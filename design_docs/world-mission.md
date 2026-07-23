@@ -139,8 +139,14 @@ What this mission touches or overlaps, and the drawn boundaries:
   Gate-5 retro in the shared skill so ALL missions benefit. NEVER copy skills into this repo.
 - **Never touch the V1 mission's state or checkout** (`~/.ailang/state/mission-v1*`, legacy
   `mission-control.*` paths, the `sunholo-data/ailang` working tree).
-- **Language gaps route upstream**: anything AILANG can't express cleanly becomes an issue/backlog
-  item on `sunholo-data/ailang` — no local compiler workarounds, no vendored forks.
+- **Language gaps route upstream — two channels, always both**: anything AILANG can't express
+  cleanly (or any core/binary change World needs) becomes (1) a GitHub issue on
+  `sunholo-data/ailang` — the durable, triageable record with repro + version per that repo's
+  conventions — AND (2) an agent message to the v1 loop's inbox so it is seen without waiting for
+  a triage sweep: `ailang messages send mission-control "<summary + issue link>" --title "..."
+  --from "world-coordinator"` (local send on this rig; the v1 session's start hook surfaces
+  unread messages). The V1 mission owns routing it (extension vs core-floor per PROGRAM.md);
+  World NEVER works around the compiler locally, no vendored forks.
 - **Compiler-checked docs discipline**: every `.ail` snippet that enters `design_docs/` ships as a
   checkable file under `design_docs/sketches/` (or a successor source tree) and passes the CI
   gate. A doc claiming "this compiles" without a checked artifact is a defect.
