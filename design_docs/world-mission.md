@@ -61,11 +61,12 @@ At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the arc
 
 ## CURRENT GOAL
 
-1. **Iteration 0 (definition)**: ratify the bar (below) with Mark through the design quorum —
-   including fixing clause 4's thresholds NUMERICALLY — then score the queue against it. Output:
-   ratified bar + ordered queue in this doc, kill switch released by Mark/v1 agent.
-2. **Then**: work the queue through the inner loop (design-doc → sprint-plan → execute →
+1. ~~Iteration 0: ratify the bar~~ — **DONE 2026-07-23 attended** (Mark: clause-4 fixed at
+   −2pp / ≤25%; bar + Conflict Surface + guardrails + queue ratified as drafted; re-quorum run
+   attended — see STATUS).
+2. **NOW**: work the queue through the inner loop (design-doc → sprint-plan → execute →
    evaluate), one sprint-sized item per iteration, recording routing evidence every time.
+   Next item: `[NEXT] w-log-epoch-decision` (clause-1).
 
 ## The bar — what "Ailang World 1.0" must meet (RATIFY with Mark at iteration 0)
 
@@ -84,12 +85,12 @@ At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the arc
   capability + budget check; effect results are recorded (replay input); capsules run with a
   physical isolation floor beneath the semantic checks. No ambient-authority path exists from an
   agent to the outside world.
-- **Clause 4 — the M4 VALUE GATE (ratified kill-switch)**: motoko operates through world
-  transitions (propose → verify → commit) and **matches-or-beats motoko-on-shell** —
-  pass-rate within noise on the standard benchmark tier at **≤25% wall-clock overhead**
-  (candidate thresholds; FIX NUMERICALLY at iteration 0 so the gate cannot be argued after the
-  fact). If the gate fails after honest tuning, **World parks** — same demand-evidence discipline
-  as every other item.
+- **Clause 4 — the M4 VALUE GATE (kill-switch; thresholds RATIFIED by Mark 2026-07-23)**: motoko
+  operates through world transitions (propose → verify → commit) and **matches-or-beats
+  motoko-on-shell**, measured as PAIRED runs (N≥3 per arm, same benchmark set, standard tier):
+  **World pass-rate ≥ shell pass-rate − 2 percentage points AND median wall-clock overhead
+  ≤ +25%**. If the gate fails after honest tuning, **World parks** — same demand-evidence
+  discipline as every other item.
 - **Clause 5 — the human surface works for real work**: one real goal expressed → proposals →
   approval inbox with evidence bundles → commit → **provenance walk answers "why did this
   happen"** without log archaeology (SCENARIOS.md scenarios 1–3, live).
@@ -196,6 +197,18 @@ mission in `~/.config/ailang/mission-world.env`:
    first as CLI/generated projection (SCENARIOS.md scenario 1/3) · ~2d
 8. [PARKED until 4 lands] **w-self-mod-vertical** · clause-7 · one World extension shipped through
    World's own pipeline end-to-end · ~1–2d
+
+## Premise Verification Log (quorum objection #1 — every load-bearing claim, with evidence)
+
+| Premise | Verified | Evidence |
+|---|---|---|
+| `serve-api --mcp / --mcp-http / --a2a` exist (clause-6 machinery) | bootstrap + iter-0 | `ailang serve-api` help, v0.30.0 |
+| `ai-check` = unified check+verify, always-JSON, **no `--json` flag** | bootstrap flag-test + iter-0 | error repro'd live; citations fixed here (`4c6080a`) and upstream (`ailang@aabb3a58c`, v1-ack on issue #1) |
+| CI `CI` / job `ailang-code verify gate` green and NON-vacuous | every push since `3c8791d` | job log shows `checked 2 module(s)`, released linux binary, sha256-verified |
+| DESIGN.md type sketches compile | CI-gated | `design_docs/sketches/*.ail` in every run |
+| Mission state fully namespaced (no v1 collision) | dry-runs 2026-07-23 | `/tmp/ailang-mission-world.log`: distinct `mission-world.pid`, worldtest profile proof |
+| Upstream routing channel works end-to-end | 2026-07-23 | defect report → v1 verified+fixed+ack'd < 1h (issue #1) |
+| Registry + `ailang publish` cascade exist (clause-7 lane) | v1-mission operational history | live on multivac; World's local-first cascade mode is DESIGN.md §13/M-scope work, not assumed |
 
 ---
 **Document created**: 2026-07-23 (bootstrap, attended). Iteration 0 ratifies it via the quorum
