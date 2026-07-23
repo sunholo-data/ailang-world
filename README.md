@@ -77,16 +77,18 @@ the kernel does not exist yet. What is true today:
 - ✅ CI verify gate live: every `.ail` module in the repo passes `ailang ai-check` (types + Z3) on the released binary
 - ✅ Mission loop armed and firing; charter drafted and awaiting iteration-0 ratification
 - ⬜ M1 kernel (world store, transition log, deterministic replay) — next
-- ⬜ M2 local daemon · M3 effect broker · M4 motoko integration (the value gate) · M5+ speculation, generated UI, multi-agent
+- ⬜ M2 local daemon · M3 effect broker · M4 reference-agent integration (the value gate) · M5+ speculation, generated UI, multi-agent
 
 ## The value gate
 
-World ships with its own kill switch, on purpose. **Clause 4 of the charter:** the first
-native agent (motoko) operating through world transitions must **match or beat** the same
-agent on a raw shell — pass-rate within noise at bounded overhead, thresholds fixed
-numerically *before* the work starts. If typed proposals make agents merely *auditable* but
-not *better*, World parks, and says so here. A trust substrate that can't pass its own
-evidence bar has no business asking for yours.
+World ships with its own kill switch, on purpose. **Clause 4 of the charter:** two reference
+agents from different providers (Claude Code and codex), each running the same benchmarks in
+two arms — native shell tools vs World's MCP transition tools — must **both match or beat**
+their shell baseline: pass-rate within 2 points, wall-clock overhead within 25%, thresholds
+fixed *before* the work started, with a stability precondition on the baseline so a flaky
+harness can never fake the verdict either way. If typed proposals make agents merely
+*auditable* but not *better*, World parks, and says so here. A trust substrate that can't
+pass its own evidence bar has no business asking for yours.
 
 ## Relationship to AILANG
 

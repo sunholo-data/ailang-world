@@ -441,8 +441,12 @@ only nondeterministic component in the system.
 ### 12.4 The falsifiable bet
 
 World is worth building **iff typed proposals make agents better, not merely auditable**.
-The evidence gate is M4: motoko operating through world transitions must match or beat
-motoko-on-shell pass-rate at acceptable overhead, while delivering replay and audit for
+The evidence gate is M4 (agent definition amended at ratification, 2026-07-23): **two reference
+agents from different providers — Claude Code agent-mode and codex — each running shell-arm vs
+World-MCP-arm paired**, must both match or beat their shell baseline at acceptable overhead,
+with a shell-arm stability precondition so a flaky baseline can never false-park the project
+(motoko, the aspirational first native agent, runs as an optional never-blocking third arm
+until stable), while delivering replay and audit for
 free. If it can't, World is parked — same demand-evidence discipline as every other item.
 
 Named risks: **OS gravity well** (everything wants to move into the kernel — mitigated by
@@ -672,7 +676,7 @@ becoming replayable transition history.
 | M1 | Semantic world library | World/Proposal/Transition/Evidence types **in AILANG** (`ai-check` green as CI gate); Go host for SQLite store, content-addressed objects, append-only log; replay of recorded transitions proven |
 | M2 | Local daemon | `ailang-worldd`: SQLite, REST API, CLI. Zero cloud deps |
 | M3 | Effect broker | FS, Git, Model (`std/ai`), `Human.Approve` (reuse approval-queue pattern); effect-result recording |
-| M4 | Motoko integration — **the value gate (§12.4)** | Shell orchestration → world transitions; first end-to-end propose/verify/commit by an agent. Go/no-go: match-or-beat motoko-on-shell pass-rate at acceptable overhead, or World is parked |
+| M4 | Reference-agent integration — **the value gate (§12.4)** | First end-to-end propose/verify/commit by agents. Dual reference (Claude Code + codex), shell arm vs World-MCP arm, both must match-or-beat at bounded overhead (stability precondition on the shell arm); motoko optional third arm. Fail on eligible agents → World parks |
 | M5 | Speculative execution | Parallel candidate branches over immutable worlds; evaluation graph; evidence comparison |
 | M6 | Generated UI (A2UI/AG-UI) | Dynamic interfaces generated from world state, available transitions, approvals, evidence — emitted in an open agent-UI protocol (open question 9) |
 | M7 | Multi-agent coordination | Planner / verifier / reviewer / scheduler / operator communicating through typed proposals + messages (nodes/edges live); external agents interop via A2A — aitana/platform as the first cross-stack peer |

@@ -15,8 +15,8 @@ scheduled outer loop on the always-on rig. **First mission outside the AILANG re
 **North star**: ship **Ailang World 1.0** — a local-first semantic operating environment
 ([DESIGN.md](DESIGN.md) §1: an immutable, typed, content-addressed world graph whose transactions
 are AILANG programs; propose → verify → commit; capabilities, budgets, evidence, replay) — with
-the software-engineering domain live and motoko as the first native agent, subject to the M4
-value gate (clause 4 below).
+the software-engineering domain live, subject to the M4 value gate on dual reference agents
+(clause 4 below; motoko remains the aspirational first *native* agent as an optional arm).
 **Traces to**: [DESIGN.md](DESIGN.md) (thesis) and the AILANG program's operating model
 ([PROGRAM.md](https://github.com/sunholo-data/ailang/blob/dev/design_docs/PROGRAM.md) — frozen
 minimal core, extension-routed evolution); language gaps found here route BACK to
@@ -55,11 +55,11 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
 Newest **3** STATUS stamps live here; older ones move to `world-mission-status-archive.md`.
 At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the archive file.
 
+## STATUS 2026-07-23 (post-ratification AMENDMENT, attended) — **Clause 4 gate agent redefined by Mark: DUAL REFERENCE (Claude Code + codex, cross-provider, both must pass) with a stability precondition; motoko → optional never-blocking third arm.** Rationale: motoko's current instability (hard to run even locally; long harness-fragility record) would make the shell baseline metrologically unsound — a flaky baseline measures noise, not World's value, and risks false-park. Queue item 6 renamed w-value-gate-m4, now parked until 2–5 land (World arm needs w-mcp-projection). No advisory quorum round run: narrowing amendment decided attended by the human authority gate with evidence in hand (bounded-advisory guardrail: the quorum holds no veto). DESIGN.md + README rippled.
+
 ## STATUS 2026-07-23 (iter 0 CLOSED) — **CHARTER RATIFIED by Mark, attended session with the World coordinator.** Clause-4 fixed: −2pp pass-rate (paired N≥3, standard tier) + ≤25% median wall-clock overhead. Bar + Conflict Surface + guardrails + queue ratified as drafted. Ratification record: issue #1 comment + commits `46f8b57` (clause-4 numbers) · `8f61dcb`/`a86e997` (quorum-objection evidence, live tests). Advisory quorum ledger: **5 rounds** run attended (~$0.23 metered total), every round's objections closed with evidence — live tests where possible (artifacts: `.ailang/state/mission-quorum/world-mission-2026-07-23T*.json`). The quorum is reject-by-default and ADVISORY: its job here is objection-surfacing, not blessing; no further rounds sought — the authority gate is Mark's, exercised. **Loop is CLEAR to route `[NEXT] w-log-epoch-decision`.**
 
 ## STATUS 2026-07-23 (iter 0) — Advisory quorum ran headless (BLOCKED 3/3, metered $0.037); ratification PARKED for Mark (attended). Agenda: (1) fix clause-4 numbers, (2) add Conflict Surface section, (3) `ai-check --json` premise defect — v0.30.0 has no such flag. No sprint routed; queue unchanged. See log iter 0 + issue #1.
-
-## STATUS 2026-07-23 — BOOTSTRAP: charter drafted (attended session, Mark + Fable); iteration 0 (quorum ratification) PENDING; kill switch SET; no iterations have fired.
 
 ## CURRENT GOAL
 
@@ -87,12 +87,21 @@ At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the arc
   capability + budget check; effect results are recorded (replay input); capsules run with a
   physical isolation floor beneath the semantic checks. No ambient-authority path exists from an
   agent to the outside world.
-- **Clause 4 — the M4 VALUE GATE (kill-switch; thresholds RATIFIED by Mark 2026-07-23)**: motoko
-  operates through world transitions (propose → verify → commit) and **matches-or-beats
-  motoko-on-shell**, measured as PAIRED runs (N≥3 per arm, same benchmark set, standard tier):
-  **World pass-rate ≥ shell pass-rate − 2 percentage points AND median wall-clock overhead
-  ≤ +25%**. If the gate fails after honest tuning, **World parks** — same demand-evidence
-  discipline as every other item.
+- **Clause 4 — the M4 VALUE GATE (kill-switch; thresholds ratified 2026-07-23, agent definition
+  AMENDED by Mark same day, attended)**: the gate runs on **TWO reference agents from different
+  providers — Claude Code (agent mode) and codex CLI** — each in paired arms: *shell* (native
+  tools) vs *World* (MCP transition tools only), same model, same benchmark set (standard tier),
+  N≥3 runs per arm. **The gate passes only if BOTH reference agents show: World pass-rate ≥
+  shell pass-rate − 2 percentage points AND median wall-clock overhead ≤ +25%.**
+  **Stability precondition (gate validity, not gate outcome)**: a reference agent is
+  gate-eligible only if its SHELL arm completes N≥3 runs with zero harness-fault failures
+  (api_error / resource_limit / harness classes) and pass-rate range ≤5pp; an ineligible agent
+  is fixed or substituted — if both become ineligible the gate PAUSES for instrumentation (a
+  measurement problem, explicitly NOT a value-park). If the gate fails on eligible agents after
+  honest tuning, **World parks**. **motoko is an OPTIONAL third arm** — the local-first/R5
+  narrative, run only if it meets the same precondition, informative and NEVER gate-blocking
+  (amendment rationale: motoko's current instability would make the baseline metrologically
+  unsound — Mark 2026-07-23).
 - **Clause 5 — the human surface works for real work**: one real goal expressed → proposals →
   approval inbox with evidence bundles → commit → **provenance walk answers "why did this
   happen"** without log archaeology (SCENARIOS.md scenarios 1–3, live).
@@ -213,9 +222,10 @@ mission in `~/.config/ailang/mission-world.env`:
    isolation floor · ~2–3d
 5. **w-mcp-projection** · clause-6 · project the transition registry over MCP + publish the A2A
    agent card (reuse `ailang serve-api --mcp/--a2a` machinery — do not reinvent) · ~1d
-6. [PARKED until 2–4 land] **w-motoko-m4** · clause-4 · motoko speaks transitions; run the value
-   gate against the thresholds fixed at iteration 0; report honestly; park World if it fails ·
-   ~3d
+6. [PARKED until 2–5 land] **w-value-gate-m4** · clause-4 · dual-reference value gate: Claude
+   Code + codex, shell arm vs World-MCP arm, paired N≥3, stability precondition checked first;
+   motoko as optional third arm if eligible; report honestly; park World if it fails on eligible
+   agents · ~3d (renamed from w-motoko-m4 per the 2026-07-23 clause-4 amendment)
 7. [PARKED until 4 lands] **w-approval-inbox** · clause-5 · the approval inbox + provenance walk,
    first as CLI/generated projection (SCENARIOS.md scenario 1/3) · ~2d
 8. [PARKED until 4 lands] **w-self-mod-vertical** · clause-7 · one World extension shipped through
