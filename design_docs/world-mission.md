@@ -170,6 +170,13 @@ What this mission touches or overlaps, and the drawn boundaries:
 - **Kernel performance budget from day 1** (DESIGN.md §13.5): the M4 overhead gate gets HARDER as
   models get faster — fork cost and verify latency are design constraints on M1, not later
   optimizations.
+- **Advisory quorum rounds are BOUNDED** (ratified by Mark 2026-07-23, from the 5-round
+  iteration-0 ledger): on ratification-class docs (charter, bar changes), at most **2 quorum
+  rounds per revision cycle**. The quorum's job there is objection-SURFACING for the human
+  authority gate — it holds no veto, a synthesized PASS is not required, and rounds must never
+  be re-run in search of one. When objections stop being load-bearing, close on the human gate
+  and record the ledger. (Design-doc quorums at pick keep their normal semantics — BLOCKED
+  parks the item.)
 - **Kill switch stays until ratification**; only Mark (or the v1 agent on his instruction) arms
   the loop.
 
