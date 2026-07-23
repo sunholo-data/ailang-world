@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+
+jobs:
+  ailang-verify:
+    name: ailang-code verify gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install released ailang binary
+        run: |
+          set -euo pipefail
+          base="https://github.com/sunholo-data/ailang/releases/latest/download"
+          curl -fsSL -o linux.x64.ailang.tar.gz "$base/linux.x64.ailang.tar.gz"
+          curl -fsSL -o linux.x64.ailang.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
+          sha256sum -c linux.x64.ailang.tar.gz.sha256
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf linux.x64.ailang.tar.gz -C "$HOME/.local/bin" ailang
+          chmod +x "$HOME/.local/bin/ailang"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: ailang version
+        run: ailang --version
+
+      - name: Verify all .ail modules (ai-check = check + Z3 verify)
+        run: ./scripts/verify_ail.sh

@@ -1,0 +1,36 @@
+module sketches/transitions
+
+import sketches/worldtypes (Proposal, Verdict, Evidence)
+import std/io (println)
+
+-- A World transition: pure state + command -> new state.
+-- Illustrative: World here is a stand-in record.
+
+type World = {
+  version: int,
+  taskCount: int
+}
+
+-- Phase 1: Reason — pure, no effects, unlimited speculation
+export func plan(w: World, goal: string) -> Proposal {
+  {
+    goal: goal,
+    plan: "sketch",
+    expectedEffects: ["FS.Write"],
+    requiredCaps: [],
+    confidence: 0.9
+  }
+}
+
+-- Phase 2: Verify — pure contract/policy check over the proposal
+export func verify(w: World, p: Proposal) -> Verdict {
+  if p.confidence > 0.8
+  then Committed(p.goal)
+  else Rejected("confidence below policy floor")
+}
+
+-- Phase 3: Commit — the ONLY effectful phase; effects are declared in the signature
+export func commit(w: World, p: Proposal) -> World ! {FS, IO} {
+  println("committing: ${p.goal}");
+  { version: w.version + 1, taskCount: w.taskCount + 1 }
+}

@@ -1,0 +1,15 @@
+module sketches/worldtypes
+
+-- Illustrative core types for AILANG World (design-doc sketch)
+
+export type Capability = { effect: string, scope: string, expiresAt: int, budget: int }
+
+export type Evidence = CompilerOutput(string) | TestReport(string, bool) | HumanApproval(string) | AiReview(string, float)
+
+export type Proposal = { goal: string, plan: string, expectedEffects: list[string], requiredCaps: list[Capability], confidence: float }
+
+export type Verdict = Committed(string) | Rejected(string)
+
+export func describe(p: Proposal) -> string {
+  p.goal
+}
