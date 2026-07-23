@@ -24,8 +24,9 @@ minimal core, extension-routed evolution); language gaps found here route BACK t
 **Skill**: the SAME unforked `mission-control` skill every mission uses, reached via user-level
 symlinks (`~/.claude/skills/*`) — this repo carries NO skill copies (a copy is a fork; forks stop
 learning).
-**Scheduling**: launchd `dev.ailang.mission-world` (installed; **KILL SWITCH SET** —
-`~/.ailang/state/mission-world.disabled` — until iteration-0 ratification). StartInterval
+**Scheduling**: launchd `dev.ailang.mission-world` — **ARMED by Mark 2026-07-23** ahead of
+ratification; sprint-routing stays BLOCKED until the charter is ratified (iter-0 honored this:
+quorum-only, no sprint). Off switch: `~/.ailang/state/mission-world.disabled`. StartInterval
 staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-nothing.
 **Log**: [world-mission-log.md](world-mission-log.md) — append-only, one entry per iteration.
 **Human-facing reporting**: GitHub issue #1 — every iteration posts its report there as a comment
@@ -99,6 +100,33 @@ At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the arc
   ships as an extension package through World's own propose → verify → commit pipeline, with the
   §14 boundaries enforced (mission-loop machinery, AILANG compiler, live daemon EXCLUDED from
   self-mod scope).
+
+## Conflict Surface (DRAFTED post-iter-0 by the World coordinator — RATIFY alongside the bar; answers quorum objection #2)
+
+What this mission touches or overlaps, and the drawn boundaries:
+
+- **`ailang serve-api` (ailang repo)** — the overlap is the PROTOCOL BOUNDARY only. serve-api is
+  a *stateless* projection: module exports → REST/MCP/A2A, per request; it owns no persistent
+  store, no transition log, no scheduler, no effect recording. World's daemon is precisely the
+  *stateful* kernel (store + log + broker + scheduler). Resolution: `ailang-worldd` does NOT
+  reimplement protocol serving — clause 6 is delivered by REUSING serve-api's MCP/A2A machinery
+  as the projection layer over the transition registry; if serve-api needs hooks for that, they
+  are upstream issues on `sunholo-data/ailang`. A new daemon is justified by state, not by
+  protocol: grafting a world store onto serve-api would move OS concerns into the frozen
+  language repo — the wrong direction under PROGRAM.md.
+- **The `ailang` binary / compiler (frozen core)** — worldd consumes the RELEASED binary
+  (`check`/`test`/`ai-check`/serve-api) and never links compiler internals; language gaps route
+  upstream as issues (guardrail above).
+- **Coordinator / Collaboration Hub (ailang repo)** — pattern overlap only (approval queue,
+  messaging). Patterns port; schemas do not. World's human surfaces are projections from the
+  world store (SCENARIOS.md scenario 1), not extensions of the Hub; no shared database.
+- **The mission loop itself** — the loop that builds this repo stays OUTSIDE World's
+  self-modification scope (DESIGN.md §14). When M4 puts motoko on World, the mission loop is
+  unchanged; only motoko's execution substrate changes.
+- **OPEN for ratification**: whether worldd lives in THIS repo as its own Go module (DESIGN.md
+  §15 assumption, coordinator-recommended: keeps the language repo frozen, lets World iterate at
+  its own cadence) vs an `ailang world` subcommand upstream. Revisit only on concrete
+  binary-distribution pain.
 
 ## Guardrails (mission-specific; the skill's Standing Rules always apply on top)
 

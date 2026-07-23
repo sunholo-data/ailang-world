@@ -134,7 +134,7 @@ subsystem against ailang v0.30.0:
 | World subsystem | Exists today in `ailang` | Gap to close |
 |---|---|---|
 | Effect system | Effect rows in signatures (`! {FS, IO}`), compiler-enforced; caps gated at run (`--caps IO,FS,Net,AI,SharedMem`); `AILANG_FS_SANDBOX` | Finer-grained scoped caps (per-path, per-service); new effect domains (Git, GitHub, Container, Human); delegation/attenuation/expiry |
-| Verify phase | `ailang ai-check --json` = type-check + Z3 contract verification in one call — the unified gate | Policy engine; cost estimation; simulation harness |
+| Verify phase | `ailang ai-check` = type-check + Z3 contract verification in one call, always-JSON output (v0.30.0 has no `--json` flag — iter-0 verified premise) — the unified gate | Policy engine; cost estimation; simulation harness |
 | Budgets | Effect `@limit` budget scoping; `AILANG_EVAL_MAX_RSS` process-group cap; MEM001 runtime budget (designed) | Unified per-proposal budget ledger (tokens, money, approvals, wall time) |
 | Traces / evidence | `AILANG_TRACE standard/deep` OTEL spans, span budgets, trace CLI | Bind traces to transitions (trace ↔ commit identity); evidence as typed world objects |
 | Messaging (edges) | `ailang messages` — SQLite-local inboxes, send/ack, cloud transport opt-in | Typed payloads (today: strings); inbox-as-world-node semantics |
@@ -680,7 +680,7 @@ becoming replayable transition history.
 
 Delivery discipline: each milestone lands via the World mission loop (the parameterized
 driver — never a hand-rolled second loop), with the `ailang-code` verify profile
-(`ailang check` / `ailang test` / `ailang ai-check --json`).
+(`ailang check` / `ailang test` / `ailang ai-check`).
 
 ## 18. Non-goals (v1)
 
