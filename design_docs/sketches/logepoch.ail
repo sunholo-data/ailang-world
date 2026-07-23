@@ -1,0 +1,74 @@
+module sketches/logepoch
+
+-- Decision-doc sketch for w-log-epoch-decision (clause-1).
+-- These types freeze the SHAPE of the three decisions; M1 implements them.
+-- Revised after quorum round 1: authoritative replay pins the exact
+-- content-addressed interpreter artifact; epoch membership is operational
+-- metadata and never licenses binary substitution.
+
+-- Decision 3: every hash carries its algorithm explicitly.
+-- Canonical textual form: "${algo}:${digest}" e.g. "sha256:9f86d0...".
+export type HashRef = { algo: string, digest: string }
+
+-- Decision 3: the object-store envelope names its hash algorithm as a field —
+-- migration is mixed-algorithm coexistence, never a rewrite of history.
+export type ObjectEnvelope = {
+  hash: HashRef,
+  interfaceHash: HashRef,
+  semanticId: string,
+  provenance: string
+}
+
+-- Decision 1: a semantics epoch is decoupled from the binary version string.
+-- The registry maps each epoch to CANDIDATE binaries nominated by corpus
+-- attestation as believed-compatible. Nomination is NON-authoritative: a
+-- finite corpus cannot establish semantic equivalence over all programs, so
+-- candidacy is operational metadata (tooling, migration planning, "which
+-- binaries probably replay this") — it never authorizes substituting a
+-- different binary during authoritative replay and never licenses cache
+-- reuse across distinct interpreter artifacts.
+export type EpochRecord = {
+  epoch: int,
+  candidateBinaries: list[string],
+  successor: int,
+  frozen: bool
+}
+
+-- Decisions 1 + 2 meet in the log header:
+--   interpreter (content hash of the exact released ailang binary bytes)
+--     pins WHICH artifact evaluates the entry,
+--   transitionFn (content hash) pins WHAT code ran,
+--   semanticsEpoch tags the compatibility class (operational metadata only).
+-- AUTHORITATIVE replay identity is the pair (transitionFn, interpreter).
+export type LogHeader = {
+  entryIndex: int,
+  semanticsEpoch: int,
+  transitionFn: HashRef,
+  interpreter: HashRef,
+  prevEntryHash: HashRef,
+  writtenBy: string
+}
+
+-- Canonical rendering of a hash reference (the on-disk / in-log text form).
+export func renderRef(r: HashRef) -> string {
+  "${r.algo}:${r.digest}"
+}
+
+-- Epoch lookup predicate: a registry record describes a log entry's
+-- compatibility class iff the epochs match. This is operational grouping
+-- ONLY. Authoritative replay ignores candidateBinaries and executes with the
+-- exact archived artifact named by h.interpreter; if that artifact is
+-- unavailable or unsupported on the host, replay FAILS EXPLICITLY (A11) —
+-- it never silently substitutes another binary.
+export func servesEntry(rec: EpochRecord, h: LogHeader) -> bool {
+  rec.epoch == h.semanticsEpoch
+}
+
+-- The verify/typecheck cache key: results cache forever because both the
+-- code (content hash) and the EXACT interpreter artifact that produced them
+-- are pinned. semanticsEpoch is deliberately absent: it is compatibility
+-- metadata, not validity — distinct interpreter artifacts never share cache
+-- rows, even inside one epoch.
+export func cacheKey(h: LogHeader) -> string {
+  "${renderRef(h.transitionFn)}@${renderRef(h.interpreter)}"
+}
