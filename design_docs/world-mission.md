@@ -56,12 +56,11 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
 Newest **3** STATUS stamps live here; older ones move to `world-mission-status-archive.md`.
 At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the archive file.
 
+## STATUS 2026-07-23 (iteration 1) — **First post-ratification sprint: `w-log-epoch-decision` (clause-1). D2 (content-addressed transition functions — canonical source-byte hash) + D3 (SHA-256 with explicit tagged `HashRef`) SETTLED (no quorum objection, 2 rounds). D1 replay-pin identity PARKED needs-human-review on the determinism⇄portability fork.** Designer = Fable (rotation seed, subscription via `claude-sub`; design + 1 revision). Quorum: r1 BLOCKED (both reviewers: corpus attestation ≠ semantic equivalence → "any attested binary" replay is non-deterministic) → revision pinned the exact content-addressed interpreter artifact → r2 BLOCKED (reviewers split in opposite directions: hermeticity vs cross-platform portability). Bounded pick-time protocol (1 revision + 1 re-quorum) exhausted → parked for Mark with a 3-option framing (A exact-binary / B release-identity+corpus-gated / C runtime-closure). Upstream question routed both channels: **ailang#471** (does a released binary expose a platform-independent semantics-version identity for portable replay?). Doc committed `c3c5124`, CI green. `metered=$0.123`. Queue item 1 → `[PARKED]`; item 2 (w-world-library-m1) stays blocked on this decision.
+
 ## STATUS 2026-07-23 (AMENDMENT 2, attended) — **Value-gate REFRAMED by Mark ("agents are residents, not the destination"): clause 4 → the RESIDENT-AGENT NON-INFERIORITY FLOOR (do-no-harm; same dual-reference machinery, park condition intact); the VALUE burden moves to clause 5's new PROVENANCE TEETH (≥3 real why-questions answered ≤5min each via provenance walk) + R1 named standing value evidence (mission-on-World vs tonight's markdown baseline — the current operation is the control arm).** Queue item 6 → w-agent-floor-m4. DESIGN.md §12.4 + README reframed. Category error acknowledged: pass-rate comparison tests World where it's weakest and misses what it's for.
 
 ## STATUS 2026-07-23 (post-ratification AMENDMENT, attended) — **Clause 4 gate agent redefined by Mark: DUAL REFERENCE (Claude Code + codex, cross-provider, both must pass) with a stability precondition; motoko → optional never-blocking third arm.** Rationale: motoko's current instability (hard to run even locally; long harness-fragility record) would make the shell baseline metrologically unsound — a flaky baseline measures noise, not World's value, and risks false-park. Queue item 6 renamed w-value-gate-m4, now parked until 2–5 land (World arm needs w-mcp-projection). No advisory quorum round run: narrowing amendment decided attended by the human authority gate with evidence in hand (bounded-advisory guardrail: the quorum holds no veto). DESIGN.md + README rippled.
-
-## STATUS 2026-07-23 (iter 0 CLOSED) — **CHARTER RATIFIED by Mark, attended session with the World coordinator.** Clause-4 fixed: −2pp pass-rate (paired N≥3, standard tier) + ≤25% median wall-clock overhead. Bar + Conflict Surface + guardrails + queue ratified as drafted. Ratification record: issue #1 comment + commits `46f8b57` (clause-4 numbers) · `8f61dcb`/`a86e997` (quorum-objection evidence, live tests). Advisory quorum ledger: **5 rounds** run attended (~$0.23 metered total), every round's objections closed with evidence — live tests where possible (artifacts: `.ailang/state/mission-quorum/world-mission-2026-07-23T*.json`). The quorum is reject-by-default and ADVISORY: its job here is objection-surfacing, not blessing; no further rounds sought — the authority gate is Mark's, exercised. **Loop is CLEAR to route `[NEXT] w-log-epoch-decision`.**
-
 
 ## CURRENT GOAL
 
@@ -70,7 +69,10 @@ At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the arc
    attended — see STATUS).
 2. **NOW**: work the queue through the inner loop (design-doc → sprint-plan → execute →
    evaluate), one sprint-sized item per iteration, recording routing evidence every time.
-   Next item: `[NEXT] w-log-epoch-decision` (clause-1).
+   Next item WAS `w-log-epoch-decision` (clause-1) — iteration 1 drafted + quorum-reviewed it;
+   D2/D3 settled, **D1 replay-pin PARKED for Mark** (determinism⇄portability fork; see the doc's
+   "Open Decision" section + issue #1). The queue is blocked on that human decision until Mark
+   picks a D1 option; on his reply the item unparks and M1 (`w-world-library-m1`) proceeds.
 
 ## The bar — what "Ailang World 1.0" must meet (RATIFIED by Mark 2026-07-23, attended — see STATUS + issue #1 record)
 
@@ -221,10 +223,13 @@ mission in `~/.config/ailang/mission-world.env`:
 <!-- Every open item carries a clause tag. Estimates are honest guesses at bootstrap;
      iteration 0 re-scores. NEW-DOC items start with design-doc-creator. -->
 
-1. [NEXT] **w-log-epoch-decision** · clause-1 · decide log-epoch semantics versioning +
-   content-addressed transition functions (DESIGN.md open q 11; REFERENCES.md deltas 1, 2, 5)
-   BEFORE any log format lands — a design doc, quorum-reviewed · ~0.5d
-2. **w-world-library-m1** · clause-1 · the semantic world library: World/Proposal/Transition/
+1. [PARKED needs-human-review] **w-log-epoch-decision** · clause-1 · doc drafted +
+   quorum-reviewed (2 rounds): **D2** (content-addressed transition fns) + **D3** (SHA-256 +
+   tagged HashRef) SETTLED; **D1 replay-pin identity** parked for Mark on the
+   determinism⇄portability fork (3 options framed in the doc's "Open Decision" section).
+   Doc: `design_docs/planned/w-log-epoch-decision.md` (`c3c5124`, CI green). Upstream Q: ailang#471.
+   → **unparks on Mark's D1 pick**, then M1 can freeze the log format.
+2. [BLOCKED on item 1's D1 pick] **w-world-library-m1** · clause-1 · the semantic world library: World/Proposal/Transition/
    Evidence types in AILANG (ai-check green in CI), Go host for the SQLite store +
    content-addressed objects + append-only log; replay of a recorded episode proven bit-for-bit ·
    ~2–3d
