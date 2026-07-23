@@ -114,11 +114,15 @@ What this mission touches or overlaps, and the drawn boundaries:
   + scheduler) — a new daemon is justified by state, not by protocol.
   **ALSO VERIFIED**: `internal/apiserver` is a Go `internal/` package → NOT importable from
   another repo. "Reuse" is therefore one of three concrete paths, in preference order:
-  (a) **primary — no upstream change needed, works today**: World exposes its transition
-  registry AS `.ail` modules (capability-filtered exports) and serves them with
-  `ailang serve-api --mcp/--a2a` — the registry IS typed AILANG exports, which is also the most
-  World-native shape; (b) fallback: worldd runs `ailang serve-api` as a sidecar process;
-  (c) only on evidence: upstream issue to export a public serving package. Grafting a world
+  (a) **primary**: World exposes its transition registry AS `.ail` modules served by
+  `ailang serve-api --mcp/--a2a` — **VERIFIED for static module exports (live test
+  2026-07-23)**: served `design_docs/sketches/` over `--mcp-http`, and `tools/list` returned
+  `plan`/`verify`/`commit` as MCP tools with schemas + effect signatures. **NOT claimed**
+  (explicitly w-mcp-projection's ACCEPTANCE CRITERIA, not premises): dynamic worldd-backed
+  registry, per-session capability filtering, propose→verify→commit enforcement at the
+  boundary — if those fail there, fall to (b)/(c); (b) fallback: worldd runs `ailang
+  serve-api` as a sidecar process; (c) only on evidence: upstream issue to export a public
+  serving package. Grafting a world
   store onto serve-api itself stays ruled out — it would move OS concerns into the frozen
   language repo, the wrong direction under PROGRAM.md.
 - **The `ailang` binary / compiler (frozen core)** — worldd consumes the RELEASED binary
@@ -217,6 +221,8 @@ mission in `~/.config/ailang/mission-world.env`:
 | Registry + `ailang publish` cascade exist (clause-7 lane) | v1-mission operational history | live on multivac; World's local-first cascade mode is DESIGN.md §13/M-scope work, not assumed |
 | `internal/apiserver` (serve-api impl) is stateless — no persistence, no scheduler | code inspection 2026-07-23 | package-wide grep: zero sqlite/sql.Open/bolt/badger/scheduler hits; request-scoped handlers only |
 | `internal/apiserver` NOT importable cross-repo (Go `internal/`) | Go module rules + path | Conflict Surface reuse paths (a)/(b)/(c) sized accordingly; path (a) needs no upstream change |
+| serve-api projects `.ail` exports as MCP tools (path (a), static case) | LIVE TEST 2026-07-23 | `ailang serve-api --mcp-http --port 8199 sketches` → `tools/list` returned `plan`/`verify`/`commit` with JSON schemas + effect rows in descriptions; server killed after, port freed. Dynamic/capability-filtered projection deliberately NOT claimed — w-mcp-projection acceptance criteria |
+| `verify_ail.sh` fails loudly at N=0 (gate cannot pass vacuously) | LIVE TEST 2026-07-23 | script run against an empty `design_docs/` scratch tree → "✗ no .ail modules found — the gate would be vacuous; failing loudly", **exit code 1** |
 | `ailang messages` channel works end-to-end (guardrail's delivery leg) | live round-trip 2026-07-23 | sent `msg_…_2c6964d3` (defect report) + `msg_…_acc5edcc` (channel test); v1 agent RECEIVED and acted — upstream ack on issue #1 at 18:27Z citing the report, fix `ailang@aabb3a58c` |
 | v1 session-start hook reads the message inbox | config + observed 2026-07-23 | ailang repo `.claude/settings.json` SessionStart → `scripts/hooks/session_start.sh` ("checks the user inbox … using the ailang messages CLI"); displayed 5 unread at this session's start |
 
