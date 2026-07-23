@@ -55,7 +55,7 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
 Newest **3** STATUS stamps live here; older ones move to `world-mission-status-archive.md`.
 At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the archive file.
 
-## STATUS 2026-07-23 (iter 0 CLOSED) — **CHARTER RATIFIED by Mark, attended session with the World coordinator.** Clause-4 fixed: −2pp pass-rate (paired N≥3, standard tier) + ≤25% median wall-clock overhead. Bar + Conflict Surface + guardrails + queue ratified as drafted. Ratification record: issue #1 comment + commits `46f8b57` (clause-4 numbers) · `8f61dcb`/`a86e997` (quorum-objection evidence, live tests). Advisory quorum ledger: 4 rounds run attended, every objection closed with live evidence (artifacts: `.ailang/state/mission-quorum/world-mission-2026-07-23T*.json`); quorum is advisory — the authority gate is Mark's, exercised. **Loop is CLEAR to route `[NEXT] w-log-epoch-decision`.**
+## STATUS 2026-07-23 (iter 0 CLOSED) — **CHARTER RATIFIED by Mark, attended session with the World coordinator.** Clause-4 fixed: −2pp pass-rate (paired N≥3, standard tier) + ≤25% median wall-clock overhead. Bar + Conflict Surface + guardrails + queue ratified as drafted. Ratification record: issue #1 comment + commits `46f8b57` (clause-4 numbers) · `8f61dcb`/`a86e997` (quorum-objection evidence, live tests). Advisory quorum ledger: **5 rounds** run attended (~$0.23 metered total), every round's objections closed with evidence — live tests where possible (artifacts: `.ailang/state/mission-quorum/world-mission-2026-07-23T*.json`). The quorum is reject-by-default and ADVISORY: its job here is objection-surfacing, not blessing; no further rounds sought — the authority gate is Mark's, exercised. **Loop is CLEAR to route `[NEXT] w-log-epoch-decision`.**
 
 ## STATUS 2026-07-23 (iter 0) — Advisory quorum ran headless (BLOCKED 3/3, metered $0.037); ratification PARKED for Mark (attended). Agenda: (1) fix clause-4 numbers, (2) add Conflict Surface section, (3) `ai-check --json` premise defect — v0.30.0 has no such flag. No sprint routed; queue unchanged. See log iter 0 + issue #1.
 
@@ -109,11 +109,15 @@ At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the arc
 What this mission touches or overlaps, and the drawn boundaries:
 
 - **`ailang serve-api` (ailang repo)** — the overlap is the PROTOCOL BOUNDARY only.
-  **VERIFIED (code inspection 2026-07-23, `internal/apiserver/` at ailang HEAD)**: the package is
-  stateless — no persistence (zero sqlite/sql.Open/bolt/badger hits package-wide), no scheduler;
-  request-scoped serving of module exports over REST/MCP/A2A (`mcp.go`, `a2a.go`, `handler.go`,
-  `routes_dispatch.go`). World's daemon is precisely the *stateful* kernel (store + log + broker
-  + scheduler) — a new daemon is justified by state, not by protocol.
+  **VERIFIED (code inspection 2026-07-23, `internal/apiserver/` at ailang HEAD)**: the package
+  advertises NO persistence or scheduling API — zero sqlite/sql.Open/bolt/badger/scheduler hits
+  package-wide; request-scoped serving of module exports over REST/MCP/A2A (`mcp.go`, `a2a.go`,
+  `handler.go`, `routes_dispatch.go`). Precision note (quorum round-5): the load-bearing form of
+  this claim is "no advertised state machinery to build a world kernel on" — verified from the
+  package surface; exhaustive absence-of-state through transitive calls is neither claimed nor
+  needed, because the daemon justification runs the other way: worldd needs a store + log +
+  broker + scheduler that apiserver does not offer, while apiserver's protocol serving IS reused
+  (path (a), demonstrated live). A new daemon is justified by state, not by protocol.
   **ALSO VERIFIED**: `internal/apiserver` is a Go `internal/` package → NOT importable from
   another repo. "Reuse" is therefore one of three concrete paths, in preference order:
   (a) **primary**: World exposes its transition registry AS `.ail` modules served by
@@ -227,6 +231,7 @@ mission in `~/.config/ailang/mission-world.env`:
 | `verify_ail.sh` fails loudly at N=0 (gate cannot pass vacuously) | LIVE TEST 2026-07-23 | script run against an empty `design_docs/` scratch tree → "✗ no .ail modules found — the gate would be vacuous; failing loudly", **exit code 1** |
 | Driver sources `~/.config/ailang/mission-world.env` + respects role overrides | code + LIVE 2026-07-23 | `tools/launchd/mission-control.sh:46-47` sources `mission-${MISSION_PROFILE}.env`; `:238` `MISSION_EXECUTOR_MODEL` respected (default opus); dry-run log 19:45:39 echoes env-only values (repo-slug/doc/workdir) + resolved roles — sourcing proven end-to-end |
 | Charter RATIFIED (authorization state, kill switch, sprint routing) | attended session 2026-07-23 | Mark's decisions recorded: clause-4 = −2pp/≤25% paired N≥3; bar+Conflict Surface+guardrails+queue as drafted; ratification comment on issue #1; STATUS stamp above is the in-doc record |
+| Kill-switch + gh-issue state paths are world-namespaced in the LIVE driver (safety property) | LIVE 2026-07-23 | driver log 19:45:24/19:45:39/20:02:47: "kill switch present (`…/mission-world.disabled`) — skip" — the driver printed and HONORED the world-namespaced path 3× while the v1 loop ran unaffected; iter-0 posted to issue #1 = `mission-world-gh-issue` read correctly |
 | `ailang messages` channel works end-to-end (guardrail's delivery leg) | live round-trip 2026-07-23 | sent `msg_…_2c6964d3` (defect report) + `msg_…_acc5edcc` (channel test); v1 agent RECEIVED and acted — upstream ack on issue #1 at 18:27Z citing the report, fix `ailang@aabb3a58c` |
 | v1 session-start hook reads the message inbox | config + observed 2026-07-23 | ailang repo `.claude/settings.json` SessionStart → `scripts/hooks/session_start.sh` ("checks the user inbox … using the ailang messages CLI"); displayed 5 unread at this session's start |
 
