@@ -55,6 +55,8 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
 Newest **3** STATUS stamps live here; older ones move to `world-mission-status-archive.md`.
 At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the archive file.
 
+## STATUS 2026-07-23 (iter 0 CLOSED) — **CHARTER RATIFIED by Mark, attended session with the World coordinator.** Clause-4 fixed: −2pp pass-rate (paired N≥3, standard tier) + ≤25% median wall-clock overhead. Bar + Conflict Surface + guardrails + queue ratified as drafted. Ratification record: issue #1 comment + commits `46f8b57` (clause-4 numbers) · `8f61dcb`/`a86e997` (quorum-objection evidence, live tests). Advisory quorum ledger: 4 rounds run attended, every objection closed with live evidence (artifacts: `.ailang/state/mission-quorum/world-mission-2026-07-23T*.json`); quorum is advisory — the authority gate is Mark's, exercised. **Loop is CLEAR to route `[NEXT] w-log-epoch-decision`.**
+
 ## STATUS 2026-07-23 (iter 0) — Advisory quorum ran headless (BLOCKED 3/3, metered $0.037); ratification PARKED for Mark (attended). Agenda: (1) fix clause-4 numbers, (2) add Conflict Surface section, (3) `ai-check --json` premise defect — v0.30.0 has no such flag. No sprint routed; queue unchanged. See log iter 0 + issue #1.
 
 ## STATUS 2026-07-23 — BOOTSTRAP: charter drafted (attended session, Mark + Fable); iteration 0 (quorum ratification) PENDING; kill switch SET; no iterations have fired.
@@ -68,7 +70,7 @@ At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the arc
    evaluate), one sprint-sized item per iteration, recording routing evidence every time.
    Next item: `[NEXT] w-log-epoch-decision` (clause-1).
 
-## The bar — what "Ailang World 1.0" must meet (RATIFY with Mark at iteration 0)
+## The bar — what "Ailang World 1.0" must meet (RATIFIED by Mark 2026-07-23, attended — see STATUS + issue #1 record)
 
 <!-- Distilled from DESIGN.md §14–§17 milestones + §12.4 value thesis + §13.5 priorities.
      Deliberately fewer clauses than milestones: clauses are CHECKABLE END-STATES, not work items. -->
@@ -102,7 +104,7 @@ At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the arc
   §14 boundaries enforced (mission-loop machinery, AILANG compiler, live daemon EXCLUDED from
   self-mod scope).
 
-## Conflict Surface (DRAFTED post-iter-0 by the World coordinator — RATIFY alongside the bar; answers quorum objection #2)
+## Conflict Surface (RATIFIED 2026-07-23 with the bar; drafted post-iter-0 to answer quorum objection #2)
 
 What this mission touches or overlaps, and the drawn boundaries:
 
@@ -223,9 +225,12 @@ mission in `~/.config/ailang/mission-world.env`:
 | `internal/apiserver` NOT importable cross-repo (Go `internal/`) | Go module rules + path | Conflict Surface reuse paths (a)/(b)/(c) sized accordingly; path (a) needs no upstream change |
 | serve-api projects `.ail` exports as MCP tools (path (a), static case) | LIVE TEST 2026-07-23 | `ailang serve-api --mcp-http --port 8199 sketches` → `tools/list` returned `plan`/`verify`/`commit` with JSON schemas + effect rows in descriptions; server killed after, port freed. Dynamic/capability-filtered projection deliberately NOT claimed — w-mcp-projection acceptance criteria |
 | `verify_ail.sh` fails loudly at N=0 (gate cannot pass vacuously) | LIVE TEST 2026-07-23 | script run against an empty `design_docs/` scratch tree → "✗ no .ail modules found — the gate would be vacuous; failing loudly", **exit code 1** |
+| Driver sources `~/.config/ailang/mission-world.env` + respects role overrides | code + LIVE 2026-07-23 | `tools/launchd/mission-control.sh:46-47` sources `mission-${MISSION_PROFILE}.env`; `:238` `MISSION_EXECUTOR_MODEL` respected (default opus); dry-run log 19:45:39 echoes env-only values (repo-slug/doc/workdir) + resolved roles — sourcing proven end-to-end |
+| Charter RATIFIED (authorization state, kill switch, sprint routing) | attended session 2026-07-23 | Mark's decisions recorded: clause-4 = −2pp/≤25% paired N≥3; bar+Conflict Surface+guardrails+queue as drafted; ratification comment on issue #1; STATUS stamp above is the in-doc record |
 | `ailang messages` channel works end-to-end (guardrail's delivery leg) | live round-trip 2026-07-23 | sent `msg_…_2c6964d3` (defect report) + `msg_…_acc5edcc` (channel test); v1 agent RECEIVED and acted — upstream ack on issue #1 at 18:27Z citing the report, fix `ailang@aabb3a58c` |
 | v1 session-start hook reads the message inbox | config + observed 2026-07-23 | ailang repo `.claude/settings.json` SessionStart → `scripts/hooks/session_start.sh` ("checks the user inbox … using the ailang messages CLI"); displayed 5 unread at this session's start |
 
 ---
-**Document created**: 2026-07-23 (bootstrap, attended). Iteration 0 ratifies it via the quorum
-with Mark before any sprint routes. The kill switch stays set until then.
+**Document created**: 2026-07-23 (bootstrap, attended). **RATIFIED 2026-07-23** (iteration 0,
+attended: Mark + World coordinator) — record on issue #1; advisory-quorum ledger in
+`.ailang/state/mission-quorum/`. Sprint routing is authorized from the next loop fire.
