@@ -438,16 +438,27 @@ transitions turn agent work into compounding, trainable capital; and the correct
 of labor is a stochastic proposer over a deterministic substrate — the agent should be the
 only nondeterministic component in the system.
 
-### 12.4 The falsifiable bet
+### 12.4 The falsifiable bet (reframed at ratification, 2026-07-23)
 
-World is worth building **iff typed proposals make agents better, not merely auditable**.
-The evidence gate is M4 (agent definition amended at ratification, 2026-07-23): **two reference
-agents from different providers — Claude Code agent-mode and codex — each running shell-arm vs
-World-MCP-arm paired**, must both match or beat their shell baseline at acceptable overhead,
-with a shell-arm stability precondition so a flaky baseline can never false-park the project
-(motoko, the aspirational first native agent, runs as an optional never-blocking third arm
-until stable), while delivering replay and audit for
-free. If it can't, World is parked — same demand-evidence discipline as every other item.
+The bet is two-part, because agents are World's *residents*, not its destination — comparing
+World to a coding agent is a category error (like benchmarking git by typing speed). The
+comparison class for World's value is **the operational status quo**: the scripts, schedulers,
+conventions, and human vigilance that do World's job by hand today.
+
+**Part 1 — the floor (M4, do-no-harm)**: a substrate that taxes its residents dies before its
+systemic value accrues. Two reference agents from different providers — Claude Code agent-mode
+and codex — each running shell-arm vs World-MCP-arm paired, must both hold *non-inferiority*
+(pass-rate within the ratified band at bounded overhead), with a shell-arm stability
+precondition so a flaky baseline can never fake the verdict in either direction (motoko, the
+aspirational first native agent, is an optional never-blocking third arm until stable). Floor
+fails on eligible agents → World parks.
+
+**Part 2 — the value (clause 5 + R1)**: demonstrated on capability the shell cannot express at
+any pass-rate — real "why did this happen" questions answered in minutes by provenance walk
+instead of archaeology sessions (measurably, per the charter), incident *classes* eliminated
+structurally, and ultimately the mission loop itself migrating onto World and beating its own
+markdown-and-discipline baseline on incidents and attention (R1 — today's manual operation is
+the recorded control arm).
 
 Named risks: **OS gravity well** (everything wants to move into the kernel — mitigated by
 the frozen-core rule and the thin-kernel consequence of §4); **single-customer risk** (the
@@ -532,7 +543,7 @@ ladder is what the substrate is *for*.
 
 | Rung | Ambition | Why impossible before / gate |
 |---|---|---|
-| R1 | **A self-maintaining project**: the V1 mission loop runs ON World | Gate: M4 value gate passes |
+| R1 | **A self-maintaining project**: the V1 mission loop runs ON World — the standing VALUE evidence (§12.4 part 2): incidents + attention vs the 2026-07 manual baseline | Gate: M4 non-inferiority floor passes |
 | R2 | **Fleet-scale engineering under sub-linear human attention**: hundreds of concurrent agent workstreams, one human as constitution-author rather than reviewer | Impossible before: human attention scales linearly with agent count when review is the only gate. Gate: measured attention-per-workstream falls as workstreams rise |
 | R3 | **A self-maintaining package ecosystem**: registry packages that keep themselves green — deps bumped, breakage repaired, evidence attached — indefinitely; "abandoned package" stops being a category | Gate: N packages maintained one quarter with zero human commits, cascade-driven |
 | R4 | **Delegation of real-world authority**: production deploys, budgeted spend, external communications held by agents behind capability + evidence gates | Impossible before: nobody sane grants a shell-agent prod rights; typed authority + replayable audit makes it an insurable proposition. Gate: R3 plus an incident-free audited quarter |
@@ -676,7 +687,7 @@ becoming replayable transition history.
 | M1 | Semantic world library | World/Proposal/Transition/Evidence types **in AILANG** (`ai-check` green as CI gate); Go host for SQLite store, content-addressed objects, append-only log; replay of recorded transitions proven |
 | M2 | Local daemon | `ailang-worldd`: SQLite, REST API, CLI. Zero cloud deps |
 | M3 | Effect broker | FS, Git, Model (`std/ai`), `Human.Approve` (reuse approval-queue pattern); effect-result recording |
-| M4 | Reference-agent integration — **the value gate (§12.4)** | First end-to-end propose/verify/commit by agents. Dual reference (Claude Code + codex), shell arm vs World-MCP arm, both must match-or-beat at bounded overhead (stability precondition on the shell arm); motoko optional third arm. Fail on eligible agents → World parks |
+| M4 | Reference-agent integration — **the non-inferiority floor (§12.4 part 1)** | First end-to-end propose/verify/commit by agents. Dual reference (Claude Code + codex), shell arm vs World-MCP arm, both must hold non-inferiority at bounded overhead (stability precondition on the shell arm); motoko optional third arm. Floor fails on eligible agents → World parks. The VALUE burden lives in clause 5's provenance teeth + R1 |
 | M5 | Speculative execution | Parallel candidate branches over immutable worlds; evaluation graph; evidence comparison |
 | M6 | Generated UI (A2UI/AG-UI) | Dynamic interfaces generated from world state, available transitions, approvals, evidence — emitted in an open agent-UI protocol (open question 9) |
 | M7 | Multi-agent coordination | Planner / verifier / reviewer / scheduler / operator communicating through typed proposals + messages (nodes/edges live); external agents interop via A2A — aitana/platform as the first cross-stack peer |

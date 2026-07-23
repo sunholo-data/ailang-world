@@ -79,16 +79,29 @@ the kernel does not exist yet. What is true today:
 - ⬜ M1 kernel (world store, transition log, deterministic replay) — next
 - ⬜ M2 local daemon · M3 effect broker · M4 reference-agent integration (the value gate) · M5+ speculation, generated UI, multi-agent
 
-## The value gate
+## The floor, and the value
 
-World ships with its own kill switch, on purpose. **Clause 4 of the charter:** two reference
-agents from different providers (Claude Code and codex), each running the same benchmarks in
-two arms — native shell tools vs World's MCP transition tools — must **both match or beat**
-their shell baseline: pass-rate within 2 points, wall-clock overhead within 25%, thresholds
-fixed *before* the work started, with a stability precondition on the baseline so a flaky
-harness can never fake the verdict either way. If typed proposals make agents merely
-*auditable* but not *better*, World parks, and says so here. A trust substrate that can't
-pass its own evidence bar has no business asking for yours.
+Agents are World's *residents*, not its destination — so World is not measured by whether it
+makes a coding agent pass more benchmarks. That would be like benchmarking git by typing
+speed. The comparison class for World's value is the **operational status quo**: the scripts,
+schedulers, conventions, and human vigilance that do this job by hand today.
+
+Two burdens, both in the charter, both falsifiable:
+
+- **The floor (do-no-harm kill switch)**: two reference agents from different providers
+  (Claude Code and codex), each running the same benchmarks with native shell tools vs
+  World's MCP transition tools, must both hold **non-inferiority** — pass-rate within 2
+  points, overhead within 25%, thresholds fixed *before* the work started, with a stability
+  precondition on the baseline so a flaky harness can't fake the verdict either way. A
+  substrate that taxes its residents dies before its value accrues; if World fails this
+  floor, World parks, and says so here.
+- **The value (what World is for)**: capability a shell cannot express at any pass-rate —
+  real "why did this happen" questions answered in minutes by provenance walk instead of
+  archaeology sessions (measurably: ≥3 real questions, ≤5 minutes each), incident *classes*
+  eliminated structurally, and ultimately the mission loop that builds this repo migrating
+  onto World and beating its own manual baseline on incidents and human attention.
+
+A trust substrate that can't pass its own evidence bar has no business asking for yours.
 
 ## Relationship to AILANG
 
