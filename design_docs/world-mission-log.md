@@ -181,3 +181,73 @@ answers #471 first, that may make option B cheap and pre-empt the fork.
 
 **Retro (Gate 5)** — see this iteration's report; friction watch-items recorded (design-doc-creator
 repo-layout coupling: instance 1 for the world repo). No skill edit (needs ≥2 same-gap instances).
+
+---
+
+## Iteration 2 — 2026-07-23 — queue HUMAN-BLOCKED on D1; no sprint (bookkeeping-only)
+
+**Kind**: no-actionable-item iteration. The entire queue is blocked on Mark's D1 decision (parked
+iter-1). No forcing; single bookkeeping deliverable + honest report (Standing rule 2).
+
+**Context / preflight (Gate 0–1)**
+- Kill switch `~/.ailang/state/mission-world.disabled`: NOT set (armed). Billing tripwire: **CLEAN**
+  (no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`). gh account: `sunholo-voight-kampff`.
+- Local `dev` == `origin/dev` == `5219e54` (in sync, `git fetch` clean). CI `CI` on dev:
+  **completed/success** @ `5219e5499`. No `[nightly-eval]` regression issues.
+- Inbox: 1 unread — `mission-v1` controlplane status (their iter-94 dev-RED docs fix, PR #470,
+  their repo). Cross-mission sender class: **not a World bug, directive, or demand** → informational,
+  acked, no action. No human directive.
+- Bookkeeping issue #1 (`mission-world-gh-issue`): 7 comments, **zero `@MarkEdmondson1234`** — D1
+  still unanswered. Watermark advanced `19:25:04Z`→`20:13:54Z`. Created today (after the 07-20
+  Monday boundary), 7<80 comments → **no weekly rotation**.
+- Upstream `ailang#471` (the input that could pre-empt the D1 fork): still **OPEN, 0 comments** —
+  no new information to feed the decision.
+
+**Pick + reality-check (Gate 2)**: top `[NEXT]` is item 1 `w-log-epoch-decision` = **PARKED
+needs-human-review** on D1 (Mark). Walked the queue: item 2 (M1) BLOCKED on item 1's D1 pick; items
+3–5 chain on M1 landing (M1 freezes the log format D1 governs); items 6–8 explicitly parked. **No
+sprint-executable OR critical-path design-doc item is independent of D1.** Verified the D1 ask is
+already crisply presented to Mark on issue #1 (iter-1 report: A/B/C options table + explicit
+"unblocks the whole queue" ask) — so no re-nag; a duplicate decision request would be noise on the
+day the ask was posted.
+
+**Route / execute (Gate 3)**: **none** — no design-doc-creator / planner / executor / evaluator /
+quorum spawned; no worktree. Correctly declined to freelance speculative M2/M3 design ahead of the
+D1-dependent M1 (would risk rework once the log format is decided — a "data before conclusions"
+violation, PROGRAM.md invariant + Standing rule 2).
+
+**Landed (Gate 3b)**: doc-only bookkeeping commit on dev (this log entry + STATUS rotation +
+watermark). CI expected green (docs/`.ail`-unchanged; `verify_ail.sh` gate only).
+
+**Routing evidence**
+| Role | Pinned | Actual | Notes |
+|---|---|---|---|
+| Controller (triage/pick/record/retro) | `$MODEL` session | claude-opus-4-8 | opus-first, correct |
+| Designer / Planner / Executor / Evaluator / Quorum | — | **not spawned** | no doc/sprint/eval this iteration; queue human-blocked |
+
+**Metered ledger**: `metered=$0.00` — no codex/gemini/quorum calls. All work was controller-session
++ gh + local `ailang messages` (subscription/free). Ceiling `$5` untouched.
+
+**Ruled out** (do not re-chase)
+- Re-pinging Mark for the D1 decision this iteration — already crisply asked on issue #1 the same
+  day (iter-1 report); a same-day duplicate is noise, not signal. The Gate-5 report notes "still
+  awaiting D1" once, concisely, without re-posting the options table.
+- Speculative design-doc drafting for items 3–5 (M2/M3/MCP) to fill the idle iteration — all depend
+  on M1's store/log representation, which depends on D1. Drafting now risks rework; declined.
+- Advancing R1 standing-value baseline capture (clause 5) as filler — it is w-approval-inbox's scope
+  (parked until item 4 lands), not a freelance idle-iteration task.
+
+**Parked for human (Mark — unchanged from iter-1, issue #1 + doc "Open Decision")**
+- **Decide D1's replay-pin identity** (A exact-binary / B release-identity+corpus-gated / C
+  content-addressed runtime-closure) — unblocks the whole queue. Optionally informed by ailang#471
+  (portable semantics identity) if upstream answers first.
+
+**Next**: unchanged — on Mark's D1 pick, unpark item 1, land the decision, route M1. Until then every
+queue item is blocked; scheduled fires will confirm-and-idle (see retro watch-item).
+
+**Retro (Gate 5)** — **watch-item (instance 1): fully-human-blocked queue.** The skill assumes "the
+queue always has a next item," but a mission can be legitimately blocked on ONE human decision with
+every downstream item dependency-chained behind it. Handled correctly here (confirm park validity,
+no forcing, one concise report). If this recurs (instance 2) it justifies a shared-skill rule for
+headless back-off cadence when a queue is 100% human-blocked (avoid per-fire report noise on issue
+#1). No skill edit this iteration (needs ≥2 same-gap instances). No process/mission-doc change.
