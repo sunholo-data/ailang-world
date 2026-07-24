@@ -1,6 +1,6 @@
 # w-world-library-m1 — Semantic World Library Kernel
 
-**Status**: **Planned — design complete & quorum-direction-accepted; M1 SPRINT PARKED (needs-human-review)** pending Mark's one-time OK of the narrow-refinement carve-out first-use + the §14 replay-orchestration framing (see Quorum Log)
+**Status**: **Planned — design complete & quorum-direction-accepted; M1 SPRINT AUTHORIZED (Mark, 2026-07-24, attended: option A — carve-out first-use approved, §14 replay-orchestration framing approved; ratification recorded in the charter queue + STATUS)**
 **Date**: 2026-07-24
 **Charter clause**: clause-1
 **Verified against**: **`AILANG v0.30.0`** — the official released darwin/arm64 artifact
