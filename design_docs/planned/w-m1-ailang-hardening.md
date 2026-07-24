@@ -111,6 +111,7 @@ paths — same shape as production). **V-numbers are cited throughout the doc.**
 | V23 | A contract on `proposalMatchesWorld(w: World, p: Proposal)` with an inlined field-equality body + exact `ensures` reports function `status: "error"`, reason `Z3 error ... Invalid constant declaration: unknown sort 'Proposal'`, `verify.errors: 1`, process exit 0 (SILENT). `verificationMatchesProposal` and `commitAllowed` are the same class because both take `Proposal` | controller iter-13 pinned-binary scratch mirroring the REAL types |
 | V24 | A contract on `isValidNextWorld(w: World, next: World, outputWorld: HashRef, nextLogHead: HashRef)` with an inlined field-equality body + exact `ensures` reports `status: "verified"`, `verify.errors: 0`, exit 0; `World`/`HashRef` contain no ADT | controller iter-13 pinned-binary scratch mirroring the REAL types |
 | V25 | Inline `tests [(in,exp)]` on a Proposal-taking predicate run and pass using a full 9-field `Proposal` literal (`evidence: []`, `confidence: 1.0`, `requiredCaps: []`, `expectedEffects: []`): `proposalMatchesWorld_test_1/2` both `status: "pass"`, `failed_tests: 0`. With all three Proposal predicates tests-only (no `ensures`) plus the proven `isValidNextWorld` contract, `ai-check` reports `verified: 1, errors: 0, counterexample: 0` — a clean gate | controller iter-13 pinned-binary scratch mirroring the REAL types |
+| V26 | **Bounded-execution semantics (re-quorum objection).** `ai-check -timeout` is a **per-function Z3 timeout** (default 5s — `--help`: "Per-function Z3 timeout"), **NOT** a process-wide wall-clock bound; `ailang test` has **no** timeout flag at all. Neither leg self-bounds its wall-clock, so a solver/runner/parse hang would block CI indefinitely — the gate must wrap BOTH invocations in an OS-level bounded subprocess that kills the process group on expiry and fails loudly (Standing Rule 6) | controller iter-13 `ai-check --help` + `test --help` on the pinned binary |
 
 ---
 
@@ -274,12 +275,47 @@ REQUIRED_TESTS = {   # logepoch (8) + contracts (6)
 }
 EXACT_TOTAL_VERIFIED = 4   # secondary check, world/ modules only
 EXACT_TOTAL_TESTS    = 14  # secondary check
+GATE_LEG_TIMEOUT_S   = 120 # hardcoded wall-clock cap per ai-check module leg (Rule 6, V26)
+GATE_TEST_TIMEOUT_S  = 180 # hardcoded wall-clock cap for the directory-mode test leg (V26)
 ```
+
+**Leg 0 — bounded execution (hardcoded deadlines, non-env-overridable, V26).** `ai-check
+-timeout` bounds only individual Z3 queries and `ailang test` has no timeout at all (V26), so a
+solver/runner/parse hang would block CI indefinitely — a bounded-waits violation (Standing Rule
+6). Every binary invocation in **both** legs runs through a hardcoded-deadline wrapper that starts
+the child in its own process group and, on expiry, kills the **whole group**, prints a named
+`✗ TIMEOUT …` to STDERR, and exits `124`. The deadlines are constants (`GATE_LEG_TIMEOUT_S`,
+`GATE_TEST_TIMEOUT_S`) — no environment variable can extend or disable them (only `AILANG_BIN`
+stays configurable). Portable form (python3 is already required by the parser; `start_new_session`
+→ process-group kill):
+
+```bash
+run_bounded() {  # $1=timeout_s  $2=out_file  $3..=cmd ;  exit 124 + named msg on expiry
+  local t="$1" out="$2"; shift 2
+  python3 - "$t" "$out" "$@" <<'PY'
+import os, signal, subprocess, sys
+t = int(sys.argv[1]); out = sys.argv[2]; cmd = sys.argv[3:]
+with open(out, "wb") as f:
+    p = subprocess.Popen(cmd, stdout=f, stderr=subprocess.STDOUT, start_new_session=True)
+    try:
+        sys.exit(p.wait(timeout=t))
+    except subprocess.TimeoutExpired:
+        os.killpg(os.getpgid(p.pid), signal.SIGKILL)
+        sys.stderr.write("✗ TIMEOUT after %ds: %s\n" % (t, " ".join(cmd))); sys.exit(124)
+PY
+}
+```
+
+A `124` from `run_bounded` is **always fatal** (it is the one exit code that is NOT advisory —
+distinct from the Z3-error-exits-0 and counterexample-exits-1 classes the JSON parse handles).
+Keep `ai-check`'s per-function `-timeout` at its 5 s default as an inner belt so individual Z3
+queries also self-bound.
 
 **Leg 1 — ai-check manifest.** For each module, capture the JSON to a temp file and parse
 (python3 — present on macOS and ubuntu-latest runners; no jq dependency). Exit codes are
 **advisory** (`|| true` / RC captured) — the JSON parse is authoritative, since a Z3
-encoding error exits 0 (V10) and a vanished identity exits 0 (V20):
+encoding error exits 0 (V10) and a vanished identity exits 0 (V20) — **except a `124` TIMEOUT
+(Leg 0), which is fatal**:
 
 - **every** swept module (world/ + sketches): fail if `.check.passed != true`,
   `.verify.errors > 0`, or `.verify.counterexample > 0`;
@@ -295,7 +331,10 @@ encoding error exits 0 (V10) and a vanished identity exits 0 (V20):
 ```bash
 total_verified=0                                # explicit init before the loop
 for mod in "${ROOTS[@]}"; do
-  "$AILANG_BIN" ai-check "$mod" > "$tmp_json" || true    # exit advisory (V10/V20)
+  mod=${mod#./}                                 # normalize path so keys match the manifest (gemini catch)
+  run_bounded "$GATE_LEG_TIMEOUT_S" "$tmp_json" "$AILANG_BIN" ai-check -timeout 5s "$mod"; rc=$?
+  [ "$rc" -eq 124 ] && { echo "✗ ai-check TIMEOUT on $mod (>${GATE_LEG_TIMEOUT_S}s)"; exit 1; }
+  # other exit codes advisory (V10/V20) — the JSON parse below is authoritative
   mod_verified=$(python3 - "$mod" "$tmp_json" <<'PY'
   # loads REQUIRED_VERIFIED (hardcoded above); validates check/errors/counterexample
   # for all modules and required identities for world/ modules; prints the module's
@@ -317,7 +356,9 @@ anticipated: required *named* tests, not per-module counts. One directory-mode r
 are preserved and merged across modules, V22):
 
 ```bash
-"$AILANG_BIN" test --format json world/ > "$tmp_test_json" || true   # exit advisory; JSON authoritative
+run_bounded "$GATE_TEST_TIMEOUT_S" "$tmp_test_json" "$AILANG_BIN" test --format json world/; rc=$?
+[ "$rc" -eq 124 ] && { echo "✗ ailang test TIMEOUT (>${GATE_TEST_TIMEOUT_S}s)"; exit 1; }
+# other exit codes advisory; JSON parse authoritative
 # python3 parser:
 #  - strip non-JSON prefix lines before the first "{" (stdout banner, V19)
 #  - fail unless EVERY name in REQUIRED_TESTS appears in .tests[] with status == "pass"
@@ -344,7 +385,11 @@ fail the gate naming the missing `(transitions, applyRevision)` identity (V20 co
 aggregate-invisible vanish this catches). **NT2** — a scratch copy with both `renderRef`
 tests removed must fail the gate naming the missing `renderRef_test_1`/`renderRef_test_2`
 identities even though the other 12 required tests still pass (V21 confirms an aggregate floor
-would miss the removed identities).
+would miss the removed identities). **NT3** — pointing `AILANG_BIN` at a mock that `sleep`s
+longer than `GATE_LEG_TIMEOUT_S` must make the ai-check leg terminate at the deadline with a
+named `✗ ai-check TIMEOUT` message and a nonzero exit — and no environment variable extends it
+(the bounded-waits teeth, V26). **NT4** — the same mock against the directory-mode test leg must
+be terminated at `GATE_TEST_TIMEOUT_S` with a named `✗ ailang test TIMEOUT` and nonzero exit.
 Each mutation fails independently.
 
 **CI safety:** `AILANG_BIN` stays the only knob (CI exports its checksum-verified install);
@@ -446,9 +491,11 @@ no `ensures`. Expect `verified: 1` (`isValidNextWorld`), `errors: 0`, plus 6 pas
 **Phase 3 — transitions (~1h).** D1: add `applyRevision`, rewire `commit`'s `Applied` arm.
 Expect `verified: 1` and **no** entry for `commit` in `verify.results` (V9).
 
-**Phase 4 — gate (~1–2h).** D5: retrofit `verify_ail.sh` (required-check manifest, JSON
-parse with banner-strip, test leg, exit-codes-advisory). Run the negative tests NT1/NT2
-(below), then full gate + CI.
+**Phase 4 — gate (~1–2h).** D5: retrofit `verify_ail.sh` (Leg 0 `run_bounded` hardcoded-deadline
+wrapper, required-check manifest, JSON parse with banner-strip, test leg, exit-codes-advisory
+except the fatal `124` TIMEOUT, path normalization `mod=${mod#./}`). Run the negative tests
+NT1/NT2 (manifest teeth) **and NT3/NT4 (bounded-waits teeth — sleeping `AILANG_BIN` mock)**,
+then full gate + CI.
 
 Executor note (mission requirement): load the version-locked syntax first (`ailang-docs` MCP
 `prompt_get` or `ailang prompt`) before touching `.ail`.
@@ -472,6 +519,11 @@ Executor note (mission requirement): load the version-locked syntax first (`aila
 - [ ] **Gate policy is hardcoded:** no environment variable can lower, bypass, or shrink the
       required-identity manifest or the exact totals; `AILANG_BIN` (binary path) is the only
       configurable knob.
+- [ ] **Bounded waits (Standing Rule 6, V26):** both gate legs run through the hardcoded-deadline
+      `run_bounded` wrapper (Leg 0) that starts the child in its own process group and SIGKILLs the
+      whole group on expiry; NT3/NT4 (a sleeping `AILANG_BIN` mock) prove each leg terminates at
+      `GATE_LEG_TIMEOUT_S`/`GATE_TEST_TIMEOUT_S` with a named TIMEOUT failure + nonzero exit, and
+      that no environment variable can extend or disable the deadline.
 - [ ] **Negative test NT1 (required identities have teeth):** running the retrofitted gate
       against a scratch copy of `world/` with `applyRevision`'s contract stripped exits
       non-zero naming the missing `(transitions, applyRevision)` identity — even though 3
@@ -539,6 +591,32 @@ unchanged.
   tests each. New totals: **4 verified / 14 tests**.
 - The design DIRECTION is unchanged: proven contracts wherever the encoder allows, inline tests as
   the machine check everywhere else, and a hardcoded non-vacuous required-check manifest gate.
+
+### iter-13 re-quorum + narrow-refinement carve-out (2nd revision)
+
+- **Re-quorum** on the descoped doc (`gpt5-6-sol`, `gemini-3-1-pro`; controller verdict pass;
+  metered $0.095): **gemini-3-1-pro PASS** (only non-blocking notes: future JSON-schema coupling of
+  `len(tests[]) == 14`; a `mod=${mod#./}` path-normalization catch — the latter folded into Leg 1).
+  **gpt5-6-sol REJECT**, one blocking objection: the gate invokes `ai-check` and `ailang test`
+  with **no enforced wall-clock deadline**, so a solver/runner hang blocks CI indefinitely —
+  a bounded-waits (Standing Rule 6) violation. Concrete `proposed_fix`: hardcoded non-overridable
+  deadlines on both legs; establish `ai-check -timeout` semantics; wrap in a process-group-killing
+  subprocess timeout; add sleeping-mock negative tests.
+- **NARROW-REFINEMENT CARVE-OUT applied** (already ratified for the world mission, iter-11 M1 GO,
+  attended). The objection (a) carries a concrete reviewer-authored `proposed_fix` and (b) does NOT
+  dispute the design DIRECTION — it is a determinism/robustness completeness fix (bounded waits).
+  Controller made this bounded 2nd revision applying the reviewer's VERBATIM fix:
+  1. **V26** establishes empirically that `ai-check -timeout` is a **per-function** Z3 timeout (not
+     process-wide) and `ailang test` has no timeout — so both legs need an OS-level bound.
+  2. **Leg 0 `run_bounded`** wrapper: hardcoded `GATE_LEG_TIMEOUT_S`/`GATE_TEST_TIMEOUT_S`
+     (non-env-overridable), `start_new_session` process group, SIGKILL-on-expiry, named TIMEOUT to
+     STDERR, exit `124` (the one fatal, non-advisory code). Both legs route through it. Controller
+     pre-validated the mechanism on 4 cases (fast→rc0 output captured; 30 s hang→rc124 killed at
+     the 2 s deadline; nonzero exit preserved ≠ timeout; process-group kill leaves no leaked child).
+  3. **NT3/NT4** (sleeping `AILANG_BIN` mock) prove each leg terminates at its deadline; an
+     acceptance criterion added.
+- Not a force-pass (Standing rule 2): the design direction was uncontested; the fix is the
+  reviewer's own. Routed straight to sprint-planner after this revision (no 3rd quorum).
 
 ## Related Documents
 
