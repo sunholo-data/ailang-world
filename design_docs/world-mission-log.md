@@ -976,3 +976,112 @@ subscription Agent-tool pins). Budget ceiling ($5) not approached.
   evaluator's carry-forward recs where they touch M4 (move `store_heads` into `schema.sql`; add a
   store-layer `entry_hash_ref` derivation test). Item stays [IN-SPRINT] until M6 lands
   replay-doubling + verify_go.sh, then → [LANDED] and the doc moves to `implemented/`.
+
+---
+
+## Iteration 11 — 2026-07-24 — `w-m1-ailang-hardening` design doc DONE + quorum-cleared via the RATIFIED narrow-refinement carve-out; auditable reproduction fixtures committed (`aa542a1`)
+
+**Kind**: design + carve-out iteration on ONE item (`w-m1-ailang-hardening`, top `[NEXT]`,
+Mark-directed). Produced the design doc (rotation designer, Fable) through two quorum rounds and
+applied the ratified narrow-refinement carve-out (controller). Item → [IN-SPRINT]; sprint-planner
+→ executor is next iteration. NOT a code sprint (no `.ail`/gate edits yet — those are the execute step).
+
+**Context / preflight (Gate 0–1)**
+- Kill switch: NOT set (armed). Billing tripwire: **CLEAN** (no API keys). gh account:
+  `sunholo-voight-kampff` (gh not on tool-shell PATH — `/opt/homebrew/bin` prepended per-call).
+- Overlap guard: `mission-world.pid`=2840 ALIVE = THIS run's own `claude -p` driver (verified by
+  command line) — no concurrent iteration.
+- Local `dev` == `origin/dev` == `b0a632a` (in sync). CI `CI` on dev: **completed/success** @
+  `b0a632a2a`. No `[nightly-eval]` open issues on `sunholo-data/ailang-world`.
+- Bookkeeping issue `#1` (world-namespaced `mission-world-gh-issue`; generic `mission-gh-issue`=422
+  is V1's, correctly NOT used). **Zero** new `@MarkEdmondson1234` comments since watermark
+  `2026-07-23T20:13:54Z`. Inbox: 1 unread = mission-world's OWN prior discoverability finding
+  (`msg …_208ab38d`; already in memory `ailang-feature-discoverability-gap`, local `.mcp.json` fix
+  applied, upstream asks route to shared-skill owners World can't edit) → not-outranking, marked read.
+- No weekly rotation: issue #1 current-week, <80 comments.
+
+**Pick + reality-check (Gate 2)**
+- Picked top `[NEXT]` `w-m1-ailang-hardening` (Mark-directed, queued iter-10): add Z3
+  `requires`/`ensures` + inline tests to the M1 `.ail` surface + a non-vacuous verify gate.
+- Reality-check: no design doc (`grep` → only the mission-doc queue entry), no plan, no eval. M1
+  `.ail` files present; `contracts.ail` confirmed to carry only decorative `bool` predicates, 0 tests
+  (the gap is REAL). Not already-landed (fresh fetch; nothing on origin).
+- **Controller empirically grounded the syntax on the pinned released `v0.30.0`** BEFORE routing
+  (this is the discoverability root-cause fix — the prior iteration wrote AILANG from priors): a
+  scratch probe proved `requires`/`ensures` Z3-verify via `ai-check` (2 fns "verified") and inline
+  `tests [((args),exp)]` run via `ailang test`. Loaded the version-locked syntax via `ailang prompt`
+  first. **Used `/tmp/ailang-v0300/ailang` (released v0.30.0), NOT the PATH `-dirty` dev build.**
+
+**Route + execute (Gate 3) — all heavy roles model-PINNED, spawned (never inline)**
+- No design doc → **design-doc-creator on the ROTATION designer `claude:claude-fable-5`** (rotation
+  next after codex; Fable probe rc=0, subscription-only via key-strip; backgrounded, bounded 30-min
+  cap). Directive carried a self-contained adapting brief (known repo friction: design-doc-creator
+  assumes the ailang-repo layout), the controller's empirical findings, and the key ADT-return design
+  question. Produced `design_docs/planned/w-m1-ailang-hardening.md`: resolves the `CommitResult`
+  sum-type contract question via a Z3-proven `applyRevision` helper (`commit` stays uncontracted,
+  composes it); 7 proven contracts + 8 inline tests; 22-row empirical verification log; found real
+  v0.30.0 limits (V3 encoder won't inline unencodable-bodied callees, V4 `implies` unparseable, V8
+  `plan` unprovable — float/empty-list literal mis-sort, V10 Z3-encoding-errors-exit-0-SILENTLY).
+- **Quorum-at-pick** (`ailang design-quorum`, reviewers gpt5-6-sol + gemini-3-1-pro — distinct from
+  the Fable designer, generator≠judge): **r1 BLOCKED** (gpt5-6-sol reject: aggregate-floor gate
+  `MIN_VERIFIED=6` too weak — a dropped contract still clears it; gemini pass). Gate-mandated **Fable
+  revision** rewrote D5 to a hardcoded required-check MANIFEST (per-module verified-identity sets +
+  named-test sets, no env-overridable strength knobs). **r2 re-quorum BLOCKED** on two NEW **narrow,
+  direction-preserving** objections with concrete `proposed_fix`: (gpt5-6-sol) the V-log isn't
+  auditable → commit a fixture dir; (gemini-3-1-pro) Leg-1 `$()` capture swallows the python error →
+  route to stderr.
+- **NARROW-REFINEMENT CARVE-OUT applied.** RATIFIED for the world mission at the M1 GO (attended,
+  `world-mission-status-archive.md` L3: "narrow-refinement carve-out first-use APPROVED") → "later
+  iterations apply without re-asking." Both r2 objections satisfy (a) concrete verbatim `proposed_fix`
+  + (b) no design-direction dispute → the **controller** (not a 3rd Fable run — the carve-out is a
+  controller action, so Fable discipline is preserved) made a bounded 2nd revision applying the
+  reviewers' verbatim fixes: (1) committed `design_docs/verification/w-m1-ailang-hardening/`
+  (4 `.ail.txt` fixtures + `run.sh` + captured `OUTPUTS.md`; pinned binary sha256 `e9746fef…`,
+  reproducing the load-bearing V-rows); (2) routed the Leg-1 python error to stderr.
+- **The reviewer-demanded fixtures caught two first-draft inaccuracies** (the auditability objection
+  was VINDICATED — data before conclusions): **D-A** V3 "may not call ANY user function" is
+  overstated — `callsUserFn` (contract body calls the encodable-bodied `sameRef`) actually
+  **verified**; corrected to "unencodable-bodied callee errors; encodable can verify" (the decision
+  to inline predicate bodies still stands as the strictly-safe choice). **D-B** the leg-2 secondary
+  count must be `len(tests[])==8`, NOT `passed_tests==8` — `--format json` counts passing
+  contract-derived properties in `passed_tests` (`inline_tests` fixture: `passed_tests==7`), so it
+  would be flaky. Both corrected in D5 + acceptance criteria + a doc "Post-fixture corrections" section.
+- Committed `aa542a1` (doc + fixtures + `.mcp.json` + `.gitignore .codex/` + mission bookkeeping),
+  pushed to dev. CI running for the doc-only push (no `.ail` under swept trees → ai-check gate
+  unaffected; `.ail.txt` fixtures are not swept).
+
+**Routing evidence** (role, model ACTUALLY used)
+| Role | Pin (env) | Actual | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | opus | triage/pick/empirical-probe/quorum-verdict/carve-out-2nd-revision/record/retro |
+| Design-doc-creator | ROTATION (`mission-world-designer-rotation`) | **`claude:claude-fable-5`** Fable (subscription via `claude-sub` key-strip; create + 1 gate-mandated revision) | rotation next after codex; probe rc=0; write-back `claude:claude-fable-5` |
+| Quorum reviewers | (design-quorum default) | gpt5-6-sol + gemini-3-1-pro | 2 rounds; generator≠judge (≠ Fable designer); reject-by-default |
+| Sprint-planner | `MISSION_PLANNER_MODEL`=opus | (not run) | next iteration (design doc's §Implementation Plan is the 4-phase basis) |
+| Sprint-executor | `MISSION_EXECUTOR_MODEL`=opus | (not run) | next iteration |
+| Sprint-evaluator | `MISSION_EVALUATOR_MODEL`=sonnet | (not run) | next iteration |
+
+`metered=$0.149` — two quorum rounds ($0.067 r1 + $0.082 r2, external reviewer API). Fable
+designer + revision = **$0.00** (OAuth subscription). Well under the $5 ceiling.
+
+**Ruled out** (do not re-chase)
+- Parking the item for Mark's carve-out ratification — the carve-out was ALREADY ratified for the
+  world mission at the M1 GO (attended); re-asking would waste an iteration, exactly what the
+  carve-out exists to prevent. (My first-pass STATUS/queue edits assumed un-ratified and were
+  corrected once the archive ratification was found.)
+- A 3rd Fable run for the 2nd revision — the carve-out is a CONTROLLER action; the controller applies
+  the verbatim fixes directly, keeping the one-Fable-run-per-iteration discipline intact.
+- Running the sprint-planner/executor THIS iteration — the design+quorum×2+carve-out+fixtures work is
+  a full iteration; the execute step (implement 3 modules + the manifest gate + PR + CI) is the next
+  iteration's deliverable (mirrors iter-6 doc → iter-8 execute).
+- `plan`/`verify` contracts — empirically UNPROVABLE in v0.30.0 (V8 literal mis-sort; V3 predicate
+  calls) — documented as out-of-scope with the upstream escalation channel (`sunholo-data/ailang#476`).
+
+**Retro / Next (Gate 5)**: No skill edit (the carve-out was a ratified-mechanism APPLICATION, not a
+new controller-authored gate change → no re-ratification, no ≥2-friction skill signal). No
+routing-policy change. One process observation logged, below action bar: the two premature
+STATUS/queue edits (assuming the carve-out needed fresh ratification) cost only local churn because
+the archive ratification check (Gate-2 reality-check on mission state) caught it before reporting —
+instance 1 of "check the archive for prior human ratifications of a gate mechanism before assuming a
+first-use park." **Next iteration**: sprint-planner (opus) → the doc's §Implementation Plan → sprint
+-executor (opus, worktree: 3 `.ail` modules + the `verify_ail.sh` manifest gate, both negative tests)
+→ evaluator (sonnet, generator≠judge) → PR → CI green → [LANDED], then resume `w-world-library-m1` M4.
