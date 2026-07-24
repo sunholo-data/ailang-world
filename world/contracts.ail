@@ -8,19 +8,92 @@ import world/types (World, Proposal, Verification)
 -- predicates so policy cannot drift between the two phases.
 
 -- Contract 1: a proposal's inputWorld equals the current world's stateRoot.
-export func proposalMatchesWorld(w: World, p: Proposal) -> bool {
+-- TESTS-ONLY (D2, V23): a contract here reaches Proposal.evidence (an ADT) and
+-- Z3-errors `unknown sort 'Proposal'` while ai-check exits 0 silently
+-- (upstream sunholo-data/ailang#477). The shared-predicate body (calls sameRef)
+-- is kept byte-identical to preserve the anti-drift architecture; the two
+-- inline tests are its machine check.
+export func proposalMatchesWorld(w: World, p: Proposal) -> bool
+tests [
+  ((({ revision: 0,
+       stateRoot: { algo: "sha256", digest: "aa" },
+       logHead: { algo: "sha256", digest: "bb" } }),
+    ({ proposalHash: { algo: "sha256", digest: "ph" },
+       inputWorld: { algo: "sha256", digest: "aa" },
+       transitionFn: { algo: "sha256", digest: "tf" },
+       goal: "g", plan: "p",
+       expectedEffects: [], requiredCaps: [], evidence: [],
+       confidence: 1.0 })), true),
+  ((({ revision: 0,
+       stateRoot: { algo: "sha256", digest: "aa" },
+       logHead: { algo: "sha256", digest: "bb" } }),
+    ({ proposalHash: { algo: "sha256", digest: "ph" },
+       inputWorld: { algo: "sha256", digest: "zz" },
+       transitionFn: { algo: "sha256", digest: "tf" },
+       goal: "g", plan: "p",
+       expectedEffects: [], requiredCaps: [], evidence: [],
+       confidence: 1.0 })), false)
+]
+{
   sameRef(w.stateRoot, p.inputWorld)
 }
 
 -- Contract 2: a verification names the same proposalHash as the proposal it
--- judged.
-export func verificationMatchesProposal(p: Proposal, v: Verification) -> bool {
+-- judged. TESTS-ONLY (D2, V23): Proposal reaches an ADT ⇒ unknown sort. Body
+-- unchanged (shared-predicate anti-drift); two inline tests are the machine check.
+export func verificationMatchesProposal(p: Proposal, v: Verification) -> bool
+tests [
+  ((({ proposalHash: { algo: "sha256", digest: "ph" },
+       inputWorld: { algo: "sha256", digest: "aa" },
+       transitionFn: { algo: "sha256", digest: "tf" },
+       goal: "g", plan: "p",
+       expectedEffects: [], requiredCaps: [], evidence: [],
+       confidence: 1.0 }),
+    ({ proposalHash: { algo: "sha256", digest: "ph" },
+       accepted: true, reason: "accepted" })), true),
+  ((({ proposalHash: { algo: "sha256", digest: "ph" },
+       inputWorld: { algo: "sha256", digest: "aa" },
+       transitionFn: { algo: "sha256", digest: "tf" },
+       goal: "g", plan: "p",
+       expectedEffects: [], requiredCaps: [], evidence: [],
+       confidence: 1.0 }),
+    ({ proposalHash: { algo: "sha256", digest: "other" },
+       accepted: true, reason: "accepted" })), false)
+]
+{
   sameRef(p.proposalHash, v.proposalHash)
 }
 
 -- Contract 3: commit may proceed only when the verification is accepted AND
 -- both identity predicates hold (input-world match and proposal-hash match).
-export func commitAllowed(w: World, p: Proposal, v: Verification) -> bool {
+-- TESTS-ONLY (D2, V23): Proposal reaches an ADT ⇒ unknown sort. Body unchanged
+-- (shared-predicate anti-drift); two inline tests are the machine check.
+export func commitAllowed(w: World, p: Proposal, v: Verification) -> bool
+tests [
+  ((({ revision: 0,
+       stateRoot: { algo: "sha256", digest: "aa" },
+       logHead: { algo: "sha256", digest: "bb" } },
+     { proposalHash: { algo: "sha256", digest: "ph" },
+       inputWorld: { algo: "sha256", digest: "aa" },
+       transitionFn: { algo: "sha256", digest: "tf" },
+       goal: "g", plan: "p",
+       expectedEffects: [], requiredCaps: [], evidence: [],
+       confidence: 1.0 },
+     { proposalHash: { algo: "sha256", digest: "ph" },
+       accepted: true, reason: "accepted" })), true),
+  ((({ revision: 0,
+       stateRoot: { algo: "sha256", digest: "aa" },
+       logHead: { algo: "sha256", digest: "bb" } },
+     { proposalHash: { algo: "sha256", digest: "ph" },
+       inputWorld: { algo: "sha256", digest: "aa" },
+       transitionFn: { algo: "sha256", digest: "tf" },
+       goal: "g", plan: "p",
+       expectedEffects: [], requiredCaps: [], evidence: [],
+       confidence: 1.0 },
+     { proposalHash: { algo: "sha256", digest: "ph" },
+       accepted: false, reason: "rejected" })), false)
+]
+{
   proposalMatchesWorld(w, p)
     && v.accepted
     && verificationMatchesProposal(p, v)
@@ -28,13 +101,20 @@ export func commitAllowed(w: World, p: Proposal, v: Verification) -> bool {
 
 -- Contract 4: the resulting world increments revision by exactly one and
 -- carries the supplied output-state root and next-log-head references.
+-- Z3-PROVEN (D2, V24): World/HashRef contain no ADT, so the body is inlined to
+-- field equality (do NOT call sameRef — an unencodable-bodied callee errors,
+-- D-A/V3) and the exact `ensures` restates the full semantics.
 export func isValidNextWorld(
   w: World,
   next: World,
   outputWorld: HashRef,
   nextLogHead: HashRef
-) -> bool {
+) -> bool ! {}
+ensures { result == (next.revision == w.revision + 1
+  && next.stateRoot.algo == outputWorld.algo && next.stateRoot.digest == outputWorld.digest
+  && next.logHead.algo == nextLogHead.algo && next.logHead.digest == nextLogHead.digest) }
+{
   next.revision == w.revision + 1
-    && sameRef(next.stateRoot, outputWorld)
-    && sameRef(next.logHead, nextLogHead)
+    && next.stateRoot.algo == outputWorld.algo && next.stateRoot.digest == outputWorld.digest
+    && next.logHead.algo == nextLogHead.algo && next.logHead.digest == nextLogHead.digest
 }
