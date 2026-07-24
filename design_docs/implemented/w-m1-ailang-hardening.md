@@ -113,6 +113,7 @@ paths — same shape as production). **V-numbers are cited throughout the doc.**
 | V24 | A contract on `isValidNextWorld(w: World, next: World, outputWorld: HashRef, nextLogHead: HashRef)` with an inlined field-equality body + exact `ensures` reports `status: "verified"`, `verify.errors: 0`, exit 0; `World`/`HashRef` contain no ADT | controller iter-13 pinned-binary scratch mirroring the REAL types |
 | V25 | Inline `tests [(in,exp)]` on a Proposal-taking predicate run and pass using a full 9-field `Proposal` literal (`evidence: []`, `confidence: 1.0`, `requiredCaps: []`, `expectedEffects: []`): `proposalMatchesWorld_test_1/2` both `status: "pass"`, `failed_tests: 0`. With all three Proposal predicates tests-only (no `ensures`) plus the proven `isValidNextWorld` contract, `ai-check` reports `verified: 1, errors: 0, counterexample: 0` — a clean gate | controller iter-13 pinned-binary scratch mirroring the REAL types |
 | V26 | **Bounded-execution semantics (re-quorum objection).** `ai-check -timeout` is a **per-function Z3 timeout** (default 5s — `--help`: "Per-function Z3 timeout"), **NOT** a process-wide wall-clock bound; `ailang test` has **no** timeout flag at all. Neither leg self-bounds its wall-clock, so a solver/runner/parse hang would block CI indefinitely — the gate must wrap BOTH invocations in an OS-level bounded subprocess that kills the process group on expiry and fails loudly (Standing Rule 6) | controller iter-13 `ai-check --help` + `test --help` on the pinned binary |
+| V27 | **`ai-check` needs an external `z3` binary — and SKIPS SILENTLY without it.** The released ailang shells out to `z3` (searches `$PATH` + hardcoded `/usr/bin/z3`, `/usr/local/bin/z3`, `/snap/bin/z3`, `/opt/homebrew/bin/z3` — confirmed in the binary's strings). On a host with **no** z3 (a bare `ubuntu-latest` runner) every contract **SKIPS**: the identity is **absent** from `verify.results[]`, `verify.verified: 0`, exit 0 (the V20 silent-vanish class). So the required-check manifest is only meaningful where z3 is installed → **CI MUST install Z3 4.16.0** (the doc's pin) before the gate. First seen live: PR #5's first CI run went red (`isValidNextWorld MISSING from verify.results[]`) because the runner had no z3, though the identical binary (commit `e37b370`) + z3 4.16.0 verifies it locally | PR #5 CI run 30102600625 (linux, no z3) vs controller darwin (z3 4.16.0) |
 
 ---
 
@@ -535,9 +536,10 @@ Executor note (mission requirement): load the version-locked syntax first (`aila
       `renderRef_test_1`/`renderRef_test_2` identities — even though 12 tests still pass and
       `failed_tests == 0` (V21). Each mutation fails independently of the other. Recorded
       once in the PR description; not a permanent CI job.
-- [ ] CI green end-to-end (ai-check gate + go-verify job untouched).
-- [ ] No diffs outside `world/{logepoch,contracts,transitions}.ail` and
-      `scripts/verify_ail.sh`. `world/types.ail` byte-identical.
+- [ ] CI green end-to-end (ai-check gate + go-verify job). **The `ailang-verify` job installs
+      Z3 4.16.0** (V27 — the gate is vacuous on a z3-less runner); `go-verify` untouched.
+- [ ] Diffs limited to `world/{logepoch,contracts,transitions}.ail`, `scripts/verify_ail.sh`, and
+      `.github/workflows/ci.yml` (the Z3-install step, V27). `world/types.ail` byte-identical.
 
 ## Quorum verification log + carve-out application (iter-11)
 
