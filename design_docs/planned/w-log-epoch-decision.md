@@ -1,6 +1,6 @@
 # w-log-epoch-decision — Log Epochs, Content-Addressed Transitions, Versioned Hashes
 
-**Status**: Planned — **BLOCKED / needs-human-review** (D2 & D3 stand; **D1's replay-pin identity is an OPEN human-ratification decision** — see "Open Decision (parked for Mark)" below). The transition-log format is the frozen kernel; the charter guardrail requires explicit human ratification for kernel-format decisions.
+**Status**: **SETTLED — ready for M1** (D1 RATIFIED by Mark 2026-07-24, attended: **Option A + B-as-metadata hybrid** — see "Ratified Decision" below; D2 & D3 stood from 2026-07-23). The transition-log format is the frozen kernel; the charter guardrail required explicit human ratification — exercised.
 **Date**: 2026-07-23
 **Charter clause**: clause-1
 **Verified against**: shipped `ailang` binary `v0.30.0-144-g07fbb29c5` (`ailang --version`)
@@ -18,7 +18,29 @@
 
 ---
 
-## Open Decision (parked for Mark — quorum round 2, 2026-07-23)
+## Ratified Decision (Mark, 2026-07-24, attended — resolves the fork below)
+
+**D1 = Option A + Option B's identity recorded as metadata.** Every log-entry header carries:
+
+1. `interpreter: HashRef` — content hash of the **exact released `ailang` binary bytes**: the
+   **authoritative replay pin**. Bit-for-bit determinism on the writing platform; matches 1.0's
+   single-machine local-first scope (clause 2), where platform-lock costs nothing today.
+2. `release: string` — the platform-independent source identity (`ailang version` tag + commit,
+   verified available in ailang#471) — **compatibility metadata, NOT authoritative**.
+3. `semanticsEpoch: int` — as drafted (epoch registry an object in the store).
+
+**The M8 door, held open without a format migration:** when multi-node arrives, promoting the
+portable identity (release + conformance-corpus gate) to replay-authoritative is a **ratified
+policy change over fields that already exist in every header** — never a log rewrite. Until
+then, cross-platform replay is explicitly out of guarantee.
+**Hermeticity obligation → M1 acceptance:** replay-doubling — every M1 acceptance run replays
+each recorded episode twice through the pinned binary and byte-compares; divergence fails M1
+(answers gpt5-6-sol's unproven-hermeticity objection with a standing test instead of an
+assumption).
+**Archive obligation:** the pinned binary artifact must be retained (D1 carries the obligation;
+location is an M1 operational detail, per the blast-radius table).
+
+## Open Decision (parked for Mark — quorum round 2, 2026-07-23) — RESOLVED ABOVE, kept for the record
 
 **D2 (content-addressed transition functions) and D3 (SHA-256 + tagged `HashRef`) are settled**
 — they drew no objection across two quorum rounds. **D1's replay-pin identity is NOT settled.**

@@ -56,11 +56,12 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
 Newest **3** STATUS stamps live here; older ones move to `world-mission-status-archive.md`.
 At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the archive file.
 
+## STATUS 2026-07-24 (D1 RATIFIED, attended) — **Mark picked A+B-METADATA for the D1 replay pin: authoritative = exact-binary content hash (1.0 is single-machine — platform-lock costs nothing); release tag+commit + semanticsEpoch ride in every header as compatibility metadata so the M8 portable-promotion is a policy change, never a log migration; hermeticity answered by replay-doubling in M1 acceptance.** w-log-epoch-decision → [LANDED] (all of D1/D2/D3 settled); queue UNBLOCKED; **w-world-library-m1 is [NEXT]** — the kernel build starts. ailang#471 resolved with the outcome. 4 blocked iterations cost $0.00 — the human-gate discipline held.
+
 ## STATUS 2026-07-24 (iteration 5) — **Queue still HUMAN-BLOCKED on D1 (4th consecutive); confirm-and-report bookkeeping-only — decision-support floor still hit, standing pause offer unanswered (deliberately NOT re-nagged).** Preflight clean: armed, billing CLEAN, account `sunholo-voight-kampff`, dev==origin/dev `5795dcb`, CI green @ HEAD (`completed success`), no `[nightly-eval]` open issues, no unread inbox, no new Mark comment on #1 since watermark `2026-07-23T20:13:54Z` (D1 still unanswered), no directive. Re-ran the "is there REALLY new decision-support?" check with evidence, floor still hit: shipped binary `v0.30.0-147-g6ed26bebd` is the **same commit** as iter-3/4 (no `conformance`/`semantics`/`spec` subcommand → Option B still corpus-gated-only), and ailang#471 has only my own iter-3 comment (still OPEN, no upstream/Mark movement) → **no non-redundant #471 material, no new decision-support to extract**. Verified the prior D1-block judgment holds: items 3–5 chain on M1's D1-governed store/log rep; no critical-path item is D1-independent → correctly declined speculative M2–M5 drafting to fill the fire (rework risk; "data before conclusions"). The iter-4 pause offer (`~/.ailang/state/mission-world.disabled`) is **STANDING/unanswered** — not re-nagged; report reduced to a compact heartbeat. `metered=$0.00`; no inner-loop skill spawned. **Retro: instance 4 of the fully-human-blocked-queue friction — no NEW skill signal beyond iter-4 (patch still unapplied; floor still hit); the incremental datum is the standing offer went a full cycle unanswered, so the honest behavior is minimal heartbeat, not another proposal round.** No queue changes (D1 still parked). Watermark unchanged (no Mark comment). No weekly rotation (10<80 comments, issue #1 created post-Monday-boundary).
 
 ## STATUS 2026-07-24 (iteration 4) — **Queue still HUMAN-BLOCKED on D1 (3rd consecutive); no new decision-support to add — bookkeeping-only + escalated the idle-fire cost.** Preflight clean: armed, billing CLEAN, account `sunholo-voight-kampff`, dev==origin/dev `39de8a8`, CI green @ HEAD, no nightly regressions, no Mark comment (D1 unanswered), no directive. Inbox: 1 informational (`eval-suite` "Eval Suite Started" auto-notify) — read, no queue impact. Ran the "is there REALLY new decision-support?" check and found **none**: iter-3 already reduced D1 to its irreducible values-call core (**A/C deterministic-platform-locked vs B portable-probabilistic**), and the upstream input hasn't moved — re-probed the shipped binary (`v0.30.0-147-g6ed26bebd`, **same commit** as iter-3; still no `conformance`/`semantics`/`spec` subcommand), so Option B is still corpus-gated-only and there is **no non-redundant #471 material to post**. Correctly declined to manufacture a probe to look busy or to re-nag the D1 ask. `metered=$0.00`. **Retro: instance 3 of the fully-human-blocked-queue friction — the ≥2 bar was met at instance-2 (iter-3 PROPOSED the shared-skill back-off patch); instance-3's new signal is that the patch is STILL unapplied (shared `SKILL.md` has no back-off rule) AND the "reduce decision cost" behavior has hit its floor (nothing left to extract until Mark/upstream moves).** Sharpened the proposed rule (support-while-non-redundant → cheap confirm-and-report → after K blocked fires, offer to PAUSE the loop) and re-surfaced it to Mark + V1; World cannot edit the shared skill (V1-checkout guardrail). New actionable offer to Mark: set `~/.ailang/state/mission-world.disabled` to pause nightly firing until D1 is decided (World will not self-disable). No queue changes (D1 still parked). Watermark unchanged (no Mark comment). No weekly rotation (9<80 comments, post-Monday-boundary issue).
 
-## STATUS 2026-07-24 (iteration 3) — **Queue still HUMAN-BLOCKED on D1 (2nd consecutive); no sprint — but NOT a no-op: turned the idle fire into D1 decision-support.** Preflight clean: armed, billing CLEAN, account `sunholo-voight-kampff`, dev==origin/dev `b337ee2`, CI green @ HEAD, no nightly regressions, no Mark comment (D1 unanswered), no directive. Inbox: 2 informational (mission-v1 iter-95 status; eval-suite auto-notify) — acked, no queue impact. Ran the "is there REALLY nothing to do?" check: Option B of D1 hinges on whether a released `ailang` exposes a platform-independent **semantics-version identity** (= upstream ailang#471). Probed the shipped binary `v0.30.0`: `ailang version` gives a **source** identity (release tag+commit — platform-independent but not proven-semantics), `ailangVersion()` bundles `platform` (platform-dependent), and **no** conformance/spec/semantics-hash subcommand exists. **Finding: Option B is corpus-gated-only today; nothing upstream makes it "proven"** → D1 reduces to **A/C (deterministic, platform-locked) vs B (portable, probabilistic)**. Posted as evidence to ailang#471 (comment 5064518731) + pinged V1 (informational). Does NOT decide D1 (Mark's values call) — narrows it. `metered=$0.00`. **Retro: instance 2 of the fully-human-blocked-queue friction (iter-2 = instance 1) → meets the ≥2 bar for a shared-skill fix, but World CANNOT edit the shared skill (it lives in the V1 checkout; V1 iter-95 edited it ~1h prior) → PROPOSED patch routed to Mark + V1, not applied.** No queue changes (D1 still parked). Watermark unchanged (no Mark comment). No weekly rotation (8<80 comments, post-Monday-boundary issue).
 
 ## CURRENT GOAL
 
@@ -69,10 +70,9 @@ At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the arc
    attended — see STATUS).
 2. **NOW**: work the queue through the inner loop (design-doc → sprint-plan → execute →
    evaluate), one sprint-sized item per iteration, recording routing evidence every time.
-   Next item WAS `w-log-epoch-decision` (clause-1) — iteration 1 drafted + quorum-reviewed it;
-   D2/D3 settled, **D1 replay-pin PARKED for Mark** (determinism⇄portability fork; see the doc's
-   "Open Decision" section + issue #1). The queue is blocked on that human decision until Mark
-   picks a D1 option; on his reply the item unparks and M1 (`w-world-library-m1`) proceeds.
+   **D1 RATIFIED 2026-07-24 (Mark, attended: A+B-metadata) — queue UNBLOCKED.**
+   Next item: `[NEXT] w-world-library-m1` (clause-1) — M1 may now freeze the log format per the
+   settled decision doc.
 
 ## The bar — what "Ailang World 1.0" must meet (RATIFIED by Mark 2026-07-23, attended — see STATUS + issue #1 record)
 
@@ -223,13 +223,13 @@ mission in `~/.config/ailang/mission-world.env`:
 <!-- Every open item carries a clause tag. Estimates are honest guesses at bootstrap;
      iteration 0 re-scores. NEW-DOC items start with design-doc-creator. -->
 
-1. [PARKED needs-human-review] **w-log-epoch-decision** · clause-1 · doc drafted +
-   quorum-reviewed (2 rounds): **D2** (content-addressed transition fns) + **D3** (SHA-256 +
-   tagged HashRef) SETTLED; **D1 replay-pin identity** parked for Mark on the
-   determinism⇄portability fork (3 options framed in the doc's "Open Decision" section).
-   Doc: `design_docs/planned/w-log-epoch-decision.md` (`c3c5124`, CI green). Upstream Q: ailang#471.
-   → **unparks on Mark's D1 pick**, then M1 can freeze the log format.
-2. [BLOCKED on item 1's D1 pick] **w-world-library-m1** · clause-1 · the semantic world library: World/Proposal/Transition/
+1. [LANDED 2026-07-24] **w-log-epoch-decision** · clause-1 · ALL THREE decisions settled: D2
+   (content-addressed transition fns) + D3 (SHA-256 + tagged HashRef) via quorum; **D1 RATIFIED
+   by Mark attended: A+B-metadata hybrid** — authoritative pin = exact-binary content hash;
+   release tag+commit + semanticsEpoch as compatibility metadata in every header (M8 promotion =
+   policy change, never a format migration); hermeticity → replay-doubling in M1 acceptance.
+   Doc: `design_docs/planned/w-log-epoch-decision.md` (SETTLED — ready for M1).
+2. [NEXT] **w-world-library-m1** · clause-1 · the semantic world library: World/Proposal/Transition/
    Evidence types in AILANG (ai-check green in CI), Go host for the SQLite store +
    content-addressed objects + append-only log; replay of a recorded episode proven bit-for-bit ·
    ~2–3d
