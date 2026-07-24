@@ -1,0 +1,27 @@
+module host/replay/testdata/transition_fixture
+
+import world/transitions (plan, verify, commit)
+import world/types (World, Proposal, Verification, CommitResult, Applied, Denied)
+import world/logepoch (HashRef, renderRef)
+
+-- Deterministic fixture transition driver (Decision 7). It exercises the REAL
+-- world/transitions library through the pure plan -> verify -> commit flow and
+-- renders the resulting next world as one deterministic line. The archived
+-- released AILANG binary EXECUTES this source during replay; the Go host never
+-- reimplements the interpreter (DESIGN.md §14).
+export func main() -> string {
+  let genesisState = { algo: "sha256", digest: "aaaa" };
+  let genesisLog = { algo: "sha256", digest: "0000" };
+  let w0 = { revision: 0, stateRoot: genesisState, logHead: genesisLog };
+  let pHash = { algo: "sha256", digest: "1111" };
+  let fnHash = { algo: "sha256", digest: "2222" };
+  let outState = { algo: "sha256", digest: "bbbb" };
+  let nextLog = { algo: "sha256", digest: "3333" };
+  let p = plan(w0, pHash, fnHash, "fixture-goal");
+  let v = verify(w0, p);
+  let result = commit(w0, p, v, outState, nextLog);
+  match result {
+    Applied(w1, _t) => "rev=${show(w1.revision)} state=${renderRef(w1.stateRoot)} log=${renderRef(w1.logHead)}",
+    Denied(reason) => "denied:${reason}"
+  }
+}
