@@ -164,15 +164,6 @@ func Open(path string) (*Store, error) {
 		_ = db.Close()
 		return nil, fmt.Errorf("store: apply schema: %w", err)
 	}
-	if _, err := db.Exec(
-		`CREATE TABLE IF NOT EXISTS store_heads (
-			head_key    TEXT PRIMARY KEY,
-			world_ref   TEXT NOT NULL
-		);`,
-	); err != nil {
-		_ = db.Close()
-		return nil, fmt.Errorf("store: create store_heads: %w", err)
-	}
 	return &Store{db: db}, nil
 }
 

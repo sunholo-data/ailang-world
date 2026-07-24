@@ -52,6 +52,16 @@ CREATE TABLE IF NOT EXISTS epoch_registry_heads (
     object_ref    TEXT NOT NULL
 );
 
+-- The store's mutable selected-world-head pointer, keyed by a fixed head_key.
+-- Unlike every other table this is NOT content-addressed: it is the single
+-- compare-and-append serialization point (Decision 4). Commit reads world_ref
+-- here under the transaction and advances it; a stale observed head yields a
+-- ConflictError. M1 uses exactly one row (head_key = "selected_world_head").
+CREATE TABLE IF NOT EXISTS store_heads (
+    head_key  TEXT PRIMARY KEY,
+    world_ref TEXT NOT NULL
+);
+
 -- Cached typecheck/verify result, keyed EXACTLY by the pair
 -- (transition_fn_ref, interpreter_ref). semantics_epoch is copied in as
 -- diagnostic/migration metadata only; it is NOT part of the cache key, so an
