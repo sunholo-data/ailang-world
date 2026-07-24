@@ -60,8 +60,30 @@ jobs:
       - name: go version
         run: go version
 
+      - name: Install PINNED v0.30.0 ailang binary (replay goldens are v0.30.0-scoped)
+        run: |
+          set -euo pipefail
+          # The replay tests drive the released ailang as a subprocess and
+          # byte-compare its output against goldens generated with v0.30.0
+          # (testdata/recorded_result.bytes, recorded_world_hash.txt). Pin the
+          # TAG, not `latest`: any drift would break the byte-for-byte replay.
+          # Without AILANG_BIN, pinnedBinary(t) t.Skip()s and CI is false-green.
+          base="https://github.com/sunholo-data/ailang/releases/download/v0.30.0"
+          curl -fsSL -o linux.x64.ailang.tar.gz "$base/linux.x64.ailang.tar.gz"
+          curl -fsSL -o linux.x64.ailang.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
+          sha256sum -c linux.x64.ailang.tar.gz.sha256
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf linux.x64.ailang.tar.gz -C "$HOME/.local/bin" ailang
+          chmod +x "$HOME/.local/bin/ailang"
+          # Assert the pinned version loudly so a tag drift is a red step here,
+          # not a silent goldens mismatch downstream.
+          ver="$("$HOME/.local/bin/ailang" --version)"
+          echo "$ver"
+          echo "$ver" | grep -q 'v0.30.0'
+          echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
+
       - name: go build
         run: go build ./...
 
-      - name: go test
+      - name: go test (replay tests run against pinned AILANG_BIN)
         run: go test ./... -count=1

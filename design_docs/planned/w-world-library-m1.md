@@ -415,12 +415,12 @@ M1 satisfies the nine implications from `w-log-epoch-decision.md` as follows:
   errors.
 - [ ] Epoch 1 registry object names the M1 AILANG release as its first nominated candidate.
 - [ ] Startup archives the configured interpreter and every new entry stamps its exact `HashRef`.
-- [ ] Authoritative replay resolves the executable from each entry's `interpreter` hash.
-- [ ] CI asserts epoch-registry candidate changes cannot redirect authoritative replay.
-- [ ] Verification/typecheck cache tests prove the key is exactly `(transitionFn, interpreter)`
+- [x] Authoritative replay resolves the executable from each entry's `interpreter` hash.
+- [x] CI asserts epoch-registry candidate changes cannot redirect authoritative replay.
+- [x] Verification/typecheck cache tests prove the key is exactly `(transitionFn, interpreter)`
   and epoch changes alone preserve the selected row as metadata-compatible.
-- [ ] A recorded fixture episode replays bit-for-bit to its recorded result and final world hash.
-- [ ] **Replay-doubling:** every acceptance episode replays twice through the pinned artifact;
+- [x] A recorded fixture episode replays bit-for-bit to its recorded result and final world hash.
+- [x] **Replay-doubling:** every acceptance episode replays twice through the pinned artifact;
   replay A, replay B, and the recorded bytes match exactly, with divergence causing test failure.
 - [ ] The three prerequisite sketches and `sketches/worldkernel.ail` remain green in the final gate.
 - [ ] M1 exports embedded host packages and stops before daemon, broker, isolation, REST, CLI, MCP,
