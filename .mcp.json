@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ailang-docs": {
+      "url": "https://mcp.ailang.sunholo.com/mcp/",
+      "transport": "streamable-http"
+    }
+  }
+}

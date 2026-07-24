@@ -1,0 +1,16 @@
+-- FIXTURE (.ail.txt; run.sh runs it via the pinned binary).
+-- Backs V10 (counterexample → NON-ZERO exit): a deliberately WRONG postcondition. Z3
+-- finds a counterexample; ai-check EXITS 1. Together with encoder_limits.ail.txt (error →
+-- exit 0) and verified_baseline.ail.txt (all-verified → exit 0), this pins the full
+-- exit-code table: verified→0, counterexample→1, encoding-error→0(SILENT), parse-error→1.
+-- This is the fixture proving the gate's teeth CANNOT rely on exit codes alone.
+-- Expected: ai-check EXIT 1, .verify.counterexample >= 1.
+module counterexample
+
+-- Claims to add one but actually adds two: Z3 must produce a counterexample.
+export func brokenIncrement(x: int) -> int ! {}
+requires { x >= 0 }
+ensures { result == x + 1 }
+{
+  x + 2
+}

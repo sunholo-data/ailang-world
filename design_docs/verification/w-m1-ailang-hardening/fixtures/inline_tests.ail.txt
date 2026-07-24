@@ -1,0 +1,40 @@
+-- FIXTURE (.ail.txt; run.sh runs `ailang test --format json` on it via the pinned binary).
+-- Backs the LEG-2 gate claims:
+--   V12 : inline tests on interpolation renderers + record-arg tests parse & run; a contract
+--         and tests COEXIST on one function (order: sig → ! {} → ensures → tests → body).
+--   V18 : `ailang test --format json` exposes per-test IDENTITIES (tests[].name == "<fn>_test_<N>"),
+--         so the manifest can require NAMED tests, not just a count.
+-- Expected: `ailang test --format json` → failed_tests == 0, passed_tests == 6, and
+--           tests[].name includes renderRef_test_1/2, sameRef_test_1/2, servesEntry_test_1/2.
+module inline_tests
+
+type HashRef = { algo: string, digest: string }
+
+-- interpolation renderer: Z3 cannot encode it (V7) → tests are its only machine check.
+export func renderRef(r: HashRef) -> string
+tests [
+  (({ algo: "sha256", digest: "abc" }), "sha256:abc"),
+  (({ algo: "sha1", digest: "00" }), "sha1:00")
+]
+{
+  "${r.algo}:${r.digest}"
+}
+
+-- contract AND tests coexist on one function (V12).
+export func sameRef(left: HashRef, right: HashRef) -> bool ! {}
+ensures { result == (left.algo == right.algo && left.digest == right.digest) }
+tests [
+  ((({ algo: "sha256", digest: "abc" }), ({ algo: "sha256", digest: "abc" })), true),
+  ((({ algo: "sha256", digest: "abc" }), ({ algo: "sha256", digest: "def" })), false)
+]
+{
+  left.algo == right.algo && left.digest == right.digest
+}
+
+-- pure int-equality predicate: proven contract + tests.
+export func servesEntry(epoch: int, semanticsEpoch: int) -> bool ! {}
+ensures { result == (epoch == semanticsEpoch) }
+tests [ ((1, 1), true), ((1, 2), false) ]
+{
+  epoch == semanticsEpoch
+}

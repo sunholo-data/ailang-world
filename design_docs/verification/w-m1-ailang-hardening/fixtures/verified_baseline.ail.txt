@@ -1,0 +1,83 @@
+-- FIXTURE (committed as .ail.txt so scripts/verify_ail.sh does not sweep it; run.sh
+-- copies it to a temp dir as .ail and runs the pinned binary). Mirrors the real
+-- world/{logepoch,types,contracts,transitions} shapes, inlined into one self-contained
+-- module so the fixture is auditable in isolation.
+--
+-- Backs, on the PINNED v0.30.0 binary:
+--   V1/V2 : record-field postcondition on `applyRevision` proves ("verified")
+--   V5    : the four contracts.ail predicates prove with inlined field-equality bodies
+--   V9    : an uncontracted sum-returning `commit` composing the helper produces NO
+--           obligation (absent from verify.results[])
+--   V17   : ai-check emits BARE function names in verify.results[].function
+--           (e.g. "applyRevision", not "world/transitions.applyRevision")
+-- Expected: ai-check exit 0, verify.verified == 6, no entry for `commit`.
+module verified_baseline
+
+type HashRef = { algo: string, digest: string }
+type World = { revision: int, stateRoot: HashRef, logHead: HashRef }
+type Proposal = { proposalHash: HashRef, inputWorld: HashRef }
+type Verification = { proposalHash: HashRef, accepted: bool }
+type CommitResult = Applied(World) | Denied(string)
+
+-- Contract 4's core (mirrors world/transitions.applyRevision, D1).
+export func applyRevision(w: World, outputWorld: HashRef, nextLogHead: HashRef) -> World ! {}
+requires { w.revision >= 0 }
+ensures {
+  result.revision == w.revision + 1
+    && result.stateRoot.algo == outputWorld.algo
+    && result.stateRoot.digest == outputWorld.digest
+    && result.logHead.algo == nextLogHead.algo
+    && result.logHead.digest == nextLogHead.digest
+}
+{
+  { revision: w.revision + 1, stateRoot: outputWorld, logHead: nextLogHead }
+}
+
+-- The four contracts.ail predicates (D2), bodies inlined per V3.
+export func proposalMatchesWorld(w: World, p: Proposal) -> bool ! {}
+ensures { result == (w.stateRoot.algo == p.inputWorld.algo
+                      && w.stateRoot.digest == p.inputWorld.digest) }
+{
+  w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest
+}
+
+export func verificationMatchesProposal(p: Proposal, v: Verification) -> bool ! {}
+ensures { result == (p.proposalHash.algo == v.proposalHash.algo
+                      && p.proposalHash.digest == v.proposalHash.digest) }
+{
+  p.proposalHash.algo == v.proposalHash.algo && p.proposalHash.digest == v.proposalHash.digest
+}
+
+export func commitAllowed(w: World, p: Proposal, v: Verification) -> bool ! {}
+ensures { result == ((w.stateRoot.algo == p.inputWorld.algo
+                        && w.stateRoot.digest == p.inputWorld.digest)
+                      && v.accepted
+                      && (p.proposalHash.algo == v.proposalHash.algo
+                           && p.proposalHash.digest == v.proposalHash.digest)) }
+{
+  (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest)
+    && v.accepted
+    && (p.proposalHash.algo == v.proposalHash.algo
+         && p.proposalHash.digest == v.proposalHash.digest)
+}
+
+export func isValidNextWorld(w: World, next: World, outputWorld: HashRef, nextLogHead: HashRef) -> bool ! {}
+ensures { result == (next.revision == w.revision + 1
+                      && next.stateRoot.algo == outputWorld.algo
+                      && next.stateRoot.digest == outputWorld.digest
+                      && next.logHead.algo == nextLogHead.algo
+                      && next.logHead.digest == nextLogHead.digest) }
+{
+  next.revision == w.revision + 1
+    && next.stateRoot.algo == outputWorld.algo && next.stateRoot.digest == outputWorld.digest
+    && next.logHead.algo == nextLogHead.algo && next.logHead.digest == nextLogHead.digest
+}
+
+-- V9: uncontracted, sum-typed return, calls the proven helper + a predicate.
+-- Must produce NO Z3 obligation (absent from verify.results[]).
+export func commit(w: World, p: Proposal, v: Verification, outputWorld: HashRef, nextLogHead: HashRef) -> CommitResult ! {}
+{
+  if commitAllowed(w, p, v)
+  then Applied(applyRevision(w, outputWorld, nextLogHead))
+  else Denied("verification contract failed")
+}

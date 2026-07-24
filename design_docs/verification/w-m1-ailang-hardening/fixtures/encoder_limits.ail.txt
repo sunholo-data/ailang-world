@@ -1,0 +1,35 @@
+-- FIXTURE (.ail.txt; run.sh runs it via the pinned binary).
+-- Backs the ENCODER-LIMIT + SILENT-ERROR meta-claims the reviewer most doubted:
+--   V3  : a contracted function that CALLS a user function (even SMT-encodable, same
+--         module) fails Z3 with "unknown constant …" → verify.errors > 0, status "error".
+--         The v0.30.0 encoder never inlines callees; provable contracts need inlined bodies.
+--   V8  : a contract on a function constructing a record with a float literal (1.0) and an
+--         empty-list literal ([]) mis-sorts (1.0→Int, []→Seq Int) → mk_* "unknown constant".
+--   V10 (silent): BOTH of the above raise verify.errors > 0 but ai-check still EXITS 0.
+--         This is why the gate must parse .verify.errors from JSON, not trust exit codes.
+-- Expected: ai-check EXIT 0, .verify.errors >= 1, at least one result status == "error".
+module encoder_limits
+
+type HashRef = { algo: string, digest: string }
+
+-- helper the contracted caller will reference (itself SMT-encodable)
+export func sameRef(a: HashRef, b: HashRef) -> bool ! {}
+{
+  a.algo == b.algo && a.digest == b.digest
+}
+
+-- V3: contract body calls sameRef (a user function) → Z3 "unknown constant sameRef".
+export func callsUserFn(a: HashRef, b: HashRef) -> bool ! {}
+ensures { result == (a.algo == b.algo && a.digest == b.digest) }
+{
+  sameRef(a, b)
+}
+
+-- V8: float + empty-list literals in a constructed record under a contract mis-sort.
+type Proposal = { confidence: float, effects: list[string] }
+
+export func planLike(c: float) -> Proposal ! {}
+ensures { result.confidence == c }
+{
+  { confidence: 1.0, effects: [] }
+}
