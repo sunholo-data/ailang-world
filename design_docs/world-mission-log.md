@@ -1193,3 +1193,99 @@ predicates → documented-limitation rows with inline tests as their machine che
 V8/§5 pattern) → **re-quorum ONCE** → resume Phases 2–4 (transitions `applyRevision` + contracts
 `isValidNextWorld` + the corrected manifest gate + NT1/NT2) on the existing branch → evaluator
 (sonnet) → PR → CI green → [LANDED]; then resume `w-world-library-m1` M4.
+
+## Iteration 13 — 2026-07-24 — `w-m1-ailang-hardening` LANDED (PR #5 → squash `d0009c8`, dev CI green): 4 Z3-proven contracts + 14 inline tests + a hardcoded bounded non-vacuous required-check-manifest gate; two new toolchain findings (V26 bounded-waits, V27 z3-on-CI) landed as fixes
+
+**Kind**: execute iteration on ONE item (`w-m1-ailang-hardening`, top of queue) — ran the pre-authorized
+autonomous iter-12 "Next" path end-to-end (empirical grounding → designer revision → re-quorum →
+carve-out 2nd revision → planner refresh → executor → evaluator → PR → CI → merge). LANDED.
+
+**Context / preflight (Gate 0–1)**
+- Kill switch armed. Billing tripwire **CLEAN**. gh account `sunholo-voight-kampff` (gh on `/opt/homebrew/bin`, prepended per-call).
+- World-namespaced state: bookkeeping issue `#1` (`mission-world-gh-issue`=1). **Zero** new `@MarkEdmondson1234`
+  comments (only bot author on #1; watermark `2026-07-23T20:13:54Z`). Inbox: **one** unread eval-suite-START FYI
+  (V1's local-GPU suite, `bcb87630`) — informational, not outranking; no cross-mission DEMAND, no regression.
+  No `[nightly-eval]` open issues on the world repo.
+- Local `dev` == `origin/dev` == `6de21b5` (in sync). CI `CI` on dev: **completed/success**.
+- No weekly rotation (issue #1, current week, <80 comments).
+
+**Pick + reality-check (Gate 2)**
+- Picked top item `w-m1-ailang-hardening` — the iter-12 "Next" explicitly pre-authorized the autonomous
+  revision→re-quorum→resume path (parked but NOT human-blocked). Fresh-origin already-landed check: not on
+  dev (only iter logs + the iter-11 doc). Branch `sprint/w-m1-ailang-hardening` held Phase 1 (`35c3133`,
+  logepoch: 2 verified + 8 tests). Pinned binary confirmed: `/tmp/ailang-v0300/ailang` v0.30.0 `e37b370`.
+
+**Route + execute (Gate 3) — all heavy roles model-PINNED, spawned (never inline)**
+- **Controller empirical grounding FIRST** (data-before-conclusions; closes the iter-11 toy-Proposal blind spot):
+  on the pinned binary against the REAL `world/types.ail` — (a) a contract on `proposalMatchesWorld(...,p: Proposal)`
+  → `unknown sort 'Proposal'`, `errors:1`, exit 0 SILENT (reproduced iter-12); (b) `isValidNextWorld` (World/HashRef)
+  → verified; (c) inline `tests` on a Proposal-taking predicate with a full 9-field literal → run + pass; (d) 3
+  predicates tests-only + isValidNextWorld proven → ai-check `verified:1, errors:0` (clean gate). Achievable = 4.
+- **design-doc-creator on the ROTATION designer `codex:gpt-5.6-sol`** (advanced from last-used `claude`;
+  probe rc=0; independent authorship deliberately chosen — the original doc's blind spot was Fable's). Surgical
+  revision: V5 superseded + V23/V24/V25 added; D2/D4/D5/Goals/Acceptance/Conflict-Surface descoped 7→4; the 3
+  Proposal predicates → documented-limitation + tests-only (bodies UNCHANGED → anti-drift preserved); totals
+  4 verified / 14 tests. Faithful, doc-only. Committed `0b623e7`.
+- **Re-quorum ONCE** (`ailang design-quorum`, controller verdict pass, metered **$0.095**): **gemini-3-1-pro PASS**
+  (non-blocking: schema-coupling note + a `mod=${mod#./}` path-norm catch — folded in); **gpt5-6-sol REJECT**, ONE
+  blocking objection — the gate ran `ai-check`/`ailang test` with **no wall-clock deadline** (bounded-waits, Standing
+  Rule 6). Concrete verbatim `proposed_fix`, no design-direction dispute.
+- **NARROW-REFINEMENT CARVE-OUT applied** (already ratified for world at the M1 GO, attended) → controller bounded
+  2nd revision applying the reviewer's verbatim fix: V26 (empirically established `ai-check -timeout` is per-function
+  Z3 only, `ailang test` has none) + **Leg 0 `run_bounded`** (hardcoded non-env-overridable `GATE_LEG_TIMEOUT_S=120`/
+  `GATE_TEST_TIMEOUT_S=180`, `start_new_session` process group, SIGKILL-on-expiry, exit 124 fatal; controller
+  pre-validated the mechanism on 4 cases) + NT3/NT4 + acceptance criterion. Routed straight to planner (no 3rd
+  quorum). NOT a force-pass (Rule 2: direction uncontested). Committed `4685063`.
+- **sprint-planner (opus)** refreshed the plan/handoff (P1 done, P2/P4 rescoped to 4-verified/14-tests + Leg 0).
+- **sprint-executor (opus, worktree `/tmp/wt-w-m1-hardening`)** — loaded version-locked syntax first — built
+  P2 (contracts: `isValidNextWorld` inlined+proven; 3 predicates tests-only, 6 tests; `e38ffa1`), P3 (transitions
+  `applyRevision` proven helper + rewired commit's Applied arm; `7242e64`), P4 (the bounded manifest gate; `7b20411`).
+  **Controller INDEPENDENTLY re-verified** on the pinned binary: full gate exit 0 (4/4 verified, 14 tests); NT1
+  mutation (strip applyRevision's contract) → gate exit 1 naming the identity (teeth confirmed); deadlines hardcoded;
+  3 predicates carry no `ensures`; `world/types.ail` byte-identical; diff scoped to the 3 `.ail` + the `.sh`.
+- **sprint-evaluator (sonnet, generator≠judge: opus executor ≠ sonnet judge) PASS 97/100** — no blocking issues;
+  independently re-ran every check; −3 only for the pre-move `Status: Planned` (a Gate-4 step, done here).
+
+**Gate 3b — CI (the item is not LANDED until remote CI is green)**
+- Doc → `implemented/` + `Status: Implemented` (`5c69428`); pushed; **PR #5** opened.
+- **First CI run RED** → root-caused to **V27: `ai-check` shells out to an external `z3`** (PATH + hardcoded
+  `/usr/bin`, `/usr/local/bin`, `/snap/bin`, `/opt/homebrew/bin` — confirmed in the binary's strings) and **SKIPS
+  SILENTLY** when absent. A bare `ubuntu-latest` runner has no z3, so every contract vanished from `verify.results[]`
+  (`isValidNextWorld MISSING`, the V20 class) — the identical binary (`e37b370`) + z3 4.16.0 verifies it locally on
+  darwin. Fix (in-scope infra, analogous to the go-verify job added in M2): the `ailang-verify` job installs **Z3
+  4.16.0** (x64-glibc-2.39, sha256-pinned) to `/usr/local/bin/z3`. Recorded as V27 + acceptance-criteria update
+  (`622a543`). **Re-run CI GREEN** (bounded poll): `4/4 required world/ identities verified, all 14 named tests pass`,
+  both jobs success.
+- Squash-merged PR #5 → dev `d0009c8`; **dev CI on the merge commit GREEN** (bounded poll). Worktree removed.
+
+**Routing evidence** (role, model ACTUALLY used)
+| Role | Pin (env) | Actual | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | opus | triage/pick/empirical-grounding/carve-out-2nd-revision/independent-verify/record/retro |
+| Design-doc-creator | ROTATION (`codex:gpt-5.6-sol`) | **codex gpt-5.6-sol** (executor recipe, backgrounded, 30-min cap; probe rc=0) | surgical 7→4 revision; metered (see below) |
+| Sprint-planner | `MISSION_PLANNER_MODEL`=opus | **opus** (Agent-tool pin) | plan refresh (P1 done, P2/P4 rescoped) |
+| Sprint-executor | `MISSION_EXECUTOR_MODEL`=opus | **opus** (Agent-tool pin, isolated worktree) | P2/P3/P4; controller-reproduced |
+| Sprint-evaluator | `MISSION_EVALUATOR_MODEL`=sonnet | **sonnet** (Agent-tool pin) | PASS 97/100; generator≠judge (opus≠sonnet) held |
+
+`metered≈$0.44` — re-quorum **$0.095** (gpt5-6-sol $0.067 + gemini-3-1-pro $0.028) + codex designer **~$0.35** (est,
+~69k tok gpt-5.6-sol); planner/executor/evaluator on opus/sonnet subscription Agent-tool pins ($0.00). Under the $5 ceiling.
+Designer rotation advanced `claude`→**`codex`** (write-back `codex:gpt-5.6-sol`).
+
+**Ruled out** (do not re-chase)
+- **Proving the 3 Proposal predicates in v0.30.0** — impossible (ADT-in-record `unknown sort`, V23; upstream #477).
+  They are tests-only by design; do not re-attempt a contract on them against this binary.
+- **A gate that assumes z3 is present on CI** — false on bare `ubuntu-latest` (V27). CI MUST install z3; the gate is
+  vacuous otherwise (silent skip, exit 0). Do not remove the CI Z3-install step.
+- **Trusting `ai-check`/`ailang test` exit codes** — a Z3 encoding error exits 0 (V10) and a missing z3 skips silently
+  (V27); the gate parses JSON. A `124` from `run_bounded` is the one fatal, non-advisory code.
+- **A full planner re-spawn producing a fresh sprint** — unneeded; P1 was landed and P3 unchanged, so the planner
+  refreshed the existing plan (P2/P4 rescope) rather than redesigning.
+
+**Retro / Next (Gate 5)**: No skill edit, no routing-policy change. Two pattern-watch process notes (both below the
+≥2-instance skill-edit bar, logged for future correlation): **(1) V27 z3-on-CI** — the shipped-binary verify profile
+silently no-ops its Z3 leg without an external solver; a future `ailang-code` mission on a fresh CI will hit this, so
+the world CI now carries the Z3-install as the reference pattern (candidate: fold a "CI installs the pinned Z3" note into
+the shared `ailang-code` verify-profile guidance if a 2nd mission hits it). **(2) fixture-vs-production-type drift**
+(iter-12 instance 1; this iteration's empirical-grounding-first step was the mitigation — verify claims against the REAL
+exported types, not toy fixtures). **Next iteration: `w-world-library-m1` M4** — interpreter artifact archive + epoch-1
+registry bootstrap (`world/epoch-registry/v1`); also fold the M3 carry-forward (`store_heads` → `schema.sql`).

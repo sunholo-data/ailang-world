@@ -56,11 +56,11 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
 Newest **3** STATUS stamps live here; older ones move to `world-mission-status-archive.md`.
 At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the archive file.
 
+## STATUS 2026-07-24 (iteration 13) — **`w-m1-ailang-hardening` LANDED — PR #5 → squash `d0009c8`, dev CI green; the M1 AILANG surface now carries 4 Z3-proven contracts + 14 inline tests + a hardcoded, bounded, non-vacuous required-check-manifest gate.** Executed the pre-authorized autonomous iter-12 "Next" path. **Controller empirically grounded the achievable-4 scope on pinned v0.30.0 FIRST** (reproduced the ADT-in-record `unknown sort` on the REAL `Proposal`; confirmed `isValidNextWorld` verifies; confirmed inline tests on Proposal-taking predicates run+pass — the iter-11 toy-Proposal blind spot, closed). **Designer revision on the ROTATION designer `codex:gpt-5.6-sol`** (advanced from last-used claude; independent authorship — the original doc's blind spot was Fable's): descoped V5/D2/D4/D5 7→4, the 3 Proposal predicates → documented-limitation + tests-only (bodies UNCHANGED, anti-drift preserved), totals 4 verified/14 tests. **Re-quorum ONCE** (gemini-3-1-pro PASS, gpt5-6-sol REJECT, metered $0.095): the one blocking objection was bounded-waits (the gate ran ai-check/test with no wall-clock deadline — Standing Rule 6). **NARROW-REFINEMENT CARVE-OUT applied** (already ratified for world at M1 GO): concrete verbatim `proposed_fix` + no direction dispute → controller bounded 2nd revision added V26 + Leg-0 `run_bounded` (hardcoded non-overridable deadlines, process-group SIGKILL, exit 124; mechanism controller-pre-validated) + NT3/NT4; routed straight to planner (no 3rd quorum). **sprint-planner (opus)** refreshed the plan (P1 done, P2/P4 rescoped). **sprint-executor (opus, worktree)** implemented P2 (contracts: isValidNextWorld proven + 6 Proposal-predicate tests) / P3 (transitions applyRevision) / P4 (the bounded manifest gate) — controller INDEPENDENTLY re-verified on the pinned binary (gate exit 0, 4 verified, 14 tests; NT1 mutation → gate fails naming the identity). **sprint-evaluator (sonnet, generator≠judge) PASS 97/100.** **PR #5's first CI went RED → V27: `ai-check` shells to an external `z3` and SKIPS SILENTLY without it; bare `ubuntu-latest` has no z3 so every contract vanished from `results[]`.** Fixed by installing **Z3 4.16.0** (sha256-pinned) in the `ailang-verify` CI job (in-scope infra, analogous to the go-verify job) → CI green (4/4 verified, 14 tests on linux). Doc → `implemented/`. `metered≈$0.44` ($0.095 quorum + ~$0.35 codex designer; planner/executor/evaluator on subscription pins). Preflight clean: armed, billing CLEAN, `sunholo-voight-kampff`, dev==origin/dev (`6de21b5`), CI green, no `[nightly-eval]` issues, no new Mark comment (watermark `2026-07-23T20:13:54Z`), inbox = one eval-suite-start FYI (not-outranking). No weekly rotation (issue #1, <80 comments). Designer rotation advanced claude→**codex** (write-back `codex:gpt-5.6-sol`). **Next: `w-world-library-m1` M4** (interpreter artifact archive + epoch-1 registry bootstrap). Retro: V27 (z3-on-CI) + the fixture-vs-production-type drift (iter-12 instance 1) are pattern-watch process notes below the ≥2-instance skill bar; no skill/routing change.
+
 ## STATUS 2026-07-24 (iteration 12) — **`w-m1-ailang-hardening` EXECUTE attempted; Phase 1 (logepoch) LANDED on branch, Phases 2–4 BLOCKED by a newly-found v0.30.0 encoder limit that invalidates doc claim V5 → item PARKED for a designer revision + re-quorum (autonomous next iteration; not human-blocked).** Routed the quorum-cleared doc: **sprint-planner (opus)** → 4-phase plan JSON + handoff (`.ailang/state/sprints/w-m1-ailang-hardening.{plan.json,handoff.md}`). **sprint-executor (opus, isolated worktree `/tmp/wt-w-m1-hardening`)** built Phase 1 (D3 logepoch): `sameRef` field-eq body + proven `ensures`, `servesEntry` `ensures`, 8 named inline tests on `renderRef`/`sameRef`/`cacheKey`/`servesEntry` — **ai-check `verified:2` (sameRef, servesEntry), 8/8 tests pass, errors:0**; committed `35c3133`. Executor then **STOPPED per the design's own STOP-on-contradiction rule**: applying D2 verbatim to `contracts.ail` gave `verified:1, errors:3` — the 3 `Proposal`-taking predicates Z3-error `unknown sort 'Proposal'`. **Controller independently reproduced** (single-predicate + a minimal self-contained module: a record with an ADT-typed field → `unknown sort`, `errors:1`, **exit 0 silent**) and bisected the trigger to **any user-ADT-typed field** in the record (`Proposal.evidence: list[Evidence]`). Design claim **V5 ("all 4 predicates verify") is empirically FALSE against production types** — the committed fixture used a toy 2-field `Proposal`. Achievable proven set = **4** (`applyRevision`, `isValidNextWorld`, `sameRef`, `servesEntry`), not 7 → D2/D4/D5-manifest/`EXACT_TOTAL_VERIFIED=7` invalidated. **Did NOT force a shrunk manifest through** (Standing rule 2 — the quorum is the guardrail; a 7→4 gate-strength cut is exactly the reviewer's r1 concern and must be re-blessed, not controller-decided). Preserved Phase 1 by **pushing branch `sprint/w-m1-ailang-hardening`** (durable WIP, unmerged). Filed upstream **`sunholo-data/ailang#477`** (encoder: declare Z3 datatypes for ADT-bearing records; + make `ai-check` exit non-zero on `verify.errors>0`) + `mission-control` note. `metered=$0.00` (planner+executor on opus Agent-tool subscription pins; no quorum this iteration). Preflight clean: armed, billing CLEAN, `sunholo-voight-kampff`, dev==origin/dev (`a4ec887`), CI green, no `[nightly-eval]` issues, no new Mark comment (watermark `2026-07-23T20:13:54Z`), inbox = eval-suite FYIs + own prior report (not-outranking). No weekly rotation (issue #1, <80 comments). **Next: rotation designer revises the doc to the achievable-4 scope → re-quorum ONCE → resume Phases 2–4 → evaluator → PR → CI; then w-world-library-m1 M4.** No skill/routing change (the STOP-and-report worked exactly as designed; the finding is a design-fidelity + upstream-escalation outcome, not a loop-process gap).
 
 ## STATUS 2026-07-24 (STANDARDS RATIFIED, attended) — **Mark's two findings closed as standing structure: (1) the zero-contracts gap and (2) slim-core/package-first were unwritten house style → now `design_docs/coding-standards.md` (S1–S6, binding, evaluator-scored) + repo `CLAUDE.md` (standing agent instructions: charter→standards→thesis reading order, pinned-binary rule, fluency protocol via the `.mcp.json` ailang-docs server).** Complements the in-sprint `w-m1-ailang-hardening` (code retrofit + manifest gate — the loop's lane); this is the never-again lane. Coordinator stood DOWN from the attended retrofit on sync (in-sprint collision avoidance).
-
-## STATUS 2026-07-24 (iteration 11) — **`w-m1-ailang-hardening` design doc DONE + quorum-cleared via the RATIFIED narrow-refinement carve-out; auditable reproduction fixtures committed (`aa542a1`). Item → [IN-SPRINT]; sprint-planner → EXECUTE is next iteration (the doc's §Implementation Plan is the 4-phase basis).** Picked the top `[NEXT]` item (Mark-directed AILANG-feature retrofit of the M1 surface). Reality-check: no doc/plan/eval; M1 `.ail` confirmed to carry only decorative `bool` predicates + 0 tests (gap real). **Controller empirically grounded the syntax on pinned v0.30.0** BEFORE routing (the discoverability root-cause fix): `requires`/`ensures` Z3-verify via `ai-check`, inline `tests [((args),exp)]` run via `ailang test` — both viable. Routed to **design-doc-creator on the rotation designer `claude:claude-fable-5`** (probe rc=0, subscription-only; rotation next after codex) with an adapting brief (known repo friction) + the empirical findings + the ADT-return design question. Doc `design_docs/planned/w-m1-ailang-hardening.md`: resolves the `CommitResult` sum-type contract question via a Z3-proven `applyRevision` helper, 7 proven contracts + 8 tests, 22-row empirical verification log; found real v0.30.0 limits (V8 `plan` unprovable, V10 Z3-encoding-errors-exit-0-SILENTLY). **Quorum r1 BLOCKED** (gpt5-6-sol: aggregate-floor gate too weak; gemini pass) → gate-mandated **Fable revision** rewrote D5 to a hardcoded required-check MANIFEST. **Re-quorum r2 BLOCKED** on two NEW narrow, direction-preserving objections with concrete `proposed_fix` (gpt5-6-sol: commit an auditable verification-fixture dir; gemini-3-1-pro: route Leg-1 python error to stderr). **NARROW-REFINEMENT CARVE-OUT applied** — RATIFIED for the world mission at the M1 GO (attended, `world-mission-status-archive.md` L3), so "later iterations apply without re-asking"; both objections satisfy (a) verbatim `proposed_fix` + (b) no design-direction dispute; the carve-out is a CONTROLLER action → no 3rd Fable run (Fable-discipline preserved). Controller 2nd revision: committed `design_docs/verification/w-m1-ailang-hardening/` (4 fixtures + `run.sh` + captured `OUTPUTS.md`, pinned binary sha256 `e9746fef…`) + the stderr fix. **The reviewer-demanded fixtures caught & corrected two first-draft inaccuracies** (D-A: V3 "no user calls" overstated — an encodable-bodied callee verifies; inlining still safe; D-B: leg-2 secondary must be `len(tests[])==8`, not `passed_tests` which counts contract properties → flaky). `metered=$0.149` (two quorum rounds $0.067+$0.082; Fable designer+revision on subscription = $0.00). Preflight clean: armed, billing CLEAN, `sunholo-voight-kampff`, dev==origin/dev (b0a632a), CI green, no `[nightly-eval]` issues, no new Mark comment (watermark `2026-07-23T20:13:54Z`), inbox = own prior discoverability finding (marked read). Also committed the untracked `.mcp.json` (discoverability MCP-wiring local fix, queue-referenced) + `.gitignore` for `.codex/`. **Next: sprint-planner (opus) turns the doc's §Implementation Plan into a sprint JSON → sprint-executor (opus, worktree) implements the 3-module retrofit + the manifest gate → evaluator (sonnet) → PR → CI green.** Designer rotation advanced codex→claude (write-back `claude:claude-fable-5`). No weekly rotation (issue #1, <80 comments). No skill/routing change this iteration (carve-out was a ratified-mechanism APPLICATION, not a new gate change).
 
 ## CURRENT GOAL
 
@@ -223,42 +223,27 @@ mission in `~/.config/ailang/mission-world.env`:
 <!-- Every open item carries a clause tag. Estimates are honest guesses at bootstrap;
      iteration 0 re-scores. NEW-DOC items start with design-doc-creator. -->
 
-**[PARKED — designer revision + re-quorum needed (iter-12); NOT human-blocked; still PREEMPTS w-world-library-m1 M4]
-w-m1-ailang-hardening** · clause-1 · **Phase 1 (logepoch) LANDED on branch; Phases 2–4 BLOCKED by a v0.30.0 encoder limit that invalidates doc claim V5.**
-(`design_docs/planned/w-m1-ailang-hardening.md`, Fable designer; doc claimed 7 Z3-proven contracts + 8
-inline tests + a hardcoded required-check-manifest non-vacuous gate.) **iter-12 finding (reproduced by
-executor AND controller on pinned v0.30.0):** a `requires`/`ensures` contract on a function whose
-parameter is a record transitively containing a user **ADT** (sum type) fails with Z3 `unknown sort
-'<Record>'` and `ai-check` **exits 0 SILENTLY** (the V10 class). `Proposal` has `evidence: list[Evidence]`,
-so the 3 `Proposal`-taking predicates (`proposalMatchesWorld`, `verificationMatchesProposal`,
-`commitAllowed`) **cannot be Z3-proven**; only `isValidNextWorld` (World/HashRef) + `applyRevision`
-verify. **Achievable proven set = 4, not 7** → the ratified D2/D4/D5-manifest/`EXACT_TOTAL_VERIFIED=7`/V5
-are invalidated. Filed upstream `sunholo-data/ailang#477` (+ `mission-control` msg
-`msg_20260724_143026_0b2a75a0`); minimal repro + bisection attached. **Phase 1 preserved**:
-`world/logepoch.ail` (`sameRef`+`servesEntry` verified, 8 named tests pass) committed `35c3133` on pushed
-branch `sprint/w-m1-ailang-hardening` (NOT merged to dev — lands with the revised sprint). **Next iteration
-(autonomous, no human needed):** rotation designer revises V5/D2/D4/D5 to the achievable-4 scope (the 3
-`Proposal` predicates → documented-limitation rows, inline tests as their machine check per the doc's own
-V8/§5 pattern) → **re-quorum ONCE** → resume Phases 2–4 (transitions `applyRevision` + contracts
-`isValidNextWorld` + the corrected manifest gate + NT1/NT2) → evaluator → PR → CI. Surfaced to Mark FYI
-(his directed item; descopes a ratified claim) but does not block on him. **AILANG-knowledge review + retrofit of M1 milestone-1 (`world/{contracts,transitions,logepoch,types}.ail`)**
-— the flagship AILANG showcase shipped using **none** of AILANG's distinguishing features
-(0 Z3 contracts, 0 tests, only decorative `bool` predicates); root cause = discoverability, now
-partially corrected (`.mcp.json` wiring the `ailang-docs` MCP; upstream fix → `mission-control`
-msg `msg_20260724_114812_208ab38d` + issue `sunholo-data/ailang#476`). **The reviewer/executor
-MUST load the version-locked syntax first** (MCP `prompt_get` or `ailang prompt`) before touching
-`.ail`. **Scope (all empirically grounded against pinned `v0.30.0` + Z3 4.16.0):**
-(1) add `requires`/`ensures` contracts to the **int/bool/record invariants** and let `ai-check`
-actually prove them — e.g. `commit` `ensures` the `Applied` world's `revision == w.revision + 1`
-(Contract 4's core; VERIFIED-provable — a `nextRevision`-shaped postcondition proves live);
-(2) add inline `tests [(in,exp)]` to the pure functions, **especially the string-rendering ones
-Z3 SKIPS** — `renderRef`/`sameRef`/`cacheKey` use interpolation → builtin `show` (no SMT
-encoding), so tests are their only machine check; (3) make the verify gate **non-vacuous** (assert
-≥1 proven contract + tests present, not just module count). **OUT of scope (correctly absent — do
-NOT add):** effects (M1 is intentionally pure `! {}`; shells belong to the Go host + M3 broker) and
-package extensions (frozen core; clause 7 later). Go milestones M2/M3 are out of scope (Go, already
-tested + evaluator-passed). Cheaper now than after M4/M5 build on these types. See memory
-`ailang-feature-discoverability-gap`. · ~0.5–1d · queued iter-10 (Mark-directed).
+**[LANDED 2026-07-24 (iter-13), CI green on dev `d0009c8`] w-m1-ailang-hardening** · clause-1 ·
+The M1 AILANG surface now USES AILANG's distinguishing features. Doc
+`design_docs/implemented/w-m1-ailang-hardening.md` (Fable r1 designer; **codex/gpt-5.6-sol iter-13
+revision**; controller carve-out 2nd revision). Shipped via **PR #5 → squash `d0009c8`,
+sprint-evaluator PASS 97/100** (sonnet, generator≠judge). **4 Z3-proven contracts**
+(`transitions/applyRevision`, `contracts/isValidNextWorld`, `logepoch/sameRef`+`servesEntry`) +
+**14 named inline tests** + a **hardcoded, bounded, non-vacuous required-check-manifest gate**
+(`scripts/verify_ail.sh`). **iter-12→13 descope (empirically forced):** a contract on any
+`Proposal`-taking predicate Z3-errors `unknown sort 'Proposal'` (Proposal.evidence is an ADT) and
+`ai-check` exits 0 SILENTLY → the 3 Proposal predicates (`proposalMatchesWorld`,
+`verificationMatchesProposal`, `commitAllowed`) are documented-limitation + tests-only (6 tests,
+shared-predicate bodies UNCHANGED → anti-drift preserved); achievable proven set = **4, not 7**.
+Upstream `sunholo-data/ailang#477`. **Two new toolchain findings landed as V-rows:** V26 (`ai-check
+-timeout` is per-function Z3 only, not process-wide; `ailang test` has none → the gate wraps both
+legs in a hardcoded-deadline process-group-killing `run_bounded`, Standing Rule 6), and **V27
+(`ai-check` shells to an external `z3` and SKIPS SILENTLY without it — a bare `ubuntu-latest` runner
+has no z3, so every contract vanished from `verify.results[]` and PR #5's first CI went red; fixed
+by installing Z3 4.16.0 in the `ailang-verify` CI job, sha256-pinned)**. Retrofit of M1 milestone-1
+(`world/{contracts,transitions,logepoch}.ail`; `types.ail` byte-identical); root cause was
+discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correctly out of scope
+(frozen core). See memory `ailang-feature-discoverability-gap`. · queued iter-10 (Mark-directed).
 
 1. [LANDED 2026-07-24] **w-log-epoch-decision** · clause-1 · ALL THREE decisions settled: D2
    (content-addressed transition fns) + D3 (SHA-256 + tagged HashRef) via quorum; **D1 RATIFIED
@@ -279,8 +264,8 @@ tested + evaluator-passed). Cheaper now than after M4/M5 build on these types. S
    PASS 88/100 (generator≠judge; −5 non-blocking `store_heads` schema-split, carried to M4).
    **Remaining: M4** interpreter artifact archive + epoch-1 registry bootstrap (`world/epoch-registry/v1`)
    → M5 replay+replay-doubling → M6 CI Go gate finalize (`verify_go.sh`). → [LANDED] + doc→implemented/
-   when M6 lands. **NOTE: `w-m1-ailang-hardening` (top of queue) runs BEFORE M4 — the M1 AILANG
-   surface gets its Z3 contracts + tests retrofit first, since M4/M5 build on these types.**
+   when M6 lands. **NOTE: `w-m1-ailang-hardening` LANDED iter-13 (`d0009c8`) — the M1 AILANG surface
+   now carries its Z3 contracts + tests + bounded manifest gate; M4 is the next build step.**
    The item: the semantic world library: World/Proposal/Transition/
    Evidence types in AILANG (ai-check green in CI), Go host for the SQLite store +
    content-addressed objects + append-only log; replay of a recorded episode proven bit-for-bit ·
