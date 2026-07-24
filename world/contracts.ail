@@ -1,0 +1,40 @@
+module world/contracts
+
+import world/logepoch (HashRef, sameRef)
+import world/types (World, Proposal, Verification)
+
+-- Shared pure transition predicates (Decision 1 — Contracts). These are
+-- executable preconditions, not prose: verify and commit call the SAME
+-- predicates so policy cannot drift between the two phases.
+
+-- Contract 1: a proposal's inputWorld equals the current world's stateRoot.
+export func proposalMatchesWorld(w: World, p: Proposal) -> bool {
+  sameRef(w.stateRoot, p.inputWorld)
+}
+
+-- Contract 2: a verification names the same proposalHash as the proposal it
+-- judged.
+export func verificationMatchesProposal(p: Proposal, v: Verification) -> bool {
+  sameRef(p.proposalHash, v.proposalHash)
+}
+
+-- Contract 3: commit may proceed only when the verification is accepted AND
+-- both identity predicates hold (input-world match and proposal-hash match).
+export func commitAllowed(w: World, p: Proposal, v: Verification) -> bool {
+  proposalMatchesWorld(w, p)
+    && v.accepted
+    && verificationMatchesProposal(p, v)
+}
+
+-- Contract 4: the resulting world increments revision by exactly one and
+-- carries the supplied output-state root and next-log-head references.
+export func isValidNextWorld(
+  w: World,
+  next: World,
+  outputWorld: HashRef,
+  nextLogHead: HashRef
+) -> bool {
+  next.revision == w.revision + 1
+    && sameRef(next.stateRoot, outputWorld)
+    && sameRef(next.logHead, nextLogHead)
+}

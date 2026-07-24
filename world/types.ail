@@ -1,0 +1,85 @@
+module world/types
+
+import world/logepoch (HashRef, LogHeader)
+
+-- Production core surface for AILANG World (Decision 1 — Typed Surface).
+-- Promotes the ratified sketches/worldkernel.ail types. Every field whose
+-- meaning is a digest is typed as HashRef; human-readable labels remain
+-- strings.
+
+-- A capability grant: an effect authorization with a scope, expiry, and a
+-- consumable budget. Enforcement is reserved for a later milestone (M3);
+-- M1 fixes the shape only.
+export type Capability = {
+  effect: string,
+  scope: string,
+  expiresAt: int,
+  budget: int
+}
+
+-- Evidence variants carry their content reference as a HashRef; the
+-- human-readable label / score stays a plain value. TestReport carries a
+-- pass/fail bool; AiReview carries a confidence float.
+export type Evidence
+  = CompilerOutput(HashRef)
+  | TestReport(HashRef, bool)
+  | HumanApproval(HashRef)
+  | AiReview(HashRef, float)
+  | RecordedEffect(HashRef)
+
+-- An immutable world revision: a monotonically increasing revision number,
+-- the content-addressed state root, and the content-addressed log head.
+export type World = {
+  revision: int,
+  stateRoot: HashRef,
+  logHead: HashRef
+}
+
+-- A pure proposal over an immutable input world. It carries its own
+-- proposalHash, the input-world hash, the transition-function hash, the goal
+-- and plan labels, expected effects, required capabilities, evidence, and a
+-- confidence score.
+export type Proposal = {
+  proposalHash: HashRef,
+  inputWorld: HashRef,
+  transitionFn: HashRef,
+  goal: string,
+  plan: string,
+  expectedEffects: list[string],
+  requiredCaps: list[Capability],
+  evidence: list[Evidence],
+  confidence: float
+}
+
+-- The result of the pure verify phase: names the same proposalHash it
+-- judged, an accept/reject decision, and a human-readable reason.
+export type Verification = {
+  proposalHash: HashRef,
+  accepted: bool,
+  reason: string
+}
+
+-- An applied transition body: proposal, input-world, output-world, and
+-- transition-function references (each a HashRef), plus the evidence
+-- references committed with it.
+export type Transition = {
+  proposalHash: HashRef,
+  inputWorld: HashRef,
+  outputWorld: HashRef,
+  transitionFn: HashRef,
+  evidence: list[HashRef]
+}
+
+-- The frozen LogHeader (from world/logepoch) combined with a transition
+-- body. The Go host addresses and persists this; M1 fixes the shape.
+export type RecordedTransition = {
+  header: LogHeader,
+  transition: Transition
+}
+
+-- The outcome of the pure commit phase: either an Applied next-world plus its
+-- transition body, or a Denied decision carrying the reason the contract
+-- failed.
+export type CommitResult
+  = Applied(World, Transition)
+  | Denied(string)

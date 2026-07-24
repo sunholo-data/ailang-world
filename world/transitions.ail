@@ -1,0 +1,76 @@
+module world/transitions
+
+import world/logepoch (HashRef)
+import world/types (
+  World, Proposal, Verification, Transition, CommitResult,
+  Applied, Denied
+)
+import world/contracts (
+  proposalMatchesWorld, commitAllowed
+)
+
+-- Pure plan / verify / commit implementation (Decision 1). All three phases
+-- are pure: no effects, no capability enforcement, no persistence. The M1
+-- commit derives the next immutable World plus a Transition body; the Go host
+-- (M3) persists that result atomically inside one SQLite transaction. This
+-- preserves the three-phase semantic shape while reserving physical effects
+-- and capability enforcement for a later milestone.
+
+-- Phase 1 — Plan: construct a pure proposal over an immutable input world.
+-- The proposal's inputWorld is pinned to the current world's stateRoot so
+-- Contract 1 (proposalMatchesWorld) holds by construction for a freshly
+-- planned proposal.
+export func plan(
+  w: World,
+  proposalHash: HashRef,
+  transitionFn: HashRef,
+  goal: string
+) -> Proposal {
+  {
+    proposalHash: proposalHash,
+    inputWorld: w.stateRoot,
+    transitionFn: transitionFn,
+    goal: goal,
+    plan: "deterministic transition",
+    expectedEffects: [],
+    requiredCaps: [],
+    evidence: [],
+    confidence: 1.0
+  }
+}
+
+-- Phase 2 — Verify: evaluate the executable contract without effects. Accepts
+-- iff the proposal's input world matches the current world (Contract 1). The
+-- verification always names the proposal's own hash so Contract 2 holds.
+export func verify(w: World, p: Proposal) -> Verification {
+  if proposalMatchesWorld(w, p)
+  then { proposalHash: p.proposalHash, accepted: true, reason: "accepted" }
+  else { proposalHash: p.proposalHash, accepted: false, reason: "input world mismatch" }
+}
+
+-- Phase 3 — Commit: derive the next immutable world and transition record
+-- without effects. Proceeds only when Contract 3 (commitAllowed) holds:
+-- verification accepted AND both identity predicates. The resulting world
+-- increments revision by one and carries the supplied output-state root and
+-- next-log-head references (Contract 4 holds by construction). Persistence
+-- and the append-only log entry belong to the Go host transaction.
+export func commit(
+  w: World,
+  p: Proposal,
+  v: Verification,
+  outputWorld: HashRef,
+  nextLogHead: HashRef
+) -> CommitResult {
+  if commitAllowed(w, p, v)
+  then Applied(
+    { revision: w.revision + 1, stateRoot: outputWorld, logHead: nextLogHead },
+    {
+      proposalHash: p.proposalHash,
+      inputWorld: p.inputWorld,
+      outputWorld: outputWorld,
+      transitionFn: p.transitionFn,
+      evidence: []
+    }
+  )
+  else Denied("verification contract failed")
+}
