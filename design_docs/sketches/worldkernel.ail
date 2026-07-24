@@ -1,0 +1,120 @@
+module sketches/worldkernel
+
+import sketches/logepoch (HashRef, LogHeader, renderRef)
+
+-- Compiler-checked M1 sketch. The production modules land under world/*;
+-- this file keeps every typed surface shown by the M1 design executable.
+
+export type Capability = {
+  effect: string,
+  scope: string,
+  expiresAt: int,
+  budget: int
+}
+
+export type Evidence
+  = CompilerOutput(HashRef)
+  | TestReport(HashRef, bool)
+  | HumanApproval(HashRef)
+  | AiReview(HashRef, float)
+  | RecordedEffect(HashRef)
+
+export type World = {
+  revision: int,
+  stateRoot: HashRef,
+  logHead: HashRef
+}
+
+export type Proposal = {
+  proposalHash: HashRef,
+  inputWorld: HashRef,
+  transitionFn: HashRef,
+  goal: string,
+  plan: string,
+  expectedEffects: list[string],
+  requiredCaps: list[Capability],
+  evidence: list[Evidence],
+  confidence: float
+}
+
+export type Verification = {
+  proposalHash: HashRef,
+  accepted: bool,
+  reason: string
+}
+
+export type Transition = {
+  proposalHash: HashRef,
+  inputWorld: HashRef,
+  outputWorld: HashRef,
+  transitionFn: HashRef,
+  evidence: list[HashRef]
+}
+
+export type RecordedTransition = {
+  header: LogHeader,
+  transition: Transition
+}
+
+export type CommitResult
+  = Applied(World, Transition)
+  | Denied(string)
+
+export func sameRef(left: HashRef, right: HashRef) -> bool {
+  renderRef(left) == renderRef(right)
+}
+
+-- Executable precondition shared by verify and commit.
+export func proposalMatchesWorld(w: World, p: Proposal) -> bool {
+  sameRef(w.stateRoot, p.inputWorld)
+}
+
+-- Phase 1: construct a pure proposal over an immutable input world.
+export func plan(
+  w: World,
+  proposalHash: HashRef,
+  transitionFn: HashRef,
+  goal: string
+) -> Proposal {
+  {
+    proposalHash: proposalHash,
+    inputWorld: w.stateRoot,
+    transitionFn: transitionFn,
+    goal: goal,
+    plan: "deterministic transition",
+    expectedEffects: [],
+    requiredCaps: [],
+    evidence: [],
+    confidence: 1.0
+  }
+}
+
+-- Phase 2: evaluate the executable contract without effects.
+export func verify(w: World, p: Proposal) -> Verification {
+  if proposalMatchesWorld(w, p)
+  then { proposalHash: p.proposalHash, accepted: true, reason: "accepted" }
+  else { proposalHash: p.proposalHash, accepted: false, reason: "input world mismatch" }
+}
+
+-- Phase 3: derive the next immutable world and transition record without effects.
+-- Persistence and log append belong to the Go host transaction.
+export func commit(
+  w: World,
+  p: Proposal,
+  v: Verification,
+  outputWorld: HashRef,
+  nextLogHead: HashRef
+) -> CommitResult {
+  if proposalMatchesWorld(w, p) && v.accepted && sameRef(p.proposalHash, v.proposalHash)
+  then Applied(
+    { revision: w.revision + 1, stateRoot: outputWorld, logHead: nextLogHead },
+    {
+      proposalHash: p.proposalHash,
+      inputWorld: p.inputWorld,
+      outputWorld: outputWorld,
+      transitionFn: p.transitionFn,
+      evidence: []
+    }
+  )
+  else Denied("verification contract failed")
+}

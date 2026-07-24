@@ -520,3 +520,105 @@ itself be the noise the rule targets). **Lane = none applied** (the ≥2-instanc
 PROPOSED and blocked on the V1-checkout guardrail; re-proposing adds nothing). No mission-doc/process
 change (guardrails already handle the mechanics correctly — this iteration executed the iter-4 rule as
 designed). Memory `human-blocked-queue-no-backoff` updated to instance-4 (standing-offer-unanswered).
+
+---
+
+## Iteration 6 — 2026-07-24 — FIRST REAL SPRINT: w-world-library-m1 design doc written (codex designer) & quorum-direction-accepted; M1 SPRINT PARKED on a carve-out first-use gate
+
+**Kind**: First post-D1-unblock design iteration. D1 ratified (c7864bf) → queue unblocked → picked the
+[NEXT] kernel item `w-world-library-m1`. No design doc existed → routed to the ROTATION designer. Deliverable
+= the M1 design doc + creation-time quorum. Outcome: doc is design-complete and quorum-**direction**-accepted,
+but the go/no-go to SPRINT is parked for Mark (bounded quorum budget exhausted on two narrow non-direction
+defects; a carve-out first-use decision belongs to the human).
+
+**Context / preflight (Gate 0–1)**
+- Kill switch NOT set (armed). Billing tripwire **CLEAN**. gh `sunholo-voight-kampff` (active). Main tree
+  clean. Pidfile `mission-world.pid`=95872 = this run's own driver (no sibling overlap).
+- Local `dev` == `origin/dev` == `c7864bf` (fetch clean, in sync). No `[nightly-eval]` open issues on
+  ailang-world.
+- Inbox: **6 unread, all V1-mission traffic** — nightly-eval regressions `type_safe_record_access` +
+  `prompt_injection`, `eval-suite` 52/84 (61%), V1 iter-97 report. These are the AILANG **language**
+  benchmarks (V1's eval suite); World owns no eval suite and the nightly regression issues are not on
+  ailang-world. Triaged as **not-outranking** (a sibling mission's benchmark regressions are V1's to fix;
+  they are neither a World regression nor a directive).
+- Bookkeeping issue #1 (`mission-world-gh-issue`): no `@MarkEdmondson1234` comment since watermark
+  `2026-07-23T20:13:54Z`. #1 created 2026-07-23 (post 07-20 Monday boundary), <80 comments → **no weekly
+  rotation**. No `-prev` predecessor check needed.
+
+**Pick + reality-check (Gate 2)**: top `[NEXT]` = item 2 `w-world-library-m1` (D1 now RATIFIED, item 1
+[LANDED]). Reality-check: `grep -ri w-world-library design_docs/` → no existing doc (only the settled epoch
+doc references it) → genuinely a NEW-DOC item. Repo was **bootstrap-only**: no Go host, no `.ail` world
+library — just `sketches/{logepoch,worldtypes,transitions}.ail`. Not already-landed (fresh `git fetch`;
+no merged PR; direct-commit check clean). Item is un-started and sprint-sized (~2–3d).
+
+**Route / execute (Gate 3)** — designer = **ROTATION** (`mission-world-designer-rotation` last-used =
+`claude:claude-fable-5`, who authored the epoch doc → NEXT = **`codex:gpt-5.6-sol`**):
+- Codex preflight probe (bounded 120s): rc=0, replied `ok` → lane available.
+- Real run: `codex exec --model gpt-5.6-sol --sandbox workspace-write` in an isolated worktree
+  (`/tmp/wt-w-world-library-m1` off `origin/dev`), backgrounded with a 30-min `date +%s` cap; directive
+  carried the design-doc-creator methodology + a **self-contained ailang-world adapting brief** (no
+  std/VERSION, no changelogs, flat planned/, Conflict Surface = §14 boundary) + all settled context.
+  71,648 tokens; exit 0. Produced `design_docs/planned/w-world-library-m1.md` (~510 lines) +
+  `sketches/worldkernel.ail` (HashRef adopted throughout, pure plan→verify→commit, ai-check green).
+- Controller INDEPENDENTLY re-verified the load-bearing claims: `ailang --version` matches; `ailang --help`
+  genuinely lists `run/check/ai-check/iface/replay/serve-api` (codex's positive-existence claim TRUE);
+  `./scripts/verify_ail.sh` green on 4 modules.
+- **Quorum (creation-time)**: reviewer **gemini-3-1-pro** only — `gpt5-6-sol` EXCLUDED (it authored the doc;
+  **generator≠judge**), quorum degraded to 1 external + controller. Controller verdict = pass both rounds.
+  - **Round 1 BLOCKED** — gemini: Verification Log validated against the rig's `-dirty` build
+    (`v0.30.0-147-g6ed26bebd-dirty`), inadmissible for a determinism kernel. **Fixed** (controller revision,
+    mechanical/data-only): downloaded the official released **`AILANG v0.30.0`** darwin/arm64 artifact,
+    checksum-verified (`sha256:ac3174e0…` matches the published `.sha256`), confirmed clean (no `-dirty`),
+    re-verified all 4 sketches ai-check-green on it, re-pinned header + Verification Log.
+  - **Round 2 (the one permitted re-quorum) BLOCKED** — gemini: Conflict Surface omitted the overlap between
+    the released `ailang replay` and M1's Go replay engine. **Clarified in-doc**: `ailang replay <trace.jsonl>`
+    is a single-program execution-trace replay; M1 `host/replay` is a store/log-level ORCHESTRATOR that
+    delegates per-transition re-execution to the released binary — **§14-forced, not a new design decision**;
+    layers are complementary.
+- Design DIRECTION accepted both rounds; net-axiom **+12** (A1/A3/A4/A7 all ≥0); all **9** epoch-doc M1
+  implications mapped 1:1.
+
+**Landed (Gate 3b)**: doc + sketch + bookkeeping committed to dev (see commit). `.ail` change = new
+`worldkernel.ail`, ai-check green on BOTH the rig binary and the clean release; CI expected green.
+
+**Decision — SPRINT PARKED (needs-human-review), NOT the doc**: the bounded one-revision-one-requorum budget
+is exhausted, both blocks were narrow non-direction defects the controller resolved, and routing straight to
+sprint-planner would require the **narrow-refinement carve-out** — whose FIRST use in the World mission needs
+Mark's one-time OK, and whose strict trigger (a verbatim reviewer-authored fix) the r2 objection did not
+cleanly meet. So the planner→executor SPRINT is parked for Mark's go/no-go on (a) the carve-out first-use here
+and (b) the §14 replay-orchestration framing. The design itself is complete and quorum-direction-accepted.
+
+**Routing evidence**
+| Role | Pinned | Actual | Notes |
+|---|---|---|---|
+| Controller (triage/pick/record/retro/revision) | `$MODEL` session | claude-opus-4-8 | opus-first, correct |
+| Designer | ROTATION (next after claude) | **codex:gpt-5.6-sol** | probe rc=0; real run exit 0, 71.6k tok; sandbox worktree; rotation advanced → codex recorded last-used |
+| Quorum reviewer | default gpt5-6-sol,gemini-3-1-pro | **gemini-3-1-pro only** | gpt5-6-sol EXCLUDED = doc author (generator≠judge); degraded N−1 by NAME |
+| Planner / Executor / Evaluator | opus / opus / sonnet | **not spawned** | sprint parked for Mark before planning |
+
+**Metered ledger**: `metered≈$0.24` — codex designer 71,648 tok (gpt-5.6-sol; CLI emitted no USD, est ~$0.20)
++ gemini quorum r1 $0.01737 + r2 $0.01793 + release download $0.00. Ceiling `$5` untouched (~5%).
+
+**Ruled out** (do not re-chase)
+- Re-spawning codex for a 3rd revision / 3rd quorum round — exceeds the bounded budget; the remaining
+  question is a human go/no-go, not more automated work.
+- Force-passing the doc to sprint over gemini's r2 block — Standing rule 2 (never force a guardrail) + the
+  carve-out's first-use-needs-Mark rule both forbid it.
+- Using the rig's `-dirty` binary as the M1 verification substrate — a determinism kernel must pin a released
+  artifact; the checksum-verified released v0.30.0 is now the pin.
+- Treating the V1 nightly-eval regressions as World's pick — they are V1's language benchmarks, not World's.
+
+**Retro / Next**
+- **Retro (Gate 5)**: Two frictions worth recording. (1) **`ailang-code` profile assumes a pinned released
+  binary, but the rig ships only a `-dirty` dev build** — surfaced by gemini's r1 block; this iter established
+  the pin (released v0.30.0, checksummed) but a durable **binary-lockfile mechanism** is a backlog item, not
+  yet in place. (2) **design-doc-creator's ailang-repo assumptions** (instance 2/2 of the watch-item):
+  the codex directive had to carry a full self-contained adapting brief; the shared skill still lacks an
+  ailang-world adapting section — but World CANNOT edit the shared skill (V1-checkout guardrail), so this is
+  a PROPOSED shared-skill fix routed to Mark/V1, not applied here. Neither triggers a mission-doc/process
+  change this iteration (the carve-out + generator≠judge + bounded-quorum rules all functioned as designed).
+- **Next**: on Mark's OK → route `w-world-library-m1` to **sprint-planner** (opus), then executor
+  (`MISSION_EXECUTOR_MODEL=codex:gpt-5.6-sol` per the profile, evaluator sonnet — generator≠judge holds since
+  codex-executor ≠ sonnet-evaluator). If Mark instead wants the replay-reuse question reopened, that's a
+  bounded designer revision. Also queue a small **binary-lockfile** item so future iterations pin the released
+  ailang deterministically instead of the rig's dev build.
