@@ -221,6 +221,11 @@ func (e *Engine) ReplayEntry(ep Episode, idx int, entry EpisodeEntry) (ReplayRes
 
 	// Step 6: reconstruct the next world/log hash from the produced bytes and
 	// compare it with the recorded final world hash.
+	//
+	// M1 fixture scope: this "world hash" is the content address of the result
+	// bytes (SHA-256(produced)), so it cannot independently catch a divergence
+	// step 5 misses. A real episode would hash the full World struct (log +
+	// registry + heads), giving an independent transition witness.
 	worldHash := hashref.SumSHA256(produced)
 	if worldHash.Digest() != entry.RecordedWorldHash.Digest() ||
 		worldHash.Algo() != entry.RecordedWorldHash.Algo() {
@@ -286,7 +291,7 @@ func verifyExecutable(path string, ref hashref.HashRef) error {
 
 // runPinnedTransition materializes a hermetic project root, writes the pinned
 // canonical source at its fixed module path and copies the world/* library into
-// it, then runs `<execPath> run --quiet --caps ” --entry main <source>` with
+// it, then runs `<execPath> run --quiet --caps "" --entry main <source>` with
 // the project root as the working directory. It returns the exact stdout bytes.
 //
 // The archived released binary is the interpreter; this function only stages
