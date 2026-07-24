@@ -436,3 +436,87 @@ fires, escalate an explicit *pause-the-loop* offer to the human (this iteration 
 escalation). **Lane = PROPOSED skill fix, not applied** (V1-checkout guardrail); re-surfaced to Mark + V1
 in the report with the sharpened rule text. No mission-doc/process change this iteration (the guardrails
 already handle the mechanics; the gap is genuinely in the shared skill).
+
+## Iteration 5 — 2026-07-24 — queue still HUMAN-BLOCKED on D1 (4th consecutive); confirm-and-report bookkeeping-only; standing pause offer unanswered (NOT re-nagged)
+
+**Kind**: no-actionable-item iteration (4th consecutive). Same class as iter-4: decision-support floor
+still hit, nothing upstream moved, pause offer already standing from iter-4. The honest deliverable is a
+**compact heartbeat** — cheap bookkeeping + a deliberately-minimal report — NOT another proposal round or
+a re-nag. The one new datum is that iter-4's pause offer went a full cycle unanswered.
+
+**Context / preflight (Gate 0–1)**
+- Kill switch `~/.ailang/state/mission-world.disabled`: NOT set (armed). Billing tripwire: **CLEAN**
+  (no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`). gh account: `sunholo-voight-kampff` (active). Main
+  tree clean. Pidfile `mission-world.pid`=87378 = this run's own driver (no sibling overlap).
+- Local `dev` == `origin/dev` == `5795dcb` (`git fetch` clean, in sync). CI `CI` on dev:
+  **completed/success** @ `5795dcbdd` (HEAD). No `[nightly-eval]` regression issues (world repo).
+- Inbox: **no unread messages** (`ailang messages list --unread` → "No messages found").
+- Bookkeeping issue #1 (`mission-world-gh-issue`): 10 comments, **zero `@MarkEdmondson1234`** since
+  watermark `2026-07-23T20:13:54Z` → D1 still unanswered. Created 2026-07-23 (after the 07-20 Monday
+  boundary), 10<80 comments → **no weekly rotation**. Watermark unchanged (no Mark comment to process).
+  No `-prev` issue (no rotation has occurred) → no predecessor-thread check needed.
+- Upstream `ailang#471` (the input that could pre-empt/narrow D1): still **OPEN**, only our own iter-3
+  evidence comment (last activity `2026-07-23T23:26:53Z`, author `sunholo-voight-kampff`) — no answer
+  from anyone. Block persists.
+
+**Pick + reality-check (Gate 2)**: top `[NEXT]` is item 1 `w-log-epoch-decision` = **PARKED
+needs-human-review** on D1 (Mark). Queue re-walked, unchanged from iter-2/3/4: item 2 (M1) BLOCKED on
+D1; items 3–5 chain on M1 (which freezes the D1-governed store/log rep); items 6–8 explicitly parked.
+Re-verified the prior D1-block judgment rather than inheriting it: no sprint-executable OR critical-path
+design-doc item is independent of D1.
+
+**Route / execute (Gate 3)**: **no inner-loop skill spawned** (no designer/planner/executor/
+evaluator/quorum; no worktree). Re-ran the "is there REALLY new decision-support?" check and confirmed
+the floor is still hit with fresh evidence:
+  - Shipped binary `ailang --version` == `v0.30.0-147-g6ed26bebd` — **same commit** as iter-3/4's probe;
+    `ailang --help` still exposes **no** `conformance`/`semantics`/`spec` subcommand → Option B remains
+    corpus-gated-only; nothing upstream makes it "proven". No new material to post to #471.
+  - `ailang#471` unmoved (only our own comment; still OPEN). → D1's fork is unchanged at its irreducible
+    core: **A/C (deterministic, platform-locked) vs B (portable, probabilistic)** — a pure values call.
+  So there is no non-redundant automated work on the blocker. Correct move: cheap confirm-and-report; do
+  not manufacture a probe, re-nag the D1 ask, or repeat iter-4's proposal round.
+
+**Landed (Gate 3b)**: doc-only bookkeeping commit on dev (this log entry + STATUS rotation). No `.ail`
+or `verify_ail.sh`-relevant change → CI expected green (gate is non-vacuous on existing modules).
+
+**Routing evidence**
+| Role | Pinned | Actual | Notes |
+|---|---|---|---|
+| Controller (triage/pick/record/retro) | `$MODEL` session | claude-opus-4-8 | opus-first, correct |
+| Designer / Planner / Executor / Evaluator / Quorum | — | **not spawned** | no doc/sprint/eval; queue human-blocked |
+
+**Metered ledger**: `metered=$0.00` — no codex/gemini/quorum calls; all work was controller-session +
+`gh` + local `ailang --version`/`--help` + `ailang messages` (subscription/free). Ceiling `$5` untouched.
+
+**Ruled out** (do not re-chase)
+- Re-posting the "B is corpus-gated-only" finding to #471 — binary unchanged (same commit); a re-post is
+  pure noise. Only a CHANGE upstream (a semantics-identity landing, or Mark answering) warrants a new post.
+- Re-nagging Mark for the D1 pick — asked crisply since iter-1, evidenced iter-3, pause-offer iter-4. A
+  4th re-ask is noise.
+- Re-issuing iter-4's pause offer / shared-skill proposal as a fresh full report — both are STANDING and
+  unanswered; repeating them verbatim each fire is the very noise the back-off rule warns against. This
+  iteration's report is a compact heartbeat that references them as standing, not re-proposes them.
+- Speculative design drafting for items 3–5 (or pre-staging per-D1-branch log formats) to fill the fire —
+  all depend on M1's store/log rep, which depends on D1. Declined (rework risk; "data before
+  conclusions"). Same as iter-2/3/4.
+
+**Parked for human (Mark)** — all STANDING from prior iterations, no new asks:
+- **Decide D1's replay-pin identity** — fork settled to **A/C (deterministic, platform-locked) vs B
+  (portable, probabilistic; upstream semantics-identity does not exist today)**. Unblocks the whole queue.
+- **(Standing, iter-3) Ratify the shared-skill back-off rule** for a 100%-human-blocked queue — still
+  unapplied (World cannot edit the shared skill; V1-checkout guardrail).
+- **(Standing, iter-4) Pause offer** — set `~/.ailang/state/mission-world.disabled` to stop the nightly
+  fire until D1 is decided. Unanswered for a full cycle. World will NOT self-disable (guardrail).
+
+**Next**: unchanged — on Mark's D1 pick, unpark item 1, land the decision, route M1. Until then each fire
+is a compact confirm-and-report heartbeat (preflight + queue-walk + one binary/issue probe + minimal
+report), NOT a manufactured decision-support pass or a re-nag.
+
+**Retro (Gate 5)** — **instance 4 of the fully-human-blocked-queue friction.** No NEW skill signal beyond
+iter-4: the proposed back-off patch is still unapplied and the decision-support floor is still hit. The
+incremental datum is behavioral — iter-4's escalated pause offer went a full cycle unanswered, so the
+honest response is to hold at minimal heartbeat rather than escalate again (escalating every fire would
+itself be the noise the rule targets). **Lane = none applied** (the ≥2-instance skill fix is already
+PROPOSED and blocked on the V1-checkout guardrail; re-proposing adds nothing). No mission-doc/process
+change (guardrails already handle the mechanics correctly — this iteration executed the iter-4 rule as
+designed). Memory `human-blocked-queue-no-backoff` updated to instance-4 (standing-offer-unanswered).
