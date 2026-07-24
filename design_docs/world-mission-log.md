@@ -878,3 +878,101 @@ subscription Agent-tool pins). Budget ceiling ($5) not approached.
   worlds, atomic append-only log — pins the pure-Go SQLite driver here) to sprint-executor (opus) in
   a fresh worktree → evaluator (sonnet). Item stays [IN-SPRINT] until M6 lands the epoch registry +
   replay-doubling + verify_go.sh, then → [LANDED] and the doc moves to `implemented/`.
+
+## Iteration 10 — 2026-07-24 — M1 milestone 3 (SQLite store + atomic append-only log, Decision 4) LANDED on dev, CI green (2 jobs)
+
+**Kind**: inner-loop sprint pass on ONE item (`w-world-library-m1`), executor → evaluator → land.
+Plan already existed (iter-8) → no planner/designer this iteration. Milestone 3 of 6.
+
+**Context / preflight (Gate 0–1)**
+- Kill switch `~/.ailang/state/mission-world.disabled`: NOT set (armed). Billing tripwire: **CLEAN**
+  (no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`). gh account: `sunholo-voight-kampff` (gh not on the
+  tool-shell PATH — `/opt/homebrew/bin` prepended per-call; no state impact).
+- Overlap guard: `mission-world.pid`=65052 ALIVE but is THIS run's own `claude -p` mission-control
+  driver (verified by command line) — no concurrent iteration.
+- Local `dev` == `origin/dev` == `03efeef` at start (in sync; `git ls-remote` confirmed). CI `CI` on
+  dev: **completed/success** @ `03efeef0a`. No `[nightly-eval]` open issues on
+  `sunholo-data/ailang-world`.
+- Bookkeeping issue `#1` (world-namespaced `mission-world-gh-issue`; generic `mission-gh-issue`=422
+  is V1's, correctly NOT used). **Zero** new `@MarkEdmondson1234` comments since watermark
+  `2026-07-23T20:13:54Z` (unchanged). Inbox: 2 unread = mission-world's own iter-9 report (self) +
+  V1 `eval-suite` "started" FYI (3 models × 3 benchmarks — V1's suite) → both **not-outranking**.
+- No weekly rotation: issue #1 is current-week (created 2026-07-23, week of 2026-07-20), <80 comments.
+
+**Pick + reality-check (Gate 2)**
+- Picked item 2 `w-world-library-m1`, milestone **M3** (per iter-9 "Next" + the sprint plan's M3
+  entry). Plan exists (`.ailang/state/sprints/w-world-library-m1.plan.json`) → route straight to
+  sprint-executor (no re-quorum: design doc unchanged, direction-accepted iter-6/8).
+- Not already-landed: fresh `git fetch`; no `host/store/`, no `schema.sql`, no SQLite driver on
+  origin/dev; only prior merged PRs are #2 (M1) and #3 (M2). No sibling session (main tree clean, no
+  MERGE_HEAD).
+- M3 spec (plan): `host/store/{schema.sql,store.go}` (~420 LOC), 5 tables, single-transaction
+  compare-and-append (Decision 4), structured `ConflictError` on stale head, verification-cache key
+  = `(transition_fn_ref, interpreter_ref)`, pins the pure-Go SQLite driver (deferred from M2).
+  Verify = `go build ./...` + `go test ./host/store/... -count=1`.
+
+**Route + execute (Gate 3) — all roles model-PINNED, spawned (never inline)**
+- **Sprint-executor** (opus Agent, isolated worktree
+  `~/.ailang/state/worktrees/w-world-library-m3` branch `sprint/w-world-library-m3` from
+  origin/dev@03efeef): built `host/store/schema.sql` (66 LOC — `objects`, `worlds`, `log_entries`,
+  `epoch_registry_heads`, `verification_cache`; each HashRef one canonical `algo:digest` TEXT
+  column; frozen 6-field LogHeader verbatim; `transition_ref` separate/outside the frozen header;
+  `entry_hash_ref TEXT UNIQUE`; cache PK `(transition_fn_ref, interpreter_ref)`), `host/store/store.go`
+  (576 LOC — `database/sql` + pinned pure-Go `modernc.org/sqlite v1.54.0`; content-verified
+  immutable object insert via host/hashref; single-transaction compare-and-append `Commit` with
+  structured `*ConflictError`/`IsConflict`; pair-keyed verify cache), `host/store/store_test.go`
+  (362 LOC, 7 tests). Committed `e2cfad6` on the branch. **Deliberate deviation** (self-reported): a
+  non-frozen helper table `store_heads` (selected-world-head persistence for the compare-and-append
+  guard) is created in `Open()` outside `schema.sql` — kept out of the frozen schema by design.
+- **Controller independent verify** (data before conclusions): `go build ./...` rc=0; `go test
+  ./host/store/... -count=1` `ok`; `go test ./... -count=1` all three packages `ok` (no M1/M2
+  regression); `gofmt -l host/` empty; **`CGO_ENABLED=0 go build ./host/store/...` rc=0** (driver
+  genuinely CGo-free → CI needs no C toolchain); tree clean at commit.
+- **Sprint-evaluator** (sonnet Agent; generator≠judge: opus executor ≠ sonnet judge): **PASS
+  88/100 round 1**, no blocking defects. Independently re-ran build/test/-v/vet/gofmt/tidy +
+  `CGO_ENABLED=0`, read store.go/store_test.go critically, confirmed all 3 acceptance criteria
+  (persistence incl. verbatim frozen-header round-trip; one-transaction compare-and-append with
+  `errors.As`-matchable `ConflictError` + clean rollback proof; cache key provably the exact pair
+  with epoch as metadata-only). Design-fidelity −5 for the `store_heads` schema split (schema.sql
+  claims single-source-of-truth but a 6th table lives in `Open()`); judged **moderate, non-blocking,
+  trivially fixable** — carried to M4, not force-fixed by the controller (respects generator≠judge).
+- **Land (Gate 3b)**: PR **#4** → dev; both CI checks (`ailang-code verify gate` + `go host build +
+  test gate`) **completed success** on the PR head `e2cfad6`; mergeable CLEAN → squash-merged
+  **`a901c30`**, branch deleted; local dev ff'd; post-merge dev CI **green** (run 30078588978).
+  Worktree removed; stale `sprint/w-world-library-m2` local branch pruned.
+
+**Routing evidence** (role, model ACTUALLY used)
+| Role | Pin (env) | Actual | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | opus | triage/pick/verify/record/retro |
+| Sprint-planner | — | (not run) | plan pre-existed from iter-8; no re-plan needed |
+| Design-doc-creator | — | (not run) | no new/revised doc; rotation state unchanged (`codex:gpt-5.6-sol`) |
+| Sprint-executor | `MISSION_EXECUTOR_MODEL`=opus | opus Agent | ✓ as pinned (codex lane not yet wired for World; interim opus per Repo Profile) |
+| Sprint-evaluator | `MISSION_EVALUATOR_MODEL`=sonnet | sonnet Agent | ✓ generator≠judge (opus≠sonnet) |
+
+`metered=$0.00` — no codex / managed_agents / quorum reviewer calls (all roles on Anthropic
+subscription Agent-tool pins). Budget ceiling ($5) not approached.
+
+**Ruled out** (do not re-chase)
+- Force-fixing the `store_heads` schema split this iteration — it PASSED (88/100, non-blocking, the
+  evaluator itself scoped it "for M4/next sprint"); the controller hand-editing passing executor code
+  would erode generator≠judge. Carried forward as an M4 cleanup, not a defect gate.
+- Landing M4–M6 this iteration — milestone-by-milestone across iterations is the plan (each ends
+  CI-green). Item stays [IN-SPRINT], not [LANDED], until M6.
+- A different SQLite driver — `modernc.org/sqlite v1.54.0` is the canonical pure-Go/CGo-free choice;
+  `CGO_ENABLED=0` build confirms hermeticity. `go mod tidy` stable (no strip).
+
+**Retro / Next (Gate 5)**
+- **Retro**: clean executor→verify→evaluator→land pass; ailang-code verify profile + generator≠judge
+  + bounded CI polls + worktree isolation all functioned. Friction, NONE meeting the ≥2-same-gap
+  skill-edit bar: the only note is the evaluator's `store_heads` schema-split observation (a
+  code-quality nit inside a PASS, not a skill/process gap). No skill edit. No process change. No
+  routing change — this is the **3rd** landed sprint on the executor=opus / evaluator=sonnet /
+  generator≠judge pattern (iter-8/9/10, all clean PASS: 93/97/88); the pattern now meets the
+  ≥3-datapoint bar as *corroboration to keep it*, not to change it — no policy edit proposed.
+- **Next**: route `w-world-library-m1` **milestone 4** (interpreter artifact archive + epoch-1
+  registry bootstrap — semantic ID `world/epoch-registry/v1`, first `EpochRecord` = M1 interpreter
+  release string) to sprint-executor (opus) in a fresh worktree → evaluator (sonnet). Fold the M3
+  evaluator's carry-forward recs where they touch M4 (move `store_heads` into `schema.sql`; add a
+  store-layer `entry_hash_ref` derivation test). Item stays [IN-SPRINT] until M6 lands
+  replay-doubling + verify_go.sh, then → [LANDED] and the doc moves to `implemented/`.
