@@ -1,6 +1,7 @@
 # w-m1-ailang-hardening — Z3 Contracts + Inline Tests for the M1 Kernel
 
-**Status**: Planned
+**Status**: Implemented (iter-13, 2026-07-24 — 4 Z3-proven contracts + 14 inline tests + a
+bounded non-vacuous required-check-manifest gate; sprint-evaluator PASS 97/100, generator≠judge)
 **Date**: 2026-07-24
 **Charter clause**: clause-1
 **Mission**: ailang-world
