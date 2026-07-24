@@ -1,0 +1,42 @@
+{
+  "go.lintTool": "golangci-lint",
+  "go.lintFlags": [
+    "--fast"
+  ],
+  "go.lintOnSave": "workspace",
+  "go.formatTool": "gofmt",
+  "go.formatOnSave": true,
+  "[go]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+  "go.build.buildFlags": [
+    "-tags=scripts"
+  ],
+  "gopls": {
+    "build.directoryFilters": [
+      "-scripts",
+      "-examples/agents"
+    ],
+    "ui.diagnostic.analyses": {
+      "cognitive_complexity": false
+    }
+  },
+  "sonarlint.rules": {
+    "go:S3776": {
+      "level": "off"
+    },
+    "go:S1541": {
+      "level": "off"
+    }
+  },
+  "files.exclude": {
+    "scripts/**/*.go": false
+  },
+  "go.toolsEnvVars": {
+    "GOWORK": "off"
+  },
+  "git.ignoreLimitWarning": true
+}
