@@ -622,3 +622,66 @@ and (b) the §14 replay-orchestration framing. The design itself is complete and
   codex-executor ≠ sonnet-evaluator). If Mark instead wants the replay-reuse question reopened, that's a
   bounded designer revision. Also queue a small **binary-lockfile** item so future iterations pin the released
   ailang deterministically instead of the rig's dev build.
+
+---
+
+## Iteration 7 — 2026-07-24 — queue HEAD still HUMAN-BLOCKED (w-world-library-m1 sprint on Mark's carve-out OK); confirm-and-report heartbeat + durable backlog capture
+
+**Kind**: bookkeeping-only heartbeat (no sprint routed — the top actionable item is parked
+`needs-human-review` on a human gate surfaced <1 day ago; no other queue item is workable).
+
+**Context / preflight (Gate 0–1)**
+- Kill switch `~/.ailang/state/mission-world.disabled`: NOT set (armed). Billing tripwire: **CLEAN**
+  (no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`). gh account: `sunholo-voight-kampff`.
+- Local `dev` == `origin/dev` == `405beda` (in sync, `git fetch` clean, 0 behind). CI `CI` on dev:
+  **completed/success** @ `405beda4c`.
+- Bookkeeping issue `#1` (`mission-world-gh-issue`=1). **Zero** new `@MarkEdmondson1234` comments
+  since watermark `2026-07-23T20:13:54Z` → the iter-6 carve-out OK is still **unanswered**.
+- No `[nightly-eval]` open issues on `sunholo-data/ailang-world`. Inbox: 2 unread, both
+  **V1-mission** `eval-suite` controlplane notifications (suite-started + no-op all-skipped) — not
+  World's benchmarks (World owns no eval suite), triaged **not-outranking** (per Gate-0 cross-mission
+  contract: a sibling's eval traffic never sets this mission's priorities).
+
+**Pick + reality-check (Gate 2)**
+- Top actionable: item 2 `w-world-library-m1` — **PARKED (needs-human-review)** since iter-6 on
+  Mark's one-time OK of (a) the narrow-refinement carve-out's FIRST use in World and (b) the
+  replay-orchestration framing. **Re-verified the park is correct to hold, NOT to unblock**: the r2
+  gemini objection lacked a verbatim reviewer-authored `proposed_fix`, so the carve-out's condition
+  (a) [every remaining objection carries a concrete reviewer fix] FAILS; and even if it held,
+  first-use-in-World requires Mark's ratification. Unblocking it myself = a controller-invented
+  resolution (explicitly forbidden by the carve-out text) + forcing a guardrail (Standing Rule 2).
+  → left parked, correctly.
+- No other item is workable: item 3 `w-worldd-m2` and items 4–8 all chain on M1 being **built**
+  (the daemon/broker/projection consume the M1 store/log rep). Declined speculative M2+ design —
+  same ruled-out reasoning as iters 4–5 (rework risk; "data before conclusions"). The M1 *design*
+  is done and quorum-direction-accepted; only its *sprint* is gated.
+
+**Work done (Gate 4, headless-safe)**
+- **Durable backlog capture**: promoted iter-6's prose-only infra finding to a real queue row —
+  item 9 `[BACKLOG] w-verify-binary-lockfile` (clause-1-infra): the rig ships `v0.30.0-151-…-dirty`
+  and the repo has **no lockfile**, so the released-binary pin is re-established ad-hoc each verify.
+  Queued, NOT implemented — the mechanism may generalize to the SHARED `ailang-code` profile (a
+  future attended / Gate-5-shared-skill decision), and hand-editing CI headless is out of bounds.
+- STATUS: added the iter-7 stamp; rotated iter-5 out to `world-mission-status-archive.md` (keeping
+  newest-3: iter-7, iter-6, D1-RATIFIED).
+
+**Routing evidence**: no role spawned (no sprint). Controller = Opus (session). `metered=$0.00`
+(no codex / managed_agents / quorum calls). Budget ceiling: N/A (nothing metered).
+
+**Ruled out** (do not re-chase)
+- Unblocking the M1 sprint via the carve-out — condition (a) fails + first-use needs Mark; forbidden.
+- Speculative M2–M8 design to "fill the fire" — all chain on M1 built; rework risk.
+- Re-nagging the carve-out OK — surfaced <1 day ago (iter-6); the report restates it once, no new
+  proposal round (established minimal-heartbeat discipline, iters 3–5).
+- A new pause-the-loop offer — the iter-4 offer is still standing/unanswered; not re-raised.
+
+**Retro / Next (Gate 5)**
+- **Retro**: instance 1 of the *M1-carve-out* heartbeat block (distinct from the earlier D1 block).
+  No NEW skill/process signal — the existing minimal-heartbeat discipline already covers a
+  freshly-surfaced human gate; no ≥2-instance same-gap trigger fires, so **no skill edit, no
+  process change** this iteration. The carve-out / generator≠judge / bounded-quorum rules all
+  functioned as designed at iter-6; nothing here contradicts them.
+- **Next**: on Mark's carve-out OK on #1 → route `w-world-library-m1` to **sprint-planner** (opus)
+  → executor (`codex:gpt-5.6-sol`) → evaluator (sonnet; generator≠judge holds). If he reopens the
+  replay-reuse framing instead → bounded designer revision. If the block persists, later iterations
+  stay minimal heartbeats until a human/regression signal arrives.
