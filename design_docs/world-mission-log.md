@@ -685,3 +685,91 @@ and (b) the §14 replay-orchestration framing. The design itself is complete and
   → executor (`codex:gpt-5.6-sol`) → evaluator (sonnet; generator≠judge holds). If he reopens the
   replay-reuse framing instead → bounded designer revision. If the block persists, later iterations
   stay minimal heartbeats until a human/regression signal arrives.
+
+## Iteration 8 — 2026-07-24 — M1 UNBLOCKED & BUILDING: w-world-library-m1 milestone 1 (pure AILANG library) LANDED on dev, CI green
+
+**Kind**: full inner-loop sprint pass on ONE item (`w-world-library-m1`) — planner → executor →
+evaluator → land. First shipped CODE of the mission. Milestone 1 of 6 (per the sprint plan).
+
+**Context / preflight (Gate 0–1)**
+- Kill switch `~/.ailang/state/mission-world.disabled`: NOT set (armed). Billing tripwire: **CLEAN**
+  (no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`). gh account: `sunholo-voight-kampff`.
+- Overlap guard: `mission-world.pid`=42355 is ALIVE but is THIS run's own driver (`claude -p` under
+  `tools/launchd/mission-control.sh`, my grandparent) — no concurrent iteration.
+- Local `dev` == `origin/dev` == `bea1871` at start (in sync). CI `CI` on dev: **completed/success**
+  @ `bea18716d`. No `[nightly-eval]` open issues on `sunholo-data/ailang-world`.
+- Bookkeeping issue `#1`. **Zero** new `@MarkEdmondson1234` comments since watermark
+  `2026-07-23T20:13:54Z` (watermark unchanged). Inbox: unread = V1-mission `eval-suite` /
+  `nightly-eval` traffic (`type_safe_record_access`, `prompt_injection` regressions are **V1's**
+  benchmarks; World owns no eval suite) → triaged **not-outranking** per the cross-mission contract.
+- **State change since iter-7**: commit `bea1871` (STATUS "M1 GO, attended") records Mark's
+  attended authorization — the iter-6 carve-out first-use OK **GIVEN** (option A) + §14
+  replay-orchestration framing APPROVED. Recorded in the charter (not via the bot-account #1
+  comment, correctly rejected by the allowlist). Queue item 2 was `[NEXT — SPRINT AUTHORIZED]`.
+
+**Pick + reality-check (Gate 2)**
+- Picked item 2 `w-world-library-m1` (SPRINT AUTHORIZED). Design doc
+  `design_docs/planned/w-world-library-m1.md` present, quorum-direction-accepted (2 gemini rounds,
+  artifacts in `.ailang/state/mission-quorum/`) → **skip re-quorum**. Not already-landed (no `world/`
+  dir on origin/dev at pick). Estimate ~2–3d → sprint-sized, NOT a multi-week decomposition item.
+- Scope confirmed against the doc's "Files to Create" (~1,925 LOC) + Acceptance Criteria. Pinned
+  released binary `/tmp/ailang-v0300/ailang` re-asserted `AILANG v0.30.0` (clean, no `-dirty`).
+
+**Route + execute (Gate 3) — all roles model-PINNED, spawned (never inline)**
+- **Sprint-planner** (opus Agent): decomposed M1 into 6 CI-green, independently-committable
+  milestones (M1 pure-AILANG lib 1.5d → M2 go bootstrap+hashref+canon → M3 SQLite store → M4
+  archive+epoch registry → M5 replay+replay-doubling 2d → M6 CI Go gate). Total ~6d (doc's 2–3d
+  judged optimistic). Plan+handoff → `.ailang/state/sprints/w-world-library-m1.plan.json`/`.handoff.md`.
+  Surfaced a real finding: `verify_ail.sh` swept only `design_docs/` → new `world/` modules would
+  be silently ungated.
+- **Sprint-executor** (opus Agent, isolated worktree `sprint/w-world-library-m1` from origin/dev):
+  built milestone 1 — `world/logepoch.ail` (84), `world/types.ail` (85), `world/contracts.ail`
+  (40), `world/transitions.ail` (76); extended `verify_ail.sh` ROOTS to sweep `world/` from repo
+  root (MOD010: module path == file path) + made the gate binary `AILANG_BIN`-configurable
+  (CI-safe default `ailang`, no hardcoded /tmp). Handled a genuine MOD010 deviation from the plan's
+  `cd world` step correctly.
+- **Controller independent verify**: all 4 modules `ai-check` → `"passed":true,"error_count":0`;
+  `verify_ail.sh` `checked 8 module(s)` exit 0 (4 sketches + 4 world), 0 errors.
+- **Sprint-evaluator** (sonnet Agent; generator≠judge: opus executor ≠ sonnet judge): **PASS
+  93/100 round 1**. Design-fidelity 10/10 (typed surface + shared contracts match the doc; verify &
+  commit both call the shared predicates → no drift; every digest field `HashRef`; `cacheKey` =
+  `(transitionFn, interpreter)`, epoch excluded). One pre-merge item: drop the force-added
+  `.ailang/state/sprints/*.json` (inside a gitignored tree). Applied — amended the commit to strip
+  it; `world/*` + script retained.
+- **Land (Gate 3b)**: PR **#2** → dev; bounded 30-min CI poll → **completed success**; auto-merged
+  squash `9d61d663e`, branch deleted; main tree ff'd to `9d61d66`; post-merge dev CI **green**
+  (id 30070945259). Worktree removed.
+
+**Routing evidence** (role, model ACTUALLY used)
+| Role | Pin (env) | Actual | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | opus | triage/pick/verify/record |
+| Sprint-planner | `MISSION_PLANNER_MODEL`=opus | opus Agent | ✓ as pinned |
+| Sprint-executor | `MISSION_EXECUTOR_MODEL`=opus | opus Agent | ✓ as pinned. NB iter-7 "Next" mused `codex:gpt-5.6-sol` but that was the DESIGNER rotation seed, not the executor pin — env pin is authoritative; executor = opus |
+| Sprint-evaluator | `MISSION_EVALUATOR_MODEL`=sonnet | sonnet Agent | ✓ generator≠judge (opus≠sonnet) |
+
+`metered=$0.00` — no codex / managed_agents / quorum reviewer calls this iteration (all roles ran on
+Anthropic subscription Agent-tool pins). Budget ceiling ($5) not approached.
+
+**Ruled out** (do not re-chase)
+- Landing all 6 milestones this iteration — M2–M6 (Go host, SQLite, replay) are ~4.5d; milestone-by-
+  milestone across iterations is the plan (each ends CI-green). Item stays [IN-SPRINT], not [LANDED].
+- Carrying the `.ailang/state/sprints/*.json` progress artifact onto dev — it lives inside the
+  repo-wide-gitignored `.ailang/` tree; dropped from the commit (evaluator rec). Sprint state stays
+  local; if it should be tracked, that's a deliberate `.gitignore` negation, not a silent force-add.
+
+**Retro / Next (Gate 5)**
+- **Retro**: the full planner→executor→evaluator→land loop ran cleanly on the first real build —
+  the ailang-code verify profile (pinned released binary as the gate), generator≠judge, bounded
+  CI poll, and worktree isolation all functioned as designed. Two friction items, NEITHER meeting
+  the ≥2-same-gap skill-edit bar this iteration: (1) the sprint-planner's per-module verify command
+  (`cd world && ai-check logepoch.ail`) was MOD010-wrong for prefixed module names — the executor
+  caught & corrected it, but a repeat would justify a sprint-planner note that ailang module paths
+  are repo-root-relative; logged as instance 1. (2) `git worktree`/PR flow needed a manual merge
+  after `--auto` initially read as "not set" (it did fire post-CI) — no action. No skill edit, no
+  process/routing change (routing-policy change needs ≥3 evidence rows; this is the FIRST landed
+  sprint — 1 datapoint).
+- **Next**: route `w-world-library-m1` **milestone 2** (Go bootstrap + `host/hashref` + `host/canon`,
+  leaf utils, `go.mod`, golden SHA-256 tests) to sprint-executor (opus) in a fresh worktree →
+  evaluator (sonnet). Item stays [IN-SPRINT] until M6 lands the full Go host + replay-doubling + CI
+  Go gate, then → [LANDED] and the doc moves to `implemented/`.
