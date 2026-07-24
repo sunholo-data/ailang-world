@@ -1085,3 +1085,111 @@ instance 1 of "check the archive for prior human ratifications of a gate mechani
 first-use park." **Next iteration**: sprint-planner (opus) → the doc's §Implementation Plan → sprint
 -executor (opus, worktree: 3 `.ail` modules + the `verify_ail.sh` manifest gate, both negative tests)
 → evaluator (sonnet, generator≠judge) → PR → CI green → [LANDED], then resume `w-world-library-m1` M4.
+
+## Iteration 12 — 2026-07-24 — `w-m1-ailang-hardening` EXECUTE attempted; Phase 1 (logepoch) LANDED on branch, Phases 2–4 BLOCKED by a v0.30.0 encoder limit invalidating doc claim V5 → PARKED for a designer revision + re-quorum (autonomous, not human-blocked); upstream issue #477 filed
+
+**Kind**: execute iteration on ONE item (`w-m1-ailang-hardening`, top of queue). Ran the full inner
+loop (planner → executor); executor STOPPED at Phase 2 on a design-contradicting empirical finding
+that the controller independently reproduced. Deliverable pivoted to: preserve Phase 1, escalate the
+encoder gap upstream, park for a bounded designer-revision + re-quorum next iteration. NOT a
+force-through; NOT human-blocked.
+
+**Context / preflight (Gate 0–1)**
+- Kill switch: NOT set (armed). Billing tripwire: **CLEAN** (no API keys). gh account:
+  `sunholo-voight-kampff` (gh not on tool-shell PATH — `/opt/homebrew/bin` prepended per-call).
+- Local `dev` == `origin/dev` == `a4ec887` (in sync). CI `CI` on dev: **completed/success** @
+  `a4ec887f8`. No `[nightly-eval]` open issues on `sunholo-data/ailang-world`.
+- Bookkeeping issue `#1` (world-namespaced `mission-world-gh-issue`=1). **Zero** new
+  `@MarkEdmondson1234` comments since watermark `2026-07-23T20:13:54Z`. Inbox: eval-suite start/partial
+  FYIs (V1's suite, not World's) + own iter-11 report + a sibling `mission-v1` status — none
+  outranking; the one unread eval-suite start marked read. No cross-mission DEMAND.
+- No weekly rotation: issue #1 current-week, <80 comments.
+
+**Pick + reality-check (Gate 2)**
+- Picked top item `w-m1-ailang-hardening` (Mark-directed): design doc DONE + quorum-cleared (iter-11),
+  no plan yet → route planner → executor → evaluator (per the iter-11 "Next"). Quorum artifact present
+  (carve-out-cleared) → QUORUM-AT-PICK satisfied. Not already-landed (fresh fetch; only the iter-11
+  doc commit `aa542a1` on origin). Pinned binary confirmed: `/tmp/ailang-v0300/ailang` = v0.30.0
+  `e37b370` (matches doc). `world/contracts.ail` confirmed to still carry decorative predicates + 0
+  tests (gap real).
+
+**Route + execute (Gate 3) — all heavy roles model-PINNED, spawned (never inline)**
+- **sprint-planner (opus)** → 4-phase sprint JSON + handoff faithful to the doc's Implementation Plan
+  (`.ailang/state/sprints/w-m1-ailang-hardening.{plan.json,handoff.md}`). No redesign.
+- **sprint-executor (opus, isolated worktree `/tmp/wt-w-m1-hardening`, branch
+  `sprint/w-m1-ailang-hardening`)**, loaded version-locked syntax first (mission requirement).
+  **Phase 1 (D3, logepoch) DONE + committed `35c3133`** — controller-verified on the pinned binary:
+  `ai-check world/logepoch.ail` → `verified:2` (`sameRef`, `servesEntry`), `errors:0`;
+  `test --format json world/logepoch.ail` → 8 named inline tests pass (`renderRef/sameRef/cacheKey/
+  servesEntry _test_1/2`), `failed:0`, `len(tests[])==8`. Matches D3/D4/D-B exactly.
+- **Executor STOPPED at Phase 2** per the design's own "STOP-and-report if the pinned binary
+  contradicts a V-claim" rule: applying D2 verbatim to `contracts.ail` gave `verified:1, errors:3`.
+  Only `isValidNextWorld` (World/HashRef) verified; the 3 `Proposal`-taking predicates
+  (`proposalMatchesWorld`, `verificationMatchesProposal`, `commitAllowed`) Z3-errored
+  `unknown sort 'Proposal'`.
+
+**The finding (data before conclusions — controller-reproduced, not merely trusted)**
+- Applied the D2 contract to `proposalMatchesWorld` against the REAL `world/types.ail`: `errors:1`,
+  reason `Z3 error … Invalid constant declaration: unknown sort 'Proposal'`, **exit 0 (silent —
+  the V10 class)**.
+- Built a **minimal self-contained module** (a record with one user-ADT-typed field + a trivial
+  `ensures`): same `unknown sort` error. Bisection (executor + controller): **any field whose type is
+  a user-defined sum type (ADT) makes the enclosing record an unencodable Z3 sort** — the encoder
+  declares the record sort without first declaring a datatype for the contained ADT.
+- `Proposal.evidence: list[Evidence]` (Evidence is a 4-constructor ADT) is the trigger. Design claim
+  **V5 ("all four contracts.ail predicates verify") is empirically FALSE against production types** —
+  the iter-11 committed fixture used a **toy 2-field `Proposal`**, which is why the auditability
+  objection's fixtures didn't catch it. **Achievable Z3-proven set = 4** (`applyRevision`,
+  `isValidNextWorld`, `sameRef`, `servesEntry`), NOT the ratified 7 → D2/D4/D5-manifest/
+  `EXACT_TOTAL_VERIFIED=7` are invalidated.
+
+**Disposition (Gate 2/3 judgment)**
+- **Did NOT force a shrunk manifest through** (Standing rule 2 — the quorum is the guardrail here; a
+  7→4 gate-strength reduction is exactly the reviewers' r1 concern and must be re-blessed by
+  re-quorum, not decided by the controller/executor). **Did NOT merge a partial** to dev (the gate is
+  the load-bearing deliverable and it's blocked).
+- **Preserved Phase 1**: pushed branch `sprint/w-m1-ailang-hardening` (durable WIP, unmerged) — it
+  lands with the revised sprint.
+- **Escalated upstream** (frozen-core protocol): filed `sunholo-data/ailang#477` with the minimal
+  repro + bisection (two asks: declare Z3 datatypes for ADT-bearing records; make `ai-check` exit
+  non-zero on `verify.errors>0`), + `mission-control` msg `msg_20260724_143026_0b2a75a0`.
+- **Parked** the item `[PARKED — designer revision + re-quorum needed; NOT human-blocked]`; surfaced
+  to Mark FYI (his directed item; descopes a ratified claim) but it does not block on him.
+
+**Routing evidence** (role, model ACTUALLY used)
+| Role | Pin (env) | Actual | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | opus | triage/pick/independent-repro/bisection/disposition/record/retro |
+| Sprint-planner | `MISSION_PLANNER_MODEL`=opus | **opus** (Agent-tool pin) | 4-phase plan JSON + handoff; faithful, no redesign |
+| Sprint-executor | `MISSION_EXECUTOR_MODEL`=opus | **opus** (Agent-tool pin, isolated worktree) | Phase 1 landed on branch; STOPPED at Phase 2 per design rule (correct) |
+| Sprint-evaluator | `MISSION_EVALUATOR_MODEL`=sonnet | (not run) | no complete sprint to evaluate; deferred with the re-execute |
+| Design-doc-creator | ROTATION | (not run) | revision routes next iteration (rotation head = `claude:claude-fable-5`) |
+
+`metered=$0.00` — planner + executor on opus **Agent-tool subscription pins** (session inheritance,
+not the metered API); no quorum/codex/gemini spend this iteration. Well under the $5 ceiling.
+
+**Ruled out** (do not re-chase)
+- **Contracting the 3 `Proposal`-taking predicates in v0.30.0** — empirically impossible
+  (record-transitively-contains-ADT ⇒ `unknown sort`, reproduced twice incl. a minimal module).
+  Do not re-attempt against this binary; the fix is upstream (#477).
+- **Editing `world/types.ail` to drop/flatten `evidence`** to dodge the encoder — forbidden (doc
+  mandates `types.ail` byte-identical; it would change the production type surface the Go host uses).
+- **Reshaping predicate signatures to avoid `Proposal`** — changes the exported contract surface
+  (`verify`/`commit` + Go host depend on it); outside retrofit scope, not what D2 specifies.
+- **Controller unilaterally shrinking `REQUIRED_VERIFIED` 7→4 and landing** — that is the exact
+  gate-weakening the r1 quorum objected to; it must go through the sanctioned revision→re-quorum loop.
+- **Merging Phase 1 alone to dev** — a partial of a sprint whose doc is under revision; the gate
+  doesn't yet enforce the new contracts. Kept on the pushed branch instead.
+
+**Retro / Next (Gate 5)**: No skill edit — the STOP-and-report mechanism worked exactly as the design
+intended (the executor halted rather than working around a false V-claim; the controller reproduced
+before concluding). No routing-policy change. One process observation (below the ≥2-instance skill
+bar, logged for pattern-watch): **a design doc's empirical fixtures are only as strong as the types
+they exercise** — iter-11's auditability fixtures used a toy `Proposal`, so they "passed" while the
+production type fails; a future fixture-review gate could require fixtures to import the REAL types
+they claim to validate (instance 1 of "fixture-vs-production-type drift"). **Next iteration
+(autonomous):** rotation designer revises V5/D2/D4/D5 to the achievable-4 scope (the 3 `Proposal`
+predicates → documented-limitation rows with inline tests as their machine check, per the doc's own
+V8/§5 pattern) → **re-quorum ONCE** → resume Phases 2–4 (transitions `applyRevision` + contracts
+`isValidNextWorld` + the corrected manifest gate + NT1/NT2) on the existing branch → evaluator
+(sonnet) → PR → CI green → [LANDED]; then resume `w-world-library-m1` M4.
