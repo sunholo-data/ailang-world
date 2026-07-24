@@ -29,3 +29,23 @@ jobs:
 
       - name: Verify all .ail modules (ai-check = check + Z3 verify)
         run: ./scripts/verify_ail.sh
+
+  go-verify:
+    name: go host build + test gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: go version
+        run: go version
+
+      - name: go build
+        run: go build ./...
+
+      - name: go test
+        run: go test ./... -count=1
