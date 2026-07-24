@@ -1289,3 +1289,93 @@ the shared `ailang-code` verify-profile guidance if a 2nd mission hits it). **(2
 (iter-12 instance 1; this iteration's empirical-grounding-first step was the mitigation — verify claims against the REAL
 exported types, not toy fixtures). **Next iteration: `w-world-library-m1` M4** — interpreter artifact archive + epoch-1
 registry bootstrap (`world/epoch-registry/v1`); also fold the M3 carry-forward (`store_heads` → `schema.sql`).
+
+## Iteration 14 — 2026-07-24 — `w-world-library-m1` M4 LANDED (PR #6 → squash `8133573`, dev CI green, both jobs): interpreter artifact archive + epoch-1 registry bootstrap (Decisions 5+6) + the M3 `store_heads` carry-forward
+
+**Kind**: execute iteration on ONE item (`w-world-library-m1`, top of queue, IN-SPRINT). Mid-sprint EXECUTE — the
+doc was quorum-direction-accepted and the 6-milestone plan approved at M1 (iter-8); M1–M3 landed (iter-8/9/10). No
+new design-doc-creator, no re-quorum: routed straight to sprint-executor (Gate 3 "Plan exists" lane).
+
+**Context / preflight (Gate 0–1)**
+- Kill switch armed. Billing tripwire **CLEAN** (no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`). gh account
+  `sunholo-voight-kampff` (gh on `/opt/homebrew/bin`, prepended per-call). Pidfile `mission-world.pid`=85308 =
+  this run's own driver ancestor (walked ps tree; no overlap).
+- World-namespaced state: bookkeeping issue `#1` (`mission-world-gh-issue`=1). **Zero** new `@MarkEdmondson1234`
+  comments on #1 (watermark `2026-07-23T20:13:54Z`). Inbox: 4 unread, all informational — an `eval-suite` START
+  notice (V1's local-GPU suite), the sibling `mission-v1` iter-101 report (no world-directed demand → cross-mission
+  class, no action), and my own two iter-13 reports. None outranked the queue; no genuine regression, no
+  cross-mission DEMAND. Marked read. No `[nightly-eval]` open issues on the world repo.
+- Local `dev` == `origin/dev` == `d690e45` (in sync after `git fetch`). CI `CI` on dev: **completed/success** @
+  `d690e458`. No weekly rotation (issue #1, current week, <80 comments).
+
+**Pick + reality-check (Gate 2)**
+- Picked top item `w-world-library-m1` M4 — the iter-13 "Next" explicitly named it. Fresh-origin already-landed
+  check (`git fetch` + `git log origin/dev --grep=M4/archive`): NOT landed — no `host/archive/`, no
+  `world/epoch-registry/`, no merged PR mentioning archive. Genuinely the next build step.
+- Read the plan's M4 milestone spec + acceptance_checks + verify_commands, and the design doc's Decision 5
+  (Epoch Registry Objects) + Decision 6 (Interpreter Artifact Archive) — the exact M4 scope. Confirmed the M3
+  evaluator's −5 carry-forward (`store_heads` created inline in `store.Open()` rather than `schema.sql`).
+- Build/test sanity on current dev: `go build ./...` OK, `go test ./host/...` all green, pinned binary
+  `/tmp/ailang-v0300/ailang` present (v0.30.0 `e37b370`).
+
+**Route + execute (Gate 3) — heavy roles model-PINNED, spawned (never inline)**
+- Isolated worktree `git worktree add -b sprint/w-world-library-m1-m4 /tmp/wt-w-m1-m4 origin/dev` (from `d690e45`,
+  build OK). NEVER the shared main tree.
+- **sprint-executor (opus, MISSION_EXECUTOR_MODEL=opus, Agent-tool pin, worktree)** — directive carried the full
+  API context (store/hashref public surface, Decisions 5+6 mechanics, the 3 deliverables + acceptance checks +
+  verify commands + CI-safety requirement). Delivered 3 commits: `78d3c6a` (fold `store_heads` → `schema.sql`),
+  `d771c52` (archive, Decision 6), `da70f02` (registry bootstrap, Decision 5). Files: `host/archive/archive.go`
+  (387) + `_test.go` (243); `host/registry/registry.go` (159) + `_test.go` (158); `schema.sql` (+10);
+  `store.go` (−9). Net +957/−9.
+- **Controller INDEPENDENTLY re-verified** in the worktree (data-before-conclusions): `go build ./...` rc=0;
+  `go test ./host/... -count=1` all green (archive 8, registry 5, store 7); `go vet ./host/...` clean; `gofmt -l
+  host/` empty. Spot-checks: `store_heads` CREATE TABLE fully removed from `Open()` (0 hits) and present in
+  `schema.sql`; archive uses `io.TeeReader(src, hasher)` single stream + `os.Rename` atomic + `archivedPerm =
+  0o555`; archive tests use synthetic POSIX shell fake-interpreters with skip guards, and `TestArchivePinnedInterpreter`
+  skips when the pinned binary is absent → linux CI needs no binary/Z3; registry uses `store.EpochRegistryV1` +
+  ordered `EpochRecord.Candidates` (advisory).
+- **sprint-evaluator (sonnet, MISSION_EVALUATOR_MODEL=sonnet, Agent-tool pin; generator≠judge: opus executor ≠
+  sonnet judge) PASS 88/100 round 1** — independently re-ran build/test/vet/gofmt (15/15 green), confirmed
+  single-stream hash-while-copy, fsync→chmod→rename order, `errors.As`-distinguishable ReplayError Kinds,
+  genuine idempotence, no privileged side channel, full `store_heads` removal. No blocking issues.
+
+**Gate 3b — CI (item not LANDED until remote CI green on the merge)**
+- Pushed branch; **PR #6** opened (base dev). Expected checks for this Go+schema diff: the two world CI jobs
+  (`go host build + test gate`, `ailang-code verify gate`) — both present in the run, no path-filtered N/A.
+- Bounded poll (30-min cap): PR #6 CI **completed/success**, both jobs green. Squash-merged (`--delete-branch`) →
+  dev `8133573`. Bounded poll of dev CI on the merge commit `8133573`: **completed/success**. Worktree removed;
+  local dev fast-forwarded to `8133573`.
+
+**Routing evidence** (role, model ACTUALLY used)
+| Role | Pin (env) | Actual | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | opus (`claude-opus-4-8`) | triage/pick/reality-check/independent-verify/record/retro |
+| Design-doc-creator | — | not spawned | doc already quorum-cleared; no new/revised doc |
+| Sprint-planner | — | not spawned | plan pre-existed (iter-8); M4 milestone spec used as-is |
+| Sprint-executor | `MISSION_EXECUTOR_MODEL`=opus | **opus** (Agent-tool pin, isolated worktree) | 3 commits; controller-reproduced |
+| Sprint-evaluator | `MISSION_EVALUATOR_MODEL`=sonnet | **sonnet** (Agent-tool pin) | PASS 88/100; generator≠judge (opus≠sonnet) held |
+
+**Metered ledger**: `metered=$0.00` — executor opus + evaluator sonnet on subscription Agent-tool pins; no
+designer/quorum/codex/gemini metered spend this iteration. Ceiling ($5) not approached. Designer rotation
+UNCHANGED (`codex:gpt-5.6-sol` — no new doc authored).
+
+**Ruled out** (do not re-chase)
+- Re-running design-doc-creator or a quorum for M4 — the doc is already quorum-direction-accepted and M1–M3
+  executed against it; mid-sprint milestones route straight to the executor.
+- Folding `host/registry` into `host/store` — the executor made it a separate package; the evaluator judged this
+  correct package-first design (imports store+hashref, no cycle, keeps registry semantics out of the physical
+  store layer). The plan's "within store/archive path" wording meant "through the store object/head mechanism,"
+  not "literally in those files." Not a defect.
+- Proving acceptance-check #1 (`writtenBy` stamps interpreter HashRef+version on every log entry) in M4 — that is
+  a log-WRITE-time caller contract that lands in **M5** (replay); M4 delivers the archive + resolver the stamp
+  will reference. The archive side (hash, manifest, resolver) is proven here.
+
+**Retro / Next (Gate 5)**: No skill edit, no routing-policy change. This is the **4th consecutive clean landed
+sprint** on the opus-executor / sonnet-judge / generator≠judge pattern (iter-8/9/10/14 all PASS ≥88, zero
+blocking defects) — corroborates keeping the pattern; still below any change bar. Two non-blocking M4
+carry-forwards recorded for M5/M6 (not skill/process gaps, ordinary code follow-ups): (1) add
+`TestArchiveExecFailureOnBadVersion` to cover `KindExecFailure` (defined + used, untested); (2) harden the
+sidecar-present/executable-absent idempotence path (currently `Resolve()` catches it as `KindAbsentArtifact`
+before any execution — safe, but archival could re-verify the file exists on disk). **Next iteration:
+`w-world-library-m1` M5** — replay + replay-doubling (bit-for-bit episode reconstruction); the `writtenBy`
+interpreter-HashRef stamp lands here, and it folds the two M4 carry-forwards.
