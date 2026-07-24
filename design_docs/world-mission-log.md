@@ -1379,3 +1379,107 @@ sidecar-present/executable-absent idempotence path (currently `Resolve()` catche
 before any execution — safe, but archival could re-verify the file exists on disk). **Next iteration:
 `w-world-library-m1` M5** — replay + replay-doubling (bit-for-bit episode reconstruction); the `writtenBy`
 interpreter-HashRef stamp lands here, and it folds the two M4 carry-forwards.
+
+---
+
+## Iteration 15 — 2026-07-24 — `w-world-library-m1` M5 LANDED (PR #7 → squash `ef06937`, dev CI green, both jobs): replay engine + replay-doubling + fixture episode (Decision 7); evaluator PASS 73/100 with an in-PR CI false-green fix (B1)
+
+**Kind**: execute iteration on ONE item (`w-world-library-m1`, top of queue, IN-SPRINT). Mid-sprint EXECUTE — the
+doc was quorum-direction-accepted and the 6-milestone plan approved at M1 (iter-8); M1–M4 landed (iter-8/9/10/14).
+No new design-doc-creator, no re-quorum: routed straight to sprint-executor (Gate 3 "Plan exists" lane). M5 is the
+**load-bearing, acceptance-defining** milestone (subprocess-driven replay + replay-doubling hermeticity).
+
+**Context / preflight (Gate 0–1)**
+- Kill switch armed. Billing tripwire **CLEAN** (no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`). gh account
+  `sunholo-voight-kampff` (gh at `/opt/homebrew/bin`, prepended per-call — not on the default shell PATH).
+  Pidfile `mission-world.pid`=95235 = this run's own `claude -p` driver (verified via `ps`; my bash child ≠
+  overlap).
+- World-namespaced state: bookkeeping issue `#1` (`mission-world-gh-issue`=1; the generic `mission-gh-issue`=422
+  is the V1 loop's, not World's). **Zero** new `@MarkEdmondson1234` comments on #1 (watermark
+  `2026-07-23T20:13:54Z`). Inbox: 1 unread — the sibling `mission-v1` iter-102 controlplane report (VM parity
+  re-scope + a soundness bug awaiting Mark on V1's #422); a cross-mission STATUS FYI, no World-directed demand,
+  no soundness bug in World → did not outrank, marked read. No `[nightly-eval]` open issues on the world repo.
+- Local `dev` == `origin/dev` == `f116174` (in sync after `git fetch`). CI `CI` on dev: **completed/success** @
+  `f1161740`. No weekly rotation (issue #1, created 2026-07-23 — after this Monday's 07:00 boundary — and <80
+  comments).
+
+**Pick + reality-check (Gate 2)**
+- Picked top item `w-world-library-m1` M5 — the iter-14 "Next" explicitly named it. Fresh-origin already-landed
+  check: `git log origin/dev --grep`, no `host/replay/` dir, no merged replay PR → NOT landed, genuinely the next
+  build step.
+- Read the plan's M5 milestone spec (files, 5 acceptance_checks, verify_commands, ci_green_boundary) + the design
+  doc §14 (replay DELEGATES per-transition execution to the archived released artifact — never reimplements the
+  interpreter). Read the existing host public APIs (store/archive/registry/canon/hashref) so the executor directive
+  carried accurate interfaces. Pinned binary `/tmp/ailang-v0300/ailang` present + clean (`v0.30.0` `e37b370`,
+  no `-dirty`).
+
+**Route + execute (Gate 3) — heavy roles model-PINNED, spawned (never inline)**
+- Isolated worktree `git worktree add -b sprint/w-world-library-m1-m5 /tmp/wt-w-world-m1-m5 origin/dev` (from
+  `f116174`). NEVER the shared main tree.
+- **sprint-executor (opus, MISSION_EXECUTOR_MODEL=opus, Agent-tool pin, worktree)** — directive carried §14, the
+  M5 files/acceptance/verify, existing host APIs, and the two M4 carry-forwards to fold in. Delivered `host/replay/
+  replay.go` (384), `replay_test.go` (640, 12 tests), `testdata/{transition_fixture.ail, recorded_result.bytes,
+  recorded_world_hash.txt}`. Commit `3559a07`.
+- **Controller INDEPENDENTLY re-verified** in the worktree (data-before-conclusions): `go build ./...` rc=0;
+  `AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/... -count=1` all 6 packages green incl. **replay 12/12**
+  (11s runtime — genuinely driving the pinned binary as a subprocess, not skipping); `go vet` clean; `gofmt -l
+  host/` empty. Spot-checked `replay.go`: resolves execPath from **each entry's `Interpreter` HashRef** (not the
+  registry), verifies exe against that hash, consults the `(TransitionFn,Interpreter)` verify cache, executes via
+  `exec.CommandContext` — no interpreter reimplementation; goldens are committed anchors (not tautological).
+- **sprint-evaluator (sonnet, MISSION_EVALUATOR_MODEL=sonnet, Agent-tool pin; generator≠judge: opus ≠ sonnet)
+  PASS 73/100 round 1** — independently re-ran the gate, confirmed genuine hermeticity (zero `registry` import in
+  `replay.go` — structural, not just behavioral, proof), committed golden anchor, no Go-side interpreter
+  reimplementation, pair-only cache key. Raised ONE **BLOCKING merge-condition (B1)**: the CI `go-verify` job ran
+  `go test ./...` **without `AILANG_BIN`**, so all 12 replay tests silently `t.Skip`-ed in CI — a false-green of
+  exactly the iter-13 V27 z3-silent-skip class. Non-blocking carry-forwards NB1 (fixture-scoped world-hash =
+  `SHA-256(result bytes)`, documented in code), NB2 (interpreter-member end-to-end re-verify, env-constrained by
+  one archived binary), NB5 (`scripts/verify_go.sh`, M6 scope).
+- **B1 fixed in-PR (bounded follow-up, opus executor)** — added a `go-verify` step that downloads the **pinned
+  v0.30.0** linux binary (by TAG, not `latest` — the replay goldens are v0.30.0-scoped; `latest` drift would break
+  bit-for-bit replay), sha256-verifies it, asserts `v0.30.0` loudly, and exports `AILANG_BIN` via `$GITHUB_ENV`.
+  Also fixed the NB3 comment typo + checked the 5 delivered M5 acceptance boxes in the design doc + documented NB1
+  at the world-hash site. Commit `8ba5fe9`. Controller re-verified all four gate commands still green on the fix
+  commit.
+
+**Gate 3b — CI (item not LANDED until remote CI green on the merge)**
+- Pushed branch; **PR #7** opened (base dev). Expected checks for this Go+CI-YAML diff: the two world CI jobs
+  (`go host build + test gate`, `ailang-code verify gate`) — both present, no path-filtered N/A. PR mergeable.
+- Bounded poll (25-min cap): PR #7 CI **completed/success**. **Verified the B1 fix WORKED**: the go-verify job log
+  shows `AILANG v0.30.0` (version-assert passed) and `ok …/host/replay 3.306s` — the replay tests **actually ran
+  in CI** (no SKIP), which was the whole point. Squash-merged (`--delete-branch`) → dev `ef06937`. Bounded poll
+  (20-min cap) of dev CI on the merge commit `ef06937`: **completed/success**, both jobs. Worktree removed.
+
+**Routing evidence** (role, model ACTUALLY used)
+| Role | Pin (env) | Actual | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | opus (`claude-opus-4-8`) | triage/pick/reality-check/independent-verify/record/retro |
+| Design-doc-creator | — | not spawned | doc already quorum-cleared; no new/revised doc |
+| Sprint-planner | — | not spawned | plan pre-existed (iter-8); M5 milestone spec used as-is |
+| Sprint-executor | `MISSION_EXECUTOR_MODEL`=opus | **opus** (Agent-tool pin, isolated worktree) | M5 (`3559a07`) + B1 fix (`8ba5fe9`); controller-reproduced |
+| Sprint-evaluator | `MISSION_EVALUATOR_MODEL`=sonnet | **sonnet** (Agent-tool pin) | PASS 73/100; generator≠judge (opus≠sonnet) held; raised B1 |
+
+**Metered ledger**: `metered=$0.00` — executor opus + evaluator sonnet on subscription Agent-tool pins; no
+designer/quorum/codex/gemini metered spend this iteration. Ceiling ($5) not approached. Designer rotation
+UNCHANGED (`codex:gpt-5.6-sol` — no new doc authored).
+
+**Ruled out** (do not re-chase)
+- Re-running design-doc-creator/quorum for M5 — doc already quorum-direction-accepted; mid-sprint milestone.
+- Treating B1 as an M6 deferral — the evaluator's accepted criterion is "CI asserts …"; a replay suite that
+  silently skips in CI makes M5's load-bearing acceptance unenforceable remotely. Fixed in the SAME PR (the
+  evaluator's explicit recommendation), not carried to M6.
+- Downloading `latest` in the go-verify CI step (mirroring the existing `ailang-verify` job) — rejected: the
+  replay goldens are v0.30.0-scoped, so the go-verify download is pinned to the **v0.30.0 tag** for drift-safety.
+  A future release could break bit-for-bit replay under `latest`.
+- The NB1 "world hash" is not a defect to fix now — for the M1 FIXTURE episode `SHA-256(result bytes)` is a
+  genuine deterministic content address anchored to a committed golden; a real episode hashing the full `World`
+  struct is future scope (documented in code, not re-architected here).
+
+**Retro / Next (Gate 5)**: No skill edit, no routing-policy change. The B1 CI false-green is the **2nd instance**
+of the silent-skip-in-CI class (V27 z3 was the 1st, iter-13) — but both were caught by the gate (evaluator here,
+first CI red there) and fixed in-PR, and the fix pattern is identical (download the pinned artifact + assert
+version in the job that needs it). It is a recurring *code/CI* pattern, NOT a loop-process gap the skill could
+prevent, so it stays a pattern-watch note below the ≥2-instance skill-edit bar (the skill can't know a repo's
+test-skip guards). **5th consecutive clean-landed sprint** on opus-executor / sonnet-judge / generator≠judge
+(iter-8/9/10/14/15) — corroborates keeping the pattern. **Next iteration: `w-world-library-m1` M6** — CI Go gate
+finalize + `scripts/verify_go.sh` + final green sweep → then item `[LANDED]` + doc → `implemented/`. M6 also picks
+up the documented carry-forwards NB2 (interpreter-member end-to-end re-verify) and NB5 (`verify_go.sh`).
