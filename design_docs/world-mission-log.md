@@ -773,3 +773,108 @@ Anthropic subscription Agent-tool pins). Budget ceiling ($5) not approached.
   leaf utils, `go.mod`, golden SHA-256 tests) to sprint-executor (opus) in a fresh worktree →
   evaluator (sonnet). Item stays [IN-SPRINT] until M6 lands the full Go host + replay-doubling + CI
   Go gate, then → [LANDED] and the doc moves to `implemented/`.
+
+---
+
+## Iteration 9 — 2026-07-24 — M1 milestone 2 (Go host bootstrap: host/hashref + host/canon) LANDED on dev, CI green (2 jobs)
+
+**Kind**: inner-loop sprint pass on ONE item (`w-world-library-m1`), executor → evaluator → land.
+Plan already existed (iter-8) → no planner/designer this iteration. Milestone 2 of 6.
+
+**Context / preflight (Gate 0–1)**
+- Kill switch `~/.ailang/state/mission-world.disabled`: NOT set (armed). Billing tripwire: **CLEAN**
+  (no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`). gh account: `sunholo-voight-kampff` (gh was not on
+  PATH in the tool shell — `/opt/homebrew/bin` prepended per-call; no state impact).
+- Overlap guard: `mission-world.pid`=55929 is ALIVE but is THIS run's own `claude -p` driver process
+  (verified: identical mission-control command line) — no concurrent iteration.
+- Local `dev` == `origin/dev` == `8f918b9` at start (in sync; `git branch -vv` confirmed — the
+  two-ref `git rev-parse --short dev origin/dev` errored oddly but sync was confirmed independently).
+  CI `CI` on dev: **completed/success** @ `8f918b914`. No `[nightly-eval]` open issues on
+  `sunholo-data/ailang-world`.
+- Bookkeeping issue `#1` (world-namespaced `mission-world-gh-issue`; the generic `mission-gh-issue`
+  =422 is V1's, in the ailang repo — correctly NOT used). **Zero** new `@MarkEdmondson1234` comments
+  since watermark `2026-07-23T20:13:54Z` (unchanged). Inbox: 1 unread = V1-mission `eval-suite`
+  "started" FYI (3 models × 3 benchmarks — V1's suite; World owns none) → triaged **not-outranking**.
+- No weekly rotation: issue #1 is current-week (created 2026-07-23, week of 2026-07-20), 17 comments
+  (<80), watermark post-Monday boundary.
+
+**Pick + reality-check (Gate 2)**
+- Picked item 2 `w-world-library-m1`, milestone **M2** (per the iter-8 "Next" + the sprint plan's
+  M2 entry). Plan exists (`.ailang/state/sprints/w-world-library-m1.plan.json`) → route straight to
+  sprint-executor (no re-quorum: design doc unchanged, direction-accepted iter-6/8).
+- Not already-landed: fresh `git fetch`; no `.go` files, no `host/`, no `go.mod` on origin/dev; only
+  prior merged PR is #2 (M1). No sibling session (main tree clean, no MERGE_HEAD).
+- M2 spec (plan): two dependency-free leaf Go packages + `go.mod`, ~340 LOC, acceptance = `go build`/
+  `go test` green for `host/hashref` + `host/canon`, canon covers 8 canonicalization cases +
+  idempotence + golden HashRef, hash readers reject malformed/uppercase/bare/unsupported forms.
+- **Charter reconciliation**: the Repo Profile (line ~50) mandates "extend the CI workflow in the
+  same PR that introduces Go code"; the sprint plan scheduled the CI Go gate at M6. M2 is the PR
+  where Go first lands → directed the executor to ALSO add the go-verify CI job now (the plan's M6
+  "verify_go.sh + final sweep" still stands as a superset). Go host code is never un-gated.
+
+**Route + execute (Gate 3) — all roles model-PINNED, spawned (never inline)**
+- **Sprint-executor** (opus Agent, isolated worktree `/tmp/wt-world-m2` branch
+  `sprint/w-world-library-m2` from dev@8f918b9): built `go.mod` (module
+  `github.com/sunholo-data/ailang-world`, go 1.26.4, no external deps), `host/hashref/`
+  (hashref.go 184 + test 143: tagged `HashRef` `algo:digest` parse/render, sha256 via crypto/sha256,
+  structured `HashError` rejecting malformed/uppercase-hex/bare/unsupported-tag/wrong-width, golden
+  vectors) and `host/canon/` (source.go 166 + test 142: 8-step UTF-8/LF canonicalization,
+  `CanonicalizationError` on invalid UTF-8/BOM/NUL, all 8 cases + idempotence + golden HashRef).
+  Extended `.github/workflows/ci.yml` with a `go-verify` job (setup-go via `go-version-file: go.mod`
+  → `go build ./...` → `go test ./... -count=1`); existing `ailang-verify` job untouched. Committed
+  `83809e8` on the branch. **Deliberate deviation**: the plan's "pin SQLite driver at M2" was
+  DEFERRED to M3 (its first importing code) — `go mod tidy` strips an unused `require`, which would
+  break the gate; the leaf packages build+test clean with zero deps (`go mod tidy` = no-op, verified).
+- **Controller independent verify** (data before conclusions): `go build ./...` rc=0; `go test
+  ./host/... -count=1` both packages `ok` (45 test cases via `-v`); `go vet ./...` rc=0; `gofmt -l
+  host/` empty; `go mod tidy` no-op; ci.yml diff is a clean job addition; the existing ailang gate
+  still passes (`verify_ail.sh` rc=0, `checked 8 module(s)`).
+- **Sprint-evaluator** (sonnet Agent; generator≠judge: opus executor ≠ sonnet judge): **PASS
+  97/100 round 1**, no blocking defects. Ran its own build/test/vet/gofmt + independently
+  checksum-verified the golden sha256 vectors (`shasum -a 256`). Confirmed Decision-2 (all 8 steps)
+  and Decision-3 (HashRef invariants, lowercase-hex enforcement, structured errors) fidelity, and
+  that the go-verify job genuinely gates future PRs. Judged the SQLite deferral sound. Three
+  non-blocking notes (SQLite-pin-deferral doc, verify_go.sh is an M6 deliverable, one unreachable
+  defensive branch `firstInvalidUTF8Offset` returns -1) — none actioned (all cosmetic / future-milestone).
+- **Land (Gate 3b)**: PR **#3** → dev; both CI jobs (`ailang-code verify gate` + `go host build +
+  test gate`) **completed success** on the PR head; mergeable CLEAN → squash-merged **`d5b155c`**,
+  branch deleted; local dev ff'd; post-merge dev CI **green** both jobs (run 30072503676). Worktree
+  removed.
+
+**Routing evidence** (role, model ACTUALLY used)
+| Role | Pin (env) | Actual | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | opus | triage/pick/verify/record/retro |
+| Sprint-planner | — | (not run) | plan pre-existed from iter-8; no re-plan needed |
+| Design-doc-creator | — | (not run) | no new/revised doc; rotation state unchanged (`codex:gpt-5.6-sol`) |
+| Sprint-executor | `MISSION_EXECUTOR_MODEL`=opus | opus Agent | ✓ as pinned (codex lane not yet wired for World; interim opus per Repo Profile) |
+| Sprint-evaluator | `MISSION_EVALUATOR_MODEL`=sonnet | sonnet Agent | ✓ generator≠judge (opus≠sonnet) |
+
+`metered=$0.00` — no codex / managed_agents / quorum reviewer calls (all roles on Anthropic
+subscription Agent-tool pins). Budget ceiling ($5) not approached.
+
+**Ruled out** (do not re-chase)
+- Pinning the pure-Go SQLite driver at M2 — deferred to M3 where it is first imported (unused
+  `require` is stripped by `go mod tidy` and breaks the build). Documented in the commit + evaluator-endorsed.
+- Landing M3–M6 this iteration — milestone-by-milestone across iterations is the plan (each ends
+  CI-green). Item stays [IN-SPRINT], not [LANDED], until M6.
+- Deferring the CI Go gate to M6 (as the plan scheduled) — overridden: the charter requires CI to
+  gate Go code from its first landing, so the go-verify job landed with M2.
+
+**Retro / Next (Gate 5)**
+- **Retro**: clean executor→evaluator→land pass; the ailang-code verify profile + generator≠judge +
+  bounded CI polls + worktree isolation all functioned. Friction, NONE meeting the ≥2-same-gap
+  skill-edit bar: (1) the sprint-planner scheduled the CI Go gate at M6, but the charter Repo
+  Profile requires CI to gate Go code in the PR where it FIRST lands (M2) — reconciled by the
+  controller directing the executor to add go-verify now; logged as **instance 1** of a
+  "planner-vs-charter CI-gate-timing" gap (a repeat would justify a sprint-planner note to front-
+  load charter-mandated CI gates to the first-landing PR). (2) A controller scripting slip — the
+  first Gate-3b poll used `git rev-parse HEAD` in the MAIN checkout (returns dev's SHA, not the
+  branch head) → "no run discovered"; self-caught, re-polled with `origin/sprint/...` SHA; no
+  action. No skill edit, no process/routing change (routing-policy change needs ≥3 evidence rows;
+  this is the 2nd landed sprint — the executor=opus / evaluator=sonnet / generator≠judge pattern
+  now has 2 clean datapoints, still below the bar to change anything).
+- **Next**: route `w-world-library-m1` **milestone 3** (SQLite schema + store: immutable objects,
+  worlds, atomic append-only log — pins the pure-Go SQLite driver here) to sprint-executor (opus) in
+  a fresh worktree → evaluator (sonnet). Item stays [IN-SPRINT] until M6 lands the epoch registry +
+  replay-doubling + verify_go.sh, then → [LANDED] and the doc moves to `implemented/`.
