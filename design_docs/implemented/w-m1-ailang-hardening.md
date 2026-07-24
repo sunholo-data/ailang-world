@@ -1,6 +1,7 @@
 # w-m1-ailang-hardening — Z3 Contracts + Inline Tests for the M1 Kernel
 
-**Status**: Planned
+**Status**: Implemented (iter-13, 2026-07-24 — 4 Z3-proven contracts + 14 inline tests + a
+bounded non-vacuous required-check-manifest gate; sprint-evaluator PASS 97/100, generator≠judge)
 **Date**: 2026-07-24
 **Charter clause**: clause-1
 **Mission**: ailang-world
@@ -8,7 +9,9 @@
 **Verified against**: **released `AILANG v0.30.0`** (`/tmp/ailang-v0300/ailang`, commit `e37b370`,
 built 2026-07-19) + **Z3 4.16.0** — the same pinned artifact as the M1 sprint. Every contract and
 test shape in this doc was run through that exact binary before being specified (see the
-Verification Log). NOT verified against the PATH dev build.
+Verification Log). NOT verified against the PATH dev build. Claim V5 was found FALSE against
+production types on 2026-07-24 (executor iter-12 + controller iter-13); the achievable proven set
+is 4, and upstream `sunholo-data/ailang#477` tracks the ADT-in-record encoder gap.
 **Traces to**: [w-world-library-m1.md](w-world-library-m1.md) (M1 milestone 1 shipped the four
 modules this doc retrofits); [world-mission.md](../world-mission.md) queue item; memory
 `ailang-feature-discoverability-gap`
@@ -54,13 +57,14 @@ the code itself.
 ## Goals
 
 1. `ai-check` reports `status == "verified"` for **every identity in a required-check
-   manifest**: `(transitions, applyRevision)`, the four `contracts` predicates, and
-   `(logepoch, sameRef)` + `(logepoch, servesEntry)` — 7 in total, with the exact total
-   (`== 7`) as a *secondary* check only.
-2. `ailang test` passes **all 8 named inline tests** (`renderRef_test_1/2`, `sameRef_test_1/2`,
-   `cacheKey_test_1/2`, `servesEntry_test_1/2` — per-test identities confirmed available in
-   v0.30.0 JSON, V18), covering every interpolation-based function whose only possible machine
-   check is a test.
+   manifest**: `(transitions, applyRevision)`, `(contracts, isValidNextWorld)`,
+   `(logepoch, sameRef)`, and `(logepoch, servesEntry)` — 4 in total, with the exact total
+   (`== 4`) as a *secondary* check only.
+2. `ailang test` passes **all 14 named inline tests** (`renderRef_test_1/2`, `sameRef_test_1/2`,
+   `cacheKey_test_1/2`, `servesEntry_test_1/2`, `proposalMatchesWorld_test_1/2`,
+   `verificationMatchesProposal_test_1/2`, `commitAllowed_test_1/2` — per-test identities
+   confirmed available in v0.30.0 JSON, V18/V25), covering every interpolation-based function
+   and every Proposal-taking predicate whose designated machine check is a test.
 3. `scripts/verify_ail.sh` **fails loudly** when any required identity is missing, errored,
    counterexampled, or skipped, or when any required named test is missing or failing — with
    the manifest and totals **hardcoded** (no env override can weaken the gate; only
@@ -87,7 +91,7 @@ paths — same shape as production). **V-numbers are cited throughout the doc.**
 | V2 | Record-field postconditions prove: `ensures { result.revision == w.revision + 1 && result.stateRoot.algo == outputWorld.algo && … }` (5-conjunct) **verified**, including with `World`/`HashRef` imported cross-module | multi-module scratch mirroring `world/logepoch` + `world/types` + `world/transitions` |
 | V3 | **A contracted function may not call ANY user function** — not cross-module, not same-module, not even an SMT-encodable one. Z3 fails with `unknown constant sameRef (HashRef HashRef)` → `status: "error"`. The v0.30.0 encoder never inlines callees. Provable contracts require **fully-inlined bodies** | body `sameRef(…)` + inlined ensures → `error`; same body inlined → `verified` |
 | V4 | `implies` is **not** AILANG syntax (`PAR_UNEXPECTED_TOKEN` at the keyword). Exact-equality form `ensures { result == (<full condition>) }` is the provable shape and entails the implication corollaries | parse-error transcript; exact form verified on all 4 predicates |
-| V5 | All four contracts.ail predicates **verify** when bodies are inlined field-equality: `proposalMatchesWorld`, `verificationMatchesProposal`, `commitAllowed`, `isValidNextWorld` → 4× `"verified"`, exit 0 | multi-module scratch, `verify.verified: 3` (contracts) + 1 (isValidNextWorld scratch) |
+| V5 | **SUPERSEDED 2026-07-24 — FALSE against production types.** Only `isValidNextWorld` verifies. The three Proposal-taking predicates Z3-error with `unknown sort 'Proposal'` because production `Proposal` contains `evidence: list[Evidence]`, where `Evidence` is an ADT; `ai-check` exits 0 silently | executor iter-12 + controller iter-13 pinned-binary reproductions against scratch mirroring the real production types |
 | V6 | `sameRef` with a **field-equality body** + `ensures { result == (left.algo == right.algo && left.digest == right.digest) }` → `"verified"` (its current interpolation body is unencodable) | scratch logepoch mirror |
 | V7 | Any function whose body reaches interpolation (`renderRef`, `cacheKey`, current `sameRef`) is **unencodable**; contracted callers get `UNENCODABLE_TYPE` skip or Z3 error. Tests are the only machine check | scratch3 skip transcript: `calls user function "sameRef" that is not SMT-encodable` |
 | V8 | `plan` **cannot** carry a contract in v0.30.0: the encoder mis-sorts literals in record construction — `confidence: 1.0` → SMT `Int` vs declared `Real`; `expectedEffects: []` → `(Seq Int)` vs `(Seq String)` → `unknown constant mk_Proposal` error | scratch `planlike` error transcript |
@@ -105,6 +109,11 @@ paths — same shape as production). **V-numbers are cited throughout the doc.**
 | V20 | **NT1 analog (silent identity vanish):** deleting `sameRef`'s `ensures` makes the identity **disappear from `results[]` entirely** — `verified` 2→1, `errors: 0`, exit 0. Invisible to exit codes and maskable by any aggregate floor; only a required-identity check catches it | scratch mutation: ensures line stripped → `results: [servesEntry]`, exit 0 |
 | V21 | **NT2 analog (aggregate floor blind spot):** deleting both `renderRef` tests → `passed_tests: 6, failed_tests: 0`, exit 0 — an aggregate floor of 6 **still passes**; the named-test manifest fails (both `renderRef_test_*` absent) | scratch mutation: tests block removed → 6 names, no `renderRef_test_*`, exit 0 |
 | V22 | Directory mode `ailang test --format json world/` merges all modules into **one JSON preserving `tests[].name`** (names stay bare — no module qualifier) and exits 0 when a test-free module sits alongside tested ones; a test-free module **alone** exits 1 but still emits valid JSON (`total_tests: 0`, `success: false`) | two-module scratch (`logepoch` + test-free `types`): dir-mode exit 0 with all 8 names; `types.ail` solo → exit 1, valid JSON |
+| V23 | A contract on `proposalMatchesWorld(w: World, p: Proposal)` with an inlined field-equality body + exact `ensures` reports function `status: "error"`, reason `Z3 error ... Invalid constant declaration: unknown sort 'Proposal'`, `verify.errors: 1`, process exit 0 (SILENT). `verificationMatchesProposal` and `commitAllowed` are the same class because both take `Proposal` | controller iter-13 pinned-binary scratch mirroring the REAL types |
+| V24 | A contract on `isValidNextWorld(w: World, next: World, outputWorld: HashRef, nextLogHead: HashRef)` with an inlined field-equality body + exact `ensures` reports `status: "verified"`, `verify.errors: 0`, exit 0; `World`/`HashRef` contain no ADT | controller iter-13 pinned-binary scratch mirroring the REAL types |
+| V25 | Inline `tests [(in,exp)]` on a Proposal-taking predicate run and pass using a full 9-field `Proposal` literal (`evidence: []`, `confidence: 1.0`, `requiredCaps: []`, `expectedEffects: []`): `proposalMatchesWorld_test_1/2` both `status: "pass"`, `failed_tests: 0`. With all three Proposal predicates tests-only (no `ensures`) plus the proven `isValidNextWorld` contract, `ai-check` reports `verified: 1, errors: 0, counterexample: 0` — a clean gate | controller iter-13 pinned-binary scratch mirroring the REAL types |
+| V26 | **Bounded-execution semantics (re-quorum objection).** `ai-check -timeout` is a **per-function Z3 timeout** (default 5s — `--help`: "Per-function Z3 timeout"), **NOT** a process-wide wall-clock bound; `ailang test` has **no** timeout flag at all. Neither leg self-bounds its wall-clock, so a solver/runner/parse hang would block CI indefinitely — the gate must wrap BOTH invocations in an OS-level bounded subprocess that kills the process group on expiry and fails loudly (Standing Rule 6) | controller iter-13 `ai-check --help` + `test --help` on the pinned binary |
+| V27 | **`ai-check` needs an external `z3` binary — and SKIPS SILENTLY without it.** The released ailang shells out to `z3` (searches `$PATH` + hardcoded `/usr/bin/z3`, `/usr/local/bin/z3`, `/snap/bin/z3`, `/opt/homebrew/bin/z3` — confirmed in the binary's strings). On a host with **no** z3 (a bare `ubuntu-latest` runner) every contract **SKIPS**: the identity is **absent** from `verify.results[]`, `verify.verified: 0`, exit 0 (the V20 silent-vanish class). So the required-check manifest is only meaningful where z3 is installed → **CI MUST install Z3 4.16.0** (the doc's pin) before the gate. First seen live: PR #5's first CI run went red (`isValidNextWorld MISSING from verify.results[]`) because the runner had no z3, though the identical binary (commit `e37b370`) + z3 4.16.0 verifies it locally | PR #5 CI run 30102600625 (linux, no z3) vs controller darwin (z3 4.16.0) |
 
 ---
 
@@ -156,32 +165,27 @@ The increment invariant is Z3-proven at the helper; `commit` (uncontracted) comp
 produces no Z3 obligation and no error (V9). This is the strongest provable shape v0.30.0
 admits for a sum-typed commit.
 
-### D2 — contracts.ail: exact `ensures` on all four predicates, bodies inlined
+### D2 — contracts.ail: one proven predicate; Proposal predicates get inline tests
 
-By V3, a provable predicate cannot call `sameRef`. Each predicate's body is rewritten as
-inlined field equality, and its `ensures` restates the **exact** semantics
-(`ensures { result == (<full condition>) }`, V4/V5):
+Only `isValidNextWorld` gets a Z3 contract. Its `World`/`HashRef` parameters contain no ADT, so
+its body is rewritten as inlined field equality and its `ensures` restates the **exact** semantics
+(`ensures { result == (<full condition>) }`, V4/V24). The inlining rationale remains V3/D-A: a
+contract that must be Z3-encodable takes the strictly-safe path independent of callee encodability.
 
-```ailang
-export func proposalMatchesWorld(w: World, p: Proposal) -> bool ! {}
-ensures { result == (w.stateRoot.algo == p.inputWorld.algo
-                       && w.stateRoot.digest == p.inputWorld.digest) }
-{
-  w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest
-}
-```
-
-(`verificationMatchesProposal`, `commitAllowed`, `isValidNextWorld` follow the same pattern —
-full conjunctions in the per-function table below. `commitAllowed`'s exact ensures entails the
-security corollary "not accepted ⇒ not allowed" without needing `implies`, which doesn't
-parse, V4.)
+The three Proposal-taking predicates — `proposalMatchesWorld`,
+`verificationMatchesProposal`, and `commitAllowed` — keep their **existing shared-predicate
+bodies unchanged**, including calls to `sameRef` and to each other. They gain 2 inline `tests`
+each and carry **no `ensures`**. A contract on any of them reaches production `Proposal`, whose
+`evidence: list[Evidence]` transitively contains a user ADT, and fails with
+`unknown sort 'Proposal'` while `ai-check` exits 0 silently (V23; upstream
+`sunholo-data/ailang#477`). Their machine check is therefore the six named inline tests (V25).
 
 **The drift objection, answered.** contracts.ail's stated design is "verify and commit call the
-SAME predicates so policy cannot drift." Inlining field equality into each predicate trades
-*function-sharing* for something strictly stronger: each predicate now carries an `ensures`
-that pins its exact semantics, and **Z3 emits a counterexample the moment any body drifts from
-its contract** (V10: counterexample → exit 1 → gate red). The callers (`verify`, `commit`)
-still call the shared predicates — that layer of the anti-drift architecture is untouched.
+SAME predicates so policy cannot drift." That anti-drift shared-predicate architecture is
+preserved for all three Proposal predicates: their bodies remain shared-predicate calls, and the
+callers (`verify`, `commit`) remain unchanged. Only `isValidNextWorld` is inlined because its
+contract is Z3-encodable and proven; where the v0.30.0 encoder cannot form the obligation, inline
+tests provide the machine check without duplicating predicate logic.
 
 ### D3 — logepoch.ail: `sameRef` becomes structural (and proven); renderers get tests
 
@@ -222,19 +226,20 @@ in v0.30.0 (reason given).
 | `commit` | transitions | none — sum-typed result + calls user fns (V3); composes the proven helper | — (Proposal/Verification literals heavy; stretch only) | via `applyRevision` + `commitAllowed` |
 | `plan` | transitions | none — encoder mis-sorts `1.0`/`[]` literals in record construction (V8) | stretch | — (documented v0.30.0 limitation) |
 | `verify` | transitions | none — body calls shared predicate (V3) | stretch | — |
-| `proposalMatchesWorld` | contracts | exact ensures, inlined field-eq body | — | **Z3 ✅** (V5) |
-| `verificationMatchesProposal` | contracts | exact ensures: `result == (p.proposalHash.algo == v.proposalHash.algo && p.proposalHash.digest == v.proposalHash.digest)` | — | **Z3 ✅** (V5) |
-| `commitAllowed` | contracts | exact ensures: `result == (input-world field-eq && v.accepted && proposal-hash field-eq)` — entails "¬accepted ⇒ ¬allowed" | — | **Z3 ✅** (V5) |
-| `isValidNextWorld` | contracts | exact ensures: `result == (next.revision == w.revision + 1 && stateRoot field-eq outputWorld && logHead field-eq nextLogHead)` | — | **Z3 ✅** (V5) |
+| `proposalMatchesWorld` | contracts | none (Proposal contains ADT `evidence` ⇒ `unknown sort`, V23/#477); existing shared-predicate body unchanged | 2: `proposalMatchesWorld_test_1`, `proposalMatchesWorld_test_2` | **tests only** (V25) |
+| `verificationMatchesProposal` | contracts | none (Proposal contains ADT `evidence` ⇒ `unknown sort`, V23/#477); existing shared-predicate body unchanged | 2: `verificationMatchesProposal_test_1`, `verificationMatchesProposal_test_2` | **tests only** (V25) |
+| `commitAllowed` | contracts | none (Proposal contains ADT `evidence` ⇒ `unknown sort`, V23/#477); existing shared-predicate body unchanged | 2: `commitAllowed_test_1`, `commitAllowed_test_2` | **tests only** (V25) |
+| `isValidNextWorld` | contracts | exact ensures: `result == (next.revision == w.revision + 1 && stateRoot field-eq outputWorld && logHead field-eq nextLogHead)`; inlined field-eq body | — | **Z3 ✅** (V24) |
 | `sameRef` | logepoch | exact ensures over field equality; body retrofitted from text-eq (D3) | 2 (equal / differing digest) | **Z3 ✅ + tests** (V6, V12) |
 | `renderRef` | logepoch | none — interpolation (V7) | 2: `({algo:"sha256",digest:"abc"}) → "sha256:abc"`, `({algo:"sha1",digest:"00"}) → "sha1:00"` | **tests only** |
 | `cacheKey` | logepoch | none — interpolation via `renderRef` (V7) | 2: full `LogHeader` literal → `"sha256:aa@sha256:bb"`; distinct interpreter digest → distinct key | **tests only** (V12: nested literals confirmed) |
 | `servesEntry` | logepoch | `ensures { result == (rec.epoch == h.semanticsEpoch) }` | 2: matching epoch → `true`, mismatched → `false` | **Z3 ✅ + tests** |
 | `types.ail` (all) | types | none — type declarations only, no functions | — | type-check (unchanged) |
 
-**Totals: 7 Z3-proven contracts, 8 inline tests.** The gate (D5) requires each of these **by
-identity, not by count**: a per-module manifest of required verified functions plus the set of
-required passing test names, with the exact totals (`== 7`, `== 8`) as secondary checks only.
+**Totals: 4 Z3-proven contracts, 14 inline tests.** The gate (D5) requires each of these **by
+identity, not by count**: `(transitions, applyRevision)`, `(contracts, isValidNextWorld)`,
+`(logepoch, sameRef)`, and `(logepoch, servesEntry)`, plus all 14 required passing test names,
+with the exact totals (`== 4`, `== 14`) as secondary checks only.
 Required invariants and renderer coverage are not interchangeable counts (V20/V21 demonstrate
 both maskings empirically). A benign refactor that renames or moves one of these functions must
 update the hardcoded manifest in the same PR — a deliberate, reviewable act rather than a
@@ -245,10 +250,10 @@ silent gate weakening.
 Current gate: per-module `ai-check`, trusts exit codes, passes on module count alone (V15) —
 and exit codes are **insufficient** because a Z3 encoding error exits 0 (V10). Aggregate
 floors are also insufficient: a dropped contract *vanishes silently* from `results[]` (V20)
-and a deleted test pair still clears a floor of 6 (V21) — required invariants and renderer
-coverage are not interchangeable counts. The gate is therefore a **required-check manifest**:
-hardcoded per-module identity sets that must verify/pass, with exact totals as secondary
-checks. Retrofit the script (same file, same ROOTS mechanism, same AILANG_BIN contract):
+and a deleted test pair still clears a floor of 6 (V21) — required invariants and test coverage
+are not interchangeable counts. The gate is therefore a **required-check manifest**: hardcoded
+per-module identity sets that must verify/pass, with exact totals as secondary checks. Retrofit
+the script (same file, same ROOTS mechanism, same AILANG_BIN contract):
 
 **Gate policy — hardcoded constants, deliberately NOT env-overridable.** Only `AILANG_BIN`
 remains configurable, and it selects the binary *path*, not gate strength. There are no
@@ -259,23 +264,60 @@ Keyed by **(module file, bare function name)** because `ai-check` emits bare nam
 ```python
 REQUIRED_VERIFIED = {
     "world/transitions.ail": {"applyRevision"},
-    "world/contracts.ail":   {"proposalMatchesWorld", "verificationMatchesProposal",
-                              "commitAllowed", "isValidNextWorld"},
+    "world/contracts.ail":   {"isValidNextWorld"},
     "world/logepoch.ail":    {"sameRef", "servesEntry"},
-    "world/types.ail":       set(),        # type decls only; must still check clean
+    "world/types.ail":       set(),
 }
-REQUIRED_TESTS = {  # all live in world/logepoch; names per V18's <fn>_test_<N> scheme
+REQUIRED_TESTS = {   # logepoch (8) + contracts (6)
     "renderRef_test_1", "renderRef_test_2", "sameRef_test_1", "sameRef_test_2",
     "cacheKey_test_1", "cacheKey_test_2", "servesEntry_test_1", "servesEntry_test_2",
+    "proposalMatchesWorld_test_1", "proposalMatchesWorld_test_2",
+    "verificationMatchesProposal_test_1", "verificationMatchesProposal_test_2",
+    "commitAllowed_test_1", "commitAllowed_test_2",
 }
-EXACT_TOTAL_VERIFIED = 7   # secondary check, world/ modules only
-EXACT_TOTAL_TESTS    = 8   # secondary check
+EXACT_TOTAL_VERIFIED = 4   # secondary check, world/ modules only
+EXACT_TOTAL_TESTS    = 14  # secondary check
+GATE_LEG_TIMEOUT_S   = 120 # hardcoded wall-clock cap per ai-check module leg (Rule 6, V26)
+GATE_TEST_TIMEOUT_S  = 180 # hardcoded wall-clock cap for the directory-mode test leg (V26)
 ```
+
+**Leg 0 — bounded execution (hardcoded deadlines, non-env-overridable, V26).** `ai-check
+-timeout` bounds only individual Z3 queries and `ailang test` has no timeout at all (V26), so a
+solver/runner/parse hang would block CI indefinitely — a bounded-waits violation (Standing Rule
+6). Every binary invocation in **both** legs runs through a hardcoded-deadline wrapper that starts
+the child in its own process group and, on expiry, kills the **whole group**, prints a named
+`✗ TIMEOUT …` to STDERR, and exits `124`. The deadlines are constants (`GATE_LEG_TIMEOUT_S`,
+`GATE_TEST_TIMEOUT_S`) — no environment variable can extend or disable them (only `AILANG_BIN`
+stays configurable). Portable form (python3 is already required by the parser; `start_new_session`
+→ process-group kill):
+
+```bash
+run_bounded() {  # $1=timeout_s  $2=out_file  $3..=cmd ;  exit 124 + named msg on expiry
+  local t="$1" out="$2"; shift 2
+  python3 - "$t" "$out" "$@" <<'PY'
+import os, signal, subprocess, sys
+t = int(sys.argv[1]); out = sys.argv[2]; cmd = sys.argv[3:]
+with open(out, "wb") as f:
+    p = subprocess.Popen(cmd, stdout=f, stderr=subprocess.STDOUT, start_new_session=True)
+    try:
+        sys.exit(p.wait(timeout=t))
+    except subprocess.TimeoutExpired:
+        os.killpg(os.getpgid(p.pid), signal.SIGKILL)
+        sys.stderr.write("✗ TIMEOUT after %ds: %s\n" % (t, " ".join(cmd))); sys.exit(124)
+PY
+}
+```
+
+A `124` from `run_bounded` is **always fatal** (it is the one exit code that is NOT advisory —
+distinct from the Z3-error-exits-0 and counterexample-exits-1 classes the JSON parse handles).
+Keep `ai-check`'s per-function `-timeout` at its 5 s default as an inner belt so individual Z3
+queries also self-bound.
 
 **Leg 1 — ai-check manifest.** For each module, capture the JSON to a temp file and parse
 (python3 — present on macOS and ubuntu-latest runners; no jq dependency). Exit codes are
 **advisory** (`|| true` / RC captured) — the JSON parse is authoritative, since a Z3
-encoding error exits 0 (V10) and a vanished identity exits 0 (V20):
+encoding error exits 0 (V10) and a vanished identity exits 0 (V20) — **except a `124` TIMEOUT
+(Leg 0), which is fatal**:
 
 - **every** swept module (world/ + sketches): fail if `.check.passed != true`,
   `.verify.errors > 0`, or `.verify.counterexample > 0`;
@@ -284,14 +326,17 @@ encoding error exits 0 (V10) and a vanished identity exits 0 (V20):
   `counterexample`, or `skip` for a required name each fail with a message naming the
   (module, function) pair;
 - accumulate `total_verified` over **world/ modules only**; after the loop assert
-  `total_verified == 7` exactly (secondary). Sketches are excluded from the total and carry
+  `total_verified == 4` exactly (secondary). Sketches are excluded from the total and carry
   empty required sets — a future contracted sketch can neither mask a required identity
   (requirements are per-module) nor perturb the exact total.
 
 ```bash
 total_verified=0                                # explicit init before the loop
 for mod in "${ROOTS[@]}"; do
-  "$AILANG_BIN" ai-check "$mod" > "$tmp_json" || true    # exit advisory (V10/V20)
+  mod=${mod#./}                                 # normalize path so keys match the manifest (gemini catch)
+  run_bounded "$GATE_LEG_TIMEOUT_S" "$tmp_json" "$AILANG_BIN" ai-check -timeout 5s "$mod"; rc=$?
+  [ "$rc" -eq 124 ] && { echo "✗ ai-check TIMEOUT on $mod (>${GATE_LEG_TIMEOUT_S}s)"; exit 1; }
+  # other exit codes advisory (V10/V20) — the JSON parse below is authoritative
   mod_verified=$(python3 - "$mod" "$tmp_json" <<'PY'
   # loads REQUIRED_VERIFIED (hardcoded above); validates check/errors/counterexample
   # for all modules and required identities for world/ modules; prints the module's
@@ -302,8 +347,8 @@ PY
   ) || exit 1
   case "$mod" in world/*) total_verified=$((total_verified + mod_verified));; esac
 done
-if [ "$total_verified" -ne 7 ]; then
-  echo "✗ expected exactly 7 proven world/ contracts, got $total_verified"; exit 1
+if [ "$total_verified" -ne 4 ]; then
+  echo "✗ expected exactly 4 proven world/ contracts, got $total_verified"; exit 1
 fi
 ```
 
@@ -313,15 +358,17 @@ anticipated: required *named* tests, not per-module counts. One directory-mode r
 are preserved and merged across modules, V22):
 
 ```bash
-"$AILANG_BIN" test --format json world/ > "$tmp_test_json" || true   # exit advisory; JSON authoritative
+run_bounded "$GATE_TEST_TIMEOUT_S" "$tmp_test_json" "$AILANG_BIN" test --format json world/; rc=$?
+[ "$rc" -eq 124 ] && { echo "✗ ailang test TIMEOUT (>${GATE_TEST_TIMEOUT_S}s)"; exit 1; }
+# other exit codes advisory; JSON parse authoritative
 # python3 parser:
 #  - strip non-JSON prefix lines before the first "{" (stdout banner, V19)
 #  - fail unless EVERY name in REQUIRED_TESTS appears in .tests[] with status == "pass"
 #    (message to STDERR names each missing/failing test identity — objection-2 fix)
 #  - fail if .failed_tests > 0
-#  - assert len(.tests[]) == 8 exactly (secondary) — NOT .passed_tests (see fixture
-#    correction D-B: .passed_tests also counts contract-derived PROPERTIES, so it is 9+
-#    on the real logepoch and would be flaky; the count of NAMED inline tests is stable)
+#  - assert len(.tests[]) == 14 exactly (secondary) — NOT .passed_tests (see fixture
+#    correction D-B: .passed_tests also counts contract-derived PROPERTIES and would be
+#    flaky; the count of NAMED inline tests is stable)
 ```
 
 The `|| true` (objection-2 fix) interacts with the manifest by design: a failing test exits 1
@@ -329,16 +376,22 @@ but still emits full JSON (V18), so the parser reports *which* identity failed; 
 zero-test run yields absent/failing JSON fields, which the parser fails loudly. Property-test
 **skips are tolerated** (record-param generators don't exist in v0.30.0, V14); assertions
 are on named `tests[]` entries and `failed_tests`, never on `skipped_tests` or
-`properties[]`. Test names are bare, not module-qualified (V22) — unique today because
-`world/logepoch` is the only test-bearing module; if a future module introduces a colliding
-name, leg 2 must switch to per-module runs (recorded as a comment in the script).
+`properties[]`. Test names are bare, not module-qualified (V22). Two test-bearing modules now
+exist (`world/logepoch` and `world/contracts`) with no collision because the seven function
+names are distinct; if a future collision arises, leg 2 must switch to the documented
+per-module-run escape hatch (recorded as a comment in the script).
 
 **Negative acceptance tests** (one-shot, recorded in the PR description — not permanent CI
 jobs): **NT1** — a scratch copy of `world/` with `applyRevision`'s contract stripped must
 fail the gate naming the missing `(transitions, applyRevision)` identity (V20 confirms the
 aggregate-invisible vanish this catches). **NT2** — a scratch copy with both `renderRef`
 tests removed must fail the gate naming the missing `renderRef_test_1`/`renderRef_test_2`
-identities even though 6 tests still pass (V21 confirms an aggregate floor would miss it).
+identities even though the other 12 required tests still pass (V21 confirms an aggregate floor
+would miss the removed identities). **NT3** — pointing `AILANG_BIN` at a mock that `sleep`s
+longer than `GATE_LEG_TIMEOUT_S` must make the ai-check leg terminate at the deadline with a
+named `✗ ai-check TIMEOUT` message and a nonzero exit — and no environment variable extends it
+(the bounded-waits teeth, V26). **NT4** — the same mock against the directory-mode test leg must
+be terminated at `GATE_TEST_TIMEOUT_S` with a named `✗ ailang test TIMEOUT` and nonzero exit.
 Each mutation fails independently.
 
 **CI safety:** `AILANG_BIN` stays the only knob (CI exports its checksum-verified install);
@@ -365,30 +418,34 @@ honest enumeration:
    attached to `CommitResult` (sum type), and no contract can live on `commit` at all because
    its body calls user functions (V3). The design routes the invariant through `applyRevision`
    (D1). **What is and isn't proven must be stated honestly:** Z3 proves *the helper*
-   increments the revision; that `commit`'s `Applied` arm *uses* the helper is enforced by
-   code review + the `isValidNextWorld` proven predicate remaining available to the Go host —
-   not by Z3. A future AILANG with per-constructor postconditions could close this gap; out of
-   scope here.
+   increments the revision and proves `isValidNextWorld`; `commitAllowed` is tests-only because
+   its `Proposal` parameter reaches an ADT (V23). That `commit`'s `Applied` arm *uses* the helper
+   is enforced by code review + the `isValidNextWorld` proven predicate remaining available to
+   the Go host — not by Z3. A future AILANG with per-constructor postconditions could close this
+   gap; out of scope here.
 
 3. **No-user-calls encoding rule vs the shared-predicate architecture.** Inlining field
-   equality into the four predicates duplicates `sameRef`'s logic in exactly the way
-   contracts.ail's header comment warns against. Mitigation (D2): each duplicate site now
-   carries a Z3-checked exact `ensures`; drift produces a counterexample → exit 1 → CI red
-   (V10). The `verify`/`commit` → shared-predicate call structure is unchanged.
+   equality is limited to `isValidNextWorld`, whose contract must be Z3-encodable (V24).
+   `proposalMatchesWorld`, `verificationMatchesProposal`, and `commitAllowed` keep their
+   shared-predicate bodies unchanged, preserving contracts.ail's anti-drift architecture; their
+   machine check is 2 inline tests each, with no `ensures` because Proposal contracts Z3-error
+   (V23/V25). The `verify`/`commit` → shared-predicate call structure is unchanged.
 
 4. **`sameRef` semantic change (text-eq → field-eq).** Deliberate strengthening (D3). Differs
    only for refs whose `algo` contains `:` — impossible for producer-generated refs (`sha256`
    fixed by the settled epoch decision) but *representable* by the type. Downstream check:
    sketches are self-contained and don't import `world/logepoch` (V16); the Go host shares no
-   code with the `.ail` modules (V16); `world/contracts.ail` call sites are being rewritten in
-   this same change. `renderRef`'s output format is untouched — the on-disk/in-log canonical
+   code with the `.ail` modules (V16); `world/contracts.ail` keeps its shared-predicate call sites.
+   `renderRef`'s output format is untouched — the on-disk/in-log canonical
    text form does not change, so nothing the Go host has persisted is affected.
 
 5. **v0.30.0 encoder limitations bound the scope.** `plan` cannot be contracted (literal-sort
-   encoder errors, V8); `verify` cannot (calls predicates, V3). Neither is silently dropped:
-   the table records the reason, and the mission's upstream channel (`sunholo-data/ailang#476`
-   thread) is the escalation path for the encoder gaps (function-call inlining, float/empty-list
-   literal sorts, record generators for property tests).
+   encoder errors, V8); `verify` cannot (calls predicates, V3); and a record parameter that
+   transitively contains a user ADT cannot be encoded (`unknown sort 'Proposal'`, V23), tracked
+   upstream as `sunholo-data/ailang#477`. None is silently dropped: the table records the reason,
+   and the mission's upstream channel (`sunholo-data/ailang#476` thread) remains the escalation
+   path for the plan/verify gaps (function-call inlining, float/empty-list literal sorts, record
+   generators for property tests).
 
 6. **Gate change blast radius.** `verify_ail.sh` gains JSON parsing, a hardcoded
    required-check manifest, and a second leg. Failure modes considered: (a) Z3-error-exits-0
@@ -406,15 +463,16 @@ honest enumeration:
    coupling is deliberate**: renaming or moving a required function breaks the gate until the
    hardcoded manifest is edited in the same PR — visible, reviewable friction in place of the
    silent weakening that downward-overridable floors permitted; sketches can never mask a
-   required identity (requirements are per-(module, function) and the `== 7` total is scoped
+   required identity (requirements are per-(module, function) and the `== 4` total is scoped
    to `world/`); (g) bare test names could in principle collide across future test-bearing
-   modules (V22) — `logepoch` is today's only one; a collision forces leg 2 to per-module
-   runs, noted in a script comment.
+   modules (V22) — `logepoch` and `contracts` now both carry tests with no collision; a future
+   collision forces leg 2 to the documented per-module-run fallback, noted in a script comment.
 
 7. **Programs that MUST still work after this change** (regression fixtures, all existing):
    - `world/types.ail` — byte-identical, still type-checks (`ai-check` exit 0).
    - `world/logepoch.ail`, `world/contracts.ail`, `world/transitions.ail` — `ai-check` exit 0
-     with `errors == 0, counterexample == 0` and the new `verified` counts.
+     with `errors == 0, counterexample == 0` and the new `verified` counts;
+     `world/contracts.ail` also carries 6 passing inline tests.
    - `host/...` Go tests and the CI `go-verify` job — untouched files, must stay green.
    - `design_docs/sketches/*.ail` — still swept by leg 1, still pass with 0 contracts.
    - CI workflow's `AILANG_BIN` export — unchanged contract, no workflow edit required unless
@@ -427,15 +485,19 @@ honest enumeration:
 **Phase 1 — logepoch (~1h).** D3: `sameRef` field-eq body + ensures + 2 tests; `renderRef` +
 `cacheKey` tests; `servesEntry` ensures + tests. Run `ai-check` + `ailang test` on the module.
 
-**Phase 2 — contracts (~1h).** D2: four predicates → inlined bodies + exact ensures. Expect
-`verified: 4`, `errors: 0`.
+**Phase 2 — contracts (~1h).** D2: `isValidNextWorld` → inlined body + exact ensures; the three
+Proposal-taking predicates keep their shared-predicate bodies, gain 2 inline tests each, and carry
+no `ensures`. Expect `verified: 1` (`isValidNextWorld`), `errors: 0`, plus 6 passing inline tests
+(`proposalMatchesWorld`/`verificationMatchesProposal`/`commitAllowed`, 2 each).
 
 **Phase 3 — transitions (~1h).** D1: add `applyRevision`, rewire `commit`'s `Applied` arm.
 Expect `verified: 1` and **no** entry for `commit` in `verify.results` (V9).
 
-**Phase 4 — gate (~1–2h).** D5: retrofit `verify_ail.sh` (required-check manifest, JSON
-parse with banner-strip, test leg, exit-codes-advisory). Run the negative tests NT1/NT2
-(below), then full gate + CI.
+**Phase 4 — gate (~1–2h).** D5: retrofit `verify_ail.sh` (Leg 0 `run_bounded` hardcoded-deadline
+wrapper, required-check manifest, JSON parse with banner-strip, test leg, exit-codes-advisory
+except the fatal `124` TIMEOUT, path normalization `mod=${mod#./}`). Run the negative tests
+NT1/NT2 (manifest teeth) **and NT3/NT4 (bounded-waits teeth — sleeping `AILANG_BIN` mock)**,
+then full gate + CI.
 
 Executor note (mission requirement): load the version-locked syntax first (`ailang-docs` MCP
 `prompt_get` or `ailang prompt`) before touching `.ail`.
@@ -443,33 +505,41 @@ Executor note (mission requirement): load the version-locked syntax first (`aila
 ## Acceptance Criteria
 
 - [ ] `scripts/verify_ail.sh` green on the pinned binary with **every required identity
-      verified**: `(transitions, applyRevision)`, the four contracts.ail predicates,
+      verified**: `(transitions, applyRevision)`, `(contracts, isValidNextWorld)`,
       `(logepoch, sameRef)`, `(logepoch, servesEntry)` — each present in `ai-check`
       `verify.results[]` (bare names, V17) with `status == "verified"`, and world/-scoped
-      total exactly **7** (secondary check).
-- [ ] `ailang test --format json world/` green with **all 8 required named tests passing**:
-      `renderRef_test_1/2`, `sameRef_test_1/2`, `cacheKey_test_1/2`, `servesEntry_test_1/2`
-      each `status == "pass"` in `tests[]` (V18), `failed_tests == 0`, and
-      `len(tests[]) == 8` exactly (secondary — NOT `passed_tests`, which also counts passing
-      contract properties → flaky; fixture correction D-B); property skips tolerated (V14).
+      total exactly **4** (secondary check).
+- [ ] `ailang test --format json world/` green with **all 14 required named tests passing**:
+      `renderRef_test_1/2`, `sameRef_test_1/2`, `cacheKey_test_1/2`, `servesEntry_test_1/2`,
+      `proposalMatchesWorld_test_1/2`, `verificationMatchesProposal_test_1/2`, and
+      `commitAllowed_test_1/2` each `status == "pass"` in `tests[]` (V18/V25),
+      `failed_tests == 0`, and `len(tests[]) == 14` exactly (secondary — NOT `passed_tests`,
+      which also counts passing contract properties → flaky; fixture correction D-B); property
+      skips tolerated (V14).
 - [ ] `verify.errors == 0` and `verify.counterexample == 0` on every module (the silent-error
       class, V10, is now gate-fatal).
 - [ ] **Gate policy is hardcoded:** no environment variable can lower, bypass, or shrink the
       required-identity manifest or the exact totals; `AILANG_BIN` (binary path) is the only
       configurable knob.
+- [ ] **Bounded waits (Standing Rule 6, V26):** both gate legs run through the hardcoded-deadline
+      `run_bounded` wrapper (Leg 0) that starts the child in its own process group and SIGKILLs the
+      whole group on expiry; NT3/NT4 (a sleeping `AILANG_BIN` mock) prove each leg terminates at
+      `GATE_LEG_TIMEOUT_S`/`GATE_TEST_TIMEOUT_S` with a named TIMEOUT failure + nonzero exit, and
+      that no environment variable can extend or disable the deadline.
 - [ ] **Negative test NT1 (required identities have teeth):** running the retrofitted gate
       against a scratch copy of `world/` with `applyRevision`'s contract stripped exits
-      non-zero naming the missing `(transitions, applyRevision)` identity — even though 6
+      non-zero naming the missing `(transitions, applyRevision)` identity — even though 3
       other functions still verify (the aggregate-invisible vanish, V20). Recorded once in
       the PR description; not a permanent CI job.
 - [ ] **Negative test NT2 (named tests have teeth):** running the gate against a scratch copy
       with both `renderRef` tests removed exits non-zero naming the missing
-      `renderRef_test_1`/`renderRef_test_2` identities — even though 6 tests still pass and
+      `renderRef_test_1`/`renderRef_test_2` identities — even though 12 tests still pass and
       `failed_tests == 0` (V21). Each mutation fails independently of the other. Recorded
       once in the PR description; not a permanent CI job.
-- [ ] CI green end-to-end (ai-check gate + go-verify job untouched).
-- [ ] No diffs outside `world/{logepoch,contracts,transitions}.ail` and
-      `scripts/verify_ail.sh`. `world/types.ail` byte-identical.
+- [ ] CI green end-to-end (ai-check gate + go-verify job). **The `ailang-verify` job installs
+      Z3 4.16.0** (V27 — the gate is vacuous on a z3-less runner); `go-verify` untouched.
+- [ ] Diffs limited to `world/{logepoch,contracts,transitions}.ail`, `scripts/verify_ail.sh`, and
+      `.github/workflows/ci.yml` (the Z3-install step, V27). `world/types.ail` byte-identical.
 
 ## Quorum verification log + carve-out application (iter-11)
 
@@ -508,6 +578,48 @@ unchanged.
   counts passing contract-derived **properties** in `passed_tests` (`inline_tests.ail.txt`:
   `passed_tests == 7`, `total_tests == 8`), so `passed_tests` is flaky. D5 + the acceptance criteria
   now assert the count of named inline `tests[]`. `failed_tests == 0` stays a hard check.
+
+### iter-13 revision (7->4 descope, empirically forced)
+
+- Executor iter-12 and controller iter-13 falsified V5 on 2026-07-24 against production types
+  using the pinned `/tmp/ailang-v0300/ailang` binary: a contract on any Proposal-taking predicate
+  errors with `unknown sort 'Proposal'` because `Proposal.evidence` contains the `Evidence` ADT,
+  while `ai-check` exits 0 silently. Upstream `sunholo-data/ailang#477` tracks this encoder gap.
+- Controller iter-13 reproduced that `isValidNextWorld` verifies cleanly on the real
+  `World`/`HashRef` shape and that inline Proposal-predicate tests run and pass with full
+  production-shaped literals. The achievable scope is therefore 4 Z3-proven contracts:
+  `applyRevision`, `isValidNextWorld`, `sameRef`, and `servesEntry`.
+- `proposalMatchesWorld`, `verificationMatchesProposal`, and `commitAllowed` move to tests-only:
+  their shared-predicate bodies remain unchanged, they carry no `ensures`, and they gain 2 inline
+  tests each. New totals: **4 verified / 14 tests**.
+- The design DIRECTION is unchanged: proven contracts wherever the encoder allows, inline tests as
+  the machine check everywhere else, and a hardcoded non-vacuous required-check manifest gate.
+
+### iter-13 re-quorum + narrow-refinement carve-out (2nd revision)
+
+- **Re-quorum** on the descoped doc (`gpt5-6-sol`, `gemini-3-1-pro`; controller verdict pass;
+  metered $0.095): **gemini-3-1-pro PASS** (only non-blocking notes: future JSON-schema coupling of
+  `len(tests[]) == 14`; a `mod=${mod#./}` path-normalization catch — the latter folded into Leg 1).
+  **gpt5-6-sol REJECT**, one blocking objection: the gate invokes `ai-check` and `ailang test`
+  with **no enforced wall-clock deadline**, so a solver/runner hang blocks CI indefinitely —
+  a bounded-waits (Standing Rule 6) violation. Concrete `proposed_fix`: hardcoded non-overridable
+  deadlines on both legs; establish `ai-check -timeout` semantics; wrap in a process-group-killing
+  subprocess timeout; add sleeping-mock negative tests.
+- **NARROW-REFINEMENT CARVE-OUT applied** (already ratified for the world mission, iter-11 M1 GO,
+  attended). The objection (a) carries a concrete reviewer-authored `proposed_fix` and (b) does NOT
+  dispute the design DIRECTION — it is a determinism/robustness completeness fix (bounded waits).
+  Controller made this bounded 2nd revision applying the reviewer's VERBATIM fix:
+  1. **V26** establishes empirically that `ai-check -timeout` is a **per-function** Z3 timeout (not
+     process-wide) and `ailang test` has no timeout — so both legs need an OS-level bound.
+  2. **Leg 0 `run_bounded`** wrapper: hardcoded `GATE_LEG_TIMEOUT_S`/`GATE_TEST_TIMEOUT_S`
+     (non-env-overridable), `start_new_session` process group, SIGKILL-on-expiry, named TIMEOUT to
+     STDERR, exit `124` (the one fatal, non-advisory code). Both legs route through it. Controller
+     pre-validated the mechanism on 4 cases (fast→rc0 output captured; 30 s hang→rc124 killed at
+     the 2 s deadline; nonzero exit preserved ≠ timeout; process-group kill leaves no leaked child).
+  3. **NT3/NT4** (sleeping `AILANG_BIN` mock) prove each leg terminates at its deadline; an
+     acceptance criterion added.
+- Not a force-pass (Standing rule 2): the design direction was uncontested; the fix is the
+  reviewer's own. Routed straight to sprint-planner after this revision (no 3rd quorum).
 
 ## Related Documents
 

@@ -48,6 +48,25 @@ export func verify(w: World, p: Proposal) -> Verification {
   else { proposalHash: p.proposalHash, accepted: false, reason: "input world mismatch" }
 }
 
+-- Contract 4's core, machine-proven (D1, V2/V24): the next world increments
+-- revision by exactly one and carries the supplied output-state root and
+-- next-log-head references. Extracted as a pure helper so a Z3-provable
+-- postcondition can live here (commit itself returns a sum type and calls user
+-- functions, so no contract can attach to commit directly — V3/V9). The body is
+-- a plain record literal; the exact ensures pins the invariant.
+export func applyRevision(w: World, outputWorld: HashRef, nextLogHead: HashRef) -> World ! {}
+requires { w.revision >= 0 }
+ensures {
+  result.revision == w.revision + 1
+    && result.stateRoot.algo == outputWorld.algo
+    && result.stateRoot.digest == outputWorld.digest
+    && result.logHead.algo == nextLogHead.algo
+    && result.logHead.digest == nextLogHead.digest
+}
+{
+  { revision: w.revision + 1, stateRoot: outputWorld, logHead: nextLogHead }
+}
+
 -- Phase 3 — Commit: derive the next immutable world and transition record
 -- without effects. Proceeds only when Contract 3 (commitAllowed) holds:
 -- verification accepted AND both identity predicates. The resulting world
@@ -63,7 +82,7 @@ export func commit(
 ) -> CommitResult {
   if commitAllowed(w, p, v)
   then Applied(
-    { revision: w.revision + 1, stateRoot: outputWorld, logHead: nextLogHead },
+    applyRevision(w, outputWorld, nextLogHead),
     {
       proposalHash: p.proposalHash,
       inputWorld: p.inputWorld,

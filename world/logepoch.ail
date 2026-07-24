@@ -54,13 +54,34 @@ export type LogHeader = {
 }
 
 -- Canonical rendering of a hash reference (the on-disk / in-log text form).
-export func renderRef(r: HashRef) -> string {
+-- Interpolation reaches builtin `show`, which has no SMT encoding (V7), so
+-- Z3 cannot prove this; inline tests are its only machine check (D3/D4).
+export func renderRef(r: HashRef) -> string
+tests [
+  (({ algo: "sha256", digest: "abc" }), "sha256:abc"),
+  (({ algo: "sha1", digest: "00" }), "sha1:00")
+]
+{
   "${r.algo}:${r.digest}"
 }
 
--- Structural equality of two hash references via their canonical text form.
-export func sameRef(left: HashRef, right: HashRef) -> bool {
-  renderRef(left) == renderRef(right)
+-- Structural equality of two hash references by field equality. Retrofitted
+-- from canonical-text-form equality (renderRef(l) == renderRef(r)) to the
+-- finer, Z3-encodable field-equality relation (D3, V6): the exact ensures
+-- pins the semantics and Z3 proves the body satisfies it. This is a
+-- deliberate tiny strengthening — text equality conflated refs whose fields
+-- straddle a ':' (e.g. {algo:"a",digest:"b:c"} vs {algo:"a:b",digest:"c"});
+-- field equality is the documented "Structural equality" intent, and no
+-- producer emits colon-bearing algos (sha256 only, settled epoch decision),
+-- so no observable behavior changes on real data.
+export func sameRef(left: HashRef, right: HashRef) -> bool ! {}
+ensures { result == (left.algo == right.algo && left.digest == right.digest) }
+tests [
+  ((({ algo: "sha256", digest: "abc" }), ({ algo: "sha256", digest: "abc" })), true),
+  ((({ algo: "sha256", digest: "abc" }), ({ algo: "sha256", digest: "def" })), false)
+]
+{
+  left.algo == right.algo && left.digest == right.digest
 }
 
 -- Epoch lookup predicate: a registry record describes a log entry's
@@ -69,7 +90,23 @@ export func sameRef(left: HashRef, right: HashRef) -> bool {
 -- exact archived artifact named by h.interpreter; if that artifact is
 -- unavailable or unsupported on the host, replay FAILS EXPLICITLY (A11) —
 -- it never silently substitutes another binary.
-export func servesEntry(rec: EpochRecord, h: LogHeader) -> bool {
+export func servesEntry(rec: EpochRecord, h: LogHeader) -> bool ! {}
+ensures { result == (rec.epoch == h.semanticsEpoch) }
+tests [
+  ((({ epoch: 1, candidateBinaries: [], successor: 2, frozen: false }),
+    ({ entryIndex: 0, semanticsEpoch: 1,
+       transitionFn: { algo: "sha256", digest: "aa" },
+       interpreter: { algo: "sha256", digest: "bb" },
+       prevEntryHash: { algo: "sha256", digest: "cc" },
+       writtenBy: "tester" })), true),
+  ((({ epoch: 1, candidateBinaries: [], successor: 2, frozen: false }),
+    ({ entryIndex: 0, semanticsEpoch: 2,
+       transitionFn: { algo: "sha256", digest: "aa" },
+       interpreter: { algo: "sha256", digest: "bb" },
+       prevEntryHash: { algo: "sha256", digest: "cc" },
+       writtenBy: "tester" })), false)
+]
+{
   rec.epoch == h.semanticsEpoch
 }
 
@@ -79,6 +116,19 @@ export func servesEntry(rec: EpochRecord, h: LogHeader) -> bool {
 -- metadata, not validity — distinct interpreter artifacts never share cache
 -- rows, even inside one epoch. The key is exactly the pair
 -- (transitionFn, interpreter).
-export func cacheKey(h: LogHeader) -> string {
+export func cacheKey(h: LogHeader) -> string
+tests [
+  (({ entryIndex: 0, semanticsEpoch: 1,
+      transitionFn: { algo: "sha256", digest: "aa" },
+      interpreter: { algo: "sha256", digest: "bb" },
+      prevEntryHash: { algo: "sha256", digest: "cc" },
+      writtenBy: "tester" }), "sha256:aa@sha256:bb"),
+  (({ entryIndex: 0, semanticsEpoch: 1,
+      transitionFn: { algo: "sha256", digest: "aa" },
+      interpreter: { algo: "sha256", digest: "zz" },
+      prevEntryHash: { algo: "sha256", digest: "cc" },
+      writtenBy: "tester" }), "sha256:aa@sha256:zz")
+]
+{
   "${renderRef(h.transitionFn)}@${renderRef(h.interpreter)}"
 }
