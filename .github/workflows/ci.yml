@@ -84,3 +84,6 @@ jobs:
 
       - name: go build + test gate (replay tests run against pinned AILANG_BIN)
         run: ./scripts/verify_go.sh
+
+      - name: worldd benchmark smoke gate
+        run: ./scripts/bench_worldd.sh --smoke
