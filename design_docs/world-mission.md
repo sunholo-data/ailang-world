@@ -242,10 +242,14 @@ Uses the **shared** per-role model routing from `mission-control` (controller /
 designer-rotation / planner / executor / evaluator, generator≠judge enforced). Overrides for THIS
 mission in `~/.config/ailang/mission-world.env`:
 
-- **Executor default**: NON-Anthropic lane — `codex` (e.g. `MISSION_EXECUTOR_MODEL=codex:gpt-5.6-sol`)
-  per the shared quota plan, once the fleet lanes are wired for this repo; until then the profile's
-  documented interim default (opus, subscription) applies. Wiring the codex lane is part of
-  iteration 0's checklist.
+- **Executor default**: NON-Anthropic lane — `codex:gpt-5.6-sol` (`MISSION_EXECUTOR_MODEL`),
+  per the shared quota plan. **iter-19 routing incident RESOLVED by Mark 2026-07-27 (attended,
+  option c): codex-cli upgraded 0.137.0 → 0.145.0 (npm -g) and the pin LIVE-PROBED working**
+  (`env -u OPENAI_API_KEY codex exec --model gpt-5.6-sol` → PIN-OK, ~21 tokens, ChatGPT-
+  subscription OAuth — Mark verified server-codex OAuth2 same day, so the lane works headless
+  in mission loops AND evals). The opus fallback stays the documented degrade path only.
+  Upstream driver-probe gap (probe omits `--model`, false-greens an unusable pin) remains
+  filed as ailang#486 for the v1 lane.
 - **Evaluator**: must differ in provider from the executor (generator≠judge) — sonnet or
   gemini when the executor is codex.
 - Otherwise: inherits the shared defaults.
