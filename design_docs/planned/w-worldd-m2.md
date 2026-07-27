@@ -1,11 +1,10 @@
 # w-worldd-m2 — `ailang-worldd` Local Daemon (CLI + REST over the M1 Host)
 
-**Status**: **ARM A RATIFIED by Mark 2026-07-27 (attended) — ENFORCE single-writer**: reopen the M1 `host/store` freeze (kernel change hereby ratified) for a fail-closed `OpenWriter` (non-waiting OS-backed exclusive lock, `WriterAlreadyActive` on contention, distinct read-only path, subprocess tests). Next iteration applies arm A as the r3 designer revision → sprint-planner. (design DIRECTION accepted by both quorum
-reviewers across two rounds; one remaining objection is a ratification-class kernel decision — see
-the Park box below). NOT yet routed to sprint-planner.
+**Status**: **REVISION r3 APPLIED — ARM A RATIFIED by Mark 2026-07-27 (attended), single-writer ENFORCED**: the bounded M1 `host/store` kernel change is specified as `Open` = fail-closed writer open (non-waiting OS-backed exclusive lock, `WriterAlreadyActive` on contention) plus additive `OpenReadOnly`, with cross-process subprocess proof. Design DIRECTION accepted by both quorum reviewers across two rounds; ready for sprint-planner.
 **Date**: 2026-07-27
 
 > ## ✅ PARK BOX — RESOLVED: Mark picked **(A) Enforce it** (attended, 2026-07-27; recorded in the charter STATUS — the ratified-mission-state channel). Rationale: authority as enforcement, not convention — an embedded writer bypassing the daemon's capability/budget checks is exactly the ambient-authority pattern clause 3 exists to end; the M1 kernel change is ratified by this decision.
+> **r3 applied:** ARM A is now carried through D2, M2.A, the file/acceptance surfaces, and A6; route to sprint-planner.
 > ## (original park box, kept for the record — mission iteration 17, 2026-07-27)
 >
 > This doc passed the pick-time quorum's DIRECTION check (both `gpt5-6-sol` + `gemini-3-1-pro`
@@ -105,7 +104,8 @@ accelerate.
   no self-mod machinery.
 - **P6 — verify gate extends automatically.** `scripts/verify_go.sh` (anti-false-green guard:
   fails loudly if `AILANG_BIN` is unset or ≠ v0.30.0) and the CI `go-verify` job already run
-  `go build ./... && go test ./...` — new `cmd/` + `host/daemon` packages are swept with no gate
+  `go build ./... && go test ./...` — new `cmd/` + `host/daemon` packages and the one
+  **RATIFIED, additive, zero-schema `host/store` writer-lock change** are swept with no gate
   change. The ONLY CI addition is the bench-smoke step (P3), landed in the same PR that
   introduces the daemon (the M1/M6 same-PR pattern).
 
@@ -114,7 +114,8 @@ accelerate.
 | Decision | Why High Impact | Chosen By | Deadline | Change Cost |
 |----------|-----------------|-----------|----------|-------------|
 | worldd = in-repo binary `cmd/ailang-worldd` in the existing module | Resolves the charter's OPEN placement item along the ratified default | M2 (P1) | compile | medium |
-| Daemon holds the SOLE store handle while serving; CLI is a REST client | One writer process over SQLite; no second write path to corrupt compare-and-append | M2 | runtime | high |
+| Daemon holds the SOLE write handle while serving; CLI is a REST client | ENFORCED by a non-waiting OS-backed exclusive writer lock; a second process fails closed with `WriterAlreadyActive` | Mark-ratified ARM A | writer open | high |
+| Reopen M1 `host/store` only for `Open` writer locking + additive `OpenReadOnly` | Authority must be enforcement, not an operator convention; zero schema change and landed direct-open tests remain valid | Mark-ratified ARM A | M2.A | medium |
 | REST surface is worldd-NATIVE `/v1/*` (not MCP/A2A) | Draws the clause-6 boundary; prevents accidental serve-api dependency | M2 | API | high |
 | Loopback-only bind, no override in M2 | Makes local-first structurally true, not configuration-true | M2 | runtime | low |
 | No capability/budget checks in M2 — a loopback trusted-operator surface | Draws the clause-3 boundary explicitly instead of half-building the broker | M2 | API | medium |
@@ -124,13 +125,14 @@ accelerate.
 ### Design Freeze
 
 - [ ] worldd lives at `cmd/ailang-worldd` + `host/daemon` inside `github.com/sunholo-data/ailang-world` (P1).
-- [ ] The daemon process is the single writer; every CLI mutation goes through REST to it.
+- [ ] The daemon process is structurally the single writer: `store.Open` acquires a non-waiting OS-backed exclusive lock beside the DB and contention returns structured `WriterAlreadyActive`; every CLI mutation goes through REST.
+- [ ] `store.OpenReadOnly` is the distinct reader path and requires no writer lock; two processes cannot simultaneously hold write handles to one DB path.
 - [ ] REST v1 is the seven-route table frozen in `sketches/worlddapi.ail` `routes()`.
 - [ ] Error mapping is the sketch's `httpStatus`: conflict→409, not-found→404, malformed→400, oversized body→413, internal→500.
 - [ ] Default bind `127.0.0.1:7644`; startup refuses any bindHost failing `isLoopbackHost` (Z3-proven predicate).
 - [ ] Every wait and allocation is bounded (D7): `http.Server` carries `ReadHeaderTimeout`/`ReadTimeout`/`WriteTimeout`/`IdleTimeout`; commit bodies capped at `maxCommitBytes` (8 MiB, Z3-proven `withinCommitBytes`); CLI client calls carry `context.WithTimeout(defaultClientTimeout)`; shutdown drains under `shutdownTimeout` then hard-closes.
 - [ ] Benchmarks report p50/p95 for store-commit, REST-commit, head-read, health, **and log-range (the only deliberate N+1) at limit=100 and the clamp max 500**; baseline committed at `bench/BASELINE.md`.
-- [ ] M2 adds **zero** columns, tables, or methods to `host/store`'s schema and **zero** semantics to `world/*`.
+- [ ] M2 adds **zero** columns, tables, or indexes to `host/store/schema.sql`; the lock is process-level state, not database state. The only M1 kernel delta is the ratified additive writer-lock/read-only-open API; `world/*` semantics remain unchanged.
 
 ---
 
@@ -141,7 +143,7 @@ accelerate.
 | Path | Role |
 |------|------|
 | `cmd/ailang-worldd` | `main`: flag parsing, subcommand dispatch (`serve` + client verbs), exit codes |
-| `host/daemon` | HTTP server lifecycle, route wiring, JSON codecs, error mapping — importing `host/store`, `host/archive`, `host/registry`, `host/hashref` unchanged |
+| `host/daemon` | HTTP server lifecycle, route wiring, JSON codecs, error mapping — importing the landed host packages plus the ratified `host/store` open semantics |
 
 **S3 answer — why is this not a package?** The daemon is precisely the thing that CANNOT be an
 AILANG package: it is the OS-process boundary that future packages are served *through* (DESIGN
@@ -150,13 +152,14 @@ terminates in an existing M1 host call (`store.Commit`, `store.GetObject`, `stor
 `registry` reads) or a pure predicate already frozen in AILANG. Anything that would grow
 semantics here — policies, new transition kinds, projections — is ruled out of M2 and routed to
 packages/broker/clause-6 by the Deferred Scope table. The kernel stays thin: ~2 transport
-packages, 0 new store methods, 0 new `world/*` functions.
+packages, one ratified additive store open path + structured lock error, 0 new `world/*`
+functions.
 
 **What the daemon reuses (never reinvents):**
 
 | Need | Reused M1 surface |
 |------|-------------------|
-| Open/serve the store | `store.Open(path)` → `Store` methods |
+| Open/serve the store | `store.Open(path)` → fail-closed writer handle → existing `Store` methods |
 | Commit transactions | `store.Commit(Commit)` + `store.IsConflict` / `*ConflictError` |
 | Reads | `GetObject/GetWorld/GetLogEntry/GetRegistryHead/SelectedHead/GetVerifyResult` |
 | Hash text at the boundary | `hashref.Parse` / `HashRef.String` (reject → 400) |
@@ -165,19 +168,53 @@ packages, 0 new store methods, 0 new `world/*` functions.
 
 ## Decision 2 — Single-Writer Process Model
 
-**Decision.** While `ailang-worldd serve` runs, its process owns the only open handle to the
-SQLite database. The CLI client verbs (D5) never open the DB; they speak REST to the daemon.
-Rationale: `host/store`'s concurrency boundary is the single compare-and-append transaction
-(M1 Decision 4) — one serving process serializes commits through it and surfaces stale heads as
-structured 409s, instead of two processes contending on SQLite file locks. Embedded use
-(tests, offline tools) remains legitimate **when the daemon is not serving that DB** — the store
-stays a library (S3); the daemon is not a mandatory gateway.
+**Decision.** `host/store` enforces one write handle per canonical DB path across processes.
+`store.Open(path)` first resolves an absolute DB identity (resolving symlinks for the existing
+target, or for its parent before first creation), and all SQLite + lock operations use that same
+canonical path. Before returning a usable `Store`, it opens `<canonical-db>.writer.lock` beside
+the DB and attempts a **non-waiting OS-backed exclusive lock** (`flock`,
+`O_EXLOCK`, or the platform-equivalent primitive). Contention returns the structured
+`*store.WriterAlreadyActive` error immediately; it never waits. Only after the lock is held may the
+SQLite write handle open. While `ailang-worldd serve` runs, its successful `store.Open` therefore
+owns the sole write authority for that DB; CLI client verbs (D5) never open the DB and speak REST
+to the daemon.
+
+Non-file DSNs are detected on the resolved DSN before any canonicalization. An in-memory database
+(`:memory:`, or any DSN resolving to SQLite in-memory mode such as `file::memory:` / `mode=memory`)
+is per-connection and cannot be shared across processes, so there is nothing to exclude: `Open`
+acquires no writer lock and creates no lock file. The fail-closed guarantee is over file-backed DB
+paths. This is not a hole in the invariant: a second process physically cannot reach another
+process's in-memory DB.
+
+**API shape (ratified, minimal/additive).** Keep the landed `store.Open(path)` name and make it
+the locked writer constructor; add `store.OpenReadOnly(path)` for readers that use SQLite's
+read-only mode and do not acquire the writer lock. This preserves every existing M1 direct-open
+call site and test unchanged — `host/store`, `host/replay`, `host/archive`, and `host/registry`
+continue opening their isolated temp stores through `Open` — while making their writer authority
+fail closed if another process already serves the same path. A new `OpenWriter` plus deprecation
+would force churn without strengthening the invariant.
+
+The lock is a process-level artifact only: **zero tables, columns, or indexes change in
+`host/store/schema.sql`**. If SQLite open fails after lock acquisition, `Open` releases the lock
+before returning the error. `Close` closes the SQLite handle and releases/closes the lock handle.
+On process crash, the OS releases lock ownership automatically; the lock file may remain as a
+stale pathname, but existence is never treated as ownership, so it cannot wedge the DB. On daemon
+restart, `Open` reopens that file and reacquires the OS lock; restart succeeds after the prior
+process has exited and fails immediately with `WriterAlreadyActive` if it has not.
+
+The proof is cross-process, not an in-process mutex test: a subprocess helper opens a write handle
+and signals readiness; a second process targets the same DB and must deterministically receive
+`WriterAlreadyActive`. Companion subprocess cases prove `OpenReadOnly` succeeds while the writer
+is held and that a writer can reacquire after the lock-holder is killed without cleanup. This
+retires the rejected operational-rule framing: two processes cannot simultaneously hold write
+handles to one DB path.
 
 Commit flow per request: decode JSON → `hashref.Parse` every ref (fail → 400) → assemble
 `store.Commit` → call it → `ConflictError` → 409 with both heads (sketch `conflictBody` shape:
 observed + selected, so the caller re-plans against `SelectedHead`) → success → 200 with the new
-selected head. The daemon adds **no locking of its own**; `net/http` concurrency is safe because
-the store transaction is the serialization point (proved by M1's `TestCommitConflictOnStaleHead`).
+selected head. Within the sole writer process, the store transaction remains the request-level
+serialization point (proved by M1's `TestCommitConflictOnStaleHead`); the new OS lock guards the
+outer process boundary before any write handle exists.
 
 ## Decision 3 — REST Surface v1 (worldd-native)
 
@@ -229,14 +266,15 @@ loopback daemon — that is ingress to worldd, not egress to any external system
 
 ```
 ailang-worldd serve   --db <path> [--bind 127.0.0.1:7644] [--ailang-bin <path>]
-ailang-worldd health|head                     [--addr http://127.0.0.1:7644]
-ailang-worldd world get <ref> | object get <ref> [--payload]
-ailang-worldd log get <index> | log range --from N [--limit M]
-ailang-worldd registry get <name>
-ailang-worldd commit --file <commit.json>
+ailang-worldd [--addr http://127.0.0.1:7644] health|head
+ailang-worldd [--addr http://127.0.0.1:7644] world get <ref> | object get <ref> [--payload]
+ailang-worldd [--addr http://127.0.0.1:7644] log get <index> | log range --from N [--limit M]
+ailang-worldd [--addr http://127.0.0.1:7644] registry get <name>
+ailang-worldd [--addr http://127.0.0.1:7644] commit --file <commit.json>
 ```
 
-`serve` lifecycle: `store.Open` → (if `--ailang-bin` given) `archive.Archive` + manifest probe →
+`--addr` is one global client flag available to every client verb; it is not a `serve` flag.
+`serve` lifecycle: fail-closed `store.Open` → (if `--ailang-bin` given) `archive.Archive` + manifest probe →
 `registry.Bootstrap` (idempotent; divergent head = fatal structured error, never silent) → bind
 (loopback-checked) → serve (with the D7 server timeouts set) → on SIGINT/SIGTERM, **bounded**
 graceful drain via `http.Server.Shutdown(ctx)` under `shutdownTimeout` (10 s), then hard
@@ -336,9 +374,13 @@ implementation courtesy.
 
 ## Milestones (each independently CI-green; ~2d total)
 
-### M2.A — Daemon shell: serve + health/head + perf harness (~0.75d)
+### M2.A — Writer lock + daemon shell: serve + health/head + perf harness (~1.0d)
 
-- **files**: `cmd/ailang-worldd/main.go` (~120 LOC), `host/daemon/daemon.go` (~240 — config,
+- **files**: `host/store/store.go` (+~25 LOC — route `Open` through writer acquisition, add
+  `OpenReadOnly`, retain all existing store methods), `host/store/writer_lock*.go` (~80 LOC — non-waiting OS-backed exclusive lock,
+  `WriterAlreadyActive`, release on `Close`, additive `OpenReadOnly`),
+  `host/store/writer_lock_test.go` (~150 — subprocess contention/read-only/crash-recovery
+  proof), `cmd/ailang-worldd/main.go` (~120 LOC), `host/daemon/daemon.go` (~240 — config,
   loopback guard, **D7 named bound constants + all four `http.Server` timeouts**, lifecycle
   with bounded `Shutdown(shutdownTimeout)`-then-`Close()`, `/v1/health`, `/v1/head`),
   `host/daemon/daemon_test.go` (~220 — httptest: health/head round-trip, non-loopback bind
@@ -347,17 +389,24 @@ implementation courtesy.
   `maxCommitBytes == 8388608` matches the Z3-proven sketch bound**),
   `host/daemon/bench_test.go` (~120), `scripts/bench_worldd.sh` (~40),
   `bench/BASELINE.md` (~30), `.github/workflows/ci.yml` (+~8: bench-smoke step in `go-verify`)
-- **acceptance_checks**: daemon starts on a temp store, serves health+head, refuses
-  `--bind 0.0.0.0:…`; `TestDaemonDependencyAllowlist` green; server timeouts asserted set
-  (D7); shutdown drain bounded by `shutdownTimeout` then hard-close; bench smoke emits ≥1
-  benchmark line and the committed `bench/BASELINE.md` records store-commit/head-read/health
-  p50+p95 (log-range rows land with the route in M2.B — noted as pending in the baseline)
+- **acceptance_checks**: cross-process store tests prove a second writer fails immediately with
+  `WriterAlreadyActive`, `OpenReadOnly` succeeds while the writer is held, and killing the
+  writer process leaves no permanent wedge; all landed direct `store.Open` temp-store tests in
+  `host/store`, `host/replay`, `host/archive`, and `host/registry` stay green without call-site
+  rewrites; no lock file is created for `:memory:` opens (assert no `:memory:*` path appears in
+  the working directory after the suite), and the two landed `:memory:` call sites
+  (`host/store/store_test.go`, `host/registry/registry_test.go`) stay green unmodified; daemon
+  starts on a temp store, serves health+head, refuses `--bind 0.0.0.0:…`;
+  `TestDaemonDependencyAllowlist` green; server timeouts asserted set (D7); shutdown drain
+  bounded by `shutdownTimeout` then hard-close; bench smoke emits ≥1 benchmark line and the
+  committed `bench/BASELINE.md` records store-commit/head-read/health p50+p95 (log-range rows
+  land with the route in M2.B — noted as pending in the baseline)
 - **verify_commands**: `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_go.sh` ·
   `./scripts/verify_ail.sh` · `./scripts/bench_worldd.sh --smoke`
 - **ci_green_boundary**: both existing CI jobs + the new bench-smoke step green on the PR; no
   REST mutations exist yet, so nothing depends on M2.B
 
-### M2.B — Full REST v1: reads + commit + conflict semantics (~0.75d)
+### M2.B — Full REST v1: reads + commit + conflict semantics (~0.6d)
 
 - **files**: `host/daemon/handlers.go` (~290 — worlds/objects/log/log-range/registry GETs,
   POST commit **body-capped via `http.MaxBytesReader(maxCommitBytes)`**, `ApiError`→status
@@ -372,13 +421,13 @@ implementation courtesy.
 - **acceptance_checks**: a genesis+commit episode driven entirely over REST reproduces the
   store-level result byte-for-byte; stale-head commit returns 409 whose body lets the client
   re-plan (asserted by re-planning and committing successfully); oversized commit body → 413;
-  no new store methods appeared (`git diff` on `host/store/` is empty); bench smoke output now
-  contains `BenchmarkLogRange` lines
+  no `host/store` changes beyond M2.A's ratified writer-lock/`OpenReadOnly` surface; bench smoke
+  output now contains `BenchmarkLogRange` lines
 - **verify_commands**: same two gates + `./scripts/bench_worldd.sh --smoke`
 - **ci_green_boundary**: full test suite green including 409/400/404/413 paths; bench smoke now
   includes REST commit + log-range
 
-### M2.C — CLI client + end-to-end + baseline refresh + close-out (~0.5d)
+### M2.C — CLI client + end-to-end + baseline refresh + close-out (~0.4d)
 
 - **files**: `cmd/ailang-worldd/cli.go` (~210 — client verbs, shared JSON codec, **every call
   under `context.WithTimeout(defaultClientTimeout)` (D7)**), `cmd/ailang-worldd/cli_test.go`
@@ -409,11 +458,15 @@ implementation courtesy.
 | `scripts/bench_worldd.sh` | ~40 | new: non-vacuous bench runner (fails on zero benchmarks) |
 | `bench/BASELINE.md` | ~30 | new: committed day-1 budget baseline (incl. log-range rows) |
 | `.github/workflows/ci.yml` | ~8 | bench-smoke step in the existing `go-verify` job |
+| `host/store/store.go` | +~25 | minimal constructor wiring: `Open` = writer path; additive `OpenReadOnly`; existing methods unchanged |
+| `host/store/writer_lock*.go` | ~80 | ratified additive kernel change: fail-closed OS writer lock + `WriterAlreadyActive` + `OpenReadOnly` |
+| `host/store/writer_lock_test.go` | ~150 | subprocess proof: writer contention, concurrent read-only open, crash recovery |
 | `design_docs/sketches/worlddapi.ail` | 123 | **already created + checked with this doc** (r1: + `withinCommitBytes`, `PayloadTooLarge`→413) |
 
-Estimated implementation total: ~1,880 LOC. `host/store`, `host/hashref`, `host/canon`,
-`host/archive`, `host/registry`, `host/replay`, `world/*`, `scripts/verify_ail.sh`,
-`scripts/verify_go.sh`: **unchanged**.
+Estimated implementation total: ~2,135 LOC. `host/store` changes only on the ratified, bounded
+writer-lock/`OpenReadOnly` surface above, with **zero `schema.sql` change**. `host/hashref`,
+`host/canon`, `host/archive`, `host/registry`, `host/replay`, `world/*`,
+`scripts/verify_ail.sh`, `scripts/verify_go.sh`: **unchanged**.
 
 ## Conflict Surface
 
@@ -449,10 +502,12 @@ The iteration-0 quorum's standing objection demands this boundary be explicit.
   scope (P5). M2 ships no self-update, no hot-reload, no in-band binary replacement. Replacing
   a running worldd follows the attended atomic-mv discipline.
 - **vs M1's embedded consumers.** The store remains an embeddable library; M2 does not make the
-  daemon a mandatory gateway. The one operational rule: never run the daemon and an embedded
-  writer against the same DB file concurrently (D2 single-writer). Tests and `host/replay`
-  fixtures keep opening temp stores directly — the M1 test suite is untouched and must stay
-  green.
+  daemon a mandatory gateway. Concurrent writer exclusion is now **enforced**, not an operational
+  rule: an embedded writer targeting the daemon's DB fails closed with `WriterAlreadyActive`
+  before receiving a write handle, rather than risking a corrupted/contended DB. Non-concurrent
+  embedded use remains supported; tests and `host/replay` fixtures keep opening isolated temp
+  stores directly through `store.Open`, and the landed M1 suites stay green without call-site
+  rewrites beyond the constructor behavior itself.
 - **vs the Go namespace of this repo.** Verified negative-existence (log below): zero `net/http`
   imports, zero `worldd` identifiers in Go code, no `cmd/` directory — the daemon collides with
   nothing. The new sketch enters `verify_ail.sh`'s sweep with an EMPTY required set (sketches
@@ -464,8 +519,9 @@ The iteration-0 quorum's standing objection demands this boundary be explicit.
 Is a daemon-shaped gap being patched one endpoint at a time? No — the audit runs the other way:
 M2's risk is the **OS gravity well** (DESIGN §12.4), kernel growth disguised as convenience
 endpoints. The design counters it structurally: one JSON codec, one error-mapping ADT (frozen in
-the checked sketch), one backing host call per route, zero new store methods, and a Deferred
-Scope table that names where each tempting addition actually belongs. The `log?from&limit` range
+the checked sketch), one backing host call per route, zero new route-driven store methods (the
+only new method is ratified `OpenReadOnly`), and a Deferred Scope table that names where each
+tempting addition actually belongs. The `log?from&limit` range
 read is the deliberate test case: implemented as a bounded loop over the EXISTING `GetLogEntry`
 rather than a new store query — the pattern every future read endpoint follows — **and its N+1
 cost is measured, not hidden: `BenchmarkLogRange` puts it in the D6 harness and the committed
@@ -485,8 +541,18 @@ is capped by the frozen `routes()` table; growing it is a doc change, not a driv
 
 ## Acceptance Criteria
 
-- [ ] `ailang-worldd serve` runs over a SQLite store using ONLY landed M1 packages — `git diff`
-  on `host/{store,hashref,canon,archive,registry,replay}/` and `world/` is empty.
+- [ ] `ailang-worldd serve` runs over the landed M1 host with exactly one bounded, ratified
+  exception: `host/store` may add only the fail-closed writer-lock implementation,
+  `WriterAlreadyActive`, `OpenReadOnly`, and their focused tests; `host/store/schema.sql`,
+  `host/{hashref,canon,archive,registry,replay}/`, and `world/` have no M2 semantic changes.
+- [ ] A subprocess holds `store.Open` on a temp DB; a second process attempting `store.Open` on
+  the same path fails immediately and deterministically with structured `WriterAlreadyActive`.
+- [ ] `store.OpenReadOnly` succeeds and reads while the daemon/subprocess holds the writer lock;
+  it never acquires or weakens the writer lock.
+- [ ] After the writer subprocess is killed without cleanup, a fresh process reacquires the
+  writer lock and opens the DB; a stale lock-file pathname never permanently wedges restart.
+- [ ] `host/store/schema.sql` is byte-for-byte unchanged: the writer lock is an OS/process-level
+  artifact, with zero new tables, columns, or indexes.
 - [ ] All seven frozen routes implemented; CLI verbs cover the table 1:1; end-to-end test drives
   a genesis→commit→read episode through the CLI against a real subprocess daemon.
 - [ ] Stale-head commit over REST returns 409 with observed+selected heads; the test re-plans
@@ -523,14 +589,14 @@ is capped by the frozen `routes()` table; growing it is a doc change, not a driv
 | A1: Determinism | +1 | Transport shell adds no nondeterminism; commit semantics remain M1's compare-and-append; replay machinery untouched |
 | A2: Replayability | +1 | Same immutable objects/log via the same store calls; REST commit is byte-equivalent to embedded commit (tested) |
 | A3: Effect Legibility | 0 | Daemon I/O is host-boundary Go (S2-conformant); broker-recorded effects are explicitly clause-3 |
-| A4: Explicit Authority | 0 | Honest pre-authority: loopback-bound trusted-operator surface, no ambient path beyond what M1's library already granted locally; enforcement lands with the broker |
+| A4: Explicit Authority | 0 | Writer authority is now structurally exclusive (`WriterAlreadyActive` on competing opens); capability-level authority still belongs to the broker |
 | A5: Bounded Verification | +1 | Verify cache untouched; all list reads clamped by a Z3-proven bound (`clampLimit`) and all request bodies by a second Z3-proven bound (`withinCommitBytes`, D7) |
-| A6: Safe Concurrency | +2 | Single-writer daemon + store transaction as the sole serialization point; stale heads surface as structured 409 re-plan signals |
+| A6: Safe Concurrency | +2 | Cross-process OS lock makes the daemon the enforced sole writer; the store transaction serializes requests inside it, and stale heads surface as structured 409 re-plan signals |
 | A7: Machines First | +2 | Route table, error ADT, and bind/clamp predicates frozen in a compiler-checked artifact; JSON everywhere; canonical hash text only |
 | A8: Minimal Syntax | 0 | No language surface |
 | A9: Cost Visibility | +2 | p50/p95 budget measured and committed from the first daemon commit, **covering every shipped access pattern including the deliberate N+1 log-range read (`BenchmarkLogRange` at limit=100/500)**; every daemon wait/allocation bounded by named constants (D7); non-vacuous CI smoke |
-| A10: Composability | +1 | Transports over unchanged packages; store stays embeddable; clause-3/6 stack on top without rework |
-| A11: Structured Failure | +1 | `ApiError` ADT mirrors structured host errors; startup failures (bad bind, divergent registry head) are fatal and named |
+| A10: Composability | +1 | Transports preserve landed host APIs except the ratified additive store open path; non-concurrent embedding remains valid; clause-3/6 stack on top without rework |
+| A11: Structured Failure | +1 | `ApiError` ADT mirrors structured host errors; writer contention is named `WriterAlreadyActive`; startup failures (bad bind, divergent registry head) are fatal and named |
 | A12: System Boundary | +2 | Daemon = process boundary exactly where DESIGN §15 draws it; semantics stay in `world/*` + `host/*` |
 
 **Net Score: +13** ✅ — hard axioms A1/A3/A4/A7 all ≥ 0.
@@ -620,6 +686,33 @@ is capped by the frozen `routes()` table; growing it is a doc change, not a driv
    ✓ all 14 required named tests pass (failed_tests=0)
 ✓ verify gate PASSED: 4 required identities verified, 14 named tests pass
 ```
+
+### Quorum revision r3 (2026-07-27) — ARM A applied (human-ratified)
+
+- **Round-2 objection (`gpt5-6-sol`, verbatim):** *"The single-writer guarantee is asserted but
+  not enforced. `ailang-worldd` takes no database lease or process lock, `store.Open` remains
+  available to embedded writers, and a second daemon can open the same SQLite file. An operational
+  instruction to 'never' do so cannot support the claimed sole-handle model or A6 safe-concurrency
+  conclusion."*
+- **Ratification:** Mark picked ARM A, attended, on 2026-07-27; the charter STATUS records the
+  ratified mission state. Rationale: authority must be enforcement, not convention; an embedded
+  writer bypassing the daemon is the ambient-authority pattern clause 3 exists to end. This
+  decision ratifies the bounded M1 `host/store` kernel change.
+- **Applied API shape:** landed `store.Open(path)` becomes the fail-closed writer path and gains a
+  non-waiting OS-backed exclusive lock; contention returns structured `WriterAlreadyActive`.
+  Additive `store.OpenReadOnly(path)` provides concurrent readers without acquiring the writer
+  lock. Existing M1 direct-open call sites remain unchanged and their temp-store suites must stay
+  green. `host/store/schema.sql` remains byte-for-byte unchanged.
+- **Sections changed:** Status header + Park box; P6; High-Impact Decisions; Design Freeze;
+  Decision 1 reuse/kernel wording; Decision 2 (fully rewritten); Decision 5 (`--addr` global for
+  every client verb); M2.A/B/C estimates and checks; aggregate file table; Conflict Surface vs
+  M1 embedded consumers; Acceptance Criteria; A4/A6/A10/A11 compliance rows; this log.
+- **Controller-review correction:** amended r3 with the non-file DSN carve-out: SQLite in-memory
+  DSNs are detected before canonicalization and acquire no writer lock or lock file; the
+  fail-closed invariant applies to file-backed DB paths.
+- **Verification:** the checked `.ail` sketch was unchanged in r3, so the conditional
+  `verify_ail.sh` rerun was not required and was not run; the last pinned-binary gate output remains
+  the r1 tail above, and the controller independently re-verifies.
 
 ## Related Documents
 
