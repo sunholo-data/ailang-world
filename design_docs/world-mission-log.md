@@ -2088,3 +2088,199 @@ committed day-1 budget; REST-commit + log-range rows marked explicitly PENDING M
 `scripts/bench_worldd.sh --smoke` that fails on a MISSING BENCHMARK NAME (not a zero line count —
 `go test -bench` exits 0 on no-match, the V27/B1 class), and the CI bench-smoke step. That completes
 M2.A; then M2.B, M2.C.
+
+---
+
+## Iteration 20 — 2026-07-27 — `w-worldd-m2` **M2.A/A3 LANDED → MILESTONE M2.A COMPLETE** (PR #12 → squash `9579fe1`, dev CI green, both jobs): Decision 6's perf harness + committed day-1 baseline + a bench-smoke gate that fails BY NAME — and the codex `gpt-5.6-sol` executor lane's first successful real run
+
+**Kind**: mid-sprint EXECUTE iteration ("Plan exists" lane) — no new design doc, no quorum, no
+planner. Executor → controller verification → evaluator → PR → CI-green merge. One round; zero
+blocking findings.
+
+**Context / preflight (Gate 0)**
+- Kill switch: NOT set (armed). Billing tripwire: **CLEAN** (no `ANTHROPIC_API_KEY` /
+  `ANTHROPIC_AUTH_TOKEN`). gh account: `sunholo-voight-kampff`.
+- Pidfile `mission-world.pid`=63444 = this run's own driver (verified via `ps`; no overlap).
+- Inbox: 2 unread — one `[controlplane] eval-suite` FYI from the V1 loop, and one
+  `[mission-control] world-coordinator` message that is **this loop's OWN outbound** from iter-19
+  (the codex-incident resolution note). Neither is a directive; neither outranks the queue. Both
+  marked read. No `[nightly-eval]` issues (the only open issue is bookkeeping #9).
+- **No new `@MarkEdmondson1234` comment** on #9 (6 comments) or predecessor #1 (25). Watermark
+  unchanged at `2026-07-27T08:55:11Z` — nothing new to advance past.
+- Weekly rotation: **NOT due** — see the Retro's process fix; #9 is this week's thread with 6
+  comments.
+
+**Observe (Gate 1)**
+- `git fetch origin`; local `dev` == `origin/dev` == `bfbd94e`. CI on dev **completed/success**
+  for the last 8 runs. One workflow (`CI`, two jobs) — no path-filtered workflow to mis-poll.
+
+**Pick + reality-check (Gate 2)**
+- Queue head = item 3 `w-worldd-m2` **[IN-SPRINT]**; iter-19's recorded **Next** is checkpoint A3.
+- **Already-landed check against a FRESH origin**: `git fetch` then `ls bench/ scripts/`,
+  `find . -name '*bench*'`, and a merged-PR search. `bench/` did not exist, no `bench_test.go`
+  anywhere, newest merged PR was #11 (A2). A3 genuinely open. No quorum needed (mid-sprint execute
+  on a doc that is quorum-run, r3-revised and Mark-ratified).
+
+**Routing — the codex lane's first successful real run since the iter-19 incident (Gate 3)**
+- Iter-19's process fix demanded the skill's **own probe WITH `--model`** before trusting the
+  lane, and `env -u OPENAI_API_KEY` at the call site so an ambient metered key cannot silently
+  bill while `auth.json` is on ChatGPT subscription auth. Both applied:
+  `env -u OPENAI_API_KEY codex exec --model gpt-5.6-sol 'reply with exactly: ok'` → **rc=0, `ok`**,
+  on **codex-cli 0.145.0** (Mark upgraded it attended, option c). `auth_mode=chatgpt` confirmed by
+  reading `~/.codex/auth.json`. `OPENAI_API_KEY` **was** set in the tool shell, so the `env -u`
+  strip was load-bearing, not ceremonial.
+- Executor ran backgrounded under a 30-min `date +%s` cap (Standing rule 6), `--sandbox
+  workspace-write`, `--add-dir` for GOCACHE/GOMODCACHE, in worktree `/tmp/wt-worldd-a3`. Exited
+  **rc=0 within the cap**.
+
+**Execute (Gate 3) — sprint-executor `codex:gpt-5.6-sol`, isolated worktree `/tmp/wt-worldd-a3`**
+- Delivered 300 insertions / 2 deletions across 5 files: `host/daemon/bench_test.go` (new, 177),
+  `scripts/bench_worldd.sh` (new, 42, executable), `bench/BASELINE.md` (new, 69),
+  `.github/workflows/ci.yml` (+3), `host/daemon/daemon_test.go` (+11/−2, carry-forward CF-7).
+- **The executor's headline behaviour was HONESTY UNDER A DEGRADED ENVIRONMENT.** The codex
+  sandbox denies loopback `bind(2)` (`listen tcp 127.0.0.1:0: bind: operation not permitted`), so
+  the two HTTP benchmarks could not run at all inside it. It measured the store-commit row,
+  recorded head-read and health as **UNAVAILABLE with the sandbox error quoted**, and wrote in
+  `BASELINE.md` that the artifact "must be refreshed … outside the restricted sandbox before A3 is
+  accepted" — explicitly declining to invent values. It also flagged that it could not produce the
+  requested post-revert GREEN smoke output, for the same reason. An executor that fabricates
+  plausible p95s here would have poisoned the day-1 budget permanently, since every later sprint
+  diffs against this file.
+- The controller measured the two HTTP rows on the same dev rig outside the sandbox and completed
+  the table. `BASELINE.md` records that split provenance verbatim rather than presenting the
+  numbers as one uniform run.
+
+**Verification — controller re-ran everything INDEPENDENTLY (data before conclusions)**
+- `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_go.sh` → green, **`host/replay` RUNNING
+  12.5s (not SKIP)** — the V27/B1 silent-skip class stayed closed.
+- `./scripts/verify_ail.sh` → **EXACTLY 4/4 identities / 9 modules / 14 tests**.
+- `gofmt -l .` and `go vet ./...` clean.
+- **Scope clean BY DIFF, not by claim**: `git diff --name-only origin/dev` returns exactly the two
+  permitted tracked files. `host/daemon/daemon.go`, `go.mod`, `go.sum`, `host/store/**` and every
+  other host package **byte-unchanged**. No new module dependencies —
+  `TestDaemonDependencyAllowlist` still green.
+- **THREE MUTATIONS, each observed RED then reverted GREEN:**
+  1. **`BenchmarkHealth` → `BenchmarkHealthX`.** The run still emitted THREE benchmark lines and
+     `go test` still exited **0** — a line-count check would have passed clean. The gate caught it
+     **by name**: `✗ … missing expected benchmark(s): BenchmarkHealth`, rc=1. This is precisely the
+     V27/B1 vacuous-pass class, and it is now closed for benchmarks.
+  2. **`releaseFromVersion` returning a different release per call** → CF-7 test **RED** with
+     `registry: existing head … diverges from bootstrap revision …`. The **same** mutation is
+     **GREEN** against the pre-CF-7 test body (with `AilangBin` unset the function is never
+     called), so CF-7 closed a gap that was genuinely open rather than adding decoration.
+  3. **5 ms injected into the measured region** → head-read p50 moved **0.11 ms → 7.02 ms**,
+     proving the reported percentiles track real per-iteration wall clock and are not constants or
+     Go's own mean relabelled.
+- **A controller self-correction worth recording**: mutation 2's FIRST form appended the counter to
+  the whole version string *before* `releaseFromVersion` splits on newline — so the first non-empty
+  line was unchanged and the mutation was a silent no-op. The test passed, and for a moment that
+  read as "CF-7 is not load-bearing". Re-checking the mutation itself rather than believing its
+  result turned a would-be false finding into the strongest proof in the set. A green result from a
+  mutation you have not verified actually mutates anything is not evidence.
+- **Measured day-1 baseline** (Mac Studio M4 Max, darwin/arm64, go1.26.4, `-benchtime 200x`, one
+  invocation): store commit p50 0.4981 / p95 0.6093 ms (target ≤25); head read p50 0.06975 / p95
+  0.08596 ms (≤5); health p50 0.04612 / p95 0.06288 ms (≤2). **All three inside budget with 32–58×
+  headroom.** REST-commit and both log-range rows explicitly **PENDING M2.B** — an acceptance
+  check, not a nicety, since log-range is the surface's only deliberate N+1.
+
+**EVALUATION — sprint-evaluator (sonnet), generator≠judge holds (codex/OpenAI ≠ Anthropic)**
+- **PASS 89/100, ZERO blocking findings.** It independently confirmed all three mutations, checked
+  the percentile math at N==0/1/2 (no panic, correct value — the N==1 path is CI's critical path),
+  and confirmed the manifest is genuinely hardcoded rather than derived from the output it checks.
+- **The judge REFUTED two of the controller's own claims, and it was right both times** (recorded
+  because a judge that only ratifies is worthless):
+  (a) "`host/replay` does not `t.Skip`" is true only **in the context of `verify_go.sh`**, which
+  exports `AILANG_BIN`; run bare, `host/replay` skips all 10 tests. A presentation error in the
+  claim, not a code defect — but the unqualified form is exactly how a false-green gets believed.
+  (b) the `go test | tee` pipeline propagates failure only because the script is `#!/usr/bin/env
+  bash` with `set -o pipefail`; the behaviour is not portable to zsh. True as written, fragile if
+  the shebang ever changes.
+- **The controller REFUTED the judge's one scoring deduction (−4, "CF-A3-1")**, which claimed the
+  three `SumSHA256` calls sit inside `BenchmarkStoreCommit`'s measured window. They do not: every
+  `SumSHA256` is at lines 57–77, `start := time.Now()` is line **80** and `time.Since(start)` line
+  **84**, so the p50/p95 window contains **only** `s.Commit`. The evaluator visibly contradicted
+  itself mid-sentence on this point ("wait, actually it IS before `start`" → "the hash calls ARE
+  inside"). Its finding has a valid kernel — the hashing *is* inside the `b.ResetTimer()` loop and
+  therefore inflates `ns/op`, Go's own mean — but `BASELINE.md` already discloses that `ns/op` is
+  the mean "reported alongside for reference" while the percentiles are the recorded numbers. **No
+  code change; the finding is recorded as refuted-as-stated rather than adopted.** Verifying a
+  judge's finding before acting on it is the same discipline that produced iter-19's round-2 fix —
+  it cuts both ways.
+
+**Gate 3b — CI GREEN (bounded polls, 30-min caps, no unbounded waits)**
+- PR #12 run `30275747631` → **completed/success**, both jobs. `mergeable=MERGEABLE/CLEAN` checked
+  before arming the poll (no conflict-skipped suite to wait on forever).
+- **The new CI step was confirmed to actually RUN, not merely to be wired**: the go-verify log
+  shows `── worldd benchmark smoke …` on `goos: linux / goarch: amd64 / AMD EPYC 7763` emitting
+  `BenchmarkStoreCommit-4  1  1054791 ns/op  1.049 p50_ms  1.049 p95_ms` — so the `-benchtime 1x`
+  **N==1 percentile path works on the runner**, on a different OS and architecture than the dev rig.
+- Squash-merged → `9579fe1`. Dev-merge run `30276704692` → **completed/success**, both jobs.
+- Worktree removed; local `dev` fast-forwarded to `9579fe1` (clean tree, no `MERGE_HEAD`).
+
+**Routing evidence** (role, model ACTUALLY used — the enforcement backstop)
+
+| Role | Env pin | ACTUALLY ran on | Notes |
+|---|---|---|---|
+| Controller | session | `claude-opus-5` | triage/pick/probe/3 mutation tests/baseline measurement/BASELINE.md completion/review/record/retro |
+| Design-doc-creator | — | **not invoked** | execute lane; doc r3 already quorum-run + Mark-ratified. Rotation state UNCHANGED (`codex:gpt-5.6-sol`) — rotation advances per new-doc iteration, and no doc was authored |
+| Sprint-planner | — | **not invoked** | plan already approved in iter-18 |
+| Sprint-executor | `codex:gpt-5.6-sol` | **`codex:gpt-5.6-sol`** — pin HONOURED, no fallback | first successful real run of this pin; probe WITH `--model` rc=0 on codex-cli **0.145.0**; one round, rc=0 inside the 30-min cap |
+| Sprint-evaluator | `sonnet` | **sonnet** | generator≠judge satisfied structurally — codex/OpenAI executor vs Anthropic judge is a CROSS-PROVIDER split, the strongest form available; one round |
+
+**Metered ledger**: `metered=$0.00`. The codex probe and the full executor run were the ChatGPT
+**subscription** lane (`auth_mode=chatgpt`), invoked with `env -u OPENAI_API_KEY` so an ambient
+metered key could not silently bill — the `claude-sub` call-site discipline applied to the OpenAI
+lane, and the key **was** present in the shell, so the strip mattered. Evaluator on a subscription
+Agent-tool pin. Nothing metered; ceiling ($5) untouched.
+
+**Ruled out** (do not re-chase)
+- **Adopting the evaluator's CF-A3-1 deduction** — refuted by line numbers (see above). The hashing
+  is outside the p50/p95 window; it affects only `ns/op`, which `BASELINE.md` already frames as a
+  reference mean.
+- **Treating the codex sandbox's loopback-bind denial as a code defect** — it is an environment
+  constraint of `--sandbox workspace-write`. The same benchmarks run green on the dev rig AND on
+  the ubuntu CI runner. Do not "fix" the benchmarks to avoid binding; that would replace a real
+  loopback round-trip with an in-process handler call and quietly falsify the budget.
+- **A round-2 fix pass** — not attempted and not needed: zero blocking findings, and the single
+  deduction was refuted rather than fixed.
+- **Substituting a different codex model** — unnecessary this iteration (the pin worked), and it
+  would still be an unratified routing-policy change if it ever became tempting.
+
+**Non-blocking carry-forwards — ENUMERATED** (per the iter-19 process fix; a bare count loses them)
+1. **CF-A3-1** — `BenchmarkStoreCommit`'s in-loop hashing inflates `ns/op` (NOT p50/p95, which is
+   what the budget records). → **no action required** — refuted as stated; already disclosed in
+   `BASELINE.md`.
+2. **CF-A3-2** — `scripts/bench_worldd.sh`'s hardcoded manifest must be extended by hand when
+   `BenchmarkRESTCommit` and the two `BenchmarkLogRange` variants land; nothing gates the manifest
+   against drift. → **M2.B** (the plan already requires the extension; treat a missing name as the
+   gate doing its job).
+3. **CF-A3-3** — `TestBoundedWaitsAndBodyLimit` part (b), 413-on-oversized-body, still absent
+   because `POST /v1/commit` does not exist. Same as CF-1 from iter-19. → **M2.B**.
+4. **CF-A3-4** — `bench/BASELINE.md` must be refreshed to the full surface (log-range at limit=100
+   AND the clamp max 500) with no PENDING rows left. → **M2.C**.
+5. Iter-19's **CF-2** (daemon-layer `WriterAlreadyActive` via subprocess e2e) and **CF-4**
+   (`releaseFromVersion` divergence sharp edge) remain open → **M2.C**; **CF-5** (`/v1/head` JSON
+   `ApiError` envelope) → **M2.B**; **CF-3**, **CF-6**, **CF-9** remain "no action required".
+   **CF-7 and CF-8 are CLOSED by this checkpoint.**
+
+**Retro / Next (Gate 5)** — **no skill edit** (no gap reached the ≥2-instance bar). **Two process
+fixes to the charter's Repo Profile**, both now at 2 instances:
+(1) **A fresh worktree never contains the sprint plan JSON.** `.gitignore` line 3 is `**/.ailang/`,
+so `.ailang/state/sprints/*.plan.json` — the executor's own plan — is structurally absent from
+every `git worktree add`. The codex executor reported it as a blocker mid-run; the controller
+copied it in (it stays gitignored, so it does not pollute the diff). Every future worktree-based
+executor directive must either copy the plan in first or quote the binding requirements inline.
+(2) **The weekly-rotation rule misfires on a thread created just before Monday 07:00.** Issue #9
+was created 2026-07-27 **05:51Z**, ~1h before the boundary, so the literal rule ("past the most
+recent Monday 07:00 AND the current issue was created before that boundary") reads as ROTATE —
+which would open a second thread for the same week that #9 already titles. Iter-19 and iter-20 both
+hit this and both judged NOT-DUE on intent. The Repo Profile now records the intent test: a thread
+whose title names the CURRENT week is this week's thread regardless of the clock, and the >80-comment
+limb is the real bound.
+No routing-policy change — the codex pin working as specified is the documented rule operating
+correctly, not evidence for a new policy (and one clean run is not the charter's ≥3 rows).
+**Next**: `w-worldd-m2` milestone **M2.B** — the remaining five REST routes
+(`POST /v1/commit` with the 8 MiB `maxCommitBytes` cap and 409/400/404/413 mapping, `/v1/log` with
+the deliberate N+1 at limit=100 and the clamp max 500, and the object/head reads), folding CF-A3-2,
+CF-A3-3 and CF-5, and extending both the bench manifest and `BASELINE.md`. Then M2.C (CLI client +
+subprocess e2e + baseline refresh + close-out) lands the item.
