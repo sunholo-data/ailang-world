@@ -1712,3 +1712,168 @@ r3 designer revision (+ fold gemini's non-blocking `--addr` global-flag nit), re
 sprint-planner. If no answer yet, `w-worldd-m2` stays parked and the queue head advances to
 `w-effect-broker-m3` (clause-3, NEW-DOC) — but note w-effect-broker depends conceptually on the
 daemon shell, so prefer waiting for the unpark unless Mark redirects.
+
+---
+
+## Iteration 18 — 2026-07-27 — `w-worldd-m2` UNPARKED on Mark's ratification: r3 revision applied + sprint planned + **M2.A/A1 LANDED** (PR #10 → squash `b0deedb`, dev CI green, both jobs) — the RATIFIED single-writer kernel change is now ENFORCED across processes
+
+**Kind**: full-chain iteration — human-directive unpark → designer revision r3 (+ a controller-review
+fix pass r3b) → sprint-planner → sprint-executor → sprint-evaluator → PR → CI-green merge.
+
+**Context / preflight (Gate 0)**
+- Kill switch `~/.ailang/state/mission-control.disabled`: NOT set (armed). Billing tripwire:
+  **CLEAN** (no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`). gh account: `sunholo-voight-kampff`.
+- Pidfile `mission-world.pid`=3308 = this run's own driver (verified via `ps`; no overlap).
+- Inbox: empty. No `[nightly-eval]` issues (only open issue is bookkeeping #9, 3 comments).
+- **HUMAN DIRECTIVE ACTED ON** — `@MarkEdmondson1234` on #9 @ `2026-07-27T08:55:11Z`, body `"A"`:
+  the answer to iteration 17's parked A/B fork = **arm A, ENFORCE single-writer**. Already recorded
+  in the charter by the attended session (`9578d1f`); this iteration is the unpark that acts on it.
+  Watermark `mission-world-last-seen` advanced `2026-07-23T20:13:54Z` → `2026-07-27T08:55:11Z`
+  (written BEFORE routing). Predecessor issue #1 re-checked (rotation-week catch): no new comments.
+- Weekly rotation: NOT due — #9 was created today (2026-07-27 05:51Z, after the Monday-07:00
+  boundary) and has <80 comments.
+
+**Observe (Gate 1)**
+- `git fetch origin`; local `dev` == `origin/dev` == `6fba10d`; CI on dev **completed/success**.
+  Repo has exactly one workflow (`CI`, two jobs: `ailang-code verify gate` + `go host build + test
+  gate`) — no path-filtered workflow to mis-poll (Gate-3b blind-poll class N/A here).
+
+**Pick + reality-check (Gate 2)**
+- Queue head = item 3 `w-worldd-m2`, tagged `[NEXT — ARM A RATIFIED]`. Verified against reality:
+  no `cmd/` directory, no `worldd` Go code, no merged PR, no sprint plan → genuinely unstarted.
+- Quorum-at-pick: already satisfied (2 artifacts, `.ailang/state/mission-quorum/w-worldd-m2-*.json`).
+  The charter prescribes the unpark path explicitly — **apply the chosen arm as r3 → sprint-planner**
+  — so no third quorum round was run (the human ratification supersedes the reviewer's objection;
+  this is NOT the narrow-refinement carve-out and did not need it).
+
+**Route + execute (Gate 3) — every heavy role model-PINNED and spawned, never inline**
+- **Designer rotation** advanced `claude:claude-fable-5` → **`codex:gpt-5.6-sol`** (state file
+  `mission-world-designer-rotation` written back after the run). Notably this is the SAME reviewer
+  that raised the objection, now authoring its own ratified fix.
+- **Designer r3** (codex, `--sandbox workspace-write`, bounded 30-min cap, rc=0, 63.6k tokens):
+  rewrote **Decision 2** — `store.Open` = fail-closed writer path (canonical DB identity →
+  non-waiting OS exclusive lock on `<canonical-db>.writer.lock` → only then the SQLite handle),
+  structured `WriterAlreadyActive` on contention, additive `store.OpenReadOnly`, explicit
+  crash/stale-lock recovery, cross-process subprocess proof — and carried it through Status/Park
+  box, P6, High-Impact table, Design Freeze, D1 reuse table, **D5 (`--addr` promoted to a global
+  client flag — the r2 `gemini-3-1-pro` non-blocking nit)**, M2.A/B/C (lock lands in M2.A; day
+  split re-cut 1.0/0.6/0.4d, still ~2d), aggregate file table (~2,135 LOC), Conflict Surface vs M1
+  embedded consumers, Acceptance Criteria, A4/A6/A10/A11, and a new r3 log subsection.
+  API-shape choice (its own rationale): keep the landed `Open` NAME as the locked writer
+  constructor + add `OpenReadOnly`, rather than a new `OpenWriter` + deprecation — no call-site
+  churn, same invariant.
+- **Controller review found ONE defect → bounded fix pass r3b** (same lane, 15-min cap, rc=0,
+  30.4k tokens): r3 specified a lock file beside the canonicalized DB but left **non-file DSNs
+  unspecified**. `Open(":memory:")` has TWO landed call sites (`host/store/store_test.go:13`,
+  `host/registry/registry_test.go:12`) and `store.go:148` documents `:memory:` as supported — so
+  as written it would have created a literal `./:memory:.writer.lock` and made the two in-process
+  opens contend, **falsifying the doc's own "landed suites stay green unmodified" claim**. r3b adds
+  the carve-out (in-memory DSNs detected pre-canonicalization, no lock, no lock file; the invariant
+  is stated over file-backed paths), the matching M2.A acceptance checks, and an honest
+  "controller-review correction" bullet in the r3 log. Committed as `5b105b5`.
+- **sprint-planner** (`$MISSION_PLANNER_MODEL`=**opus**, pinned Agent sub-agent): wrote
+  `.ailang/state/sprints/w-worldd-m2.{plan.json,handoff.md}`. Kept the doc's 3 milestones; added a
+  top-level `ratified_kernel_change` block, per-milestone `non_vacuity_requirements`, and an
+  internal **A1/A2/A3 split of M2.A** with A1 (`host/store` only) marked
+  `safe_landing_point: true` — because M2.A's planned ~1,550 LOC exceeds M1's largest landed
+  milestone (1,086). Velocity was measured, not invented: 7 landed PRs, and M1's doc estimate ran
+  **2.2× low** (1,925 est vs 4,273 actual) → a 1.5× haircut on doc LOC estimates.
+- **sprint-executor** (`$MISSION_EXECUTOR_MODEL`=**opus**, pinned Agent sub-agent, isolated
+  worktree `/tmp/wt-worldd-m2-a1` on branch `sprint/w-worldd-m2-a1` — never the shared main tree):
+  implemented **A1 only**. 1,017 insertions / 11 deletions across 5 files, all in `host/store`:
+  `store.go` (+111/−11, constructor wiring only — every existing method body untouched),
+  `writer_lock.go` (203, shared: `WriterAlreadyActive`/`IsWriterAlreadyActive`,
+  `UnsupportedPlatformError`, `isInMemoryDSN`, `canonicalDBPath`, DSN rendering),
+  `writer_lock_unix.go` (68, `//go:build unix`, `syscall.Flock(LOCK_EX|LOCK_NB)` from **stdlib**
+  — chosen over `golang.org/x/sys` so M2.B's dependency-allowlist test stays simple),
+  `writer_lock_other.go` (24, `//go:build !unix`, fails closed, honestly marked untested),
+  `writer_lock_test.go` (622, the cross-process proof).
+
+**Verification — controller INDEPENDENTLY re-ran everything (data before conclusions)**
+- Both gates green in the worktree on the **pinned `/tmp/ailang-v0300/ailang` (v0.30.0, clean)**:
+  `verify_go.sh` → build clean, all 6 host packages `ok` with **`host/replay` RUNNING 12.2s, not
+  SKIP** (the iter-13 V27 / iter-15 B1 false-green class stayed closed); `verify_ail.sh` → **exactly**
+  4/4 required `world/` identities across 9 modules + 14 named tests (A1 adds no `.ail`, so any
+  movement would have been a red flag, not a success).
+- Scope discipline verified by diff, not by claim: `host/store/schema.sql` **byte-for-byte
+  unchanged**; `git diff dev..HEAD` over `world/ host/hashref host/canon host/archive host/registry
+  host/replay scripts/ host/store/store_test.go` is **empty**; all five landed `store.Open` call
+  sites green **unmodified**.
+- **Controller's own mutation test** (the executor reported four; this is an independent fifth):
+  `LOCK_EX` → `LOCK_SH` turns the suite RED with
+  `Open(...) SUCCEEDED while OS process 23237 holds the writer lock: the ratified single-writer
+  invariant is not enforced` — naming a live helper PID. An in-process mutex is structurally
+  incapable of passing this suite. Tree restored, re-verified green.
+- **sprint-evaluator** (`$MISSION_EVALUATOR_MODEL`=**sonnet**; generator≠judge holds: opus executor
+  ≠ sonnet judge): **PASS 97/100, ZERO blocking merge conditions**. It re-ran both gates itself,
+  checked all 12 claims adversarially, and judged all five of the executor's self-declared gaps
+  acceptable. Three non-blocking carry-forwards → checkpoint A2.
+
+**Gate 3b — CI GREEN (bounded polls, 30-min caps, no unbounded waits)**
+- PR **#10** (`sprint/w-worldd-m2-a1` → `dev`): run `30256646182` **completed/success**, both jobs
+  (`ailang-code verify gate` 9s, `go host build + test gate` 28s). `mergeable: MERGEABLE`.
+- Squash-merged → **`b0deedb`** on dev, branch deleted. Dev-merge run `30256701072`
+  **completed/success**, both jobs. Only an OBSERVED green upgraded the tag. Worktree removed.
+
+**Routing evidence** (role, model ACTUALLY used — the enforcement backstop)
+
+| Role | Env pin | ACTUALLY ran on | Notes |
+|---|---|---|---|
+| Controller | session | `claude-opus-5` | triage/pick/review/mutation-test/record/retro |
+| Design-doc-creator (r3 + r3b) | ROTATION | **`codex:gpt-5.6-sol`** | rotation advanced from fable; probe rc=0; both runs bounded (30m/15m) and rc=0 |
+| Sprint-planner | `MISSION_PLANNER_MODEL`=opus | **opus** | pinned Agent sub-agent |
+| Sprint-executor | `MISSION_EXECUTOR_MODEL`=opus | **opus** | pinned Agent sub-agent, isolated worktree |
+| Sprint-evaluator | `MISSION_EVALUATOR_MODEL`=sonnet | **sonnet** | generator≠judge satisfied (opus ≠ sonnet) |
+
+No role fell back off its pin; no FLAGged degradation.
+
+**Metered ledger**: `metered=$0.00` — and this is a CHANGE worth recording. Mid-iteration an
+attended session flipped the codex lane to **ChatGPT subscription auth** (`~/.codex/auth.json`
+`auth_mode=chatgpt`; the metered API key moved aside to `auth.json.apikey.bak` at 11:33 local,
+concurrent with this iteration's codex probe). So both designer runs (63.6k + 30.4k tokens) were a
+**quota lane, not metered dollars**. Honest residual uncertainty: the r3 run launched within ~2
+minutes of that flip, so if it raced the change it would have billed the API key — worst case ≈
+**$0.23** by a GPT-5-class rate estimate. Either way far under the `$5` ceiling. No quorum calls,
+no gemini/managed_agents calls this iteration.
+
+**Ruled out** (do not re-chase)
+- **A third quorum round on `w-worldd-m2`** — ruled out deliberately: the blocking objection was
+  resolved by HUMAN RATIFICATION, which outranks the reviewer verdict; the charter's unpark
+  instruction says r3 → sprint-planner, full stop. Re-quorumming a ratified decision would be
+  re-litigating a settled human call.
+- **`OpenWriter` as a new constructor + deprecating `Open`** — considered by the designer and
+  rejected: it forces churn at all five landed call sites without strengthening the invariant.
+  Recorded here so a later iteration does not "fix" the naming back.
+- **Unlinking the lock file on release** — rejected in-design: it races another process that has
+  already opened the file. flock ownership is per open-file-description, so the leftover *pathname*
+  is inert and the SIGKILL-recovery test proves it cannot wedge the DB.
+- **An in-process mutex / package-level held-paths map** — this would be a DEFECT, not a shortcut;
+  it is exactly what the quorum rejected. Verified impossible-to-ship by the controller's own
+  `LOCK_EX`→`LOCK_SH` mutation.
+- **Blaming the codex lane for the first probe failure** — refuted: `rc=127 env: node: No such
+  file or directory` was a PATH gap in the tool shell, not a codex/quota problem. See the retro.
+
+**Concurrency note (Critical Principle 0 — recorded, not acted on)**: partway through this
+iteration `tools/launchd/mission-control.sh` (FROZEN CORE, shared driver) appeared MODIFIED and
+uncommitted in the main checkout — an attended/sibling session flipping
+`MISSION_EXECUTOR_MODEL`'s default to `codex:gpt-5.6-sol` and documenting the subscription-auth
+change. The tree was clean at Gate 0, so this landed mid-iteration. It was **left completely
+untouched**: not stashed, not committed, not reverted. Local `dev` was reconciled to `origin/dev`
+with `git reset --mixed` + a scoped `git checkout -- host/store/` precisely so the sibling's
+uncommitted work survived; `git status` afterwards shows that one file and nothing else.
+
+**Retro / Next (Gate 5)**: ONE process fix, no skill edit — see the charter's Repo Profile
+addition. Friction was a **3-instance PATH class in a single iteration**: `codex` (`rc=127 env:
+node: not found`), `go` (`verify_go.sh: line 36: go: command not found`), and `gh` (already in
+memory from earlier iterations) are all under `/opt/homebrew/bin`, which this tool shell's PATH
+omits. That is ≥2 recorded instances pointing at one gap, and it is a MISSION-DOC (process) fix,
+not a skill fix, because the PATH is a property of this rig's Repo Profile rather than of the
+shared skill. No routing-policy change (7th consecutive clean landed sprint corroborates
+opus-executor / sonnet-judge / generator≠judge; the codex designer lane produced a doc revision
+that survived independent review with exactly one narrow defect, caught and fixed inside the same
+iteration).
+**Next**: `w-worldd-m2` checkpoint **A2** — `cmd/ailang-worldd` + `host/daemon` shell (config,
+loopback guard, D7 bound constants + the four `http.Server` timeouts, bounded shutdown,
+`/v1/health`, `/v1/head`), folding the evaluator's three non-blocking carry-forwards; then A3
+(bench harness + `bench/BASELINE.md` + `scripts/bench_worldd.sh --smoke` + the CI bench-smoke step)
+completes M2.A; then M2.B, M2.C.
