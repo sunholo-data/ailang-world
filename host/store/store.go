@@ -135,6 +135,10 @@ func IsConflict(err error) bool {
 type Store struct {
 	db  *sql.DB
 	sel selectedHead
+	// lock is the held single-writer lock (w-worldd-m2 Decision 2, arm A). It
+	// is nil for in-memory databases (nothing to exclude across processes) and
+	// for read-only handles (which never take writer authority).
+	lock *writerLock
 }
 
 // selectedHead tracks the store's currently selected world head. M1 keeps this
@@ -144,31 +148,116 @@ type selectedHead struct{}
 // selectedHeadKey is the fixed key for the single selected-head row M1 uses.
 const selectedHeadKey = "selected_world_head"
 
-// Open opens (or creates) the SQLite database at path and applies the schema.
-// path may be a filename or ":memory:". The pure-Go driver is registered as
-// "sqlite" by the blank import above.
+// Open opens (or creates) the SQLite database at path, taking sole WRITER
+// authority over it, and applies the schema. path may be a filename or
+// ":memory:".
+//
+// Single-writer, fail closed (w-worldd-m2 Decision 2 r3 — arm A, ratified
+// attended by Mark, 2026-07-27): for a FILE-BACKED database, Open resolves a
+// canonical database identity and takes a NON-WAITING OS-backed exclusive lock
+// on "<canonical-db>.writer.lock" BEFORE any SQLite write handle exists. If
+// another process already holds that lock, Open returns *WriterAlreadyActive
+// immediately — it never waits, never retries and never blocks. Readers that do
+// not need write authority use OpenReadOnly instead.
+//
+// An in-memory database ( ":memory:", "file::memory:", any DSN with
+// mode=memory ) is per-connection and physically unreachable from another
+// process, so it takes NO lock and creates NO lock file. That is decided on the
+// resolved DSN BEFORE canonicalization.
+//
+// The pure-Go driver is registered as "sqlite" by the blank import above.
 func Open(path string) (*Store, error) {
-	db, err := sql.Open("sqlite", path)
+	if isInMemoryDSN(path) {
+		db, err := openSQLite(path, path, true)
+		if err != nil {
+			return nil, err
+		}
+		return &Store{db: db}, nil
+	}
+
+	canonical, params, err := resolveDSN(path)
 	if err != nil {
-		return nil, fmt.Errorf("store: open %q: %w", path, err)
+		return nil, err
+	}
+	lock, err := acquireWriterLock(canonical)
+	if err != nil {
+		return nil, err
+	}
+	db, err := openSQLite(path, writeDSN(canonical, params), true)
+	if err != nil {
+		// The lock was taken before SQLite ever opened; drop it, or a retry in
+		// this same process would deadlock against its own descriptor.
+		_ = lock.release()
+		return nil, err
+	}
+	return &Store{db: db, lock: lock}, nil
+}
+
+// OpenReadOnly opens an EXISTING file-backed database in SQLite's read-only
+// mode. It acquires NO writer lock and applies NO schema (a read-only handle
+// must not attempt DDL), so it succeeds while another process holds writer
+// authority over the same database.
+//
+// It is an error to ask for a read-only view of an in-memory DSN: such a
+// database is per-connection, so a fresh read-only connection could only ever
+// observe an empty database. Failing loudly beats returning an empty store.
+func OpenReadOnly(path string) (*Store, error) {
+	if isInMemoryDSN(path) {
+		return nil, fmt.Errorf(
+			"store: open read-only %q: an in-memory database is per-connection and has no "+
+				"shared contents to read", path)
+	}
+	canonical, params, err := resolveDSN(path)
+	if err != nil {
+		return nil, err
+	}
+	db, err := openSQLite(path, readOnlyDSN(canonical, params), false)
+	if err != nil {
+		return nil, err
+	}
+	return &Store{db: db}, nil
+}
+
+// openSQLite opens the driver handle for dsn, reporting errors against the
+// caller-facing display path. applySchema is false for read-only handles.
+func openSQLite(display, dsn string, applySchema bool) (*sql.DB, error) {
+	db, err := sql.Open("sqlite", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("store: open %q: %w", display, err)
 	}
 	// A single open connection keeps a :memory: database (which is per-connection)
 	// coherent across the store's lifetime and makes the compare-and-append
 	// transaction the sole serialization point.
 	db.SetMaxOpenConns(1)
+	// database/sql opens lazily, so this first Exec is also what surfaces an
+	// unopenable database (a missing file under mode=ro, say) at construction
+	// time rather than at first query.
 	if _, err := db.Exec("PRAGMA foreign_keys = ON;"); err != nil {
 		_ = db.Close()
 		return nil, fmt.Errorf("store: enable foreign keys: %w", err)
 	}
-	if _, err := db.Exec(schemaSQL); err != nil {
-		_ = db.Close()
-		return nil, fmt.Errorf("store: apply schema: %w", err)
+	if applySchema {
+		if _, err := db.Exec(schemaSQL); err != nil {
+			_ = db.Close()
+			return nil, fmt.Errorf("store: apply schema: %w", err)
+		}
 	}
-	return &Store{db: db}, nil
+	return db, nil
 }
 
-// Close closes the underlying database.
-func (s *Store) Close() error { return s.db.Close() }
+// Close closes the underlying database and then releases the writer lock, if
+// this handle holds one. The lock is released even when closing the database
+// fails, so a failed Close can never leave writer authority stranded.
+func (s *Store) Close() error {
+	err := s.db.Close()
+	if s.lock != nil {
+		if rerr := s.lock.release(); rerr != nil && err == nil {
+			err = rerr
+		}
+		s.lock = nil
+	}
+	return err
+}
 
 // verifyObject checks that o.Hash addresses o.Payload under o.Hash's algorithm.
 // A mismatch is a content-addressing violation and blocks insertion.
