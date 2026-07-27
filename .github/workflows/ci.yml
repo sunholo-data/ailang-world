@@ -82,8 +82,5 @@ jobs:
           echo "$ver" | grep -q 'v0.30.0'
           echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
 
-      - name: go build
-        run: go build ./...
-
-      - name: go test (replay tests run against pinned AILANG_BIN)
-        run: go test ./... -count=1
+      - name: go build + test gate (replay tests run against pinned AILANG_BIN)
+        run: ./scripts/verify_go.sh

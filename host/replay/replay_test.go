@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -458,9 +459,15 @@ func TestPairMemberChangeCausesCacheMiss(t *testing.T) {
 
 // TestInterpreterMemberChangeCausesCacheMiss changes the OTHER pair member (the
 // interpreter) and asserts a cache miss for the new pair, keeping the original
-// pair's row intact. Because a second real interpreter artifact is not
-// available in the test environment, this exercises the cache key directly via
-// a synthetic-but-well-formed interpreter ref inserted alongside the real one.
+// pair's row intact. It exercises the cache key directly via a
+// synthetic-but-well-formed interpreter ref inserted alongside the real one.
+//
+// NOTE (NB2 boundary): this is a cache-key-only assertion — it never drives a
+// full replay through the second interpreter, because `otherInterp` is a bare
+// hash with no archived executable. The genuine end-to-end interpreter-member
+// replay (a SECOND, hash-distinct, WORKING archived interpreter driven through
+// all six replay steps) is
+// TestInterpreterMemberChangeDrivesRealReplayEndToEnd below.
 func TestInterpreterMemberChangeCausesCacheMiss(t *testing.T) {
 	env := newFixtureEnv(t)
 
@@ -484,6 +491,133 @@ func TestInterpreterMemberChangeCausesCacheMiss(t *testing.T) {
 		t.Fatalf("changed-interpreter cache lookup: %v", err)
 	} else if hit {
 		t.Fatal("changed interpreter member must be a cache MISS")
+	}
+}
+
+// TestInterpreterMemberChangeDrivesRealReplayEndToEnd resolves the NB2
+// carry-forward (M4/M5): re-verify the replay path END-TO-END when the
+// INTERPRETER itself is the changed member of the (transitionFn, interpreter)
+// verify-cache key — not just the cache lookup in isolation.
+//
+// The env is "constrained by one archived binary" only if a second interpreter
+// must be a DISTINCT UPSTREAM RELEASE. It need not be: a second WORKING
+// interpreter that is byte-distinct (hence a distinct HashRef and a distinct
+// cache-key member) is constructible from the single pinned binary as a thin
+// exec wrapper. Running it produces byte-identical AILANG execution output, so
+// the same recorded goldens replay bit-for-bit through BOTH interpreters. This
+// drives all six replay steps (content check, entry-interpreter resolution,
+// cache consult, ARCHIVED-binary invocation, byte compare, world-hash
+// reconstruction) through the second interpreter and asserts:
+//
+//	(1) the (transitionFn, interpreter2) pair is a genuine end-to-end cache MISS
+//	    that re-verifies and populates ITS OWN row;
+//	(2) the executable actually invoked is the archive slot for interpreter2's
+//	    hash (authoritative resolution follows the changed member);
+//	(3) the (transitionFn, interpreter1) row is untouched by the change; and
+//	(4) both interpreters produce byte-identical recorded results and world
+//	    hashes (the wrapper is a faithful second interpreter, not a stub).
+//
+// STILL ENV-CONSTRAINED (documented, not faked): asserting that two
+// SEMANTICALLY-DIVERGENT interpreter releases produce DIFFERENT replay bytes for
+// the same source needs >=2 distinct upstream AILANG releases in the archive,
+// which this single-binary CI env cannot supply. That negative case is the
+// upstream multi-release integration test, out of M1 scope.
+func TestInterpreterMemberChangeDrivesRealReplayEndToEnd(t *testing.T) {
+	env := newFixtureEnv(t)
+	bin := pinnedBinary(t) // absolute path to the real pinned interpreter
+
+	// Seed and cache the ORIGINAL (transitionFn, interpreter1) pair via a real
+	// replay so we can later prove the change leaves this row intact.
+	if _, err := env.engine.ReplayEpisode(env.episode); err != nil {
+		t.Fatalf("seed replay of original pair: %v", err)
+	}
+	if _, hit, err := env.store.GetVerifyResult(env.srcObj.Hash, env.interp); err != nil {
+		t.Fatalf("original pair lookup: %v", err)
+	} else if !hit {
+		t.Fatal("original pair must be cached after the seed replay")
+	}
+
+	// Build a SECOND, byte-distinct, WORKING interpreter: a thin exec wrapper
+	// around the real pinned binary. It is a different byte stream (=> different
+	// content hash => different cache-key member) but a faithful interpreter,
+	// producing identical AILANG execution output.
+	wrapperDir := t.TempDir()
+	wrapperPath := filepath.Join(wrapperDir, "ailang")
+	wrapper := "#!/usr/bin/env bash\nexec " + strconv.Quote(bin) + " \"$@\"\n"
+	if err := os.WriteFile(wrapperPath, []byte(wrapper), 0o755); err != nil {
+		t.Fatalf("write wrapper interpreter: %v", err)
+	}
+
+	interp2, err := env.archive.Archive(wrapperPath)
+	if err != nil {
+		t.Fatalf("archive second (wrapper) interpreter: %v", err)
+	}
+	if interp2.String() == env.interp.String() {
+		t.Fatal("wrapper interpreter must be a DISTINCT HashRef from the real binary")
+	}
+
+	// Pre-condition (1): the (transitionFn, interpreter2) pair is a cache MISS
+	// before any replay drives it.
+	if _, hit, err := env.store.GetVerifyResult(env.srcObj.Hash, interp2); err != nil {
+		t.Fatalf("interpreter2 pair pre-lookup: %v", err)
+	} else if hit {
+		t.Fatal("changed-interpreter pair must be a cache MISS before its first replay")
+	}
+
+	// Drive the FULL replay through interpreter2 using the SAME committed goldens
+	// (the wrapper produces byte-identical output to interpreter1).
+	ep2 := env.episode
+	ep2.Entries = []EpisodeEntry{{
+		TransitionFn:      env.srcObj.Hash,
+		Interpreter:       interp2,
+		SemanticsEpoch:    1,
+		RecordedResult:    env.recorded,
+		RecordedWorldHash: env.worldRef,
+	}}
+	res2, err := env.engine.ReplayEpisode(ep2)
+	if err != nil {
+		t.Fatalf("end-to-end replay through interpreter2: %v", err)
+	}
+
+	// (1) genuine end-to-end cache MISS on this run (re-verified, not a hit).
+	if res2[0].CacheHit {
+		t.Fatal("first end-to-end replay of the changed interpreter pair must be a cache MISS")
+	}
+	// ... and the row is now populated for the NEW pair.
+	if _, hit, err := env.store.GetVerifyResult(env.srcObj.Hash, interp2); err != nil {
+		t.Fatalf("interpreter2 pair post-lookup: %v", err)
+	} else if !hit {
+		t.Fatal("changed-interpreter pair must be cached after its end-to-end re-verification")
+	}
+
+	// (2) authoritative resolution followed the CHANGED member: the invoked
+	// executable is interpreter2's archive slot, not interpreter1's.
+	want2, err := env.archive.Resolve(interp2)
+	if err != nil {
+		t.Fatalf("resolve interpreter2: %v", err)
+	}
+	if res2[0].ExecPath != want2 {
+		t.Fatalf("end-to-end replay invoked %q, expected the changed interpreter %q", res2[0].ExecPath, want2)
+	}
+	if want1, err := env.archive.Resolve(env.interp); err != nil {
+		t.Fatalf("resolve interpreter1: %v", err)
+	} else if res2[0].ExecPath == want1 {
+		t.Fatal("changed-member replay must NOT resolve back to interpreter1")
+	}
+
+	// (3) the ORIGINAL (transitionFn, interpreter1) row is untouched.
+	if _, hit, err := env.store.GetVerifyResult(env.srcObj.Hash, env.interp); err != nil {
+		t.Fatalf("original pair post-change lookup: %v", err)
+	} else if !hit {
+		t.Fatal("original pair row must survive the interpreter-member change")
+	}
+
+	// (4) the second interpreter is faithful: byte-identical result + world hash.
+	if string(res2[0].Produced) != string(env.recorded) {
+		t.Fatalf("interpreter2 produced %q != recorded %q", string(res2[0].Produced), string(env.recorded))
+	}
+	if res2[0].WorldHash.String() != env.worldRef.String() {
+		t.Fatalf("interpreter2 world hash %q != recorded %q", res2[0].WorldHash.String(), env.worldRef.String())
 	}
 }
 
