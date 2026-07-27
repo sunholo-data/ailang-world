@@ -403,18 +403,18 @@ M1 satisfies the nine implications from `w-log-epoch-decision.md` as follows:
 
 ## Acceptance Criteria
 
-- [ ] `world/logepoch.ail`, `world/types.ail`, `world/contracts.ail`, and
+- [x] `world/logepoch.ail`, `world/types.ail`, `world/contracts.ail`, and
   `world/transitions.ail` pass `ailang ai-check` under the recorded released binary.
-- [ ] `./scripts/verify_ail.sh` passes every `.ail` module and reports a positive module count.
-- [ ] Go code lands with `go.mod`; CI runs `go build ./... && go test ./...` in the same PR.
-- [ ] Source canonicalization tests cover CRLF, lone CR, trailing ASCII space/tab, terminal empty
+- [x] `./scripts/verify_ail.sh` passes every `.ail` module and reports a positive module count.
+- [x] Go code lands with `go.mod`; CI runs `go build ./... && go test ./...` in the same PR.
+- [x] Source canonicalization tests cover CRLF, lone CR, trailing ASCII space/tab, terminal empty
   lines, UTF-8 validation, BOM, NUL, idempotence, and a golden SHA-256 `HashRef`.
-- [ ] SQLite persists object envelopes, immutable worlds, the frozen log header, transition-body
+- [x] SQLite persists object envelopes, immutable worlds, the frozen log header, transition-body
   references, the registry head, and pair-keyed verification cache.
-- [ ] Hash readers reject malformed, uppercase, bare, and unsupported tagged forms with structured
+- [x] Hash readers reject malformed, uppercase, bare, and unsupported tagged forms with structured
   errors.
-- [ ] Epoch 1 registry object names the M1 AILANG release as its first nominated candidate.
-- [ ] Startup archives the configured interpreter and every new entry stamps its exact `HashRef`.
+- [x] Epoch 1 registry object names the M1 AILANG release as its first nominated candidate.
+- [x] Startup archives the configured interpreter and every new entry stamps its exact `HashRef`.
 - [x] Authoritative replay resolves the executable from each entry's `interpreter` hash.
 - [x] CI asserts epoch-registry candidate changes cannot redirect authoritative replay.
 - [x] Verification/typecheck cache tests prove the key is exactly `(transitionFn, interpreter)`
@@ -422,8 +422,8 @@ M1 satisfies the nine implications from `w-log-epoch-decision.md` as follows:
 - [x] A recorded fixture episode replays bit-for-bit to its recorded result and final world hash.
 - [x] **Replay-doubling:** every acceptance episode replays twice through the pinned artifact;
   replay A, replay B, and the recorded bytes match exactly, with divergence causing test failure.
-- [ ] The three prerequisite sketches and `sketches/worldkernel.ail` remain green in the final gate.
-- [ ] M1 exports embedded host packages and stops before daemon, broker, isolation, REST, CLI, MCP,
+- [x] The three prerequisite sketches and `sketches/worldkernel.ail` remain green in the final gate.
+- [x] M1 exports embedded host packages and stops before daemon, broker, isolation, REST, CLI, MCP,
   or A2A implementation.
 
 ## Axiom Compliance
