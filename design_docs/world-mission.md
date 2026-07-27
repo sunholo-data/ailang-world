@@ -479,6 +479,25 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
    The OTHER round-2 objection (`gemini-3-1-pro`: no non-vacuity mutations for handler subprocess
    timeouts / output caps) **is** carve-out-eligible — concrete verbatim fix, completeness only —
    and is **PRE-APPROVED to apply on unpark**, no re-quorum needed for it.
+4b. [**NEW iter-23** — the kernel-durability item CF-B-2 has needed since iter-21; **NEW-DOC** when
+   picked. Gating relationship: **if the iter-23 parked question is answered `(a)`, half (ii) merges
+   INTO `w-effect-broker-m3` M3 and this item shrinks to CF-B-2 alone**; if `(b)` (the controller's
+   recommendation, and the default if unanswered) this item carries BOTH halves]
+   **w-store-durability** · clause-1 · store/kernel hardening across a crash:
+   **(i) CF-B-2** — `store.Commit` writes a zero `PrevEntryHash` that `store.GetLogEntry` **cannot
+   read back**, so the embedded Go API can append a log entry no reader can ever load. The daemon
+   refuses it at the REST boundary, which is a boundary patch over a kernel defect. Discovered
+   iter-21 **by a failing test**; as of iter-23 it still has **no issue and no repro fixture** —
+   this row closes the queue half, and a committed repro fixture is the first deliverable (the
+   ghost-close rule: never bare bookkeeping).
+   **(ii) the broker effect journal** — a durable pre-dispatch intent object + journal head + a
+   post-dispatch outcome object, with an `IndeterminateEffectError` recovery path that **never**
+   auto-re-executes, and per-handler idempotency/reconciliation rules before any retry is allowed.
+   Raised by `gpt5-6-sol` in the `w-effect-broker-m3` round-2 quorum: without it a real external
+   effect (an `FS.Write`, a `Git.Commit`, a **paid** `Model.Infer`) can occur with no durable
+   record, and replay cannot distinguish "never executed" from "executed but record lost".
+   Both halves are the same question — **what the kernel guarantees across a crash** — which is why
+   they share one item rather than being answered twice · ~1–2d · surfaced iter-21, queued iter-23.
 5. **w-mcp-projection** · clause-6 · project the transition registry over MCP + publish the A2A
    agent card (reuse `ailang serve-api --mcp/--a2a` machinery — do not reinvent) · ~1d
 6. [PARKED until 2–5 land] **w-agent-floor-m4** · clause-4 · dual-reference NON-INFERIORITY
