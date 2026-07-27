@@ -620,8 +620,15 @@ func TestRunAnnouncesResolvedListenAddress(t *testing.T) {
 // the first has released writer authority) finds the SAME epoch-registry head
 // rather than creating a divergent epoch 1.
 func TestNewBootstrapsEpochRegistryIdempotently(t *testing.T) {
-	dbPath := filepath.Join(t.TempDir(), "world.db")
-	cfg := Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0}
+	dir := t.TempDir()
+	dbPath := filepath.Join(dir, "world.db")
+	ailangBin, _ := fakeInterpreter(t, dir, "AILANG v0.30.0\nCommit: e37b370\n")
+	cfg := Config{
+		DBPath:    dbPath,
+		BindHost:  DefaultBindHost,
+		BindPort:  0,
+		AilangBin: ailangBin,
+	}
 
 	heads := make([]string, 0, 2)
 	for i := range 2 {
