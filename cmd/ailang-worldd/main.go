@@ -9,13 +9,16 @@
 //	ailang-worldd serve --db <path> [--bind 127.0.0.1:7644] [--ailang-bin <path>]
 //	ailang-worldd [--addr http://127.0.0.1:7644] health
 //	ailang-worldd [--addr http://127.0.0.1:7644] head
+//	ailang-worldd [--addr http://127.0.0.1:7644] world get <ref>
+//	ailang-worldd [--addr http://127.0.0.1:7644] object get <ref> [--payload]
+//	ailang-worldd [--addr http://127.0.0.1:7644] log get <index>
+//	ailang-worldd [--addr http://127.0.0.1:7644] log range --from N [--limit M]
+//	ailang-worldd [--addr http://127.0.0.1:7644] registry get <name>
+//	ailang-worldd [--addr http://127.0.0.1:7644] commit --file <commit.json>
 //
 // `--addr` is ONE GLOBAL CLIENT FLAG available to every client verb; it is not a
 // `serve` flag, and passing it to `serve` is a usage error rather than a silently
-// ignored argument. The remaining client verbs of the frozen route table
-// (world/object/log/registry/commit) land in M2.C alongside the real-subprocess
-// end-to-end test; M2.A deliberately ships health and head only rather than
-// half-implementing the rest.
+// ignored argument.
 //
 // Exit codes: 0 success, 1 usage or client error, 2 fatal startup/runtime.
 package main
@@ -26,13 +29,10 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
-	"time"
 
 	"github.com/sunholo-data/ailang-world/host/daemon"
 )
@@ -44,18 +44,18 @@ const (
 	exitFatal = 2
 )
 
-// maxClientResponseBytes bounds how much of a daemon response the client will
-// buffer. Decision 7 bounds every request-driven allocation; a client reading an
-// unbounded body from a wedged or hostile server would be the same class of
-// defect on the other side of the socket. It matches the D7 commit-body cap.
-const maxClientResponseBytes = 8388608
-
 const usage = `ailang-worldd — AILANG World local daemon (loopback only)
 
 Usage:
   ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
   ailang-worldd [--addr <url>] health
   ailang-worldd [--addr <url>] head
+  ailang-worldd [--addr <url>] world get <ref>
+  ailang-worldd [--addr <url>] object get <ref> [--payload]
+  ailang-worldd [--addr <url>] log get <index>
+  ailang-worldd [--addr <url>] log range --from N [--limit M]
+  ailang-worldd [--addr <url>] registry get <name>
+  ailang-worldd [--addr <url>] commit --file <commit.json>
 
 Global client flag:
   --addr <url>   base URL of the daemon (default ` + daemon.DefaultAddr + `).
@@ -66,9 +66,6 @@ serve flags:
   --bind host:port     loopback listen address (default ` + daemon.DefaultBind + `);
                        a non-loopback host is refused — there is no override
   --ailang-bin <path>  interpreter to archive and pin at startup (optional)
-
-Client verbs for the remaining routes (world/object/log/registry/commit) arrive
-in milestone M2.C.
 
 Exit codes: 0 ok, 1 usage or client error, 2 fatal startup.
 `
@@ -117,6 +114,21 @@ func run(args []string, stdout, stderr io.Writer) int {
 
 	case "head":
 		return runClientGet(*addr, "/v1/head", rest[1:], stdout, stderr)
+
+	case "world":
+		return runWorld(*addr, rest[1:], stdout, stderr)
+
+	case "object":
+		return runObject(*addr, rest[1:], stdout, stderr)
+
+	case "log":
+		return runLog(*addr, rest[1:], stdout, stderr)
+
+	case "registry":
+		return runRegistry(*addr, rest[1:], stdout, stderr)
+
+	case "commit":
+		return runCommit(*addr, rest[1:], stdout, stderr)
 
 	case "help":
 		fmt.Fprint(stdout, usage)
@@ -171,63 +183,5 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "ailang-worldd: %v\n", err)
 		return exitFatal
 	}
-	return exitOK
-}
-
-// client is the CLI's REST caller. It owns one http.Client and derives a
-// per-call deadline, so no client call can hang past the D7 budget. timeout is a
-// struct field rather than a constant so M2.C's "a non-responding server yields
-// a deadline error, not a hang" test does not have to wait 30 s.
-type client struct {
-	base    string
-	timeout time.Duration
-	http    *http.Client
-}
-
-func newClient(base string) *client {
-	return &client{
-		base:    strings.TrimSuffix(base, "/"),
-		timeout: daemon.DefaultClientTimeout,
-		http:    &http.Client{},
-	}
-}
-
-// get performs one bounded GET and returns the status code and body text.
-func (c *client) get(path string) (int, string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.base+path, nil)
-	if err != nil {
-		return 0, "", fmt.Errorf("build request for %s%s: %w", c.base, path, err)
-	}
-	resp, err := c.http.Do(req)
-	if err != nil {
-		return 0, "", fmt.Errorf("GET %s%s: %w", c.base, path, err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-	body, err := io.ReadAll(io.LimitReader(resp.Body, maxClientResponseBytes))
-	if err != nil {
-		return resp.StatusCode, "", fmt.Errorf("read %s%s response: %w", c.base, path, err)
-	}
-	return resp.StatusCode, string(body), nil
-}
-
-// runClientGet is the shared body of the read-only client verbs: dial, print the
-// response, and map a non-2xx status onto the client-error exit code.
-func runClientGet(addr, path string, args []string, stdout, stderr io.Writer) int {
-	if len(args) > 0 {
-		fmt.Fprintf(stderr, "ailang-worldd: unexpected argument %q\n", args[0])
-		return exitUsage
-	}
-	code, body, err := newClient(addr).get(path)
-	if err != nil {
-		fmt.Fprintf(stderr, "ailang-worldd: %v\n", err)
-		return exitUsage
-	}
-	if code < 200 || code >= 300 {
-		fmt.Fprintf(stderr, "ailang-worldd: %s returned HTTP %d: %s\n", path, code, strings.TrimSpace(body))
-		return exitUsage
-	}
-	fmt.Fprintln(stdout, strings.TrimSpace(body))
 	return exitOK
 }

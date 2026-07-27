@@ -217,6 +217,38 @@ func TestBadRequestAndNotFoundAreDistinct(t *testing.T) {
 	}
 }
 
+func TestHeadErrorsUseAPIEnvelope(t *testing.T) {
+	t.Run("not found", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		assertErrorClass(t, requestRecorder(t, d, http.MethodGet, "/v1/head", nil),
+			http.StatusNotFound, "NotFound")
+	})
+	t.Run("internal", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		if err := d.store.Close(); err != nil {
+			t.Fatalf("close store: %v", err)
+		}
+		assertErrorClass(t, requestRecorder(t, d, http.MethodGet, "/v1/head", nil),
+			http.StatusInternalServerError, "Internal")
+	})
+}
+
+func TestGETRoutesRejectOtherMethods(t *testing.T) {
+	d := newHandlerDaemon(t)
+	for _, test := range []struct {
+		method string
+		target string
+	}{
+		{http.MethodPost, "/v1/health"},
+		{http.MethodDelete, "/v1/head"},
+	} {
+		rec := requestRecorder(t, d, test.method, test.target, nil)
+		if rec.Code != http.StatusMethodNotAllowed {
+			t.Errorf("%s %s status=%d, want 405; body=%s", test.method, test.target, rec.Code, rec.Body)
+		}
+	}
+}
+
 func TestStaleHeadConflictBodySupportsReplan(t *testing.T) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "conflict")
@@ -286,6 +318,26 @@ func TestLogRangeClampAndDefaultAreNonVacuous(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("non-zero from starts at requested index", func(t *testing.T) {
+		const from = 37
+		rec := requestRecorder(t, d, http.MethodGet, "/v1/log?from=37&limit=3", nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status=%d body=%s", rec.Code, rec.Body)
+		}
+		var body logRangeResponse
+		if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+			t.Fatal(err)
+		}
+		if len(body.Items) != 3 || body.Items[0].Header.EntryIndex != from {
+			t.Fatalf("indices begin at %v, want %d; body=%s", func() any {
+				if len(body.Items) == 0 {
+					return "<empty>"
+				}
+				return body.Items[0].Header.EntryIndex
+			}(), from, rec.Body)
+		}
+	})
 }
 
 // genesisCommit builds a TRUE genesis commit: the ZERO observed head, which is

@@ -384,18 +384,17 @@ func (d *Daemon) handleHealth(w http.ResponseWriter, _ *http.Request) {
 // "algo:digest" text (Decision 3 — one hash encoding everywhere; the daemon
 // never invents a second one).
 //
-// Status classes follow the sketch's ApiError -> httpStatus mapping: no
-// selected head is NotFound (404); a store failure is Internal (500). M2.A
-// renders them as text/plain; the JSON error envelope arrives with M2.B's
-// full error surface.
+// Success remains canonical plain text. Errors use the same JSON APIError
+// envelope as every other v1 route: no selected head is NotFound (404), and a
+// store failure is Internal (500).
 func (d *Daemon) handleHead(w http.ResponseWriter, _ *http.Request) {
 	ref, ok, err := d.store.SelectedHead()
 	if err != nil {
-		http.Error(w, "internal: "+err.Error(), http.StatusInternalServerError)
+		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if !ok {
-		http.Error(w, "not found: no world head has been selected yet", http.StatusNotFound)
+		writeAPIError(w, "NotFound", "no world head has been selected yet", http.StatusNotFound)
 		return
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
