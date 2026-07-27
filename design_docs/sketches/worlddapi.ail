@@ -1,0 +1,123 @@
+module sketches/worlddapi
+
+import sketches/logepoch (HashRef, renderRef)
+
+-- Compiler-checked M2 sketch for w-worldd-m2 (clause-2): the TYPED surface of
+-- the `ailang-worldd` local daemon's worldd-NATIVE REST/CLI API. The daemon is
+-- a transport shell over the landed M1 host packages (host/store, host/archive,
+-- host/registry, host/replay); this sketch freezes the API's semantic SHAPE.
+-- It is NOT the MCP/A2A projection (clause-6, w-mcp-projection) and carries NO
+-- capability/budget authority (clause-3, w-effect-broker-m3).
+
+-- Daemon configuration. Local-first is inviolable (charter guardrail): the
+-- default bind host MUST satisfy isLoopbackHost; a non-loopback bind requires
+-- an explicit operator flag and is out of scope for M2 acceptance.
+export type DaemonConfig = {
+  dbPath: string,
+  bindHost: string,
+  bindPort: int
+}
+
+-- Loopback guard for the local-first premise. The daemon refuses to start on a
+-- non-loopback bindHost unless explicitly overridden (M2 ships no override).
+export func isLoopbackHost(host: string) -> bool ! {}
+ensures { result == (host == "127.0.0.1" || host == "::1" || host == "localhost") }
+tests [
+  ("127.0.0.1", true),
+  ("::1", true),
+  ("0.0.0.0", false),
+  ("example.com", false)
+]
+{
+  host == "127.0.0.1" || host == "::1" || host == "localhost"
+}
+
+-- List-endpoint page-size clamp: every collection read is bounded (no
+-- unbounded scans through the REST surface). 100 is the default page size;
+-- 500 the hard ceiling.
+export func clampLimit(requested: int) -> int ! {}
+ensures { result >= 1 && result <= 500 }
+tests [
+  (0, 100),
+  (25, 25),
+  (1000, 500)
+]
+{
+  if requested < 1 then 100
+  else if requested > 500 then 500
+  else requested
+}
+
+-- Commit request-body bound (Decision 7, bounded waits & allocations): the
+-- daemon wraps POST /v1/commit's body in http.MaxBytesReader capped at
+-- maxCommitBytes = 8 MiB (8388608 bytes); an oversized body renders as 413
+-- (PayloadTooLarge below). Z3-proven so the bound is a frozen semantic fact,
+-- not a tunable Go constant.
+export func withinCommitBytes(n: int) -> bool ! {}
+ensures { result == (n >= 0 && n <= 8388608) }
+tests [
+  (0, true),
+  (8388608, true),
+  (8388609, false)
+]
+{
+  n >= 0 && n <= 8388608
+}
+
+-- The v1 REST route table (worldd-native; see the design doc's Conflict
+-- Surface for the serve-api boundary). CLI subcommands map 1:1 onto these.
+export type Route = { method: string, path: string }
+
+export func routes() -> list[Route] ! {} {
+  [
+    { method: "GET", path: "/v1/health" },
+    { method: "GET", path: "/v1/head" },
+    { method: "GET", path: "/v1/worlds/{ref}" },
+    { method: "GET", path: "/v1/objects/{ref}" },
+    { method: "GET", path: "/v1/log/{index}" },
+    { method: "GET", path: "/v1/registry/{name}" },
+    { method: "POST", path: "/v1/commit" }
+  ]
+}
+
+-- Typed API failure classes. These mirror the structured Go host errors
+-- (store.ConflictError, absent object/world/log rows, malformed HashRef text)
+-- onto transport-independent categories; the HTTP layer renders them.
+-- Z3 NOTE (documented limitation, w-m1-ailang-hardening): contracts on
+-- ADT-taking functions error with "unknown sort", so httpStatus is
+-- tests-covered rather than contract-proven — same policy as the three
+-- Proposal predicates in world/contracts.ail.
+export type ApiError
+  = HeadConflict(HashRef, HashRef)
+  | NotFound(string)
+  | BadRequest(string)
+  | PayloadTooLarge(int)
+  | Internal(string)
+
+export func httpStatus(e: ApiError) -> int ! {}
+tests [
+  ((NotFound("no such object")), 404),
+  ((BadRequest("malformed hash ref")), 400),
+  ((PayloadTooLarge(8388609)), 413),
+  ((Internal("io failure")), 500)
+]
+{
+  match e {
+    HeadConflict(_, _) => 409,
+    NotFound(_) => 404,
+    BadRequest(_) => 400,
+    PayloadTooLarge(_) => 413,
+    Internal(_) => 500
+  }
+}
+
+-- A 409 conflict body carries both heads so the caller can re-plan against
+-- the selected head (the store's compare-and-append contract, M1 Decision 4).
+export func conflictBody(observed: HashRef, selected: HashRef) -> string ! {}
+tests [
+  ((({ algo: "sha256", digest: "aa" }), ({ algo: "sha256", digest: "bb" })),
+   "conflict: observed sha256:aa selected sha256:bb")
+]
+{
+  "conflict: observed ${renderRef(observed)} selected ${renderRef(selected)}"
+}
