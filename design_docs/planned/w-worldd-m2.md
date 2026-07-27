@@ -1,11 +1,12 @@
 # w-worldd-m2 — `ailang-worldd` Local Daemon (CLI + REST over the M1 Host)
 
-**Status**: **PARKED — needs human ratification** (design DIRECTION accepted by both quorum
+**Status**: **ARM A RATIFIED by Mark 2026-07-27 (attended) — ENFORCE single-writer**: reopen the M1 `host/store` freeze (kernel change hereby ratified) for a fail-closed `OpenWriter` (non-waiting OS-backed exclusive lock, `WriterAlreadyActive` on contention, distinct read-only path, subprocess tests). Next iteration applies arm A as the r3 designer revision → sprint-planner. (design DIRECTION accepted by both quorum
 reviewers across two rounds; one remaining objection is a ratification-class kernel decision — see
 the Park box below). NOT yet routed to sprint-planner.
 **Date**: 2026-07-27
 
-> ## ⛔ PARK BOX — one decision for @MarkEdmondson1234 (mission iteration 17, 2026-07-27)
+> ## ✅ PARK BOX — RESOLVED: Mark picked **(A) Enforce it** (attended, 2026-07-27; recorded in the charter STATUS — the ratified-mission-state channel). Rationale: authority as enforcement, not convention — an embedded writer bypassing the daemon's capability/budget checks is exactly the ambient-authority pattern clause 3 exists to end; the M1 kernel change is ratified by this decision.
+> ## (original park box, kept for the record — mission iteration 17, 2026-07-27)
 >
 > This doc passed the pick-time quorum's DIRECTION check (both `gpt5-6-sol` + `gemini-3-1-pro`
 > accept the daemon-shell-over-M1-host direction). Round-1's two objections (bounded waits /
