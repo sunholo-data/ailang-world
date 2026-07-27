@@ -2284,3 +2284,230 @@ correctly, not evidence for a new policy (and one clean run is not the charter's
 the deliberate N+1 at limit=100 and the clamp max 500, and the object/head reads), folding CF-A3-2,
 CF-A3-3 and CF-5, and extending both the bench manifest and `BASELINE.md`. Then M2.C (CLI client +
 subprocess e2e + baseline refresh + close-out) lands the item.
+
+---
+
+## Iteration 21 — 2026-07-27 — `w-worldd-m2` **M2.B LANDED** (PR #13 → squash `b412699`, dev CI green, both jobs): the full REST v1 surface — and a genesis commit the kernel accepts that the API could not express, caught by the judge and the controller independently
+
+**Kind**: mid-sprint EXECUTE iteration ("Plan exists" lane) — no new design doc, no quorum, no
+planner. Executor → controller verification → evaluator (BLOCK) → bounded controller fix → evaluator
+round 2 (PASS) → PR → CI-green merge.
+
+**Context / preflight (Gate 0)**
+- Kill switch: NOT set (armed). Billing tripwire: **CLEAN** (no `ANTHROPIC_API_KEY` /
+  `ANTHROPIC_AUTH_TOKEN`). gh account: `sunholo-voight-kampff`.
+- Pidfile `mission-world.pid`=95933 = this run's own driver (verified via `ps`; no overlap).
+- Inbox: **no unread messages**. Only open issue is bookkeeping #9. No `[nightly-eval]` issues.
+- **No new `@MarkEdmondson1234` comment.** #9 has 7 comments; the newest Mark comment is at
+  `2026-07-27T08:55:11Z`, which EQUALS the watermark, so it was already actioned in iter-18. The
+  predecessor #1 (CLOSED) was re-read per the rotation-week catch — nothing new. Watermark
+  unchanged.
+- Weekly rotation: **NOT due** — #9 was created `2026-07-27T05:51:13Z`, i.e. AFTER the most recent
+  Monday-07:00 boundary (05:00Z), and has 7 comments (< 80). This is the intent test iter-20's
+  process fix recorded, applied for the first time.
+- **A PRIOR FIRE WAS LOST.** The 16:12 fire was killed by the driver's own stall watchdog at 17:02
+  (`STALL: claude 63444 idle with a descendant alive ≥2400s across 3 samples`, rc=143). It left
+  **no artifacts**: no worktree, no branch, no commit, no issue comment, no log entry. Verified by
+  `git worktree list`, `ls -d /tmp/wt-*`, `git branch -r` and the #9 comment timeline (nothing
+  between 14:52 and this iteration). Recorded here so the gap in iteration numbering is not read
+  later as a missing entry.
+
+**Observe (Gate 1)**
+- `git fetch origin`; local `dev` == `origin/dev` == `f61aafb`, clean tree. CI on dev
+  **completed/success** for the last 3 runs. One workflow (`CI`, two jobs), no `paths:` filter, so
+  nothing to mis-poll.
+
+**THE ROUTING FINDING — the codex lane was silently disabled for BOTH missions (Gate 0/3)**
+- The driver exported `MISSION_EXECUTOR_MODEL=opus`, not the charter's `codex:gpt-5.6-sol`. The
+  driver log says why: `codex executor lane probe failed (rc=127) … exec: codex: not found`.
+- **rc=127 is a PATH gap, not a spent quota and not an unusable model pin** — reading it as either
+  is the iter-18/iter-19 scar in a third costume. `tools/launchd/mission-control.sh:44` exports
+  `PATH="$HOME/go/bin:$HOME/.local/bin:$PATH"`; under launchd the base PATH is
+  `/usr/bin:/bin:/usr/sbin:/sbin`, so `claude` (in `~/.local/bin`) resolves and **`codex`
+  (`/opt/homebrew/bin/codex`) does not.**
+- Per the Repo Profile's own iter-19 process fix ("always run the skill's OWN probe WITH `--model`
+  before trusting the lane"), the controller re-probed with PATH fixed:
+  `env -u OPENAI_API_KEY codex exec --skip-git-repo-check --model gpt-5.6-sol 'reply with exactly: ok'`
+  → **rc=0, replied `ok`**, codex-cli **0.145.0**, `auth_mode=chatgpt`. The lane is healthy; only
+  the driver cannot see the binary. The executor was therefore routed to the RATIFIED
+  `codex:gpt-5.6-sol` pin rather than honouring a fallback provably caused by an environment defect.
+- **The defect is PRE-EXISTING and was masked, not caused, by #486.** The old probe was
+  `cx_out=$(codex exec … 2>&1)` behind a gate that fell back only on a `QUOTA_SIG` regex match —
+  and `bash: codex: command not found` does not match that regex, so a 127 **false-greened** the
+  lane and the skill's own PATH-fixing re-probe hid it. #486's stricter "fall back on ANY non-zero
+  rc" is correct and exposed it.
+- **Blast radius confirmed cross-mission**: `gh api` fetched upstream `dev`'s copy of the driver —
+  identical line 44 and identical probe at line 297 — so the V1 loop demotes to opus every fire
+  for the same reason. Cost direction is the exact opposite of what the codex flip was for.
+- `tools/launchd/*` is FROZEN CORE here, so **no local patch**. Routed on both channels:
+  **`sunholo-data/ailang#493`** (with log excerpts, the one-line diff, and a request to treat
+  rc=127 as a driver-environment defect rather than a reason to demote a model pin) and an
+  `ailang messages send mission-control` note (`msg_20260727_183949_4951d6bc`).
+
+**Pick + reality-check (Gate 2)**
+- Queue head = item 3 `w-worldd-m2` **[IN-SPRINT]**; iter-20's recorded **Next** is milestone M2.B.
+- **Already-landed check against a FRESH origin**: `git fetch` then `ls host/daemon/`,
+  `ls host/daemon/handlers*.go` (no matches), merged-PR search (newest was #12 = A3), open-PR list
+  (empty). M2.B genuinely unstarted.
+- No quorum needed (mid-sprint execute on a doc that is quorum-run, r3-revised and Mark-ratified).
+
+**Execute (Gate 3) — sprint-executor `codex:gpt-5.6-sol`, isolated worktree `/tmp/wt-worldd-b`**
+- Bounded 30-min `date +%s` cap (Standing rule 6), `--sandbox workspace-write`, `--add-dir` for
+  GOCACHE/GOMODCACHE/the pinned binary, backgrounded. Exited **rc=0** well inside the cap.
+- Delivered 387 + 322 new lines (`handlers.go`, `handlers_test.go`) plus edits to `bench_test.go`
+  (+146), `daemon.go`, `daemon_test.go`, `scripts/bench_worldd.sh`, `bench/BASELINE.md`.
+- **The executor again behaved honestly under a degraded environment.** Its sandbox denies loopback
+  `bind(2)`, so it could not run ANY socket test or benchmark; it listed all eleven by name, quoted
+  the sandbox error verbatim, and declined to fill in the benchmark rows. It also refused to
+  weaken the socket tests into in-process handler calls to make them runnable — the substitution
+  that would have quietly falsified the perf budget, and which iter-20 put on the ruled-out list.
+- **It surfaced the milestone's real defect itself, in its final message**, rather than papering
+  over it: `hashref.Parse` rejects the empty zero ref, so "parse EVERY ref" and "a genesis commit
+  over REST" cannot both hold. It flagged the tension and declined to invent a second zero-ref
+  encoding. That is exactly the behaviour the directive asked for and it is what made the block
+  cheap to close.
+
+**Verification — controller re-ran everything INDEPENDENTLY (data before conclusions)**
+- `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_go.sh` → **rc=0**, all 8 packages, with
+  `host/replay` **RUNNING 13.2s (not SKIP)** — the V27/B1 silent-skip class stayed closed.
+- `./scripts/verify_ail.sh` → **rc=0**, EXACTLY 4/4 identities / 9 modules / 14 tests.
+- `./scripts/bench_worldd.sh --smoke` → **rc=0**, manifest extended to all six names.
+- **Scope clean BY DIFF, not by claim**: `git diff --exit-code` over `host/store/ world/
+  host/hashref host/canon host/archive host/registry host/replay go.mod go.sum tools/ design_docs/
+  .github/` → rc=0. No new module dependency, so `TestDaemonDependencyAllowlist` stays green.
+- `gofmt -l cmd host` clean, `go vet ./...` rc=0.
+- **FIVE MUTATIONS, each observed RED then reverted GREEN:**
+  1. `clampLimit` ceiling 500 → 1000 → clamp test RED: `returned 510 items, want 500 (store has 510)`.
+  2. Removed the `http.MaxBytesReader` wrap → body-cap arm (a) RED with **400, not 413** — precisely
+     the null case the plan predicted for an ignored cap.
+  3. Dropped `ObservedHead`/`SelectedHead` from the 409 JSON **while keeping the prose message** →
+     re-plan test RED at `parse conflict observedHead: hashref: empty hashref text`. A 409 that
+     carries only prose is a dead end, and the test proves the body is machine-usable.
+  4. (post-fix) Reverted `observedHead` to strict `parseRef` → the new equivalence test RED at
+     `REST commit status=400`.
+  5. (post-fix) Widened the lenience to `prevEntryHash` → `TestGenesisRefLenienceIsExactlyOneField`
+     RED with **status 200** — i.e. the over-wide version succeeds in writing the unreadable entry.
+- **A first-party probe rather than an inherited claim.** The executor's "genesis cannot round-trip"
+  was a CLAIM, so the controller wrote a throwaway test instead of forwarding it: the EMBEDDED store
+  **accepted** a zero-observed-head genesis commit, and the identical commit over REST returned
+  **400 `observedHead: hashref: empty hashref text`**. Probe file deleted after use.
+
+**EVALUATION — sprint-evaluator (sonnet), generator≠judge holds (codex/OpenAI ≠ Anthropic)**
+- **Round 1: BLOCK, 82/100, one blocking finding** — the acceptance check "a genesis+commit episode
+  driven **entirely** over REST" was not met. The judge reached this INDEPENDENTLY of the executor's
+  flag and of the controller's probe, and confirmed it with two probes of its own (including that an
+  all-zeros SHA-256 observed head yields 409, so no workaround existed). It also named the
+  contributing cause the controller had not: the helper was called `seedRESTGenesis` while calling
+  `PutWorld`/`SelectHead` directly — **a misleading name that made the gap invisible to the
+  executor's own review.**
+- **Round 2: PASS, 89/100, ZERO blocking.** It re-derived the `prevEntryHash` asymmetry with its own
+  probe test rather than accepting the controller's account, cross-checked the BASELINE.md N+1
+  arithmetic in Python, and confirmed the lenience list is exhaustive against `decodeCommit`.
+- **The judge caught a defect the controller introduced in the fix**: the `parseGenesisRef` doc
+  comment cited `TestGenesisRefLenienceIsExactlyTwoFields`, a test that does not exist (it was
+  renamed to `…OneField` when the fix narrowed from two fields to one). Fixed before merge. A
+  comment naming a non-existent gate is exactly how a future reader concludes there is no gate.
+
+**The blocking finding, and why the fix is shaped the way it is**
+- `POST /v1/commit` rejected a genesis commit **that the embedded kernel accepts**, so the REST
+  surface could not express a commit its own store supports.
+- `parseGenesisRef` accepts `""` as the zero `HashRef` for **`observedHead` ONLY**. This is not a
+  second hash encoding: `HashRef.String()` **already** renders the zero value as `""`, so `""` is
+  the canonical text of the zero ref, and Decision 3's "one hash encoding everywhere" is satisfied
+  by round-tripping it rather than bent.
+- **The lenience deliberately does NOT extend to `prevEntryHash`**, though it is equally "absent" at
+  genesis. Discovered while writing the fix: `store.Commit` **WRITES** a zero `PrevEntryHash` that
+  `store.GetLogEntry` **CANNOT READ BACK** (`store: log entry 0 prevEntryHash: hashref: empty
+  hashref text`). Accepting `""` there would have handed REST clients a way to append a log entry
+  no reader can ever load — a worse defect than the one being closed. M1's own convention seeds
+  entry 0's `PrevEntryHash` from the genesis world's `LogHead` (`store_test.go:103`), always a real
+  content address. **The first draft of the fix DID include `prevEntryHash`; the new equivalence
+  test failed against it, and that failure is what surfaced the store asymmetry.** The test caught
+  the controller, which is the point of writing the test first.
+
+**Measured — the full v1 surface, one invocation, no PENDING rows**
+(M4 Max, darwin/arm64, go1.26.4, one `-benchtime 200x` run; all six re-measured together so no row
+comes from a different invocation than its neighbours)
+
+| Operation | target p95 | p50 | p95 | headroom |
+|---|---:|---:|---:|---:|
+| Store commit (embedded, kernel floor) | ≤25 ms | 0.4715 | 0.5421 | 46× |
+| REST commit (`POST /v1/commit`) | ≤35 ms | 0.5000 | 0.5763 | 61× |
+| Head read | ≤5 ms | 0.06617 | 0.08033 | 62× |
+| Health | ≤2 ms | 0.04579 | 0.06796 | 29× |
+| Log range, limit=100 (default page) | ≤30 ms | 0.9824 | 1.248 | 24× |
+| Log range, limit=500 (clamp max) | ≤120 ms | 4.738 | 4.915 | 24× |
+
+- **The deliberate N+1 now has a verdict, not just a number**: 3.94× the time for 5× the rows
+  (~9.8 µs/entry at 500 vs ~12.5 µs at 100) — linear with a small fixed cost amortised over the
+  larger page, and 24× inside budget at the clamp max. **No range-read store method is justified by
+  this data**, and `BASELINE.md` now says what evidence would overturn that (superlinearity, or a
+  p95 approaching target at limit=500).
+- REST commit costs **0.5763 ms p95 against the embedded floor's 0.5421** — a ~0.03 ms transport tax,
+  so essentially all commit cost is the kernel's fsync, not the daemon.
+
+**Gate 3b — CI GREEN (bounded polls, 30-min caps, no unbounded waits)**
+- `mergeable=MERGEABLE` checked before arming the poll. One workflow, no `paths:` filter, so a run
+  was genuinely expected.
+- PR #13 run `30287931351` → **completed/success**, both jobs. Dev-merge run `30288051202` →
+  **completed/success**, both jobs.
+- **The new benchmarks were confirmed to actually RUN on the runner, not merely be wired**: the
+  go-verify log shows `BenchmarkRESTCommit-4`, `BenchmarkLogRange/limit_100-4` and
+  `BenchmarkLogRange/limit_500-4` emitting real p50/p95 on linux/amd64 — a different OS and
+  architecture than the dev rig.
+- Squash-merged → `b412699`. Worktree removed, branch deleted, local `dev` fast-forwarded, tree clean.
+
+**Routing evidence** (role, model ACTUALLY used — the enforcement backstop)
+
+| Role | Env pin | ACTUALLY ran on | Notes |
+|---|---|---|---|
+| Controller | session | `claude-opus-5` | triage/pick/probe/upstream issue/5 mutations/first-party genesis probe/round-2 fix/baseline measurement/record/retro |
+| Design-doc-creator | — | **not invoked** | execute lane; doc r3 already quorum-run + Mark-ratified. Rotation state UNCHANGED (`codex:gpt-5.6-sol`) — rotation advances per new-doc iteration |
+| Sprint-planner | — | **not invoked** | plan approved in iter-18 |
+| Sprint-executor | driver exported `opus`; charter default `codex:gpt-5.6-sol` | **`codex:gpt-5.6-sol`** | driver's fallback was a PATH-127, re-probed rc=0 with `--model`, ratified pin honoured. FLAGGED + routed as ailang#493 |
+| Sprint-evaluator | `sonnet` | **sonnet**, 2 rounds | generator≠judge: round 1 judged codex/OpenAI output (cross-provider); round 2 judged the CONTROLLER's opus fix (sonnet ≠ opus) — independent in both rounds |
+
+**Metered ledger**: `metered=$0.00`. The codex probe and the full executor run were the ChatGPT
+**subscription** lane (`auth_mode=chatgpt`), invoked with `env -u OPENAI_API_KEY` — and the key
+**was** set in the tool shell, so the strip was load-bearing. Both evaluator rounds were subscription
+Agent-tool pins. Ceiling ($5) untouched.
+
+**Ruled out** (do not re-chase)
+- **Reading the driver's `rc=127` as a spent codex quota or an unusable model pin** — refuted by a
+  direct probe: `codex` exists at `/opt/homebrew/bin/codex`, cli 0.145.0, and answers rc=0 with
+  `--model gpt-5.6-sol` once PATH includes homebrew. It is a driver PATH defect, nothing else.
+- **Blaming #486 for the codex demotion** — refuted by reading the pre-#486 code: the old gate fell
+  back only on `QUOTA_SIG`, so a 127 false-greened the lane. #486 exposed a pre-existing bug.
+- **Patching `tools/launchd/mission-control.sh` locally** — FROZEN CORE. Routed upstream on both
+  channels instead.
+- **Extending the empty-string lenience to `prevEntryHash`** — actively harmful: `store.Commit`
+  writes a zero there that `store.GetLogEntry` cannot read back, so it would let a client append an
+  unreadable log entry. Proven by mutation 5 (status 200) and by the first fix draft's test failure.
+- **Adding a range-read store method for `GET /v1/log`** — not justified: the N+1 is linear and 24×
+  inside budget at the clamp max. `BASELINE.md` records the evidence that would change this.
+- **Fixing the `store.Commit`/`GetLogEntry` zero-`prevEntryHash` asymmetry in this milestone** — it
+  is a kernel change, out of M2.B's ratified scope. Carried forward.
+- **Weakening the socket tests to run inside the codex sandbox** — same ruled-out entry as iter-20;
+  it would replace a real loopback round-trip with an in-process call and falsify the budget.
+
+**Non-blocking carry-forwards — ENUMERATED** (per the iter-19 process fix; a bare count loses them)
+1. **CF-B-1** — `handleHead`'s error paths (`daemon.go:394`, `:398`) still use text `http.Error`
+   rather than the shared JSON `APIError` envelope, though M2.A's comment promised the envelope
+   would arrive with M2.B. → **M2.C**, where the CLI client must know which routes return text vs
+   JSON errors.
+2. **CF-B-2** — `store.Commit` accepts and WRITES a zero `PrevEntryHash` that `store.GetLogEntry`
+   cannot READ BACK. A real M1 kernel asymmetry; the daemon refuses it at the boundary so no REST
+   client can trigger it, but the embedded API still can. → needs a kernel-side decision (validate
+   on write, or support the zero on read); **not M2.C — a store-hardening item for the queue.**
+3. **CF-B-3** — `scripts/bench_worldd.sh`'s manifest is still hand-maintained; it now lists six
+   names and nothing gates it against drift when a seventh benchmark lands. → carried from CF-A3-2,
+   still open, low priority (a missing name is the gate working).
+4. **CF-B-4** — no test asserts a non-GET method on a GET route yields 405 from the mux, nor that
+   `GET /v1/log?from=N` pages from a non-zero offset. Both behaviours are implemented and unasserted.
+   → **M2.C**.
+
+**Next**: `w-worldd-m2` milestone **M2.C** — the CLI client verbs over the now-complete REST surface,
+a real-subprocess end-to-end episode (genesis → commit → read through the CLI against a spawned
+daemon), and close-out. Folds CF-B-1 and CF-B-4. **That milestone LANDS the item.** Note `BASELINE.md`
+no longer needs an M2.C refresh (CF-A3-4 is closed early — the full surface is measured with no
+PENDING rows), so M2.C's baseline work is a re-measure-and-diff, not a fill-in.
