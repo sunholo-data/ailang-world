@@ -271,6 +271,25 @@ What this mission touches or overlaps, and the drawn boundaries:
   be re-run in search of one. When objections stop being load-bearing, close on the human gate
   and record the ledger. (Design-doc quorums at pick keep their normal semantics — BLOCKED
   parks the item.)
+- **A MUTATION'S RESULT IS ONLY EVIDENCE IF THE MUTATION ITSELF IS VALID** (process fix, iter-22;
+  **2nd instance** — iter-20 was the 1st). Mutation testing is how this mission proves a gate is
+  non-vacuous, so a bad mutation silently produces a false finding in EITHER direction. Two
+  distinct failure modes have now been observed:
+  1. **The mutation does not compile.** Two iter-22 attempts failed `declared and not used`. A
+     build break proves nothing about a test's strength — it is not a RED. Reformulate into a
+     compiling, behaviour-changing form (e.g. keep the variable used: `from*0 + offset`,
+     `*payload && len(path) < 0`) and re-run before scoring.
+  2. **The mutation compiles but changes no behaviour**, so its GREEN reads as "the gate is
+     vacuous" when the gate is fine. Iter-20's counter was appended before a newline split (a
+     silent no-op whose green briefly read as "CF-7 is not load-bearing"); iter-22 collapsed the
+     registry client's per-segment `url.PathEscape` into a whole-string one, which is
+     behaviour-EQUIVALENT because `PathEscape` encodes `/` as `%2F` and Go's mux unescapes the
+     `{name...}` wildcard to the identical `PathValue`.
+  **The rule**: before recording ANY mutation result, confirm the mutation (a) COMPILED and
+  (b) actually changed observable behaviour. An unexpected GREEN is a claim about your mutation
+  first and about the gate second — re-check the mutation before concluding the gate is weak.
+  Record refuted mutations in the log's Ruled out ledger rather than dropping them; both times,
+  re-checking turned a would-be false finding into the strongest evidence in the set.
 - **Kill switch stays until ratification**; only Mark (or the v1 agent on his instruction) arms
   the loop.
 
