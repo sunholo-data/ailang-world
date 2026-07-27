@@ -5,10 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -661,4 +663,208 @@ func TestReleaseFromVersion(t *testing.T) {
 			t.Errorf("releaseFromVersion(%q) = %q, want %q", c.in, got, c.want)
 		}
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Zero-cloud dependency allowlist (Decision 4: enforced, not asserted)
+// ---------------------------------------------------------------------------
+
+// allowedDepModules is the closed set of non-stdlib module roots the daemon
+// core (host/daemon + cmd/ailang-worldd) may reach, directly or transitively.
+// The charter guardrail "local-first is inviolable" is enforced here: a cloud
+// SDK, telemetry shim or network client cannot enter the build graph without
+// this literal being edited, which is a reviewable event.
+//
+// Everything below modernc.org/sqlite is the indirect chain that the pure-Go
+// SQLite driver drags in; it is all local computation (libc shim, allocator,
+// bignum, strftime, tty probe, uuid) with no outbound network capability.
+var allowedDepModules = []string{
+	"github.com/sunholo-data/ailang-world", // this repo
+	"modernc.org/sqlite",                   // pure-Go SQLite driver (host/store)
+	"modernc.org/libc",                     // indirect: sqlite
+	"modernc.org/mathutil",                 // indirect: sqlite
+	"modernc.org/memory",                   // indirect: sqlite
+	"golang.org/x/sys",                     // indirect: sqlite
+	"github.com/dustin/go-humanize",        // indirect: sqlite
+	"github.com/google/uuid",               // indirect: sqlite
+	"github.com/mattn/go-isatty",           // indirect: sqlite
+	"github.com/ncruces/go-strftime",       // indirect: sqlite
+	"github.com/remyoudompheng/bigfft",     // indirect: sqlite
+}
+
+// daemonCorePatterns are the two package trees the allowlist governs.
+var daemonCorePatterns = []string{"./host/daemon/...", "./cmd/ailang-worldd/..."}
+
+// isStdlibImportPath reports whether an import path belongs to the Go standard
+// library, using the canonical rule: a stdlib path's FIRST segment contains no
+// dot (real modules are rooted at a domain, e.g. "modernc.org/sqlite").
+//
+// We deliberately use this string rule rather than `go list -deps -f
+// '{{.Standard}}'`. Both are correct here — verified against the toolchain,
+// including the GOROOT-vendored packages ("vendor/golang.org/x/net/...",
+// "crypto/internal/entropy/v1.0.0"), which the dot rule classifies as stdlib
+// (first segments "vendor" and "crypto") exactly as .Standard=true does. The
+// dot rule wins because it is a pure function: it is unit-testable below
+// without a toolchain, so the classifier itself is gated, not just its output.
+func isStdlibImportPath(p string) bool {
+	first, _, _ := strings.Cut(p, "/")
+	return !strings.Contains(first, ".")
+}
+
+// disallowedDeps partitions a dependency list against allowedDepModules and
+// returns the offending package paths BY NAME, so an operator reading CI output
+// knows precisely what leaked in.
+//
+// It returns an error on an empty list. Per coding-standards S6 a gate must
+// fail on its null case: if `go list` ever emits nothing (wrong working
+// directory, silently-broken patterns, a mis-scoped refactor) an allowlist that
+// vacuously passed would be a false green, which is the exact defect class that
+// bit V27 and B1.
+func disallowedDeps(deps []string) ([]string, error) {
+	if len(deps) == 0 {
+		return nil, errors.New("dependency list is empty: the allowlist would pass vacuously — " +
+			"`go list -deps` produced no packages for " + strings.Join(daemonCorePatterns, " "))
+	}
+	var bad []string
+	for _, d := range deps {
+		if isStdlibImportPath(d) {
+			continue
+		}
+		allowed := false
+		for _, m := range allowedDepModules {
+			if d == m || strings.HasPrefix(d, m+"/") {
+				allowed = true
+				break
+			}
+		}
+		if !allowed {
+			bad = append(bad, d)
+		}
+	}
+	return bad, nil
+}
+
+// goListDeps shells out to `go list -deps` over the given patterns, rooted at
+// the repository. It returns an error — never a skip — when the toolchain is
+// unreachable. `go` is resolved from PATH only, on purpose: a single, obvious
+// resolution path means a CI failure here reads as "go is missing" rather than
+// silently falling back to some other toolchain.
+func goListDeps(repoRoot string, patterns ...string) ([]string, error) {
+	goBin, err := exec.LookPath("go")
+	if err != nil {
+		return nil, fmt.Errorf("cannot locate the `go` toolchain on PATH: %w", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	defer cancel()
+	args := append([]string{"list", "-deps"}, patterns...)
+	cmd := exec.CommandContext(ctx, goBin, args...)
+	cmd.Dir = repoRoot
+	var stdout, stderr strings.Builder
+	cmd.Stdout, cmd.Stderr = &stdout, &stderr
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("%s list -deps %s (in %s): %w\nstderr: %s",
+			goBin, strings.Join(patterns, " "), repoRoot, err, stderr.String())
+	}
+	var deps []string
+	sc := bufio.NewScanner(strings.NewReader(stdout.String()))
+	sc.Buffer(make([]byte, 0, 64*1024), 1<<20)
+	for sc.Scan() {
+		if line := strings.TrimSpace(sc.Text()); line != "" {
+			deps = append(deps, line)
+		}
+	}
+	if err := sc.Err(); err != nil {
+		return nil, fmt.Errorf("scan `go list` output: %w", err)
+	}
+	return deps, nil
+}
+
+// repoRootFromPackageDir returns the module root as seen from this package's
+// working directory (<root>/host/daemon), failing loudly if go.mod is not
+// there — a wrong root would yield an empty dep list, i.e. a vacuous gate.
+func repoRootFromPackageDir(t *testing.T) string {
+	t.Helper()
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		t.Fatalf("resolve repo root: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "go.mod")); err != nil {
+		t.Fatalf("repo root %s has no go.mod: %v", root, err)
+	}
+	return root
+}
+
+// TestDaemonDependencyAllowlist enforces Decision 4's zero-cloud claim as a
+// gate rather than prose: the daemon core's full transitive build graph must
+// consist only of the Go standard library, this repository, and the explicitly
+// enumerated local-only modules above. It also proves its own non-vacuity —
+// the null case, the classifier and the by-name reporting are each asserted.
+func TestDaemonDependencyAllowlist(t *testing.T) {
+	t.Run("null case fails", func(t *testing.T) {
+		if _, err := disallowedDeps(nil); err == nil {
+			t.Fatal("disallowedDeps(nil) returned no error: the gate would pass vacuously on an empty dependency list")
+		}
+		if _, err := disallowedDeps([]string{}); err == nil {
+			t.Fatal("disallowedDeps([]) returned no error: the gate would pass vacuously on an empty dependency list")
+		}
+	})
+
+	t.Run("classifier separates stdlib from modules", func(t *testing.T) {
+		cases := []struct {
+			in   string
+			want bool
+		}{
+			{"net/http", true},
+			{"crypto/internal/entropy/v1.0.0", true},
+			{"vendor/golang.org/x/net/dns/dnsmessage", true},
+			{"unsafe", true},
+			{"modernc.org/sqlite", false},
+			{"cloud.google.com/go/storage", false},
+			{"github.com/sunholo-data/ailang-world/host/store", false},
+		}
+		for _, c := range cases {
+			if got := isStdlibImportPath(c.in); got != c.want {
+				t.Errorf("isStdlibImportPath(%q) = %v, want %v", c.in, got, c.want)
+			}
+		}
+	})
+
+	t.Run("an intruder is reported by name", func(t *testing.T) {
+		bad, err := disallowedDeps([]string{
+			"net/http",
+			"modernc.org/sqlite",
+			"cloud.google.com/go/storage",
+			"github.com/aws/aws-sdk-go-v2/service/s3",
+		})
+		if err != nil {
+			t.Fatalf("disallowedDeps: %v", err)
+		}
+		want := []string{"cloud.google.com/go/storage", "github.com/aws/aws-sdk-go-v2/service/s3"}
+		if strings.Join(bad, ",") != strings.Join(want, ",") {
+			t.Fatalf("disallowedDeps = %v, want exactly %v", bad, want)
+		}
+	})
+
+	t.Run("daemon core build graph", func(t *testing.T) {
+		root := repoRootFromPackageDir(t)
+		deps, err := goListDeps(root, daemonCorePatterns...)
+		if err != nil {
+			// Loud by construction: never t.Skip. A skipped allowlist is a
+			// false green, and the zero-cloud guardrail would go unenforced.
+			t.Fatalf("could not enumerate the daemon dependency graph, so the zero-cloud "+
+				"allowlist could NOT be enforced (this is a failure, not a skip): %v", err)
+		}
+		bad, err := disallowedDeps(deps)
+		if err != nil {
+			t.Fatalf("dependency allowlist could not be evaluated: %v", err)
+		}
+		if len(bad) > 0 {
+			t.Fatalf("%d package(s) outside the zero-cloud allowlist reached the daemon core "+
+				"(patterns %s):\n  %s\nEach must be either removed or added to allowedDepModules "+
+				"with a justification (charter guardrail: local-first is inviolable).",
+				len(bad), strings.Join(daemonCorePatterns, " "), strings.Join(bad, "\n  "))
+		}
+		t.Logf("zero-cloud allowlist enforced over %d transitive packages for %s",
+			len(deps), strings.Join(daemonCorePatterns, " "))
+	})
 }
