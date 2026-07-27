@@ -2886,3 +2886,306 @@ changes are the new doc plus this charter/log/archive bookkeeping; no code touch
 question is answered — the doc needs no re-design, and `gemini`'s fix applies verbatim on the way
 in. If the park persists past the next fire, the queue's next actionable item is
 **`w-mcp-projection`** (clause-6, ~1 d), which is independent of the broker.
+
+## Iteration 24 — 2026-07-28 — `w-mcp-projection` (clause-6 protocol boundary) NEW-DOC authored + 2 quorum rounds + carve-out revision → **LANDED as a record, item RE-TAGGED `BLOCKED` on three named prerequisites**; the queue row's own premise did not survive the binary, and the gap is upstream as `ailang#498`
+
+**Pick**: item 4 `w-effect-broker-m3` remained PARKED (no `@MarkEdmondson1234` answer to its binary
+(a)/(b) question yet — 1 iteration old, and the queue is not fully blocked, so the default was NOT
+force-applied). Pick = the queue's next actionable item, **item 5 `w-mcp-projection`**, exactly as
+iter-23's Next line predicted. NEW-DOC lane, and the tag was verified as a FACT before spending
+anything: `design_docs/planned/` held only `w-effect-broker-m3` + `w-log-epoch-decision`; no
+`w-mcp-projection` doc, no merged PR, no `origin/dev` commit.
+
+**A gating question I checked rather than assumed**: queue item 6b (`w-human-surface`) says it
+"GATES items 7 and all **M6** work", and item 5 is clause-**6** — a namespace collision that reads
+as a block. It is not one: `DESIGN.md:692` defines **M6 = Generated UI (A2UI/AG-UI)**, while the bar's
+clause 6 is the protocol boundary. Two different numbering spaces. MCP/A2A serve agents, not humans,
+so 6b's "no human-facing sprint routes before it is ratified" does not reach item 5.
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` =
+`sunholo-voight-kampff`; `dev` == `origin/dev` (`503659d`), nothing missing; workflow `CI`
+**completed/success** at HEAD (this repo has exactly ONE workflow — Build-and-Release / Docs-Deploy
+do not exist here, so they are **N/A, not pending**); no `[nightly-eval]` issues; only `#9` open.
+No new `@MarkEdmondson1234` comment on `#9` (11 comments, every one a bot report) nor on predecessor
+`#1`; watermark `2026-07-27T08:55:11Z` unchanged, so nothing to advance. No rotation due (`#9` titles
+this week, 11 ≪ 80 — the iter-20 intent test). Inbox: ONE unread, a V1 eval-suite start notification
+(3 models × 3 benchmarks) — noise for World, no request, triaged to zero.
+
+**The iter-23 PATH fix is CONFIRMED WORKING.** The driver exported
+`MISSION_EXECUTOR_MODEL=codex:gpt-5.6-sol` this fire — **not** the spurious `opus` of iters 21/22 —
+so `PATH=/opt/homebrew/bin:$PATH` in `~/.config/ailang/mission-world.env` lands in exactly the
+window predicted (driver line 48, after line 44's prepend, before the codex pre-flight at line 297)
+and the ratified pin now survives the driver's own probe. The four-iteration mis-diagnosis is closed
+in practice, not just on paper.
+
+**Routing evidence**
+
+| Role | Pinned | Actually ran | Note |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | claude-opus-5 | quota bucket |
+| Designer | ROTATION → next after `claude:claude-fable-5` = **`codex:gpt-5.6-sol`** | **codex `gpt-5.6-sol` ×2** (author + bounded revision) | probe replied `ok`, codex-cli 0.145.0, `auth_mode=chatgpt`, `env -u OPENAI_API_KEY` **load-bearing** (the ambient key WAS set). Author run ~13 min under a 30-min cap; revision under a 25-min cap |
+| Quorum r1 | `gpt5-6-sol`, `gemini-3-1-pro`, cap `0.25` | **both present** | $0.04535 + $0.018094 = **$0.063444** → BLOCKED |
+| Quorum r2 | same | **both present** | $0.05183 + $0.021082 = **$0.072912** → BLOCKED (1 of 2) |
+| Carve-out revision | — | **controller, inline** | reviewers' VERBATIM text; no third round |
+| Planner / Executor / Evaluator | — | **did not run** | the item never reached the sprint lane — see below |
+
+`metered=$0.1363` (quorum reviewers only; designer on the ChatGPT subscription lane; controller on a
+subscription bucket. $5 ceiling untouched). Rotation state advanced to `codex:gpt-5.6-sol`.
+
+**Delivered**: `design_docs/planned/w-mcp-projection.md`, **641 lines**, plus `ailang#498`, plus this
+record and the charter re-tag. **No `.ail` sketch** — the designer's P8 argues protocol/session
+invariants are cross-request host-boundary behaviour belonging in Go conformance tests, not pure
+kernel law; no reviewer challenged it, and the doc contains no `.ail` snippet, so the
+compiler-checked-docs guardrail is satisfied and `verify_ail.sh`'s required-check manifest
+legitimately does not move (still exactly 4/4 identities / 9 modules / 14 tests).
+
+### THE ITEM'S OWN PREMISE DID NOT SURVIVE CONTACT WITH THE BINARY
+
+The queue row read *"reuse `ailang serve-api --mcp/--a2a` machinery — do not reinvent · ~1d"*. The
+charter's Conflict Surface had already done the right thing and split that into **premises**
+(protocol projection of static `.ail` exports, live-tested 2026-07-23) versus **acceptance criteria**
+(dynamic worldd-backed registry, per-session capability filtering, propose→verify→commit enforcement
+at the boundary). This iteration proved the acceptance half is **not reachable on v0.30.0 at all**.
+
+**The load-bearing discovery — the projected surface cannot be an exact allowlist.** My own
+first-party stdio MCP probe (`initialize` → `notifications/initialized` → `tools/list`) against the
+pinned binary — re-run by me, not accepted from the designer:
+
+```
+unfiltered      : ['addOne', 'submit_feedback']
+--routes-only   : ['submit_feedback']
+--caps '' only  : ['addOne', 'submit_feedback']
+```
+
+1. A built-in **`submit_feedback`** tool is exposed under **every** flag combination and no flag
+   removes it. Its own description — which I captured verbatim rather than quoting the designer —
+   routes to a `public-feedback` inbox with a **Pub/Sub notification**. That is a built-in **egress**
+   tool that no World session authorized, inside a bar whose clause 2 demands zero cloud
+   dependencies in the core and whose clause 3 demands that **no ambient-authority path exist from
+   an agent to the outside world**. I deliberately did **not** invoke it: reading a tool list is a
+   probe, calling a tool that publishes to an external inbox is not.
+2. Discovery is built from loaded module exports rather than a caller-supplied provider, and
+   `--caps` / `--routes-only` / `--api-key-*` are all **process-wide** — `--caps` gates execution,
+   not discovery. A static key and a process cap set cannot represent a session.
+
+My earlier finding (that `--a2a` publishes the 8 embedded `std/io` exports — `writeBytes`, `exit`,
+`readLine`, … — as callable A2A **skills**, 26 skills on the sketches directory) turned out to be the
+**less** severe half: `--routes-only` does suppress those. Which also means upstream **`#145`**
+("`--routes-only` does not filter MCP tools/list", v0.10.2) is genuinely **FIXED**, and this is not
+its regression — worth stating, because filing a fixed bug again would have cost the upstream
+maintainer real time.
+
+Two further first-party facts for whoever builds this: MCP HTTP at `/mcp/` replies **SSE-framed**
+(`event: message` + `data:`), not a plain JSON body; and module resolution is **cwd-sensitive** —
+serving `design_docs/sketches/` from the repo root fails `LDR001: module not found:
+sketches/worldtypes` while serving `sketches/` from `design_docs/` succeeds.
+
+**Consequence**: reuse paths **(a) and (b) are rejected on evidence**. (b), a sidecar per session,
+makes process lifetime the session model and *still* exposes `submit_feedback`; reverse-proxy
+filtering was rejected because it would make World parse and re-encode MCP/A2A — precisely the
+reinvention DESIGN.md §3.7 forbids. The design takes **path (c)**: request a narrow public serving
+seam over the existing `internal/apiserver` (caller-owned mux; principal resolved before discovery
+*or* invocation; caller supplies the exact visible descriptors; named invocations routed back with
+the same session; MCP tools and A2A skills generated from that one set; **no built-in tool unless the
+caller supplies it**; upstream keeps codec ownership and SSE conformance). The charter listed (c) as
+"only on evidence" — this is that evidence.
+
+**Routed upstream on BOTH channels**: `sunholo-data/ailang#498` + `msg_20260728_015014_8e5a281e`,
+carrying the full stdio repro, the version pin, `#145` cited as the fixed predecessor, a **narrower
+interim ask** that would unblock most of this on its own (a flag suppressing `submit_feedback` +
+documenting that `--caps` gates execution rather than discovery), and the **cause stated as a
+labelled HYPOTHESIS** because upstream source was never inspected.
+
+### THE QUORUM EARNED ITS KEEP TWICE AGAIN
+
+**Round 1 — BLOCKED** (both present, `$0.063444`):
+
+- **`gpt5-6-sol`**: no bounded-wait contract anywhere on the projection path — no timeout source,
+  maximum, context-propagation requirement, cleanup rule, protocol error mapping, acceptance test or
+  RED mutation for a stalled resolver / registry / broker / verifier / client. *"Broker
+  unavailability returns an error"* is not a contract. → **Applied in full, in the reviewer's own
+  terms**: new `Decision 6 — Bounded waits across the projection path`, `AC13`, and the reviewer's
+  own mutation name `MUT-DROP-DEADLINE`.
+- **`gemini-3-1-pro`**: Conflict-Surface gap — mounting upstream SSE-framed MCP HTTP handlers on the
+  worldd daemon ignores that a REST daemon's `ReadTimeout`/`WriteTimeout` **abruptly terminate**
+  long-lived SSE streams. → **Applied**: the requested `HTTP Server Timeouts vs SSE` entry, `AC14`,
+  `MUT-SSE-REST-DEADLINE`.
+
+**I ran gemini's own "verify" step, and it collapsed its two-branch fix to one branch.** Gemini
+offered *"use `http.ResponseController` … **or** explicitly document that the current daemon lacks
+global timeouts"*. The second branch is **FALSE for this repo** — VERIFIED BY ME at
+`host/daemon/daemon.go:409-414`, wiring constants declared at `:77-91`: `ReadHeaderTimeout` 5 s,
+`ReadTimeout` 30 s, `WriteTimeout` 30 s, `IdleTimeout` 120 s — **the D7 bound-constant block that
+`w-worldd-m2` milestone A2 ratified and FROZE**. So the revision was directed to the
+`ResponseController` branch, scoped to `/mcp/` only, with the D7 constants and every REST `/v1/*`
+path explicitly byte-unchanged — *and* with the follow-up the freeze demands but the reviewer did not
+ask: **what bounds the connection once its write deadline is relaxed?** An unbounded-lifetime
+connection on the single-writer daemon is the very class Standing rule 6 exists to prevent. Answer
+adopted: a second explicit finite stream-lifetime maximum, with `IdleTimeout` correctly excluded
+(it governs idleness *between* requests, not an active handler). The two objections were answered as
+**one deadline-discipline story**, not two disconnected patches.
+
+**Round 2 — BLOCKED, 1 of 2** (both present, `$0.072912`):
+
+- **`gemini-3-1-pro` PASSED**, with a non-blocking observation: delegating SSE socket lifecycle to a
+  not-yet-written upstream handler risks **zombie TCP connections** if upstream mishandles the
+  injected cancellation context; its fix asks that the bounded-wait test assert **OS-level** socket
+  closure rather than logical Go context cancellation.
+- **`gpt5-6-sol` rejected again — and it is the best single catch of the night.** Decision 6/AC13 as
+  revised promised that cancellation after commit *begins* still yields no store/log mutation. That
+  is **not achievable**: an HTTP context can expire while an atomic store commit is already in
+  flight, so absent a verified atomic "not-started versus committed" contract the commit may succeed
+  while the caller observed cancellation — ambiguous outcomes dressed as a determinism guarantee.
+
+### NARROW-REFINEMENT CARVE-OUT APPLIED (bounded 2nd revision, controller)
+
+Both limbs hold. **(a)** each remaining objection carries concrete, reviewer-authored `proposed_fix`
+prose — `gpt5-6-sol` supplied verbatim replacement wording for the cancellation paragraph, the AC13
+revision *and* the premise row; `gemini-3-1-pro` supplied the `ConnState`/client-read-error
+assertion. **(b)** neither disputes the design DIRECTION — path (c), upstream-owned codecs,
+session-scoped projection inside worldd and the bounded-wait decision all stand. The defect is
+**truthfulness-of-claim**: an acceptance criterion asserting a guarantee the system cannot provide.
+That is what the carve-out is for. Applied:
+
+1. Decision 6's commit-boundary paragraph **replaced with the reviewer's verbatim contract**, quoted
+   as a block quote so the substitution is auditable, and with the over-strong claim it replaces
+   **stated explicitly rather than silently deleted**.
+2. `AC13` now tests cancellation on **both sides** of the boundary — before acceptance → no durable
+   mutation; after acceptance → exactly one recoverable, queryable/replayable receipt under a stable
+   invocation/idempotency ID; never a definitive "not committed" while the outcome is unknown — and
+   carries gemini's OS-level socket-closure assertion.
+3. Two new premise rows, including **`Commit-boundary contract` marked UNVERIFIED — PREREQUISITE**:
+   no landed API exposes these semantics, so the row records the gap instead of inventing a
+   mechanism.
+4. P6.B gains the commit-boundary contract as an **explicit third blocker**, in Decision 6, the
+   Design Freeze and the milestone text.
+5. Three new RED mutations: `MUT-COMMIT-BOUNDARY-LIE`, `MUT-LEAK-SSE-CONN`, and r1's
+   `MUT-DROP-DEADLINE`.
+
+**No third quorum round** — the carve-out is one bounded revision, not a re-litigation. This
+SATISFIES the objections; Standing rule 2 still forbids proceeding over a contested design
+DIRECTION, and none was contested.
+
+**The carve-out normally routes straight to sprint-planner. It did NOT here — and the reason is the
+doc's own conclusion, not the quorum.** P6.B is blocked on three prerequisites, so a sprint plan
+would be a plan for work that cannot start. Only **P6.A** ("file the upstream finding + land this
+record") is actionable, and P6.A is deterministic controller work — so the controller did it inline
+this iteration rather than spinning up planner/executor/evaluator to produce a plan for a blocked
+milestone. Recorded as a deliberate routing decision, not an omission.
+
+### A GENERATOR=JUDGE COLLISION — FLAGGED IN BOTH ROUNDS, AND IT PRODUCED EVIDENCE
+
+The doc and its revision were authored by `codex:gpt-5.6-sol`, so the `gpt5-6-sol` reviewer seat was
+a **SELF-review and not independent**. Iter-23 faced the mirror image of this and solved it by
+keeping the author Anthropic; here the rotation put the author on codex, so exclusion was the other
+option. I retained the seat, on the reasoning that reject-by-default synthesis means a self-*pass*
+cannot manufacture a PROCEED — so keeping it can only **add** objections, never remove them — while
+excluding it would have dropped the sharpest reviewer to an N=1 metered quorum. Independent
+rejectors throughout: `gemini-3-1-pro` + this controller.
+
+**The outcome is a datapoint, not just a caveat: the self-seat did not rubber-stamp itself in either
+round.** It produced the strongest objection both times and was the **only** reviewer still rejecting
+in round 2. That is evidence that a same-model seat with a fresh context and a reject-by-default
+prompt retains real adversarial value — worth two more datapoints before it becomes policy, but it
+argues for *flag-and-retain* over *exclude* when the rotation and the reviewer set collide.
+
+### Controller's own independent evidence (never laundering a sub-agent claim)
+
+- `verify_ail.sh` **rc=0**, exactly **4/4 required identities across 9 modules, 14/14 named tests** —
+  re-run **in the worktree after the doc landed** to prove the manifest is untouched by a doc-only
+  change.
+- `verify_go.sh` **rc=0** with `host/replay` **RUNNING 14.047 s, not SKIP** (plus `cmd/ailang-worldd`
+  3.414 s, `host/daemon` 3.986 s, `host/store` 1.512 s and the rest green).
+- The designer's sandbox denied loopback `bind(2)` — `listen tcp 127.0.0.1:0: bind: operation not
+  permitted`, quoted verbatim — and it **explicitly declined to claim the Go gate green**, writing
+  "UNVERIFIED in this sandbox, not green". **Fourth consecutive milestone in which the codex lane
+  refused to fabricate.** I ran the socket-dependent gate outside the sandbox instead.
+- `go.mod:3` = `go 1.26.4`, so `http.NewResponseController` genuinely exists (the revision's
+  mechanism is not hypothetical).
+- Repo-wide search for `[Tt]ransition[ -]?[Rr]egistry` → `design_docs/` **only**, **zero** hits in
+  `host/`, `world/`, `cmd/`: the clause-3 prerequisite is real, and `host/registry` is the
+  *interpreter epoch* registry, a different thing.
+- `.github/workflows/ci.yml` has exactly two jobs (`ailang-verify` = "ailang-code verify gate",
+  `go-verify` = "go host build + test gate", bench smoke inside the latter) — the doc's Conflict
+  Surface claim, checked not assumed.
+- Scope clean **by diff**: exactly ONE new file (`design_docs/planned/w-mcp-projection.md`) plus the
+  charter and this log. No `.ail`, no Go, no schema, no CI, no `go.mod`.
+
+### Ruled out / refuted this iteration
+
+1. **"`w-mcp-projection` is gated by item 6b's 'all M6 work'"** — REFUTED. `DESIGN.md:692` defines
+   M6 = Generated UI (A2UI/AG-UI); the bar's clause 6 is the protocol boundary. Different numbering
+   spaces; MCP/A2A serve agents, not humans.
+2. **"`--a2a` leaking `std/io` is the blocker"** — REFUTED as *the* blocker. `--routes-only`
+   suppresses all eight `std/io` skills. The real blocker is the unsuppressible `submit_feedback`.
+   Filing the `std/io` half alone would have been a fixed-bug re-file of `#145`.
+3. **"`--caps` can filter the projected surface"** — REFUTED by measurement: `--caps ''` leaves the
+   tool list byte-identical (27 names on the sketches dir, 2 on the minimal probe). `--caps` gates
+   execution, not discovery.
+4. **"gemini's 'or document that the daemon lacks global timeouts' branch might apply"** — REFUTED
+   first-party: `daemon.go:409-414` sets all four D7 timeouts. Only the `ResponseController` branch
+   is available, and it must be reconciled with a ratified freeze.
+5. **"the codex probe failed (rc=127) so the lane is down"** — REFUTED by reading the probe's
+   OUTPUT: it replied `ok`. The 127 came from my own `wait` on a non-child pid. See the process fix.
+6. **"the designer run hung for 30+ minutes"** — REFUTED: it exited `rc=0`. My `pgrep -f` poll was
+   matching its own shell. See the process fix.
+7. **Applying the parked item 4's default `(b)` this iteration** — deliberately NOT done. The park
+   is one iteration old, the queue was not fully blocked, and forcing a recorded default early
+   would spend a ratification-class decision the human is still holding.
+
+### Gate 3b
+
+**N/A — no code pushed.** The iteration's deliverables are doc/charter/log commits on `dev` plus an
+upstream issue and an agent message. The `CI` workflow's `ailang-verify` + `go-verify` jobs were both
+run **locally, first-party, green** (above); the post-commit run is recorded in the report.
+
+### Non-blocking carry-forwards (ENUMERATED per the iter-19 process fix)
+
+- **CF-D-1** → `ailang#498`: if upstream ships only the narrow interim fix (a `submit_feedback`
+  suppression flag) rather than the full callback seam, re-evaluate whether path (a) becomes viable
+  for a *read-only* discovery surface while invocation stays on worldd. The doc's Decision 1 says
+  the direction would not change; that claim should be re-tested against whatever actually ships.
+- **CF-D-2** → `w-store-durability` (item 4b): fold the **commit-boundary contract** (atomic
+  not-started-versus-committed, stable invocation/idempotency ID, queryable durable receipt) into
+  that item's half (ii). It is the same kernel-durability question `gpt5-6-sol` raised about the M3
+  broker, reached from a second direction.
+- **CF-D-3** → whoever builds P6.A's fixture: the frozen two-session conformance fixture lives in the
+  design doc, deliberately NOT as a skipped or expected-failing CI test (the V27/B1 vacuous-pass
+  class). When the seam lands, that fixture must become a real test in the same PR — a fixture that
+  never becomes a test is a claim.
+- **CF-D-4** → charter hygiene: the Premise Verification Log's 2026-07-23 serve-api row has been
+  annotated with the cwd correction, but other early rows may carry the same "recorded the result,
+  not the conditions" weakness. Worth one sweep when an iteration is otherwise light.
+
+### Retro — ONE process fix, no skill edit (World never edits the shared skill)
+
+**A liveness or exit-code check is only evidence if it refers to the process you actually launched.**
+Two instances in ONE iteration, one benign and one not:
+
+1. `wait "$pid"` on a pid launched inside a nested `( … & echo $! > file )` subshell returns
+   **rc=127** — "no such job" — while the codex probe had in fact replied `ok`. In this mission
+   `rc=127` has already produced **four** wrong diagnoses (iters 18/19/21/22: spent quota, unusable
+   pin, frozen driver). A fifth rc=127 meaning "your `wait` had nothing to wait for" is exactly how
+   that scar re-opens. Only reading the probe's **output** saved it.
+2. `pgrep -f "codex exec --model"` as a completion poll **self-matches the polling shell's own
+   command line**, so "still running?" is permanently TRUE. It read as a 30-minute hang on a run that
+   had already exited `rc=0` — and the ad-hoc loop I wrote carried **no deadline at all**, my own
+   Standing-rule-6 violation.
+
+Rules recorded in the Repo Profile: poll the **captured pid** (`kill -0 "$pid"`), never a name
+pattern; keep the launch and the `wait` in the **same shell**; read a probe's **output**, not only
+its exit code; every loop carries a `date +%s` deadline, including the ones written ad hoc while
+waiting. **The meta-rule is the iteration-107 lesson in a new costume: when the skill ships a
+snippet, use it verbatim — a hand-rolled variant is a new defect surface, and a broken instrument
+reads exactly like a real measurement.**
+
+No routing-policy change (that needs ≥3 evidence rows; the generator=judge retain-vs-exclude
+question above has 1).
+
+**Next**: the queue's next actionable item is **`w-store-durability`** (item 4b, clause-1, NEW-DOC,
+~1–2d) — and it is now *more* attractive than when it was queued: `gpt5-6-sol` has independently
+raised the same commit-durability question from two directions (the M3 dispatch→record crash window
+in iter-23, and this iteration's commit point-of-no-return), and its half (i) **CF-B-2** is in scope
+under **both** answers to the parked question, so it can start without waiting on Mark.
+`w-effect-broker-m3` (item 4) unparks the moment the (a)/(b) question is answered.
+`w-mcp-projection` unparks only when `#498` ships a seam **and** clause 3 lands.
