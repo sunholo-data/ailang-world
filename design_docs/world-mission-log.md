@@ -1587,3 +1587,128 @@ This is a NEW-DOC item: it needs a design doc via the ROTATION designer (last-us
 gemini after G4, else back to claude) + a mandatory `## Conflict Surface` vs the existing `ailang serve-api`
 machinery (the iteration-0 quorum's standing gemini objection), then the pick-time quorum before routing. It is
 a ~2d sprint-sized item — decompose into milestones at planning if needed.
+
+---
+
+## Iteration 17 — 2026-07-27 — `w-worldd-m2` (clause-2 local daemon) NEW-DOC authored + quorum-run (2 rounds) → **PARKED needs-human-review** on ONE ratification-class decision (single-writer enforcement)
+
+**Kind**: NEW-DOC design iteration (design-doc-creator → pick-time quorum). Parked at the quorum
+gate for a human decision; no sprint routed (Standing rule 2 — never force a guardrail).
+
+**Context / preflight (Gate 0)**
+- Kill switch `~/.ailang/state/mission-world.disabled`: NOT set (armed). Billing tripwire: **CLEAN**
+  (no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`). gh account: `sunholo-voight-kampff` (`gh` not on
+  the tool PATH — prepended `/opt/homebrew/bin` per call, per memory).
+- Pidfile `mission-world.pid`=57443 = this run's own driver (my shell PPID; no overlap).
+- Inbox: empty (`ailang messages list --unread` → none). No `[nightly-eval]` issues (only open
+  issue is bookkeeping #9). No `@MarkEdmondson1234` comment on #9 (created today) or predecessor
+  #1 since watermark `2026-07-23T20:13:54Z`. Weekly rotation already performed this morning
+  (issue #9 "week of 2026-07-27", predecessor #1) — no rotation needed this iteration.
+
+**Observe (Gate 1)**
+- `git fetch origin`; local `dev` == `origin/dev` == `6fbbafd`; no missing commits. CI on dev:
+  **completed/success** @ `6fbbafd36`. (Leftover remote branch `origin/sprint/w-world-library-m1`
+  from the completed M1 sprint — harmless; not cleaned.)
+
+**Pick + reality-check (Gate 2)**
+- Queue head = item 3 `w-worldd-m2` (items 1–2 LANDED). NEW-DOC tag is a claim → verified: no
+  `design_docs/planned|implemented/w-worldd-m2.md` (grep hits were queue/log references), not on
+  `origin/dev` (`git log --grep`), no merged PR, no quorum artifact → **genuine NEW-DOC**.
+- Charter's Conflict Surface marks worldd's placement "OPEN for ratification … Revisit only on
+  concrete binary-distribution pain"; the coordinator-recommended DEFAULT is the in-repo Go module
+  and there is no distribution pain → proceeds without a human gate (recorded as premise P1).
+
+**Route + execute (Gate 3) — designer model-PINNED, spawned (never inline)**
+- Designer rotation: last-used `codex:gpt-5.6-sol` → next in cycle is gemini, but gemini
+  (managed_agents) is READ-ONLY (CapRemoteSandbox — file edits don't reach the worktree) so it
+  cannot author a doc → wrap to `claude:claude-fable-5`. Fable probe via `claude-sub` (billing
+  guard, bounded 120s): **rc=0, replied `ok`**.
+- **design-doc-creator (claude:claude-fable-5, `claude-sub` backgrounded, bounded ≤30min,
+  bypassPermissions)** — directive carried a full ADAPTING BRIEF (the skill assumes the upstream
+  `sunholo-data/ailang` layout — known friction; this is ailang-world), all clause-2 constraints,
+  the M1 host API surface it wraps, the day-1 perf-budget guardrail, S3 slim-kernel, §14, and the
+  MANDATORY `## Conflict Surface` vs `ailang serve-api`. Produced
+  `design_docs/planned/w-worldd-m2.md` (34 KB, 3 CI-green milestones ~2d) + checked sketch
+  `design_docs/sketches/worlddapi.ail`.
+- **Controller INDEPENDENTLY re-verified** (data before conclusions) on the **pinned
+  `/tmp/ailang-v0300/ailang` (v0.30.0, clean)**: sketch `check.passed:true`, `verify {verified:2,
+  counterexample:0, skipped:0, errors:0}` (isLoopbackHost, clampLimit), full
+  `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh` → PASSED (9 modules, 4/4 required
+  identities, 14 named tests). Confirmed the module-resolution path (`cd design_docs` first, per
+  `verify_ail.sh`'s base-cwd logic) — a root-relative check falsely reports `LDR001 module not
+  found: sketches/logepoch`; the gate's `cd $base` form is the truth.
+
+**Pick-time quorum (Gate 2 quorum-at-pick) — 2 rounds, controller-verdict pass both**
+- **r1** (`ailang design-quorum`, reviewers gpt5-6-sol + gemini-3-1-pro, $0.10/reviewer cap):
+  **BLOCKED**, both present, metered **$0.0817**. Objections: (1) gpt5-6-sol — bounded-waits axiom:
+  unbounded `http.Server`, unbounded client calls, unbounded graceful shutdown, no request-body
+  limit on base64 commit payloads; (2) gemini-3-1-pro — the `GET /v1/log?from&limit` deliberate
+  O(N) N+1 loop is omitted from the D6 perf harness, so the day-1 budget (P3/A9) hides the only
+  deliberate N+1 latency. Both concrete, non-direction → routed to the designer.
+- **designer revision r1** (same Fable lane, bounded ≤25min, rc=0): new **Decision 7 "Bounded Waits
+  & Allocations"** (http.Server ReadHeader/Read/Write/Idle timeouts; bounded `Shutdown(ctx)`+hard
+  close; client `context.WithTimeout` on every call; `POST /v1/commit` capped by
+  `http.MaxBytesReader(maxCommitBytes=8 MiB)`→**413** with a new **Z3-proven `withinCommitBytes`**
+  contract + `PayloadTooLarge` `ApiError` arm + non-vacuous `TestBoundedWaitsAndBodyLimit`) and
+  **`BenchmarkLogRange`** (limit=100 + clamp-max 500) + `bench/BASELINE.md` N+1 rows (P3/A9/M2.*
+  /Acceptance updated). Controller re-verified on pinned v0.30.0: `verified:3` (isLoopbackHost,
+  clampLimit, withinCommitBytes), 0 counterexamples/errors/skips; full sweep still green.
+- **re-quorum r2** (the ONE allowed re-quorum): **BLOCKED**, both present, metered **$0.104**.
+  `gemini-3-1-pro` **PASS** (its note — make CLI `--addr` a global flag — is non-blocking).
+  `gpt5-6-sol` **REJECT**, strongest objection: *"The single-writer guarantee is asserted but not
+  enforced. `ailang-worldd` takes no database lease or process lock, `store.Open` remains available
+  to embedded writers, and a second daemon can open the same SQLite file. An operational
+  instruction to 'never' do so cannot support the claimed sole-handle model or A6 safe-concurrency
+  conclusion."* Its `proposed_fix` is a FORK: (A) add a fail-closed store writer-lock
+  (`OpenWriter`/`WriterAlreadyActive`, read-only path, subprocess tests) — a `host/store` change —
+  **or** (B) withdraw the sole-writer claim + document/test bounded multi-process SQLite behavior.
+
+**Decision — PARK (Gate 2 default; carve-out ruled out)**
+- One revision + one re-quorum used (the gate's budget). Still-blocked → default is
+  `needs-human-review`. The **narrow-refinement carve-out (iter-95) does NOT apply**: the objection
+  (a) offers a FORK requiring controller JUDGMENT to choose an architecture (not a single verbatim
+  fix), and (b) touches the LANDED M1 `host/store` — a **kernel change**, which the mission
+  guardrail makes **ratification-class** ("kernel changes require explicit human ratification,
+  quorum evidence attached"); arm (B) withdraws a load-bearing A6 claim (direction-level). Carve-out
+  first-use also needs Mark's one-time OK — impossible headless. → **PARKED for @MarkEdmondson1234**
+  with the A/B decision named in the doc's Park box + the queue tag.
+- Doc + sketch committed to dev (doc-only, gate-green — preserves the design work + quorum evidence
+  so the next iteration unparks fast). Not routed to sprint-planner.
+
+**Gate 3b — CI**: doc-only + sketch push. The sketch enters `verify_ail.sh`'s CI sweep (already
+green locally on pinned v0.30.0); no Go code changed. Bounded poll of the resulting dev CI run.
+
+**Routing evidence** (role, model ACTUALLY used)
+| Role | Pin (env) | Actual | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | opus (`claude-opus-4-8`) | triage/pick/reality-check/independent-verify/quorum-orchestration/record/retro |
+| Design-doc-creator | ROTATION (seed `claude:claude-fable-5`) | **`claude:claude-fable-5`** (`claude-sub`, backgrounded, bounded, subscription/quota-bucket) | authored doc + sketch + revision r1; rotation last-used advanced codex→claude (gemini skipped: read-only) |
+| Quorum reviewers | fleet Phase B | **gpt5-6-sol + gemini-3-1-pro** (both present, metered) | r1 BLOCKED, r2 gemini PASS / gpt5-6-sol REJECT |
+| Sprint-planner / executor / evaluator | — | not spawned | parked before routing |
+
+**Metered ledger**: `metered=$0.186` (quorum r1 $0.0817 + r2 $0.1040; both under the $0.10/reviewer
+cap). Designer Fable = subscription quota-bucket ($0). Ceiling ($5) not approached.
+
+**Ruled out** (do not re-chase)
+- The narrow-refinement carve-out for the r2 objection — it's a judgment fork touching the M1
+  kernel (ratification-class), not a verbatim reviewer fix; forcing it would breach Standing rule 2
+  + the kernel-ratification guardrail.
+- A 2nd designer revision this iteration — the gate allows exactly one revision + one re-quorum;
+  spending more without a human decision would re-litigate a contested (fork) objection.
+- Worrying the daemon-placement "OPEN for ratification" item — the charter defers it to concrete
+  binary-distribution pain, which does not exist (no `cmd/` ships today); recorded as premise P1.
+- Root-relative `ai-check` of the sketch (false `LDR001`) — resolution is base-cwd-relative; the
+  gate's `cd $base` form is authoritative.
+
+**Retro / Next (Gate 5)**: No skill edit (no ≥2-instance recurring friction this iteration; the
+design-doc-creator upstream-layout assumption is already the PROPOSED-to-Mark instance 2/2 in
+memory — handled by the adapting-brief workaround, unchanged). No routing-policy change. The
+opus-controller / Fable-designer / dual-provider-quorum path worked exactly as designed — the
+quorum caught two real hardening gaps (bounded waits, hidden N+1) that a single-eye pass would have
+shipped, and the revise→re-quorum loop resolved both; the third objection is a genuine
+architecture decision correctly escalated, not a loop failure. **Next iteration**: if Mark answers
+the A/B single-writer decision (comment on #9), UNPARK `w-worldd-m2` — apply the chosen arm as an
+r3 designer revision (+ fold gemini's non-blocking `--addr` global-flag nit), re-verify, route to
+sprint-planner. If no answer yet, `w-worldd-m2` stays parked and the queue head advances to
+`w-effect-broker-m3` (clause-3, NEW-DOC) — but note w-effect-broker depends conceptually on the
+daemon shell, so prefer waiting for the unpark unless Mark redirects.
