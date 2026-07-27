@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World mockup — approval inbox / decision packets (HUMAN-SURFACE.md P1/P5)</title>
+<style>
+  :root { --bg:#faf9f5; --card:#fff; --ink:#1a1a17; --mut:#6b6a64; --line:#dedcd3;
+          --acc:#185fa5; --accbg:#e6f1fb; --ok:#0f6e56; --warn:#854f0b; --warnbg:#faeeda; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1f1e1b; --card:#292824; --ink:#eceae3; --mut:#a3a199; --line:#3d3c36;
+            --acc:#85b7eb; --accbg:#0c447c; --ok:#5dcaa5; --warn:#fac775; --warnbg:#633806; } }
+  body { background:var(--bg); color:var(--ink); font:14px/1.65 -apple-system, "Segoe UI", sans-serif; margin:0; padding:2rem; }
+  .wrap { max-width:760px; margin:0 auto; }
+  h1 { font-size:18px; font-weight:600; } .note { color:var(--mut); font-size:13px; }
+  .hdr { display:flex; justify-content:space-between; align-items:baseline; margin:.8rem 0 .6rem; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:1rem 1.2rem; margin-bottom:10px; }
+  .row { display:flex; align-items:center; gap:10px; }
+  .pill { background:var(--warnbg); color:var(--warn); font-size:11px; padding:3px 10px; border-radius:8px; white-space:nowrap; }
+  .ev td { padding:3px 0; font-size:12.5px; } .ev td:first-child { width:22px; color:var(--ok); }
+  .meta { display:flex; gap:14px; font-size:12px; color:var(--mut); border-top:1px solid var(--line); margin-top:.7rem; padding-top:.7rem; flex-wrap:wrap; }
+  .btns { display:flex; gap:8px; margin-top:.8rem; }
+  button { font:12.5px inherit; padding:6px 14px; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--ink); }
+  button.go { border-color:var(--acc); color:var(--acc); }
+  .small { padding:.55rem 1.2rem; display:flex; gap:10px; align-items:center; font-size:13px; }
+  .small .n { margin-left:auto; font-size:11px; color:var(--mut); }
+  .foot { font-size:12px; color:var(--mut); margin-top:.4rem; }
+</style>
+</head>
+<body><div class="wrap">
+<h1>Approval inbox — decision packets (P1 · P5)</h1>
+<p class="note">Design fixture for HUMAN-SURFACE.md. The unit of interaction: proposal + evidence + exact authority
+requested + budget + reversibility, composed for a one-glance decision. Verification always ran BEFORE this reached
+a human; batching, not interrupting, is the delivery mode.</p>
+<div class="hdr"><strong style="font-size:15px;">Approval inbox</strong><span class="note">3 need you · 14 auto-committed overnight</span></div>
+
+<div class="card">
+  <div class="row" style="margin-bottom:.5rem;">
+    <div style="flex:1;"><strong>Deploy docparse 0.9.2 to staging</strong><br>
+      <span class="note">proposed by codex-exec-2 · goal: "add YAML export" (yours, Tue) · confidence 0.92</span></div>
+    <span class="pill">needs approval</span>
+  </div>
+  <table class="ev">
+    <tr><td>✓</td><td>ai-check: types + 4 contracts verified (Z3)</td></tr>
+    <tr><td>✓</td><td>tests: 214 pass, 3 new for YAML export</td></tr>
+    <tr><td>✓</td><td>contract held: billing module untouched (0 transitions)</td></tr>
+    <tr><td>Δ</td><td>expected world change: staging.docparse 0.9.1 → 0.9.2 (diff)</td></tr>
+  </table>
+  <div class="meta"><span>🔒 requests: Cloud.Deploy (docparse, staging only)</span><span>◷ spent $3.20 of $10 goal budget</span><span>↩ reversible: roll-forward to 0.9.1</span></div>
+  <div class="btns"><button class="go">Approve</button><button>Attenuate</button><button>Defer</button><button>Reject…</button><button>Provenance</button></div>
+</div>
+
+<div class="card small"><span>📦</span><span>Widen sonnet-eval capability: FS.Read on benchmarks/** <span class="note">· earned by calibration (0.94 over 60 proposals)</span></span><span class="n">2 of 3</span></div>
+<div class="card small"><span>✉️</span><span>Send release notes to discord #announcements <span class="note">· External class always asks</span></span><span class="n">3 of 3</span></div>
+
+<p class="foot">🛡 14 transitions auto-committed under standing policy (dep bumps ≤ minor, green evidence) ·
+2 proposals auto-rejected by the verifier before reaching you · review the night →</p>
+</div></body>
+</html>

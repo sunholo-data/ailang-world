@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World mockup — grounded prose + trust gradient (HUMAN-SURFACE.md P2/P3/P6)</title>
+<style>
+  :root { --bg:#faf9f5; --card:#fff; --ink:#1a1a17; --mut:#6b6a64; --line:#dedcd3;
+          --acc:#185fa5; --accbg:#e6f1fb; --ok:#0f6e56; --okbg:#e1f5ee; --warn:#854f0b; --warnbg:#faeeda; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1f1e1b; --card:#292824; --ink:#eceae3; --mut:#a3a199; --line:#3d3c36;
+            --acc:#85b7eb; --accbg:#0c447c; --ok:#5dcaa5; --okbg:#085041; --warn:#fac775; --warnbg:#633806; } }
+  body { background:var(--bg); color:var(--ink); font:15px/1.7 -apple-system, "Segoe UI", sans-serif; margin:0; padding:2rem; }
+  .wrap { max-width:960px; margin:0 auto; }
+  h1 { font-size:18px; font-weight:600; } .note { color:var(--mut); font-size:13px; }
+  .panes { display:flex; gap:16px; flex-wrap:wrap; margin-top:1rem; }
+  .pane { flex:1 1 340px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:1.1rem 1.25rem; }
+  .lbl { font-size:11px; color:var(--mut); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.6rem; }
+  a.obj { color:var(--acc); text-decoration:none; border-bottom:1px solid var(--acc); }
+  .grade { font-size:10px; padding:1px 7px; border-radius:9px; margin:0 3px; vertical-align:2px; font-weight:600; }
+  .proven { background:var(--accbg); color:var(--acc); } .tested,.attested { background:var(--okbg); color:var(--ok); }
+  .claimed { background:var(--warnbg); color:var(--warn); }
+  .ungrounded { border-bottom:1px dotted var(--mut); color:var(--mut); }
+  table { width:100%; font-size:13px; border-collapse:collapse; } td { padding:3px 0; } td:first-child { color:var(--mut); } td:last-child { text-align:right; }
+  .btns { border-top:1px solid var(--line); margin-top:.8rem; padding-top:.8rem; display:flex; gap:8px; }
+  button { font:12px inherit; padding:5px 12px; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--ink); }
+</style>
+</head>
+<body><div class="wrap">
+<h1>Grounded prose + trust gradient (P2 · P3 · P6)</h1>
+<p class="note">Design fixture for HUMAN-SURFACE.md. Left: AI narrative where every load-bearing noun is a typed link
+carrying an epistemic grade; unsupported spans render <em>visibly ungrounded</em>. Right: the linked object one zoom
+level deeper, with the walk/diff/replay verbs every object carries.</p>
+<div class="panes">
+  <div class="pane">
+    <div class="lbl">AI narrative — the conversation lens</div>
+    <p>The YAML export goal is nearly done. I deployed
+      <a class="obj" href="#">docparse&nbsp;0.9.2</a><span class="grade attested">ATTESTED</span> to staging after
+      <a class="obj" href="#">214 tests passed</a><span class="grade tested">TESTED</span> and the
+      <a class="obj" href="#">billing-untouched contract held</a><span class="grade proven">PROVEN</span>.</p>
+    <p>Performance should improve by roughly 20% <span class="grade claimed">CLAIMED</span>
+      <span class="ungrounded">based on my reading of the change</span> — I can fork a branch and measure
+      if you want the graded version.</p>
+    <p class="note">The dotted span has no typed object behind it. The renderer shows that — not the model's confidence.</p>
+  </div>
+  <div class="pane">
+    <div class="lbl">World panel — the linked object (zoom: inspect)</div>
+    <p style="font-weight:600; font-size:14px; margin:.2rem 0 .6rem;">deployment: docparse@0.9.2 · staging</p>
+    <table>
+      <tr><td>committed</td><td>transition #148 · 11:42</td></tr>
+      <tr><td>authorized by</td><td>you · goal "add YAML export"</td></tr>
+      <tr><td>evidence</td><td>1 proven · 3 tested · 2 attested</td></tr>
+      <tr><td>reversibility</td><td>roll-forward to 0.9.1</td></tr>
+    </table>
+    <div class="btns"><button>Walk</button><button>Diff</button><button>Replay</button></div>
+    <p class="note">Same five zoom levels on every object: glance → decide → inspect → walk → replay.</p>
+  </div>
+</div>
+</div></body>
+</html>

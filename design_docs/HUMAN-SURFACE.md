@@ -1,6 +1,9 @@
 # The Human Surface — founding UX design (v0.1)
 
-**Status**: DRAFT for ratification — authored attended (Mark + World coordinator, 2026-07-27).
+**Status**: **v0.1 principles PROVISIONALLY RATIFIED** (Mark, attended, 2026-07-27: "good
+principles for now, yes good start") — binding working basis for all human-facing work; formal
+pick-time quorum + full §7 ratification (trust-grade taxonomy naming, packet-schema freeze
+timing) still runs when queue item 6b is picked. Authored attended (Mark + World coordinator).
 This is the experience-layer peer of [DESIGN.md](DESIGN.md): §11 answered *what surfaces exist*;
 this answers *how humans and the AI state machine actually meet*. **Binding input** for
 `w-approval-inbox` (clause 5) and M6 (generated projections) — neither routes to sprint before
@@ -138,6 +141,20 @@ principle: **P5**. A menubar/tray presence with a packet-count badge and native 
 is a better attention-choreography instrument than a browser tab (glanceable quiet-is-health,
 OS-level batched alerts). Post-daemon, pullable early on demand; a fully native macOS app
 remains an optional post-1.0 renderer, never the definition.
+
+## 6.5 Mockups (design fixtures, committed like the compiled sketches)
+
+Open locally in any browser (self-contained, no dependencies, light/dark aware):
+
+- [mockups/approval-inbox.html](mockups/approval-inbox.html) — **P1 + P5 rendered**: the
+  decision-packet stream — evidence bundle, exact authority ask, budget, reversibility, the
+  five decision verbs, and the quiet-is-health footer (auto-commits reviewable, never gating).
+- [mockups/grounded-prose.html](mockups/grounded-prose.html) — **P2 + P3 + P6 rendered**: AI
+  narrative whose nouns are graded typed links (PROVEN/TESTED/ATTESTED/CLAIMED), an ungrounded
+  span exposed by the renderer, and the world panel one zoom level deeper with walk/diff/replay.
+
+These are fixtures, not pixel specs: the reference renderer must preserve their *grammar*
+(grades visible, packets one-glance-decidable, verbs present), not their styling.
 
 ## 7. Ratification points (Mark)
 
