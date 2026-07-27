@@ -29,10 +29,9 @@
 //     immediately with *store.WriterAlreadyActive, surfaced here as a fatal
 //     structured StartupError.
 //
-// Scope boundary: M2.A serves GET /v1/health and GET /v1/head only. The
-// remaining five routes of the frozen route table (worldd-native /v1/*, see the
-// sketch's routes()) land in M2.B; the CLI client verbs beyond health/head land
-// in M2.C. There is no effect broker, no capability/budget authority and no
+// Scope boundary: M2.B serves exactly the frozen worldd-native /v1/* route
+// table (see the sketch's routes()). CLI client verbs beyond health/head belong
+// to M2.C. There is no effect broker, no capability/budget authority and no
 // MCP/A2A projection here — those are clause-3 and clause-6 respectively.
 package daemon
 
@@ -348,12 +347,19 @@ func releaseFromVersion(version string) string {
 // method part of the pattern, so a non-GET on these paths is a 405 from the mux
 // rather than a hand-rolled check.
 //
-// M2.A wires two of the frozen seven routes; the other five are M2.B. Growing
-// this table is a design-doc change, not a drive-by commit.
+// The seven patterns below are the complete frozen v1 table. The registry
+// pattern deliberately uses a multi-segment wildcard: registry semantic IDs
+// such as "world/epoch-registry/v1" contain slashes.
 func (d *Daemon) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/health", d.handleHealth)
 	mux.HandleFunc("GET /v1/head", d.handleHead)
+	mux.HandleFunc("GET /v1/worlds/{ref}", d.handleWorld)
+	mux.HandleFunc("GET /v1/objects/{ref}", d.handleObject)
+	mux.HandleFunc("GET /v1/log/{index}", d.handleLogEntry)
+	mux.HandleFunc("GET /v1/log", d.handleLogRange)
+	mux.HandleFunc("GET /v1/registry/{name...}", d.handleRegistry)
+	mux.HandleFunc("POST /v1/commit", d.handleCommit)
 	return mux
 }
 

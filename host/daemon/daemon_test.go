@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -193,8 +194,8 @@ func TestNewRefusesNonLoopbackBind(t *testing.T) {
 //	          design_docs/sketches/worlddapi.ail, so the Go constant and the
 //	          frozen semantic bound cannot drift silently.
 //
-// Part (b) — the 413 on an oversized POST /v1/commit body — belongs to M2.B,
-// when the route exists. It is deliberately absent here rather than faked.
+// Part (b) — the 413 on an oversized POST /v1/commit body followed by a valid
+// small commit — is exercised in handlers_test.go, where the M2.B route exists.
 //
 // The named constants are themselves pinned against the D7 table, so editing a
 // constant to match a drifted server (or vice versa) still turns this red.
@@ -244,6 +245,23 @@ func TestBoundedWaitsAndBodyLimit(t *testing.T) {
 			if c.got != c.want {
 				t.Errorf("http.Server.%s = %s, want the named constant %s", c.name, c.got, c.want)
 			}
+		}
+	})
+
+	// part (b): both arms are load-bearing. The oversized request must trip the
+	// MaxBytesReader cap, and a subsequent valid request must prove the cap is
+	// not simply rejecting every commit.
+	t.Run("b/commit body cap rejects only oversized requests", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		oversized := bytes.NewReader(bytes.Repeat([]byte{'x'}, maxCommitBytes+1))
+		assertErrorClass(t, requestRecorder(t, d, http.MethodPost, "/v1/commit", oversized),
+			http.StatusRequestEntityTooLarge, "PayloadTooLarge")
+
+		genesis := seedGenesisEmbedded(t, d, "body-cap")
+		valid := testCommit(genesis, 1, "body-cap")
+		rec := requestRecorder(t, d, http.MethodPost, "/v1/commit", bytes.NewReader(encodeCommit(valid)))
+		if rec.Code != http.StatusOK {
+			t.Fatalf("small valid commit after oversized body: status=%d body=%s", rec.Code, rec.Body)
 		}
 	})
 

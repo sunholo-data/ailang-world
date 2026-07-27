@@ -16,6 +16,9 @@ expected=(
   BenchmarkStoreCommit
   BenchmarkHeadRead
   BenchmarkHealth
+  BenchmarkRESTCommit
+  BenchmarkLogRange/limit_100
+  BenchmarkLogRange/limit_500
 )
 
 out="$(mktemp -t bench_worldd.XXXXXX)"
