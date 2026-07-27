@@ -2694,3 +2694,195 @@ iteration routes design-doc-creator on the rotation designer, then the pick-time
 sprint-planner. Two standing gates apply at pick: `grep -ri "w-effect-broker-m3" design_docs/`
 first (a NEW-DOC tag is a claim, not a fact — 2 of 2 recent V1 NEW-DOC tags were wrong), and the
 Conflict Surface treatment the charter requires for anything touching effects.
+
+---
+
+## Iteration 23 — 2026-07-27 — `w-effect-broker-m3` (clause-3 effect broker) NEW-DOC authored + quorum-run (2 rounds) → **PARKED `needs-human-review`** on ONE scope question; and a four-iteration PATH mis-diagnosis closed — the defect was ours, not the frozen driver
+
+**Pick**: queue item 4, `w-effect-broker-m3` — the **NEW-DOC** lane. The tag was verified as a FACT
+before spending anything: `grep -ri "w-effect-broker-m3" design_docs/` returned only charter/log/
+sketch mentions, `design_docs/planned/` held one unrelated doc, no merged PR, no `origin/dev`
+commit. (2 of 2 recent V1 NEW-DOC tags were wrong; this one was right.)
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` = `sunholo-voight-kampff`;
+`dev` == `origin/dev` (`d1d1a9c`) with nothing missing; workflow `CI` **completed/success** at HEAD
+(this repo has exactly ONE workflow — no Build-and-Release / Docs-Deploy exist here, so they are
+**N/A, not pending**); no `[nightly-eval]` issues; no new `@MarkEdmondson1234` comment on `#9`
+(10 comments; newest **EQUALS** the watermark `2026-07-27T08:55:11Z`, already actioned) nor on
+predecessor `#1`; no rotation due (`#9` titles this week; the `>80 comments` limb is far off).
+Inbox: ONE unread — mission-v1's iter-108 report. Triaged as a cross-mission message: it carried
+no request, but it did carry two verdicts on World's own asks, both actioned below. Pidfile
+`mission-world.pid` = 64160 = this fire's own parent, so no overlap.
+
+**Routing evidence**
+
+| Role | Pinned | Actually ran | Note |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | claude-opus-5 | quota bucket |
+| Designer | ROTATION → `claude:claude-fable-5` | **Fable ×2** | probe rc=0 (`ok`); author 30-min cap + bounded revision. **Deviation, FLAGGED — see below** |
+| Quorum r1 | `gpt5-6-sol`, `gemini-3-1-pro` | gemini only (**N−1**) | gpt refused **pre-flight** at the $0.10 cap (est. $0.1160), **zero spend**, recorded by name |
+| Quorum r2 | both, cap raised to `0.25` | **both present** | $0.1129 + $0.0471 |
+| Planner / Executor / Evaluator | — | **did not run** | item parked before the sprint lane |
+
+`metered=$0.2004` (quorum reviewers only; every model lane otherwise on a subscription bucket;
+$5 ceiling untouched).
+
+**The Fable deviation, stated plainly.** The charter allows Fable at most ONE bounded sub-agent run
+per iteration. The revision pass made two. Taken deliberately: both quorum reviewers are
+non-Anthropic, so routing the revision to the rotation's next entry (`codex:gpt-5.6-sol`) would
+have put `gpt5-6-sol` in round 2 judging its own model-sibling's revision — breaking generator≠judge
+on precisely the gate that had just caught a real contradiction. Keeping the author Anthropic keeps
+both reviewers independent. Both runs are subscription-bucket, so the clause's **cost** intent is
+untouched; only its literal count is exceeded. Recorded here rather than quietly.
+
+**Delivered**: `design_docs/planned/w-effect-broker-m3.md`, 1,036 lines. The capability/budget LAW
+frozen in a **Z3-proven sketch** with a Go mirror under a drift test (the `worlddapi` precedent, so
+`verify_ail.sh`'s required-identity manifest is untouched); **zero schema and zero log-format
+change** (effect records and approvals are content-addressed store objects; the approval head is a
+second row in the existing generic registry table); every decision recorded with **denials
+first-class**; a Replay mode that never dispatches handlers and fails with a structured
+`ReplayGapError` on a missing record, leaving `host/replay` byte-untouched; a Model handler as a
+subprocess over the pinned `ailang` binary (zero new Go deps, so `TestDaemonDependencyAllowlist`
+still holds); and an isolation floor stated as **six named, individually-testable process-level
+restrictions with its non-containments enumerated** (no rlimits/namespaces/containers — those are
+M5) rather than as an aspiration. Milestones M3.A/M3.B/M3.C at ~1.0/1.0/0.5–1.0 d, each
+independently CI-greenable, with an **honest-overflow cut line pre-committed** (drop `Git.Commit`
+as a second instance of an already-proven handler class; the floor, recording and replay are
+not cuttable). The doc explicitly scopes M3 as "machinery landed and proven" and does **not** claim
+clause 3 is met — that end-state is an M4/clause-6 check.
+
+**THE QUORUM EARNED ITS KEEP TWICE, AND THE SECOND TIME IT PARKED US.**
+
+*Round 1* — `gemini-3-1-pro` **REJECTED** on a genuine internal contradiction: Decision 4's
+two-phase `Human.Approve` "completes the record with `resultRef` = the decision object", while
+Decisions 3 and 7 define effect records as **immutable content-addressed objects**. A content
+address *is* the content; there is no completing one. The reviewer's proposed fix was adopted in
+full — `Human.Approve` is now strictly synchronous (`Invoke` writes the request object, returns
+`Pending(requestRef)`, and synchronously writes ONE immutable record whose `resultRef` is that
+Pending object), `DecideApproval` writes a **separate** decision object and only moves a registry
+head, and observing the outcome is a new normal brokered effect **`Human.PollApproval`** with its
+own capability, budget line and record. Propagated to 15 sites, plus a new named RED mutation
+**`MUT-REC-IMMUT`** with **two independent red paths**: a byte-identity re-read of the record
+captured at `Invoke` time, and a store-integrity sweep asserting stored hash == hash(bytes).
+
+*Round 2* — the cap was raised to `0.25` **specifically to buy back the reviewer round 1 lost**, and
+it worked: both present, both independent, and **both REJECTED**. Neither disputes the design
+DIRECTION.
+
+- **`gemini-3-1-pro` — carve-out-eligible, PRE-APPROVED to apply on unpark.** Pure completeness:
+  premise P7 and axiom A9 claim named timeout and output-cap bounds on the Git/Model handlers, but
+  the Non-Vacuity table tests bounds only for the capsule floor (F5/F6). It supplied two
+  ready-to-paste mutation rows. No re-quorum needed for it.
+- **`gpt5-6-sol` — THE PARK REASON.** The broker dispatches a handler and *then* writes the record,
+  so process death in between leaves a **real external effect** (an `FS.Write`, a `Git.Commit`, a
+  paid `Model.Infer`) with no durable record, and replay cannot distinguish "never executed" from
+  "executed but record lost" — a silent-duplicate-execution risk that contradicts the milestone's
+  own headline claim that every effect result is recorded.
+
+**Why the narrow-refinement carve-out was NOT taken.** The carve-out permits a controller-applied
+2nd revision only when **every** remaining objection carries a concrete reviewer-authored fix AND
+disputes only completeness / determinism / attribution / a non-core scope cut. `gemini`'s passes
+both limbs. `gpt5-6-sol`'s fails the second: its fix adds a durable pre-dispatch intent object, a
+broker journal head, an `IndeterminateEffectError` recovery path that must never auto-re-execute,
+per-handler idempotency and reconciliation rules, and crash-injection tests — a durability
+**architecture** change that also overlaps the open **CF-B-2** store-hardening carry-forward.
+Deciding whether M3 must close that window or may honestly re-scope its claim is a
+scope-and-ratification call needing human judgment, not a verbatim text substitution; applying it
+would be the controller authoring a substantial design while calling it a reviewer's fix.
+Guardrail honoured — **park, do not force through** (Standing rule 2).
+
+**PARKED FOR A HUMAN — binary, answerable in one comment.** Does M3 (a) close the dispatch/record
+crash window now — pre-dispatch intent object + broker journal head + `IndeterminateEffectError` +
+crash-injection tests (~+0.5–1 d, overlapping CF-B-2) — or (b) keep its scope and **weaken the
+claim** to the reviewer's own wording, *"every attempted dispatch is durably detectable; completed
+outcomes are replayable; indeterminate attempts fail closed without live fallback"*, with the
+journal queued as its own item beside CF-B-2? **Controller recommends (b)**: an honest narrow claim
+beats an unproven broad one, and durability belongs with the kernel. **Default if unanswered: (b).**
+
+**THE HEADLINE PROCESS FINDING — four iterations of wrong diagnosis, closed; the defect was OURS.**
+Iters 18/19/21/22 each re-derived the same symptom (codex probe `rc=127` → the ratified
+`codex:gpt-5.6-sol` pin silently demoted to opus) and each landed on a **different wrong cause**:
+spent quota, then an unusable model pin, then the shared **frozen driver** — which iter-21 filed
+upstream as `ailang#493` asserting "the V1 loop is demoting every fire too". mission-v1 refuted
+that from inside its own fire, and this iteration confirmed the real cause first-party:
+`grep -c PATH ~/Library/LaunchAgents/dev.ailang.mission-world.plist` → **0**. The World plist sets
+no `EnvironmentVariables` at all; V1's supplies `/opt/homebrew/bin`. Driver line 44 **prepends**,
+so it is correct-but-dependent — fine for a mission whose plist gives it a usable base, broken for
+one that does not. `gh`, `go` and `node` were collateral, not just codex (this controller's own
+shell had no `gh`). **Fixed with no frozen-core edit and no launchd reload**: the driver sources
+`~/.config/ailang/mission-<name>.env` at line **48** — after line 44, before the codex pre-flight at
+line 297 — so `PATH=/opt/homebrew/bin:$PATH` in that file lands in exactly the right window;
+verified by replaying the driver's own ordering under `env -i` (codex/gh/go all resolve). Correction
+posted to `#493`; acknowledgement plus the reusable pattern posted to v1's thread `#484`.
+**The durable lesson is the mis-attribution, not the path**, and both halves are now charter rules:
+(a) when one symptom yields a THIRD distinct diagnosis, suspect the part you have never inspected —
+nobody had ever looked at our own plist; (b) **before blaming shared or frozen infrastructure,
+check whether a peer consumer of it is healthy** — one `grep` on V1's plist would have refuted the
+iter-21 filing before it was written. A defect in shared code should reproduce for every consumer;
+one that does not is a local environment defect wearing a shared-code costume.
+
+**THREE LANGUAGE DEFECTS ROUTED AS `sunholo-data/ailang#495` — all reproduced first-party, and TWO
+were WRONG AS REPORTED.** The designer surfaced them; the controller re-ran every one rather than
+laundering the claim:
+
+- **U3 — confirmed and sharpened.** The two toolchain legs **contradict each other on identical
+  source**: `ai-check` PROVES a `requires`-guarded `debit` correct, and `ailang test` then FAILS
+  it — `ensures violated for input: budget=-553, cost=-762`, inputs the `requires` excludes. The
+  derived ensures property ignores the precondition.
+- **U2 — UNDERSTATED as reported.** Nullary ADT constructors fail too (`*ast.Identifier`), not only
+  applied ones (`*ast.FuncCall`); and `ailang check` passes the file **clean**, so only the test leg
+  catches it — a check-only gate reads green.
+- **U1 — stated cause REFUTED.** Two minimal repros (a callee taking two different record sorts;
+  and the `(record, string)` callee the error message itself names) **both verify clean**, so
+  "params mix two record sorts" is not the trigger. The failure IS real — restoring the composed
+  body flips `effectAllowed` to `status: "error"` while six predicates still verify, with the Z3
+  diagnostic captured verbatim — so it was filed **with its cause explicitly open and a labelled
+  hypothesis** rather than a confident wrong cause. Independent of root cause and worth more than
+  the bug itself: **`ai-check` exits rc=0 with a `status: "error"` result**, so an encoding failure
+  is indistinguishable from a pass at the process boundary. This is exactly why our gate asserts a
+  hardcoded identity manifest instead of trusting the exit code.
+
+**Controller's own independent evidence** (never laundering a sub-agent claim): `verify_ail.sh` at
+EXACTLY **4/4 required identities / 9 modules / 14 named tests**; `verify_go.sh` green with
+`host/replay` **RUNNING 13.99 s, not SKIP**; the doc's Appendix-A sketch re-run by me →
+**7/7 `verified`, 0 errors**, with `verify.results[]` enumerated by name so z3 genuinely ran (not
+the V27 silent-skip class), and `ailang test` → **27 passed / 0 failed / 32 total**; and Appendix A
+**diffed BYTE-IDENTICAL** to the sketch I verified, both before and after the revision — so M3.A's
+"lands this verbatim" is sound rather than asserted. Scope clean **by diff, not by claim**: the only
+changes are the new doc plus this charter/log/archive bookkeeping; no code touched.
+
+**Ruled out**
+- **Applying `gpt5-6-sol`'s round-2 fix under the narrow-refinement carve-out** — fails limb (b);
+  it is a durability-architecture change requiring controller judgment, not a verbatim substitution.
+- **Blaming the shared driver for the PATH gap** — refuted first-party (V1's plist is healthy, ours
+  has no PATH key at all). The iter-21 filing's central claim was wrong and has been corrected
+  upstream rather than left to stand.
+- **Patching `tools/launchd/mission-control.sh` locally** — frozen core; the per-mission env file is
+  the correct non-frozen home and needs no launchd reload.
+- **Reloading the World plist mid-fire to apply the PATH fix** — `launchctl` unload/load on this
+  job would terminate the running iteration. The env-file route makes it unnecessary.
+- **U1's "two record sorts" characterization** — refuted by two of my own minimal repros; not routed
+  as a cause.
+- **Routing the doc revision to the rotation's codex entry** — would have made `gpt5-6-sol` judge
+  its own sibling's revision in round 2, breaking generator≠judge on the gate that mattered.
+- **Running sprint-planner anyway** — the doc is quorum-blocked; planning against a design whose
+  recording model may change would be re-work.
+
+**Non-blocking carry-forwards — ENUMERATED** (per the iter-19 process fix; a bare count loses them)
+1. **CF-D-1** — `gemini-3-1-pro`'s round-2 objection (handler timeout / output-cap mutations
+   missing from the Non-Vacuity table and M3.B tests). Verbatim fix in hand; **apply on unpark**.
+2. **CF-D-2** — the Appendix-A sketch's inline comment still carries U1's **superseded** wording
+   ("params mix two record sorts"). The doc is authoritative and says so; fix in-sprint at M3.A,
+   which triggers the re-verify rule.
+3. **CF-D-3** — `ailang test --format json` emits a non-JSON prefix line (`→ Running tests in …`),
+   so its output cannot be piped straight into `jq`. Cosmetic; worth folding into a future upstream
+   note rather than its own issue.
+4. **CF-B-2** (carried, still open, still with **no issue, queue row or repro fixture**) —
+   `store.Commit` writes a zero `PrevEntryHash` that `store.GetLogEntry` cannot read back. It now
+   has a second consumer arguing for it: `gpt5-6-sol`'s park objection is adjacent, so whichever
+   iteration takes the durability work should take CF-B-2 with it.
+
+**Next**: `w-effect-broker-m3` **unparks straight to sprint-planner** the moment the (a)/(b)
+question is answered — the doc needs no re-design, and `gemini`'s fix applies verbatim on the way
+in. If the park persists past the next fire, the queue's next actionable item is
+**`w-mcp-projection`** (clause-6, ~1 d), which is independent of the broker.
