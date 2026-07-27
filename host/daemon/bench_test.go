@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -174,4 +175,149 @@ func BenchmarkHeadRead(b *testing.B) {
 
 func BenchmarkHealth(b *testing.B) {
 	benchmarkDaemonGET(b, "/v1/health", false)
+}
+
+func BenchmarkRESTCommit(b *testing.B) {
+	dbPath := filepath.Join(b.TempDir(), "world.db")
+	d, err := New(Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
+	if err != nil {
+		b.Fatalf("New: %v", err)
+	}
+	genesis := store.World{
+		Ref: hashref.SumSHA256([]byte("rest-bench-genesis")), Revision: 0,
+		StateRoot: hashref.SumSHA256([]byte("rest-bench-genesis-state")),
+		LogHead:   hashref.SumSHA256([]byte("rest-bench-genesis-log")),
+	}
+	if err := d.store.PutWorld(genesis); err != nil {
+		b.Fatalf("PutWorld genesis: %v", err)
+	}
+	if err := d.store.SelectHead(genesis.Ref); err != nil {
+		b.Fatalf("SelectHead genesis: %v", err)
+	}
+	if err := d.Listen(); err != nil {
+		_ = d.Close()
+		b.Fatalf("Listen: %v", err)
+	}
+	serveDone := make(chan error, 1)
+	go func() { serveDone <- d.Serve() }()
+	b.Cleanup(func() {
+		if err := d.Shutdown(); err != nil {
+			b.Errorf("Shutdown: %v", err)
+		}
+		if err := <-serveDone; err != nil && err != http.ErrServerClosed {
+			b.Errorf("Serve: %v", err)
+		}
+		if err := d.Close(); err != nil {
+			b.Errorf("Close: %v", err)
+		}
+	})
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	current := genesis
+	samples := make([]time.Duration, 0, b.N)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		commit := testCommit(current, int64(i), fmt.Sprintf("rest-bench-%d", i))
+		body := encodeCommit(commit)
+		req, err := http.NewRequest(http.MethodPost, d.URL()+"/v1/commit", bytes.NewReader(body))
+		if err != nil {
+			b.Fatalf("build POST: %v", err)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		start := time.Now()
+		resp, err := client.Do(req)
+		if err != nil {
+			b.Fatalf("POST commit #%d: %v", i, err)
+		}
+		if _, err := io.Copy(io.Discard, resp.Body); err != nil {
+			_ = resp.Body.Close()
+			b.Fatalf("drain POST body: %v", err)
+		}
+		if err := resp.Body.Close(); err != nil {
+			b.Fatalf("close POST body: %v", err)
+		}
+		samples = append(samples, time.Since(start))
+		if resp.StatusCode != http.StatusOK {
+			b.Fatalf("POST commit #%d status=%d", i, resp.StatusCode)
+		}
+		current = commit.NextWorld
+	}
+	b.StopTimer()
+	reportPercentiles(b, samples)
+}
+
+func BenchmarkLogRange(b *testing.B) {
+	for _, limit := range []int{100, 500} {
+		b.Run(fmt.Sprintf("limit_%d", limit), func(b *testing.B) {
+			dbPath := filepath.Join(b.TempDir(), "world.db")
+			d, err := New(Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
+			if err != nil {
+				b.Fatalf("New: %v", err)
+			}
+			current := store.World{
+				Ref: hashref.SumSHA256([]byte("range-bench-genesis")), Revision: 0,
+				StateRoot: hashref.SumSHA256([]byte("range-bench-genesis-state")),
+				LogHead:   hashref.SumSHA256([]byte("range-bench-genesis-log")),
+			}
+			if err := d.store.PutWorld(current); err != nil {
+				b.Fatalf("PutWorld genesis: %v", err)
+			}
+			if err := d.store.SelectHead(current.Ref); err != nil {
+				b.Fatalf("SelectHead genesis: %v", err)
+			}
+			for i := int64(0); i < 500; i++ {
+				commit := testCommit(current, i, fmt.Sprintf("range-bench-%d", i))
+				if err := d.store.Commit(commit); err != nil {
+					b.Fatalf("seed Commit(%d): %v", i, err)
+				}
+				current = commit.NextWorld
+			}
+			if err := d.Listen(); err != nil {
+				_ = d.Close()
+				b.Fatalf("Listen: %v", err)
+			}
+			serveDone := make(chan error, 1)
+			go func() { serveDone <- d.Serve() }()
+			b.Cleanup(func() {
+				if err := d.Shutdown(); err != nil {
+					b.Errorf("Shutdown: %v", err)
+				}
+				if err := <-serveDone; err != nil && err != http.ErrServerClosed {
+					b.Errorf("Serve: %v", err)
+				}
+				if err := d.Close(); err != nil {
+					b.Errorf("Close: %v", err)
+				}
+			})
+
+			client := &http.Client{Timeout: 10 * time.Second}
+			route := fmt.Sprintf("/v1/log?from=0&limit=%d", limit)
+			doGET := func() {
+				resp, err := client.Get(d.URL() + route)
+				if err != nil {
+					b.Fatalf("GET %s: %v", route, err)
+				}
+				if _, err := io.Copy(io.Discard, resp.Body); err != nil {
+					_ = resp.Body.Close()
+					b.Fatalf("drain GET body: %v", err)
+				}
+				if err := resp.Body.Close(); err != nil {
+					b.Fatalf("close GET body: %v", err)
+				}
+				if resp.StatusCode != http.StatusOK {
+					b.Fatalf("GET %s status=%d", route, resp.StatusCode)
+				}
+			}
+			doGET() // warm listener and keep-alive outside the measured window
+			samples := make([]time.Duration, 0, b.N)
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				start := time.Now()
+				doGET()
+				samples = append(samples, time.Since(start))
+			}
+			b.StopTimer()
+			reportPercentiles(b, samples)
+		})
+	}
 }
