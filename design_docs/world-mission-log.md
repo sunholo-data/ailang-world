@@ -1483,3 +1483,107 @@ test-skip guards). **5th consecutive clean-landed sprint** on opus-executor / so
 (iter-8/9/10/14/15) — corroborates keeping the pattern. **Next iteration: `w-world-library-m1` M6** — CI Go gate
 finalize + `scripts/verify_go.sh` + final green sweep → then item `[LANDED]` + doc → `implemented/`. M6 also picks
 up the documented carry-forwards NB2 (interpreter-member end-to-end re-verify) and NB5 (`verify_go.sh`).
+
+## Iteration 16 — 2026-07-27 — `w-world-library-m1` M6 LANDED (PR #8 → squash `a07ac96`, dev CI green, both jobs): CI Go gate + `scripts/verify_go.sh` (anti-false-green) + NB2 end-to-end — **the entire w-world-library-m1 item LANDED (all 6 milestones); doc → implemented/**
+
+**Kind**: execute iteration on ONE item (`w-world-library-m1`, top of queue, IN-SPRINT). Mid-sprint EXECUTE, the
+final milestone (M6). The doc was quorum-direction-accepted and the 6-milestone plan approved at M1 (iter-8);
+M1–M5 landed (iter-8/9/10/14/15). No new design-doc-creator, no re-quorum, no planner: routed straight to
+sprint-executor (Gate 3 "Plan exists" lane). M6 wires the Go gate into CI + local, closes the NB2/NB5
+carry-forwards, and lands the whole item.
+
+**Context / preflight (Gate 0–1)**
+- Kill switch armed. Billing tripwire **CLEAN** (no `ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`). gh account
+  `sunholo-voight-kampff` (gh at `/opt/homebrew/bin`, prepended per-call — not on the default shell PATH).
+- World-namespaced state: bookkeeping issue `#1` (`mission-world-gh-issue`=1; the generic `mission-gh-issue`=484
+  is the V1 loop's, not World's — read the world-namespaced files per the Repo Profile). Pidfile
+  `mission-world.pid`=47511 = this run's own `claude -p` driver (verified via `ps`; my bash child ≠ overlap).
+  **Zero** new `@MarkEdmondson1234` comments on #1 (watermark `2026-07-23T20:13:54Z`, unchanged). Inbox: 2 unread
+  — both `eval-suite` controlplane status FYIs (suite started; 65/84 partial); not a World regression, not a
+  directive, no cross-mission demand → did not outrank. No `[nightly-eval]` open issues on the world repo.
+- Local `dev` == `origin/dev` == `f3c73c9` (in sync after `git fetch`). CI `CI` on dev: **completed/success** @
+  `f3c73c9`. No weekly rotation (issue #1, created 2026-07-23, <80 comments; re-evaluate the Monday-07:00
+  boundary next iteration).
+
+**Pick + reality-check (Gate 2)**
+- Picked top item `w-world-library-m1` M6 — the iter-15 "Next" explicitly named it. Fresh-origin already-landed
+  check: `git log origin/dev --grep`, no `scripts/verify_go.sh`, no merged M6 PR → NOT landed, genuinely the
+  final build step. Read the plan's M6 milestone spec (files, 3 acceptance_checks, verify_commands,
+  ci_green_boundary) + inspected the EXISTING `ci.yml` (M2–M5 already added `ailang-verify` + `go-verify`; the
+  go-verify job inlined `go build`/`go test` rather than calling a script) so the executor directive matched
+  reality. Pinned binary `/tmp/ailang-v0300/ailang` present + clean (`v0.30.0`).
+
+**Route + execute (Gate 3) — heavy roles model-PINNED, spawned (never inline)**
+- Isolated worktree `git worktree add -b sprint/w-world-library-m1-m6 /tmp/wt-w-world-m1-m6 origin/dev` (from
+  `f3c73c9`). NEVER the shared main tree.
+- **sprint-executor (opus, MISSION_EXECUTOR_MODEL=opus, Agent-tool pin, worktree)** — directive carried the M6
+  spec, the existing CI structure, the anti-false-green requirement, and NB2. Delivered `scripts/verify_go.sh`
+  (durable local `go build && go test -count=1` gate with a loud-fail guard on unset/wrong-version `AILANG_BIN`),
+  a `ci.yml` edit (go-verify job → single `./scripts/verify_go.sh` step, pinned-binary download + version-assert
+  + Z3 + ailang-verify all retained), and `host/replay/replay_test.go` NB2
+  (`TestInterpreterMemberChangeDrivesRealReplayEndToEnd` — full replay through a byte-distinct second interpreter,
+  genuine end-to-end, env-constraint honestly documented). Checked the M1 acceptance boxes it verified.
+- **Controller INDEPENDENTLY re-verified** in the worktree (data-before-conclusions): `go build` rc=0;
+  `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_go.sh` green with `ok …/host/replay 13.4s` (replay RAN,
+  all 6 host pkgs `ok`); the anti-false-green guard fires (`env -u AILANG_BIN` → rc=1; `AILANG_BIN=/bin/echo`
+  wrong-version → rc=1); `verify_ail.sh` = 4/4 world identities + 14 named tests / 8 modules; `go vet` clean;
+  `gofmt -l scripts/ host/` empty; `actionlint ci.yml` rc=0. Read the NB2 test in full — it is a genuine
+  end-to-end assertion (distinct HashRef, all six replay steps, cache-miss + authoritative-resolution +
+  original-row-intact + faithful bytes), not a tautology. Also completed the remaining 5 M1 acceptance boxes the
+  executor conservatively left unchecked — each verified against a landed, currently-green test (canon
+  CRLF/CR/BOM/NUL/UTF-8/idempotence/golden; hashref reject malformed/uppercase/bare/tagged; store
+  header/pair/registry-head/verif; registry epoch-1 candidate; archive HashRef/manifest/sidecar).
+- **sprint-evaluator (sonnet, MISSION_EVALUATOR_MODEL=sonnet, Agent-tool pin; generator≠judge: opus ≠ sonnet)
+  PASS 96/100 round 1**, ZERO blocking conditions — independently re-ran the gate, confirmed the guard fires,
+  the replay tests RUN (not skip), the NB2 test is genuine end-to-end, the CI edit weakened nothing (pinned
+  download + version-assert + Z3 + ailang-verify intact), and the M1 acceptance checkmarks are truthful. One
+  non-blocking note: move the doc `planned/ → implemented/` on land (done in-PR).
+- Controller moved the doc `planned/ → implemented/` in the SAME PR (atomic LAND; `verify_ail.sh` unaffected —
+  it sweeps `world/` + sketches, not `design_docs/`). Committed on the worktree branch (`5888daf` M6 +
+  `5c3f594` doc move), crediting the opus executor.
+
+**Gate 3b — CI (item not LANDED until remote CI green on the merge)**
+- Pushed branch; **PR #8** opened (base dev). Expected checks: both world CI jobs (`ailang-code verify gate`,
+  `go host build + test gate`) — the workflow has no path filter, both run on the PR, no N/A. PR mergeable.
+- Bounded poll (30-min cap): PR #8 CI **completed/success**, both jobs. **Verified the anti-false-green wiring
+  WORKED in CI**: the go-verify log shows `AILANG_BIN=/home/runner/.local/bin/ailang (AILANG v0.30.0)` +
+  `ok …/host/replay 9.021s` + `✓ go gate PASSED` — the replay tests ACTUALLY RAN via the new script (no SKIP),
+  which is the whole point of M6. Squash-merged (`--delete-branch`) → dev `a07ac96`. Bounded poll (30-min cap)
+  of dev CI on the merge commit `a07ac96`: **completed/success**, both jobs. Worktree removed; main checkout
+  fast-forwarded to `a07ac96`.
+
+**Routing evidence** (role, model ACTUALLY used)
+| Role | Pin (env) | Actual | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | opus (`claude-opus-4-8`) | triage/pick/reality-check/independent-verify/box-completion/record/retro |
+| Design-doc-creator | — | not spawned | doc already quorum-cleared; no new/revised doc |
+| Sprint-planner | — | not spawned | plan pre-existed (iter-8); M6 milestone spec used as-is |
+| Sprint-executor | `MISSION_EXECUTOR_MODEL`=opus | **opus** (Agent-tool pin, isolated worktree) | M6 (`5888daf`) + doc move (`5c3f594`); controller-reproduced |
+| Sprint-evaluator | `MISSION_EVALUATOR_MODEL`=sonnet | **sonnet** (Agent-tool pin) | PASS 96/100, zero blocking; generator≠judge (opus≠sonnet) held |
+
+**Metered ledger**: `metered=$0.00` — executor opus + evaluator sonnet on subscription Agent-tool pins; no
+designer/quorum/codex/gemini metered spend this iteration. Ceiling ($5) not approached. Designer rotation
+UNCHANGED (`codex:gpt-5.6-sol` — no new doc authored).
+
+**Ruled out** (do not re-chase)
+- Re-running design-doc-creator/quorum/planner for M6 — doc already quorum-direction-accepted; mid-sprint final
+  milestone, "Plan exists" lane.
+- Deferring the doc `planned/→implemented/` move to a follow-up — done in the SAME PR so the LAND is atomic
+  (the evaluator's non-blocking note; verify_ail.sh proven unaffected by the move).
+- Proving that two SEMANTICALLY-DIVERGENT interpreter releases yield DIFFERENT replay bytes — genuinely
+  env-constrained (needs ≥2 distinct upstream AILANG releases in the archive); documented in the NB2 test
+  comment as upstream multi-release integration scope, NOT faked. The end-to-end interpreter-member replay
+  itself IS verified (byte-distinct working wrapper).
+
+**Retro / Next (Gate 5)**: No skill edit, no routing-policy change. **6th consecutive clean-landed sprint** on
+opus-executor / sonnet-judge / generator≠judge (iter-8/9/10/14/15/16) — corroborates keeping the pattern. The
+anti-false-green guard M6 adds is the 3rd touch of the silent-skip-in-CI class (V27 z3 iter-13, B1 AILANG_BIN
+iter-15, now M6's verify_go.sh guard) — but each was caught by the gate and the pattern is a repo-specific
+code/CI discipline (download the pinned artifact + assert + fail-loud in the job that needs it), NOT a
+loop-process gap the skill could enforce → stays a pattern-watch note below the ≥2-instance skill-edit bar.
+**Next iteration: `w-world-library-m1` is COMPLETE — pick the next open queue item, `w-worldd-m2`** (clause-2,
+`ailang-worldd` local daemon: SQLite/REST/CLI, zero cloud deps, kernel perf budget measured from first commit).
+This is a NEW-DOC item: it needs a design doc via the ROTATION designer (last-used `codex:gpt-5.6-sol` → next is
+gemini after G4, else back to claude) + a mandatory `## Conflict Surface` vs the existing `ailang serve-api`
+machinery (the iteration-0 quorum's standing gemini objection), then the pick-time quorum before routing. It is
+a ~2d sprint-sized item — decompose into milestones at planning if needed.
