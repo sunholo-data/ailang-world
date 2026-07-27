@@ -2511,3 +2511,186 @@ a real-subprocess end-to-end episode (genesis → commit → read through the CL
 daemon), and close-out. Folds CF-B-1 and CF-B-4. **That milestone LANDS the item.** Note `BASELINE.md`
 no longer needs an M2.C refresh (CF-A3-4 is closed early — the full surface is measured with no
 PENDING rows), so M2.C's baseline work is a re-measure-and-diff, not a fill-in.
+
+## Iteration 22 — 2026-07-27 — `w-worldd-m2` **M2.C LANDED → ITEM COMPLETE** (PR #14 → squash `73d3486`, dev CI green, both jobs): CLI client verbs over the full REST surface, a real-subprocess end-to-end episode, and an executor that refused to fabricate for the third milestone running
+
+**Pick**: queue item 3, `w-worldd-m2`, milestone **M2.C** — the "Plan exists" lane (design doc
+quorum-cleared and r3-applied, sprint plan approved, three milestones already landed). No new doc,
+no quorum, no planner. M2.C was scoped by the plan JSON as the milestone that LANDS the item.
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` = `sunholo-voight-kampff`;
+main checkout clean; `dev == origin/dev` (`1960188`); dev CI green; zero `[nightly-eval]` issues;
+bookkeeping issue #9 at 8 comments with **no new `@MarkEdmondson1234` comment** (newest still equals
+the watermark `2026-07-27T08:55:11Z`, actioned in iter-18) and predecessor #1 re-checked; **no
+rotation due** (#9 created 05:51Z and titled "week of 2026-07-27" — the iter-20 intent test, second
+application). Inbox: 4 unread, all triaged to zero, **none outranking** — mission-v1's iter-107
+report (cross-mission FYI carrying no request for World; it does note `m-z3-adt-record-sort Lane A`
+is queued upstream as `[world-DEMAND]`), this loop's own iter-21 report, an eval-suite FYI, and this
+loop's own outbound `ailang#493` note.
+
+**Routing evidence**
+
+| Role | Pin (env) | ACTUAL model used | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | **opus** | triage/pick/verify/mutations/record/retro |
+| Designer | — | **not spawned** | no new doc this iteration (mid-sprint EXECUTE lane) |
+| Planner | — | **not spawned** | plan already approved |
+| Executor | `codex:gpt-5.6-sol` (charter-ratified) | **codex:gpt-5.6-sol — PIN HONOURED** | driver exported `opus`; see the routing finding below |
+| Evaluator | `sonnet` | **sonnet** | generator≠judge holds **cross-provider** (OpenAI executor vs Anthropic judge) |
+
+`metered=$0.00` — the codex probe and the full executor run rode the ChatGPT **subscription** lane
+(`auth_mode=chatgpt`), invoked with `env -u OPENAI_API_KEY` so an ambient metered key could not
+silently bill; the evaluator ran on a subscription Agent-tool pin. The `$5` ceiling was untouched.
+
+**ROUTING FINDING — the ratified codex pin was honoured over a provably spurious driver fallback.**
+The driver exported `MISSION_EXECUTOR_MODEL=opus` because its codex pre-flight still fails
+`rc=127 exec: codex: not found` — the `ailang#493` PATH gap (`tools/launchd/mission-control.sh:44`
+exports `PATH="$HOME/go/bin:$HOME/.local/bin:$PATH"` and omits `/opt/homebrew/bin`, where codex
+lives). That issue was filed by this loop last iteration and remains **OPEN upstream with no
+comments**, so the defect reproduced exactly as predicted. Per the Repo Profile's iter-19 rule the
+controller re-probed **WITH `--model`** and a corrected PATH → **rc=0, replied `ok`, codex-cli
+0.145.0, `auth_mode=chatgpt`**. So the charter's ratified pin ran. This is the third distinct
+costume of the same scar (iter-18 read a PATH gap as spent quota; iter-19 read a model-availability
+400 as spent quota; iter-21/22 read a PATH `rc=127` as an unusable lane): **a non-zero probe exit is
+a diagnosis to make, never a verdict to accept.**
+
+**Delivered** (742 insertions / 133 deletions, 9 files, ONE executor round, ZERO blocking findings):
+
+- **`cmd/ailang-worldd/cli.go`** — client verbs 1:1 onto the frozen route table
+  (`health`/`head`/`world get`/`object get [--payload]`/`log get`/`log range --from/--limit`/
+  `registry get`/`commit --file`). **ONE `http.Client`, ONE transport path**; every call derives
+  `context.WithTimeout` from an **injectable** struct field defaulting to
+  `daemon.DefaultClientTimeout`, so no client call can hang AND the deadline test need not wait
+  30 s. Response reads and commit-file reads are both bounded. Non-2xx decodes the shared
+  `daemon.APIError` envelope, including the 409's machine-readable heads.
+- **`cmd/ailang-worldd/cli_test.go`** — the centrepiece: end-to-end against a **REAL SUBPROCESS**.
+  `go build` the binary, spawn `serve --db <temp> --bind 127.0.0.1:0`, read the **announced**
+  address from the daemon's stdout (exactly why A2 announces it), then drive every verb **through
+  the CLI client functions**, never raw HTTP — a genesis → commit → read episode plus a 409
+  conflict re-plan round-trip. Plus a bounded-deadline test against a listener that accepts and
+  never responds, asserting `errors.Is(err, context.DeadlineExceeded)` specifically rather than
+  "some error". Every wait in the file is bounded; the daemon is always killed in `t.Cleanup`.
+- **CF-B-1 closed** — `handleHead`'s 404/500 paths move to the shared JSON `APIError` envelope
+  (`NotFound`/`Internal`), while the **success path stays canonical `text/plain` `algo:digest`**
+  (the frozen contract — deliberately NOT JSON-ified), and the stale comment promising the
+  envelope "with M2.B" is corrected.
+- **CF-B-4 closed** — the two implemented-but-unasserted behaviours now have gates: a non-GET
+  method on a GET route yields **405 from the real mux** (`d.Handler().ServeHTTP`, not an
+  app-level branch), and `GET /v1/log?from=N` pages from a non-zero offset (asserted on
+  `Items[0].Header.EntryIndex == 37`).
+- **`bench/BASELINE.md`** — all six rows re-measured in ONE 200x invocation on the closing branch.
+- **`README.md`** — operator quickstart (build, `serve --db`, the verbs, loopback + single-writer).
+
+**THE EXECUTOR'S THIRD CONSECUTIVE REFUSAL TO FABRICATE.** The codex `workspace-write` sandbox
+denies loopback `bind(2)`, so the executor could not run ANY socket test or benchmark — including
+pre-existing ones. For the third milestone running (A3, M2.B, M2.C) it authored them correctly
+anyway, quoted every denial verbatim under a `SANDBOX-BLOCKED` heading, and **explicitly declined
+to invent the numbers**, writing into `BASELINE.md` that the controller must re-measure rather than
+relabelling M2.B's values as an M2.C measurement. That refusal is the whole reason the baseline is
+trustworthy: a fabricated p95 is undetectable after the fact and would poison every later sprint
+that diffs against this file.
+
+**Controller's own independent evidence** (never laundering a sub-agent claim — every gate re-run
+first-party outside the sandbox): `go test ./...` **all 8 packages ok** with `host/replay`
+**RUNNING 13.6–14.0 s, not SKIP**; `go test ./cmd/... -v` with **ZERO skips** and
+`TestCLIRealSubprocessEpisode` passing against a genuinely built-and-spawned binary;
+`verify_go.sh` PASSED on the pinned v0.30.0 (`e37b370`); `verify_ail.sh` at **EXACTLY 4/4
+identities / 9 modules / 14 tests**; bench smoke green on **all six** benchmark names;
+`gofmt`/`go vet` clean; scope clean **by diff not by claim** (`host/store/**` incl. `schema.sql`,
+`host/{hashref,canon,archive,registry,replay}`, `world/**`, `scripts/**`, `.github/**`, `go.mod`,
+`go.sum` all byte-unchanged; no new deps, no new store methods).
+
+**FIVE MUTATIONS, each RED then reverted GREEN**:
+1. CF-B-1 reverted (head 404 back to text `http.Error`) → **RED at two independent tests**.
+2. The D7 client deadline swapped for `context.WithCancel` → the deadline test **HANGS until
+   `go test`'s own 90 s timeout kills it**. The strongest available proof that it observes a real
+   timeout rather than asserting the source calls `WithTimeout`.
+3. `object get --payload` parsed but never applied to the URL → **RED**, proving the e2e asserts
+   response **CONTENT**, not exit codes.
+4. `GET /v1/health` registered without its method prefix → **RED at 405**, proving the CF-B-4 test
+   exercises the real mux.
+5. `GET /v1/log?from=N` offset never applied → **RED** (`indices begin at 0, want 37`).
+
+**A SIXTH MUTATION WAS REFUTED AS BEHAVIOUR-EQUIVALENT — recorded, not buried.** Collapsing the
+registry client's per-segment escaping into a whole-string `url.PathEscape` was expected to break
+the multi-segment `{name...}` route, but the suite stayed GREEN. **Re-checking the mutation instead
+of believing its result** (the iter-20 self-correction discipline) showed it is behaviour-equivalent:
+`PathEscape` turns `/` into `%2F`, and Go's mux matches that single escaped segment against
+`{name...}` and unescapes it to the **identical** `PathValue` — verified with a standalone probe in
+which both URL forms returned `200 name="world/epoch-registry/v1"`. The test was never at fault;
+the per-segment loop is defensive, not load-bearing. **The evaluator independently reproduced this
+refutation with its own probe** rather than accepting the controller's account.
+
+**Two further mutation attempts were DISCARDED BEFORE SCORING because they failed to COMPILE**
+(`declared and not used`) rather than failing a test. A build break proves nothing about a gate's
+strength, so each was reformulated into a compiling, behaviour-changing form (items 3 and 5 above)
+before being counted. Recorded because a compile error is an easy thing to mistake for a RED.
+
+**sprint-evaluator (sonnet; generator≠judge is a CROSS-PROVIDER split — codex/OpenAI executor vs
+Anthropic judge): PASS 96/100, ZERO blocking.** It earned its keep: it re-ran every gate
+first-party, ran three of its own mutations (stubbing `client.get`, redacting a `worldJSON` field,
+and dropping the method prefixes — each RED), independently reproduced the mux/escaping refutation,
+and confirmed the baseline numbers differ from `origin/dev`'s at every decimal place rather than
+being copy-forwards. It was also careful about its own limits, stating plainly that it could not
+reproduce the controller's five mutations because they ran in a different process. Its
+**restored-the-tree** claim was verified by the controller (`git status --porcelain` empty,
+`git diff --exit-code` clean at `a02420e`) rather than taken on trust.
+
+**A MEASUREMENT HONESTY CORRECTION also lands.** M2.B recorded the loopback transport tax as
+"~0.03 ms". Across two runs the same difference measured **0.03 ms and 0.10 ms** — because the
+*floor* moved (store-commit p95 0.5421 → 0.4717 ms) while the REST row barely did (0.5763 →
+0.5682 ms). At sub-millisecond magnitudes a single run cannot resolve that to two decimal places,
+so `BASELINE.md` now states only the durable claim — **well under 0.1 ms; commit cost is dominated
+by the kernel's fsync** — and records explicitly that rows are re-measured every milestone rather
+than carried forward, with the reason (carrying a row forward silently mixes invocations and makes
+ordinary drift look like a regression). The N+1 finding **reproduced**: 4.15× time for 5× rows
+here vs 3.94× in M2.B, same per-entry shape, still 24× inside target → **no range-read store
+method is justified**, now on two independent runs.
+
+**Gate 3b**: PR run `30297461991` and dev-merge run `30297536500` both **completed/success**, both
+jobs each (`ailang-code verify gate`, `go host build + test gate`), confirmed by **direct
+per-workflow query** against `origin/dev` = `73d34862f` — not from the poll's own verdict (the
+iter-107 rule: a poll's output is a hint, the direct read is the verdict). This repo has exactly
+one workflow (`CI`), so no N/A path-filtered workflow needed recording. Worktree removed, branch
+deleted.
+
+**Close-out**: `design_docs/planned/w-worldd-m2.md` → `design_docs/implemented/w-worldd-m2.md`,
+with **every** Acceptance Criteria **and** Design Freeze box checked (the last acceptance box —
+"`verify_go.sh` and both CI jobs green on every milestone PR" — was ticked only AFTER the
+dev-merge run was observed green, not before). Queue item 3 retagged **LANDED / ITEM COMPLETE**;
+`w-effect-broker-m3` promoted to **[NEXT]**.
+
+**Ruled out**
+- **Fixing CF-B-2 (`prevEntryHash` write/read asymmetry) in this milestone** — it is an M1 kernel
+  change, out of M2's ratified scope, and the daemon already refuses the zero at the boundary so
+  no REST client can trigger it. Carried OUT of the item as a store-hardening queue candidate.
+- **Weakening the socket tests to run inside the codex sandbox** — same ruled-out entry as iters
+  20 and 21. Replacing the real subprocess with an `httptest.Server` would destroy the one thing
+  M2.C exists to prove (the binary, flag parsing, lifecycle, loopback guard and writer lock).
+- **Substituting `codex:gpt-5.5` when the driver reported the lane down** — the lane was not down;
+  and an unratified model swap is a routing-policy change the charter gates behind evidence.
+- **Counting the two non-compiling mutations as RED** — a build break is not a gate result.
+- **Treating the sixth mutation's GREEN as a gate defect** — it was a no-op mutation, proven so.
+
+**Non-blocking carry-forwards — ENUMERATED** (per the iter-19 process fix; a bare count loses them)
+1. **CF-C-1** — `--limit 0` on `log range` is indistinguishable from the flag being unset (both
+   omit `&limit=`); server-side `clampLimit(0)=100` makes the behaviour correct but silent.
+   → CLI polish, low priority.
+2. **CF-C-2** — no test covers a registry name containing characters `PathEscape` would encode
+   (spaces, `%`). The per-segment loop is defensive but unexercised for that case. → whenever M3
+   introduces new registry names.
+3. **CF-C-3** — **CF-B-2 needs a real home**: it is named in a code comment and in the doc, but has
+   no open issue and no reproduction fixture, so it can quietly evaporate between milestones.
+   → file it as a store-hardening queue item WITH a repro test. **This is the highest-value
+   carry-forward of the four.**
+4. **CF-C-4** — the 405 gate asserts 2 of the 7 GET routes. The mux mechanism is proven by two
+   vectors, so this is strengthening, not a defect. → next daemon-facing sprint.
+5. **CF-B-3** (carried from M2.B, still open) — `scripts/bench_worldd.sh`'s benchmark-name manifest
+   is hand-maintained; nothing gates it against drift when a seventh benchmark lands. Low priority
+   (a missing name is the gate working).
+
+**Next**: the queue head is **`w-effect-broker-m3`** (clause-3) — a **NEW-DOC** item, so the next
+iteration routes design-doc-creator on the rotation designer, then the pick-time quorum, then
+sprint-planner. Two standing gates apply at pick: `grep -ri "w-effect-broker-m3" design_docs/`
+first (a NEW-DOC tag is a claim, not a fact — 2 of 2 recent V1 NEW-DOC tags were wrong), and the
+Conflict Surface treatment the charter requires for anything touching effects.

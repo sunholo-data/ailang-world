@@ -1,6 +1,27 @@
 # w-worldd-m2 — `ailang-worldd` Local Daemon (CLI + REST over the M1 Host)
 
-**Status**: **REVISION r3 APPLIED — ARM A RATIFIED by Mark 2026-07-27 (attended), single-writer ENFORCED**: the bounded M1 `host/store` kernel change is specified as `Open` = fail-closed writer open (non-waiting OS-backed exclusive lock, `WriterAlreadyActive` on contention) plus additive `OpenReadOnly`, with cross-process subprocess proof. Design DIRECTION accepted by both quorum reviewers across two rounds; ready for sprint-planner.
+**Status**: ✅ **IMPLEMENTED — ITEM COMPLETE 2026-07-27.** All milestones landed on `dev` with CI
+green (both jobs) on every PR run AND every dev-merge run: **A1** `b0deedb` (PR #10 — ratified
+single-writer kernel change), **A2** `39b2115` (PR #11 — daemon shell, loopback guard, dependency
+allowlist), **A3** `9579fe1` (PR #12 — perf harness, day-1 baseline, bench-smoke gate), **M2.B**
+`b412699` (PR #13 — full REST v1), **M2.C** `73d3486` (PR #14 — CLI client verbs, real-subprocess
+end-to-end, CF-B-1/CF-B-4). Every Acceptance Criteria and Design Freeze box is checked.
+`ailang-worldd` is a loopback-only, single-writer local daemon over the landed M1 host: all seven
+frozen v1 routes reachable both over REST and through CLI verbs, a measured six-row performance
+baseline with no PENDING rows, and zero cloud dependencies **enforced by a build-graph allowlist
+test** rather than asserted in prose.
+
+**Carried forward OUT of this item** (kernel-side, not M2 scope): **CF-B-2** — `store.Commit`
+writes a zero `PrevEntryHash` that `store.GetLogEntry` cannot read back. The daemon refuses it at
+the boundary so no REST client can trigger it, but the embedded API still can. Resolving it needs
+a kernel decision (validate on write, or support the zero on read) and belongs to a
+store-hardening item.
+
+**Prior status (kept for the record)**: REVISION r3 APPLIED — ARM A RATIFIED by Mark 2026-07-27
+(attended), single-writer ENFORCED: the bounded M1 `host/store` kernel change is specified as
+`Open` = fail-closed writer open (non-waiting OS-backed exclusive lock, `WriterAlreadyActive` on
+contention) plus additive `OpenReadOnly`, with cross-process subprocess proof. Design DIRECTION
+accepted by both quorum reviewers across two rounds.
 **Date**: 2026-07-27
 
 > ## ✅ PARK BOX — RESOLVED: Mark picked **(A) Enforce it** (attended, 2026-07-27; recorded in the charter STATUS — the ratified-mission-state channel). Rationale: authority as enforcement, not convention — an embedded writer bypassing the daemon's capability/budget checks is exactly the ambient-authority pattern clause 3 exists to end; the M1 kernel change is ratified by this decision.
@@ -124,15 +145,15 @@ accelerate.
 
 ### Design Freeze
 
-- [ ] worldd lives at `cmd/ailang-worldd` + `host/daemon` inside `github.com/sunholo-data/ailang-world` (P1).
-- [ ] The daemon process is structurally the single writer: `store.Open` acquires a non-waiting OS-backed exclusive lock beside the DB and contention returns structured `WriterAlreadyActive`; every CLI mutation goes through REST.
-- [ ] `store.OpenReadOnly` is the distinct reader path and requires no writer lock; two processes cannot simultaneously hold write handles to one DB path.
-- [ ] REST v1 is the seven-route table frozen in `sketches/worlddapi.ail` `routes()`.
-- [ ] Error mapping is the sketch's `httpStatus`: conflict→409, not-found→404, malformed→400, oversized body→413, internal→500.
-- [ ] Default bind `127.0.0.1:7644`; startup refuses any bindHost failing `isLoopbackHost` (Z3-proven predicate).
-- [ ] Every wait and allocation is bounded (D7): `http.Server` carries `ReadHeaderTimeout`/`ReadTimeout`/`WriteTimeout`/`IdleTimeout`; commit bodies capped at `maxCommitBytes` (8 MiB, Z3-proven `withinCommitBytes`); CLI client calls carry `context.WithTimeout(defaultClientTimeout)`; shutdown drains under `shutdownTimeout` then hard-closes.
-- [ ] Benchmarks report p50/p95 for store-commit, REST-commit, head-read, health, **and log-range (the only deliberate N+1) at limit=100 and the clamp max 500**; baseline committed at `bench/BASELINE.md`.
-- [ ] M2 adds **zero** columns, tables, or indexes to `host/store/schema.sql`; the lock is process-level state, not database state. The only M1 kernel delta is the ratified additive writer-lock/read-only-open API; `world/*` semantics remain unchanged.
+- [x] worldd lives at `cmd/ailang-worldd` + `host/daemon` inside `github.com/sunholo-data/ailang-world` (P1).
+- [x] The daemon process is structurally the single writer: `store.Open` acquires a non-waiting OS-backed exclusive lock beside the DB and contention returns structured `WriterAlreadyActive`; every CLI mutation goes through REST.
+- [x] `store.OpenReadOnly` is the distinct reader path and requires no writer lock; two processes cannot simultaneously hold write handles to one DB path.
+- [x] REST v1 is the seven-route table frozen in `sketches/worlddapi.ail` `routes()`.
+- [x] Error mapping is the sketch's `httpStatus`: conflict→409, not-found→404, malformed→400, oversized body→413, internal→500.
+- [x] Default bind `127.0.0.1:7644`; startup refuses any bindHost failing `isLoopbackHost` (Z3-proven predicate).
+- [x] Every wait and allocation is bounded (D7): `http.Server` carries `ReadHeaderTimeout`/`ReadTimeout`/`WriteTimeout`/`IdleTimeout`; commit bodies capped at `maxCommitBytes` (8 MiB, Z3-proven `withinCommitBytes`); CLI client calls carry `context.WithTimeout(defaultClientTimeout)`; shutdown drains under `shutdownTimeout` then hard-closes.
+- [x] Benchmarks report p50/p95 for store-commit, REST-commit, head-read, health, **and log-range (the only deliberate N+1) at limit=100 and the clamp max 500**; baseline committed at `bench/BASELINE.md`.
+- [x] M2 adds **zero** columns, tables, or indexes to `host/store/schema.sql`; the lock is process-level state, not database state. The only M1 kernel delta is the ratified additive writer-lock/read-only-open API; `world/*` semantics remain unchanged.
 
 ---
 
@@ -577,8 +598,11 @@ is capped by the frozen `routes()` table; growing it is a doc change, not a driv
   bench-smoke step fails on zero benchmarks.
 - [x] `sketches/worlddapi.ail` stays green in `verify_ail.sh` alongside the prior 8 modules;
   the 4 required world/ identities and 14 required named tests are unperturbed.
-- [ ] `scripts/verify_go.sh` (with pinned `AILANG_BIN`) and both CI jobs green on every
-  milestone PR.
+- [x] `scripts/verify_go.sh` (with pinned `AILANG_BIN`) and both CI jobs green on every
+  milestone PR. **Observed green on all five milestone merges**: A1 `b0deedb` (PR #10),
+  A2 `39b2115` (PR #11), A3 `9579fe1` (PR #12), M2.B `b412699` (PR #13), M2.C `73d3486`
+  (PR #14) — both jobs (`ailang-code verify gate`, `go host build + test gate`) success on
+  each PR run AND on each dev-merge run.
 - [x] M2 stops before broker, capabilities, budgets, isolation, MCP, A2A, and any serve-api
   dependency.
 
