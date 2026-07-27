@@ -103,6 +103,35 @@ Two burdens, both in the charter, both falsifiable:
 
 A trust substrate that can't pass its own evidence bar has no business asking for yours.
 
+## Run the local world daemon
+
+Build the single daemon/client binary, then start one writer for a database:
+
+```sh
+go build -o ailang-worldd ./cmd/ailang-worldd
+./ailang-worldd serve --db ./world.db
+```
+
+The REST listener is loopback-only (default `127.0.0.1:7644`) and each file-backed
+database permits exactly one writer process. A second daemon or embedded writer
+fails closed; read-only store users may coexist.
+
+The same binary is the bounded-timeout client:
+
+```sh
+./ailang-worldd health
+./ailang-worldd head
+./ailang-worldd world get sha256:<digest>
+./ailang-worldd object get sha256:<digest> --payload
+./ailang-worldd log get 0
+./ailang-worldd log range --from 0 --limit 100
+./ailang-worldd registry get world/epoch-registry/v1
+./ailang-worldd commit --file commit.json
+```
+
+Use global `--addr http://127.0.0.1:<port>` before a client verb when the daemon
+uses another loopback port. `--addr` is not valid with `serve`; use `--bind`.
+
 ## Relationship to AILANG
 
 [AILANG](https://github.com/sunholo-data/ailang) is the language: deterministic, explicit

@@ -541,46 +541,108 @@ is capped by the frozen `routes()` table; growing it is a doc change, not a driv
 
 ## Acceptance Criteria
 
-- [ ] `ailang-worldd serve` runs over the landed M1 host with exactly one bounded, ratified
+- [x] `ailang-worldd serve` runs over the landed M1 host with exactly one bounded, ratified
   exception: `host/store` may add only the fail-closed writer-lock implementation,
   `WriterAlreadyActive`, `OpenReadOnly`, and their focused tests; `host/store/schema.sql`,
   `host/{hashref,canon,archive,registry,replay}/`, and `world/` have no M2 semantic changes.
-- [ ] A subprocess holds `store.Open` on a temp DB; a second process attempting `store.Open` on
+- [x] A subprocess holds `store.Open` on a temp DB; a second process attempting `store.Open` on
   the same path fails immediately and deterministically with structured `WriterAlreadyActive`.
-- [ ] `store.OpenReadOnly` succeeds and reads while the daemon/subprocess holds the writer lock;
+- [x] `store.OpenReadOnly` succeeds and reads while the daemon/subprocess holds the writer lock;
   it never acquires or weakens the writer lock.
-- [ ] After the writer subprocess is killed without cleanup, a fresh process reacquires the
+- [x] After the writer subprocess is killed without cleanup, a fresh process reacquires the
   writer lock and opens the DB; a stale lock-file pathname never permanently wedges restart.
-- [ ] `host/store/schema.sql` is byte-for-byte unchanged: the writer lock is an OS/process-level
+- [x] `host/store/schema.sql` is byte-for-byte unchanged: the writer lock is an OS/process-level
   artifact, with zero new tables, columns, or indexes.
-- [ ] All seven frozen routes implemented; CLI verbs cover the table 1:1; end-to-end test drives
+- [x] All seven frozen routes implemented; CLI verbs cover the table 1:1; end-to-end test drives
   a genesis→commit→read episode through the CLI against a real subprocess daemon.
-- [ ] Stale-head commit over REST returns 409 with observed+selected heads; the test re-plans
+- [x] Stale-head commit over REST returns 409 with observed+selected heads; the test re-plans
   from the body and commits successfully.
-- [ ] Malformed `HashRef` → 400; absent object/world/log/registry → 404; log-range limit
+- [x] Malformed `HashRef` → 400; absent object/world/log/registry → 404; log-range limit
   clamped to ≤500; oversized commit body (> `maxCommitBytes`) → 413 with the `PayloadTooLarge`
   class.
-- [ ] **Bounded waits (D7)**: the `http.Server` sets `ReadHeaderTimeout`/`ReadTimeout`/
+- [x] **Bounded waits (D7)**: the `http.Server` sets `ReadHeaderTimeout`/`ReadTimeout`/
   `WriteTimeout`/`IdleTimeout` to the named constants; `POST /v1/commit` reads through
   `http.MaxBytesReader(maxCommitBytes)`; every CLI client call carries
   `context.WithTimeout(defaultClientTimeout)`; shutdown is `Shutdown(ctx≤shutdownTimeout)` then
   hard `Close()`. `TestBoundedWaitsAndBodyLimit` green, non-vacuously: timeouts asserted
   non-zero AND oversized-body → 413 AND `maxCommitBytes == 8388608` (the Z3-proven sketch bound).
-- [ ] Non-loopback `--bind` refused at startup; default bind is `127.0.0.1:7644`.
-- [ ] `TestDaemonDependencyAllowlist` proves zero cloud/network-egress dependencies in
+- [x] Non-loopback `--bind` refused at startup; default bind is `127.0.0.1:7644`.
+- [x] `TestDaemonDependencyAllowlist` proves zero cloud/network-egress dependencies in
   `host/daemon` + `cmd/ailang-worldd`.
-- [ ] Startup archives `--ailang-bin` (when given) via `host/archive` and bootstraps
+- [x] Startup archives `--ailang-bin` (when given) via `host/archive` and bootstraps
   `world/epoch-registry/v1` via `registry.Bootstrap`, idempotently.
-- [ ] Perf harness lands in the FIRST daemon PR; `bench/BASELINE.md` committed with p50/p95 for
+- [x] Perf harness lands in the FIRST daemon PR; `bench/BASELINE.md` committed with p50/p95 for
   store-commit, REST-commit, head-read, health, **and log-range at limit=100 and limit=500
   (`BenchmarkLogRange` — the deliberate N+1 is in the day-1 budget, not hidden from it)**; CI
   bench-smoke step fails on zero benchmarks.
-- [ ] `sketches/worlddapi.ail` stays green in `verify_ail.sh` alongside the prior 8 modules;
+- [x] `sketches/worlddapi.ail` stays green in `verify_ail.sh` alongside the prior 8 modules;
   the 4 required world/ identities and 14 required named tests are unperturbed.
 - [ ] `scripts/verify_go.sh` (with pinned `AILANG_BIN`) and both CI jobs green on every
   milestone PR.
-- [ ] M2 stops before broker, capabilities, budgets, isolation, MCP, A2A, and any serve-api
+- [x] M2 stops before broker, capabilities, budgets, isolation, MCP, A2A, and any serve-api
   dependency.
+
+### M2.C Verification Log — 2026-07-27
+
+- `gofmt -l cmd host`, `go vet ./...`, and `go build ./...`: green (empty output).
+- `./scripts/verify_ail.sh`: green — `✓ verify gate PASSED: 4 required identities verified,
+  14 named tests pass`.
+- Focused non-socket CLI/handler tests: green.
+- `go test ./... -count=1` and `./scripts/verify_go.sh`: blocked only when tests attempted
+  loopback listeners (`listen tcp 127.0.0.1:0: bind: operation not permitted`; the existing
+  IPv6 httptest path likewise reported `listen tcp6 [::1]:0: bind: operation not permitted`).
+- `./scripts/bench_worldd.sh --smoke`: emitted the store benchmark, then failed on the same
+  sandbox listener denial. The full 200x attempt measured store commit at p50 0.5168 ms /
+  p95 0.6746 ms, but no partial row was substituted into the six-row baseline.
+- The final `scripts/verify_go.sh`/bench acceptance box remains unchecked until the controller
+  runs the socket-dependent gates outside this sandbox.
+
+#### Controller re-run OUTSIDE the sandbox (same worktree, same commit)
+
+Every gate the executor could not reach was re-run by the controller on the dev rig. These are
+first-party observations, not the executor's reported tails:
+
+- `go test ./... -count=1`: **all 8 packages ok**, with `host/replay` **RUNNING 13.6–14.0 s, not
+  SKIP** (a skip would mean `AILANG_BIN` was unset — the V27/B1 false-green class).
+- `go test ./cmd/... -count=1 -v`: **zero skips**; `TestCLIRealSubprocessEpisode` PASSES against
+  a genuinely built-and-spawned binary.
+- `./scripts/verify_go.sh`: **PASSED** on the pinned `AILANG v0.30.0` (commit `e37b370`).
+- `./scripts/verify_ail.sh`: **PASSED** — exactly 4/4 required identities across 9 modules,
+  14/14 required named tests.
+- `./scripts/bench_worldd.sh --smoke`: **PASSED**, all six benchmark names present.
+- Protected-scope `git diff --exit-code`: **clean by diff, not by claim** — `host/store/**`
+  (incl. `schema.sql`), `host/{hashref,canon,archive,registry,replay}`, `world/**`, `scripts/**`,
+  `.github/**`, `go.mod`, `go.sum` all byte-unchanged. No new dependencies.
+- `bench/BASELINE.md`: the controller re-measured **all six rows in ONE 200x invocation** outside
+  the sandbox; the table records M2.C-measured values with no PENDING rows.
+
+**Mutation testing (each RED, then reverted GREEN)** — the gates are non-vacuous, not merely
+green:
+
+1. CF-B-1 reverted (head 404 back to text `http.Error`) → **RED at two independent tests**.
+2. The D7 client deadline replaced with `context.WithCancel` → the deadline test **HANGS** until
+   `go test`'s own 90 s timeout kills it, proving it observes a real timeout rather than merely
+   asserting that the source calls `context.WithTimeout`.
+3. `object get --payload` parsed but never applied to the URL → **RED**, proving the e2e asserts
+   response CONTENT, not exit codes.
+4. `GET /v1/health` registered without its method prefix → **RED at 405**, proving the CF-B-4
+   test exercises the real mux.
+5. `GET /v1/log?from=N` offset never applied → **RED** (`indices begin at 0, want 37`).
+
+**One mutation was REFUTED as stated, and is recorded rather than buried.** Collapsing the
+registry client's per-segment escaping into a single whole-string `url.PathEscape` was expected
+to break the multi-segment `{name...}` route, but the suite stayed GREEN. Re-checking the
+mutation instead of trusting its result showed it is **behaviour-equivalent**: `PathEscape` turns
+`/` into `%2F`, and Go's mux matches that single escaped segment against `{name...}` and
+unescapes it to the identical `PathValue` — verified with a standalone probe in which both URL
+forms returned `200 name="world/epoch-registry/v1"`. So the test was never at fault, and the
+per-segment loop is defensive rather than load-bearing. The registry verb IS genuinely covered:
+the e2e calls it with a multi-segment name and asserts the response body.
+
+Two mutation attempts were discarded before scoring because they failed to COMPILE
+(`declared and not used`) rather than failing a test — a build break proves nothing about a
+gate's strength, so each was reformulated into a compiling, behaviour-changing form (items 3
+and 5 above) before being counted.
 
 ## Axiom Compliance
 

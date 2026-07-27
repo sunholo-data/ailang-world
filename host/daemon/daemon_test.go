@@ -553,6 +553,10 @@ func TestHealthAndHeadRoundTrip(t *testing.T) {
 	if code != http.StatusNotFound {
 		t.Fatalf("GET /v1/head with no selected head: status = %d (body %q), want 404", code, body)
 	}
+	var headErr APIError
+	if err := json.Unmarshal([]byte(body), &headErr); err != nil || headErr.Error.Class != "NotFound" {
+		t.Fatalf("GET /v1/head error body = %q, want JSON NotFound envelope (decode err=%v)", body, err)
+	}
 
 	// --- GET /v1/head, after seeding ----------------------------------------
 	world := seedHead(t, d.store)
