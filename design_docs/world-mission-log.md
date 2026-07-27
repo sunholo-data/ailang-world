@@ -1877,3 +1877,214 @@ loopback guard, D7 bound constants + the four `http.Server` timeouts, bounded sh
 `/v1/health`, `/v1/head`), folding the evaluator's three non-blocking carry-forwards; then A3
 (bench harness + `bench/BASELINE.md` + `scripts/bench_worldd.sh --smoke` + the CI bench-smoke step)
 completes M2.A; then M2.B, M2.C.
+
+## Iteration 19 — 2026-07-27 — `w-worldd-m2` **M2.A/A2 LANDED** (PR #11 → squash `39b2115`, dev CI green, both jobs): the `ailang-worldd` daemon shell — loopback guard, D7 bounds, `/v1/health` + `/v1/head`, and zero-cloud ENFORCED by a dependency allowlist
+
+**Kind**: mid-sprint EXECUTE iteration ("Plan exists" lane) — no new design doc, no quorum, no
+planner. Executor → evaluator → **round-2 fix on a BLOCKING finding** → re-verify → PR → CI-green
+merge.
+
+**Context / preflight (Gate 0)**
+- Kill switch: NOT set (armed). Billing tripwire: **CLEAN** (no `ANTHROPIC_API_KEY` /
+  `ANTHROPIC_AUTH_TOKEN`). gh account: `sunholo-voight-kampff`.
+- Pidfile `mission-world.pid`=35412 = this run's own driver (verified via `ps`; no overlap).
+- Inbox: 3 unread, all `[controlplane] eval-suite` status FYIs from the V1 loop — not directives,
+  not cross-mission requests, do not outrank the queue. No `[nightly-eval]` issues (the only open
+  issue is bookkeeping #9).
+- **No new `@MarkEdmondson1234` comment** on #9 (watermark `2026-07-27T08:55:11Z` = his "A"
+  ratification, already acted on in iter-18). Predecessor #1 re-checked per the rotation-week
+  catch: nothing new. Watermark unchanged — nothing new to advance past.
+- Weekly rotation: NOT due — #9 created 2026-07-27 05:51Z (after the Monday-07:00 boundary), 4
+  comments.
+
+**Observe (Gate 1)**
+- `git fetch origin`; local `dev` == `origin/dev` == `b1e2b33`. CI on dev **completed/success**.
+  One workflow (`CI`, two jobs) — no path-filtered workflow to mis-poll.
+
+**Pick + reality-check (Gate 2)**
+- Queue head = item 3 `w-worldd-m2` **[IN-SPRINT]**; iter-18's recorded **Next** is checkpoint A2.
+- Already-landed check against a FRESH origin: `cmd/` did not exist, `host/daemon` did not exist,
+  no PR mentioned the daemon. A2 genuinely unstarted. No quorum needed (design doc r3 is
+  quorum-run + human-ratified; this is the execute lane).
+- Baseline established by the controller BEFORE handing the worktree over: `verify_go.sh` green,
+  6 host packages `ok`, `host/replay` RUNNING 12.673s. So a red gate would be the executor's
+  change, not a pre-existing condition.
+
+**ROUTING INCIDENT — the pinned executor model does not exist for this CLI (Gate 3)**
+- `$MISSION_EXECUTOR_MODEL` = `codex:gpt-5.6-sol` (the default flipped to codex by an attended
+  session, `dd12587`, for quota relief). Per the skill's cross-provider recipe the controller ran
+  the bounded pre-flight probe **with the pinned model** — it FAILED, and NOT on quota:
+  `400 invalid_request_error: The 'gpt-5.6-sol' model requires a newer version of Codex. Please
+  upgrade to the latest app or CLI` (codex-cli **0.137.0**).
+- **Diagnosis, not assumption**: a second bounded probe WITHOUT `--model` returned rc=0 on default
+  **`gpt-5.5`**. So the codex lane itself is healthy and on ChatGPT subscription auth
+  (`auth_mode=chatgpt`); it is the MODEL PIN that is unreachable.
+- **This means the driver's own pre-flight probe false-greens a model pin.**
+  `tools/launchd/mission-control.sh:248` probes `codex exec --skip-git-repo-check 'reply with
+  exactly: ok'` — **no `--model` flag** — so it exercises the default model and reports the lane
+  healthy while the pinned model cannot run. The driver logged
+  `executor=codex:gpt-5.6-sol` for this fire on exactly that false signal. The shared SKILL's
+  recipe is correct (it passes `--model "$MODEL"`); the DRIVER's probe is the one missing it.
+  `tools/launchd/*` is **FROZEN CORE** for this mission → NOT edited locally; routed upstream as a
+  proposal (two channels, per the guardrail).
+- **Action taken**: per the recipe's fallback rule, the executor role fell back to `$MODEL` (opus)
+  via a pinned Agent sub-agent, **FLAGGED**. Deliberately NOT substituted with `codex:gpt-5.5` —
+  swapping in an unratified model is a routing-policy change, which the charter gates behind
+  evidence, not controller convenience. generator≠judge still holds (opus executor ≠ sonnet judge).
+
+**Execute (Gate 3) — sprint-executor, isolated worktree `/tmp/wt-worldd-m2-a2`**
+- Round 1 (`879558d`): 4 new files, **1548 insertions, 0 deletions** — `cmd/ailang-worldd/main.go`
+  (233), `cmd/ailang-worldd/main_test.go` (129), `host/daemon/daemon.go` (522),
+  `host/daemon/daemon_test.go` (664). LOC came in **2.1× the plan estimate** (~730 planned),
+  consistent with M1's measured 2.2×-low calibration — the haircut in the plan is still too small.
+- Declared deviations, both accepted: a 4th file (`main_test.go`) because the exit-code contract
+  and the "`--addr` is not a serve flag" rule were stated acceptance properties with no test
+  anywhere in A2/A3; and a `drainTimeout` field on `Daemon` instead of referencing `shutdownTimeout`
+  directly — its own mutation testing showed the direct reference was **unfalsifiable** (raising the
+  constant to 100h stayed green). Making an assertion falsifiable is the right call.
+
+**Verification — controller re-ran everything INDEPENDENTLY (data before conclusions)**
+- Both gates green on the pinned `/tmp/ailang-v0300/ailang` (v0.30.0, clean, `e37b370`): all 8
+  packages `ok` with **`host/replay` RUNNING 12.1–12.3s, never SKIP** (the V27/B1 false-green class
+  stayed closed); `verify_ail.sh` at **EXACTLY** 4/4 required `world/` identities across 9 modules
+  and **EXACTLY** 14 named tests (A2 adds no `.ail`, so any movement would be a red flag, not a
+  success). `gofmt`/`go vet` clean.
+- Scope verified **by diff, not by claim**: `host/store`, `host/replay`, `host/registry`,
+  `host/archive`, `host/canon`, `host/hashref`, `world/`, `scripts/`, `.github/`, `go.mod`, `go.sum`
+  all byte-unchanged vs `origin/dev`. No new module dependency.
+- **Controller mutation 1** (independent of the executor's): widening `isLoopbackHost` to also
+  accept `0.0.0.0` — a SUBTLE widening, not an always-true — turned the suite RED at **two**
+  independent tests (`TestIsLoopbackHostMirrorsSketchPredicate` and
+  `TestNewRefusesNonLoopbackBind/refused/0.0.0.0`) in 1.2s. Tree restored byte-clean.
+- **Controller mutation 2**: dropping `golang.org/x/sys` from the dependency allowlist turned it RED
+  naming `golang.org/x/sys/unix` — proving the allowlist walks the REAL build graph, not a synthetic
+  list. Tree restored byte-clean.
+- **LIVE, with real OS processes** (the highest-value check — A1's ratified kernel invariant meeting
+  its first real consumer): built the binary; proc 1 announced
+  `ailang-worldd listening on http://127.0.0.1:54819`; `/v1/health` returned the real archived
+  interpreter HashRef `sha256:e9746fef…` plus the pinned `AILANG v0.30.0` manifest version;
+  **a SECOND OS PROCESS on the same DB failed closed in 0s, rc=2**, with `WriterAlreadyActive`
+  surfaced as `StartupError{Stage: store-open}`; `--bind 0.0.0.0` refused rc=2 with a named error;
+  SIGTERM exited cleanly.
+
+**EVALUATION — the independent judge found a real BLOCKING defect (this is the loop working)**
+- **sprint-evaluator** (`$MISSION_EVALUATOR_MODEL`=**sonnet**; generator≠judge holds: opus executor
+  ≠ sonnet judge): round 1 **PASS-WITH-CONDITIONS, 79/100, ONE BLOCKING condition**.
+- **BLOCK-1**: `TestDaemonDependencyAllowlist` was **not delivered**. Without it, Decision 4's
+  "zero-cloud is enforced, not asserted" and the charter's **local-first is inviolable** guardrail
+  were prose with no gate behind them. The executor had claimed the plan JSON scoped the test to
+  M2.B.
+- **The controller verified the evaluator's finding rather than adopting it** — and found the
+  evaluator's own framing slightly overstated. Its claim "all three documents place it in A2" is not
+  exactly right: the **plan JSON is internally inconsistent** — it says "the **M2.B**
+  dependency-allowlist test" twice (in two risk texts), says "`TestDaemonDependencyAllowlist`,
+  **M2.A**" once, and **omits the test from A2's file list entirely**. The executor's reading was
+  therefore defensible, not careless. The **design doc governs** (it is the quorum-reviewed,
+  ratified artifact) and places the test in M2.A four times over: Decision 4, the M2.A
+  `daemon_test.go` file description, the M2.A acceptance checks, and a standalone global acceptance
+  criterion. The handoff agrees (line 149). **Verdict: the test belongs in A2 and was dropped.**
+- **Round 2** (`a1cc5fa`, bounded single-file fix pass, executor lane): `TestDaemonDependencyAllowlist`
+  added to `host/daemon/daemon_test.go` (+206). It shells out to `go list -deps` over BOTH
+  `./host/daemon/...` and `./cmd/ailang-worldd/...` (**237 transitive packages** today), resolves
+  `go` via `exec.LookPath` and **`t.Fatalf`s rather than `t.Skip`s** when the toolchain is missing
+  (a skip here would be precisely the V27/B1 silent-skip class), **fails on an empty dependency
+  list** (S6 null case), and **names the offending packages** so CI output is actionable.
+- **Round-2 verification by the SAME independent judge** (narrowly scoped to BLOCK-1 — the
+  controller is opus, i.e. the executor's own model family, so controller self-verification alone
+  would have been weaker evidence than it looks): **BLOCK-1 CLOSED**, **revised score 92/100**, no
+  new blocking conditions. It ran its own distinct mutation (removing `modernc.org/sqlite`, which
+  neither the controller nor the executor had mutated) → RED naming three packages by name; and
+  confirmed the synthetic self-proof subtests are *in addition to* the real-graph walk, not instead
+  of it.
+
+**Gate 3b — CI GREEN (bounded polls, 30-min caps, no unbounded waits)**
+- PR **#11** (`sprint/w-worldd-m2-a2` → `dev`): run `30266163765` **completed/success**, both jobs
+  (`ailang-code verify gate`, `go host build + test gate`).
+- Squash-merged → **`39b2115`** on dev, branch deleted. Dev-merge run `30266239289`
+  **completed/success**, both jobs. Only an OBSERVED green upgraded the tag. Worktree removed;
+  local `dev` fast-forwarded to `39b2115`.
+
+**Routing evidence** (role, model ACTUALLY used — the enforcement backstop)
+
+| Role | Env pin | ACTUALLY ran on | Notes |
+|---|---|---|---|
+| Controller | session | `claude-opus-5` | triage/pick/baseline/2 mutation tests/live process proof/review/record/retro |
+| Design-doc-creator | — | **not invoked** | execute lane; doc r3 already quorum-run + ratified |
+| Sprint-planner | — | **not invoked** | plan already approved in iter-18 |
+| Sprint-executor | `codex:gpt-5.6-sol` | **opus (FALLBACK, FLAGGED)** | pinned model rejected by codex-cli 0.137.0 (`requires a newer version of Codex`) — NOT quota. Recipe's fallback rule applied; 2 rounds (r1 + bounded fix) |
+| Sprint-evaluator | `sonnet` | **sonnet** | generator≠judge satisfied (opus ≠ sonnet); 2 rounds (full + scoped BLOCK-1 re-verify) |
+
+One role fell back off its pin — the executor — **FLAGGED above and reported to Mark**.
+
+**Metered ledger**: `metered=$0.00`. The codex probes were the ChatGPT **subscription** lane
+(`auth_mode=chatgpt`) and were ~1 reply-token each; the controller additionally invoked codex with
+`env -u OPENAI_API_KEY` so an ambient metered key could not silently bill (guard the CALL SITE, the
+`claude-sub` discipline applied to the OpenAI lane). Executor + evaluator ran on subscription
+Agent-tool pins. No quorum calls, no gemini/managed_agents calls. Far under the `$5` ceiling.
+
+**Ruled out** (do not re-chase)
+- **Substituting `codex:gpt-5.5` for the failed `gpt-5.6-sol` pin** — deliberately rejected. The
+  lane is healthy on the default model, so this was tempting and would have preserved Mark's
+  quota-relief intent. But swapping in an unratified model is a routing-policy change, and the
+  charter gates those behind an evidence rule, not controller convenience. The skill's documented
+  fallback is `$MODEL`. Recorded so a later iteration does not treat this as an oversight.
+- **Blaming quota for the codex probe failure** — REFUTED by a second probe: the default model
+  answered rc=0 on the same auth. The failure is a CLI/model-availability mismatch. (Note the shape
+  of the iter-18 scar repeating: a lane failure that superficially reads as "quota spent" but is
+  something else entirely. Diagnose before concluding.)
+- **Treating the plan JSON as authoritative over the design doc** — the plan contradicts itself on
+  where `TestDaemonDependencyAllowlist` lives. The quorum-reviewed design doc governs; the plan is a
+  derived artifact.
+- **Landing A3 in this iteration** — not attempted. A2 alone ran 2.1× its LOC estimate and needed a
+  fix round; the plan explicitly authorises incremental checkpoint landing, and iter-18 set the
+  precedent by landing A1 alone.
+- **An in-process test for `WriterAlreadyActive` at the daemon layer** — correctly refused by the
+  executor as the forbidden anti-pattern; the controller proved it with two real OS processes
+  instead. Belongs in M2.C's subprocess e2e (CF-2).
+
+**Non-blocking carry-forwards — ENUMERATED, because iteration 18 recorded "three carry-forwards"
+without naming them and they were LOST** (the fix: the evaluator directive now REQUIRES an explicit
+numbered list):
+1. **CF-1** — `TestBoundedWaitsAndBodyLimit` part (b), 413-on-oversized-body. Correctly absent:
+   `POST /v1/commit` is M2.B. → **M2.B** (`handlers_test.go`).
+2. **CF-2** — no in-process test that the daemon surfaces `WriterAlreadyActive` as
+   `StartupError{Stage: store-open}`; an in-process test would violate the ratified cross-process
+   requirement. Controller verified live with two real OS processes. → **M2.C** subprocess e2e.
+3. **CF-3** — the non-unix writer-lock arm (`writer_lock_other.go`) is unexercised by CI. Inherited
+   from A1, honestly documented; dev=darwin/arm64 and CI=ubuntu are both unix. → **no change
+   needed**, acknowledged design choice.
+4. **CF-4** — `releaseFromVersion` divergence hazard: a DB bootstrapped WITH `--ailang-bin` and later
+   served WITHOUT it yields a different epoch-1 revision → fatal startup. That IS the specified
+   never-silent behaviour, but it is an operator sharp edge. → **M2.C close-out** (or a doc decision
+   if a friendlier rule is wanted — it is a design question, not a code tweak).
+5. **CF-5** — `/v1/head` error bodies are `text/plain`, not the sketch's JSON `ApiError` envelope.
+   Status codes already follow `httpStatus`. → **M2.B** handlers.
+6. **CF-6** — `TestHealthAndHeadRoundTrip` skips on Windows (POSIX shell-script fake interpreter),
+   mirroring `host/archive`'s existing convention; CI is ubuntu-only so it never skips in the gate.
+   → **no change needed**.
+7. **CF-7** — `TestNewBootstrapsEpochRegistryIdempotently` never exercises the `--ailang-bin` path,
+   so a broken `releaseFromVersion` is caught only by its own unit test. → **A3 or M2.C**.
+8. **CF-8** — A3 items (`bench_test.go`, `scripts/bench_worldd.sh`, `bench/BASELINE.md`, the CI
+   bench-smoke step) deferred by design. → **A3** (the next checkpoint).
+9. **CF-9** — `isStdlibImportPath` lives in `_test.go` so it cannot be imported/fuzzed externally;
+   its unit vectors are the only documentation of the intended contract (the existing
+   `vendor/golang.org/x/net/...` vector already guards the main regression). → **informational, no
+   action required**.
+
+**Retro / Next (Gate 5)** — **no skill edit** (no gap reached the ≥2-instance bar; and the one
+skill-adjacent finding is a DRIVER bug, not a skill bug — the skill's recipe is correct). **Two
+process fixes to the charter's Repo Profile**, both first-instance-but-costly-to-rediscover:
+(1) the codex model-pin reality (`gpt-5.6-sol` unreachable on codex-cli 0.137.0; the driver's probe
+omits `--model` and therefore false-greens a pin), and (2) a standing requirement that the
+evaluator's non-blocking carry-forwards be ENUMERATED in the log entry — iteration 18's three were
+recorded only as a count and are unrecoverable. **Upstream proposal routed on two channels** (per
+the frozen-core guardrail): the driver probe fix belongs to the shared infrastructure, so it goes to
+the V1 loop as an issue + an `ailang messages` note — never a local edit of `tools/launchd/*`.
+No routing-policy change (the executor fallback is the documented rule operating correctly, not
+evidence for a new policy).
+**Next**: `w-worldd-m2` checkpoint **A3** — bench harness (`BenchmarkStoreCommit`,
+`BenchmarkHeadRead`, `BenchmarkHealth` with p50/p95 via `b.ReportMetric`), `bench/BASELINE.md` (the
+committed day-1 budget; REST-commit + log-range rows marked explicitly PENDING M2.B), a
+`scripts/bench_worldd.sh --smoke` that fails on a MISSING BENCHMARK NAME (not a zero line count —
+`go test -bench` exits 0 on no-match, the V27/B1 class), and the CI bench-smoke step. That completes
+M2.A; then M2.B, M2.C.
