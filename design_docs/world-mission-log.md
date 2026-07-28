@@ -4076,3 +4076,150 @@ never auto-re-execute), the two journal benchmarks into the hardcoded smoke mani
 `bench/BASELINE.md` re-measured in ONE invocation, and **AC6 now explicitly owned there**. Then
 item 4 `w-effect-broker-m3`, which the ratification made depend on this journal. No human gate is
 outstanding for SD.C.
+
+## Iteration 30 — 2026-07-28 — `w-store-durability` **SD.C LANDED → ITEM 4b IS COMPLETE** (PR #19 → squash `6811604`, dev CI green both jobs, judge PASS 88/100 zero-blocking) — and the iteration's three findings all came from **re-measuring something that had already passed**: the executor's own headline number was wrong by 2×, the AC whose mutation reds was proving nothing, and a stale JSON block sat one line under a heading saying CURRENT
+
+**Pick**: item **4b `w-store-durability`**, milestone **SD.C** — the queue head and the LAST
+milestone of the item. Reality-checked before routing: `crash_test.go` / `recover_test.go` absent
+from `host/store/`, no PR, no commit on a freshly-fetched `origin/dev` — not a resume. Doc
+RATIFIED + twice-quorumed, plan present ⇒ straight to sprint-executor, no designer, no planner,
+no re-quorum.
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` =
+`sunholo-voight-kampff`; local `dev` == `origin/dev` == `14635f8`; CI on dev
+**completed/success** @ `14635f89e`. Inbox: **zero** messages. Bookkeeping issue **#9** (22
+comments), watermark `2026-07-27T08:55:11Z`, **zero** new `@MarkEdmondson1234` comments. **No
+rotation due** — `#9` was created `2026-07-27T05:51Z`, i.e. *after* the Monday 07:00 **CEST**
+(= 05:00Z) boundary, and its title names this week; 22 ≪ 80. No `[nightly-eval]` issues in this
+repo.
+
+**Routing evidence**
+
+| Role | Pinned | Actually ran | Note |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | claude-opus-5 | quota bucket |
+| Designer | — | **did not run** | doc existed, ratified, quorum-cleared; rotation state untouched at `codex:gpt-5.6-sol` |
+| Planner | `$MISSION_PLANNER_MODEL`=opus | **did not run** | the SD.C milestone object already existed in `.ailang/state/sprints/w-store-durability.plan.json` from iter-28, amended at `9316286` |
+| Executor | `$MISSION_EXECUTOR_MODEL` = **`codex:gpt-5.6-sol`** | **codex `gpt-5.6-sol`**, rc=0 | probe run **WITH `--model`** (the iter-19 scar) → rc=0 and replied `ok`; `env -u OPENAI_API_KEY` (auth.json is `auth_mode=chatgpt`); directive asserted at **18594 B** before spawn; `< /dev/null`; per-iteration filename `codex_directive_world_iter30.txt` (the iter-21 `/tmp`-sharing rule); 30-min cap; sandbox blocked its commit as documented → controller committed, crediting it |
+| Evaluator | `$MISSION_EVALUATOR_MODEL` = **sonnet** | **sonnet**, one round: **PASS 88/100, ZERO blocking** | generator≠judge holds cross-provider (OpenAI executor vs Anthropic judge) |
+
+`metered=$0.00` — every lane on a subscription/quota bucket (codex on ChatGPT auth, controller and
+judge on Anthropic quota). No quorum ran. The `$5` ceiling was never approached.
+
+**Delivered** — PR #19, two commits, squashed to `6811604`:
+- `84fb487` **the milestone**: `host/store/crash_test.go` (+315), `host/store/recover_test.go`
+  (+162), `host/store/store.go` (+9), `host/daemon/bench_test.go` (+99),
+  `scripts/bench_worldd.sh` (+2), `bench/BASELINE.md` (rewritten), `README.md` (+11), doc →
+  `implemented/`, two consumer-doc rows superseded.
+- `c80c90c` the last acceptance box, ticked on the run ID and both job names read from
+  `gh run view --json jobs` rather than inferred from the poll.
+
+**Closes AC6, AC10, AC11, AC12, AC14** — and with them the item: every acceptance and
+design-freeze box in `w-store-durability.md` is checked.
+
+**Finding 1 — the item's central mutation is DISCRIMINATING, and that is a property of the test's
+DESIGN, not luck.**
+`MUT-SPLIT-TX` is the only mutation that proves AC6's atomicity rather than asserting it. Run
+first-party rather than banked from the executor's report, it reds **exactly**
+`TestCrashReceiptLawAtNamedStopPoints/mid-commit-before-outcome` (`world=true entry=true, want
+both false`) while `after-intent`, `after-external-effect` and `after-outcome` stay **GREEN**. A
+mutation that reds everything would have proven nothing. The reason it discriminates is the kill
+hook's ANCHOR: `commitBeforeOutcomeHook` sits at the **outcome-write site**, so when the mutation
+moves that write past `tx.Commit()` the hook travels with it and the kill lands in the newly-opened
+window. Anchored to a line number instead, it would fire before `tx.Commit()` in both variants and
+red nothing — a crash test that cannot fail. `store.go` reverted to sha256 `33058c85…`, matching
+the executor's independently-reported restore hash.
+
+**Finding 2 — AC11's own named mutation is SELF-REFERENTIAL: a gate no kernel change can fail.**
+The doc's Non-Vacuity table names `MUT-AUTO-RETRY` (re-dispatch indeterminate intents on recovery)
+as AC11's RED mutation, and it does red two tests. But the probe consumer lives in
+`recover_test.go` — so the mutation edits the test's **own helper** and the same file's assertions
+fail. No change to `host/store` production code can fail it. The discriminating experiment was to
+mutate the KERNEL instead: `MUT-RECEIPT-LIE` (report `not-started` for a durable intent with no
+outcome) reds `TestRecoverIndeterminateSurfacesNeverLieLaw` **and**
+`TestRecoverModelInferNeverRedispatchesEvenWhenResolutionOffered`, plus 3 of 4 crash subtests and
+SD.B's `TestReceiptStateDriftAllBooleanCombinations/indeterminate`. So the *never-lie* half has
+real teeth — via a mutation the table never named — while
+`TestRecoverRetryAllowedMirrorsAllSketchRows` stays GREEN under every kernel mutation, being a
+three-line test-local mirror of the sketch's LAW 3 checked against three constants. **The
+test-local design was the RIGHT call** (the real consumer is M3's broker; putting consumer policy
+in `host/store` before it exists would be worse) — the defect was calling the result a proof.
+AC11's claim is downgraded in-doc to what SD.C can actually prove, the Non-Vacuity row is
+corrected, and **CF-H-1** carries the real closure to item 4, where `MUT-AUTO-RETRY` becomes a
+production mutation. `journal.go` reverted to sha256 `2edf83a3…`.
+
+**Finding 3 — a blown performance target, and the executor's figure for it was wrong by ~2×.**
+Decision 7 set commit-with-receipt at within **+20%** of a bare commit. The executor measured
+**2.8×** at `-benchtime 50x` inside its sandbox and correctly refused to write it into
+`BASELINE.md`. Re-measured on the dev rig at 200x: **+50.9%** (0.4537 → 0.6846 ms p95),
+reproduced at **1.51× / 1.49× / 1.46×** across three runs. So the target IS blown — recorded, not
+relaxed, per the decision's own wording — but by half, not by nearly two. At sub-millisecond
+magnitudes 50 samples cannot resolve the ratio, which is precisely the lesson the REST-commit row
+has carried in this same file since M2.C. Both files now carry the corrected number and the reason
+the old one was wrong. Journal append passes at 0.4599 ms p95 against 10 ms.
+
+**A judge nit re-checked instead of filed — second iteration running that this paid.**
+The evaluator reported, as a non-blocking doc nit, that Appendix A's embedded `ailang test` JSON
+read `32/32`. Reproduced first-party: the heading three lines above says **CURRENT (iter-29, after
+LAW 6's widening)** and the prose beside it says 30 named / 37 passed, so the appendix paired a
+CURRENT `verify` transcript with a SUPERSEDED `test` transcript under a heading claiming both were
+current — and **the stale half was the machine-readable block a future author would copy**. That
+is the fourth instance in this one item of *a correction that stopped one artifact short*.
+Re-measured on the pinned binary and replaced (`37/37`, `len(tests[])` 30), with the defect
+recorded in place rather than silently fixed.
+
+**Gate discipline held.** The codex sandbox again denied loopback binds, so `verify_go.sh` and
+`bench_worldd.sh --smoke` were **UNINFORMATIVE UNDER SANDBOX** — the executor labelled them as
+such rather than reporting a verdict, and the controller re-ran every gate outside it:
+`verify_go.sh` PASS (all 8 packages `ok`), `verify_ail.sh` PASS (4/4 identities, 10 modules, 14/14
+named `world/` tests), bench smoke PASS at **8** manifest names, sketch 7/7 `verified` +
+`len(tests[])` 30 / `passed_tests` 37, AC12 frozen-surface diff rc=0, gofmt/vet clean. **The
+sandbox also made one mutation untestable, and moving it outside closed the gap**:
+`MUT-BENCH-DROP` could only be `UNINFORMATIVE` in-sandbox (the smoke script dies on the bind
+before it reaches the name check); outside, it is rc=1 with
+`✗ missing expected benchmark(s): …` for **each** of the two new names. A pre-sprint bench
+baseline was taken at `14635f8` before any work started.
+
+**Ruled out / refuted this iteration**
+- *"Commit-with-receipt costs 2.8× a bare commit"* (executor, 50x in-sandbox) — **REFUTED by
+  re-measurement**: 1.46–1.51× over three 200x runs. Do not re-quote 2.8×.
+- *"`MUT-AUTO-RETRY` proves AC11"* — **REFUTED**: it mutates test-local code; no kernel change can
+  fail it. The kernel teeth are `MUT-RECEIPT-LIE`'s.
+- *"The journal's bind lookup might be an unindexed scan, explaining the tax"* — **REFUTED**
+  before it was written down: `schema.sql`'s `UNIQUE (invocation_id, kind)` is the index. The tax
+  is two extra in-transaction inserts plus a compare, not a missing index — and not an extra
+  fsync.
+- *"The two benchmarks may not be fixture-matched, confounding the ratio"* — **REFUTED** by
+  reading both: each times ONLY `s.Commit(...)`, both on temp-file stores, and
+  `BenchmarkCommitWithReceipt` stages its intents *before* `ResetTimer`. Independently re-checked
+  by the judge.
+- Re-running the codex sandbox's failing daemon tests as if they were real failures — the known
+  `bind: operation not permitted` artefact; the out-of-sandbox re-run is the verdict.
+
+**Open carry-forwards (enumerated, per the iter-19 rule that a bare COUNT is unrecoverable)**:
+**CF-F-1** the daemon's `scanPageSize`/`scanRowBudget`/`scanTimeBudget` are still not pinned by a
+constant-equality test the way `TestBoundedWaitsAndBodyLimit` pins the D7 constants — owner: item
+4 or the next daemon-touching sprint;
+**CF-F-2** `MUT-STORE-TOUCHED` was never formally run and recorded, though the judge confirmed the
+`snapshotStore` before/after in `validate_test.go` IS the load-bearing gate — owner: item 4;
+**CF-F-4** `integrityFixture` is killed at ~100 s under `-race` (PROVEN pre-existing; `-race` is
+not one of the binding gates) — owner: any sprint touching `host/daemon/daemon_test.go`;
+**CF-G-1** `decodeJournalIntent`'s `ObservedHead == ""` genesis exception (`journal.go:151`) still
+carries no comment linking it to P2 — owner: item 4;
+**CF-G-3** `bindCommitIntentTx` still returns `InvocationMismatchError` for two semantically
+distinct conditions ("no durable intent" vs "field mismatch") with no structured discriminant —
+owner: item 4;
+**CF-H-1** (new) AC11's consumer half: `MUT-AUTO-RETRY` becomes a *production* mutation only once
+M3's broker owns the dispatch path, and must be re-run there — owner: item 4.
+**CF-G-2 CLOSED** — SD.C's crash tests use file-backed `filepath.Join(t.TempDir(), "world.db")`
+stores, which is exactly the path SD.B's in-memory tests did not exercise (judge-confirmed).
+**CF-I-1 CLOSED IN-ITERATION** rather than filed — the stale Appendix A JSON, above.
+
+**Next**: item **4 `w-effect-broker-m3`** — **UNPARKED and now the queue head**. Its scope question
+was answered by Mark's attended ratification (the broker DEPENDS on this journal, so the crash
+window closes structurally), and as of this iteration that dependency is LANDED. It routes
+**straight to sprint-planner**: the doc is written and twice-quorumed, no re-design and no
+re-quorum. The planner must fold in three things 4b produced that the doc does not contain — the
+superseded Decision-3 ordering limitation and Deferred-Scope journal row (marked at `6811604`),
+**CF-H-1**, and the measured +50.9% receipt tax. The `gemini-3-1-pro` round-2 objection on handler
+timeout/output-cap mutations stays pre-approved to apply verbatim. No human gate is outstanding.

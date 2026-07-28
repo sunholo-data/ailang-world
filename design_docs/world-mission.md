@@ -195,11 +195,11 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
 Newest **3** STATUS stamps live here; older ones move to `world-mission-status-archive.md`.
 At Gate 4, after adding your stamp, move the now-4th stamp to the TOP of the archive file.
 
+## STATUS 2026-07-28 (iteration 30) — **`w-store-durability` SD.C LANDED → ITEM 4b IS COMPLETE** (PR #19 → squash `6811604`, dev CI green both jobs; judge sonnet **PASS 88/100, ZERO blocking**; executor `codex:gpt-5.6-sol`). The last milestone of the kernel-durability item. **AC6 is now PROVEN rather than asserted**: `host/store/crash_test.go` (+315) re-execs a helper (the `writer_lock_test.go` pattern) to one of four NAMED stop points — `after-intent`, `after-external-effect`, `mid-commit-before-outcome`, `after-outcome` — SIGKILLs it, reopens the store and asserts the receipt law, `PendingIntents`, the probe effect and world/entry presence per stop point; `recover_test.go` (+162) is the probe consumer (never-lie, `retryAllowed`, deterministic commit-path reconciler, `Model.Infer`-shaped counting probe at ZERO dispatches); `store.go` (+9) adds `commitBeforeOutcomeHook`, a production no-op **anchored to the outcome-write SITE**; `bench_test.go` (+99) + `bench_worldd.sh` (+2) price the journal; `bench/BASELINE.md` re-measured; doc → `implemented/` with **every** box checked. Closes **AC6, AC10, AC11, AC12, AC14**. **THREE findings, all from re-measuring something that had already passed.** (1) **The item's central mutation is DISCRIMINATING, and I reproduced it first-party rather than banking the executor's report**: `MUT-SPLIT-TX` reds *exactly* `mid-commit-before-outcome` (`world=true entry=true, want both false`) while the other three stop points stay GREEN — a blanket break would have proven nothing. The reason it works is design, not luck: the kill hook is anchored to the **outcome-write site**, so it travels with the mutation; anchored to a line number it would fire before `tx.Commit()` in both variants and red nothing. `store.go` reverted byte-identical (`33058c85…`). (2) **AC11's own named mutation is SELF-REFERENTIAL — a gate that no kernel change can fail, the mission's signature shape, found by asking "what would have to break for this to red?"** `MUT-AUTO-RETRY` edits `recoverIndeterminate` in `recover_test.go`, i.e. the test's own helper. The discriminating experiment: a **kernel-side** `MUT-RECEIPT-LIE` reds both never-retry tests (plus 3 crash subtests and SD.B's drift test) — so the never-lie half DOES have teeth, via a mutation the doc never named — while `TestRecoverRetryAllowedMirrorsAllSketchRows` stays GREEN under every kernel mutation, being a sketch-drift check over a test-local mirror with no production consumer. The AC's claim is downgraded in-doc to what SD.C can actually prove; the consumer half is **CF-H-1** for M3, where `MUT-AUTO-RETRY` becomes a production mutation. Test-local was the RIGHT architectural call (the real consumer is M3's broker); the defect was calling the result a proof. (3) **Decision 7's receipt target is BLOWN — recorded, not relaxed — and the executor's figure for it was wrong by ~2×.** Commit-with-receipt p95 is **+50.9%** over a bare commit (0.4537 → 0.6846 ms) against a ≤+20% target, reproduced at 1.51×/1.49×/1.46× over three 200x runs. The executor reported **2.8×** from a `-benchtime 50x` run inside its sandbox; at sub-millisecond magnitudes 50 samples cannot resolve the ratio. Both numbers corrected in `bench/BASELINE.md` and the doc. **A judge nit re-checked instead of filed, for the second iteration running**: Appendix A's embedded `ailang test` JSON still read `32/32` — the superseded round-1 measurement — under a heading saying **CURRENT**, so the appendix paired a current `verify` transcript with a stale `test` one and **the stale half was the machine-readable block a future author would copy**. Fourth instance in this item of *a correction that stopped one artifact short*. Re-measured on the pinned binary and replaced (`37/37`, `len(tests[])` 30). Also: every gate re-run OUTSIDE the codex sandbox (loopback-bind denial makes any `host/daemon` verdict uninformative in BOTH directions) — `verify_go.sh` PASS, `verify_ail.sh` PASS (4/4 identities, 10 modules, 14/14 named `world/` tests), bench smoke PASS at 8 manifest names, sketch 7/7 verified, AC12 diff rc=0; and `MUT-BENCH-DROP` — which the executor could only report `UNINFORMATIVE UNDER SANDBOX` — was made **informative** here, rc=1 per name. A pre-sprint baseline was taken at `14635f8` before any work. **Queue: 4b → [LANDED, ITEM COMPLETE]; item 4 `w-effect-broker-m3` → [NEXT], unparked — its scope question was answered by the ratification and its stated dependency (this journal) has now landed.** Carry-forwards CF-F-1/CF-F-2/CF-F-4, CF-G-1/CF-G-3 open (CF-G-2 CLOSED — the crash tests use file-backed `t.TempDir()` stores); new CF-H-1. 4 stamps → newest 3 kept, the TRIPLE-RATIFICATION stamp archived this Gate 4.
+
 ## STATUS 2026-07-28 (iteration 29) — **`w-store-durability` SD.B LANDED: THE DURABLE JOURNAL + IN-TX COMMIT RECEIPTS** (PR #18 → squash `d5774eb`, dev CI green both jobs; judge sonnet **PASS 94/100, zero blocking**; executor `codex:gpt-5.6-sol`). ARM J1 + Decision 4 shipped: additive `journal` table (every existing `CREATE TABLE` byte-unchanged), `host/store/journal.go` (+470 — types, deterministic codecs with golden bytes, `AppendIntent`/`AppendOutcome`/`GetReceipt`/`PendingIntents`, in-tx gapless `seq`), `store.go` (+83 — `Commit.InvocationID`; `bindCommitIntentTx` compares ALL EIGHT commit-defining fields **inside the existing transaction, before any mutation**; the receipt is written in that SAME transaction), `journal_test.go` (+390, 7 tests incl. the 10-row drift test). `InvocationID == ""` is byte-compatible with every landed caller. Closes **AC5, AC7, AC8, AC9, AC13, AC15, AC10-PendingIntents-half, AC12**. **TWO findings, both a prescribed fix that was itself vacuous.** (1) **Iter-28's prescription for the sketch precondition was WRONG, and measuring it before adopting it is what caught that (THIRD instance of the one root cause).** It specified ONE new `tests[]` row and pinned `len(tests[])` 25→26 / `passed_tests` 32→33 — numbers that reached the doc, this charter and the plan JSON. Measured on the pinned binary: at **26 rows, dropping `TransitionRef` alone from the Go compare reds NOTHING** (`failed=0`), because the round-2 REQUIRED `EntryHash`-preserving row mutates `PrevEntryHash`/`TransitionFn`/`Interpreter` *together* and never touches `TransitionRef` — while `MUT-INTENT-NARROW-BIND` itself demands the four added fields be load-bearing **"individually and not decorative"**. Landed form is **10 rows** (all-match + one single-field row per commit-defining field + the REQUIRED combined row); **AC9 now pins 30 / 37** (premise row **V28**). It was load-bearing end-to-end: `MUT-DROP-TRANSITIONREF` reds exactly `row-8-transition-ref`, **reproduced first-party** by the controller, reverted byte-identical. The planner's "16 params is 2× the widest arity ever proven" risk is **REFUTED** — 7/7 verified, 0 counterexamples, first try; no upstream issue owed. (2) **AC6 was owned by NO milestone** — found by re-checking a NON-BLOCKING judge nit instead of filing it. `AC5–AC8` gave SD.B ownership of AC6, whose only proof is crash injection, whose file `crash_test.go` is in **SD.C's** list, while SD.C's list read `AC10–AC11, AC14`; SD.C's close-out would never have forced it, and `MUT-SPLIT-TX` belonged to a test nobody owned — **an acceptance check no gate can fail**. Reassigned to SD.C at `9316286` in all three places. Also: the codex sandbox again denied loopback binds (6 tests + 4 benchmarks), so `verify_go.sh` and `bench_worldd.sh --smoke` were **re-run outside it** — both PASS; and a **baseline** bench was taken at `857a912` BEFORE the sprint so the after-reading is a comparison (`BenchmarkStoreCommit` 0.400 → 0.405 ms, no tax on the empty-ID path). **Queue: 4b → SD.C remains (AC6 now explicitly owned there), then 4.** Carry-forwards CF-F-1/CF-F-2/CF-F-4 + new CF-G-1/CF-G-2/CF-G-3 open. 4 stamps → newest 3 kept, iter-27 archived this Gate 4.
 
 ## STATUS 2026-07-28 (iteration 28) — **`w-store-durability` SD.A LANDED: CF-B-2 IS CLOSED AT THE KERNEL WRITE PATH** (PR #17 → squash `86d1276`, dev CI green; judge sonnet across 3 rounds FAIL 57 → PASS 91 → MERGE 97; executor `codex:gpt-5.6-sol`). ARM V1 shipped: `store.Commit` validates **EIGHT** ref fields (5 entry + 3 world) plus each Object's `Hash`/`InterfaceHash`, before `tx.Begin()`, with structured `InvalidRefError`; the same helper guards `PutObject`/`PutWorld`/`SetRegistryHead`/`SelectHead`/`PutVerifyResult`. `ObservedHead` stays the one zero-legal COMPARED field. New `host/store/scan.go`: bounded read-only `ScanUnreadableLog`/`ScanUnreadableWorlds`, **keyset cursors only** (never `OFFSET`, never rowid), `MaxIntegrityScanPage` + `InvalidLimitError` enforced before any query; daemon pages both tables at startup and reports `integrity_hole` / `integrity_scan_incomplete` with a continuation cursor. Closes **AC1–AC4, AC12, AC10-scan-half**; `schema.sql` byte-unchanged. **THREE findings, all of them our own artifacts disagreeing with each other**: (1) quorum round 2's "seven→eight" correction reached premise V23 and STOPPED — Decision 1's prose and AC2 still said seven, and V23 still carried the *superseded* "degenerate-but-readable" claim iter-27 retracted; implementing seven drops `NextWorld.Ref`, the CLASS 3 **wedge**, leaving the worst failure mode open while every gate goes green (fixed `a25d87f`; now EXECUTABLE — `MUT-SEVEN-NOT-EIGHT` reds 2 tests). (2) **SD.B BLOCKING PRECONDITION**: `sketches/storejournal.ail:132` LAW 6 `intentBindsCommit` still declares the round-1 NARROW 4-field binding (8 params) while the ratified Freeze/Decision 4/AC15 require the 8-field form (16 params) — the Freeze pins the Go mirror to the sketch by drift test, so SD.B as written would certify the very binding the doc calls the defect. Applies the ratified Freeze ⇒ no human needed, but MUST precede SD.B's drift test (AC9 counts 25→26 / 32→33). (3) **I reported 3 gates green while 4 were binding** — the judge FAILED round 1 at 57 on a RED `bench_worldd.sh --smoke`, caused by `BenchmarkStoreCommit` seeding a zero `PrevEntryHash`, i.e. **a benchmark relying on the defect**. Also: the codex sandbox denies loopback binds, and that panic MASKED a real `io.Pipe` startup deadlock — my round-1 fix then only covered the healthy path and left it wedgeable for stores WITH holes/truncation (CF-F-3, closed structurally at `d506275`). **Queue: 4b → SD.B/SD.C remain (sketch arity first), then 4.** Carry-forwards CF-F-1/CF-F-2/CF-F-4 open. 6 stamps → newest 3 kept, iters 24/25/26 archived this Gate 4.
-
-## STATUS 2026-07-28 (TRIPLE RATIFICATION, attended ~09:00) — **Mark answered the one-reply gate: items 4, 4b, 6b ALL RATIFIED as recommended.** (1) **4b `w-store-durability` packet RATIFIED IN FULL**: ARM V1 (validate every ref at the kernel WRITE path — iter-27's fixture evidence decisive: V2 cannot reach CLASS 3, one write-side check reds all three classes) · ARM J1 (durable intent/outcome journal as additive SQLite table + content-addressed payloads) · `Commit` stable invocation ID with in-tx receipt binding · three-state receipt law (not-started/indeterminate/resolved, never-lie, Z3-proven) · recovery NEVER auto-re-executes indeterminate intents. The M1 kernel reopen this entails is RATIFIED (human gate exercised). (2) **4 `w-effect-broker-m3` scope RESOLVED: broker DEPENDS on 4b's journal** — the crash window closes structurally, not by documentation; sequencing 4b → 4. (3) **6b `w-human-surface` v0.3 §7 FORMALLY RATIFIED**: principles + anti-patterns binding; trust grades stay PROVEN/TESTED/ATTESTED/CLAIMED; packet schema freezes when the inbox build STARTS; renderer FRESH (Hub = pattern donor); dialect deferred to M6 (common-core emitter); §7.5 resolved consistent with the ratified anti-patterns — CLAIMED-grade `AiReview` content renders ONLY with its evidence ref attached (anything else is confidence theater). **Queue: 4b → [NEXT] (sprint the fix half), then 4; 6b → [LANDED as design, binding]; item 7 (approval inbox) unblocks on 4.** Recorded in-charter per the ratification-channel pattern; 5 stamps present — next Gate-4 hand-rotates two.
 
 
 ## CURRENT GOAL
@@ -456,6 +456,31 @@ What this mission touches or overlaps, and the drawn boundaries:
   because the whole failure mode is prose that outlives its measurement. Prose decays; a committed
   test does not, which is why the ghost-close rule exists and why a measurement worth keeping
   belongs in a fixture rather than a paragraph.
+- **A named RED mutation is evidence only if it mutates the code the gate is supposed to be
+  guarding. Mutate the PRODUCTION side — or write down what the gate cannot fail** (added
+  iter-30; 2nd instance of *a gate that cannot fail*, after iter-29's AC6 owned by no milestone).
+  The non-vacuity discipline says "name a mutation that turns this gate RED", and a mutation that
+  reds *feels* like proof. It is not, if the thing you mutated is the test. SD.C's AC11 named
+  `MUT-AUTO-RETRY` — re-dispatch indeterminate intents on recovery — and it duly reds two tests;
+  but the probe consumer is test-local, so the mutation edits the test's **own helper** and the
+  same file's assertions fail. **No change to `host/store` could ever fail that gate.** The
+  discriminating experiment is one line of thought — *what would have to break in PRODUCTION for
+  this to red?* — and one command: mutate the kernel instead. `MUT-RECEIPT-LIE` reds both
+  never-retry tests, so the never-lie half had real teeth via a mutation the table never named,
+  while a third AC11 test stayed green under **every** kernel mutation and was a sketch-drift
+  check all along. The rules: (a) for each named mutation, state which FILE it edits and whether
+  that file is production or test — a test-side mutation is a **drift check**, never a proof of a
+  kernel property; (b) when a proof must be staged over a not-yet-existing consumer (test-local by
+  necessity, as here), that is legitimate — but the acceptance check says so explicitly and carries
+  a named carry-forward to the milestone where the mutation becomes production; (c) prefer the
+  mutation that is DISCRIMINATING: `MUT-SPLIT-TX` reds exactly one of four crash stop points and
+  leaves three green, which is why it proves atomicity — a mutation that reds everything localises
+  nothing. **Corollary, same root** (iter-30's third finding): *a ratio measured at low sample
+  count is a claim, not a number.* The executor reported the receipt tax as 2.8× from a 50-sample
+  run; three 200-sample runs put it at 1.46–1.51×. Before a performance figure enters a doc, a
+  charter stamp or a downstream item's premises, re-measure it at the sample size the file's own
+  invocation line specifies — and if the two disagree, record **why** the first was wrong, not
+  just the corrected value.
 - **Kill switch stays until ratification**; only Mark (or the v1 agent on his instruction) arms
   the loop.
 
@@ -587,17 +612,41 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
    queue item, NOT M2. Judge's M2.C non-blocking findings: CF-C-1 (`--limit 0` indistinguishable
    from unset), CF-C-2 (registry escaping untested for encoded characters), CF-C-3 (CF-B-2 needs
    a tracking item + repro fixture), CF-C-4 (405 asserted on 2 of 7 GET routes).
-4. [**PARKED `needs-human-review` 2026-07-27 (iter-23)** — DOC WRITTEN + TWO QUORUM ROUNDS RUN;
-   blocked on ONE scope question only. Doc: `design_docs/planned/w-effect-broker-m3.md` (Fable
-   designer, rotation; 1,036 lines; Appendix-A sketch **7/7 Z3-verified / 27 tests / 0 failures**,
-   re-run first-party by the controller and byte-identical to the doc's appendix).
-   **Unparks straight to sprint-planner** once the question below is answered — no re-design
-   needed] **w-effect-broker-m3** · clause-3 · effect broker with FS / Git / Model (`std/ai`) /
+4. [**[NEXT] — UNPARKED 2026-07-28 (iter-30). The scope question is ANSWERED and the dependency
+   has LANDED.** Mark's attended triple ratification resolved it as **(a)-by-substrate**: the
+   broker DEPENDS on 4b's journal, so the crash window closes structurally rather than by
+   documentation, sequencing 4b → 4. **4b is now COMPLETE** (SD.A `86d1276` · SD.B `d5774eb` ·
+   SD.C `6811604`), so nothing gates this item. **Routes straight to sprint-planner** — the doc is
+   written and twice-quorumed, no re-design and no re-quorum needed. Three things the planner MUST
+   fold in before writing milestones, all produced by 4b and none of them in the doc as authored:
+   (1) the doc's Decision 3 "honest ordering limitation" paragraph and its Deferred-Scope
+   write-ahead-journal row are **SUPERSEDED** (marked so at `6811604`) — M3 now consumes
+   `store.AppendIntent` / `Commit.InvocationID` / `GetReceipt` and the three-state receipt law
+   instead of deferring them; (2) **CF-H-1** — AC11's never-auto-re-execute proof is currently
+   demonstrated over a *test-local* probe consumer, so its named mutation `MUT-AUTO-RETRY` is
+   self-referential; M3 owns the real dispatch path and must re-run it as a **production**
+   mutation, which is the first time that acceptance check can actually fail; (3) the measured
+   **+50.9% receipt tax** (`bench/BASELINE.md`) — M3 is the first component to pay it on a real
+   dispatch, and owns the question of whether Decision 7's +20% bound was ever right for two
+   in-transaction inserts. The round-2 `gemini-3-1-pro` objection (no non-vacuity mutations for
+   handler subprocess timeouts / output caps) stays **PRE-APPROVED to apply verbatim**, no
+   re-quorum. ~~PARKED `needs-human-review` 2026-07-27 (iter-23)~~. Doc:
+   `design_docs/planned/w-effect-broker-m3.md` (Fable designer, rotation; 1,036 lines;
+   Appendix-A sketch **7/7 Z3-verified / 27 tests / 0 failures**, re-run first-party by the
+   controller and byte-identical to the doc's appendix)] **w-effect-broker-m3** · clause-3 · effect broker with FS / Git / Model (`std/ai`) /
    Human.Approve handlers; effect-result recording; capability + budget checks; first physical
    isolation floor · ~2–3d. Builds on the landed `w-worldd-m2` daemon, whose single-writer
    authority is exactly the property that makes broker-mediated effects meaningful (an embedded
    writer bypassing capability/budget checks is the ambient-authority pattern clause 3 exists to
    end — Mark's ratification rationale, iter-18).
+
+   > **ANSWERED — the block below is kept as the record of what was asked, not as an open gate.**
+   > Mark ratified attended (charter STATUS, `bc467f1`): **neither (a) nor (b) as framed** — the
+   > journal became its own item (4b) and the broker DEPENDS on it, so M3 gets the truthful broad
+   > claim *without* the scope increase (a) would have cost, and does not have to weaken its claim
+   > as (b) proposed. The controller's recorded recommendation was **(b)**; the human's answer was
+   > better than the recommendation, and 4b's SD.A→SD.C evidence is why. As of iter-30 that
+   > dependency is LANDED, so this question gates nothing.
 
    **THE PARKED QUESTION (`gpt5-6-sol`, quorum round 2 — answerable in one comment).** The broker
    dispatches a handler and *then* writes the effect record. If the process dies in between, the
@@ -621,16 +670,36 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
    The OTHER round-2 objection (`gemini-3-1-pro`: no non-vacuity mutations for handler subprocess
    timeouts / output caps) **is** carve-out-eligible — concrete verbatim fix, completeness only —
    and is **PRE-APPROVED to apply on unpark**, no re-quorum needed for it.
-4b. [**IN SPRINT — RATIFIED; SD.A LANDED (iter-28, `86d1276`) + SD.B LANDED (iter-29, PR #18 →
-   squash `d5774eb`, dev CI green both jobs, judge PASS 94/100 zero-blocking); ONLY SD.C REMAINS.**
-   SD.B shipped ARM J1 + Decision 4 — the additive `journal` table, `journal.go` (+470),
-   `Commit.InvocationID` with the eight-field in-tx binding and the receipt written in the SAME
-   transaction, and the 10-row drift test mirroring the frozen sketch — closing **AC5, AC7, AC8,
-   AC9, AC13, AC15, AC10-`PendingIntents`-half, AC12**. **SD.C is the last milestone**: crash
-   injection at named kill points (real subprocess kills), the probe-consumer recovery proof
-   (never auto-re-execute), the two journal benchmarks into the hardcoded smoke manifest +
-   `bench/BASELINE.md` re-measured in ONE invocation, **and AC6 — which iter-29 found was owned by
-   NO milestone and reassigned here** (`9316286`). No human gate is outstanding for SD.C.
+4b. [**LANDED 2026-07-28 (iter-30) — ITEM COMPLETE**, all three milestones dev-CI-green (both
+   jobs), doc → `design_docs/implemented/w-store-durability.md` with EVERY acceptance +
+   design-freeze box checked. SD.A `86d1276` (iter-28) · SD.B `d5774eb` (iter-29) · **SD.C
+   `6811604` (iter-30, PR #19, judge sonnet PASS 88/100, ZERO blocking)**.
+   **SD.C closed the item**: `host/store/crash_test.go` (+315) proves **AC6** across REAL PROCESS
+   DEATH — a re-exec'd helper advances to one of four NAMED stop points (`after-intent`,
+   `after-external-effect`, `mid-commit-before-outcome`, `after-outcome`), is SIGKILLed, and the
+   parent reopens the store and asserts the receipt law, `PendingIntents`, the probe effect and
+   world/entry presence per stop point; `mid-commit` is arranged by helper logic through
+   `commitBeforeOutcomeHook` (a production no-op **anchored to the outcome-write SITE**, not to a
+   line), never by a sleep; every wait polls the CAPTURED `os.Process` under a deadline (AC10).
+   `recover_test.go` (+162) is the probe consumer: never-lie surfacing, the `retryAllowed` gate,
+   the deterministic commit-path reconciler, and a `Model.Infer`-shaped counting probe at ZERO
+   dispatches (AC11). `bench_test.go` (+99) + `bench_worldd.sh` (+2 manifest names) +
+   `bench/BASELINE.md` (all 8 rows in ONE 200x invocation) price the journal (AC14).
+   **`MUT-SPLIT-TX` reds EXACTLY `mid-commit-before-outcome` while the other three stop points
+   stay GREEN** — reproduced first-party by the controller, `store.go` reverted byte-identical.
+   **Two things the close-out found by re-measuring rather than accepting.** (i) **AC11's named
+   `MUT-AUTO-RETRY` is SELF-REFERENTIAL** — the probe consumer is test-local (correctly: the real
+   consumer is M3's broker), so the mutation edits the test's own helper and no kernel change can
+   fail it. A kernel-side `MUT-RECEIPT-LIE` DOES red both never-retry tests, so the never-lie half
+   has teeth via a mutation the doc never named; `TestRecoverRetryAllowedMirrorsAllSketchRows` is
+   provably kernel-independent. AC11's claim is downgraded in-doc to what SD.C can prove; the
+   consumer half is **CF-H-1**, owned by item 4. (ii) **Decision 7's receipt target is BLOWN and
+   recorded, not relaxed**: commit-with-receipt p95 **+50.9%** over a bare commit (0.4537 →
+   0.6846 ms) against ≤ +20%, reproduced 1.51×/1.49×/1.46× over three 200x runs — and the
+   executor's in-sandbox 50x reading of **2.8×** was a low-sample artifact, corrected in both
+   files. Item 4 is the first component to pay this on a real dispatch path and owns the question
+   of whether +20% was ever the right bound for two in-transaction inserts.
+   ~~IN SPRINT — SD.C remains~~
    All three ratification arms answered by Mark, attended (`bc467f1`): ARM V1 · ARM J1 ·
    `Commit.InvocationID` + in-tx receipt binding · three-state receipt law · recovery never
    auto-re-executes. The M1 kernel reopen is RATIFIED. Doc:

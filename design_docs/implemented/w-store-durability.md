@@ -1111,8 +1111,21 @@ the sweep checks the file, and this appendix records the verification transcript
 ```
 
 ```json
-{"failed_tests": 0, "passed_tests": 32, "skipped_tests": 0, "success": true, "total_tests": 32}
+{"failed_tests": 0, "passed_tests": 37, "skipped_tests": 0, "success": true, "total_tests": 37}
 ```
+`len(tests[]) = 30` in the same response — the gated number (correction D-B), which the summary
+object above does not carry.
+
+> **This block was STALE until the SD.C close-out, and that is worth recording rather than
+> quietly fixing (4th instance in this one item of "a correction isn't applied until it reaches
+> EVERY artifact that restates it").** It read `32 / 32` — the superseded round-1 measurement —
+> while the heading three lines above says **CURRENT (iter-29, after LAW 6's widening)** and the
+> prose beside it says 30 named / 37 passed. So the appendix paired a CURRENT `verify` transcript
+> with a SUPERSEDED `test` transcript under a heading claiming both were current, and the stale
+> half was the machine-readable one a future author would copy. The prose carried the correction;
+> the JSON did not. Found by the SD.C judge (sonnet) as a doc nit, **reproduced first-party and
+> re-measured on the pinned `v0.30.0` binary before being replaced** — the numbers above are that
+> measurement, not a hand-edit of the old ones.
 
 The seven laws: `writableRefText` (the write-validity floor — no ref column may persist the zero
 rendering), `isIndeterminate` (durable intent + no durable outcome), `mayReportNotStarted` (the
