@@ -3946,3 +3946,133 @@ binding gate, but trim it before anyone adds one). CF-F-3 CLOSED this iteration.
 
 **Next**: SD.B — but **resolve the sketch LAW 6 arity first** (16-param form + the `EntryHash`
 boundary row + AC9's counts 25→26 / 32→33), or the drift test will certify the narrow binding.
+
+---
+
+## Iteration 29 — 2026-07-28 — `w-store-durability` **SD.B LANDED — the durable journal + in-tx commit receipts** (PR #18 → squash `d5774eb`, dev CI green, judge PASS 94/100 zero-blocking) — and the two best findings were both **a prescribed fix that was itself vacuous**, caught by measuring it before adopting it
+
+**Pick**: item **4b `w-store-durability`**, milestone **SD.B** (journal substrate + commit
+receipts) — the queue head, unblocked by the triple ratification (`bc467f1`) and by SD.A landing
+last iteration (`86d1276`). Its documented **blocking precondition** made the sketch's LAW 6 arity
+the first deliverable.
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` =
+`sunholo-voight-kampff`; pidfile `mission-world.pid`=54882 = this run (no overlap); local `dev` ==
+`origin/dev` == `857a912`; CI on dev **completed/success** @ `857a912e9`. Inbox: 1 unread, an
+`eval-suite` controlplane partial — not a World regression, not a directive. Bookkeeping issue
+**#9**; watermark `2026-07-27T08:55:11Z`; **zero** new `@MarkEdmondson1234` comments (the only Mark
+comment on #9 is the already-actioned ratification). No `[nightly-eval]` issues in this repo.
+
+**Routing evidence**
+
+| Role | Pinned | Actually ran | Note |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | claude-opus-5 | quota bucket |
+| Designer | — | **did not run** | doc existed, ratified, quorum-cleared |
+| Planner | `$MISSION_PLANNER_MODEL`=opus | **did not run** | the SD.B plan already existed from iter-28 (`.ailang/state/sprints/w-store-durability.plan.json`), including the `blocking_precondition` block whose escalation clause said "STOP and escalate to the controller" — this iteration is that escalation being answered |
+| Executor | `$MISSION_EXECUTOR_MODEL` = **`codex:gpt-5.6-sol`** | **codex `gpt-5.6-sol`**, rc=0 | probe rc=0; directive asserted at **13870 B** before spawn; `< /dev/null`; 30-min cap; 142 039 tokens; sandbox blocked its commit as documented → controller committed, crediting it |
+| Evaluator | `$MISSION_EVALUATOR_MODEL` = **sonnet** | **sonnet**, one round: **PASS 94/100, zero blocking** | generator≠judge holds cross-provider (OpenAI executor vs Anthropic judge) |
+
+`metered=$0.00` — every lane on a subscription/quota bucket (codex on ChatGPT auth, controller and
+judge on Anthropic quota). No quorum ran (no new design). The `$5` ceiling was never approached.
+Designer rotation unchanged at `codex:gpt-5.6-sol` (no designer fired).
+
+**Delivered** — three commits, PR #18:
+- `29d2791` **the precondition**: `sketches/storejournal.ail` LAW 6 `intentBindsCommit` widened
+  from the round-1 NARROW 4-field binding (8 params) to the ratified round-2 **8-field** one
+  (16 params, 10 `tests[]` rows). 163 → 180 lines. Applies the already-ratified Design Freeze, so
+  no human gate.
+- `1bf443e` **the implementation**: `schema.sql` +11 (additive `journal` table, every existing
+  `CREATE TABLE` byte-unchanged), `journal.go` +470 (types, deterministic codecs with golden
+  bytes, `AppendIntent`/`AppendOutcome`/`GetReceipt`/`PendingIntents`, in-tx gapless `seq`),
+  `store.go` +83 (`Commit.InvocationID`; `bindCommitIntentTx` comparing all eight
+  commit-defining fields **inside the existing transaction, before any mutation**;
+  `InvocationMismatchError`; the outcome receipt written in that SAME transaction),
+  `journal_test.go` +390 (7 tests including the 10-row drift test mirroring the sketch).
+  `InvocationID == ""` is byte-compatible with every landed caller.
+- `9316286` **the AC6 reassignment** (see finding 2).
+
+**Closes AC5, AC7, AC8, AC9, AC13, AC15, AC10's `PendingIntents` half, AC12.** SD.C keeps
+AC6/AC10–AC11/AC14 (crash injection, recovery proof, bench pricing).
+
+**Finding 1 — the prescribed fix for a propagation defect was ITSELF vacuous, and only measuring
+it before adoption caught that (THIRD instance of the one root cause).**
+Iter-28 found that round 2's widened field list never reached the frozen sketch, and prescribed
+the repair precisely: widen LAW 6, add "the required `EntryHash`-preserving boundary row", update
+AC9 `len(tests[])` 25→26 / `passed_tests` 32→33. Those numbers were written into the doc, the
+charter STATUS and the sprint plan. Rather than apply them, I built both forms and measured:
+
+| LAW 6 `tests[]` form | `len` / `passed` | `MUT-INTENT-NARROW-BIND` | **drop `TransitionRef` ALONE** |
+|---|---|---|---|
+| as prescribed (5 round-1 rows + the 1 combined row) | 26 / 33 | reds | **`failed=0` — invisible** |
+| **as landed** (+ one single-field row per field) | **30 / 37** | `failed=5` (`_test_6`…`_test_10`) | `failed=1` (`_test_8`) |
+
+The REQUIRED combined row mutates `PrevEntryHash`/`TransitionFn`/`Interpreter` **together** and
+never touches `TransitionRef` — so at 26 rows a Go mirror that drops `TransitionRef` from the
+in-tx compare passes every row. Meanwhile `MUT-INTENT-NARROW-BIND`'s own text demands the four
+added fields be load-bearing **"individually and not decorative"**, which 26 rows cannot show.
+The fix for an under-propagated correction was under-propagated in the same way, one field
+further in. Landed form is 10 rows; AC9 pins 30 / 37; recorded as premise row **V28**.
+**It was load-bearing, end to end**: the executor's `MUT-DROP-TRANSITIONREF` reds exactly
+`TestIntentBindingMirrorsAllTenSketchRows/row-8-transition-ref` — a row that would not exist
+under the prescription — and I **reproduced that first-party** rather than trusting the report
+(`Commit error = <nil>, want mismatch field TransitionRef`; reverted; `cmp` byte-identical).
+The planner's flagged risk that a 16-parameter Z3 contract is "2× the widest arity ever proven"
+is **REFUTED, not deferred**: 7/7 verified, 0 counterexamples, first try. No upstream issue owed.
+
+**Finding 2 — an acceptance check owned by no milestone, found because I re-checked a
+NON-BLOCKING judge nit instead of filing it.**
+The judge reported, as a doc nit, that SD.B's `acceptance_checks` line still read `AC5–AC8` after
+AC6 was deferred. Reproducing it made it bigger: the range gave **SD.B** ownership of AC6, whose
+only proof mechanism is crash injection at `mid-commit-before-outcome` — and `crash_test.go` is in
+**SD.C's** file list, while SD.C's own list read `AC10–AC11, AC14`. So the milestone that owned
+AC6 had no crash test, the milestone with the crash test was never required to close AC6, and
+SD.C's close-out ("doc → `implemented/` with every box checked") would not have forced it. Its
+required RED mutation `MUT-SPLIT-TX` belonged to a test nobody owned. That is the mission's
+signature failure shape — **an acceptance check that no gate can fail**. Fixed at `9316286` in all
+three places that restate the ownership, recording that SD.B landed only the STRUCTURAL half
+(outcome inside `Commit`'s transaction) and that reading that code is not proof of atomicity
+across process death. This is the second consecutive iteration in which the highest-value finding
+came from re-checking one of our OWN artifacts against another.
+
+**Gate discipline held.** The PLAN declares four binding gates plus two explicit sketch runs; all
+six were run and all six reported. The codex sandbox again denied loopback binds — 6 daemon/CLI
+tests and 4 of 6 benchmarks — so `verify_go.sh` and `bench_worldd.sh --smoke` were **re-run
+outside it by the controller**, per the standing scar that a sandboxed verdict for `host/daemon`
+and `cmd/*` is uninformative. Both PASS. I also took a **baseline** bench-smoke at `857a912`
+BEFORE the sprint, so the after-reading is a comparison rather than an assertion:
+`BenchmarkStoreCommit` 0.400 ms → 0.405 ms — no journal tax on the empty-`InvocationID` path,
+which is the compatibility claim actually being made.
+
+**Ruled out / refuted this iteration**
+- *"A 16-parameter Z3 contract may exceed what v0.30.0 can prove"* (planner risk, iter-28) —
+  **REFUTED by measurement**: verifies first try, 7/7, 0 counterexamples. No upstream issue.
+- *"The doc's prescribed 26-row sketch form satisfies `MUT-INTENT-NARROW-BIND`"* — **REFUTED**:
+  `failed=0` when `TransitionRef` alone is dropped. Do not re-adopt the 26/33 numbers; they are
+  struck in the doc, the charter and the plan JSON.
+- *"The judge's CF-SD.B-1 is a cosmetic doc nit"* — **REFUTED** by reproducing it; AC6 was
+  unowned, not mislabelled.
+- Re-running the codex sandbox's failing daemon tests as if they were real failures — they are
+  the known `bind: operation not permitted` artefact; the controller's out-of-sandbox re-run is
+  the verdict.
+
+**Open carry-forwards (enumerated, per the iter-19 rule that a bare COUNT is unrecoverable)**:
+**CF-F-1** the daemon's `scanPageSize`/`scanRowBudget`/`scanTimeBudget` wiring is still not pinned
+by a constant-equality test the way `TestBoundedWaitsAndBodyLimit` pins the D7 constants;
+**CF-F-2** carried from iter-28; **CF-F-4** `integrityFixture` is killed at ~100 s under `-race`
+(pre-existing; `-race` is not a CI gate here);
+**CF-G-1** (new, judge) `decodeJournalIntent`'s `ObservedHead == ""` genesis exception carries no
+comment linking it to P2 / the genesis convention;
+**CF-G-2** (new, judge) SD.B's tests use the in-memory store path, so the file-backed writer-lock
+path SD.C's crash tests need is not yet exercised — note it in SD.C's fixture design;
+**CF-G-3** (new, controller) `bindCommitIntentTx` reports "invocation ID set but no durable
+intent" as an `InvocationMismatchError` whose `Want` is the sentinel string `"durable intent"`
+rather than a real field value — structured, but it overloads one error type for two distinct
+conditions; SD.C or M3 should give it its own type.
+
+**Next**: **SD.C** — crash injection at named kill points (real subprocess kills, the
+`writer_lock_test` pattern), the probe-consumer recovery proof (`IndeterminateEffectError`,
+never auto-re-execute), the two journal benchmarks into the hardcoded smoke manifest +
+`bench/BASELINE.md` re-measured in ONE invocation, and **AC6 now explicitly owned there**. Then
+item 4 `w-effect-broker-m3`, which the ratification made depend on this journal. No human gate is
+outstanding for SD.C.
