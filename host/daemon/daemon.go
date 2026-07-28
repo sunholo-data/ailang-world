@@ -615,8 +615,19 @@ func Run(ctx context.Context, cfg Config, announce io.Writer) error {
 	// store's announce stream stays byte-identical to the pre-sweep contract.
 	//
 	// It is NOT a silent skip: holes and truncation — the two states an operator
-	// must act on — are still reported in full, and a truncated scan still says so
-	// explicitly rather than reading as a clean bill of health.
+	// must act on — are still reported, and a truncated scan still says so
+	// explicitly rather than reading as a clean bill of health. The daemon never
+	// emits an all-clear for a store it did not fully verify.
+	//
+	// Be precise about WHICH guarantee this is, because the two are different and
+	// only one of them holds. TRUTHFULNESS is guaranteed: no output ever claims a
+	// store is clean when it is not. DELIVERY is best-effort: a consumer that
+	// reads to EOF — which is what an operator running the daemon as a subprocess
+	// does — receives every line, but a caller that stops reading after the
+	// listen line, or a process torn down before the goroutine is scheduled, may
+	// never see the warnings. That is the deliberate trade for never letting a
+	// diagnostic wedge startup, and it is a weaker DELIVERY promise than the
+	// synchronous form had — not a weaker claim about the store.
 	//
 	// The write happens on its own goroutine, and that is load-bearing rather than
 	// stylistic. `announce` is frequently an io.Pipe (daemon_test.go:585 and the
