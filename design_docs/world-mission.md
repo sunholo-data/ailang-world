@@ -94,6 +94,22 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   are **never CI-run** — the sketch's *contracts* are swept by Leg 1's per-module `ai-check`, but
   its `tests[]` are not. Any milestone relying on sketch tests must run them explicitly in its
   verify_commands (found independently by the controller and the designer, iter-25).
+- **When CI reds on a TIMING assertion, WIDEN THE GAP — never loosen the guard (process fix,
+  iter-33).** Iteration 33's CI red was `elapsed <= 200ms` for a 40ms bound, where a shared runner
+  had spent 316ms on process spawn alone. The obvious fix is to raise the guard past the
+  observation. That would have shipped a real bug: the fixture's sleep was raised 0.3s → 5s and the
+  guard 200ms → 2s instead, taking the honoured-vs-ignored margin from ~2× to ~130×, and the next CI
+  run reported **5.00s — the mutation signature** — which is how the actual defect was found.
+  **A timing assertion exists to detect a bound that is not enforced; loosening it past the symptom
+  deletes exactly that power.** Widen the separation between the two outcomes, then re-run the named
+  mutation to confirm it still reds (iter-33 re-proved `MUT-HANDLER-TIMEOUT-IGNORED` at 5.25s/5.29s
+  against the new 2s guard *before* pushing). **Corollaries, both paid for in the same iteration:**
+  (a) **an exec surface must kill the process GROUP, not the child** — `exec.CommandContext` reaches
+  only the direct child, so a forked grandchild keeps the inherited pipes open and the deadline is
+  not enforced; `scripts/verify_ail.sh` has carried this correction since **V26** and the Go code
+  repeated it, so audit any NEW `exec.Command*` against `Setpgid` + `Kill(-pid)`; (b) **darwin and
+  linux disagree here**, so the rig's green is not evidence about CI for anything subprocess-lifetime
+  shaped — a gate that passes locally and reds in CI is data, not noise.
 - **`passed_tests` is NOT the named-test count (process fix, iter-25 — the landed correction D-B,
   restated because a fresh author hit it again).** `ailang test --format json` reports
   `passed_tests`/`total_tests` that ALSO count contract-derived properties: for
