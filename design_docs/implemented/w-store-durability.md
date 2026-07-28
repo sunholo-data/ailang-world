@@ -886,7 +886,11 @@ tooling) has a named non-kernel destination.
   `PrevEntryHash`/`TransitionFn`/`Interpreter` while holding `EntryHash` byte-identical — since
   V12 records that the kernel never derives `EntryHash` from entry contents, this is the exact
   drift a three-field binding would wave through.
-- [ ] Both CI jobs green on every milestone PR and every dev merge.
+- [x] Both CI jobs green on every milestone PR and every dev merge. SD.A `86d1276` · SD.B
+  `d5774eb` · **SD.C: run `30366106652` at `84fb4874`, `ailang-code verify gate: success` +
+  `go host build + test gate: success`** — read from `gh run view --json jobs`, not inferred from
+  a poll (the iter-107 rule that a poll's output is a hint and the direct per-workflow read is
+  the verdict).
 - [x] The kernel arms (V1/V2, J1/J2, `Commit.InvocationID`) are ratified by Mark, attended,
   BEFORE SD.A/SD.B execute — recorded in the charter STATUS like the single-writer arm A.
 
