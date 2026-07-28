@@ -59,6 +59,16 @@ modules found, zero obligations proven, zero tests discovered, `verify.errors > 
 by a zero exit code. When you find such a case (as `w-m1-ailang-hardening` did with
 `ai-check`'s exit code), fix the gate AND file the upstream issue.
 
+## S7 — Usage surfaces ship usage docs (the discoverability rule; added 2026-07-28, Mark)
+
+Every user-facing surface (CLI verb, REST route, package API) lands WITH: (a) `--help` /
+self-description; (b) a runnable quickstart covering the full happy path **including payload
+construction** (`docs/QUICKSTART.md` or equivalent, executed-verbatim before commit); (c) a
+working example or generator. **Knowledge that exists only in test files is a defect** — this
+rule's third-instance origin: the M1 fluency gap, the ailang-feature gap, and the worldd commit
+schema that even the coordinator had to reverse-engineer from `cli_test.go`. "The tests show
+how" is not documentation; the evaluator scores it.
+
 ---
 *Changes to this document are ratification-class (human gate). It is deliberately short —
 every sprint reads it; token cost is a standing tax.*

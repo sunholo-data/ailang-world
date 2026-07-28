@@ -26,3 +26,7 @@ AILANG. It is built by an autonomous mission loop with human ratification gates.
   language gaps route to `sunholo-data/ailang` as issues + an `ailang messages send
   mission-control` note — no local workarounds, no vendored forks.
 - **Never touch** `~/.ailang/state/mission-v1*` or the V1 checkout from work in this repo.
+
+## Operating the daemon
+
+Build/run/commit/read walkthrough (executed-verbatim, S7-maintained): [docs/QUICKSTART.md](docs/QUICKSTART.md).
