@@ -640,7 +640,17 @@ the answer is (a) — half (ii) merges into M3 — is along milestone lines, not
   duplicate-ID rejection, gapless seq, bounded `PendingIntents`, golden bytes, migration: open a
   pre-journal fixture store → table appears, existing DDL byte-identical via
   `sqlite_master` comparison)
-- **acceptance_checks**: AC5–AC8, AC9 (sketch), AC13 (migration), AC15 (intent binding)
+- **acceptance_checks**: AC5, AC7, AC8, AC9 (sketch), AC10 (`PendingIntents` half), AC12,
+  AC13 (migration), AC15 (intent binding).
+  **AC6 was ORPHANED by the original `AC5–AC8` range and is reassigned to SD.C (iter-29).** The
+  range gave SD.B ownership of AC6, whose ONLY proof mechanism is crash injection at
+  `mid-commit-before-outcome` — and `crash_test.go` is in **SD.C's** file list, while SD.C's own
+  acceptance list read `AC10–AC11, AC14`. So no milestone's close-out forced AC6, and its
+  non-vacuity mutation `MUT-SPLIT-TX` belonged to a test nobody owned. SD.B implements the
+  structural half (the outcome row is written inside `Commit`'s existing transaction, before
+  `tx.Commit()`); only SD.C can PROVE it survives process death. Found by the SD.B judge as a
+  doc nit; the reassignment is the controller's, after confirming the check was unowned rather
+  than merely mislabelled.
 - **verify_commands**: both gates + explicit
   `cd design_docs && /tmp/ailang-v0300/ailang ai-check -timeout 5s sketches/storejournal.ail &&
   /tmp/ailang-v0300/ailang test --format json sketches/storejournal.ail` (P8's honest
@@ -655,7 +665,10 @@ the answer is (a) — half (ii) merges into M3 — is along milestone lines, not
   reconciliation, Model.Infer-style never-retry proof over the probe), `host/daemon/bench_test.go`
   (+~50), `scripts/bench_worldd.sh` (+2 manifest names), `bench/BASELINE.md` (all rows
   re-measured in ONE invocation), `README.md` (+~8)
-- **acceptance_checks**: AC10–AC11, AC14; doc → `implemented/` with every box checked
+- **acceptance_checks**: **AC6 (reassigned here iter-29 — it was orphaned between the two
+  milestones; `MUT-SPLIT-TX` is its required RED mutation and belongs to `crash_test.go`, which
+  is in THIS milestone's file list)**, AC10–AC11, AC14; doc → `implemented/` with every box
+  checked
 - **verify_commands**: full sweep — both gates + `./scripts/bench_worldd.sh --smoke` + the
   explicit sketch test run
 - **ci_green_boundary**: LANDS the item
@@ -784,9 +797,12 @@ tooling) has a named non-kernel destination.
   `receiptState` on all four boolean combinations (the `corrupt` arm asserted unrepresentable —
   `AppendOutcome` without intent is a structured error); after `AppendIntent` alone, the answer
   is `indeterminate` and NEVER `not-started` (`mayReportNotStarted` mirrored).
-- [ ] **AC6 — commit-receipt atomicity**: crash injection at `mid-commit-before-outcome` yields
+- [ ] **AC6 — commit-receipt atomicity** (owner: **SD.C** — reassigned iter-29; see that
+  milestone): crash injection at `mid-commit-before-outcome` yields
   a store with NEITHER the new world NOR the outcome; a completed commit yields BOTH; no
-  interleaving exists in which exactly one is durable.
+  interleaving exists in which exactly one is durable. SD.B landed the structural half (the
+  outcome write is inside `Commit`'s transaction, `store.go` step 6, before `tx.Commit()`);
+  reading that code is NOT the proof — only a real subprocess kill is.
 - [ ] **AC7 — idempotency semantics**: `AppendIntent` same-ID + same-bytes is a no-op returning
   the original seq; same-ID + different-bytes is `DuplicateInvocationError`; at most one outcome
   per ID enforced by the schema (raw-SQL duplicate attempt fails the UNIQUE constraint).
