@@ -157,10 +157,9 @@ func parseRef(text, field string) (hashref.HashRef, error) {
 // from the genesis world's LogHead (host/store/store_test.go:103), i.e. always a
 // real content address; and store.Commit will WRITE a zero PrevEntryHash that
 // store.GetLogEntry then cannot READ BACK ("store: log entry 0 prevEntryHash:
-// hashref: empty hashref text"). Accepting "" there would hand REST clients a way
-// to append a log entry that no reader can ever load. That store asymmetry is a
-// real M1 defect, recorded as a carry-forward; the daemon does not paper over it
-// and does not widen its own boundary to reach it.
+// hashref: empty hashref text"). ARM V1's landed kernel validation now refuses
+// that write. This boundary check remains as defense-in-depth and does not widen
+// the daemon's carefully bounded genesis exception.
 //
 // Found by the M2.B sprint-evaluator (round 1, BLOCKING) and independently by the
 // controller: before this, POST /v1/commit answered a genesis commit that the
