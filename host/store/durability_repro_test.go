@@ -76,7 +76,7 @@ func TestCFB2UnreadableLogEntryClass(t *testing.T) {
 		{"transition fn", "transitionFn", func(c *Commit) { c.Entry.Header.TransitionFn = hashref.HashRef{} }},
 		{"interpreter", "interpreter", func(c *Commit) { c.Entry.Header.Interpreter = hashref.HashRef{} }},
 		{"previous entry hash", "prevEntryHash", func(c *Commit) { c.Entry.Header.PrevEntryHash = hashref.HashRef{} }},
-		{"entry hash", "hash", func(c *Commit) { c.Entry.EntryHash = hashref.HashRef{} }},
+		{"entry hash", "entry 1 hash:", func(c *Commit) { c.Entry.EntryHash = hashref.HashRef{} }},
 		{"transition ref", "transitionRef", func(c *Commit) { c.Entry.TransitionRef = hashref.HashRef{} }},
 	}
 
