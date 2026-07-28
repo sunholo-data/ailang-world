@@ -4417,3 +4417,33 @@ carrying the ratified third arm and CF-J-2/J-3/J-4; then **M3.C**; then **M3.D**
 item **4c `w-effect-journal`**. The sprint plan needs M3.D rewritten from "blocked, do not start"
 to option (i)'s scope, and the doc needs Decision 3's third arm plus the corrected supersession
 note before M3.B is planned.
+
+### Iteration 31 — ADDENDUM 2: **both Gate-3b polls declared `TIMEOUT — PARK` on runs that were GREEN, and the root cause is measured, not guessed**
+
+Two hand-rolled Gate-3b polls fired late, each printing `PARK` while its own last-seen line read
+`completed success` on the run it was waiting for. Neither misled the verdict — both times the
+recorded result came from the direct per-workflow query, which is exactly what Gate 3b's *"the
+poll's output is a HINT, never the verdict"* rule exists for. **The rule absorbed my own bug**,
+which is the only reason a landed, green milestone was not parked.
+
+**Root cause, evidenced first-party by the poll's own output** (not inferred):
+
+```
+Gate 3b TIMEOUT (last=completed success 577af239d56e…) — PARK
+origin/dev = 2edf2ef4f          <-- the target it was still comparing against
+```
+
+The loop captured `sha=$(git rev-parse origin/dev)` **once, at arm time**, then compared every
+reading against that frozen value. I kept pushing (`4f7dc5e`, `c26b27d`, `577af23`), so the branch
+advanced underneath it and the comparison could never succeed — it ran to its deadline and reported
+a park. **A poll that pins its target SHA at arm time cannot match a moving branch, and it fails in
+the direction of a spurious PARK** — the dangerous direction, because a park on a landed item is
+how work gets redone.
+
+**The skill's own snippet does not have this defect**: it resolves a **run ID** (`rid`) once and
+polls *that run's* status, which is stable under new pushes. My variant substituted a SHA
+comparison. So this needs no skill change and no new guardrail — the existing rule ("reuse the
+snippet verbatim, once per workflow; never hand-roll a variant") is correct and I deviated from it.
+Recorded because this is the second and third instance of the hand-rolled-poll class in the fleet
+(iteration 107 was the first), and because the cheap tell is worth naming: **if a poll compares
+against anything captured before the loop, ask what happens when the thing it names moves.**
