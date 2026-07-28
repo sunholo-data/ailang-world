@@ -129,6 +129,25 @@ func IsConflict(err error) bool {
 	return errors.As(err, &c)
 }
 
+// InvalidRefError reports a reference which a write path refuses to persist.
+type InvalidRefError struct {
+	Op, Field, Text string
+	Err             error
+}
+
+func (e *InvalidRefError) Error() string {
+	return fmt.Sprintf("store: %s: %s: refuses to persist an invalid ref %q: %v",
+		e.Op, e.Field, e.Text, e.Err)
+}
+
+func (e *InvalidRefError) Unwrap() error { return e.Err }
+
+// IsInvalidRef reports whether err is (or wraps) an *InvalidRefError.
+func IsInvalidRef(err error) bool {
+	var invalid *InvalidRefError
+	return errors.As(err, &invalid)
+}
+
 // Store is a handle to the SQLite-backed world store. It is safe for the
 // single-connection embedded-library use of M1; concurrency correctness rests on
 // the single compare-and-append transaction, not on Go-level locking.
@@ -276,10 +295,27 @@ func verifyObject(o Object) error {
 	return nil
 }
 
+func validateRefText(op, field, text string) error {
+	if _, err := hashref.Parse(text); err != nil {
+		return &InvalidRefError{Op: op, Field: field, Text: text, Err: err}
+	}
+	return nil
+}
+
+func validateRef(op, field string, ref hashref.HashRef) error {
+	return validateRefText(op, field, ref.String())
+}
+
 // PutObject inserts one immutable object after verifying its content address.
 // Re-inserting an identical object is idempotent (INSERT OR IGNORE), since the
 // bytes and hash are unchanged by definition of content addressing.
 func (s *Store) PutObject(o Object) error {
+	if err := validateRef("PutObject", "Hash", o.Hash); err != nil {
+		return err
+	}
+	if err := validateRef("PutObject", "InterfaceHash", o.InterfaceHash); err != nil {
+		return err
+	}
 	if err := verifyObject(o); err != nil {
 		return err
 	}
@@ -331,6 +367,15 @@ func (s *Store) GetObject(ref hashref.HashRef) (Object, bool, error) {
 // PutWorld inserts one immutable world revision. Re-inserting the same revision
 // is idempotent.
 func (s *Store) PutWorld(w World) error {
+	if err := validateRef("PutWorld", "Ref", w.Ref); err != nil {
+		return err
+	}
+	if err := validateRef("PutWorld", "StateRoot", w.StateRoot); err != nil {
+		return err
+	}
+	if err := validateRef("PutWorld", "LogHead", w.LogHead); err != nil {
+		return err
+	}
 	_, err := s.db.Exec(
 		`INSERT OR IGNORE INTO worlds (world_ref, revision, state_root, log_head)
 		 VALUES (?, ?, ?, ?);`,
@@ -432,6 +477,9 @@ func (s *Store) GetLogEntry(index int64) (LogEntry, bool, error) {
 // SetRegistryHead upserts the current immutable registry object reference for a
 // registry name (Decision 5). M1 bootstrap uses EpochRegistryV1.
 func (s *Store) SetRegistryHead(name string, objectRef hashref.HashRef) error {
+	if err := validateRef("SetRegistryHead", "objectRef", objectRef); err != nil {
+		return err
+	}
 	_, err := s.db.Exec(
 		`INSERT INTO epoch_registry_heads (registry_name, object_ref)
 		 VALUES (?, ?)
@@ -468,6 +516,12 @@ func (s *Store) GetRegistryHead(name string) (hashref.HashRef, bool, error) {
 // An upsert with the same pair but a different epoch updates metadata in place
 // and preserves the single selected row for that pair.
 func (s *Store) PutVerifyResult(r VerifyResult) error {
+	if err := validateRef("PutVerifyResult", "TransitionFn", r.TransitionFn); err != nil {
+		return err
+	}
+	if err := validateRef("PutVerifyResult", "Interpreter", r.Interpreter); err != nil {
+		return err
+	}
 	verified := 0
 	if r.Verified {
 		verified = 1
@@ -548,6 +602,9 @@ func selectedHeadTx(q interface {
 // used to seed the genesis head before the first Commit; steady-state head
 // advancement happens inside Commit.
 func (s *Store) SelectHead(ref hashref.HashRef) error {
+	if err := validateRef("SelectHead", "ref", ref); err != nil {
+		return err
+	}
 	_, err := s.db.Exec(
 		`INSERT INTO store_heads (head_key, world_ref) VALUES (?, ?)
 		 ON CONFLICT(head_key) DO UPDATE SET world_ref = excluded.world_ref;`,
@@ -573,6 +630,32 @@ func (s *Store) SelectHead(ref hashref.HashRef) error {
 // leaves the store untouched. A nil selected head (genesis) is treated as a
 // match only when c.ObservedHead is also the zero HashRef.
 func (s *Store) Commit(c Commit) error {
+	refs := []struct {
+		field string
+		ref   hashref.HashRef
+	}{
+		{"Entry.Header.TransitionFn", c.Entry.Header.TransitionFn},
+		{"Entry.Header.Interpreter", c.Entry.Header.Interpreter},
+		{"Entry.Header.PrevEntryHash", c.Entry.Header.PrevEntryHash},
+		{"Entry.EntryHash", c.Entry.EntryHash},
+		{"Entry.TransitionRef", c.Entry.TransitionRef},
+		{"NextWorld.StateRoot", c.NextWorld.StateRoot},
+		{"NextWorld.LogHead", c.NextWorld.LogHead},
+		{"NextWorld.Ref", c.NextWorld.Ref},
+	}
+	for _, item := range refs {
+		if err := validateRef("Commit", item.field, item.ref); err != nil {
+			return err
+		}
+	}
+	for _, o := range c.Objects {
+		if err := validateRef("Commit", "Objects.Hash", o.Hash); err != nil {
+			return err
+		}
+		if err := validateRef("Commit", "Objects.InterfaceHash", o.InterfaceHash); err != nil {
+			return err
+		}
+	}
 	// Content-verify all objects before opening the transaction so a bad object
 	// never even starts a write.
 	for _, o := range c.Objects {

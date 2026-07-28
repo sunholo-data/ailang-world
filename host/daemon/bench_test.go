@@ -50,8 +50,19 @@ func BenchmarkStoreCommit(b *testing.B) {
 		}
 	})
 
+	// ObservedHead stays the zero value: it is the kernel's single zero-legal
+	// COMPARED field, which is exactly how a genesis commit is expressed.
 	var observed hashref.HashRef
-	var previousLog hashref.HashRef
+
+	// previousLog must be a REAL content address from the first iteration on.
+	// It was previously the zero HashRef, which made entry 0 carry a zero
+	// PrevEntryHash — precisely the CF-B-2 poison this milestone now refuses at
+	// the write path. That commit was never legal: M1's genesis convention seeds
+	// entry 0's PrevEntryHash from the genesis world's LogHead, a real content
+	// address (store_test.go:103), and a zero prev is unreadable by GetLogEntry.
+	// The benchmark only ever "passed" because Commit validated nothing, so this
+	// is a benchmark that was relying on the defect, not a regression in the fix.
+	previousLog := hashref.SumSHA256([]byte("bench-genesis-prev"))
 	samples := make([]time.Duration, 0, b.N)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

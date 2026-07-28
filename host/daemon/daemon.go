@@ -139,6 +139,12 @@ const (
 // kernel-assigned port by trimming this prefix. Changing it breaks that test.
 const ListenAnnouncePrefix = "ailang-worldd listening on "
 
+const (
+	integrityScanPageSize   = 64
+	integrityScanRowBudget  = 20000
+	integrityScanTimeBudget = 2 * time.Second
+)
+
 // unpinnedRelease is the epoch-registry candidate recorded when serve is started
 // WITHOUT --ailang-bin, i.e. when there is no archived interpreter to nominate.
 //
@@ -234,11 +240,52 @@ type Daemon struct {
 	// the bound is (a) assertable as wiring and (b) shrinkable in tests, which
 	// is the only way the expiry branch of the SHIPPED Shutdown path can be
 	// exercised without a ten-second test.
-	drainTimeout time.Duration
+	drainTimeout   time.Duration
+	scanPageSize   int
+	scanRowBudget  int
+	scanTimeBudget time.Duration
+	integrity      IntegrityReport
 
 	// Health facts resolved once at startup and served verbatim.
 	interpreterRef     string
 	interpreterVersion string
+}
+
+// IntegrityReport is the bounded startup sweep result.
+type IntegrityReport struct {
+	LogRowsScanned   int
+	WorldRowsScanned int
+	Holes            []store.UnreadableRow
+	Complete         bool
+	ResumeLogIndex   int64
+	ResumeWorldRef   string
+}
+
+func (d *Daemon) IntegrityReport() IntegrityReport {
+	r := d.integrity
+	r.Holes = append([]store.UnreadableRow(nil), r.Holes...)
+	return r
+}
+
+func (r IntegrityReport) Lines() []string {
+	lines := make([]string, 0, len(r.Holes)+1)
+	for _, hole := range r.Holes {
+		if hole.Table == "log_entries" {
+			lines = append(lines, fmt.Sprintf("integrity_hole table=log_entries index=%d field=%s",
+				hole.Index, hole.Field))
+		} else {
+			lines = append(lines, fmt.Sprintf("integrity_hole table=worlds ref=%s field=%s",
+				hole.Ref, hole.Field))
+		}
+	}
+	if r.Complete {
+		lines = append(lines, fmt.Sprintf("integrity_scan_complete log_rows=%d world_rows=%d holes=%d",
+			r.LogRowsScanned, r.WorldRowsScanned, len(r.Holes)))
+	} else {
+		lines = append(lines, fmt.Sprintf("integrity_scan_incomplete log_rows=%d world_rows=%d holes=%d resume_log_index=%d resume_world_ref=%s",
+			r.LogRowsScanned, r.WorldRowsScanned, len(r.Holes), r.ResumeLogIndex, r.ResumeWorldRef))
+	}
+	return lines
 }
 
 // HealthResponse is the GET /v1/health body: daemon version, db path and the
@@ -292,7 +339,11 @@ func New(cfg Config) (*Daemon, error) {
 		return nil, &StartupError{Stage: StageStoreOpen, Detail: detail, Err: err}
 	}
 
-	d := &Daemon{cfg: cfg, store: s, drainTimeout: shutdownTimeout}
+	d := &Daemon{
+		cfg: cfg, store: s, drainTimeout: shutdownTimeout,
+		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
+		scanTimeBudget: integrityScanTimeBudget,
+	}
 	release := unpinnedRelease
 
 	if cfg.AilangBin != "" {
@@ -319,8 +370,63 @@ func New(cfg Config) (*Daemon, error) {
 			fmt.Sprintf("cannot bootstrap %s with release %q", registry.SemanticID, release), err)
 	}
 
+	d.integrity = d.scanIntegrity()
 	d.srv = newServer(d.Handler())
 	return d, nil
+}
+
+func (d *Daemon) scanIntegrity() IntegrityReport {
+	start := time.Now()
+	report := IntegrityReport{}
+	logDone, worldDone := false, false
+	for !logDone || !worldDone {
+		remaining := d.scanRowBudget - report.LogRowsScanned - report.WorldRowsScanned
+		if remaining <= 0 || time.Since(start) >= d.scanTimeBudget {
+			return report
+		}
+		limit := d.scanPageSize
+		if limit > remaining {
+			limit = remaining
+		}
+		if !logDone {
+			page, err := d.store.ScanUnreadableLog(report.ResumeLogIndex, limit)
+			if err != nil {
+				report.Holes = append(report.Holes, store.UnreadableRow{
+					Table: "log_entries", Index: report.ResumeLogIndex,
+					Field: "scan", Reason: err.Error(),
+				})
+				return report
+			}
+			report.LogRowsScanned += page.Scanned
+			report.ResumeLogIndex = page.NextIndex
+			report.Holes = append(report.Holes, page.Rows...)
+			logDone = page.Done
+		}
+		remaining = d.scanRowBudget - report.LogRowsScanned - report.WorldRowsScanned
+		if remaining <= 0 || time.Since(start) >= d.scanTimeBudget {
+			return report
+		}
+		limit = d.scanPageSize
+		if limit > remaining {
+			limit = remaining
+		}
+		if !worldDone {
+			page, err := d.store.ScanUnreadableWorlds(report.ResumeWorldRef, limit)
+			if err != nil {
+				report.Holes = append(report.Holes, store.UnreadableRow{
+					Table: "worlds", Ref: report.ResumeWorldRef,
+					Field: "scan", Reason: err.Error(),
+				})
+				return report
+			}
+			report.WorldRowsScanned += page.Scanned
+			report.ResumeWorldRef = page.NextRef
+			report.Holes = append(report.Holes, page.Rows...)
+			worldDone = page.Done
+		}
+	}
+	report.Complete = true
+	return report
 }
 
 // abort releases writer authority and wraps err as a fatal StartupError. Used
@@ -503,6 +609,51 @@ func Run(ctx context.Context, cfg Config, announce io.Writer) error {
 	}
 	if _, err := fmt.Fprintf(announce, "%s%s\n", ListenAnnouncePrefix, d.URL()); err != nil {
 		return &StartupError{Stage: StageListen, Detail: "cannot announce the resolved listen address", Err: err}
+	}
+	// Announce the sweep ONLY when there is something to warn about — a hole, or a
+	// scan that could not finish. A clean, complete sweep says nothing, so a healthy
+	// store's announce stream stays byte-identical to the pre-sweep contract.
+	//
+	// It is NOT a silent skip: holes and truncation — the two states an operator
+	// must act on — are still reported, and a truncated scan still says so
+	// explicitly rather than reading as a clean bill of health. The daemon never
+	// emits an all-clear for a store it did not fully verify.
+	//
+	// Be precise about WHICH guarantee this is, because the two are different and
+	// only one of them holds. TRUTHFULNESS is guaranteed: no output ever claims a
+	// store is clean when it is not. DELIVERY is best-effort: a consumer that
+	// reads to EOF — which is what an operator running the daemon as a subprocess
+	// does — receives every line, but a caller that stops reading after the
+	// listen line, or a process torn down before the goroutine is scheduled, may
+	// never see the warnings. That is the deliberate trade for never letting a
+	// diagnostic wedge startup, and it is a weaker DELIVERY promise than the
+	// synchronous form had — not a weaker claim about the store.
+	//
+	// The write happens on its own goroutine, and that is load-bearing rather than
+	// stylistic. `announce` is frequently an io.Pipe (daemon_test.go:585 and the
+	// CLI/main subprocess tests): SYNCHRONOUS and unbuffered, so every Write blocks
+	// until a reader consumes it, and those callers read exactly ONE line — the
+	// listen announcement — then stop reading. A synchronous write here therefore
+	// blocked Run before it reached Serve() below, so the socket it had just
+	// announced never served (observed as GET /v1/health timing out).
+	//
+	// Emitting only warnings fixed that for a healthy store, but NOT for a store
+	// that genuinely has something to say: with a hole present, or a sweep
+	// truncated by the row/time budget, the same one-line reader deadlocked again.
+	// Startup diagnostics must never be able to wedge startup, whatever the store
+	// contains — so Run never waits on the consumer. Ordering is still guaranteed:
+	// the listen line is written synchronously above, before this goroutine starts.
+	// A consumer that stops reading simply leaves the goroutine parked until the
+	// stream is closed; it cannot delay Serve, the health surface, or shutdown.
+	if report := d.IntegrityReport(); !report.Complete || len(report.Holes) > 0 {
+		lines := report.Lines()
+		go func() {
+			for _, line := range lines {
+				if _, err := fmt.Fprintln(announce, line); err != nil {
+					return // the consumer went away; a diagnostic must not outlive it
+				}
+			}
+		}()
 	}
 
 	served := make(chan error, 1)
