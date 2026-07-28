@@ -4575,3 +4575,137 @@ multiplier and it carries three internal checkpoints (B-1/B-2/B-3), the first tw
 landable. Then **M3.C**, then **M3.D** (option (i), `blocked_on` cleared, `MUT-AUTO-RETRY-PROD` now
 a production mutation that discharges CF-H-1), then item **4c `w-effect-journal`**. The plan and
 handoff are durable at `.ailang/state/sprints/w-effect-broker-m3.{plan.json,handoff.md}`.
+
+## Iteration 33 — 2026-07-29 — `w-effect-broker-m3` **M3.B LANDED** (PR #22 → squash `10beb83`, dev CI green both jobs, judge sonnet PASS 88/100 zero-blocking) — and the iteration's spine is that **a bounded-wait guarantee did not hold on linux, in a mission whose Standing Rule 6 is "every wait is bounded"**, hidden by darwin, already solved in this repo's own shell gate, and exposed only because a CI-robustness fix WIDENED a discrimination gap instead of loosening an assertion
+
+**Pick**: item **4 `w-effect-broker-m3`**, milestone **M3.B** — the queue head, `[IN-SPRINT]`, no
+human gate outstanding (Mark's `c26b27d` ratification was executed by M3.B0 last iteration).
+Reality-checked first-party on a freshly-fetched `origin/dev`: `host/capsule/` absent, no
+`handlers.go`/`handlers_git.go`/`handlers_model.go`/`approve.go`, nothing in `git log origin/dev
+--grep` or the merged-PR list. Doc twice-quorumed → **no re-quorum**, routes straight to the executor.
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` = `sunholo-voight-kampff`;
+tree clean on `dev` == `origin/dev` @ `5333cbc`; pidfile `5035` is this run's own parent (no overlap);
+`CI` green on HEAD. **Zero** `@MarkEdmondson1234` comments since watermark `2026-07-27T08:55:11Z`.
+**No rotation due** — `#9` was created 07:51 CEST on Monday the 27th, i.e. AFTER the Monday-07:00
+**local** boundary (the timezone is load-bearing: read as UTC it would have spuriously rotated), and
+26 comments < 80.
+
+**Routing evidence**
+| Role | Pin | Actually ran on | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` | **opus** | triage/pick/review/fixes/record |
+| Executor | `$MISSION_EXECUTOR_MODEL` | **`codex:gpt-5.6-sol`** | probe run **WITH `--model`** (charter iter-19 rule — the driver's own probe omits it and would green a dead pin) → rc=0, `auth_mode=chatgpt`, `OPENAI_API_KEY` stripped at the call site. Three bounded 30-min runs, one per checkpoint. |
+| Evaluator | `$MISSION_EVALUATOR_MODEL` | **sonnet** | generator≠judge, cross-provider vs codex |
+| Designer | — | not fired | no new doc |
+
+`metered=$0.00` — codex ran on ChatGPT subscription auth, not the metered key; no quorum, no
+managed_agents. Budget ceiling `$5` untouched.
+
+**Delivered** — three commits on `sprint/w-effect-broker-m3b`, squashed to `10beb83`:
+`4db226d` the milestone (B-1 handlers · B-2 approval · B-3 capsule, plus two controller fixes) ·
+`d9267fe` the CI fixes · `e9d3020` the process-group fix. **1,767 insertions**, planner predicted
+~1,450 = **1.22×** (M3.A was 1.00×; the 1.6× multiplier stays refuted, but M3.B is the first
+milestone to overshoot — worth one more datapoint before concluding anything).
+Closes **AC5, AC6, AC7, AC9, AC15**, and third-arm conformance inherited from AC18. Five acceptance
+boxes flipped in `design_docs/planned/w-effect-broker-m3.md`; the rest stay open for M3.C's
+close-out (CF-K-2's discipline).
+
+**Finding 1 — the bound that wasn't a bound, and the repo had already learned it.**
+`runBounded` used `exec.CommandContext`, which kills only the **direct child**. A handler that forks
+leaves a grandchild holding the inherited stdout pipe, so the capped `io.ReadAll` blocks until the
+**grandchild** exits and the deadline is never enforced. Linux CI measured **`5.002891s` against a
+40ms bound** — to three decimal places the runtime of the `sleep 5` grandchild, not the bound —
+while **darwin ran the identical code in 42ms**. No local gate could see it.
+`scripts/verify_ail.sh` has carried the correction since **V26**: *"start the child in its own
+process group and, on expiry, SIGKILL the WHOLE group."* The Go exec surfaces repeated, in
+production code, the mistake this repo's own shell gate had already fixed — and `host/capsule` had
+it too. Both now set `Setpgid` and cancel with `Kill(-pid, SIGKILL)`.
+**The part worth keeping is HOW it surfaced.** CI first red on an over-tight assertion
+(`elapsed <= 200ms` for a 40ms bound; a shared runner spent 316ms on spawn alone). The tempting fix
+is to loosen the guard past the observation. Instead the **gap was widened** — the fixture's sleep
+went 0.3s → 5s and the guard 200ms → 2s, taking the honoured/ignored margin from ~2× to ~130×. That
+made the *next* CI run report 5.00s, which is the mutation signature, which is what exposed the real
+defect. **Loosening an assertion to make CI green hides the bug the assertion exists to find;
+widening the gap makes it louder.**
+
+**Finding 2 — two defects found by reading the diff, both reproduced before being fixed.**
+(i) `Model.Infer` hand-rolled its JSON prompt escaping, handling only `\ " \n \r \t`, so control
+bytes `0x00`–`0x1f` produced **invalid JSON** (`json.Valid=false`, verified standalone against
+`encoding/json`). Reachable from any caller payload, and post-M3.B0 the consequence is a failure
+record with a **STANDING DEBIT** for what is really a host encoding bug — measured, not argued:
+restoring the encoder reds all four payloads, each with `Failed=true`. Now `encoding/json` (stdlib,
+no new dependency, allowlist untouched).
+(ii) The capsule never killed a child that overflowed the output cap, so `cmd.Wait()` blocked to the
+wall clock and the caller got a `*TimeoutError` for an overflow — **F6 silently degrading into F5**.
+Measured with the real interpreter: 5.04s against a 5s bound. **The shipped F6 test could not see
+it**: its fixture emits 513 bytes, *below one OS pipe buffer*, so the child always exits on its own.
+Reachable under `--caps ""` because the interpreter prints the entry's **return value** — no
+capability needed. `MUT-CAPSULE-OVERFLOW-NO-KILL` is discriminating: the new production-shaped test
+reds at the full bound while the shipped F6 test stays green at 0.99s. Same family as iter-32's
+finding — *a passing gate whose fixture is sized wrong hides the production failure mode.*
+
+**Finding 3 — a "prove the guarantee" test that was VACUOUS, caught by mutating it.**
+The first version of the process-group test asserted that the grandchild pid was dead afterwards.
+Under `MUT-KILL-DIRECT-CHILD-ONLY` it **passed anyway**, at 5.35s instead of 0.31s: when the kill
+misses, `Invoke` blocks on the inherited pipe until the grandchild exits on its own, so by the time
+the test looks it has *always* died. The liveness check could never fail. Rewritten to assert
+**elapsed only** — the one signal that discriminates — and the vacuity is recorded in the test's own
+comment so nobody re-adds the reassuring-but-empty check. *Directly the iter-32 lesson applied to a
+gate I wrote myself this iteration.*
+
+**Ruled out / refuted this iteration**
+- **REFUTED — my own grandchild hypothesis, on darwin.** A forced-grandchild probe
+  (`sh -c 'sleep 5' & wait`) returned **42.88ms**, so the mechanism does *not* reproduce on darwin
+  with that fixture; I did not get to assert it from the rig. The linux timing (`5.002891s` for a
+  `sleep 5`) is what carries the diagnosis. Recorded because the fix shipped on an inference from
+  CI measurement, not from a local repro — and the fix was then confirmed by CI going green.
+- **REFUTED — the executor's `verify_go.sh` verdicts.** All three runs self-labelled
+  `UNINFORMATIVE UNDER SANDBOX` (loopback binds denied). Controller re-ran every one outside the
+  sandbox: **rc=0** each time. The label was correct and honest; banking the in-sandbox exit code
+  would have been wrong in both directions.
+- **CONFIRMED, against the plan** — `MUT-REC-IMMUT`'s second disjunct ("stored hash != hash(bytes)")
+  is **UNREACHABLE by construction**: `store.PutObject` calls `verifyObject` (rejects any
+  hash/payload mismatch) then `INSERT OR IGNORE`. The plan offered an `or`; the kernel makes only
+  the re-put branch reachable. Judge independently confirmed. **The plan's mutation spec, not the
+  executor's work, was the weaker artifact.**
+- **The executor moved `MUT-POLL-NOT-AN-EFFECT` off the file the plan named** (`approve.go` →
+  `broker.go`), arguing capability/debit/record are frozen *pipeline* responsibilities. That was
+  correct — it is iter-32's rule (*a named RED mutation is evidence only if it mutates the code the
+  gate guards*) applied unprompted by a sub-agent. The judge's fair criticism: **I should have filed
+  the plan's inconsistency explicitly rather than only accepting the executor's reasoning** → CF-L-1.
+- **AC7's deletion step is NON-VACUOUS** — proven first-party with a throwaway probe: deleting the
+  decision object flips the LIVE poll `"decided"` → `"pending"` while replay stays byte-identical
+  with zero dispatches. Judge confirmed.
+- **Gate-3b poll grabbed a STALE run** on the first attempt (the completed-failure run for the
+  previous SHA) and reported `completed failure` for a push it had never seen. Caught by the skill's
+  own rule — *the poll's output is a HINT, never the verdict* — and re-read directly against the
+  target SHA. Every subsequent poll pinned `headSha` before waiting. **Fourth iteration in which
+  hand-rolling around the shipped snippet produced a defect.**
+
+**Open non-blocking carry-forwards (enumerated — a bare COUNT is unrecoverable, iter-19 rule):**
+**CF-L-1** — the plan's `MUT-POLL-NOT-AN-EFFECT` names `approve.go`, but the guarded code
+(capability check, debit, record write) is in `broker.go`; a mutation to `approve.go` alone cannot
+bypass any of the three. Correct the mutation spec at close-out — owner: **M3.C**.
+**CF-L-2** — `handlers_git.go` sets `GIT_AUTHOR_*`/`GIT_COMMITTER_*` although the plan's file entry
+says "no `GIT_*` variables". Functionally required (an empty HOME leaves git without an identity)
+and it strengthens determinism, but the code carries no comment explaining the deviation. Add one
+and correct the spec to "no inherited/HOME-borne git config" — owner: **M3.C**.
+**CF-L-3** — `walkApprovalHead` walks the approval head chain with no explicit depth bound. Cycles
+are impossible (the chain is content-addressed, so a cycle would need a hash containing itself), but
+the walk is O(all approvals ever) per poll and carries no stated bound. Add a depth guard or the
+cycle-impossibility comment — owner: **M3.C**, which owns the bench.
+**CF-L-4** — AC7's "delete the decision object" uses a test-local store wrapper because `host/store`
+exposes no deletion API. Correct and disclosed, but note it in M3.C so a future evaluator does not
+read it as requiring store-level deletion — owner: **M3.C**.
+**CF-L-5** — the darwin/linux divergence in Finding 1 means the rig's gate is blind to a whole class
+of subprocess-lifetime bug. Consider whether any other exec surface (`host/replay`, `host/archive`)
+has the same direct-child-only kill — **not** audited this iteration — owner: **M3.C**.
+Earlier carry-forwards still open: **CF-K-1**, **CF-K-2**, **CF-K-3**, **CF-F-1**, **CF-F-2**,
+**CF-F-4**, **CF-G-1**, **CF-G-3**, **CF-H-1**, **CF-J-4**.
+
+**Next**: **M3.C** — the effectful-episode record/replay proof, the broker's price in the day-1
+baseline, and the honest close-out (AC8, AC11, AC12, AC13, AC14, AC17), folding CF-L-1…CF-L-5 and
+flipping AC18's checkbox (CF-K-2). Then **M3.D** (ratified option (i)) and item **4c
+`w-effect-journal`**. The dispatch→record crash window remains OPEN and AC19 still forbids claiming
+otherwise.

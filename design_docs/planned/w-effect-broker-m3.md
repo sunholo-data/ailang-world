@@ -728,25 +728,25 @@ named destination in Deferred Scope.
 - [ ] Ledger enforcement: an invoke whose cost exceeds the session's REMAINING budget is
   `denied:budget` even when the static grant would allow it; the denial is recorded with the
   budget untouched.
-- [ ] All four handlers (FS.Read/FS.Write, Git.Commit, Model.Infer, Human.Approve +
+- [x] All four handlers (FS.Read/FS.Write, Git.Commit, Model.Infer, Human.Approve +
   Human.PollApproval) execute through the one pipeline; Model runs under `--ai-stub` in CI with
   deterministic recorded bytes; Human.Approve is strictly synchronous (final result =
   `Pending(requestRef)`, one immutable record) with the attention budget consumed at request
   time; Human.PollApproval is a normal brokered effect with its own capability, budget line,
   and record.
-- [ ] Effect-record immutability holds by test, not convention: after `DecideApproval`, the
+- [x] Effect-record immutability holds by test, not convention: after `DecideApproval`, the
   approve record re-read from the store is byte-identical to the bytes captured at `Invoke`
   time and every stored record's hash re-verifies against its bytes (the named
   record-immutability mutation demonstrated red during the sprint).
-- [ ] Replay of the approval flow matches Decision 5's stated contract: the approve record
+- [x] Replay of the approval flow matches Decision 5's stated contract: the approve record
   replays as Pending, the poll record replays the recorded observation, and the decision
   object is never consulted except through a poll record.
 - [ ] Replay mode: the M3.C episode re-runs byte-identically from records with ZERO handler
   dispatches (counting-stub assertion); a deleted record yields `ReplayGapError`; the replayed
   transition's evidence refs resolve to the same record objects.
-- [ ] The capsule floor: all six restrictions F1–F6 individually green on darwin/arm64 AND
+- [x] The capsule floor: all six restrictions F1–F6 individually green on darwin/arm64 AND
   linux CI, each with its named mutation demonstrated red during the sprint.
-- [ ] `TestBrokerDependencyAllowlist` green; `go.mod`/`go.sum` byte-unchanged (zero new
+- [x] `TestBrokerDependencyAllowlist` green; `go.mod`/`go.sum` byte-unchanged (zero new
   dependencies).
 - [ ] Byte-unchanged by diff, not by claim: `host/store/**` (incl. `schema.sql`),
   `host/replay/**`, `host/{hashref,canon,archive,registry}/**`, `host/daemon/**` (except

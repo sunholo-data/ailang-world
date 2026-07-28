@@ -645,9 +645,35 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
    a tracking item + repro fixture), CF-C-4 (405 asserted on 2 of 7 GET routes).
 4. [**[IN-SPRINT] — M3.A LANDED 2026-07-28 (iter-31), PR #20 → squash `2edf2ef`, judge PASS
    84/100 · **M3.B0 LANDED 2026-07-28 (iter-32), dev CI green both jobs, PR #21 → squash
-   `9401f2d`, judge sonnet PASS 88/100 zero-blocking**. **M3.D IS RATIFIED — Mark, attended,
-   `c26b27d`: OPTION (i), and Decision 3 REOPENED for a third `failed` arm. NO human gate is
-   outstanding on this item.** M3.B is NEXT.**
+   `9401f2d`, judge sonnet PASS 88/100 zero-blocking** · **M3.B LANDED 2026-07-29 (iter-33), dev
+   CI green both jobs, PR #22 → squash `10beb83`, judge sonnet PASS 88/100 zero-blocking**.
+   **M3.D IS RATIFIED — Mark, attended, `c26b27d`: OPTION (i), and Decision 3 REOPENED for a
+   third `failed` arm. NO human gate is outstanding on this item.** M3.C is NEXT.**
+
+   **M3.B LANDED — the handlers, the approval flow and the isolation floor** (PR #22 → `10beb83`;
+   1,767 insertions across checkpoints B-1/B-2/B-3 against the planner's ~1,450 = **1.22×**).
+   Closes **AC5, AC6, AC7, AC9, AC15**. ONE shared bounded-subprocess surface (`handlers.go`) so a
+   single production mutation reds BOTH handlers' timeout and output-cap tests; `Git.Commit` with a
+   scrubbed env and an empty HOME; `Model.Infer` over the pinned binary under `--ai-stub`; the
+   frozen synchronous approval flow (`approve.go` — `Pending(requestRef)` as the FINAL result, the
+   record never rewritten, `DecideApproval` an operator entry point writing a SEPARATE decision
+   object, `Human.PollApproval` an ordinary effect); and `host/capsule`, the F1–F6 floor with one
+   independently-reddable test per restriction and **ZERO skips**. `host/replay/**` byte-unchanged.
+   **THE FINDING: a bounded-wait guarantee that did not hold on linux, in a mission whose Standing
+   Rule 6 is "every wait is bounded".** `runBounded` killed only its DIRECT child, so a handler that
+   forks left a grandchild holding the inherited stdout pipe and the capped read blocked until the
+   GRANDCHILD exited — linux CI measured **`5.002891s` against a 40ms bound**, to three decimals the
+   runtime of the `sleep 5`, while darwin ran the identical code in **42ms**. `scripts/verify_ail.sh`
+   already carried the correction (**V26**: kill the whole process group); the Go exec surfaces
+   repeated the mistake the shell gate had already fixed. Both corrected (`Setpgid` + `Kill(-pid)`).
+   **It was exposed only because a CI-robustness fix WIDENED the discrimination gap rather than
+   loosening the assertion** — the tempting fix (raise the guard past the observed 316ms) would have
+   shipped it silently. Two more controller-found defects, each reproduced before being acted on:
+   `Model.Infer` hand-rolled JSON escaping that emitted **invalid JSON for control bytes**
+   (reachable from any payload; post-M3.B0 it bills a STANDING DEBIT for what is a host encoding
+   bug), and the capsule never killing a child that overflowed the output cap, so **F6 silently
+   degraded into F5** (`*TimeoutError` returned for an overflow — the shipped F6 fixture emits 513
+   bytes, below one pipe buffer, so its child always exits and the defect was invisible to it).
 
    **M3.B0 EXECUTED THE RATIFICATION** (folded into the doc at `84b8efd`, shipped at `9401f2d`):
    Decision 3 now has a THIRD arm — **every failed effect writes exactly one record and the DEBIT
