@@ -118,10 +118,12 @@ clause depends on.
   frozen; the Go mirror is pinned by a drift test that fails on any divergence.
 - [ ] Denial checks run in the frozen order: effect name → scope → expiry → budget (first
   failure names the denial).
-- [ ] Every effect request produces exactly one effect record — allowed AND denied — written to
-  the store as a content-addressed object with `semantic_id` `world/effect-record/v1` BEFORE the
-  result is returned to the requester, and **never rewritten afterwards** — there is no record
-  "update" or "completion" path anywhere in the broker.
+- [ ] Every effect request produces exactly one effect record — **denied, succeeded AND failed**
+  (the third arm was RATIFIED 2026-07-28, charter `c26b27d`; see Decision 3's reopen block) —
+  written to the store as a content-addressed object with `semantic_id` `world/effect-record/v1`
+  BEFORE the result or error is returned to the requester, and **never rewritten afterwards** —
+  there is no record "update" or "completion" path anywhere in the broker. A failed effect keeps
+  its debit; there is no refund path.
 - [ ] `Human.Approve` is STRICTLY SYNCHRONOUS: its final result is the `Pending(requestRef)`
   object and its one record's `resultRef` points to it; `DecideApproval` writes a separate
   decision object and moves the `world/approvals/v1` head only; observing the decision is the
@@ -222,9 +224,14 @@ must survive a session (Open Decision OD3).
 3. **Denied** → an effect record is written (allowed=false, denial label, budget untouched,
    zero `resultRef`) → the structured denial returns to the caller. Denials are first-class
    records, not silent refusals.
-4. **Allowed** → the ledger debits → the handler executes → the result bytes are content-
-   addressed and written as an object (`world/effect-result/v1`) → the effect record is written
-   (allowed=true, `resultRef`) → the result returns to the caller.
+4. **Allowed, handler succeeded** → the ledger debits → the handler executes → the result bytes
+   are content-addressed and written as an object (`world/effect-result/v1`) → the effect record
+   is written (allowed=true, `resultRef`) → the result returns to the caller.
+4b. **Allowed, handler FAILED** → the ledger debits (and the debit **stands**) → the handler
+   executes and returns a structured error → an effect record is written recording the failure,
+   with the debit reflected in `budgetBefore`/`budgetAfter` and a zero `resultRef` (no result
+   object exists) → the structured error returns to the caller. See the reopened-Decision block
+   below: this arm is RATIFIED, not optional.
 5. The record's own hash is returned with the result, so an episode driver can thread
    `RecordedEffect(recordRef)` into the `Transition.evidence` it commits.
 
@@ -237,11 +244,102 @@ inside `Invoke` and writes exactly ONE record. There is no asynchronous completi
 broker, by construction, and the immutability gate in the Non-Vacuity table pins this with a
 named mutation.
 
-**SUPERSEDED — `w-store-durability` SD.B/SD.C, landed.** The former honest-ordering limitation
-said the handler executed before any durable record and deferred the crash window to a future
-write-ahead journal. The landed store journal now records a durable intent before dispatch,
-records the outcome afterward, surfaces indeterminate intents, and never auto-re-executes them.
-M3 consumes that substrate and its frozen per-handler reconciliation contract.
+> ### CORRECTED 2026-07-28 (iter-32) — the previous supersession note OVERCLAIMED, and the
+> correction is ratified
+>
+> **What this note used to say** (kept verbatim so the overclaim is legible, not quietly
+> rewritten): *"SUPERSEDED — `w-store-durability` SD.B/SD.C, landed. The former honest-ordering
+> limitation said the handler executed before any durable record and deferred the crash window to
+> a future write-ahead journal. The landed store journal now records a durable intent before
+> dispatch, records the outcome afterward, surfaces indeterminate intents, and never
+> auto-re-executes them. M3 consumes that substrate and its frozen per-handler reconciliation
+> contract."*
+>
+> **Why it was false.** Measured first-party at iter-31 Gate 2: `store.AppendIntent`'s
+> `validateIntent` requires six non-zero **commit-shaped** refs and `bindCommitIntentTx` compares
+> all eight for byte-equality. A brokered effect's RESULT is an INPUT to the transition that
+> produces the next world, so `EntryHash`/`WorldRef` are **not knowable before dispatch** — a
+> pre-dispatch intent for a general brokered effect is structurally impossible. **The landed
+> substrate is a COMMIT journal; closing this window at effect granularity needs an EFFECT
+> journal, which does not exist yet.**
+>
+> **What M3 actually delivers (RATIFIED by Mark, attended 2026-07-28, charter `c26b27d` — option
+> (i), episode/commit-boundary anchoring).** The episode driver appends the intent once world+entry
+> are built and commits with `InvocationID`; the broker gains a **production** `recover.go`
+> consuming `PendingIntents`/`GetReceipt`, surfacing `IndeterminateEffectError` and **never**
+> auto-re-executing. That is M3.D.
+>
+> **The dispatch→record window STAYS OPEN in M3, and M3 says so.** If the process dies between a
+> handler's dispatch and its record write, the external effect has happened with no durable effect
+> record, and replay cannot distinguish "never executed" from "executed, record lost". M3 claims
+> exactly this and no more: *every attempted dispatch is durably detectable at the commit
+> boundary; completed outcomes are replayable; indeterminate attempts fail closed without live
+> fallback.* Closing the window at effect granularity is queue item **4c `w-effect-journal`**
+> (the `host/store` kernel reopen it entails is **pre-ratified in principle** by the same
+> decision; its design still quorums at pick).
+>
+> **No milestone, acceptance criterion or claim in this document may state or imply that the
+> dispatch→record crash window is closed by M3.**
+
+### REOPENED 2026-07-28 (iter-32) — the THIRD ARM. Ratified by Mark, attended (charter `c26b27d`)
+
+This Decision was FROZEN with exactly two arms, **denied** and **allowed**. The Design Freeze
+exists to force a human gate before a frozen decision changes; that gate was **exercised and
+answered**, so this reopen is ratified, not a sprint-time renegotiation.
+
+**The defect it closes (`CF-J-2`, reproduced first-party at iter-31).** A handler that returns an
+error leaves the ledger **debited** (the debit happens before dispatch) and writes **NO record at
+all**. So a failed effect — possibly *partially executed*: bytes written, tokens spent, a git
+object created — is invisible to both audit and replay, while a merely **denied** effect is fully
+recorded. The weaker outcome is better recorded than the stronger one, and Decision 3's own claim
+that "the ledger is reconstructible from the record stream alone" is **false on this path** (the
+ledger says 2, the records say 5). It is CI-pinned today by
+`host/broker/handler_error_repro_test.go`, a committed reproduction asserting the *current*
+behaviour.
+
+**THE RATIFIED RESOLUTION — both halves are binding:**
+
+1. **Every failed effect writes a record.** Audit and replay become complete, rather than
+   complete-except-on-failure. Exactly ONE record, written before the error returns to the caller,
+   immutable like every other — the write-once discipline above is unchanged.
+2. **The debit STANDS. There is no refund.** Refunding an effect that may have already spent real
+   money would make the ledger lie about spend — the never-lie law applied to money. The candidate
+   fix that rolled the debit back is **explicitly rejected**.
+
+**Constraints the encoding must satisfy** (the exact wire form is a bounded PLANNER decision — it
+is specified in the sprint plan and implemented once, not re-derived per site):
+
+- `recordConsistent` must remain a **Z3-provable** total law over all three arms, in the
+  `design_docs/sketches/effectbroker.ail` sketch, with `tests[]` rows covering each arm and at
+  least one *negative* row per arm. The Go `RecordConsistent` mirror and the drift test move with
+  it.
+- The three arms must be **mutually distinguishable from the record bytes alone** — a replayer
+  holding only the record stream must be able to tell "denied", "succeeded" and "failed" apart
+  without consulting anything else.
+- A failed record carries a **zero `resultRef`** (no result object exists) and reflects the debit:
+  `budgetAfter == budgetBefore - cost`, the same as a success.
+- **Replay must reproduce the failure**, not the absence of a result: replaying a failed record
+  returns the structured error and dispatches ZERO handlers (Decision 5's contract, extended to
+  the third arm).
+- `world/effect-record/v1`'s codec is the frozen fixed-field-order codec, and `DecodeRecord` uses
+  `DisallowUnknownFields`. Whether the third arm is a new field or a re-reading of the existing
+  `allowed`/`denial` pair, and whether the semantic ID must bump, is the planner's call to make
+  **once, explicitly, with its reasoning recorded** — including whether any records already
+  written by a landed milestone would fail to decode.
+- The committed reproduction `host/broker/handler_error_repro_test.go` is this fix's **red→green**
+  test: every assertion in it currently asserts the broken behaviour and is expected to be
+  rewritten, deliberately, by whoever closes this. That is what a committed reproduction is for.
+
+**Sequencing.** This arm rewrites the one pipeline every handler flows through, so it lands
+**before or with** the subprocess handlers of M3.B — `Git.Commit` and `Model.Infer` are precisely
+the handlers most likely to fail mid-effect, and adding them over a two-arm pipeline would ship
+new failure paths into a known hole.
+
+**Bookkeeping note (an artifact-drift instance, folded in here).** The committed reproduction file
+names this carry-forward **`CF-I-2`** in its comments and in its test name
+(`TestCFI2HandlerErrorDebitsLedgerAndWritesNoRecord`), but iter-31 renumbered it **`CF-J-2`**
+because `CF-I-1`/`CF-I-2` were already used and closed by iter-30. The renumbering never reached
+the code. Whoever rewrites that file red→green renames it to `CF-J-2` in the same commit.
 
 ## Decision 4 — The four handlers
 
@@ -404,7 +502,44 @@ its own design doc + quorum, the sanctioned path.
 - **ci_green_boundary**: no daemon, capsule, git, model, or approval code exists yet; nothing
   depends on M3.B
 
+### M3.B0 — The RATIFIED third arm: every failed effect writes a record, and the debit stands (~0.5d)
+
+**Added iter-32 by Mark's attended ratification (charter `c26b27d`) — see Decision 3's reopen
+block for the binding semantics and constraints.** It is a SEPARATE, leading unit and not a
+sub-task of M3.B for one reason: it rewrites the single pipeline every handler flows through, and
+M3.B's whole job is to add the two handlers most likely to fail mid-effect (`Git.Commit`,
+`Model.Infer`). Adding new failure paths over a two-arm pipeline would ship them into a known hole.
+
+- **files**: `design_docs/sketches/effectbroker.ail` (the frozen law — `recordConsistent`
+  generalized to three arms with per-arm positive AND negative `tests[]` rows; **Appendix A of
+  this document is updated in the SAME commit and the byte-verbatim `diff` re-asserted**, and
+  `verify_ail.sh`'s totals are re-measured, never quoted: report `len(tests[])` and
+  `passed_tests` SEPARATELY, gate on `len(tests[])`), `host/broker/record.go` (the codec + the
+  `RecordConsistent` mirror), `host/broker/broker.go` (the third arm in `Invoke` and in the
+  Replay path), `host/broker/broker_test.go` + `host/broker/decide_test.go` (drift test rows,
+  golden bytes, arm-discrimination, replay-of-failure),
+  `host/broker/handler_error_repro_test.go` (**rewritten red→green** and renamed
+  `CF-I-2`→`CF-J-2`)
+- **also folds CF-J-1** — the comment above `effectAllowed` in the sketch still carries the
+  first-draft claim "a contract calling a callee whose params mix two record sorts Z3-errors",
+  which this document's own **U1** row refutes. The sketch is landed byte-verbatim by design, so
+  the correction had to wait for the next deviation that re-runs both gates and updates
+  Appendix A. This is that deviation.
+- **acceptance_checks**: **AC18** in full (see Acceptance Criteria), with all four named
+  mutations — `MUT-FAILED-ARM-NO-RECORD`, `MUT-FAILED-ARM-REFUND`,
+  `MUT-FAILED-ARM-INDISTINGUISHABLE`, `MUT-REPLAY-FAILED-AS-SUCCESS` — demonstrated RED during
+  the sprint, each with the reds it must NOT cause reported too (a blanket red proves nothing);
+  every file reverted byte-identical afterwards, asserted by hash
+- **verify_commands**: both gates, plus the Appendix-A `diff` and a re-measured
+  `verify_ail.sh` totals line
+- **ci_green_boundary**: independently landable as its own PR to dev. Nothing outside
+  `host/broker` and the sketch/Appendix-A pair changes; `host/store/**`, `host/replay/**`,
+  `host/capsule` (does not exist yet), `cmd/`, `world/`, `scripts/`, `.github/` untouched
+
 ### M3.B — Subprocess handlers + Human.Approve + the capsule floor (~1.0d)
+
+**Depends on M3.B0** — the handlers land over the three-arm pipeline, and their failure paths are
+recorded from the first commit.
 
 - **files**: `host/broker/handlers_git.go` (~110), `host/broker/handlers_model.go` (~110 —
   pinned-binary subprocess, `--ai-stub` in tests), `host/broker/approve.go` (~170 — synchronous
@@ -558,7 +693,7 @@ named destination in Deferred Scope.
 | Prefix/glob capability scopes | its own law design (Z3 encodability of pattern matching unproven) | M3 = exact match |
 | Persistent / cross-session budgets | kernel schema decision (ratification-class) | M3 = session ledger + records |
 | Additional Git verbs, GitHub/Cloud/Email handlers | package-lane extensions (S3) | four charter handlers only |
-| ~~Write-ahead effect journal (crash window in Decision 3)~~ | **SUPERSEDED — `w-store-durability` SD.B/SD.C, landed** | durable intent/outcome substrate is now a landed premise for M3 |
+| Write-ahead **effect** journal (the dispatch→record crash window in Decision 3) | **queue item 4c `w-effect-journal`** — the `host/store` kernel reopen is pre-ratified in principle (charter `c26b27d`); its design still quorums at pick | **STILL DEFERRED, and M3 says so.** The iter-31 "SUPERSEDED by `w-store-durability`" claim was measured FALSE: SD.B/SD.C landed a **commit** journal (`validateIntent` needs six non-zero commit-shaped refs, unknowable before dispatch), not an **effect** journal. M3 delivers option (i) commit-boundary anchoring (M3.D) and leaves the dispatch→record window open — see Decision 3's corrected note |
 | Container/microVM isolation | M5 (DESIGN open question 2 recommendation) | M3 = the six-restriction process floor |
 | Unified effectful-episode replay inside `host/replay` | future design, when a real episode needs log-driven effect replay | M3 proves the broker-level path |
 | Kernel promotion of the broker law into `world/capabilities.ail` | future kernel item (touches the `verify_ail.sh` required manifest) | law lives in the checked sketch (the `worlddapi` precedent) |
@@ -572,8 +707,22 @@ named destination in Deferred Scope.
   the silent-skip exit-0).
 - [ ] The Go `decide` mirror is pinned by a drift test covering all five decision arms, every
   sketch `tests[]` boundary case, and the frozen canonical labels.
-- [ ] Every effect request — allowed AND denied — writes exactly one content-addressed effect
-  record before any result is returned; `recordConsistent` holds over every written record.
+- [ ] Every effect request — denied, succeeded AND failed — writes exactly one content-addressed
+  effect record before any result or error is returned; `recordConsistent` holds over every
+  written record.
+- [ ] **AC18 (the RATIFIED third arm, charter `c26b27d`).** A handler that returns an error writes
+  exactly one effect record recording the failure, with the debit **standing**
+  (`budgetAfter == budgetBefore - cost`) and a zero `resultRef`; the three arms are distinguishable
+  from the record bytes alone; `recordConsistent` is Z3-**verified** over all three arms in
+  `design_docs/sketches/effectbroker.ail` with per-arm positive AND negative `tests[]` rows, and
+  the Go mirror + drift test move with it (sketch and Appendix A updated in the SAME commit, byte-
+  verbatim `diff` re-asserted); replaying a failed record returns the structured error with ZERO
+  handler dispatches; and `host/broker/handler_error_repro_test.go` is rewritten red→green (and
+  renamed `CF-I-2`→`CF-J-2`). The ledger is reconstructible from the record stream alone on the
+  failure path — the claim that was false before this arm.
+- [ ] **The honest-claim gate (charter `c26b27d`).** No milestone, acceptance criterion, status
+  line or close-out claim states or implies that the **dispatch→record** crash window is closed by
+  M3. The close-out asserts this by `grep`, not by recollection.
 - [ ] Ledger enforcement: an invoke whose cost exceeds the session's REMAINING budget is
   `denied:budget` even when the static grant would allow it; the denial is recorded with the
   budget untouched.
@@ -617,9 +766,13 @@ named destination in Deferred Scope.
 | Golden record bytes | reorder two codec fields → red at the committed golden |
 | Ledger debit | drop the debit → red (budget-exhaustion test expects `denied:budget` on the second invoke) |
 | `recordConsistent` enforcement | write `budgetAfter = budgetBefore` on an allowed record → red |
+| **AC18 — the failed arm is recorded (`MUT-FAILED-ARM-NO-RECORD`)** | in `host/broker/broker.go`, restore the pre-fix behaviour: return the handler's error WITHOUT writing a record → red at the rewritten `handler_error_repro_test.go` (record count and record ref), and red at the record-stream reconstruction assertion (ledger says N−cost, records say N). PRODUCTION mutation |
+| **AC18 — the debit STANDS (`MUT-FAILED-ARM-REFUND`)** | in `host/broker/broker.go`, roll the ledger back on handler error (`s.grants[i].Budget = budgetBefore`) — the candidate fix the ratification explicitly REJECTED → red at the budget assertion AND at `recordConsistent` over the written failure record (`budgetAfter != budgetBefore - cost`). Two independent reds; if only one fires, the failure record is not carrying the debit and the encoding is wrong. PRODUCTION mutation |
+| **AC18 — the three arms stay distinguishable (`MUT-FAILED-ARM-INDISTINGUISHABLE`)** | encode a failed record with the exact bytes a *successful* record would carry for the same request (however the planner's chosen encoding expresses the arm — drop the discriminator) → red at the from-bytes-alone arm-discrimination test and at the sketch-mirror drift test. DISCRIMINATING: the denied-path and success-path tests must stay GREEN, or the mutation is proving only that records exist |
+| **AC18 — replay reproduces the failure (`MUT-REPLAY-FAILED-AS-SUCCESS`)** | in Replay mode, return a zero-length result and `nil` error for a failed record instead of the structured error → red at the replay-of-failure test, with the zero-dispatch counting stub still asserted at 0 (a mutation that also dispatches is proving the wrong thing) |
 | Replay zero-dispatch | let Replay mode fall back to live dispatch on a missing record → red (counting stub > 0 AND missing `ReplayGapError`) |
 | Episode byte-identity | truncate one recorded result object → red (byte comparison + gap error) |
-| F1 pinned interpreter | corrupt the archived binary by one byte → red (hash-verification refusal — the replay `KindHashMismatch` class) |
+| F1 pinned interpreter | **CORRECTED iter-32 (CF-J-4).** The mutation as first written — "corrupt the archived binary by one byte" — is a **FIXTURE** mutation: corrupting the binary makes the F1 test *pass*, so no change to `capsule.go` can fail it. It tests the test. Run **BOTH**, and report them separately: (a) the fixture corruption, which proves the test can fire at all; (b) **`MUT-F1-UNVERIFIED-EXEC`** — in `host/capsule/capsule.go`, skip the `verifyExecutable` hash check before `exec` → red at the hash-mismatch refusal test ONLY. Only (b) is evidence that the gate guards production code (the standing rule: a named RED mutation is evidence only if it mutates the code the gate guards) |
 | F2 caps denial | run the capsule with `--caps IO` instead of `--caps ""` → red (the effect-attempting fixture must FAIL for the test to pass) |
 | F3 FS jail | omit `AILANG_FS_SANDBOX` from the child env → red (escape probe would succeed) |
 | F4 env scrub | pass `os.Environ()` through → red (marker variable becomes visible) |
