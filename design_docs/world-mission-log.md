@@ -3189,3 +3189,277 @@ in iter-23, and this iteration's commit point-of-no-return), and its half (i) **
 under **both** answers to the parked question, so it can start without waiting on Mark.
 `w-effect-broker-m3` (item 4) unparks the moment the (a)/(b) question is answered.
 `w-mcp-projection` unparks only when `#498` ships a seam **and** clause 3 lands.
+
+## Iteration 25 — 2026-07-28 — `w-store-durability` (clause-1 kernel durability) NEW-DOC authored + 2 quorum rounds + carve-out revision → **DOC LANDED, item PARKED on a RATIFICATION PACKET**; the one-field defect measured out to eight, and a reviewer caught an arithmetic error in my own evidence
+
+**Pick**: item 4 `w-effect-broker-m3` remained PARKED — still no `@MarkEdmondson1234` answer to its
+binary (a)/(b) question, now **2 iterations old**. The recorded default `(b)` was again NOT
+force-applied: the queue was not fully blocked, and forcing a ratification-class default early
+spends a decision the human is still holding. Pick = the queue's next actionable item, **item 4b
+`w-store-durability`**, exactly as iter-24's Next line predicted. NEW-DOC tag verified as a FACT
+before spending anything: `grep -ril w-store-durability design_docs/` matched only the charter and
+this log; `planned/` held `w-effect-broker-m3`, `w-log-epoch-decision`, `w-mcp-projection` and no
+fourth doc; `git log origin/dev --grep` showed only the two bookkeeping commits that queued it;
+`gh pr list --search "store-durability in:title" --state all` was empty.
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` =
+`sunholo-voight-kampff`; `dev` == `origin/dev` (`615619c`), nothing missing; workflow `CI`
+**completed/success** at HEAD (this repo has exactly ONE workflow — Build-and-Release / Docs-Deploy
+do not exist here, so they are **N/A, not pending**); no `[nightly-eval]` issues; only `#9` open.
+No new `@MarkEdmondson1234` comment on `#9` (13 comments, every one a bot report) nor on
+predecessor `#1` (25 comments); watermark `2026-07-27T08:55:11Z` unchanged, so nothing to advance.
+No rotation due (`#9` titles this week, 13 ≪ 80 — the iter-20 intent test). Inbox: **two** unread,
+both V1-side and neither a request for World — a V1 eval-suite start notification and mission-v1's
+iteration-109 report. Per the cross-mission contract a sibling's report is neither a directive nor
+a demand; triaged to zero without action.
+
+**Routing evidence**
+
+| Role | Pinned | Actually ran | Note |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | claude-opus-5 | quota bucket |
+| Designer | ROTATION → next after `codex:gpt-5.6-sol` = **`claude:claude-fable-5`** | **Fable ×2** (author + round-1 revision) | via `claude-sub` (subscription-or-nothing); 1-token probe replied `ok` first. Author 15.7 min under a 30-min cap, revision 7.4 min under a 25-min cap, both rc=0 |
+| Quorum r1 | `gpt5-6-sol`, `gemini-3-1-pro`, cap `0.25` | **both present** | $0.094345 + $0.038692 = **$0.133037** → BLOCKED |
+| Quorum r2 | same | **both present** | $0.110670 + $0.046362 = **$0.157032** → BLOCKED (2 of 2) |
+| Carve-out revision | — | **controller, inline** | reviewers' VERBATIM text; no third round |
+| Planner / Executor / Evaluator | — | **did not run** | the item parked before the sprint lane — see below |
+
+`metered=$0.290069` (quorum reviewers only; designer and controller on subscription buckets. $5
+ceiling untouched). Rotation state advanced to `claude:claude-fable-5`.
+
+**Delivered**: `design_docs/planned/w-store-durability.md` (**1,058 lines**) and
+`design_docs/sketches/storejournal.ail` (**163 lines**, 7 Z3-proven laws), plus this record and the
+charter re-tag. Unlike iter-24's doc, this one **ships `.ail`** — the write-validity / receipt /
+retry contract is pure kernel law, so coding-standard S1 applies rather than the host-boundary
+argument. Required-check manifest legitimately unmoved: the gate's exact totals are `world/`-scoped.
+
+### THE ITEM IS BIGGER THAN THE ROW THAT QUEUED IT — measured, not argued
+
+The charter row named ONE field: `store.Commit` writes a zero `PrevEntryHash` that
+`store.GetLogEntry` cannot read back. A throwaway table-driven probe I ran at `origin/dev`
+`615619c` **before any routing**, and re-ran independently after the designer's account rather than
+inheriting it, found the real shape:
+
+```
+zero TransitionFn        commit_err=<nil> | GetLogEntry err=…transitionFn: hashref: empty hashref text
+zero Interpreter         commit_err=<nil> | GetLogEntry err=…interpreter: …
+zero EntryHash           commit_err=<nil> | GetLogEntry err=…hash: …
+zero TransitionRef       commit_err=<nil> | GetLogEntry err=…transitionRef: …
+zero PrevEntryHash       commit_err=<nil> | GetLogEntry err=…prevEntryHash: …
+zero NextWorld.LogHead   commit_err=<nil> | GetWorld(head) err=…log head: …
+zero NextWorld.StateRoot commit_err=<nil> | GetWorld(head) err=…state root: …
+zero NextWorld.Ref       commit_err=<nil> | GetLogEntry ok=true | GetWorld(head) ok=true   <-- reads back FINE
+```
+
+**`store.Commit` validates NONE of its eight ref fields.** Seven persist a permanently unreadable
+row. The eighth, `NextWorld.Ref`, commits and reads back *fine* — an empty-string ref becomes the
+selected head, degenerate-but-readable — which makes it the one poison shape a read-side fix could
+never even observe, and therefore the single sharpest argument for the doc's ARM V1 (validate on
+write) over ARM V2 (be lenient on read).
+
+Two further measured facts the charter row did not carry, both from the same probe:
+
+1. **The poisoned commit ADVANCES the head.** `SelectedHead()` returns the new world and
+   `GetWorld(head)` succeeds, with its `LogHead` addressing an entry no reader can ever load. The
+   store's *current* world is un-walkable backwards.
+2. **The damage is not self-limiting.** A subsequent, entirely legal commit chains entry 2 onto the
+   poisoned entry 1 and reads back fine. The append-only log grows a **permanent hole mid-chain
+   with readable entries on both sides**, with no detection and no recovery path.
+
+Blast radius reaches the REST surface: `handleLogRange` is a bounded loop over `GetLogEntry`, so
+ONE poisoned index 500s the **whole range read**, not just that entry.
+
+### THE QUORUM EARNED ITS KEEP FOUR TIMES ACROSS TWO ROUNDS
+
+**Round 1 — BLOCKED** (both present, `$0.133037`):
+
+- **`gpt5-6-sol`**: `Commit.InvocationID` was never BOUND to the intent's planned fields.
+  `AppendIntent(id, A)` then `Commit(id, B)` would write a receipt claiming A resolved as B —
+  atomic *presence* of commit + outcome had been designed, semantic *equality* had not. →
+  **Applied in the reviewer's own terms**: in-transaction intent load + canonical field compare,
+  `InvocationMismatchError{ID, Field}`, resolved-ID reuse specified, new `AC15`, new
+  `MUT-INTENT-UNBOUND` — **and a new Z3-proven sketch law `intentBindsCommit`**, so field-level
+  binding is PROVEN rather than asserted in prose.
+- **`gemini-3-1-pro`**: one `ScanUnreadable(fromIndex, limit)` cannot paginate BOTH `log_entries`
+  (integer index) and `worlds` (content-addressed TEXT key) without unstable `OFFSET`s or implicit
+  SQLite rowids that a `VACUUM` can renumber. → **Applied verbatim**:
+  `ScanUnreadableLog(fromIndex, limit)` + `ScanUnreadableWorlds(afterRef, limit)`, with the
+  lexicographic keyset ordering stated explicitly rather than implied.
+
+**Round 2 — BLOCKED, 2 of 2** (both present, `$0.157032`):
+
+- **`gpt5-6-sol`**: the bounded-allocation claim was unsupported — *"merely stopping at the supplied
+  limit does not bound allocation or query work"* when the limit is caller-controlled with
+  undefined zero/negative/oversized behaviour; and the startup sweep as written could silently miss
+  every hole after page 1.
+- **`gemini-3-1-pro`**: round 1's binding compared only three fields, but **premise V12 records that
+  the kernel never derives `EntryHash` from entry contents** — so a caller can mutate
+  `PrevEntryHash`/`TransitionFn`/`Interpreter` while holding `EntryHash` byte-identical, and the
+  receipt would falsely claim the original intent succeeded. It does not challenge round 1's fix;
+  it finishes it through the gap round 1 left open.
+
+### NARROW-REFINEMENT CARVE-OUT APPLIED (bounded 2nd revision, controller)
+
+Both limbs hold. **(a)** each objection carries concrete, reviewer-authored `proposed_fix` prose
+(named kernel constants, a named error type, a named warning, an explicit field list). **(b)**
+neither disputes the design DIRECTION — arms, milestone structure, ratification framing and the
+(a)/(b) gating section all stand; the defects are bounded-allocation completeness and an incomplete
+field list. Applied:
+
+1. Kernel constants `MaxPendingIntentsPage` / `MaxIntegrityScanPage` with a `1 <= limit <= Max…`
+   guard returning `InvalidLimitError` — **the kernel owns the ceiling, not the caller**. The
+   superseded claim ("bounded because it respects the caller's limit") is stated, not deleted.
+2. The daemon's startup integrity check pages to completion or a fixed total-row/time budget and,
+   on exhaustion, emits a **distinct `integrity_scan_incomplete` warning carrying its continuation
+   cursor and counts** — never a clean-looking message over a truncated scan.
+3. The commit-defining field list widened to all seven ref fields in Decision 4 steps 1–2, the
+   Design Freeze and `AC15`, with the **`EntryHash`-preserving drift case REQUIRED**.
+4. `P7` rewritten around "the KERNEL owns the bound"; `AC10` extended with zero / negative / `Max…`
+   / `Max…+1` cases and a multi-page startup test; two Design-Freeze boxes added.
+5. Four new RED mutations: `MUT-CALLER-OWNS-LIMIT`, `MUT-SCAN-SILENT-TRUNCATE`,
+   `MUT-INTENT-NARROW-BIND`, joining round 1's `MUT-INTENT-UNBOUND`.
+
+**No third round** — the carve-out is one bounded revision, not a re-litigation. This SATISFIES the
+objections; Standing rule 2 still forbids proceeding over a contested DIRECTION, and none was.
+
+### THE REVIEWER CAUGHT AN ARITHMETIC ERROR IN MY OWN FIRST-PARTY EVIDENCE
+
+`gemini-3-1-pro`'s round-2 "catch" was not about the designer's work. My premise row **V23** — the
+one I wrote, from my own probe — said *"seven-field matrix … the seventh, `NextWorld.Ref`"* while
+listing seven **poisoned** fields before it. Eight, not seven. The row is now corrected in the open,
+with the correction and its source stated inline rather than quietly patched.
+
+The durable lesson is sharper than the typo. This mission's standing rule is *never launder a
+sub-agent's claim — re-run it yourself*. I did exactly that, twice, and the transcripts were right.
+What slipped through was the **sentence I wrapped around my own correct measurement**. First-party
+measurement earns trust for the OBSERVATIONS, not for the arithmetic and summary built on top of
+them; a sub-agent's number gets re-run, while the controller's own count of its own results gets
+waved through because it feels like ground truth. Everything handed downstream is a claim, including
+the controller's summary of its own evidence.
+
+### WHY NO SPRINT RAN, AND WHY THAT IS NOT A MISS
+
+The carve-out normally routes straight to sprint-planner. It did not here, and the reason is the
+doc's own final acceptance box, not the quorum: **the kernel arms are ratification-class** under the
+charter's frozen-kernel guardrail — a behavioural change to the landed `store.Commit`, the
+**first-ever `schema.sql` change**, and a `Commit` struct extension. A plan would plan work that
+cannot legally start, and if Mark selects ARM V2 or ARM J2 the plan is waste. Same shape as
+iteration 24's decision, different cause: iter-24 was blocked on external prerequisites (an upstream
+seam + an absent registry), this is blocked on **one human decision the doc has already reduced to
+three named arm choices with recommendations**. Recorded as a deliberate routing decision.
+
+### A GATE WEAKNESS, FOUND INDEPENDENTLY BY BOTH CONTROLLER AND DESIGNER
+
+`verify_ail.sh` Leg 2 runs `ailang test --format json world/` — **`world/` only**. A sketch's inline
+`tests[]` are therefore **never CI-executed**. The sketch's *contracts* ARE swept by Leg 1's
+per-module `ai-check` (which is why the 7 Z3 proofs are genuinely gated), but its 25 named tests are
+honest dead weight in CI unless a milestone runs them explicitly. The designer reached the same
+conclusion from reading the script while I reached it from running the commands; the doc states it
+as an honest limitation and puts the explicit run in every milestone's `verify_commands`. Recorded
+in the Repo Profile.
+
+Alongside it, the module count moved **9 → 10**. The load-bearing numbers are unchanged and remain
+the thing to assert — **4/4 required `world/` identities** and **14/14 named `world/` tests**, both
+`world/`-scoped by construction. A future iteration seeing 10 where iterations 22–24 recorded 9 is
+observing this commit, not a regression.
+
+### A SECOND MEASUREMENT-HONESTY CORRECTION, CAUGHT BEFORE THE QUORUM
+
+The designer wrote **"26/26 named tests"**, taken from `passed_tests`. The real named count was
+**20**: `passed_tests`/`total_tests` also count contract-derived properties — precisely the landed
+`verify_ail.sh` correction D-B ("gate on `len(tests[])`, not `passed_tests`"). I caught it by
+re-running the command instead of reading the report, corrected it in seven places before round 1
+ran, and it is now a Repo Profile rule. Post-revision the true figures are `len(tests[]) = 25`
+named and `passed_tests = 32` (25 named + 7 contract properties), reported separately throughout.
+
+### Controller's own independent evidence (never laundering a sub-agent claim)
+
+- The eight-field matrix above — run twice, before routing and after the designer's report.
+- `ai-check` on the final sketch → `check.passed: true`, **7 verified / 0 counterexample / 0
+  errors**, all seven enumerated in `verify.results[]` — so z3 genuinely ran, not the V27
+  silent-skip.
+- `ailang test --format json sketches/storejournal.ail` → **25 named** (`len(tests[])`), 32
+  `passed_tests`, **0 failed**.
+- `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh` → **PASS**, 4/4 required `world/`
+  identities across **10** modules, 14/14 named `world/` tests — run in BOTH the worktree and the
+  main tree after the copy.
+- Pinned binary re-confirmed: `AILANG v0.30.0`, commit `e37b370`, clean (no `-dirty`).
+- Scope clean **by diff**: exactly two new files plus this charter and log. No Go, no schema, no
+  CI, no `go.mod`.
+
+### Ruled out / refuted this iteration
+
+1. **"CF-B-2 is a one-field defect"** — REFUTED by measurement. It is an eight-field class in which
+   `Commit` validates nothing; see the matrix above.
+2. **"A read-side fix (ARM V2) could close CF-B-2"** — REFUTED on the `NextWorld.Ref` case, which
+   reads back without error, so a read-side fix never observes a failure to be lenient about.
+3. **"The sketch's inline tests are covered by CI"** — REFUTED by reading the script: Leg 2 sweeps
+   `world/` only.
+4. **"`passed_tests` is the named-test count"** — REFUTED by measurement (32 vs 25); the landed
+   correction D-B, hit again by a fresh author.
+5. **"Adding a sketch perturbs the required-check manifest"** — REFUTED: `EXACT_TOTAL_VERIFIED`
+   sums only `case "$mod" in world/*` and Leg 2 runs `world/`, so the totals held at 4/14 while the
+   module count moved 9 → 10. No script edit was needed.
+6. **Applying item 4's recorded default `(b)` this iteration** — deliberately NOT done, second
+   iteration running. The queue still had an actionable item, and the same attended comment can now
+   answer both parks at once.
+7. **Running sprint-planner anyway on the carve-out's normal route** — deliberately NOT done; see
+   the routing section. A plan for ratification-blocked work is waste under either arm choice.
+
+### Gate 3b
+
+**N/A for code — no code pushed.** The deliverables are doc/sketch/charter/log commits on `dev`.
+The `CI` workflow's `ailang-verify` leg was run **locally, first-party, green** (above); the
+post-commit run is recorded in the report. `go-verify` is untouched by a doc+sketch diff and was
+not re-run — stated as a CLAIM, not a green.
+
+### Non-blocking carry-forwards (ENUMERATED per the iter-19 process fix)
+
+- **CF-E-1** → whoever executes SD.A: my probe used a **throwaway** test that I deleted. The
+  committed repro fixture is still owed and is the charter's ghost-close requirement — AC1 already
+  specifies its shape, and it must assert POST-fix behaviour, never pin the current defect as
+  expected.
+- **CF-E-2** → `verify_ail.sh` (a future infra item): Leg 2's `world/`-only scope means every
+  sketch's inline tests are unrun in CI. Extending Leg 2 to sweep `design_docs/sketches/` with its
+  own name manifest would close it — but it is a gate change, so it wants its own small design and
+  a deliberate manifest, not an ad-hoc edit inside a feature sprint.
+- **CF-E-3** → `w-mcp-projection` (item 5): when this item lands, that doc's premise row
+  `Commit-boundary contract` (currently **UNVERIFIED — PREREQUISITE**) flips to VERIFIED citing
+  `store.AppendIntent` / `Commit.InvocationID` / `GetReceipt` and the SD.C crash tests, clearing
+  one of its three blockers.
+- **CF-E-4** → `w-effect-broker-m3` (item 4): on unpark, its Decision 3 "honest ordering
+  limitation" paragraph and its Deferred-Scope journal row are superseded either way — under (a) by
+  its own revision, under (b) by this item's landed substrate.
+- **CF-E-5** → charter hygiene, carried forward unactioned from iter-24 (CF-D-4): the Premise
+  Verification Log's early rows may share the "recorded the result, not the conditions" weakness
+  the 2026-07-23 serve-api row had. Still worth one sweep when an iteration is otherwise light —
+  and the next iteration may well be, since the queue is now human-gated.
+
+### Retro — ONE process fix, no skill edit (World never edits the shared skill)
+
+**The iter-24 scar held under test, and its mirror image is the new finding.** Mid-iteration I began
+arming a `pgrep -f "claude-fable-5"` poll to detect the designer's completion — the *exact*
+self-matching pattern iteration 24 recorded as a defect. I recognised it before it ran, killed the
+task, and used the captured-pid `kill -0` form plus the launcher's own completion notification
+instead. The recorded lesson worked as intended.
+
+What is new is the inverse failure, and it is the process fix: **a controller's own summary of its
+own first-party evidence is still a claim.** The standing discipline is "re-run the sub-agent's
+number rather than inheriting it", and it fired correctly twice this iteration (the designer's
+`26/26` and its CF-B-2 account were both re-measured). But V23's arithmetic — mine, over my own
+correct transcript — was never re-read, and an external reviewer had to catch it. Rules recorded:
+before handing a premise row downstream, re-read it **against its own transcript** and count what it
+claims to count; a first-party measurement licenses the observations, not the prose wrapped around
+them.
+
+No routing-policy change (that needs ≥3 evidence rows). The iter-24 generator=judge
+retain-vs-exclude question gained no datapoint this iteration — the rotation put the author on
+Fable, so both reviewers were independent by construction and the collision did not arise.
+
+**Next**: the queue has **no unblocked actionable item left**. Items 4 and 4b both await Mark; item
+5 awaits `ailang#498` plus clause 3; items 6, 6b, 7 and 8 are gated behind those. The single
+highest-value human action is ONE comment on `#9` answering item 4's `(a)`/`(b)` **and** item 4b's
+three arms together — that unparks two items straight to sprint-planner with no re-design. If the
+park persists into the next fire, the only remaining self-serve work is item 9
+`w-verify-binary-lockfile` (~0.5d infra), which the charter itself flags as needing human
+confirmation before implementing. The honest statement is that this loop is now human-gated.
