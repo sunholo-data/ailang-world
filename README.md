@@ -116,6 +116,17 @@ The REST listener is loopback-only (default `127.0.0.1:7644`) and each file-back
 database permits exactly one writer process. A second daemon or embedded writer
 fails closed; read-only store users may coexist.
 
+At startup the daemon performs a bounded integrity scan of persisted log and
+world references. `integrity_scan_complete` means both tables were fully scanned
+within the configured bounds; its row and hole counts describe that complete
+pass. `integrity_scan_incomplete` means a row or time budget stopped the scan;
+the message includes continuation cursors and counts for the scanned prefix, so
+it must not be read as a clean bill of health. Individual `integrity_hole`
+messages identify unreadable historic rows. A store with a historic hole still
+serves readable data: affected reads continue to fail loudly. Repair is ruled
+out by design because rewriting committed immutable history would destroy the
+evidence. Detection and honest operator visibility are the deliverable.
+
 The same binary is the bounded-timeout client:
 
 ```sh

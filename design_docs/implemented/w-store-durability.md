@@ -158,42 +158,42 @@ item applies the same principle to what the writer is allowed to write.
 
 ### Design Freeze (the sprint must not renegotiate these)
 
-- [ ] Every ref field the store WRITES is validated before any transaction begins; a zero or
+- [x] Every ref field the store WRITES is validated before any transaction begins; a zero or
   unparseable ref returns a structured `InvalidRefError{Op, Field}` and leaves the store
   untouched. `ObservedHead` remains the single, kernel-defined zero-legal COMPARED field (P2).
-- [ ] Existing tables' DDL in `schema.sql` is byte-unchanged; the ONLY schema change is the
+- [x] Existing tables' DDL in `schema.sql` is byte-unchanged; the ONLY schema change is the
   additive `journal` table (Decision 3's DDL), applied via the landed `CREATE TABLE IF NOT
   EXISTS` mechanism on writer open.
-- [ ] Poisoned rows already written are never rewritten, deleted, or silently skipped; the
+- [x] Poisoned rows already written are never rewritten, deleted, or silently skipped; the
   detection sweep reports them; reads keep failing loudly with the current structured errors.
-- [ ] The journal is append-only with gapless sequence numbers (Law 4); intent and outcome
+- [x] The journal is append-only with gapless sequence numbers (Law 4); intent and outcome
   payloads are content-addressed store objects (`world/*` semantic IDs per Decision 3); at most
   one intent and one outcome per invocation ID, enforced by the schema.
-- [ ] `GetReceipt` answers in exactly the three states of the sketch's `receiptState` law and can
+- [x] `GetReceipt` answers in exactly the three states of the sketch's `receiptState` law and can
   never answer `not-started` while a durable intent exists (`mayReportNotStarted`, Z3-proven).
-- [ ] `Commit` with an `InvocationID` loads the durable intent inside its own transaction and
+- [x] `Commit` with an `InvocationID` loads the durable intent inside its own transaction and
   compares the commit-defining fields (invocation ID, planned `NextWorld.Ref`,
   `Entry.EntryHash`, `ObservedHead`, `PrevEntryHash`, `TransitionFn`, `TransitionRef`,
   `Interpreter` — the round-2 list) against the actual request BEFORE any mutation; any
   mismatch returns structured `InvocationMismatchError` with the store untouched; a `Commit` of
   an already-resolved ID returns the existing receipt idempotently ONLY when those fields match,
   else the mismatch error (`intentBindsCommit`, Z3-proven — quorum round 1).
-- [ ] Detection is per-table with keyset cursors: `ScanUnreadableLog(fromIndex, limit)` over the
+- [x] Detection is per-table with keyset cursors: `ScanUnreadableLog(fromIndex, limit)` over the
   integer log index, `ScanUnreadableWorlds(afterRef, limit)` over the ref TEXT in lexicographic
   order — never `OFFSET`, never implicit rowids (quorum round 1).
-- [ ] Every paged API enforces `1 <= limit <= Max…` against a KERNEL constant
+- [x] Every paged API enforces `1 <= limit <= Max…` against a KERNEL constant
   (`MaxPendingIntentsPage`, `MaxIntegrityScanPage`) and returns `InvalidLimitError` outside it;
   the daemon's startup integrity check pages to completion or to a fixed total-row/time budget and
   emits `integrity_scan_incomplete` with a continuation cursor when the budget is exhausted — a
   truncated scan never reports as a clean one (quorum round 2).
-- [ ] No recovery path dispatches, re-executes, or retries anything. The kernel surfaces
+- [x] No recovery path dispatches, re-executes, or retries anything. The kernel surfaces
   indeterminate intents; resolution is an explicit consumer action gated by `retryAllowed`
   (Z3-proven).
-- [ ] The M2 REST route table, error envelope, D7 timeout constants, and CLI verb set are
+- [x] The M2 REST route table, error envelope, D7 timeout constants, and CLI verb set are
   byte-untouched; the only daemon delta is the bounded startup integrity warning (Decision 2).
-- [ ] `host/replay/**`, `host/{hashref,canon,archive,registry}/**`, `world/**`, `go.mod`,
+- [x] `host/replay/**`, `host/{hashref,canon,archive,registry}/**`, `world/**`, `go.mod`,
   `go.sum`: byte-unchanged.
-- [ ] The sketch `sketches/storejournal.ail` is the frozen law; the Go mirror is pinned by a
+- [x] The sketch `sketches/storejournal.ail` is the frozen law; the Go mirror is pinned by a
   drift test over every law and every `tests[]` boundary case (the `worlddapi`/`effectbroker`
   precedent).
 
@@ -520,6 +520,21 @@ targets to validate and record, honest about enforcement (CI asserts mechanism, 
 on the dev rig baseline, the D6 precedent): journal append p95 ≤ 10 ms; commit-with-receipt p95
 within +20% of bare store-commit p95.
 
+> **LANDED RESULT (SD.C, controller-measured on the dev rig, one 200x invocation).** Journal
+> append **PASSES** at 0.4599 ms p95 (22× inside its 10 ms target). Commit-with-receipt
+> **FAILS its target**: 0.6846 ms p95 against a bare-commit floor of 0.4537 ms — **+50.9%**,
+> where the target was +20%. Reproduced at 1.51× / 1.49× / 1.46× over three 200x runs. Per the
+> decision's own wording, a blown target is **a recorded design signal, not a licence to relax
+> the number**, so the target stands unchanged and the miss is written into `bench/BASELINE.md`.
+> What is actually being paid for is one indexed journal lookup, the eight-field intent compare,
+> an outcome encode, and two extra row inserts — all *inside* the existing transaction, so this
+> is not an extra fsync; the absolute cost stays ~36× inside the 25 ms kernel budget.
+> `w-effect-broker-m3` is the first component to pay this on a real dispatch path and owns the
+> question of whether +20% was ever the right bound for two in-transaction inserts.
+> **The executor's in-sandbox 50x reading of 2.8× was a low-sample artifact**, corrected here
+> and in the baseline file — at sub-millisecond magnitudes a 50-sample run cannot resolve the
+> ratio, which is the same lesson the REST-commit row has carried since M2.C.
+
 ## Decision 8 — What stays OUT (and where it goes)
 
 No broker, no handlers, no REST/CLI surface, no repair tooling, no `EntryHash`-recomputation
@@ -778,37 +793,37 @@ tooling) has a named non-kernel destination.
 
 ## Acceptance Criteria
 
-- [ ] **AC1 — the committed repro fixture exists and is load-bearing**:
+- [x] **AC1 — the committed repro fixture exists and is load-bearing**:
   `durability_repro_test.go` reconstructs the V2 probe shape (zero `PrevEntryHash`) and the V3
   class shapes (zero `TransitionFn`; zero world `LogHead`) and asserts each now fails with
   structured `InvalidRefError` naming the field, with the store byte-untouched (head + row
   counts unchanged).
-- [ ] **AC2 — whole-class coverage**: a table-driven test zeroes each ref field of each write
+- [x] **AC2 — whole-class coverage**: a table-driven test zeroes each ref field of each write
   path (`Commit`'s **eight** — count corrected iter-28, `PutObject`'s two, `PutWorld`'s three, `SetRegistryHead`,
   `SelectHead`, `PutVerifyResult`) individually and asserts per-field rejection.
-- [ ] **AC3 — the genesis exception survives exactly**: zero `ObservedHead` on a genesis commit
+- [x] **AC3 — the genesis exception survives exactly**: zero `ObservedHead` on a genesis commit
   still succeeds; `TestGenesisRefLenienceIsExactlyOneField` green unmodified.
-- [ ] **AC4 — detection without creation**: `ScanUnreadableLog` and `ScanUnreadableWorlds` each
+- [x] **AC4 — detection without creation**: `ScanUnreadableLog` and `ScanUnreadableWorlds` each
   find a raw-SQL-inserted poisoned row in their own table (the public API can no longer create
   one) and report index/ref + failing field; `ScanUnreadableWorlds` resumed from a mid-scan
   `afterRef` covers exactly the remaining refs in lexicographic order (no overlap, no skip); the
   daemon startup sweeps log the named warning on a fixture store and serve normally.
-- [ ] **AC5 — the receipt law, non-vacuously**: `GetReceipt` drift-tested against the sketch's
+- [x] **AC5 — the receipt law, non-vacuously**: `GetReceipt` drift-tested against the sketch's
   `receiptState` on all four boolean combinations (the `corrupt` arm asserted unrepresentable —
   `AppendOutcome` without intent is a structured error); after `AppendIntent` alone, the answer
   is `indeterminate` and NEVER `not-started` (`mayReportNotStarted` mirrored).
-- [ ] **AC6 — commit-receipt atomicity** (owner: **SD.C** — reassigned iter-29; see that
+- [x] **AC6 — commit-receipt atomicity** (owner: **SD.C** — reassigned iter-29; see that
   milestone): crash injection at `mid-commit-before-outcome` yields
   a store with NEITHER the new world NOR the outcome; a completed commit yields BOTH; no
   interleaving exists in which exactly one is durable. SD.B landed the structural half (the
   outcome write is inside `Commit`'s transaction, `store.go` step 6, before `tx.Commit()`);
   reading that code is NOT the proof — only a real subprocess kill is.
-- [ ] **AC7 — idempotency semantics**: `AppendIntent` same-ID + same-bytes is a no-op returning
+- [x] **AC7 — idempotency semantics**: `AppendIntent` same-ID + same-bytes is a no-op returning
   the original seq; same-ID + different-bytes is `DuplicateInvocationError`; at most one outcome
   per ID enforced by the schema (raw-SQL duplicate attempt fails the UNIQUE constraint).
-- [ ] **AC8 — gapless append**: journal `seq` values are exactly 1..N with no gaps after any
+- [x] **AC8 — gapless append**: journal `seq` values are exactly 1..N with no gaps after any
   green test run including rollback-inducing failures (Law 4 mirrored).
-- [ ] **AC9 — the sketch is gate-real**: `sketches/storejournal.ail` — 7 contracts `verified` in
+- [x] **AC9 — the sketch is gate-real**: `sketches/storejournal.ail` — 7 contracts `verified` in
   `verify.results[]` with z3 present (never the silent-skip exit-0), **30** named tests
   (`len(tests[])`, NOT `passed_tests` — which is 37 because it also counts the 7 contract-derived
   properties; gate on the named list, correction D-B) via the
@@ -816,7 +831,7 @@ tooling) has a named non-kernel destination.
   unperturbed. The 25 → 30 / 32 → 37 step is LAW 6's widening to the round-2 eight-field binding
   with one single-field mismatch row per field plus the REQUIRED `EntryHash`-preserving row — see
   SD.B's precondition block for the measurement that rejected the 26-row form as vacuous.
-- [ ] **AC10 — bounded everything, with the KERNEL owning the ceiling** (extended in quorum
+- [x] **AC10 — bounded everything, with the KERNEL owning the ceiling** (extended in quorum
   round 2, `gpt5-6-sol`, applied verbatim): every paged API (`PendingIntents`,
   `ScanUnreadableLog`, `ScanUnreadableWorlds`) is exercised with **zero, negative, `Max…`, and
   `Max…+1`** limits — the three interior-invalid cases return `InvalidLimitError` and the
@@ -826,22 +841,39 @@ tooling) has a named non-kernel destination.
   continuation cursor and scanned counts — never a clean-looking message over a truncated scan;
   every crash-test wait polls a captured pid under a deadline (code-reviewed + the deadline test
   pattern).
-- [ ] **AC11 — never auto-re-execute**: the probe-consumer recovery proof shows an indeterminate
+- [x] **AC11 — never auto-re-execute**: the probe-consumer recovery proof shows an indeterminate
   intent surfacing `IndeterminateEffectError` with the probe's counting handler at ZERO
   re-dispatches; the commit-path reconciler resolves deterministically; the Model.Infer-shaped
   probe is never retried even after reconciliation is offered (`retryAllowed` gate mirrored).
-- [ ] **AC12 — frozen surfaces byte-stable by diff, not claim**: `host/replay/**`,
+  **Checked with a stated limit, measured by the controller.** The probe consumer is test-local
+  by design (the real one is M3's broker), so the KERNEL half of this check is what SD.C can
+  actually prove and does: a kernel-side `MUT-RECEIPT-LIE` reds both never-retry tests, which is
+  the evidence that they read real durable state rather than their own fixtures. The CONSUMER
+  half — "a broker never auto-re-executes" — is demonstrated over a test-local consumer and
+  cannot be failed by any kernel change; its named mutation `MUT-AUTO-RETRY` is self-referential
+  until M3 exists. See the corrected Non-Vacuity rows and **CF-H-1**.
+- [x] **AC12 — frozen surfaces byte-stable by diff, not claim**: `host/replay/**`,
   `host/{hashref,canon,archive,registry}/**`, `world/**`, `cmd/**`, `scripts/verify_{ail,go}.sh`,
   `go.mod`, `go.sum`, `.github/**`; daemon route table, error envelope, and D7 constants
   asserted unchanged by the landed tests.
-- [ ] **AC13 — migration proven**: opening a pre-journal fixture store with the new binary
+- [x] **AC13 — migration proven**: opening a pre-journal fixture store with the new binary
   creates the journal table and leaves every pre-existing table's `sqlite_master` DDL
   byte-identical; `OpenReadOnly` on an un-migrated store fails structurally on journal reads
   (documented), and normally after one writer open.
-- [ ] **AC14 — the cost is priced**: both journal benchmarks in the hardcoded smoke manifest;
+- [x] **AC14 — the cost is priced**: both journal benchmarks in the hardcoded smoke manifest;
   `bench/BASELINE.md` re-measured in one invocation with the new rows and the
-  commit-vs-commit-with-receipt pair visible.
-- [ ] **AC15 — intent binding is field-level, not ID-level** (round-1 objection 1): after
+  commit-vs-commit-with-receipt pair visible. **Closed by the CONTROLLER outside the executor
+  sandbox** — both the manifest gate and five of the eight rows need a loopback bind the sandbox
+  denies, so the executor correctly reported them `UNINFORMATIVE UNDER SANDBOX` and wrote
+  `<CONTROLLER-MEASURED>` into every cell. All eight rows then measured in ONE 200x invocation
+  on the dev rig, and `MUT-BENCH-DROP` run for EACH new name (rc=1 both times,
+  `✗ missing expected benchmark(s): BenchmarkJournalAppend` / `… BenchmarkCommitWithReceipt`;
+  `bench_test.go` restored to sha256 `b69833b0…`). **The Decision-7 receipt target is BLOWN and
+  recorded, not relaxed**: commit-with-receipt p95 is **+50.9%** over the bare commit against a
+  ≤ +20% target (0.4537 → 0.6846 ms), reproduced at 1.51× / 1.49× / 1.46× across three 200x
+  runs. The executor's in-sandbox 50x reading of **2.8×** was a low-sample artifact and is
+  corrected in `bench/BASELINE.md`. Journal append is 0.4599 ms p95 against a ≤ 10 ms target.
+- [x] **AC15 — intent binding is field-level, not ID-level** (round-1 objection 1): after
   `AppendIntent(id, A)`, a `Commit` carrying `id` but differing in ANY commit-defining field
   (planned `NextWorld.Ref`, `Entry.EntryHash`, `ObservedHead`, **`PrevEntryHash`,
   `TransitionFn`, `TransitionRef`, `Interpreter`** — the round-2 list) returns structured
@@ -854,8 +886,12 @@ tooling) has a named non-kernel destination.
   `PrevEntryHash`/`TransitionFn`/`Interpreter` while holding `EntryHash` byte-identical — since
   V12 records that the kernel never derives `EntryHash` from entry contents, this is the exact
   drift a three-field binding would wave through.
-- [ ] Both CI jobs green on every milestone PR and every dev merge.
-- [ ] The kernel arms (V1/V2, J1/J2, `Commit.InvocationID`) are ratified by Mark, attended,
+- [x] Both CI jobs green on every milestone PR and every dev merge. SD.A `86d1276` · SD.B
+  `d5774eb` · **SD.C: run `30366106652` at `84fb4874`, `ailang-code verify gate: success` +
+  `go host build + test gate: success`** — read from `gh run view --json jobs`, not inferred from
+  a poll (the iter-107 rule that a poll's output is a hint and the direct per-workflow read is
+  the verdict).
+- [x] The kernel arms (V1/V2, J1/J2, `Commit.InvocationID`) are ratified by Mark, attended,
   BEFORE SD.A/SD.B execute — recorded in the charter STATUS like the single-writer arm A.
 
 ## Non-Vacuity — the named RED mutation for every gate (S6)
@@ -871,13 +907,13 @@ mutations go to the Ruled-out ledger, not the bin.
 | AC3 genesis exception | **MUT-GENESIS-WIDEN** — route `ObservedHead` through strict `validateRef` too → the landed genesis tests red (the exception is load-bearing in BOTH directions) |
 | AC4 detection | **MUT-SWEEP-SILENT** — make a sweep swallow parse failures and return empty (applied to `ScanUnreadableLog` and `ScanUnreadableWorlds` in turn — two runs, per-table coverage) → that sweep's scan test + the daemon warning test red |
 | AC5 receipt law | **MUT-RECEIPT-LIE** — return `not-started` when an intent exists without an outcome → drift test against the sketch's `receiptState`/`mayReportNotStarted` reds |
-| AC6 atomicity | **MUT-SPLIT-TX** — write the outcome row in a separate transaction AFTER `Commit`'s tx commits → the `mid-commit` crash injection observes a committed world with no receipt → red |
+| AC6 atomicity | **MUT-SPLIT-TX** — write the outcome row in a separate transaction AFTER `Commit`'s tx commits → the `mid-commit` crash injection observes a committed world with no receipt → red. **RUN AND REPRODUCED FIRST-PARTY BY THE CONTROLLER (SD.C)**: it reds `TestCrashReceiptLawAtNamedStopPoints/mid-commit-before-outcome` with `world=true entry=true, want both false`, and — the part that makes it evidence rather than noise — the other three stop points stay GREEN, so the mutation is DISCRIMINATING, not a blanket break. `store.go` reverted to sha256 `33058c85…`. The hook that arranges the kill (`commitBeforeOutcomeHook`) is anchored to the OUTCOME-WRITE SITE, not to a fixed line number, which is what lets it travel with the mutation; anchored to a line it would fire before `tx.Commit()` in both variants and red nothing |
 | AC7 idempotency | **MUT-DUP-INTENT** — accept same-ID different-bytes as a silent overwrite → red at the duplicate-rejection test AND the golden-bytes/content-address check |
 | AC8 gapless seq | **MUT-SEQ-GAP** — assign `seq` from a process-local counter that survives a rolled-back tx → gapless assertion reds after an induced rollback |
 | AC10 bounds | **MUT-UNBOUNDED-PENDING** — ignore `limit` in `PendingIntents` → bounded test against the over-populated journal reds |
 | AC10 kernel ceiling (round 2) | **MUT-CALLER-OWNS-LIMIT** — drop the `1 <= limit <= Max…` guard so an oversized caller limit is honoured → the `Max…+1` case reds (it returns rows instead of `InvalidLimitError`), proving the ceiling is kernel-enforced rather than caller-advisory |
 | AC10 startup completeness (round 2) | **MUT-SCAN-SILENT-TRUNCATE** — on budget exhaustion emit the ordinary completion message instead of `integrity_scan_incomplete` → the multi-page startup test reds; the mutation is behaviour-changing by construction (a different warning string on a fixture that provably exceeds one page), satisfying the iter-20/22 valid-mutation guardrail |
-| AC11 never-retry | **MUT-AUTO-RETRY** — on recovery, re-dispatch indeterminate intents automatically → counting-probe assertion reds (dispatch count > 0) and the Model.Infer-shaped case reds independently |
+| AC11 never-retry | **MUT-AUTO-RETRY** — on recovery, re-dispatch indeterminate intents automatically → counting-probe assertion reds (dispatch count > 0) and the Model.Infer-shaped case reds independently. **CORRECTED BY MEASUREMENT (controller, SD.C) — this mutation is SELF-REFERENTIAL and is NOT what gives AC11 its teeth.** The probe consumer is deliberately test-local (`recover_test.go`; the real consumer is M3's broker, and putting consumer policy in `host/store` before it exists would be worse), so `MUT-AUTO-RETRY` edits the test's own `recoverIndeterminate` and the same file's assertions fail — no kernel change can ever fail it. What DOES give the two never-retry tests kernel teeth is a **kernel-side** mutation the table did not name: `MUT-RECEIPT-LIE` (report `not-started` for a durable intent with no outcome) reds `TestRecoverIndeterminateSurfacesNeverLieLaw` AND `TestRecoverModelInferNeverRedispatchesEvenWhenResolutionOffered` — both with `recovery error=<nil>, want *IndeterminateEffectError` — plus three crash subtests and SD.B's `TestReceiptStateDriftAllBooleanCombinations/indeterminate`; `journal.go` reverted to sha256 `2edf83a3…`. **One AC11 test is provably kernel-independent**: `TestRecoverRetryAllowedMirrorsAllSketchRows` stays GREEN under every kernel mutation, because it checks a three-line test-local mirror of the sketch's LAW 3 against three constants. It is a sketch-drift check, not a kernel gate, and it is recorded as such rather than counted as proof. **CF-H-1 carries the real closure to M3**: once the broker owns the dispatch path, `MUT-AUTO-RETRY` becomes a production mutation and must be re-run there |
 | AC13 migration | **MUT-DDL-DRIFT** — "improve" an existing table's DDL in `schema.sql` (add a CHECK to `log_entries`) → the `sqlite_master` byte-identity comparison against the pre-journal fixture reds |
 | AC14 bench manifest | **MUT-BENCH-DROP** — drop either new benchmark name → `bench_worldd.sh`'s hardcoded-manifest gate reds (the landed V27/B1 closure) |
 | AC9 sketch gates | **MUT-LAW-WEAKEN** — flip `retryAllowed`'s body to `true` → its `ensures` produces a Z3 counterexample (gate parses `verify.counterexample > 0` as failure, never the exit code); flip a `receiptState` arm → named test reds in the explicit run |
@@ -1022,6 +1058,15 @@ the full `./scripts/verify_ail.sh` sweep re-run green — transcripts in Appendi
 | V22 | `verify_go.sh` green in this worktree at doc time | **UNVERIFIED in this sandbox** — not run this session (no Go changes exist to gate; the last first-party green is the iter-24 controller record) | **CLAIM** |
 | V23 | **The full EIGHT-field matrix, measured** — CONTROLLER, iter-25, independently of the designer: a table-driven probe zeroing each ref field of `Commit` in isolation, then reading back. **Corrected in round 2**: this row originally said "seven-field matrix … the seventh, `NextWorld.Ref`" while listing seven POISONED fields before it — an off-by-one in the controller's own row, caught by `gemini-3-1-pro` and fixed here rather than quietly. There are **eight** ref fields; seven poison, one does not | `commit_err=<nil>` for **all eight**. Poison confirmed per field (7): `TransitionFn` → `GetLogEntry err="…transitionFn: hashref: empty hashref text"` · `Interpreter` → `"…interpreter: …"` · `EntryHash` → `"…hash: …"` · `TransitionRef` → `"…transitionRef: …"` · `PrevEntryHash` → `"…prevEntryHash: …"` · `NextWorld.LogHead` → `GetWorld(head) err="…log head: …"` · `NextWorld.StateRoot` → `GetWorld(head) err="…state root: …"`. ~~The **eighth**, `NextWorld.Ref`, commits and reads back **"fine"** — an empty-string world ref becomes the selected head: degenerate-but-readable, hence the one field a read-side fix (ARM V2) could never catch, and the sharpest single argument for ARM V1.~~ **SUPERSEDED iter-27, re-struck here iter-28 — this row is the doc's OWN evidence table and still carried the claim Decision 1 had already retracted.** The corrected first-party matrix is THREE classes (5 unreadable-entry / 2 unloadable-world / 1 **wedge**): `NextWorld.Ref` reads back fine at BOTH the entry and world surfaces, but `SelectedHead()` **errors** and every later `Commit` then fails with a **non-`ConflictError`**, so the store is **unrecoverably wedged through the public API** — the worst of the eight, not the mildest. Executable as `host/store/durability_repro_test.go` (`e8ba7b2`), non-vacuity proven (0 PASS / 20 FAIL under a write-side mutation, reverted byte-identical). ARM V1 remains the ratified arm, on strictly stronger evidence | **VERIFIED (corrected twice — see Decision 1)** |
 | V28 | **LAW 6's widening to the round-2 eight-field binding, and the REJECTION of the 26-row form the doc itself prescribed** — CONTROLLER, iter-29, first-party on pinned `v0.30.0` before any SD.B Go code was written | 16-parameter `intentBindsCommit`: `ai-check` → `check.passed: true`, `verify: {verified: 7, counterexample: 0, skipped: 0, errors: 0}` (**the "2× the widest arity ever proven" risk is REFUTED — no upstream issue owed**) · `ailang test --format json` → `len(tests[]) = 30`, `passed_tests = 37`, `failed = 0` · **non-vacuity, both directions**: `MUT-INTENT-NARROW-BIND` (narrow `ensures`+body back to 4 fields) → `failed = 5`, exactly `intentBindsCommit_test_6…_test_10`, rows 1–5 green; **drop `TransitionRef` ALONE** → `failed = 1` (`_test_8`) at 30 rows but **`failed = 0` at the prescribed 26 rows** — the 26-row gate cannot see a dropped `TransitionRef` · `verify_ail.sh` → PASS, 4/4 identities across 10 modules, 14 named `world/` tests, totals unperturbed | **VERIFIED** |
+| V29 | SD.C real-process crash and recovery proof | `go test ./host/store/... -run 'Crash\|Recover' -count=1 -v` → all four named crash stop-point subtests RUN and PASS; clean negative control PASS; four recovery tests PASS | **VERIFIED** |
+| V30 | AC6 split-transaction non-vacuity | MUT-SPLIT-TX compiled; `go test ./host/store -run 'TestCrashReceiptLawAtNamedStopPoints/mid-commit-before-outcome' -count=1 -v` → RED at `crash_test.go`: `world=true entry=true, want both false`; restored SHA-256 `33058c852c7fb823b226ff28bbc1e31f4ad326a312d36b3cc9c501043e48b7f6` | **VERIFIED** |
+| V31 | AC11 never-auto-retry non-vacuity | MUT-AUTO-RETRY compiled; targeted recovery gate → exactly two RED tests: `TestRecoverIndeterminateSurfacesNeverLieLaw` and `TestRecoverModelInferNeverRedispatchesEvenWhenResolutionOffered`, each observing 1 dispatch; restored SHA-256 `728a452999161c5022b2caec68786e209cd8e2e22c3957d6679043ed232346c4` | **VERIFIED, BUT SEE V37 — the mutation is SELF-REFERENTIAL** |
+| V32 | AC14 benchmark mechanism and sandbox measurement | Store-only `go test -bench 'Benchmark(StoreCommit\|JournalAppend\|CommitWithReceipt)$' -benchtime 50x -run '^$' ./host/daemon/` → append p95 0.4514 ms; commit-with-receipt p95 1.390 ms; bare commit p95 0.4965 ms. Both MUT-BENCH-DROP runs reached the renamed benchmark but `bench_worldd.sh --smoke` stopped before manifest checking on `listen tcp 127.0.0.1:0: bind: operation not permitted`; controller must run the complete 200x invocation and both missing-name checks outside sandbox | **SUPERSEDED BY V36 — the 50x ratio was a low-sample artifact** |
+| V35 | **CONTROLLER RE-RUN OF EVERY SANDBOX-BLOCKED GATE, outside the codex sandbox** (the standing scar: a sandbox verdict for `host/daemon`/`cmd/*` is uninformative in BOTH directions) | `verify_go.sh` → **PASS**, `✓ go gate PASSED`, all 8 packages `ok` · `verify_ail.sh` → **PASS**, 4/4 identities across 10 modules, 14/14 named `world/` tests · `bench_worldd.sh --smoke` → **PASS**, manifest now `BenchmarkStoreCommit BenchmarkJournalAppend BenchmarkCommitWithReceipt BenchmarkHeadRead BenchmarkHealth BenchmarkRESTCommit BenchmarkLogRange/limit_100 BenchmarkLogRange/limit_500` (8 names) · explicit sketch run → 7/7 `verified`, 0 counterexamples, `len(tests[])` **30**, `passed_tests` **37**, `failed` 0 · AC12 frozen-surface `git diff --exit-code` → rc=0, no output · `gofmt -l cmd host` → empty, `go vet ./...` → clean | **VERIFIED (first-party)** |
+| V36 | **AC14 closed first-party: the manifest gate made INFORMATIVE, and the receipt tax measured** | `MUT-BENCH-DROP` per name, outside the sandbox: renaming `BenchmarkJournalAppend` → smoke rc=**1**, `✗ missing expected benchmark(s): BenchmarkJournalAppend`; renaming `BenchmarkCommitWithReceipt` → rc=**1**, same shape. Both compiled first (valid mutations); `bench_test.go` restored to sha256 `b69833b00c999a0c3baae6de3697c70c83427446f951d0dec2a491dbc539f8a9` and smoke returned to PASS. **Cost, one 200x invocation, all 8 rows**: bare commit p95 **0.4537 ms**, journal append p95 **0.4599 ms** (target ≤ 10 ms, PASS), commit-with-receipt p95 **0.6846 ms** = **+50.9%** against a ≤ +20% target — **FAIL, recorded not relaxed**. Reproduced at 1.51× / 1.49× / 1.46× over three independent 200x runs, refuting the executor's 50x reading of 2.8× | **VERIFIED (first-party)** |
+| V37 | **AC11's mutation is self-referential; its kernel teeth come from a DIFFERENT mutation** — controller, because a named mutation that reds is not yet evidence that a *gate* has teeth | `MUT-AUTO-RETRY` edits `recoverIndeterminate` in `recover_test.go`, i.e. the test's own helper — no `host/store` production change can fail it. Discriminating experiment: apply the **kernel-side** `MUT-RECEIPT-LIE` (`journal.go` `GetReceipt`: report `not-started` for a durable intent with no outcome), compiled → reds `TestRecoverIndeterminateSurfacesNeverLieLaw` and `TestRecoverModelInferNeverRedispatchesEvenWhenResolutionOffered` (`recovery error=<nil>, want *IndeterminateEffectError`), plus 3 of 4 crash subtests and SD.B's `TestReceiptStateDriftAllBooleanCombinations/indeterminate`; `TestRecoverRetryAllowedMirrorsAllSketchRows` stays **GREEN** — it is a sketch-drift check over a test-local mirror with no production consumer, so no kernel mutation can red it. `journal.go` reverted to sha256 `2edf83a369e28cfda35e1fdf7ccfa321fe0010f5806acd6bc3e202cf9f146c7f` | **VERIFIED — recorded as CF-H-1 for M3** |
+| V33 | Frozen law and final byte-stability | `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh` → PASS, 4/4 identities across 10 modules, 14 named world tests; explicit journal sketch → 7 verified, 30 named / 37 total, 0 failed; prescribed `git diff --exit-code` over frozen surfaces → exit 0, no output; `gofmt -l cmd host && go vet ./...` → exit 0, no output | **VERIFIED** |
+| V34 | Full Go gate under executor sandbox | `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_go.sh` built successfully, then daemon/CLI tests failed only on denied loopback binds, including `listen tcp 127.0.0.1:0: bind: operation not permitted` and `listen tcp6 [::1]:0: bind: operation not permitted` | **UNINFORMATIVE UNDER SANDBOX — controller re-run required** |
 
 **Upstream findings: none.** The sketch verified clean on first authoring by following the
 already-documented v0.30.0 disciplines (total-theorem ensures per U3; no contracted-callee calls

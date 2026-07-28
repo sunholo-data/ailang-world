@@ -101,6 +101,105 @@ func BenchmarkStoreCommit(b *testing.B) {
 	reportPercentiles(b, samples)
 }
 
+func BenchmarkJournalAppend(b *testing.B) {
+	dbPath := filepath.Join(b.TempDir(), "world.db")
+	s, err := store.Open(dbPath)
+	if err != nil {
+		b.Fatalf("store.Open: %v", err)
+	}
+	b.Cleanup(func() {
+		if err := s.Close(); err != nil {
+			b.Errorf("store.Close: %v", err)
+		}
+	})
+
+	samples := make([]time.Duration, 0, b.N)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		id := fmt.Sprintf("bench-journal-%d", i)
+		intent := store.JournalIntent{
+			InvocationID:  id,
+			WorldRef:      hashref.SumSHA256([]byte(fmt.Sprintf("bench-journal-world-%d", i))),
+			EntryHash:     hashref.SumSHA256([]byte(fmt.Sprintf("bench-journal-entry-%d", i))),
+			PrevEntryHash: hashref.SumSHA256([]byte(fmt.Sprintf("bench-journal-prev-%d", i))),
+			TransitionFn:  hashref.SumSHA256([]byte("bench-journal-transition")),
+			TransitionRef: hashref.SumSHA256([]byte(fmt.Sprintf("bench-journal-body-%d", i))),
+			Interpreter:   hashref.SumSHA256([]byte("bench-journal-interpreter")),
+			LogicalTime:   int64(i),
+		}
+		start := time.Now()
+		if _, _, err := s.AppendIntent(id, intent); err != nil {
+			b.Fatalf("AppendIntent #%d: %v", i, err)
+		}
+		samples = append(samples, time.Since(start))
+	}
+	b.StopTimer()
+	reportPercentiles(b, samples)
+}
+
+func BenchmarkCommitWithReceipt(b *testing.B) {
+	dbPath := filepath.Join(b.TempDir(), "world.db")
+	s, err := store.Open(dbPath)
+	if err != nil {
+		b.Fatalf("store.Open: %v", err)
+	}
+	b.Cleanup(func() {
+		if err := s.Close(); err != nil {
+			b.Errorf("store.Close: %v", err)
+		}
+	})
+
+	var observed hashref.HashRef
+	previousLog := hashref.SumSHA256([]byte("bench-receipt-genesis-prev"))
+	commits := make([]store.Commit, b.N)
+	for i := 0; i < b.N; i++ {
+		id := fmt.Sprintf("bench-receipt-%d", i)
+		nextWorld := hashref.SumSHA256([]byte(fmt.Sprintf("bench-receipt-world-%d", i)))
+		nextLog := hashref.SumSHA256([]byte(fmt.Sprintf("bench-receipt-log-%d", i)))
+		body := hashref.SumSHA256([]byte(fmt.Sprintf("bench-receipt-body-%d", i)))
+		commits[i] = store.Commit{
+			InvocationID: id,
+			ObservedHead: observed,
+			NextWorld: store.World{
+				Ref: nextWorld, Revision: int64(i),
+				StateRoot: hashref.SumSHA256([]byte(fmt.Sprintf("bench-receipt-state-%d", i))),
+				LogHead:   nextLog,
+			},
+			Entry: store.LogEntry{
+				Header: store.LogHeader{
+					EntryIndex: int64(i), SemanticsEpoch: 1,
+					TransitionFn:  hashref.SumSHA256([]byte("bench-receipt-transition")),
+					Interpreter:   hashref.SumSHA256([]byte("bench-receipt-interpreter")),
+					PrevEntryHash: previousLog, WrittenBy: "benchmark",
+				},
+				EntryHash: nextLog, TransitionRef: body,
+			},
+		}
+		intent := store.JournalIntent{
+			InvocationID: id, WorldRef: nextWorld, EntryHash: nextLog,
+			ObservedHead: observed, PrevEntryHash: previousLog,
+			TransitionFn: commits[i].Entry.Header.TransitionFn, TransitionRef: body,
+			Interpreter: commits[i].Entry.Header.Interpreter, LogicalTime: int64(i),
+		}
+		if _, _, err := s.AppendIntent(id, intent); err != nil {
+			b.Fatalf("stage AppendIntent #%d: %v", i, err)
+		}
+		observed, previousLog = nextWorld, nextLog
+	}
+
+	samples := make([]time.Duration, 0, b.N)
+	b.ResetTimer()
+	for i := range commits {
+		start := time.Now()
+		if err := s.Commit(commits[i]); err != nil {
+			b.Fatalf("Commit with receipt #%d: %v", i, err)
+		}
+		samples = append(samples, time.Since(start))
+	}
+	b.StopTimer()
+	reportPercentiles(b, samples)
+}
+
 func benchmarkDaemonGET(b *testing.B, route string, seed bool) {
 	b.Helper()
 	dbPath := filepath.Join(b.TempDir(), "world.db")
