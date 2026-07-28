@@ -27,7 +27,7 @@ var allowedDepModules = []string{
 	"github.com/remyoudompheng/bigfft",
 }
 
-var brokerCorePatterns = []string{"./host/broker/..."}
+var brokerCorePatterns = []string{"./host/broker/...", "./host/capsule/..."}
 
 func isStdlibImportPath(p string) bool {
 	first, _, _ := strings.Cut(p, "/")
