@@ -3463,3 +3463,160 @@ three arms together — that unparks two items straight to sprint-planner with n
 park persists into the next fire, the only remaining self-serve work is item 9
 `w-verify-binary-lockfile` (~0.5d infra), which the charter itself flags as needing human
 confirmation before implementing. The honest statement is that this loop is now human-gated.
+
+---
+
+## Iteration 26 — 2026-07-28 — `w-human-surface` (clause-5 founding UX) **PICK-TIME QUORUM COMPLETE — 2 rounds, 4 objections, all applied → doc v0.1→v0.3, item PARKED on §7 ratification**; two reviewers independently found Standing Rule 6 missing from the UX layer, and the doc's cardinal-sin anti-pattern turned out to be unenforceable against the landed kernel
+
+**Pick**: items 4 and 4b stayed PARKED — still no `@MarkEdmondson1234` answer, now **3 and 2
+iterations old**. Iteration 25 closed by recording "the queue has **no unblocked actionable item
+left**". **That was wrong, and re-reading the queue rather than the previous Next line is what
+caught it.** Item 6b `w-human-surface` carries no blocking predecessor: items 6, 7 and 8 are gated
+behind 4/5/6b, but 6b GATES them and is itself gated by nothing. Its own row states the pick-time
+action explicitly — *"quorum + ratify at pick"* — and **quorum is controller work**; only the
+ratification half is human. Iter-25's Next line had swept 6b into "gated behind those" with items
+6/7/8. So the pick is 6b, and the loop was *less* blocked than the previous iteration believed.
+Ruled out as the pick: item 9 `w-verify-binary-lockfile` (BACKLOG, and the charter itself flags it
+as needing human confirmation before implementing — lower value than unblocking items 7 + M6).
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` =
+`sunholo-voight-kampff`; pidfile `mission-world.pid`=36059 = this run's own driver (no overlap);
+`dev` == `origin/dev` (`7a3e7c6`), nothing missing. Workflow `CI` **completed/success** at HEAD —
+`gh workflow list` confirms this repo has exactly **one** workflow, so Build-and-Release /
+Docs-Deploy are **N/A, not pending**. Zero `[nightly-eval]` issues; `#9` is the only open issue.
+**No new `@MarkEdmondson1234` comment on `#9`** (15 comments, all bot) **nor on predecessor `#1`**
+(25 comments, CLOSED) — watermark `2026-07-27T08:55:11Z` unchanged, nothing to advance. **No
+rotation due**: `#9` was created `2026-07-27T05:51:13Z` = **07:51 CEST**, i.e. *after* the Monday
+07:00 boundary, and 15 comments ≪ 80. Inbox: 6 unread — 5 V1-side nightly-eval/eval-suite
+notifications for the `sunholo-data/ailang` repo (a different mission's regressions; not World's
+to triage, no action, not marked read so the V1 loop still sees them) and 1 that is this loop's
+own iteration-25 report.
+
+**Routing evidence**
+
+| Role | Pinned | Actually ran | Note |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | claude-opus-5 | quota bucket |
+| Designer | ROTATION → next after `claude:claude-fable-5` = **`codex:gpt-5.6-sol`** | **codex `gpt-5.6-sol` ×1** (the v0.2 revision) | probe rc=0 replied `ok`; `env -u OPENAI_API_KEY` **load-bearing** (the ambient key IS set). Run under a 25-min cap, rc=0, doc-only edit, no commit |
+| Quorum r1 | `gpt5-6-sol`, `gemini-3-1-pro`, cap `0.25` | **both present** | $0.023845 + $0.008964 = **$0.032809** → BLOCKED (2 of 2) |
+| Quorum r2 | same | **both present** | $0.040565 + $0.015852 = **$0.056417** → BLOCKED (2 of 2) |
+| Carve-out revision (v0.3) | — | **controller, inline** | reviewers' VERBATIM text; no third round |
+| Planner / Executor / Evaluator | — | **did not run** | the item's terminal state is a human ratification, not a sprint — see below |
+
+`metered=$0.089226` (quorum reviewers only; designer on the ChatGPT subscription lane, controller
+on a subscription bucket. $5 ceiling untouched). Rotation state advanced to `codex:gpt-5.6-sol`.
+
+**Delivered**: `design_docs/HUMAN-SURFACE.md` **170 → 386 lines** (v0.1 → v0.3), the charter
+re-tag, a new charter guardrail, and this record. No `.ail` and no Go changed;
+`verify_ail.sh` **rc=0** with **4/4 required identities across 10 modules and 14/14 named tests** —
+re-run first-party both before the change (main tree) and after (worktree), so the doc-only claim
+is measured, not asserted.
+
+### THE DOC'S CARDINAL SIN IS CURRENTLY UNENFORCEABLE — measured before any routing
+
+HUMAN-SURFACE.md names **grade laundering** ("rendering CLAIMED facts in PROVEN clothing") as *the
+cardinal sin*, and says the trust gradient "is load-bearing or it is nothing". Its gradient has
+**four** grades. Before spending a cent I checked it against the landed kernel:
+
+```
+world/types.ail:23-28 — export type Evidence
+  = CompilerOutput(HashRef) | TestReport(HashRef, bool) | HumanApproval(HashRef)
+  | AiReview(HashRef, float) | RecordedEffect(HashRef)          <-- FIVE variants
+
+grep PROVEN|ATTESTED|CLAIMED over *.ail *.go *.sql  ->  ONE hit, a prose comment
+```
+
+`TestReport`→TESTED, `RecordedEffect`→ATTESTED, `AiReview`→CLAIMED. But **`CompilerOutput` and
+`HumanApproval` have no grade**, and **PROVEN's own stated producers — Z3 proof and replay — have
+no `Evidence` carrier at all**. The mapping is not merely unimplemented; it is **non-total by
+construction**, and the grade names exist nowhere in code. `HumanApproval` is exactly the evidence
+class the approval inbox (item 7, gated on this very doc) would emit, and grading a human's
+ratification as CLAIMED — *"agent said so, unverified"* — is plainly wrong.
+
+So the anti-pattern the doc calls cardinal has nothing to be enforced against. This is now
+ratification point 7.2, restated from "ratify these names" into a decidable question: **produce a
+TOTAL mapping**, with three neutral options and a recommendation that is explicitly not a
+decision. A second measured defect became new point 7.5: `Proposal.confidence` is a **bare float
+with no evidence ref**, while `AiReview` carries one — so rendering it would violate the doc's own
+*confidence theater* anti-pattern.
+
+### BOTH REVIEWERS, TWO PROVIDERS, NO SHARED CONTEXT — AND THE SAME MISSING AXIOM
+
+Round 2's objections converged, independently, on something neither round 1 nor I had seen: §3's
+**defer** ("park for more evidence") and P5's **batch over interrupt** admit an **unbounded wait on
+a human**. No TTL, no expiry transition, no deterministic outcome if the human simply never
+answers.
+
+That is **Standing Rule 6 — "every wait is bounded"** — the rule this mission adopted after
+iteration 13 burned four hours in an unbounded poll. We had encoded it for *our own* polls and
+never once asked it of the *product's* interaction grammar, in the founding document that governs
+every human-facing surface. A headless loop that blocks forever on a sleeping human is the same
+bug as a `gh run watch` with no deadline, wearing a UX costume.
+
+Applied verbatim (carve-out): §3 gains the TTL → typed-rejected-timeout rule, and a new **§3.1
+Bounded decision lifecycle** — ledger-recorded creation time + deadline + timeout policy from a
+typed finite set; DEFER must rebound and must not park indefinitely; an explicit Timeout
+transition at deadline; *"Silence MUST never synthesize approval or rejection"*; and replay must
+reproduce deadlines **from ledger time, not wall-clock race ordering**.
+
+### WHY IT WAS BLOCKED AT ALL — the same two objections as iteration 0, for the same reason
+
+Round 1's two objections were **missing Premise Verification Log** (`gpt5-6-sol`) and **missing
+Conflict Surface** (`gemini-3-1-pro`). Those are precisely the two objections that blocked the
+**charter itself** at iteration 0, from the same two reviewers, in the same order.
+
+The common cause is not reviewer habit: **both documents were authored attended**, and an
+attended doc never passes through `design-doc-creator`, whose hard gates would have forced both
+sections. Attended authorship optimizes for shared human context — and shared context is exactly
+what makes an unverified premise *feel* established. `coding-standards.md` requires neither
+section, so nothing catches it earlier. Routed as a charter guardrail this iteration (Gate 5).
+
+### The designer declined a free answer — 5th consecutive milestone
+
+`gemini-3-1-pro`'s fix helpfully supplied an example rationale: *"The Hub is inextricably tied to
+cloud authentication and multi-tenant routing…"*. That is a hypothesis about a codebase in
+**another repository**. The codex designer did not take it. §6.1 marks Hub internals **UNVERIFIED**,
+states plainly that the doc "does not claim they are cloud-coupled or unusable", and names the
+inspection that would close the gap. It justified FRESH on what it *could* establish. I verified
+the underlying fact myself: no Hub source exists in this repo.
+
+### Controller's own independent evidence (never laundering a sub-agent claim)
+
+- `verify_ail.sh` **rc=0**, **4/4** identities across **10** modules, **14/14** named tests — run
+  twice, main tree and worktree.
+- `world/types.ail` exports exactly **8** types; **none** is a decision packet — so §3.1's
+  creation-time/deadline/policy fields have no schema to live in yet (recorded as a NOT-BUILT row).
+- `host/daemon/daemon.go:355-362` registers exactly **8** JSON REST routes, no HTML/web/SSE.
+- `host/store/store.go` exposes **13** public methods with **one** `SelectedHead`/`SelectHead` and
+  **no** fork/branch/compare API.
+- **I caught myself mid-edit**: I wrote a table row asserting "`host/replay` has no timeout tests"
+  without checking. It has three timeout hits — `execTimeout = 60 * time.Second`, a bound on each
+  archived-interpreter subprocess. Substantively my row was right (no *approval* Timeout
+  transition exists) but the phrasing invited exactly the conflation this doc exists to prevent.
+  Row corrected to cite `replay.go:47-49,321` and distinguish the two explicitly. The rule that
+  caught it is the same one I apply to sub-agents: a claim is not evidence until someone runs it.
+- **`git rev-parse dev origin/dev` without `--short`**: rc=0, as the skill's iter-108 fix records.
+
+**Ruled out**
+- *"The queue has no unblocked actionable work"* (iter-25's closing line) — **REFUTED**. Item 6b
+  had no blocking predecessor and an explicitly controller-runnable pick-time action. A Next line
+  is a prior iteration's summary, not queue state; re-read the queue rows themselves.
+- *Item 9 `w-verify-binary-lockfile` as the pick* — available, but BACKLOG-tagged, off critical
+  path, and charter-flagged as needing human confirmation before implementing. 6b unblocks item 7
+  and all M6 work; 9 unblocks nothing.
+- *Excluding the `gpt5-6-sol` reviewer seat for generator≠judge* — retained and FLAGGED, per the
+  iter-24 precedent. **Datapoint 2 of the 3 that precedent asked for, and it points the same way**:
+  the self-seat rejected its own revision in round 2 and produced the round's strongest objection.
+  Reject-by-default synthesis means a self-*pass* cannot manufacture a PROCEED, so retention can
+  only add objections. Independent cross-provider rejector throughout: `gemini-3-1-pro`.
+- *Applying the recorded `(b)` default for item 4, or the ratification packet for 4b* — not
+  force-applied for the 3rd/2nd iteration running. Both remain the human's decision to spend.
+
+**Next**: **three items now wait on one human, and they can ride ONE comment on `#9`** — item 4's
+`(a)`/`(b)` scope question, item 4b's three-arm ratification packet, and item 6b's §7 ratification.
+Answering all three unparks item 4 and item 4b straight to sprint-planner and unblocks item 7
+(`w-approval-inbox`) plus all M6 work — with no re-design and no re-quorum anywhere. The minimal
+reply is in the report. If the park persists, the only remaining self-serve work is item 9
+(~0.5d infra), which the charter flags as needing human confirmation before implementing; the
+honest statement remains that this loop is human-gated, but it is now gated on **one** touchpoint
+covering three items rather than two.
