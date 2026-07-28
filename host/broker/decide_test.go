@@ -4,18 +4,9 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/sunholo-data/ailang-world/host/hashref"
 )
-
-type sketchRecord struct {
-	Cost, BudgetBefore, BudgetAfter int64
-	Allowed                         bool
-	Denial                          string
-}
-
-func sketchRecordConsistent(rec sketchRecord) bool {
-	return rec.Allowed && rec.BudgetAfter == rec.BudgetBefore-rec.Cost && rec.Denial == "" ||
-		!rec.Allowed && rec.BudgetAfter == rec.BudgetBefore
-}
 
 func TestSketchRows(t *testing.T) {
 	capability := func(effect, scope string, expiresAt, budget int64) Capability {
@@ -42,8 +33,8 @@ func TestSketchRows(t *testing.T) {
 		{"withinEffectBudget/3", 85, withinEffectBudget(5, 6), false},
 		{"withinEffectBudget/4", 86, withinEffectBudget(-1, 0), false},
 		{"withinEffectBudget/5", 87, withinEffectBudget(5, -1), false},
-		{"effectAllowed/1", 121, effectAllowed(capability("FS.Read", "/p", 10, 5), request("FS.Read", "/p", 2, 3)), true},
-		{"effectAllowed/2", 123, effectAllowed(capability("FS.Read", "/p", 10, 5), request("FS.Read", "/p", 2, 10)), false},
+		{"effectAllowed/1", 122, effectAllowed(capability("FS.Read", "/p", 10, 5), request("FS.Read", "/p", 2, 3)), true},
+		{"effectAllowed/2", 124, effectAllowed(capability("FS.Read", "/p", 10, 5), request("FS.Read", "/p", 2, 10)), false},
 	}
 	for _, row := range boolRows {
 		t.Run(fmt.Sprintf("line_%d_%s", row.line, row.name), func(t *testing.T) {
@@ -72,11 +63,11 @@ func TestSketchRows(t *testing.T) {
 		r    EffectRequest
 		want string
 	}{
-		{194, capability("FS.Read", "/p", 10, 5), request("FS.Read", "/p", 2, 3), "allowed:3"},
-		{196, capability("FS.Read", "/p", 10, 5), request("Git.Commit", "/p", 2, 3), "denied:effect-name"},
-		{198, capability("FS.Read", "/p", 10, 5), request("FS.Read", "/q", 2, 3), "denied:scope"},
-		{200, capability("FS.Read", "/p", 10, 5), request("FS.Read", "/p", 2, 10), "denied:expired"},
-		{202, capability("FS.Read", "/p", 10, 5), request("FS.Read", "/p", 6, 3), "denied:budget"},
+		{225, capability("FS.Read", "/p", 10, 5), request("FS.Read", "/p", 2, 3), "allowed:3"},
+		{227, capability("FS.Read", "/p", 10, 5), request("Git.Commit", "/p", 2, 3), "denied:effect-name"},
+		{229, capability("FS.Read", "/p", 10, 5), request("FS.Read", "/q", 2, 3), "denied:scope"},
+		{231, capability("FS.Read", "/p", 10, 5), request("FS.Read", "/p", 2, 10), "denied:expired"},
+		{233, capability("FS.Read", "/p", 10, 5), request("FS.Read", "/p", 6, 3), "denied:budget"},
 	}
 	for _, row := range decisionRows {
 		t.Run(fmt.Sprintf("line_%d_decideLabel", row.line), func(t *testing.T) {
@@ -88,16 +79,22 @@ func TestSketchRows(t *testing.T) {
 
 	recordRows := []struct {
 		line int
-		rec  sketchRecord
+		rec  EffectRecord
 		want bool
 	}{
-		{169, sketchRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Allowed: true}, true},
-		{173, sketchRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 5, Denial: "budget"}, true},
-		{177, sketchRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 4, Allowed: true}, false},
+		{175, EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Allowed: true, ResultRef: hashref.SumSHA256([]byte("bb"))}, true},
+		{179, EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 5, Allowed: true, ResultRef: hashref.SumSHA256([]byte("bb"))}, false},
+		{183, EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Allowed: true}, false},
+		{187, EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Allowed: true, Failed: true}, true},
+		{191, EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 5, Allowed: true, Failed: true}, false},
+		{195, EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Allowed: true, Failed: true, ResultRef: hashref.SumSHA256([]byte("bb"))}, false},
+		{199, EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 5, Denial: "budget"}, true},
+		{203, EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Denial: "budget"}, false},
+		{207, EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 5, Failed: true, Denial: "budget"}, false},
 	}
 	for _, row := range recordRows {
 		t.Run(fmt.Sprintf("line_%d_recordConsistent", row.line), func(t *testing.T) {
-			if got := sketchRecordConsistent(row.rec); got != row.want {
+			if got := RecordConsistent(row.rec); got != row.want {
 				t.Fatalf("sketch line %d: got %v, want %v", row.line, got, row.want)
 			}
 		})

@@ -108,10 +108,11 @@ tests [
 }
 
 -- The composed authorization predicate: ALL four laws hold. The body is
--- INLINED to field comparisons rather than calling Laws 1-4: a contract
--- calling a callee whose params mix two record sorts Z3-errors on v0.30.0
--- ("select requires 1 arguments...unknown constant effectNameMatches") --
--- the isValidNextWorld/sameRef inlining pattern applies (V-row in the doc).
+-- INLINED, not composed: calling Laws 1-4 from this body fails Z3 encoding on
+-- v0.30.0 (status "error") while the inlined body verifies. The exact trigger
+-- is NOT isolated -- the "two record sorts" story is REFUTED (see U1); a
+-- leading HYPOTHESIS is that the callees carry their own contracts. Pattern:
+-- isValidNextWorld.
 -- The exact ensures restates all four laws, so drift is impossible by proof.
 export func effectAllowed(c: Capability, r: EffectRequest) -> bool ! {}
 ensures { result == (c.effect == r.effect && c.scope == r.scope
@@ -143,9 +144,11 @@ export func decide(c: Capability, r: EffectRequest) -> BrokerDecision
 }
 
 -- The effect-record shape the broker persists as a content-addressed store
--- object (semantic_id "world/effect-record/v1") for EVERY decision — allowed
--- AND denied. resultRef is the content address of the handler's result bytes
--- for allowed effects, and the zero ref for denials (no result exists).
+-- object (semantic_id "world/effect-record/v1") for EVERY decision. The pair
+-- (allowed, failed) identifies the three legal arms: (false, false) denied,
+-- (true, false) succeeded, and (true, true) failed; (false, true) is illegal.
+-- resultRef is the content address of the handler's result bytes for success,
+-- and the zero ref for denials and failures (no result exists).
 -- budgetBefore/budgetAfter make the session's budget accounting replayable
 -- from the records alone.
 export type EffectRecord = {
@@ -155,33 +158,61 @@ export type EffectRecord = {
   budgetBefore: int,
   budgetAfter: int,
   allowed: bool,
+  failed: bool,
   denial: string,
   requestRef: HashRef,
   resultRef: HashRef
 }
 
--- Record consistency law: an allowed record debits exactly cost and carries
--- no denial label; a denied record leaves the budget untouched.
+-- Record consistency law: an allowed record debits exactly cost whether or
+-- not the handler failed; a denied record leaves the budget untouched. Only
+-- a success carries a result ref, and only a denial carries a denial label.
 export func recordConsistent(rec: EffectRecord) -> bool ! {}
-ensures { result == ((rec.allowed && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.denial == "")
-  || ((not rec.allowed) && rec.budgetAfter == rec.budgetBefore)) }
+ensures { result == ((rec.allowed && (not rec.failed) && rec.denial == "" && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.resultRef.digest != "")
+    || (rec.allowed && rec.failed && rec.denial == "" && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.resultRef.digest == "")
+    || ((not rec.allowed) && (not rec.failed) && rec.denial != "" && rec.budgetAfter == rec.budgetBefore && rec.resultRef.digest == "")) }
 tests [
   (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 3,
-      allowed: true, denial: "",
+      allowed: true, failed: false, denial: "",
       requestRef: { algo: "sha256", digest: "aa" },
       resultRef: { algo: "sha256", digest: "bb" } }), true),
   (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 5,
-      allowed: false, denial: "budget",
+      allowed: true, failed: false, denial: "",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "bb" } }), false),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 3,
+      allowed: true, failed: false, denial: "",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "" } }), false),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 3,
+      allowed: true, failed: true, denial: "",
       requestRef: { algo: "sha256", digest: "aa" },
       resultRef: { algo: "sha256", digest: "" } }), true),
-  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 4,
-      allowed: true, denial: "",
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 5,
+      allowed: true, failed: true, denial: "",
       requestRef: { algo: "sha256", digest: "aa" },
-      resultRef: { algo: "sha256", digest: "bb" } }), false)
+      resultRef: { algo: "sha256", digest: "" } }), false),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 3,
+      allowed: true, failed: true, denial: "",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "bb" } }), false),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 5,
+      allowed: false, failed: false, denial: "budget",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "" } }), true),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 3,
+      allowed: false, failed: false, denial: "budget",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "" } }), false),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 5,
+      allowed: false, failed: true, denial: "budget",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "" } }), false)
 ]
 {
-  (rec.allowed && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.denial == "")
-    || ((not rec.allowed) && rec.budgetAfter == rec.budgetBefore)
+  (rec.allowed && (not rec.failed) && rec.denial == "" && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.resultRef.digest != "")
+    || (rec.allowed && rec.failed && rec.denial == "" && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.resultRef.digest == "")
+    || ((not rec.allowed) && (not rec.failed) && rec.denial != "" && rec.budgetAfter == rec.budgetBefore && rec.resultRef.digest == "")
 }
 
 -- Canonical text form of a BrokerDecision (S1: every canonical text form has
