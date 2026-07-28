@@ -4447,3 +4447,131 @@ snippet verbatim, once per workflow; never hand-roll a variant") is correct and 
 Recorded because this is the second and third instance of the hand-rolled-poll class in the fleet
 (iteration 107 was the first), and because the cheap tell is worth naming: **if a poll compares
 against anything captured before the loop, ask what happens when the thing it names moves.**
+
+## Iteration 32 — 2026-07-28 — `w-effect-broker-m3` **M3.B0 LANDED — the ratified third arm** (PR #21 → squash `9401f2d`, dev CI green both jobs, judge PASS 88/100 zero-blocking) — and the iteration's spine is that **a gate which no production change could fail had been sitting in landed code for a full milestone**, invisible to a judge who passed it 84/100 with zero blocking findings, and it was found by asking of an already-green gate: *what would have to break for this to red?*
+
+**Pick**: item **4 `w-effect-broker-m3`**, the queue head. Reality-checked on a freshly-fetched
+`origin/dev` before routing: no `handlers_git.go`/`handlers_model.go`/`approve.go`, no
+`host/capsule`, no PR — M3.B not landed. Doc present and twice-quorumed (two artifacts in
+`.ailang/state/mission-quorum/`), sprint plan present ⇒ **no designer, no re-quorum**. The
+charter's own prescription made the pick concrete: *"the doc needs Decision 3's third arm plus the
+corrected supersession note before M3.B is planned"*.
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` =
+`sunholo-voight-kampff`; local `dev` == `origin/dev` == `104c377`; CI **completed/success** @
+`104c377eb`. Inbox: 3 unread, all `eval-suite` telemetry from the V1 loop — no directive, no
+cross-mission request. Bookkeeping **#9** (25 comments), watermark `2026-07-27T08:55:11Z`,
+**zero** `@MarkEdmondson1234` comments (the ratification came attended, recorded in-charter).
+**No rotation due** — `#9` titles the current week, so the intent test governs (Repo Profile,
+iter-20); 25 ≪ 80. No `[nightly-eval]` issues in this repo. Pidfile held only by this fire.
+
+**Routing evidence**
+
+| Role | Pinned | Actually ran | Note |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | claude-opus-5 | quota bucket |
+| Designer | — | **did not run** | doc existed + twice-quorumed; rotation untouched at `codex:gpt-5.6-sol` |
+| Planner | `$MISSION_PLANNER_MODEL`=opus | **opus**, Agent-pinned | wrote M3.B0, cleared M3.D's `blocked_on`, fixed CF-J-3; refuted 4 things incl. a live vacuity |
+| Executor | `$MISSION_EXECUTOR_MODEL` = **`codex:gpt-5.6-sol`** | **codex `gpt-5.6-sol`**, rc=0 | probe rc=0 **and its output read `ok`** (iter-24 rule: read the output, not just the code); `env -u OPENAI_API_KEY`; directive asserted at **9286 B**; `< /dev/null`; per-iteration filenames `*_world_iter32.*`; finished inside the 30-min cap; sandbox blocked its commit as documented → controller committed, crediting it |
+| Evaluator | `$MISSION_EVALUATOR_MODEL` = **sonnet** | **sonnet**, one round: **PASS 88/100, ZERO blocking** | generator≠judge holds cross-provider (OpenAI executor vs Anthropic judge) |
+
+`metered=$0.00` — every lane on a subscription/quota bucket (codex on ChatGPT auth; controller,
+planner and judge on Anthropic quota). No quorum ran. The `$5` ceiling was never approached.
+
+**Delivered** — two commits:
+- `84b8efd` **the ratification propagated into the design doc** (169 insertions): Decision 3's
+  REOPENED third-arm block with the binding semantics and the encoding *constraints* (not the
+  encoding itself — that was left as a bounded planner call); the supersession note **corrected
+  with its overclaim kept verbatim** so it stays legible; the Deferred-Scope effect-journal row
+  re-opened and pointed at item 4c; **AC18** and an **AC19 honesty gate**; the new **M3.B0**
+  milestone section; and CF-J-4's fixture-vs-production mutation correction.
+- `9401f2d` (PR #21) **the milestone** — 408 insertions / 118 deletions across exactly 7 files:
+  `design_docs/sketches/effectbroker.ail` (213 → 244), the doc's Appendix A **in the same commit**,
+  `host/broker/{record.go,broker.go,broker_test.go,decide_test.go,handler_error_repro_test.go}`.
+
+**Closes AC18.** Protected paths byte-unchanged by `git diff --exit-code`.
+
+**Finding 1 — a gate that no production change could fail, in landed code, found by asking what
+would have to break.**
+`host/broker/decide_test.go` mirrored `recordConsistent` in a **test-local** `sketchRecordConsistent`
+over a test-local `sketchRecord` struct. So the drift test proved the TEST matched the sketch — never
+that PRODUCTION did. **The measurement is one instrument, run unchanged before and after**, which is
+what makes it evidence rather than a story: forcing production `RecordConsistent` to `return true`
+red **1** subtest and **ZERO** drift rows at `84b8efd`; against the rewired test it reds **6**
+negative arms **and 6** `TestSketchRows/line_*_recordConsistent` rows. `record.go` reverted
+byte-identical (`f2285cc9…`). Three parties reached the same numbers independently: the opus planner
+found it, the controller reproduced it, the sonnet judge re-ran it unprompted. **Third instance of
+this shape in this mission** (SD.C's `MUT-AUTO-RETRY`, iter-30's CF-H-1, now this) — and the first
+found *inside a milestone that had already passed a judge*, at 84/100 with zero blocking findings.
+The transferable part is the question, not the fix: the planner found it by asking of an existing
+green gate *"what would have to break for this to red?"*.
+
+**Finding 2 — the judge's non-blocking CF-K-1 is bigger than filed. Third iteration running.**
+Filed as a type-discrimination nit: *"a caller relying on `errors.As` cannot distinguish a store
+write failure"*. Reproduced first-party with an injected failing store on the failure arm: handler
+dispatched **1×**, ledger debited **5 → 2**, record ref **zero**, and the returned error reads
+`broker: put effect record: injected record write failure` — `errors.As(&EffectFailedError)`
+**false**, and the handler's own cause **absent from the message entirely**. So on the very path the
+ratification exists to make honest, a record-write failure tells the caller only that a *store*
+write failed and **conceals that an external effect was dispatched and failed**. That is CF-J-2's own
+shape recurring one level down. It is **not** M3.B0's regression — the class is pre-existing from
+M3.A and the success arm carries it too — and **not** the M3.D crash window, so it lands as
+**CF-K-1, re-scoped in the record**, rather than as a blocker. The rule earned again: a NON-BLOCKING
+label is the judge's opinion of severity, not a measurement.
+
+**Finding 3 — the propagation defect caught in advance, for once.**
+Iteration 31's Finding 1 was that a correction announced in prose never reached the artifacts that
+restate it (fifth instance). This iteration the same class was **pre-empted at Gate 2**: the
+ratification lived in the charter and the log but not in the design doc, so the doc edit came before
+any routing. Two smaller instances surfaced while doing it and were folded into the milestone rather
+than filed: **CF-J-1** (the sketch comment still carrying the "two record sorts" claim the doc's own
+**U1** refutes) and the **CF-I-2 → CF-J-2** rename — iter-31 renumbered that carry-forward and the
+renumbering never reached the code, which I found by *reading the reproduction* instead of trusting
+the log's account of it.
+
+**Ruled out / refuted this iteration**
+- **The planner's 1.6× LOC multiplier** — refuted downward for the **second consecutive iteration**.
+  Predicted ~420, actual **408** = **1.0×**. The 1.0–1.2× calibration is now the standing figure for
+  milestones specified at this granularity.
+- **`world/effect-record/v1` must bump for a wire change** — REFUTED by measurement, not intuition:
+  no durable record exists anywhere in the repo (no `*.db`, no daemon wiring for records), and
+  M3.A's committed golden bytes still decode cleanly under `DisallowUnknownFields` with
+  `Failed=false`. The reverse direction fails, which is harmless given the above.
+- **`MUT-FAILED-ARM-INDISTINGUISHABLE` in one variant is sufficient** — refuted by the planner
+  before the sprint: the production `RecordConsistent` guard fires FIRST and refuses the write, so
+  variant 1 never reaches the byte-level discrimination test. Two variants were required and run.
+- **The doc's F1 capsule mutation** ("corrupt the archived binary") — a FIXTURE mutation that tests
+  the test; corrected in-doc this iteration to name `MUT-F1-UNVERIFIED-EXEC` beside it (CF-J-4).
+- **Both sandbox-uninformative gates** — the executor correctly labelled `verify_go.sh` and
+  `bench_worldd.sh --smoke` `UNINFORMATIVE UNDER SANDBOX` and quoted the bind error; **both PASS
+  when re-run outside**, confirming the label rather than a regression.
+- **A Gate-3b poll was needed at all** — it was not. One workflow was expected for this diff, and
+  the direct per-workflow query answered immediately. Iteration 31's addendum-2 defect (a
+  hand-rolled SHA-comparison variant parking two green runs) does not recur when the poll is not
+  invented in the first place.
+
+**Open non-blocking carry-forwards (enumerated — a bare COUNT is unrecoverable, iter-19 rule):**
+**CF-K-1** (re-scoped from the judge's filing, see Finding 2) — when `putRecord` fails *after* a
+dispatch, the returned error names only the store failure: `errors.As(&EffectFailedError)` is false
+and the handler's cause is dropped, so the fact that an external effect executed is concealed. The
+class is pre-existing from M3.A and covers the SUCCESS arm too — owner: **M3.D**, which owns the
+recovery/indeterminacy surface where this error must become legible.
+**CF-K-2** — AC18's checkbox in `design_docs/planned/w-effect-broker-m3.md` is still `- [ ]`;
+confirm it flips at the item close-out — owner: **M3.C**.
+**CF-K-3** — `invokeReplay`'s validation predicate does not name `rec.Failed` for the success-arm
+check, relying on `RecordConsistent` for that discrimination; correct but less legible than the
+three-arm law it implements — owner: **M3.C**.
+Earlier carry-forwards still open: **CF-F-1**, **CF-F-2**, **CF-F-4**, **CF-G-1**, **CF-G-3**,
+**CF-H-1**, **CF-J-4**. **CLOSED this iteration: CF-J-1** (sketch comment corrected),
+**CF-J-2** (the third arm — the reproduction rewritten red→green and renamed), **CF-J-3** (the
+plan's `MUT-RECORD-CONSISTENT-LIE` attribution, reproduced by the planner: the file is `broker.go`
+not `record.go`, and it reds 4 tests via the production guard while the golden test stays green).
+
+**Next**: **M3.B** — subprocess handlers (`Git.Commit`, `Model.Infer`) + synchronous
+`Human.Approve`/`PollApproval` + the six-restriction capsule floor F1–F6 — now landing over a
+**three-arm** pipeline, which was the whole reason M3.B0 was sequenced first: those are exactly the
+handlers most likely to fail mid-effect. The planner re-based it 2,050 → 1,450 LOC on the refuted
+multiplier and it carries three internal checkpoints (B-1/B-2/B-3), the first two independently
+landable. Then **M3.C**, then **M3.D** (option (i), `blocked_on` cleared, `MUT-AUTO-RETRY-PROD` now
+a production mutation that discharges CF-H-1), then item **4c `w-effect-journal`**. The plan and
+handoff are durable at `.ailang/state/sprints/w-effect-broker-m3.{plan.json,handoff.md}`.
