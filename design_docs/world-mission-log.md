@@ -3620,3 +3620,205 @@ reply is in the report. If the park persists, the only remaining self-serve work
 (~0.5d infra), which the charter flags as needing human confirmation before implementing; the
 honest statement remains that this loop is human-gated, but it is now gated on **one** touchpoint
 covering three items rather than two.
+
+---
+
+## Iteration 27 — 2026-07-28 — `w-store-durability` **REPRO-FIXTURE HALF LANDED** (PR #16 → squash `e8ba7b2`, dev CI green both jobs, evaluator PASS 93/100) — and re-measuring the defect first-party **corrected the mission's own written record**: the field iter-25 called "degenerate-but-readable" is the only unrecoverable one
+
+**Pick**: for the second iteration running, **the pick itself is the first finding.** Items 4, 4b
+and 6b all still wait on one unanswered `@MarkEdmondson1234` comment, and iteration 26 closed by
+saying the only remaining self-serve work was item 9 — which the charter flags as needing human
+confirmation before implementing. That framing was **incomplete**. Item 4b's own row names a
+deliverable that needs no human at all:
+
+> *"as of iter-23 it still has **no issue and no repro fixture** — this row closes the queue half,
+> and a committed repro fixture is the first deliverable (the ghost-close rule: never bare
+> bookkeeping)."*
+
+The ratification packet gates **the fix**. It does not gate **documenting the defect**. Measured
+before routing anything: `gh issue list` showed only `#9` open, and a repo-wide search for
+`CF-B-2` returned **zero** hits outside the mission doc — no issue, no fixture, no code reference.
+The row's stated first deliverable had simply been undone since iteration 21. So the pick is 4b's
+self-serve half, and again the loop was *less* blocked than the previous iteration believed.
+
+Two iterations, two instances of the same shape: **the queue's rows contain runnable work that the
+previous iteration's Next line had already written off.** Iter-25 → 6b; iter-26 → 4b's fixture.
+
+**Ruled out as the pick**: item 9 `w-verify-binary-lockfile` — but not, this time, as a bare
+"lower value" dismissal. The Gate-2 reality check turned up a genuine latent false-green in it
+(below), and it was *still* ruled out for routing because its load-bearing half is the exact CI edit
+the charter forbids headless. Also ruled out: CF-C-1/CF-C-2/CF-C-4 (small test-only carry-forwards
+on landed M2.C code) — real and unblocked, but they have no queue row, and inventing one to take a
+second item would break Standing rule 1 on an iteration that already had a charter-named deliverable.
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` =
+`sunholo-voight-kampff`; `mission-world.pid`=74714 = **this run's own driver** (checked with `ps`,
+not assumed — no overlap); `dev` == `origin/dev` (`c8d5229`), nothing missing; `git rev-parse dev
+origin/dev` **without** `--short`, rc=0, per the skill's iter-108 fix. Workflow `CI`
+**completed/success** at HEAD — this repo has exactly **one** workflow, so Build-and-Release /
+Docs-Deploy are **N/A, not pending**. Zero `[nightly-eval]` issues; `#9` the only open issue.
+**No new `@MarkEdmondson1234` comment on `#9`** (17 comments) **nor on predecessor `#1`** —
+watermark `2026-07-27T08:55:11Z` unchanged, nothing to advance. **No rotation due**: `#9` created
+`2026-07-27T05:51:13Z` = after the Monday 07:00 boundary, and 17 ≪ 80. Inbox: 1 unread, a V1-side
+`eval-suite` notification for `sunholo-data/ailang` — another mission's, no action, deliberately
+left unread so the V1 loop still sees it.
+
+**Routing evidence**
+
+| Role | Pinned | Actually ran | Note |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | claude-opus-5 | quota bucket |
+| Designer | — | **did not run** | no new doc needed; a single characterization-test file needs no design pass |
+| Planner | `$MISSION_PLANNER_MODEL`=opus | **did not run** | one test file against a charter-named deliverable; a plan would have been ceremony |
+| Executor | `$MISSION_EXECUTOR_MODEL` = **`codex:gpt-5.6-sol`** | **codex `gpt-5.6-sol`**, rc=0 | probe run **WITH `--model`** (iter-19 Repo-Profile scar), rc=0 replied `ok`; `env -u OPENAI_API_KEY`; `</dev/null`; directive asserted at **7051 bytes** before spawn; 30-min cap; sandbox blocked its `git commit` **as documented** → controller committed, crediting it |
+| Evaluator | `$MISSION_EVALUATOR_MODEL` = **sonnet** | **sonnet**, PASS **93/100**, 0 blocking | generator≠judge holds **cross-provider** (OpenAI executor vs Anthropic judge) — no collision, nothing flagged |
+
+`metered=$0.00` — every lane on a subscription/quota bucket (codex on ChatGPT auth, controller and
+judge on Anthropic buckets). No quorum ran (the design doc was already quorum-cleared at iter-25;
+this iteration added no design). The $5 ceiling was never approached. Designer rotation state
+unchanged at `codex:gpt-5.6-sol` (no designer fired).
+
+**Delivered**: `host/store/durability_repro_test.go` (225 LOC, 5 tests / 15 subtests), tracking
+issue **#15**, PR **#16** → squash **`e8ba7b2`**, and the charter corrections. `store.go` and
+`schema.sql` **byte-unchanged**. Closes the tracking half of judge carry-forward **CF-C-3**.
+
+### THE DEFECT IS WORSE, AND SHAPED DIFFERENTLY, THAN THE MISSION RECORDED
+
+Iteration 25's queue row presented this as measured fact:
+
+> *"**seven** produce a permanently unreadable row (`TransitionFn`, `Interpreter`, `EntryHash`,
+> `TransitionRef`, `PrevEntryHash`, `NextWorld.LogHead`, `NextWorld.StateRoot`), and the eighth
+> (`NextWorld.Ref`) commits and reads back *fine* … degenerate-but-readable, and therefore the one
+> shape a read-side fix could never observe."*
+
+I re-ran the matrix myself before routing, because **a prior iteration's prose is a claim, not
+evidence** — the same rule I apply to sub-agents, turned on my own predecessor. It is **refuted**.
+The damage is **three** classes, not two:
+
+| Class | Fields | Behaviour |
+|---|---|---|
+| **1** | `TransitionFn`, `Interpreter`, `PrevEntryHash`, `EntryHash`, `TransitionRef` | `GetLogEntry` → `ok=false` + err; `GetWorld`/`SelectedHead` fine |
+| **2** | `NextWorld.StateRoot`, `NextWorld.LogHead` | `GetLogEntry` **succeeds**; `GetWorld` fails; head still selectable |
+| **3** | `NextWorld.Ref` | entry **and** world read fine; `SelectedHead()` **errors**; **every later `Commit` fails with a non-`ConflictError`** → store unrecoverably wedged |
+
+Two independent errors in the old record. **CLASS 2 was mislabelled**: those two fields don't touch
+`GetLogEntry` at all — they poison a *different read surface* (`GetWorld`), and lumping them into
+"unreadable row" hid that. And **CLASS 3 was inverted**: the field the record called the mildest,
+the one it said "a read-side fix could never observe", is the **only unrecoverable one**. Because
+the failure is a plain untyped error rather than a `ConflictError`, a caller's standard
+re-plan-on-conflict path never fires — the store simply stops accepting writes forever.
+
+Corroborated unchanged: all eight fields commit with `err=<nil>` (`store.Commit` validates **none**
+of its ref fields on write), and the permanent-hole-mid-chain property holds exactly — poisoned
+entry unreadable, head still advances, a later legal commit chains onto it, readable entries on
+both sides of an unreadable one.
+
+**Decision-relevant, and deliberately not my decision**: a read-side accommodation (**ARM V2**)
+cannot reach CLASS 3 at all — there is nothing to "support on read" when `SelectedHead` has no ref
+to return and the write path then refuses every later commit. The non-vacuity mutation showed the
+converse: one write-side check (**ARM V1**) reds all three classes at once. That asymmetry now
+lives in an executable test instead of in an argument. It is offered to Mark as an observation; the
+arm choice remains his, and no default was force-applied.
+
+### NON-VACUITY PROVEN, NOT ASSERTED — and the mutation is the same one that fixes the bug
+
+A characterization test that asserts *broken* behaviour has an unusual vacuity risk: it might pass
+for reasons unrelated to the defect. So the mutation that proves it is the **fix**: apply write-side
+validation to `store.Commit` and every test must red.
+
+```
+under fix-mutation:  PASSing CFB2 subtests = 0   FAILing = 20   (5 tests / 15 subtests)
+after revert:        store.go sha256 = ebaa5b00bbe6653e…  (byte-identical to baseline)
+```
+
+The judge re-ran the entire mutation independently and reproduced 0/20 plus the byte-identity.
+
+### I CLOSED TWO JUDGE FINDINGS IN-PR RATHER THAN CARRYING THEM — verifying the first before acting
+
+- **CF-E-1**: the executor named the file `cfb2_repro_test.go`, but the ratified design doc names
+  `host/store/durability_repro_test.go` in **three** places (`:512`, `:580`, AC1 `:671`). I checked
+  the doc myself before accepting the judge's claim — it was right. Renamed. Leaving it would have
+  put the repo permanently out of step with its own design doc's file table.
+- **CF-E-2**: the CLASS-1 `entry hash` case asserted the error contained `"hash"` — which also
+  matches `"hashref"` in **every** `GetLogEntry` error, so that one substring discriminated
+  nothing. Tightened to `"entry 1 hash:"`. S6 (honest non-vacuous gates) is binding, and a
+  substring that can't fail is a small vacuous gate.
+
+Non-vacuity was then **re-proven after both edits** (0 PASS / 20 FAIL again), because an edit to a
+fixture invalidates the fixture's own prior proof.
+
+### A SECOND FALSE-GREEN SURFACE, FOUND IN THE REALITY CHECK — reported with its severity bounded DOWN
+
+The Gate-2 reality check on item 9 turned up an asymmetry between the two sibling gates:
+
+- `scripts/verify_go.sh:19-32` **hard-fails loudly** if `AILANG_BIN` is unset or its binary isn't
+  `v0.30.0` — the guard M6 landed to close the V27/B1 silent-skip class.
+- `scripts/verify_ail.sh:33` is `AILANG_BIN="${AILANG_BIN:-ailang}"` — **no guard, no version
+  assertion, and it never prints which binary it used.** Bare PATH `ailang` on this rig is
+  **`v0.30.0-205-g54d6bd191-dirty`**: 205 commits past the pin, dirty. So the repo's primary gate
+  silently validates against a dev build, contradicting CLAUDE.md's own hard rule.
+- `.github/workflows/ci.yml:18` installs `releases/**latest**/download` and never asserts the
+  version (`:43` only prints it), while `:71` (go-verify) pins `releases/download/**v0.30.0**` +
+  sha256 + `grep -q`.
+
+The tempting write-up is "the mission's `.ail` verification evidence is tainted". **I ran the gate
+both ways to check, and it isn't**: pinned and dirty produced **byte-identical** output (rc=0, 4/4
+identities across 10 modules, 14/14 named tests, both runs), and `releases/latest` **is** v0.30.0
+today. So this is **latent, not active** — no prior recorded `.ail` evidence is invalidated, and CI
+is correct **by coincidence rather than by pin**, which will end silently the day v0.31.0 ships.
+
+Routed to item 9 with the decomposition that matters: the **ANNOUNCE** half (print the resolved
+binary + version, as `verify_go.sh:33` already does) is pure observability and cannot red anything;
+the **hard-assert** half is **coupled** to the CI `latest`→pinned-tag edit, because asserting alone
+would red CI on the next upstream release with no human present. That coupling is precisely why the
+row's "confirm with a human / do not hand-edit CI headless" flag exists, so it was respected and not
+worked around.
+
+### Controller's own independent evidence (never laundering a sub-agent claim)
+
+- The executor reported *"`go test ./...` reached unrelated existing daemon tests that cannot bind
+  localhost ports in this sandbox"*. Plausible, and it turned out to be true — but it is a claim
+  from inside a sandbox about behaviour outside it, so I ran the full suite myself outside: **all 8
+  packages ok**, `go build` clean, `go vet` clean.
+- `verify_go.sh` rc=0 with **8/8 packages** and the `✓ go gate PASSED` line present; `host/replay`
+  took **11.9s**, which is how you can tell the replay tests genuinely ran rather than `t.Skip`-ing
+  (the V27/B1 class).
+- `verify_ail.sh` rc=0, **4/4 required identities across 10 modules, 14/14 named tests**.
+- Gate 3b: the bounded poll said `completed success`, and I then confirmed it **directly**
+  per-workflow — `CI: completed/success @ e8ba7b214` matching `origin/dev` `e8ba7b2`, with both jobs
+  (`ailang-code verify gate`, `go host build + test gate`) green. The skill's iter-107 rule is that
+  a poll's output is a hint, never the verdict.
+- **AND I CAUGHT MY OWN PIPE BUG MID-GATE**: I wrote `./scripts/verify_go.sh | tail; echo "rc=$?"`
+  and read rc=0 off it. That is **`tail`'s** exit status — the skill's own "exit codes through pipes
+  lie" scar, which I had just re-read. The suspicious tell was that the output's last line was the
+  version banner rather than the script's `✓ … PASSED` line. Re-ran redirecting to a file for the
+  true rc (still 0, and the PASS line **was** present — so the reading was right by luck and the
+  instrument was wrong). Same lesson as the fixture: an instrument's validity must be established
+  before its reading counts.
+
+**Ruled out**
+- *"`store.Commit` produces seven unreadable rows and one benign degenerate ref"* (iter-25's row,
+  presented as first-party measurement) — **REFUTED**. Three classes; `NextWorld.StateRoot` /
+  `NextWorld.LogHead` poison `GetWorld`, not `GetLogEntry`; `NextWorld.Ref` is the **worst** field,
+  not the mildest.
+- *"The mission's `.ail` verification evidence is tainted by the unpinned gate"* — **REFUTED by
+  measurement**, and worth stating plainly because it was the alarming version of a true finding.
+  Pinned and dirty output were byte-identical; the defect is latent.
+- *"The queue's only self-serve work is item 9"* (iter-26's Next line) — **REFUTED**, same class as
+  iter-25→6b. Item 4b's row named a human-independent first deliverable that had never been done.
+- *Adding write-side validation while I was in `store.go`* — declined. It is the substance of ARM
+  V1, one of three unratified arms; the executor was explicitly forbidden it and the temporary
+  mutation was reverted to byte-identity. Applying it would have decided a human's question by
+  implementation.
+- *Taking CF-C-1/CF-C-2/CF-C-4 as a second item* — declined under Standing rule 1; they are real,
+  unblocked and small, but have no queue row and this iteration already had a charter-named pick.
+
+**Next**: the same **THREE** items ride the same **ONE** comment on `#9` — item 4's `(a)`/`(b)`,
+item 4b's three arms, item 6b's §7 — and answering all three still unparks 4 and 4b straight to
+sprint-planner and unblocks item 7 plus all M6 work, with no re-design and no re-quorum anywhere.
+Item 4b's evidence base is now materially stronger and its first deliverable is banked, so the
+ratification is a better-informed decision than it was yesterday. Remaining self-serve work if the
+park persists: judge carry-forwards **CF-E-3/4/5** (blast-radius assertions, a design-doc landing
+note, one clarifying comment) and **CF-C-1/CF-C-2/CF-C-4** from M2.C — all small, all test-only, all
+on landed code — plus item 9's zero-risk ANNOUNCE half. That is enough to keep the loop honest for
+another iteration or two, but none of it is critical path: **the critical path is one comment.**
