@@ -3822,3 +3822,127 @@ park persists: judge carry-forwards **CF-E-3/4/5** (blast-radius assertions, a d
 note, one clarifying comment) and **CF-C-1/CF-C-2/CF-C-4** from M2.C — all small, all test-only, all
 on landed code — plus item 9's zero-risk ANNOUNCE half. That is enough to keep the loop honest for
 another iteration or two, but none of it is critical path: **the critical path is one comment.**
+
+---
+
+## Iteration 28 — 2026-07-28 — `w-store-durability` **SD.A LANDED — CF-B-2 IS CLOSED AT THE KERNEL WRITE PATH** (PR #17 → squash `86d1276`, dev CI green, judge PASS 91 → MERGE 97) — and the iteration's two best findings were both **the mission's own artifacts disagreeing with each other**: a corrected count that never reached the code, and a fix of mine that only fixed the path my tests covered
+
+**Pick**: item **4b `w-store-durability`**, the FIX half — unblocked by the triple ratification
+(`bc467f1`, Mark attended). Routing was pre-authorised by the row itself ("unparks straight to
+sprint-planner"), so no re-design and no re-quorum; the doc already carried two quorum rounds plus a
+carve-out revision. **Ruled out**: item 9 `w-verify-binary-lockfile` (still coupled to a CI edit the
+charter forbids headless); items 4/5/6/7/8 (all gated on 4b or on 4). One item, per Standing rule 1.
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` = `sunholo-voight-kampff`;
+tree clean; `dev` == `origin/dev` (`c70fadf`) with `git rev-parse` **without** `--short` (rc=0, per
+the skill's iter-108 fix); workflow `CI` **completed/success** at HEAD — this repo has exactly ONE
+workflow, so nothing else is pending-vs-N/A. **No new `@MarkEdmondson1234` comment on `#9` nor on
+predecessor `#1`** (rotation-week catch applied) — watermark `2026-07-27T08:55:11Z` unchanged,
+nothing to advance. Inbox empty. **No rotation due** (`#9`, 18 comments ≪ 80).
+
+**Routing evidence**
+
+| Role | Pinned | Actually ran | Note |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | claude-opus-5 | quota bucket |
+| Designer | — | **did not run** | doc existed, ratified, quorum-cleared |
+| Planner | `$MISSION_PLANNER_MODEL`=opus | **opus**, Agent-pinned | wrote plan+handoff; **found the "seven" defect** |
+| Executor | `$MISSION_EXECUTOR_MODEL` = **`codex:gpt-5.6-sol`** | **codex `gpt-5.6-sol`**, rc=0 | probe WITH `--model` rc=0; directive asserted at **8231 B** before spawn; `< /dev/null`; 30-min cap (used ~10 min); sandbox blocked its commit **as documented** → controller committed, crediting it |
+| Evaluator | `$MISSION_EVALUATOR_MODEL` = **sonnet** | **sonnet** ×3 rounds: **FAIL 57 → PASS 91 → MERGE 97** | generator≠judge holds cross-provider (OpenAI executor vs Anthropic judge) |
+
+`metered=$0.00` — every lane on a subscription/quota bucket. No quorum ran (no new design). The $5
+ceiling was never approached. Designer rotation unchanged at `codex:gpt-5.6-sol` (no designer fired).
+
+**Delivered**: `store.go` +83 (validateRef, `InvalidRefError`, **eight** Commit ref fields + Objects,
+plus PutObject/PutWorld/SetRegistryHead/SelectHead/PutVerifyResult), new `scan.go` (bounded keyset
+sweeps, `MaxIntegrityScanPage`, `InvalidLimitError`), daemon startup sweep + truncation warning,
+`durability_repro_test.go` rewritten to the post-fix contract, new `scan_test.go` / `validate_test.go`
+/ `integrity_test.go`. Four commits → squash `86d1276`. `schema.sql`, `go.mod`, `go.sum`, `scripts/`,
+`world/`, `cmd/`, `.github/`, `host/{replay,hashref,canon,archive,registry}` **byte-unchanged**.
+**Closes AC1–AC4, AC12 and AC10's scan half.** No journal, no `InvocationID`, no receipts — SD.B.
+
+### FINDING 1 — a corrected number that never reached the artifacts it governed
+
+Quorum round 2 corrected premise V23 from "seven ref fields" to **eight**. That fix reached the
+premise table and **stopped there**. Decision 1's prose still opened *"`Commit` renders seven ref
+fields"* and then listed eight; **AC2** still said *"`Commit`'s seven"*. The planner caught it; I
+reproduced it first-party before editing, and found a **third** instance it had missed — V23 itself
+still carried the *superseded* "degenerate-but-readable" characterisation of `NextWorld.Ref` that
+iteration 27 had already retracted in Decision 1.
+
+**Why it was load-bearing rather than cosmetic**: an executor implementing "seven" drops exactly one
+field, and the likeliest drop is `NextWorld.Ref` — **the CLASS 3 wedge**, where `SelectedHead()`
+errors and every later `Commit` fails with a **non-`ConflictError`**, so the caller's standard
+re-plan-on-conflict path never fires and the store is unrecoverable through the public API. The
+miscount would have left the item's worst failure mode fully open **while every gate went green**.
+Corrected in all three places (`a25d87f`) and the directive carried "EIGHT, NOT SEVEN" as its
+highest-risk line. It is now **executable, not prose**: `MUT-SEVEN-NOT-EIGHT` (delete the
+`NextWorld.Ref` row — literally the doc's original miscount) reds 2 tests including
+`TestCFB2ZeroWorldRefWedgeRejected`.
+
+Same root cause, second instance, found the same way: `sketches/storejournal.ail:132` LAW 6
+`intentBindsCommit` still declares the round-1 **narrow 4-field** binding (8 params) while the
+ratified Design Freeze, Decision 4, AC15 and `MUT-INTENT-NARROW-BIND` all require the round-2
+**8-field** binding (16 params). Since the Freeze makes the sketch *the frozen law* and pins the Go
+mirror to it by drift test, **SD.B as written would pin the implementation to exactly the binding the
+doc calls the defect.** Recorded in-doc as an SD.B blocking precondition; not a new decision (it
+applies the ratified Freeze), so it needs no human — but it must be done before SD.B's drift test.
+
+### FINDING 2 — I fixed the path my tests covered and left the hazard on the path they did not
+
+The codex sandbox **denies loopback binds**, so every socket test in the executor's own gate run
+aborted with `panic: httptest: failed to listen on a port: bind: operation not permitted`. The
+executor read that correctly and said so. But that panic **masked a real regression**: outside the
+sandbox the failure was different — `GET /v1/health` **timed out**. Cause: `announce` is frequently
+an `io.Pipe` (synchronous, unbuffered) whose consumers read exactly ONE line and stop; the new sweep
+lines blocked `Run` before it reached `Serve()`, so the socket it had just announced never served.
+**A sandbox that cannot exercise a surface produces gate output that is silent about it** — the
+executor's `GATE1_RC=1` was true-but-uninformative, and only the controller's own run outside the
+sandbox distinguished environment from defect.
+
+My round-1 fix — emit sweep lines only when `!Complete || len(Holes) > 0` — made startup safe for a
+**healthy** store and left it wedgeable for precisely the stores the sweep exists to serve: one with
+a hole, or one truncated by the row/time budget. Both write lines; both deadlock the same one-line
+reader. The round-2 judge caught this as CF-F-3 and rated it non-blocking; I closed it anyway
+(`d506275`), structurally — `Run` never waits on the announce consumer, the lines go out on a
+goroutine, ordering preserved because the listen line is written synchronously first. Non-vacuity:
+`MUT-SYNC-ANNOUNCE` reds `TestIntegrityWarningsNeverBlockStartupForAOneLineReader`.
+
+### FINDING 3 — I reported three gates green while four were binding
+
+The round-1 judge **FAILED the milestone at 57/100** on a blocking finding my own gate run had
+missed: `./scripts/bench_worldd.sh --smoke` was **RED**, locally and on CI. I had run
+`go test` + `verify_go.sh` + `verify_ail.sh` and reported green; the plan and handoff both list
+**four** gates as binding on every milestone. **A gate table that omits a binding gate is a false
+green** — the same vacuous-pass class this whole item exists to close, committed in the *reporting*
+layer instead of the code. Reproduced first-party before acting, per the "a judge's finding is a
+claim" rule; the judge was right on every count.
+
+The cause was itself instructive: `BenchmarkStoreCommit` seeded `previousLog` with the **zero**
+`HashRef`, so its genesis commit carried a zero `PrevEntryHash` — precisely the CF-B-2 poison ARM V1
+now refuses. That commit was **never legal** (M1's convention seeds entry 0's `PrevEntryHash` from
+the genesis world's `LogHead`, a real content address, `store_test.go:103`), and it only ever passed
+because `Commit` validated nothing. **A benchmark was relying on the defect.** Seeding it with a real
+address is the fix, and the judge independently confirmed that reading rather than taking mine.
+
+**Ruled out / refuted this iteration**
+- *"The `Reading additional input from stdin...` line means the codex stdin hang."* **Refuted.** It
+  prints even with `< /dev/null` (stdin EOFs immediately and the run proceeds normally). The line is
+  **not** a hang detector; output volume and diff progress are. Recorded so a future iteration does
+  not "fix" a working run.
+- *"The daemon `-race` hang is my new goroutine."* **Refuted by measurement**: it reproduces
+  identically with the change **stashed**, while `go test ./host/store -race` finishes in 1.9 s. It
+  is codex's `integrityFixture` (70 raw-SQL inserts through pure-Go sqlite) → **CF-F-4**.
+- *"MUT-STORE-TOUCHED proves validation placement."* **Refuted** by the executor, honestly and
+  unprompted, and reproduced by the judge: moving validation after the world INSERT still rolls the
+  transaction back, so the store-untouched assertions stay green; the real placement guard is the
+  `Commit_Object_Hash` subtest → **CF-F-2**.
+
+**Open carry-forwards (enumerated, per the iter-19 rule that a bare COUNT is unrecoverable)**:
+**CF-F-1** the `scanPageSize`/`scanRowBudget`/`scanTimeBudget` wiring is not pinned by a
+constant-equality test the way `TestBoundedWaitsAndBodyLimit` pins D7; **CF-F-2** as above;
+**CF-F-4** `integrityFixture` is killed at ~100 s under `-race` (pre-existing, `-race` is not a
+binding gate, but trim it before anyone adds one). CF-F-3 CLOSED this iteration.
+
+**Next**: SD.B — but **resolve the sketch LAW 6 arity first** (16-param form + the `EntryHash`
+boundary row + AC9's counts 25→26 / 32→33), or the drift test will certify the narrow binding.
