@@ -187,6 +187,27 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   charter (bar, Conflict Surface, guardrails, routing policy, queue, Premise Verification Log) —
   the stamps are not `---`-delimited. Caught by `git diff --stat` before commit and restored with
   `git checkout --`. Always `git diff --stat` the charter before committing it.
+- **AN INHERITED GATE IS A CLAIM — audit the gates you did NOT write (process fix, iter-32; THIRD
+  instance of the self-referential-gate class).** The non-vacuity rule this mission already runs —
+  *a named RED mutation is evidence only if it mutates the code the gate guards* — is applied to
+  the mutations a milestone **chooses for itself**. Three times now the defect has instead been in
+  a gate **inherited from an already-passed milestone**, where nobody re-asks the question because
+  the gate is green and its milestone shipped: iter-29 (AC6 was owned by no milestone, so
+  `MUT-SPLIT-TX` guarded a test nobody owned), iter-30 (SD.C's `MUT-AUTO-RETRY` edits
+  `recover_test.go`'s own helper → CF-H-1), iter-32 (M3.A's drift test mirrored `recordConsistent`
+  in a **test-local** `sketchRecordConsistent`, so it proved the TEST matched the sketch and never
+  that PRODUCTION did — forcing production `RecordConsistent` to `return true` red **1** subtest
+  and **ZERO** drift rows). The third one is the sharpest: it sat inside a milestone a judge had
+  passed **84/100 with zero blocking findings**, which is precisely why nobody looked.
+  **The rule**: when a milestone extends a surface a previous milestone gated, run the question
+  *"what would have to break for this gate to red?"* against the **INHERITED** gates too, not only
+  the new ones — and answer it with a mutation, not by reading. **The cheap universal instrument**
+  is to force the production predicate the gate names to a constant (`return true`) and count what
+  reds; a gate over a test-local mirror reds nothing and is exposed in one command. **Run the
+  identical instrument before and after any rewire** — changing the instrument between readings
+  measures the instrument (the iter-108 lesson), whereas one unchanged instrument turns "I fixed
+  it" into a number. This is the planner's and the judge's job as much as the executor's; iter-32's
+  instance was found by the **planner**, at plan time, before a line was written.
 
 ---
 
