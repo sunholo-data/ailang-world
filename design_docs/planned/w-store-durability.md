@@ -13,10 +13,11 @@ remaining SD.A/SD.B/SD.C work is authorized to route to sprint-planner without f
 first-party this session). Every `.ail` claim in this doc was checked live on that binary with z3
 on PATH and the contracts proven in `verify.results[]` (never a bare exit code); the checked
 artifact is [`sketches/storejournal.ail`](../sketches/storejournal.ail) (Appendix A), created and
-verified WITH this doc — **7/7 contracts Z3-`verified`, 0 errors, 25 named tests pass** (`len(tests[])`
-= 25; `passed_tests`/`total_tests` read **32** because they ALSO count the 7 contract-derived
-properties — the landed `verify_ail.sh` correction D-B, controller-remeasured iter-25 and
-re-measured live after the round-1 revision added LAW 6 `intentBindsCommit`), and
+verified WITH this doc — **7/7 contracts Z3-`verified`, 0 errors, 30 named tests pass** (`len(tests[])`
+= 30; `passed_tests`/`total_tests` read **37** because they ALSO count the 7 contract-derived
+properties — the landed `verify_ail.sh` correction D-B, controller-remeasured iter-25,
+re-measured live after the round-1 revision added LAW 6 `intentBindsCommit`, and re-measured
+again iter-29 after LAW 6 was widened to the round-2 eight-field binding, 25 → 30 / 32 → 37), and
 the full `verify_ail.sh` sweep re-run green at 10 modules with the 4-identity / 14-test `world/`
 totals unperturbed.
 **Traces to**: [DESIGN.md](../DESIGN.md) §1 (replay "is not aspirational — a pure transition plus
@@ -138,7 +139,7 @@ item applies the same principle to what the writer is allowed to write.
   `verify_ail.sh`'s manifest keys required identities to `world/` modules only, its exact totals
   (4 identities / 14 tests) are `world/`-scoped, and the module count is dynamic — the new sketch
   moved the sweep 9 → 10 modules with totals unperturbed (V15, live run). **Honest limitation,
-  stated**: Leg 2 executes `ailang test` on `world/` only, so the sketch's 25 named tests are NOT
+  stated**: Leg 2 executes `ailang test` on `world/` only, so the sketch's 30 named tests are NOT
   gate-run in CI; the sprint's verify_commands run them explicitly (the `effectbroker.ail`
   M3.A pattern), and the sketch's contracts ARE swept by Leg 1's per-module ai-check.
 
@@ -600,7 +601,31 @@ the answer is (a) — half (ii) merges into M3 — is along milestone lines, not
 > **Resolution (NOT a new decision — it applies the already-ratified Design Freeze):** widen LAW 6
 > to the 16-parameter form, add the required `EntryHash`-preserving boundary row to its `tests[]`,
 > re-run `ai-check` + `ailang test` on the pinned binary, and update **AC9**'s pinned counts
-> (`len(tests[])` 25 → 26, `passed_tests` 32 → 33) in the same commit. SD.A is unaffected.
+> in the same commit. SD.A is unaffected.
+>
+> **RESOLVED iter-29 — and the prescribed resolution was itself under-propagated (THIRD instance,
+> same root cause).** The paragraph above (and the sprint plan's `blocking_precondition`) specified
+> exactly ONE new `tests[]` row — the round-2 REQUIRED `EntryHash`-preserving one — giving
+> `len(tests[])` 25 → 26 / `passed_tests` 32 → 33. The controller **measured** that form before
+> adopting it, and it is **VACUOUS for one of the four fields round 2 added**. Evidence, pinned
+> `v0.30.0`, first-party this iteration:
+>
+> | LAW 6 `tests[]` form | `len(tests[])` / `passed_tests` | `MUT-INTENT-NARROW-BIND` (drop all 4 new fields) | **drop `TransitionRef` ALONE** |
+> |---|---|---|---|
+> | as prescribed above (5 round-1 rows + the 1 combined row) | 26 / 33 | reds | **0 failures — the gate cannot see it** |
+> | **as landed** (5 round-1 rows + 1 single-field row PER new field + the combined row) | **30 / 37** | reds 5 rows (`_test_6`…`_test_10`) | reds `intentBindsCommit_test_8` |
+>
+> The combined REQUIRED row mutates `PrevEntryHash`/`TransitionFn`/`Interpreter` **together** and
+> never touches `TransitionRef`, so a Go mirror that silently drops `TransitionRef` from the
+> in-tx compare passes every prescribed row — precisely the green-gate-over-a-narrow-binding
+> failure this precondition exists to prevent, one field further in. `MUT-INTENT-NARROW-BIND`
+> itself demands the four added fields be load-bearing **"individually and not decorative"**, which
+> 26 rows cannot show. **Landed form: 10 rows** = 1 all-match + 8 single-field mismatches (one per
+> commit-defining field) + the round-2 REQUIRED `EntryHash`-preserving combined row.
+> **AC9's pinned counts are therefore `len(tests[])` 25 → 30 and `passed_tests` 32 → 37** (measured,
+> not derived). The 16-parameter contract Z3-verifies on the pinned binary — 7/7 `verified`,
+> 0 counterexamples, 0 skips — so the planner's "2× the widest arity ever proven" risk is
+> **REFUTED, not deferred**; no upstream issue is owed.
 
 - **files**: `host/store/schema.sql` (+~10 — the Decision 3 DDL, additive only),
   `host/store/journal.go` (~240 — types, deterministic codec for intent/outcome objects
@@ -645,7 +670,7 @@ the item's substance.
 
 | File | Est. LOC | Change |
 |------|---------:|--------|
-| `design_docs/sketches/storejournal.ail` | 163 | **already created + verified with this doc, re-verified after the round-1 revision** (7/7 Z3-proven, 25 named tests + 7 contract properties = `passed_tests` 32) |
+| `design_docs/sketches/storejournal.ail` | 180 | **created + verified with this doc; re-verified after the round-1 revision; LAW 6 WIDENED iter-29 to the round-2 eight-field binding (16 params, 10 `tests[]` rows — SD.B's blocking precondition)** (7/7 Z3-proven, 30 named tests + 7 contract properties = `passed_tests` 37) |
 | `host/store/store.go` | +~115 | validateRef + InvalidRefError + write-path application; `Commit.InvocationID` + in-tx intent binding (`InvocationMismatchError`) + in-tx outcome |
 | `host/store/schema.sql` | +~10 | additive `journal` table (existing DDL byte-unchanged) |
 | `host/store/journal.go` | ~240 | new: journal types, codec, four API methods |
@@ -768,11 +793,13 @@ tooling) has a named non-kernel destination.
 - [ ] **AC8 — gapless append**: journal `seq` values are exactly 1..N with no gaps after any
   green test run including rollback-inducing failures (Law 4 mirrored).
 - [ ] **AC9 — the sketch is gate-real**: `sketches/storejournal.ail` — 7 contracts `verified` in
-  `verify.results[]` with z3 present (never the silent-skip exit-0), **25** named tests
-  (`len(tests[])`, NOT `passed_tests` — which is 32 because it also counts the 7 contract-derived
+  `verify.results[]` with z3 present (never the silent-skip exit-0), **30** named tests
+  (`len(tests[])`, NOT `passed_tests` — which is 37 because it also counts the 7 contract-derived
   properties; gate on the named list, correction D-B) via the
   explicit test run; full `verify_ail.sh` sweep green at 10 modules, 4/14 `world/` totals
-  unperturbed.
+  unperturbed. The 25 → 30 / 32 → 37 step is LAW 6's widening to the round-2 eight-field binding
+  with one single-field mismatch row per field plus the REQUIRED `EntryHash`-preserving row — see
+  SD.B's precondition block for the measurement that rejected the 26-row form as vacuous.
 - [ ] **AC10 — bounded everything, with the KERNEL owning the ceiling** (extended in quorum
   round 2, `gpt5-6-sol`, applied verbatim): every paged API (`PendingIntents`,
   `ScanUnreadableLog`, `ScanUnreadableWorlds`) is exercised with **zero, negative, `Max…`, and
@@ -930,6 +957,7 @@ stated at each site):
 **Post-revision gate**: sketch re-verified on the pinned v0.30.0 binary (`ai-check` 7/7
 `verified`, 0 counterexamples; `ailang test --format json` 25 named / 32 total, 0 failed) and
 the full `./scripts/verify_ail.sh` sweep re-run green — transcripts in Appendix A and V15.
+*(Reading as of round 2; superseded iter-29 by LAW 6's widening → 30 named / 37 total, V28.)*
 
 ## Axiom Compliance
 
@@ -977,6 +1005,7 @@ the full `./scripts/verify_ail.sh` sweep re-run green — transcripts in Appendi
 | V21 | Go build/test of the new code | no Go exists at doc time; LOC/structure are estimates | **CLAIM** — the sprint's gates are the check |
 | V22 | `verify_go.sh` green in this worktree at doc time | **UNVERIFIED in this sandbox** — not run this session (no Go changes exist to gate; the last first-party green is the iter-24 controller record) | **CLAIM** |
 | V23 | **The full EIGHT-field matrix, measured** — CONTROLLER, iter-25, independently of the designer: a table-driven probe zeroing each ref field of `Commit` in isolation, then reading back. **Corrected in round 2**: this row originally said "seven-field matrix … the seventh, `NextWorld.Ref`" while listing seven POISONED fields before it — an off-by-one in the controller's own row, caught by `gemini-3-1-pro` and fixed here rather than quietly. There are **eight** ref fields; seven poison, one does not | `commit_err=<nil>` for **all eight**. Poison confirmed per field (7): `TransitionFn` → `GetLogEntry err="…transitionFn: hashref: empty hashref text"` · `Interpreter` → `"…interpreter: …"` · `EntryHash` → `"…hash: …"` · `TransitionRef` → `"…transitionRef: …"` · `PrevEntryHash` → `"…prevEntryHash: …"` · `NextWorld.LogHead` → `GetWorld(head) err="…log head: …"` · `NextWorld.StateRoot` → `GetWorld(head) err="…state root: …"`. ~~The **eighth**, `NextWorld.Ref`, commits and reads back **"fine"** — an empty-string world ref becomes the selected head: degenerate-but-readable, hence the one field a read-side fix (ARM V2) could never catch, and the sharpest single argument for ARM V1.~~ **SUPERSEDED iter-27, re-struck here iter-28 — this row is the doc's OWN evidence table and still carried the claim Decision 1 had already retracted.** The corrected first-party matrix is THREE classes (5 unreadable-entry / 2 unloadable-world / 1 **wedge**): `NextWorld.Ref` reads back fine at BOTH the entry and world surfaces, but `SelectedHead()` **errors** and every later `Commit` then fails with a **non-`ConflictError`**, so the store is **unrecoverably wedged through the public API** — the worst of the eight, not the mildest. Executable as `host/store/durability_repro_test.go` (`e8ba7b2`), non-vacuity proven (0 PASS / 20 FAIL under a write-side mutation, reverted byte-identical). ARM V1 remains the ratified arm, on strictly stronger evidence | **VERIFIED (corrected twice — see Decision 1)** |
+| V28 | **LAW 6's widening to the round-2 eight-field binding, and the REJECTION of the 26-row form the doc itself prescribed** — CONTROLLER, iter-29, first-party on pinned `v0.30.0` before any SD.B Go code was written | 16-parameter `intentBindsCommit`: `ai-check` → `check.passed: true`, `verify: {verified: 7, counterexample: 0, skipped: 0, errors: 0}` (**the "2× the widest arity ever proven" risk is REFUTED — no upstream issue owed**) · `ailang test --format json` → `len(tests[]) = 30`, `passed_tests = 37`, `failed = 0` · **non-vacuity, both directions**: `MUT-INTENT-NARROW-BIND` (narrow `ensures`+body back to 4 fields) → `failed = 5`, exactly `intentBindsCommit_test_6…_test_10`, rows 1–5 green; **drop `TransitionRef` ALONE** → `failed = 1` (`_test_8`) at 30 rows but **`failed = 0` at the prescribed 26 rows** — the 26-row gate cannot see a dropped `TransitionRef` · `verify_ail.sh` → PASS, 4/4 identities across 10 modules, 14 named `world/` tests, totals unperturbed | **VERIFIED** |
 
 **Upstream findings: none.** The sketch verified clean on first authoring by following the
 already-documented v0.30.0 disciplines (total-theorem ensures per U3; no contracted-callee calls
@@ -1002,11 +1031,12 @@ run — the widest-arity contract proven in this repo to date, same disciplines.
 
 ## Appendix A — the verified sketch (landed with this doc as `design_docs/sketches/storejournal.ail`)
 
-Verified this session on the pinned binary — **re-run live after the round-1 revision added
-LAW 6 `intentBindsCommit`**: `check.passed: true` · **7/7 contracts `verified`**
-(0 counterexamples, 0 errors, 0 skips — z3 on PATH, results enumerated) · **25 named tests pass**
-(0 failed, 0 skipped; `passed_tests`/`total_tests` report 32 because they also count the 7
-contract-derived properties — gate on `len(tests[])`, correction D-B). 163 lines. The file in `sketches/` is the artifact; it is not duplicated here
+**CURRENT (iter-29, after LAW 6's widening — V28):** `check.passed: true` · **7/7 contracts
+`verified`** (0 counterexamples, 0 errors, 0 skips — z3 on PATH, results enumerated) ·
+**30 named tests pass** (0 failed, 0 skipped; `passed_tests`/`total_tests` report 37 because they
+also count the 7 contract-derived properties — gate on `len(tests[])`, correction D-B). 180 lines.
+*(Superseded reading, kept for the ledger: at round-1 revision the same file measured 25 named /
+32 total / 163 lines with LAW 6 at 8 parameters.)* The file in `sketches/` is the artifact; it is not duplicated here
 byte-for-byte to avoid the two-copies drift the compiler-checked-docs rule exists to prevent —
 the sweep checks the file, and this appendix records the verification transcript:
 
