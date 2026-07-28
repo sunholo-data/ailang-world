@@ -117,8 +117,31 @@ func TestCFB2UnloadableWorldClass(t *testing.T) {
 // read-side repair could reach the selected-head failure or unblock later writes.
 func TestCFB2ZeroWorldRefWedgeRejected(t *testing.T) {
 	s := openMem(t)
-	c := cfb2Commit(seedGenesis(t, s))
+	genesis := seedGenesis(t, s)
+	c := cfb2Commit(genesis)
 	before := snapshotStore(t, s)
 	c.NextWorld.Ref = hashref.HashRef{}
 	assertRejectedUntouched(t, s, before, c, "NextWorld.Ref")
+
+	// AC1's CLASS 3 half: rejection alone is NOT the property under test. What
+	// made CLASS 3 the worst of the eight is that the poison WEDGED the store —
+	// SelectedHead() errored with a non-ConflictError and every later Commit
+	// inherited that error, so a caller's standard re-plan-on-conflict path never
+	// fired and the store could never accept another write. Asserting the bad
+	// commit was refused says nothing about that. Only a subsequent VALID commit
+	// succeeding proves the store is still live after a refusal.
+	if _, _, err := s.SelectedHead(); err != nil {
+		t.Fatalf("SelectedHead errored after a REFUSED commit: %v — that is the CLASS 3 wedge this fix exists to prevent", err)
+	}
+	good := cfb2Commit(genesis)
+	if err := s.Commit(good); err != nil {
+		t.Fatalf("a valid Commit after a refused one failed: %v — refusal must leave the store able to accept writes", err)
+	}
+	ref, ok, err := s.SelectedHead()
+	if err != nil || !ok {
+		t.Fatalf("SelectedHead after the valid commit: err=%v ok=%v", err, ok)
+	}
+	if ref.String() != good.NextWorld.Ref.String() {
+		t.Fatalf("selected head = %q, want the valid commit's world %q", ref.String(), good.NextWorld.Ref.String())
+	}
 }

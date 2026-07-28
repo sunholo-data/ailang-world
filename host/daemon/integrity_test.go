@@ -1,7 +1,11 @@
 package daemon
 
 import (
+	"bufio"
+	"context"
 	"database/sql"
+	"io"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -88,6 +92,88 @@ func TestIntegrityStartupSweepPagesBothTables(t *testing.T) {
 		if !strings.Contains(lines, want) {
 			t.Fatalf("lines %q do not contain %q", lines, want)
 		}
+	}
+}
+
+// TestIntegrityWarningsFollowTheAnnouncementAndServeNormally is AC4's
+// warn-AND-serve half, which the report-only tests above cannot reach: they call
+// New() and read IntegrityReport(), never Listen/Serve, so nothing proved that a
+// store WITH holes still answers requests.
+//
+// It also pins the announce ORDERING (the listen line stays first, warnings
+// follow) and, unlike TestRunAnnouncesResolvedListenAddress, it DRAINS the pipe
+// for the whole run — which is the real-stdout case, and the case where the
+// warning lines actually get written. Together the two tests cover both sides of
+// the io.Pipe hazard: one reader that stops after the first line (must not
+// deadlock -> no extra writes on a clean store) and one that keeps reading (must
+// see the warnings, in order, on a dirty store).
+func TestIntegrityWarningsFollowTheAnnouncementAndServeNormally(t *testing.T) {
+	cfg := Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0}
+	pr, pw := io.Pipe()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ran := make(chan error, 1)
+	go func() {
+		err := Run(ctx, cfg, pw)
+		_ = pw.Close()
+		ran <- err
+	}()
+
+	lines := make(chan string, 32)
+	go func() {
+		sc := bufio.NewScanner(pr)
+		for sc.Scan() {
+			lines <- sc.Text()
+		}
+		close(lines)
+	}()
+
+	readLine := func(what string) string {
+		select {
+		case l, ok := <-lines:
+			if !ok {
+				t.Fatalf("announce stream closed before %s", what)
+			}
+			return l
+		case <-time.After(10 * time.Second):
+			t.Fatalf("timed out waiting for %s", what)
+			return ""
+		}
+	}
+
+	first := readLine("the listen announcement")
+	if !strings.HasPrefix(first, ListenAnnouncePrefix) {
+		t.Fatalf("first line = %q, want the stable prefix %q — warnings must never precede it", first, ListenAnnouncePrefix)
+	}
+	url := strings.TrimSpace(strings.TrimPrefix(first, ListenAnnouncePrefix))
+
+	// The fixture carries two holes and a complete sweep: 2 hole lines + 1 summary.
+	warnings := []string{readLine("hole line 1"), readLine("hole line 2"), readLine("the sweep summary")}
+	joined := strings.Join(warnings, "\n")
+	for _, want := range []string{
+		"integrity_hole table=log_entries index=66 field=prevEntryHash",
+		"integrity_hole table=worlds ref=",
+		"integrity_scan_complete log_rows=70 world_rows=2 holes=2",
+	} {
+		if !strings.Contains(joined, want) {
+			t.Fatalf("warning lines %q do not contain %q", joined, want)
+		}
+	}
+
+	// AC4: a store with a historic hole WARNS and still SERVES every readable row.
+	if code, body := getBody(t, url+"/v1/health"); code != http.StatusOK {
+		t.Fatalf("GET /v1/health = %d (body %q), want 200 — a hole must not stop the daemon serving", code, body)
+	}
+
+	cancel()
+	select {
+	case err := <-ran:
+		if err != nil {
+			t.Fatalf("Run returned %v, want a clean bounded shutdown", err)
+		}
+	case <-time.After(shutdownTimeout + 5*time.Second):
+		t.Fatal("Run did not return within the bounded shutdown window")
 	}
 }
 
