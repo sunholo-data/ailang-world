@@ -632,6 +632,14 @@ func (s *Store) SelectHead(ref hashref.HashRef) error {
 // Any error rolls the whole transaction back, so a conflict or a bad object
 // leaves the store untouched. A nil selected head (genesis) is treated as a
 // match only when c.ObservedHead is also the zero HashRef.
+//
+// commitBeforeOutcomeHook is a no-op in production. The real-process crash
+// proof replaces it inside its re-exec'd helper so the helper can stop at the
+// exact boundary after world/log/head writes and before the outcome write.
+// This deterministic arrangement avoids a sleep-timed SIGKILL and makes the
+// split-transaction mutation observably red.
+var commitBeforeOutcomeHook = func() {}
+
 func (s *Store) Commit(c Commit) error {
 	refs := []struct {
 		field string
@@ -750,6 +758,7 @@ func (s *Store) Commit(c Commit) error {
 
 	// Step 6: append the receipt in this same transaction.
 	if c.InvocationID != "" {
+		commitBeforeOutcomeHook()
 		outcome := JournalOutcome{
 			InvocationID: c.InvocationID,
 			Status:       "committed",

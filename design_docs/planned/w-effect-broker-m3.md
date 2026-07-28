@@ -237,11 +237,11 @@ inside `Invoke` and writes exactly ONE record. There is no asynchronous completi
 broker, by construction, and the immutability gate in the Non-Vacuity table pins this with a
 named mutation.
 
-**Honest ordering limitation, named**: the handler executes BEFORE its record is durable. A
-crash in the window between execution and `PutObject` loses the record of an effect that
-happened. Closing that window needs a write-ahead journal — a store-hardening design (it
-belongs with the CF-B-2 kernel item, Deferred Scope), not an M3 bolt-on. M3's tests assert the
-ordering that IS guaranteed: no result is *returned* before its record is written.
+**SUPERSEDED — `w-store-durability` SD.B/SD.C, landed.** The former honest-ordering limitation
+said the handler executed before any durable record and deferred the crash window to a future
+write-ahead journal. The landed store journal now records a durable intent before dispatch,
+records the outcome afterward, surfaces indeterminate intents, and never auto-re-executes them.
+M3 consumes that substrate and its frozen per-handler reconciliation contract.
 
 ## Decision 4 — The four handlers
 
@@ -558,7 +558,7 @@ named destination in Deferred Scope.
 | Prefix/glob capability scopes | its own law design (Z3 encodability of pattern matching unproven) | M3 = exact match |
 | Persistent / cross-session budgets | kernel schema decision (ratification-class) | M3 = session ledger + records |
 | Additional Git verbs, GitHub/Cloud/Email handlers | package-lane extensions (S3) | four charter handlers only |
-| Write-ahead effect journal (crash window in Decision 3) | store-hardening item (with CF-B-2 / CF-C-3) | ordering guarantee documented honestly |
+| ~~Write-ahead effect journal (crash window in Decision 3)~~ | **SUPERSEDED — `w-store-durability` SD.B/SD.C, landed** | durable intent/outcome substrate is now a landed premise for M3 |
 | Container/microVM isolation | M5 (DESIGN open question 2 recommendation) | M3 = the six-restriction process floor |
 | Unified effectful-episode replay inside `host/replay` | future design, when a real episode needs log-driven effect replay | M3 proves the broker-level path |
 | Kernel promotion of the broker law into `world/capabilities.ail` | future kernel item (touches the `verify_ail.sh` required manifest) | law lives in the checked sketch (the `worlddapi` precedent) |

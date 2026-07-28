@@ -14,6 +14,8 @@ fi
 
 expected=(
   BenchmarkStoreCommit
+  BenchmarkJournalAppend
+  BenchmarkCommitWithReceipt
   BenchmarkHeadRead
   BenchmarkHealth
   BenchmarkRESTCommit
