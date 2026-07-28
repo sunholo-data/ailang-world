@@ -1,7 +1,12 @@
 # w-store-durability — What the Kernel Guarantees Across a Crash (CF-B-2 + the durable intent/outcome journal + commit receipts)
 
-**Status**: Planned (NEW-DOC, queue item 4b, iter-25)
-**Date**: 2026-07-28
+**Status**: **RATIFIED + IN SPRINT** (queue item 4b) — authored iter-25; **all three ratification
+arms answered by Mark, attended, 2026-07-28 (charter STATUS stamp, commit `bc467f1`): ARM V1
+(validate-on-write) · ARM J1 (additive `journal` table) · `Commit.InvocationID` with the in-tx
+receipt binding · the three-state receipt law · recovery never auto-re-executes. The M1 kernel
+reopen this entails is RATIFIED.** SD.A's repro fixture is **LANDED** (`e8ba7b2`, PR #16); the
+remaining SD.A/SD.B/SD.C work is authorized to route to sprint-planner without further gates.
+**Date**: 2026-07-28 (ratified + routed iter-28)
 **Charter clause**: clause-1 (deterministic kernel)
 **Verified against**: **`AILANG v0.30.0`** — the pinned released binary at `/tmp/ailang-v0300/ailang`
 (`AILANG v0.30.0`, commit `e37b370`, built 2026-07-19 — no `-dirty` suffix; re-confirmed
@@ -68,7 +73,8 @@ range** the moment the loop touches a poisoned index (code-verified, V9) — a d
 denial-of-read on the log surface. And the class is **wider than the charter row states**: this
 session's probe (V3) confirmed a zero `TransitionFn` poisons its entry identically, and a zero
 `World.LogHead` produces a world row `GetWorld` cannot load — `Commit` validates **none** of the
-seven ref fields it renders to TEXT (V4), so every one of them is a CF-B-2 waiting for a caller.
+**eight** ref fields it renders to TEXT (V4, count corrected iter-28), so every one of them is a
+CF-B-2 waiting for a caller.
 
 **Second, nothing in the kernel can say what happened across a crash.** The parked broker design
 names its own crash window honestly (its Decision 3: the handler executes before its record is
@@ -194,8 +200,9 @@ item applies the same principle to what the writer is allowed to write.
 
 ## Decision 1 — Validate-on-write at the kernel (ratification ARMS V1/V2)
 
-**The measured defect class (all first-party this session, V2–V4).** `Commit` renders seven ref
-fields to TEXT with `HashRef.String()` — `EntryHash`, `TransitionFn`, `Interpreter`,
+**The measured defect class (all first-party this session, V2–V4).** `Commit` renders **eight** ref
+fields to TEXT with `HashRef.String()` (**count corrected iter-28** — the prose said "seven" while
+listing eight; see the correction note at the end of this section) — `EntryHash`, `TransitionFn`, `Interpreter`,
 `PrevEntryHash`, `TransitionRef`, and the world row's `Ref`/`StateRoot`/`LogHead` — and inserts
 whatever it gets; `PutObject`/`PutWorld`/`SetRegistryHead`/`SelectHead`/`PutVerifyResult` share
 the pattern. The zero value renders as `""`, satisfies every `TEXT NOT NULL`, and every reader
@@ -204,9 +211,43 @@ rejects it. Write-anything + read-strictly is the asymmetry; three distinct pois
 reproduced live (zero prev → unreadable entry; zero transitionFn → unreadable entry; zero world
 logHead → unreadable world, with the selected head pointing at it), and the controller's
 independent eight-field matrix (V23) closed out the class measurement: **all eight** zero-field
-commits return `commit_err=<nil>`; **seven** produce an unreadable row, and the eighth —
+commits return `commit_err=<nil>`; ~~**seven** produce an unreadable row, and the eighth —
 `NextWorld.Ref` — commits and reads back *fine*, the empty-string world ref becoming the
-selected head (degenerate but readable).
+selected head (degenerate but readable).~~
+
+**SUPERSEDED — CORRECTED iter-27 by first-party re-measurement, now CI-executable as
+`host/store/durability_repro_test.go` (`e8ba7b2`).** The struck sentence conflated two different
+READ surfaces and labelled the only *unrecoverable* field as the mildest. The damage is **THREE**
+classes:
+
+- **CLASS 1 — log entry permanently unreadable (5 fields)**: `TransitionFn`, `Interpreter`,
+  `PrevEntryHash`, `EntryHash`, `TransitionRef` → `GetLogEntry` returns `ok=false` + error;
+  `GetWorld` and `SelectedHead` unaffected.
+- **CLASS 2 — world revision unloadable (2 fields)**: `NextWorld.StateRoot`, `NextWorld.LogHead`
+  → `GetLogEntry` SUCCEEDS, but `GetWorld` returns `ok=false` + error while `SelectedHead`
+  succeeds — the selected head points at a world that cannot be loaded. A *different read
+  surface*, not an unreadable row.
+- **CLASS 3 — the store is WEDGED (1 field: `NextWorld.Ref`)**: entry AND `GetWorld` both read
+  back fine, but `SelectedHead()` **errors** (`store: selected head: hashref: empty hashref
+  text`) and **every subsequent `Commit` fails with that same error, which is NOT a
+  `ConflictError`** — so a caller's standard re-plan-on-conflict path never fires and the store
+  can never accept another commit. Unrecoverable through the public API, and the **worst** of the
+  eight — not the mildest.
+
+The three-class split is what Mark's ARM V1 ratification was decided on (charter STATUS
+2026-07-28); the sprint implements against THIS matrix, not the struck text.
+
+**COUNT CORRECTION (iter-28, controller first-party, surfaced by the sprint-planner).** This
+section's prose opened "`Commit` renders **seven** ref fields" and then listed **eight**; **AC2**
+said "`Commit`'s seven" likewise. Premise **V23** had already been corrected to *eight* in quorum
+round 2 — the fix simply never propagated to Decision 1's prose or to AC2. This is the SAME
+off-by-one `gemini-3-1-pro` caught once, surviving in the two places round 2 did not reach.
+**Why it is load-bearing rather than cosmetic:** an executor implementing "`Commit`'s seven" would
+leave exactly one field unvalidated, and the field most likely to be dropped is `NextWorld.Ref` —
+**the CLASS 3 wedge**, i.e. the one field whose omission leaves the item's worst failure mode
+fully open while every gate goes green. Corrected to **eight** in all three places. The three
+classes sum 5 + 2 + 1 = 8; the sprint validates **eight** Commit ref fields (plus each Object's
+`Hash` and `InterfaceHash`).
 
 **ARM V1 (recommended) — reject on write, everywhere.** One unexported helper,
 `validateRef(op, field string, ref hashref.HashRef) error`, returning a structured
@@ -229,10 +270,15 @@ rejected: (a) it blesses a value the type documents as invalid and every other l
 lenience would legitimize only corruption; (c) read-lenience cannot distinguish "legal absent"
 from "torn write"; (d) it must either bless all eight fields' zeros (a world whose `StateRoot` is
 "" becomes readable-but-meaningless) or leave the class inconsistently half-fixed; (e) — the
-sharpest, measured, argument (V23) — the eighth field is fatal to V2 on its own terms: a zero
-`NextWorld.Ref` commits AND reads back without error, the empty-string ref becoming the selected
-head, so a read-side fix never even *observes* a failure to be lenient about — that poison shape
-is only closable at the write. The charter
+sharpest, measured, argument, **RESTATED iter-27 and stronger than the version it replaces** — a
+zero `NextWorld.Ref` (**CLASS 3**) is fatal to V2 on its own terms. ~~It commits AND reads back
+without error, so a read-side fix never even *observes* a failure to be lenient about.~~ The
+re-measurement shows the entry and the world both read back fine while `SelectedHead()` **errors**
+and every later `Commit` then fails with a **non-`ConflictError`**: the store is **wedged**, with
+nothing on any read path for V2 to be lenient *about*. There is no "support the zero on read" move
+here — read-lenience cannot un-wedge a write path. The converse was shown independently and
+executably: one write-side check reds all three classes at once (the fixture's non-vacuity
+mutation, 0 PASS / 20 FAIL). The asymmetry is now measured rather than argued. The charter
 row phrased the kernel decision as exactly this fork; the recommendation is V1.
 
 **Why is this not a package? (S3)** Validation of the kernel's own write path cannot live outside
@@ -509,10 +555,19 @@ the answer is (a) — half (ii) merges into M3 — is along milestone lines, not
 
 ### SD.A — Repro fixture + validate-on-write + detection sweep (~0.5d) — half (i), in scope under BOTH answers
 
-- **files**: `host/store/durability_repro_test.go` (~150 — **the committed repro fixture, the
-  first deliverable per the charter's ghost-close rule**: reproduces this doc's V2/V3 probe
-  shapes and asserts the post-fix behavior — structured `InvalidRefError` per field, store
-  untouched by diffing row counts + head before/after), `host/store/store.go` (+~70 —
+- **CF-E-4 (DISCHARGED HERE — do NOT treat the fixture as TODO)**: `host/store/durability_repro_test.go`
+  **ALREADY LANDED** iter-27 at squash **`e8ba7b2`** (PR #16, dev CI green both jobs, evaluator
+  PASS 93/100) — 225 LOC, 5 tests / 15 subtests, 0 skips, re-confirmed green first-party at
+  `c70fadf` this iteration. It asserts the CURRENT, WRONG behaviour on purpose (`store.go` and
+  `schema.sql` byte-unchanged), so **landing ARM V1 will and must turn it RED** — rewriting it to
+  assert the post-fix contract (structured `InvalidRefError` per field, store untouched by diffing
+  row counts + head before/after) is part of this milestone, not a regression.
+  Two judge carry-forwards remain open **inside that file** and are in SD.A scope:
+  **CF-E-3** — add store-untouched / head-advanced assertions for CLASS 1 and CLASS 2 to pin the
+  blast radius (CLASS 3 already has them); **CF-E-5** — clarify in-file why the zero-ref world is
+  deliberately asserted *readable* in the CLASS-3 test (it is the wedge's premise, not lenience).
+- **files**: `host/store/durability_repro_test.go` (~+60 — rewrite to the post-fix contract, above),
+  `host/store/store.go` (+~70 —
   `validateRef`, `InvalidRefError`, application at every write path per Decision 1),
   `host/store/scan.go` (~110 — `ScanUnreadableLog` + `ScanUnreadableWorlds`, bounded,
   read-only, keyset pagination per Decision 2) + `scan_test.go` (~140 — fixture store with
@@ -528,6 +583,24 @@ the answer is (a) — half (ii) merges into M3 — is along milestone lines, not
 - **ci_green_boundary**: no journal exists yet; nothing depends on SD.B
 
 ### SD.B — Journal substrate + commit receipts (~0.5–0.75d) — needs the ratified arms
+
+> **BLOCKING PRECONDITION, found iter-28 by the sprint-planner and CONFIRMED first-party by the
+> controller — resolve BEFORE writing the SD.B drift test.** The frozen sketch and this doc
+> disagree about the binding law's own width. `sketches/storejournal.ail:132` declares LAW 6
+> `intentBindsCommit` with **8 parameters = 4 compared fields** (invocation ID, `NextWorld.Ref`,
+> `Entry.EntryHash`, `ObservedHead`) — the **round-1 NARROW list**. The **round-2 widened list** is
+> what the Design Freeze, Decision 4, AC15 and the `MUT-INTENT-NARROW-BIND` mutation all require:
+> **8 compared fields** (the four above **plus** `PrevEntryHash`, `TransitionFn`, `TransitionRef`,
+> `Interpreter`) = **16 parameters**. Because the Design Freeze makes the sketch *the frozen law*
+> and pins the Go mirror to it with a drift test, implementing SD.B as written would **pin the Go
+> code to precisely the narrow binding this doc calls the defect** — a green gate certifying the
+> wrong contract. This is the round-2 revision failing to reach the sketch, the same propagation
+> failure as the "seven" count above (**two instances, one root cause**: a round-2 fix applied to
+> prose but not to every artifact it governs).
+> **Resolution (NOT a new decision — it applies the already-ratified Design Freeze):** widen LAW 6
+> to the 16-parameter form, add the required `EntryHash`-preserving boundary row to its `tests[]`,
+> re-run `ai-check` + `ailang test` on the pinned binary, and update **AC9**'s pinned counts
+> (`len(tests[])` 25 → 26, `passed_tests` 32 → 33) in the same commit. SD.A is unaffected.
 
 - **files**: `host/store/schema.sql` (+~10 — the Decision 3 DDL, additive only),
   `host/store/journal.go` (~240 — types, deterministic codec for intent/outcome objects
@@ -673,7 +746,7 @@ tooling) has a named non-kernel destination.
   structured `InvalidRefError` naming the field, with the store byte-untouched (head + row
   counts unchanged).
 - [ ] **AC2 — whole-class coverage**: a table-driven test zeroes each ref field of each write
-  path (`Commit`'s seven, `PutObject`'s two, `PutWorld`'s three, `SetRegistryHead`,
+  path (`Commit`'s **eight** — count corrected iter-28, `PutObject`'s two, `PutWorld`'s three, `SetRegistryHead`,
   `SelectHead`, `PutVerifyResult`) individually and asserts per-field rejection.
 - [ ] **AC3 — the genesis exception survives exactly**: zero `ObservedHead` on a genesis commit
   still succeeds; `TestGenesisRefLenienceIsExactlyOneField` green unmodified.
@@ -903,7 +976,7 @@ the full `./scripts/verify_ail.sh` sweep re-run green — transcripts in Appendi
 | V20 | No committed `.db` fixture exists (poisoned-population premise) | `find . -name "*.db" -not -path "./.git/*"` → empty | **VERIFIED** |
 | V21 | Go build/test of the new code | no Go exists at doc time; LOC/structure are estimates | **CLAIM** — the sprint's gates are the check |
 | V22 | `verify_go.sh` green in this worktree at doc time | **UNVERIFIED in this sandbox** — not run this session (no Go changes exist to gate; the last first-party green is the iter-24 controller record) | **CLAIM** |
-| V23 | **The full EIGHT-field matrix, measured** — CONTROLLER, iter-25, independently of the designer: a table-driven probe zeroing each ref field of `Commit` in isolation, then reading back. **Corrected in round 2**: this row originally said "seven-field matrix … the seventh, `NextWorld.Ref`" while listing seven POISONED fields before it — an off-by-one in the controller's own row, caught by `gemini-3-1-pro` and fixed here rather than quietly. There are **eight** ref fields; seven poison, one does not | `commit_err=<nil>` for **all eight**. Poison confirmed per field (7): `TransitionFn` → `GetLogEntry err="…transitionFn: hashref: empty hashref text"` · `Interpreter` → `"…interpreter: …"` · `EntryHash` → `"…hash: …"` · `TransitionRef` → `"…transitionRef: …"` · `PrevEntryHash` → `"…prevEntryHash: …"` · `NextWorld.LogHead` → `GetWorld(head) err="…log head: …"` · `NextWorld.StateRoot` → `GetWorld(head) err="…state root: …"`. The **eighth**, `NextWorld.Ref`, commits and reads back **"fine"** — an empty-string world ref becomes the selected head: degenerate-but-readable, hence the one field a read-side fix (ARM V2) could never catch, and the sharpest single argument for ARM V1 | **VERIFIED** |
+| V23 | **The full EIGHT-field matrix, measured** — CONTROLLER, iter-25, independently of the designer: a table-driven probe zeroing each ref field of `Commit` in isolation, then reading back. **Corrected in round 2**: this row originally said "seven-field matrix … the seventh, `NextWorld.Ref`" while listing seven POISONED fields before it — an off-by-one in the controller's own row, caught by `gemini-3-1-pro` and fixed here rather than quietly. There are **eight** ref fields; seven poison, one does not | `commit_err=<nil>` for **all eight**. Poison confirmed per field (7): `TransitionFn` → `GetLogEntry err="…transitionFn: hashref: empty hashref text"` · `Interpreter` → `"…interpreter: …"` · `EntryHash` → `"…hash: …"` · `TransitionRef` → `"…transitionRef: …"` · `PrevEntryHash` → `"…prevEntryHash: …"` · `NextWorld.LogHead` → `GetWorld(head) err="…log head: …"` · `NextWorld.StateRoot` → `GetWorld(head) err="…state root: …"`. ~~The **eighth**, `NextWorld.Ref`, commits and reads back **"fine"** — an empty-string world ref becomes the selected head: degenerate-but-readable, hence the one field a read-side fix (ARM V2) could never catch, and the sharpest single argument for ARM V1.~~ **SUPERSEDED iter-27, re-struck here iter-28 — this row is the doc's OWN evidence table and still carried the claim Decision 1 had already retracted.** The corrected first-party matrix is THREE classes (5 unreadable-entry / 2 unloadable-world / 1 **wedge**): `NextWorld.Ref` reads back fine at BOTH the entry and world surfaces, but `SelectedHead()` **errors** and every later `Commit` then fails with a **non-`ConflictError`**, so the store is **unrecoverably wedged through the public API** — the worst of the eight, not the mildest. Executable as `host/store/durability_repro_test.go` (`e8ba7b2`), non-vacuity proven (0 PASS / 20 FAIL under a write-side mutation, reverted byte-identical). ARM V1 remains the ratified arm, on strictly stronger evidence | **VERIFIED (corrected twice — see Decision 1)** |
 
 **Upstream findings: none.** The sketch verified clean on first authoring by following the
 already-documented v0.30.0 disciplines (total-theorem ensures per U3; no contracted-callee calls
