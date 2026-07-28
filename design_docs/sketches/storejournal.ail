@@ -120,26 +120,43 @@ tests [
 }
 
 -- LAW 6 — commit binding, the FIELD-LEVEL half (quorum round 1,
--- gpt5-6-sol, adopted as kernel law): a Commit carrying an invocation ID
--- may mutate the store ONLY when its commit-defining fields match the
--- durable intent's planned fields by exact canonical-text equality —
--- invocation ID, planned next-world ref, planned entry hash, observed
--- head. AppendIntent(id, A) followed by Commit(id, B) is a structured
--- InvocationMismatchError and leaves the store untouched; a receipt may
--- never claim resolution for an operation different from the recorded
--- intent. The Go comparison runs inside Commit's transaction, before any
--- mutation, over the intent object's canonical (golden-bytes) encoding.
-export func intentBindsCommit(intentId: string, commitId: string, iWorldRef: string, cWorldRef: string, iEntryHash: string, cEntryHash: string, iObservedHead: string, cObservedHead: string) -> bool ! {}
-ensures { result == (intentId == commitId && iWorldRef == cWorldRef && iEntryHash == cEntryHash && iObservedHead == cObservedHead) }
+-- gpt5-6-sol, adopted as kernel law; WIDENED to the round-2 eight-field
+-- list, gemini-3-1-pro, applied here iter-29 — the round-2 revision had
+-- reached the prose but not this frozen artifact): a Commit carrying an
+-- invocation ID may mutate the store ONLY when ALL EIGHT of its
+-- commit-defining fields match the durable intent's planned fields by
+-- exact canonical-text equality — invocation ID, planned next-world ref,
+-- planned entry hash, observed head, planned prev-entry hash, transition
+-- function name, transition ref, interpreter ref. AppendIntent(id, A)
+-- followed by Commit(id, B) is a structured InvocationMismatchError and
+-- leaves the store untouched; a receipt may never claim resolution for an
+-- operation different from the recorded intent. The Go comparison runs
+-- inside Commit's transaction, before any mutation, over the intent
+-- object's canonical (golden-bytes) encoding.
+-- tests[] carries ONE single-field mismatch row PER field, so a Go mirror
+-- that silently drops ANY ONE of the eight reds a row of its own
+-- (MUT-INTENT-NARROW-BIND must be individually load-bearing, not
+-- collectively), PLUS the round-2 REQUIRED EntryHash-preserving row:
+-- PrevEntryHash/TransitionFn/Interpreter drift while EntryHash stays
+-- byte-identical — the exact shape a narrow binding waves through, since
+-- V12 records that the kernel never derives EntryHash from entry
+-- contents.
+export func intentBindsCommit(intentId: string, commitId: string, iWorldRef: string, cWorldRef: string, iEntryHash: string, cEntryHash: string, iObservedHead: string, cObservedHead: string, iPrevEntryHash: string, cPrevEntryHash: string, iTransitionFn: string, cTransitionFn: string, iTransitionRef: string, cTransitionRef: string, iInterpreter: string, cInterpreter: string) -> bool ! {}
+ensures { result == (intentId == commitId && iWorldRef == cWorldRef && iEntryHash == cEntryHash && iObservedHead == cObservedHead && iPrevEntryHash == cPrevEntryHash && iTransitionFn == cTransitionFn && iTransitionRef == cTransitionRef && iInterpreter == cInterpreter) }
 tests [
-  (("inv-1", "inv-1", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:h0"), true),
-  (("inv-1", "inv-2", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:h0"), false),
-  (("inv-1", "inv-1", "sha256:w1", "sha256:wB", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:h0"), false),
-  (("inv-1", "inv-1", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:eB", "sha256:h0", "sha256:h0"), false),
-  (("inv-1", "inv-1", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:hB"), false)
+  (("inv-1", "inv-1", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:h0", "sha256:p0", "sha256:p0", "applyRevision", "applyRevision", "sha256:t1", "sha256:t1", "sha256:i1", "sha256:i1"), true),
+  (("inv-1", "inv-2", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:h0", "sha256:p0", "sha256:p0", "applyRevision", "applyRevision", "sha256:t1", "sha256:t1", "sha256:i1", "sha256:i1"), false),
+  (("inv-1", "inv-1", "sha256:w1", "sha256:wB", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:h0", "sha256:p0", "sha256:p0", "applyRevision", "applyRevision", "sha256:t1", "sha256:t1", "sha256:i1", "sha256:i1"), false),
+  (("inv-1", "inv-1", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:eB", "sha256:h0", "sha256:h0", "sha256:p0", "sha256:p0", "applyRevision", "applyRevision", "sha256:t1", "sha256:t1", "sha256:i1", "sha256:i1"), false),
+  (("inv-1", "inv-1", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:hB", "sha256:p0", "sha256:p0", "applyRevision", "applyRevision", "sha256:t1", "sha256:t1", "sha256:i1", "sha256:i1"), false),
+  (("inv-1", "inv-1", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:h0", "sha256:p0", "sha256:pB", "applyRevision", "applyRevision", "sha256:t1", "sha256:t1", "sha256:i1", "sha256:i1"), false),
+  (("inv-1", "inv-1", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:h0", "sha256:p0", "sha256:p0", "applyRevision", "applyRevisionB", "sha256:t1", "sha256:t1", "sha256:i1", "sha256:i1"), false),
+  (("inv-1", "inv-1", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:h0", "sha256:p0", "sha256:p0", "applyRevision", "applyRevision", "sha256:t1", "sha256:tB", "sha256:i1", "sha256:i1"), false),
+  (("inv-1", "inv-1", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:h0", "sha256:p0", "sha256:p0", "applyRevision", "applyRevision", "sha256:t1", "sha256:t1", "sha256:i1", "sha256:iB"), false),
+  (("inv-1", "inv-1", "sha256:w1", "sha256:w1", "sha256:e1", "sha256:e1", "sha256:h0", "sha256:h0", "sha256:p0", "sha256:pB", "applyRevision", "applyRevisionB", "sha256:t1", "sha256:t1", "sha256:i1", "sha256:iB"), false)
 ]
 {
-  intentId == commitId && iWorldRef == cWorldRef && iEntryHash == cEntryHash && iObservedHead == cObservedHead
+  intentId == commitId && iWorldRef == cWorldRef && iEntryHash == cEntryHash && iObservedHead == cObservedHead && iPrevEntryHash == cPrevEntryHash && iTransitionFn == cTransitionFn && iTransitionRef == cTransitionRef && iInterpreter == cInterpreter
 }
 
 -- Canonical receipt-state projection (the queryable receipt's state field).

@@ -97,7 +97,9 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
 - **`passed_tests` is NOT the named-test count (process fix, iter-25 — the landed correction D-B,
   restated because a fresh author hit it again).** `ailang test --format json` reports
   `passed_tests`/`total_tests` that ALSO count contract-derived properties: for
-  `storejournal.ail` that is `passed_tests: 32` against **`len(tests[]) == 25`** named tests. The
+  `storejournal.ail` that is `passed_tests: 37` against **`len(tests[]) == 30`** named tests
+  (32 / 25 before LAW 6's iter-29 widening — the example moves whenever the sketch does, which is
+  itself why the two numbers must always be re-measured rather than quoted). The
   iter-25 designer wrote "26/26 named tests" from `passed_tests` when the real named count was 20;
   the controller caught it by re-running the command. Always report the two numbers separately, and
   gate on `len(tests[])`.
@@ -594,8 +596,8 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
    `Commit.InvocationID` + in-tx receipt binding · three-state receipt law · recovery never
    auto-re-executes. The M1 kernel reopen is RATIFIED. Doc:
    `design_docs/planned/w-store-durability.md` (Fable designer, rotation; header now RATIFIED +
-   IN SPRINT) + `design_docs/sketches/storejournal.ail` (163 lines, **7/7 contracts Z3-verified**,
-   25 named tests — controller-remeasured). Sprint plan + handoff written by the **opus** planner at
+   IN SPRINT) + `design_docs/sketches/storejournal.ail` (180 lines, **7/7 contracts Z3-verified**,
+   30 named tests — controller-remeasured iter-29 after LAW 6's widening). Sprint plan + handoff written by the **opus** planner at
    `.ailang/state/sprints/w-store-durability.{plan.json,handoff.md}` (3 milestones SD.A/SD.B/SD.C).
 
    **SD.A IS LANDED — CF-B-2 IS CLOSED AT THE KERNEL WRITE PATH.** PR **#17** → squash **`86d1276`**,
@@ -615,14 +617,18 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
    `go.sum`, `scripts/`, `world/`, `cmd/`, `.github/`,
    `host/{replay,hashref,canon,archive,registry}` **byte-unchanged**.
 
-   > **SD.B MUST RESOLVE THIS FIRST (blocking precondition, iter-28).**
-   > `sketches/storejournal.ail:132` LAW 6 `intentBindsCommit` still declares the round-1 **NARROW
-   > 4-field** binding (8 params) while the ratified Design Freeze, Decision 4, AC15 and
-   > `MUT-INTENT-NARROW-BIND` all require the round-2 **8-field** binding (16 params). The Freeze
-   > makes the sketch *the frozen law* and pins the Go mirror to it by drift test, so **SD.B as
-   > written would certify exactly the binding the doc calls the defect.** Widening applies the
-   > already-ratified Freeze ⇒ **no human gate**, but it must land with the `EntryHash`-preserving
-   > boundary row and AC9's counts updated (`len(tests[])` 25→26, `passed_tests` 32→33).
+   > **SD.B's blocking precondition — RESOLVED iter-29, and the prescribed resolution was itself
+   > under-propagated (THIRD instance of the one root cause).** LAW 6 `intentBindsCommit` is now the
+   > round-2 **8-field** binding (16 params), applying the already-ratified Freeze ⇒ no human gate.
+   > But the iter-28 prescription — one new `tests[]` row, `len(tests[])` 25→26 / `passed_tests`
+   > 32→33 — was **measured vacuous before adoption**: the single REQUIRED `EntryHash`-preserving
+   > row mutates `PrevEntryHash`/`TransitionFn`/`Interpreter` *together* and never touches
+   > `TransitionRef`, so at 26 rows a Go mirror that drops `TransitionRef` alone reds **nothing**
+   > (`failed=0`, first-party). `MUT-INTENT-NARROW-BIND` demands the four added fields be
+   > load-bearing **individually**. Landed form: **10 rows** = all-match + one single-field mismatch
+   > per commit-defining field + the REQUIRED combined row; **AC9 pins `len(tests[])` 30 /
+   > `passed_tests` 37** (measured). The 16-param Z3 arity risk the planner flagged is **REFUTED**
+   > (verifies first try, 7/7) — no upstream issue owed. Evidence: doc row **V28**.
 
    **Open non-blocking carry-forwards (enumerated — a bare COUNT is unrecoverable, iter-19 rule):**
    **CF-F-1** the daemon's `scanPageSize`/`scanRowBudget`/`scanTimeBudget` wiring is not pinned by a
