@@ -376,6 +376,30 @@ What this mission touches or overlaps, and the drawn boundaries:
   one row per load-bearing dependency, and a Conflict Surface for anything the doc proposes to
   build fresh — **before** spending the first quorum round, not after. Budget one designer pass
   for it. A round spent rediscovering a known-missing section is a round bought at full price.
+- **THE MISSION'S OWN RECORD IS A CLAIM, NOT EVIDENCE** (process fix, iter-27; **2nd instance** —
+  iter-26 was the 1st). The skill already forbids laundering a *sub-agent's* finding (iter-105), a
+  *judge's* finding (iter-111) and a *survey row* (iter-25) into established fact. The gap it does
+  not cover is the most seductive source of all: **a measurement this mission itself recorded in the
+  charter or the log, in a prior iteration, in the controller's own voice.** It reads as first-party
+  because it *was* first-party — for someone else, at a different commit, and it arrives with no
+  visible provenance and no re-run.
+  Instance 1 (iter-26): the controller wrote a premise row asserting "`host/replay` has no timeout
+  tests" without running anything; it has three, `execTimeout = 60 * time.Second`.
+  Instance 2 (iter-27): item 4b's row carried an eight-field `store.Commit` matrix presented as
+  measured fact — *"seven produce a permanently unreadable row … the eighth (`NextWorld.Ref`) reads
+  back fine, degenerate-but-readable"*. Re-run first-party it is **wrong twice**: two of the
+  "seven" poison `GetWorld`, a different read surface entirely, and `NextWorld.Ref` is the **only
+  unrecoverable field** of the eight — it wedges the store behind a non-`ConflictError`. That row
+  had already been handed to a sub-agent directive **and** was on its way into a human ratification
+  packet as decision-support.
+  **The rule**: a measurement recorded by a PRIOR iteration is `UNVERIFIED, inherited from
+  <iteration N>` until this iteration re-runs it. Re-run it before (a) routing it to a sub-agent,
+  (b) surfacing it to Mark as decision-support, or (c) restating it in a new record. When a re-run
+  refutes it, **correct the original in place with a visible strikethrough plus the corrected
+  finding** — never silently overwrite it and never leave the stale prose standing next to the fix,
+  because the whole failure mode is prose that outlives its measurement. Prose decays; a committed
+  test does not, which is why the ghost-close rule exists and why a measurement worth keeping
+  belongs in a fixture rather than a paragraph.
 - **Kill switch stays until ratification**; only Mark (or the v1 agent on his instruction) arms
   the loop.
 
