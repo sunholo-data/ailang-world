@@ -4380,3 +4380,40 @@ it** and is the next executable milestone: subprocess handlers + `Human.Approve`
 floor F1–F6, with CF-J-2/CF-J-3/CF-J-4 and the pre-approved `gemini-3-1-pro` timeout/output-cap
 mutations folded in. The plan and handoff are written and durable at
 `.ailang/state/sprints/w-effect-broker-m3.{plan.json,handoff.md}`.
+
+### Iteration 31 — ADDENDUM (post-report, `c26b27d`): **BOTH design calls RATIFIED by Mark, attended (~19:50), so this entry's "Next" above is superseded**
+
+The report went out at 19:36 saying M3.D was parked; Mark answered attended at ~19:50 and the
+decision is recorded in-charter per the ratification-channel pattern. **No human gate is
+outstanding on item 4.** Recorded here because the ratification commit touched only
+`world-mission.md` — the log, this entry's Next, and the project memory all still said "parked",
+which is *this iteration's own Finding 1 recurring against its own bookkeeping*: a correction is
+not applied until it reaches every artifact that restates it. Fixed in all four places this
+addendum.
+
+1. **M3.D = OPTION (i) NOW, OPTION (iii) QUEUED as item 4c `w-effect-journal`.** Episode/commit-
+   boundary anchoring lands inside M3: the episode driver appends the intent once world+entry are
+   built and commits with `InvocationID`; the broker gains a **production** `recover.go` consuming
+   `PendingIntents`/`GetReceipt`, surfacing `IndeterminateEffectError`, never auto-re-executing —
+   which **closes CF-H-1** with a genuine production mutation (`MUT-AUTO-RETRY` finally becomes
+   one). The dispatch→record window **stays open and must be claimed honestly**: the Decision-3
+   supersession note has to be corrected so it stops overclaiming — the very propagation defect
+   Finding 1 identified. The `host/store` kernel reopen that closes the window at effect
+   granularity is **pre-ratified in principle** and becomes item **4c** (~1–1.5d, design +
+   quorum at pick as usual).
+2. **CF-J-2 — the third arm is RATIFIED; frozen Decision 3 is REOPENED** (the human gate the
+   Design Freeze exists to force, exercised). Every **failed** effect writes a record, so audit and
+   replay are complete rather than complete-except-on-failure. **The debit STANDS**: refunding a
+   possibly-partially-executed effect would make the ledger lie about spend — the never-lie law
+   applied to money. This is the human resolving exactly the fork the controller declined to
+   resolve (the two candidate fixes had opposite semantics), and it picks *neither* of my two
+   candidates cleanly — it takes fix (b)'s record and explicitly rejects fix (a)'s refund on a
+   rationale I had not articulated. `host/broker/handler_error_repro_test.go` — the reproduction
+   landed this iteration asserting current behaviour — becomes that fix's **red→green** test,
+   which is exactly what a committed reproduction is for.
+
+**Revised Next**: **M3.B** (subprocess handlers + `Human.Approve` + capsule floor F1–F6), now
+carrying the ratified third arm and CF-J-2/J-3/J-4; then **M3.C**; then **M3.D** (option (i)); then
+item **4c `w-effect-journal`**. The sprint plan needs M3.D rewritten from "blocked, do not start"
+to option (i)'s scope, and the doc needs Decision 3's third arm plus the corrected supersession
+note before M3.B is planned.
