@@ -18,6 +18,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/archive"
@@ -154,6 +155,15 @@ func (r *Runner) Run(entry Entry) (Result, error) {
 		"run", "--quiet", "--caps", r.caps, "--entry", entryFn, entryModulePath)
 	cmd.Dir = root
 	cmd.Env = []string{"AILANG_FS_SANDBOX=" + root}
+	// Same correction as host/broker's runBounded: kill the whole process group,
+	// or a forked grandchild keeps the inherited pipes open and outlives F5/F6.
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	cmd.Cancel = func() error {
+		if cmd.Process == nil {
+			return nil
+		}
+		return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+	}
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {

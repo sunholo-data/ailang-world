@@ -693,3 +693,33 @@ func TestApprovalReplayContract(t *testing.T) {
 		t.Fatalf("approval replay was not byte-identical")
 	}
 }
+
+// The wall-clock bound must kill the whole process TREE, not just the handler's
+// direct child. A forked grandchild inherits the stdout pipe, so if it survives
+// the kill the capped read blocks until the GRANDCHILD exits and the bound is not
+// enforced. Linux CI measured 5.002s against a 40ms bound — exactly the runtime of
+// the grandchild — while darwin reported 42ms for the same code, so this is a real
+// guarantee that one platform hides.
+//
+// Only elapsed is asserted. Checking that the grandchild is DEAD afterwards is
+// vacuous: when the kill misses it, Invoke blocks on the inherited pipe until the
+// grandchild exits on its own, so by the time a test could look it has always died.
+func TestHandlerTimeoutKillsTheWholeProcessGroup(t *testing.T) {
+	fake := writeExecutable(t, "sleep 5 &\nwait")
+	handler, err := NewGitHandler(GitHandlerConfig{
+		GitPath: fake, ExecTimeout: 100 * time.Millisecond,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	scope := t.TempDir()
+	session, _ := handlerSession(t, EffectGitCommit, scope, handler)
+	start := time.Now()
+	_, _, _ = session.Invoke(context.Background(),
+		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, []byte("group"))
+	elapsed := time.Since(start)
+	if elapsed > 2*time.Second {
+		t.Errorf("Invoke took %s for a 100ms bound: the kill missed the forked "+
+			"grandchild, which held the stdout pipe until it exited on its own", elapsed)
+	}
+}

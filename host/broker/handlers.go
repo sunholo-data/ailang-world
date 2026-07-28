@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"syscall"
 	"time"
 )
 
@@ -84,6 +85,20 @@ func runBounded(ctx context.Context, bounds handlerBounds, spec handlerCommand) 
 	defer cancel()
 
 	cmd := exec.CommandContext(runCtx, spec.path, spec.args...)
+	// The bound must survive a handler that forks. Killing only the direct child
+	// leaves a grandchild holding the inherited stdout pipe, so the capped read
+	// below blocks until the GRANDCHILD exits and the deadline is not enforced —
+	// observed on linux CI as 5.002s against a 40ms bound, exactly the runtime of
+	// the grandchild. Run the handler in its own process group and kill the whole
+	// group, which is the same correction scripts/verify_ail.sh already carries
+	// (V26) for the same reason.
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	cmd.Cancel = func() error {
+		if cmd.Process == nil {
+			return nil
+		}
+		return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+	}
 	cmd.Dir = spec.dir
 	cmd.Env = spec.env
 	pipe, err := cmd.StdoutPipe()
