@@ -171,6 +171,24 @@ func TestGitCommitRoundTripScrubsHostileHome(t *testing.T) {
 	}
 }
 
+// pinnedAILANG resolves the pinned interpreter the way the landed replay and
+// capsule tests do. Hardcoding /tmp/ailang-v0300/ailang passes on the rig and
+// fails in CI, where the pinned v0.30.0 binary is installed under $HOME — a
+// green local gate that cannot see the failure. verify_go.sh mandates
+// AILANG_BIN, and CI exports it, so a skip here is itself the alarm.
+func pinnedAILANG(t *testing.T) string {
+	t.Helper()
+	bin := os.Getenv("AILANG_BIN")
+	if bin == "" {
+		t.Skip("AILANG_BIN not set; Model.Infer requires the pinned released ailang binary")
+	}
+	info, err := os.Stat(bin)
+	if err != nil || !info.Mode().IsRegular() {
+		t.Skipf("AILANG_BIN %q is not a usable executable: %v", bin, err)
+	}
+	return bin
+}
+
 // A Model.Infer payload is arbitrary caller bytes. The prompt is handed to the
 // interpreter as a JSON argument, so every byte a caller can send must survive
 // that encoding. Control bytes (0x00-0x1f) are the case a hand-rolled escaper
@@ -178,7 +196,7 @@ func TestGitCommitRoundTripScrubsHostileHome(t *testing.T) {
 // — post-M3.B0 — the caller is charged a standing debit for what is really a
 // host encoding bug, not a failed effect.
 func TestModelPromptEncodesControlBytes(t *testing.T) {
-	const ailang = "/tmp/ailang-v0300/ailang"
+	ailang := pinnedAILANG(t)
 	handler, err := NewModelHandler(ModelHandlerConfig{AILANGPath: ailang, Stub: true})
 	if err != nil {
 		t.Fatal(err)
@@ -206,7 +224,7 @@ func TestModelPromptEncodesControlBytes(t *testing.T) {
 }
 
 func TestModelStubRoundTripDeterministicRecordedBytes(t *testing.T) {
-	const ailang = "/tmp/ailang-v0300/ailang"
+	ailang := pinnedAILANG(t)
 	handler, err := NewModelHandler(ModelHandlerConfig{AILANGPath: ailang, Stub: true})
 	if err != nil {
 		t.Fatal(err)
@@ -244,7 +262,7 @@ func TestModelStubRoundTripDeterministicRecordedBytes(t *testing.T) {
 }
 
 func TestGitHandlerTimeoutWritesFailureRecord(t *testing.T) {
-	fake := writeExecutable(t, "sleep 0.30\nprintf 'finished\\n'")
+	fake := writeExecutable(t, "sleep 5\nprintf 'finished\\n'")
 	handler, err := NewGitHandler(GitHandlerConfig{
 		GitPath: fake, ExecTimeout: 40 * time.Millisecond,
 	})
@@ -257,14 +275,16 @@ func TestGitHandlerTimeoutWritesFailureRecord(t *testing.T) {
 	_, ref, invokeErr := session.Invoke(context.Background(),
 		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, []byte("timeout"))
 	elapsed := time.Since(start)
-	if elapsed > 200*time.Millisecond {
-		t.Errorf("Git timeout elapsed = %s, want <= 200ms for 40ms bound", elapsed)
+	// 2s tolerates process-spawn latency on a shared CI runner while still
+	// reding hard if the deadline is ignored (the subprocess sleeps 5s).
+	if elapsed > 2*time.Second {
+		t.Errorf("Git timeout elapsed = %s, want <= 2s for a 40ms bound", elapsed)
 	}
 	assertHandlerFailureRecord(t, session, recording, ref, invokeErr, 2, ErrHandlerTimeout)
 }
 
 func TestModelHandlerTimeoutWritesFailureRecord(t *testing.T) {
-	fake := writeExecutable(t, "sleep 0.30\nprintf 'finished\\n'")
+	fake := writeExecutable(t, "sleep 5\nprintf 'finished\\n'")
 	handler, err := NewModelHandler(ModelHandlerConfig{
 		AILANGPath: fake, Stub: true, ExecTimeout: 40 * time.Millisecond,
 	})
@@ -276,8 +296,8 @@ func TestModelHandlerTimeoutWritesFailureRecord(t *testing.T) {
 	_, ref, invokeErr := session.Invoke(context.Background(),
 		EffectRequest{Effect: EffectModelInfer, Scope: "model-scope", Cost: 2, Now: 1}, []byte("timeout"))
 	elapsed := time.Since(start)
-	if elapsed > 200*time.Millisecond {
-		t.Errorf("Model timeout elapsed = %s, want <= 200ms for 40ms bound", elapsed)
+	if elapsed > 2*time.Second {
+		t.Errorf("Model timeout elapsed = %s, want <= 2s for a 40ms bound", elapsed)
 	}
 	assertHandlerFailureRecord(t, session, recording, ref, invokeErr, 2, ErrHandlerTimeout)
 }
