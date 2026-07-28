@@ -104,6 +104,9 @@ type VerifyResult struct {
 //   - Entry is the append-only log row; its PrevEntryHash must equal the log
 //     head observed at ObservedHead.
 type Commit struct {
+	// InvocationID optionally binds this commit to a durable journal intent.
+	// Empty preserves the pre-journal behavior exactly.
+	InvocationID string
 	ObservedHead hashref.HashRef
 	Objects      []Object
 	NextWorld    World
@@ -672,7 +675,21 @@ func (s *Store) Commit(c Commit) error {
 	// making this rollback a no-op.
 	defer func() { _ = tx.Rollback() }()
 
-	// Step 1: compare-and-append guard.
+	// Step 1: bind the request to its durable intent before any mutation.
+	var boundIntent JournalIntent
+	if c.InvocationID != "" {
+		var resolved bool
+		boundIntent, resolved, err = bindCommitIntentTx(tx, c)
+		if err != nil {
+			return err
+		}
+		if resolved {
+			// A fully matching resolved invocation is an idempotent no-op.
+			return nil
+		}
+	}
+
+	// Step 1 continued: compare-and-append guard.
 	selected, hasSelected, err := selectedHeadTx(tx)
 	if err != nil {
 		return err
@@ -731,9 +748,75 @@ func (s *Store) Commit(c Commit) error {
 		return fmt.Errorf("store: advance selected head: %w", err)
 	}
 
-	// Step 6: commit.
+	// Step 6: append the receipt in this same transaction.
+	if c.InvocationID != "" {
+		outcome := JournalOutcome{
+			InvocationID: c.InvocationID,
+			Status:       "committed",
+			ResultRef:    c.NextWorld.Ref,
+			LogicalTime:  boundIntent.LogicalTime,
+		}
+		payload, err := encodeJournalOutcome(outcome)
+		if err != nil {
+			return fmt.Errorf("store: encode commit outcome: %w", err)
+		}
+		object := journalObject(JournalOutcomeV1, payload)
+		seq, err := nextJournalSeqTx(tx)
+		if err != nil {
+			return err
+		}
+		if err := insertJournalObjectTx(tx, object); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(`INSERT INTO journal(seq, kind, invocation_id, object_ref)
+			VALUES (?, 'outcome', ?, ?)`, seq, c.InvocationID, object.Hash.String()); err != nil {
+			return fmt.Errorf("store: append commit outcome: %w", err)
+		}
+	}
+
+	// Step 7: commit.
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("store: commit transaction: %w", err)
 	}
 	return nil
+}
+
+func bindCommitIntentTx(tx *sql.Tx, c Commit) (JournalIntent, bool, error) {
+	row, ok, err := journalRowFor(tx, c.InvocationID, "intent")
+	if err != nil {
+		return JournalIntent{}, false, err
+	}
+	if !ok {
+		return JournalIntent{}, false, &InvocationMismatchError{
+			ID: c.InvocationID, Field: "InvocationID", Want: "durable intent", Got: c.InvocationID,
+		}
+	}
+	intent, err := decodeJournalIntent(row.obj.Payload)
+	if err != nil {
+		return JournalIntent{}, false, fmt.Errorf("store: decode commit intent: %w", err)
+	}
+	fields := []struct {
+		name, want, got string
+	}{
+		{"InvocationID", intent.InvocationID, c.InvocationID},
+		{"WorldRef", intent.WorldRef.String(), c.NextWorld.Ref.String()},
+		{"EntryHash", intent.EntryHash.String(), c.Entry.EntryHash.String()},
+		{"ObservedHead", intent.ObservedHead.String(), c.ObservedHead.String()},
+		{"PrevEntryHash", intent.PrevEntryHash.String(), c.Entry.Header.PrevEntryHash.String()},
+		{"TransitionFn", intent.TransitionFn.String(), c.Entry.Header.TransitionFn.String()},
+		{"TransitionRef", intent.TransitionRef.String(), c.Entry.TransitionRef.String()},
+		{"Interpreter", intent.Interpreter.String(), c.Entry.Header.Interpreter.String()},
+	}
+	for _, field := range fields {
+		if field.want != field.got {
+			return JournalIntent{}, false, &InvocationMismatchError{
+				ID: c.InvocationID, Field: field.name, Want: field.want, Got: field.got,
+			}
+		}
+	}
+	_, resolved, err := journalRowFor(tx, c.InvocationID, "outcome")
+	if err != nil {
+		return JournalIntent{}, false, err
+	}
+	return intent, resolved, nil
 }

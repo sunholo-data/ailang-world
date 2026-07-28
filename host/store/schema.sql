@@ -74,3 +74,14 @@ CREATE TABLE IF NOT EXISTS verification_cache (
     result_detail     TEXT NOT NULL,
     PRIMARY KEY (transition_fn_ref, interpreter_ref)
 );
+
+-- Durable ordered index for content-addressed intent and outcome payloads.
+-- UNIQUE(invocation_id, kind) is also the lookup index used by receipt reads;
+-- no additional index is needed.
+CREATE TABLE IF NOT EXISTS journal (
+    seq           INTEGER PRIMARY KEY,
+    kind          TEXT NOT NULL CHECK (kind IN ('intent','outcome')),
+    invocation_id TEXT NOT NULL CHECK (invocation_id <> ''),
+    object_ref    TEXT NOT NULL CHECK (object_ref <> ''),
+    UNIQUE (invocation_id, kind)
+);
