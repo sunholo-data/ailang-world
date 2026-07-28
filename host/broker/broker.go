@@ -88,6 +88,24 @@ func (e *DenialError) Error() string {
 	return fmt.Sprintf("broker: effect denied: %s (record %s)", e.Decision.Label, e.RecordRef.String())
 }
 
+// EffectFailedError reports a dispatched handler failure after its immutable
+// failure record has been persisted. Live errors unwrap the handler's detail;
+// replay errors are reconstructed from the record alone and do not.
+type EffectFailedError struct {
+	Effect    string
+	Scope     string
+	RecordRef hashref.HashRef
+	cause     error
+}
+
+func (e *EffectFailedError) Error() string {
+	return fmt.Sprintf("broker: effect %q failed for scope %q (record %s)", e.Effect, e.Scope, e.RecordRef.String())
+}
+
+func (e *EffectFailedError) Unwrap() error {
+	return e.cause
+}
+
 // ReplayGapError reports a missing or inconsistent next replay record.
 type ReplayGapError struct {
 	Index int
@@ -136,7 +154,18 @@ func (s *Session) Invoke(
 	}
 	result, err = handler.Execute(ctx, req, payload)
 	if err != nil {
-		return nil, hashref.HashRef{}, fmt.Errorf("broker: execute %q: %w", req.Effect, err)
+		rec := EffectRecord{
+			Effect: req.Effect, Scope: req.Scope, Cost: req.Cost,
+			BudgetBefore: budgetBefore, BudgetAfter: decision.Remaining,
+			Allowed: true, Failed: true, RequestRef: requestRef,
+		}
+		ref, putErr := s.putRecord(rec)
+		if putErr != nil {
+			return nil, hashref.HashRef{}, putErr
+		}
+		return nil, ref, &EffectFailedError{
+			Effect: req.Effect, Scope: req.Scope, RecordRef: ref, cause: err,
+		}
 	}
 	resultObj := resultObject(result)
 	if err := s.store.PutObject(resultObj); err != nil {
@@ -241,6 +270,13 @@ func (s *Session) invokeReplay(
 		return nil, hashref.HashRef{}, &ReplayGapError{Index: index, Why: "record does not match request and decision"}
 	}
 	if decision.Allowed {
+		if rec.Failed {
+			s.grants[grantIndex].Budget = decision.Remaining
+			s.next++
+			return nil, recordRef, &EffectFailedError{
+				Effect: rec.Effect, Scope: rec.Scope, RecordRef: recordRef,
+			}
+		}
 		resultObj, ok, err := s.store.GetObject(rec.ResultRef)
 		if err != nil {
 			return nil, hashref.HashRef{}, &ReplayGapError{Index: index, Why: "read result: " + err.Error()}

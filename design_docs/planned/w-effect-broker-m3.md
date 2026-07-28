@@ -7,7 +7,8 @@
 (`AILANG v0.30.0`, commit `e37b370`, clean — no `-dirty` suffix). Every `.ail` claim in this doc
 was checked live on that binary WITH z3 on PATH and the contract proven in `verify.results[]`
 (never a bare exit code); the checked artifact is the sketch in Appendix A, which milestone M3.A
-lands verbatim as `design_docs/sketches/effectbroker.ail`.
+lands verbatim as `design_docs/sketches/effectbroker.ail`. M3.B0 re-measured 7 verified
+contracts, `len(tests[]) == 31`, `passed_tests == 33`, and 244 sketch lines.
 **Traces to**: [DESIGN.md](../DESIGN.md) §7 (Phase 3: "The broker **records every effect
 result**, which is what makes Phase 1+2 replayable against history"), §8 (effect / capability /
 budget — the direct source), §9 (evidence), §15 (the broker's exact layer in the stack), §14
@@ -63,7 +64,7 @@ clause depends on.
 - **P1 — the broker is a Go host package (`host/broker`), the capsule runner another
   (`host/capsule`); the LAW they enforce is frozen in a compiler-checked sketch.** This follows
   the exemplar exactly: `worlddapi.ail` froze the REST surface's semantic shape; `effectbroker.ail`
-  (Appendix A — already verified on the pinned binary: **7/7 contracts Z3-proven, 25/25 named
+  (Appendix A — already verified on the pinned binary: **7/7 contracts Z3-proven, 31/31 named
   tests pass**) freezes the capability/budget law. The Go implementation mirrors the sketch and a
   drift test pins the mirror. Promotion of the law into `world/` kernel modules is deliberately
   deferred (Decision 8) — it would touch the `verify_ail.sh` required-manifest, a gate change M3
@@ -195,10 +196,11 @@ The law is exactly Appendix A, verified on the pinned binary this session:
   limitation), whose arms call the SAME proven predicates (the `contracts.ail` anti-drift
   pattern). Its five arms are pinned through the canonical projection `decideLabel` because
   `tests[]` cannot express ADT constructor expected values on v0.30.0 (V7 / U2).
-- **`recordConsistent`** — the record-accounting law: an allowed record debits exactly `cost`
-  and carries no denial label; a denied record leaves the budget untouched. Z3-proven; the Go
-  side asserts it over every record it writes (and the replay verifier re-asserts it over every
-  record it reads).
+- **`recordConsistent`** — the three-arm record-accounting law: succeeded and failed records
+  debit exactly `cost`, denied records leave the budget untouched, only success carries a result
+  ref, and only denial carries a denial label. The illegal `(allowed=false, failed=true)` pair is
+  rejected. Z3-proven; the Go side asserts it over every record it writes (and the replay
+  verifier re-asserts it over every record it reads).
 
 **The Go mirror + drift test.** `host/broker` implements `decide` in Go. The drift test runs a
 table of decision cases — including every arm and every boundary in the sketch's `tests[]` —
@@ -440,7 +442,7 @@ named mutation in the Non-Vacuity table.
 
 | Datum | Where | Shape |
 |-------|-------|-------|
-| Effect record | `objects` row, `semantic_id` `world/effect-record/v1` | the sketch's `EffectRecord`, serialized by ONE deterministic Go codec (fixed field order, no wall-clock, no map iteration), golden-bytes test committed |
+| Effect record | `objects` row, `semantic_id` `world/effect-record/v1` | the sketch's `EffectRecord`; `(allowed, failed)` identifies denied, succeeded, or failed; serialized by ONE deterministic Go codec (fixed field order, no wall-clock, no map iteration), golden-bytes tests committed |
 | Effect result bytes | `objects` row, `world/effect-result/v1` | raw handler output, content-addressed |
 | Approval request / decision | `objects` rows, `world/approval-request/v1` / `world/approval-decision/v1` | request: effect+scope+cost+requester+`now`; decision: requestRef+approve/deny+decidedBy+`now` — the decision is ALWAYS a new object referencing the request, never an edit of anything |
 | Approval Pending result / poll result | `objects` rows, `world/effect-result/v1` (the ordinary result-bytes shape) | `Human.Approve`'s result = the serialized `Pending(requestRef)`; `Human.PollApproval`'s result = the observed decision object bytes or the still-pending marker |
@@ -820,7 +822,8 @@ are labelled as such.
 | V2 | NEW-DOC is a fact | `grep -ri "w-effect-broker-m3" design_docs/ -l`; `ls design_docs/planned/` | hits only in charter/log/M1+M2 docs/`worlddapi.ail` boundary comments; `planned/` holds only `w-log-epoch-decision.md` |
 | V3 | z3 present → contract claims provable non-silently | `ls /opt/homebrew/bin/z3` + `ai-check` JSON | z3 present; `verify.available: true`, 7 named results in `verify.results[]` |
 | V4 | Sketch contracts prove | `cd /tmp/wbroker-sketch && /tmp/ailang-v0300/ailang ai-check -timeout 5s sketches/effectbroker.ail` | `check.passed: true`; `verify: {verified: 7, counterexample: 0, skipped: 0, errors: 0}` — `effectNameMatches`, `scopeMatches`, `capabilityLive`, `withinEffectBudget`, `debit`, `effectAllowed`, `recordConsistent` all `verified` |
-| V5 | Sketch named tests pass | `/tmp/ailang-v0300/ailang test --format json sketches/effectbroker.ail` | `failed_tests: 0, **len(tests[]) 25**, passed_tests: 27, skipped_tests: 5, total_tests: 32, success: true` — re-measured by the controller iter-31. **Gate on `len(tests[])` (25), never on `passed_tests` (27 = 25 named + 2 passing properties).** (skips = the known no-generator-for-record-params class, same as `world/` modules) |
+| V5 | Sketch named tests pass | `/tmp/ailang-v0300/ailang test --format json sketches/effectbroker.ail` | `failed_tests: 0, **len(tests[]) 31**, passed_tests: 33, skipped_tests: 5, total_tests: 38, success: true` — re-measured by the M3.B0 executor. **Gate on `len(tests[])` (31), never on `passed_tests` (33 = 31 named + 2 passing properties).** (skips = the known no-generator-for-record-params class, same as `world/` modules) |
+| V5a | **NEW positive verifier fact:** a contract can read a nested record field of a record parameter on v0.30.0 | M3.B0 `recordConsistent` uses `rec.resultRef.digest` in its `ensures`; `/tmp/ailang-v0300/ailang ai-check -timeout 15s sketches/effectbroker.ail` | `recordConsistent` is present in `verify.results[]` with `status: "verified"`; nested field access is therefore not the fragile part of U1 |
 | V6 | **NEW verifier fact (trigger NOT isolated)**: `effectAllowed`'s composed body (calling the four law predicates) fails Z3 encoding; the inlined body verifies | first sketch draft, same `ai-check`; **controller first-party re-run iter-22** confirmed the repro (restoring the composed body → `status: "error"`, other 6 predicates still verify) AND refuted the first-draft "two record sorts in the callee params" characterization with two clean-verifying counter-repros | captured Z3 diagnostic: `(error "line 12 column 90: select requires 1 arguments, but was provided with 2 arguments")` · `(error "line 17 column 100: unknown constant effectNameMatches (Capability String) ")` · `(error "line 19 column 687: unknown constant result")`; fixed by the ratified `isValidNextWorld` inlining pattern → then `verified` |
 | V7 | **NEW test-runner fact**: `tests[]` cannot express ADT constructor expected values — applied (`*ast.FuncCall`) AND nullary (`*ast.Identifier`) constructors both fail; **`ailang check` passes the same file CLEAN** (rc=0, "No errors found") — only the `test` leg catches it | first sketch draft, `ailang test`; controller re-run confirmed the `check`-leg asymmetry | `decide_test_1..5` fail: `failed to evaluate expected: expected literal expression, got *ast.FuncCall` / `*ast.Identifier`; a check-only gate reads GREEN on this defect; fixed via the `decideLabel` string projection |
 | V8 | **NEW toolchain contradiction**: `ai-check` PROVES `debit` correct (Z3 `verified`) while `ailang test` FAILS the same function on inputs its `requires` excludes — the two legs contradict each other on identical source | first sketch draft, `ailang test`; controller re-run reproduced exactly as stated | `debit_property_2` **fail**: `ensures violated for input: budget=-679, cost=-221` (inputs violate the declared `requires`; sibling `debit_property_1` correctly skipped the same class); fixed with a total-theorem ensures, both properties now pass (100 runs) |
@@ -852,7 +855,7 @@ are labelled as such.
 `ailang test --format json` (after the V7/V8 fixes):
 
 ```json
-{"failed_tests": 0, "passed_tests": 27, "skipped_tests": 5, "success": true, "total_tests": 32}
+{"failed_tests": 0, "passed_tests": 33, "skipped_tests": 5, "success": true, "total_tests": 38}
 ```
 
 (the 5 skips are `no generator for parameter c: Capability` / `rec: EffectRecord` — the
@@ -1012,7 +1015,7 @@ answerable in one comment, and the doc needs no further work before the answer a
 ## Appendix A — the verified sketch (M3.A lands this verbatim as `design_docs/sketches/effectbroker.ail`)
 
 Verified this session on the pinned binary: `check.passed: true` · 7/7 contracts `verified`
-(0 counterexamples, 0 errors, 0 skips) · **25** named tests pass (`len(tests[]) == 25`; `passed_tests` 27 adds the 2 passing PROPERTIES, and gating on it would be the `len(tests[])`-vs-`passed_tests` defect this repo already paid for once). 213 lines.
+(0 counterexamples, 0 errors, 0 skips) · **31** named tests pass (`len(tests[]) == 31`; `passed_tests` 33 adds the 2 passing PROPERTIES, and gating on it would be the `len(tests[])`-vs-`passed_tests` defect this repo already paid for once). 244 lines.
 
 ```ailang
 module sketches/effectbroker
@@ -1125,10 +1128,11 @@ tests [
 }
 
 -- The composed authorization predicate: ALL four laws hold. The body is
--- INLINED to field comparisons rather than calling Laws 1-4: a contract
--- calling a callee whose params mix two record sorts Z3-errors on v0.30.0
--- ("select requires 1 arguments...unknown constant effectNameMatches") --
--- the isValidNextWorld/sameRef inlining pattern applies (V-row in the doc).
+-- INLINED, not composed: calling Laws 1-4 from this body fails Z3 encoding on
+-- v0.30.0 (status "error") while the inlined body verifies. The exact trigger
+-- is NOT isolated -- the "two record sorts" story is REFUTED (see U1); a
+-- leading HYPOTHESIS is that the callees carry their own contracts. Pattern:
+-- isValidNextWorld.
 -- The exact ensures restates all four laws, so drift is impossible by proof.
 export func effectAllowed(c: Capability, r: EffectRequest) -> bool ! {}
 ensures { result == (c.effect == r.effect && c.scope == r.scope
@@ -1160,9 +1164,11 @@ export func decide(c: Capability, r: EffectRequest) -> BrokerDecision
 }
 
 -- The effect-record shape the broker persists as a content-addressed store
--- object (semantic_id "world/effect-record/v1") for EVERY decision — allowed
--- AND denied. resultRef is the content address of the handler's result bytes
--- for allowed effects, and the zero ref for denials (no result exists).
+-- object (semantic_id "world/effect-record/v1") for EVERY decision. The pair
+-- (allowed, failed) identifies the three legal arms: (false, false) denied,
+-- (true, false) succeeded, and (true, true) failed; (false, true) is illegal.
+-- resultRef is the content address of the handler's result bytes for success,
+-- and the zero ref for denials and failures (no result exists).
 -- budgetBefore/budgetAfter make the session's budget accounting replayable
 -- from the records alone.
 export type EffectRecord = {
@@ -1172,33 +1178,61 @@ export type EffectRecord = {
   budgetBefore: int,
   budgetAfter: int,
   allowed: bool,
+  failed: bool,
   denial: string,
   requestRef: HashRef,
   resultRef: HashRef
 }
 
--- Record consistency law: an allowed record debits exactly cost and carries
--- no denial label; a denied record leaves the budget untouched.
+-- Record consistency law: an allowed record debits exactly cost whether or
+-- not the handler failed; a denied record leaves the budget untouched. Only
+-- a success carries a result ref, and only a denial carries a denial label.
 export func recordConsistent(rec: EffectRecord) -> bool ! {}
-ensures { result == ((rec.allowed && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.denial == "")
-  || ((not rec.allowed) && rec.budgetAfter == rec.budgetBefore)) }
+ensures { result == ((rec.allowed && (not rec.failed) && rec.denial == "" && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.resultRef.digest != "")
+    || (rec.allowed && rec.failed && rec.denial == "" && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.resultRef.digest == "")
+    || ((not rec.allowed) && (not rec.failed) && rec.denial != "" && rec.budgetAfter == rec.budgetBefore && rec.resultRef.digest == "")) }
 tests [
   (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 3,
-      allowed: true, denial: "",
+      allowed: true, failed: false, denial: "",
       requestRef: { algo: "sha256", digest: "aa" },
       resultRef: { algo: "sha256", digest: "bb" } }), true),
   (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 5,
-      allowed: false, denial: "budget",
+      allowed: true, failed: false, denial: "",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "bb" } }), false),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 3,
+      allowed: true, failed: false, denial: "",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "" } }), false),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 3,
+      allowed: true, failed: true, denial: "",
       requestRef: { algo: "sha256", digest: "aa" },
       resultRef: { algo: "sha256", digest: "" } }), true),
-  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 4,
-      allowed: true, denial: "",
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 5,
+      allowed: true, failed: true, denial: "",
       requestRef: { algo: "sha256", digest: "aa" },
-      resultRef: { algo: "sha256", digest: "bb" } }), false)
+      resultRef: { algo: "sha256", digest: "" } }), false),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 3,
+      allowed: true, failed: true, denial: "",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "bb" } }), false),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 5,
+      allowed: false, failed: false, denial: "budget",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "" } }), true),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 3,
+      allowed: false, failed: false, denial: "budget",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "" } }), false),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 5,
+      allowed: false, failed: true, denial: "budget",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "" } }), false)
 ]
 {
-  (rec.allowed && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.denial == "")
-    || ((not rec.allowed) && rec.budgetAfter == rec.budgetBefore)
+  (rec.allowed && (not rec.failed) && rec.denial == "" && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.resultRef.digest != "")
+    || (rec.allowed && rec.failed && rec.denial == "" && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.resultRef.digest == "")
+    || ((not rec.allowed) && (not rec.failed) && rec.denial != "" && rec.budgetAfter == rec.budgetBefore && rec.resultRef.digest == "")
 }
 
 -- Canonical text form of a BrokerDecision (S1: every canonical text form has

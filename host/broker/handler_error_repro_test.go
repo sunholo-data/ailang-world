@@ -4,66 +4,80 @@ import (
 	"context"
 	"errors"
 	"testing"
+
+	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/store"
 )
 
-// CF-I-2 — a COMMITTED REPRODUCTION of a known, unresolved gap, following the
-// `host/store/durability_repro_test.go` precedent: it asserts the CURRENT
-// behaviour on purpose, so the gap is CI-enforced rather than a note in a log,
-// and so whoever closes it must deliberately rewrite this file.
-//
-// THE GAP. Decision 3 freezes a pipeline with exactly two arms — denied and
-// allowed. There is no HANDLER-ERROR arm. When a handler fails, the ledger has
-// already been debited (broker.go debits before dispatch) and NO record is
-// written, so:
-//
-//   - Decision 3's "the ledger is reconstructible ... from the record stream
-//     alone" is FALSE on this path: the ledger says 2, the records say 5.
-//   - A failed effect is invisible to audit and to replay, while a merely
-//     DENIED effect is fully recorded — the weaker outcome is better recorded
-//     than the stronger one.
-//   - The handler may have partially executed before failing (bytes written,
-//     tokens spent, a git object created), so this is not merely an accounting
-//     nit.
-//
-// This is NOT the M3.D crash window (process death, blocked on ratification).
-// It is an ordinary in-process error path and M3.D's question does not cover it.
-//
-// WHY IT IS NOT FIXED HERE. The two candidate fixes have opposite semantics —
-// (a) roll the debit back, which refunds an effect that may have spent real
-// money; (b) keep the debit and write a failure record, which adds a third arm
-// to a frozen Decision. Choosing is a design call, not a sprint fix, so it is
-// recorded rather than force-applied.
-type cfi2FailingHandler struct{ calls int }
+// CF-J-2 guards the attended, ratified third-arm law (charter c26b27d): an
+// ordinary in-process handler error writes exactly one failure record before
+// returning, and its debit stands. This does not close the dispatch→record
+// crash window; process death in that interval remains outside M3.B0.
+type cfj2FailingHandler struct{ calls int }
 
-func (h *cfi2FailingHandler) Execute(ctx context.Context, req EffectRequest, payload []byte) ([]byte, error) {
+func (h *cfj2FailingHandler) Execute(ctx context.Context, req EffectRequest, payload []byte) ([]byte, error) {
 	h.calls++
 	return nil, errors.New("handler failed after partial execution")
 }
 
-func TestCFI2HandlerErrorDebitsLedgerAndWritesNoRecord(t *testing.T) {
+type cfj2RecordingStore struct {
+	base    *store.Store
+	records []store.Object
+}
+
+func (s *cfj2RecordingStore) PutObject(obj store.Object) error {
+	if err := s.base.PutObject(obj); err != nil {
+		return err
+	}
+	if obj.SemanticID == EffectRecordV1 {
+		s.records = append(s.records, obj)
+	}
+	return nil
+}
+
+func (s *cfj2RecordingStore) GetObject(ref hashref.HashRef) (store.Object, bool, error) {
+	return s.base.GetObject(ref)
+}
+
+func TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord(t *testing.T) {
 	st := openTestStore(t)
-	handler := &cfi2FailingHandler{}
-	s := NewSession(st,
+	recording := &cfj2RecordingStore{base: st}
+	handler := &cfj2FailingHandler{}
+	s := newSession(recording,
 		[]Capability{{Effect: "FS.Write", Scope: "/p", ExpiresAt: 100, Budget: 5}},
-		Registry{"FS.Write": handler})
+		Registry{"FS.Write": handler}, Live, nil)
 
 	before := s.grants[0].Budget
 	_, ref, err := s.Invoke(context.Background(),
 		EffectRequest{Effect: "FS.Write", Scope: "/p", Cost: 3, Now: 1}, []byte("x"))
 
-	if err == nil {
-		t.Fatal("want a handler error, got nil")
+	var failed *EffectFailedError
+	if !errors.As(err, &failed) {
+		t.Fatalf("Invoke error = %v, want *EffectFailedError", err)
 	}
 	if handler.calls != 1 {
 		t.Fatalf("handler dispatched %d times, want exactly 1", handler.calls)
 	}
-
-	// CURRENT behaviour, asserted so a change is visible. When CF-I-2 is
-	// resolved, EVERY assertion below is expected to fail and be rewritten.
-	if got, want := s.grants[0].Budget, before-3; got != want {
-		t.Fatalf("ledger budget = %d, want %d (the debit currently survives the error)", got, want)
+	if failed.Unwrap() == nil {
+		t.Fatal("live failure must unwrap the handler error")
 	}
-	if !ref.IsZero() {
-		t.Fatalf("record ref = %s, want zero (no record is currently written on handler error)", ref.String())
+	if ref.IsZero() || failed.RecordRef != ref {
+		t.Fatalf("record refs = %s and %s, want same non-zero ref", ref, failed.RecordRef)
+	}
+
+	// The debit stands by ratification even if the handler partially executed.
+	if got, want := s.grants[0].Budget, before-3; got != want {
+		t.Fatalf("ledger budget = %d, want %d", got, want)
+	}
+	if got := len(recording.records); got != 1 {
+		t.Fatalf("failure record count = %d, want exactly 1", got)
+	}
+	rec, err := DecodeRecord(recording.records[0].Payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !rec.Allowed || !rec.Failed || !rec.ResultRef.IsZero() || rec.Denial != "" ||
+		rec.BudgetAfter != rec.BudgetBefore-rec.Cost || !RecordConsistent(rec) {
+		t.Fatalf("failure record = %#v", rec)
 	}
 }

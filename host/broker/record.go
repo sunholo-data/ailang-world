@@ -22,6 +22,7 @@ type EffectRecord struct {
 	BudgetBefore int64
 	BudgetAfter  int64
 	Allowed      bool
+	Failed       bool
 	Denial       string
 	RequestRef   hashref.HashRef
 	ResultRef    hashref.HashRef
@@ -34,6 +35,7 @@ type recordWire struct {
 	BudgetBefore int64  `json:"budgetBefore"`
 	BudgetAfter  int64  `json:"budgetAfter"`
 	Allowed      bool   `json:"allowed"`
+	Failed       bool   `json:"failed"`
 	Denial       string `json:"denial"`
 	RequestRef   string `json:"requestRef"`
 	ResultRef    string `json:"resultRef"`
@@ -43,7 +45,7 @@ type recordWire struct {
 func EncodeRecord(rec EffectRecord) []byte {
 	payload, err := json.Marshal(recordWire{
 		rec.Effect, rec.Scope, rec.Cost, rec.BudgetBefore, rec.BudgetAfter,
-		rec.Allowed, rec.Denial, rec.RequestRef.String(), rec.ResultRef.String(),
+		rec.Allowed, rec.Failed, rec.Denial, rec.RequestRef.String(), rec.ResultRef.String(),
 	})
 	if err != nil {
 		panic("broker: fixed effect record cannot fail JSON encoding: " + err.Error())
@@ -72,7 +74,7 @@ func DecodeRecord(payload []byte) (EffectRecord, error) {
 	}
 	return EffectRecord{
 		wire.Effect, wire.Scope, wire.Cost, wire.BudgetBefore, wire.BudgetAfter,
-		wire.Allowed, wire.Denial, requestRef, resultRef,
+		wire.Allowed, wire.Failed, wire.Denial, requestRef, resultRef,
 	}, nil
 }
 
@@ -84,10 +86,21 @@ func parseRequiredRef(field, text string) (hashref.HashRef, error) {
 	return ref, nil
 }
 
-// RecordConsistent mirrors the sketch's recordConsistent law.
+// RecordConsistent mirrors design_docs/sketches/effectbroker.ail. The arm table
+// is (allowed, failed): denied=(false,false), success=(true,false), and
+// failed=(true,true); (false,true) is illegal. The sketch's
+// rec.resultRef.digest == "" is equivalent to ResultRef.IsZero() and to
+// "resultRef":"" on the wire: DecodeRecord makes a zero wire value the full Go
+// zero ref, while non-empty wire refs must parse and therefore cannot be half-zero.
 func RecordConsistent(rec EffectRecord) bool {
-	return rec.Allowed && rec.BudgetAfter == rec.BudgetBefore-rec.Cost && rec.Denial == "" ||
-		!rec.Allowed && rec.BudgetAfter == rec.BudgetBefore
+	switch {
+	case rec.Allowed && !rec.Failed:
+		return rec.Denial == "" && rec.BudgetAfter == rec.BudgetBefore-rec.Cost && !rec.ResultRef.IsZero()
+	case rec.Allowed && rec.Failed:
+		return rec.Denial == "" && rec.BudgetAfter == rec.BudgetBefore-rec.Cost && rec.ResultRef.IsZero()
+	default: // !Allowed
+		return !rec.Failed && rec.Denial != "" && rec.BudgetAfter == rec.BudgetBefore && rec.ResultRef.IsZero()
+	}
 }
 
 func recordObject(rec EffectRecord) store.Object {

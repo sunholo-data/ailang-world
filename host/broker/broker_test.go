@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
@@ -170,7 +171,7 @@ func TestRecordGoldenBytes(t *testing.T) {
 		RequestRef: hashref.SumSHA256([]byte("request")),
 		ResultRef:  hashref.SumSHA256([]byte("result")),
 	}
-	const want = `{"effect":"FS.Read","scope":"/project/a","cost":2,"budgetBefore":5,"budgetAfter":3,"allowed":true,"denial":"","requestRef":"sha256:1f58b9145b24d108d7ac38887338b3ea3229833b9c1e418250343f907bfd1047","resultRef":"sha256:f6a214f7a5fcda0c2cee9660b7fc29f5649e3c68aad48e20e950137c98913a68"}`
+	const want = `{"effect":"FS.Read","scope":"/project/a","cost":2,"budgetBefore":5,"budgetAfter":3,"allowed":true,"failed":false,"denial":"","requestRef":"sha256:1f58b9145b24d108d7ac38887338b3ea3229833b9c1e418250343f907bfd1047","resultRef":"sha256:f6a214f7a5fcda0c2cee9660b7fc29f5649e3c68aad48e20e950137c98913a68"}`
 	if got := string(EncodeRecord(rec)); got != want {
 		t.Fatalf("golden bytes differ:\ngot  %s\nwant %s", got, want)
 	}
@@ -181,16 +182,40 @@ func TestRecordGoldenBytes(t *testing.T) {
 	if roundTrip != rec {
 		t.Fatalf("round trip = %#v, want %#v", roundTrip, rec)
 	}
+
+	failed := EffectRecord{
+		Effect: "FS.Read", Scope: "/project/a", Cost: 2,
+		BudgetBefore: 5, BudgetAfter: 3, Allowed: true, Failed: true,
+		RequestRef: hashref.SumSHA256([]byte("request")),
+	}
+	const wantFailed = `{"effect":"FS.Read","scope":"/project/a","cost":2,"budgetBefore":5,"budgetAfter":3,"allowed":true,"failed":true,"denial":"","requestRef":"sha256:1f58b9145b24d108d7ac38887338b3ea3229833b9c1e418250343f907bfd1047","resultRef":""}`
+	if got := string(EncodeRecord(failed)); got != wantFailed {
+		t.Fatalf("failed golden bytes differ:\ngot  %s\nwant %s", got, wantFailed)
+	}
+	failedRoundTrip, err := DecodeRecord([]byte(wantFailed))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if failedRoundTrip != failed {
+		t.Fatalf("failed round trip = %#v, want %#v", failedRoundTrip, failed)
+	}
 }
 
 func TestRecordConsistentAllSketchArms(t *testing.T) {
+	resultRef := hashref.SumSHA256([]byte("result"))
 	cases := []struct {
 		rec  EffectRecord
 		want bool
 	}{
-		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Allowed: true}, true},
 		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 5, Denial: "budget"}, true},
-		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 4, Allowed: true}, false},
+		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Denial: "budget"}, false},
+		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 5, Failed: true, Denial: "budget"}, false},
+		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Allowed: true, ResultRef: resultRef}, true},
+		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 5, Allowed: true, ResultRef: resultRef}, false},
+		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Allowed: true}, false},
+		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Allowed: true, Failed: true}, true},
+		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 5, Allowed: true, Failed: true}, false},
+		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Allowed: true, Failed: true, ResultRef: resultRef}, false},
 	}
 	for i, tc := range cases {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
@@ -198,6 +223,146 @@ func TestRecordConsistentAllSketchArms(t *testing.T) {
 				t.Fatalf("RecordConsistent = %v, want %v", got, tc.want)
 			}
 		})
+	}
+}
+
+func decodeStoredRecord(t *testing.T, s *store.Store, ref hashref.HashRef) EffectRecord {
+	t.Helper()
+	obj, ok, err := s.GetObject(ref)
+	if err != nil || !ok {
+		t.Fatalf("GetObject(%s) = ok %v, err %v", ref, ok, err)
+	}
+	rec, err := DecodeRecord(obj.Payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return rec
+}
+
+func TestThreeArmsDistinguishableFromBytesAlone(t *testing.T) {
+	s := openTestStore(t)
+	invoke := func(scope string, handler Handler) hashref.HashRef {
+		t.Helper()
+		session := NewSession(
+			s,
+			[]Capability{{Effect: "probe", Scope: "/ok", ExpiresAt: 10, Budget: 5}},
+			Registry{"probe": handler},
+		)
+		_, ref, _ := session.Invoke(
+			context.Background(),
+			EffectRequest{Effect: "probe", Scope: scope, Cost: 2, Now: 1},
+			[]byte("input"),
+		)
+		if ref.IsZero() {
+			t.Fatalf("Invoke scope %q returned zero record ref", scope)
+		}
+		return ref
+	}
+
+	deniedRef := invoke("/denied", ProbeHandler{})
+	successRef := invoke("/ok", ProbeHandler{})
+	failedRef := invoke("/ok", HandlerFunc(func(context.Context, EffectRequest, []byte) ([]byte, error) {
+		return nil, errors.New("partial failure")
+	}))
+	records := []EffectRecord{
+		decodeStoredRecord(t, s, deniedRef),
+		decodeStoredRecord(t, s, successRef),
+		decodeStoredRecord(t, s, failedRef),
+	}
+	pairs := [][2]bool{
+		{records[0].Allowed, records[0].Failed},
+		{records[1].Allowed, records[1].Failed},
+		{records[2].Allowed, records[2].Failed},
+	}
+	want := [][2]bool{{false, false}, {true, false}, {true, true}}
+	if !reflect.DeepEqual(pairs, want) {
+		t.Fatalf("(allowed, failed) pairs decoded from record bytes = %v, want %v", pairs, want)
+	}
+}
+
+func TestLedgerReconstructibleFromRecordStreamOnFailure(t *testing.T) {
+	s := openTestStore(t)
+	calls := 0
+	session := NewSession(
+		s,
+		[]Capability{{Effect: "probe", Scope: "/ok", ExpiresAt: 10, Budget: 5}},
+		Registry{"probe": HandlerFunc(func(_ context.Context, _ EffectRequest, _ []byte) ([]byte, error) {
+			calls++
+			if calls == 2 {
+				return nil, errors.New("failed after spending")
+			}
+			return []byte("ok"), nil
+		})},
+	)
+	_, successRef, err := session.Invoke(
+		context.Background(),
+		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 2, Now: 1},
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, failedRef, err := session.Invoke(
+		context.Background(),
+		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 3, Now: 1},
+		nil,
+	)
+	var failed *EffectFailedError
+	if !errors.As(err, &failed) {
+		t.Fatalf("second Invoke error = %v, want *EffectFailedError", err)
+	}
+
+	reconstructed := int64(5)
+	for _, ref := range []hashref.HashRef{successRef, failedRef} {
+		rec := decodeStoredRecord(t, s, ref)
+		if rec.Allowed {
+			reconstructed -= rec.Cost
+		}
+	}
+	if got := session.grants[0].Budget; reconstructed != got || got != 0 {
+		t.Fatalf("record-stream budget = %d, live budget = %d, want both 0", reconstructed, got)
+	}
+}
+
+func TestReplayOfFailedRecordReproducesTheFailure(t *testing.T) {
+	s := openTestStore(t)
+	grants := []Capability{{Effect: "probe", Scope: "/ok", ExpiresAt: 10, Budget: 5}}
+	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 2, Now: 1}
+	live := NewSession(s, grants, Registry{"probe": HandlerFunc(
+		func(context.Context, EffectRequest, []byte) ([]byte, error) {
+			return nil, errors.New("platform-specific handler detail")
+		},
+	)})
+	_, recordRef, liveErr := live.Invoke(context.Background(), req, nil)
+	var liveFailed *EffectFailedError
+	if !errors.As(liveErr, &liveFailed) {
+		t.Fatalf("live error = %v, want *EffectFailedError", liveErr)
+	}
+
+	replayDispatches := 0
+	replay := NewReplaySession(
+		s,
+		grants,
+		Registry{"probe": ProbeHandler{Dispatches: &replayDispatches}},
+		[]hashref.HashRef{recordRef},
+	)
+	result, replayRef, replayErr := replay.Invoke(context.Background(), req, nil)
+	var replayFailed *EffectFailedError
+	if result != nil || replayRef != recordRef {
+		t.Errorf("replay = result %q, ref %s; want nil, %s", result, replayRef, recordRef)
+	}
+	if replayDispatches != 0 {
+		t.Errorf("replay dispatches = %d, want 0", replayDispatches)
+	}
+	if !errors.As(replayErr, &replayFailed) {
+		t.Fatalf("replay error = %v, want *EffectFailedError (dispatches stayed %d)", replayErr, replayDispatches)
+	}
+	if liveFailed.Effect != replayFailed.Effect || liveFailed.Scope != replayFailed.Scope ||
+		liveFailed.RecordRef != replayFailed.RecordRef {
+		t.Fatalf("live failure = %#v, replay failure = %#v", liveFailed, replayFailed)
+	}
+	if replayFailed.Unwrap() != nil {
+		t.Fatalf("replay failure unwrap = %v, want nil", replayFailed.Unwrap())
 	}
 }
 
