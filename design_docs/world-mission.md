@@ -344,6 +344,16 @@ What this mission touches or overlaps, and the drawn boundaries:
   each, and adopt on the measurement — then correct the prescription everywhere it was restated
   (here: 25→**30** / 32→**37**, doc + charter + plan JSON + new premise row V28). The tell that you
   are at risk: you are about to type a number you did not measure.
+- **Allocate a carry-forward ID by reading the PREVIOUS entry's carry-forward block, not the
+  open-CF list** (added iter-31). The planner and the judge independently proposed **CF-I-1** for
+  the stale `effectAllowed` comment; iteration 30 had already used and *closed* CF-I-1 for a
+  different finding, so it was absent from the open list precisely *because* it was resolved. In an
+  append-only log two findings sharing an ID is unrecoverable in the same way a bare COUNT is (the
+  iter-19 rule) — worse, because the collision reads as continuity. **Rule**: before allocating,
+  read the last entry's full carry-forward paragraph *including its CLOSED lines*, take the next
+  unused **letter** for the iteration, and never reuse a letter a prior iteration retired. A
+  sub-agent's proposed ID is a suggestion; the controller owns the namespace. This iteration is
+  CF-**J**-*.
 - **Every acceptance check names exactly ONE owning milestone, and that milestone must hold the
   file that can fail it** (added iter-29). Milestone acceptance lists written as RANGES silently
   claim checks nobody can discharge. SD.B's list read `AC5–AC8`, which handed it **AC6** — whose
