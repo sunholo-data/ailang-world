@@ -177,6 +177,60 @@ func TestIntegrityWarningsFollowTheAnnouncementAndServeNormally(t *testing.T) {
 	}
 }
 
+// TestIntegrityWarningsNeverBlockStartupForAOneLineReader closes CF-F-3.
+//
+// The previous guard only suppressed output for a CLEAN, COMPLETE sweep, which
+// made startup safe for a healthy store and left it wedgeable for exactly the
+// stores the sweep exists to serve: one with a hole, or one whose scan was
+// truncated by the row/time budget. Both write lines, and every one-line
+// io.Pipe consumer in this repo (TestRunAnnouncesResolvedListenAddress, the CLI
+// end-to-end test) stops reading after the announcement — so the write blocked
+// Run before Serve() and the announced socket never served.
+//
+// This drives Run against the POISONED fixture with a consumer that reads the
+// announcement and then deliberately never reads again, and requires the daemon
+// to serve and shut down anyway. A startup diagnostic must never be able to
+// wedge startup, whatever the store contains.
+func TestIntegrityWarningsNeverBlockStartupForAOneLineReader(t *testing.T) {
+	cfg := Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0}
+	pr, pw := io.Pipe()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	ran := make(chan error, 1)
+	go func() {
+		err := Run(ctx, cfg, pw)
+		_ = pw.Close()
+		ran <- err
+	}()
+
+	// Read exactly ONE line, then stop reading for the rest of the run.
+	line, err := bufio.NewReader(pr).ReadString('\n')
+	if err != nil {
+		t.Fatalf("read listen announcement: %v", err)
+	}
+	if !strings.HasPrefix(line, ListenAnnouncePrefix) {
+		t.Fatalf("announcement = %q, want prefix %q", line, ListenAnnouncePrefix)
+	}
+	url := strings.TrimSpace(strings.TrimPrefix(line, ListenAnnouncePrefix))
+
+	if code, body := getBody(t, url+"/v1/health"); code != http.StatusOK {
+		t.Fatalf("GET /v1/health = %d (body %q), want 200 — pending integrity warnings must not block Serve", code, body)
+	}
+
+	cancel()
+	select {
+	case err := <-ran:
+		if err != nil {
+			t.Fatalf("Run returned %v, want a clean bounded shutdown", err)
+		}
+	case <-time.After(shutdownTimeout + 5*time.Second):
+		t.Fatal("Run did not return — an unread integrity warning wedged shutdown")
+	}
+	// Draining afterwards is what unparks the writer goroutine.
+	_ = pr.Close()
+}
+
 func TestIntegrityStartupSweepReportsTruncation(t *testing.T) {
 	d, err := New(Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0})
 	if err != nil {

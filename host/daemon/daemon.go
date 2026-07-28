@@ -614,25 +614,35 @@ func Run(ctx context.Context, cfg Config, announce io.Writer) error {
 	// scan that could not finish. A clean, complete sweep says nothing, so a healthy
 	// store's announce stream stays byte-identical to the pre-sweep contract.
 	//
-	// This is load-bearing, not a style choice. `announce` is frequently an
-	// io.Pipe (daemon_test.go:585, and the CLI/main subprocess tests), which is
-	// SYNCHRONOUS and unbuffered: every Write blocks until a reader consumes it.
-	// Those callers read exactly ONE line — the listen announcement — and then stop
-	// reading. Writing any further line here therefore blocks Run forever, so it
-	// never reaches Serve() below and the socket it just announced never serves.
-	// Emitting only warnings keeps the healthy path write-free and non-blocking;
-	// TestRunAnnouncesResolvedListenAddress is the standing guard (it deadlocked,
-	// and timed out on GET /v1/health, when this loop ran unconditionally).
-	//
 	// It is NOT a silent skip: holes and truncation — the two states an operator
 	// must act on — are still reported in full, and a truncated scan still says so
 	// explicitly rather than reading as a clean bill of health.
+	//
+	// The write happens on its own goroutine, and that is load-bearing rather than
+	// stylistic. `announce` is frequently an io.Pipe (daemon_test.go:585 and the
+	// CLI/main subprocess tests): SYNCHRONOUS and unbuffered, so every Write blocks
+	// until a reader consumes it, and those callers read exactly ONE line — the
+	// listen announcement — then stop reading. A synchronous write here therefore
+	// blocked Run before it reached Serve() below, so the socket it had just
+	// announced never served (observed as GET /v1/health timing out).
+	//
+	// Emitting only warnings fixed that for a healthy store, but NOT for a store
+	// that genuinely has something to say: with a hole present, or a sweep
+	// truncated by the row/time budget, the same one-line reader deadlocked again.
+	// Startup diagnostics must never be able to wedge startup, whatever the store
+	// contains — so Run never waits on the consumer. Ordering is still guaranteed:
+	// the listen line is written synchronously above, before this goroutine starts.
+	// A consumer that stops reading simply leaves the goroutine parked until the
+	// stream is closed; it cannot delay Serve, the health surface, or shutdown.
 	if report := d.IntegrityReport(); !report.Complete || len(report.Holes) > 0 {
-		for _, line := range report.Lines() {
-			if _, err := fmt.Fprintln(announce, line); err != nil {
-				return &StartupError{Stage: StageListen, Detail: "cannot announce the integrity scan", Err: err}
+		lines := report.Lines()
+		go func() {
+			for _, line := range lines {
+				if _, err := fmt.Fprintln(announce, line); err != nil {
+					return // the consumer went away; a diagnostic must not outlive it
+				}
 			}
-		}
+		}()
 	}
 
 	served := make(chan error, 1)
