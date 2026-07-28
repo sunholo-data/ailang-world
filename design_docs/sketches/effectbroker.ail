@@ -1,0 +1,213 @@
+module sketches/effectbroker
+
+import sketches/logepoch (HashRef)
+
+-- Compiler-checked M3 sketch for w-effect-broker-m3 (clause-3): the typed
+-- capability/budget LAW of the effect broker. The broker itself is a Go host
+-- package (host/broker); this sketch freezes the semantic shape the Go
+-- implementation mirrors, exactly as worlddapi.ail froze the REST surface.
+-- Every effect execution is decided by these predicates; the Go boundary
+-- cites them and a unit test pins the mirror so the two cannot drift.
+
+-- A capability grant (mirrors world/types.Capability field-for-field: the
+-- kernel type is the authority; this sketch restates it so the broker law is
+-- checkable standalone). scope is EXACT-MATCH in M3; pattern scoping is a
+-- later, separately-ratified widening.
+export type Capability = {
+  effect: string,
+  scope: string,
+  expiresAt: int,
+  budget: int
+}
+
+-- A single effect request as the broker receives it: the effect name, the
+-- exact scope acted on, the declared cost, and the broker clock (unix seconds).
+export type EffectRequest = {
+  effect: string,
+  scope: string,
+  cost: int,
+  now: int
+}
+
+-- The broker's decision ADT. Allowed carries the remaining budget after the
+-- debit. The denial arms are DISJOINT and ORDERED: name, scope, expiry,
+-- budget — the first failing check names the denial, so a denial is always
+-- actionable (A11 structured failure).
+export type BrokerDecision
+  = Allowed(int)
+  | DeniedEffectName
+  | DeniedScope
+  | DeniedExpired
+  | DeniedBudget
+
+-- Law 1: the capability names the requested effect.
+export func effectNameMatches(c: Capability, effect: string) -> bool ! {}
+ensures { result == (c.effect == effect) }
+tests [
+  (({ effect: "FS.Read", scope: "/p", expiresAt: 10, budget: 1 }, "FS.Read"), true),
+  (({ effect: "FS.Read", scope: "/p", expiresAt: 10, budget: 1 }, "FS.Write"), false)
+]
+{
+  c.effect == effect
+}
+
+-- Law 2: the capability's scope equals the requested scope (M3: exact match).
+export func scopeMatches(c: Capability, scope: string) -> bool ! {}
+ensures { result == (c.scope == scope) }
+tests [
+  (({ effect: "e", scope: "/project/src", expiresAt: 10, budget: 1 }, "/project/src"), true),
+  (({ effect: "e", scope: "/project/src", expiresAt: 10, budget: 1 }, "/project"), false)
+]
+{
+  c.scope == scope
+}
+
+-- Law 3: the capability is live at the broker clock. A non-negative clock
+-- strictly before expiresAt is live; expiry is exclusive.
+export func capabilityLive(c: Capability, now: int) -> bool ! {}
+ensures { result == (now >= 0 && now < c.expiresAt) }
+tests [
+  (({ effect: "e", scope: "s", expiresAt: 10, budget: 1 }, 9), true),
+  (({ effect: "e", scope: "s", expiresAt: 10, budget: 1 }, 10), false),
+  (({ effect: "e", scope: "s", expiresAt: 10, budget: 1 }, -1), false)
+]
+{
+  now >= 0 && now < c.expiresAt
+}
+
+-- Law 4: a declared cost fits a remaining budget. Zero-cost effects are
+-- legal; negative costs and negative budgets never authorize.
+export func withinEffectBudget(budget: int, cost: int) -> bool ! {}
+ensures { result == (cost >= 0 && budget >= 0 && cost <= budget) }
+tests [
+  ((5, 5), true),
+  ((5, 0), true),
+  ((5, 6), false),
+  ((-1, 0), false),
+  ((5, -1), false)
+]
+{
+  cost >= 0 && budget >= 0 && cost <= budget
+}
+
+-- Law 5: the debit arithmetic, TOTAL (no requires: a requires-guarded
+-- int-param contract trips a v0.30.0 property-test defect where the derived
+-- ensures property ignores requires -- V-row in the doc, routed upstream).
+-- The second ensures conjunct is the total-theorem form of the safety fact:
+-- the remaining budget is non-negative and bounded EXACTLY when Law 4 held.
+export func debit(budget: int, cost: int) -> int ! {}
+ensures { result == budget - cost
+  && ((budget >= 0 && cost >= 0 && cost <= budget) == (result >= 0 && result <= budget)) }
+tests [
+  ((5, 2), 3),
+  ((5, 5), 0),
+  ((5, 0), 5)
+]
+{
+  budget - cost
+}
+
+-- The composed authorization predicate: ALL four laws hold. The body is
+-- INLINED to field comparisons rather than calling Laws 1-4: a contract
+-- calling a callee whose params mix two record sorts Z3-errors on v0.30.0
+-- ("select requires 1 arguments...unknown constant effectNameMatches") --
+-- the isValidNextWorld/sameRef inlining pattern applies (V-row in the doc).
+-- The exact ensures restates all four laws, so drift is impossible by proof.
+export func effectAllowed(c: Capability, r: EffectRequest) -> bool ! {}
+ensures { result == (c.effect == r.effect && c.scope == r.scope
+  && r.now >= 0 && r.now < c.expiresAt
+  && r.cost >= 0 && c.budget >= 0 && r.cost <= c.budget) }
+tests [
+  (({ effect: "FS.Read", scope: "/p", expiresAt: 10, budget: 5 },
+    { effect: "FS.Read", scope: "/p", cost: 2, now: 3 }), true),
+  (({ effect: "FS.Read", scope: "/p", expiresAt: 10, budget: 5 },
+    { effect: "FS.Read", scope: "/p", cost: 2, now: 10 }), false)
+]
+{
+  c.effect == r.effect && c.scope == r.scope
+    && r.now >= 0 && r.now < c.expiresAt
+    && r.cost >= 0 && c.budget >= 0 && r.cost <= c.budget
+}
+
+-- The decision function. Returns an ADT, so (per the documented v0.30.0
+-- limitation: ADT-bearing sorts Z3-error as unknown sort) this is TESTS-ONLY;
+-- its arms call the SAME proven predicates so policy cannot drift between the
+-- proof layer and the decision layer (the contracts.ail anti-drift pattern).
+export func decide(c: Capability, r: EffectRequest) -> BrokerDecision
+{
+  if not effectNameMatches(c, r.effect) then DeniedEffectName
+  else if not scopeMatches(c, r.scope) then DeniedScope
+  else if not capabilityLive(c, r.now) then DeniedExpired
+  else if not withinEffectBudget(c.budget, r.cost) then DeniedBudget
+  else Allowed(debit(c.budget, r.cost))
+}
+
+-- The effect-record shape the broker persists as a content-addressed store
+-- object (semantic_id "world/effect-record/v1") for EVERY decision — allowed
+-- AND denied. resultRef is the content address of the handler's result bytes
+-- for allowed effects, and the zero ref for denials (no result exists).
+-- budgetBefore/budgetAfter make the session's budget accounting replayable
+-- from the records alone.
+export type EffectRecord = {
+  effect: string,
+  scope: string,
+  cost: int,
+  budgetBefore: int,
+  budgetAfter: int,
+  allowed: bool,
+  denial: string,
+  requestRef: HashRef,
+  resultRef: HashRef
+}
+
+-- Record consistency law: an allowed record debits exactly cost and carries
+-- no denial label; a denied record leaves the budget untouched.
+export func recordConsistent(rec: EffectRecord) -> bool ! {}
+ensures { result == ((rec.allowed && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.denial == "")
+  || ((not rec.allowed) && rec.budgetAfter == rec.budgetBefore)) }
+tests [
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 3,
+      allowed: true, denial: "",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "bb" } }), true),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 5,
+      allowed: false, denial: "budget",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "" } }), true),
+  (({ effect: "e", scope: "s", cost: 2, budgetBefore: 5, budgetAfter: 4,
+      allowed: true, denial: "",
+      requestRef: { algo: "sha256", digest: "aa" },
+      resultRef: { algo: "sha256", digest: "bb" } }), false)
+]
+{
+  (rec.allowed && rec.budgetAfter == rec.budgetBefore - rec.cost && rec.denial == "")
+    || ((not rec.allowed) && rec.budgetAfter == rec.budgetBefore)
+}
+
+-- Canonical text form of a BrokerDecision (S1: every canonical text form has
+-- a machine check). Doubles as the checkable test surface for decide: tests[]
+-- on v0.30.0 cannot express ADT constructor expected values ("expected
+-- literal expression, got *ast.FuncCall" -- V-row in the doc, routed
+-- upstream), so the five decision arms are pinned through this projection.
+export func decideLabel(c: Capability, r: EffectRequest) -> string
+tests [
+  (({ effect: "FS.Read", scope: "/p", expiresAt: 10, budget: 5 },
+    { effect: "FS.Read", scope: "/p", cost: 2, now: 3 }), "allowed:3"),
+  (({ effect: "FS.Read", scope: "/p", expiresAt: 10, budget: 5 },
+    { effect: "Git.Commit", scope: "/p", cost: 2, now: 3 }), "denied:effect-name"),
+  (({ effect: "FS.Read", scope: "/p", expiresAt: 10, budget: 5 },
+    { effect: "FS.Read", scope: "/q", cost: 2, now: 3 }), "denied:scope"),
+  (({ effect: "FS.Read", scope: "/p", expiresAt: 10, budget: 5 },
+    { effect: "FS.Read", scope: "/p", cost: 2, now: 10 }), "denied:expired"),
+  (({ effect: "FS.Read", scope: "/p", expiresAt: 10, budget: 5 },
+    { effect: "FS.Read", scope: "/p", cost: 6, now: 3 }), "denied:budget")
+]
+{
+  match decide(c, r) {
+    Allowed(remaining) => "allowed:${show(remaining)}",
+    DeniedEffectName => "denied:effect-name",
+    DeniedScope => "denied:scope",
+    DeniedExpired => "denied:expired",
+    DeniedBudget => "denied:budget"
+  }
+}

@@ -1,0 +1,283 @@
+package broker
+
+import (
+	"bytes"
+	"context"
+	"errors"
+	"fmt"
+	"testing"
+
+	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/store"
+)
+
+func openTestStore(t *testing.T) *store.Store {
+	t.Helper()
+	s, err := store.Open(":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := s.Close(); err != nil {
+			t.Errorf("close store: %v", err)
+		}
+	})
+	return s
+}
+
+func echoRegistry(counter *int) Registry {
+	return Registry{"probe": HandlerFunc(func(
+		_ context.Context,
+		_ EffectRequest,
+		payload []byte,
+	) ([]byte, error) {
+		*counter++
+		return append([]byte("echo:"), payload...), nil
+	})}
+}
+
+func TestDeniedInvokeWritesOneRecord(t *testing.T) {
+	s := openTestStore(t)
+	count := 0
+	session := NewSession(s, []Capability{{"probe", "/ok", 10, 5}}, echoRegistry(&count))
+	req := EffectRequest{Effect: "probe", Scope: "/wrong", Cost: 2, Now: 1}
+	result, recordRef, err := session.Invoke(context.Background(), req, []byte("x"))
+	var denial *DenialError
+	if !errors.As(err, &denial) {
+		t.Fatalf("Invoke error = %v, want *DenialError", err)
+	}
+	if result != nil {
+		t.Fatalf("denied result = %q, want nil", result)
+	}
+	if recordRef.IsZero() || denial.RecordRef != recordRef {
+		t.Fatalf("record refs = %s and %s, want same non-zero ref", recordRef, denial.RecordRef)
+	}
+	if count != 0 {
+		t.Fatalf("handler dispatch count = %d, want 0", count)
+	}
+	obj, ok, err := s.GetObject(recordRef)
+	if err != nil || !ok {
+		t.Fatalf("GetObject = ok %v, err %v", ok, err)
+	}
+	rec, err := DecodeRecord(obj.Payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec.Allowed || rec.Denial != LabelDeniedScope || rec.BudgetAfter != rec.BudgetBefore ||
+		!rec.ResultRef.IsZero() || !RecordConsistent(rec) {
+		t.Fatalf("denial record = %#v", rec)
+	}
+}
+
+func TestAllowedInvokeWritesResultAndRecord(t *testing.T) {
+	s := openTestStore(t)
+	count := 0
+	session := NewSession(s, []Capability{{"probe", "/ok", 10, 5}}, echoRegistry(&count))
+	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 2, Now: 1}
+	result, recordRef, err := session.Invoke(context.Background(), req, []byte("x"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(result) != "echo:x" || count != 1 {
+		t.Fatalf("result %q, dispatches %d", result, count)
+	}
+	obj, ok, err := s.GetObject(recordRef)
+	if err != nil || !ok {
+		t.Fatalf("GetObject = ok %v, err %v", ok, err)
+	}
+	rec, err := DecodeRecord(obj.Payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !rec.Allowed || rec.BudgetBefore != 5 || rec.BudgetAfter != 3 ||
+		rec.ResultRef.IsZero() || !RecordConsistent(rec) {
+		t.Fatalf("allowed record = %#v", rec)
+	}
+	resultObj, ok, err := s.GetObject(rec.ResultRef)
+	if err != nil || !ok || !bytes.Equal(resultObj.Payload, result) {
+		t.Fatalf("result object = ok %v, payload %q, err %v", ok, resultObj.Payload, err)
+	}
+}
+
+func TestLedgerUsesRemainingBudget(t *testing.T) {
+	s := openTestStore(t)
+	count := 0
+	session := NewSession(s, []Capability{{"probe", "/ok", 10, 5}}, echoRegistry(&count))
+	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 3, Now: 1}
+	if _, _, err := session.Invoke(context.Background(), req, nil); err != nil {
+		t.Fatal(err)
+	}
+	_, ref, err := session.Invoke(context.Background(), req, nil)
+	var denial *DenialError
+	if !errors.As(err, &denial) || denial.Decision.Label != LabelDeniedBudget {
+		t.Fatalf("second Invoke error = %v, want denied:budget", err)
+	}
+	if count != 1 {
+		t.Fatalf("dispatch count = %d, want 1", count)
+	}
+	obj, ok, getErr := s.GetObject(ref)
+	if getErr != nil || !ok {
+		t.Fatalf("GetObject = ok %v, err %v", ok, getErr)
+	}
+	rec, err := DecodeRecord(obj.Payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec.BudgetBefore != 2 || rec.BudgetAfter != 2 {
+		t.Fatalf("denial budgets = %d -> %d, want 2 -> 2", rec.BudgetBefore, rec.BudgetAfter)
+	}
+}
+
+type failRecordStore struct {
+	base *store.Store
+}
+
+func (s *failRecordStore) PutObject(obj store.Object) error {
+	if obj.SemanticID == EffectRecordV1 {
+		return errors.New("injected record write failure")
+	}
+	return s.base.PutObject(obj)
+}
+
+func (s *failRecordStore) GetObject(ref hashref.HashRef) (store.Object, bool, error) {
+	return s.base.GetObject(ref)
+}
+
+func TestRecordFailureDeliversNoResult(t *testing.T) {
+	base := openTestStore(t)
+	count := 0
+	session := newSession(
+		&failRecordStore{base}, []Capability{{"probe", "/ok", 10, 5}},
+		echoRegistry(&count), Live, nil,
+	)
+	result, ref, err := session.Invoke(
+		context.Background(),
+		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 1},
+		[]byte("secret"),
+	)
+	if err == nil || result != nil || !ref.IsZero() {
+		t.Fatalf("Invoke = result %q, ref %s, err %v; want nil, zero, error", result, ref, err)
+	}
+	if count != 1 {
+		t.Fatalf("dispatch count = %d, want 1", count)
+	}
+}
+
+func TestRecordGoldenBytes(t *testing.T) {
+	rec := EffectRecord{
+		Effect: "FS.Read", Scope: "/project/a", Cost: 2,
+		BudgetBefore: 5, BudgetAfter: 3, Allowed: true,
+		RequestRef: hashref.SumSHA256([]byte("request")),
+		ResultRef:  hashref.SumSHA256([]byte("result")),
+	}
+	const want = `{"effect":"FS.Read","scope":"/project/a","cost":2,"budgetBefore":5,"budgetAfter":3,"allowed":true,"denial":"","requestRef":"sha256:1f58b9145b24d108d7ac38887338b3ea3229833b9c1e418250343f907bfd1047","resultRef":"sha256:f6a214f7a5fcda0c2cee9660b7fc29f5649e3c68aad48e20e950137c98913a68"}`
+	if got := string(EncodeRecord(rec)); got != want {
+		t.Fatalf("golden bytes differ:\ngot  %s\nwant %s", got, want)
+	}
+	roundTrip, err := DecodeRecord([]byte(want))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if roundTrip != rec {
+		t.Fatalf("round trip = %#v, want %#v", roundTrip, rec)
+	}
+}
+
+func TestRecordConsistentAllSketchArms(t *testing.T) {
+	cases := []struct {
+		rec  EffectRecord
+		want bool
+	}{
+		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 3, Allowed: true}, true},
+		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 5, Denial: "budget"}, true},
+		{EffectRecord{Cost: 2, BudgetBefore: 5, BudgetAfter: 4, Allowed: true}, false},
+	}
+	for i, tc := range cases {
+		t.Run(fmt.Sprint(i), func(t *testing.T) {
+			if got := RecordConsistent(tc.rec); got != tc.want {
+				t.Fatalf("RecordConsistent = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestReplayReturnsRecordedBytesWithoutDispatch(t *testing.T) {
+	s := openTestStore(t)
+	liveDispatches := 0
+	grants := []Capability{{"probe", "/ok", 10, 5}}
+	live := NewSession(s, grants, Registry{
+		"probe": ProbeHandler{Dispatches: &liveDispatches},
+	})
+	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 2, Now: 1}
+	want, recordRef, err := live.Invoke(context.Background(), req, []byte("input"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if liveDispatches != 1 {
+		t.Fatalf("live dispatches = %d, want 1", liveDispatches)
+	}
+
+	replayDispatches := 0
+	replay := NewReplaySession(s, grants, Registry{
+		"probe": ProbeHandler{Dispatches: &replayDispatches},
+	}, []hashref.HashRef{recordRef})
+	got, gotRef, err := replay.Invoke(context.Background(), req, []byte("ignored"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(got, want) || gotRef != recordRef {
+		t.Fatalf("replay = %q, %s; want %q, %s", got, gotRef, want, recordRef)
+	}
+	if replayDispatches != 0 {
+		t.Fatalf("replay dispatches = %d, want 0", replayDispatches)
+	}
+}
+
+func TestReplayGapNeverFallsBackToLive(t *testing.T) {
+	s := openTestStore(t)
+	dispatches := 0
+	missing := hashref.SumSHA256([]byte("missing-record"))
+	replay := NewReplaySession(
+		s,
+		[]Capability{{"probe", "/ok", 10, 5}},
+		Registry{"probe": ProbeHandler{Dispatches: &dispatches}},
+		[]hashref.HashRef{missing},
+	)
+	result, ref, err := replay.Invoke(
+		context.Background(),
+		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 1},
+		nil,
+	)
+	var gap *ReplayGapError
+	if !errors.As(err, &gap) || result != nil || !ref.IsZero() {
+		t.Errorf("Invoke = result %q, ref %s, err %v; want nil, zero, ReplayGapError", result, ref, err)
+	}
+	if dispatches != 0 {
+		t.Fatalf("replay fallback dispatched %d times", dispatches)
+	}
+}
+
+func TestReplayRejectsMismatchedRequest(t *testing.T) {
+	s := openTestStore(t)
+	dispatches := 0
+	grants := []Capability{{"probe", "/ok", 10, 5}}
+	live := NewSession(s, grants, Registry{"probe": ProbeHandler{Dispatches: &dispatches}})
+	_, recordRef, err := live.Invoke(
+		context.Background(),
+		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 1},
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	replay := NewReplaySession(s, grants, nil, []hashref.HashRef{recordRef})
+	_, _, err = replay.Invoke(
+		context.Background(),
+		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 2, Now: 1},
+		nil,
+	)
+	var gap *ReplayGapError
+	if !errors.As(err, &gap) {
+		t.Fatalf("mismatch error = %v, want ReplayGapError", err)
+	}
+}
