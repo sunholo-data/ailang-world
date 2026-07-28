@@ -63,7 +63,7 @@ clause depends on.
 - **P1 — the broker is a Go host package (`host/broker`), the capsule runner another
   (`host/capsule`); the LAW they enforce is frozen in a compiler-checked sketch.** This follows
   the exemplar exactly: `worlddapi.ail` froze the REST surface's semantic shape; `effectbroker.ail`
-  (Appendix A — already verified on the pinned binary: **7/7 contracts Z3-proven, 27/27 named
+  (Appendix A — already verified on the pinned binary: **7/7 contracts Z3-proven, 25/25 named
   tests pass**) freezes the capability/budget law. The Go implementation mirrors the sketch and a
   drift test pins the mirror. Promotion of the law into `world/` kernel modules is deliberately
   deferred (Decision 8) — it would touch the `verify_ail.sh` required-manifest, a gate change M3
@@ -89,7 +89,7 @@ clause depends on.
 - **P6 — the verify gates extend automatically, plus two bounded additions.** New Go packages
   are swept by `verify_go.sh`/CI with no gate change. The new sketch enters `verify_ail.sh`'s
   sweep automatically (verified: the required-identity manifest is keyed to `world/` modules
-  only; sketches carry empty required sets; the module count is dynamic — 9 → 10). The only gate
+  only; sketches carry empty required sets; the module count is dynamic — **10 → 11**, controller-measured iter-31; the doc's original "9 → 10" predates `storejournal.ail`). The only gate
   edits are two new benchmark names in `scripts/bench_worldd.sh`'s **hardcoded manifest** and
   their `bench/BASELINE.md` rows (M3.C).
 - **P7 — every wait and allocation is bounded (the D7 discipline, inherited).** Capsule
@@ -392,7 +392,7 @@ its own design doc + quorum, the sanctioned path.
   record bytes; allowlist test; Replay-mode zero-dispatch + gap error on the probe handler),
   `host/broker/allowlist_test.go` (~90 — `TestBrokerDependencyAllowlist`, daemon-test pattern
   over `./host/broker/...` + `./host/capsule/...`)
-- **acceptance_checks**: sketch green in the full `verify_ail.sh` sweep (10 modules; 4/4
+- **acceptance_checks**: sketch green in the full `verify_ail.sh` sweep (**11** modules; 4/4
   identities + 14 world/ tests unperturbed); Go/sketch drift test green; a denied effect
   produces a record with untouched budget and a structured denial; a second invoke past the
   ledger's remaining budget returns `denied:budget` where the static grant alone would allow
@@ -516,7 +516,7 @@ Estimated ~2,950 LOC. **Byte-unchanged**: `host/store/**` (incl. `schema.sql`), 
   name-keyed and generic, and this doc is the durable record of the second tenant.
 - **vs `verify_ail.sh`'s exact-totals gate.** Verified from the script: the required-identity
   manifest and required-test set are keyed to `world/` modules only; sketches carry empty
-  required sets; the module count is dynamic. The new sketch moves the sweep 9 → 10 modules
+  required sets; the module count is dynamic. The new sketch moves the sweep **10 → 11** modules (controller-measured iter-31)
   and CANNOT perturb the 4-identity / 14-test totals. (Iteration logs that assert "EXACTLY
   9 modules" as a health check must read 10 after M3.A lands — noted so the next controller
   doesn't misread the delta as drift.)
@@ -567,7 +567,7 @@ named destination in Deferred Scope.
 ## Acceptance Criteria
 
 - [ ] `design_docs/sketches/effectbroker.ail` lands verbatim from Appendix A; full
-  `verify_ail.sh` sweep green at 10 modules with the 4-identity / 14-test world/ totals
+  `verify_ail.sh` sweep green at **11** modules with the 4-identity / 14-test world/ totals
   unperturbed; its 7 contracts appear as `verified` in `verify.results[]` (z3 present — never
   the silent-skip exit-0).
 - [ ] The Go `decide` mirror is pinned by a drift test covering all five decision arms, every
@@ -667,7 +667,7 @@ are labelled as such.
 | V2 | NEW-DOC is a fact | `grep -ri "w-effect-broker-m3" design_docs/ -l`; `ls design_docs/planned/` | hits only in charter/log/M1+M2 docs/`worlddapi.ail` boundary comments; `planned/` holds only `w-log-epoch-decision.md` |
 | V3 | z3 present → contract claims provable non-silently | `ls /opt/homebrew/bin/z3` + `ai-check` JSON | z3 present; `verify.available: true`, 7 named results in `verify.results[]` |
 | V4 | Sketch contracts prove | `cd /tmp/wbroker-sketch && /tmp/ailang-v0300/ailang ai-check -timeout 5s sketches/effectbroker.ail` | `check.passed: true`; `verify: {verified: 7, counterexample: 0, skipped: 0, errors: 0}` — `effectNameMatches`, `scopeMatches`, `capabilityLive`, `withinEffectBudget`, `debit`, `effectAllowed`, `recordConsistent` all `verified` |
-| V5 | Sketch named tests pass | `/tmp/ailang-v0300/ailang test --format json sketches/effectbroker.ail` | `failed_tests: 0, passed_tests: 27, skipped_tests: 5, success: true` (skips = the known no-generator-for-record-params class, same as `world/` modules) |
+| V5 | Sketch named tests pass | `/tmp/ailang-v0300/ailang test --format json sketches/effectbroker.ail` | `failed_tests: 0, **len(tests[]) 25**, passed_tests: 27, skipped_tests: 5, total_tests: 32, success: true` — re-measured by the controller iter-31. **Gate on `len(tests[])` (25), never on `passed_tests` (27 = 25 named + 2 passing properties).** (skips = the known no-generator-for-record-params class, same as `world/` modules) |
 | V6 | **NEW verifier fact (trigger NOT isolated)**: `effectAllowed`'s composed body (calling the four law predicates) fails Z3 encoding; the inlined body verifies | first sketch draft, same `ai-check`; **controller first-party re-run iter-22** confirmed the repro (restoring the composed body → `status: "error"`, other 6 predicates still verify) AND refuted the first-draft "two record sorts in the callee params" characterization with two clean-verifying counter-repros | captured Z3 diagnostic: `(error "line 12 column 90: select requires 1 arguments, but was provided with 2 arguments")` · `(error "line 17 column 100: unknown constant effectNameMatches (Capability String) ")` · `(error "line 19 column 687: unknown constant result")`; fixed by the ratified `isValidNextWorld` inlining pattern → then `verified` |
 | V7 | **NEW test-runner fact**: `tests[]` cannot express ADT constructor expected values — applied (`*ast.FuncCall`) AND nullary (`*ast.Identifier`) constructors both fail; **`ailang check` passes the same file CLEAN** (rc=0, "No errors found") — only the `test` leg catches it | first sketch draft, `ailang test`; controller re-run confirmed the `check`-leg asymmetry | `decide_test_1..5` fail: `failed to evaluate expected: expected literal expression, got *ast.FuncCall` / `*ast.Identifier`; a check-only gate reads GREEN on this defect; fixed via the `decideLabel` string projection |
 | V8 | **NEW toolchain contradiction**: `ai-check` PROVES `debit` correct (Z3 `verified`) while `ailang test` FAILS the same function on inputs its `requires` excludes — the two legs contradict each other on identical source | first sketch draft, `ailang test`; controller re-run reproduced exactly as stated | `debit_property_2` **fail**: `ensures violated for input: budget=-679, cost=-221` (inputs violate the declared `requires`; sibling `debit_property_1` correctly skipped the same class); fixed with a total-theorem ensures, both properties now pass (100 runs) |
@@ -678,9 +678,9 @@ are labelled as such.
 | V13 | `Evidence.RecordedEffect(HashRef)` + `Capability` shape already landed | read `world/types.ail` | both present verbatim; `Capability = {effect, scope, expiresAt, budget}` with "Enforcement is reserved for a later milestone (M3)" in the M1 comment |
 | V14 | Store surface relied on exists; `PutObject` verifies content | `grep '^func \|^type ' host/store/store.go`; read `schema.sql` | `PutObject/GetObject/SetRegistryHead/GetRegistryHead/Commit/…` present; `verifyObject` on the put path; `epoch_registry_heads` is generic name-keyed ("keyed by registry name") |
 | V15 | Replay engine pattern for pinned subprocess exec (floor F1/F5 basis) | read `host/replay/replay.go` | `verifyExecutable` (hash check), `runPinnedTransition` (`run --quiet --caps "" --entry main`, `execTimeout = 60s`, temp root staging) — the pattern `host/capsule` mirrors; file will stay byte-unchanged |
-| V16 | `verify_ail.sh` cannot be perturbed by a new sketch | read `scripts/verify_ail.sh` manifest logic | `REQUIRED_VERIFIED`/`REQUIRED_TESTS` keyed to `world/` modules; module count dynamic; sketch → swept with empty required set (9 → 10 modules) |
+| V16 | `verify_ail.sh` cannot be perturbed by a new sketch | read `scripts/verify_ail.sh` manifest logic | `REQUIRED_VERIFIED`/`REQUIRED_TESTS` keyed to `world/` modules; module count dynamic; sketch → swept with empty required set (**10 → 11** modules, controller-measured iter-31) |
 | V17 | Daemon allowlist does not cover new packages (hence P3's new test) | `grep daemonCorePatterns host/daemon/daemon_test.go` | `[]string{"./host/daemon/...", "./cmd/ailang-worldd/..."}` — broker/capsule outside it; new allowlist test required and specified |
-| V18 | Bench smoke gate is a hardcoded NAME manifest to extend | read `scripts/bench_worldd.sh` | six hardcoded benchmark names; M3.C adds two |
+| V18 | Bench smoke gate is a hardcoded NAME manifest to extend | read `scripts/bench_worldd.sh` | **eight** hardcoded benchmark names (controller-measured iter-31; the doc's original "six" predates SD.B/SD.C adding `BenchmarkJournalAppend` and `BenchmarkCommitWithReceipt`); M3.C adds two |
 | V19 | CF-B-2 exists as described (broker must not depend on it) | **CLAIM** — cited from the M2 doc + charter STATUS (iter-21/22 records), not re-reproduced this session | design responds by never writing log entries and using parseable `PrevEntryHash` in the episode test |
 | V20 | Go build/test of the new packages | **CLAIM** — no Go code exists at doc time; the LOC/structure estimates are estimates | the sprint's gates (`verify_go.sh`, CI) are the check |
 
@@ -859,7 +859,7 @@ answerable in one comment, and the doc needs no further work before the answer a
 ## Appendix A — the verified sketch (M3.A lands this verbatim as `design_docs/sketches/effectbroker.ail`)
 
 Verified this session on the pinned binary: `check.passed: true` · 7/7 contracts `verified`
-(0 counterexamples, 0 errors, 0 skips) · 27/27 named tests pass. 213 lines.
+(0 counterexamples, 0 errors, 0 skips) · **25** named tests pass (`len(tests[]) == 25`; `passed_tests` 27 adds the 2 passing PROPERTIES, and gating on it would be the `len(tests[])`-vs-`passed_tests` defect this repo already paid for once). 213 lines.
 
 ```ailang
 module sketches/effectbroker

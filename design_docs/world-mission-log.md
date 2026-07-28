@@ -4223,3 +4223,160 @@ re-quorum. The planner must fold in three things 4b produced that the doc does n
 superseded Decision-3 ordering limitation and Deferred-Scope journal row (marked at `6811604`),
 **CF-H-1**, and the measured +50.9% receipt tax. The `gemini-3-1-pro` round-2 objection on handler
 timeout/output-cap mutations stays pre-approved to apply verbatim. No human gate is outstanding.
+
+---
+
+## Iteration 31 — 2026-07-28 — `w-effect-broker-m3` **M3.A LANDED** (PR #20 → squash `2edf2ef`, dev CI green, judge PASS 84/100 zero-blocking) — and the iteration's spine is that **the ratification's plain reading is not executable against the substrate that was built to satisfy it**: the landed journal is a COMMIT journal, the broker needs an EFFECT journal, and no one had noticed because the correction that announced the fix never left the prose
+
+**Pick**: item **4 `w-effect-broker-m3`**, the queue head, unparked by iter-30. Reality-checked
+before routing: no `host/broker/`, no PR, no commit on a freshly-fetched `origin/dev`; doc present
+at `design_docs/planned/`, twice-quorumed (two artifacts in `.ailang/state/mission-quorum/`), no
+sprint plan ⇒ **sprint-planner**, no designer, no re-quorum.
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` =
+`sunholo-voight-kampff`; local `dev` == `origin/dev` == `b33640c`; CI on dev **completed/success**
+@ `b33640c55`. Inbox: 4 unread, all `eval-suite` telemetry plus my own iter-30 report — no
+directive, no cross-mission request. Bookkeeping **#9** (23 comments), watermark
+`2026-07-27T08:55:11Z`, **zero** new `@MarkEdmondson1234` comments. **No rotation due** — `#9`
+created `2026-07-27T05:51Z`, *after* the Monday 07:00 **CEST** (= 05:00Z) boundary; 23 ≪ 80.
+No `[nightly-eval]` issues in this repo.
+
+**Routing evidence**
+
+| Role | Pinned | Actually ran | Note |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | claude-opus-5 | quota bucket |
+| Designer | — | **did not run** | doc existed + twice-quorumed; rotation untouched at `codex:gpt-5.6-sol` |
+| Planner | `$MISSION_PLANNER_MODEL`=opus | **opus**, Agent-pinned | wrote `.ailang/state/sprints/w-effect-broker-m3.{plan.json,handoff.md}`; contradicted the controller 3× and the doc 5× |
+| Executor | `$MISSION_EXECUTOR_MODEL` = **`codex:gpt-5.6-sol`** | **codex `gpt-5.6-sol`**, rc=0 | probe rc=0; directive asserted at **7191 B** before spawn; `< /dev/null`; per-iteration filename `codex_directive_iter31.txt`; 30-min cap, finished inside it; sandbox blocked its commit as documented → controller committed, crediting it |
+| Evaluator | `$MISSION_EVALUATOR_MODEL` = **sonnet** | **sonnet**, one round: **PASS 84/100, ZERO blocking** | generator≠judge holds cross-provider (OpenAI executor vs Anthropic judge) |
+
+`metered=$0.00` — every lane on a subscription/quota bucket (codex on ChatGPT auth, controller,
+planner and judge on Anthropic quota). No quorum ran. The `$5` ceiling was never approached.
+
+**Delivered** — PR #20, two commits, squashed to `2edf2ef` (1,317 + 62 insertions, 10 files, all new):
+- `7c74f06` **the milestone**: `design_docs/sketches/effectbroker.ail` (213, Appendix A
+  byte-verbatim), `host/broker/{broker.go 257, broker_test.go 283, decide_test.go 119,
+  record.go 109, allowlist_test.go 108, handlers_fs.go 87, decide.go 73, handlers_fs_test.go 68}`.
+- `01c2fe2` the CF-J-2 committed reproduction (production code byte-unchanged).
+
+**Closes AC1, AC2, AC3, AC4, AC10.** Protected paths byte-unchanged vs dev by
+`git diff --exit-code`: `host/{store,replay,hashref,canon,archive,registry,daemon}`, `cmd/`,
+`world/`, `scripts/`, `.github/`, `go.mod`, `go.sum`.
+
+**Finding 1 — THE RATIFIED FOLD-IN IS NOT EXECUTABLE, and the reason is that the correction
+announcing it never left the prose.**
+The charter ordered the planner to fold in "M3 now consumes `store.AppendIntent` /
+`Commit.InvocationID` / `GetReceipt`". Measured first-party at Gate 2, before routing:
+`validateIntent` (`host/store/journal.go:210`) requires **six non-zero commit-shaped refs**
+(`WorldRef`, `EntryHash`, `PrevEntryHash`, `TransitionFn`, `TransitionRef`, `Interpreter`), and
+`bindCommitIntentTx` (`store.go:807-825`) compares **all eight** for byte-equality inside the
+transaction before any mutation. **All four** landed callers derive the intent from an
+already-complete `Commit` via `testCommitIntent(id, c Commit)`. A brokered effect's RESULT is an
+INPUT to the transition that produces the next world, so `EntryHash`/`WorldRef` are **not knowable
+before dispatch**: a pre-dispatch intent for a general brokered effect is **structurally
+impossible**. SD.C's AC6 proof works only because its "external effect" is a probe file write whose
+content never feeds the commit (`crash_test.go:77` builds the `Commit` first). **The substrate as
+landed is a commit journal; the broker needs an effect journal.** Every way out crosses Design
+Freeze bullet 8 ("zero `host/store` method changes") or Decision 7 ("the broker writes objects and
+registry heads only — never log entries"), so it is a scope-and-ratification call, not a planning
+call → quarantined as **M3.D**, `blocked_on: human-ratification`, and surfaced to Mark with three
+costed options and a recommended default. **Why it stayed invisible**: a grep of the whole doc for
+`intent`/`journal` hits ONLY the two supersession notes and the quorum log — **zero** hits in the
+pipeline steps, the milestone file lists, the Acceptance Criteria, the Non-Vacuity table or the
+Conflict Surface. Fifth instance of *a correction is not applied until it reaches every artifact
+that restates it*, and the first where the un-propagated correction would have shipped a milestone
+claiming a crash window was closed by a substrate it never called.
+
+**Finding 2 — the executor's headline defect was REFUTED by running the experiment its own claim
+implied.**
+The executor reported `MUT-Z3-ABSENT` as a critical vacuous-pass: `verify_ail.sh` exits 0 with z3
+off PATH while claiming "4/4 required identities verified". Reproduced — the exit code is real.
+But an exit code is not a diagnosis. The discriminating experiment is whether verification still
+*catches a false contract*: mutating `world/contracts.ail`'s `isValidNextWorld` body to
+`w.revision + 2` against an `ensures` of `+ 1` yields `counterexample: 1` **identically with and
+without z3 on PATH** (`available: true` both ways; 5.7 ms vs 10.3 ms). **AILANG v0.30.0 embeds its
+solver**, so removing z3 from PATH is not a mutation of anything — `MUT-Z3-ABSENT` is a refuted
+instrument, not a defect, and the gate has teeth. `contracts.ail` reverted byte-identical
+(sha256 `1fdc52c3…`). This **retires the premise behind V27** ("ai-check shells to an external z3
+and skips silently") for this path on darwin/arm64. The CI z3 install **stays** until the same
+experiment is run on linux — V27's original observation was on a bare ubuntu runner, and ripping
+out a guard on one platform's evidence would be the very defect Finding 1 is about. The judge
+independently reproduced the refutation.
+
+**Finding 3 — the judge's non-blocking nit is a missing ARM in a frozen pipeline.**
+The judge filed **CF-J-2** as a ledger-accounting nit. Reproduced first-party (budget 5 → 2,
+debited 3, **zero** records written, error returned) it is bigger than filed: **Decision 3 freezes
+a pipeline with exactly two arms, denied and allowed, and has no handler-error arm.** So a handler
+that fails — possibly *after partially executing*: bytes written, tokens spent, a git object
+created — leaves the ledger debited, writes **no record at all**, and is invisible to audit AND
+replay, while a merely DENIED effect is fully recorded: the weaker outcome is better recorded than
+the stronger one. It also falsifies Decision 3's own "the ledger is reconstructible from the record
+stream alone". This is **not** the M3.D crash window — it is an ordinary in-process error path that
+M3.D's ratification does not cover. **Not fixed, deliberately**: the two candidate fixes have
+opposite semantics — (a) roll the debit back, refunding an effect that may have spent real money;
+(b) keep the debit and write a failure record, adding a third arm to a frozen Decision — so
+choosing is a design call. It landed instead as a **committed reproduction**
+(`host/broker/handler_error_repro_test.go`, the `durability_repro_test.go` precedent), asserting
+current behaviour so the gap is CI-enforced and its resolution must be deliberate. **Non-vacuity
+proven, not asserted**: under candidate fix (a) the fixture reds with `ledger budget = 5, want 2`;
+`broker.go` reverted byte-identical (sha256 `ac050fea…`).
+
+**Finding 4 — a carry-forward ID collision, caught by reading the log's own tail.**
+Both the planner and the judge proposed **CF-I-1** for the stale `effectAllowed` comment. But
+iteration 30 already used and closed CF-I-1 (the stale Appendix A JSON). Reusing it would have made
+two different findings share an ID in an append-only log — unrecoverable exactly the way a bare
+COUNT is (the iter-19 rule). This iteration's carry-forwards are therefore renumbered **CF-J-***.
+The cheap habit that caught it: read the previous entry's carry-forward block before allocating an
+ID, not just the open-CF list.
+
+**Ruled out / refuted this iteration**
+- **`MUT-Z3-ABSENT` as evidence of a gate defect** — refuted (Finding 2). The gate is sound; the
+  mutation is not an instrument.
+- **The planner's 1.6× LOC multiplier** — REFUTED downward. It predicted ~2,100 for M3.A and
+  warned this would be the largest PR in repo history (record 1,754 on #11, controller-verified).
+  Actual: **1,317**, i.e. **1.0×** the doc's 1,323. The doc's estimate was accurate and the
+  multiplier was pessimism carried over from M1/M2. Next planner: start at 1.0–1.2× for milestones
+  specified at this granularity.
+- **"The controller's 3-caller `AppendIntent` grep"** — refuted by the planner: there is a fourth
+  (`recover_test.go:58`). Conclusion unaffected and strictly stronger (zero production callers
+  across four files). Cause: a `| head` truncation in my own grep. A truncated grep is a claim.
+- **The doc's "27/27 named tests"** — refuted on the pinned binary: `len(tests[])` is **25**;
+  `passed_tests` 27 adds 2 passing PROPERTIES (`total_tests` 32, 7 properties, 5 skipped). Corrected
+  in the doc together with the module count (**10 → 11**, not 9 → 10 — the doc predates
+  `storejournal.ail`) and V18's benchmark manifest (**eight** names, not six). All three
+  controller-measured. The verbatim-appendix gate was re-checked after my own edits — line numbers
+  unshifted, `diff` still exit 0, because a doc correction that breaks the gate it sits next to is
+  the same defect wearing my name.
+- **The plan's `MUT-RECORD-CONSISTENT-LIE` attribution** — refuted by the judge: the file is
+  `broker.go`, not `record.go`, and it reds 4 tests, not "the golden-bytes test only" (the golden
+  test builds its record directly, bypassing `Invoke`). → **CF-J-3**.
+- **The plan's `MUT-EXPIRY-BOUNDARY` expected subset** — refuted by the executor: three
+  sketch-derived rows red, not two.
+
+**Open non-blocking carry-forwards (enumerated — a bare COUNT is unrecoverable, iter-19 rule):**
+**CF-J-1** the stale comment above `effectAllowed` in `effectbroker.ail` still carries the
+first-draft "a callee whose params mix two record sorts Z3-errors" claim that the doc's own **U1**
+refutes; the sketch is landed byte-verbatim by design, so the correction is the next deviation that
+re-runs both gates and updates Appendix A — owner: M3.B or close-out.
+**CF-J-2** the handler-error arm (Finding 3), now CI-pinned by
+`host/broker/handler_error_repro_test.go` — owner: M3.B, which adds exactly the handlers most
+likely to fail mid-effect (`Git.Commit`, `Model.Infer`).
+**CF-J-3** the plan's `MUT-RECORD-CONSISTENT-LIE` names the wrong file and the wrong expected
+failure set — owner: whoever plans M3.B.
+**CF-J-4** the doc's **F1** capsule mutation ("corrupt the archived binary by one byte") is a
+**fixture** mutation, caught prospectively by the planner: corrupting the binary makes the F1 test
+*pass*, so no change to `capsule.go` can fail it. The production mutation (`MUT-F1-UNVERIFIED-EXEC`
+— drop hash verification) is already in the plan; the doc's table still needs it — owner: M3.B.
+Earlier carry-forwards still open: **CF-F-1**, **CF-F-2**, **CF-F-4**, **CF-G-1**, **CF-G-3**,
+**CF-H-1** (CF-H-1 is dischargeable under **all three** M3.D options — the planner's refinement of
+my framing: it needs a *production consumer* of `PendingIntents`/`GetReceipt`, not effect-shaped
+intents).
+
+**Next**: **M3.D is PARKED `needs-human-review`** — one comment from Mark unparks it, three costed
+options with a recommended default (**M3D-i**, episode/commit-boundary anchoring: zero kernel cost,
+closes CF-H-1, leaves the dispatch→record window open **and says so**). **M3.B is NOT blocked by
+it** and is the next executable milestone: subprocess handlers + `Human.Approve` + the capsule
+floor F1–F6, with CF-J-2/CF-J-3/CF-J-4 and the pre-approved `gemini-3-1-pro` timeout/output-cap
+mutations folded in. The plan and handoff are written and durable at
+`.ailang/state/sprints/w-effect-broker-m3.{plan.json,handoff.md}`.
