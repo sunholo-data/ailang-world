@@ -1075,42 +1075,62 @@ package still compiles, the name simply leaves the reported set, and the
 manifest gate is isolated. Both names then red naming exactly themselves.
 **Fix the mutation spec to the rename form.**
 
-**(2) `skipped_tests` is a third number nobody reports, and it is non-zero
-everywhere — including in the mission's own CI gate.** `ailang test --format
-json` returns `total_tests`, `passed_tests`, `failed_tests` **and**
-`skipped_tests`. The charter's iter-25 process fix taught reporting
-`len(tests[])` and `passed_tests` separately and gating on `len(tests[])`.
-**Both of those are blind to `skipped_tests`.** Measured first-party:
+**(2) `skipped_tests` is a known-and-recorded number that no CLAIM aggregates —
+and the "expected noise" characterisation deserves re-examination.**
 
-| Target | total | passed | named `len(tests[])` | **skipped** |
+**First, the correction, because the first draft of this note overclaimed and
+the judge refuted it.** I initially wrote that the skips had been "silently
+empty since iter-13 and nobody noticed". That is **false**, and the evidence
+against it was already in this repository:
+
+- `design_docs/implemented/w-m1-ailang-hardening.md:103` records it as premise
+  **V14**: *"Contract-derived property tests over record-typed parameters skip
+  (`no generator for parameter rec: EpochRecord`) — expected noise; passing
+  inline tests alongside skipped properties still exit 0."*
+- The same document, at lines 378 and 460, states the gate design decision
+  explicitly: the assertions "are on named `tests[]` entries and `failed_tests`
+  **only, never `skipped_tests`**".
+- **This document's own premise V5** (line 825) records `skipped_tests: 5`
+  verbatim and annotates it: *"(skips = the known no-generator-for-record-params
+  class, same as `world/` modules)"*.
+
+So the behaviour was measured, documented and deliberately excluded from the
+gate at M1, and re-measured in this doc. It is not a discovery and it is not a
+silent skip in the V27/B1 sense — those were checks nobody knew were empty.
+**Recording it as a third instance of that class would have been an overclaim,
+which is the exact failure mode the honest-claim gate exists to prevent.**
+
+**What is still worth carrying (CF-M-1), stated at its real size:**
+
+| Target | total | passed | named `len(tests[])` | skipped |
 |---|---:|---:|---:|---:|
 | `sketches/effectbroker.ail` | 38 | 33 | 31 | **5** |
 | `world/` (the CI gate's own Leg-2 invocation) | 19 | 14 | 14 | **5** |
 
-Every skip is a **contract-derived property test** that ran `tests_run: 0` with
-`"no generator for parameter <p>: <T>"` for an ADT or record type — `Capability`
-and `EffectRecord` in the sketch; `World`, `HashRef` and `EpochRecord` in
-`world/`. `scripts/verify_ail.sh` gates on `failed_tests == 0` and
-`len(tests[]) == 14`, so it prints `✓ all 14 required named tests pass
-(failed_tests=0)` while five sibling property checks ran zero cases.
+1. **The proportion is not marginal.** In `world/` it is **5 of 5** — *every*
+   contract-derived property over the core types (`World`, `HashRef`,
+   `EpochRecord`) runs zero cases. "Expected noise" is a fair description of a
+   few skipped edge properties; it is a weaker description of a randomized layer
+   that is 100% empty. Whether that layer is worth having at all is a real
+   question, and the honest options are to make it run or to stop counting it.
+2. **The number is recorded in premises but never reaches a claim.** STATUS
+   stamps and close-outs quote "4/4 identities / 14 named tests" as the gate's
+   teeth; none of them carries "and 5 properties ran zero cases". A fact that
+   lives only in a premise row does not travel.
+3. **The gate could assert it cheaply**: pin an EXPECTED `skipped_tests` and
+   fail loudly when it moves, so a NEW skip cannot hide among the known ones —
+   which is the actual live risk today. That touches `scripts/verify_ail.sh`, an
+   **AC11-protected path for M3.C**, so it is deliberately not done here.
 
-**Scope, stated honestly.** The Z3 contracts are genuinely verified (7/7,
-0 counterexamples, parsed from `verify.results[]`) — no proof is weakened and
-no claim in this document is falsified. What is affected is the *additional*
-randomized property layer, which has been silently empty since
-`w-m1-ailang-hardening` (iter-13) and, for this sketch, since M3.A `2edf2ef` —
-confirmed by running one unchanged instrument against `2edf2ef`, `9401f2d`,
-`10beb83` and HEAD, which all report exactly 5 skips.
+The root cause — no value generator for ADT/record parameters in v0.30.0 — is a
+language limitation and routes upstream per the frozen-core rule
+(`sunholo-data/ailang#517`), never a local workaround.
 
-This is the **third instance** of *a check that reports success while silently
-running nothing* in this mission, after **V27** (`ai-check` shells out to `z3`
-and skips silently without it) and **B1** (replay tests `t.Skip`-ing in CI).
-The root cause is an AILANG v0.30.0 limitation — no value generator for ADT or
-record parameters — which routes upstream per the frozen-core rule, never a
-local workaround. The gate fix (assert an expected `skipped_tests`, loudly)
-touches `scripts/verify_ail.sh`, which is an **AC11-protected path for M3.C**,
-so it is deliberately NOT made here: it is carried as **CF-M-1** with its own
-queue item.
+**The durable lesson is the correction itself.** The controller's own headline
+finding was refuted by the independent judge citing this repository's own
+premise rows. Everything a controller hands downstream is a claim, including its
+own account of its own evidence — the iter-25 lesson recurring with the roles
+unchanged.
 
 ## Appendix A — the verified sketch (M3.A lands this verbatim as `design_docs/sketches/effectbroker.ail`)
 
