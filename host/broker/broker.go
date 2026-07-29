@@ -37,22 +37,25 @@ type Registry map[string]Handler
 type objectStore interface {
 	PutObject(store.Object) error
 	GetObject(hashref.HashRef) (store.Object, bool, error)
+	AppendNextEffectIntent(string, store.EffectIntent) (string, int64, error)
+	AppendEffectOutcome(string, store.EffectOutcome) (int64, hashref.HashRef, error)
 }
 
 // Session is one serial capability ledger and effect-record stream.
 type Session struct {
-	mu       sync.Mutex
-	store    objectStore
-	grants   []Capability
-	registry Registry
-	mode     Mode
-	replay   []hashref.HashRef
-	next     int
+	mu        sync.Mutex
+	store     objectStore
+	episodeID string
+	grants    []Capability
+	registry  Registry
+	mode      Mode
+	replay    []hashref.HashRef
+	next      int
 }
 
 // NewSession constructs a live session over an injected store handle.
-func NewSession(s *store.Store, grants []Capability, registry Registry) *Session {
-	return newSession(s, grants, registry, Live, nil)
+func NewSession(s *store.Store, episodeID string, grants []Capability, registry Registry) *Session {
+	return newSession(s, episodeID, grants, registry, Live, nil)
 }
 
 // NewReplaySession constructs a replay session consuming recordRefs in order.
@@ -62,18 +65,20 @@ func NewReplaySession(
 	registry Registry,
 	recordRefs []hashref.HashRef,
 ) *Session {
-	return newSession(s, grants, registry, Replay, recordRefs)
+	return newSession(s, "", grants, registry, Replay, recordRefs)
 }
 
 func newSession(
 	s objectStore,
+	episodeID string,
 	grants []Capability,
 	registry Registry,
 	mode Mode,
 	recordRefs []hashref.HashRef,
 ) *Session {
 	return &Session{
-		store: s, grants: append([]Capability(nil), grants...), registry: registry,
+		store: s, episodeID: episodeID,
+		grants: append([]Capability(nil), grants...), registry: registry,
 		mode: mode, replay: append([]hashref.HashRef(nil), recordRefs...),
 	}
 }
@@ -129,7 +134,8 @@ func (s *Session) Invoke(
 	if s.mode == Replay {
 		return s.invokeReplay(req, decision)
 	}
-	requestRef := requestHash(req, payload)
+	requestObj := requestObject(req, payload)
+	requestRef := requestObj.Hash
 	budgetBefore := int64(0)
 	if grantIndex >= 0 {
 		budgetBefore = s.grants[grantIndex].Budget
@@ -147,11 +153,24 @@ func (s *Session) Invoke(
 		return nil, ref, &DenialError{Decision: decision, RecordRef: ref}
 	}
 
-	s.grants[grantIndex].Budget = decision.Remaining
+	if s.episodeID == "" {
+		return nil, hashref.HashRef{}, errors.New("broker: live allowed effect requires an episode ID")
+	}
 	handler, ok := s.registry[req.Effect]
 	if !ok {
 		return nil, hashref.HashRef{}, fmt.Errorf("broker: no handler registered for %q", req.Effect)
 	}
+	if err := s.store.PutObject(requestObj); err != nil {
+		return nil, hashref.HashRef{}, fmt.Errorf("broker: put effect request: %w", err)
+	}
+	effectID, _, err := s.store.AppendNextEffectIntent(s.episodeID, store.EffectIntent{
+		EpisodeID: s.episodeID, Effect: req.Effect, Scope: req.Scope, Cost: req.Cost,
+		RequestRef: requestRef, LogicalTime: req.Now,
+	})
+	if err != nil {
+		return nil, hashref.HashRef{}, fmt.Errorf("broker: append effect intent: %w", err)
+	}
+	s.grants[grantIndex].Budget = decision.Remaining
 	result, err = handler.Execute(ctx, req, payload)
 	if err != nil {
 		rec := EffectRecord{
@@ -162,6 +181,11 @@ func (s *Session) Invoke(
 		ref, putErr := s.putRecord(rec)
 		if putErr != nil {
 			return nil, hashref.HashRef{}, putErr
+		}
+		if _, _, outcomeErr := s.store.AppendEffectOutcome(effectID, store.EffectOutcome{
+			InvocationID: effectID, Status: "failed", RecordRef: ref, LogicalTime: req.Now,
+		}); outcomeErr != nil {
+			return nil, hashref.HashRef{}, fmt.Errorf("broker: append failed effect outcome: %w", outcomeErr)
 		}
 		return nil, ref, &EffectFailedError{
 			Effect: req.Effect, Scope: req.Scope, RecordRef: ref, cause: err,
@@ -179,6 +203,11 @@ func (s *Session) Invoke(
 	recordRef, err = s.putRecord(rec)
 	if err != nil {
 		return nil, hashref.HashRef{}, err
+	}
+	if _, _, err := s.store.AppendEffectOutcome(effectID, store.EffectOutcome{
+		InvocationID: effectID, Status: "succeeded", RecordRef: recordRef, LogicalTime: req.Now,
+	}); err != nil {
+		return nil, hashref.HashRef{}, fmt.Errorf("broker: append succeeded effect outcome: %w", err)
 	}
 	return result, recordRef, nil
 }
@@ -217,9 +246,16 @@ func denialRank(label string) int {
 }
 
 func requestHash(req EffectRequest, payload []byte) hashref.HashRef {
+	return hashref.SumSHA256(requestBytes(req, payload))
+}
+
+func requestBytes(req EffectRequest, payload []byte) []byte {
 	text := fmt.Sprintf("%d:%s%d:%s%d:%d:", len(req.Effect), req.Effect, len(req.Scope), req.Scope, req.Cost, req.Now)
-	input := append([]byte(text), payload...)
-	return hashref.SumSHA256(input)
+	return append([]byte(text), payload...)
+}
+
+func requestObject(req EffectRequest, payload []byte) store.Object {
+	return brokerObject("world/effect-request/v1", requestBytes(req, payload))
 }
 
 func (s *Session) putRecord(rec EffectRecord) (hashref.HashRef, error) {
