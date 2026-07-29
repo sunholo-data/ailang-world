@@ -19,6 +19,7 @@ module sketches/storejournal
 --                           commit-defining fields it matches, not merely
 --                           the same invocation ID (quorum round 1,
 --                           gpt5-6-sol).
+--   5. effect dispatch    — dispatch requires a prior durable intent.
 --
 -- v0.30.0 verifier discipline (w-m1-ailang-hardening + w-effect-broker-m3
 -- findings): total-theorem ensures only (no requires — U3), no contracted
@@ -103,7 +104,22 @@ tests [
   seq == prevSeq + 1 && seq >= 1
 }
 
--- LAW 5 — outcome binding, the IDENTITY half: an outcome resolves exactly
+-- LAW 5 — effect dispatch is lawful only when nothing was dispatched, or
+-- when the effect intent was already durable. This is total: the forbidden
+-- (dispatched, not durable) combination must remain representable and false.
+export func effectDispatchLawful(dispatched: bool, intentDurable: bool) -> bool ! {}
+ensures { result == (dispatched == false || intentDurable) }
+tests [
+  ((false, false), true),
+  ((false, true), true),
+  ((true, true), true),
+  ((true, false), false)
+]
+{
+  dispatched == false || intentDurable
+}
+
+-- LAW 6 — outcome binding, the IDENTITY half: an outcome resolves exactly
 -- the intent whose invocation ID it names. Exact string equality — the
 -- scope-matching discipline of the broker law, applied to invocation
 -- identity. NOT sufficient alone for the commit path — LAW 6 is the
@@ -119,7 +135,7 @@ tests [
   intentId == outcomeId
 }
 
--- LAW 6 — commit binding, the FIELD-LEVEL half (quorum round 1,
+-- LAW 7 — commit binding, the FIELD-LEVEL half (quorum round 1,
 -- gpt5-6-sol, adopted as kernel law; WIDENED to the round-2 eight-field
 -- list, gemini-3-1-pro, applied here iter-29 — the round-2 revision had
 -- reached the prose but not this frozen artifact): a Commit carrying an
