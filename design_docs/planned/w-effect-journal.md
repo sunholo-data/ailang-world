@@ -1,8 +1,11 @@
 # w-effect-journal — Closing the dispatch→record window at effect granularity (the EFFECT journal)
 
-**Status**: Planned (NEW-DOC, queue row 4c, designer rotation iter-36 — design quorums at pick;
-**r1**: quorum round-1 BLOCKED on the resumption-ordinal collision — fix applied throughout, see
-Decision 3 and the Decision 4 resumption row)
+**Status**: Planned — **QUORUM-CLEARED via the charter's narrow-refinement carve-out** (NEW-DOC,
+queue row 4c, designer rotation iter-36). **r0** authored by `claude:claude-fable-5`; **r1** fixed
+quorum round-1's blocking finding (resumption-ordinal collision); **r2** applied quorum round-2's
+blocking fix VERBATIM as a bounded controller revision (the split allocator became one
+transactional `AppendNextEffectIntent`) plus the round-2 pass-vote's concrete `GetReceipt` guard.
+See the Quorum verification log at the end.
 **Date**: 2026-07-29
 **Charter clause**: clause-3 (explicit authority end-to-end — the last open window of objection 2A)
 **Verified against**: **`AILANG v0.30.0`** — the pinned released binary at `/tmp/ailang-v0300/ailang`
@@ -166,7 +169,7 @@ the effect intent below is TRUE at write time; nothing is invented to pass valid
 |----------|-----------------|-----------|-------------|
 | **Path A**: DDL-free — per-effect synthetic invocation IDs + effect-shaped payload codecs, reusing `kind='intent'/'outcome'` | The only path that closes the window WITHOUT shipping a fail-open schema change (V6/V7); keeps the estimate inside the band | this doc (quorum at pick) | high |
 | Reserved ID namespace `effect:<episodeID>:<ordinal>`, enforced in both appenders | ID-space disjointness is what lets one table carry two payload shapes without ambiguity; unenforced, a collision corrupts both journals' receipt laws | this doc | medium |
-| **The ordinal is derived from the durable journal at episode start (`NextEffectOrdinal`), never from a fresh in-memory zero** | A transient counter restarting at 0 after a crash GUARANTEES `DuplicateInvocationError` against the pre-crash `effect:<episodeID>:0` row, bricking the episode — the quorum round-1 blocking finding (gemini-3-1-pro), accepted as correct | quorum r1 + this doc | high |
+| **The ordinal is minted by the STORE inside the appending transaction (`AppendNextEffectIntent`) — the broker never holds one** | Two successive quorum findings, both accepted: r1 (gemini-3-1-pro) — a transient counter restarting at 0 after a crash GUARANTEES `DuplicateInvocationError` against the pre-crash `effect:<episodeID>:0` row, bricking the episode; r2 (gpt5-6-sol) — deriving it durably but appending in a SEPARATE operation just moves the collision to a TOCTOU. Only an in-transaction mint closes both | quorum r1 + r2 | high |
 | Intent is durable BEFORE dispatch; outcome AFTER the record | The entire point of the item — the ordering IS the window closure; frozen as a law in the sketch | this doc | high |
 | Denied effects write NO journal rows | No dispatch → no window → nothing to journal; the denial record (landed M3 discipline) is already durable and complete; journal growth stays 2 rows per *dispatched* effect | this doc | low |
 | `PendingIntents` gains a `semantic_id` filter; `PendingEffectIntents` is a separate method | Without the filter, commit recovery decodes effect payloads as commit intents and errors on every store with a pending effect (V9: `PendingIntents` decodes every row via `decodeJournalIntent`) | this doc | medium |
@@ -175,18 +178,21 @@ the effect intent below is TRUE at write time; nothing is invented to pass valid
 ### Design Freeze (the sprint must not renegotiate these)
 
 - [x] `host/store/schema.sql` byte-for-byte unchanged; **no DDL change, no migration machinery**.
-- [x] The `host/store` method delta is EXACTLY Decision 2's table: `AppendEffectIntent`,
-  `AppendEffectOutcome`, `GetEffectReceipt`, `PendingEffectIntents`, `NextEffectOrdinal` (new);
-  `validateIntent` + `PendingIntents` (changed, as specified); nothing else.
+- [x] The `host/store` method delta is EXACTLY Decision 2's table (**r2**):
+  `AppendNextEffectIntent`, `AppendEffectOutcome`, `GetEffectReceipt`, `PendingEffectIntents`
+  (new — **four**, since r2 folded the ordinal derivation INTO the appender's transaction and
+  removed both `AppendEffectIntent` and `NextEffectOrdinal`); `validateIntent`, `PendingIntents`
+  and `GetReceipt` (changed, as specified); nothing else.
 - [x] The ordering law: **no handler dispatch without a prior durable effect intent**; the
   outcome append happens after the effect record object is durable; both directions tested and
   mutation-pinned.
 - [x] Effect invocation IDs are `effect:<episodeInvocationID>:<ordinal>` (ordinal decimal ≥ 0);
   the commit appender REJECTS the `effect:` prefix; the effect appender REQUIRES the full shape.
-  No other ID form enters the effect journal. **The ordinal is initialized from durable journal
-  state at episode start — `store.NextEffectOrdinal(episodeID)` — never from a fresh in-memory
-  zero; the in-memory counter is a cache of that durable value, valid only within one process
-  lifetime** (Decision 3; quorum r1 blocking fix).
+  No other ID form enters the effect journal. **The ordinal is minted by the STORE, inside the
+  same transaction that appends the intent (`AppendNextEffectIntent`) — never by the broker, never
+  from an in-memory counter, never read outside a transaction.** There is no ordinal cache
+  (Decision 3; quorum r1 found the fresh-zero collision, quorum r2 found that a split
+  read-then-append merely moved it to a TOCTOU).
 - [x] No placeholder/dummy refs, ever — every effect-intent field is true at write time
   (ratification record `c26b27d`).
 - [x] Recovery never dispatches, never auto-resolves, never appends an outcome, never
@@ -268,17 +274,21 @@ type EffectOutcome struct {
 
 | Method | New/Changed | Exact change |
 |--------|-------------|--------------|
-| `AppendEffectIntent(id, EffectIntent)` | **new** | mirrors `AppendIntent`'s tx discipline (idempotent on identical bytes, `DuplicateInvocationError` on differing bytes, object + journal row in ONE tx, `nextJournalSeqTx`); validates the `effect:` shape, `Ordinal >= 0`, non-empty `Effect`/`Scope`/`EpisodeID`, non-zero `RequestRef`, and that `id` == the derived `effect:<EpisodeID>:<Ordinal>` |
+| `AppendNextEffectIntent(episodeID string, intentWithoutID EffectIntent) (id string, ordinal int64, err error)` | **new** (**r2**, quorum round-2 blocking fix — the reviewer's own signature, adopted verbatim) | **ONE transaction does all of it**: acquire the store's write serialization → derive the next ordinal from ALL matching durable intents (resolved, indeterminate and pending alike — the r1 candidate-set, now computed INSIDE the tx) → validate exhaustion (`ordinal == math.MaxInt64` → structured `OrdinalExhaustedError`, never a silent wrap) → construct the canonical ID `effect:<episodeID>:<ordinal>` and payload → insert the object + journal row → commit. The ordinal never exists outside the transaction, so no read→allocate→append interleaving is possible. Also validates non-empty `Effect`/`Scope`/`episodeID` and a non-zero `RequestRef`, and keeps `AppendIntent`'s duplicate discipline for the constructed row |
+| ~~`AppendEffectIntent(id, EffectIntent)`~~ | **REMOVED in r2** | superseded — a caller-supplied ordinal is exactly the split allocation the round-2 objection names. The broker no longer chooses effect IDs; the store mints them |
+| ~~`NextEffectOrdinal(episodeID)`~~ | **REMOVED in r2** | superseded — its derivation moved INSIDE `AppendNextEffectIntent`'s transaction. Exposing it as a standalone read is what made the TOCTOU expressible |
 | `AppendEffectOutcome(id, EffectOutcome)` | **new** | mirrors `AppendOutcome`: requires a durable effect intent, rejects a second outcome, requires `Status ∈ {succeeded, failed}` and non-zero `RecordRef` |
 | `GetEffectReceipt(id)` | **new** | the same three-state receipt law (`not-started` / `indeterminate` / `resolved`) over the effect payloads; rejects non-`effect:` IDs with a structured error |
 | `PendingEffectIntents(limit, fromIndex...)` | **new** | `PendingIntents`'s keyset paging, filtered to `o.semantic_id = 'world/effect-intent/v1'`, same `MaxPendingIntentsPage` bound |
-| `NextEffectOrdinal(episodeID)` | **new** (r1, quorum blocking fix) | returns `1 + max(ordinal)` over ALL journaled effect intents (`kind='intent'`) whose `invocation_id` carries the exact prefix `effect:<episodeID>:` and whose remaining suffix parses as a strict decimal — resolved, indeterminate, and pending alike (V26: no existing method can answer this — `PendingIntents`/`PendingEffectIntents` exclude resolved intents by construction, `GetReceipt`/`GetEffectReceipt` are per-ID); returns `0` for an episode with no journaled effects; rejects empty `episodeID`. Suffixes that are not strict decimals belong to a different episode whose ID textually extends this one and are skipped (V27 probes exactly this adversarial case) |
 | `validateIntent` | **changed** | adds: reject `InvocationID` with the reserved `effect:` prefix (structured `InvocationMismatchError`) — the commit-side half of P3's disjointness |
 | `PendingIntents` | **changed** | query gains `AND o.semantic_id = 'world/journal-intent/v1'` — behaviour-preserving on every existing store (no effect intents exist anywhere yet, V14), and REQUIRED once they do (V9: today's query decodes every pending row as a commit intent and would error on the first effect payload) |
 
-`GetReceipt` is deliberately **unchanged**: with disjoint namespaces a commit ID can never
-resolve an effect row. Defense-in-depth (rejecting `effect:` IDs there too) is a MAY, decided at
-sprint time; the disjointness tests are the MUST.
+`GetReceipt` gains ONE guard (**r2** — `gemini-3-1-pro`'s round-2 fix, adopted verbatim although
+it voted pass): `strings.HasPrefix(id, "effect:")` → structured `InvocationMismatchError`, matching
+`validateIntent`'s strictness. Its reason is concrete — without it, a caller mistakenly passing an
+`effect:` ID reaches `decodeJournalIntent` on an effect payload and surfaces a codec failure
+instead of a clean boundary rejection. This promotes OD1 from a sprint-time MAY to a MUST; OD1 is
+struck from Open Decisions accordingly.
 
 ## Decision 3 — The ID namespace
 
@@ -299,16 +309,36 @@ re-initialized the transient counter, and a resumed broker's first dispatch at o
 guaranteed `DuplicateInvocationError` (differing bytes) against the pre-crash intent —
 permanently bricking the episode. The correction:
 
-- **At episode start — fresh or resumed, the broker does not distinguish — the counter is
-  initialized from durable state**: `ordinal := store.NextEffectOrdinal(episodeID)` (Decision 2).
+- **r1's correction (superseded in form by r2, kept because its REASON still governs the
+  candidate set):** the ordinal must come from durable state, never a fresh in-memory zero.
   A fresh episode gets 0 because the journal holds nothing for it; a resumed episode gets
   `1 + max(journaled ordinal)`, past every ID the pre-crash process claimed, including any
   indeterminate one. One scan per episode start, bounded by journal size (P6); whether it uses
   the `UNIQUE (invocation_id, kind)` index via a prefix range is an implementation detail the
   sprint may take or leave — the V27 probe verified the semantics, not the plan.
-- **Within a process lifetime** the broker increments the in-memory counter per dispatched
-  effect (denied effects journal nothing and consume no ordinal). The counter is a CACHE of the
-  durable value, never the source of truth across a restart.
+- **r2 (quorum round 2, `gpt5-6-sol`) — THE SPLIT ALLOCATOR IS GONE; there is no in-memory
+  counter at all.** r1 kept a per-process cache incremented per dispatch, with
+  `NextEffectOrdinal` and `AppendEffectIntent` as two separate operations. The reviewer's
+  objection, accepted: *"`NextEffectOrdinal(episodeID)` and `AppendEffectIntent` occur in separate
+  operations, so two episode starts or broker instances can both observe the same maximum and mint
+  the same effect ID … the resumption fix merely replaces the restart collision with a TOCTOU
+  collision."* Its fix is applied **verbatim**: one transactional store operation,
+  `AppendNextEffectIntent`, which acquires the store's write serialization, derives the next
+  ordinal from all matching durable intents, validates exhaustion, constructs the canonical ID and
+  payload, and inserts the object plus journal row **before releasing the transaction**. The
+  broker-maintained ordinal cache is REMOVED (the reviewer's condition for keeping it — separately
+  enforced and verified exclusive per-episode ownership — is not something this item establishes,
+  so the cache goes). The ordinal is therefore never held outside a transaction, and the
+  read→allocate→append sequence cannot interleave.
+- **What the landed single-writer lock does and does not cover — stated, and NOT used to soften
+  the fix (V28).** One limb of the objection is refuted by landed code: two broker *processes*
+  cannot share a store as writers, because `store.Open` takes a non-waiting exclusive lock and the
+  second caller gets `*WriterAlreadyActive` (proven cross-process by the landed A1 test). The other
+  limb is REAL and unguarded: `host/store/store.go` and `journal.go` contain **no mutex of any
+  kind**, so two goroutines in ONE process — two concurrent episodes — can interleave freely. The
+  reviewer's fix is adopted in full regardless: a transactional allocator is correct under both
+  limbs, and narrowing a fix to the part of an objection one can refute is how a real defect
+  survives a review.
 - **Alternative considered — the reviewer's own proposal**, deriving from restored episode state
   (`int64(len(episode.History))` or records counted during Replay): **rejected, because it has a
   residual collision in exactly the crash this item exists to close.** History counts *records*,
@@ -321,10 +351,10 @@ permanently bricking the episode. The correction:
 ## Decision 4 — The rewired broker pipeline (allowed arms only)
 
 ```
-episode start (fresh OR resumed) → ordinal := store.NextEffectOrdinal(episodeID)  [durable-derived, Decision 3]
+episode start (fresh OR resumed) → NOTHING to initialize: the broker holds no ordinal (r2, Decision 3)
 decide → (denied? → record denial, return — UNCHANGED, no journal)
        → PutObject(request payload)                     [durable, true]
-       → AppendEffectIntent                             [durable — THE WINDOW CLOSES HERE]
+       → AppendNextEffectIntent(episodeID, intent)      [durable, ordinal minted IN-TX — THE WINDOW CLOSES HERE]
        → debit → dispatch handler
        → put result object (success) / none (failed)    [landed M3 discipline, unchanged]
        → write effect record (three-arm, unchanged)
@@ -340,7 +370,7 @@ Crash truth-table after this item (the receipt law doing its job per effect):
 | intent ↔ outcome | intent | `indeterminate` | dispatch may have happened; fail-closed, surfaced by recovery, never re-executed without the `retryAllowed` gate |
 | record ↔ outcome | intent + record | `indeterminate` | executed AND recorded; bookkeeping incomplete — the stated residual (Decision 5) |
 | after outcome | intent + outcome | `resolved` | fully accounted |
-| **resumption (after ANY of the above)** | every journaled intent for the episode, resolved or not | next ordinal = `1 + max(journaled ordinal)` via `NextEffectOrdinal` | **no collision is possible**: every ID the pre-crash process claimed is a journal row, so every journaled ordinal ≤ max and the first post-recovery dispatch mints a strictly fresh ID. A fresh-zero counter here was the quorum-refuted defect — guaranteed `DuplicateInvocationError` against `effect:<episodeID>:0` |
+| **resumption (after ANY of the above)** | every journaled intent for the episode, resolved or not | next ordinal derived and appended in ONE tx by `AppendNextEffectIntent` | **no collision is possible, and none is expressible**: every ID the pre-crash process claimed is a journal row, so every journaled ordinal ≤ max and the next mint is strictly fresh — and because the derivation never leaves the transaction, two concurrent allocations cannot observe the same max. A fresh-zero counter was the r1 quorum-refuted defect; a split derive-then-append was the **r2** one |
 
 The debit ordering (intent before debit) means a crash between intent and debit loses only
 in-memory ledger state — which the record stream already reconstructs (landed M3 Decision 3), and
@@ -385,12 +415,14 @@ such effects stay indeterminate: fail-closed, honest, strictly more knowledge th
 
 ### MJ.A — The kernel reopen + the law (~0.5d)
 
-- **files**: `host/store/journal.go` (+~255 — the two codecs, five new methods incl.
-  `NextEffectOrdinal`, `validateIntent` namespace check, `PendingIntents` filter,
+- **files**: `host/store/journal.go` (+~255 — the two codecs, four new methods incl.
+  `AppendNextEffectIntent` (in-tx mint + exhaustion check), `validateIntent` namespace check,
+  the `GetReceipt` namespace guard, `PendingIntents` filter,
   `EffectInvocationID`), `host/store/journal_test.go`
   (+~290 — golden bytes ×2, disjointness both directions, duplicate/orphan-outcome discipline,
   receipt three-state walk, `PendingIntents` cross-contamination, `PendingEffectIntents` paging,
-  `NextEffectOrdinal` over fresh/resolved/indeterminate/adversarial-suffix populations),
+  in-tx ordinal minting over fresh/resolved/indeterminate/adversarial-suffix populations, the
+  two-goroutine concurrent-allocation test and the `MaxInt64` exhaustion test — AC7b),
   `design_docs/sketches/storejournal.ail` (+~15 — **LAW 5** `effectDispatchLawful(dispatched,
   intentDurable) -> bool`, total-theorem `ensures result == (dispatched == false ||
   intentDurable)` with positive AND negative `tests[]` rows, plus CF-N-3's `((false, true),
@@ -407,8 +439,8 @@ such effects stay indeterminate: fail-closed, honest, strictly more knowledge th
 
 ### MJ.B — The rewired pipeline + the crash-window proof + recovery (~0.5d)
 
-- **files**: `host/broker/broker.go` (+~95 — intent-before-dispatch, ordinal initialized from
-  `NextEffectOrdinal` at episode start and cached in memory per Decision 3 (never a fresh zero),
+- **files**: `host/broker/broker.go` (+~95 — intent-before-dispatch via `AppendNextEffectIntent`,
+  which returns the minted ID; the broker keeps NO ordinal state at all (r2, Decision 3);
   outcome-after-record; denied arm untouched), `host/broker/recover.go` (+~60 —
   the effect-granularity page walk + widened finding type), `host/broker/broker_test.go` /
   `recover_test.go` (+~300 — the **crash-window test**: fault-injected store loses everything
@@ -442,7 +474,7 @@ are the item.
 
 | File | Est. LOC | Change |
 |------|---------:|--------|
-| `host/store/journal.go` | +~255 | codecs, 5 new methods (incl. `NextEffectOrdinal`, r1), 2 changed methods |
+| `host/store/journal.go` | +~255 | codecs, 4 new methods (incl. `AppendNextEffectIntent`, r2), 3 changed methods |
 | `host/store/journal_test.go` | +~290 | new-surface tests |
 | `host/store/recover_test.go` | +~5 | CF-N-3 mirror row |
 | `design_docs/sketches/storejournal.ail` | +~15 | LAW 5 + CF-N-3 row (re-verified live) |
@@ -537,6 +569,17 @@ as its first milestone.**
    dispatches; **and the resumed broker then dispatches a NEW effect on the same episode
    successfully — no `DuplicateInvocationError`, its ID strictly past the indeterminate
    ordinal, its receipt walking to `resolved`**.
+7b. **AC7b (r2, quorum round-2 fix)** — **allocation atomicity**: (i) two concurrent
+    `AppendNextEffectIntent` calls for the SAME episode, run from two goroutines against one
+    store, yield two DISTINCT ordinals and two durable rows — never a duplicate, never a lost
+    write; (ii) an episode whose journal already holds ordinal `math.MaxInt64` yields a structured
+    `OrdinalExhaustedError` rather than wrapping or silently reusing. Both are the reviewer's own
+    named tests ("two concurrent allocations for the same episode, plus a structured error test
+    for `MaxInt64` exhaustion").
+7c. **AC7c (r2)** — the premise log carries evidence for the transaction/serialization behaviour
+    the allocator relies on (the reviewer's third ask): the tx boundary is asserted by test, not
+    by prose, and V28's split finding (cross-process covered by the writer lock, in-process NOT)
+    is restated wherever the atomicity claim is made.
 8. **AC8** — sketch re-verified live on the pinned binary: 8 named contracts in
    `verify.results[]` all `verified`; `len(tests[])` and `passed_tests` reported as two numbers,
    gate on `len(tests[])` ≥ baseline+new rows; no `skipped_tests` assertion.
@@ -562,8 +605,8 @@ report the reds it must NOT cause, and revert from a `cp` backup verified by has
 
 | Gate | Named mutation (form) | Must red | Must stay green |
 |------|----------------------|----------|-----------------|
-| AC7 window | `MUT-INTENT-AFTER-DISPATCH` (form: in `host/broker/broker.go`, move the `AppendEffectIntent` call after the handler dispatch) — PRODUCTION | crash-window test (receipt reads `not-started` where `indeterminate` is required) | success-path pipeline tests (discriminating: the happy path cannot tell the orders apart) |
-| AC7 resumption (r1) | `MUT-ORDINAL-ZERO-RESUME` (form: in `host/broker/broker.go`, replace the `NextEffectOrdinal`-derived episode-start initialization with the constant `0`) — PRODUCTION, must compile | ONLY the new post-recovery-dispatch assertion (`DuplicateInvocationError` on the resumed episode's first new dispatch) | ALL pre-existing crash-window assertions (indeterminate receipt, `Recover` surfacing, zero dispatches) AND every fresh-episode pipeline test — 0 is the CORRECT initialization for a fresh episode, which is exactly why this mutant is discriminating: only the resumption arm can tell the derivation from the constant |
+| AC7 window | `MUT-INTENT-AFTER-DISPATCH` (form: in `host/broker/broker.go`, move the `AppendNextEffectIntent` call after the handler dispatch) — PRODUCTION | crash-window test (receipt reads `not-started` where `indeterminate` is required) | success-path pipeline tests (discriminating: the happy path cannot tell the orders apart) |
+| AC7 resumption (r1, re-aimed by r2) | `MUT-ORDINAL-ZERO-RESUME` (form: in `host/store`'s `AppendNextEffectIntent`, replace the in-tx derived ordinal with the constant `0` — the r1 form named `broker.go`'s initializer, which r2 DELETED, so the mutation moves with the logic) — PRODUCTION, must compile | ONLY the new post-recovery-dispatch assertion (`DuplicateInvocationError` on the resumed episode's first new dispatch) | ALL pre-existing crash-window assertions (indeterminate receipt, `Recover` surfacing, zero dispatches) AND every fresh-episode pipeline test — 0 is the CORRECT initialization for a fresh episode, which is exactly why this mutant is discriminating: only the resumption arm can tell the derivation from the constant |
 | AC3 | `MUT-NAMESPACE-DROP` (form: delete the `effect:` rejection in `validateIntent`, `host/store/journal.go`) — PRODUCTION | commit-side disjointness test | all pre-existing journal tests |
 | AC4 | `MUT-PENDING-FILTER-DROP` (form: remove the `semantic_id` predicate from `PendingIntents`' SQL) — PRODUCTION | cross-contamination test (decode error on the planted effect intent) | `PendingEffectIntents` tests |
 | AC5 | `MUT-OUTCOME-ORPHAN` (form: remove the intent-existence check in `AppendEffectOutcome`) — PRODUCTION | orphan-outcome test | duplicate-outcome test |
@@ -571,6 +614,8 @@ report the reds it must NOT cause, and revert from a `cp` backup verified by has
 | AC9 | `MUT-DENIED-JOURNALED` (form: write an effect intent on the denied arm) — PRODUCTION | denied-no-journal test | denial-record tests |
 | AC7/recovery | `MUT-EFFECT-REDISPATCH` (form: in the effect-granularity walk, invoke the registry's handler for an indeterminate finding) — PRODUCTION | counting-probe zero-dispatch test | surfacing tests |
 | AC11 | `MUT-RECOVERY-UNBOUNDED` (form: replace the bounded page loop's condition with `true` in `host/broker/recover.go` — NOTE the family: iter-35 found TWO forms redding by different mechanisms; name which form ran) — PRODUCTION, must compile | never-draining-fake bound test | single-page and multi-page tests |
+| AC7b atomicity (r2) | `MUT-ORDINAL-SPLIT-TX` (form: in `AppendNextEffectIntent`, compute the next ordinal in its OWN transaction/query and commit it before opening the append transaction — i.e. restore r1's split allocator; NOTE the FAMILY: a variant that merely moves the read one statement earlier inside the SAME tx is NOT this mutation and proves nothing, so the record must name which form ran) — PRODUCTION, must compile | the two-goroutine concurrent-allocation test (duplicate ordinal / duplicate row) | every single-threaded allocation test, the resumption test, and the exhaustion test — a split allocator is still CORRECT serially, which is exactly what makes this mutant discriminating |
+| AC7b exhaustion (r2) | `MUT-ORDINAL-WRAP` (form: delete the `math.MaxInt64` exhaustion check so the increment wraps) — PRODUCTION | the `OrdinalExhaustedError` test | all ordinary allocation tests |
 | AC12 | `MUT-RETRY-XOR` (form: `retryAllowed` body `!indeterminate \|\| reconciled` → `(!indeterminate) != reconciled` in `host/broker/recover.go:46`) — PRODUCTION | ONLY the `((false,true), true)` row — truth table: `(F,F)`→T✓, `(T,F)`→F✓, `(T,T)`→T✓, `(F,T)`→**F✗** — proving the new row is the only non-vacuous witness | all three pre-existing rows |
 
 ## Axiom Compliance
@@ -642,12 +687,13 @@ this worktree at `9be4140`), verifying the quorum-blocking fix's mechanism first
 |---|-------|---------|---------------|
 | V26 | **No existing store method can derive the resumption ordinal** — a new method is required (hence the Decision 2 / freeze / aggregate updates) | read `host/store/journal.go` in full (471 lines) | confirmed: `PendingIntents` (`journal.go:427-470`) filters `NOT EXISTS … kind='outcome'`, so RESOLVED effect intents vanish from its result set (and `PendingEffectIntents` mirrors it); `journalRowFor`/`GetReceipt` (`journal.go:364-423`) are strictly per-`(invocation_id, kind)`; no other method queries `journal` by ID prefix. A pending-only derivation undercounts by every resolved effect |
 | V27 | **The `NextEffectOrdinal` candidate-set semantics hold on the real DDL, including the adversarial cross-episode suffix, and the pending-only view provably misses resolved ordinals** | fresh DB from repo `schema.sql` (sqlite3 CLI 3.51.0 — SQL-semantics probe, same V15 caveat and V24 driver-parity precedent); rows: commit intent `ep-1`; effect intents ordinals 0 (with outcome → RESOLVED) and 1; adversarial `effect:ep-1:x:0` from an episode ID extending the prefix; then the exact-prefix `substr` query vs the pending-only query | prefix query returns exactly `{effect:ep-1:0, effect:ep-1:1, effect:ep-1:x:0}` — the resolved row present, the adversarial suffix `x:0` present-but-non-decimal (skipped by the strict decimal parse, so max ordinal = 1, next = 2); pending-only query returns `{effect:ep-1:1, effect:ep-1:x:0}` — **resolved ordinal 0 MISSING**, proving both the new method's necessity and the collision in any pending-only (or, analogously, record-history-based) derivation |
+| V28 | **The round-2 objection is HALF refuted and HALF real — and the fix is applied in full anyway** (controller, iter-36) | `grep -n 'LOCK_EX\|LOCK_NB\|WriterAlreadyActive' host/store/writer_lock*.go host/store/store.go`; `grep -n 'sync\.\|Mutex\|RWMutex' host/store/store.go host/store/journal.go` | **Cross-process limb REFUTED**: `store.Open` takes a non-waiting exclusive lock and a second writer gets `*WriterAlreadyActive` (landed A1, proven cross-process), so "two broker instances sharing a store" cannot arise. **In-process limb REAL**: **zero** mutex hits in `store.go`/`journal.go` — two goroutines in one process can interleave a split read→allocate→append freely. The reviewer's transactional allocator is adopted in full rather than narrowed to the surviving limb |
+| V29 | **Doc size silently degraded its own review** (controller, iter-36 — process finding) | quorum round-1 artifact `w-effect-journal-2026-07-29T05-50-34Z.json` | `gpt5-6-sol` absent, `absent_reason: budget`, `error: estimated cost $0.1005 (doc ~13952 input tok) exceeds cap $0.1000 (pre-flight refusal, zero spend)`. Round 1 therefore ran ONE-EYED, and the reviewer it lost is the one that later found the TOCTOU. The quorum degraded correctly and named the absentee — it was not a silent pass — but the cap was raised to $0.25 for round 2 and both reviewers were present |
 
 ## Open Decisions (escalated with recommended defaults — the sprint proceeds on the defaults)
 
-- **OD1 — `GetReceipt` defense-in-depth.** Should `GetReceipt` structurally reject `effect:` IDs
-  (beyond namespace disjointness making them unreachable)? **Default: yes, one guard + one
-  test** — cheap, and it turns a silent empty result into a structured error.
+- ~~**OD1 — `GetReceipt` defense-in-depth.**~~ **CLOSED in r2** — promoted from a MAY to a MUST
+  (Decision 2), applying `gemini-3-1-pro`'s round-2 fix verbatim. No longer an open decision.
 - **OD2 — sketch-side ID derivation.** Promote `EffectInvocationID`'s canonical text form into
   `storejournal.ail` with named tests? **Default: Go-side goldens only in this item**; promotion
   waits for a fluency-protocol check of string stdlib support on v0.30.0 (never from memory —
@@ -672,3 +718,53 @@ this worktree at `9be4140`), verifying the quorum-blocking fix's mechanism first
 - `design_docs/sketches/storejournal.ail` — the law this item edits (LAW 5 + CF-N-3 row)
 - Charter queue row 4c + ratification `c26b27d` — scope, pre-ratification-in-principle, and the
   placeholder-ref prohibition
+
+## Quorum verification log
+
+**Round 1** (`2026-07-29T05-50-34Z`, cap $0.10/reviewer, metered **$0.034**) — **BLOCKED**.
+`gemini-3-1-pro` **reject**: the in-memory per-episode ordinal counter is never re-initialized
+after a crash, so a resumed broker's first dispatch collides with the durable
+`effect:<episodeID>:0` and bricks the episode with `DuplicateInvocationError`. `gpt5-6-sol`
+**ABSENT — `budget`**: pre-flight refusal, *"estimated cost $0.1005 (doc ~13952 input tok) exceeds
+cap $0.1000"*, **zero spend**; the quorum degraded to N−1 and named the absentee (never a silent
+pass). Controller verdict: pass.
+
+**r1 revision** (same Fable designer lane, bounded, rc=0). The objection was accepted as a real
+defect. The fix derives the ordinal from durable journal state rather than a fresh zero — and the
+designer **declined the reviewer's own `len(episode.History)` variant with a reason**: history
+counts *records*, and an indeterminate effect is precisely an intent whose record was lost, so
+after exactly the AC7 crash that variant returns the indeterminate intent's own ordinal and still
+collides. r0's frozen claim *"collision-free by construction within an episode"* was marked FALSE
+across a crash boundary and corrected everywhere it was restated. Controller re-verified the crux
+on `modernc.org/sqlite` rather than the designer's CLI harness (**V25b**).
+
+**Round 2** (`2026-07-29T06-00-47Z`, cap raised to $0.25 so the round-1 absentee could run,
+metered **$0.130**; **both reviewers present**) — **BLOCKED**, but only one vote.
+`gemini-3-1-pro` **PASS** (its round-1 objection resolved), with a concrete non-blocking fix: add a
+`strings.HasPrefix(id, "effect:")` guard to `GetReceipt`. `gpt5-6-sol` **reject**: the r1 fix is
+**not atomic** — `NextEffectOrdinal` and `AppendEffectIntent` are separate operations, so two
+allocations can observe the same maximum; *"the resumption fix merely replaces the restart
+collision with a TOCTOU collision."* Controller verdict: pass.
+
+**r2 — the charter's NARROW-REFINEMENT CARVE-OUT, applied by the controller.** Both limbs are
+satisfied: the remaining blocking objection (a) carries a concrete **reviewer-authored**
+`proposed_fix`, and (b) disputes no design DIRECTION — it endorses Path A, the journal shape,
+intent-before-dispatch and the ID namespace, and objects only to the *atomicity* of one method.
+That is the "determinism" limb the carve-out names. The reviewer's fix was applied **verbatim**:
+a single transactional `AppendNextEffectIntent(episodeID, intentWithoutID) (id, ordinal, err)`;
+the broker-side ordinal cache **removed**; `MaxInt64` exhaustion given a structured error; and the
+reviewer's two named tests added as **AC7b**, with premise-log evidence for the transaction
+behaviour as **AC7c**. `gemini-3-1-pro`'s `GetReceipt` guard was adopted too, closing **OD1**.
+
+**One thing the controller measured and did NOT use to soften the fix (V28).** Half of the round-2
+objection is refuted by landed code: two broker *processes* cannot share a store as writers
+(`store.Open`'s non-waiting exclusive lock → `*WriterAlreadyActive`, proven cross-process). The
+other half is real and unguarded — there is **no mutex anywhere** in `store.go`/`journal.go`, so
+two goroutines in one process can interleave. The transactional allocator is adopted in full
+regardless. Narrowing a fix to the part of an objection you can refute is how a real defect
+survives a review, and this mission has paid for that lesson in the opposite direction already.
+
+**Not force-passed.** Standing rule 2 still forbids proceeding over a contested design DIRECTION;
+nothing here was contested at that level, and no objection was overridden — each was *satisfied*.
+Next stop is the sprint-planner, not the executor: this doc is a design, and its milestones are
+still unplanned.
