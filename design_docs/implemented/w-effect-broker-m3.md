@@ -113,31 +113,31 @@ clause depends on.
 
 ### Design Freeze (the sprint must not renegotiate these)
 
-- [ ] The broker law is the Appendix A sketch, landed verbatim as
+- [x] The broker law is the Appendix A sketch, landed verbatim as
   `design_docs/sketches/effectbroker.ail`; the five decision arms and their canonical labels
   (`allowed:<n>`, `denied:effect-name`, `denied:scope`, `denied:expired`, `denied:budget`) are
   frozen; the Go mirror is pinned by a drift test that fails on any divergence.
-- [ ] Denial checks run in the frozen order: effect name → scope → expiry → budget (first
+- [x] Denial checks run in the frozen order: effect name → scope → expiry → budget (first
   failure names the denial).
-- [ ] Every effect request produces exactly one effect record — **denied, succeeded AND failed**
+- [x] Every effect request produces exactly one effect record — **denied, succeeded AND failed**
   (the third arm was RATIFIED 2026-07-28, charter `c26b27d`; see Decision 3's reopen block) —
   written to the store as a content-addressed object with `semantic_id` `world/effect-record/v1`
   BEFORE the result or error is returned to the requester, and **never rewritten afterwards** —
   there is no record "update" or "completion" path anywhere in the broker. A failed effect keeps
   its debit; there is no refund path.
-- [ ] `Human.Approve` is STRICTLY SYNCHRONOUS: its final result is the `Pending(requestRef)`
+- [x] `Human.Approve` is STRICTLY SYNCHRONOUS: its final result is the `Pending(requestRef)`
   object and its one record's `resultRef` points to it; `DecideApproval` writes a separate
   decision object and moves the `world/approvals/v1` head only; observing the decision is the
   separate brokered effect `Human.PollApproval` (own capability, own budget line, own record).
-- [ ] `host/store/schema.sql` and the six frozen `LogHeader` fields are byte-for-byte unchanged.
-- [ ] Replay mode never dispatches a handler; a missing record is a structured `ReplayGapError`,
+- [x] `host/store/schema.sql` and the six frozen `LogHeader` fields are byte-for-byte unchanged.
+- [x] Replay mode never dispatches a handler; a missing record is a structured `ReplayGapError`,
   never a live re-execution.
-- [ ] Capsules execute ONLY the pinned, hash-verified archived interpreter with `--caps ""`,
+- [x] Capsules execute ONLY the pinned, hash-verified archived interpreter with `--caps ""`,
   a scrubbed environment, a fresh working directory, `AILANG_FS_SANDBOX` set to that directory,
   a named wall-clock bound, and a named output byte cap (Decision 6 — all six, each tested).
-- [ ] `host/broker` and `host/capsule` import only {Go stdlib, this module, the pinned
+- [x] `host/broker` and `host/capsule` import only {Go stdlib, this module, the pinned
   `modernc.org/sqlite` chain} — enforced by `TestBrokerDependencyAllowlist`.
-- [ ] M3 adds zero REST routes, zero CLI verbs, zero daemon code changes, and zero `host/store`
+- [x] M3 adds zero REST routes, zero CLI verbs, zero daemon code changes, and zero `host/store`
   method changes.
 
 ---
@@ -583,9 +583,56 @@ recorded from the first commit.
   FS.Read p95 ≤ 10 ms on the dev rig — targets to validate and record, CI asserts mechanism
   only per the D6 precedent), `README.md` (+~10)
 - **acceptance_checks**: episode test green; benchmark manifest gate red if either new name is
-  dropped; baseline committed with broker rows; doc → `implemented/` with every box checked
+  dropped; baseline committed with broker rows; ~~doc → `implemented/` with every box checked~~
+  → moved to M3.D by the sprint plan's `PLANNER_DECISION_the_close_out_moves_to_M3_D`, because
+  moving the doc while AC16 was still unlanded would have been a false close-out
 - **verify_commands**: full sweep — both gates + `./scripts/bench_worldd.sh --smoke`
-- **ci_green_boundary**: LANDS the item
+- **ci_green_boundary**: closes AC8/AC11/AC12/AC13/AC17 and DRAFTS the close-out; the doc stays in
+  `planned/`
+
+### M3.D — Commit-boundary anchoring + the broker's PRODUCTION recovery path (~0.5d)
+
+The item's LAST milestone. **This section was added at iteration 35, as part of M3.D itself.**
+Until then M3.D existed only in Decision 3's corrected supersession note ("That is M3.D"), the
+Deferred Scope row, the charter stamp and the sprint plan — the Milestones list jumped from M3.C
+to nothing. That is the *a correction that stopped one artifact short* shape this item has now hit
+six times, so writing the section is part of the milestone rather than a footnote to it.
+
+**Ratified**: option (i), Mark attended, 2026-07-28, charter `c26b27d`; propagated to this doc at
+`84b8efd`.
+
+- **files**: `host/broker/recover.go` (~140 — NEW, **production**: `Recover` pages
+  `store.PendingIntents` with the kernel-owned `store.MaxPendingIntentsPage` bound and the `Seq`
+  keyset cursor, reads `store.GetReceipt` per intent, and surfaces
+  `*IndeterminateEffectError{InvocationID, PlannedWorldRef, PlannedEntryHash}` for every
+  `ReceiptIndeterminate` intent — never dispatching, never auto-resolving, never appending an
+  outcome, never re-executing; it takes a `Registry` variadically and deliberately never consults
+  it, so the no-dispatch policy is observable at the production boundary),
+  `host/broker/recover_test.go` (~350 — counting probe at ZERO dispatches, never-lie surfacing,
+  the `Model.Infer`-shaped never-redispatch case, deterministic reconciliation, the paging bound,
+  and the multi-page keyset case added at iteration 35), `host/broker/episode_test.go` (+~40 — the
+  episode's commit anchored to a durable intent)
+- **acceptance_checks**: **AC16** (CF-H-1, discharged by a **PRODUCTION** mutation), **AC14**,
+  **AC19** — all three migrated here from M3.C by the plan's `PLANNER_DECISION`
+- **verify_commands**: both gates + `go test ./host/broker/...` with ZERO skips + the protected-path
+  `git diff --exit-code` + the AC19 honest-claim grep
+- **ci_green_boundary**: **LANDS THE ITEM.**
+
+**What option (i) IS**: the episode driver appends ONE durable intent once the world and entry are
+fully built — i.e. AFTER every brokered effect has run and been recorded — then commits with
+`Commit.InvocationID` set. Recovery reads the journal and reports; it never acts.
+
+**What option (i) IS NOT**: it is NOT a pre-dispatch intent. That is structurally impossible against
+this substrate, and the impossibility was MEASURED at iteration 31: a brokered effect's result is an
+INPUT to the transition that produces the next world, so `EntryHash` / `TransitionRef` /
+`NextWorld.Ref` are not knowable before dispatch. It is NOT an effect journal — that is queue item
+4c `w-effect-journal`. **It does NOT close the dispatch→record window.**
+
+**The honest claim, verbatim (AC19).** Every COMMIT of an effectful episode is crash-detectable and
+never auto-re-executed. The dispatch→record window remains OPEN and is stated, not closed: an
+effect whose handler completed but whose record write was lost is not durably detectable. Objection
+2A is **PARTIALLY** discharged; closing it at effect granularity is queue item 4c
+`w-effect-journal`.
 
 **Pre-committed overflow cut line (the honest fiction-avoidance clause):** if the sprint runs
 past ~3d, the cut is **`Git.Commit` → deferred to a named follow-up (`w-broker-git-handler`,
@@ -703,16 +750,16 @@ named destination in Deferred Scope.
 
 ## Acceptance Criteria
 
-- [ ] `design_docs/sketches/effectbroker.ail` lands verbatim from Appendix A; full
+- [x] `design_docs/sketches/effectbroker.ail` lands verbatim from Appendix A; full
   `verify_ail.sh` sweep green at **11** modules with the 4-identity / 14-test world/ totals
   unperturbed; its 7 contracts appear as `verified` in `verify.results[]` (z3 present — never
   the silent-skip exit-0).
-- [ ] The Go `decide` mirror is pinned by a drift test covering all five decision arms, every
+- [x] The Go `decide` mirror is pinned by a drift test covering all five decision arms, every
   sketch `tests[]` boundary case, and the frozen canonical labels.
-- [ ] Every effect request — denied, succeeded AND failed — writes exactly one content-addressed
+- [x] Every effect request — denied, succeeded AND failed — writes exactly one content-addressed
   effect record before any result or error is returned; `recordConsistent` holds over every
   written record.
-- [ ] **AC18 (the RATIFIED third arm, charter `c26b27d`).** A handler that returns an error writes
+- [x] **AC18 (the RATIFIED third arm, charter `c26b27d`).** A handler that returns an error writes
   exactly one effect record recording the failure, with the debit **standing**
   (`budgetAfter == budgetBefore - cost`) and a zero `resultRef`; the three arms are distinguishable
   from the record bytes alone; `recordConsistent` is Z3-**verified** over all three arms in
@@ -722,10 +769,10 @@ named destination in Deferred Scope.
   handler dispatches; and `host/broker/handler_error_repro_test.go` is rewritten red→green (and
   renamed `CF-I-2`→`CF-J-2`). The ledger is reconstructible from the record stream alone on the
   failure path — the claim that was false before this arm.
-- [ ] **The honest-claim gate (charter `c26b27d`).** No milestone, acceptance criterion, status
+- [x] **The honest-claim gate (charter `c26b27d`).** No milestone, acceptance criterion, status
   line or close-out claim states or implies that the **dispatch→record** crash window is closed by
   M3. The close-out asserts this by `grep`, not by recollection.
-- [ ] Ledger enforcement: an invoke whose cost exceeds the session's REMAINING budget is
+- [x] Ledger enforcement: an invoke whose cost exceeds the session's REMAINING budget is
   `denied:budget` even when the static grant would allow it; the denial is recorded with the
   budget untouched.
 - [x] All four handlers (FS.Read/FS.Write, Git.Commit, Model.Infer, Human.Approve +
@@ -741,20 +788,20 @@ named destination in Deferred Scope.
 - [x] Replay of the approval flow matches Decision 5's stated contract: the approve record
   replays as Pending, the poll record replays the recorded observation, and the decision
   object is never consulted except through a poll record.
-- [ ] Replay mode: the M3.C episode re-runs byte-identically from records with ZERO handler
+- [x] Replay mode: the M3.C episode re-runs byte-identically from records with ZERO handler
   dispatches (counting-stub assertion); a deleted record yields `ReplayGapError`; the replayed
   transition's evidence refs resolve to the same record objects.
 - [x] The capsule floor: all six restrictions F1–F6 individually green on darwin/arm64 AND
   linux CI, each with its named mutation demonstrated red during the sprint.
 - [x] `TestBrokerDependencyAllowlist` green; `go.mod`/`go.sum` byte-unchanged (zero new
   dependencies).
-- [ ] Byte-unchanged by diff, not by claim: `host/store/**` (incl. `schema.sql`),
+- [x] Byte-unchanged by diff, not by claim: `host/store/**` (incl. `schema.sql`),
   `host/replay/**`, `host/{hashref,canon,archive,registry}/**`, `host/daemon/**` (except
   `bench_test.go`), `cmd/**`, `world/**`, `scripts/verify_{ail,go}.sh`, `.github/**`.
-- [ ] `BenchmarkBrokerDecide` + `BenchmarkBrokerFSRead` in the hardcoded smoke manifest;
+- [x] `BenchmarkBrokerDecide` + `BenchmarkBrokerFSRead` in the hardcoded smoke manifest;
   `bench/BASELINE.md` re-measured in one invocation with the broker rows present.
 - [ ] Both CI jobs green on every milestone PR and every dev merge.
-- [ ] The scope note's honesty holds at close-out: the item is recorded as "clause-3 machinery
+- [x] The scope note's honesty holds at close-out: the item is recorded as "clause-3 machinery
   landed and proven; end-state check pending first agent (M4)" — not as clause 3 done.
 
 ## Non-Vacuity — the named RED mutation for every gate (S6)
@@ -1012,10 +1059,54 @@ force through.
 **The question for the human** is stated in the mission log and the charter queue row; it is
 answerable in one comment, and the doc needs no further work before the answer arrives.
 
-## Close-out draft (M3.C — to be applied by M3.D with the doc move)
+## Close-out (M3.C drafted it; M3.D applied it with the doc move at iteration 35)
 
-This is a draft hand-off, not the item close-out. The document stays in
-`planned/`; M3.D owns AC14, AC16, AC19, and the eventual move to `implemented/`.
+~~This is a draft hand-off, not the item close-out. The document stays in
+`planned/`; M3.D owns AC14, AC16, AC19, and the eventual move to `implemented/`.~~
+**Superseded at iteration 35.** M3.D landed, and this is now the item close-out. The
+strike-through is kept rather than deleted so the hand-off remains auditable.
+
+**AC16 — CF-H-1 IS DISCHARGED, AND BY A PRODUCTION MUTATION.** This is the check
+the whole milestone existed for, so the discriminating result is recorded in
+full rather than as a verdict:
+
+- **File mutated**: `host/broker/recover.go` — **production code**, not a test
+  helper. The mutation makes `Recover` re-dispatch every indeterminate intent
+  through the registry. It **COMPILES** (a mutation that fails to build measures
+  the compiler, not the gate).
+- **RED, independently**: `TestRecoverCountingProbeDispatchesZeroHandlers`
+  (*"recovery dispatched 1 handlers, want 0"*) and
+  `TestRecoverModelInferNeverRedispatchesAfterResolution` (*"recovery dispatched
+  1 handlers after resolution, want 0"*).
+- **STAYED GREEN**: `TestRecoverSurfacesNeverLieLaw`,
+  `TestRecoverCommitPathPlannedStateAbsentWithoutOutcome`,
+  `TestRecoverUsesKernelPagingBound`,
+  `TestRecoverPagesWithKeysetCursorAcrossFullPages`,
+  `TestRecoveryConsumerContractMirrorsSketch`. Two red, five green — the
+  mutation changed the *policy*, it did not break recovery. Had everything red,
+  it would have proven nothing.
+- **Reverted byte-identical**, `sha256` re-measured before and after.
+- **THE SD.C CONTRAST, STATED EXPLICITLY**: SD.C's version of this mutation
+  edited `recoverIndeterminate` in `host/store/recover_test.go` — **the test's
+  own helper** — so no kernel change could ever have failed it. That is what
+  V37 → CF-H-1 records. Reporting "MUT-AUTO-RETRY red" *without* this contrast
+  would reproduce the exact defect CF-H-1 exists to name.
+
+**AC16 corroboration — `MUT-RECEIPT-LIE-CONSUMED`.** `host/store/journal.go`
+`GetReceipt` mutated to report a durable intent as `not-started`. The broker's
+surfacing test **reds**, proving the broker *consumes* the kernel's never-lie law
+rather than re-deriving it — had it stayed green, the consumption claim would
+have been vacuous. `TestRecoveryConsumerContractMirrorsSketch`, which reads no
+receipt, stayed green. `journal.go` reverted byte-identical;
+`sha256 2edf83a369e28cfda35e1fdf7ccfa321fe0010f5806acd6bc3e202cf9f146c7f`
+**re-measured** before and after rather than trusted from the plan's string.
+
+**Substrate corroboration, LABELLED — `MUT-NO-INTENT-BEFORE-COMMIT`.** Committing
+with `InvocationID` set but no durable intent reds with `store: invocation
+"broker-episode-live-replay" field InvocationID mismatch: want "durable intent"`,
+exactly as the planner predicted from reading `bindCommitIntentTx`. This is
+**TEST CODE reddening on LANDED kernel code**: it is corroboration about the
+substrate and is **NOT counted toward AC16**.
 
 - [x] **AC8:** `host/broker/episode_test.go` (landed in C-1) covers the live and
   replay episode, all three record arms, zero replay dispatch, replay gaps, and
@@ -1036,10 +1127,82 @@ This is a draft hand-off, not the item close-out. The document stays in
 - [x] **AC17:** the baseline states the per-commit arithmetic for N=1 and N=3,
   requires three 200x runs for a ratio within 2× of unity, and leaves Decision
   7's +20% bound unchanged.
-- [ ] **AC14:** migrated to M3.D; do not claim clause 3 complete before the
-  first agent exists in M4.
-- [ ] **AC19:** migrated to M3.D. C-2 gathers its grep evidence, but M3.D owns
-  the assertion and final close-out.
+- [x] **AC14 (M3.D):** the item is recorded as **"clause-3 machinery landed and
+  proven; end-state check pending first agent (M4)"** — **NOT** as clause 3 done.
+  The broker, its law, its three record arms, the capsule floor, replay and now
+  commit-boundary recovery all exist and are proven by named mutations; what does
+  not yet exist is an AGENT using them, and clause 3's end-state check is about
+  that agent, not about this machinery. No line of this close-out may be read as
+  clause 3 complete.
+- [x] **AC19 (M3.D) — the honest-claim gate, asserted by `grep` AND by reading
+  every hit.** Over `host/broker/recover.go` the prohibited-claim pattern
+  (`crash window (is )?closed|closes the (dispatch|crash) window|durably
+  (recorded|detectable) (for )?every effect`) returns **nothing**. Over this
+  document it returns **exactly two hits, and both are the PROHIBITION itself** —
+  line 284 (*"No milestone, acceptance criterion or claim in this document may
+  state or imply that the dispatch→record crash window is closed by M3."*) and
+  the AC19 criterion bullet quoting the same sentence. Both were read, not
+  assumed; neither asserts the window is closed.
+
+  **Recorded, because the gate as literally specified is unsatisfiable.** The
+  plan requires "the honest-claim `grep` … returns nothing". It cannot: the rule
+  forbids a phrase, the rule is written in this document, and so the rule
+  contains the phrase. The only way to make a bare `grep` return nothing would be
+  to **delete the prohibition** — i.e. the gate's literal form rewards removing
+  the very sentence it exists to enforce. A pattern this gate can actually be
+  scored on must either exclude the prohibition lines or, as here, require that
+  **every hit be read and classified**. The check is "no hit ASSERTS the closure",
+  not "no hit MENTIONS it". Same family as `len(tests[])`-vs-`passed_tests`: the
+  number you gate on has to be the number that means what you claim.
+
+  The residual is stated in the ratification's exact words: **every COMMIT of an
+  effectful episode is
+  crash-detectable and never auto-re-executed; the dispatch→record window remains
+  OPEN and is stated, not closed — an effect whose handler completed but whose
+  record write was lost is not durably detectable. Objection 2A is PARTIALLY
+  discharged; closing it at effect granularity is queue item 4c
+  `w-effect-journal`.**
+
+### Two defects found in M3.D's own new code, before it landed
+
+Both are the mission's signature shape — **a check that no input could ever
+fail** — and both were found by the controller reviewing a checkpoint that had
+already reported every gate green.
+
+**(1) An unreachable guard.** `recoverPending` guarded with
+`if retryAllowed(true, false)`, whose condition is `!true || false` — a
+**compile-time FALSE**. It reads as a runtime safety check ("unreconciled
+invocation was marked retryable") but no input can trip it. Proven unreachable
+*before* removal by replacing its body with a `panic`: the whole package still
+passed. Removed. The adjacent `!mayReportNotStarted(true)` was the same folded
+constant; its enclosing branch IS reachable and load-bearing, so the branch was
+kept and the call replaced by the constant it always was. Both helpers remain as
+the mirrored law, pinned against `design_docs/sketches/storejournal.ail` by
+`TestRecoveryConsumerContractMirrorsSketch`.
+
+**(2) The paging discipline had nothing to prove.** The plan's
+`MUT-PENDING-UNBOUNDED` (drop the `Seq` keyset cursor) left **all five** original
+recovery tests GREEN. The temp-file fixtures hold ONE pending intent, so they
+only ever produce a single short page, and a dropped cursor changes nothing
+observable; `TestRecoverUsesKernelPagingBound` asserts the literal `limit`
+argument and the `*InvalidLimitError` boundary, never multi-page behaviour. Per
+the plan's own instruction for exactly this case — *"the test must be added, not
+the mutation dropped"* — `TestRecoverPagesWithKeysetCursorAcrossFullPages` was
+written. With it the mutation reds **exactly that one test**
+(`recovery did not terminate: 9 calls, cursors=[-1 -1 -1 ...]`) while the other
+six stay green.
+
+**And the method matters more than either fix: the first
+`MUT-PENDING-UNBOUNDED` run was a SILENT NO-OP.** The replacement pattern
+carried four tabs where the source has three, so `str.replace` matched nothing
+and the resulting all-green read *exactly* like a mutation that had been applied
+and survived. The conclusion happened to be right; the evidence for it was
+worthless. **A mutation that was never applied is indistinguishable from a
+mutation that was survived** — the same vacuous-pass family as the silent z3
+skip (V27), the silent `t.Skip` (B1) and the build-error-wearing-the-gate's-
+clothes (iteration 34). Mutations are now applied under an assertion that the
+pattern matched exactly once, and the applied diff is shown before the suite
+runs.
 
 CF-L-4 is intentionally test-local: AC7 simulates deletion through a local
 store wrapper because `host/store` exposes no deletion API. It does not require
