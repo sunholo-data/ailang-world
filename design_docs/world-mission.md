@@ -56,6 +56,26 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   a spent codex quota rather than a PATH gap (iter-18 lost a codex probe to exactly that
   misreading). The pinned AILANG binary lives OUTSIDE the repo at `/tmp/ailang-v0300/ailang`
   (v0.30.0, commit `e37b370`, clean) — always pass it explicitly as `AILANG_BIN`.
+- **THE RIG'S SHELL IS `zsh`, AND TWO OF THE SKILL'S OWN INSTRUMENT IDIOMS SILENTLY PRODUCE
+  CLEAN-LOOKING NON-RESULTS HERE (process fix, iter-37; 2 instances in ONE iteration, both in the
+  controller's own Gate-2 verification).** Every Bash call in this loop runs under `zsh`, not bash,
+  and both defects below return something that looks exactly like a passed check:
+  (a) **an unquoted `--include=*.go` is GLOB-EXPANDED by zsh** — with no matching file in the cwd it
+  fails the whole command with `no matches found`, so `grep -rn PATTERN --include=*.go .` **never
+  runs** and the surrounding pipeline reports `0` hits. Iter-37 nearly handed its executor a
+  fabricated *"zero callers anywhere"* fact this way; the only reason it was caught is that the same
+  call carried a **known-positive control** which also came back empty. Quote it (`--include='*.go'`)
+  or, better, use the `Grep` tool, which cannot be glob-mangled.
+  (b) **`${PIPESTATUS[0]}` IS BASH SYNTAX AND EXPANDS TO EMPTY IN `zsh`** — the array is
+  `pipestatus` and it is **1-indexed**, so the skill's own Gate-2 remedy for *"exit codes through
+  pipes lie"* prints `rc=` and voids the reading it was added to protect. Use direct invocation
+  (`cmd > /tmp/out 2>&1; echo "rc=$?"`) and read the file afterwards; that works in both shells.
+  **The general rule both instances teach: a remedy is an instrument too, and inherits the same
+  burden of proof as the thing it verifies.** Pair every negative or exit-code check with a
+  known-positive control in the SAME call, so a broken instrument is distinguishable from a real
+  all-clear. **Routed upstream as a PROPOSED shared-skill fix** (World cannot edit the
+  mission-control SKILL.md — it lives in the V1 checkout), since Gate 2's step 3 currently
+  *prescribes* the bash-only form.
 - **Codex model pins are NOT covered by the driver's probe (process fix, iter-19).** The driver's
   codex pre-flight (`tools/launchd/mission-control.sh:248`) runs `codex exec --skip-git-repo-check
   'reply with exactly: ok'` — **without `--model`** — so it exercises codex's DEFAULT model and
