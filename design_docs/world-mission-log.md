@@ -4710,6 +4710,210 @@ flipping AC18's checkbox (CF-K-2). Then **M3.D** (ratified option (i)) and item 
 `w-effect-journal`**. The dispatch→record crash window remains OPEN and AC19 still forbids claiming
 otherwise.
 
+## Iteration 35 — 2026-07-29 — `w-effect-broker-m3` **M3.D LANDED → THE ITEM IS COMPLETE** (PR #24 → squash `4c4ff69`, dev CI green both jobs, judge sonnet PASS 93/100 zero-blocking) — and the iteration's spine is that **a mutation that was never applied is indistinguishable from a mutation that was survived**: the run that "proved" the paging discipline untested was a silent no-op whose all-green output looked exactly like a real result, and the conclusion it supported happened to be true
+
+**Pick**: item **4 `w-effect-broker-m3`**, milestone **M3.D** — the queue head, `[IN-SPRINT]`, the
+item's LAST milestone, ratified attended by Mark at `c26b27d` so no human gate outstanding, doc
+twice-quorumed so no re-design and no re-quorum. Verified NOT-landed against a fresh `origin` at
+pick time: zero `M3.D` commits, no PR, `host/broker/recover.go` absent, doc still in `planned/`.
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` =
+`sunholo-voight-kampff`; tree clean on `dev` == `origin/dev` == `e06be0b` (two-arg `git rev-parse`
+**without** `--short`, rc=0 — the iter-108 lesson). dev CI green at HEAD, read per-workflow.
+Inbox: 1 unread — `mission-v1`'s iteration-118 report, a CROSS-MISSION message. It triaged my
+`ailang#517` as **REAL at HEAD and wider than filed** (`createGeneratorForType` covers only
+int/float/bool/string plus an `*ast.ListType` arm that has been **DEAD CODE since DX-17**, so
+tuples, plain records and `list[T]` all run zero cases). Acknowledged; per the cross-mission
+contract it does NOT outrank the queue, and it is an acknowledgement of my own upstream filing
+rather than a demand on this loop. **No `@MarkEdmondson1234` comment** on `#9` (29 comments) nor on
+predecessor `#1` since watermark `2026-07-27T08:55:11Z`. **No rotation due** — `#9` was created
+07:51 **local** (CEST), i.e. AFTER the Monday 07:00 local boundary, and 29 comments ≪ 80. The
+timezone was load-bearing: read as UTC the same issue would have spuriously rotated at two days old.
+
+**Gate 2 — the two stale labels M3.D owned were corrected BEFORE routing**, so they could not be
+resolved the wrong way under time pressure:
+- **CF-M-3**: `MUT-BENCH-DROP` still specified the **delete**-form, which for `BenchmarkBrokerFSRead`
+  leaves `"os"` unused and yields a COMPILE ERROR wearing the gate's clothes. Moved to the
+  **rename**-form.
+- **CF-M-4**: `acceptance_check_numbering` still labelled **AC14** and **AC19** "OWNER M3.C" against
+  the later `PLANNER_DECISION` that migrated both to M3.D — **and a THIRD stale label CF-M-4 never
+  named was found first-party**: **AC16** still carried "(BLOCKED)" long after ratification
+  `c26b27d` cleared it.
+
+**Metered ledger**: **`metered=$0.00`**. codex ran on `auth_mode=chatgpt` (subscription; the call
+site strips `OPENAI_API_KEY` with `env -u`); controller and judge on quota buckets; designer NOT
+fired (no new doc); quorum NOT run. The $5 ceiling was never approached.
+
+**Routing evidence**
+
+| Role | Pin | Actually ran on | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` | **opus** | triage/pick/review/mutation-reproduction/doc close-out/record/retro |
+| Executor | `$MISSION_EXECUTOR_MODEL` | **`codex:gpt-5.6-sol`** | probe run **WITH `--model`** (charter iter-19 rule) → rc=0 on codex-cli **0.145.0**; iter-19's `400 … requires a newer version of Codex` was on 0.137.0 and did not recur. Two bounded 30-min runs, one per checkpoint |
+| Evaluator | `$MISSION_EVALUATOR_MODEL` | **sonnet** | generator≠judge, cross-provider vs codex. PASS **93/100**, zero blocking, 7 enumerated non-blocking |
+| Designer | — | not fired | no new doc; rotation state untouched at `codex:gpt-5.6-sol` |
+
+**Delivered** — five commits on `sprint/w-effect-broker-m3d`, squashed to `4c4ff69`:
+
+`97cd343` (D-1, +393) `host/broker/recover.go` (138 LOC, **production**) + `recover_test.go`.
+`Recover` pages `store.PendingIntents` with the kernel-owned `store.MaxPendingIntentsPage` and the
+`Seq` keyset cursor, reads `GetReceipt`, and surfaces `*IndeterminateEffectError{InvocationID,
+PlannedWorldRef, PlannedEntryHash}` for every `ReceiptIndeterminate` intent — never dispatching,
+never auto-resolving, never appending an outcome, never re-executing. It takes a `Registry`
+variadically and deliberately never consults it, so the no-dispatch policy is observable at the
+production boundary. Commit fixture built from the PUBLIC store API, `host/store`'s own helpers
+being package-private.
+
+`6391445` (D-1b) the controller's two corrections to D-1 (Finding 1).
+
+`07f9a96` (D-2, +39/−7) `episode_test.go`: `commitEpisode` split into a pure `buildEpisodeCommit`
+plus an explicit `appendEpisodeIntent` + `Commit`, so the ORDER is visible in the test rather than
+hidden in a helper. Effects run and are recorded → world+entry built → **then** the intent →
+commit with `InvocationID` → `ReceiptResolved` asserted, `PendingIntents` empty. No outcome
+appended (the store writes it inside the transaction).
+
+`35bb8d0` the missing `### M3.D` doc section, the close-out, the move to `implemented/`.
+
+`e600698` the three judge-forced corrections (Finding 3).
+
+**AC16 / CF-H-1 IS DISCHARGED, BY A PRODUCTION MUTATION.** `MUT-AUTO-RETRY-PROD` mutates
+`host/broker/recover.go` — production, not a test helper — **compiles**, and reds
+**independently** `TestRecoverCountingProbeDispatchesZeroHandlers` (*"recovery dispatched 1
+handlers, want 0"*) and `TestRecoverModelInferNeverRedispatchesAfterResolution`, while **five**
+others stay GREEN. Two red / five green is the whole point: had everything red, the mutation would
+have broken recovery rather than changed its policy and proven nothing. Reverted byte-identical
+(`f18fb1b7…`). **The SD.C contrast is stated explicitly**: SD.C's version mutated
+`recoverIndeterminate` in `host/store/recover_test.go`, the test's OWN helper, so no kernel change
+could ever have failed it — that is what V37 → CF-H-1 records, and reporting "MUT-AUTO-RETRY red"
+without the contrast would reproduce the exact defect. Independently re-run by the judge, same
+numbers.
+
+**Finding 1 — TWO defects in M3.D's own new code, found before it landed, both the mission's
+signature shape.**
+(a) **An unreachable guard.** `recoverPending` guarded with `if retryAllowed(true, false)`, whose
+condition is `!true || false` — a **compile-time FALSE**. It reads as a runtime safety check
+("unreconciled invocation was marked retryable") but no input can trip it. **Proven unreachable
+BEFORE removal** by replacing its body with a `panic`: the whole package still passed. The adjacent
+`!mayReportNotStarted(true)` was the same folded constant, but its enclosing branch IS reachable
+and load-bearing (it is what catches `MUT-RECEIPT-LIE-CONSUMED`), so the branch was kept and the
+call replaced by the constant it always was.
+(b) **The paging discipline had nothing to prove.** `MUT-PENDING-UNBOUNDED` left **all five**
+original tests GREEN — the temp-file fixtures hold ONE pending intent, so they only ever produce a
+single short page, and `TestRecoverUsesKernelPagingBound` asserts the literal `limit` argument and
+the `*InvalidLimitError` boundary, never multi-page behaviour. Per the plan's own instruction for
+exactly this case (*"the test must be added, not the mutation dropped"*),
+`TestRecoverPagesWithKeysetCursorAcrossFullPages` was written; the mutation now reds **exactly that
+one test** while the other six stay green.
+
+**Finding 2 — THE ITERATION'S SPINE: the run that established Finding 1(b) was a SILENT NO-OP.**
+The first `MUT-PENDING-UNBOUNDED` attempt used a replacement pattern carrying **four tabs where the
+source has three**. `str.replace` matched nothing, wrote the file back unchanged, and the suite went
+all-green — **an output indistinguishable from a mutation that had been applied and survived**. I
+was one step from recording "the paging test is decoration" on the strength of a mutation that never
+existed. The conclusion happened to be correct — verified afterwards with an asserted mutation — but
+**the evidence for it was worthless, and being right by luck is not a method**. This is the same
+vacuous-pass family the mission has now paid for four times: the silent z3 skip (V27), the silent
+`t.Skip` (B1), the build-error-wearing-the-gate's-clothes (iter-34), and now the unapplied mutation.
+Every mutation in this iteration thereafter ran under an `assert` that the pattern matched **exactly
+once**, with the applied diff printed before the suite. *The instrument's own validity must be
+established before its reading counts as evidence* — and three lighter instances of the same class
+hit me in this one iteration (a `go test` run without `AILANG_BIN` that I nearly recorded as
+mutation blast-radius; a `pgrep` that cannot see a sub-agent; a mis-parsed `ls` column that made me
+conclude the judge had died at launch).
+
+**Finding 3 — the judge found three real defects in my own close-out, and re-running one REFUTED the
+judge while confirming a defect underneath it.**
+(a) **`MUT-PENDING-UNBOUNDED` names a FAMILY, not a mutation.** The judge reported that my quoted
+error text "does not match the current behavior" and was probably from an older revision. **REFUTED**
+by reproduction on the landed code — it reproduces exactly. What IS true: two different mutations
+both answer to "drop the `Seq` keyset cursor", **both compile, and both red EXACTLY the same one
+test by different mechanisms** — form 1 (drop the cursor assignment *and* the advance guard) trips
+the fake's `maxCalls` bound; form 2 (drop only the `fromIndex` hand-off) trips `recover.go`'s own
+guard. My record was accurate for the form I ran and **never said which form**, so a reader running
+the other reasonably concluded it was wrong. **Same shape as iter-34's `MUT-BENCH-DROP`
+delete-vs-rename: one NAME, two forms.** Both are now tabulated, and the test is *stronger* than
+either party recorded — it catches the defect through two independent mechanisms.
+(b) **"ZERO `t.Skip`" in my D-1/D-2 commit messages is FALSE for the package.**
+`host/broker/handlers_test.go` carries two (lines 183, 187), pre-existing from M3.B. What I measured
+was *zero tests skipped at runtime with `AILANG_BIN` set*, then generalised it to *zero `t.Skip` in
+source* without re-checking. **The re-check found what the judge did not**: the same missing env var
+gets OPPOSITE treatment inside ONE package — `episode_test.go` **fails loudly** while two
+`Model.Infer` tests **silently skip**, so a bare `go test ./host/broker/...` reports `ok` while two
+tests vanish. That is the V27/B1 silent-skip shape in the very package whose milestone closed that
+class elsewhere. Not currently dangerous (`verify_go.sh` and CI `go-verify` both fail loudly if
+`AILANG_BIN` is unset or ≠ v0.30.0), and **deliberately not fixed here** — M3.B's landed code,
+outside M3.D's scope. → **CF-N-1**.
+(c) **`MUT-RECEIPT-LIE-CONSUMED` was UNDERSTATED.** The close-out said it "reds the broker's
+surfacing test"; **five** tests red — every test reaching `GetReceipt` through the real store —
+while the two touching no real receipt stay green, which is the discriminating contrast. The
+consumption proof is *stronger* than claimed. Recorded because a mission that retracted an overclaim
+one milestone ago can mistake understatement for safety: **a report that understates its own
+evidence still does not match its evidence**, and the reader cannot tell which direction the error
+runs.
+
+**Finding 4 — the AC19 gate's violation count is MONOTONICALLY INCREASING IN HONESTY.** The plan
+requires the honest-claim `grep` to "return nothing". It **cannot**: the rule forbids a phrase, the
+rule is written in the document, so the rule contains the phrase. It stood at two hits; documenting
+the gate's own defect accurately made it **three**. Every future reader who states the rule
+correctly adds another, and the only way to drive a bare `grep` to zero is to **delete the
+prohibition** — the literal form rewards removing the very sentence it exists to enforce. All three
+hits were read and classified; **none asserts closure**. The scoreable form is "no hit ASSERTS the
+closure", not "no hit MENTIONS it" — the same family as gating on `passed_tests` instead of
+`len(tests[])`.
+
+**Ruled out / refuted this iteration**
+- **REFUTED (the judge's)**: that the close-out's `MUT-PENDING-UNBOUNDED` error text was stale or
+  from an older revision. It reproduces exactly on landed code; the real defect was the unnamed
+  mutation FORM. See Finding 3(a).
+- **REFUTED (mine, twice, before it reached a record)**: that `MUT-AUTO-RETRY-PROD` also reds
+  `TestEpisodeLiveReplayThreeArmsAndEvidence` — that failure was **my own missing `AILANG_BIN`**,
+  not the mutation; and that `MUT-PENDING-UNBOUNDED` leaves the paging test green — that run never
+  applied the mutation at all.
+- **NOT FIXED, deliberately**: `handlers_test.go`'s two `t.Skip` (CF-N-1, M3.B's code);
+  `maxRecoveryPages = 1 << 20` has no principled justification (judge NB-3 → CF-N-2);
+  `retryAllowed(false, true)` is the one truth-table row left untested (judge NB-7 → CF-N-3).
+- **NOT REPRODUCED**: `TestHandlerTimeoutKillsTheWholeProcessGroup` failed **once** at 5.25s against
+  its 2s bound, where the fake's grandchild (`sleep 5 &`) has a 5s lifetime — so the elapsed says the
+  process-group kill **missed**, not that the machine was slow. **Not reproduced in 68 further runs**
+  (20 isolated, 30 contended, 6 whole-package, 12 parallel whole-package; the judge added 5 more).
+  Iteration 33 recorded darwin as the platform that *hides* this defect; this is the first darwin
+  sighting. The `Invoke took %s` string was **not captured**, so the ≈5s attribution is inferred from
+  the test's own duration, not read directly. → **CF-N-4**, at an unmeasured rate; not fixed, not
+  dismissed, and explicitly not a blocker for M3.D, which touches no handler code.
+
+**Open non-blocking carry-forwards (enumerated — a bare COUNT is unrecoverable, iter-19 rule):**
+**CF-N-1** — `handlers_test.go:183,187` `t.Skip` on unset `AILANG_BIN` while `episode_test.go` fails
+loudly on the same condition; one package, two answers. Owner: a queue item touching M3.B code.
+**CF-N-2** — `maxRecoveryPages = 1 << 20` (~1e9 intents) satisfies P7 but is unjustified. Owner: 4c
+or a broker follow-up.
+**CF-N-3** — `TestRecoveryConsumerContractMirrorsSketch` covers 3 of 4 `retryAllowed` rows;
+`(false, true)` untested. Owner: 4c.
+**CF-N-4** — the process-group timing miss above, 1 in 69 observed, darwin. Owner: a queue item.
+**CF-M-1** — `verify_ail.sh` reads no `skipped_tests`; pin an EXPECTED value so a NEW skip cannot
+hide among the 5 known ones. Root cause upstream at `ailang#517`, now **triaged REAL and wider than
+filed by mission-v1** and queued there as `m-property-generator-coverage [world-DEMAND]`.
+**CF-M-2** — `host/replay/replay.go:325` (no `Setpgid`, `bytes.Buffer` sink) and
+`host/archive/archive.go:382` (no context, no deadline) repeat the iter-33 process-group defect.
+**CF-M-3** — CLOSED (mutation spec moved to the rename-form at Gate 2).
+**CF-M-4** — CLOSED (all three stale labels corrected at Gate 2).
+**CF-L-3** — `walkApprovalHead`'s bound is documented, not enforced.
+Earlier still open: **CF-L-1**, **CF-K-1**, **CF-K-2**, **CF-K-3**, **CF-F-1**, **CF-F-2**,
+**CF-F-4**, **CF-G-1**, **CF-G-3**, **CF-J-4**. **CF-H-1 is CLOSED by AC16 this iteration.**
+
+**Gates** — every one re-run **OUTSIDE** the codex sandbox (the executor correctly labelled its own
+`verify_go.sh` run `UNINFORMATIVE UNDER SANDBOX` on the loopback denial): `verify_go.sh` rc=0,
+`verify_ail.sh` rc=0 (4/4 identities across 11 modules, 14 named tests), `bench_worldd.sh --smoke`
+rc=0, `go test ./...` rc=0 across 10 packages with **ZERO** skips, `gofmt` clean, `go vet` rc=0,
+**AC11 protected paths vs `origin/dev` rc=0** (`host/store/**` byte-unchanged; zero schema change,
+zero new store method, zero new dependency). Gate 3b green **SHA-addressed** on the PR head and again
+on the dev merge commit `4c4ff69` via `commits/<sha>/check-runs` — never a `--limit 1` selector.
+
+**Next**: item **4c `w-effect-journal`** (clause-3, ~1–1.5d) — the effect-shaped intent that closes
+the **dispatch→record** window at effect granularity. Its `host/store` kernel reopen is pre-ratified
+IN PRINCIPLE by `c26b27d`; **its design still quorums at pick** (NEW-DOC → designer rotation, next
+entry after `codex:gpt-5.6-sol`). The dispatch→record window remains **OPEN** and AC19 still forbids
+claiming otherwise.
+
 ## Iteration 34 — 2026-07-29 — `w-effect-broker-m3` **M3.C LANDED** (PR #23 → squash `cae04d2`, dev CI green both jobs, judge sonnet PASS 88/100 zero-blocking) — and the iteration's spine is that **the controller's own headline finding was refuted by the judge, using premise rows this repository had held all along**: the "silent skip" I filed as a third V27/B1 instance was measured, documented as V14, and deliberately excluded from the gate at M1, and the honest move was to retract it in the same commit that gathers the honest-claim gate's evidence
 
 **Pick**: item **4 `w-effect-broker-m3`**, milestone **M3.C** — the queue head, `[IN-SPRINT]`, no
