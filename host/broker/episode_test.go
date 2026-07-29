@@ -77,9 +77,8 @@ func runEpisodeCapsule(t *testing.T, binary string) (string, hashref.HashRef) {
 	return string(got.Stdout), interpreter
 }
 
-func commitEpisode(
+func buildEpisodeCommit(
 	t *testing.T,
-	s *store.Store,
 	capsuleOutput string,
 	interpreter hashref.HashRef,
 	records []hashref.HashRef,
@@ -97,7 +96,7 @@ func commitEpisode(
 	}
 	transition := episodeObject(episodeTransitionV1, payload)
 	entryHash := hashref.SumSHA256(append([]byte("episode-entry:"), payload...))
-	commit := store.Commit{
+	return store.Commit{
 		Objects: []store.Object{transition},
 		NextWorld: store.World{
 			Ref:       hashref.SumSHA256([]byte("episode-world")),
@@ -118,10 +117,24 @@ func commitEpisode(
 			TransitionRef: transition.Hash,
 		},
 	}
-	if err := s.Commit(commit); err != nil {
-		t.Fatalf("commit episode: %v", err)
+}
+
+func appendEpisodeIntent(t *testing.T, s *store.Store, c store.Commit) {
+	t.Helper()
+	intent := store.JournalIntent{
+		InvocationID:  c.InvocationID,
+		WorldRef:      c.NextWorld.Ref,
+		EntryHash:     c.Entry.EntryHash,
+		ObservedHead:  c.ObservedHead,
+		PrevEntryHash: c.Entry.Header.PrevEntryHash,
+		TransitionFn:  c.Entry.Header.TransitionFn,
+		TransitionRef: c.Entry.TransitionRef,
+		Interpreter:   c.Entry.Header.Interpreter,
+		LogicalTime:   17,
 	}
-	return commit
+	if _, _, err := s.AppendIntent(c.InvocationID, intent); err != nil {
+		t.Fatalf("append episode intent: %v", err)
+	}
 }
 
 func readEpisodeEvidence(t *testing.T, s *store.Store, ref hashref.HashRef) []hashref.HashRef {
@@ -247,7 +260,26 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 			t.Fatalf("denied record has wrong arm: %#v", rec)
 		}
 	}
-	commit := commitEpisode(t, s, capsuleOutput, interpreter, records)
+	commit := buildEpisodeCommit(t, capsuleOutput, interpreter, records)
+	commit.InvocationID = "broker-episode-live-replay"
+	appendEpisodeIntent(t, s, commit)
+	if err := s.Commit(commit); err != nil {
+		t.Fatalf("commit episode: %v", err)
+	}
+	receipt, ok, err := s.GetReceipt(commit.InvocationID)
+	if err != nil || !ok {
+		t.Fatalf("episode receipt: ok=%v err=%v", ok, err)
+	}
+	if receipt.State != store.ReceiptResolved {
+		t.Fatalf("episode receipt state = %q, want %q", receipt.State, store.ReceiptResolved)
+	}
+	pending, err := s.PendingIntents(store.MaxPendingIntentsPage)
+	if err != nil {
+		t.Fatalf("pending episode intents: %v", err)
+	}
+	if len(pending) != 0 {
+		t.Fatalf("pending episode intents = %d, want 0", len(pending))
+	}
 	liveEvidence := readEpisodeEvidence(t, s, commit.Entry.TransitionRef)
 	if len(liveEvidence) != len(records) {
 		t.Fatalf("live evidence count = %d, want %d", len(liveEvidence), len(records))
