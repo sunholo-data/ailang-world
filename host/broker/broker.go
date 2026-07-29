@@ -154,6 +154,10 @@ func (s *Session) Invoke(
 	}
 
 	if s.episodeID == "" {
+		// Keep this broker-boundary guard for an actionable error. The store
+		// independently rejects the same input in
+		// TestAppendNextEffectIntentValidationAndOrdinalDerivation, while
+		// TestAllowedLiveSessionRequiresEpisodeID pins this boundary message.
 		return nil, hashref.HashRef{}, errors.New("broker: live allowed effect requires an episode ID")
 	}
 	handler, ok := s.registry[req.Effect]
@@ -255,7 +259,7 @@ func requestBytes(req EffectRequest, payload []byte) []byte {
 }
 
 func requestObject(req EffectRequest, payload []byte) store.Object {
-	return brokerObject("world/effect-request/v1", requestBytes(req, payload))
+	return brokerObject(EffectRequestV1, requestBytes(req, payload))
 }
 
 func (s *Session) putRecord(rec EffectRecord) (hashref.HashRef, error) {

@@ -257,6 +257,20 @@ func TestAllowedLiveSessionRequiresEpisodeID(t *testing.T) {
 	}
 }
 
+func TestAllowedLiveSessionWithoutHandlerDoesNotDebitBudget(t *testing.T) {
+	s := openTestStore(t)
+	session := NewSession(s, "missing-handler",
+		[]Capability{{"missing", "/ok", 10, 5}}, Registry{})
+	req := EffectRequest{Effect: "missing", Scope: "/ok", Cost: 2, Now: 9}
+	_, _, err := session.Invoke(context.Background(), req, []byte("request"))
+	if err == nil || err.Error() != `broker: no handler registered for "missing"` {
+		t.Fatalf("Invoke error = %v, want missing-handler failure", err)
+	}
+	if got := session.grants[0].Budget; got != 5 {
+		t.Fatalf("budget after missing handler = %d, want 5 (not debited)", got)
+	}
+}
+
 func TestRecordGoldenBytes(t *testing.T) {
 	rec := EffectRecord{
 		Effect: "FS.Read", Scope: "/project/a", Cost: 2,

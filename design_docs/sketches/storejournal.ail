@@ -82,6 +82,7 @@ export func retryAllowed(indeterminate: bool, reconciled: bool) -> bool ! {}
 ensures { result == (indeterminate == false || reconciled) }
 tests [
   ((false, false), true),
+  ((false, true), true),
   ((true, false), false),
   ((true, true), true)
 ]

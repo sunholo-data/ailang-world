@@ -244,13 +244,27 @@ func TestCrashWindowRecoveryReportsAndResumptionMintsFreshOrdinal(t *testing.T) 
 
 func TestRecoverCountingProbeDispatchesZeroHandlers(t *testing.T) {
 	s, _ := pendingRecoveryCommit(t, "counting-probe")
+	effectID, _, err := s.AppendNextEffectIntent("counting-probe-episode", store.EffectIntent{
+		EpisodeID:   "counting-probe-episode",
+		Effect:      recoveryProbeEffect,
+		Scope:       "/pending",
+		Cost:        1,
+		RequestRef:  hashref.SumSHA256([]byte("counting-probe-effect-request")),
+		LogicalTime: 1,
+	})
+	if err != nil {
+		t.Fatalf("AppendNextEffectIntent: %v", err)
+	}
 	probe := &recoveryCountingProbe{}
 	findings, err := Recover(s, Registry{recoveryProbeEffect: probe})
 	if err != nil {
 		t.Fatalf("Recover: %v", err)
 	}
-	if len(findings) != 1 {
-		t.Fatalf("Recover findings=%d, want 1", len(findings))
+	if len(findings) != 2 {
+		t.Fatalf("Recover findings=%d, want 2 (commit and effect)", len(findings))
+	}
+	if findings[1].EffectIntent.InvocationID != effectID {
+		t.Fatalf("effect finding = %#v, want invocation %q", findings[1], effectID)
 	}
 	if probe.dispatches != 0 {
 		t.Fatalf("recovery dispatched %d handlers, want 0", probe.dispatches)
@@ -372,6 +386,114 @@ type pagedRecoveryStore struct {
 	effectFromIndex []int64
 	effectCalls     int
 	sawEffect       map[string]bool
+}
+
+// neverDrainingRecoveryStore reuses fixed page buffers because these tests
+// intentionally exercise all 2^20 pages. Allocating a page on every call would
+// turn a bounded-loop assertion into an allocator benchmark. Receipts are
+// resolved so findings do not accumulate; the fake's tripwire makes an
+// unbounded mutant fail deterministically instead of hanging.
+type neverDrainingRecoveryStore struct {
+	commitPage  []store.PendingIntent
+	effectPage  []store.PendingEffectIntent
+	commitCalls int
+	effectCalls int
+	maxCalls    int
+}
+
+func newNeverDrainingRecoveryStore(commit, effect bool) *neverDrainingRecoveryStore {
+	p := &neverDrainingRecoveryStore{maxCalls: maxRecoveryPages + 16}
+	if commit {
+		p.commitPage = make([]store.PendingIntent, store.MaxPendingIntentsPage)
+		for i := range p.commitPage {
+			p.commitPage[i].InvocationID = "never-draining-commit"
+		}
+	}
+	if effect {
+		p.effectPage = make([]store.PendingEffectIntent, store.MaxPendingIntentsPage)
+		for i := range p.effectPage {
+			p.effectPage[i].InvocationID = "effect:never-draining:0"
+		}
+	}
+	return p
+}
+
+func (p *neverDrainingRecoveryStore) PendingIntents(
+	_ int,
+	fromIndex ...int64,
+) ([]store.PendingIntent, error) {
+	if len(p.commitPage) == 0 {
+		return nil, nil
+	}
+	p.commitCalls++
+	if p.commitCalls > p.maxCalls {
+		return nil, fmt.Errorf("commit fake tripwire exceeded after %d calls", p.commitCalls)
+	}
+	cursor := int64(0)
+	if len(fromIndex) > 0 {
+		cursor = fromIndex[0]
+	}
+	for i := range p.commitPage {
+		p.commitPage[i].Seq = cursor + int64(i) + 1
+	}
+	return p.commitPage, nil
+}
+
+func (p *neverDrainingRecoveryStore) GetReceipt(id string) (store.Receipt, bool, error) {
+	return store.Receipt{InvocationID: id, State: store.ReceiptResolved}, true, nil
+}
+
+func (p *neverDrainingRecoveryStore) PendingEffectIntents(
+	_ int,
+	fromIndex ...int64,
+) ([]store.PendingEffectIntent, error) {
+	if len(p.effectPage) == 0 {
+		return nil, nil
+	}
+	p.effectCalls++
+	if p.effectCalls > p.maxCalls {
+		return nil, fmt.Errorf("effect fake tripwire exceeded after %d calls", p.effectCalls)
+	}
+	cursor := int64(0)
+	if len(fromIndex) > 0 {
+		cursor = fromIndex[0]
+	}
+	for i := range p.effectPage {
+		p.effectPage[i].Seq = cursor + int64(i) + 1
+	}
+	return p.effectPage, nil
+}
+
+func (p *neverDrainingRecoveryStore) GetEffectReceipt(
+	id string,
+) (store.Receipt, bool, error) {
+	return store.Receipt{InvocationID: id, State: store.ReceiptResolved}, true, nil
+}
+
+func TestRecoverCommitStopsAtPageBound(t *testing.T) {
+	probe := newNeverDrainingRecoveryStore(true, false)
+	_, err := recoverCommitPending(probe)
+	const want = "broker: recovery exceeded 1048576 pages"
+	if err == nil || err.Error() != want {
+		t.Fatalf("recoverCommitPending error = %v, want %q (calls=%d)",
+			err, want, probe.commitCalls)
+	}
+	if probe.commitCalls != maxRecoveryPages {
+		t.Fatalf("commit pending calls = %d, want %d", probe.commitCalls, maxRecoveryPages)
+	}
+}
+
+func TestRecoverEffectStopsAtPageBound(t *testing.T) {
+	probe := newNeverDrainingRecoveryStore(false, true)
+	_, err := recoverEffectPending(probe, nil)
+	const want = "broker: effect recovery exceeded 1048576 pages"
+	if err == nil || err.Error() != want {
+		t.Fatalf("recoverEffectPending error = %v, want %q (calls=%d)",
+			err, want, probe.effectCalls)
+	}
+	if probe.effectCalls != maxRecoveryPages {
+		t.Fatalf("effect pending calls = %d, want %d", probe.effectCalls, maxRecoveryPages)
+	}
 }
 
 func (p *pagedRecoveryStore) PendingIntents(
@@ -561,6 +683,7 @@ func TestRecoveryConsumerContractMirrorsSketch(t *testing.T) {
 		indeterminate, reconciled, want bool
 	}{
 		{false, false, true},
+		{false, true, true},
 		{true, false, false},
 		{true, true, true},
 	} {
