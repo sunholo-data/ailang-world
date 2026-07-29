@@ -39,11 +39,25 @@ func (s *cfj2RecordingStore) GetObject(ref hashref.HashRef) (store.Object, bool,
 	return s.base.GetObject(ref)
 }
 
+func (s *cfj2RecordingStore) AppendNextEffectIntent(
+	episodeID string,
+	intent store.EffectIntent,
+) (string, int64, error) {
+	return s.base.AppendNextEffectIntent(episodeID, intent)
+}
+
+func (s *cfj2RecordingStore) AppendEffectOutcome(
+	id string,
+	outcome store.EffectOutcome,
+) (int64, hashref.HashRef, error) {
+	return s.base.AppendEffectOutcome(id, outcome)
+}
+
 func TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord(t *testing.T) {
 	st := openTestStore(t)
 	recording := &cfj2RecordingStore{base: st}
 	handler := &cfj2FailingHandler{}
-	s := newSession(recording,
+	s := newSession(recording, "handler-error-repro",
 		[]Capability{{Effect: "FS.Write", Scope: "/p", ExpiresAt: 100, Budget: 5}},
 		Registry{"FS.Write": handler}, Live, nil)
 

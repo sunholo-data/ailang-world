@@ -40,6 +40,20 @@ func (s *handlerRecordingStore) GetObject(ref hashref.HashRef) (store.Object, bo
 	return s.base.GetObject(ref)
 }
 
+func (s *handlerRecordingStore) AppendNextEffectIntent(
+	episodeID string,
+	intent store.EffectIntent,
+) (string, int64, error) {
+	return s.base.AppendNextEffectIntent(episodeID, intent)
+}
+
+func (s *handlerRecordingStore) AppendEffectOutcome(
+	id string,
+	outcome store.EffectOutcome,
+) (int64, hashref.HashRef, error) {
+	return s.base.AppendEffectOutcome(id, outcome)
+}
+
 func (s *handlerRecordingStore) SetRegistryHead(name string, ref hashref.HashRef) error {
 	return s.base.SetRegistryHead(name, ref)
 }
@@ -51,7 +65,7 @@ func (s *handlerRecordingStore) GetRegistryHead(name string) (hashref.HashRef, b
 func handlerSession(t *testing.T, effect, scope string, handler Handler) (*Session, *handlerRecordingStore) {
 	t.Helper()
 	recording := &handlerRecordingStore{base: openTestStore(t)}
-	session := newSession(recording, []Capability{{
+	session := newSession(recording, "handler-session", []Capability{{
 		Effect: effect, Scope: scope, ExpiresAt: 100, Budget: 7,
 	}}, Registry{effect: handler}, Live, nil)
 	return session, recording
@@ -380,7 +394,7 @@ func approvalSession(t *testing.T) (*Session, *handlerRecordingStore, *HumanHand
 	t.Helper()
 	recording := &handlerRecordingStore{base: openTestStore(t), deleted: make(map[hashref.HashRef]bool)}
 	human := newHumanHandler(recording)
-	session := newSession(recording, []Capability{
+	session := newSession(recording, "approval-handler", []Capability{
 		{Effect: EffectHumanApprove, Scope: "release", ExpiresAt: 100, Budget: 5},
 		{Effect: EffectHumanPollApproval, Scope: "release", ExpiresAt: 100, Budget: 4},
 	}, Registry{
@@ -564,7 +578,7 @@ func TestDecideApprovalBeforeRequestRejected(t *testing.T) {
 func TestPollApprovalDeniedWithoutOwnGrant(t *testing.T) {
 	recording := &handlerRecordingStore{base: openTestStore(t), deleted: make(map[hashref.HashRef]bool)}
 	human := newHumanHandler(recording)
-	session := newSession(recording, []Capability{
+	session := newSession(recording, "model-handler", []Capability{
 		{Effect: EffectHumanApprove, Scope: "release", ExpiresAt: 100, Budget: 5},
 	}, Registry{EffectHumanApprove: human, EffectHumanPollApproval: human}, Live, nil)
 	pending, _, err := session.Invoke(context.Background(),
@@ -629,7 +643,7 @@ func TestApprovalFailuresKeepStandingAttentionDebit(t *testing.T) {
 				handlerRecordingStore: base, failSemantic: tc.failSemantic, failHead: tc.failHead,
 			}
 			human := newHumanHandler(failing)
-			session := newSession(failing, []Capability{{
+			session := newSession(failing, "approval-failure", []Capability{{
 				Effect: EffectHumanApprove, Scope: "release", ExpiresAt: 100, Budget: 5,
 			}}, Registry{EffectHumanApprove: human}, Live, nil)
 			_, ref, invokeErr := session.Invoke(context.Background(),
@@ -672,7 +686,7 @@ func TestApprovalReplayContract(t *testing.T) {
 		dispatches++
 		return nil, errors.New("replay dispatched a handler")
 	})
-	replay := newSession(recording, []Capability{
+	replay := newSession(recording, "", []Capability{
 		{Effect: EffectHumanApprove, Scope: "release", ExpiresAt: 100, Budget: 5},
 		{Effect: EffectHumanPollApproval, Scope: "release", ExpiresAt: 100, Budget: 4},
 	}, Registry{EffectHumanApprove: stub, EffectHumanPollApproval: stub}, Replay,

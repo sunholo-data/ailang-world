@@ -123,6 +123,125 @@ func pendingRecoveryCommit(t *testing.T, label string) (*store.Store, store.Comm
 	return s, c
 }
 
+func TestCrashWindowRecoveryReportsAndResumptionMintsFreshOrdinal(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "world.db")
+	base, err := store.Open(dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const episodeID = "crash-window-resume"
+	dispatches := 0
+	failing := &failRecordStore{base: base}
+	crashHandler := HandlerFunc(func(
+		_ context.Context,
+		_ EffectRequest,
+		payload []byte,
+	) ([]byte, error) {
+		dispatches++
+		receipt, hasIntent, err := base.GetEffectReceipt(
+			store.EffectInvocationID(episodeID, 0),
+		)
+		if err != nil || !hasIntent || receipt.State != store.ReceiptIndeterminate {
+			t.Fatalf("receipt at crash-window dispatch = %#v, hasIntent %v, err %v; want indeterminate",
+				receipt, hasIntent, err)
+		}
+		return append([]byte("echo:"), payload...), nil
+	})
+	session := newSession(
+		failing,
+		episodeID,
+		[]Capability{{"probe", "/ok", 100, 10}},
+		Registry{"probe": crashHandler},
+		Live,
+		nil,
+	)
+	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 23}
+	result, recordRef, invokeErr := session.Invoke(
+		context.Background(), req, []byte("before-crash"),
+	)
+	if invokeErr == nil || result != nil || !recordRef.IsZero() {
+		t.Fatalf("faulted Invoke = result %q, ref %s, err %v; want nil, zero, error",
+			result, recordRef, invokeErr)
+	}
+	if dispatches != 1 {
+		t.Fatalf("pre-crash dispatches = %d, want 1", dispatches)
+	}
+	if failing.effectOutcomeCalls != 0 {
+		t.Fatalf("pre-crash outcome calls = %d, want 0", failing.effectOutcomeCalls)
+	}
+	if _, ok, err := base.GetObject(requestHash(req, []byte("before-crash"))); err != nil || !ok {
+		t.Fatalf("durable request object = ok %v, err %v; want present", ok, err)
+	}
+	if err := base.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	reopened, err := store.Open(dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = reopened.Close() }()
+	firstID := store.EffectInvocationID(episodeID, 0)
+	receipt, hasIntent, err := reopened.GetEffectReceipt(firstID)
+	if err != nil || !hasIntent || receipt.State != store.ReceiptIndeterminate {
+		t.Fatalf("reopened receipt = %#v, hasIntent %v, err %v; want indeterminate",
+			receipt, hasIntent, err)
+	}
+
+	recoveryProbe := &recoveryCountingProbe{}
+	findings, err := Recover(reopened, Registry{"probe": recoveryProbe})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(findings) != 1 {
+		t.Fatalf("recovery findings = %d, want 1", len(findings))
+	}
+	finding := findings[0]
+	if finding.Err.EpisodeID != episodeID || finding.Err.Ordinal != 0 ||
+		finding.Err.Effect != "probe" || finding.Err.Scope != "/ok" ||
+		finding.EffectIntent.InvocationID != firstID {
+		t.Fatalf("effect finding = %#v", finding)
+	}
+	if recoveryProbe.dispatches != 0 {
+		t.Fatalf("recovery dispatches = %d, want 0", recoveryProbe.dispatches)
+	}
+	receipt, hasIntent, err = reopened.GetEffectReceipt(firstID)
+	if err != nil || !hasIntent || receipt.State != store.ReceiptIndeterminate {
+		t.Fatalf("post-recovery receipt = %#v, hasIntent %v, err %v; recovery acted",
+			receipt, hasIntent, err)
+	}
+
+	resumedDispatches := 0
+	resumed := NewSession(
+		reopened,
+		episodeID,
+		[]Capability{{"probe", "/ok", 100, 10}},
+		echoRegistry(&resumedDispatches),
+	)
+	result, recordRef, err = resumed.Invoke(
+		context.Background(),
+		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 24},
+		[]byte("after-crash"),
+	)
+	if err != nil {
+		t.Fatalf("resumed Invoke: %v", err)
+	}
+	if string(result) != "echo:after-crash" || recordRef.IsZero() || resumedDispatches != 1 {
+		t.Fatalf("resumed Invoke = result %q, ref %s, dispatches %d",
+			result, recordRef, resumedDispatches)
+	}
+	secondID := store.EffectInvocationID(episodeID, 1)
+	if secondID <= firstID {
+		t.Fatalf("resumed ID %q is not strictly past %q", secondID, firstID)
+	}
+	resumedReceipt, hasIntent, err := reopened.GetEffectReceipt(secondID)
+	if err != nil || !hasIntent || resumedReceipt.State != store.ReceiptResolved ||
+		resumedReceipt.EffectOutcome == nil || resumedReceipt.EffectOutcome.RecordRef != recordRef {
+		t.Fatalf("resumed receipt = %#v, hasIntent %v, err %v; want resolved",
+			resumedReceipt, hasIntent, err)
+	}
+}
+
 func TestRecoverCountingProbeDispatchesZeroHandlers(t *testing.T) {
 	s, _ := pendingRecoveryCommit(t, "counting-probe")
 	probe := &recoveryCountingProbe{}
@@ -244,11 +363,15 @@ func TestRecoverUsesKernelPagingBound(t *testing.T) {
 // green against all five original cases. This fake is what gives the paging
 // discipline something to prove.
 type pagedRecoveryStore struct {
-	pages      [][]store.PendingIntent
-	fromIndex  []int64 // the cursor received on each call; -1 means "no cursor"
-	calls      int
-	maxCalls   int
-	sawReceipt map[string]bool
+	pages           [][]store.PendingIntent
+	fromIndex       []int64 // the cursor received on each call; -1 means "no cursor"
+	calls           int
+	maxCalls        int
+	sawReceipt      map[string]bool
+	effectPages     [][]store.PendingEffectIntent
+	effectFromIndex []int64
+	effectCalls     int
+	sawEffect       map[string]bool
 }
 
 func (p *pagedRecoveryStore) PendingIntents(
@@ -296,6 +419,48 @@ func (p *pagedRecoveryStore) GetReceipt(id string) (store.Receipt, bool, error) 
 	return store.Receipt{InvocationID: id, State: store.ReceiptIndeterminate}, true, nil
 }
 
+func (p *pagedRecoveryStore) PendingEffectIntents(
+	limit int,
+	fromIndex ...int64,
+) ([]store.PendingEffectIntent, error) {
+	if limit != store.MaxPendingIntentsPage {
+		return nil, fmt.Errorf("effect limit=%d, want store.MaxPendingIntentsPage", limit)
+	}
+	cursor := int64(-1)
+	if len(fromIndex) > 0 {
+		cursor = fromIndex[0]
+	}
+	p.effectFromIndex = append(p.effectFromIndex, cursor)
+	p.effectCalls++
+	if p.effectCalls > p.maxCalls {
+		return nil, fmt.Errorf("effect recovery did not terminate: %d calls, cursors=%v",
+			p.effectCalls, p.effectFromIndex)
+	}
+	idx := 0
+	for i, page := range p.effectPages {
+		if len(page) == 0 {
+			continue
+		}
+		if cursor < page[len(page)-1].Seq {
+			idx = i
+			break
+		}
+		idx = i + 1
+	}
+	if idx >= len(p.effectPages) {
+		return nil, nil
+	}
+	return p.effectPages[idx], nil
+}
+
+func (p *pagedRecoveryStore) GetEffectReceipt(id string) (store.Receipt, bool, error) {
+	if p.sawEffect == nil {
+		p.sawEffect = map[string]bool{}
+	}
+	p.sawEffect[id] = true
+	return store.Receipt{InvocationID: id, State: store.ReceiptIndeterminate}, true, nil
+}
+
 func TestRecoverPagesWithKeysetCursorAcrossFullPages(t *testing.T) {
 	full := make([]store.PendingIntent, store.MaxPendingIntentsPage)
 	for i := range full {
@@ -336,6 +501,55 @@ func TestRecoverPagesWithKeysetCursorAcrossFullPages(t *testing.T) {
 	}
 	if !probe.sawReceipt[fmt.Sprintf("paged-%d", store.MaxPendingIntentsPage+1)] {
 		t.Error("the intent on the SECOND page was never read: recovery stopped after one page")
+	}
+}
+
+func TestRecoverEffectPagesWithKeysetCursorAndKeepsFindingShapesSeparate(t *testing.T) {
+	full := make([]store.PendingEffectIntent, store.MaxPendingIntentsPage)
+	for i := range full {
+		ordinal := int64(i)
+		id := store.EffectInvocationID("effect-paged", ordinal)
+		full[i] = store.PendingEffectIntent{
+			Seq:          ordinal + 1,
+			InvocationID: id,
+			Intent: store.EffectIntent{
+				InvocationID: id, EpisodeID: "effect-paged", Ordinal: ordinal,
+				Effect: "probe", Scope: "/paged",
+			},
+		}
+	}
+	tailOrdinal := int64(store.MaxPendingIntentsPage)
+	tailID := store.EffectInvocationID("effect-paged", tailOrdinal)
+	tail := []store.PendingEffectIntent{{
+		Seq:          tailOrdinal + 1,
+		InvocationID: tailID,
+		Intent: store.EffectIntent{
+			InvocationID: tailID, EpisodeID: "effect-paged", Ordinal: tailOrdinal,
+			Effect: "probe", Scope: "/paged",
+		},
+	}}
+	probe := &pagedRecoveryStore{
+		effectPages: [][]store.PendingEffectIntent{full, tail},
+		maxCalls:    8,
+	}
+	findings, err := recoverPending(probe)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(findings) != store.MaxPendingIntentsPage+1 {
+		t.Fatalf("effect findings = %d, want %d",
+			len(findings), store.MaxPendingIntentsPage+1)
+	}
+	if len(probe.effectFromIndex) < 2 ||
+		probe.effectFromIndex[0] != -1 ||
+		probe.effectFromIndex[1] != int64(store.MaxPendingIntentsPage) {
+		t.Fatalf("effect cursors = %v, want [-1 %d ...]",
+			probe.effectFromIndex, store.MaxPendingIntentsPage)
+	}
+	last := findings[len(findings)-1]
+	if !probe.sawEffect[tailID] || last.Intent.InvocationID != "" ||
+		last.EffectIntent.InvocationID != tailID || last.Err.Ordinal != tailOrdinal {
+		t.Fatalf("last effect finding = %#v, saw receipt %v", last, probe.sawEffect[tailID])
 	}
 }
 

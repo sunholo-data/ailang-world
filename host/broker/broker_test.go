@@ -40,7 +40,7 @@ func echoRegistry(counter *int) Registry {
 func TestDeniedInvokeWritesOneRecord(t *testing.T) {
 	s := openTestStore(t)
 	count := 0
-	session := NewSession(s, []Capability{{"probe", "/ok", 10, 5}}, echoRegistry(&count))
+	session := NewSession(s, "denied-record", []Capability{{"probe", "/ok", 10, 5}}, echoRegistry(&count))
 	req := EffectRequest{Effect: "probe", Scope: "/wrong", Cost: 2, Now: 1}
 	result, recordRef, err := session.Invoke(context.Background(), req, []byte("x"))
 	var denial *DenialError
@@ -68,12 +68,16 @@ func TestDeniedInvokeWritesOneRecord(t *testing.T) {
 		!rec.ResultRef.IsZero() || !RecordConsistent(rec) {
 		t.Fatalf("denial record = %#v", rec)
 	}
+	receipt, hasIntent, err := s.GetEffectReceipt(store.EffectInvocationID("denied-record", 0))
+	if err != nil || hasIntent || receipt.State != store.ReceiptNotStarted {
+		t.Fatalf("denied receipt = %#v, hasIntent %v, err %v; want not-started", receipt, hasIntent, err)
+	}
 }
 
 func TestAllowedInvokeWritesResultAndRecord(t *testing.T) {
 	s := openTestStore(t)
 	count := 0
-	session := NewSession(s, []Capability{{"probe", "/ok", 10, 5}}, echoRegistry(&count))
+	session := NewSession(s, "allowed-record", []Capability{{"probe", "/ok", 10, 5}}, echoRegistry(&count))
 	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 2, Now: 1}
 	result, recordRef, err := session.Invoke(context.Background(), req, []byte("x"))
 	if err != nil {
@@ -103,7 +107,7 @@ func TestAllowedInvokeWritesResultAndRecord(t *testing.T) {
 func TestLedgerUsesRemainingBudget(t *testing.T) {
 	s := openTestStore(t)
 	count := 0
-	session := NewSession(s, []Capability{{"probe", "/ok", 10, 5}}, echoRegistry(&count))
+	session := NewSession(s, "ledger-budget", []Capability{{"probe", "/ok", 10, 5}}, echoRegistry(&count))
 	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 3, Now: 1}
 	if _, _, err := session.Invoke(context.Background(), req, nil); err != nil {
 		t.Fatal(err)
@@ -130,7 +134,8 @@ func TestLedgerUsesRemainingBudget(t *testing.T) {
 }
 
 type failRecordStore struct {
-	base *store.Store
+	base               *store.Store
+	effectOutcomeCalls int
 }
 
 func (s *failRecordStore) PutObject(obj store.Object) error {
@@ -144,11 +149,27 @@ func (s *failRecordStore) GetObject(ref hashref.HashRef) (store.Object, bool, er
 	return s.base.GetObject(ref)
 }
 
+func (s *failRecordStore) AppendNextEffectIntent(
+	episodeID string,
+	intent store.EffectIntent,
+) (string, int64, error) {
+	return s.base.AppendNextEffectIntent(episodeID, intent)
+}
+
+func (s *failRecordStore) AppendEffectOutcome(
+	id string,
+	outcome store.EffectOutcome,
+) (int64, hashref.HashRef, error) {
+	s.effectOutcomeCalls++
+	return s.base.AppendEffectOutcome(id, outcome)
+}
+
 func TestRecordFailureDeliversNoResult(t *testing.T) {
 	base := openTestStore(t)
 	count := 0
+	failing := &failRecordStore{base: base}
 	session := newSession(
-		&failRecordStore{base}, []Capability{{"probe", "/ok", 10, 5}},
+		failing, "record-failure", []Capability{{"probe", "/ok", 10, 5}},
 		echoRegistry(&count), Live, nil,
 	)
 	result, ref, err := session.Invoke(
@@ -161,6 +182,78 @@ func TestRecordFailureDeliversNoResult(t *testing.T) {
 	}
 	if count != 1 {
 		t.Fatalf("dispatch count = %d, want 1", count)
+	}
+	if failing.effectOutcomeCalls != 0 {
+		t.Fatalf("AppendEffectOutcome calls = %d, want 0 after record failure",
+			failing.effectOutcomeCalls)
+	}
+	receipt, hasIntent, receiptErr := base.GetEffectReceipt(
+		store.EffectInvocationID("record-failure", 0),
+	)
+	if receiptErr != nil || !hasIntent || receipt.State != store.ReceiptIndeterminate {
+		t.Fatalf("record-failure receipt = %#v, hasIntent %v, err %v; want indeterminate",
+			receipt, hasIntent, receiptErr)
+	}
+}
+
+func TestIntentIsDurableBeforeDispatch(t *testing.T) {
+	s := openTestStore(t)
+	const episodeID = "intent-before-dispatch"
+	handler := HandlerFunc(func(
+		_ context.Context,
+		_ EffectRequest,
+		_ []byte,
+	) ([]byte, error) {
+		receipt, hasIntent, err := s.GetEffectReceipt(store.EffectInvocationID(episodeID, 0))
+		if err != nil || !hasIntent || receipt.State != store.ReceiptIndeterminate {
+			t.Fatalf("receipt at dispatch = %#v, hasIntent %v, err %v; want indeterminate",
+				receipt, hasIntent, err)
+		}
+		return []byte("done"), nil
+	})
+	session := NewSession(s, episodeID,
+		[]Capability{{"probe", "/ok", 10, 5}}, Registry{"probe": handler})
+	if _, _, err := session.Invoke(context.Background(),
+		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 7}, []byte("request")); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestFailedInvokeJournalsResolvedOutcome(t *testing.T) {
+	s := openTestStore(t)
+	const episodeID = "failed-outcome"
+	handlerErr := errors.New("injected handler failure")
+	session := NewSession(s, episodeID,
+		[]Capability{{"probe", "/ok", 10, 5}}, Registry{"probe": HandlerFunc(
+			func(context.Context, EffectRequest, []byte) ([]byte, error) {
+				return nil, handlerErr
+			},
+		)})
+	_, recordRef, err := session.Invoke(context.Background(),
+		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 7}, nil)
+	var failed *EffectFailedError
+	if !errors.As(err, &failed) || !errors.Is(err, handlerErr) {
+		t.Fatalf("Invoke error = %v, want EffectFailedError wrapping handler error", err)
+	}
+	receipt, hasIntent, err := s.GetEffectReceipt(store.EffectInvocationID(episodeID, 0))
+	if err != nil || !hasIntent || receipt.State != store.ReceiptResolved ||
+		receipt.EffectOutcome == nil || receipt.EffectOutcome.Status != "failed" ||
+		receipt.EffectOutcome.RecordRef != recordRef || receipt.EffectOutcome.LogicalTime != 7 {
+		t.Fatalf("failed receipt = %#v, hasIntent %v, err %v", receipt, hasIntent, err)
+	}
+}
+
+func TestAllowedLiveSessionRequiresEpisodeID(t *testing.T) {
+	s := openTestStore(t)
+	session := NewSession(s, "",
+		[]Capability{{"probe", "/ok", 10, 5}}, echoRegistry(new(int)))
+	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 9}
+	_, _, err := session.Invoke(context.Background(), req, []byte("request"))
+	if err == nil || err.Error() != "broker: live allowed effect requires an episode ID" {
+		t.Fatalf("Invoke error = %v, want empty-episode failure", err)
+	}
+	if _, ok, getErr := s.GetObject(requestHash(req, []byte("request"))); getErr != nil || ok {
+		t.Fatalf("request object after empty episode = ok %v, err %v; want absent", ok, getErr)
 	}
 }
 
@@ -244,7 +337,7 @@ func TestThreeArmsDistinguishableFromBytesAlone(t *testing.T) {
 	invoke := func(scope string, handler Handler) hashref.HashRef {
 		t.Helper()
 		session := NewSession(
-			s,
+			s, "decision-cases",
 			[]Capability{{Effect: "probe", Scope: "/ok", ExpiresAt: 10, Budget: 5}},
 			Registry{"probe": handler},
 		)
@@ -284,7 +377,7 @@ func TestLedgerReconstructibleFromRecordStreamOnFailure(t *testing.T) {
 	s := openTestStore(t)
 	calls := 0
 	session := NewSession(
-		s,
+		s, "budget-irrelevant",
 		[]Capability{{Effect: "probe", Scope: "/ok", ExpiresAt: 10, Budget: 5}},
 		Registry{"probe": HandlerFunc(func(_ context.Context, _ EffectRequest, _ []byte) ([]byte, error) {
 			calls++
@@ -328,7 +421,7 @@ func TestReplayOfFailedRecordReproducesTheFailure(t *testing.T) {
 	s := openTestStore(t)
 	grants := []Capability{{Effect: "probe", Scope: "/ok", ExpiresAt: 10, Budget: 5}}
 	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 2, Now: 1}
-	live := NewSession(s, grants, Registry{"probe": HandlerFunc(
+	live := NewSession(s, "replay-failed-source", grants, Registry{"probe": HandlerFunc(
 		func(context.Context, EffectRequest, []byte) ([]byte, error) {
 			return nil, errors.New("platform-specific handler detail")
 		},
@@ -370,7 +463,8 @@ func TestReplayReturnsRecordedBytesWithoutDispatch(t *testing.T) {
 	s := openTestStore(t)
 	liveDispatches := 0
 	grants := []Capability{{"probe", "/ok", 10, 5}}
-	live := NewSession(s, grants, Registry{
+	const episodeID = "replay-bytes-source"
+	live := NewSession(s, episodeID, grants, Registry{
 		"probe": ProbeHandler{Dispatches: &liveDispatches},
 	})
 	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 2, Now: 1}
@@ -395,6 +489,11 @@ func TestReplayReturnsRecordedBytesWithoutDispatch(t *testing.T) {
 	}
 	if replayDispatches != 0 {
 		t.Fatalf("replay dispatches = %d, want 0", replayDispatches)
+	}
+	nextReceipt, hasNext, err := s.GetEffectReceipt(store.EffectInvocationID(episodeID, 1))
+	if err != nil || hasNext || nextReceipt.State != store.ReceiptNotStarted {
+		t.Fatalf("replay-created receipt = %#v, hasIntent %v, err %v; want none",
+			nextReceipt, hasNext, err)
 	}
 }
 
@@ -426,7 +525,7 @@ func TestReplayRejectsMismatchedRequest(t *testing.T) {
 	s := openTestStore(t)
 	dispatches := 0
 	grants := []Capability{{"probe", "/ok", 10, 5}}
-	live := NewSession(s, grants, Registry{"probe": ProbeHandler{Dispatches: &dispatches}})
+	live := NewSession(s, "replay-mismatch-source", grants, Registry{"probe": ProbeHandler{Dispatches: &dispatches}})
 	_, recordRef, err := live.Invoke(
 		context.Background(),
 		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 1},

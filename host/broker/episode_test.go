@@ -188,7 +188,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 		liveDispatches++
 		return nil, errors.New("deliberate episode failure")
 	})
-	live := NewSession(s, episodeGrants(inputPath), Registry{
+	live := NewSession(s, "landed-episode", episodeGrants(inputPath), Registry{
 		EffectFSRead:            FSHandler{},
 		EffectModelInfer:        model,
 		EffectHumanApprove:      human,
@@ -280,6 +280,40 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 	if len(pending) != 0 {
 		t.Fatalf("pending episode intents = %d, want 0", len(pending))
 	}
+	for ordinal := int64(0); ordinal < 5; ordinal++ {
+		id := store.EffectInvocationID("landed-episode", ordinal)
+		effectReceipt, hasIntent, receiptErr := s.GetEffectReceipt(id)
+		if receiptErr != nil || !hasIntent || effectReceipt.State != store.ReceiptResolved ||
+			effectReceipt.EffectIntent == nil || effectReceipt.EffectOutcome == nil {
+			t.Fatalf("effect receipt %d = %#v, hasIntent %v, err %v; want resolved",
+				ordinal, effectReceipt, hasIntent, receiptErr)
+		}
+		wantStatus := "succeeded"
+		if ordinal == 4 {
+			wantStatus = "failed"
+		}
+		if effectReceipt.EffectIntent.EpisodeID != "landed-episode" ||
+			effectReceipt.EffectIntent.Ordinal != ordinal ||
+			effectReceipt.EffectOutcome.Status != wantStatus ||
+			effectReceipt.EffectOutcome.RecordRef != records[ordinal] ||
+			effectReceipt.EffectOutcome.LogicalTime != calls[ordinal].request.Now {
+			t.Fatalf("effect receipt %d payload = %#v", ordinal, effectReceipt)
+		}
+	}
+	pendingEffects, err := s.PendingEffectIntents(store.MaxPendingIntentsPage)
+	if err != nil {
+		t.Fatalf("pending effect intents: %v", err)
+	}
+	if len(pendingEffects) != 0 {
+		t.Fatalf("pending effect intents = %d, want 0", len(pendingEffects))
+	}
+	deniedEffectReceipt, deniedHasIntent, err := s.GetEffectReceipt(
+		store.EffectInvocationID("landed-episode", 5),
+	)
+	if err != nil || deniedHasIntent || deniedEffectReceipt.State != store.ReceiptNotStarted {
+		t.Fatalf("denied episode receipt = %#v, hasIntent %v, err %v; want not-started",
+			deniedEffectReceipt, deniedHasIntent, err)
+	}
 	liveEvidence := readEpisodeEvidence(t, s, commit.Entry.TransitionRef)
 	if len(liveEvidence) != len(records) {
 		t.Fatalf("live evidence count = %d, want %d", len(liveEvidence), len(records))
@@ -346,7 +380,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 		gapDispatches++
 		return nil, fmt.Errorf("live fallback")
 	})
-	gap := newSession(gapStore, episodeGrants(inputPath),
+	gap := newSession(gapStore, "", episodeGrants(inputPath),
 		Registry{EffectFSRead: gapStub}, Replay, records[:1])
 	_, _, err = gap.Invoke(ctx, calls[0].request, calls[0].payload)
 	var replayGap *ReplayGapError

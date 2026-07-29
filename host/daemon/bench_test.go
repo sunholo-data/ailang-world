@@ -471,7 +471,7 @@ func BenchmarkBrokerFSRead(b *testing.B) {
 	if err := os.WriteFile(inputPath, []byte("broker-fs-read-seed"), 0o600); err != nil {
 		b.Fatalf("seed input: %v", err)
 	}
-	session := broker.NewSession(s, []broker.Capability{{
+	session := broker.NewSession(s, "benchmark-fs-read", []broker.Capability{{
 		Effect: broker.EffectFSRead, Scope: inputPath,
 		ExpiresAt: int64(b.N) + 1, Budget: int64(b.N),
 	}}, broker.Registry{broker.EffectFSRead: broker.FSHandler{}})
