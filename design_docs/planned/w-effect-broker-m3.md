@@ -352,7 +352,7 @@ recorded. The four charter-named handlers, at their honest M3 depth:
 | Handler | Effects | Mechanism | M3 depth |
 |---------|---------|-----------|----------|
 | **FS** | `FS.Read`, `FS.Write` | direct Go I/O; the request scope IS the file's canonical absolute path (exact match, Law 2); the handler additionally resolves symlinks and refuses any path whose resolution leaves the scope's parent — defense-in-depth under the semantic check | full |
-| **Git** | `Git.Commit` | subprocess `git` (found via explicit config, not ambient PATH), cwd = the scope repo path, environment scrubbed to a fixed minimal slice (no `GIT_*`, no `HOME`-borne config injection: `HOME` set to an empty temp dir) | one verb — proves the subprocess-handler class; more verbs are package-lane extensions |
+| **Git** | `Git.Commit` | subprocess `git` (found via explicit config, not ambient PATH), cwd = the scope repo path, environment scrubbed to a fixed minimal slice (no inherited/HOME-borne git config; `HOME` set to an empty temp dir; deterministic author/committer identity injected as constants) | one verb — proves the subprocess-handler class; more verbs are package-lane extensions |
 | **Model** | `Model.Infer` | subprocess over the **pinned released `ailang` binary** running a fixed `std/ai` program; CI/tests use `--ai-stub` (verified live: deterministic output, rc=0, zero network); live `--ai <model>` is config-gated and NOT CI-exercised (CI has no keys, and must not) | stub-proven; live path smoke-tested attended once before M4 relies on it (OD2) |
 | **Human** | `Human.Approve`, `Human.PollApproval` | **strictly synchronous, store-backed** — `Human.Approve`: `Invoke` writes an approval-request object, links it from the `world/approvals/v1` registry head, and returns a structured **`Pending(requestRef)`** as its FINAL result; the Pending object is content-addressed as `world/effect-result/v1` bytes and the ONE immutable effect record for the invoke is written synchronously with `resultRef` = that Pending object, exactly like every other effect. Nothing about this record is ever rewritten. `broker.DecideApproval(requestRef, approve/deny, decidedBy)` — NOT an effect, an operator entry point — writes a SEPARATE, new `world/approval-decision/v1` object and moves the registry head; it never touches the request's effect record. Observing the human's decision is a separate brokered effect, **`Human.PollApproval`**: it requires its own capability grant, draws on its own budget line, and writes its own effect record whose result is the decision-so-far (the decision object, or a recorded still-pending marker) — a normal effect in every respect | queue mechanics + records proven in-process; the human-facing inbox is `w-approval-inbox` (clause-5) and the decider identity is an unauthenticated string under the M2 loopback-trust model (OD4) |
 
@@ -1011,6 +1011,106 @@ force through.
 
 **The question for the human** is stated in the mission log and the charter queue row; it is
 answerable in one comment, and the doc needs no further work before the answer arrives.
+
+## Close-out draft (M3.C — to be applied by M3.D with the doc move)
+
+This is a draft hand-off, not the item close-out. The document stays in
+`planned/`; M3.D owns AC14, AC16, AC19, and the eventual move to `implemented/`.
+
+- [x] **AC8:** `host/broker/episode_test.go` (landed in C-1) covers the live and
+  replay episode, all three record arms, zero replay dispatch, replay gaps, and
+  evidence-reference identity.
+- [x] **AC11:** the C-2 final protected-path diff command is empty and the only
+  `host/daemon` change is `bench_test.go`.
+- [x] **AC12:** the hardcoded manifest contains ten names, including
+  `BenchmarkBrokerDecide` and `BenchmarkBrokerFSRead`; `bench/BASELINE.md`
+  contains all ten rows. The executor wrote `<CONTROLLER-MEASURED>` into all 44
+  measured fields and quoted the denied loopback bind; the controller performed
+  the single complete 200x invocation outside the sandbox (three times for the
+  receipt ratio) and replaced every row together. Both `MUT-BENCH-DROP` runs
+  were made informative outside the sandbox — see the note below on why the
+  plan's delete-form was not.
+- [x] **AC13:** the local AILANG and Go verification gates are recorded in the
+  C-2 executor report; PR/dev-merge CI remains controller evidence and must not
+  be inferred from local exit codes.
+- [x] **AC17:** the baseline states the per-commit arithmetic for N=1 and N=3,
+  requires three 200x runs for a ratio within 2× of unity, and leaves Decision
+  7's +20% bound unchanged.
+- [ ] **AC14:** migrated to M3.D; do not claim clause 3 complete before the
+  first agent exists in M4.
+- [ ] **AC19:** migrated to M3.D. C-2 gathers its grep evidence, but M3.D owns
+  the assertion and final close-out.
+
+CF-L-4 is intentionally test-local: AC7 simulates deletion through a local
+store wrapper because `host/store` exposes no deletion API. It does not require
+or imply a store-level deletion surface.
+
+Under ratified option (i) (Mark attended, charter `c26b27d`), the
+**dispatch→record crash window remains OPEN**. M3.D adds commit-boundary
+anchoring; it does not turn the landed commit journal into a pre-dispatch effect
+journal and must not claim otherwise.
+
+Re-measured close-out facts: the landed sketch has `len(tests[]) == 31` and is
+244 lines; the benchmark manifest is ten names. CF-B-2 is **CLOSED** by SD.A
+commit `86d1276`, so Decision 7's earlier carry-forward sentence is stale; this
+draft notes that fact without editing the ratified decision mid-sprint.
+
+Honest-claim evidence is gathered with exact commands and output in the C-2
+executor report. Decision 3's corrected supersession note remains intact: it
+states that the former store-durability supersession claim was measured false.
+
+### Two instrument defects found at close-out, both of the same shape
+
+**(1) `MUT-BENCH-DROP` was uninformative for one of its two names.** The plan
+specifies the mutation as *delete the benchmark function*. Deleting
+`BenchmarkBrokerDecide` reds the smoke correctly — `missing expected
+benchmark(s): BenchmarkBrokerDecide`. Deleting `BenchmarkBrokerFSRead` instead
+leaves `"os"` imported and unused, so the package **fails to compile** and the
+smoke reports `underlying go test failed` — a build error, not the manifest
+gate firing. A build failure is not evidence that a gate has teeth. Under the
+executor's sandbox BOTH names read as `underlying go test failed` (the loopback
+denial masks everything), so the difference was invisible from inside. The
+informative form is to **rename** the function rather than delete it: the
+package still compiles, the name simply leaves the reported set, and the
+manifest gate is isolated. Both names then red naming exactly themselves.
+**Fix the mutation spec to the rename form.**
+
+**(2) `skipped_tests` is a third number nobody reports, and it is non-zero
+everywhere — including in the mission's own CI gate.** `ailang test --format
+json` returns `total_tests`, `passed_tests`, `failed_tests` **and**
+`skipped_tests`. The charter's iter-25 process fix taught reporting
+`len(tests[])` and `passed_tests` separately and gating on `len(tests[])`.
+**Both of those are blind to `skipped_tests`.** Measured first-party:
+
+| Target | total | passed | named `len(tests[])` | **skipped** |
+|---|---:|---:|---:|---:|
+| `sketches/effectbroker.ail` | 38 | 33 | 31 | **5** |
+| `world/` (the CI gate's own Leg-2 invocation) | 19 | 14 | 14 | **5** |
+
+Every skip is a **contract-derived property test** that ran `tests_run: 0` with
+`"no generator for parameter <p>: <T>"` for an ADT or record type — `Capability`
+and `EffectRecord` in the sketch; `World`, `HashRef` and `EpochRecord` in
+`world/`. `scripts/verify_ail.sh` gates on `failed_tests == 0` and
+`len(tests[]) == 14`, so it prints `✓ all 14 required named tests pass
+(failed_tests=0)` while five sibling property checks ran zero cases.
+
+**Scope, stated honestly.** The Z3 contracts are genuinely verified (7/7,
+0 counterexamples, parsed from `verify.results[]`) — no proof is weakened and
+no claim in this document is falsified. What is affected is the *additional*
+randomized property layer, which has been silently empty since
+`w-m1-ailang-hardening` (iter-13) and, for this sketch, since M3.A `2edf2ef` —
+confirmed by running one unchanged instrument against `2edf2ef`, `9401f2d`,
+`10beb83` and HEAD, which all report exactly 5 skips.
+
+This is the **third instance** of *a check that reports success while silently
+running nothing* in this mission, after **V27** (`ai-check` shells out to `z3`
+and skips silently without it) and **B1** (replay tests `t.Skip`-ing in CI).
+The root cause is an AILANG v0.30.0 limitation — no value generator for ADT or
+record parameters — which routes upstream per the frozen-core rule, never a
+local workaround. The gate fix (assert an expected `skipped_tests`, loudly)
+touches `scripts/verify_ail.sh`, which is an **AC11-protected path for M3.C**,
+so it is deliberately NOT made here: it is carried as **CF-M-1** with its own
+queue item.
 
 ## Appendix A — the verified sketch (M3.A lands this verbatim as `design_docs/sketches/effectbroker.ail`)
 

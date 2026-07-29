@@ -21,6 +21,8 @@ expected=(
   BenchmarkRESTCommit
   BenchmarkLogRange/limit_100
   BenchmarkLogRange/limit_500
+  BenchmarkBrokerDecide
+  BenchmarkBrokerFSRead
 )
 
 out="$(mktemp -t bench_worldd.XXXXXX)"

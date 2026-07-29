@@ -7,11 +7,13 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"os"
 	"path/filepath"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -430,4 +432,72 @@ func BenchmarkLogRange(b *testing.B) {
 			reportPercentiles(b, samples)
 		})
 	}
+}
+
+func BenchmarkBrokerDecide(b *testing.B) {
+	capability := broker.Capability{
+		Effect: broker.EffectFSRead, Scope: "/bench/input", ExpiresAt: int64(b.N) + 1, Budget: int64(b.N),
+	}
+	samples := make([]time.Duration, 0, b.N)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		req := broker.EffectRequest{
+			Effect: broker.EffectFSRead, Scope: "/bench/input", Cost: 1, Now: int64(i),
+		}
+		start := time.Now()
+		decision := broker.Decide(capability, req)
+		samples = append(samples, time.Since(start))
+		if !decision.Allowed {
+			b.Fatalf("Decide #%d = %#v, want allowed", i, decision)
+		}
+	}
+	b.StopTimer()
+	reportPercentiles(b, samples)
+}
+
+func BenchmarkBrokerFSRead(b *testing.B) {
+	dbPath := filepath.Join(b.TempDir(), "world.db")
+	s, err := store.Open(dbPath)
+	if err != nil {
+		b.Fatalf("store.Open: %v", err)
+	}
+	b.Cleanup(func() {
+		if err := s.Close(); err != nil {
+			b.Errorf("store.Close: %v", err)
+		}
+	})
+
+	inputPath := filepath.Join(b.TempDir(), "input.txt")
+	if err := os.WriteFile(inputPath, []byte("broker-fs-read-seed"), 0o600); err != nil {
+		b.Fatalf("seed input: %v", err)
+	}
+	session := broker.NewSession(s, []broker.Capability{{
+		Effect: broker.EffectFSRead, Scope: inputPath,
+		ExpiresAt: int64(b.N) + 1, Budget: int64(b.N),
+	}}, broker.Registry{broker.EffectFSRead: broker.FSHandler{}})
+
+	samples := make([]time.Duration, 0, b.N)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		want := []byte(fmt.Sprintf("broker-fs-read-%d", i))
+		if err := os.WriteFile(inputPath, want, 0o600); err != nil {
+			b.Fatalf("write input #%d: %v", i, err)
+		}
+		req := broker.EffectRequest{
+			Effect: broker.EffectFSRead, Scope: inputPath, Cost: 1, Now: int64(i),
+		}
+		b.StartTimer()
+		start := time.Now()
+		got, recordRef, err := session.Invoke(context.Background(), req, nil)
+		samples = append(samples, time.Since(start))
+		if err != nil {
+			b.Fatalf("Invoke #%d: %v", i, err)
+		}
+		if !bytes.Equal(got, want) || recordRef.IsZero() {
+			b.Fatalf("Invoke #%d returned result %q, record %s", i, got, recordRef.String())
+		}
+	}
+	b.StopTimer()
+	reportPercentiles(b, samples)
 }

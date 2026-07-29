@@ -210,6 +210,10 @@ func walkApprovalHead(s approvalStore, requestRef hashref.HashRef, wantDecision 
 	if err != nil || !ok {
 		return store.Object{}, false, err
 	}
+	// This is O(all approval-head objects) per poll. A cycle cannot exist in
+	// this content-addressed chain: creating one would require an object's hash
+	// to contain itself. A future indexed approval surface should replace this
+	// linear walk rather than weakening that immutable-chain invariant.
 	for !head.IsZero() {
 		obj, found, getErr := s.GetObject(head)
 		if getErr != nil {
