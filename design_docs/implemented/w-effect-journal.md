@@ -1,6 +1,22 @@
 # w-effect-journal — Closing the dispatch→record window at effect granularity (the EFFECT journal)
 
-**Status**: Planned — **QUORUM-CLEARED via the charter's narrow-refinement carve-out** (NEW-DOC,
+**Status**: **IMPLEMENTED — ITEM COMPLETE 2026-07-29 (iter-39)**. All three milestones landed
+CI-green on `dev`, both jobs SHA-addressed on each merge commit: **MJ.A** PR #26 → `82d9128`
+(judge PASS 86/100), **MJ.B** PR #27 → `3ef5510` (judge PASS 86/100), **MJ.C** PR #28 → `460ade3`
+(judge PASS 85/100, zero blocking). **AC1–AC13 all met**, with two of them satisfied by
+*correction* rather than by construction and recorded as such rather than quietly checked:
+**AC5's third clause was STRUCK as a doc defect** (identical-byte outcome re-append is absent from
+the landed commit substrate too, so implementing it on the effect side alone would diverge — AC5's
+text below is already rewritten), and **AC11's named mutation was split into `-COMMIT` and
+`-EFFECT` forms** at Gate 2, because MJ.B added a second, textually identical page loop and the
+single-form mutation could no longer match exactly once. The Non-Vacuity table's AC11 row still
+names the pre-split form and is deliberately left as the historical record.
+The dispatch→record window is closed at effect granularity. **One residual stays open and is
+stated, not hidden** (Decision 5): a crash between the effect record write and the outcome append
+leaves an indeterminate receipt whose record already exists. Nothing in this document claims that
+every crash ambiguity is eliminated.
+
+~~Planned~~ — **QUORUM-CLEARED via the charter's narrow-refinement carve-out** (NEW-DOC,
 queue row 4c, designer rotation iter-36). **r0** authored by `claude:claude-fable-5`; **r1** fixed
 quorum round-1's blocking finding (resumption-ordinal collision); **r2** applied quorum round-2's
 blocking fix VERBATIM as a bounded controller revision (the split allocator became one
