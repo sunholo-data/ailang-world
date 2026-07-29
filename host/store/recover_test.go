@@ -81,12 +81,15 @@ func TestRecoverIndeterminateSurfacesNeverLieLaw(t *testing.T) {
 }
 
 func TestRecoverRetryAllowedMirrorsAllSketchRows(t *testing.T) {
+	// This store-local copy mirrors the sketch only. Production retryAllowed
+	// lives in broker, so broker's MUT-RETRY-XOR cannot reach this witness.
 	rows := []struct {
 		name                      string
 		indeterminate, reconciled bool
 		want                      bool
 	}{
 		{"not-indeterminate", false, false, true},
+		{"not-indeterminate-reconciled", false, true, true},
 		{"indeterminate-unreconciled", true, false, false},
 		{"indeterminate-reconciled", true, true, true},
 	}

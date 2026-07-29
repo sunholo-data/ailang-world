@@ -7,6 +7,10 @@ import (
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
+// maxRecoveryPages bounds both commit- and effect-intent recovery walks.
+// At 2^20 pages × store.MaxPendingIntentsPage (1000), it permits about
+// 1.05 billion intents—orders of magnitude beyond any store this substrate
+// can produce—while ensuring a corrupted cursor cannot loop forever.
 const maxRecoveryPages = 1 << 20
 
 // IndeterminateEffectError reports a durable commit intent for which no

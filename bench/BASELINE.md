@@ -16,27 +16,86 @@ sandbox and replaced every row together.
 - Machine: Mac Studio (Mac16,9), Apple M4 Max, 16 cores (12P/4E), 128 GB RAM
 - Platform: `darwin/arm64`
 - Go: `go version go1.26.4 darwin/arm64`
-- Repository commit: the M3.C branch (`sprint/w-effect-broker-m3c`, based on `536cca0`)
+- Repository commit: the MJ.C branch (`sprint/w-effect-journal-mjc`, based on `b485ead`)
 - AILANG pin: `/tmp/ailang-v0300/ailang`, v0.30.0, commit `e37b370`
 - Invocation: `go test -bench . -benchtime 200x -run '^$' ./host/daemon/`
+- **Rig load at measurement: `load averages: 5.22 4.99 5.91`** — the sibling V1
+  mission's eval suite was running `ollama` + `llama-server` at 80–98% CPU
+  throughout. See the MJ.C section: the absolute rows below are load-elevated,
+  and this item's cost was therefore established by a same-rig A/B, not by a
+  diff against the idle-rig M3.C numbers.
 
 Percentiles are computed from per-iteration wall-clock samples and emitted as
 `p50_ms` and `p95_ms`; `ns/op` remains in the raw output for reference. A mean
 hides the tail the budget is actually about, which is why the percentiles are
 the recorded numbers.
 
+## MJ.C re-measure — and the delta that would have been a fabricated regression
+
+MJ.C invoked all ten rows together with the command above. The sandbox denied
+the five loopback benchmarks with:
+`listen tcp 127.0.0.1:0: bind: operation not permitted`.
+That run is **UNINFORMATIVE UNDER SANDBOX**, and the executor correctly wrote
+`<CONTROLLER-MEASURED>` into every measured cell rather than mixing partial
+numbers into a complete baseline. The controller performed the single complete
+unsandboxed invocation and replaced every row together.
+
+**Then the naive delta turned out to be an artefact of the rig, not of the code.**
+Read against the idle-rig M3.C row, `BenchmarkBrokerFSRead` p95 moved
+0.7472 ms → 4.529 ms, a **6.06× "regression"** that this item would have banked
+as the effect journal's cost. It is not. The sibling **V1 mission's eval suite
+was running on the same development rig** (`ollama` + `llama-server`, 80–98%
+CPU, `load averages: 5.22 4.99 5.91`), and every row is inflated by it.
+
+The cost was therefore established by a **same-rig A/B** — the identical
+invocation on the pre-MJ.C parent commit `b485ead`, under the same load, minutes
+apart — rather than by a diff against numbers taken under different conditions:
+
+| `BenchmarkBrokerFSRead` p95 | Value |
+|---|---:|
+| Control — `b485ead`, pre-MJ.C, same loaded rig | **4.523 ms** |
+| MJ.C run 1 (the recorded all-row invocation) | 4.529 ms |
+| MJ.C run 2 | 4.610 ms |
+| MJ.C run 3 | 4.604 ms |
+| **MJ.C cost vs control** | **+0.13% — within run-to-run noise; no measurable cost** |
+
+**MJ.C's measured cost is zero.** That is the expected result: MJ.C adds no
+production code to the dispatch path — the effect-journal appends this row now
+includes were already there from **MJ.B**, and MJ.B's own cost was never
+isolated against a same-rig control.
+
+The generalisable point, and the reason the A/B was run at all: **a delta
+against a baseline captured under different conditions is not a measurement of
+the change — it is a measurement of the conditions.** A benchmark is an
+instrument, and it inherits the same burden of proof as any other instrument in
+this repository; the control is what distinguishes a real regression from a busy
+machine. Nothing in this file, in `scripts/bench_worldd.sh`, or in the harness
+records the rig load at measurement time, so this confound is currently invisible
+by default and was caught only because the ratio looked implausible. Raised as
+queue item **4f `w-bench-load-confound`**.
+
+The three MJ.C runs above also satisfy this file's own "a ratio within 2× of 1.0
+is run three times with all three reported" rule for the commit-with-receipt row
+(+50.5%, +72.1%, +46.1%; control +35.1%) — a spread that is itself the load, and
+a standing exceedance now in its sixth milestone, not a new one.
+
 | Operation | Day-1 p95 target | Measured p50 | Measured p95 | Result |
 |---|---:|---:|---:|---|
-| Store commit (embedded `store.Commit`, kernel floor) | ≤ 25 ms | 0.3980 ms | 0.4610 ms | **inside budget** (54× headroom) |
-| Journal intent append (`store.AppendIntent`) | ≤ 10 ms | 0.3906 ms | 0.4542 ms | **inside budget** (22× headroom) |
-| Commit with in-transaction receipt | ≤ 120% of store-commit p95 (≤ 0.5532 ms) | 0.5543 ms | 0.6800 ms | **TARGET EXCEEDED — +47.5%**, see below |
-| REST commit (`POST /v1/commit`) | ≤ 35 ms | 0.5256 ms | 0.6319 ms | **inside budget** (55× headroom) |
-| Head read (`GET /v1/head`) | ≤ 5 ms | 0.07033 ms | 0.08904 ms | **inside budget** (56× headroom) |
-| Health (`GET /v1/health`) | ≤ 2 ms | 0.04646 ms | 0.06813 ms | **inside budget** (29× headroom) |
-| Log range (`GET /v1/log`, limit=100 — the default page) | ≤ 30 ms | 1.151 ms | 1.409 ms | **inside budget** (21× headroom) |
-| Log range (`GET /v1/log`, limit=500 — the clamp max) | ≤ 120 ms | 5.759 ms | 6.149 ms | **inside budget** (20× headroom) |
-| Pure broker decision (`broker.Decide`) | ≤ 0.1 ms | 0.0000420 ms | 0.0000420 ms | **inside budget, but RESOLUTION-LIMITED — read the note below, not the number** |
-| Brokered `FS.Read` full pipeline | ≤ 10 ms | 0.6368 ms | 0.7472 ms | **inside budget** (13× headroom) |
+| Store commit (embedded `store.Commit`, kernel floor) | ≤ 25 ms | 0.4808 ms | 1.015 ms | **inside budget** (24.6× headroom) |
+| Journal intent append (`store.AppendIntent`) | ≤ 10 ms | 0.7145 ms | 0.9647 ms | **inside budget** (10.4× headroom) |
+| Commit with in-transaction receipt | ≤ 120% of store-commit p95 (≤ 1.218 ms) | 1.019 ms | 1.528 ms | **TARGET EXCEEDED — +50.5%**, see below |
+| REST commit (`POST /v1/commit`) | ≤ 35 ms | 0.6105 ms | 1.297 ms | **inside budget** (27× headroom) |
+| Head read (`GET /v1/head`) | ≤ 5 ms | 0.09896 ms | 0.1449 ms | **inside budget** (34.5× headroom) |
+| Health (`GET /v1/health`) | ≤ 2 ms | 0.06546 ms | 0.08962 ms | **inside budget** (22.3× headroom) |
+| Log range (`GET /v1/log`, limit=100 — the default page) | ≤ 30 ms | 3.064 ms | 3.850 ms | **inside budget** (7.8× headroom) |
+| Log range (`GET /v1/log`, limit=500 — the clamp max) | ≤ 120 ms | 15.65 ms | 17.55 ms | **inside budget** (6.8× headroom) |
+| Pure broker decision (`broker.Decide`) | ≤ 0.1 ms | 0.0000830 ms | 0.0000840 ms | **inside budget, but RESOLUTION-LIMITED — read the note below, not the number** |
+| Brokered `FS.Read` full pipeline | ≤ 10 ms | 3.618 ms | 4.529 ms | **inside budget** (2.2× headroom) — load-elevated; see the A/B above |
+
+**Every absolute row above is load-elevated** and must not be read as a
+regression against the idle-rig M3.C table. The headroom figures are honest for
+*this* run's conditions and are the conservative reading; the ratios and the A/B
+are the load-independent signal.
 
 ## The pure decision is below this harness's clock resolution — a bound, not a measurement
 
@@ -100,6 +159,13 @@ effect. Under every M3.D option, each brokered effect pays the two
 content-addressed `PutObject` writes priced by `BenchmarkBrokerFSRead`; the
 in-transaction receipt is paid once at the episode's commit boundary.
 
+**Both figures below are the M3.C IDLE-rig numbers, and deliberately so** — this
+analysis is a ratio between two rows, so it is only valid when both rows come
+from the same conditions. MJ.C's rows are load-elevated (see the MJ.C section),
+so substituting them here would change the arithmetic without changing the
+conclusion. Re-derive this section from a clean-rig invocation when queue item
+**4f `w-bench-load-confound`** lands a load gate.
+
 - Measured receipt delta: 0.6800 − 0.4610 = **0.2190 ms** per commit (p95, run 1).
 - Measured per-effect cost: **0.7472 ms** p95 (`BenchmarkBrokerFSRead`).
 - N=1 brokered effect: 0.2190 / 1 = **0.2190 ms** per effect → **+29.3%** on top
@@ -150,11 +216,52 @@ existing `GetLogEntry` rather than a new range query in the kernel
 
 ## Raw benchmark evidence
 
+**MJ.C — the recorded all-row invocation (LOADED rig, `load averages: 5.22 4.99 5.91`).**
+These are the numbers the summary table above reports.
+
 ```text
 goos: darwin
 goarch: arm64
 pkg: github.com/sunholo-data/ailang-world/host/daemon
 cpu: Apple M4 Max
+BenchmarkStoreCommit-16          	     200	    619414 ns/op	         0.4808 p50_ms	         1.015 p95_ms
+BenchmarkJournalAppend-16        	     200	    703076 ns/op	         0.7145 p50_ms	         0.9647 p95_ms
+BenchmarkCommitWithReceipt-16    	     200	    944072 ns/op	         1.019 p50_ms	         1.528 p95_ms
+BenchmarkHeadRead-16             	     200	    107971 ns/op	         0.09896 p50_ms	         0.1449 p95_ms
+BenchmarkHealth-16               	     200	     66019 ns/op	         0.06546 p50_ms	         0.08962 p95_ms
+BenchmarkRESTCommit-16           	     200	    803222 ns/op	         0.6105 p50_ms	         1.297 p95_ms
+BenchmarkLogRange/limit_100-16   	     200	   2465289 ns/op	         3.064 p50_ms	         3.850 p95_ms
+BenchmarkLogRange/limit_500-16   	     200	  12167745 ns/op	        15.65 p50_ms	        17.55 p95_ms
+BenchmarkBrokerDecide-16         	     200	       141.2 ns/op	         0.0000830 p50_ms	         0.0000840 p95_ms
+BenchmarkBrokerFSRead-16         	     200	   3206511 ns/op	         3.618 p50_ms	         4.529 p95_ms
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon
+```
+
+**The MJ.C A/B control — the identical invocation on the pre-MJ.C parent
+`b485ead`, same loaded rig, minutes apart.** This is what establishes that MJ.C
+costs nothing; it is not a milestone baseline and must not be diffed as one.
+
+```text
+BenchmarkStoreCommit-16          	     200	    610850 ns/op	         0.4409 p50_ms	         1.022 p95_ms
+BenchmarkJournalAppend-16        	     200	    613433 ns/op	         0.6074 p50_ms	         0.9161 p95_ms
+BenchmarkCommitWithReceipt-16    	     200	    946877 ns/op	         1.034 p50_ms	         1.381 p95_ms
+BenchmarkHeadRead-16             	     200	     70529 ns/op	         0.06671 p50_ms	         0.08904 p95_ms
+BenchmarkHealth-16               	     200	     67325 ns/op	         0.06692 p50_ms	         0.09046 p95_ms
+BenchmarkRESTCommit-16           	     200	    924774 ns/op	         0.9967 p50_ms	         1.316 p95_ms
+BenchmarkLogRange/limit_100-16   	     200	   2497106 ns/op	         3.128 p50_ms	         3.749 p95_ms
+BenchmarkLogRange/limit_500-16   	     200	  12177548 ns/op	        15.71 p50_ms	        17.31 p95_ms
+BenchmarkBrokerDecide-16         	     200	       172.3 ns/op	         0.0000830 p50_ms	         0.0000840 p95_ms
+BenchmarkBrokerFSRead-16         	     200	   3296938 ns/op	         3.661 p50_ms	         4.523 p95_ms
+```
+
+**M3.C — the last IDLE-rig all-row invocation, retained deliberately.** The
+amortisation analysis above is computed from these numbers, and they are the
+only clean-rig reference this file still holds. **They are NOT this milestone's
+measurement** — diffing the loaded MJ.C rows against them is exactly the
+fabricated 6.06× "regression" the MJ.C section documents.
+
+```text
 BenchmarkStoreCommit-16          	     200	    399910 ns/op	         0.3980 p50_ms	         0.4610 p95_ms
 BenchmarkJournalAppend-16        	     200	    395345 ns/op	         0.3906 p50_ms	         0.4542 p95_ms
 BenchmarkCommitWithReceipt-16    	     200	    572273 ns/op	         0.5543 p50_ms	         0.6800 p95_ms
@@ -192,6 +299,11 @@ ok  	github.com/sunholo-data/ailang-world/host/daemon	3.433s
   explicitly declined to invent values. That refusal is the only reason this
   table is trustworthy: a fabricated p95 here would poison every future sprint
   that diffs against this file and would be undetectable after the fact.
+  **MJ.C repeated the pattern for a sixth milestone** — and added the missing
+  half: declining to invent a number protects against fabricated *values*, but
+  not against a fabricated *delta*. See the MJ.C A/B above, where a real
+  measurement compared against a baseline taken under different rig conditions
+  produced a 6.06× regression that does not exist.
 - **Every row is re-measured each milestone, never carried forward.** Rows drift
   run to run on a shared machine (store commit p95 has read 0.6093 → 0.5421 →
   0.4717 → 0.4537 → 0.4610 ms across A3/M2.B/M2.C/SD.C/M3.C without any

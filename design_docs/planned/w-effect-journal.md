@@ -139,7 +139,7 @@ the effect intent below is TRUE at write time; nothing is invented to pass valid
   guarantee.)
 - **P2 — the kernel reopen is exactly scoped, and every touched method is named.** M3 Design
   Freeze bullet 8 said "zero `host/store` method changes"; this item is the ratified exception.
-  The full delta is in Decision 2: **five new methods, two changed methods, zero removed, zero
+  The full delta is in Decision 2: **four new methods, three changed methods, zero removed, zero
   changed signatures on existing methods.** Anything beyond that list is out of scope for the
   sprint without returning here.
 - **P3 — invocation-ID namespaces are disjoint by construction, enforced in BOTH appenders.**
@@ -277,8 +277,8 @@ type EffectOutcome struct {
 | `AppendNextEffectIntent(episodeID string, intentWithoutID EffectIntent) (id string, ordinal int64, err error)` | **new** (**r2**, quorum round-2 blocking fix — the reviewer's own signature, adopted verbatim) | **ONE transaction does all of it**: acquire the store's write serialization → derive the next ordinal from ALL matching durable intents (resolved, indeterminate and pending alike — the r1 candidate-set, now computed INSIDE the tx) → validate exhaustion (`ordinal == math.MaxInt64` → structured `OrdinalExhaustedError`, never a silent wrap) → construct the canonical ID `effect:<episodeID>:<ordinal>` and payload → insert the object + journal row → commit. The ordinal never exists outside the transaction, so no read→allocate→append interleaving is possible. Also validates non-empty `Effect`/`Scope`/`episodeID` and a non-zero `RequestRef`, and keeps `AppendIntent`'s duplicate discipline for the constructed row |
 | ~~`AppendEffectIntent(id, EffectIntent)`~~ | **REMOVED in r2** | superseded — a caller-supplied ordinal is exactly the split allocation the round-2 objection names. The broker no longer chooses effect IDs; the store mints them |
 | ~~`NextEffectOrdinal(episodeID)`~~ | **REMOVED in r2** | superseded — its derivation moved INSIDE `AppendNextEffectIntent`'s transaction. Exposing it as a standalone read is what made the TOCTOU expressible |
-| `AppendEffectOutcome(id, EffectOutcome)` | **new** | mirrors `AppendOutcome`: requires a durable effect intent, rejects a second outcome, requires `Status ∈ {succeeded, failed}` and non-zero `RecordRef` |
-| `GetEffectReceipt(id)` | **new** | the same three-state receipt law (`not-started` / `indeterminate` / `resolved`) over the effect payloads; rejects non-`effect:` IDs with a structured error |
+| `AppendEffectOutcome(id, EffectOutcome)` | **new** | mirrors `AppendOutcome`: requires a durable effect intent, rejects a second outcome, requires `Status ∈ {succeeded, failed}` and non-zero `RecordRef`. Its existence check deliberately joins the intent object on `semantic_id = 'world/effect-intent/v1'`, stronger than `AppendOutcome`'s `kind='intent'` check, so a commit-shaped row cannot authorize an effect outcome; the broker calls it after persisting the failed or succeeded effect record |
+| `GetEffectReceipt(id)` | **new** | the same three-state receipt law (`not-started` / `indeterminate` / `resolved`) over the effect payloads; enforces the canonical `effect:<episodeID>:<ordinal>` form, so `effect:ep:07` is rejected. Production uses `EffectInvocationID` and never emits a zero-padded ordinal |
 | `PendingEffectIntents(limit, fromIndex...)` | **new** | `PendingIntents`'s keyset paging, filtered to `o.semantic_id = 'world/effect-intent/v1'`, same `MaxPendingIntentsPage` bound |
 | `validateIntent` | **changed** | adds: reject `InvocationID` with the reserved `effect:` prefix (structured `InvocationMismatchError`) — the commit-side half of P3's disjointness |
 | `PendingIntents` | **changed** | query gains `AND o.semantic_id = 'world/journal-intent/v1'` — behaviour-preserving on every existing store (no effect intents exist anywhere yet, V14), and REQUIRED once they do (V9: today's query decodes every pending row as a commit intent and would error on the first effect payload) |
@@ -390,6 +390,14 @@ whose record object WAS written is resolvable by deterministic reconciliation (t
 content-addressed; a reconciler may append the outcome it proves). That reconciler is
 **deferred scope** — it is an act, and this item's recovery only reports. Until it lands,
 such effects stay indeterminate: fail-closed, honest, strictly more knowledge than today.
+
+**Close-out claim boundary:** a crash between the effect RECORD write and the OUTCOME append
+still leaves an indeterminate receipt whose record already exists. This item does not eliminate
+every crash ambiguity; it makes that residual durable, visible, and fail-closed. Also,
+`retryAllowed` has **zero production callers**. The guard was deliberately removed from recovery
+as compile-time unreachable: recovery never retries, so the law is tested as a consumer-contract
+truth table only. `MUT-RETRY-XOR` proves the new `(false, true)` test row discriminates; it does
+not prove any runtime behaviour changes.
 
 ## Decision 6 — CF-N-2, CF-N-3, and the bench posture
 
@@ -561,7 +569,9 @@ as its first milestone.**
 4. **AC4** — `PendingIntents` returns zero effect intents with a pending effect intent planted;
    `PendingEffectIntents` returns zero commit intents symmetrically.
 5. **AC5** — outcome discipline: `AppendEffectOutcome` without a durable intent → structured
-   error; second outcome → `DuplicateInvocationError`; idempotent identical-bytes re-append.
+   error; second outcome → `DuplicateInvocationError`. Identical-byte re-append is deliberately
+   not required: landed `AppendOutcome` rejects every second outcome, and the effect journal
+   mirrors that commit-substrate discipline rather than diverging from it.
 6. **AC6** — `GetEffectReceipt` walks all three states over a real store lifecycle.
 7. **AC7** — **the window AND the resumption** (expanded in r1 per the quorum): the
    crash-simulation test (fault-injected store, handler ran, record/outcome lost) yields
@@ -591,8 +601,10 @@ as its first milestone.**
 12. **AC12** — CF-N-3: `((false,true), true)` present at all three sites; `MUT-RETRY-XOR`
     demonstrated red on ONLY that row.
 13. **AC13** — full gates: `verify_go.sh`, `verify_ail.sh` (11 modules / 4 identities / 14 world
-    tests), bench smoke, `go test ./...` zero skips, protected-path `git diff --exit-code`,
-    CI observed green before any box is checked. **No grep-based honest-claim gate** (the AC19
+    tests), bench smoke, `go test ./...` with exactly the two pre-existing subprocess-helper
+    skips (`TestCrashHelperProcess` and
+    `TestWriterLockHelperProcess`), protected-path `git diff --exit-code`, and CI observed green
+    before any box is checked. **No grep-based honest-claim gate** (the AC19
     lesson: it was unsatisfiable and monotonically increasing in honesty); the honest-claim
     check is the quorum reading the Scope note and Decision 5 against the code.
 
@@ -617,6 +629,9 @@ report the reds it must NOT cause, and revert from a `cp` backup verified by has
 | AC7b atomicity (r2) | `MUT-ORDINAL-SPLIT-TX` (form: in `AppendNextEffectIntent`, compute the next ordinal in its OWN transaction/query and commit it before opening the append transaction — i.e. restore r1's split allocator; NOTE the FAMILY: a variant that merely moves the read one statement earlier inside the SAME tx is NOT this mutation and proves nothing, so the record must name which form ran) — PRODUCTION, must compile | the two-goroutine concurrent-allocation test (duplicate ordinal / duplicate row) | every single-threaded allocation test, the resumption test, and the exhaustion test — a split allocator is still CORRECT serially, which is exactly what makes this mutant discriminating |
 | AC7b exhaustion (r2) | `MUT-ORDINAL-WRAP` (form: delete the `math.MaxInt64` exhaustion check so the increment wraps) — PRODUCTION | the `OrdinalExhaustedError` test | all ordinary allocation tests |
 | AC12 | `MUT-RETRY-XOR` (form: `retryAllowed` body `!indeterminate \|\| reconciled` → `(!indeterminate) != reconciled` in `host/broker/recover.go:46`) — PRODUCTION | ONLY the `((false,true), true)` row — truth table: `(F,F)`→T✓, `(T,F)`→F✓, `(T,T)`→T✓, `(F,T)`→**F✗** — proving the new row is the only non-vacuous witness | all three pre-existing rows |
+
+The document is content-ready to move to `design_docs/implemented/` once MJ.C CI is observed
+green. The controller, not the executor, performs that move and checks acceptance boxes.
 
 ## Axiom Compliance
 

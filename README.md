@@ -24,6 +24,12 @@ the world *why* anything happened.
 
 The underlying OS executes bytes. **AILANG World executes intent.**
 
+Effect receipts let operators distinguish effects that were never dispatched
+from effects whose durable intent has no outcome. Treat an `indeterminate`
+receipt as fail-closed: do not retry automatically. A crash after the effect
+record write but before the outcome append can leave a record that requires
+deterministic reconciliation before the receipt can be resolved.
+
 ## Why
 
 Extrapolate the model trend — smarter, faster, cheaper, increasingly on-device — and

@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	EffectRecordV1 = "world/effect-record/v1"
-	EffectResultV1 = "world/effect-result/v1"
+	EffectRequestV1 = "world/effect-request/v1"
+	EffectRecordV1  = "world/effect-record/v1"
+	EffectResultV1  = "world/effect-result/v1"
 )
 
 // EffectRecord is the immutable accounting and replay input for one request.
