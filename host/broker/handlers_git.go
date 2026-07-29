@@ -58,6 +58,9 @@ func (h *GitHandler) Execute(ctx context.Context, req EffectRequest, payload []b
 			"PATH=/usr/bin:/bin",
 			"LANG=C",
 			"LC_ALL=C",
+			// The empty HOME intentionally removes ambient identity. These four
+			// deterministic constants make commit usable without inheriting or
+			// leaking any caller-provided GIT_* values.
 			"GIT_AUTHOR_NAME=AILANG World",
 			"GIT_AUTHOR_EMAIL=ailang-world@invalid",
 			"GIT_COMMITTER_NAME=AILANG World",

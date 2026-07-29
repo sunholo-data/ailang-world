@@ -143,6 +143,20 @@ The same binary is the bounded-timeout client:
 Use global `--addr http://127.0.0.1:<port>` before a client verb when the daemon
 uses another loopback port. `--addr` is not valid with `serve`; use `--bind`.
 
+## Effect broker operator boundary
+
+The M3 effect broker is the in-process authority and accounting boundary for
+effect requests. It has **zero REST routes and zero CLI verbs**; callers embed
+it directly. Every allowed, denied, or failed effect produces an immutable,
+content-addressed effect-record object. Successful result bytes are stored the
+same way. Replay mode reads those records and never dispatches a live handler.
+
+Subprocess effects use the capsule floor: a pinned executable, empty
+capabilities, an FS jail, a scrubbed environment, a wall-clock timeout, and an
+output cap. This is a process-safety floor, not full isolation. M3 provides no
+network isolation, memory or CPU limits, or containers; container/microVM
+isolation belongs to M5.
+
 ## Relationship to AILANG
 
 [AILANG](https://github.com/sunholo-data/ailang) is the language: deterministic, explicit

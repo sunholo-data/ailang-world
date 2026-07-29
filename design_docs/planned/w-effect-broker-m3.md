@@ -352,7 +352,7 @@ recorded. The four charter-named handlers, at their honest M3 depth:
 | Handler | Effects | Mechanism | M3 depth |
 |---------|---------|-----------|----------|
 | **FS** | `FS.Read`, `FS.Write` | direct Go I/O; the request scope IS the file's canonical absolute path (exact match, Law 2); the handler additionally resolves symlinks and refuses any path whose resolution leaves the scope's parent — defense-in-depth under the semantic check | full |
-| **Git** | `Git.Commit` | subprocess `git` (found via explicit config, not ambient PATH), cwd = the scope repo path, environment scrubbed to a fixed minimal slice (no `GIT_*`, no `HOME`-borne config injection: `HOME` set to an empty temp dir) | one verb — proves the subprocess-handler class; more verbs are package-lane extensions |
+| **Git** | `Git.Commit` | subprocess `git` (found via explicit config, not ambient PATH), cwd = the scope repo path, environment scrubbed to a fixed minimal slice (no inherited/HOME-borne git config; `HOME` set to an empty temp dir; deterministic author/committer identity injected as constants) | one verb — proves the subprocess-handler class; more verbs are package-lane extensions |
 | **Model** | `Model.Infer` | subprocess over the **pinned released `ailang` binary** running a fixed `std/ai` program; CI/tests use `--ai-stub` (verified live: deterministic output, rc=0, zero network); live `--ai <model>` is config-gated and NOT CI-exercised (CI has no keys, and must not) | stub-proven; live path smoke-tested attended once before M4 relies on it (OD2) |
 | **Human** | `Human.Approve`, `Human.PollApproval` | **strictly synchronous, store-backed** — `Human.Approve`: `Invoke` writes an approval-request object, links it from the `world/approvals/v1` registry head, and returns a structured **`Pending(requestRef)`** as its FINAL result; the Pending object is content-addressed as `world/effect-result/v1` bytes and the ONE immutable effect record for the invoke is written synchronously with `resultRef` = that Pending object, exactly like every other effect. Nothing about this record is ever rewritten. `broker.DecideApproval(requestRef, approve/deny, decidedBy)` — NOT an effect, an operator entry point — writes a SEPARATE, new `world/approval-decision/v1` object and moves the registry head; it never touches the request's effect record. Observing the human's decision is a separate brokered effect, **`Human.PollApproval`**: it requires its own capability grant, draws on its own budget line, and writes its own effect record whose result is the decision-so-far (the decision object, or a recorded still-pending marker) — a normal effect in every respect | queue mechanics + records proven in-process; the human-facing inbox is `w-approval-inbox` (clause-5) and the decider identity is an unauthenticated string under the M2 loopback-trust model (OD4) |
 
@@ -1011,6 +1011,126 @@ force through.
 
 **The question for the human** is stated in the mission log and the charter queue row; it is
 answerable in one comment, and the doc needs no further work before the answer arrives.
+
+## Close-out draft (M3.C — to be applied by M3.D with the doc move)
+
+This is a draft hand-off, not the item close-out. The document stays in
+`planned/`; M3.D owns AC14, AC16, AC19, and the eventual move to `implemented/`.
+
+- [x] **AC8:** `host/broker/episode_test.go` (landed in C-1) covers the live and
+  replay episode, all three record arms, zero replay dispatch, replay gaps, and
+  evidence-reference identity.
+- [x] **AC11:** the C-2 final protected-path diff command is empty and the only
+  `host/daemon` change is `bench_test.go`.
+- [x] **AC12:** the hardcoded manifest contains ten names, including
+  `BenchmarkBrokerDecide` and `BenchmarkBrokerFSRead`; `bench/BASELINE.md`
+  contains all ten rows. The executor wrote `<CONTROLLER-MEASURED>` into all 44
+  measured fields and quoted the denied loopback bind; the controller performed
+  the single complete 200x invocation outside the sandbox (three times for the
+  receipt ratio) and replaced every row together. Both `MUT-BENCH-DROP` runs
+  were made informative outside the sandbox — see the note below on why the
+  plan's delete-form was not.
+- [x] **AC13:** the local AILANG and Go verification gates are recorded in the
+  C-2 executor report; PR/dev-merge CI remains controller evidence and must not
+  be inferred from local exit codes.
+- [x] **AC17:** the baseline states the per-commit arithmetic for N=1 and N=3,
+  requires three 200x runs for a ratio within 2× of unity, and leaves Decision
+  7's +20% bound unchanged.
+- [ ] **AC14:** migrated to M3.D; do not claim clause 3 complete before the
+  first agent exists in M4.
+- [ ] **AC19:** migrated to M3.D. C-2 gathers its grep evidence, but M3.D owns
+  the assertion and final close-out.
+
+CF-L-4 is intentionally test-local: AC7 simulates deletion through a local
+store wrapper because `host/store` exposes no deletion API. It does not require
+or imply a store-level deletion surface.
+
+Under ratified option (i) (Mark attended, charter `c26b27d`), the
+**dispatch→record crash window remains OPEN**. M3.D adds commit-boundary
+anchoring; it does not turn the landed commit journal into a pre-dispatch effect
+journal and must not claim otherwise.
+
+Re-measured close-out facts: the landed sketch has `len(tests[]) == 31` and is
+244 lines; the benchmark manifest is ten names. CF-B-2 is **CLOSED** by SD.A
+commit `86d1276`, so Decision 7's earlier carry-forward sentence is stale; this
+draft notes that fact without editing the ratified decision mid-sprint.
+
+Honest-claim evidence is gathered with exact commands and output in the C-2
+executor report. Decision 3's corrected supersession note remains intact: it
+states that the former store-durability supersession claim was measured false.
+
+### Two instrument defects found at close-out, both of the same shape
+
+**(1) `MUT-BENCH-DROP` was uninformative for one of its two names.** The plan
+specifies the mutation as *delete the benchmark function*. Deleting
+`BenchmarkBrokerDecide` reds the smoke correctly — `missing expected
+benchmark(s): BenchmarkBrokerDecide`. Deleting `BenchmarkBrokerFSRead` instead
+leaves `"os"` imported and unused, so the package **fails to compile** and the
+smoke reports `underlying go test failed` — a build error, not the manifest
+gate firing. A build failure is not evidence that a gate has teeth. Under the
+executor's sandbox BOTH names read as `underlying go test failed` (the loopback
+denial masks everything), so the difference was invisible from inside. The
+informative form is to **rename** the function rather than delete it: the
+package still compiles, the name simply leaves the reported set, and the
+manifest gate is isolated. Both names then red naming exactly themselves.
+**Fix the mutation spec to the rename form.**
+
+**(2) `skipped_tests` is a known-and-recorded number that no CLAIM aggregates —
+and the "expected noise" characterisation deserves re-examination.**
+
+**First, the correction, because the first draft of this note overclaimed and
+the judge refuted it.** I initially wrote that the skips had been "silently
+empty since iter-13 and nobody noticed". That is **false**, and the evidence
+against it was already in this repository:
+
+- `design_docs/implemented/w-m1-ailang-hardening.md:103` records it as premise
+  **V14**: *"Contract-derived property tests over record-typed parameters skip
+  (`no generator for parameter rec: EpochRecord`) — expected noise; passing
+  inline tests alongside skipped properties still exit 0."*
+- The same document, at lines 378 and 460, states the gate design decision
+  explicitly: the assertions "are on named `tests[]` entries and `failed_tests`
+  **only, never `skipped_tests`**".
+- **This document's own premise V5** (line 825) records `skipped_tests: 5`
+  verbatim and annotates it: *"(skips = the known no-generator-for-record-params
+  class, same as `world/` modules)"*.
+
+So the behaviour was measured, documented and deliberately excluded from the
+gate at M1, and re-measured in this doc. It is not a discovery and it is not a
+silent skip in the V27/B1 sense — those were checks nobody knew were empty.
+**Recording it as a third instance of that class would have been an overclaim,
+which is the exact failure mode the honest-claim gate exists to prevent.**
+
+**What is still worth carrying (CF-M-1), stated at its real size:**
+
+| Target | total | passed | named `len(tests[])` | skipped |
+|---|---:|---:|---:|---:|
+| `sketches/effectbroker.ail` | 38 | 33 | 31 | **5** |
+| `world/` (the CI gate's own Leg-2 invocation) | 19 | 14 | 14 | **5** |
+
+1. **The proportion is not marginal.** In `world/` it is **5 of 5** — *every*
+   contract-derived property over the core types (`World`, `HashRef`,
+   `EpochRecord`) runs zero cases. "Expected noise" is a fair description of a
+   few skipped edge properties; it is a weaker description of a randomized layer
+   that is 100% empty. Whether that layer is worth having at all is a real
+   question, and the honest options are to make it run or to stop counting it.
+2. **The number is recorded in premises but never reaches a claim.** STATUS
+   stamps and close-outs quote "4/4 identities / 14 named tests" as the gate's
+   teeth; none of them carries "and 5 properties ran zero cases". A fact that
+   lives only in a premise row does not travel.
+3. **The gate could assert it cheaply**: pin an EXPECTED `skipped_tests` and
+   fail loudly when it moves, so a NEW skip cannot hide among the known ones —
+   which is the actual live risk today. That touches `scripts/verify_ail.sh`, an
+   **AC11-protected path for M3.C**, so it is deliberately not done here.
+
+The root cause — no value generator for ADT/record parameters in v0.30.0 — is a
+language limitation and routes upstream per the frozen-core rule
+(`sunholo-data/ailang#517`), never a local workaround.
+
+**The durable lesson is the correction itself.** The controller's own headline
+finding was refuted by the independent judge citing this repository's own
+premise rows. Everything a controller hands downstream is a claim, including its
+own account of its own evidence — the iter-25 lesson recurring with the roles
+unchanged.
 
 ## Appendix A — the verified sketch (M3.A lands this verbatim as `design_docs/sketches/effectbroker.ail`)
 
