@@ -236,6 +236,109 @@ func TestRecoverUsesKernelPagingBound(t *testing.T) {
 	}
 }
 
+// pagedRecoveryStore scripts multi-page PendingIntents responses so the keyset
+// cursor and the loop's termination are exercised. The temp-file fixtures above
+// hold ONE pending intent, so they only ever produce a single short page: with
+// them, dropping the cursor entirely changes nothing observable and
+// MUT-PENDING-UNBOUNDED cannot red. Measured at iteration 35 — the mutation was
+// green against all five original cases. This fake is what gives the paging
+// discipline something to prove.
+type pagedRecoveryStore struct {
+	pages      [][]store.PendingIntent
+	fromIndex  []int64 // the cursor received on each call; -1 means "no cursor"
+	calls      int
+	maxCalls   int
+	sawReceipt map[string]bool
+}
+
+func (p *pagedRecoveryStore) PendingIntents(
+	limit int,
+	fromIndex ...int64,
+) ([]store.PendingIntent, error) {
+	if limit != store.MaxPendingIntentsPage {
+		return nil, fmt.Errorf("limit=%d, want store.MaxPendingIntentsPage", limit)
+	}
+	cursor := int64(-1)
+	if len(fromIndex) > 0 {
+		cursor = fromIndex[0]
+	}
+	p.fromIndex = append(p.fromIndex, cursor)
+	p.calls++
+	if p.calls > p.maxCalls {
+		return nil, fmt.Errorf(
+			"recovery did not terminate: %d calls, cursors=%v", p.calls, p.fromIndex)
+	}
+	// Serve pages positionally, but ONLY when the cursor actually advanced the
+	// way a keyset scan requires; a stuck cursor re-serves page 0 forever,
+	// which is precisely the unbounded-rescan defect.
+	idx := 0
+	for i, page := range p.pages {
+		if len(page) == 0 {
+			continue
+		}
+		if cursor < page[len(page)-1].Seq {
+			idx = i
+			break
+		}
+		idx = i + 1
+	}
+	if idx >= len(p.pages) {
+		return nil, nil
+	}
+	return p.pages[idx], nil
+}
+
+func (p *pagedRecoveryStore) GetReceipt(id string) (store.Receipt, bool, error) {
+	if p.sawReceipt == nil {
+		p.sawReceipt = map[string]bool{}
+	}
+	p.sawReceipt[id] = true
+	return store.Receipt{InvocationID: id, State: store.ReceiptIndeterminate}, true, nil
+}
+
+func TestRecoverPagesWithKeysetCursorAcrossFullPages(t *testing.T) {
+	full := make([]store.PendingIntent, store.MaxPendingIntentsPage)
+	for i := range full {
+		seq := int64(i + 1)
+		full[i] = store.PendingIntent{
+			Seq:          seq,
+			InvocationID: fmt.Sprintf("paged-%d", seq),
+		}
+	}
+	tail := []store.PendingIntent{{Seq: int64(store.MaxPendingIntentsPage + 1),
+		InvocationID: fmt.Sprintf("paged-%d", store.MaxPendingIntentsPage+1)}}
+
+	probe := &pagedRecoveryStore{
+		pages:    [][]store.PendingIntent{full, tail},
+		maxCalls: 8, // a stuck cursor blows this long before maxRecoveryPages
+	}
+	findings, err := recoverPending(probe)
+	if err != nil {
+		t.Fatalf("recoverPending across pages: %v", err)
+	}
+	want := store.MaxPendingIntentsPage + 1
+	if len(findings) != want {
+		t.Fatalf("findings=%d, want %d (one per pending intent across both pages)",
+			len(findings), want)
+	}
+	// The FIRST call carries no cursor; every later call must carry the last
+	// Seq of the page before it. That is the keyset contract.
+	if len(probe.fromIndex) < 2 {
+		t.Fatalf("PendingIntents called %d times, want at least 2 pages",
+			len(probe.fromIndex))
+	}
+	if probe.fromIndex[0] != -1 {
+		t.Errorf("first PendingIntents cursor=%d, want none", probe.fromIndex[0])
+	}
+	if probe.fromIndex[1] != int64(store.MaxPendingIntentsPage) {
+		t.Errorf("second PendingIntents cursor=%d, want %d — the keyset cursor did not advance",
+			probe.fromIndex[1], store.MaxPendingIntentsPage)
+	}
+	if !probe.sawReceipt[fmt.Sprintf("paged-%d", store.MaxPendingIntentsPage+1)] {
+		t.Error("the intent on the SECOND page was never read: recovery stopped after one page")
+	}
+}
+
 func TestRecoveryConsumerContractMirrorsSketch(t *testing.T) {
 	if mayReportNotStarted(true) || !mayReportNotStarted(false) {
 		t.Fatal("mayReportNotStarted does not mirror the authoritative sketch")

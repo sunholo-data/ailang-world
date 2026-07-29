@@ -101,24 +101,28 @@ func recoverPending(s recoveryStore) ([]IndeterminateEffect, error) {
 					"broker: recover receipt %q: %w", pending.InvocationID, err,
 				)
 			}
+			// PendingIntents just handed us this invocation, so an intent IS
+			// durable for it. mayReportNotStarted(true) == false is therefore
+			// the law's verdict here: the kernel may NOT report not-started.
+			// It is spelled as a constant rather than as a call because a call
+			// on a known-true argument folds at compile time — it would read as
+			// a runtime consultation of the law while being unable to vary.
+			// The law itself is pinned by TestRecoveryConsumerContractMirrorsSketch
+			// against design_docs/sketches/storejournal.ail.
 			if !hasIntent {
-				if !mayReportNotStarted(true) {
-					return nil, fmt.Errorf(
-						"broker: pending invocation %q was reported not-started",
-						pending.InvocationID,
-					)
-				}
-				continue
+				return nil, fmt.Errorf(
+					"broker: pending invocation %q was reported not-started",
+					pending.InvocationID,
+				)
 			}
 			if receipt.State != store.ReceiptIndeterminate {
 				continue
 			}
-			if retryAllowed(true, false) {
-				return nil, fmt.Errorf(
-					"broker: unreconciled invocation %q was marked retryable",
-					pending.InvocationID,
-				)
-			}
+			// NOTE: there is deliberately no retryAllowed() guard here. Recovery
+			// never retries anything, so a guard on retryAllowed(true, false)
+			// would be a compile-time false — unreachable code wearing the
+			// clothes of a runtime check. Proven unreachable before removal by
+			// replacing its body with a panic: the whole package still passed.
 			indeterminate := &IndeterminateEffectError{
 				InvocationID:     pending.InvocationID,
 				PlannedWorldRef:  pending.Intent.WorldRef,
