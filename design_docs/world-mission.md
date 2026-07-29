@@ -82,6 +82,33 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   them). So every worktree-based executor directive must EITHER `cp` the plan into the worktree
   first (it stays gitignored, so it never pollutes the diff) OR quote the binding requirements
   inline. Do not assume a sub-agent can read mission state that lives outside git.
+- **A MUTATION IS AN INSTRUMENT — ESTABLISH ITS VALIDITY BEFORE ITS RESULT COUNTS (process fix,
+  iter-35; ≥2 instances across iter-34 and iter-35).** Non-vacuity mutations are how this mission
+  proves a gate has teeth, so a broken mutation does not merely waste a run — it manufactures
+  evidence. **Three failure modes are now on record, and every one produces a reading
+  indistinguishable from a real result:**
+  (a) **NEVER APPLIED** (iter-35): a `str.replace` pattern carrying four tabs against three-tab
+  source matched nothing, wrote the file back unchanged, and the suite went all-green — identical
+  to *"the mutation was applied and the gate failed to catch it"*. The conclusion it supported
+  happened to be true, which is worse, not better: **being right by luck is not a method.**
+  (b) **FAILS TO COMPILE** (iter-34, three times in one iteration): the package does not build, the
+  gate script reports failure, and a build error wears the gate's clothes. **You measured the
+  compiler, not the gate.**
+  (c) **THE NAME DENOTES A FAMILY** (iter-34 `MUT-BENCH-DROP` delete-vs-rename; iter-35
+  `MUT-PENDING-UNBOUNDED`, where two forms both compile and both red the same test by *different*
+  mechanisms). A mutation report that does not say WHICH FORM ran is not checkable, and a second
+  party running the other form will reasonably conclude the record is wrong — that is exactly what
+  happened at iter-35, costing a judge round-trip to resolve.
+  **Required practice, all five steps:** (1) apply under an assertion that the pattern matched
+  **exactly once**, and abort loudly otherwise — never a bare `replace`/`sed`; (2) print the
+  applied `git diff` BEFORE running the suite; (3) confirm the mutant **COMPILES** and say so;
+  (4) **NAME THE FORM** in the record, alongside the exact error text it produced; (5) revert by
+  `cp` from a backup taken first — **never `git checkout --` on a file carrying uncommitted work**
+  (iter-34 destroyed an executor's work that way) — then verify byte-identity by `sha256`.
+  This is the same family as the silent z3 skip (V27) and the silent `t.Skip` (B1): *a check that
+  did not run is indistinguishable from a check that passed*. **PROPOSED UPSTREAM** to the shared
+  `mission-control` skill's Gate-2 verification protocol (it lives in the V1 checkout, so World
+  proposes and never applies) — V1 runs mutations too and has the same exposure.
 - **The `verify_ail.sh` module count is now 10, not 9 (process fix, iter-25).** Iteration STATUS
   stamps 22/23/24 all recorded the gate as "EXACTLY 4/4 identities / **9** modules / 14 tests" as a
   first-party freshness check. `design_docs/sketches/storejournal.ail` landed iter-25, so the sweep
