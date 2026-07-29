@@ -4709,3 +4709,194 @@ baseline, and the honest close-out (AC8, AC11, AC12, AC13, AC14, AC17), folding 
 flipping AC18's checkbox (CF-K-2). Then **M3.D** (ratified option (i)) and item **4c
 `w-effect-journal`**. The dispatch→record crash window remains OPEN and AC19 still forbids claiming
 otherwise.
+
+## Iteration 34 — 2026-07-29 — `w-effect-broker-m3` **M3.C LANDED** (PR #23 → squash `cae04d2`, dev CI green both jobs, judge sonnet PASS 88/100 zero-blocking) — and the iteration's spine is that **the controller's own headline finding was refuted by the judge, using premise rows this repository had held all along**: the "silent skip" I filed as a third V27/B1 instance was measured, documented as V14, and deliberately excluded from the gate at M1, and the honest move was to retract it in the same commit that gathers the honest-claim gate's evidence
+
+**Pick**: item **4 `w-effect-broker-m3`**, milestone **M3.C** — the queue head, `[IN-SPRINT]`, no
+human gate outstanding (M3.D was ratified attended at `c26b27d`), doc twice-quorumed so no
+re-design and no re-quorum. Verified NOT-landed against a fresh `origin` at pick time: zero
+`M3.C` commits, no PR, `host/broker/episode_test.go` absent, bench manifest still at EIGHT names.
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` =
+`sunholo-voight-kampff`; tree clean on `dev` == `origin/dev` == `536cca0` (two-arg `git rev-parse`
+**without** `--short`, rc=0 — the iter-108 lesson); dev CI green at HEAD read **SHA-addressed** via
+`commits/<sha>/check-runs` rather than a run-list selector. Inbox: 10 unread, all eval-suite
+telemetry plus my own iter-33 report — no directives, no sibling requests, no regressions.
+**No `@MarkEdmondson1234` comment** on `#9` (27 comments) nor on predecessor `#1` since watermark
+`2026-07-27T08:55:11Z`. **No rotation due** — `#9` titles the current week and 27 ≪ 80 (the
+iter-20 intent test). Metered ledger: **`metered=$0.00`** — codex ran on `auth_mode=chatgpt`
+(subscription), controller and judge on quota buckets, designer NOT fired (no new doc), quorum NOT
+run; the $5 ceiling was never approached.
+
+**Routing evidence**
+
+| Role | Pin | Actually ran on | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` | **opus** | triage/pick/review/mutation-reproduction/bench/record/retro |
+| Executor | `$MISSION_EXECUTOR_MODEL` | **`codex:gpt-5.6-sol`** | probe run **WITH `--model`** (charter iter-19 rule) → rc=0, replied `ok`; `OPENAI_API_KEY` stripped at the call site via `env -u`. Two bounded 30-min runs, one per checkpoint |
+| Evaluator | `$MISSION_EVALUATOR_MODEL` | **sonnet** | generator≠judge, cross-provider vs codex |
+| Designer | — | not fired | no new doc; rotation state untouched at `codex:gpt-5.6-sol` |
+
+**Delivered** — three commits on `sprint/w-effect-broker-m3c`, squashed to `cae04d2`:
+
+`550f4ee` (C-1, +335) `host/broker/episode_test.go` — AC8. One episode run twice. Live: a capsule
+transition over the F1–F6 floor plus SIX brokered effects covering all **three** ratified arms
+(FS.Read and Model.Infer under `--ai-stub` succeeding; Human.Approve → out-of-band
+`DecideApproval` → Human.PollApproval; one handler failure with the **debit standing** and a zero
+`resultRef`; one denial), then a real `store.Commit` supplying all **eight** ref fields SD.A
+validates before `tx.Begin()`, whose `Transition.evidence` carries the `RecordedEffect` ref for
+every effect. Replay: the same episode against counting stubs asserted at **zero** dispatches,
+byte-identical per effect; a mismatched request and a deleted result each yield `*ReplayGapError`
+with no live fallback; replayed evidence refs resolve to the same record objects.
+
+`f34f0e3` (C-2, +351/−96) `BenchmarkBrokerDecide` + `BenchmarkBrokerFSRead` in
+`host/daemon/bench_test.go` (there, not `host/broker`, because `bench_worldd.sh` only runs
+`./host/daemon/` — anywhere else is outside the only non-vacuous manifest gate); manifest **8 → 10**;
+`bench/BASELINE.md` re-measured; README operator note; CF-L-2/L-3/L-4 folded; close-out DRAFTED
+with the doc left in `planned/`. Closes AC11, AC12, AC17.
+
+`0ff48a6` the retraction (below).
+
+**AC14 and AC19 were NOT checked** — they migrated to M3.D per the plan's
+`PLANNER_DECISION_the_close_out_moves_to_M3_D`, while the `acceptance_check_numbering` block still
+carries stale "OWNER M3.C" labels for both. That contradiction was resolved at Gate 2, before
+routing, and written into the executor directive so it could not be resolved the wrong way under
+time pressure.
+
+**Finding 1 — THE ITERATION'S SPINE: the judge refuted the controller's headline finding, and the
+controller was wrong.**
+I measured that `ailang test --format json` returns a fourth number, `skipped_tests`, that the
+mission's gate does not read: **5** for `sketches/effectbroker.ail` and **5** for `world/` under
+`verify_ail.sh`'s own Leg-2 invocation, every one a contract-derived property that ran
+`tests_run: 0` with `"no generator for parameter <p>: <T>"` over an ADT or record type. I confirmed
+it pre-existing with ONE unchanged instrument across `2edf2ef` / `9401f2d` / `10beb83` / HEAD — all
+exactly 5 — filed it as the **third instance** of the V27/B1 silent-skip class, wrote it into the
+close-out draft and the PR body, and **published it upstream as `sunholo-data/ailang#517`**.
+The judge refuted the framing with this repository's own evidence:
+`implemented/w-m1-ailang-hardening.md:103` records it as premise **V14** — *"Contract-derived
+property tests over record-typed parameters skip … **expected noise**"* — the same doc at `:378`
+and `:460` states the gate decision deliberately (*assert on named `tests[]` and `failed_tests`
+only, **never `skipped_tests`***), and **this very design doc's premise V5 (line 825)** records
+`skipped_tests: 5` verbatim, annotated "the known no-generator-for-record-params class".
+So it was measured, documented and *deliberately* excluded at M1. **It is not a discovery, and it
+is not silent in the V27/B1 sense — those were checks nobody knew were empty.** Filing it as a
+third instance would have been exactly the overclaim AC19's honest-claim gate exists to prevent,
+in the commit that gathers AC19's evidence. Retracted in `0ff48a6`, in the PR (a comment, not a
+quiet body edit), and in a public correcting comment on `#517` — because I had already published
+the wrong version where others would read it.
+**What survives as CF-M-1, at its real size**: (a) in `world/` it is **5 of 5** — *every*
+property over the core types runs zero cases, and "expected noise" fits a few skipped edge
+properties better than a 100%-empty randomized layer; (b) the number lives in premise rows but
+**never reaches a claim** — STATUS stamps quote "4/4 identities / 14 named tests" with no "and 5
+properties ran zero cases" beside it, and a fact that lives only in a premise does not travel;
+(c) the live risk is that a **NEW** skip is indistinguishable from the known ones, which pinning an
+EXPECTED `skipped_tests` would close — but that edits `scripts/verify_ail.sh`, an AC11-protected
+path, so it was deliberately not done here.
+**The durable lesson**: the skill's rule is "reproduce a judge's finding before acting on it, and
+before dismissing it". I applied it and it came back the other way — the judge refuted *me*. The
+iter-25 lesson recurs with the roles unchanged: **everything a controller hands downstream is a
+claim, including its own account of its own evidence.**
+
+**Finding 2 — a build failure is not a red gate, THREE times in one iteration.**
+(a) My own first attempt at `MUT-REPLAY-SKIP-VERIFY` deleted the assertion block and left
+`expectedBudget` unused — the package failed to COMPILE. I nearly recorded that as the mutation
+redding. Redone in a form that keeps the variable live, it reproduced the executor's exact message
+(`replay mismatch error = <nil> <nil>, want *ReplayGapError`) and also red
+`TestReplayRejectsMismatchedRequest`.
+(b) **The plan's own `MUT-BENCH-DROP` is uninformative for one of its two names.** The spec says
+*delete the benchmark function*. Deleting `BenchmarkBrokerDecide` reds correctly
+(`missing expected benchmark(s): BenchmarkBrokerDecide`); deleting `BenchmarkBrokerFSRead` leaves
+`"os"` imported and unused, so the smoke reports `underlying go test failed` — a compile error
+wearing the gate's clothes. **Under the executor's sandbox BOTH names read identically**
+(`bind: operation not permitted` masks everything), so this was structurally invisible from inside.
+The **rename**-form isolates the manifest: the package still compiles, the name simply leaves the
+reported set, and both names then red naming exactly themselves. Verified independently by the
+judge. Mutation spec corrected.
+(c) The same shape one level out: a gate's exit code is not a diagnosis — the mission already knew
+this for `t.Skip` and for silent z3, and a compile error is the third costume.
+
+**Finding 3 — I destroyed the executor's uncommitted work with a mutation revert, and the recovery
+is the evidence the reconstruction was faithful.**
+I reverted `MUT-BENCH-DROP` with `git checkout -- host/daemon/bench_test.go`. C-2 was still
+UNCOMMITTED, so that reverted to `HEAD` and deleted both new benchmarks; the next mutation then
+reported both names missing, a reading that was pure artifact. Reconstructed the file from the diff
+and it came back **byte-identical to the executor's own reported sha256**
+(`2ffa7c01109b19999de0a09578886df0501e20484ba19b97fe44f29bf4ef0772`) — which is the only reason the
+reconstruction is trustworthy rather than merely plausible. Switched to a `cp` backup for the
+remaining runs. **A mutation revert must never be `git checkout` on a file carrying uncommitted
+work**; the instrument must not be able to destroy the subject.
+
+**Finding 4 — two numbers recorded as bounds rather than measurements.**
+(a) `BenchmarkBrokerDecide` reports p50 **==** p95 **==** `0.0000420 ms` in all three runs. Two
+percentiles agreeing to three significant figures across three independent runs are not a tail —
+42 ns is exactly ONE darwin/arm64 `mach_absolute_time` tick (41.67 ns), so every sample is one tick
+and the percentile over a constant is that constant. Recorded as a **resolution bound** with the
+resolvable `78.55 ns/op` alongside. *A number at insufficient resolution is a claim, exactly as a
+ratio at insufficient sample count is.*
+(b) The loopback-transport delta measures **0.171 ms**, falsifying SD.C's replacement claim ("never
+more than ~0.15 ms") one milestone after it replaced M2.C's falsified "well under 0.1 ms". Across
+four samples it has risen monotonically (0.03 / 0.10 / 0.136 / 0.171), so the ceiling form was
+**dropped rather than re-fitted a third time**.
+The receipt tax reproduced at **1.475× / 1.510× / 1.520×** against Decision 7's ≤ +20% — six runs
+across two milestones now in a 1.46×–1.52× band. **The bound was not relaxed, re-targeted, or
+re-run until agreeable.** The arithmetic M3 owed was recorded instead: the tax is per-COMMIT, so at
+the acceptance episode's own **N=6** effects (measured — the plan predicted 3) it is 0.0365 ms per
+effect, **+4.9%**.
+
+**Finding 5 — iteration 33 never wrote its STATUS stamp.** The charter's STATUS block still had
+iter-32 as newest, so the charter *alone* would say M3.B had not landed; only the queue row and the
+log carried it. Gate 4 is append-only bookkeeping and it silently skipped a step. Covered in this
+iteration's stamp and noted here so the gap is not read later as a missing milestone.
+
+**Ruled out / refuted this iteration**
+- **REFUTED (mine): the `skipped_tests` observation as a new silent-skip instance.** Documented as
+  V14 at M1 and as V5 in this doc. See Finding 1.
+- **REFUTED: `MUT-REPLAY-SKIP-VERIFY` "reds the byte-identity assertions".** It does not, and should
+  not — skipping verification still returns the recorded bytes. It reds the *mismatch* assertion and
+  `TestReplayRejectsMismatchedRequest`. The discriminating power for zero-dispatch belongs to
+  `MUT-REPLAY-DISPATCH-COUNT` alone, which reds **only** `replay handler dispatches = 6, want 0`
+  while every byte-identity, arm, gap and evidence assertion stays GREEN — reproduced first-party
+  and independently re-run by the judge.
+- **NOT DONE, deliberately**: CF-L-3's depth guard. The executor chose the documented-bound option
+  (cycle-impossibility + the O(all approvals) cost stated). Correct under the directive's EITHER/OR,
+  but the bound is **documented rather than enforced** — recorded so a later reader does not mistake
+  the comment for a guard.
+- **NOT FIXED, deliberately**: `host/replay/replay.go:325` and `host/archive/archive.go:382`
+  (Finding 6 below) and the `verify_ail.sh` skip assertion — all AC11-protected paths for M3.C.
+
+**Finding 6 — CF-L-5 answered, and the answer is yes.** Iteration 33 left it as "consider whether
+any other exec surface has the same direct-child-only kill — **not audited**". Audited first-party
+at Gate 2, before routing: **`host/replay/replay.go:325`** uses `exec.CommandContext` with **no
+`Setpgid`/`Kill(-pid)`** while writing into a `bytes.Buffer`, so `Wait` blocks on the pipe-copy
+goroutine until every writer closes — precisely the iter-33 defect, in a package that runs archived
+interpreters as subprocesses. **`host/archive/archive.go:382`** runs
+`exec.Command(execPath, "--version").CombinedOutput()` with **no context and no deadline at all** —
+an unbounded wait in a mission whose Standing Rule 6 is "every wait is bounded". Both are
+AC11-protected for M3.C, so neither was touched; they become **CF-M-2** with a queue item.
+
+**Open non-blocking carry-forwards (enumerated — a bare COUNT is unrecoverable, iter-19 rule):**
+**CF-M-1** — `verify_ail.sh` asserts `failed_tests == 0` and `len(tests[]) == 14` and reads no
+`skipped_tests`; pin an EXPECTED value so a NEW skip cannot hide among the 5 known ones. Root cause
+upstream at `sunholo-data/ailang#517`. AC11-protected → owner: a queue item, not M3.D.
+**CF-M-2** — `host/replay/replay.go:325` (no `Setpgid`, `bytes.Buffer` sink) and
+`host/archive/archive.go:382` (no context, no deadline) repeat the iter-33 process-group defect.
+AC11-protected → owner: a queue item.
+**CF-M-3** — the plan's `MUT-BENCH-DROP` spec must move from the delete-form to the rename-form;
+the delete-form is a compile error for `BenchmarkBrokerFSRead`. Owner: **M3.D** close-out.
+**CF-M-4** — `acceptance_check_numbering` still labels AC14/AC19 "OWNER M3.C" against the later
+`PLANNER_DECISION`. M3.D must not inherit them as already-closed. Owner: **M3.D**.
+**CF-L-3 (re-scoped)** — `walkApprovalHead`'s bound is documented, not enforced. Owner: a future
+indexed approval surface.
+Earlier carry-forwards still open: **CF-L-1** (corrected in the plan this iteration — the spec named
+`approve.go` while all three disciplines live in `broker.go`'s `Invoke`; the poll-specific form is
+three runs each bypassing ONE discipline for `Human.PollApproval` only), **CF-L-2** (CLOSED),
+**CF-L-4** (CLOSED — noted in the close-out draft), **CF-L-5** (CLOSED — see Finding 6),
+**CF-K-1**, **CF-K-2**, **CF-K-3**, **CF-F-1**, **CF-F-2**, **CF-F-4**, **CF-G-1**, **CF-G-3**,
+**CF-H-1**, **CF-J-4**.
+
+**Next**: **M3.D** — the ratified option (i): episode/commit-boundary anchoring, the production
+`host/broker/recover.go` consuming `PendingIntents`/`GetReceipt`, `IndeterminateEffectError`, never
+auto-re-executing — which is what makes **CF-H-1** dischargeable as a PRODUCTION mutation (AC16).
+M3.D also owns **AC14**, **AC19**, the missing `### M3.D` doc section, and the move to
+`implemented/`. Then item **4c `w-effect-journal`**. The **dispatch→record window remains OPEN** and
+AC19 still forbids claiming otherwise.
