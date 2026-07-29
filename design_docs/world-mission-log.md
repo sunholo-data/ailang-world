@@ -5104,3 +5104,186 @@ auto-re-executing — which is what makes **CF-H-1** dischargeable as a PRODUCTI
 M3.D also owns **AC14**, **AC19**, the missing `### M3.D` doc section, and the move to
 `implemented/`. Then item **4c `w-effect-journal`**. The **dispatch→record window remains OPEN** and
 AC19 still forbids claiming otherwise.
+
+---
+
+## Iteration 36 — 2026-07-29 — `w-effect-journal` (item 4c) **NEW-DOC LANDED + QUORUM-CLEARED** (PR #25 → squash `fe582b5`, dev CI green both jobs SHA-addressed on the merge commit; no sprint routed — a design iteration) — and the iteration's spine is that **the queue row's own costing claim was false, and the gate it cited as proof is inert**: three compiling mutations show that nothing in this repository guards the journal table's DDL, that the gate's own named mutation reds by a different mechanism than the one it is documented as having, and that the documented mechanism is dead code
+
+**Pick**: item **4c `w-effect-journal`** (clause-3, ~1–1.5d) — the queue head, `[NEXT]`, unblocked by
+item 4 completing at iter-35. NEW-DOC, so the designer rotation fires and the design quorums at
+pick. Reality-checked before routing: `grep -ril w-effect-journal design_docs/` matches only the
+charter, the log and the M3 doc/plan — **no doc exists**, no `*effect-journal*` file anywhere, no
+PR (merged or open), no sprint plan. The NEW-DOC tag is a fact, not a claim (the iter-26 rule: two
+of two NEW-DOC tags were wrong once).
+
+**Gate 0/1 preflight**: kill switch armed; billing tripwire **CLEAN**; `gh` =
+`sunholo-voight-kampff`; main tree clean, `dev` == `origin/dev` == `0f2afad` (two-arg `git
+rev-parse` **without** `--short`, rc=0). dev CI green at HEAD, read per-workflow. Inbox: **no
+unread**. **No `@MarkEdmondson1234` comment** on `#9` (31 comments) nor on predecessor `#1` since
+watermark `2026-07-27T08:55:11Z`; watermark unchanged, nothing to action. **No rotation due** —
+`#9` was created 07:51 **local** (CEST) on Monday 2026-07-27, i.e. AFTER that day's 07:00 local
+boundary, its title names the current week, and 31 comments ≪ 80. Zero open `[nightly-eval]`
+issues (this repo has no nightly bot; the only open issue is `#9` itself).
+
+**Gate 2 — THE COSTING CLAIM IN THE QUEUE ROW WAS REFUTED BEFORE A DESIGNER WAS SPAWNED.**
+The row, and the M3 `plan.json` it came from, carry the M3 planner's costing of option (iii):
+*"Cheaper than assumed — **no schema change** (the commit shape lives in the payload codec, not the
+DDL, so AC13's `sqlite_master` gate stays green)"* — labelled in `plan.json` as *"Planner's
+**measured** note"*. The premise is true and stays true: the eight commit refs really do live in
+the payload codec (`host/store/journal.go:104-143`). The **conclusion does not follow**, because
+the journal table's *kind vocabulary* and its *cardinality* live in the DDL
+(`host/store/schema.sql:81-87`). Measured first-party in a scratch worktree at `0f2afad`:
+
+- **P1** — `INSERT … kind='effect-intent'` → `CHECK constraint failed: kind IN
+  ('intent','outcome') (275)`. A new kind label is DDL-rejected.
+- **P2** — a second `kind='intent'` for the same `invocation_id` → `UNIQUE constraint failed:
+  journal.invocation_id, journal.kind (2067)`. N effects need N **distinct** invocation IDs.
+- **P3, the sharp one** — a widened CHECK re-applied to an **EXISTING** store returns **rc=0, no
+  error**; `sqlite_master` shows the journal DDL **unchanged**; the new-kind insert then fails on
+  the OLD constraint. Cause: every statement in `schema.sql` is `CREATE TABLE IF NOT EXISTS`, a
+  no-op on an existing table.
+
+With **zero** migration machinery anywhere in `host/` (Grep for
+`user_version|ALTER TABLE|migrate|Migrate|schema_version` → **0 hits**), P3 means **any DDL change
+in this repo ships FAIL-OPEN**: new stores get the new schema, every existing store silently keeps
+the old one, and nothing detects the disagreement. *A schema change that was never applied is
+indistinguishable from one that was* — **iteration 35's spine, one layer down**, at the schema
+rather than the mutation.
+
+**AND THE GATE THE CLAIM CITED HAS NO TEETH WHERE IT WAS CITED.** Three mutations, each applied
+under an exactly-once assertion with the diff printed, each confirmed to COMPILE, each reverted
+from a `cp` backup verified byte-identical by sha256:
+
+1. **`MUT-JOURNAL-DDL-WIDEN`** (form: widen the journal `kind` CHECK in `host/store/schema.sql`) —
+   `go build` rc=0, `go vet` rc=0, then `AILANG_BIN=… go test ./... -count=1` **rc=0, 10/10
+   packages `ok`, zero FAIL**. *Nothing in this repository guards the journal table's DDL.*
+2. **`MUT-DDL-DRIFT`** — the gate's OWN named mutation (`log_entries` CHECK). It DOES red. But
+   **read the message, not the exit code**: `journal_test.go:345: pre-journal schema source
+   drifted: sha256=7358d876…`. That is the **source-text sha256 pin**, which `t.Fatalf`s before a
+   database is ever built. The `sqlite_master` comparison at line 368 never executes.
+3. **`MUT-DDL-COMPARE-DEAD`** (form: `if !reflect.DeepEqual(after, before)` →
+   `if false && !reflect.DeepEqual(after, before)`, both variables still used so the mutant must
+   compile; `go vet` rc=0) — the whole `host/store` package stays **GREEN**. The `sqlite_master`
+   byte-identity comparison contributes **zero discrimination**.
+
+So the gate's real teeth are a source-text pin over the pre-journal *prefix* of `schema.sql`. That
+protection is genuine for pre-existing tables — just delivered by a different mechanism than the
+one it is documented as having — and it covers neither the journal table (edits sit below the
+pinned prefix) nor the upgrade path (P3). **Fifth instance of this mission's signature shape**, and
+the **first found at PICK time**, in a gate inherited from an item that is already COMPLETE and was
+judged **88/100 with zero blocking findings**. That is precisely the exposure iter-32's process fix
+names: audit the gates you did NOT write. Raised as its own queue row **4d `w-ddl-gate-teeth`**
+rather than folded into 4c, because it is a pre-existing defect in landed `w-store-durability` code
+and 4c's AC1 deliberately does not depend on it.
+
+**Routing evidence**
+
+| Role | Pin | ACTUALLY ran on | Notes |
+|---|---|---|---|
+| Controller | `$MODEL` (session) | **opus** | triage/pick/probes/mutations/carve-out/record |
+| Designer | ROTATION | **`claude:claude-fable-5`** | advanced from last-used `codex:gpt-5.6-sol`; gemini skipped (CapRemoteSandbox is read-only — it cannot author into a worktree). Probed WITH the model pin before use (rc=0, replied `ok`), via `claude-sub` so the billing guard holds. r0 (567 lines) + r1 revision, both bounded, both rc=0. Rotation state written back |
+| Quorum reviewers | default | `gemini-3-1-pro` + `gpt5-6-sol` | r1 one-eyed (see below), r2 both present |
+| Planner / Executor / Evaluator | — | **not spawned** | design iteration; no sprint, so no plan, no code, no judge |
+
+**Metered ledger**: quorum r1 **$0.034** + r2 **$0.130** = **`metered=$0.164`** against the
+`$5` ceiling — not approached. The designer ran on the Fable **quota bucket** (`claude-sub`,
+subscription-or-nothing), so it contributes **$0.00** metered.
+
+**Delivered** — three commits on `design/w-effect-journal`, squashed to `fe582b5` via PR #25:
+`design_docs/planned/w-effect-journal.md`, **770 lines, 30 premise rows**. The design is **Path A,
+DDL-free**: per-effect synthetic invocation IDs in a reserved `effect:<episodeID>:<ordinal>`
+namespace plus two new payload codecs, reusing the existing `kind` vocabulary and cardinality.
+**Path B** (new kind labels) is REJECTED on the P3/fail-open evidence — it would honestly have to
+ship a migration mechanism first (~2.5–3d, not ~1.5d). Kernel delta frozen at **four new** store
+methods + three changed, `schema.sql` byte-unchanged. Three milestones (MJ.A/MJ.B/MJ.C, ~1.5d).
+
+**Finding 1 — TWO QUORUM ROUNDS, TWO COLLISIONS IN THE SAME FIELD, and the second was created by
+the fix for the first.** r1 `gemini-3-1-pro` **reject**: the ordinal was an in-memory per-episode
+counter that nothing re-initializes after a crash, so a resumed broker's first dispatch collides
+with the durable `effect:<episodeID>:0` and **bricks the episode** with `DuplicateInvocationError`.
+r0 had *frozen the opposite claim* — "collision-free by construction within an episode" — which is
+FALSE across a crash boundary; it was corrected in every artifact that restated it, not just the
+one the reviewer quoted. The r1 fix then **declined the reviewer's own proposed variant with a
+reason**: `len(episode.History)` counts *records*, and an indeterminate effect is precisely an
+intent whose record was lost, so after exactly the AC7 crash it returns the indeterminate intent's
+own ordinal and still collides. r2 `gpt5-6-sol` **reject**: deriving durably but appending in a
+SEPARATE operation *"merely replaces the restart collision with a TOCTOU collision."* Correct
+again. Applied VERBATIM under the **narrow-refinement carve-out** — both limbs satisfied (concrete
+reviewer-authored `proposed_fix`; determinism-only, with Path A, the journal shape,
+intent-before-dispatch and the ID namespace all explicitly endorsed): one transactional
+`AppendNextEffectIntent(episodeID, intentWithoutID) (id, ordinal, err)` mints the ordinal INSIDE
+the appending transaction; `AppendEffectIntent` and `NextEffectOrdinal` are both removed; the
+broker holds **no ordinal state at all**; `MaxInt64` exhaustion gets a structured error; the
+reviewer's two named tests land as **AC7b** and its evidence ask as **AC7c**. `gemini`'s concrete
+`GetReceipt` namespace guard was adopted too, **closing OD1**. Nothing was force-passed and no
+objection was overridden — each was *satisfied*.
+
+**Finding 2 — half of the round-2 objection is refuted by landed code, and the fix was applied in
+full anyway (V28).** `store.Open` takes a non-waiting exclusive lock and a second writer gets
+`*WriterAlreadyActive` (proven cross-process by the landed A1 test), so "two broker instances
+sharing a store" cannot arise. But `host/store/store.go` and `journal.go` contain **no mutex of any
+kind**, so two goroutines in ONE process can interleave a split read→allocate→append freely. The
+transactional allocator is correct under both limbs, so it was adopted whole. **Narrowing a fix to
+the part of an objection you can refute is how a real defect survives a review** — the mirror of
+iter-34's lesson, which ran the other way (a judge refuting the controller).
+
+**Finding 3 — enriching a doc degraded its own review (V29).** My V21–V25 additions pushed the doc
+to ~13,952 input tokens, and quorum r1 refused `gpt5-6-sol` **pre-flight**: *"estimated cost
+$0.1005 … exceeds cap $0.1000"*, zero spend, `absent_reason: budget`. The quorum degraded to N−1
+and **named the absentee**, exactly as designed — never a silent pass — but round 1 still ran
+one-eyed, and the reviewer it lost is the one that later found the TOCTOU. The coupling is real:
+doc size is an input to reviewer cost, so making a doc more evidential can silently buy it a
+thinner review. Cap raised to $0.25 for r2; both reviewers present.
+
+**Finding 4 — my own Gate-3b poll was a broken instrument, caught in the act.** I hand-rolled
+`target=$(git rev-parse origin/<branch> 2>/dev/null || cd <wt> && git rev-parse HEAD)`. Shell
+precedence binds that as `(A || cd) && B`, so **both** commands ran and `$target` held TWO SHAs;
+every `gh api commits/$target/check-runs` call was malformed, returned nothing, and the loop
+printed blank lines toward its deadline. It would have expired and read as a CI timeout — a park
+verdict manufactured by my own shell. Killed and re-run with a single literal SHA: both jobs
+`completed/success` on PR head `de0fb59`, and again on merge commit `fe582b5`. This is the third
+instance of the meta-rule iter-24 and iter-107 both recorded: **when the skill ships a snippet, use
+it verbatim — a hand-rolled variant is a new defect surface, and a broken instrument reads exactly
+like a real measurement.**
+
+**Ruled out / refuted this iteration**
+- **"No schema change is needed for item 4c"** — REFUTED (P1/P2/P3 above). It is not a discount;
+  it is a design constraint Path A must actively satisfy. Do not re-cost this item as cheap
+  *because* the DDL is untouched — the DDL is untouched *because* the design works to keep it so.
+- **"AC13's `sqlite_master` gate would have caught a journal DDL change"** — REFUTED by
+  `MUT-JOURNAL-DDL-WIDEN` (survives the whole suite) and `MUT-DDL-COMPARE-DEAD` (comparison is
+  dead code). Do not cite that gate as protection for the journal table.
+- **"The round-2 TOCTOU cannot happen because the store is single-writer"** — HALF refuted, half
+  real (V28). Cross-process: prevented. In-process: unguarded, zero mutexes.
+- **Not re-chased**: gemini as a designer lane. It is `CapRemoteSandbox` — server-side sandbox, no
+  local worktree edits — so it cannot author a doc into the branch. Rotation skipped it to
+  `claude`, as prior iterations did; this is a standing property, not a new finding.
+- **Not claimed**: that the effect journal closes every crash ambiguity. The doc's Decision 5
+  states a residual (record↔outcome) and the Scope note forbids any claim otherwise.
+
+**Open carry-forwards** — **CF-N-2** (`maxRecoveryPages = 1 << 20` unjustified) and **CF-N-3**
+(`retryAllowed(false,true)` untested) are now **acceptance criteria with their own mutations**
+inside 4c (AC11/AC12), so they die by evidence rather than prose. **CF-N-1** (`t.Skip` on unset
+`AILANG_BIN` in `handlers_test.go:183,187`), **CF-N-4** (the 1-in-69 process-group timing miss),
+**CF-M-1**, **CF-M-2**, **CF-L-1**, **CF-L-3**, **CF-K-1/K-2/K-3**, **CF-F-1/F-2/F-4**,
+**CF-G-1/G-3**, **CF-J-4** all remain open and unchanged — this iteration wrote no code.
+**NEW: the inert DDL gate** is queue row **4d**, not a carry-forward, because it needs work rather
+than watching.
+
+**Gates** — the doc is prose, so the binding gates are the repo's own, run on the merge commit:
+`ailang-code verify gate` **completed/success** and `go host build + test gate`
+**completed/success**, both read **SHA-addressed** via `commits/<sha>/check-runs` on PR head
+`de0fb59` and again on `fe582b5` — never a `--limit 1` selector. Controller-side, outside any
+sandbox: `go test ./...` rc=0 across 10 packages (as the mutation control), `go build`/`go vet`
+rc=0, and every mutated file restored byte-identical by sha256 before the worktrees were removed.
+Designer-reported numbers **re-measured rather than cited** (V25/V25b): `storejournal.ail` is
+**7/7 contracts verified** by name, **`len(tests[]) == 30`**, `passed_tests == 37` reported
+separately and not gated on; and Path A's mechanism holds on **`modernc.org/sqlite`**, the binding
+production actually uses, not only the designer's sqlite3 CLI.
+
+**Next**: item **4c `w-effect-journal`** — the doc is landed and **quorum-cleared**, so the next
+fire **routes straight to sprint-planner**: no re-design, no re-quorum. The planner owns cutting
+MJ.A/MJ.B/MJ.C into a plan and must fold in the r2 shape (four new store methods, the in-tx
+ordinal mint, AC7b's concurrency + exhaustion tests). Then item **4d `w-ddl-gate-teeth`**
+(~0.25–0.5d) whenever the queue allows — and **necessarily before any future item that needs a DDL
+change**, since today such a change ships fail-open.
