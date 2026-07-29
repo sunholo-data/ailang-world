@@ -800,7 +800,10 @@ named destination in Deferred Scope.
   `bench_test.go`), `cmd/**`, `world/**`, `scripts/verify_{ail,go}.sh`, `.github/**`.
 - [x] `BenchmarkBrokerDecide` + `BenchmarkBrokerFSRead` in the hardcoded smoke manifest;
   `bench/BASELINE.md` re-measured in one invocation with the broker rows present.
-- [ ] Both CI jobs green on every milestone PR and every dev merge.
+- [x] Both CI jobs green on every milestone PR and every dev merge. *(M3.D: **OBSERVED**,
+  SHA-addressed on `35bb8d0` via `commits/<sha>/check-runs` — `ailang-code verify gate: success`,
+  `go host build + test gate: success`. Checked only after observation, never inferred from local
+  exit codes.)*
 - [x] The scope note's honesty holds at close-out: the item is recorded as "clause-3 machinery
   landed and proven; end-state check pending first agent (M4)" — not as clause 3 done.
 
@@ -1096,10 +1099,25 @@ full rather than as a verdict:
 `GetReceipt` mutated to report a durable intent as `not-started`. The broker's
 surfacing test **reds**, proving the broker *consumes* the kernel's never-lie law
 rather than re-deriving it — had it stayed green, the consumption claim would
-have been vacuous. `TestRecoveryConsumerContractMirrorsSketch`, which reads no
-receipt, stayed green. `journal.go` reverted byte-identical;
+have been vacuous. `journal.go` reverted byte-identical;
 `sha256 2edf83a369e28cfda35e1fdf7ccfa321fe0010f5806acd6bc3e202cf9f146c7f`
 **re-measured** before and after rather than trusted from the plan's string.
+
+**Corrected after the judge: this was UNDERSTATED, and understatement is a
+reporting defect too.** The sentence above says "the broker's surfacing test
+reds". **Five** tests red, not one — every test that reaches `GetReceipt` through
+the real store (`TestRecoverCountingProbeDispatchesZeroHandlers`,
+`TestRecoverSurfacesNeverLieLaw`,
+`TestRecoverModelInferNeverRedispatchesAfterResolution`,
+`TestRecoverCommitPathPlannedStateAbsentWithoutOutcome`,
+`TestRecoverUsesKernelPagingBound`). The two that touch no real receipt —
+`TestRecoveryConsumerContractMirrorsSketch` and the fake-store paging test —
+stayed **green**, which is the discriminating contrast. So the consumption proof
+is *stronger* than the close-out first claimed. Recorded because this mission has
+been careful about overclaiming since iteration 34's retraction and could easily
+mistake understatement for safety: **a report that understates its own evidence
+is still a report that does not match its evidence**, and the next reader cannot
+tell which direction the error runs.
 
 **Substrate corroboration, LABELLED — `MUT-NO-INTENT-BEFORE-COMMIT`.** Committing
 with `InvocationID` set but no durable intent reds with `store: invocation
@@ -1138,22 +1156,28 @@ substrate and is **NOT counted toward AC16**.
   every hit.** Over `host/broker/recover.go` the prohibited-claim pattern
   (`crash window (is )?closed|closes the (dispatch|crash) window|durably
   (recorded|detectable) (for )?every effect`) returns **nothing**. Over this
-  document it returns **exactly two hits, and both are the PROHIBITION itself** —
-  line 284 (*"No milestone, acceptance criterion or claim in this document may
-  state or imply that the dispatch→record crash window is closed by M3."*) and
-  the AC19 criterion bullet quoting the same sentence. Both were read, not
-  assumed; neither asserts the window is closed.
+  document it returns **three hits, and all three are the PROHIBITION itself** —
+  line 284 (Decision 3's *"No milestone, acceptance criterion or claim in this
+  document may state or imply that the dispatch→record crash window is closed by
+  M3."*), the AC19 criterion bullet quoting that sentence, and this bullet
+  quoting it again. All three were read and classified, not assumed; **none
+  asserts the window is closed.**
 
-  **Recorded, because the gate as literally specified is unsatisfiable.** The
-  plan requires "the honest-claim `grep` … returns nothing". It cannot: the rule
-  forbids a phrase, the rule is written in this document, and so the rule
-  contains the phrase. The only way to make a bare `grep` return nothing would be
-  to **delete the prohibition** — i.e. the gate's literal form rewards removing
-  the very sentence it exists to enforce. A pattern this gate can actually be
-  scored on must either exclude the prohibition lines or, as here, require that
-  **every hit be read and classified**. The check is "no hit ASSERTS the closure",
-  not "no hit MENTIONS it". Same family as `len(tests[])`-vs-`passed_tests`: the
-  number you gate on has to be the number that means what you claim.
+  **Recorded, because the gate as literally specified is unsatisfiable — and
+  worse, its violation count is MONOTONICALLY INCREASING in honesty.** The plan
+  requires "the honest-claim `grep` … returns nothing". It cannot: the rule
+  forbids a phrase, the rule is written in this document, so the rule contains
+  the phrase. It started at two hits; documenting the gate's own defect
+  accurately made it three. Every future reader who correctly explains the rule
+  will add a fourth, a fifth. **A gate whose violation count rises each time
+  someone states the rule correctly is measuring the opposite of what it
+  intends** — and the only way to drive a bare `grep` to zero is to **delete the
+  prohibition**, i.e. the literal form rewards removing the very sentence it
+  exists to enforce. A scoreable form must either exclude quoting/prohibition
+  lines or, as here, require that **every hit be read and classified**. The check
+  is "no hit ASSERTS the closure", not "no hit MENTIONS it". Same family as
+  `len(tests[])`-vs-`passed_tests`: the number you gate on has to be the number
+  that means what you claim.
 
   The residual is stated in the ratification's exact words: **every COMMIT of an
   effectful episode is
@@ -1188,9 +1212,68 @@ observable; `TestRecoverUsesKernelPagingBound` asserts the literal `limit`
 argument and the `*InvalidLimitError` boundary, never multi-page behaviour. Per
 the plan's own instruction for exactly this case — *"the test must be added, not
 the mutation dropped"* — `TestRecoverPagesWithKeysetCursorAcrossFullPages` was
-written. With it the mutation reds **exactly that one test**
-(`recovery did not terminate: 9 calls, cursors=[-1 -1 -1 ...]`) while the other
-six stay green.
+written. With it the mutation reds **exactly that one test** while the other six
+stay green.
+
+**Corrected after the judge (iteration 35): `MUT-PENDING-UNBOUNDED` names a
+FAMILY of mutations, not one, and the evidence record must say which member ran.**
+The judge reported that the error text quoted here "does not match the current
+behavior" and was probably from an older revision. That is **REFUTED** — but the
+judge was right that something was imprecise, and finding out what required
+running both. Reproduced first-party, on the landed code, both forms compiling:
+
+| Form | What it drops | Error that fires | Reds |
+|---|---|---|---|
+| **1** (recorded here) | the `cursor = pending.Seq` assignment **and** the advance guard | `recovery did not terminate: 9 calls, cursors=[-1 -1 -1 …]` — the fake's own `maxCalls` bound | exactly this one test |
+| **2** (the judge's) | only the `fromIndex` hand-off; cursor + guard kept | `recovery cursor did not advance: got seq 1 after 1000` — `recover.go`'s own guard | exactly this one test |
+
+Both are legitimate readings of "drop the `Seq` keyset cursor". The quoted text
+was accurate for Form 1 all along; it simply never said *which form*, so a
+reader running the other one reasonably concluded the record was wrong. **Same
+shape as iteration 34's `MUT-BENCH-DROP` delete-vs-rename**: one mutation NAME,
+two forms, and the report is only checkable if the form is named.
+
+And the result is **stronger** than either party first recorded: the new test
+catches this defect through **two independent mechanisms** — the production
+cursor-advance guard *and* the fake's bounded call count — so it reds whichever
+way the cursor discipline is broken.
+
+### (3) An overclaim of my own, caught by the judge: "ZERO `t.Skip`"
+
+The D-1 and D-2 commit messages state **"ZERO `t.Skip`"**. That is true of the new
+`recover_test.go` and **FALSE of the package**. `host/broker/handlers_test.go`
+carries two, at lines 183 and 187, pre-existing from M3.B:
+
+```
+handlers_test.go:183: t.Skip("AILANG_BIN not set; Model.Infer requires the pinned released ailang binary")
+handlers_test.go:187: t.Skipf("AILANG_BIN %q is not a usable executable: %v", bin, err)
+```
+
+What was actually measured was *zero tests skipped at runtime with `AILANG_BIN`
+set* — a different claim from *zero `t.Skip` in the source*, generalised without
+being re-checked. The gate this milestone spent its time proving cannot be the
+one the report is loose about.
+
+**And the re-check found something the judge did not.** The same missing env var
+gets **opposite treatment inside one package**:
+
+| With `AILANG_BIN` unset | Response |
+|---|---|
+| `TestEpisodeLiveReplayThreeArmsAndEvidence` (M3.C) | **FAILS LOUDLY** — *"AILANG_BIN must name the pinned released interpreter"* |
+| `TestModelPromptEncodesControlBytes`, `TestModelStubRoundTripDeterministicRecordedBytes` (M3.B) | **SILENTLY SKIP** |
+
+So a bare `go test ./host/broker/...` without the env var reports `ok` while two
+`Model.Infer` tests vanish — the **V27/B1 silent-skip shape**, at small scale, in
+the package whose milestone closed that class elsewhere. It is not currently
+dangerous: `scripts/verify_go.sh` and the CI `go-verify` job both fail loudly if
+`AILANG_BIN` is unset or ≠ v0.30.0, so no gate can silently pass. But the
+inconsistency is real and a developer running the package directly gets the
+false-green.
+
+**Deliberately NOT fixed here.** `handlers_test.go` is M3.B's landed code and
+changing it is outside M3.D's scope; converting a skip to a fatal is a behaviour
+change that deserves its own justification rather than a drive-by in a close-out
+commit. Recorded as **CF-N-1** with the measurement attached.
 
 **And the method matters more than either fix: the first
 `MUT-PENDING-UNBOUNDED` run was a SILENT NO-OP.** The replacement pattern
