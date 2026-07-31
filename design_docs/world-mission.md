@@ -642,6 +642,10 @@ What this mission touches or overlaps, and the drawn boundaries:
   --from "world-coordinator"` (local send on this rig; the v1 session's start hook surfaces
   unread messages). The V1 mission owns routing it (extension vs core-floor per PROGRAM.md);
   World NEVER works around the compiler locally, no vendored forks.
+  **Releases are MARK'S sole decision (Mark, 2026-07-29: "I determine releases")**: when World
+  needs an upstream fix in consumable form (pinned-release discipline), ask MARK directly —
+  attended, or via issue #9 naming him — never the v1 loop. Standing trigger on record:
+  ailang#498 merging → ask Mark for the next release.
 - **CODING STANDARDS are binding** (ratified attended 2026-07-24): [coding-standards.md](coding-standards.md) — Z3 contracts on the pure core (S1), effects at the boundary (S2), **slim kernel / package-first** (S3: every kernel addition answers "why is this not a package?"), compiler-checked docs (S4), the AILANG fluency protocol (S5), honest non-vacuous gates (S6). Evaluators score against it; changes to it are ratification-class.
 - **Compiler-checked docs discipline**: every `.ail` snippet that enters `design_docs/` ships as a
   checkable file under `design_docs/sketches/` (or a successor source tree) and passes the CI
@@ -1636,7 +1640,10 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
    checked first; motoko as optional third arm if eligible; report honestly; park World if the
    floor fails on eligible agents · ~3d (was w-motoko-m4 → w-value-gate-m4 → renamed with the
    2026-07-23 floor reframe; clause-5 provenance teeth carry the value burden)
-6b. [**PARKED `needs-human-review` 2026-07-28 (iter-26) — PICK-TIME QUORUM COMPLETE (2 rounds,
+6b. [**LANDED AS DESIGN, BINDING — §7 RATIFIED by Mark's attended triple ratification
+   (STATUS 2026-07-28 ~09:00; row flipped by the coordinator 2026-07-31, closing the
+   bookkeeping lag). Unblocks item 7 (w-approval-inbox) the moment item 5's MCP work lands.**
+   ~~PARKED `needs-human-review` 2026-07-28 (iter-26)~~ — PICK-TIME QUORUM COMPLETE (2 rounds,
    4 objections, all applied); the only thing left is Mark's §7 ratification.** Doc revised
    `170 → 386` lines: **v0.2** by the rotation designer (`codex:gpt-5.6-sol`) applying round-1's
    two verbatim fixes — a **16-row Premise Verification Log** (§8), **§8.1 reuse-or-replace**

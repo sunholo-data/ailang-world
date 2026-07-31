@@ -679,6 +679,16 @@ worktrees, benchmarks, deployments, capabilities, budgets.
 transitions, its per-edit typecheck feedback becoming Verify-phase evidence, its runs
 becoming replayable transition history.
 
+**Boundary with Motoko's deterministic test world (ruling adopted 2026-07-31, per the
+[DST overlap note](https://github.com/arniwesth/motoko_agent/blob/arniwesth/mot-44-motoko_dst_execution_primer/.agent/projects/009_motoko_dst_execution/NOTE-ailang-world-overlap.md)
+— see REFERENCES.md):** the Motoko DST world is an *ephemeral, seed-driven effect-scenario
+interpreter* that tests Motoko's real driver — generated faults, virtual time, shrinking; AILANG
+World is the *persistent production substrate* — governance, provenance, storage, replay of what
+actually happened. Different layers; neither replaces the other. Integration happens at Motoko's
+typed request/result seam (a future `AilangWorldLiveAdapter` delegating live effects to World's
+broker), evidence binds by content hash — schemas never merge. Terminology discipline:
+`DeterministicTestWorld` vs `AilangWorld`, never a bare shared "World" across the two meanings.
+
 ## 17. Milestones
 
 | # | Deliverable | Notes |

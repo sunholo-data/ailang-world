@@ -396,6 +396,28 @@ Verified had to exist** — human audit found a large fraction of "objective" ta
 i.e. verification harnesses themselves need verification, which is what World's typed
 contracts formalize. *Pitfall:* tests underspecify intent; contamination is endemic.
 
+### Motoko DST ⇄ AILANG World boundary note (arniwesth/motoko_agent, 2026-07-24)
+https://github.com/arniwesth/motoko_agent/blob/arniwesth/mot-44-motoko_dst_execution_primer/.agent/projects/009_motoko_dst_execution/NOTE-ailang-world-overlap.md
+Companion to that repo's `ADR-001-deterministic-test-world-architecture.md`; reviewed World at
+`03efeef` and reads our code accurately. Its ruling — **adopted by World**: the Motoko
+deterministic test world (ephemeral, seed-driven, fault-generating, virtual-time) and AILANG
+World (persistent governance/provenance substrate) share transition discipline but are
+DIFFERENT LAYERS; neither replaces the other. World's replay reconstructs *what happened*;
+DST generates *what could happen* — the FDB-simulation vs Datomic-history split from this
+bibliography, made concrete. Steal/align: the **typed effect envelope** field list (kind+origin,
+causal identity + encounter ordinal, bounded request digest, deadline/timing, **ordered
+intermediate emissions**, typed result, capability identity, evidence refs); the
+**partial-stream-then-error** requirement (terminal-only result records are insufficient — this
+names a REAL World gap for streaming `Model.Infer` records, converging with upstream
+ailang recorded-stream work); the **terminology rule** (`DeterministicTestWorld` vs
+`AilangWorld`; never a bare shared `World`). Integration shape: a future
+`AilangWorldLiveAdapter` behind Motoko's typed request/result seam, delegating live effects to
+World's broker while Motoko keeps its own driver behavior. *Pitfall/staleness:* reviewed
+pre-broker — its revisit-trigger 1 ("review when the M3 broker contract exists") has FIRED
+(`host/broker` landed, items 4+4c complete); the scheduled boundary review is now due on both
+sides, natural venue = the upstream recorded-stream lane which already carries both DST ADRs
+as design context.
+
 ### AgentReputation — decentralized agent reputation (arXiv:2605.00073)
 https://arxiv.org/html/2605.00073v1
 Closest published prior art to §13.3 calibration records: **verification regimes of
