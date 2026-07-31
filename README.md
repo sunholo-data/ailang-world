@@ -34,10 +34,17 @@ deterministic reconciliation before the receipt can be resolved.
 
 Extrapolate the model trend — smarter, faster, cheaper, increasingly on-device — and
 generation stops being scarce. What stays scarce is **trust, running at the speed of the
-intelligence it governs**. Every workflow engine can schedule an agent; none can examine an
-agent's plan before it runs and *prove* it stays inside its declared effects. That takes a
-language with compiler-enforced effect rows and decidable verification — which is exactly
-what AILANG was built to be. World is that bet, operationalized:
+intelligence it governs**. Workflow engines schedule agents but can't examine a plan before
+it runs and *prove* it stays inside its declared effects — that takes a language. The field
+now agrees: **Language-Based Agent Control** is a live research tradition — Odersky's
+capture-checked capabilities in Scala 3 ([Best Paper, CAIS 2026](https://dl.acm.org/doi/10.1145/3786335.3813127)),
+[Etas](https://arxiv.org/abs/2607.17780)'s effect-typed agent language, and more. AILANG
+World's position in that field: a **purpose-built language with a working compiler** (not an
+embedding, not a paper), Z3-verified contracts gating every push, **operating a persistent
+governed substrate** — world graph, receipts, bit-for-bit replay — that the language tier
+doesn't have and the substrate tier can't prove. See
+[design_docs/POSITIONING.md](design_docs/POSITIONING.md) for the honest landscape. World is
+that bet, operationalized:
 
 - **Verification before execution** — proposals are proven well-formed before any effect fires.
 - **Constructive replay** — determinism guaranteed by the language, not reconstructed from logs.

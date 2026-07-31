@@ -421,9 +421,14 @@ They cannot provide, and cannot cheaply retrofit:
 - **Authority as types** — capabilities checked where the transition is defined, not ACLs
   bolted onto an API gateway.
 
-The moat is the language. That is also the honest answer to "why is this ours to build":
-anyone can build a workflow engine; only the AILANG stack can make the workflow steps
-themselves decidable.
+The moat is the language *joined to the substrate* — updated 2026-07-31, because the language
+leg alone is no longer unclaimed: **Language-Based Agent Control** is now a named research
+tradition (Odersky/TACIT's capture-checked capabilities — Best Paper CAIS 2026; Etas's
+effect-typed agent language; LBAC/TypeGuard — see [POSITIONING.md](POSITIONING.md)). Strong
+validation of the thesis, arrived at independently by several groups. World's differentiated
+position is the intersection none of them occupy: a purpose-built LBAC language with a shipped
+compiler, *operating* a persistent governed substrate (provenance ledger, receipts, proven
+replay, budgeted attention) — plus the still-unclaimed decision taxonomy (POSITIONING.md §3).
 
 ### 12.3 The agent's own case
 
