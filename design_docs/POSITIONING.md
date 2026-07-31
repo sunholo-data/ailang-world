@@ -79,6 +79,24 @@ The landscape's own structure makes the differentiated claim precise:
 > with proven bit-for-bit replay — and it is being built, in public, by the autonomous process
 > it exists to govern.
 
+## The second axis: control AND capability (added 2026-07-31, same day)
+
+The tier map above is entirely about **control** — proving what an agent may do. Zhang's
+["Language model harnesses are compositional generalizers"](https://alexzhang13.github.io/blog/2026/harness/)
+names the orthogonal **capability** axis: a well-designed harness makes every model call
+*locally in-distribution*, collapsing structurally similar tasks into near-isomorphic
+trajectories — and his RLM experiments show harness-level structure generalizing 8–32× beyond
+training length where the bare network fails (see REFERENCES.md).
+
+World's position on this axis is the same discipline wearing its other hat: **typed
+transitions, canonical decision packets, and stable tool identities are simultaneously the
+proof surface (control) and the normalization surface (capability)**. Verification structure
+and generalization structure are the same structure. Nobody in Tier 1 makes the capability
+claim; nobody in Zhang's framing makes the control claim; World's architecture happens to be
+both — and the clause-4 floor experiment will produce the first paired data on whether the
+capability effect is real for production agents. If it is, the floor was conservative: the
+honest sales line stops at "no worse" until our own data says "better".
+
 ## Risks & open actions
 
 - **Vocabulary risk**: academia will own the category's language within ~a year. Publish the

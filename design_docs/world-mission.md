@@ -1635,7 +1635,11 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
       invocation/idempotency ID, and a queryable durable receipt. No landed API exposes these.
       **This is the SAME kernel-durability question as item 4b half (ii)**, reached from a different
       direction — independent corroboration that 4b is real work, not bookkeeping.
-6. [PARKED until 2–5 land] **w-agent-floor-m4** · clause-4 · dual-reference NON-INFERIORITY
+6. [PARKED until 2–5 land; design-lens note added 2026-07-31: the doc, when authored, carries
+   the compositional-generalization hypothesis (Zhang 2026, REFERENCES.md) — the World arm's
+   typed structure may IMPROVE generalization, so the experiment should record per-task-family
+   splits, not only aggregate pass-rate; the ratified thresholds are UNCHANGED]
+   **w-agent-floor-m4** · clause-4 · dual-reference NON-INFERIORITY
    floor: Claude Code + codex, shell arm vs World-MCP arm, paired N≥3, stability precondition
    checked first; motoko as optional third arm if eligible; report honestly; park World if the
    floor fails on eligible agents · ~3d (was w-motoko-m4 → w-value-gate-m4 → renamed with the

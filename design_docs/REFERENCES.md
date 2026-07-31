@@ -396,6 +396,28 @@ Verified had to exist** — human audit found a large fraction of "objective" ta
 i.e. verification harnesses themselves need verification, which is what World's typed
 contracts formalize. *Pitfall:* tests underspecify intent; contamination is endemic.
 
+### "Language model harnesses are compositional generalizers" — Alex L. Zhang (2026)
+https://alexzhang13.github.io/blog/2026/harness/
+The capability-side argument for World's shape (the LBAC landscape covers the control side —
+see POSITIONING.md). Thesis: the harness, not the network, should carry the inductive bias —
+its job is to encode arbitrarily complex environment state so **every model call is locally
+in-distribution**, reducing unfamiliar problems to compositions of familiar ones. Evidence:
+RL-training a Recursive Language Model harness generalizes to held-out tasks **8–32× longer**
+and across domains at ~10× the eval lift of training the bare Transformer — because the
+harness "induces an equivalence relation between tasks with latent similarities" (a quotient
+over trajectories: structurally similar tasks become near-isomorphic token streams).
+**Steal for World**: (1) "locally in-distribution" as an explicit DESIGN CRITERION for the MCP
+projection and every agent-facing surface — stable transition identities, canonical packet
+shapes, bounded request digests are not just audit hygiene, they are generalization
+infrastructure; (2) the isomorphism framing as the strongest form of the clause-4 hypothesis —
+the World arm may beat shell *because of* its typed structure (the decomposition prior), not
+despite its overhead; an interpretive lens the `w-agent-floor-m4` design doc should carry;
+(3) the "Mismanaged Geniuses Hypothesis" (human tasks decompose into sub-tasks within current
+model capability; the decomposition itself is short) — the same bet World's sprint-sized queue
+discipline has been winning on for 40 iterations. *Pitfall:* results are one lab's RLM
+experiments on one model family; treat as hypothesis-grade for World until the floor
+experiment produces our own paired data.
+
 ### Motoko DST ⇄ AILANG World boundary note (arniwesth/motoko_agent, 2026-07-24)
 https://github.com/arniwesth/motoko_agent/blob/arniwesth/mot-44-motoko_dst_execution_primer/.agent/projects/009_motoko_dst_execution/NOTE-ailang-world-overlap.md
 Companion to that repo's `ADR-001-deterministic-test-world-architecture.md`; reviewed World at
