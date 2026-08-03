@@ -37,6 +37,41 @@ import (
 //go:embed schema.sql
 var schemaSQL string
 
+const currentSchemaVersion = 1
+
+type LegacySchemaVersionError struct {
+	Path           string
+	Found, Current int
+}
+
+func (e *LegacySchemaVersionError) Error() string {
+	return fmt.Sprintf("store: schema version legacy: %q has user_version %d with application schema; binary requires %d; refusing to modify", e.Path, e.Found, e.Current)
+}
+
+type FutureSchemaVersionError struct {
+	Path           string
+	Found, Current int
+}
+
+func (e *FutureSchemaVersionError) Error() string {
+	return fmt.Sprintf("store: schema version future: %q has user_version %d; binary supports %d; use a compatible binary", e.Path, e.Found, e.Current)
+}
+
+type InvalidSchemaVersionError struct {
+	Path           string
+	Found, Current int
+}
+
+func (e *InvalidSchemaVersionError) Error() string {
+	return fmt.Sprintf("store: schema version invalid: %q has negative user_version %d; binary requires %d; refusing to modify", e.Path, e.Found, e.Current)
+}
+
+type UninitializedReadOnlyStoreError struct{ Path string }
+
+func (e *UninitializedReadOnlyStoreError) Error() string {
+	return fmt.Sprintf("store: schema uninitialized: read-only store %q has no application schema; open writable once to initialize", e.Path)
+}
+
 // EpochRegistryV1 is the semantic ID / registry name of the epoch registry
 // (Decision 5). It is the key used in epoch_registry_heads for M1.
 const EpochRegistryV1 = "world/epoch-registry/v1"
@@ -258,13 +293,97 @@ func openSQLite(display, dsn string, applySchema bool) (*sql.DB, error) {
 		_ = db.Close()
 		return nil, fmt.Errorf("store: enable foreign keys: %w", err)
 	}
-	if applySchema {
-		if _, err := db.Exec(schemaSQL); err != nil {
-			_ = db.Close()
-			return nil, fmt.Errorf("store: apply schema: %w", err)
-		}
+	if err := enforceSchemaVersion(display, db, applySchema); err != nil {
+		_ = db.Close()
+		return nil, err
 	}
 	return db, nil
+}
+
+func enforceSchemaVersion(display string, db *sql.DB, applySchema bool) error {
+	var version, applicationObjects int
+	if err := db.QueryRow("PRAGMA user_version").Scan(&version); err != nil {
+		return fmt.Errorf("store: read schema version: %w", err)
+	}
+	if err := db.QueryRow(`SELECT count(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite\_%' ESCAPE '\'`).Scan(&applicationObjects); err != nil {
+		return fmt.Errorf("store: inspect application schema: %w", err)
+	}
+	if version == 0 && applicationObjects == 0 {
+		if !applySchema {
+			return &UninitializedReadOnlyStoreError{Path: display}
+		}
+		if err := freshInitTx(db, func(tx *sql.Tx) error {
+			_, err := tx.Exec("PRAGMA user_version = 1")
+			return err
+		}); err != nil {
+			return err
+		}
+		var committedVersion int
+		if err := db.QueryRow("PRAGMA user_version").Scan(&committedVersion); err != nil {
+			return fmt.Errorf("store: verify fresh schema version: %w", err)
+		}
+		if committedVersion != currentSchemaVersion {
+			return fmt.Errorf("store: fresh schema version drift: %q reported user_version %d after initialization; want %d", display, committedVersion, currentSchemaVersion)
+		}
+		return nil
+	}
+	if version == 0 {
+		return &LegacySchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
+	}
+	if version < 0 {
+		return &InvalidSchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
+	}
+	if version == currentSchemaVersion {
+		if applySchema {
+			if _, err := db.Exec(schemaSQL); err != nil {
+				return fmt.Errorf("store: apply schema: %w", err)
+			}
+			var after int
+			if err := db.QueryRow("PRAGMA user_version").Scan(&after); err != nil {
+				return fmt.Errorf("store: re-read schema version: %w", err)
+			}
+			if after != currentSchemaVersion {
+				return fmt.Errorf("store: schema version drift: %q reported user_version %d after applying the current schema; want %d", display, after, currentSchemaVersion)
+			}
+		}
+		return nil
+	}
+	if version > currentSchemaVersion {
+		return &FutureSchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
+	}
+	return nil
+}
+
+func freshInitTx(db *sql.DB, writeVersion func(*sql.Tx) error) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("store: initialize fresh schema: begin: %w", err)
+	}
+	rollback := func(stage string, err error) error {
+		_ = tx.Rollback()
+		return fmt.Errorf("store: initialize fresh schema: %s: %w", stage, err)
+	}
+	var version, applicationObjects int
+	if err := tx.QueryRow("PRAGMA user_version").Scan(&version); err != nil {
+		return rollback("re-read schema version", err)
+	}
+	if err := tx.QueryRow(`SELECT count(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite\_%' ESCAPE '\'`).Scan(&applicationObjects); err != nil {
+		return rollback("re-inspect application schema", err)
+	}
+	if version != 0 || applicationObjects != 0 {
+		return rollback("re-check freshness", fmt.Errorf("found user_version %d and %d application objects; want 0 and 0", version, applicationObjects))
+	}
+	if _, err := tx.Exec(schemaSQL); err != nil {
+		return rollback("apply schema", err)
+	}
+	if err := writeVersion(tx); err != nil {
+		return rollback("set schema version", err)
+	}
+	if err := tx.Commit(); err != nil {
+		_ = tx.Rollback()
+		return fmt.Errorf("store: initialize fresh schema: commit: %w", err)
+	}
+	return nil
 }
 
 // Close closes the underlying database and then releases the writer lock, if
