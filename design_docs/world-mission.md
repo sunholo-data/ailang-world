@@ -92,6 +92,27 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   all-clear. **Routed upstream as a PROPOSED shared-skill fix** (World cannot edit the
   mission-control SKILL.md — it lives in the V1 checkout), since Gate 2's step 3 currently
   *prescribes* the bash-only form.
+- **READING A CI LOG IS AN INSTRUMENT, AND A LESSON RECORDED ONLY IN A STATUS STAMP IS ON A
+  THREE-ITERATION TIMER (process fix, iter-42 — and the finding is the DECAY, not the defect).**
+  Gate 3b's "verify rather than read" step means grepping a ~70 KB CI log for proof the gates ran.
+  Two idioms silently return a plausible **zero** there, and both have now cost an iteration:
+  (a) **`go test` prints `ok` + TWO SPACES + a TAB before the package path**, so `grep -cE "ok +github"`
+  (iter-41) and `grep -cE "ok(\t| +)github"` (iter-42) BOTH return `0` for a run in which every
+  package passed. Neither alternation matches `ok␣␣→github`. Use a shape that cannot care —
+  `grep -oE "ok[[:space:]]+github\.com/[a-z0-9./_-]+" | sort -u | wc -l` — and pair it with a
+  `FAIL` count, which is the reading that actually matters. True value both times: **10 packages**.
+  (b) **`head -N` on a search is a TRUNCATION, not a result.** At iter-42 a
+  `grep -rn bench_worldd … | head -20` cut off exactly above the `.github/workflows/ci.yml` hit and
+  the controller was one sentence from recording *"the bench smoke gate runs nowhere in CI"* — the
+  sibling loop's iteration-119 fabricated-absence defect, reproduced. `grep -rn` output order is
+  filesystem traversal order, **not** sorted, so "the important hit would have been near the top" is
+  not a defence. Count first (`grep -rc`), or read the file the claim is about.
+  **What makes this a charter rule rather than another war story: iter-41 DID record (a) — inside its
+  STATUS stamp.** The STATUS block keeps the newest **3** stamps and archives the rest, so a lesson
+  written there is deleted from the charter's live text within three iterations, and (a) recurred at
+  iter-42 while iter-41's stamp was still present but no longer where anyone looks. **A durable rule
+  goes in this section; a STATUS stamp is a narrative of one iteration and expires like one.** Before
+  writing a lesson into a stamp, ask whether it must survive the rotation — if yes, it belongs here.
 - **A WRITTEN RULE IS NOT A CONTROL: THIS CHARTER ALREADY FORBADE `git checkout` AS A MUTATION
   REVERT, IN TWO PLACES, AND I DID IT ANYWAY FOUR ITERATIONS LATER (process fix, iter-38 — and the
   finding is the RECURRENCE, not the defect).** At iter-34 the controller reverted a mutation with
