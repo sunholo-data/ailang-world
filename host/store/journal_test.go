@@ -813,13 +813,7 @@ func TestSchemaDDLMatchesCanonicalManifest(t *testing.T) {
 	}
 }
 
-// Open creates the absent journal table; it does NOT upgrade existing tables.
-// A green result here is not an upgrade: it says only that this one historical
-// shape matches the current six-table manifest and preserves one sentinel. These
-// tests cannot detect deployed-store drift at runtime, authorize DDL edits, prove
-// constraint semantics, cover other histories or secondary objects/PRAGMAs, or
-// make CREATE TABLE IF NOT EXISTS alter an existing table. DG.B remains open.
-func TestOpenAddsJournalAndDetectsStalePreJournalDDL(t *testing.T) {
+func TestOpenRejectsPreJournalLegacyStore(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "pre-journal.db")
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
@@ -837,44 +831,55 @@ func TestOpenAddsJournalAndDetectsStalePreJournalDDL(t *testing.T) {
 	if _, err := db.Exec(`INSERT INTO store_heads (head_key, world_ref) VALUES (?, ?)`, sentinelHead, sentinelWorld); err != nil {
 		t.Fatal(err)
 	}
+	before := tableDDL(t, db)
+	var beforeVersion int
+	if err := db.QueryRow("PRAGMA user_version").Scan(&beforeVersion); err != nil {
+		t.Fatal(err)
+	}
 	if err := db.Close(); err != nil {
 		t.Fatal(err)
 	}
 	s, err := Open(path)
+	if s != nil {
+		_ = s.Close()
+		t.Fatal("Open returned a store for a legacy database")
+	}
+	var legacy *LegacySchemaVersionError
+	if !errors.As(err, &legacy) {
+		t.Fatalf("Open error = %T %v, want *LegacySchemaVersionError", err, err)
+	}
+	db, err = sql.Open("sqlite", path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer s.Close()
-	after := tableDDL(t, s.db)
-	if _, ok := after["journal"]; !ok {
-		t.Fatal("journal table absent after writer open")
+	defer db.Close()
+	after := tableDDL(t, db)
+	if !reflect.DeepEqual(after, before) {
+		t.Fatalf("DDL changed after rejected Open:\n before: %#v\n after: %#v", before, after)
+	}
+	if _, ok := after["journal"]; ok {
+		t.Fatal("journal table created by rejected Open")
+	}
+	var afterVersion int
+	if err := db.QueryRow("PRAGMA user_version").Scan(&afterVersion); err != nil {
+		t.Fatal(err)
+	}
+	if afterVersion != beforeVersion {
+		t.Fatalf("user_version changed from %d to %d", beforeVersion, afterVersion)
 	}
 	var gotWorld string
-	if err := s.db.QueryRow(`SELECT world_ref FROM store_heads WHERE head_key = ?`, sentinelHead).Scan(&gotWorld); err != nil {
+	if err := db.QueryRow(`SELECT world_ref FROM store_heads WHERE head_key = ?`, sentinelHead).Scan(&gotWorld); err != nil {
 		t.Fatal(err)
 	}
 	if gotWorld != sentinelWorld {
 		t.Fatalf("historical sentinel world_ref = %q, want %q", gotWorld, sentinelWorld)
-	}
-	for _, name := range historicalNames {
-		want, ok := canonicalTableDDL[name]
-		if !ok {
-			t.Fatalf("canonical manifest missing historical table %q", name)
-		}
-		got, ok := after[name]
-		if !ok {
-			t.Fatalf("opened historical store missing table %q", name)
-		}
-		if normalizeDDL(got) != normalizeDDL(want) {
-			t.Fatalf("stale historical DDL for table %q:\n got: %s\nwant: %s", name, normalizeDDL(got), normalizeDDL(want))
-		}
 	}
 }
 
 func tableDDL(t *testing.T, db *sql.DB) map[string]string {
 	t.Helper()
 	rows, err := db.Query(`SELECT name, sql FROM sqlite_master
-		WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name`)
+		WHERE type='table' AND name NOT LIKE 'sqlite\_%' ESCAPE '\' ORDER BY name`)
 	if err != nil {
 		t.Fatal(err)
 	}
