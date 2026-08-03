@@ -312,11 +312,18 @@ func enforceSchemaVersion(display string, db *sql.DB, applySchema bool) error {
 		if !applySchema {
 			return &UninitializedReadOnlyStoreError{Path: display}
 		}
-		if _, err := db.Exec(schemaSQL); err != nil {
-			return fmt.Errorf("store: apply schema: %w", err)
+		if err := freshInitTx(db, func(tx *sql.Tx) error {
+			_, err := tx.Exec("PRAGMA user_version = 1")
+			return err
+		}); err != nil {
+			return err
 		}
-		if _, err := db.Exec("PRAGMA user_version = 1"); err != nil {
-			return fmt.Errorf("store: set schema version: %w", err)
+		var committedVersion int
+		if err := db.QueryRow("PRAGMA user_version").Scan(&committedVersion); err != nil {
+			return fmt.Errorf("store: verify fresh schema version: %w", err)
+		}
+		if committedVersion != currentSchemaVersion {
+			return fmt.Errorf("store: fresh schema version drift: %q reported user_version %d after initialization; want %d", display, committedVersion, currentSchemaVersion)
 		}
 		return nil
 	}
@@ -326,13 +333,55 @@ func enforceSchemaVersion(display string, db *sql.DB, applySchema bool) error {
 	if version < 0 {
 		return &InvalidSchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
 	}
+	if version == currentSchemaVersion {
+		if applySchema {
+			if _, err := db.Exec(schemaSQL); err != nil {
+				return fmt.Errorf("store: apply schema: %w", err)
+			}
+			var after int
+			if err := db.QueryRow("PRAGMA user_version").Scan(&after); err != nil {
+				return fmt.Errorf("store: re-read schema version: %w", err)
+			}
+			if after != currentSchemaVersion {
+				return fmt.Errorf("store: schema version drift: %q reported user_version %d after applying the current schema; want %d", display, after, currentSchemaVersion)
+			}
+		}
+		return nil
+	}
 	if version > currentSchemaVersion {
 		return &FutureSchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
 	}
-	if applySchema {
-		if _, err := db.Exec(schemaSQL); err != nil {
-			return fmt.Errorf("store: apply schema: %w", err)
-		}
+	return nil
+}
+
+func freshInitTx(db *sql.DB, writeVersion func(*sql.Tx) error) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("store: initialize fresh schema: begin: %w", err)
+	}
+	rollback := func(stage string, err error) error {
+		_ = tx.Rollback()
+		return fmt.Errorf("store: initialize fresh schema: %s: %w", stage, err)
+	}
+	var version, applicationObjects int
+	if err := tx.QueryRow("PRAGMA user_version").Scan(&version); err != nil {
+		return rollback("re-read schema version", err)
+	}
+	if err := tx.QueryRow(`SELECT count(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite\_%' ESCAPE '\'`).Scan(&applicationObjects); err != nil {
+		return rollback("re-inspect application schema", err)
+	}
+	if version != 0 || applicationObjects != 0 {
+		return rollback("re-check freshness", fmt.Errorf("found user_version %d and %d application objects; want 0 and 0", version, applicationObjects))
+	}
+	if _, err := tx.Exec(schemaSQL); err != nil {
+		return rollback("apply schema", err)
+	}
+	if err := writeVersion(tx); err != nil {
+		return rollback("set schema version", err)
+	}
+	if err := tx.Commit(); err != nil {
+		_ = tx.Rollback()
+		return fmt.Errorf("store: initialize fresh schema: commit: %w", err)
 	}
 	return nil
 }

@@ -3,6 +3,7 @@ package store
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -10,6 +11,8 @@ import (
 
 	_ "modernc.org/sqlite"
 )
+
+const frozenFutureSchemaVersion = 2
 
 const applicationObjectCountSQL = `SELECT count(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite\_%' ESCAPE '\'`
 
@@ -89,6 +92,11 @@ func TestFreshWriterInitializesSchemaAndVersionOne(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "fresh.db")
 	s, err := Open(path)
 	if err != nil {
+		db := rawDB(t, path)
+		_, version := schemaState(t, db)
+		if version != 1 {
+			t.Fatalf("fresh user_version = %d, want 1 (Open error: %v)", version, err)
+		}
 		t.Fatal(err)
 	}
 	defer s.Close()
@@ -99,6 +107,158 @@ func TestFreshWriterInitializesSchemaAndVersionOne(t *testing.T) {
 	_, version := schemaState(t, s.db)
 	if version != 1 {
 		t.Fatalf("fresh user_version = %d, want 1", version)
+	}
+}
+
+func TestFreshInitializationIsAtomic(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "atomic.db")
+	db := rawDB(t, path)
+	sentinel := errors.New("induced version write failure")
+	err := freshInitTx(db, func(*sql.Tx) error { return sentinel })
+	if !errors.Is(err, sentinel) {
+		t.Fatalf("freshInitTx error = %v, want wrapped sentinel", err)
+	}
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	reopened, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer reopened.Close()
+	var count, version int
+	if err := reopened.QueryRow(applicationObjectCountSQL).Scan(&count); err != nil {
+		t.Fatal(err)
+	}
+	if err := reopened.QueryRow("PRAGMA user_version").Scan(&version); err != nil {
+		t.Fatal(err)
+	}
+	if count != 0 || version != 0 {
+		t.Fatalf("rolled-back state = (%d objects, version %d), want (0, 0)", count, version)
+	}
+}
+
+func setPositiveFixtureVersion(t *testing.T, db *sql.DB, version int) {
+	t.Helper()
+	if version < 1 || version > 2147483647 {
+		t.Fatalf("positive fixture version %d outside 1..2147483647", version)
+	}
+	if _, err := db.Exec(fmt.Sprintf("PRAGMA user_version = %d", version)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func setNegativeFixtureVersion(t *testing.T, db *sql.DB, version int) {
+	t.Helper()
+	if version >= 0 {
+		t.Fatalf("negative fixture version = %d", version)
+	}
+	if _, err := db.Exec(fmt.Sprintf("PRAGMA user_version = %d", version)); err != nil {
+		t.Fatal(err)
+	}
+	var got int
+	if err := db.QueryRow("PRAGMA user_version").Scan(&got); err != nil {
+		t.Fatal(err)
+	}
+	if got != version {
+		t.Fatalf("negative fixture user_version = %d, want %d", got, version)
+	}
+}
+
+func TestSupportedVersionOneOpensWithoutRewritingPragma(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "supported.db")
+	db := rawDB(t, path)
+	if _, err := db.Exec(schemaSQL); err != nil {
+		t.Fatal(err)
+	}
+	setPositiveFixtureVersion(t, db, 1)
+	beforeNames, beforeVersion := schemaState(t, db)
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	s, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	afterNames, afterVersion := schemaState(t, s.db)
+	if !reflect.DeepEqual(afterNames, beforeNames) || afterVersion != beforeVersion || afterVersion != 1 {
+		t.Fatalf("supported state changed: before=(%v,%d) after=(%v,%d)", beforeNames, beforeVersion, afterNames, afterVersion)
+	}
+}
+
+func TestFutureVersionIsRejected(t *testing.T) {
+	requireFreshControl(t)
+	path := filepath.Join(t.TempDir(), "future.db")
+	db := rawDB(t, path)
+	if _, err := db.Exec(schemaSQL); err != nil {
+		t.Fatal(err)
+	}
+	setPositiveFixtureVersion(t, db, frozenFutureSchemaVersion)
+	beforeNames, beforeVersion := schemaState(t, db)
+	if err := db.Close(); err != nil {
+		t.Fatal(err)
+	}
+	s, err := Open(path)
+	if s != nil {
+		_ = s.Close()
+		t.Fatal("future Open returned a store")
+	}
+	var future *FutureSchemaVersionError
+	if !errors.As(err, &future) || future.Found != 2 || future.Current != 1 {
+		t.Fatalf("Open error = %#v, want future Found=2 Current=1", err)
+	}
+	if !strings.Contains(err.Error(), "schema version future") {
+		t.Fatalf("future message = %q", err)
+	}
+	db = rawDB(t, path)
+	afterNames, afterVersion := schemaState(t, db)
+	if !reflect.DeepEqual(afterNames, beforeNames) || afterVersion != beforeVersion {
+		t.Fatalf("future changed: before=(%v,%d) after=(%v,%d)", beforeNames, beforeVersion, afterNames, afterVersion)
+	}
+}
+
+func TestNegativeVersionsAreInvalid(t *testing.T) {
+	for _, version := range []int{-1, -2147483648} {
+		t.Run(fmt.Sprint(version), func(t *testing.T) {
+			requireFreshControl(t)
+			path := filepath.Join(t.TempDir(), "invalid.db")
+			db := rawDB(t, path)
+			if _, err := db.Exec(schemaSQL); err != nil {
+				t.Fatal(err)
+			}
+			setNegativeFixtureVersion(t, db, version)
+			beforeNames, beforeVersion := schemaState(t, db)
+			if err := db.Close(); err != nil {
+				t.Fatal(err)
+			}
+			s, err := Open(path)
+			if s != nil {
+				_ = s.Close()
+				t.Fatal("invalid Open returned a store")
+			}
+			var invalid *InvalidSchemaVersionError
+			if !errors.As(err, &invalid) || invalid.Found != version || invalid.Current != 1 {
+				t.Fatalf("Open error = %#v, want invalid Found=%d Current=1", err, version)
+			}
+			if !strings.Contains(err.Error(), "schema version invalid") {
+				t.Fatalf("invalid message = %q", err)
+			}
+			db = rawDB(t, path)
+			afterNames, afterVersion := schemaState(t, db)
+			if !reflect.DeepEqual(afterNames, beforeNames) || afterVersion != beforeVersion {
+				t.Fatalf("invalid changed: before=(%v,%d) after=(%v,%d)", beforeNames, beforeVersion, afterNames, afterVersion)
+			}
+		})
+	}
+}
+
+func TestSchemaVersionRangeBounds(t *testing.T) {
+	if currentSchemaVersion < 1 || currentSchemaVersion > 2147483647 {
+		t.Fatalf("currentSchemaVersion = %d, want 1..2147483647", currentSchemaVersion)
+	}
+	if frozenFutureSchemaVersion < 1 || frozenFutureSchemaVersion > 2147483647 {
+		t.Fatalf("frozen future version = %d, want 1..2147483647", frozenFutureSchemaVersion)
 	}
 }
 
