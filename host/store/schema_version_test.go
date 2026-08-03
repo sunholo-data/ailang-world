@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -259,6 +260,135 @@ func TestSchemaVersionRangeBounds(t *testing.T) {
 	}
 	if frozenFutureSchemaVersion < 1 || frozenFutureSchemaVersion > 2147483647 {
 		t.Fatalf("frozen future version = %d, want 1..2147483647", frozenFutureSchemaVersion)
+	}
+}
+
+func TestOpenReadOnlyEnforcesVersionOne(t *testing.T) {
+	lockControlPath := filepath.Join(t.TempDir(), "writer-lock-control.db")
+	control, err := Open(lockControlPath)
+	if err != nil {
+		t.Fatalf("writable lock positive control: %v", err)
+	}
+	if _, err := os.Stat(lockControlPath + writerLockSuffix); err != nil {
+		_ = control.Close()
+		t.Fatalf("writable Open did not create expected lock file: %v", err)
+	}
+	if err := control.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name      string
+		setup     func(*testing.T, *sql.DB)
+		emptyFile bool
+		wantType  string
+		accept    bool
+	}{
+		{name: "version1", setup: func(t *testing.T, db *sql.DB) {
+			_, err := db.Exec(schemaSQL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			setPositiveFixtureVersion(t, db, 1)
+		}, accept: true},
+		{name: "legacy", setup: func(t *testing.T, db *sql.DB) {
+			_, err := db.Exec(preJournalSchemaV0)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}, wantType: "legacy"},
+		{name: "sqliteX_probe", setup: func(t *testing.T, db *sql.DB) {
+			_, err := db.Exec(`CREATE TABLE sqliteX_probe(id INTEGER)`)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}, wantType: "legacy"},
+		{name: "future", setup: func(t *testing.T, db *sql.DB) {
+			_, err := db.Exec(schemaSQL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			setPositiveFixtureVersion(t, db, 2)
+		}, wantType: "future"},
+		{name: "negative1", setup: func(t *testing.T, db *sql.DB) {
+			_, err := db.Exec(schemaSQL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			setNegativeFixtureVersion(t, db, -1)
+		}, wantType: "invalid"},
+		{name: "int32min", setup: func(t *testing.T, db *sql.DB) {
+			_, err := db.Exec(schemaSQL)
+			if err != nil {
+				t.Fatal(err)
+			}
+			setNegativeFixtureVersion(t, db, -2147483648)
+		}, wantType: "invalid"},
+		{name: "empty", emptyFile: true, wantType: "uninitialized"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "readonly.db")
+			var beforeNames []string
+			var beforeVersion int
+			if tc.emptyFile {
+				if err := os.WriteFile(path, nil, 0o600); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				db := rawDB(t, path)
+				tc.setup(t, db)
+				beforeNames, beforeVersion = schemaState(t, db)
+				if err := db.Close(); err != nil {
+					t.Fatal(err)
+				}
+			}
+			ro, err := OpenReadOnly(path)
+			if tc.accept {
+				if err != nil {
+					t.Fatal(err)
+				}
+				if ro == nil {
+					t.Fatal("OpenReadOnly returned nil store")
+				}
+				_ = ro.Close()
+			} else {
+				if ro != nil {
+					_ = ro.Close()
+					t.Fatal("OpenReadOnly returned a store for rejected fixture")
+				}
+				switch tc.wantType {
+				case "legacy":
+					var target *LegacySchemaVersionError
+					if !errors.As(err, &target) || !strings.Contains(err.Error(), "schema version legacy") {
+						t.Fatalf("error = %T %v, want legacy", err, err)
+					}
+				case "future":
+					var target *FutureSchemaVersionError
+					if !errors.As(err, &target) || !strings.Contains(err.Error(), "schema version future") {
+						t.Fatalf("error = %T %v, want future", err, err)
+					}
+				case "invalid":
+					var target *InvalidSchemaVersionError
+					if !errors.As(err, &target) || !strings.Contains(err.Error(), "schema version invalid") {
+						t.Fatalf("error = %T %v, want invalid", err, err)
+					}
+				case "uninitialized":
+					var target *UninitializedReadOnlyStoreError
+					if !errors.As(err, &target) || !strings.Contains(err.Error(), "schema uninitialized") {
+						t.Fatalf("error = %T %v, want uninitialized", err, err)
+					}
+				}
+				db := rawDB(t, path)
+				afterNames, afterVersion := schemaState(t, db)
+				if !reflect.DeepEqual(afterNames, beforeNames) || afterVersion != beforeVersion {
+					t.Fatalf("read-only rejection changed state: before=(%v,%d) after=(%v,%d)", beforeNames, beforeVersion, afterNames, afterVersion)
+				}
+			}
+			if _, err := os.Stat(path + writerLockSuffix); !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("OpenReadOnly created writer lock %q: %v", path+writerLockSuffix, err)
+			}
+		})
 	}
 }
 
