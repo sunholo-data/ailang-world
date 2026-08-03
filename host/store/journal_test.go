@@ -1,13 +1,12 @@
 package store
 
 import (
-	"crypto/sha256"
 	"database/sql"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -628,21 +627,216 @@ func TestPendingEffectIntentsLimitsPagingAndIsolation(t *testing.T) {
 	}
 }
 
-func TestPreJournalMigrationPreservesExistingDDL(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "pre-journal.db")
-	oldSchema := schemaSQL[:strings.Index(schemaSQL, "-- Durable ordered index")]
-	sum := sha256.Sum256([]byte(oldSchema))
-	if got := hex.EncodeToString(sum[:]); got != "43a9c80b4ebbd73dd7f30eb360db4a2a5df7f33466ca5c3993e9ee075e1354b5" {
-		t.Fatalf("pre-journal schema source drifted: sha256=%s", got)
+// preJournalSchemaV0 is copied verbatim from 8133573:host/store/schema.sql, the
+// last pre-journal schema; d5774eb added journal. The artifact SHA-256 is
+// 35f09862e20ddc1c6b0467b69781b2d25fbc07d04c49f777a76a62793e14bbdd.
+// Never mechanically update this fixture to follow current DDL.
+const preJournalSchemaV0 = `-- schema.sql — SQLite schema for the M1 semantic world store (Decision 4).
+--
+-- Every HashRef occupies exactly one canonical TEXT column in "algo:digest"
+-- form. The Go boundary parses each value into host/hashref.HashRef before use,
+-- giving one atomic indexed identity per digest and avoiding split-column
+-- comparison mistakes. Algorithm-specific validation stays in the dispatcher so
+-- future tags coexist in the same tables.
+
+-- Immutable content-addressed objects: the ratified ObjectEnvelope (Decision 3)
+-- plus the exact payload bytes addressed by hash_ref. hash_ref is the primary
+-- identity; interface_hash_ref is the hash of the typed interface/schema bytes.
+-- semantic_id and provenance are UTF-8 labels, not digest fields.
+CREATE TABLE IF NOT EXISTS objects (
+    hash_ref           TEXT PRIMARY KEY,
+    interface_hash_ref TEXT NOT NULL,
+    semantic_id        TEXT NOT NULL,
+    provenance         TEXT NOT NULL,
+    payload            BLOB NOT NULL
+);
+
+-- Immutable world revisions. Each world_ref addresses one revision; state_root
+-- is the state object and log_head is the append-only log head at that revision.
+CREATE TABLE IF NOT EXISTS worlds (
+    world_ref  TEXT PRIMARY KEY,
+    revision   INTEGER NOT NULL,
+    state_root TEXT NOT NULL,
+    log_head   TEXT NOT NULL
+);
+
+-- Append-only log. The six frozen LogHeader fields are stored verbatim:
+--   entry_index, semantics_epoch, transition_fn_ref, interpreter_ref,
+--   prev_entry_hash_ref, written_by.
+-- transition_ref points to the content-addressed transition body and is OUTSIDE
+-- the frozen header. entry_hash_ref addresses the canonical encoded
+-- header-plus-body-reference bytes and is UNIQUE across the log.
+CREATE TABLE IF NOT EXISTS log_entries (
+    entry_index         INTEGER PRIMARY KEY,
+    entry_hash_ref      TEXT NOT NULL UNIQUE,
+    semantics_epoch     INTEGER NOT NULL,
+    transition_fn_ref   TEXT NOT NULL,
+    interpreter_ref     TEXT NOT NULL,
+    prev_entry_hash_ref TEXT NOT NULL,
+    written_by          TEXT NOT NULL,
+    transition_ref      TEXT NOT NULL
+);
+
+-- Current immutable registry object reference, keyed by registry name (for
+-- example "world/epoch-registry/v1"). object_ref addresses the selected
+-- revision's immutable registry object.
+CREATE TABLE IF NOT EXISTS epoch_registry_heads (
+    registry_name TEXT PRIMARY KEY,
+    object_ref    TEXT NOT NULL
+);
+
+-- The store's mutable selected-world-head pointer, keyed by a fixed head_key.
+-- Unlike every other table this is NOT content-addressed: it is the single
+-- compare-and-append serialization point (Decision 4). Commit reads world_ref
+-- here under the transaction and advances it; a stale observed head yields a
+-- ConflictError. M1 uses exactly one row (head_key = "selected_world_head").
+CREATE TABLE IF NOT EXISTS store_heads (
+    head_key  TEXT PRIMARY KEY,
+    world_ref TEXT NOT NULL
+);
+
+-- Cached typecheck/verify result, keyed EXACTLY by the pair
+-- (transition_fn_ref, interpreter_ref). semantics_epoch is copied in as
+-- diagnostic/migration metadata only; it is NOT part of the cache key, so an
+-- epoch-only change preserves the selected row as metadata-compatible.
+CREATE TABLE IF NOT EXISTS verification_cache (
+    transition_fn_ref TEXT NOT NULL,
+    interpreter_ref   TEXT NOT NULL,
+    semantics_epoch   INTEGER NOT NULL,
+    verified          INTEGER NOT NULL,
+    result_detail     TEXT NOT NULL,
+    PRIMARY KEY (transition_fn_ref, interpreter_ref)
+);
+`
+
+// canonicalTableDDL is review-visible policy. It must remain hardcoded and must
+// not be derived from schemaSQL, a hash of schemaSQL, or the database under test.
+var canonicalTableDDL = map[string]string{
+	"objects": `CREATE TABLE objects (
+    hash_ref           TEXT PRIMARY KEY,
+    interface_hash_ref TEXT NOT NULL,
+    semantic_id        TEXT NOT NULL,
+    provenance         TEXT NOT NULL,
+    payload            BLOB NOT NULL
+)`,
+	"worlds": `CREATE TABLE worlds (
+    world_ref  TEXT PRIMARY KEY,
+    revision   INTEGER NOT NULL,
+    state_root TEXT NOT NULL,
+    log_head   TEXT NOT NULL
+)`,
+	"log_entries": `CREATE TABLE log_entries (
+    entry_index         INTEGER PRIMARY KEY,
+    entry_hash_ref      TEXT NOT NULL UNIQUE,
+    semantics_epoch     INTEGER NOT NULL,
+    transition_fn_ref   TEXT NOT NULL,
+    interpreter_ref     TEXT NOT NULL,
+    prev_entry_hash_ref TEXT NOT NULL,
+    written_by          TEXT NOT NULL,
+    transition_ref      TEXT NOT NULL
+)`,
+	"epoch_registry_heads": `CREATE TABLE epoch_registry_heads (
+    registry_name TEXT PRIMARY KEY,
+    object_ref    TEXT NOT NULL
+)`,
+	"store_heads": `CREATE TABLE store_heads (
+    head_key  TEXT PRIMARY KEY,
+    world_ref TEXT NOT NULL
+)`,
+	"verification_cache": `CREATE TABLE verification_cache (
+    transition_fn_ref TEXT NOT NULL,
+    interpreter_ref   TEXT NOT NULL,
+    semantics_epoch   INTEGER NOT NULL,
+    verified          INTEGER NOT NULL,
+    result_detail     TEXT NOT NULL,
+    PRIMARY KEY (transition_fn_ref, interpreter_ref)
+)`,
+	"journal": `CREATE TABLE journal (
+    seq           INTEGER PRIMARY KEY,
+    kind          TEXT NOT NULL CHECK (kind IN ('intent','outcome')),
+    invocation_id TEXT NOT NULL CHECK (invocation_id <> ''),
+    object_ref    TEXT NOT NULL CHECK (object_ref <> ''),
+    UNIQUE (invocation_id, kind)
+)`,
+}
+
+// normalizeDDL collapses whitespace only; it does not lowercase, reorder,
+// strip quotes, or otherwise erase SQL structure.
+func normalizeDDL(ddl string) string {
+	return strings.Join(strings.Fields(ddl), " ")
+}
+
+func sortedDDLNames(ddl map[string]string) []string {
+	names := make([]string, 0, len(ddl))
+	for name := range ddl {
+		names = append(names, name)
 	}
+	sort.Strings(names)
+	return names
+}
+
+func requireExactTableNames(t *testing.T, context string, got map[string]string, want []string) {
+	t.Helper()
+	if len(got) == 0 {
+		t.Fatalf("%s materialized zero tables", context)
+	}
+	wantSet := make(map[string]struct{}, len(want))
+	for _, name := range want {
+		wantSet[name] = struct{}{}
+		if _, ok := got[name]; !ok {
+			t.Fatalf("%s missing table %q", context, name)
+		}
+	}
+	for _, name := range sortedDDLNames(got) {
+		if _, ok := wantSet[name]; !ok {
+			t.Fatalf("%s has unexpected table %q", context, name)
+		}
+	}
+}
+
+func TestSchemaDDLMatchesCanonicalManifest(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "fresh.db")
+	s, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+
+	actual := tableDDL(t, s.db)
+	names := sortedDDLNames(canonicalTableDDL)
+	requireExactTableNames(t, "fresh store", actual, names)
+	for _, name := range names {
+		got, want := normalizeDDL(actual[name]), normalizeDDL(canonicalTableDDL[name])
+		if got != want {
+			t.Fatalf("canonical DDL mismatch for table %q:\n got: %s\nwant: %s", name, got, want)
+		}
+	}
+}
+
+// Open creates the absent journal table; it does NOT upgrade existing tables.
+// A green result here is not an upgrade: it says only that this one historical
+// shape matches the current six-table manifest and preserves one sentinel. These
+// tests cannot detect deployed-store drift at runtime, authorize DDL edits, prove
+// constraint semantics, cover other histories or secondary objects/PRAGMAs, or
+// make CREATE TABLE IF NOT EXISTS alter an existing table. DG.B remains open.
+func TestOpenAddsJournalAndDetectsStalePreJournalDDL(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "pre-journal.db")
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := db.Exec(oldSchema); err != nil {
+	if _, err := db.Exec(preJournalSchemaV0); err != nil {
 		t.Fatal(err)
 	}
-	before := tableDDL(t, db)
+	historicalNames := []string{
+		"epoch_registry_heads", "log_entries", "objects", "store_heads", "verification_cache", "worlds",
+	}
+	requireExactTableNames(t, "historical fixture", tableDDL(t, db), historicalNames)
+	const sentinelHead = "selected_world_head"
+	const sentinelWorld = "sha256:historical-sentinel-world"
+	if _, err := db.Exec(`INSERT INTO store_heads (head_key, world_ref) VALUES (?, ?)`, sentinelHead, sentinelWorld); err != nil {
+		t.Fatal(err)
+	}
 	if err := db.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -655,9 +849,25 @@ func TestPreJournalMigrationPreservesExistingDDL(t *testing.T) {
 	if _, ok := after["journal"]; !ok {
 		t.Fatal("journal table absent after writer open")
 	}
-	delete(after, "journal")
-	if !reflect.DeepEqual(after, before) {
-		t.Fatalf("existing sqlite_master DDL drifted:\nbefore=%v\nafter=%v", before, after)
+	var gotWorld string
+	if err := s.db.QueryRow(`SELECT world_ref FROM store_heads WHERE head_key = ?`, sentinelHead).Scan(&gotWorld); err != nil {
+		t.Fatal(err)
+	}
+	if gotWorld != sentinelWorld {
+		t.Fatalf("historical sentinel world_ref = %q, want %q", gotWorld, sentinelWorld)
+	}
+	for _, name := range historicalNames {
+		want, ok := canonicalTableDDL[name]
+		if !ok {
+			t.Fatalf("canonical manifest missing historical table %q", name)
+		}
+		got, ok := after[name]
+		if !ok {
+			t.Fatalf("opened historical store missing table %q", name)
+		}
+		if normalizeDDL(got) != normalizeDDL(want) {
+			t.Fatalf("stale historical DDL for table %q:\n got: %s\nwant: %s", name, normalizeDDL(got), normalizeDDL(want))
+		}
 	}
 }
 
