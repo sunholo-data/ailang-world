@@ -1,11 +1,42 @@
 # w-ddl-gate-teeth — make schema drift observable
 
-**Status:** **PARKED — `needs-human-review`.** The pick-time quorum ran its full two rounds and
-**BLOCKED both times**. One blocking objection remains, and it **disputes the design DIRECTION**, so
-the charter's narrow-refinement carve-out does not apply and the controller may not resolve it.
-**This document is a decision packet for the human, not authorization to implement DG.A.** No
-milestone may be routed to a planner or an executor until **OD-5** is answered. See the Quorum
-verification log at the end.  
+**Status:** **DG.A ROUTABLE — OD-5 RATIFIED by Mark 2026-08-03 (attended).** ~~PARKED —
+`needs-human-review`~~. The pick-time quorum ran its full two rounds and **BLOCKED both times** on a
+directional objection the controller could not resolve; the human has now resolved it.
+
+> **RATIFICATION (attended, recorded in the charter STATUS of 2026-08-03; transcribed here by the
+> controller at iteration 43 — this is a record of a human decision, not a design change).**
+> Mark's words: *"4d RATIFIED — fix NOW: SQLite `user_version` pin failing LOUD on binary↔store
+> schema mismatch + de-fang the sha256 self-bypass; the frozen-store touch is ratified (the
+> guardrail collision resolves the S6 way: a gate that invites its own bypass is not a gate)."*
+>
+> **How that maps onto this document, stated precisely, because it does not match any one of OD-5's
+> three listed alternatives.**
+> - **OD-5 is answered AGAINST this document's D4 position and WITH `gpt5-6-sol`.** The frozen-kernel
+>   deferral does not hold: the loop is now authorized to change which on-disk stores `store.Open`
+>   accepts. The reviewer was right, and it is recorded here that the reviewer was right.
+> - **OD-3 is ratified as its alternative 1** — establish a version, fail LOUD on an unsupported or
+>   un-upgraded store. **But ratifying the DECISION is not the same as having a DESIGN.** OD-3's own
+>   text requires treatment of legacy version 0 to be specified and the fresh / supported / legacy /
+>   future cases to be proven with fixtures. None of that exists in this document: there are no ACs,
+>   no named mutations, and no milestone for it. **It is therefore authorized-but-undesigned and is
+>   carried as `DG.B`, which a designer must specify before any executor may touch `store.Open`.**
+>   Building it headlessly from a three-alternative decision packet is exactly the fabrication this
+>   mission's Gate-2 discipline forbids.
+> - **"De-fang the sha256 self-bypass" is ALREADY what DG.A specifies** and needs no new design:
+>   **AC4** deletes the source-SHA pin, the same-source before/after equality and the
+>   `delete(..., "journal")` outright, and **AC2**'s `MUT-EXISTING-DDL-CHANGE-REMANIFESTED` is the
+>   discriminating control proving the replacement manifest **cannot** be silenced the same way — a
+>   developer who legitimately re-manifests a `store_heads` edit still gets a red from the
+>   historical-store test. That is the S6 property Mark names: the gate no longer invites its own
+>   bypass.
+>
+> **Consequently: DG.A is routable NOW, unchanged, exactly as specified below** (it is the de-fang,
+> and it is the evidence DG.B's design will need). **DG.B is queued as the next item.** Splitting
+> this way delivers the ratified de-fang immediately without inventing a durability-kernel
+> acceptance contract that no reviewer has seen.
+
+See the Quorum verification log at the end.  
 **Item:** `w-ddl-gate-teeth` (queue item 4d)  
 **Clause:** clause-1  
 **Date:** 2026-07-30  
@@ -242,8 +273,17 @@ guardrail: a headless loop may add this test extension, but may not change which
 quorum did not accept that position: `gpt5-6-sol` rejected it in both rounds, so as a matter of
 process DG.A is blocked on **OD-5** regardless of the argument's merits. What is being deferred to
 the human is not whether the reasoning above is sound — it is who gets to decide between two
-ratified guardrails when they point opposite ways. Until OD-5 is answered, **OD-5 governs and no
-milestone here may be routed.**
+ratified guardrails when they point opposite ways. ~~Until OD-5 is answered, **OD-5 governs and no
+milestone here may be routed.**~~
+
+> **RESOLVED 2026-08-03 (Mark, attended) — AND D4's POSITION ABOVE DID NOT SURVIVE.** The human
+> ratified the frozen-store touch and ordered the `user_version` pin *now*, which is `gpt5-6-sol`'s
+> direction, not this section's. **D4 above is retained verbatim as the position that was
+> overruled** — it is not edited to look prescient, because a design doc that quietly rewrites its
+> own losing argument teaches the next reader nothing. What D4 got right: DG.A is strictly additive
+> and did not need to wait. What D4 got wrong: it treated "pre-existing at HEAD" as sufficient
+> reason to leave a *measured* production fail-open in the completed state, and the axiom does not
+> have that exemption. The production response is now **DG.B** (authorized, undesigned).
 
 Changing that requires a durable schema-version contract. `PRAGMA user_version` is the smallest
 candidate, but setting or enforcing it changes what stores the kernel accepts. Automatically
@@ -338,10 +378,14 @@ Anything that changes `host/store/schema.sql`, `store.Open`, accepted on-disk ve
 migrates stored data is deferred behind OD-3/OD-4 and is not a second milestone hidden inside
 DG.A.
 
-**DG.A IS NOT ROUTABLE YET.** The pick-time quorum blocked this document in both rounds on a
-directional objection, so DG.A is held on **OD-5** and must not be handed to a planner or an
-executor until the human answers it. The milestone body above is what will be built *if* OD-5
-resolves to alternative 1; it is a specification, not an authorization.
+**DG.A IS ROUTABLE (OD-5 ratified by Mark, 2026-08-03 — see Status).** ~~DG.A IS NOT ROUTABLE
+YET.~~ The directional objection that held it has been resolved by the human **in the reviewer's
+favour**, and the milestone body above is now an authorization as well as a specification. It is
+unchanged by the ratification: DG.A was always the de-fang half, and the ratification's other half
+(the `user_version` production contract) is **DG.B**, which is *not* specified here and must not be
+smuggled into this milestone. The paragraph immediately above still binds — anything touching
+`host/store/schema.sql`, `store.Open`, accepted on-disk versions, or stored data is **DG.B**, not
+DG.A, and an executor that reaches for it is out of scope.
 
 ## Open Decisions for the human
 
@@ -351,7 +395,13 @@ resolves to alternative 1; it is a specification, not an authorization.
 > parked-for-human list is a single global namespace — two live `OD-1`s meaning different
 > things is the iter-31 ID-collision defect, where a collision reads as continuity.
 
-### OD-5 — **THE CONTROLLING DECISION. Does the no-silent-fallback axiom oblige this item to change `store.Open` NOW, overriding the frozen-kernel deferral?**
+### OD-5 — ~~THE CONTROLLING DECISION~~ **ANSWERED 2026-08-03 (Mark, attended): YES — the axiom wins, the frozen-store touch is ratified.**
+
+> **Answer: none of the three alternatives below as written — closest to alternative 2, but without
+> holding DG.A hostage.** Mark ratified the kernel touch *and* ordered the `user_version` pin
+> **now**, while DG.A (which changes no accepted store format) lands immediately rather than
+> waiting for it. So: alternative 1's *sequencing* with alternative 2's *substance*. The three
+> alternatives are kept below unedited as the options that were actually put to the human.
 
 *Added by the controller after quorum round 2. This is the decision that parks the item; OD-3 and
 OD-4 are downstream of it. It is here because it is not a design question — it is a conflict
@@ -406,7 +456,15 @@ cannot diagnose schema drift**, which is the reviewer's point and it stands.
 mutations show it cannot fail for any realistic production change, so every DDL edit until then
 ships fail-open with no gate that would notice.
 
-### OD-3 — add and enforce a `PRAGMA user_version` contract now?
+### OD-3 — ~~add and enforce a `PRAGMA user_version` contract now?~~ **RATIFIED 2026-08-03 (Mark, attended): YES — alternative 1, fail LOUD. → becomes milestone `DG.B`, still to be DESIGNED.**
+
+> The decision is settled; the design is not. This section is a decision packet — three
+> alternatives and a recommendation. It has **no acceptance criteria, no named mutations, and no
+> fixtures**, and its own recommendation text demands *"specify treatment of legacy version 0 and
+> prove fresh, supported, legacy, and future-version cases"* before ratification-class code lands.
+> None of that has been written or reviewed. **DG.B is therefore the next item's deliverable: a
+> designed, quorum-reviewed milestone for the `user_version` contract.** No executor may implement
+> `store.Open` acceptance changes from this section alone.
 
 **Question.** Should every new/current store receive a nonzero version and should
 `store.Open` fail loudly when an existing store has an unsupported or un-upgraded version?
@@ -564,3 +622,58 @@ premise, determinism), **one of which was factually wrong in its prescribed word
 logged a dead mechanism as live had it been adopted on authority. That ratio is the argument for
 running the quorum and for measuring what it prescribes.
 
+
+---
+
+## DG.A implementation verification log (iteration 43, 2026-08-03)
+
+**Conditions.** Worktree `.wt-iter43` branched from `origin/dev` @ `ef8e104`; toolchain `go1.26.4`
+(read with `go -C <dir> env GOVERSION` — plain `go env GOVERSION` is directory-sensitive under
+`GOTOOLCHAIN=auto`); `AILANG_BIN=/tmp/ailang-v0300/ailang` → `AILANG v0.30.0`; darwin/arm64.
+Executor `codex:gpt-5.6-sol` (sandboxed, cannot commit); planner `opus`; controller `claude-opus-5`.
+
+**Baseline before any edit — measured, not assumed.** `scripts/verify_go.sh` → rc=0, **10 packages
+`ok`, 0 FAIL**. Counted with a TAB-safe pattern (`^ok[[:space:]]+github`) plus a known-positive
+control, because `go test` prints `ok` + two spaces + a TAB and the obvious grep returns a plausible
+`0` (the iteration-41/42 scar).
+
+**Mutation ledger.** Executor-run, one run each, no retries, each restored byte-identically:
+
+| Mutation | Class | Expected | Observed | Restored |
+|---|---|---|---|---|
+| `MUT-JOURNAL-DDL-WIDEN` | PRODUCTION | fresh RED on journal; historical GREEN | `canonical DDL mismatch for table "journal"`; historical PASS | sha256 ✓ |
+| `MUT-EXISTING-DDL-CHANGE-REMANIFESTED` | PRODUCTION+TEST | fresh GREEN; historical RED on `store_heads` | fresh PASS; `stale historical DDL for table "store_heads"` | sha256 ✓ |
+| `MUT-HISTORICAL-FIXTURE-DROP-STORE-HEADS` | TEST probe | early missing-table RED | `historical fixture missing table "store_heads"` | sha256 ✓ |
+| `MUT-CANONICAL-MANIFEST-DERIVED` | TEST probe | GREEN — AC1's RED absent | both PASS; derivation kills the discriminator | sha256 ✓ |
+| `MUT-UPGRADE-ASSERTION-DEAD` | TEST probe | GREEN — AC2's RED absent; vet rc=0 | `MUT-5_VET_RC=0`; both PASS | sha256 ✓ |
+
+**Controller's independent reproduction of the load-bearing one.** An executor's gate verdict is a
+claim, and AC2 is the claim the whole milestone rests on, so the controller re-ran
+`MUT-EXISTING-DDL-CHANGE-REMANIFESTED` first-party rather than banking the executor's row:
+
+- fresh-store gate `TestSchemaDDLMatchesCanonicalManifest` → **PASS**
+- historical gate `TestOpenAddsJournalAndDetectsStalePreJournalDDL` → **FAIL** at `journal_test.go:870`,
+  `stale historical DDL for table "store_heads"`, printing got (2 columns) vs want (3 columns)
+- restored: sha256 of `schema.sql` and `journal_test.go` **identical to pre-mutation**, and
+  `git status --porcelain host/store/schema.sql` empty; restored baseline `ok 0.355s`.
+
+**Why that specific pair is the whole item.** It is the exact action the OLD gate invited — edit the
+DDL, then update the expectation the failure message hands you — and under the old gate that action
+turned **all 10 packages green** with the edit unapplied to every existing store (iteration 41's M4
+and M5). Under the new gate the fresh-store check goes green and the historical check **reds**. That
+asymmetry is the de-fang Mark ratified: the gate no longer invites its own bypass.
+
+**Post-implementation gate, re-run OUTSIDE the executor's sandbox** (mandatory — a
+`workspace-write` sandbox denies loopback binds, so `host/broker`, `host/daemon` and
+`cmd/ailang-worldd` results from inside it are uninformative in both directions):
+`scripts/verify_go.sh` → **rc=0, 10 packages `ok`, 0 FAIL**.
+
+**Honest scope of what this milestone establishes.** **Two** ACs are genuine production
+discriminators (AC1, AC2 — both reddened by a PRODUCTION mutation). **Three** are test-side
+discrimination probes (AC3, AC4, AC5) that prove the gate's independence, not any kernel property.
+Reporting "5/5 acceptance criteria with named REDs" would overstate the production evidence by 2.5×.
+
+**What DG.A still does NOT do.** `store.Open` continues to accept a structurally stale store and
+return `err=nil` — iteration 41's M5, unchanged and unfixed here. DG.A makes drift visible **in the
+suite before a change lands**; it makes nothing visible to an already-deployed binary. That is
+**DG.B**'s job, and DG.B is ratified but undesigned. Item 4d is **not** closed by this milestone.
