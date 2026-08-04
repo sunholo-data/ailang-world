@@ -187,8 +187,11 @@ This item makes two things mechanical:
    question R1–R6 answer — see *What these gates CANNOT fail* and `4f/OD-8`.)
 
 It deliberately does **not** re-derive the amortisation numbers (see *Out of scope*): those are
-pinned to a toolchain that parked decision **OD-1** exists to change, and banking numbers under
-an unresolved condition is precisely the defect this item exists to fix.
+pinned to a toolchain the repo has since moved off ~~that parked decision **OD-1** exists to
+change~~ (**corrected iteration 48 — OD-1 is DISCHARGED, P38**), and re-deriving them requires
+the very recorder this item is building, so the follow-up is blocked on **BC.A′ landing**, not on
+a human. Banking numbers under a condition you have not recorded is precisely the defect this
+item exists to fix.
 
 ## Premise Verification Log
 
@@ -221,7 +224,7 @@ document sat parked (Gate-2 rule 3b(vi); see the two CONTROLLER NOTEs before *De
 | P3 | CI runs the smoke gate, and it is a NAME gate, not a measurement gate | First-party read of `.github/workflows/ci.yml` (whole file) | Job `go-verify`, step `worldd benchmark smoke gate` at `ci.yml:88-89` runs `./scripts/bench_worldd.sh --smoke`. No numbers recorded, no thresholds evaluated anywhere in the workflow | CONFIRMED — read, not grepped, per the controller's F2 truncation warning |
 | P4 | CI checkouts are shallow (no `fetch-depth`) | Same read | Both jobs use bare `actions/checkout@v4` (`ci.yml:13`, `:53`) with no `fetch-depth` key | CONFIRMED — constrains the checker to in-file structure (see D3) |
 | P5 | The comparability promise and the S6 honesty line are real | First-party read of `bench/BASELINE.md:5-8` | `:5` "Later sprints diff against this file on the same development rig"; `:7-8` "Noise-gating a shared runner would be a dishonest gate (S6)" | CONFIRMED |
-| P6 | The conditions ARE recorded today, but BY HAND | First-party read of `bench/BASELINE.md:16-26` | `:18` `Go: go version go1.26.4 darwin/arm64`; `:22` `Rig load at measurement: load averages: 5.22 4.99 5.91` — prose typed by the controller, produced by nothing | CONFIRMED |
+| P6 | The conditions ARE recorded today, but BY HAND | First-party read of `bench/BASELINE.md:16-26` | ~~`:18` `Go: go version go1.26.4 darwin/arm64`~~ **STALE — SUPERSEDED BY P40 (iteration 48)**: `:18` reads **`go1.25.6`** since `f19acac`, the same commit that staled P9 and P22. `:22` `Rig load at measurement: load averages: 5.22 4.99 5.91` — **still exact** (control leg, unchanged at HEAD). **The claim this row exists to make is UNAFFECTED and is if anything strengthened**: the line is hand-typed prose produced by nothing, which is exactly why it can drift silently against the toolchain it purports to describe | SUPERSEDED IN VALUE, CONFIRMED IN CLAIM — see P40 |
 | P7 | The confound is a standing condition, live right now | `uptime; sysctl -n hw.ncpu hw.model; ps -Ao pid=,ppid=,pcpu=,comm= \| sort -k3 -rn \| head -8` at 2026-08-03 07:27 CEST | `load averages: 3.93 3.20 3.03` on 16-core Mac16,9; top consumers: **100.0%** `/var/folders/.../go-build200642988/b001/exe/solution` (pid 28606), **99.6%** `node` (pid 90462), **77.0%** `ollama` | CONFIRMED |
 | P8 | The generic temp-path binary CAN be attributed one level up, mechanically | `ps -o comm= -p 28600` (ppid of the 100%-CPU `solution` binary) | `go` — the parent comm resolves; a `go`-spawned test binary is identifiable as such without guessing which mission owns it | CONFIRMED — D1's parent-comm field is feasible |
 | P9 | Toolchain state and the floor | `go version; go env GOVERSION GOOS GOARCH; sed -n '1,5p' go.mod` | ~~`go1.26.4 darwin/arm64`; `go.mod:3` = `go 1.26.4`~~ **STALE — SUPERSEDED BY P37 (iteration 48)**: `go.mod:3` now reads **`go 1.25.6`** (landed `f19acac`, iteration 46). The rest of the row survives and is the reason the staleness is narrow: the `go` directive is a **floor** (iter-40, measured), so `go env GOVERSION` in this repo still reads **`go1.26.4`** and every *recorded* toolchain value in this design is unchanged. ~~lowering the floor is **OD-1, parked**~~ → **OD-1 DISCHARGED (P38)** | SUPERSEDED — see P37 |
@@ -254,6 +257,8 @@ document sat parked (Gate-2 rule 3b(vi); see the two CONTROLLER NOTEs before *De
 | P36 | Every utility-class invocation is sub-second on this rig, even loaded — 20 s is a ≥400× margin, and reusing the 120 s probe constant would be indefensible padding | **first-party, load 4.48 (uptime in same call):** python3 `subprocess` timing of each member: `sysctl -n vm.loadavg`/`hw.ncpu`/`hw.model` · `ps -Ao pid=,ppid=,pcpu=,comm=` · `date -u` · `git status --porcelain` · `git rev-parse HEAD`/`HEAD^`/`--git-dir` · `python3 -c` secrets nonce · `python3` hashlib SHA-256 over a 17,825,792 B file (the prebuilt-binary size class, P26) | `0.005 / 0.004 / 0.003` s · `0.044` s · `0.004` s · `0.016` s · `0.011 / 0.012 / 0.011` s · `0.042` s · `0.050` s — **worst member 0.050 s** (the 17 MB hash). One run per member on one loaded rig: a SAMPLE establishing the class's order of magnitude (tens of milliseconds), per the iter-46 spine — used only to size the deadline's species; `REC_UTIL_TIMEOUT_S=20` is an explicitly-labelled **400× engineering margin** over the worst sampled member, not a measured tail | CONFIRMED |
 | P37 | **The AC6 floor-straddle exists at HEAD and needs only ONE throwaway commit, because `go -C <dir> env GOVERSION` resolves each tree's own floor** (supersedes P9; re-measures P24's mechanism at today's HEAD) | **controller-measured (iteration 48)**, `ea5e405`, clean tree: `git worktree add --detach <repo>/../.bench-probe-iter48 HEAD` (**sibling of the repo, never `/tmp`**) → `grep '^go ' $WT/go.mod; go -C "$WT" env GOVERSION` → python3 in-place edit of the floor `1.25.6`→`1.26.5` with an `assert s2 != s` **mutation-applied control** → re-read both → `grep '^go ' go.mod; go -C "$(pwd)" env GOVERSION` in the main tree as the untouched control → `git worktree remove --force` | Control leg: floor `go 1.25.6` → **`go1.26.4`**. Mutated leg: floor `go 1.26.5` → **`go1.26.5`**. Mutation control printed `mutation applied` (an unmatched regex would have aborted, per the iter-45 spine). Main tree after: `go 1.25.6` / `go1.26.4` — **unchanged**. So HEAD is a valid AC6 *control* as-is: the fixture is `variant` = one commit raising the floor to `1.26.5`, `control` = HEAD (its parent), and the `go1.26.4` vs `go1.26.5` straddle `MUT-AB-FLOOR-SPLIT` predicts is genuine. Toolchain cache re-listed in the same session: **6 cached** (`1.24.9`, `1.25.6`, `1.26.0`, `1.26.2`, `1.26.3`, `1.26.5`) — `1.26.5` present, so no network (P24 holds); `1.26.4` is the *installed* system Go, not a cache entry | CONFIRMED |
 | P38 | `4e/OD-1` is DISCHARGED, so nothing in this item is blocked on a human toolchain decision (supersedes P22) | **controller-measured (iteration 48)**: `sed -n '1759,1762p' design_docs/world-mission.md` (charter item 4e row) · `sed -n '1,6p' go.mod` | Charter reads `**ITEM COMPLETE 2026-08-04 (iter-46) … 4e/OD-1 AND 4e/OD-2 BOTH DISCHARGED**`; `go.mod:3` = `go 1.25.6`, i.e. the floor OD-1 was *about* has already moved. The *Deferred* limb (iii) is therefore blocked on **BC.A′ existing**, not on Mark | CONFIRMED |
+| P41 | **AC6's known-positive CANNOT FIRE under the toolchain regime this repository requires, and the only straddle achievable on this rig is between two deny-listed compilers.** Five quorum rounds assumed the fixture was viable; nobody ran it | **controller-measured (iteration 48)**, prompted by the planner's DD-1 and then carried past it: (1) `for tc in go1.26.5 go1.25.6 go1.26.4; do GOTOOLCHAIN=$tc go test ./host/store/ -run TestToolchainCanary; done`; (2) a variant worktree with floor `1.26.5` and the repo as control, each read under BOTH `GOTOOLCHAIN=auto` and `GOTOOLCHAIN=go1.25.6`; (3) a `toolchain go1.24.9` / `toolchain go1.25.6` directive pair under `auto`, with a no-directive third tree as control; (4) `sed -n '35,41p' scripts/verify_go.sh` | (1) canary **FAILS on go1.26.5 AND on go1.26.4**, `ok` only on go1.25.6 — so the rig's DEFAULT toolchain reds the canary **by iteration-46 design**, and `verify_go.sh:40` deny-lists **`go1.26.0`–`go1.26.5`** entire. (2) Under `auto`: variant `go1.26.5`, control `go1.26.4` — a real straddle, **both deny-listed**. Under `GOTOOLCHAIN=go1.25.6` (the regime the gate requires and CI pins): **BOTH trees report `go1.25.6`** — `go env GOVERSION` returns the PIN, not the tree's requirement, so the straddle **silently collapses** and `MUT-AB-FLOOR-SPLIT` would come back **GREEN**: a vacuous pass in the one AC that exists to prove the probe is not vacuous. (3) The `toolchain` directive does **not** rescue it — all three trees returned `go1.26.4`, because a `toolchain` directive, like a floor, only ever forces **UPWARD**; downward selection is impossible from `go.mod` alone. The only cached toolchain above the local `go1.26.4` is `go1.26.5`, which is deny-listed, and the control is always the local toolchain — so **no deny-list-free straddle exists on this rig** | CONFIRMED — AC6 amended below; **this constrains only AC6, not the mechanism** |
+| P40 | **The stale-premise sweep, done with the instrument instead of the name-list — and the record of why the first pass found two of three** | **controller-measured (iteration 48)**, after the PLANNER refuted the controller's claim that P9/P22 were the only stale rows: `git diff --name-only c1e6125..HEAD -- ':!design_docs'` (the doc's OLDEST measurement base, which rows P1–P22 declare) with the control `git diff --name-only 61348b9..HEAD -- ':!design_docs'` (the base rows P26+ declare) · `for rev in c1e6125 61348b9 HEAD; do git show "$rev:bench/BASELINE.md" \| sed -n '18p'; done` · `git log --oneline -3 -- bench/BASELINE.md` | From `c1e6125`: **8 non-doc files changed** (`ci.yml`, `bench/BASELINE.md`, `go.mod`, four `host/store/*`, `scripts/verify_go.sh`). From `61348b9`: **ZERO** — which is precisely why sweeping from the wrong base reads as "nothing is stale". `BASELINE.md:18` = `go1.26.4` at `c1e6125`, `go1.25.6` at `61348b9` and at HEAD; `git log` puts the change in **`f19acac`** — so P6, P9 and P22 are **one drift event with three faces**, not three findings. Control leg `:22` unchanged at both revisions, so the instrument is reading real content. **Honest tally: the controller's first pass found 2 of 3, because it swept the rows iteration 47 had NAMED rather than the commit that caused them; the third was found by the planner and confirmed here.** The durable instrument is the diff from the doc's own **oldest** declared measurement base — a document with rows measured at several bases is only as fresh as its oldest one | CONFIRMED |
 | P39 | Branch A is still entirely unbuilt at HEAD — nothing from any earlier milestone shipped (re-confirms P28 at `ea5e405`) | **controller-measured (iteration 48)**: `grep -c -- "<pat>" scripts/bench_worldd.sh` for `--record-pair`, `--check-claims`, `--record ` with the **known-positive control** `--smoke` in the same call | `--record-pair` **0**, `--check-claims` **0**, `--record ` **0**, control `--smoke` **2** — the instrument sees the file, so the three zeros are measurements rather than a failed grep. Nothing to salvage, nothing to collide with | CONFIRMED |
 
 One negative expectation is stated as an expectation, not a fact: **the recorder is expected to
@@ -966,7 +971,8 @@ sha256 both sides — the iter-38/39 mutation discipline) → R6 REDs rather tha
 Scope assertions, verified at review: the implementation changes **only**
 `scripts/bench_worldd.sh`, `bench/BASELINE.md`, and `.github/workflows/ci.yml`. Untouched:
 `host/daemon/bench_test.go` and its 10-name smoke manifest, `scripts/verify_ail.sh` and its
-required-check manifest (P17), `scripts/verify_go.sh`, `go.mod` (OD-1, P22), all `.ail` files,
+required-check manifest (P17), `scripts/verify_go.sh`, `go.mod` (**untouched because this item
+selects no toolchain — the old "OD-1, parked" reason is discharged, P38**), all `.ail` files,
 `world/`, `host/` production code, `tools/launchd/*`. `--smoke` output and semantics are
 byte-compatible (CI's existing step must pass unmodified).
 
@@ -998,6 +1004,32 @@ and append it to `bench/BASELINE.md` under the AC5 backup/sha256-restore discipl
 two-commit form remains permissible and produces the same result; the one-commit form is
 recommended because it is strictly less setup for identical evidence. **The predicted RED message
 is unchanged.**
+
+> **AC6 REGIME CLAUSE — BINDING, AND MEASURED RATHER THAN ASSUMED (iteration 48, P41).** Five
+> quorum rounds accepted this fixture without anyone running it. It only works under one regime,
+> and under the repository's *own* required regime it fails **green**:
+>
+> - **The fixture session MUST be invoked with `GOTOOLCHAIN=auto` explicitly.** Under
+>   `GOTOOLCHAIN=go1.25.6` — the regime `scripts/verify_go.sh` requires and CI pins job-wide —
+>   `go env GOVERSION` returns **the pin** for every tree, both sections record `go1.25.6`, and
+>   `MUT-AB-FLOOR-SPLIT` **PASSES**. That is a vacuous known-positive in the one criterion whose
+>   entire job is to prove the probe is not vacuous, so it must be stated as a precondition of the
+>   run, not left to the invoking shell.
+> - **Both members of the only achievable straddle are deny-listed compilers** (`go1.26.4`
+>   control, `go1.26.5` variant; `verify_go.sh:40` deny-lists `go1.26.0`–`go1.26.5`), and there is
+>   no deny-list-free alternative on this rig: floors and `toolchain` directives select only
+>   UPWARD, the sole cached toolchain above the local `go1.26.4` is `go1.26.5`, and the control is
+>   always the local toolchain. **This is acceptable and must be labelled, not silently absorbed**:
+>   AC6 is a probe of *the recorder's per-tree `go -C` placement*, not a benchmark whose numbers
+>   anyone will use. The planner measured that the `go1.26.5`-built `host/daemon` bench binary
+>   still runs all ten rows `rc=0`, so the legs complete and a pair is emitted.
+> - **The emitted acceptance-fixture pair MUST NOT be appended to `bench/BASELINE.md` as a
+>   milestone baseline**, and its section label must name the deny-listed toolchains it was
+>   recorded under. It is fixture evidence for AC6 and nothing else.
+> - **The canary reds on the rig's default toolchain by design** (iteration 46). Every other
+>   command in this sprint — builds, `go test`, `verify_go.sh`, the acceptance pair — runs under
+>   `GOTOOLCHAIN=go1.25.6`. `GOTOOLCHAIN=auto` is scoped to the AC6 fixture session ALONE, and
+>   the executor must not export it globally.
 
 - **`MUT-AB-FLOOR-SPLIT`** (**EVIDENCE**, the known-positive): the pair is same-session (R4b/c/d
   genuinely satisfied) and variant-vs-parent (R4a genuinely satisfied) — and `--check-claims`
