@@ -35,6 +35,24 @@ proposed addition to `world/` or `host/` must answer, in its design doc: **"why 
 package?"** Kernel growth without that answer is the OS gravity well (DESIGN.md §12.4) — the
 named failure mode of this project.
 
+
+### S3 ledger — language split & kernel size (dated; drift must be visible)
+
+Measured per attended review (repro: `wc -l` over `world/*.ail`, `design_docs/**/*.ail`,
+non-test vs test `.go` under `host/ cmd/`). The ratified architecture (DESIGN §19 q1) expects a
+small `.ail` semantic core over a Go host, with the `.ail` share GROWING as: the MCP projection
+registry (.ail `@route` modules), policies, domain transitions, and clause-7 extension packages
+land — and as upstream Z3 encoder limits lift (ADT-record sort). A FALLING `.ail` share or a
+kernel that grows without "why is this not a package?" answers is drift against S3.
+
+| Date | `.ail` core (world/) | `.ail` checked docs | Go host (non-test) | Go tests | Note |
+|---|---|---|---|---|---|
+| 2026-08-04 | 434 | 809 | 6,773 | 10,506 | Post M1–M3+4b/4c: the Go-host build phase, as planned. All 4 core modules carry Z3-proven contracts; the broker's decision law is authored in `.ail` (7/7 verified) and transcribed to Go under a byte-verbatim drift test — AILANG is the semantic source of truth even where Go executes. Tests exceed production 1.55:1. |
+
+*Watch-item (not yet built): S3 is evaluator-scored, not machine-checked — a kernel-surface
+manifest gate (pin `world/` exports the way the required-check manifest pins contracts) would
+make kernel growth mechanically loud. Candidate hardening item when kernel churn justifies it.*
+
 ## S4 — Compiler-checked docs
 
 Every `.ail` snippet in `design_docs/` ships as a checkable file swept by the CI gate. A doc
