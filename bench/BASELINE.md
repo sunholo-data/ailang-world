@@ -432,3 +432,161 @@ rather than left as a favourable silence.
 The fixture's `INSTRUMENT FAILURE (or GOOD NEWS)` exit-1 on that outcome is why
 the CI step is `continue-on-error: true`: gating it would encode *"linux/amd64
 must be broken"* as a merge condition.
+
+## Mechanism acceptance pair — BC.B′ (`--record-pair`, one session)
+
+Mechanism acceptance run — conditioned on the recorded `goversion: go1.25.6`,
+superseded by the first amortisation re-derivation; **NOT a milestone
+performance baseline** and not to be diffed as one. It exists to demonstrate
+that the recorder emits a well-formed pair and that `--check-claims` accepts
+it. Variant `f93e40c` (this milestone), control `5ff281b` (its parent).
+
+```bench-conditions
+schema: bench-conditions/2
+role: variant
+pair_id: e3ab6242126ecbafbaddd7512078bebe28de9afe03c939bc566c3e0afdcab238
+pair_nonce: 09cead3319334d415b6ec957d4b9e466
+session_utc: 2026-08-04T18:34:25Z
+pair_variant_commit: f93e40cb6cfe1f1daa8ab822e7b80e54363582d3
+pair_control_commit: 5ff281ba9382a74cf794d66dcc78e5a8701b4b6e
+commit: f93e40cb6cfe1f1daa8ab822e7b80e54363582d3
+parent: 5ff281ba9382a74cf794d66dcc78e5a8701b4b6e
+tree: clean
+goversion: go1.25.6
+goos_goarch: darwin/arm64
+ncpu: 16
+hw_model: Mac16,9
+ailang_pin: AILANG v0.30.0 via $AILANG_BIN
+prebuild_elapsed_s: 1
+binary_sha256: c132b230530b16e220af9dd42c3b3ed46b4f8b261d52294a065403f9e33ce964
+invocation: /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/bench_worldd.session.XXXXXX.k5Q7NAQdBh/bench.variant -test.bench . -test.benchtime 200x -test.run '^$'
+leg_order: control,variant,variant,control
+leg1_seq: 2/4
+leg1_start_utc: 2026-08-04T18:34:36Z
+leg1_end_utc: 2026-08-04T18:34:44Z
+leg1_elapsed_s: 8
+leg1_load: 5.77 6.88 6.38
+leg1_competing: pcpu=142.1 pid=15822 comm=/Applications/Ollama.app/Contents/Resources/ollama parent=/Applications/Ollama.app/Contents/Resources/ollama
+leg1_competing: pcpu=99.7 pid=90462 comm=node parent=/bin/bash
+leg1_competing: pcpu=99.4 pid=28606 comm=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/go-build200642988/b001/exe/solution parent=go
+leg1_output_sha256: c077a9d1b69b05adf442149308fbe44b5b9fc33730adbb8d84f2044d096a9e3e
+leg2_seq: 3/4
+leg2_start_utc: 2026-08-04T18:34:44Z
+leg2_end_utc: 2026-08-04T18:34:52Z
+leg2_elapsed_s: 8
+leg2_load: 6.12 6.92 6.40
+leg2_competing: pcpu=145.4 pid=15822 comm=/Applications/Ollama.app/Contents/Resources/ollama parent=/Applications/Ollama.app/Contents/Resources/ollama
+leg2_competing: pcpu=100.0 pid=28606 comm=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/go-build200642988/b001/exe/solution parent=go
+leg2_competing: pcpu=99.3 pid=90462 comm=node parent=/bin/bash
+leg2_output_sha256: b55cdea28d156563617ef9e465fb2eb0b735e912c3a750a7fe5d7189df02de62
+conditions_sha256: 7a949a14517bdd2a961679338654d3c453e64fd594844a8d04262de06ccbe825
+```
+```text
+goos: darwin
+goarch: arm64
+pkg: github.com/sunholo-data/ailang-world/host/daemon
+cpu: Apple M4 Max
+BenchmarkStoreCommit-16          	     200	    929077 ns/op	         0.8563 p50_ms	         1.252 p95_ms
+BenchmarkJournalAppend-16        	     200	    809868 ns/op	         0.7975 p50_ms	         0.9162 p95_ms
+BenchmarkCommitWithReceipt-16    	     200	   1182650 ns/op	         1.152 p50_ms	         1.460 p95_ms
+BenchmarkHeadRead-16             	     200	    137367 ns/op	         0.1347 p50_ms	         0.1685 p95_ms
+BenchmarkHealth-16               	     200	     82602 ns/op	         0.07904 p50_ms	         0.1197 p95_ms
+BenchmarkRESTCommit-16           	     200	    937922 ns/op	         0.9003 p50_ms	         1.163 p95_ms
+BenchmarkLogRange/limit_100-16   	     200	   2790776 ns/op	         2.781 p50_ms	         3.332 p95_ms
+BenchmarkLogRange/limit_500-16   	     200	  13763639 ns/op	        14.06 p50_ms	        14.72 p95_ms
+BenchmarkBrokerDecide-16         	     200	       177.5 ns/op	         0.0000830 p50_ms	         0.0001250 p95_ms
+BenchmarkBrokerFSRead-16         	     200	   3707227 ns/op	         3.626 p50_ms	         4.386 p95_ms
+PASS
+```
+```text
+goos: darwin
+goarch: arm64
+pkg: github.com/sunholo-data/ailang-world/host/daemon
+cpu: Apple M4 Max
+BenchmarkStoreCommit-16          	     200	    772864 ns/op	         0.7613 p50_ms	         0.8635 p95_ms
+BenchmarkJournalAppend-16        	     200	    697015 ns/op	         0.6902 p50_ms	         0.8097 p95_ms
+BenchmarkCommitWithReceipt-16    	     200	   1079102 ns/op	         1.048 p50_ms	         1.334 p95_ms
+BenchmarkHeadRead-16             	     200	    129435 ns/op	         0.1258 p50_ms	         0.1660 p95_ms
+BenchmarkHealth-16               	     200	     78064 ns/op	         0.07721 p50_ms	         0.1037 p95_ms
+BenchmarkRESTCommit-16           	     200	    993340 ns/op	         0.9693 p50_ms	         1.192 p95_ms
+BenchmarkLogRange/limit_100-16   	     200	   2818879 ns/op	         2.790 p50_ms	         3.371 p95_ms
+BenchmarkLogRange/limit_500-16   	     200	  13681619 ns/op	        13.99 p50_ms	        14.75 p95_ms
+BenchmarkBrokerDecide-16         	     200	       175.6 ns/op	         0.0000830 p50_ms	         0.0001250 p95_ms
+BenchmarkBrokerFSRead-16         	     200	   3550005 ns/op	         3.456 p50_ms	         4.300 p95_ms
+PASS
+```
+```bench-conditions
+schema: bench-conditions/2
+role: control
+pair_id: e3ab6242126ecbafbaddd7512078bebe28de9afe03c939bc566c3e0afdcab238
+pair_nonce: 09cead3319334d415b6ec957d4b9e466
+session_utc: 2026-08-04T18:34:25Z
+pair_variant_commit: f93e40cb6cfe1f1daa8ab822e7b80e54363582d3
+pair_control_commit: 5ff281ba9382a74cf794d66dcc78e5a8701b4b6e
+commit: 5ff281ba9382a74cf794d66dcc78e5a8701b4b6e
+parent: 0b72019d4ffc839215c5bc0dab1068ac7dd98e9d
+tree: clean
+goversion: go1.25.6
+goos_goarch: darwin/arm64
+ncpu: 16
+hw_model: Mac16,9
+ailang_pin: AILANG v0.30.0 via $AILANG_BIN
+prebuild_elapsed_s: 1
+binary_sha256: 78ac85296308480920a27944e1bf56d4fadbc5eee4a0bb909463e05839f8840b
+invocation: /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/bench_worldd.session.XXXXXX.k5Q7NAQdBh/bench.control -test.bench . -test.benchtime 200x -test.run '^$'
+leg_order: control,variant,variant,control
+leg1_seq: 1/4
+leg1_start_utc: 2026-08-04T18:34:29Z
+leg1_end_utc: 2026-08-04T18:34:36Z
+leg1_elapsed_s: 7
+leg1_load: 5.48 6.85 6.36
+leg1_competing: pcpu=100.0 pid=28606 comm=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/go-build200642988/b001/exe/solution parent=go
+leg1_competing: pcpu=100.0 pid=90462 comm=node parent=/bin/bash
+leg1_competing: pcpu=32.2 pid=15822 comm=/Applications/Ollama.app/Contents/Resources/ollama parent=/Applications/Ollama.app/Contents/Resources/ollama
+leg1_output_sha256: 32d6bbf0737530a4c9d27aac4ab56e1b2a11d9ca8e83596e6daff8664d09f530
+leg2_seq: 4/4
+leg2_start_utc: 2026-08-04T18:34:52Z
+leg2_end_utc: 2026-08-04T18:34:59Z
+leg2_elapsed_s: 7
+leg2_load: 6.43 6.97 6.42
+leg2_competing: pcpu=143.5 pid=15822 comm=/Applications/Ollama.app/Contents/Resources/ollama parent=/Applications/Ollama.app/Contents/Resources/ollama
+leg2_competing: pcpu=100.0 pid=28606 comm=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/go-build200642988/b001/exe/solution parent=go
+leg2_competing: pcpu=99.7 pid=90462 comm=node parent=/bin/bash
+leg2_output_sha256: 7d316b2e06ce54712820fd2bcb4bee69d4f5a8062447ecac1cc260ac22a4be3b
+conditions_sha256: fa8f44c76e078c21b12639e3d2f481c3326a186fd1141b5e26b318d2b829d230
+```
+```text
+goos: darwin
+goarch: arm64
+pkg: github.com/sunholo-data/ailang-world/host/daemon
+cpu: Apple M4 Max
+BenchmarkStoreCommit-16          	     200	    806234 ns/op	         0.7876 p50_ms	         0.9879 p95_ms
+BenchmarkJournalAppend-16        	     200	    737991 ns/op	         0.7406 p50_ms	         0.8427 p95_ms
+BenchmarkCommitWithReceipt-16    	     200	   1009047 ns/op	         0.9845 p50_ms	         1.217 p95_ms
+BenchmarkHeadRead-16             	     200	    125598 ns/op	         0.1235 p50_ms	         0.1520 p95_ms
+BenchmarkHealth-16               	     200	     80645 ns/op	         0.07950 p50_ms	         0.1061 p95_ms
+BenchmarkRESTCommit-16           	     200	    878016 ns/op	         0.8608 p50_ms	         1.020 p95_ms
+BenchmarkLogRange/limit_100-16   	     200	   2135639 ns/op	         2.011 p50_ms	         2.546 p95_ms
+BenchmarkLogRange/limit_500-16   	     200	  11577061 ns/op	        11.65 p50_ms	        14.22 p95_ms
+BenchmarkBrokerDecide-16         	     200	       145.4 ns/op	         0.0000830 p50_ms	         0.0000840 p95_ms
+BenchmarkBrokerFSRead-16         	     200	   3499954 ns/op	         3.463 p50_ms	         4.157 p95_ms
+PASS
+```
+```text
+goos: darwin
+goarch: arm64
+pkg: github.com/sunholo-data/ailang-world/host/daemon
+cpu: Apple M4 Max
+BenchmarkStoreCommit-16          	     200	    752983 ns/op	         0.7415 p50_ms	         0.8643 p95_ms
+BenchmarkJournalAppend-16        	     200	    740239 ns/op	         0.6915 p50_ms	         0.8383 p95_ms
+BenchmarkCommitWithReceipt-16    	     200	   1058544 ns/op	         1.025 p50_ms	         1.300 p95_ms
+BenchmarkHeadRead-16             	     200	    124119 ns/op	         0.1190 p50_ms	         0.1557 p95_ms
+BenchmarkHealth-16               	     200	     82180 ns/op	         0.07979 p50_ms	         0.1098 p95_ms
+BenchmarkRESTCommit-16           	     200	    953202 ns/op	         0.9326 p50_ms	         1.085 p95_ms
+BenchmarkLogRange/limit_100-16   	     200	   2787720 ns/op	         2.783 p50_ms	         3.340 p95_ms
+BenchmarkLogRange/limit_500-16   	     200	  13428337 ns/op	        13.96 p50_ms	        15.61 p95_ms
+BenchmarkBrokerDecide-16         	     200	       173.3 ns/op	         0.0000830 p50_ms	         0.0001250 p95_ms
+BenchmarkBrokerFSRead-16         	     200	   3745194 ns/op	         3.813 p50_ms	         4.526 p95_ms
+PASS
+```
+paste-ready pair written to: /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/bench_worldd.pair.XXXXXX.d0deuyKpBr

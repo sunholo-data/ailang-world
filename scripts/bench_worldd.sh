@@ -500,7 +500,10 @@ for block in conditions:
         if len(entries) != 1 and key not in ("leg1_competing", "leg2_competing"):
             fail(f"conditions block at line {block['open'] + 1} repeats key: {key}")
             block["valid"] = False
-    one = lambda key: values[key][0] if len(values.get(key, [])) == 1 else None
+    # `values` is bound as a DEFAULT ARG, never captured from the loop variable. A bare
+    # closure late-binds: every block's `one` then reads the LAST block's fields, which
+    # silently voids every section-local rule (R4c) and REDs a genuinely valid pair.
+    one = lambda key, values=values: values[key][0] if len(values.get(key, [])) == 1 else None
     block["one"] = one
     if one("schema") != "bench-conditions/2":
         fail(f"conditions block at line {block['open'] + 1} has unsupported schema")
