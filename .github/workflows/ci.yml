@@ -49,16 +49,20 @@ jobs:
   go-verify:
     name: go host build + test gate
     runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: go1.25.6
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version: '1.25.6'
 
       - name: go version
-        run: go version
+        run: |
+          go version
+          go env GOVERSION
 
       - name: Install PINNED v0.30.0 ailang binary (replay goldens are v0.30.0-scoped)
         run: |

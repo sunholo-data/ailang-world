@@ -32,10 +32,24 @@ if ! echo "$ver" | grep -q 'v0.30.0'; then
 fi
 echo "── AILANG_BIN=$AILANG_BIN ($ver)"
 
+# This deny-list is the measured set: go1.26.0-go1.26.5 on darwin/arm64.
+# Future go1.26.6 or go1.27.x versions are not covered here; the canary in this
+# gate is the version-agnostic detector for any version that miscompiles the shape.
+ACTIVE_GO=$(go env GOVERSION)      # observe; never assign
+case "$ACTIVE_GO" in
+  go1.26.0|go1.26.1|go1.26.2|go1.26.3|go1.26.4|go1.26.5)
+    echo "verify_go.sh: FATAL: active toolchain $ACTIVE_GO miscompiles host/store/scan.go's" >&2
+    echo "  array-literal shape (see design_docs/verification/w-race-gate-blindspot/). Pin a" >&2
+    echo "  known-good toolchain, e.g. GOTOOLCHAIN=go1.25.6." >&2
+    exit 1 ;;
+esac
+
 echo "── go build ./..."
+go version
 go build ./...
 
 echo "── go test ./... -count=1"
+go version
 go test ./... -count=1
 
 echo "✓ go gate PASSED: build clean, tests pass with pinned AILANG_BIN ($ver)"
