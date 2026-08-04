@@ -1,7 +1,13 @@
 # w-race-gate-blindspot — the gate that is never run, and the compiler underneath it
 
-**Status**: INVESTIGATION COMPLETE, mechanism IDENTIFIED. Remediation **PARKED for human
-ratification** (two decisions, §Open Decisions). Clause-1. Item 4e in the charter queue.
+**Status**: **IMPLEMENTED 2026-08-04 (iteration 46) — ITEM COMPLETE.** RG.A landed via PR #36 →
+squash `f19acac`, dev CI green both jobs (SHA-addressed on the merge commit, step logs read to prove
+the `-race` leg actually ran); evaluator `sonnet` **PASS 96/100, zero blocking**. `4e/OD-1`
+DISCHARGED (floor at 1.25.6); `4e/OD-2` DISCHARGED (reproducer filed upstream as
+[`golang/go#80706`](https://github.com/golang/go/issues/80706)); `4e/OD-3` remains DECLINED as
+primary; `4e/OD-4` remains OPEN and is a cost question only. See §Implementation record.
+~~INVESTIGATION COMPLETE, mechanism IDENTIFIED. Remediation **PARKED for human
+ratification** (two decisions, §Open Decisions).~~ Clause-1. Item 4e in the charter queue.
 **Authorship**: controller-authored (iteration 40, 2026-07-30) rather than produced by
 `design-doc-creator` — see §Provenance for why, and note that the charter's iter-26 guardrail
 obligation for such a doc (a Premise Verification Log and a Conflict Surface) is discharged below.
@@ -197,9 +203,18 @@ than it appears to.
 
 ## Deferred Scope
 
-- Determining whether **linux/amd64** (what CI runs) is affected. Not determinable on this rig: no
-  Rosetta, so a cross-compiled binary cannot be executed. The cheap decisive experiment is to run the
-  fixture **in CI**; deferred to RG.A rather than guessed at.
+- ~~Determining whether **linux/amd64** (what CI runs) is affected.~~ **ANSWERED 2026-08-04
+  (iteration 46, AC6): linux/amd64 is NOT affected.** All four affected toolchains return `OK` on
+  `ubuntu-latest` (run `30872300227`, merge commit `f19acac`, step *"Measure compiler reproducer on
+  linux/amd64 (non-gating)"*), plus both known-good toolchains — so `run.sh` reports `INSTRUMENT
+  FAILURE (or GOOD NEWS): no known-affected toolchain reproduced the defect`, which on amd64 is the
+  GOOD NEWS branch. **Consequence, recorded because it cuts AGAINST this doc's own motivation
+  section**: CI was never building this repository through the miscompilation, so the historical
+  blast radius was bounded to local darwin/arm64 developer builds the whole time. The pin remains
+  correct — it is what makes the two environments agree and what stops a developer shipping from a
+  rig whose gates cannot be trusted — but the "default builds are exposed" argument was broader than
+  the evidence now supports, and that is stated rather than left as a favourable silence. Recorded
+  permanently in `bench/BASELINE.md` too: a step log nothing requires anyone to read is not a record.
 - Naming the responsible SSA pass with certainty. A lead exists; verifying it needs compiler-source
   work with no bearing on the remediation.
 - Auditing the `ailang` interpreter repository (`sunholo-data/ailang`) for the same exposure. It is a
@@ -388,3 +403,74 @@ not a smaller change than an original; it deserves the same adversarial read.
 - `design_docs/implemented/w-effect-journal.md` — CF-MJC-1 (`host/broker` `-race` cost)
 - `bench/BASELINE.md` — comparability conditions; item 4f
 - `design_docs/coding-standards.md` — S6 (honest, non-vacuous gates)
+
+---
+
+## Implementation record (RG.A — iteration 46, 2026-08-04)
+
+Landed as **PR #36 → squash `f19acac`** on `dev`, CI green on **both** jobs, SHA-addressed on the
+merge commit and the step logs read rather than the badge trusted (run `30872300227`): the `-race`
+banner appears exactly once with the plain-leg banner as its known-positive control, the
+race-detector control emits 2 `WARNING: DATA RACE` lines, 21 `ok` lines, and the single `FAIL`
+substring in the log is inside the fixture's own expected `INSTRUMENT FAILURE (or GOOD NEWS)`
+message, not a test. Evaluator `sonnet` **PASS 96/100, zero blocking**, having independently
+reproduced AC3 both legs, AC2 leg 1, AC4, `MUT-CANARY-BLIND` and `MUT-RACE-LEG-DROPPED` with its own
+sha256 proofs.
+
+Five commits, each independently green at its boundary, reconstructed by the controller from the
+executor's cumulative `.snap/M<k>/` snapshots (the codex sandbox forbids git writes) and proven
+byte-identical to the executor's final tree by `shasum -c`, 8/8 OK:
+`77ce069` (M1) · `d66e12a` (M2) · `08fdb83` (M3) · `252ab51` + `01e6a01` (controller corrections).
+
+### Acceptance criteria
+
+| AC | Verdict | Evidence |
+|---|---|---|
+| **AC1** | MET | `GOTOOLCHAIN=go1.25.6 go build ./...` rc=1 before the floor change (`go.mod requires go >= 1.26.4`), rc=0 after. Fixture re-run first-party at `7550ee9`: 1.26.0/.3/.4/.5 `BUG`, 1.25.6/1.24.9 `OK`, `-N` `OK`, `-l` `BUG`, **both controls fired** |
+| **AC2** | MET | Leg 1 (the one that proves the assertion can fail at all): default 1.26.4 env, `GOTOOLCHAIN` unset → rc=1, named FATAL, and **zero** `── go build` lines while the known-positive `── AILANG_BIN=` line fires in the same output. Leg 2: under the pin, rc=0 end-to-end |
+| **AC2b** | MET | `go version` before the control, the build and each test leg; CI additionally prints `go env GOVERSION`. Both read from the merge-commit step log as `go version go1.25.6 linux/amd64` |
+| **AC3** | MET | Canary **FAILS** under `GOTOOLCHAIN=go1.26.4` (`Field="" want "stateRoot"`), **PASSES** under `go1.25.6` — both legs run by the controller and again by the evaluator |
+| **AC4** | MET | `go test ./... -count=1 -race` rc=0, 10/10 `ok`, **zero data races**, run four times across controller and evaluator plus once in CI |
+| **AC5** | MET | Merge-commit step log read: the `-race` leg banner present once, with the plain leg present as its control |
+| **AC6** | MET | **linux/amd64 is NOT affected** — see §Deferred Scope |
+| **AC7** | MET | `bench/BASELINE.md` records the toolchain move as a condition change; no benchmark number re-measured. Item 4f owns re-derivation |
+
+### Named RED mutations
+
+All five legs applied with an asserted single-site replacement and a sha256 before/after/restored
+triple, byte-identical restore verified each time — a mutation not proven **applied** is not a
+mutation.
+
+| Mutation | Result | Note |
+|---|---|---|
+| `MUT-CANARY-BLIND` | `ok` on 1.26.4, **FAIL** on 1.25.6 | **The doc's prediction ("passes on BOTH toolchains") is REFUTED** — independently by planner, executor, controller and evaluator. The SPLIT still establishes what the mutation was for: the canary's *assertion*, not its presence, is what discriminates |
+| `MUT-PIN-REMOVED` | both legs red | **Re-pointed**: the doc targets "the `GOTOOLCHAIN` export in `verify_go.sh`", which after Decision 2's round-2 revision does not exist — the script sets nothing. Re-pointed at `go.mod`'s floor, predicted result preserved |
+| `MUT-VERSION-ASSERT-DEAD` | reaches `── go build` | Assertion's teeth removed ⇒ the gate proceeds on an affected toolchain. Production discriminator |
+| `MUT-RACE-LEG-DROPPED` A | green | Presence-only drift check, labelled as such |
+| `MUT-RACE-LEG-DROPPED` B | red, named | Dropping `-race` from the known-positive control reds the gate with *"the race detector is not armed; every 0-races result in this gate is void"*. **This is what upgrades the criterion from a drift check to a production discriminator** |
+
+### Honest tally
+
+**4 of 8** criteria are production discriminators (AC1, AC2, AC3, AC4 — AC4 only because the
+known-positive control makes it one). AC2b, AC5, AC6, AC7 are records and drift checks. The
+evaluator argued 4/8 is defensible and could be read as 3/8 under the strictest counting; it is
+recorded here at 4/8 with that dissent attached rather than silently rounded up.
+
+### What was added beyond the design
+
+The doc specified a `-race` leg. It did not specify how anyone would know the detector was armed —
+so a green `0 races` would have been unfalsifiable, which is this mission's signature defect wearing
+the remedy's clothes. `racecontrol/` is a nested module (invisible to `./...`; `go list ./...` still
+reports exactly 10 packages) holding a deliberate data race that the gate runs FIRST and aborts on
+if no `WARNING: DATA RACE` appears.
+
+### The number that would not hold still
+
+The doc says the `-race` leg costs ~179 s. Six measurements at one commit gave `host/broker` at
+69 / 76.9 / 96.6 / 120.7 / 175.3 s on darwin/arm64 and 131.8 s in CI — a **2.54x spread** at nominal
+load. The first correction replaced the single figure with "a range, 69-121 s"; the evaluator's
+first independent run measured 175.3 s and falsified it. **A range you stopped measuring at is just
+a wider single number.** `bench/BASELINE.md` therefore states the sample and its spread, says no
+upper bound is established, and derives only what follows: the leg roughly doubles the gate, and
+CI's `timeout-minutes: 25` is sized against an unknown tail with expiry routing to `4e/OD-4` rather
+than being silently raised.
