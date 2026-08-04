@@ -330,5 +330,24 @@ to post-pin measurements. Item 4f owns re-derivation (CF-K-2); no benchmark
 number was re-measured or changed here.
 
 The approximately 179-second `-race` figure carried by the item 4e design doc
-was not reproduced at `7550ee9`: the planner measured 78 seconds wall on
-darwin/arm64 under load around 4.5, with `host/broker` taking 76.9 seconds.
+was not reproduced at `7550ee9`. It is also **not replaced by a single number**,
+because four measurements on this one rig, on this one commit, disagree by
+1.75x — and a single figure quoted from any one of them would be exactly the
+kind of unre-measured claim this item exists to catch.
+
+`host/broker` dominates the `-race` leg in every run (~90-98% of its critical
+path). Measured on darwin/arm64, Go 1.25.6, `AILANG_BIN` set:
+
+| Run | `host/broker` under `-race` | Whole-gate wall |
+|---|---|---|
+| planner, whole-suite | 76.9 s | 78 s (suite only) |
+| planner, isolated re-run | 69 s | — |
+| controller, `verify_go.sh` end-to-end | 120.7 s | 196 s |
+| controller, M3 boundary re-run | 96.6 s | 166 s |
+
+So: **the honest statement is a range, 69-121 s for `host/broker`**, and the
+`-race` leg roughly doubles the gate rather than adding a fixed cost. All four
+runs were under nominal rig load (1-min average 4.0-5.1), so load does not
+explain the spread; the leg is simply variable at this scale. The CI bound
+(`timeout-minutes: 25`) is sized against the top of the range plus the unknown
+runner-architecture factor, not against the fastest observation.
