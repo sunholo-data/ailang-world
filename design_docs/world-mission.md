@@ -2063,7 +2063,15 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
 7. [PARKED until 4 AND 6b land] **w-approval-inbox** · clause-5 · the approval inbox + provenance
    walk, first as CLI/generated projection (SCENARIOS.md scenario 1/3), **built to
    HUMAN-SURFACE.md** · ~2d
-8. [PARKED until 4 lands] **w-self-mod-vertical** · clause-7 · one World extension shipped through
+8. [PARKED until 4 lands] **w-self-mod-vertical** · clause-7 · one World extension shipped through **[NAMING + FLOW, Mark 2026-08-04: World extensions publish to the PUBLIC AILANG
+   registry under the `world/` vendor namespace** (verified unclaimed 2026-08-04; explorer:
+   ailang.sunholo.com/docs/packages/explorer). The clause-7 publish is itself a BROKERED,
+   RECEIPTED effect (capability + budget + record) — World's self-modifications become public,
+   hash-verified artifacts with a full evidence chain. Local-first holds: publish is an outward
+   effect-handler interaction; consumption is version-pinned + hash-verified install; the core
+   never depends on the registry at runtime. Item-8's design doc VERIFIES publish-auth/vendor-
+   registration mechanics at pick (VERIFY-FIRST) — `ailang publish` reads ailang.toml, uploads
+   via the validation service.]**
    World's own pipeline end-to-end · ~1–2d
 9. [BACKLOG — infra, not critical-path; **SHARPENED WITH FIRST-PARTY MEASUREMENT iter-27**]
    **w-verify-binary-lockfile** · clause-1-infra · a durable
