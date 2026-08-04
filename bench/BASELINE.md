@@ -7,6 +7,39 @@ only that the harness runs and reports (`scripts/bench_worldd.sh --smoke`);
 thresholds are evaluated from the development-rig baseline. Noise-gating a
 shared runner would be a dishonest gate (S6).
 
+For every new cost claim, an A/B against the parent commit captured as one
+interleaved, single-session pair is mandatory evidence. A pair recorded this way
+is mechanically complete, contemporaneous, tamper-evident evidence for a cost
+claim. `./scripts/bench_worldd.sh --check-claims` enforces only the admissibility
+of that evidence; it does not determine whether an observed delta supports the
+claim. Establishing whether a delta is real through repetitions and noise bounds
+is deliberately out of scope here and is owned by `w-agent-floor-m4`'s
+experimental design.
+
+Create the control as a sibling worktree and record all four legs in one
+invocation (never place the worktree under `/tmp`):
+
+```sh
+git worktree add ../.bench-control HEAD^
+./scripts/bench_worldd.sh --record-pair --variant . --control ../.bench-control
+# Append the emitted pair to this file, then check it.
+./scripts/bench_worldd.sh --check-claims
+git worktree remove ../.bench-control
+```
+
+For new measurements, the machine-emitted `bench-conditions/2` conditions block
+is the only valid form of measurement conditions. Read the pair as four legs,
+without averaging: leg-adjacent comparisons are the signal, while the spread
+between the two legs of either role is that session's own noise floor. An effect
+inside that within-role spread is not resolved by the pair.
+
+Interleaving makes the roles' legs adjacent in time and alternating in order, so
+a monotonic drift in rig conditions largely cancels in the comparison. It bounds
+temporal separation, not divergence magnitude: a load episode shorter than the
+session, or one correlated with leg boundaries, neither cancels nor is detected.
+The per-leg load and process snapshots are evidence for the reader's judgment;
+nothing here gates on or bounds the load value.
+
 **All ten rows below come from one invocation.** The sprint executor's sandbox
 denies the loopback binds five of the rows need, so the executor wrote
 `<CONTROLLER-MEASURED>` into every measured cell and quoted the denied bind
@@ -95,7 +128,8 @@ a standing exceedance now in its sixth milestone, not a new one.
 **Every absolute row above is load-elevated** and must not be read as a
 regression against the idle-rig M3.C table. The headroom figures are honest for
 *this* run's conditions and are the conservative reading; the ratios and the A/B
-are the load-independent signal.
+are contemporaneous evidence whose meaning remains subject to the recorded load
+and within-role spread.
 
 ## The pure decision is below this harness's clock resolution — a bound, not a measurement
 
@@ -163,8 +197,8 @@ in-transaction receipt is paid once at the episode's commit boundary.
 analysis is a ratio between two rows, so it is only valid when both rows come
 from the same conditions. MJ.C's rows are load-elevated (see the MJ.C section),
 so substituting them here would change the arithmetic without changing the
-conclusion. Re-derive this section from a clean-rig invocation when queue item
-**4f `w-bench-load-confound`** lands a load gate.
+conclusion. Re-derive this section from a clean-rig invocation pending the first
+clean-toolchain pair recorded through `--record-pair`.
 
 - Measured receipt delta: 0.6800 − 0.4610 = **0.2190 ms** per commit (p95, run 1).
 - Measured per-effect cost: **0.7472 ms** p95 (`BenchmarkBrokerFSRead`).
@@ -219,6 +253,7 @@ existing `GetLogEntry` rather than a new range query in the kernel
 **MJ.C — the recorded all-row invocation (LOADED rig, `load averages: 5.22 4.99 5.91`).**
 These are the numbers the summary table above reports.
 
+<!-- legacy-unconditioned: pre-4f historical MJ.C measurement -->
 ```text
 goos: darwin
 goarch: arm64
@@ -242,6 +277,7 @@ ok  	github.com/sunholo-data/ailang-world/host/daemon
 `b485ead`, same loaded rig, minutes apart.** This is what establishes that MJ.C
 costs nothing; it is not a milestone baseline and must not be diffed as one.
 
+<!-- legacy-unconditioned: pre-4f historical MJ.C control -->
 ```text
 BenchmarkStoreCommit-16          	     200	    610850 ns/op	         0.4409 p50_ms	         1.022 p95_ms
 BenchmarkJournalAppend-16        	     200	    613433 ns/op	         0.6074 p50_ms	         0.9161 p95_ms
@@ -261,6 +297,7 @@ only clean-rig reference this file still holds. **They are NOT this milestone's
 measurement** — diffing the loaded MJ.C rows against them is exactly the
 fabricated 6.06× "regression" the MJ.C section documents.
 
+<!-- legacy-unconditioned: pre-4f historical M3.C measurement -->
 ```text
 BenchmarkStoreCommit-16          	     200	    399910 ns/op	         0.3980 p50_ms	         0.4610 p95_ms
 BenchmarkJournalAppend-16        	     200	    395345 ns/op	         0.3906 p50_ms	         0.4542 p95_ms

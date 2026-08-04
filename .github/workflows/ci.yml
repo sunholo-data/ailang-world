@@ -100,3 +100,24 @@ jobs:
 
       - name: worldd benchmark smoke gate
         run: ./scripts/bench_worldd.sh --smoke
+
+      - name: worldd bench claim-structure gate
+        timeout-minutes: 2
+        run: ./scripts/bench_worldd.sh --check-claims
+
+      - name: worldd bench recorder refuses off-rig
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          err="$(mktemp)"
+          if ./scripts/bench_worldd.sh --record-pair --variant . --control . 2>"$err"; then
+            printf '%s\n' 'recorder unexpectedly succeeded on the off-rig runner' >&2
+            exit 1
+          fi
+          if grep -Fq 'probe FAILED: sysctl -n hw.ncpu' "$err"; then
+            :
+          else
+            printf '%s\n' 'recorder did not refuse at the expected hw.ncpu probe' >&2
+            sed -n '1,80p' "$err" >&2
+            exit 1
+          fi
