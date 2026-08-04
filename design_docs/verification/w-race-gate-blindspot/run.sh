@@ -30,7 +30,7 @@ ran=0
 
 probe() { # $1=toolchain  $2=expectation label
 	local tc="$1" expect="$2" out rc bin
-	bin="$(mktemp -t w40repro)" || return 1
+	bin="$(mktemp "${TMPDIR:-/tmp}/w40repro.XXXXXX")" || return 1
 	if ! GOTOOLCHAIN="$tc" go build -o "$bin" . 2>/tmp/w40_build_err.txt; then
 		printf '  %-10s SKIPPED (toolchain unavailable: %s)\n' \
 			"$tc" "$(tr -d '\n' </tmp/w40_build_err.txt | cut -c1-70)"
@@ -64,7 +64,7 @@ for tc in $KNOWN_GOOD; do probe "$tc" GOOD || exit 1; done
 
 echo
 echo "-- optimization-level control on the default toolchain --"
-bin="$(mktemp -t w40reproN)"
+bin="$(mktemp "${TMPDIR:-/tmp}/w40reproN.XXXXXX")"
 if go build -gcflags='all=-N' -o "$bin" .; then
 	printf '  %-22s got: %s\n' "-gcflags=all=-N" "$("$bin" 2>&1)"
 fi

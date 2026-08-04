@@ -15,7 +15,7 @@ sandbox and replaced every row together.
 
 - Machine: Mac Studio (Mac16,9), Apple M4 Max, 16 cores (12P/4E), 128 GB RAM
 - Platform: `darwin/arm64`
-- Go: `go version go1.26.4 darwin/arm64`
+- Go: `go version go1.25.6 darwin/arm64`
 - Repository commit: the MJ.C branch (`sprint/w-effect-journal-mjc`, based on `b485ead`)
 - AILANG pin: `/tmp/ailang-v0300/ailang`, v0.30.0, commit `e37b370`
 - Invocation: `go test -bench . -benchtime 200x -run '^$' ./host/daemon/`
@@ -321,3 +321,14 @@ ok  	github.com/sunholo-data/ailang-world/host/daemon	3.433s
   commit-with-receipt row **is not**, and is recorded that way rather than
   re-targeted. The broker decision row is inside by a wide margin but is
   reported as a bound rather than a measurement.
+
+## Toolchain condition change (RG.A, item 4e)
+
+As of 2026-08-04, the repository toolchain is pinned to Go 1.25.6. Every
+number above this section was measured with Go 1.26.4 and is not comparable
+to post-pin measurements. Item 4f owns re-derivation (CF-K-2); no benchmark
+number was re-measured or changed here.
+
+The approximately 179-second `-race` figure carried by the item 4e design doc
+was not reproduced at `7550ee9`: the planner measured 78 seconds wall on
+darwin/arm64 under load around 4.5, with `host/broker` taking 76.9 seconds.

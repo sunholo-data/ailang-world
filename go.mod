@@ -1,6 +1,6 @@
 module github.com/sunholo-data/ailang-world
 
-go 1.26.4
+go 1.25.6
 
 require modernc.org/sqlite v1.54.0
 
