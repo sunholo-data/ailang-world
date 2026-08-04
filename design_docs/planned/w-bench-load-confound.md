@@ -1,6 +1,18 @@
 # w-bench-load-confound — make the benchmark baseline's comparability conditions machine-recorded, and make the single-session A/B against the parent commit the only form in which benchmark evidence enters the file ~~— the only mechanically-valid form of a cost claim~~ *(title clause SUPERSEDED, round 5: the grammar validates EVIDENCE, not claims — see `4f/OD-8`)*
 
-**Status:** **PARKED — awaiting `4f/OD-8`** (round-5 quorum, 2026-08-04, iteration 47:
+**Status:** **ROUTABLE — `4f/OD-8` ANSWERED (attended, 2026-08-04, charter commit `ea5e405`):
+EVIDENCE, NOT CLAIMS.** Mark took alternative (1) with (3) as bookkeeping — the OD-6 stamp's
+wording is amended to *"mechanically complete, contemporaneous, tamper-evident **evidence** for a
+cost claim"*, and claim VALIDATION (N≥3 paired runs, noise handling) is deliberately out of 4f's
+scope and becomes a **named requirement of `w-agent-floor-m4`'s experimental design**. Milestones
+**BC.A′/BC.B′ are ROUTABLE**; nothing in the mechanism changes. Full ratification text in the
+*Open decision for the human* section. Premise rows **P9/P22 were stale and are superseded by
+P37–P39** (controller-measured at routing time, iteration 48) — read the two CONTROLLER NOTEs
+before *Deferred* before implementing AC6.
+
+<details><summary>Superseded status text (round 5, iteration 47) — kept per the no-prescience convention</summary>
+
+~~**PARKED — awaiting `4f/OD-8`**~~ (round-5 quorum, 2026-08-04, iteration 47:
 BLOCKED, two rejects, both correct, both adopted in revision round 5 below. The second
 reject's scope limb — R1–R6 never determine whether the observed delta supports a cost claim
 — is TRUE **by ratified design** (OD-6 excluded the reviewer's third limb), but it exposes a
@@ -14,6 +26,9 @@ RATIFIED per mission convention; nothing in round 5 reopens it. The design below
 **branch-A design**: single-session interleaved `--record-pair`, pair ID, control-reuse
 rejection. ~~Milestones BC.A′/BC.B′ are routable to a planner/executor.~~ **SUPERSEDED
 (round 5): routability is suspended pending `4f/OD-8`.**
+
+</details>
+
 **Item:** `w-bench-load-confound` (queue item 4f; charter row at
 `design_docs/world-mission.md:1568`) + carry-forward **CF-K-2** (toolchain as a condition of
 comparability), which folds in here; this revision also discharges **CF-M-1** (D4's specific
@@ -193,7 +208,11 @@ first-party by this designer against the round-3 text before it was edited, and 
 controller's figures exactly. Rows **P35–P36** were added during revision round 5 (2026-08-04,
 iteration 47), both measured **first-party by this designer** — P35 against the round-4 text
 BEFORE any round-5 edit (so the absence it records is the absence the quorum rejected), P36 on
-the live rig at load 4.48.
+the live rig at load 4.48. Rows **P37–P39** were added at **routing time, iteration 48**, after
+the human ratified OD-8 — all three **controller-measured first-party** at `ea5e405` (clean tree,
+`git status --porcelain` empty, verified in the same session), each carrying its own control in
+the same call. They supersede **P9** and **P22**, which had gone stale against HEAD while this
+document sat parked (Gate-2 rule 3b(vi); see the two CONTROLLER NOTEs before *Deferred*).
 
 | # | Claim | How verified (command) | Observed | Verdict |
 |---|---|---|---|---|
@@ -205,7 +224,7 @@ the live rig at load 4.48.
 | P6 | The conditions ARE recorded today, but BY HAND | First-party read of `bench/BASELINE.md:16-26` | `:18` `Go: go version go1.26.4 darwin/arm64`; `:22` `Rig load at measurement: load averages: 5.22 4.99 5.91` — prose typed by the controller, produced by nothing | CONFIRMED |
 | P7 | The confound is a standing condition, live right now | `uptime; sysctl -n hw.ncpu hw.model; ps -Ao pid=,ppid=,pcpu=,comm= \| sort -k3 -rn \| head -8` at 2026-08-03 07:27 CEST | `load averages: 3.93 3.20 3.03` on 16-core Mac16,9; top consumers: **100.0%** `/var/folders/.../go-build200642988/b001/exe/solution` (pid 28606), **99.6%** `node` (pid 90462), **77.0%** `ollama` | CONFIRMED |
 | P8 | The generic temp-path binary CAN be attributed one level up, mechanically | `ps -o comm= -p 28600` (ppid of the 100%-CPU `solution` binary) | `go` — the parent comm resolves; a `go`-spawned test binary is identifiable as such without guessing which mission owns it | CONFIRMED — D1's parent-comm field is feasible |
-| P9 | Toolchain state and the floor | `go version; go env GOVERSION GOOS GOARCH; sed -n '1,5p' go.mod` | `go1.26.4 darwin/arm64`; `go.mod:3` = `go 1.26.4`. The `go` directive is a **floor** (iter-40, measured); only `GOTOOLCHAIN` selects exactly, and lowering the floor is **OD-1, parked** | CONFIRMED |
+| P9 | Toolchain state and the floor | `go version; go env GOVERSION GOOS GOARCH; sed -n '1,5p' go.mod` | ~~`go1.26.4 darwin/arm64`; `go.mod:3` = `go 1.26.4`~~ **STALE — SUPERSEDED BY P37 (iteration 48)**: `go.mod:3` now reads **`go 1.25.6`** (landed `f19acac`, iteration 46). The rest of the row survives and is the reason the staleness is narrow: the `go` directive is a **floor** (iter-40, measured), so `go env GOVERSION` in this repo still reads **`go1.26.4`** and every *recorded* toolchain value in this design is unchanged. ~~lowering the floor is **OD-1, parked**~~ → **OD-1 DISCHARGED (P38)** | SUPERSEDED — see P37 |
 | P10 | `benchstat` is NOT installed | `command -v benchstat; echo "rc=$?"` with same-call control `command -v go` | `rc=1`; control `/opt/homebrew/bin/go` | CONFIRMED — this design uses no benchstat |
 | P11 | The recorder's probes exist and their output shapes are known | `sysctl -n vm.loadavg` · `sysctl -n hw.model hw.ncpu` · `date -u +%Y-%m-%dT%H:%M:%SZ` | `{ 2.96 3.20 3.06 }` · `Mac16,9` / `16` · `2026-08-03T05:29:25Z` | CONFIRMED — D1 parses these exact shapes |
 | P12 | `python3` is present, and the repo already requires it loudly | `command -v python3` + first-party read of `scripts/verify_ail.sh` | `/opt/homebrew/bin/python3`; `verify_ail.sh` exits 1 with a named message when python3 is absent ("python3 is REQUIRED … fails the script LOUDLY") and states it is present on macOS dev machines and ubuntu-latest | CONFIRMED — the checker may embed python3 by precedent |
@@ -218,7 +237,7 @@ the live rig at load 4.48.
 | P19 | Baseline repo state | `git rev-parse HEAD; git status --porcelain` | `c1e6125c…`; empty status | CONFIRMED |
 | P20 | Adjacent parked docs touch the same surfaces | First-party reads: `w-race-gate-blindspot.md:139,172,184,229`; `w-mcp-projection.md:350-351` | The race doc (parked on OD-1/OD-2) flags `BASELINE.md` comparability as *"Item 4f owns the mechanism"* (`:184`) and proposes `ci.yml` Go-version/`-race` changes (`:139`, `:172`); the MCP doc explicitly *"does not rewrite `bench/BASELINE.md`"* | CONFIRMED — see Conflict Surface |
 | P21 | Both sha256 CLIs exist locally, but tool divergence is avoidable | `command -v shasum sha256sum` | `/usr/bin/shasum`, `/sbin/sha256sum` | CONFIRMED — design decision: both recorder and checker hash via **python3 `hashlib`**, so darwin/linux CLI divergence cannot enter the gate |
-| P22 | OD-1 is parked and constrains scope | **charter-cited** (`world-mission.md`, iter-40/41 status rows; controller F8) | OD-1 = lower the `go.mod` floor 1.26.4 → 1.25.6; awaiting Mark; this loop may not decide it | ACCEPTED AS CHARTER STATE |
+| P22 | OD-1 is parked and constrains scope | **charter-cited** (`world-mission.md`, iter-40/41 status rows; controller F8) | ~~OD-1 = lower the `go.mod` floor 1.26.4 → 1.25.6; awaiting Mark; this loop may not decide it~~ **STALE — SUPERSEDED BY P38 (iteration 48): `4e/OD-1` is DISCHARGED.** Mark ratified it and it landed at iteration 46 (`f19acac`). Nothing in this item is constrained by it any more; the *Deferred* limb (iii) is now blocked on BC.A′ existing, not on a human | SUPERSEDED — see P38 |
 | P23 | A bounded-execution precedent exists in-repo, and it is process-group-killing | Full first-party read of `scripts/verify_ail.sh:44-46,54-74` | `run_bounded` (V26): python3 `Popen(..., start_new_session=True)` puts the child in its own process group; on expiry `os.killpg(..., SIGKILL)` kills the WHOLE group, a named `✗ TIMEOUT after Ns: <cmd>` goes to stderr, exit **124**; deadlines are hardcoded constants (`GATE_LEG_TIMEOUT_S=120`, `GATE_TEST_TIMEOUT_S=180`), not env knobs; every binary invocation in both gate legs runs through it | CONFIRMED — D1 **mirrors this helper verbatim** rather than inventing a third form |
 | P24 | `go env GOVERSION` is directory-sensitive; the switching mechanism is live; the recorder's `-C` form works; the AC6 fixture needs no network | Temp module with a `go 1.26.5` floor: `(cd "$d" && go env GOVERSION GOTOOLCHAIN)` · same in the repo · same in module-less `/private/tmp` · `go -C "$d" env GOVERSION` · `go -C <repo> test -c ./host/daemon/` · `ls "$(go env GOMODCACHE)/golang.org"` | Temp module → **`go1.26.5`**, `GOTOOLCHAIN=auto`; repo (floor `go 1.26.4`) → **`go1.26.4`**; no-module dir → `go1.26.4`; `go -C` env form → `go1.26.5` rc=0; `go -C … test` form compiles OK; toolchains **go1.25.6 AND go1.26.5 already cached** in GOMODCACHE | CONFIRMED — reproduces the controller's measurement first-party; a caller-cwd probe records the wrong tree's toolchain, and both floors the AC6 fixture uses are cached (no download) |
 | P25 | The benchmark deadline is derivable from measurement, and 120 s would be too small | `uptime`; `time ( go test -c -o … ./host/daemon/ )` cold then warm; iteration-weighted sums computed from the recorded `BASELINE.md` rows (python3) | At load 2.87: cache-cold compile **128.85 s wall** (1.64 s user / 4.67 s system, 4% CPU — cache-cold and rig-contended); warm re-compile 0.174 s; recorded idle full-run binary time 3.433 s (`BASELINE.md:276`); loaded iteration-weighted sum **4.217 s** vs idle **1.924 s** = 2.19×; worst observed p95 inflation 6.06× (iter-39) | CONFIRMED as a measurement — but its **consequence is SUPERSEDED** by branch A: the 128.85 s belongs to a compile that A2 moves OUT of the measured window, so the single `REC_BENCH_TIMEOUT_S=600` bounded two populations with different physics. Replaced by the P27-derived structure in D1 (CF-M-2 discharged) |
@@ -233,6 +252,9 @@ the live rig at load 4.48.
 | P34 | A complete four-leg interleaved session measured a 27 s window end-to-end — a SAMPLE, not a bound | **controller-measured (iteration 47):** two prebuilt binaries (variant at `61348b9`, control at its parent `f19acac`; control-tree prebuild via `go -C`: 2 s), legs in the frozen C/V/V/C order, each `-test.bench . -test.benchtime 200x -test.run '^$'`; load averages 4.39 → 4.87 across the session | Leg walls **7, 7, 6, 7 s**; TOTAL measured window **27 s**. One session on one loaded rig at one commit pair — it establishes that a whole branch-A session's measured window is TENS OF SECONDS, which is the fact `REC_LEG_TIMEOUT_S`'s margin reasons about, and it establishes nothing about the tail (the iter-46 spine: record the sample and its spread, never an interval you assume bounds anything) | CONFIRMED |
 | P35 | The round-4 text bounded NONE of the `sysctl`/`ps`/`python3`/`git`/`date` invocations — the round-5 reject's premise is exactly right, and the "sum of its parts" sentence was false as written | **first-party, against the round-4 text before any round-5 edit:** collect every bounding-related line (`grep -nE 'run_bounded\|bounded runner\|bounded execution\|Bounded execution'` → **15** lines), then filter those lines for `sysctl\|python3\|\bgit\b\|\bps\b\|\bdate\b`; same-call known-positive control `grep -c 'sysctl'` → **20** | The filter returned exactly TWO lines — the premise rows P23/P30, which describe `verify_ail.sh`'s helper and mention python3 only as the HELPER's implementation language. **Zero** of the 15 bounding lines covers a recorder `sysctl`, `ps`, `git`, `date`, or python3 hashing/nonce invocation; the covered enumeration (round-4 D1) listed only `go env`, prebuilds, legs, `$AILANG_BIN --version`. The control (sysctl × 20) proves the instrument sees the file — the absence is real | CONFIRMED — fixed this round: every external invocation bounded, `REC_UTIL_TIMEOUT_S`, `MUT-REC-UTIL-STALL` |
 | P36 | Every utility-class invocation is sub-second on this rig, even loaded — 20 s is a ≥400× margin, and reusing the 120 s probe constant would be indefensible padding | **first-party, load 4.48 (uptime in same call):** python3 `subprocess` timing of each member: `sysctl -n vm.loadavg`/`hw.ncpu`/`hw.model` · `ps -Ao pid=,ppid=,pcpu=,comm=` · `date -u` · `git status --porcelain` · `git rev-parse HEAD`/`HEAD^`/`--git-dir` · `python3 -c` secrets nonce · `python3` hashlib SHA-256 over a 17,825,792 B file (the prebuilt-binary size class, P26) | `0.005 / 0.004 / 0.003` s · `0.044` s · `0.004` s · `0.016` s · `0.011 / 0.012 / 0.011` s · `0.042` s · `0.050` s — **worst member 0.050 s** (the 17 MB hash). One run per member on one loaded rig: a SAMPLE establishing the class's order of magnitude (tens of milliseconds), per the iter-46 spine — used only to size the deadline's species; `REC_UTIL_TIMEOUT_S=20` is an explicitly-labelled **400× engineering margin** over the worst sampled member, not a measured tail | CONFIRMED |
+| P37 | **The AC6 floor-straddle exists at HEAD and needs only ONE throwaway commit, because `go -C <dir> env GOVERSION` resolves each tree's own floor** (supersedes P9; re-measures P24's mechanism at today's HEAD) | **controller-measured (iteration 48)**, `ea5e405`, clean tree: `git worktree add --detach <repo>/../.bench-probe-iter48 HEAD` (**sibling of the repo, never `/tmp`**) → `grep '^go ' $WT/go.mod; go -C "$WT" env GOVERSION` → python3 in-place edit of the floor `1.25.6`→`1.26.5` with an `assert s2 != s` **mutation-applied control** → re-read both → `grep '^go ' go.mod; go -C "$(pwd)" env GOVERSION` in the main tree as the untouched control → `git worktree remove --force` | Control leg: floor `go 1.25.6` → **`go1.26.4`**. Mutated leg: floor `go 1.26.5` → **`go1.26.5`**. Mutation control printed `mutation applied` (an unmatched regex would have aborted, per the iter-45 spine). Main tree after: `go 1.25.6` / `go1.26.4` — **unchanged**. So HEAD is a valid AC6 *control* as-is: the fixture is `variant` = one commit raising the floor to `1.26.5`, `control` = HEAD (its parent), and the `go1.26.4` vs `go1.26.5` straddle `MUT-AB-FLOOR-SPLIT` predicts is genuine. Toolchain cache re-listed in the same session: **6 cached** (`1.24.9`, `1.25.6`, `1.26.0`, `1.26.2`, `1.26.3`, `1.26.5`) — `1.26.5` present, so no network (P24 holds); `1.26.4` is the *installed* system Go, not a cache entry | CONFIRMED |
+| P38 | `4e/OD-1` is DISCHARGED, so nothing in this item is blocked on a human toolchain decision (supersedes P22) | **controller-measured (iteration 48)**: `sed -n '1759,1762p' design_docs/world-mission.md` (charter item 4e row) · `sed -n '1,6p' go.mod` | Charter reads `**ITEM COMPLETE 2026-08-04 (iter-46) … 4e/OD-1 AND 4e/OD-2 BOTH DISCHARGED**`; `go.mod:3` = `go 1.25.6`, i.e. the floor OD-1 was *about* has already moved. The *Deferred* limb (iii) is therefore blocked on **BC.A′ existing**, not on Mark | CONFIRMED |
+| P39 | Branch A is still entirely unbuilt at HEAD — nothing from any earlier milestone shipped (re-confirms P28 at `ea5e405`) | **controller-measured (iteration 48)**: `grep -c -- "<pat>" scripts/bench_worldd.sh` for `--record-pair`, `--check-claims`, `--record ` with the **known-positive control** `--smoke` in the same call | `--record-pair` **0**, `--check-claims` **0**, `--record ` **0**, control `--smoke` **2** — the instrument sees the file, so the three zeros are measurements rather than a failed grep. Nothing to salvage, nothing to collide with | CONFIRMED |
 
 One negative expectation is stated as an expectation, not a fact: **the recorder is expected to
 refuse on ubuntu-latest** because `sysctl -n vm.loadavg` / `hw.ncpu` are BSD names absent from
@@ -582,6 +604,17 @@ threshold — is out of scope with reasons (see *Out of scope*): `BASELINE.md:7`
 noise-gating a shared runner dishonest, and a threshold gate assumes an idle rig that a
 two-mission rig does not guarantee.
 
+> **RATIFIED WORDING (`4f/OD-8`, attended 2026-08-04 — binding on the header text BC.B′ writes
+> into `BASELINE.md`).** "Mandatory" is a rule about **admissibility of evidence**, never about
+> the **validity of a claim**. The header must say, in substance: *a pair recorded this way is
+> mechanically complete, contemporaneous, tamper-evident **evidence for** a cost claim; the
+> checker enforces that evidence is admissible, and it determines nothing about whether the
+> observed delta supports the claim.* Whether a delta is real — repetitions, noise bounds — is
+> **out of scope here by ratification** and is an owned requirement of `w-agent-floor-m4`'s
+> experimental design (N≥3 paired runs + noise handling). Any phrasing of the form "the only
+> mechanically valid form of a cost claim" is **forbidden in the shipped file**; it is the exact
+> over-claim `gpt5-6-sol` blocked on across two quorum rounds and the human corrected.
+
 > ~~"…whereas the A/B is correct under any load (it is what actually caught the 6.06×
 > artefact)."~~ **SUPERSEDED (round 2 → branch A).** This was the sentence the round-2 reject
 > refuted: an *independently recorded* pair is not correct under any load — R4 compared neither
@@ -620,11 +653,16 @@ two-mission rig does not guarantee.
   gate.
 - **The A/B procedure** (added to `BASELINE.md`'s header, executed-verbatim per S7 — by the
   controller, since the executor sandbox denies the loopback binds five benchmarks need, the
-  standing `<CONTROLLER-MEASURED>` precedent): `git worktree add /tmp/bench-control HEAD^`;
-  `./scripts/bench_worldd.sh --record-pair --variant . --control /tmp/bench-control` (ONE
+  standing `<CONTROLLER-MEASURED>` precedent): `git worktree add ../.bench-control HEAD^`;
+  `./scripts/bench_worldd.sh --record-pair --variant . --control ../.bench-control` (ONE
   invocation, one session, four legs); append the emitted file; run `--check-claims`;
-  `git worktree remove /tmp/bench-control`; commit. There is no two-invocation form to fall
+  `git worktree remove ../.bench-control`; commit. There is no two-invocation form to fall
   back to — the recorder has no single-role mode (D1).
+  **PATH CORRECTED (iteration 48):** ~~`/tmp/bench-control`~~ — the shared mission-control skill
+  forbids worktrees under `/tmp`, because a `/tmp`-rooted checkout fails CWD-resolving tests for
+  its *location* and CI cannot reproduce the red. The procedure written into `BASELINE.md` is
+  executed verbatim by future readers (S7), so it must not teach the forbidden path. Use a
+  **sibling of the repo** here and in AC6.
 
 Prose in the header additionally states the policy's meaning for readers: a delta between
 invocations recorded under different conditions is **indicative only**; ~~the pair is the only
@@ -788,17 +826,22 @@ step's grep is pinned to exactly that marker.
   the per-leg load and process snapshots are evidence for the reader's judgment, and nothing
   mechanical gates on load.*
 - The three historical raw blocks (P13) each gain their `legacy-unconditioned` marker line.
-- The amortisation section's existing note gains one sentence naming the **post-OD-1 follow-up**
-  (see *Out of scope / Deferred*) instead of the current open-ended "when queue item 4f lands a
-  load gate" — this item deliberately lands **no load gate**, and the pointer must not imply one.
+- The amortisation section's existing note gains one sentence naming the **amortisation
+  re-derivation follow-up** (see *Out of scope / Deferred*) instead of the current open-ended
+  "when queue item 4f lands a load gate" — this item deliberately lands **no load gate**, and the
+  pointer must not imply one. **WORDING CORRECTED (iteration 48, P38):** the follow-up is
+  *"pending the first clean-toolchain pair recorded through `--record-pair`"* — ~~*"pending
+  OD-1"*~~, which is discharged and would be a dangling reference the day this lands.
 - One real recorder **pair** (variant at the BC.B′ merge candidate, control at its parent —
   ONE `--record-pair` session, four legs, both sections plus four raw blocks), produced by the
   controller, is appended under a section explicitly labelled: *mechanism acceptance run —
-  conditioned on go1.26.4, superseded by the first post-OD-1 measurement; NOT a milestone
-  performance baseline*. This gives deliverable (i) a real in-file instance, gives R1–R4 (all
+  conditioned on the recorded `GOVERSION`, superseded by the first amortisation re-derivation;
+  NOT a milestone performance baseline* (**label corrected, iteration 48**: it must name the
+  toolchain the run actually recorded rather than the literal `go1.26.4`, and must not cite a
+  discharged decision). This gives deliverable (i) a real in-file instance, gives R1–R4 (all
   limbs, including recomputation and interleave) a live pair to validate forever, and gives the
-  named mutations their targets — while the label keeps it from being read as banked
-  performance numbers under the unresolved OD-1 condition.
+  named mutations their targets — while the label keeps it from being read as a banked
+  performance baseline.
 
 ## Acceptance Criteria
 
@@ -930,19 +973,31 @@ byte-compatible (CI's existing step must pass unmodified).
 ### AC6 — the toolchain probe measures each measured tree, and a REAL cross-toolchain pair REDs
 
 Owned by **BC.B′** (the probe behavior it exercises lands in BC.A′). This is round-1
-objection 2's reviewer-required probe, and it runs against the exact condition OD-1 will
-create. The fixture is a **throwaway worktree pair** — the iter-40/41 measurement pattern
-(charter-cited, P22 context): the real `go.mod` is never touched, the floor edits exist only as
-never-pushed commits under `/tmp`, and the worktrees are removed afterwards.
+objection 2's reviewer-required probe. ~~it runs against the exact condition OD-1 will
+create~~ **SUPERSEDED (iteration 48): that condition EXISTS at HEAD** — `4e/OD-1` is discharged,
+the floor is `go 1.25.6`, and `go env GOVERSION` resolves to `go1.26.4` (P37/P38). The fixture is
+a **throwaway worktree pair** — the iter-40/41 measurement pattern: the real `go.mod` is never
+touched, the floor edit exists only as a never-pushed commit, and the worktrees are removed
+afterwards.
 
-Fixture: `git worktree add /tmp/bench-floorsplit HEAD` (detached), then two throwaway commits —
-**A** edits the floor to `go 1.26.5`, **B** on top of A reverts it to `go 1.26.4`; then a
-second worktree pinned at A (`git worktree add /tmp/bench-floorsplit-A <A>`, with
-`/tmp/bench-floorsplit` checked out at B). Both toolchains are already cached on this rig
-(P24), so no network is involved. Record the pair in ONE session:
-`--record-pair --variant /tmp/bench-floorsplit --control /tmp/bench-floorsplit-A` — the
-parent-edge check passes by construction (B's parent IS A) — and append it to
-`bench/BASELINE.md` under the AC5 backup/sha256-restore discipline.
+**Fixture (re-pointed at the real straddle, iteration 48 — P37).** ~~two throwaway commits, A
+raising the floor to `go 1.26.5` and B on top of A reverting it to `go 1.26.4`, in two worktrees
+under `/tmp`~~ **SUPERSEDED on two counts.** (1) **HEAD is already a valid control**, so only ONE
+throwaway commit is needed: `variant` = a detached worktree at HEAD with the floor edited to
+`go 1.26.5` and committed (never pushed); `control` = a detached worktree at **HEAD itself**,
+which is the variant's parent, so the parent-edge check passes by construction. Measured: floor
+`1.25.6` → `go1.26.4`, floor `1.26.5` → `go1.26.5` — the genuine straddle this AC needs.
+(2) **Neither worktree may live under `/tmp`** — the shared mission-control skill forbids it
+outright (a `/tmp`-rooted checkout fails CWD-resolving tests for its *location*, producing a red
+CI cannot reproduce). Place both as **siblings of the repo**, e.g.
+`<repo>/../.bench-floorsplit-variant` and `<repo>/../.bench-floorsplit-control`. Both toolchains
+are cached on this rig (P37 re-listing: 6 cached, `1.26.5` among them), so no network is
+involved. Record the pair in ONE session:
+`--record-pair --variant <…>/.bench-floorsplit-variant --control <…>/.bench-floorsplit-control`,
+and append it to `bench/BASELINE.md` under the AC5 backup/sha256-restore discipline. The
+two-commit form remains permissible and produces the same result; the one-commit form is
+recommended because it is strictly less setup for identical evidence. **The predicted RED message
+is unchanged.**
 
 - **`MUT-AB-FLOOR-SPLIT`** (**EVIDENCE**, the known-positive): the pair is same-session (R4b/c/d
   genuinely satisfied) and variant-vs-parent (R4a genuinely satisfied) — and `--check-claims`
@@ -1118,16 +1173,21 @@ against the landed harness.
   detected, nor adjudicated by a
   threshold nobody can justify. The per-leg load and process snapshots put any divergence in
   front of the reviewing human, which is where this design leaves it.
-- **(iii) — re-deriving the amortisation section** — DEFERRED, blocked on **OD-1**. The section
-  is pinned to M3.C idle-rig numbers and labelled so. Re-deriving it now would bank a fresh set
-  of numbers conditioned on go1.26.4 — a toolchain that OD-1 exists to change, on a compiler
-  release line proven to miscompile landed durability code (iter-40). **Banking numbers under an
-  unresolved condition is precisely the defect this item exists to fix**, so (iii) becomes the
-  named follow-up *"post-OD-1 amortisation re-derivation"* — first clean-rig invocation on the
-  ratified toolchain, recorded through this item's recorder, superseding the acceptance pair —
-  and not a milestone here. The D5 pointer edit writes exactly this into `BASELINE.md`.
-- **Any change to the `go.mod` floor or toolchain selection** — that **is** OD-1, parked for
-  Mark (P22). This design records `GOVERSION`; it never selects or asserts one.
+- **(iii) — re-deriving the amortisation section** — DEFERRED. ~~blocked on **OD-1**~~
+  **REASON SUPERSEDED (iteration 48, P38): OD-1 is DISCHARGED and the floor has already moved to
+  `go 1.25.6` (`f19acac`).** The deferral itself is unchanged and its new reason is stronger,
+  because it is structural rather than political: re-deriving the section means recording a
+  clean-toolchain pair **through `--record-pair`**, which BC.A′ has not built yet (P39 — zero
+  occurrences at HEAD, `--smoke` control = 2). You cannot use the mechanism in the milestone that
+  creates it. The section stays pinned to M3.C idle-rig numbers and labelled so; (iii) becomes
+  the named follow-up *"amortisation re-derivation"* — first clean invocation recorded through
+  this item's recorder, superseding the acceptance pair — and not a milestone here. The D5
+  pointer edit writes exactly this into `BASELINE.md`, in the corrected wording.
+- **Any change to the `go.mod` floor or toolchain selection** — ~~that **is** OD-1, parked for
+  Mark (P22)~~ **still out of scope, for a plainer reason now that OD-1 is discharged: this item
+  has no business selecting a toolchain.** This design *records* `GOVERSION`; it selects nothing
+  and asserts no version value. The AC6 fixture's floor edit lives only in a throwaway,
+  never-pushed worktree commit (P37) and never touches the real `go.mod`.
 - **Benchstat, statistical machinery, more samples** — P10: not installed; nothing here needs
   it; adding a pinned dependency is a separate decision with its own doc if a future item wants
   distributional comparisons.
@@ -1212,8 +1272,10 @@ The executor may not quietly change these invariants:
   change requiring review.
 - `--smoke` and its 10-name manifest are byte-compatible; `bench_test.go`, `verify_ail.sh`,
   `verify_go.sh`, `go.mod`, and all `.ail` files are untouched.
-- The acceptance pair lands with its "NOT a milestone performance baseline / superseded
-  post-OD-1" label verbatim; the executor does not present its numbers as a baseline.
+- The acceptance pair lands with its "NOT a milestone performance baseline / superseded by the
+  first amortisation re-derivation" label verbatim (**wording corrected iteration 48 — the old
+  "post-OD-1" spelling names a discharged decision, P38**); the executor does not present its
+  numbers as a baseline.
 - Every named mutation records its edited file, classification, single-run-plus-restore
   discipline, and sha256-verified restoration.
 
@@ -1310,7 +1372,7 @@ These limits are part of the design, not residual fine print:
   network. The refusal names the probe either way; the remedy is pre-caching the toolchain,
   which this rig already does for every floor on either side of OD-1 (P24).
 
-## Open decision for the human — **ANSWERED: OD-6 RATIFIED, BRANCH A**
+## Open decision for the human — **ANSWERED: OD-6 RATIFIED, BRANCH A · OD-8 RATIFIED, EVIDENCE-NOT-CLAIMS**
 
 > Numbering note (controller, iteration 42): this is **OD-6**, continuing the mission-wide
 > sequence. OD-1/OD-2 belong to `w-race-gate-blindspot` (item 4e); OD-3/OD-4/OD-5 belong to
@@ -1414,7 +1476,35 @@ rework the interface BC.A ships.
 ### OD-8 — **The ratification promises "mechanically valid cost claims". Branch A, built exactly as ratified, delivers mechanically complete, contemporaneous, tamper-evident EVIDENCE for a cost claim — not a validated one. Which did you mean?**
 
 > Controller-authored bookkeeping (iteration 47), like the OD-6 section above. It changes no
-> design text. **RAISED** 2026-08-04 at quorum round 5.
+> design text. **RAISED** 2026-08-04 at quorum round 5. **ANSWERED** 2026-08-04 (attended) — see
+> the ratification box immediately below.
+
+> **RATIFICATION (attended stamp 2026-08-04, recorded in the charter's STATUS block at
+> `design_docs/world-mission.md`, commit `ea5e405`), verbatim:**
+>
+> > **Mark resolved 4f/OD-8: EVIDENCE, NOT CLAIMS.** The OD-6 stamp's wording is amended: branch
+> > A delivers mechanically complete, contemporaneous, tamper-evident **EVIDENCE for a cost
+> > claim** — claim VALIDATION (whether the observed delta statistically supports the claim:
+> > repetitions, noise bounds) is deliberately out of 4f's scope and **folds into
+> > `w-agent-floor-m4`'s experimental design** (which must specify N≥3 paired runs + noise
+> > handling regardless; the floor's design doc gains this as a named requirement). 4f branch-A
+> > milestones BC.A′/BC.B′ → ROUTABLE.
+>
+> **This is alternative (1) with (3) as bookkeeping** — the recommendation, and the objecting
+> reviewer's own round-2 fallback. Three consequences, none of which is new design work:
+> **(i)** the OD-6 ratification's phrase *"mechanically valid cost claims"* is superseded by
+> *"mechanically complete, contemporaneous, tamper-evident evidence for a cost claim"* wherever
+> this document or the charter relies on it — the title clause was already struck at round 5, and
+> the D2 policy text must read the same way (BC.B′);
+> **(ii)** `gpt5-6-sol`'s round-5 blocking limb is **resolved by the human, not overridden by the
+> controller** — the reviewer disputed the *claim*, the human corrected the *claim*, and the
+> mechanism it disputed is unchanged. The narrow-refinement carve-out was correctly NOT used;
+> **(iii)** claim validation (N≥3 paired runs, noise handling) is now an owned, named requirement
+> of `w-agent-floor-m4`, not an unowned gap. It is **out of scope here** by ratification.
+>
+> **Everything the round-5 quorum fixed stands**: the closed-world bounding rule (P35), the
+> dimensional corrections to the skew/separation sentence, and the enumerated CANNOT-fail
+> scenarios.
 
 **How it arose.** `gpt5-6-sol` rejected the branch-A design on the same ground it rejected in
 round 2, and this time the objection landed on the *ratification's own wording* rather than on the
@@ -1490,15 +1580,51 @@ CANNOT-fail scenarios are improvements under either answer.
 > read for design soundness rather than for freshness against HEAD — so a doc parked across four
 > iterations accumulates premises that were true when written and are not true now.
 
+> **CONTROLLER NOTE (iteration 48) — THE THREE CONSEQUENCES ABOVE ARE NOW MEASURED, NOT
+> FORECAST.** The note above was written from a *reading* of HEAD; it correctly named what needed
+> re-checking and then, correctly, left the re-checking undone. Iteration 48 ran it. All commands
+> and outputs are recorded as rows **P37–P39**; the operative results:
+> **(a) — RE-JUSTIFIED, NOT VOID.** Limb (iii) is no longer blocked on OD-1 (discharged, P38), but
+> it does not therefore come into scope: it is blocked on `--record-pair` **existing**, since its
+> whole content is "record the first clean-toolchain pair *through this item's recorder*". The
+> dependency changed identity, not direction — it now points at BC.A′ landing rather than at a
+> human decision. Restated in *Deferred* below. **This is a correction of a stated reason, not a
+> change of scope.**
+> **(b) — THE STRADDLE IS REAL, AND IT MAKES AC6's FIXTURE CHEAPER, NOT DIFFERENT (P37).** Measured
+> in a throwaway sibling worktree at HEAD: floor `go 1.25.6` → `go -C <dir> env GOVERSION` =
+> **`go1.26.4`**; the same tree with the floor edited to `go 1.26.5` → **`go1.26.5`**; the main
+> tree unchanged throughout (control). So the AC6 fixture no longer needs **two** throwaway
+> commits (A raises the floor, B reverts it): **HEAD itself is a valid control**, because its own
+> floor already resolves to a different toolchain than a `go 1.26.5` child would. One commit on
+> top of HEAD (`variant`, floor → `1.26.5`), with HEAD as `control`, satisfies the parent-edge
+> check by construction and produces the same genuine `go1.26.4` vs `go1.26.5` straddle
+> `MUT-AB-FLOOR-SPLIT` requires. The two-commit form still works and remains permissible; the
+> one-commit form is the recommended simplification and it is what the executor should build.
+> The predicted RED message is unchanged.
+> **(b2) — THE FIXTURE WORKTREES MUST NOT LIVE UNDER `/tmp`.** AC6's text says
+> `git worktree add /tmp/bench-floorsplit`. The shared mission-control skill now forbids this
+> outright: a `/tmp`-rooted checkout fails tests that resolve paths against the CWD *for the
+> location rather than the code*, and CI never reproduces the red. Use a **sibling of the repo**
+> (e.g. `<repo>/../.bench-floorsplit-<n>`), as iteration 48's own probe did. This overrides the
+> path literals in AC6 and anywhere else in this document; nothing else about the fixture changes.
+> **(c) — CONFIRMED, and it is why (a)/(b) are cheap:** every *recorded* `GOVERSION` value in this
+> design is unchanged, because the `go` directive is a floor (P37's control leg).
+
 ## Deferred
 
-- **Post-OD-1 amortisation re-derivation** (item (iii)) — first clean-toolchain invocation,
-  recorded via `--record-pair` as a proper single-session pair, supersedes the acceptance pair and re-derives the
-  amortisation ratios from same-conditions rows. Blocked on **OD-1**; named in `BASELINE.md` by
-  the D5 pointer edit.
-- **`w-race-gate-blindspot` AC7 hookup** — when OD-1 resolves and the race doc's toolchain pin
-  lands, its condition-change record uses this item's mechanism (its `:184` already assigns
-  ownership here). No action in this item.
+- **Amortisation re-derivation** (item (iii)) — first clean-toolchain invocation, recorded via
+  `--record-pair` as a proper single-session pair, supersedes the acceptance pair and re-derives
+  the amortisation ratios from same-conditions rows. ~~Blocked on **OD-1**~~ **SUPERSEDED
+  (iteration 48): OD-1 is DISCHARGED** (`f19acac`, iteration 46 — P38). It remains deferred for a
+  different and stronger reason: it consumes `--record-pair`, which **BC.A′ has not built yet**
+  (P28 — zero occurrences at HEAD, `--smoke` control = 2). So it is blocked on BC.A′ landing, a
+  dependency this item creates rather than one a human must resolve. Named in `BASELINE.md` by the
+  D5 pointer edit — whose wording must say *"pending the first recorded clean-toolchain pair"*,
+  **not** *"pending OD-1"* (BC.B′).
+- **`w-race-gate-blindspot` AC7 hookup** — ~~when OD-1 resolves and~~ **the race doc's toolchain
+  pin has LANDED** (`f19acac`, iteration 46), so this hookup is unblocked on its stated condition
+  and waits only on this item's mechanism existing. Its condition-change record uses this item's
+  recorder (its `:184` already assigns ownership here). **No action in this item** — unchanged.
 
 ---
 
