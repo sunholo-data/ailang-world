@@ -416,8 +416,246 @@ else:
   printf 'paste-ready pair written to: %s\n' "$emission_file"
 }
 
+check_claims() {
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "✗ bench claim check FAILED: python3 is required" >&2
+    return 1
+  fi
+  python3 - <<'PY'
+import collections
+import datetime
+import hashlib
+import pathlib
+import re
+import sys
+
+path = pathlib.Path("bench/BASELINE.md")
+failures = []
+
+def fail(message):
+    failures.append(message)
+    print("✗ " + message, file=sys.stderr)
+
+try:
+    data = path.read_text()
+except (OSError, UnicodeError):
+    data = ""
+lines = data.splitlines()
+
+fences = []
+i = 0
+while i < len(lines):
+    match = re.match(r"^```([^`]*)$", lines[i])
+    if not match:
+        i += 1
+        continue
+    kind = match.group(1).strip()
+    close = i + 1
+    while close < len(lines) and lines[close] != "```":
+        close += 1
+    if close >= len(lines):
+        close = len(lines)
+    fences.append({"kind": kind, "open": i, "close": close,
+                   "body": lines[i + 1:close]})
+    i = close + 1
+
+raw_re = re.compile(r"^Benchmark[A-Za-z_/]+(-[0-9]+)?\s")
+raws = [f for f in fences if any(raw_re.match(line) for line in f["body"])]
+conditions = [f for f in fences if f["kind"] == "bench-conditions"]
+legacy_lines = [i for i, line in enumerate(lines)
+                if "<!-- legacy-unconditioned: pre-4f" in line]
+
+# R6: file-level null case, before every other rule.
+if not data or not raws:
+    fail("bench/BASELINE.md contains no benchmark evidence — refusing a vacuous pass")
+
+required = [
+    "schema", "role", "pair_id", "pair_nonce", "session_utc",
+    "pair_variant_commit", "pair_control_commit", "commit", "parent", "tree",
+    "goversion", "goos_goarch", "ncpu", "hw_model", "ailang_pin",
+    "prebuild_elapsed_s", "binary_sha256", "invocation", "leg_order",
+]
+for leg in (1, 2):
+    required.extend(f"leg{leg}_{suffix}" for suffix in
+                    ("seq", "start_utc", "end_utc", "elapsed_s", "load",
+                     "competing", "output_sha256"))
+required.append("conditions_sha256")
+
+for block in conditions:
+    block["values"] = collections.defaultdict(list)
+    block["valid"] = True
+    for line in block["body"]:
+        match = re.match(r"^([a-z][a-z0-9_]*):(?: (.*))?$", line)
+        if not match:
+            fail(f"conditions block at line {block['open'] + 1} contains an unparseable line")
+            block["valid"] = False
+            continue
+        block["values"][match.group(1)].append(match.group(2) or "")
+    values = block["values"]
+    for key in required:
+        if key not in values or not any(values[key]):
+            fail(f"conditions block at line {block['open'] + 1} is missing required key: {key}")
+            block["valid"] = False
+    for key, entries in values.items():
+        if len(entries) != 1 and key not in ("leg1_competing", "leg2_competing"):
+            fail(f"conditions block at line {block['open'] + 1} repeats key: {key}")
+            block["valid"] = False
+    # `values` is bound as a DEFAULT ARG, never captured from the loop variable. A bare
+    # closure late-binds: every block's `one` then reads the LAST block's fields, which
+    # silently voids every section-local rule (R4c) and REDs a genuinely valid pair.
+    one = lambda key, values=values: values[key][0] if len(values.get(key, [])) == 1 else None
+    block["one"] = one
+    if one("schema") != "bench-conditions/2":
+        fail(f"conditions block at line {block['open'] + 1} has unsupported schema")
+        block["valid"] = False
+    if one("tree") != "clean":
+        fail(f"conditions block at line {block['open'] + 1} does not declare a clean tree")
+        block["valid"] = False
+    digest = one("conditions_sha256")
+    hash_lines = [line for line in block["body"]
+                  if not line.startswith("conditions_sha256:")]
+    actual = hashlib.sha256(("\n".join(hash_lines) + "\n").encode()).hexdigest()
+    if digest is None or digest != actual:
+        fail(f"conditions block at line {block['open'] + 1} has an invalid conditions_sha256")
+        block["valid"] = False
+    invocation = one("invocation") or ""
+    invocation_re = re.compile(
+        r"^\S+\s+-test\.bench\s+\S+\s+-test\.benchtime\s+\S+\s+-test\.run\s+\S+$")
+    if not invocation_re.match(invocation) or re.search(r"(^|\s)go(?:\s|$)", invocation):
+        fail(f"conditions block at line {block['open'] + 1}: invocation is not a prebuilt-binary invocation")
+        block["valid"] = False
+
+# R2: ownership is structural, but only a valid conditions block can authorize numbers.
+owned = {}
+for block in conditions:
+    following = [f for f in fences if f["open"] > block["close"]]
+    legs = []
+    if following and following[0]["kind"] == "text" and following[0]["open"] - block["close"] <= 5:
+        legs.append(following[0])
+        if len(following) > 1 and following[1]["kind"] == "text":
+            legs.append(following[1])
+    block["legs"] = legs
+    if len(legs) != 2:
+        fail(f"conditions block at line {block['open'] + 1} does not own exactly two leg outputs")
+        block["valid"] = False
+    elif block["valid"]:
+        for leg in legs:
+            owned[leg["open"]] = block
+
+for raw in raws:
+    legacy = any(raw["open"] - 3 <= marker < raw["open"] for marker in legacy_lines)
+    if raw["open"] not in owned and not legacy:
+        # Planner-supplied message (PD-6), not quoted from the design doc.
+        fail(f"raw benchmark block at line {raw['open'] + 1} is orphaned — no valid conditions block or legacy marker")
+
+# R3: bind each available leg output, even if another R1 limb already failed.
+for block in conditions:
+    for number, leg in enumerate(block.get("legs", []), 1):
+        recorded = block["one"](f"leg{number}_output_sha256")
+        payload = ("\n".join(leg["body"]).rstrip("\n") + "\n").encode()
+        if recorded is None or recorded != hashlib.sha256(payload).hexdigest():
+            # Planner-supplied message (PD-6), not quoted from the design doc.
+            fail(f"conditions block at line {block['open'] + 1} leg {number} output hash mismatch")
+
+# R4c: section-local derivation and endpoint binding, before grouping.
+for block in conditions:
+    one = block["one"]
+    fields = [one(name) for name in ("session_utc", "pair_variant_commit",
+                                     "pair_control_commit", "pair_nonce")]
+    pair_id = one("pair_id")
+    if pair_id is not None and all(value is not None for value in fields):
+        canonical = "bench-pair/2\n" + "\n".join(fields) + "\n"
+        if pair_id != hashlib.sha256(canonical.encode()).hexdigest():
+            fail(f"conditions block at line {block['open'] + 1}: pair_id does not derive from recorded session fields")
+    role = one("role")
+    bound = ((role == "variant" and one("commit") == one("pair_variant_commit")
+              and one("parent") == one("pair_control_commit")) or
+             (role == "control" and one("commit") == one("pair_control_commit")))
+    if role is not None and not bound:
+        fail(f"conditions block at line {block['open'] + 1}: pair endpoints do not bind this section's own commits")
+
+# R4d: grouping by pair_id is a rule step, including the unpairable null case.
+groups = collections.defaultdict(list)
+for block in conditions:
+    pair_id = block["one"]("pair_id")
+    if pair_id is None:
+        fail(f"conditions block at line {block['open'] + 1}: unpairable conditions block — no counterpart shares its pair_id")
+    else:
+        groups[pair_id].append(block)
+
+pairs = []
+for members in groups.values():
+    roles = [member["one"]("role") for member in members]
+    if len(members) == 1:
+        fail(f"conditions block at line {members[0]['open'] + 1}: unpairable conditions block — no counterpart shares its pair_id")
+    elif len(members) != 2 or sorted(roles) != ["control", "variant"]:
+        fail("control reused across pairs / duplicated pair member")
+    else:
+        pairs.append({member["one"]("role"): member for member in members})
+
+def parse_time(value):
+    try:
+        return datetime.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (AttributeError, ValueError):
+        return None
+
+# R4a/R4b/R4e/R4f, only after a well-formed pair exists.
+for pair in pairs:
+    variant, control = pair["variant"], pair["control"]
+    vo, co = variant["one"], control["one"]
+    if co("commit") != vo("parent"):
+        fail("A/B pair is not variant-vs-parent")
+    identity = ("pair_id", "session_utc", "pair_nonce", "pair_variant_commit",
+                "pair_control_commit", "leg_order")
+    if any(vo(key) != co(key) for key in identity):
+        fail("pair identity mismatch — sections are not from one session")
+    if any(vo(key) != co(key) for key in ("goversion", "goos_goarch", "ncpu", "hw_model")):
+        fail("toolchain mismatch inside claimed A/B pair")
+    interleaved = vo("leg_order") == co("leg_order") == "control,variant,variant,control"
+    expected_seq = {"control": ("1/4", "4/4"), "variant": ("2/4", "3/4")}
+    events = []
+    for role, block in (("control", control), ("variant", variant)):
+        one = block["one"]
+        if (one("leg1_seq"), one("leg2_seq")) != expected_seq[role]:
+            interleaved = False
+        for leg in (1, 2):
+            seq = one(f"leg{leg}_seq")
+            start = parse_time(one(f"leg{leg}_start_utc"))
+            end = parse_time(one(f"leg{leg}_end_utc"))
+            if not seq or not start or not end or end < start:
+                interleaved = False
+            else:
+                try:
+                    events.append((int(seq.split("/", 1)[0]), start))
+                except ValueError:
+                    interleaved = False
+    events.sort()
+    if len(events) != 4 or [seq for seq, _ in events] != [1, 2, 3, 4] or any(
+            events[n][1] >= events[n + 1][1] for n in range(3)):
+        interleaved = False
+    if not interleaved:
+        fail("legs not interleaved — control legs are not outermost")
+
+# R5: the legacy pin is exact in both directions.
+if len(legacy_lines) != 3:
+    fail(f"expected exactly 3 legacy markers, found {len(legacy_lines)}")
+
+print(f"checked: {len(raws)} raw benchmark blocks, {len(conditions)} conditions blocks, "
+      f"{len(pairs)} well-formed pairs, {len(legacy_lines)} legacy markers")
+if failures:
+    print(f"✗ worldd bench claim-structure gate FAILED: {len(failures)} violation(s)", file=sys.stderr)
+    sys.exit(1)
+print("✓ worldd bench claim-structure gate PASSED")
+PY
+}
+
 if [ "$#" -ge 1 ] && [ "$1" = "--record-pair" ]; then
   record_pair "$@"
+  exit $?
+fi
+
+if [ "$#" -eq 1 ] && [ "$1" = "--check-claims" ]; then
+  check_claims
   exit $?
 fi
 
