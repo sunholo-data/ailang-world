@@ -102,6 +102,9 @@ record_pair() {
     return 1
   fi
   probe_capture "$REC_PROBE_TIMEOUT_S" "AILANG_BIN --version" ailang_version "$AILANG_BIN" --version || return 1
+  # Schema is ONE line (doc D1). `ailang --version` prints a banner; keep only the
+  # version line so a line-oriented parser cannot mistake the banner for extra keys.
+  ailang_version="$(printf '%s' "$ailang_version" | head -1)"
 
   local session_utc pair_nonce
   probe_capture "$REC_UTIL_TIMEOUT_S" "date -u (session stamp)" session_utc date -u +%Y-%m-%dT%H:%M:%SZ || return 1
@@ -112,7 +115,7 @@ record_pair() {
   fi
 
   local variant_go control_go
-  if GOTOOLCHAIN=go1.25.6 run_bounded "$REC_PROBE_TIMEOUT_S" "$record_tmp" go -C "$variant_dir" env GOVERSION GOOS GOARCH; then
+  if run_bounded "$REC_PROBE_TIMEOUT_S" "$record_tmp" go -C "$variant_dir" env GOVERSION GOOS GOARCH; then
     variant_go="$(<"$record_tmp")"
   else
     rc=$?
@@ -123,7 +126,7 @@ record_pair() {
     echo "✗ tree probe FAILED: go -C $variant_dir env GOVERSION GOOS GOARCH" >&2
     return 1
   fi
-  if GOTOOLCHAIN=go1.25.6 run_bounded "$REC_PROBE_TIMEOUT_S" "$record_tmp" go -C "$control_dir" env GOVERSION GOOS GOARCH; then
+  if run_bounded "$REC_PROBE_TIMEOUT_S" "$record_tmp" go -C "$control_dir" env GOVERSION GOOS GOARCH; then
     control_go="$(<"$record_tmp")"
   else
     rc=$?
@@ -214,7 +217,7 @@ record_pair() {
     if [ "$role" = variant ]; then dir="$variant_dir"; else dir="$control_dir"; fi
     binary_file="$session_dir/bench.$role"
     probe_capture "$REC_UTIL_TIMEOUT_S" "date +%s (prebuild $role start)" started_s date +%s || return 1
-    if GOTOOLCHAIN=go1.25.6 run_bounded "$REC_PREBUILD_TIMEOUT_S" "$session_dir/prebuild.$role.out" \
+    if run_bounded "$REC_PREBUILD_TIMEOUT_S" "$session_dir/prebuild.$role.out" \
       go -C "$dir" test -c -o "$binary_file" ./host/daemon/; then
       :
     else
