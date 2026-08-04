@@ -15,7 +15,7 @@ sandbox and replaced every row together.
 
 - Machine: Mac Studio (Mac16,9), Apple M4 Max, 16 cores (12P/4E), 128 GB RAM
 - Platform: `darwin/arm64`
-- Go: `go version go1.26.4 darwin/arm64`
+- Go: `go version go1.25.6 darwin/arm64`
 - Repository commit: the MJ.C branch (`sprint/w-effect-journal-mjc`, based on `b485ead`)
 - AILANG pin: `/tmp/ailang-v0300/ailang`, v0.30.0, commit `e37b370`
 - Invocation: `go test -bench . -benchtime 200x -run '^$' ./host/daemon/`
@@ -321,3 +321,77 @@ ok  	github.com/sunholo-data/ailang-world/host/daemon	3.433s
   commit-with-receipt row **is not**, and is recorded that way rather than
   re-targeted. The broker decision row is inside by a wide margin but is
   reported as a bound rather than a measurement.
+
+## Toolchain condition change (RG.A, item 4e)
+
+As of 2026-08-04, the repository toolchain is pinned to Go 1.25.6. Every
+number above this section was measured with Go 1.26.4 and is not comparable
+to post-pin measurements. Item 4f owns re-derivation (CF-K-2); no benchmark
+number was re-measured or changed here.
+
+The approximately 179-second `-race` figure carried by the item 4e design doc
+was not reproduced at `7550ee9` — and it is **not replaced by a number, or by a
+range**. `host/broker` dominates the `-race` leg in every run (~90-98% of its
+critical path) and its cost is simply not stable:
+
+| Run | `host/broker` under `-race` | Whole-gate wall | Platform |
+|---|---|---|---|
+| planner, whole-suite | 76.9 s | 78 s (suite only) | darwin/arm64 |
+| planner, isolated re-run | 69 s | — | darwin/arm64 |
+| controller, `verify_go.sh` end-to-end | 120.7 s | 196 s | darwin/arm64 |
+| controller, M3 boundary re-run | 96.6 s | 166 s | darwin/arm64 |
+| evaluator, independent re-run | 175.3 s | — | darwin/arm64 |
+| CI, PR #36 | 131.8 s | 338 s (job) | linux/amd64 |
+
+**Six measurements, one commit, 69-175 s on one platform — a 2.54x spread**, all
+under nominal rig load (1-min average 4.0-5.1), so load does not explain it.
+
+Read the history of this paragraph, because it is the point. It first carried a
+single figure (78 s) taken from one run. That was corrected to "the honest
+statement is a range, 69-121 s" — which the evaluator then falsified on its
+first independent run, at 175.3 s. **A range you stopped measuring at is just a
+wider single number**, and the second version repeated the first version's defect
+one level up: an interval quoted as though it bounded something, when all it
+bounded was the sample. So this file now states the sample, its spread, and the
+fact that no upper bound has been established.
+
+Consequences that follow from that, rather than from any one figure:
+
+- The `-race` leg roughly **doubles** the gate; it does not add a fixed cost.
+- CI's `timeout-minutes: 25` is deliberately far above every observation, because
+  the distribution's tail is unknown. Expiry is a **RED** whose number routes to
+  `4e/OD-4` (make `maxRecoveryPages` injectable) — never a silently raised ceiling.
+- Any future "the `-race` leg costs X" claim needs its own re-measurement. Item 4f
+  owns re-derivation of the numbers above this section (`CF-K-2`).
+
+## linux/amd64 is NOT affected (AC6, measured 2026-08-04)
+
+The design doc deferred one question it could not answer on this rig: the
+miscompilation is demonstrated on **darwin/arm64**, and CI runs **linux/amd64**,
+for which exposure was UNDETERMINED (no Rosetta here, so a cross-compiled binary
+cannot be executed locally). AC6 settles it by running the fixture in CI.
+
+Measured in PR #36's `go-verify` job, run `30871069962`, step *"Measure compiler
+reproducer on linux/amd64 (non-gating)"*:
+
+```
+go1.26.0   expect=BAD   got: OK (rc=0)
+go1.26.3   expect=BAD   got: OK (rc=0)
+go1.26.4   expect=BAD   got: OK (rc=0)
+go1.26.5   expect=BAD   got: OK (rc=0)
+go1.25.6   expect=GOOD  got: OK (rc=0)
+go1.24.9   expect=GOOD  got: OK (rc=0)
+INSTRUMENT FAILURE (or GOOD NEWS): no known-affected toolchain reproduced the
+```
+
+**No affected toolchain reproduces the defect on linux/amd64.** So this
+repository's CI was never building through the miscompilation; the exposure was
+bounded to local darwin/arm64 developer builds the whole time. The pin is still
+correct — it is what makes the two environments agree, and what stops a developer
+shipping from a rig the gate cannot trust — but the historical blast radius is
+smaller than the doc's motivation section assumed, and that is recorded here
+rather than left as a favourable silence.
+
+The fixture's `INSTRUMENT FAILURE (or GOOD NEWS)` exit-1 on that outcome is why
+the CI step is `continue-on-error: true`: gating it would encode *"linux/amd64
+must be broken"* as a merge condition.

@@ -49,16 +49,20 @@ jobs:
   go-verify:
     name: go host build + test gate
     runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: go1.25.6
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: go.mod
+          go-version: '1.25.6'
 
       - name: go version
-        run: go version
+        run: |
+          go version
+          go env GOVERSION
 
       - name: Install PINNED v0.30.0 ailang binary (replay goldens are v0.30.0-scoped)
         run: |
@@ -83,7 +87,16 @@ jobs:
           echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
 
       - name: go build + test gate (replay tests run against pinned AILANG_BIN)
+        # Expiry is RED; route an overrun to 4e/OD-4, never silently raise this ceiling.
+        timeout-minutes: 25
         run: ./scripts/verify_go.sh
+
+      # run.sh exits 1 when no affected toolchain reproduces, which is the good
+      # "linux/amd64 is clean" outcome; this records evidence and is not a gate.
+      - name: Measure compiler reproducer on linux/amd64 (non-gating)
+        continue-on-error: true
+        timeout-minutes: 15
+        run: ./design_docs/verification/w-race-gate-blindspot/run.sh
 
       - name: worldd benchmark smoke gate
         run: ./scripts/bench_worldd.sh --smoke
