@@ -2,54 +2,40 @@
 
 *Snapshot, overwritten every Gate 4. History lives in `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-05, iteration 51 · dev @ `269f1fe` · CI green both jobs (SHA-addressed)
+**As of** 2026-08-05, iteration 52 · dev @ `c0ca1df` · CI green both jobs (SHA-addressed)
 
 ## In flight
 
-- **Item 8 `w-self-mod-vertical` — DOC LANDED, not yet sprint-planned.** PR #40 → `269f1fe`,
-  839 lines, designer `codex:gpt-5.6-sol`. Milestones **SM.A–SM.D**, **4–5 d**. `[NEXT]` is its
-  sprint-planner run, gated on nothing. **SM.A–SM.C routable today**; only SM.D waits on `8/OD-1`.
-- **Planner prices these two first** (carried, not cleared — round 2 had one reviewer, round 3 was
-  the carve-out): the design needs a `schema.sql` change, and the landed `w-ddl-gate-teeth` DDL gate
-  reds on *any* schema edit **by design**, so its fixture update belongs in the same milestone; and
-  whether 4–5 d is one queue item or splits at SM.B.
-- **Item 5 `w-mcp-projection` — still BLOCKED** on one prerequisite: the transition registry is
-  absent at HEAD (measured iter-50, control fired). Unchanged this iteration.
+- **Item 8 `w-self-mod-vertical` — SPRINT-PLANNED** (plan + handoff in `.ailang/state/sprints/`,
+  gitignored as all 18 prior sprint artifacts are; planner `opus`). **Re-scoped 4 → 6 milestones**:
+  `SM.A · SM.B1 · SM.B2a · SM.B2b · SM.C · SM.D`. Stays **one queue item** — the split is internal.
+- **`[NEXT]` is `SM.A`** — package projection, drift/export/tar gate, smoke, boundary guard.
+  Gated on nothing, no kernel touch, ~620 LOC. It builds the ready packet `8/OD-1` authorizes.
+- **Item 5 `w-mcp-projection` — still BLOCKED** on one prerequisite (transition registry absent at
+  HEAD, measured iter-50, control fired). Unchanged this iteration.
 
 ## Latest
 
-- Iter-51 headline: the item's binding VERIFY-FIRST clause returned a fact that **reframes it**.
-  There is no vendor namespace to claim — `registry-validator/main.go:177` says
-  `// Step 5: Namespace auth — deferred (accept all publishers for now)` — and a live 4-arm dry-run
-  accepts `world/`, `someoneelse/` **and `sunholo/`** alike, against a firing control. *`world/` is
-  a string World writes, not a namespace World holds.* Publish is immutable, unrecallable by the
-  publisher, and the key is **ambient in this loop's shells**.
-- Quorum blocked twice. Round 1's defect was **mine**: I appended an `approve.go` evidence row after
-  the body was written, so the doc's evidence contradicted its own design *by construction*.
-  Round 3's carve-out ran the reviewer's own prescribed check and the answer was neither
-  right-nor-wrong — the metadata path is a GCS **bucket key**, not a validator route. A bare 404
-  there re-authorizes an irreversible POST, so absence now needs a same-pass known-positive control.
+- **Mark approved the `world/` publish** (`#32`, 08:25). `8/OD-1` **RATIFIED as policy** — but not
+  the exact-bytes stamp SM.D describes, and it cannot be: the packet doesn't exist until SM.A
+  builds it. **An authorization is not an attendance.** SM.D stays attended-only, never in CI.
+- **The planner refuted the design's central reuse claim.** Decision 3's "extract v0.30.0
+  package-hashing logic" is **impossible** — it lives in upstream's `internal/pkg/` and World is a
+  different module. `AC6` needs a re-implementation (`host/pkgproj`) + a 24-char cross-check.
+  The doc cited that path three times *as evidence for* the plan the path forbids.
+- **`DD-3`**: bumping the schema version makes `store.go:354`'s bare `return nil` reachable — a v1
+  store would open fine and **never run `schemaSQL`**. Answered from ratified text, non-blocking.
+- **DDL blast radius ~3× the doc's Conflict Surface** (second fixture in `journal_test.go`,
+  `frozenFutureSchemaVersion = 2` collision, literal `PRAGMA user_version = 1`) — all into SM.B1's
+  single commit. **5 ACs judged vacuous and replaced**; 36 mutations total.
 
-## Loop
+## Loop · cost · asks
 
-- Cadence: launchd, `mission-world`. Controller `claude-opus-5`.
-- Routing: designer rotation advanced slot 1 → **slot 2 `codex:gpt-5.6-sol`** (pointer written back;
-  next new-doc iteration returns to `claude:claude-fable-5`). Executor `codex:gpt-5.6-sol` ·
-  evaluator `sonnet` · planner `opus`. Planner/executor/evaluator **not fired** — a design
-  iteration has no implementation to judge.
-- Verify profile `ailang-code`; AILANG pinned **v0.30.0** at `/tmp/ailang-v0300/ailang`
-  (`e9746fef…`); upstream source read only at `e37b370d…`.
-- Bookkeeping issue **#32** (week of 2026-08-03).
-
-## Cost
-
-- Iteration 51 **`metered≈$0.96`** against the $5 ceiling: quorum **$0.140** measured exactly
-  (r1 $0.103 + r2 $0.037), codex designer **≈$0.82 ESTIMATED** — the CLI reports tokens
-  (525k in / 15.5k out, then 40.9k) and **not dollars**, so that half of the ledger is an estimate
-  wearing a number. Controller on the opus quota bucket.
-
-## Parked on Mark
-
-- **`8/OD-1`** — attended stamp authorizing the **irreversible first public publish** of
-  `world/core@0.1.0`. Controller default: **do not publish**; the loop stops at
-  `READY_AWAITING_HUMAN_PUBLISH`. Blocks **SM.D only**. Next free OD number: **`OD-9`**.
+- launchd `mission-world`; controller `claude-opus-5`. Planner **`opus`** (lane
+  `opus fail-closed:env-pin`, verbatim). Designer/executor/evaluator **not fired** — a planning
+  iteration has nothing to execute or judge; designer rotation stays `codex:gpt-5.6-sol`.
+- Verify profile `ailang-code`; AILANG pinned **v0.30.0** at `/tmp/ailang-v0300/ailang`; upstream
+  read only at `e37b370d…`. Bookkeeping issue **#32** (week of 2026-08-03).
+- **`metered=$0.00`** vs the $5 ceiling — all roles on quota buckets. First planning iter at zero.
+- **Parked on Mark: NONE.** `8/OD-1` answered today; `8/OD-3` from ratified charter text; `8/OD-2`
+  (upstream namespace auth) open but **non-blocking by design**. Next free OD: **`OD-9`**.
