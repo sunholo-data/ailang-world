@@ -220,4 +220,7 @@ if n != EXACT_TOTAL_TESTS:
 print("   ✓ all %d required named tests pass (failed_tests=0)" % EXACT_TOTAL_TESTS)
 PY
 
+echo "── Leg 3: world package nine-step gate"
+./scripts/verify_world_package.sh || exit $?
+
 echo "✓ verify gate PASSED: 4 required identities verified, 14 named tests pass"

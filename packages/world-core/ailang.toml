@@ -1,0 +1,13 @@
+[package]
+name = "world/core"
+version = "0.1.0"
+edition = "1"
+ailang = ">=0.30.0"
+module_prefix = "world"
+description = "AILANG World's pure semantic core"
+
+[exports]
+modules = ["world/types", "world/contracts", "world/transitions", "world/logepoch"]
+
+[effects]
+max = []
