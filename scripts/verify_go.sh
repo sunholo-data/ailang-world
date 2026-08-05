@@ -32,6 +32,42 @@ if ! echo "$ver" | grep -q 'v0.30.0'; then
 fi
 echo "── AILANG_BIN=$AILANG_BIN ($ver)"
 
+echo "── tracked-binary hygiene gate"
+# SM.A (squash 13315da) committed a 15.7 MB compiled darwin/arm64 `ailang-worldd`
+# Mach-O into the repository root. It passed the codex executor, a sonnet evaluator
+# scoring 87/100 with zero blocking findings, the controller's four-gate re-run and
+# both CI jobs — because nothing anywhere looked. Compiled artifacts are permanent
+# git bloat, are platform-specific in a repo whose whole thesis is byte-exact
+# reproducibility, and silently dirty the shared checkout the moment anyone rebuilds
+# (which changes controller behaviour at Gate 0, while Principle 0 forbids stashing).
+#
+# The detector is git's OWN binary classification: `git diff --numstat` prints `-`
+# for both the add and delete counts of any blob it considers binary. That is
+# portable between darwin and the ubuntu runner in a way `file(1)`'s wording
+# ("Mach-O" vs "ELF") is not, and it needs no allowlist — measured at 0eb58f5,
+# exactly one of 142 tracked files was binary, and it was the stray artifact.
+#
+# NON-VACUITY (rule 3a): an enumeration that returns nothing is indistinguishable
+# from a clean repo — same silence, same exit path. So the TOTAL file count is
+# asserted non-zero in the SAME call, before the binary count is believed. A
+# detector that can see nothing fails loudly instead of passing quietly.
+empty_tree=$(git hash-object -t tree /dev/null)
+binary_numstat="$(git diff --numstat "$empty_tree" HEAD)"
+tracked_total=$(printf '%s\n' "$binary_numstat" | grep -c . || true)
+if [ "$tracked_total" -eq 0 ]; then
+  echo "verify_go.sh: FATAL: the tracked-binary detector enumerated 0 files; the instrument" >&2
+  echo "  is broken, so every 'no binaries' result it reports is void." >&2
+  exit 1
+fi
+tracked_binaries="$(printf '%s\n' "$binary_numstat" | awk -F'\t' '$1 == "-" && $2 == "-" { print $3 }')"
+if [ -n "$tracked_binaries" ]; then
+  echo "verify_go.sh: FATAL: compiled/binary artifacts are tracked in git:" >&2
+  printf '%s\n' "$tracked_binaries" | sed 's/^/    /' >&2
+  echo "  Remove each with 'git rm --cached <path>' and add it to .gitignore." >&2
+  exit 1
+fi
+echo "   ✓ 0 binary blobs among $tracked_total tracked files"
+
 # This deny-list is the measured set: go1.26.0-go1.26.5 on darwin/arm64.
 # Future go1.26.6 or go1.27.x versions are not covered here; the canary in this
 # gate is the version-agnostic detector for any version that miscompiles the shape.
