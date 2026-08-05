@@ -37,7 +37,12 @@ import (
 //go:embed schema.sql
 var schemaSQL string
 
-const currentSchemaVersion = 1
+const currentSchemaVersion = 2
+
+// ErrApprovalAlreadyConsumed reports that an approval reference has already
+// been bound to a durable effect intent. Approval claims are single-use and
+// have no update, delete, or refund path.
+var ErrApprovalAlreadyConsumed = errors.New("store: approval already consumed")
 
 type LegacySchemaVersionError struct {
 	Path           string
@@ -313,7 +318,7 @@ func enforceSchemaVersion(display string, db *sql.DB, applySchema bool) error {
 			return &UninitializedReadOnlyStoreError{Path: display}
 		}
 		if err := freshInitTx(db, func(tx *sql.Tx) error {
-			_, err := tx.Exec("PRAGMA user_version = 1")
+			_, err := tx.Exec("PRAGMA user_version = 2")
 			return err
 		}); err != nil {
 			return err
@@ -351,7 +356,7 @@ func enforceSchemaVersion(display string, db *sql.DB, applySchema bool) error {
 	if version > currentSchemaVersion {
 		return &FutureSchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
 	}
-	return nil
+	return &LegacySchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
 }
 
 func freshInitTx(db *sql.DB, writeVersion func(*sql.Tx) error) error {
