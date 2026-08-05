@@ -41,6 +41,20 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   `~/.ailang/state/mission-world-*` paths — no collision with the V1 loop)
 - **Bookkeeping issue**: `#1`, rotates weekly; live number in
   `~/.ailang/state/mission-world-gh-issue` (seeded by the v1 agent after ratification)
+- **THIS LOOP KEEPS *TWO* MARK-COMMENT WATERMARKS, AND ONLY ONE OF THEM IS THE ONE THE SHARED
+  SKILL DERIVES (process fix, iter-52).** Gate 0 prescribes the issue-scoped
+  `~/.ailang/state/mission-${MISSION_GH_ISSUE}-last-seen`; this mission has in fact been writing
+  the mission-scoped `~/.ailang/state/mission-world-last-seen`. Because the issue number ROTATES
+  WEEKLY, the skill-derived path is a *fresh, empty* file most weeks — reading it returns the epoch
+  default, so the Gate-0 query re-reads all history. That direction is harmless (re-triage is
+  idempotent). **The mirror is not**: a stale issue-scoped file whose number happens to be reused,
+  or a mission-scoped file left unwritten, can make an unprocessed `MarkEdmondson1234` comment
+  invisible — and a human directive OUTRANKS the queue, so dropping one is the highest-severity
+  failure available to this loop. **Rule: read BOTH files and take the OLDER of the two as the
+  watermark; write BOTH after triage.** Iteration 52 found the pair 24 h apart
+  (`mission-world-last-seen` = `2026-08-04T08:25:01Z`, `mission-32-last-seen` absent) and caught
+  Mark's `8/OD-1` ratification only because the empty file failed safe. This is World-local (V1's
+  issue-scoped path is correct for V1), so it is a process fix here rather than a skill proposal.
 - **CI workflows Gate 3b / Gate 1 poll**: `CI` (job: "ailang-code verify gate")
 - **Verify profile**: `ailang-code` — the shipped `ailang` binary IS the gate:
   `ailang check` (types), `ailang test` (tests, once test suites exist),
