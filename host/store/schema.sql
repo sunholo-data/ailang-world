@@ -85,3 +85,12 @@ CREATE TABLE IF NOT EXISTS journal (
     object_ref    TEXT NOT NULL CHECK (object_ref <> ''),
     UNIQUE (invocation_id, kind)
 );
+
+-- Single-use approval claims. approval_ref identifies the consumed approval;
+-- request_ref and invocation_id bind that consumption to its durable effect
+-- intent. The invocation is unique so one intent cannot consume two approvals.
+CREATE TABLE IF NOT EXISTS approval_claims (
+    approval_ref TEXT PRIMARY KEY,
+    request_ref  TEXT NOT NULL,
+    invocation_id TEXT NOT NULL UNIQUE
+);

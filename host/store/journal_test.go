@@ -546,6 +546,83 @@ func TestAppendNextEffectIntentConcurrentAllocation(t *testing.T) {
 	}
 }
 
+func TestAppendClaimedEffectIntentAtomicDurableAndSingleUse(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "claimed.db")
+	s, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	approvalRef := hashref.SumSHA256([]byte("approval"))
+	requestRef := hashref.SumSHA256([]byte("request"))
+	intent := effectIntentFixture("claimed-episode", 1)
+	intent.RequestRef = requestRef
+
+	if _, err := s.db.Exec(`CREATE TRIGGER reject_claim BEFORE INSERT ON approval_claims BEGIN SELECT RAISE(FAIL, 'induced claim failure'); END`); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := s.AppendClaimedEffectIntent("claimed-episode", intent, approvalRef, requestRef); err == nil || !strings.Contains(err.Error(), "induced claim failure") {
+		t.Fatalf("induced failure = %v, want induced claim failure", err)
+	}
+	if _, err := s.db.Exec(`DROP TRIGGER reject_claim`); err != nil {
+		t.Fatal(err)
+	}
+	for table, want := range map[string]int{"approval_claims": 0, "journal": 0, "objects": 0} {
+		var got int
+		if err := s.db.QueryRow("SELECT COUNT(*) FROM " + table).Scan(&got); err != nil {
+			t.Fatal(err)
+		}
+		if got != want {
+			t.Fatalf("%s rows after rollback = %d, want %d", table, got, want)
+		}
+	}
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	s, err = Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	id, ordinal, err := s.AppendClaimedEffectIntent("claimed-episode", intent, approvalRef, requestRef)
+	if err != nil || ordinal != 0 {
+		t.Fatalf("successful claim = (%q,%d,%v), want ordinal 0", id, ordinal, err)
+	}
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	s, err = Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	var claimRequest, claimInvocation string
+	if err := s.db.QueryRow(`SELECT request_ref, invocation_id FROM approval_claims WHERE approval_ref = ?`, approvalRef.String()).Scan(&claimRequest, &claimInvocation); err != nil {
+		t.Fatal(err)
+	}
+	if claimRequest != requestRef.String() || claimInvocation != id {
+		t.Fatalf("durable claim = (%q,%q), want (%q,%q)", claimRequest, claimInvocation, requestRef.String(), id)
+	}
+	var journalBefore int
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM journal`).Scan(&journalBefore); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := s.AppendClaimedEffectIntent("claimed-episode", intent, approvalRef, requestRef); !errors.Is(err, ErrApprovalAlreadyConsumed) {
+		t.Fatalf("reused approval error = %T %v, want ErrApprovalAlreadyConsumed", err, err)
+	}
+	var journalAfter int
+	if err := s.db.QueryRow(`SELECT COUNT(*) FROM journal`).Scan(&journalAfter); err != nil {
+		t.Fatal(err)
+	}
+	if journalAfter != journalBefore {
+		t.Fatalf("journal rows after rejected reuse = %d, want %d", journalAfter, journalBefore)
+	}
+	receipt, ok, err := s.GetEffectReceipt(id)
+	if err != nil || !ok || receipt.EffectIntent == nil {
+		t.Fatalf("durable effect intent receipt = (%+v,%v,%v)", receipt, ok, err)
+	}
+}
+
 func TestAppendEffectOutcomeDisciplineAndReceiptWalk(t *testing.T) {
 	s := openMem(t)
 	missingID := EffectInvocationID("missing", 0)
@@ -757,6 +834,11 @@ var canonicalTableDDL = map[string]string{
     invocation_id TEXT NOT NULL CHECK (invocation_id <> ''),
     object_ref    TEXT NOT NULL CHECK (object_ref <> ''),
     UNIQUE (invocation_id, kind)
+)`,
+	"approval_claims": `CREATE TABLE approval_claims (
+    approval_ref TEXT PRIMARY KEY,
+    request_ref  TEXT NOT NULL,
+    invocation_id TEXT NOT NULL UNIQUE
 )`,
 }
 

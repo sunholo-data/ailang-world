@@ -547,6 +547,91 @@ func (s *Store) AppendNextEffectIntent(episodeID string, intent EffectIntent) (s
 	return id, ordinal, nil
 }
 
+// AppendClaimedEffectIntent atomically consumes approvalRef and appends the
+// next effect intent. A failed transaction makes neither the claim, journal
+// row, nor content-addressed intent object visible.
+func (s *Store) AppendClaimedEffectIntent(episodeID string, intent EffectIntent, approvalRef, requestRef hashref.HashRef) (string, int64, error) {
+	if err := validateEffectIntent(episodeID, intent); err != nil {
+		return "", 0, err
+	}
+	if err := validateRef("AppendClaimedEffectIntent", "ApprovalRef", approvalRef); err != nil {
+		return "", 0, err
+	}
+	if err := validateRef("AppendClaimedEffectIntent", "RequestRef", requestRef); err != nil {
+		return "", 0, err
+	}
+	if intent.RequestRef != requestRef {
+		return "", 0, &InvocationMismatchError{Field: "RequestRef", Want: requestRef.String(), Got: intent.RequestRef.String()}
+	}
+	tx, err := s.db.Begin()
+	if err != nil {
+		return "", 0, fmt.Errorf("store: begin claimed effect intent: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	var consumed int
+	if err := tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM approval_claims WHERE approval_ref = ?)`, approvalRef.String()).Scan(&consumed); err != nil {
+		return "", 0, fmt.Errorf("store: inspect approval claim: %w", err)
+	}
+	if consumed != 0 {
+		return "", 0, ErrApprovalAlreadyConsumed
+	}
+
+	prefix := "effect:" + episodeID + ":"
+	rows, err := tx.Query(`SELECT invocation_id FROM journal WHERE kind = 'intent' AND invocation_id >= ? AND invocation_id < ?`, prefix, "effect:"+episodeID+";")
+	if err != nil {
+		return "", 0, fmt.Errorf("store: scan claimed effect ordinals: %w", err)
+	}
+	maxOrdinal := int64(-1)
+	for rows.Next() {
+		var candidate string
+		if err := rows.Scan(&candidate); err != nil {
+			_ = rows.Close()
+			return "", 0, err
+		}
+		suffix := strings.TrimPrefix(candidate, prefix)
+		ordinal, parseErr := strconv.ParseInt(suffix, 10, 64)
+		if parseErr == nil && EffectInvocationID(episodeID, ordinal) == candidate && ordinal > maxOrdinal {
+			maxOrdinal = ordinal
+		}
+	}
+	if err := rows.Err(); err != nil {
+		_ = rows.Close()
+		return "", 0, err
+	}
+	if err := rows.Close(); err != nil {
+		return "", 0, err
+	}
+	if maxOrdinal == math.MaxInt64 {
+		return "", 0, &OrdinalExhaustedError{EpisodeID: episodeID}
+	}
+	ordinal := maxOrdinal + 1
+	id := EffectInvocationID(episodeID, ordinal)
+	intent.InvocationID, intent.EpisodeID, intent.Ordinal = id, episodeID, ordinal
+	payload, err := encodeEffectIntent(intent)
+	if err != nil {
+		return "", 0, fmt.Errorf("store: encode claimed effect intent: %w", err)
+	}
+	object := journalObject(EffectIntentV1, payload)
+	seq, err := nextJournalSeqTx(tx)
+	if err != nil {
+		return "", 0, err
+	}
+	if err := insertJournalObjectTx(tx, object); err != nil {
+		return "", 0, err
+	}
+	if _, err := tx.Exec(`INSERT INTO journal(seq, kind, invocation_id, object_ref) VALUES (?, 'intent', ?, ?)`, seq, id, object.Hash.String()); err != nil {
+		return "", 0, fmt.Errorf("store: append claimed effect intent %q: %w", id, err)
+	}
+	if _, err := tx.Exec(`INSERT INTO approval_claims(approval_ref, request_ref, invocation_id) VALUES (?, ?, ?)`, approvalRef.String(), requestRef.String(), id); err != nil {
+		return "", 0, fmt.Errorf("store: claim approval %q: %w", approvalRef.String(), err)
+	}
+	if err := tx.Commit(); err != nil {
+		return "", 0, fmt.Errorf("store: commit claimed effect intent: %w", err)
+	}
+	return id, ordinal, nil
+}
+
 // AppendOutcome requires a durable intent and atomically appends one outcome.
 func (s *Store) AppendOutcome(id string, outcome JournalOutcome) (int64, hashref.HashRef, error) {
 	if id == "" || outcome.InvocationID != id {
