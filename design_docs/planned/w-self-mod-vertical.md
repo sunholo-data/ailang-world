@@ -245,9 +245,40 @@ server metadata URL, observed immutable metadata digest, and reconciliation mode
 EffectRecord binds all requested publish observables through content-addressed `RequestRef` and
 `ResultRef` without widening the frozen record codec.
 
-The dry-run parser must not trust truncated display prefixes. It either obtains full hashes from a
-small library extraction of v0.30.0 package hashing logic or independently recomputes them and uses
-the CLI only as a cross-check. A receipt containing only V-J's displayed prefixes is invalid.
+The dry-run parser must not trust truncated display prefixes. It **independently recomputes** the
+three hashes in `host/pkgproj` and uses the CLI only as a cross-check. A receipt containing only
+V-J's displayed prefixes is invalid.
+
+> **`DD-1` (SM.A, landed) — the "library extraction" branch this paragraph used to offer does not
+> exist, and three of this document's own citations are the proof.** The sentence above originally
+> read *"either obtains full hashes from a small library extraction of v0.30.0 package hashing
+> logic or independently recomputes them"*. The first branch is impossible: World is
+> `module github.com/sunholo-data/ailang-world`, upstream is `module github.com/sunholo-data/ailang`,
+> and the hashing lives in `internal/pkg/{hasher,tarball}.go` — which Go's internal rule forbids
+> importing across module paths. The Premise Verification Log cites those exact files three times
+> *as evidence that the mechanics work*. They do work; the word `internal` in the path is
+> simultaneously the reason the plan built on them cannot. **When you cite a path as evidence,
+> read it once more as a policy.**
+>
+> The CLI is no fallback either: `e37b370:cmd/ailang/pkg_publish.go:110-112` prints
+> `hash[:24]+"..."` (`"sha256:"` is 7 chars, so 17 hex nibbles = 68 bits survive), and the tarball
+> bytes are never persisted — the only `.tar.gz` reference in that file is the multipart form on
+> the **upload** path, which `--dry-run` returns before reaching.
+>
+> `AC6` is therefore satisfied by a **re-implementation** in `host/pkgproj` carrying a mandatory,
+> hard-failing cross-check against those 24-char prefixes. **The risk this created has been
+> measured and is CLOSED:** the tarball hash rides `compress/gzip`'s DEFLATE output and
+> `archive/tar`'s format selection, and World builds at `go 1.25.6` while upstream's module
+> declares `go 1.26.5`. Measured 2026-08-05 (iter-53) against the pinned binary, all three arms
+> agree, tarball length `5472 = 5472` — and the instrument was shown able to red:
+> `MUT-SM-PKGPROJ-CONTENT-SEPARATOR` (`file:%s\n` → `file:%s`) reds the **content** arm alone and
+> `MUT-SM-PKGPROJ-TAR-MODE` (`Mode: 0644` → `0600`) reds the **tarball** arm alone, each naming
+> both values, with the control green before and after and `pkgproj.go` byte-identical on restore.
+> Decomposing the comparison into three arms is load-bearing rather than cosmetic: content and
+> interface are pure sha256 over bytes and **cannot** diverge by toolchain, so a content/interface
+> mismatch means the re-implementation is wrong while a tarball-only mismatch is a genuine
+> cross-toolchain finding. The two have opposite remedies, and one merged verdict destroys exactly
+> the information that tells them apart.
 
 ### Definite and ambiguous outcomes
 
@@ -457,6 +488,52 @@ existing two legs. The package verifier:
 8. Lists tar entries and asserts the exact allowlist, proving design sketches cannot leak.
 9. Writes a deterministic ready packet to the store during the operational workflow; CI compares
    canonical JSON golden bytes but does not persist mission state.
+
+> **`DD-4` (SM.A, landed) — a THIRD LEG, never a new `ROOTS` entry.** The obvious way to make
+> `verify_ail.sh` see `packages/` is to add `".|packages"` to its `ROOTS` array. That reds the
+> repo's primary gate for a reason unrelated to the code under test: `verify_ail.sh:160`
+> (`EXACT_TOTAL_VERIFIED=4`) and `:190` (`EXACT_TOTAL_TESTS = 14`) are **exact equalities, not
+> floors**, and the four projections are byte-identical copies of the canonical modules — so they
+> re-verify the same four contracts and the total becomes 8. Landed as an explicit third leg
+> invoking `scripts/verify_world_package.sh`; measured after landing, the gate still reports
+> `4/4` identities and `14` named tests.
+>
+> **`DD-5` (SM.A, landed) — the `.ailang` cache is inside the tarball's walk.** `CreateTarball`
+> skips only directories named `.git`, `tests`, `test` — **not `.ailang`** — while step 5 of this
+> very gate (check + test from the package root) is what *creates*
+> `packages/world-core/.ailang/cache/**`. A stray `*.ail` there would silently enter the tarball
+> and move its hash. Step 8 therefore asserts zero cached `*.ail` **with a firing control** in the
+> same run (measured: control fired on 33 non-`.ail` files, zero `.ail` observed).
+>
+> **`DD-7` (SM.A, landed; found by the controller at landing, named by no prior reviewer) — the
+> compiler pin is PLATFORM-SPECIFIC, and CI job 1 does not have the pinned compiler at all.**
+> Two independent facts, both measured 2026-08-05:
+> **(a)** the rig is darwin/arm64 (Mach-O) and CI is linux/amd64 (ELF), so a single
+> `COMPILER_SHA256` constant is a gate that can only ever pass on one of the two. It is now a
+> per-platform table with a loud unknown-platform failure — darwin/arm64
+> `e9746fef8570bc42…`, linux/amd64 `1e594d158dffa688…`, the latter measured by downloading
+> `releases/download/v0.30.0` and verifying its published `.sha256` (`OK`) as the control.
+> Non-vacuity: a byte-flipped copy of the pinned binary reporting an identical
+> `AILANG v0.30.0` string is rejected, naming both SHAs.
+> **(b)** CI job 1 installs `releases/latest`, and the step log at `af0c3b4` (run `30993399332`)
+> prints **`AILANG v0.33.0`** for job 1 against **`AILANG v0.30.0`** for job 2 in the same run.
+> `latest` moved on 2026-08-04, so **queue item 9's "latent, not active" assessment expired**.
+> v0.33.0 additionally fails this gate's own step 5 (measured on the rig: *"5 properties never ran
+> (no generator)"*). CI job 1 therefore installs the pin to a separate path and passes it to this
+> leg alone via `WORLD_PKG_AILANG_BIN`, leaving what legs 1-2 verify against untouched — that
+> broader change is item 9's and is human-gated.
+> **Consequence for the ready packet:** `compilerSHA256` is provenance about the *machine*, not
+> identity of the *artifact*, and it is the only field in the packet that is platform-dependent
+> (content and interface are sha256 over bytes; the tarball was measured to reproduce
+> byte-identically across toolchains). It is asserted against the platform table and deliberately
+> kept **out** of the byte-compared golden — including it would make the golden pass on exactly
+> one platform, i.e. a gate that cannot run in CI.
+>
+> **S3 answer — "why is `host/pkgproj` not a package?"** It is HOST code, not kernel: it adds
+> nothing to `world/**` and introduces no new semantics, sitting at the outward projection and
+> verification boundary in the same class as `host/replay`. It computes the hashes that
+> **authorize** package publication, so it cannot itself be a published package without
+> circularity.
 
 The Go gate covers broker changes through `go test ./...`, but acceptance requires named tests for
 allowed success, namespace rejection, missing approval, changed hash, missing credential, definite
@@ -805,6 +882,10 @@ census on 2026-08-04, refreshed by controller census on 2026-08-05.
 | **V-N — the metadata probe endpoint: a BUCKET OBJECT, not a validator route; measured with both controls** | Yes — **added under the round-2 carve-out, running reviewer `gemini-3-1-pro`'s own prescribed measurement** | `(controller iter-51, 2026-08-05)` **Router:** `git show e37b370…:cmd/registry-validator/main.go \| grep -nE 'HandleFunc'` → `:58` `/publish`, `:59` `/unpublish`, `:60` `/rebuild-index`, `:61` `/health`, `:62` `/version`, `:65` `/api/packages`, `:66` `/api/packages/`, `:67` `/api/stats` — **8 routes, none serving `/packages/…`** (this is a complete enumeration, not a `head`-truncated one). **Key construction:** `git grep -n 'metadata.json' e37b370… -- cmd/ internal/` → `main.go:168`, `cache.go:159`, `unpublish.go:190`, all `fmt.Sprintf("packages/%s/%s/%s/metadata.json", …)` passed to `v.bucket.Object(...)` — a GCS key, server-side. **Live, read-only, two arms:** ARM 1 known-positive control `GET https://storage.googleapis.com/ailang-registry/packages/sunholo/auth/0.4.1/metadata.json` → **HTTP 200, 1289 B**, JSON keys `content_hash`, `interface_hash`, `manifest`, `name`, `published_at`, `published_by`, `schema`, `tarball_hash`, `tarball_size_bytes`, `validation`, `version` — so all three hashes AC19 compares are actually served. ARM 2 negative control, the exact object this design will create, `…/packages/world/core/0.1.0/metadata.json` → **HTTP 404, 217 B**, body is **GCS XML** `<Code>NoSuchKey</Code>`, not JSON. Net: the reviewer's path *string* was right and its *nature* was wrong, and the nature is what the recovery boundary rests on — see the revised Probe-then-resolve |
 | Module-prefix compatibility | Yes | `git -C /Users/voightkampff/dev/sunholo-data/ailang show e37b370d1d7a9c4e7136b319e38bec4d5f2bd9a0:internal/pkg/manifest.go \| sed -n '220,310p'` → export accepted when it equals/starts with package name **or** configured single-segment `module_prefix`; exact-version dependency validation also shown |
 | Tarball breadth | Yes | `git -C /Users/voightkampff/dev/sunholo-data/ailang show e37b370d1d7a9c4e7136b319e38bec4d5f2bd9a0:internal/pkg/tarball.go` → recursive walk includes `ailang.toml`, every `*.ail`, `AGENT.md`, `_smoke.ail`, and `assets/`; excludes git/test dirs/lockfile; sorted zero timestamps |
+| **V-O — `internal/pkg` extraction is impossible across modules (`DD-1`)** | Yes | `(controller iter-53, 2026-08-05)` `go.mod:1` here → `module github.com/sunholo-data/ailang-world`; `git show e37b370:go.mod` → `module github.com/sunholo-data/ailang`, `go 1.26.5` (World declares `go 1.25.6`). `git ls-tree --name-only e37b370 internal/pkg/` → 31 entries incl. `hasher.go`, `tarball.go`, `manifest.go`; control `cmd/ailang/` → 207 entries, so the instrument reads the tree. `git show e37b370:cmd/ailang/pkg_publish.go \| grep -nE 'os\.WriteFile\|os\.Create\|\.tar\.gz'` → `:79`/`:240` (toml rewrite + restore) and `:251` (multipart form, **upload** path only); control `grep -c 'Printf'` → 25. Tarball bytes are never persisted; hashes only ever printed at `[:24]` |
+| **V-P — the three-arm cross-check AGREES across toolchains, and is proven able to RED (`AC6`)** | Yes — **the finding SM.A existed to surface** | `(controller iter-53, 2026-08-05)` live `CrossCheck` against `packages/world-core` with the pinned binary: `content`, `interface`, `tarball` all AGREE, tarball length `5472 = 5472`, so World's `go1.25.6` `compress/gzip`+`archive/tar` output reproduces the `go1.26.5`-built CLI's byte-for-byte. **Negative controls, each with sha256 proof the mutation applied and byte-identical restore** (`pkgproj.go` baseline `65efe4fb7e59…`): `MUT-SM-PKGPROJ-CONTENT-SEPARATOR` (`file:%s\n`→`file:%s`, sha `c258cdde…`) → RED on the **content** arm only; `MUT-SM-PKGPROJ-TAR-MODE` (`Mode: 0644`→`0600`, sha `5d13faad…`) → RED on the **tarball** arm only; each names both values; control green before and after |
+| **V-Q — CI job 1 verifies `.ail` against an UNPINNED compiler, and it went active 2026-08-04 (`DD-7`, queue item 9)** | Yes — **contradicts item 9's recorded "latent, not active"** | `(controller iter-53, 2026-08-05)` `gh release view` → `latest` = **v0.33.0**, published `2026-08-04T12:25:38Z` (control: the `v0.30.0` tag still resolves as a distinct release). Step log for `af0c3b4`, run `30993399332`, SHA-addressed: job `ailang-code verify gate` → **`AILANG v0.33.0`**; job `go host build + test gate` → **`AILANG v0.30.0`** in the *same run*, which is the control proving the difference is real. Rig PATH `ailang` also measured **`v0.33.0-1-gdd68e0741`**, and it fails the package gate's own step 5 (*"5 properties never ran (no generator)"*) |
+| **V-R — the pinned compiler's SHA-256 is platform-specific (`DD-7`)** | Yes | `(controller iter-53, 2026-08-05)` `file /tmp/ailang-v0300/ailang` → `Mach-O 64-bit executable arm64`, sha `e9746fef8570bc42…`. Downloaded `releases/download/v0.30.0/linux.x64.ailang.tar.gz` (39,825,888 B), published `.sha256` verified `OK` as the control, extracted → `ELF 64-bit LSB executable, x86-64`, sha `1e594d158dffa688…`. Non-vacuity of the pin: a byte-flipped copy still reporting `AILANG v0.30.0` (sha `74b475bc4715…`) is REJECTED naming both values |
 | Current module declarations/imports | Yes | `sed -n '1,220p' world/types.ail; sed -n '1,220p' world/contracts.ail; sed -n '1,260p' world/transitions.ail; sed -n '1,220p' world/logepoch.ail` → declarations `world/types`, `world/contracts`, `world/transitions`, `world/logepoch`; cross-imports use same prefixes; positive presence in every file |
 | Replay path collision count | Yes — **number CORRECTED by controller; the instrument's scope is itself load-bearing** | `(controller iter-51, 2026-08-05, re-derived per rule 3b(v-b))` the row's own stated command returns **`18`**, not the `19` first written — a transcribed quantity that did not reproduce. Per-file enumeration in the same call: `world/transitions.ail` 4, `world/contracts.ail` 3, `world/types.ail` 3, `world/logepoch.ail` 1, `host/replay/testdata/transition_fixture.ail` 4, `host/store/store.go` 1, `design_docs/verification/w-m1-ailang-hardening/fixtures/verified_baseline.ail.txt` 2 (= 18). The equivalent `grep -rE … --include='…'` — which does **not** honour `.gitignore` — returns **26 lines across 12 files**, because it also walks the gitignored build cache `world/.ailang/cache/compile/**`. Neither is "the" answer: `18` is the tracked-source surface this design sizes against; the cache is regenerable and never tracked. Material to **AC4**: that cache holds **0** `*.ail` files (same-call control: **79** `*.json`), so it cannot leak through `CreateTarball`'s `*.ail` filter — but `CreateTarball` skips only `.git`, `tests`, `test` (`internal/pkg/tarball.go:43-47` @ `e37b370…`), **not** `.ailang`, so AC4's tar-entry allowlist is doing real work rather than restating an upstream exclusion |
 | Broker intent-before-dispatch | Yes | `sed -n '1,360p' host/broker/broker.go` → allowed live flow `PutObject` → `AppendNextEffectIntent` → budget debit → `handler.Execute` → record/result → `AppendEffectOutcome` |

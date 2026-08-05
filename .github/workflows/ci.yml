@@ -9,8 +9,15 @@ jobs:
   ailang-verify:
     name: ailang-code verify gate
     runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: go1.25.6
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.6'
 
       - name: Install released ailang binary
         run: |
@@ -42,6 +49,28 @@ jobs:
 
       - name: ailang version
         run: ailang --version
+
+      # The step above installs `releases/latest`, which moved to v0.33.0 on 2026-08-04 — so the
+      # two existing legs verify against an UNPINNED compiler. That gap is queue item 9's and is
+      # human-gated, so it is deliberately left alone here. The world-package leg, however, is a
+      # byte-exact gate: it recomputes package hashes and cross-checks them against the CLI's own,
+      # so it must have the PINNED compiler or it is comparing two different algorithms. v0.33.0
+      # also fails that gate's own package-test step (measured on the rig: "5 properties never
+      # ran (no generator)"). This installs the pin to a SEPARATE path and hands it to that leg
+      # alone via WORLD_PKG_AILANG_BIN, leaving PATH `ailang` — and thus legs 1-2 — untouched.
+      - name: Install PINNED v0.30.0 ailang for the world-package leg only
+        run: |
+          set -euo pipefail
+          base="https://github.com/sunholo-data/ailang/releases/download/v0.30.0"
+          curl -fsSL -o pinned.tar.gz "$base/linux.x64.ailang.tar.gz"
+          curl -fsSL -o pinned.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
+          # the published checksum names the release asset, not our local filename
+          echo "$(cut -d' ' -f1 pinned.tar.gz.sha256)  pinned.tar.gz" | sha256sum -c -
+          mkdir -p "$HOME/.pinned-ailang"
+          tar -xzf pinned.tar.gz -C "$HOME/.pinned-ailang" ailang
+          chmod +x "$HOME/.pinned-ailang/ailang"
+          "$HOME/.pinned-ailang/ailang" --version | grep -q 'AILANG v0.30.0'
+          echo "WORLD_PKG_AILANG_BIN=$HOME/.pinned-ailang/ailang" >> "$GITHUB_ENV"
 
       - name: Verify all .ail modules (ai-check = check + Z3 verify)
         run: ./scripts/verify_ail.sh
