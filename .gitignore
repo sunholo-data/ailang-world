@@ -4,3 +4,15 @@
 
 # codex CLI local state (not committed)
 .codex/
+
+# Compiled Go artifacts. `go build -o <name> ./cmd/<name>` from the repo root drops
+# the binary here; SM.A (13315da) shipped a 15.7 MB darwin/arm64 `ailang-worldd`
+# that way and it survived the executor, the evaluator, four controller gates and
+# CI. scripts/verify_go.sh now reds on any tracked binary blob — this list only
+# stops the accident from reaching `git add` in the first place.
+/ailang-worldd
+/ailang-world
+*.test
+*.out
+*.prof
+coverage.txt
