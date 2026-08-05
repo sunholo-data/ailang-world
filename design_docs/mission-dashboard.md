@@ -2,40 +2,44 @@
 
 *Snapshot, overwritten every Gate 4. History lives in `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-05, iteration 52 · dev @ `c0ca1df` · CI green both jobs (SHA-addressed)
+**As of** 2026-08-05, iteration 53 · dev @ `13315da` · CI green both jobs (SHA-addressed, step-log verified)
 
 ## In flight
 
-- **Item 8 `w-self-mod-vertical` — SPRINT-PLANNED** (plan + handoff in `.ailang/state/sprints/`,
-  gitignored as all 18 prior sprint artifacts are; planner `opus`). **Re-scoped 4 → 6 milestones**:
-  `SM.A · SM.B1 · SM.B2a · SM.B2b · SM.C · SM.D`. Stays **one queue item** — the split is internal.
-- **`[NEXT]` is `SM.A`** — package projection, drift/export/tar gate, smoke, boundary guard.
-  Gated on nothing, no kernel touch, ~620 LOC. It builds the ready packet `8/OD-1` authorizes.
+- **Item 8 `w-self-mod-vertical` — milestone `SM.A` LANDED** (PR #41 → squash `13315da`, 1,547
+  insertions). Projected `world/core@0.1.0`, `host/pkgproj` hash re-implementation, a nine-step
+  package gate as `verify_ail.sh`'s THIRD LEG, and AC12's boundary guard.
+- **`[NEXT]` is `SM.B1`** — the durability kernel (`approval_claims`, schema 1→2). Gated on
+  nothing. Must be **ONE commit**: splitting it lands a red DDL gate. `DD-2`'s ~3× blast radius
+  and `DD-3` (`store.go:354`'s bare `return nil`) are binding on it.
 - **Item 5 `w-mcp-projection` — still BLOCKED** on one prerequisite (transition registry absent at
-  HEAD, measured iter-50, control fired). Unchanged this iteration.
+  HEAD). Unchanged this iteration.
 
 ## Latest
 
-- **Mark approved the `world/` publish** (`#32`, 08:25). `8/OD-1` **RATIFIED as policy** — but not
-  the exact-bytes stamp SM.D describes, and it cannot be: the packet doesn't exist until SM.A
-  builds it. **An authorization is not an attendance.** SM.D stays attended-only, never in CI.
-- **The planner refuted the design's central reuse claim.** Decision 3's "extract v0.30.0
-  package-hashing logic" is **impossible** — it lives in upstream's `internal/pkg/` and World is a
-  different module. `AC6` needs a re-implementation (`host/pkgproj`) + a 24-char cross-check.
-  The doc cited that path three times *as evidence for* the plan the path forbids.
-- **`DD-3`**: bumping the schema version makes `store.go:354`'s bare `return nil` reachable — a v1
-  store would open fine and **never run `schemaSQL`**. Answered from ratified text, non-blocking.
-- **DDL blast radius ~3× the doc's Conflict Surface** (second fixture in `journal_test.go`,
-  `frozenFutureSchemaVersion = 2` collision, literal `PRAGMA user_version = 1`) — all into SM.B1's
-  single commit. **5 ACs judged vacuous and replaced**; 36 mutations total.
+- **The sprint's one gating unknown came back GREEN, on two platforms.** `AC6`'s cross-check agrees
+  on `content`/`interface`/`tarball` — World's `go1.25.6` gzip+tar output reproduces the
+  `go1.26.5`-built pinned CLI byte-for-byte on darwin/arm64 **and** linux/amd64. Proven a
+  measurement, not a co-occurrence: two mutations red one arm each, naming both values, restore
+  byte-identical.
+- **Queue item 9 went from latent to ACTIVE — a day before anyone looked.** `releases/latest` moved
+  to **v0.33.0** on 2026-08-04, so CI job 1 has been verifying `.ail` against an unpinned compiler.
+  Measured in the step log at `af0c3b4`: job 1 `v0.33.0`, job 2 `v0.30.0`, same run. **Item 9's own
+  row predicted exactly this** and graded itself "latent, not active". A prediction is not a monitor.
+- **`DD-7` (found at landing, named by no designer/planner/reviewer):** a byte-exact compiler pin is
+  platform-specific, so the single-constant version would have redded CI 100%. Now a per-platform
+  table; `compilerSHA256` is machine provenance and is kept OUT of the artifact golden.
+- **`AC12` landed with honest limits** rather than a clean claim: its "network confined to
+  `host/broker`" control is **vacuous today** (zero `net/http` there — network arrives in SM.B2a).
 
 ## Loop · cost · asks
 
-- launchd `mission-world`; controller `claude-opus-5`. Planner **`opus`** (lane
-  `opus fail-closed:env-pin`, verbatim). Designer/executor/evaluator **not fired** — a planning
-  iteration has nothing to execute or judge; designer rotation stays `codex:gpt-5.6-sol`.
-- Verify profile `ailang-code`; AILANG pinned **v0.30.0** at `/tmp/ailang-v0300/ailang`; upstream
-  read only at `e37b370d…`. Bookkeeping issue **#32** (week of 2026-08-03).
-- **`metered=$0.00`** vs the $5 ceiling — all roles on quota buckets. First planning iter at zero.
-- **Parked on Mark: NONE.** `8/OD-1` answered today; `8/OD-3` from ratified charter text; `8/OD-2`
-  (upstream namespace auth) open but **non-blocking by design**. Next free OD: **`OD-9`**.
+- launchd `mission-world`; controller `claude-opus-5`. Executor **`codex:gpt-5.6-sol`** (4 bounded
+  30-min runs); evaluator **`sonnet`** (generator≠judge). Designer/planner **not fired** — doc and
+  plan both already landed; designer rotation unchanged.
+- Verify profile `ailang-code`; AILANG pinned **v0.30.0** at `/tmp/ailang-v0300/ailang`; the package
+  leg now carries its own pinned install in CI via `WORLD_PKG_AILANG_BIN`. Issue **#32**.
+- **`metered=$0.00`** vs the $5 ceiling — every role on a quota bucket.
+- **Parked on Mark: NONE.** `8/OD-1` ratified; `8/OD-2` open but non-blocking. Worth his attention,
+  not blocking: item 9's human-gated half (pin CI job 1 vs keep tracking `latest`) — the cheap
+  observability half (`verify_ail.sh` announcing its resolved binary) is recommended first.
