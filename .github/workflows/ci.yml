@@ -69,7 +69,21 @@ jobs:
           mkdir -p "$HOME/.pinned-ailang"
           tar -xzf pinned.tar.gz -C "$HOME/.pinned-ailang" ailang
           chmod +x "$HOME/.pinned-ailang/ailang"
-          "$HOME/.pinned-ailang/ailang" --version | grep -q 'AILANG v0.30.0'
+          # NO PIPE. `cmd --version | grep -q` under `set -o pipefail` is a RACE:
+          # `grep -q` exits on its first match while `--version` still has 6 of its
+          # 7 lines to write, so the writer takes SIGPIPE and the pipeline reports
+          # 141. Measured on the rig: the piped form failed 3/40 runs, the form
+          # below 0/200. It took dev red on a6cc473 — a DOCS-ONLY commit — while
+          # passing on e24a6f0, 1856bfb and both PR runs, which is exactly what an
+          # intermittent race looks like from the outside: a red with no cause in
+          # the diff. Capturing first is not sufficient on its own; `echo "$big" |
+          # grep -q` reproduces 141 too. The fix is to use no pipe at all.
+          pinned_ver="$("$HOME/.pinned-ailang/ailang" --version)"
+          echo "$pinned_ver"
+          case "$pinned_ver" in
+            *'AILANG v0.30.0'*) ;;
+            *) echo "✗ pinned world-package binary is not v0.30.0" >&2; exit 1 ;;
+          esac
           echo "WORLD_PKG_AILANG_BIN=$HOME/.pinned-ailang/ailang" >> "$GITHUB_ENV"
 
       - name: Verify all .ail modules (ai-check = check + Z3 verify)
@@ -110,9 +124,17 @@ jobs:
           chmod +x "$HOME/.local/bin/ailang"
           # Assert the pinned version loudly so a tag drift is a red step here,
           # not a silent goldens mismatch downstream.
+          # Same no-pipe form as the world-package install above. This site has
+          # never gone red, but only by ACCIDENT OF SIZE: `--version` is 167 bytes,
+          # which fits the 64 KiB pipe buffer, so `echo` never blocks and never
+          # takes SIGPIPE. That is a property of the output length, not of the
+          # shape — the shape is the same race, one verbose release away.
           ver="$("$HOME/.local/bin/ailang" --version)"
           echo "$ver"
-          echo "$ver" | grep -q 'v0.30.0'
+          case "$ver" in
+            *'v0.30.0'*) ;;
+            *) echo "✗ AILANG_BIN is not v0.30.0" >&2; exit 1 ;;
+          esac
           echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
 
       - name: go build + test gate (replay tests run against pinned AILANG_BIN)
