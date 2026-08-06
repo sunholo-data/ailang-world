@@ -303,9 +303,16 @@ anti-vacuity.** `checkGoGroup` (`:130`) calls `goListDeps` and uses the result s
 `len(deps) == 0` guard (`:135`); the returned closure is never compared against
 `forbiddenImportPrefixes`/`extraForbidden` (controller re-confirmed first-party this iteration).
 A transitive route (a protected package importing an in-repo helper that imports
-`net/http/httputil`) would pass today. Feasibility baseline for a future scan is measured: 0
-forbidden-prefix hits in all three closures; bare `net/http` appears only in
-`cmd/ailang-worldd`'s (1), matching its documented loopback exception (V16).
+`net/http/httputil`) would pass today. ~~Feasibility baseline for a future scan is measured: 0
+forbidden-prefix hits in all three closures~~ — **REFUTED at iter-57 (V16a/V16b), and the
+refutation makes the transitive route *actual* rather than hypothetical.** `cmd/ailang-worldd`'s
+closure contains `host/registry`, which IS a forbidden prefix (`:53`), reached via
+`host/daemon:51`. So a closure scan would **red today** — but on **legitimate** code: `host/registry`
+is the *interpreter epoch* registry, not the *package* registry the entry targets, exactly the name
+collision iter-53 predicted and iter-57 measured. **`10/OD-1` therefore cannot be implemented until
+that collision is resolved**, which strengthens the deferral below rather than weakening it. Bare
+`net/http` still appears only in `cmd/ailang-worldd`'s (1), matching its documented loopback
+exception (V16).
 
 ## Deferred Scope (cut to hold ≤1 day)
 
@@ -323,6 +330,62 @@ forbidden-prefix hits in all three closures; bare `net/http` appears only in
 
 Each AC carries the mission's vacuity self-test: *would it pass identically if the protected thing
 did not work?*
+
+> **⚠ SPRINT-PLANNED AT ITER-57 — THE PLAN SUPERSEDES SEVERAL ACs BELOW, AND THE PLAN WINS ON
+> THOSE POINTS.** Plan: `.ailang/state/sprints/w-boundary-gate-tree-mutation.{plan.json,handoff.md}`
+> (planner `opus`, lane derived **fail-closed `opus missing-script`** — `tools/launchd/derive-planner-lane.sh`
+> is absent from this checkout; `MISSION_PLANNER_MODEL=opus` independently agrees). Milestones
+> **BG.A** (AC2, AC3, AC4, AC5 · M1, M2, M4, M5) → **BG.B** (AC1a · M3, M6) → **BG.C**
+> (AC1b, AC6′ · M7); the partition is complete — 7 criteria, 7 mutations, none dropped or
+> double-assigned. Applying this document's own vacuity self-test, the planner judged **four** of
+> the six ACs below vacuity-capable as written, and rewrote them:
+>
+> - **AC6 → AC6′.** The `≤2× 0.435s` bound is **superseded**. The constant was transcribed from a
+>   different worktree at a different cache warmth, so it does not survive rule 3e(i) ("a control is
+>   only a control if it runs from a tree in the state the baseline was in"). Controller measurement
+>   on **unchanged** code at `e9c8c85`: fresh-worktree first run **0.664s / 0.621s** (n=2, two
+>   independent worktrees), warm steady state **~0.480s** (n=9). So zero code change already sits at
+>   **1.43–1.53×** of the AC's own constant cold and 1.09–1.17× warm — leaving ~1.31× of headroom,
+>   not 2×. Worse than the false-red risk: the noise band consumes ~76% of the budget, so a **green**
+>   AC6 could not have failed informatively. The planner found a third defect the controller missed —
+>   the units are ambiguous by **1.32×** (go-*reported* 0.479s vs wall-clock 0.631s median, n=5;
+>   0.435s is a go-reported figure but the wording is about the command completing) — and a fourth:
+>   what AC6 nominally protects is a **600s** `-race` budget against a **0.5s** package, 1200× of
+>   headroom, so it could not fail for the change either. **AC6′** is a paired same-session ratio
+>   (one worktree, equal warmth, ≥8 interleaved A/B pairs swapping only this file and asserting its
+>   sha256 changed; `median(wall_B)/median(wall_A) ≤ 1.50`) plus a `median(wall_B) ≤ 3.0s` ceiling,
+>   **asserted on wall-clock**, said explicitly so the unit cannot be re-ambiguated. Its noise floor
+>   was measured rather than assumed: 8 interleaved pairs on **identical** code returned **1.0079**
+>   against a true ratio of 1.000, pooled spread 1.058 — so 1.50 is ~8.5× the spread.
+> - **AC1 → AC1a + AC1b.** The AST guard is vacuity-capable in a mode Decision 8 never considered:
+>   `host/boundary` holds **exactly one `.go` file** and it is a `_test.go`, so an empty `ParseDir`,
+>   a filter dropping `_test.go`, or a selector bug each yield "zero violations, green". Decision 8
+>   defends the *self-match* mode at length and is silent on the *empty-enumeration* mode. The plan
+>   requires an exact non-empty file count, a known-positive (the walker must **find** the permitted
+>   `os.WriteFile` and report its line), and deny-list completeness. The `ModTime` backstop is
+>   silently disarmable on CI (see V16c and the ext4 note in C1) and is made **fail-loud**: a 20/20
+>   granularity probe whose failure is a **test failure** naming both `st_dev`s, plus sha256, size,
+>   mode and **inode** asserted unconditionally — inode closing a rename route that both of this
+>   document's stated observables miss.
+> - **AC2 strengthened.** Measured by the planner: `go list -overlay` **silently ignores** a
+>   `Replace` key matching no file — rc=0, base closure, **no stderr**. Asserting "the overlay
+>   closure contains `mutantImport`" is therefore not enough on its own; the plan asserts on the
+>   closure `checkGoGroup` actually **consumed**, plus a negative half. Free — `checkGoGroup` already
+>   computes and discards it.
+> - **AC4 instrument fix.** `git status --porcelain` reports **untracked** files, so an in-tree ready
+>   marker reds on the harness's own artifact. The marker moves outside `repoRoot` and the residue
+>   assertion is path-scoped to the four targets. (The round-2 fail-closed rewrite of AC4 itself
+>   stands — the planner called it this document's best work.)
+>
+> AC3 and AC5 are sound as written; the controller separately verified AC3's `:217–:222` citation
+> first-party (it is exactly the two RED-fidelity assertions — the doc never checked it). Estimate:
+> the doc's **≤1 day of effort** holds (velocity: 12 landed feat/fix commits, median **363**
+> insertions; the closest analogue is `1761a9c`, a single-test-file change to *this same file*,
+> +56/−7, one iteration), but **elapsed is 2–3 iterations**, because measured cadence is ≤1
+> milestone/iteration and **4 of the 7 mutations cannot run in the executor sandbox** (M5 needs
+> subprocess SIGKILL + git inspection; M6/M7 re-arm live-tree writes; AC6′ needs a file swap out of
+> git history) — the controller pass is the critical path. LOC re-estimated **+150 → +250**, all of
+> it spent making this document's own ACs non-vacuous.
 
 - **AC1 — all mutation-harness writes are structurally confined; a live-tree write is
   synchronously rejected.** Every write the mutation harness performs is routed through the
@@ -431,7 +494,10 @@ control carried in the same call.
 | V15 | ~~The boundary gate is the only live-tree mutator~~ — **SUPERSEDED by V15a/V15b. The original row searched `os.WriteFile` ONLY, while this design's own threat model (Decision 8) names `os.OpenFile`, `os.Create` and `os.Rename` as mutators — so it did not search for the functions the design itself calls dangerous.** Objection raised by `gemini-3-1-pro` in quorum round 2 and **correct**; retained here rather than silently rewritten, because "the audit did not look for the thing it was auditing" is the same class this document exists to fix | (original) `grep -rn os.WriteFile --include='*_test.go' …` | narrow — conclusion happened to survive, but was **unverified** as written |
 | V15a | **Gemini's widened search, run verbatim by the controller** (KP: the known mutator must appear) | `grep -rnE 'os\.(WriteFile\|OpenFile\|Create\|Rename\|Remove)\|ioutil\.WriteFile' --include='*_test.go' host/ cmd/` | **25 hits across 13 test files**; KP `host/boundary/` = **3** (instrument sees the known positive). The only `Create/OpenFile/Rename` outside `host/boundary` is `cmd/ailang-worldd/cli_test.go:272`, whose `path := filepath.Join(t.TempDir(), "large.json")` is TempDir-rooted (`:271`) |
 | V15b | **P9 measured directly rather than inferred from 25 call sites** — the whole suite mutates no tracked file except via the boundary gate. *(The 20 Hz poll below is a one-off external MEASUREMENT instrument run by the controller; it is not the per-arm polling detector deleted in round 1, and nothing like it is proposed for the committed test.)* | two arms in a clean worktree, `git status --porcelain` sampled at 20 Hz throughout: **KP control** `go test ./... -count=1`; **arm** the same with `-skip 'TestWorldBoundaryDependencyAllowlist'` | KP control: **1** distinct dirty observation — ` M cmd/ailang-worldd/main.go` — so the sampler fires; arm: **0** distinct dirty observations. Both arms end with a clean tree. Both also exit `rc=1` on the **same** pre-existing cause (`TestEpisodeLiveReplayThreeArmsAndEvidence`: `AILANG_BIN must name the pinned released interpreter` — `verify_go.sh`'s deliberate fail-loud guard, which a bare `go test` bypasses); identical in both arms, so the comparison is unaffected, and CI is green at `deeb804`. **P9 is therefore a measurement, not a grep** |
-| V16 | No forbidden prefix in any baseline closure; bare `net/http` only in worldd's (KP: that 1) | `go list -deps <p> \| grep -cE '<forbidden prefixes>'` and `grep -c '^net/http$'` per group | store `0/0`, replay `0/0`, worldd `0/1` — matches iter-55's 0/160, 0/162, 1/233 |
+| V16 | ~~No forbidden prefix in any baseline closure~~ — **the first half is REFUTED at iter-57; see V16a.** The bare-`net/http` half stands | `go list -deps <p> \| grep -cE '<forbidden prefixes>'` and `grep -c '^net/http$'` per group | store `0/0`, replay `0/0`, worldd `0/1` — the **second** number of each pair is right, the **first is wrong**. The error hid because one cell bundled two different questions and only one of them was ever checked against a firing control |
+| V16a | **`cmd/ailang-worldd`'s baseline closure DOES contain a forbidden prefix** — `github.com/sunholo-data/ailang-world/host/registry`, which is `forbiddenImportPrefixes[3]` (`:53`) — reached transitively via `cmd/ailang-worldd → host/daemon → host/registry` (`daemon.go:51`, a direct import). Raised by the **iter-57 planner**, reproduced first-party by the controller before being recorded | `go list -deps <p> \| grep -c '^github.com/sunholo-data/ailang-world/host/registry$'` per group, with KP `modernc.org/sqlite` in the same call | worldd **1** (of 233), store **0** (of 160), replay **0** (of 162); KP fired **1 / 1 / 1**. **So this document's "0 forbidden-prefix hits in all three closures" and "a scan would be green on the current tree" are FALSE** |
+| V16b | **The red that `10/OD-1` would produce is a FALSE POSITIVE — which makes the deferral STRONGER, not weaker.** `host/registry` is the **interpreter epoch** registry (`world/epoch-registry/v1`, `w-world-library-m1` Decision 5), unrelated to the *package* registry the forbidden entry targets. iter-53 predicted exactly this (*"a name collision that will produce a false positive the moment anything legitimately needs epoch metadata"*); at iter-57 it is **measured**, and `host/daemon` is the thing that legitimately needs it | read `host/registry/registry.go:1–12`; `grep -n 'host/registry' host/daemon/*.go` (KP: `daemon.go` carries 3 in-repo `host/` imports) | package doc confirms the epoch registry; `daemon.go:51` is a direct import. **`10/OD-1` cannot be implemented until the collision is resolved** — a closure scan today reds legitimate code, so shipping it as-is would install a gate whose red means nothing |
+| V16c | **Nothing a PASSING Go test emits reaches CI.** The gate's `ENUMERATION`/`MUTATION`/`RESTORE` `t.Logf` lines have therefore **never appeared in a CI log**, and "loud but non-gating" is a contradiction in CI. Raised by the **iter-57 planner**, reproduced first-party | paired arms on `TestWorldBoundaryDependencyAllowlist`, same worktree: **A** = CI's exact form (no `-v`); **B** = identical **+ `-v`**, as the known-positive | A: rc=0, output is the single line `ok … 0.580s`, matching lines **0**. B (KP): rc=0, matching lines **12** (the ENUMERATION rows dump the full 160/162/233 closures). `verify_go.sh:100` is `go test ./... -count=1`, and its `-race` leg builds `["go","test","./...","-count=1","-race","-timeout","8m"]` — **neither carries `-v`**. Consequence for this design: any observable it wants CI to see must be an **assertion**, never a log line |
 | V17 | The repo's own gate SIGKILLs a process group on `-race` timeout | `grep -n 'killpg\|SIGKILL' scripts/verify_go.sh` | `113: os.killpg(os.getpgid(p.pid), signal.SIGKILL)` |
 | V18 | `replay.go` has the same unique anchor; the AIL enumeration is 4 files incl. `world/types.ail` | python anchor count; `ls world/*.ail \| wc -l; ls world/types.ail` | `1`; `4`; `world/types.ail` |
 | V19 | `host/daemon`'s go-list allowlist is read-only and dot-rule-classifies `net/http/httputil` as stdlib (never a victim of this mutant) | read `daemon_test.go:700–768` (`allowedDepModules`, `isStdlibImportPath`, `disallowedDeps`) | module-root allowlist, stdlib exempt via first-segment-has-no-dot; no writes |

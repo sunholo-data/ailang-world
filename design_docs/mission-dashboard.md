@@ -2,37 +2,40 @@
 
 *Snapshot, overwritten every Gate 4. History lives in `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-06, iteration 56 · dev @ `deeb804` + PR #46 · CI green both jobs (SHA-addressed)
+**As of** 2026-08-06, iteration 57 · dev @ `e9c8c85` · CI green both jobs (SHA-addressed)
 
 ## In flight
 
-- **Item 10 `w-boundary-gate-tree-mutation` — DESIGN DOC LANDED** (PR #46). Promoted ahead of
-  `SM.B2a` this iteration on a new measurement, not on the queue order.
-- **`[NEXT]` is item 10's sprint-planner run**, gated on nothing. Then `SM.B2a`.
+- **Item 10 `w-boundary-gate-tree-mutation` — SPRINT-PLANNED** (`BG.A` → `BG.B` → `BG.C`; planner
+  `opus`, lane fail-closed `opus missing-script`). Partition complete: 7 ACs, 7 mutations, none
+  dropped.
+- **`[NEXT]` is milestone `BG.A`**, gated on nothing — the first executor run for item 10.
 - **Item 8 `w-self-mod-vertical`** — `SM.B2a` (~780 LOC, brokered publish, the first
-  irreversible-publish-capable code) still the next milestone; unchanged, deliberately not started.
+  irreversible-publish-capable code) queued behind item 10; unchanged, deliberately not started.
 - **Item 5 `w-mcp-projection` — still BLOCKED** on one prerequisite. Unchanged.
 
-## Latest — the gate that guards the tree can poison it, and the build cannot see it
+## Latest — a threshold whose noise is the size of its signal cannot fail informatively
 
-- **The teeth-proof writes live production sources and restores with a `defer`.** That `defer`
-  survives return and `t.Fatal` and **nothing else**: SIGKILL mid-mutation → `rc=137`, residue
-  permanent; Go's own `-test.timeout` panic → `rc=2`, same (60s control completes clean). Both kill
-  paths are in the repo's own gate — `verify_go.sh` runs `-race -timeout 8m` inside an
-  `os.killpg(SIGKILL)` at 600s.
-- **The residue is invisible to the build**: `go build` **rc=0**, `go vet` **rc=0** with all three
-  mutants applied. It reds *the boundary gate itself*, accusing an innocent file of a
-  network-boundary violation — during the one sprint whose job is to add network code.
-- **Correction to mission records**: the mutants are NOT "deliberately non-compiling" (charter,
-  queue row and this dashboard all said so). They compile. The harm model is worse, not milder.
-- **Fix**: `go list -overlay` — the overlay closure is diff-identical to a physically poisoned tree
-  (control fired, 69-package difference) and the tree stays 0-dirty.
+- **`AC6` was vacuous in BOTH directions, and baselining is what found it.** On *unchanged* code:
+  fresh-worktree first run **0.664 / 0.621 s** (n=2), warm steady state **~0.480 s** (n=9) — against
+  the AC's own `≤2× 0.435 s`. Zero change already sits at **1.43–1.53×** cold, and CI checks out
+  fresh. The noise band eats ~76% of the budget, so a **green** `AC6` proved nothing either. The
+  planner added two more defects: units ambiguous by **1.32×** (go-reported vs wall-clock), and the
+  600 s `-race` budget it nominally guards has **1200×** headroom over a 0.5 s package.
+- **`V16` refuted.** `cmd/ailang-worldd`'s closure *does* carry a forbidden prefix (`host/registry`,
+  1 of 233, KP firing). **But the red would be a false positive** — that is the *epoch* registry, not
+  the package registry, exactly the name collision iter-53 predicted. **`10/OD-1` gets more blocked,
+  not less.**
+- **CI has never seen the gate's diagnostics.** No `-v` anywhere in `verify_go.sh`: CI's form prints
+  one `ok` line (0 matches) against a KP `-v` arm at **12**. Any observable must be an **assertion**.
+- **iter-56's own correction was incomplete** — the false "deliberately non-compiling" sentence was
+  still live in the charter's queue row, 35 lines below its own correction. Fixed this Gate 4.
 
 ## Loop · cost · asks
 
-- launchd `mission-world`; controller `claude-opus-5`. Designer **`claude:claude-fable-5`**
-  (rotation slot 1; pointer advanced). Planner/executor/evaluator **not fired** — a design-doc
-  iteration. Verify profile `ailang-code`; AILANG pinned **v0.30.0**. Issue **#32**.
-- **`metered=$0.154`** vs the $5 ceiling — two quorum rounds, all four reviewer slots present.
+- launchd `mission-world`; controller `claude-opus-5`. Planner **`opus`**. Designer/executor/
+  evaluator **not fired** — a planning iteration; rotation pointer unchanged at
+  `claude:claude-fable-5`. Verify profile `ailang-code`; AILANG pinned **v0.30.0**. Issue **#32**.
+- **`metered=$0.00`** vs the $5 ceiling — every role on a quota bucket, no quorum round.
 - **Parked on Mark: NONE.** `8/OD-2`, `10/OD-1`, `10/OD-2` open, all non-blocking with controller
   defaults recorded. FYI not blocking: item 9's human-gated half (pin CI job 1 vs track `latest`).
