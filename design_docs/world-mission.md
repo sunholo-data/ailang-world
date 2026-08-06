@@ -1067,19 +1067,27 @@ Uses the **shared** per-role model routing from `mission-control` (controller /
 designer-rotation / planner / executor / evaluator, generator≠judge enforced). Overrides for THIS
 mission in `~/.config/ailang/mission-world.env`:
 
-- **Executor default — `pi:openrouter/deepseek/deepseek-v4-flash-0731` (Mark 2026-08-06,
-  attended; env pin landed in `mission-world.env` 17:53 local, codex-quota relief).** V1 ran
-  the lane first: ≥3 executor iterations, sonnet 91/88 zero-blocking, ~$0.006/iter REAL
-  metered (posts to the $5 ledger, unlike quota lanes). **pi has NO sandbox** — every pi run
-  carries V1's discipline: re-verify the main checkout byte-identical to preflight after the
-  run; and the codex-sandbox plan assumptions (S-7 "executor cannot commit", `.snap/M<k>/`
-  reconstruction, UNINFORMATIVE-under-sandbox caveats) do NOT apply — state the routing delta
-  in the directive, exactly as iter-58 did for opus. **SM.B2a exception (coordinator, same
-  exchange): the first irreversible-publish-capable milestone does NOT default to an
-  unsandboxed lane** — for SM.B2a use the codex lane, or an opus once-file, or carry an
+- **Executor policy (Mark 2026-08-06, attended — SUPERSEDES the default-flip recorded an
+  hour earlier at `681990a`, which over-read the directive): `codex:gpt-5.6-sol` REMAINS the
+  default; `pi:openrouter/deepseek/deepseek-v4-flash-0731` is the QUOTA-RELIEF REPLACEMENT —
+  when the codex bucket is spent, the executor runs deepseek instead of degrading to opus.**
+  The env pin in `mission-world.env` (17:53 local) is the MANUAL instance of that policy —
+  codex is dry as of 2026-08-06 — and must flip back to the codex default when the bucket
+  refills (one-line rollback documented in place). The AUTOMATIC chain (codex → pi-deepseek
+  → opus; the driver's codex pre-flight hardcodes opus at fallback) is SHARED-DRIVER work,
+  routed upstream via both channels: **ailang#611**, which carries the probe-blindness
+  constraint (a codex 1-token probe can rc=0 on a SPENT bucket, so the chain must also apply
+  at the skill's in-iteration fallback, not only at the driver probe). V1 precedent for the
+  lane: ≥3 executor iterations, sonnet 91/88 zero-blocking, ~$0.006/iter REAL metered (posts
+  to the $5 ledger, unlike quota lanes). **pi has NO sandbox** — every pi run carries V1's
+  discipline: re-verify the main checkout byte-identical to preflight after the run; the
+  codex-sandbox plan assumptions (S-7 "executor cannot commit", `.snap/M<k>/` reconstruction,
+  UNINFORMATIVE-under-sandbox caveats) do NOT apply — state the routing delta in the
+  directive, exactly as iter-58 did for opus. **SM.B2a exception (coordinator, same
+  exchange): the first irreversible-publish-capable milestone does NOT run on an unsandboxed
+  lane by default** — for SM.B2a use the codex lane, or an opus once-file, or carry an
   explicit extra integrity gate (worktree isolation + `env -u AILANG_REGISTRY_API_KEY`
-  verified in the directive, checkout byte-diff both sides). Rollback = comment one line in
-  the env file (documented in place there).
+  verified in the directive, checkout byte-diff both sides).
 - *(prior default, still the documented fallback)*: NON-Anthropic lane — `codex:gpt-5.6-sol`
   (`MISSION_EXECUTOR_MODEL`), per the shared quota plan. **iter-19 routing incident RESOLVED
   by Mark 2026-07-27 (attended, option c): codex-cli upgraded 0.137.0 → 0.145.0 (npm -g) and
