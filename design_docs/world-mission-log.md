@@ -6270,3 +6270,88 @@ Zero code change already sits at **1.43–1.53×** the AC's own constant in the 
 **Next.** Milestone `BG.A`, gated on nothing — the first executor run for item 10. Then `BG.B`, `BG.C`, then item 8's `SM.B2a`.
 
 **Open asks for Mark: NONE.** `8/OD-2`, `10/OD-1`, `10/OD-2` open, all non-blocking with controller defaults recorded; `10/OD-1` now carries a measured reason it cannot proceed.
+
+---
+
+## Iteration 58 — 2026-08-06 — `w-boundary-gate-tree-mutation` (item 10) **`BG.A` LANDED — the boundary gate now proves its teeth without writing the tree it guards** (PR #47 → squash `278f102`; evaluator sonnet **PASS 89/100 r1, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a checker that cannot read the tree finds no forbidden imports**, a shape met three times: inside the fix, inside the doc and plan that specified it, and inside my own known-positive control
+
+**Pick.** Queue head, unchanged: item 10, whose declared next unit of work was milestone `BG.A`. First code for this item.
+
+**What landed.** One file, `host/boundary/allowlist_world_test.go`, **+325/−44**. No production code, no script, no workflow. The mutant is now **declared**, never written: `go list -deps -overlay=<json>` for the dependency-closure half, an overlay-aware read helper for the import-scan half. `mutateAndRestore` and its `defer`-based restore are **deleted** rather than made safer — there is nothing to restore when nothing is written. **AC2, AC3, AC4, AC5 discharged**; `AC1a`/`AC1b`/`AC6′` and mutations `M3`/`M6`/`M7` remain with `BG.B`/`BG.C`.
+
+**Rule 3e ran FIRST, and it is what makes any of the greens mean anything.** All three acceptance commands were baselined on a pristine tree at `10120d6`, in a worktree sibling to the repo, **before the executor was spawned**: `go test ./host/boundary/ -count=1 -v` rc=0 (12 evidence lines, matching `V16c`'s KP), `verify_go.sh` rc=0 (build · plain · `-race`), `verify_ail.sh` rc=0. A green afterwards is therefore attributable to the change rather than to the repo.
+
+**Controller-measured, not inherited** (Gate-2 rule (b): an executor's and a judge's findings are claims too).
+
+| group | baseline closure | baseline `httputil` | overlay closure | overlay `httputil` |
+|---|---|---|---|---|
+| `host/store` | **160** | **0** | **229** | **1** |
+| `host/replay` | 162 | 0 | 231 | 1 |
+| `cmd/ailang-worldd` | 233 | 0 | 234 | 1 |
+
+Exactly the planner's `PV-3`/`PV-8` prediction, and asserted on the closure `checkGoGroup` **returned** — not on a second `go list`, which could be green while the call that gates ran on the base closure.
+
+`M1` and `M2(b)` re-run first-party under the house recipe (anchor count **1** asserted, differing sha256 asserted *before believing*, control arm **first** at rc=0, byte-identical restore `d535c1ec…` verified between arms):
+
+| id | edit | observed |
+|---|---|---|
+| control | none | `ok … 0.504s`, rc=0 |
+| `M1` | mutant generator emits `"fmt"` | `mutation in host/store/store.go passed boundary guard` (rc=1) |
+| `M2(b)` | overlay `Replace` **KEY** names no real file — the **silent** failure | `overlay closure does not contain "net/http/httputil" … (overlay closure=160, baseline closure=160) -- the toolchain half of the gate is dead` (rc=1, all three Go arms) |
+
+`M2(b)` is the one that matters. The planner measured that `go list -overlay` returns **rc=0, the base closure and no stderr** when a `Replace` key matches no real file — so without AC2 the toolchain half can be dead while the import scan keeps producing a perfectly convincing RED through the read half.
+
+**`M5` — the AC4 kill harness — is the controller's own, and it was run with its negative control (rule 3d).** Per arm, deterministically: await that arm's ready marker under a fixed timeout → verify the mutant and overlay JSON **exist** → verify the overlay **maps** the real target to the temp mutant → verify the process is **alive** → `SIGKILL`.
+
+| arm | artifacts verified | alive at kill | rc | changed target shas | `git status --porcelain` |
+|---|---|---|---|---|---|
+| `host/store` | ✓ | ✓ | −9 | 0 | 0 |
+| `host/replay` | ✓ | ✓ | −9 | 0 | 0 |
+| `cmd/ailang-worldd` | ✓ | ✓ | −9 | 0 | 0 |
+| `world` | ✓ | ✓ | −9 | 0 | 0 |
+| **negative control** — same kill, **base** harness | n/a | n/a | −9 | **1** | **` M host/store/store.go`** |
+
+Outcomes **differ**, so the green measures the mechanism and not the environment. That is the whole distance between this result and the one iter-55 warned could mean *"the threat was never exercised."* AC4's fail-closed property proven in both directions: armed-but-never-killed → `panic: test timed out`, rc=1 (a timeout **fails**); an in-repo marker path → rejected with `resolves inside repoRoot`, and the marker file was **never created**.
+
+**A defect in the design doc and the plan themselves, found only by executing them.** `go/parser`'s `readSource` tests `src != nil` on the **interface**, so a typed nil `[]byte` is a non-nil interface handed back as an **empty source**; every unreplaced file then parses as `expected 'package', found 'EOF'`. Both artifacts write the helper as `parser.ParseFile(fset, path, <bytes-or-nil>, …)` — precisely the shape that produces it. It surfaced only because `checkGoGroup` surfaces parse errors; had the walk swallowed them, the gate would have been a checker that reads nothing and therefore finds nothing. Isolated in `parseSrc`, documented in a comment, recorded in the doc so the written wording does not reproduce it.
+
+**The evaluator earned its fee on a finding it filed as low-severity — and the controller reproduced it rather than accepting the label.** The plan's `BG.B` step says "route BG.A's **two** per-arm writes (mutant file, overlay JSON) through `confinedWrite`". It was written before the AC4 barrier existed as code, and the barrier adds a **third** direct `os.WriteFile(absMarker, …)`. Measured at `278f102`: **3** `os.WriteFile` sites (`:383` marker, `:428` mutant, `:439` overlay JSON), **0** `OpenFile`/`Create`/`Rename`, with a firing known-positive control (`os.ReadFile` = **4**, so the zeros are measurements). Decision 8's AST guard reds on any of the four names outside the single permitted site, so leaving the marker write direct makes `BG.B` **red on BG.A's own landed code**. Routing it through `confinedWrite` is correct rather than an exemption — the marker is *required* to live outside `repoRoot`, exactly what `confinedWrite` permits — so the writer also becomes the enforcement point for the AC4 marker-path rule, replacing the bespoke `insideRepo` check at `:367–:373`. Plan corrected in place with a `controller_corrections` entry. This is rule 3b(vii) at its sharpest: **the plan and the code rotted apart inside the single iteration that produced both.**
+
+**A deliberate deviation from the plan's literal signature, and the controller records the opposite verdict to the judge's.** The plan specifies `checkGoGroup(root, group, overlay string)`; the executor used a two-field `overlay{jsonPath, replace}` so the toolchain half and the read half are **separately disarmable**. The reason is AC2's own falsifiability: with one string, dropping `-overlay` also disarms the import scan, so `M2(a)` would red at **AC3** instead of AC2 and the toolchain half would go untested — *a mutation shaped to the check tests the check, not the threat* (iter-54's spine). The evaluator scored it **−5 on design fidelity** as an undocumented departure; on the merits the deviation is what makes AC2 non-vacuous, it is documented on the type, and the **plan** is what was wrong.
+
+**My own instrument failed once, and the failure is the most useful thing here.** Proving the AC4 barrier is a no-op when unset, my known-positive control returned `BARRIER lines: armed=0, unset=0` — control and claim agreeing at zero, which reads as a clean result and is in fact an instrument that **cannot see a positive**. Cause: the armed arm ran without `-v`, and `V16c` — measured by this very sprint's planner one iteration ago — says a Go test without `-v` emits nothing, not even `t.Logf`. Re-run with `-v` on both arms: armed **1**, unset **0**, rc=0. The sprint's own headline measurement invalidated the controller's control, in the same file, one iteration after being recorded.
+
+**Gate 3b — recorded honestly rather than rounded to green.** At the merge SHA, `go host build + test gate` is **SUCCESS**; `ailang-code verify gate` is **FAILURE**, and the failure is in **`Set up job`, step 1, before checkout, with zero repo commands executed**: `Failed to resolve action download info. Error: Service Unavailable`. Attribution is by **mechanism plus two firing controls**, never by redness or adjacency (rule 3d):
+
+- githubstatus.com: `Actions: partial_outage`, incident opened `2026-08-06T15:22:49Z`; the run started `15:38:01Z` — **16 minutes inside it**.
+- The **identical tree** passed the **identical job** on PR #47 at `15:33:02Z` (`51e18968` → SUCCESS), five minutes before the outage bit.
+- The sibling job on the same merge commit is SUCCESS, and both jobs use the same two actions (`actions/checkout@v4`, `actions/setup-go@v5`), so it is not action-specific.
+
+**Three bounded re-run attempts, none of which reached a repo command**: two died in the same pre-checkout `Set up job` step, and the third sat `queued` ~15 min and was **`cancelled`**; the run ends `completed/failure` with the verify job never having executed a line of this repo's code, and `Actions: partial_outage` is still live at the close of the iteration. Bounded per Standing rule 6 — a headless slot is not spent waiting on someone else's incident. **The merge is not reverted** — reverting a change proven green on the same tree, by the same job, would be the worse error — but the queue tag says `BG.A LANDED` **with the CI caveat attached**, and re-confirming that job at `278f102` is the first item of iteration 59.
+
+**Routing evidence.**
+
+| role | model | note |
+|---|---|---|
+| controller | `claude-opus-5` | triage, Gate-2 checks, `M5` + `M1`/`M2(b)` reproduction, gates, Gate 3b, record |
+| designer | **not fired** | doc landed iter-56; rotation pointer unchanged at `claude:claude-fable-5` |
+| planner | **not fired** | plan landed iter-57 |
+| executor | **`opus`** (Agent-tool pinned from `MISSION_EXECUTOR_MODEL`) | **routing delta**: the plan assumed `codex:gpt-5.6-sol` under `--sandbox workspace-write`, so its `S-7` "the executor lane cannot commit" and `.snap/M<k>/` reconstruction rule did **not** apply and `BG.A` is one ordinary commit; the sandbox `UNINFORMATIVE` caveats likewise did not arise. Stated explicitly in the directive rather than left for the executor to discover |
+| evaluator | **`sonnet`** | distinct model ⇒ generator≠judge; **PASS 89/100, round 1, zero blocking**, three low-severity non-blocking findings, all carried |
+
+`metered=$0.00` against the `$5` ceiling — every role on a quota bucket, no quorum round, no cross-provider call.
+
+**Safety.** No publish occurred and no `ailang publish` was invoked in any form, in any arm including probes; no secret was printed. `GOTOOLCHAIN=go1.25.6` on every `go` invocation (the PATH go is **go1.26.4**, which `verify_go.sh:76` explicitly denies) and `AILANG_BIN=/tmp/ailang-v0300/ailang` (v0.30.0, `e37b370`) on every gate. **The boundary gate was never run in the main checkout** — it mutates live production sources at base, which is the defect under repair. Every run and every re-arming mutation lived in a worktree **sibling** to the repo, never under `/tmp`; all three probe worktrees plus the poisoned negative-control tree were restored and removed.
+
+**Gate-2 cross-checks, all run.** Rule 3b(vi-b) freshness sweep from the doc's **oldest** declared base (`deeb804`): **0** non-doc files changed, control firing at **5** (all under `design_docs/`). Rule 3b(v) re-derivation at pick time: the gate file was **351** lines with `repoRoot:60 goListDeps:72 enumerateAIL:96 checkGoGroup:130 checkAILGroup:165 mutateAndRestore:190`, matching `V2` exactly. Rule 3b(vii): doc and plan **agreed** on `BG.A`'s AC ownership — the rot appeared *after* execution instead, which is the new instance above. Already-landed check on fresh origin: `BG.A` returned **1** hit, the iter-57 planning record, against a firing control (`SM.B1` → `feat(8): SM.B1 … (#43)`). Mid-flight-iteration check (the iteration-149 class): **no open PRs from this loop and no stale sprint worktrees** before starting.
+
+**Next.** Milestone `BG.B` (`AC1a` · `M3`, `M6`) — gated on nothing, but it **must apply the three-write-site correction first**, or its own AST guard reds on `BG.A`'s landed barrier. Also first: re-confirm `ailang-code verify gate` at `278f102` once the GitHub Actions incident closes.
+
+**Ruled out / refuted (mine and others').**
+- *"The plan's single-string `overlay` parameter is the right shape."* **Refuted by execution** — it makes `M2(a)` red at AC3 instead of AC2, leaving the toolchain half untested.
+- *"The plan's `BG.B` routes two writes."* **Refuted** — three, measured with a firing control; the third would red the guard `BG.B` installs.
+- *"`parser.ParseFile(fset, path, <bytes-or-nil>, …)` is safe as written."* **Refuted** — a typed nil `[]byte` is a non-nil interface and parses as an empty source.
+- *"The evaluator's NB-2 is a documentation nit."* **Refuted by reproduction** — it is a blocking precondition for the next milestone. A NON-BLOCKING label is the judge's opinion of severity, not a measurement.
+- *"The `ailang-code verify gate` red is our code."* **Refuted** — the job died in `Set up job` before checkout, during a declared Actions outage, with the identical tree green on the identical job five minutes earlier.
+- *"The first `ailang-code verify gate` red was a one-off transient."* **Refuted by its own re-run** — it reproduced twice, which is what turned "probably infrastructure" into a measured incident-window attribution rather than a hopeful one.
+- *"My AC4 no-op control fired."* **Refuted** — armed=0 and unset=0 is an instrument that cannot see a positive, not a clean result. `V16c` explains it, and the corrected control reads armed=1 / unset=0.

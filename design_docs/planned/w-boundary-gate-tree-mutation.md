@@ -1,6 +1,7 @@
 # w-boundary-gate-tree-mutation — the gate must not be able to poison the tree it guards
 
-**Status**: Planned
+**Status**: In sprint — **`BG.A` LANDED 2026-08-06 (iter-58)**, PR #47 → squash `278f102`. `BG.B`
+and `BG.C` remain; the doc stays in `planned/` until all three land.
 **Date**: 2026-08-06
 **Queue item**: 10, `w-boundary-gate-tree-mutation` (promoted ahead of `SM.B2a` at iter-56, on the
 strength of the SIGKILL-residue measurement below)
@@ -386,6 +387,65 @@ did not work?*
 > subprocess SIGKILL + git inspection; M6/M7 re-arm live-tree writes; AC6′ needs a file swap out of
 > git history) — the controller pass is the critical path. LOC re-estimated **+150 → +250**, all of
 > it spent making this document's own ACs non-vacuous.
+
+> **⚠ `BG.A` LANDED AT ITER-58 (PR #47 → squash `278f102`, dev CI: `go host build + test gate`
+> SUCCESS SHA-addressed on the merge commit; `ailang-code verify gate` blocked by a **declared
+> GitHub Actions outage** — see the charter STATUS stamp). Executor `opus` (the driver env's
+> `MISSION_EXECUTOR_MODEL`, NOT the plan's assumed `codex:gpt-5.6-sol` — so the plan's `S-7`
+> no-git-writes/snapshot rule did not apply and BG.A is one ordinary commit). Evaluator `sonnet`
+> **PASS 89/100, round 1, zero blocking findings**.** **AC2, AC3, AC4 and AC5 are DISCHARGED**;
+> `AC1a`/`AC1b`/`AC6′` and mutations `M3`/`M6`/`M7` remain with `BG.B`/`BG.C`. Measured, not
+> inherited: AC2's four numbers per Go arm are `host/store` **160/0 → 229/1**, `host/replay`
+> 162/0 → 231/1, `cmd/ailang-worldd` 233/0 → 234/1 — the planner's `PV-3`/`PV-8` prediction exactly,
+> asserted on the closure `checkGoGroup` RETURNED rather than on a second `go list`. `M1` and
+> `M2(b)` were re-run first-party by the controller under the house recipe (anchor count **1**,
+> differing sha256 asserted before believing, control arm first, byte-identical restore verified):
+> `M2(b)` — the overlay `Replace` KEY naming no real file, i.e. the **silent** failure — reds with
+> `overlay closure=160, baseline closure=160 -- the toolchain half of the gate is dead`. **`M5`, the
+> AC4 kill harness, was run by the controller on all four arms with its NEGATIVE CONTROL (rule 3d)**:
+> marker awaited under a fixed timeout → mutant + overlay JSON verified present → overlay verified to
+> map real target → temp mutant → process verified **alive** → `SIGKILL` (`rc=-9`); result **0**
+> changed target sha256s and **0** `git status --porcelain` lines on all four arms, against the SAME
+> kill on the **base** harness which returned `killed_while_mutating=host/store/store.go`,
+> `RESIDUE=YES`, ` M host/store/store.go`. Outcomes differ, so the green measures the mechanism and
+> not the environment. AC4's fail-closed property was proven in both directions: armed-but-never-
+> killed → `panic: test timed out`, rc=1 (a timeout FAILS); an in-repo marker path → rejected with
+> `resolves inside repoRoot`, and the marker file was never created.
+>
+> **ONE DEFECT IN THIS DOCUMENT AND ITS PLAN, FOUND DURING EXECUTION AND NOT BEFORE.** `go/parser`'s
+> `readSource` tests `src != nil` on the **interface**, so a typed nil `[]byte` is a NON-nil
+> interface and is handed back as an **empty source** — every unreplaced file then parses as
+> `expected 'package', found 'EOF'`, and *a checker that cannot read the tree finds no forbidden
+> imports*. Both this doc and the plan write the read helper as
+> `parser.ParseFile(fset, path, <bytes-or-nil>, …)`, which is the shape that produces it. It was
+> observed live, is isolated in `parseSrc`, and is recorded here because a future implementer
+> following the written wording will hit it. It is this item's own spine arriving inside the fix:
+> a green that means "the check never ran".
+>
+> **CARRY TO `BG.B` — the plan's write-site count is now WRONG BY ONE, and the missing one would red
+> the guard `BG.B` installs.** The plan says "route BG.A's **two** per-arm writes (mutant file,
+> overlay JSON) through `confinedWrite`"; it was written before the AC4 barrier existed as code, and
+> the barrier adds a **third** direct `os.WriteFile(absMarker, …)`. Measured at `278f102`: **3**
+> `os.WriteFile` sites (`:383` marker, `:428` mutant, `:439` overlay JSON), **0**
+> `OpenFile`/`Create`/`Rename`, with a firing known-positive control (`os.ReadFile` = **4**).
+> Decision 8's guard reds on any of the four names outside the single permitted site, so leaving the
+> marker write direct makes `BG.B` red on `BG.A`'s own landed code. Routing it through
+> `confinedWrite` is CORRECT rather than an exemption — the marker is *required* to resolve outside
+> `repoRoot`, which is exactly what `confinedWrite` permits, so the confined writer also becomes the
+> enforcement point for the AC4 marker-path rule and replaces the bespoke `insideRepo` check at
+> `:367–:373`. Raised by the evaluator (`NB-2`), reproduced by the controller before being recorded;
+> the plan artifact is corrected in place and carries a `controller_corrections` entry.
+>
+> **A DELIBERATE DEVIATION FROM THE PLAN'S LITERAL SIGNATURE, AND IT IS THE RIGHT ONE.** The plan
+> specifies `checkGoGroup(root, group, overlay string)` — a single JSON path serving both halves.
+> The executor used a two-field `overlay{jsonPath, replace}` so the toolchain half and the read half
+> are **separately disarmable**, and the reason is `AC2`'s own falsifiability: with one string,
+> dropping `-overlay` would also disarm the import scan, so `M2(a)` would red at **AC3** instead of
+> at AC2 and the toolchain half would go untested — *a mutation shaped to the check tests the check,
+> not the threat* (iter-54's spine). The observed `M2(a)`/`M2(b)` messages confirm it. The evaluator
+> scored this **−5 on design fidelity** as an undocumented departure; the controller records the
+> opposite verdict on the merits — the deviation is what makes AC2 non-vacuous, it is documented in
+> a code comment on the type, and the plan is what is now corrected.
 
 - **AC1 — all mutation-harness writes are structurally confined; a live-tree write is
   synchronously rejected.** Every write the mutation harness performs is routed through the

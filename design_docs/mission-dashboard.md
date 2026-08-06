@@ -2,40 +2,47 @@
 
 *Snapshot, overwritten every Gate 4. History lives in `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-06, iteration 57 · dev @ `e9c8c85` · CI green both jobs (SHA-addressed)
+**As of** 2026-08-06, iteration 58 · dev @ `278f102` · CI: `go host build + test gate` **green**;
+`ailang-code verify gate` **red on a declared GitHub Actions outage, not on our code** — 3 bounded
+re-runs, none reached a repo command. **Iteration 59's first item: re-confirm it at `278f102`.**
 
 ## In flight
 
-- **Item 10 `w-boundary-gate-tree-mutation` — SPRINT-PLANNED** (`BG.A` → `BG.B` → `BG.C`; planner
-  `opus`, lane fail-closed `opus missing-script`). Partition complete: 7 ACs, 7 mutations, none
-  dropped.
-- **`[NEXT]` is milestone `BG.A`**, gated on nothing — the first executor run for item 10.
-- **Item 8 `w-self-mod-vertical`** — `SM.B2a` (~780 LOC, brokered publish, the first
-  irreversible-publish-capable code) queued behind item 10; unchanged, deliberately not started.
+- **Item 10 `w-boundary-gate-tree-mutation` — `BG.A` LANDED** (PR #47 → squash `278f102`, evaluator
+  `sonnet` **89/100 r1, zero blocking**). The gate no longer writes the tree it guards: the mutant is
+  **declared** via `go list -overlay` + an overlay-aware read; the `defer`-based restore is deleted.
+  **AC2/AC3/AC4/AC5 discharged.**
+- **`[NEXT]` is milestone `BG.B`** (`AC1a` · `M3`, `M6`), gated on nothing — **but apply the
+  three-write-site correction first** (below) or its own AST guard reds on `BG.A`'s landed code.
+- **Item 8 `w-self-mod-vertical`** — `SM.B2a` (~780 LOC, first irreversible-publish-capable code)
+  queued behind item 10; unchanged.
 - **Item 5 `w-mcp-projection` — still BLOCKED** on one prerequisite. Unchanged.
 
-## Latest — a threshold whose noise is the size of its signal cannot fail informatively
+## Latest — a checker that cannot read the tree finds no forbidden imports
 
-- **`AC6` was vacuous in BOTH directions, and baselining is what found it.** On *unchanged* code:
-  fresh-worktree first run **0.664 / 0.621 s** (n=2), warm steady state **~0.480 s** (n=9) — against
-  the AC's own `≤2× 0.435 s`. Zero change already sits at **1.43–1.53×** cold, and CI checks out
-  fresh. The noise band eats ~76% of the budget, so a **green** `AC6` proved nothing either. The
-  planner added two more defects: units ambiguous by **1.32×** (go-reported vs wall-clock), and the
-  600 s `-race` budget it nominally guards has **1200×** headroom over a 0.5 s package.
-- **`V16` refuted.** `cmd/ailang-worldd`'s closure *does* carry a forbidden prefix (`host/registry`,
-  1 of 233, KP firing). **But the red would be a false positive** — that is the *epoch* registry, not
-  the package registry, exactly the name collision iter-53 predicted. **`10/OD-1` gets more blocked,
-  not less.**
-- **CI has never seen the gate's diagnostics.** No `-v` anywhere in `verify_go.sh`: CI's form prints
-  one `ok` line (0 matches) against a KP `-v` arm at **12**. Any observable must be an **assertion**.
-- **iter-56's own correction was incomplete** — the false "deliberately non-compiling" sentence was
-  still live in the charter's queue row, 35 lines below its own correction. Fixed this Gate 4.
+Met three times this iteration: inside the fix, inside the doc+plan that specified it, and inside my
+own control.
+
+- **`M5` (the SIGKILL harness) passed 4/4 arms with a firing negative control.** Marker awaited →
+  artifacts verified → overlay verified to map target→mutant → process verified **alive** → `SIGKILL`
+  (`rc=-9`): **0** changed shas, **0** porcelain lines. The **same kill on the base harness**:
+  `RESIDUE=YES`, ` M host/store/store.go`. Outcomes differ, so the green measures the mechanism.
+- **The plan's `BG.B` write-site count is wrong by one, and the missing one reds `BG.B`'s own guard.**
+  Plan says two writes; measured **3** `os.WriteFile` (`:383` marker, `:428` mutant, `:439` overlay),
+  **0** `OpenFile/Create/Rename`, KP `os.ReadFile` = 4. Route the AC4 marker through `confinedWrite`
+  too — it is *required* to live outside `repoRoot`, which is exactly what the writer permits.
+- **The doc and plan both specify a latent bug.** `go/parser` tests `src != nil` on the **interface**,
+  so a typed nil `[]byte` parses as an **empty source** — every unreplaced file becomes
+  `expected 'package', found 'EOF'`. Isolated in `parseSrc`.
+- **My own known-positive control was invalid** (armed=0, unset=0 — an instrument that cannot see a
+  positive). Cause: no `-v`, i.e. this sprint's own `V16c`, one iteration after it was measured.
 
 ## Loop · cost · asks
 
-- launchd `mission-world`; controller `claude-opus-5`. Planner **`opus`**. Designer/executor/
-  evaluator **not fired** — a planning iteration; rotation pointer unchanged at
-  `claude:claude-fable-5`. Verify profile `ailang-code`; AILANG pinned **v0.30.0**. Issue **#32**.
+- launchd `mission-world`; controller `claude-opus-5`. Executor **`opus`** (env pin; the plan assumed
+  codex, so its no-git-writes/snapshot rule did not apply). Evaluator **`sonnet`**. Designer/planner
+  not fired; rotation pointer unchanged at `claude:claude-fable-5`. Verify profile `ailang-code`;
+  AILANG pinned **v0.30.0**. Issue **#32**.
 - **`metered=$0.00`** vs the $5 ceiling — every role on a quota bucket, no quorum round.
 - **Parked on Mark: NONE.** `8/OD-2`, `10/OD-1`, `10/OD-2` open, all non-blocking with controller
   defaults recorded. FYI not blocking: item 9's human-gated half (pin CI job 1 vs track `latest`).
