@@ -2,39 +2,37 @@
 
 *Snapshot, overwritten every Gate 4. History lives in `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-06, iteration 55 · dev @ `1761a9c` · CI green both jobs (SHA-addressed)
+**As of** 2026-08-06, iteration 56 · dev @ `deeb804` + PR #46 · CI green both jobs (SHA-addressed)
 
 ## In flight
 
-- **Item 8 `w-self-mod-vertical` — `AC12` REPAIRED** (PR #45 → `1761a9c`). The World-boundary gate's
-  loopback exception was true of **one** group and a single shared list gave it to **all three**:
-  bare `net/http` blank-imported into `host/store` passed the gate green. Now per-group.
-- **`[NEXT]` is still `SM.B2a`** — brokered publish handler, de-ambient credential, typed
-  indeterminate (~780 LOC). Gated on nothing, and now lands against a gate with teeth.
-- **NEW item 10 `w-boundary-gate-tree-mutation`** — the same gate mutates *other packages'*
-  production sources in the live tree while `go test ./...` builds them concurrently. Measured on
-  pristine `dev`. Consider landing **before** SM.B2a, which lengthens the broker suite and widens
-  the window.
+- **Item 10 `w-boundary-gate-tree-mutation` — DESIGN DOC LANDED** (PR #46). Promoted ahead of
+  `SM.B2a` this iteration on a new measurement, not on the queue order.
+- **`[NEXT]` is item 10's sprint-planner run**, gated on nothing. Then `SM.B2a`.
+- **Item 8 `w-self-mod-vertical`** — `SM.B2a` (~780 LOC, brokered publish, the first
+  irreversible-publish-capable code) still the next milestone; unchanged, deliberately not started.
 - **Item 5 `w-mcp-projection` — still BLOCKED** on one prerequisite. Unchanged.
 
-## Latest — the guard against network had a hole in two of its three groups
+## Latest — the gate that guards the tree can poison it, and the build cannot see it
 
-- **Found at the SM.B2a boundary, before the network code it guards exists.** Every protected
-  group's mutation was `net/http/httputil`, which the gate *does* catch — the mutation was shaped to
-  the check, not the threat. Bare `net/http` → `host/store` **rc=0 PASS**, → `host/replay` **rc=0
-  PASS**; both now RED, `cmd/ailang-worldd` still permitted, pristine still green.
-- **The exemption was unforced**, not just unnecessary: baseline `net/http` in each closure is
-  `host/store` **0**, `host/replay` **0**, `cmd/ailang-worldd` **1**. Only one group ever needed it.
-- **Second finding, pre-existing and unrelated to the pick.** That same gate rewrites
-  `main.go`/`store.go`/`replay.go` in place; a concurrent reader on pristine `dev` observed all
-  three in a **non-compiling** state (5 samples of 90; control **0/200** with the gate idle). It
-  red-lit `TestCLIRealSubprocessEpisode` once here. Latent in CI: **0/8** full-suite runs.
+- **The teeth-proof writes live production sources and restores with a `defer`.** That `defer`
+  survives return and `t.Fatal` and **nothing else**: SIGKILL mid-mutation → `rc=137`, residue
+  permanent; Go's own `-test.timeout` panic → `rc=2`, same (60s control completes clean). Both kill
+  paths are in the repo's own gate — `verify_go.sh` runs `-race -timeout 8m` inside an
+  `os.killpg(SIGKILL)` at 600s.
+- **The residue is invisible to the build**: `go build` **rc=0**, `go vet` **rc=0** with all three
+  mutants applied. It reds *the boundary gate itself*, accusing an innocent file of a
+  network-boundary violation — during the one sprint whose job is to add network code.
+- **Correction to mission records**: the mutants are NOT "deliberately non-compiling" (charter,
+  queue row and this dashboard all said so). They compile. The harm model is worse, not milder.
+- **Fix**: `go list -overlay` — the overlay closure is diff-identical to a physically poisoned tree
+  (control fired, 69-package difference) and the tree stays 0-dirty.
 
 ## Loop · cost · asks
 
-- launchd `mission-world`; controller `claude-opus-5`. Designer/planner/executor/evaluator **not
-  fired** — a controller-sized measured repair; rotation unchanged at `codex:gpt-5.6-sol`.
-  Verify profile `ailang-code`; AILANG pinned **v0.30.0**. Issue **#32**.
-- **`metered=$0.00`** vs the $5 ceiling — controller-only, every role on a quota bucket.
-- **Parked on Mark: NONE.** `8/OD-2` open, non-blocking. FYI not blocking: item 9's human-gated half
-  (pin CI job 1 vs keep tracking `latest`).
+- launchd `mission-world`; controller `claude-opus-5`. Designer **`claude:claude-fable-5`**
+  (rotation slot 1; pointer advanced). Planner/executor/evaluator **not fired** — a design-doc
+  iteration. Verify profile `ailang-code`; AILANG pinned **v0.30.0**. Issue **#32**.
+- **`metered=$0.154`** vs the $5 ceiling — two quorum rounds, all four reviewer slots present.
+- **Parked on Mark: NONE.** `8/OD-2`, `10/OD-1`, `10/OD-2` open, all non-blocking with controller
+  defaults recorded. FYI not blocking: item 9's human-gated half (pin CI job 1 vs track `latest`).

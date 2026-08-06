@@ -6171,3 +6171,48 @@ Compose the last four and the finding is not decorative: **any process inheritin
 **Gate 5 — retro. No skill edit** (World cannot edit the shared mission-control SKILL.md — it resolves by symlink into the V1 checkout, verified IDENTICAL to origin this iteration). The transferable finding is **PROPOSED to Mark + V1** rather than applied: *an exception encoded as an omission from a shared list silently generalises to every consumer of that list; encode it per-consumer, and pin the asymmetry with a test that reds when it is collapsed.* Process fix applied locally instead: queue item 10 records the gate's live-tree mutation, and item 8's row now carries what SM.B2a must re-assert versus what is now discharged.
 
 **Next.** Milestone **`SM.B2a`** — the brokered publish handler, the de-ambient credential and the typed indeterminate outcome (~780 LOC, handoff §6, ACs `AC7`/`AC10`/`AC11`). Gated on nothing. **Read before starting**: (1) the AC12 *positive* half is still unproven — `host/broker` has zero `net/http` deps and the gate's green control only checks non-emptiness; (2) `AC9b`'s concurrent-collision error class belongs to SM.B2b, not here; (3) consider landing **item 10** first, since SM.B2a lengthens the broker suite and widens the live-tree mutation window.
+
+## Iteration 56 — 2026-08-06 — `w-boundary-gate-tree-mutation` (item 10, **promoted ahead of the queue head**) **DESIGN DOC LANDED — the gate that guards the tree can poison it, and the build cannot see it** (PR #46 → squash `ca25ed6`, dev CI green both jobs SHA-addressed on the merge commit; `metered=$0.154`) — and the iteration's spine is that **a green result must be unable to mean "the check never ran"**, a shape found three times: in the gate, in its own fix, and in its own audit
+
+**Pick.** Queue head was item 8's `SM.B2a`. Item 10 carried iter-55's open invitation *"consider ordering BEFORE `SM.B2a`"*. The promotion was decided by measurement, not by the invitation.
+
+**The finding.** `mutateAndRestore` (`host/boundary/allowlist_world_test.go:190`) restores via `defer`. A `defer` survives return and `t.Fatal` and nothing else.
+
+| arm | result |
+|---|---|
+| normal completion (green control) | `rc=0`, `ok 0.612s`, three files byte-identical, tree clean |
+| SIGKILL mid-mutation | `rc=137`, ` M host/store/store.go` — residue **permanent** |
+| Go's own `-test.timeout` panic, 250ms | `rc=2`, residue on `cmd/ailang-worldd/main.go` (60s control completes clean) |
+
+Both kill paths are inside the repo's own gate: `scripts/verify_go.sh` runs `go test ./... -race -timeout 8m` (panic path) wrapped in `os.killpg(…, SIGKILL)` at 600s (`:113`), invoked by CI job 2. Margin is wide today (78s vs 600s) so the grade stays honestly **latent** — but a margin is not a monitor, which is the lesson item 9 already paid for.
+
+**The refutation that became the finding.** I predicted the residue would leave a non-compiling file and brick the build. **Refuted:** with all three mutants applied simultaneously, `go build ./...` **rc=0** and `go vet` **rc=0**. The import compiles — the gate's own comment says *"compiling HTTP import"*. The residue is therefore **invisible to the build**, and what it breaks is the boundary gate itself, which then accuses an innocent production file of a *network-boundary violation* — indistinguishable from a real one, during the one milestone that adds network code. That is a worse harm model than the one I predicted, and it is the ordering argument.
+
+**Correction to mission records.** The charter queue row, the iter-55 STATUS stamp and the dashboard all described the mutants as *"deliberately non-compiling"* — three times, and false. Corrected in all three this Gate 4. Consequently iter-55's transient `could not import net/http/httputil` CI red cannot be explained by "the file is broken"; it is a build-graph artifact of the file *changing* under a concurrent build.
+
+**Decision, controller-verified rather than inherited.** `go list -overlay` + an overlay-aware read: the gate never writes a byte under the repo root, closing crash-residue and the concurrency window with one mechanism. Overlay closure **diff-IDENTICAL** to a physically poisoned tree, control firing at a 69-package difference, repo tree **0-dirty** throughout. The queue row's preferred scratch-copy repair was rejected because `repoRoot` bakes the real root in at compile time (`runtime.Caller(0)`).
+
+**Quorum: two rounds, both BLOCKED, both accepted rather than argued.**
+- **Round 1** (both reviewers, one objection): AC1/M3's ~2 ms polling detector was probabilistic. Deleted, not supplemented. Replaced by BOTH reviewers' fixes as complementary layers — `gpt5-6-sol`'s structural write confinement + `go/ast` guard (primary, filesystem-independent) and `gemini-3-1-pro`'s `ModTime` backstop. Per rule 3f the controller **measured** gemini's premise instead of forwarding it: back-to-back write+restore advanced `st_mtime_ns` **200/200**, with a 1 ms gap **200/200**, KP pair firing both ways (no-write → unchanged; single-write → 200/200 changed).
+- **Round 2** (two NEW objections, resolved under the narrow-refinement carve-out; neither disputed the design DIRECTION, both carried a concrete `proposed_fix`): (a) `gpt5-6-sol` — AC4/M5's *"≥10 randomized offsets"* never proved a kill landed after an arm armed its overlay, so a clean tree could mean the threat was never exercised; replaced by its verbatim barrier protocol. (b) `gemini-3-1-pro` — **P9's audit had not searched for its own threat model** (`V15` grepped `os.WriteFile` only, while Decision 8 names `OpenFile`/`Create`/`Rename`).
+
+**P9 is now a measurement, not a search.** Gemini's widened search verbatim: **25** hits across 13 test files, KP `host/boundary` = **3**, the only `Create/OpenFile/Rename` outside `host/boundary` being `cli_test.go:272` (`t.TempDir()`-rooted). Then the property itself, end-to-end: sampling `git status --porcelain` at 20 Hz across the whole suite gives **1** distinct dirty observation with the gate enabled (` M cmd/ailang-worldd/main.go`) and **0** with only `TestWorldBoundaryDependencyAllowlist` skipped.
+
+**Second finding, carried as `10/OD-1` rather than fixed.** `checkGoGroup` (`:130`) computes the `go list -deps` closure and then uses it **only** as a `len(deps)==0` anti-vacuity guard; the forbidden-prefix scan walks **direct import specs alone**, so a transitive forbidden dependency is invisible in a gate named "dependency allowlist".
+
+**Ruled out / refuted (mine and others').**
+- *"The residue leaves a non-compiling file and bricks the build."* **REFUTED** — `go build` rc=0, `go vet` rc=0. The truth is worse.
+- *"The mutants are deliberately non-compiling"* (charter/queue/dashboard, ×3). **REFUTED** by the same measurement.
+- *First SIGKILL sampler returned a clean tree.* **UNINFORMATIVE, not negative** — it recomputed baselines via `git show` per round and lost the race to the restore. Re-run with precomputed baselines before anything was believed.
+- *Eight timeout runs showed "no residue".* **Instrument failure** — the test binary had been compiled in a worktree I had since deleted, so `repoRoot`'s compile-time `runtime.Caller(0)` path made every run fail before reaching a mutation. Rebuilt in place with a known-positive control. (This accidentally *proved* the `repoRoot` constraint that rules out the scratch-copy design.)
+- *My package counts 165→234.* Taken under PATH **go1.26.4**, which `verify_go.sh:76` **explicitly denies**. The doc's `GOTOOLCHAIN=go1.25.6` figures (160→229) are operative; the equivalence result merely now holds on two toolchains. Neither of us was wrong — we measured different instruments.
+- *`awk` reported 10 malformed Verification-Log table rows.* **Instrument error** — it counted escaped `\|` inside code spans as delimiters. 0 malformed on a correct count.
+- *Both P9 arms exited `rc=1`.* **Not a dev regression** — `TestEpisodeLiveReplayThreeArmsAndEvidence` fails loud when `AILANG_BIN` is unset, which is `verify_go.sh`'s deliberate guard firing at a bare `go test` that bypassed the script. Identical in both arms, so the comparison is unaffected; CI green at `deeb804`.
+
+**Routing evidence.** designer `claude:claude-fable-5` (rotation slot 1; probe rc=0; two bounded 30-min runs, directives 14,115 B and 11,259 B; no git writes) · quorum `gpt5-6-sol` + `gemini-3-1-pro`, **both present both rounds**, r1 `$0.0674` r2 `$0.0864` · planner/executor/evaluator **not fired** (design-doc iteration) · controller `claude-opus-5` · rotation pointer advanced to `claude:claude-fable-5` · `metered=$0.154` vs the `$5` ceiling.
+
+**Safety.** No publish, no `ailang publish` in any form including probes; no secret printed; every experiment in a worktree **sibling of the repo** (never `/tmp`, never the main checkout); all four probe worktrees removed.
+
+**Next.** Item 10's sprint-planner run, gated on nothing. Then `SM.B2a`.
+
+**Open asks for Mark: NONE.** `8/OD-2`, `10/OD-1`, `10/OD-2` open, all non-blocking with controller defaults recorded.
