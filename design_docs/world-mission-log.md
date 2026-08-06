@@ -6355,3 +6355,60 @@ Outcomes **differ**, so the green measures the mechanism and not the environment
 - *"The `ailang-code verify gate` red is our code."* **Refuted twice over** — the job died in `Set up job` before checkout during a declared Actions outage, with the identical tree green on the identical job five minutes earlier; and then the next commit, a descendant carrying the same BG.A code, passed all 11 steps of that job green.
 - *"The first `ailang-code verify gate` red was a one-off transient."* **Refuted by its own re-run** — it reproduced twice, which is what turned "probably infrastructure" into a measured incident-window attribution rather than a hopeful one.
 - *"My AC4 no-op control fired."* **Refuted** — armed=0 and unset=0 is an instrument that cannot see a positive, not a clean result. `V16c` explains it, and the corrected control reads armed=1 / unset=0.
+
+## Iteration 59 — 2026-08-06 — **dev RED at HEAD, diagnosed as provider outage — no code landed, and the deliverable is the diagnosis** (`metered=$0.00`; controller-only) — and the iteration's spine is that **a green obtained during an open incident is a sample, not a settlement**, a claim bought by the iteration immediately before this one
+
+**Pick.** Not the queue head. Gate 1's standing rule — *a RED dev outranks the queue* — fired: `origin/dev` @ `4e959bf` was `completed/failure` on CI, while the state I inherited asserted CI was green at HEAD. That contradiction is the pick.
+
+**The verdict, and why it is not a revert.** Gate 1's outage clause exists because the rule above ("a RED dev outranks the queue; the fix IS the first deliverable") reads as an instruction to *change something*, and the most available change is reverting the most recent merge. Here that would have destroyed `BG.A` — reviewed, evaluated 89/100, and demonstrably fine — to appease an unrelated infrastructure event. The discriminating question is **not** `steps=0` (V1 iter-154 measured a job with 17 passing steps that still concluded `failure`, so `steps=0` is the commonest member of a family, not an invariant) but: **is the failure attributable to any STEP?**
+
+| commit | time | `ailang-code verify gate` | `go host build + test gate` |
+|---|---|---|---|
+| `10120d6` | 10:49Z | success / 11 steps | success / 13 |
+| `278f102` (BG.A merge) | 15:38Z | **cancelled / 0** | success / 13 |
+| `ea4b03d` | 16:21Z | **cancelled / 0** | success / 13 |
+| `e3808c0` | 16:33Z | success / 11 | success / 13 ← the "settling" green |
+| `4e959bf` (HEAD, doc-only) | 16:46Z | **cancelled / 0** | **cancelled / 0** |
+
+Across all five commits × two jobs, **every job reports `failed=none`**. Not one step has failed anywhere in the window. The four red jobs are conclusion **`cancelled`**, not `failure`.
+
+**Six controls, all firing (rule 3d — a red in the direction you predicted needs a negative control exactly as much as an empty result needs a positive one).**
+
+| # | control | result |
+|---|---|---|
+| 1 | no step failed in any job, 5 commits × 2 jobs | `failed=none` everywhere |
+| 2 | parent arm — same jobs, 13 min earlier | `e3808c0` BOTH success (11 + 13 steps) |
+| 3 | provider status API, first-party | `Actions = major_outage`; incident `15:22:49Z`, still `investigating` `20:34:17Z`; run created `16:46:43Z` — **inside the window** |
+| 4 | sibling mission, different repo, same window | `mission-v1` iter-154: `#608` zero runs created, 0 of 4 re-runs started in 28 min |
+| 5 | the diff itself | `e3808c0..4e959bf` = **3 markdown files**; `0` `.ail`, `0` `.go`, `0` `scripts/`\|`.github/`, `0` `design_docs/verification/` — **KP control fires** (same filter catches `host/boundary/allowlist_world_test.go` on the BG.A commit), so the zeros are measurements |
+| 6 | local gate, identical tree | sibling-of-repo worktree (never `/tmp`) at `4e959bf`: `verify_go.sh` **rc=0**, pinned **AILANG v0.30.0**, build · plain · `-race`, **24** packages `ok`, **0** FAIL, KP control firing |
+
+Control 5 is the one that closes it: CI *does* execute a script under `design_docs/`, so "doc-only" is not automatically "no gate input" — it had to be measured at the path level rather than asserted from the directory name.
+
+**The correction, and it lands on the iteration immediately before this one.** Iteration 58 recorded the CI caveat as **SETTLED** and dev **GREEN at HEAD**. Its inference about the **code** was correct and still stands: `e3808c0` is a descendant of the BG.A merge, the same job passed all 11 steps on the same code, and that is exactly why BG.A was correctly not reverted. What did not follow is the inference about the **incident** — and iteration 58's *own* doc-only bookkeeping commit went red on **both** jobs 13 minutes later. The pattern is intermittent and got **worse** after the settling green, not better. **During an open incident, outcome is not a function of the tree**, so neither a red nor a green is attributable to the diff. The loop already knew not to trust the red. It trusted the green. Charter row corrected in place rather than silently overwritten, so the superseded claim stays readable.
+
+**`BG.B`'s premise re-verified first-party at HEAD** (rule 3b(v): a count transcribed from a document is a claim about the document, not the repo), so the next iteration executes without re-litigating it:
+
+- **3** `os.WriteFile` **calls** — `:383` (AC4 marker), `:428` (mutant), `:439` (overlay JSON). The plan still says **two**; the correction stands and must be applied before `BG.B` routes, or its own AST guard reds on BG.A's landed code.
+- `os.OpenFile` / `os.Create` / `os.Rename` = **0**; `confinedWrite` = **0** with KP control `checkGoGroup` = **6**, so the zeros are measurements.
+- The file is **byte-identical** at `278f102` and HEAD — `sha256 d535c1ec92641c02…`, which is also the restore hash iteration 58 quoted, so two independent routes agree.
+
+**A trap for `BG.B`, surfaced only because my own control disagreed with the charter.** I measured `os.ReadFile` = **5** where the charter said **4**, on a file I had just proven unchanged. The charter was right and *my* instrument was the imprecise one: `:264` is a **comment**, so there are 5 textual occurrences and 4 real calls. Recorded rather than discarded, because `BG.B` installs an **AST** guard and text-vs-AST therefore disagree by exactly one in the very file being guarded. `os.WriteFile` happens to have no comment mentions today, so text == AST == 3 there — a property of this file's current prose, not of the shape.
+
+**Gate-4 tell defect, caught by the skill's own known-positive control.** The shared skill prescribes `grep -c "ITERATION <N-1>"` — **uppercase**, V1's stamp casing. World stamps `(iteration N)` **lowercase**, so the tell returned **0**, which reads exactly like "you are holding a stale charter". Its control returned 0 too, which is the designed signal that the *instrument* is broken rather than the charter stale. Case-insensitively: prev = **1**, control = **2**; rotation invariant `^## STATUS 2026` = **3**; charter/log `git diff` against `origin/dev` empty. The charter was healthy throughout. This is the same defect V1 fixed at iteration 134 by **adding the control rather than fixing the literal** — so it recurred, in a second mission, exactly as an unfixed cause does.
+
+**Routing evidence.** Controller `claude-opus-5` (session; triage/measure/record/retro). **No heavy role was spawned** — no designer, planner, executor or evaluator, and no quorum round: a triage iteration whose entire product is measurement. Designer rotation pointer **unchanged** at `claude:claude-fable-5` (not consumed — correct, since no doc was created or revised). Verify profile `ailang-code`; AILANG pinned **v0.30.0** (PATH `ailang` is `v0.33.0-…-dirty` and the charter forbids validating against it, so the pinned binary at `/tmp/ailang-v0300` was used for the local gate). **`metered=$0.00`** against the $5 ceiling — every lane a quota bucket.
+
+**Gate 3b.** **NOT green, and not claimed as such.** Re-runs fired (`rerun-failed-jobs` accepted; run `31121008498` moved `completed/failure` → `queued`) and were still `queued` at the poll's bound — which is itself the outage, not a timeout of ours. Per V1 iter-154's correction, polling used `actions/runs?head_sha=` rather than `check-runs`, because re-running a workflow **empties** the `check-runs` collection and every aggregate over an incomplete set is vacuously green; the poll also asserts `present == expected` before any verdict. **A re-run is owed once the incident closes. 0 observed failures is not a green, so nothing was upgraded to LANDED.**
+
+**Ruled out.**
+
+- *"The red is our code."* **Refuted by six controls** — most decisively by `failed=none` across every job in the window, and by the diff being 3 markdown files with a firing KP control.
+- *"`steps=0` is the outage signature."* **Refuted as an invariant** (V1 iter-154: a 17-step all-passing job still concluded `failure`). It held here for all four red jobs, but the operative question is *is any STEP responsible*, and that is what was actually checked.
+- *"Iteration 58 was wrong to leave BG.A landed."* **Refuted** — its code inference was sound and independently re-confirmed here by a local `verify_go.sh` rc=0 on the same tree. Only its *incident* inference was wrong.
+- *"The charter is stale — the Gate-4 tell returned 0."* **Refuted by the tell's own control also returning 0**, which diagnoses the instrument, not the file. Case-insensitively the charter is fresh and matches `origin/dev` byte-for-byte.
+- *"The charter's `os.ReadFile = 4` was a transcription error."* **Refuted** — the charter counted calls; my grep counted text including a comment. My instrument was the wrong one.
+
+**Next.** `BG.B` (`AC1a` · `M3`, `M6`), gated **only** on the outage clearing — its premise is now measured at HEAD and needs no re-derivation. First action next iteration: re-poll run `31121008498`, and if the incident has closed, confirm a real green on `4e959bf` before treating dev as healthy. Then route `BG.B` **with the three-write-site correction applied**.
+
+**Asks for Mark: none.** Two shared-skill fixes are **proposed** to V1/Mark (World cannot edit the shared skill): (a) the outage rule should state that a **green** obtained during an open incident does not close it — instances: this iteration, and V1 iter-153's `docs` job going cancelled→success on a byte-identical tree, which the skill already cites as evidence that outcome is environment-driven and then never applies in the green direction; (b) Gate 4's stale-charter tell should be `grep -ci`, since stamp casing is mission-specific — instances: V1 iter-134 and this iteration.

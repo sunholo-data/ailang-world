@@ -2,47 +2,51 @@
 
 *Snapshot, overwritten every Gate 4. History lives in `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-06, iteration 58 · dev @ `e3808c0` · CI **green BOTH jobs at HEAD** (SHA-addressed);
-`ailang-code verify gate` was red on a **declared GitHub Actions outage** at the BG.A merge SHA and is
-**green at HEAD** on `e3808c0`, a descendant carrying the same code — all 11 steps, step-log verified.
+**As of** 2026-08-06, iteration 59 · dev @ `4e959bf` · CI **RED at HEAD — and not about the code**.
+Both jobs `cancelled` with **`steps=0`** inside a declared **GitHub Actions `major_outage`**. **No step
+has failed anywhere**: across the last 5 commits × 2 jobs, every job reports `failed=none`. Local
+`verify_go.sh` is **rc=0** on this exact tree with pinned AILANG v0.30.0. Re-run fired; still `queued`.
 
 ## In flight
 
 - **Item 10 `w-boundary-gate-tree-mutation` — `BG.A` LANDED** (PR #47 → squash `278f102`, evaluator
-  `sonnet` **89/100 r1, zero blocking**). The gate no longer writes the tree it guards: the mutant is
-  **declared** via `go list -overlay` + an overlay-aware read; the `defer`-based restore is deleted.
-  **AC2/AC3/AC4/AC5 discharged.**
-- **`[NEXT]` is milestone `BG.B`** (`AC1a` · `M3`, `M6`), gated on nothing — **but apply the
-  three-write-site correction first** (below) or its own AST guard reds on `BG.A`'s landed code.
-- **Item 8 `w-self-mod-vertical`** — `SM.B2a` (~780 LOC, first irreversible-publish-capable code)
-  queued behind item 10; unchanged.
+  `sonnet` **89/100 r1, zero blocking**). **AC2/AC3/AC4/AC5 discharged.** No code landed this iteration.
+- **`[NEXT]` is milestone `BG.B`** (`AC1a` · `M3`, `M6`), gated only on the outage clearing. Its
+  premise is now **re-verified first-party at HEAD** (below) — route the three-write-site correction.
+- **Item 8 `w-self-mod-vertical`** — `SM.B2a` queued behind item 10; unchanged.
 - **Item 5 `w-mcp-projection` — still BLOCKED** on one prerequisite. Unchanged.
 
-## Latest — a checker that cannot read the tree finds no forbidden imports
+## Latest — a green obtained during an open incident is a sample, not a settlement
 
-Met three times this iteration: inside the fix, inside the doc+plan that specified it, and inside my
-own control.
+Iteration 58 read `e3808c0`'s green as closing the CI caveat. Its **own** doc-only bookkeeping commit
+`4e959bf` then went red on **both** jobs 13 minutes later. The code inference was right and still
+stands; the *infrastructure* inference did not follow.
 
-- **`M5` (the SIGKILL harness) passed 4/4 arms with a firing negative control.** Marker awaited →
-  artifacts verified → overlay verified to map target→mutant → process verified **alive** → `SIGKILL`
-  (`rc=-9`): **0** changed shas, **0** porcelain lines. The **same kill on the base harness**:
-  `RESIDUE=YES`, ` M host/store/store.go`. Outcomes differ, so the green measures the mechanism.
-- **The plan's `BG.B` write-site count is wrong by one, and the missing one reds `BG.B`'s own guard.**
-  Plan says two writes; measured **3** `os.WriteFile` (`:383` marker, `:428` mutant, `:439` overlay),
-  **0** `OpenFile/Create/Rename`, KP `os.ReadFile` = 4. Route the AC4 marker through `confinedWrite`
-  too — it is *required* to live outside `repoRoot`, which is exactly what the writer permits.
-- **The doc and plan both specify a latent bug.** `go/parser` tests `src != nil` on the **interface**,
-  so a typed nil `[]byte` parses as an **empty source** — every unreplaced file becomes
-  `expected 'package', found 'EOF'`. Isolated in `parseSrc`.
-- **My own known-positive control was invalid** (armed=0, unset=0 — an instrument that cannot see a
-  positive). Cause: no `-v`, i.e. this sprint's own `V16c`, one iteration after it was measured.
+| commit | time | `ailang-code verify gate` | `go host build + test gate` |
+|---|---|---|---|
+| `10120d6` | 10:49Z | success / 11 steps | success / 13 |
+| `278f102` | 15:38Z | **cancelled / 0** | success / 13 |
+| `ea4b03d` | 16:21Z | **cancelled / 0** | success / 13 |
+| `e3808c0` | 16:33Z | success / 11 | success / 13 ← the "settling" green |
+| `4e959bf` | 16:46Z | **cancelled / 0** | **cancelled / 0** |
+
+During an open incident **outcome is not a function of the tree**, so neither a red nor a green is
+attributable. The loop already knew not to trust the red; it trusted the green.
+
+- **Six firing controls**: parent-arm green 13 min earlier · status API (`major_outage`, incident
+  `15:22:49Z` → run `16:46:43Z`, inside the window) · `failed=none` in every job · sibling
+  `mission-v1` iter-154 same signature, different repo, same window · the diff is **3 markdown
+  files**, 0 `.ail`/`.go`/`scripts`/`.github`/`verification` (KP control fires) · local gate rc=0.
+- **`BG.B` premise re-verified at HEAD**: **3** `os.WriteFile` calls (`:383`/`:428`/`:439`),
+  `confinedWrite`=**0** (KP `checkGoGroup`=6). File **byte-identical** to the charter's base
+  (`d535c1ec…`). Trap: `os.ReadFile` is **5 textual / 4 calls** (`:264` is a comment) — text and AST
+  disagree by one in the very file `BG.B` installs an **AST** guard on.
 
 ## Loop · cost · asks
 
-- launchd `mission-world`; controller `claude-opus-5`. Executor **`opus`** (env pin; the plan assumed
-  codex, so its no-git-writes/snapshot rule did not apply). Evaluator **`sonnet`**. Designer/planner
-  not fired; rotation pointer unchanged at `claude:claude-fable-5`. Verify profile `ailang-code`;
-  AILANG pinned **v0.30.0**. Issue **#32**.
-- **`metered=$0.00`** vs the $5 ceiling — every role on a quota bucket, no quorum round.
-- **Parked on Mark: NONE.** `8/OD-2`, `10/OD-1`, `10/OD-2` open, all non-blocking with controller
-  defaults recorded. FYI not blocking: item 9's human-gated half (pin CI job 1 vs track `latest`).
+- launchd `mission-world`; controller `claude-opus-5`. No designer/planner/executor/evaluator fired
+  (triage iteration). Rotation pointer unchanged at `claude:claude-fable-5`. Verify profile
+  `ailang-code`; AILANG pinned **v0.30.0**. Issue **#32**.
+- **`metered=$0.00`** vs the $5 ceiling — controller-only, no sub-agent, no quorum round.
+- **Parked on Mark: NONE.** Two shared-skill fixes **PROPOSED to V1/Mark** (World cannot edit the
+  shared skill): the green-during-outage rule, and Gate 4's case-sensitive stale-charter tell.
