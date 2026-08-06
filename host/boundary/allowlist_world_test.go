@@ -23,15 +23,27 @@ import (
 
 type goGroup struct {
 	name, pattern, dir, mutantFile, mutantImport string
+	// extraForbidden holds import prefixes rejected for THIS group only, on top
+	// of forbiddenImportPrefixes. It exists because the loopback exception below
+	// is true of exactly one group, and a single shared list silently granted it
+	// to all three: measured at the SM.B2a boundary, bare "net/http" blank-imported
+	// into host/store/store.go left this gate green (rc=0) while the
+	// "net/http/httputil" arm correctly red-ed. Baseline net/http presence in each
+	// group's dependency closure is host/store 0, host/replay 0,
+	// cmd/ailang-worldd 1 — so store and replay were exempt from a transport they
+	// never used, in the gate whose whole purpose is confining network to
+	// host/broker.
+	extraForbidden []string
 }
 
 var protectedGoGroups = []goGroup{
-	{"host/store", "./host/store/...", "host/store", "host/store/store.go", "net/http/httputil"},
-	{"host/replay", "./host/replay/...", "host/replay", "host/replay/replay.go", "net/http/httputil"},
+	{"host/store", "./host/store/...", "host/store", "host/store/store.go", "net/http/httputil", []string{"net/http"}},
+	{"host/replay", "./host/replay/...", "host/replay", "host/replay/replay.go", "net/http/httputil", []string{"net/http"}},
 	// ailang-worldd already uses net/http for its loopback-only daemon client.
 	// Keep that inherited transport visible as a narrow exception while rejecting
-	// an additional HTTP surface (and all direct registry/cloud imports).
-	{"cmd/ailang-worldd", "./cmd/ailang-worldd/...", "cmd/ailang-worldd", "cmd/ailang-worldd/main.go", "net/http/httputil"},
+	// an additional HTTP surface (and all direct registry/cloud imports). This is
+	// the ONLY group the exception is true of, hence the empty extraForbidden.
+	{"cmd/ailang-worldd", "./cmd/ailang-worldd/...", "cmd/ailang-worldd", "cmd/ailang-worldd/main.go", "net/http/httputil", nil},
 }
 
 var forbiddenImportPrefixes = []string{
@@ -106,8 +118,8 @@ func enumerateAIL(root string) ([]string, error) {
 	return files, err
 }
 
-func forbiddenImport(path string) bool {
-	for _, prefix := range forbiddenImportPrefixes {
+func forbiddenImport(path string, extra ...string) bool {
+	for _, prefix := range append(append([]string{}, forbiddenImportPrefixes...), extra...) {
 		if path == strings.TrimSuffix(prefix, "/") || strings.HasPrefix(path, prefix) {
 			return true
 		}
@@ -141,7 +153,7 @@ func checkGoGroup(root string, group goGroup) error {
 			if err != nil {
 				return fmt.Errorf("parse import in %s: %w", path, err)
 			}
-			if forbiddenImport(imp) {
+			if forbiddenImport(imp, group.extraForbidden...) {
 				rel, _ := filepath.Rel(root, path)
 				return fmt.Errorf("%s: forbidden registry/HTTP/cloud dependency %q", filepath.ToSlash(rel), imp)
 			}
@@ -298,5 +310,42 @@ func TestWorldBoundaryNullCases(t *testing.T) {
 	}
 	if !forbiddenImport("net/http/httputil") {
 		t.Fatal("HTTP mutation control unexpectedly permitted")
+	}
+}
+
+// TestBareNetHTTPExemptionIsPerGroup pins the asymmetry that the single shared
+// forbiddenImportPrefixes list used to erase. The loopback-daemon exception is
+// true of cmd/ailang-worldd and of nothing else, so bare "net/http" must be
+// rejected for host/store and host/replay while remaining permitted for
+// cmd/ailang-worldd. Collapsing extraForbidden back into one global list makes
+// this test fail rather than silently re-granting the exemption.
+func TestBareNetHTTPExemptionIsPerGroup(t *testing.T) {
+	byName := make(map[string]goGroup, len(protectedGoGroups))
+	for _, g := range protectedGoGroups {
+		byName[g.name] = g
+	}
+	if len(byName) != 3 {
+		t.Fatalf("protected group enumeration is %d, want 3: the guard below would not cover what it claims", len(byName))
+	}
+
+	for _, want := range []struct {
+		group     string
+		forbidden bool
+	}{
+		{"host/store", true},
+		{"host/replay", true},
+		{"cmd/ailang-worldd", false}, // documented loopback-IPC exception
+	} {
+		g, ok := byName[want.group]
+		if !ok {
+			t.Fatalf("protected group %q absent: enumeration no longer covers it", want.group)
+		}
+		if got := forbiddenImport("net/http", g.extraForbidden...); got != want.forbidden {
+			t.Errorf("forbiddenImport(\"net/http\") for %s = %v, want %v", want.group, got, want.forbidden)
+		}
+		// net/http/httputil stays forbidden everywhere, per the shared list.
+		if !forbiddenImport("net/http/httputil", g.extraForbidden...) {
+			t.Errorf("net/http/httputil unexpectedly permitted for %s", want.group)
+		}
 	}
 }
