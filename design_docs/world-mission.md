@@ -510,6 +510,33 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   names it, and the queue tag for the picked item names the landed milestone.** Cheap, and it is
   the third artifact-drift instance in this mission after the CF-I-2→CF-J-2 rename and the stale
   Appendix-A JSON.
+- **TWO PRE-REGISTERED WATCH-ITEMS, EACH AT INSTANCE 1 (iter-58).** Gate 5 allows at most ONE skill
+  edit per iteration and requires **≥2 recorded frictions pointing at the same gap**; neither of
+  these reaches the bar yet, so they are recorded here with their remedy already written, exactly as
+  V1's iter-140 pre-registered the rule iter-142 landed. Counting them is the point — an unrecorded
+  instance 1 means instance 2 arrives looking like instance 1.
+  - **(W1) A SPRINT PLAN'S CLAIMS ABOUT THE CODE GO STALE THE MOMENT ONE OF ITS OWN MILESTONES
+    LANDS.** Skill rule 3b(vii) diffs a design doc against its plan **at pick time**, and it is aimed
+    at *documents*. Nothing points the same suspicion at the **code**: a plan is written once,
+    against the tree as it stood, and then each milestone it describes *changes that tree* — so
+    milestone N's step can be factually wrong about a file milestone N−1 rewrote, and the rot is
+    invisible because both artifacts were authored by the same planner in the same hour. Instance 1:
+    the plan's `BG.B` step says "route BG.A's **two** per-arm writes through `confinedWrite`"; BG.A
+    landed a **third** (the AC4 barrier marker), which BG.B's own AST guard would have redded on
+    sight. **Remedy at instance 2**: before routing milestone N>1, re-derive by command every
+    *quantity* the plan asserts about code that milestone N−1 touched — counts, line numbers, call
+    sites — with rule 3a's known-positive control, and treat "the previous milestone edited this
+    file" as positive evidence of divergence rather than as reassurance.
+  - **(W2) A PLAN NAMES ITS EXECUTOR, AND ITS SAFETY CONSTRAINTS ARE CONDITIONED ON THAT NAME.**
+    Instance 1: the item-10 plan's `executor` field is `codex:gpt-5.6-sol under --sandbox
+    workspace-write`, while the driver env pins `MISSION_EXECUTOR_MODEL=opus`. The env wins — but
+    the plan's `S-7` ("the executor lane cannot commit", hence `.snap/M<k>/` snapshots and a
+    controller reconstruction) and its `UNINFORMATIVE UNDER SANDBOX` labelling rule are *derived
+    from* the codex assumption and become wrong, not merely redundant, under any other lane. A
+    directive that silently carries them tells the executor to do unnecessary work under one reading
+    and to distrust valid gate results under another. **Remedy at instance 2**: at Gate 3, diff the
+    plan's `executor` field against the role's env value and, where they differ, state in the
+    directive which plan constraints are thereby VOID — never leave the executor to infer it.
 
 ---
 
