@@ -2,9 +2,9 @@
 
 *Snapshot, overwritten every Gate 4. History lives in `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-06, iteration 58 · dev @ `278f102` · CI: `go host build + test gate` **green**;
-`ailang-code verify gate` **red on a declared GitHub Actions outage, not on our code** — 3 bounded
-re-runs, none reached a repo command. **Iteration 59's first item: re-confirm it at `278f102`.**
+**As of** 2026-08-06, iteration 58 · dev @ `e3808c0` · CI **green BOTH jobs at HEAD** (SHA-addressed);
+`ailang-code verify gate` was red on a **declared GitHub Actions outage** at the BG.A merge SHA and is
+**green at HEAD** on `e3808c0`, a descendant carrying the same code — all 11 steps, step-log verified.
 
 ## In flight
 
