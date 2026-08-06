@@ -1067,14 +1067,27 @@ Uses the **shared** per-role model routing from `mission-control` (controller /
 designer-rotation / planner / executor / evaluator, generator≠judge enforced). Overrides for THIS
 mission in `~/.config/ailang/mission-world.env`:
 
-- **Executor default**: NON-Anthropic lane — `codex:gpt-5.6-sol` (`MISSION_EXECUTOR_MODEL`),
-  per the shared quota plan. **iter-19 routing incident RESOLVED by Mark 2026-07-27 (attended,
-  option c): codex-cli upgraded 0.137.0 → 0.145.0 (npm -g) and the pin LIVE-PROBED working**
-  (`env -u OPENAI_API_KEY codex exec --model gpt-5.6-sol` → PIN-OK, ~21 tokens, ChatGPT-
-  subscription OAuth — Mark verified server-codex OAuth2 same day, so the lane works headless
-  in mission loops AND evals). The opus fallback stays the documented degrade path only.
-  Upstream driver-probe gap (probe omits `--model`, false-greens an unusable pin) remains
-  filed as ailang#486 for the v1 lane.
+- **Executor default — `pi:openrouter/deepseek/deepseek-v4-flash-0731` (Mark 2026-08-06,
+  attended; env pin landed in `mission-world.env` 17:53 local, codex-quota relief).** V1 ran
+  the lane first: ≥3 executor iterations, sonnet 91/88 zero-blocking, ~$0.006/iter REAL
+  metered (posts to the $5 ledger, unlike quota lanes). **pi has NO sandbox** — every pi run
+  carries V1's discipline: re-verify the main checkout byte-identical to preflight after the
+  run; and the codex-sandbox plan assumptions (S-7 "executor cannot commit", `.snap/M<k>/`
+  reconstruction, UNINFORMATIVE-under-sandbox caveats) do NOT apply — state the routing delta
+  in the directive, exactly as iter-58 did for opus. **SM.B2a exception (coordinator, same
+  exchange): the first irreversible-publish-capable milestone does NOT default to an
+  unsandboxed lane** — for SM.B2a use the codex lane, or an opus once-file, or carry an
+  explicit extra integrity gate (worktree isolation + `env -u AILANG_REGISTRY_API_KEY`
+  verified in the directive, checkout byte-diff both sides). Rollback = comment one line in
+  the env file (documented in place there).
+- *(prior default, still the documented fallback)*: NON-Anthropic lane — `codex:gpt-5.6-sol`
+  (`MISSION_EXECUTOR_MODEL`), per the shared quota plan. **iter-19 routing incident RESOLVED
+  by Mark 2026-07-27 (attended, option c): codex-cli upgraded 0.137.0 → 0.145.0 (npm -g) and
+  the pin LIVE-PROBED working** (`env -u OPENAI_API_KEY codex exec --model gpt-5.6-sol` →
+  PIN-OK, ~21 tokens, ChatGPT-subscription OAuth — Mark verified server-codex OAuth2 same
+  day, so the lane works headless in mission loops AND evals). The opus fallback stays the
+  documented degrade path only. Upstream driver-probe gap (probe omits `--model`,
+  false-greens an unusable pin) remains filed as ailang#486 for the v1 lane.
 - **Evaluator**: must differ in provider from the executor (generator≠judge) — sonnet or
   gemini when the executor is codex.
 - Otherwise: inherits the shared defaults.
