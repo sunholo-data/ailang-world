@@ -46,6 +46,14 @@ func (s *cfj2RecordingStore) AppendNextEffectIntent(
 	return s.base.AppendNextEffectIntent(episodeID, intent)
 }
 
+func (s *cfj2RecordingStore) AppendClaimedEffectIntent(
+	episodeID string,
+	intent store.EffectIntent,
+	approvalRef, requestRef hashref.HashRef,
+) (string, int64, error) {
+	return s.base.AppendClaimedEffectIntent(episodeID, intent, approvalRef, requestRef)
+}
+
 func (s *cfj2RecordingStore) AppendEffectOutcome(
 	id string,
 	outcome store.EffectOutcome,

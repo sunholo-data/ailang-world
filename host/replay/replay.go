@@ -42,6 +42,8 @@ import (
 	"github.com/sunholo-data/ailang-world/host/canon"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
+
+	"github.com/sunholo-data/ailang-world/host/childenv"
 )
 
 // execTimeout bounds every archived-interpreter subprocess invocation so replay
@@ -325,6 +327,11 @@ func runPinnedTransition(execPath, worldLibDir string, canonicalSource []byte) (
 	cmd := exec.CommandContext(ctx, execPath,
 		"run", "--quiet", "--caps", "", "--entry", entryFn, entryModulePath)
 	cmd.Dir = root
+	// Decision 4 of design_docs/planned/w-self-mod-vertical.md: replay is a
+	// non-publish subprocess and must observe every registry variable unset.
+	// Scrubbing os.Environ() rather than emptying it keeps the rest of the
+	// environment — and therefore the recorded goldens — unchanged.
+	cmd.Env = childenv.Scrubbed(os.Environ())
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {

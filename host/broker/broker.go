@@ -38,6 +38,7 @@ type objectStore interface {
 	PutObject(store.Object) error
 	GetObject(hashref.HashRef) (store.Object, bool, error)
 	AppendNextEffectIntent(string, store.EffectIntent) (string, int64, error)
+	AppendClaimedEffectIntent(string, store.EffectIntent, hashref.HashRef, hashref.HashRef) (string, int64, error)
 	AppendEffectOutcome(string, store.EffectOutcome) (int64, hashref.HashRef, error)
 }
 
@@ -167,16 +168,58 @@ func (s *Session) Invoke(
 	if err := s.store.PutObject(requestObj); err != nil {
 		return nil, hashref.HashRef{}, fmt.Errorf("broker: put effect request: %w", err)
 	}
-	effectID, _, err := s.store.AppendNextEffectIntent(s.episodeID, store.EffectIntent{
+	intent := store.EffectIntent{
 		EpisodeID: s.episodeID, Effect: req.Effect, Scope: req.Scope, Cost: req.Cost,
 		RequestRef: requestRef, LogicalTime: req.Now,
-	})
+	}
+	var (
+		effectID string
+		ordinal  int64
+	)
+	if req.Effect == EffectRegistryPublish {
+		// Registry.Publish is the one irreversible effect, so its durable
+		// intent is written by the transaction that ALSO consumes the attended
+		// approval (SM.B1's AppendClaimedEffectIntent). A separate claim and
+		// intent would let a restart or a second session re-dispatch the same
+		// approval; here neither the claim, the journal row nor the intent
+		// object becomes visible without the other.
+		approvalRef, refErr := publishApprovalRef(payload)
+		if refErr != nil {
+			return nil, hashref.HashRef{}, fmt.Errorf("broker: publish approval ref: %w", refErr)
+		}
+		effectID, ordinal, err = s.store.AppendClaimedEffectIntent(
+			s.episodeID, intent, approvalRef, requestRef)
+	} else {
+		effectID, ordinal, err = s.store.AppendNextEffectIntent(s.episodeID, intent)
+	}
 	if err != nil {
 		return nil, hashref.HashRef{}, fmt.Errorf("broker: append effect intent: %w", err)
 	}
 	s.grants[grantIndex].Budget = decision.Remaining
 	result, err = handler.Execute(ctx, req, payload)
 	if err != nil {
+		// THE ONE NARROW SPECIAL CASE. Only the typed *IndeterminateEffectError
+		// suppresses the outcome, and only after the intent is already durable.
+		// Any other error — including a subprocess timeout, an overflow or a
+		// non-zero exit — keeps the landed resolved-failed behaviour verbatim
+		// in the block below. MUT-SM-ALL-ERRORS-PENDING widens this arm and
+		// reds the landed handler-failure tests, which is what proves it narrow.
+		var indeterminate *IndeterminateEffectError
+		if errors.As(err, &indeterminate) {
+			indeterminate.InvocationID = effectID
+			indeterminate.EpisodeID = s.episodeID
+			indeterminate.Ordinal = ordinal
+			if indeterminate.Effect == "" {
+				indeterminate.Effect = req.Effect
+			}
+			if indeterminate.Scope == "" {
+				indeterminate.Scope = req.Scope
+			}
+			// No EffectRecord, no outcome. The budget stays debited: an
+			// ambiguous dispatch consumed the one attended attempt, and only
+			// SM.C's read-only reconciliation may resolve the receipt.
+			return nil, hashref.HashRef{}, err
+		}
 		rec := EffectRecord{
 			Effect: req.Effect, Scope: req.Scope, Cost: req.Cost,
 			BudgetBefore: budgetBefore, BudgetAfter: decision.Remaining,

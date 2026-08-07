@@ -32,6 +32,8 @@ import (
 	"runtime"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
+
+	"github.com/sunholo-data/ailang-world/host/childenv"
 )
 
 // executableName is the fixed leaf filename of every archived interpreter.
@@ -379,7 +381,14 @@ func (a *Archive) writeManifest(ref hashref.HashRef, m Manifest) error {
 // verbatim (trailing whitespace preserved as emitted by the interpreter). The
 // caller wraps failures as a KindExecFailure ReplayError.
 func probeVersion(execPath string) (string, error) {
-	out, err := exec.Command(execPath, "--version").CombinedOutput()
+	cmd := exec.Command(execPath, "--version")
+	// Decision 4 of design_docs/planned/w-self-mod-vertical.md: every
+	// World-launched process other than the one live publish dispatch runs
+	// under the stripped environment. Without this the version probe inherits
+	// the process environment wholesale, so an ambient registry credential
+	// would reach a child that has no use for it.
+	cmd.Env = childenv.Scrubbed(os.Environ())
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("%s --version: %w (output: %q)", execPath, err, string(out))
 	}

@@ -34,6 +34,7 @@ import (
 	"strconv"
 	"syscall"
 
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 )
 
@@ -75,6 +76,19 @@ func main() { os.Exit(run(os.Args[1:], os.Stdout, os.Stderr)) }
 // run is main's testable body: it takes its arguments and streams explicitly so
 // nothing about the CLI depends on process globals.
 func run(args []string, stdout, stderr io.Writer) int {
+	// STARTUP REFUSAL (w-self-mod-vertical Decision 4 / AC10). The public
+	// AILANG registry is immutable, so an ambient AILANG_REGISTRY_API_KEY
+	// hands unrecallable publish authority to every process this binary ever
+	// forks — and to every agent and shell command that inherits from them.
+	// The refusal is here, ahead of flag parsing, so it applies to `serve` and
+	// to every client verb alike: there is no subcommand that is exempt.
+	//
+	// The message names the VARIABLE, never the value.
+	if err := broker.AssertNoAmbientRegistryCredential(os.Environ()); err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd: %v\n", err)
+		return exitFatal
+	}
+
 	globals := flag.NewFlagSet("ailang-worldd", flag.ContinueOnError)
 	globals.SetOutput(stderr)
 	globals.Usage = func() { fmt.Fprint(stderr, usage) }

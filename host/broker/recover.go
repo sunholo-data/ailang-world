@@ -24,9 +24,19 @@ type IndeterminateEffectError struct {
 	Ordinal          int64
 	Effect           string
 	Scope            string
+	// Detail is the redacted, handler-supplied reason a DISPATCH-TIME
+	// ambiguity was raised (SM.B2a). It is empty for every finding produced by
+	// the post-hoc recovery scan below, which has no handler to ask.
+	Detail string
 }
 
 func (e *IndeterminateEffectError) Error() string {
+	if e.Detail != "" {
+		return fmt.Sprintf(
+			"broker: effect %q is indeterminate: episode %q ordinal %d, effect %q, scope %q: %s",
+			e.InvocationID, e.EpisodeID, e.Ordinal, e.Effect, e.Scope, e.Detail,
+		)
+	}
 	if e.EpisodeID != "" {
 		return fmt.Sprintf(
 			"broker: effect %q is indeterminate: episode %q ordinal %d, effect %q, scope %q",
