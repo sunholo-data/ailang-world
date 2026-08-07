@@ -19,6 +19,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -58,6 +59,14 @@ var forbiddenImportPrefixes = []string{
 }
 
 var forbiddenAILMarkers = []string{".ailang/cache", "package-cache", "package_cache", "http://", "https://"}
+
+// granularityTrials is N in the BG.C AC1b calibration. It is the number of
+// back-to-back stat -> write-new -> write-original -> stat pairs used to prove
+// the nanosecond ModTime comparator can actually fire on a given filesystem
+// before the ModTime half of the runtime backstop is believed. The threshold
+// is deliberately NOT lowered below 20/20 on any filesystem: a probe that
+// tolerates misses is a detector that can report a false negative.
+const granularityTrials = 20
 
 func repoRoot(t *testing.T) string {
 	t.Helper()
@@ -423,6 +432,101 @@ func armBarrier(t *testing.T, root, arm string, m armBarrierMarker) {
 	t.Fatalf("%s barrier for arm %s timed out after %s without being killed: AC4 is fail-closed, so a timeout FAILS the criterion rather than passing it", armBarrierEnv, arm, armBarrierTimeout)
 }
 
+// fileObservables returns the five live-target observables BG.C's runtime
+// backstop (AC1b) compares across a gate arm -- content sha256, size, mode,
+// inode and nanosecond ModTime -- plus the st_dev of the filesystem the path
+// lives on. The stat comes from os.Stat + fi.Sys().(*syscall.Stat_t); darwin's
+// Stat_t.Dev is int32 and linux's is uint64 (and darwin's Ino is uint64 while
+// on some platforms it differs), so Dev and Ino are converted with explicit
+// uint64() -- the conversion compiles on both, CI is linux and this host is
+// darwin, and no build tags are used. mtimeNs uses fi.ModTime().UnixNano(),
+// which carries the filesystem's nanosecond resolution on both platforms
+// (darwin Mtimespec / linux Mtim) -- that is exactly the resolution the 20-trial
+// probe below measures.
+func fileObservables(path string) (sha string, size int64, mode os.FileMode, inode uint64, mtimeNs int64, dev uint64, err error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", 0, 0, 0, 0, 0, err
+	}
+	sha = digest(data)
+	fi, err := os.Stat(path)
+	if err != nil {
+		return "", 0, 0, 0, 0, 0, err
+	}
+	size = fi.Size()
+	mode = fi.Mode()
+	st, ok := fi.Sys().(*syscall.Stat_t)
+	if !ok {
+		return "", 0, 0, 0, 0, 0, fmt.Errorf("file %s: syscall.Stat_t unavailable", path)
+	}
+	inode = uint64(st.Ino)
+	mtimeNs = fi.ModTime().UnixNano()
+	dev = uint64(st.Dev)
+	return sha, size, mode, inode, mtimeNs, dev, nil
+}
+
+// deviceOf returns st_dev for any path (file OR directory) via os.Stat. It
+// exists because the granularity probe needs the st_dev of the arm's t.TempDir()
+// directory and of repoRoot, which are directories and therefore cannot be
+// read as files by fileObservables. Same uint64() portability discipline as
+// fileObservables.
+func deviceOf(path string) (uint64, error) {
+	fi, err := os.Stat(path)
+	if err != nil {
+		return 0, err
+	}
+	st, ok := fi.Sys().(*syscall.Stat_t)
+	if !ok {
+		return 0, fmt.Errorf("path %s: syscall.Stat_t unavailable", path)
+	}
+	return uint64(st.Dev), nil
+}
+
+// granularityProbe measures the WORST CASE ModTime resolution of the filesystem
+// the probe lives on. Under the arm's t.TempDir() it creates a probe file via
+// confinedWrite (the single permitted write path, so the AST write-guard stays
+// green) and runs granularityTrials back-to-back stat -> write-new ->
+// write-original -> stat pairs with NO sleeps, counting how many trials the
+// nanosecond ModTime actually changed. It records st_dev for the t.TempDir()
+// path and for root so the transferability of the result can be asserted (W6).
+func granularityProbe(t *testing.T, root, dir string) (fired int, tmpdirDev, repoDev uint64) {
+	t.Helper()
+	probe := filepath.Join(dir, "ac1b_mtime_probe")
+	orig := []byte("ac1b mtime granularity probe -- original content\n")
+	if err := confinedWrite(root, probe, orig, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	fired = 0
+	for i := 0; i < granularityTrials; i++ {
+		_, _, _, _, m1, _, err := fileObservables(probe)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := confinedWrite(root, probe, []byte(fmt.Sprintf("ac1b probe trial %d different content\n", i)), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if err := confinedWrite(root, probe, orig, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		_, _, _, _, m2, _, err := fileObservables(probe)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if m1 != m2 {
+			fired++
+		}
+	}
+	tmpdirDev, err := deviceOf(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	repoDev, err = deviceOf(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return fired, tmpdirDev, repoDev
+}
+
 // mutateViaOverlay proves the guard has teeth WITHOUT writing a byte inside the
 // repository. The mutant and the overlay JSON are written to t.TempDir(); the
 // substitution is DECLARED to the toolchain (`go list -overlay`) and to the
@@ -447,6 +551,17 @@ func mutateViaOverlay(t *testing.T, root, rel, arm string, mutate func([]byte) [
 		t.Fatal(err)
 	}
 	baseSHA := digest(baseline)
+
+	// BG.C AC1b runtime backstop -- BEFORE half. Taken immediately after absTarget
+	// is known and the baseline is read, and BEFORE any overlay artifact is
+	// written: this is the oldest honest snapshot of the live target on disk.
+	beforeSHA, beforeSize, beforeMode, beforeInode, beforeMtimeNs, _, oerr := fileObservables(absTarget)
+	if oerr != nil {
+		t.Fatalf("AC1b arm=%s path=%s cannot stat live target before arm: %v", arm, rel, oerr)
+	}
+	if beforeSHA != baseSHA {
+		t.Fatalf("AC1b arm=%s path=%s baseline read and live-target stat disagree (sha=%s vs stat=%s): the snapshot is not of the file the guard will protect", arm, rel, baseSHA, beforeSHA)
+	}
 	mutant := mutate(baseline)
 	mutantSHA := digest(mutant)
 	// Retained from the old harness: a mutation that never applied and a
@@ -499,6 +614,89 @@ func mutateViaOverlay(t *testing.T, root, rel, arm string, mutate func([]byte) [
 	})
 
 	err = check(ov)
+
+	// BG.C AC1b runtime backstop -- AFTER half. Runs on EVERY path, BEFORE the
+	// guard-red fatals below: a backstop that only runs when the rest of the test
+	// already passed could never report the interesting case (the guard failed to
+	// red while the live file was nonetheless untouched).
+	afterSHA, afterSize, afterMode, afterInode, afterMtimeNs, _, oerr := fileObservables(absTarget)
+	if oerr != nil {
+		t.Fatalf("AC1b arm=%s path=%s cannot stat live target after arm: %v", arm, rel, oerr)
+	}
+
+	// W3 -- four UNCONDITIONAL, filesystem-independent assertions. Inode is not
+	// decoration: os.Rename is on the AST deny-list precisely because it is a
+	// mutator, and a rename-based restore leaves content byte-identical and mtime
+	// possibly unchanged while CHANGING the inode.
+	if beforeSHA != afterSHA {
+		t.Fatalf("AC1b arm=%s path=%s live-target sha256 changed: before=%s after=%s", arm, rel, beforeSHA, afterSHA)
+	}
+	if beforeSize != afterSize {
+		t.Fatalf("AC1b arm=%s path=%s live-target size changed: before=%d after=%d", arm, rel, beforeSize, afterSize)
+	}
+	if beforeMode != afterMode {
+		t.Fatalf("AC1b arm=%s path=%s live-target mode changed: before=%v after=%v", arm, rel, beforeMode, afterMode)
+	}
+	if beforeInode != afterInode {
+		t.Fatalf("AC1b arm=%s path=%s live-target inode changed: before=%d after=%d (an os.Rename-based restore is exactly this signature)", arm, rel, beforeInode, afterInode)
+	}
+
+	// W7 -- no-write control: stat the same file twice with NO write between and
+	// assert all five observables are equal. Without it, an always-unequal
+	// comparator would make W3 red for the wrong reason and an always-equal one
+	// would make it vacuously green.
+	n1sha, n1size, n1mode, n1ino, n1mt, _, nerr := fileObservables(absTarget)
+	if nerr != nil {
+		t.Fatalf("AC1b no-write control: first stat failed: %v", nerr)
+	}
+	n2sha, n2size, n2mode, n2ino, n2mt, _, nerr := fileObservables(absTarget)
+	if nerr != nil {
+		t.Fatalf("AC1b no-write control: second stat failed: %v", nerr)
+	}
+	noWriteControl := n1sha == n2sha && n1size == n2size && n1mode == n2mode && n1ino == n2ino && n1mt == n2mt
+	if !noWriteControl {
+		t.Fatalf("AC1b no-write control failed: comparator reports a difference on a file no write touched (sha=%v size=%v mode=%v inode=%v mtime=%v)", n1sha == n2sha, n1size == n2size, n1mode == n2mode, n1ino == n2ino, n1mt == n2mt)
+	}
+	t.Logf("AC1b nowrite_control equal=%v", noWriteControl)
+
+	// W4 -- the granularity probe, measured under the arm's t.TempDir() before the
+	// ModTime comparison is believed.
+	probeFired, tmpdirDev, repoDev := granularityProbe(t, root, dir)
+
+	// W6 -- CONTROLLER ADDITION: the probe runs under t.TempDir() but the mtime
+	// assertion it licenses is made about a file under repoRoot. If those are
+	// different filesystems, a 20/20 probe on a fine-grained tmpfs would license an
+	// mtime assertion on a coarse-grained repo volume -- a detector that cannot
+	// detect, certified by a measurement of somewhere else. Checked BEFORE the
+	// 20/20 gate: an untransferable probe is not a passing probe.
+	if tmpdirDev != repoDev {
+		t.Fatalf("AC1b granularity probe measured a different filesystem than the live target: probe dev=%d, live-target dev=%d; the probe result is not transferable -- see 10/OD-9", tmpdirDev, repoDev)
+	}
+
+	// W5 -- the 20/20 gate, with no third state and no silent state. fired < 20
+	// FAILS the test; there is no logging-and-continuing branch. In CI a passing
+	// test emits nothing, so a conditional backstop that logs and continues would
+	// produce an outcome byte-identical to one that asserted -- "the check never
+	// ran" wearing a green, which is this whole item's defect class. The threshold
+	// is never lowered.
+	if probeFired < granularityTrials {
+		t.Fatalf("AC1b backstop is not armed on this filesystem: granularity probe fired %d/%d (tmpdir dev=%d, repo dev=%d); the ModTime half of the backstop cannot be relied on here -- see 10/OD-9", probeFired, granularityTrials, tmpdirDev, repoDev)
+	}
+
+	// The mtime comparator has now PROVEN it can fire (20/20) on the SAME
+	// filesystem as the live target, so the nanosecond ModTime assertion is
+	// licensed and believed.
+	mtimeEqual := beforeMtimeNs == afterMtimeNs
+	if !mtimeEqual {
+		t.Fatalf("AC1b arm=%s path=%s live-target nanosecond ModTime changed: before=%d after=%d", arm, rel, beforeMtimeNs, afterMtimeNs)
+	}
+
+	// W8 -- evidence logs (visible only under -v, which is why every gate carries
+	// -v). The probe X/20 and both st_dev values are the first measurement of
+	// ModTime granularity on the CI filesystem in this mission's history.
+	t.Logf("AC1b arm=%s path=%s probe_fired=%d/20 tmpdir_dev=%d repo_dev=%d", arm, rel, probeFired, tmpdirDev, repoDev)
+	t.Logf("AC1b arm=%s path=%s sha256=%s size=%d mode=%v inode=%d mtime_ns_equal=%v", arm, rel, afterSHA, afterSize, afterMode, afterInode, mtimeEqual)
+
 	if err == nil {
 		t.Fatalf("mutation in %s passed boundary guard", rel)
 	}
@@ -725,7 +923,16 @@ func TestWorldBoundaryRecordingWriter(t *testing.T) {
 		if len(recorded) == 0 {
 			t.Fatalf("%s: the harness recorded ZERO writes through the confined sink: either mutateViaOverlay bypasses rawWrite (regression) or this test no longer drives it (vacuous)", arm)
 		}
-		const wantWrites = 2 // every arm: the mutant file and the overlay JSON
+		// Every arm writes through the confined sink: the harness's own two
+		// artifacts (the mutant file and the overlay JSON), plus the BG.C AC1b
+		// backstop's granularity probe under the arm's t.TempDir() -- ONE create
+		// (the original content) and then TWO confined writes per trial (new
+		// content, then the original written back) for granularityTrials trials.
+		// All of them resolve beneath the arm's temp root, so the confinement
+		// assertions below stay meaningful while the exact-count check stays
+		// exact. Raising the count to include the probe is strict, not a
+		// weakening: it verifies the BACKSTOP's own writes are confined too.
+		const wantWrites = 2 + 1 + 2*granularityTrials
 		if len(recorded) != wantWrites {
 			t.Fatalf("%s: the harness recorded %d writes through the confined sink, want %d: %q", arm, len(recorded), wantWrites, recorded)
 		}

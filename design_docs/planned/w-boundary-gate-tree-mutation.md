@@ -1,7 +1,8 @@
 # w-boundary-gate-tree-mutation — the gate must not be able to poison the tree it guards
 
-**Status**: In sprint — **`BG.A` LANDED 2026-08-06 (iter-58)**, PR #47 → squash `278f102`. `BG.B`
-and `BG.C` remain; the doc stays in `planned/` until all three land.
+**Status**: **ALL THREE MILESTONES LANDED** — `BG.A` 2026-08-06 (iter-58, PR #47 → squash
+`278f102`), `BG.B` 2026-08-07 (iter-60, PR #48 → squash `39130ec`), `BG.C` 2026-08-07 (iter-61).
+Moves to `implemented/` once `BG.C`'s merge is CI-green.
 **Date**: 2026-08-06
 **Queue item**: 10, `w-boundary-gate-tree-mutation` (promoted ahead of `SM.B2a` at iter-56, on the
 strength of the SIGKILL-residue measurement below)
@@ -446,6 +447,71 @@ did not work?*
 > scored this **−5 on design fidelity** as an undocumented departure; the controller records the
 > opposite verdict on the merits — the deviation is what makes AC2 non-vacuous, it is documented in
 > a code comment on the type, and the plan is what is now corrected.
+
+> **⚠ `BG.B` LANDED AT ITER-60** (PR #48 → squash `39130ec`; evaluator `sonnet` **88/100 r1, zero
+> blocking**). `AC1a` is DISCHARGED: every harness write routes through one `confinedWrite` that
+> rejects `repoRoot` destinations *synchronously, before a byte is written*, delegating to a
+> swappable `rawWrite` sink; and `TestBoundaryASTWriteGuard` reds on any `os.WriteFile`/`OpenFile`/
+> `Create`/`Rename` **CALL** in `host/boundary` outside the single `var rawWrite = os.WriteFile`
+> ValueSpec. **This carry block is itself a repair**: iter-60 landed the code but never updated this
+> document, so its header read `BG.B and BG.C remain` for a milestone that had shipped — rule
+> 3b(vii) rot, self-inflicted, found at iter-61's pick with a firing control (`BG.B LANDED` = 0,
+> `BG.A LANDED` = 2). **The iter-60 finding worth carrying:** the recording-writer test as first
+> delivered *synthesised its own paths* instead of driving `mutateViaOverlay`, so its exact-count
+> assertion counted only its own writes; with the harness reverted to bare `os.WriteFile` it still
+> PASSED 4/4. Repaired to drive the real harness with the sink **teed** — and a tee recorder must
+> delegate to the **captured original**, never to `os.WriteFile`, which the guard itself forbids.
+>
+> **⚠ `BG.C` LANDED AT ITER-61 — `AC1b` and `AC6′` DISCHARGED, AND THE DOC'S ORIGINAL `AC6` IS NOW
+> REFUTED IN BOTH DIRECTIONS BY MEASUREMENT.** Executor `pi:deepseek-v4-flash-0731`; every gate and
+> every mutation re-run first-party by the controller (an executor-reported green is never banked).
+>
+> **`AC1b` — the runtime backstop, calibrated.** Per arm, `mutateViaOverlay` captures
+> (sha256, size, mode, inode, mtime_ns) of the live target BEFORE any overlay artifact is written
+> and again immediately AFTER `check()` returns — placed *before* the guard-red fatals, so the
+> backstop is evaluated on every path including the one where the guard failed to red. sha256, size,
+> mode and **inode** are asserted UNCONDITIONALLY (filesystem-independent). `mtime_ns` is asserted
+> only after a 20-trial granularity probe fires **20/20** on the arm's `t.TempDir()`. There is no
+> logging-and-continuing branch: `<20/20` FAILS with the probe count and both `st_dev`s.
+>
+> **A CONTROLLER ADDITION THE PLAN DID NOT HAVE, AND ITS MUTATION.** The plan RECORDS `st_dev` for
+> `t.TempDir()` and for `repoRoot` but never COMPARES them — so a 20/20 probe on a fine-grained
+> tmpfs would have licensed an mtime assertion about a file on a possibly coarse-grained repo
+> volume: *a detector that cannot detect, certified by a measurement of somewhere else.* On this
+> host the two devs happen to be equal (`16777230`), which is exactly why the gap is invisible
+> without an assertion. `tmpdirDev == repoDev` is now asserted BEFORE the 20/20 gate — an
+> untransferable probe is not a passing probe.
+>
+> **FOUR MUTATIONS, ALL RED AS PREDICTED, AST GUARD GREEN IN EVERY ARM** (controller, disposable
+> worktree, anchor count asserted before editing, differing sha256 asserted before believing,
+> byte-identical restore and zero production residue verified after each):
+> `M7` (`cp`-based write+restore — off the AST deny-list) → *live-target nanosecond ModTime changed*;
+> `M10` (**new** — `mv`-based restore, content byte-identical) → *live-target inode changed*, which
+> is the first time anything proved inode earns its place rather than asserting it;
+> `M8` (**new** — forced cross-filesystem probe) → *probe measured a different filesystem than the
+> live target*; `M9` (**new** — probe write pair removed) → *backstop is not armed on this
+> filesystem: granularity probe fired **0/20***. `M9` matters most: it proves the `R-EXT4`
+> pre-authorized branch is REACHABLE and that its message carries the numbers, which is the only way
+> CI can answer the ext4 question at all — `verify_go.sh` runs `go test` **without `-v`**, so on a
+> green nothing is printed and the *assertion*, not the log line, is the channel.
+>
+> **`AC6′` DISCHARGED — and it vindicates its own replacement.** 8 interleaved same-session A/B
+> pairs after a discarded warm-up, one worktree, only this file swapped, both sha256s asserted to
+> differ: median wall-clock **A = 1.1275 s**, **B = 1.4700 s**, **ratio = 1.3038 ≤ 1.50**, absolute
+> **1.4700 s ≤ 3.0 s**. Both clauses PASS. Read against `PV-15`'s 1.0079 noise floor the ~30 % is a
+> REAL cost — and it is `BG.A`/`BG.B`'s overlay and guard machinery, not `BG.C`: the package moved
+> 1.325 s → 1.279 s across `BG.C` itself, i.e. no measurable increment. **The doc's original `AC6`
+> (`≤2× 0.435 s` = 0.870 s) would have FAILED here in both arms** — arm B's go-reported median is
+> ~1.199 s (2.75× the constant) and **arm A, which is UNMODIFIED base code, is ~0.877 s and already
+> over the bound.** A criterion that reds on the tree it was measured from cannot attribute anything;
+> iter-57's replacement was not pedantry.
+>
+> **Residual, stated rather than hidden:** the `syscall.Stat_t` field usage is portable by explicit
+> `uint64(st.Dev)`/`uint64(st.Ino)` and `fi.ModTime().UnixNano()`, but it was only ever EXECUTED on
+> darwin here — no Linux virtualization exists on this rig (`docker`/`colima`/`podman`/`lima`/
+> `limactl`/`vagrant`/`qemu`/`multipass` all absent, measured with a firing control). The merge's CI
+> run on `ubuntu-latest` is the first and only ext4 measurement, and `10/OD-9` is pre-registered for
+> the branch where it reds.
 
 - **AC1 — all mutation-harness writes are structurally confined; a live-tree write is
   synchronously rejected.** Every write the mutation harness performs is routed through the
