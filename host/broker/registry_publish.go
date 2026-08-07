@@ -92,9 +92,15 @@ type PublishHashes struct {
 	InterfaceHash string
 }
 
-// PublishApproval is the attended one-shot stamp. SM.B2a consumes only its
-// identity and hash fields; SM.B2b binds ApprovalRef to the durable
-// single-use claim.
+// PublishApproval is the attended one-shot stamp as the HANDLER sees it: a
+// configured expectation the recomputed bytes must match.
+//
+// It is defence in depth and nothing more. Since SM.B2b the authority itself
+// comes from elsewhere: ApprovalRef names a LANDED ApprovalDecisionV1 object,
+// Session.Invoke traverses it to its ApprovalRequestV1 and its canonical scope
+// (validatePublishApproval), and the store consumes it exactly once
+// (AppendClaimedEffectIntent). Deleting this struct would not make an
+// unapproved publish possible; deleting that traversal would.
 type PublishApproval struct {
 	ApprovalRef    hashref.HashRef
 	Vendor         string
@@ -195,17 +201,6 @@ func DecodePublishPayload(payload []byte) (PublishIdentity, PublishHashes, error
 			ContentHash:   wire.ContentHash,
 			InterfaceHash: wire.InterfaceHash,
 		}, nil
-}
-
-// publishApprovalRef extracts the approval reference the durable single-use
-// claim is keyed on, without interpreting anything else in the payload. It is
-// the broker's only read of a publish payload; the handler owns the rest.
-func publishApprovalRef(payload []byte) (hashref.HashRef, error) {
-	id, _, err := DecodePublishPayload(payload)
-	if err != nil {
-		return hashref.HashRef{}, err
-	}
-	return id.ApprovalRef, nil
 }
 
 // publishResultWire is the canonical success/definite-failure result object.

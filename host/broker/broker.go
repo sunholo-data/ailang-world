@@ -183,9 +183,19 @@ func (s *Session) Invoke(
 		// intent would let a restart or a second session re-dispatch the same
 		// approval; here neither the claim, the journal row nor the intent
 		// object becomes visible without the other.
-		approvalRef, refErr := publishApprovalRef(payload)
-		if refErr != nil {
-			return nil, hashref.HashRef{}, fmt.Errorf("broker: publish approval ref: %w", refErr)
+		//
+		// SM.B2b: the attended stamp is VALIDATED against the landed
+		// ApprovalDecisionV1/ApprovalRequestV1 objects first, here rather than
+		// in the handler, for one reason — "already consumed" is one of AC9's
+		// seven refusal classes and it is decided by the claim transaction on
+		// the very next line. Putting the other six on the far side of that
+		// transaction would split one refusal set across two layers, and would
+		// require handing the handler a store. Both refusal families therefore
+		// land BEFORE the handler runs, i.e. before the credential is read and
+		// before any request can leave this process.
+		approvalRef, approvalErr := validatePublishApproval(s.store, payload, req)
+		if approvalErr != nil {
+			return nil, hashref.HashRef{}, approvalErr
 		}
 		effectID, ordinal, err = s.store.AppendClaimedEffectIntent(
 			s.episodeID, intent, approvalRef, requestRef)
