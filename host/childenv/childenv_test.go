@@ -43,6 +43,51 @@ func TestScrubbedRemovesEveryRegistryVariableAndNothingElse(t *testing.T) {
 	}
 }
 
+// TestScrubbedNeverReturnsNilBecauseNilMeansInherit is the guard for the one
+// way this package can fail OPEN. exec reads a nil cmd.Env as "inherit the
+// process environment", so a Scrubbed that returned nil for a degenerate input
+// would hand a child the very credential it was called to remove — silently,
+// and in the direction that costs an irreversible publish. Every production
+// caller passes os.Environ() today, so this is unreachable now; it is a guard
+// against the next caller, which is exactly when nobody re-reads the comment.
+func TestScrubbedNeverReturnsNilBecauseNilMeansInherit(t *testing.T) {
+	// Every input that could plausibly reduce to nothing.
+	allRegistry := make([]string, 0, len(RegistryVariables))
+	for _, name := range RegistryVariables {
+		allRegistry = append(allRegistry, name+"=leaked")
+	}
+	for _, tc := range []struct {
+		name   string
+		input  []string
+		reason string
+	}{
+		{"nil", nil, "a caller with no environment to hand on"},
+		{"empty", []string{}, "an environment already emptied upstream"},
+		{"only registry variables", allRegistry, "everything present was stripped"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := Scrubbed(tc.input)
+			if got == nil {
+				t.Fatalf("Scrubbed(%s) returned nil (%s): exec would read that as "+
+					"INHERIT and pass %s to the child", tc.name, tc.reason, CredentialVariable)
+			}
+			if len(got) != 0 {
+				t.Errorf("Scrubbed(%s) = %v, want an empty (but non-nil) environment", tc.name, got)
+			}
+		})
+	}
+
+	// Known-positive control for the assertion itself: on an input that DOES
+	// have survivors, the same call must come back non-nil AND non-empty. A
+	// test that only ever demands non-nil would pass against a function that
+	// returned an empty slice unconditionally — i.e. against a scrubber that
+	// silently discarded PATH.
+	if got := Scrubbed([]string{"PATH=/usr/bin", CredentialVariable + "=leaked"}); len(got) != 1 {
+		t.Fatalf("control: Scrubbed kept %v, want exactly [PATH=/usr/bin] — "+
+			"the non-nil assertion above is only meaningful if survivors survive", got)
+	}
+}
+
 func TestHasTreatsAnEmptyAssignmentAsAbsentAuthority(t *testing.T) {
 	if Has([]string{CredentialVariable + "="}, CredentialVariable) {
 		t.Error("an empty assignment was reported as ambient authority")

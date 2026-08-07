@@ -38,12 +38,18 @@ var RegistryVariables = []string{
 
 // Scrubbed returns environ without any RegistryVariables assignment. It
 // returns a fresh slice and never mutates its argument, so a caller may hand
-// os.Environ() straight through. A nil or empty environ yields a nil result,
-// which exec's cmd.Env treats as "inherit" — callers that require a stripped
-// environment must therefore pass a real environ, and the ones in this
-// repository pass os.Environ().
+// os.Environ() straight through.
+//
+// The result is ALWAYS non-nil, and that is a safety property rather than a
+// style choice: exec's cmd.Env treats a nil slice as "inherit the process
+// environment", so a nil return would hand a child every variable this package
+// exists to strip — including the credential, whose leak is irreversible. The
+// degenerate inputs (nil, empty, or an environ consisting only of registry
+// variables) therefore yield an EMPTY environment rather than an inherited
+// one. A child missing PATH fails loudly; a child holding publish authority it
+// was never meant to see does not.
 func Scrubbed(environ []string) []string {
-	var kept []string
+	kept := make([]string, 0, len(environ))
 	for _, assignment := range environ {
 		if !isRegistryAssignment(assignment) {
 			kept = append(kept, assignment)
