@@ -341,6 +341,278 @@ type publishFixture struct {
 	approval PublishApproval
 	scope    string
 	payload  []byte
+
+	// The three fields below are populated only by landApproval. Until then
+	// identity.ApprovalRef is a SYNTHETIC digest that names no object, which is
+	// exactly right for the handler-only tests (they never reach the broker's
+	// approval traversal) and exactly wrong for anything routed through
+	// Session.Invoke.
+	approvalScope      string
+	approvalRequestRef hashref.HashRef
+	approvalDecision   string
+}
+
+// ---------------------------------------------------------------------------
+// SM.B2b — a FILE-BACKED store, because AC9a and AC9c must close and reopen it
+//
+// openTestStore uses ":memory:", which host/store documents as per-connection
+// and physically unreachable from a second handle. A close/reopen criterion
+// evaluated against it would be satisfied by an empty database — i.e. it would
+// pass for the wrong reason. Every SM.B2b test therefore uses this instead.
+// ---------------------------------------------------------------------------
+
+type publishStore struct {
+	*store.Store
+	path   string
+	closed bool
+}
+
+func openPublishStore(t *testing.T) *publishStore {
+	t.Helper()
+	return openPublishStoreAt(t, filepath.Join(t.TempDir(), "world.db"))
+}
+
+func openPublishStoreAt(t *testing.T, path string) *publishStore {
+	t.Helper()
+	s, err := store.Open(path)
+	if err != nil {
+		t.Fatalf("store.Open(%q): %v", path, err)
+	}
+	p := &publishStore{Store: s, path: path}
+	t.Cleanup(func() { p.close(t) })
+	return p
+}
+
+func (p *publishStore) close(t *testing.T) {
+	t.Helper()
+	if p.closed {
+		return
+	}
+	p.closed = true
+	if err := p.Store.Close(); err != nil {
+		t.Fatalf("close store %q: %v", p.path, err)
+	}
+}
+
+// reopen closes this handle and opens the SAME FILE again. The returned handle
+// shares nothing but the bytes on disk: no cache, no connection, no in-memory
+// budget. That is the whole content of AC9a's "new process".
+func (p *publishStore) reopen(t *testing.T) *publishStore {
+	t.Helper()
+	p.close(t)
+	return openPublishStoreAt(t, p.path)
+}
+
+// approvalTimes are the logical times of one attended approval. They are
+// explicit because the broker never reads a wall clock and every ordering
+// refusal in validatePublishApproval is stated in terms of them.
+type approvalTimes struct{ request, decide, expires int64 }
+
+func defaultApprovalTimes() approvalTimes {
+	return approvalTimes{request: 10, decide: 11, expires: 100}
+}
+
+// landApproval mints the attended stamp for f through the LANDED attended
+// path and returns a fixture whose ApprovalRef IS the content hash of the
+// resulting immutable ApprovalDecisionV1.
+//
+// Every step is the landed surface, unmodified:
+//
+//	Session.Invoke(Human.Approve)  -> HumanHandler mints ApprovalRequestV1
+//	DecideApproval(...)            -> the operator entry point mints ApprovalDecisionV1
+//	Session.Invoke(Human.PollApproval) -> HumanHandler observes it back
+//
+// The poll is not decoration: AC9's non-vacuity requirement is that the
+// positive control be an approval TRAVERSED through DecideApproval and
+// EffectHumanPollApproval, so the traversal is performed here for every
+// fixture and its result is checked to hash back to the same decision ref.
+func (f publishFixture) landApproval(
+	t *testing.T, base approvalStore, decision string, times approvalTimes,
+) publishFixture {
+	t.Helper()
+	return f.landApprovalWithScope(t, base,
+		PublishApprovalScopeFor(f.identity, f.hashes, times.expires), decision, times)
+}
+
+// landApprovalWithScope is landApproval with the canonical scope supplied by
+// the caller instead of derived. It exists for exactly one reason: AC9's
+// wrong-effect arm needs a stamp that is publish-grammatical in every respect
+// EXCEPT its frozen `effect` term, and PublishApprovalScopeFor — correctly —
+// cannot mint one. It reaches for FormatPublishApprovalScope, which is landed
+// exported production code, so no codec is widened to build the fixture.
+func (f publishFixture) landApprovalWithScope(
+	t *testing.T, base approvalStore, approvalScope, decision string, times approvalTimes,
+) publishFixture {
+	t.Helper()
+	return f.landApprovalWithScopeAndCost(t, base, approvalScope, decision, times, PublishCost)
+}
+
+// landApprovalWithScopeAndCost additionally lets the caller choose the cost the
+// attended request is minted AT. It exists for AC9's wrong-cost arm: the landed
+// HumanHandler copies req.Cost into approvalRequestWire.Cost verbatim, so a
+// request priced at anything other than PublishCost is minted by invoking
+// Human.Approve at that cost — no codec is touched to produce it.
+func (f publishFixture) landApprovalWithScopeAndCost(
+	t *testing.T, base approvalStore, approvalScope, decision string,
+	times approvalTimes, cost int64,
+) publishFixture {
+	t.Helper()
+	human := newHumanHandler(base)
+	session := newSession(base, "attended-"+f.identity.Vendor+"-"+f.identity.Version,
+		[]Capability{
+			{Effect: EffectHumanApprove, Scope: approvalScope, ExpiresAt: times.expires, Budget: cost},
+			{Effect: EffectHumanPollApproval, Scope: approvalScope, ExpiresAt: times.expires, Budget: 4},
+		}, Registry{
+			EffectHumanApprove: human, EffectHumanPollApproval: human,
+		}, Live, nil)
+
+	pending, _, err := session.Invoke(context.Background(), EffectRequest{
+		Effect: EffectHumanApprove, Scope: approvalScope, Cost: cost, Now: times.request,
+	}, mustApprovalJSON(approvalInputWire{Requester: "sm-b2b-fixture"}))
+	if err != nil {
+		t.Fatalf("landed Human.Approve: %v", err)
+	}
+	requestRef := decodePendingRef(t, pending)
+
+	decisionRef := decideAndPollLandedApproval(t, base, approvalScope, requestRef, decision, times)
+
+	landed := f
+	landed.identity.ApprovalRef = decisionRef
+	landed.approval.ApprovalRef = decisionRef
+	landed.payload = EncodePublishPayload(landed.identity, landed.hashes)
+	landed.approvalScope = approvalScope
+	landed.approvalRequestRef = requestRef
+	landed.approvalDecision = decision
+	return landed
+}
+
+// decideAndPollLandedApproval runs the second and third legs of the attended
+// path — the landed operator entry point and the landed poll effect — and
+// asserts that what comes back out of the poll hashes to the decision the
+// publish payload will name. Without that check the traversal could be
+// observing some other object and every "landed" claim below would be a
+// coincidence.
+func decideAndPollLandedApproval(
+	t *testing.T, base approvalStore, approvalScope string,
+	requestRef hashref.HashRef, decision string, times approvalTimes,
+) hashref.HashRef {
+	t.Helper()
+	decisionRef, err := decideApproval(base, requestRef, decision, "attended-operator", times.decide)
+	if err != nil {
+		t.Fatalf("landed DecideApproval(%q): %v", decision, err)
+	}
+	human := newHumanHandler(base)
+	pollSession := newSession(base, "attended-poll", []Capability{
+		{Effect: EffectHumanPollApproval, Scope: approvalScope, ExpiresAt: times.expires, Budget: 4},
+	}, Registry{EffectHumanPollApproval: human}, Live, nil)
+	polled, _, err := pollSession.Invoke(context.Background(), EffectRequest{
+		Effect: EffectHumanPollApproval, Scope: approvalScope, Cost: PublishCost, Now: times.decide,
+	}, mustApprovalJSON(approvalInputWire{RequestRef: requestRef.String()}))
+	if err != nil {
+		t.Fatalf("landed Human.PollApproval: %v", err)
+	}
+	var observed observedDecisionWire
+	if err := decodeApprovalJSON(polled, &observed); err != nil {
+		t.Fatal(err)
+	}
+	if observed.Status != "decided" {
+		t.Fatalf("landed poll status = %q, want \"decided\"", observed.Status)
+	}
+	if got := hashref.SumSHA256(observed.Decision); got != decisionRef {
+		t.Fatalf("polled decision hashes to %s, want the decision ref %s", got, decisionRef)
+	}
+	return decisionRef
+}
+
+// landApprovalOverRawRequest mints the ApprovalRequestV1 DIRECTLY, then heads,
+// decides and polls it through the landed surface.
+//
+// It exists for exactly one arm, and it is the only fixture in this file that
+// does not go through the Human.Approve effect — NECESSARILY so. The guard it
+// pins refuses a request that was not minted by Human.Approve, and
+// HumanHandler.Execute writes `Effect: req.Effect` inside `case
+// EffectHumanApprove:`, so the landed effect can only ever produce
+// "Human.Approve". A fixture the guard is supposed to reject therefore cannot
+// be produced by the path the guard exists to bless; the alternative to
+// building it here is leaving the branch untested, which is what this arm is
+// repairing.
+//
+// Everything it reaches for is landed production code — brokerObject,
+// mustApprovalJSON, the unchanged approvalRequestWire, appendApprovalHead,
+// decideApproval and the poll effect. No codec is widened and no wire type is
+// added to build it.
+func (f publishFixture) landApprovalOverRawRequest(
+	t *testing.T, base approvalStore, wire approvalRequestWire, decision string, times approvalTimes,
+) publishFixture {
+	t.Helper()
+	requestObj := brokerObject(ApprovalRequestV1, mustApprovalJSON(wire))
+	if err := base.PutObject(requestObj); err != nil {
+		t.Fatalf("put raw approval request: %v", err)
+	}
+	if err := appendApprovalHead(base, requestObj.Hash, hashref.HashRef{}); err != nil {
+		t.Fatalf("head raw approval request: %v", err)
+	}
+	decisionRef := decideAndPollLandedApproval(
+		t, base, wire.Scope, requestObj.Hash, decision, times)
+
+	landed := f
+	landed.identity.ApprovalRef = decisionRef
+	landed.approval.ApprovalRef = decisionRef
+	landed.payload = EncodePublishPayload(landed.identity, landed.hashes)
+	landed.approvalScope = wire.Scope
+	landed.approvalRequestRef = requestObj.Hash
+	landed.approvalDecision = decision
+	return landed
+}
+
+// putRawApprovalObject stores an approval-shaped object with caller-chosen
+// payload bytes and returns its content hash. It is how AC9 reaches the SIX
+// traversal-error branches of validatePublishApproval — an unparseable
+// requestRef, a decision naming an absent or wrong-kind request, undecodable
+// request or decision bytes — none of which the landed minting path can
+// produce, because the landed minting path is the thing that produces
+// well-formed objects. brokerObject is landed production code, so the fixture
+// still costs no codec change.
+func putRawApprovalObject(t *testing.T, base approvalStore, semanticID string, payload []byte) hashref.HashRef {
+	t.Helper()
+	obj := brokerObject(semanticID, payload)
+	if err := base.PutObject(obj); err != nil {
+		t.Fatalf("put raw %s object: %v", semanticID, err)
+	}
+	return obj.Hash
+}
+
+// withApprovalRef re-points a payload at a different approval decision, leaving
+// every other field of the identity alone.
+func (f publishFixture) withApprovalRef(ref hashref.HashRef) []byte {
+	id := f.identity
+	id.ApprovalRef = ref
+	return EncodePublishPayload(id, f.hashes)
+}
+
+// publishGrant is the one-shot attended capability: exact scope, budget one.
+func publishGrant(scope string) Capability {
+	return Capability{Effect: EffectRegistryPublish, Scope: scope, ExpiresAt: 100, Budget: PublishCost}
+}
+
+// publishCounters is the observable AC8/AC9/AC9a/AC9b/AC9c are stated in: the
+// number of POSTs the SHARED fake validator saw, the number of publisher
+// subprocess dispatches, and the number of times the credential provider was
+// consulted. They are read together so an arm can assert that a refusal moved
+// NONE of them.
+type publishCounters struct {
+	posts, dispatches, credentialLoads int64
+}
+
+func readPublishCounters(v *fakeValidator, h *RegistryPublishHandler) publishCounters {
+	return publishCounters{
+		posts: int64(v.count()), dispatches: h.Dispatches(), credentialLoads: h.CredentialLoads(),
+	}
+}
+
+func (c publishCounters) String() string {
+	return fmt.Sprintf("POST=%d dispatches=%d credentialLoads=%d",
+		c.posts, c.dispatches, c.credentialLoads)
 }
 
 func newPublishFixture(t *testing.T, registryOrigin, approvalSeed string) publishFixture {
@@ -469,7 +741,13 @@ func loopbackHandler(t *testing.T, cfg RegistryPublishConfig) *RegistryPublishHa
 
 func TestPublishDenialsPersistAndNeverDispatchWithLivePositiveControl(t *testing.T) {
 	validator := newFakeValidator(t, "ok")
-	fixture := newPublishFixture(t, validator.origin(), "ac7")
+	base := openPublishStore(t)
+	// SM.B2b: the positive control now runs through validatePublishApproval, so
+	// its approval must be a LANDED ApprovalDecisionV1 rather than a synthetic
+	// digest. The denial arms below are unaffected — they are refused by the
+	// capability decision, which is strictly earlier.
+	fixture := newPublishFixture(t, validator.origin(), "ac7").
+		landApproval(t, base, "approve", defaultApprovalTimes())
 	handler := loopbackHandler(t, RegistryPublishConfig{
 		PublisherPath:   writePublisherScript(t, "success", nil),
 		PackageDir:      fixture.dir,
@@ -556,7 +834,8 @@ func TestPublishDenialsPersistAndNeverDispatchWithLivePositiveControl(t *testing
 
 	// SAME-RUN POSITIVE CONTROL. A zero counter proves nothing unless the same
 	// counter, the same handler and the same validator can be shown to move.
-	session, recording := publishSession(t, openTestStore(t), "ac7-allowed", validGrant, handler)
+	// It runs on `base`, the store the attended approval actually landed in.
+	session, recording := publishSession(t, base.Store, "ac7-allowed", validGrant, handler)
 	result, ref, err := session.Invoke(context.Background(), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: now,
 	}, fixture.payload)
@@ -604,15 +883,14 @@ func effectReceipt(t *testing.T, recording *publishRecordingStore, index int) st
 // ---------------------------------------------------------------------------
 
 func TestDefiniteFailureResolvesWhileAmbiguityStaysIndeterminate(t *testing.T) {
-	base := openTestStore(t)
-	grant := func(scope string) Capability {
-		return Capability{Effect: EffectRegistryPublish, Scope: scope, ExpiresAt: 100, Budget: 1}
-	}
+	base := openPublishStore(t)
+	grant := publishGrant
 
 	// ARM A — a DEFINITE handler failure: the validator answers 403, so the
 	// attempt is over and its result is known.
 	definiteValidator := newFakeValidator(t, "namespace")
-	definiteFixture := newPublishFixture(t, definiteValidator.origin(), "ac11-definite")
+	definiteFixture := newPublishFixture(t, definiteValidator.origin(), "ac11-definite").
+		landApproval(t, base, "approve", defaultApprovalTimes())
 	definiteHandler := loopbackHandler(t, RegistryPublishConfig{
 		PublisherPath:   writePublisherScript(t, "namespace", nil),
 		PackageDir:      definiteFixture.dir,
@@ -624,7 +902,7 @@ func TestDefiniteFailureResolvesWhileAmbiguityStaysIndeterminate(t *testing.T) {
 		ExecTimeout:     20 * time.Second,
 	})
 	definiteSession, definiteRecording := publishSession(
-		t, base, "ac11-definite", grant(definiteFixture.scope), definiteHandler)
+		t, base.Store, "ac11-definite", grant(definiteFixture.scope), definiteHandler)
 	_, definiteRef, definiteErr := definiteSession.Invoke(context.Background(), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: definiteFixture.scope, Cost: PublishCost, Now: 50,
 	}, definiteFixture.payload)
@@ -646,7 +924,8 @@ func TestDefiniteFailureResolvesWhileAmbiguityStaysIndeterminate(t *testing.T) {
 	// SAME run. The validator accepts the request (so it is logged: the body
 	// demonstrably left the publisher) and then aborts the connection.
 	ambiguousValidator := newFakeValidator(t, "reset")
-	ambiguousFixture := newPublishFixture(t, ambiguousValidator.origin(), "ac11-ambiguous")
+	ambiguousFixture := newPublishFixture(t, ambiguousValidator.origin(), "ac11-ambiguous").
+		landApproval(t, base, "approve", defaultApprovalTimes())
 	ambiguousHandler := loopbackHandler(t, RegistryPublishConfig{
 		PublisherPath:   writePublisherScript(t, "reset", nil),
 		PackageDir:      ambiguousFixture.dir,
@@ -658,7 +937,7 @@ func TestDefiniteFailureResolvesWhileAmbiguityStaysIndeterminate(t *testing.T) {
 		ExecTimeout:     20 * time.Second,
 	})
 	ambiguousSession, ambiguousRecording := publishSession(
-		t, base, "ac11-ambiguous", grant(ambiguousFixture.scope), ambiguousHandler)
+		t, base.Store, "ac11-ambiguous", grant(ambiguousFixture.scope), ambiguousHandler)
 	_, ambiguousRef, ambiguousErr := ambiguousSession.Invoke(context.Background(), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: ambiguousFixture.scope, Cost: PublishCost, Now: 50,
 	}, ambiguousFixture.payload)
@@ -713,7 +992,9 @@ func TestDefiniteFailureResolvesWhileAmbiguityStaysIndeterminate(t *testing.T) {
 // ordinary non-zero exit from the same handler is not.
 func TestHandlerTimeoutIsAmbiguousButAnExitCodeIsNot(t *testing.T) {
 	validator := newFakeValidator(t, "hang")
-	fixture := newPublishFixture(t, validator.origin(), "ac11-timeout")
+	base := openPublishStore(t)
+	fixture := newPublishFixture(t, validator.origin(), "ac11-timeout").
+		landApproval(t, base, "approve", defaultApprovalTimes())
 	handler := loopbackHandler(t, RegistryPublishConfig{
 		PublisherPath:   writePublisherScript(t, "hang", nil),
 		PackageDir:      fixture.dir,
@@ -724,9 +1005,7 @@ func TestHandlerTimeoutIsAmbiguousButAnExitCodeIsNot(t *testing.T) {
 		Approval:        fixture.approval,
 		ExecTimeout:     700 * time.Millisecond,
 	})
-	session, recording := publishSession(t, openTestStore(t), "ac11-timeout", Capability{
-		Effect: EffectRegistryPublish, Scope: fixture.scope, ExpiresAt: 100, Budget: 1,
-	}, handler)
+	session, recording := publishSession(t, base.Store, "ac11-timeout", publishGrant(fixture.scope), handler)
 	_, _, err := session.Invoke(context.Background(), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload)
@@ -1024,7 +1303,9 @@ func driveReplayEntry(t *testing.T, probe string) {
 
 func TestPublisherErrorRedactsTheSecretAndKeepsTheMarker(t *testing.T) {
 	validator := newFakeValidator(t, "validation")
-	fixture := newPublishFixture(t, validator.origin(), "ac10b")
+	base := openPublishStore(t)
+	fixture := newPublishFixture(t, validator.origin(), "ac10b").
+		landApproval(t, base, "approve", defaultApprovalTimes())
 	handler := loopbackHandler(t, RegistryPublishConfig{
 		PublisherPath:   writePublisherScript(t, "validation", nil),
 		PackageDir:      fixture.dir,
@@ -1035,9 +1316,7 @@ func TestPublisherErrorRedactsTheSecretAndKeepsTheMarker(t *testing.T) {
 		Approval:        fixture.approval,
 		ExecTimeout:     20 * time.Second,
 	})
-	session, recording := publishSession(t, openTestStore(t), "ac10b", Capability{
-		Effect: EffectRegistryPublish, Scope: fixture.scope, ExpiresAt: 100, Budget: 1,
-	}, handler)
+	session, recording := publishSession(t, base.Store, "ac10b", publishGrant(fixture.scope), handler)
 	_, _, err := session.Invoke(context.Background(), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload)
@@ -1105,7 +1384,9 @@ func TestPublishCostLawIsExactlyOne(t *testing.T) {
 		t.Fatalf("PublishCost = %d, want exactly 1", PublishCost)
 	}
 	validator := newFakeValidator(t, "ok")
-	fixture := newPublishFixture(t, validator.origin(), "cost")
+	base := openPublishStore(t)
+	fixture := newPublishFixture(t, validator.origin(), "cost").
+		landApproval(t, base, "approve", defaultApprovalTimes())
 	handler := loopbackHandler(t, RegistryPublishConfig{
 		PublisherPath:   writePublisherScript(t, "success", nil),
 		PackageDir:      fixture.dir,
@@ -1130,9 +1411,7 @@ func TestPublishCostLawIsExactlyOne(t *testing.T) {
 	}
 
 	// The record must carry cost 1 and debit exactly one unit.
-	session, recording := publishSession(t, openTestStore(t), "cost", Capability{
-		Effect: EffectRegistryPublish, Scope: fixture.scope, ExpiresAt: 100, Budget: 1,
-	}, handler)
+	session, recording := publishSession(t, base.Store, "cost", publishGrant(fixture.scope), handler)
 	if _, _, err := session.Invoke(context.Background(), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload); err != nil {
@@ -1499,4 +1778,747 @@ func mustHost(t *testing.T, raw string) string {
 		t.Fatalf("parse %q: %v", raw, err)
 	}
 	return parsed.Hostname()
+}
+
+// ---------------------------------------------------------------------------
+// SM.B2b — AC8, AC9, AC9a, AC9b, AC9c
+//
+// Everything below shares one shape, because the criteria share one claim:
+// that single use of the attended stamp is enforced DURABLY, by the store, and
+// not by the in-memory budget that happens to sit in front of it. So every
+// reuse arm is presented with a session whose budget is FRESH — a session that
+// would happily allow the publish if the claim were the only thing stopping it.
+// ---------------------------------------------------------------------------
+
+// landNonPublishApproval mints an approval whose scope is NOT publish-shaped,
+// through the same landed path. It is the fixture for AC9's malformed arm and
+// for approve_test.go's backwards-compatibility arms.
+func landNonPublishApproval(
+	t *testing.T, base approvalStore, scope string, cost int64, times approvalTimes,
+) (requestRef, decisionRef hashref.HashRef) {
+	t.Helper()
+	human := newHumanHandler(base)
+	session := newSession(base, "attended-nonpublish-"+scope, []Capability{
+		{Effect: EffectHumanApprove, Scope: scope, ExpiresAt: times.expires, Budget: cost},
+	}, Registry{EffectHumanApprove: human}, Live, nil)
+	pending, _, err := session.Invoke(context.Background(), EffectRequest{
+		Effect: EffectHumanApprove, Scope: scope, Cost: cost, Now: times.request,
+	}, mustApprovalJSON(approvalInputWire{Requester: "sm-b2b-fixture"}))
+	if err != nil {
+		t.Fatalf("non-publish Human.Approve: %v", err)
+	}
+	requestRef = decodePendingRef(t, pending)
+	decisionRef, err = decideApproval(base, requestRef, "approve", "attended-operator", times.decide)
+	if err != nil {
+		t.Fatalf("non-publish DecideApproval: %v", err)
+	}
+	return requestRef, decisionRef
+}
+
+// AC8 — the claim and the intent are persisted atomically BEFORE dispatch, the
+// budget lands at zero, and a FRESH session with a FRESH budget re-presenting
+// the same approval is refused before the credential is read and before POST.
+func TestPublishClaimIsDurableBeforeDispatchAndSurvivesAFreshBudget(t *testing.T) {
+	validator := newFakeValidator(t, "ok")
+	base := openPublishStore(t)
+	fixture := newPublishFixture(t, validator.origin(), "ac8").
+		landApproval(t, base, "approve", defaultApprovalTimes())
+	handler := loopbackHandler(t, RegistryPublishConfig{
+		PublisherPath:   writePublisherScript(t, "success", nil),
+		PackageDir:      fixture.dir,
+		Manifest:        fixture.manifest,
+		RegistryOrigin:  validator.origin(),
+		ValidatorOrigin: validator.origin(),
+		Credential:      writeCredentialFile(t, ac10Sentinel),
+		Approval:        fixture.approval,
+		ExecTimeout:     20 * time.Second,
+	})
+
+	// The pre-dispatch observation. It runs INSIDE the handler chain, so
+	// "before dispatch" is a position in the real control flow rather than an
+	// inference from ordering in the source.
+	type preDispatch struct {
+		ran            bool
+		effectIDs      []string
+		receiptState   store.ReceiptState
+		hasReceipt     bool
+		claimReuseErr  error
+		countersAtGate publishCounters
+	}
+	var observed preDispatch
+
+	recording := &publishRecordingStore{base: base.Store}
+	probe := HandlerFunc(func(ctx context.Context, req EffectRequest, payload []byte) ([]byte, error) {
+		observed.ran = true
+		observed.effectIDs = append([]string(nil), recording.effectIDs...)
+		observed.countersAtGate = readPublishCounters(validator, handler)
+		if len(recording.effectIDs) == 1 {
+			receipt, ok, err := base.GetEffectReceipt(recording.effectIDs[0])
+			observed.hasReceipt, observed.receiptState = ok, receipt.State
+			if err != nil {
+				observed.claimReuseErr = err
+				return nil, err
+			}
+		}
+		// Ask the STORE whether the approval is already claimed, using the same
+		// production entry point a second session would use. A rollback leaves
+		// nothing behind, so this probe cannot itself consume anything.
+		probeRef := hashref.SumSHA256([]byte("ac8-claim-probe"))
+		_, _, observed.claimReuseErr = base.AppendClaimedEffectIntent(
+			"ac8-claim-probe",
+			store.EffectIntent{
+				EpisodeID: "ac8-claim-probe", Effect: EffectRegistryPublish,
+				Scope: fixture.scope, Cost: PublishCost, RequestRef: probeRef, LogicalTime: 51,
+			}, fixture.identity.ApprovalRef, probeRef)
+		return handler.Execute(ctx, req, payload)
+	})
+	session := newSession(recording, "ac8", []Capability{publishGrant(fixture.scope)},
+		Registry{EffectRegistryPublish: probe}, Live, nil)
+
+	if _, ref, err := session.Invoke(context.Background(), EffectRequest{
+		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
+	}, fixture.payload); err != nil || ref.IsZero() {
+		t.Fatalf("AC8 grant Invoke = ref %s, err %v; want a record and no error "+
+			"(counters at refusal: %s)", ref, err, readPublishCounters(validator, handler))
+	}
+
+	if !observed.ran {
+		t.Fatal("AC8: the pre-dispatch probe never ran; every observation below is void")
+	}
+	if len(observed.effectIDs) != 1 {
+		t.Fatalf("AC8: durable effect intents at dispatch = %v, want exactly 1", observed.effectIDs)
+	}
+	if !observed.hasReceipt || observed.receiptState != store.ReceiptIndeterminate {
+		t.Errorf("AC8: receipt at dispatch = %q (present %v), want %q — the intent must be durable "+
+			"BEFORE the POST", observed.receiptState, observed.hasReceipt, store.ReceiptIndeterminate)
+	}
+	if !errors.Is(observed.claimReuseErr, store.ErrApprovalAlreadyConsumed) {
+		t.Errorf("AC8: re-claiming the approval at dispatch time = %v, want ErrApprovalAlreadyConsumed "+
+			"— the claim must be durable BEFORE the POST", observed.claimReuseErr)
+	}
+	if observed.countersAtGate.posts != 0 || observed.countersAtGate.dispatches != 0 {
+		t.Errorf("AC8: counters at the pre-dispatch gate = %s, want POST=0 dispatches=0",
+			observed.countersAtGate)
+	}
+	if got := session.grants[0].Budget; got != 0 {
+		t.Errorf("AC8: budget after the grant = %d, want 0", got)
+	}
+	afterGrant := readPublishCounters(validator, handler)
+	t.Logf("AC8 counters after the valid grant: %s", afterGrant)
+	if afterGrant != (publishCounters{posts: 1, dispatches: 1, credentialLoads: 1}) {
+		t.Fatalf("AC8: counters after the valid grant = %s, want POST=1 dispatches=1 credentialLoads=1",
+			afterGrant)
+	}
+
+	// THE NON-VACUITY REQUIREMENT: a FRESH session with a FRESH budget. Without
+	// the fresh budget this arm would be satisfied by the in-memory debit that
+	// AC8 exists to say is not enough.
+	freshSession, _ := publishSession(t, base.Store, "ac8-fresh", publishGrant(fixture.scope), handler)
+	if got := freshSession.grants[0].Budget; got != PublishCost {
+		t.Fatalf("AC8: the fresh session's budget = %d, want %d — a spent budget would refuse for "+
+			"the WRONG reason", got, PublishCost)
+	}
+	_, _, reuseErr := freshSession.Invoke(context.Background(), EffectRequest{
+		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 51,
+	}, fixture.payload)
+	if !errors.Is(reuseErr, store.ErrApprovalAlreadyConsumed) {
+		t.Fatalf("AC8: fresh-budget reuse error = %T %v, want store.ErrApprovalAlreadyConsumed",
+			reuseErr, reuseErr)
+	}
+	var denied *DenialError
+	if errors.As(reuseErr, &denied) {
+		t.Fatalf("AC8: the reuse was refused by BUDGET (%s), not by the durable claim", denied.Decision.Label)
+	}
+	afterReuse := readPublishCounters(validator, handler)
+	t.Logf("AC8 counters after the fresh-budget reuse: %s", afterReuse)
+	if afterReuse != afterGrant {
+		t.Fatalf("AC8: counters moved across the refused reuse: %s -> %s; the refusal must land "+
+			"BEFORE credential load and POST", afterGrant, afterReuse)
+	}
+}
+
+// AC9 — the seven refusal classes, each with its own sentinel, each measured to
+// leave the credential provider and the POST counter untouched; and a positive
+// control that is an approval traversed through the LANDED DecideApproval and
+// EffectHumanPollApproval.
+func TestPublishApprovalRefusalSetWithALandedPositiveControl(t *testing.T) {
+	validator := newFakeValidator(t, "ok")
+	base := openPublishStore(t)
+	good := newPublishFixture(t, validator.origin(), "ac9").
+		landApproval(t, base, "approve", defaultApprovalTimes())
+	handler := loopbackHandler(t, RegistryPublishConfig{
+		PublisherPath:   writePublisherScript(t, "success", nil),
+		PackageDir:      good.dir,
+		Manifest:        good.manifest,
+		RegistryOrigin:  validator.origin(),
+		ValidatorOrigin: validator.origin(),
+		Credential:      writeCredentialFile(t, ac10Sentinel),
+		Approval:        good.approval,
+		ExecTimeout:     20 * time.Second,
+	})
+
+	// ARM: expired. Same bytes, same package, stamped to expire at 40; the
+	// publish is presented at 50.
+	expired := newPublishFixture(t, validator.origin(), "ac9-expired").
+		landApproval(t, base, "approve", approvalTimes{request: 5, decide: 6, expires: 40})
+
+	// ARM: wrong-scope. The stamp is minted for 0.1.1; the payload publishes
+	// 0.1.0. Everything else about it is valid.
+	otherVersion := good
+	otherVersion.identity.Version = "0.1.1"
+	otherVersion = otherVersion.landApproval(t, base, "approve",
+		approvalTimes{request: 7, decide: 8, expires: 100})
+	wrongScopeIdentity := good.identity
+	wrongScopeIdentity.ApprovalRef = otherVersion.identity.ApprovalRef
+
+	// ARM: wrong-hash. The stamp is the valid one; the payload's tarball digest
+	// differs from it by exactly one nibble.
+	flipped := good.hashes
+	flipped.TarballSHA256 = flipLastNibble(flipped.TarballSHA256)
+
+	// ARM: denied.
+	denied := newPublishFixture(t, validator.origin(), "ac9").
+		landApproval(t, base, "deny", approvalTimes{request: 12, decide: 13, expires: 100})
+
+	// ARM: wrong-effect. A GENUINELY LANDED approval — real Human.Approve, real
+	// DecideApproval, real Human.PollApproval — whose scope is well-formed
+	// publish-approval grammar in every single respect except that its frozen
+	// `effect` term names FS.Write.
+	//
+	// It exists because nothing else reaches the effect check. The "scope is
+	// not publish grammar" arm below is refused by ParsePublishApprovalScope
+	// for carrying no mark, which returns BEFORE scope.Effect is ever read — so
+	// that arm pins the parser, not the term. Everything here is deliberately
+	// identical to the good fixture (same package, version, manifest ref and
+	// all three digests) so that the ONLY thing that can refuse it is the
+	// effect term: with that one check disabled, this payload passes every
+	// remaining comparison in validatePublishApproval.
+	wrongEffect := good.landApprovalWithScope(t, base, FormatPublishApprovalScope(PublishApprovalScope{
+		Publish:       PublishScope(validator.origin(), fixtureVendor, fixtureName, fixtureVersion),
+		Effect:        "FS.Write",
+		ManifestRef:   good.identity.ManifestRef.String(),
+		TarballSHA256: good.hashes.TarballSHA256,
+		ContentHash:   good.hashes.ContentHash,
+		InterfaceHash: good.hashes.InterfaceHash,
+		ExpiresAt:     100,
+	}), "approve", approvalTimes{request: 16, decide: 17, expires: 100})
+
+	// goodScopeAt renders the good fixture's canonical scope with a chosen
+	// expiry term. Every arm below that is not ABOUT the scope uses the
+	// expiry-100 form, so the field under test is the only difference.
+	goodScopeAt := func(expiresAt int64) string {
+		return PublishApprovalScopeFor(good.identity, good.hashes, expiresAt)
+	}
+
+	// ARM: wrong-request-effect. The ApprovalRequestV1 was not minted by
+	// Human.Approve. See landApprovalOverRawRequest for why this is the one
+	// fixture that cannot come out of the landed effect: the guard exists to
+	// refuse exactly what that effect cannot produce.
+	wrongRequestEffect := good.landApprovalOverRawRequest(t, base, approvalRequestWire{
+		Effect: EffectHumanPollApproval, Scope: goodScopeAt(100), Cost: PublishCost,
+		Requester: "sm-b2b-fixture", Now: 18,
+	}, "approve", approvalTimes{request: 18, decide: 19, expires: 100})
+
+	// ARM: wrong-cost. Minted through the landed effect AT cost 2, which
+	// HumanHandler copies into the request wire verbatim.
+	wrongCost := good.landApprovalWithScopeAndCost(t, base, goodScopeAt(100), "approve",
+		approvalTimes{request: 22, decide: 23, expires: 100}, 2)
+
+	// ARM: request-after-publish. The attended request is made at logical time
+	// 60; the publish it is presented for is at 50. An approval requested AFTER
+	// the thing it authorizes is not evidence of anything.
+	//
+	// This arm and the next share ErrPublishApprovalMalformed and are pinned by
+	// their MESSAGE as well as their sentinel, deliberately: [request 60,
+	// publish 50] is an EMPTY interval, so any decision time whatsoever also
+	// violates the decision-range branch. There is no fixture that violates
+	// request-after-publish alone, so the substring is what makes each arm
+	// attributable to its own branch.
+	requestAfterPublish := good.landApprovalWithScope(t, base, goodScopeAt(100), "approve",
+		approvalTimes{request: 60, decide: 61, expires: 100})
+
+	// ARM: decision-outside-range. Requested at 20, DECIDED at 5 — before the
+	// request it decides.
+	decisionBeforeRequest := good.landApprovalWithScope(t, base, goodScopeAt(100), "approve",
+		approvalTimes{request: 20, decide: 5, expires: 100})
+
+	// ARM: expiry-before-its-own-request. The stamp expires at 15 but was
+	// requested at 20, so it was spent authority the moment it was minted. The
+	// capability that minted it is unexpired (times.expires = 100), which is
+	// what keeps this arm about the SCOPE's expiry term rather than about the
+	// grant.
+	expiryBeforeRequest := good.landApprovalWithScope(t, base, goodScopeAt(15), "approve",
+		approvalTimes{request: 20, decide: 21, expires: 100})
+
+	// ARM: grant-scope-mismatch. The stamp and the payload agree completely;
+	// the CAPABILITY the effect was decided against describes a different
+	// package version. This is the third of the three identities
+	// validatePublishApproval keeps separate, and it is the one the existing
+	// wrong-scope arm does NOT exercise (there, stamp and grant agree and the
+	// payload differs).
+	otherVersionScope := PublishScope(validator.origin(), fixtureVendor, fixtureName, "0.1.1")
+
+	// ARMS: the six TRAVERSAL-ERROR branches. The content-addressed walk from
+	// payload.approvalRef to the canonical scope has six ways to fail that are
+	// not policy decisions but broken links, and each returns its own message.
+	// None of them is reachable through the landed minting path — that path
+	// exists to produce well-formed objects — so each is built with
+	// putRawApprovalObject over landed production encoders.
+	absentRequest := hashref.SumSHA256([]byte("ac9-no-such-approval-request"))
+	decisionNamingAbsentRequest := putRawApprovalObject(t, base, ApprovalDecisionV1,
+		mustApprovalJSON(approvalDecisionWire{
+			RequestRef: absentRequest.String(), Decision: "approve",
+			DecidedBy: "attended-operator", Now: 11,
+		}))
+	decisionNamingADecision := putRawApprovalObject(t, base, ApprovalDecisionV1,
+		mustApprovalJSON(approvalDecisionWire{
+			RequestRef: good.identity.ApprovalRef.String(), Decision: "approve",
+			DecidedBy: "attended-operator", Now: 11,
+		}))
+	decisionWithUnparseableRequestRef := putRawApprovalObject(t, base, ApprovalDecisionV1,
+		mustApprovalJSON(approvalDecisionWire{
+			RequestRef: "not-a-hash-ref", Decision: "approve",
+			DecidedBy: "attended-operator", Now: 11,
+		}))
+	// The two undecodable objects below MUST NOT share payload bytes. The store
+	// is content-addressed and PutObject is INSERT OR IGNORE, so identical
+	// payloads are one object and the second semantic ID is silently dropped —
+	// which is exactly what happened the first time this fixture was written.
+	undecodableDecision := putRawApprovalObject(t, base, ApprovalDecisionV1,
+		[]byte(`{"unknownDecisionField":1}`))
+
+	// A decision that correctly heads and decides a request whose BYTES the
+	// landed codec cannot read. decideApproval checks the semantic ID and the
+	// head chain, never the request payload, so this is decidable and only
+	// falls over at the broker's own decode.
+	undecodableRequest := putRawApprovalObject(t, base, ApprovalRequestV1,
+		[]byte(`{"unknownRequestField":1}`))
+	if err := appendApprovalHead(base, undecodableRequest, hashref.HashRef{}); err != nil {
+		t.Fatal(err)
+	}
+	decisionOverUndecodableRequest, err := decideApproval(
+		base, undecodableRequest, "approve", "attended-operator", 11)
+	if err != nil {
+		t.Fatalf("decide over an undecodable request: %v", err)
+	}
+
+	// ARM: malformed. Two shapes — a ref that names an object of the WRONG
+	// semantic kind, and a landed approval whose scope is not publish-grammar.
+	malformedIdentity := good.identity
+	malformedIdentity.ApprovalRef = good.approvalRequestRef // an ApprovalRequestV1, not a decision
+	_, nonPublishDecision := landNonPublishApproval(t, base, "release", PublishCost,
+		approvalTimes{request: 14, decide: 15, expires: 100})
+	nonPublishIdentity := good.identity
+	nonPublishIdentity.ApprovalRef = nonPublishDecision
+
+	// ARM: missing. A syntactically valid ref that names no object at all.
+	missing := newPublishFixture(t, validator.origin(), "ac9-missing")
+
+	negatives := []struct {
+		name     string
+		payload  []byte
+		scope    string
+		now      int64
+		sentinel error
+		contains string
+	}{
+		{"missing", missing.payload, missing.scope, 50, ErrPublishApprovalMissing, "names no object"},
+		{"expired", expired.payload, expired.scope, 50, ErrPublishApprovalExpired, "expired at logical time 40"},
+		{"wrong-scope", EncodePublishPayload(wrongScopeIdentity, good.hashes), good.scope, 50,
+			ErrPublishApprovalScope, "version:0.1.1"},
+		{"wrong-hash", EncodePublishPayload(good.identity, flipped), good.scope, 50,
+			ErrPublishApprovalScope, "tarball hash"},
+		{"denied", denied.payload, denied.scope, 50, ErrPublishApprovalDenied, `says "deny"`},
+		{"wrong-effect (landed, publish-grammatical, effect term is FS.Write)",
+			wrongEffect.payload, wrongEffect.scope, 50,
+			ErrPublishApprovalScope, `approval stamps effect "FS.Write"`},
+		{"wrong-request-effect (the request was not minted by Human.Approve)",
+			wrongRequestEffect.payload, wrongRequestEffect.scope, 50,
+			ErrPublishApprovalScope, `was minted by effect "Human.PollApproval"`},
+		{"wrong-cost (the attended request is priced at 2)",
+			wrongCost.payload, wrongCost.scope, 50,
+			ErrPublishApprovalScope, "approves cost 2, want exactly 1"},
+		{"grant-scope-mismatch (stamp and payload agree, the capability does not)",
+			good.payload, otherVersionScope, 50,
+			ErrPublishApprovalScope, "does not describe the payload package"},
+		{"request-after-publish (requested at 60, published at 50)",
+			requestAfterPublish.payload, requestAfterPublish.scope, 50,
+			ErrPublishApprovalMalformed, "at logical time 60, after the publish at 50"},
+		{"decision-outside-request-publish-range (decided at 5, requested at 20)",
+			decisionBeforeRequest.payload, decisionBeforeRequest.scope, 50,
+			ErrPublishApprovalMalformed, "at logical time 5, outside [request 20, publish 50]"},
+		{"expiry-precedes-its-own-request (expires 15, requested at 20)",
+			expiryBeforeRequest.payload, expiryBeforeRequest.scope, 50,
+			ErrPublishApprovalMalformed, "approval expiry 15 precedes its own request time 20"},
+		{"traversal (the publish payload itself does not decode)",
+			[]byte(`{"schema":"world/not-a-publish-request/v1"}`), good.scope, 50,
+			ErrPublishApprovalMalformed, "publish payload schema"},
+		{"traversal (decision object bytes do not decode)",
+			good.withApprovalRef(undecodableDecision), good.scope, 50,
+			ErrPublishApprovalMalformed, "decision: broker: decode approval payload"},
+		{"traversal (decision requestRef is not a hash ref)",
+			good.withApprovalRef(decisionWithUnparseableRequestRef), good.scope, 50,
+			ErrPublishApprovalMalformed, "decision requestRef"},
+		{"traversal (decision names a request that does not exist)",
+			good.withApprovalRef(decisionNamingAbsentRequest), good.scope, 50,
+			ErrApprovalRequestNotFound, "references request " + absentRequest.String()},
+		{"traversal (decision names an object that is not a request)",
+			good.withApprovalRef(decisionNamingADecision), good.scope, 50,
+			ErrPublishApprovalMalformed, `want "world/approval-request/v1"`},
+		{"traversal (request object bytes do not decode)",
+			good.withApprovalRef(decisionOverUndecodableRequest), good.scope, 50,
+			ErrPublishApprovalMalformed, "request: broker: decode approval payload"},
+		{"malformed (decision ref names an approval REQUEST)",
+			EncodePublishPayload(malformedIdentity, good.hashes), good.scope, 50,
+			ErrPublishApprovalMalformed, "want \"world/approval-decision/v1\""},
+		{"malformed (landed approval whose scope is not publish grammar)",
+			EncodePublishPayload(nonPublishIdentity, good.hashes), good.scope, 50,
+			ErrPublishApprovalMalformed, "carries no \"#\" mark"},
+	}
+
+	for _, tc := range negatives {
+		t.Run(tc.name, func(t *testing.T) {
+			before := readPublishCounters(validator, handler)
+			session, recording := publishSession(
+				t, base.Store, "ac9-"+tc.name, publishGrant(tc.scope), handler)
+			_, ref, err := session.Invoke(context.Background(), EffectRequest{
+				Effect: EffectRegistryPublish, Scope: tc.scope, Cost: PublishCost, Now: tc.now,
+			}, tc.payload)
+			if !errors.Is(err, tc.sentinel) {
+				t.Fatalf("%s error = %T %v, want %v", tc.name, err, err, tc.sentinel)
+			}
+			if !strings.Contains(err.Error(), tc.contains) {
+				t.Errorf("%s refusal %q does not mention %q", tc.name, err, tc.contains)
+			}
+			if !ref.IsZero() {
+				t.Errorf("%s produced effect record %s; a pre-claim refusal records nothing", tc.name, ref)
+			}
+			if len(recording.effectIDs) != 0 {
+				t.Errorf("%s minted durable effect intents %v, want none", tc.name, recording.effectIDs)
+			}
+			after := readPublishCounters(validator, handler)
+			t.Logf("AC9 %s: counters %s -> %s", tc.name, before, after)
+			if after != before {
+				t.Fatalf("%s moved a counter (%s -> %s): the refusal must land BEFORE credential "+
+					"load and BEFORE POST", tc.name, before, after)
+			}
+			if after != (publishCounters{}) {
+				t.Fatalf("%s: counters are %s but nothing has legitimately dispatched yet", tc.name, after)
+			}
+		})
+	}
+
+	// POSITIVE CONTROL. Seven zero-valued counters prove nothing unless the
+	// SAME counters, the SAME handler and the SAME validator can be shown to
+	// move — under an approval that reached here through the landed
+	// Human.Approve -> DecideApproval -> Human.PollApproval traversal that
+	// landApproval performs and hash-checks.
+	positiveSession, _ := publishSession(t, base.Store, "ac9-positive", publishGrant(good.scope), handler)
+	if _, ref, err := positiveSession.Invoke(context.Background(), EffectRequest{
+		Effect: EffectRegistryPublish, Scope: good.scope, Cost: PublishCost, Now: 50,
+	}, good.payload); err != nil || ref.IsZero() {
+		t.Fatalf("AC9 positive control = ref %s, err %v; want a record and no error "+
+			"(counters at refusal: %s)", ref, err, readPublishCounters(validator, handler))
+	}
+	positive := readPublishCounters(validator, handler)
+	t.Logf("AC9 positive control: counters %s", positive)
+	if positive != (publishCounters{posts: 1, dispatches: 1, credentialLoads: 1}) {
+		t.Fatalf("AC9 positive control counters = %s, want POST=1 dispatches=1 credentialLoads=1", positive)
+	}
+
+	// ARM: already-consumed — the seventh negative class, and the only one that
+	// can be stated against a counter that has just been shown to move.
+	t.Run("already-consumed", func(t *testing.T) {
+		before := readPublishCounters(validator, handler)
+		session, recording := publishSession(
+			t, base.Store, "ac9-consumed", publishGrant(good.scope), handler)
+		if got := session.grants[0].Budget; got != PublishCost {
+			t.Fatalf("the reuse session's budget = %d, want %d", got, PublishCost)
+		}
+		_, _, err := session.Invoke(context.Background(), EffectRequest{
+			Effect: EffectRegistryPublish, Scope: good.scope, Cost: PublishCost, Now: 51,
+		}, good.payload)
+		if !errors.Is(err, store.ErrApprovalAlreadyConsumed) {
+			t.Fatalf("already-consumed error = %T %v, want store.ErrApprovalAlreadyConsumed", err, err)
+		}
+		var denial *DenialError
+		if errors.As(err, &denial) {
+			t.Fatalf("the reuse was refused by BUDGET (%s), not by the durable claim", denial.Decision.Label)
+		}
+		if len(recording.effectIDs) != 0 {
+			t.Errorf("already-consumed minted durable effect intents %v, want none", recording.effectIDs)
+		}
+		after := readPublishCounters(validator, handler)
+		t.Logf("AC9 already-consumed: counters %s -> %s", before, after)
+		if after != before {
+			t.Fatalf("already-consumed moved a counter (%s -> %s)", before, after)
+		}
+	})
+}
+
+// AC9a — close and REOPEN the store, then a new session with a new budget. The
+// SHARED fake's total POST count must remain EXACTLY ONE.
+func TestConsumedApprovalStaysConsumedAcrossStoreCloseAndReopen(t *testing.T) {
+	validator := newFakeValidator(t, "ok")
+	base := openPublishStore(t)
+	fixture := newPublishFixture(t, validator.origin(), "ac9a").
+		landApproval(t, base, "approve", defaultApprovalTimes())
+	// ONE handler and ONE validator span both processes, so the POST count
+	// below is a total and not a per-session reading.
+	handler := loopbackHandler(t, RegistryPublishConfig{
+		PublisherPath:   writePublisherScript(t, "success", nil),
+		PackageDir:      fixture.dir,
+		Manifest:        fixture.manifest,
+		RegistryOrigin:  validator.origin(),
+		ValidatorOrigin: validator.origin(),
+		Credential:      writeCredentialFile(t, ac10Sentinel),
+		Approval:        fixture.approval,
+		ExecTimeout:     20 * time.Second,
+	})
+
+	first, _ := publishSession(t, base.Store, "ac9a-first", publishGrant(fixture.scope), handler)
+	if _, _, err := first.Invoke(context.Background(), EffectRequest{
+		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
+	}, fixture.payload); err != nil {
+		t.Fatalf("AC9a first invocation: %v", err)
+	}
+	afterFirst := readPublishCounters(validator, handler)
+	t.Logf("AC9a arm 1 (first invocation, original store): %s", afterFirst)
+	if afterFirst != (publishCounters{posts: 1, dispatches: 1, credentialLoads: 1}) {
+		t.Fatalf("AC9a: counters after the first invocation = %s, want POST=1 dispatches=1 credentialLoads=1",
+			afterFirst)
+	}
+
+	// CLOSE and REOPEN. The reopened handle shares no connection, no cache and
+	// no budget with the first — only the bytes on disk.
+	reopened := base.reopen(t)
+	afterReopen := readPublishCounters(validator, handler)
+	t.Logf("AC9a arm 2 (after close+reopen, before retry): %s", afterReopen)
+
+	second, recording := publishSession(t, reopened.Store, "ac9a-second", publishGrant(fixture.scope), handler)
+	if got := second.grants[0].Budget; got != PublishCost {
+		t.Fatalf("AC9a: the reopened session's budget = %d, want a FRESH %d", got, PublishCost)
+	}
+	_, _, err := second.Invoke(context.Background(), EffectRequest{
+		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 60,
+	}, fixture.payload)
+	if !errors.Is(err, store.ErrApprovalAlreadyConsumed) {
+		t.Fatalf("AC9a: reuse after reopen = %T %v, want store.ErrApprovalAlreadyConsumed", err, err)
+	}
+	var denial *DenialError
+	if errors.As(err, &denial) {
+		t.Fatalf("AC9a: the reuse was refused by BUDGET (%s), not by the durable claim", denial.Decision.Label)
+	}
+	if len(recording.effectIDs) != 0 {
+		t.Errorf("AC9a: the reopened session minted durable intents %v, want none", recording.effectIDs)
+	}
+	afterSecond := readPublishCounters(validator, handler)
+	t.Logf("AC9a arm 3 (after the refused retry): %s", afterSecond)
+	if got := int64(validator.count()); got != 1 {
+		t.Fatalf("AC9a: SHARED fake's total POST count = %d, want EXACTLY 1", got)
+	}
+	if afterSecond != afterFirst {
+		t.Fatalf("AC9a: counters moved across close+reopen+retry: %s -> %s", afterFirst, afterSecond)
+	}
+}
+
+// AC9b — two concurrent sessions with distinct FRESH budgets race the same
+// approval behind a START BARRIER. Run this under -race.
+func TestTwoSessionsRacingOneApprovalDispatchExactlyOnce(t *testing.T) {
+	validator := newFakeValidator(t, "ok")
+	base := openPublishStore(t)
+	fixture := newPublishFixture(t, validator.origin(), "ac9b").
+		landApproval(t, base, "approve", defaultApprovalTimes())
+	handler := loopbackHandler(t, RegistryPublishConfig{
+		PublisherPath:   writePublisherScript(t, "success", nil),
+		PackageDir:      fixture.dir,
+		Manifest:        fixture.manifest,
+		RegistryOrigin:  validator.origin(),
+		ValidatorOrigin: validator.origin(),
+		Credential:      writeCredentialFile(t, ac10Sentinel),
+		Approval:        fixture.approval,
+		ExecTimeout:     20 * time.Second,
+	})
+
+	const racers = 2
+	type outcome struct {
+		err       error
+		effectIDs []string
+	}
+	outcomes := make([]outcome, racers)
+	// THE START BARRIER. Without it this is a sequential test wearing a race
+	// test's name: both goroutines must be parked at the same instruction
+	// before either is allowed to touch the store.
+	var ready, done sync.WaitGroup
+	start := make(chan struct{})
+	ready.Add(racers)
+	done.Add(racers)
+	for i := 0; i < racers; i++ {
+		go func(i int) {
+			defer done.Done()
+			// Each racer gets its OWN session over the SAME store, with its own
+			// FRESH budget of one.
+			recording := &publishRecordingStore{base: base.Store}
+			session := newSession(recording, fmt.Sprintf("ac9b-%d", i),
+				[]Capability{publishGrant(fixture.scope)},
+				Registry{EffectRegistryPublish: handler}, Live, nil)
+			ready.Done()
+			<-start
+			_, _, err := session.Invoke(context.Background(), EffectRequest{
+				Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
+			}, fixture.payload)
+			outcomes[i] = outcome{err: err, effectIDs: recording.effectIDs}
+		}(i)
+	}
+	ready.Wait()
+	close(start)
+	done.Wait()
+
+	winners, losers := 0, 0
+	for i, got := range outcomes {
+		t.Logf("AC9b racer %d: err=%v durableIntents=%v", i, got.err, got.effectIDs)
+		switch {
+		case got.err == nil:
+			winners++
+			if len(got.effectIDs) != 1 {
+				t.Errorf("AC9b racer %d won but minted durable intents %v, want exactly 1",
+					i, got.effectIDs)
+			}
+		case errors.Is(got.err, store.ErrApprovalAlreadyConsumed):
+			losers++
+			if len(got.effectIDs) != 0 {
+				t.Errorf("AC9b racer %d lost but minted durable intents %v, want none",
+					i, got.effectIDs)
+			}
+			var denial *DenialError
+			if errors.As(got.err, &denial) {
+				t.Errorf("AC9b racer %d was refused by BUDGET (%s), not by the durable claim",
+					i, denial.Decision.Label)
+			}
+		default:
+			t.Errorf("AC9b racer %d: unexpected error %T %v", i, got.err, got.err)
+		}
+	}
+	if winners != 1 || losers != racers-1 {
+		t.Fatalf("AC9b: %d winners and %d losers, want exactly 1 and %d", winners, losers, racers-1)
+	}
+	counters := readPublishCounters(validator, handler)
+	t.Logf("AC9b arm (both racers complete): %s", counters)
+	if counters != (publishCounters{posts: 1, dispatches: 1, credentialLoads: 1}) {
+		t.Fatalf("AC9b: counters = %s, want POST=1 dispatches=1 credentialLoads=1 — the loser must "+
+			"be refused BEFORE credential load", counters)
+	}
+}
+
+// AC9c — a dispatched-but-ambiguous attempt BURNS the approval. After a store
+// reopen a fresh session/budget retrying the same stamp receives
+// ErrApprovalAlreadyConsumed (not budget denial), the total POST count stays
+// one, and recovery reports the pending publish without launching anything.
+func TestIndeterminatePublishBurnsTheApprovalAndRecoveryStaysReadOnly(t *testing.T) {
+	// "reset": the validator ACCEPTS the request (so the body demonstrably left
+	// the publisher) and then aborts the connection. That is the genuinely
+	// ambiguous case, and the reason burning the stamp is the safe choice.
+	validator := newFakeValidator(t, "reset")
+	base := openPublishStore(t)
+	fixture := newPublishFixture(t, validator.origin(), "ac9c").
+		landApproval(t, base, "approve", defaultApprovalTimes())
+	handler := loopbackHandler(t, RegistryPublishConfig{
+		PublisherPath:   writePublisherScript(t, "reset", nil),
+		PackageDir:      fixture.dir,
+		Manifest:        fixture.manifest,
+		RegistryOrigin:  validator.origin(),
+		ValidatorOrigin: validator.origin(),
+		Credential:      writeCredentialFile(t, ac10Sentinel),
+		Approval:        fixture.approval,
+		ExecTimeout:     20 * time.Second,
+	})
+
+	first, recording := publishSession(t, base.Store, "ac9c-first", publishGrant(fixture.scope), handler)
+	_, ref, err := first.Invoke(context.Background(), EffectRequest{
+		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
+	}, fixture.payload)
+	var indeterminate *IndeterminateEffectError
+	if !errors.As(err, &indeterminate) {
+		t.Fatalf("AC9c first invocation error = %T %v, want *IndeterminateEffectError", err, err)
+	}
+	if !ref.IsZero() {
+		t.Errorf("AC9c: the ambiguous arm produced effect record %s, want none", ref)
+	}
+	afterFirst := readPublishCounters(validator, handler)
+	t.Logf("AC9c arm 1 (first invocation, typed indeterminate): %s", afterFirst)
+	if afterFirst != (publishCounters{posts: 1, dispatches: 1, credentialLoads: 1}) {
+		t.Fatalf("AC9c: counters after the ambiguous dispatch = %s, want POST=1 dispatches=1 "+
+			"credentialLoads=1", afterFirst)
+	}
+	if got := effectReceipt(t, recording, 0).State; got != store.ReceiptIndeterminate {
+		t.Fatalf("AC9c: receipt state = %q, want %q", got, store.ReceiptIndeterminate)
+	}
+
+	reopened := base.reopen(t)
+
+	// RECOVERY IS READ-ONLY. It is handed the real publish registry, and the
+	// counters must not move: a surface that can report an unresolved
+	// irreversible attempt must not be able to launch a second one.
+	findings, err := Recover(reopened.Store, Registry{EffectRegistryPublish: handler})
+	if err != nil {
+		t.Fatal(err)
+	}
+	publishes := PendingPublishes(findings)
+	if len(publishes) != 1 {
+		t.Fatalf("AC9c: PendingPublishes = %d findings, want exactly 1 (all findings: %d)",
+			len(publishes), len(findings))
+	}
+	if got := publishes[0].EffectIntent.Effect; got != EffectRegistryPublish {
+		t.Errorf("AC9c: pending publish effect = %q, want %q", got, EffectRegistryPublish)
+	}
+	if got := publishes[0].EffectIntent.Scope; got != fixture.scope {
+		t.Errorf("AC9c: pending publish scope = %q, want %q", got, fixture.scope)
+	}
+	// The selector must actually SELECT: a filter that returns everything would
+	// pass the assertion above whenever the store holds exactly one finding.
+	if got := PendingPublishes(nil); got != nil {
+		t.Errorf("AC9c: PendingPublishes(nil) = %v, want nil", got)
+	}
+	if got := PendingPublishes([]IndeterminateEffect{{
+		EffectIntent: store.EffectIntent{Effect: "FS.Write"},
+	}}); len(got) != 0 {
+		t.Errorf("AC9c: PendingPublishes selected a non-publish finding %v", got)
+	}
+	afterRecovery := readPublishCounters(validator, handler)
+	t.Logf("AC9c arm 2 (after read-only recovery over the reopened store): %s", afterRecovery)
+	if afterRecovery != afterFirst {
+		t.Fatalf("AC9c: recovery moved a counter (%s -> %s); recovery must never dispatch",
+			afterFirst, afterRecovery)
+	}
+
+	// The retry, with a FRESH session and a FRESH budget.
+	second, secondRecording := publishSession(
+		t, reopened.Store, "ac9c-second", publishGrant(fixture.scope), handler)
+	if got := second.grants[0].Budget; got != PublishCost {
+		t.Fatalf("AC9c: the retry session's budget = %d, want a FRESH %d", got, PublishCost)
+	}
+	_, _, retryErr := second.Invoke(context.Background(), EffectRequest{
+		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 60,
+	}, fixture.payload)
+	if !errors.Is(retryErr, store.ErrApprovalAlreadyConsumed) {
+		t.Fatalf("AC9c: retry error = %T %v, want store.ErrApprovalAlreadyConsumed", retryErr, retryErr)
+	}
+	// THE DISTINCTION AC9c EXISTS FOR: budget denial would also leave the POST
+	// counter reading 1 while proving nothing about the claim.
+	var denial *DenialError
+	if errors.As(retryErr, &denial) {
+		t.Fatalf("AC9c: the retry was refused by BUDGET (%s), not by the durable claim",
+			denial.Decision.Label)
+	}
+	if len(secondRecording.effectIDs) != 0 {
+		t.Errorf("AC9c: the retry minted durable intents %v, want none", secondRecording.effectIDs)
+	}
+	afterRetry := readPublishCounters(validator, handler)
+	t.Logf("AC9c arm 3 (after the refused fresh-budget retry): %s", afterRetry)
+	if got := int64(validator.count()); got != 1 {
+		t.Fatalf("AC9c: total POST count = %d, want EXACTLY 1", got)
+	}
+	if afterRetry != afterFirst {
+		t.Fatalf("AC9c: counters moved across reopen+recovery+retry: %s -> %s", afterFirst, afterRetry)
+	}
 }

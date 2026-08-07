@@ -95,6 +95,26 @@ func Recover(s *store.Store, registries ...Registry) ([]IndeterminateEffect, err
 	return recoverPending(s)
 }
 
+// PendingPublishes selects the Registry.Publish findings from a recovery scan.
+//
+// It is the SM.B2b half of the publish recovery surface, and it is a SELECTION
+// and nothing else: it takes findings Recover already produced, performs no
+// I/O, consults no Registry, and cannot dispatch. SM.C owns resolving them.
+//
+// The reason it exists is AC9c: after a crash mid-publish the operator must be
+// able to see WHICH irreversible attempt is unresolved without the act of
+// looking being able to launch a second one. A filter over an already-computed
+// slice cannot launch anything.
+func PendingPublishes(findings []IndeterminateEffect) []IndeterminateEffect {
+	var publishes []IndeterminateEffect
+	for _, finding := range findings {
+		if finding.EffectIntent.Effect == EffectRegistryPublish {
+			publishes = append(publishes, finding)
+		}
+	}
+	return publishes
+}
+
 func recoverPending(s recoveryStore) ([]IndeterminateEffect, error) {
 	findings, err := recoverCommitPending(s)
 	if err != nil {

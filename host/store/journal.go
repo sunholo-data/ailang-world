@@ -624,6 +624,33 @@ func (s *Store) AppendClaimedEffectIntent(episodeID string, intent EffectIntent,
 		return "", 0, fmt.Errorf("store: append claimed effect intent %q: %w", id, err)
 	}
 	if _, err := tx.Exec(`INSERT INTO approval_claims(approval_ref, request_ref, invocation_id) VALUES (?, ?, ?)`, approvalRef.String(), requestRef.String(), id); err != nil {
+		// The approval_ref PRIMARY KEY is the real single-use enforcement; the
+		// SELECT EXISTS above is only a fast path. If they disagree — another
+		// transaction claimed this approval between the two statements — the
+		// caller must still receive ErrApprovalAlreadyConsumed, because a
+		// caller that cannot tell "already spent" from "the store is broken"
+		// will retry an IRREVERSIBLE publish.
+		//
+		// Which of the two it is, is asked of the DATABASE rather than read out
+		// of the driver's error text: a message match would silently stop
+		// working on a driver upgrade, and would fail OPEN.
+		//
+		// HONEST LIMIT: this branch is UNREACHABLE while openSQLite pins
+		// db.SetMaxOpenConns(1) and Open holds a cross-process writer lock —
+		// with one connection, no second transaction can interleave between
+		// the SELECT EXISTS above and this INSERT, so the fast path always
+		// wins the race and this fallback has no test. It is kept because the
+		// alternative to unreachable-and-correct is reachable-and-fail-open:
+		// if that connection cap is ever relaxed, the loser of the race would
+		// otherwise receive an opaque constraint error and could retry an
+		// irreversible publish.
+		var claimed int
+		if queryErr := tx.QueryRow(
+			`SELECT EXISTS(SELECT 1 FROM approval_claims WHERE approval_ref = ?)`,
+			approvalRef.String(),
+		).Scan(&claimed); queryErr == nil && claimed != 0 {
+			return "", 0, ErrApprovalAlreadyConsumed
+		}
 		return "", 0, fmt.Errorf("store: claim approval %q: %w", approvalRef.String(), err)
 	}
 	if err := tx.Commit(); err != nil {
