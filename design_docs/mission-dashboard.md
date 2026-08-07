@@ -2,50 +2,46 @@
 
 *Snapshot, overwritten every Gate 4. History lives in `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-07, iteration 61 · dev @ `c6a14c0` · GitHub status API **All Systems Operational,
-0 incidents** — so unlike iterations 58–60 a green here is attributable, not a sample.
+**As of** 2026-08-07, iteration 62 · dev @ `3fd889f` · status API **All Systems Operational, 0
+incidents** — this green is attributable, and licenses an infrastructure inference as well as a code one.
 
 ## In flight
 
-- **Item 10 `w-boundary-gate-tree-mutation` — `BG.C` LANDED, and the ITEM IS COMPLETE.** All three
-  milestones shipped: `BG.A` `278f102` (iter-58) · `BG.B` `39130ec` (iter-60) · `BG.C` PR #49
-  (iter-61, evaluator `sonnet` **94/100 r1, zero blocking**). Doc → `implemented/`.
-- **`[NEXT]` is item 8 `w-self-mod-vertical`, milestone `SM.B2a`** — gated on nothing. `8/OD-1`
-  (the attended publish authorization) was ANSWERED 2026-08-05 and is now registered.
+- **Item 8 `w-self-mod-vertical` — `SM.B2a` LANDED** (PR #50 → `3fd889f`, evaluator `sonnet`
+  **98/100 r1, zero blocking**). Brokered publish handler, de-ambient credential, typed
+  indeterminate outcome. `AC7` · `AC10` · `AC11` discharged.
+- **`[NEXT]` is `SM.B2b`** — `AC8` (dispatch half) + `AC9`/`AC9a`/`AC9b`/`AC9c`: attended-stamp
+  binding and single-use approval consumption. Gated on nothing. `SM.B2a` wired
+  `AppendClaimedEffectIntent` but does **no approval validation** — that is `SM.B2b`'s whole job.
 - **Item 5 `w-mcp-projection` — still BLOCKED** on one prerequisite (the transition registry).
 
-## Latest — a probe that must prove it can fire, on the filesystem it certifies
+## Latest — the credential was already leaking, and a replaced AC is what found it
 
-`BG.C` adds the runtime backstop: five observables of the live target captured before/after
-`check()`, four asserted unconditionally, `mtime_ns` asserted **only** after a 20-trial probe fires
-**20/20**. `<20/20` FAILS loudly — `verify_go.sh` runs `go test` without `-v`, so a passing test
-prints nothing and the *assertion*, not the log line, is the only channel a measurement travels.
+The doc's original `AC10` ("all non-publish subprocesses observe it unset") is satisfiable by
+launching **zero** subprocesses. Iter-52's planner replaced it with one that must re-derive the site
+count **by command in-run**, drive **every** site, and `t.Fatal` on an empty enumeration. Executing
+that literally measured **two of five production subprocess sites leaking a live,
+irreversible-publish credential** (verified first-party at base `0c47667`):
 
-**The controller finding.** The plan RECORDS `st_dev` for `t.TempDir()` and `repoRoot` but never
-COMPARES them — so a 20/20 probe on a fine-grained tmpfs would license an mtime assertion about a
-file on a possibly coarse-grained repo volume. On this host the two devs are equal (`16777230`),
-which is exactly why the gap is invisible without an assertion. Now asserted *before* the gate.
-
-| mutation | observed |
+| site | defect at base |
 |---|---|
-| `M7` `cp` write+restore (off the AST deny-list) | `live-target nanosecond ModTime changed` |
-| `M10` **new** — `mv` restore, content byte-identical | `live-target inode changed` |
-| `M8` **new** — forced cross-filesystem probe | `probe measured a different filesystem than the live target` |
-| `M9` **new** — probe write pair removed | `backstop is not armed…: probe fired 0/20` |
+| `host/archive/archive.go` `probeVersion` | bare `exec.Command(...).CombinedOutput()` — **no `cmd.Env` at all** |
+| `host/replay/replay.go` `runPinnedTransition` | sets `Dir`/`Stdout`/`Stderr`, **not `Env`** |
 
-AST guard stayed **GREEN** in all four arms — so the backstop is live *independently* of the guard.
+Both fixed; `host/childenv` holds the variable list once so four packages cannot drift.
 
-**`AC6′`**: 8 interleaved same-session pairs — median A `1.1275 s`, B `1.4700 s`, **ratio 1.3038 ≤
-1.50**, absolute ≤ 3.0 s. The doc's ORIGINAL `AC6` (`≤2× 0.435 s`) would have failed **both** arms,
-including arm A, which is unmodified base code. iter-57's replacement was not pedantry.
+**Judge `NB-1`, fixed not carried** — the *direction* is why: `Scrubbed` returned **nil** for
+degenerate inputs and `exec` reads a nil `cmd.Env` as **INHERIT**. Fail-OPEN, in the one package
+written to prevent it. Now always non-nil; guard proven by a **compiling** mutant (`f9e2e40`).
+
+**Twice a mutation redded for the wrong reason** — one never landed (sha256 unchanged), one failed to
+build. *"Vacuous"*, *"never ran"* and *"doesn't build"* are three facts wearing one exit code.
 
 ## Loop · cost · asks
 
-- launchd `mission-world`; controller `claude-opus-5`. Executor **`pi:deepseek-v4-flash-0731`**
-  (codex bucket dry until Aug 8 11:24); evaluator **`sonnet`** (distinct provider ⇒ generator≠judge).
-  No designer/planner fired. Verify profile `ailang-code`; AILANG pinned **v0.30.0**. Issue **#32**.
-- **`metered=$0.024`** vs the $5 ceiling — the pi executor run; every other role on a quota bucket.
-- **Process fix landed:** the `OD-<n>` registry's own enumeration instrument returned **0** against a
-  firing control, so **six** ODs were allocated unregistered — including `8/OD-1`, which is where
-  Mark's attended publish approval landed. Instrument replaced, all six registered.
+- Controller `claude-opus-5`. Executor **`opus`** — codex quota-dry to Aug 8 11:24 **and** `pi` barred
+  for publish-capable code (Mark, attended 2026-08-06); documented fallback, FLAGGED. Evaluator
+  **`sonnet`** ⇒ generator≠judge. AILANG pinned **v0.30.0**. Issue **#32**.
+- **`metered=$0.00`** vs the $5 ceiling — all roles on quota buckets.
+- **Safety:** `ailang publish` never invoked in any form; no non-loopback request; no secret printed.
 - **Parked on Mark: NONE.**
