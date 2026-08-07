@@ -5,13 +5,61 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 )
+
+// TestMain removes the registry credential from this package's test process.
+//
+// It is not a convenience. run() now REFUSES to start when the credential is
+// ambient (Decision 4), and the credential IS ambient in the mission
+// operator's shell — so without this every test below would pass in CI and
+// fail locally, which is the worst possible property for a gate. Unsetting it
+// here makes the suite host-independent and leaves the ambient behaviour to
+// the one test that sets it deliberately,
+// TestRunRefusesAnAmbientRegistryCredential.
+func TestMain(m *testing.M) {
+	if err := os.Unsetenv(broker.RegistryCredentialVariable); err != nil {
+		panic(err)
+	}
+	os.Exit(m.Run())
+}
+
+// TestRunRefusesAnAmbientRegistryCredential is MUT-SM-AMBIENT-KEY's gate and
+// its mandatory negative control: the SAME invocation, differing only in the
+// environment. Identical outcomes in both arms would mean the check never read
+// the environment.
+func TestRunRefusesAnAmbientRegistryCredential(t *testing.T) {
+	const sentinel = "worldd-ambient-sentinel-not-a-real-key"
+
+	t.Setenv(broker.RegistryCredentialVariable, sentinel)
+	var stdout, stderr bytes.Buffer
+	if got := run([]string{"help"}, &stdout, &stderr); got != exitFatal {
+		t.Fatalf("ambient arm exit = %d, want %d (fatal)", got, exitFatal)
+	}
+	if !strings.Contains(stderr.String(), broker.RegistryCredentialVariable) {
+		t.Errorf("refusal %q does not name the variable", stderr.String())
+	}
+	if strings.Contains(stderr.String(), sentinel) || strings.Contains(stdout.String(), sentinel) {
+		t.Fatal("the startup refusal printed the credential value")
+	}
+
+	// NEGATIVE CONTROL: same args, same streams, variable absent.
+	t.Setenv(broker.RegistryCredentialVariable, "")
+	stdout.Reset()
+	stderr.Reset()
+	if got := run([]string{"help"}, &stdout, &stderr); got != exitOK {
+		t.Fatalf("NEGATIVE CONTROL failed: absent-variable arm exit = %d, want %d; "+
+			"the same outcome in both arms means the check never read the environment",
+			got, exitOK)
+	}
+}
 
 // TestRunExitCodes pins Decision 5's exit-code contract and the flag-placement
 // rule. Each case asserts the CODE, not merely "an error happened", because the

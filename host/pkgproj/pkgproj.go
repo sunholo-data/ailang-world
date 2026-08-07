@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/childenv"
 )
 
 type Manifest struct {
@@ -202,11 +204,10 @@ func CrossCheck(packageDir string, manifest Manifest, ailangBin string) (CrossCh
 	local := Hashes{Content: content, Interface: InterfaceHash(manifest), Tarball: TarballHash(tarball), TarballBytes: len(tarball)}
 	cmd := exec.Command(ailangBin, "publish", "--dry-run")
 	cmd.Dir = packageDir
-	for _, env := range os.Environ() {
-		if !strings.HasPrefix(env, "AILANG_REGISTRY_API_KEY=") {
-			cmd.Env = append(cmd.Env, env)
-		}
-	}
+	// The dry-run cross-check is a non-publish subprocess: it must observe
+	// every registry variable unset, not just the credential. The name list
+	// lives in host/childenv so this site cannot drift away from the others.
+	cmd.Env = childenv.Scrubbed(os.Environ())
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return CrossCheckResult{Local: local}, fmt.Errorf("ailang publish --dry-run: %w: %s", err, out)
