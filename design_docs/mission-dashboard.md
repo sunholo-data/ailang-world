@@ -2,53 +2,50 @@
 
 *Snapshot, overwritten every Gate 4. History lives in `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-07, iteration 60 · dev @ `39130ec` · CI **GREEN at HEAD**, both jobs, SHA-addressed,
-step-log verified (`ailang-code verify gate` 11/11 · `go host build + test gate` 13/13, `failed=none`).
-Iteration 59's red is **retired by outcome divergence**: the identical tree that was `cancelled/steps=0`
-is now `success` with 24 steps executed. Iteration 59 was right — it was the provider.
+**As of** 2026-08-07, iteration 61 · dev @ `c6a14c0` · GitHub status API **All Systems Operational,
+0 incidents** — so unlike iterations 58–60 a green here is attributable, not a sample.
 
 ## In flight
 
-- **Item 10 `w-boundary-gate-tree-mutation` — `BG.B` LANDED** (PR #48 → squash `39130ec`; evaluator
-  `sonnet` **88/100 r1, zero blocking**). `AC1a` discharged; `M3`, `M6` and the deny-list control all
-  fired with their control arms.
-- **`[NEXT]` is milestone `BG.C`** — the runtime backstop (`AC1b`, `M7`), gated on nothing. Carry:
-  `C1`'s nanosecond-`ModTime` premise is **APFS-only** (200/200 on darwin, unmeasured on CI's ext4);
-  `BG.C` is a fail-loud 20/20 granularity probe with a pre-authorized refutation path (`10/OD-3`).
-- **Item 8 `w-self-mod-vertical`** — `SM.B2a` next after item 10. Unchanged.
-- **Item 5 `w-mcp-projection` — still BLOCKED** on one prerequisite (the transition registry). Unchanged.
+- **Item 10 `w-boundary-gate-tree-mutation` — `BG.C` LANDED, and the ITEM IS COMPLETE.** All three
+  milestones shipped: `BG.A` `278f102` (iter-58) · `BG.B` `39130ec` (iter-60) · `BG.C` PR #49
+  (iter-61, evaluator `sonnet` **94/100 r1, zero blocking**). Doc → `implemented/`.
+- **`[NEXT]` is item 8 `w-self-mod-vertical`, milestone `SM.B2a`** — gated on nothing. `8/OD-1`
+  (the attended publish authorization) was ANSWERED 2026-08-05 and is now registered.
+- **Item 5 `w-mcp-projection` — still BLOCKED** on one prerequisite (the transition registry).
 
-## Latest — the test that proved the writer was blind to the writer
+## Latest — a probe that must prove it can fire, on the filesystem it certifies
 
-`BG.B` routes every harness write through one `confinedWrite` that rejects `repoRoot` destinations
-**before a byte is written**, and installs an **AST** write-guard that must prove it can SEE before its
-silence counts. The finding is in the *test*, not the writer:
+`BG.C` adds the runtime backstop: five observables of the live target captured before/after
+`check()`, four asserted unconditionally, `mtime_ns` asserted **only** after a 20-trial probe fires
+**20/20**. `<20/20` FAILS loudly — `verify_go.sh` runs `go test` without `-v`, so a passing test
+prints nothing and the *assertion*, not the log line, is the only channel a measurement travels.
 
-- The recording-writer test as first delivered **synthesised its own paths** and called `confinedWrite`
-  directly instead of driving the real harness. Its "exact count = 2" counted only the writes it had
-  itself just made — self-fulfilling.
-- **Measured**: with `mutateViaOverlay`'s own writes reverted to bare `os.WriteFile`, it still
-  **PASSED 4/4 arms**. Blind to the write path it claimed to cover.
-- Repaired to drive the real harness with the sink **teed**; arm mutations factored into shared helpers
-  so gate and test cannot drift. **Non-vacuity by outcome divergence**: the identical probe now
-  **REDS 4/4** — `the harness recorded ZERO writes through the confined sink`.
+**The controller finding.** The plan RECORDS `st_dev` for `t.TempDir()` and `repoRoot` but never
+COMPARES them — so a 20/20 probe on a fine-grained tmpfs would license an mtime assertion about a
+file on a possibly coarse-grained repo volume. On this host the two devs are equal (`16777230`),
+which is exactly why the gap is invisible without an assertion. Now asserted *before* the gate.
 
 | mutation | observed |
 |---|---|
-| `M3` `confinedWrite` on a live repo path | rejected, message exactly as predicted, target sha256 **UNCHANGED** |
-| `M6` the pre-BG.A defect verbatim (direct write + deferred restore) | AST guard **REDS** naming `:503` and `:506` |
-| deny-list truncated to zero | `AST deny-list has 0 entries, want 4` |
+| `M7` `cp` write+restore (off the AST deny-list) | `live-target nanosecond ModTime changed` |
+| `M10` **new** — `mv` restore, content byte-identical | `live-target inode changed` |
+| `M8` **new** — forced cross-filesystem probe | `probe measured a different filesystem than the live target` |
+| `M9` **new** — probe write pair removed | `backstop is not armed…: probe fired 0/20` |
 
-Gates baselined on a **pristine** tree first (rule 3e) so a red would be attributable: `verify_go.sh`
-rc=0, `verify_ail.sh` rc=0, boundary gate rc=0 — before any work, and again after.
+AST guard stayed **GREEN** in all four arms — so the backstop is live *independently* of the guard.
+
+**`AC6′`**: 8 interleaved same-session pairs — median A `1.1275 s`, B `1.4700 s`, **ratio 1.3038 ≤
+1.50**, absolute ≤ 3.0 s. The doc's ORIGINAL `AC6` (`≤2× 0.435 s`) would have failed **both** arms,
+including arm A, which is unmodified base code. iter-57's replacement was not pedantry.
 
 ## Loop · cost · asks
 
 - launchd `mission-world`; controller `claude-opus-5`. Executor **`pi:deepseek-v4-flash-0731`**
-  (codex bucket dry, resets **Aug 8 11:24** — quota-relief policy, probe rc=1 first-party);
-  evaluator **`sonnet`** (distinct provider ⇒ generator≠judge). No designer/planner fired.
-  Verify profile `ailang-code`; AILANG pinned **v0.30.0**. Issue **#32**.
-- **`metered=$0.024`** vs the $5 ceiling (the pi executor run; every other role on a quota bucket).
-- **Parked on Mark: NONE.** V1 iter-156 **accepted both** shared-skill proposals — the
-  green-during-outage rule is **live** in the shared skill; the case-sensitive stale-charter tell is
-  queued as V1 iter-157's edit. Workaround (`grep -ci`) in use here until it lands.
+  (codex bucket dry until Aug 8 11:24); evaluator **`sonnet`** (distinct provider ⇒ generator≠judge).
+  No designer/planner fired. Verify profile `ailang-code`; AILANG pinned **v0.30.0**. Issue **#32**.
+- **`metered=$0.024`** vs the $5 ceiling — the pi executor run; every other role on a quota bucket.
+- **Process fix landed:** the `OD-<n>` registry's own enumeration instrument returned **0** against a
+  firing control, so **six** ODs were allocated unregistered — including `8/OD-1`, which is where
+  Mark's attended publish approval landed. Instrument replaced, all six registered.
+- **Parked on Mark: NONE.**
