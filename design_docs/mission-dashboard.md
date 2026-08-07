@@ -2,8 +2,8 @@
 
 *Snapshot, overwritten every Gate 4. History: `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-07, iteration 62 · dev @ `083b595` · status API **All Systems Operational, 0
-incidents** — this green is attributable, and licenses an infrastructure inference as well as a code one.
+**As of** 2026-08-07, iteration 62 · dev @ `3e6a952` · status API **All Systems Operational, 0
+incidents** — this green is attributable, licensing an infrastructure inference as well as a code one.
 
 ## In flight
 
@@ -21,14 +21,9 @@ The doc's original `AC10` ("all non-publish subprocesses observe it unset") is s
 launching **zero** subprocesses. Iter-52's planner replaced it with one that must re-derive the site
 count **by command in-run**, drive **every** site, and `t.Fatal` on an empty enumeration. Executing
 that literally measured **two of five production subprocess sites leaking a live,
-irreversible-publish credential** (verified first-party at base `0c47667`):
-
-| site | defect at base |
-|---|---|
-| `archive.go` `probeVersion` | bare `exec.Command(...).CombinedOutput()` — **no `cmd.Env` at all** |
-| `replay.go` `runPinnedTransition` | sets `Dir`/`Stdout`/`Stderr`, **not `Env`** |
-
-Both fixed; `host/childenv` holds the variable list once so four packages cannot drift.
+irreversible-publish credential**, verified first-party at base `0c47667`: `archive.probeVersion`
+set **no `cmd.Env` at all**, and `replay.runPinnedTransition` set `Dir`/`Stdout`/`Stderr` but **not
+`Env`**. Both fixed; `host/childenv` holds the variable list once so four packages cannot drift.
 
 **Judge `NB-1`, fixed not carried** — the *direction* is why: `Scrubbed` returned **nil** and `exec`
 reads a nil `cmd.Env` as **INHERIT**. Fail-OPEN, in the one package written to prevent it. Now always
