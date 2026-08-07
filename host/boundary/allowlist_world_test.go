@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"os"
@@ -347,6 +348,40 @@ func insideRepo(root, path string) (bool, error) {
 	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)), nil
 }
 
+// rawWrite is the SINK. Tests swap this, never confinedWrite, so the CHECK is
+// always exercised before any byte can be written.
+var rawWrite = os.WriteFile
+
+// confinedWrite is the single enforcement point every legacy os.WriteFile call
+// in this file routes through. It resolves root and dst the same way insideRepo
+// does (symlink-evaluated absolute paths; dst need not exist yet, its parent
+// must), and if dst lies at or beneath root it returns an error SYNCHRONOUSLY,
+// before rawWrite is invoked at all -- there is no write-then-check and no
+// window. Otherwise it delegates to the swappable rawWrite sink.
+func confinedWrite(root, dst string, data []byte, perm os.FileMode) error {
+	inside, err := insideRepo(root, dst)
+	if err != nil {
+		return err
+	}
+	if inside {
+		evalRoot, err := filepath.EvalSymlinks(root)
+		if err != nil {
+			return err
+		}
+		dir, base := filepath.Split(filepath.Clean(dst))
+		evalDir, err := filepath.EvalSymlinks(filepath.Clean(dir))
+		if err != nil {
+			return err
+		}
+		rel, err := filepath.Rel(evalRoot, filepath.Join(evalDir, base))
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("confined writer: destination inside repoRoot: %s", filepath.ToSlash(rel))
+	}
+	return rawWrite(dst, data, perm)
+}
+
 func armBarrier(t *testing.T, root, arm string, m armBarrierMarker) {
 	t.Helper()
 	spec := os.Getenv(armBarrierEnv)
@@ -364,13 +399,6 @@ func armBarrier(t *testing.T, root, arm string, m armBarrierMarker) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	inside, err := insideRepo(root, absMarker)
-	if err != nil {
-		t.Fatalf("%s marker %s cannot be resolved against repoRoot %s: %v", armBarrierEnv, absMarker, root, err)
-	}
-	if inside {
-		t.Fatalf("%s marker %s resolves inside repoRoot %s: `git status --porcelain` reports untracked files, so an in-repo marker would red the AC4 harness on its own artifact", armBarrierEnv, absMarker, root)
-	}
 	for _, artifact := range []string{m.Mutant, m.OverlayJSON} {
 		if _, err := os.Stat(artifact); err != nil {
 			t.Fatalf("%s cannot arm %s: artifact %s is absent: %v", armBarrierEnv, arm, artifact, err)
@@ -380,8 +408,12 @@ func armBarrier(t *testing.T, root, arm string, m armBarrierMarker) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(absMarker, payload, 0o600); err != nil {
-		t.Fatal(err)
+	// confinedWrite IS the AC4 enforcement point for the marker path: a marker
+	// that resolves inside repoRoot is rejected synchronously, before a byte is
+	// written. `git status --porcelain` reports untracked files, so an in-repo
+	// marker would red the AC4 harness on its own artifact.
+	if err := confinedWrite(root, absMarker, payload, 0o600); err != nil {
+		t.Fatalf("%s marker %s rejected by confined writer (an in-repo marker would surface as untracked residue in `git status --porcelain`): %v", armBarrierEnv, absMarker, err)
 	}
 	t.Logf("BARRIER arm=%s marker=%s pid=%d target=%s mutant=%s overlay_json=%s timeout=%s", arm, absMarker, m.PID, m.Target, m.Mutant, m.OverlayJSON, armBarrierTimeout)
 	deadline := time.Now().Add(armBarrierTimeout)
@@ -425,7 +457,7 @@ func mutateViaOverlay(t *testing.T, root, rel, arm string, mutate func([]byte) [
 
 	dir := t.TempDir()
 	absMutant := filepath.Join(dir, "mutant__"+strings.ReplaceAll(rel, string(filepath.Separator), "__"))
-	if err := os.WriteFile(absMutant, mutant, 0o600); err != nil {
+	if err := confinedWrite(root, absMutant, mutant, 0o600); err != nil {
 		t.Fatal(err)
 	}
 	// Absolute paths on BOTH sides. Relative keys also apply, but absolute is
@@ -436,7 +468,7 @@ func mutateViaOverlay(t *testing.T, root, rel, arm string, mutate func([]byte) [
 		t.Fatal(err)
 	}
 	absOverlayJSON := filepath.Join(dir, "overlay.json")
-	if err := os.WriteFile(absOverlayJSON, blob, 0o600); err != nil {
+	if err := confinedWrite(root, absOverlayJSON, blob, 0o600); err != nil {
 		t.Fatal(err)
 	}
 	// Validate the artifacts before anything consumes them: `go list -overlay`
@@ -475,6 +507,26 @@ func mutateViaOverlay(t *testing.T, root, rel, arm string, mutate func([]byte) [
 	}
 	t.Logf("MUTATION path=%s baseline_sha256=%s mutant_sha256=%s guard=%q", rel, baseSHA, mutantSHA, err)
 	return mutantSHA
+}
+
+// goArmMutate is the import-injecting mutation every protected Go arm applies,
+// and ailArmMutate is the world arm's package-cache marker. Both are named
+// rather than inlined so the gate and the recording-writer test below drive the
+// IDENTICAL mutation: a recording test that mutated differently would be
+// observing a write path the gate does not actually take.
+func goArmMutate(t *testing.T, group goGroup) func([]byte) []byte {
+	return func(baseline []byte) []byte {
+		anchor := []byte("import (\n")
+		if bytes.Count(baseline, anchor) != 1 {
+			t.Fatalf("mutation anchor count for %s is %d, want 1", group.mutantFile, bytes.Count(baseline, anchor))
+		}
+		insert := []byte(fmt.Sprintf("import (\n\t_ %q // boundary mutation: compiling HTTP import\n", group.mutantImport))
+		return bytes.Replace(baseline, anchor, insert, 1)
+	}
+}
+
+func ailArmMutate(baseline []byte) []byte {
+	return append(append([]byte(nil), baseline...), []byte("\n-- boundary mutation: package-cache .ailang/cache\n")...)
 }
 
 func TestWorldBoundaryDependencyAllowlist(t *testing.T) {
@@ -525,14 +577,7 @@ func TestWorldBoundaryDependencyAllowlist(t *testing.T) {
 			// goListDeps call would prove the overlay works for THAT call and
 			// say nothing about the call that gates.
 			var overlayDeps []string
-			mutateViaOverlay(t, root, group.mutantFile, group.name, func(baseline []byte) []byte {
-				anchor := []byte("import (\n")
-				if bytes.Count(baseline, anchor) != 1 {
-					t.Fatalf("mutation anchor count for %s is %d, want 1", group.mutantFile, bytes.Count(baseline, anchor))
-				}
-				insert := []byte(fmt.Sprintf("import (\n\t_ %q // boundary mutation: compiling HTTP import\n", group.mutantImport))
-				return bytes.Replace(baseline, anchor, insert, 1)
-			}, func(ov overlay) error {
+			mutateViaOverlay(t, root, group.mutantFile, group.name, goArmMutate(t, group), func(ov overlay) error {
 				var err error
 				overlayDeps, err = checkGoGroup(root, group, ov)
 				return err
@@ -560,9 +605,7 @@ func TestWorldBoundaryDependencyAllowlist(t *testing.T) {
 		})
 	}
 	t.Run("mutation_world", func(t *testing.T) {
-		mutateViaOverlay(t, root, "world/types.ail", "world", func(baseline []byte) []byte {
-			return append(append([]byte(nil), baseline...), []byte("\n-- boundary mutation: package-cache .ailang/cache\n")...)
-		}, func(ov overlay) error { return checkAILGroup(root, ov) })
+		mutateViaOverlay(t, root, "world/types.ail", "world", ailArmMutate, func(ov overlay) error { return checkAILGroup(root, ov) })
 	})
 
 	// Green control: the broker is intentionally the network boundary. Its
@@ -629,4 +672,268 @@ func TestBareNetHTTPExemptionIsPerGroup(t *testing.T) {
 			t.Errorf("net/http/httputil unexpectedly permitted for %s", want.group)
 		}
 	}
+}
+
+// TestWorldBoundaryRecordingWriter proves the write path of the mutation
+// harness never touches repoRoot and always lands inside the acting arm's temp
+// root. It swaps the SINK (rawWrite) -- never confinedWrite, so the confinement
+// CHECK still runs in front of every write -- and drives THE REAL HARNESS,
+// mutateViaOverlay, once per arm. A captured destination that resolves inside
+// repoRoot, one that escapes the arm's temp root, or an arm that recorded ZERO
+// destinations, must RED this test rather than pass vacuously.
+//
+// It drives mutateViaOverlay rather than replaying its write sequence inline,
+// and that distinction is the whole value of the test. The first version of
+// this test synthesised its own mutant and overlay paths and called
+// confinedWrite directly; the controller MEASURED it and it PASSED 4/4 arms
+// with mutateViaOverlay's own writes reverted to bare os.WriteFile -- i.e. it
+// was blind to the harness whose write path it claimed to cover, and its
+// exact-count assertion counted only the writes the test itself had just made.
+// That is this sprint's own spine (a check shaped to itself tests itself, not
+// the threat), so the assertion now counts the HARNESS's writes.
+//
+// The sink is a TEE, not a no-op: mutateViaOverlay validates its artifacts by
+// reading them back off disk, so a sink that swallows writes would fail the
+// harness for the wrong reason. It delegates to the CAPTURED original rather
+// than to os.WriteFile, which would itself be an unpermitted call under the AST
+// write-guard below.
+func TestWorldBoundaryRecordingWriter(t *testing.T) {
+	origRawWrite := rawWrite
+	defer func() { rawWrite = origRawWrite }()
+
+	root := repoRoot(t)
+
+	// drive runs ONE real arm with the sink teed, and returns what the harness
+	// actually wrote.
+	drive := func(t *testing.T, rel, arm string, mutate func([]byte) []byte, check func(overlay) error) []string {
+		t.Helper()
+		var recorded []string
+		rawWrite = func(dst string, data []byte, perm os.FileMode) error {
+			recorded = append(recorded, dst)
+			return origRawWrite(dst, data, perm)
+		}
+		defer func() { rawWrite = origRawWrite }()
+		mutateViaOverlay(t, root, rel, arm, mutate, check)
+		return recorded
+	}
+
+	assertArm := func(t *testing.T, arm string, recorded []string) {
+		t.Helper()
+		// (c) non-empty AND exact count. Zero destinations means the harness no
+		// longer writes through the confined sink at all -- the exact regression
+		// this test exists to catch -- so it REDS as vacuous rather than passing.
+		if len(recorded) == 0 {
+			t.Fatalf("%s: the harness recorded ZERO writes through the confined sink: either mutateViaOverlay bypasses rawWrite (regression) or this test no longer drives it (vacuous)", arm)
+		}
+		const wantWrites = 2 // every arm: the mutant file and the overlay JSON
+		if len(recorded) != wantWrites {
+			t.Fatalf("%s: the harness recorded %d writes through the confined sink, want %d: %q", arm, len(recorded), wantWrites, recorded)
+		}
+		for _, dst := range recorded {
+			// (b) no recorded destination may resolve beneath repoRoot.
+			if inside, err := insideRepo(root, dst); err != nil || inside {
+				t.Errorf("%s: recorded destination %s resolves beneath repoRoot (inside=%v, err=%v)", arm, dst, inside, err)
+			}
+			// (a) every recorded destination must resolve beneath a temp root,
+			// never the repository -- asserted against the destination's own
+			// prefix because t.TempDir() is owned by mutateViaOverlay.
+			if inside, err := insideRepo(os.TempDir(), dst); err != nil || !inside {
+				t.Errorf("%s: recorded destination %s does not resolve beneath the temp root %s (inside=%v, err=%v)", arm, dst, os.TempDir(), inside, err)
+			}
+		}
+		sorted := append([]string(nil), recorded...)
+		sort.Strings(sorted)
+		t.Logf("RECORDED_WRITES arm=%s count=%d destinations=%q", arm, len(sorted), sorted)
+	}
+
+	for _, group := range protectedGoGroups {
+		group := group
+		t.Run("recording_"+strings.ReplaceAll(group.name, "/", "_"), func(t *testing.T) {
+			recorded := drive(t, group.mutantFile, group.name, goArmMutate(t, group), func(ov overlay) error {
+				_, err := checkGoGroup(root, group, ov)
+				return err
+			})
+			assertArm(t, group.name, recorded)
+		})
+	}
+	t.Run("recording_world", func(t *testing.T) {
+		recorded := drive(t, "world/types.ail", "world", ailArmMutate, func(ov overlay) error { return checkAILGroup(root, ov) })
+		assertArm(t, "world", recorded)
+	})
+}
+
+// TestBoundaryASTWriteGuard walks the FULL AST of every .go file in
+// host/boundary and REDS if any os.WriteFile / os.OpenFile / os.Create /
+// os.Rename CALL appears anywhere except the single permitted site (the
+// rawWrite initializer). It is deliberately an AST walk over identifiers and
+// CallExprs, NOT a grep needle: iteration 54's textual self-guard in host/store
+// was vacuous because its positive needle matched its own check line, and an
+// AST walk cannot match its own source text at all.
+//
+// TWO STATED LIMITATIONS, recorded here so a green from this guard is never read
+// as more than it is:
+//
+//  1. The deny-list matches a SELECTOR, `os.<Name>`, so it is bypassable by
+//     import aliasing (`import w "os"; w.WriteFile(...)`), by reflection, and by
+//     a write reached through a helper in another package. Resolving aliases
+//     needs go/packages type information, which this walk deliberately does not
+//     load. That residual escape is what mutation M7 and milestone BG.C exist to
+//     cover with a RUNTIME backstop; this guard is the structural half only.
+//  2. The guard covers WRITES only. A future check added inside checkGoGroup or
+//     checkAILGroup that reads the disk DIRECTLY -- rather than through the
+//     overlay read helper -- would silently not be exercised with the mutant, and
+//     nothing here would notice: a checker reading past the thing it is meant to
+//     inspect. That is a REVIEW RULE, not an assertion, and it is recorded as
+//     such rather than as an acceptance criterion that cannot fail.
+func TestBoundaryASTWriteGuard(t *testing.T) {
+	// (iii) deny-list, enforced by length and by membership below.
+	denyList := []string{"WriteFile", "OpenFile", "Create", "Rename"}
+	if len(denyList) != 4 {
+		t.Fatalf("AST deny-list has %d entries, want 4", len(denyList))
+	}
+	for _, name := range []string{"WriteFile", "OpenFile", "Create", "Rename"} {
+		found := false
+		for _, d := range denyList {
+			if d == name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("AST deny-list is missing %q (present: %q)", name, denyList)
+		}
+	}
+
+	_, here, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("cannot locate host/boundary directory")
+	}
+	dir := filepath.Dir(here)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var goFiles []string
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".go") {
+			goFiles = append(goFiles, e.Name())
+		}
+	}
+	sort.Strings(goFiles)
+	// (i) non-empty and equal to the explicit expected constant.
+	const wantFileCount = 1
+	if len(goFiles) != wantFileCount {
+		t.Fatalf("host/boundary contains %d .go files, want %d: %q", len(goFiles), wantFileCount, goFiles)
+	}
+	t.Logf("AST_GUARD go_file_count=%d files=%q", len(goFiles), goFiles)
+
+	permittedLine := -1
+	permittedFound := false
+	violations := 0
+	for _, name := range goFiles {
+		path := filepath.Join(dir, name)
+		fset := token.NewFileSet()
+		// UNTYPED nil src = read from disk (see (overlay).parseSrc: a typed nil
+		// []byte is a non-nil interface and would parse as empty + EOF).
+		tree, err := parser.ParseFile(fset, path, nil, 0)
+		if err != nil {
+			t.Fatalf("parse %s: %v", path, err)
+		}
+		ast.Inspect(tree, func(n ast.Node) bool {
+			switch node := n.(type) {
+			case *ast.CallExpr:
+				sel, ok := node.Fun.(*ast.SelectorExpr)
+				if !ok {
+					return true
+				}
+				pkg, ok := sel.X.(*ast.Ident)
+				if !ok || pkg.Name != "os" {
+					return true
+				}
+				for _, d := range denyList {
+					if sel.Sel.Name == d {
+						pos := fset.Position(node.Pos())
+						t.Errorf("%s:%d: unpermitted os.%s CALL outside the rawWrite initializer", pos.Filename, pos.Line, d)
+						violations++
+						break
+					}
+				}
+			case *ast.ValueSpec:
+				// The SINGLE permitted site. `var rawWrite = os.WriteFile` is an
+				// identifier REFERENCE, not a CallExpr, so the deny-list walk
+				// above cannot and must not flag it. We assert separately that
+				// the walker LOCATES this assignment and its line, so a walker
+				// that finds as many permitted sites as violations is shown to
+				// actually work before its green is believed.
+				for i, id := range node.Names {
+					if id.Name != "rawWrite" || i >= len(node.Values) {
+						continue
+					}
+					sel, ok := node.Values[i].(*ast.SelectorExpr)
+					if !ok {
+						continue
+					}
+					pkg, ok := sel.X.(*ast.Ident)
+					if !ok || pkg.Name != "os" || sel.Sel.Name != "WriteFile" {
+						continue
+					}
+					permittedLine = fset.Position(node.Pos()).Line
+					permittedFound = true
+				}
+			}
+			return true
+		})
+	}
+
+	// (ii) the walker must PROVE it found the permitted rawWrite initializer.
+	if !permittedFound {
+		t.Fatal("AST walker did not locate the permitted rawWrite = os.WriteFile initializer: a walker reporting as many permitted sites as violations is untested and its green is void")
+	}
+	t.Logf("AST_GUARD permitted_site=rawWrite line=%d", permittedLine)
+	// (iv) enumeration: exact .go file count and the permitted call site's line.
+	t.Logf("AST_GUARD enumeration go_file_count=%d permitted_call_line=%d", len(goFiles), permittedLine)
+
+	if violations != 0 {
+		t.Fatalf("AST write-guard found %d unpermitted os write call(s)", violations)
+	}
+}
+
+// TestConfinedWriteRejectsInsideRepo is both the B4 rejection-path test and the
+// M3 threat-shaped mutation. It routes today's live-path mutation at
+// host/store/store.go through the writer, expects the exact mandated rejection
+// message, and proves the rejection happens before a single byte can be written
+// by asserting the target's sha256 is UNCHANGED. The green is carried by an
+// EXERCISED rejection, never by the absence of observations.
+func TestConfinedWriteRejectsInsideRepo(t *testing.T) {
+	root := repoRoot(t)
+	target := filepath.Join(root, "host", "store", "store.go")
+	before, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	beforeSHA := digest(before)
+	mutant := append(append([]byte(nil), before...), []byte("\n// M3 confined-writer rejection probe\n")...)
+
+	// M3 threat-shaped mutation routed through the writer.
+	err = confinedWrite(root, target, mutant, 0o600)
+	if err == nil {
+		t.Fatal("confinedWrite accepted a destination inside repoRoot: the rejection path is not exercised")
+	}
+	if !strings.Contains(err.Error(), "confined writer: destination inside repoRoot") {
+		t.Fatalf("confinedWrite rejection message %q does not carry the mandated marker", err.Error())
+	}
+	predicted := "confined writer: destination inside repoRoot: host/store/store.go"
+	if err.Error() != predicted {
+		t.Fatalf("M3 predicted message %q but observed %q", predicted, err.Error())
+	}
+	t.Logf("M3 PREDICTED=%q OBSERVED=%q", predicted, err.Error())
+
+	after, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if digest(after) != beforeSHA {
+		t.Fatalf("confinedWrite rejected but %s changed sha256 before=%s after=%s", target, beforeSHA, digest(after))
+	}
+	t.Logf("M3 target=host/store/store.go sha256_after_rejection=%s UNCHANGED", beforeSHA)
 }
