@@ -808,6 +808,20 @@ func TestWorldBoundaryDependencyAllowlist(t *testing.T) {
 
 	// Green control: the broker is intentionally the network boundary. Its
 	// non-empty closure must remain permitted by this inverse protected-group guard.
+	//
+	// UNTIL SM.C THIS CONTROL WAS VACUOUS AND THE CHARTER SAID SO. `len(deps) != 0`
+	// is true of every Go package, so the control could only ever have proved that
+	// `go list` ran — the positive half, that network code once it EXISTS in
+	// host/broker is genuinely permitted there, was unproven because host/broker
+	// had ZERO net/http in its production source and ZERO in its dependency
+	// closure (measured at 2ef4a23: 0 files, 0/168 deps). SM.B2a did not discharge
+	// it either: its POST happens inside the pinned `ailang` CHILD PROCESS, which
+	// is not a Go dependency of anything here.
+	//
+	// SM.C's reconciler is the first IN-PROCESS net/http in host/broker, so the
+	// control can finally be one that fails. Deleting the reconciler's import, or
+	// moving the network boundary out of host/broker without moving this gate,
+	// now reds here instead of passing silently.
 	broker, err := goListDeps(root, "", "./host/broker/...")
 	if err != nil {
 		t.Fatal(err)
@@ -815,7 +829,15 @@ func TestWorldBoundaryDependencyAllowlist(t *testing.T) {
 	if len(broker) == 0 {
 		t.Fatal("host/broker dependency enumeration is empty")
 	}
-	t.Logf("GREEN_CONTROL group=host/broker exact_count=%d result=PASS", len(broker))
+	httpDeps := countDep(broker, "net/http")
+	t.Logf("GREEN_CONTROL group=host/broker exact_count=%d net/http=%d result=PASS", len(broker), httpDeps)
+	if httpDeps != 1 {
+		t.Fatalf("host/broker closure contains %q %d time(s), want exactly 1: the network boundary "+
+			"is supposed to LIVE here (host/broker/registry_reconcile.go's bounded read-only GET). "+
+			"A zero here means either the reconciler lost its transport or the boundary moved out of "+
+			"host/broker without this gate moving with it -- and the permissive half of AC12 would go "+
+			"back to being unfalsifiable (closure=%d packages)", "net/http", httpDeps, len(broker))
+	}
 }
 
 func TestWorldBoundaryNullCases(t *testing.T) {
