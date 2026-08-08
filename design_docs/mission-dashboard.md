@@ -2,39 +2,40 @@
 
 *Snapshot, overwritten every Gate 4. History: `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-08, iteration 63 · dev @ `abb3a3d` · status API **All Systems Operational, 0
-incidents** — this green is attributable, licensing an infrastructure inference as well as a code one.
+**As of** 2026-08-08, iteration 65 · dev @ `0cd00eb` · status API **All Systems Operational, 0
+incidents** — so the green is attributable (infrastructure inference, not just a code one).
 
 ## In flight
 
-- **Item 8 `w-self-mod-vertical` — `SM.B2b` LANDED** (PR #51 → `abb3a3d`, evaluator `sonnet`
-  **74/100, one blocking — closed and re-verified**): an attended approval now binds **bytes, not a
-  name**, and is spent **exactly once, durably**. `AC8`/`AC9`/`AC9a`/`AC9b`/`AC9c` discharged;
-  SM.B1's carried `NB-2` closed.
-- **`[NEXT]` is `SM.C`** — probe-then-resolve reconciliation, replay evidence, clean-room fixture,
-  attended runbook. Gated on nothing.
+- **Item 8 `w-self-mod-vertical` — `SM.C` LANDED** (PR #52 → `0cd00eb`, evaluator `sonnet`
+  **93/100, zero blocking**): probe-then-resolve reconciliation, replay evidence, attended runbook.
+  `AC13`–`AC17` discharged; 8 named mutations + 23/23 refusal branches pinned.
+- **`SM.D` is BLOCKED on `8/OD-1`** (attended, never headless/CI), so **item 8 has no
+  headless-routable milestone left** — the next iteration must pick elsewhere.
 - **Item 5 `w-mcp-projection` — still BLOCKED** on one prerequisite (the transition registry).
 
-## Latest — a guard is not a gate until something reds when you remove it
+## Latest — a clean `rc=0` is what a dead iteration looks like
 
-The milestone was **inherited from a dead iteration**: Gate 2's rule (c) found an orphan worktree
-holding five uncommitted production files, no commit, no branch, zero charter rows. It built and
-vetted clean — and **redded five landed SM.B2a tests**, with a pristine-base control green. Then a
-three-stage cascade, each stage a different role, each measured. The **controller** mutated
-the executor's own new gate: neutering `scope.Effect != EffectRegistryPublish` left the **entire
-`host/broker` package green** — the neighbouring arm rejects at the parser and never reaches the
-term. The **evaluator**, given that as a named target, found **six more**; the **executor** audited
-the function and found **twelve**. `AC9` now carries **20 negative arms, one per refusal branch**;
-all seven policy branches re-verified RED by the controller.
+Gate 2 found a second consecutive orphan worktree: 525 lines of untested `SM.C` code, no commit,
+no charter row. Rather than just adopt it, the loop **diagnosed why its slots die**. `Background
+tasks still running after 600s; terminating.` appears **exactly twice in 67 iterations** — and
+those two are **exactly** the two orphaned slots. The controller spawns its executor as a
+background agent, ends its turn to wait, and the harness kills it at 600 s; the driver then logs
+`rc=0` with **no watchdog firing**. Survived by never ending the turn while the agent ran.
 
-**Rule 3d, bought and caught in one breath:** an expiry mutation redded in exactly the predicted
-direction — and the FAIL was a pre-existing load flake. *A red is not evidence until you can name
-the test that produced it.* Also: the doc **contradicts itself in one paragraph**.
+**Three more measured things.** `AC13`'s landed guard was satisfiable by a recovery that *does*
+dispatch — it passes the real handler, which refuses before its own counter moves, and stayed
+GREEN under mutation. **Rule 3e(b) caught my own contamination**: the executor's `verify_go.sh`
+was green, mine was **red** — adding a `.go` file to `host/boundary` trips its `wantFileCount = 1`
+pin (third bite; fixed by moving the gate, not relaxing the pin). And the evaluator's one finding
+reproduced: an arm-(iii) fixture is a **coverage bystander, not a guard**. `8/OD-2` routed upstream
+as `sunholo-data/ailang#633`, every premise measured first-party.
 
 ## Loop · cost · asks
 
-- Controller `claude-opus-5`. Executor **`opus`** — codex measured quota-dry (resets Aug 8 11:24)
-  **and** `pi` barred for publish-capable code (Mark, attended 2026-08-06); FLAGGED. Evaluator
-  **`sonnet`** ⇒ generator≠judge. AILANG pinned **v0.30.0**. Issue **#32**. **`metered=$0.00`**.
-- **Safety:** `ailang publish` never invoked; every publisher is the re-exec'd test binary on
-  loopback; no secret printed. **Parked on Mark: NONE.**
+- Controller `claude-opus-5`. Executor **`opus`** — codex measured quota-dry first-party (`rc=1`,
+  resets 11:24) **and** `pi` barred for publish-capable code (Mark, attended 2026-08-06); FLAGGED.
+  Evaluator **`sonnet`** ⇒ generator≠judge. AILANG **v0.30.0** · Issue **#32** · **`metered=$0.00`**.
+- **Safety:** `ailang publish` never invoked; reconciliation's only verb is `GET`; no secret printed.
+- **Parked on Mark:** **`8/OD-1`** (attended approval, blocks `SM.D` and thus all of item 8) · the
+  driver env-var proposal (`CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0`; frozen core, World cannot apply).
