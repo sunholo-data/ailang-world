@@ -792,9 +792,23 @@ func TestProbeControlValidityHasThreeDistinguishableArms(t *testing.T) {
 	arm3 := []struct {
 		name  string
 		setUp func(t *testing.T, b *fakeBucket)
-		// broken says whether the whole origin is unreachable, in which case
-		// the TARGET request fails too and branch C4 (not a control branch)
-		// is what refuses.
+		// wholeOriginDown says the whole origin is unreachable. MEASURED
+		// (iteration 65, evaluator finding, reproduced by the controller): the
+		// branch that refuses here is **C1** — "same-pass control fetch failed"
+		// — NOT C4. Closing the origin kills the CONTROL request too, and the
+		// control is examined first, so C1 wins before C4 is ever reached.
+		//
+		// Consequence, stated plainly because it is easy to misread this
+		// fixture as a guard: an origin-down row is a COVERAGE BYSTANDER for
+		// the control-validity mutations. Verified first-party — under both
+		// MUT-SM-PROBE-NO-CONTROL and MUT-SM-PROBE-CONTROL-ALWAYS-OK the two
+		// sibling rows (wrong_registry_origin_empty_bucket, control_403) red
+		// while this one PASSES, because with C1-C3 neutered it simply falls
+		// through to C4's target-fetch failure, which is uninformative for a
+		// different reason. The arm's mutation-catching duty is discharged
+		// entirely by those two siblings; this row documents that a wholly
+		// dead origin is also never an absence, and TestTargetTransportFailure-
+		// IsNeverAbsence is what actually pins the C4 path.
 		wholeOriginDown bool
 	}{
 		{
