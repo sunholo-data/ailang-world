@@ -18,18 +18,17 @@ incidents** — so the green is attributable (infrastructure inference, not just
 
 Gate 2 found a second consecutive orphan worktree: 525 lines of untested `SM.C` code, no commit,
 no charter row. Rather than just adopt it, the loop **diagnosed why its slots die**. `Background
-tasks still running after 600s; terminating.` appears **exactly twice in 67 iterations** — and
-those two are **exactly** the two orphaned slots. The controller spawns its executor as a
-background agent, ends its turn to wait, and the harness kills it at 600 s; the driver then logs
-`rc=0` with **no watchdog firing**. Survived by never ending the turn while the agent ran.
+tasks still running after 600s; terminating.` appears **exactly twice in 67 iterations** — and those
+two are **exactly** the two orphans. The controller spawns its executor as a background agent, ends
+its turn to wait, and the harness kills it at 600 s; the driver then logs `rc=0` with **no watchdog
+firing**. Survived by never ending the turn while the agent ran.
 
 **Three more measured things.** `AC13`'s landed guard was satisfiable by a recovery that *does*
-dispatch — it passes the real handler, which refuses before its own counter moves, and stayed
-GREEN under mutation. **Rule 3e(b) caught my own contamination**: the executor's `verify_go.sh`
-was green, mine was **red** — adding a `.go` file to `host/boundary` trips its `wantFileCount = 1`
-pin (third bite; fixed by moving the gate, not relaxing the pin). And the evaluator's one finding
-reproduced: an arm-(iii) fixture is a **coverage bystander, not a guard**. `8/OD-2` routed upstream
-as `sunholo-data/ailang#633`, every premise measured first-party.
+dispatch — it passes the real handler, which refuses before its own counter moves, and stayed GREEN
+under mutation. **Rule 3e(b) caught my own contamination**: the executor's `verify_go.sh` was green,
+mine was **red** — a `.go` file added to `host/boundary` trips its `wantFileCount = 1` pin (third
+bite; fixed by moving the gate, not relaxing the pin). The evaluator's one finding reproduced: an
+arm-(iii) fixture is a **bystander, not a guard**. `8/OD-2` → `sunholo-data/ailang#633`, all measured.
 
 ## Loop · cost · asks
 
