@@ -1,0 +1,14 @@
+# The upstream releases legs 1-2 of scripts/verify_ail.sh are EXPECTED to resolve.
+# A resolved release outside this set prints one non-fatal notice; it can never red the gate.
+#
+# Two entries, because legs 1-2 legitimately resolve two different releases by lane:
+#   v0.33.0 — upstream `releases/latest`, which CI's `ailang-code verify gate` job installs on
+#             PATH and does NOT override (ci.yml exports only WORLD_PKG_AILANG_BIN). Ratified
+#             ruling `9/OD-10` clause (a): legs 1-2 TRACK RELEASED versions.
+#   v0.30.0 — the documented local pin (CLAUDE.md, charter Verification Log). Operators export
+#             AILANG_BIN to this binary, so it is the token the local lane resolves.
+#
+# Adding an entry is a REVIEW, not a formality: it records that someone looked at what the primary
+# .ail gate switched to. Blank lines and `#` comments are ignored; an empty set fails the gate loudly.
+v0.33.0
+v0.30.0
