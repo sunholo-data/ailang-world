@@ -2,39 +2,43 @@
 
 *Snapshot, overwritten every Gate 4. History: `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-10, **attended session with Mark** · dev @ `7817d8e` · issue **#53**.
+**As of** 2026-08-10, **iteration 67** · dev @ `a4452d1` · CI green both jobs · issue **#53**.
 
 ## In flight
 
-- **All three asks DISCHARGED; nothing is parked on Mark.** `9/OD-10` ratified **ACCEPT**; the
-  driver export **applied**; `8/OD-1` needed no ruling — answered 2026-08-05.
-- **THE QUEUE IS NOT EMPTY.** `SM.D`'s entrypoint and item 9's three pieces are all routable.
+- **`SM.D0` LANDED** (PR #55 → `a4452d1`) — the attended-publish entrypoint exists. **`SM.D` is now
+  a real procedure and is ATTENDED-ONLY**: never headless, never CI. Item 8 has no headless
+  milestone left.
+- **`[NEXT]` is item 9's three pieces**, routable today under the `9/OD-10` ACCEPT ruling.
+- **Parked on Mark: NOTHING. Zero open asks.**
 
-## Latest — a milestone whose final action is attended is not an attended milestone
+## Latest — the deliverable was a fence, not a feature
 
-Mark attended to run `SM.D`, the irreversible first publish. **It could not be run, and not for
-want of a decision: the code that performs it does not exist.** Measured four ways — no
-`Publish`/`Approve` in `cmd/ailang-worldd` outside tests (`registry` is a read-only GET); no
-publishing script; the runbook's three ```bash blocks are **all in Stage A**, so Stage B is prose;
-and the publish machinery is a library whose `RegistryOrigin` has **no non-test caller**.
+Until this commit the *absence* of a caller was the safety property: `grep -rhoE 'Publish|Approve'
+cmd/` = **0** (control: 27 `func `), and the production constructor refuses loopback while every
+caller was an `httptest`. `SM.D0` deliberately relaxes that, so its centre is the fence.
 
-**The absence is the safety property.** `registry_publish.go:396-399` demands `https` and refuses
-loopback while every caller is an `httptest`. Nothing here can publish, so nothing headless can
-trip it. Writing the entrypoint is the deliberate relaxation — headless may **build** it, never
-**run** it; `pi` stays barred. **The bookkeeping defect it exposes:** iter-65/66 called `SM.D`
-"attended-only, blocked on `8/OD-1`" and declared the queue empty, then picked filler while item 8
-held routable work. Rule: *name the ARTIFACT a human owes, or the park cannot be discharged.*
+**The fence is a controlling-terminal check** — chosen because it is the one thing this loop is
+structurally unable to satisfy (stdin is a socket; `open(/dev/tty)` → *device not configured*).
+`/dev/null` **is** a character device, so a naive isatty would admit `--live < /dev/null`; hence the
+`os.SameFile` branch. `R-CI` is a declared tripwire, **not** the fence. 14 refusal branches, 22
+mutations, 22 killed. Stage B of the runbook now carries commands — it was prose, which is how its
+step-4 defect (confirm digests the gate never emits) survived a milestone.
 
-**Stage A ran green anyway** — projection reproduces byte-identically, readiness gate 9/9 equal to
-the golden, `verify_ail.sh` 4 identities / 14 tests, `verify_go.sh` 28 `ok` / 0 FAIL / race control
-2. Packet reviewed: `world/core@0.1.0`, 4 exports, effects `[]`, 5773 bytes. **No publish occurred;
-`world/core@0.1.0` remains unclaimed.** Carry closed: the publisher's success marker is now
-**observed** (`⚠ Dry run complete`), not read from upstream source. **Two runbook defects, both
-`SM.D` inputs:** step 4 asks the human to confirm digests the gate never emits (the dry-run shows
-68 bits, not 256; the real check is mechanical at steps 7/9), and Stage B has no commands at all.
+**The finding, and it came from the judge.** `MUT-D0-FENCE-ORDER`'s non-vacuity claim was **false**
+in three places — *"every AC21 row still passes; killed only by AC22"*. Reproduced first-party:
+**6 of 15 rows red** (`R-CI`, `R-TTY-OPEN/CHARDEV/SAMEFILE`, `R-PHRASE-EOF/PHRASE`), because those
+rows' fixture uses a **loopback** origin so a hoisted constructor refuses first. AC22 still earns
+its place; it is not the unique killer. Corrected in code and commit message. **Spine: a
+non-vacuity claim never run as literally described is a vacuous pass — and it hides best when the
+code it describes is correct.**
+
+**Also:** two landed defects repaired — `TestRunbookStageAPerformsNoPublicWrite` was structurally
+vacuous (its detection loop had never executed its body), and `protectedGoGroups` let any new
+`cmd/` package escape the boundary gate. **No publish occurred; `world/core@0.1.0` unclaimed.**
 
 ## Loop · cost · asks
 
-- Attended; controller `claude-opus-5`, no executor/evaluator, `metered=$0.00`; **v0.30.0** pinned.
-- **Parked on Mark: NOTHING.** Next: `SM.D`'s entrypoint (build-only) · item 9's is-a-release
-  assertion + `9/CF-A-1` shim + `9/CF-A-2` (under ACCEPT the DRIFT warning now fires every run).
+- Planner+executor `opus` (**`pi` barred** — publish-capable), evaluator `sonnet` **88/100 zero
+  blocking**, `metered=$0.00`; **v0.30.0** pinned. Carry `8/CF-D0-1`: the fence guards the call
+  site, not `host/broker` — a direct broker call from other Go code skips all 14 branches.
