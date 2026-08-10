@@ -1,40 +1,42 @@
 # AILANG World — mission dashboard
 
-*Snapshot, overwritten every Gate 4. History: `world-mission.md` STATUS + `world-mission-log.md`.*
+*Snapshot, overwritten every iteration. History lives in `world-mission.md` (STATUS) and
+`world-mission-log.md`. Last written: iteration 69, 2026-08-11.*
 
-**As of** 2026-08-10, **iteration 68** · dev @ `9789b87` · CI green both jobs · issue **#53**.
+## Now
 
-## In flight
+- **dev**: `32b086c` — CI **green both jobs**, SHA-addressed, `checks=2` = expected 2,
+  0-incident window (so the green is attributable).
+- **Last landed**: `VL.B` (PR #57) — Z3 installed in **both** CI jobs; `host/verifygate`'s
+  accept-arms now assert `verify gate PASSED`. Evaluator `sonnet` **91/100, zero blocking**.
+- **Item 9 `w-verify-binary-lockfile`**: COMPLETE. `9/OD-11` **ratified and discharged**.
 
-- **`VL.A` LANDED** (PR #56 → `9789b87`) — item 9's three headless pieces all shipped. The `.ail`
-  gate now **refuses a dev build**; the proving shim is **committed**; the always-firing warning is
-  gone. **Item 9 is COMPLETE** — its doc-less charter row is the spec and every piece is closed.
-- **`[NEXT]`: item 5 `w-mcp-projection` needs its ONE prereq (the transition registry) written, or
-  item 6b. Item 8 has no headless milestone left (`SM.D` is attended-only).**
-- **Parked on Mark: nothing blocking. One scope ask below.**
+## Parked on Mark
 
-## Latest — the defect, and two greens that answered the wrong question
+**Nothing.** Zero open asks. `9/OD-10` and `9/OD-11` are both ratified and closed.
 
-**The defect, measured at base:** a shim reporting `AILANG v0.33.0-105-…-dirty` drove the real gate
-to `rc=0` / `verify gate PASSED`. The primary `.ail` gate passed exactly the build CLAUDE.md forbids.
+Two items remain owed by the **shared driver** (frozen core — World cannot apply them):
+`ailang#611` (real per-role executor chain) and the World driver sync (missing `pi:*`
+pre-flight loop).
 
-**Landed:** five refusal branches each with a stable reason **CODE** (they *funnel* —
-`NOT_A_RELEASE` is a catch-all, so an `rc`-keyed table scores **3 of 8** mutations falsely SURVIVED).
-The release shape admits a pre-release identifier by design: upstream published `v0.24.1-rc1` with
-`isPrerelease: false`, so strict `^vX.Y.Z$` had a measured 1-in-64 chance of redding CI on a release.
+## Next
 
-**Two local greens were both wrong, in the same way.** (1) The executor's equality-shaped notice was
-quiet in CI and printed `moved from 'v0.33.0' to 'v0.30.0'` on **every local run** — always-firing
-again, and false. Fixed to membership over the two lanes' releases. (2) Both gates were rc=0 locally,
-re-run outside the codex sandbox on purpose — and CI red **twice**: a hardcoded rig path, then the
-go-verify job's missing Z3. **Spine: a green proves the tree passes where you ran it; only CI proves
-it passes where it must — and re-running "outside the sandbox" answers a different question.**
+Item 5 `w-mcp-projection`'s single remaining prerequisite — the **transition registry**,
+still ABSENT at HEAD. Either write it, or re-scope `P6.B` around its absence.
+Item 8's `SM.D` is **attended-only** and never routes headless.
 
-## Loop · cost · asks
+## Loop
 
-- Planner `opus` · executor `codex:gpt-5.6-sol` · repair+adjudication `opus` · judge `sonnet`
-  **38/100 FAIL r1 — the judge was RIGHT and its blocking finding is the iteration's spine**;
-  `metered=$0.00`. 10 mutations, 10 killed. **v0.30.0** pinned.
-- **ASK `9/OD-11`** (one word): may a milestone add a **Z3 install step to CI job 2**? Blocked
-  headless because `9/OD-10` clause (a) scopes item 9 to zero `.github/` edits. Cost of not doing
-  it: `host/verifygate` asserts the version block's contract, never `verify gate PASSED`.
+- Cadence: launchd, every ~6h, headless. Bookkeeping issue **#53** (rotates Mondays 07:00 local).
+- Routing: controller/planner `opus` · executor chain `codex:gpt-5.6-sol → pi:deepseek-v4-flash → opus`
+  · evaluator `sonnet` (generator≠judge). `pi` is **BARRED** from publish-capable milestones.
+- Planner lane note: `derive-planner-lane.sh` is absent here, so the lane fails closed to
+  opus **loudly** every iteration — expected, not a fault.
+- Spend: `metered=$0.00` this iteration; budget ceiling $5/iteration. All lanes quota buckets.
+
+## Standing hazards
+
+- Export `AILANG_BIN=/tmp/ailang-v0300/ailang` **and** `GOTOOLCHAIN=go1.25.6` before any gate —
+  `verify_go.sh` is rc=1 at BASE without the toolchain pin.
+- The released `ailang` shells out to z3 via **hardcoded absolute paths**; PATH cannot hide it.
+  The only faithful solverless control is `AILANG_Z3_PATH=<nonexistent>`.
