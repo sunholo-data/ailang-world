@@ -39,7 +39,7 @@ jobs:
           chmod +x "$HOME/.local/bin/ailang"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Install Z3 4.16.0 (ai-check's SMT solver — matches the doc's pinned Z3)
+      - name: Install Z3 ${{ env.Z3_VER }} (ai-check's SMT solver — the workflow-level pin)
         run: |
           set -euo pipefail
           # The released ailang binary shells out to `z3` (searches PATH +
