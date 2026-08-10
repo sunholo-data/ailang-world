@@ -31,7 +31,15 @@ type Manifest struct {
 	Effects Effects
 }
 
-type Package struct{ Name, Edition, AILANG string }
+// Package is the [package] table of an ailang.toml.
+//
+// Version is carried here but is deliberately NOT an input to InterfaceHash:
+// the interface hash is the shape of what the package EXPORTS, and bumping a
+// version does not change that shape. It exists because the ready packet's
+// `version` field has to come from somewhere, and the manifest is where the
+// version lives on disk. TestInterfaceHashIgnoresTheVersion measures the
+// independence rather than asserting it here.
+type Package struct{ Name, Edition, AILANG, Version string }
 type Exports struct{ Modules []string }
 type Effects struct{ Max []string }
 

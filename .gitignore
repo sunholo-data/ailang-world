@@ -12,6 +12,7 @@
 # stops the accident from reaching `git add` in the first place.
 /ailang-worldd
 /ailang-world
+/world-publish
 *.test
 *.out
 *.prof

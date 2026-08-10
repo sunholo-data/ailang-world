@@ -47,6 +47,15 @@ var protectedGoGroups = []goGroup{
 	// an additional HTTP surface (and all direct registry/cloud imports). This is
 	// the ONLY group the exception is true of, hence the empty extraForbidden.
 	{"cmd/ailang-worldd", "./cmd/ailang-worldd/...", "cmd/ailang-worldd", "cmd/ailang-worldd/main.go", "net/http/httputil", nil},
+	// SM.D0. world-publish is the attended entrypoint for the one IRREVERSIBLE
+	// public write in this repository, so it is the last package that should be
+	// allowed a transport of its own. It performs none: every byte it puts on
+	// the wire is emitted by host/broker — the publisher subprocess, and
+	// ReconcileRegistryPublish's bounded read-only GET. Bare "net/http" is
+	// therefore forbidden here exactly as it is for host/store and host/replay;
+	// the loopback-daemon exception at the row above is true of cmd/ailang-worldd
+	// and of nothing else.
+	{"cmd/world-publish", "./cmd/world-publish/...", "cmd/world-publish", "cmd/world-publish/main.go", "net/http/httputil", []string{"net/http"}},
 }
 
 var forbiddenImportPrefixes = []string{
@@ -868,8 +877,8 @@ func TestBareNetHTTPExemptionIsPerGroup(t *testing.T) {
 	for _, g := range protectedGoGroups {
 		byName[g.name] = g
 	}
-	if len(byName) != 3 {
-		t.Fatalf("protected group enumeration is %d, want 3: the guard below would not cover what it claims", len(byName))
+	if len(byName) != 4 {
+		t.Fatalf("protected group enumeration is %d, want 4: the guard below would not cover what it claims", len(byName))
 	}
 
 	for _, want := range []struct {
@@ -879,6 +888,7 @@ func TestBareNetHTTPExemptionIsPerGroup(t *testing.T) {
 		{"host/store", true},
 		{"host/replay", true},
 		{"cmd/ailang-worldd", false}, // documented loopback-IPC exception
+		{"cmd/world-publish", true},  // SM.D0: no transport of its own
 	} {
 		g, ok := byName[want.group]
 		if !ok {
@@ -891,6 +901,106 @@ func TestBareNetHTTPExemptionIsPerGroup(t *testing.T) {
 		if !forbiddenImport("net/http/httputil", g.extraForbidden...) {
 			t.Errorf("net/http/httputil unexpectedly permitted for %s", want.group)
 		}
+	}
+}
+
+// TestEveryCommandDirectoryIsAProtectedGroup is AC31, and it exists because
+// protectedGoGroups was a HAND-MAINTAINED LIST.
+//
+// Until SM.D0 this repository had exactly one command, so the hand-maintained
+// list happened to be complete and nothing measured that it was. Adding
+// cmd/world-publish — the attended entrypoint for the one irreversible public
+// write here — is precisely the change that opens the gap: a new cmd/ package
+// is UNGATED by the network-boundary allowlist until somebody remembers to add
+// it, and "somebody remembers" is not a gate.
+//
+// So the milestone that opens the gap closes it in the same commit. This test
+// asserts SET EQUALITY between the directories under cmd/ and the cmd-rooted
+// entries in protectedGoGroups, in BOTH directions:
+//
+//	a new command with no group   -> RED (the gap this closes)
+//	a group naming a dead command -> RED (a stale entry gating nothing)
+//
+// MUT-D0-BOUNDARY-GROUP deletes the cmd/world-publish entry and this reds.
+func TestEveryCommandDirectoryIsAProtectedGroup(t *testing.T) {
+	root := repoRoot(t)
+	entries, err := os.ReadDir(filepath.Join(root, "cmd"))
+	if err != nil {
+		t.Fatalf("read cmd/: %v", err)
+	}
+	onDisk := map[string]bool{}
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		onDisk["cmd/"+entry.Name()] = true
+	}
+	// ANTI-VACUITY (rule 3a): an empty enumeration would make the set equality
+	// below true of an empty protected list too, i.e. a green meaning "nothing
+	// was checked".
+	if len(onDisk) == 0 {
+		t.Fatal("instrument failure: enumerated ZERO directories under cmd/, so this gate would " +
+			"be satisfied by a protectedGoGroups with no cmd entries at all")
+	}
+
+	inTable := map[string]bool{}
+	for _, group := range protectedGoGroups {
+		if strings.HasPrefix(group.name, "cmd/") {
+			inTable[group.name] = true
+		}
+	}
+	if len(inTable) == 0 {
+		t.Fatal("instrument failure: protectedGoGroups carries NO cmd-rooted entry")
+	}
+
+	for name := range onDisk {
+		if !inTable[name] {
+			t.Errorf("%s is a command in this repository and is NOT a protected network-boundary "+
+				"group. Every cmd/ package must appear in protectedGoGroups with its own mutant arm; "+
+				"a new command must not be able to import a transport unnoticed", name)
+		}
+	}
+	for name := range inTable {
+		if !onDisk[name] {
+			t.Errorf("protectedGoGroups names %s, which is not a directory under cmd/: the group "+
+				"gates nothing and its mutant arm cannot run", name)
+		}
+	}
+
+	onDiskNames := make([]string, 0, len(onDisk))
+	for name := range onDisk {
+		onDiskNames = append(onDiskNames, name)
+	}
+	sort.Strings(onDiskNames)
+	t.Logf("ENUMERATION cmd/ directories = %d %q; cmd-rooted protected groups = %d",
+		len(onDisk), onDiskNames, len(inTable))
+
+	// Each cmd group must carry a REAL mutant file and a mutant import, or its
+	// arm in TestWorldBoundaryDependencyAllowlist proves nothing.
+	for _, group := range protectedGoGroups {
+		if !strings.HasPrefix(group.name, "cmd/") {
+			continue
+		}
+		if group.mutantFile == "" || group.mutantImport == "" {
+			t.Errorf("group %s has no mutant arm (file %q import %q)",
+				group.name, group.mutantFile, group.mutantImport)
+			continue
+		}
+		info, err := os.Stat(filepath.Join(root, group.mutantFile))
+		if err != nil || info.IsDir() {
+			t.Errorf("group %s names mutant file %s, which is not a readable file: %v",
+				group.name, group.mutantFile, err)
+		}
+	}
+
+	// NEGATIVE CONTROL (rule 3d): the set-difference predicate above must be
+	// capable of REPORTING a miss. A comparison that could never differ yields
+	// the same green as a genuinely complete table.
+	if inTable["cmd/this-command-does-not-exist"] {
+		t.Fatal("negative control failed: the table claims a command that cannot exist")
+	}
+	if onDisk["cmd/this-command-does-not-exist"] {
+		t.Fatal("negative control failed: cmd/this-command-does-not-exist is on disk")
 	}
 }
 

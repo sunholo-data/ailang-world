@@ -106,6 +106,24 @@ func TestRunbookNamesOnlyScriptsThatExist(t *testing.T) {
 //
 // MUT-SM-RUNBOOK-UNATTENDED: add `ailang publish` (without `--dry-run`) to
 // Stage A; this test reds.
+//
+// SM.D0 — WIDENED, NOT REPLACED, and the widening is the repair of a measured
+// defect in this very function.
+//
+// As landed, its detection predicate was `strings.Contains(trimmed, "ailang
+// publish")`. Measured at 6d1dce0: `grep -c 'ailang publish'
+// docs/SELF_MOD_PUBLISH.md` = 0. THE LOOP BODY HAD NEVER EXECUTED. The two
+// instrument-failure fatals above check the REGION being scanned — that the
+// Stage B marker exists, that Stage A contains the readiness gate — and nothing
+// checked the PREDICATE doing the scanning, so a green here was
+// indistinguishable from a matcher that could never match.
+//
+// It now calls livePublishCommand, the SINGLE shared predicate, which
+// TestOnePredicateSeesZeroLivePublishesInStageAAndAtLeastOneInStageB drives in
+// the POSITIVE direction against Stage B. A broken matcher therefore yields a
+// Stage-B count of zero and reds there, so the zero asserted here can no longer
+// be produced by a dead instrument. The `--dry-run` exemption the landed version
+// carried is preserved inside that predicate verbatim.
 func TestRunbookStageAPerformsNoPublicWrite(t *testing.T) {
 	root := repoRoot(t)
 	doc, err := os.ReadFile(filepath.Join(root, runbookPath))
@@ -131,14 +149,18 @@ func TestRunbookStageAPerformsNoPublicWrite(t *testing.T) {
 			"so it is not the automated stage", stageBMarker)
 	}
 
+	// CONTROL ON THE PREDICATE ITSELF, in the same call as the zero it produces.
+	// Without this, "no line in Stage A matched" is also what a predicate that
+	// matches nothing at all reports — which is precisely the state this function
+	// shipped in.
+	if !livePublishCommand("ailang publish") || livePublishCommand("ailang publish --dry-run") {
+		t.Fatal("instrument failure: the shared livePublishCommand predicate does not discriminate " +
+			"a live publish from a dry run, so the Stage-A zero below proves nothing")
+	}
+
 	for _, line := range strings.Split(stageA, "\n") {
 		trimmed := strings.TrimSpace(line)
-		if !strings.Contains(trimmed, "ailang publish") {
-			continue
-		}
-		// `--dry-run` performs no public write and is what the readiness gate
-		// itself runs, so it is the one permitted form.
-		if strings.Contains(trimmed, "--dry-run") {
+		if !livePublishCommand(trimmed) {
 			continue
 		}
 		t.Errorf("%s Stage A (the UNATTENDED stage) contains a live publish: %q. "+
