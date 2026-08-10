@@ -2,14 +2,13 @@
 
 *Snapshot, overwritten every Gate 4. History: `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-10, **iteration 67** · dev @ `a4452d1` · CI green both jobs · issue **#53**.
+**As of** 2026-08-10, **iteration 67** · dev @ `a8832a2` · CI green both jobs · issue **#53**.
 
 ## In flight
 
 - **`SM.D0` LANDED** (PR #55 → `a4452d1`) — the attended-publish entrypoint exists. **`SM.D` is now
   a real procedure and is ATTENDED-ONLY**: never headless, never CI. Item 8 has no headless
-  milestone left.
-- **`[NEXT]` is item 9's three pieces**, routable today under the `9/OD-10` ACCEPT ruling.
+  milestone left; **`[NEXT]` is item 9's three pieces**, routable under the `9/OD-10` ACCEPT ruling.
 - **Parked on Mark: NOTHING. Zero open asks.**
 
 ## Latest — the deliverable was a fence, not a feature
@@ -18,12 +17,12 @@ Until this commit the *absence* of a caller was the safety property: `grep -rhoE
 cmd/` = **0** (control: 27 `func `), and the production constructor refuses loopback while every
 caller was an `httptest`. `SM.D0` deliberately relaxes that, so its centre is the fence.
 
-**The fence is a controlling-terminal check** — chosen because it is the one thing this loop is
-structurally unable to satisfy (stdin is a socket; `open(/dev/tty)` → *device not configured*).
-`/dev/null` **is** a character device, so a naive isatty would admit `--live < /dev/null`; hence the
-`os.SameFile` branch. `R-CI` is a declared tripwire, **not** the fence. 14 refusal branches, 22
-mutations, 22 killed. Stage B of the runbook now carries commands — it was prose, which is how its
-step-4 defect (confirm digests the gate never emits) survived a milestone.
+**The fence is a controlling-terminal check** — the one thing this loop is structurally unable to
+satisfy (stdin is a socket; `open(/dev/tty)` → *device not configured*). `/dev/null` **is** a
+character device, so a naive isatty would admit `--live < /dev/null`; hence the `os.SameFile`
+branch. `R-CI` is a declared tripwire, **not** the fence. 14 refusal branches, 22 mutations, 22
+killed. Stage B of the runbook now carries commands — it was prose, which is how its step-4 defect
+(confirm digests the gate never emits) survived a milestone.
 
 **The finding, and it came from the judge.** `MUT-D0-FENCE-ORDER`'s non-vacuity claim was **false**
 in three places — *"every AC21 row still passes; killed only by AC22"*. Reproduced first-party:
