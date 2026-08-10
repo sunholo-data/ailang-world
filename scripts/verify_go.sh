@@ -26,8 +26,16 @@ ver="$("$AILANG_BIN" --version 2>&1)" || {
   echo "✗ AILANG_BIN=$AILANG_BIN could not be executed for a version check" >&2
   exit 1
 }
-if ! echo "$ver" | grep -q 'v0.30.0'; then
-  echo "✗ AILANG_BIN=$AILANG_BIN does not report v0.30.0 (got: $ver) — replay goldens are v0.30.0-scoped." >&2
+# EXACT TOKEN, NEVER A SUBSTRING (iter-66). This assertion used `grep -q 'v0.30.0'`, which the
+# string `v0.30.0-205-g54d6bd191-dirty` SATISFIES — so the anti-false-green guard admitted exactly
+# the dirty dev build CLAUDE.md forbids, measured against the real script before the fix. The
+# released binary reports the bare token in both arms that matter: `AILANG v0.30.0` locally
+# (/tmp/ailang-v0300/ailang) and `AILANG v0.30.0` on the linux runner (CI step log, run
+# 31249744703, `go host build + test gate`), so tightening this cannot red CI.
+ver_tok="$(printf '%s\n' "$ver" | head -1 | awk '{print $2}')"
+if [ "$ver_tok" != 'v0.30.0' ]; then
+  echo "✗ AILANG_BIN=$AILANG_BIN does not report exactly v0.30.0 (got: ${ver_tok:-<none>}) — replay goldens are v0.30.0-scoped." >&2
+  echo "  A -dirty or -N-g<sha> suffix is a REJECTION, not a match: dev builds are forbidden by CLAUDE.md." >&2
   exit 1
 fi
 echo "── AILANG_BIN=$AILANG_BIN ($ver)"
