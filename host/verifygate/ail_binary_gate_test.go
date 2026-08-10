@@ -13,9 +13,18 @@ import (
 	"testing"
 )
 
+// pinned is the released delegate every shim arm runs the real gate against. It MUST come from
+// AILANG_BIN, never from a literal: the pinned binary's tmp-rooted location is a convention of one
+// dev rig and exists on no runner. CI's go-verify job exports AILANG_BIN (ci.yml) after installing and
+// sha256-verifying the pinned v0.30.0 release, which is the same contract verify_go.sh asserts
+// before it will run this package at all.
+//
+// The sibling packages read AILANG_BIN and `t.Skip` when it is unset. This package must NOT: a
+// silent skip is the exact false-green class this whole milestone exists to close, so an unset or
+// wrong AILANG_BIN is a loud t.Fatal (see requirePinned).
 var (
 	repoRoot = findRepoRoot()
-	pinned   = "/tmp/ailang-v0300/ailang"
+	pinned   = os.Getenv("AILANG_BIN")
 )
 
 func findRepoRoot() string {
@@ -28,9 +37,14 @@ func findRepoRoot() string {
 
 func requirePinned(t *testing.T) {
 	t.Helper()
+	if pinned == "" {
+		t.Fatal("AILANG_BIN is unset — the shim arms need the pinned released delegate to run the real gate. " +
+			"Never skip: a silent skip here is the false-green class this milestone closes. " +
+			"verify_go.sh already refuses to run without it — export the pinned released binary named in CLAUDE.md.")
+	}
 	out, err := exec.Command(pinned, "--version").CombinedOutput()
 	if err != nil || !strings.HasPrefix(string(out), "AILANG v0.30.0") {
-		t.Fatalf("pinned delegate unavailable or wrong (never skip): err=%v output=%q", err, out)
+		t.Fatalf("pinned delegate %q unavailable or wrong (never skip): err=%v output=%q", pinned, err, out)
 	}
 }
 
@@ -317,6 +331,42 @@ func TestEmptyExpectedReleaseSetFailsLoudly(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	if err == nil || !strings.Contains(string(out), "lists no releases") || strings.Contains(string(out), "── Leg 1") {
 		t.Fatalf("empty expected-release set was not an early loud failure: err=%v\n%s", err, out)
+	}
+}
+
+// TestNoRigAbsolutePaths is the regression guard for the defect that red CI on this milestone's
+// first push: `pinned` was a hardcoded tmp-rooted literal, a convention of one dev rig that exists
+// on no runner, so all ten shim-driven tests t.Fatal'd in the go-verify job while every local
+// gate was rc=0. The local green was real and answered the wrong question. A rig-absolute literal in
+// this package is always wrong — the binary's location is CI's to choose and AILANG_BIN's to carry.
+func TestNoRigAbsolutePaths(t *testing.T) {
+	entries, err := filepath.Glob(filepath.Join(repoRoot, "host", "verifygate", "*.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) == 0 {
+		t.Fatal("instrument failure: globbed zero .go files in host/verifygate")
+	}
+	// Known-positive control: the scan must be able to see a string that IS present.
+	var sawControl bool
+	for _, path := range entries {
+		src, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(src), "AILANG_BIN") {
+			sawControl = true
+		}
+		// The needles are ASSEMBLED, never written literally: a scanner that also scans its own
+		// source matches its own pattern list and reports three findings against a clean file.
+		for _, bad := range []string{"/tmp" + "/ailang", "/Us" + "ers/", "/home" + "/runner/"} {
+			if strings.Contains(string(src), bad) {
+				t.Errorf("%s contains rig-absolute path %q — resolve the binary from AILANG_BIN instead", filepath.Base(path), bad)
+			}
+		}
+	}
+	if !sawControl {
+		t.Fatal("instrument failure: known-positive control \"AILANG_BIN\" not found in any scanned file")
 	}
 }
 
