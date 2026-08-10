@@ -32,6 +32,36 @@ cd "$(dirname "$0")/.."
 
 AILANG_BIN="${AILANG_BIN:-ailang}"
 
+# ── Resolved-binary announcement for legs 1-2 (charter item 9; iter-66) ───────
+# ATTRIBUTION, NOT A GATE — this block cannot change the exit code, and that is deliberate.
+#
+# verify_go.sh:33 announces its resolved binary; this gate never did, and legs 1-2 default to bare
+# PATH `ailang`. So on 2026-08-04 upstream `latest` moved v0.30.0 -> v0.33.0 and the repo's PRIMARY
+# .ail gate silently began validating against an unpinned compiler, in violation of CLAUDE.md's
+# "never a -dirty dev build" rule; two iterations (51, 52) ran that way and nothing surfaced it
+# (charter item 9, iter-53). A recorded prediction of future breakage is not a monitor. This is.
+#
+# Leg 3 is NOT covered here: verify_world_package.sh:15 resolves its own WORLD_PKG_AILANG_BIN and
+# already announces the compiler it pinned by exact bytes. Legs 1-2 are the unannounced half.
+#
+# The hard version ASSERTION and the CI `latest`->pinned-tag edit are deliberately NOT here. They
+# are coupled and human-gated: a hard assert alone would red CI on the next upstream release, with
+# no human present. Warning is the half that is safe to land headless.
+GATE_PINNED_VERSION="v0.30.0"
+_ail_resolved="$(command -v -- "$AILANG_BIN" 2>/dev/null || printf '%s' "$AILANG_BIN")"
+_ail_version_line="$("$AILANG_BIN" --version 2>&1 | head -1)"
+[ -n "$_ail_version_line" ] || _ail_version_line="<unavailable>"
+# Exact token compare, never a substring: `v0.30.0-205-g54d6bd191-dirty` CONTAINS `v0.30.0`, so a
+# substring test would grade a 205-commit dirty dev build as pinned.
+_ail_version_tok="$(printf '%s\n' "$_ail_version_line" | awk '{print $2}')"
+echo "── legs 1-2 AILANG_BIN=$_ail_resolved ($_ail_version_line)"
+if [ "$_ail_version_tok" != "$GATE_PINNED_VERSION" ]; then
+  echo "⚠ DRIFT: legs 1-2 are validating against '${_ail_version_tok:-<none>}', not the documented"
+  echo "  pin $GATE_PINNED_VERSION. This gate does NOT fail on drift (the hard assertion is coupled to"
+  echo "  the CI \`latest\`->pinned-tag edit and is human-gated, charter item 9). Export"
+  echo "  AILANG_BIN=/path/to/$GATE_PINNED_VERSION/ailang to verify against the pin."
+fi
+
 command -v python3 >/dev/null 2>&1 || {
   echo "✗ python3 not found — the gate parses JSON with python3 and cannot run without it" >&2
   exit 1
