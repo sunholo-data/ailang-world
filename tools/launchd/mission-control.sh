@@ -43,6 +43,17 @@ cd "$REPO" || exit 1
 # launchd PATH is restricted; claude lives in ~/.local/bin, go tools in ~/go/bin.
 export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH"
 
+# Dead-slot fix (Mark, attended 2026-08-10). The harness terminates background
+# tasks at 600s. A controller that spawns its executor as a background Agent and
+# ends its turn to wait is killed there — the driver then logs
+# `iteration complete (rc=0)`, NO watchdog fires (HARD TIMEOUT/STALL: both
+# absent), and the slot ends with a plausible transcript, zero charter rows and
+# zero commits. A clean rc=0 is what a dead iteration looks like. Measured: the
+# only 2 hits of "Background tasks still running after 600s" in 67 iterations
+# are exactly the 2 orphaned slots (iter-64 stranded 525 lines of SM.C).
+# 0 = no ceiling. The driver's own HARD_TIMEOUT/STALL watchdogs remain the bound.
+export CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0
+
 # --- MISSION PROFILE + STATE NAMESPACE (M1, 2026-07-21) ----------------------
 [ -n "${MISSION_PROFILE:-}" ] && [ -f "$HOME/.config/ailang/mission-${MISSION_PROFILE}.env" ] \
   && . "$HOME/.config/ailang/mission-${MISSION_PROFILE}.env"
