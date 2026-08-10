@@ -2,6 +2,7 @@ package verifygate
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -55,6 +56,12 @@ func runGate(t *testing.T, env map[string]string) (int, string) {
 	blocked := map[string]bool{
 		"AILANG_BIN": true, "WORLD_PKG_AILANG_BIN": true,
 		"AILANG_SHIM_VERSION_LINE": true, "AILANG_SHIM_DELEGATE": true,
+		// Ambient AILANG_Z3_PATH is stripped so every arm resolves the solver the way the
+		// LANE does (the binary's own search: PATH + /usr/local/bin, /usr/bin, /snap/bin,
+		// /opt/homebrew/bin). `blocked` filters os.Environ() only — an explicit entry in the
+		// `env` map below still reaches the child, which is how a Z3-absent control is armed
+		// deterministically instead of relying on os/exec's dedup order.
+		"AILANG_Z3_PATH": true,
 	}
 	cmd.Env = make([]string, 0, len(os.Environ())+len(env))
 	for _, item := range os.Environ() {
@@ -96,8 +103,8 @@ func requireRefusal(t *testing.T, line, code string) {
 	}
 }
 
-// Markers the accept-arms assert on. All three are emitted BEFORE anything Z3-dependent, which is
-// what makes these tests portable between the two CI jobs.
+// Markers the accept-arms assert on. The first three are emitted BEFORE anything Z3-dependent; the
+// fourth (passedMarker) is the gate's terminal success line and needs a solver in the lane.
 const (
 	refusalMarker = "AILANG_BIN refused" // the version block refused; emitted only by _refuse
 	leg1Marker    = "── Leg 1"           // the version block accepted and the gate proceeded
@@ -106,28 +113,194 @@ const (
 	// (`required identity … MISSING from verify.results[]`), which is what makes delegation
 	// provable without Z3.
 	noDelegateMarker = "could not parse ai-check JSON"
+	// The gate's terminal success line (verify_ail.sh:304). Unambiguous: the only other "gate
+	// PASSED" line is `world package gate PASSED`, which does not contain this substring.
+	passedMarker = "verify gate PASSED"
 )
 
-// requireProceeded asserts the version block ACCEPTED and the real gate ran on the real delegate.
+// requireProceeded asserts the version block ACCEPTED, the real gate ran on the real delegate, and
+// THE GATE PASSED.
 //
-// It deliberately does NOT assert `verify gate PASSED`. These tests run inside `go test ./...`,
-// i.e. CI's go-verify job, which installs no Z3 — and without Z3 `ai-check` skips every contract
-// silently (the documented V20/V27 class), so the whole gate reds at leg 1 for a reason that has
-// nothing to do with the version predicate under test. Asserting PASSED here made 10 tests red in
-// that job while every local gate was rc=0. The version block's contract is "refuse, or proceed on
-// the real binary", and these three markers are exactly that contract, observable before Z3 matters.
-// The claim that the gate as a whole passes belongs to AC1 — `verify_ail.sh` run in the job that
-// has Z3 — not to this package.
-func requireProceeded(t *testing.T, label, out string) {
-	t.Helper()
+// The fourth assertion is what 9/OD-11 bought. It was absent because these tests run inside
+// `go test ./...`, i.e. CI's go-verify job, which installed no Z3 — and without a solver `ai-check`
+// reports verify.available=false and every contract vanishes from verify.results[] (V20/V27), so
+// the gate reds at leg 1 for a reason with nothing to do with the version predicate. The three
+// remaining markers were re-aimed at that lane and are all emitted before Z3 matters. Measured, the
+// cost of that portability was exact and total: with AILANG_Z3_PATH pointed at a missing file, a
+// PASSING gate (rc=0) and a FAILING gate (rc=1) produce IDENTICAL values for all three — refused=0,
+// leg1=1, noDelegate=0 — so the accept-arms were green in the lane where the gate they drive was
+// red. `verify gate PASSED` is the only marker that separates them.
+//
+// Mark ratified the install ("Yes you can install z3 on cicd", 9/OD-11); ci.yml now installs the
+// same pinned Z3 in BOTH jobs, so the assertion is reachable everywhere this package runs. If a
+// lane loses its solver, TestSolverAvailableInThisLane says so by name before these arms confuse
+// anyone.
+// checkProceeded is the accept contract as a PURE PREDICATE, returning an error instead of failing
+// a test. The split exists so the contract can be pointed at output the suite chooses — which is
+// the only way to prove the passedMarker assertion is load-bearing. In a solver-bearing lane every
+// accept-arm passes whether or not that assertion is present, so a mutation neutering it survives
+// against every arm above; TestAcceptContractRejectsASolverlessGate feeds this function the output
+// of a deliberately solverless gate and requires it to REJECT, which no healthy-lane arm can do.
+func checkProceeded(label, out string) error {
 	if strings.Contains(out, refusalMarker) {
-		t.Fatalf("%s: version block refused a release token\n%s", label, out)
+		return fmt.Errorf("%s: version block refused a release token\n%s", label, out)
 	}
 	if !strings.Contains(out, leg1Marker) {
-		t.Fatalf("%s: gate never reached leg 1 — it did not proceed past the version block\n%s", label, out)
+		return fmt.Errorf("%s: gate never reached leg 1 — it did not proceed past the version block\n%s", label, out)
 	}
 	if strings.Contains(out, noDelegateMarker) {
-		t.Fatalf("%s: shim did not delegate — ai-check produced no parseable output\n%s", label, out)
+		return fmt.Errorf("%s: shim did not delegate — ai-check produced no parseable output\n%s", label, out)
+	}
+	if !strings.Contains(out, passedMarker) {
+		return fmt.Errorf("%s: gate proceeded but did NOT pass — %q absent. If this lane has no Z3 the whole "+
+			"gate reds at leg 1; see TestSolverAvailableInThisLane and the Z3 install steps in "+
+			".github/workflows/ci.yml\n%s", label, passedMarker, out)
+	}
+	return nil
+}
+
+func requireProceeded(t *testing.T, label, out string) {
+	t.Helper()
+	if err := checkProceeded(label, out); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestAcceptContractRejectsASolverlessGate is the committed, always-running proof that the fourth
+// marker earns its place — the non-vacuity claim of 9/OD-11 made permanent rather than left to a
+// one-shot drill on a tree that no longer exists.
+//
+// It arms the Z3-absent control the way runGate's `blocked` map intends: ambient AILANG_Z3_PATH is
+// stripped so arms resolve the solver the way their LANE does, but an explicit entry in the env map
+// still reaches the child. So this is the ONLY way the suite can observe a failing gate, and it is
+// the exact lane CI job 2 was before Mark ratified the install.
+//
+// The assertion is two-sided on purpose. First it re-measures the defect: all THREE legacy markers
+// are satisfied by this failing gate, so the pre-9/OD-11 contract would have accepted it. Then it
+// requires the current contract to reject it. Neuter the passedMarker check and this test is the
+// one that reds.
+func TestAcceptContractRejectsASolverlessGate(t *testing.T) {
+	requirePinned(t)
+	env := shimEnv("AILANG v0.33.0")
+	// Assembled, never a rig-absolute literal (TestNoRigAbsolutePaths).
+	env["AILANG_Z3_PATH"] = filepath.Join(t.TempDir(), "nosuch", "z3")
+
+	rc, out := runGate(t, env)
+	if rc == 0 {
+		t.Fatalf("instrument failure: the solverless control did not disarm the gate — rc=0, so "+
+			"there is no failing gate to test the contract against\n%s", out)
+	}
+
+	// The defect 9/OD-11 names, re-measured every run: the legacy three cannot see this failure.
+	if strings.Contains(out, refusalMarker) {
+		t.Fatalf("solverless control: gate refused the token instead of failing later — wrong failure\n%s", out)
+	}
+	if !strings.Contains(out, leg1Marker) {
+		t.Fatalf("solverless control: gate never reached leg 1 — wrong failure\n%s", out)
+	}
+	if strings.Contains(out, noDelegateMarker) {
+		t.Fatalf("solverless control: shim failed to delegate — wrong failure\n%s", out)
+	}
+
+	// And the current contract must REJECT it. This is the kill arm for the passedMarker assertion.
+	if err := checkProceeded("solverless control", out); err == nil {
+		t.Fatal("the accept contract ACCEPTED a gate that FAILED (rc!=0): every marker it checks was " +
+			"satisfied by a solverless run, which is exactly the state 9/OD-11 closed. The " +
+			"`verify gate PASSED` assertion in checkProceeded is not doing its job.")
+	}
+}
+
+// TestSolverAvailableInThisLane is the self-naming instrument check for 9/OD-11. Every accept-arm
+// above now asserts `verify gate PASSED`, which is unreachable without a solver; if a lane loses
+// Z3 this test says exactly that, by name, instead of four arms failing with a leg-1 contract error.
+//
+// It is SELF-CONTROLLED: arm B points AILANG_Z3_PATH at a path that does not exist and requires
+// verify.available to be FALSE. That is not decoration — it is the anti-vacuity proof, and unlike a
+// source mutation it runs on every CI run forever. Measured on the rig: the binary does not link
+// libz3 (`otool -L` names none) and does not fall back to PATH when AILANG_Z3_PATH is set and
+// missing (it carries the string "AILANG_Z3_PATH set to %q but file not found"), so arm B is a
+// faithful model of a solverless runner. PATH manipulation is NOT a valid control here: removing
+// the toolchain directory also removes `go`, and the gate then reds for an unrelated reason.
+//
+// DECLARED RESIDUAL (rule 3j — a named gap is cheap, an assumed one is not): arm A's
+// `verify.available` assertion is a DIAGNOSTIC, not a guard. It fires exactly when the lane has no
+// solver, which is a lane this suite deliberately cannot create for itself — probe() strips ambient
+// AILANG_Z3_PATH so each arm resolves the solver the way its LANE does. So a mutation neutering
+// arm A SURVIVES here by construction, and it was measured surviving rather than assumed away. What
+// is protected is the pair: arm B (a missing solver must produce available=false) and the
+// arms-differ check together prove the probe reads the solver at all, so arm A cannot be green
+// against a probe that reads nothing.
+func TestSolverAvailableInThisLane(t *testing.T) {
+	requirePinned(t)
+
+	type aiCheck struct {
+		Check struct {
+			Passed bool `json:"passed"`
+		} `json:"check"`
+		Verify struct {
+			Available bool `json:"available"`
+			Verified  int  `json:"verified"`
+		} `json:"verify"`
+	}
+
+	probe := func(t *testing.T, z3 string) aiCheck {
+		t.Helper()
+		cmd := exec.Command(pinned, "ai-check", "-timeout", "5s", "world/contracts.ail")
+		cmd.Dir = repoRoot
+		env := make([]string, 0, len(os.Environ())+1)
+		for _, item := range os.Environ() {
+			if strings.SplitN(item, "=", 2)[0] != "AILANG_Z3_PATH" {
+				env = append(env, item)
+			}
+		}
+		if z3 != "" {
+			env = append(env, "AILANG_Z3_PATH="+z3)
+		}
+		cmd.Env = env
+		// Exit status is ADVISORY here (V10/V20) exactly as in verify_ail.sh; the JSON is
+		// authoritative. Only an unparseable body is instrument failure.
+		raw, _ := cmd.Output()
+		start := bytes.IndexByte(raw, '{')
+		if start < 0 {
+			t.Fatalf("instrument failure: ai-check produced no JSON object (%d bytes): %q", len(raw), raw)
+		}
+		var parsed aiCheck
+		if err := json.Unmarshal(raw[start:], &parsed); err != nil {
+			t.Fatalf("instrument failure: ai-check JSON did not parse: %v\n%s", err, raw)
+		}
+		return parsed
+	}
+
+	// Arm A — this lane, as the gate will see it.
+	armA := probe(t, "")
+	// Known-positive control FIRST: if check.passed is false the run is broken and an
+	// available=false verdict would be attributed to the wrong cause.
+	if !armA.Check.Passed {
+		t.Fatalf("instrument failure: ai-check on world/contracts.ail did not pass its CHECK phase; "+
+			"the solver verdict below would be meaningless (%+v)", armA)
+	}
+	if !armA.Verify.Available {
+		t.Fatalf("NO SMT SOLVER IN THIS LANE: ai-check reports verify.available=false, so every " +
+			"contract vanishes from verify.results[] (V20/V27) and scripts/verify_ail.sh cannot " +
+			"reach `verify gate PASSED`. Install the pinned Z3 (see the workflow-level Z3_VER/Z3_SHA " +
+			"and the two `Install Z3` steps in .github/workflows/ci.yml), or locally: " +
+			"brew install z3 / apt install z3, or set AILANG_Z3_PATH.")
+	}
+	if armA.Verify.Verified < 1 {
+		t.Fatalf("solver is available but verified %d contracts in world/contracts.ail, want >=1 (%+v)",
+			armA.Verify.Verified, armA)
+	}
+
+	// Arm B — the negative control. Assembled, never a rig-absolute literal (TestNoRigAbsolutePaths).
+	missing := filepath.Join(t.TempDir(), "nosuch", "z3")
+	armB := probe(t, missing)
+	if armB.Verify.Available {
+		t.Fatalf("instrument is NOT discriminating: verify.available stayed true with AILANG_Z3_PATH "+
+			"pointed at %q, so arm A's green proves nothing about this lane", missing)
+	}
+	if armA.Verify.Available == armB.Verify.Available {
+		t.Fatalf("arms do not differ (A=%v B=%v) — the probe is not reading the solver",
+			armA.Verify.Available, armB.Verify.Available)
 	}
 }
 
@@ -435,9 +608,9 @@ func TestExpectedReleaseSetIsNonEmpty(t *testing.T) {
 // makes it fall back to AILANG_BIN, so the gate reds at the world-package leg on compiler BYTES —
 // rc=1 in both arms, which would let a careless test conclude "the version assertion fired" when it
 // never ran. The essential claim is therefore that the failure is NOT the version predicate's, and
-// that claim is Z3-independent. The precise `wrong compiler version` reason lives at leg 3, which is
-// only reachable where Z3 is installed, so it is asserted as a strengthening when the gate got that
-// far rather than as a portability requirement.
+// that claim is Z3-independent. The precise `wrong compiler version` reason lives at leg 3; since
+// 9/OD-11 both CI jobs install Z3, so leg 3 is reachable everywhere this package runs and the reason
+// is asserted unconditionally.
 func TestFixtureDiscrimination(t *testing.T) {
 	requirePinned(t)
 	env := shimEnv("AILANG v0.33.0")
@@ -455,8 +628,84 @@ func TestFixtureDiscrimination(t *testing.T) {
 	if !strings.Contains(out, leg1Marker) {
 		t.Fatalf("fixture discrimination: gate never proceeded past the version block\n%s", out)
 	}
-	if strings.Contains(out, "── Leg 3") && !strings.Contains(out, "wrong compiler version") {
+	// Unconditional since 9/OD-11. Before the Z3 install this was guarded by `Contains(…, "── Leg 3")`
+	// because the solverless go-verify job never got past leg 1 — measured: `── Leg 3` count 0 there
+	// vs 1 locally, so in CI the guarded body had NEVER executed. With a solver in both jobs the leg
+	// is always reached and the guard would only hide a regression.
+	if !strings.Contains(out, "── Leg 3") {
+		t.Fatalf("fixture discrimination: gate never reached leg 3 — it stopped earlier, so the "+
+			"compiler-identity check below was never exercised (a Z3-less lane looks exactly like "+
+			"this; see TestSolverAvailableInThisLane)\n%s", out)
+	}
+	if !strings.Contains(out, "wrong compiler version") {
 		t.Fatalf("fixture discrimination: reached leg 3 but not via the compiler-version check\n%s", out)
+	}
+}
+
+// TestZ3PinDeclaredOnceAndInstalledInBothJobs guards the structure 9/OD-11 bought.
+//
+// Two claims, and the second is the one with teeth: (1) the Z3 version and sha256 are declared
+// EXACTLY ONCE, at workflow scope, so the two jobs cannot install different solvers — a job-local
+// re-declaration would shadow the pin for that job only, which is 9/CF-A-2's "two lanes resolve
+// different things" all over again; (2) BOTH jobs actually install it. Claim 2 is why this test is
+// not decoration: if job 2's install is dropped, every accept-arm's `verify gate PASSED` becomes
+// unreachable and 10 tests red with a leg-1 contract error that names no cause. This names the cause.
+//
+// DECLARED RESIDUAL (found by the evaluator, reproduced first-party): this is a STATIC text scan, so
+// it sees the install command's TEXT, never whether the step RUNS. A step-level `if:` whose
+// expression is always false at runtime — e.g. `contains(github.event.head_commit.message, '<a
+// marker nobody writes>')` — disables job 2's install while leaving every byte this test counts
+// intact, and `actionlint` is green too (it flags a literal `if: false`, not a non-constant
+// always-false expression). The bar the milestone actually has to clear still holds, by two
+// DYNAMIC backstops that run in the job itself: TestSolverAvailableInThisLane reds by name
+// (`NO SMT SOLVER IN THIS LANE`), and every requireProceeded accept-arm reds on the absent
+// passedMarker. So this test's claim (2) is narrower than "job 2 will have a solver" — it is "the
+// pin is declared once and both install steps are PRESENT" — and that narrowing is stated here
+// rather than left for a reader to discover.
+func TestZ3PinDeclaredOnceAndInstalledInBothJobs(t *testing.T) {
+	path := filepath.Join(repoRoot, ".github", "workflows", "ci.yml")
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := string(raw)
+	// Known-positive control: the scan must be able to see strings that ARE present, or a
+	// zero-count assertion below could be satisfied by reading the wrong file.
+	for _, control := range []string{"ailang-verify:", "go-verify:", "./scripts/verify_go.sh"} {
+		if !strings.Contains(src, control) {
+			t.Fatalf("instrument failure: %s does not contain known-positive control %q", path, control)
+		}
+	}
+	for _, tc := range []struct {
+		needle string
+		want   int
+		why    string
+	}{
+		{"Z3_VER:", 1, "the version must be declared exactly once, at workflow scope"},
+		{"Z3_SHA:", 1, "the sha256 must be declared exactly once, at workflow scope"},
+		{"Z3_VER=", 0, "a job-local Z3_VER= shadows the workflow pin for that job only"},
+		{"Z3_SHA=", 0, "a job-local Z3_SHA= shadows the workflow pin for that job only"},
+	} {
+		if got := strings.Count(src, tc.needle); got != tc.want {
+			t.Errorf("ci.yml: count(%q)=%d, want %d — %s", tc.needle, got, tc.want, tc.why)
+		}
+	}
+
+	// The install assertion is LINE-EXACT, not a substring count, and that is a repair rather than
+	// a style choice: `strings.Count` over the install command SURVIVED a mutation redirecting one
+	// job's solver to /usr/local/bin/z3x, because the mutated line still CONTAINS the needle. A
+	// prefix-shaped needle cannot detect a suffix-shaped mutation. Counting whole trimmed lines can.
+	const installLine = `sudo install -m 0755 "${Z3_DIR}/bin/z3" /usr/local/bin/z3`
+	installs := 0
+	for _, line := range strings.Split(src, "\n") {
+		if strings.TrimSpace(line) == installLine {
+			installs++
+		}
+	}
+	if installs != 2 {
+		t.Errorf("ci.yml: %d job(s) install the pinned solver to /usr/local/bin/z3, want 2 — BOTH jobs "+
+			"must install it. Job 1 runs ai-check directly; job 2 runs it THROUGH host/verifygate's "+
+			"shim arms, whose `verify gate PASSED` assertion is unreachable without a solver.", installs)
 	}
 }
 
