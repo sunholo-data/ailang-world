@@ -14,27 +14,24 @@
 ## Latest — the deliverable was a fence, not a feature
 
 Until this commit the *absence* of a caller was the safety property: `grep -rhoE 'Publish|Approve'
-cmd/` = **0** (control: 27 `func `), and the production constructor refuses loopback while every
-caller was an `httptest`. `SM.D0` deliberately relaxes that, so its centre is the fence.
+cmd/` = **0** (control: 27 `func `). `SM.D0` deliberately relaxes that, so its centre is the fence.
 
-**The fence is a controlling-terminal check** — the one thing this loop is structurally unable to
-satisfy (stdin is a socket; `open(/dev/tty)` → *device not configured*). `/dev/null` **is** a
-character device, so a naive isatty would admit `--live < /dev/null`; hence the `os.SameFile`
-branch. `R-CI` is a declared tripwire, **not** the fence. 14 refusal branches, 22 mutations, 22
-killed. Stage B of the runbook now carries commands — it was prose, which is how its step-4 defect
-(confirm digests the gate never emits) survived a milestone.
+**The fence is a controlling-terminal check** — the one thing this loop cannot satisfy (stdin is a
+socket; `open(/dev/tty)` → *device not configured*). `/dev/null` **is** a character device, so a
+naive isatty would admit `--live < /dev/null`; hence the `os.SameFile` branch. `R-CI` is a declared
+tripwire, **not** the fence. 14 refusal branches, 22 mutations, 22 killed. Stage B now carries
+commands — it was prose, which is how its step-4 defect survived a milestone.
 
-**The finding, and it came from the judge.** `MUT-D0-FENCE-ORDER`'s non-vacuity claim was **false**
-in three places — *"every AC21 row still passes; killed only by AC22"*. Reproduced first-party:
-**6 of 15 rows red** (`R-CI`, `R-TTY-OPEN/CHARDEV/SAMEFILE`, `R-PHRASE-EOF/PHRASE`), because those
-rows' fixture uses a **loopback** origin so a hoisted constructor refuses first. AC22 still earns
-its place; it is not the unique killer. Corrected in code and commit message. **Spine: a
-non-vacuity claim never run as literally described is a vacuous pass — and it hides best when the
-code it describes is correct.**
+**The finding, from the judge.** `MUT-D0-FENCE-ORDER`'s non-vacuity claim was **false** in three
+places — *"every AC21 row still passes; killed only by AC22"*. Reproduced first-party: **6 of 15
+rows red** (`R-CI`, `R-TTY-OPEN/CHARDEV/SAMEFILE`, `R-PHRASE-EOF/PHRASE`), because those rows'
+fixture uses a **loopback** origin so a hoisted constructor refuses first. AC22 is not the unique
+killer. **Spine: a non-vacuity claim never run as literally described is a vacuous pass — and it
+hides best when the code it describes is correct.**
 
-**Also:** two landed defects repaired — `TestRunbookStageAPerformsNoPublicWrite` was structurally
-vacuous (its detection loop had never executed its body), and `protectedGoGroups` let any new
-`cmd/` package escape the boundary gate. **No publish occurred; `world/core@0.1.0` unclaimed.**
+**Also:** `TestRunbookStageAPerformsNoPublicWrite` was structurally vacuous (its detection loop had
+never executed its body) and `protectedGoGroups` let any new `cmd/` package escape the boundary
+gate; both repaired. **No publish occurred; `world/core@0.1.0` unclaimed.**
 
 ## Loop · cost · asks
 
