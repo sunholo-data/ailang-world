@@ -1158,13 +1158,36 @@ mission in `~/.config/ailang/mission-world.env`:
   hour earlier at `681990a`, which over-read the directive): `codex:gpt-5.6-sol` REMAINS the
   default; `pi:openrouter/deepseek/deepseek-v4-flash-0731` is the QUOTA-RELIEF REPLACEMENT —
   when the codex bucket is spent, the executor runs deepseek instead of degrading to opus.**
-  The env pin in `mission-world.env` (17:53 local) is the MANUAL instance of that policy —
-  codex is dry as of 2026-08-06 — and must flip back to the codex default when the bucket
-  refills (one-line rollback documented in place). The AUTOMATIC chain (codex → pi-deepseek
-  → opus; the driver's codex pre-flight hardcodes opus at fallback) is SHARED-DRIVER work,
-  routed upstream via both channels: **ailang#611**, which carries the probe-blindness
-  constraint (a codex 1-token probe can rc=0 on a SPENT bucket, so the chain must also apply
-  at the skill's in-iteration fallback, not only at the driver probe). V1 precedent for the
+  **THE CHAIN IS NOW LIVE — ATTENDED 2026-08-10 (Mark, verbatim: "we want codex, deepseek,
+  opus"). IT IS IMPLEMENTED IN `mission-world.env`, NOT IN THE DRIVER, SO THE `executor=`
+  VALUE ON THE "mission iteration starting" LINE IS NOW A RESOLVED PROBE RESULT RATHER THAN A
+  DECLARATION.** The 2026-08-06 env pin was the MANUAL instance of this policy, and it exposed
+  the failure mode that retires manual pins for good: **a hand-pinned relief lane cannot notice
+  the condition that justifies it ending.** Because the pin is `pi:*`, the driver's `codex:*`
+  pre-flight branch never executed, so the codex refill of 2026-08-08 11:24 was invisible for
+  FOUR DAYS — measured attended (`codex exec --model gpt-5.6-sol` → rc=0 `ok`) with the loop
+  still running the relief lane. Rollback executed; the chain replaced it.
+  **WHY IT LIVES IN THE ENV FILE:** neither driver implements a chain — upstream has two
+  INDEPENDENT role-generic pre-flight loops (`codex:*` and `pi:*`) that each degrade to a
+  hardcoded `opus` and do not know about each other, and **World's copy is 101 lines behind
+  upstream (487 vs 588) with NO `pi:*` loop at all**, so the deepseek pin ran UNPROBED for
+  those same four days. The driver is frozen core → iter-23 PATH-fix precedent. Non-vacuity is
+  THREE ARMS, each read off the driver's own resolved roles line under `MISSION_DRY_RUN=1`:
+  healthy → `codex:gpt-5.6-sol`; `MISSION_EXECUTOR_CODEX_MODEL=bogus` →
+  `pi:openrouter/deepseek/deepseek-v4-flash-0731`; both models bogus → `opus`. Arm B is the
+  first time World has probed the pi lane at all. The block carries a DELETE-ON-SYNC marker,
+  and a command-line `MISSION_EXECUTOR_MODEL` pin still wins.
+  **THE CHAIN DOES NOT KNOW ABOUT THE pi BAR BELOW** — it can resolve `pi:deepseek` for a
+  publish-capable milestone. The bar is a CONTROLLER-side rule applied ON TOP of the resolved
+  lane: read the lane, then apply the bar; never infer permission from what the chain handed
+  you. **STILL OWED BY THE SHARED DRIVER, AND BOTH ARE FROZEN CORE HERE:** **ailang#611** (the
+  real per-role chain — carries the probe-blindness constraint that a codex 1-token probe can
+  rc=0 on a SPENT bucket, so the chain must ALSO apply at the skill's in-iteration fallback,
+  not only at the driver probe) and the **World driver sync** that brings the missing `pi:*`
+  loop. Upstream comment + `mission-control` note filed 2026-08-10. Honest cost of the interim:
+  codex is probed TWICE per fire on the healthy path, because the driver re-probes the pin it
+  is handed and cannot be told "already probed" — ~4.5k subscription tokens, no metered $.
+  V1 precedent for the
   lane: ≥3 executor iterations, sonnet 91/88 zero-blocking, ~$0.006/iter REAL metered (posts
   to the $5 ledger, unlike quota lanes). **pi has NO sandbox** — every pi run carries V1's
   discipline: re-verify the main checkout byte-identical to preflight after the run; the
