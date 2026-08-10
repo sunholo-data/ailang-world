@@ -32,34 +32,82 @@ cd "$(dirname "$0")/.."
 
 AILANG_BIN="${AILANG_BIN:-ailang}"
 
-# ── Resolved-binary announcement for legs 1-2 (charter item 9; iter-66) ───────
-# ATTRIBUTION, NOT A GATE — this block cannot change the exit code, and that is deliberate.
-#
-# verify_go.sh:33 announces its resolved binary; this gate never did, and legs 1-2 default to bare
-# PATH `ailang`. So on 2026-08-04 upstream `latest` moved v0.30.0 -> v0.33.0 and the repo's PRIMARY
-# .ail gate silently began validating against an unpinned compiler, in violation of CLAUDE.md's
-# "never a -dirty dev build" rule; two iterations (51, 52) ran that way and nothing surfaced it
-# (charter item 9, iter-53). A recorded prediction of future breakage is not a monitor. This is.
-#
-# Leg 3 is NOT covered here: verify_world_package.sh:15 resolves its own WORLD_PKG_AILANG_BIN and
-# already announces the compiler it pinned by exact bytes. Legs 1-2 are the unannounced half.
-#
-# The hard version ASSERTION and the CI `latest`->pinned-tag edit are deliberately NOT here. They
-# are coupled and human-gated: a hard assert alone would red CI on the next upstream release, with
-# no human present. Warning is the half that is safe to land headless.
-GATE_PINNED_VERSION="v0.30.0"
-_ail_resolved="$(command -v -- "$AILANG_BIN" 2>/dev/null || printf '%s' "$AILANG_BIN")"
+# ── Released-binary assertion and announcement for legs 1-2 ──────────────────
+_ail_release_verdict() { # $1=version token; prints one stable verdict code
+  local tok="$1"
+  if [ -z "$tok" ]; then
+    printf '%s\n' NO_VERSION_TOKEN
+  elif [[ "$tok" =~ (-dirty$|-[0-9]+-g[0-9a-f]+) ]]; then
+    printf '%s\n' DEV_BUILD
+  elif ! [[ "$tok" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.]+)?$ ]]; then
+    printf '%s\n' NOT_A_RELEASE
+  else
+    printf '%s\n' OK
+  fi
+}
+
+_refuse() { # $1=stable code; $2=detail
+  echo "✗ AILANG_BIN refused [$1]: $2" >&2
+  exit 1
+}
+
+# Known-positive control: if these disagree, no observation made by this instrument is trustworthy.
+while IFS='|' read -r _control_token _control_expected; do
+  _control_actual="$(_ail_release_verdict "$_control_token")"
+  if [ "$_control_actual" != "$_control_expected" ]; then
+    echo "verify_ail.sh: FATAL: release-verdict instrument broken: token '${_control_token:-<empty>}' expected $_control_expected, got $_control_actual" >&2
+    exit 1
+  fi
+done <<'CONTROL'
+v0.30.0|OK
+v0.30.0-205-g54d6bd191-dirty|DEV_BUILD
+|NO_VERSION_TOKEN
+CONTROL
+
+if ! _ail_resolved="$(command -v -- "$AILANG_BIN" 2>/dev/null)"; then
+  _refuse UNRESOLVABLE "'$AILANG_BIN' is not an executable command"
+fi
 _ail_version_line="$("$AILANG_BIN" --version 2>&1 | head -1)"
-[ -n "$_ail_version_line" ] || _ail_version_line="<unavailable>"
-# Exact token compare, never a substring: `v0.30.0-205-g54d6bd191-dirty` CONTAINS `v0.30.0`, so a
-# substring test would grade a 205-commit dirty dev build as pinned.
+if [ -z "$_ail_version_line" ]; then
+  _refuse NO_VERSION_OUTPUT "--version produced no first line"
+fi
 _ail_version_tok="$(printf '%s\n' "$_ail_version_line" | awk '{print $2}')"
+if [ -z "$_ail_version_tok" ]; then
+  _refuse NO_VERSION_TOKEN "first --version line has no version token: $_ail_version_line"
+fi
+_ail_verdict="$(_ail_release_verdict "$_ail_version_tok")"
+if [ "$_ail_verdict" = DEV_BUILD ]; then
+  _refuse DEV_BUILD "version token '$_ail_version_tok' identifies a development build"
+fi
+if [ "$_ail_verdict" = NOT_A_RELEASE ]; then
+  _refuse NOT_A_RELEASE "version token '$_ail_version_tok' is not an upstream release"
+fi
+
 echo "── legs 1-2 AILANG_BIN=$_ail_resolved ($_ail_version_line)"
-if [ "$_ail_version_tok" != "$GATE_PINNED_VERSION" ]; then
-  echo "⚠ DRIFT: legs 1-2 are validating against '${_ail_version_tok:-<none>}', not the documented"
-  echo "  pin $GATE_PINNED_VERSION. This gate does NOT fail on drift (the hard assertion is coupled to"
-  echo "  the CI \`latest\`->pinned-tag edit and is human-gated, charter item 9). Export"
-  echo "  AILANG_BIN=/path/to/$GATE_PINNED_VERSION/ailang to verify against the pin."
+# Expected-release notice (charter 9/CF-A-2). MEMBERSHIP, not equality against one line.
+#
+# The warning this replaces compared against the v0.30.0 pin and so fired on EVERY CI run once the
+# `9/OD-10` ACCEPT ruling made legs 1-2 track releases — and a warning that always fires is not a
+# signal. An equality test against a single recorded observation just MOVES that defect: legs 1-2
+# legitimately resolve TWO different releases depending on lane, because CI's job 1 exports no
+# AILANG_BIN (ci.yml:87 exports only WORLD_PKG_AILANG_BIN) and takes `releases/latest` off PATH,
+# while a local operator exports the documented v0.30.0 pin. Under equality the local lane then
+# printed `moved from 'v0.33.0' to 'v0.30.0'` on every run — always-firing again, and false: the
+# operator's deliberate pin is not an upstream move.
+#
+# So the file lists the releases legs 1-2 are EXPECTED to resolve, and the notice fires only on a
+# token outside that set. Quiet in both real lanes today; fires once when upstream's `latest` moves,
+# which is exactly the 2026-08-04 v0.30.0 -> v0.33.0 event that created charter item 9 and ran
+# unnoticed for two iterations. Non-fatal by construction — it can never red CI.
+_ail_expected_releases="$(grep -vE '^[[:space:]]*(#|$)' scripts/testdata/ailang_release_observed.txt)"
+[ -n "$_ail_expected_releases" ] || {
+  echo "verify_ail.sh: FATAL: scripts/testdata/ailang_release_observed.txt lists no releases — an empty set would silence this notice forever rather than firing it." >&2
+  exit 1
+}
+if ! printf '%s\n' "$_ail_expected_releases" | grep -qxF "$_ail_version_tok"; then
+  echo "ℹ UNRECOGNISED RELEASE: legs 1-2 resolved '$_ail_version_tok', which is not among the"
+  echo "  releases this repo expects ($(printf '%s' "$_ail_expected_releases" | tr '\n' ' ')). The primary"
+  echo "  .ail gate has switched compiler — review it, then update scripts/testdata/ailang_release_observed.txt."
 fi
 
 command -v python3 >/dev/null 2>&1 || {
