@@ -15,9 +15,8 @@
 
 **Nothing.** Zero open asks. `9/OD-10` and `9/OD-11` are both ratified and closed.
 
-Two items remain owed by the **shared driver** (frozen core — World cannot apply them):
-`ailang#611` (real per-role executor chain) and the World driver sync (missing `pi:*`
-pre-flight loop).
+Owed by the **shared driver** (frozen core — World cannot apply): `ailang#611` (real
+per-role executor chain) and the World driver sync (missing `pi:*` pre-flight loop).
 
 ## Next
 
@@ -30,8 +29,7 @@ Item 8's `SM.D` is **attended-only** and never routes headless.
 - Cadence: launchd, every ~6h, headless. Bookkeeping issue **#53** (rotates Mondays 07:00 local).
 - Routing: controller/planner `opus` · executor chain `codex:gpt-5.6-sol → pi:deepseek-v4-flash → opus`
   · evaluator `sonnet` (generator≠judge). `pi` is **BARRED** from publish-capable milestones.
-- Planner lane note: `derive-planner-lane.sh` is absent here, so the lane fails closed to
-  opus **loudly** every iteration — expected, not a fault.
+- `derive-planner-lane.sh` is absent here: the lane fails closed to opus loudly every fire.
 - Spend: `metered=$0.00` this iteration; budget ceiling $5/iteration. All lanes quota buckets.
 
 ## Standing hazards
