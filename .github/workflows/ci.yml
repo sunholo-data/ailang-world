@@ -5,6 +5,14 @@ on:
     branches: [dev]
   pull_request:
 
+# The z3 pin is declared ONCE, at workflow scope, because BOTH jobs must install the SAME solver.
+# Job 1 runs `ai-check` directly; job 2 runs it THROUGH host/verifygate's shim arms, which drive
+# scripts/verify_ail.sh end to end. Two job-local literals would let the lanes drift silently —
+# the same "two lanes resolve different things" defect 9/CF-A-2 was. Ratified: 9/OD-11.
+env:
+  Z3_VER: 4.16.0
+  Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+
 jobs:
   ailang-verify:
     name: ailang-code verify gate
@@ -38,9 +46,7 @@ jobs:
           # /usr/bin, /usr/local/bin, /snap/bin). ubuntu-latest ships none, so
           # every contract silently SKIPS (vanishes from verify.results[]) and
           # the required-check manifest gate is meaningless without it.
-          Z3_VER=4.16.0
           Z3_DIR="z3-${Z3_VER}-x64-glibc-2.39"
-          Z3_SHA=7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
           curl -fsSL -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VER}/${Z3_DIR}.zip"
           echo "${Z3_SHA}  z3.zip" | sha256sum -c -
           unzip -q z3.zip
@@ -136,6 +142,22 @@ jobs:
             *) echo "✗ AILANG_BIN is not v0.30.0" >&2; exit 1 ;;
           esac
           echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
+
+      - name: Install Z3 ${{ env.Z3_VER }} (host/verifygate drives the REAL .ail gate under go test)
+        run: |
+          set -euo pipefail
+          # 9/OD-11, RATIFIED: "Yes you can install z3 on cicd".
+          # host/verifygate's shim arms run scripts/verify_ail.sh end to end. Without a solver
+          # `ai-check` reports verify.available=false and every contract vanishes from
+          # verify.results[] (V20/V27), so the gate reds at leg 1 and the accept-arms could only
+          # assert markers emitted BEFORE Z3 matters — they were green in a lane where the gate
+          # they drive was red. Same version and sha as job 1, from the workflow-level pin above.
+          Z3_DIR="z3-${Z3_VER}-x64-glibc-2.39"
+          curl -fsSL -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VER}/${Z3_DIR}.zip"
+          echo "${Z3_SHA}  z3.zip" | sha256sum -c -
+          unzip -q z3.zip
+          sudo install -m 0755 "${Z3_DIR}/bin/z3" /usr/local/bin/z3
+          z3 --version
 
       - name: go build + test gate (replay tests run against pinned AILANG_BIN)
         # Expiry is RED; route an overrun to 4e/OD-4, never silently raise this ceiling.
