@@ -96,12 +96,45 @@ func requireRefusal(t *testing.T, line, code string) {
 	}
 }
 
+// Markers the accept-arms assert on. All three are emitted BEFORE anything Z3-dependent, which is
+// what makes these tests portable between the two CI jobs.
+const (
+	refusalMarker = "AILANG_BIN refused" // the version block refused; emitted only by _refuse
+	leg1Marker    = "── Leg 1"           // the version block accepted and the gate proceeded
+	// The signature a NON-delegating shim produces: ai-check returns empty output at the first
+	// module, so the gate cannot parse its JSON. Measured to differ from the Z3-absent signature
+	// (`required identity … MISSING from verify.results[]`), which is what makes delegation
+	// provable without Z3.
+	noDelegateMarker = "could not parse ai-check JSON"
+)
+
+// requireProceeded asserts the version block ACCEPTED and the real gate ran on the real delegate.
+//
+// It deliberately does NOT assert `verify gate PASSED`. These tests run inside `go test ./...`,
+// i.e. CI's go-verify job, which installs no Z3 — and without Z3 `ai-check` skips every contract
+// silently (the documented V20/V27 class), so the whole gate reds at leg 1 for a reason that has
+// nothing to do with the version predicate under test. Asserting PASSED here made 10 tests red in
+// that job while every local gate was rc=0. The version block's contract is "refuse, or proceed on
+// the real binary", and these three markers are exactly that contract, observable before Z3 matters.
+// The claim that the gate as a whole passes belongs to AC1 — `verify_ail.sh` run in the job that
+// has Z3 — not to this package.
+func requireProceeded(t *testing.T, label, out string) {
+	t.Helper()
+	if strings.Contains(out, refusalMarker) {
+		t.Fatalf("%s: version block refused a release token\n%s", label, out)
+	}
+	if !strings.Contains(out, leg1Marker) {
+		t.Fatalf("%s: gate never reached leg 1 — it did not proceed past the version block\n%s", label, out)
+	}
+	if strings.Contains(out, noDelegateMarker) {
+		t.Fatalf("%s: shim did not delegate — ai-check produced no parseable output\n%s", label, out)
+	}
+}
+
 func TestKnownPositiveDelegates(t *testing.T) {
 	requirePinned(t)
-	rc, out := runGate(t, shimEnv("AILANG v0.33.0"))
-	if rc != 0 || !strings.Contains(out, "verify gate PASSED") {
-		t.Fatalf("delegating release arm: rc=%d\n%s", rc, out)
-	}
+	_, out := runGate(t, shimEnv("AILANG v0.33.0"))
+	requireProceeded(t, "delegating release arm", out)
 }
 
 func TestDirtyBuildRefused(t *testing.T) {
@@ -257,18 +290,20 @@ func TestReleaseChangeNotice(t *testing.T) {
 	}
 	quietCounts := map[string]int{}
 	for _, arm := range quiet {
-		rc, out := runGate(t, shimEnv(arm.version))
+		_, out := runGate(t, shimEnv(arm.version))
+		requireProceeded(t, arm.name, out)
 		n := strings.Count(out, notice)
 		quietCounts[arm.name] = n
-		if rc != 0 || n != 0 {
-			t.Fatalf("%s: expected rc=0 with 0 notices, got rc=%d n=%d\n%s", arm.name, rc, n, out)
+		if n != 0 {
+			t.Fatalf("%s: expected 0 notices, got %d\n%s", arm.name, n, out)
 		}
 	}
 
-	rcB, outB := runGate(t, shimEnv("AILANG v0.34.0"))
+	_, outB := runGate(t, shimEnv("AILANG v0.34.0"))
+	requireProceeded(t, "ArmUnrecognised", outB)
 	countB := strings.Count(outB, notice)
-	if rcB != 0 || countB != 1 {
-		t.Fatalf("ArmUnrecognised: expected rc=0 with exactly 1 notice, got rc=%d n=%d\n%s", rcB, countB, outB)
+	if countB != 1 {
+		t.Fatalf("ArmUnrecognised: expected exactly 1 notice, got %d\n%s", countB, outB)
 	}
 	// The notice must name the token it refused AND the expected set it checked against.
 	for _, want := range []string{"v0.34.0", "v0.33.0", "v0.30.0"} {
@@ -396,14 +431,32 @@ func TestExpectedReleaseSetIsNonEmpty(t *testing.T) {
 	}
 }
 
+// TestFixtureDiscrimination is the meta-control the handoff demands: omitting WORLD_PKG_AILANG_BIN
+// makes it fall back to AILANG_BIN, so the gate reds at the world-package leg on compiler BYTES —
+// rc=1 in both arms, which would let a careless test conclude "the version assertion fired" when it
+// never ran. The essential claim is therefore that the failure is NOT the version predicate's, and
+// that claim is Z3-independent. The precise `wrong compiler version` reason lives at leg 3, which is
+// only reachable where Z3 is installed, so it is asserted as a strengthening when the gate got that
+// far rather than as a portability requirement.
 func TestFixtureDiscrimination(t *testing.T) {
 	requirePinned(t)
 	env := shimEnv("AILANG v0.33.0")
 	delete(env, "WORLD_PKG_AILANG_BIN")
 	rc, out := runGate(t, env)
-	if rc != 1 || !strings.Contains(out, "wrong compiler version") ||
-		strings.Contains(out, "[DEV_BUILD]") || strings.Contains(out, "[NOT_A_RELEASE]") {
-		t.Fatalf("fixture discrimination: rc=%d\n%s", rc, out)
+	if rc != 1 {
+		t.Fatalf("fixture discrimination: want rc=1, got rc=%d\n%s", rc, out)
+	}
+	for _, marker := range []string{refusalMarker, "[DEV_BUILD]", "[NOT_A_RELEASE]", noDelegateMarker} {
+		if strings.Contains(out, marker) {
+			t.Fatalf("fixture discrimination: rc=1 came from %q, not from the compiler-identity check — "+
+				"a test wired this way would credit the version predicate for a red it did not cause\n%s", marker, out)
+		}
+	}
+	if !strings.Contains(out, leg1Marker) {
+		t.Fatalf("fixture discrimination: gate never proceeded past the version block\n%s", out)
+	}
+	if strings.Contains(out, "── Leg 3") && !strings.Contains(out, "wrong compiler version") {
+		t.Fatalf("fixture discrimination: reached leg 3 but not via the compiler-version check\n%s", out)
 	}
 }
 
