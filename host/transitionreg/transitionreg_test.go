@@ -96,7 +96,6 @@ func TestSnapshotIsEagerAndCopyIsolated(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	// Mutating construction inputs and store bytes cannot affect the parsed snapshot.
 	d.InputSchema[2] = 'X'
 	f.object.Payload[0] = '['
@@ -116,9 +115,15 @@ func TestSnapshotIsEagerAndCopyIsolated(t *testing.T) {
 		t.Fatalf("snapshot alias escaped: list=%+v lookup=%+v ok=%v", again, got, ok)
 	}
 	// Cache returns a fresh deep copy without touching the now-corrupt store bytes.
+	s.entries[0].InputSchema[2] = 'Q'
 	cached, err := r.ReadSnapshot(context.Background())
 	if err != nil || string(cached.List()[0].InputSchema) != `{"in":1}` {
 		t.Fatalf("cache copy changed: snapshot=%+v err=%v", cached.List(), err)
+	}
+	cached.entries[0].InputSchema[2] = 'R'
+	third, err := r.ReadSnapshot(context.Background())
+	if err != nil || string(third.List()[0].InputSchema) != `{"in":1}` {
+		t.Fatalf("cache result aliases cache: snapshot=%+v err=%v", third.List(), err)
 	}
 }
 
