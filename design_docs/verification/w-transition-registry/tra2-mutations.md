@@ -33,8 +33,8 @@ skipped. Two arms have non-zero inverses and are explicitly not claimed as isola
 | MUT-ENTRIES-NO-LIMIT | live entries guard `1->0` | `5aecd46b... -> 1244ba67...` | 0 | rc=1 `TestPublishRefusals/entries_over_1024` | 0 | match | KILLED |
 | MUT-REVISION-NO-LIMIT | max-raw call `1->0` | `11ad144e... -> fea7b1df...` | 0 | rc=1 `TestReadSnapshotRefusals/revision_raw_over_limit` | 0 | `11ad144e...` match | KILLED |
 | MUT-AIL-EMPTY-MODULE | `world/*.ail` `4->5` | absent -> `cdbc91b7...` | 0 | repaired AC9 rc=1; `modules11=0`, `tests14=1`, `steps9=1` | raw script rc=0 | absent; file count 4 | KILLED |
-| MUT-DELETE-TR-A-TEST (AC2) | AC2 names `3->2` | see T8 section below | 0 | activated AC2 rc=1, observed count=2 | 0 after restore | match | KILLED |
-| MUT-DELETE-TR-A-TEST (AC3) | AC3 names `4->3` | see T8 section below | 0 | activated AC3 rc=1, observed count=3 | 0 after restore | match | KILLED |
+| MUT-DELETE-TR-A-TEST (AC2) | AC2 names `3->2` | `33bd76d3... -> c611ce74...` | 0 | activated AC2 rc=1, observed count=2 | 0 | `33bd76d3...` match; restored gate rc=0/count=3 | KILLED |
+| MUT-DELETE-TR-A-TEST (AC3) | AC3 names `4->3` | `33bd76d3... -> 4946d4b4...` | 0 | activated AC3 rc=1, observed count=3 | 0 | `33bd76d3...` match; restored gate rc=0/count=4 | KILLED |
 
 The semantic-tag arm exposes a plan-level coupling: changing the package semantic constant affects
 many tests, so the required package inverse cannot be green. The CAS-swallow arm likewise changes
