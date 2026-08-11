@@ -41,3 +41,52 @@ many tests, so the required package inverse cannot be green. The CAS-swallow arm
 real CAS-conflict behavior covered by `TestPublishCASConflictPreservesWinner`; skipping only the
 injected-error subtest cannot make the package green. Both mutants landed and built, and both named
 tests fired, but neither is represented as an isolated mutation kill.
+
+## Controller adjudication of the two non-isolated arms (iteration 72, rule 3h)
+
+The executor flagged both departures rather than quietly weakening a test, so both were adjudicated
+by measurement in **both** directions rather than accepted on the strength of its report.
+
+**The checkable proposition:** *the package inverse is red because ADDITIONAL legitimate tests
+detect the mutation — over-coverage — and not because the named test's failure is a bystander
+effect of unrelated breakage.* The discriminating command is the inverse arm widened to skip the
+COMPLETE detector set. If the mechanism is over-coverage that run is rc=0; if the mutant is
+breaking something unrelated it stays red. Both arms were then re-run with the same `-skip` on the
+**unmutated** tree, so an rc=0 cannot be an artifact of the skip set concealing a pre-existing red
+(rule 3d's negative control, aimed at a mutation inverse).
+
+| arm | anchor | build | named kill | executor inverse | full detector set | **skip-all inverse** | same skip, UNMUTATED | verdict |
+|---|---|---:|---|---:|---|---:|---:|---|
+| `MUT-PUBLISH-SWALLOW` (CAS) | `1 -> 0`, sha `5aecd46b…` -> `5de5c683…` | 0 | rc=1 `TestPublishRefusals/injected_cas_error` | rc=1 | `TestPublishRefusals`, `TestPublishCASConflictPreservesWinner`, **`TestConcurrentPublishHasOneWinner`** | **rc=0** | rc=0 | **KILL, over-coverage** |
+| `MUT-GO-CODEC-TAG` | `1 -> 0`, sha `11ad144e…` -> `f2c3cb37…` | 0 | rc=1 `TestCodecGoldenRoundTrip` | rc=1 | `TestCodecGoldenRoundTrip`, `TestReadSnapshotRefusals` | **rc=0** | rc=0 | **KILL, over-coverage** |
+
+Both production files were restored from a `cp` backup and re-hashed: `codec.go`
+`11ad144ec17e6291cecdf2540f8c74031cd9b7c48353705116867d168aa5ba49` and `transitionreg.go`
+`5aecd46b3bb9080dc4fb5fe2dadfdd14458ad17444a90f779b4db484b8504611` — byte-identical to the
+executor's delivered tree, so this adjudication changed nothing.
+
+**Two corrections to the executor's characterisation, both measured, neither changing the verdict:**
+
+1. The CAS arm names **one** co-detector. There are **two** — `TestConcurrentPublishHasOneWinner`
+   also fails, because a swallowed CAS error makes every racer believe it won. That is a
+   *strengthening*: the concurrency invariant is pinned by a second, independent test.
+2. The semantic-tag arm says the constant "affects many tests". Enumerated with `-v`, it is exactly
+   **two**, and the second one is worth naming because it is a consequence of this milestone's own
+   design decision: `TestReadSnapshotRefusals/wrong_semantic_id` pins the *measured message*
+   `semantic ID "wrong/semantic" is not "world/transition-registry/v1"`, which **embeds the
+   constant**. Per-branch message pinning — mandated here after TR.A1's two survivals — therefore
+   couples the refusal table to the identity literal. The coupling is benign and arguably desirable
+   (a silent semantic-ID change now reds two tests, not one), but it is the reason this arm cannot
+   have a green single-test inverse, and it would be invisible to anyone reading only the
+   mutation's name.
+
+**The general point this pair settles, and the reason it is recorded rather than waved through:**
+the plan's §4.1 step 7 requires a green package inverse to prove *your* test is the killer rather
+than a bystander. That is the right check for a mutation whose blast radius is one branch, and it
+is **unsatisfiable by construction** for a mutation that alters a shared constant or a real
+behavioural invariant — the mutant is *supposed* to be visible to more than one test. Read
+strictly, step 7 would have scored two correct, well-pinned kills as failures, and the cheapest way
+to make them "pass" is to weaken the co-detectors. The executor declined to do that and said so,
+which is what made the correct adjudication available. The generalised form of the check, which
+holds for both narrow and broad mutations: **skip the complete set of tests that legitimately
+detect the mutation and require rc=0, with the same skip on the unmutated tree as the control.**
