@@ -535,7 +535,7 @@ state. Every delivered gate also has a compiling RED mutation below.
    Base observed: rc=0 because count=1 is the known existing control. TR.A activation removes the
    count=1 arm, requires count=2, and runs both tests.
 5. **AC5 — capability snapshot and all landed denial arms.** Command:
-   `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/broker -list 'Test(CapabilitySnapshotEpochAndIsolation|AllowsUsesDecideAllFourDenials)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 0 || { test "$count" -eq 2 && GOTOOLCHAIN=go1.25.6 go test ./host/broker -run 'Test(CapabilitySnapshotEpochAndIsolation|AllowsUsesDecideAllFourDenials)$' -count=1; }`.
+   `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/broker -list 'Test(CapabilitySnapshotEpochAndIsolation|AllowsUsesDecideAllFourDenials)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 2 && GOTOOLCHAIN=go1.25.6 go test ./host/broker -run 'Test(CapabilitySnapshotEpochAndIsolation|AllowsUsesDecideAllFourDenials)$' -count=1`.
    Base observed: rc=0 because count=0 (TR.B tests absent), independently of TR.A's directory.
    TR.B activation requires count=2. Delivered: both named
    tests PASS and enumerate effect-name, scope, expiry, and budget denials.
