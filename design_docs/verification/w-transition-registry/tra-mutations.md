@@ -47,9 +47,37 @@ and gate rc=1; inverse rc=0; restore reproduced
 returned rc=0 and printed 12 modules; repaired AC9 observed `modules11=0` and returned rc=1. The
 file was deleted and the world file count restored to four.
 
-## Not executed in TR.A1
+## Six arms deferred by the executor, then run by the controller
 
-The following T4-assigned plan arms were not executed in this sandbox session and no kill is
-claimed: `MUT-ID-NO-LENGTH-BOUND`, `MUT-CJSON-DUP-KEY-OK`, `MUT-CJSON-SURROGATE-OK`,
-`MUT-CJSON-NO-NUMBER-BOUND`, `MUT-CJSON-UNKNOWN-KEY-OK`, and `MUT-CODEC-NUMBER-RAW`.
+The executor did not execute these six T4-assigned arms and said so, claiming no kill. The
+controller ran all six. Every mutant was asserted LANDED (differing sha256 over a single-match
+anchor) and BUILDING (`GOTOOLCHAIN=go1.25.6 go build ./...` rc=0) before its result was read;
+each kill arm was `-run`-scoped, each had an inverse `-skip` arm requiring rc=0, and every
+restore came from a `cp` backup and was verified byte-identical.
+
+| Mutation | Landed (sha) | Builds | Result | Failing test |
+|---|---|---|---|---|
+| `MUT-ID-NO-LENGTH-BOUND` | `674cc001…` → `31488eb8…` | rc=0 | **KILLED** | `TestDescriptorValidationRefusals/segment_too_long` |
+| `MUT-CJSON-DUP-KEY-OK` | `11ad144e…` → `8887f146…` | rc=0 | **KILLED** | `…/duplicate_schema_key_nested` |
+| `MUT-CJSON-NO-NUMBER-BOUND` | `11ad144e…` → `071d6791…` | rc=0 | **KILLED** | `…/number_coefficient_overflow` |
+| `MUT-CODEC-NUMBER-RAW` | `11ad144e…` → `76f129d9…` | rc=0 | **KILLED** | `TestCodecGoldenRoundTrip` |
+| `MUT-CJSON-SURROGATE-OK` | `11ad144e…` → `707b1ce8…` | rc=0 | **SURVIVED → now KILLED** | `…/lone_surrogate` |
+| `MUT-CJSON-UNKNOWN-KEY-OK` | `11ad144e…` → `083410ce…` | rc=0 | **SURVIVED → now KILLED** | `…/unknown_revision_key` |
+
+**The two survivals were genuine, and they share one cause.** Both mutants landed and built, so
+neither was instrument failure. The refusal table asserted only *that* an error was returned,
+never *which branch* returned it — and `DecodeRevision` performs a canonical re-encode comparison
+(`codec.go`), so every guard has a second refuser standing behind it. Neutering the named guard
+left the input still refused, by the backstop, and the message-agnostic assertion stayed green.
+On the clean tree the named guards *do* fire, which is exactly why this was invisible.
+
+Repaired in `c0e72de`: all 16 refusal cases now pin their own measured message. Re-run against the
+strengthened test, both survivors KILL, and the failure text names the masking mechanism —
+`input schema is not canonical` and `revision is not canonical for its typed schema`.
+
+The masking is specific to inputs that are *silently transformed* during decode→re-encode
+(a surrogate becomes U+FFFD; an unknown key is dropped). Duplicate-key, ID-length and
+digit-overflow violations are outright rejections with nothing to mask them, which is why they
+killed on the first arm. The evaluator swept for a third masked case independently and found none.
+
 T5–T8/TR.A2 mutations are outside TR.A1 by controller direction.
