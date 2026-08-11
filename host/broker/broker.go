@@ -52,6 +52,35 @@ type Session struct {
 	mode      Mode
 	replay    []hashref.HashRef
 	next      int
+	epoch     int64
+}
+
+// CapabilitySnapshot is an immutable copy of a session capability ledger at
+// one instant. Now is supplied by the caller; the broker never reads a clock.
+type CapabilitySnapshot struct {
+	Epoch  int64
+	Now    int64
+	grants []Capability
+}
+
+// CapabilitySnapshot returns a detached view of the current ledger.
+func (s *Session) CapabilitySnapshot(now int64) CapabilitySnapshot {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return CapabilitySnapshot{Epoch: s.epoch, Now: now, grants: append([]Capability(nil), s.grants...)}
+}
+
+// Grants returns a fresh copy of the snapshot's grants.
+func (c CapabilitySnapshot) Grants() []Capability {
+	return append([]Capability(nil), c.grants...)
+}
+
+// Len reports the number of grants in the snapshot.
+func (c CapabilitySnapshot) Len() int { return len(c.grants) }
+
+func (s *Session) debitGrant(i int, remaining int64) {
+	s.grants[i].Budget = remaining
+	s.epoch++
 }
 
 // NewSession constructs a live session over an injected store handle.
@@ -124,6 +153,14 @@ func (e *ReplayGapError) Error() string {
 
 // Invoke runs the one frozen decision/debit/dispatch/record pipeline.
 func (s *Session) Invoke(
+	ctx context.Context,
+	req EffectRequest,
+	payload []byte,
+) (result []byte, recordRef hashref.HashRef, err error) {
+	return s.invoke(ctx, req, payload)
+}
+
+func (s *Session) invoke(
 	ctx context.Context,
 	req EffectRequest,
 	payload []byte,
@@ -205,7 +242,7 @@ func (s *Session) Invoke(
 	if err != nil {
 		return nil, hashref.HashRef{}, fmt.Errorf("broker: append effect intent: %w", err)
 	}
-	s.grants[grantIndex].Budget = decision.Remaining
+	s.debitGrant(grantIndex, decision.Remaining)
 	result, err = handler.Execute(ctx, req, payload)
 	if err != nil {
 		// THE ONE NARROW SPECIAL CASE. Only the typed *IndeterminateEffectError
@@ -270,21 +307,7 @@ func (s *Session) Invoke(
 }
 
 func (s *Session) decide(req EffectRequest) (int, Decision) {
-	if len(s.grants) == 0 {
-		return -1, Decision{Label: LabelDeniedEffectName}
-	}
-	bestIndex := 0
-	best := Decide(s.grants[0], req)
-	for i := 1; i < len(s.grants); i++ {
-		next := Decide(s.grants[i], req)
-		if next.Allowed {
-			return i, next
-		}
-		if denialRank(next.Label) > denialRank(best.Label) {
-			bestIndex, best = i, next
-		}
-	}
-	return bestIndex, best
+	return decideOver(s.grants, req)
 }
 
 func denialRank(label string) int {
@@ -364,7 +387,7 @@ func (s *Session) invokeReplay(
 	}
 	if decision.Allowed {
 		if rec.Failed {
-			s.grants[grantIndex].Budget = decision.Remaining
+			s.debitGrant(grantIndex, decision.Remaining)
 			s.next++
 			return nil, recordRef, &EffectFailedError{
 				Effect: rec.Effect, Scope: rec.Scope, RecordRef: recordRef,
@@ -377,7 +400,7 @@ func (s *Session) invokeReplay(
 		if !ok {
 			return nil, hashref.HashRef{}, &ReplayGapError{Index: index, Why: "result object is missing"}
 		}
-		s.grants[grantIndex].Budget = decision.Remaining
+		s.debitGrant(grantIndex, decision.Remaining)
 		s.next++
 		return append([]byte(nil), resultObj.Payload...), recordRef, nil
 	}

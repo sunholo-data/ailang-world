@@ -28,6 +28,14 @@ type EffectRequest struct {
 	Now    int64
 }
 
+// Requirement is the authority requested by a registry descriptor. Expiry and
+// budget belong to session grants, not registry metadata.
+type Requirement struct {
+	Effect string
+	Scope  string
+	Cost   int64
+}
+
 // Decision is the canonical projection of the frozen broker decision.
 type Decision struct {
 	Allowed   bool
@@ -52,6 +60,36 @@ func Decide(c Capability, r EffectRequest) Decision {
 	}
 	remaining := c.Budget - r.Cost
 	return Decision{Allowed: true, Remaining: remaining, Label: allowedLabel(remaining)}
+}
+
+// decideOver applies the broker's one ranked selection mechanism to a ledger.
+func decideOver(grants []Capability, r EffectRequest) (int, Decision) {
+	if len(grants) == 0 {
+		return -1, Decision{Label: LabelDeniedEffectName}
+	}
+	bestIndex := 0
+	best := Decide(grants[0], r)
+	for i := 1; i < len(grants); i++ {
+		next := Decide(grants[i], r)
+		if next.Allowed {
+			return i, next
+		}
+		if denialRank(next.Label) > denialRank(best.Label) {
+			bestIndex, best = i, next
+		}
+	}
+	return bestIndex, best
+}
+
+// Allows evaluates a descriptor requirement over a captured ledger snapshot.
+func Allows(snap CapabilitySnapshot, req Requirement) Decision {
+	_, decision := decideOver(snap.grants, EffectRequest{
+		Effect: req.Effect,
+		Scope:  req.Scope,
+		Cost:   req.Cost,
+		Now:    snap.Now,
+	})
+	return decision
 }
 
 func allowedLabel(remaining int64) string {
