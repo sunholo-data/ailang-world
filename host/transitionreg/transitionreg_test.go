@@ -106,37 +106,38 @@ func TestDescriptorIdentityAndContentUpdate(t *testing.T) {
 func TestDescriptorValidationRefusals(t *testing.T) {
 	tests := []struct {
 		name string
+		want string
 		run  func() error
 	}{
-		{"id_grammar", func() error { d := validDescriptor(); d.ID = "Bad ID"; return d.Validate() }},
-		{"id_too_long", func() error {
+		{"id_grammar", "does not match stable ID grammar", func() error { d := validDescriptor(); d.ID = "Bad ID"; return d.Validate() }},
+		{"id_too_long", "length must be 1..128 bytes", func() error {
 			d := validDescriptor()
 			d.ID = strings.Join([]string{strings.Repeat("a", 32), strings.Repeat("b", 32), strings.Repeat("c", 32), strings.Repeat("d", 32)}, "/")
 			return d.Validate()
 		}},
-		{"segment_too_long", func() error { d := validDescriptor(); d.ID = strings.Repeat("a", 33); return d.Validate() }},
-		{"zero_transition_fn", func() error { d := validDescriptor(); d.TransitionFn = hashref.HashRef{}; return d.Validate() }},
-		{"zero_interpreter", func() error { d := validDescriptor(); d.Interpreter = hashref.HashRef{}; return d.Validate() }},
-		{"negative_semantics_epoch", func() error { d := validDescriptor(); d.SemanticsEpoch = -1; return d.Validate() }},
-		{"negative_cost", func() error { d := validDescriptor(); d.Access.Cost = -1; return d.Validate() }},
-		{"schema_not_an_object", func() error { d := validDescriptor(); d.InputSchema = []byte(`[]`); return d.Validate() }},
-		{"schema_raw_over_262144", func() error {
+		{"segment_too_long", "segment length must be 1..32 bytes", func() error { d := validDescriptor(); d.ID = strings.Repeat("a", 33); return d.Validate() }},
+		{"zero_transition_fn", "transitionFn is zero", func() error { d := validDescriptor(); d.TransitionFn = hashref.HashRef{}; return d.Validate() }},
+		{"zero_interpreter", "interpreter is zero", func() error { d := validDescriptor(); d.Interpreter = hashref.HashRef{}; return d.Validate() }},
+		{"negative_semantics_epoch", "semanticsEpoch is negative", func() error { d := validDescriptor(); d.SemanticsEpoch = -1; return d.Validate() }},
+		{"negative_cost", "cost is negative", func() error { d := validDescriptor(); d.Access.Cost = -1; return d.Validate() }},
+		{"schema_not_an_object", "schema root must be an object", func() error { d := validDescriptor(); d.InputSchema = []byte(`[]`); return d.Validate() }},
+		{"schema_raw_over_262144", "raw JSON is 262146 bytes; limit is 262144", func() error {
 			raw := append(bytes.Repeat([]byte(" "), maxSchemaRaw), []byte(`{}`)...)
 			_, err := canonicalSchema(raw)
 			return err
 		}},
-		{"schema_canonical_over_65536", func() error {
+		{"schema_canonical_over_65536", "canonical schema is 65544 bytes; limit is 65536", func() error {
 			d := validDescriptor()
 			d.InputSchema = []byte(`{"x":"` + strings.Repeat("a", maxSchemaCanonical) + `"}`)
 			return d.Validate()
 		}},
-		{"duplicate_schema_key_nested", func() error {
+		{"duplicate_schema_key_nested", "duplicate object member \"a\"", func() error {
 			d := validDescriptor()
 			d.InputSchema = []byte(`{"x":{"a":1,"a":2}}`)
 			return d.Validate()
 		}},
-		{"lone_surrogate", func() error { d := validDescriptor(); d.InputSchema = []byte(`{"x":"\ud800"}`); return d.Validate() }},
-		{"invalid_utf8", func() error {
+		{"lone_surrogate", "JSON string contains an escaped surrogate", func() error { d := validDescriptor(); d.InputSchema = []byte(`{"x":"\ud800"}`); return d.Validate() }},
+		{"invalid_utf8", "JSON is not valid UTF-8", func() error {
 			d := validDescriptor()
 			d.InputSchema = []byte{'{', '"', 'x', '"', ':', '"', 0xff, '"', '}'}
 			if utf8.Valid(d.InputSchema) {
@@ -144,24 +145,32 @@ func TestDescriptorValidationRefusals(t *testing.T) {
 			}
 			return d.Validate()
 		}},
-		{"number_coefficient_overflow", func() error {
+		{"number_coefficient_overflow", "number coefficient has 1025 digits; limit is 1024", func() error {
 			d := validDescriptor()
 			d.InputSchema = []byte(`{"n":` + strings.Repeat("1", maxNumberDigits+1) + `}`)
 			return d.Validate()
 		}},
-		{"unknown_revision_key", func() error {
+		{"unknown_revision_key", "unknown key \"extra\"", func() error {
 			_, err := DecodeRevision([]byte(`{"entries":[],"extra":0,"interfaceHash":"` + InterfaceHashV1.String() + `","parent":"","revision":1,"semanticID":"` + SemanticIDV1 + `"}`))
 			return err
 		}},
-		{"missing_descriptor_key", func() error {
+		{"missing_descriptor_key", "missing key \"id\"", func() error {
 			_, err := DecodeRevision([]byte(`{"entries":[{}],"interfaceHash":"` + InterfaceHashV1.String() + `","parent":"","revision":1,"semanticID":"` + SemanticIDV1 + `"}`))
 			return err
 		}},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			if err := tc.run(); err == nil {
+			err := tc.run()
+			if err == nil {
 				t.Fatal("invalid value was accepted")
+			}
+			// Pin the BRANCH, not merely the refusal: DecodeRevision's canonical
+			// re-encode check (codec.go) refuses these inputs too, so a message-agnostic
+			// assertion stays green when the named guard is neutered. Measured: with
+			// the escaped-surrogate and unknown-key guards disabled, this test passed.
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("refused by the wrong branch: got %q, want it to contain %q", err, tc.want)
 			}
 		})
 	}
