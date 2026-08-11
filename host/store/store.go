@@ -81,6 +81,10 @@ func (e *UninitializedReadOnlyStoreError) Error() string {
 // (Decision 5). It is the key used in epoch_registry_heads for M1.
 const EpochRegistryV1 = "world/epoch-registry/v1"
 
+// TransitionRegistryV1 is the semantic ID / registry name of the transition
+// descriptor registry.
+const TransitionRegistryV1 = "world/transition-registry/v1"
+
 // Object is the immutable ObjectEnvelope (Decision 3) together with its payload
 // bytes. Hash addresses Payload; the store verifies that relationship on insert.
 type Object struct {
@@ -630,6 +634,100 @@ func (s *Store) GetRegistryHead(name string) (hashref.HashRef, bool, error) {
 		return hashref.HashRef{}, false, nil
 	case err != nil:
 		return hashref.HashRef{}, false, fmt.Errorf("store: get registry head %q: %w", name, err)
+	}
+	ref, err := hashref.Parse(text)
+	if err != nil {
+		return hashref.HashRef{}, false, fmt.Errorf("store: registry head %q: %w", name, err)
+	}
+	return ref, true, nil
+}
+
+// RegistryCASConflict is returned when a registry head differs from the head
+// against which a caller planned. A zero Expected means the caller expected
+// the registry name to have no head. Actual is zero when HadHead is false.
+type RegistryCASConflict struct {
+	Name     string
+	Expected hashref.HashRef
+	Actual   hashref.HashRef
+	HadHead  bool
+}
+
+func (e *RegistryCASConflict) Error() string {
+	if !e.HadHead {
+		return fmt.Sprintf("store: stale registry head %q: expected %q; registry has no head",
+			e.Name, e.Expected.String())
+	}
+	return fmt.Sprintf("store: stale registry head %q: expected %q; actual head is %q",
+		e.Name, e.Expected.String(), e.Actual.String())
+}
+
+// IsRegistryCASConflict reports whether err is (or wraps) a
+// *RegistryCASConflict.
+func IsRegistryCASConflict(err error) bool {
+	var conflict *RegistryCASConflict
+	return errors.As(err, &conflict)
+}
+
+// CompareAndSetRegistryHead atomically advances name from expected to next. A
+// zero expected requires an absent head. Next must name an existing immutable
+// object. Only the row identified by name is changed.
+func (s *Store) CompareAndSetRegistryHead(name string, expected, next hashref.HashRef) error {
+	if !expected.IsZero() {
+		if err := validateRef("CompareAndSetRegistryHead", "expected", expected); err != nil {
+			return err
+		}
+	}
+	if err := validateRef("CompareAndSetRegistryHead", "next", next); err != nil {
+		return err
+	}
+
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("store: compare and set registry head %q: begin: %w", name, err)
+	}
+	defer tx.Rollback()
+
+	var exists int
+	switch err := tx.QueryRow(`SELECT 1 FROM objects WHERE hash_ref = ?;`, next.String()).Scan(&exists); {
+	case errors.Is(err, sql.ErrNoRows):
+		return fmt.Errorf("store: compare and set registry head %q: next object %q does not exist", name, next.String())
+	case err != nil:
+		return fmt.Errorf("store: compare and set registry head %q: check next object: %w", name, err)
+	}
+
+	actual, hadHead, err := registryHeadTx(tx, name)
+	if err != nil {
+		return err
+	}
+	if hadHead != !expected.IsZero() || (hadHead && actual != expected) {
+		return &RegistryCASConflict{Name: name, Expected: expected, Actual: actual, HadHead: hadHead}
+	}
+
+	_, err = tx.Exec(
+		`INSERT INTO epoch_registry_heads (registry_name, object_ref) VALUES (?, ?)
+		 ON CONFLICT(registry_name) DO UPDATE SET object_ref = excluded.object_ref;`,
+		name, next.String(),
+	)
+	if err != nil {
+		return fmt.Errorf("store: compare and set registry head %q: write: %w", name, err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("store: compare and set registry head %q: commit: %w", name, err)
+	}
+	return nil
+}
+
+func registryHeadTx(q interface {
+	QueryRow(string, ...any) *sql.Row
+}, name string) (hashref.HashRef, bool, error) {
+	var text string
+	switch err := q.QueryRow(
+		`SELECT object_ref FROM epoch_registry_heads WHERE registry_name = ?;`, name,
+	).Scan(&text); {
+	case errors.Is(err, sql.ErrNoRows):
+		return hashref.HashRef{}, false, nil
+	case err != nil:
+		return hashref.HashRef{}, false, fmt.Errorf("store: read registry head %q: %w", name, err)
 	}
 	ref, err := hashref.Parse(text)
 	if err != nil {

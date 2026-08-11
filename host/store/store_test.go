@@ -2,6 +2,7 @@ package store
 
 import (
 	"errors"
+	"sync"
 	"testing"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
@@ -280,6 +281,161 @@ func TestRegistryHeadRoundTrip(t *testing.T) {
 	if got2.String() != reg2.String() {
 		t.Fatalf("registry head not updated: got %q want %q", got2, reg2)
 	}
+}
+
+func TestCompareAndSetRegistryHead(t *testing.T) {
+	put := func(t *testing.T, s *Store, payload string) Object {
+		t.Helper()
+		o := obj(payload, TransitionRegistryV1)
+		if err := s.PutObject(o); err != nil {
+			t.Fatalf("PutObject(%q): %v", payload, err)
+		}
+		return o
+	}
+	assertHead := func(t *testing.T, s *Store, name string, want hashref.HashRef, wantOK bool) {
+		t.Helper()
+		got, ok, err := s.GetRegistryHead(name)
+		if err != nil || ok != wantOK || (ok && got != want) {
+			t.Fatalf("GetRegistryHead(%q) = (%q,%v,%v), want (%q,%v,nil)", name, got, ok, err, want, wantOK)
+		}
+	}
+
+	t.Run("absent_head_accepts_zero_expected", func(t *testing.T) {
+		s := openMem(t)
+		next := put(t, s, "next")
+		if err := s.CompareAndSetRegistryHead(TransitionRegistryV1, hashref.HashRef{}, next.Hash); err != nil {
+			t.Fatalf("CompareAndSetRegistryHead: %v", err)
+		}
+		assertHead(t, s, TransitionRegistryV1, next.Hash, true)
+	})
+
+	t.Run("absent_head_rejects_nonzero_expected", func(t *testing.T) {
+		s := openMem(t)
+		expected := put(t, s, "expected")
+		next := put(t, s, "next")
+		err := s.CompareAndSetRegistryHead(TransitionRegistryV1, expected.Hash, next.Hash)
+		var conflict *RegistryCASConflict
+		if !errors.As(err, &conflict) || !IsRegistryCASConflict(err) || conflict.HadHead || conflict.Expected != expected.Hash || !conflict.Actual.IsZero() {
+			t.Fatalf("conflict = %#v, err=%v", conflict, err)
+		}
+		assertHead(t, s, TransitionRegistryV1, hashref.HashRef{}, false)
+	})
+
+	t.Run("stale_expected_conflicts", func(t *testing.T) {
+		s := openMem(t)
+		actual := put(t, s, "actual")
+		expected := put(t, s, "expected")
+		next := put(t, s, "next")
+		if err := s.SetRegistryHead(TransitionRegistryV1, actual.Hash); err != nil {
+			t.Fatal(err)
+		}
+		err := s.CompareAndSetRegistryHead(TransitionRegistryV1, expected.Hash, next.Hash)
+		var conflict *RegistryCASConflict
+		if !errors.As(err, &conflict) || !conflict.HadHead || conflict.Expected != expected.Hash || conflict.Actual != actual.Hash {
+			t.Fatalf("conflict = %#v, err=%v", conflict, err)
+		}
+		assertHead(t, s, TransitionRegistryV1, actual.Hash, true)
+	})
+
+	t.Run("dangling_next_refused", func(t *testing.T) {
+		s := openMem(t)
+		actual := put(t, s, "actual")
+		if err := s.SetRegistryHead(TransitionRegistryV1, actual.Hash); err != nil {
+			t.Fatal(err)
+		}
+		dangling := hashref.SumSHA256([]byte("absent"))
+		if err := s.CompareAndSetRegistryHead(TransitionRegistryV1, actual.Hash, dangling); err == nil {
+			t.Fatal("CompareAndSetRegistryHead accepted a dangling next object")
+		}
+		assertHead(t, s, TransitionRegistryV1, actual.Hash, true)
+	})
+
+	t.Run("rollback_leaves_head_unchanged", func(t *testing.T) {
+		s := openMem(t)
+		actual := put(t, s, "actual")
+		stale := put(t, s, "stale")
+		next := put(t, s, "next")
+		if err := s.SetRegistryHead(TransitionRegistryV1, actual.Hash); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.CompareAndSetRegistryHead(TransitionRegistryV1, stale.Hash, next.Hash); err == nil {
+			t.Fatal("stale CAS succeeded")
+		}
+		assertHead(t, s, TransitionRegistryV1, actual.Hash, true)
+		if err := s.CompareAndSetRegistryHead(TransitionRegistryV1, actual.Hash, hashref.SumSHA256([]byte("missing"))); err == nil {
+			t.Fatal("dangling CAS succeeded")
+		}
+		assertHead(t, s, TransitionRegistryV1, actual.Hash, true)
+	})
+
+	t.Run("epoch_registry_isolation", func(t *testing.T) {
+		s := openMem(t)
+		epoch := put(t, s, "epoch")
+		transition := put(t, s, "transition")
+		epochNext := put(t, s, "epoch-next")
+		if err := s.SetRegistryHead(EpochRegistryV1, epoch.Hash); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.CompareAndSetRegistryHead(TransitionRegistryV1, hashref.HashRef{}, transition.Hash); err != nil {
+			t.Fatal(err)
+		}
+		assertHead(t, s, EpochRegistryV1, epoch.Hash, true)
+		assertHead(t, s, TransitionRegistryV1, transition.Hash, true)
+		if err := s.CompareAndSetRegistryHead(EpochRegistryV1, epoch.Hash, epochNext.Hash); err != nil {
+			t.Fatal(err)
+		}
+		assertHead(t, s, EpochRegistryV1, epochNext.Hash, true)
+		assertHead(t, s, TransitionRegistryV1, transition.Hash, true)
+	})
+
+	t.Run("concurrent_racers_one_winner", func(t *testing.T) {
+		s := openMem(t)
+		const racers = 8
+		next := make([]Object, racers)
+		for i := range next {
+			next[i] = put(t, s, string(rune('a'+i)))
+		}
+		start := make(chan struct{})
+		errs := make(chan error, racers)
+		var wg sync.WaitGroup
+		for i := range next {
+			wg.Add(1)
+			go func(i int) {
+				defer wg.Done()
+				<-start
+				errs <- s.CompareAndSetRegistryHead(TransitionRegistryV1, hashref.HashRef{}, next[i].Hash)
+			}(i)
+		}
+		close(start)
+		wg.Wait()
+		close(errs)
+		wins, conflicts := 0, 0
+		for err := range errs {
+			if err == nil {
+				wins++
+			} else if IsRegistryCASConflict(err) {
+				conflicts++
+			} else {
+				t.Fatalf("unexpected racer error: %v", err)
+			}
+		}
+		if wins != 1 || conflicts != racers-1 {
+			t.Fatalf("wins=%d conflicts=%d, want 1/%d", wins, conflicts, racers-1)
+		}
+		head, ok, err := s.GetRegistryHead(TransitionRegistryV1)
+		if err != nil || !ok {
+			t.Fatalf("final head: ok=%v err=%v", ok, err)
+		}
+		found := false
+		for _, candidate := range next {
+			if candidate.Hash == head {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatalf("final head %q was not a racer", head)
+		}
+	})
 }
 
 // TestVerificationCacheKeyIsExactlyThePair proves the cache key is
