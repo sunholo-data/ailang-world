@@ -2,12 +2,15 @@ package transitionreg
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/store"
 )
 
 type EffectRequirement struct {
@@ -29,6 +32,125 @@ type Revision struct {
 	Revision      int64
 	Parent        hashref.HashRef
 	Entries       []Descriptor
+}
+
+// ObjectStore is the persistence boundary used by readers and publishers.
+// Keeping it narrow makes store failures directly injectable in tests.
+type ObjectStore interface {
+	GetRegistryHead(string) (hashref.HashRef, bool, error)
+	GetObject(hashref.HashRef) (store.Object, bool, error)
+	PutObject(store.Object) error
+	CompareAndSetRegistryHead(string, hashref.HashRef, hashref.HashRef) error
+}
+
+// Reader exposes an eager, immutable view of one registry revision.
+type Reader interface {
+	ReadSnapshot(context.Context) (Snapshot, error)
+}
+
+// Snapshot is a self-contained view of a single immutable registry head.
+type Snapshot struct {
+	Head     hashref.HashRef
+	Revision int64
+	entries  []Descriptor
+}
+
+// StoreReader reads transition revisions and caches validated parsed objects by
+// their immutable content hash. The registry head is never cached.
+type StoreReader struct {
+	store ObjectStore
+	mu    sync.RWMutex
+	cache map[hashref.HashRef]Snapshot
+}
+
+func NewReader(objects ObjectStore) *StoreReader {
+	return &StoreReader{store: objects, cache: make(map[hashref.HashRef]Snapshot)}
+}
+
+func (r *StoreReader) ReadSnapshot(ctx context.Context) (Snapshot, error) {
+	if err := ctx.Err(); err != nil {
+		return Snapshot{}, fmt.Errorf("read transition registry: context: %w", err)
+	}
+	head, ok, err := r.store.GetRegistryHead(store.TransitionRegistryV1)
+	if err != nil {
+		return Snapshot{}, fmt.Errorf("read transition registry head: %w", err)
+	}
+	if !ok {
+		return Snapshot{}, errors.New("read transition registry: head is absent")
+	}
+
+	r.mu.RLock()
+	cached, found := r.cache[head]
+	r.mu.RUnlock()
+	if found {
+		return cloneSnapshot(cached), nil
+	}
+
+	object, ok, err := r.store.GetObject(head)
+	if err != nil {
+		return Snapshot{}, fmt.Errorf("read transition registry object: %w", err)
+	}
+	if !ok {
+		return Snapshot{}, fmt.Errorf("read transition registry: object %q is absent", head.String())
+	}
+	if got := hashref.SumSHA256(object.Payload); got != head || object.Hash != head {
+		return Snapshot{}, fmt.Errorf("read transition registry: object hash mismatch for %q", head.String())
+	}
+	if object.SemanticID != SemanticIDV1 {
+		return Snapshot{}, fmt.Errorf("read transition registry: semantic ID %q is not %q", object.SemanticID, SemanticIDV1)
+	}
+	if object.InterfaceHash != InterfaceHashV1 {
+		return Snapshot{}, fmt.Errorf("read transition registry: interface hash %q is not %q", object.InterfaceHash, InterfaceHashV1)
+	}
+	revision, err := DecodeRevision(object.Payload)
+	if err != nil {
+		return Snapshot{}, fmt.Errorf("read transition registry revision: %w", err)
+	}
+	if revision.Revision == 0 && !revision.Parent.IsZero() {
+		return Snapshot{}, errors.New("read transition registry revision: revision 0 must have no parent")
+	}
+	if revision.Revision > 0 && revision.Parent.IsZero() && revision.Revision != 1 {
+		return Snapshot{}, errors.New("read transition registry revision: revision after 1 must have a parent")
+	}
+
+	parsed := Snapshot{Head: head, Revision: revision.Revision, entries: cloneDescriptors(revision.Entries)}
+	r.mu.Lock()
+	if existing, exists := r.cache[head]; exists {
+		parsed = existing
+	} else {
+		r.cache[head] = parsed
+	}
+	r.mu.Unlock()
+	return cloneSnapshot(parsed), nil
+}
+
+func (s Snapshot) Lookup(id string) (Descriptor, bool) {
+	i := sort.Search(len(s.entries), func(i int) bool { return CompareID(s.entries[i].ID, id) >= 0 })
+	if i == len(s.entries) || s.entries[i].ID != id {
+		return Descriptor{}, false
+	}
+	return cloneDescriptor(s.entries[i]), true
+}
+
+func (s Snapshot) List() []Descriptor { return cloneDescriptors(s.entries) }
+
+func cloneSnapshot(s Snapshot) Snapshot {
+	return Snapshot{Head: s.Head, Revision: s.Revision, entries: cloneDescriptors(s.entries)}
+}
+
+func cloneDescriptors(entries []Descriptor) []Descriptor {
+	out := make([]Descriptor, len(entries))
+	for i := range entries {
+		out[i] = cloneDescriptor(entries[i])
+	}
+	return out
+}
+
+func cloneDescriptor(d Descriptor) Descriptor {
+	d.InputSchema = append([]byte(nil), d.InputSchema...)
+	d.OutputSchema = append([]byte(nil), d.OutputSchema...)
+	d.DeclaredEffects = append([]EffectRequirement(nil), d.DeclaredEffects...)
+	return d
 }
 
 func (d Descriptor) Validate() error {

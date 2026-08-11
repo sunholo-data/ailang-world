@@ -2,11 +2,15 @@ package transitionreg
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"strings"
+	"sync"
 	"testing"
 	"unicode/utf8"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/store"
 )
 
 var (
@@ -16,6 +20,150 @@ var (
 
 func validDescriptor() Descriptor {
 	return Descriptor{ID: "tools.echo", TransitionFn: testFn, Interpreter: testInterpreter, SemanticsEpoch: 1, InputSchema: []byte(`{}`), OutputSchema: []byte(`{}`), Access: EffectRequirement{Effect: "read", Scope: "world", Cost: 1}, DeclaredEffects: []EffectRequirement{{Effect: "read", Scope: "world", Cost: 1}}, Title: "Echo", Description: "test"}
+}
+
+type fakeObjectStore struct {
+	mu          sync.Mutex
+	head        hashref.HashRef
+	hasHead     bool
+	headErr     error
+	object      store.Object
+	hasObject   bool
+	objectErr   error
+	headReads   int
+	objectReads int
+	putErr      error
+	casErr      error
+}
+
+func (f *fakeObjectStore) GetRegistryHead(string) (hashref.HashRef, bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.headReads++
+	return f.head, f.hasHead, f.headErr
+}
+func (f *fakeObjectStore) GetObject(hashref.HashRef) (store.Object, bool, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.objectReads++
+	return f.object, f.hasObject, f.objectErr
+}
+func (f *fakeObjectStore) PutObject(store.Object) error { return f.putErr }
+func (f *fakeObjectStore) CompareAndSetRegistryHead(string, hashref.HashRef, hashref.HashRef) error {
+	return f.casErr
+}
+
+func storedRevision(t *testing.T, r Revision) store.Object {
+	t.Helper()
+	payload, err := EncodeRevision(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return store.Object{Hash: hashref.SumSHA256(payload), InterfaceHash: InterfaceHashV1, SemanticID: SemanticIDV1, Payload: payload}
+}
+
+func fakeWithRevision(t *testing.T, r Revision) *fakeObjectStore {
+	o := storedRevision(t, r)
+	return &fakeObjectStore{head: o.Hash, hasHead: true, object: o, hasObject: true}
+}
+
+func TestReadSnapshotReadsHeadOnce(t *testing.T) {
+	f := fakeWithRevision(t, validRevision(validDescriptor()))
+	r := NewReader(f)
+	first, err := r.ReadSnapshot(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := r.ReadSnapshot(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first.Head != second.Head || f.headReads != 2 {
+		t.Fatalf("head reads = %d, want one per call; heads %q/%q", f.headReads, first.Head, second.Head)
+	}
+	if f.objectReads != 1 {
+		t.Fatalf("object reads = %d, want 1 across cache hit", f.objectReads)
+	}
+}
+
+func TestSnapshotIsEagerAndCopyIsolated(t *testing.T) {
+	d := validDescriptor()
+	d.InputSchema = []byte(`{"in":1}`)
+	d.OutputSchema = []byte(`{"out":2}`)
+	f := fakeWithRevision(t, validRevision(d))
+	r := NewReader(f)
+	s, err := r.ReadSnapshot(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Mutating construction inputs and store bytes cannot affect the parsed snapshot.
+	d.InputSchema[2] = 'X'
+	f.object.Payload[0] = '['
+	list := s.List()
+	list[0].ID = "changed"
+	list[0].InputSchema[2] = 'Y'
+	lookup, ok := s.Lookup("tools.echo")
+	if !ok {
+		t.Fatal("lookup missed frozen descriptor")
+	}
+	lookup.OutputSchema[2] = 'Z'
+	lookup.DeclaredEffects[0].Effect = "changed"
+
+	again := s.List()
+	got, ok := s.Lookup("tools.echo")
+	if !ok || again[0].ID != "tools.echo" || string(got.InputSchema) != `{"in":1}` || string(got.OutputSchema) != `{"out":2}` || got.DeclaredEffects[0].Effect != "read" {
+		t.Fatalf("snapshot alias escaped: list=%+v lookup=%+v ok=%v", again, got, ok)
+	}
+	// Cache returns a fresh deep copy without touching the now-corrupt store bytes.
+	cached, err := r.ReadSnapshot(context.Background())
+	if err != nil || string(cached.List()[0].InputSchema) != `{"in":1}` {
+		t.Fatalf("cache copy changed: snapshot=%+v err=%v", cached.List(), err)
+	}
+}
+
+func TestReadSnapshotRefusals(t *testing.T) {
+	injected := errors.New("injected head read failure")
+	base := fakeWithRevision(t, validRevision(validDescriptor()))
+	tests := []struct {
+		name string
+		want string
+		make func() *fakeObjectStore
+	}{
+		{"absent_head", "head is absent", func() *fakeObjectStore { return &fakeObjectStore{} }},
+		{"injected_read_error", "read transition registry head: injected head read failure", func() *fakeObjectStore { return &fakeObjectStore{headErr: injected} }},
+		{"object_absent", "object \"" + base.head.String() + "\" is absent", func() *fakeObjectStore { f := *base; f.hasObject = false; return &f }},
+		{"corrupt_object_payload", "object hash mismatch", func() *fakeObjectStore {
+			f := *base
+			f.object.Payload = append([]byte(nil), f.object.Payload...)
+			f.object.Payload[0] = '['
+			return &f
+		}},
+		{"wrong_semantic_id", "semantic ID \"wrong/semantic\" is not \"world/transition-registry/v1\"", func() *fakeObjectStore { f := *base; f.object.SemanticID = "wrong/semantic"; return &f }},
+		{"wrong_interface_hash", "interface hash \"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\" is not", func() *fakeObjectStore {
+			f := *base
+			f.object.InterfaceHash = hashref.MustParse("sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc")
+			return &f
+		}},
+		{"revision_raw_over_limit", "raw JSON is 16777217 bytes; limit is 16777216", func() *fakeObjectStore {
+			f := *base
+			f.object.Payload = bytes.Repeat([]byte(" "), maxRevisionRaw+1)
+			f.head = hashref.SumSHA256(f.object.Payload)
+			f.object.Hash = f.head
+			return &f
+		}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := NewReader(tc.make()).ReadSnapshot(context.Background())
+			if err == nil {
+				t.Fatal("invalid snapshot was accepted")
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("refused by wrong branch: got %q, want substring %q", err, tc.want)
+			}
+		})
+	}
 }
 func validRevision(entries ...Descriptor) Revision {
 	return Revision{SemanticID: SemanticIDV1, InterfaceHash: InterfaceHashV1, Revision: 1, Entries: entries}
