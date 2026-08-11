@@ -48,6 +48,19 @@ func (f *fakeObjectStore) GetObject(hashref.HashRef) (store.Object, bool, error)
 	f.objectReads++
 	return f.object, f.hasObject, f.objectErr
 }
+// clone returns an independent fake seeded from f's configuration. It exists
+// because `g := *f` copies the embedded sync.Mutex — `go vet` reports copylocks
+// for that, and `go test`'s default vet subset does not include the copylocks
+// analyzer, so the shape is invisible to `verify_go.sh`. Counters deliberately
+// start at zero: a clone is a fresh observation, never a continuation of f's.
+func (f *fakeObjectStore) clone() *fakeObjectStore {
+	return &fakeObjectStore{
+		head: f.head, hasHead: f.hasHead, headErr: f.headErr,
+		object: f.object, hasObject: f.hasObject, objectErr: f.objectErr,
+		putErr: f.putErr, casErr: f.casErr,
+	}
+}
+
 func (f *fakeObjectStore) PutObject(store.Object) error { return f.putErr }
 func (f *fakeObjectStore) CompareAndSetRegistryHead(string, hashref.HashRef, hashref.HashRef) error {
 	return f.casErr
@@ -129,6 +142,7 @@ func TestSnapshotIsEagerAndCopyIsolated(t *testing.T) {
 
 func TestReadSnapshotRefusals(t *testing.T) {
 	injected := errors.New("injected head read failure")
+	injectedObject := errors.New("injected object read failure")
 	base := fakeWithRevision(t, validRevision(validDescriptor()))
 	tests := []struct {
 		name string
@@ -137,25 +151,40 @@ func TestReadSnapshotRefusals(t *testing.T) {
 	}{
 		{"absent_head", "head is absent", func() *fakeObjectStore { return &fakeObjectStore{} }},
 		{"injected_read_error", "read transition registry head: injected head read failure", func() *fakeObjectStore { return &fakeObjectStore{headErr: injected} }},
-		{"object_absent", "object \"" + base.head.String() + "\" is absent", func() *fakeObjectStore { f := *base; f.hasObject = false; return &f }},
+		{"injected_object_read_error", "read transition registry object: injected object read failure", func() *fakeObjectStore {
+			f := base.clone()
+			f.objectErr = injectedObject
+			return f
+		}},
+		{"object_absent", "object \"" + base.head.String() + "\" is absent", func() *fakeObjectStore { f := base.clone(); f.hasObject = false; return f }},
 		{"corrupt_object_payload", "object hash mismatch", func() *fakeObjectStore {
-			f := *base
+			f := base.clone()
 			f.object.Payload = append([]byte(nil), f.object.Payload...)
 			f.object.Payload[0] = '['
-			return &f
+			return f
 		}},
-		{"wrong_semantic_id", "semantic ID \"wrong/semantic\" is not \"world/transition-registry/v1\"", func() *fakeObjectStore { f := *base; f.object.SemanticID = "wrong/semantic"; return &f }},
+		{"wrong_semantic_id", "semantic ID \"wrong/semantic\" is not \"world/transition-registry/v1\"", func() *fakeObjectStore { f := base.clone(); f.object.SemanticID = "wrong/semantic"; return f }},
 		{"wrong_interface_hash", "interface hash \"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\" is not", func() *fakeObjectStore {
-			f := *base
+			f := base.clone()
 			f.object.InterfaceHash = hashref.MustParse("sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc")
-			return &f
+			return f
 		}},
 		{"revision_raw_over_limit", "raw JSON is 16777217 bytes; limit is 16777216", func() *fakeObjectStore {
-			f := *base
+			f := base.clone()
 			f.object.Payload = bytes.Repeat([]byte(" "), maxRevisionRaw+1)
 			f.head = hashref.SumSHA256(f.object.Payload)
 			f.object.Hash = f.head
-			return &f
+			return f
+		}},
+		// Decision 3's parent/revision chain rules. Both branches shipped with NO
+		// coverage: neutered together with `if false && …` the mutant built and the
+		// WHOLE package stayed green, so a corrupted or tampered object with a broken
+		// revision chain was silently accepted as a valid Snapshot.
+		{"revision_zero_with_parent", "revision 0 must have no parent", func() *fakeObjectStore {
+			return fakeWithRevision(t, Revision{SemanticID: SemanticIDV1, InterfaceHash: InterfaceHashV1, Revision: 0, Parent: testFn, Entries: []Descriptor{validDescriptor()}})
+		}},
+		{"revision_after_one_without_parent", "revision after 1 must have a parent", func() *fakeObjectStore {
+			return fakeWithRevision(t, Revision{SemanticID: SemanticIDV1, InterfaceHash: InterfaceHashV1, Revision: 5, Entries: []Descriptor{validDescriptor()}})
 		}},
 	}
 	for _, tc := range tests {

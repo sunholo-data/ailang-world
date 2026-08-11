@@ -80,6 +80,58 @@ executor's delivered tree, so this adjudication changed nothing.
    have a green single-test inverse, and it would be invisible to anyone reading only the
    mutation's name.
 
+## Evaluator finding — THREE refusal branches shipped with zero coverage (rule 3j), now closed
+
+The `sonnet` evaluator (PASS 86/100) filed two BLOCKING findings that neither the executor nor the
+controller caught. Both were reproduced first-party before being acted on, per the standing rule
+that a judge's finding is a claim like any other — and both are **genuine survivals**: mutant
+LANDED (differing sha256), mutant BUILDS (`go build ./...` rc=0), and the **entire
+`host/transitionreg` package rc=0 with the defect present**.
+
+| branch | file | survived as delivered |
+|---|---|---|
+| `revision == 0 && !parent.IsZero()` | `transitionreg.go:109` | package rc=0 |
+| `revision > 1 && parent.IsZero()` | `transitionreg.go:112` | package rc=0 |
+| `GetObject` error wrapper | `transitionreg.go:89` | package rc=0 |
+
+The first two are Decision 3's parent/revision chain rules; with both neutered together,
+`ReadSnapshot` **silently accepts** a `Revision{Revision: 5, Parent: zero}` as a valid `Snapshot`,
+so a corrupted or tampered object with a broken revision chain reads as valid. The third is the
+generic store-error wrapper: `fakeObjectStore.objectErr` was declared and wired into the fake's
+`GetObject` but **never set to non-nil by any test**, so an injected read error was swallowed
+undetected. That is the same defect class `MUT-READ-SWALLOW` exists to catch, one call deeper.
+
+**Why the sweep missed them, which is the part worth keeping.** The plan's §4.3 rule-3j audit was
+genuinely thorough — eleven previously-unmutated frozen branches — but it enumerated branches
+frozen by Decisions **1, 2 and 4**. Decision **3**'s own chain rules were never audited, and
+neither were the store-error wrappers **T5 itself introduces**. So the gap is not an oversight
+*within* the audit's scope; it is the audit's scope. Rule 3j says the unit of mutation is the
+BRANCH, and an audit anchored to a list of *decisions* silently inherits that list's boundaries —
+including branches written during the sprint, which by construction no pre-sprint enumeration can
+contain.
+
+Three subtests added to `TestReadSnapshotRefusals` (`injected_object_read_error`,
+`revision_zero_with_parent`, `revision_after_one_without_parent`), each pinning its own measured
+message. AC2's count is unchanged at **3** — these are subtests, not new top-level names.
+
+| arm | LANDED | BUILDS | KILL | failing subtest | INVERSE | RESTORE |
+|---|---|---:|---:|---|---:|---|
+| `MUT-REV-CHAIN-ZERO-PARENT` | `5aecd46b…` -> `fa9739aa…` | 0 | 1 | `…/revision_zero_with_parent` | **0** | match |
+| `MUT-REV-CHAIN-MISSING-PARENT` | `5aecd46b…` -> `ec80cf7e…` | 0 | 1 | `…/revision_after_one_without_parent` | **0** | match |
+| `MUT-READ-OBJECT-SWALLOW` | `5aecd46b…` -> `609ace1f…` | 0 | 1 | `…/injected_object_read_error` | **0** | match |
+
+All three are **isolated** kills — each redded by exactly its own subtest, each with a green
+package inverse — so unlike the two arms adjudicated above they satisfy §4.1 step 7 unmodified.
+
+**Also fixed, non-blocking, and instructive about the gate rather than the code:**
+`go vet ./host/transitionreg/...` was **rc=1** with five `copylocks` findings — `f := *base`
+copies `fakeObjectStore`, which embeds a `sync.Mutex`. It escaped review because
+`go test`'s default vet subset **excludes** the `copylocks` analyzer and `verify_go.sh` never
+invokes `go vet` directly, so both the local gate and CI were green on it. Replaced with an
+explicit `clone()` that constructs a fresh fake; `go vet` is now rc=0. Worth noting as a standing
+gap: **a green `go test` is not a green `go vet`**, and nothing in this repo's gate currently
+closes the difference.
+
 **The general point this pair settles, and the reason it is recorded rather than waved through:**
 the plan's §4.1 step 7 requires a green package inverse to prove *your* test is the killer rather
 than a bystander. That is the right check for a mutation whose blast radius is one branch, and it
