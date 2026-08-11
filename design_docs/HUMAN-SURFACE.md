@@ -1,14 +1,24 @@
 # The Human Surface — founding UX design (v0.3)
 
-**Status**: **PICK-TIME QUORUM COMPLETE (iteration 26, 2026-07-28) — PARKED on §7 human
-ratification.** Two rounds, both BLOCKED, all four objections now applied: r1 (unverified backend
-premises · missing Hub conflict surface) in **v0.2** by the rotation designer; r2 (no bounded wait
-on a human — both reviewers, independently) in **v0.3** under the narrow-refinement carve-out,
-using the reviewers' verbatim text. Full record in §9. **v0.1 principles remain PROVISIONALLY
-RATIFIED** (Mark, attended, 2026-07-27: "good principles for now, yes good start") — the binding
-working basis for all human-facing work. What is left is **not** more review: it is the §7
-ratification (total evidence-grade mapping · timeout-policy set · packet-schema freeze timing),
-which is Mark's authority alone. Authored attended (Mark + World coordinator).
+**Status**: **RATIFIED AND BINDING. §7 was formally ratified by Mark on 2026-07-28** (attended
+TRIPLE RATIFICATION — `bc467f1`, *"human-surface v0.3 s7 formally ratified"*), and the charter's
+6b queue row was flipped to match on 2026-07-31 (`ee75837`). **This header was not, and read
+`PARKED on §7 human ratification` for 14 days — corrected 2026-08-11, attended.** It is the header
+a designer reads first, so the stale line said *blocked on a human* about the one thing that was
+already decided. Nothing in this document is waiting on a human decision.
+
+Pick-time quorum completed at iteration 26 (2026-07-28): two rounds, both BLOCKED, all four
+objections applied — r1 (unverified backend premises · missing Hub conflict surface) in **v0.2** by
+the rotation designer; r2 (no bounded wait on a human — both reviewers, independently) in **v0.3**
+under the narrow-refinement carve-out, using the reviewers' verbatim text. Full record in §9. The
+v0.1 principles were provisionally ratified attended on 2026-07-27 ("good principles for now, yes
+good start") and are now covered by the §7 ratification above. Authored attended (Mark + World
+coordinator).
+
+**What gates the work is now a DEPENDENCY, not a decision**: `w-approval-inbox` (queue item 7)
+unblocks when item 5's MCP projection lands, which is itself gated on item 11's `TR.C` binding
+gate. The §7 outputs (total evidence-grade mapping · timeout-policy set · packet-schema freeze
+timing) are ratified inputs to that work, not open questions — implement to them.
 This is the experience-layer peer of [DESIGN.md](DESIGN.md): §11 answered *what surfaces exist*;
 this answers *how humans and the AI state machine actually meet*. **Binding input** for
 `w-approval-inbox` (clause 5) and M6 (generated projections) — neither routes to sprint before

@@ -2219,7 +2219,17 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
    grammar + anti-patterns (grade laundering is the cardinal sin). Mark named this the vision's
    key surface ("an ideal AI language in an AI state machine OS with a NOVEL human interaction
    surface"); no human-facing sprint routes before it is ratified · ratification session ~0.5d
-7. [PARKED until 4 AND 6b land] **w-approval-inbox** · clause-5 · the approval inbox + provenance
+7. [**PARK CONDITION CORRECTED 2026-08-11 (attended) — BLOCKER ROT, THE ITER-70 CLASS AGAIN.** The
+   row read *"PARKED until 4 AND 6b land"* and **BOTH LANDED**: item 4 `w-effect-broker-m3` on
+   2026-07-29 (iter-35, doc in `implemented/`), and 6b's §7 ratification on 2026-07-28 (Mark,
+   attended TRIPLE RATIFICATION — `bc467f1` *"human-surface v0.3 s7 formally ratified"*; the 6b row
+   was flipped 2026-07-31 in `ee75837`). So by its own stated condition this item has been unparked
+   for **13 days** while reading as blocked. **NOTHING HERE IS WAITING ON A HUMAN.** The REAL gate is
+   the one 6b's row names — *"unblocks item 7 the moment item 5's MCP work lands"* — and item 5 is
+   itself gated on item 11's `TR.C` binding gate being GREEN (`TR.A`+`TR.B` deliver the mechanism,
+   not the enforcement). **PARKED until item 5's `P6.B` lands**, and no longer on anything else.
+   Chain at this correction: `TR.A2` → `TR.B` → `TR.C` → item 5 `P6.B` → this item.]
+   **w-approval-inbox** · clause-5 · the approval inbox + provenance
    walk, first as CLI/generated projection (SCENARIOS.md scenario 1/3), **built to
    HUMAN-SURFACE.md** · ~2d
 8. [**[IN-SPRINT] — `SM.D0` LANDED 2026-08-10 (iter-67), PR #55 → squash `a4452d1`, dev CI green BOTH jobs SHA-addressed and step-log verified on the merge commit (`ailang-code verify gate` 11/11 · `go host build + test gate` 13/13, `failed=0`, `checks=2` = expected 2) in a 0-incident window. Evaluator `sonnet` **88/100, ZERO BLOCKING**. THE ENTRYPOINT NOW EXISTS: `SM.D` IS A REAL PROCEDURE AND IS ATTENDED-ONLY — never headless, never CI. THIS ITEM HAS NO HEADLESS-ROUTABLE MILESTONE LEFT; item 9's three pieces are the routable work.**
