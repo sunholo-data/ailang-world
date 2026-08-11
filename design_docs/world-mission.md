@@ -62,6 +62,21 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   gate). Repo-wide sweep: `./scripts/verify_ail.sh` (what CI runs; fails loudly on zero modules).
   Go host code (daemon/store, from M1 onward) adds `go build ./... && go test ./...` to the gate
   when it first lands — extend the CI workflow in the same PR that introduces Go code.
+- **`scripts/mission_directives.sh` DOES NOT EXIST IN THIS REPO — invoke it by ABSOLUTE PATH from
+  the V1 checkout (process fix, iter-72).** Gate 0.6 says to run `scripts/mission_directives.sh`
+  and, in the same breath, forbids hand-rolling the `gh | jq` pipeline it replaces — because the
+  author allowlist that stops arbitrary commenters steering this loop lives *in that script*, not
+  in prose a controller is trusted to retype. But the script is a V1 artifact and was never copied
+  here (measured iter-72: absent from `scripts/`, present at
+  `/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_directives.sh`). A controller that
+  runs the relative path gets `No such file or directory` and is one step from doing exactly the
+  thing the rule forbids — or, worse, from concluding the directive channel is unavailable and
+  skipping it, which silently drops human directives that OUTRANK the queue. It takes `--repo`, so
+  no fork is needed:
+  `/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_directives.sh --issue "$ISSUE"
+  --repo sunholo-data/ailang-world --since "$last"`. Do **not** vendor a copy (frozen core, and a
+  second copy is a second allowlist to drift); if the V1 checkout ever moves, that is a
+  human-decision row, not a licence to hand-roll.
 - **Rig PATH (process fix, iter-18 — 3 instances in ONE iteration)**: the agent tool shell's `PATH`
   does **not** include `/opt/homebrew/bin`, so `gh`, `go`, `node` and `codex` all fail with
   `command not found` / `env: node: No such file or directory` (`rc=127`). Every Bash call that
