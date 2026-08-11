@@ -290,6 +290,10 @@ export MISSION_DESIGNER_MODEL="${MISSION_DESIGNER_MODEL:-claude:claude-fable-5}"
 export MISSION_METERED_BUDGET_USD="${MISSION_METERED_BUDGET_USD:-5}"
 export MISSION_PLANNER_MODEL="${MISSION_PLANNER_MODEL:-opus}"
 export MISSION_EXECUTOR_MODEL="${MISSION_EXECUTOR_MODEL:-codex:gpt-5.6-sol}"
+# EXECUTOR FALLBACK CHAIN — ailang#611 (2026-08-11). Ratified: codex default,
+# deepseek the replacement when codex is dry, opus the last resort. Kept identical
+# to the V1 driver so both missions route the same way.
+export MISSION_EXECUTOR_FALLBACK="${MISSION_EXECUTOR_FALLBACK:-pi:openrouter/deepseek/deepseek-v4-flash-0731:floor}"
 # Codex-lane pre-flight (2026-07-27): subscription quota is invisible until it errors, so probe
 # once per fire. Any probe failure → fall back to opus THIS fire only (logged, never wedged).
 #
@@ -311,8 +315,30 @@ case "$MISSION_EXECUTOR_MODEL" in codex:*)
     if [ $cx_rc -eq 124 ]; then cx_why="probe timed out after ${PROBE_TIMEOUT}s"
     elif printf '%s' "$cx_out" | grep -qiE "$QUOTA_SIG"; then cx_why="quota-limited"
     else cx_why="probe failed (rc=$cx_rc)"; fi
-    log "codex executor lane $cx_why for model '$cx_model' -> falling back to opus for this fire"
+    # Hand off to the NEXT link, not straight to opus (ailang#611). The pi loop
+    # below probes a `pi:*` value and degrades to opus itself — that is what makes
+    # codex -> deepseek -> opus a real chain rather than two independent cliffs.
+    _fb="${MISSION_EXECUTOR_FALLBACK:-opus}"
+    log "codex executor lane $cx_why for model '$cx_model' -> falling back to '$_fb' for this fire"
     log "codex probe output: $(printf '%s' "$cx_out" | tail -3 | tr '\n' ' ')"
+    MISSION_EXECUTOR_MODEL="$_fb"; export MISSION_EXECUTOR_MODEL
+  fi
+  ;;
+esac
+# pi-lane pre-flight (ported from the V1 driver, ailang#611, 2026-08-11). World had
+# NO pi loop, so before this a `pi:*` value here ran UNPROBED — mission-world.env
+# said exactly that. Probe is ~1 reply-token; the OpenRouter key rides
+# ~/.pi/agent/models.json (custom provider), not env, so it is headless-safe.
+# BASH 3.2 (L19): no associative arrays, no ${var,,}.
+case "$MISSION_EXECUTOR_MODEL" in pi:*)
+  pi_model="${MISSION_EXECUTOR_MODEL#pi:}"
+  _mc_bounded "$PROBE_TIMEOUT" pi --mode json --no-session --no-tools --model "$pi_model" -p 'reply with exactly: ok'
+  pi_rc=$?; pi_out="$MC_BOUNDED_OUT"
+  if [ $pi_rc -ne 0 ]; then
+    if [ $pi_rc -eq 124 ]; then pi_why="probe timed out after ${PROBE_TIMEOUT}s"
+    else pi_why="probe failed (rc=$pi_rc)"; fi
+    log "pi executor lane $pi_why for model '$pi_model' -> falling back to opus for this fire"
+    log "pi probe output: $(printf '%s' "$pi_out" | tail -3 | tr '\n' ' ')"
     MISSION_EXECUTOR_MODEL="opus"; export MISSION_EXECUTOR_MODEL
   fi
   ;;
