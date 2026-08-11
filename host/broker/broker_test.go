@@ -96,6 +96,35 @@ func TestCapabilitySnapshotEpochAndIsolation(t *testing.T) {
 			t.Fatalf("replay epoch = %d, want 1", got)
 		}
 	})
+	// debitGrant has THREE call sites: the live invoke, the succeeded-replay
+	// path, and the failed-replay path. The subtest above covers the second;
+	// this one covers the THIRD, which is otherwise untested — neutering only
+	// the failed-replay bump (keeping its budget write) leaves the entire
+	// package green. Same "guard the helper, miss the call site" shape as
+	// MUT-BIND-DECLARED-ALIAS, one layer down.
+	t.Run("replay_debit_increments_epoch_on_failure", func(t *testing.T) {
+		st := openTestStore(t)
+		req := EffectRequest{"probe", "/ok", 2, 1}
+		live := NewSession(st, "snapshot-replay-failed", []Capability{grant}, Registry{"probe": HandlerFunc(
+			func(context.Context, EffectRequest, []byte) ([]byte, error) {
+				return nil, errors.New("handler failed")
+			},
+		)})
+		_, ref, liveErr := live.Invoke(context.Background(), req, nil)
+		var failed *EffectFailedError
+		if !errors.As(liveErr, &failed) {
+			t.Fatalf("live error = %v, want *EffectFailedError", liveErr)
+		}
+
+		replay := NewReplaySession(st, []Capability{grant}, nil, []hashref.HashRef{ref})
+		before := replay.CapabilitySnapshot(1).Epoch
+		if _, _, err := replay.Invoke(context.Background(), req, nil); !errors.As(err, &failed) {
+			t.Fatalf("replay error = %v, want *EffectFailedError", err)
+		}
+		if after := replay.CapabilitySnapshot(1).Epoch; after != before+1 {
+			t.Fatalf("epoch after failed-replay debit = %d, want %d", after, before+1)
+		}
+	})
 	t.Run("snapshot_is_isolated_from_later_debit", func(t *testing.T) {
 		s, _ := newLive(t)
 		snap := s.CapabilitySnapshot(1)

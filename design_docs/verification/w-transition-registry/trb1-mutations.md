@@ -148,3 +148,52 @@ multi-grant ledger. So the delegation evidence for *ranking* rests solely on the
 `ranked_best_denial_across_three_grants`, not on co-detection with landed coverage.
 Recorded rather than smoothed over — it is weaker evidence than the plan assumed,
 though the pin itself is real and non-vacuous.
+
+---
+
+# Evaluator finding — a SECOND uncovered call site, in the mechanism the sweep audited
+
+The independent evaluator (`sonnet`, generator≠judge — the executor ran on
+`codex:gpt-5.6-sol`) was handed the `debitGrant` extraction as a named target and found
+a blocking gap the controller's own 18-arm sweep missed. **Reproduced first-party before
+acting on it**, per the rule that a judge's finding is a claim like any other:
+
+- Mutation: at the **failed**-replay branch (`broker.go:390`) only, replace
+  `s.debitGrant(grantIndex, decision.Remaining)` with a direct
+  `s.grants[grantIndex].Budget = decision.Remaining` — i.e. keep the budget write, drop
+  the epoch bump. The live site (`:245`) and the succeeded-replay site (`:403`) are left
+  untouched (control: `grep -c 'debitGrant(grantIndex'` = **2** after the mutation).
+- **LANDED** — sha256 `8044a6503cb8` → `dec185739972`.
+- **BUILDS** — `go build ./...` rc=0.
+- **SURVIVED** — whole `./host/broker` rc=0, **0 FAIL**, `ok 35.554s` with the defect
+  present.
+
+`debitGrant` has **three** call sites. `replay_debit_increments_epoch` covers the
+succeeded-replay one; the live one is covered by
+`allowed_invoke_increments_epoch_exactly_once`. The **failed**-replay one was covered by
+nothing — `TestReplayOfFailedRecordReproducesTheFailure` exercises that branch but never
+asserts `Epoch` or `Budget`. T1's exit-gate language claims the subtest pins that "the
+replay debit **sites** are on the same mechanism", plural; only one of the two was
+actually pinned.
+
+**This is the same shape as `J6`, one layer down, and that is the durable finding.** The
+production code is correct today — all three sites really do call the one mechanism — so
+every direct observation agrees with the claim. What is missing is the assertion that
+would notice a future edit breaking only the third site. A sweep that unifies three call
+sites into one mechanism naturally tests *the mechanism*, and the thing it stops testing
+is *the sites*. Two instances in one milestone (`J6`'s input-side copy, and this), plus
+three in the previous one, is now this repo's most reliably recurring defect class:
+**guard the helper, miss the call site.**
+
+**Fixed in-PR** by the subtest `replay_debit_increments_epoch_on_failure`, which drives a
+live invoke through a failing handler, replays the resulting failed record, and asserts
+the epoch advances by exactly 1 across the failed-replay debit. Re-run against the
+identical mutant (same sha256 `dec185739972`, `go build` rc=0): **KILLS**, failing exactly
+`TestCapabilitySnapshotEpochAndIsolation/replay_debit_increments_epoch_on_failure`, and
+the inverse arm (`-skip` that test, whole package) is **rc=0 with 0 FAIL** — the new
+subtest is the killer, not a bystander. Restored byte-identical. A SUBTEST, so AC5 stays
+at exactly 2.
+
+Post-fix gates, all outside the sandbox: `verify_go.sh` **rc=0** (0 FAIL; broker 48.180s
+plain / 90.886s race, transitionreg 2.860s / 2.999s), `go vet ./host/...` **rc=0**,
+AC5 **count=2**.
