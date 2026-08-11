@@ -165,6 +165,184 @@ func TestReadSnapshotRefusals(t *testing.T) {
 		})
 	}
 }
+
+func openTransitionStore(t *testing.T) *store.Store {
+	t.Helper()
+	s, err := store.Open(":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+	return s
+}
+
+func seedRevision(t *testing.T, s *store.Store, r Revision) hashref.HashRef {
+	t.Helper()
+	o := storedRevision(t, r)
+	if err := s.PutObject(o); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.CompareAndSetRegistryHead(store.TransitionRegistryV1, hashref.HashRef{}, o.Hash); err != nil {
+		t.Fatal(err)
+	}
+	return o.Hash
+}
+
+func TestPublishCASConflictPreservesWinner(t *testing.T) {
+	s := openTransitionStore(t)
+	current := validRevision(validDescriptor())
+	expected := seedRevision(t, s, current)
+	dA := validDescriptor()
+	dA.Title = "winner"
+	dB := validDescriptor()
+	dB.Title = "loser"
+	nextA, err := BuildNext(current, []Change{{ID: dA.ID, Descriptor: &dA}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	nextB, err := BuildNext(current, []Change{{ID: dB.ID, Descriptor: &dB}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	p := NewReader(s)
+	winner, err := p.Publish(context.Background(), expected, nextA)
+	if err != nil {
+		t.Fatal(err)
+	}
+	orphan, err := p.Publish(context.Background(), expected, nextB)
+	if err == nil || !store.IsRegistryCASConflict(err) {
+		t.Fatalf("stale publication error = %v, want typed CAS conflict", err)
+	}
+	head, ok, err := s.GetRegistryHead(store.TransitionRegistryV1)
+	if err != nil || !ok || head != winner {
+		t.Fatalf("winner was not preserved: head=%q ok=%v err=%v", head, ok, err)
+	}
+	loserBytes, _ := EncodeRevision(nextB)
+	loserRef := hashref.SumSHA256(loserBytes)
+	if orphan != (hashref.HashRef{}) {
+		t.Fatalf("failed publish returned ref %q", orphan)
+	}
+	if _, ok, err := s.GetObject(loserRef); err != nil || !ok {
+		t.Fatalf("CAS orphan was not preserved: ok=%v err=%v", ok, err)
+	}
+}
+
+func TestConcurrentPublishHasOneWinner(t *testing.T) {
+	s := openTransitionStore(t)
+	p := NewReader(s)
+	next := validRevision(validDescriptor())
+	const racers = 8
+	start := make(chan struct{})
+	var ready sync.WaitGroup
+	var done sync.WaitGroup
+	ready.Add(racers)
+	done.Add(racers)
+	errs := make(chan error, racers)
+	for i := 0; i < racers; i++ {
+		go func() {
+			defer done.Done()
+			ready.Done()
+			<-start
+			_, err := p.Publish(context.Background(), hashref.HashRef{}, next)
+			errs <- err
+		}()
+	}
+	ready.Wait()
+	close(start)
+	done.Wait()
+	close(errs)
+	winners, conflicts := 0, 0
+	for err := range errs {
+		switch {
+		case err == nil:
+			winners++
+		case store.IsRegistryCASConflict(err):
+			conflicts++
+		default:
+			t.Fatalf("unexpected racer error: %v", err)
+		}
+	}
+	if winners != 1 || conflicts != racers-1 {
+		t.Fatalf("winners=%d conflicts=%d, want 1/%d", winners, conflicts, racers-1)
+	}
+}
+
+func TestStableIDByteOrder(t *testing.T) {
+	if CompareID("a", "ab") >= 0 {
+		t.Fatal("prefix did not sort shorter first")
+	}
+	for a := 0; a < 256; a++ {
+		for b := 0; b < 256; b++ {
+			got := CompareID(string([]byte{byte(a)}), string([]byte{byte(b)}))
+			if (a < b && got >= 0) || (a == b && got != 0) || (a > b && got <= 0) {
+				t.Fatalf("unsigned byte order failed for %d/%d: %d", a, b, got)
+			}
+		}
+	}
+	current := validRevision()
+	da, db := validDescriptor(), validDescriptor()
+	da.ID, db.ID = "ab", "a"
+	next, err := BuildNext(current, []Change{{ID: da.ID, Descriptor: &da}, {ID: db.ID, Descriptor: &db}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := []string{next.Entries[0].ID, next.Entries[1].ID}; got[0] != "a" || got[1] != "ab" {
+		t.Fatalf("BuildNext order = %v", got)
+	}
+}
+
+func TestPublishRefusals(t *testing.T) {
+	current := validRevision(validDescriptor())
+	currentObject := storedRevision(t, current)
+	baseNext, err := BuildNext(current, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		name string
+		want string
+		make func() (*fakeObjectStore, hashref.HashRef, Revision)
+	}{
+		{"revision_not_n_plus_1", "revision 3 is not expected 2", func() (*fakeObjectStore, hashref.HashRef, Revision) {
+			n := baseNext
+			n.Revision = 3
+			return &fakeObjectStore{object: currentObject, hasObject: true}, currentObject.Hash, n
+		}},
+		{"parent_not_captured_head", "parent \"\" is not captured head", func() (*fakeObjectStore, hashref.HashRef, Revision) {
+			n := baseNext
+			n.Parent = hashref.HashRef{}
+			return &fakeObjectStore{object: currentObject, hasObject: true}, currentObject.Hash, n
+		}},
+		{"duplicate_id", "entries are not strictly ordered by ID", func() (*fakeObjectStore, hashref.HashRef, Revision) {
+			n := baseNext
+			n.Entries = append(n.Entries, cloneDescriptor(n.Entries[0]))
+			return &fakeObjectStore{object: currentObject, hasObject: true}, currentObject.Hash, n
+		}},
+		{"entries_over_1024", "entries exceeds 1024", func() (*fakeObjectStore, hashref.HashRef, Revision) {
+			n := baseNext
+			n.Entries = make([]Descriptor, maxEntries+1)
+			return &fakeObjectStore{object: currentObject, hasObject: true}, currentObject.Hash, n
+		}},
+		{"injected_put_error", "put object: injected put failure", func() (*fakeObjectStore, hashref.HashRef, Revision) {
+			return &fakeObjectStore{object: currentObject, hasObject: true, putErr: errors.New("injected put failure")}, currentObject.Hash, baseNext
+		}},
+		{"injected_cas_error", "compare and set head: injected CAS failure", func() (*fakeObjectStore, hashref.HashRef, Revision) {
+			return &fakeObjectStore{object: currentObject, hasObject: true, casErr: errors.New("injected CAS failure")}, currentObject.Hash, baseNext
+		}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			f, expected, next := tc.make()
+			_, err := NewReader(f).Publish(context.Background(), expected, next)
+			if err == nil {
+				t.Fatal("invalid publication was accepted")
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("refused by wrong branch: got %q, want substring %q", err, tc.want)
+			}
+		})
+	}
+}
 func validRevision(entries ...Descriptor) Revision {
 	return Revision{SemanticID: SemanticIDV1, InterfaceHash: InterfaceHashV1, Revision: 1, Entries: entries}
 }

@@ -153,6 +153,116 @@ func cloneDescriptor(d Descriptor) Descriptor {
 	return d
 }
 
+// Change replaces the descriptor named by ID, or removes it when Descriptor is
+// nil. A replacement descriptor must carry the same stable ID.
+type Change struct {
+	ID         string
+	Descriptor *Descriptor
+}
+
+// BuildNext applies changes without mutating current or its descriptors.
+func BuildNext(current Revision, changes []Change) (Revision, error) {
+	if err := current.Validate(); err != nil {
+		return Revision{}, fmt.Errorf("build next: current revision: %w", err)
+	}
+	currentBytes, err := EncodeRevision(current)
+	if err != nil {
+		return Revision{}, fmt.Errorf("build next: encode current: %w", err)
+	}
+	byID := make(map[string]Descriptor, len(current.Entries)+len(changes))
+	for _, d := range current.Entries {
+		byID[d.ID] = cloneDescriptor(d)
+	}
+	seenChanges := make(map[string]struct{}, len(changes))
+	for _, change := range changes {
+		if err := validateID(change.ID); err != nil {
+			return Revision{}, fmt.Errorf("build next: change ID: %w", err)
+		}
+		if _, duplicate := seenChanges[change.ID]; duplicate {
+			return Revision{}, fmt.Errorf("build next: duplicate change ID %q", change.ID)
+		}
+		seenChanges[change.ID] = struct{}{}
+		if change.Descriptor == nil {
+			delete(byID, change.ID)
+			continue
+		}
+		if change.Descriptor.ID != change.ID {
+			return Revision{}, fmt.Errorf("build next: replacement ID %q does not match change ID %q", change.Descriptor.ID, change.ID)
+		}
+		if err := change.Descriptor.Validate(); err != nil {
+			return Revision{}, fmt.Errorf("build next: descriptor %q: %w", change.ID, err)
+		}
+		byID[change.ID] = cloneDescriptor(*change.Descriptor)
+	}
+	entries := make([]Descriptor, 0, len(byID))
+	for _, d := range byID {
+		entries = append(entries, d)
+	}
+	entries, err = SortedDescriptors(entries)
+	if err != nil {
+		return Revision{}, fmt.Errorf("build next: %w", err)
+	}
+	next := Revision{
+		SemanticID:    SemanticIDV1,
+		InterfaceHash: InterfaceHashV1,
+		Revision:      current.Revision + 1,
+		Parent:        hashref.SumSHA256(currentBytes),
+		Entries:       entries,
+	}
+	if _, err := EncodeRevision(next); err != nil {
+		return Revision{}, fmt.Errorf("build next: encode next: %w", err)
+	}
+	return next, nil
+}
+
+// Publish writes next as an immutable object and then advances only the
+// transition registry head with CAS. A CAS failure intentionally leaves the
+// content-addressed object in the store.
+func (r *StoreReader) Publish(ctx context.Context, expectedHead hashref.HashRef, next Revision) (hashref.HashRef, error) {
+	if err := ctx.Err(); err != nil {
+		return hashref.HashRef{}, fmt.Errorf("publish transition registry: context: %w", err)
+	}
+	if expectedHead.IsZero() {
+		if next.Revision != 1 {
+			return hashref.HashRef{}, fmt.Errorf("publish transition registry: revision %d is not expected 1", next.Revision)
+		}
+		if !next.Parent.IsZero() {
+			return hashref.HashRef{}, errors.New("publish transition registry: parent is not captured head (absent)")
+		}
+	} else {
+		currentObject, ok, err := r.store.GetObject(expectedHead)
+		if err != nil {
+			return hashref.HashRef{}, fmt.Errorf("publish transition registry: read expected revision: %w", err)
+		}
+		if !ok {
+			return hashref.HashRef{}, fmt.Errorf("publish transition registry: expected object %q is absent", expectedHead)
+		}
+		current, err := DecodeRevision(currentObject.Payload)
+		if err != nil {
+			return hashref.HashRef{}, fmt.Errorf("publish transition registry: decode expected revision: %w", err)
+		}
+		if next.Revision != current.Revision+1 {
+			return hashref.HashRef{}, fmt.Errorf("publish transition registry: revision %d is not expected %d", next.Revision, current.Revision+1)
+		}
+		if next.Parent != expectedHead {
+			return hashref.HashRef{}, fmt.Errorf("publish transition registry: parent %q is not captured head %q", next.Parent, expectedHead)
+		}
+	}
+	payload, err := EncodeRevision(next)
+	if err != nil {
+		return hashref.HashRef{}, fmt.Errorf("publish transition registry: encode: %w", err)
+	}
+	ref := hashref.SumSHA256(payload)
+	object := store.Object{Hash: ref, InterfaceHash: InterfaceHashV1, SemanticID: SemanticIDV1, Provenance: "host/transitionreg", Payload: payload}
+	if err := r.store.PutObject(object); err != nil {
+		return hashref.HashRef{}, fmt.Errorf("publish transition registry: put object: %w", err)
+	}
+	if err := r.store.CompareAndSetRegistryHead(store.TransitionRegistryV1, expectedHead, ref); err != nil {
+		return hashref.HashRef{}, fmt.Errorf("publish transition registry: compare and set head: %w", err)
+	}
+	return ref, nil
+}
+
 func (d Descriptor) Validate() error {
 	if err := validateID(d.ID); err != nil {
 		return fmt.Errorf("descriptor ID: %w", err)
