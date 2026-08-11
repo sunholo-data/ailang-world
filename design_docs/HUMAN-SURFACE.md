@@ -92,10 +92,20 @@ verification settled; deliver ONE digest, not N pings; "review the night" after 
 rather than gating them. Quiet is the default state of a healthy World — the UI must make
 quiet feel like health, not absence.
 
-**Dependency — NOT BUILT (`w-effect-broker-m3`, queue item 4, PARKED):** the landed daemon
-explicitly has no effect broker or capability/budget authority
-(`host/daemon/daemon.go:34`). P5 remains the required interaction policy; enforcement cannot
-be claimed until that item lands.
+~~**Dependency — NOT BUILT (`w-effect-broker-m3`, queue item 4, PARKED)**~~ **— STALE, CORRECTED
+2026-08-11 (attended).** Item 4 **LANDED 2026-07-29 (iter-35)**, doc in `implemented/`. The broker
+exists (`host/broker`: capability grants, budget, `Session.Invoke`), `Human.Approve` is a real
+effect (`approve.go:17`), and an approval is spent exactly once durably (`approval_claims` PRIMARY
+KEY). **P5 is enforceable today** — this note said otherwise for 13 days, and it is the note a
+designer reads before deciding what is buildable.
+
+**The dependency that IS real, and is new here:** P5's closing line — *"the UI must make quiet feel
+like health, not absence"* — has been falsified operationally by this repo's own loop. Twice in 67
+iterations a slot died silently, logging `iteration complete (rc=0)` with no watchdog, a plausible
+transcript, and zero commits. **A dead World and a calm World render as the same empty list.** So
+the quiet state MUST be a positive assertion with a timestamp — last verified heartbeat, next
+expected, what was checked — never the absence of items. Absence of alarm is not presence of
+health.
 
 ### P6 — Five zoom levels, everywhere
 Every projected object MUST support the same ladder: **glance** (chip/count) → **decide** (packet) →

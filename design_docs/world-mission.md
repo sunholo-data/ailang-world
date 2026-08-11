@@ -771,7 +771,8 @@ What this mission touches or overlaps, and the drawn boundaries:
 
   | `9/OD-11` | 9 `w-verify-binary-lockfile` | may a milestone add a **Z3 install step to CI job 2** (`go-verify`)? `ai-check` shells to z3 and CI installs it in job 1 only, so `host/verifygate`'s shim arms — which drive the REAL `.ail` gate under `go test ./...` — cannot reach `verify gate PASSED` there (measured: CI red at `9151797`, `required identity … MISSING from verify.results[]`, the documented V27 class). | **RATIFIED 2026-08-10 (Mark, headless directive on issue #53) — YES.** Verbatim: *"Yes you can install z3 on cicd"*. That widens `9/OD-10` clause (a) **for this install specifically** and nothing else — job 1 still installs `releases/latest` for legs 1-2, and `:64`/`:118` stay pinned. **DISCHARGED by `VL.B` (iter-69, PR #57 → squash `32b086c`).** The pin is now declared ONCE at workflow scope and both jobs install it; `host/verifygate`'s accept-arms assert `verify gate PASSED`. **The cost this ask named was measured in both arms before the fix:** with a solver `rc=0`/PASSED=1, without one `rc=1`/PASSED=0 — and `AILANG_BIN refused`=0, `── Leg 1`=1, `could not parse ai-check JSON`=0 in **BOTH**, so the old contract was satisfied identically by a passing and a failing gate. Settled in CI, not locally: job 2's step log shows `Z3 version 4.16.0 - 64 bit` and `host/verifygate` `ok` twice. Raised iter-68, ratified and closed iter-69. |
 
-  Next free ID: **`OD-12`**.
+  | `14/OD-12` | 14 `w-workbench-read-only` | **the workbench's INTERACTION GRAMMAR — which modalities are first-class?** The whole corpus is silent on it: a search across DESIGN.md / HUMAN-SURFACE.md / SCENARIOS.md for `speech·voice·audio·video·keyboard·shortcut·click·scroll·touch·drag·hover·screen reader·accessib` returns **nothing** except "clickably checkable" (P2), "gesture" used metaphorically (P6/P7), and "not log scroll" as an anti-pattern. So the medium is decided and the *grammar* is not | **OPEN, NON-BLOCKING — build on the default, settle before item 7 ships.** Controller default: **keyboard-first triage** (the surface's nearest ancestor is a code-review queue, and packets are a list you move through, not a canvas), **pointer for the provenance graph** (walking edges is the one genuinely spatial task), **text for goal composition**. **Speech is admissible as an INPUT channel to the composer and MUST NOT be the confirmation channel** — §3 requires the human to sign the *typed* object rather than the prose, and a typed authority envelope cannot be safely confirmed by ear; the signature must be visual and re-readable. **Audio earns one job only**: scenario 4's single batched notification (P5 — an unbatched ping is a budget bug). **Video: no role identified.** Accessibility is unstated corpus-wide, which is notable given P3 already forbids colour as the sole channel for the same epistemic reason — that constraint should be named as an accessibility floor, not re-derived |
+  Next free ID: **`OD-13`**.
 
 - **SIX ODs WERE ALLOCATED WITHOUT EVER ENTERING THIS TABLE, AND THE REASON IS THAT THIS
   GUARDRAIL'S OWN ENUMERATION INSTRUMENT FINDS NOTHING** (process fix, iter-61; **fifth instance**
@@ -2654,6 +2655,72 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
     deliberate allowlist for intentional module additions, and a RED mutation proving a stray
     `world/*.ail` cannot pass. · ~0.5d · NEEDS A DESIGN DOC (small — may be folded into a
     `TR.*` milestone's docs task if the sprint has room).
+13. [**FILED 2026-08-11 (attended, Mark) — MEASURED ABSENT, AND IT IS THE CHEAPEST HIGH-LEVERAGE
+    ITEM IN THE UI PROGRAMME. `6b/§7` RATIFICATION POINT 2 WAS RATIFIED AS A DOCUMENT AND ITS
+    DELIVERABLE WAS NEVER PRODUCED.**]
+    **w-evidence-grade-mapping** · clause-5 · the TOTAL `Evidence` → grade mapping that P3
+    (trust-gradient rendering) requires and that no code supplies. **MEASURED at `871e3b6`:**
+    `world/types.ail` defines exactly **five** `Evidence` variants — `CompilerOutput(HashRef)`,
+    `TestReport(HashRef, bool)`, `HumanApproval(HashRef)`, `AiReview(HashRef, float)`,
+    `RecordedEffect(HashRef)` — and a repo-wide search of `world/` + `host/` for
+    `PROVEN|TESTED|ATTESTED|CLAIMED` returns **zero** non-comment hits. The mapping exists in prose
+    only. **WHY IT IS URGENT RATHER THAN TIDY, stated as arithmetic:** two of the five variants
+    (`CompilerOutput`, `HumanApproval`) have **no grade at all**, and they are the two most common
+    on a real screen; and the stated producers of the TOP grade (Z3 proof, deterministic replay)
+    have **no `Evidence` carrier**, so `PROVEN` is unreachable. A faithful renderer today shows
+    `UNSUPPORTED` across most of its surface and can never show `PROVEN` — in a system whose
+    distinguishing feature is machine proof. **A gradient whose top grade cannot be produced is not
+    a gradient; it is a two-tone badge that teaches the reader to ignore the channel**, which is
+    the anti-pattern list's own "grade laundering" arriving by omission rather than by intent.
+    §7 point 2 already names the recommended shape (add/reshape variants so a carrier distinguishes
+    a compiler result from a verified proof and preserves human ratification without mislabelling it
+    as an unverified agent claim) — **that recommendation is explicitly NOT the decision**, so this
+    item still owes a design doc. **THE GOTCHA THAT WILL BITE THE EXECUTOR:** `world/types.ail` is
+    the pure core, so this edit moves the required-check manifest — `scripts/verify_ail.sh` pins
+    `EXACT_TOTAL_VERIFIED` and `EXACT_TOTAL_TESTS` as **exact equalities** (`4/11/14` today), and
+    new contracts or tests red the repo's primary gate for a reason unrelated to the change unless
+    the pins move in the SAME commit. See item 12. · ~0.5–1d · NEEDS A DESIGN DOC · gated on
+    nothing, and gated on no other queue item.
+14. [**FILED 2026-08-11 (attended, Mark) — THE UI PROGRAMME IS CURRENTLY SERIALISED BEHIND WORK IT
+    DOES NOT DEPEND ON, AND THIS ROW IS THE PARALLEL PATH.**]
+    **w-workbench-read-only** · clause-5 · a renderer route on `worldd` plus the READ-ONLY
+    workbench — world browser, timeline scrubber, provenance walk (SCENARIOS.md scenario 3).
+    **THE ARGUMENT, MEASURED:** `host/daemon/daemon.go:461-468` already serves exactly the
+    vocabulary a browser needs — `GET /v1/head`, `/v1/worlds/{ref}`, `/v1/objects/{ref}`, `/v1/log`,
+    `/v1/log/{index}`, `/v1/registry/{name...}` — so the ONLY backend addition is the renderer route
+    itself (the daemon has no HTML/web/SSE route today; that absence is measured, not assumed).
+    **Read-only means it depends on NONE of the four things the approval inbox is waiting on**: no
+    decision-packet schema, no timeout policy set, no grade mapping, no session-filtered MCP. It
+    therefore runs **IN PARALLEL with item 11**, not behind it — different files, no shared gate.
+    It also builds the grammar item 7 will inherit (P6's zoom ladder, P2's link discipline) against
+    real objects, so the inbox becomes a composition rather than a first attempt; and it de-risks
+    the medium decision (localhost surface + optional shell) on the surface where being wrong is
+    cheap. **BUILD IT EVEN THOUGH THE GRADES ARE MISSING:** until item 13 lands it renders
+    `UNSUPPORTED`, which the anti-pattern list already rules is the CORRECT rendering of an unmapped
+    variant — and a screen full of honest `UNSUPPORTED` badges is the most persuasive argument
+    available for funding item 13. **TWO LANDMINES, BOTH FIRST-PARTY:** (a) a renderer route means
+    new `net/http` surface in `cmd/ailang-worldd`, which is the ONE group the boundary gate's
+    per-group `extraForbidden` list exempts for loopback IPC — the exemption is per-group by
+    construction since iter-55, so do not collapse it, and re-assert the positive arm rather than
+    inheriting it green; (b) `host/boundary` pins `wantFileCount = 1` and any new `.go` file there
+    reds `TestBoundaryASTWriteGuard` — this has bitten three times; the fix is a new package, never
+    relaxing the pin. **CARRIES `14/OD-12`** (below) as a NON-BLOCKING decision: build on the
+    controller default and settle it before item 7 ships. · ~1.5–2d · NEEDS A DESIGN DOC.
+15. [**FILED 2026-08-11 (attended, Mark) — ITEM 7's REAL PREREQUISITES, NEITHER OF WHICH DEPENDS ON
+    THE TRANSITION REGISTRY.**]
+    **w-decision-lifecycle-freeze** · clause-5 · enumerate the **typed finite set of timeout
+    policies** (`6b/§7` ratification point 1, deliberately NOT enumerated in the doc — candidates
+    named by the reviewers: cancel · remain safely unexecuted with bounded escalation · execute only
+    if authority was already independently granted) and **freeze the decision-packet schema**
+    (point 3 — it becomes a world type, so it is kernel-adjacent and the item-13 manifest gotcha
+    applies here too). **WHY IT IS NOT COSMETIC:** HUMAN-SURFACE.md §3.1 is BINDING and entirely
+    unimplemented — every packet MUST carry a ledger-recorded creation time, decision deadline and
+    timeout policy; DEFER MUST create a new bounded deadline; silence MUST NEVER synthesize approval
+    or rejection; and replay MUST reproduce deadline behaviour deterministically from ledger time.
+    Without it **the inbox can wedge on a human exactly the way this loop wedged on a background
+    agent** — Standing Rule 6 restated at the UX layer, which is precisely how both round-2
+    reviewers found it independently across two providers. · ~1d · NEEDS A DESIGN DOC · blocks
+    item 7, gated on nothing.
 
 ## Premise Verification Log (quorum objection #1 — every load-bearing claim, with evidence)
 
