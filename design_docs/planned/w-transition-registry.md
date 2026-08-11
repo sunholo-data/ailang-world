@@ -178,6 +178,11 @@ recursively sorted keys. Encode → Decode → Encode must reproduce identical b
 bytes and the v1 interface hash are derived artifacts of this frozen specification. The object is
 written through `PutObject`; the existing generic head names it.
 
+`TestCodecGoldenRoundTrip` must assert byte equality against a committed literal golden (and a
+literal interface-hash string), in addition to round-trip idempotence. A golden derived at test
+time from the encoder or its semantic-ID constant cannot detect indentation, key-order, or tag
+mutations because it changes alongside the mechanism it is meant to freeze.
+
 `host/store` gains `CompareAndSetRegistryHead(name, expected, next)`. In one SQLite transaction it
 requires the current head to equal `expected` (zero means absent), requires `next` to name an
 existing object, and changes exactly that named row. Conflict returns a typed error carrying both
@@ -516,7 +521,7 @@ state. Every delivered gate also has a compiling RED mutation below.
 > Log below is a *record of commands actually run* and is deliberately left as recorded.
 
 1. **AC1 — identity, codec, and schema validation.** Command:
-   `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -list 'Test(DescriptorIdentityAndContentUpdate|CodecGoldenRoundTrip|DescriptorValidationRefusals)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 0 || { test "$count" -eq 3 && GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -run 'Test(DescriptorIdentityAndContentUpdate|CodecGoldenRoundTrip|DescriptorValidationRefusals)$' -count=1; }`.
+   `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -list 'Test(DescriptorIdentityAndContentUpdate|CodecGoldenRoundTrip|DescriptorValidationRefusals)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 3 && GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -run 'Test(DescriptorIdentityAndContentUpdate|CodecGoldenRoundTrip|DescriptorValidationRefusals)$' -count=1`.
    Base observed: rc=0 because count=0 (package absent), not because of a directory gate. TR.A
    activation requires count=3; three named tests PASS.
 2. **AC2 — eager one-head snapshot and copy isolation.** Command:
@@ -526,7 +531,7 @@ state. Every delivered gate also has a compiling RED mutation below.
    `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -list 'Test(PublishCASConflictPreservesWinner|ConcurrentPublishHasOneWinner|StableIDByteOrder|PublishRefusals)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 0 || { test "$count" -eq 4 && GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -run 'Test(PublishCASConflictPreservesWinner|ConcurrentPublishHasOneWinner|StableIDByteOrder|PublishRefusals)$' -count=1; }`.
    Base observed: rc=0 because count=0 (package absent). TR.A activation requires count=4.
 4. **AC4 — generic store CAS preserves the epoch registry.** Command:
-   `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/store -list 'Test(RegistryHeadRoundTrip|CompareAndSetRegistryHead)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 1 || { test "$count" -eq 2 && GOTOOLCHAIN=go1.25.6 go test ./host/store -run 'Test(RegistryHeadRoundTrip|CompareAndSetRegistryHead)$' -count=1; }`.
+   `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/store -list 'Test(RegistryHeadRoundTrip|CompareAndSetRegistryHead)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 2 && GOTOOLCHAIN=go1.25.6 go test ./host/store -run 'Test(RegistryHeadRoundTrip|CompareAndSetRegistryHead)$' -count=1`.
    Base observed: rc=0 because count=1 is the known existing control. TR.A activation removes the
    count=1 arm, requires count=2, and runs both tests.
 5. **AC5 — capability snapshot and all landed denial arms.** Command:
@@ -547,11 +552,11 @@ state. Every delivered gate also has a compiling RED mutation below.
    Base observed: rc=0, package PASS in 2.197s. Delivered result remains rc=0 without importing
    `host/transitionreg` in production replay code.
 9. **AC9 — AILANG gate totals do not move.** Command:
-   `export PATH=/opt/homebrew/bin:$PATH; AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh`.
+   `export PATH=/opt/homebrew/bin:$PATH; out=$(AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh 2>&1); rc=$?; m=$(printf '%s\n' "$out" | grep -c '4/4 required world/ identities verified across 11 module(s)'); t=$(printf '%s\n' "$out" | grep -c 'all 14 required named tests pass'); s=$(printf '%s\n' "$out" | grep -c 'world package gate PASSED: 9/9 steps'); [ "$rc" -eq 0 ] && [ "$m" -eq 1 ] && [ "$t" -eq 1 ] && [ "$s" -eq 1 ]`.
    Base observed: rc=0; 4/4 verified identities across 11 modules, 14 named tests, all 9 package
    steps, and final PASS. Delivered output has the same 4/11/14 totals.
 10. **AC10 — build plus focused Go packages.** Command:
-    `export PATH=/opt/homebrew/bin:$PATH; GOTOOLCHAIN=go1.25.6 AILANG_BIN=/tmp/ailang-v0300/ailang go build ./... && GOTOOLCHAIN=go1.25.6 go test ./host/store -run 'TestRegistryHeadRoundTrip$' -count=1 && GOTOOLCHAIN=go1.25.6 go test ./host/broker -run 'Test(ReplayReturnsRecordedBytesWithoutDispatch|ReplayGapNeverFallsBackToLive)$' -count=1 && count=$(GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -list 'TestCodecGoldenRoundTrip$' 2>/dev/null | grep -c '^Test' || true) && { test "$count" -eq 0 || { test "$count" -eq 1 && GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -count=1; }; }`.
+    `export PATH=/opt/homebrew/bin:$PATH; GOTOOLCHAIN=go1.25.6 AILANG_BIN=/tmp/ailang-v0300/ailang go build ./... && GOTOOLCHAIN=go1.25.6 go test ./host/store -run 'TestRegistryHeadRoundTrip$' -count=1 && GOTOOLCHAIN=go1.25.6 go test ./host/broker -run 'Test(ReplayReturnsRecordedBytesWithoutDispatch|ReplayGapNeverFallsBackToLive)$' -count=1 && count=$(GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -list 'TestCodecGoldenRoundTrip$' 2>/dev/null | grep -c '^Test' || true) && test "$count" -eq 1 && GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -count=1`.
     Base observed: rc=0; build, store, and broker focused tests PASS; transition-registry count=0
     because the package is absent. TR.A activation removes the zero arm, requires count=1, and runs
     the full package. Full `verify_go.sh` was also
@@ -587,7 +592,7 @@ state. Every delivered gate also has a compiling RED mutation below.
 | AC3 expected-head conflict | `MUT-CAS-BLIND`: replace CAS predicate with unconditional upsert | loser overwrites winner; conflict test RED |
 | AC3 next-object existence | `MUT-CAS-DANGLING`: neuter object-existence guard | dangling-head subtest RED |
 | AC3 store/CAS error | `MUT-PUBLISH-SWALLOW`: return nil on injected Put/CAS errors, one at a time | matching publication subtest RED |
-| AC4 wrong registry name | `MUT-CAS-EPOCH-HEAD`: hardcode epoch registry name | epoch round-trip or CAS isolation test RED |
+| AC4 wrong registry name | `MUT-CAS-EPOCH-HEAD`: hardcode epoch registry name | `TestCompareAndSetRegistryHead/epoch_registry_isolation` RED; the epoch round-trip does not call CAS and remains green |
 | AC5 capability isolation | `MUT-CAPS-ALIAS`: return session grant slice directly | mutation-after-snapshot assertion RED |
 | AC5 epoch update | `MUT-CAPS-STATIC-EPOCH`: do not increment epoch after debit | epoch assertion RED |
 | AC5 effect-name denial | `MUT-ALLOW-NAME`: force only `denied:effect-name` to allowed | named denial arm RED |
@@ -604,7 +609,7 @@ state. Every delivered gate also has a compiling RED mutation below.
 | AC7 startup cache | `MUT-STARTUP-CACHE`: memoize first registry snapshot | next-read test RED |
 | AC7 split request epoch | `MUT-CAPS-REREAD`: obtain capabilities again after registry barrier | captured-epoch test RED |
 | AC8 registry redirects replay | `MUT-REPLAY-CURRENT-REGISTRY`: resolve source/interpreter from current head | existing replay authority test RED |
-| AC9 new `.ail` | `MUT-AIL-EMPTY-MODULE`: add an empty `world/transitionregistry.ail` without manifest update | exact module total/allowlist RED |
+| AC9 new `.ail` | `MUT-AIL-EMPTY-MODULE`: add an empty `world/transitionregistry.ail` without manifest update | repaired AC9's printed-total assertion has `modules11=0`; the underlying script remains rc=0 |
 | AC10 package build | `MUT-GO-CODEC-TAG`: change the v1 semantic ID constant to `world/transition-registry/v2` | full new-package suite RED while all production code still compiles |
 | TR.A activated test inventory | `MUT-DELETE-TR-A-TEST`: delete or rename one required AC1–AC4/AC10 test after removing the base arm | exact activated count RED; zero is no longer accepted |
 | TR.B activated test inventory | `MUT-DELETE-TR-B-TEST`: delete or rename one required AC5–AC7 test after removing the base arm | exact activated count RED; zero is no longer accepted |
@@ -613,7 +618,8 @@ state. Every delivered gate also has a compiling RED mutation below.
 | AC11 detector neutered | `MUT-BINDING-IF-FALSE`: change the detector condition to `if false && ...` | known three-site detector control sees zero instead of exactly 3; assertion RED while mutant compiles |
 | TR.C activated test inventory | `MUT-DELETE-TR-C-TEST`: delete or rename the required AC11 test after removing the base arm | exact activated count RED; the known control alone is no longer accepted |
 
-Every designed refusal is represented above. There is no claimed unreachable branch. Store errors
+Eleven frozen refusal branches in Decisions 1, 2, and 4 have no named mutation above; the TR.A
+sprint plan adds mutations for all eleven. Store errors
 are driven by injected interfaces; SQLite CAS conflicts are driven by two handles/racers. Mutation
 runs must record the failing test name, not only rc=1.
 
