@@ -59,3 +59,92 @@ additional executor-enumerated mutation beyond J1 if retained.
 - Restore and backup SHA-256 both
   `cfbcb415d9e7483aac035875ad5045b31dfd85c6bb1f5d8a035959b830a47530`.
 - Post-restore `go vet ./host/...`: rc=0.
+
+---
+
+# Controller sweep — the 17 deferred arms, run outside the sandbox
+
+The executor deferred 17 of its 19 required arms and enumerated them rather than
+claiming them. The controller ran **18 arms** (the 17 deferred plus a re-run of
+`MUT-CAPS-ALIAS` at the accessor seam), outside the `workspace-write` sandbox, so
+every inverse arm is informative here where the executor's were not.
+
+Protocol per arm, no exceptions: `cp` backup → mutate → assert **LANDED** (sha256
+differs) → assert **BUILDS** (`go build ./...` rc=0) → scoped kill arm, recording
+**which test and subtest** failed → inverse arm (`-skip` the killer plus the known
+base flake, whole package) → `cp` restore → assert byte-identity.
+
+**Result: 18 arms, 17 KILLED, 1 SURVIVED.**
+
+| arm | file | verdict | killing subtest / note |
+|---|---|---|---|
+| `MUT-CAPS-STATIC-EPOCH` | broker.go | KILLED, isolated | `allowed_invoke_increments_epoch_exactly_once` + `replay_debit_increments_epoch` |
+| `MUT-CAPS-ALIAS-ACCESSOR` | broker.go | KILLED, isolated | `grants_accessor_returns_a_fresh_copy` |
+| `MUT-CAPS-SNAPSHOT-ALIAS` | broker.go | KILLED, isolated | `snapshot_is_isolated_from_later_debit` |
+| `MUT-ALLOW-NOW-ZERO` | decide.go | KILLED, isolated | `uses_snapshot_now_not_a_wall_clock` (+ 2 more) |
+| `MUT-ALLOW-EMPTY-LEDGER` | decide.go | KILLED, co-detected | `no_grants_is_denied_effect_name` |
+| `MUT-ALLOW-NAME` | decide.go | KILLED, inverse unsatisfiable | `denied_effect_name`; co-detected by landed `decide_test.go`, NOT weakened |
+| `MUT-ALLOW-SCOPE` | decide.go | KILLED, inverse unsatisfiable | `denied_scope`; co-detected by a landed test, NOT weakened |
+| `MUT-ALLOW-EXPIRED` | decide.go | KILLED, inverse unsatisfiable | `denied_expired`; co-detected by a landed test, NOT weakened |
+| `MUT-ALLOW-BUDGET` | decide.go | KILLED, inverse unsatisfiable | `denied_budget`; co-detected by a landed test, NOT weakened |
+| `MUT-ALLOW-RANK` | decide.go | KILLED, **isolated** | `ranked_best_denial_across_three_grants` — see note below |
+| `J1-MUT-MANIFEST-ACCESS-NEG-COST-OK` | confined.go | KILLED, isolated | `negative_access_cost` |
+| `J1b-MUT-MANIFEST-DECLARED-NEG-COST-OK` | confined.go | KILLED, isolated | `negative_cost` |
+| `J2-MUT-MANIFEST-DUP-OK` | confined.go | KILLED, isolated | `duplicate_declared` |
+| `J3-MUT-DECLARED-NAME-ONLY` | confined.go | KILLED, isolated | `undeclared_scope` + `undeclared_cost` |
+| `J4-MUT-DECLARED-COST-ANY` | confined.go | KILLED, isolated | `undeclared_cost` |
+| `J5-MUT-DECLARED-SCOPE-ANY` | confined.go | KILLED, isolated | `undeclared_scope` |
+| **`J6-MUT-BIND-DECLARED-ALIAS`** | confined.go | **SURVIVED** | see below |
+| `J7-MUT-DECLARED-ACCESSOR-ALIAS` | confined.go | KILLED, isolated | `declared_accessor_is_a_fresh_copy` |
+
+Every arm restored byte-identical from its `cp` backup.
+
+## The survival: `J6-MUT-BIND-DECLARED-ALIAS`
+
+Mutation: in `Bind`, `declared := append([]Requirement(nil), m.Declared...)`
+becomes `declared := m.Declared`.
+
+- **LANDED** — sha256 `c6fbdfc71786` → `62b0b1253242`.
+- **BUILDS** — `go build ./...` rc=0.
+- **SURVIVED** — the *entire* `host/broker` package is rc=0 with the defect present.
+
+So this is a genuine survival, not a non-compiling mutant and not an instrument
+failure.
+
+**What it means.** `Bind`'s own doc comment says it "validates and **copies** a
+descriptor authority envelope". Aliasing means the envelope is *not frozen at bind
+time*: a caller that mutates its `Manifest.Declared` slice after `Bind` retroactively
+changes what an already-bound invoker will accept. In a clause-3 substrate whose
+whole claim is that authority is explicit and declared up front, a declaration set
+that can be widened after the fact by an unrelated write is precisely the failure the
+milestone exists to prevent.
+
+**Why it was invisible.** The asymmetry is the finding. `J7` — the *output* side, the
+`Declared()` accessor — was pinned by `declared_accessor_is_a_fresh_copy`, and it
+kills cleanly. Nobody wrote the mirror assertion for the *input* side. That is this
+repo's named recurring shape, **guard the helper, miss the call site**, arriving one
+more time: the copy that is tested is the one going out, and the copy that is not
+tested is the one coming in.
+
+**Fixed in-PR** by the subtest `bind_copies_the_caller_declaration_slice`, which pins
+both halves — that `Declared()` still shows the envelope frozen at `Bind` time, and,
+the authority-bearing half, that `Request` still REFUSES the triple the caller tried
+to inject afterwards, with its own measured message. Re-run against the identical
+mutant (same sha256 `62b0b1253242`, `go build` rc=0): **KILLS**, failing exactly
+`TestBindRefusesMalformedManifest/bind_copies_the_caller_declaration_slice`, and the
+inverse arm (`-skip` that test, whole package) is **rc=0 with 0 FAIL** — so the new
+subtest is the killer, not a bystander. Restored byte-identical.
+
+It is a SUBTEST, not a new top-level test, so AC5 stays at exactly the 2 this
+milestone just activated.
+
+## One planner prediction refuted
+
+`MUT-ALLOW-RANK` was expected to be co-detected by a landed test (the four
+`MUT-ALLOW-*` arms are, which is what makes their inverse arms unsatisfiable by
+construction). It was **isolated** instead: the landed `decide_test.go` covers
+`Decide` on a single capability and does not exercise the ranked selector across a
+multi-grant ledger. So the delegation evidence for *ranking* rests solely on the new
+`ranked_best_denial_across_three_grants`, not on co-detection with landed coverage.
+Recorded rather than smoothed over — it is weaker evidence than the plan assumed,
+though the pin itself is real and non-vacuous.

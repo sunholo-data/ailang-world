@@ -299,6 +299,29 @@ func TestBindRefusesMalformedManifest(t *testing.T) {
 			t.Fatalf("Declared cost = %d, want 1", again)
 		}
 	})
+	// The accessor arm above pins the OUTPUT side of the copy. This arm pins the
+	// INPUT side: the caller's slice must be copied AT BIND TIME, so a later
+	// mutation of it cannot retroactively widen an already-bound authority
+	// envelope. Without it, MUT-BIND-DECLARED-ALIAS (declared := m.Declared)
+	// survives with the whole package green.
+	t.Run("bind_copies_the_caller_declaration_slice", func(t *testing.T) {
+		caller := []Requirement{{"probe", "/ok", 1}}
+		bound, err := s.Bind(Manifest{Declared: caller})
+		if err != nil {
+			t.Fatal(err)
+		}
+		caller[0] = Requirement{"probe", "/evil", 1}
+
+		if got := bound.Declared()[0]; got != (Requirement{"probe", "/ok", 1}) {
+			t.Fatalf("Declared[0] = %+v, want the envelope frozen at Bind time", got)
+		}
+		_, _, err = bound.Request(context.Background(),
+			EffectRequest{Effect: "probe", Scope: "/evil", Cost: 1}, nil)
+		const want = `broker: undeclared effect request: effect "probe" scope "/evil" cost 1`
+		if err == nil || err.Error() != want {
+			t.Fatalf("Request error = %v, want %q", err, want)
+		}
+	})
 }
 
 func TestDeniedInvokeWritesOneRecord(t *testing.T) {
