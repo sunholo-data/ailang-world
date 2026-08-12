@@ -7297,3 +7297,205 @@ to detect.
 own fallback if the planner prices the Leg-1 loop restructure higher, and names its one demotable
 arm). Then item **16** (`w-broker-base-flake`, the ~18% base flake that taxes every mutation sweep).
 Item 5 `w-mcp-projection` `P6.B` remains UNBLOCKED.
+
+## Iteration 77 — 2026-08-12 — `w-ail-gate-module-pin` (item 12) **LANDED — ITEM 12 IS COMPLETE, and the judge defeated the gate the milestone had just landed, with a capital letter** (PR #64 → squash `40164ea`, dev CI green **both jobs on the merge commit, SHA-addressed, `present=2` = expected 2**, `unresolved_incidents=0`; evaluator `sonnet` **93/100 PASS, zero blocking**, its one non-blocking finding reproduced first-party and **FIXED IN-PR**; `metered=$0.00`) — the iteration's spine is that **a recogniser's coverage is a property of its ENUMERATOR, one level below its branches: five arms and ten mutations all agreed because every one of them spelled the extension lowercase, and `find -name` is case-sensitive**
+
+**Pick.** The queue head, item 12, and iteration 76's own `[NEXT]`: the **sprint**, not another doc —
+the design doc landed last iteration quorum-cleared, so the routing step is planner → executor →
+judge. Gate 0: kill switch armed · billing tripwire **CLEAN** (both Anthropic env vars empty) · `gh`
+on `sunholo-voight-kampff` · main checkout clean. **Zero new `MarkEdmondson1234` comments** since the
+watermark `2026-08-12T07:27:31Z` on `#53` (`mission_directives.sh`, allowlist enforced in-script,
+**0 of 15** comments; the script lives in the **V1 checkout** and was invoked by absolute path per
+the Repo Profile). Both watermarks — the skill-derived issue-scoped `mission-53-last-seen` and the
+mission-scoped `mission-world-last-seen` — read the SAME timestamp this week, so the charter's
+take-the-older rule was satisfied trivially rather than by luck. No rotation owed: `#53` was created
+`05:37:35Z` = **07:37 local**, after the Monday-07:00-**local** boundary, 15 comments (< 80). Inbox:
+7 unread, none outranking — 6 `eval-suite` notices and one **cross-mission report** from `mission-v1`
+(iteration 185, `#617` M3 landed). That message is a report, not a request: a sibling mission cannot
+set this mission's priorities, and it did not try to. Gate 1: `dev` **==** `origin/dev` @ `c53db58`,
+zero worktrees, no open PRs by this loop, main checkout clean — **nothing died mid-flight**. dev CI
+**green, SHA-addressed** (`checks=2` = expected 2; the repo has exactly one workflow, so Gate 1's
+name-allowlist blindness is covered by construction). **Weekly external-issue sweep: 0 orphans of 1
+enumerated** — `jq length` = 1 and `gh issue list | wc -l` = 1 agree, so the enumeration is asserted
+rather than assumed; the only open issue repo-wide is `#53` itself (charter 1 / log 12 / dash 1),
+with a firing known-positive control (`#61` → charter 1 / log 2) and a known-absent control (`#999` →
+charter 0).
+
+**THE RUNNING RULEBOOK IS ONE HUNK BEHIND ITS ORIGIN, AND I CHECKED RATHER THAN ASSUMED.** Gate 1's
+`cmp` of the running skill against V1 `origin/dev` came back **DIFFERS** — 46 changed lines, origin
+2,193 vs running 2,153, in exactly **two hunks**, both inside Gate 5's weekly-rotation step (a new
+fail-soft "open the new thread with a weekly report" block Mark added today). This is the Repo
+Profile's documented one-way divergence: the symlink resolves to the *ailang* main checkout's
+**working tree**, so what executes is that checkout's file at its own HEAD, not origin's. Not
+load-bearing here — **no rotation was owed this iteration** — but it will be at the next Monday
+boundary, and it is recorded so the next controller does not rediscover it. Everything else in the
+file is byte-identical, so no gate I ran differs from the rules the mission agreed on.
+
+**Reality-check before routing, all re-derived rather than inherited.** The item is not already
+landed (`git log origin/dev --grep`), has no sprint plan (`.ailang/state/sprints/` — 10 files,
+none matching), and its doc is live at `design_docs/planned/w-ail-gate-module-pin.md`. Quorum
+artifacts exist for both rounds; R2's synthesis carries `absent_reviewers: []`, so there is **no
+N−1 degrade hiding behind a green verdict** and my own `--controller-verdict` was not load-bearing.
+Freshness swept from the **OLDEST** declared base (`adfaa0b`, not the newer `304120b` — a document is
+only as fresh as its oldest measurement): 20 non-`design_docs` files changed in that range and
+`scripts/verify_ail.sh` is **not** among them, so every line-number citation in the doc is live.
+`host/verifygate/` exists with exactly one file; `runGate` at `:52-56` really does hardcode `repoRoot`
+for both the script path and `cmd.Dir`, so the doc's `runGateAt` requirement (V24) holds.
+`grep -rn LEG1_MODULES` → **0**, same-call control `EXACT_TOTAL_VERIFIED` → **4**, so the name is
+genuinely unallocated. And the load-bearing baseline, measured by me on a pristine tree at HEAD
+rather than quoted from the doc: `verify_ail.sh` **rc=0**, `✓ 4/4 … across 11 module(s)`,
+`✓ all 14 required named tests pass`, world-package gate **9/9**.
+
+**THE PLANNER PROTOTYPED THE ENTIRE CHANGE AND REFUTED FIVE OF THE DESIGN DOC'S CLAIMS — ONE OF
+THEM LOAD-BEARING, AND IT WOULD HAVE SHIPPED A NULL-CASE ARM THAT COULD NOT FIRE.** The rig's
+`/usr/bin/env bash` is **3.2.57** and `verify_ail.sh` sets `set -uo pipefail` at `:30`. Under that
+pair, `"${arr[@]}"` on an **EMPTY** array is an unbound-variable **ABORT**. I confirmed it
+first-party in three arms before routing anything: empty → `bash: arr[@]: unbound variable`,
+**rc=127**, the trailing `echo` never reached; same-shape **non-empty control** → survives, rc=0;
+and `${#arr[@]}` on an empty array → **count=0, rc=0**, so the prescribed fix is itself sound. The
+doc's §4.2 wrote the set files and *then* guarded, which means `LEG1_MODULES=()` would have killed
+the script **before its own null-case message could print** — i.e. the S6 arm the doc specified
+would have failed against a faithful implementation of the doc. Four further refutations, each
+measured: §6's mutation table missed a refusal branch (the `diff -u` diagnostic is separately
+neuterable); §8's conflict surface never named `TestNoRigAbsolutePaths`, which globs
+`host/verifygate/*.go` and therefore scans the new file (doc mentions **0**, control
+`TestInScriptControl` **4** — I re-verified both); §5.2's copy set must be `.ail`-FILE-scoped rather
+than a directory copy that drags 95 gitignored cache files including entries for modules that no
+longer exist; and §4.2's "the copy set stops being obviously sufficient" claim could not be
+reproduced at all. **It priced the work at ~0.75 day against the doc's ~0.5 and refused to split**,
+and the sharpest of its four structural reasons is that a script-first/arms-second seam lands the
+pin with **no committed non-vacuity proof — which is literally item 12's own residual**, since
+iteration 71 landed a one-shot acceptance command about a tree that no longer exists and the item
+came straight back. It also **overruled §5.4's demotion path**, shipping BOTH null cases as
+committed arms; that judgement was vindicated inside the hour, because the branch those arms cover
+is precisely the one the doc got wrong. Its argument for compare-first is stronger than the doc's
+own: an **invalid** stray under compare-after reds `✗ check.passed != true` — a PARSE failure, the
+wrong reason, pointing the reader at syntax — so under that shape every arm's correctness would
+silently depend on its probe being valid AILANG.
+
+**The executor ran all 10 mutations / 20 arms and deferred none.** It discarded two malformed
+mutants because `go vet` rejected them rather than crediting a red for a compile failure, correctly
+labelled its in-sandbox `verify_go.sh` red **UNINFORMATIVE UNDER SANDBOX** (denied loopback binds),
+and **self-reported three checkable deviations** — a plan-specified enumeration mutant that was
+inert because it appended after a `#` comment, and two harness copy-count expectations that fire
+before the observable the plan claimed. Fourth consecutive milestone where a self-reported deviation
+beat a silent pass.
+
+**THE CONTROLLER'S OWN SWEEP, ENUMERATED FROM THE DIFF RATHER THAN FROM THE PLAN'S LIST.** Four
+production refusal branches (empty enumeration, empty allowlist, set inequality, the `diff -u`
+diagnostic); **all four KILLED**, each naming the right test, every inverse arm (`-skip` the new
+tests) **rc=0**, unmutated control **rc=0**, script restored **byte-identical**. The untracked-file
+trap reproduced yet again on the new Go file: ordinary `git diff` → **0** added lines, `--no-index`
+→ **263**.
+
+**ONE OF MY OWN ARMS WAS DISCARDED RATHER THAN BANKED, AND IT IS ITERATION 75's SHAPE EXACTLY.** My
+first diagnostic mutant injected `>/dev/null` mid-command — and the trailing `>&2` on the *next*
+line overrode it, so the diagnostic still printed. The sha **MOVED**, so the landed-proof passed,
+and the arm **survived without ever reaching its branch**. Read naively that is a coverage gap in a
+green suite; read correctly it is a broken instrument. Re-aimed at the redirection itself, the
+branch **is** pinned — both the stray and deleted arms fail, on an assertion that reads the
+offending path out of the gate's own stderr. **A landed mutation is not a reached mutation**, and
+`sha256` cannot tell the difference.
+
+**THE SPINE — THE JUDGE DEFEATED THE GATE THIS MILESTONE HAD JUST LANDED, AND IT IS A FOURTH
+DIRECTION OF THIS REPO'S RECURRING CLASS.** `find "$searchdir" -name '*.ail'` matches
+**case-sensitively**, so `world/SNEAKY.AIL` never entered the swept set — and a set the enumeration
+cannot see is a set the compare cannot refuse. Reproduced first-party before acting on it: the gate
+exits **rc=0** and prints its OWN brand-new success line, `✓ swept .ail module set equals the
+LEG1_MODULES allowlist (11 modules)`, **byte-identical to the pristine baseline's**, while the file
+sits in `world/` and is named **nowhere** in the output (`grep -ci sneaky` = **0**). Same-call
+control: `find -name` sees **4** files under `world/`, `-iname` sees **5**. Note what this is not —
+it is not a missing branch, not an untested call site, and not an unenumerated refusal shape. The
+four branches were all pinned; the *input* never reached them.
+
+**Why that is a spine and not a fifth tally mark.** `TR.B1`: the mechanism was tested, its call
+SITES were not. `TR.B2`: the site was tested, the mechanism's second BRANCH was not. `TR.C`: the
+branch was tested exhaustively and the **shape space of what it refuses** was never enumerated — 32
+arms all spelled the forbidden thing the same way. Iteration 75 drew the right lesson and this
+milestone *applied* it: the sprint plan enumerated spellings deliberately, and I probed two more
+myself (`design_docs/_stray_outside_sketches.ail`, exercising the fact that the `design_docs|.` root
+sweeps *all* of `design_docs` and not just `sketches/`; and a nested `world/nested/_stray_nested.ail`)
+— **both refused rc=1, each named, with zero `ai-check` lines reached**, so the refusal genuinely
+precedes the sweep. And it was still defeated, because every spelling anyone tried — mine included —
+was a spelling `find`'s glob could *see*. Rule 3j asks *how many ways can this refuse*; iteration 75
+added *how many ways can the refused thing be SPELLED*; the question neither asks is **who decides
+what counts as a spelling at all** — and here that was the enumerator, not the gate. The general
+form, worth more than the instance: **before trusting a set-compare, ask what its ENUMERATOR cannot
+see** — case, symlinks, roots, extensions, permissions. A compare is only ever as complete as the
+`find` that feeds it, and an enumerator's blind spot is invisible to every downstream assertion by
+construction.
+
+**THE REPAIR IS PROVEN, NOT ASSERTED.** `-iname`, which is safe because case variants are **0**
+today (`find … -iname '*.ail' ! -name '*.ail'` → 0, so the swept set does not move — the spelling
+closes without the pin changing), plus a fifth committed arm that reads the offending path out of
+the gate's own diff output rather than reconstructing it. Three arms: **(A)** repaired gate — all
+**five** arms PASS; **(B)** pristine tree **UNMOVED** — rc=0, `4/11/14`, identical success lines;
+**(C)** revert **ONLY** the detector and keep the arm → **rc=1 with EXACTLY
+`TestModuleManifestRejectsCaseVariantExtension` failing and nothing else**, and the inverse arm
+(same mutant, `-skip CaseVariant`) **rc=0** — which is what makes the new arm the killer rather than
+a bystander. Landed in-PR as its own reviewable commit, not carried to a follow-up: the item's
+headline sentence is "a stray module passes", and this was a second still-open shape of that exact
+sentence on case-sensitive CI runners.
+
+**COMMIT RECONSTRUCTION PROVED FAITHFUL, AND THE TARGETS WERE EMPTIED FIRST.** Five commits rebuilt
+from the executor's cumulative `.snap/` snapshots in task order — emptied first, because a
+final-tree hash cannot detect absorption — gated at every boundary (`verify_ail.sh` after T1,
+`go vet` after T2, the arms after T3), then the repair as a sixth reviewable diff. All five files
+`shasum -c` **OK** against the executor's final tree.
+
+**A DESTRUCTIVE EDIT OF MY OWN, CAUGHT IMMEDIATELY AND REVERSED.** `rm -rf design_docs/verification`
+— intended to clear the one new subdirectory — deleted **three tracked sibling directories** (19
+files: `w-m1-ailang-hardening`, `w-race-gate-blindspot`, `w-transition-registry`). Nothing was staged
+from them and `git status` surfaced it on the next command, so the commit was already scoped to two
+files, but the near-miss is the point: the rotation rule warns that a destructive edit reports
+success exactly like a correct one, and this is that hazard aimed at a path rather than at a line
+range. Scope the path, and check `git status` before, not only after.
+
+**AN INSTRUMENT OF MINE FAILED AT GATE 3b AND PRINTED A CONFIDENT ZERO FOR TEN MINUTES.** My
+SHA-pinned poll reported `checks=0 pending=0` on a commit that was in fact **2/2 green** — two
+independent defects in one line: an **unterminated jq string** emitted nothing, and `${1:-0}`
+rendered that silence as a plausible `0`; compounded by **zsh not word-splitting** `set -- $out`
+(measured: `$#` = 1, `$1` = the whole `"2 0 0"` string — the 6th recorded zsh instance in this
+loop). Two things saved it: the **completeness assertion** (`present == expected`) refused to
+declare green over a short set, and a **known-positive SHA** — the previous PR head, which the
+evaluator had independently seen green — returned `2` from the identical call, which is what proved
+the instrument rather than the repo was broken. Rule 3a's trap, landing squarely on the gate whose
+verdict decides LANDED vs parked.
+
+**GATES, ALL OUTSIDE THE SANDBOX, on the final `.snap`-free tree (what CI sees):**
+`./scripts/verify_ail.sh` **rc=0** with `✓ swept .ail module set equals the LEG1_MODULES allowlist
+(11 modules)` and totals **4/11/14 UNMOVED** · `GOTOOLCHAIN=go1.25.6 ./scripts/verify_go.sh`
+**rc=0**, **34 `ok`, 0 `FAIL`**, exactly 2 healthy `WARNING: DATA RACE` · `go vet
+./host/verifygate/` **rc=0** (`go build ./...` does not compile `_test.go` at all, so vet is the
+compile gate for a test-only file) · five committed arms PASS, each logging its pristine-control
+marker · **AC7**: `git status --porcelain` empty and `storejournal.ail` sha `adf0760b…` and the
+11-file census all identical before and after a full `go test ./...`. Gate 3b: **green on the merge
+commit**, `present=2` = expected 2, `pending=0`, `unresolved_incidents=0` on the provider's status
+API — so the green is attributable to the tree rather than to the weather.
+
+**Routing evidence.** controller `opus` (session) · planner **`opus`** via the Agent tool — lane
+**fail-closed**, reason `missing-script` (`tools/launchd/derive-planner-lane.sh` does not exist in
+this repo; `MISSION_PLANNER_MODEL=opus` agrees independently) · executor **`codex:gpt-5.6-sol`**,
+probe rc=0, real run backgrounded under a 30-min `date +%s` cap, finished inside it with all five
+task snapshots · evaluator **`sonnet`** — distinct provider from the codex executor, so
+generator≠judge holds without a re-route. Both sub-agent spawns were **foreground**
+(`run_in_background: false`) and the codex background run was held with **chained bounded in-turn
+polls**, per Standing rule 7 — no turn ended while work was outstanding. `metered=$0.00`: every
+lane a quota bucket, nothing billed, cap `$5` untouched.
+
+**RULED OUT:** an `EXACT_TOTAL_MODULES` count literal (defeated by iteration 76's composed mutant,
+and a third literal for item 13 to maintain); splitting the milestone (four seams, each failing
+structurally); demoting either null-case arm to a one-shot (a proof about a tree that no longer
+exists is this item's own original complaint); the compare-after-sweep fallback (an invalid stray
+reds for the *wrong reason* under it); touching `REQUIRED_VERIFIED` / `EXACT_TOTAL_VERIFIED` /
+`EXACT_TOTAL_TESTS` / Leg 2 / Leg 3 / `verify_world_package.sh` / CI / `host/boundary`; sweeping
+`packages/world-core/*.ail` or `host/replay/testdata/transition_fixture.ail` into Leg 1; banking my
+own inert diagnostic mutant; deferring the case-variant defeat to a queue row rather than fixing it
+in-PR; and chasing either the `GOTOOLCHAIN=go1.25.6` FATAL or the `host/broker` flake as regressions
+(both are base conditions).
+
+**ZERO OPEN ASKS. NEXT:** item **16** — the `host/broker` ~18% base flake, which is a standing tax
+on every mutation sweep this loop runs and has now been deferred by four consecutive iterations.
+Then item **13** `w-evidence-grade-mapping`. Item 5 `P6.B` remains **UNBLOCKED**. Bookkeeping owed
+at the next convenient pick: move `w-ail-gate-module-pin.md` and its `-sprint-plan.md` companion to
+`design_docs/implemented/`.

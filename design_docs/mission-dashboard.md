@@ -1,22 +1,25 @@
 # AILANG World — mission dashboard
 
 *Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS) + `world-mission-log.md`.
-Last written: iteration 76, 2026-08-12.*
+Last written: iteration 77, 2026-08-12.*
 
 ## Now
 
-- **dev**: `d201a1e` — CI green both jobs on the parent `304120b`, SHA-addressed, `checks=2` = expected 2.
-- **This iteration produced a DESIGN DOC, not a milestone**: item 12 `w-ail-gate-module-pin` had no
-  doc, so the routing step was designer → quorum. `design_docs/planned/w-ail-gate-module-pin.md`
-  (557 lines) is quorum-cleared and **ready for sprint-planner** — that is the next iteration's pick.
-- **The gate defect is now measured at HEAD, not inherited.** Three arms, tree restored byte-identical
-  each time: stray `world/*.ail` → `12 module(s)` **rc=0 PASSED**; delete a leaf sketch →
-  `10 module(s)` **rc=0 PASSED**; **both composed → `11 module(s)`, success line BYTE-IDENTICAL to the
-  baseline, PASSED**.
-- **That third arm killed the queue row's own prescription.** The row asked for
-  `EXACT_TOTAL_MODULES=11`; a count pin passes the add-one-delete-one mutant. The doc ports the
-  identity allowlist the sibling leg already implements (`verify_world_package.sh:86-96`) and that
-  coding-standards **S1** mandates ("never aggregate counts alone").
+- **dev**: `40164ea` (PR #64 squash) — **CI GREEN BOTH JOBS on the merge commit**, SHA-addressed,
+  `present=2` = expected 2, `unresolved_incidents=0`, so the green is attributable.
+- **Item 12 `w-ail-gate-module-pin` is COMPLETE.** `scripts/verify_ail.sh` now pins the Leg-1 module
+  **SET** by identity (`LEG1_MODULES`, 11 repo-relative paths), enumerating once and comparing
+  **before** any `ai-check` runs, NUL-delimited end to end. Evaluator `sonnet` **93/100 PASS, zero
+  blocking**. Totals **4/11/14 unmoved**; `verify_go.sh` rc=0, 34 `ok`, 0 `FAIL`, 2 healthy races.
+- **The 11 is no longer decorative.** Five committed arms in `host/verifygate/module_manifest_gate_test.go`,
+  each running a pristine control from its own isolated `t.TempDir()` root first, so an arm cannot
+  pass vacuously. Deliberately **not** a count pin: add-one-delete-one prints a success line
+  byte-identical to the baseline's (§S1 — never aggregate counts alone).
+- **THE JUDGE DEFEATED THE GATE THE MILESTONE JUST LANDED, AND THE REPAIR IS IN-PR.**
+  `find -name '*.ail'` is case-**SENSITIVE**, so `world/SNEAKY.AIL` never entered the swept set —
+  the gate printed its own new success line, `✓ swept .ail module set equals the LEG1_MODULES
+  allowlist (11 modules)`, with an unenumerated module sitting in `world/`. Reproduced first-party
+  (control: `-name` 4, `-iname` 5), repaired with `-iname`, pinned by a fifth committed arm.
 
 ## Parked on Mark
 
@@ -25,37 +28,40 @@ Last written: iteration 76, 2026-08-12.*
 
 ## Next
 
-**Item 12 sprint** — plan + execute the doc above (~0.5d, top of band). Then **item 16** (the
-`host/broker` ~18% base flake), a standing tax on every mutation sweep. **Item 5 `P6.B` is UNBLOCKED**
-(prerequisite discharged at `625fb89`). `SM.D` (item 8) is attended-only; items 13/14/15 attended.
+**Item 16** — the `host/broker` ~18% base flake, a standing tax on every mutation sweep. Then
+**item 13** `w-evidence-grade-mapping` (cheapest high-leverage UI item; `PROVEN` is currently
+unreachable). **Item 5 `P6.B` remains UNBLOCKED.** `SM.D` (item 8) is attended-only; 13/14/15 attended.
 
 ## Loop
 
-- launchd, ~6h, headless. Issue **#53** (rotates Mondays 07:00 **local**; not due — created Mon 07:37 local, 14 comments).
-- controller `opus` · designer `claude:claude-fable-5` (rotation) · planner `opus` · executor
+- launchd, ~6h, headless. Issue **#53** (rotates Mondays 07:00 **local**; not due — created Mon 07:37 local, 15 comments).
+- controller `opus` · planner `opus` (lane fail-closed, `missing-script`) · executor
   `codex:gpt-5.6-sol` · evaluator `sonnet`. `pi` **BARRED** from publish milestones.
-- `metered=$0.169` (quorum R1 $0.0691 + R2 $0.0999); cap $5.
+- `metered=$0.00` — every lane a quota bucket. Cap $5.
 
 ## Standing hazards
 
-- **GUARD THE HELPER, MISS THE BRANCH/CALL SITE — 7 instances in 4 milestones**, three directions:
+- **GUARD THE HELPER, MISS THE BRANCH/CALL SITE — 8 instances in 5 milestones**, now FOUR directions:
   mechanism tested/SITES unguarded · site tested/second BRANCH unguarded · branch tested and the
-  **shape space of what it refuses** never enumerated. Ask all three.
-- **A REVIEWER'S OBJECTION IS A CLAIM TOO — and can be right for the wrong reason.** Iter-76's
-  surviving round-2 objection named two concrete exploits; **both were REFUTED** in isolated trees
-  with firing controls, while the defect it pointed at was real. Measure before applying, and record
-  the correction instead of laundering it into agreement.
+  **shape space** of what it refuses never enumerated · and now **the shape space enumerated only in
+  the spelling the author used** (every arm wrote the extension lowercase). Ask all four.
+- **A RECOGNISER'S COVERAGE IS A PROPERTY OF ITS INPUT GRAMMAR.** Before trusting any set-compare,
+  ask what its ENUMERATOR cannot see — case, symlinks, roots, extensions. `find -name` is
+  case-sensitive; `-iname` is not.
+- **AN EMPTY jq/`gh` RESULT IN A POLL IS A BROKEN INSTRUMENT UNTIL PROVEN OTHERWISE.** Iter-77's own
+  Gate-3b poll printed `checks=0` for 10 minutes on a commit that was **2/2 green**: an unterminated
+  jq string emitted nothing and `${1:-0}` rendered it as a confident zero. **And `set -- $out` does
+  NOT word-split in zsh** — `$#` is 1. Always pair a poll with a known-positive SHA.
 - **An isolated-tree test needs a PRISTINE-COPY control** — an incomplete copy reds for the wrong
-  reason and looks exactly like a kill. My own first newline probe created **1 file where it needed
-  2**; only an asserted creation-count caught it, and its "PIN DEFEATED" line was discarded as vacuous.
-- **`git diff` OMITS UNTRACKED FILES** — use `git diff --no-index /dev/null <file>`.
+  reason and looks exactly like a kill.
+- **`git diff` OMITS UNTRACKED FILES** — use `git diff --no-index /dev/null <file>` (measured again
+  this iteration: ordinary diff **0** added lines on the new test file, `--no-index` **263**).
+- **A MUTATION CAN LAND BY sha AND STILL NOT REACH ITS BRANCH.** Iter-77 injected `>/dev/null`
+  mid-command where a trailing `>&2` overrode it; the arm survived and was DISCARDED, not banked.
 - **For a test-only milestone the compile gate is `go vet`, NOT `go build ./...`.**
 - **`verify_go.sh` FATALs unless `GOTOOLCHAIN=go1.25.6`** (go1.26.4 miscompiles `host/store/scan.go`)
-  — a BASE condition, not a regression. Confirmed again this iteration (local go is 1.26.4).
+  — a BASE condition, not a regression.
 - **`go test ./...` runs PACKAGES CONCURRENTLY** (`verify_go.sh:108`, no `-p 1`), and `host/boundary`
-  enumerates *and reads* the live `world/` (`allowlist_world_test.go:197`, `:293`) — so no test may
-  mutate the live tree. `host/broker`'s AST gate does NOT collide (filters `.go` at `:149`).
-- **`host/verifygate` has NO file-count pin** (`host/boundary`'s `wantFileCount = 1` is scoped to
-  `host/boundary` only) — a new `_test.go` file there is safe.
+  enumerates *and reads* the live `world/` — so no committed test may mutate the live tree.
 - **`rg` is NOT a binary here.** **`host/broker` is ~18% flaky at base** (item 16).
-- **`verify_ail.sh` never asserts the module count against 11** — only against 0. Item 12, designed.
+- **`rm -rf design_docs/verification` deletes THREE tracked sibling dirs.** Scope the path.
