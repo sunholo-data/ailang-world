@@ -129,6 +129,23 @@ ROOTS=(
   ".|world"
 )
 
+# Exact Leg-1 module manifest (identity allowlist, NOT a count). An intentional module
+# add/remove is a ONE-LINE edit here, in the SAME commit. Repo-relative paths, matching
+# the sweep's $mod key.
+LEG1_MODULES=(
+  design_docs/sketches/effectbroker.ail
+  design_docs/sketches/logepoch.ail
+  design_docs/sketches/storejournal.ail
+  design_docs/sketches/transitions.ail
+  design_docs/sketches/worlddapi.ail
+  design_docs/sketches/worldkernel.ail
+  design_docs/sketches/worldtypes.ail
+  world/contracts.ail
+  world/logepoch.ail
+  world/transitions.ail
+  world/types.ail
+)
+
 # ── Leg 0 — bounded execution (hardcoded deadlines, non-env-overridable, V26) ──
 # ai-check -timeout bounds only individual Z3 queries and `ailang test` has no timeout at all (V26),
 # so a solver/runner/parse hang would block CI indefinitely. Every binary invocation in BOTH legs
@@ -151,11 +168,21 @@ with open(out, "wb") as f:
 PY
 }
 
+# NUL-aware diagnostic formatter. Reads a NUL-delimited set file and prints ONE
+# shell-quoted token per line, so `diff -u` stays line-oriented and a pathological path
+# (newline, |, space, glob char) is RENDERED safely rather than PARSED.
+_nul_quoted_lines() { # $1=NUL-delimited file
+  local _p
+  while IFS= read -r -d '' _p; do printf '%q\n' "$_p"; done < "$1"
+}
+
 # Absolute temp paths: Leg 1 runs run_bounded inside `( cd "$base" ... )`, so the out-file path
 # must not be relative to the changed cwd.
 tmp_json="$(mktemp -t verify_ail_json.XXXXXX)"
 tmp_test_json="$(mktemp -t verify_ail_test.XXXXXX)"
-trap 'rm -f "$tmp_json" "$tmp_test_json"' EXIT
+tmp_mods_actual="$(mktemp -t verify_ail_mods_a.XXXXXX)"
+tmp_mods_expected="$(mktemp -t verify_ail_mods_e.XXXXXX)"
+trap 'rm -f "$tmp_json" "$tmp_test_json" "$tmp_mods_actual" "$tmp_mods_expected"' EXIT
 
 # ── Leg 1 — ai-check required-check manifest ──────────────────────────────────
 # For each swept module: run bounded, capture JSON, parse. Exit codes ADVISORY (JSON is
@@ -165,24 +192,63 @@ trap 'rm -f "$tmp_json" "$tmp_test_json"' EXIT
 echo "── Leg 1: ai-check required-check manifest"
 total_verified=0
 checked=0
+
+# ── Leg 1a — enumerate ONCE into parallel indexed arrays (NUL end to end; no delimiter
+# is ever embedded in a record, so no path can be mis-parsed by the gate that must reject it).
+bases=(); rels=(); mods=()
 for entry in "${ROOTS[@]}"; do
   base="${entry%%|*}"
   tree="${entry#*|}"
   if [ "$tree" = "." ]; then searchdir="$base"; else searchdir="$base/$tree"; fi
   [ -d "$searchdir" ] || continue
   while IFS= read -r -d '' f; do
-    rel="${f#"$base"/}"          # module path relative to its base (what ai-check wants)
-    mod="${f#./}"                # repo-relative path (manifest key), normalized (gemini catch)
-    checked=$((checked + 1))
-    echo "   ai-check $mod"
-    ( cd "$base" && run_bounded "$GATE_LEG_TIMEOUT_S" "$tmp_json" "$AILANG_BIN" ai-check -timeout 5s "$rel" )
-    rc=$?
-    if [ "$rc" -eq 124 ]; then
-      echo "✗ ai-check TIMEOUT on $mod (>${GATE_LEG_TIMEOUT_S}s)" >&2
-      exit 1
-    fi
-    # other exit codes advisory (V10/V20) — the JSON parse below is authoritative
-    mod_verified=$(python3 - "$mod" "$tmp_json" <<'PY'
+    bases+=("$base")
+    rels+=("${f#"$base"/}")      # module path relative to its base (what ai-check wants)
+    mods+=("${f#./}")            # repo-relative path (manifest key), normalized (gemini catch)
+  done < <(find "$searchdir" -name '*.ail' -print0 | sort -z)
+done
+
+# ── Leg 1b — MEMBERSHIP COMPARE, before any ai-check runs.
+# Guards come BEFORE the printf writes and read ${#arr[@]}: under `set -u` (line 30) with
+# bash 3.2 (the rig's /usr/bin/env bash), "${arr[@]}" on an EMPTY array is an unbound-variable
+# ABORT, so a write-then-guard order would kill the script before its own null-case message
+# could ever print. ${#arr[@]} is set -u-safe on an empty array.
+if [ "${#mods[@]}" -eq 0 ]; then
+  echo "✗ swept .ail enumeration was empty — the membership compare would pass vacuously; failing loudly" >&2
+  exit 1
+fi
+if [ "${#LEG1_MODULES[@]}" -eq 0 ]; then
+  echo "✗ LEG1_MODULES allowlist is empty — the membership compare would pass vacuously; failing loudly" >&2
+  exit 1
+fi
+printf '%s\0' "${mods[@]}"         | LC_ALL=C sort -z > "$tmp_mods_actual"
+printf '%s\0' "${LEG1_MODULES[@]}" | LC_ALL=C sort -z > "$tmp_mods_expected"
+if ! cmp -s "$tmp_mods_expected" "$tmp_mods_actual"; then
+  echo "✗ swept .ail module set differs from the LEG1_MODULES allowlist — an intentional" >&2
+  echo "  module add/remove must edit LEG1_MODULES in scripts/verify_ail.sh in the SAME commit" >&2
+  diff -u --label "expected: LEG1_MODULES in scripts/verify_ail.sh" \
+          --label "actual:   .ail files swept under ROOTS" \
+          <(_nul_quoted_lines "$tmp_mods_expected") <(_nul_quoted_lines "$tmp_mods_actual") >&2
+  exit 1
+fi
+echo "   ✓ swept .ail module set equals the LEG1_MODULES allowlist (${#mods[@]} modules)"
+
+# ── Leg 1c — consume the SAME arrays by index. cwd / run_bounded / absolute-temp semantics
+# are untouched; "what is compared" and "what is checked" are the same array objects.
+for i in "${!mods[@]}"; do
+  base="${bases[$i]}"
+  rel="${rels[$i]}"
+  mod="${mods[$i]}"
+  checked=$((checked + 1))
+  echo "   ai-check $mod"
+  ( cd "$base" && run_bounded "$GATE_LEG_TIMEOUT_S" "$tmp_json" "$AILANG_BIN" ai-check -timeout 5s "$rel" )
+  rc=$?
+  if [ "$rc" -eq 124 ]; then
+    echo "✗ ai-check TIMEOUT on $mod (>${GATE_LEG_TIMEOUT_S}s)" >&2
+    exit 1
+  fi
+  # other exit codes advisory (V10/V20) — the JSON parse below is authoritative
+  mod_verified=$(python3 - "$mod" "$tmp_json" <<'PY'
 import json, sys
 mod = sys.argv[1]
 # Hardcoded manifest — keyed by (repo-relative module file, bare function name), V17.
@@ -223,11 +289,10 @@ for fn in sorted(required):
 # Print the count of VERIFIED results (used for the world/-scoped secondary total).
 print(sum(1 for r in verify.get("results", []) if r.get("status") == "verified"))
 PY
-    ) || exit 1
-    case "$mod" in
-      world/*) total_verified=$((total_verified + mod_verified));;
-    esac
-  done < <(find "$searchdir" -name '*.ail' -print0 | sort -z)
+  ) || exit 1
+  case "$mod" in
+    world/*) total_verified=$((total_verified + mod_verified));;
+  esac
 done
 
 if [ "$checked" -eq 0 ]; then
