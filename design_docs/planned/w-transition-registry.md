@@ -412,6 +412,10 @@ Unknown/expired session and upstream structured-error encoding remain P6.B respo
   list. Any detector tokens used by the test are assembled rather than present as literal scan
   needles. The test assertion fails, rather than merely logging, because `scripts/verify_go.sh`
   runs `go test` without `-v`; normal `go test ./...` therefore enforces the boundary in CI.
+- The production-file inventory is a filesystem walk that skips nested Go modules and asserts a
+  non-zero floor, required anchors, test-file exclusion, and a `go list` superset cross-check.
+  Detector identifiers are exact matches; in particular `InvokeAttendedPublish` is not an
+  `Invoke` selector call. Hermetic positive and negative controls cover every detector mechanism.
 - TR.C may land before or after TR.B, but TR.B does not close the declaration-honesty claim by
   itself. The `w-mcp-projection` P6.B prerequisite is satisfied only when TR.A and TR.B are merged
   and TR.C is green; its charter must record that exact condition before implementation starts.
@@ -437,7 +441,8 @@ changing its wire format; TR.C is a structural CI boundary and may land on eithe
 | `host/broker/decide.go` | TR.B | exported thin `Allows` adapter over `Decide` |
 | `host/broker/broker_test.go` | TR.B | snapshot epoch and four denial-arm tests |
 | `host/broker/invoke_boundary_test.go` | TR.C | repository-wide AST binding assertion and exact three-call legacy exemption |
-| `design_docs/planned/w-transition-registry.md` | design | this document |
+| `design_docs/planned/w-transition-registry.md` | design/TR.C | this document and AC11 zero-tolerance activation |
+| `design_docs/verification/w-transition-registry/trc-mutations.md` | TR.C | 23-mutation non-vacuity transcript |
 
 No change to `world/`, `host/registry`, `host/store/schema.sql`, `host/replay`, daemon/CLI code,
 protocol code, `scripts/verify_ail.sh`, or CI workflow.
@@ -564,7 +569,7 @@ state. Every delivered gate also has a compiling RED mutation below.
     because this sandbox denies loopback listeners (`bind: operation not permitted`). CI must run
     `./scripts/verify_go.sh` green before any milestone merges.
 11. **AC11 — structural registry-dispatch binding boundary.** Command:
-    `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/broker -list 'Test(ReplayReturnsRecordedBytesWithoutDispatch|RegistryDispatchBindingBoundary)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 1 || { test "$count" -eq 2 && GOTOOLCHAIN=go1.25.6 go test ./host/broker -run 'Test(ReplayReturnsRecordedBytesWithoutDispatch|RegistryDispatchBindingBoundary)$' -count=1; }`.
+    `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/broker -list 'Test(ReplayReturnsRecordedBytesWithoutDispatch|RegistryDispatchBindingBoundary)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 2 && GOTOOLCHAIN=go1.25.6 AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/broker -run 'Test(ReplayReturnsRecordedBytesWithoutDispatch|RegistryDispatchBindingBoundary)$' -count=1`.
     Base observed this revision: rc=0, count=1 from the known existing replay control; the binding
     test is absent. TR.C activation removes the count=1 arm, requires count=2, and runs both tests.
     The count gate is independent of whether any future projection/coordinator directory exists.
@@ -614,9 +619,13 @@ state. Every delivered gate also has a compiling RED mutation below.
 | AC10 package build | `MUT-GO-CODEC-TAG`: change the v1 semantic ID constant to `world/transition-registry/v2` | full new-package suite RED while all production code still compiles |
 | TR.A activated test inventory | `MUT-DELETE-TR-A-TEST`: delete or rename one required AC1–AC4/AC10 test after removing the base arm | exact activated count RED; zero is no longer accepted |
 | TR.B activated test inventory | `MUT-DELETE-TR-B-TEST`: delete or rename one required AC5–AC7 test after removing the base arm | exact activated count RED; zero is no longer accepted |
-| AC11 fourth raw invoke | `MUT-BINDING-FOURTH-INVOKE`: add a fourth production `Session.Invoke` outside the three enumerated legacy sites | AST boundary assertion RED while production compiles |
+| AC11 fourth raw invoke inside broker | `MUT-BINDING-FOURTH-INVOKE-IN`: add a fourth production `Session.Invoke` inside `host/broker` | exact exemption count RED while production compiles |
+| AC11 raw invoke outside broker | `MUT-BINDING-FOURTH-INVOKE-OUT`: add an `Invoke` selector outside `host/broker` | outside-clean assertion RED |
+| AC11 moved exemption identity | `MUT-BINDING-MOVE-SITE`: move one exempt call into a new helper while retaining count 3 | identity-set assertion RED while count remains green |
+| AC11 live/replay constructors | `MUT-BINDING-CTOR-LIVE`, `MUT-BINDING-CTOR-REPLAY` | matching hermetic control and outside-clean assertion RED |
+| AC11 type/alias/dot import | `MUT-BINDING-SESSION-TYPE`, `MUT-BINDING-ALIAS-IMPORT`, `MUT-BINDING-DOT-IMPORT` | matching detector mechanism RED |
 | AC11 raised exemption | `MUT-BINDING-RAISE-COUNT`: silently raise the enumerated exemption count | pinned count/identity assertion RED |
-| AC11 detector neutered | `MUT-BINDING-IF-FALSE`: change the detector condition to `if false && ...` | known three-site detector control sees zero instead of exactly 3; assertion RED while mutant compiles |
+| AC11 detector neutered | `MUT-BINDING-IF-FALSE-{INVOKE,CTOR-LIVE,CTOR-REPLAY,SESSION-TYPE,DOT-IMPORT}` | the corresponding hermetic positive control sees zero; assertion RED while mutant compiles |
 | TR.C activated test inventory | `MUT-DELETE-TR-C-TEST`: delete or rename the required AC11 test after removing the base arm | exact activated count RED; the known control alone is no longer accepted |
 
 TR.B rule-3j branch inventory (enumerated from the implementation diff):
@@ -695,7 +704,7 @@ prefix; output is quoted or counted rather than inferred.
 | V22 | revised aggregate gate at base | `export PATH=/opt/homebrew/bin:$PATH;` run the exact AC10 command above, then print rc/count | build PASS; store PASS; broker PASS; AC10 rc=0 count=0 because the new package is absent. |
 | V23 | `grep` exists without the harness shell snapshot | `export PATH=/opt/homebrew/bin:$PATH; env -i PATH=/usr/bin:/bin:/opt/homebrew/bin sh -c 'command -v grep'` | `/usr/bin/grep`, rc=0. |
 | V24 | v1 interface hash derived from the frozen ASCII preimage in Decision 2 | `export PATH=/opt/homebrew/bin:$PATH; printf '%s' 'world/transition-registry/v1\|TR-CJSON-1\|revision:{entries,interfaceHash,parent,revision,semanticID}\|descriptor:{access,declaredEffects,description,id,inputSchema,interpreter,outputSchema,semanticsEpoch,title,transitionFn}\|id:lower-ascii-1..128-segments-1..32\|schema:raw262144-canonical65536\|entries:1024\|revision:raw16777216-canonical8388608' \| shasum -a 256` | `743f39f470bf354ebab0ab196598b5ba72db80463d833325cb7672249d4734ac`, rc=0. |
-| V25 | controller measurement of every production `Session.Invoke` call | `export PATH=/opt/homebrew/bin:$PATH; grep -rn '\.Invoke(' --include='*.go' host/ cmd/ \| grep -v _test.go` | exactly **3**, all in `host/broker/publish_op.go` at lines 135, 162, and 279; the `_test.go` known-positive arm returns **83** |
+| V25 | controller measurement of every production `Session.Invoke` call | `export PATH=/opt/homebrew/bin:$PATH; grep -rn '\.Invoke(' --include='*.go' host/ cmd/ \| grep -v _test.go` | exactly **3**, all in `host/broker/publish_op.go` at lines 135, 162, and 279; the current `_test.go` known-positive arm returns **90** |
 | V26 | controller measurement of production session construction | `export PATH=/opt/homebrew/bin:$PATH; grep -rn 'NewSession(\|NewReplaySession(\|newSession(' --include='*.go' host/ cmd/ \| grep -v _test.go` | exported `broker.NewSession`: **0** production callers; exported `NewReplaySession`: **0** production callers; unexported `newSession`: exactly **3**, all in `host/broker/publish_op.go` at lines 132, 159, and 276, providing the firing positive control |
 | V27 | current coordinator/daemon-to-broker dispatch path | controller call-graph synthesis of V25 and V26, tracing the only production construction and invocation sites | **none**: the daemon does not invoke the broker; exported `Session.Invoke` (`broker.go:126`) is reached in production only from inside `host/broker` |
 
