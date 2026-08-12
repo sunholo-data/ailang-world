@@ -205,7 +205,14 @@ for entry in "${ROOTS[@]}"; do
     bases+=("$base")
     rels+=("${f#"$base"/}")      # module path relative to its base (what ai-check wants)
     mods+=("${f#./}")            # repo-relative path (manifest key), normalized (gemini catch)
-  done < <(find "$searchdir" -name '*.ail' -print0 | sort -z)
+    # -iname, NOT -name: `-name '*.ail'` is case-SENSITIVE, so `world/SNEAKY.AIL` was invisible to
+    # the enumeration and therefore to the compare — the gate printed its own "module set equals the
+    # LEG1_MODULES allowlist (11 modules)" success line with an unenumerated module sitting in world/.
+    # A recogniser's coverage is a property of its INPUT GRAMMAR, not of its branch count. Case
+    # variants are 0 today (`find … -iname '*.ail' ! -name '*.ail'` → 0), so this does not move the
+    # set; it closes the spelling. A variant now enters `mods`, mismatches the allowlist, and is
+    # refused BEFORE any ai-check runs.
+  done < <(find "$searchdir" -iname '*.ail' -print0 | sort -z)
 done
 
 # ── Leg 1b — MEMBERSHIP COMPARE, before any ai-check runs.

@@ -201,6 +201,41 @@ func TestModuleManifestRejectsStrayModule(t *testing.T) {
 	requireLiveTreeUntouched(t)
 }
 
+// TestModuleManifestRejectsCaseVariantExtension pins the spelling that defeated the first cut of
+// this gate. The enumeration used `find -name '*.ail'`, which is case-SENSITIVE, so a module named
+// `SNEAKY.AIL` never entered the swept set — and a set the enumeration cannot see is a set the
+// compare cannot refuse. Measured on the landed-then-repaired tree: with `-name`, the gate exits 0
+// and prints "swept .ail module set equals the LEG1_MODULES allowlist (11 modules)" while the file
+// sits in world/; with `-iname` it is refused before any ai-check runs.
+//
+// The assertion deliberately reads the offending path out of the gate's OWN diff output rather than
+// reconstructing the expected text, so a gate that refuses for some unrelated reason cannot pass it.
+func TestModuleManifestRejectsCaseVariantExtension(t *testing.T) {
+	root := newIsolatedGateRoot(t)
+	requirePristineControl(t, root)
+	probe := filepath.Join(root, "world", "SNEAKY.AIL")
+	const source = "module world/SNEAKY\n\nexport func sneakyId(x: int) -> int = x\n"
+	if err := os.WriteFile(probe, []byte(source), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	rc, out := runGateAt(t, root, map[string]string{
+		"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
+	})
+	if rc != 1 {
+		t.Fatalf("case-variant extension: want rc=1, got %d\n%s", rc, out)
+	}
+	if !strings.Contains(out, "+world/SNEAKY.AIL") {
+		t.Fatalf("case-variant refusal omits the offending path from the manifest diff\n%s", out)
+	}
+	if strings.Contains(out, "verify gate PASSED") {
+		t.Fatalf("case-variant refusal printed terminal success\n%s", out)
+	}
+	if got := strings.Count(out, "\n   ai-check "); got != 0 {
+		t.Fatalf("case-variant was ai-checked before refusal: count=%d\n%s", got, out)
+	}
+	requireLiveTreeUntouched(t)
+}
+
 func TestModuleManifestRejectsDeletedModule(t *testing.T) {
 	root := newIsolatedGateRoot(t)
 	requirePristineControl(t, root)

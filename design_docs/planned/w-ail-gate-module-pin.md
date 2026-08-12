@@ -297,7 +297,21 @@ copied root. Only then is the mutation applied and the red asserted. Without thi
 committed-arm story is a vacuous pass wearing a green. Its own non-vacuity is MUT-ISO-INCOMPLETE
 (§6): drop one file from the copy set and the control itself must fail.
 
-### 5.4 The three arms
+### 5.4 The arms — FIVE as shipped, not three
+
+> **Superseded by implementation, and by the judge.** This section was drafted for three arms with
+> a named demotion path for the third. **Five shipped.** The sprint plan (§6.2) took both null
+> cases as committed arms rather than demoting either — a one-shot is a proof about a tree that no
+> longer exists, which is this item's entire residual complaint about iteration 71, and the branch
+> those two arms cover is the one this doc got *wrong* (the bash-3.2 `set -u` guard ordering).
+> The fifth, `TestModuleManifestRejectsCaseVariantExtension`, was added after the evaluator
+> defeated the landed gate with `world/SNEAKY.AIL`: `find -name '*.ail'` is case-SENSITIVE, so the
+> variant never entered the swept set and the gate printed its own
+> `✓ swept .ail module set equals the LEG1_MODULES allowlist (11 modules)` line with an
+> unenumerated module in `world/`. Reproduced first-party, repaired with `-iname`, and proven by
+> reverting only the detector — exactly that arm reds, and the inverse arm is rc=0. The demotion
+> path below is therefore NOT TAKEN; it is left in place as the record of a decision, not as
+> live guidance.
 
 - **`TestModuleManifestRejectsStrayModule`** — builds an isolated root; pristine control
   (§5.3); writes a valid leaf probe `<iso>/world/_stray_manifest_probe.ail` (fixed 3-line
