@@ -68,31 +68,38 @@ func scanFile(rel string, tree *ast.File, fset *token.FileSet, insideBroker bool
 			locals[local] = true
 		}
 	}
+	// Every detector matches the bare *ast.SelectorExpr, NEVER the enclosing
+	// *ast.CallExpr. A call site's selector is itself a SelectorExpr node, so
+	// matching here still sees `s.Invoke(...)` — but it ALSO sees the shapes a
+	// CallExpr-anchored detector is blind to by construction: a method value
+	// (`call := s.Invoke`), a function value (`mk := broker.NewSession`), an
+	// argument (`f(s.Invoke)`), or a struct field holding either. Those reach a
+	// raw session through ordinary Go and no reflection, so anchoring on the
+	// call was a hole, not a simplification. Matching both node kinds would
+	// double-count every real call site and silently move the exemption count
+	// from 3 to 6, so the CallExpr arm is deleted rather than kept alongside.
+	// Comments are why this is an AST and not a text scan: `Session.Invoke`
+	// appears in 8 production comments here and in cmd/world-publish, and a
+	// text scanner would be RED at base on prose.
 	ast.Inspect(tree, func(node ast.Node) bool {
-		switch n := node.(type) {
-		case *ast.CallExpr:
-			sel, ok := n.Fun.(*ast.SelectorExpr)
-			if !ok {
-				return true
-			}
-			if sel.Sel.Name == invokeSel {
-				add(sel.Pos(), "invoke-call")
-			}
-			id, ok := sel.X.(*ast.Ident)
-			if !ok || !locals[id.Name] {
-				return true
-			}
-			if sel.Sel.Name == ctorLive {
-				add(sel.Pos(), "ctor-live")
-			}
-			if sel.Sel.Name == ctorReplay {
-				add(sel.Pos(), "ctor-replay")
-			}
-		case *ast.SelectorExpr:
-			id, ok := n.X.(*ast.Ident)
-			if ok && locals[id.Name] && n.Sel.Name == sessType {
-				add(n.Pos(), "session-type")
-			}
+		sel, ok := node.(*ast.SelectorExpr)
+		if !ok {
+			return true
+		}
+		if sel.Sel.Name == invokeSel {
+			add(sel.Pos(), "invoke-call")
+		}
+		id, ok := sel.X.(*ast.Ident)
+		if !ok || !locals[id.Name] {
+			return true
+		}
+		switch sel.Sel.Name {
+		case sessType:
+			add(sel.Pos(), "session-type")
+		case ctorLive:
+			add(sel.Pos(), "ctor-live")
+		case ctorReplay:
+			add(sel.Pos(), "ctor-replay")
 		}
 		return true
 	})
@@ -292,6 +299,13 @@ func TestRegistryDispatchBindingBoundary(t *testing.T) {
 			{"POS-session-type", `package p; import broker ` + brokerImport + `; func f(*broker.Session){}`, "session-type", 1},
 			{"POS-alias-session", `package p; import bk ` + brokerImport + `; func f(*bk.Session){}`, "session-type", 1},
 			{"POS-dot-import", `package p; import . ` + brokerImport, "dot-import", 1},
+			// The three shapes a CallExpr-anchored detector was blind to. Each
+			// reaches a raw session through ordinary Go — no reflection, no
+			// linkname, no build tags — and each was green against all 32
+			// mutation arms, because every arm used the CALLED form.
+			{"POS-invoke-method-value", `package p; func f(s interface{ ` + `Invo` + `ke()` + ` }) { g := s.` + `Invo` + `ke; _ = g }`, "invoke-call", 1},
+			{"POS-ctor-func-value", `package p; import broker ` + brokerImport + `; var mk = broker.NewSession`, "ctor-live", 1},
+			{"POS-invoke-as-argument", `package p; func h(any){}; func f(s interface{ ` + `Invo` + `ke()` + ` }) { h(s.` + `Invo` + `ke) }`, "invoke-call", 1},
 			{"NEG-invokeattended", `package p; import broker ` + brokerImport + `; func f(){ broker.InvokeAttendedPublish(nil,nil,nil,nil) }`, "", 0},
 			{"NEG-bound-request", `package p; import broker ` + brokerImport + `; func f(b *broker.BoundInvoker){ b.Request(nil) }`, "", 0},
 			{"NEG-prose-only", `package p // broker.NewSession and Session.` + `Invo` + `ke are prose`, "", 0},

@@ -138,3 +138,53 @@ rc=0, totals **4 identities / 11 modules / 14 tests UNMOVED** · `go vet ./host/
 AC6=3 AC7=3 unmoved, **AC11 1 → 2 ACTIVATED** · `AC-INVOKE3` n=3 p=3 (control 90) · `host/broker`
 under `-race` **90.896s** against a 92.3s base. Final gate on a `.snap`-free tree, i.e. the tree CI
 sees: `walked=39 skipped_tests=45 skipped_nested_modules=2 golist=38`.
+
+## The evaluator's blocking finding, reproduced and FIXED IN-PR (iteration 75)
+
+`sonnet` scored the milestone **63/100 FAIL** on one blocking finding, and it is the right verdict:
+**the gate was defeated by ordinary Go.** Every detector for `Invoke`, `NewSession` and
+`NewReplaySession` lived inside `case *ast.CallExpr`, matching only when the selector is the `Fun`
+of a call. So a **method value** or a **function value** reaches a raw session with no reflection,
+no `//go:linkname`, no generics and no build tags:
+
+```go
+var mkSession = broker.NewSession   // function value — ctor-live never fires
+s := mkSession(st, id, grants, reg) // type *broker.Session, never spelled
+call := s.Invoke                    // method value — Fun is an *ast.Ident, not a SelectorExpr
+result, _, err := call(ctx, req, nil)
+```
+
+**Reproduced first-party before acting.** That package placed at `host/evasion75/`: `go build ./...`
+rc=0, `go vet ./host/...` rc=0, and the gate **rc=0 — PASS**, with `walked=40` (was 39) proving the
+file WAS scanned and yielded zero findings. A package outside `host/broker` constructed a raw
+session and invoked it, and the gate said the boundary was clean.
+
+**Why all 32 arms agreed.** Every one of them — the executor's 23 and the controller's 9 — used the
+CALLED form. This is the mission's recurring class in its purest shape yet: the production code was
+correct, the mechanism was tested, and the *shape space* was never enumerated. Rule 3j asks how many
+ways a thing can REFUSE; this asks the dual — how many ways the thing it refuses can be SPELLED.
+
+**The fix**: match the bare `*ast.SelectorExpr` and delete the `*ast.CallExpr` arm. A call site's
+selector is itself a SelectorExpr, so real calls are still seen; matching BOTH node kinds would
+double-count every call and silently move the exemption count from 3 to 6. Measured safe first: the
+only bare `.Invoke` selectors in production outside the three legacy sites are **8 occurrences in
+COMMENTS** (`host/broker/registry_publish.go`, `approve.go`, `publish_op.go`,
+`cmd/world-publish/main.go:358`) — invisible to an AST and RED at base to any text scanner, which is
+exactly why the design mandated ASTs.
+
+**Three new hermetic controls pin the branch** (`POS-invoke-method-value`, `POS-ctor-func-value`,
+`POS-invoke-as-argument`), so the repair has an observer rather than being a silent widening.
+
+**The repair is proven, not asserted — three arms:**
+
+| Arm | Observation |
+|---|---|
+| A — fixed detector, whole gate | rc=0; all 15 controls PASS; `inside_broker_exemption` still exactly **3**; `walked=39 golist=38` |
+| B — the original evasion against the fixed detector | **rc=1**, `:270 raw broker binding outside host/broker` — the construction is now REFUSED |
+| C — revert ONLY the detector, keep the new controls | **rc=1**, and the failures are **exactly** the three new controls and nothing else — so they are the killer, not bystanders |
+
+`invoke_boundary_test.go` restored to the fixed state, sha256 `5fa995cba6ed8790…` verified.
+
+Gates after the repair, outside the sandbox: `verify_go.sh` rc=0 / 0 FAIL / 2 healthy races ·
+`verify_ail.sh` rc=0, **4/11/14 UNMOVED** · `go vet ./host/...` rc=0 · AC5=2 AC6=3 AC7=3 AC11=2
+`AC-INVOKE3` n=3.
