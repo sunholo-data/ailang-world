@@ -7499,3 +7499,221 @@ on every mutation sweep this loop runs and has now been deferred by four consecu
 Then item **13** `w-evidence-grade-mapping`. Item 5 `P6.B` remains **UNBLOCKED**. Bookkeeping owed
 at the next convenient pick: move `w-ail-gate-module-pin.md` and its `-sprint-plan.md` companion to
 `design_docs/implemented/`.
+
+## Iteration 78 — 2026-08-13 — `w-broker-base-flake` (item 16) **DESIGNED and PARKED `needs-human-review` — two quorum rounds, both BLOCKED, and the second objection reverses the doc's central architectural choice** (doc `design_docs/planned/w-broker-base-flake.md`, 586 lines; both rounds had 2 external reviewers PRESENT, `absent_reviewers` empty; `metered=$0.202435`) — the iteration's spine is that **a faithful mock of a mechanism is not a faithful mock of its INPUTS: my 1,987-run exoneration of `runBounded` re-used one warm fixture inode while the real test writes a fresh one every run, and on darwin that difference is 3 ms vs 103 ms — the same order as the 100 ms deadline under test**
+
+**Pick.** The queue head, item 16, and iteration 77's own `[NEXT]`. It is a `NEEDS A DESIGN DOC`
+head, so the routing step is **designer → quorum**, not planner → executor.
+
+**Gate 0.** Kill switch armed · tree clean · `gh` on `sunholo-voight-kampff` · billing tripwire
+**CLEAN** (`ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` both empty). Bookkeeping issue is **#53**
+(from the world-namespaced `~/.ailang/state/mission-world-gh-issue`, **not** the unnamespaced
+`mission-gh-issue`, which holds V1's `635`); `scripts/mission_directives.sh` — which lives in the
+**V1 checkout** and was invoked by absolute path — reports **0 directives from
+`[MarkEdmondson1234]`** since the watermark `2026-08-12T12:23:17Z`, of **16** comments, so the
+allowlist filter is enumerating rather than returning empty. **No thread rotation owed:** `#53` was
+created `2026-08-10T05:37:35Z` = **07:37 local**, i.e. AFTER the Monday-07:00 **local** boundary,
+and it holds 16 comments (< 80). **Weekly external-issue sweep: 0 orphans of 1 enumerated** — the
+repo has exactly one open issue and it is the bookkeeping thread itself. Inbox: 8 unread, of which
+6 are `eval-suite` run notifications and 2 are `mission-v1` (iteration 187's report, and its
+acknowledgement that **World's iter-77 rule-3j enumerator proposal was ADOPTED** into the shared
+skill as commit `0625059d3` / PR `ailang#684`, with V1's own corroborating instance filed as
+`ailang#683`). Cross-mission messages never auto-outrank the queue and neither of these asked
+anything of World; both marked read.
+
+**Gate 1.** `git fetch origin`; local `dev` **==** `origin/dev` **== `b2c3f89`**, zero ahead, zero
+behind, zero worktrees, main checkout clean. **The running skill is byte-identical to origin** —
+World has no repo-local `.claude/skills/`, so `~/.claude/skills/mission-control` resolves through
+the symlink into the **V1 checkout**, and `git show origin/dev:… | cmp -s -` there is silent. That
+is the first time in four iterations the rulebook has not been behind; V1's iter-187 message says
+why (it fast-forwarded the shared checkout). dev CI **green both jobs on `b2c3f89`**, read
+SHA-addressed (`checks=2` = expected 2: `ailang-code verify gate` + `go host build + test gate`);
+the repo has exactly one workflow, so Gate 1's name-allowlist blindness is covered by construction.
+**Died-mid-flight check, all four traces:** zero open PRs authored by this loop, `git worktree list`
+shows only the main checkout, `git status --porcelain` empty, and the `.wt-iter*` siblings on disk
+are V1's (iteration numbers 117–163, outside World's range).
+
+**THE MEASUREMENT KILLED BOTH OF THE QUEUE ROW'S LOAD-BEARING NUMBERS AND ITS STATED MECHANISM —
+AND THIS IS THE SECOND CONSECUTIVE ITEM WHERE THAT HAPPENED.** Item 16 was filed at iter-73 from
+the `TR.B` planner's measurement: `TestHandlerTimeoutKillsTheWholeProcessGroup` failing **2 of 11**
+isolated runs (**~18%**), with "process-group kill timing under parallel load" named as the
+hypothesis. Ghost discipline says live-repro a row's claim at HEAD before routing anything, so I
+did.
+
+**The flake is REAL and I reproduced it — once.** Building the package test binary with `-race` and
+running that one test, the **first** run failed:
+`--- FAIL: TestHandlerTimeoutKillsTheWholeProcessGroup (5.28s)` against a **100 ms** bound. 5.28 s ≈
+the fixture's own `sleep 5`, which is what the test's failure message predicts.
+
+**But the rate at HEAD is 0.76%, not ~18%.** Real-test runs, all with
+`AILANG_BIN=/tmp/ailang-v0300/ailang` and a prebuilt binary
+(`go test -c [-race] -o /tmp/broker.test ./host/broker`), selected with
+`-test.run '^TestHandlerTimeoutKillsTheWholeProcessGroup$' -test.count=1`:
+
+| arm | pass | fail |
+|---|---|---|
+| plain, 20 isolated sequential | 20 | 0 |
+| plain, 8 concurrent × 5 rounds | 40 | 0 |
+| `-race`, 20 isolated sequential | 20 | 0 |
+| `-race`, 8 concurrent × 4 rounds | 32 | 0 |
+| `-race`, warm + `-test.v`, 15 runs | 15 | 0 |
+| `-race`, cold-first-run after `go clean -cache -testcache` × 4 cycles | 4 | 0 |
+| **the one failure (above)** | — | **1** |
+| **total** | **131** | **1** → **0.76%** |
+
+**THAT REFUTES THE ROW'S OWN ACCEPTANCE PRESCRIPTION, WHICH IS THE POINT AND NOT A PEDANTRY.** The
+row mandates proving the fix "with a repeat-count run (`-count=20`) that reds before and passes
+after". At p = 0.0076 a 20-run arm reds with probability 1 − (1 − p)²⁰ ≈ **14%**, so the prescribed
+"reds before" leg **fails to red about 86% of the time** — a coin-flip gate, i.e. precisely the
+vacuous gate coding-standards **S6** forbids. This is the same shape as iteration 76 killing item
+12's `EXACT_TOTAL_MODULES=11`: **a queue row's diagnosis and its prescription age at different
+rates, and the prescription rots first**, because a diagnosis is a claim about the world that stays
+roughly true while a prescription is a claim about what will still be *sufficient*, which decays
+the moment any number moves.
+
+**I THEN EXONERATED `runBounded` ACROSS 1,987 CONTROLLED RUNS — AND THE DESIGNER REFUTED THE
+EXONERATION. THAT IS THE SPINE.** I wrote a standalone probe mirroring
+`host/broker/handlers.go:82` `runBounded` line for line — `exec.CommandContext`,
+`SysProcAttr{Setpgid: true}`, `cmd.Cancel = syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)`,
+`StdoutPipe`, capped `io.ReadAll`, `cmd.Wait` — and instrumented the two ways that kill can silently
+no-op: the `cmd.Process == nil` early return at `:97`, and an **`ESRCH`** return, which is what
+happens if the child has not yet completed its post-fork `setpgid`, because then the target process
+*group* does not exist and **nothing at all is killed**. Against a fixture verified byte-identical
+to `writeExecutable`'s output with `od -c`:
+
+| build | shape | runs | leaks >2 s | ESRCH | `Process==nil` | worst |
+|---|---|---|---|---|---|---|
+| plain | bounds 1/5/20/50/100/300 ms, 12 each | 72 | 0 | 0 | 0 | 303 ms |
+| plain | serial ×400 @100 ms | 400 | 0 | 0 | 0 | 108 ms |
+| plain | 12-way parallel ×600 @100 ms | 600 | 0 | 0 | 0 | 108 ms |
+| plain | serial 15 + 12-way ×120 (first instrumented pass) | 135 | 0 | 0 | 0 | 143 ms |
+| `-race` | serial ×300 @100 ms | 300 | 0 | 0 | 0 | 104 ms |
+| `-race` | 12-way parallel ×480 @100 ms | 480 | 0 | 0 | 0 | 121 ms |
+| | **total** | **1,987** | **0** | **0** | **0** | |
+
+**The designer found the hole in one move.** My probe re-executes **one warm fixture inode**; the
+real test calls `writeExecutable(t, …)` and so writes a **fresh** file into a fresh `t.TempDir()` on
+every single run. On darwin a freshly-written `#!/bin/sh` script pays a first-exec assessment cost.
+I re-measured it independently before accepting the refutation:
+
+```
+FRESH  n=25  min=100ms  med=103ms  max=198ms  mean=107ms  >100ms=24
+WARM   n=25  min=2ms    med=3ms    max=10ms   mean=3ms    >100ms=0
+```
+
+**A 34× difference, and it is the same order as the 100 ms deadline under test.** So my 1,987-run
+exoneration is scoped to the **warm** regime, and **the real test never enters it**. This is rule
+3a(i-d)'s scope trap sprung on the controller, and it is a nastier variant than the usual one: the
+instrument was *mechanically* faithful — every syscall, flag and struct field matched, which is
+exactly what I checked — and only its **fixture lifecycle** diverged, which no amount of reading the
+two sources side by side would have surfaced, because the divergence is not in either source. The
+generalisation worth more than the instance: **a faithful mock of the mechanism is not a faithful
+mock of its INPUTS, and when an input's cost is the same order as the bound under test, the input
+IS the mechanism.** It has a second edge the designer drew out and which is arguably the more
+valuable finding: because the fresh-exec cost ≈ the deadline, the deadline usually expires *before
+the grandchild exists at all*, so **the committed test is partially vacuous per-run on darwin** —
+it has been passing for months without exercising the grandchild-kill path it exists to protect.
+
+**A THIRD INSTRUMENT OF MINE FAILED VACUOUSLY AND IS RECORDED AS PRECEDENT.** My first "control
+test in the same package" selected `-test.run '^TestHandlerFilesystemScopeConfinement$'` — **a name
+that does not exist in this repo**. It printed `testing: warning: no tests to run` / `PASS` /
+**rc=0**, which is byte-indistinguishable from a real green, and I banked it for a full arm before
+checking whether the name existed. Every acceptance criterion in the resulting doc now counts
+`--- PASS:` / `--- FAIL:` lines rather than reading `rc=0`.
+
+**Designer.** `claude:claude-fable-5` via `claude-sub` (the `env -u ANTHROPIC_API_KEY
+-u ANTHROPIC_AUTH_TOKEN` wrapper — subscription-or-nothing by construction), 1-token probe rc=0
+first, directive **13,327 B** delivery-asserted, `< /dev/null`, backgrounded under a bounded 30-min
+`date +%s` cap, finished in ~25 min inside it. **Rotation:** `~/.ailang/state/mission-designer-
+rotation` is **rig-shared, not mission-namespaced**, and held `codex:gpt-5.6-sol` as last-used;
+gemini is unwired, so the next wired entry is claude — which also matches
+`MISSION_DESIGNER_MODEL`. The directive carried every measurement above under an explicit
+VERIFIED-BY-ME heading with its command, and invited refutation; the refutation it returned is the
+spine of this iteration, which is the loop working exactly as Gate 2's rule (d) describes.
+
+**QUORUM R1 — BLOCKED (`gpt5-6-sol` reject, `gemini-3-1-pro` pass), 2 external reviewers PRESENT,
+`absent_reviewers` EMPTY, `$0.087608`** under a pre-emptively raised `--max-cost-usd 0.30` (iteration
+75's budget-degrade lesson: raise the cap *before* the doc grows, not after a reviewer drops out on
+cost). The objection: the doc offered a `survived` fixture marker as the discriminator between "the
+kill missed the grandchild" (H1) and "the deadline machinery itself stalled" (H2-late), and used
+that one bit to authorise the M2 fix. It cannot bear that weight — the fixture writes
+`sleep 5 && : > survived &`, so `survived` appears exactly when the sleeper completes its five
+seconds *naturally*, which is true both when the kill never reached it and when the kill fired after
+it had already finished. **I checked the objection against the doc's own §5.3 text before forwarding
+it (rule 3f — a reviewer's objection is a claim too) and it is correct rather than a misreading**, so
+I routed a revision carrying both reviewers' verbatim fixes, my own confirmation, and the measured
+observation that kill-boundary instrumentation costs about one assignment — my probe already
+captures errno, and I pointed the designer at its source.
+
+**The revision conceded rather than argued**, withdrew the round-1 claim on the record, and took
+resolution **(A)**: bring M2's `killGroup` seam forward into M1 so the test can record the
+objection's exact evidence list — kill count, monotonic offset, target pgid, errno. It proved the
+seam live on the real tree and restored `handlers.go`; **I verified that restore first-party rather
+than accepting it** — `sha256 8419874…` identical at HEAD and in the working tree, with a
+same-package different-file control hashing differently to show the instrument discriminates, and
+`git status --porcelain` holding only the untracked doc.
+
+**QUORUM R2 — BLOCKED, BOTH REVIEWERS REJECTING, BOTH PRESENT, `$0.114827`. THE TWO OBJECTIONS
+DIFFER IN KIND, AND THAT DIFFERENCE IS THE WHOLE PARK DECISION.** `gemini-3-1-pro`'s is textbook
+narrow-refinement material: `exec.CommandContext` runs its `Cancel` hook — and therefore the
+`killGroup` seam — on a **background context-cancellation goroutine**, while the main test goroutine
+resumes from `cmd.Wait()` inside `Invoke` as soon as the process dies, so reading the recorder's
+fields straight after `Invoke` returns is an unsynchronised race; its verbatim fix is a `sync.Mutex`
+around the recorded fields, held on both the write and the assertion. Concrete, correct, and it
+accepts the design direction. `gpt5-6-sol`'s does not: it asks for resolution **(B)** — delete the
+`handlers.go` change, the recorder, `MUT-SEAM-BYPASS` and M1's authority to choose the fix — which
+**reverses the central A-vs-B decision**, invokes **S3**, and offers as alternatives an external
+platform-specific tracer or *a separate design doc*. The carve-out permits a controller-applied
+second revision only when **every** remaining objection carries a concrete reviewer-authored fix
+**and** does not dispute the design DIRECTION. This one disputes the direction and needs judgement,
+so **Standing rule 2 binds: park, do not force through.**
+
+**I MEASURED THE PARK DOWN TO A ONE-WORD DECISION RATHER THAN FORWARDING AN INVESTIGATION.** Three
+findings, all controller first-party. **(i)** `gpt5-6-sol`'s "enlarges the frozen production core"
+framing is **measurably wrong**: `CLAUDE.md:25` scopes the frozen core to `tools/launchd/*` plus
+skills, **not** `host/`. **(ii)** Its *catch* is nevertheless right and the doc does not meet it —
+coding-standards **S3** binds `host/` explicitly ("Every proposed addition to `world/` or `host/`
+must answer, in its design doc: **why is this not a package?**"), and the doc's §10 answers
+`not applicable in the S3 sense`, which is a dismissal rather than an answer. So the objection is
+**right for the wrong reason**, which is iteration 76's recorded shape and the one the loop is
+least equipped to handle. **(iii)** There is **exactly one** precedent in this repo, the same shape,
+landed through this loop: `host/store/store.go:863` `var commitBeforeOutcomeHook = func() {}`
+(`6811604`, PR #19, `w-store-durability SD.C`), a mutable package-global test hook in production
+code, justified in its own comment on the same grounds — making a mutation observably red without a
+sleep-timed SIGKILL. Both reviewers' safety premise also holds today, and is now measured properly:
+`t.Parallel()` appears **0** times across **46** `*_test.go` files under `host/` + `cmd/`, with a
+same-scope known-positive control firing at **119** (`t.TempDir()`) and `grep` exiting **1** (no
+match) rather than **2** (no such file). **My first attempt at that reading had a control that never
+fired and was discarded** — `grep -rl … | head -3` makes the pipeline's exit status `head`'s, so the
+`|| echo "(none)"` fallback could never run and an empty result read as a clean zero. Rule 3's
+exit-codes-through-pipes class, aimed at the control instead of at the result.
+
+**Gates.** Tree clean throughout; `handlers.go` byte-identical to HEAD; the only added file is the
+design doc. Gate-4 base re-confirmed `dev == origin/dev == b2c3f89` before the first write, with the
+previous-iteration tell run case-insensitively (`iteration 77` → **3**, control `iteration 76` →
+**2**) and the rotation invariant asserted in code before the charter was written
+(`after == before + 2 − 2×1`, 2898 → 2898, STATUS count 3 → 3, and a post-edit grep for known queue
+rows rather than for a STATUS row).
+
+**Ruled out.** The row's `~18%` rate · the row's `-count=20` acceptance proof · "process-group kill
+timing" as the mechanism *in the warm regime* (1,987 runs) · `-test.v`, cold page-cache /
+freshly-built binary, and `-race`-per-se as triggers · my own store/SQLite suspect ordering, on the
+designer's counter-argument that a 5.10–5.26 s elapsed is a fingerprint of the pipe being held to
+the grandchild's *natural* exit and that no store mechanism couples a stall to the fixture's `sleep`
+parameter, which is stronger than my §V-F reasoning · applying the narrow-refinement carve-out to
+R2 · adding a retry or a skip, which the row rightly forbids · and treating `gpt5-6-sol`'s
+frozen-core framing as a reason to abandon (A), since the framing is refuted even though its S3
+catch stands.
+
+**Routing evidence.** controller `opus` (session) · designer **`claude:claude-fable-5`** via
+`claude-sub`, rotation-selected, probe rc=0, 13,327 B directive delivery-asserted, bounded 30-min
+cap, ~25 min; revision run identically at 7,779 B, ~11 min · planner / executor / evaluator **NOT
+RUN** — the item never reached a sprint, so there was nothing to plan, execute or judge; had a
+planner been needed, Gate 3 step 1b fails closed to opus **loudly**, reason `missing-script`
+(`tools/launchd/derive-planner-lane.sh` does not exist in this repo) · quorum reviewers
+`gpt5-6-sol` + `gemini-3-1-pro`, **both PRESENT in both rounds**, `absent_reviewers` empty both
+times. **`metered=$0.202435`** (R1 `$0.087608` + R2 `$0.114827`) against the **$5** ceiling; every
+other lane a quota bucket.
+
+**Next.** Item 16 unblocks on a one-word answer (A or B). Failing that, item **13**
+`w-evidence-grade-mapping`. Item 5 `P6.B` remains UNBLOCKED.
