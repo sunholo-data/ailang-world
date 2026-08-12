@@ -177,6 +177,11 @@ func TestProposalDescriptorAgreementRefusals(t *testing.T) {
 		{"semantics_epoch_mismatch", "semantics epoch", func(p *Proposal) { p.SemanticsEpoch++ }},
 		{"required_caps_mismatch", "required capabilities", func(p *Proposal) { p.RequiredCaps.Cost++ }},
 		{"expected_effects_mismatch", "expected effects", func(p *Proposal) { p.ExpectedEffects = append(p.ExpectedEffects, EffectRequirement{Effect: "write"}) }},
+		// Same LENGTH, different CONTENT. Without this arm the length guard in
+		// equalRequirements is the only observed branch, and neutering the
+		// element-wise comparison leaves the whole package green — measured as a
+		// survival by the controller sweep (MUT-PROPOSAL-EFFECTS-ELEM).
+		{"expected_effects_same_length_different_content", "expected effects", func(p *Proposal) { p.ExpectedEffects[0].Scope = "other" }},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

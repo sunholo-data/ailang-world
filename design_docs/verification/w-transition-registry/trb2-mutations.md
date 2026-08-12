@@ -52,3 +52,76 @@ the additions. Reading that diff found J14, the previously unnamed `target.Bind`
 branch; its focused subtest and mutation are recorded above.
 
 No arm was deferred.
+
+---
+
+## Controller sweep, outside the sandbox (iteration 74)
+
+The executor's 21 arms were re-derived independently rather than banked: the controller
+enumerated **every** refusal/guard branch in `bind.go` from the file itself (not from the plan's
+J-list, which was written before a line of TR.B2 existed) and neutered each one with
+`if false && <cond>`, asserting **LANDED** by sha256 and **BUILDS** by `go build ./...` before
+reading any test result.
+
+**14 branches, 13 killed, 1 SURVIVED.**
+
+| # | Branch | Result |
+|---|---|---|
+| B1 | `Bind`: zero snapshot | KILLED — `TestGuardedSessionRefusesUndeclaredEffect/zero_snapshot` |
+| B2 | `Bind`: lookup miss | KILLED — `.../absent_transition` |
+| B3 | `Bind`: access denied | KILLED — `TestGuardedSessionStillRequiresBrokerGrant/bind_denial_label_budget` |
+| B4 | `Bind`: `target.Bind` error (line 77) | KILLED — `.../target_bind_error` |
+| B5 | `Check`: transition fn | KILLED — `.../transition_fn_mismatch` |
+| B6 | `Check`: interpreter | KILLED — `.../interpreter_mismatch` |
+| B7 | `Check`: semantics epoch | KILLED — `.../semantics_epoch_mismatch` |
+| B8 | `Check`: required caps | KILLED — `.../required_caps_mismatch` |
+| B9 | `Check`: expected effects | KILLED — `.../expected_effects_mismatch` |
+| B10 | `Allowed()`: capability filter | KILLED — `TestTwoSessionExactOrderedSets` |
+| B11 | `equalRequirements`: **length** guard | KILLED — `.../expected_effects_mismatch` |
+| B12 | `equalRequirements`: **element-wise** guard | ***SURVIVED*** |
+| B13 | `NewRequest`: reader error (line 120) | KILLED — `TestSingleRequestKeepsCapturedEpochs/injected_read_error` |
+
+### The survival, and why every arm above it agreed with the claim
+
+`MUT-PROPOSAL-EFFECTS-ELEM` — `if false && a[i] != b[i]` inside `equalRequirements`.
+Mutant LANDED (`068fc0e47a1404e5` → `80589e531dcff0e2`), BUILDS (`go build ./...` rc=0), and the
+**whole `host/transitionreg` package is rc=0 with the defect present**. A proposal whose
+`ExpectedEffects` has the **same length but different content** as the bound descriptor's
+`DeclaredEffects` therefore passed `Check` — precisely the case Decision 7 exists to forbid.
+
+`equalRequirements` has **two** refusal branches; `expected_effects_mismatch` **appends** an
+element, so it exercises only the length one. The doc's `MUT-PROPOSAL-EFFECTS` row, the plan's
+J-list, and the executor's own arm all name one mutation for a helper with two seams — so a green
+suite, a green mutation table and a correct reading of the code all agreed, and none of them could
+see the gap. This is the sixth instance in three consecutive milestones of this repo's most
+reliably recurring shape: **guard the helper, miss the branch/call site.**
+
+Note it is the *mirror* of TR.B1's two survivals. There the mechanism was tested and the SITES were
+not; here a single call SITE was tested and the mechanism's second BRANCH was not. The durable
+instrument covers both directions: per helper, ask **how many ways can this refuse, and how many
+does a test observe?** — never how many tests name it.
+
+### The fix, proven
+
+A subtest `TestProposalDescriptorAgreementRefusals/expected_effects_same_length_different_content`
+(same length, `ExpectedEffects[0].Scope` changed) — a **subtest**, so AC6 stays at `count=3`.
+
+- with the fix and no mutant: package rc=0, all 7 subtests PASS;
+- with the fix and `MUT-PROPOSAL-EFFECTS-ELEM` re-applied: rc=1, killer is
+  `.../expected_effects_same_length_different_content`;
+- **inverse arm** — same mutant, `-skip TestProposalDescriptorAgreementRefusals`: **rc=0**, which
+  is what proves the new subtest is the killer and not a bystander;
+- restored `bind.go` sha256 `068fc0e47a1404e5…` — byte-identical to base.
+
+### Gate results re-run outside the sandbox (the executor's were sandbox-denied)
+
+`verify_go.sh` rc=**0** (the executor's rc≠0 was `bind: operation not permitted`, correctly
+labelled UNINFORMATIVE UNDER SANDBOX). Race leg: `host/broker 102.197s` (base 92.3 s, +9.9 s),
+`host/transitionreg 3.898s` — inside the +30 s budget and far inside the 600 s race kill.
+`verify_ail.sh` rc=0, totals **4 identities / 11 modules / 14 named tests** UNMOVED.
+`go vet ./host/...` rc=0. AC5 `count=2`, AC6 `count=3`, AC7 `count=3`, AC-INVOKE3 `n=3 p=3 t=90`,
+AC11 production-replay `transitionreg` imports **0**.
+
+**Standing note on `verify_go.sh`:** it FATALs unless `GOTOOLCHAIN=go1.25.6` is exported
+(go1.26.4 miscompiles `host/store/scan.go`). That rc=1 is a base condition of the script, not a
+regression — measured on this tree both ways.
