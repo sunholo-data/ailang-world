@@ -4,14 +4,414 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
 	"unicode/utf8"
 
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
+
+func descriptorSnapshot(ds ...Descriptor) Snapshot {
+	return Snapshot{Head: testFn, Revision: 1, entries: cloneDescriptors(ds)}
+}
+
+func transitionSession(t *testing.T, episode string, grants []broker.Capability, count *int) *broker.Session {
+	t.Helper()
+	return broker.NewSession(openTransitionStore(t), episode, grants, broker.Registry{
+		"read": broker.HandlerFunc(func(context.Context, broker.EffectRequest, []byte) ([]byte, error) {
+			*count++
+			return []byte("ok"), nil
+		}),
+	})
+}
+
+func TestGuardedSessionRefusesUndeclaredEffect(t *testing.T) {
+	d := validDescriptor()
+	d.DeclaredEffects = []EffectRequirement{{Effect: "read", Scope: "world", Cost: 1}}
+	tests := []struct {
+		name string
+		req  broker.EffectRequest
+		want string
+	}{
+		{"undeclared_name", broker.EffectRequest{Effect: "write", Scope: "world", Cost: 1, Now: 1}, `broker: undeclared effect request: effect "write" scope "world" cost 1`},
+		{"undeclared_scope", broker.EffectRequest{Effect: "read", Scope: "other", Cost: 1, Now: 1}, `broker: undeclared effect request: effect "read" scope "other" cost 1`},
+		{"undeclared_cost", broker.EffectRequest{Effect: "read", Scope: "world", Cost: 2, Now: 1}, `broker: undeclared effect request: effect "read" scope "world" cost 2`},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			count := 0
+			s := transitionSession(t, "undeclared-"+tc.name, []broker.Capability{{Effect: "read", Scope: "world", ExpiresAt: 10, Budget: 5}}, &count)
+			before := s.CapabilitySnapshot(1).Epoch
+			bound, err := Bind(descriptorSnapshot(d), d.ID, s.CapabilitySnapshot(1), s)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, _, err = bound.Request(context.Background(), tc.req, nil)
+			var undeclared *broker.UndeclaredEffectError
+			if !errors.As(err, &undeclared) || err.Error() != tc.want {
+				t.Fatalf("Request error = %v, want *UndeclaredEffectError %q", err, tc.want)
+			}
+			if count != 0 || s.CapabilitySnapshot(1).Epoch != before {
+				t.Fatalf("undeclared request reached handler or debit: count=%d epoch=%d want 0/%d", count, s.CapabilitySnapshot(1).Epoch, before)
+			}
+		})
+	}
+	t.Run("absent_transition", func(t *testing.T) {
+		count := 0
+		s := transitionSession(t, "absent", nil, &count)
+		_, err := Bind(descriptorSnapshot(d), "tools.absent", s.CapabilitySnapshot(1), s)
+		var absent *TransitionAbsentError
+		want := `transition registry: transition "tools.absent" is absent`
+		if !errors.As(err, &absent) || err.Error() != want {
+			t.Fatalf("Bind error = %v, want *TransitionAbsentError %q", err, want)
+		}
+	})
+	t.Run("zero_snapshot", func(t *testing.T) {
+		count := 0
+		s := transitionSession(t, "zero", nil, &count)
+		_, err := Bind(Snapshot{}, d.ID, s.CapabilitySnapshot(1), s)
+		want := `transition registry: cannot bind "tools.echo" from a zero snapshot`
+		if err == nil || err.Error() != want {
+			t.Fatalf("Bind error = %v, want %q", err, want)
+		}
+	})
+	t.Run("target_bind_error", func(t *testing.T) {
+		injected := errors.New("injected target bind failure")
+		capsSession := broker.NewSession(openTransitionStore(t), "target-error", []broker.Capability{{Effect: "read", Scope: "world", ExpiresAt: 10, Budget: 5}}, nil)
+		_, err := Bind(descriptorSnapshot(d), d.ID, capsSession.CapabilitySnapshot(1), rejectingBinder{err: injected})
+		want := `transition registry: bind "tools.echo": injected target bind failure`
+		if !errors.Is(err, injected) || err.Error() != want {
+			t.Fatalf("Bind error = %v, want wrapped %q", err, want)
+		}
+	})
+	t.Run("manifest_conversion_reaches_target", func(t *testing.T) {
+		count := 0
+		s := transitionSession(t, "manifest-copy", []broker.Capability{{Effect: "read", Scope: "world", ExpiresAt: 10, Budget: 5}}, &count)
+		recorder := &recordingBinder{target: s}
+		if _, err := Bind(descriptorSnapshot(d), d.ID, s.CapabilitySnapshot(1), recorder); err != nil {
+			t.Fatal(err)
+		}
+		want := broker.Manifest{Access: requirementOf(d.Access), Declared: requirementsOf(d.DeclaredEffects)}
+		if !reflect.DeepEqual(recorder.manifest, want) {
+			t.Fatalf("target manifest = %+v, want %+v", recorder.manifest, want)
+		}
+	})
+}
+
+func TestGuardedSessionStillRequiresBrokerGrant(t *testing.T) {
+	d := validDescriptor()
+	denials := []struct {
+		name  string
+		grant broker.Capability
+		label string
+	}{
+		{"effect_name", broker.Capability{Effect: "write", Scope: "world", ExpiresAt: 10, Budget: 5}, broker.LabelDeniedEffectName},
+		{"scope", broker.Capability{Effect: "read", Scope: "other", ExpiresAt: 10, Budget: 5}, broker.LabelDeniedScope},
+		{"expired", broker.Capability{Effect: "read", Scope: "world", ExpiresAt: 1, Budget: 5}, broker.LabelDeniedExpired},
+		{"budget", broker.Capability{Effect: "read", Scope: "world", ExpiresAt: 10, Budget: 0}, broker.LabelDeniedBudget},
+	}
+	for _, tc := range denials {
+		t.Run("bind_denial_label_"+tc.name, func(t *testing.T) {
+			count := 0
+			s := transitionSession(t, "bind-denial-"+tc.name, []broker.Capability{tc.grant}, &count)
+			_, err := Bind(descriptorSnapshot(d), d.ID, s.CapabilitySnapshot(1), s)
+			var denied *AccessDeniedError
+			want := fmt.Sprintf("transition registry: access to %q denied: %s", d.ID, tc.label)
+			if !errors.As(err, &denied) || denied.Label != tc.label || err.Error() != want {
+				t.Fatalf("Bind error = %v, want *AccessDeniedError label=%q message=%q", err, tc.label, want)
+			}
+		})
+	}
+	t.Run("declared_but_missing_live_grant", func(t *testing.T) {
+		count := 0
+		dispatchDescriptor := cloneDescriptor(d)
+		dispatchDescriptor.DeclaredEffects = []EffectRequirement{{Effect: "read", Scope: "world", Cost: 2}}
+		s := transitionSession(t, "dispatch-denial", []broker.Capability{{Effect: "read", Scope: "world", ExpiresAt: 10, Budget: 1}}, &count)
+		bound, err := Bind(descriptorSnapshot(dispatchDescriptor), dispatchDescriptor.ID, s.CapabilitySnapshot(1), s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, _, err = bound.Request(context.Background(), broker.EffectRequest{Effect: "read", Scope: "world", Cost: 2, Now: 1}, nil)
+		var denial *broker.DenialError
+		if !errors.As(err, &denial) || denial.Decision.Label != broker.LabelDeniedBudget {
+			t.Fatalf("Request error = %v, want *DenialError label %q", err, broker.LabelDeniedBudget)
+		}
+		if count != 0 {
+			t.Fatalf("handler count=%d, want 0", count)
+		}
+	})
+	t.Run("declared_and_live_succeeds", func(t *testing.T) {
+		count := 0
+		s := transitionSession(t, "dispatch-success", []broker.Capability{{Effect: "read", Scope: "world", ExpiresAt: 10, Budget: 5}}, &count)
+		bound, err := Bind(descriptorSnapshot(d), d.ID, s.CapabilitySnapshot(1), s)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got, _, err := bound.Request(context.Background(), broker.EffectRequest{Effect: "read", Scope: "world", Cost: 1, Now: 1}, nil)
+		if err != nil || string(got) != "ok" || count != 1 {
+			t.Fatalf("Request = %q, %v; handler count=%d, want ok/<nil>/1", got, err, count)
+		}
+	})
+}
+
+func TestProposalDescriptorAgreementRefusals(t *testing.T) {
+	d := validDescriptor()
+	count := 0
+	s := transitionSession(t, "proposal", []broker.Capability{{Effect: "read", Scope: "world", ExpiresAt: 10, Budget: 5}}, &count)
+	bound, err := Bind(descriptorSnapshot(d), d.ID, s.CapabilitySnapshot(1), s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	base := Proposal{TransitionFn: d.TransitionFn, Interpreter: d.Interpreter, SemanticsEpoch: d.SemanticsEpoch, RequiredCaps: d.Access, ExpectedEffects: append([]EffectRequirement(nil), d.DeclaredEffects...)}
+	tests := []struct {
+		name, field string
+		mutate      func(*Proposal)
+	}{
+		{"transition_fn_mismatch", "transition function", func(p *Proposal) { p.TransitionFn = testInterpreter }},
+		{"interpreter_mismatch", "interpreter", func(p *Proposal) { p.Interpreter = testFn }},
+		{"semantics_epoch_mismatch", "semantics epoch", func(p *Proposal) { p.SemanticsEpoch++ }},
+		{"required_caps_mismatch", "required capabilities", func(p *Proposal) { p.RequiredCaps.Cost++ }},
+		{"expected_effects_mismatch", "expected effects", func(p *Proposal) { p.ExpectedEffects = append(p.ExpectedEffects, EffectRequirement{Effect: "write"}) }},
+		// Same LENGTH, different CONTENT. Without this arm the length guard in
+		// equalRequirements is the only observed branch, and neutering the
+		// element-wise comparison leaves the whole package green — measured as a
+		// survival by the controller sweep (MUT-PROPOSAL-EFFECTS-ELEM).
+		{"expected_effects_same_length_different_content", "expected effects", func(p *Proposal) { p.ExpectedEffects[0].Scope = "other" }},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			p := base
+			p.ExpectedEffects = append([]EffectRequirement(nil), base.ExpectedEffects...)
+			tc.mutate(&p)
+			err := bound.Check(p)
+			var mismatch *ProposalMismatchError
+			want := fmt.Sprintf("transition registry: proposal %s does not match bound descriptor", tc.field)
+			if !errors.As(err, &mismatch) || err.Error() != want {
+				t.Fatalf("Check error = %v, want *ProposalMismatchError %q", err, want)
+			}
+		})
+	}
+	t.Run("all_fields_agree", func(t *testing.T) {
+		if err := bound.Check(base); err != nil {
+			t.Fatalf("Check error = %v, want nil", err)
+		}
+		got := bound.Descriptor()
+		got.InputSchema[0] = 'X'
+		if reflect.DeepEqual(got, bound.Descriptor()) {
+			t.Fatal("Descriptor result aliases bound descriptor")
+		}
+	})
+}
+
+type snapshotReader struct {
+	snap  Snapshot
+	err   error
+	reads int
+}
+
+type rejectingBinder struct{ err error }
+
+func (b rejectingBinder) Bind(broker.Manifest) (*broker.BoundInvoker, error) { return nil, b.err }
+
+type recordingBinder struct {
+	target   Binder
+	manifest broker.Manifest
+}
+
+func (b *recordingBinder) Bind(m broker.Manifest) (*broker.BoundInvoker, error) {
+	b.manifest = m
+	return b.target.Bind(m)
+}
+
+func (r *snapshotReader) ReadSnapshot(context.Context) (Snapshot, error) {
+	r.reads++
+	return cloneSnapshot(r.snap), r.err
+}
+
+type countingCapabilities struct {
+	source CapabilitySource
+	calls  int
+}
+
+func (c *countingCapabilities) CapabilitySnapshot(now int64) broker.CapabilitySnapshot {
+	c.calls++
+	return c.source.CapabilitySnapshot(now)
+}
+
+func descriptorWithAccess(id, effect string) Descriptor {
+	d := validDescriptor()
+	d.ID = id
+	d.Access = EffectRequirement{Effect: effect, Scope: "world", Cost: 1}
+	d.DeclaredEffects = []EffectRequirement{{Effect: effect, Scope: "world", Cost: 1}}
+	return d
+}
+
+func descriptorIDs(ds []Descriptor) []string {
+	ids := make([]string, len(ds))
+	for i := range ds {
+		ids[i] = ds[i].ID
+	}
+	return ids
+}
+
+func containsDescriptor(ds []Descriptor, id string) bool {
+	for _, d := range ds {
+		if d.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+func TestTwoSessionExactOrderedSets(t *testing.T) {
+	a := descriptorWithAccess("tools.alpha", "alpha")
+	b := descriptorWithAccess("tools.beta", "beta")
+	neither := descriptorWithAccess("tools.gamma", "gamma")
+	snap := descriptorSnapshot(a, b, neither)
+	sessionA := broker.NewSession(openTransitionStore(t), "allowed-a", []broker.Capability{{Effect: "alpha", Scope: "world", ExpiresAt: 10, Budget: 5}}, nil)
+	sessionB := broker.NewSession(openTransitionStore(t), "allowed-b", []broker.Capability{{Effect: "beta", Scope: "world", ExpiresAt: 10, Budget: 5}}, nil)
+
+	qa, err := NewRequest(context.Background(), &snapshotReader{snap: snap}, sessionA, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	qb, err := NewRequest(context.Background(), &snapshotReader{snap: snap}, sessionB, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	allowedA, allowedB := qa.Allowed(), qb.Allowed()
+	if got, want := descriptorIDs(allowedA), []string{a.ID}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("session A exact IDs = %v, want %v", got, want)
+	}
+	if got, want := descriptorIDs(allowedB), []string{b.ID}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("session B exact IDs = %v, want %v", got, want)
+	}
+	if containsDescriptor(allowedA, b.ID) || containsDescriptor(allowedA, neither.ID) {
+		t.Fatalf("session A contains forbidden descriptor: %v", descriptorIDs(allowedA))
+	}
+	if containsDescriptor(allowedB, a.ID) || containsDescriptor(allowedB, neither.ID) {
+		t.Fatalf("session B contains forbidden descriptor: %v", descriptorIDs(allowedB))
+	}
+	t.Run("returned_descriptors_are_copies", func(t *testing.T) {
+		first := qa.Allowed()
+		first[0].InputSchema[0] = 'X'
+		first[0].DeclaredEffects[0].Effect = "changed"
+		again := qa.Allowed()[0]
+		if string(again.InputSchema) != `{}` || again.DeclaredEffects[0].Effect != "alpha" {
+			t.Fatalf("Allowed alias escaped: %+v", again)
+		}
+	})
+	t.Run("order_is_the_snapshot_order", func(t *testing.T) {
+		both := broker.NewSession(openTransitionStore(t), "allowed-both", []broker.Capability{
+			{Effect: "alpha", Scope: "world", ExpiresAt: 10, Budget: 5},
+			{Effect: "beta", Scope: "world", ExpiresAt: 10, Budget: 5},
+		}, nil)
+		q, err := NewRequest(context.Background(), &snapshotReader{snap: snap}, both, 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got, want := descriptorIDs(q.Allowed()), []string{a.ID, b.ID}; !reflect.DeepEqual(got, want) {
+			t.Fatalf("Allowed order = %v, want snapshot order %v", got, want)
+		}
+	})
+}
+
+func TestNextReadObservesNewHeadWithoutRestart(t *testing.T) {
+	s := openTransitionStore(t)
+	d1 := descriptorWithAccess("tools.alpha", "alpha")
+	current := validRevision(d1)
+	head1 := seedRevision(t, s, current)
+	r := NewReader(s)
+	first, err := NewRequest(context.Background(), r, broker.NewSession(s, "head-one", nil, nil), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	d2 := descriptorWithAccess("tools.beta", "beta")
+	next, err := BuildNext(current, []Change{{ID: d2.ID, Descriptor: &d2}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	head2, err := r.Publish(context.Background(), head1, next)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := NewRequest(context.Background(), r, broker.NewSession(s, "head-two", nil, nil), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first.Registry.Head != head1 || second.Registry.Head != head2 || second.Registry.Revision != 2 {
+		t.Fatalf("captured heads/revision = %q/%q/%d, want %q/%q/2", first.Registry.Head, second.Registry.Head, second.Registry.Revision, head1, head2)
+	}
+	if _, ok := first.Registry.Lookup(d2.ID); ok {
+		t.Fatal("first request unexpectedly observed revision 2 entry")
+	}
+	if got, ok := second.Registry.Lookup(d2.ID); !ok || got.ID != d2.ID {
+		t.Fatalf("new request did not observe revision 2 entry: %+v ok=%v", got, ok)
+	}
+}
+
+func TestSingleRequestKeepsCapturedEpochs(t *testing.T) {
+	t.Run("captured_sources_are_not_reread", func(t *testing.T) {
+		s := openTransitionStore(t)
+		d1 := descriptorWithAccess("tools.alpha", "alpha")
+		current := validRevision(d1)
+		head1 := seedRevision(t, s, current)
+		r := NewReader(s)
+		handlerCount := 0
+		session := broker.NewSession(s, "captured", []broker.Capability{{Effect: "alpha", Scope: "world", ExpiresAt: 10, Budget: 5}}, broker.Registry{
+			"alpha": broker.HandlerFunc(func(context.Context, broker.EffectRequest, []byte) ([]byte, error) { handlerCount++; return nil, nil }),
+		})
+		caps := &countingCapabilities{source: session}
+		q, err := NewRequest(context.Background(), r, caps, 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		capturedEpoch, capturedHead := q.Caps.Epoch, q.Registry.Head
+		invoker, err := session.Bind(broker.Manifest{Declared: []broker.Requirement{{Effect: "alpha", Scope: "world", Cost: 1}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, _, err := invoker.Request(context.Background(), broker.EffectRequest{Effect: "alpha", Scope: "world", Cost: 1, Now: 1}, nil); err != nil {
+			t.Fatal(err)
+		}
+		d2 := descriptorWithAccess("tools.beta", "beta")
+		next, err := BuildNext(current, []Change{{ID: d2.ID, Descriptor: &d2}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := r.Publish(context.Background(), head1, next); err != nil {
+			t.Fatal(err)
+		}
+		for i := 0; i < 2; i++ {
+			_ = q.Allowed()
+		}
+		if caps.calls != 1 {
+			t.Fatalf("CapabilitySnapshot calls=%d, want exactly 1", caps.calls)
+		}
+		if q.Caps.Epoch != capturedEpoch || q.Registry.Head != capturedHead {
+			t.Fatalf("request captures moved: epoch=%d/%d head=%q/%q", q.Caps.Epoch, capturedEpoch, q.Registry.Head, capturedHead)
+		}
+		if session.CapabilitySnapshot(1).Epoch == capturedEpoch || handlerCount != 1 {
+			t.Fatalf("controls did not move: live epoch=%d captured=%d handler=%d", session.CapabilitySnapshot(1).Epoch, capturedEpoch, handlerCount)
+		}
+	})
+	t.Run("injected_read_error", func(t *testing.T) {
+		injected := errors.New("injected request read failure")
+		r := &snapshotReader{err: injected}
+		count := 0
+		s := transitionSession(t, "read-error", nil, &count)
+		_, err := NewRequest(context.Background(), r, s, 1)
+		want := "transition registry: construct request: injected request read failure"
+		if !errors.Is(err, injected) || err.Error() != want || r.reads != 1 {
+			t.Fatalf("NewRequest error=%v reads=%d, want wrapped %q and 1", err, r.reads, want)
+		}
+	})
+}
 
 var (
 	testFn          = hashref.MustParse("sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
@@ -48,6 +448,7 @@ func (f *fakeObjectStore) GetObject(hashref.HashRef) (store.Object, bool, error)
 	f.objectReads++
 	return f.object, f.hasObject, f.objectErr
 }
+
 // clone returns an independent fake seeded from f's configuration. It exists
 // because `g := *f` copies the embedded sync.Mutex — `go vet` reports copylocks
 // for that, and `go test`'s default vet subset does not include the copylocks
