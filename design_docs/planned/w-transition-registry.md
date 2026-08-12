@@ -540,12 +540,12 @@ state. Every delivered gate also has a compiling RED mutation below.
    TR.B activation requires count=2. Delivered: both named
    tests PASS and enumerate effect-name, scope, expiry, and budget denials.
 6. **AC6 — descriptor-bound declaration-honesty mechanism.** Command:
-   `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -list 'Test(GuardedSessionRefusesUndeclaredEffect|GuardedSessionStillRequiresBrokerGrant|ProposalDescriptorAgreementRefusals)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 0 || { test "$count" -eq 3 && GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -run 'Test(GuardedSessionRefusesUndeclaredEffect|GuardedSessionStillRequiresBrokerGrant|ProposalDescriptorAgreementRefusals)$' -count=1; }`.
+   `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -list 'Test(GuardedSessionRefusesUndeclaredEffect|GuardedSessionStillRequiresBrokerGrant|ProposalDescriptorAgreementRefusals)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 3 && GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -run 'Test(GuardedSessionRefusesUndeclaredEffect|GuardedSessionStillRequiresBrokerGrant|ProposalDescriptorAgreementRefusals)$' -count=1`.
    Base observed: rc=0 because count=0 (package absent). TR.B activation requires count=3; the
    three named tests PASS with zero handler calls
    on every refusal.
 7. **AC7 — exact two-session consumer fixture and dynamic next-request source.** Command:
-   `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -list 'Test(TwoSessionExactOrderedSets|NextReadObservesNewHeadWithoutRestart|SingleRequestKeepsCapturedEpochs)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 0 || { test "$count" -eq 3 && GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -run 'Test(TwoSessionExactOrderedSets|NextReadObservesNewHeadWithoutRestart|SingleRequestKeepsCapturedEpochs)$' -count=1; }`.
+   `export PATH=/opt/homebrew/bin:$PATH; count=$(GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -list 'Test(TwoSessionExactOrderedSets|NextReadObservesNewHeadWithoutRestart|SingleRequestKeepsCapturedEpochs)$' 2>/dev/null | grep -c '^Test' || true); test "$count" -eq 3 && GOTOOLCHAIN=go1.25.6 go test ./host/transitionreg -run 'Test(TwoSessionExactOrderedSets|NextReadObservesNewHeadWithoutRestart|SingleRequestKeepsCapturedEpochs)$' -count=1`.
    Base observed: rc=0 because count=0 (package absent). TR.B activation requires count=3.
 8. **AC8 — replay remains hash-pinned.** Command:
    `export PATH=/opt/homebrew/bin:$PATH; test "$(GOTOOLCHAIN=go1.25.6 go test ./host/replay -list 'Test(FixtureEpisodeReplaysBitForBit|EpochRegistryCandidateCannotRedirect)$' | grep -c '^Test')" -eq 2 && GOTOOLCHAIN=go1.25.6 AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/replay -run 'Test(FixtureEpisodeReplaysBitForBit|EpochRegistryCandidateCannotRedirect)$' -count=1`.
@@ -593,7 +593,8 @@ state. Every delivered gate also has a compiling RED mutation below.
 | AC3 next-object existence | `MUT-CAS-DANGLING`: neuter object-existence guard | dangling-head subtest RED |
 | AC3 store/CAS error | `MUT-PUBLISH-SWALLOW`: return nil on injected Put/CAS errors, one at a time | matching publication subtest RED |
 | AC4 wrong registry name | `MUT-CAS-EPOCH-HEAD`: hardcode epoch registry name | `TestCompareAndSetRegistryHead/epoch_registry_isolation` RED; the epoch round-trip does not call CAS and remains green |
-| AC5 capability isolation | `MUT-CAPS-ALIAS`: return session grant slice directly | mutation-after-snapshot assertion RED |
+| AC5 capability isolation (session→snapshot) | `MUT-CAPS-ALIAS-SESSION`: retain the session grant slice in `CapabilitySnapshot` | later-debit isolation assertion RED |
+| AC5 capability isolation (snapshot→caller) | `MUT-CAPS-ALIAS-CALLER`: return the snapshot grant slice from `Grants` | caller-mutation isolation assertion RED |
 | AC5 epoch update | `MUT-CAPS-STATIC-EPOCH`: do not increment epoch after debit | epoch assertion RED |
 | AC5 effect-name denial | `MUT-ALLOW-NAME`: force only `denied:effect-name` to allowed | named denial arm RED |
 | AC5 scope denial | `MUT-ALLOW-SCOPE`: force only `denied:scope` to allowed | named denial arm RED |
@@ -617,6 +618,25 @@ state. Every delivered gate also has a compiling RED mutation below.
 | AC11 raised exemption | `MUT-BINDING-RAISE-COUNT`: silently raise the enumerated exemption count | pinned count/identity assertion RED |
 | AC11 detector neutered | `MUT-BINDING-IF-FALSE`: change the detector condition to `if false && ...` | known three-site detector control sees zero instead of exactly 3; assertion RED while mutant compiles |
 | TR.C activated test inventory | `MUT-DELETE-TR-C-TEST`: delete or rename the required AC11 test after removing the base arm | exact activated count RED; the known control alone is no longer accepted |
+
+TR.B rule-3j branch inventory (enumerated from the implementation diff):
+
+| Branch | Named compiling mutation | Required RED observation |
+|---|---|---|
+| J1 negative manifest cost | `MUT-MANIFEST-NEG-COST-OK` | malformed-manifest negative-cost subtest RED |
+| J2 duplicate manifest declaration | `MUT-MANIFEST-DUP-OK` | malformed-manifest duplicate subtest RED |
+| J3 declaration scope is exact | `MUT-DECLARED-NAME-ONLY` | undeclared-scope subtest RED |
+| J4 declaration cost is exact | `MUT-DECLARED-COST-ANY` | undeclared-cost subtest RED |
+| J5 replay debit increments epoch | `MUT-EPOCH-LIVE-ONLY` | replay-debit epoch subtest RED |
+| J6 `Allows` uses captured `Now` | `MUT-ALLOW-NOW-ZERO` | captured-now subtest RED |
+| J7 bind preserves broker denial label | `MUT-BIND-COLLAPSE-LABEL` | exact-label subtests RED |
+| J8 bind refuses zero snapshot | `MUT-BIND-EMPTY-SNAPSHOT-OK` | zero-snapshot subtest RED |
+| J9 proposal compares interpreter | `MUT-PROPOSAL-INTERP` | interpreter-mismatch subtest RED |
+| J10 proposal compares semantics epoch | `MUT-PROPOSAL-EPOCH` | semantics-epoch-mismatch subtest RED |
+| J11 request propagates reader failure | `MUT-REQUEST-SWALLOW` | injected-read-error subtest RED |
+| J12 allowed descriptors are detached | `MUT-REQUEST-ALIAS` | returned-descriptors-are-copies subtest RED |
+| J13 allowed order is snapshot order | `MUT-REQUEST-REORDER` | order-is-the-snapshot-order subtest RED |
+| J14 target bind error is propagated | `MUT-TARGET-BIND-SWALLOW` | target-bind-error subtest RED |
 
 Eleven frozen refusal branches in Decisions 1, 2, and 4 have no named mutation above; the TR.A
 sprint plan adds mutations for all eleven. Store errors

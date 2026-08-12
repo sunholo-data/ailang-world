@@ -80,6 +80,27 @@ func TestGuardedSessionRefusesUndeclaredEffect(t *testing.T) {
 			t.Fatalf("Bind error = %v, want %q", err, want)
 		}
 	})
+	t.Run("target_bind_error", func(t *testing.T) {
+		injected := errors.New("injected target bind failure")
+		capsSession := broker.NewSession(openTransitionStore(t), "target-error", []broker.Capability{{Effect: "read", Scope: "world", ExpiresAt: 10, Budget: 5}}, nil)
+		_, err := Bind(descriptorSnapshot(d), d.ID, capsSession.CapabilitySnapshot(1), rejectingBinder{err: injected})
+		want := `transition registry: bind "tools.echo": injected target bind failure`
+		if !errors.Is(err, injected) || err.Error() != want {
+			t.Fatalf("Bind error = %v, want wrapped %q", err, want)
+		}
+	})
+	t.Run("manifest_conversion_reaches_target", func(t *testing.T) {
+		count := 0
+		s := transitionSession(t, "manifest-copy", []broker.Capability{{Effect: "read", Scope: "world", ExpiresAt: 10, Budget: 5}}, &count)
+		recorder := &recordingBinder{target: s}
+		if _, err := Bind(descriptorSnapshot(d), d.ID, s.CapabilitySnapshot(1), recorder); err != nil {
+			t.Fatal(err)
+		}
+		want := broker.Manifest{Access: requirementOf(d.Access), Declared: requirementsOf(d.DeclaredEffects)}
+		if !reflect.DeepEqual(recorder.manifest, want) {
+			t.Fatalf("target manifest = %+v, want %+v", recorder.manifest, want)
+		}
+	})
 }
 
 func TestGuardedSessionStillRequiresBrokerGrant(t *testing.T) {
@@ -186,6 +207,20 @@ type snapshotReader struct {
 	snap  Snapshot
 	err   error
 	reads int
+}
+
+type rejectingBinder struct{ err error }
+
+func (b rejectingBinder) Bind(broker.Manifest) (*broker.BoundInvoker, error) { return nil, b.err }
+
+type recordingBinder struct {
+	target   Binder
+	manifest broker.Manifest
+}
+
+func (b *recordingBinder) Bind(m broker.Manifest) (*broker.BoundInvoker, error) {
+	b.manifest = m
+	return b.target.Bind(m)
 }
 
 func (r *snapshotReader) ReadSnapshot(context.Context) (Snapshot, error) {
