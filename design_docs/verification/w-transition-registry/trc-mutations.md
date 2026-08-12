@@ -74,3 +74,67 @@ or command failure; go-list relative-path failure; repository parser failure; sy
 parser failure; synthetic fixture mkdir/write failures; nested-module fixture identity mismatch; and
 the positive-control kind mismatch. These are reported rather than silently folded into the frozen
 23-row table.
+
+## Controller sweep, outside the sandbox (iteration 75)
+
+The executor's 23 arms were re-read, and two things it could not do were done here: the substantive
+assertion branches its 23 do not name were mutated, and the 22 whole-package inverse arms it
+explicitly DEFERRED were run. Every arm below asserts LANDED (sha256 pair) and BUILDS before any
+test result is read; for a test-only milestone the compile gate is `go vet ./host/broker`, because
+`go build ./...` does not compile `_test.go` files at all.
+
+**The rule-3j cut, and its negative control.** `git diff --no-index /dev/null
+host/broker/invoke_boundary_test.go | grep -cE '^\+.*(t\.Fatal|t\.Errorf|t\.Fatalf)'` returns **29**
+(control: 354 added lines). The same cut through ordinary `git diff` returns **0** — the
+untracked-file trap iteration 74 recorded, reproduced first-party on the file this milestone adds.
+
+### Four branches the plan's 23 do not name — all KILLED
+
+| Arm | Branch | Mutation | Killed by |
+|---|---|---|---|
+| C1 | `:216` `skippedTests == 0` | `stats.skippedTests++` → `_ = stats` | `enumeration`: `production walk skipped zero _test.go files; exclusion is vacuous` |
+| C2 | `:225` required anchors | walker drops `writer_lock_other.go` | `enumeration`: `production walk missed required anchor host/store/writer_lock_other.go` |
+| C3 | `:312` control kind | rename the `invoke-call` literal everywhere | `inside_broker_exemption` `:280` — **NOT** `:312`; the mutation moved observer and observed together, so this arm does not reach the branch it was aimed at |
+| C4 | `:312` control kind, ISOLATED | relabel at the PRODUCER only (`:54`), leaving both expectation sites intact | `:312` on all six `POS-*` controls (`kind=wrong-kind want invoke-call`), plus `:280` |
+
+C3 → C4 is the finding worth keeping: an arm that rewrites a constant used by BOTH the mechanism and
+the assertion cannot fail for the reason it claims (rule 3i). C3 alone would have recorded `:312` as
+covered while leaving it unobserved; only mutating at the producer reaches it.
+
+### The 22 deferred whole-package inverse arms
+
+Negative control first: on the UNMUTATED tree, `go test ./host/broker -skip
+'TestRegistryDispatchBindingBoundary|TestHandlerTimeoutKillsTheWholeProcessGroup' -count=1` is
+**rc=0, ok 35.403s** — so a red inverse would have meant something.
+
+| Arm | Shape | Kill | Whole-pkg inverse |
+|---|---|---:|---:|
+| P1 | fourth `Invoke` inside `host/broker` (`confined.go`) | rc=1 `exemption count=4 want 3`, naming `confined.go:75 fn=trcP1` | **rc=0** |
+| P2 | `Invoke` selector outside (`host/transitionreg/bind.go`) | rc=1 `outside_broker_is_clean` | **rc=0** |
+| P3 | `broker.NewSession` outside | rc=1 `outside_broker_is_clean` | **rc=0** |
+| P4 | `broker.Session` type outside | rc=1 `outside_broker_is_clean` | **rc=0** |
+| M16-shape | walker appends nothing (test-file-only) | rc=1 `walked ZERO production .go files` | **rc=0** |
+
+Two arms were DISCARDED rather than banked, both for the reason this discipline exists: a first
+`P1` used `s.Invoke(ctx, req)` and failed `not enough arguments`, and `P5` (dot-import in
+`host/daemon`) failed `undefined: broker` — `host/daemon` does not import the broker at all. A
+mutant that does not build reds in exactly the direction you predicted, which is the one case a
+negative control agrees with you for the wrong reason.
+
+The remaining test-file-only arms (M9, M11–M15, M17–M23, C1–C4) have a whole-package inverse of
+rc=0 **by construction**, and the construction is measured rather than assumed: every helper the
+gate defines — `parseAndScan`, `enumerateProductionFiles`, `assertEnumeration`,
+`goListProductionFiles`, `repositoryRoot`, `bindingFinding`, `walkStats` — has **0** references
+outside `invoke_boundary_test.go`, against a firing control of **35** for `Session`. Skipping the
+gate therefore executes none of the mutated code. The M16-shape arm above converts that derivation
+into one measurement.
+
+**Result: 23 executor arms + 9 controller arms, ZERO survivals.**
+
+### Gates, all outside the sandbox
+
+`verify_go.sh` rc=0 with **0** `FAIL` and exactly 2 healthy `WARNING: DATA RACE` · `verify_ail.sh`
+rc=0, totals **4 identities / 11 modules / 14 tests UNMOVED** · `go vet ./host/...` rc=0 · AC5=2
+AC6=3 AC7=3 unmoved, **AC11 1 → 2 ACTIVATED** · `AC-INVOKE3` n=3 p=3 (control 90) · `host/broker`
+under `-race` **90.896s** against a 92.3s base. Final gate on a `.snap`-free tree, i.e. the tree CI
+sees: `walked=39 skipped_tests=45 skipped_nested_modules=2 golist=38`.
