@@ -7007,3 +7007,144 @@ Control arm (unmutated) `rc=0`; `approve.go` restored to `6a9db6a7…0cb0` after
 **Ruled out.** Removing the redundant `cloneDescriptor` calls (above — it trades an allocation for a cross-package coupling). Adding the repair as a new top-level test (that would move AC6 off the exact 3 this milestone activates; it belongs as a subtest, same reasoning as TR.B1's two repairs). Repairing the `host/broker` base flake inside this milestone (item 16 owns it). Treating the cross-mission CORROBORATED-PENDING reply as a directive or a blocker — a sibling mission's triage of World's proposal changes nothing about World's queue. Chasing `verify_go.sh`'s toolchain FATAL as a regression. Rewriting the plan's rule-3j cut instrument here rather than recording the untracked-file blindness for the next doc to inherit.
 
 **Next.** **`TR.C`** — the binding gate, and the last milestone of item 11. `TR.A`+`TR.B` deliver the *mechanism*; without `TR.C` the undeclared-effect guard is an unenforced helper and item 5 `P6.B`'s prerequisite is **not** satisfied. It is an AST gate pinning the 3 legacy `Invoke` sites by identity and by exact count, already protected in advance by `AC-INVOKE3` (`n=3 p=3` re-measured green this iteration). Then item 12, then item 16. **Zero open asks.**
+
+## Iteration 75 — 2026-08-12 — `w-transition-registry` (item 11) **`TR.C` LANDED — ITEM 11 IS COMPLETE, and the judge defeated the gate with a method value** (PR #63 → squash `625fb89`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, `unresolved_incidents=0`; evaluator `sonnet` **63/100 FAIL**, its one blocking finding reproduced first-party and **FIXED IN-PR**; `metered=$0.00`) — the iteration's spine is that **a refusal gate needs its own shape space enumerated, not just its branches: 32 mutation arms agreed because every one of them spelled the forbidden thing the same way**
+
+**Pick.** The queue head, item 11, and iteration 74's own `[NEXT]`: `TR.C`, the binding gate and the
+last milestone of the item. Gate 0 clean: kill switch armed, tree clean, `sunholo-voight-kampff`
+active, billing tripwire **CLEAN**. Zero Mark comments after the watermark on `#53`
+(`mission_directives.sh`, allowlist enforced in-script, **0 of 13** comments; the script lives in the
+**V1 checkout** and was invoked by absolute path). Watermark rule applied: BOTH files read, older
+taken — `mission-53-last-seen` = `2026-08-11T20:57:58Z`, `mission-world-last-seen` =
+`2026-08-11T09:32:22Z`, so the query ran from the latter. No rotation owed: `#53` was created
+`05:37:35Z` = **07:37 local**, after the Monday-07:00-**local** boundary, and carries 13 comments
+(< 80). External-issue sweep: **0 orphans of 1 enumerated** (`jq length` = 1 and `gh issue list |
+wc -l` = 1 agree), the only open issue repo-wide being `#53` itself (charter 1 / log 7 / dash 1),
+control `#62` firing (charter 2 / log 1 / dash 1). Running skill **`cmp`-identical** to V1
+`origin/dev` — no rulebook drift. Inbox: 2 unread, both `eval-suite` no-ops, nothing outranking. No
+open PRs by this loop, no worktrees, main checkout clean: nothing died mid-flight.
+
+**Baselines re-measured at HEAD `2d5a346` on the pristine tree before any work (rule 3e).** AC11
+`count=1` (the replay control present, the binding test absent) with the **same-package,
+same-instrument** known-positive control AC5 returning **2** — so the 1 is a measurement, not a
+broken `-list` pattern. AC6=3, AC7=3 held. Production `.Invoke(` **exactly 3** at
+`publish_op.go:135,162,279` against a test control of **90**; exported `NewSession` **0** production
+callers (control 30); `broker.Session` outside `host/broker` **0** (control: 55 production `broker.`
+refs). Freshness sweep from the doc's only declared base `b0f323a`: 19 non-doc files changed
+(control with docs: 31), of which 4 are TR.B's own `host/broker` work.
+
+**The planner priced TR.C at 1.25 days against the doc's 0.5, and refused to split it.** 760 LOC of
+test at the ~1000/day `VL.B` reference is 0.75 day; the other 0.5 is 23 mutations / 46 arms. All
+three candidate seams fail structurally — one AC, one file, one top-level test, one activation — and
+the only clean seam ships a refusal whose non-vacuity is unproven, which is this item's three-time
+failure mode. It refuted nothing of the controller's premises and sharpened two, and it found two
+things that changed the design: **(a)** a `go list`-based enumeration would leave
+`host/store/writer_lock_other.go` (`//go:build !unix`) **permanently unscanned** on darwin AND on
+linux/CI (walk 39, `go list` 38), so enumeration must be a filesystem walk with `go list` retained
+only as a superset cross-check; **(b)** `host/boundary` is **disqualified** as a home for the gate —
+its landed `TestBoundaryASTWriteGuard` pins `const wantFileCount = 1` over every `.go` file in that
+directory, so a second file there reds a LANDED criterion. All four measurements re-verified
+first-party before routing. It also found four doc/plan divergences, of which **D4** is a rule-3e
+catch: a prefix reading of "any `Invoke` selector call" is **RED AT BASE**, because
+`cmd/world-publish/main.go:367` calls `broker.InvokeAttendedPublish`.
+
+**What landed.** `host/broker/invoke_boundary_test.go`, 353 LOC, **zero production LOC**. Outside
+`host/broker` the gate rejects any `Invoke` selector, either exported session constructor, and any
+`broker.Session` exposure through plain, aliased or dot imports; inside, it pins the three
+pre-registry calls by identity AND exact count. The walker fails loudly on an empty or short file
+set, a missing anchor, a vacuous test-exclusion, and an unparseable file — an AST gate that parses
+nothing is otherwise vacuously green. **AC11 activated 1 → 2**, tolerant `-eq 1 ||` arm deleted,
+confirmed from the diff rather than the prose.
+
+**The executor ran all 23 arms and deferred none of the KILLS — but it deferred 22 of 23 INVERSE
+arms, and said so.** The whole-package inverse is unobtainable under `workspace-write`: the package
+panics binding `[::1]:0`. It labelled them `DEFERRED / UNINFORMATIVE UNDER SANDBOX` rather than
+banking the scoped arm as if it were the prescribed one, and discarded three non-building first
+attempts instead of recording them. That is the third consecutive milestone where a self-reported
+deferral was worth more than a silent pass.
+
+**The controller sweep, enumerated from the FILE.** The rule-3j cut through
+`git diff --no-index /dev/null` returns **29** refusal branches (control: 354 added lines); the same
+cut through ordinary `git diff` returns **0** — iteration 74's untracked-file trap, reproduced
+first-party on the very file this milestone adds. Four substantive assertion branches the plan's 23
+arms do not name were mutated and **all four killed**: the skipped-tests floor, the required-anchor
+set, and the hermetic control's kind check. **One of those arms is recorded as having failed to
+reach its own branch**: renaming the `invoke-call` literal changes the producer AND the expectation
+together, so it was killed at `:280` while `:312` stayed green — only a producer-side relabel
+reaches it. That is rule 3i exactly: an assertion observing a value set alongside the mechanism
+cannot fail for the reason it claims. Then the 22 deferred inverse arms were run outside the
+sandbox — 4 production-mutant shapes plus one test-only representative, all rc=0 against an rc=0
+unmutated negative control, with the remaining test-only arms rc=0 **by measured construction** (all
+7 gate helpers have 0 references outside the gate file, control `Session` = 35). Two of my own arms
+were DISCARDED for not building, which is the case a negative control cannot catch because it agrees
+with you for the wrong reason.
+
+**THE SPINE — THE JUDGE DEFEATED THE GATE WITH ORDINARY GO, AND ALL 32 ARMS HAD AGREED.** `sonnet`
+scored **63/100 FAIL** on one blocking finding and it is the right verdict. Every detector for
+`Invoke`, `NewSession` and `NewReplaySession` lived inside `case *ast.CallExpr`, matching only when
+the selector is the `Fun` of a call. So a **method value** or a **function value** reaches a raw
+broker session from outside `host/broker` with no reflection, no `//go:linkname`, no generics and no
+build tags:
+
+    var mkSession = broker.NewSession    // function value — ctor-live never fires
+    s := mkSession(st, id, grants, reg)  // type *broker.Session, never spelled
+    call := s.Invoke                     // method value — Fun is an *ast.Ident
+    result, _, err := call(ctx, req, nil)
+
+Reproduced first-party before acting: `go build` rc=0, `go vet` rc=0, gate **rc=0 PASS**, with
+`walked=40` (was 39) proving the file WAS scanned and yielded zero findings. **Why every arm
+agreed** is the durable part, and it is a THIRD direction of this repo's recurring class rather than
+a seventh tally mark. TR.B1: the mechanism was tested and its call SITES were not. TR.B2: the site
+was tested and the mechanism's second BRANCH was not. TR.C: the branch was tested, exhaustively —
+and the **shape space of what it refuses** was never enumerated. Rule 3j asks *how many ways can this
+refuse*; the dual, which nothing in the rulebook asks, is **how many ways can the thing it refuses be
+SPELLED**. A detector is a recogniser, and a recogniser's coverage is a property of its input
+grammar, not of its branch count.
+
+**The repair is proven, not asserted.** Match the bare `*ast.SelectorExpr` and DELETE the
+`*ast.CallExpr` arm — a call site's selector is itself a SelectorExpr, so real calls are still seen,
+while matching both node kinds would double-count every call and silently move the exemption from 3
+to 6. Measured safe before applying: the only other bare `.Invoke` selectors in production are **8
+occurrences in COMMENTS**, invisible to an AST and RED at base to any text scanner — which is
+precisely the reason the design mandated ASTs over a text scan. Three new hermetic controls pin the
+branch, so the fix has an observer. Three arms: **(A)** fixed detector, whole gate rc=0, all 15
+controls PASS, exemption still exactly 3; **(B)** the original evasion against the fixed detector
+**rc=1**, refused; **(C)** revert ONLY the detector and keep the controls → **rc=1 with exactly the
+three new controls failing and nothing else**, which is what makes them the killer rather than
+bystanders.
+
+**Commit reconstruction, and one deviation.** Four commits rebuilt from the executor's cumulative
+`.snap/` snapshots in task order, each green at its boundary, plus the controller's sweep and the
+repair as their own reviewable diffs; every file sha256-matched the executor's final tree. The
+deviation: the plan's **T1 and T2 were folded into the first commit**, because their `go list`
+cross-check mis-joined test-only packages (empty `.GoFiles`) into a directory path and BOTH were RED
+on `host/boundary`. The first reconstruction attempt was also discarded and redone — copying each
+snapshot over a tree that still held the executor's FINAL state made T1's commit absorb the T5
+transcript and the T6 doc edits, which the final-tree hash could not detect because the end state
+was identical either way.
+
+**GATES, ALL OUTSIDE THE SANDBOX:** `verify_go.sh` rc=0 with **0** `FAIL` and exactly 2 healthy
+`WARNING: DATA RACE` · `verify_ail.sh` rc=0, totals **4/11/14 UNMOVED** · `go vet ./host/...` rc=0 ·
+AC5=2, AC6=3, AC7=3 unmoved · **AC11 1 → 2** · `AC-INVOKE3` n=3 p=3 (control 90) · `host/broker`
+under `-race` **90.896s** against a 92.3s base · final gate on a `.snap`-free tree, i.e. what CI
+sees: `walked=39 skipped_tests=45 skipped_nested_modules=2 golist=38`.
+
+**Routing evidence.** controller `opus` (session) · planner `opus` (lane fails closed,
+reason `missing-script` — `derive-planner-lane.sh` does not exist in this checkout) · executor
+`codex:gpt-5.6-sol` (probe rc=0, 38-minute run, bounded 30-min cap not reached) · evaluator `sonnet`
+(generator≠judge holds three ways: opus controller, codex executor, sonnet judge). `metered=$0.00` —
+every lane a quota bucket. No designer ran; the doc has existed since iteration 70.
+
+**RULED OUT:** splitting TR.C (all three seams fail structurally, and the only clean one ships an
+unproven refusal); siting the gate in `host/boundary` (its landed `wantFileCount = 1` would red);
+enumerating with `go list` (it would leave a production file permanently unscanned); a
+prefix/substring reading of "any `Invoke` selector" (RED at base on `broker.InvokeAttendedPublish`);
+keeping the `*ast.CallExpr` arm alongside the SelectorExpr one (double-counts, moving the exemption
+to 6); adding the repair's controls as new top-level tests (that would move AC11 off the 2 just
+activated — they are subtests of `detector_controls`); repairing the `host/broker` base flake (item
+16); touching `scripts/verify_ail.sh` (item 12); and treating the executor's in-sandbox
+`verify_go.sh` red as a regression (every failure a denied loopback bind).
+
+**ZERO OPEN ASKS. NEXT:** item **12** `w-ail-gate-module-pin` (~0.5d, needs a small design doc),
+then item **16** (the base flake, a standing tax on every future sweep). **Item 5's `P6.B`
+prerequisite is now SATISFIED** — TR.A and TR.B merged and TR.C green, as of `625fb89`.
