@@ -7148,3 +7148,152 @@ activated — they are subtests of `detector_controls`); repairing the `host/bro
 **ZERO OPEN ASKS. NEXT:** item **12** `w-ail-gate-module-pin` (~0.5d, needs a small design doc),
 then item **16** (the base flake, a standing tax on every future sweep). **Item 5's `P6.B`
 prerequisite is now SATISFIED** — TR.A and TR.B merged and TR.C green, as of `625fb89`.
+
+## Iteration 76 — 2026-08-12 — `w-ail-gate-module-pin` (item 12) **DESIGNED, not landed — and the measurement killed the queue row's own prescription** (design doc `d201a1e`, 557 lines, quorum 2 rounds BOTH BLOCKED with 2 external reviewers present in each, narrow-refinement carve-out applied to round 2; `metered=$0.169`) — the iteration's spine is that **a reviewer's objection is a claim too, and the hardest shape to handle is the one whose defect is real while its stated mechanism is false, because the fix is obviously good and nothing in the loop prompts you to check the reasoning**
+
+**Pick.** The queue head, item 12, and iteration 75's own `[NEXT]`. It is the queue's first
+`NEEDS A DESIGN DOC` head since iter-71, so the routing step is **designer → quorum**, not
+planner → executor. Gate 0: kill switch armed · billing tripwire **CLEAN** (both Anthropic env vars
+empty) · `gh` on `sunholo-voight-kampff` · main checkout clean · pidfile `mission-world.pid` = 7652
+= my own process, no overlap. **Zero new `MarkEdmondson1234` comments** since the watermark
+`2026-08-12T07:27:31Z`, with a known-positive control in the same instrument (the same script over
+`--since 1970` returns **1** — the 2026-08-10 z3 ruling, already actioned — so the empty result is
+evidence, not a broken query); the predecessor issue `#32` was also read (rotation-week rule) and is
+0/29. `scripts/mission_directives.sh` does not exist in this repo and was invoked by absolute path
+from the **V1 checkout**, per the Repo Profile. Inbox: 4 unread, all `eval-suite` notices —
+informational, nothing asked of World. Gate 1: `dev` **==** `origin/dev` @ `304120b`, zero
+worktrees, running skill **byte-identical to origin** (`cmp` silent, 188,002 B both sides; it
+resolves through a symlink into the *ailang* checkout). dev CI **green both jobs, SHA-addressed**
+(`checks=2` = expected 2, the repo has exactly one workflow so the name-allowlist blindness is
+covered by construction). **Weekly external-issue sweep: 0 orphans of 1 enumerated** — a per-issue
+table with the list length asserted, `#53` (our own thread) at charter 1 / log 10, control `#63`
+firing at 2/1/0/1, zero `[nightly-eval]` alarms. No rotation owed: `#53` was created
+`2026-08-10T05:37:35Z` = **07:37 local**, AFTER the Monday-07:00-local boundary, and holds 14
+comments (« 80).
+
+**Reality-check: the item is live, not a ghost, and I re-derived it rather than inheriting it.**
+No design doc existed (`grep -ril` over `design_docs/` hit only the charter, log and dashboard;
+control `w-transition-registry` = **8** files). Not landed: no matching commit, no PR, no open PR
+from this loop, no stale worktree, main checkout clean — so no iteration died mid-flight holding
+this. `scripts/verify_ail.sh` is **byte-unchanged since `adfaa0b`** (control: the same range over
+the charter → `1 file changed, 202 insertions(+), 9 deletions(-)`, so the diff instrument fires),
+and `$checked` still occurs in exactly four places: `:167` init, `:176` increment, `:233` `-eq 0`,
+`:243` print. The known-positive control lives in the same file — `total_verified` **is** pinned
+exactly at `:238-239` — so "the script cannot pin a total" is refuted and "it simply does not pin
+this one" is the measurement.
+
+**Baseline first (rule 3e), then the defect, three arms, each restored byte-identical.** Pristine
+`./scripts/verify_ail.sh` → **rc=0**, `✓ 4/4 required world/ identities verified across 11
+module(s)`, Leg 3 `9/9 steps performed non-zero work`. Then: a valid leaf `world/_stray.ail` →
+`… across **12** module(s)`, **rc=0 PASSED**; `rm design_docs/sketches/storejournal.ail` →
+`… across **10** module(s)`, **rc=0 PASSED**; and **both composed → `… across **11** module(s)`,
+a success line BYTE-IDENTICAL to the baseline's, rc=0 PASSED.** `git status --porcelain` re-verified
+empty after each; storejournal's sha256 `adf0760b…5079` held across the round trip.
+
+**THE THIRD ARM KILLED THE QUEUE ROW'S OWN PRESCRIPTION, WHICH IS THE POINT OF MEASURING A ROW YOU
+WROTE YOURSELF.** The row (filed iter-71, by this loop) asked for "an exact-total assertion mirroring
+`:239`" — `EXACT_TOTAL_MODULES=11`. That literal **passes the add-one-delete-one mutant**, because
+the count is restored while the SET is wrong. So the doc rejects the row's shape and ports the
+identity allowlist the sibling leg already implements 100 lines away
+(`verify_world_package.sh:86-96`: expected list from a hardcoded array, `find` for the actual, **both**
+enumerations asserted non-empty so an empty compare cannot pass vacuously, `cmp -s` + `diff -u`) —
+which is also what coding-standards **S1** binds: "the verify gate asserts a manifest of named check
+identities … never aggregate counts alone". The count is then redundant and is deliberately NOT
+added, so item 13 inherits no third literal to keep in sync. The generalisable half: **a queue row's
+diagnosis and its prescription age differently** — the diagnosis here was exactly right for four
+iterations while the prescription it carried was never checked, because nobody re-measures the fix
+they are about to implement.
+
+**Quorum round 1: both reviewers rejected independently on the SAME defect, and it was real.**
+`gpt5-6-sol` and `gemini-3-1-pro` both found that §5's committed RED arms mutated the **live**
+checkout while `go test ./...` runs packages concurrently. **I measured the premise before routing it
+(rule 3f) and corrected its attribution**: `verify_go.sh:108` runs `go test ./... -count=1` with
+**no `-p 1`**, and the colliding package is **`host/boundary`** — `enumerateAIL`
+(`allowlist_world_test.go:197`) `WalkDir`s the live `world/` collecting every `.ail`, and
+`checkAILGroup` then **reads each one** (`:293`) with `t.Fatal` on failure, so a stray arm's
+create/cleanup window can ENOENT a package that has nothing to do with this change. `host/broker`'s
+AST gate — the file gemini named — does **not** collide: it filters `filepath.Ext != ".go"` at `:149`
+and skips `_test.go`. So the instruction was right and the named file was wrong, and handing the
+designer the *measurement* rather than the *objection* is what let one revision close it. Both
+reviewers' verbatim fix was adopted (isolated `t.TempDir()` root running the real **copied** script
+with `cmd.Dir` set), plus gpt5's byte-unchanged criterion and gemini's `LC_ALL=C` — the latter
+recorded at its **honest severity** (both sides sort in one environment, so it fixes no live bug; it
+buys diff determinism). The revision found a fact nobody had: the committed `runGate` helper
+hardcodes `repoRoot` for both the script path and `cmd.Dir` (`:54-55`), so a `runGateAt` variant is
+genuinely required — verified first-party.
+
+**THE SPINE — ROUND 2 SPLIT (gemini PASS, gpt5 REJECT), AND THE SURVIVING OBJECTION WAS RIGHT ABOUT
+THE DEFECT AND WRONG ABOUT THE MECHANISM.** It held that the first draft's `base|rel|mod`
+line-delimited temp file is unsafe for a gate whose job is rejecting *unexpected* paths, since the
+delimiter can occur in the data and "no repo path contains `|`" describes only today's paths. Both
+carve-out limbs were met — a concrete reviewer-authored `proposed_fix`, and no dispute of the design
+DIRECTION (allowlist, compare-first and isolation were all accepted) — so the **narrow-refinement
+carve-out was APPLIED** and the fix taken verbatim: NUL-delimited end to end via indexed arrays,
+`printf '%s\0'`, `LC_ALL=C sort -z`, NUL-aware/shell-quoted diagnostics. **But I measured it before
+applying it, and BOTH named exploits are REFUTED.** In isolated temp trees, with the file-creation
+count asserted before any verdict was read: with `|` in a filename, column extraction yields an
+**extra** row (`junk.ail`), the compare **fails**, the pin **holds**; with a newline, 2 real files
+produce a **4-line** file and a garbled column, the compare **fails** again. The mangled parse is
+**fail-safe**, so the claim that a wrong set could "satisfy the manifest comparison" is false in both
+arms. What IS established is that the encoding **corrupts** — the sweep's own
+`while IFS='|' read -r base rel mod` mis-parses the same rows, so the gate would run against garbled
+paths and print blank diff lines, and the first draft's "prevents drift" claim is false in exactly
+that case. Adopted on **that** ground, at zero cost (`find -print0` already emits NUL, so the fix
+removes the parse rather than hardening it), and written into the doc **with the correction**
+(§4.2a, V25, V26) rather than laundered into agreement.
+
+**Why that is a spine and not a footnote.** The rulebook has a rule for a claim that comes back empty
+(3a), green (3b), red-as-predicted (3d), and for a reviewer's *premise* (3f). It has none for the
+shape here: **an objection whose defect is real and whose stated mechanism is false.** That shape is
+the most likely of all to be waved through, because the proposed fix is obviously good — adopting it
+costs nothing and feels like diligence, so there is no moment at which anyone is prompted to check
+the reasoning. The cost of skipping the check is not the fix (which was right); it is that the doc
+would have recorded a **false threat model**, and the next reader would have inherited "a `|` in a
+filename defeats this pin" as a fact from a quorum-cleared document. Rule 3b(v)(b) says a value
+transcribed from a document is not a measurement; this is its mirror — **an objection quoted from a
+reviewer is not a measurement either**, and a reviewer is exactly the author whose text feels least
+like a claim.
+
+**An instrument of my own failed, and its output was DISCARDED rather than banked.** My first
+newline probe printed `>>> COMPARE PASSES — PIN DEFEATED` — precisely the direction I was predicting,
+which is rule 3d in its purest form. The file had never been created (the constructed path needed a
+nonexistent intermediate directory), so a 1-file tree matched a 1-entry allowlist **vacuously**. Only
+an asserted creation-count caught it, and the re-run — `[ "$n" -eq 2 ] || { echo INSTRUMENT BROKEN;
+exit 1; }` — is what makes V25/V26 evidence rather than confirmation. Worth stating as a habit: **a
+control that ABORTS is worth more than a control that merely prints**, because a printed control
+still leaves a human to notice it, and at 2am there is no human.
+
+**GATES.** Baseline `./scripts/verify_ail.sh` rc=0 with totals **4/11/14 UNMOVED**; every mutation
+restored and the tree re-verified clean. Charter rotation arithmetic asserted **before** writing
+(`after == before + 2 − 2·moved`, 2852→2852 in-memory, file 2851 both sides), stamp count **3**,
+`git diff --stat` = **2 insertions / 2 deletions** — exactly stamp-in, stamp-out — and three known
+queue rows re-grepped after the edit as the mass-deletion tell. Local `go` is **1.26.4**, so
+`verify_go.sh` needs `GOTOOLCHAIN=go1.25.6` — re-confirmed as a BASE condition, not a regression.
+
+**Routing evidence.** controller `opus` (session) · designer **`claude:claude-fable-5`** via the
+`claude-sub` wrapper (rotation: state held `codex:gpt-5.6-sol`, so claude is next; probe rc=0 with
+`ok`; **two** bounded runs — the initial draft and the round-1 revision — both inside the 30-min cap,
+subscription bucket, `$0.00` metered) · quorum reviewers `gpt5-6-sol` + `gemini-3-1-pro`, **2
+external present in BOTH rounds, `absent_reviewers` EMPTY**, so no N−1 degrade and my own
+`--controller-verdict` was load-bearing for neither synthesis — the per-reviewer cap was raised to
+`$0.30` **pre-emptively** to defeat the budget-degrade trap, and both rounds together cost less than
+twice the default. planner/executor/evaluator **did not run** (no sprint this iteration).
+`metered=$0.169134` (R1 `$0.069134` + R2 `$0.099862`), cap `$5`.
+
+**RULED OUT:** an `EXACT_TOTAL_MODULES` count literal (defeated by the composed mutant, and a third
+literal for item 13 to maintain); pinning `world/` only (the sketch-deletion arm is half the measured
+defect); sweeping `packages/world-core/*.ail` (already pinned by identity in Leg 3 step 2/9 **and** by
+SHA-256 in step 3/9) or `host/replay/testdata/transition_fixture.ail` (a replay input the archived
+binary executes, gated by `host/replay`'s Go tests, and sweeping it would add a third source-root
+semantics to a two-root mechanism); leaving the committed arms on the live tree; citing `host/broker`'s
+AST gate as the collision; treating gpt5's exploit as reproduced; and **running the sprint this
+iteration** — the doc-less head's routing step is designer→quorum, and a planner+executor+judge+CI
+chain would not have fitted the remaining slot. Attempting it is exactly how an iteration dies
+mid-flight holding unlanded work, which Gate 2 now spends three paragraphs teaching later iterations
+to detect.
+
+**ZERO OPEN ASKS. NEXT:** the item-12 **sprint** — `sprint-planner` on
+`design_docs/planned/w-ail-gate-module-pin.md`, then execute (~0.5d, top of band; the doc names its
+own fallback if the planner prices the Leg-1 loop restructure higher, and names its one demotable
+arm). Then item **16** (`w-broker-base-flake`, the ~18% base flake that taxes every mutation sweep).
+Item 5 `w-mcp-projection` `P6.B` remains UNBLOCKED.
