@@ -280,4 +280,74 @@ func TestRegistryDispatchBindingBoundary(t *testing.T) {
 			t.Fatalf("inside-broker exemption identity mismatch: got=%v want=%v", got, want)
 		}
 	})
+	t.Run("detector_controls", func(t *testing.T) {
+		brokerImport := `"github.com/sunholo-data/ailang-world/host/` + `broker"`
+		cases := []struct {
+			name, src, kind string
+			want            int
+		}{
+			{"POS-invoke-outside", `package p; func f(s interface{ ` + `Invo` + `ke()` + ` }) { s.` + `Invo` + `ke() }`, "invoke-call", 1},
+			{"POS-ctor-live", `package p; import broker ` + brokerImport + `; func f(){ broker.NewSession(nil,nil) }`, "ctor-live", 1},
+			{"POS-ctor-replay", `package p; import broker ` + brokerImport + `; func f(){ broker.NewReplaySession(nil,nil) }`, "ctor-replay", 1},
+			{"POS-session-type", `package p; import broker ` + brokerImport + `; func f(*broker.Session){}`, "session-type", 1},
+			{"POS-alias-session", `package p; import bk ` + brokerImport + `; func f(*bk.Session){}`, "session-type", 1},
+			{"POS-dot-import", `package p; import . ` + brokerImport, "dot-import", 1},
+			{"NEG-invokeattended", `package p; import broker ` + brokerImport + `; func f(){ broker.InvokeAttendedPublish(nil,nil,nil,nil) }`, "", 0},
+			{"NEG-bound-request", `package p; import broker ` + brokerImport + `; func f(b *broker.BoundInvoker){ b.Request(nil) }`, "", 0},
+			{"NEG-prose-only", `package p // broker.NewSession and Session.` + `Invo` + `ke are prose`, "", 0},
+			{"NEG-unrelated-selector", `package p; func f(){ x.Ping() }`, "", 0},
+		}
+		for _, tc := range cases {
+			t.Run(tc.name, func(t *testing.T) {
+				fset := token.NewFileSet()
+				tree, err := parser.ParseFile(fset, tc.name+".go", tc.src, parser.ParseComments)
+				if err != nil {
+					t.Fatalf("parse synthetic control: %v", err)
+				}
+				found := scanFile(tc.name+".go", tree, fset, false)
+				if len(found) != tc.want {
+					t.Fatalf("findings=%d want %d: %v", len(found), tc.want, found)
+				}
+				if tc.want == 1 && found[0].kind != tc.kind {
+					t.Fatalf("kind=%s want %s", found[0].kind, tc.kind)
+				}
+			})
+		}
+		t.Run("WALK-nested-module", func(t *testing.T) {
+			tree := t.TempDir()
+			if err := os.WriteFile(filepath.Join(tree, "root.go"), []byte("package root"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			nested := filepath.Join(tree, "nested")
+			if err := os.Mkdir(nested, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(nested, "go.mod"), []byte("module nested\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(nested, "hidden.go"), []byte("not go"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			got, stats, err := enumerateProductionGoFiles(tree)
+			if err != nil {
+				t.Fatalf("nested-module walk: %v", err)
+			}
+			if !reflect.DeepEqual(got, []string{"root.go"}) || stats.skippedNestedModules != 1 {
+				t.Fatalf("nested module was not skipped: files=%v stats=%+v", got, stats)
+			}
+		})
+		t.Run("WALK-unparseable", func(t *testing.T) {
+			tree := t.TempDir()
+			if err := os.WriteFile(filepath.Join(tree, "broken.go"), []byte("package"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			got, _, err := enumerateProductionGoFiles(tree)
+			if err != nil || len(got) != 1 {
+				t.Fatalf("walk unparseable fixture: files=%v err=%v", got, err)
+			}
+			if _, err := parseAndScan(tree, got[0], false); err == nil {
+				t.Fatal("unparseable production file was silently accepted")
+			}
+		})
+	})
 }
