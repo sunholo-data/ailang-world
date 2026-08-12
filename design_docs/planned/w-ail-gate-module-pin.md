@@ -7,8 +7,8 @@
 - **Instruments**: pinned `ailang` **v0.30.0** (commit `e37b370`) at `/tmp/ailang-v0300/ailang`;
   **z3 4.16.0** at `/opt/homebrew/bin/z3` (present for every run below — a solverless run is a
   false green and would invalidate every rc reported here)
-- **Files touched**: `scripts/verify_ail.sh` (~40–50 changed lines),
-  `host/verifygate/module_manifest_gate_test.go` (NEW, ~230–300 LOC incl. the isolated-root
+- **Files touched**: `scripts/verify_ail.sh` (+66/−4 lines),
+  `host/verifygate/module_manifest_gate_test.go` (NEW, ~270 LOC incl. the isolated-root
   helper — grown from the first draft's ~150–200; see §9)
 
 Every codebase claim in this doc was re-measured first-party at `304120b` (Verification Log,
@@ -147,13 +147,15 @@ check* — a single enumeration feeds both the membership compare and the ai-che
    NUL-terminated result into **indexed bash arrays** (`bases[]`, `rels[]`, `mods[]`) — parallel
    arrays, never a delimiter-joined record. **No `base|rel|mod` triple file exists.**
    *(This replaces the first draft's line-delimited triple file — see §4.2a.)*
-2. **Membership compare, before any `ai-check` runs**, kept **NUL-delimited end to end**: write
-   the actual set with `printf '%s\0' "${mods[@]}"` and the expected set with
-   `printf '%s\0' "${LEG1_MODULES[@]}"`, pass both through `LC_ALL=C sort -z`, assert **both**
-   files non-empty (the S6 null-case guards, mirroring
+2. **Membership compare, before any `ai-check` runs**, kept **NUL-delimited end to end**. First
+   assert `${#mods[@]}` and `${#LEG1_MODULES[@]}` are non-zero, then write the actual set with
+   `printf '%s\0' "${mods[@]}"` and the expected set with `printf '%s\0' "${LEG1_MODULES[@]}"`
+   and pass both through `LC_ALL=C sort -z`. The guards must precede the writes: bash 3.2 plus
+   `set -u` aborts on `"${arr[@]}"` for an empty array, while `${#arr[@]}` is safe. These are
+   the S6 null-case guards, mirroring
    `verify_world_package.sh:93-94` — without them a broken `find` plus an emptied array compare
    equal and pass vacuously); then `cmp -s`. Mismatch diagnostics are emitted through a
-   **NUL-aware formatter** (`tr '\0' '\n'` into `diff -u` for display only, with paths
+   **NUL-aware formatter** into `diff -u --label` for display only, with paths
    shell-quoted via `printf '%q'`), so a pathological path is *rendered* safely rather than
    *parsed*. The message on mismatch:
 
@@ -261,12 +263,13 @@ walker skips non-`.go` at `:149` — V20. The real collider both enumerates *and
 stricter than either review claimed.) The reviewers proposed the same fix, adopted here
 verbatim: private isolated roots. Do not re-propose live-tree mutation from committed tests.
 
-### 5.2 The isolated root, and why a four-item copy is sufficient
+### 5.2 The isolated root, and why a file-scoped copy is sufficient
 
-A helper (`newIsolatedGateRoot(t)`) builds a private root under `t.TempDir()` and copies in
-exactly four things: `scripts/verify_ail.sh`, `scripts/testdata/ailang_release_observed.txt`
-(the script FATALs on a missing/empty expected-release file, `:102-106`), `world/`, and
-`design_docs/sketches/`. The script does `cd "$(dirname "$0")/.."` (`:31`), so placing the copy
+A helper (`newIsolatedGateRoot(t)`) builds a private root under `t.TempDir()` and copies exactly
+13 files: `scripts/verify_ail.sh`, `scripts/testdata/ailang_release_observed.txt` (the script
+FATALs on a missing/empty expected-release file, `:102-106`), four `world/*.ail` files, and seven
+`design_docs/sketches/*.ail` files. Directory copies are forbidden because they drag gitignored
+`.ailang/cache` entries. The script does `cd "$(dirname "$0")/.."` (`:31`), so placing the copy
 at `<iso>/scripts/verify_ail.sh` makes `<iso>` the repo root **by construction** — measured:
 run from `$HOME`, the copy checked exactly its own 11 modules and never looked at the live tree
 (V21). `cmd.Dir` is set to `<iso>` anyway (the reviewers' formulation; belt to the `$0`
@@ -294,7 +297,21 @@ copied root. Only then is the mutation applied and the red asserted. Without thi
 committed-arm story is a vacuous pass wearing a green. Its own non-vacuity is MUT-ISO-INCOMPLETE
 (§6): drop one file from the copy set and the control itself must fail.
 
-### 5.4 The three arms
+### 5.4 The arms — FIVE as shipped, not three
+
+> **Superseded by implementation, and by the judge.** This section was drafted for three arms with
+> a named demotion path for the third. **Five shipped.** The sprint plan (§6.2) took both null
+> cases as committed arms rather than demoting either — a one-shot is a proof about a tree that no
+> longer exists, which is this item's entire residual complaint about iteration 71, and the branch
+> those two arms cover is the one this doc got *wrong* (the bash-3.2 `set -u` guard ordering).
+> The fifth, `TestModuleManifestRejectsCaseVariantExtension`, was added after the evaluator
+> defeated the landed gate with `world/SNEAKY.AIL`: `find -name '*.ail'` is case-SENSITIVE, so the
+> variant never entered the swept set and the gate printed its own
+> `✓ swept .ail module set equals the LEG1_MODULES allowlist (11 modules)` line with an
+> unenumerated module in `world/`. Reproduced first-party, repaired with `-iname`, and proven by
+> reverting only the detector — exactly that arm reds, and the inverse arm is rc=0. The demotion
+> path below is therefore NOT TAKEN; it is left in place as the record of a decision, not as
+> live guidance.
 
 - **`TestModuleManifestRejectsStrayModule`** — builds an isolated root; pristine control
   (§5.3); writes a valid leaf probe `<iso>/world/_stray_manifest_probe.ail` (fixed 3-line
@@ -358,6 +375,7 @@ by another route.
 | MUT-NEUTER | neuter the **live** script's `cmp` (sha'd working-copy edit, restored; one-shot, sequential — never concurrent with `go test`). The arms COPY the live script into their isolated roots, so the neutering propagates into every arm | n/a (assertion doesn't exist yet) | committed stray arm **FAILS** | `go test -run TestModuleManifestRejectsStray` reds | AC5 — the proof this is a gate, not a guard |
 | MUT-EMPTY-ALLOWLIST | empty `LEG1_MODULES` in a mutant script written into the isolated root | n/a | loud `✗ … empty` rc=1 (S6 null case), not a vacuous pass | the non-empty guard's own message | committed `TestModuleManifestEmptyAllowlistFailsLoudly` (or one-shot fallback) |
 | MUT-ENUM-EMPTY | neuter the actual-side enumeration (mutant script in an isolated root) | n/a | loud `✗ swept .ail enumeration was empty` rc=1 | the actual-side non-empty guard | one-shot in sprint |
+| MUT-DIAG-SILENT | neuter only the `diff -u --label` diagnostic inside the inequality branch | n/a | refusal remains rc=1 but the stray arm fails its offending-path assertion | the diagnostic's `+`/`-` path line | committed stray arm; mutation M7 |
 | MUT-ISO-INCOMPLETE | omit one file (e.g. `storejournal.ail`) from an arm's copy set | n/a | the arm's **pristine control** (§5.3) fails — compare reds on the missing path *before any mutation is applied* | the required Leg-1 success line is absent; the compare diff names the un-copied file | one-shot in sprint — proves the control reads the compare rather than passing vacuously |
 
 Each proposed assertion (set-equality, expected-non-empty, actual-non-empty) has at least one
@@ -421,7 +439,9 @@ they prove the real installed gate reds, not only a copy of it.
   will appear twice after the array lands; no committed test anchors on that string (V15).
 - **`host/verifygate` accepts a new file.** No file-count pin exists there (V10; the
   `host/boundary` `wantFileCount = 1` landmine is scoped to `host/boundary` only — the fix
-  there is always a new package, and is not needed here).
+  there is always a new package, and is not needed here). `TestNoRigAbsolutePaths` does glob
+  every `host/verifygate/*.go` file, including the new one, so all paths in it are assembled from
+  `repoRoot` and `t.TempDir()`; no rig-absolute literal may appear even in a comment.
 - **The repo-wide AST gate** (`host/broker/invoke_boundary_test.go`) floors the walked
   production-file count at ≥30 and pins no exact total (`:209-213`, V13), and the walker skips
   `_test.go` files anyway; the new test file must contain no `Invoke`/`NewSession`/
@@ -458,14 +478,14 @@ they prove the real installed gate reds, not only a copy of it.
 
 ## 9. Scope re-checked after the isolation rework: held at ~0.5 day, at the top of the band
 
-Script: one array + an enumerate/compare/consume restructure of an existing loop, ~40–50 lines,
+Script: one array + an enumerate/compare/consume restructure of an existing loop, +66/−4 lines,
 patterned line-for-line on `verify_world_package.sh:86-96` — unchanged from the first draft.
 Test file: the isolation rework is real LOC — the `newIsolatedGateRoot` copy helper, the
 `runGateAt` variant (`runGate` is live-hardwired, V24), per-arm pristine controls, and the
-no-live-write assertions take the file from ~150–200 to **~230–300 LOC**. The estimate is
+no-live-write assertions take the file to **~270 LOC**. The estimate is
 re-checked against that growth rather than silently held: it stays at ~0.5 day, now at the top
 of the band, for two measured reasons. First, the mechanics were de-risked live this session —
-the four-item copy set is sufficient, the script self-roots from `$0`, and a pristine legs-1–2
+the 13-file `.ail`-scoped copy set is sufficient, the script self-roots from `$0`, and a pristine legs-1–2
 run against the copy costs ~1.7 s wall (V21/V22) — so neither construction nor CI runtime is
 exploratory. Second, the helper *replaces* first-draft machinery it deletes: the
 in-memory-backup/`t.Cleanup` careful-restore protocol is gone entirely (`t.TempDir()` cleanup
@@ -475,7 +495,7 @@ one. The one place scope could still shrink — committing MUT-EMPTY-ALLOWLIST a
 has a named demotion path (§5.4). The first draft's other fallback, compare-after-sweep (keep
 the loop untouched, compare at the end), is now priced HIGHER than before and should not be
 taken lightly: without compare-first the refusing arms and every pristine control pay a full
-ai-check sweep, and the four-item copy stops being obviously sufficient; that trade is recorded
+ai-check sweep, and the file-scoped copy stops being obviously sufficient; that trade is recorded
 here so it is a decision, not a drift.
 
 ## 10. What this item is NOT doing
