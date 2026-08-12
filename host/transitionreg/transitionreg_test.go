@@ -182,6 +182,197 @@ func TestProposalDescriptorAgreementRefusals(t *testing.T) {
 	})
 }
 
+type snapshotReader struct {
+	snap  Snapshot
+	err   error
+	reads int
+}
+
+func (r *snapshotReader) ReadSnapshot(context.Context) (Snapshot, error) {
+	r.reads++
+	return cloneSnapshot(r.snap), r.err
+}
+
+type countingCapabilities struct {
+	source CapabilitySource
+	calls  int
+}
+
+func (c *countingCapabilities) CapabilitySnapshot(now int64) broker.CapabilitySnapshot {
+	c.calls++
+	return c.source.CapabilitySnapshot(now)
+}
+
+func descriptorWithAccess(id, effect string) Descriptor {
+	d := validDescriptor()
+	d.ID = id
+	d.Access = EffectRequirement{Effect: effect, Scope: "world", Cost: 1}
+	d.DeclaredEffects = []EffectRequirement{{Effect: effect, Scope: "world", Cost: 1}}
+	return d
+}
+
+func descriptorIDs(ds []Descriptor) []string {
+	ids := make([]string, len(ds))
+	for i := range ds {
+		ids[i] = ds[i].ID
+	}
+	return ids
+}
+
+func containsDescriptor(ds []Descriptor, id string) bool {
+	for _, d := range ds {
+		if d.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+func TestTwoSessionExactOrderedSets(t *testing.T) {
+	a := descriptorWithAccess("tools.alpha", "alpha")
+	b := descriptorWithAccess("tools.beta", "beta")
+	neither := descriptorWithAccess("tools.gamma", "gamma")
+	snap := descriptorSnapshot(a, b, neither)
+	sessionA := broker.NewSession(openTransitionStore(t), "allowed-a", []broker.Capability{{Effect: "alpha", Scope: "world", ExpiresAt: 10, Budget: 5}}, nil)
+	sessionB := broker.NewSession(openTransitionStore(t), "allowed-b", []broker.Capability{{Effect: "beta", Scope: "world", ExpiresAt: 10, Budget: 5}}, nil)
+
+	qa, err := NewRequest(context.Background(), &snapshotReader{snap: snap}, sessionA, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	qb, err := NewRequest(context.Background(), &snapshotReader{snap: snap}, sessionB, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	allowedA, allowedB := qa.Allowed(), qb.Allowed()
+	if got, want := descriptorIDs(allowedA), []string{a.ID}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("session A exact IDs = %v, want %v", got, want)
+	}
+	if got, want := descriptorIDs(allowedB), []string{b.ID}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("session B exact IDs = %v, want %v", got, want)
+	}
+	if containsDescriptor(allowedA, b.ID) || containsDescriptor(allowedA, neither.ID) {
+		t.Fatalf("session A contains forbidden descriptor: %v", descriptorIDs(allowedA))
+	}
+	if containsDescriptor(allowedB, a.ID) || containsDescriptor(allowedB, neither.ID) {
+		t.Fatalf("session B contains forbidden descriptor: %v", descriptorIDs(allowedB))
+	}
+	t.Run("returned_descriptors_are_copies", func(t *testing.T) {
+		first := qa.Allowed()
+		first[0].InputSchema[0] = 'X'
+		first[0].DeclaredEffects[0].Effect = "changed"
+		again := qa.Allowed()[0]
+		if string(again.InputSchema) != `{}` || again.DeclaredEffects[0].Effect != "alpha" {
+			t.Fatalf("Allowed alias escaped: %+v", again)
+		}
+	})
+	t.Run("order_is_the_snapshot_order", func(t *testing.T) {
+		both := broker.NewSession(openTransitionStore(t), "allowed-both", []broker.Capability{
+			{Effect: "alpha", Scope: "world", ExpiresAt: 10, Budget: 5},
+			{Effect: "beta", Scope: "world", ExpiresAt: 10, Budget: 5},
+		}, nil)
+		q, err := NewRequest(context.Background(), &snapshotReader{snap: snap}, both, 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got, want := descriptorIDs(q.Allowed()), []string{a.ID, b.ID}; !reflect.DeepEqual(got, want) {
+			t.Fatalf("Allowed order = %v, want snapshot order %v", got, want)
+		}
+	})
+}
+
+func TestNextReadObservesNewHeadWithoutRestart(t *testing.T) {
+	s := openTransitionStore(t)
+	d1 := descriptorWithAccess("tools.alpha", "alpha")
+	current := validRevision(d1)
+	head1 := seedRevision(t, s, current)
+	r := NewReader(s)
+	first, err := NewRequest(context.Background(), r, broker.NewSession(s, "head-one", nil, nil), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	d2 := descriptorWithAccess("tools.beta", "beta")
+	next, err := BuildNext(current, []Change{{ID: d2.ID, Descriptor: &d2}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	head2, err := r.Publish(context.Background(), head1, next)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := NewRequest(context.Background(), r, broker.NewSession(s, "head-two", nil, nil), 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first.Registry.Head != head1 || second.Registry.Head != head2 || second.Registry.Revision != 2 {
+		t.Fatalf("captured heads/revision = %q/%q/%d, want %q/%q/2", first.Registry.Head, second.Registry.Head, second.Registry.Revision, head1, head2)
+	}
+	if _, ok := first.Registry.Lookup(d2.ID); ok {
+		t.Fatal("first request unexpectedly observed revision 2 entry")
+	}
+	if got, ok := second.Registry.Lookup(d2.ID); !ok || got.ID != d2.ID {
+		t.Fatalf("new request did not observe revision 2 entry: %+v ok=%v", got, ok)
+	}
+}
+
+func TestSingleRequestKeepsCapturedEpochs(t *testing.T) {
+	t.Run("captured_sources_are_not_reread", func(t *testing.T) {
+		s := openTransitionStore(t)
+		d1 := descriptorWithAccess("tools.alpha", "alpha")
+		current := validRevision(d1)
+		head1 := seedRevision(t, s, current)
+		r := NewReader(s)
+		handlerCount := 0
+		session := broker.NewSession(s, "captured", []broker.Capability{{Effect: "alpha", Scope: "world", ExpiresAt: 10, Budget: 5}}, broker.Registry{
+			"alpha": broker.HandlerFunc(func(context.Context, broker.EffectRequest, []byte) ([]byte, error) { handlerCount++; return nil, nil }),
+		})
+		caps := &countingCapabilities{source: session}
+		q, err := NewRequest(context.Background(), r, caps, 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		capturedEpoch, capturedHead := q.Caps.Epoch, q.Registry.Head
+		invoker, err := session.Bind(broker.Manifest{Declared: []broker.Requirement{{Effect: "alpha", Scope: "world", Cost: 1}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, _, err := invoker.Request(context.Background(), broker.EffectRequest{Effect: "alpha", Scope: "world", Cost: 1, Now: 1}, nil); err != nil {
+			t.Fatal(err)
+		}
+		d2 := descriptorWithAccess("tools.beta", "beta")
+		next, err := BuildNext(current, []Change{{ID: d2.ID, Descriptor: &d2}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := r.Publish(context.Background(), head1, next); err != nil {
+			t.Fatal(err)
+		}
+		for i := 0; i < 2; i++ {
+			_ = q.Allowed()
+		}
+		if caps.calls != 1 {
+			t.Fatalf("CapabilitySnapshot calls=%d, want exactly 1", caps.calls)
+		}
+		if q.Caps.Epoch != capturedEpoch || q.Registry.Head != capturedHead {
+			t.Fatalf("request captures moved: epoch=%d/%d head=%q/%q", q.Caps.Epoch, capturedEpoch, q.Registry.Head, capturedHead)
+		}
+		if session.CapabilitySnapshot(1).Epoch == capturedEpoch || handlerCount != 1 {
+			t.Fatalf("controls did not move: live epoch=%d captured=%d handler=%d", session.CapabilitySnapshot(1).Epoch, capturedEpoch, handlerCount)
+		}
+	})
+	t.Run("injected_read_error", func(t *testing.T) {
+		injected := errors.New("injected request read failure")
+		r := &snapshotReader{err: injected}
+		count := 0
+		s := transitionSession(t, "read-error", nil, &count)
+		_, err := NewRequest(context.Background(), r, s, 1)
+		want := "transition registry: construct request: injected request read failure"
+		if !errors.Is(err, injected) || err.Error() != want || r.reads != 1 {
+			t.Fatalf("NewRequest error=%v reads=%d, want wrapped %q and 1", err, r.reads, want)
+		}
+	})
+}
+
 var (
 	testFn          = hashref.MustParse("sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 	testInterpreter = hashref.MustParse("sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
