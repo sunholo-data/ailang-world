@@ -166,3 +166,97 @@ func requireLiveTreeUntouched(t *testing.T) {
 		t.Fatalf("committed arm changed live storejournal: got sha256 %x, baseline %x", got, liveStorejournalDigest)
 	}
 }
+
+func TestModuleManifestRejectsStrayModule(t *testing.T) {
+	root := newIsolatedGateRoot(t)
+	control := requirePristineControl(t, root)
+	if got := strings.Count(control, "\n   ai-check "); got != 11 {
+		t.Fatalf("pristine control emitted %d ai-check lines, want 11", got)
+	}
+	probe := filepath.Join(root, "world", "_stray_manifest_probe.ail")
+	const source = "module world/_stray_manifest_probe\n\nexport func strayId(x: int) -> int = x\n"
+	if err := os.WriteFile(probe, []byte(source), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	rc, out := runGateAt(t, root, map[string]string{
+		"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
+	})
+	if rc != 1 {
+		t.Fatalf("stray module: want rc=1, got %d\n%s", rc, out)
+	}
+	for _, want := range []string{
+		"LEG1_MODULES", "+world/_stray_manifest_probe.ail",
+		"expected: LEG1_MODULES", "actual:   .ail files swept",
+	} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("stray refusal omits %q\n%s", want, out)
+		}
+	}
+	if got := strings.Count(out, "\n   ai-check "); got != 0 {
+		t.Fatalf("stray was ai-checked before refusal: count=%d\n%s", got, out)
+	}
+	if strings.Contains(out, "verify gate PASSED") {
+		t.Fatalf("stray refusal printed terminal success\n%s", out)
+	}
+	requireLiveTreeUntouched(t)
+}
+
+func TestModuleManifestRejectsDeletedModule(t *testing.T) {
+	root := newIsolatedGateRoot(t)
+	requirePristineControl(t, root)
+	target := filepath.Join(root, "design_docs", "sketches", "storejournal.ail")
+	if err := os.Remove(target); err != nil {
+		t.Fatal(err)
+	}
+	rc, out := runGateAt(t, root, map[string]string{
+		"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
+	})
+	if rc != 1 || !strings.Contains(out, "-design_docs/sketches/storejournal.ail") {
+		t.Fatalf("deleted leaf not refused by named manifest diff: rc=%d\n%s", rc, out)
+	}
+	requireLiveTreeUntouched(t)
+}
+
+func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
+	root := newIsolatedGateRoot(t)
+	requirePristineControl(t, root)
+	const old = `LEG1_MODULES=(
+  design_docs/sketches/effectbroker.ail
+  design_docs/sketches/logepoch.ail
+  design_docs/sketches/storejournal.ail
+  design_docs/sketches/transitions.ail
+  design_docs/sketches/worlddapi.ail
+  design_docs/sketches/worldkernel.ail
+  design_docs/sketches/worldtypes.ail
+  world/contracts.ail
+  world/logepoch.ail
+  world/transitions.ail
+  world/types.ail
+)`
+	mutateCopiedScript(t, root, old, "LEG1_MODULES=()")
+	rc, out := runGateAt(t, root, map[string]string{
+		"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
+	})
+	if rc != 1 || !strings.Contains(out, "LEG1_MODULES allowlist is empty") {
+		t.Fatalf("empty allowlist did not fail through its named guard: rc=%d\n%s", rc, out)
+	}
+	if strings.Contains(out, "unbound variable") {
+		t.Fatalf("empty allowlist aborted before its own guard\n%s", out)
+	}
+	requireLiveTreeUntouched(t)
+}
+
+func TestModuleManifestEmptyEnumerationFailsLoudly(t *testing.T) {
+	root := newIsolatedGateRoot(t)
+	requirePristineControl(t, root)
+	const old = `mods+=("${f#./}")            # repo-relative path (manifest key), normalized (gemini catch)`
+	const replacement = `mods+=("${f#./}"); mods=() # repo-relative path (manifest key), normalized (gemini catch)`
+	mutateCopiedScript(t, root, old, replacement)
+	rc, out := runGateAt(t, root, map[string]string{
+		"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
+	})
+	if rc != 1 || !strings.Contains(out, "swept .ail enumeration was empty") {
+		t.Fatalf("empty enumeration did not fail through its named guard: rc=%d\n%s", rc, out)
+	}
+	requireLiveTreeUntouched(t)
+}
