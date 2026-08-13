@@ -364,6 +364,35 @@ and stays armed. It is also neither a retry (the timed run happens once; the war
 a different, unmeasured invocation whose only job is inode state) nor a skip (the assertion
 is unchanged at 2s and the test runs everywhere it ran before).
 
+**How the warm-up is proven — deterministically, per run, not by sampling** (round-3 quorum,
+`gpt5-6-sol` REJECT, `proposed_fix` adopted verbatim; see the Quorum log). Round 3's draft
+proved the warm-up by *population*: P3 required a **majority** of 20 cold runs to exhibit
+vacuous mode (measured analogue ~6/8) and MUT-WARM-SKIP expected a red "in most runs". Both
+are sampling gates whose verdict turns on scheduler, page-cache and assessment-latency luck —
+**the S6 violation this document exists to remove from the queue row's own `-count=20`
+prescription, reproduced inside the section named "proofs that cannot pass by luck"**. The
+reviewer was right and the arms are deleted, not softened. The warm-up is proven instead by
+conditions that must hold on **every** timed invocation:
+
+- The warm-up exec runs via `exec.CommandContext` under an **explicit bounded timeout**
+  (Standing rule 6 applies to a test's own subprocess too) and must **exit successfully**; a
+  timed-out or non-zero warm-up is a `t.Fatal`, never a silently skipped warm-up that would
+  leave the timed run in the cold regime the assertions below then blame.
+- Every timed invocation must observe `exec_started` **and** `forked`, plus **exactly one
+  successful kill record** (count 1, errno nil, offset ≥ the 100ms deadline — §5.4). This is
+  the warm-up's *purpose* asserted as a per-run postcondition: if warming failed to move the
+  fork ahead of the deadline, `forked` is absent at the deadline and that run reds. A 100%
+  requirement over every run replaces a majority requirement over a population.
+- **No acceptance verdict depends on how many cold executions happen to cross the 100ms
+  deadline.** The cold-regime numbers (W7/W8/W15) remain in §3 and §14 as the *motivation* for
+  warming; they are no longer an acceptance arm.
+
+Mutation coverage for the warm-up call itself is likewise deterministic (the reviewer's
+alternative, adopted): the warm-up is extracted as a test-owned helper with an **injectable
+runner**, and a pure-Go unit test asserts **exactly one bounded warm-up invocation** with the
+timeout set — a count and a flag, both exact, neither timing-derived (MUT-WARM-UNBOUNDED and
+MUT-WARM-DROP, §8). The real test's marker assertions stay as the end-to-end postcondition.
+
 ### 5.6 Committed attribution arms — pure Go, deliberately NOT the subprocess escape
 
 `handlers_stall_diag_test.go` extracts the decomposition into a helper
@@ -384,8 +413,11 @@ leak): the escape was measured **non-deterministic in exactly the regime a commi
 would run in** — 20/20 leaks on a warm fixture but **1/8 on fresh fixtures** (W6), because the
 same first-exec latency of §3 usually lets the kill win before the escape exists. A committed
 arm that reds 7 runs in 8 for environmental reasons would be this item manufacturing the very
-flake class it was filed against. The escape fixture is used only in warmed one-shot form
-(§7, AC5-adjacent) where the operator controls the regime. CI cost of the two arms: ~3s plain
+flake class it was filed against. The escape fixture is used only in **operator-driven warmed
+one-shot form, and it is deliberately no acceptance criterion of this item** — round 3's AC5
+cited it as an arm; the round-3 quorum's deletion of every sampling gate applies to it for the
+same reason (`1/8 on fresh` is a coin flip whichever section it sits in). CI cost of the two
+committed pure-Go arms: ~3s plain
 leg, ~5–8s race leg, against the race leg's 600s watchdog with `host/broker` at 76.9s
 critical path (W9) — stated so the budget change is a decision, not a drift.
 
@@ -448,12 +480,22 @@ with `AILANG_BIN=/tmp/ailang-v0300/ailang` exported and `GOTOOLCHAIN=go1.25.6`; 
   A diagnosis that cannot reproduce the signature under forced H1 conditions would never be
   trusted to report a spontaneous one.
 - **P2 — the diagnosis tells the truth (committed).** The two §5.6 arms, every CI run.
-- **P3 — the precondition proof (darwin one-shot, the before/after for §5.5).** At base, 20
-  runs of the *unwarmed* test with markers: the majority must show `forked` absent-at-deadline
-  (vacuous-mode; measured analogue ~6/8, W7/W8). After §5.5: 20 runs, **0** vacuous-mode. This
-  measures the race *precondition* (fork-vs-deadline alignment) rather than the rare race
-  *outcome* — deterministic in aggregate where `-count=20` was a coin flip. Recorded as a
-  darwin-only AC: linux has no assessment latency and both arms would read 0.
+- **P3 — the warm-up proof, deterministic per run (replaces the round-3 cold-majority arm).**
+  The round-3 draft's P3 asked for a *majority* of 20 cold runs to show `forked`
+  absent-at-deadline (analogue ~6/8, W7/W8). That is sampling, so it is **deleted** —
+  `gpt5-6-sol`'s round-3 objection, adopted verbatim (§5.5, Quorum log). In its place, two arms
+  that cannot pass or fail by luck:
+  **(a)** the committed pure-Go warm-up unit test — the injectable runner records **exactly one**
+  warm-up invocation carrying a **non-zero bounded timeout** (exact count, exact flag; no
+  timing); its mutations are MUT-WARM-DROP and MUT-WARM-UNBOUNDED (§8), each redding on a
+  counted assertion.
+  **(b)** the per-run postcondition inside the real test, every run on every platform:
+  `exec_started` present, `forked` present, and exactly one kill record with errno nil at offset
+  ≥ the deadline. Nothing here is platform-conditional and nothing is a threshold, so the
+  darwin-only framing is gone too: on linux these hold because there is no assessment latency,
+  on darwin they hold **because** the warm-up ran — and if it did not, the run reds and names
+  which marker was missing. The cold-regime measurements stay in §3/§14 as motivation, not as a
+  gate.
 - **P4 — the pass arm.** Pristine tree, modified test, 20 isolated `-race` runs, 20/20
   `--- PASS` (the weak direction, labeled as such; base measured 20/20 today, W4).
 
@@ -474,7 +516,8 @@ run because the bulk of M1 remains test-side).
 | MUT-DIAG-BLIND-EXEC | drop the Execute enter/exit timestamps from the helper | n/a | `TestStallDiagnosisAttributesHandlerWindow` reds | attribution ≠ Execute window | committed P2 arm |
 | MUT-DIAG-BLIND-STORE | drop the store-call timestamps | n/a | `TestStallDiagnosisAttributesStoreWindow` reds | attribution ≠ store window | committed P2 arm |
 | MUT-MARKER-DROP | fixture stops writing `forked`/`exec_started` | n/a | real test reds on its non-vacuity assertion | `forked` absent on a pass run | the modified test itself |
-| MUT-WARM-SKIP | remove the `W16_WARM=1` warm-up exec | this IS today's regime | darwin: `forked`-at-deadline assertion reds in most runs (measured ~6/8 analogue, W7) | vacuous-mode signal fires | AC5 (P3, darwin one-shot) |
+| MUT-WARM-DROP | test-owned warm-up helper's call removed (`if false && …` on the runner call so imports stay used) | n/a | the pure-Go warm-up unit test reds: recorded invocations **0 ≠ 1** | exact invocation count | AC5(a) |
+| MUT-WARM-UNBOUNDED | warm-up helper passes `context.Background()` instead of the bounded context | n/a | same unit test reds: recorded deadline flag **unset** | exact flag, not a duration | AC5(a) |
 | MUT-BOUND-LOOSE | raise the test's 2s bound to 10s | n/a | MUT-KILL-NEUTER one-shot **stops redding** (5.15s < 10s) — the composed one-shot's green IS the kill signal, run as a pair | AC3's red arm goes green | AC3 protocol (one-shot pair) |
 | MUT-GUARD-PARALLEL | one-shot: add `t.Parallel()` as the first statement of the group-kill test (compiles; `go vet ./host/broker/` stays green, so the red is the guard's own) | n/a — 0 `t.Parallel` across `host/`+`cmd/` tests at `e3ef152` (R4) | `TestBrokerTestsDoNotCallParallel` reds, naming `handlers_test.go:<line>`; restore sha-identical; guard green | guard's `Parallel`-selector census ≠ 0 | AC7 (one-shot pair) |
 
@@ -508,8 +551,19 @@ nowhere — V-G/W4). Base-state results per rule 3e are stated inline.
   TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential' -v -count=1` → exactly 2
   `--- PASS` lines (base with the seam applied: 2, N5); then `go build ./host/broker/` and
   `go vet ./host/broker/` both rc=0.
-- **AC5 — P3 executed on darwin** with both arms' vacuous-mode counts recorded (base analogue:
-  ~6/8 cold, 0 warm — W7/W15).
+- **AC5 — the warm-up is proven deterministically, on every platform.** Replaces round 3's
+  darwin-only cold-majority arm, deleted per `gpt5-6-sol`'s round-3 `proposed_fix` (§5.5, §7 P3).
+  **(a)** `go test ./host/broker/ -run '^TestWarmUpRunsExactlyOnceUnderABoundedContext$' -v
+  -count=1` → exactly 1 `--- PASS:` line (base: **0** — the test does not exist; and per V-G/W4 a
+  `-run` naming no test prints a vacuous rc=0 `PASS`, which is why the counted line is the
+  verdict). Then the MUT-WARM-DROP and MUT-WARM-UNBOUNDED one-shots of §8, each → exactly 1
+  `--- FAIL:` line, each restored sha-identical, each re-run → 1 `--- PASS:`. Both mutants must
+  BUILD: `go vet ./host/broker/` rc=0 on the mutated tree before its FAIL is read (a
+  non-compiling mutant reds in the direction you predicted for the wrong reason).
+  **(b)** the per-run postcondition is already enforced by AC2's 20 runs, whose logs must each
+  show `exec_started`, `forked`, and the single kill record — so AC5(b) adds no command, it names
+  which of AC2's assertions carries the warm-up's proof. **No arm of this AC counts cold runs or
+  compares a majority against a threshold**; that is the whole point of the replacement.
 - **AC6 — live tree hygiene.** `git status --porcelain` identical before/after the full run;
   `shasum -a 256 host/broker/handlers.go` identical to its pre-AC3 value — which is the
   **post-M1 committed content including the §5.4 seam**, not the base `b2c3f89` hash (the seam
@@ -621,10 +675,17 @@ pure-Go sleeps; and the one-shot protocols were rehearsed via probe analogues (W
 is deliberately NOT in the 0.5d: M2 (decision-gated, §6) and any chase of the 0.76% by brute
 sampling. The §5.4 guard adds ~60 test-only LOC assembled from two committed house patterns
 (R9) and parses 15 files — noise against the band, and it travels with the seam: it is part of
-the trap, not optional polish. If the sprint planner prices the fixture work above the band,
+the trap, not optional polish. Round 3's deterministic replacement for the warm-up proof adds a
+test-owned warm-up helper with an injectable runner plus one pure-Go unit test — ~30 test-only
+LOC and two one-shot mutations — and **removes** the 40-run darwin cold/warm sampling campaign
+round 3's AC5 required, so the net effect on the band is a *reduction* in wall-clock and an
+increase in determinism. If the sprint planner prices the fixture work above the band,
 the honest fallback is to land §5.1–5.4+5.6 (the trap, seam and guard included) and demote
 §5.5 to the follow-up — the trap is the part that must not slip, and without §5.4 it cannot
-authorize anything (§6).
+authorize anything (§6). Note the fallback now costs more than it did: §5.5 carries the warm-up
+helper and its unit test, so demoting it also demotes AC5(a), leaving the warm-up's purpose
+asserted only by AC2's per-run markers. That is still non-vacuous, but say so explicitly rather
+than letting the demotion look free.
 
 ## 13. What this item is NOT doing
 
@@ -755,9 +816,15 @@ mission bookkeeping issue sunholo-data/ailang-world#53 at `2026-08-13T06:12:23Z`
 exactly: **`option A`** — re-read first-party this session via `gh api` (R7; `created_at`, not
 `createdAt`). Resolution A — the §5.4 `killGroup` seam lands in M1 — is therefore **ratified
 mission state**. This OVERRULES `gpt5-6-sol`'s directional objection **by ratification
-authority**: explicitly not by controller judgment, and explicitly not by a third quorum
-round, which would have re-litigated a settled decision. What the ratification does **not**
-dissolve, and this round-3 revision discharges instead:
+authority** — explicitly not by controller judgment, and not by any reviewer's later
+agreement. A third quorum round WAS nevertheless run (below), and the ratified direction was
+not what it was bought for: the round-3 revision introduced a whole new committed gate
+(`TestBrokerTestsDoNotCallParallel`) plus an evaluated S3 answer, neither of which any
+reviewer had seen, and multi-provider eyes on *new design* is what the quorum gate is for.
+A reviewer re-raising resolution B would not have been a blocking objection this round; the
+controller said so in the round-3 controller note, on the record, before the reviewers ran.
+Neither reviewer re-raised it. What the ratification does **not** dissolve, and this revision
+discharges instead:
 
 - **`gpt5-6-sol`'s catch survives its own premise.** The premise was false: it framed the seam
   as enlarging "the frozen production core", but `CLAUDE.md:25` scopes the frozen core to
@@ -770,6 +837,50 @@ dissolve, and this round-3 revision discharges instead:
   own named mutation (MUT-GUARD-PARALLEL) and anti-vacuity floor.
 - **`gemini-3-1-pro`'s fix is adopted verbatim** (§5.4), with AC2 carrying the `-race` proof
   N5 deliberately left on the table.
+
+**Round 3 (iter-80): BLOCKED, then closed by the narrow-refinement carve-out.** Both external
+reviewers present, `absent_reviewers` field absent from the artifact and `present: [gpt5-6-sol,
+gemini-3-1-pro]` — no N−1 degrade; `metered=$0.148857` (`gpt5-6-sol` `$0.105725`,
+`gemini-3-1-pro` `$0.043132`; per-reviewer cap raised pre-emptively to `$0.45`).
+
+- **`gemini-3-1-pro` — PASS.** Non-blocking catch: the §5.4 AST guard matches any
+  `SelectorExpr` named `Parallel`, so it would also flag an unrelated `config.Parallel()`. It
+  judged the trade acceptable given 0 present false positives and the load-bearing need to
+  protect the mutable seam. No fix proposed; the doc already declares the same breadth as
+  deliberate (a recogniser's coverage is a property of its input grammar), so the breadth is
+  recorded as a known cost, not a defect. **Nothing changed for this catch.**
+- **`gpt5-6-sol` — REJECT, and it found the one thing this document should have been most
+  ashamed of.** It dropped resolution B entirely and objected instead that **AC5/P3 and
+  MUT-WARM-SKIP were probabilistic sampling gates**: P3's "before" arm required a *majority* of
+  20 cold darwin runs to exhibit vacuous mode (analogue ~6/8) and MUT-WARM-SKIP expected a red
+  "in most runs", so both verdicts turn on scheduler, page-cache and assessment-latency luck.
+  Its catch names the aggravating detail: the doc *called* P3 "deterministic in aggregate",
+  which is a claim, not a bound — no binomial argument was ever offered. **Verified first-party
+  before acting (rule 3f), not forwarded**: §7 P3 and §8's MUT-WARM-SKIP row read exactly as
+  quoted. **The objection is correct, and it is this document convicting itself**: killing the
+  queue row's `-count=20` coin-flip gate on S6 grounds is this doc's central contribution, and
+  it shipped two coin-flip gates of its own — inside the section titled *"Replacing
+  `-count=20`: proofs that cannot pass by luck"*. A gate's own section heading is not a
+  measurement.
+- **Disposition — narrow-refinement carve-out, `proposed_fix` applied VERBATIM by the
+  controller.** The objection disputes no design direction (it accepts A, the seam, the guard
+  and the warm-up itself); it is a determinism defect with a fully specified reviewer-authored
+  remedy, which is precisely what the carve-out covers. Applied, in the reviewer's own terms:
+  the cold-majority arm is **deleted** from P3 and AC5; **MUT-WARM-SKIP is removed** as a
+  timing-based mutation; the warm-up now runs via `exec.CommandContext` under an explicit
+  bounded timeout and must exit successfully; every timed invocation must observe
+  `exec_started` **and** `forked` plus exactly one successful kill record (a 100%-per-run
+  postcondition replacing a majority-over-population threshold); and the warm-up call gains
+  deterministic mutation coverage through a test-owned helper with an **injectable runner** and
+  a pure-Go unit test asserting exactly one bounded invocation (MUT-WARM-DROP,
+  MUT-WARM-UNBOUNDED, AC5(a)). The real test's marker assertions remain the end-to-end
+  postcondition, as the fix directs. Two consequences recorded rather than hidden: the escape
+  fixture is likewise no longer any acceptance arm (`1/8 on fresh` is a coin flip wherever it
+  sits, §5.6), and §12's fallback of demoting §5.5 now also demotes AC5(a), which is stated
+  there instead of left to look free. **No third revision round was bought and none is owed:
+  the carve-out's condition — every remaining blocking objection concrete, non-directional and
+  reviewer-specified — is met, and applying a reviewer's own words is satisfying the objection,
+  not force-passing it.**
 
 ## Related
 
