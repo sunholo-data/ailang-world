@@ -2245,15 +2245,15 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
 
    **WHAT THE CONTROLLER MEASURED FIRST-PARTY (the load-bearing claim did not survive the kernel).**
    The doc's trust gradient has **four** grades (PROVEN > TESTED > ATTESTED > CLAIMED); the landed
-   kernel's `Evidence` ADT (`world/types.ail:23-28`) has **five** variants. `TestReport`→TESTED,
-   `RecordedEffect`→ATTESTED, `AiReview`→CLAIMED — but **`CompilerOutput` and `HumanApproval` have
-   no grade**, and **PROVEN's own stated producers (Z3, replay) have no `Evidence` carrier at
-   all**. The grade names appear **nowhere** in `*.ail`/`*.go`/`*.sql` (one prose comment aside).
+   kernel's `Evidence` ADT (`world/types.ail:23-28`) has **five** variants. The mapping gap is now
+   closed by the total `gradeOf(Evidence)`: `TestReport`→TESTED,
+   `CompilerOutput`/`HumanApproval`/`RecordedEffect`→ATTESTED, and `AiReview`→CLAIMED. **PROVEN's
+   own stated producers (Z3, replay) still have no `Evidence` carrier at all**.
    `HumanApproval` is precisely the evidence the approval inbox — item 7, gated on this doc —
    would emit, and grading a human's ratification as CLAIMED ("agent said so, unverified") is
-   plainly wrong. So the doc's cardinal-sin anti-pattern, **grade laundering, is today
-   unenforceable**: there is no total mapping to launder against. Ratification point 7.2 is
-   restated as that decidable question. Also measured: `Proposal.confidence` is a **bare float
+   plainly wrong. The total mapping now makes the doc's cardinal-sin anti-pattern, **grade
+   laundering**, enforceable for decoded `Evidence`; the carrier gap for `PROVEN` remains.
+   Also measured: `Proposal.confidence` is a **bare float
    with no evidence ref** (`AiReview` carries one), so rendering it would violate the doc's own
    confidence-theater anti-pattern → new ratification point 7.5]
    **w-human-surface** · clause-5 · the founding UX design for the human↔AI surface:
@@ -2798,16 +2798,16 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
     ITEM IN THE UI PROGRAMME. `6b/§7` RATIFICATION POINT 2 WAS RATIFIED AS A DOCUMENT AND ITS
     DELIVERABLE WAS NEVER PRODUCED.**]~~
     **w-evidence-grade-mapping** · clause-5 · the TOTAL `Evidence` → grade mapping that P3
-    (trust-gradient rendering) requires and that no code supplies. **MEASURED at `871e3b6`:**
+    (trust-gradient rendering) requires, now supplied by `gradeOf(Evidence)`. **Originally measured
+    at `871e3b6`:**
     `world/types.ail` defines exactly **five** `Evidence` variants — `CompilerOutput(HashRef)`,
     `TestReport(HashRef, bool)`, `HumanApproval(HashRef)`, `AiReview(HashRef, float)`,
     `RecordedEffect(HashRef)` — and a repo-wide search of `world/` + `host/` for
-    `PROVEN|TESTED|ATTESTED|CLAIMED` returns **zero** non-comment hits. The mapping exists in prose
-    only. **WHY IT IS URGENT RATHER THAN TIDY, stated as arithmetic:** two of the five variants
-    (`CompilerOutput`, `HumanApproval`) have **no grade at all**, and they are the two most common
-    on a real screen; and the stated producers of the TOP grade (Z3 proof, deterministic replay)
-    have **no `Evidence` carrier**, so `PROVEN` is unreachable. A faithful renderer today shows
-    `UNSUPPORTED` across most of its surface and can never show `PROVEN` — in a system whose
+    `PROVEN|TESTED|ATTESTED|CLAIMED` returned **zero** non-comment hits. The mapping gap is closed:
+    `CompilerOutput` and `HumanApproval` map to `ATTESTED`. The stated producers of the TOP grade
+    (Z3 proof, deterministic replay)
+    have **no `Evidence` carrier**, so `PROVEN` is unreachable. A faithful renderer can grade
+    decoded `Evidence` but can never show `PROVEN` — in a system whose
     distinguishing feature is machine proof. **A gradient whose top grade cannot be produced is not
     a gradient; it is a two-tone badge that teaches the reader to ignore the channel**, which is
     the anti-pattern list's own "grade laundering" arriving by omission rather than by intent.
