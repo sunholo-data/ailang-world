@@ -12,7 +12,7 @@
   `host/broker/handlers_stall_diag_test.go` (NEW, ~150 LOC: diagnosis helper + two committed
   attribution arms), `host/broker/handlers_parallel_guard_test.go` (NEW, ~60 LOC: the §5.4
   no-`t.Parallel` invariant gate, built from two committed house patterns, R9), and
-  `host/broker/handlers.go` (**+5/−1 lines**: the `killGroup` seam of §5.4,
+  `host/broker/handlers.go` (**+7/−1 lines**: the `killGroup` seam of §5.4,
   behaviour-identical, proven gate-clean by one-shot N5). Round 1 claimed zero production
   bytes; the revision traded that property away deliberately, and the 2026-08-13 human
   ratification settles the choice — see the Quorum verification log.
@@ -158,11 +158,18 @@ it (§8).
 ### 5.1 Capture the error
 
 `_, _, _ = session.Invoke(...)` becomes a captured `(result, ref, err)`. The test explicitly
-asserts that `err` is a `*HandlerTimeoutError` on the pass path (preventing silent non-timeout
-early returns), and the failure branch prints `%+v` of the error alongside elapsed. A
-`*HandlerTimeoutError` says `runBounded`'s deadline machinery ran to completion; anything else
-immediately relocates the fault. Zero timing cost. (Pass-path wording per the round-1 quorum's
-gemini fix, adopted verbatim.)
+asserts on the pass path that a `*HandlerTimeoutError` is **in `err`'s chain** — `errors.As`,
+**not** a bare type assertion — and the failure branch prints `%+v` of the error alongside
+elapsed. A `*HandlerTimeoutError` says `runBounded`'s deadline machinery ran to completion;
+anything else immediately relocates the fault. Zero timing cost. (Pass-path intent per the
+round-1 quorum's gemini fix, adopted verbatim.)
+
+**`errors.As` is load-bearing, not style.** `Invoke` does not return the handler error: it
+returns `&EffectFailedError{… cause: err}` (`broker.go:284`, type at `:129`). Measured by the
+sprint planner and confirmed first-party by the controller: `errors.As` → **true**, bare
+`err.(*HandlerTimeoutError)` → **false**. Round 3's wording said "`err` is a
+`*HandlerTimeoutError`", which read literally reds **100% of healthy runs** — a gate that
+cannot pass rather than one that cannot fail, but the same class of unmeasured assertion.
 
 ### 5.2 Phase decomposition, entirely test-owned
 
@@ -235,7 +242,7 @@ price, stated plainly: **M1 stops being a zero-production-byte milestone**, whic
 counted as a selling point. The trade is 6 lines of behaviour-identical production code against
 an entire second quarter-of-CI-runs wait; this doc judges that cheap and says so on the record.
 
-The production change in `handlers.go` (+5/−1, applied/gated/reverted as one-shot N5):
+The production change in `handlers.go` (+7/−1, applied/gated/reverted as one-shot N5):
 
 ```go
 // killGroup is the cancellation kill boundary, a package-level seam so the
@@ -274,14 +281,22 @@ type killRecord struct {
 	errno  error
 }
 
+// MUST DELEGATE, MUST NOT DUPLICATE. Capture the production seam and CALL it;
+// a wrapper that re-implements `syscall.Kill(-pgid, …)` here leaves the
+// production body DEAD for the test's duration, which makes MUT-KILL-NEUTER
+// (and therefore AC3, this item's only forced-failure proof) mutate dead code
+// and pass at ~105ms. Measured both ways by the sprint planner — see the
+// planner-refutation block below.
+orig := killGroup // captured BEFORE the swap; restored via t.Cleanup
 killGroup = func(pgid int) error {
+	err := orig(pgid) // the real kill, THROUGH the production seam
 	rec.mu.Lock()
 	defer rec.mu.Unlock() // held across the WHOLE write: count, offset, pgid, errno
 	rec.count++
 	rec.offset = time.Since(invokeStart)
 	rec.pgid = pgid
-	rec.errno = syscall.Kill(-pgid, syscall.SIGKILL) // the real kill
-	return rec.errno
+	rec.errno = err
+	return err
 }
 
 // assertion side: snapshot the fields under the same lock, assert on the
@@ -418,7 +433,7 @@ one-shot form, and it is deliberately no acceptance criterion of this item** —
 cited it as an arm; the round-3 quorum's deletion of every sampling gate applies to it for the
 same reason (`1/8 on fresh` is a coin flip whichever section it sits in). CI cost of the two
 committed pure-Go arms: ~3s plain
-leg, ~5–8s race leg, against the race leg's 600s watchdog with `host/broker` at 76.9s
+leg, ~5–8s race leg, against the race leg's 600s watchdog with `host/broker` MEASURED at 193.4s
 critical path (W9) — stated so the budget change is a decision, not a drift.
 
 ## 6. The fix question, answered honestly: M2 is decision-gated, not landed
@@ -539,10 +554,19 @@ nowhere — V-G/W4). Base-state results per rule 3e are stated inline.
   markers assertion executed AND the §5.4 kill-record assertion (count 1, errno nil, offset ≥
   deadline) executed. Base: today's test measured 20/20 (W4); this re-runs it modified; the
   seam alone (recorder not yet swapped) measured 5/5 green under `-race` in one-shot N5.
-  **This AC is the deliberate other half of N5**: the 20 `-race` runs of the *recorder-swapped*
-  test are what prove §5.4's mutex against the `cmd.Cancel` background-goroutine write — the
-  exact residual `gemini-3-1-pro`'s round-2 objection quoted. N5's scope never reached the
-  recorder; this AC's does, and it can fail (an unsynchronised recorder reds under `-race`).
+  **This AC runs the recorder-swapped test under `-race`, which N5's scope never reached — but
+  it does NOT prove the mutex, and round 3's claim that it did is withdrawn.** The sprint
+  planner measured an *unsynchronised* recorder at **0 `DATA RACE` across 20 `-race` runs**,
+  with a known-positive control in the same binary reporting `WARNING: DATA RACE` — so the
+  instrument could see one and there was none to see. Confirmed first-party by the controller in
+  the Go 1.25.6 source: `os/exec`'s `watchCtx` sends on `resultc` *after* invoking `Cancel`
+  (`exec.go:805-820`) and `Wait` receives from it (`:930`), and a channel send/receive pair is a
+  happens-before edge, so the hook's writes are already visible to the goroutine returning from
+  `cmd.Wait`. **`gemini-3-1-pro`'s round-2 blocking objection therefore describes a race Go
+  forecloses** — see the planner-refutation block below. The mutex STAYS (it is ratified, free,
+  and honest defence-in-depth against a future reader who reads the record off the hook's own
+  goroutine); what is deleted is this AC's claim to *prove* it, because an assertion that cannot
+  fail is exactly what round 3 was convened to remove.
 - **AC3 — P1 executed** (MUT-KILL-NEUTER protocol of §8, including the MUT-BOUND-LOOSE pair
   and byte-identical restore).
 - **AC4 — committed arms and boundary gates live.** `go test ./host/broker/ -run
@@ -605,7 +629,8 @@ nowhere — V-G/W4). Base-state results per rule 3e are stated inline.
 - **`scripts/verify_ail.sh` / `LEG1_MODULES`** (landed by item 12 at `:135`): no `.ail` file
   is touched or added — the allowlist is unmoved (W11).
 - **`verify_go.sh` race-leg watchdog (600s)**: +~5–8s from the committed arms against a
-  76.9s package critical path (W9) — comfortably inside budget, stated per the no-silent-caps
+  MEASURED 193.4s race-leg package cost (C7; W9's 76.9s was a stale comment, not a measurement) —
+  inside budget at ~3x margin, not ~8x, stated per the no-silent-caps
   rule. The §5.4 guard's AST parse of ~15 `_test.go` files adds milliseconds (R9), noted for
   completeness.
 - **`episode_test.go` AILANG_BIN refusal** (V-H/W10): single-test `-run` commands above don't
@@ -635,7 +660,7 @@ nowhere — V-G/W4). Base-state results per rule 3e are stated inline.
     analogues). Injection therefore costs: a new field on `handlerBounds` or `handlerCommand`,
     threading through `normalized()` and all three handler constructors, plus a new field on
     at least one exported config so a test can reach it — strictly more production surface,
-    *including exported surface*, than the seam's +5/−1 unexported lines, to express the same
+    *including exported surface*, than the seam's +7/−1 unexported lines, to express the same
     test-only need. Rejected as the worse S3 answer, by measurement not taste.
   - *No production change at all (M1 stays test-only).* That is resolution B, closed by the
     2026-08-13 human ratification (Quorum log); not re-argued here.
@@ -692,7 +717,7 @@ than letting the demotion look free.
 - **Not** claiming the mechanism is confirmed. §3 is a hypothesis with new supporting
   measurements; the instruments decide, and the doc's value survives the hypothesis failing.
 - **Not** landing a production *fix* (the re-sweep stays decision-gated on a captured
-  diagnosis, §6). M1's only production change is the §5.4 seam — +5/−1 behaviour-identical
+  diagnosis, §6). M1's only production change is the §5.4 seam — +7/−1 behaviour-identical
   lines whose entire job is observability; round 1's "zero production bytes" claim is
   deliberately given up, and the Quorum log records both why and the 2026-08-13 human
   ratification that settles it.
@@ -744,7 +769,7 @@ wrote only this doc.
 | N2 | the binding gate cannot match the seam | Read `invoke_boundary_test.go:247-313` | detector kinds are exactly `invoke-call`, `ctor-live`, `ctor-replay`, `session-type`, `dot-import` (incl. method-value/func-value forms); inside-broker exemption pinned to `wantCount=3`, identities all in `publish_op.go` (`:274-288`). A package-level `var killGroup` + a call to it is none of these kinds |
 | N3 | the subprocess gate pins a file set, not lines, and matches only `exec.Command*` | Read `registry_publish_test.go:1076-1131,1181-1190` | matcher: `pkg.Name == "exec"` && sel ∈ {`Command`,`CommandContext`}, skips `_test.go` (`:1084`); driver map pins five files incl. `handlers.go` (`:1181-1186`) with `len(drivers) != len(files)` as the tripwire; site lines are `t.Logf`ed, never asserted |
 | N4 | errno capture at the kill boundary costs one assignment per field | Read `/tmp/pgprobe/main.go:31-41` (the controller's 1,987-run instrument) | `cmd.Cancel` records `r.nilProc` on the nil-`Process` early return and `r.killErr = err` around the real `syscall.Kill` — the recorder-behind-the-seam pattern of §5.4, already proven at scale by V-D |
-| N5 | the §5.4 seam is gate-clean, behaviour-preserving, and restorable — measured, not argued | one-shot: `cp` backup; apply seam (+5/−1); `shasum` before/after; `go build ./host/broker/`; `go vet ./host/broker/`; `go test -run 'TestRegistryDispatchBindingBoundary\|TestEverySubprocessSiteIsDriven…' -v -count=1` counting `--- PASS`; `go test -race -run '^TestHandlerTimeoutKillsTheWholeProcessGroup$' -count=5 -v`; restore; `shasum` | sha `8419874…` → `666a5d4…` (edit took — positive control), BUILD_OK, VET_OK, gates **2× `--- PASS`** (0.11s, 1.35s), group-kill **5/5 `--- PASS`** (0.12–0.14s each), restore sha `8419874…` byte-identical |
+| N5 | the §5.4 seam is gate-clean, behaviour-preserving, and restorable — measured, not argued | one-shot: `cp` backup; apply seam (+7/−1); `shasum` before/after; `go build ./host/broker/`; `go vet ./host/broker/`; `go test -run 'TestRegistryDispatchBindingBoundary\|TestEverySubprocessSiteIsDriven…' -v -count=1` counting `--- PASS`; `go test -race -run '^TestHandlerTimeoutKillsTheWholeProcessGroup$' -count=5 -v`; restore; `shasum` | sha `8419874…` → `666a5d4…` (edit took — positive control), BUILD_OK, VET_OK, gates **2× `--- PASS`** (0.11s, 1.35s), group-kill **5/5 `--- PASS`** (0.12–0.14s each), restore sha `8419874…` byte-identical |
 | N6 | nothing pins `handlers.go` by hash, line, or count anywhere in gates/scripts/CI | `grep -rn 'handlers\.go'` over `host/ scripts/ .github/` (`*_test.go`,`*.sh`,`*.yml`), sibling names excluded; control: same sweep style finds the known `wantFileCount` pin in `host/boundary/allowlist_world_test.go:1163` | sole hit is the N3 driver-map key (file-set membership, which the seam does not change); the control pin was found, so the instrument reads |
 | R1 | freshness sweep: no code-citing W/N row is stale at HEAD | `git diff --name-only b2c3f89..e3ef152`; `git rev-parse --short HEAD` | 6 files, all `design_docs/*` (mission-dashboard, this doc, w-evidence-grade-mapping, mission log, status archive, charter); control fired: known-changed `design_docs/world-mission.md` IS listed; no `host/`, `cmd/`, `scripts/`, or `.github/` path appears; HEAD = `e3ef152` |
 | R2 | the frozen core excludes `host/` (gpt5's R2 premise false) | `grep -n "Frozen core" CLAUDE.md`; read the bullet | `CLAUDE.md:25`: "never modify `tools/launchd/*` (shared driver) or copy skills into this repo" — `host/` is not named |
@@ -777,7 +802,7 @@ wrote only this doc.
   fallback of narrowing M1 to localisation and deferring mechanism selection, was rejected
   because it converts one wait on a 0.76% event into two: a trap that fires once per ~130 CI
   runs and then cannot name the mechanism wastes its firing. Price paid and recorded: M1 is no
-  longer zero-production-bytes (+5/−1 behaviour-identical lines in `handlers.go`). The seam
+  longer zero-production-bytes (+7/−1 behaviour-identical lines in `handlers.go`). The seam
   was proven gate-clean by a sha-verified one-shot on the real tree — build, vet, both
   `host/broker` AST boundary gates, and the group-kill test 5/5 under `-race`, all green,
   restore byte-identical (N1–N3, N5–N6). §6's decision condition now requires the recorded
@@ -881,6 +906,64 @@ gemini-3-1-pro]` — no N−1 degrade; `metered=$0.148857` (`gpt5-6-sol` `$0.105
   the carve-out's condition — every remaining blocking objection concrete, non-directional and
   reviewer-specified — is met, and applying a reviewer's own words is satisfying the objection,
   not force-passing it.**
+
+**Round-3 PLANNER refutations (iter-80, opus lane, reason token `missing-script`) — seven, all
+measured, and the doc lost every one.** Rule 3b(vii): a design doc and its sprint plan are two
+documents describing one sprint, so this block exists to keep them from diverging. Where the two
+disagree, **the plan wins on all seven** — not because a planner outranks a reviewed artifact,
+but because these were measured and the doc's versions were reasoned. Each was re-verified by the
+controller before adoption (rule 3h: a deviation is a claim in *both* directions).
+
+- **C1 — BLOCKING, and it voided this item's only forced-failure proof.** §5.4's recorder code
+  block **duplicated** the kill (`rec.errno = syscall.Kill(-pgid, …)`) instead of **delegating**
+  to the captured production seam. Because `killGroup` is a package `var` the test *replaces*,
+  the production body is DEAD for the test's duration — so MUT-KILL-NEUTER, P1 and **AC3 all
+  mutated dead code**. Measured in one binary on the seamed tree (`handlers.go` sha `666a5d4…`,
+  byte-identical to N5's recorded hash) with the mutant applied: doc-verbatim recorder →
+  `--- PASS` at **105 ms**, the mutation not observed at all; delegating recorder →
+  `--- FAIL` at **5.168 s** carrying §6's complete H1 signature (count 1, errno nil, offset
+  103 ms, `survived` present, elapsed in the 5.0–5.5 s band). The doc's *prose* said "a recording
+  wrapper that still performs the real kill", which is right; its *code* duplicated, and **the
+  code is what an executor types**. Fixed in §5.4. The generalisation is worth more than the
+  instance and belongs to the same family as rule 3i: **a test seam that REPLACES rather than
+  WRAPS makes every mutation of the replaced body vacuous** — and no amount of reading the
+  mutation table catches it, because the table names the right file, the right line and the right
+  one-line edit.
+- **C2 — §5.1's assertion could not pass.** `Invoke` returns `*EffectFailedError` wrapping the
+  handler error (`broker.go:284`/`:129`), so a bare type assertion for `*HandlerTimeoutError` is
+  **false** where `errors.As` is **true**. Read literally, round 3's wording reds 100% of healthy
+  runs. Fixed in §5.1; controller confirmed the return type first-party.
+- **C3 — a reviewer's blocking objection was itself wrong, and it had already survived a park and
+  a ratification.** `gemini-3-1-pro`'s round-2 data-race objection, adopted verbatim, describes a
+  race Go forecloses: `os/exec`'s `watchCtx` sends on `resultc` after calling `Cancel` and `Wait`
+  receives it, which is a happens-before edge (controller-verified in the Go 1.25.6 source,
+  `exec.go:805-820` and `:930`). Planner measurement: unsynchronised recorder, **0 `DATA RACE` in
+  20 `-race` runs**, known-positive control in the same binary reporting `WARNING: DATA RACE`.
+  The mutex stays; AC2's claim to prove it is withdrawn. **This is the THIRD S6-shaped
+  cannot-fail gate found in this document's own history** — after the queue row's `-count=20`
+  (killed at iter-78) and round 3's cold-majority arms (killed by `gpt5-6-sol` this iteration) —
+  and it is the first one that came from a reviewer rather than from an author.
+- **C4 — the pass path must NOT assert `survived` absent.** Measured: bound raised to 10 s with
+  the kill neutered → `PASS` at 5.160 s **with `survived` present**. The stronger, free assertion
+  is therefore unavailable, because adding it makes MUT-BOUND-LOOSE's specified green
+  unreachable. A real trade, nowhere stated before.
+- **C5 — §5.3's fork-unmoved claim is false for one marker.** "The marker writes sit *after*
+  `sleep 5 &`, so the fork is byte-for-byte unmoved" does not hold for `exec_started`, which the
+  doc's own fixture writes *before* the fork.
+- **C6 — the seam is `+7/−1`, not `+7/−1`** (stated five times, including in the ratified A/B
+  text put to the human). The `handlers.go` sha matches N5 exactly, so the *code* was always
+  right and only the label was wrong — which is why nobody caught it.
+- **C7 — §5.6's CI budget baseline was a comment, not a measurement, and is stale 2.5×.**
+  "76.9 s critical path" is a comment at `verify_go.sh:110-111`. Today: `host/broker` = 90.2 s
+  plain, **193.4 s race**, against the 600 s watchdog over the whole leg. The conclusion survives
+  at ~3× margin rather than ~8×; the margin is restated rather than the conclusion re-asserted.
+
+Three underspecifications were resolved in the plan rather than the doc (`handlerSession`
+hardcodes the store, so §5.2's timing variant had no swap point → a nil-default `onStoreCall`
+hook; `repositoryRoot` already exists and must not be redeclared; `W16_WARM` was a probe label
+leaking into committed code). The planner also prototyped MUT-SEAM-BYPASS, MUT-GUARD-PARALLEL
+(which caught **both** `t.Parallel()` and the method-value form `var tt = t.Parallel`, executing
+§5.4's grammar-coverage claim rather than asserting it) and the bounded warm-up, all green.
 
 ## Related
 
