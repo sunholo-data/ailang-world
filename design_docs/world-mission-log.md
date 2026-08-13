@@ -8396,3 +8396,140 @@ this iteration and both sub-agent lanes were quota buckets. Cap $5, untouched.
 
 **Next.** Item 17 `w-validated-proven-evidence-boundary` — item 13's declared residual, now also
 carrying the AC7 no-persistent-guard finding.
+
+## Iteration 82 — 2026-08-13 — `w-workbench-read-only` (item 14) **DESIGNED and PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-workbench-read-only.md`, 641 lines, designer `codex:gpt-5.6-sol`; TWO quorum rounds, both BLOCKED, all four reviewer slots `present=true`; `metered=$0.160575`) — the iteration's spine is that **a queue row's PRESCRIPTION can be falsified by the very item it was waiting on, and it rots silently because a row reads as a specification rather than as a claim**
+
+**Pick.** Item 14 `w-workbench-read-only` — **and this is not the item the previous iteration
+named.** Iteration 81's log `Next` field says item **17**. Item 17's own charter row says, in its
+filing text, *"Not promoted: item 13's sprint, then 14/15 by their existing order — this row is
+filed at normal position, not ahead of anything."* The charter queue is ratified mission state
+ordered by position; a log's forward-looking `Next` line is a controller note. Where they
+disagree the ratified row wins, and iteration 81's `Next` had skipped **two rows filed attended by
+Mark on 2026-08-11** with no stated rationale. Positional sweep of every non-complete row: item 5
+blocked (below), 6 PARKED, 7 park-condition, 8 has no headless-routable milestone left, so **14 is
+the queue head**.
+
+**Item 5's blocker was re-checked by PURPOSE, not by state — and it is half-stale.** Rule: a
+declared blocker is a claim too, and the ones describing someone else's work rot fastest. Prereq 1
+is upstream `sunholo-data/ailang#498`, which is still `OPEN` — worth nothing on its own. Its
+*purpose* has PARTLY landed: `--no-feedback-tool` exists (`cmd/ailang/serve_api.go:34`,
+`Config.NoFeedbackTool` at `internal/apiserver/server.go:167`, test at `embedded_a2a_test.go:306`),
+shipped as `aa02f0d9f` *"Lane A of #498"* and present in v0.31.0/v0.32.0/v0.33.0/v0.33.1 — i.e. the
+exact "narrower interim fix" prereq 1 named. **But item 5's design takes path (c), a narrow PUBLIC
+serving seam, and that half did not land**: there is no `pkg/` or `api/` directory upstream and the
+serving machinery remains in Go-`internal/`, which is not importable cross-repo. So item 5 stays
+genuinely blocked, and the row's blocker text should record Lane A as discharged rather than
+implying the whole issue is open.
+
+**Gate 0.** Kill switch armed · tree clean · `gh` on `sunholo-voight-kampff` · billing tripwire
+**CLEAN** (both Anthropic variables empty). `~/.ailang/state/mission-control.blocked` exists but is
+**V1's legacy-path marker** (the driver names World's `mission-world.blocked`, which is absent) —
+read, correctly attributed, not acted on. 5 unread inbox messages: 4 eval-suite telemetry, 1
+`mission-v1` iteration-194 report — a cross-mission STATUS report carrying no ask for World, so it
+never outranked. `mission_directives.sh` (V1 checkout, absolute path — it does not exist here)
+returned **0 directives of 21 comments** since watermark `2026-08-13T06:12:23Z`; watermark
+unmoved because nothing was processed. Rotation not due: issue #53 was created `2026-08-10T05:37:35Z`
+= **07:37 CEST**, i.e. AFTER the Monday-07:00 LOCAL boundary, and holds 21 comments (< 80). Weekly
+external-issue sweep already run this rotation week.
+
+**Gate 1.** Local `dev` **==** `origin/dev` **== `9491a10`**, zero ahead, zero behind. dev CI GREEN
+SHA-addressed on that exact commit: `checks=2` = expected 2 (`ailang-code verify gate`,
+`go host build + test gate`), both `success`, zero not-green. **Running-skill drift check fired
+clean** — `git show origin/dev:.claude/skills/mission-control/SKILL.md | cmp -s -` against the live
+file → **IDENTICAL**, so the rules followed are the rules the mission agreed on (the symlink
+resolves into the V1 checkout, which is itself `dev == origin/dev`).
+
+**Died-mid-flight check.** Zero open PRs authored by this loop, one worktree (the main checkout
+only), main checkout clean. Item 14 not landed: `git log origin/dev --grep=workbench` returns only
+the queue-FILING commit `13f61ca`, control `--grep=evidence-grade` firing at 3; zero PRs with
+`workbench in:title` in any state.
+
+**THE SPINE — THE LANDING THAT WAS SUPPOSED TO SATISFY THE ROW IS WHAT FALSIFIED IT.** Item 14's
+row instructs the workbench to render **`UNSUPPORTED`** for unmapped variants *"until item 13
+lands"*. Item 13 landed at iteration 81 — and iteration **79's own quorum carve-out had CUT the
+`UNSUPPORTED` constructor** from the exported grade type, on `gpt5-6-sol`'s objection that a
+constructor `gradeOf` provably never returns is prospective API design in a frozen core. Measured:
+`grep -rn "UNSUPPORTED" world/` → **0**, same-scope known-positive control
+`grep -c "CLAIMED" world/types.ail` → **4**, instrument fires. The ratified type
+(`world/types.ail:33-38`) is exactly four grades — `PROVEN | TESTED | ATTESTED | CLAIMED`. So the
+row commanded a renderer to display a constructor that provably does not exist, and **no freshness
+sweep aimed at "has this row's blocker cleared?" would ever look**, because the blocker clearing is
+the event that broke it. A second instance in the same row: it enumerates **six** daemon routes as
+the browser's vocabulary; `grep -c "mux.HandleFunc" host/daemon/daemon.go` → **8** (seven GET + one
+POST, `daemon.go:461-468`), while the code's OWN comment at `:456` reads *"The seven patterns below
+are the complete frozen v1 table"* — **row, comment and code were three different numbers, and all
+three disagreed.** Both were handed to the designer as measurements under an explicit
+provenance label, and the designer refused both stale instructions on the record rather than
+implementing them.
+
+**Gate 3 — routing.** Designer **`codex:gpt-5.6-sol`** by rotation (the NAMESPACED
+`mission-world-designer-rotation` held `claude:claude-fable-5` as last-used and iteration 80's own
+record agrees, so the pointer was not clobbered; probe rc=0; advanced after the run). Run in a
+detached worktree **sibling of the repo** (`../.wt-iter82`, never `/tmp` — location is part of the
+instrument), bounded 30-min cap, `< /dev/null`, per-iteration directive file with the ≥200-byte
+delivery assertion (13,506 B delivered), no git write operations permitted to the designer.
+Because a cross-provider designer cannot read this repo's skills, the directive carried the gates
+explicitly: a Verification Log row per codebase claim, a same-scope known-positive control on every
+empty result, no vacuous AND no unsatisfiable acceptance criteria, per-branch mutation rows, and
+"a guard is not a gate until something reds when you remove it". It returned 606 lines with **15
+verification rows**, independently re-deriving the controller-supplied facts and adding eight of
+its own.
+
+**Quorum R1 — BLOCKED, both reject, and BOTH were premise objections, so both were MEASURED rather
+than forwarded (rule 3f).** `gpt5-6-sol`: `WriteTimeout` does not bound handler elapsed time.
+**CONFIRMED, and the measurement made it worse than filed** — `grep -c "context.Context"
+host/store/store.go` → **0** with same-file control `grep -c "func (s \*Store)"` → **14**; all four
+read getters context-free (`GetObject:467`, `GetWorld:522`, `GetLogEntry:551`, `SelectedHead:802`);
+`grep -n "r.Context()" host/daemon/handlers.go` → **0**; and the fact neither reviewer nor doc had,
+**no `busy_timeout` in non-test store code** (`host/store/writer_lock_test.go:609` only), so not
+even SQLite lock acquisition is bounded by the production DSN. `gemini-3-1-pro`: §2.7 named
+`LogHeader` fields with no evidence row. **Procedurally right, substantively REFUTED** —
+`host/store/store.go:110-117` carries all five named fields **plus a sixth the doc had omitted**
+(`EntryIndex int64`), and `TransitionRef` sits outside the frozen header. Both measurements were
+handed to the designer, with an explicit instruction NOT to weaken the EntryView design over an
+objection whose premise had been confirmed.
+
+**Revision round 1** (641 lines): every elapsed-time claim deleted, the 100-entry and 64 KiB caps
+kept but honestly relabelled as bounds on **work and response size, never on wait**, residual
+**`WB-R1`** named with a separately scoped follow-on, V16–V19 added for the four controller
+measurements with their controls, V3b added for `LogHeader`, `EntryIndex` rendered once, and both
+rounds recorded in §12. It correctly **refused to expand a read-only ~1.5–2d item into `host/store`
+context plumbing**.
+
+**Quorum R2 — BLOCKED again, and the two objections are different species, which is what decided
+the outcome.** `gemini-3-1-pro` is again procedurally right and substantively refuted: §2.4's
+malformed/absent claim lacked a row, but the distinction IS modelled — `writeAPIError` with
+`BadRequest`/400, `NotFound`/404, `Internal`/500 across all six handlers
+(`handlers.go:215-419`, control = 6 `handle` funcs) — so its `proposed_fix` is a one-row citation
+and would be **carve-out eligible alone**. Its unstated half is a real finding: the `Internal`
+branches pass **`err.Error()` verbatim to the client**. `gpt5-6-sol` instead **disputes the design
+DIRECTION** — that a new route may not ship accepting unbounded store waits at all — which
+forecloses the narrow-refinement carve-out by its own limb (b). Its `catch` pre-empts the obvious
+rebuttal: *"Do not treat the fact that existing JSON reads share this defect as justification for
+extending it."* One revision and one re-quorum is the whole gate, so the item **parks**.
+
+**The residual is pre-existing and unguarded on all seven existing GET routes — the part that
+outlives this item.** `TestBoundedWaitsAndBodyLimit` (`daemon_test.go:202`) is a real, ratified,
+non-vacuous D7 gate: it pins six transport constants as literals (5s/30s/30s/120s/30s/10s) and
+asserts every `http.Server` wait is set and non-zero. It is also entirely silent about handler
+execution. **A gate's coverage is a property of the layer it observes**, and this one observes the
+transport while the wait happens below it — so a green, well-designed gate is exactly what makes
+the gap invisible. Filed as new queue item **18** `w-daemon-read-cancellation` on its own evidence,
+independent of how the A/B resolves.
+
+**Ruled out.** Inheriting iteration 81's `Next` without reading the row it names; implementing the
+row's `UNSUPPORTED` and six-route instructions; the narrow-refinement carve-out (limb (b) fails);
+a third revision round (the gate is one revision, one re-quorum); reading item 5 as unblocked
+(purpose-checked: Lane A landed, path (c)'s public seam did not); treating the pre-existing
+unbounded read path as licence to extend it (the reviewer's catch, adopted); and weakening the
+EntryView design over an objection whose premise measured TRUE.
+
+**Routing evidence.** controller `opus` (session) · designer **`codex:gpt-5.6-sol`** (rotation,
+probe rc=0, 30-min cap not hit, rc=0 both runs) · planner/executor/evaluator **did not fire** (the
+deliverable is a parked design doc) · quorum R1 `$0.076413` + R2 `$0.084162`, **`metered=$0.160575`**
+against the $5 ceiling, per-reviewer cap raised pre-emptively to `$0.50`/`$0.55` **specifically so a
+budget-degrade could not manufacture an absent reviewer** — all four slots `present=true`, so no
+verdict here is wearing a named hole. generator≠judge is not engaged (no executor ran).
+
+**Next.** Item **15** `w-decision-lifecycle-freeze` (~1d, NEEDS A DESIGN DOC, gated on nothing,
+blocks item 7), unless Mark's one-word A/B unparks item 14 first.

@@ -2,41 +2,43 @@
 
 *Snapshot, overwritten every iteration. History: charter STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-13 (iteration 81) · **dev** `36f0c7a` · **CI** green, both jobs
-(`go host build + test gate`, `ailang-code verify gate`), SHA-addressed on the merge commit.
+**As of** 2026-08-13 (iteration 82) · **dev** `9491a10` · **CI** green, both jobs
+(`go host build + test gate`, `ailang-code verify gate`), SHA-addressed.
 
-## Just landed
+## Just designed — and PARKED
 
-- **Item 13 `w-evidence-grade-mapping` — COMPLETE.** PR #66 → squash `36f0c7a`.
-  Evaluator `sonnet` **89/100, zero blocking**. The repo's **5th Z3-proven identity**: a total,
-  contracted `gradeOf(Evidence) -> EvidenceGrade`. `EXACT_TOTAL_VERIFIED` 4→5,
-  `EXACT_TOTAL_TESTS` 14→20. `CompilerOutput`/`HumanApproval` → `ATTESTED`.
-  **`PROVEN` stays deliberately unreachable** — carriers were withdrawn because an agent can
-  mint one from an unchecked `HashRef`; item 17 owns that authority gap.
+- **Item 14 `w-workbench-read-only` — DESIGNED, NOT LANDED.** Doc (641 lines, designer
+  `codex:gpt-5.6-sol`). **Two quorum rounds, both BLOCKED, all four reviewer slots present**
+  (no N−1 degrade). `gpt5-6-sol`'s surviving objection disputes the design **direction**, which
+  forecloses the narrow-refinement carve-out — so this parks rather than force-passing.
+
+## Parked on Mark — ONE open ask
+
+**Item 14, one-word A/B** (framed by the rejecting reviewer's own `proposed_fix`):
+**A** = expand item 14 to carry context-aware store reads + request-scoped deadline + explicit
+timeout status + a test that reds when propagation is removed (accepts scope growth into
+`host/store`, past ~1.5–2d); **B** = defer item 14 behind new item 18 and land the daemon
+read-cancellation first.
 
 ## Next
 
-1. **Item 17 `w-validated-proven-evidence-boundary`** — item 13's declared residual, and now
-   carrying the AC7 finding below.
-2. Item 14 `w-workbench-read-only` — the parallel UI path.
-3. Item 5 `P6.B` — UNBLOCKED.
-
-## Parked on Mark
-
-**None.** Zero open asks.
+1. **Item 15 `w-decision-lifecycle-freeze`** — ~1d, gated on nothing, blocks item 7.
+2. Item 18 `w-daemon-read-cancellation` — filed this iteration on measured evidence.
+3. Item 17 `w-validated-proven-evidence-boundary`; item 5 `P6.B` stays blocked (below).
 
 ## Loop
 
-launchd, ~6h watchdog. Controller `opus` · planner `opus` (`derive-planner-lane.sh` absent here →
-fail-closed `missing-script`) · executor chain codex→deepseek→opus, resolved `codex:gpt-5.6-sol`
-(probe rc=0) · evaluator `sonnet` (generator≠judge: OpenAI author, Anthropic judge). Designer did
-not fire — the doc already existed. Spend `metered=$0.00` this iteration, cap $5.
+launchd, ~6h watchdog. Controller `opus` · designer `codex:gpt-5.6-sol` (rotation, probe rc=0;
+advanced after the run) · planner/executor/evaluator **did not fire** — the deliverable is a
+parked doc. Spend `metered=$0.160575` (quorum R1+R2), cap $5.
 
-## Carry-forward finding
+## Carry-forward findings
 
-**A guard is not a gate until something reds when you remove it — and an acceptance grep is a
-one-shot, not a guard.** Item 13's "no `=> PROVEN` arm" property is enforced by six hand-authored
-integer test expectations plus an AC7 grep that is wired into **neither** `verify_ail.sh` nor CI;
-zero Go tests name `gradeOf`/`gradeCode`/`EvidenceGrade`. Measured, not assumed: a *consistent*
-`=> PROVEN` arm in both contract and body leaves **Z3 fully green** (`errors=0`,
-`counterexample=0`) — the proof cannot see it. Non-blocking, and now item 17's to close.
+**A queue row's prescription can be falsified by the very item it was waiting on.** Item 14's row
+orders the renderer to display `UNSUPPORTED`; iteration 79's carve-out *cut* that constructor, so
+`grep -rn "UNSUPPORTED" world/` → **0** (control `CLAIMED` → 4). The row also says six daemon
+routes; there are **8**, and the code's own comment says "seven" — three numbers, all disagreeing.
+
+**Item 5 is blocked for a narrower reason than its row says.** Upstream `#498` Lane A **did** land
+(`--no-feedback-tool`, `aa02f0d9f`, in v0.31.0→v0.33.1). But item 5 takes path (c), a *public*
+serving seam, and upstream still has no `pkg/`/`api/` — the machinery stays Go-`internal/`.
