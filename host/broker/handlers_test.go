@@ -16,13 +16,17 @@ import (
 )
 
 type handlerRecordingStore struct {
-	base    *store.Store
-	records []store.Object
-	objects []store.Object
-	deleted map[hashref.HashRef]bool
+	base        *store.Store
+	records     []store.Object
+	objects     []store.Object
+	deleted     map[hashref.HashRef]bool
+	onStoreCall func(op string)
 }
 
 func (s *handlerRecordingStore) PutObject(obj store.Object) error {
+	if s.onStoreCall != nil {
+		s.onStoreCall("PutObject")
+	}
 	if err := s.base.PutObject(obj); err != nil {
 		return err
 	}
@@ -44,6 +48,9 @@ func (s *handlerRecordingStore) AppendNextEffectIntent(
 	episodeID string,
 	intent store.EffectIntent,
 ) (string, int64, error) {
+	if s.onStoreCall != nil {
+		s.onStoreCall("AppendNextEffectIntent")
+	}
 	return s.base.AppendNextEffectIntent(episodeID, intent)
 }
 
@@ -59,6 +66,9 @@ func (s *handlerRecordingStore) AppendEffectOutcome(
 	id string,
 	outcome store.EffectOutcome,
 ) (int64, hashref.HashRef, error) {
+	if s.onStoreCall != nil {
+		s.onStoreCall("AppendEffectOutcome")
+	}
 	return s.base.AppendEffectOutcome(id, outcome)
 }
 
