@@ -8226,3 +8226,173 @@ Gate-3b `set --` array fix at 3 instances.
 **Next.** Item **13** `w-evidence-grade-mapping`'s SPRINT (designed and quorum-cleared at
 iteration 79, `6d12a79`, ~0.65d). Item 5 `P6.B` remains UNBLOCKED. **Zero items are parked on
 Mark, and there are no open asks.**
+
+## Iteration 81 — 2026-08-13 — `w-evidence-grade-mapping` (item 13) **COMPLETE and LANDED — the repo's 5th Z3-proven identity** (PR [#66](https://github.com/sunholo-data/ailang-world/pull/66) → squash `36f0c7a`; Gate 3b GREEN on the merge commit itself, `checks=2` = expected 2, `present == expected` asserted, 0 non-success; evaluator `sonnet` **89/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **an acceptance criterion can be unsatisfiable BY CONSTRUCTION, and that is worse than one that cannot fail, because the only way to satisfy it is to falsify the evidence — AC9 demanded a hash move that the hash function cannot produce, while its own next clause forbade the single act that would have produced it**
+
+**Pick.** Item 13 `w-evidence-grade-mapping`, the queue head — `[NEXT]`, designed and
+quorum-cleared at iter-79. No human directive outranked it; the one directive the Gate-0 query
+returned was Mark's `option A` at `2026-08-13T06:12:23Z`, **already fully actioned by iteration
+80**, which landed item 16 on it. It re-surfaced only because iter-80 advanced the issue-scoped
+`mission-53-last-seen` and left the mission-scoped `mission-world-last-seen` at
+`2026-08-12T17:58:05Z`; the Repo Profile's "read BOTH, take the OLDER" rule is what surfaced it,
+and cross-reading iter-80's own STATUS stamp is what identified it as spent rather than fresh.
+**Both watermarks advanced to `2026-08-13T06:12:23Z` before routing.** This is the second half of
+the World-local two-watermark rule being honoured only half the time — the read side is followed,
+the write side is not.
+
+**Gate 0.** Kill switch armed · tree clean · `gh` on `sunholo-voight-kampff` · billing tripwire
+**CLEAN** (both Anthropic variables empty). 3 unread inbox messages, all V1-mission traffic
+(`eval-suite`, a V1 `sprint-executor` completion, `mission-v1` iteration 192's report) — none a
+World regression, none a cross-mission request, so none outranked the queue. No rotation due:
+`#53` was created `2026-08-10T05:37:35Z`, i.e. **after** that Monday's 07:00-LOCAL boundary
+(= `05:00Z`), and holds 20 comments against the 80 threshold. The weekly external-issue sweep is
+not owed by this iteration — it belongs to the first fire after the rotation, which has passed.
+
+**Gate 1.** `git fetch origin`; local `dev` **==** `origin/dev` **== `20ed668`**, zero ahead, zero
+behind, so the working tree was the base and Gate 4 could write in place. Dev CI green
+SHA-addressed: `checks=2`, both `success` (`total_count` non-zero is the control that the endpoint
+answered). **The RUNNING skill DIFFERS from its origin** — `cmp` against
+`origin/dev:.claude/skills/mission-control/SKILL.md` in the V1 checkout fails, 205,789 B vs
+203,314 B. Read the delta before proceeding, per the Repo Profile: **+37/−7, entirely V1 telemetry
+prose** (`chains post-iteration` per-stage `status`/tokens, and the `AILANG_CHAINS_CLOUD` dual-write
+section). The file is **committed**, not an uncommitted iter-161-class edit — V1's local HEAD is
+4 ahead / 1 behind its origin. Nothing in the delta binds any gate this iteration ran.
+
+**Died-mid-flight check.** Zero open PRs authored by this loop, one worktree (the main checkout),
+clean tree in the main checkout. Iteration 80 terminated cleanly.
+
+**Gate 2 — the item, and then the item's own gate pins.** Not landed: `git log origin/dev --grep`
+returns only the design and queue commits, merged-PR search empty (control: `broker-base-flake`
+returns 3). Quorum verified **first-party rather than inherited** — R2's artifact has BOTH external
+reviewers `present: true`, so the iter-175 `absent_reviewers` hole does not apply; the synthesis
+reads `blocked` on one non-directional `gpt5-6-sol` objection, and the carve-out fix was confirmed
+LANDED in the doc (`EvidenceGrade` is exactly `PROVEN | TESTED | ATTESTED | CLAIMED`, with V25's
+sha-based landed-proof and V26 recording a false-green that was discarded). Freshness sweep from
+the doc's base `6d12a79`: the only non-`design_docs` files changed since are `host/broker/*`
+(item 16's work), none cited by any row; control = 10 files total including `design_docs`, so the
+diff instrument ran. Baseline taken pristine (rule 3e): `verify_ail.sh` **rc=0 at 4/11/14, 9/9**.
+
+**THE CHARTER'S OWN SHORTHAND WAS THE FIRST THING THAT DID NOT SURVIVE.** Item 13's queue row says
+`scripts/verify_ail.sh` pins `EXACT_TOTAL_VERIFIED` and `EXACT_TOTAL_TESTS` "as **exact
+equalities** (`4/11/14` today)", and memory records "the **five** gate pins a `world/*.ail` edit
+moves". A `grep -E "EXACT_TOTAL_(VERIFIED|TESTS|MODULES)="` returned **one** of the three. That is
+rule 3a exactly — one hit is not a conclusion — so I widened before believing it, and the widened
+read is a different picture in three ways:
+
+- `EXACT_TOTAL_VERIFIED=4` is a **shell** variable, `:310`.
+- `EXACT_TOTAL_TESTS = 14` is a **PYTHON** variable, `:340`, inside an embedded `python3` heredoc,
+  **with spaces around the `=`** — which is precisely why the shell-shaped pattern missed it.
+- **`EXACT_TOTAL_MODULES` DOES NOT EXIST.** The module pin is `LEG1_MODULES`, a bash **array**
+  compared as a **SET** (sorted `diff`, `:232-241`), with its own anti-vacuity floor at `:227`.
+  The `11` in "`4/11/14` exact equalities" is an allowlist cardinality, not an equality pin.
+- And the one that mattered most: `REQUIRED_TESTS` (`:333-339`) is a **fourth** mechanism, the
+  set of 14 named identities. The design doc calls it "the Leg-2 manifest" — correctly, at
+  `:273-274` and `:414` citing `verify_ail.sh:317-340` — which is why the doc held up where the
+  charter row did not. **The artifact the planner reads was right; the summary of it was wrong.**
+
+**Gate 3 — routing.** Designer did not fire (the doc existed; `grep -ri` confirmed). Planner lane
+**opus**, fail-closed LOUDLY: `tools/launchd/derive-planner-lane.sh` does **not exist** in this
+checkout, reason token **`missing-script`**, which is the documented path and not a silent default.
+Executor `codex:gpt-5.6-sol` (probe rc=0, `ok`), evaluator `sonnet` — generator≠judge holds across
+providers. Directive delivered 9,448 B with the `exit 64` assertions armed; `codex rc=0`.
+
+### THE SPINE — an acceptance criterion that could not be satisfied honestly
+
+The planner refuted the design doc three times. All three were re-confirmed first-party by me
+before routing, and the evaluator independently reproduced all three afterwards. One of them is a
+new shape.
+
+**AC9 required the package `interfaceHash` to MOVE. It cannot move.**
+`host/pkgproj/pkgproj.go:86` — `func InterfaceHash(manifest Manifest) string` — hashes exactly
+five things: package name, edition, ailang version, sorted export **module names**, and sorted
+effects. It never opens a source file; it takes a struct. (Control: the package *does* read files
+elsewhere, 2 `os.ReadFile`/`os.Open` hits, so "zero file reads" is a measurement about this
+function rather than a broken grep.) This item adds a function to an **already-exported module**,
+changing none of those five inputs. So `interfaceHash` is invariant **by derivation**, not by
+observation — the planner's empirical `d16cc882 → d16cc882` is what the mechanism forces.
+
+Why this outranks the ordinary vacuous-gate class the mission keeps closing: rule 3i's shape is an
+assertion that **cannot fail for the reason it claims**, and it ships as *documentation of
+protection that was never present* — inert. AC9 is the mirror, and it is **active**. It cannot
+*pass* for the right reason. An executor obeying it has exactly two moves: declare a correct
+implementation failed, or hand-edit the golden's `interfaceHash` until the check goes green — and
+**AC9's own next clause forbids editing the golden by hand.** The document therefore demanded an
+act and prohibited it in adjacent sentences, and the only path through is to falsify evidence in a
+byte-exact provenance artifact. A gate that cannot fail wastes a reviewer's confidence; a gate that
+cannot pass honestly **recruits the executor into corrupting the record.** Two external reviewers
+cleared this doc across two rounds; quorum reads for design soundness, not for whether an AC's
+demanded observable is producible by the mechanism named. Amended: three fields move
+(`contentHash`, `tarballSHA256`, `tarballBytes`) and `interfaceHash` must be **byte-identical** —
+which converts the criterion from unsatisfiable into positive evidence that no export was added.
+
+**The other two.** The Conflict Surface omitted a **fifth** file: `host/verifygate/
+module_manifest_gate_test.go:128` hardcodes the marker `"✓ 4/4 required world/ identities verified
+across 11 module(s)"`, so moving `EXACT_TOTAL_VERIFIED` reds CI's go-verify job — the doc's AC12
+"four metadata files" is false. And `scripts/verify_ail.sh:376` was an unguarded literal: the
+terminal banner hardcoded `4 … 14` while `:315` and `:370` interpolate, sitting outside every range
+the doc's §8.1 enumerates. The planner recorded it as an *unguarded pin* with a grep AC rather than
+inventing a mutation that pretends to kill it, which is the honest disposition.
+
+### A SIXTH file, found by running the boundary instead of trusting the split
+
+The plan's T1/T5 split put `docs/SELF_MOD_PUBLISH.md` in the **prose** commit. The skill requires
+running the relevant test package at every commit boundary for bisectability, so I did: with the
+five code files alone, `host/runbook`'s AC28 `TestRunbookDigestsAppearVerbatimInTheCommittedGolden`
+**REDS**, naming `sha256:5ea15858` and `sha256:a32806a0` as digests no longer present in the golden
+— in the test's own words, *"the runbook is telling an attended operator to approve bytes that are
+not the reviewed artifact."* The digest repair is a **gate dependency, not prose**, so it moved into
+commit 1. Noted for the record: that probe printed `rc=0` because it ran through a pipe, and only
+reading WHICH test failed gave the true answer — step 3's exit-codes-through-pipes class, live.
+
+### Two measured facts about what the proof does and does not buy
+
+**M12 — count-only pinning is vacuous.** Moving `EXACT_TOTAL_TESTS` to 20 **without** adding the six
+names to `REQUIRED_TESTS` still passes: `n == 20` holds and all 14 old names are present, so a
+rename of any new identity sails through. Reproduced independently by the evaluator. The landed
+script pins all six names.
+
+**M7 — Z3 cannot see a consistent lie.** A `=> PROVEN` arm placed in **both** the contract and the
+body leaves Leg 1 **fully green** (`verify.verified=1`, `errors=0`, `counterexample=0`); only the
+six hand-authored integer expectations in Leg 2 red. So "PROVEN is unreachable" rests on the tests
+and a grep, **not on the proof**, and the plan says so rather than claiming the contract forbids it.
+The evaluator sharpened this into the iteration's carry-forward finding: AC7's grep is wired into
+**neither** `verify_ail.sh` nor CI, and **zero** Go tests name `gradeOf`/`gradeCode`/`EvidenceGrade`
+— so the property has no persistent guard at all. Non-blocking, correctly scoped (item 17 owns mint
+authority), and now recorded in the item-17 queue row rather than left in an evaluation file.
+
+**Executor discipline, verified not banked.** All 15 mutations sha256-landed-proof'd, build/check
+asserted, restored byte-identical from `cp` backups, and read by which named check fired. All 15
+matched prediction. The pre-registered `world/types.ail` hash (`91af8cea… → 2cf5b004…`) and the
+pre-computed golden byte string matched exactly. `verify_go.sh` was correctly labelled
+**UNINFORMATIVE UNDER SANDBOX** (loopback-bind denials in `cmd/ailang-worldd`, `host/broker`,
+`host/daemon`) rather than reported as a result — and the controller's re-run outside the sandbox
+returned **rc=0**, build clean, plain **and race**, every `host/` package ok. Two self-reported
+deviations, both benign (a stale base-SHA in plan metadata; a `.probe/` helper instead of `/tmp`).
+
+**Gate 4 base check.** `dev == origin/dev == 36f0c7a`, tree clean. Previous-iteration tell
+`grep -ci "iteration 80"` = **2** with known-present control `iteration 79` = **1**; stamp count
+**3** before the rotation; charter **3015** lines before, and the executor's own prose repair to the
+charter was verified non-destructive (3015 → 3015, 3 stamps, item-13 row intact, historical STATUS
+records untouched) before it was committed.
+
+**Ruled out.**
+- *That the Gate-0 directive was fresh work.* It was iteration 80's, already spent — caught by
+  cross-reading the previous STATUS stamp rather than by the watermark, which had been left stale.
+- *That `EXACT_TOTAL_MODULES` exists, and that `4/11/14` are three equality pins.* Four distinct
+  mechanisms; one of them is a set-compare, and one is Python.
+- *That the design doc was stale.* Swept from its own base; nothing it cites has moved.
+- *That the quorum had an `absent_reviewers` hole.* Both external reviewers present in both rounds,
+  verified in the artifact rather than inherited from the charter.
+- *That the evaluator's local `-race` red was a regression.* It chased it with isolated reruns
+  (6/6 green), a base-commit rerun under identical concurrent load (green), and the real CI log
+  (both jobs pass) before declining to file it — rule 3d applied by the judge, unprompted.
+- *That a plan's commit split can be trusted without running it.* It could not; see the sixth file.
+
+**Routing evidence.** controller `opus` (session) · designer **did not fire** (doc existed) ·
+planner **`opus`**, reason token **`missing-script`** (fail-closed LOUD; `derive-planner-lane.sh`
+absent) · executor **`codex:gpt-5.6-sol`** (chain resolved, probe rc=0) · evaluator **`sonnet`**
+(generator≠judge: OpenAI author, Anthropic judge). `metered=$0.00` — no quorum round was needed
+this iteration and both sub-agent lanes were quota buckets. Cap $5, untouched.
+
+**Next.** Item 17 `w-validated-proven-evidence-boundary` — item 13's declared residual, now also
+carrying the AC7 no-persistent-guard finding.
