@@ -1,66 +1,42 @@
 # AILANG World — mission dashboard
 
-*Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS) + `world-mission-log.md`.
-Last written: iteration 79, 2026-08-13.*
+*Snapshot, overwritten every iteration. History: charter STATUS + `world-mission-log.md`.*
 
-## Now
+**As of** 2026-08-13 (iteration 80) · **dev** `d9712dd` · **CI** green, both jobs
+(`go host build + test gate`, `ailang-code verify gate`), SHA-addressed on the merge commit.
 
-- **dev**: `2ef2271` — CI **green**, SHA-addressed (`checks=2` = expected 2). No code landed; the
-  deliverable is a quorum-cleared design doc.
-- **Item 13 `w-evidence-grade-mapping` is DESIGNED and CLEARED for the sprint-planner** — doc
-  `design_docs/planned/w-evidence-grade-mapping.md` (620 lines), committed `6d12a79`, priced 0.65d.
-  Two quorum rounds, both external reviewers **present** in both; R2 = gemini **PASS**, gpt5 REJECT
-  on one non-directional point, resolved under the **narrow-refinement carve-out**, verbatim fix.
-- **The decision, because it changes what the row delivers: representation-only.** A Z3-**PROVEN**
-  total `gradeOf(Evidence) -> EvidenceGrade` in `world/types.ail` — the repo's **5th** proven
-  identity. `CompilerOutput`/`HumanApproval` → `ATTESTED`. **`PROVEN` stays unreachable on purpose:**
-  round 1's `ProofReport`/`ReplayReport` carriers were withdrawn because an agent can mint one from
-  an unchecked `HashRef` — a representation gap turned into a grade-laundering *authority* gap.
-- **THE SPINE — a limitation the repo recorded about ITSELF was narrower than its own comment.**
-  V23 (`world/contracts.ail:11`) says a contract "reaches Proposal.evidence (an ADT) and Z3-errors
-  `unknown sort 'Proposal'`". Everyone since, including the ratified human-surface doc, generalised
-  that to "ADTs". Measured: a **bare ADT param** and an **ADT-valued result** both VERIFY
-  non-vacuously (a false postcondition counterexamples with a model naming sort `Ev` and tester
-  `(_ is CompilerOutput)`); the failing shape is a **RECORD containing `list[ADT]`**. That one probe
-  is what made a proven mapping possible at all.
+## Just landed
 
-## Parked on Mark
-
-**ONE open ask, unchanged from iteration 78 — a one-word `A` or `B` on item 16** (`w-broker-base-flake`):
-**A** bring M2's `killGroup` seam into M1 (+5/−1 behaviour-identical lines in `host/broker`, makes the
-~0.76% event decisive; costs M1 its "zero production bytes" property) · **B** keep M1 production-free,
-narrow its claim, defer mechanism selection (costs a second rare-event wait). Also owed by the
-**shared driver** (frozen core — World cannot apply): `ailang#611` and the World driver `pi:*` sync.
+- **Item 16 `w-broker-base-flake` — COMPLETE.** M1 via PR #65 → squash `d9712dd`.
+  Evaluator `sonnet` **96/100, zero blocking**. The `host/broker` timeout test now carries a
+  diagnosis (markers, phase split, kill record) instead of a bare 2s assertion, so the ~0.76%
+  flake becomes decisive the one time CI catches it. **Bounded, not diagnosed** — that is the
+  honest claim; M2 (the post-reap re-sweep) stays decision-gated by the doc's §6.
+  Unparked by Mark's `option A` on #53 (`2026-08-13T06:12:23Z`), which put the `killGroup` seam
+  into production `host/broker/handlers.go` (+7/−1, behaviour-identical).
 
 ## Next
 
-**Item 13's sprint** — `sprint-planner` on the doc, then execute (~0.65d). Mark's A/B unparks item 16
-and takes precedence if it arrives. **Item 5 `P6.B` remains UNBLOCKED.** 13/14/15 attended-filed;
-`SM.D` (item 8) attended-only.
+1. **Item 13 `w-evidence-grade-mapping`** — SPRINT (designed + quorum-cleared iter-79,
+   `6d12a79`, ~0.65d). Iteration 81's pick.
+2. Item 17 `w-validated-proven-evidence-boundary` — item 13's declared residual.
+3. Item 5 `P6.B` — UNBLOCKED.
+
+## Parked on Mark
+
+**None.** Zero open asks.
 
 ## Loop
 
-- launchd, ~6h, headless. Issue **#53** (rotates Mondays 07:00 **local**; not due — created Mon
-  07:37 local, 17 comments). Running skill **== origin** (2nd consecutive iteration).
-- controller `opus` · designer **`codex:gpt-5.6-sol`** (rotation; the namespaced pointer agreed with
-  my own log, so it was NOT clobbered — V1 namespaced the shared key upstream in `8fdccf00c`) ·
-  planner `opus` (fail-closed, `missing-script`) · executor `codex:gpt-5.6-sol` · evaluator `sonnet`.
-  `pi` **BARRED** from publish milestones.
-- `metered=$0.177493` this iteration (quorum only; caps raised pre-emptively). Cap $5.
+launchd, ~6h watchdog. Controller `opus` · designer **rotation** (`claude:claude-fable-5` ⇄
+`codex:gpt-5.6-sol`, gemini unwired) · planner `opus` (`derive-planner-lane.sh` absent here →
+fail-closed `missing-script`) · executor chain codex→deepseek→opus, resolved
+`codex:gpt-5.6-sol` · evaluator `sonnet` (generator≠judge). Spend `metered=$0.148857` (quorum
+only), cap $5.
 
-## Standing hazards
+## Carry-forward finding
 
-- **A FIX THAT NEVER APPLIED PRINTS THE SAME GREEN AS A FIX THAT WORKED.** My carve-out probe's
-  assert fired on a token inside a *comment*, so nothing was written — and the checks that followed
-  passed, because they re-measured the pre-fix file. Landed-proof by **sha**, always.
-- A repo's own recorded limitation is a claim, recorded at the granularity that sufficed for the case
-  that produced it. Re-probe the **boundary**, not the example.
-- v0.30.0 **accepts a non-exhaustive ADT match**; a totality violation shows up only as
-  `verify.errors>0` with **rc=0**. Never let an AC read `ai-check`'s exit code.
-- Editing `world/*.ail` moves FIVE pins, not two: `EXACT_TOTAL_VERIFIED`, `EXACT_TOTAL_TESTS`, the
-  `packages/world-core` projection (Leg 3 step 3/9), the frozen 4-export manifest, and the
-  byte-for-byte ready-packet golden (step 9/9).
-- **Guard the helper, miss the branch/call site — five directions** (mechanism/sites · site/second
-  branch · branch/shape-space · shape-space/spelling · recogniser/enumerator).
-- `verify_go.sh` needs `GOTOOLCHAIN=go1.25.6`; `verify_ail.sh` needs `AILANG_BIN` reporting exactly
-  `v0.30.0` (PATH `ailang` is `v0.33.0-dirty` and is correctly REFUSED).
+**A test seam that REPLACES rather than WRAPS makes every mutation of the replaced body
+vacuous** — the table names the right file, line and edit throughout; only running it shows the
+target was bypassed. Three cannot-fail gates were removed from item 16 alone, one of them
+authored by a *reviewer* and surviving a park, a ratification and a verbatim adoption.

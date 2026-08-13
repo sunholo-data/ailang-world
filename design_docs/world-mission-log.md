@@ -7985,3 +7985,244 @@ instruction that a Gate-3b poll's output is a HINT and never the verdict is what
 because the direct `--jq` read gave the right answer immediately; and iteration 77 hit this identical
 class in this identical gate, which makes two instances on one surface. World cannot edit the shared
 skill, so it goes to V1 as a proposal with both instances named.
+
+---
+
+## Iteration 80 — 2026-08-13 — `w-broker-base-flake` (item 16) **COMPLETE and LANDED — unparked by a one-word human directive** (PR [#65](https://github.com/sunholo-data/ailang-world/pull/65) → squash `d9712dd`; Gate 3b GREEN on the merge commit itself, `checks=2` = expected 2, `present == expected` asserted, 0 non-success; evaluator `sonnet` **96/100, zero blocking**; `metered=$0.148857`) — the iteration's spine is that **a test seam which REPLACES rather than WRAPS makes every mutation of the replaced body vacuous, and the mutation table cannot show it because the table names the right file, the right line and the right one-line edit throughout**
+
+**Pick.** Item 16, by **human directive**, which outranks the queue. Mark Edmondson
+(`@MarkEdmondson1234`) commented `option A` on bookkeeping issue **#53** at
+`2026-08-13T06:12:23Z`, answering the one-word A/B this loop has carried since iteration 78.
+An allowlisted answer to a parked item unparks it and makes it the pick, so item 13's sprint
+(iteration 79's `[NEXT]`) yields and stays `[NEXT]` for iteration 81.
+
+**Gate 0.** Kill switch armed · tree clean · `gh` on `sunholo-voight-kampff` · billing tripwire
+**CLEAN** (both Anthropic key variables empty) · `mission-world.pid` = 4586 = my own parent, so
+no overlap. The directive was read through the allowlist-enforcing
+`scripts/mission_directives.sh` **from the V1 checkout** (World has no copy of its own):
+**1 directive of 19 comments**, the other 18 correctly classified as public feedback. The
+watermark `~/.ailang/state/mission-53-last-seen` was advanced `2026-08-12T17:58:05Z` →
+`2026-08-13T06:12:23Z` **before routing**, per Gate 0.7 — a crashed iteration re-triages
+idempotently, but a dropped human answer does not come back.
+
+**Weekly external-issue sweep — per-issue table, not a summary sentence.** All four roots
+asserted present (`test -f`) before reading their emptiness. **1 open issue enumerated**
+(`gh issue list … | jq length` = 1), and it is #53, the bookkeeping thread itself:
+charter **1** / log **20** / archive 0 / dashboard **1**. Known-tracked control `#19` → **3**
+in the charter, firing. **Verdict: 0 orphans of 1 enumerated.** No rotation due — #53 was
+created `2026-08-10T05:37:35Z` = 07:37 **local**, i.e. after the Monday-07:00 local boundary,
+and carries 19 comments against the 80 threshold.
+
+**Cross-mission message triaged, not obeyed.** `mission-v1` iter-190 reported both of World's
+iter-79 proposals: proposal 1 (the Gate-3b `set --` array fix) **ACCEPTED** but deferred under
+the one-edit-per-iteration rule, now at 3 instances across two missions; proposal 2 (a repo's
+own recorded limitation is a claim at its original granularity) is at **instance 2**, V1 having
+hit it first-party. Informational, no demand, so per the Gate-0 cross-mission contract it earns
+no queue row and does not outrank anything.
+
+**Gate 1.** `git fetch origin`; local `dev` **==** `origin/dev` **== `e3ef152`**, zero ahead,
+zero behind. Running skill **byte-identical to origin** (`cmp` silent, 199,829 B both) —
+World's `~/.claude/skills/mission-control` resolves by symlink into the V1 checkout, so this
+check is about V1's working tree, not World's. dev CI green, SHA-addressed: `checks=2`, both
+`go host build + test gate` and `ailang-code verify gate` `success`.
+
+**Died-mid-flight check, all four traces:** zero open PRs authored by this loop, `git worktree
+list` showing only the main checkout, main checkout `git status --porcelain` empty, and no
+stale sprint branch. Nothing inherited.
+
+**Designer rotation, checked against my own log rather than trusted.** The namespaced
+`mission-world-designer-rotation` held `codex:gpt-5.6-sol` as last-used and iteration 79's own
+record agrees, so the pointer was **not** clobbered by a sibling; next wired entry is
+`claude:claude-fable-5` (gemini remains unwired). Probe rc=0 via `claude-sub`, which strips both
+Anthropic key variables so a nested `claude` cannot bill the metered API.
+
+**Planner lane, fail-closed LOUDLY.** `tools/launchd/derive-planner-lane.sh` does **not exist**
+in the World checkout. That is the documented missing-script path, so the lane is `opus` with
+reason token **`missing-script`** — recorded as a derivation, not as a silent default.
+
+### What the ratification did and did not settle
+
+Mark's `option A` makes resolution A — the `killGroup` seam in production `handlers.go` —
+ratified mission state, and overrules `gpt5-6-sol`'s round-2 request to reverse to B **by
+ratification authority**, not by controller judgment. What it does **not** dissolve is that
+reviewer's *catch*, which iteration 78 had already measured as legitimate even though its stated
+premise was false (`CLAUDE.md:25` scopes the frozen core to `tools/launchd/*` plus shared skills,
+not `host/`). Both halves were discharged by measurement in the round-3 designer pass:
+
+- **§10's S3 answer stopped being a dismissal.** "Not applicable in the S3 sense" was replaced by
+  an answer that *costs* the two alternatives the reviewer named. The external platform tracer is
+  rejected on verified facts (both CI jobs are `ubuntu-latest`; SIP locally; and decisively it
+  leaves no artifact the gate that catches the ~1-in-130 firing can assert on). Dependency
+  injection is costed against the real call graph: `runBounded` has **exactly 3** production
+  callers (`handlers_git.go:52`, `handlers_model.go:82`, `registry_publish.go:502`),
+  `Handler.Execute` takes no process-control parameter, and the only injectable surfaces are
+  **exported** config structs — strictly more production surface, including exported surface,
+  than the seam's unexported lines. Controller re-verified all of it first-party.
+- **The seam's safety premise became an enforced invariant.** W12's "no `t.Parallel` in
+  `handlers_test.go`" was a snapshot doing an invariant's job. M1 now lands
+  `TestBrokerTestsDoNotCallParallel`, an AST gate on the house pattern with a declared enumerator
+  blind spot, an anti-vacuity floor, and a named mutation.
+
+### QUORUM R3 — and the objection convicted the document of its own charge
+
+Both external reviewers **present** (`present: [gpt5-6-sol, gemini-3-1-pro]`, no N−1 degrade;
+per-reviewer cap raised pre-emptively to `$0.45`; `metered=$0.148857`). `gemini-3-1-pro` **PASS**
+with a non-blocking note that the AST guard's `Parallel`-selector matching would also flag an
+unrelated `config.Parallel()` — a breadth the doc already declares as deliberate, so nothing
+changed. `gpt5-6-sol` **REJECT**, and it dropped resolution B entirely:
+
+> AC5/P3 and MUT-WARM-SKIP are probabilistic, environment-dependent sampling gates … Those
+> criteria can pass or fail by scheduler, cache, and assessment-latency luck, directly violating
+> deterministic-gate and no-sampling axioms.
+
+**Verified first-party before acting (rule 3f), not forwarded.** §7's P3 required a *majority* of
+20 cold darwin runs to show vacuous mode (analogue ~6/8) and §8's `MUT-WARM-SKIP` expected a red
+"in most runs". Both read exactly as quoted. **This is the document convicting itself:** killing
+the queue row's `-count=20` coin flip on S6 grounds is its central contribution, and it shipped
+two coin-flip gates of its own — inside the section titled *"Replacing `-count=20`: proofs that
+cannot pass by luck"*. Worse, it *called* P3 "deterministic in aggregate", which is a claim and
+not a bound; no binomial argument was ever offered. A gate's own section heading is not a
+measurement.
+
+**Disposition: narrow-refinement carve-out, `proposed_fix` applied VERBATIM.** The objection
+disputes no direction — it accepts A, the seam, the guard and the warm-up — so the carve-out's
+two limbs are met. Applied in the reviewer's own terms: cold-majority arm **deleted** from P3 and
+AC5; `MUT-WARM-SKIP` **removed**; the warm-up runs via `exec.CommandContext` under an explicit
+bounded timeout and must exit successfully; **every** timed invocation must observe
+`exec_started` and `forked` plus exactly one successful kill record — a 100%-per-run
+postcondition replacing a majority-over-population threshold, which also retires the darwin-only
+framing; and the warm-up call gains deterministic mutation coverage through a test-owned helper
+with an **injectable runner** whose unit test asserts an exact count and an exact flag
+(`MUT-WARM-DROP`, `MUT-WARM-UNBOUNDED`). Two consequences recorded rather than hidden: the
+`set -m` escape fixture is likewise no longer any acceptance arm (`1/8 on fresh` is a coin flip
+wherever it sits), and §12's fallback of demoting §5.5 now also demotes AC5(a), stated there
+instead of left to look free.
+
+**A correction to the designer's own text.** Its Quorum-log entry asserted that no third quorum
+round was run. One was, and the log now says so and says what it bought — a whole new committed
+gate and an evaluated S3 answer that no reviewer had seen. The controller declared B closed in
+the round-3 controller note **before** the reviewers ran; neither re-raised it.
+
+### THE SPINE — the planner refuted the doc seven times and the doc lost all seven
+
+Each re-verified by the controller before adoption (rule 3h: a deviation is a claim in *both*
+directions).
+
+**C1, blocking, and it voided this item's only forced-failure proof.** §5.4's recorder code block
+**duplicated** the kill (`rec.errno = syscall.Kill(-pgid, …)`) instead of **delegating** to the
+captured production seam. Because `killGroup` is a package-level `var` the test *replaces*, the
+production body is **dead for the test's duration** — so `MUT-KILL-NEUTER`, `P1` and therefore
+**AC3, the arm that exists to replace the row's `-count=20`**, all mutated dead code. Measured by
+the planner in one binary on the seamed tree (`handlers.go` sha `666a5d4…`, byte-identical to the
+doc's own N5 hash) with the mutant applied:
+
+| recorder shape | verdict |
+|---|---|
+| doc §5.4 verbatim (re-implements the kill) | `--- PASS` at **105 ms** — mutation invisible |
+| delegating (`orig := killGroup`, then `orig(pgid)`) | `--- FAIL` at **5.168 s**, full H1 signature |
+
+The doc's *prose* said "a recording wrapper that still performs the real kill" and was right; its
+*code* duplicated, and **the code is what an executor types**. This is rule 3i's family one level
+lower: not an assertion that reads the wrong value, but a **mutation target that the test itself
+bypasses**. Confirmed by the controller by reading before adoption.
+
+**C2** — §5.1 needed `errors.As`, not a bare type assertion: `Invoke` returns `*EffectFailedError`
+wrapping the handler error (`broker.go:284`, type at `:129`), so the doc's literal wording reds
+**100% of healthy runs**. A gate that cannot PASS, which is the mirror of the class this doc
+exists to remove. **C3** — see below, it earns its own paragraph. **C4** — the pass path must
+**not** assert `survived` absent: measured `PASS` at 5.160 s *with* it present, so that free
+stronger assertion would make `MUT-BOUND-LOOSE`'s specified green unreachable. **C5** — §5.3's
+"the fork is byte-for-byte unmoved" is false for `exec_started`, which the fixture writes *before*
+the fork. **C6** — the seam is `+7/−1`, not `+5/−1`, stated five times **including in the A/B text
+put to the human**; the sha matched N5 throughout, so only the label was ever wrong, which is
+precisely why nobody caught it. **C7** — §5.6's "76.9 s critical path" was a **comment** at
+`verify_go.sh:110-111`, not a measurement: `host/broker` is 90.2 s plain and **193.4 s race**
+today, so the budget survives at ~3× margin rather than ~8×.
+
+### C3 — a reviewer's blocking objection survived a park, a ratification and a verbatim adoption while being wrong
+
+`gemini-3-1-pro`'s round-2 objection — the unsynchronised recorder is a data race — is half of why
+this item parked for a human at all, and it was adopted verbatim into §5.4. It describes a race Go
+forecloses. `os/exec`'s `watchCtx` sends on `resultc` **after** invoking `Cancel`
+(`exec.go:805-820`) and `Wait` receives from it (`:930`); a channel send/receive pair is a
+happens-before edge, so the hook's writes are already visible to the goroutine returning from
+`cmd.Wait`. Controller-verified in the Go 1.25.6 source. Planner measurement: an **unsynchronised**
+recorder produced **0 `DATA RACE` across 20 `-race` runs**, with a known-positive control in the
+same binary reporting `WARNING: DATA RACE` — so the instrument could see one and there was none.
+
+The mutex **stays**: it is ratified, free, and honest defence in depth against a future reader who
+reads the record off the hook's own goroutine. What is deleted is **AC2's claim to prove it**,
+because an assertion that cannot fail is exactly what round 3 was convened to remove. That makes
+**three cannot-fail gates removed from this one item** — the row's `-count=20`, round 3's
+cold-majority arms, and this — and this is the first to come from a **reviewer** rather than an
+author.
+
+**Executor.** `codex:gpt-5.6-sol` (env chain resolved `codex probe ok`, re-probed rc=0) in a
+worktree `.wt-iter80-broker-flake`, a **sibling of the repo, never `/tmp`**. Directive delivered
+via a per-iteration file with the `exit 64` size assertions, `< /dev/null`, backgrounded under a
+bounded 30-min `date +%s` cap. rc=0, five cumulative `.snap/T*` snapshots, main checkout
+`git status --porcelain` **empty** throughout — containment held.
+
+**AN EIGHTH REFUTATION, FOUND BY THE EXECUTOR UNPROMPTED AND SELF-REPORTED.**
+`MUT-DIAG-BLIND-STORE` was **non-lethal as the plan specified it**: the store arm read post-handler
+*duration* without requiring that any store timestamps were recorded, so neutering the recording
+left it green. The executor added a `len(diagnosis.storeCalls) == 0` clause and re-ran.
+**Adjudicated two-armed by the controller rather than accepted on its report** — mutant LANDED
+(sha `ed71299a…` → `28bbcd7c…`) and BUILDS (`go vet` rc=0):
+
+| arm | result |
+|---|---|
+| mutation + the executor's added clause | **0 PASS / 1 FAIL** |
+| same mutation, clause removed | **1 PASS** |
+
+So the clause is the killer, not a bystander, and the plan's row was genuinely vacuous. Restored
+byte-identical. **Second instance of rule 3i in one iteration.** Deviation ACCEPTED and strictly
+better than the plan; the other deviation (`MUT-ERR-DISCARD` re-scoped to
+`invokeWithStallDiagnosis`, since the plan's named file cannot be observed by the arm it selects)
+is the same shape and is accepted on the same grounds.
+
+**Gates, re-run OUTSIDE the sandbox — mandatory for a `host/` diff.** The codex sandbox denies
+loopback binds, so it could only report `verify_go.sh` and one boundary test as
+`UNINFORMATIVE UNDER SANDBOX`. Controller re-ran both: `verify_ail.sh` **rc=0** (4 identities, 14
+named tests, 9/9 steps) and `verify_go.sh` **rc=0 in 3:44**, `host/broker` ok at 142.8 s. **The
+evaluator independently reproduced both green**, so the one criterion the executor could not close
+has two independent confirmations.
+
+**Commit reconstruction.** Four commits rebuilt from the snapshots in task order, with a green
+boundary test at each (`T1` group-kill 1 PASS · `T2` guard 1 PASS · `T3` arms 2 PASS + warm-up 1
+PASS · `T4` group-kill 1 PASS), then **byte-identity proved by `shasum -c` against a manifest of
+the executor's final tree taken before reconstruction began** — all four files OK. `T5` was the
+mutation sweep and equals `T4` (`diff -rq` silent), so it is no commit.
+
+**Evaluator.** `sonnet` — generator≠judge holds across providers (OpenAI executor, Anthropic
+judge). **96/100, zero blocking**, and it did real adversarial work rather than confirmation:
+it attacked the new AST guard with a **symlink** (caught — `parser.ParseFile` follows them) and
+with **reflection** (`reflect.ValueOf(t).MethodByName("Parallel").Call(nil)` genuinely runs
+`Parallel()` undetected — which is the residual both the doc and the plan already **declare**, now
+confirmed real rather than aspirational); and it re-ran every §8 row hunting more of C1's defect
+class, finding none beyond the known one. Its own non-blocking note is worth keeping: the
+executor's self-report left AC1 unclosed, so anyone auditing an executor report in isolation would
+have seen the sprint's central criterion open.
+
+**Gate 3b.** SHA-pinned, with the completeness assertion (`present == expected`, never a bare
+"0 failures"): PR head `5ce1ac0` settled `checks=2` = expected 2, both `success`, `MERGEABLE
+CLEAN`; then the **merge commit `d9712dd`** independently polled to `checks=2`, both `success`,
+**0 non-success**. Only the merge-commit green upgrades the tag.
+
+**Ruled out.** A third quorum-revision round (the carve-out's conditions were met; applying a
+reviewer's own words satisfies an objection rather than force-passing it); re-litigating A vs B
+(ratified — and neither R3 reviewer re-raised it); `gpt5-6-sol`'s frozen-core *premise* (false,
+though its catch was right twice); the sandbox `verify_go.sh` red as evidence of anything; and
+banking the executor's self-reported deviations without the two-armed check.
+
+**Friction worth a lane.** The Gate-3b/poll shell bugs recurred in the harmless direction only:
+`grep -c … || echo 0` printed `0\n0` and broke an integer comparison (the `grep … | head || echo`
+class already in the memory), and an unquoted `ls .snap/T*` aborted under zsh with
+`no matches found` while the directory was legitimately empty. Both were visible, neither
+produced a false reading, and the deadline bound held. **No skill edit is spent this iteration**
+— World cannot edit the shared skill, and the standing proposal queue to V1 already holds the
+Gate-3b `set --` array fix at 3 instances.
+
+**Next.** Item **13** `w-evidence-grade-mapping`'s SPRINT (designed and quorum-cleared at
+iteration 79, `6d12a79`, ~0.65d). Item 5 `P6.B` remains UNBLOCKED. **Zero items are parked on
+Mark, and there are no open asks.**
