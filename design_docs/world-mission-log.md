@@ -7968,3 +7968,20 @@ then execute (~0.65d, and the doc names its own pin moves, its projection/golden
 and its twelve mutations). Unless Mark's one-word A/B arrives first, in which case item 16 unparks
 and takes precedence. Item 5 `P6.B` remains UNBLOCKED. **Zero new open asks** — the item-16 A/B from
 iteration 78 is still outstanding and unchanged.
+
+**Gate 3b (addendum).** Both landings green, SHA-addressed: `6495f56` (charter/log/dashboard) and
+`a515f3b` (the queue-17 follow-on row) each returned `present=2` = expected 2, `pending=0`,
+`notgreen=0`, with both jobs `completed/success` (`go host build + test gate`, `ailang-code verify
+gate`), confirmed against a direct per-workflow read matching `origin/dev`.
+
+**AND THE POLL ITSELF FAILED, FOR THE 7th RECORDED zsh REASON IN THIS REPO AND THE 2nd TIME IN THIS
+EXACT GATE.** `set -- $r` on the string `"2 0 0"` does **not** word-split under zsh — measured side
+by side in one call: zsh `$#=1 $1=[2 0 0]`, bash `$#=3 $1=[2]`. So `present`, `pending` and
+`notgreen` were assigned garbage, the break condition could never match, and the loop ran until the
+Bash tool's own 10-minute ceiling killed it (rc=143) — **while the lines it was printing already read
+`2 0 0`, i.e. settled and green, sixteen iterations earlier.** Three things worth keeping: Standing
+rule 6's bound is the only reason this cost ten minutes rather than a slot; the skill's own
+instruction that a Gate-3b poll's output is a HINT and never the verdict is what saved the verdict,
+because the direct `--jq` read gave the right answer immediately; and iteration 77 hit this identical
+class in this identical gate, which makes two instances on one surface. World cannot edit the shared
+skill, so it goes to V1 as a proposal with both instances named.
