@@ -2915,6 +2915,42 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
     passes after — never by adding a retry or a skip. · ~0.5d · NEEDS A DESIGN DOC (small) · gated
     on nothing; should land before `TR.C` if the queue allows, since `TR.C`'s whole deliverable is an
     assertion in this package.
+17. [**FILED 2026-08-13 (iter-79) — NOT a new idea, it is item 13's DECLARED RESIDUAL, and it is
+    filed here because a residual recorded only in a design doc's `## Related` section is invisible
+    to the next implementer, which is the exact failure item 13's own §2.4 was written to avoid.**]
+    **w-validated-proven-evidence-boundary** · clause-5 · the validated boundary and first real
+    producer path that makes the top trust grade `PROVEN` **honestly** reachable. **WHY IT EXISTS:**
+    item 13 ratifies a total, Z3-proven `Evidence → EvidenceGrade` mapping over the five existing
+    constructors and **deliberately leaves `PROVEN` unreachable**, because round 1's proposed
+    `ProofReport`/`ReplayReport` carriers were defeated by `gpt5-6-sol` — an agent authors
+    `Proposal.evidence`, so an unvalidated carrier lets it mint the top grade from an arbitrary
+    `HashRef`, converting a representation gap into a **grade-laundering authority gap**, and
+    HUMAN-SURFACE names grade laundering the cardinal sin. Item 13 therefore types the result and
+    declares **mint authority** as an open obligation; this row owns it. **MEASURED at `2ef2271`,
+    and the numbers are why this is a separate item rather than a §7.2 sub-clause:** there is **no
+    production `Evidence` constructor or decoder anywhere in Go** (0 non-test hits under `host/` +
+    `cmd/`; same-call control, the same pattern restricted to `_test.go`, returns **13**), **no Z3
+    proof-report producer** (every non-test `Z3` hit is a comment about a mirrored predicate;
+    control **424** non-test `hashref` hits), and **no `.ail` module reads `Evidence` at all** —
+    `verify()` at `world/transitions.ail:45` touches only `proposalMatchesWorld` and every
+    construction site passes the empty list (control `.stateRoot` = **6**). `host/replay` has real
+    `DivergenceError`/`KindHashMismatch` (`replay.go:111`, `:285`) but no Evidence output path. So
+    this item builds the repo's **FIRST** `Evidence` producer plus a validating decode boundary —
+    not a wiring job, which is precisely the scope-expansion item 13 refused to absorb silently.
+    **ACCEPTANCE SURFACE, carried verbatim from the reviewer so the descope loses nothing:** define
+    explicit mint authority and a validated/opaque value unavailable to proposal authors; bounded
+    `HashRef` loading, hash verification, typed report decode, and an explicit successful
+    proof/replay result; an explicit error result on every failure with **no fallback grade**;
+    grading accepts only that validated value; both real producers wired through it; and mutations
+    proving **arbitrary, missing, malformed, mismatched, failed and divergent** reports cannot yield
+    `PROVEN`. **CARRIES ITEM 13's GOTCHAS FORWARD:** it is kernel-adjacent, so the five-pin move
+    applies (`EXACT_TOTAL_VERIFIED`, `EXACT_TOTAL_TESTS`, the `packages/world-core` projection at
+    Leg 3 step 3/9, the frozen 4-export manifest at step 4/9, and the byte-for-byte ready-packet
+    golden at step 9/9); and a contract may **not** take `Proposal` or anything reaching
+    `list[Evidence]` (measured: `unknown sort` on a record containing `list[ADT]`, `verify.errors=1`,
+    which reds Leg 1). · ~1.5–2d · NEEDS A DESIGN DOC · **gated on item 13 landing** (it ratifies the
+    grade type this boundary returns). Not promoted: item 13's sprint, then 14/15 by their existing
+    order — this row is filed at normal position, not ahead of anything.
 
 ## Premise Verification Log (quorum objection #1 — every load-bearing claim, with evidence)
 
