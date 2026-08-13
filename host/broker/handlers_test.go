@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -726,18 +728,25 @@ func TestApprovalReplayContract(t *testing.T) {
 	}
 }
 
-// The wall-clock bound must kill the whole process TREE, not just the handler's
-// direct child. A forked grandchild inherits the stdout pipe, so if it survives
-// the kill the capped read blocks until the GRANDCHILD exits and the bound is not
-// enforced. Linux CI measured 5.002s against a 40ms bound — exactly the runtime of
-// the grandchild — while darwin reported 42ms for the same code, so this is a real
-// guarantee that one platform hides.
-//
-// Only elapsed is asserted. Checking that the grandchild is DEAD afterwards is
-// vacuous: when the kill misses it, Invoke blocks on the inherited pipe until the
-// grandchild exits on its own, so by the time a test could look it has always died.
+type killRecord struct {
+	mu     sync.Mutex
+	count  int
+	offset time.Duration
+	pgid   int
+	errno  error
+}
+
+// The wall-clock bound must kill the whole process TREE. The markers prove the
+// grandchild existed, while the delegated kill recorder and phase diagnosis make
+// a slow return attributable instead of inferring its cause from elapsed time.
 func TestHandlerTimeoutKillsTheWholeProcessGroup(t *testing.T) {
-	fake := writeExecutable(t, "sleep 5 &\nwait")
+	markdir := t.TempDir()
+	fake := writeExecutable(t, fmt.Sprintf(`if [ "${W16_WARM:-}" = "1" ]; then exit 0; fi
+: > "%s/exec_started"
+sleep 5 && : > "%s/survived" &
+: > "%s/forked"
+wait`, markdir, markdir, markdir))
+	warmUpFixture(t, fake, execWarmUpRunner)
 	handler, err := NewGitHandler(GitHandlerConfig{
 		GitPath: fake, ExecTimeout: 100 * time.Millisecond,
 	})
@@ -745,13 +754,51 @@ func TestHandlerTimeoutKillsTheWholeProcessGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 	scope := t.TempDir()
-	session, _ := handlerSession(t, EffectGitCommit, scope, handler)
-	start := time.Now()
-	_, _, _ = session.Invoke(context.Background(),
-		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, []byte("group"))
-	elapsed := time.Since(start)
-	if elapsed > 2*time.Second {
-		t.Errorf("Invoke took %s for a 100ms bound: the kill missed the forked "+
-			"grandchild, which held the stdout pipe until it exited on its own", elapsed)
+	timing := &timingHandler{handler: handler}
+	session, recording := handlerSession(t, EffectGitCommit, scope, timing)
+
+	kill := &killRecord{}
+	orig := killGroup
+	t.Cleanup(func() { killGroup = orig })
+	killGroup = func(pgid int) error {
+		kill.mu.Lock()
+		defer kill.mu.Unlock()
+		kill.count++
+		kill.offset = time.Since(timing.invokeStart)
+		kill.pgid = pgid
+		kill.errno = orig(pgid)
+		return kill.errno
 	}
+
+	diagnosis := invokeWithStallDiagnosis(t, session, recording, timing,
+		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, []byte("group"))
+	kill.mu.Lock()
+	count, offset, pgid, errno := kill.count, kill.offset, kill.pgid, kill.errno
+	kill.mu.Unlock()
+	marker := func(name string) bool {
+		_, err := os.Stat(filepath.Join(markdir, name))
+		return err == nil
+	}
+	execStarted, forked, survived := marker("exec_started"), marker("forked"), marker("survived")
+
+	var timeout *HandlerTimeoutError
+	var problems []string
+	if diagnosis.elapsed > 2*time.Second {
+		problems = append(problems, fmt.Sprintf("elapsed %s exceeds 2s", diagnosis.elapsed))
+	}
+	if !errors.As(diagnosis.err, &timeout) {
+		problems = append(problems, fmt.Sprintf("error chain lacks *HandlerTimeoutError: %+v", diagnosis.err))
+	}
+	if count != 1 || errno != nil || offset < 100*time.Millisecond || pgid <= 0 {
+		problems = append(problems, fmt.Sprintf("kill record count=%d offset=%s pgid=%d errno=%v", count, offset, pgid, errno))
+	}
+	if !execStarted || !forked {
+		problems = append(problems, fmt.Sprintf("non-vacuity markers exec_started=%t forked=%t", execStarted, forked))
+	}
+	detail := fmt.Sprintf("%s markers={exec_started:%t forked:%t survived:%t} kill={count:%d offset:%s pgid:%d errno:%v}",
+		diagnosis, execStarted, forked, survived, count, offset, pgid, errno)
+	if len(problems) != 0 {
+		t.Fatalf("group-kill diagnosis failed: %s; %s", strings.Join(problems, "; "), detail)
+	}
+	t.Log(detail)
 }
