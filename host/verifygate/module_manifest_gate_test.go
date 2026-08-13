@@ -125,7 +125,7 @@ func requirePristineControl(t *testing.T, root string) string {
 	rc, out := runGateAt(t, root, map[string]string{
 		"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
 	})
-	const marker = "✓ 4/4 required world/ identities verified across 11 module(s)"
+	const marker = "✓ 5/5 required world/ identities verified across 11 module(s)"
 	if !strings.Contains(out, marker) {
 		t.Fatalf("pristine isolated control missing %q (rc=%d)\n%s", marker, rc, out)
 	}

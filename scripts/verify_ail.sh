@@ -263,7 +263,7 @@ REQUIRED_VERIFIED = {
     "world/transitions.ail": {"applyRevision"},
     "world/contracts.ail":   {"isValidNextWorld"},
     "world/logepoch.ail":    {"sameRef", "servesEntry"},
-    "world/types.ail":       set(),
+    "world/types.ail":       {"gradeOf"},
 }
 try:
     with open(sys.argv[2]) as fh:
@@ -307,7 +307,7 @@ if [ "$checked" -eq 0 ]; then
   exit 1
 fi
 
-EXACT_TOTAL_VERIFIED=4
+EXACT_TOTAL_VERIFIED=5
 if [ "$total_verified" -ne "$EXACT_TOTAL_VERIFIED" ]; then
   echo "✗ expected exactly $EXACT_TOTAL_VERIFIED proven world/ contracts, got $total_verified" >&2
   exit 1
@@ -330,14 +330,16 @@ fi
 # other exit codes advisory — the JSON parse below is authoritative
 python3 - "$tmp_test_json" <<'PY' || exit 1
 import json, sys
-REQUIRED_TESTS = {  # logepoch (8) + contracts (6)
+REQUIRED_TESTS = {  # logepoch (8) + contracts (6) + types (6)
     "renderRef_test_1", "renderRef_test_2", "sameRef_test_1", "sameRef_test_2",
     "cacheKey_test_1", "cacheKey_test_2", "servesEntry_test_1", "servesEntry_test_2",
     "proposalMatchesWorld_test_1", "proposalMatchesWorld_test_2",
     "verificationMatchesProposal_test_1", "verificationMatchesProposal_test_2",
     "commitAllowed_test_1", "commitAllowed_test_2",
+    "gradeCode_test_1", "gradeCode_test_2", "gradeCode_test_3",
+    "gradeCode_test_4", "gradeCode_test_5", "gradeCode_test_6",
 }
-EXACT_TOTAL_TESTS = 14
+EXACT_TOTAL_TESTS = 20
 raw = open(sys.argv[1], "rb").read().decode("utf-8", "replace")
 i = raw.find("{")                       # strip stdout banner before the first '{' (V19)
 if i < 0:
@@ -373,4 +375,4 @@ PY
 echo "── Leg 3: world package nine-step gate"
 ./scripts/verify_world_package.sh || exit $?
 
-echo "✓ verify gate PASSED: 4 required identities verified, 14 named tests pass"
+echo "✓ verify gate PASSED: 5 required identities verified, 20 named tests pass"

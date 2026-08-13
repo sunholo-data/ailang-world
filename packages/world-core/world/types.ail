@@ -27,6 +27,53 @@ export type Evidence
   | AiReview(HashRef, float)
   | RecordedEffect(HashRef)
 
+-- The four ratified trust grades. gradeOf is total over decoded Evidence and
+-- returns one of these four; absent/unreadable/malformed input is NOT a grade
+-- and belongs to the deferred validated-boundary follow-on.
+export type EvidenceGrade
+  = PROVEN
+  | TESTED
+  | ATTESTED
+  | CLAIMED
+
+-- Canonical grading for the ratified five-constructor representation.
+-- No current Evidence constructor has authority to mint PROVEN.
+export func gradeOf(e: Evidence) -> EvidenceGrade ! {}
+ensures { result == match e {
+  CompilerOutput(_) => ATTESTED,
+  TestReport(_, _) => TESTED,
+  HumanApproval(_) => ATTESTED,
+  AiReview(_, _) => CLAIMED,
+  RecordedEffect(_) => ATTESTED
+} }
+{
+  match e {
+    CompilerOutput(_) => ATTESTED,
+    TestReport(_, _) => TESTED,
+    HumanApproval(_) => ATTESTED,
+    AiReview(_, _) => CLAIMED,
+    RecordedEffect(_) => ATTESTED
+  }
+}
+
+-- Private adapter because v0.30.0 inline-test expected values cannot be ADT
+-- identifiers. Integer codes are test plumbing, not an exported ordering.
+func gradeCode(e: Evidence) -> int
+tests [
+  (CompilerOutput({ algo: "sha256", digest: "compiler" }), 2),
+  (TestReport({ algo: "sha256", digest: "tests-pass" }, true), 3),
+  (TestReport({ algo: "sha256", digest: "tests-fail" }, false), 3),
+  (HumanApproval({ algo: "sha256", digest: "approval" }), 2),
+  (AiReview({ algo: "sha256", digest: "review" }, 0.8), 1),
+  (RecordedEffect({ algo: "sha256", digest: "effect" }), 2)
+]
+{
+  match gradeOf(e) {
+    PROVEN => 4, TESTED => 3, ATTESTED => 2,
+    CLAIMED => 1
+  }
+}
+
 -- An immutable world revision: a monotonically increasing revision number,
 -- the content-addressed state root, and the content-addressed log head.
 export type World = {
