@@ -1,73 +1,66 @@
 # AILANG World — mission dashboard
 
 *Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS) + `world-mission-log.md`.
-Last written: iteration 78, 2026-08-13.*
+Last written: iteration 79, 2026-08-13.*
 
 ## Now
 
-- **dev**: `b2c3f89` — CI **green both jobs**, SHA-addressed (`checks=2` = expected 2). Nothing
-  landed to code this iteration; the deliverable is a design doc plus a measured park.
-- **Item 16 `w-broker-base-flake` is DESIGNED and PARKED `needs-human-review`.** Doc
-  `design_docs/planned/w-broker-base-flake.md` (586 lines), two quorum rounds, **both BLOCKED**,
-  both external reviewers **present** in both (`absent_reviewers` empty). R2's objections differ in
-  kind: gemini's is a concrete `sync.Mutex` fix (carve-out material), gpt5's **reverses the doc's
-  central architectural choice**, so the carve-out does not apply and Standing rule 2 binds.
-- **THE QUEUE ROW'S NUMBERS AND ITS MECHANISM ARE BOTH DEAD.** The flake is real — reproduced once,
-  `FAIL (5.28s)` against a 100 ms bound — but the rate is **1 in 132 runs = 0.76%**, not the row's
-  ~18%. So the row's own `-count=20` acceptance proof reds only **~14%** of the time: a coin-flip
-  gate, which **S6** forbids. Second consecutive item where the measurement killed the prescription.
-- **THE SPINE — MY OWN 1,987-RUN EXONERATION WAS SCOPED TO A REGIME THE TEST NEVER ENTERS.** My
-  probe mirrored `runBounded` line for line and re-used **one warm fixture inode**; the real test
-  writes a **fresh** one every run, and on darwin that is **103 ms median vs 3 ms** (24/25 fresh
-  execs exceed 100 ms) — the same order as the deadline under test. A faithful mock of a mechanism
-  is not a faithful mock of its **inputs**. Corollary the designer drew out: the committed test is
-  **partially vacuous per-run on darwin**, because the deadline usually expires before the
-  grandchild exists at all.
+- **dev**: `2ef2271` — CI **green**, SHA-addressed (`checks=2` = expected 2). No code landed; the
+  deliverable is a quorum-cleared design doc.
+- **Item 13 `w-evidence-grade-mapping` is DESIGNED and CLEARED for the sprint-planner** — doc
+  `design_docs/planned/w-evidence-grade-mapping.md` (620 lines), committed `6d12a79`, priced 0.65d.
+  Two quorum rounds, both external reviewers **present** in both; R2 = gemini **PASS**, gpt5 REJECT
+  on one non-directional point, resolved under the **narrow-refinement carve-out**, verbatim fix.
+- **The decision, because it changes what the row delivers: representation-only.** A Z3-**PROVEN**
+  total `gradeOf(Evidence) -> EvidenceGrade` in `world/types.ail` — the repo's **5th** proven
+  identity. `CompilerOutput`/`HumanApproval` → `ATTESTED`. **`PROVEN` stays unreachable on purpose:**
+  round 1's `ProofReport`/`ReplayReport` carriers were withdrawn because an agent can mint one from
+  an unchecked `HashRef` — a representation gap turned into a grade-laundering *authority* gap.
+- **THE SPINE — a limitation the repo recorded about ITSELF was narrower than its own comment.**
+  V23 (`world/contracts.ail:11`) says a contract "reaches Proposal.evidence (an ADT) and Z3-errors
+  `unknown sort 'Proposal'`". Everyone since, including the ratified human-surface doc, generalised
+  that to "ADTs". Measured: a **bare ADT param** and an **ADT-valued result** both VERIFY
+  non-vacuously (a false postcondition counterexamples with a model naming sort `Ev` and tester
+  `(_ is CompilerOutput)`); the failing shape is a **RECORD containing `list[ADT]`**. That one probe
+  is what made a proven mapping possible at all.
 
 ## Parked on Mark
 
-**ONE open ask — a one-word answer, `A` or `B`, on item 16:**
-- **A** (as designed) — bring M2's `killGroup` seam forward into M1: `var killGroup = func(pgid int)
-  error` in `host/broker/handlers.go`, +5/−1 behaviour-identical lines, so the test records the
-  kill's count, monotonic offset, pgid and errno and makes the ~0.76% event **decisive** the one
-  time CI catches it. Costs M1 its "zero production bytes" property.
-- **B** — keep M1 production-free, narrow its claim to "localise the stall to the `Execute` window",
-  defer mechanism selection to an external tracer or a separate doc. Costs a second rare-event wait.
-
-Measured for the decision: gpt5's "frozen core" framing is **wrong** (`CLAUDE.md:25` scopes it to
-`tools/launchd/*` + skills, not `host/`), but its **catch is right** — **S3** does bind `host/`
-("why is this not a package?") and the doc's §10 dismisses rather than answers it. Exactly **one**
-precedent exists, same shape, landed through this loop: `host/store/store.go:863`
-`var commitBeforeOutcomeHook = func() {}` (`6811604`, PR #19).
-
-Also owed by the **shared driver** (frozen core — World cannot apply): `ailang#611` (real per-role
-executor chain) and the World driver sync (missing `pi:*` pre-flight).
+**ONE open ask, unchanged from iteration 78 — a one-word `A` or `B` on item 16** (`w-broker-base-flake`):
+**A** bring M2's `killGroup` seam into M1 (+5/−1 behaviour-identical lines in `host/broker`, makes the
+~0.76% event decisive; costs M1 its "zero production bytes" property) · **B** keep M1 production-free,
+narrow its claim, defer mechanism selection (costs a second rare-event wait). Also owed by the
+**shared driver** (frozen core — World cannot apply): `ailang#611` and the World driver `pi:*` sync.
 
 ## Next
 
-**Item 16** on Mark's one word; failing that **item 13** `w-evidence-grade-mapping` (cheapest
-high-leverage UI item; `PROVEN` is currently unreachable). **Item 5 `P6.B` remains UNBLOCKED.**
-`SM.D` (item 8) is attended-only; 13/14/15 attended.
+**Item 13's sprint** — `sprint-planner` on the doc, then execute (~0.65d). Mark's A/B unparks item 16
+and takes precedence if it arrives. **Item 5 `P6.B` remains UNBLOCKED.** 13/14/15 attended-filed;
+`SM.D` (item 8) attended-only.
 
 ## Loop
 
 - launchd, ~6h, headless. Issue **#53** (rotates Mondays 07:00 **local**; not due — created Mon
-  07:37 local, 16 comments). Running skill **== origin** for the first time in 4 iterations.
-- controller `opus` · designer `claude:claude-fable-5` (rotation; the rotation file is **rig-shared,
-  not mission-namespaced**) · planner `opus` (fail-closed, `missing-script`) · executor
-  `codex:gpt-5.6-sol` · evaluator `sonnet`. `pi` **BARRED** from publish milestones.
-- `metered=$0.202435` this iteration (quorum only, both caps raised pre-emptively). Cap $5.
+  07:37 local, 17 comments). Running skill **== origin** (2nd consecutive iteration).
+- controller `opus` · designer **`codex:gpt-5.6-sol`** (rotation; the namespaced pointer agreed with
+  my own log, so it was NOT clobbered — V1 namespaced the shared key upstream in `8fdccf00c`) ·
+  planner `opus` (fail-closed, `missing-script`) · executor `codex:gpt-5.6-sol` · evaluator `sonnet`.
+  `pi` **BARRED** from publish milestones.
+- `metered=$0.177493` this iteration (quorum only; caps raised pre-emptively). Cap $5.
 
 ## Standing hazards
 
-- **SCOPE, NOT MECHANISM, IS WHAT BREAKS A CONTROL.** Three instances in one iteration: a probe
-  faithful in every syscall but not in its fixture lifecycle; a `-run` naming a **nonexistent test**
-  (`no tests to run` → `PASS` → **rc=0**); and `grep -rl … | head` making the pipeline's status
-  `head`'s, so the `||` fallback could never fire. Pair every check with a control **in the same
-  call and the same scope**, and read `grep`'s exit code (1 = no match, 2 = no such file).
-- **GUARD THE HELPER, MISS THE BRANCH/CALL SITE — now five directions** (mechanism/sites ·
-  site/second branch · branch/shape-space · shape-space/spelling · **recogniser/enumerator**).
-- A queue row's **prescription** rots faster than its diagnosis — re-measure both at pick time.
-- `go build ./...` does not compile `_test.go`; use `go vet`. `git diff` omits untracked files.
-- `verify_go.sh` needs `GOTOOLCHAIN=go1.25.6` and an `AILANG_BIN` reporting exactly `v0.30.0`;
-  without `AILANG_BIN`, `host/broker` is red 100% of the time (correct behaviour, not the flake).
+- **A FIX THAT NEVER APPLIED PRINTS THE SAME GREEN AS A FIX THAT WORKED.** My carve-out probe's
+  assert fired on a token inside a *comment*, so nothing was written — and the checks that followed
+  passed, because they re-measured the pre-fix file. Landed-proof by **sha**, always.
+- A repo's own recorded limitation is a claim, recorded at the granularity that sufficed for the case
+  that produced it. Re-probe the **boundary**, not the example.
+- v0.30.0 **accepts a non-exhaustive ADT match**; a totality violation shows up only as
+  `verify.errors>0` with **rc=0**. Never let an AC read `ai-check`'s exit code.
+- Editing `world/*.ail` moves FIVE pins, not two: `EXACT_TOTAL_VERIFIED`, `EXACT_TOTAL_TESTS`, the
+  `packages/world-core` projection (Leg 3 step 3/9), the frozen 4-export manifest, and the
+  byte-for-byte ready-packet golden (step 9/9).
+- **Guard the helper, miss the branch/call site — five directions** (mechanism/sites · site/second
+  branch · branch/shape-space · shape-space/spelling · recogniser/enumerator).
+- `verify_go.sh` needs `GOTOOLCHAIN=go1.25.6`; `verify_ail.sh` needs `AILANG_BIN` reporting exactly
+  `v0.30.0` (PATH `ailang` is `v0.33.0-dirty` and is correctly REFUSED).

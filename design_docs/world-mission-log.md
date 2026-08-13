@@ -7717,3 +7717,254 @@ other lane a quota bucket.
 
 **Next.** Item 16 unblocks on a one-word answer (A or B). Failing that, item **13**
 `w-evidence-grade-mapping`. Item 5 `P6.B` remains UNBLOCKED.
+
+## Iteration 79 — 2026-08-13 — `w-evidence-grade-mapping` (item 13) **DESIGNED and QUORUM-CLEARED for the sprint-planner** (doc `design_docs/planned/w-evidence-grade-mapping.md`, 620 lines, committed `6d12a79`; two quorum rounds, both external reviewers PRESENT in both with `absent_reviewers` empty; R2 = `gemini-3-1-pro` PASS + `gpt5-6-sol` REJECT resolved under the narrow-refinement carve-out; `metered=$0.177493`) — the iteration's spine is that **a limitation the repo had already recorded about itself was NARROWER than its own comment invited, and measuring the boundary opened a design option the ratified text did not know existed**
+
+**Pick.** Item 13. Not the queue head by tag — item 16 is still `[PARKED needs-human-review]` on
+Mark's one-word A/B from iteration 78, and iteration 78's own `[NEXT]` named item 13 as the fallback
+for exactly this case. It is a `NEEDS A DESIGN DOC` row, so the routing step is designer→quorum, not
+planner→executor.
+
+**Gate 0.** Kill switch armed · tree clean · `gh` on `sunholo-voight-kampff` · billing tripwire
+**CLEAN** (both Anthropic key variables empty). Bookkeeping issue **#53**, watermark
+`2026-08-12T17:58:05Z`; `scripts/mission_directives.sh` (allowlist enforced in-script; the script
+lives in the **V1 checkout** and was invoked by absolute path) reports **0 directives from
+`MarkEdmondson1234`** of 17 comments. No rotation owed: `#53` was created `05:37:35Z` = **07:37
+local**, after the Monday-07:00-**local** boundary, and holds 17 comments (< 80). **Weekly
+external-issue sweep: 0 orphans of 1 enumerated** — `jq length` = 1 and `gh issue list | wc -l` = 1
+agree, so the enumeration is asserted rather than assumed; the only open issue repo-wide is `#53`
+itself (charter 1 / log 17 / dashboard 1), with control `#57` firing (charter 1 / log 2 / archive 1)
+and known-absent `#999` returning 0 in charter and dashboard. Inbox: 6 unread, none outranking — 3
+`eval-suite`/`nightly-eval` from the V1 rig (that repo's benchmarks, not World's), and 1
+cross-mission report from `mission-v1` confirming iteration 78's two messages were triaged with
+nothing owed, plus an FYI that the shared designer-rotation key was colliding across missions and is
+now namespaced upstream (`8fdccf00c`).
+
+**Gate 1.** `git fetch origin`; local `dev` **==** `origin/dev` **== `2ef2271`**, zero ahead, zero
+behind. Running skill **`cmp`-identical** to V1 `origin/dev` — no rulebook drift, second consecutive
+iteration. dev CI **GREEN**, read SHA-addressed via `commits/<sha>/check-runs`: `checks=2`, which
+equals the 2 expected for this repo, and zero not-green rows.
+
+**Died-mid-flight check, all four traces:** zero open PRs authored by this loop, `git worktree list`
+shows only the main checkout, `git status --porcelain` empty in the main checkout, and no stale
+worktree to inspect. Nothing died mid-flight.
+
+**Designer rotation, checked against my own log rather than trusted.** The namespaced
+`~/.ailang/state/mission-world-designer-rotation` held `claude:claude-fable-5`; iteration 78's own
+record says it used claude; the two agree, so the pointer was **not** clobbered by the collision V1
+reported. Next wired entry after claude is **`codex:gpt-5.6-sol`** (gemini remains unwired). Probe
+rc=0, replied `ok`. Pointer advanced to `codex:gpt-5.6-sol` **on the namespaced path only**.
+
+**THE QUEUE ROW'S CLAIMS RE-MEASURED AT HEAD, NOT INHERITED.** The row was measured at `871e3b6`
+and cites a 2026-08-11 filing. At `2ef2271`: `world/types.ail:23-28` declares exactly five `Evidence`
+variants (read directly, not counted from prose); a repo-wide `grep -rnE 'PROVEN|TESTED|ATTESTED|CLAIMED'`
+over `world/` + `host/` returns **2** hits and **both are comments** (`world/contracts.ail:104`
+"Z3-PROVEN", `host/boundary/allowlist_world_test.go:695` "has now PROVEN it can fire"), with the
+same-scope known-positive control `Evidence` returning **20** and both roots asserted to exist
+(`world` 29 files, `host` 80) — so the row's "grade vocabulary exists in prose only" holds. Baseline
+`AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh` is **rc=0** (`4` identities / `14`
+tests / package 9/9). Without `AILANG_BIN` the PATH binary is `v0.33.0-149-g4a45e993d-dirty` and the
+gate REFUSES it — a base condition, re-confirmed rather than rediscovered.
+
+**A CONFLICT SURFACE THE QUEUE ROW DOES NOT MENTION, FOUND BEFORE THE DESIGNER RAN.** The row warns
+that a `world/types.ail` edit moves `EXACT_TOTAL_VERIFIED` and `EXACT_TOTAL_TESTS`. It does, and it
+also moves three more pins the row is silent about. `world/types.ail` is **duplicated** at
+`packages/world-core/world/types.ail` and the two are byte-identical today (both
+`91af8cea316ac177bee0a1ab7ec4a364d604df6949f347c9e8a5e3e988f2a4c5`; `cmp -s` silent; control — the
+same pair for `contracts.ail` is also identical, while types-vs-contracts differ, so `cmp` can see a
+difference). `scripts/verify_world_package.sh`, run as Leg 3, then pins it at **step 3/9**
+(projection SHA-256 equality per module), **step 4/9** (the exact frozen manifest, including exactly
+four exports), **step 8/9** (exactly six tar entries) and **step 9/9** (byte-for-byte against
+`scripts/world_package_ready_packet.golden.json`, which pins `contentHash`, `interfaceHash`,
+`tarballSHA256` and `tarballBytes=5773`). All of this went into the designer directive as measured
+rows, which is why the doc's §3.4 and §8.2 exist at all.
+
+**THE SPINE — `unknown sort 'Proposal'` IS NOT "ADTs ARE UNENCODABLE", AND THE DIFFERENCE IS THE
+WHOLE DESIGN SPACE.** `world/contracts.ail:11-15` records V23 first-party: a contract there "reaches
+Proposal.evidence (an ADT) and Z3-errors `unknown sort 'Proposal'` while ai-check exits 0 silently".
+Every natural reading of that sentence — and HUMAN-SURFACE §7.2's three neutral options are all
+written as though it were true — says a grade mapping over an ADT can only ever be tests-only. I
+probed the boundary instead of inheriting the inference. On the pinned v0.30.0:
+
+- a contract over a **bare ADT parameter** verifies: `rank(e: Ev) -> int` with
+  `ensures { result >= 0 && result <= 3 }` → `status: verified`, and the same-file no-ADT control
+  `plain(x: int)` verifies too, so `verify.verified = 2`, `errors = 0`;
+- a contract over an **ADT-valued result** verifies: `gradeOf(e: Ev) -> Grade` with
+  `ensures { result != UNSUPPORTED }` over a 5-nullary-constructor `Grade` → `verified`;
+- **and the proof is non-vacuous**, which is the arm that makes the other two evidence rather than
+  hope. A deliberately FALSE postcondition (`ensures { result == PROVEN }` on a body returning
+  `TESTED`/`CLAIMED`) returns `status: counterexample`, `verify.counterexample = 2`, with a real Z3
+  model naming a genuine datatype sort and a working constructor tester:
+  `{'name':'$p_e','sort':'Ev','value':'(CompilerOutput "")'}` and
+  `{'name':'result','sort':'Grade','value':'(ite ((_ is CompilerOutput) $p_e) TESTED CLAIMED)'}`.
+- the actual failing shape is a **RECORD containing `list[ADT]`**: `bagLabelled(b: Bag)` where
+  `Bag = { label: string, items: [Ev] }` returns `status: error`, `unknown sort 'Bag'`,
+  `verify.errors = 1`, while the same-file control `flatLabelled(f: Flat)` over a record with no ADT
+  field is `verified`.
+
+So: the mapping can be the repo's **fifth Z3-proven identity** rather than a tests-only one, and no
+`Proposal`-taking contract may ever land (`verify_ail.sh` fails on `verify.errors > 0`). Note the
+generalisable half, which is worth more than the instance: **a repo's own recorded limitation is a
+claim, and it is usually recorded at the granularity that was sufficient for the case that produced
+it** — V23 was written about `Proposal`, was true about `Proposal`, and had been silently generalised
+to "ADTs" by everyone who read it since, including the ratified human-surface document.
+
+**Designer.** `codex:gpt-5.6-sol` via the shared executor recipe (per-iteration directive file with
+the `exit 64` delivery asserts, `< /dev/null`, backgrounded under a bounded 30-min `date +%s` cap,
+`--sandbox workspace-write`, `-C` an ephemeral detached worktree at
+`/Users/voightkampff/dev/sunholo-data/.wt-iter79-design` — a **sibling of the repo, never `/tmp`**).
+The directive carried all of the above as labelled VERIFIED-BY-ME rows plus the gates a
+cross-provider designer cannot read from this repo's skills: a Verification Log row per codebase
+claim, a same-scope known-positive control for every absence, a negative control for every "it
+works", the mandatory Conflict Surface, and S1/S3/S6 quoted explicitly (S3 named because a previous
+World doc was rejected for answering it "not applicable"). It wrote 563 lines and touched no tracked
+file.
+
+**QUORUM R1 — BLOCKED, BOTH REVIEWERS REJECTING, BOTH PRESENT, `$0.090408`.**
+`gemini-3-1-pro` caught that §3.3 and AC4 attribute the eight test identities to `gradeOf` while the
+`tests` block hangs off the private `gradeCode`, so the runner emits `gradeCode_test_N` and no
+implementer could satisfy the criterion as written. I had already measured the premise independently
+— a private `gradeCode` beside an exported contracted `gradeOf` emits `gradeCode_test_1`,
+`gradeCode_test_2`, `passed=2 failed=0`, rc=0 — so it was confirmed, not forwarded. Two facts fell
+out of that probe which the doc had not established and which its whole Leg-2 layer depends on: **a
+PRIVATE function's inline tests ARE collected**, and the exported contract **still verifies with a
+private caller present**.
+
+`gpt5-6-sol` objected that the round-1 design made `PROVEN` **forgeable**: any
+`ProofReport(arbitraryHash)` or `ReplayReport(arbitraryHash)` grades `PROVEN` while report existence,
+integrity, success and producer wiring were all explicitly out of scope — grade laundering, which
+HUMAN-SURFACE names the cardinal sin — and that "producers must construct these only after success"
+is unenforced prose with no verified construction boundary anywhere.
+
+**I MEASURED THAT OBJECTION'S PREMISES RATHER THAN FORWARDING THEM (rule 3f), AND THE MEASUREMENT
+REFUTED ITS ASSUMED REMEDY WHILE CONFIRMING ITS CATCH.** The reviewer asked to "wire both real
+producers through the boundary". There are no producers to wire:
+
+- **0** non-test Go hits for `Evidence` under `host/` + `cmd/`; control, the same pattern restricted
+  to `_test.go`, returns **13** (the `Kind: "RecordedEffect"` JSON in `host/broker/episode_test.go`);
+- **0** Z3 report producers — every non-test `Z3` hit is a *comment* about a Go predicate mirroring
+  an already-proven AILANG one (`host/daemon/daemon.go:160`, `handlers.go:192`); control, non-test
+  `hashref` hits, returns **424**;
+- **no `.ail` module reads `Evidence` at all.** `verify()` at `world/transitions.ail:45` calls only
+  `proposalMatchesWorld`; every construction site passes the **empty** list
+  (`world/transitions.ail:37`, `:91`, and all the `world/contracts.ail` test literals); control
+  `.stateRoot` returns **6** hits. `Evidence` is currently write-only and never even written
+  non-empty;
+- `host/replay` is real (`DivergenceError` at `:111`, `archive.KindHashMismatch` at `:285`) but has
+  no Evidence output path.
+
+So the demand amounted to asking a 0.5–1d type-level ratification item to build the repository's
+**first** `Evidence` producer plus a validating decode boundary. The revision directive said so, and
+also said two things the designer needed in order not to answer badly: that the reviewer's *catch* is
+correct and must not be argued with, and that **answering by symmetry was a REJECTED answer** —
+constructor-directed grading is already ratified for `TestReport`/`RecordedEffect`/`AiReview`, so the
+property is inherited rather than introduced, but forging `AiReview → CLAIMED` gains an adversary
+nothing while forging `ProofReport → PROVEN` gains everything, and the doc had to answer that
+asymmetry in its own terms.
+
+**The revision chose gpt5's own stated fallback — Resolution B, representation-only** — and carried
+it through rather than bolting it on: both carriers withdrawn on the record, the five ratified
+constructors given a total provable mapping, `PROVEN` left deliberately unreachable and said so at
+the top of the doc, **mint authority declared as an open obligation in §2.4 and in the type's own
+comments** (a residual recorded only in a design doc is invisible to the next implementer), a
+renderer MUST NOT display `PROVEN` for kernel evidence until the follow-on lands, and a scoped
+follow-on `w-validated-proven-evidence-boundary` proposed in `## Related` carrying gpt5's six named
+failure modes — arbitrary, missing, malformed, mismatched, failed, divergent — **verbatim**, so
+nothing was lost in the descope.
+
+**I RAN THE DOC'S LITERAL §3.2 CODE ON THE REAL TREE RATHER THAN TRUSTING IT (rule 3i).** A design
+doc's code block is exactly the "kills which mutation" column one level up: an implementer will copy
+it, and nobody checks it before the sprint. Method: an **isolated copy** of `world/*.ail` — never the
+live checkout, which is iteration 76's collision lesson — with the real
+`import world/logepoch (HashRef)`, and **a baseline control taken first**: `passed=14 failed=0`,
+reproducing the live gate's own `EXACT_TOTAL_TESTS=14`, which is what establishes the instrument as
+faithful before any result from it counts. Then, with §3.2 applied verbatim:
+
+- **Leg 1 equivalent** — `ai-check -timeout 5s world/types.ail` → `gradeOf` **`verified`**,
+  `verify.verified=1`, `errors=0`. So `EXACT_TOTAL_VERIFIED` 4→5 is measured.
+- **Leg 2 equivalent** — `test --format json world/` → `passed=20 failed=0`, identities exactly
+  `gradeCode_test_1` … `gradeCode_test_6`. So 14→20 is measured, and gemini's objection is closed by
+  observation rather than by agreement.
+- **Mutation M1** — add a sixth `Evidence` variant with no `gradeOf` arm. **LANDED** (sha
+  `6ad0c8e74ff1b4d4` → `d894b46c708c64e1`), and reds with `verify.errors=1`, `gradeOf status=error`,
+  reason `non-exhaustive pattern match` — **while `check.passed` stayed `true` and `rc` stayed `0`**.
+  Two consequences, both load-bearing: the typechecker ACCEPTS a non-exhaustive ADT match (probed
+  separately and directly: a three-constructor match with two arms and no contract gives
+  `check.passed=True`, `errors=0`), so **the contract is the only totality guard there is**; and no
+  acceptance criterion may read `ai-check`'s exit code, because a totality violation and a clean run
+  share it. Restored byte-identical.
+
+**QUORUM R2 — `gemini-3-1-pro` PASS, `gpt5-6-sol` REJECT, both PRESENT, `$0.087085`. THE TWO
+INDEPENDENTLY NAMED THE SAME ELEMENT, WHICH IS WHAT MADE THE CARVE-OUT SAFE RATHER THAN CONVENIENT.**
+gpt5: adding `UNSUPPORTED` to the exported kernel `EvidenceGrade` violates minimal-frozen-core when
+`gradeOf` provably never returns it and no consumer exists — prospective API design that conflates
+grading with evidence-acquisition failure. gemini, in its PASSING review, named its closest concern
+as the same dead `UNSUPPORTED => 0` adapter arm with the same remedy ("simply remove it"). Both
+carve-out limbs were met: a concrete reviewer-authored `proposed_fix` (gpt5's spelled out the exact
+four-constructor type, the arm to delete, and replacement prose including a
+`GradeReadResult = Graded(EvidenceGrade) | Unsupported(UnsupportedReason)` illustration for the
+follow-on), and **no dispute of the design DIRECTION** — the total mapping, the Z3-proven contract,
+the placement in `world/types.ail`, the five arms and their grades, `PROVEN`'s deferral, the private
+adapter and every gate-pin move were all accepted; the cut is of a non-core sentinel constructor. So
+the **narrow-refinement carve-out was APPLIED** with gpt5's text verbatim.
+
+**And it was MEASURED before it was applied, not after** (iteration 76's lesson). With the carve-out
+landed in the isolated tree (sha `6ad0c8e74ff1b4d4` → `2cf5b004f7f0573f`): `gradeOf` still
+**`verified`** with `errors=0`, Leg 2 still `passed=20 failed=0` with the same six identities, and
+**M1 still reds** (`verify.errors=1`). So the totality mechanism survives the cut, and the fix costs
+nothing. I then swept the stale phrasing it left behind across §4, the acceptance criteria and §8.5 —
+including an **AC1 that still read "five result constructors" while the doc's own §3.2 now said
+four**, which is rule 3b(vi) in miniature: a document's criteria and its evidence age at different
+rates, and the criterion is what goes stale. I also cross-checked §3.2's `EvidenceGrade` declaration
+and `gradeCode` match **against the file I had actually run** — both MATCH — so the artifact an
+implementer copies is the artifact under test.
+
+**AN INSTRUMENT OF MINE PRINTED A PLAUSIBLE GREEN FOR AN EDIT THAT NEVER LANDED, AND WAS DISCARDED
+RATHER THAN BANKED.** My first carve-out probe asserted `'UNSUPPORTED' not in src` before writing.
+The token survives in a **comment**, so the assert fired, the file was never written — and the
+Leg-1/Leg-2 commands that followed printed `gradeOf verified` and `passed=20 failed=0`, which is
+indistinguishable from a real post-fix result *because it was a real result*: the pre-fix file
+measured twice. Only a sha-based landed-proof turns that arm into evidence. The compact statement:
+**a mutation that never ran and a mutation that did not red share an exit code — and so does a FIX
+that never applied.** The identical shape then fired a second time in this iteration's own Gate-4
+STATUS rotation: my archive-prepend assertion `hdr>0` was wrong (the archive has no header — its
+first line IS a stamp), it aborted **before any write**, and because the writes sit after the asserts
+the charter was left untouched at 2926 lines. That is the rotation rule working as designed: a
+fail-safe abort instead of a half-applied mass edit.
+
+**Gate 4.** Base re-confirmed `dev == origin/dev == 2ef2271` before the first write; freshness tell
+read iter-78 present (`grep -ci` = 1) with control iter-77 = 4. STATUS rotation asserted before
+writing — `after == before + 2 - 2*1` held exactly (2927→2927 on `split('\n')`, 2926 `wc -l` both
+sides), stamp count 3, iteration 76 moved to the top of the archive (89→90 stamps), and the queue-row
+control re-checked after the edit (item 13 and item 16 rows both still present).
+
+**Routing evidence.** controller `opus` (session) · designer **`codex:gpt-5.6-sol`** (rotation entry,
+probe rc=0, two runs: initial + one revision) · planner / executor / evaluator **not run** — the item
+never reached a sprint, by design. `metered=$0.177493` (quorum R1 `$0.090408` + R2 `$0.087085`;
+caps raised pre-emptively to `$0.35` then `$0.40` to defeat the budget-degrade trap, and both rounds
+came in well under). Both quorum rounds had **2 external reviewers present**, `absent_reviewers`
+empty, so no N−1 degrade and my `--controller-verdict` was load-bearing for neither synthesis.
+Carve-out applied once, on round 2, with the reviewer's verbatim fix.
+
+**Ruled out.** Reading V23 as "ADTs are unencodable" (refuted by measurement, and it is the
+iteration's whole finding); HUMAN-SURFACE §7.2's option A (add grades to the ratified vocabulary —
+changes a cross-surface vocabulary to fit accidental kernel shape and still leaves proof/replay
+uncarried); option B as literally recommended (reshape variants, mapping left implicit — no
+exhaustiveness protection, since v0.30.0 accepts a non-exhaustive match); option C (lowest-grade
+`CLAIMED` default — mislabels human ratification as an unverified agent claim and leaves `PROVEN`
+unreachable anyway); tests-only (leaves measured proof strength unused); keeping the `PROVEN`
+carriers behind unenforced "producers must" prose; answering gpt5 by symmetry with the weaker
+ratified constructors; expanding scope to build the validation boundary and producer wiring inside
+this item; an aggregate `Proposal`-grade function (the record-containing-`list[ADT]` limitation
+forbids its contract, and it needs empty-evidence and unobtainable-value rules that belong to the
+decision packet); a new `world/grades.ail` module (a twelfth `LEG1_MODULES` identity, a fifth package
+export, the frozen manifest, the tar allowlist and the golden, for no benefit over co-locating the
+eliminator with its ADT); running the sprint in this slot (a planner + executor + judge + CI chain
+does not fit the remaining time, and attempting it is how an iteration dies mid-flight holding
+unlanded work); and banking my un-landed carve-out probe.
+
+**Next.** The item-13 **sprint**: `sprint-planner` on `design_docs/planned/w-evidence-grade-mapping.md`,
+then execute (~0.65d, and the doc names its own pin moves, its projection/golden regeneration step
+and its twelve mutations). Unless Mark's one-word A/B arrives first, in which case item 16 unparks
+and takes precedence. Item 5 `P6.B` remains UNBLOCKED. **Zero new open asks** — the item-16 A/B from
+iteration 78 is still outstanding and unchanged.
