@@ -32,9 +32,9 @@ Every prior interface renders one of two things: **mutable opaque state** (class
 screen shows a value; where it came from and whether it's true are unknowable) or **token
 streams** (chat UIs — prose whose relationship to reality is vibes). The established premise
 today is narrower: the store has an immutable append-only log and bit-for-bit replay, verified
-by `scripts/verify_go.sh` in CI (§8). Universal provenance and a total evidence-grade mapping
-are **not established**: `Store.Commit` permits unreadable references, and the five-variant
-`Evidence` ADT has no total mapping to the four proposed grades.
+by `scripts/verify_go.sh` in CI (§8). Universal provenance is **not established**:
+`Store.Commit` permits unreadable references. The five-variant `Evidence` ADT now has a total
+mapping to the four ratified grades; `PROVEN` still has no carrier.
 
 The intended surface is the first that may eventually assume **everything behind the glass is
 a typed, verified, replayable ledger**. That is a backend requirement, not a present fact.
@@ -273,18 +273,13 @@ These are fixtures, not pixel specs: the reference renderer must preserve their 
    fixed as part of this ratification (candidate members named by the reviewers: cancel · remain
    safely unexecuted with bounded escalation · execute only if authority was already independently
    granted).
-2. **Total evidence-grade mapping.** The kernel has
+2. **Total evidence-grade mapping — CLOSED.** The kernel has
    `CompilerOutput(HashRef)`, `TestReport(HashRef, bool)`, `HumanApproval(HashRef)`,
    `AiReview(HashRef, float)`, and `RecordedEffect(HashRef)`. The proposed gradient has
-   `PROVEN > TESTED > ATTESTED > CLAIMED`. Under this document's definitions,
-   `TestReport → TESTED`, `RecordedEffect → ATTESTED`, and `AiReview → CLAIMED`;
-   `CompilerOutput` and `HumanApproval` have no grade, while the stated `PROVEN` producers
-   (Z3 proof and replay) have no `Evidence` carrier. Ratification MUST produce a **total**
-   mapping. Neutral options: add grades; add/reshape `Evidence` variants; or define a
-   documented total function with an explicit lowest-grade default. **Recommendation:
-   add/reshape evidence variants**, because a carrier should distinguish a compiler result
-   from a verified proof and preserve human ratification without mislabelling it as an
-   unverified agent claim. This recommendation is not the decision.
+   `PROVEN > TESTED > ATTESTED > CLAIMED`. The landed total `gradeOf(Evidence)` maps
+   `TestReport → TESTED`, `CompilerOutput`/`HumanApproval`/`RecordedEffect → ATTESTED`, and
+   `AiReview → CLAIMED`. The stated `PROVEN` producers (Z3 proof and replay) still have no
+   `Evidence` carrier.
 3. Decision-packet schema freeze timing (it becomes a world type — kernel-adjacent).
 4. Open questions 7 (Hub vs fresh: recommend FRESH, Hub as pattern donor) and 9 (dialect —
    defer to M6 with a common-core emitter).
