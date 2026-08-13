@@ -76,6 +76,12 @@ type handlerCommand struct {
 	env  []string
 }
 
+// killGroup is the cancellation kill boundary, a package-level seam so the
+// timeout tests can observe the kill's time, target and errno directly.
+var killGroup = func(pgid int) error {
+	return syscall.Kill(-pgid, syscall.SIGKILL)
+}
+
 // runBounded is the one timeout and allocation surface used by every subprocess
 // handler. It reads at most limit+1 bytes so overflow is detected, never hidden
 // by truncation.
@@ -97,7 +103,7 @@ func runBounded(ctx context.Context, bounds handlerBounds, spec handlerCommand) 
 		if cmd.Process == nil {
 			return nil
 		}
-		return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+		return killGroup(cmd.Process.Pid)
 	}
 	cmd.Dir = spec.dir
 	cmd.Env = spec.env
