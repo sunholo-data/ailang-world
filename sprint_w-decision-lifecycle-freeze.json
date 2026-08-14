@@ -2,7 +2,7 @@
   "sprint_id": "w-decision-lifecycle-freeze",
   "queue_item": 15,
   "title": "The ratified three-constructor TimeoutPolicy set, the frozen v1 DecisionPacket world type, and five Z3-proven lifecycle laws",
-  "status": "planned",
+  "status": "complete",
   "created": "2026-08-14",
   "planner": "mission-control iteration 85, opus sprint-planner",
   "design_doc": "design_docs/planned/w-decision-lifecycle-freeze.md",
@@ -10,7 +10,11 @@
   "base_commit": "b9a7838938600669340b945674df2db41901a48a",
   "branch": "sprint/w-decision-lifecycle-freeze",
   "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-iter85",
-  "github_issues": [],
+  "github_issues": [
+    "https://github.com/sunholo-data/ailang/issues/712",
+    "https://github.com/sunholo-data/ailang/issues/713",
+    "https://github.com/sunholo-data/ailang/issues/715"
+  ],
   "environment": {
     "AILANG_BIN": "/tmp/ailang-v0300/ailang",
     "ailang_version": "AILANG v0.30.0 (e37b370)",
@@ -52,21 +56,37 @@
     "passed_tests_observed_after": 43,
     "passed_tests_warning": "The gate reads len(tests[]) at verify_ail.sh:367, NEVER passed_tests. passed_tests also counts contract-derived properties and is 43, not 39. Step 5/9 of the package gate prints its own activity count (42 after the change) and has NO count pin. Do not pin 43 or 42.",
     "new_named_identities": [
-      "outcomeCode_test_1", "outcomeCode_test_2", "outcomeCode_test_3",
-      "outcomeCode_test_4", "outcomeCode_test_5", "outcomeCode_test_6",
-      "deferCode_test_1", "deferCode_test_2", "deferCode_test_3",
-      "scheduleCode_test_1", "scheduleCode_test_2", "scheduleCode_test_3",
-      "firedCode_test_1", "firedCode_test_2", "firedCode_test_3",
-      "escalationCode_test_1", "escalationCode_test_2", "escalationCode_test_3",
+      "outcomeCode_test_1",
+      "outcomeCode_test_2",
+      "outcomeCode_test_3",
+      "outcomeCode_test_4",
+      "outcomeCode_test_5",
+      "outcomeCode_test_6",
+      "deferCode_test_1",
+      "deferCode_test_2",
+      "deferCode_test_3",
+      "scheduleCode_test_1",
+      "scheduleCode_test_2",
+      "scheduleCode_test_3",
+      "firedCode_test_1",
+      "firedCode_test_2",
+      "firedCode_test_3",
+      "escalationCode_test_1",
+      "escalationCode_test_2",
+      "escalationCode_test_3",
       "escalationCode_test_4"
     ],
     "new_proven_identities": [
-      "timeoutOutcome", "timeoutFiredLegally", "validEscalation", "validDefer", "wellFormedSchedule"
+      "timeoutOutcome",
+      "timeoutFiredLegally",
+      "validEscalation",
+      "validDefer",
+      "wellFormedSchedule"
     ],
     "golden_before": "{\"compilerVersion\":\"AILANG v0.30.0\",\"contentHash\":\"sha256:489d5e5d47d5c3443ca698f69c6250db57831f463cad8abbec8510ae55ecf632\",\"effects\":[],\"exports\":[\"world/types\",\"world/contracts\",\"world/transitions\",\"world/logepoch\"],\"interfaceHash\":\"sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083\",\"package\":\"world/core\",\"tarballBytes\":6236,\"tarballSHA256\":\"sha256:d0cdf42be80eee2de043645a6bcdb491cb439e3ba659b08b3ff67ee797e99001\",\"version\":\"0.1.0\"}",
     "golden_after": "{\"compilerVersion\":\"AILANG v0.30.0\",\"contentHash\":\"sha256:06acbb83ce8824166a2852912776edfe749ba741052f3daa8dd16c99abfb526e\",\"effects\":[],\"exports\":[\"world/types\",\"world/contracts\",\"world/transitions\",\"world/logepoch\"],\"interfaceHash\":\"sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083\",\"package\":\"world/core\",\"tarballBytes\":7856,\"tarballSHA256\":\"sha256:5823edcfbb3fa640080f405771578d84c71de72184b7cfda9033a50f76de608d\",\"version\":\"0.1.0\"}",
-    "gate_line_after": "✓ verify gate PASSED: 10 required identities verified, 39 named tests pass",
-    "gate_marker_after": "✓ 10/10 required world/ identities verified across 11 module(s)"
+    "gate_line_after": "\u2713 verify gate PASSED: 10 required identities verified, 39 named tests pass",
+    "gate_marker_after": "\u2713 10/10 required world/ identities verified across 11 module(s)"
   },
   "doc_defects_found": [
     {
@@ -74,14 +94,14 @@
       "severity": "plan-killing",
       "summary": "AC9 is unsatisfiable as written: interfaceHash CANNOT move.",
       "detail": "Design doc 4.3 says 'content/interface/tarball hashes all move' and AC9 fails on 'unchanged hashes'. host/pkgproj/pkgproj.go:86 InterfaceHash hashes only the manifest (package name, edition, ailang constraint, sorted export MODULE names, sorted effects) and never opens a source file. This item adds no export module, so interfaceHash is invariant by construction. MEASURED: contentHash, tarballSHA256 and tarballBytes move; interfaceHash does not.",
-      "resolution": "AC9 AMENDED in sprint plan section 2: require exactly three moved fields and assert interfaceHash byte-IDENTICAL as the positive evidence that no package export module was added. The 'unchanged hashes ⇒ fail' clause is struck; 'hand-authored JSON ⇒ fail' stands.",
+      "resolution": "AC9 AMENDED in sprint plan section 2: require exactly three moved fields and assert interfaceHash byte-IDENTICAL as the positive evidence that no package export module was added. The 'unchanged hashes \u21d2 fail' clause is struck; 'hand-authored JSON \u21d2 fail' stands.",
       "process_finding": "This is a REPEATED defect. Item 13 hit it; its SPRINT PLAN diagnosed and amended it (w-evidence-grade-mapping-sprint-plan.md section 0.2 i), but the correction was never written back into the design doc: w-evidence-grade-mapping.md:291 still claims interfaceHash moves and :387 still carries the unsatisfiable AC. Item 15 cites that doc as its precedent and inherited the defect verbatim."
     },
     {
       "id": "D2",
       "severity": "unguarded-lie-in-waiting",
       "summary": "A SIXTH gate pin the Conflict Surface omits: scripts/verify_ail.sh:378.",
-      "detail": "Line 378 is a hardcoded literal, 'echo \"✓ verify gate PASSED: 5 required identities verified, 20 named tests pass\"'. Lines 315 and 372 interpolate their totals; 378 does not. Doc section 8.1 claims to list all five pins and 378 is outside every entry. Left stale the gate still exits 0 and its own terminal summary lies. The only Go assertion on it is ail_binary_gate_test.go:118 passedMarker = 'verify gate PASSED', a SUBSTRING used via strings.Contains, which a stale '5 ... 20' satisfies. This is the second consecutive item to trip it (item 13 raised it as :376).",
+      "detail": "Line 378 is a hardcoded literal, 'echo \"\u2713 verify gate PASSED: 5 required identities verified, 20 named tests pass\"'. Lines 315 and 372 interpolate their totals; 378 does not. Doc section 8.1 claims to list all five pins and 378 is outside every entry. Left stale the gate still exits 0 and its own terminal summary lies. The only Go assertion on it is ail_binary_gate_test.go:118 passedMarker = 'verify gate PASSED', a SUBSTRING used via strings.Contains, which a stale '5 ... 20' satisfies. This is the second consecutive item to trip it (item 13 raised it as :376).",
       "resolution": "Added as edit 6 of milestone M1.2 and as new AC13 (grep with a same-instrument control). No mutation arm is invented for it: it is honestly declared unguarded."
     },
     {
@@ -103,12 +123,12 @@
     {
       "ac": 9,
       "type": "amended",
-      "text": "interfaceHash MUST be byte-IDENTICAL, not different. Require exactly three moved packet fields (contentHash, tarballSHA256, tarballBytes) and assert interfaceHash unchanged as positive evidence that no package export module was added. Four modules and six tar entries unchanged, both re-asserted. The 'unchanged hashes ⇒ fail' clause is struck."
+      "text": "interfaceHash MUST be byte-IDENTICAL, not different. Require exactly three moved packet fields (contentHash, tarballSHA256, tarballBytes) and assert interfaceHash unchanged as positive evidence that no package export module was added. Four modules and six tar entries unchanged, both re-asserted. The 'unchanged hashes \u21d2 fail' clause is struck."
     },
     {
       "ac": 13,
       "type": "new",
-      "text": "scripts/verify_ail.sh's terminal banner reads '✓ verify gate PASSED: 10 required identities verified, 39 named tests pass'. This pin is NOT gate-enforced; it is asserted by grep with a same-instrument control. No mutation arm is invented for it."
+      "text": "scripts/verify_ail.sh's terminal banner reads '\u2713 verify gate PASSED: 10 required identities verified, 39 named tests pass'. This pin is NOT gate-enforced; it is asserted by grep with a same-instrument control. No mutation arm is invented for it."
     }
   ],
   "features": [
@@ -124,17 +144,34 @@
         "host/verifygate/module_manifest_gate_test.go",
         "scripts/world_package_ready_packet.golden.json"
       ],
-      "closes_acceptance_criteria": [2, 3, 4, 8, 9, 13],
-      "advances_acceptance_criteria": [1, 10, 11],
+      "closes_acceptance_criteria": [
+        2,
+        3,
+        4,
+        8,
+        9,
+        13
+      ],
+      "advances_acceptance_criteria": [
+        1,
+        10,
+        11
+      ],
       "estimated_loc": 320,
       "estimated_days": 0.3,
-      "estimated_days_breakdown": {"types_ail_addition": 0.1, "six_pin_edits": 0.05, "projection_and_golden": 0.08, "AC9_amendment_reconciliation": 0.05, "pin_6": 0.02},
+      "estimated_days_breakdown": {
+        "types_ail_addition": 0.1,
+        "six_pin_edits": 0.05,
+        "projection_and_golden": 0.08,
+        "AC9_amendment_reconciliation": 0.05,
+        "pin_6": 0.02
+      },
       "dependencies": [],
       "acceptance_criteria": [
         "AC2 - DecisionPacket is exactly the seven fields of design doc 4.2; no list of any ADT enters the record; world/types.ail lines 1-132 are byte-untouched (head -132 | cmp against the pre-edit file).",
         "AC3 - REQUIRED_VERIFIED['world/types.ail'] gains exactly timeoutOutcome, timeoutFiredLegally, validEscalation, validDefer, wellFormedSchedule; each reports status=verified with verify.errors=0 and counterexample=0 in the ai-check JSON (NEVER rc); EXACT_TOTAL_VERIFIED moves 5 -> 10.",
         "AC4 - the 19 identities are added to REQUIRED_TESTS; EXACT_TOTAL_TESTS moves 20 -> 39, SUBJECT TO OBSERVED RUNNER JSON. The oracle is len(tests[]), never passed_tests (observed 43). The executor must READ the observed number and reconcile; a mismatch with the pre-registered 39 is a finding to REPORT, not a number to force.",
-        "AC8 - host/verifygate/module_manifest_gate_test.go:128 reads '✓ 10/10 required world/ identities verified across 11 module(s)'; '11 module(s)' stays 11; go test ./host/verifygate/ is green.",
+        "AC8 - host/verifygate/module_manifest_gate_test.go:128 reads '\u2713 10/10 required world/ identities verified across 11 module(s)'; '11 module(s)' stays 11; go test ./host/verifygate/ is green.",
         "AC9 (AMENDED) - build_world_package.sh run; canonical and projected types.ail byte-equal (cmp rc=0, with a known-negative control); golden regenerated through host/pkgproj behind a reproduce-the-committed-golden control run FIRST; exactly contentHash, tarballSHA256 and tarballBytes move; interfaceHash byte-IDENTICAL; 4 exports and 6 tar entries unchanged; no hand-authored JSON.",
         "AC13 - verify_ail.sh's terminal banner reads the 10/39 text; grep -c of the 5/20 text is 0; grep -c 'verify gate PASSED' control is 1.",
         "LANDED-PROOF: shasum -a 256 world/types.ail reads 2cf5b004f7f0573f... before and f8e08f68734724e4... after. Any other post sha is a STOP - the golden was computed from f8e08f68...",
@@ -159,11 +196,23 @@
       "name": "The mutation drill - 16 arms (NO COMMIT; tree restored byte-identical)",
       "description": "Land, read, restore and sha-verify MU1-MU16. This is the sprint's spine: the five laws are Z3-proven but Z3 is BLIND to a consistent lie, so the named runtime identities are the only thing that kills 'silence synthesizes execution' (MU2) and 'an early timeout is legal' (MU14). The milestone's deliverable is EVIDENCE, not a diff: at exit every touched file is byte-identical to COMMIT 1.",
       "commits": 0,
-      "closes_acceptance_criteria": [1, 5, 6, 7],
-      "reproves_non_vacuously": [3, 4, 8, 9],
+      "closes_acceptance_criteria": [
+        1,
+        5,
+        6,
+        7
+      ],
+      "reproves_non_vacuously": [
+        3,
+        4,
+        8,
+        9
+      ],
       "estimated_loc": 0,
       "estimated_days": 0.42,
-      "dependencies": ["M1_ATOMIC_LANDING"],
+      "dependencies": [
+        "M1_ATOMIC_LANDING"
+      ],
       "mutation_protocol": [
         "1. Backup exists in /tmp/w15_backup/ (cp, made in M1.0). Record the pre sha256.",
         "2. Apply with a replacement that ASSERTS its exact occurrence count (1 for body-only, 2 for 'both'). A sed that silently matched nothing is the failure this step exists to catch.",
@@ -174,23 +223,202 @@
         "7. Re-run the positive control and require GREEN before the next arm."
       ],
       "mutations": [
-        {"id": "MU1", "target": "world/types.ail", "edit": "Cancel arm -> EscalateWithNewDeadline, BODY ONLY", "occurrences": 1, "ac": [7], "expect": "verify.counterexample >= 1, timeoutOutcome status=counterexample", "control": "restore -> verified, cex=0"},
-        {"id": "MU2", "target": "world/types.ail", "edit": "ExecuteIfGranted no-auth arm -> ExecuteUnderPriorAuthority, BOTH contract and body (silence synthesizes execution)", "occurrences": 2, "ac": [5, 7], "expect": "Z3 STAYS GREEN (verified=6, cex=0, errors=0) AND outcomeCode_test_5 is the SOLE failure", "control": "restore -> 39/39", "planner_measured": true},
-        {"id": "MU3", "target": "world/types.ail", "edit": "EscalateBounded exhaustion arm -> EscalateWithNewDeadline, BOTH (unbounded park)", "occurrences": 2, "ac": [7], "expect": "outcomeCode_test_3 fails, alone", "control": "outcomeCode_test_2 stays pass"},
-        {"id": "MU4", "target": "world/types.ail", "edit": "EscalateBounded live arm -> ResolveRejectedTimeout, BOTH", "occurrences": 2, "ac": [7], "expect": "outcomeCode_test_2 fails, alone", "control": "outcomeCode_test_3 stays pass"},
-        {"id": "MU5", "target": "world/types.ail", "edit": "delete the EscalateBounded arm from the timeoutOutcome BODY, contract kept", "occurrences": 1, "ac": [6], "expect": "verify.errors == 1, timeoutOutcome status=error, check.passed STILL true, ai-check rc STILL 0 (rc is NOT the oracle)", "control": "restore -> verified, errors=0", "planner_measured": true},
-        {"id": "MU6", "target": "world/types.ail", "edit": "add a 4th TimeoutPolicy constructor with NO arm", "occurrences": 1, "ac": [1, 6], "expect": "verify.errors == 1 - the contract is the ONLY totality guard (v0.30.0 accepts non-exhaustive ADT matches at check time with rc 0)", "control": "add an explicit arm -> verified"},
-        {"id": "MU7", "target": "world/types.ail", "edit": "validDefer: drop 'newDeadline > now', BOTH", "occurrences": 2, "ac": [7], "expect": "deferCode_test_2 fails, alone", "control": "deferCode_test_3 stays pass"},
-        {"id": "MU8", "target": "world/types.ail", "edit": "validDefer: drop 'escalationsRemaining > 0', BOTH", "occurrences": 2, "ac": [7], "expect": "deferCode_test_3 fails, alone", "control": "deferCode_test_2 stays pass"},
-        {"id": "MU9", "target": "world/types.ail", "edit": "wellFormedSchedule: 'deadlineAt > createdAt' -> '>=', BOTH", "occurrences": 2, "ac": [7], "expect": "scheduleCode_test_2 fails, alone", "control": "scheduleCode_test_1/3 stay pass"},
-        {"id": "MU10", "target": "scripts/verify_ail.sh", "edit": "remove \"timeoutOutcome\" from REQUIRED_VERIFIED['world/types.ail']", "occurrences": 1, "ac": [3, 4], "expect": "the named identity leaves the Leg-1 manifest while EXACT_TOTAL_VERIFIED=10 still passes - the count pin does NOT imply the name pin", "control": "restore literal -> gate green"},
-        {"id": "MU11", "target": "world/types.ail", "edit": "edit canonical types.ail and SKIP build_world_package.sh", "occurrences": 1, "ac": [9], "expect": "Leg 3 step 3/9 sha256 projection mismatch", "control": "rebuild projection -> step 3/9 green"},
-        {"id": "MU12", "target": "scripts/world_package_ready_packet.golden.json", "edit": "rebuild the projection, keep the OLD golden", "occurrences": 1, "ac": [9], "expect": "Leg 3 step 9/9 'ready packet differs byte-for-byte from golden' with a diff -u naming contentHash/tarballSHA256/tarballBytes - and NOT interfaceHash", "control": "recompute via pkgproj -> step 9/9 green"},
-        {"id": "MU13", "target": "host/verifygate/module_manifest_gate_test.go", "edit": "revert the marker to 5/5", "occurrences": 1, "ac": [8], "expect": "go test ./host/verifygate/ -run TestModuleManifest FAILS: 'pristine isolated control missing \"✓ 5/5 required world/ identities verified across 11 module(s)\"'", "control": "restore -> ok", "planner_measured": true},
-        {"id": "MU14", "target": "world/types.ail", "edit": "timeoutFiredLegally: 'recordedNow >= deadlineAt' -> '>= deadlineAt - 1', BOTH (early timeout)", "occurrences": 2, "ac": [5, 7], "expect": "Z3 STAYS GREEN (verified=6, cex=0, errors=0); firedCode_test_1 is the SOLE failure", "control": "restore -> 39/39", "planner_measured": true},
-        {"id": "MU15", "target": "world/types.ail", "edit": "validEscalation: exact decrement '== old - 1' -> '<= old - 1', BOTH (non-decrementing escalation)", "occurrences": 2, "ac": [5, 7], "expect": "Z3 STAYS GREEN; escalationCode_test_3 is the SOLE failure", "control": "escalationCode_test_1/2/4 stay pass", "caveat": "x <= y-1 is equivalent to x < y over ints, so this admits over-decrement while still refusing a non-decrement. If it does not kill escalationCode_test_3 (inputs 3,3,10,20), relax to 'newEscalationsRemaining <= oldEscalationsRemaining' instead and RECORD WHICH FORM LANDED. An arm that cannot fire is decoration - say so rather than reporting a kill."},
-        {"id": "MU16", "target": "world/types.ail", "edit": "validEscalation: 'newDeadlineAt > recordedNow' -> '>=', BOTH", "occurrences": 2, "ac": [5, 7], "expect": "Z3 STAYS GREEN; escalationCode_test_4 is the SOLE failure", "control": "escalationCode_test_1/2/3 stay pass"},
-        {"id": "EXTRA_NONVACUITY", "target": "world/types.ail", "edit": "BODY-ONLY: 'recordedNow >= deadlineAt' -> '>' (contract kept honest)", "occurrences": 1, "ac": [], "expect": "verify.counterexample == 1, timeoutFiredLegally status=counterexample - proves the new contracts are not tautological", "control": "restore -> verified"}
+        {
+          "id": "MU1",
+          "target": "world/types.ail",
+          "edit": "Cancel arm -> EscalateWithNewDeadline, BODY ONLY",
+          "occurrences": 1,
+          "ac": [
+            7
+          ],
+          "expect": "verify.counterexample >= 1, timeoutOutcome status=counterexample",
+          "control": "restore -> verified, cex=0"
+        },
+        {
+          "id": "MU2",
+          "target": "world/types.ail",
+          "edit": "ExecuteIfGranted no-auth arm -> ExecuteUnderPriorAuthority, BOTH contract and body (silence synthesizes execution)",
+          "occurrences": 2,
+          "ac": [
+            5,
+            7
+          ],
+          "expect": "Z3 STAYS GREEN (verified=6, cex=0, errors=0) AND outcomeCode_test_5 is the SOLE failure",
+          "control": "restore -> 39/39",
+          "planner_measured": true
+        },
+        {
+          "id": "MU3",
+          "target": "world/types.ail",
+          "edit": "EscalateBounded exhaustion arm -> EscalateWithNewDeadline, BOTH (unbounded park)",
+          "occurrences": 2,
+          "ac": [
+            7
+          ],
+          "expect": "outcomeCode_test_3 fails, alone",
+          "control": "outcomeCode_test_2 stays pass"
+        },
+        {
+          "id": "MU4",
+          "target": "world/types.ail",
+          "edit": "EscalateBounded live arm -> ResolveRejectedTimeout, BOTH",
+          "occurrences": 2,
+          "ac": [
+            7
+          ],
+          "expect": "outcomeCode_test_2 fails, alone",
+          "control": "outcomeCode_test_3 stays pass"
+        },
+        {
+          "id": "MU5",
+          "target": "world/types.ail",
+          "edit": "delete the EscalateBounded arm from the timeoutOutcome BODY, contract kept",
+          "occurrences": 1,
+          "ac": [
+            6
+          ],
+          "expect": "verify.errors == 1, timeoutOutcome status=error, check.passed STILL true, ai-check rc STILL 0 (rc is NOT the oracle)",
+          "control": "restore -> verified, errors=0",
+          "planner_measured": true
+        },
+        {
+          "id": "MU6",
+          "target": "world/types.ail",
+          "edit": "add a 4th TimeoutPolicy constructor with NO arm",
+          "occurrences": 1,
+          "ac": [
+            1,
+            6
+          ],
+          "expect": "verify.errors == 1 - the contract is the ONLY totality guard (v0.30.0 accepts non-exhaustive ADT matches at check time with rc 0)",
+          "control": "add an explicit arm -> verified"
+        },
+        {
+          "id": "MU7",
+          "target": "world/types.ail",
+          "edit": "validDefer: drop 'newDeadline > now', BOTH",
+          "occurrences": 2,
+          "ac": [
+            7
+          ],
+          "expect": "deferCode_test_2 fails, alone",
+          "control": "deferCode_test_3 stays pass"
+        },
+        {
+          "id": "MU8",
+          "target": "world/types.ail",
+          "edit": "validDefer: drop 'escalationsRemaining > 0', BOTH",
+          "occurrences": 2,
+          "ac": [
+            7
+          ],
+          "expect": "deferCode_test_3 fails, alone",
+          "control": "deferCode_test_2 stays pass"
+        },
+        {
+          "id": "MU9",
+          "target": "world/types.ail",
+          "edit": "wellFormedSchedule: 'deadlineAt > createdAt' -> '>=', BOTH",
+          "occurrences": 2,
+          "ac": [
+            7
+          ],
+          "expect": "scheduleCode_test_2 fails, alone",
+          "control": "scheduleCode_test_1/3 stay pass"
+        },
+        {
+          "id": "MU10",
+          "target": "scripts/verify_ail.sh",
+          "edit": "remove \"timeoutOutcome\" from REQUIRED_VERIFIED['world/types.ail']",
+          "occurrences": 1,
+          "ac": [
+            3,
+            4
+          ],
+          "expect": "the named identity leaves the Leg-1 manifest while EXACT_TOTAL_VERIFIED=10 still passes - the count pin does NOT imply the name pin",
+          "control": "restore literal -> gate green"
+        },
+        {
+          "id": "MU11",
+          "target": "world/types.ail",
+          "edit": "edit canonical types.ail and SKIP build_world_package.sh",
+          "occurrences": 1,
+          "ac": [
+            9
+          ],
+          "expect": "Leg 3 step 3/9 sha256 projection mismatch",
+          "control": "rebuild projection -> step 3/9 green"
+        },
+        {
+          "id": "MU12",
+          "target": "scripts/world_package_ready_packet.golden.json",
+          "edit": "rebuild the projection, keep the OLD golden",
+          "occurrences": 1,
+          "ac": [
+            9
+          ],
+          "expect": "Leg 3 step 9/9 'ready packet differs byte-for-byte from golden' with a diff -u naming contentHash/tarballSHA256/tarballBytes - and NOT interfaceHash",
+          "control": "recompute via pkgproj -> step 9/9 green"
+        },
+        {
+          "id": "MU13",
+          "target": "host/verifygate/module_manifest_gate_test.go",
+          "edit": "revert the marker to 5/5",
+          "occurrences": 1,
+          "ac": [
+            8
+          ],
+          "expect": "go test ./host/verifygate/ -run TestModuleManifest FAILS: 'pristine isolated control missing \"\u2713 5/5 required world/ identities verified across 11 module(s)\"'",
+          "control": "restore -> ok",
+          "planner_measured": true
+        },
+        {
+          "id": "MU14",
+          "target": "world/types.ail",
+          "edit": "timeoutFiredLegally: 'recordedNow >= deadlineAt' -> '>= deadlineAt - 1', BOTH (early timeout)",
+          "occurrences": 2,
+          "ac": [
+            5,
+            7
+          ],
+          "expect": "Z3 STAYS GREEN (verified=6, cex=0, errors=0); firedCode_test_1 is the SOLE failure",
+          "control": "restore -> 39/39",
+          "planner_measured": true
+        },
+        {
+          "id": "MU15",
+          "target": "world/types.ail",
+          "edit": "validEscalation: exact decrement '== old - 1' -> '<= old - 1', BOTH (non-decrementing escalation)",
+          "occurrences": 2,
+          "ac": [
+            5,
+            7
+          ],
+          "expect": "Z3 STAYS GREEN; escalationCode_test_3 is the SOLE failure",
+          "control": "escalationCode_test_1/2/4 stay pass",
+          "caveat": "x <= y-1 is equivalent to x < y over ints, so this admits over-decrement while still refusing a non-decrement. If it does not kill escalationCode_test_3 (inputs 3,3,10,20), relax to 'newEscalationsRemaining <= oldEscalationsRemaining' instead and RECORD WHICH FORM LANDED. An arm that cannot fire is decoration - say so rather than reporting a kill."
+        },
+        {
+          "id": "MU16",
+          "target": "world/types.ail",
+          "edit": "validEscalation: 'newDeadlineAt > recordedNow' -> '>=', BOTH",
+          "occurrences": 2,
+          "ac": [
+            5,
+            7
+          ],
+          "expect": "Z3 STAYS GREEN; escalationCode_test_4 is the SOLE failure",
+          "control": "escalationCode_test_1/2/3 stay pass"
+        },
+        {
+          "id": "EXTRA_NONVACUITY",
+          "target": "world/types.ail",
+          "edit": "BODY-ONLY: 'recordedNow >= deadlineAt' -> '>' (contract kept honest)",
+          "occurrences": 1,
+          "ac": [],
+          "expect": "verify.counterexample == 1, timeoutFiredLegally status=counterexample - proves the new contracts are not tautological",
+          "control": "restore -> verified"
+        }
       ],
       "no_arm_exists_for": {
         "violation": "Fabricated authority",
@@ -214,12 +442,17 @@
       "name": "Full pinned gates, hold-set re-measurement, scope inspection (NO COMMIT)",
       "description": "Run both pinned gates end to end, re-measure the hold set against its base values, and prove the diff touched exactly the five header files and nothing forbidden.",
       "commits": 0,
-      "closes_acceptance_criteria": [10, 11],
+      "closes_acceptance_criteria": [
+        10,
+        11
+      ],
       "estimated_loc": 0,
-      "estimated_days": 0.10,
-      "dependencies": ["M2_MUTATION_DRILL"],
+      "estimated_days": 0.1,
+      "dependencies": [
+        "M2_MUTATION_DRILL"
+      ],
       "acceptance_criteria": [
-        "AC10 - AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh rc=0 with '✓ 10/10 required world/ identities verified across 11 module(s)', '✓ all 39 required named tests pass (failed_tests=0)', '9/9 steps performed non-zero work'.",
+        "AC10 - AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh rc=0 with '\u2713 10/10 required world/ identities verified across 11 module(s)', '\u2713 all 39 required named tests pass (failed_tests=0)', '9/9 steps performed non-zero work'.",
         "AC10 - GOTOOLCHAIN=go1.25.6 AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_go.sh green; go build ./... rc=0; go test ./... -count=1 rc=0 across 17 packages.",
         "AC11 - git diff --name-only HEAD~1..HEAD lists exactly the five files; grep for host/store|host/daemon|host/broker|schema.sql returns NO hit (with a known-positive control on world/types.ail so the instrument is proven to fire); no host emitter added; git status --porcelain EMPTY.",
         "Hold set re-measured in full: LEG1_MODULES 11 entries, 11 ai-check lines, 4 exports, 6 tar entries, interfaceHash sha256:d16cc88270ff... - every one UNMOVED. A moved must-not-move is a STOP."
@@ -238,10 +471,14 @@
       "name": "Upstream routing - three sunholo-data/ailang issues plus a mission-control note (NO COMMIT)",
       "description": "The mission's no-local-workarounds rule: the three v0.30.0 verifier limitations measured by the design doc route upstream as GitHub issues plus an ailang messages send mission-control note. No repo file changes.",
       "commits": 0,
-      "closes_acceptance_criteria": [12],
+      "closes_acceptance_criteria": [
+        12
+      ],
       "estimated_loc": 0,
       "estimated_days": 0.08,
-      "dependencies": ["M1_ATOMIC_LANDING"],
+      "dependencies": [
+        "M1_ATOMIC_LANDING"
+      ],
       "issues_to_file": [
         {
           "title": "v0.30.0: a record containing a bare ADT field is Z3-unencodable and fails silently at rc level",
@@ -274,19 +511,75 @@
     }
   ],
   "acceptance_criteria_map": {
-    "AC1": {"closed_by": "M2_MUTATION_DRILL", "advanced_by": ["M1_ATOMIC_LANDING"], "observable": "the type declaration plus MU6's totality guard"},
-    "AC2": {"closed_by": "M1_ATOMIC_LANDING", "observable": "DecisionPacket's seven fields; no list[ADT] in the record; lines 1-132 byte-untouched"},
-    "AC3": {"closed_by": "M1_ATOMIC_LANDING", "reproved_by": "MU10", "observable": "REQUIRED_VERIFIED names + per-identity verify.results[].status + EXACT_TOTAL_VERIFIED 5->10"},
-    "AC4": {"closed_by": "M1_ATOMIC_LANDING", "reproved_by": "MU10", "observable": "REQUIRED_TESTS +19 names + EXACT_TOTAL_TESTS 20->39 subject to observed len(tests[])"},
-    "AC5": {"closed_by": "M2_MUTATION_DRILL", "observable": "MU2/MU14/MU15/MU16: Z3 green + named test SOLE failure + byte-identical restore"},
-    "AC6": {"closed_by": "M2_MUTATION_DRILL", "observable": "MU5/MU6: verify.errors==1 with check.passed still true"},
-    "AC7": {"closed_by": "M2_MUTATION_DRILL", "observable": "MU1-MU9 and MU14-MU16 each red ONLY their named observable"},
-    "AC8": {"closed_by": "M1_ATOMIC_LANDING", "reproved_by": "MU13", "observable": "the 10/10 marker and a green go-verify job"},
-    "AC9": {"closed_by": "M1_ATOMIC_LANDING", "reproved_by": ["MU11", "MU12"], "observable": "projection byte-equality + 3 moved packet fields + interfaceHash INVARIANT (AMENDED)"},
-    "AC10": {"closed_by": "M3_GATES_AND_SCOPE", "advanced_by": ["M1_ATOMIC_LANDING"], "observable": "both pinned gates rc=0 with the named output"},
-    "AC11": {"closed_by": "M3_GATES_AND_SCOPE", "advanced_by": ["M1_ATOMIC_LANDING"], "observable": "git diff --name-only = the five files; no forbidden path; no host emitter"},
-    "AC12": {"closed_by": "M4_UPSTREAM_ROUTING", "observable": "three issue URLs plus one mission-control message ID"},
-    "AC13": {"closed_by": "M1_ATOMIC_LANDING", "confirmed_by": "M3_GATES_AND_SCOPE", "observable": "grep of the terminal banner with a same-instrument control (NEW, unguarded pin)"}
+    "AC1": {
+      "closed_by": "M2_MUTATION_DRILL",
+      "advanced_by": [
+        "M1_ATOMIC_LANDING"
+      ],
+      "observable": "the type declaration plus MU6's totality guard"
+    },
+    "AC2": {
+      "closed_by": "M1_ATOMIC_LANDING",
+      "observable": "DecisionPacket's seven fields; no list[ADT] in the record; lines 1-132 byte-untouched"
+    },
+    "AC3": {
+      "closed_by": "M1_ATOMIC_LANDING",
+      "reproved_by": "MU10",
+      "observable": "REQUIRED_VERIFIED names + per-identity verify.results[].status + EXACT_TOTAL_VERIFIED 5->10"
+    },
+    "AC4": {
+      "closed_by": "M1_ATOMIC_LANDING",
+      "reproved_by": "MU10",
+      "observable": "REQUIRED_TESTS +19 names + EXACT_TOTAL_TESTS 20->39 subject to observed len(tests[])"
+    },
+    "AC5": {
+      "closed_by": "M2_MUTATION_DRILL",
+      "observable": "MU2/MU14/MU15/MU16: Z3 green + named test SOLE failure + byte-identical restore"
+    },
+    "AC6": {
+      "closed_by": "M2_MUTATION_DRILL",
+      "observable": "MU5/MU6: verify.errors==1 with check.passed still true"
+    },
+    "AC7": {
+      "closed_by": "M2_MUTATION_DRILL",
+      "observable": "MU1-MU9 and MU14-MU16 each red ONLY their named observable"
+    },
+    "AC8": {
+      "closed_by": "M1_ATOMIC_LANDING",
+      "reproved_by": "MU13",
+      "observable": "the 10/10 marker and a green go-verify job"
+    },
+    "AC9": {
+      "closed_by": "M1_ATOMIC_LANDING",
+      "reproved_by": [
+        "MU11",
+        "MU12"
+      ],
+      "observable": "projection byte-equality + 3 moved packet fields + interfaceHash INVARIANT (AMENDED)"
+    },
+    "AC10": {
+      "closed_by": "M3_GATES_AND_SCOPE",
+      "advanced_by": [
+        "M1_ATOMIC_LANDING"
+      ],
+      "observable": "both pinned gates rc=0 with the named output"
+    },
+    "AC11": {
+      "closed_by": "M3_GATES_AND_SCOPE",
+      "advanced_by": [
+        "M1_ATOMIC_LANDING"
+      ],
+      "observable": "git diff --name-only = the five files; no forbidden path; no host emitter"
+    },
+    "AC12": {
+      "closed_by": "M4_UPSTREAM_ROUTING",
+      "observable": "three issue URLs plus one mission-control message ID"
+    },
+    "AC13": {
+      "closed_by": "M1_ATOMIC_LANDING",
+      "confirmed_by": "M3_GATES_AND_SCOPE",
+      "observable": "grep of the terminal banner with a same-instrument control (NEW, unguarded pin)"
+    }
   },
   "velocity": {
     "method": "arm-count, not LOC. These sprints are not authoring-bound: the .ail payload is written once and pasted, while the cost is ai-check + ailang test + full-gate wall time multiplied by the mutation-arm count.",
@@ -302,14 +595,54 @@
     "plan_total_days": 0.9,
     "verdict": "AGREE with the 1.00 d headline; DISAGREE with the band split.",
     "bands": [
-      {"work": "world/types.ail addition (3 types + 5 contracts + 5 adapters), pinned-binary green", "doc": 0.32, "plan": 0.10, "driver": "text composed, verified, tested and gate-run by the planner; the executor pastes and asserts a sha"},
-      {"work": "six gate-pin edits across two files", "doc": null, "plan": 0.05, "driver": "all six validated end-to-end in an isolated repo copy"},
-      {"work": "MU1-MU16 with landed-proofs, scoped reads, controls and restores", "doc": null, "plan": 0.42, "driver": "16 arms x 0.027 d; 4 arms pre-measured on the exact landing bytes"},
-      {"work": "package projection + golden", "doc": null, "plan": 0.08, "driver": "recipe prototyped with TWO known-positive controls; expected bytes pre-registered"},
-      {"work": "full pinned gates + hold set + scope inspection", "doc": null, "plan": 0.10, "driver": "unchanged in substance"},
-      {"work": "AC9 amendment - reconciling AC9 against InterfaceHash", "doc": 0.0, "plan": 0.05, "driver": "doc defect D1; undiagnosed this is an open-ended stall, not 0.05 d"},
-      {"work": "pin 6 (verify_ail.sh:378), absent from the doc's conflict surface", "doc": 0.0, "plan": 0.02, "driver": "doc defect D2"},
-      {"work": "three upstream issues + mission-control note", "doc": null, "plan": 0.08, "driver": "folded into the doc's band 3, which was already short"}
+      {
+        "work": "world/types.ail addition (3 types + 5 contracts + 5 adapters), pinned-binary green",
+        "doc": 0.32,
+        "plan": 0.1,
+        "driver": "text composed, verified, tested and gate-run by the planner; the executor pastes and asserts a sha"
+      },
+      {
+        "work": "six gate-pin edits across two files",
+        "doc": null,
+        "plan": 0.05,
+        "driver": "all six validated end-to-end in an isolated repo copy"
+      },
+      {
+        "work": "MU1-MU16 with landed-proofs, scoped reads, controls and restores",
+        "doc": null,
+        "plan": 0.42,
+        "driver": "16 arms x 0.027 d; 4 arms pre-measured on the exact landing bytes"
+      },
+      {
+        "work": "package projection + golden",
+        "doc": null,
+        "plan": 0.08,
+        "driver": "recipe prototyped with TWO known-positive controls; expected bytes pre-registered"
+      },
+      {
+        "work": "full pinned gates + hold set + scope inspection",
+        "doc": null,
+        "plan": 0.1,
+        "driver": "unchanged in substance"
+      },
+      {
+        "work": "AC9 amendment - reconciling AC9 against InterfaceHash",
+        "doc": 0.0,
+        "plan": 0.05,
+        "driver": "doc defect D1; undiagnosed this is an open-ended stall, not 0.05 d"
+      },
+      {
+        "work": "pin 6 (verify_ail.sh:378), absent from the doc's conflict surface",
+        "doc": 0.0,
+        "plan": 0.02,
+        "driver": "doc defect D2"
+      },
+      {
+        "work": "three upstream issues + mission-control note",
+        "doc": null,
+        "plan": 0.08,
+        "driver": "folded into the doc's band 3, which was already short"
+      }
     ],
     "objections": [
       "Band 3 is UNDERPRICED. Design doc section 9 charges 'package projection + golden, full pinned gates, three upstream filings' to 0.28 d. Item 13 - the doc's own cited precedent - spent 0.30 d on projection + golden + gates with ZERO upstream filings. Three GitHub issues with repro bodies plus a mission-control note is real work folded into a band that was already 0.02 d short before they were added. This plan gives that work 0.26 d.",
@@ -320,11 +653,26 @@
   "split_verdict": {
     "decision": "NO SPLIT of M1 - one commit, measured not argued",
     "seams_tested": [
-      {"seam": "types.ail first, script pins second", "reds": "Leg 1: 'expected exactly 5 proven world/ contracts, got 10'; also Leg 3 step 3/9"},
-      {"seam": "pins first, types.ail second", "reds": "Leg 1: 'required identity (types, timeoutOutcome) MISSING from verify.results[]'"},
-      {"seam": "code + pins, projection second", "reds": "Leg 3 step 3/9 sha256 equality"},
-      {"seam": "projection rebuilt, golden second", "reds": "Leg 3 step 9/9 cmp -s - that is mutation MU12, not a milestone"},
-      {"seam": "AILANG first, Go marker second", "reds": "go test ./host/verifygate/ - CI's go-verify job - MEASURED FAIL (V13b)"}
+      {
+        "seam": "types.ail first, script pins second",
+        "reds": "Leg 1: 'expected exactly 5 proven world/ contracts, got 10'; also Leg 3 step 3/9"
+      },
+      {
+        "seam": "pins first, types.ail second",
+        "reds": "Leg 1: 'required identity (types, timeoutOutcome) MISSING from verify.results[]'"
+      },
+      {
+        "seam": "code + pins, projection second",
+        "reds": "Leg 3 step 3/9 sha256 equality"
+      },
+      {
+        "seam": "projection rebuilt, golden second",
+        "reds": "Leg 3 step 9/9 cmp -s - that is mutation MU12, not a milestone"
+      },
+      {
+        "seam": "AILANG first, Go marker second",
+        "reds": "go test ./host/verifygate/ - CI's go-verify job - MEASURED FAIL (V13b)"
+      }
     ]
   },
   "risk_level": "medium",
@@ -348,5 +696,51 @@
       "flipping HUMAN-SURFACE 7.1/7.3 to CLOSED, moving the two section-8 premise rows, reconciling the item-15/item-7 charter rows -> controller/human acts after this sprint lands",
       "writing the interfaceHash correction back into design_docs/implemented/w-evidence-grade-mapping.md (defect D1) -> a controller call; it is design_docs/, so AC11 forbids the executor from doing it here"
     ]
+  },
+  "execution": {
+    "iteration": 85,
+    "note": "M1 was executed by iteration 85 attempt 1, which died mid-flight before committing (Standing rule 7: it ended its turn waiting on a background executor; the driver logged rc=0 with no reap line because CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0 suppresses it). Attempt 2 verified rather than adopted that work, found and repaired one regression, then drove M2/M3/M4 in-turn.",
+    "commit": "1cd8c67",
+    "pull_request": "https://github.com/sunholo-data/ailang-world/pull/67",
+    "evaluator": {
+      "model": "sonnet",
+      "score": 96,
+      "verdict": "PASS",
+      "blocking_findings": 0,
+      "independently_reproduced": "10 of 16 mutation arms, the six-file attribution, both full gate runs, all three upstream artifacts"
+    },
+    "milestones": [
+      {
+        "id": "M1_ATOMIC_LANDING",
+        "status": "complete",
+        "passes": true,
+        "commit": "1cd8c67",
+        "correction": "SIX files, not five: docs/SELF_MOD_PUBLISH.md quotes contentHash and tarballSHA256 verbatim in its attended-operator approval table, so reprojecting red-lighted host/runbook's TestRunbookDigestsAppearVerbatimInTheCommittedGolden. Attribution measured: rc=0 on pristine origin/dev, rc=1 on the pre-repair M1 tree."
+      },
+      {
+        "id": "M2_MUTATION_DRILL",
+        "status": "complete",
+        "passes": true,
+        "commit": null,
+        "arms_run": 18,
+        "result": "16 planned arms + VP15 non-vacuity control + MU15b fallback. All observables matched. MU15 form (a) CANNOT FIRE (x <= y-1 is equivalent to x < y over ints) and is recorded as decoration rather than a kill, per the plan's own pre-registered instruction; MU15b (<= oldEscalationsRemaining) kills escalationCode_test_3 alone. MU10 is a green-by-design arm: the count pin does not imply the name pin. Tree byte-identical at exit.",
+        "instrument_defect_caught": "The first drill run invoked ai-check from world/ as 'types.ail' and got LDR001 module-not-found, which reads as a kill on EVERY arm. Caught by a pristine known-positive control; correct form is repo-root + 'world/types.ail'. Two arms re-run."
+      },
+      {
+        "id": "M3_GATES_SCOPE",
+        "status": "complete",
+        "passes": true,
+        "commit": null,
+        "result": "verify_ail.sh rc=0 at 10/39/9-of-9; verify_go.sh rc=0; go build rc=0; go test -count=1 rc=0, 17 packages. AC11 scope: 6 files, zero forbidden-path hits, control fires, porcelain empty. AC13 banner 1/0/1. Hold set re-measured, nothing moved."
+      },
+      {
+        "id": "M4_UPSTREAM_ROUTING",
+        "status": "complete",
+        "passes": true,
+        "commit": null,
+        "result": "#712 and #713 filed by attempt 1; #715 filed this iteration. Attempt 1 declined to file the third because its own probe control had failed; re-probed with a firing known-positive control (single-int row: check clean, test passes). mission-control note msg_20260814_172014_fcee49fc names all three."
+      }
+    ],
+    "routing_deviation": "M2/M3/M4 were driven by the controller (opus) in-turn rather than by the pinned codex:gpt-5.6-sol executor. Reason: attempt 1 died at exactly that background spawn. These milestones produce evidence, not a diff. Evaluator judged the evidence not weakened, having reproduced it independently. FLAGGED for Mark."
   }
 }
