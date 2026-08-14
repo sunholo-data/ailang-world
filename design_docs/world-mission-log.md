@@ -8796,3 +8796,155 @@ all one-word**: item 17's A/B/C filed here, item 15's §7.3 A/B from iteration 8
 A/B from iteration 82. Three consecutive iterations have now ended in a parked design doc; the
 loop cannot unpark itself, and the rate at which asks accumulate is worth Mark's attention on its
 own.
+
+## Iteration 85 — 2026-08-14 — `w-decision-lifecycle-freeze` (item 15) **COMPLETE and LANDED — the v1 `DecisionPacket` is frozen and the repo's Z3-proven identity count doubles, 5 → 10** (PR [#67](https://github.com/sunholo-data/ailang-world/pull/67) → squash `aaada20`; Gate 3b GREEN on the merge commit itself, `present(2) == expected(2)`, control fires; evaluator `sonnet` **96/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **this slot's own predecessor died mid-flight after doing the work, and the safety net installed to stop that had already deleted the only instrument that could see it fail**
+
+**Pick — NOT chosen from the queue, INHERITED from a corpse.** Gate 2's died-mid-flight sweep
+found a worktree `.wt-iter85` on branch `sprint/w-decision-lifecycle-freeze`, holding a planner
+commit (`5e5c507`) plus **uncommitted** M1 work. The driver log confirms it: the 12:25:46 fire
+logged `iteration complete (rc=0)` at 13:01:59 — 36 minutes — above a transcript whose last words
+are *"Waiting on the executor's bounded completion."* That is Standing rule 7's exact tell. So the
+deliverable was to **verify and land** iteration 85 attempt 1's work, not to redo it, and not to
+pick a fresh row. Item 15 was in any case sprint-ready and gated on nothing after Mark's attended
+ratification. Zero Gate-0 directives (`mission_directives.sh --issue 53` → **0** of 25 comments
+from `MarkEdmondson1234` since the OLDER of the two watermarks, `2026-08-14T01:28:53Z`).
+
+**Gate 1.** `dev` == `origin/dev` at `61982e9`, nothing behind or ahead; tree carried one
+doc-only modification (attempt 1's residue — see below). The RUNNING skill `cmp`s **IDENTICAL** to
+`origin/dev`, so the rules followed are the ratified ones. Baseline with the pinned binary
+(`AILANG_BIN=/tmp/ailang-v0300/ailang`, v0.30.0 `e37b370`; the PATH binary is
+`v0.33.1-47-g66abbc660-dirty` and was never used as a gate): `verify_ail.sh` rc=0 at **5/20/9-9**.
+
+**THE SPINE — THE FIX FOR THE ORPHANED-SLOT BUG IS INSTALLED HERE, IT DID NOT WORK, AND
+INSTALLING IT DESTROYED THE TELL.** The shared skill's Standing rule 7 records that a controller
+which ends its turn while a background agent runs gets reaped at 600 s with `rc=0` and no watchdog,
+and it prescribes an attribution instrument: `grep -c 'Background tasks still running after 600s'`
+over the driver log, recorded as **2 of 2, zero misses, zero false positives** for World's only two
+orphaned slots (2026-08-07 18:43, 2026-08-08 05:05). Three measurements this iteration, and each
+one breaks a different half of that:
+**(a)** World's driver **does** carry the fix — `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0` at
+`tools/launchd/mission-control.sh:55` (World runs its OWN driver copy, `393` diff lines from V1's).
+So attempt 1 is a **post-fix** orphan, and V1's iteration-176 finding — *the ceiling removes the
+reap, it does not hold the slot* — now reproduces in a second mission.
+**(b)** Because the ceiling suppresses the line, the prescribed grep is **blind by construction to
+exactly the instances it now needs to catch**. Attempt 1 produced **no reap line at all**.
+**(c)** The same grep **over-counts**: it returns **3** against **2** real reap lines (2435, 2483),
+the third being iteration 65's own log record *quoting the count*. The skill already warns that a
+self-describing file poisons a known-ABSENT control; this is the same trap sprung on a
+known-PRESENT one, which is worse, because an over-counting control looks like more evidence.
+The surviving attribution is mechanism-independent and is what was actually used: an
+`iteration complete (rc=0)` whose elapsed time is far below the work claimed, sitting above a
+transcript that ends by announcing a wait, corroborated by an orphan worktree holding real work.
+**Operational consequence, applied immediately:** this iteration spawned its evaluator with
+`run_in_background: false` and drove M2/M3/M4 in-turn, so no background work was ever outstanding
+at a turn boundary.
+
+**THE SECOND FINDING — THE INHERITED M1 WAS ONE FILE SHORT, AND VERIFYING RATHER THAN ADOPTING IT
+IS THE ONLY REASON THAT WAS FOUND.** Gate 2 says an orphan's work has been reviewed by nobody, not
+even by the executor that wrote it. Measured: the plan's "five-file atomic landing" is **six**.
+Reprojecting the package moves `contentHash` and `tarballSHA256`, and `docs/SELF_MOD_PUBLISH.md`
+quotes **both verbatim** in the table an attended operator reads before approving a permanent
+publish. `host/runbook`'s `TestRunbookDigestsAppearVerbatimInTheCommittedGolden` red-lit with
+exactly the right complaint — *"the runbook is telling an attended operator to approve bytes that
+are not the reviewed artifact"*. Attribution is measured, not assumed (rule 3e): that test is
+**rc=0 on pristine `origin/dev`** and **rc=1 on the M1 tree**, so the regression is M1's. The
+runbook's own line 89 had predicted the failure mode in advance (*"change the package without
+reprojecting … and the repository gate reds"*), so the gate worked exactly as designed and the
+only thing missing was a sixth file.
+
+**THE MUTATION DRILL — 16 ARMS + THE VP15 CONTROL + AN MU15 FALLBACK, AND ONE ARM IS DECORATION.**
+Every arm asserted its exact occurrence count, asserted it LANDED by sha256, asserted the mutant
+still checks/builds **before** any test result was read, reported the **scoped** non-`pass`
+identity list rather than an exit code, and restored by `cp` (never `git checkout --`, which in an
+uncommitted sprint worktree deletes the work and then reports the disaster).
+- **MU2 is the spine of the design**: a *consistent lie* — the `ExecuteIfGranted` no-auth arm
+  changed in **both** contract and body, so silence synthesizes execution — leaves Z3 fully
+  **GREEN** (`verified=6, cex=0, errors=0`) and is caught by exactly one named test,
+  `outcomeCode_test_5`, alone. Proof is not enough; the named test is load-bearing.
+- **MU6**: a 4th `TimeoutPolicy` constructor with no arm gives `verify.errors=1` while **all 39
+  tests still pass** — the contract is the only totality guard, since v0.30.0 accepts a
+  non-exhaustive match at check time.
+- **MU5**: deleting the body arm gives `verify.errors=1` with `check.passed` still **true** and
+  `ai-check` rc still **0** — the silent-skip class, reproduced.
+- **MU15 CANNOT FIRE.** `x <= y - 1` is equivalent to `x < y` over ints, so the arm still refuses
+  the non-decrement input `(3,3,10,20)` it was written to admit: `verified=6, cex=0` **and
+  `failed=0`**. Recorded as **decoration, not a kill** — the plan pre-registered this exact
+  possibility and instructed the executor to say which form landed. The fallback **MU15b**
+  (`<= oldEscalationsRemaining`) kills `escalationCode_test_3` alone.
+- **MU10** is green *by design*: dropping `"timeoutOutcome"` from `REQUIRED_VERIFIED` leaves the
+  gate rc=0, because the count pin does not imply the name pin — which is why AC3 and AC4 both
+  exist.
+- **MU12** supplies AC9's evidence first-party: the step 9/9 diff moves `contentHash`,
+  `tarballBytes` and `tarballSHA256` while **`interfaceHash` is byte-identical on both sides**.
+- Not mutated, deliberately: **fabricated authority**. `independentAuthority` is a host-derived
+  `bool` input and no pure law can verify a bool's provenance. Carried as the declared item-7 host
+  residual, never as a pretended kill.
+
+**A BROKEN INSTRUMENT WAS CAUGHT BY ITS OWN CONTROL, AND IT WOULD HAVE REPORTED A KILL ON EVERY
+ARM.** The first drill run invoked `ai-check` from `world/` as `types.ail`; that fails
+`LDR001: module not found: world/logepoch`, which surfaces as `check.passed=False, verified=0` —
+indistinguishable from a mutant that destroyed the contract. Two arms were recorded as kills before
+a pristine known-positive control was run and came back **False** on an unmutated tree. The correct
+form mirrors `verify_ail.sh`'s `ROOTS` entry `.|world`: repo root, `world/types.ail`. The control
+was then wired into the harness itself and asserted before and after every batch. This is rule
+3a(i) in its purest form — the arms that "died" were the instrument, not the code.
+
+**A GATE'S OWN CONTROL CAN BE SATISFIED BY A GATE THAT DIED (non-blocking, pre-existing).**
+MU13's failure message reads `pristine isolated control missing "✓ 5/5 …" (rc=127)`. Investigated
+rather than waved through: `requirePristineControl` (`module_manifest_gate_test.go:122-133`)
+asserts **only** that Leg 1's marker string appears and uses `rc` merely as error text, while the
+temp root is a **selective** file copy that omits `scripts/verify_world_package.sh` — so the gate
+exits **127** at Leg 3 on a *pristine* run and the control is satisfied anyway. MU13 is unaffected
+(outcomes differ: rc=1 mutated vs **rc=0** unmutated, so the mutation is the variable), but the
+control's name over-promises: it establishes that Leg 1 emitted a marker, not that the gate is
+green.
+
+**Routing evidence.** Controller `opus` (session). Planner **not re-run** — attempt 1's plan
+(`5e5c507`, opus; `derive-planner-lane.sh` absent in this repo → fail closed to opus, reason token
+`missing-script`) was inherited and verified. Designer **not run** (no new doc); rotation pointer
+untouched at `codex:gpt-5.6-sol`. Evaluator **`sonnet`** as pinned, spawned `run_in_background:
+false` into **its own worktree** `.wt-iter85-eval` per the judge-isolation rule — it mutated source
+and restored by `cp`, and the sprint worktree was never touched. generator≠judge holds (executor
+codex + controller opus vs judge sonnet). **DEVIATION, FLAGGED:** M2/M3/M4 were driven by the
+controller rather than spawned to the pinned `codex:gpt-5.6-sol` executor. Reason: attempt 1 died
+at precisely that background spawn, and these three milestones produce **evidence, not a diff**.
+Adjudicated per rule 3h by measurement rather than by prior — the evaluator was handed the
+deviation as a named target and independently reproduced 10 of the 16 arms, the six-file
+attribution and both full gate runs from a cold worktree, all matching. `metered=$0.00` (no
+quorum round, no cross-provider run; the doc was already quorum-cleared at iteration 83).
+
+**Gates.** Pinned v0.30.0 `e37b370`, darwin/arm64 — **the ubuntu leg was unrun locally and cleared
+only in CI** (rule 3b(viii)). `verify_ail.sh` rc=0 at **10 identities / 39 named tests / package
+9-of-9**; `verify_go.sh` rc=0; `go build ./...` rc=0; `go test ./... -count=1` rc=0, **17
+packages**, zero failures. Hold set re-measured and nothing moved: `LEG1_MODULES` 11 · ai-check
+modules 11 · exports 4 · tar entries 6 · `interfaceHash` `d16cc882…` · `world/types.ail` lines
+1–132 prefix sha `2cf5b004…` with a discriminating control. `host/broker` passed but retains its
+~18% base flake, so that green is not evidence the flake is gone. Gate 3b was read twice,
+SHA-addressed: green on the PR head, then **again on the squash-merge commit `aaada20`**, since a
+squash produces a different commit and the PR's green never covers it.
+
+**Upstream routing (AC12).** Three v0.30.0 limitations, no local workarounds: `#712` (a **bare**
+ADT field in a record is Z3-unencodable — `#477`'s `list` is not the cause), `#713` (ADT equality
+refused in a conjunction, and the error's own suggested fix `import std/prelude` is refused by
+`IMP012`), and **`#715`, filed this iteration** — inline tests cannot express a multi-argument row
+(parse failure) and a tuple-valued input is **collected**, with a real location and duration, then
+dies at runtime with `no pattern matched in match expression`. Attempt 1 had deliberately declined
+to file `#715` because its own probe control had failed; re-probed here with a firing
+known-positive control (a single-int row: `check` clean, test passes), so it now rests on a
+measurement rather than on a recollection. Note that declining to file was the *right* call —
+an unreproduced claim should not become an upstream issue. `mission-control` note
+`msg_20260814_172014_fcee49fc` names all three.
+
+**Ruled out.** Adopting the inherited M1 as delivered (it was one file short, and the repo's own
+gate said so); `git checkout --` as a restore mechanism in an uncommitted worktree; the skill's
+prescribed reap-line grep as an orphan tell under `ceiling=0` (blind in one direction,
+over-counting in the other); treating MU15 as a kill (it cannot fire); treating MU13's `rc=127` as
+a vacuous kill (refuted by the unmutated negative control at rc=0); reading `interfaceHash` as
+movable (`InterfaceHash` at `pkgproj.go:86` never opens a source file — the correction is now
+written back to `w-evidence-grade-mapping.md`, whose stale sentence propagated the false premise
+into item 15's AC9 in the first place); and the PATH `ailang` as a gate (`-dirty`).
+
+**Next.** Item **18** `w-daemon-read-cancellation` — `[NEXT]`, needs a design doc, gated on
+nothing, and now **blocks item 14** by Mark's ratified sequencing. Item **17** needs a *revision
+round* rather than a new design (the MAC seam, the V27 repair pointing §3.3/§3.4 at
+`verify.results[]`, and the unconditional negative control). **Zero open asks.**

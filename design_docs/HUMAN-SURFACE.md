@@ -268,11 +268,17 @@ These are fixtures, not pixel specs: the reference renderer must preserve their 
 ## 7. Ratification points (Mark)
 
 1. The seven principles + anti-patterns + the §3.1 bounded decision lifecycle as BINDING on all
-   human-facing work (evaluator-scored, like coding-standards.md). §3.1 requires a **typed finite
-   set of timeout policies**; that set is deliberately NOT enumerated in this document and must be
-   fixed as part of this ratification (candidate members named by the reviewers: cancel · remain
-   safely unexecuted with bounded escalation · execute only if authority was already independently
-   granted).
+   human-facing work (evaluator-scored, like coding-standards.md). **STILL OPEN — this half is
+   unratified.**
+   **The timeout-policy half is CLOSED** (ratified attended, Mark, 2026-08-14; landed by item 15
+   `w-decision-lifecycle-freeze`, `aaada20`). §3.1 required a **typed finite set of timeout
+   policies** deliberately not enumerated here; that set is now fixed at exactly three members in
+   `world/types.ail` — `TimeoutPolicy = Cancel | EscalateBounded | ExecuteIfGranted`, matching the
+   three the reviewers named. They are **nullary by design**: the escalation bound is packet state
+   (`escalationsRemaining`), not policy identity. The behaviour is not merely declared but
+   Z3-proven total by `timeoutOutcome`, and silence never synthesizes approval — no
+   `TimeoutOutcome` constructor approves anything, and `ExecuteUnderPriorAuthority` requires
+   authority that already existed.
 2. **Total evidence-grade mapping — CLOSED.** The kernel has
    `CompilerOutput(HashRef)`, `TestReport(HashRef, bool)`, `HumanApproval(HashRef)`,
    `AiReview(HashRef, float)`, and `RecordedEffect(HashRef)`. The proposed gradient has
@@ -280,7 +286,19 @@ These are fixtures, not pixel specs: the reference renderer must preserve their 
    `TestReport → TESTED`, `CompilerOutput`/`HumanApproval`/`RecordedEffect → ATTESTED`, and
    `AiReview → CLAIMED`. The stated `PROVEN` producers (Z3 proof and replay) still have no
    `Evidence` carrier.
-3. Decision-packet schema freeze timing (it becomes a world type — kernel-adjacent).
+3. **Decision-packet schema freeze timing — CLOSED, OPTION A** (ratified attended, Mark,
+   2026-08-14; landed by item 15 `w-decision-lifecycle-freeze`, `aaada20`). The v1
+   `DecisionPacket` is frozen **now** rather than after real inbox usage: it is seven fields
+   (`packetHash`, `proposalHash`, `requestRef`, `createdAt`, `deadlineAt`, `escalationsRemaining`,
+   `policy`) under the semantic ID `world/decision-packet/v1`, and **every later amendment is a new
+   version (`/v2`), never an in-place edit** — the same discipline as `LogHeader` and every other
+   content-addressed wire type. It references rather than embeds (`proposalHash` reaches
+   evidence/caps, `requestRef` reaches the landed approval objects), and `createdAt`/`deadlineAt`
+   are **logical** times: no field reads a wall clock. Option B (ratify only the `TimeoutPolicy`
+   set and defer the schema) was rejected because its only merit — letting real usage inform the
+   field set — needs item 7, which is parked behind item 5's upstream blocker with no ETA.
+   Enforcement remains item 7's by explicit deferral: five laws are proven and, as landed, not yet
+   invoked by any host path.
 4. Open questions 7 (Hub vs fresh: recommend FRESH, Hub as pattern donor) and 9 (dialect —
    defer to M6 with a common-core emitter).
 5. **Proposal confidence.** `Proposal.confidence: float` has no adjacent evidence `HashRef`;
