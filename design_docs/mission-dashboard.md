@@ -1,40 +1,40 @@
 # AILANG World — mission dashboard
 
 *Snapshot, overwritten every iteration. History: charter STATUS + `world-mission-log.md`.*
-**As of** 2026-08-14 (iter-85) · **dev** `aaada20` · **CI** green on the merge commit, SHA-addressed,
-`present(2) == expected(2)`.
+**As of** 2026-08-14 (iter-86) · **dev** `6fd26f0` · **CI** green, SHA-addressed, `checks=2` both
+`success`, control fires on a known-runs SHA. Nothing landed to dev this iteration.
 
-## Just landed — item 15 `w-decision-lifecycle-freeze`
+## Item 18 `w-daemon-read-cancellation` — DESIGNED, then PARKED `needs-human-review`
 
-PR [#67](https://github.com/sunholo-data/ailang-world/pull/67) → `aaada20`. Evaluator `sonnet`
-**96/100, ZERO blocking**, reproducing 10 of 16 mutation arms in its own worktree. The v1
-`DecisionPacket` is frozen: three types, **five Z3-proven laws**, 39 named tests; pins moved in the
-same commit — **5→10 identities, 20→39 tests**. `metered=$0.00`. The landing is **six files, not
-five**: `docs/SELF_MOD_PUBLISH.md` quotes `contentHash`/`tarballSHA256` verbatim in its attended-
-operator approval table, so reprojecting red-lit `host/runbook` (rc=0 pristine, rc=1 pre-repair).
+673-line doc, 9 ACs, 27+2 verification rows, 12 mutation rows. **Two quorum rounds, both
+`blocked` — and both with BOTH external reviewers PRESENT** (`absent_reviewers: []` each round,
+so neither verdict is a pass-with-a-hole; the per-reviewer cap was raised to $0.25/$0.30 against a
+$0.10 default precisely to pre-empt the budget-degrade trap). `metered=$0.2299`.
 
-## The iteration's real subject: a SECOND dead slot, and the fix didn't hold
+Round 2 left **one** live objection. gemini's was a PREMISE objection — measured by the controller,
+**both premises TRUE** (`handleLogRange` writes once at the end; `defaultClientTimeout = 30s` at
+`daemon.go:110`), recorded as V28/V29, design unchanged, objection **discharged by measurement**.
+`gpt5-6-sol`'s is a **DIRECTION dispute on the scope boundary**, which forecloses the carve-out.
 
-Iteration 85 **attempt 1** did the design work, planned, spawned the executor — and died ending its
-turn to wait. `rc=0`, no watchdog, no charter row. Worse than the 2026-08-07/08 pair on two counts:
-World's driver **does** carry `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0` (`mission-control.sh:55`), so
-this is a **post-fix** orphan; and that ceiling **suppresses the reap line the skill's own
-attribution tell greps for**, so the prescribed instrument reads clean (it also over-counts: 3, one
-being a log record quoting the count). Attribute by shape — `rc=0` far too fast, a transcript
-ending in an announced wait, an orphan worktree holding real work.
+## The spine: one enumeration, wrong at three different scopes, in one iteration
+
+The queue row said **four** context-free read getters. The designer found a **fifth**
+(`GetRegistryHead:628`) — then stated it as a store-wide universal, and the store has **six**
+(`GetVerifyResult:773`, off the daemon path). Meanwhile the controller's own directive, under a
+**VERIFIED-BY-ME** heading, put the DSN builders in `store.go` — that file has **zero** definitions;
+they are at `writer_lock.go:120/176/187`. I had read **call sites as definitions**. The designer
+refuted it. Under-count, over-claim and mis-location are the same defect: **a count is only true
+inside the scope it was taken in, and the scope is the part nobody writes down.**
 
 ## What each item needs now
 
-- **18 `w-daemon-read-cancellation`** — `[NEXT]`, needs a design doc; blocks item 14.
+- **18** — **PARKED**: one-word A/B (A = ship the 1.5 d scoped item · B = re-size to repo-wide).
 - **17** — *revision round*: MAC seam, V27 repair (`verify.results[]`, never the int), neg control.
-- **14** — blocked on 18 (`err.Error()` leaks to an unauthenticated client). **5** — still blocked.
-- HUMAN-SURFACE §7 **points 1 (timeout half) and 3 CLOSED**; point 1's "binding" half open.
+- **14** — blocked on 18. **5** — still blocked.
+- New follow-on filed by the doc: `w-bounded-waits-operator-and-write-paths` (item 18's residue).
 
 ## Loop · carry-forward
 
-launchd, ~6h watchdog. Controller `opus` · evaluator `sonnet` · rotation still at
-`codex:gpt-5.6-sol` (designer did not fire). Cap $5; spent **$0.00**. **FLAGGED**: M2/M3/M4 were
-driven by the controller, not the pinned codex executor — deliberate, because attempt 1 died at
-that exact spawn; the evaluator judged the evidence not weakened. **An arm can be decoration** —
-MU15: `x <= y-1` ≡ `x < y` over ints, so it still refuses the input it was written to admit and
-kills nothing; the plan pre-registered exactly that. **Zero open asks.**
+launchd, ~6h watchdog. Controller `opus` · designer `claude:claude-fable-5` (rotation advanced
+`codex` → `claude`; **FLAGGED**: two bounded Fable runs, design + revision, vs the one-run
+discipline). Cap $5; spent **$0.2299**. **ONE open ask.**

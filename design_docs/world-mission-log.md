@@ -8948,3 +8948,182 @@ into item 15's AC9 in the first place); and the PATH `ailang` as a gate (`-dirty
 nothing, and now **blocks item 14** by Mark's ratified sequencing. Item **17** needs a *revision
 round* rather than a new design (the MAC seam, the V27 repair pointing §3.3/§3.4 at
 `verify.results[]`, and the unconditional negative control). **Zero open asks.**
+
+---
+
+## Iteration 86 — 2026-08-14 — `w-daemon-read-cancellation` (item 18) **DESIGNED and PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-daemon-read-cancellation.md`, 673 lines, designer `claude:claude-fable-5`; TWO quorum rounds, all four reviewer slots `present=true`, **both rounds `blocked`**; `metered=$0.2299`) — the iteration's spine is that **one enumeration was wrong at three different scopes in a single iteration — the queue row under-counted it, the controller mis-located it inside a VERIFIED-BY-ME directive, and the designer's own correction re-stated it as a false universal — because a count is only true inside the scope it was taken in, and the scope is the part nobody writes down**
+
+**Pick.** Queue head, item **18** `w-daemon-read-cancellation`, taken as `[NEXT]` from iteration
+85's STATUS stamp. NEEDS A DESIGN DOC, gated on nothing, and — since Mark's attended option-B
+ratification — the prerequisite of item 14.
+
+**Gate 0.** Kill switch armed-off; `sunholo-voight-kampff`; billing **CLEAN**; tree clean. Inbox: 2
+unread, both `eval-suite` auto-notices, neither a directive. Directives: **0** from
+`MarkEdmondson1234` of 26 comments on `#53` since the watermark `2026-08-14T06:24:00Z`, via the V1
+checkout's `mission_directives.sh` by absolute path (this repo has none, per the Repo Profile).
+Rotation not due: `#53` created `2026-08-10T05:37:35Z` = **07:37 local**, *after* the Monday-07:00
+boundary, and 26 comments < 80. **Weekly external-issue sweep, per-issue table as the rule
+requires:** **1** open issue enumerated, `#53` → charter **2** / log **27** / archive **1** /
+dashboard **0**; control `#67` → charter **2** / log **1**, so the grep sees positives. Verdict:
+**0 orphans of 1 enumerated**.
+
+**Gate 1.** `dev` == `origin/dev` at `6fd26f0`, neither ahead nor behind. The RUNNING skill is
+**byte-identical to origin** (`cmp -s` silent, V1 checkout 0 behind) — the divergence class that
+cost iterations 84 and 85 is clear. CI read SHA-addressed on the HEAD commit: `checks=2`,
+`ailang-code verify gate` **success**, `go host build + test gate` **success**; control on a
+known-runs SHA returns **2**, so the count is an instrument reading and not an empty endpoint. Runs
+**exist** for HEAD, so this is not the unverified-HEAD case.
+
+**Gate 2 — died-mid-flight sweep: CLEAN, and worth stating because the last two iterations were
+not.** Open PRs authored by this loop: **0**. `git worktree list`: **one** entry, the main checkout.
+`git status --porcelain` in the main checkout: **empty**. No orphaned work to inherit or credit.
+
+**Ghost discipline — the defect live-reproduced at HEAD, five measurements each with a control.**
+The queue row's numbers were taken at `9491a10`; HEAD is `6fd26f0`, so they were re-run rather than
+inherited. `grep -c 'context.Context' host/store/store.go` → **0**, same-file control
+`grep -c 'func (s \*Store)'` → **14**. The read getters are context-free at exactly the declared
+lines (`GetObject:467`, `GetWorld:522`, `GetLogEntry:551`, `SelectedHead:802`).
+`grep -c 'r.Context()' host/daemon/handlers.go` → **0**, control → **9**. `busy_timeout` outside
+tests → **0**, the pragma living only at `writer_lock_test.go:609`. The six `Internal` branches pass
+`err.Error()` verbatim at **220, 247, 277, 325, 351, 419** — exactly as filed. The D7 gate claim
+also holds: `TestBoundedWaitsAndBodyLimit` (`daemon_test.go:202`) pins constants wired at
+`daemon.go:517-520`, and `http.Server.WriteTimeout` cannot cancel a goroutine parked in a store
+call. Seven GET routes confirmed by direct enumeration at `daemon.go:461-467`. **The row is real.**
+
+**THE SPINE — ONE ENUMERATION, WRONG AT THREE SCOPES, IN ONE ITERATION.** The three errors are not
+independent; they are the same defect committed by three different roles, each of which had the
+right answer for *its* scope and stated it for a wider one.
+
+**(a) The queue row UNDER-counted.** It named **four** context-free read getters. The designer's
+first-party pass found a **fifth**, `GetRegistryHead:628`, which `GET /v1/registry/{name...}`
+calls — so the row's own scope (the daemon read path) contained one more member than the row said.
+
+**(b) The CONTROLLER mis-located, inside a directive labelled VERIFIED BY ME.** The spawn directive
+told the designer that `resolveDSN` / `writeDSN` / `readOnlyDSN` live in `host/store/store.go`
+"~lines 229-290". Measured: `grep -c 'func writeDSN\|func readOnlyDSN\|func resolveDSN'` over
+`store.go` → **0**; the definitions are at `host/store/writer_lock.go:120/176/187`. What
+`store.go:244,252` contains is **call sites**, and they were read as definitions. This is rule
+3a(iii)'s lesson — a hit proves a call exists, never that the thing is defined there — pointed at
+*location* rather than at *reachability*, and it is precisely the laundering Gate 2 forbids: an
+unverified fact handed downstream under a heading that told the designer to trust it. **The designer
+refuted it.** That is the loop working (Gate 2 rule (d)), and it is the second consecutive iteration
+in which a sub-agent corrected a controller-supplied fact.
+
+**(c) The DESIGNER's correction became a false UNIVERSAL.** Having fixed (a), the doc wrote "All
+**five** read getters are context-free" as a property of the *store*. The store has **six**:
+`GetVerifyResult:773` is context-free too. The doc's SCOPE was right — `GetVerifyResult`'s sole
+production caller is `host/replay/replay.go:191` and no daemon handler touches it, so it is
+correctly outside the daemon read path — but the SENTENCE was not. Caught by the controller,
+re-scoped in round 2, and recorded as row V25 so the next reader can see the omission was
+deliberate.
+
+**The generalisation, which is worth more than any of the three:** an under-count, a mis-location
+and an over-claim look like three unrelated slips, and they are one. **A count is only true inside
+the scope it was taken in, and the scope is the part nobody writes down** — so the number survives
+being copied into a wider sentence, where nothing about it looks wrong. Rule 3b(ii) already makes a
+`-run`/`--version` narrowing travel with a green; this is the same obligation for a *cardinality*,
+and no rule currently attaches a scope to a count.
+
+**Quorum round 1 — `blocked`, both reviewers present, `$0.0985`.** Two rejects. `gemini-3-1-pro`:
+a **timer leak** — §2.3's `readCtx` returns a `CancelFunc` and the doc said only "pass the context
+down", never mandating `defer cancel()` (controller check: 6 `cancel` mentions in the doc, not one
+stating the obligation). `gpt5-6-sol`: the design **over-claims** ("unbounded reads unrepresentable
+at the type level") while 16 production sites keep `context.Background()` and `POST /v1/commit`
+stays unbounded; plus a watchdog that may `t.Error` without releasing the blocked getter.
+gemini's second catch was the sharpest and was verified first-party before being forwarded: §2.5's
+`blockingStore` **overrides one getter while driving all six routes**, and the six routes read
+through five distinct getters — so every non-overridden route answers **200** and spuriously fails
+the 503 assertion.
+
+**Revision pass, then ONE re-quorum, per the gate.** Both gemini fixes applied **verbatim**; the
+`defer cancel()` obligation was additionally made a *gate* rather than a note (new
+`TestReadCtxCancelledAfterHandler` + MU11). B1 conceded outright, not defended. B2 fixed for
+**every** watchdog in the doc with a named release mechanism and exit bound. B3 — the scope
+objection — was partly **folded in**: 5 of the 16 sites take the caller's real context at zero API
+cost (`transitionreg.ReadSnapshot:70` / `Publish:221` already carry a `ctx`; `Session.invoke` drops
+one at `broker.go:173`) — both confirmed first-party by the controller — plus a ratchet test pinning
+the remaining 11 so the deadline-free set can only shrink, plus a **named follow-on item**
+`w-bounded-waits-operator-and-write-paths` for the residue.
+
+**Quorum round 2 — `blocked`, both reviewers present, `$0.1314`.** gemini's new reject was a
+**PREMISE** objection: two present-tense claims in §2.3 absent from the Verification Log. Rule 3f
+says measure a premise objection rather than forward it, and **both measured TRUE** —
+`handleLogRange` accumulates into `items` and writes exactly once via a terminal `writeJSON`, every
+error path returning before writing (zero `Flush`/`WriteHeader`/`w.Write` in the body), so a
+mid-loop 503 replaces the page cleanly; and `defaultClientTimeout = 30 * time.Second` at
+`daemon.go:110`, exported at `:133` and pinned by two tests. The objection was correct **as
+process** and empty **as design**: the controller added rows **V28/V29** with the commands and
+outputs, and the objection is **discharged by measurement, not by argument**.
+
+**WHY THIS PARKS RATHER THAN PROCEEDING.** `gpt5-6-sol`'s round-2 reject restates the scope
+objection after a revision that folded in everything measurably cheap: an item filed under clause-3
+cannot claim "every wait is bounded" while `POST /v1/commit` waits indefinitely on the single
+connection and 11 sites keep `context.Background()`; a follow-on item and a ratchet do not close it.
+Its **premise is TRUE and the doc already says so** — this is not a factual dispute. It disputes the
+**DIRECTION**, i.e. where the item's boundary belongs, and Gate 2's narrow-refinement carve-out
+requires every remaining objection to carry a concrete fix **AND not dispute the direction**. So the
+carve-out is foreclosed and Standing rule 2 binds. This is the **third** consecutive confirmation of
+iteration 82's rule, and the cleanest instance yet: every *other* objection this iteration was
+resolved in-loop — two verbatim, two conceded, two discharged by measurement — leaving exactly one
+live objection whose only defect is that a controller may not settle it.
+
+**Per rule 3f(c) the park carries numbers, so the human decision is one word.** §13 states a
+bounded A/B. **A** = ship the scoped item (7 daemon GET routes + 5 folded-in sites + ratchet +
+named follow-on), **1.5 d**, unblocks item 14 now, residual clause-3 exposure tracked. **B** =
+re-size to repo-wide bounded waits, **≥ 2.5 d**, blocks item 14 a further day — and it requires two
+human policy calls first, which is the real reason the controller did not simply adopt the
+reviewer's fix: **what bounds an attended approval that is *designed* to wait on a human** is a
+decision about the World's authority model, not plumbing; and `Commit`'s atomicity-vs-deadline is
+the second. Measured cost of B (row V27): the boundary guard breaks all 11 residual sites the moment
+M1 lands; they sit in 8 functions behind 3 exported entry points with **40** test call sites.
+
+**An operational win worth recording: BOTH rounds had `absent_reviewers: []`.** The skill warns that
+a `proceed` with a non-empty `absent_reviewers` is a pass with a named hole, and that the degrade is
+self-selecting — a reviewer drops on budget exactly when the doc has just grown. The recorded V1
+instance refused over **$0.0048**. This iteration raised the per-reviewer cap to **$0.25** (round 1)
+and **$0.30** (round 2) against the **$0.10** default, *before* seeing any degrade, on a 499→673-line
+doc. Neither round lost a reviewer, and the total for four reviewer-runs was **$0.2299** — under 5%
+of the $5 ceiling. **Pre-emptively raising the cap costs cents and removes the hole class
+entirely**; on a long doc it should be the default, not the remedy.
+
+**Routing evidence.** Controller `opus` (session). Designer **`claude:claude-fable-5`** via
+`claude-sub` — the namespaced rotation pointer `~/.ailang/state/mission-world-designer-rotation`
+read `codex:gpt-5.6-sol` (last-used), so the next entry is claude; advanced to
+`claude:claude-fable-5` after the run. Probe rc=0, replied `ok`. Directive delivered **7446 B**
+(design) and **8532 B** (revision), both asserted ≥200 B before spawn; both runs backgrounded under
+a 30-min `date +%s` cap and **actively polled in-turn** (Standing rule 7 — the controller never
+ended a turn with work outstanding, which is what killed iterations 84 and 85 attempt 1). Both
+returned rc=0 at ~15 min and ~11 min. Planner/executor/evaluator **did not run** — the item parked
+before routing. **FLAGGED:** the Fable discipline allows ONE bounded sub-agent run per iteration and
+this iteration used **two** (design + revision). The revision lane is mandated by Gate 2's
+one-revision-one-requorum rule, so the two rules collide on any doc that gets rejected; recorded
+here rather than resolved, since a rule change needs the charter's evidence bar. `metered=$0.2299`
+(quorum only; both designer runs are subscription-bucket, zero dollars).
+
+**Ruled out.** *Adopting the queue row's four-getter enumeration* — it was one short on its own
+scope (a). *Trusting the controller's own DSN citation* — refuted by the designer, definitions are
+in `writer_lock.go` (b). *Treating gemini's round-2 reject as a design defect* — measured, both
+premises TRUE, so it was a documentation gap and nothing about the design changed. *Treating
+gpt5's objection as a factual dispute* — its premise is true and already recorded; the disagreement
+is about scope. *Applying the carve-out* — foreclosed by a direction dispute, exactly as iteration
+82 recorded. *Widening item 18 unilaterally to satisfy gpt5* — that is the human's call, and it
+carries two policy questions a design pass cannot settle.
+
+**Gates.** No code changed; the commit is docs-only (`design_docs/planned/w-daemon-read-cancellation.md`
+new, plus charter/log/dashboard), so `scripts/verify_ail.sh`'s pins are untouched
+(`EXACT_TOTAL_VERIFIED=10`, `EXACT_TOTAL_TESTS=39` both unmoved — the doc adds no `.ail`). Note for
+the sprint when it is unparked: the doc's V13 records that the item **does** touch one `.ail`,
+`design_docs/sketches/worlddapi.ail`, because `handlers.go:16-18` freezes `APIError` as an exact
+mirror of it — the designer probed that edit against pinned v0.30.0 on a scratch copy
+(`check.passed=True, errors=0, cex=0`, tests 18→19) and proved from `verify_ail.sh` source that it
+moves **zero** pins, since sketches carry empty required sets and leg 2 tests `world/` only.
+Platform: everything measured on **darwin/arm64**; no CI leg was run for this docs-only change
+beyond the inherited green on `6fd26f0`.
+
+**Next.** Item **18** stays `[PARKED needs-human-review]` pending the one-word A/B. With 18 parked
+and 14 ratified to sit behind it, the unblocked work is item **17**, which iteration 84 established
+needs a *revision round* rather than a new design (MAC seam, the V27 repair reading
+`verify.results[].function` rather than the bare int, and a negative control). If Mark answers `A`,
+item 18 unparks straight to sprint-planner as written.
+
+**ONE open ask** — the item-18 scope A/B, phrased for a one-word reply.
