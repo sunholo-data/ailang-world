@@ -99,6 +99,20 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   `pipestatus` and it is **1-indexed**, so the skill's own Gate-2 remedy for *"exit codes through
   pipes lie"* prints `rc=` and voids the reading it was added to protect. Use direct invocation
   (`cmd > /tmp/out 2>&1; echo "rc=$?"`) and read the file afterwards; that works in both shells.
+- **`ai-check` IS CWD-SENSITIVE, AND THE WRONG CWD REPORTS A KILL ON *EVERY* MUTATION ARM (process
+  fix, iter-85).** A `world/*.ail` module imports its siblings by package path, so the module root
+  matters: `verify_ail.sh`'s `ROOTS` entry is `.|world`, i.e. **base = repo root, rel =
+  `world/types.ail`**. Run it the natural-looking way instead — `cd world && ai-check types.ail` —
+  and it fails `LDR001: module not found: world/logepoch`, which surfaces in the JSON as
+  **`check.passed=false, verified=0`**. That is **byte-indistinguishable from a mutant that
+  destroyed the contract**, so a mutation drill run from the wrong directory reports a confident
+  kill on every single arm, including arms that in truth change nothing. Iteration 85 banked two
+  such kills before a **pristine known-positive control** (unmutated tree must read
+  `check.passed=true, verified=6, cex=0, errors=0`) came back FALSE and exposed the instrument.
+  Rule: any drill harness asserts that control **before and after every batch**, never once at the
+  start — and mirror `ROOTS` rather than guessing the cwd. This is rule 3a(i) with the unusual
+  twist that the broken instrument produces a *positive* result, not an empty one, so the
+  "search found nothing" reflex does not fire.
   (c) **`"$var:path"` IS A ZSH HISTORY-MODIFIER EXPANSION, NOT A LITERAL — AND `git show
   "$rev:host/…"` IS SILENTLY REWRITTEN (added iter-41; instance 3 of this same class).** In zsh
   5.9 the `:x` suffix after an unbraced `$var` inside double quotes is applied as a **modifier**:
