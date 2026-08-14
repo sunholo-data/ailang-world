@@ -440,6 +440,38 @@ pre-broker — its revisit-trigger 1 ("review when the M3 broker contract exists
 sides, natural venue = the upstream recorded-stream lane which already carries both DST ADRs
 as design context.
 
+### Cordis spatiotemporal composability ⇄ Motoko comparison (arniwesth/motoko_agent, 2026-08-14)
+https://github.com/arniwesth/motoko_agent/blob/e3f041919f9d17064b4081cef92be54f32fb1cef/.agent/research/Spatiotemporal_Composability/cordis-paper-vs-motoko.md
+Motoko's read of "A Programming Paradigm for Spatiotemporal Composability" (Shi/Zhang/Cui,
+PKU/DeepSeek-AI, Aug 2026, 88 pp; Cordis meta-framework, TypeScript, validated observationally
+on Koishi). The paper lifts effect/coeffect theory to runtime: **temporal composability** =
+revertible effects (`Γ → Γ × (Γ → Γ)` — every context transformation returns its inverse;
+unload = LIFO-composed undo), **spatial composability** = reactive coeffects (declared
+dependency sets driving activation/teardown; realm isolation; right-biased monoid-merged
+interception metadata for capability attenuation). Motoko's doc frames the two as opposite
+bets — revert-after (Cordis) vs verify-before (Motoko DST + Phoenix restart); World is the
+unstated THIRD bet on the same axis: never mutate — append + re-select over immutable
+content-addressed history. **Steal/align:** (1) inverse-carrying effect records at the broker —
+a `RecordedEffect` that also records its compensator, *appended as data, never applied to the
+log*, making compensation one more replayable transition; (2) the evidence-grade reading of the
+paper's central obligation — `g∘f = id` is CLAIMED under Cordis (author obligation, its §5.1.1),
+TESTED under Motoko's revert-then-replay DST family, PROVEN for World's encodable pure fragment
+— the three systems are rungs of item 13's ladder, not competitors; (3) instantiation-as-
+tracked-effect (its Def. 47) is already native here — a Proposal IS one; (4) the interception
+algebra maps onto approval-scope/capability attenuation. **Do NOT adopt the runtime:**
+hot-plug/reactive topology is a spatial-composability surface whose cost World measured
+first-party at iter-84 (exports are modules; a foreign module minted `PROVEN`) — Cordis
+*mediates* access at runtime, World *relocates* authority behind the host seal; and World
+closes the paper's two admitted gaps by construction (nominal linking with no versioning →
+content addressing, its §6.6; boundary emissions only withheld/compensated → the approval
+scopes live exactly on that line, its §6.1). *Pitfall:* the paper's harness application is
+future work and its Koishi evidence is "existence-and-adoption", not quantitative; and **M4
+expires item 17 §2.4's "no cross-host proof receipt" scoping** — a Motoko DST verdict arriving
+as Evidence is CLAIMED until a cross-producer provenance story exists (re-execution is
+economically absurd at simulation scale; the ratified single-host MAC does not extend across
+the trust boundary to a foreign producer's key). Natural venue: the due Motoko⇄World boundary
+review — see the entry above, whose revisit-trigger 1 has FIRED.
+
 ### AgentReputation — decentralized agent reputation (arXiv:2605.00073)
 https://arxiv.org/html/2605.00073v1
 Closest published prior art to §13.3 calibration records: **verification regimes of
