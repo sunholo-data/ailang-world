@@ -8675,3 +8675,124 @@ intended doc, and every probe and isolated tree lived outside the repo.
 **Next.** Item **17** (item 13's declared residual — the `PROVEN` authority gap) unless Mark's
 answers unpark item 14 or item 15 first. **TWO open asks, both one-word**: item 14's A/B from
 iteration 82, still unanswered, and item 15's §7.3 freeze-timing A/B filed here.
+
+## Iteration 84 — 2026-08-14 — `w-validated-proven-evidence-boundary` (item 17) **DESIGNED and PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-validated-proven-evidence-boundary.md`, 566 lines, commits `169d6bc` → `bc3965d` → `323baf6`, designer `codex:gpt-5.6-sol`; TWO quorum rounds, all four reviewer slots `present=true`, both rounds BLOCKED; `metered=$0.179422`) — the iteration's spine is that **a reviewer's proposed fix can be perfectly RUNNABLE and still be a DOWNGRADE, and the carve-out's one safeguard — applying the reviewer's verbatim words — is precisely what would ship it**
+
+**Pick.** Item 17, the queue head by position and iteration 83's named `NEXT`. Zero Gate-0
+directives (`mission_directives.sh --issue 53` → **0** of 24 comments from `MarkEdmondson1234`
+since the watermark `2026-08-14T01:28:53Z`), so nothing outranked it. Items 14 and 15 stay parked
+on their own unanswered asks. Blocker re-verified rather than inherited: item 17 was "gated on
+item 13 landing", and item 13 is COMPLETE (`36f0c7a` on `origin/dev`). No design doc existed
+(`grep -ril` over `design_docs/` returned only mission docs + item 13's own `## Related`; control
+— the same method finds item 13's doc — fires). Died-mid-flight sweep clean: **0** open PRs from
+`sunholo-voight-kampff`, one worktree (the main checkout), tree clean.
+
+**Gate 1.** `dev` == `origin/dev` at `4557262`, nothing behind or ahead. CI green, read
+SHA-addressed on the HEAD commit: `checks=2` = expected 2 (`go host build + test gate`,
+`ailang-code verify gate`), **0** non-success — a run EXISTS, so the verdict is a verdict and not
+an unverified zero. The RUNNING skill now `cmp`s **IDENTICAL** to `origin/dev` (V1's checkout is
+at its origin) — the 7-behind divergence recorded at iteration 83 has cleared on its own.
+Baseline with the pinned binary (`AILANG_BIN=/tmp/ailang-v0300/ailang`, v0.30.0 `e37b370`;
+the PATH binary is `v0.33.1-23-g644cf178a-dirty` and was never used):
+`./scripts/verify_ail.sh` rc=0, **5** identities / **20** named tests / package gate **9/9**.
+
+**THE SPINE — A REMEDY CAN BE IMPLEMENTABLE AND STILL BE WORSE THAN THE OPTION THE REVIEWER DID
+NOT CHECK FOR.** Iteration 83 learned to *measure the remedy*, because `gpt5-6-sol`'s fix there
+was Z3-unencodable. That rule catches a fix that cannot run. Round 2 here produced the other
+member of the class, and the rule as written sails straight past it. `gemini-3-1-pro` blocked on
+a **correct premise**: §3.3/§3.4 wanted "a sorted, non-empty list of required function
+identities", and `verify.verified` is an **integer** — measured, `type=int`, value `1`. Its
+`proposed_fix` was concrete, verbatim-appliable and would have run perfectly: replace the
+identity set with a `verifiedCount` integer. **It is a downgrade.** One field over,
+`verify.results` is a **list** whose entries carry `['function','status','duration']` —
+`function='gradeOf'`, `status='verified'` — and the same-instrument control fires: on the
+one-sided mutant the same entry reads `status='counterexample'` while `verified` drops to `0`.
+So the binary *does* emit identities, per-identity, with per-identity verdicts, and the design
+can validate a sorted identity set that is strictly stronger than any count (a count of 1 cannot
+say *which* function was verified). Had this objection arrived alone — narrow, concrete,
+non-direction — it would have satisfied every clause of the narrow-refinement carve-out, and the
+carve-out's whole safeguard is applying the reviewer's VERBATIM text. The safeguard is the
+delivery mechanism. **The discriminator iteration 83's rule lacks: not "does the remedy run?" but
+"does the remedy REDUCE WHAT THE GATE CAN OBSERVE?"** Recorded as V27 and deliberately NOT
+applied — a controller-invented resolution is forbidden even when the measurement is clean.
+
+**THE SECOND FINDING — THE KERNEL'S FOUR "EXPORTS" ARE MODULES, NOT FUNCTIONS, AND THAT MAKES A
+REVIEWER'S ROUND-1 OBJECTION EXECUTABLE RATHER THAN THEORETICAL.** Round 1's `gpt5-6-sol` blocked
+on direction: a public `ValidatedProof(HashRef) => PROVEN` kernel arm is agent-spellable, so any
+pure-AILANG consumer reaches `PROVEN` without the Go boundary. Per rule 3f the controller ran it
+instead of forwarding it, and the measurement made it **worse than filed**. (a) `world/types` is
+one of the four package exports pinned at five separate gate surfaces
+(`verify_world_package.sh:34,120,153,175,239`) — and those exports are **modules**, so publishing
+`world/types` publishes every `Evidence` constructor *and* `gradeOf` to every downstream consumer
+of `world/core`. (b) A foreign module `world/consumer`, importing `gradeOf` and the constructor
+and minting from the literal `digest: "i-made-this-up"`, **checks rc=0 "No errors found!" and its
+inline test asserting `PROVEN` (code 4) PASSES** — no decoder, no validator, no seal anywhere on
+that path. Negative control in the same scope fires: `NoSuchCtor` → rc=1,
+`IMP010: symbol 'NoSuchCtor' not exported by 'world/types'`. The DESIGNER (never the controller)
+then adopted the reviewer's own `proposed_fix`: `ProofReceipt(HashRef) => CLAIMED`, with
+authority-bearing `PROVEN` reachable only as a Go `ResolvedGradeProven` from
+`GradeOfValidated(ValidatedEvidence)` whose fields and constructor are unexported. **V26 is what
+makes that a measurement rather than a promise:** the *same attack module*, same literal, same
+scratch scope, run against both designs — round 1 the attack test PASSES; round 2 `check` is
+still rc=0 `No errors found!` (the refusal is semantic, not a type error an attacker would
+notice) and the attack test **FAILS** with `test 0: expected 4, got 1`. `1` is `CLAIMED`. Only
+the kernel arm differs, so the outcomes differing is the evidence.
+
+**Why it PARKS.** Round 2 drew two NEW objections, both reviewers present. `gpt5-6-sol`'s is a
+DIRECTION dispute one layer down: a content-addressed report is not an **authenticated** one —
+every field `ValidateProof` checks (semantic id, compiler hash, verified identities, success
+flags) is a public value an attacker can encode into canonical bytes, so hash recomputation
+proves integrity, never provenance. Its `catch` is a fair reading of §11: the log contains no
+measurement disproving the route-around. **V28 prices the premise without settling it** — the
+daemon exposes 7 `GET` routes and exactly one write, `POST /v1/commit`, with **no** object-write
+route (control: 8 of 8 `HandleFunc` registrations enumerated, so the enumeration is complete),
+but `PutObject` has **10** non-test call sites (control: `GetObject` → **16**) and
+`host/broker/broker.go:289` stores bytes derived from an effect result. So "writable object
+store" is *not excluded by the transport*. Stated at its true strength: the threat model is live
+enough to need a decision; **no probe here demonstrates a full forgery**. The reviewer's own fix
+offers two mutually exclusive architectures — re-execute the pinned checker inside the validator
+(a validator that runs a compiler on every grade resolution) or MAC/sign reports with a host-held
+key. Standing rule 2 forbids proceeding over a contested direction, so this is a human A/B/C.
+
+**Routing evidence.** Controller `opus` (session). Designer **`codex:gpt-5.6-sol`** — rotation
+pointer `~/.ailang/state/mission-world-designer-rotation` held `claude:claude-fable-5` as
+last-used with mtime `02:53` matching iteration 83's own record, so not clobbered; probe rc=0
+(replied `ok`); ran twice, the initial doc and the one prescribed revision; advanced to
+`codex:gpt-5.6-sol`. Planner / executor / evaluator **did not fire** (no sprint — the item
+parked at design). Both codex runs used the full recipe guards: per-iteration directive file with
+the ≥200-byte delivery assertion, `< /dev/null`, backgrounded under a 30-min `date +%s` cap,
+`--sandbox workspace-write` in a worktree **sibling of the repo** (never `/tmp`), no git writes
+by the executor, controller-authored commits. Both returned rc=0 with a non-empty worktree diff
+of exactly the one intended file. `metered=$0.179422` (quorum R1 `$0.080852` + R2 `$0.09857`),
+against the `$5` ceiling; per-reviewer cap raised pre-emptively to `$0.70`/`$0.80` so a
+budget degrade could not manufacture an absent reviewer — `absent_reviewers` empty in both rounds.
+
+**FLAGGED — generator≠judge is violated whenever the designer rotation lands on codex.** The
+doc was authored by `codex:gpt-5.6-sol` and reviewed by a quorum containing `gpt5-6-sol`. The
+skill enforces generator≠judge between *executor* and *evaluator* and says nothing about
+*designer* vs *quorum reviewer*. Note the effect here ran in the honest direction — the model
+rejected its own design twice, and its round-1 objection was correct — so this is a routing
+observation, not a claim that the verdicts were tainted. Iteration 82 had the same collision.
+
+**Ruled out.**
+1. *"The `PROVEN` prohibition is wired into neither `verify_ail.sh` nor CI"* (item 17's own queue
+   row, iteration 81) — **FALSE as stated**. `verify_ail.sh:266` pins `gradeOf` in the Leg-1
+   required-verified manifest and `:339-340` pin all six `gradeCode_test_N` in `REQUIRED_TESTS`;
+   control `grep -c EXACT_TOTAL_VERIFIED` → 4. Only the AC7 `PROVEN` grep is absent. The accurate
+   statement is that the prohibition rests on six named, **gate-pinned** integer expectations.
+2. *"No `.ail` module reads `Evidence` at all"* (same row, measured at `2ef2271`) — stale by
+   construction: item 13 landed `Evidence`, `EvidenceGrade` and `gradeOf` into `world/types.ail`.
+   The surviving true part is narrower and still load-bearing: `gradeOf` has **no caller** outside
+   its own module and its projection.
+3. *`AILANG_RELAX_MODULES=1` is load-bearing for the designer's probe* — **refuted**. The positive
+   arm reproduces identically without it, so that narrowing does not travel with the finding.
+4. *The queue row's ~1.5–2d price* — **refuted by fresh inventory**, which is exactly what item 13
+   demanded ("price only after a fresh inventory"). 3.5d for tranche 1, 8.5d across three ordered
+   documents; the guardrail is ≤3–4d, so the decomposition is the deliverable, not a shortfall.
+
+**Next.** Item **18** `w-daemon-read-cancellation` — the only unparked, unblocked row left, and
+the one whose defect this mission measured first-party at iteration 82. **THREE open asks now,
+all one-word**: item 17's A/B/C filed here, item 15's §7.3 A/B from iteration 83, and item 14's
+A/B from iteration 82. Three consecutive iterations have now ended in a parked design doc; the
+loop cannot unpark itself, and the rate at which asks accumulate is worth Mark's attention on its
+own.
