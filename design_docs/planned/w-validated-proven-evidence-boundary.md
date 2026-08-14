@@ -1,6 +1,11 @@
 # w-validated-proven-evidence-boundary — authority-bearing proof evidence
 
-- **Status**: Planned
+- **Status**: **PARKED `needs-human-review`** after TWO quorum rounds (iteration 84) — DESIGNED, not landed
+- **Park reason**: round-2 `gpt5-6-sol` raises a DIRECTION objection the controller may not settle —
+  a content-addressed, self-asserted report is not an *authenticated* one, so `ValidateProof` as
+  designed mints from bytes an attacker with store-write access could fabricate (V28 prices the
+  premise). The three candidate directions are mutually exclusive architecture choices, so this is a
+  human A/B/C, not a completeness nit. See §10.1.
 - **Item**: queue item 17, `w-validated-proven-evidence-boundary`
 - **Filed**: 2026-08-14, iteration 84
 - **Measurement base**: `4557262`
@@ -473,6 +478,45 @@ cannot yield `PROVEN`; until tranche 3 lands, no renderer may display `PROVEN` a
   table-driven arm was deleted. M7 is the sole payload-hash mutation owner. The remaining rows
   each have one owner, and AC9 enumerates M7 once.
 
+## 10.2 Round 3 quorum — BLOCKED, and why this document PARKS
+
+Round 2's revision cleared round 1 and drew two **new** objections, both from present reviewers
+(no N−1 degrade; `absent_reviewers` empty in both rounds). The controller measured the empirical
+half of each rather than forwarding it, and the two land in different lanes.
+
+**A — `gpt5-6-sol`, DIRECTION. This is the park.** Verbatim: *"The validator mints authority from a
+forgeable, self-asserted JSON report. Hash recomputation proves only content integrity; semantic /
+interface IDs, compiler hash, verified identities, and success flags are all public values an
+attacker can encode into canonical bytes. `ValidateProof` neither reruns the proof nor authenticates
+that the trusted producer created the report."* Its `catch` is precisely a demand for a negative
+control this document does not contain, which is a fair reading of §11. **V28 prices the premise
+without settling it:** the daemon's surface is 7 `GET` routes plus exactly one write, `POST
+/v1/commit`, with no object-write route (control: 8 of 8 registrations enumerated) — but
+`PutObject` has 10 non-test call sites and `host/broker/broker.go:289` stores bytes derived from an
+effect result, so "writable object store" is not excluded by the transport. The reviewer's own
+`proposed_fix` offers two mutually exclusive architectures — re-execute the pinned checker inside
+`ValidateProof` and treat stored reports as non-authoritative cache, or authenticate reports with a
+host-held signing/MAC key. Choosing between those is a design DIRECTION call with real cost
+consequences (a validator that re-runs the checker is a validator that executes a compiler on every
+grade resolution). Standing rule 2 forbids the controller proceeding over a contested direction and
+the narrow-refinement carve-out does not apply, so this parks for a human A/B/C.
+
+**B — `gemini-3-1-pro`, PREMISE. Correct premise, WEAKENING fix — see V27, and do not apply it
+verbatim.** The objection is right that `verify.verified` is an integer, so §3.3/§3.4's "list of
+required function identities" cannot come from that field. Its fix — replace the identity set with a
+`verifiedCount` integer — was measured and is a **downgrade**: `verify.results[]` carries
+`function` and `status` per identity (control: the same field reads `status='counterexample'` on a
+one-sided mutant), so identity-level validation is available and strictly stronger than a count.
+The repair is to re-point §3.3/§3.4 at `verify.results[]`. That is the DESIGNER's call, recorded
+here and deliberately **not applied** — a controller-invented resolution is forbidden even when the
+measurement is clean, and the carve-out's verbatim-application safeguard would have shipped the
+weakening.
+
+**Whoever resumes this document** starts from the human's A/B/C on objection A, applies the V27
+repair to §3.3/§3.4, and adds the negative control objection A's `catch` asks for — a test that
+hand-authors otherwise-perfect canonical `ProofReportV1` bytes and requires an explicit
+`unauthenticated_report` result rather than a seal.
+
 ## 11. Verification Log
 
 Unless labelled inherited, every command was run from repository root at `4557262` on 2026-08-14.
@@ -508,6 +552,8 @@ same call. Glob-shaped arguments are quoted. V18, V22, V24, and V25 use only scr
 | V24 | A foreign pure-AILANG consumer can import the rejected public constructor and execute `gradeOf(ValidatedProof(made-up HashRef)) => PROVEN`; a nonexistent-constructor negative control fails at import. | **CONTROLLER-RUN at `4557262` with pinned v0.30.0**: copied `world/types.ail` and `world/logepoch.ail` to scratch; applied the round-1 constructor/contract/body change and asserted three `ValidatedProof` occurrences; checked and tested `world/consumer.ail` importing `Evidence`, `EvidenceGrade`, `gradeOf`, `ValidatedProof`, and `HashRef`; in the same scratch scope replaced that import/call with `NoSuchCtor` and rechecked. | Positive: `ailang check` rc=0, `No errors found!`; `ailang test` passes `launder_code_test_1`, whose `PROVEN` arm returns 4. Negative control: rc=1, `Error: IMP010: symbol 'NoSuchCtor' not exported by 'world/types'`. No Go boundary, decoder, validator, or sealed value occurs on the positive path. |
 | V25 | Revised `ProofReceipt => CLAIMED` syntax checks, verifies, and executes; a same-scope one-sided body mutation to `PROVEN` is non-vacuously rejected. | `apply_patch` created `/tmp/iter84_receipt_probe.ail` and identical `/tmp/iter84_receipt_mutant.ail` except the mutant body arm; `export AILANG_BIN=/tmp/ailang-v0300/ailang; $AILANG_BIN ai-check /tmp/iter84_receipt_probe.ail >/tmp/iter84_receipt_probe.stdout 2>/tmp/iter84_receipt_probe.stderr; $AILANG_BIN test /tmp/iter84_receipt_probe.ail >/tmp/iter84_receipt_test.stdout 2>/tmp/iter84_receipt_test.stderr; $AILANG_BIN ai-check /tmp/iter84_receipt_mutant.ail >/tmp/iter84_receipt_mutant.stdout 2>/tmp/iter84_receipt_mutant.stderr`; `python3` loaded each stdout JSON and printed `d['check']['passed'], d['verify']['verified'], d['verify']['errors'], d['verify']['counterexample']`; `rg 'PASS\|FAIL\|gradeCode\|counterexample\|ProofReceipt' /tmp/iter84_receipt_test.stdout /tmp/iter84_receipt_mutant.stdout /tmp/iter84_receipt_mutant.stderr` inspected runtime and negative-control outputs. | Positive rc=0: `check.passed=True`, `verify.verified=1`, `verify.errors=0`, `verify.counterexample=0`; both runtime tests pass, including made-up receipt → code 1. Mutant rc=1: `check.passed=True`, `verify.verified=0`, `verify.errors=0`, `verify.counterexample=1`; witness is `(ProofReceipt (mk_HashRef "!0!" "!1!"))`. |
 | V26 | **CONTROLLER-RUN (iteration 84), and it is the arm that makes the round-2 fix a MEASUREMENT rather than a promise: the revised design DEFEATS the exact attack that defeated round 1, run in BOTH arms with only the design as the variable.** V24 and V25 each measure one design; neither runs the *attack* against the *fix*. | Rebuilt V24's scratch tree from `world/types.ail` + `world/logepoch.ail` at `4557262`, applied the **round-2** change instead (asserted LANDED: 3 `ProofReceipt` occurrences at lines 29/49/58), and re-ran V24's **byte-for-byte identical attack module** — a foreign `world/consumer` importing `gradeOf` and the receipt constructor, minting from the same literal `digest: "i-made-this-up"`, with an inline test asserting the result is `PROVEN` (code 4). | **Outcomes DIFFER, which is the whole evidence.** Round-1 arm: the attack test **PASSES** (`launder_code_test_1`, rc=0) — the foreign module really obtains `PROVEN`. Round-2 arm: `ailang check` still rc=0 `No errors found!` (so the refusal is *semantic*, not a type error the attacker would notice), and the attack test **FAILS** — `✗ attack_code_test_1`, **`test 0: expected 4, got 1`**, rc=1. `1` is `CLAIMED`. Same attacker, same literal, same instrument, same scratch scope; the only variable is the kernel arm. Note what this does NOT prove, per §2.3's own limitation: it bounds the `Evidence -> EvidenceGrade` route, not a future consumer that spells `EvidenceGrade.PROVEN` directly. |
+| V27 | **CONTROLLER-RUN (iteration 84), round-2 quorum. `gemini-3-1-pro`'s PREMISE is CORRECT and its `proposed_fix` is an unnecessary WEAKENING — the identities the design needs ARE emitted, one field over from the one the doc named.** The objection: §3.3/§3.4 require a list of required function identities, but `verify.verified` is an integer, so "the Go producer cannot extract or validate identities that the AILANG binary does not emit". | Re-read the pinned binary's own `ai-check` JSON and enumerated the `verify` object rather than the single field the objection names, with the one-sided mutant of V22 as the same-instrument negative control. | `verify.verified` is indeed `int = 1` — the premise holds. But `verify.results` is a **list** whose entries carry keys `['function', 'status', 'duration']`: `function='gradeOf'`, `status='verified'`. Control (mutant, same instrument): `verify.verified = 0` while `results[0]` still reads `function='gradeOf'`, `status='counterexample'` — so the field distinguishes verified from unverified **per identity**. Therefore the producer CAN validate a sorted non-empty identity set, from `verify.results[].function` filtered on `status == "verified"`. Adopting the proposed `verifiedCount` integer would discard identity-level checking (a count of 1 cannot say *which* function was verified) — strictly weaker than what the instrument supports. **The correct repair is to re-point §3.3/§3.4 at `verify.results[]`, not to downgrade the field.** This is a DESIGNER decision, not a controller one, and it is recorded here rather than applied. |
+| V28 | **CONTROLLER-RUN (iteration 84). The empirical half of `gpt5-6-sol`'s round-2 objection: is a "writable object store" excluded by the daemon's surface? NO — the read-only HTTP surface does not exclude it, and there is a non-test path that stores bytes derived from an effect result.** This does not resolve the objection; it prices it. | Enumerated the daemon's route registrations and every non-test `PutObject` caller, each with a same-scope control. | Daemon registers **8** routes: seven `GET /v1/*` and exactly one write, `POST /v1/commit` (`host/daemon/daemon.go:461-468`); control — total `HandleFunc` registrations in the same scope = **8**, so the enumeration is complete, and there is **no object-write route**. But `PutObject` has **10** non-test call sites (control: `GetObject` non-test callers = **16**), and `host/broker/broker.go:289` stores `resultObject(result)` — the bytes of an effect invocation's result. So the reviewer's premise is **not** excluded by the transport: at least one non-test, agent-adjacent path writes object bytes whose content derives from an effect the agent requested. **Stated at its true strength: this shows the threat model is live enough to need a decision, NOT that a full forgery has been demonstrated** — no probe here constructs canonical `ProofReportV1` bytes through that path or seals them. |
 
 ## 12. Related
 
