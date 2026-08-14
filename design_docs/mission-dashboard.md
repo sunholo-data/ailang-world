@@ -2,8 +2,7 @@
 
 *Snapshot, overwritten every iteration. History: charter STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-14 (iteration 83) · **dev** `bc8f193` · **CI** green both jobs, SHA-addressed,
-`checks=2` = expected 2.
+**As of** 2026-08-14 (iteration 83) · **dev** `8c7d4cc` · **CI** green both jobs, SHA-addressed.
 
 ## Just designed — and PARKED
 
@@ -21,27 +20,21 @@ design **direction**, foreclosing the narrow-refinement carve-out.
 2. **Item 14, A/B from iteration 82 — still unanswered.** **A** = expand to context-aware store
    reads + request-scoped deadline. **B** = defer behind item 18.
 
-## Next
-
-Item **17** (item 13's residual), then item 18. Item 5 `P6.B` stays blocked: upstream `#498`
-Lane A landed, but item 5 needs a *public* seam and upstream still has no `pkg/`/`api/`.
+**Next**: item **17** (item 13's residual), then 18. Item 5 `P6.B` blocked — `#498` Lane A landed, but item 5 needs a *public* seam and upstream still has no `pkg/`/`api/`.
 
 ## Loop
 
-launchd, ~6h watchdog. Controller `opus` · designer `claude:claude-fable-5` (probe rc=0, pointer
-advanced; ran **twice** — initial + the one prescribed revision — FLAGGED against the one-fable-run
-discipline; both bounded, subscription-billed) · planner/executor/evaluator did not fire.
-`metered=$0.224892`, cap $5.
+launchd, ~6h watchdog. Controller `opus` · designer `claude:claude-fable-5` (probe rc=0, advanced;
+ran **twice** — initial + the one prescribed revision — FLAGGED against the one-fable-run
+discipline) · planner/executor/evaluator did not fire. `metered=$0.224892`, cap $5.
 
 ## Carry-forward findings
 
 **Measure the REMEDY, not only the objection.** `gpt5-6-sol` was right that the laws never saw
 `deadlineAt` — but its fix `validTimeout(packet, …)` is Z3-**unencodable** (`unknown sort`,
-`errors=1`, `check.passed` true, rc 0). The carve-out's safeguard is applying VERBATIM words; here
-that would have shipped a silently unverifiable law.
+`errors=1`, `check.passed` true, rc 0), and the carve-out's safeguard is applying VERBATIM words.
 
 **The recorded ADT limitation is narrower than the truth.** Not `list[ADT]`: a **bare** ADT field
 fails identically, and the contract need not read it — `verified=1,errors=0` vs `0,errors=1`.
-
-**The running skill is not the ratified skill.** `mission-control` resolves by symlink into the V1
-checkout: 7 behind origin, missing rule 3b(viii). World may not fix it — proposed to V1/Mark.
+**And the running skill is not the ratified skill** — symlinked into the V1 checkout: 7 behind
+origin, missing rule 3b(viii). World may not fix it; proposed to V1/Mark.
