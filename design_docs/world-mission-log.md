@@ -8533,3 +8533,145 @@ verdict here is wearing a named hole. generator≠judge is not engaged (no execu
 
 **Next.** Item **15** `w-decision-lifecycle-freeze` (~1d, NEEDS A DESIGN DOC, gated on nothing,
 blocks item 7), unless Mark's one-word A/B unparks item 14 first.
+
+---
+
+## Iteration 83 — 2026-08-14 — `w-decision-lifecycle-freeze` (item 15) **DESIGNED and PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-decision-lifecycle-freeze.md`, 694 lines, commit `2104631`, designer `claude:claude-fable-5`; TWO quorum rounds, all four reviewer slots `present=true`; R1 both reject, **R2 `gemini-3-1-pro` PASS / `gpt5-6-sol` REJECT**; `metered=$0.224892`) — the iteration's spine is that **a reviewer's objection can be substantively CORRECT while its `proposed_fix` is unimplementable by construction, and the narrow-refinement carve-out has no slot for that shape, because the carve-out's whole safeguard is applying the reviewer's VERBATIM words**
+
+**Pick.** Item 15 `w-decision-lifecycle-freeze` — the queue head by position and the item iteration
+82 named as `Next`. Zero Gate-0 directives, so nothing outranked it: `mission_directives.sh` returned
+**0 directives of 22 comments** from `MarkEdmondson1234` since the watermark `2026-08-13T06:12:23Z`
+(both watermarks read, per the charter's two-watermark rule; they agree). Item 14 remains parked on
+its own unanswered A/B from iteration 82, so it was not re-picked. The row's NEW-DOC tag was checked
+rather than trusted: `grep -ril "decision-lifecycle" design_docs/` hits only the charter, log and
+dashboard — no doc in `planned/` or `implemented/` (control: `evidence-grade-mapping` finds
+`implemented/w-evidence-grade-mapping.md`). No open PRs from this account, no worktrees, no
+uncommitted residue.
+
+**Gate 0.** Kill switch armed · tree clean · `gh` on `sunholo-voight-kampff` · billing tripwire
+**CLEAN** (both Anthropic variables empty). Weekly external-issue sweep: **0 orphans of 1
+enumerated** — the repo has exactly one open issue, the bookkeeping thread `#53` itself, whose
+per-issue anchored counts are charter **3** / log **25** / archive 0 / dashboard 0; the enumeration
+length was asserted against `gh issue list … | length` = 1. No rotation due: `#53` was created
+`2026-08-10T05:37:35Z`, i.e. **after** the most recent Monday-07:00 **local** boundary (= `05:00Z`),
+and it holds 22 comments, under the 80 cap.
+
+**Gate 1 — and the running rulebook is not the ratified one.** Local `dev` **==** `origin/dev` **==
+`bc8f193`**, zero ahead, zero behind. dev CI GREEN, read SHA-addressed on the base:
+`checks=2` = the 2 expected from the Repo Profile (`ailang-code verify gate`, `go host build + test
+gate`), 0 non-success. **But the `cmp` against origin fired.** This repo has no local
+`.claude/skills/`; the skill resolves through the user symlink into the **V1 checkout**, whose
+working tree is **0 ahead / 7 behind** its own `origin/dev`. The newest commit touching the skill,
+`d53352a` *"Gate 2 rule 3b gains the platform axis (#701)"*, is **NOT-in-local-HEAD** (controls: the
+two next-newest, `e4c45eb` and `0881761`, both **IN-local-HEAD**). So the running copy is missing
+rule **3b(viii)** — the host-platform-narrowing rule — and carries a corrupted fragment where it was
+excised (`…is most of them. — a probe identifies the endpoint you REACHED, never the`, spliced onto
+the head of 3c). World cannot fix this: the file lives in the V1 checkout, Principle 0 forbids
+touching that shared tree, and the charter forbids copying skills here. **Proposed to V1/Mark, not
+applied** — the reconcile is `git -C <v1> checkout -B dev origin/dev` under the four
+non-destructiveness obligations, and it is V1's to run.
+
+**Died-mid-flight check.** No open PRs authored by this account (`[]`), `git worktree list` shows
+only the main checkout, and `git status --porcelain` was empty in it. Iteration 82's record is
+present in the charter (`grep -ci 'iteration 82'` → 1; control `iteration 81` → 2). Nothing
+inherited.
+
+**THE SPINE — MEASURE THE REMEDY, NOT ONLY THE OBJECTION.** Rule 3f already says a reviewer's
+objection is a claim and the controller must measure it before forwarding. This iteration found its
+sharper dual. R1's `gpt5-6-sol` was **right**: `timeoutOutcome(policy, escalationsRemaining,
+independentAuthority)` takes neither `deadlineAt` nor `recordedNow`, so **an early timeout satisfies
+the law**, and the doc's "replay satisfied by construction" was overstated. Its `proposed_fix` named
+`validTimeout(packet, recordedNow, recordedAuthority, outcome)`. The controller built that literal
+signature and ran it against the pinned binary: **`unknown sort 'DecisionPacket'`, `verify.errors=1`,
+`verified=0` — while `check.passed` stays `true` and rc stays `0`.** A `packet` is a record carrying
+the ADT field `policy: TimeoutPolicy`, the exact shape the doc had already measured unencodable. So
+the carve-out's instruction to apply a reviewer's **VERBATIM** words — the very clause that makes it
+"satisfying an objection" rather than "force-passing" — would here have shipped an unverifiable law
+that fails **silently**, the same vacuous-pass class the doc exists to close. A `proposed_fix` is a
+claim about what the toolchain can do, and nothing in the rulebook says to test it. The controller
+then measured the encodable form green (`verified=3`; int-only laws, no ADT equality, no record
+parameter) **before** routing the revision, so the designer received a measurement rather than an
+objection — and independently re-derived and extended it to five laws.
+
+**THE REPO'S RECORDED ADT LIMITATION IS NARROWER THAN THE TRUTH — the iter-79 lesson, one level
+deeper.** The charter records the unencodable shape as "a RECORD containing `list[ADT]`". Measured
+first-party, two files differing in exactly one field: `packetint.ail` (three ints) →
+`verified=1, errors=0`; `packetrec.ail` (the same three ints **plus one bare `policy: Policy`
+field**) → `verified=0, errors=1, unknown sort 'Packet'`. **The `list` is not needed, and the
+contract never even reads the ADT field** — its mere presence in the record type voids encoding.
+Two further v0.30.0 limitations measured and routed upstream: ADT equality inside a general boolean
+expression needs an `Eq` instance (`No instance for Eq[TimeoutOutcome]`) while the top-level
+`result == match …` postcondition form does **not**, which is exactly why `timeoutOutcome` verifies
+and a single combined law does not; and the obvious workaround `import std/prelude` is refused by
+`IMP012_UNSUPPORTED_NAMESPACE`. That trio forces the three-law split as a **measured constraint**,
+not a stylistic choice.
+
+**Verification — every load-bearing designer claim reproduced first-party.** All at the pinned
+`/tmp/ailang-v0300/ailang` (**v0.30.0**); the PATH `ailang` is `v0.33.1-23-g644cf178a-dirty` and was
+never used as a gate. Round-1 tree: `verified=4, errors=0, cex=0`, `len(tests[])=32, failed=0`, the
+uncontracted `DecisionPacket` record present and non-poisoning. **V-P8, the design's central
+discriminator:** the consistent-lie mutation making silence synthesize execution — contract **and**
+body, applied under a 2-occurrence assert, sha `1321b29d…`→`47dccd91…` proving it LANDED, mutant
+typechecks — is **Z3-GREEN** (`verified=4, errors=0, cex=0`) and killed by **exactly one** named
+test, `outcomeCode_test_5` (`failed_tests=1`); restored byte-identical from a `cp` backup, never
+`git checkout --`. Round-2 tree (sha `fda7f30b…`): `verified=6, errors=0, cex=0` and
+`len(tests[])=39, failed=0` with 19 new named identities. Pin arithmetic re-derived from observation
+rather than transcribed: `EXACT_TOTAL_VERIFIED` **5→10**, `EXACT_TOTAL_TESTS` **20→39**, marker
+**`10/10` across 11 module(s)**; all five pins in the Conflict Surface, including pin 5's marker
+string that red-lighted item 13's CI. One instrument note worth keeping: the first `ai-check` run
+came back `check.passed=False` purely because it was invoked from **inside** `world/` rather than the
+project root — the location is part of the instrument, and a module-resolution failure wears a
+verification failure's clothes.
+
+**R1's `gemini-3-1-pro` — procedurally right, substantively refuted, and it passed at R2.** Both
+premises were measured and both HOLD: `Proposal` does carry `evidence`/`requiredCaps`/`confidence`
+(field-anchored counts 2/1/1; control `proposalHash` 4), and `validatePublishApproval`
+(`approve.go:485`) does enforce four ordering comparisons in both directions under its own comment
+*"Logical time, in both directions."* Its conditional — *"if `Proposal` lacks the claimed fields,
+amend the schema"* — never triggered. Only the evidence rows were missing; the claims were true.
+Its R2 pass carries a non-blocking observation worth inheriting: `validEscalation` bounds the
+**number** of deferrals but not the **duration** of one, so item 7's host wiring should enforce
+`newDeadlineAt - recordedNow <= MAX_DEFER_DURATION` to fully seal "no indefinite parking".
+
+**Why the park, and why it is not a stall.** R2's surviving `gpt5-6-sol` objection is accurate on
+its checkable half — measured: **no acceptance criterion requires any of the five proven laws to be
+INVOKED**, so they are provable and inert, and nothing rejects a malformed packet because this item
+ships no host path at all (the emitter is item 7's by explicit deferral). That is the "a guard is
+not a gate until something reds when you remove it" class aimed at a kernel law rather than a
+refusal branch. But its conclusion — *"Do not freeze v1 until those integration gates exist"* —
+disputes the design **DIRECTION**, so the narrow-refinement carve-out fails on limb (b) exactly as
+at iteration 82, and Standing rule 2 forbids forcing it. **The decisive fact for the human: the
+reviewer's own first `proposed_fix` IS the doc's Option B.** The block therefore collapses onto
+HUMAN-SURFACE §7 point 3 — the freeze-timing question the doc already puts to Mark — so one word
+closes the ratification point and the quorum block together.
+
+**Ruled out.** The narrow-refinement carve-out (limb (b) fails — direction disputed). A third
+revision round (the gate is one revision, one re-quorum). Applying `gpt5-6-sol`'s R1 `proposed_fix`
+verbatim (measured unencodable, and silently so). Trusting the designer's `passed_tests` over
+`len(tests[])` (43 vs 39 on the R2 tree — the gate's choice is right). The PATH `ailang` as a gate
+(`-dirty`). Reading `Proposal`'s field list from prose rather than from its declaration. Treating
+the naive greps for `Timeout`/`Defer`/`expire` (9/15/10 non-test files) as prior art — they are Go
+idiom noise; `Escalat` is the honest zero (control `Approval` → 10). And inheriting item 15's
+"blocks item 7" claim: item 7's own row names a different chain (`TR.A2 → TR.B → TR.C → item 5
+P6.B`) and does not mention item 15, so this item supplies content item 7 needs but is not its only
+gate — both rows are ratified and they disagree.
+
+**Routing evidence.** controller `opus` (session) · designer **`claude:claude-fable-5`** — rotation:
+the NAMESPACED `mission-world-designer-rotation` held `codex:gpt-5.6-sol` as last-used and iteration
+82's own record agrees, so the pointer was **not** clobbered; `claude-sub` 1-token probe rc=0;
+advanced to `claude:claude-fable-5` after the run. **The designer ran TWICE (initial + the one
+prescribed revision round) — FLAGGED against the Fable discipline's "at most ONE bounded sub-agent
+run per iteration"**; both were bounded (30-min `date +%s` cap, `< /dev/null`, ≥200-byte directive
+assert, per-iteration directive filenames) and both are subscription-billed via `claude-sub`, not
+metered. planner / executor / evaluator **not run** (no sprint — the deliverable is a design doc).
+`derive-planner-lane.sh` remains **ABSENT** in this checkout, reason token **`missing-script`** —
+unchanged, and moot this iteration. `metered=$0.224892` = quorum R1 `$0.097744` (`gpt5-6-sol`
+`$0.068860` + `gemini-3-1-pro` `$0.028884`) + R2 `$0.127148` (`$0.089690` + `$0.037458`), against
+the `$5` ceiling; per-reviewer caps were raised pre-emptively to `$0.60`/`$0.70` so a budget-degrade
+could not manufacture an absent reviewer, and **all four slots read `present=true`** — no green
+verdict wearing a named hole. Containment held throughout: the main checkout showed only the
+intended doc, and every probe and isolated tree lived outside the repo.
+
+**Next.** Item **17** (item 13's declared residual — the `PROVEN` authority gap) unless Mark's
+answers unpark item 14 or item 15 first. **TWO open asks, both one-word**: item 14's A/B from
+iteration 82, still unanswered, and item 15's §7.3 freeze-timing A/B filed here.

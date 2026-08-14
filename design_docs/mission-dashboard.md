@@ -2,43 +2,49 @@
 
 *Snapshot, overwritten every iteration. History: charter STATUS + `world-mission-log.md`.*
 
-**As of** 2026-08-13 (iteration 82) · **dev** `9491a10` · **CI** green, both jobs
-(`go host build + test gate`, `ailang-code verify gate`), SHA-addressed.
+**As of** 2026-08-14 (iteration 83) · **dev** `bc8f193` · **CI** green both jobs, SHA-addressed,
+`checks=2` = expected 2.
 
 ## Just designed — and PARKED
 
-- **Item 14 `w-workbench-read-only` — DESIGNED, NOT LANDED.** Doc (641 lines, designer
-  `codex:gpt-5.6-sol`). **Two quorum rounds, both BLOCKED, all four reviewer slots present**
-  (no N−1 degrade). `gpt5-6-sol`'s surviving objection disputes the design **direction**, which
-  forecloses the narrow-refinement carve-out — so this parks rather than force-passing.
+**Item 15 `w-decision-lifecycle-freeze`** — doc 694 lines, commit `2104631`, designer
+`claude:claude-fable-5`. Two quorum rounds, all four reviewer slots present (no N−1 degrade).
+R1 both reject; **R2 `gemini-3-1-pro` PASS, `gpt5-6-sol` REJECT** — its surviving objection
+disputes the design **direction**, foreclosing the narrow-refinement carve-out.
 
-## Parked on Mark — ONE open ask
+## Parked on Mark — TWO open asks, both one-word
 
-**Item 14, one-word A/B** (framed by the rejecting reviewer's own `proposed_fix`):
-**A** = expand item 14 to carry context-aware store reads + request-scoped deadline + explicit
-timeout status + a test that reds when propagation is removed (accepts scope growth into
-`host/store`, past ~1.5–2d); **B** = defer item 14 behind new item 18 and land the daemon
-read-cancellation first.
+1. **Item 15, §7.3 freeze timing.** **A** = freeze the v1 `DecisionPacket` now (five Z3-proven
+   laws land in `world/types.ail`; enforcement stays item 7's by deferral). **B** = ratify only
+   the `TimeoutPolicy` set + resolution semantics, record unfrozen until item 7. *The rejecting
+   reviewer's own first `proposed_fix` IS option B — one word closes ask and block together.*
+2. **Item 14, A/B from iteration 82 — still unanswered.** **A** = expand to context-aware store
+   reads + request-scoped deadline (grows into `host/store`). **B** = defer behind item 18.
 
 ## Next
 
-1. **Item 15 `w-decision-lifecycle-freeze`** — ~1d, gated on nothing, blocks item 7.
-2. Item 18 `w-daemon-read-cancellation` — filed this iteration on measured evidence.
-3. Item 17 `w-validated-proven-evidence-boundary`; item 5 `P6.B` stays blocked (below).
+Item **17** `w-validated-proven-evidence-boundary` (item 13's residual), then item 18; item 5
+`P6.B` stays blocked (upstream `#498` Lane A landed, but item 5 needs a *public* seam and
+upstream still has no `pkg/`/`api/`).
 
 ## Loop
 
-launchd, ~6h watchdog. Controller `opus` · designer `codex:gpt-5.6-sol` (rotation, probe rc=0;
-advanced after the run) · planner/executor/evaluator **did not fire** — the deliverable is a
-parked doc. Spend `metered=$0.160575` (quorum R1+R2), cap $5.
+launchd, ~6h watchdog. Controller `opus` · designer `claude:claude-fable-5` (probe rc=0, pointer
+advanced; ran **twice** — initial + the one prescribed revision — FLAGGED against the one-fable-run
+discipline; both bounded, subscription-billed) · planner/executor/evaluator did not fire.
+`metered=$0.224892`, cap $5.
 
 ## Carry-forward findings
 
-**A queue row's prescription can be falsified by the very item it was waiting on.** Item 14's row
-orders the renderer to display `UNSUPPORTED`; iteration 79's carve-out *cut* that constructor, so
-`grep -rn "UNSUPPORTED" world/` → **0** (control `CLAIMED` → 4). The row also says six daemon
-routes; there are **8**, and the code's own comment says "seven" — three numbers, all disagreeing.
+**Measure the REMEDY, not only the objection.** `gpt5-6-sol` was right that the laws never saw
+`deadlineAt` — but its fix `validTimeout(packet, …)` is Z3-**unencodable** (`unknown sort`,
+`errors=1`, `check.passed` true, rc 0). Applying a reviewer's VERBATIM words — the carve-out's
+safeguard — would have shipped a silently unverifiable law.
 
-**Item 5 is blocked for a narrower reason than its row says.** Upstream `#498` Lane A **did** land
-(`--no-feedback-tool`, `aa02f0d9f`, in v0.31.0→v0.33.1). But item 5 takes path (c), a *public*
-serving seam, and upstream still has no `pkg/`/`api/` — the machinery stays Go-`internal/`.
+**The recorded ADT limitation is narrower than the truth.** Not "a record containing `list[ADT]`":
+a **bare** ADT field fails identically, and the contract need not read it. One field apart:
+`verified=1,errors=0` vs `verified=0,errors=1`.
+
+**The running skill is not the ratified skill.** `mission-control` resolves by symlink into the V1
+checkout, which is 7 behind origin and missing rule 3b(viii) (`d53352a` NOT-in-local-HEAD; controls
+IN). World cannot fix it — proposed to V1/Mark.
