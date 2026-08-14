@@ -2850,7 +2850,17 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
     new contracts or tests red the repo's primary gate for a reason unrelated to the change unless
     the pins move in the SAME commit. See item 12. · ~0.5–1d · NEEDS A DESIGN DOC · gated on
     nothing, and gated on no other queue item.]~~
-14. [**[PARKED `needs-human-review` 2026-08-13 (iter-82)] — DESIGNED, NOT LANDED. Doc
+14. [**RATIFIED 2026-08-14 (Mark, attended): OPTION B — DEFER BEHIND ITEM 18.** The A/B filed at
+    iter-82 is answered. Item 14 does NOT grow into `host/store` context plumbing; item 18
+    `w-daemon-read-cancellation` lands first and gives all eight routes one elapsed-time contract,
+    and item 14 then ships its renderer onto that base. Rationale recorded with the decision: the
+    unbounded-read defect is pre-existing on all seven existing GET routes, so B *removes* it rather
+    than extending it — which satisfies the rejecting reviewer's own `catch` — and item 18 was
+    already the next unparked row, so the ordering cost is nil. The reviewer's objection is
+    therefore SUSTAINED, and answered by sequencing rather than by scope growth. Residual `WB-R1`
+    is discharged by item 18, not by this item. Carried forward independently of the A/B: the
+    `Internal` branches passing `err.Error()` verbatim to an unauthenticated localhost client.
+    **Unparked; blocked only on item 18.** ~~[PARKED `needs-human-review` 2026-08-13 (iter-82)]~~ — DESIGNED, NOT LANDED. Doc
     `design_docs/planned/w-workbench-read-only.md` (641 lines, designer `codex:gpt-5.6-sol`,
     rotation) is committed; TWO quorum rounds both BLOCKED with all four reviewer slots
     `present=true` (no N−1 degrade). `metered=$0.160575`. R2's surviving objection
@@ -2906,7 +2916,19 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
     reds `TestBoundaryASTWriteGuard` — this has bitten three times; the fix is a new package, never
     relaxing the pin. **CARRIES `14/OD-12`** (below) as a NON-BLOCKING decision: build on the
     controller default and settle it before item 7 ships. · ~1.5–2d · NEEDS A DESIGN DOC.
-15. [**[PARKED `needs-human-review` 2026-08-14 (iter-83)] — DESIGNED, NOT LANDED. Doc
+15. [**RATIFIED 2026-08-14 (Mark, attended): §7.3 = OPTION A — FREEZE v1 NOW.** The A/B filed at
+    iter-83 is answered. The v1 `DecisionPacket` freezes with this item: the type and its five
+    Z3-proven laws land in `world/types.ail`, the semantic ID `world/decision-packet/v1` is
+    reserved, and every later amendment is a NEW version (`/v2`), never an in-place edit — the
+    same discipline as `LogHeader` and every other content-addressed wire type. Enforcement
+    remains item 7's by explicit deferral. Rationale recorded with the decision: Option B's only
+    merit is letting real inbox usage inform the field set, but that usage comes from item 7,
+    which is parked behind item 5's upstream blocker with no ETA — so B trades a cheap,
+    version-bumpable commitment for an indefinite wait. The specific defect that made
+    "Option A as written" unacceptable at R1 (laws that could not see `deadlineAt`, so an early
+    timeout satisfied them) was fixed in the R2 revision and is proven, so the reviewer's stated
+    ground for deferral no longer exists. **Unparked; sprint-ready, gated on nothing.**
+    ~~[PARKED `needs-human-review` 2026-08-14 (iter-83)]~~ — DESIGNED, NOT LANDED. Doc
     `design_docs/planned/w-decision-lifecycle-freeze.md` (694 lines, commit `2104631`), two quorum
     rounds, all four reviewer slots PRESENT. R1 both reject; **R2 `gemini-3-1-pro` PASS,
     `gpt5-6-sol` REJECT**. The surviving objection disputes the design DIRECTION — *"Do not freeze
@@ -3045,7 +3067,28 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
     passes after — never by adding a retry or a skip. · ~0.5d · NEEDS A DESIGN DOC (small) · gated
     on nothing; should land before `TR.C` if the queue allows, since `TR.C`'s whole deliverable is an
     assertion in this package.
-17. [**[PARKED `needs-human-review` 2026-08-14 (iter-84)] — DESIGNED, NOT LANDED. Doc
+17. [**RATIFIED 2026-08-14 (Mark, attended): OPTION B — AUTHENTICATE REPORTS WITH A HOST-HELD
+    MAC/SIGNING KEY.** The A/B/C filed at iter-84 is answered. `ValidateProof` earns authority by
+    verifying a host-issued tag over the canonical `ProofReportV1` bytes; hash recomputation stays
+    as the integrity check it is, and the MAC supplies the PROVENANCE it never could. Option A
+    (re-execute the pinned checker inside the validator) is REJECTED on cost and architecture, not
+    on strength: it puts a compiler+solver on the critical path of every grade resolution — an
+    effectful, timeout-prone operation added to a daemon that, per items 14/18, has no bounded-wait
+    discipline in its store layer yet. Option C is REJECTED as a resting state; it remains the
+    honest description of tranche 1 only if B is scheduled as its immediate successor. Rationale
+    recorded with the decision: the gap is provenance, a MAC is a provenance primitive, and the key
+    custody objection is bounded — the key is single-host, never crosses a trust boundary, needs no
+    rotation protocol for correctness, and its worst-case loss ("stored reports become
+    unvalidatable and must be regenerated") is precisely Option A's steady state. The rejecting
+    reviewer's objection is SUSTAINED: §11 must gain the negative control its `catch` demands.
+    **Whoever resumes this doc: (i) design the MAC seam per this ratification; (ii) apply the V27
+    repair — re-point §3.3/§3.4 at `verify.results[]`, which carries per-identity `function` and
+    `status`, NOT at the `verify.verified` integer, and NOT at the reviewer's weaker
+    `verifiedCount` fix; (iii) add the negative control: hand-author otherwise-perfect canonical
+    `ProofReportV1` bytes and require an explicit `unauthenticated_report` result rather than a
+    seal.** That control is required under all three options and so is not contingent on this
+    answer. **Unparked; needs a revision round, not a new design.**
+    ~~[PARKED `needs-human-review` 2026-08-14 (iter-84)]~~ — DESIGNED, NOT LANDED. Doc
     `design_docs/planned/w-validated-proven-evidence-boundary.md` (566 lines, 28 Verification Log
     rows), commits `169d6bc` → `bc3965d` → `323baf6`, designer `codex:gpt-5.6-sol`. TWO quorum
     rounds, all four slots PRESENT (`absent_reviewers` empty both rounds), BOTH BLOCKED;
