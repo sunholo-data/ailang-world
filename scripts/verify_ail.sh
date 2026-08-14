@@ -263,7 +263,8 @@ REQUIRED_VERIFIED = {
     "world/transitions.ail": {"applyRevision"},
     "world/contracts.ail":   {"isValidNextWorld"},
     "world/logepoch.ail":    {"sameRef", "servesEntry"},
-    "world/types.ail":       {"gradeOf"},
+    "world/types.ail":       {"gradeOf", "timeoutOutcome", "timeoutFiredLegally",
+                             "validEscalation", "validDefer", "wellFormedSchedule"},
 }
 try:
     with open(sys.argv[2]) as fh:
@@ -307,7 +308,7 @@ if [ "$checked" -eq 0 ]; then
   exit 1
 fi
 
-EXACT_TOTAL_VERIFIED=5
+EXACT_TOTAL_VERIFIED=10
 if [ "$total_verified" -ne "$EXACT_TOTAL_VERIFIED" ]; then
   echo "✗ expected exactly $EXACT_TOTAL_VERIFIED proven world/ contracts, got $total_verified" >&2
   exit 1
@@ -330,7 +331,7 @@ fi
 # other exit codes advisory — the JSON parse below is authoritative
 python3 - "$tmp_test_json" <<'PY' || exit 1
 import json, sys
-REQUIRED_TESTS = {  # logepoch (8) + contracts (6) + types (6)
+REQUIRED_TESTS = {  # logepoch (8) + contracts (6) + types (25)
     "renderRef_test_1", "renderRef_test_2", "sameRef_test_1", "sameRef_test_2",
     "cacheKey_test_1", "cacheKey_test_2", "servesEntry_test_1", "servesEntry_test_2",
     "proposalMatchesWorld_test_1", "proposalMatchesWorld_test_2",
@@ -338,8 +339,15 @@ REQUIRED_TESTS = {  # logepoch (8) + contracts (6) + types (6)
     "commitAllowed_test_1", "commitAllowed_test_2",
     "gradeCode_test_1", "gradeCode_test_2", "gradeCode_test_3",
     "gradeCode_test_4", "gradeCode_test_5", "gradeCode_test_6",
+    "outcomeCode_test_1", "outcomeCode_test_2", "outcomeCode_test_3",
+    "outcomeCode_test_4", "outcomeCode_test_5", "outcomeCode_test_6",
+    "deferCode_test_1", "deferCode_test_2", "deferCode_test_3",
+    "scheduleCode_test_1", "scheduleCode_test_2", "scheduleCode_test_3",
+    "firedCode_test_1", "firedCode_test_2", "firedCode_test_3",
+    "escalationCode_test_1", "escalationCode_test_2", "escalationCode_test_3",
+    "escalationCode_test_4",
 }
-EXACT_TOTAL_TESTS = 20
+EXACT_TOTAL_TESTS = 39
 raw = open(sys.argv[1], "rb").read().decode("utf-8", "replace")
 i = raw.find("{")                       # strip stdout banner before the first '{' (V19)
 if i < 0:
@@ -375,4 +383,4 @@ PY
 echo "── Leg 3: world package nine-step gate"
 ./scripts/verify_world_package.sh || exit $?
 
-echo "✓ verify gate PASSED: 5 required identities verified, 20 named tests pass"
+echo "✓ verify gate PASSED: 10 required identities verified, 39 named tests pass"

@@ -288,7 +288,18 @@ the canonical file.
 Regenerate `scripts/world_package_ready_packet.golden.json` with
 `pkgproj.RecomputeReadyPacket` and `pkgproj.EncodeReadyPacket`; do not hand-edit derived fields.
 The repository has a verifier but no dedicated regeneration command (V16). The grade type and
-function change `contentHash`, `interfaceHash`, `tarballSHA256`, and ordinarily `tarballBytes`.
+function change `contentHash`, `tarballSHA256`, and ordinarily `tarballBytes`. **`interfaceHash`
+does NOT move — CORRECTED 2026-08-14 (iter-85), measured, after this stale sentence propagated a
+false premise into a second item's acceptance criteria.** `InterfaceHash`
+(`host/pkgproj/pkgproj.go:86`) hashes only `manifest.Package.Name`, `Edition`, `AILANG`, the
+sorted `Exports.Modules` list and `Effects.Max`; it never reads a source file, so **no** change to
+a module's *contents* can move it — only a change to the manifest's exported module inventory can,
+and this item changes no inventory. (The adjacent `ContentHash` *does* read files, which is what
+makes the original claim plausible.) Item 15's design doc inherited this sentence as precedent and
+built `AC9` on it, requiring a hash move the hash function cannot produce; item 13's own sprint
+plan had already diagnosed it and the correction was never written back here, which is why it
+recurred. The correct assertion is the *invariance*: `interfaceHash` unchanged is itself the
+check.
 The packet remains four exports and six tar entries because neither `Evidence` constructors nor
 module inventory changes (V6, V7).
 

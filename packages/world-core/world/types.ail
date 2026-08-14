@@ -130,3 +130,150 @@ export type RecordedTransition = {
 export type CommitResult
   = Applied(World, Transition)
   | Denied(string)
+
+-- The typed finite set of timeout policies (HUMAN-SURFACE §3.1 / §7 point 1).
+-- RATIFIED (attended, Mark, 2026-08-14): exactly these three members. Nullary
+-- by design: the escalation bound is packet state, not policy identity.
+export type TimeoutPolicy
+  = Cancel
+  | EscalateBounded
+  | ExecuteIfGranted
+
+-- The typed outcome of the explicit Timeout transition at deadline. Silence
+-- never synthesizes approval: no outcome constructor approves anything, and
+-- ExecuteUnderPriorAuthority requires authority that already existed.
+export type TimeoutOutcome
+  = ResolveRejectedTimeout
+  | EscalateWithNewDeadline
+  | ExecuteUnderPriorAuthority
+
+-- The frozen v1 decision packet (HUMAN-SURFACE §7 point 3), semantic ID
+-- world/decision-packet/v1. References, not embeds: proposalHash reaches
+-- evidence/caps; requestRef reaches the landed approval objects.
+-- createdAt/deadlineAt are LOGICAL times (journal.go:26-27 idiom); no field
+-- reads a wall clock. Amendments are /v2, never in-place.
+export type DecisionPacket = {
+  packetHash: HashRef,
+  proposalHash: HashRef,
+  requestRef: HashRef,
+  createdAt: int,
+  deadlineAt: int,
+  escalationsRemaining: int,
+  policy: TimeoutPolicy
+}
+
+-- The total timeout law: what the explicit Timeout transition must do, per
+-- policy, given the packet's escalation budget and the host-derived fact of
+-- whether independent authority is live at the recorded logical time.
+export func timeoutOutcome(policy: TimeoutPolicy, escalationsRemaining: int, independentAuthority: bool) -> TimeoutOutcome ! {}
+ensures { result == match policy {
+  Cancel => ResolveRejectedTimeout,
+  EscalateBounded => if escalationsRemaining > 0 then EscalateWithNewDeadline else ResolveRejectedTimeout,
+  ExecuteIfGranted => if independentAuthority then ExecuteUnderPriorAuthority else ResolveRejectedTimeout
+} }
+{
+  match policy {
+    Cancel => ResolveRejectedTimeout,
+    EscalateBounded => if escalationsRemaining > 0 then EscalateWithNewDeadline else ResolveRejectedTimeout,
+    ExecuteIfGranted => if independentAuthority then ExecuteUnderPriorAuthority else ResolveRejectedTimeout
+  }
+}
+
+-- DEFER rebound law: a defer is valid only with a strictly-future new deadline
+-- and remaining escalation budget. DEFER MUST NOT park indefinitely.
+export func validDefer(now: int, newDeadline: int, escalationsRemaining: int) -> bool ! {}
+ensures { result == (newDeadline > now && escalationsRemaining > 0) }
+{
+  newDeadline > now && escalationsRemaining > 0
+}
+
+-- Packet schedule well-formedness: creation time is a valid logical instant,
+-- the deadline is strictly after creation, and the budget is non-negative.
+export func wellFormedSchedule(createdAt: int, deadlineAt: int, escalationsRemaining: int) -> bool ! {}
+ensures { result == (createdAt >= 0 && deadlineAt > createdAt && escalationsRemaining >= 0) }
+{
+  createdAt >= 0 && deadlineAt > createdAt && escalationsRemaining >= 0
+}
+
+-- Timeout deadline law: an explicit Timeout transition is legal only at or
+-- after the packet's deadline, judged against the RECORDED logical now.
+-- This is what connects the deadline to the outcome: an early timeout is a
+-- detectable lie under replay, not a compatible history.
+export func timeoutFiredLegally(deadlineAt: int, recordedNow: int) -> bool ! {}
+ensures { result == (recordedNow >= deadlineAt) }
+{
+  recordedNow >= deadlineAt
+}
+
+-- Escalation/DEFER rebind law: any recorded rebind must decrement the budget
+-- by EXACTLY one and set a strictly-future new deadline. validDefer guards
+-- "may a defer happen now"; this law validates the recorded before/after
+-- pair, so a non-decrementing escalation is a detectable lie under replay.
+export func validEscalation(oldEscalationsRemaining: int, newEscalationsRemaining: int, recordedNow: int, newDeadlineAt: int) -> bool ! {}
+ensures { result == (oldEscalationsRemaining > 0 && newEscalationsRemaining == oldEscalationsRemaining - 1 && newDeadlineAt > recordedNow) }
+{
+  oldEscalationsRemaining > 0 && newEscalationsRemaining == oldEscalationsRemaining - 1 && newDeadlineAt > recordedNow
+}
+
+-- Private test adapters. Single-int case dispatchers because v0.30.0's inline
+-- harness cannot take multiple arguments (parse fail) nor tuple-valued inputs
+-- (collected, then "no pattern matched" at runtime) — both measured, both
+-- routed upstream. Integer codes are test plumbing, not an exported ordering.
+func outcomeCode(caseId: int) -> int
+tests [
+  (1, 1), (2, 2), (3, 1), (4, 3), (5, 1), (6, 1)
+]
+{
+  let code = \o. match o {
+    ResolveRejectedTimeout => 1,
+    EscalateWithNewDeadline => 2,
+    ExecuteUnderPriorAuthority => 3
+  };
+  if caseId == 1 then code(timeoutOutcome(Cancel, 5, true))
+  else if caseId == 2 then code(timeoutOutcome(EscalateBounded, 2, false))
+  else if caseId == 3 then code(timeoutOutcome(EscalateBounded, 0, true))
+  else if caseId == 4 then code(timeoutOutcome(ExecuteIfGranted, 3, true))
+  else if caseId == 5 then code(timeoutOutcome(ExecuteIfGranted, 3, false))
+  else code(timeoutOutcome(Cancel, 0, false))
+}
+
+func deferCode(caseId: int) -> int
+tests [
+  (1, 1), (2, 0), (3, 0)
+]
+{
+  if caseId == 1 then (if validDefer(10, 20, 2) then 1 else 0)
+  else if caseId == 2 then (if validDefer(10, 10, 2) then 1 else 0)
+  else (if validDefer(10, 20, 0) then 1 else 0)
+}
+
+func scheduleCode(caseId: int) -> int
+tests [
+  (1, 1), (2, 0), (3, 0)
+]
+{
+  if caseId == 1 then (if wellFormedSchedule(0, 1, 0) then 1 else 0)
+  else if caseId == 2 then (if wellFormedSchedule(5, 5, 0) then 1 else 0)
+  else (if wellFormedSchedule(0-1, 1, 0) then 1 else 0)
+}
+
+func firedCode(caseId: int) -> int
+tests [
+  (1, 0), (2, 1), (3, 1)
+]
+{
+  if caseId == 1 then (if timeoutFiredLegally(10, 9) then 1 else 0)
+  else if caseId == 2 then (if timeoutFiredLegally(10, 10) then 1 else 0)
+  else (if timeoutFiredLegally(10, 11) then 1 else 0)
+}
+
+func escalationCode(caseId: int) -> int
+tests [
+  (1, 1), (2, 0), (3, 0), (4, 0)
+]
+{
+  if caseId == 1 then (if validEscalation(3, 2, 10, 20) then 1 else 0)
+  else if caseId == 2 then (if validEscalation(0, 0-1, 10, 20) then 1 else 0)
+  else if caseId == 3 then (if validEscalation(3, 3, 10, 20) then 1 else 0)
+  else (if validEscalation(3, 2, 10, 10) then 1 else 0)
+}
