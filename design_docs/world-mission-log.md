@@ -9127,3 +9127,169 @@ needs a *revision round* rather than a new design (MAC seam, the V27 repair read
 item 18 unparks straight to sprint-planner as written.
 
 **ONE open ask** — the item-18 scope A/B, phrased for a one-word reply.
+
+---
+
+## Iteration 87 — 2026-08-15 — `w-validated-proven-evidence-boundary` (item 17) **REVISED TWICE and re-PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-validated-proven-evidence-boundary.md`, 566 → 711 lines, designer `codex:gpt-5.6-sol` ×2; quorum rounds **3 and 4** overall, `absent_reviewers: []` both, round 4 the **first reviewer flip to `pass`** in this item's history; `metered=$0.266188`) — the iteration's spine is that **the reviewer's own verbatim alternative was the trap: applying `gpt5-6-sol`'s round-3 `proposed_fix` exactly as written produced the round-4 objection from the same reviewer, because arm 2 and "authority boundary" are incompatible and only applying it revealed that**
+
+**Pick.** Item **17** `w-validated-proven-evidence-boundary`, the `[NEXT]` tag set by iteration 86.
+Not a new design: iteration 84 parked it, Mark's attended **Option B** ratification (host-held
+MAC/signing key) unparked it, and the charter row prescribes a **revision round on the existing
+doc** — (i) the MAC seam, (ii) the V27 repair, (iii) a negative control.
+
+**Gate 0.** Kill switch armed-off; `sunholo-voight-kampff`; billing **CLEAN**; tree clean. Inbox: 4
+unread — three `eval-suite` auto-notices and one `mission-v1` cross-mission report, none a directive
+and none a regression, so the queue stands. Directives: **0** from `MarkEdmondson1234` of 27
+comments on `#53` since the watermark `2026-08-14T16:01:52Z`, via the V1 checkout's
+`mission_directives.sh` by absolute path. Both watermarks (`mission-53-last-seen`,
+`mission-world-last-seen`) read identically, so the World-local read-the-older rule is a no-op this
+fire. Rotation not due: `#53` created `2026-08-10T05:37:35Z` = **07:37 local**, *after* the
+Monday-07:00 boundary, and 27 comments < 80. **Weekly external-issue sweep:** **1** open issue
+enumerated, `#53` → charter **2** / log **30** / archive **1** / dashboard **0**; control `#67` →
+charter **2** / log **2**. Verdict: **0 orphans of 1 enumerated**.
+
+**Gate 1.** `dev` == `origin/dev` at `bef0153`, neither ahead nor behind. The RUNNING skill is
+**byte-identical to origin** (`cmp -s` silent; both paths 228,658 B, resolved through the
+`~/.claude` → V1-checkout symlink). CI read SHA-addressed on HEAD: `checks=2`, `ailang-code verify
+gate` **success**, `go host build + test gate` **success** — a true non-zero `total_count`, so not
+the unverified-HEAD case.
+
+**Gate 2 — died-mid-flight sweep: CLEAN.** Open PRs authored by this loop: **0**. `git worktree
+list`: one entry, the main checkout. `git status --porcelain`: empty. Nothing to inherit.
+
+**Freshness first, and it found the iteration's quietest defect.** The doc declares
+`**Measurement base**: 4557262`; HEAD is `bef0153`. Swept from the doc's **own declared base**
+(rule 3b(vi-b)): `git diff --name-only 4557262..HEAD -- ':!design_docs'` → **7** files, control
+(including `design_docs`) → **18**, so the instrument fired. Among the seven are `world/types.ail`,
+its `packages/world-core/` projection, `scripts/verify_ail.sh` and the ready-packet golden.
+**§3.6's gate pins were stale by exactly one iteration.** The doc said `EXACT_TOTAL_TESTS` **20 →
+21** and `EXACT_TOTAL_VERIFIED` **remains 5**. Measured at HEAD: `verify_ail.sh:311` →
+`EXACT_TOTAL_VERIFIED=10`, `:350` → `EXACT_TOTAL_TESTS = 39`, and `REQUIRED_TESTS` holds exactly
+**39** names (counted by parsing the block, not by trusting its comment). Moved by `aaada20` — item
+15's landing at iteration **85**. The charter queue row's own "the pins this row must move are now
+5/20, not 4/14" text was stale for the same reason. Fresh baseline replacing V17:
+`AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh` → **rc=0**, `10 required identities
+verified, 39 named tests pass`, world package gate **9/9 steps performed non-zero work**. Also
+re-measured rather than inherited: `Evidence` still has exactly **five** constructors at
+`world/types.ail:23-28`, despite the file gaining **147** insertions since the doc's base — so §1's
+premise HOLDS and was explicitly flagged to the designer as *not* to "fix".
+
+**THE SPINE — APPLYING A REVIEWER'S VERBATIM `proposed_fix` IS WHAT EXPOSED THAT THE FIX WAS
+UNSOUND.** Round 3's `gpt5-6-sol` reject was a genuine catch, and the controller verified it
+first-party before routing: §7 carried **14** numbered ACs, and AC14 *"First startup atomically
+creates a 32-byte key … as a daemon-owned `0600` regular file"* sat in a tranche whose §8.2 says
+*"`host/daemon`, `cmd/**` … do not change in tranche 1"* and whose §3.4:284 says *"the first
+integration is a library API, not a daemon route"*. **Unsatisfiable by construction** — the class
+iteration 81 already named, and two reviewers had cleared it in the round that shipped it. The
+reviewer's `proposed_fix` offered two arms; the designer took **arm 2 verbatim** — *"remove all
+startup/key-custody acceptance claims from tranche 1 and make it explicitly non-production until a
+separate wiring tranche lands"* — dropping AC14, taking §7 to **13** criteria, and filing a named
+successor `w-proven-evidence-production-key-wiring` carrying the reviewer's own
+missing/valid/symlinked/wrong-permission/replaced-key cases.
+
+Round 4 then rejected **that**, from the same reviewer, and it is right: with no production
+composition root the key must come from the caller, so `NewValidator(key [32]byte, reader,
+compilerConfig)` (doc `:198`, and `:211` — *"copies an exactly 32-byte MAC key supplied directly by
+its caller"*) is a public constructor any Go caller can hand its **own** key, and
+`GradeOfValidated(sealed)` (doc `:201`, described at `:78`/`:295` as *the sole bridge*) is a **free
+function**. Attacker-chosen key → hand-MACed envelope → fake reader → `ResolvedGradeProven`.
+Verified first-party against the doc before accepting it. **The two arms were never
+risk-equivalent: arm 2 removes the thing that makes a host authority exist, and no reading of the
+round-3 text would have shown that — only building it did.** Iteration 84 recorded that a
+`proposed_fix` can be RUNNABLE and still a DOWNGRADE; this is the next turn of that screw — a fix
+that is runnable, correctly applied, *and* self-defeating, where the discriminator is not "does it
+run" or "does it reduce what the gate can observe" but **"does the thing it removes turn out to be
+load-bearing for the claim the document is making?"**
+
+**Rule 3f in its intended form — the premise objection was MEASURED, not forwarded, and the
+measurement CORRECTED the document.** `gemini-3-1-pro` blocked round 3 on the doc asserting, with
+no Verification Log row, that the pinned verifier *"cannot encode a record containing `list[ADT]`"*.
+The objection is **correct about the document** and the premise is **true** — and the real boundary
+is **broader** than the doc claimed. Two probe files, four record shapes, every arm in **one**
+`ai-check` call with the pinned v0.30.0 so the controls are same-call and same-scope:
+
+| arm | record parameter shape | `verify.results[].status` |
+|---|---|---|
+| `arm3` | scalars only | **verified** |
+| `arm6` | contains `list[scalar]` | **verified** |
+| `arm2` | *bare ADT parameter* (not a record) | **verified** |
+| `arm4` | contains a **bare ADT** field | **error** |
+| `arm5` | contains **`list[ADT]`** | **error** |
+
+Exact text: `Z3 error … (error "Invalid constant declaration: unknown sort 'BareAdtRec'")`. Three
+corrections follow, all now in the doc: the limitation is **an ADT-typed field in a record
+parameter, bare or in a list** — not `list[ADT]`; **records and lists are not the problem**
+(`arm3`/`arm6` verify); and `arm1`'s contract **never reads the ADT field** (`ensures { result ==
+(r.goal == "x") }`) yet still errors, so the trigger is the parameter's TYPE and you cannot dodge
+it by touching only scalar fields. And the reason this could sit unproven in a reviewed document:
+**`rc=0`, `check.passed=true`, `check.error_count=0` throughout — the encoding failure is silent to
+the exit code**, visible only in `verify.results[].status`. Rows V31/V32 carry the commands and the
+observed output. `gemini-3-1-pro` **passed** on round 4.
+
+**Routing.** Designer `codex:gpt-5.6-sol` (rotation file held `claude:claude-fable-5` as
+last-used; advanced to `codex` and written back). Two bounded passes, `rc=0` both, directive
+delivery asserted at **18,506 B** and **12,631 B**, `< /dev/null`, 30-min cap, worktree
+`.wt-iter87` — a sibling of the repo, never `/tmp`. Both passes produced a non-empty diff. Not the
+scarce Fable bucket, so the one-run discipline iteration 86 flagged is not engaged here.
+
+**Deviation adjudicated by measurement (rule 3h), and it was a CORRECTION.** Pass 1 re-measured
+V28's inherited counts and reported **8** `PutObject` / **13** `GetObject` non-test call sites,
+against the doc's **10/16**. Controller re-derived independently: a looser `PutObject(` grep over
+`host/ cmd/` returns **11**, of which exactly **3** are interface declarations and the method
+definition (`PutObject\((store\.Object|o Object)\) error`), leaving **8**. The designer's
+`\.PutObject\(` is the better instrument; its deviation stands, and the row now carries its scope
+("the scoped non-test `host`/`cmd` inventory") rather than a bare cardinality.
+
+**Ruled out.** (a) That the item needed a new design — it did not; the existing doc was revised in
+place, as the charter row prescribed. (b) That gpt5's round-4 objection could be waved through under
+the narrow-refinement carve-out — it cannot: the one revision and one re-quorum this cycle permits
+were both spent, the objection disputes whether tranche 1 is an authority boundary **at all**, and
+its `proposed_fix` again ends in two mutually exclusive architectures ("*either* postpone
+authority-bearing `ResolvedGradeProven` until tranche 2 *or* construct the authority through an
+internal/unexported capability"), which is exactly the controller-invented resolution the carve-out
+forbids. (c) That `AC14` was absent — a literal `grep -c "AC14"` returns **0** because the doc
+numbers ACs as a plain list; the controller ran that, got a false absence, and widened before
+concluding (rule 3a(ii)). (d) That the probe `.ail` files could live in the worktree — they were
+staged there and removed before the designer ran, because a stray repo-root `.ail` moves the gate's
+module count; `--add-dir /tmp` made them readable where they were.
+
+**Cost.** `metered=$0.266188` of the $5 ceiling — quorum round 3 `$0.127746`, round 4 `$0.138442`.
+Both rounds ran with `--max-cost-usd 0.35` set **before** round 1 (iteration 86's operational
+lesson, applied), and both returned `absent_reviewers: []`. Designer passes rode the codex quota
+lane, **116,724** tokens on pass 1; codex reported no dollar figure.
+
+**Platform.** Everything measured on **darwin/arm64**; this is a docs-only change, and the only CI
+legs are the two on the landing commit.
+
+**Next — and the answer is that THE HEADLESS QUEUE IS NOW FULLY BLOCKED.** Every one of the 19 rows
+(18 numbered plus `4b`) is either complete or blocked: **1, 2, 3, 4, 4b, 9, 10, 11, 12, 13, 15, 16**
+LANDED/COMPLETE; **5** blocked on two live prerequisites (upstream `sunholo-data/ailang#498`
+re-checked this iteration — still **OPEN**, last updated `2026-08-04`; plus the unbuilt
+commit-boundary contract); **6** parked until 2–5 land; **7** parked until item 5's `P6.B`; **8**
+attended-only; **14** ratified to sit behind 18; **17** and **18** parked on one-word asks. So the
+two outstanding A/Bs are not conveniences — **they are the only things that unblock this loop**, and
+that is now the headline of the report rather than a footnote.
+
+**AND THE CONTROLLER GOT THIS WRONG TWICE ON THE WAY, WHICH IS THIS ITERATION'S SECOND FINDING AND
+THE SHARPER ONE FOR THIS REPO.** First answer: item **16** — which is `[COMPLETE 2026-08-13
+(iter-80)]`; caught by enumerating the queue's row headers instead of trusting the previous
+dashboard's "what each item needs" list. Second answer: item **8**, on the strength of grepping its
+row and getting **HEADLESS-ROUTABLE** and **NOT BLOCKED ON MARK**. Both strings are real and both
+sit inside `**Prior head text follows.** ~~…~~` — **superseded text the row deliberately keeps
+inline**. Item 8's LIVE head says the exact opposite: *"`SM.D` IS A REAL PROCEDURE AND IS
+ATTENDED-ONLY — never headless, never CI. THIS ITEM HAS NO HEADLESS-ROUTABLE MILESTONE LEFT; item
+9's three pieces are the routable work"* — and item 9 is itself `[LANDED — ITEM COMPLETE
+2026-08-10 (iter-68)]`. Only reading line 2293 itself, rather than the row, refuted it.
+**This is the same defect as the iteration's spine, one level down.** The spine is that a claim true
+in one scope goes wrong when quoted in a wider one; here the scope is **which head is live**, and
+this charter's own convention — rows that retain their history inline behind `~~` — makes a
+row-scoped grep return the live head and every dead one *with no marker in the match*. A count of
+tokens cannot distinguish them: my `grep -c` over item 8 returned 12 hits spanning three different
+epochs of that row. Routed to Gate 5 as a **process** finding, at 1 recorded instance (watch-item,
+bar is 2), with the cheap instrument named: read the row's FIRST line, or strip `~~`-fenced spans
+before grepping a queue row.
+
+Non-blocking and recorded for whoever resumes 17: `gemini-3-1-pro` notes `DecodeProposal(raw)`
+states no byte bound before parsing, unlike `ValidateProof`'s 256 KiB envelope cap.
+
+**TWO open asks** — items 17 and 18, both phrased for one-word replies.

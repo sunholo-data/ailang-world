@@ -1,40 +1,45 @@
 # AILANG World — mission dashboard
 
 *Snapshot, overwritten every iteration. History: charter STATUS + `world-mission-log.md`.*
-**As of** 2026-08-14 (iter-86) · **dev** `6fd26f0` · **CI** green, SHA-addressed, `checks=2` both
-`success`, control fires on a known-runs SHA. Nothing landed to dev this iteration.
+**As of** 2026-08-15 (iter-87) · **dev** `bef0153` · **CI** green, SHA-addressed, `checks=2` both
+`success`. Doc revision only; no code changed. `metered=$0.266188` of $5.
 
-## Item 18 `w-daemon-read-cancellation` — DESIGNED, then PARKED `needs-human-review`
+## ⚠ THE HEADLESS QUEUE IS FULLY BLOCKED — the two asks are the only unblockers
 
-673-line doc, 9 ACs, 27+2 verification rows, 12 mutation rows. **Two quorum rounds, both
-`blocked` — and both with BOTH external reviewers PRESENT** (`absent_reviewers: []` each round,
-so neither verdict is a pass-with-a-hole; the per-reviewer cap was raised to $0.25/$0.30 against a
-$0.10 default precisely to pre-empt the budget-degrade trap). `metered=$0.2299`.
+All 19 rows (18 + `4b`) complete or blocked. **1,2,3,4,4b,9,10,11,12,13,15,16** LANDED · **5**
+upstream `ailang#498` still **OPEN** (re-checked `2026-08-04`) + unbuilt commit-boundary contract ·
+**6** until 2–5 · **7** until 5's `P6.B` · **8** attended-only · **14** behind 18 · **17**/**18** on
+one-word asks.
 
-Round 2 left **one** live objection. gemini's was a PREMISE objection — measured by the controller,
-**both premises TRUE** (`handleLogRange` writes once at the end; `defaultClientTimeout = 30s` at
-`daemon.go:110`), recorded as V28/V29, design unchanged, objection **discharged by measurement**.
-`gpt5-6-sol`'s is a **DIRECTION dispute on the scope boundary**, which forecloses the carve-out.
+## Item 17 `w-validated-proven-evidence-boundary` — revised twice, re-PARKED
 
-## The spine: one enumeration, wrong at three different scopes, in one iteration
+Designer `codex:gpt-5.6-sol` ×2, 566 → 711 lines; quorum rounds **3 and 4**, `absent_reviewers: []`
+both. Round 4 is the **first reviewer flip to `pass`** in this item's history (`gemini-3-1-pro`);
+`gpt5-6-sol` rejects. All three prescribed deliverables landed — MAC seam per Mark's Option B, the
+V27 repair (`verify.results[].function`, never the bare int), and the `unauthenticated_report`
+negative control.
 
-The queue row said **four** context-free read getters. The designer found a **fifth**
-(`GetRegistryHead:628`) — then stated it as a store-wide universal, and the store has **six**
-(`GetVerifyResult:773`, off the daemon path). Meanwhile the controller's own directive, under a
-**VERIFIED-BY-ME** heading, put the DSN builders in `store.go` — that file has **zero** definitions;
-they are at `writer_lock.go:120/176/187`. I had read **call sites as definitions**. The designer
-refuted it. Under-count, over-claim and mis-location are the same defect: **a count is only true
-inside the scope it was taken in, and the scope is the part nobody writes down.**
+**The spine: the reviewer's own verbatim alternative was the trap.** Round 3's `gpt5-6-sol` catch
+was real — AC14 demanded a *daemon-owned* key at *first startup* in a tranche whose §8.2 excludes
+`host/daemon`/`cmd/**`: unsatisfiable by construction. Its fix had two arms; the designer took arm 2
+**verbatim** (the carve-out's whole safeguard) — and round 4 rejected the result, correctly: with no
+production root the key is caller-supplied, so `NewValidator(key [32]byte, …)` (`:198`/`:211`) plus
+the **free** `GradeOfValidated` (`:201`) lets any Go caller mint `ResolvedGradeProven`. **Arm 2 and
+"authority boundary" are incompatible, and only applying arm 2 revealed it.**
 
-## What each item needs now
+**Measured, not forwarded (rule 3f):** gemini's premise objection — 4 record shapes, one `ai-check`,
+pinned v0.30.0. Scalar record, `list[scalar]` and bare-ADT *param* **verify**; record with a **bare
+ADT field** or `list[ADT]` **error**. Broader than the doc claimed, and `rc=0`/`check.passed=true`
+throughout — **silent to the exit code**. Rows V31/V32; gemini passed. **Also corrected:** §3.6 said
+`EXACT_TOTAL_VERIFIED=5`/`TESTS=20`; at HEAD **10**/**39** (`aaada20`, one iteration earlier).
 
-- **18** — **PARKED**: one-word A/B (A = ship the 1.5 d scoped item · B = re-size to repo-wide).
-- **17** — *revision round*: MAC seam, V27 repair (`verify.results[]`, never the int), neg control.
-- **14** — blocked on 18. **5** — still blocked.
-- New follow-on filed by the doc: `w-bounded-waits-operator-and-write-paths` (item 18's residue).
+## Second finding — `grep` cannot see `~~`
 
-## Loop · carry-forward
+"What's next" came out wrong twice: item 16 (COMPLETE), then item 8 — by reading
+`HEADLESS-ROUTABLE` out of **struck-through** prior-head text while the live head says
+attended-only. ~19 rows keep dead heads inline *on purpose*. Process fix recorded; watch-item at 1.
 
-launchd, ~6h watchdog. Controller `opus` · designer `claude:claude-fable-5` (rotation advanced
-`codex` → `claude`; **FLAGGED**: two bounded Fable runs, design + revision, vs the one-run
-discipline). Cap $5; spent **$0.2299**. **ONE open ask.**
+## Loop
+
+launchd, ~6h watchdog. Controller `opus` · designer `codex:gpt-5.6-sol` (rotation `claude` →
+`codex`, written back). **TWO open asks** (17 and 18), both one-word.
