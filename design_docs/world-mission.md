@@ -130,6 +130,23 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   (`perl -0pe 's/~~.*?~~//gs'`); never conclude a row's status from a token count over the whole
   row. Same family as rule 3b(ix) — a claim true in the scope it was written for, quoted into a
   wider one — with the scope being *which head is live*.
+  **INSTANCE 2 — 2026-08-15 (iter-88), A DIFFERENT MECHANISM, SAME CLASS: THE SUB-ROW NAMING
+  CONVENTION IS INVISIBLE TO THE NATURAL PATTERN, SO THE QUEUE UNDER-COUNTS BY A FIFTH. The bar
+  of 2 is met and this is now a recorded rule, not a watch-item.** Iteration 87 wrote *"All **19**
+  rows (18 numbered + `4b`)"*. Enumerated by parsing row heads, the queue is **24**: `1, 2, 3, 4,
+  4b, 4c, 4d, 4e, 4f, 5, 6, 6b, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18` — missing `4c`, `4d`,
+  `4e`, `4f`, `6b`. The cause is that a `^[0-9]+\.` reading cannot see a letter-suffixed sub-row,
+  and this charter grows them freely (an item that splits keeps its parent's number). **What makes
+  it durable is that the VERDICT survived**: every missed row is `LANDED`/`COMPLETE`, so "all rows
+  are complete or blocked" was still true, and nothing about the sentence looked wrong. A count
+  that is wrong in a direction the conclusion does not care about gets no scrutiny at all.
+  Rule: enumerate queue rows with `^[0-9]+[a-z]?\. \[` and **quote the enumerating command beside
+  the count** (rule 3b(ix)); never state a queue cardinality from a `^[0-9]+\.` pattern or from
+  memory of the last row's number. **The generalisation across both instances is the one to carry:
+  this charter's own formatting conventions — struck-through dead heads, letter-suffixed sub-rows —
+  are each invisible to the instrument a reader naturally reaches for, and both failures are
+  SILENT and produce a confident, specific, wrong answer.** Before grepping this file for anything
+  structural, ask what convention the pattern cannot see.
   (c) **`"$var:path"` IS A ZSH HISTORY-MODIFIER EXPANSION, NOT A LITERAL — AND `git show
   "$rev:host/…"` IS SILENTLY REWRITTEN (added iter-41; instance 3 of this same class).** In zsh
   5.9 the `:x` suffix after an unbraced `$var` inside double quotes is applied as a **modifier**:
