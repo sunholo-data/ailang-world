@@ -1,45 +1,54 @@
 # AILANG World — mission dashboard
 
 *Snapshot, overwritten every iteration. History: charter STATUS + `world-mission-log.md`.*
-**As of** 2026-08-15 (iter-87) · **dev** `bef0153` · **CI** green, SHA-addressed, `checks=2` both
-`success`. Doc revision only; no code changed. `metered=$0.266188` of $5.
+**As of** 2026-08-15 (iter-88) · **dev** `e53876a` · **CI** green, SHA-addressed, `checks=2` both
+`success`. Charter/record only; no code changed, nothing routed. `metered=$0.00` of $5.
 
-## ⚠ THE HEADLESS QUEUE IS FULLY BLOCKED — the two asks are the only unblockers
+## ✅ CORRECTION — THE QUEUE IS **NOT** FULLY BLOCKED. Item 5's blockers have rotted.
 
-All 19 rows (18 + `4b`) complete or blocked. **1,2,3,4,4b,9,10,11,12,13,15,16** LANDED · **5**
-upstream `ailang#498` still **OPEN** (re-checked `2026-08-04`) + unbuilt commit-boundary contract ·
-**6** until 2–5 · **7** until 5's `P6.B` · **8** attended-only · **14** behind 18 · **17**/**18** on
-one-word asks.
+Iteration 87's headline is wrong one iteration after it was written. **All three of item 5
+`w-mcp-projection`'s P6.B prerequisites are discharged**, measured first-party with firing controls.
+Queue is **24 rows** (18 numbered + `4b,4c,4d,4e,4f,6b`), not the 19 last recorded.
 
-## Item 17 `w-validated-proven-evidence-boundary` — revised twice, re-PARKED
+## The spine — a blocker's STATE is not its PURPOSE
 
-Designer `codex:gpt-5.6-sol` ×2, 566 → 711 lines; quorum rounds **3 and 4**, `absent_reviewers: []`
-both. Round 4 is the **first reviewer flip to `pass`** in this item's history (`gemini-3-1-pro`);
-`gpt5-6-sol` rejects. All three prescribed deliverables landed — MAC seam per Mark's Option B, the
-V27 repair (`verify.results[].function`, never the bare int), and the `unauthenticated_report`
-negative control.
+Iter-87 re-checked `ailang#498` and recorded *"still OPEN, last updated 2026-08-04"*. True about the
+issue, and the wrong instrument — Gate 2 says `OPEN` + long-untouched is evidence **toward**
+superseded. **Lane B landed in full**: `f5ebcc0b5` M1 (#585) · `6166adab8` M2 (#592) · `b8c038647`
+M3 (#601), shipping the **module-root public package `serveapi/`**, released in **v0.33.1**.
 
-**The spine: the reviewer's own verbatim alternative was the trap.** Round 3's `gpt5-6-sol` catch
-was real — AC14 demanded a *daemon-owned* key at *first startup* in a tranche whose §8.2 excludes
-`host/daemon`/`cmd/**`: unsatisfiable by construction. Its fix had two arms; the designer took arm 2
-**verbatim** (the carve-out's whole safeguard) — and round 4 rejected the result, correctly: with no
-production root the key is caller-supplied, so `NewValidator(key [32]byte, …)` (`:198`/`:211`) plus
-the **free** `GradeOfValidated` (`:201`) lets any Go caller mint `ResolvedGradeProven`. **Arm 2 and
-"authority boundary" are incompatible, and only applying arm 2 revealed it.**
+It answers the row's four named requirements **four-for-four** — caller-owned mux (`Mount`),
+principal resolved before discovery *or* invocation (`SessionResolver` in both the `Tools` and
+`Invoke` closures of both handlers), caller-supplied exact descriptors (`ToolSource.Tools`), and
+**no built-in tool unless supplied**: `submit_feedback` = **0** across the four seam files while the
+same grep in the same directory returns **4** on `feedback_tool.go` (control fires).
 
-**Measured, not forwarded (rule 3f):** gemini's premise objection — 4 record shapes, one `ai-check`,
-pinned v0.30.0. Scalar record, `list[scalar]` and bare-ADT *param* **verify**; record with a **bare
-ADT field** or `list[ADT]` **error**. Broader than the doc claimed, and `rc=0`/`check.passed=true`
-throughout — **silent to the exit code**. Rows V31/V32; gemini passed. **Also corrected:** §3.6 said
-`EXACT_TOTAL_VERIFIED=5`/`TESTS=20`; at HEAD **10**/**39** (`aaada20`, one iteration earlier).
+Prereq 2 was discharged at iter-75. Prereq 3's basis *"No landed API exposes these"* is now **FALSE**
+— `JournalIntent`+`bindCommitIntentTx`, `InvocationID`, `GetReceipt`/`GetEffectReceipt` are all
+landed public APIs. **Residual, one word:** *"a **VERIFIED** commit-boundary contract"* — none of the
+**10** pinned Z3 identities is a commit-boundary law, so the surface exists and the proof does not.
+That is `world/*.ail` work, not more `host/`.
 
-## Second finding — `grep` cannot see `~~`
+## Why it is still not routable — prescription rot, 3rd instance
 
-"What's next" came out wrong twice: item 16 (COMPLETE), then item 8 — by reading
-`HEADLESS-ROUTABLE` out of **struck-through** prior-head text while the live head says
-attended-only. ~19 rows keep dead heads inline *on purpose*. Process fix recorded; watch-item at 1.
+The doc chose **path (c)** ("a narrow seam over `internal/apiserver`") *because* upstream exposed
+nothing public. Upstream now ships it, so path (c) may reduce to "import `serveapi`". **The clearing
+of the blocker IS the falsifier** — invisible to any "has the blocker cleared?" sweep. Item 5 needs a
+**design revision** before any sprint.
+
+## ⚠ THREE open asks — item 5's unblocks the most
+
+- **Item 5 (NEW)** — World's `go.mod` requires **only** `modernc.org/sqlite`; there is no ailang Go
+  dep to bump, so this is World's **first**. **A** = import `serveapi` at v0.33.1 (smallest, tracks
+  upstream, couples the host + re-opens the `.ail` verifier pin `v0.30.0` as a second axis) ·
+  **B** = stay dependency-free, build path (c) informed by upstream's contract. Frozen-core cuts for
+  **A**, slim-kernel for **B** — which is why it is not the loop's call.
+- **Item 17** — one word (evidence-boundary architecture, re-parked after round 4).
+- **Item 18** — one word (daemon read cancellation, scope A/B).
 
 ## Loop
 
-launchd, ~6h watchdog. Controller `opus` · designer `codex:gpt-5.6-sol` (rotation `claude` →
-`codex`, written back). **TWO open asks** (17 and 18), both one-word.
+launchd, ~6h watchdog. Controller `opus`; **no designer/planner/executor/evaluator spawned** this
+iteration — nothing routable without the asks. Rotation pointer untouched at `codex:gpt-5.6-sol`.
+Upstream `#498` annotated and **deliberately left OPEN**: World's blocker is discharged, its CLI
+`serve-api` half is not.

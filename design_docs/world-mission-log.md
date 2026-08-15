@@ -9293,3 +9293,149 @@ Non-blocking and recorded for whoever resumes 17: `gemini-3-1-pro` notes `Decode
 states no byte bound before parsing, unlike `ValidateProof`'s 256 KiB envelope cap.
 
 **TWO open asks** — items 17 and 18, both phrased for one-word replies.
+
+## Iteration 88 — 2026-08-15 — item **5** `w-mcp-projection` **UNBLOCKED — all three P6.B prerequisites discharged, measured first-party; no code landed and nothing routed** (charter row 5 rewritten, STATUS rotated, dashboard rebuilt, upstream `#498` annotated; `metered=$0.00`) — the iteration's spine is that **a blocker's STATE is not its PURPOSE: `ailang#498` is still `OPEN` and untouched since 2026-08-04, which iteration 87 read as blocking, while the thing it was filed to obtain shipped in `v0.33.1` and has been sitting in a public package for eleven days**
+
+**Pick.** None from the queue — the queue head was believed fully blocked. Iteration 87 recorded
+*"THE HEADLESS QUEUE IS NOW FULLY BLOCKED … the two outstanding A/Bs are the ONLY things that unblock
+this loop"*, and with no human present and no directives, the skill's disposition for an unroutable
+slot applies: pick something that does not need the landing gate — an analysis, a triage, a
+decision-bearing investigation. The investigation chosen was **re-verifying the queue's declared
+blockers**, per Gate 2's rule that a declared blocker is a claim too and the ones describing someone
+else's work rot fastest. It overturned the headline.
+
+**Gate 0.** Kill switch armed-off; `sunholo-voight-kampff` active; billing **CLEAN** (both Anthropic
+key vars empty). Tree clean. Inbox: **2** unread, both non-directive — an `eval-suite` start notice
+and `mission-v1`'s iteration-205 report to controlplane; per the cross-mission contract a sibling's
+report never auto-outranks the queue, and neither is a regression. Directive channel: **0** of **28**
+`#53` comments from `MarkEdmondson1234` since watermark `2026-08-14T16:01:52Z`
+(`scripts/mission_directives.sh`, allowlist enforced in-script). No rotation due — `#53` was created
+`2026-08-10T05:37:35Z` = **07:37 CEST on that Monday**, i.e. *after* the 07:00 local boundary, and it
+holds 28 comments against the 80 cap. (The timezone is the load-bearing half: read as UTC the
+boundary would precede creation and the thread would spuriously rotate.)
+
+**Gate 1.** `dev` == `origin/dev` at `e53876a`, neither ahead nor behind (two-arg `rev-parse` with no
+`--short`, rc=0). The RUNNING skill is **byte-identical to origin** — `cmp -s` silent, both sides
+228,658 B — resolved through the `~/.claude/skills/mission-control` symlink into the **V1 checkout**,
+confirmed by `readlink`. CI read SHA-addressed on the HEAD commit: `checks=2`, `go host build + test
+gate` **success**, `ailang-code verify gate` **success**. `total_count=2` is non-zero, so the
+instrument answered and a run exists — not the unverified-HEAD case.
+
+**Gate 2 — died-mid-flight sweep: CLEAN.** Open PRs authored by this loop: **0** (`[]`).
+`git worktree list`: **1** (the main checkout only). `git status --porcelain` in the main checkout:
+empty. Charter freshness tell: `grep -ci "iteration 87"` → **2** with the control `iteration 86` →
+**1**, so the charter is current and the instrument works.
+
+**THE SPINE — A BLOCKER'S *STATE* IS NOT ITS *PURPOSE*, AND THIS LOOP HAS NOW FAILED THAT RULE THREE
+TIMES.** Gate 2 is explicit: *"the tell that a blocker is dead is never its own state … `OPEN` +
+long-untouched is evidence TOWARD superseded, not evidence of blocking"*, and *"never quote a PR's or
+issue's purpose from a doc that merely cites it"*. Iteration 87 re-checked `sunholo-data/ailang#498`
+and recorded *"still **OPEN**, last updated `2026-08-04`"*. Every word of that is true, and it is a
+fact about the issue rather than about the seam. Measured here: **Lane B has landed in full** —
+`f5ebcc0b5` M1 *"public embeddable contract, authorized surface, bounded callback runner"* (#585),
+`6166adab8` M2 *"request-scoped MCP adapter and frozen wire envelopes"* (#592), `b8c038647` M3
+*"A2A projection, Mount, and one exposure gateway"* (#601).
+
+**Prerequisite 1 — DISCHARGED, four-for-four against its own named requirements.** The artifact is
+`serveapi/serveapi.go`, a **module-root public package**, not `internal/`:
+
+| Row's named requirement | Landed surface |
+|---|---|
+| caller-owned mux | `func (s *Server) Mount(mux *http.ServeMux)` |
+| principal resolved before discovery *or* invocation | `SessionResolver.ResolveSession(ctx, *http.Request)` wired into BOTH the `Tools` and `Invoke` closures of BOTH the MCP and A2A handlers |
+| caller supplies the exact visible descriptors | `ToolSource.Tools(ctx, Session) ([]ToolDescriptor, error)` |
+| **no built-in tool unless the caller supplies it** | `submit_feedback` **0** in `embedded_mcp.go`, `embedded_a2a.go`, `authorized_surface.go`, `callbacks.go` |
+
+That last row is the load-bearing one and it was measured rather than inferred from a single file's
+silence: the **same grep in the same directory** returns **4** on `feedback_tool.go`, so the
+known-positive control fires and the zeros are measurements (rule 3a(i-d) — the control scoped to the
+path under test, which is precisely the clause that a control run *elsewhere* would have failed).
+The session/process-wide gap that created this row in the first place is closed too: `Session` threads
+through discovery *and* invocation, where `--caps`/`--routes-only`/`--api-key-*` were process-wide.
+**Released:** `git tag --contains` puts M1 in `v0.33.0` and M2/M3 in **`v0.33.1`**; control — an older
+commit resolves to **5** tags, so `--contains` is working.
+
+**Prerequisite 2 — already discharged at iter-75** (item 11 `w-transition-registry` COMPLETE, `TR.C`
+green at `625fb89`). Unchanged; restated only because the row's own instruction was to re-verify the
+*other two* at pick time.
+
+**Prerequisite 3 — its stated basis is now FALSE, with one precise residual.** The prerequisite's own
+words were *"No landed API exposes these."* At HEAD all three named artifacts are landed **public**
+APIs: an atomic not-started-vs-committed contract → `JournalIntent` (`host/store/journal.go:26-28`,
+*"the canonical statement of a planned commit"*) bound in-transaction by `bindCommitIntentTx`
+(`host/store/store.go:1015`); a stable invocation/idempotency ID → `InvocationID` threaded through
+journal, receipts and recovery (`journal.go:29,42,51,63,80,95,103`; `host/broker/publish_op.go:220`);
+a queryable durable receipt → `func (s *Store) GetReceipt(id string) (Receipt, bool, error)`
+(`journal.go:813`) and `GetEffectReceipt` (`:852`), consumed by `recoverCommitPending`
+(`host/broker/recover.go:126`).
+
+**THE RESIDUAL IS ONE WORD, AND IT IS THE WORD THIS REPO CARES MOST ABOUT: "a *VERIFIED*
+commit-boundary contract."** In this repo "verified" has a specific, gate-enforced meaning, and by
+that meaning it is **not** satisfied: none of the **10** pinned Z3-proven identities is a
+commit-boundary law — `applyRevision`, `isValidNextWorld`, `sameRef`, `servesEntry`, `gradeOf`,
+`timeoutOutcome`, `timeoutFiredLegally`, `validEscalation`, `validDefer`, `wellFormedSchedule`
+(`REQUIRED_VERIFIED`, `scripts/verify_ail.sh:262-268`). So the Go surface exists and the *proof* does
+not. Reading the landed API as discharging "verified" would be exactly the vacuous pass this charter
+keeps closing elsewhere, so it is recorded as an open, scoped residual — and it is **pure-core work in
+`world/*.ail`**, not more `host/`.
+
+**SECOND FINDING — PRESCRIPTION ROT, THIRD INSTANCE, AND THE CLEANEST OF THE THREE: THE CLEARING OF
+THE BLOCKER *IS* THE FALSIFIER.** Item 5's design doc chose **path (c)** — *"a narrow public serving
+seam over the existing `internal/apiserver`"* — explicitly because reuse paths (a) and (b) were
+rejected on first-party evidence and upstream exposed nothing public. Upstream now ships that seam,
+so path (c) may reduce to *"import `github.com/sunholo-data/ailang/serveapi`"*. This is invisible to
+any sweep that asks *"has the blocker cleared?"*, because **the answer being YES is what voids the
+design**. Instances 1 and 2 were iter-82's renderer row (ordered to display a constructor the
+carve-out had cut) and iter-70's item-7 park condition. Consequence: item 5 is **unblocked but not
+routable as designed** — it needs a revision round before any planner sees it.
+
+**THIRD FINDING — THE QUEUE HAS 24 ROWS, NOT 19.** Iteration 87 wrote *"All 19 rows (18 numbered +
+`4b`)"*. Enumerated by parsing row heads: **1, 2, 3, 4, 4b, 4c, 4d, 4e, 4f, 5, 6, 6b, 7, 8, 9, 10, 11,
+12, 13, 14, 15, 16, 17, 18** = **24**, missing `4c, 4d, 4e, 4f, 6b`. Every missed row is
+LANDED/COMPLETE, so the *verdict* ("complete or blocked") held — which is exactly why it survived
+unchallenged. Rule 3b(ix) again: a count correct nowhere in particular, quoted as a property of the
+queue. Note the mechanism is this charter's own sub-row naming convention, which is invisible to the
+natural `^[0-9]+\.` reading — the same class as iter-87's `~~`-blindness finding, one convention over.
+
+**Routing.** Controller `opus`. **No designer, planner, executor or evaluator was spawned** — nothing
+was routable without the A/B below, and a park does not need a sub-agent. Designer rotation pointer
+**untouched** at `codex:gpt-5.6-sol` (`~/.ailang/state/mission-world-designer-rotation`). No quorum
+(no doc authored or revised). No background work was outstanding at any turn boundary (Standing
+rule 7).
+
+**Upstream `#498` — annotated and DELIBERATELY LEFT OPEN.** The skill's rule (c) says a dead blocker
+gets closed with the measurement. Applied literally that would be wrong here, and the distinction is
+the iteration's whole point: **the blocker died, the issue did not.** World's downstream need is
+discharged by `serveapi`, but the *filed defect* also covers the CLI `serve-api` surface, where
+`feedback_tool.go` still injects `submit_feedback` unconditionally — genuinely unaddressed. Closing
+would destroy that information. Comment posted with the full four-for-four measurement, issue left
+open, and the split recorded in the charter row so no future iteration re-reads `OPEN` as blocking.
+
+**Ruled out.** (a) That `#498`'s `OPEN` state is evidence of blocking — refuted by the three merge
+commits and the released tags. (b) That the landed `host/` commit-boundary APIs satisfy prerequisite
+3 in full — refuted by `REQUIRED_VERIFIED`, which contains no commit-boundary law. (c) That item 5
+can be routed to a planner as-written — its architecture was selected under a premise that is now
+false. (d) That adopting `serveapi` is a version bump — World's `go.mod` requires **only**
+`modernc.org/sqlite`; there is **no** ailang Go dependency to bump, so it would be World's first.
+(e) That the queue was fully blocked at all.
+
+**Cost.** `metered=$0.00` of the $5 ceiling — no quorum round, no metered sub-agent, no provider lane
+fired. Controller-only on the `opus` quota bucket.
+
+**Platform.** Everything measured on **darwin/arm64**. This is a docs-only change; no `.ail` and no Go
+source moved, so no gate pin shifts and the ubuntu leg carries no new risk. The pinned verifier was
+not invoked (nothing to verify) and remains `v0.30.0` — note that adopting `serveapi` would re-open
+that pin as a **second, independent axis** from the Go module version, which is why the ask names it.
+
+**Next.** Item **5** needs a **design revision**, gated on the one-word A/B below; it is the only
+queue row whose prerequisites are all discharged. Items **17** and **18** remain parked on their own
+one-word asks. Item **7** was blocked on 5's `P6.B` and therefore moves with it.
+
+**THREE open asks** — items 5, 17 and 18, all phrased for one-word replies. Item 5's is new and
+unblocks the most: **A** = import `serveapi` at `v0.33.1` (smallest surface, tracks upstream, but
+couples World's host to the upstream Go module and re-opens the `.ail` verifier pin as a second axis)
+· **B** = stay dependency-free and build path (c) as designed, now informed by upstream's published
+contract. The frozen-core rule cuts **for A** (a real module dependency is the sanctioned path, the
+opposite of a vendored fork) while the slim-kernel rule cuts **for B**; that tension is a DIRECTION
+question, which forecloses the narrow-refinement carve-out and is why the controller did not settle
+it.
