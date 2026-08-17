@@ -1,54 +1,65 @@
 # AILANG World — mission dashboard
 
 *Snapshot, overwritten every iteration. History: charter STATUS + `world-mission-log.md`.*
-**As of** 2026-08-15 (iter-88) · **dev** `e53876a` · **CI** green, SHA-addressed, `checks=2` both
-`success`. Charter/record only; no code changed, nothing routed. `metered=$0.00` of $5.
+**As of** 2026-08-17 (iter-89) · **dev** `e73b10d` · **CI** green, SHA-addressed, `checks=2` both
+`success`. One gate fix landed; nothing routed. `metered=$0.00` of $5.
 
-## ✅ CORRECTION — THE QUEUE IS **NOT** FULLY BLOCKED. Item 5's blockers have rotted.
+## 🔧 LANDED — the local verify gate was 100% dead on a green tree
 
-Iteration 87's headline is wrong one iteration after it was written. **All three of item 5
-`w-mcp-projection`'s P6.B prerequisites are discharged**, measured first-party with firing controls.
-Queue is **24 rows** (18 numbered + `4b,4c,4d,4e,4f,6b`), not the 19 last recorded.
+`verify_ail.sh` refused `[NOT_A_RELEASE]` and **all 17** `host/verifygate` arms failed, with the
+binary, modules and contracts all fine. `~/.ailang/state` crossed **322 MB** (`observatory.db`
+272 MB) past the binary's 200 MB threshold, so every `ailang` call now prefixes an
+`Observatory: 269MB` warning **on stderr** — and World merged stderr into output it *parses*, at
+three sites (`verify_ail.sh:70` `2>&1|head -1`; `run_bounded`'s `stderr=subprocess.STDOUT` feeding a
+JSON parser; `ail_binary_gate_test.go:46` `CombinedOutput()`). Both `run_bounded` callers parse JSON,
+so the merge was wrong for every caller.
 
-## The spine — a blocker's STATE is not its PURPOSE
+Not ours: a pristine `origin/dev` worktree failed **17/17** identically, and the same tree is green
+on CI. After the fix: `verify_ail.sh` rc=0 (**10** identities / **39** tests / **9/9**, matching the
+recorded pins), `go test ./...` rc=0 **0 FAIL**. Non-vacuity: still refuses `[DEV_BUILD]`. Mutation:
+re-merging stderr reproduces the byte-identical red; restore byte-identical.
+**An instrument that captures more than it parses can be voided by a process it has nothing to do
+with** — the tell is that every arm dies at once and names the environment, not the assertion.
 
-Iter-87 re-checked `ailang#498` and recorded *"still OPEN, last updated 2026-08-04"*. True about the
-issue, and the wrong instrument — Gate 2 says `OPEN` + long-untouched is evidence **toward**
-superseded. **Lane B landed in full**: `f5ebcc0b5` M1 (#585) · `6166adab8` M2 (#592) · `b8c038647`
-M3 (#601), shipping the **module-root public package `serveapi/`**, released in **v0.33.1**.
+## ⚠ FOUR open asks — the queue is IDLE until one is answered
 
-It answers the row's four named requirements **four-for-four** — caller-owned mux (`Mount`),
-principal resolved before discovery *or* invocation (`SessionResolver` in both the `Tools` and
-`Invoke` closures of both handlers), caller-supplied exact descriptors (`ToolSource.Tools`), and
-**no built-in tool unless supplied**: `submit_feedback` = **0** across the four seam files while the
-same grep in the same directory returns **4** on `feedback_tool.go` (control fires).
+The headless queue is fully blocked, re-verified this iteration by reading all **24** rows' LIVE
+heads (not inherited, and not through `~~` spans — iter-87's trap).
 
-Prereq 2 was discharged at iter-75. Prereq 3's basis *"No landed API exposes these"* is now **FALSE**
-— `JournalIntent`+`bindCommitIntentTx`, `InvocationID`, `GetReceipt`/`GetEffectReceipt` are all
-landed public APIs. **Residual, one word:** *"a **VERIFIED** commit-boundary contract"* — none of the
-**10** pinned Z3 identities is a commit-boundary law, so the surface exists and the proof does not.
-That is `world/*.ail` work, not more `host/`.
+- **D-WORLD-5** — item 5 `w-mcp-projection`. **A** = import upstream `serveapi` at v0.33.1 ·
+  **B** = stay dependency-free, build the seam locally. Unblocks the most (items 6 and 7 sit behind
+  item 5 *landing*, which its discharged prerequisites are not).
+- **D-WORLD-17** — one word (evidence-boundary architecture, re-parked after quorum round 4).
+- **D-WORLD-18** — one word (daemon read cancellation, scope A/B).
+- **D-WORLD-DRIVER-1 (NEW)** — see below.
 
-## Why it is still not routable — prescription rot, 3rd instance
+## The spine — the driver this loop runs is not in git
 
-The doc chose **path (c)** ("a narrow seam over `internal/apiserver`") *because* upstream exposed
-nothing public. Upstream now ships it, so path (c) may reduce to "import `serveapi`". **The clearing
-of the blocker IS the falsifier** — invisible to any "has the blocker cleared?" sweep. Item 5 needs a
-**design revision** before any sprint.
+`dev.ailang.mission-world.plist:14` executes this repo's **working-tree**
+`tools/launchd/mission-control.sh`, modified and uncommitted since 2026-08-15, **109 diff lines**
+from origin — plus untracked `derive-planner-lane.sh`, `test_mission_routing.sh`, `testdata/`, and a
+`verify_go.sh` step that runs them. Gate 1's `cmp` guards `SKILL.md` and came back clean while the
+**driver** diverged. The same bundle carried the **Human Decision Ledger** — Mark's 2026-08-15
+"authoritative current state" — so `origin/dev` held **0** ledgers against **1** in the working tree.
 
-## ⚠ THREE open asks — item 5's unblocks the most
+**Fixed for the half World owns**: ledger + `scripts/mission_decisions.sh` committed
+(`--check` → valid, 5 rows). `tools/launchd/*` is **frozen core** per CLAUDE.md, so the controller
+may not land it → `D-WORLD-DRIVER-1`. Whole bundle backed up to
+`~/.ailang/state/world-driver-backup-2026-08-17/`, 6/6 sha256 OK.
 
-- **Item 5 (NEW)** — World's `go.mod` requires **only** `modernc.org/sqlite`; there is no ailang Go
-  dep to bump, so this is World's **first**. **A** = import `serveapi` at v0.33.1 (smallest, tracks
-  upstream, couples the host + re-opens the `.ail` verifier pin `v0.30.0` as a second axis) ·
-  **B** = stay dependency-free, build path (c) informed by upstream's contract. Frozen-core cuts for
-  **A**, slim-kernel for **B** — which is why it is not the loop's call.
-- **Item 17** — one word (evidence-boundary architecture, re-parked after round 4).
-- **Item 18** — one word (daemon read cancellation, scope A/B).
+## Second — the two-day silence was a REFUSAL, not a death
+
+Three slots (08-16 20:28, 08-17 00:29, 04:29) logged `NO usable controller … Refusing.`: every
+Anthropic pref quota-limited **and** codex returning `try again at Aug 20th, 2026 5:34 AM`. That is
+the new driver's fail-closed path working — zero tokens beyond probes, loud log — the opposite of
+Standing rule 7's silent `rc=0` orphan. **Codex is exhausted fleet-wide until 2026-08-20 05:34**, so
+the designer rotation's `codex:` entry will probe-fail on the next new-doc iteration.
+
+Third: `derive-planner-lane.sh` is recorded as **absent** (iter-80) and now **exists** — returns
+`opus fail-closed:env-pin`. A recorded *absence* goes stale too, and nothing re-reads one.
 
 ## Loop
 
-launchd, ~6h watchdog. Controller `opus`; **no designer/planner/executor/evaluator spawned** this
-iteration — nothing routable without the asks. Rotation pointer untouched at `codex:gpt-5.6-sol`.
-Upstream `#498` annotated and **deliberately left OPEN**: World's blocker is discharged, its CLI
-`serve-api` half is not.
+launchd, ~6h watchdog. Controller `claude:claude-opus-5`; **no designer/planner/executor/evaluator
+spawned**. Rotation pointer untouched at `codex:gpt-5.6-sol`. Weekly sweep: **0 orphans of 1**
+enumerated open issue. Bookkeeping thread rotated off `#53` (Monday-07:00-local rule).

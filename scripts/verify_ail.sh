@@ -67,7 +67,12 @@ CONTROL
 if ! _ail_resolved="$(command -v -- "$AILANG_BIN" 2>/dev/null)"; then
   _refuse UNRESOLVABLE "'$AILANG_BIN' is not an executable command"
 fi
-_ail_version_line="$("$AILANG_BIN" --version 2>&1 | head -1)"
+# stdout ONLY — never `2>&1`. The binary emits operational warnings on stderr (measured
+# 2026-08-17: `Observatory: 269MB (warn threshold: 200MB)` once `~/.ailang/state` crossed the
+# threshold), and merging them puts a log line FIRST, so `head -1` reads the log timestamp as
+# the version token and this gate refuses NOT_A_RELEASE on a perfectly good pinned release.
+# An empty stdout still refuses loudly below (NO_VERSION_OUTPUT), so nothing is weakened.
+_ail_version_line="$("$AILANG_BIN" --version 2>/dev/null | head -1)"
 if [ -z "$_ail_version_line" ]; then
   _refuse NO_VERSION_OUTPUT "--version produced no first line"
 fi
@@ -153,13 +158,19 @@ LEG1_MODULES=(
 # WHOLE group, print a named TIMEOUT to STDERR, and exit 124. A 124 is the ONE fatal, non-advisory
 # exit code (distinct from the Z3-error-exits-0 and counterexample-exits-1 classes the JSON parse
 # handles). python3's start_new_session gives us the process group.
+# Both callers parse $out as JSON, so stderr MUST NOT be merged into it — it is captured to
+# "$out.err" instead and surfaced by the failure branches. Measured 2026-08-17: the binary
+# prints operational warnings on stderr (`Observatory: 269MB (warn threshold: 200MB)` once
+# `~/.ailang/state` crossed the threshold); merged, that line lands FIRST and every leg died
+# on `could not parse ai-check JSON (Extra data: line 1 column 5)` — a green tree reading as a
+# repo-wide KILL, with the binary, the modules and the contracts all fine.
 run_bounded() {  # $1=timeout_s  $2=out_file  $3..=cmd ;  exit 124 + named msg on expiry
   local t="$1" out="$2"; shift 2
   python3 - "$t" "$out" "$@" <<'PY'
 import os, signal, subprocess, sys
 t = int(sys.argv[1]); out = sys.argv[2]; cmd = sys.argv[3:]
-with open(out, "wb") as f:
-    p = subprocess.Popen(cmd, stdout=f, stderr=subprocess.STDOUT, start_new_session=True)
+with open(out, "wb") as f, open(out + ".err", "wb") as e:
+    p = subprocess.Popen(cmd, stdout=f, stderr=e, start_new_session=True)
     try:
         sys.exit(p.wait(timeout=t))
     except subprocess.TimeoutExpired:
@@ -252,6 +263,7 @@ for i in "${!mods[@]}"; do
   rc=$?
   if [ "$rc" -eq 124 ]; then
     echo "✗ ai-check TIMEOUT on $mod (>${GATE_LEG_TIMEOUT_S}s)" >&2
+    [ -s "$tmp_json.err" ] && { echo "   stderr tail:" >&2; tail -5 "$tmp_json.err" >&2; }
     exit 1
   fi
   # other exit codes advisory (V10/V20) — the JSON parse below is authoritative
@@ -326,6 +338,7 @@ run_bounded "$GATE_TEST_TIMEOUT_S" "$tmp_test_json" "$AILANG_BIN" test --format 
 rc=$?
 if [ "$rc" -eq 124 ]; then
   echo "✗ ailang test TIMEOUT (>${GATE_TEST_TIMEOUT_S}s)" >&2
+  [ -s "$tmp_test_json.err" ] && { echo "   stderr tail:" >&2; tail -5 "$tmp_test_json.err" >&2; }
   exit 1
 fi
 # other exit codes advisory — the JSON parse below is authoritative

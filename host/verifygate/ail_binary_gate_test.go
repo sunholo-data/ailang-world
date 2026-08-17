@@ -43,7 +43,10 @@ func requirePinned(t *testing.T) {
 			"Never skip: a silent skip here is the false-green class this milestone closes. " +
 			"verify_go.sh already refuses to run without it — export the pinned released binary named in CLAUDE.md.")
 	}
-	out, err := exec.Command(pinned, "--version").CombinedOutput()
+	// Output(), never CombinedOutput(): the binary writes operational warnings to stderr, and
+	// merging them prefixes the banner so this HasPrefix check fails on a correct pinned
+	// release (measured 2026-08-17 — an `Observatory: …MB` warning failed all 17 arms here).
+	out, err := exec.Command(pinned, "--version").Output()
 	if err != nil || !strings.HasPrefix(string(out), "AILANG v0.30.0") {
 		t.Fatalf("pinned delegate %q unavailable or wrong (never skip): err=%v output=%q", pinned, err, out)
 	}
