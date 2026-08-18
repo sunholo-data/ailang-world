@@ -76,6 +76,34 @@ if [ -n "$tracked_binaries" ]; then
 fi
 echo "   ✓ 0 binary blobs among $tracked_total tracked files"
 
+echo "── mission routing + decision-ledger gate"
+/bin/bash tools/launchd/test_mission_routing.sh
+/bin/bash -n tools/launchd/mission-control.sh tools/launchd/derive-planner-lane.sh scripts/mission_decisions.sh
+
+# DRIVER DRIFT GATE — D-WORLD-DRIVER-1, RESOLVED B (Mark, attended 2026-08-17).
+# The driver is FLEET-owned: changes land here only as fleet-authored commits,
+# never as World-controller edits. launchd executes this repo's WORKING TREE
+# (dev.ailang.mission-world.plist ProgramArguments), so an uncommitted driver is
+# a live driver that exists in no repository — iter-89 measured exactly that
+# state lurking for two days, carrying the human decision ledger with it.
+# In CI the checkout is clean and this passes; on the rig, mid-propagation dirt
+# reds LOUDLY until the fleet commits it. That red is the point, not a nuisance.
+# Path-liveness control: prove git is scanning a real tracked set before
+# trusting an empty diff — a mistyped path would pass vacuously.
+driver_tracked=$(git ls-files tools/launchd/ scripts/mission_decisions.sh | wc -l | tr -d ' ')
+if [ "$driver_tracked" -lt 5 ]; then
+  echo "verify_go.sh: FATAL: driver drift gate control failed — only $driver_tracked tracked driver files (expected >=5); the gate is not scanning what it claims" >&2
+  exit 1
+fi
+driver_drift=$(git status --porcelain -- tools/launchd/ scripts/mission_decisions.sh)
+if [ -n "$driver_drift" ]; then
+  echo "verify_go.sh: FATAL: DRIVER DRIFT (D-WORLD-DRIVER-1) — the running driver differs from the committed one:" >&2
+  printf '%s\n' "$driver_drift" | sed 's/^/    /' >&2
+  echo "  The driver is fleet-owned; land this as a fleet-authored commit. World's controller must not edit or absorb it." >&2
+  exit 1
+fi
+echo "   ✓ driver drift gate: $driver_tracked tracked driver files, working tree matches HEAD"
+
 # This deny-list is the measured set: go1.26.0-go1.26.5 on darwin/arm64.
 # Future go1.26.6 or go1.27.x versions are not covered here; the canary in this
 # gate is the version-agnostic detector for any version that miscompiles the shape.

@@ -24,7 +24,10 @@ AILANG. It is built by an autonomous mission loop with human ratification gates.
   sprint doc's Verification Log), never a `-dirty` dev build, never from memory.
 - **Frozen core**: never modify `tools/launchd/*` (shared driver) or copy skills into this repo;
   language gaps route to `sunholo-data/ailang` as issues + an `ailang messages send
-  mission-control` note — no local workarounds, no vendored forks.
+  mission-control` note — no local workarounds, no vendored forks. The driver is FLEET-owned
+  (`D-WORLD-DRIVER-1`, ratified 2026-08-17): updates land here only as fleet-authored commits,
+  and `verify_go.sh`'s drift gate reds while the working-tree driver diverges from HEAD — that
+  red means "the fleet must commit", never "absorb it into your change".
 - **Never touch** `~/.ailang/state/mission-v1*` or the V1 checkout from work in this repo.
 
 ## Operating the daemon
