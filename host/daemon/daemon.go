@@ -48,6 +48,7 @@ import (
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/archive"
+	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/registry"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -113,6 +114,17 @@ const (
 	// the daemon hard-Closes and reports a non-nil error: an incomplete drain is
 	// REPORTED, never waited out forever.
 	shutdownTimeout = 10 * time.Second
+
+	// readDeadline bounds the ELAPSED TIME of every store read a GET handler
+	// performs (D7 addendum, w-daemon-read-cancellation). The four http.Server
+	// timeouts above bound the transport; none of them bounds the wait that
+	// happens BELOW the transport, inside database/sql. This constant does.
+	//
+	// It must stay well below writeTimeout: the 503 must be writable inside the
+	// connection's remaining write window. At 10 s against a 30 s writeTimeout,
+	// a read that consumes the whole deadline still leaves 20 s to write the
+	// error. TestBoundedWaitsAndBodyLimit pins the literal.
+	readDeadline = 10 * time.Second
 )
 
 // Operational defaults (Decision 4 / Decision 5). Exported because
@@ -235,12 +247,34 @@ type Daemon struct {
 	srv   *http.Server
 	ln    net.Listener
 
+	// reads is the read seam every /v1 GET route goes through. New always wires
+	// it to the SAME *store.Store held in `store`, so the production path is
+	// unchanged and passes through one extra interface dispatch — the seam
+	// exists so a test can WRAP (embed-and-override) the real store to produce
+	// a stimulus a real store cannot produce on demand: a getter that blocks.
+	//
+	// It is deliberately NOT the whole store. Writes (Commit) stay on `store`:
+	// putting the write path behind a type named "reads" would widen the seam
+	// past this item's scope. The integrity sweep's ScanUnreadableLog /
+	// ScanUnreadableWorlds also stay on `store` — they are startup reads, not
+	// request reads, and no /v1 route reaches them.
+	reads readStore
+
 	// drainTimeout bounds the graceful shutdown. New always sets it to the D7
 	// shutdownTimeout; it is a field rather than a direct constant reference so
 	// the bound is (a) assertable as wiring and (b) shrinkable in tests, which
 	// is the only way the expiry branch of the SHIPPED Shutdown path can be
 	// exercised without a ten-second test.
-	drainTimeout   time.Duration
+	drainTimeout time.Duration
+
+	// readDeadline bounds every store read a GET handler performs. New always
+	// sets it from the readDeadline constant; it is a field rather than a
+	// direct constant reference for the same two reasons drainTimeout is —
+	// the wiring is assertable (MU8: wire it to 0 and TestBoundedWaitsAndBodyLimit
+	// reds) and the value is shrinkable in tests, which is the only way the
+	// SHIPPED timeout branch can be exercised without a ten-second test.
+	readDeadline time.Duration
+
 	scanPageSize   int
 	scanRowBudget  int
 	scanTimeBudget time.Duration
@@ -249,6 +283,29 @@ type Daemon struct {
 	// Health facts resolved once at startup and served verbatim.
 	interpreterRef     string
 	interpreterVersion string
+}
+
+// readStore is the daemon's request-read surface: EXACTLY the five store
+// getters the six /v1 GET routes reach, each context-first.
+//
+// FIVE methods, not six. The route count and the method count are different
+// numbers and the design doc conflates them in two places: GetLogEntry serves
+// BOTH GET /v1/log/{index} and the bounded loop of GET /v1/log, so six routes
+// reach the store through five distinct getters. There is no sixth method to
+// find; Commit is the write path (out of scope) and GetVerifyResult is off the
+// daemon's read path entirely.
+//
+// *store.Store satisfies this by construction — New assigns the same handle to
+// both d.store and d.reads — so the seam adds no production behaviour. Its only
+// job is to let a test wrap the real store rather than replace it, which keeps
+// every handler-side mutation non-vacuous: the fake substitutes store BODIES,
+// and all handler code still runs the production path.
+type readStore interface {
+	GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error)
+	GetWorld(ctx context.Context, ref hashref.HashRef) (store.World, bool, error)
+	GetLogEntry(ctx context.Context, index int64) (store.LogEntry, bool, error)
+	GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error)
+	SelectedHead(ctx context.Context) (hashref.HashRef, bool, error)
 }
 
 // IntegrityReport is the bounded startup sweep result.
@@ -340,7 +397,8 @@ func New(cfg Config) (*Daemon, error) {
 	}
 
 	d := &Daemon{
-		cfg: cfg, store: s, drainTimeout: shutdownTimeout,
+		cfg: cfg, store: s, reads: s, drainTimeout: shutdownTimeout,
+		readDeadline: readDeadline,
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget,
 	}
@@ -453,7 +511,7 @@ func releaseFromVersion(version string) string {
 // method part of the pattern, so a non-GET on these paths is a 405 from the mux
 // rather than a hand-rolled check.
 //
-// The seven patterns below are the complete frozen v1 table. The registry
+// The eight patterns below are the complete frozen v1 table. The registry
 // pattern deliberately uses a multi-segment wildcard: registry semantic IDs
 // such as "world/epoch-registry/v1" contain slashes.
 func (d *Daemon) Handler() http.Handler {
@@ -496,8 +554,12 @@ func (d *Daemon) handleHealth(w http.ResponseWriter, _ *http.Request) {
 func (d *Daemon) handleHead(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := d.readCtx(r)
 	defer cancel()
-	ref, ok, err := d.store.SelectedHead(ctx)
+	ref, ok, err := d.reads.SelectedHead(ctx)
 	if err != nil {
+		if timedOut(ctx, err) {
+			writeReadTimeout(w, d.readDeadline)
+			return
+		}
 		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 		return
 	}

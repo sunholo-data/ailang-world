@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -203,20 +204,54 @@ func clampLimit(requested int) int {
 }
 
 // readCtx derives the context every store read a GET handler performs runs
-// under. It is DERIVED FROM THE REQUEST, not from context.Background(): a
-// client that disconnects releases the store's single connection immediately
-// instead of holding it for the residual deadline.
+// under. Two independent bounds, and both matter:
 //
-// In M1 it adds no deadline of its own (a cancel-only context derived from the
-// request is exactly the daemon's behaviour before this item), so M1 is
-// behaviour-identical and independently landable. M2 changes only this body to
-// context.WithTimeout(r.Context(), d.readDeadline).
+//   - THE DEADLINE. d.readDeadline caps the ELAPSED time of the read, which is
+//     the wait no http.Server timeout can see: those bound the transport, and
+//     the wait this item is about happens below the transport, inside
+//     database/sql. Expiry renders as 503 / class Timeout, never as a 500.
+//
+//   - THE REQUEST. The parent is r.Context(), NOT context.Background(): a
+//     client that disconnects releases the store's single connection
+//     immediately instead of holding it for the residual deadline.
+//     TestDaemonReadDisconnect is the arm that discriminates the two, and it
+//     is the reason this parameter is the *http.Request and not a bare ctx.
 //
 // EVERY caller must `defer cancel()` immediately after calling it — a
-// WithCancel/WithTimeout context whose CancelFunc is never called leaks its
-// context subtree (and, from M2, its timer) once per store-reading request.
+// WithTimeout context whose CancelFunc is never called leaks its timer and its
+// context subtree once per store-reading request, until the deadline fires.
+// That obligation is a gate, not advice: TestReadCtxCancelledAfterHandler
+// asserts on every route that the context the getter received is already
+// cancelled the moment ServeHTTP returns.
 func (d *Daemon) readCtx(r *http.Request) (context.Context, context.CancelFunc) {
-	return context.WithCancel(r.Context())
+	return context.WithTimeout(r.Context(), d.readDeadline)
+}
+
+// timedOut classifies a failed store read as a deadline expiry rather than an
+// internal failure.
+//
+// THE CONTEXT IS THE AUTHORITY and it is checked FIRST. The driver's interrupt
+// path can surface a cancelled read as a SQLITE_INTERRUPT-shaped error that
+// does NOT wrap context.DeadlineExceeded, so an errors.Is-only classifier would
+// misfile a real timeout as a 500 — the exact drift MU3 exists to catch.
+// errors.Is is kept as the second arm for the case where the context is still
+// live but the error itself carries the expiry.
+func timedOut(ctx context.Context, err error) bool {
+	if ctx.Err() != nil {
+		return true
+	}
+	return errors.Is(err, context.DeadlineExceeded)
+}
+
+// writeReadTimeout renders the read-deadline expiry: HTTP 503 with class Timeout.
+//
+// 503 and not 504: 504 is a GATEWAY's statement about an upstream server, and
+// this daemon is the origin. The standard library answers 503 for exactly this
+// shape. The status is mirrored in the frozen, compiler-checked sketch
+// (design_docs/sketches/worlddapi.ail, httpStatus: `Timeout(_) => 503`), and
+// TestTimeoutStatusMirrorsSketch replays that vector so the two cannot drift.
+func writeReadTimeout(w http.ResponseWriter, deadline time.Duration) {
+	writeAPIError(w, "Timeout", fmt.Sprintf("read deadline (%s) exceeded", deadline), http.StatusServiceUnavailable)
 }
 
 // handleWorld serves GET /v1/worlds/{ref} (Decision 3) over store.GetWorld.
@@ -235,8 +270,12 @@ func (d *Daemon) handleWorld(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := d.readCtx(r)
 	defer cancel()
-	world, ok, err := d.store.GetWorld(ctx, ref)
+	world, ok, err := d.reads.GetWorld(ctx, ref)
 	if err != nil {
+		if timedOut(ctx, err) {
+			writeReadTimeout(w, d.readDeadline)
+			return
+		}
 		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -264,8 +303,12 @@ func (d *Daemon) handleObject(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := d.readCtx(r)
 	defer cancel()
-	object, ok, err := d.store.GetObject(ctx, ref)
+	object, ok, err := d.reads.GetObject(ctx, ref)
 	if err != nil {
+		if timedOut(ctx, err) {
+			writeReadTimeout(w, d.readDeadline)
+			return
+		}
 		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -296,8 +339,12 @@ func (d *Daemon) handleLogEntry(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := d.readCtx(r)
 	defer cancel()
-	entry, ok, err := d.store.GetLogEntry(ctx, index)
+	entry, ok, err := d.reads.GetLogEntry(ctx, index)
 	if err != nil {
+		if timedOut(ctx, err) {
+			writeReadTimeout(w, d.readDeadline)
+			return
+		}
 		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -349,8 +396,12 @@ func (d *Daemon) handleLogRange(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	items := make([]logEntryResponse, 0, limit)
 	for offset := 0; offset < limit; offset++ {
-		entry, ok, err := d.store.GetLogEntry(ctx, from+int64(offset))
+		entry, ok, err := d.reads.GetLogEntry(ctx, from+int64(offset))
 		if err != nil {
+			if timedOut(ctx, err) {
+				writeReadTimeout(w, d.readDeadline)
+				return
+			}
 			writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -377,8 +428,12 @@ func (d *Daemon) handleRegistry(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := d.readCtx(r)
 	defer cancel()
-	ref, ok, err := d.store.GetRegistryHead(ctx, name)
+	ref, ok, err := d.reads.GetRegistryHead(ctx, name)
 	if err != nil {
+		if timedOut(ctx, err) {
+			writeReadTimeout(w, d.readDeadline)
+			return
+		}
 		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 		return
 	}
