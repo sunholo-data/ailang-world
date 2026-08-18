@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -540,5 +541,199 @@ func TestTimeoutStatusMirrorsSketch(t *testing.T) {
 			t.Errorf("%s: class = %q, want %q — the sketch's ApiError constructor name is the wire class",
 				route.name, body.Error.Class, "Timeout")
 		}
+	}
+}
+
+// ---------------------------------------------------------------------------
+// AC5 — a 500 sanitizes the wire and keeps the detail for the operator
+// ---------------------------------------------------------------------------
+
+// internalDetailSentinel is a string PRODUCTION CODE CANNOT PRODUCE.
+//
+// That property is the whole test, and it is the direct lesson of M2's MU3
+// survival: there, the design's own prescribed fake returned ctx.Err(), which is
+// exactly the value the surviving arm of a two-arm classifier needed, so the
+// mutant passed on a value that came from the FIXTURE rather than from the code
+// under test. A sanitize test seeded with any error text the daemon could have
+// written itself has the same hole — "the body does not contain the detail"
+// would be satisfiable by accident.
+//
+// So the seeded detail is a random token, verified absent from the entire
+// repository before it was chosen (`grep -rc kQ7v .` -> no file matched, with a
+// same-scope known-positive control that did match). If it appears in a response
+// body, it can ONLY have travelled there from errSentinelInternal through the
+// 500 branch; if it appears on the error log, likewise. Neither write can be
+// faked into existence by anything else in the process.
+const internalDetailSentinel = "kQ7v-store-detail-9f3c1d82"
+
+// errSentinelInternal is shaped like the real leak this AC closes: store errors
+// interpolate the display DSN path (`store: open %q`), which is host filesystem
+// detail with no bearing on the caller's request.
+//
+// It is deliberately NOT a context error and does NOT wrap
+// context.DeadlineExceeded, so timedOut() classifies it false and the INTERNAL
+// branch runs — not the 503 branch. An arm that accidentally rendered 503 would
+// be caught by assertErrorClass below, not silently pass.
+var errSentinelInternal = errors.New(
+	`store: open "/private/var/folders/` + internalDetailSentinel + `/world.db": disk I/O error`)
+
+// failingStore wraps the real store and overrides ALL FIVE getters to fail with
+// the sentinel error. It WRAPS rather than replaces (the iteration-80 vacuity
+// trap): every line of the handler under test — readCtx, defer cancel, timedOut,
+// writeInternalError — is the production path.
+//
+// All five, not one: the six read routes reach the store through five distinct
+// getters, so a one-getter fake would let the other routes fall through to the
+// embedded real store and answer 200, and assertErrorClass would red for a
+// reason that has nothing to do with sanitization.
+type failingStore struct {
+	*store.Store
+}
+
+func (failingStore) GetObject(context.Context, hashref.HashRef) (store.Object, bool, error) {
+	return store.Object{}, false, errSentinelInternal
+}
+
+func (failingStore) GetWorld(context.Context, hashref.HashRef) (store.World, bool, error) {
+	return store.World{}, false, errSentinelInternal
+}
+
+func (failingStore) GetLogEntry(context.Context, int64) (store.LogEntry, bool, error) {
+	return store.LogEntry{}, false, errSentinelInternal
+}
+
+func (failingStore) GetRegistryHead(context.Context, string) (hashref.HashRef, bool, error) {
+	return hashref.HashRef{}, false, errSentinelInternal
+}
+
+func (failingStore) SelectedHead(context.Context) (hashref.HashRef, bool, error) {
+	return hashref.HashRef{}, false, errSentinelInternal
+}
+
+// TestInternalErrorsAreSanitized is AC5's persistent form.
+//
+// It asserts TWO WRITES SEPARATELY, and the separation is the design:
+//
+//	(a) the RESPONSE BODY must NOT carry the sentinel, and must carry
+//	    internalErrorMessage and nothing else;
+//	(b) the ERROR LOG must carry the sentinel VERBATIM, on one line, next to the
+//	    route it came from.
+//
+// Neither assertion implies the other. A mutation that restores the raw error to
+// the body (MU7) still writes the log line and so still satisfies (b) — it dies
+// on (a). A mutation that drops the log write still sanitizes the body and so
+// still satisfies (a) — it dies on (b). A single combined assertion would be
+// killable by either mutation and would tell you nothing about which.
+//
+// The route enumeration matters too: it drives all SIX read routes plus
+// POST /v1/commit, i.e. every 500 branch in the package, so a sanitizer
+// installed in five handlers and forgotten in the sixth reds here.
+func TestInternalErrorsAreSanitized(t *testing.T) {
+	t.Run("error-log-defaults-to-stderr", func(t *testing.T) {
+		// The nil-means-os.Stderr contract, asserted on the CONSTRUCTED field
+		// rather than inferred. New resolves it once; a daemon that resolved
+		// lazily (or not at all) would leave this nil and panic on the first
+		// 500, which is precisely the moment nothing may panic.
+		d := newHandlerDaemon(t)
+		if d.errLog == nil {
+			t.Fatalf("d.errLog is nil on a constructed daemon — a 500 would panic writing its detail line")
+		}
+		if d.errLog != os.Stderr {
+			t.Errorf("d.errLog = %#v, want os.Stderr — Config.ErrorLog was nil, and nil means the process owner's stderr", d.errLog)
+		}
+	})
+
+	t.Run("read-routes", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		routes := seedReadRoutes(t, d, "sanitize")
+
+		var errLog bytes.Buffer
+		d.errLog = &errLog
+		d.reads = failingStore{Store: d.store}
+
+		for _, route := range routes {
+			errLog.Reset()
+			rec := requestRecorder(t, d, http.MethodGet, route.target, nil)
+			body := assertErrorClass(t, rec, http.StatusInternalServerError, "Internal")
+
+			// (a) THE RESPONSE WRITE. Independent of (b).
+			if strings.Contains(rec.Body.String(), internalDetailSentinel) {
+				t.Errorf("%s (%s): the 500 body leaked the store's internal detail %q; body=%s",
+					route.name, route.target, internalDetailSentinel, rec.Body)
+			}
+			if body.Error.Message != internalErrorMessage {
+				t.Errorf("%s: 500 message = %q, want the fixed %q — a 500 body carries no host state",
+					route.name, body.Error.Message, internalErrorMessage)
+			}
+
+			// (b) THE ERROR-LOG WRITE. Independent of (a).
+			assertErrorLogLine(t, errLog.String(), route.name, http.MethodGet, route.target)
+		}
+	})
+
+	t.Run("commit-route", func(t *testing.T) {
+		// POST /v1/commit's 500 is the one internal branch NOT on the read seam
+		// (it is store.Commit, the write path, which this item deliberately does
+		// not put behind an interface). Closing the store is how the existing
+		// suite already produces a real store failure on a live route, so this
+		// arm exercises the shipped branch with a REAL error rather than a fake.
+		d := newHandlerDaemon(t)
+		genesis := seedGenesisEmbedded(t, d, "sanitize-commit")
+		payload := encodeCommit(testCommit(genesis, 1, "sanitize-commit"))
+		if err := d.store.Close(); err != nil {
+			t.Fatalf("close store: %v", err)
+		}
+
+		var errLog bytes.Buffer
+		d.errLog = &errLog
+
+		rec := requestRecorder(t, d, http.MethodPost, "/v1/commit", bytes.NewReader(payload))
+		body := assertErrorClass(t, rec, http.StatusInternalServerError, "Internal")
+		if body.Error.Message != internalErrorMessage {
+			t.Errorf("commit 500 message = %q, want the fixed %q; body=%s",
+				body.Error.Message, internalErrorMessage, rec.Body)
+		}
+		// The detail must still reach the operator: an empty log here would mean
+		// the branch sanitized by DELETING the information rather than routing it.
+		line := strings.TrimRight(errLog.String(), "\n")
+		if line == "" {
+			t.Fatalf("POST /v1/commit wrote a sanitized 500 but logged nothing — the detail was destroyed, not routed")
+		}
+		if !strings.Contains(line, "POST /v1/commit") {
+			t.Errorf("commit error-log line = %q, want it to name the route %q", line, "POST /v1/commit")
+		}
+	})
+}
+
+// assertErrorLogLine is (b): the operator stream got ONE line, it names the
+// route, and it carries the seeded detail verbatim.
+//
+// The one-line property is asserted, not assumed. "One line per error" is what
+// makes the stream greppable under a 500 storm, and a %+v dump would satisfy a
+// bare Contains check while burying the log in stack traces.
+func assertErrorLogLine(t *testing.T, logged, label, method, target string) {
+	t.Helper()
+	if logged == "" {
+		t.Errorf("%s: the error log is EMPTY — the 500's detail was destroyed rather than routed to the operator", label)
+		return
+	}
+	if !strings.HasSuffix(logged, "\n") {
+		t.Errorf("%s: error-log write %q is not newline-terminated", label, logged)
+	}
+	line := strings.TrimRight(logged, "\n")
+	if strings.Contains(line, "\n") {
+		t.Errorf("%s: the error log wrote %d lines for one error, want exactly 1:\n%s",
+			label, strings.Count(line, "\n")+1, logged)
+	}
+	if !strings.Contains(line, internalDetailSentinel) {
+		t.Errorf("%s: error-log line = %q, want it to carry the VERBATIM detail %q that the body no longer does",
+			label, line, internalDetailSentinel)
+	}
+	// The route, not the raw target: r.URL.Path is logged, deliberately without
+	// RawQuery, so /v1/log?from=0&limit=5 logs as GET /v1/log.
+	path, _, _ := strings.Cut(target, "?")
+	if want := method + " " + path; !strings.Contains(line, want) {
+		t.Errorf("%s: error-log line = %q, want it to name the route %q — a detail line with no route is unattributable",
+			label, line, want)
 	}
 }
