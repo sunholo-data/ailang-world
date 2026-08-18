@@ -731,9 +731,18 @@ func assertErrorLogLine(t *testing.T, logged, label, method, target string) {
 	}
 	// The route, not the raw target: r.URL.Path is logged, deliberately without
 	// RawQuery, so /v1/log?from=0&limit=5 logs as GET /v1/log.
+	//
+	// The trailing colon is LOAD-BEARING and is why this is not a bare Contains
+	// on the route. The producer's format is "%s %s: %v", so the route is
+	// always followed immediately by ": ". Without the colon, "GET /v1/log" is
+	// a PREFIX of "GET /v1/log?from=0&limit=5", so logging r.URL.String()
+	// instead of r.URL.Path would leak client-supplied query text into the
+	// operator stream and this assertion would still pass — measured: that
+	// exact mutation SURVIVED the whole host/daemon suite (rc=0) before the
+	// colon was added, and reds here with it.
 	path, _, _ := strings.Cut(target, "?")
-	if want := method + " " + path; !strings.Contains(line, want) {
-		t.Errorf("%s: error-log line = %q, want it to name the route %q — a detail line with no route is unattributable",
+	if want := method + " " + path + ":"; !strings.Contains(line, want) {
+		t.Errorf("%s: error-log line = %q, want it to name the route %q — a detail line with no route is unattributable, and an UNANCHORED route match would accept a line carrying client-supplied query text",
 			label, line, want)
 	}
 }
