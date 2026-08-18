@@ -10030,3 +10030,255 @@ not carry.**
 D7 test extension), gated on nothing — but **E3 must be settled as its first act**. Then M3. The doc
 stays in `planned/` until all three land. **One open ask unchanged**: `D-WORLD-19` (item 17's scope,
 one word). The fleet-authored driver commit remains owed under `D-WORLD-DRIVER-1` arm B.
+
+## Iteration 92 — 2026-08-18 — **item 18's M2 landed (PR #70 → squash `b3c5de0`, Gate 3b green SHA-addressed, evaluator `sonnet` 99/100 with zero blocking findings)** (`metered=$0.0205`; controller `claude:claude-opus-5`; executor `opus` after the chain degraded twice; evaluator `sonnet`; no designer, no planner — the plan already covered M2) — the iteration's spine is that **the design doc's own prescribed test fake could not kill the design doc's own mutation, because the fake hands the arm the mutation left alive exactly the value that arm needs**
+
+**Gate 0.** Kill switch armed-off; `sunholo-voight-kampff` active; billing tripwire **CLEAN**. Inbox
+**0** unread. Directives: **0** from `MarkEdmondson1234` on `#68` (4 comments, all the loop's own)
+and **0** on predecessor `#53`. Both watermarks read and the OLDER taken per the charter's
+World-local rule; this week they agree at `2026-08-18T06:03:24Z`. The instrument's control fired
+(**3** Mark directives across `#53`'s full history, all pre-watermark). `scripts/mission_directives.sh`
+invoked by ABSOLUTE path from the V1 checkout per the Repo Profile — World has no copy, and
+hand-rolling the `gh | jq` pipeline is what that rule exists to forbid. Decision ledger
+`--check` **valid, 6 rows**; `--open` returns **1** row (`D-WORLD-19`). Weekly external-issue sweep
+**NOT due** (rotation was iteration 89, Monday 2026-08-17).
+
+**Gate 1.** `dev` == `origin/dev` at `05e79e6` on entry (two-arg `rev-parse`, no `--short`). CI
+SHA-addressed on that commit: `checks=2`, `ailang-code verify gate` and `go host build + test gate`
+both `success`; `total_count=2` is the known-positive control, so this is a reading and not an
+empty answer. No open PRs from this loop, no stale worktrees, main checkout clean — the
+died-mid-flight sweep is negative on all three arms.
+
+**THE RUNNING SKILL DIFFERS FROM ORIGIN, and I read the delta before proceeding.** `cmp -s` against
+`origin/dev` was **non-silent** for the first time in three iterations. The `~/.claude/skills/mission-control`
+symlink resolves into the V1 checkout, and that checkout is **11 commits behind** its own origin. The
+delta is exactly one Gate-3b rule, added by motoko iteration 10 and landed as `c8b2ea0a2` (PR `#760`):
+*auto-merge is not a landing mechanism when the red is inherited from the base — an armed auto-merge is
+a prediction, and Gate 3b's whole discipline is that a prediction is not an observation.* So the rules I
+was about to follow were, in that one respect, not the rules the fleet had agreed on. **I honoured the
+rule I was missing**: `#70` was merged in-turn on an observed green rather than left behind auto-merge.
+Not World's tree to reconcile — V1 owns it — so this is reported, not fixed. Worth noting the direction:
+the Repo Profile's war story is about a *stale running copy carrying uncommitted edits*, and this is the
+mirror — a running copy that is **behind**, missing a rule that exists. Both are the same one-way drift,
+and only the `cmp` catches either.
+
+**Gate 2.** Pick = item **18** `w-daemon-read-cancellation`, milestone **M2** — the queue's `[NEXT]`
+and the only fully-unblocked row (item 17 parked on `D-WORLD-19`, item 5 re-blocked upstream). Not
+already landed: fresh fetch, `origin/dev` at `05e79e6`, no merged PR, no direct commit. No quorum
+round owed — the doc carries two, and M1 already shipped off it. The design doc and its sprint plan
+were diffed against each other for M2's AC list (rule 3b(vii)); the plan's §2.1 already flags AC4,
+which is what sent me to measure it.
+
+**E3 SETTLED BEFORE ROUTING — AND IT WAS BROKEN IN BOTH DIRECTIONS, WHERE ITER-91 RECORDED ONE.**
+Iteration 91's E3 says AC4 is *unsatisfiable as written*. Measured first-party at `05e79e6`, that is
+true of only one of its two arms:
+
+- `grep -c 'r.Context()' host/daemon/handlers.go` → raw **2**. One of those hits is inside a doc
+  COMMENT (`handlers.go:213`, M1's note saying *"M2 changes only this body to
+  `context.WithTimeout(r.Context(), d.readDeadline)`"*). Comment-stripped it is **1**, at
+  `handlers.go:219` — a line **M1 landed**. So this arm was **already green at M2's base**: not
+  unsatisfiable, **vacuous**. That is rule 3e(a) — a gate already red (or here, already green) at
+  base measures the repo, not your change — and it is the arm that would have shipped.
+- `grep -c 'r.Context()' host/daemon/daemon.go` → **0**, and it stays 0 by design: §2.3 chose a
+  single `readCtx` helper, so the call site at `daemon.go:497` spells `d.readCtx(r)`. Genuinely
+  unsatisfiable without abandoning the design.
+
+**One acceptance criterion, one vacuous arm and one unsatisfiable arm, and the recorded defect saw
+only the second.** The generalisable half: *a defect recorded against one arm of a compound criterion
+does not travel to the other arm, and the arm nobody flagged is the one that still passes.*
+
+**AC4′, with every baseline measured by me at the moment I wrote it into the directive.**
+(a) comment-stripped `grep -c 'context.WithTimeout(r.Context(), d.readDeadline)'` in `handlers.go`
+must be **1**; baseline **0**; same-file stripped control `r.Context()` = **1** (proving the stripped
+reader still sees code rather than stripping everything). (b) `grep -c 'readDeadline'` in `daemon.go`
+must be **≥ 2**; baseline **0**; same-file control `drainTimeout` = **5**. (c) MU1 and MU2 must both
+kill — the behavioural authority, and the only arm no grep can fake.
+
+**AC4′(a) CARRIES A TRAP THAT WOULD HAVE MADE THE REPLACEMENT VACUOUS TOO, AND IT IS A NEW SHAPE.**
+The **raw** grep for M2's target token returns **1 at base and 1 at head** — unchanged across the
+entire milestone — because M1's doc comment spells, verbatim, the string M2 was going to add. A
+raw-grep AC4′(a) is 100% vacuous here, and it fails in the most flattering way possible: it reads
+green from the first day. This repo already knows *"grep cannot see that a hit is inside a comment"*
+(iter-79's assert, iter-91's ratchet count of 12-vs-11). This is the sharper form: **a comment can
+quote a FUTURE code state, so a grep-shaped acceptance criterion can be pre-satisfied by the very
+comment that promises the work.** The tell is that the token you are pinning appears in a sentence
+describing what a later milestone will do.
+
+**Gate 3 — routing, and the `pi` lane reached its third strike.** `codex:gpt-5.6-sol` probed
+**rc=1** first-party (`usage limit … try again at Aug 20th, 2026 5:34 AM`), so the recorded
+exhaustion is current, not stale. The ratified chain's next link, `MISSION_EXECUTOR_FALLBACK` =
+`pi:openrouter/deepseek/deepseek-v4-flash-0731:floor`, probed **rc=0** and was given one bounded
+25-minute run under the sandbox + worktree-fence extensions. Result, against the three mandatory
+post-run assertions: **(a)** `stopReason":"length"` = **0** — PASSES; **(b)** `git status --porcelain`
+in the worktree = **0 files** — FAILS; **(c)** `agent_end` = **0**, with `turn_start`=**15** >
+`turn_end`=**14** — FAILS. 38 tool calls (30 `read`, 8 `bash`), zero edits, and a final unterminated
+turn streaming pure `thinking_delta` that wrote **325 MB** of NDJSON in ~13 minutes until my own
+disk-size ceiling killed it (`rc=137`).
+
+**That is three consecutive zero-byte failures on this lane, by three DISTINCT mechanisms** — iter-91
+run 1 (a lone `thinking` block, `stopReason=stop`, 625 output tokens against a 65,536 budget), iter-91
+run 2 (hallucinated tool names `exec_command`/`execute_file_list`), and this run (an unterminated
+runaway with no terminal event at all). It meets the charter's ≥3-datapoint evidence bar for a routing
+change, and it re-confirms iteration 91's spine from a third angle: **the deliverable-keyed detector
+(`git status`) has now caught all three; the mechanism-keyed detector (`stopReason`) has caught none.**
+
+**A CORRECTION TO THE SHARED SKILL'S OWN HAZARD NOTE, measured.** The `pi` recipe's operational hazard
+paragraph attributes the ~3 MB/s NDJSON growth to *"a runaway turn"* in the context of the
+16,384-token output cap, and prescribes polling the file size *"alongside the deadline"* — i.e. as a
+second belt behind the `stopReason` check. On this run `stopReason":"length"` was **0** and `maxTokens`
+was verified at 65,536, so the output cap is not implicated at all, and **the size poll was the only
+detector that fired**. The disk hazard is independent of the token cap, not a symptom of it. Filed as a
+skill proposal below rather than applied — World cannot edit the shared skill.
+
+**WHAT LANDED — M2, greens AC3 (minus sanitize), AC4′ and AC7.** 6 files, **+988/−62**, including a
+544-line `host/daemon/read_deadline_test.go`. `readDeadline = 10 * time.Second` as a constant plus a
+`Daemon.readDeadline` field wired by `New` (the `drainTimeout` field-not-constant idiom); `readCtx`'s
+body becomes `context.WithTimeout(r.Context(), d.readDeadline)`; the five-method `readStore` seam with
+all six read handlers reading through it; timeout classification checking **`ctx.Err() != nil` first**
+(the context is the authority — the driver's interrupt can surface as `SQLITE_INTERRUPT`, which does
+not wrap `context.DeadlineExceeded`) and emitting **503 / class `Timeout`**; the frozen sketch gains a
+`Timeout(string)` constructor and its `=> 503` arm; and `TestBoundedWaitsAndBodyLimit` gains a seventh
+literal row plus a `New`-wiring assertion. AC3 enumerates **13** `=== RUN` against a measured base of
+**5**. The sketch edit reproduced the planner's **pre-registered post-edit sha256**
+`cb7f7f89b098d26fa5e683e873ff4eee6b080abe5df2a2b4969a680e7200a615` byte-for-byte.
+
+**THE SPINE — THE DOC'S OWN FAKE CANNOT KILL THE DOC'S OWN MUTATION (executor's E7, reproduced by me
+in both arms, then independently by the evaluator).** The timeout classifier has **two** arms:
+`ctx.Err() != nil`, and `errors.Is(err, context.DeadlineExceeded)`. **MU3** neuters only the first
+(`if false && ctx.Err() != nil`). The design doc's §2.5 prescribes that `blockingStore`'s getters
+`return ctx.Err()` — which *is* `context.DeadlineExceeded`. So under MU3 the fake hands the surviving
+second arm exactly the value it needs, the mutant classifies the response correctly, and the assertion
+**cannot fail**:
+
+- MU3 + the doc's literal fake → `go test ./host/daemon -run 'TestDaemonReadDeadline/blocking-store'
+  -v -count=1` → **rc=0, 2 `=== RUN`, PASS. MU3 SURVIVES.** Controls in the same breath: MU3 still
+  applied (`grep -c 'if false && ctx.Err() != nil'` = 1) and the fake still at the doc's literal.
+- MU3 + the shipped interrupt-shaped sentinel (`errStoreInterrupted`, deliberately not wrapping
+  `context.DeadlineExceeded`) → **rc=1**, body
+  `{"class":"Internal","message":"store: query interrupted (SQLITE_INTERRUPT)"}`.
+
+Implemented verbatim, this milestone would have shipped a green suite recording MU3 as killed — a
+hollow pin on the one mechanism the whole item exists to install.
+
+**Why this is a NEW shape rather than another instance of a known one.** V1 iteration 200's rule says
+an observable can be downstream of the mechanism and still not discriminate it, because *other
+mechanisms write the same value* — and it names error paths, defaults, zero values, shared enum
+branches, timeouts. Every one of those is a property of the **production code**. Here the production
+code is fine and the classifier's two arms are both correct and both wanted. **The colliding value was
+supplied by the TEST FIXTURE, and the fixture was prescribed by the design doc that also prescribed the
+mutation.** A mutation drill audits the mutation, the assertion and the observable; nothing in this
+mission's rulebook asks *what does the FAKE return, and does that value let a surviving arm of the
+mutated function produce the same output?* The general form: **when a mutation neuters one arm of a
+multi-arm classifier, the test fixture must not emit a value the other arms can classify — otherwise the
+fake, not the code, is what passes the test.**
+
+**AND MY OWN FIRST MEASUREMENT OF IT WAS VACUOUS.** The survive-arm's first run returned `rc=0` with
+`=== RUN` = **0**, because I omitted `-v`. That is precisely the *"a `-run` selector matching nothing
+exits 0 with 'no tests to run'"* trap this skill names, arriving inside the verification of the
+iteration's headline finding — the same place iteration 91 met its own instrument failures. I caught it
+only because I print the enumeration beside the exit code as a habit; had I banked `rc=0` I would have
+recorded "MU3 survives" from a command that never ran the test, and been right by accident. **A
+conclusion reached from a broken instrument is not made sound by later turning out to be true.**
+
+**MU10 IS CI-RED AFTER ALL — a declared one-sided pin turned out two-sided (executor's E8, reproduced).**
+The plan declares MU10 (sketch `Timeout(_) => 503` → `500`) as not-CI-red, on the correct premise that
+Leg 2 tests `world/` only and the sketch's inline rows are outside both gate legs. Measured: under MU10
+`verify_ail.sh` really is **rc=0** with pins intact — the boundary claim is exactly right — but
+`TestTimeoutStatusMirrorsSketch` **parses** the sketch (rooted by `runtime.Caller`) rather than
+restating its literals, so the **Go** leg reds **rc=1**, enumeration 1, at `read_deadline_test.go:506`.
+The executor's DV-6 is what makes this true, and it is strictly better than planned: the drift direction
+the plan could only pin one-sidedly is now pinned on both.
+
+**Seven mutation arms, all killed** (MU1, MU2, MU3, MU8, MU9, MU11, MU14) — each with a sha256 PRE, an
+anchor-count assert, a sha256 POST proving the edit landed, a compile of the mutant (`go build` for
+production code, `go vet` for test-only), a `-run`-scoped KILL arm read by enumeration rather than exit
+code, a `-skip`-scoped INVERSE arm proving the named test is the killer and not a bystander, and a `cp`
+restore verified byte-identical. `git checkout --` was never used, in either the executor's sweep or
+mine. **MU8 re-classified from wiring-only to semantic (E9):** `readDeadline: 0` produces an
+already-expired context, so every read route 503s and the inverse arm reds 8 top-level tests — the doc
+told the executor not to re-classify it, and the executor correctly recorded the finding without acting
+on it unilaterally.
+
+**Controller re-ran every gate rather than banking the executor's** (generator≠judge): `go build ./...`
+rc=0, `go vet ./...` rc=0, `gofmt -l .` empty, `go test ./... -count=1` **rc=0, 17 packages, zero FAIL**,
+`AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh` **rc=0** with pins **UNMOVED** — 10/10
+identities across 11 modules, 39 named tests, 9-of-9 package-gate steps. AC4′(a) and (b) re-derived with
+their controls. MU3 and MU10 independently re-mutated and `cp`-restored to verified byte-identity
+(handlers.go `a408872d…`, read_deadline_test.go `a7b873cf…`, worlddapi.ail `cb7f7f89…`).
+
+**EVALUATOR `sonnet` 99/100 PASS, ZERO BLOCKING — and it was pointed at six named targets first**
+(rule 3h(c): an independent judge that agrees after being aimed at the finding is evidence; one that
+never looked is not). It got its **own** worktree, per Gate 3's judge-isolation rule, so its mutations
+could not collide with my gate runs — and it did mutate, extensively. It independently reproduced E7 in
+both arms, all three AC4′ sub-claims, MU1/MU2 **by their literal form rather than by inference**, and
+all six deviations. The arm I most wanted was the **precondition-neutering drill across the whole M2 test
+set** — neuter the fixture, not the production code, and require the arm to die — and **every arm died**:
+the deadline shrink, the fake installation ×2, the `cancel()` call, and the sketch-mirror's deadline. No
+test in that file passes for the wrong reason. It also confirmed a hazard I had not asked about: both
+watchdogs register `t.Cleanup(release)` **after** `t.Cleanup(d.Close)`, and since `t.Cleanup` runs LIFO
+that ordering guarantees release-before-close — so a parked getter holding the sole connection
+(`SetMaxOpenConns(1)`) can never convert a clean red into a suite-wide hang.
+
+**Six executor deviations, DV-1…DV-6, all adjudicated by command in both arms, none a weakening.**
+DV-1 (two helpers plus a 4-line guard per site, rather than an inlined classifier ×6) claims *strict, not
+a weakening* on the grounds that `grep -c 'err.Error()' host/daemon/handlers.go` is unchanged; verified
+**11 at base and 11 at head**, so M3's six-branch sweep to exactly 5 survivors is untouched. DV-3 is the
+E7 fix. DV-5 added two subtests the doc names but never gave a home. No "deviations are suspect" prior
+was applied — this mission's record is that most executor deviations are improvements, and two of these
+are the iteration's best findings.
+
+**Gate 3b.** PR #70. `mergeable` read FIRST (`MERGEABLE`/`CLEAN`) before any dropped-event reasoning.
+PR head `d407739`: `present=2`, both `success`. Squash-merged to `b3c5de0` and polled SHA-addressed on
+the **merge commit** with the completeness assert — `present=2 == expected=2` (the two workflows this
+repo declares), `pending=0`, `ailang-code verify gate` and `go host build + test gate` both `success`.
+Auto-merge deliberately **not** armed, per the origin-skill rule my running copy was missing.
+
+**Routing.** Controller `claude:claude-opus-5`. **No designer** (the doc exists and needed no revision)
+and **no planner** (the plan already covered M2 in §3.2). Executor: `codex:gpt-5.6-sol` probe rc=1 →
+`pi:openrouter/deepseek/deepseek-v4-flash-0731:floor` probe rc=0, run FAILED assertions (b) and (c) →
+fell to `$MODEL` = **opus** via the Agent tool, FLAGGED. Evaluator **sonnet** — distinct provider-tier
+from the opus executor, so generator≠judge holds.
+
+**Cost.** `metered=$0.0205` of the $5 ceiling: pi probe `$0.00008306` + pi run `$0.020388`
+(provider-reported; the rate-card cross-check reads `$0.022557` on 76,953 in / 16,850 out / 699,904
+cache-read, and I record the provider's own number). The codex probe billed nothing (rc=1). The opus
+executor, sonnet evaluator and this controller session are quota buckets, not dollars.
+
+**Platform.** darwin/arm64. `timeout(1)` absent — every bounded wait used `date +%s` deadlines or Go's
+own `-timeout`. `AILANG_BIN=/tmp/ailang-v0300/ailang` (AILANG v0.30.0, commit `e37b370`),
+`GOTOOLCHAIN=go1.25.6`. The windows and ubuntu CI legs were not run locally; both remote jobs are green
+on the merge commit.
+
+**Ruled out.** (a) Reading AC4's defect as one-sided — iteration 91 recorded the unsatisfiable half, and
+the vacuous half is the one that would have shipped a green. (b) Trusting the E7 survive-arm's bare
+`rc=0` — enumeration was 0, so that reading was an instrument failure, not a result; re-run with `-v`
+gave 2. (c) Attributing the pi runaway to the recorded 16,384-token output cap — `stopReason":"length"`
+was **0** and `maxTokens` is verified at 65,536, so the size hazard is independent of the cap. (d) A
+"deviations are suspect" prior on DV-1…DV-6 — all six checked, all held. (e) Reconciling the V1
+checkout's 11-commit lag — it is another mission's tree, and the skill's reconcile authorisation is a
+human decision, not a controller one. (f) Moving the design doc to `implemented/` — M3 remains.
+
+**Retro.** One **skill proposal** at the ≥2-friction bar and one process note.
+
+**Skill proposal (World cannot edit the shared skill — PROPOSED to Mark + V1, not applied).** The `pi`
+recipe's operational-hazard paragraph ties the runaway-NDJSON disk risk to a turn that hits the output
+cap, and positions the file-size poll as a companion to the `stopReason` check. Two frictions now say
+that framing is wrong: iteration 91's two runs had `stopReason=stop` at 625 tokens (cap not implicated),
+and this iteration's run wrote **325 MB** with `stopReason":"length"` = **0**. Proposed edit: state that
+the size poll is an **independent, mandatory** guard whose trigger is unrelated to the token cap, and
+promote assertion **(b)** — the worktree diff — to the FIRST of the three post-run assertions, since it
+is the only one that has fired on all three failures. This is the deliverable-keyed-detector rule
+iteration 91 proposed, now with its third datapoint.
+
+**Process note, instance 1 (watch-item; the bar is 2).** A design doc that prescribes BOTH a mutation
+and the test fake that mutation runs against can make its own arm vacuous, and neither quorum (two
+rounds, two reviewers) nor the plan's mutation table can see it — quorum reads for design soundness, and
+the table records the mutation and the selector but never the fixture's return value. If a second
+instance appears, the fix is a per-arm question at plan time: *what does this arm's fixture return, and
+can any un-mutated branch of the function classify that value?*
+
+**Next.** Item 18's **M3** — `internalErrorMessage` + `Config.ErrorLog` (nil → `os.Stderr`), the six
+`Internal` branches at `handlers.go` swept to exactly **5** surviving `err.Error()` calls (the
+BadRequest sites, which must NOT be over-sanitized), `TestInternalErrorsAreSanitized`, and the
+QUICKSTART S7 re-execution. Gated on nothing; the M3 baseline is verified unchanged by M2. **One open
+ask unchanged:** `D-WORLD-19` (item 17's scope, one word).
