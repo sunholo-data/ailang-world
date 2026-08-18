@@ -1,11 +1,16 @@
 # w-validated-proven-evidence-boundary — authority-bearing proof evidence
 
-- **Status**: **DIRECTION RATIFIED; revised pending re-quorum** — DESIGNED, not landed
+- **Status**: **DIRECTION RATIFIED (`D-WORLD-17`); round-5 revision 2 applied, pending re-quorum** — DESIGNED, not landed
 - **Park reason**: the iteration-84 park is answered. Mark Edmondson attended and ratified option B
   on 2026-08-14: authenticate canonical proof reports with a single-host, host-held MAC key. This
   revision applies that direction. Round 4 further narrows tranche 1 to an explicitly
   non-production, caller-keyed library boundary and measures the verifier's record-with-ADT-field
-  encoding failure. See §10.4.
+  encoding failure. See §10.4. Round 5 applies the attended `D-WORLD-17` ratification of
+  2026-08-17: every seal is bound to its minting validator, and the free `GradeOfValidated` is
+  replaced by the `Validator.Resolve` method. See §10.5. Revision 2 closes round 5's two
+  sustained completeness objections: the zero-value forge (mint validity, `ErrUnmintedAuthority`,
+  M21) and the §3.4/§9 bounded-runner contradiction, resolved (a) — tranche 1 owns the runner
+  (V35). See the §10.5 revision-2 note.
 - **Item**: queue item 17, `w-validated-proven-evidence-boundary`
 - **Filed**: 2026-08-14, iteration 84
 - **Measurement base**: `bef0153`
@@ -13,8 +18,8 @@
 - **This tranche estimate**: **3.5 days**
 - **Decomposition**: **yes** — four ordered sprint-sized items, **9.5 days total** (§9)
 - **Design result**: serialized proof references remain untrusted and grade `CLAIMED`; only a host
-  validator may mint the sealed value from which the host-resolved API returns authority-bearing
-  `PROVEN`.
+  validator may mint the sealed value from which only the minting validator's `Resolve` method
+  returns authority-bearing `PROVEN`.
 
 This document is the first tranche of the larger queue item. The measured inventory found no production
 Go Evidence boundary, no Z3 report producer, no renderer, and no named Go-test manifest (V3, V4,
@@ -75,9 +80,15 @@ Authority is instead a Go value with unexported state and a host-only resolved g
    can succeed only after authenticating the report with the host-held key.
 2. `host/evidence.DecodeProposal` decodes `ProofReceipt` as untrusted `ClaimedEvidence`; possession
    of the receipt neither seals it nor changes its kernel grade.
-3. `host/evidence.GradeOfValidated(ValidatedEvidence) ResolvedGrade` is the only API that can
-   return host `ResolvedGradeProven`. It accepts neither raw `Evidence`, decoded claims, nor a
-   `HashRef`. `ResolvedGrade` is represented in Go, not serialized in the kernel ADT.
+3. `Validator.Resolve(sealed) ResolvedGrade` — a METHOD on `Validator`, per the attended
+   `D-WORLD-17` ratification — is the only API that can return host `ResolvedGradeProven`. There
+   is no free resolver: the former package-level `GradeOfValidated` is DROPPED, with no deprecated
+   alias, package-level helper, or convenience wrapper, because a resolver detached from a
+   validator instance is the round-4 defect itself. `Resolve` accepts neither raw `Evidence`,
+   decoded claims, nor a `HashRef`, and it refuses any `ValidatedEvidence` sealed under a
+   different mint identity (`ErrForeignSeal`) — and any zero or unminted identity outright,
+   before comparison (`ErrUnmintedAuthority`, §3.2). `ResolvedGrade` is represented in Go, not
+   serialized in the kernel ADT.
 4. Within the library API, a `ProofReceipt` is revalidated against its authenticated report,
    expected subject, and the caller-supplied key before a new sealed value can exist. No serialized
    value regains authority by decode. Production key loading and restart wiring are tranche 2.
@@ -86,12 +97,25 @@ Authority is instead a Go value with unexported state and a host-only resolved g
    no renderer may show `PROVEN`.
 
 The safety statement is now exact at both language boundaries: an agent can spell
-`ProofReceipt`, but direct `gradeOf` execution returns `CLAIMED`; an agent cannot construct the Go
-sealed value required by `GradeOfValidated`. Kernel `EvidenceGrade.PROVEN` remains a public,
+`ProofReceipt`, but direct `gradeOf` execution returns `CLAIMED`; an agent can construct only a
+ZERO-VALUE Go `ValidatedEvidence` — exported types make `var s ValidatedEvidence` unpreventable —
+which `Resolve` refuses by name before any comparison, and even holding a genuinely minted seal,
+cannot make any validator carrying a different mint identity resolve it. Kernel `EvidenceGrade.PROVEN` remains a public,
 agent-spellable enum value with no `Evidence -> EvidenceGrade` kernel producer in tranche 1. Its
 mere spelling carries no authority, just as caller-written Go grade data carries none. That
 reserved result is acceptable: removing it would break the already-pinned grade vocabulary,
 while assigning it to a public Evidence constructor would recreate grade laundering.
+
+The binding property is stated exactly, neither more nor less. What is enforced: a zero-value
+`Validator` or `ValidatedEvidence` never resolves to any grade (`ErrUnmintedAuthority`), and you
+CANNOT make a validator carrying someone else's mint identity resolve your seal — `Resolve`
+refuses any `ValidatedEvidence` whose mint identity differs from the receiver's
+(`ErrForeignSeal`). The guarantee is per-identity, not per-Go-variable: a value copy of a
+validator carries the same key and the same identity and IS the same mint authority, deliberately
+(§3.2). What is not enforced: you CAN still construct your own `Validator` with your own key via
+`NewValidator` and self-mint into it, and that is accepted, because no library can stop a caller
+lying to itself. Tranche 1 enforces provenance relative to a minting identity; it does not, and
+cannot, make a caller-constructed validator's output mean anything to anyone else.
 
 ### 2.3 Current and future grade-consuming ingress
 
@@ -198,13 +222,52 @@ ValidationResult             // accessors expose Validated or Unsupported, not w
 NewValidator(key [32]byte, reader, compilerConfig)
 Validator.ValidateProof(ctx, reportRef, expectedSubject)
 DecodeProposal(raw)          // ProofReceipt remains an untrusted claim
-GradeOfValidated(sealed) ResolvedGrade
+Validator.Resolve(sealed) ResolvedGrade   // method; sole ResolvedGradeProven source; refuses zero/unminted identities with ErrUnmintedAuthority, foreign seals with ErrForeignSeal
 ResolvedGrade                // host enum; ResolvedGradeProven is not serialized
 ```
 
 No `NewValidatedEvidence`, struct literal, `SetGrade`, raw-hash grade resolver, receipt resolver,
-or exported unseal method exists. Put external-package tests in `host/evidence/authority_test.go`
-so they compile with only the public API.
+exported unseal method, or package-level grade resolver of any name exists — the free
+`GradeOfValidated` is dropped, not renamed. Put external-package tests in
+`host/evidence/authority_test.go` so they compile with only the public API.
+
+Binding mechanism, stated as an invariant the reader can check, not an assurance. The mint
+identity is an unexported pointer to a per-instance, non-zero-size heap allocation made only
+inside `NewValidator` — non-zero-size because Go permits two distinct zero-size allocations to
+share an address, which would let two identities collide by accident; pointing it at the
+validator's own heap-held key copy satisfies this. `ValidateProof` stamps that pointer into the
+seal's unexported `mintedBy` field at mint time. `Resolve` performs two ordered checks before
+returning any grade:
+
+1. **Mint validity.** If the receiver validator's identity or the seal's `mintedBy` is nil,
+   `Resolve` returns the dedicated sentinel error `ErrUnmintedAuthority` and no grade, BEFORE
+   any comparison. A zero identity is never valid. This closes the zero-value forge:
+   `Validator` and `ValidatedEvidence` are exported types, so a foreign package can always
+   construct `var v evidence.Validator; var s evidence.ValidatedEvidence` — unexported fields
+   stop writes, not zero values — and a bare equality check would compare zero to zero and pass.
+   Here that pair is refused at step 1 and never reaches the comparison.
+2. **Binding.** Otherwise, if `sealed.mintedBy` differs from the receiver's identity, `Resolve`
+   returns the dedicated sentinel error `ErrForeignSeal` and no grade.
+
+The checkable property: (a) both identity fields are unexported, so no foreign package can
+assign them; (b) the only assignments in the package are inside `NewValidator` and
+`ValidateProof`; (c) the Go zero value of either type has a nil identity and is refused at step
+1. Therefore every grade-bearing `Resolve` return requires two non-nil, equal pointers, and such
+a pair exists only in values descended from the same `NewValidator` call. `ErrUnmintedAuthority`
+and `ErrForeignSeal` are each produced by exactly one check and nowhere else, and neither is a
+member of §2.5's `UnsupportedReason` set, which belongs to `ValidateProof`'s validation
+pipeline — so each observable identifies its check uniquely rather than reading a shared error
+enum or a bare absence.
+
+Copy semantics are explicit, and the guarantee is worded no stronger than the mechanism. A value
+copy of a `Validator` (`v2 := *v1`, assignment, or embedding) carries the same identity pointer
+and the same key: a copy IS the same mint authority, deliberately, because the identity names the
+`NewValidator` call, not the Go variable. A copied seal likewise carries its `mintedBy` pointer
+and remains resolvable by that same authority. What a copy cannot do is the load-bearing part: a
+foreign package cannot conjure a value carrying a given identity without copying a value that
+already holds it, since the pointer target is allocated only inside `NewValidator` and the fields
+are unexported. The enforced guarantee is therefore per-identity: only a validator carrying the
+identity minted by the `NewValidator` call that produced a seal can resolve that seal.
 
 The new package depends on `host/hashref` and a minimal object-reader interface, not on daemon,
 replay, or renderer. That avoids a cycle and makes the validator testable with a bounded fake.
@@ -282,6 +345,26 @@ wall time, stdout, and stderr, and parses JSON rather than trusting process rc. 
 stores an authenticated envelope only when `check.passed=true`, `verify.errors=0`,
 `verify.counterexample=0`, and that sorted set contains the configured required identity set.
 
+**Tranche 1 owns the bounded runner** (resolution (a) of the round-5 §3.4/§9 contradiction),
+because the bounded producer is tranche 1's named deliverable and cannot emit an authenticated
+report without executing the pinned checker, so the bounding primitive belongs to the tranche
+that executes. No exported bounded-subprocess helper exists for `host/evidence` to import: the
+repository's three non-test subprocess sites each bound locally, and the one general-purpose
+runner, `runBounded`, is unexported and broker-internal (V35). The producer therefore implements
+its own bounding inside `host/evidence`, on the pattern V35 measures in `runBounded`: wall time
+is bound by `context.WithTimeout` feeding `exec.CommandContext`, with the child in its own
+process group and the whole group killed on cancellation so a forked grandchild cannot outlive
+the deadline; output is read through a capped reader sized limit+1 bytes so overflow is detected
+rather than silently truncated; deadline overrun and output overflow are each producer refusals
+that emit and store no report. The producer departs from `runBounded` in exactly one measured
+property: `runBounded` merges stderr into stdout, while the producer captures the two streams
+SEPARATELY and parses JSON only from stdout, because this producer's output is parsed and a
+warning merged into the parsed stream voids the parse (V22 records that failure mode; V27
+separates the streams for the same reason). Reusing broker's runner is rejected, not deferred:
+it would add a `host/broker` dependency §3.2 excludes, and exporting it is a broker API change
+outside this tranche. The tranche-1 arithmetic in §9 already prices this construction inside the
+0.60-day producer row; no pricing change follows.
+
 The producer takes required identities from its caller; an empty set is refused. The first
 integration is a library API, not a daemon route or an agent tool. Therefore an agent cannot ask
 the host to prove arbitrary source and immediately attach the result through a public network
@@ -292,8 +375,9 @@ surface. A later transition may call it only after separately ratifying that aut
 Across serialization, the kernel carries `ProofReceipt(reportRef)`, which always remains an
 untrusted `ClaimedEvidence`. Trusted validation separately produces
 `ValidatedEvidence{reportRef, subject, ...}` with unexported fields.
-`GradeOfValidated(ValidatedEvidence)` is the sole bridge to host `ResolvedGradeProven`; there is no
-bridge that serializes authority back into an AILANG constructor.
+`Validator.Resolve(sealed)`, called on a validator carrying the minting identity, is the sole
+bridge to host `ResolvedGradeProven`; there is no free resolver and no bridge that serializes
+authority back into an AILANG constructor.
 
 The pure kernel proves only the untrusted receipt-to-`CLAIMED` mapping. Go performs bounded loading,
 digest verification, strict typed decode, MAC authentication, solver-success checks, and
@@ -393,19 +477,29 @@ assigned beside it.
 | M17 named-manifest removal | `scripts/verify_go.sh`: remove one literal required name, leaving the test present | `TestEvidenceNamedManifestRejectsUnpinnedTest` in `host/verifygate/evidence_manifest_gate_test.go` | Isolated gate sees an extra observed test; `evidence test set differs from REQUIRED_EVIDENCE_TESTS`. |
 | M18 projection drift | edit only `world/types.ail` | existing world-package step 3/9 | `projection hash mismatch: world/types.ail` (exact wording confirmed during implementation). |
 | M19 stale ready packet | rebuild projection but retain old golden | existing world-package step 9/9 | `ready packet differs byte-for-byte from golden`. |
+| M20 **cross-validator binding** | `host/evidence/validator.go`: change the seal-identity guard in `Resolve` to `if false && sealed.mintedBy != v.id` (exact field names fixed at implementation; the neutered comparison is the binding check itself) | `TestAttackerChosenValidatorCannotMintForHostAuthority` | A seal minted by validator 2 (attacker-constructed, attacker-keyed) is presented to validator 1's `Resolve`, which must return the dedicated `ErrForeignSeal` and no grade — an observable only the binding comparison produces, not a shared reason enum or a bare absence. Under the mutant the foreign seal resolves; failure: `foreign seal resolved ResolvedGradeProven; want ErrForeignSeal`. |
+| M21 **zero-value mint validity** | `host/evidence/validator.go`: change the mint-validity guard in `Resolve` to `if false && (v.id == nil \|\| sealed.mintedBy == nil)` (exact field names fixed at implementation; the neutered check is the nil-identity refusal itself, leaving the M20 comparison intact) | `TestZeroValueForgeryCannotResolve` | The test constructs `var v evidence.Validator; var s evidence.ValidatedEvidence` from the external test package — the two-line forge exported types make unpreventable — and calls `v.Resolve(s)`, requiring the dedicated `ErrUnmintedAuthority` and no grade. Under the mutant the two nil identities reach the M20 comparison, compare equal (zero == zero), and the forge resolves; failure: `zero-value seal resolved ResolvedGradeProven; want ErrUnmintedAuthority`. |
 
-For M2–M14, the control first validates one good authenticated report for the same expected subject and observes a
-sealed result whose `GradeOfValidated` result is `ResolvedGradeProven`. Thus a mutant cannot pass
+For M2–M14, the control first validates one good authenticated report for the same expected subject and observes
+that the minting validator's `Resolve` returns `ResolvedGradeProven`. Thus a mutant cannot pass
 merely because the test never reached minting. M1's control executes an agent-authored receipt and
 observes `CLAIMED` before applying the one-sided mutation. For M6, the non-divergent control must
-produce a replay report and resolve host `PROVEN` before the corrupted record is introduced.
+produce a replay report and resolve host `PROVEN` before the corrupted record is introduced. For
+M20, the control is same-instance: validator 1 first mints its own seal and observes its own
+`Resolve` return `ResolvedGradeProven`, proving the fixture reaches minting and resolution before
+the foreign-seal refusal is asserted. M21 carries the same same-instance control inside its own
+test: a `NewValidator`-built validator resolves its own minted seal to `ResolvedGradeProven`
+before the zero-value pair is asserted, so the refusal cannot be satisfied vacuously by a
+resolver that refuses everything.
 
 ## 7. Acceptance criteria
 
 1. **Authority surface.** `ValidatedEvidence` has no exported fields or public constructor.
-   `Validator.ValidateProof` is the sole mint. External package tests prove no authority-bearing
-   grade API accepts a raw `HashRef`, decoded proposal evidence, receipt, or caller-written
-   `EvidenceGrade`.
+   `Validator.ValidateProof` is the sole mint, and the `Validator.Resolve` method is the sole
+   grade resolver — no package-level resolver exists under any name, and
+   `TestPublicAuthoritySurfaceIsFrozen` reds if one appears. External package tests prove no
+   authority-bearing grade API accepts a raw `HashRef`, decoded proposal evidence, receipt, or
+   caller-written `EvidenceGrade`.
 2. **Agent containment.** `DecodeProposal` may decode `ProofReceipt`, but it remains
    `ClaimedEvidence`; canonical `gradeOf` returns `CLAIMED`, and no host grade API accepts it.
 3. **Bounded authenticated validation.** Envelopes and decoded reports are bounded before strict
@@ -415,10 +509,12 @@ produce a replay report and resolve host `PROVEN` before the corrupted record is
    agree.
 4. **No fallback.** Every validation failure yields its exact `UnsupportedReason` or an explicit
    operational error. No failure result carries any grade.
-5. **Producer.** The pinned executable is byte/version checked; execution is time/output bounded;
-   JSON fields—not rc—decide success; identities come from `verify.results[]` entries with
-   `status == "verified"`; an empty required identity set is refused; only successfully MAC-tagged
-   envelopes are stored.
+5. **Producer.** The pinned executable is byte/version checked; execution is time/output bounded
+   by the tranche-1-owned runner inside `host/evidence` (§3.4, V35), with deadline overrun and
+   output overflow each a refusal that emits no report, and stdout/stderr captured separately;
+   JSON fields read from stdout—not rc—decide success; identities come from `verify.results[]`
+   entries with `status == "verified"`; an empty required identity set is refused; only
+   successfully MAC-tagged envelopes are stored.
 6. **Kernel mapping.** Add only `ProofReceipt(HashRef)` in tranche 1 and map it to `CLAIMED`; extend
    exact contract/body and integer policy case. No kernel Evidence constructor produces `PROVEN`.
 7. **AILANG pins.** Keep `gradeOf` named and `EXACT_TOTAL_VERIFIED=10`; add the observed seventh
@@ -426,8 +522,8 @@ produce a replay report and resolve host `PROVEN` before the corrupted record is
    `EXACT_TOTAL_MODULES`.
 8. **Go persistent gate.** Add the exact non-empty named-test manifest and exact count to
    `scripts/verify_go.sh`; add an isolated self-mutation test in `host/verifygate`.
-9. **Required mutations.** Every tranche-1 row M1–M5 and M7–M19 reds with its named observable;
-   controls green. M5 is the sole payload-hash mutation owner. M6 is an
+9. **Required mutations.** Every tranche-1 row M1–M5, M7–M19, M20, and M21 reds with its named
+   observable; controls green. M5 is the sole payload-hash mutation owner. M6 is an
    acceptance criterion of tranche 3 and replay remains unable to yield `PROVEN` before then.
 10. **Projection/golden.** Canonical/projected `types.ail` are byte-identical, the frozen four
     exports and six tar entries remain unchanged, and the canonical ready packet golden is
@@ -445,6 +541,29 @@ produce a replay report and resolve host `PROVEN` before the corrupted record is
    `ValidateProof` must return the exact stable reason string `unauthenticated_report` and no
     `ValidatedEvidence`; under M10, both assertions must fail. The reason is read from the
     validator result after the MAC branch, not from fixture state written beside it.
+14. **Cross-validator binding.** `Validator.Resolve` refuses a `ValidatedEvidence` minted under
+    any other mint identity (per-identity, not per-Go-variable: a value copy of a validator
+    carries the same identity and key and is the same authority — §3.2):
+    `TestAttackerChosenValidatorCannotMintForHostAuthority` constructs validator 2 with its own
+    key, mints a seal through it, presents that seal to validator 1's `Resolve`, and requires the
+    dedicated `ErrForeignSeal` with no grade — after first resolving a same-instance seal to
+    `ResolvedGradeProven` as its control. The enforced property is exactly that a caller cannot
+    make someone else's validator resolve their seal; self-minting into a caller-constructed
+    validator remains possible and is accepted, because no library can stop a caller lying to
+    itself. M20 must red this arm. (This numbered slot was vacated in round 4 when the
+    unsatisfiable startup-key AC was removed; this is a new criterion, not that one revived.)
+15. **Mint validity.** A zero or unset identity never resolves to any grade:
+    `TestZeroValueForgeryCannotResolve` constructs a zero-value `Validator` and a zero-value
+    `ValidatedEvidence` from the external test package — the forge unexported fields cannot
+    prevent, because exported types always have constructible zero values — calls
+    `Resolve` on the pair, and requires the dedicated `ErrUnmintedAuthority` with no grade,
+    after its same-test control resolves a `NewValidator`-minted same-instance seal to
+    `ResolvedGradeProven`. The nil-identity refusal executes BEFORE AC14's binding comparison,
+    so the zero-zero pair is refused rather than compared equal. `ErrUnmintedAuthority` is
+    produced by the mint-validity check and nowhere else and is distinct from `ErrForeignSeal`,
+    because "never minted" and "minted by someone else" are different refusals. M21 must red
+    this arm.
+
 ## 8. Conflict surface
 
 ### 8.1 Five coupled AILANG moves
@@ -520,14 +639,17 @@ tranche 2. No tranche adds a rotation protocol or a validator-side compiler exec
 
 Tranche 2 has its own acceptance criteria: (a) its design verification log must enumerate the
 existing production configuration type and startup function, private-state-directory handling,
-secret/key handling, secure or atomic file-write helpers, and bounded subprocess runner, each with
-a command and observed output before reuse is claimed; (b) it must name the exact `host/daemon`
-and/or `cmd/**` files brought into scope; (c) initialization must provision or load exactly 32
-bytes, retain the resulting keyed validator before serving requests, and abort startup on any
-failure; and (d) an integration test must start that actual composition root against missing,
-valid, symlinked, wrong-permission, and replaced key cases and observe the specified fail-closed
-behavior. No existing helper or path is assumed by tranche 1; reuse decisions belong to that
-measured successor design.
+secret/key handling, and secure or atomic file-write helpers, each with a command and observed
+output before reuse is claimed; (b) it must name the exact `host/daemon` and/or `cmd/**` files
+brought into scope; (c) initialization must provision or load exactly 32 bytes, retain the
+resulting keyed validator before serving requests, and abort startup on any failure; and (d) an
+integration test must start that actual composition root against missing, valid, symlinked,
+wrong-permission, and replaced key cases and observe the specified fail-closed behavior. For
+those production-wiring surfaces, no existing helper or path is assumed by tranche 1 and reuse
+decisions belong to that measured successor design. The bounded subprocess runner is the named
+exception and is NOT on tranche 2's list: tranche 1 owns it, measured its reuse decision in this
+document's own log (V35: the only general runner is unexported and broker-internal, so nothing
+reusable exists), and implements it inside `host/evidence` (§3.4).
 
 Ordering is binding. Tranche 1 is non-production until tranche 2 wires key custody. Tranche 3
 cannot reuse raw proof receipts as replay receipts. Tranche 4 cannot infer trust from either
@@ -655,6 +777,131 @@ hand-authors otherwise-perfect canonical `ProofReportV1` bytes and requires an e
   `world/contracts.ail:11-13` corroborates the Proposal case and cites upstream issue 477, but the
   first-party probe rows—not that comment—support this design boundary (V31–V32).
 
+## 10.5 Round 5 revision
+
+- **Direction — RATIFIED option A, attended.** Mark Edmondson ratified decision-ledger row
+  `D-WORLD-17` in `design_docs/world-mission.md` on 2026-08-17 (recommendation adopted verbatim):
+  bind every seal to its minting validator; tranche 1 stays library-only and explicitly
+  NON-PRODUCTION. This closes the round-4 blocking catch — with no production root, the key is
+  caller-supplied, so a public `NewValidator` plus a free `GradeOfValidated` let any Go caller
+  construct a validator, mint a seal, and obtain `ResolvedGradeProven` — by making possession of
+  a seal worthless without the minting validator instance. Option B was rejected for chaining the
+  item behind an unwritten successor and re-creating the guard-lands-before-the-guarded-thing
+  vacuity pattern (the AC12/AC13 precedent).
+- **What changed.** The free `GradeOfValidated(sealed) ResolvedGrade` is DROPPED — not deprecated,
+  not aliased, not wrapped, because its existence detached from a validator instance is the
+  defect — and replaced by the `Validator.Resolve(sealed) ResolvedGrade` method (§2.2 item 3,
+  §3.2, §3.5). Each validator carries an unexported per-instance identity stamped into the seal
+  at mint; `Resolve` refuses foreign seals with the dedicated `ErrForeignSeal` (§3.2). The
+  cross-validator refusal arm lands as named RED mutation M20 with
+  `TestAttackerChosenValidatorCannotMintForHostAuthority` (§6, control paragraph included), and
+  new AC14 states the enforced property (§7). All five pre-revision references to the dropped
+  symbol were moved (V33); the symbol appears in no `.go` or `.ail` file, so this is a
+  document-only change (V34).
+- **What is and is not enforced.** You cannot make someone else's validator resolve your seal;
+  you can still self-mint into a validator you constructed yourself, and that is accepted — no
+  library can stop a caller lying to itself. Round 4's explicitly non-production tranche-1
+  framing is unchanged and still correct; production key custody stays with
+  `w-proven-evidence-production-key-wiring`.
+- **Round 5, revision 2.** Quorum round 5 returned BLOCKED with both reviewers present; both
+  objections were controller-measured first-party and SUSTAINED, both are COMPLETENESS defects,
+  and the ratified `D-WORLD-17` direction is untouched.
+  - **`gpt5-6-sol` — the binding was forgeable by Go zero values.** `Validator` and
+    `ValidatedEvidence` are exported, so `var v Validator; var s ValidatedEvidence; v.Resolve(s)`
+    compared zero identity to zero identity and passed — two lines of Go minting
+    `ResolvedGradeProven` with no key and no `NewValidator` call; the round-4 defect one layer
+    down (round 4 was a resolver plus a public constructor; this was a resolver plus no
+    constructor at all). Fixed with a mint-validity invariant (§3.2): the identity is now an
+    unexported pointer to a non-zero-size allocation made only inside `NewValidator`, and
+    `Resolve` refuses any nil identity with the dedicated `ErrUnmintedAuthority` BEFORE the
+    binding comparison, so a zero identity is never valid. The objection's copy-semantics half
+    is answered by statement, not denial: a value copy of a validator carries the same identity
+    pointer and key and IS the same authority — the guarantee is re-worded per-identity, not
+    per-Go-variable (§2.2, §3.2, AC14), so the claim is no stronger than the mechanism. New RED
+    mutation **M21** (`TestZeroValueForgeryCannotResolve`, observable `ErrUnmintedAuthority`)
+    lands in §6 with a same-instance control; new AC15 states the criterion; criterion 9's
+    required-mutation list gains M21.
+  - **`gemini-3-1-pro` — §3.4 and §9 contradicted each other.** §3.4 mandated the tranche-1
+    producer bound wall time, stdout, and stderr, while §9 placed the bounded subprocess runner
+    on tranche 2's to-be-measured inventory and forbade tranche 1 assuming any helper — an
+    acceptance criterion resting on a capability the same document called unmeasured and
+    unowned. Resolved by branch **(a)**: tranche 1 owns the bounded runner, because the bounded
+    producer is tranche 1's named deliverable and cannot emit an authenticated report without
+    executing the pinned checker. New row V35 measures the primitive first-party (exactly three
+    non-test `exec.CommandContext` sites; the sole general-purpose runner `runBounded` is
+    unexported and broker-internal, so nothing reusable exists and reuse is rejected, not
+    deferred); §3.4 now specifies the tranche-1 construction, including overrun and overflow as
+    report-emitting-nothing refusals and separate stdout/stderr capture; §9's tranche-2 list
+    drops the runner and names the exception; AC5 states the same ownership. Pricing is
+    unchanged — the 0.60-day producer row already covered this construction.
+
+## 10.6 Round 6 quorum — BLOCKED, and why this document PARKS again
+
+Round 6 is the single re-quorum Gate 2 permits after a revision pass. Both reviewers were
+present (`absent_reviewers: []`, per-reviewer cap raised to `$0.45` *before* the round, on a doc
+that had grown 718 → 901 lines), `metered=$0.174209`. Verdict: **blocked**. Two objections
+survive, and this document parks a fourth time — but note what changed: the ratified DIRECTION
+(D-WORLD-17 arm A) was never in question in either round-5 or round-6 review. Every objection
+across both rounds has been a completeness defect in the mechanism, and three of the four were
+answered in-loop.
+
+**Objection 6a — `gpt5-6-sol`, API shape. SUSTAINED, and NOT the reason this parks.**
+`Validator.Resolve(sealed) ResolvedGrade` is a single-return signature with no refusal channel,
+while §§2.2/3.2/3.5, M20/M21 and AC14/AC15 all require it to return `ErrUnmintedAuthority` or
+`ErrForeignSeal` *and no grade*. The declared API cannot express what the whole authority
+boundary rests on, and the failure mode is a silent default grade. The defect is the
+controller's: the round-5 directive prescribed that signature verbatim from the attended
+ratification's wording, and neither the designer nor round 5's reviewers questioned it.
+Its `proposed_fix` is concrete, uncontested and direction-compatible — a sum-style
+`ResolutionResult` with unexported fields and mutually exclusive `Proven() (ResolvedGrade, bool)`
+and `Err() error` accessors, whose ZERO VALUE is an explicit refusal rather than success (the
+same invariant M21 already pins one layer down). **This fix is pre-agreed and applies under
+either arm of the ask below.** It is recorded here rather than applied because the
+narrow-refinement carve-out is all-or-nothing: one disqualifying objection forecloses it for the
+whole document.
+
+**Objection 6b — `gemini-3-1-pro`, unbounded allocation on untrusted input. SUSTAINED, premise
+MEASURED FIRST-PARTY, and this is what parks the document.**
+§3.3 step 3 caps the envelope at 256 KiB "before allocating a second full copy" — which concedes
+that the FIRST copy is already fully in memory, allocated by the store layer, before any length
+check runs. An attacker-supplied `HashRef` to a multi-gigabyte object OOMs the process before the
+validator ever looks at a length. The reviewer's premise was not forwarded on trust; the
+controller re-derived it at `03c7892` (rule 3f):
+
+- `host/store` exposes exactly **two** exported `Object` methods — `PutObject(o Object) error`
+  (`store.go:443`) and `GetObject(ref hashref.HashRef) (Object, bool, error)` (`store.go:467`).
+  `GetObject` returns the whole `Object`; there is no streaming or size-bounded form.
+- Non-test `host/store` contains **zero** occurrences of `io.Reader`, `io.LimitReader`,
+  `maxBytes` or `MaxBytes`. Known-positive control in the same call: **23** exported `Store`
+  methods exist (`store.go` 14, `journal.go` 9), so the zero is a measurement, not a broken grep.
+
+So the objection is true, and its `proposed_fix` — "modify §8.2 to permit extending the store API
+with a bounded read method (`OpenObject(ref) (io.ReadCloser, error)` or a `maxBytes` parameter)"
+— cannot be applied as a narrow refinement. It **widens §8.2's frozen package boundary into
+`host/store`**, and `host/store`'s read path is the declared subject of a different ratified queue
+item (18, `w-daemon-read-cancellation`, D-WORLD-18 arm A, whose own ratchet
+`TestNoNewDeadlineFreeStoreReads` pins that package's residual read sites). Deciding whether
+tranche 1 may extend `host/store` — and how that interacts with an item queued to bound the same
+package — is a scope call, and Gate 2 forbids a controller-invented resolution of one. **Fourth
+consecutive confirmation of the rule that a scope/direction dispute forecloses the carve-out.**
+
+**THE ASK, one word.** Both arms keep D-WORLD-17 arm A intact and both include objection 6a's
+pre-agreed fix.
+
+- **A — tranche 1 may extend `host/store` with a bounded object read.** Adopt 6b's fix verbatim:
+  `OpenObject(ref) (io.ReadCloser, error)` (or `GetObject` gaining a `maxBytes` bound), §3.3 step
+  2 streams through an `io.LimitReader` at 256 KiB, and §8.2's package list widens to include
+  `host/store`. Closes the OOM vector inside this tranche. Cost: a second item now writes to
+  `host/store` while item 18 is queued to bound it, so the two must be sequenced or merged.
+- **B — tranche 1 does not touch `host/store`.** The unbounded first copy is recorded as an
+  explicit, named limitation of a tranche that is already declared library-only and
+  NON-PRODUCTION, with an acceptance criterion stating the residual and a named successor owning
+  the bounded read — either item 18 or the tranche-2 wiring item. Keeps the frozen package
+  boundary and the tranche ordering; leaves a real resource-exhaustion vector unfixed in code that
+  by construction never runs in production.
+
+Ledger row: `D-WORLD-19`.
+
 ## 11. Verification Log
 
 Rows V1–V8, V12–V14, V17, V21, and V27–V32 were rerun from repository root at
@@ -662,7 +909,8 @@ Rows V1–V8, V12–V14, V17, V21, and V27–V32 were rerun from repository root
 paths are outside V29's seven changed non-design files, or are explicitly labelled inherited/history.
 Negative measurements assert their roots first and include a same-scope positive control in the
 same call. Glob-shaped arguments are quoted. V18, V22, V24, and V25 use only scratch files under
-`/tmp` when they write.
+`/tmp` when they write. V33–V34 were run for the round-5 revision on 2026-08-18 from repository
+root at `03c7892`; V35 was run for round-5 revision 2 on 2026-08-18 at the same `03c7892` base.
 
 | ID | Claim | Exact command and same-call control | Observed output |
 |---|---|---|---|
@@ -698,6 +946,15 @@ same call. Glob-shaped arguments are quoted. V18, V22, V24, and V25 use only scr
 | V30 | In the scoped `Evidence` declaration at `bef0153`, exactly five constructor lines occur and none is a `PROVEN` producer; the adjacent grade declaration is the same-scope positive control for `PROVEN`. | `grep -n 'type Evidence' -A 12 world/types.ail` | Lines 24–28 enumerate `CompilerOutput`, `TestReport`, `HumanApproval`, `AiReview`, and `RecordedEffect`; line 34 contains the control `PROVEN`, while no constructor line does. |
 | V31 | With pinned v0.30.0, a record parameter containing `list[Evidence]` fails encoding even when its contract reads only a scalar field; a bare `Evidence` parameter is the same-file, same-call positive control. The failure is silent to process rc and `check`. | `sed -n '1,220p' /tmp/iter87_adt_probe.ail`; `set +e; AILANG_RELAX_MODULES=1 /tmp/ailang-v0300/ailang ai-check -timeout 20s /tmp/iter87_adt_probe.ail >/tmp/iter87_adt_probe.rerun.json 2>/tmp/iter87_adt_probe.rerun.err; probe_rc=$?; printf 'rc=%s stderr_bytes=' "$probe_rc"; wc -c </tmp/iter87_adt_probe.rerun.err; python3 -c "import json; d=json.load(open('/tmp/iter87_adt_probe.rerun.json')); print(d['check']['passed'],d['check']['error_count'],d['verify']['verified'],d['verify']['errors']); [print(x['function'],x['status'],x.get('reason','')) for x in d['verify']['results']]"` | Probe defines `arm1(Rec)` with `evidence: list[Evidence]` but its contract/body read only `r.goal`; `arm2(Evidence)` is the control. `rc=0`, stderr `0` bytes, `check.passed=True`, `check.error_count=0`, `verify.verified=1`, `verify.errors=1`; `arm2 verified`, while `arm1 error` reports `Invalid constant declaration: unknown sort 'Rec'` and `unknown constant $p_r`. |
 | V32 | The measured boundary is an ADT-typed field in a record parameter, bare or inside a list—not records or lists by themselves. The repository's Proposal comment is corroboration, not the measurement. | `sed -n '1,260p' /tmp/iter87_adt_probe2.ail`; `set +e; AILANG_RELAX_MODULES=1 /tmp/ailang-v0300/ailang ai-check -timeout 20s /tmp/iter87_adt_probe2.ail >/tmp/iter87_adt_probe2.rerun.json 2>/tmp/iter87_adt_probe2.rerun.err; probe_rc=$?; printf 'rc=%s stderr_bytes=' "$probe_rc"; wc -c </tmp/iter87_adt_probe2.rerun.err; python3 -c "import json; d=json.load(open('/tmp/iter87_adt_probe2.rerun.json')); print(d['check']['passed'],d['check']['error_count'],d['verify']['verified'],d['verify']['errors']); [print(x['function'],x['status'],x.get('reason','')) for x in d['verify']['results']]"; nl -ba world/contracts.ail \| sed -n '9,16p'` | Same file/call: scalar-only record `arm3` and record with `list[string]` `arm6` are `verified`; record with bare `Evidence` `arm4` and record with `list[Evidence]` `arm5` are `error`. `rc=0`, stderr `0` bytes, `check.passed=True`, `check.error_count=0`, `verify.verified=2`, `verify.errors=2`; errors name unknown sorts `BareAdtRec` and `ListAdtRec`. Repository lines 11–13 independently note Proposal's unknown-sort failure and upstream `sunholo-data/ailang#477`. No deeper nesting, result-position record, or tuple shape was tested. |
+| V33 | Round-5 sweep (R1): before this revision the document referenced the free resolver symbol at exactly **five** lines — 78, 90, 201, 295, 398 — two more than the three the revision brief listed, which is why the sweep and not the list is authoritative. After the revision, every remaining occurrence names the symbol only to record that it is dropped (header, §2.2, §3.2, §10.5, and this log); none specifies it as a live API surface. | `grep -n 'GradeOfValidated' design_docs/planned/w-validated-proven-evidence-boundary.md` run before the edits and again after; counts via `grep -c` on the same pattern and path | Before: `doc_count=5`, lines 78/90/201/295/398 (the line-78/201/295 subset matching the brief's `sed -n '78p;201p;295p'` spot-check). After the R1/R2/R3 edits and before these two rows landed: 5 hits at lines 9/82/221/705/710, each a drop-notice; final re-run after this table row is recorded beneath the table. |
+| V34 | At `03c7892`, the dropped symbol appears in zero `.go`/`.ail` files and `host/evidence` does not exist, so R1 is a document-only change with no code to migrate; the same-call positive control fires. | `printf 'code_hits='; { grep -rln 'GradeOfValidated' --include='*.go' --include='*.ail' . \|\| true; } \| wc -l; printf 'control='; grep -rln 'func (s \*Store)' --include='*.go' . \| wc -l; ls -d host/evidence \|\| echo ABSENT; ls host/ \| wc -l` | `code_hits=0`; same-instrument control `4` files define `func (s *Store)` methods; `host/evidence` prints ABSENT while `ls host/` lists 15 packages, so the instrument sees both positives and the directory root. |
+| V35 | At `03c7892`, no exported bounded-subprocess helper exists in non-test `host`/`cmd` for `host/evidence` to import; the same-call inspection of unexported `runBounded` is the positive control and the measured pattern §3.4 reimplements (wall-time bound, output cap with overflow detection, overrun kill → refusal). | `git rev-parse --short HEAD; rg -n 'CommandContext' host cmd --glob '*.go' --glob '!**/*_test.go'; rg -n 'func Run[A-Z]\|func .*Bounded' host cmd --glob '*.go' --glob '!**/*_test.go'; nl -ba host/broker/handlers.go \| sed -n '60,140p'` | `03c7892`. Exactly 3 non-test `CommandContext` sites: `host/replay/replay.go:327`, `host/capsule/capsule.go:154`, `host/broker/handlers.go:93`. The exported-helper pattern matches only `func runBounded` at `host/broker/handlers.go:88` — 1 hit, lowercase, so unexported and broker-internal; zero `func Run[A-Z]` subprocess helpers. Inspection shows `context.WithTimeout(ctx, bounds.execTimeout)` feeding `exec.CommandContext`; `Setpgid: true` with `cmd.Cancel` invoking `killGroup` (`syscall.Kill(-pgid, SIGKILL)`) so a forked grandchild dies with the group; `io.LimitedReader{N: bounds.maxOutputBytes + 1}` with overflow returning `HandlerOutputOverflowError` and deadline expiry returning `HandlerTimeoutError`, both refusals returning no output. One property NOT to copy: `cmd.Stderr = cmd.Stdout` merges the streams, which §3.4's producer must not do because it parses stdout as JSON. |
+
+Final V33 re-run after all round-5 edits including revision 2: `grep -n 'GradeOfValidated'` on
+this file returns **8** hits at lines 9 (header), 85 (§2.2 drop-notice), 231 (§3.2 drop-notice),
+786/791 (§10.5 records), and 882/883/886 (the V33/V34 rows and this sentence, which quote the
+pattern as an instrument). Zero of the eight is a live API reference; the normative API surfaces
+in §2.2, §3.2, and §3.5 name only `Validator.Resolve`.
 
 ## 12. Related
 

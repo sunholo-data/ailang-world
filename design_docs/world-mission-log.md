@@ -9605,3 +9605,201 @@ one-way drift is unguarded one file over. Not a skill edit yet — and World can
 **Next.** Nothing is headless-routable. The loop is idle until one of **FOUR** one-word asks is
 answered: `D-WORLD-5` (unblocks the most — items 6 and 7 sit behind item 5 landing), `D-WORLD-17`,
 `D-WORLD-18`, `D-WORLD-DRIVER-1`.
+
+## Iteration 90 — 2026-08-18 — **an attended human ratification of all four open decisions had been sitting UNCOMMITTED in the shared working tree for three days; landed it (`03c7892`, Gate 3b green), then falsified item 5's freshly-ratified arm A by measurement and re-parked item 17 after two more quorum rounds** (`metered=$0.328765`; controller `claude:claude-opus-5`; designer `claude:claude-fable-5` ×2; no planner, executor or evaluator) — the iteration's spine is that **Gate 2's died-mid-flight sweep is written entirely about iterations that die, and the thing it caught here was a session that finished cleanly and handed its last two commands to a human who never ran them**
+
+**Gate 0.** Kill switch armed-off; `sunholo-voight-kampff` active; billing tripwire **CLEAN**. Inbox
+**4** unread — my own `mission-control` note, `mission-v1`'s iteration-218 controlplane report, two
+`eval-suite` notices — none a directive, regression or cross-mission request, so none outranks the
+queue. Directives: **0** from `MarkEdmondson1234` on `#68` (2 comments, both this loop's own weekly
+report and digest) and **0** on predecessor `#53` since `2026-08-15T18:23:42Z`. The rotation-week
+catch applies (`#68` was created `2026-08-17T19:19:43Z`, `-prev` = `#53`) and both watermarks were
+read with the older taken, per the Repo Profile's two-watermark rule. Watermark left unmoved —
+nothing was processed through that channel, because the human input this iteration acted on did not
+arrive through it. Weekly sweep: **0 orphans of 1 enumerated** (`#68` is the only open issue).
+
+**Gate 1.** `dev` == `origin/dev` at `614e5f8`, two-arg `rev-parse`, no `--short`. CI SHA-addressed:
+`checks=2`, `go host build + test gate` **success**, `ailang-code verify gate` **success**;
+known-positive control on `e73b10d` returns **2**, so the count is a measurement. RUNNING skill
+`cmp -s`-identical to `origin/dev`'s blob; `readlink` confirms the symlink still resolves into the V1
+checkout.
+
+**THE SPINE — AN ATTENDED RATIFICATION IS ALSO WORKING-TREE STATE.** Gate 2's died-mid-flight sweep
+has three arms — open PRs (**0**), stale worktrees (**1**, the repo itself), and uncommitted
+working-tree state — and all three are written about *an iteration that died*. The third arm fired,
+and what it had found was something else entirely. Six modified files and three untracked ones, with
+mtimes `21:33:31` (`CLAUDE.md`, `scripts/verify_go.sh`) and `21:40:01` (charter, archive, dashboard)
+— **eleven and eighteen minutes AFTER** the driver logged `iteration complete (rc=0)` at `21:22:20`.
+That ordering is the whole tell, and it reads as an anomaly rather than as work: nothing in this loop
+writes files after its own slot ends.
+
+Session transcript `72af8c81-31db-4ccb-ba8f-97989cd42155.jsonl` settles it. Human turns:
+*"what decisions are needed by me?"* (`19:21:33Z`), *"yep read all the decisions I need to make and
+recommend. ailang world is currently blocked"* (`19:24:25Z`), *"please enact your recommendations and
+decisions"* (`19:30:07Z`). Mark ratified all four: **D-WORLD-5 → A** (import `serveapi` pinned at
+v0.33.1), **D-WORLD-17 → A** (bind every seal to its minting validator; tranche 1 library-only and
+explicitly non-production), **D-WORLD-18 → A** (ship the scoped item, straight to sprint-planner per
+the doc's own §13, no designer round), **D-WORLD-DRIVER-1 → B with teeth** (the driver stays
+fleet-owned and the sync is a COMMIT, never working-tree dirt).
+
+The session's last message ends: *"One step needs your hands — the classifier rightly won't let me
+stage frozen-core files … run these two: `git add tools/launchd scripts/verify_go.sh CLAUDE.md` …
+`git commit -F …`"*. Those two commands were never run, so the enactment stopped one step short and
+the whole ratification stayed unversioned for three days in a checkout two sibling missions can
+touch.
+
+**What makes this worth a rule rather than an anecdote:** `mission_decisions.sh --check` read
+`valid, 5 rows` and `--open` read **EMPTY** throughout, because both read the **working tree**. Gate 0
+calls that ledger *"the authoritative current state"*. So the loop's authoritative instrument was
+reporting a queue-unblocking event that `origin/dev` had never heard of — the same failure class
+iteration 89 measured for the ledger's *existence*, one layer up and pointed at its *contents*. The
+generalisable half: **a decision ledger is only as durable as the commit that carries it, and the
+moment nobody checks whether the bytes left the tree is precisely the moment a human was in the
+room.**
+
+**Disposition, split by ownership.** Landed doc-only as `03c7892` — charter, status archive and
+dashboard — after verifying the inherited edits rather than adopting them (rule 3b(v)): STATUS
+rotation intact (charter 3 stamps, iteration 87 present in the archive at **1** with control
+`iteration 86` firing at **1**, and **0** at HEAD), queue rows 5/17/18 re-headed, ledger `--check`
+valid / `--open` empty. Gate 3b GREEN on that commit, SHA-addressed, `present=2 == expected=2`, both
+`success`. The `tools/launchd/*` + `scripts/verify_go.sh` + `CLAUDE.md` bundle is deliberately still
+uncommitted: D-WORLD-DRIVER-1 arm B assigns it to a fleet-authored commit, this controller is
+headless rather than attended, and `verify_go.sh`'s new gate step invokes
+`tools/launchd/test_mission_routing.sh` — so landing it without the tracked bundle would red CI, the
+exact outcome iteration 89 ruled out. Both newly-changed files were added to the existing backup and
+sha256-verified byte-identical, so the pending bundle is now recoverable in full.
+
+**ITEM 5 — THE RATIFIED ARM WAS FALSIFIED BY MEASUREMENT, AND THE RULING PRE-AUTHORIZED THE WAY
+OUT.** D-WORLD-5 arm A attached two conditions, and condition (ii) is an audit of the dependency
+closure against `TestDaemonDependencyAllowlist` *before* any `go.mod` change, with a disallowed graph
+routing to Open Decision 4's default — ask upstream for a protocol-only module, **never a broad
+relaxation**. Run first-party at `03c7892`:
+
+- `serveapi/serveapi.go` is **201 lines** whose only non-stdlib import is
+  `github.com/sunholo-data/ailang/internal/apiserver`. It is a facade, not an isolation layer.
+- `go list -deps` under go1.26.6: `serveapi` → **479** non-stdlib packages; `internal/apiserver` →
+  **478**. The facade adds exactly one package over the runtime it wraps.
+- Negative controls in the same call, proving the instrument can report small numbers:
+  `cmd/registry-validator` **6**, `cmd/wasm` **12**, `cmd/astdump` **14**.
+- **304** of the 479 are cloud / telemetry / GCP / model-host code — `cloud.google.com/go/auth`,
+  `cloud.google.com/go/compute/metadata`, `google.golang.org/grpc`, `google.golang.org/api`,
+  `go.opentelemetry.io/otel`, `go.opencensus.io`, `github.com/googleapis/enterprise-certificate-proxy`,
+  `github.com/google/s2a-go`, `github.com/ollama/ollama`, `github.com/mattn/go-sqlite3` (CGO).
+- World's daemon core today: **239 packages / 46 non-stdlib / exactly the 11 allowlisted roots**.
+  Importing `serveapi` would add **476 disallowed packages across 86 module roots**. Known-positive
+  control on the partitioner: `github.com/google/uuid` IS in the closure and is correctly NOT in the
+  disallowed set.
+
+Iteration 88 measured this seam **4-for-4 on the API axis** and was entirely right; nobody had
+measured the DEPENDENCY axis, because until the ruling chose A, importing was not on the table. So
+the failure is not a stale measurement — it is a correct measurement on a different axis, which is
+rule 3b(ix)'s shape (a claim true in the scope it was taken in) applied to an *axis* rather than a
+count. Filed [`ailang#764`](https://github.com/sunholo-data/ailang/issues/764) with the full table
+and the controls, plus the `mission-control` note CLAUDE.md's frozen-core rule requires
+(`msg_20260818_013505_d4b0352a`; the envelope's ollama embed failed and is noted, not hidden).
+**No new human ask** — the ruling already decided this branch.
+
+**SECOND FINDING — `go1.26.6` FIXES THE MISCOMPILE, AND A COMMITTED ARTIFACT SAID OTHERWISE.**
+`design_docs/verification/w-race-gate-blindspot/README.md` records *"go1.26.0 / .3 / .4 / .5 — Wrong,
+including the newest stable, so there is nothing to upgrade to"*. True on 2026-07-30. Measured today
+in one call: `go1.26.5` → **BUG: Field="" want "stateRoot"**, `go1.26.6` → **OK**, `go1.25.6` → **OK**;
+and the committed `run.sh`, run unmodified, reports *"reproduction confirmed, and both controls
+fired"*. This is the third instance of the recorded-absence-gone-stale class (iteration 88's dead
+blocker, iteration 89's `derive-planner-lane.sh`) and the first in which the stale claim lived in a
+**committed artifact built specifically to outlast prose** — the artifact did its job perfectly; what
+went stale was the sentence *around* it. It matters twice: `v0.33.1` declares `go 1.26.5`, which this
+repo's deny-list refuses, so the toolchain half of arm A is now resolvable; and queue item **4e**'s
+parked remediation is newly unblocked.
+
+**ITEM 17 — TWO MORE ROUNDS, RE-PARKED, DIRECTION NEVER RE-DISPUTED.** Doc 711 → 968 lines. Both
+rounds had `absent_reviewers: []`, with the per-reviewer cap raised to `$0.35` and `$0.45` *before*
+each round rather than after a degrade (iteration 86's lesson, applied twice more). Round 5 blocked
+on two completeness defects; both were controller-MEASURED and SUSTAINED before being forwarded
+(rule 3f), and both were fixed in one bounded revision:
+
+- **The new binding was forgeable by Go zero values.** Exported `Validator` and `ValidatedEvidence`
+  with unexported fields stop a foreign package *writing* them; they do not stop it constructing
+  `var v Validator; var s ValidatedEvidence`, whose identities compare EQUAL at zero — so `Resolve`
+  returns a grade for a seal nobody minted, with no key and no constructor call. This is the round-4
+  catch reappearing exactly one layer down: round 4 was "a free resolver plus a public constructor",
+  round 5 is "a resolver plus no constructor at all". Fixed by a mint-validity invariant (identity is
+  an unexported pointer to a per-instance **non-zero-size** allocation made only in `NewValidator`;
+  `Resolve` refuses any nil identity with the dedicated sentinel `ErrUnmintedAuthority` *before*
+  comparing), new RED arm **M21** with its own discriminating observable, and sibling **AC15**. The
+  designer also **weakened the stated guarantee to match the mechanism** — per mint-identity, not per
+  Go variable, since a value copy carries the same key and is the same authority — rather than
+  leaving an over-claim, which is what got this document rejected twice before.
+- **§3.4 and §9 contradicted each other**: §3.4 required the tranche-1 producer to bound wall time,
+  stdout and stderr, while §9 put "bounded subprocess runner" in tranche 2's enumeration and forbade
+  tranche 1 assuming a helper. Resolved by branch (a) with `V35` measured first: exactly **3**
+  non-test `exec.CommandContext` sites (`host/broker/handlers.go:93`, `host/capsule/capsule.go:154`,
+  `host/replay/replay.go:327`; control **10** including tests), and `runBounded`
+  (`host/broker/handlers.go:88`) is unexported and broker-internal — so reuse is REJECTED with a
+  reason rather than deferred, and the tranche-1 construction deliberately separates stdout from
+  stderr because the producer parses stdout as JSON. That last detail is iteration 89's finding
+  paying forward.
+
+Round 6 blocked on two more. **6a** (`gpt5-6-sol`) is uncontested, pre-agreed under either arm, and
+**the controller's own defect**: `Validator.Resolve(sealed) ResolvedGrade` is a single-return
+signature with no refusal channel, while §§2.2/3.2/3.5, M20/M21 and AC14/AC15 all require it to
+return `ErrUnmintedAuthority` or `ErrForeignSeal` **and no grade**. The round-5 directive prescribed
+that signature verbatim from the attended ratification's own wording, and neither the designer nor
+round 5's two reviewers questioned it. **6b** (`gemini-3-1-pro`) is what parks the document: §3.3's
+256 KiB cap runs *after* the store has already materialised the first full copy, so an
+attacker-supplied `HashRef` to a multi-gigabyte object OOMs the process before any length check. Its
+premise was re-derived first-party rather than forwarded: `host/store` exposes exactly **two**
+exported Object methods, `PutObject` (`store.go:443`) and `GetObject` (`store.go:467`), `GetObject`
+returns the whole payload, and non-test `host/store` contains **zero** occurrences of `io.Reader`,
+`io.LimitReader`, `maxBytes` or `MaxBytes` — with **23** exported `Store` methods as the same-scope
+known-positive control, so the zero is a measurement. Its `proposed_fix` widens §8.2's frozen package
+boundary into `host/store`, which is item **18**'s declared subject and carries its own ratchet over
+that package's read sites. That is a scope call, so the narrow-refinement carve-out is foreclosed —
+**fourth consecutive confirmation** of iteration 82's rule, and note that 6a alone would have
+qualified: the carve-out is all-or-nothing, so one disqualifying objection parks the whole document.
+
+**CONTROLLER MISS, recorded rather than buried.** Item 17's ratified queue row already said *"Also
+fold in gemini's non-blocking note (`DecodeProposal(raw)` byte bound)"* — the same byte-bound concern,
+filed **non-blocking** at iteration 87 — and the round-5 directive never passed it to the designer.
+It came back one round later as a BLOCKING objection that parked the item. **A non-blocking note is a
+deferred objection, not a discharged one**, and the only thing that distinguishes them is whether
+someone carries it into the next directive.
+
+**Routing.** Controller `claude:claude-opus-5` (`MODEL_WHY=probe ok`). Designer
+`claude:claude-fable-5` ×2 via `~/.local/bin/claude-sub` (billing guard: the wrapper `exec`s
+`env -u ANTHROPIC_API_KEY -u ANTHROPIC_AUTH_TOKEN claude`, and the tripwire read CLEAN independently);
+rotation pointer advanced `codex:gpt-5.6-sol` → `claude:claude-fable-5` in the namespaced
+`~/.ailang/state/mission-world-designer-rotation`, with the `codex:` entry skipped because it is
+exhausted fleet-wide until 2026-08-20 05:34. No planner, executor or evaluator spawned — no sprint
+ran. **FLAGGED:** two Fable runs again, the collision iteration 86 recorded between the
+one-bounded-run Fable discipline and Gate 2's one-revision-one-requorum rule. Instance **2**, still
+recorded rather than resolved, since changing it needs the charter's evidence bar.
+
+**Cost.** `metered=$0.328765` of the $5 ceiling — four quorum reviewer runs across two rounds
+(`$0.154556` + `$0.174209`). No metered executor, no managed_agents run.
+
+**Platform.** Everything measured on **darwin/arm64**. The `go list -deps` closure figures are
+platform-sensitive in principle (build constraints select different files per GOOS), so the 479/476
+counts travel with that narrowing; the direction of the finding does not, since the intruders are
+cloud SDKs rather than platform shims. Docs-only change: no `.ail` and no Go source moved.
+
+**Ruled out.** (a) Committing the fleet driver bundle — D-WORLD-DRIVER-1 arm B assigns it to a
+fleet-authored commit and the harness refused the *attended* assistant the identical staging.
+(b) Applying gemini's 6b fix under the carve-out — it crosses a frozen package boundary into another
+ratified item. (c) Reading iteration 88's 4-for-4 API measurement as covering the dependency axis.
+(d) Treating a green `--open` from `mission_decisions.sh` as evidence the ledger is durable — it
+reads the working tree. (e) `pgrep -qf 'claude-sub'` as a liveness probe: the wrapper `exec`s into
+`claude`, so the process renames itself out of the pattern watching it, and the probe reported the
+designer dead twice while it was running — a broken instrument caught only because "the doc changed
+by 15 lines" was implausible for the work requested.
+
+**Retro.** One process finding at **instance 1** (watch-item, bar is 2): Gate 2's died-mid-flight
+sweep is scoped to *dying iterations*, and an attended session that ends cleanly with unrun
+hand-back commands leaves the identical trace while matching none of the rule's three narratives.
+The cheap tell that worked here is file mtimes AFTER the driver's `iteration complete` line. One
+skill-fix candidate at **instance 2** (bar met, but it is the shared V1-owned SKILL.md, which World
+may not edit): the Fable one-bounded-run discipline versus one-revision-one-requorum — proposed, not
+applied.
+
+**Next.** Item **18** `w-daemon-read-cancellation` is the only fully-unblocked routable row —
+D-WORLD-18 arm A, straight to **sprint-planner**, no designer round. **TWO open asks:** `D-WORLD-19`
+(one word) and the fleet-authored driver commit (two commands, not a decision).
