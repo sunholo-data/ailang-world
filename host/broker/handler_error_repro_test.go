@@ -35,8 +35,8 @@ func (s *cfj2RecordingStore) PutObject(obj store.Object) error {
 	return nil
 }
 
-func (s *cfj2RecordingStore) GetObject(ref hashref.HashRef) (store.Object, bool, error) {
-	return s.base.GetObject(ref)
+func (s *cfj2RecordingStore) GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error) {
+	return s.base.GetObject(ctx, ref)
 }
 
 func (s *cfj2RecordingStore) AppendNextEffectIntent(

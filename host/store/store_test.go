@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"testing"
@@ -39,7 +40,7 @@ func TestObjectPersistenceRoundTrip(t *testing.T) {
 	if err := s.PutObject(o); err != nil {
 		t.Fatalf("PutObject: %v", err)
 	}
-	got, ok, err := s.GetObject(o.Hash)
+	got, ok, err := s.GetObject(context.Background(), o.Hash)
 	if err != nil || !ok {
 		t.Fatalf("GetObject: ok=%v err=%v", ok, err)
 	}
@@ -79,7 +80,7 @@ func TestWorldPersistenceRoundTrip(t *testing.T) {
 	if err := s.PutWorld(w); err != nil {
 		t.Fatalf("PutWorld: %v", err)
 	}
-	got, ok, err := s.GetWorld(w.Ref)
+	got, ok, err := s.GetWorld(context.Background(), w.Ref)
 	if err != nil || !ok {
 		t.Fatalf("GetWorld: ok=%v err=%v", ok, err)
 	}
@@ -127,7 +128,7 @@ func TestFrozenHeaderRoundTrip(t *testing.T) {
 		t.Fatalf("Commit: %v", err)
 	}
 
-	got, ok, err := s.GetLogEntry(1)
+	got, ok, err := s.GetLogEntry(context.Background(), 1)
 	if err != nil || !ok {
 		t.Fatalf("GetLogEntry(1): ok=%v err=%v", ok, err)
 	}
@@ -142,7 +143,7 @@ func TestFrozenHeaderRoundTrip(t *testing.T) {
 	}
 
 	// The selected head must have advanced to the new world.
-	sel, ok, err := s.SelectedHead()
+	sel, ok, err := s.SelectedHead(context.Background())
 	if err != nil || !ok {
 		t.Fatalf("SelectedHead: ok=%v err=%v", ok, err)
 	}
@@ -249,10 +250,10 @@ func TestCommitConflictOnStaleHead(t *testing.T) {
 
 	// The failed commit must have written nothing: log entry 2 absent, and the
 	// selected head unchanged from commitA's world.
-	if _, ok, _ := s.GetLogEntry(2); ok {
+	if _, ok, _ := s.GetLogEntry(context.Background(), 2); ok {
 		t.Fatal("failed commit left log entry 2 behind; transaction did not roll back")
 	}
-	sel, _, _ := s.SelectedHead()
+	sel, _, _ := s.SelectedHead(context.Background())
 	if sel.String() != world2.Ref.String() {
 		t.Fatalf("selected head changed after failed commit: got %q want %q", sel, world2.Ref)
 	}
@@ -264,7 +265,7 @@ func TestRegistryHeadRoundTrip(t *testing.T) {
 	if err := s.SetRegistryHead(EpochRegistryV1, reg); err != nil {
 		t.Fatalf("SetRegistryHead: %v", err)
 	}
-	got, ok, err := s.GetRegistryHead(EpochRegistryV1)
+	got, ok, err := s.GetRegistryHead(context.Background(), EpochRegistryV1)
 	if err != nil || !ok {
 		t.Fatalf("GetRegistryHead: ok=%v err=%v", ok, err)
 	}
@@ -277,7 +278,7 @@ func TestRegistryHeadRoundTrip(t *testing.T) {
 	if err := s.SetRegistryHead(EpochRegistryV1, reg2); err != nil {
 		t.Fatalf("SetRegistryHead update: %v", err)
 	}
-	got2, _, _ := s.GetRegistryHead(EpochRegistryV1)
+	got2, _, _ := s.GetRegistryHead(context.Background(), EpochRegistryV1)
 	if got2.String() != reg2.String() {
 		t.Fatalf("registry head not updated: got %q want %q", got2, reg2)
 	}
@@ -294,7 +295,7 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 	}
 	assertHead := func(t *testing.T, s *Store, name string, want hashref.HashRef, wantOK bool) {
 		t.Helper()
-		got, ok, err := s.GetRegistryHead(name)
+		got, ok, err := s.GetRegistryHead(context.Background(), name)
 		if err != nil || ok != wantOK || (ok && got != want) {
 			t.Fatalf("GetRegistryHead(%q) = (%q,%v,%v), want (%q,%v,nil)", name, got, ok, err, want, wantOK)
 		}
@@ -422,7 +423,7 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 		if wins != 1 || conflicts != racers-1 {
 			t.Fatalf("wins=%d conflicts=%d, want 1/%d", wins, conflicts, racers-1)
 		}
-		head, ok, err := s.GetRegistryHead(TransitionRegistryV1)
+		head, ok, err := s.GetRegistryHead(context.Background(), TransitionRegistryV1)
 		if err != nil || !ok {
 			t.Fatalf("final head: ok=%v err=%v", ok, err)
 		}

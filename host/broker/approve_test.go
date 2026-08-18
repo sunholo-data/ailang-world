@@ -224,7 +224,7 @@ func TestLandedApprovalWiresCarryPublishBoundDecisionsUnchanged(t *testing.T) {
 	times := defaultApprovalTimes()
 	fixture := newPublishFixture(t, "http://127.0.0.1:1", "wire").landApproval(t, base, "approve", times)
 
-	requestObj, ok, err := base.GetObject(fixture.approvalRequestRef)
+	requestObj, ok, err := base.GetObject(context.Background(), fixture.approvalRequestRef)
 	if err != nil || !ok {
 		t.Fatalf("approval request object = ok %v, err %v", ok, err)
 	}
@@ -249,7 +249,7 @@ func TestLandedApprovalWiresCarryPublishBoundDecisionsUnchanged(t *testing.T) {
 		t.Fatalf("re-encoded request = %s, want the landed bytes %s", got, requestObj.Payload)
 	}
 
-	decisionObj, ok, err := base.GetObject(fixture.identity.ApprovalRef)
+	decisionObj, ok, err := base.GetObject(context.Background(), fixture.identity.ApprovalRef)
 	if err != nil || !ok {
 		t.Fatalf("approval decision object = ok %v, err %v", ok, err)
 	}

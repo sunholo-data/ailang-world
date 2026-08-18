@@ -170,14 +170,39 @@ func canonicalDBPath(path string) (string, error) {
 	return filepath.Join(resolvedDir, base), nil
 }
 
-// writeDSN renders the DSN handed to the driver for a WRITE handle. A plain
-// path DSN stays a plain path (byte-identical driver behaviour to M1, modulo
-// canonicalization); a URI DSN keeps its parameters.
-func writeDSN(canonical string, params url.Values) string {
-	if len(params) == 0 {
-		return canonical
+// busyTimeoutMillis is the lock-layer retry window applied to every production
+// connection (w-daemon-read-cancellation §2.2). It is the LOCK policy, not the
+// elapsed-time bound: the request context remains the outer bound, and 2000 ms
+// sits well below the daemon's 10 s read deadline so the context always wins.
+// It is large enough to ride out a writer's commit burst instead of failing
+// instantly with SQLITE_BUSY.
+const busyTimeoutMillis = 2000
+
+// withBusyTimeout returns params with a busy_timeout pragma added, UNLESS the
+// caller's own DSN already set one — an explicit caller value is never
+// overridden. The driver applies _pragma per physical connection at open time,
+// so the setting survives pool connection recycling, which an
+// `Exec("PRAGMA ...")` issued after Open would not.
+func withBusyTimeout(params url.Values) url.Values {
+	out := url.Values{}
+	for k, v := range params {
+		out[k] = append([]string(nil), v...)
 	}
-	return fileURI(canonical, params)
+	for _, pragma := range out["_pragma"] {
+		if strings.HasPrefix(strings.TrimSpace(pragma), "busy_timeout") {
+			return out
+		}
+	}
+	out.Add("_pragma", fmt.Sprintf("busy_timeout(%d)", busyTimeoutMillis))
+	return out
+}
+
+// writeDSN renders the DSN handed to the driver for a WRITE handle. Parameters
+// carried by a URI DSN are kept, and the busy_timeout pragma is injected when
+// the caller did not set one — which means a production write handle is always
+// rendered as a file: URI, since it always carries at least that parameter.
+func writeDSN(canonical string, params url.Values) string {
+	return fileURI(canonical, withBusyTimeout(params))
 }
 
 // readOnlyDSN renders the DSN handed to the driver for a READ-ONLY handle. The
@@ -185,10 +210,7 @@ func writeDSN(canonical string, params url.Values) string {
 // parameter may only RESTRICT those flags, never elevate them — so mode=ro
 // yields a genuinely read-only connection.
 func readOnlyDSN(canonical string, params url.Values) string {
-	q := url.Values{}
-	for k, v := range params {
-		q[k] = append([]string(nil), v...)
-	}
+	q := withBusyTimeout(params)
 	q.Set("mode", "ro")
 	return fileURI(canonical, q)
 }

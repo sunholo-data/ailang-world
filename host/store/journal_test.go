@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -172,7 +173,7 @@ type storeSnapshot struct {
 func snapshotJournalStore(t *testing.T, s *Store) storeSnapshot {
 	t.Helper()
 	var snap storeSnapshot
-	head, ok, err := s.SelectedHead()
+	head, ok, err := s.SelectedHead(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}

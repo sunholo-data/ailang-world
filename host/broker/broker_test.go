@@ -372,7 +372,7 @@ func TestDeniedInvokeWritesOneRecord(t *testing.T) {
 	if count != 0 {
 		t.Fatalf("handler dispatch count = %d, want 0", count)
 	}
-	obj, ok, err := s.GetObject(recordRef)
+	obj, ok, err := s.GetObject(context.Background(), recordRef)
 	if err != nil || !ok {
 		t.Fatalf("GetObject = ok %v, err %v", ok, err)
 	}
@@ -402,7 +402,7 @@ func TestAllowedInvokeWritesResultAndRecord(t *testing.T) {
 	if string(result) != "echo:x" || count != 1 {
 		t.Fatalf("result %q, dispatches %d", result, count)
 	}
-	obj, ok, err := s.GetObject(recordRef)
+	obj, ok, err := s.GetObject(context.Background(), recordRef)
 	if err != nil || !ok {
 		t.Fatalf("GetObject = ok %v, err %v", ok, err)
 	}
@@ -414,7 +414,7 @@ func TestAllowedInvokeWritesResultAndRecord(t *testing.T) {
 		rec.ResultRef.IsZero() || !RecordConsistent(rec) {
 		t.Fatalf("allowed record = %#v", rec)
 	}
-	resultObj, ok, err := s.GetObject(rec.ResultRef)
+	resultObj, ok, err := s.GetObject(context.Background(), rec.ResultRef)
 	if err != nil || !ok || !bytes.Equal(resultObj.Payload, result) {
 		t.Fatalf("result object = ok %v, payload %q, err %v", ok, resultObj.Payload, err)
 	}
@@ -436,7 +436,7 @@ func TestLedgerUsesRemainingBudget(t *testing.T) {
 	if count != 1 {
 		t.Fatalf("dispatch count = %d, want 1", count)
 	}
-	obj, ok, getErr := s.GetObject(ref)
+	obj, ok, getErr := s.GetObject(context.Background(), ref)
 	if getErr != nil || !ok {
 		t.Fatalf("GetObject = ok %v, err %v", ok, getErr)
 	}
@@ -461,8 +461,8 @@ func (s *failRecordStore) PutObject(obj store.Object) error {
 	return s.base.PutObject(obj)
 }
 
-func (s *failRecordStore) GetObject(ref hashref.HashRef) (store.Object, bool, error) {
-	return s.base.GetObject(ref)
+func (s *failRecordStore) GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error) {
+	return s.base.GetObject(ctx, ref)
 }
 
 func (s *failRecordStore) AppendNextEffectIntent(
@@ -576,7 +576,7 @@ func TestAllowedLiveSessionRequiresEpisodeID(t *testing.T) {
 	if err == nil || err.Error() != "broker: live allowed effect requires an episode ID" {
 		t.Fatalf("Invoke error = %v, want empty-episode failure", err)
 	}
-	if _, ok, getErr := s.GetObject(requestHash(req, []byte("request"))); getErr != nil || ok {
+	if _, ok, getErr := s.GetObject(context.Background(), requestHash(req, []byte("request"))); getErr != nil || ok {
 		t.Fatalf("request object after empty episode = ok %v, err %v; want absent", ok, getErr)
 	}
 }
@@ -659,7 +659,7 @@ func TestRecordConsistentAllSketchArms(t *testing.T) {
 
 func decodeStoredRecord(t *testing.T, s *store.Store, ref hashref.HashRef) EffectRecord {
 	t.Helper()
-	obj, ok, err := s.GetObject(ref)
+	obj, ok, err := s.GetObject(context.Background(), ref)
 	if err != nil || !ok {
 		t.Fatalf("GetObject(%s) = ok %v, err %v", ref, ok, err)
 	}

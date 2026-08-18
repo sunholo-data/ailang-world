@@ -1,0 +1,497 @@
+{
+  "sprint_id": "w-daemon-read-cancellation",
+  "queue_item": 18,
+  "title": "A bounded elapsed-time contract for the daemon's read path: context-first store getters, a 10s request deadline reaching the blocking call, an explicit 503/Timeout class, a busy_timeout lock policy, sanitized 500 bodies, and a ratchet pinning the 11 residual deadline-free reads",
+  "status": "in_progress",
+  "created": "2026-08-18",
+  "planner": "mission-control iteration 91, opus sprint-planner",
+  "design_doc": "design_docs/planned/w-daemon-read-cancellation.md",
+  "sprint_plan": "design_docs/planned/w-daemon-read-cancellation-sprint-plan.md",
+  "base_commit": "d31362f",
+  "branch": "sprint/w-daemon-read-cancellation",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-iter91",
+  "github_issues": [],
+  "environment": {
+    "AILANG_BIN": "/tmp/ailang-v0300/ailang",
+    "ailang_version": "AILANG v0.30.0 (e37b370)",
+    "GOTOOLCHAIN": "go1.25.6",
+    "notes": [
+      "The PATH `ailang` is a -dirty dev build. NEVER use it as a gate. Acceptable ONLY for `ailang messages send`.",
+      "GOTOOLCHAIN=go1.25.6 is a BASE CONDITION of this rig, not a regression.",
+      "A bare `go test ./...` without AILANG_BIN exits rc=1 with ~8 failures. BASE CONDITION, not a regression.",
+      "host/broker carries a recorded ~18% base flake. One green run (observed 50.8s at d31362f) is not evidence the flake is gone; one red run is not evidence of a regression.",
+      "ai-check is CWD-SENSITIVE. Run from repo root with a repo-root-relative module path. The wrong cwd returns LDR001 module-not-found, which reads as a KILL ON EVERY ARM. Always run a pristine known-positive control first.",
+      "DO NOT run scripts/verify_go.sh as this sprint's gate: its driver-drift gate reds while the deliberate uncommitted fleet bundle diverges from HEAD. That red means 'the fleet must commit', never 'absorb it'. The Go gate here is `go build ./... && go test ./...` run directly.",
+      "zsh trap: unquoted --include=*.go glob-expands and the command NEVER RUNS. Always quote --include='*.go'.",
+      "zsh trap: ${PIPESTATUS[0]} is silently EMPTY. Capture to a file and read rc=$? directly."
+    ]
+  },
+  "ratification": {
+    "decision": "D-WORLD-18",
+    "who": "Mark, attended, 2026-08-17, recorded in the charter decision ledger",
+    "outcome": "OPTION A - ship the scoped item as designed: the 7 daemon GET routes, the five zero-cost fold-ins, and TestNoNewDeadlineFreeStoreReads pinning the 11 residual deadline-free sites (approve 8, registry 2, replay 1; follow-on progress mechanically observable 11 -> 0).",
+    "routing": "Per design doc section 13, A unparks this doc DIRECTLY to sprint-planner as written. NO designer round. NO re-litigation of scope. The one surviving round-2 objection (gpt5-6-sol's scope-boundary dispute) is settled; its remedy is the named follow-on item, not this sprint.",
+    "why_not_B": "B forces two authority-model policy questions NOW, costs >=2.5d vs 1.5d, and blocks item 14 a further day - while A's residue is enforced (AC9 ratchet), not hidden."
+  },
+  "velocity": {
+    "method": "LOC against measured repo references, cross-checked against the doc's own band split.",
+    "references": [
+      "VL.B sprint plan: 515 LOC at 0.5 d = ~1030 LOC/day",
+      "TR.A sprint plan: 2630 LOC at 2 d = ~1315 LOC/day, flagged by its own planner as ABOVE measured velocity",
+      "item 16 (d9712dd): 335 Go insertions across 4 files in a ~0.5 d band"
+    ],
+    "applied": "~1270 LOC over 1.5 d = ~845 LOC/day - inside the measured band and below both stretch references. The doc's 1.5 d is AGREED, not re-priced.",
+    "test_to_impl_ratio": "2.6:1 (915 test LOC : 355 impl LOC). High but correct: the item's thesis is that the EXISTING gate could not see the layer where the wait happens, so the new gates ARE the deliverable. Do not compress the test bands to hit the estimate.",
+    "target_loc_per_day": 845,
+    "estimated_total_loc": 1270,
+    "estimated_days": 1.5
+  },
+  "features": [
+    {
+      "id": "M1_STORE_CONTEXT",
+      "name": "Store layer: context-first getters, QueryRowContext, busy_timeout DSN injection, the 86-site migration, and the ratchet",
+      "description": "The five daemon-read-path getters (GetObject:467, GetWorld:522, GetLogEntry:551, GetRegistryHead:628, SelectedHead:802) become context-first and route through s.db.QueryRowContext. writeDSN/readOnlyDSN (writer_lock.go:176/187) inject _pragma=busy_timeout(2000) when the caller's DSN did not set one. The 22 non-test and 64 test call sites migrate. New host/store/context_read_test.go carries TestReadGettersHonorContext (5 subtests), TestProductionDSNSetsBusyTimeout, TestReadRetriesUnderTransientExclusiveLock (with a PRE-REGISTERED outcome record) and TestNoNewDeadlineFreeStoreReads (the section 2.8 ratchet). Daemon BEHAVIOUR IS UNCHANGED after M1 - a request context without a deadline is exactly today's bound - which is what makes M1 independently landable.",
+      "commits": 1,
+      "files": [
+        "host/store/store.go",
+        "host/store/writer_lock.go",
+        "host/store/context_read_test.go (NEW)",
+        "host/daemon/daemon.go",
+        "host/daemon/handlers.go",
+        "host/transitionreg/transitionreg.go",
+        "host/broker/broker.go",
+        "host/broker/approve.go",
+        "host/registry/registry.go",
+        "host/replay/replay.go",
+        "18 *_test.go files across host/{store,broker,daemon,transitionreg,registry}"
+      ],
+      "closes_acceptance_criteria": [1, 2, 6, 9],
+      "advances_acceptance_criteria": [8],
+      "mutations": ["MU4a", "MU4b", "MU4c", "MU4d", "MU4e", "MU5", "MU6", "MU12", "MU13"],
+      "passes": true,
+      "completed": "2026-08-18",
+      "notes": "M1 COMPLETE, T1.1-T1.9 all landed. Final-tree gates: GOTOOLCHAIN=go1.25.6 go build ./... rc=0; go test ./... -count=1 rc=0 (17 packages ok, 0 FAIL); go vet ./... rc=0; gofmt clean. ACs greened: AC1 7/14 (want >=5, control >=14); AC2 rc=0 with 8 '=== RUN' (want >=7); AC6 4 (want >=1); AC9 rc=0, 1 '=== RUN', pins {approve.go:8, registry.go:2, replay.go:1, all else 0}, total 11; AC8 rc=0. AC4 deliberately NOT greened here - it is M2's, and see doc_defects_found_by_executor.",
+      "pre_registered_outcome_observed": "(a) RETRY-WINS - the row came back at 343.7ms with the exclusive lock held 300ms and busy_timeout 2000ms (planner probe 341ms; executor reruns 344ms / 348ms). Corroborated as a REAL retry rather than a fast path by MU5: with the injection deleted the identical read is REFUSED at 20.458us with 'database is locked (5) (SQLITE_BUSY)'.",
+      "mutation_results": {
+        "MU4a": "KILLED. store.go:475 QueryRowContext(ctx -> context.Background()). sha256 ecdd5652->242674c7. go build rc=0 (mutant compiles). KILL: go test ./host/store -run TestReadGettersHonorContext/GetObject rc=1, 2 '=== RUN', --- FAIL at 2.15s: 'GetObject did not return within 2s with an already-expired context: the context does not reach the blocking database/sql call'. INVERSE (-skip TestReadGettersHonorContext) rc=0.",
+        "MU4b": "KILLED. store.go:529. sha256 ecdd5652->09be5843. mutant go build rc=0. KILL rc=1, 2 '=== RUN', --- FAIL: TestReadGettersHonorContext/GetWorld (2.16s), same named assertion. INVERSE rc=0.",
+        "MU4c": "KILLED. store.go:562. sha256 ecdd5652->04497eb5. mutant go build rc=0. KILL rc=1, 2 '=== RUN', --- FAIL: TestReadGettersHonorContext/GetLogEntry (2.16s). INVERSE rc=0.",
+        "MU4d": "KILLED. store.go:631. sha256 ecdd5652->bc45f834. mutant go build rc=0. KILL rc=1, 2 '=== RUN', --- FAIL: TestReadGettersHonorContext/GetRegistryHead (2.16s). INVERSE rc=0.",
+        "MU4e": "KILLED. store.go:804 selectedHeadTx(ctx -> context.Background(), s.db) - SelectedHead has NO direct QueryRow, see doc_defects_found_by_executor. sha256 ecdd5652->a8b14f37. mutant go build rc=0. KILL rc=1, 2 '=== RUN', --- FAIL: TestReadGettersHonorContext/SelectedHead (2.16s). INVERSE rc=0.",
+        "MU5": "KILLED. writer_lock.go: the out.Add(\"_pragma\", busy_timeout(2000)) injection line deleted (post-mutation grep of the injection = 0). sha256 0f6b4c59->0a84d382. mutant go build rc=0. KILL: TestReadRetriesUnderTransientExclusiveLock rc=1, 1 '=== RUN', FAIL: 'the read was REFUSED by the lock (err=... database is locked (5) (SQLITE_BUSY)) after 20.458us instead of riding it out'. INVERSE rc=0.",
+        "MU6": "KILLED. writer_lock.go:179 busyTimeoutMillis 2000 -> 0. sha256 0f6b4c59->f2b53e8b. mutant go build rc=0. KILL: TestProductionDSNSetsBusyTimeout rc=1, 1 '=== RUN', FAIL: 'write handle PRAGMA busy_timeout = 0, want 2000' AND 'read-only handle PRAGMA busy_timeout = 0, want 2000'. INVERSE rc=0. IMPORTANT: this arm SURVIVED (rc=0) against the first version of the test, which compared the live PRAGMA readback against busyTimeoutMillis - the same constant the mutation moves, so both sides moved together and the assertion could not fail. Killed only after the expected value became a test-local literal (wantBusyTimeoutMS = 2000).",
+        "MU12": "KILLED. handlers.go: scratch '_, _, _ = d.store.GetWorld(context.Background(), ref)' inserted in handleWorld; per-file deadline-free count 0 -> 1. sha256 cc6fd705->5aee17ed. mutant go build rc=0. KILL: TestNoNewDeadlineFreeStoreReads rc=1, 1 '=== RUN', FAIL: 'host/daemon/handlers.go has 1 deadline-free store read(s) and is pinned at 0' + 'deadline-free store reads total 12, pinned at 11'. INVERSE rc=0.",
+        "MU13": "KILLED. store.go:468 GetObject reverted to the context-free signature (ctx param dropped, QueryRowContext(ctx -> context.Background())). sha256 ecdd5652->bd5faf2b. KILL: GOTOOLCHAIN=go1.25.6 go build ./... rc=1 with 20 error lines naming GetObject (host/registry/registry.go:136, host/replay/replay.go:153, host/broker, host/daemon, host/transitionreg, ...). Restored -> go build rc=0."
+      },
+      "mutation_discipline": "Every arm: anchor count asserted before editing; sha256 PRE/POST landed-proof before any result was read; mutant compiled (go build for these nine, all production-code mutants); KILL arm asserted on the '=== RUN' ENUMERATION as well as rc; INVERSE arm (-skip on the named selector) rc=0; restore by cp from /tmp/w18_mut taken OUTSIDE the repo, with sha256 == PRE verified byte-identical. 'git checkout --' was never used. INSTRUMENT FAILURE CAUGHT: the first MU4a-e sweep scored rc=127 with 0 '=== RUN' because coreutils 'timeout' is not installed on this rig - the enumeration assert caught what the exit code alone would have hidden; rerun with 'go test -timeout'.",
+      "estimated_loc": 525,
+      "estimated_days": 0.5,
+      "estimated_days_breakdown": {
+        "getter_signatures_and_QueryRowContext": 0.05,
+        "busy_timeout_DSN_injection": 0.05,
+        "22_nontest_call_site_migration": 0.05,
+        "64_test_call_site_migration": 0.05,
+        "context_read_test_go_four_tests": 0.2,
+        "mutation_sweep_9_arms": 0.1
+      },
+      "dependencies": [],
+      "acceptance_criteria": [
+        "AC1 - grep -c 'context.Context' host/store/store.go >= 5 (baseline 0), same-call control grep -c 'func (s \\*Store)' still >= 14 (baseline 14).",
+        "AC2 - go test ./host/store -run 'TestReadGettersHonorContext|TestProductionDSNSetsBusyTimeout|TestReadRetriesUnderTransientExclusiveLock' -v -count=1 : rc=0 AND >= 7 '=== RUN' lines. Baseline is rc=0 with ZERO === RUN lines and 'no tests to run' (the vacuous pass, observed live). COUNT THE ENUMERATION, NEVER THE EXIT CODE ALONE.",
+        "AC6 - grep -rn 'busy_timeout' host/store/*.go | grep -v _test | wc -l >= 1 (baseline 0; same-scope known-positive control is the single test-input hit at writer_lock_test.go:609).",
+        "AC9 - go test ./host/store -run 'TestNoNewDeadlineFreeStoreReads' -v -count=1 : rc=0 AND exactly 1 '=== RUN' AND the pinned per-file counts equal {approve.go: 8, registry.go: 2, replay.go: 1, all else: 0}. Baseline is the vacuous rc=0 / 0 === RUN shape.",
+        "AC8 (advanced) - GOTOOLCHAIN=go1.25.6 go build ./... && go test ./... -count=1 : rc=0, 17 packages.",
+        "T1.7 PRE-REGISTERED OUTCOME: the contention test must RECORD which arm held - (a) retry-wins (row returned at ~300ms once the lock released) or (b) interrupt-wins (context/interrupt error before 2000ms). Both satisfy the <=3s bound. NEITHER IS A FAILURE. Not recording which one happened IS a failure. Under MU5 the read must fail INSTANTLY with SQLITE_BUSY.",
+        "Exit gate: both CI legs green - go build + go test, and ./scripts/verify_ail.sh rc=0 at 10 / 39 / 9-of-9."
+      ],
+      "traps": [
+        "T1.3 CRITICAL: land readCtx as a ONE-LINE helper in M1 returning context.WithCancel(r.Context()) - i.e. NO timeout yet - so the six daemon getter sites pass d.readCtx(r) from M1 onward and NEVER spell context.Background(). This keeps the AC9 ratchet pin at 11 in BOTH milestones, gives MU1 its exact one-line mutation site in M2, and is behaviour-identical in M1. If the daemon sites spell context.Background() instead, the ratchet reads 17, not 11, and AC9 reds.",
+        "DR-2 IS RATIFIED: approve.go (8), registry/registry.go (2), replay/replay.go (1) get context.Background() VERBATIM. Do NOT thread a real deadline through them. Doing so shrinks the AC9 pin and reds AC9.",
+        "The 11-site ratchet scope is NOT the same measurement as 'production context.Background() literals'. Re-derived first-party at d31362f: 11 = approve.go:169,195,225,234,251,261,495,522 + registry.go:127,135 + replay.go:153. A count is only true inside the scope it was taken in.",
+        "MU4a-e cite store.go lines 467/522/551/628/802 - re-verified byte-correct at d31362f.",
+        "Watchdog rule B2: the layer-1 watchdog's red path is t.Error THEN close the occupying *sql.Conn, then drain the result channel under a second 2s bound. With SetMaxOpenConns(1) (store.go:297) a parked getter holds the SOLE connection and a deferred s.Close() behind it turns a clean red into a SUITE-WIDE HANG.",
+        "host/broker's ~18% base flake will touch M1: both broker files change mechanically here. Attribute by shape against the base rate, never by one run.",
+        "TestNoNewDeadlineFreeStoreReads lives in host/store, NOT host/boundary: the boundary package's file census is pinned at wantFileCount = 1 (allowlist_world_test.go:1163) and this item adds no file there.",
+        "Root the ratchet scanner via runtime.Caller so its result does not depend on the test's working directory."
+      ]
+    },
+    {
+      "id": "M2_DAEMON_DEADLINE",
+      "name": "Daemon deadline, the five-method read seam, explicit 503/Timeout status, and the sketch mirror",
+      "description": "readDeadline = 10 * time.Second as a constant plus a Daemon field set by New (the drainTimeout field-not-constant idiom at daemon.go:238-243/343). readCtx's body becomes context.WithTimeout(r.Context(), d.readDeadline); all six store-reading GET handlers keep a defer cancel() immediately after calling it (the section 2.3 mandate). A FIVE-method unexported readStore seam wires New to the same *store.Store. Timeout classification checks ctx.Err() FIRST. The sketch gains Timeout(string), the arm Timeout(_) => 503, and one test row. daemon_test.go gains the seventh D7 literal row. New host/daemon/read_deadline_test.go carries TestDaemonReadDeadline (two arms), TestDaemonReadDisconnect, TestReadCtxCancelledAfterHandler and TestTimeoutStatusMirrorsSketch.",
+      "commits": 1,
+      "files": [
+        "host/daemon/daemon.go",
+        "host/daemon/handlers.go",
+        "host/daemon/daemon_test.go",
+        "host/daemon/read_deadline_test.go (NEW)",
+        "design_docs/sketches/worlddapi.ail"
+      ],
+      "closes_acceptance_criteria": [4, 7],
+      "advances_acceptance_criteria": [3, 8],
+      "mutations": ["MU1", "MU2", "MU3", "MU8", "MU9", "MU11", "MU14", "MU10 (declared NOT CI-red)"],
+      "estimated_loc": 610,
+      "estimated_days": 0.75,
+      "estimated_days_breakdown": {
+        "readDeadline_const_field_helper": 0.05,
+        "five_method_readStore_seam_and_handleHead": 0.1,
+        "timeout_classification_six_handlers": 0.1,
+        "sketch_edit_and_D7_row": 0.05,
+        "read_deadline_test_go_four_tests": 0.3,
+        "mutation_sweep_7_arms_plus_1_declared": 0.15
+      },
+      "dependencies": ["M1_STORE_CONTEXT"],
+      "acceptance_criteria": [
+        "AC3 (minus sanitize) - go test ./host/daemon -run 'TestDaemonReadDeadline|TestDaemonReadDisconnect|TestReadCtxCancelledAfterHandler|TestInternalErrorsAreSanitized|TestTimeoutStatusMirrorsSketch|TestBoundedWaitsAndBodyLimit' -v -count=1 : rc=0 AND '=== RUN' lines for the four new M2 test functions AND the extended D7 constants row. Baseline: rc=0 with exactly FIVE === RUN lines, all from the existing TestBoundedWaitsAndBodyLimit and its four subtests (observed live at d31362f).",
+        "AC4 - grep -c 'r.Context()' host/daemon/handlers.go >= 1 AND grep -c 'r.Context()' host/daemon/daemon.go >= 1. Baselines 0 and 0, same-call controls 9 (http.ResponseWriter) and 8 (mux.HandleFunc).",
+        "AC7 - AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh rc=0 with THE SAME TOTALS: '10/10 required world/ identities verified across 11 module(s)', 'all 39 required named tests pass', 'world package gate PASSED: 9/9 steps'. PRE-REGISTERED: the planner ran the exact edit against the real gate at d31362f and observed precisely this. ANY OTHER TOTALS = STOP AND REPORT, never adjust a pin.",
+        "AC8 (advanced) - build + full test suite green.",
+        "MU10 is run LOCALLY only and its result recorded as NOT-CI-red; that is a declared coverage boundary, not a gap to paper over."
+      ],
+      "traps": [
+        "PLAN-AFFECTING DOC DEFECT: design doc section 2.5 says 'six-value read interface' and section 2.7 says 'six-method unexported interface'. BOTH ARE WRONG. MEASURED: six store-reading GET routes, six call sites, but FIVE DISTINCT GETTERS - GetLogEntry serves BOTH /v1/log/{index} and /v1/log. The same section 2.5 paragraph says blockingStore overrides 'all five getters'. readStore has EXACTLY FIVE METHODS: GetObject, GetWorld, GetLogEntry, GetRegistryHead, SelectedHead. DO NOT INVENT A SIXTH.",
+        "The two candidate sixth methods are both wrong: Commit is the write path (DR-1 declares it untouched; a 'reads' interface holding it widens the seam past ratified scope), and GetVerifyResult is off the daemon read path entirely (its only non-test caller is replay.go:153) - adding it makes the fake's coverage claim false and pulls follow-on work forward.",
+        "OUT OF THE SEAM: d.store.ScanUnreadableLog (daemon.go:392) and d.store.ScanUnreadableWorlds (daemon.go:414) are store reads on the daemon but live in the INTEGRITY-REPORT path, not on any /v1 GET route. They keep using d.store directly.",
+        "The doc's section 8 gate-pin LINE NUMBERS are STALE (iteration 89 moved verify_ail.sh): EXACT_TOTAL_VERIFIED is at line 323, not 311; EXACT_TOTAL_TESTS is at line 363, not 350. The VALUES (10, 39) and the disposition (not moved) are correct.",
+        "EXACT_TOTAL_TESTS = 39 has SPACES AROUND '=' (it is inside embedded python, not shell). A shell-shaped grep 'EXACT_TOTAL_TESTS=' MISSES it.",
+        "The sketch runner's passed_tests moves 18 -> 19 but len(tests[]) is 16 in BOTH arms. verify_ail.sh pins len(tests[]) at line 363. NEVER quote passed_tests at a gate.",
+        "The sketch edit is EXACTLY THREE ANCHORS: '| Timeout(string)' after '| Internal(string)'; a comma after the Internal test row plus '((Timeout(\"read deadline exceeded\")), 503)'; a comma after 'Internal(_) => 500' plus 'Timeout(_) => 503'. Nothing else.",
+        "Classify by the CONTEXT, not by error text: check ctx.Err() != nil FIRST, then fall through to Internal. The driver's interrupt path can surface as SQLITE_INTERRUPT which does NOT wrap context.DeadlineExceeded, so errors.Is-only classification misfiles real timeouts as 500s. errors.Is is checked as well, but the context is the authority.",
+        "blockingStore must override ALL FIVE getters (reviewer A2's verbatim fix). A one-getter fake lets the other five routes fall through to the embedded real store, answer 200 instantly, and SPURIOUSLY RED the 503 assertion.",
+        "Watchdog rule B2: layer 3's red path is t.Error THEN close(escape). Under MU2 the fake's context is Background-derived and would otherwise stay parked until the 10s deadline. The escape return must be a DISTINCT SENTINEL that can never be read as a pass.",
+        "TestReadCtxCancelledAfterHandler must leave readDeadline at its 10s DEFAULT. That is what makes context.Canceled producible only by the handler's defer cancel() within test time.",
+        "MU8 is DECLARED WIRING-ONLY by the doc (it reads a value set alongside its mechanism) and is paired with MU1. Do not re-classify it as a semantic kill.",
+        "Non-scope freebie, explicitly permitted: daemon.go:456 still says 'The seven patterns below' above EIGHT registrations. One word. Fix it in M2's diff; do not count it as scope.",
+        "handleLogRange's bounded loop passes the SAME context to every iteration. Verified (V28): the function accumulates into a slice and has exactly ONE write on the success path (a terminal writeJSON), zero Flush/WriteHeader/w.Write - so a mid-loop 503 replaces the whole page cleanly."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M3_SANITIZE_AND_DOCS",
+      "name": "Sanitize the six Internal branches, add the ErrorLog surface, and the QUICKSTART paragraph",
+      "description": "internalErrorMessage = 'internal store failure' replaces err.Error() on the SIX Internal (500) branches at handlers.go:220, 247, 277, 325, 351, 419; the full error goes to a new Config.ErrorLog io.Writer (nil -> os.Stderr) as one line naming the route and the verbatim error. The FIVE BadRequest sites (215, 242, 392, 399, 410) are left exactly as they are. TestInternalErrorsAreSanitized asserts BOTH writes separately. QUICKSTART gains one short paragraph in the serve section, and the walkthrough is RE-EXECUTED before commit (S7).",
+      "commits": 1,
+      "files": [
+        "host/daemon/daemon.go",
+        "host/daemon/handlers.go",
+        "host/daemon/read_deadline_test.go",
+        "docs/QUICKSTART.md"
+      ],
+      "closes_acceptance_criteria": [3, 5, 8],
+      "advances_acceptance_criteria": [],
+      "mutations": ["MU7"],
+      "estimated_loc": 135,
+      "estimated_days": 0.25,
+      "estimated_days_breakdown": {
+        "internalErrorMessage_and_Config_ErrorLog": 0.06,
+        "six_branch_sweep": 0.03,
+        "TestInternalErrorsAreSanitized": 0.08,
+        "QUICKSTART_paragraph_plus_reexecution": 0.05,
+        "mutation_MU7": 0.03
+      },
+      "dependencies": ["M2_DAEMON_DEADLINE"],
+      "acceptance_criteria": [
+        "AC5 - grep -c 'err.Error()' host/daemon/handlers.go is EXACTLY 5 (baseline 11), and the five survivors are the BadRequest sites (215, 242, 392, 399, 410 at base). Fails if a 500 branch still echoes OR if a 400 branch was over-sanitized.",
+        "AC3 (full) - TestInternalErrorsAreSanitized enumerates and passes alongside the four M2 test functions and the extended D7 row.",
+        "AC8 - GOTOOLCHAIN=go1.25.6 go build ./... && go test ./... -count=1 rc=0, 17 packages.",
+        "AC7 still rc=0 at 10 / 39 / 9-of-9.",
+        "QUICKSTART walkthrough re-executed verbatim (S7) before the commit; the executed commands and their outputs recorded.",
+        "Full AC set green: AC1-AC9."
+      ],
+      "traps": [
+        "OVER-SANITIZING A 400 FAILS AC5 JUST AS HARD AS LEAVING A 500 ECHOING. The five BadRequest sites echo parse failures of the CLIENT'S OWN INPUT (hashref text, JSON decode positions) and contain no server state. Stripping them guts the API's main debugging affordance to protect nothing.",
+        "409 keeps its machine-readable two-head body (that is protocol, not leakage). 503's message names only the deadline constant.",
+        "NEVER route error text to announce. ListenAnnouncePrefix (daemon.go:140) is a ONE-LINE protocol whose consumers read exactly one line, and iteration 28 measured extra announce lines DEADLOCKING Run against an io.Pipe. Error logging gets its own writer.",
+        "MU7 must red on BOTH asserted writes independently: the sentinel must be ABSENT from the response body and PRESENT in the ErrorLog buffer. A mutation passing one still reds the other - that is the point.",
+        "There are ZERO log. calls in non-test host/daemon today (same-scope control: 16 fmt. calls). Config.ErrorLog is a genuinely new surface; do not reach for a package-level logger.",
+        "docs/QUICKSTART.md is 90 lines; the serve section is :10-19 and the 409 demo is :69-76. S7 means EXECUTED-VERBATIM: the paragraph's claims must be true of the binary the walkthrough builds."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "acceptance_criteria_map": {
+    "AC1": {
+      "closed_by": "M1_STORE_CONTEXT",
+      "named_mutation": ["MU13 (PLANNER-ADDED)"],
+      "observable": "count of context.Context in store.go with a same-call func (s *Store) control; the real guard is the COMPILER - a getter reverting to context-free cannot build against 86 call sites passing one",
+      "doc_had_mutation": false
+    },
+    "AC2": {
+      "closed_by": "M1_STORE_CONTEXT",
+      "named_mutation": ["MU4a", "MU4b", "MU4c", "MU4d", "MU4e", "MU5", "MU6"],
+      "observable": "the >= 7 '=== RUN' enumeration plus each getter's return-within-watchdog carrying the context error",
+      "doc_had_mutation": true
+    },
+    "AC3": {
+      "closed_by": "M3_SANITIZE_AND_DOCS",
+      "advanced_by": ["M2_DAEMON_DEADLINE"],
+      "named_mutation": ["MU1", "MU2", "MU3", "MU7", "MU8", "MU9", "MU11"],
+      "observable": "'=== RUN' lines for all five new test functions plus the extended D7 constants row",
+      "doc_had_mutation": true
+    },
+    "AC4": {
+      "closed_by": "M2_DAEMON_DEADLINE",
+      "named_mutation": ["MU2"],
+      "observable": "r.Context() present in both files; the SEMANTIC form is MU2 (r.Context() -> context.Background()) reding TestDaemonReadDisconnect",
+      "doc_had_mutation": false,
+      "note": "The doc names no section 6 row for AC4. MU2 is AC4's mechanism and is MAPPED here rather than added - AC4's grep form is a snapshot whose persistent form is MU2's test."
+    },
+    "AC5": {
+      "closed_by": "M3_SANITIZE_AND_DOCS",
+      "named_mutation": ["MU7"],
+      "observable": "two separately-asserted writes - response body (sentinel absent) and ErrorLog buffer (sentinel present)",
+      "doc_had_mutation": true
+    },
+    "AC6": {
+      "closed_by": "M1_STORE_CONTEXT",
+      "named_mutation": ["MU5", "MU6"],
+      "observable": "PRAGMA busy_timeout readback from the LIVE CONNECTION (driver state, not the Go literal that set it)",
+      "doc_had_mutation": true
+    },
+    "AC7": {
+      "closed_by": "M2_DAEMON_DEADLINE",
+      "named_mutation": ["MU14 (PLANNER-ADDED)"],
+      "observable": "verify_ail.sh rc=0 at 10 / 39 / 9-of-9, PRE-REGISTERED by the planner against the real gate under the real edit",
+      "doc_had_mutation": false,
+      "note": "MU10 is DECLARED NOT CI-RED by the doc, honestly: Leg 2 runs `ailang test world/` so the sketch's inline rows are outside both gate legs. The doc's enforced guard for that drift DIRECTION is MU9's Go-side mirror test - correct, but it leaves AC7's OWN instrument (Leg 1's ai-check sweep) unproven. MU14 supplies the non-vacuity control: break the sketch's syntax, assert Leg 1 reds naming the file, restore byte-identically."
+    },
+    "AC8": {
+      "closed_by": "M3_SANITIZE_AND_DOCS",
+      "advanced_by": ["M1_STORE_CONTEXT", "M2_DAEMON_DEADLINE"],
+      "named_mutation": ["MU13 (PLANNER-ADDED)"],
+      "observable": "go build + go test -count=1 rc=0 across 17 packages; MU13 proves the compiler is the guard on the 86-site migration",
+      "doc_had_mutation": false
+    },
+    "AC9": {
+      "closed_by": "M1_STORE_CONTEXT",
+      "named_mutation": ["MU12"],
+      "observable": "the per-file count the scanner reads from the source tree; the pins are NON-ZERO (11 total) so an empty or mis-rooted scan cannot pass",
+      "doc_had_mutation": true
+    }
+  },
+  "acceptance_criteria_without_named_mutation_in_the_doc": [
+    "AC1 - remedied by PLANNER-ADDED MU13 (revert GetObject's signature; go build must red naming GetObject).",
+    "AC4 - covered in substance by MU2; MAPPED, not added. The grep form is a snapshot whose persistent form is MU2's test.",
+    "AC7 - remedied by PLANNER-ADDED MU14 (deliberate sketch syntax error; verify_ail.sh Leg 1 must red naming worlddapi.ail). MU10 is honestly declared NOT CI-red by the doc.",
+    "AC8 - the gate is its own guard, plus MU13."
+  ],
+  "planner_added_mutations": [
+    {
+      "id": "MU13",
+      "milestone": "M1_STORE_CONTEXT",
+      "mutation": "revert GetObject's signature at host/store/store.go:467 to context-free (drop the ctx parameter and the ctx argument to QueryRowContext)",
+      "kill_command": "GOTOOLCHAIN=go1.25.6 go build ./...",
+      "expected": "rc != 0 with at least one error naming GetObject; then restore and assert rc=0",
+      "covers": ["AC1", "AC8"],
+      "rationale": "AC1 is a grep snapshot with no section 6 row. Its real guard is the compiler - stronger than a grep and previously unnamed."
+    },
+    {
+      "id": "MU14",
+      "milestone": "M2_DAEMON_DEADLINE",
+      "mutation": "insert a deliberate syntax error in design_docs/sketches/worlddapi.ail (e.g. delete the closing paren of the new Timeout(string) constructor)",
+      "kill_command": "AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh",
+      "expected": "rc != 0 with Leg 1 naming worlddapi.ail; then restore byte-identically by sha256 and assert rc=0 at 10 / 39 / 9-of-9",
+      "covers": ["AC7"],
+      "rationale": "AC7's own instrument was unproven. Without MU14, AC7 is a gate nobody has shown can red."
+    }
+  ],
+  "pre_registered": {
+    "note": "Every value below was measured first-party by the planner at d31362f, each zero with a known-positive control in the same call. A value that does not reproduce is a STOP-and-report, never a number to force.",
+    "base_gates": {
+      "go_build": "rc=0",
+      "go_test_full": "rc=0, 17 packages ok, 0 FAIL",
+      "verify_ail_sh": "rc=0 - '10 required identities verified, 39 named tests pass', world package gate 9/9",
+      "ailang_bin_version": "AILANG v0.30.0, Commit e37b370"
+    },
+    "ac_baselines": {
+      "AC1": "0 / control 14",
+      "AC2": "rc=0, 0 '=== RUN' lines, 'testing: warning: no tests to run' (the vacuous pass)",
+      "AC3": "rc=0, exactly 5 '=== RUN' lines, ALL from TestBoundedWaitsAndBodyLimit and its four subtests; the five new test functions enumerate 0",
+      "AC4": "0 and 0; controls 9 (http.ResponseWriter) and 8 (mux.HandleFunc)",
+      "AC5": "11; Internal at 220,247,277,325,351,419; BadRequest at 215,242,392,399,410",
+      "AC6": "0; same-scope control 1 (writer_lock_test.go:609)",
+      "AC7": "rc=0 at 10 / 39 / 9-of-9",
+      "AC8": "build rc=0; full test rc=0, 17 packages",
+      "AC9": "rc=0, 0 '=== RUN' lines (the vacuous pass)"
+    },
+    "sketch_edit_probe": {
+      "probe_A_isolated_module_copy": {
+        "layout_required": "sketches/{worlddapi,logepoch}.ail - the sketch imports `sketches/logepoch`. The WRONG layout (design_docs/sketches/) returns LDR001 'module not found: sketches/logepoch' and reads as a KILL ON EVERY ARM. Caught only because the pristine control ran FIRST.",
+        "pristine_control": "check.passed=True, error_count=0, verify.errors=0, cex=0, passed_tests=18",
+        "after_edit": "check.passed=True, error_count=0, verify.errors=0, verified=3, cex=0, passed_tests=19"
+      },
+      "probe_B_real_repo_real_gate": {
+        "file": "design_docs/sketches/worlddapi.ail",
+        "sha256_before": "3a83a1dd05e427f47452c32ac3ad1b05524d9b902c00a4173555baf126c9ef2b",
+        "sha256_after_edit": "cb7f7f89b098d26fa5e683e873ff4eee6b080abe5df2a2b4969a680e7200a615",
+        "verify_ail_under_edit": "rc=0 - '10/10 required world/ identities verified across 11 module(s)', 'all 39 required named tests pass (failed_tests=0)', 'world package gate PASSED: 9/9 steps'",
+        "restore_verified": "sha256 back to 3a83a1dd... byte-identical; git status --porcelain clean for design_docs/sketches/"
+      },
+      "precision_the_doc_omits": "passed_tests moves 18 -> 19 but len(tests[]) is 16 in BOTH arms - the new row lands in passed_tests, NOT in the tests[] array. verify_ail.sh pins len(tests[]) at line 363, and Leg 2 runs `ailang test world/` anyway, so the sketch is doubly invisible to it. NEVER quote passed_tests at a gate."
+    },
+    "measured_counts": {
+      "getter_call_sites_total": 86,
+      "getter_call_sites_nontest": 22,
+      "getter_call_sites_test": 64,
+      "test_files_touched": 18,
+      "nontest_by_file": {
+        "host/broker/approve.go": 8,
+        "host/broker/broker.go": 2,
+        "host/daemon/daemon.go": 1,
+        "host/daemon/handlers.go": 5,
+        "host/registry/registry.go": 2,
+        "host/replay/replay.go": 1,
+        "host/transitionreg/transitionreg.go": 3
+      },
+      "ratchet_pins": {
+        "host/broker/approve.go": 8,
+        "host/registry/registry.go": 2,
+        "host/replay/replay.go": 1,
+        "all_else": 0
+      },
+      "ratchet_exact_sites": [
+        "host/broker/approve.go:169", "host/broker/approve.go:195", "host/broker/approve.go:225",
+        "host/broker/approve.go:234", "host/broker/approve.go:251", "host/broker/approve.go:261",
+        "host/broker/approve.go:495", "host/broker/approve.go:522",
+        "host/registry/registry.go:127", "host/registry/registry.go:135",
+        "host/replay/replay.go:153"
+      ],
+      "daemon_route_call_sites": 6,
+      "daemon_distinct_getters": 5,
+      "store_getters_total": 6,
+      "store_commit_production_callers": 1,
+      "gate_pin_lines_at_HEAD": {
+        "EXACT_TOTAL_VERIFIED": "scripts/verify_ail.sh:323 (doc says 311 - STALE)",
+        "EXACT_TOTAL_TESTS": "scripts/verify_ail.sh:363, with SPACES around '=' (doc says 350 - STALE)",
+        "LEG1_MODULES": "scripts/verify_ail.sh:140, worlddapi.ail at :145"
+      }
+    }
+  },
+  "doc_defects_found_by_executor": [
+    {
+      "id": "E1",
+      "severity": "plan-affecting, resolved in M1",
+      "milestone": "M1",
+      "summary": "SelectedHead has NO s.db.QueryRow of its own. The plan's V3 maps 'grep -c s.db.QueryRow( -> 5' onto the five daemon getters; the five are actually GetObject/GetWorld/GetLogEntry/GetRegistryHead/GetVerifyResult, and GetVerifyResult is off the daemon read path.",
+      "detail": "store.go:803 SelectedHead delegates to selectedHeadTx(q interface{ QueryRow(string, ...any) *sql.Row }) at :809, whose OTHER caller is INSIDE Store.Commit at :923 (passing the *sql.Tx). T1.1 for SelectedHead is therefore not a QueryRow->QueryRowContext line edit but a change to a STRUCTURAL INTERFACE shared with the write path, which the plan never mentions.",
+      "resolution": "selectedHeadTx gained a leading ctx and its structural querier became QueryRowContext(context.Context, string, ...any) *sql.Row. Commit's call site passes context.Background() with a DR-1 comment, so Store.Commit keeps its signature AND today's unbounded write-path behaviour. It is invisible to the AC9 ratchet by construction: the scanner matches '.SelectedHead(' etc., and 'selectedHeadTx(' is neither a method call nor the same identifier. MU4e mutates store.go:804 instead of a QueryRow line and kills cleanly."
+    },
+    {
+      "id": "E2",
+      "severity": "plan-affecting, resolved in M1",
+      "milestone": "M1",
+      "summary": "The 86-site census counts CALL sites only. It misses the five production INTERFACE DECLARATIONS of the getters, which the compiler forces you to migrate too.",
+      "detail": "host/broker/approve.go:47 (approvalStore.GetRegistryHead) and :470 (approvalObjectReader.GetObject); host/broker/broker.go:39 (objectStore.GetObject); host/transitionreg/transitionreg.go:40,41 (ObjectStore.GetRegistryHead/GetObject). Plus SEVEN test-fake method definitions in five _test.go files (broker/handlers_test.go:42,81; broker/handler_error_repro_test.go:38; broker/broker_test.go:464; broker/registry_publish_test.go:689; transitionreg/transitionreg_test.go:439,445). None of these are '.GetX(' call sites, so none appear in the 22/64/86 counts.",
+      "resolution": "All five production interface methods and all seven test-fake methods migrated to context-first. The delegating fakes forward the caller's ctx rather than substituting context.Background(). Cost is small but it is real work the estimate does not price."
+    },
+    {
+      "id": "E3",
+      "severity": "M2-affecting, NOT resolvable in M1 - flag for the M2 executor",
+      "milestone": "M2",
+      "summary": "AC4 demands 'r.Context()' >= 1 in BOTH handlers.go AND daemon.go, but design section 2.3's single-helper design puts 'r.Context()' in exactly ONE file.",
+      "detail": "Section 2.3 defines ONE readCtx helper and says all six store-reading GET handlers CALL IT - including handleHead, which lives in daemon.go. A call site spells 'd.readCtx(r)', not 'r.Context()'. AC7-style grep therefore reads >=1 in whichever file holds the helper body and 0 in the other. AC4's own parenthetical '(the helper; handleHead)' assumes handleHead spells r.Context() DIRECTLY, which contradicts the same section's 'all six ... call it'. Measured at end of M1 with readCtx in handlers.go: handlers.go 2 (the body at :219 plus a doc-comment mention at :213), daemon.go 0.",
+      "resolution": "NOT resolved in M1 - AC4 is M2's criterion and M1 must not green it. M1 placed readCtx in handlers.go so MU1 and MU2 keep their exact ONE-LINE mutation site, which is the property the plan calls load-bearing. M2 must either (a) satisfy AC4's daemon.go arm some other way, or (b) record AC4's grep form as unsatisfiable-as-written and rely on MU2's TestDaemonReadDisconnect, which is AC4's real mechanism. Moving r.Context() out to the six call sites would satisfy the grep but turn MU1/MU2 into six-line mutations."
+    },
+    {
+      "id": "E4",
+      "severity": "cosmetic",
+      "milestone": "M1",
+      "summary": "V25 misplaces GetVerifyResult's only non-test caller: it is host/replay/replay.go:191, not :153. replay.go:153 is a GetObject call - and it is the ONE replay.go site the AC9 ratchet pins.",
+      "detail": "Measured: grep -rn '.GetVerifyResult(' host cmd -> replay.go:191 (production) plus 13 test sites. The claim's CONCLUSION (GetVerifyResult is off the daemon read path, so it stays context-free) survives; only the line number is wrong.",
+      "resolution": "No action. Recorded so a later reader does not conclude the ratchet's replay.go pin covers GetVerifyResult - it does not; GetVerifyResult is not one of the five getters the ratchet scans."
+    },
+    {
+      "id": "E5",
+      "severity": "behaviour note, deliberate",
+      "milestone": "M1",
+      "summary": "The busy_timeout injection makes a plain-path write DSN render as a file: URI, and it does not reach :memory: stores at all.",
+      "detail": "writeDSN previously returned the bare canonical path when len(params)==0 ('byte-identical driver behaviour to M1, modulo canonicalization', its own comment). Since the injection always adds one parameter, a production write handle is now always rendered as file:///abs/path?_pragma=busy_timeout%282000%29. Measured: the driver accepts it and PRAGMA busy_timeout reads back 2000 on both handles; the full suite is green. Separately, store.Open's in-memory carve-out calls openSQLite(path, path, ...) and never goes through writeDSN, so a :memory: store gets busy_timeout 0 - correct (a per-connection in-memory database has no cross-process lock contention) but it means T1.6 MUST be file-backed. journal_mode measured as 'delete', which is why BEGIN EXCLUSIVE actually excludes readers and T1.7's stimulus works at all.",
+      "resolution": "Kept, with the comment on writeDSN updated to state it. resolveDSN parses query parameters ONLY on the file: spelling, so a plain-path DSN with '?_pragma=...' silently discards it - T1.6's caller-override arm uses a file: DSN and carries a control asserting params are non-empty."
+    }
+  ],
+  "doc_defects_found": [
+    {
+      "id": "D1",
+      "severity": "plan-affecting",
+      "summary": "The readStore seam is FIVE methods, not six. The design doc says 'six' twice and contradicts itself in the same paragraph.",
+      "detail": "Section 2.5 layer 3 says 'a six-value read interface reads readStore'; section 2.7 says 'The single new Go surface is a six-method unexported interface'. MEASURED at d31362f: the six store-reading GET routes make SIX call sites but reach FIVE DISTINCT GETTERS - GetLogEntry serves both /v1/log/{index} (handlers.go:275) and /v1/log (handlers.go:323). The same section 2.5 paragraph says blockingStore overrides 'all five getters', and layer 4 says recordingStore overrides 'all five getters'. The 'six' is the ROUTE count leaking into a METHOD count - the iteration-86 class ('a count is only true inside the scope it was taken in') recurring inside the very document that records it.",
+      "resolution": "Sprint plan section 0.5(i) fixes the seam at EXACTLY FIVE methods and names both wrong candidate sixths (Commit - the write path, DR-1 declares it untouched; GetVerifyResult - off the daemon read path, V25) plus the two out-of-seam ScanUnreadable* calls at daemon.go:392/414.",
+      "why_it_matters": "NO acceptance criterion counts the interface's methods, so this defect cannot red a gate. An executor would either invent a sixth (widening the seam past ratified scope) or stall. It had to be settled in the plan or not at all."
+    },
+    {
+      "id": "D2",
+      "severity": "premise-false-at-HEAD",
+      "summary": "V22 is FALSE at HEAD: the Go tree is NOT byte-identical to the gate-proven merge aaada20.",
+      "detail": "git diff --name-only 6fd26f0..d31362f returns 9 files, of which ONE is a .go file (host/verifygate/ail_binary_gate_test.go) and one is scripts/verify_ail.sh - both moved by iteration 89's stderr-merge repair. The doc's V22 asserts byte-identity as the reason iteration 85's green describes this exact tree.",
+      "resolution": "The claim's CONCLUSION survives (the changed file is in host/verifygate, a package this item does not touch) but its MECHANISM does not. The planner re-ran the full suite first-party instead of inheriting: go test ./... -count=1 rc=0, 17 packages, 0 FAIL at d31362f. Recorded in sprint plan section 0.2 and 0.4."
+    },
+    {
+      "id": "D3",
+      "severity": "stale-citation",
+      "summary": "The doc's section 8 conflict-surface table cites STALE line numbers for both gate pins.",
+      "detail": "EXACT_TOTAL_VERIFIED is at scripts/verify_ail.sh:323, not 311. EXACT_TOTAL_TESTS is at :363, not 350. Iteration 89's fix inserted ~19 lines above them. The VALUES (10 and 39) and the disposition (not moved) are both correct and were re-proven end-to-end under the real edit.",
+      "resolution": "Corrected in sprint plan section 0.1/0.2 and carried into both milestone trap lists, together with the inherited item-15 trap that EXACT_TOTAL_TESTS has SPACES around '=' so a shell-shaped grep misses it."
+    },
+    {
+      "id": "D4",
+      "severity": "coverage-gap",
+      "summary": "Three acceptance criteria (AC1, AC7, AC8) have NO named mutation anywhere in the doc's 12-row section 6 table, and AC4 has one only by implication.",
+      "detail": "Section 6 covers AC2, AC3, AC5, AC6 and AC9 well. AC1 and AC4 are grep snapshots; AC7 and AC8 are the gates themselves. Under the standing rule ('a guard is not a gate until something reds when you remove it') AC7 was the sharpest gap: MU10 is honestly declared NOT CI-red, and the doc's substitute guard (MU9's Go-side mirror) protects a different direction - it never shows that AC7's OWN instrument, Leg 1's ai-check sweep of the sketch, can fail at all.",
+      "resolution": "Two planner-added arms: MU13 (revert GetObject's signature; go build must red naming GetObject) covers AC1 and AC8 via the compiler, which is a stronger guard than AC1's grep. MU14 (deliberate sketch syntax error; verify_ail.sh Leg 1 must red naming worlddapi.ail, then byte-identical restore) is AC7's non-vacuity control. AC4 is MAPPED to MU2 rather than given a new arm - MU2 IS AC4's mechanism."
+    }
+  ],
+  "ratified_deferrals_do_not_fix": [
+    "DR-1: POST /v1/commit keeps only its transport bounds. Store.Commit keeps its signature. Do not bound it.",
+    "DR-2: host/broker/approve.go (8), host/registry/registry.go (2), host/replay/replay.go (1) receive context.Background() VERBATIM. Do NOT thread a real deadline through them - doing so shrinks the AC9 pin and REDS AC9.",
+    "NO store-boundary guard rejecting nil/deadline-free contexts. It is the follow-on's declared closing move, landable only when the ratchet reads zero. Landing it now breaks all 11 sites (V27).",
+    "No GetVerifyResult context migration (V25 - follow-on shape (b)).",
+    "No SSE, no http.ResponseController write-deadline relaxation, no streaming route, no retry policy above busy_timeout.",
+    "No new route, no route-table edit, no store schema change, no gate-pin move, no world/*.ail edit.",
+    "FROZEN, currently MODIFIED/UNTRACKED IN THE WORKING TREE ON PURPOSE (fleet bundle, D-WORLD-DRIVER-1): tools/launchd/*, scripts/verify_go.sh, CLAUDE.md. Do not stage, commit, revert or edit them. `git add -A` IS FORBIDDEN. Do not run scripts/verify_go.sh as this sprint's gate."
+  ],
+  "risk_level": "medium",
+  "top_risks": [
+    "R1 (HIGH without the plan's fix) - executor invents a SIXTH readStore method from the doc's wrong count, most likely Commit, widening the seam past ratified scope. Mitigated by sprint plan section 0.5(i).",
+    "R2 (HIGH) - a watchdog reds without releasing the blocked getter; with SetMaxOpenConns(1) the deferred s.Close() parks behind it and the SUITE HANGS instead of failing. Mitigated by the B2 release-mechanism rule on every watchdog.",
+    "R3 (MEDIUM) - the 86-site migration lands a deadline-free count other than 11, or an executor 'helpfully' threads real deadlines through approve/registry/replay and shrinks the AC9 pin. Mitigated by T1.3's readCtx-from-M1 trap and MU12.",
+    "R4 (MEDIUM) - host/broker's ~18% base flake reds M1's go test and is attributed to the diff (both broker files change mechanically in M1). Attribute by shape against the base rate, never by one run.",
+    "R5 (MEDIUM) - D-WORLD-19 is OPEN and its arm A edits host/store/store.go:467 GetObject, the same function M1 changes. Does not block (item 18 ratified and routable; item 17 parked), but if D-WORLD-19 resolves A mid-flight, item 17's tranche rebases onto item 18's signature - item 18 landed first and its ratification is older. CONTROLLER DECISION if it resolves before M1 commits.",
+    "R6 (LOW after pre-registration) - the .ail edit applied differently from the probed three anchors and moves a pin. Any totals other than 10/39/9-of-9 = STOP AND REPORT, never adjust a pin.",
+    "R7 (MEDIUM) - a mutation 'passes' because it never landed, or a TEST-ONLY mutant is compiled with `go build` (which does not compile _test.go at all) and scored vacuous. Mitigated by the sha256 landed-proof and the `go vet` rule.",
+    "R8 (LOW) - QUICKSTART edited but not re-executed, breaking the S7 executed-verbatim guarantee."
+  ],
+  "handoff": {
+    "to": "sprint-executor",
+    "plan_path": "design_docs/planned/w-daemon-read-cancellation-sprint-plan.md",
+    "progress_path": "sprint_w-daemon-read-cancellation.json",
+    "estimated_duration": "1.5 days",
+    "total_loc_estimate": 1270,
+    "risk_level": "medium",
+    "milestones": [
+      {"id": "M1_STORE_CONTEXT", "name": "Store layer: context-first getters + busy_timeout + ratchet", "estimated_days": 0.5},
+      {"id": "M2_DAEMON_DEADLINE", "name": "Daemon deadline, five-method read seam, 503/Timeout, sketch mirror", "estimated_days": 0.75},
+      {"id": "M3_SANITIZE_AND_DOCS", "name": "Sanitize six Internal branches, ErrorLog surface, QUICKSTART", "estimated_days": 0.25}
+    ],
+    "discovery": "Four doc defects found (D1-D4). The plan-affecting one is D1: the readStore seam is FIVE methods, not the six the doc states twice - six ROUTES reach five DISTINCT getters because GetLogEntry serves two routes. Second: three ACs (AC1, AC7, AC8) had no named mutation; two planner arms added (MU13, MU14), with AC7's gap the sharpest because MU10 is declared NOT CI-red and the doc's substitute guard protects a different drift direction. Third: AC7 is now PRE-REGISTERED end-to-end - the planner ran the exact sketch edit against the real gate and observed 10/39/9-of-9, restoring byte-identically.",
+    "carried_forward_out_of_scope": [
+      "POST /v1/commit's pool wait (DR-1) -> w-bounded-waits-operator-and-write-paths",
+      "real deadlines in approve/bootstrap/replay (DR-2, 11 pinned sites) -> same follow-on",
+      "GetVerifyResult's context (V25) -> same follow-on, shape (b)",
+      "the store-boundary nil/deadline-free reject -> same follow-on, shape (c), landable exactly when the ratchet reads zero",
+      "TWO POLICY QUESTIONS travel with the follow-on and RETURN TO MARK before it routes: what bounds an attended approval DESIGNED to wait on a human, and how Commit's atomicity trades against a deadline"
+    ],
+    "unblocks_on_landing": ["queue item 14 w-workbench-read-only - its declared residual WB-R1 is discharged here"]
+  },
+  "execution": {
+    "iteration": 91,
+    "committer": "THE CONTROLLER MAKES ALL COMMITS - one per milestone, in order M1 -> M2 -> M3. The executor holds NO git write permission: no git commit/add/push/checkout/stash/restore, no gh pr. Restores are `cp` from a backup taken OUTSIDE the repo; `git checkout --` is forbidden even for mutant cleanup.",
+    "worktree_rule": "A SIBLING of the repo, never /tmp: /Users/voightkampff/dev/sunholo-data/.wt-iter91",
+    "milestones": []
+  }
+}

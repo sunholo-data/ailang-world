@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -274,7 +275,7 @@ func TestStaleHeadConflictBodySupportsReplan(t *testing.T) {
 
 	// Genuine re-plan: load the selected world named by the body, construct the
 	// successor against it, and successfully commit that successor.
-	selectedWorld, ok, err := d.store.GetWorld(selected)
+	selectedWorld, ok, err := d.store.GetWorld(context.Background(), selected)
 	if err != nil || !ok {
 		t.Fatalf("GetWorld(selected from 409): ok=%v err=%v", ok, err)
 	}
@@ -421,8 +422,8 @@ func TestRESTGenesisAndCommitAreByteEquivalent(t *testing.T) {
 	postCommit(t, server.URL, genesis)
 	postCommit(t, server.URL, successor)
 
-	embeddedHead, okE, errE := embedded.store.SelectedHead()
-	restHead, okR, errR := rest.store.SelectedHead()
+	embeddedHead, okE, errE := embedded.store.SelectedHead(context.Background())
+	restHead, okR, errR := rest.store.SelectedHead(context.Background())
 	if errE != nil || errR != nil || !okE || !okR {
 		t.Fatalf("SelectedHead: embedded(ok=%v err=%v) REST(ok=%v err=%v)", okE, errE, okR, errR)
 	}
@@ -436,11 +437,11 @@ func TestRESTGenesisAndCommitAreByteEquivalent(t *testing.T) {
 	// Both objects, byte-for-byte.
 	for _, c := range []store.Commit{genesis, successor} {
 		ref := c.Objects[0].Hash
-		embeddedObject, ok, err := embedded.store.GetObject(ref)
+		embeddedObject, ok, err := embedded.store.GetObject(context.Background(), ref)
 		if err != nil || !ok {
 			t.Fatalf("embedded GetObject(%s): ok=%v err=%v", ref, ok, err)
 		}
-		restObject, ok, err := rest.store.GetObject(ref)
+		restObject, ok, err := rest.store.GetObject(context.Background(), ref)
 		if err != nil || !ok {
 			t.Fatalf("REST GetObject(%s): ok=%v err=%v", ref, ok, err)
 		}
@@ -451,11 +452,11 @@ func TestRESTGenesisAndCommitAreByteEquivalent(t *testing.T) {
 
 	// Both log entries, compared through their canonical encodings.
 	for index := int64(0); index <= 1; index++ {
-		embeddedEntry, ok, err := embedded.store.GetLogEntry(index)
+		embeddedEntry, ok, err := embedded.store.GetLogEntry(context.Background(), index)
 		if err != nil || !ok {
 			t.Fatalf("embedded GetLogEntry(%d): ok=%v err=%v", index, ok, err)
 		}
-		restEntry, ok, err := rest.store.GetLogEntry(index)
+		restEntry, ok, err := rest.store.GetLogEntry(context.Background(), index)
 		if err != nil || !ok {
 			t.Fatalf("REST GetLogEntry(%d): ok=%v err=%v", index, ok, err)
 		}

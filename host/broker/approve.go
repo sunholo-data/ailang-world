@@ -44,7 +44,7 @@ var (
 type approvalStore interface {
 	objectStore
 	SetRegistryHead(string, hashref.HashRef) error
-	GetRegistryHead(string) (hashref.HashRef, bool, error)
+	GetRegistryHead(context.Context, string) (hashref.HashRef, bool, error)
 }
 
 // HumanHandler implements the synchronous approval request and poll handlers.
@@ -166,7 +166,7 @@ func decideApproval(
 	if decision != "approve" && decision != "deny" {
 		return hashref.HashRef{}, ErrInvalidApprovalDecision
 	}
-	request, ok, err := s.GetObject(requestRef)
+	request, ok, err := s.GetObject(context.Background(), requestRef)
 	if err != nil {
 		return hashref.HashRef{}, fmt.Errorf("broker: read approval request: %w", err)
 	}
@@ -192,7 +192,7 @@ func decideApproval(
 }
 
 func appendApprovalHead(s approvalStore, requestRef, decisionRef hashref.HashRef) error {
-	previous, ok, err := s.GetRegistryHead(ApprovalsV1)
+	previous, ok, err := s.GetRegistryHead(context.Background(), ApprovalsV1)
 	if err != nil {
 		return fmt.Errorf("broker: read approvals head: %w", err)
 	}
@@ -222,7 +222,7 @@ func findApprovalDecision(s approvalStore, requestRef hashref.HashRef) (store.Ob
 }
 
 func walkApprovalHead(s approvalStore, requestRef hashref.HashRef, wantDecision bool) (store.Object, bool, error) {
-	head, ok, err := s.GetRegistryHead(ApprovalsV1)
+	head, ok, err := s.GetRegistryHead(context.Background(), ApprovalsV1)
 	if err != nil || !ok {
 		return store.Object{}, false, err
 	}
@@ -231,7 +231,7 @@ func walkApprovalHead(s approvalStore, requestRef hashref.HashRef, wantDecision 
 	// to contain itself. A future indexed approval surface should replace this
 	// linear walk rather than weakening that immutable-chain invariant.
 	for !head.IsZero() {
-		obj, found, getErr := s.GetObject(head)
+		obj, found, getErr := s.GetObject(context.Background(), head)
 		if getErr != nil {
 			return store.Object{}, false, getErr
 		}
@@ -248,7 +248,7 @@ func walkApprovalHead(s approvalStore, requestRef hashref.HashRef, wantDecision 
 				if err != nil {
 					return store.Object{}, false, err
 				}
-				decision, found, err := s.GetObject(ref)
+				decision, found, err := s.GetObject(context.Background(), ref)
 				if err != nil || !found {
 					return store.Object{}, false, err
 				}
@@ -258,7 +258,7 @@ func walkApprovalHead(s approvalStore, requestRef hashref.HashRef, wantDecision 
 				return decision, true, nil
 			}
 			if !wantDecision {
-				request, found, err := s.GetObject(requestRef)
+				request, found, err := s.GetObject(context.Background(), requestRef)
 				return request, found, err
 			}
 		}
@@ -467,7 +467,7 @@ func ParsePublishApprovalScope(raw string) (PublishApprovalScope, error) {
 // exactly objectStore's GetObject, narrowed, so Session can pass its own store
 // without widening objectStore for every implementer.
 type approvalObjectReader interface {
-	GetObject(hashref.HashRef) (store.Object, bool, error)
+	GetObject(context.Context, hashref.HashRef) (store.Object, bool, error)
 }
 
 // validatePublishApproval is the SM.B2b gate: it decides whether a LANDED
@@ -492,7 +492,7 @@ func validatePublishApproval(
 		return hashref.HashRef{}, fmt.Errorf("%w: %s", ErrPublishApprovalMalformed, err.Error())
 	}
 
-	decisionObj, ok, err := s.GetObject(id.ApprovalRef)
+	decisionObj, ok, err := s.GetObject(context.Background(), id.ApprovalRef)
 	if err != nil {
 		return hashref.HashRef{}, fmt.Errorf("broker: read publish approval decision: %w", err)
 	}
@@ -519,7 +519,7 @@ func validatePublishApproval(
 		return hashref.HashRef{}, fmt.Errorf(
 			"%w: decision requestRef: %s", ErrPublishApprovalMalformed, err.Error())
 	}
-	requestObj, ok, err := s.GetObject(requestRef)
+	requestObj, ok, err := s.GetObject(context.Background(), requestRef)
 	if err != nil {
 		return hashref.HashRef{}, fmt.Errorf("broker: read publish approval request: %w", err)
 	}

@@ -82,7 +82,7 @@ func decodeRecordAt(t *testing.T, s *store.Store, ref hashref.HashRef) EffectRec
 	if ref.IsZero() {
 		t.Fatal("instrument failure: asked to decode the ZERO record ref")
 	}
-	obj, ok, err := s.GetObject(ref)
+	obj, ok, err := s.GetObject(context.Background(), ref)
 	if err != nil || !ok {
 		t.Fatalf("read effect record %s: ok=%v err=%v", ref, ok, err)
 	}
@@ -118,7 +118,7 @@ func TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(t *te
 	// The minted ref must name a real ApprovalDecisionV1 that says "approve".
 	// Without this the ref could be any digest and every assertion below would
 	// be about a number rather than about an object.
-	decisionObj, ok, err := base.GetObject(approvalRef)
+	decisionObj, ok, err := base.GetObject(context.Background(), approvalRef)
 	if err != nil || !ok {
 		t.Fatalf("minted approval %s names no object: ok=%v err=%v", approvalRef, ok, err)
 	}
@@ -139,7 +139,7 @@ func TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(t *te
 	if err != nil {
 		t.Fatal(err)
 	}
-	requestObj, ok, err := base.GetObject(requestRef)
+	requestObj, ok, err := base.GetObject(context.Background(), requestRef)
 	if err != nil || !ok {
 		t.Fatalf("minted decision references request %s which is absent", requestRef)
 	}
@@ -214,7 +214,7 @@ func TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(t *te
 	// every call, so nothing in the second attempt is refused because a counter
 	// was already spent — the refusal has to come off the disk.
 	reopened := base.reopen(t)
-	if _, found, err := reopened.GetObject(approvalRef); err != nil || !found {
+	if _, found, err := reopened.GetObject(context.Background(), approvalRef); err != nil || !found {
 		t.Fatalf("the reopened store cannot read the minted approval: found=%v err=%v", found, err)
 	}
 
@@ -257,7 +257,7 @@ func TestObserveMintedDecisionDrivesLegThreeInBothDirections(t *testing.T) {
 	if err != nil {
 		t.Fatalf("instrument failure: the control mint failed: %v", err)
 	}
-	decisionObj, ok, err := base.GetObject(decisionRef)
+	decisionObj, ok, err := base.GetObject(context.Background(), decisionRef)
 	if err != nil || !ok {
 		t.Fatalf("minted decision %s is absent: ok=%v err=%v", decisionRef, ok, err)
 	}

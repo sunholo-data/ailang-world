@@ -658,7 +658,7 @@ func TestNewBootstrapsEpochRegistryIdempotently(t *testing.T) {
 		if err != nil {
 			t.Fatalf("New #%d: %v", i+1, err)
 		}
-		head, ok, err := d.store.GetRegistryHead(registry.SemanticID)
+		head, ok, err := d.store.GetRegistryHead(context.Background(), registry.SemanticID)
 		if err != nil || !ok {
 			_ = d.Close()
 			t.Fatalf("GetRegistryHead #%d: ok=%v err=%v — the lifecycle must bootstrap the registry", i+1, ok, err)

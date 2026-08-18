@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -201,6 +202,23 @@ func clampLimit(requested int) int {
 	return requested
 }
 
+// readCtx derives the context every store read a GET handler performs runs
+// under. It is DERIVED FROM THE REQUEST, not from context.Background(): a
+// client that disconnects releases the store's single connection immediately
+// instead of holding it for the residual deadline.
+//
+// In M1 it adds no deadline of its own (a cancel-only context derived from the
+// request is exactly the daemon's behaviour before this item), so M1 is
+// behaviour-identical and independently landable. M2 changes only this body to
+// context.WithTimeout(r.Context(), d.readDeadline).
+//
+// EVERY caller must `defer cancel()` immediately after calling it — a
+// WithCancel/WithTimeout context whose CancelFunc is never called leaks its
+// context subtree (and, from M2, its timer) once per store-reading request.
+func (d *Daemon) readCtx(r *http.Request) (context.Context, context.CancelFunc) {
+	return context.WithCancel(r.Context())
+}
+
 // handleWorld serves GET /v1/worlds/{ref} (Decision 3) over store.GetWorld.
 //
 // It is the first of the four read routes that share one shape, and the shape
@@ -215,7 +233,9 @@ func (d *Daemon) handleWorld(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, "BadRequest", err.Error(), http.StatusBadRequest)
 		return
 	}
-	world, ok, err := d.store.GetWorld(ref)
+	ctx, cancel := d.readCtx(r)
+	defer cancel()
+	world, ok, err := d.store.GetWorld(ctx, ref)
 	if err != nil {
 		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 		return
@@ -242,7 +262,9 @@ func (d *Daemon) handleObject(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, "BadRequest", err.Error(), http.StatusBadRequest)
 		return
 	}
-	object, ok, err := d.store.GetObject(ref)
+	ctx, cancel := d.readCtx(r)
+	defer cancel()
+	object, ok, err := d.store.GetObject(ctx, ref)
 	if err != nil {
 		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 		return
@@ -272,7 +294,9 @@ func (d *Daemon) handleLogEntry(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, "BadRequest", "log index must be a non-negative integer", http.StatusBadRequest)
 		return
 	}
-	entry, ok, err := d.store.GetLogEntry(index)
+	ctx, cancel := d.readCtx(r)
+	defer cancel()
+	entry, ok, err := d.store.GetLogEntry(ctx, index)
 	if err != nil {
 		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 		return
@@ -318,9 +342,14 @@ func (d *Daemon) handleLogRange(w http.ResponseWriter, r *http.Request) {
 		requested = parsed
 	}
 	limit := clampLimit(requested)
+	// One context for the whole bounded loop: a page that goes slow mid-loop
+	// times out AS A WHOLE. Nothing has been written yet (writeJSON runs once
+	// at the end), so the error response replaces the page cleanly.
+	ctx, cancel := d.readCtx(r)
+	defer cancel()
 	items := make([]logEntryResponse, 0, limit)
 	for offset := 0; offset < limit; offset++ {
-		entry, ok, err := d.store.GetLogEntry(from + int64(offset))
+		entry, ok, err := d.store.GetLogEntry(ctx, from+int64(offset))
 		if err != nil {
 			writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 			return
@@ -346,7 +375,9 @@ func (d *Daemon) handleRegistry(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, "BadRequest", "registry name is empty", http.StatusBadRequest)
 		return
 	}
-	ref, ok, err := d.store.GetRegistryHead(name)
+	ctx, cancel := d.readCtx(r)
+	defer cancel()
+	ref, ok, err := d.store.GetRegistryHead(ctx, name)
 	if err != nil {
 		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 		return

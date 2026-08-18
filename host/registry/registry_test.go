@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"testing"
 
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -54,7 +55,7 @@ func TestBootstrapStoresThroughObjectAndRegistryHead(t *testing.T) {
 	}
 
 	// The head is named via the ordinary store registry-head mechanism.
-	gotHead, ok, err := s.GetRegistryHead(SemanticID)
+	gotHead, ok, err := s.GetRegistryHead(context.Background(), SemanticID)
 	if err != nil || !ok {
 		t.Fatalf("GetRegistryHead: ok=%v err=%v", ok, err)
 	}
@@ -63,7 +64,7 @@ func TestBootstrapStoresThroughObjectAndRegistryHead(t *testing.T) {
 	}
 
 	// The revision itself is an ordinary immutable object addressable by the head.
-	obj, ok, err := s.GetObject(head)
+	obj, ok, err := s.GetObject(context.Background(), head)
 	if err != nil || !ok {
 		t.Fatalf("GetObject(head): ok=%v err=%v", ok, err)
 	}

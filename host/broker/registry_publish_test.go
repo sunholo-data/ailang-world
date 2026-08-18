@@ -686,8 +686,8 @@ func (s *publishRecordingStore) PutObject(obj store.Object) error {
 	return nil
 }
 
-func (s *publishRecordingStore) GetObject(ref hashref.HashRef) (store.Object, bool, error) {
-	return s.base.GetObject(ref)
+func (s *publishRecordingStore) GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error) {
+	return s.base.GetObject(ctx, ref)
 }
 
 func (s *publishRecordingStore) AppendNextEffectIntent(
@@ -813,7 +813,7 @@ func TestPublishDenialsPersistAndNeverDispatchWithLivePositiveControl(t *testing
 			}
 			// The record must be READABLE FROM THE STORE, not merely observed
 			// passing through the double.
-			if _, ok, getErr := recording.base.GetObject(ref); getErr != nil || !ok {
+			if _, ok, getErr := recording.base.GetObject(context.Background(), ref); getErr != nil || !ok {
 				t.Fatalf("denial record %s absent from the store (ok=%v err=%v)", ref, ok, getErr)
 			}
 			if len(recording.effectIDs) != 0 {
