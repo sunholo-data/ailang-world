@@ -214,6 +214,11 @@ func TestBoundedWaitsAndBodyLimit(t *testing.T) {
 			{"idleTimeout", idleTimeout, 120 * time.Second},
 			{"defaultClientTimeout", defaultClientTimeout, 30 * time.Second},
 			{"shutdownTimeout", shutdownTimeout, 10 * time.Second},
+			// D7 addendum (w-daemon-read-cancellation): the elapsed-time bound
+			// on every store read a GET handler performs. The four http.Server
+			// timeouts above bound the transport; this one bounds the wait
+			// below it, inside database/sql.
+			{"readDeadline", readDeadline, 10 * time.Second},
 		} {
 			if c.got != c.want {
 				t.Errorf("%s = %s, want %s (D7 table)", c.name, c.got, c.want)
@@ -222,6 +227,38 @@ func TestBoundedWaitsAndBodyLimit(t *testing.T) {
 		if DefaultClientTimeout != defaultClientTimeout {
 			t.Errorf("DefaultClientTimeout = %s, want %s — the CLI must not carry a second deadline",
 				DefaultClientTimeout, defaultClientTimeout)
+		}
+		// The read deadline must stay well below WriteTimeout: a read that
+		// consumes the whole deadline still has to be able to WRITE its 503
+		// inside the connection's write window. Asserted as an inequality, not
+		// a literal, so retuning either constant into an unwritable combination
+		// reds here rather than in production.
+		if readDeadline >= writeTimeout {
+			t.Errorf("readDeadline (%s) >= writeTimeout (%s) — the 503 would not fit in the write window",
+				readDeadline, writeTimeout)
+		}
+	})
+
+	// part (d): the D7 read deadline is WIRED, not merely declared. New must
+	// carry it onto the constructed daemon; a zero field is an unbounded store
+	// read, which is the whole failure this item closes. MU8 (wire the field to
+	// 0 in New) reds exactly here.
+	t.Run("d/New wires the read deadline onto the daemon", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		if d.readDeadline == 0 {
+			t.Fatalf("New left d.readDeadline zero — every store read is unbounded again")
+		}
+		if d.readDeadline != readDeadline {
+			t.Errorf("d.readDeadline = %s, want the named constant %s", d.readDeadline, readDeadline)
+		}
+		// The read seam must be wired too: a nil d.reads panics on the first
+		// GET, and a d.reads that is not the daemon's own store would serve
+		// reads from somewhere other than the handle holding writer authority.
+		if d.reads == nil {
+			t.Fatalf("New left d.reads nil — every store-reading route would panic")
+		}
+		if d.reads != readStore(d.store) {
+			t.Errorf("d.reads is not the daemon's own *store.Store — the read seam must not fork the handle")
 		}
 	})
 

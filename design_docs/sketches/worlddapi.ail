@@ -93,13 +93,15 @@ export type ApiError
   | BadRequest(string)
   | PayloadTooLarge(int)
   | Internal(string)
+  | Timeout(string)
 
 export func httpStatus(e: ApiError) -> int ! {}
 tests [
   ((NotFound("no such object")), 404),
   ((BadRequest("malformed hash ref")), 400),
   ((PayloadTooLarge(8388609)), 413),
-  ((Internal("io failure")), 500)
+  ((Internal("io failure")), 500),
+  ((Timeout("read deadline exceeded")), 503)
 ]
 {
   match e {
@@ -107,7 +109,8 @@ tests [
     NotFound(_) => 404,
     BadRequest(_) => 400,
     PayloadTooLarge(_) => 413,
-    Internal(_) => 500
+    Internal(_) => 500,
+    Timeout(_) => 503
   }
 }
 
