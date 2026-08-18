@@ -9817,3 +9817,216 @@ so it is named here rather than left as a plausible zero. The failure shape is w
 $0.15: **a per-iteration aggregate is assembled by hand from stages the controller remembers, so a
 round it forgot is invisible in exactly the record built to make spend visible.** Watch-item,
 instance 1.
+
+## Iteration 91 — 2026-08-18 — **item 18's M1 went design→plan→execute→evaluate→LANDED in one iteration (PR #69 → squash `7ad24ea`, Gate 3b green SHA-addressed, evaluator `sonnet` 92/100)** (`metered=$0.0238`; controller `claude:claude-opus-5`; planner `opus`; executor `opus` after the chain degraded; evaluator `sonnet`; no designer round) — the iteration's spine is that **the executor lane failed twice returning `rc=0` with zero bytes changed, in a shape the shared skill's own detector cannot see: `stopReason` read `stop`, the normal success state, at 625 output tokens against a 65,536 budget**
+
+**Gate 0.** Kill switch armed-off; `sunholo-voight-kampff` active; billing tripwire **CLEAN**. Inbox
+**0** unread. Directives: **0** from `MarkEdmondson1234` on `#68` (3 comments, all the loop's own)
+and **0** on predecessor `#53` since the watermark `2026-08-15T18:23:42Z`. The rotation-week catch
+was applied and matters here: the skill-derived issue-scoped path `mission-68-last-seen` is
+**ABSENT**, so it returns the epoch default, and the charter's World-local rule (read BOTH
+watermarks, take the OLDER) made the query re-read all of `#53`'s history — the harmless direction,
+and the one that fails safe. The instrument's control fired: **3** Mark directives across `#53`'s
+full history (`2026-08-10` "Yes you can install z3 on cicd", `2026-08-13` "option A", and one more),
+all pre-watermark. `scripts/mission_directives.sh` invoked by ABSOLUTE path from the V1 checkout per
+the Repo Profile — World has no copy, and hand-rolling the `gh | jq` pipeline is exactly what that
+rule forbids. Weekly external-issue sweep **NOT due**: the rotation was iteration 89 (Monday
+2026-08-17) and today is Tuesday.
+
+**Gate 1.** `dev` == `origin/dev` at `d31362f`, two-arg `rev-parse`, no `--short`. CI read
+SHA-addressed on the commit: `checks=2`, both `success` (`ailang-code verify gate`,
+`go host build + test gate`), `total_count` non-zero so the endpoint answered. RUNNING skill
+**byte-identical** to origin (`cmp -s` silent). Ledger `--check` → valid, **6 rows**; `--open` → **1**
+(`D-WORLD-19`).
+
+**Gate 2.** Pick = item **18** `w-daemon-read-cancellation`, the row iteration 90 named `[NEXT]`:
+`D-WORLD-18` resolved arm A attended, doc §13 unparks it **straight to sprint-planner with no
+designer round**. Died-mid-flight sweep: **0** open PRs (control: the all-authors query is also
+empty), **0** stale worktrees, main checkout dirty only with the known fleet bundle. Quorum artifacts
+already exist (2 rounds) and the surviving objection was the scope question Mark settled, so
+quorum-at-pick does not re-run. **The defect was re-derived first-party at HEAD before any routing**,
+each with a firing control: `context.Context` in `store.go` → **0** (control `func (s *Store)` →
+**14**); `r.Context()` in `handlers.go` → **0** (control: 6 handler funcs); `busy_timeout` non-test
+→ **0** (control: 1 occurrence, in `writer_lock_test.go`).
+
+**A vacuous zero, caught in my own hands, in the same breath.** My first `context.Background()`
+census ran `grep -rn … host/ --include=*.go` **unquoted**, which zsh glob-expands before `grep` ever
+runs — `no matches found`, and the pipeline printed **0**. That is the exact trap the skill records
+as rule 3a(e), and it read as a measurement. Quoted, the answer is **5** (control including tests:
+**144**).
+
+**THE SPINE — A DETECTOR KEYED TO THE MECHANISM OF A PAST FAILURE CANNOT SEE THE NEXT FAILURE OF THE
+SAME CLASS.** The ratified executor lane is codex, with `pi:deepseek` as quota relief. Codex was
+probed **first-party** rather than inherited from iteration 89's record — this mission has now
+recorded three instances of a stale recorded-absence — and it is genuinely still exhausted:
+`rc=1`, *"You've hit your usage limit … try again at Aug 20th, 2026 5:34 AM."* So the lane resolved
+to `pi:deepseek`, which passed its own 1-token probe (`rc=0`, replied `ok`, `$0.00008`).
+
+Both real runs then returned **`rc=0` having changed zero bytes**.
+
+- **Run 1**: 15 tool calls (12 `bash`, 3 `read`), ~3 min, `$0.0178`. The final turn carried a
+  `thinking` block **and nothing else** — no tool call, no text. pi treats that as a normal terminal
+  state and exits 0.
+- **Run 2**, with a sharpened directive that demanded an edit-first workflow and named the previous
+  failure explicitly: 6 tool calls, ~1 min, `$0.0059`, **3 of the 6 errored, two of them hallucinated
+  tool names** (`exec_command`, `execute_file_list`). Zero edits again.
+
+The recorded class (V1 iterations 172/173) is the **16,384-token output cap**: an enormous
+`thinking` or `text` block, no tool call, `stopReason: "length"` — and the rule the skill draws from
+it is *"match on `stopReason`, never on the block type"*. **Both runs here defeat that rule from the
+other side.** `stopReason` read **`stop`**, the ordinary success state, and output was **625 tokens
+against the 65,536 budget** — so the cap is not implicated, and the iteration-173 configuration fix
+was verified present (`maxTokens=65536`, `reasoning=true` for both deepseek entries). A grep for
+`stopReason: length` would report both runs healthy.
+
+**What actually caught it was `git status` in the worktree** — the deliverable, not the mechanism.
+That is the generalisable half, and it is this loop's own recurring shape aimed at its executor
+lane: the skill already says *"read the per-turn `stopReason` AND the worktree diff before believing
+the exit code"*, and only the second clause survived contact with a new mechanism. **Key the
+detector to the deliverable; a mechanism-keyed detector expires when the mechanism changes.**
+
+**Disposition.** Two runs is the control that makes this a lane finding rather than noise — and they
+failed *differently*, which is stronger evidence than two identical failures. `MISSION_EXECUTOR_FALLBACK`
+is `pi:*`, i.e. the lane that just failed, so the ratified chain's own rule ("already the failed
+lane") sends the role to `$MODEL`. Executor ran on **opus**, FLAGGED.
+
+**WHAT LANDED — M1, greens AC1/AC2/AC6/AC8/AC9.** 28 files `+252/−126` plus a 482-line
+`host/store/context_read_test.go`. Five getters context-first (`QueryRowContext`),
+`busy_timeout(2000)` injected into the production DSNs unless the caller set one, the 86-site
+migration, and the §2.8 ratchet. Daemon behaviour **unchanged**, which is what made M1 independently
+landable. §3.1's trap taken as designed: `readCtx` lands as a **cancel-only** helper derived from
+`r.Context()`, so the six daemon sites never spell `context.Background()` and the AC9 pin holds at
+**11** across both milestones — M2 changes only the helper's body.
+
+**T1.7's pre-registered outcome: (a) RETRY-WINS.** Row at **343.7 ms** (lock held 300 ms,
+busy_timeout 2000 ms; executor reruns 344/348 ms, planner probe 341 ms). A *real* retry and not a
+fast path, because under MU5 the identical read is refused at **20.458 µs** with
+`database is locked (5) (SQLITE_BUSY)`. Recording which arm held was the obligation; both were
+acceptable.
+
+**Nine mutation arms, all killed** — each with a sha256 landed-proof read BEFORE the result and a
+`cp` restore verified byte-identical; `git checkout --` never used.
+
+**THREE INSTRUMENT FAILURES CAUGHT MID-SWEEP, AND THEY ARE ONE SHAPE: A GUARD WHOSE REFERENCE MOVES
+WITH THE THING IT MEASURES.**
+1. **`timeout(1)` is not installed on this rig.** The first MU4a–e sweep scored `rc=127` with
+   `=== RUN`=0 — five vacuous "kills". The exit code alone reads as a pass; only the enumeration
+   assert caught it.
+2. **MU6 SURVIVED its first run.** T1.6 compared the live `PRAGMA busy_timeout` readback against
+   `busyTimeoutMillis` — *the very constant the mutation moves* — so both sides moved together and
+   the assertion could never fail. Killed only once the expected value became a test-local literal.
+3. T1.5's first control routed through the getter under test, so under MU4a–e it blocked in the main
+   goroutine where no watchdog reaches it: the arm died by the **180 s global test timeout** instead
+   of its own assertion.
+
+**Controller re-ran every gate rather than banking the executor's** (generator≠judge): `go build`
+rc=0, `go vet` rc=0, `gofmt -l` empty, `go test ./... -count=1` **rc=0, 17 packages, zero FAIL**,
+`./scripts/verify_ail.sh` rc=0 with pins **UNMOVED** (10 identities / 39 named tests / 9-of-9 steps).
+MU6 independently re-mutated by me to sha256 `f2b53e8b…` — kills on **both** handles — and restored
+to `0f6b4c59…`.
+
+**MY OWN FIRST SUITE RUN WAS A FALSE RED, and the discrimination is the point.** It returned `rc=1`
+with 17 `host/verifygate` arms and one `host/broker` arm failing. I had omitted `AILANG_BIN`. Those
+arms **refuse to skip by design** — *"a silent skip here is the false-green class this milestone
+closes"* — so the loud failure is the feature working. Established by re-run with the pin (rc=0, 0
+FAIL), not by assertion, and NOT attributed to the diff.
+
+**EVALUATOR `sonnet` 92/100 PASS**, one non-blocking finding, reproduced first-party before action
+per the judge-verification rule: **the sprint JSON's own M1 record was silently nulled by a
+DUPLICATE KEY.** The planner's template left `passes/started/completed/notes: null` stubs at the END
+of the `M1_STORE_CONTEXT` object; the executor wrote its real record EARLIER in the same object.
+Duplicate keys are legal JSON and **last-one-wins**, so every parser read a fully-green milestone as
+unstarted (`json.load` → `passes=None`). **The sharper half is the instrument: `jq -e .` returns
+rc=0 on that file**, so this loop's own plan-time well-formedness check is blind to duplicate keys
+BY CONSTRUCTION — a validation gate that cannot see the defect class reads exactly like one that
+checked for it. Fixed; verified with an `object_pairs_hook` duplicate detector (zero dupes file-wide)
+with `jq -e .` still rc=0 as the control.
+
+**A SECOND SCOPE-COUNT LESSON, ALSO IN MY OWN HANDS.** Iteration 86 recorded that *a count is only
+true inside the scope it was taken in*. My first read of the daemon read seam grepped only
+`handlers.go` and found **4** distinct getters. The true seam is **6 call sites → 5 distinct
+getters**: `GetLogEntry` serves two routes (`:275`, `:323`) and the sixth site is `SelectedHead()` at
+`daemon.go:497`, serving `GET /v1/head` from **outside** `handlers.go`. The design doc says
+"six-method" twice while its own next clause says "all five getters" — the planner caught it, I
+confirmed it, and **no AC counts the seam's methods, so it could never have redded a gate**; an
+executor would have invented a sixth (`Commit`, widening past ratified scope, or `GetVerifyResult`,
+off the daemon path). Likewise my raw ratchet grep read **12** where the scoped ratchet reads **11** —
+the three extra hits were a match inside a COMMENT and two bounded
+`context.WithTimeout(context.Background(), …)` calls that are not store reads at all.
+
+**Five design-doc defects found while executing (E1–E5), recorded in the sprint JSON.** **E3 gates
+M2**: `AC4 is unsatisfiable as written` — it demands `r.Context()` in both `handlers.go` and
+`daemon.go`, while §2.3's single `readCtx` helper means call sites spell `d.readCtx(r)`; M2 must
+either satisfy daemon.go's arm another way or record AC4's grep form as unsatisfiable and lean on
+MU2's `TestDaemonReadDisconnect`. E1: `SelectedHead` has no `QueryRow` of its own — it delegates to
+`selectedHeadTx`, whose other caller is inside `Store.Commit`, so T1.1 there is a structural
+interface change and not a line edit (`Commit` keeps its signature and today's behaviour; the
+evaluator confirmed this independently). E2: the 86-site census counts CALL SITES only and misses 5
+production + 7 test-fake interface declarations the compiler forces you to migrate. E4: V25's line
+number is wrong — `GetVerifyResult`'s caller is `replay.go:191`; `:153` is the `GetObject` call the
+ratchet pins. E5: `store.Open`'s `:memory:` carve-out bypasses `writeDSN`, so T1.6 must be
+file-backed; `journal_mode` is `delete`, which is the only reason `BEGIN EXCLUSIVE` excludes readers
+and T1.7's stimulus works at all.
+
+**Gate 3b.** PR #69 → squash `7ad24ea`. CI polled SHA-addressed on the **merge** commit under a
+bounded deadline: `present=2 == expected=2`, both `success`. The plan commit `632dee1` had been
+committed to local `dev` and was absorbed by the squash, leaving local `dev` 1-ahead/1-behind; I
+reconciled with `git checkout -B dev origin/dev` after measuring all four obligations — content
+duplication confirmed by reading the two plan files back out of `origin/dev` (575 lines,
+`M1 passes=True`), the incoming/dirty intersection **EMPTY** with its control firing
+(`host/store/store.go` is in the incoming set), backups in hand, and the protective form used. The
+fleet bundle verified byte-identical **5/5** afterwards.
+
+**Routing.** Controller `claude:claude-opus-5`. **No designer round** (arm A unparks straight to the
+planner). Planner `opus`, from `tools/launchd/derive-planner-lane.sh` → `opus fail-closed:env-pin`,
+rc=0, used VERBATIM. Executor: `codex:gpt-5.6-sol` probe **rc=1** (exhausted until 2026-08-20
+05:34) → `pi:openrouter/deepseek/deepseek-v4-flash-0731:floor` probe rc=0 but **two runs delivered
+zero edits** → **`opus`** via the chain's last link, **FLAGGED**. Evaluator `sonnet` (≠ opus
+executor, generator≠judge holds). No background work outstanding at any turn boundary (Standing
+rule 7) — every background run was followed by chained bounded in-turn polls.
+
+**Cost.** `metered=$0.0238` of the $5 ceiling: pi run 1 `$0.0178`, pi run 2 `$0.0059`, pi probe
+`$0.00008`. The opus/sonnet lanes are subscription-quota, not metered. Note the whole metered spend
+this iteration bought **zero delivered work** — it is the price of establishing the lane finding.
+
+**Platform.** darwin/arm64. `timeout(1)` absent. `AILANG_BIN=/tmp/ailang-v0300/ailang` (v0.30.0)
+required by `verifygate` and one broker arm. `GOTOOLCHAIN=go1.25.6`.
+
+**Ruled out.** (a) Attributing the first red suite to the diff — it was the missing `AILANG_BIN`
+pin; re-run with it, rc=0 and 0 FAIL. (b) Attributing the dead `pi` runs to the output cap — 625
+tokens against 65,536, with `maxTokens`/`reasoning` verified correctly configured, so the
+iteration-173 fix is present and not implicated. (c) Treating one `pi` failure as a lane verdict —
+the retry IS the control, and it failed *differently* (hallucinated tool names), which is what makes
+it a lane finding. (d) Trusting iteration 89's recorded codex exhaustion without re-probing — the
+probe was run, and this time the recorded absence was NOT stale. (e) Moving the design doc to
+`implemented/` — only 1 of 3 milestones is done, which the evaluator flagged explicitly. (f) Widening
+`readCtx` to spell `r.Context()` at the six call sites to green AC4's grep — it would turn MU1/MU2
+into six-line mutations, so E3 is left as an explicit M2 decision rather than quietly resolved.
+
+**Retro.** One process finding at **instance 1** (watch-item; the bar is 2): the shared skill's
+pi-lane guard prescribes `stopReason` as the tell for a vacuous executor run, and that tell is
+mechanism-keyed — it cannot see a `stopReason=stop` no-op well under the token cap. The skill
+already prescribes the worktree diff in the same sentence, and only that half survived. World cannot
+edit the shared skill; if a second instance lands, this is a Gate-5 proposal to Mark + V1 to
+**re-order that rule so the diff is the primary assertion and `stopReason` the diagnostic**. Second,
+smaller: `jq -e .` is this loop's plan-time artifact check and cannot see duplicate keys — worth a
+duplicate-key assertion in the planner's post-run steps, also skill-side.
+
+**A FOURTH INSTRUMENT FAILURE, EARNED AT GATE 4 AND IN MY OWN HANDS.** The record commit
+`f4ea2e6` shipped carrying **only a rename, 0 insertions** — its message described the charter
+stamp, the rotation, the log entry and the dashboard, none of which were in it. Cause: the `git add`
+listed the pre-rename `design_docs/mission-dashboard.md`, which no longer exists, so git rejected
+the **whole pathspec** and staged nothing; the rename was already staged from `git mv`, so the
+commit was non-empty and succeeded. **The tell was printed and walked past**: I ran
+`git diff --cached --name-status` in the same call and it showed a single `R100` line. Gate 4's own
+rule (d) says never `git add` the charter in the same breath as writing it — `git diff --stat`
+first — and the rule is right; running the check is not the same as *reading* it. Fixed by amending
+with the four files actually staged, behind an explicit pre-commit assertion (`files>=4`,
+`insertions>100`) rather than an eyeballed diff. Same family as the three mutation-sweep instrument
+failures above and as the duplicate-key defect: **a command that reports success for content it does
+not carry.**
+
+**Next.** Item 18's **M2** (`readDeadline`, the five-method read seam, 503/`Timeout`, sketch mirror,
+D7 test extension), gated on nothing — but **E3 must be settled as its first act**. Then M3. The doc
+stays in `planned/` until all three land. **One open ask unchanged**: `D-WORLD-19` (item 17's scope,
+one word). The fleet-authored driver commit remains owed under `D-WORLD-DRIVER-1` arm B.
