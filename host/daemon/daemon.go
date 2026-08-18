@@ -43,6 +43,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -198,6 +199,19 @@ type Config struct {
 	// AilangBin, when non-empty, is the interpreter archived at startup
 	// (Decision 6 pinning) and reported by GET /v1/health.
 	AilangBin string
+	// ErrorLog receives the operator-facing detail of every sanitized 500: one
+	// line per error, carrying the route and the VERBATIM store error that the
+	// response body no longer echoes (Decision: sanitize-vs-expose).
+	//
+	// nil means os.Stderr — resolved ONCE in New, never at each write, so the
+	// wiring is a constructed field a test can both assert on and replace. The
+	// party entitled to the daemon's internals is the process owner, who owns
+	// stderr; a loopback HTTP client is not that party.
+	//
+	// It is deliberately NOT the announce writer. ListenAnnouncePrefix is a
+	// one-line protocol whose consumers read exactly one line, and extra lines
+	// on that stream were measured deadlocking Run against an io.Pipe.
+	ErrorLog io.Writer
 }
 
 // Startup stages, used as the Stage field of StartupError so an operator (and a
@@ -274,6 +288,12 @@ type Daemon struct {
 	// reds) and the value is shrinkable in tests, which is the only way the
 	// SHIPPED timeout branch can be exercised without a ten-second test.
 	readDeadline time.Duration
+
+	// errLog is the RESOLVED destination of every sanitized 500's detail line.
+	// New resolves Config.ErrorLog's nil to os.Stderr here, so this field is
+	// never nil on a constructed daemon and writeInternalError needs no nil check
+	// on a path that only runs when something has already gone wrong.
+	errLog io.Writer
 
 	scanPageSize   int
 	scanRowBudget  int
@@ -362,6 +382,18 @@ type HealthResponse struct {
 	InterpreterVersion string `json:"interpreter_version"`
 }
 
+// resolveErrorLog turns Config.ErrorLog's optional nil into the concrete
+// default ONCE, at construction. Resolving at construction rather than at each
+// write is what makes the default assertable: a test reads d.errLog and sees
+// os.Stderr, instead of having to prove a negative about a nil branch it cannot
+// observe.
+func resolveErrorLog(w io.Writer) io.Writer {
+	if w == nil {
+		return os.Stderr
+	}
+	return w
+}
+
 // New runs the pre-listen half of the serve lifecycle (Decision 5):
 //
 //	loopback bind check -> store.Open (fail-closed writer) -> optional
@@ -398,7 +430,7 @@ func New(cfg Config) (*Daemon, error) {
 
 	d := &Daemon{
 		cfg: cfg, store: s, reads: s, drainTimeout: shutdownTimeout,
-		readDeadline: readDeadline,
+		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget,
 	}
@@ -550,7 +582,9 @@ func (d *Daemon) handleHealth(w http.ResponseWriter, _ *http.Request) {
 //
 // Success remains canonical plain text. Errors use the same JSON APIError
 // envelope as every other v1 route: no selected head is NotFound (404), and a
-// store failure is Internal (500).
+// store failure is Internal (500) — sanitized through writeInternalError like
+// every other 500, because this route reaches the store through the SAME read
+// seam as the five in handlers.go and leaks exactly the same host detail.
 func (d *Daemon) handleHead(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := d.readCtx(r)
 	defer cancel()
@@ -560,7 +594,7 @@ func (d *Daemon) handleHead(w http.ResponseWriter, r *http.Request) {
 			writeReadTimeout(w, d.readDeadline)
 			return
 		}
-		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
+		d.writeInternalError(w, r, err)
 		return
 	}
 	if !ok {

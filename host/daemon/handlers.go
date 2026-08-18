@@ -115,8 +115,51 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 	_ = json.NewEncoder(w).Encode(value)
 }
 
+// internalErrorMessage is the ONLY message a 500 ever carries on the wire.
+//
+// The 500 branches used to echo the raw store error text, and a store error
+// interpolates the display DSN path, schema state and driver strings —
+// environment detail about the daemon HOST, not about the caller's request.
+// Loopback is locality, not authentication: any local process can hold the
+// socket, and the workbench item will pipe these bodies into rendered HTML. So
+// the wire gets a fixed string and the operator gets the detail on d.errLog.
+//
+// The 400s are deliberately NOT sanitized: they echo parse failures of the
+// CLIENT'S OWN input (hashref text, JSON decode positions) and contain no server
+// state. Over-sanitizing a 400 would gut the API's main debugging affordance to
+// protect nothing. The 409 conflict body (machine-readable, re-planned from) and
+// the 503 timeout body (names only the deadline constant) are likewise untouched.
+const internalErrorMessage = "internal store failure"
+
 func writeAPIError(w http.ResponseWriter, class, message string, status int) {
 	writeJSON(w, status, APIError{Error: APIErrorDetail{Class: class, Message: message}})
+}
+
+// writeInternalError is the single sanitized 500 path: it splits ONE failure
+// into TWO writes with different audiences.
+//
+//   - the RESPONSE gets internalErrorMessage and nothing else;
+//   - d.errLog gets one line — the route, then the verbatim error.
+//
+// One Fprintf per error, never a %+v dump: the operator stream stays greppable
+// line-by-line, and a 500 storm cannot bury the log in stack traces. The route
+// is r.Method plus r.URL.Path (not RawQuery), so the line names the route and
+// carries no client-supplied query text.
+//
+// Every internal branch goes through here rather than calling writeAPIError with
+// a message of its own. That is what makes AC5's snapshot real: its raw
+// error-text grep over this file counts exactly 5, and all 5 are on BadRequest
+// branches. But the grep is only a snapshot — it cannot see a 500 that stops
+// LOGGING while still sanitizing its body. TestInternalErrorsAreSanitized is
+// what covers that direction, by asserting the two writes SEPARATELY, so a
+// mutation satisfying one still reds the other.
+//
+// It writes to d.errLog, NEVER to the announce writer: ListenAnnouncePrefix is a
+// one-line protocol whose consumers read exactly one line, and iteration 28
+// measured extra announce lines deadlocking Run against an io.Pipe.
+func (d *Daemon) writeInternalError(w http.ResponseWriter, r *http.Request, err error) {
+	fmt.Fprintf(d.errLog, "ailang-worldd: internal error: %s %s: %v\n", r.Method, r.URL.Path, err)
+	writeAPIError(w, "Internal", internalErrorMessage, http.StatusInternalServerError)
 }
 
 func writeConflict(w http.ResponseWriter, conflict *store.ConflictError) {
@@ -276,7 +319,7 @@ func (d *Daemon) handleWorld(w http.ResponseWriter, r *http.Request) {
 			writeReadTimeout(w, d.readDeadline)
 			return
 		}
-		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
+		d.writeInternalError(w, r, err)
 		return
 	}
 	if !ok {
@@ -309,7 +352,7 @@ func (d *Daemon) handleObject(w http.ResponseWriter, r *http.Request) {
 			writeReadTimeout(w, d.readDeadline)
 			return
 		}
-		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
+		d.writeInternalError(w, r, err)
 		return
 	}
 	if !ok {
@@ -345,7 +388,7 @@ func (d *Daemon) handleLogEntry(w http.ResponseWriter, r *http.Request) {
 			writeReadTimeout(w, d.readDeadline)
 			return
 		}
-		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
+		d.writeInternalError(w, r, err)
 		return
 	}
 	if !ok {
@@ -402,7 +445,7 @@ func (d *Daemon) handleLogRange(w http.ResponseWriter, r *http.Request) {
 				writeReadTimeout(w, d.readDeadline)
 				return
 			}
-			writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
+			d.writeInternalError(w, r, err)
 			return
 		}
 		if !ok {
@@ -434,7 +477,7 @@ func (d *Daemon) handleRegistry(w http.ResponseWriter, r *http.Request) {
 			writeReadTimeout(w, d.readDeadline)
 			return
 		}
-		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
+		d.writeInternalError(w, r, err)
 		return
 	}
 	if !ok {
@@ -502,7 +545,7 @@ func (d *Daemon) handleCommit(w http.ResponseWriter, r *http.Request) {
 			writeConflict(w, conflict)
 			return
 		}
-		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
+		d.writeInternalError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, commitResponse{SelectedHead: commit.NextWorld.Ref.String()})

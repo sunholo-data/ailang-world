@@ -2,7 +2,7 @@
   "sprint_id": "w-daemon-read-cancellation",
   "queue_item": 18,
   "title": "A bounded elapsed-time contract for the daemon's read path: context-first store getters, a 10s request deadline reaching the blocking call, an explicit 503/Timeout class, a busy_timeout lock policy, sanitized 500 bodies, and a ratchet pinning the 11 residual deadline-free reads",
-  "status": "in_progress",
+  "status": "complete",
   "created": "2026-08-18",
   "planner": "mission-control iteration 91, opus sprint-planner",
   "design_doc": "design_docs/planned/w-daemon-read-cancellation.md",
@@ -716,6 +716,46 @@
           "MU10": "local ailang test rc=1 (19 tests, 1 failed); verify_ail.sh rc=0 as declared; BUT Go mirror rc=1 - see E8"
         },
         "not_done_deliberately": "M3 (AC5 sanitize, Config.ErrorLog, QUICKSTART, MU7). Ratified deferrals DR-1/DR-2 untouched."
+      },
+      {
+        "id": "M3_SANITIZE_AND_DOCS",
+        "status": "complete",
+        "iteration": 93,
+        "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-iter93",
+        "branch": "sprint/w-daemon-read-cancellation-m3",
+        "base_commit": "e4ba56d",
+        "gates": {
+          "go build ./... && go vet ./...": "rc=0 (controller re-run)",
+          "gofmt -l host/ cmd/": "printed nothing",
+          "go test ./... -count=1": "rc=0, 17 packages ok, 0 FAIL (controller re-run)",
+          "verify_ail.sh": "rc=0, pins UNMOVED: 10 required identities / 39 named tests / world package 9-of-9; 0 .ail files changed, control 4 files changed total"
+        },
+        "acceptance": {
+          "AC5": "EXACTLY 5 err.Error() in handlers.go (baseline 11), and all five ARE the BadRequest sites (311, 344, 521, 528, 539) - controller-verified by grep -n",
+          "AC3": "rc=0, 17 '=== RUN' (M2 head was 13), 0 FAIL - controller re-run",
+          "AC7": "rc=0, pins identical; M3 edits zero .ail files",
+          "AC8": "rc=0, 17 packages",
+          "AC4": "STILL UNSATISFIABLE as a grep: daemon.go r.Context() is 0 at base AND head by design (single readCtx helper). Persistent form MU2/TestDaemonReadDisconnect passes. The AC's grep form needs amending, not the code."
+        },
+        "mutations": {
+          "MU7": "KILLED rc=1 on the BODY assertion (sentinel leaked); mutant BUILDS rc=0; INVERSE (-skip) rc=0; cp-restore byte-identical (sha cc9f206c... both ends). Reproduced INDEPENDENTLY by the controller at handlers.go:322.",
+          "MU7b": "executor-added: delete only the log write, keep the sanitized body -> rc=1 with ONLY assertion (b) failing. Proves the two writes are independently asserted. AC5's grep still reads 5 under it.",
+          "MU7c": "CONTROLLER-ADDED, and the milestone's sharpest arm: mutate the SEVENTH Internal site (daemon.go:597, handleHead). Mutant builds rc=0; TestInternalErrorsAreSanitized KILLS it rc=1 on the head (/v1/head) arm; INVERSE rc=0; restore byte-identical. CRITICALLY, AC5's grep still reads EXACTLY 5 under this mutant - AC5 PASSES ON A TREE THAT LEAKS."
+        },
+        "doc_defects_found_in_M3": [
+          "E10 (THE SPINE): there is a SEVENTH Internal 500-echo site and every document misses it. Doc 2.6/3 and plan T3.2 say 'the six Internal branches'; measured at base, handlers.go has 6 and daemon.go:563 (handleHead) has 1, so the daemon has SEVEN. The doc's count was taken INSIDE handlers.go and quoted as a property of the daemon - rule 3b(ix) - and AC5 is file-scoped to handlers.go, so it is BLIND to the seventh by construction. Implemented literally, M3 would have shipped a GREEN AC5 over a /v1/head route still leaking the DSN path. The doc is self-inconsistent: its M2 row already treats handleHead as a read route.",
+          "E11: AC5's grep counts COMMENTS. The executor's first draft read 7/5 because two doc comments mentioned err.Error(). Same class as iter-92's comment-quotes-a-future-code-state, now on the milestone's headline AC.",
+          "E12: AC5 is blind to half the decision it encodes - under MU7b (body sanitized, operator detail destroyed) the grep still reads 5. Only TestInternalErrorsAreSanitized assertion (b) gates that direction.",
+          "E13: 'greens AC5 and the full set' (plan 3.3, doc 9) is false as written - AC4's daemon.go arm is 0 at base and head. Base-attributed, not an M3 regression.",
+          "E14: AC4's handlers.go count of 2 is 1 code site + 1 comment - pre-existing, same class as E11.",
+          "E15: plan T3.4 mislocates the QUICKSTART serve section as :10-19; measured 7-22.",
+          "E16: QUICKSTART has an undocumented precondition - serve refuses to start while AILANG_REGISTRY_API_KEY is set in the environment (rc=2). Not S7 drift from the binary, but a step a verbatim reader hits.",
+          "E17 (OUT OF SCOPE, for the queue): the iter-89 stderr-merge class has a FOURTH site and this one PERSISTS. host/archive/archive.go:391 uses cmd.CombinedOutput(), so the Observatory: stderr warning is captured into the archive MANIFEST and served as /v1/health interpreter_version. Unlike iter-89's three sites it is written into stored state, so it survives the process that produced it."
+        ],
+        "routing": {
+          "executor": "opus (chain end)",
+          "why": "codex rc=1 quota-exhausted until 2026-08-20 05:34 (controller-probed first-party); pi:deepseek FAILED for the FOURTH consecutive time with ZERO bytes changed - killed by the 300MB size ceiling at 329,584,585 bytes with stopReason=length count 0, agent_end 0, turn_start 9 > turn_end 8"
+        }
       }
     ]
   }
