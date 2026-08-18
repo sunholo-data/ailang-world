@@ -10282,3 +10282,198 @@ can any un-mutated branch of the function classify that value?*
 BadRequest sites, which must NOT be over-sanitized), `TestInternalErrorsAreSanitized`, and the
 QUICKSTART S7 re-execution. Gated on nothing; the M3 baseline is verified unchanged by M2. **One open
 ask unchanged:** `D-WORLD-19` (item 17's scope, one word).
+
+## Iteration 93 — 2026-08-18 — **item 18 is COMPLETE: M3 landed (PR [#71](https://github.com/sunholo-data/ailang-world/pull/71) → squash `d21754f`, Gate 3b GREEN on the MERGE commit SHA-addressed, evaluator `sonnet` 96/100 zero blocking), doc + plan → `implemented/`** (`metered=$0.0203`; controller `claude:claude-opus-5`; executor `opus` after the chain degraded twice; evaluator `sonnet`; no designer, no planner — the plan already covered M3) — the iteration's spine is that **there is a SEVENTH `Internal` 500-echo site and AC5, the milestone's own headline gate, is blind to it by construction, so the gate passes on a tree that leaks**
+
+### Pick
+
+Item 18 `w-daemon-read-cancellation`, milestone **M3** — the queue head, gated on nothing, and the
+last of three milestones. Reality-checked before routing: no open PRs from this loop, no stale
+worktrees, main checkout clean, `internalErrorMessage` absent from every `host/daemon` file, and
+`grep -c 'err.Error()' host/daemon/handlers.go` = **11**, matching the doc's declared baseline.
+
+### The spine — a count taken inside one file, quoted as a property of the daemon
+
+The design doc (§2.6, §3) and the sprint plan (T3.2) both say **"the six Internal branches"**, and
+they enumerate six line numbers, all in `handlers.go`. Measured first-party at base `e4ba56d`:
+
+```
+git show e4ba56d:host/daemon/handlers.go | grep -c 'writeAPIError(w, "Internal"'   ->  6
+git show e4ba56d:host/daemon/daemon.go   | grep -c 'writeAPIError(w, "Internal"'   ->  1
+```
+
+The daemon has **seven**. The seventh is `handleHead` at `daemon.go:563`, which reaches the store
+through the *same* `d.reads` seam as the other six and is one of the six routes `seedReadRoutes`
+drives. The doc's own M2 row already treats it as a read route — so the document contradicts itself,
+and nothing caught it, because **AC5's grep is file-scoped**:
+
+```
+grep -c 'err.Error()' host/daemon/handlers.go     # AC5, verbatim
+```
+
+No amount of careful reading of AC5 can surface a site in `daemon.go`. Proven rather than argued,
+by mutating the seventh site back (**MU7c**): the mutant **builds** (rc=0),
+`TestInternalErrorsAreSanitized` **kills** it (rc=1, on the `head (/v1/head)` arm, quoting the
+leaked DSN path), the `-skip` inverse is rc=0 — and `grep -c 'err.Error()' handlers.go` **still
+reads exactly 5**. **AC5 passes on a tree that leaks.**
+
+Implemented to the letter, M3 would have shipped a green AC5 while `/v1/head` kept echoing
+`store: open "/private/var/folders/…/world.db": disk I/O error` to any local process holding the
+socket. The executor demonstrated the leak live against a corrupted store before fixing it.
+
+This is rule 3b(ix) — *a count is only true inside the scope it was taken in* — landing on an item's
+**headline acceptance criterion**, and it sharpens the rule in a direction it does not yet cover:
+3b(ix) is written as a discipline for whoever *writes* the count. Here the count was correct where
+it was taken, was transcribed faithfully into an AC, and the AC then **inherited the scope as a
+blindness**. A file-scoped gate cannot be widened by reading it more carefully; you have to notice
+that it has a scope at all, and a `grep -c <token> <file>` wears its scope as a mundane
+implementation detail rather than as a claim.
+
+### What landed
+
+M3 greens **AC5** and closes the item. `internalErrorMessage = "internal store failure"` is the only
+message a 500 ever carries on the wire; `Config.ErrorLog io.Writer` takes the operator-facing
+detail, with `nil → os.Stderr` **resolved once in `New`** rather than at each write — which is what
+makes the default *assertable* (a test reads `d.errLog` and sees `os.Stderr`) instead of a nil branch
+nobody can observe. `d.writeInternalError(w, r, err)` writes one line per error carrying the route,
+and never to `announce`: `ListenAnnouncePrefix` is a one-line protocol whose extra lines were
+measured deadlocking `Run` against an `io.Pipe` (V17).
+
+`grep -c 'err.Error()' host/daemon/handlers.go` goes **11 → exactly 5**, and all five survivors are
+the BadRequest sites (311, 344, 521, 528, 539 at head — verified by `grep -n`, not assumed). The
+400s echo parse failures of the *client's own* input and carry no server state; over-sanitizing them
+would fail AC5 as hard as leaving a 500 echoing. 5 files, `+338/−10`.
+
+### Mutation discipline — three arms, all killed
+
+Each with a sha256 landed-proof pair, a build check on the mutant, a `-run` KILL arm and a `-skip`
+INVERSE arm, restored by `cp` from an out-of-repo backup and verified byte-identical
+(`git checkout --` never used). MU7 and MU7c were re-run **independently by the controller**.
+
+| arm | mutation | KILL | INVERSE | AC5 grep under it |
+|---|---|---|---|---|
+| MU7 | prescribed: restore `err.Error()` at `handlers.go:322` | rc=1, **body** assertion | rc=0 | 6 (visible) |
+| MU7b | executor-added: delete only the log write, keep the sanitized body | rc=1, **log** assertion only | rc=0 | **5 (blind)** |
+| MU7c | controller-added: the **seventh** site, `daemon.go:597` | rc=1, `/v1/head` arm | rc=0 | **5 (blind)** |
+
+MU7b is what proves T3.3's independence requirement — MU7 alone kills *both* assertions at once, so
+it cannot distinguish "the body is clean" from "the detail was routed". Note the pattern in the last
+column: **two of three arms are invisible to AC5.** The grep sees exactly one direction (a leak in
+one file) of a three-directional decision.
+
+### The evaluator found a surviving mutation, and it was real
+
+`sonnet`, **96/100**, zero blocking. Its one substantive finding: `assertErrorLogLine` matched the
+route with a bare `strings.Contains(line, "GET /v1/log")`. The producer's format is `"%s %s: %v"`,
+and `GET /v1/log` is a **prefix** of `GET /v1/log?from=0&limit=5` — so mutating `r.URL.Path` to
+`r.URL.String()` leaks client-supplied query text into the operator's stderr, contradicting
+`writeInternalError`'s own doc comment, and the assertion still passes.
+
+Reproduced first-party before being acted on, in the prescribed order: the mutation **LANDS**
+(sha256 `cc9f206c…` → `f334eebb…`), **BUILDS** (rc=0), and **SURVIVES** the whole `host/daemon` suite
+(rc=0). Then closed **while the mutation was still applied** — `want + ":"`, anchoring on the
+producer's own format — giving rc=1 on the one route that carries a query, quoting the leaked
+`?from=0&limit=5` back. Production code restored byte-identical (`git diff --stat` empty against
+`b7aac87`), pristine tree rc=0 with 4 `=== RUN`, and **MU7c re-confirmed still killed with the fix in
+place**, so the anchor did not trade one blindness for another. Landed as `158c500`.
+
+**My own first diagnosis of it was wrong, and the instrument caught me.** I hypothesised the
+survival was structural — that no route under test carried a query at all, in which case
+`r.URL.String() == r.URL.Path` and anchoring alone could not kill it. My evidence was
+`grep -n 'target:' … | grep '?'` returning nothing. The route table uses **positional struct
+literals**, not a `target:` field, and `/v1/log?from=0&limit=5` is at line 54. A rule-3a empty
+result read as a fact, in the same iteration whose spine is a scope error. The evaluator's
+diagnosis was exact; mine was refuted by one wider grep.
+
+### Two base flakes, found while running the gates, attributed before being blamed
+
+Both surfaced because the controller re-ran `go test ./...` rather than banking the executor's
+green, and both were attributed with rule 3d's negative control — measured at **base**, on a
+**clean main checkout**, before any suspicion fell on the diff.
+
+**(1) `TestTimeoutStatusMirrorsSketch` — an M2 test, and the pin on the entire 503/`Timeout`
+contract.** At `e4ba56d`, `-count=20` isolated fails **1 in 20**, on the `world` route. In the M3
+worktree, `-count=10` failed **1 in 10**, on the `registry` route. Whole-package `-count=3` was
+clean. Route-agnostic, timing-driven, **pre-existing**. Shape: *"a timed-out read answered 200, want
+the sketch's 503 for Timeout"* — the stimulus is an already-expired deadline and the read sometimes
+answers before the deadline is observed. Queued as row **19**.
+
+**(2) `host/capsule`'s `TestF6OutputCapKillsChildBeyondOnePipeBuffer`.** Failed **1 of 2** full-suite
+runs at base (`*capsule.TimeoutError … wall-clock limit 5s, want *OutputLimitError`), passed **5/5**
+isolated. Two caps race inside one fixture and under whole-suite load the unrelated 5 s wall clock
+beats the output cap the test is about. Queued as row **20**.
+
+Both are the item-16 class, and both matter beyond themselves: they make `go test ./...`
+non-deterministic, which is the command every milestone's *nothing lands red* gate runs. A future
+controller hitting either will be strongly tempted to attribute it to their own diff — which is
+precisely why the measurement is in the queue row rather than in prose.
+
+### The `pi` lane is 4-for-4 zero-byte failures
+
+Routed faithfully down the ratified chain (codex → deepseek → opus) rather than pre-judging it.
+codex probed **rc=1** first-party — `usage limit … try again at Aug 20th, 2026 5:34 AM` — so the
+recorded exhaustion is not stale. `pi:deepseek` probed **rc=0** (as it has before all four
+failures), then, on the real run against the smallest and most prescriptive milestone of the entire
+item — the lane's declared best case:
+
+- the model read the code and reasoned **correctly** about all six target sites, visible in the
+  NDJSON tail, including the edit-anchor uniqueness problem;
+- 6 tool executions;
+- then a turn streaming pure `thinking` until the file reached **329,584,585 bytes**, killed by the
+  controller's 300 MB size ceiling at `rc=137`;
+- `stopReason":"length"` count **0**, `agent_end` **0**, `turn_start` 9 > `turn_end` 8, worktree diff
+  **EMPTY**.
+
+**The size poll was again the only detector that fired** — second consecutive iteration — and the
+`stopReason` assertion the shared skill prescribes has now fired on **0 of 4** failures. Note the
+epistemic status: `mission-v1` judged World's iter-92 proposal of exactly this guard **SOUND but
+ADOPTION DEFERRED**, correctly, for want of first-party pi-lane corroboration in V1's own artifacts.
+This iteration is World's second first-party instance of the same mechanism. The lane fell through
+to **opus**, FLAGGED, and the question of whether deepseek stays in the chain is raised as
+`D-WORLD-20` — a controller may not overturn an attended human ratification, even with the
+≥3-datapoint bar met.
+
+### Gates — all re-run by the controller (generator≠judge)
+
+| gate | result |
+|---|---|
+| `go build ./... && go vet ./...` | rc=0 |
+| `gofmt -l host/ cmd/` | empty |
+| `go test ./... -count=1` | **rc=0**, 17 packages, zero FAIL |
+| `./scripts/verify_ail.sh` | **rc=0**, pins **UNMOVED**: 10 identities / 39 named tests / package gate 9-of-9 |
+| `.ail` files changed | **0** (control: 4 files changed total — the instrument fires) |
+| AC3 | rc=0, **17** `=== RUN` (M2's head was 13), 0 FAIL |
+| Gate 3b, merge commit `d21754f` | `present=2 == expected=2`, both `success` |
+
+QUICKSTART was re-executed verbatim per S7 (§1–§5), plus a live probe of the new behaviour: a
+corrupted store under a running daemon answers 500 `internal store failure` on three read routes
+while stderr carries one detail line each, and a split-stream re-run proved **stdout stays at
+exactly one line** (the announce).
+
+### Ruled out
+
+- **Blaming M3 for either flake.** Both reproduce at base on a clean main checkout, one of them on a
+  different route than it failed on in the worktree.
+- **My own "no route carries a query" hypothesis** for the surviving mutation — refuted by the route
+  table's line 54, which a wider grep found immediately.
+- **Reading the pi probe's rc=0 as lane health.** It has returned rc=0 before all four failures; the
+  probe is blind to this class by construction.
+- **Editing the ratified executor chain myself.** The ≥3-datapoint evidence bar is met, but the
+  chain is Mark's attended ruling of 2026-08-10 — hence `D-WORLD-20` rather than a controller edit.
+- **Fixing rows 19/20/21 inline.** Standing rule 1; and a flake fix that is not proven under load is
+  not a fix.
+- **Treating the executor's seventh-site sanitize as an unauthorized scope widening.** It exceeds
+  T3.2's literal six, and the evaluator was asked to judge exactly that: §2.6's own rationale applies
+  identically to `handleHead`, the site is in a file T3.1 already authorizes, it was disclosed rather
+  than absorbed, and it is mutation-tested. Leaving a known leak to satisfy an incomplete task
+  description would have contradicted the design's purpose.
+
+### Next
+
+Item 18 is complete, so the queue's unblocked routable rows are the two flakes (**19**, **20**) and
+the archive stderr site (**21**). Item 17 remains parked on `D-WORLD-19`.
+
+### Open asks
+
+- `D-WORLD-19` — item 17's scope (one word: A or B). Unchanged since iteration 90.
+- `D-WORLD-20` — does `pi:deepseek` stay in the ratified executor chain (one word: A or B). **New.**

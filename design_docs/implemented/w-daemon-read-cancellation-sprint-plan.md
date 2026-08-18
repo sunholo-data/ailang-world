@@ -558,7 +558,7 @@ and only if `D-WORLD-19` is answered while the sprint is in flight.
 
 ## 9. Handoff
 
-- **Plan**: `design_docs/planned/w-daemon-read-cancellation-sprint-plan.md`
+- **Plan**: `design_docs/implemented/w-daemon-read-cancellation-sprint-plan.md`
 - **Progress JSON**: `sprint_w-daemon-read-cancellation.json` (repo root)
 - **Milestones**: `M1_STORE_CONTEXT` (0.50 d) → `M2_DAEMON_DEADLINE` (0.75 d) → `M3_SANITIZE_AND_DOCS` (0.25 d)
 - **Total**: 1.5 days, ≈1270 LOC, **risk medium**
@@ -571,5 +571,5 @@ and only if `D-WORLD-19` is answered while the sprint is in flight.
 - **Unblocks on landing**: queue item **14** `w-workbench-read-only`, whose declared residual WB-R1
   is discharged here.
 
-**SPRINT_PLAN_PATH**: `design_docs/planned/w-daemon-read-cancellation-sprint-plan.md`
+**SPRINT_PLAN_PATH**: `design_docs/implemented/w-daemon-read-cancellation-sprint-plan.md`
 **SPRINT_JSON_PATH**: `sprint_w-daemon-read-cancellation.json`
