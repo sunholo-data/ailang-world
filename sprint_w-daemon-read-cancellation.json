@@ -113,11 +113,7 @@
         "host/broker's ~18% base flake will touch M1: both broker files change mechanically here. Attribute by shape against the base rate, never by one run.",
         "TestNoNewDeadlineFreeStoreReads lives in host/store, NOT host/boundary: the boundary package's file census is pinned at wantFileCount = 1 (allowlist_world_test.go:1163) and this item adds no file there.",
         "Root the ratchet scanner via runtime.Caller so its result does not depend on the test's working directory."
-      ],
-      "passes": null,
-      "started": null,
-      "completed": null,
-      "notes": null
+      ]
     },
     {
       "id": "M2_DAEMON_DEADLINE",
