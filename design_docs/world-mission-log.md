@@ -9803,3 +9803,17 @@ applied.
 **Next.** Item **18** `w-daemon-read-cancellation` is the only fully-unblocked routable row —
 D-WORLD-18 arm A, straight to **sprint-planner**, no designer round. **TWO open asks:** `D-WORLD-19`
 (one word) and the fleet-authored driver commit (two commands, not a decision).
+
+**Amendment, same iteration — the chain UNDER-REPORTS this iteration's spend, and the loop's own
+telemetry rule is what it violates.** `ailang chains post-iteration` was posted with **4** stages
+(controller, designer, and round 6's two reviewers) and recorded **$0.1742**, against the
+**$0.328765** the charter and this entry record. Round 5's two reviewer runs (`$0.154556`) were
+omitted from the payload — one chain per iteration is the rule, so the omission cannot be repaired
+by posting a second, and the authoritative figures are the charter's and this log's, not
+`ailang chains`'. Both metered stages also posted **0 tokens**, which is the recorded limitation
+that `design-quorum` emits no token counts (iteration 83) rather than a missing field — but the
+skill's M2 telemetry rule says a reviewer bill without tokens is exactly what it exists to prevent,
+so it is named here rather than left as a plausible zero. The failure shape is worth more than the
+$0.15: **a per-iteration aggregate is assembled by hand from stages the controller remembers, so a
+round it forgot is invisible in exactly the record built to make spend visible.** Watch-item,
+instance 1.
