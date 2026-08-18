@@ -22,7 +22,13 @@ if [ -z "${AILANG_BIN:-}" ]; then
   exit 1
 fi
 
-ver="$("$AILANG_BIN" --version 2>&1)" || {
+# STDOUT ONLY (iter-89's class, 4th site, bitten 2026-08-18): a >200MB
+# ~/.ailang/state makes every ailang call emit `Observatory: NNNMB` on STDERR
+# with a timestamp prefix; capturing 2>&1 here made head-1/awk-2 parse that
+# timestamp as the version token and reject the correctly-pinned binary.
+# An instrument that captures more than it parses can be voided by a process
+# it has nothing to do with — never merge streams into parsed output.
+ver="$("$AILANG_BIN" --version 2>/dev/null)" || {
   echo "✗ AILANG_BIN=$AILANG_BIN could not be executed for a version check" >&2
   exit 1
 }
