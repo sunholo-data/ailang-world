@@ -2,6 +2,7 @@ package store
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -253,11 +254,11 @@ func assertCrashStore(t *testing.T, dbPath, effectPath, stop string) {
 	if len(pending) != wantPending {
 		t.Fatalf("%s PendingIntents=%d, want %d", stop, len(pending), wantPending)
 	}
-	_, worldOK, err := s.GetWorld(c.NextWorld.Ref)
+	_, worldOK, err := s.GetWorld(context.Background(), c.NextWorld.Ref)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, entryOK, err := s.GetLogEntry(c.Entry.Header.EntryIndex)
+	_, entryOK, err := s.GetLogEntry(context.Background(), c.Entry.Header.EntryIndex)
 	if err != nil {
 		t.Fatal(err)
 	}

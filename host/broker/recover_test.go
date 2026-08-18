@@ -169,7 +169,7 @@ func TestCrashWindowRecoveryReportsAndResumptionMintsFreshOrdinal(t *testing.T) 
 	if failing.effectOutcomeCalls != 0 {
 		t.Fatalf("pre-crash outcome calls = %d, want 0", failing.effectOutcomeCalls)
 	}
-	if _, ok, err := base.GetObject(requestHash(req, []byte("before-crash"))); err != nil || !ok {
+	if _, ok, err := base.GetObject(context.Background(), requestHash(req, []byte("before-crash"))); err != nil || !ok {
 		t.Fatalf("durable request object = ok %v, err %v; want present", ok, err)
 	}
 	if err := base.Close(); err != nil {
@@ -334,10 +334,10 @@ func TestRecoverCommitPathPlannedStateAbsentWithoutOutcome(t *testing.T) {
 	if err != nil || len(findings) != 1 {
 		t.Fatalf("Recover=(findings=%d,err=%v), want (1,nil)", len(findings), err)
 	}
-	if _, ok, err := s.GetWorld(c.NextWorld.Ref); err != nil || ok {
+	if _, ok, err := s.GetWorld(context.Background(), c.NextWorld.Ref); err != nil || ok {
 		t.Fatalf("GetWorld(planned)=(ok=%v,err=%v), want (false,nil)", ok, err)
 	}
-	if _, ok, err := s.GetLogEntry(c.Entry.Header.EntryIndex); err != nil || ok {
+	if _, ok, err := s.GetLogEntry(context.Background(), c.Entry.Header.EntryIndex); err != nil || ok {
 		t.Fatalf("GetLogEntry(planned)=(ok=%v,err=%v), want (false,nil)", ok, err)
 	}
 }

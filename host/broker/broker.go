@@ -36,7 +36,7 @@ type Registry map[string]Handler
 
 type objectStore interface {
 	PutObject(store.Object) error
-	GetObject(hashref.HashRef) (store.Object, bool, error)
+	GetObject(context.Context, hashref.HashRef) (store.Object, bool, error)
 	AppendNextEffectIntent(string, store.EffectIntent) (string, int64, error)
 	AppendClaimedEffectIntent(string, store.EffectIntent, hashref.HashRef, hashref.HashRef) (string, int64, error)
 	AppendEffectOutcome(string, store.EffectOutcome) (int64, hashref.HashRef, error)
@@ -170,7 +170,7 @@ func (s *Session) invoke(
 
 	grantIndex, decision := s.decide(req)
 	if s.mode == Replay {
-		return s.invokeReplay(req, decision)
+		return s.invokeReplay(ctx, req, decision)
 	}
 	requestObj := requestObject(req, payload)
 	requestRef := requestObj.Hash
@@ -350,6 +350,7 @@ func (s *Session) putRecord(rec EffectRecord) (hashref.HashRef, error) {
 }
 
 func (s *Session) invokeReplay(
+	ctx context.Context,
 	req EffectRequest,
 	decision Decision,
 ) ([]byte, hashref.HashRef, error) {
@@ -358,7 +359,7 @@ func (s *Session) invokeReplay(
 		return nil, hashref.HashRef{}, &ReplayGapError{Index: index, Why: "record stream exhausted"}
 	}
 	recordRef := s.replay[index]
-	obj, ok, err := s.store.GetObject(recordRef)
+	obj, ok, err := s.store.GetObject(ctx, recordRef)
 	if err != nil {
 		return nil, hashref.HashRef{}, &ReplayGapError{Index: index, Why: "read record: " + err.Error()}
 	}
@@ -393,7 +394,7 @@ func (s *Session) invokeReplay(
 				Effect: rec.Effect, Scope: rec.Scope, RecordRef: recordRef,
 			}
 		}
-		resultObj, ok, err := s.store.GetObject(rec.ResultRef)
+		resultObj, ok, err := s.store.GetObject(ctx, rec.ResultRef)
 		if err != nil {
 			return nil, hashref.HashRef{}, &ReplayGapError{Index: index, Why: "read result: " + err.Error()}
 		}

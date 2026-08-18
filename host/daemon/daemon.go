@@ -493,8 +493,10 @@ func (d *Daemon) handleHealth(w http.ResponseWriter, _ *http.Request) {
 // Success remains canonical plain text. Errors use the same JSON APIError
 // envelope as every other v1 route: no selected head is NotFound (404), and a
 // store failure is Internal (500).
-func (d *Daemon) handleHead(w http.ResponseWriter, _ *http.Request) {
-	ref, ok, err := d.store.SelectedHead()
+func (d *Daemon) handleHead(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := d.readCtx(r)
+	defer cancel()
+	ref, ok, err := d.store.SelectedHead(ctx)
 	if err != nil {
 		writeAPIError(w, "Internal", err.Error(), http.StatusInternalServerError)
 		return

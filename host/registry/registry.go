@@ -17,6 +17,7 @@ package registry
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -124,7 +125,7 @@ func Bootstrap(s *store.Store, releaseString string) (Registry, hashref.HashRef,
 	// Idempotence: if a head already exists, it must resolve to the identical
 	// epoch-1 revision. A head naming different bytes is a real divergence and is
 	// surfaced as an error rather than silently overwritten.
-	if head, ok, err := s.GetRegistryHead(SemanticID); err != nil {
+	if head, ok, err := s.GetRegistryHead(context.Background(), SemanticID); err != nil {
 		return Registry{}, hashref.HashRef{}, err
 	} else if ok {
 		if head.String() != obj.Hash.String() {
@@ -132,7 +133,7 @@ func Bootstrap(s *store.Store, releaseString string) (Registry, hashref.HashRef,
 				"registry: existing head %q diverges from bootstrap revision %q",
 				head.String(), obj.Hash.String())
 		}
-		existing, found, err := s.GetObject(head)
+		existing, found, err := s.GetObject(context.Background(), head)
 		if err != nil {
 			return Registry{}, hashref.HashRef{}, err
 		}

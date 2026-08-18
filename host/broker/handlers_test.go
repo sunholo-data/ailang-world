@@ -39,11 +39,11 @@ func (s *handlerRecordingStore) PutObject(obj store.Object) error {
 	return nil
 }
 
-func (s *handlerRecordingStore) GetObject(ref hashref.HashRef) (store.Object, bool, error) {
+func (s *handlerRecordingStore) GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error) {
 	if s.deleted[ref] {
 		return store.Object{}, false, nil
 	}
-	return s.base.GetObject(ref)
+	return s.base.GetObject(ctx, ref)
 }
 
 func (s *handlerRecordingStore) AppendNextEffectIntent(
@@ -78,8 +78,8 @@ func (s *handlerRecordingStore) SetRegistryHead(name string, ref hashref.HashRef
 	return s.base.SetRegistryHead(name, ref)
 }
 
-func (s *handlerRecordingStore) GetRegistryHead(name string) (hashref.HashRef, bool, error) {
-	return s.base.GetRegistryHead(name)
+func (s *handlerRecordingStore) GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error) {
+	return s.base.GetRegistryHead(ctx, name)
 }
 
 func handlerSession(t *testing.T, effect, scope string, handler Handler) (*Session, *handlerRecordingStore) {
@@ -461,11 +461,11 @@ func TestApprovalFlowImmutableRecordAndSeparateDecision(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resultObj, ok, err := recording.GetObject(approveRecord.ResultRef)
+	resultObj, ok, err := recording.GetObject(context.Background(), approveRecord.ResultRef)
 	if err != nil || !ok || !bytes.Equal(resultObj.Payload, pending) {
 		t.Fatalf("Pending result object = ok %v payload %q err %v", ok, resultObj.Payload, err)
 	}
-	requestBefore, ok, err := recording.GetObject(requestRef)
+	requestBefore, ok, err := recording.GetObject(context.Background(), requestRef)
 	if err != nil || !ok || requestBefore.SemanticID != ApprovalRequestV1 {
 		t.Fatalf("request object = %#v, ok %v, err %v", requestBefore, ok, err)
 	}
@@ -474,18 +474,18 @@ func TestApprovalFlowImmutableRecordAndSeparateDecision(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	decisionObj, ok, err := recording.GetObject(decisionRef)
+	decisionObj, ok, err := recording.GetObject(context.Background(), decisionRef)
 	if err != nil || !ok || decisionObj.SemanticID != ApprovalDecisionV1 {
 		t.Fatalf("decision object = %#v, ok %v, err %v", decisionObj, ok, err)
 	}
 	if len(recording.records) != 1 {
 		t.Fatalf("record count after decision = %d, want unchanged at 1", len(recording.records))
 	}
-	headRef, ok, err := recording.GetRegistryHead(ApprovalsV1)
+	headRef, ok, err := recording.GetRegistryHead(context.Background(), ApprovalsV1)
 	if err != nil || !ok {
 		t.Fatalf("approval head = %s, ok %v, err %v", headRef, ok, err)
 	}
-	headObj, ok, err := recording.GetObject(headRef)
+	headObj, ok, err := recording.GetObject(context.Background(), headRef)
 	if err != nil || !ok {
 		t.Fatalf("approval head object = ok %v, err %v", ok, err)
 	}
@@ -496,12 +496,12 @@ func TestApprovalFlowImmutableRecordAndSeparateDecision(t *testing.T) {
 	if head.DecisionRef != decisionRef.String() || head.RequestRef != requestRef.String() {
 		t.Fatalf("moved head = %#v, want request and separate decision refs", head)
 	}
-	requestAfter, ok, err := recording.GetObject(requestRef)
+	requestAfter, ok, err := recording.GetObject(context.Background(), requestRef)
 	if err != nil || !ok || requestAfter.Hash != requestBefore.Hash ||
 		!bytes.Equal(requestAfter.Payload, requestBefore.Payload) {
 		t.Fatalf("approval request changed after decision")
 	}
-	approveRecordAfter, ok, err := recording.GetObject(approveRecordRef)
+	approveRecordAfter, ok, err := recording.GetObject(context.Background(), approveRecordRef)
 	if err != nil || !ok || approveRecordAfter.Hash != approveRecordRef ||
 		!bytes.Equal(approveRecordAfter.Payload, approveRecordBefore) {
 		t.Fatalf("approve effect record changed after decision")

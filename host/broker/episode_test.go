@@ -139,7 +139,7 @@ func appendEpisodeIntent(t *testing.T, s *store.Store, c store.Commit) {
 
 func readEpisodeEvidence(t *testing.T, s *store.Store, ref hashref.HashRef) []hashref.HashRef {
 	t.Helper()
-	obj, ok, err := s.GetObject(ref)
+	obj, ok, err := s.GetObject(context.Background(), ref)
 	if err != nil || !ok {
 		t.Fatalf("transition object %s: ok=%v err=%v", ref, ok, err)
 	}
@@ -156,7 +156,7 @@ func readEpisodeEvidence(t *testing.T, s *store.Store, ref hashref.HashRef) []ha
 		if err != nil {
 			t.Fatalf("evidence[%d]: %v", i, err)
 		}
-		if _, found, getErr := s.GetObject(refs[i]); getErr != nil || !found {
+		if _, found, getErr := s.GetObject(context.Background(), refs[i]); getErr != nil || !found {
 			t.Fatalf("evidence record %s: found=%v err=%v", refs[i], found, getErr)
 		}
 	}
@@ -244,7 +244,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 	records := make([]hashref.HashRef, len(calls))
 	for i := range calls {
 		records[i] = calls[i].record
-		obj, ok, getErr := s.GetObject(calls[i].record)
+		obj, ok, getErr := s.GetObject(context.Background(), calls[i].record)
 		if getErr != nil || !ok {
 			t.Fatalf("live record %d: ok=%v err=%v", i, ok, getErr)
 		}
@@ -367,7 +367,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 		t.Errorf("replay mismatch error = %T %v, want *ReplayGapError", err, err)
 	}
 
-	firstRecord, _, _ := s.GetObject(records[0])
+	firstRecord, _, _ := s.GetObject(context.Background(), records[0])
 	firstDecoded, err := DecodeRecord(firstRecord.Payload)
 	if err != nil {
 		t.Fatal(err)

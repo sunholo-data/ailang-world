@@ -21,6 +21,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	_ "embed"
 	"errors"
@@ -464,14 +465,14 @@ func (s *Store) PutObject(o Object) error {
 
 // GetObject loads an immutable object by its HashRef. It returns (Object{}, nil,
 // false) — via ok=false — when the object is absent.
-func (s *Store) GetObject(ref hashref.HashRef) (Object, bool, error) {
+func (s *Store) GetObject(ctx context.Context, ref hashref.HashRef) (Object, bool, error) {
 	var (
 		ifaceText string
 		semantic  string
 		prov      string
 		payload   []byte
 	)
-	row := s.db.QueryRow(
+	row := s.db.QueryRowContext(ctx,
 		`SELECT interface_hash_ref, semantic_id, provenance, payload
 		   FROM objects WHERE hash_ref = ?;`,
 		ref.String(),
@@ -519,13 +520,13 @@ func (s *Store) PutWorld(w World) error {
 }
 
 // GetWorld loads a world revision by its HashRef; ok=false when absent.
-func (s *Store) GetWorld(ref hashref.HashRef) (World, bool, error) {
+func (s *Store) GetWorld(ctx context.Context, ref hashref.HashRef) (World, bool, error) {
 	var (
 		revision  int64
 		stateText string
 		headText  string
 	)
-	row := s.db.QueryRow(
+	row := s.db.QueryRowContext(ctx,
 		`SELECT revision, state_root, log_head FROM worlds WHERE world_ref = ?;`,
 		ref.String(),
 	)
@@ -548,7 +549,7 @@ func (s *Store) GetWorld(ref hashref.HashRef) (World, bool, error) {
 
 // GetLogEntry loads one append-only log row by its integer index, round-tripping
 // the frozen header verbatim; ok=false when absent.
-func (s *Store) GetLogEntry(index int64) (LogEntry, bool, error) {
+func (s *Store) GetLogEntry(ctx context.Context, index int64) (LogEntry, bool, error) {
 	var (
 		entryHashText string
 		epoch         int64
@@ -558,7 +559,7 @@ func (s *Store) GetLogEntry(index int64) (LogEntry, bool, error) {
 		writtenBy     string
 		transRefText  string
 	)
-	row := s.db.QueryRow(
+	row := s.db.QueryRowContext(ctx,
 		`SELECT entry_hash_ref, semantics_epoch, transition_fn_ref, interpreter_ref,
 		        prev_entry_hash_ref, written_by, transition_ref
 		   FROM log_entries WHERE entry_index = ?;`,
@@ -625,9 +626,9 @@ func (s *Store) SetRegistryHead(name string, objectRef hashref.HashRef) error {
 
 // GetRegistryHead returns the current registry object reference; ok=false when
 // the registry name has no head.
-func (s *Store) GetRegistryHead(name string) (hashref.HashRef, bool, error) {
+func (s *Store) GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error) {
 	var text string
-	row := s.db.QueryRow(
+	row := s.db.QueryRowContext(ctx,
 		`SELECT object_ref FROM epoch_registry_heads WHERE registry_name = ?;`, name)
 	switch err := row.Scan(&text); {
 	case errors.Is(err, sql.ErrNoRows):
@@ -799,17 +800,17 @@ func (s *Store) GetVerifyResult(transitionFn, interpreter hashref.HashRef) (Veri
 
 // SelectedHead returns the store's currently selected world head; ok=false
 // before any commit has selected a head.
-func (s *Store) SelectedHead() (hashref.HashRef, bool, error) {
-	return selectedHeadTx(s.db)
+func (s *Store) SelectedHead(ctx context.Context) (hashref.HashRef, bool, error) {
+	return selectedHeadTx(ctx, s.db)
 }
 
 // selectedHeadTx reads the selected world head using the given querier (the DB
 // or an open transaction).
-func selectedHeadTx(q interface {
-	QueryRow(string, ...any) *sql.Row
+func selectedHeadTx(ctx context.Context, q interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
 }) (hashref.HashRef, bool, error) {
 	var text string
-	row := q.QueryRow(`SELECT world_ref FROM store_heads WHERE head_key = ?;`, selectedHeadKey)
+	row := q.QueryRowContext(ctx, `SELECT world_ref FROM store_heads WHERE head_key = ?;`, selectedHeadKey)
 	switch err := row.Scan(&text); {
 	case errors.Is(err, sql.ErrNoRows):
 		return hashref.HashRef{}, false, nil
@@ -920,7 +921,9 @@ func (s *Store) Commit(c Commit) error {
 	}
 
 	// Step 1 continued: compare-and-append guard.
-	selected, hasSelected, err := selectedHeadTx(tx)
+	// DR-1: Store.Commit keeps its signature and today's unbounded behaviour;
+	// the write path's bound is the named follow-on item, not this one.
+	selected, hasSelected, err := selectedHeadTx(context.Background(), tx)
 	if err != nil {
 		return err
 	}

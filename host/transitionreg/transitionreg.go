@@ -37,8 +37,8 @@ type Revision struct {
 // ObjectStore is the persistence boundary used by readers and publishers.
 // Keeping it narrow makes store failures directly injectable in tests.
 type ObjectStore interface {
-	GetRegistryHead(string) (hashref.HashRef, bool, error)
-	GetObject(hashref.HashRef) (store.Object, bool, error)
+	GetRegistryHead(context.Context, string) (hashref.HashRef, bool, error)
+	GetObject(context.Context, hashref.HashRef) (store.Object, bool, error)
 	PutObject(store.Object) error
 	CompareAndSetRegistryHead(string, hashref.HashRef, hashref.HashRef) error
 }
@@ -71,7 +71,7 @@ func (r *StoreReader) ReadSnapshot(ctx context.Context) (Snapshot, error) {
 	if err := ctx.Err(); err != nil {
 		return Snapshot{}, fmt.Errorf("read transition registry: context: %w", err)
 	}
-	head, ok, err := r.store.GetRegistryHead(store.TransitionRegistryV1)
+	head, ok, err := r.store.GetRegistryHead(ctx, store.TransitionRegistryV1)
 	if err != nil {
 		return Snapshot{}, fmt.Errorf("read transition registry head: %w", err)
 	}
@@ -86,7 +86,7 @@ func (r *StoreReader) ReadSnapshot(ctx context.Context) (Snapshot, error) {
 		return cloneSnapshot(cached), nil
 	}
 
-	object, ok, err := r.store.GetObject(head)
+	object, ok, err := r.store.GetObject(ctx, head)
 	if err != nil {
 		return Snapshot{}, fmt.Errorf("read transition registry object: %w", err)
 	}
@@ -230,7 +230,7 @@ func (r *StoreReader) Publish(ctx context.Context, expectedHead hashref.HashRef,
 			return hashref.HashRef{}, errors.New("publish transition registry: parent is not captured head (absent)")
 		}
 	} else {
-		currentObject, ok, err := r.store.GetObject(expectedHead)
+		currentObject, ok, err := r.store.GetObject(ctx, expectedHead)
 		if err != nil {
 			return hashref.HashRef{}, fmt.Errorf("publish transition registry: read expected revision: %w", err)
 		}

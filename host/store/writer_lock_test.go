@@ -3,6 +3,7 @@ package store
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -265,7 +266,7 @@ func TestWriterLockReadOnlyConcurrent(t *testing.T) {
 
 	// Assert the VALUE, not merely the absence of an error.
 	want := obj(seed, helperSemanticID)
-	got, ok, err := ro.GetObject(want.Hash)
+	got, ok, err := ro.GetObject(context.Background(), want.Hash)
 	if err != nil {
 		t.Fatalf("read-only GetObject: %v", err)
 	}

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -105,10 +106,10 @@ func TestRecoverRetryAllowedMirrorsAllSketchRows(t *testing.T) {
 
 func reconcileCommitNotExecuted(t *testing.T, s *Store, c Commit) {
 	t.Helper()
-	if _, ok, err := s.GetWorld(c.NextWorld.Ref); err != nil || ok {
+	if _, ok, err := s.GetWorld(context.Background(), c.NextWorld.Ref); err != nil || ok {
 		t.Fatalf("planned world before reconciliation: ok=%v err=%v, want absent", ok, err)
 	}
-	if _, ok, err := s.GetLogEntry(c.Entry.Header.EntryIndex); err != nil || ok {
+	if _, ok, err := s.GetLogEntry(context.Background(), c.Entry.Header.EntryIndex); err != nil || ok {
 		t.Fatalf("planned entry before reconciliation: ok=%v err=%v, want absent", ok, err)
 	}
 	outcome := JournalOutcome{

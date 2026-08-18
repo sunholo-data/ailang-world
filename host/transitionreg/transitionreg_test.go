@@ -436,13 +436,13 @@ type fakeObjectStore struct {
 	casErr      error
 }
 
-func (f *fakeObjectStore) GetRegistryHead(string) (hashref.HashRef, bool, error) {
+func (f *fakeObjectStore) GetRegistryHead(context.Context, string) (hashref.HashRef, bool, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.headReads++
 	return f.head, f.hasHead, f.headErr
 }
-func (f *fakeObjectStore) GetObject(hashref.HashRef) (store.Object, bool, error) {
+func (f *fakeObjectStore) GetObject(context.Context, hashref.HashRef) (store.Object, bool, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.objectReads++
@@ -648,7 +648,7 @@ func TestPublishCASConflictPreservesWinner(t *testing.T) {
 	if err == nil || !store.IsRegistryCASConflict(err) {
 		t.Fatalf("stale publication error = %v, want typed CAS conflict", err)
 	}
-	head, ok, err := s.GetRegistryHead(store.TransitionRegistryV1)
+	head, ok, err := s.GetRegistryHead(context.Background(), store.TransitionRegistryV1)
 	if err != nil || !ok || head != winner {
 		t.Fatalf("winner was not preserved: head=%q ok=%v err=%v", head, ok, err)
 	}
@@ -657,7 +657,7 @@ func TestPublishCASConflictPreservesWinner(t *testing.T) {
 	if orphan != (hashref.HashRef{}) {
 		t.Fatalf("failed publish returned ref %q", orphan)
 	}
-	if _, ok, err := s.GetObject(loserRef); err != nil || !ok {
+	if _, ok, err := s.GetObject(context.Background(), loserRef); err != nil || !ok {
 		t.Fatalf("CAS orphan was not preserved: ok=%v err=%v", ok, err)
 	}
 }

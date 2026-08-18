@@ -150,7 +150,7 @@ type ReplayResult struct {
 // only for error context.
 func (e *Engine) ReplayEntry(ep Episode, idx int, entry EpisodeEntry) (ReplayResult, error) {
 	// Step 1: load transitionFn canonical bytes and verify content address.
-	src, ok, err := e.store.GetObject(entry.TransitionFn)
+	src, ok, err := e.store.GetObject(context.Background(), entry.TransitionFn)
 	if err != nil {
 		return ReplayResult{}, err
 	}
