@@ -1,6 +1,6 @@
 # w-validated-proven-evidence-boundary — authority-bearing proof evidence
 
-- **Status**: **DIRECTION RATIFIED (`D-WORLD-17`); round-5 revision 2 applied, pending re-quorum** — DESIGNED, not landed
+- **Status**: **DIRECTION RATIFIED (`D-WORLD-17`); round-7 revision applied (`D-WORLD-19` arm A, attended 2026-08-19), pending re-quorum** — DESIGNED, not landed
 - **Park reason**: the iteration-84 park is answered. Mark Edmondson attended and ratified option B
   on 2026-08-14: authenticate canonical proof reports with a single-host, host-held MAC key. This
   revision applies that direction. Round 4 further narrows tranche 1 to an explicitly
@@ -10,13 +10,16 @@
   replaced by the `Validator.Resolve` method. See §10.5. Revision 2 closes round 5's two
   sustained completeness objections: the zero-value forge (mint validity, `ErrUnmintedAuthority`,
   M21) and the §3.4/§9 bounded-runner contradiction, resolved (a) — tranche 1 owns the runner
-  (V35). See the §10.5 revision-2 note.
+  (V35). See the §10.5 revision-2 note. Round 7 applies the attended `D-WORLD-19` arm-A ruling
+  of 2026-08-19: both round-6 objections are closed with the reviewers' own fixes — the
+  sum-style `ResolutionResult` refusal channel (6a) and the bounded `host/store` object read
+  (6b) — and the iteration-87 `DecodeProposal` byte-bound note is discharged. See §10.7.
 - **Item**: queue item 17, `w-validated-proven-evidence-boundary`
 - **Filed**: 2026-08-14, iteration 84
-- **Measurement base**: `bef0153`
+- **Measurement base**: `bef0153` (rounds ≤ 4); `03c7892` (round 5); `52bc9ec` (round 7, V36–V38)
 - **Instrument**: `/tmp/ailang-v0300/ailang`, AILANG v0.30.0 (`e37b370`)
-- **This tranche estimate**: **3.5 days**
-- **Decomposition**: **yes** — four ordered sprint-sized items, **9.5 days total** (§9)
+- **This tranche estimate**: **4.0 days** (round 7 adds the ratified bounded store read, §9)
+- **Decomposition**: **yes** — four ordered sprint-sized items, **10.0 days total** (§9)
 - **Design result**: serialized proof references remain untrusted and grade `CLAIMED`; only a host
   validator may mint the sealed value from which only the minting validator's `Resolve` method
   returns authority-bearing `PROVEN`.
@@ -80,15 +83,20 @@ Authority is instead a Go value with unexported state and a host-only resolved g
    can succeed only after authenticating the report with the host-held key.
 2. `host/evidence.DecodeProposal` decodes `ProofReceipt` as untrusted `ClaimedEvidence`; possession
    of the receipt neither seals it nor changes its kernel grade.
-3. `Validator.Resolve(sealed) ResolvedGrade` — a METHOD on `Validator`, per the attended
-   `D-WORLD-17` ratification — is the only API that can return host `ResolvedGradeProven`. There
-   is no free resolver: the former package-level `GradeOfValidated` is DROPPED, with no deprecated
-   alias, package-level helper, or convenience wrapper, because a resolver detached from a
-   validator instance is the round-4 defect itself. `Resolve` accepts neither raw `Evidence`,
-   decoded claims, nor a `HashRef`, and it refuses any `ValidatedEvidence` sealed under a
-   different mint identity (`ErrForeignSeal`) — and any zero or unminted identity outright,
-   before comparison (`ErrUnmintedAuthority`, §3.2). `ResolvedGrade` is represented in Go, not
-   serialized in the kernel ADT.
+3. `Validator.Resolve(sealed ValidatedEvidence) ResolutionResult` — a METHOD on `Validator`, per
+   the attended `D-WORLD-17` ratification, with the round-6 sum-style result applied under the
+   attended `D-WORLD-19` arm A — is the only API that can produce host `ResolvedGradeProven`.
+   `ResolutionResult` has unexported fields and exposes mutually exclusive
+   `Proven() (ResolvedGrade, bool)` and `Err() error` accessors: success carries exactly
+   `ResolvedGradeProven`; refusal carries exactly one of `ErrUnmintedAuthority` or
+   `ErrForeignSeal` and no grade; and the zero value is an explicit refusal state, never
+   success. There is no free resolver: the former package-level `GradeOfValidated` is DROPPED,
+   with no deprecated alias, package-level helper, or convenience wrapper, because a resolver
+   detached from a validator instance is the round-4 defect itself. `Resolve` accepts neither
+   raw `Evidence`, decoded claims, nor a `HashRef`, and it refuses any `ValidatedEvidence`
+   sealed under a different mint identity (`ErrForeignSeal`) — and any zero or unminted
+   identity outright, before comparison (`ErrUnmintedAuthority`, §3.2). `ResolvedGrade` is
+   represented in Go, not serialized in the kernel ADT.
 4. Within the library API, a `ProofReceipt` is revalidated against its authenticated report,
    expected subject, and the caller-supplied key before a new sealed value can exist. No serialized
    value regains authority by decode. Production key loading and restart wiring are tranche 2.
@@ -221,8 +229,9 @@ ValidatedEvidence            // exported type, all fields unexported
 ValidationResult             // accessors expose Validated or Unsupported, not writable fields
 NewValidator(key [32]byte, reader, compilerConfig)
 Validator.ValidateProof(ctx, reportRef, expectedSubject)
-DecodeProposal(raw)          // ProofReceipt remains an untrusted claim
-Validator.Resolve(sealed) ResolvedGrade   // method; sole ResolvedGradeProven source; refuses zero/unminted identities with ErrUnmintedAuthority, foreign seals with ErrForeignSeal
+DecodeProposal(raw)          // ProofReceipt remains an untrusted claim; raw capped at 256 KiB before any parse (§3.3)
+Validator.Resolve(sealed ValidatedEvidence) ResolutionResult   // method; sole ResolvedGradeProven source; refuses zero/unminted identities with ErrUnmintedAuthority, foreign seals with ErrForeignSeal
+ResolutionResult             // unexported fields; mutually exclusive Proven() (ResolvedGrade, bool) and Err() error; zero value is refusal
 ResolvedGrade                // host enum; ResolvedGradeProven is not serialized
 ```
 
@@ -240,19 +249,24 @@ seal's unexported `mintedBy` field at mint time. `Resolve` performs two ordered 
 returning any grade:
 
 1. **Mint validity.** If the receiver validator's identity or the seal's `mintedBy` is nil,
-   `Resolve` returns the dedicated sentinel error `ErrUnmintedAuthority` and no grade, BEFORE
-   any comparison. A zero identity is never valid. This closes the zero-value forge:
+   `Resolve` returns a `ResolutionResult` whose `Err()` is the dedicated sentinel error
+   `ErrUnmintedAuthority` and whose `Proven()` reports no grade, BEFORE any comparison. A zero
+   identity is never valid. This closes the zero-value forge:
    `Validator` and `ValidatedEvidence` are exported types, so a foreign package can always
    construct `var v evidence.Validator; var s evidence.ValidatedEvidence` — unexported fields
    stop writes, not zero values — and a bare equality check would compare zero to zero and pass.
    Here that pair is refused at step 1 and never reaches the comparison.
 2. **Binding.** Otherwise, if `sealed.mintedBy` differs from the receiver's identity, `Resolve`
-   returns the dedicated sentinel error `ErrForeignSeal` and no grade.
+   returns a `ResolutionResult` whose `Err()` is the dedicated sentinel error `ErrForeignSeal`
+   and whose `Proven()` reports no grade.
 
 The checkable property: (a) both identity fields are unexported, so no foreign package can
 assign them; (b) the only assignments in the package are inside `NewValidator` and
 `ValidateProof`; (c) the Go zero value of either type has a nil identity and is refused at step
-1. Therefore every grade-bearing `Resolve` return requires two non-nil, equal pointers, and such
+1; (d) `ResolutionResult`'s own fields are unexported and its zero value reports `Proven()`
+false — an explicit refusal — so no code path, including an uninitialized return, can express
+success without the package constructing it. Therefore every `ResolutionResult` whose `Proven()`
+reports a grade requires two non-nil, equal pointers, and such
 a pair exists only in values descended from the same `NewValidator` call. `ErrUnmintedAuthority`
 and `ErrForeignSeal` are each produced by exactly one check and nowhere else, and neither is a
 member of §2.5's `UnsupportedReason` set, which belongs to `ValidateProof`'s validation
@@ -305,17 +319,27 @@ struct accepted as a substitute.
 Unknown, duplicate, missing, non-canonical, trailing, invalid-UTF-8, and over-limit envelope or
 report input is rejected. The sole classification exception is the envelope's `mac` member:
 missing, malformed, or wrong-length `mac` reaches the authentication step so all tag failures have
-the stable `unauthenticated_report` reason. The raw envelope is capped at **256 KiB** before decode; the decoded
-report bytes and verified list are separately capped at 256 KiB and 256 unique identities, and
-every string at 1 KiB. The implementation must reject envelope length before allocating a second
-full copy. The chosen raw cap follows an existing 256 KiB strict-codec bound already used for
-registry schema input (V11); it is a new Evidence invariant, not inherited store behaviour.
+the stable `unauthenticated_report` reason. The raw envelope is capped at **256 KiB** at the
+point of I/O: step 2 below streams the object payload from the store's bounded read through an
+`io.LimitReader` sized 256 KiB + 1 bytes, so the FIRST copy is bounded and an attacker-supplied
+`HashRef` to a multi-gigabyte object can never materialize more than the cap plus one detection
+byte (round 6's objection 6b, applied verbatim under the attended `D-WORLD-19` arm A — the
+retired wording "before allocating a second full copy" conceded exactly the unbounded first
+copy). The decoded report bytes and verified list are separately capped at 256 KiB and 256
+unique identities, and every string at 1 KiB. `DecodeProposal` applies the same 256 KiB cap to
+its raw input before any parse, refusing oversize input undecoded — the iteration-87
+non-blocking note, discharged. The chosen raw cap follows an existing 256 KiB strict-codec
+bound already used for registry schema input (V11); it is a new Evidence invariant, not
+inherited store behaviour.
 
 Validation order is fixed:
 
 1. validate canonical `HashRef`;
-2. load exactly one object through `ObjectReader`;
-3. reject absent and payload over 256 KiB;
+2. open exactly one object through `ObjectReader`'s bounded read (`OpenObject` or the
+   `maxBytes`-bounded `GetObject`, §8.2) and stream it through an `io.LimitReader` sized
+   256 KiB + 1 — the payload is never fully materialized before the bound;
+3. reject absent objects, and reject as `oversize` any read that fills the limit's extra
+   detection byte;
 4. recompute the envelope payload hash and compare algorithm plus digest to the requested ref;
 5. require exact semantic ID and interface hash;
 6. strict-decode the envelope and report, then require canonical re-encode byte equality for each,
@@ -328,6 +352,13 @@ Validation order is fixed:
    required identity set, plus `checkPassed`, `proofSucceeded`, zero errors, and zero
    counterexamples; §3.4 binds producer emission of that field to `verify.results[]`;
 11. only then construct `ValidatedEvidence`.
+
+One landing between rounds 6 and 7 must not be misread as having closed this. Item 18
+(`w-daemon-read-cancellation`) landed and threaded `context.Context` through `GetObject` (V36).
+That bounds the WAIT, not the BYTES: a context cancels a slow read, it does not cap a fast
+multi-gigabyte one, so a freshly context-threaded store still OOMs on an attacker-supplied ref.
+The bounded read above — not item 18's cancellation — is what closes 6b, and dropping it because
+"the store was just fixed" would silently reopen the vector.
 
 The validator never accepts a report merely because `store.PutObject` once checked its hash. It
 recomputes at consumption so alternate readers, corruption, and test fakes cannot bypass the
@@ -376,8 +407,9 @@ Across serialization, the kernel carries `ProofReceipt(reportRef)`, which always
 untrusted `ClaimedEvidence`. Trusted validation separately produces
 `ValidatedEvidence{reportRef, subject, ...}` with unexported fields.
 `Validator.Resolve(sealed)`, called on a validator carrying the minting identity, is the sole
-bridge to host `ResolvedGradeProven`; there is no free resolver and no bridge that serializes
-authority back into an AILANG constructor.
+bridge to host `ResolvedGradeProven` — its `ResolutionResult`'s `Proven()` accessor is the only
+place that grade exists; there is no free resolver and no bridge that serializes authority back
+into an AILANG constructor.
 
 The pure kernel proves only the untrusted receipt-to-`CLAIMED` mapping. Go performs bounded loading,
 digest verification, strict typed decode, MAC authentication, solver-success checks, and
@@ -461,7 +493,7 @@ assigned beside it.
 | M1 **arbitrary** | `world/types.ail`: change only body arm `ProofReceipt(_) => CLAIMED` to `ProofReceipt(_) => PROVEN` | `gradeCode_test_7` plus `gradeOf` verification | Agent-authored receipt reaches canonical kernel `PROVEN`; runtime fails `got 4, want 1`, while the unchanged contract yields a counterexample. |
 | M2 **invalid ref** | `host/evidence/validator.go`: change `if refErr != nil` to `if false && refErr != nil` | `TestInvalidProofRefIsRefused` | The returned reason changes from the unique `invalid_ref`; failure: `got missing; want invalid_ref`. |
 | M3 **missing** | `host/evidence/validator.go`: change `if !ok` to `if false && !ok` | `TestMissingProofReportIsRefused` | The returned reason is not `missing`; failure: `got malformed; want missing`. |
-| M4 **oversize** | `host/evidence/validator.go`: change `if len(payload) > maxEnvelopeBytes` to `if false && len(payload) > maxEnvelopeBytes` | `TestOversizeProofReportIsRefused` | The returned reason is not `oversize`; failure: `got malformed; want oversize`. |
+| M4 **oversize** | `host/evidence/validator.go`: change the streamed-read overflow guard — the check that the `io.LimitReader` sized 256 KiB + 1 filled its detection byte (§3.3 step 3) — to `if false && overflowed` | `TestOversizeProofReportIsRefused`, feeding a > 256 KiB object through the real bounded store read | The returned reason is not `oversize`; under the mutant the payload proceeds TRUNCATED at the limit, so step 4's recomputed hash cannot match; failure: `got hash_mismatch; want oversize`. |
 | M5 **hash integrity** | `host/evidence/validator.go`: change the recomputed-hash guard to `if false && !sameHash` | `TestPayloadHashMismatchIsRefused` | The returned reason is not `hash_mismatch`; failure: `got unauthenticated_report; want hash_mismatch`. |
 | M6 **divergent** (tranche 3) | `host/replay/evidence.go`: change `if err != nil` after `ReplayEpisode` to `if false && err != nil`, allowing `*DivergenceError` to reach report creation | `TestDivergentReplayCannotResolveProven` | The test corrupts recorded result bytes, calls replay-evidence production then the common resolver, and unexpectedly gets `PROVEN`; failure: `divergent replay resolved PROVEN; want unsupported replay_divergent`. This is downstream of replay comparison and report validation. |
 | M7 **wrong semantic ID** | `host/evidence/validator.go`: change semantic-ID guard to `if false && got != proofSemanticID` | `TestWrongSemanticIDIsRefused` | The unique result changes; failure: `got unauthenticated_report; want wrong_semantic_id`. |
@@ -477,8 +509,8 @@ assigned beside it.
 | M17 named-manifest removal | `scripts/verify_go.sh`: remove one literal required name, leaving the test present | `TestEvidenceNamedManifestRejectsUnpinnedTest` in `host/verifygate/evidence_manifest_gate_test.go` | Isolated gate sees an extra observed test; `evidence test set differs from REQUIRED_EVIDENCE_TESTS`. |
 | M18 projection drift | edit only `world/types.ail` | existing world-package step 3/9 | `projection hash mismatch: world/types.ail` (exact wording confirmed during implementation). |
 | M19 stale ready packet | rebuild projection but retain old golden | existing world-package step 9/9 | `ready packet differs byte-for-byte from golden`. |
-| M20 **cross-validator binding** | `host/evidence/validator.go`: change the seal-identity guard in `Resolve` to `if false && sealed.mintedBy != v.id` (exact field names fixed at implementation; the neutered comparison is the binding check itself) | `TestAttackerChosenValidatorCannotMintForHostAuthority` | A seal minted by validator 2 (attacker-constructed, attacker-keyed) is presented to validator 1's `Resolve`, which must return the dedicated `ErrForeignSeal` and no grade — an observable only the binding comparison produces, not a shared reason enum or a bare absence. Under the mutant the foreign seal resolves; failure: `foreign seal resolved ResolvedGradeProven; want ErrForeignSeal`. |
-| M21 **zero-value mint validity** | `host/evidence/validator.go`: change the mint-validity guard in `Resolve` to `if false && (v.id == nil \|\| sealed.mintedBy == nil)` (exact field names fixed at implementation; the neutered check is the nil-identity refusal itself, leaving the M20 comparison intact) | `TestZeroValueForgeryCannotResolve` | The test constructs `var v evidence.Validator; var s evidence.ValidatedEvidence` from the external test package — the two-line forge exported types make unpreventable — and calls `v.Resolve(s)`, requiring the dedicated `ErrUnmintedAuthority` and no grade. Under the mutant the two nil identities reach the M20 comparison, compare equal (zero == zero), and the forge resolves; failure: `zero-value seal resolved ResolvedGradeProven; want ErrUnmintedAuthority`. |
+| M20 **cross-validator binding** | `host/evidence/validator.go`: change the seal-identity guard in `Resolve` to `if false && sealed.mintedBy != v.id` (exact field names fixed at implementation; the neutered comparison is the binding check itself) | `TestAttackerChosenValidatorCannotMintForHostAuthority` | A seal minted by validator 2 (attacker-constructed, attacker-keyed) is presented to validator 1's `Resolve`, which must return a `ResolutionResult` whose `Err()` is the dedicated `ErrForeignSeal` and whose `Proven()` reports no grade — an observable only the binding comparison produces, not a shared reason enum or a bare absence. Under the mutant the foreign seal resolves; failure: `foreign seal resolved ResolvedGradeProven; want ErrForeignSeal`. |
+| M21 **zero-value mint validity** | `host/evidence/validator.go`: change the mint-validity guard in `Resolve` to `if false && (v.id == nil \|\| sealed.mintedBy == nil)` (exact field names fixed at implementation; the neutered check is the nil-identity refusal itself, leaving the M20 comparison intact) | `TestZeroValueForgeryCannotResolve` | The test constructs `var v evidence.Validator; var s evidence.ValidatedEvidence` from the external test package — the two-line forge exported types make unpreventable — and calls `v.Resolve(s)`, requiring a `ResolutionResult` whose `Err()` is the dedicated `ErrUnmintedAuthority` and whose `Proven()` reports no grade; the same test also constructs `var r evidence.ResolutionResult` and requires `Proven()` false, pinning the declared zero-value-is-refusal contract. Under the mutant the two nil identities reach the M20 comparison, compare equal (zero == zero), and the forge resolves; failure: `zero-value seal resolved ResolvedGradeProven; want ErrUnmintedAuthority`. |
 
 For M2–M14, the control first validates one good authenticated report for the same expected subject and observes
 that the minting validator's `Resolve` returns `ResolvedGradeProven`. Thus a mutant cannot pass
@@ -497,12 +529,25 @@ resolver that refuses everything.
 1. **Authority surface.** `ValidatedEvidence` has no exported fields or public constructor.
    `Validator.ValidateProof` is the sole mint, and the `Validator.Resolve` method is the sole
    grade resolver — no package-level resolver exists under any name, and
-   `TestPublicAuthoritySurfaceIsFrozen` reds if one appears. External package tests prove no
+   `TestPublicAuthoritySurfaceIsFrozen` reds if one appears. `Resolve` returns the sum-style
+   `ResolutionResult`: unexported fields, mutually exclusive `Proven() (ResolvedGrade, bool)`
+   and `Err() error` accessors, zero value an explicit refusal; the frozen-surface test pins
+   those two accessors and reds on any added exported field or additional grade-bearing
+   accessor. External package tests prove no
    authority-bearing grade API accepts a raw `HashRef`, decoded proposal evidence, receipt, or
    caller-written `EvidenceGrade`.
 2. **Agent containment.** `DecodeProposal` may decode `ProofReceipt`, but it remains
    `ClaimedEvidence`; canonical `gradeOf` returns `CLAIMED`, and no host grade API accepts it.
-3. **Bounded authenticated validation.** Envelopes and decoded reports are bounded before strict
+   `DecodeProposal` refuses raw input over 256 KiB before any parse (§3.3; the iteration-87
+   note, discharged).
+3. **Bounded authenticated validation.** The envelope is bounded at I/O: streamed from the
+   store's bounded read through an `io.LimitReader` sized 256 KiB + 1, never fully materialized
+   first. Readings that make this criterion falsifiable are scoped to CODE, not to this
+   document's prose (which already quotes these tokens): base reading, 0 occurrences of
+   `OpenObject` across the six non-test `host/store` files and no `host/evidence` package at
+   `52bc9ec` (V36); head reading, ≥ 1 in non-test `host/store` (or the equivalent `maxBytes`
+   parameter on `GetObject`) and ≥ 1 `io.LimitReader` in non-test `host/evidence` — scopes in
+   which base and head DIFFER by construction. Decoded reports are bounded before strict
    decode, hash is recomputed, semantic/interface identities match, envelope and report canonical
    bytes round-trip, HMAC-SHA-256 is compared in constant time, subject and compiler match, the
    `verify.results[]`-derived verified set is non-empty, and success/error/counterexample fields
@@ -545,8 +590,9 @@ resolver that refuses everything.
     any other mint identity (per-identity, not per-Go-variable: a value copy of a validator
     carries the same identity and key and is the same authority — §3.2):
     `TestAttackerChosenValidatorCannotMintForHostAuthority` constructs validator 2 with its own
-    key, mints a seal through it, presents that seal to validator 1's `Resolve`, and requires the
-    dedicated `ErrForeignSeal` with no grade — after first resolving a same-instance seal to
+    key, mints a seal through it, presents that seal to validator 1's `Resolve`, and requires a
+    `ResolutionResult` whose `Err()` is the dedicated `ErrForeignSeal` and whose `Proven()`
+    reports no grade — after first resolving a same-instance seal to
     `ResolvedGradeProven` as its control. The enforced property is exactly that a caller cannot
     make someone else's validator resolve their seal; self-minting into a caller-constructed
     validator remains possible and is accepted, because no library can stop a caller lying to
@@ -556,9 +602,12 @@ resolver that refuses everything.
     `TestZeroValueForgeryCannotResolve` constructs a zero-value `Validator` and a zero-value
     `ValidatedEvidence` from the external test package — the forge unexported fields cannot
     prevent, because exported types always have constructible zero values — calls
-    `Resolve` on the pair, and requires the dedicated `ErrUnmintedAuthority` with no grade,
+    `Resolve` on the pair, and requires a `ResolutionResult` whose `Err()` is the dedicated
+    `ErrUnmintedAuthority` and whose `Proven()` reports no grade,
     after its same-test control resolves a `NewValidator`-minted same-instance seal to
-    `ResolvedGradeProven`. The nil-identity refusal executes BEFORE AC14's binding comparison,
+    `ResolvedGradeProven`. The same test constructs `var r evidence.ResolutionResult` and
+    requires `Proven()` false: the zero value of the result type is itself an explicit refusal,
+    never success. The nil-identity refusal executes BEFORE AC14's binding comparison,
     so the zero-zero pair is refused rather than compared equal. `ErrUnmintedAuthority` is
     produced by the mint-validity check and nowhere else and is distinct from `ErrForeignSeal`,
     because "never minted" and "minted by someone else" are different refusals. M21 must red
@@ -583,7 +632,17 @@ resolver that refuses everything.
 
 - New `host/evidence`: codec, validator, producer, resolved-grade API, focused tests, mutation
   harness.
-- `host/store`: no schema change is required; use a narrow reader interface and existing Object.
+- `host/store`: **IN the tranche**, by the attended `D-WORLD-19` arm-A ruling of 2026-08-19 —
+  a ratified widening of the previously frozen package list, not scope creep. The store gains
+  exactly one bounded object-read surface: `OpenObject(ref) (io.ReadCloser, error)` (the
+  ratified spelling; the implementation must thread the same `context.Context` that item 18's
+  landed read-cancellation discipline requires of store reads) or, equivalently under the same
+  ruling, `GetObject` gaining a `maxBytes` bound. No schema change; the objects table is
+  untouched. The binding invariant either spelling must satisfy: no read opened for an
+  untrusted ref may materialize more than 256 KiB + 1 bytes of payload. Sequencing with item 18
+  (`w-daemon-read-cancellation`) resolved itself between rounds — item 18 LANDED first, so its
+  ratchet discipline is the base this change builds on; note that item 18's `context.Context`
+  bounds the WAIT, not the BYTES, and did not close this vector (§3.3, V36).
   Tests may use Store as an integration control.
 - `host/hashref`: reused unchanged.
 - `host/verifygate`: gains isolated mutation coverage for the named Go manifest.
@@ -614,25 +673,30 @@ sprint.
 
 | Ordered document | Closes | Estimate |
 |---|---|---:|
-| **1. This document, `w-validated-proven-evidence-boundary`** | Library-only proof report schema/producer and authenticated envelope; caller-supplied 32-byte MAC key; Evidence codec; bounded/hash/type/success validation; sealed mint authority; untrusted `ProofReceipt → CLAIMED`; host-only resolved `PROVEN`; refusal-branch mutations; persistent named gates. Explicitly non-production. | **3.5 d** |
+| **1. This document, `w-validated-proven-evidence-boundary`** | Library-only proof report schema/producer and authenticated envelope; caller-supplied 32-byte MAC key; Evidence codec; bounded/hash/type/success validation; bounded `host/store` object read (`D-WORLD-19` arm A); sealed mint authority; untrusted `ProofReceipt → CLAIMED`; host-only resolved `PROVEN`; refusal-branch mutations; persistent named gates. Explicitly non-production. | **4.0 d** |
 | **2. `w-proven-evidence-production-key-wiring`** | Verify and name the actual production composition root and configuration/state mechanisms; provision/load durable MAC key material; retain the keyed validator before serving; abort startup closed. | **1.0 d** |
 | **3. `w-validated-replay-evidence-boundary`** | Typed replay report and untrusted replay receipt; integrate only successful full-episode replay; bind episode/log head and interpreter set; make missing/failed/divergent replay explicitly unsupported; M6 persistent mutation. `RecordedEffect` stays `ATTESTED`. | **3.0 d** |
 | **4. `w-proven-evidence-renderer-consumption`** | Renderer/read API that accepts only sealed or freshly revalidated evidence; display `PROVEN` only from that value; explicit `UNSUPPORTED` for every validation failure; end-to-end agent-forgery and restart/revalidation tests. | **2.0 d** |
-| **Total** | All reviewer obligations | **9.5 d** |
+| **Total** | All reviewer obligations | **10.0 d** |
 
 Tranche 1 arithmetic:
 
 | Work | Time |
 |---|---:|
 | Strict report/envelope/Evidence codecs and object integration | 0.75 d |
+| Bounded store read (`OpenObject`/`maxBytes`), `io.LimitReader` streaming, store-side tests | 0.50 d |
 | Bounded pinned proof producer, caller-key MAC integration, and fixtures | 0.60 d |
 | Validator, sealed authority, receipt containment, resolved-grade API | 0.75 d |
 | Kernel mapping, projection, golden, AILANG pins | 0.35 d |
 | Named Go-test manifest and self-mutation gate | 0.45 d |
 | Mutations, full pinned gates, review contingency | 0.60 d |
-| **Total** | **3.5 d** |
+| **Total** | **4.0 d** |
 
-The tranche-1 estimate removes 0.5 day previously assigned to an unwired key lifecycle.
+The tranche-1 estimate removes 0.5 day previously assigned to an unwired key lifecycle, and
+round 7 adds 0.50 day for the `D-WORLD-19` arm-A bounded store read — priced as its own row
+rather than absorbed, because `host/store` entering the tranche is new work, not a re-labelling.
+At 4.0 days the tranche sits at the upper bound of the 3–4 day sprint guardrail, not inside a
+comfortable margin; that is stated rather than hidden.
 Authenticated-envelope canonicalization, mechanism-specific negative controls, and refusal-branch
 mutations remain; production provisioning/loading and composition-root tests move intact to
 tranche 2. No tranche adds a rotation protocol or a validator-side compiler execution path.
@@ -902,6 +966,58 @@ pre-agreed fix.
 
 Ledger row: `D-WORLD-19`.
 
+## 10.7 Round 7 revision (D-WORLD-19 arm A applied)
+
+- **The ruling.** Mark Edmondson answered `D-WORLD-19` attended on 2026-08-19T04:57:30Z, on
+  bookkeeping issue #68, verbatim: *"D world 19 - A yes"*. Arm A adopts both round-6 fixes in
+  the reviewers' own words; nothing in this revision re-litigates either objection, and
+  `D-WORLD-17` arm A, the MAC seam (option B), the non-production tranche-1 framing, and the
+  §9 decomposition are all untouched.
+- **6a applied (gpt5-6-sol's fix, verbatim).** The single-return
+  `Validator.Resolve(sealed) ResolvedGrade` is replaced at the three normative sites (§2.2
+  item 3, the §3.2 signature block, §3.5) by the sum-style
+  `Validator.Resolve(sealed ValidatedEvidence) ResolutionResult`: unexported fields, mutually
+  exclusive `Proven() (ResolvedGrade, bool)` and `Err() error` accessors, success carrying
+  exactly `ResolvedGradeProven`, refusal carrying exactly one of `ErrUnmintedAuthority` or
+  `ErrForeignSeal` with no grade, zero value an explicit refusal. M20, M21, AC1, AC14, and
+  AC15 are updated in lockstep, and M21/AC15 additionally pin the zero-value
+  `ResolutionResult` as refusal. §§10.3–10.6 retain the old spelling, as records must. The
+  round-6 record already assigns this defect to the CONTROLLER — the round-5 directive
+  transcribed the signature from the attended ratification's wording — so the old spelling is
+  a propagated transcription error, not load-bearing precedent.
+- **6b applied (gemini-3-1-pro's fix, verbatim).** §8.2's package list widens to include
+  `host/store`, which gains exactly one bounded object-read surface
+  (`OpenObject(ref) (io.ReadCloser, error)` or a `maxBytes` bound on `GetObject`), and §3.3
+  step 2 now streams the payload through an `io.LimitReader` sized 256 KiB + 1, so the first
+  copy is bounded and the retired "before allocating a second full copy" wording — which
+  conceded the unbounded first copy — is gone. M4 moves to the streaming overflow guard with a
+  corrected failure prediction (`got hash_mismatch`, since a truncated payload fails the
+  recomputed hash at step 4).
+- **Item 18 landed in between — and did NOT close 6b.** Between rounds 6 and 7, item 18
+  (`w-daemon-read-cancellation`) landed and threaded `context.Context` through `GetObject`
+  (V36). A reader checking "has item 18 already fixed this?" finds a freshly context-threaded
+  store and could conclude the OOM vector is closed. It is not: context bounds the WAIT, not
+  the BYTES. §3.3 and §8.2 both state this explicitly because it is the single most likely way
+  the bounded read gets silently dropped by a future implementer.
+- **Iteration-87 note discharged.** `gemini-3-1-pro`'s non-blocking note — `DecodeProposal(raw)`
+  stated no byte bound before parsing — was carried by the item head and dropped by two
+  consecutive directives, and the same byte-bound concern returned one round later as blocking
+  6b. It is now folded in: `DecodeProposal` caps raw input at 256 KiB before any parse (§3.2
+  API list, §3.3, AC2), recorded here so it cannot drop again.
+- **The vacuous-AC trap, avoided by scope.** The token `ResolutionResult` already appears in
+  this document at base — once, in §10.6's own account of round 6 — so any criterion counting
+  it in prose reads ≥ 1 at base AND head and is vacuous (the iteration-92/93/94 shape, three
+  times running). Every new reading in this revision is therefore scoped to named CODE files
+  with a stated base and head reading that differ (AC3, V36).
+- **Freshness refresh at `52bc9ec`.** Round 6's recorded control of "23 exported `Store`
+  methods" is stale: at HEAD it is 25 across the six non-test `host/store` files (V36). V5's
+  cited pin lines moved 311/350 → 323/363 with values unchanged (V37). The sweep from the
+  earliest declared base touches 41 non-design files (V38); the rows this revision relies on
+  were re-measured at `52bc9ec` (V36–V38, plus in-place refresh notes on V5/V10 and re-run
+  confirmations recorded in the §11 preamble).
+- **Pricing.** `host/store` entering the tranche adds 0.50 day: tranche 1 moves 3.5 → 4.0 days
+  and the decomposition total 9.5 → 10.0 days (§9).
+
 ## 11. Verification Log
 
 Rows V1–V8, V12–V14, V17, V21, and V27–V32 were rerun from repository root at
@@ -912,18 +1028,30 @@ same call. Glob-shaped arguments are quoted. V18, V22, V24, and V25 use only scr
 `/tmp` when they write. V33–V34 were run for the round-5 revision on 2026-08-18 from repository
 root at `03c7892`; V35 was run for round-5 revision 2 on 2026-08-18 at the same `03c7892` base.
 
+V36–V38 were run for round 7 on 2026-08-19 from repository root at `52bc9ec`. Because the sweep
+from the earliest declared base now touches 41 non-design files (V38), the round-7 pass re-ran
+the cheap check of every retained row citing a swept file rather than marking any row fresh by
+default: V2 (only `scripts/verify_ail.sh` moved, 386 → 399 lines), V6 (`PROVEN` 0, control 4),
+V9 (divergence returns still 169/216/234 with success at 242; the `ReplayResult` control count
+moved 15 → 17), V14 (0), V15 (0), V16 (exact-token and toolchain-denylist structure intact),
+V21 (0, control 9), V28 (8 routes; 8 put / 13 get non-test sites — unchanged), and V35 (the
+same three non-test `CommandContext` sites). V5 and V10 carry in-row round-7 refresh notes
+(V37, V36). V17 remains a `bef0153` gate measurement: it is not re-certified here, and AC11
+re-establishes the base gate at implementation time. Round-7 re-runs use `grep` (this
+environment's `rg` is unavailable); commands shown in V36–V38 are the ones actually executed.
+
 | ID | Claim | Exact command and same-call control | Observed output |
 |---|---|---|---|
 | V1 | Measurement base and clean initial tree before this revision. | `git rev-parse --short HEAD; git status --short` | `bef0153`; no status lines. |
 | V2 | Required inputs exist in this worktree. | `test -f design_docs/implemented/w-evidence-grade-mapping.md && test -f world/types.ail && test -f scripts/verify_ail.sh && test -f host/replay/replay.go; wc -l design_docs/implemented/w-evidence-grade-mapping.md world/types.ail scripts/verify_ail.sh host/replay/replay.go` | All tests rc=0; respective counts `631`, `279`, `386`, `396`. |
 | V3 | At `bef0153`, production Go has no Evidence constructor/decoder; test scope is visible. | `test -d host && test -d cmd; printf prod=; grep -rn "Evidence" host/ cmd/ --include='*.go' \| grep -v '_test\.go' \| wc -l; printf control=; grep -rn "Evidence" host/ cmd/ --include='*_test.go' \| wc -l` | roots yes; `prod=0`; same-scope test control `13`. |
 | V4 | At `bef0153`, there is no production Z3 report producer; same production scope contains hashref code. | `test -d host && test -d cmd; grep -rinE 'Z3\|z3' host/ cmd/ --include='*.go' \| grep -v '_test\.go' \| wc -l; grep -rin 'hashref' host/ cmd/ --include='*.go' \| grep -v '_test\.go' \| wc -l` | `9` Z3 hits (inspection: comments); same-scope hashref control `424`. |
-| V5 | At `bef0153`, the gate pins exactly 10 verified identities and 39 named tests; within `REQUIRED_TESTS`, exactly six names have the `gradeCode_test` prefix, and `gradeOf` remains required. | `grep -nE "^EXACT_TOTAL_VERIFIED=\|^EXACT_TOTAL_TESTS = " scripts/verify_ail.sh; python3 -c "import re; s=open('scripts/verify_ail.sh').read(); m=re.search(r'REQUIRED_TESTS = \{(.*?)\}', s, re.S); names=re.findall(r'\"([a-zA-Z0-9_]+)\"',m.group(1)); print(len(names)); print([x for x in names if x.startswith('gradeCode_test')]); m2=re.search(r'REQUIRED_VERIFIED = \{(.*?)\n\}',s,re.S); print('gradeOf', 'gradeOf' in m2.group(1))"; git log --oneline -1 -S "EXACT_TOTAL_VERIFIED=10" -- scripts/verify_ail.sh` | Lines 311/350: `10` and `39`; Python enumerates `39`, the six `_1`…`_6` names, and `gradeOf True`; introducing commit `aaada20 feat(15): freeze the v1 DecisionPacket…`. |
+| V5 | At `bef0153`, the gate pins exactly 10 verified identities and 39 named tests; within `REQUIRED_TESTS`, exactly six names have the `gradeCode_test` prefix, and `gradeOf` remains required. | `grep -nE "^EXACT_TOTAL_VERIFIED=\|^EXACT_TOTAL_TESTS = " scripts/verify_ail.sh; python3 -c "import re; s=open('scripts/verify_ail.sh').read(); m=re.search(r'REQUIRED_TESTS = \{(.*?)\}', s, re.S); names=re.findall(r'\"([a-zA-Z0-9_]+)\"',m.group(1)); print(len(names)); print([x for x in names if x.startswith('gradeCode_test')]); m2=re.search(r'REQUIRED_VERIFIED = \{(.*?)\n\}',s,re.S); print('gradeOf', 'gradeOf' in m2.group(1))"; git log --oneline -1 -S "EXACT_TOTAL_VERIFIED=10" -- scripts/verify_ail.sh` | Lines 311/350: `10` and `39`; Python enumerates `39`, the six `_1`…`_6` names, and `gradeOf True`; introducing commit `aaada20 feat(15): freeze the v1 DecisionPacket…`. **Round-7 refresh at `52bc9ec`: values unchanged, lines moved to 323/363 by item 18's landing (V37).** |
 | V6 | No additional PROVEN grep exists; the gate file is searchable. | `{ rg -n 'PROVEN' scripts/verify_ail.sh .github/workflows --glob '*.yml' || true; } \| wc -l; grep -c 'EXACT_TOTAL_VERIFIED' scripts/verify_ail.sh` | PROVEN lines `0`; same-file control `4`. Thus prohibition is the six pinned expectations and nothing else. |
 | V7 | In `world/*.ail`, only `world/types.ail` contains `Evidence` (8 lines); `gradeOf` occurs only in canonical/projected types, while the same scoped instrument finds 10 `proposalMatchesWorld` controls. | `grep -rc Evidence world/*.ail; rg -n gradeOf world packages/world-core/world --glob '*.ail'; printf control=; rg -n proposalMatchesWorld world packages/world-core/world --glob '*.ail' \| wc -l` | `world/types.ail:8`, the other three world modules `0`; `gradeOf` lines 30/41/71 in canonical and projection; `control=10`. |
 | V8 | AILANG `Proposal` contains `list[Evidence]`; the scoped production fixtures write empty evidence lists. | `rg -n 'export type Proposal\|evidence:' world/types.ail \| head -10; rg -n 'evidence: \[\]' world/transitions.ail world/contracts.ail` | `Proposal` starts at 89 and its Evidence field is line 97; empty-list hits occur twice in transitions and six times in contracts; the non-empty declaration in the same first call is the control. |
 | V9 | Replay has real divergence and a success result only after comparisons. | `nl -ba host/replay/replay.go \| sed -n '90,250p' \| rg 'DivergenceError\|return ReplayResult'; ... \| rg ReplayResult \| wc -l` | typed divergence definition; returns at lines 169, 216, 234; success at 242; control count `15`. |
-| V10 | Store Object carries payload, verifies on put, and returns full payload on get. | `nl -ba host/store/store.go \| sed -n '88,96p;440,492p' \| rg 'type Object\|Payload\|verifyObject\|GetObject\|SELECT interface_hash_ref'; rg -n 'func \(s \*Store\) (PutObject\|GetObject)' host/store/store.go \| wc -l` | payload field; `verifyObject` call; SQL payload lookup; two-method control. No Evidence-specific bound appears in this scope. |
+| V10 | Store Object carries payload, verifies on put, and returns full payload on get. | `nl -ba host/store/store.go \| sed -n '88,96p;440,492p' \| rg 'type Object\|Payload\|verifyObject\|GetObject\|SELECT interface_hash_ref'; rg -n 'func \(s \*Store\) (PutObject\|GetObject)' host/store/store.go \| wc -l` | payload field; `verifyObject` call; SQL payload lookup; two-method control. No Evidence-specific bound appears in this scope. **Round-7 refresh at `52bc9ec`: `PutObject` at :444; `GetObject` at :468 is now `(ctx context.Context, ref hashref.HashRef) (Object, bool, error)` — context-threaded by item 18 but still returning the whole `Object` with its full `[]byte` payload (V36).** |
 | V11 | A strict bounded JSON pattern exists in transition registry. | `test -d host/transitionreg; rg -n 'DisallowUnknownFields\|multiple JSON values\|trailing JSON\|maxRevisionRaw\|maxSchemaRaw' host/transitionreg/codec.go; rg -n 'func parseJSON\|func DecodeRevision' host/transitionreg/codec.go \| wc -l` | raw caps include 262144 and 16777216; trailing/multiple checks; two function controls. |
 | V12 | At `bef0153`, Go's authority-relevant Proposal is a different narrow struct and has no evidence field. | `nl -ba host/transitionreg/bind.go \| sed -n '20,30p'; nl -ba world/types.ail \| sed -n '87,100p'` | Go lines 22–27 contain transition/interpreter/epoch/caps/effects; AILANG's same-call control contains `evidence: list[Evidence]` at line 97. |
 | V13 | Projection and fixed package surfaces are live at the new base. | `cmp -s world/types.ail packages/world-core/world/types.ail; echo types_cmp=$?; rg -n 'EXPECTED_MODULE_COUNT\|exact export set\|tar contains exactly\|ready-packet golden' scripts/build_world_package.sh scripts/verify_world_package.sh` | `types_cmp=0`; build pin `EXPECTED_MODULE_COUNT=4`; verifier lines require exact export set, exact tar entries, and the ready-packet golden. |
@@ -949,12 +1077,24 @@ root at `03c7892`; V35 was run for round-5 revision 2 on 2026-08-18 at the same 
 | V33 | Round-5 sweep (R1): before this revision the document referenced the free resolver symbol at exactly **five** lines — 78, 90, 201, 295, 398 — two more than the three the revision brief listed, which is why the sweep and not the list is authoritative. After the revision, every remaining occurrence names the symbol only to record that it is dropped (header, §2.2, §3.2, §10.5, and this log); none specifies it as a live API surface. | `grep -n 'GradeOfValidated' design_docs/planned/w-validated-proven-evidence-boundary.md` run before the edits and again after; counts via `grep -c` on the same pattern and path | Before: `doc_count=5`, lines 78/90/201/295/398 (the line-78/201/295 subset matching the brief's `sed -n '78p;201p;295p'` spot-check). After the R1/R2/R3 edits and before these two rows landed: 5 hits at lines 9/82/221/705/710, each a drop-notice; final re-run after this table row is recorded beneath the table. |
 | V34 | At `03c7892`, the dropped symbol appears in zero `.go`/`.ail` files and `host/evidence` does not exist, so R1 is a document-only change with no code to migrate; the same-call positive control fires. | `printf 'code_hits='; { grep -rln 'GradeOfValidated' --include='*.go' --include='*.ail' . \|\| true; } \| wc -l; printf 'control='; grep -rln 'func (s \*Store)' --include='*.go' . \| wc -l; ls -d host/evidence \|\| echo ABSENT; ls host/ \| wc -l` | `code_hits=0`; same-instrument control `4` files define `func (s *Store)` methods; `host/evidence` prints ABSENT while `ls host/` lists 15 packages, so the instrument sees both positives and the directory root. |
 | V35 | At `03c7892`, no exported bounded-subprocess helper exists in non-test `host`/`cmd` for `host/evidence` to import; the same-call inspection of unexported `runBounded` is the positive control and the measured pattern §3.4 reimplements (wall-time bound, output cap with overflow detection, overrun kill → refusal). | `git rev-parse --short HEAD; rg -n 'CommandContext' host cmd --glob '*.go' --glob '!**/*_test.go'; rg -n 'func Run[A-Z]\|func .*Bounded' host cmd --glob '*.go' --glob '!**/*_test.go'; nl -ba host/broker/handlers.go \| sed -n '60,140p'` | `03c7892`. Exactly 3 non-test `CommandContext` sites: `host/replay/replay.go:327`, `host/capsule/capsule.go:154`, `host/broker/handlers.go:93`. The exported-helper pattern matches only `func runBounded` at `host/broker/handlers.go:88` — 1 hit, lowercase, so unexported and broker-internal; zero `func Run[A-Z]` subprocess helpers. Inspection shows `context.WithTimeout(ctx, bounds.execTimeout)` feeding `exec.CommandContext`; `Setpgid: true` with `cmd.Cancel` invoking `killGroup` (`syscall.Kill(-pgid, SIGKILL)`) so a forked grandchild dies with the group; `io.LimitedReader{N: bounds.maxOutputBytes + 1}` with overflow returning `HandlerOutputOverflowError` and deadline expiry returning `HandlerTimeoutError`, both refusals returning no output. One property NOT to copy: `cmd.Stderr = cmd.Stdout` merges the streams, which §3.4's producer must not do because it parses stdout as JSON. |
+| V36 | At `52bc9ec`, 6b's premise still holds and item 18's landing did NOT close it: non-test `host/store` exposes exactly two exported `Object` methods, `GetObject` returns the whole payload as `[]byte`, and the six non-test files contain zero `io.Reader`/`io.LimitReader`/`maxBytes` and never touch the `io` package — item 18 added `context.Context` (a WAIT bound), not a byte bound. The stale round-6 control is corrected: **25** exported `Store` methods, not 23. | `git rev-parse --short HEAD; grep -n 'func (s \*Store) PutObject\|func (s \*Store) GetObject' host/store/store.go; F=(host/store/journal.go host/store/scan.go host/store/store.go host/store/writer_lock.go host/store/writer_lock_other.go host/store/writer_lock_unix.go); grep -nE 'io\.Reader\|io\.LimitReader\|maxBytes' "${F[@]}"; echo "io_rc=$?"; grep -nE '^\s*"io"\|\bio\.' "${F[@]}"; echo "ioimport_rc=$?"; for f in "${F[@]}"; do printf '%s ctx=%s\n' "$f" "$(grep -cE 'context\.Context' "$f")"; done; grep -hnE '^func \([a-z]+ \*Store\) [A-Z]' host/store/*.go \| grep -v _test \| wc -l` | `52bc9ec`; `store.go:444 func (s *Store) PutObject(o Object) error`, `store.go:468 func (s *Store) GetObject(ctx context.Context, ref hashref.HashRef) (Object, bool, error)`; `io_rc=1`, `ioimport_rc=1` (zero hits across all six files); same-path control: `context.Context` reads `store.go 7`, the other five files `0`; **25** exported `Store` methods across the six non-test files (`journal.go` 9, `scan.go` 2, `store.go` 14, the three `writer_lock*` files 0). |
+| V37 | At `52bc9ec` the AILANG gate pins are unchanged in VALUE and moved in LINE: V5's cited 311/350 are `bef0153` positions; item 18's landing moved them. The doc's §3.6/§5/§8.1 claims about the pins remain correct. | `grep -nE "^EXACT_TOTAL_VERIFIED=\|^EXACT_TOTAL_TESTS = " scripts/verify_ail.sh` | `323:EXACT_TOTAL_VERIFIED=10`; `363:EXACT_TOTAL_TESTS = 39`. |
+| V38 | Round-7 freshness sweep from the EARLIEST declared base: 41 non-design files changed `aaada20..52bc9ec`, and the same-instrument control scoped to one cited file fires. Every retained row citing a swept file was re-run or explicitly labelled unrefreshed (see the preamble); none was marked fresh by default. | `git diff --name-only aaada20..HEAD -- ':!design_docs' \| wc -l; git diff --name-only aaada20..HEAD -- host/store/store.go \| wc -l` | `41`; control `1`. |
+| V39 | **CONTROLLER-MEASURED at `52bc9ec`, round 7, after the designer run — PRIOR ART FOR THE BOUNDED-READ IDIOM EXISTS AND THE DOC DID NOT KNOW IT.** Non-test `host/` already contains **two** `io.LimitReader` sites, and one of them (`host/capsule/capsule.go:238`) already uses the **`limit+1` detection-byte** shape §3.3 step 3 now specifies. Neither is an exported bounded-read helper — both are inline stdlib idioms at their own call sites — so there is nothing to REUSE and §8.2's new `host/store` surface is not duplicating an existing API. Recorded because §3.4 applies exactly this discipline to `runBounded` (V35: reuse REJECTED with a reason rather than deferred), and applying it to `runBounded` but not to the idiom this round introduces would be the same inconsistency round 6 blocked on. AC3's scoping is unaffected: it counts `io.LimitReader` in non-test `host/evidence`, a package that does not exist at base, so these two sites cannot satisfy it. | `grep -rn 'io.LimitReader' host/ --include='*.go' \| grep -v _test` ; same-path control `grep -rn 'io.ReadAll' host/ --include='*.go' \| grep -v _test \| wc -l` | Two hits: `host/broker/registry_reconcile.go:481` `io.ReadAll(io.LimitReader(resp.Body, cfg.MaxBodyBytes))` and `host/capsule/capsule.go:238` `io.ReadAll(io.LimitReader(pipe, limit+1))`; `host/evidence` does not exist (`test -d host/evidence` rc=1). |
 
 Final V33 re-run after all round-5 edits including revision 2: `grep -n 'GradeOfValidated'` on
 this file returns **8** hits at lines 9 (header), 85 (§2.2 drop-notice), 231 (§3.2 drop-notice),
 786/791 (§10.5 records), and 882/883/886 (the V33/V34 rows and this sentence, which quote the
 pattern as an instrument). Zero of the eight is a live API reference; the normative API surfaces
 in §2.2, §3.2, and §3.5 name only `Validator.Resolve`.
+
+Round-7 re-run of the same grep after the §10.7 edits: still **8** hits — the round-5 line
+numbers above are that round's positions and have since shifted — at lines 9 (header), 93
+(§2.2 drop-notice), 240 (§3.2 drop-notice), 850/855 (§10.5 records), 1077/1078 (the V33/V34
+rows), and the preceding note's own grep quotation; all remain drop-notices, records, or
+instrument quotes. The retired single-return signature survives only at three sites, every one a record —
+the §10.5 and §10.6 histories and §10.7's account of replacing it — and the normative surfaces
+name only the sum-style `Validator.Resolve(sealed ValidatedEvidence) ResolutionResult`.
 
 ## 12. Related
 
