@@ -10832,3 +10832,122 @@ A perfectly good counter with nothing on the other end of it — the blocked-row
 *measurement nobody owns* rather than a row nobody re-measures.
 
 **Next.** Rows 20/21/22/23, all four unblocked. **ONE** open ask: `D-WORLD-21`.
+
+## Iteration 96 — 2026-08-19 — **`D-WORLD-21` answered and applied, the carve-out taken on both round-9 objections, `gemini-3-1-pro` PASSES for the second consecutive round — and item 17 parks again on `D-WORLD-22`, because the reject landed on a residual the document itself DECLARED** (`metered=$0.6326`; controller `claude:claude-opus-5`; designer `claude:claude-fable-5` ×2, FLAGGED; no planner, executor or evaluator — no sprint ran)
+
+**Pick.** Item 17, `w-validated-proven-evidence-boundary`, revision round 9. `D-WORLD-21` was
+ruled attended (arm A) and recorded at `35fd875` on entry, which un-parks the row — so the top
+unblocked queue row was item 17, not rows 20–23. Gate 0 found **0** new directives on `#68` since
+`2026-08-19T04:57:30Z`, both watermarks agreeing; the pick came from the ledger, not the channel.
+
+**Outcome.** PARKED `needs-human-review` on the new ask `D-WORLD-22`. Doc 1295 → 1733 lines,
+commit `e903e98` (doc-only; DESIGNED, not landed). Two revision rounds (9, 9b) and two quorum
+rounds (9, 10), `absent_reviewers` empty on both.
+
+**Routing evidence.**
+
+| role | env | resolved | note |
+|---|---|---|---|
+| controller | `$MODEL` | `claude:claude-opus-5` | quota lane |
+| designer | ROTATION | `claude:claude-fable-5` ×2 | **FLAGGED, instance 4**: pointer read `claude`, next entry `codex:gpt-5.6-sol` probed first-party and is exhausted until 2026-08-20 05:34; gemini is read-only under CapRemoteSandbox and cannot edit a file, so the rotation WRAPPED rather than falling to `$MODEL`. Also FLAGGED, instance 3: two Fable runs against the one-bounded-run Fable discipline, the collision iteration 86 first recorded. |
+| planner / executor / evaluator | — | not run | no sprint this iteration |
+| quorum | — | `gpt5-6-sol`, `gemini-3-1-pro` | `absent_reviewers` empty on BOTH rounds; `--max-cost-usd 0.35` set before round 9 |
+
+**A probe that prints its own failure and exits rc=0.** `codex exec --model gpt-5.6-sol` returned
+`ERROR: You've hit your usage limit … try again at Aug 20th, 2026 5:34 AM` on **stdout**, twice,
+and **exited 0**. The lane is dry; the exit code says healthy. This is the same class as iteration
+94's mangled-but-rc=0 commit message and the loop's standing rule that a command's exit code
+describes the request rather than the delivery — read the artifact. Recorded here because the
+skill's codex recipe gates on `[ "$rc" -eq 0 ]`, which on this rig would have routed a real
+directive to an exhausted lane.
+
+**Round 9 — the ruling applied.** The seam becomes
+`ReadObject(ctx, ref, maxBytes) (ObjectMeta, []byte, error)`; the store enforces `maxBytes` BEFORE
+materialization via a `length(payload)` probe whose select list omits the payload column; the
+streaming reader, the caller-side `io.LimitReader` and the 256 KiB + 1 detection byte are retired.
+**M22 rewritten rather than re-run** — its prescribed fake was wired to OBSERVE the context, so the
+mutant died for a property the real store reader has never been shown to have — and new §6.1
+audits every prescribed fake in the document against one rule: **admissible where the fake supplies
+INPUT the mutated mechanism consumes, inadmissible where it supplies the PROPERTY the mutation is
+supposed to expose.** The owed real-store integration test lands, blocking on the store's measured
+single pooled connection (V45); lock contention and mid-blob interruption were both REJECTED as
+mechanisms with the reasons named rather than waved at.
+
+**And the fact nine rounds had never stated: arm A is ADDITIVE.** `ReadObject` adds a method and
+changes no existing signature, so the **13** non-test out-of-tranche `.GetObject(` call sites
+(6/2/2/1/1/1, reproducing V40 exactly) and the **4** interface-method DECLARATIONS — counted
+separately, because a declaration read as a call is this mission's recurring enumeration error —
+are untouched, and §8.2's frozen packages do not move. The round-7 `maxBytes`-on-`GetObject` arm
+was unsatisfiable *precisely because it was not additive* (V43). Two rounds of scope dispute rested
+on a property nobody had named.
+
+**Round 9 quorum BLOCKED; both objections carve-out eligible; both fixes applied verbatim in 9b.**
+`gpt5-6-sol` said §8.2 asserted the `objects` table immutable and insert-only with **no
+Verification Log row establishing it**, so the probe statement and the payload statement could
+observe different states. Measured before forwarding (rule 3f): the premise is TRUE — 3 writes, all
+`INSERT OR IGNORE INTO objects`; 0 UPDATE/DELETE/DROP; 0 triggers (control `CREATE TABLE` = 8 in
+the same schema); 0 FK/cascades (control `NOT NULL` = 26); and no `fmt.Sprintf` in non-test
+`host/store` builds a statement. The fix landed in full regardless — one reserved connection inside
+one read transaction, a concurrent-mutation test (M25/AC17), the V-row (V47), and
+`SetMaxOpenConns(1)` explicitly demoted to corroboration (a pool property, not a snapshot, and
+silent cross-process). `gemini-3-1-pro` said §3.2 listed every validator and codec surface and no
+producer API at all while §3.4 and §9 mandate a bounded producer — verified correct.
+
+**The spine: a NEGATIVE grep would have confirmed immutability VACUOUSLY.**
+`grep -rniE '\bUPDATE[[:space:]]+[a-z_]+[[:space:]]+SET\b'` returns **0 repo-wide, tests
+included** — while `host/store/store.go` carries **five** genuine `ON CONFLICT(…) DO UPDATE SET`
+upserts at `:618/:709/:759/:836/:978`. The upsert spelling puts no table name between `UPDATE` and
+`SET`, so a grep aimed at the UPDATE *statement form* is blind to a real mutation path by
+construction; the pattern itself was proven live against a synthetic positive carrying both
+`UPDATE objects SET` and `DELETE FROM objects`. **A broken pattern and a genuinely immutable table
+produce the identical zero.** What establishes the premise is a POSITIVE enumeration of every
+statement touching the table, read one by one.
+
+**And having found that blindness I shipped the same one in the other spelling, in the same
+breath.** The designer refuted two numbers I handed it and I reproduced both: the statements naming
+`objects` are **NINE, not five** — four `JOIN objects` reads at `journal.go:744/792/918/966`, on
+which my own `FROM objects|INTO objects` adjacency pattern reads **0** — and `Sprintf` is **15, not
+16**. The insert-only conclusion is unchanged; the enumeration was not. One grep, two spellings,
+and I saw only the half I was hunting for: I audited for MUTATION verbs and never asked what else
+could NAME the table. Second consecutive iteration in which the designer refuted a
+controller-supplied count, which is rule 3b(v) working in the direction it was written for.
+
+**Round 10 — `gemini-3-1-pro` PASS (2nd consecutive), `gpt5-6-sol` reject, and the reject landed
+on a DISCLOSURE.** A lock-contended `ReadObject` returns via `busy_timeout` (2 s,
+`writer_lock.go:179`), not `ObjectReadTimeout` — iteration 94's measured 2.043 s under a 300 ms
+deadline, filed then as queue row 22. The objection is substantively correct and the controller
+does not dispute it. Round 8's applied lesson was to STATE residuals rather than absorb them; round
+9 stated this one in AC16 in the reviewer's plain sight; and that honesty is exactly the surface
+the objection attached to. Absorbing it would have drawn no objection and would have been strictly
+worse — it is the failure iteration 94 filed row 22 to prevent. **A document is not penalised for
+the defects it hides**, and nothing in the quorum rewards the disclosure that earns the reject.
+
+**Why it parks rather than taking a third revision.** The fix's own words are *"Make deadline
+enforcement for lock contention part of this tranche … Remove the residual deferral"* — a SCOPE
+call folding a separately filed, separately owned queue row into item 17, and simultaneously a
+challenge to a predicate of the ruling on record (`D-WORLD-21` chose arm A on the ground that under
+it *"cancellation becomes ENFORCEABLE"*). The carve-out requires no dispute about direction. Sixth
+consecutive foreclosure on the scope axis.
+
+**Two of my own instruments were wrong and both fired before doing harm.** My first `cmp` of
+§§10.1–10.10 reported DIFFERS on a healthy file, because my extraction had swept in the trailing
+`## 11.` heading — the instrument was wrong, not the document, and the one-line diff is what said
+so. My Gate-4 STATUS-rotation assertion then fired on my own arithmetic (net line delta is 0, not
++2) and refused to write; the charter was untouched, which is the mass-deletion guard doing exactly
+its job. Both are cheap, and both are the reason the third instrument reading — the perturbation
+control on `cmp` — was worth running.
+
+**Ruled out / refuted.** (a) A third revision on `gpt5-6-sol`'s round-10 fix — it disputes scope
+AND a ratified predicate (standing rule 2). (b) Absorbing queue row 22 into item 17 (standing rule
+1). (c) Weakening the document's claim myself to dissolve the objection — that IS arm B, and
+choosing it is the human's call, not the controller's. (d) Reading my own `UPDATE … SET` zero as
+proof of immutability; the synthetic-positive control showed the pattern worked and the positive
+enumeration showed the answer. (e) Trusting the designer's two refutations without reproducing them
+(both reproduced first-party). (f) Applying gemini's non-blocking note in the parking commit — the
+document is parking, and an unreviewed edit made after the round that parked it is the change
+nobody would review; it is recorded as owed in §10.12 and the ledger instead. (g) Picking queue
+rows 20–23 over item 17 (a ruling had un-parked the higher row). (h) Reading the codex probe's
+`rc=0` as lane health.
+
+**Next.** Item 17 blocked on `D-WORLD-22`. Rows 20/21/22/23 all unblocked and headless-routable.
+**ONE** open ask: `D-WORLD-22`.
