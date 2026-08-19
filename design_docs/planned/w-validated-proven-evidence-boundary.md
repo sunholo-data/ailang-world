@@ -1,6 +1,6 @@
 # w-validated-proven-evidence-boundary — authority-bearing proof evidence
 
-- **Status**: **DIRECTION RATIFIED (`D-WORLD-17`); round-7 revision applied (`D-WORLD-19` arm A, attended 2026-08-19), pending re-quorum** — DESIGNED, not landed
+- **Status**: **DIRECTION RATIFIED (`D-WORLD-17`); round-7 revision applied (`D-WORLD-19` arm A, attended 2026-08-19); round-7b carve-out revision applied (both round-7 fixes, converged), pending re-quorum** — DESIGNED, not landed
 - **Park reason**: the iteration-84 park is answered. Mark Edmondson attended and ratified option B
   on 2026-08-14: authenticate canonical proof reports with a single-host, host-held MAC key. This
   revision applies that direction. Round 4 further narrows tranche 1 to an explicitly
@@ -14,12 +14,18 @@
   of 2026-08-19: both round-6 objections are closed with the reviewers' own fixes — the
   sum-style `ResolutionResult` refusal channel (6a) and the bounded `host/store` object read
   (6b) — and the iteration-87 `DecodeProposal` byte-bound note is discharged. See §10.7.
+  Round 7b applies both round-7 objections under the narrow-refinement carve-out — the two
+  reviewer fixes CONVERGE on one corrected store signature (`OpenObject(ctx, ref, maxBytes)`),
+  the `GetObject`-mutation arm is deleted as unsatisfiable (V40), and the false "item 18 bounds
+  the WAIT" sentence is corrected: a context parameter is not a bound; a deadline is (V41). See
+  §10.8.
 - **Item**: queue item 17, `w-validated-proven-evidence-boundary`
 - **Filed**: 2026-08-14, iteration 84
-- **Measurement base**: `bef0153` (rounds ≤ 4); `03c7892` (round 5); `52bc9ec` (round 7, V36–V38)
+- **Measurement base**: `bef0153` (rounds ≤ 4); `03c7892` (round 5); `52bc9ec` (round 7, V36–V38); `7806cac` (round 7b, V40–V42)
 - **Instrument**: `/tmp/ailang-v0300/ailang`, AILANG v0.30.0 (`e37b370`)
-- **This tranche estimate**: **4.0 days** (round 7 adds the ratified bounded store read, §9)
-- **Decomposition**: **yes** — four ordered sprint-sized items, **10.0 days total** (§9)
+- **This tranche estimate**: **4.25 days** (round 7 adds the ratified bounded store read; round
+  7b adds the `ObjectReadTimeout` deadline machinery — priced, not absorbed, §9)
+- **Decomposition**: **yes** — four ordered sprint-sized items, **10.25 days total** (§9)
 - **Design result**: serialized proof references remain untrusted and grade `CLAIMED`; only a host
   validator may mint the sealed value from which only the minting validator's `Resolve` method
   returns authority-bearing `PROVEN`.
@@ -180,9 +186,11 @@ Validated(ValidatedEvidence) | Unsupported(UnsupportedReason)
 
 The reasons are stable identifiers: `invalid_ref`, `missing`, `oversize`, `hash_mismatch`,
 `wrong_semantic_id`, `wrong_interface`, `malformed`, `unauthenticated_report`,
-`subject_mismatch`, `tool_mismatch`, `proof_failed`, and `proof_incomplete`. Store/I/O cancellation is an
-explicit operational error, not a grade. Neither `Unsupported` nor error contains an
-`EvidenceGrade`; no failure falls back to `CLAIMED`, `ATTESTED`, or `TESTED`.
+`subject_mismatch`, `tool_mismatch`, `proof_failed`, and `proof_incomplete`. Store/I/O cancellation
+or deadline expiry — including expiry of the validator's own derived `ObjectReadTimeout` deadline
+(§3.2, AC16) — is an explicit operational error that mints no seal, not a grade. Neither
+`Unsupported` nor error contains an `EvidenceGrade`; no failure falls back to `CLAIMED`,
+`ATTESTED`, or `TESTED`.
 
 ## 3. Proposed change — tranche 1
 
@@ -227,8 +235,9 @@ Add these conceptual surfaces (names are binding; field layout is implementation
 ClaimedEvidence              // decoded untrusted constructors, including ProofReceipt
 ValidatedEvidence            // exported type, all fields unexported
 ValidationResult             // accessors expose Validated or Unsupported, not writable fields
-NewValidator(key [32]byte, reader, compilerConfig)
-Validator.ValidateProof(ctx, reportRef, expectedSubject)
+ObjectReader                 // minimal read seam the validator consumes; its one method is the reconciled round-7b signature (§8.2, §10.8): OpenObject(ctx context.Context, ref hashref.HashRef, maxBytes int64) (ObjectMeta, io.ReadCloser, error)
+NewValidator(key [32]byte, reader, compilerConfig)   // configuration REQUIRES a positive ObjectReadTimeout; zero or negative is a constructor refusal (AC16)
+Validator.ValidateProof(ctx, reportRef, expectedSubject)   // derives context.WithTimeout(ctx, ObjectReadTimeout) before any open or read, even under context.Background() (§3.3 step 2, AC16)
 DecodeProposal(raw)          // ProofReceipt remains an untrusted claim; raw capped at 256 KiB before any parse (§3.3)
 Validator.Resolve(sealed ValidatedEvidence) ResolutionResult   // method; sole ResolvedGradeProven source; refuses zero/unminted identities with ErrUnmintedAuthority, foreign seals with ErrForeignSeal
 ResolutionResult             // unexported fields; mutually exclusive Proven() (ResolvedGrade, bool) and Err() error; zero value is refusal
@@ -335,9 +344,12 @@ inherited store behaviour.
 Validation order is fixed:
 
 1. validate canonical `HashRef`;
-2. open exactly one object through `ObjectReader`'s bounded read (`OpenObject` or the
-   `maxBytes`-bounded `GetObject`, §8.2) and stream it through an `io.LimitReader` sized
-   256 KiB + 1 — the payload is never fully materialized before the bound;
+2. derive the read deadline — `readCtx` from `context.WithTimeout(ctx, ObjectReadTimeout)` —
+   even when the caller supplies no deadline, `context.Background()` included (§3.2, AC16);
+   then open exactly one object through `ObjectReader`'s
+   `OpenObject(readCtx, ref, maxBytes)` (§8.2) and stream it through an `io.LimitReader` sized
+   256 KiB + 1 — the payload is never fully materialized before the bound, and deadline expiry
+   or cancellation is an explicit operational error that mints no seal (§2.5);
 3. reject absent objects, and reject as `oversize` any read that fills the limit's extra
    detection byte;
 4. recompute the envelope payload hash and compare algorithm plus digest to the requested ref;
@@ -353,12 +365,18 @@ Validation order is fixed:
    counterexamples; §3.4 binds producer emission of that field to `verify.results[]`;
 11. only then construct `ValidatedEvidence`.
 
-One landing between rounds 6 and 7 must not be misread as having closed this. Item 18
-(`w-daemon-read-cancellation`) landed and threaded `context.Context` through `GetObject` (V36).
-That bounds the WAIT, not the BYTES: a context cancels a slow read, it does not cap a fast
-multi-gigabyte one, so a freshly context-threaded store still OOMs on an attacker-supplied ref.
-The bounded read above — not item 18's cancellation — is what closes 6b, and dropping it because
-"the store was just fixed" would silently reopen the vector.
+One landing between rounds 6 and 7 must not be misread as having closed this — in either
+dimension. Item 18 (`w-daemon-read-cancellation`) landed and threaded `context.Context` through
+`GetObject` (V36). That bounds the SIGNATURE — not the bytes, and not, by itself, the wait. A
+context caps nothing unless someone arms it with a deadline, and item 18's own ratified deferral
+DR-2 deliberately leaves 11 production store reads passing `context.Background()`, pinned
+exactly by `TestNoNewDeadlineFreeStoreReads` (V41). A freshly context-threaded store therefore
+still OOMs on an attacker-supplied ref (no byte bound) and still blocks indefinitely for any
+caller that supplies no deadline (no inherited wait bound). The bounded read above closes the
+bytes; the `ObjectReadTimeout`-derived deadline in step 2 closes the wait at this tranche's OWN
+call site, inherited from no one. The 11 DR-2 sites are item 18's follow-on obligation and are
+deliberately NOT fixed here (§8.2). Round 7 wrote "item 18 bounds the WAIT" into this paragraph;
+that sentence was false and is superseded (§10.8, V41).
 
 The validator never accepts a report merely because `store.PutObject` once checked its hash. It
 recomputes at consumption so alternate readers, corruption, and test fakes cannot bypass the
@@ -511,6 +529,7 @@ assigned beside it.
 | M19 stale ready packet | rebuild projection but retain old golden | existing world-package step 9/9 | `ready packet differs byte-for-byte from golden`. |
 | M20 **cross-validator binding** | `host/evidence/validator.go`: change the seal-identity guard in `Resolve` to `if false && sealed.mintedBy != v.id` (exact field names fixed at implementation; the neutered comparison is the binding check itself) | `TestAttackerChosenValidatorCannotMintForHostAuthority` | A seal minted by validator 2 (attacker-constructed, attacker-keyed) is presented to validator 1's `Resolve`, which must return a `ResolutionResult` whose `Err()` is the dedicated `ErrForeignSeal` and whose `Proven()` reports no grade — an observable only the binding comparison produces, not a shared reason enum or a bare absence. Under the mutant the foreign seal resolves; failure: `foreign seal resolved ResolvedGradeProven; want ErrForeignSeal`. |
 | M21 **zero-value mint validity** | `host/evidence/validator.go`: change the mint-validity guard in `Resolve` to `if false && (v.id == nil \|\| sealed.mintedBy == nil)` (exact field names fixed at implementation; the neutered check is the nil-identity refusal itself, leaving the M20 comparison intact) | `TestZeroValueForgeryCannotResolve` | The test constructs `var v evidence.Validator; var s evidence.ValidatedEvidence` from the external test package — the two-line forge exported types make unpreventable — and calls `v.Resolve(s)`, requiring a `ResolutionResult` whose `Err()` is the dedicated `ErrUnmintedAuthority` and whose `Proven()` reports no grade; the same test also constructs `var r evidence.ResolutionResult` and requires `Proven()` false, pinning the declared zero-value-is-refusal contract. Under the mutant the two nil identities reach the M20 comparison, compare equal (zero == zero), and the forge resolves; failure: `zero-value seal resolved ResolvedGradeProven; want ErrUnmintedAuthority`. |
+| M22 **deadline derivation** | `host/evidence/validator.go`: replace the read-deadline derivation `context.WithTimeout(ctx, cfg.ObjectReadTimeout)` with `context.WithCancel(ctx)` (exact spelling fixed at implementation; the neutered mechanism is the deadline derivation itself — the mutant compiles, keeps a cancel, and simply never arms a deadline, which is exactly the caller-inherited state AC16 forbids) | `TestBlockingObjectReadReturnsWithinObjectReadTimeout` | The test configures `ObjectReadTimeout` at 50 ms, supplies a fake `ObjectReader` whose `OpenObject` returns a reader blocking until ITS ctx is done, calls `ValidateProof` under `context.Background()`, and waits on a done channel guarded by a test-side 20× timer so the mutant FAILS rather than hangs. Correct code: the derived deadline expires, the blocked read unblocks, `ValidateProof` returns the explicit operational error within the bound, and no seal exists. Under the mutant no deadline is ever armed, `context.Background()` is never done, and the guard fires; failure: `validation did not return within 20x ObjectReadTimeout under context.Background(); want explicit operational timeout error and no seal`. |
 
 For M2–M14, the control first validates one good authenticated report for the same expected subject and observes
 that the minting validator's `Resolve` returns `ResolvedGradeProven`. Thus a mutant cannot pass
@@ -522,7 +541,11 @@ M20, the control is same-instance: validator 1 first mints its own seal and obse
 the foreign-seal refusal is asserted. M21 carries the same same-instance control inside its own
 test: a `NewValidator`-built validator resolves its own minted seal to `ResolvedGradeProven`
 before the zero-value pair is asserted, so the refusal cannot be satisfied vacuously by a
-resolver that refuses everything.
+resolver that refuses everything. M22's control lives in the same test: the same validator
+configuration first validates one good authenticated report through a PROMPT (non-blocking)
+fake reader under the same `context.Background()` and resolves it to `ResolvedGradeProven`,
+proving the derived deadline does not refuse the fast path before the blocking arm asserts the
+timeout refusal.
 
 ## 7. Acceptance criteria
 
@@ -545,9 +568,10 @@ resolver that refuses everything.
    first. Readings that make this criterion falsifiable are scoped to CODE, not to this
    document's prose (which already quotes these tokens): base reading, 0 occurrences of
    `OpenObject` across the six non-test `host/store` files and no `host/evidence` package at
-   `52bc9ec` (V36); head reading, ≥ 1 in non-test `host/store` (or the equivalent `maxBytes`
-   parameter on `GetObject`) and ≥ 1 `io.LimitReader` in non-test `host/evidence` — scopes in
-   which base and head DIFFER by construction. Decoded reports are bounded before strict
+   `52bc9ec` (V36), re-confirmed 0 repo-wide under `host/` and `cmd/` at `7806cac` (V42); head
+   reading, ≥ 1 `OpenObject` in non-test `host/store` and ≥ 1 `io.LimitReader` in non-test
+   `host/evidence` — scopes in which base and head DIFFER by construction. The round-7
+   alternative spelling, a `maxBytes` parameter on `GetObject`, is DELETED (V40, §10.8). Decoded reports are bounded before strict
    decode, hash is recomputed, semantic/interface identities match, envelope and report canonical
    bytes round-trip, HMAC-SHA-256 is compared in constant time, subject and compiler match, the
    `verify.results[]`-derived verified set is non-empty, and success/error/counterexample fields
@@ -567,8 +591,8 @@ resolver that refuses everything.
    `EXACT_TOTAL_MODULES`.
 8. **Go persistent gate.** Add the exact non-empty named-test manifest and exact count to
    `scripts/verify_go.sh`; add an isolated self-mutation test in `host/verifygate`.
-9. **Required mutations.** Every tranche-1 row M1–M5, M7–M19, M20, and M21 reds with its named
-   observable; controls green. M5 is the sole payload-hash mutation owner. M6 is an
+9. **Required mutations.** Every tranche-1 row M1–M5, M7–M19, M20, M21, and M22 reds with its
+   named observable; controls green. M5 is the sole payload-hash mutation owner. M6 is an
    acceptance criterion of tranche 3 and replay remains unable to yield `PROVEN` before then.
 10. **Projection/golden.** Canonical/projected `types.ail` are byte-identical, the frozen four
     exports and six tar entries remain unchanged, and the canonical ready packet golden is
@@ -612,8 +636,24 @@ resolver that refuses everything.
     produced by the mint-validity check and nowhere else and is distinct from `ErrForeignSeal`,
     because "never minted" and "minted by someone else" are different refusals. M21 must red
     this arm.
-
-## 8. Conflict surface
+16. **Deadline-bounded validation (wait bound).** A context parameter is not a bound; a deadline
+    is — 11 ratified production store reads already pass `context.Background()` (V41), so the
+    validator may inherit no deadline from anyone. Validator configuration carries a required
+    positive `ObjectReadTimeout`; `NewValidator` refuses zero or negative. `ValidateProof`
+    derives `context.WithTimeout(ctx, ObjectReadTimeout)` before opening or reading the envelope
+    object, even when the caller supplies no deadline — `context.Background()` included. Expiry
+    or cancellation is the explicit operational error of §2.5, mints no seal, and carries no
+    grade. Named test `TestBlockingObjectReadReturnsWithinObjectReadTimeout` proves it with a
+    blocking reader: a fake `ObjectReader` whose read completes only when its ctx is done, called
+    under `context.Background()`, must return the operational error within the configured bound
+    (guarded by a test-side 20× timer so the failure mode is a red, not a hang), after the
+    same test's prompt-reader control seals and resolves to `ResolvedGradeProven`. Readings that
+    make this criterion falsifiable are scoped to CODE, not to this document's prose (which
+    quotes the token throughout): base reading, 0 occurrences of `ObjectReadTimeout` in `*.go`
+    under `host/`, `cmd/`, and `scripts/` at `7806cac` (V42); head reading, ≥ 1 in non-test
+    `host/evidence` plus ≥ 1 `context.WithTimeout` in non-test `host/evidence` — scopes in which
+    base and head DIFFER by construction (the base `context.WithTimeout` control count of 8 sits
+    entirely outside `host/evidence`, which does not exist at base). M22 must red this arm.
 
 ### 8.1 Five coupled AILANG moves
 
@@ -634,16 +674,24 @@ resolver that refuses everything.
   harness.
 - `host/store`: **IN the tranche**, by the attended `D-WORLD-19` arm-A ruling of 2026-08-19 —
   a ratified widening of the previously frozen package list, not scope creep. The store gains
-  exactly one bounded object-read surface: `OpenObject(ref) (io.ReadCloser, error)` (the
-  ratified spelling; the implementation must thread the same `context.Context` that item 18's
-  landed read-cancellation discipline requires of store reads) or, equivalently under the same
-  ruling, `GetObject` gaining a `maxBytes` bound. No schema change; the objects table is
-  untouched. The binding invariant either spelling must satisfy: no read opened for an
-  untrusted ref may materialize more than 256 KiB + 1 bytes of payload. Sequencing with item 18
-  (`w-daemon-read-cancellation`) resolved itself between rounds — item 18 LANDED first, so its
-  ratchet discipline is the base this change builds on; note that item 18's `context.Context`
-  bounds the WAIT, not the BYTES, and did not close this vector (§3.3, V36).
-  Tests may use Store as an integration control.
+  exactly ONE additive bounded object-read surface, the round-7b reconciled spelling (§10.8):
+  `OpenObject(ctx context.Context, ref hashref.HashRef, maxBytes int64) (ObjectMeta, io.ReadCloser, error)`.
+  `GetObject` is NOT modified: 13 non-test out-of-tranche `.GetObject(` call sites exist under
+  `host/` and `cmd/` outside `host/store` (V40), two of them in `host/daemon` and `host/replay`,
+  which this very list declares frozen — so the round-7 alternative arm, a `maxBytes` bound on
+  `GetObject`, was unsatisfiable by construction and is DELETED, not retained as an option.
+  `ObjectMeta` carries the non-payload columns `GetObject` already returns (`InterfaceHash`,
+  `SemanticID`, `Provenance` — V36's refresh at `store.go:468`) that §3.3 steps 4–5 check; a
+  reader-only return would strip data the validator consumes. No schema change; the objects
+  table is untouched. The binding invariant: no read opened for an untrusted ref may materialize
+  more than 256 KiB + 1 bytes of payload. Sequencing with item 18
+  (`w-daemon-read-cancellation`): item 18 LANDED first and bounds the SIGNATURE — every store
+  read now takes a `context.Context` — but a context parameter is not a wait bound: 11
+  production store reads pass `context.Background()` by item 18's own ratified deferral DR-2,
+  pinned by `TestNoNewDeadlineFreeStoreReads` (V41). Those 11 sites are item 18's follow-on
+  obligation (the pin's own comment names the 11 → 0 path) and MUST NOT be absorbed here; this
+  tranche imposes its own deadline at its own call site via `ObjectReadTimeout` (§3.3 step 2,
+  AC16). Tests may use Store as an integration control.
 - `host/hashref`: reused unchanged.
 - `host/verifygate`: gains isolated mutation coverage for the named Go manifest.
 - `scripts/verify_go.sh`: gains a focused JSON-parsed exact named-test leg; broad build/plain/race
@@ -673,30 +721,34 @@ sprint.
 
 | Ordered document | Closes | Estimate |
 |---|---|---:|
-| **1. This document, `w-validated-proven-evidence-boundary`** | Library-only proof report schema/producer and authenticated envelope; caller-supplied 32-byte MAC key; Evidence codec; bounded/hash/type/success validation; bounded `host/store` object read (`D-WORLD-19` arm A); sealed mint authority; untrusted `ProofReceipt → CLAIMED`; host-only resolved `PROVEN`; refusal-branch mutations; persistent named gates. Explicitly non-production. | **4.0 d** |
+| **1. This document, `w-validated-proven-evidence-boundary`** | Library-only proof report schema/producer and authenticated envelope; caller-supplied 32-byte MAC key; Evidence codec; bounded/hash/type/success validation; bounded `host/store` object read (`D-WORLD-19` arm A, round-7b reconciled `OpenObject` spelling); validator-imposed `ObjectReadTimeout` wait bound; sealed mint authority; untrusted `ProofReceipt → CLAIMED`; host-only resolved `PROVEN`; refusal-branch mutations; persistent named gates. Explicitly non-production. | **4.25 d** |
 | **2. `w-proven-evidence-production-key-wiring`** | Verify and name the actual production composition root and configuration/state mechanisms; provision/load durable MAC key material; retain the keyed validator before serving; abort startup closed. | **1.0 d** |
 | **3. `w-validated-replay-evidence-boundary`** | Typed replay report and untrusted replay receipt; integrate only successful full-episode replay; bind episode/log head and interpreter set; make missing/failed/divergent replay explicitly unsupported; M6 persistent mutation. `RecordedEffect` stays `ATTESTED`. | **3.0 d** |
 | **4. `w-proven-evidence-renderer-consumption`** | Renderer/read API that accepts only sealed or freshly revalidated evidence; display `PROVEN` only from that value; explicit `UNSUPPORTED` for every validation failure; end-to-end agent-forgery and restart/revalidation tests. | **2.0 d** |
-| **Total** | All reviewer obligations | **10.0 d** |
+| **Total** | All reviewer obligations | **10.25 d** |
 
 Tranche 1 arithmetic:
 
 | Work | Time |
 |---|---:|
 | Strict report/envelope/Evidence codecs and object integration | 0.75 d |
-| Bounded store read (`OpenObject`/`maxBytes`), `io.LimitReader` streaming, store-side tests | 0.50 d |
+| Bounded store read (`OpenObject` with `ObjectMeta`), `io.LimitReader` streaming, store-side tests | 0.50 d |
+| `ObjectReadTimeout` configuration, `WithTimeout` derivation, blocking-reader test, M22 | 0.25 d |
 | Bounded pinned proof producer, caller-key MAC integration, and fixtures | 0.60 d |
 | Validator, sealed authority, receipt containment, resolved-grade API | 0.75 d |
 | Kernel mapping, projection, golden, AILANG pins | 0.35 d |
 | Named Go-test manifest and self-mutation gate | 0.45 d |
 | Mutations, full pinned gates, review contingency | 0.60 d |
-| **Total** | **4.0 d** |
+| **Total** | **4.25 d** |
 
 The tranche-1 estimate removes 0.5 day previously assigned to an unwired key lifecycle, and
 round 7 adds 0.50 day for the `D-WORLD-19` arm-A bounded store read — priced as its own row
 rather than absorbed, because `host/store` entering the tranche is new work, not a re-labelling.
-At 4.0 days the tranche sits at the upper bound of the 3–4 day sprint guardrail, not inside a
-comfortable margin; that is stated rather than hidden.
+Round 7b adds 0.25 day for the deadline machinery (`ObjectReadTimeout` plumbing through
+configuration and constructor refusal, the blocking-reader test, M22), again priced rather than
+absorbed into the contingency row. At 4.25 days the tranche now EXCEEDS the 3–4 day sprint
+guardrail by a quarter day. That is stated rather than hidden, and it is the re-quorum's and the
+human's to weigh — not the pricing table's to disguise by leaving 4.0 because it was 4.0.
 Authenticated-envelope canonicalization, mechanism-specific negative controls, and refusal-branch
 mutations remain; production provisioning/loading and composition-root tests move intact to
 tranche 2. No tranche adds a rotation protocol or a validator-side compiler execution path.
@@ -1018,6 +1070,64 @@ Ledger row: `D-WORLD-19`.
 - **Pricing.** `host/store` entering the tranche adds 0.50 day: tranche 1 moves 3.5 → 4.0 days
   and the decomposition total 9.5 → 10.0 days (§9).
 
+## 10.8 Round 7b revision (carve-out: both round-7 objections, reviewers' verbatim fixes, reconciled)
+
+- **Why a revision and not a park.** Round 7's quorum returned blocked with both reviewers
+  present, but both objections AFFIRM the attended `D-WORLD-19` arm-A direction and correct only
+  the API shape and one false sentence, each with a concrete reviewer-authored `proposed_fix` —
+  and the two fixes CONVERGE on the same corrected signature. That is the narrow-refinement
+  carve-out's exact precondition, and the carve-out was used. Convergence, not verbatim
+  application, is what justifies proceeding: this document's own history holds two rounds in
+  which a reviewer's verbatim fix was applied and then refuted by its own author (round 3 →
+  round 4, gpt5-6-sol's arm 2; round 6 → round 7, gemini-3-1-pro's
+  `OpenObject(ref) (io.ReadCloser, error)`, which was RATIFIED BY THE HUMAN and still wrong —
+  it demanded context-threading in prose while dropping the `context.Context` parameter from
+  the signature). "Applied verbatim" is not self-certifying here; two independent providers
+  arriving unprompted at the same correction is the stronger warrant.
+- **Objection 7a — gemini-3-1-pro, SUSTAINED (against its own round-6 fix).** Both round-7
+  spellings were defective. A `maxBytes` bound on `GetObject` changes a signature with 13
+  non-test out-of-tranche call sites under `host/` and `cmd/` (V40), two of them in
+  `host/daemon` and `host/replay`, which §8.2 itself declares frozen — unsatisfiable by
+  construction. `OpenObject(ref) (io.ReadCloser, error)` drops the context and breaks item 18's
+  wait-bounding discipline. Fix applied verbatim: the `GetObject` arm is DELETED from §3.3,
+  §8.2, and AC3 — not retained as an alternative — and the new surface accepts
+  `ctx context.Context` first.
+- **Objection 7b — gpt5-6-sol, SUSTAINED, and the controller measured it as WORSE than
+  stated.** The round-7 sentence "item 18 added `context.Context` (a WAIT bound)" was FALSE.
+  The reviewer argued a caller MAY pass `context.Background()`; at HEAD, 11 production store
+  reads ALREADY DO, ratified as item 18's DR-2 deferral and pinned by
+  `TestNoNewDeadlineFreeStoreReads` (V41). A context parameter is not a bound; a deadline is.
+  Item 18 bounded the SIGNATURE, and the tranche must impose its own deadline at its own call
+  site rather than inherit one. Fix applied verbatim: required positive `ObjectReadTimeout` in
+  validator configuration; `ValidateProof` derives `context.WithTimeout(ctx, ObjectReadTimeout)`
+  before opening or reading, even when the caller supplies no deadline; timeout/cancellation is
+  an explicit operational error minting no seal (§2.5); named blocking-reader test; mutation
+  M22; new AC16. This requirement is load-bearing, not belt-and-braces: the deadline the
+  validator derives at its own call site is the only wait bound standing between it and the
+  ratified deadline-free residue. The 11 DR-2 sites themselves are item 18's follow-on and are
+  deliberately NOT absorbed here (§8.2; rule stated so no implementer absorbs them).
+- **The reconciled signature — a reconciliation, not a third invention.**
+  `OpenObject(ctx context.Context, ref hashref.HashRef, maxBytes int64) (ObjectMeta, io.ReadCloser, error)`
+  is gpt5-6-sol's fuller spelling, adopted because it satisfies gemini-3-1-pro's fix STRICTLY:
+  gemini's own text asked only that the context be present and `GetObject` be left alone, and
+  this signature is gemini's corrected signature plus the byte bound and metadata gpt5 requires.
+  `ObjectMeta` is kept with a measured reason, not by default: `GetObject` returns
+  `InterfaceHash`, `SemanticID`, and `Provenance` beside the payload (V36's refresh at
+  `store.go:468`), and §3.3 steps 4–5 check exactly those fields, so a reader-only return would
+  strip data the validator consumes.
+- **Supersessions.** §10.7's sentence "item 18's `context.Context` bounds the WAIT, not the
+  BYTES" — and the copies of that claim that round 7 wrote into §3.3, §8.2, and V36 — is
+  superseded by §3.3's corrected paragraph, §8.2's corrected bullet, V36's in-row correction
+  note, and V41. §§10.1–10.7 remain byte-identical as records; the false sentence stands in
+  §10.7 as history of what round 7 believed. The false sentence's provenance is already
+  recorded: the controller wrote it into the round-7 directive and the designer transcribed it.
+- **What did not change.** `D-WORLD-17` arm A, the MAC seam (Mark's option B), `D-WORLD-19`
+  arm A (`host/store` IS in the tranche), the non-production tranche-1 framing, the §9
+  three-successor decomposition, and every §10.7 change not named above.
+- **Pricing.** +0.25 day for the deadline machinery: tranche 1 moves 4.0 → 4.25 days, the
+  decomposition total 10.0 → 10.25, and the tranche now exceeds the 3–4 day guardrail by a
+  quarter day, stated in §9 rather than hidden.
+
 ## 11. Verification Log
 
 Rows V1–V8, V12–V14, V17, V21, and V27–V32 were rerun from repository root at
@@ -1039,6 +1149,10 @@ same three non-test `CommandContext` sites). V5 and V10 carry in-row round-7 ref
 (V37, V36). V17 remains a `bef0153` gate measurement: it is not re-certified here, and AC11
 re-establishes the base gate at implementation time. Round-7 re-runs use `grep` (this
 environment's `rg` is unavailable); commands shown in V36–V38 are the ones actually executed.
+
+V40–V42 were run for round 7b on 2026-08-19 from repository root at `7806cac`. V36 carries an
+in-row round-7b correction note: its measurements stand, but three words of its claim — "a WAIT
+bound" — were false and are corrected there rather than silently rewritten (§10.8, V41).
 
 | ID | Claim | Exact command and same-call control | Observed output |
 |---|---|---|---|
@@ -1077,10 +1191,13 @@ environment's `rg` is unavailable); commands shown in V36–V38 are the ones act
 | V33 | Round-5 sweep (R1): before this revision the document referenced the free resolver symbol at exactly **five** lines — 78, 90, 201, 295, 398 — two more than the three the revision brief listed, which is why the sweep and not the list is authoritative. After the revision, every remaining occurrence names the symbol only to record that it is dropped (header, §2.2, §3.2, §10.5, and this log); none specifies it as a live API surface. | `grep -n 'GradeOfValidated' design_docs/planned/w-validated-proven-evidence-boundary.md` run before the edits and again after; counts via `grep -c` on the same pattern and path | Before: `doc_count=5`, lines 78/90/201/295/398 (the line-78/201/295 subset matching the brief's `sed -n '78p;201p;295p'` spot-check). After the R1/R2/R3 edits and before these two rows landed: 5 hits at lines 9/82/221/705/710, each a drop-notice; final re-run after this table row is recorded beneath the table. |
 | V34 | At `03c7892`, the dropped symbol appears in zero `.go`/`.ail` files and `host/evidence` does not exist, so R1 is a document-only change with no code to migrate; the same-call positive control fires. | `printf 'code_hits='; { grep -rln 'GradeOfValidated' --include='*.go' --include='*.ail' . \|\| true; } \| wc -l; printf 'control='; grep -rln 'func (s \*Store)' --include='*.go' . \| wc -l; ls -d host/evidence \|\| echo ABSENT; ls host/ \| wc -l` | `code_hits=0`; same-instrument control `4` files define `func (s *Store)` methods; `host/evidence` prints ABSENT while `ls host/` lists 15 packages, so the instrument sees both positives and the directory root. |
 | V35 | At `03c7892`, no exported bounded-subprocess helper exists in non-test `host`/`cmd` for `host/evidence` to import; the same-call inspection of unexported `runBounded` is the positive control and the measured pattern §3.4 reimplements (wall-time bound, output cap with overflow detection, overrun kill → refusal). | `git rev-parse --short HEAD; rg -n 'CommandContext' host cmd --glob '*.go' --glob '!**/*_test.go'; rg -n 'func Run[A-Z]\|func .*Bounded' host cmd --glob '*.go' --glob '!**/*_test.go'; nl -ba host/broker/handlers.go \| sed -n '60,140p'` | `03c7892`. Exactly 3 non-test `CommandContext` sites: `host/replay/replay.go:327`, `host/capsule/capsule.go:154`, `host/broker/handlers.go:93`. The exported-helper pattern matches only `func runBounded` at `host/broker/handlers.go:88` — 1 hit, lowercase, so unexported and broker-internal; zero `func Run[A-Z]` subprocess helpers. Inspection shows `context.WithTimeout(ctx, bounds.execTimeout)` feeding `exec.CommandContext`; `Setpgid: true` with `cmd.Cancel` invoking `killGroup` (`syscall.Kill(-pgid, SIGKILL)`) so a forked grandchild dies with the group; `io.LimitedReader{N: bounds.maxOutputBytes + 1}` with overflow returning `HandlerOutputOverflowError` and deadline expiry returning `HandlerTimeoutError`, both refusals returning no output. One property NOT to copy: `cmd.Stderr = cmd.Stdout` merges the streams, which §3.4's producer must not do because it parses stdout as JSON. |
-| V36 | At `52bc9ec`, 6b's premise still holds and item 18's landing did NOT close it: non-test `host/store` exposes exactly two exported `Object` methods, `GetObject` returns the whole payload as `[]byte`, and the six non-test files contain zero `io.Reader`/`io.LimitReader`/`maxBytes` and never touch the `io` package — item 18 added `context.Context` (a WAIT bound), not a byte bound. The stale round-6 control is corrected: **25** exported `Store` methods, not 23. | `git rev-parse --short HEAD; grep -n 'func (s \*Store) PutObject\|func (s \*Store) GetObject' host/store/store.go; F=(host/store/journal.go host/store/scan.go host/store/store.go host/store/writer_lock.go host/store/writer_lock_other.go host/store/writer_lock_unix.go); grep -nE 'io\.Reader\|io\.LimitReader\|maxBytes' "${F[@]}"; echo "io_rc=$?"; grep -nE '^\s*"io"\|\bio\.' "${F[@]}"; echo "ioimport_rc=$?"; for f in "${F[@]}"; do printf '%s ctx=%s\n' "$f" "$(grep -cE 'context\.Context' "$f")"; done; grep -hnE '^func \([a-z]+ \*Store\) [A-Z]' host/store/*.go \| grep -v _test \| wc -l` | `52bc9ec`; `store.go:444 func (s *Store) PutObject(o Object) error`, `store.go:468 func (s *Store) GetObject(ctx context.Context, ref hashref.HashRef) (Object, bool, error)`; `io_rc=1`, `ioimport_rc=1` (zero hits across all six files); same-path control: `context.Context` reads `store.go 7`, the other five files `0`; **25** exported `Store` methods across the six non-test files (`journal.go` 9, `scan.go` 2, `store.go` 14, the three `writer_lock*` files 0). |
+| V36 | At `52bc9ec`, 6b's premise still holds and item 18's landing did NOT close it: non-test `host/store` exposes exactly two exported `Object` methods, `GetObject` returns the whole payload as `[]byte`, and the six non-test files contain zero `io.Reader`/`io.LimitReader`/`maxBytes` and never touch the `io` package — item 18 added `context.Context`, not a byte bound. The stale round-6 control is corrected: **25** exported `Store` methods, not 23. **Round-7b correction: this row's claim originally called the added parameter "(a WAIT bound)". It is not one — a context parameter bounds nothing unless armed with a deadline, and 11 production store reads pass `context.Background()` under item 18's own ratified DR-2 deferral (V41). Item 18 bounded the SIGNATURE; the measurements in this row are unchanged (§10.8).** | `git rev-parse --short HEAD; grep -n 'func (s \*Store) PutObject\|func (s \*Store) GetObject' host/store/store.go; F=(host/store/journal.go host/store/scan.go host/store/store.go host/store/writer_lock.go host/store/writer_lock_other.go host/store/writer_lock_unix.go); grep -nE 'io\.Reader\|io\.LimitReader\|maxBytes' "${F[@]}"; echo "io_rc=$?"; grep -nE '^\s*"io"\|\bio\.' "${F[@]}"; echo "ioimport_rc=$?"; for f in "${F[@]}"; do printf '%s ctx=%s\n' "$f" "$(grep -cE 'context\.Context' "$f")"; done; grep -hnE '^func \([a-z]+ \*Store\) [A-Z]' host/store/*.go \| grep -v _test \| wc -l` | `52bc9ec`; `store.go:444 func (s *Store) PutObject(o Object) error`, `store.go:468 func (s *Store) GetObject(ctx context.Context, ref hashref.HashRef) (Object, bool, error)`; `io_rc=1`, `ioimport_rc=1` (zero hits across all six files); same-path control: `context.Context` reads `store.go 7`, the other five files `0`; **25** exported `Store` methods across the six non-test files (`journal.go` 9, `scan.go` 2, `store.go` 14, the three `writer_lock*` files 0). |
 | V37 | At `52bc9ec` the AILANG gate pins are unchanged in VALUE and moved in LINE: V5's cited 311/350 are `bef0153` positions; item 18's landing moved them. The doc's §3.6/§5/§8.1 claims about the pins remain correct. | `grep -nE "^EXACT_TOTAL_VERIFIED=\|^EXACT_TOTAL_TESTS = " scripts/verify_ail.sh` | `323:EXACT_TOTAL_VERIFIED=10`; `363:EXACT_TOTAL_TESTS = 39`. |
 | V38 | Round-7 freshness sweep from the EARLIEST declared base: 41 non-design files changed `aaada20..52bc9ec`, and the same-instrument control scoped to one cited file fires. Every retained row citing a swept file was re-run or explicitly labelled unrefreshed (see the preamble); none was marked fresh by default. | `git diff --name-only aaada20..HEAD -- ':!design_docs' \| wc -l; git diff --name-only aaada20..HEAD -- host/store/store.go \| wc -l` | `41`; control `1`. |
 | V39 | **CONTROLLER-MEASURED at `52bc9ec`, round 7, after the designer run — PRIOR ART FOR THE BOUNDED-READ IDIOM EXISTS AND THE DOC DID NOT KNOW IT.** Non-test `host/` already contains **two** `io.LimitReader` sites, and one of them (`host/capsule/capsule.go:238`) already uses the **`limit+1` detection-byte** shape §3.3 step 3 now specifies. Neither is an exported bounded-read helper — both are inline stdlib idioms at their own call sites — so there is nothing to REUSE and §8.2's new `host/store` surface is not duplicating an existing API. Recorded because §3.4 applies exactly this discipline to `runBounded` (V35: reuse REJECTED with a reason rather than deferred), and applying it to `runBounded` but not to the idiom this round introduces would be the same inconsistency round 6 blocked on. AC3's scoping is unaffected: it counts `io.LimitReader` in non-test `host/evidence`, a package that does not exist at base, so these two sites cannot satisfy it. | `grep -rn 'io.LimitReader' host/ --include='*.go' \| grep -v _test` ; same-path control `grep -rn 'io.ReadAll' host/ --include='*.go' \| grep -v _test \| wc -l` | Two hits: `host/broker/registry_reconcile.go:481` `io.ReadAll(io.LimitReader(resp.Body, cfg.MaxBodyBytes))` and `host/capsule/capsule.go:238` `io.ReadAll(io.LimitReader(pipe, limit+1))`; `host/evidence` does not exist (`test -d host/evidence` rc=1). |
+| V40 | At `7806cac`, `GetObject` cannot gain a `maxBytes` parameter without changing out-of-tranche callers: exactly **13** non-test `.GetObject(` call sites exist in `*.go` under `host/` and `cmd/` outside `host/store` — `host/broker/approve.go` 6, `host/broker/broker.go` 2, `host/transitionreg/transitionreg.go` 2, `host/registry/registry.go` 1, `host/daemon/handlers.go` 1, `host/replay/replay.go` 1 — and the last two are in packages §8.2 declares frozen, so the round-7 `maxBytes`-on-`GetObject` arm was unsatisfiable by construction and is deleted (§10.8). | `git rev-parse --short HEAD; grep -rn '\.GetObject(' --include='*.go' host/ cmd/ \| grep -v '^host/store/' \| grep -v _test \| wc -l`; same-call, same-scope control: `grep -rn '\.PutObject(' --include='*.go' host/ cmd/ \| grep -v '^host/store/' \| grep -v _test \| wc -l`; per-file enumeration via `grep -rln` then `grep -c` per file | `7806cac`; count `13`; control `8` — non-zero, and equal to V28's independently measured eight non-test `PutObject` sites, so the instrument reads a known quantity correctly. Per-file enumeration exactly as stated in the claim. |
+| V41 | At `7806cac`, a context parameter is not a wait bound — item 18's OWN ratchet says so: `host/store/context_read_test.go` declares **11** production store reads that pass `context.Background()`, left deadline-free "by ratified deferral DR-2", with the comment stating the set "may SHRINK … but it may never GROW" and naming the "11 -> 0" reduction as the FOLLOW-ON item's mechanically observable path. So item 18 bounded the SIGNATURE, and this tranche's validator must arm its own deadline (`ObjectReadTimeout`, AC16) rather than inherit one; the 11 sites belong to item 18's follow-on, not to this tranche (§8.2). | `grep -n 'deadlineFreeReadPins\|TestNoNewDeadlineFreeStoreReads\|DR-2' host/store/context_read_test.go; sed -n '361,379p' host/store/context_read_test.go` | Pin map at `context_read_test.go:370`: `host/broker/approve.go` 8, `host/registry/registry.go` 2, `host/replay/replay.go` 1 — sum 11; matcher regexp `\.(GetObject\|GetWorld\|GetLogEntry\|GetRegistryHead\|SelectedHead)\(\s*context\.Background\(\)`; `TestNoNewDeadlineFreeStoreReads` at `:387` scans non-test `host/` and `cmd/` and reds if any file's count exceeds its pin. The comment reads verbatim "the EXACT set of production store reads this item leaves deadline-free, by ratified deferral DR-2". |
+| V42 | AC16's and AC3's base readings at `7806cac`: the token `ObjectReadTimeout` occurs in **zero** `*.go` files under `host/`, `cmd/`, and `scripts/`, and `OpenObject` in **zero** `*.go` files under `host/` and `cmd/` (tests included), so both head readings differ from base by construction; the same-call positive control fires in the same scope. | `printf 'objectreadtimeout_code='; grep -rn 'ObjectReadTimeout' --include='*.go' host/ cmd/ scripts/ \| wc -l; printf 'withtimeout_control='; grep -rn 'context.WithTimeout' --include='*.go' host/ cmd/ \| grep -v _test \| wc -l; printf 'openobject_code='; grep -rn 'OpenObject' --include='*.go' host/ cmd/ \| wc -l` | `objectreadtimeout_code=0`; `openobject_code=0`; same-scope control `withtimeout_control=8` non-test `context.WithTimeout` sites (all outside the not-yet-existing `host/evidence`), so each zero is a measurement, not a broken pattern. |
 
 Final V33 re-run after all round-5 edits including revision 2: `grep -n 'GradeOfValidated'` on
 this file returns **8** hits at lines 9 (header), 85 (§2.2 drop-notice), 231 (§3.2 drop-notice),
