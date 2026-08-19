@@ -20,6 +20,20 @@ import (
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
+// expiredReadDeadline is the deterministic timeout stimulus for the read-
+// deadline tests: any NON-POSITIVE duration makes context.WithTimeout take
+// context.WithDeadline's `dur <= 0` branch, which cancels the context
+// SYNCHRONOUSLY at construction — no timer, no goroutine, no race — so the
+// store read is refused at connection acquisition and the 503/Timeout branch
+// runs on every route, every run. A small POSITIVE duration (the previous
+// `1 * time.Nanosecond`) is a FUTURE deadline: it arms a time.AfterFunc, and a
+// fast read can complete before the timer goroutine runs, answering 200 with a
+// real body (measured at base: ~0.65–0.8% of runs). Do not "shrink" this back
+// to a positive value; TestExpiredReadDeadlineExpiresAtConstruction reds on
+// the sign, and the design doc for w-daemon-timeout-test-flake holds the
+// measurements.
+const expiredReadDeadline = -1 * time.Nanosecond
+
 // ---------------------------------------------------------------------------
 // The route table under test
 // ---------------------------------------------------------------------------
@@ -251,7 +265,7 @@ func TestDaemonReadDeadline(t *testing.T) {
 		// Shrinking the FIELD is the only way to exercise the shipped timeout
 		// branch without a ten-second test — which is why New wires a field
 		// rather than referencing the constant directly.
-		d.readDeadline = 1 * time.Nanosecond
+		d.readDeadline = expiredReadDeadline
 
 		for _, route := range routes {
 			rec := requestRecorder(t, d, http.MethodGet, route.target, nil)
@@ -523,7 +537,7 @@ func TestTimeoutStatusMirrorsSketch(t *testing.T) {
 
 	d := newHandlerDaemon(t)
 	routes := seedReadRoutes(t, d, "mirrors-sketch")
-	d.readDeadline = 1 * time.Nanosecond
+	d.readDeadline = expiredReadDeadline
 
 	for _, route := range routes {
 		rec := requestRecorder(t, d, http.MethodGet, route.target, nil)
@@ -744,5 +758,32 @@ func assertErrorLogLine(t *testing.T, logged, label, method, target string) {
 	if want := method + " " + path + ":"; !strings.Contains(line, want) {
 		t.Errorf("%s: error-log line = %q, want it to name the route %q — a detail line with no route is unattributable, and an UNANCHORED route match would accept a line carrying client-supplied query text",
 			label, line, want)
+	}
+}
+
+// TestExpiredReadDeadlineExpiresAtConstruction pins the property every 503
+// assertion in this file now rests on: the stimulus context is DEAD BEFORE any
+// store read can begin. Two assertions, two mutations:
+//   - the sign check kills the "shrink it back to a positive nanosecond"
+//     mutation deterministically (no timing anywhere);
+//   - the ctx.Err() check goes through the production readCtx, so a readCtx
+//     that ignores d.readDeadline (or re-derives from the 10s constant) reds
+//     here in one run.
+func TestExpiredReadDeadlineExpiresAtConstruction(t *testing.T) {
+	if expiredReadDeadline >= 0 {
+		t.Fatalf("expiredReadDeadline = %s, want a negative duration — a positive value arms "+
+			"a timer and re-creates the 200-vs-503 race this constant exists to remove",
+			expiredReadDeadline)
+	}
+	d := newHandlerDaemon(t)
+	d.readDeadline = expiredReadDeadline
+	ctx, cancel := d.readCtx(httptest.NewRequest(http.MethodGet, "/v1/head", nil))
+	defer cancel()
+	if ctx.Err() == nil {
+		t.Fatalf("readCtx under an already-expired deadline returned a LIVE context — the " +
+			"stimulus must be expired at construction, before any store read can begin")
+	}
+	if !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		t.Fatalf("ctx.Err() = %v, want context.DeadlineExceeded", ctx.Err())
 	}
 }

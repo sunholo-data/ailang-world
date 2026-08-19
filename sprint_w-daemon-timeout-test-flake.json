@@ -1,0 +1,969 @@
+{
+  "sprint_id": "w-daemon-timeout-test-flake",
+  "queue_item": 19,
+  "title": "The daemon read-deadline tests' stimulus is a POSITIVE 1ns duration, which in Go arms a timer instead of expiring at construction: replace both sites with one named expiredReadDeadline = -1 * time.Nanosecond, pin the mechanism with a new test, and write the production residual into handlers.go as a named LIMITATION",
+  "status": "executed - M1_DETERMINISTIC_STIMULUS complete, all 8 ACs green, all 3 mutation arms as pre-registered, worktree uncommitted for the controller",
+  "created": "2026-08-19",
+  "planner": "mission-control iteration 94, opus sprint-planner",
+  "design_doc": "design_docs/planned/w-daemon-timeout-test-flake.md",
+  "sprint_plan": "design_docs/planned/w-daemon-timeout-test-flake-sprint-plan.md",
+  "base_commit": "5380e6f",
+  "branch": "sprint/w-daemon-timeout-test-flake",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-iter94-timeout-flake",
+  "github_issues": [],
+  "environment": {
+    "AILANG_BIN": "/tmp/ailang-v0300/ailang",
+    "ailang_version": "AILANG v0.30.0 (e37b370)",
+    "GOTOOLCHAIN": "go1.25.6",
+    "exports_required_on_every_command": "export AILANG_BIN=/tmp/ailang-v0300/ailang GOTOOLCHAIN=go1.25.6",
+    "notes": [
+      "verify_go.sh FATALs without AILANG_BIN and DENYLISTS the local go1.26.4 (scripts/verify_go.sh:113-121 lists go1.26.0-go1.26.5). Both exports on EVERY command.",
+      "Omitting AILANG_BIN makes 17 host/verifygate arms fail LOUDLY BY DESIGN. That is a BASE CONDITION, not a regression.",
+      "The PATH `ailang` is a -dirty dev build. NEVER use it as a gate. No .ail file is touched by this item anyway.",
+      "Every ailang call prints `Observatory: 302MB (warn threshold: 200MB)` on stderr. verify_ail.sh is rc=0 with it present (iteration-89 stderr-merge repair holds). NOT a regression, do not 'fix' it.",
+      "scripts/verify_go.sh IS this sprint's gate, unlike item 18's plan: the driver drift gate is GREEN in this worktree (6 tracked driver files, tree matches HEAD) and the full gate was measured rc=0 at base in 162s. If it ever FATALs on DRIVER DRIFT, that red means 'the fleet must commit' - never absorb tools/launchd/* into this change.",
+      "host/broker carries a recorded ~18% base flake; rows 20 (host/capsule) and 21 (host/archive) are open base flakes too. None of them is this diff. Attribute by shape against the base rate, never by one run.",
+      "A -run selector matching nothing exits 0 with 'testing: warning: no tests to run' - OBSERVED LIVE AT BASE for AC2. Never read rc alone; count the --- PASS: / --- FAIL: lines."
+    ]
+  },
+  "ratification": {
+    "status": "NOT REQUIRED - no open ask on this item",
+    "provenance": "Design doc went through TWO full quorum rounds (round 1 BLOCKED, both objections PREMISE and both measured by the controller as D15/D16; round 2 one REJECT, classified COMPLETENESS/ATTRIBUTION not DIRECTION) plus a controller narrow-refinement carve-out. ARM A never moved.",
+    "authoritative": "THE DESIGN DOC WINS over anything else, including this plan. Every place this plan departs from a literal doc sentence is named in sprint plan section 0.5 with the measurement that forced it - exactly one such place (0.5(i))."
+  },
+  "velocity": {
+    "method": "Changed-lines against measured repo references, cross-checked against the planner's own end-to-end scratch application of the whole change.",
+    "references": [
+      "item 16 (d9712dd): 335 Go insertions across 4 files in a ~0.5 d band",
+      "item 18 sprint plan: ~1270 LOC over 1.5 d = ~845 LOC/day, inside the measured band",
+      "this item: ~70 changed lines across 2 files in a 0.25 d band"
+    ],
+    "applied": "~70 changed lines over 0.25 d. The estimate's risk is NOT in the typing: it is the three backup/land-proof/vet/kill/inverse/restore mutation cycles and reading counted lines correctly. Budget the quarter-day there.",
+    "measured_cost_centres": {
+      "verify_go_sh": "162 s (the real wall-clock cost centre)",
+      "verify_ail_sh": "4 s",
+      "AC3_count_1000": "3 s (planner-measured x3)",
+      "AC4_count_2000": "5-6 s",
+      "full_mutation_table": "~2 min",
+      "total_acceptance_sweep": "~5 min"
+    },
+    "estimated_total_changed_lines": 70,
+    "estimated_days": 0.25
+  },
+  "features": [
+    {
+      "id": "M1_DETERMINISTIC_STIMULUS",
+      "name": "One named constant expiredReadDeadline = -1 * time.Nanosecond at BOTH stimulus sites, a mechanism-pin test, and the in-code LIMITATION",
+      "description": "Design doc section 4, the only milestone: (4.1) one named constant with its comment block replacing BOTH `1 * time.Nanosecond` stimulus lines - read_deadline_test.go:254 inside TestDaemonReadDeadline/real-store-expired-deadline and :526 inside TestTimeoutStatusMirrorsSketch - with `d.readDeadline = expiredReadDeadline`; (4.2) a new ~26-line test TestExpiredReadDeadlineExpiresAtConstruction through PRODUCTION readCtx (it wraps, it does not replace), asserting the sign and that ctx.Err() is context.DeadlineExceeded at construction; (4.3) the LIMITATION(w-daemon-late-read-503) block appended to timedOut's doc comment in handlers.go - COMMENT ONLY, zero behavioural bytes. The mechanism: context.WithTimeout is WithDeadline(parent, now+d), and WithDeadline's `dur <= 0` branch cancels SYNCHRONOUSLY at construction (no timer, no goroutine) while any POSITIVE duration arms a time.AfterFunc that a fast :memory: read can beat - which is the measured ~1% base flake.",
+      "commits": 1,
+      "files": [
+        "host/daemon/read_deadline_test.go (+41 / -2, measured on the planner's scratch application)",
+        "host/daemon/handlers.go (+27 / -0, comment-only)"
+      ],
+      "closes_acceptance_criteria": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4",
+        "AC5",
+        "AC6",
+        "AC7",
+        "AC8"
+      ],
+      "mutations": [
+        "MU-STIM-POSITIVE",
+        "MU-DEADLINE-DETACH",
+        "MU-SITE-REVERT"
+      ],
+      "tasks": [
+        {
+          "id": "T1.1",
+          "name": "The named constant and BOTH stimulus sites (doc 4.1)",
+          "advances": [
+            "AC5"
+          ],
+          "verification": [
+            "grep -n 'time.Nanosecond' host/daemon/read_deadline_test.go -> ONE line, the const, carrying a leading `-`",
+            "grep -n 'd.readDeadline = ' host/daemon/read_deadline_test.go -> both stimulus sites read `= expiredReadDeadline`; the 50ms blocking-store site at :271 UNCHANGED",
+            "go vet ./host/daemon -> rc=0"
+          ]
+        },
+        {
+          "id": "T1.2",
+          "name": "The mechanism pin TestExpiredReadDeadlineExpiresAtConstruction (doc 4.2)",
+          "advances": [
+            "AC2"
+          ],
+          "verification": [
+            "go test ./host/daemon -run '^TestExpiredReadDeadlineExpiresAtConstruction$' -v -count=1 -> EXACTLY 1 counted '--- PASS:' line (base: 0, with a VACUOUS rc=0)"
+          ],
+          "notes": "No new imports - context, errors, net/http, net/http/httptest, time are already in the file. newHandlerDaemon is handlers_test.go:19. No fake anywhere: the asserted value is produced by the context package through production readCtx. PASTE THE GOFMT-CLEAN FORM quoted in plan T1.2 (the doc's second Fatalf needs `the \" +` with a space before the +)."
+        },
+        {
+          "id": "T1.3",
+          "name": "The LIMITATION(w-daemon-late-read-503) comment on timedOut (doc 4.3)",
+          "advances": [
+            "AC6"
+          ],
+          "verification": [
+            "grep -c 'LIMITATION(w-daemon-late-read-503)' host/daemon/handlers.go -> 1 (base 0)",
+            "grep -c 'writeReadTimeout' host/daemon/handlers.go -> 7 (same-call known-positive control)",
+            "grep -c 'err.Error()' host/daemon/handlers.go -> 5 (base 5, MUST NOT MOVE - item 18's AC5 live count)",
+            "go build ./host/daemon/ -> rc=0",
+            "sed 's://.*::' host/daemon/handlers.go | grep -c readDeadline -> 6; raw grep -c -> 7 (instrument control unmoved)"
+          ],
+          "notes": "ZERO behavioural bytes. The comment is deliberately free of err.Error(), Nanosecond, Microsecond and the bare token readDeadline - do NOT 'improve' it by adding any of them; each one moves an AC. PASTE THE GOFMT-CLEAN FORM quoted in plan T1.3."
+        },
+        {
+          "id": "T1.4",
+          "name": "gofmt hygiene",
+          "verification": [
+            "gofmt -l host/daemon/read_deadline_test.go host/daemon/handlers.go -> EMPTY. Both files are gofmt-clean at base; pasting the doc's blocks verbatim makes them dirty (see doc_defects_found G2). The reflow is EXPECTED and AC-neutral - re-run T1.3's greps after gofmt -w to prove the formatter touched no code."
+          ]
+        },
+        {
+          "id": "T1.5",
+          "name": "The static sweep at package and host/ cmd/ scope (doc AC5)",
+          "advances": [
+            "AC5"
+          ],
+          "verification": [
+            "sed 's://.*::' host/daemon/*.go | grep -c 'Nanosecond\\|Microsecond' -> 1 (base 2)",
+            "find host cmd -name '*.go' -exec sed 's://.*::' {} + | grep -c 'Nanosecond\\|Microsecond' -> 1 (base 2)",
+            "same with -not -path 'host/daemon/*' -> 0 (the composition's other half, measured not assumed)",
+            "the single stripped hit must be `const expiredReadDeadline = -1 * time.Nanosecond`, leading `-` present",
+            "RECORDED, DECLARED NOT THE GATE: raw grep -rn 'Nanosecond\\|Microsecond' host/daemon/ -> 2 at base AND 2 at head (section 4.1's comment quotes the retired spelling, so the raw form cannot move)"
+          ]
+        },
+        {
+          "id": "T1.6",
+          "name": "The determinism proofs (doc AC3/AC4) - RUN LAST",
+          "advances": [
+            "AC3",
+            "AC4"
+          ],
+          "verification": [
+            "go test ./host/daemon -run '^TestDaemonReadDeadline$/^real-store-expired-deadline$' -count=1000 -v -> EXACTLY 1000 counted '--- PASS: TestDaemonReadDeadline/real-store-expired-deadline' lines, 0 '--- FAIL' (~3 s)",
+            "go test ./host/daemon -run '^TestTimeoutStatusMirrorsSketch$' -count=2000 -v -> EXACTLY 2000 counted '--- PASS: TestTimeoutStatusMirrorsSketch' lines, 0 '--- FAIL' (~5-6 s)"
+          ],
+          "notes": "A fast finish is NOT a skipped run - the verdict is the counted line (1000 and 2000), never the clock. If either exceeds 5 minutes, stop and report; do not kill the run and do not lower a count."
+        },
+        {
+          "id": "T1.7",
+          "name": "The mutation table in full (doc section 6)",
+          "advances": [
+            "AC7"
+          ],
+          "verification": [
+            "T-MU1, T-MU2, T-MU3 executed in order, each with backup / anchor / apply / sha256+grep landed-proof / vet (and build for the production mutant) / counted kill / enumerated inverse / cp restore proven byte-identical by sha256"
+          ]
+        },
+        {
+          "id": "T1.8",
+          "name": "The full gates (doc AC1)",
+          "advances": [
+            "AC1"
+          ],
+          "verification": [
+            "./scripts/verify_ail.sh -> rc=0, 10 identities / 39 named tests / world gate 9/9 (~4 s). No .ail file is touched, so the pins are unmoved BY CONSTRUCTION - any other totals mean something else changed: STOP and report, never adjust a pin.",
+            "./scripts/verify_go.sh -> rc=0 (~162 s)"
+          ],
+          "notes": "At head the `status = 200, want 503` shape is EXTINCT, so any red in host/daemon is real. A red in host/broker is that package's recorded ~18% base flake."
+        },
+        {
+          "id": "T1.9",
+          "name": "Hygiene and the post-M1 hashes (doc AC8)",
+          "advances": [
+            "AC8"
+          ],
+          "verification": [
+            "git status --porcelain -> ONLY host/daemon/read_deadline_test.go and host/daemon/handlers.go modified (the executor makes NO commits)",
+            "shasum -a 256 on both files -> record; these are the values every mutation restore must return to byte-identically",
+            "no stray files: backups live OUTSIDE the repo in /tmp/w19_bak/"
+          ]
+        }
+      ],
+      "passes": null,
+      "estimated_changed_lines": 70,
+      "estimated_days": 0.25,
+      "dependencies": []
+    }
+  ],
+  "doc_plan_cross_check_P1": {
+    "rule": "A design doc and its sprint plan are two documents describing one sprint; revising either silently rots the other. This repo has paid for that, so the two lists are written out and compared explicitly.",
+    "acs_the_doc_says_this_milestone_closes": [
+      "AC1",
+      "AC2",
+      "AC3",
+      "AC4",
+      "AC5",
+      "AC6",
+      "AC7",
+      "AC8"
+    ],
+    "doc_basis": "Design doc section 4 is titled 'M1 - the change (one milestone, independently landable)'. There is exactly ONE milestone, so every AC in doc section 8 is closed by it. Section 8 enumerates AC1 through AC8 and nothing else.",
+    "acs_this_plans_milestone_names": [
+      "AC1",
+      "AC2",
+      "AC3",
+      "AC4",
+      "AC5",
+      "AC6",
+      "AC7",
+      "AC8"
+    ],
+    "identical": true,
+    "verdict": "CONFIRMED IDENTICAL - same count (8), same members, none dropped, none invented, none deferred to a follow-on, none split across milestones (there is only one).",
+    "mutation_cross_check": {
+      "doc_section_6_rows": [
+        "MU-STIM-POSITIVE",
+        "MU-DEADLINE-DETACH",
+        "MU-SITE-REVERT"
+      ],
+      "plan_prescribes": [
+        "MU-STIM-POSITIVE",
+        "MU-DEADLINE-DETACH",
+        "MU-SITE-REVERT"
+      ],
+      "planner_added": [],
+      "identical": true,
+      "note": "The plan adds NO mutation. Where an AC has no named mutation the plan says so and names what stands in, rather than inventing one - see acceptance_criteria_map[*].stands_in_for_missing_mutation."
+    }
+  },
+  "acceptance_criteria_map": {
+    "AC1": {
+      "closed_by": "M1_DETERMINISTIC_STIMULUS",
+      "task": "T1.8",
+      "named_mutation": [],
+      "command": "./scripts/verify_ail.sh ; ./scripts/verify_go.sh",
+      "base_measured": "rc=0 (4 s) and rc=0 (162 s), first attempt, planner-measured at 5380e6f",
+      "head_expected": "rc=0 and rc=0",
+      "observable": "gate rc plus verify_ail's 10 identities / 39 named tests / 9-of-9 world steps",
+      "stands_in_for_missing_mutation": "The gates' non-vacuity is a STANDING BASE CONDITION: verify_go.sh FATALs without AILANG_BIN and on a denylisted toolchain, and the base flake itself reds it ~2.1% of the time. AC1 demonstrably CAN fail.",
+      "honest_base_condition": "A full verify_go.sh runs both affected tests, so the BASE gate reds on exactly these two tests with probability ~2.1% (planner-measured rates, concentrated in the PLAIN leg - the race leg measured 0/1000). The doc prices it at ~2.9% across two legs. A base red matching the 200-want-503 shape is ATTRIBUTED AT BASE (rule 3d) and the gate re-run once. It is NOT a regression and must NOT be 'discovered' as one. At head that shape is extinct and any red is real.",
+      "cannot_see": "anything test-specific - that is AC2-AC5's job"
+    },
+    "AC2": {
+      "closed_by": "M1_DETERMINISTIC_STIMULUS",
+      "task": "T1.2",
+      "named_mutation": [
+        "MU-STIM-POSITIVE (the sign arm)",
+        "MU-DEADLINE-DETACH (the ctx.Err() arm)"
+      ],
+      "command": "go test ./host/daemon -run '^TestExpiredReadDeadlineExpiresAtConstruction$' -v -count=1",
+      "base_measured": "rc=0 with ZERO '--- PASS:' lines and the output 'testing: warning: no tests to run' - THE VACUOUS rc=0, observed live",
+      "head_expected": "rc=0 with EXACTLY 1 '--- PASS: TestExpiredReadDeadlineExpiresAtConstruction' line (planner-measured on the scratch head)",
+      "observable": "the COUNTED --- PASS: line, never rc",
+      "cannot_see": "whether the two big tests actually use the constant it pins - AC5 carries that"
+    },
+    "AC3": {
+      "closed_by": "M1_DETERMINISTIC_STIMULUS",
+      "task": "T1.6",
+      "named_mutation": [],
+      "command": "go test ./host/daemon -run '^TestDaemonReadDeadline$/^real-store-expired-deadline$' -count=1000 -v",
+      "base_measured": "rc=1. Sample A: 985 PASS / 15 failing runs. Sample B: 994 PASS / 6 failing runs. Combined 21/2000 = 1.05% - HIGHER than the doc's M2 rate of 0.8%. Failure text: 'read_deadline_test.go:258: status = 200, want 503; body={...real data...}' on world, object, log range, registry and head.",
+      "head_expected": "rc=0, EXACTLY 1000 counted '--- PASS: TestDaemonReadDeadline/real-store-expired-deadline' lines, 0 '--- FAIL' (planner-measured on the scratch head, 3 s)",
+      "stands_in_for_missing_mutation": "Non-vacuity is MEASURED, not argued: the AC reds at base, twice, first-party.",
+      "cannot_see": "the second test (AC4), the sibling arms normal-deadline-answers-200 and blocking-store (exercised by AC1's full gates), or a future re-introduction of the race (AC5)"
+    },
+    "AC4": {
+      "closed_by": "M1_DETERMINISTIC_STIMULUS",
+      "task": "T1.6",
+      "named_mutation": [],
+      "command": "go test ./host/daemon -run '^TestTimeoutStatusMirrorsSketch$' -count=2000 -v",
+      "base_measured": "rc=1. Sample A (n=2000): 1974 PASS / 26 FAIL. Sample B (n=1000): 994 / 6. Combined 32/3000 = 1.07% - HIGHER than the doc's M2 rate of 0.65%.",
+      "head_expected": "rc=0, EXACTLY 2000 counted '--- PASS: TestTimeoutStatusMirrorsSketch' lines, 0 '--- FAIL' (planner-measured, 5 s)",
+      "stands_in_for_missing_mutation": "Same as AC3: measured red at base.",
+      "cannot_see": "same blindnesses as AC3, mirrored"
+    },
+    "AC5": {
+      "closed_by": "M1_DETERMINISTIC_STIMULUS",
+      "task": "T1.5",
+      "named_mutation": [
+        "MU-SITE-REVERT"
+      ],
+      "command_a": "sed 's://.*::' host/daemon/*.go | grep -c 'Nanosecond\\|Microsecond'",
+      "command_b": "find host cmd -name '*.go' -exec sed 's://.*::' {} + | grep -c 'Nanosecond\\|Microsecond'",
+      "base_measured": "(a) 2, (b) 2, rest-of-scope 0; instrument control on handlers.go stripped 6 vs raw 7; find host/daemon -type d -> host/daemon only, no subdirectory, so the *.go glob equals the old recursive scope",
+      "head_expected": "(a) 1 and (b) 1, the single hit being `const expiredReadDeadline = -1 * time.Nanosecond` with the leading `-` in the matched text; control still 6 vs 7 (all planner-measured on the scratch head)",
+      "observable": "the COMMENT-STRIPPED count at TWO scopes; the count MOVES 2 -> 1 and each side is a different code state",
+      "secondary_reading_declared_not_the_gate": "raw grep -rn 'Nanosecond|Microsecond' host/daemon/ reads 2 at base AND 2 at head - section 4.1's comment quotes the retired spelling in prose, so the raw form cannot move, cannot fail for the right reason, and would red any future editor who merely mentions the token. Recorded, never gating.",
+      "cannot_see": "a future racy stimulus spelled at Millisecond scale or through a variable; and - bought by the strip - the strip is TEXTUAL not syntactic, so it deletes everything right of the first // including real code after a // inside a string literal"
+    },
+    "AC6": {
+      "closed_by": "M1_DETERMINISTIC_STIMULUS",
+      "task": "T1.3",
+      "named_mutation": [],
+      "command_a": "grep -c 'LIMITATION(w-daemon-late-read-503)' host/daemon/handlers.go (control in the same call: grep -c 'writeReadTimeout' -> 7)",
+      "command_b": "grep -c 'err.Error()' host/daemon/handlers.go",
+      "command_c": "go build ./host/daemon/",
+      "base_measured": "(a) 0 with control 7, (b) 5, (c) rc=0",
+      "head_expected": "(a) 1 with control 7, (b) STILL 5, (c) rc=0 (all planner-measured on the gofmt'd scratch head)",
+      "stands_in_for_missing_mutation": "The doc: 'the comment has no behaviour to mutate - a mutation whose only observable is a grep of prose adds nothing beyond AC6(a) itself'. (a) carries a same-call known-positive control; (b) is a DECLARED base-green paired control proving a comment-only edit cannot move a recorded raw-grep observable (the iteration-92 class), whose only reachable failure mode is this item's own edit; (c) is a compile.",
+      "cannot_see": "the comment's truthfulness - that is prose; its behavioural content is exactly the uncovered residual doc section 3 names, which is why the successor item exists"
+    },
+    "AC7": {
+      "closed_by": "M1_DETERMINISTIC_STIMULUS",
+      "task": "T1.7",
+      "named_mutation": [
+        "MU-STIM-POSITIVE",
+        "MU-DEADLINE-DETACH",
+        "MU-SITE-REVERT"
+      ],
+      "command": "the mutation table of sprint plan section 4.2, in full",
+      "base_measured": "go vet ./host/daemon rc=0 and go build ./host/daemon/ rc=0 at base (the mutant-compiles baseline)",
+      "head_expected": "every mutant vets (and the production one builds) before its verdict; every kill read as COUNTED '--- FAIL:' lines from the named killer; every inverse arm observes exactly its stated red set with no unexplained reds; every sha256 moves and restores byte-identical",
+      "observable": "counted --- FAIL: lines, enumerated red sets, sha256 movement and byte-identical restore"
+    },
+    "AC8": {
+      "closed_by": "M1_DETERMINISTIC_STIMULUS",
+      "task": "T1.9",
+      "named_mutation": [],
+      "command": "git status --porcelain ; shasum -a 256 host/daemon/read_deadline_test.go host/daemon/handlers.go",
+      "base_measured": "porcelain EMPTY; 59c8f03df154edd1c659f308e13402ae2a895ae8dd3c398b6c5eb4785d6cd5f4 and cc9f206c0472287551c5885ab654efb221502ba252d5235c814621ddde94c708",
+      "head_expected": "only the two intended files modified; both sha256 equal to their post-M1 values (the one-shots of AC7 leave no trace)",
+      "stands_in_for_missing_mutation": "hygiene; its instrument is porcelain + sha256",
+      "cannot_see": "anything about behaviour"
+    }
+  },
+  "mutations": [
+    {
+      "id": "MU-STIM-POSITIVE",
+      "milestone": "M1_DETERMINISTIC_STIMULUS",
+      "file": "host/daemon/read_deadline_test.go",
+      "kind": "test-file one-shot",
+      "anchor": "grep -n '^const expiredReadDeadline' host/daemon/read_deadline_test.go -> exactly 1 hit reading `= -1 * time.Nanosecond`",
+      "edit": "const expiredReadDeadline = -1 * time.Nanosecond  ->  const expiredReadDeadline = 1 * time.Nanosecond (drop the minus)",
+      "landed_proof": [
+        "shasum -a 256 host/daemon/read_deadline_test.go != PRE",
+        "grep -c 'const expiredReadDeadline = 1 \\* time.Nanosecond' -> 1"
+      ],
+      "compiles": "go vet ./host/daemon -> rc=0 (PLANNER-MEASURED)",
+      "kill_command": "go test ./host/daemon -run '^TestExpiredReadDeadlineExpiresAtConstruction$' -v -count=1",
+      "kill_expected": "rc=1 with EXACTLY 1 counted '--- FAIL:' line, the sign Fatalf. PLANNER-MEASURED on the scratch head. Zero timing dependence - this is the arm that makes a ~1% race killable at -count=1.",
+      "inverse_command": "go test ./host/daemon -skip '^TestExpiredReadDeadlineExpiresAtConstruction$' -count=1",
+      "inverse_expected": "rc=0 (PLANNER-MEASURED). PRICED RESIDUAL: this mutant IS the base flake, so ~2% of inverse runs red with the 200-want-503 / 'answered 200' shape. That red is the mutation's own phenotype - attribute by shape and RE-MEASURE ONCE (an operator re-measurement of a one-shot arm is not a test retry, doc section 11). A red of any OTHER shape fails the arm.",
+      "restore": "cp /tmp/w19_bak/read_deadline_test.go host/daemon/read_deadline_test.go ; sha256 == PRE"
+    },
+    {
+      "id": "MU-DEADLINE-DETACH",
+      "milestone": "M1_DETERMINISTIC_STIMULUS",
+      "file": "host/daemon/handlers.go",
+      "kind": "PRODUCTION-file one-shot",
+      "anchor": "grep -n 'return context.WithTimeout(r.Context(), d.readDeadline)' host/daemon/handlers.go -> exactly 1 hit at line 270, inside readCtx (func line 269)",
+      "edit": "readCtx body: d.readDeadline -> readDeadline (the 10s package constant at daemon.go:128)",
+      "landed_proof": [
+        "shasum -a 256 host/daemon/handlers.go != PRE",
+        "grep -c 'context.WithTimeout(r.Context(), readDeadline)' -> 1"
+      ],
+      "compiles": "go build ./host/daemon/ -> rc=0 AND go vet ./host/daemon -> rc=0. PLANNER-MEASURED - D16's 'both identifiers in scope' claim, executed.",
+      "kill_command": "go test ./host/daemon -run '^TestExpiredReadDeadlineExpiresAtConstruction$' -v -count=1",
+      "kill_expected": "rc=1 with EXACTLY 1 counted '--- FAIL:' line, message 'readCtx under an already-expired deadline returned a LIVE context - the stimulus must be expired at construction, before any store read can begin'. PLANNER-MEASURED.",
+      "inverse_command": "go test ./host/daemon -skip '^TestExpiredReadDeadlineExpiresAtConstruction$' -count=1 -v   (then ENUMERATE the '--- FAIL:' lines)",
+      "inverse_expected": "NOT rc=0 - this mutant is MULTIPLY-KILLED and the red SET is the assertion. PLANNER-MEASURED TWICE (at the base stimulus and at the head stimulus), identical both times: rc=1 with EXACTLY 4 '--- FAIL:' lines - '--- FAIL: TestDaemonReadDeadline', '    --- FAIL: TestDaemonReadDeadline/real-store-expired-deadline', '    --- FAIL: TestDaemonReadDeadline/blocking-store', '--- FAIL: TestTimeoutStatusMirrorsSketch' - with '--- PASS: TestDaemonReadDeadline/normal-deadline-answers-200'. Any red OUTSIDE those four lines is unexplained and fails the arm.",
+      "doc_divergence": "THE DOC'S SECTION 6 ROW OMITS blocking-store FROM THIS SET and says any red outside its set fails the arm. See doc_defects_found G1: an executor following that sentence verbatim would score a CORRECT mutant as a FAILED arm.",
+      "restore": "cp /tmp/w19_bak/handlers.go host/daemon/handlers.go ; sha256 == PRE"
+    },
+    {
+      "id": "MU-SITE-REVERT",
+      "milestone": "M1_DETERMINISTIC_STIMULUS",
+      "file": "host/daemon/read_deadline_test.go",
+      "kind": "test-file one-shot",
+      "has_killer_test": false,
+      "anchor": "grep -n 'd.readDeadline = expiredReadDeadline' host/daemon/read_deadline_test.go -> THREE hits after this change: the real-store-expired-deadline site, the TestTimeoutStatusMirrorsSketch site, and the PIN TEST'S OWN write. Identify the target BY ENCLOSING FUNCTION, never by a bare pattern.",
+      "edit": "the TestTimeoutStatusMirrorsSketch stimulus line only -> d.readDeadline = 1 * time.Nanosecond (bypassing the constant)",
+      "landed_proof": [
+        "shasum -a 256 != PRE",
+        "grep -n 'd.readDeadline = 1 \\* time.Nanosecond' -> 1 hit, and awk '/^func TestTimeoutStatusMirrorsSketch/,/^}/' <file> | grep -c 'time.Nanosecond' -> 1"
+      ],
+      "compiles": "go vet ./host/daemon -> rc=0 (PLANNER-MEASURED)",
+      "kill_command": "NONE - AND THAT IS THE POINT OF THE ROW. Do not invent a test for this mutant.",
+      "detector": "AC5's package-scope sweep: sed 's://.*::' host/daemon/*.go | grep -c 'Nanosecond\\|Microsecond' -> 2 (the constant plus the reverted line, one of them positive) against AC5's expected 1 -> RED. The wider host/ cmd/ scope reads 2 as well. PLANNER-MEASURED.",
+      "non_vacuity_of_the_no_killer_claim": "go test ./host/daemon -run '^TestExpiredReadDeadlineExpiresAtConstruction$' -v -count=1 | grep -c -- '--- PASS:' -> 1: the pin test STILL PASSES under this mutant. PLANNER-MEASURED - 'no committed test kills it' demonstrated, not asserted.",
+      "inverse_expected": "There is no -skip arm because there is no killer to skip. Package go test ./host/daemon -count=1 -> rc=0 GREEN (PLANNER-MEASURED); the mutant is the base flake at ONE site (~1%), so a red here is that shape - attribute by shape.",
+      "restore": "cp /tmp/w19_bak/read_deadline_test.go host/daemon/read_deadline_test.go ; sha256 == PRE ; then the sweep reads 1 again",
+      "why_it_matters": "This row IS iteration 93's lesson expressed as a mutation: the only per-commit detector for a re-introduced sub-1% race is a STATIC SWEEP, so the sweep is an AC and its scope is the whole package plus host/ cmd/, not one file."
+    }
+  ],
+  "pre_registered": {
+    "note": "Every value below was measured FIRST-PARTY by the planner at 5380e6f, each zero with a known-positive control in the same call. The head-tree and mutant readings were taken with `go build/vet/test -overlay` against scratch files under /tmp - ZERO repo bytes were written (git status --porcelain empty and both files' sha256 unchanged afterwards). If the executor's run reports anything else, the edit is not the one probed here: STOP AND REPORT, never adjust a pin.",
+    "instrument_pins": {
+      "HEAD": "5380e6f, git status --porcelain empty",
+      "toolchain": "go1.25.6 darwin/arm64 via GOTOOLCHAIN; GOROOT .../toolchain@v0.0.1-go1.25.6.darwin-arm64 present, no download",
+      "ailang": "AILANG v0.30.0, Commit e37b370",
+      "sha256_read_deadline_test_go": "59c8f03df154edd1c659f308e13402ae2a895ae8dd3c398b6c5eb4785d6cd5f4",
+      "sha256_handlers_go": "cc9f206c0472287551c5885ab654efb221502ba252d5235c814621ddde94c708",
+      "note_on_the_test_file_hash": "BYTE-IDENTICAL to the hash the doc's M4 row recorded when it restored the file after the controller's iteration-93 probe - independent confirmation that the one-shot left no trace and that plan and measurement share a base."
+    },
+    "base_gates": {
+      "verify_ail_sh": "rc=0 in 4 s - 10 required identities verified, 39 named tests pass, world package gate 9/9",
+      "verify_go_sh": "rc=0 in 162 s - 0 binary blobs among 215 tracked files; driver drift gate 6 tracked driver files, working tree matches HEAD; go gate PASSED build clean, plain and race tests pass with pinned AILANG_BIN",
+      "go_vet_host_daemon": "rc=0",
+      "go_build_host_daemon": "rc=0",
+      "go_test_host_daemon_count_1": "rc=0 (1.87 s)"
+    },
+    "base_flake_rates_first_party": {
+      "real_store_expired_deadline": "15/1000 + 6/1000 = 21/2000 = 1.05% (doc M2: 0.8%)",
+      "mirrors_sketch": "26/2000 + 6/1000 = 32/3000 = 1.07% (doc M2: 0.65%)",
+      "under_race": "0 failures in 1000 runs of TestTimeoutStatusMirrorsSketch with -race (18 s) - THE FLAKE IS A PLAIN-LEG PHENOMENON; the race detector slows the read enough that the armed timer wins every time",
+      "consequence_for_AC1": "base gate red probability ~2.1%, concentrated in the plain leg, vs the doc's ~2.9% two-leg model. Direction favourable; the doc's per-leg independence assumption over-counts the race leg. The race leg is NOT evidence about this flake in either direction."
+    },
+    "ac_baselines": {
+      "AC1": "rc=0 / rc=0, first attempt",
+      "AC2": "rc=0 with 0 '--- PASS:' lines and 'testing: warning: no tests to run' - the VACUOUS pass",
+      "AC3": "rc=1, 985/15 and 994/6",
+      "AC4": "rc=1, 1974/26 (n=2000) and 994/6 (n=1000)",
+      "AC5a": "2",
+      "AC5b": "2 (rest-of-scope 0)",
+      "AC5_control": "stripped 6 vs raw 7 on handlers.go",
+      "AC5_raw_secondary": "2",
+      "AC6a": "0 with same-call control 7",
+      "AC6b": "5",
+      "AC6c": "rc=0",
+      "AC7": "go vet rc=0 / go build rc=0 (the mutant-compiles baseline)",
+      "AC8": "porcelain empty; the two sha256 above",
+      "test_name_allocation": "grep -rn 'TestExpiredReadDeadline' host/ -> rc=1, unallocated",
+      "stimulus_sites": "grep -n 'time.Nanosecond' host/daemon/read_deadline_test.go -> :254, :526",
+      "seam": "handlers.go:269-270 readCtx = context.WithTimeout(r.Context(), d.readDeadline); daemon.go:128 readDeadline = 10 * time.Second"
+    },
+    "head_expected_measured_on_scratch": {
+      "AC2": "rc=0, exactly 1 '--- PASS: TestExpiredReadDeadlineExpiresAtConstruction' (0.4 s)",
+      "AC3": "rc=0, 1000 PASS, 0 FAIL (3 s)",
+      "AC4": "rc=0, 2000 PASS, 0 FAIL (5 s)",
+      "AC5a": "1 - `const expiredReadDeadline = -1 * time.Nanosecond`, leading `-` present",
+      "AC5b": "1 (changed package 1 + rest-of-host/cmd 0, composed with both halves measured)",
+      "AC5_control": "stripped 6 / raw 7 - unmoved by the section 4.3 comment",
+      "AC5_raw_secondary": "2 at head as well as at base - cannot move, declared not the gate",
+      "AC6a": "1 with control 7",
+      "AC6b": "5 - unmoved",
+      "AC6c": "rc=0",
+      "full_package": "go test ./host/daemon -count=1 -> rc=0",
+      "gofmt": "gofmt -l on both files -> EMPTY after the reflow of doc_defects_found G2",
+      "diff_size": "read_deadline_test.go +41/-2 ; handlers.go +27/-0"
+    },
+    "wall_clock_budgets": {
+      "AC3_count_1000": "~3 s (planner-measured x3)",
+      "AC4_count_2000": "~5-6 s",
+      "verify_ail_sh": "~4 s",
+      "verify_go_sh": "~162 s",
+      "mutation_table": "~2 min",
+      "total_acceptance_sweep": "~5 min",
+      "ceiling_rule": "If AC3 or AC4 exceeds 5 minutes, or verify_go.sh exceeds 12 minutes (its race leg carries a 600 s watchdog), STOP AND REPORT the discrepancy - do not kill the run and do not lower a count.",
+      "brief_discrepancy": "The controller's brief states -count=1000 of TestTimeoutStatusMirrorsSketch took 138 s. THAT DID NOT REPRODUCE across four first-party samples (3 s at n=1000, 6 s at n=2000, 5 s at head n=2000, 3 s for the real-store arm). Budget from the measurement; see doc_defects_found G3."
+    }
+  },
+  "doc_defects_found": [
+    {
+      "id": "G1",
+      "severity": "PLAN-AFFECTING",
+      "where": "design doc section 6, MU-DEADLINE-DETACH inverse arm",
+      "summary": "The stated inverse red SET is under-counted by one: TestDaemonReadDeadline/blocking-store ALSO reds, and the doc's next sentence says any red outside its set 'is unexplained and fails the arm'.",
+      "measured": "go test -overlay ... -skip '^TestExpiredReadDeadlineExpiresAtConstruction$' -count=1 -v, run twice (base stimulus and head stimulus), identical both times: rc=1 with exactly 4 '--- FAIL:' lines - TestDaemonReadDeadline (parent), .../real-store-expired-deadline, .../blocking-store, TestTimeoutStatusMirrorsSketch; normal-deadline-answers-200 PASS.",
+      "mechanism": "blocking-store sets d.readDeadline = 50 * time.Millisecond (read_deadline_test.go:271) and parks a getter until ctx.Done(). The mutant makes readCtx ignore the FIELD and use the 10 s package constant, so the park is never released inside test time and the subtest's own 2 s watchdog fires. Same phenotype as the other two reds - 'the field is ignored' - not an unexplained red.",
+      "consequence": "An executor following the doc's sentence verbatim would score a CORRECT mutant as a FAILED arm.",
+      "resolution": "Sprint plan section 4.2 T-MU2 carries the corrected, measured red set and requires ENUMERATION rather than an rc criterion. This is the ONLY place this plan overrides a literal doc sentence; it is overridden by measurement, not by argument, and the doc's underlying intent ('the red set is the assertion; an unexplained red fails the arm') is preserved exactly.",
+      "for_the_controller": "Decide whether to carry this into the design doc or record it as a sprint-plan finding."
+    },
+    {
+      "id": "G2",
+      "severity": "executor-affecting, resolved in the plan",
+      "where": "design doc sections 4.2 and 4.3",
+      "summary": "gofmt reflows the doc's blocks. Pasted verbatim, BOTH files become non-gofmt-clean (they are clean at base).",
+      "measured": "gofmt -d on a scratch application: (1) section 4.3's numbered residual list - Go 1.19+ doc-comment formatting treats the indented '(i)/(ii)' lines as a code block, so gofmt inserts a blank // before and after the list and re-indents its lines with a tab; (2) section 4.2's SECOND t.Fatalf - gofmt wants 'the \" +' with a space before the +, while the doc writes 'the \"+'. The FIRST Fatalf in the same test is left alone.",
+      "ac_impact": "NONE. Both changes are comment/whitespace: AC5(a)/(b) are comment-stripped, AC6(b) counts err.Error(), AC6(a)'s token is untouched. All four RE-MEASURED on the gofmt'd file: 1 / 1 / 5 / 1-with-control-7. No gate enforces gofmt (grep -rln gofmt .github scripts -> nothing; verify_go.sh has no fmt arm), so this reds nothing - it is hygiene, and the repo is currently clean.",
+      "resolution": "Sprint plan T1.2 and T1.3 quote the GOFMT-CLEAN landed forms verbatim; T1.4 makes an empty `gofmt -l` a task and pre-registers the reflow as EXPECTED, so neither the executor reverts it as a mis-paste nor the evaluator reads the whitespace delta from the doc's rendering as one."
+    },
+    {
+      "id": "G3",
+      "severity": "budget-affecting",
+      "where": "the controller's brief (not the design doc)",
+      "summary": "The brief states -count=1000 of TestTimeoutStatusMirrorsSketch took 138 s on this rig. Four first-party samples say 3-6 s.",
+      "measured": "n=1000 base 3 s (test binary reports 2.707s); n=2000 base 6 s; n=2000 head 5 s; real-store arm n=1000 3 s x3. Under -race, n=1000 takes 18 s.",
+      "resolution": "Sprint plan section 5 budgets from the measurement and adds an explicit ceiling rule so a fast finish is not read as a skipped run and a slow one is reported rather than killed. The high-count ACs are still ordered LAST per the brief's P6."
+    },
+    {
+      "id": "G4",
+      "severity": "cosmetic, already self-reported by the doc",
+      "where": "design doc header",
+      "summary": "'host/daemon/handlers.go (comment-only, ~+18/-0)' under-counts the section 4.3 block after the round-2 revision. Measured: +27/-0. The doc's own section 13 records this observation and leaves it; the plan uses the measured number."
+    },
+    {
+      "id": "G5",
+      "severity": "planner near-miss, recorded as a trap for the executor",
+      "where": "MU-SITE-REVERT's target site",
+      "summary": "After this change the test file contains THREE `d.readDeadline = expiredReadDeadline` writes - the two stimulus sites plus the section 4.2 pin test's own. The planner's first mutation script targeted 'the occurrence after func TestTimeoutStatusMirrorsSketch', matched two, asserted count==1, and wrote NOTHING - after which the sweep read the UNMUTATED value 1 and would have scored as a clean arm without the assert.",
+      "lesson": "A mutation that never landed prints the same green as one that worked. Hence the two-part landed-proof (sha256 movement AND a token grep at the intended site) and T-MU3's by-enclosing-function rule."
+    }
+  ],
+  "not_doing_ratified_do_not_fix": [
+    "ARM B (a post-read expiry check answering 503 on a successful-but-expired read) and ARM C (both) - REJECTED ON THE RECORD in doc section 3 with measurements, not taste. Do not implement, do not 'improve toward'.",
+    "Weakening, moving or re-wording either test's assertions - the 503/Timeout pins are BYTE-UNCHANGED; only the stimulus moves.",
+    "Any retry or skip. The one operator re-measurement allowed in MU-STIM-POSITIVE's inverse arm binds the OPERATOR, not the committed gate.",
+    "Committing a -count loop to CI - AC3/AC4 are operator acceptance commands (doc section 7).",
+    "The 50 ms stimulus at read_deadline_test.go:271 (blocking-store) - deliberately outside AC5's pattern and safe at any positive value, because the parked getter cannot return until ctx.Done() fires (D4).",
+    "host/store/context_read_test.go - it already spells expiry correctly (D9).",
+    "A committed AST guard against future positive sub-deadline stimuli - doc section 10 declines it with its >=2-instance ledger.",
+    "Filing the successor rows: w-daemon-late-read-503 and the busy_timeout-vs-readDeadline ordering residual are CONTROLLER/RECORD actions, not sprint work.",
+    "Rows 20 (host/capsule) and 21 (host/archive) - untouched, and NO shared root cause is claimed.",
+    "tools/launchd/*, scripts/mission_decisions.sh, verify_*.sh, CI workflows, design_docs/sketches/worlddapi.ail, and the design doc itself."
+  ],
+  "executor_vs_controller_P8": {
+    "principle": "Generator != judge. The controller re-runs every gate independently; the executor's report is evidence, not the verdict.",
+    "executor_reports": [
+      "The two edited files in the worktree, uncommitted.",
+      "Per-AC observed output for AC1-AC8 in section 5 order: the actual counted numbers (--- PASS: / --- FAIL: / grep counts / rc), not 'green'.",
+      "The full mutation ledger for T-MU1/T-MU2/T-MU3: PRE hash, POST hash, the landed-proof grep, vet (and build) rc, the kill arm's counted --- FAIL: lines WITH the failure text, the inverse arm's ENUMERATED red set, and the restore hash == PRE.",
+      "Post-M1 sha256 of both files - the values AC8 and every restore compare against.",
+      "Any deviation from a pre-registered value, verbatim, with the command that produced it. A deviation is STOP-and-report, never a silently adjusted pin.",
+      "Any base-shape red, attributed at base with the re-measurement.",
+      "Changed lines actually landed, against the plan's +41/-2 and +27/-0."
+    ],
+    "controller_re_derives": [
+      "Both full gates on the FINAL tree, and again on the MERGE commit (Gate 3b).",
+      "AC2, AC3, AC4, AC5(a)/(b) and their controls, AC6(a)/(b)/(c) from the committed tree.",
+      "At least one mutation arm re-executed first-party - a mutation table is a claim until someone other than its author runs a row of it.",
+      "The doc<->plan AC identity check against the committed doc.",
+      "Whether G1's red-set correction and G2's gofmt reflow are carried into the design doc or recorded as sprint-plan findings.",
+      "Filing the two named follow-ups (w-daemon-late-read-503; the busy_timeout-vs-readDeadline ordering residual)."
+    ]
+  },
+  "risk_level": "low",
+  "top_risks": [
+    {
+      "id": "R1",
+      "risk": "Executor scores MU-DEADLINE-DETACH's inverse arm FAILED because blocking-store reds and the doc says any red outside its set fails the arm",
+      "severity": "high without G1",
+      "mitigation": "doc_defects_found G1 + mutations[MU-DEADLINE-DETACH].inverse_expected carry the measured four-line red set and the mechanism that puts blocking-store in it"
+    },
+    {
+      "id": "R2",
+      "risk": "A mutation 'passes' because it never landed - especially MU-SITE-REVERT, whose target string occurs THREE times in the head file",
+      "severity": "high",
+      "mitigation": "two-part landed-proof (sha256 + token grep at the intended site); by-enclosing-function targeting; the planner's own near-miss recorded as G5"
+    },
+    {
+      "id": "R3",
+      "risk": "Executor reads rc instead of counted lines and scores AC2 green on the VACUOUS 'no tests to run'",
+      "severity": "medium",
+      "mitigation": "AC2's base reading (rc=0 with 0 PASS lines) is pre-registered; every AC's pass condition is a count"
+    },
+    {
+      "id": "R4",
+      "risk": "A base-flake red (status = 200, want 503) at base or in a mutation inverse arm is misattributed to the diff",
+      "severity": "medium",
+      "mitigation": "~2.1% priced with first-party rates; attribute-by-shape and re-measure-once rules; at head the shape is EXTINCT so any red there is real"
+    },
+    {
+      "id": "R5",
+      "risk": "Executor 'improves' the section 4.3 comment and adds err.Error(), Nanosecond, Microsecond or bare readDeadline, silently moving AC5 or AC6(b)",
+      "severity": "medium",
+      "mitigation": "T1.3's explicit prohibition plus four controls that catch each one"
+    },
+    {
+      "id": "R6",
+      "risk": "Executor treats gofmt's reflow as a mis-paste and reverts it, or leaves the tree non-gofmt-clean",
+      "severity": "low",
+      "mitigation": "G2 pre-registers the reflow; T1.2/T1.3 quote the landed forms; T1.4 makes gofmt -l empty a task"
+    },
+    {
+      "id": "R7",
+      "risk": "Executor mistakes a 3-second AC3 for a skipped run, or kills a slow verify_go.sh as a hang",
+      "severity": "low",
+      "mitigation": "budgets from four first-party samples plus the explicit ceiling rule"
+    },
+    {
+      "id": "R8",
+      "risk": "git checkout -- used to clean up a mutant, destroying the uncommitted milestone",
+      "severity": "medium",
+      "mitigation": "cp from /tmp/w19_bak/ only; the prohibition appears three times in the plan because this is unrecoverable"
+    },
+    {
+      "id": "R9",
+      "risk": "verify_go.sh FATALs on DRIVER DRIFT mid-sprint",
+      "severity": "low",
+      "mitigation": "green at base here (6 tracked driver files, tree matches HEAD). If it reds: stop and report - that red means the fleet must commit, never that World absorbs it"
+    }
+  ],
+  "execution": {
+    "iteration": 94,
+    "committer": "THE CONTROLLER MAKES THE COMMIT - one commit for the one milestone. The executor never runs git commit/add/push/checkout/stash/restore or gh pr.",
+    "worktree_rule": "A SIBLING of the repo, never /tmp: /Users/voightkampff/dev/sunholo-data/.wt-iter94-timeout-flake",
+    "restore_rule": "Restores are `cp` from /tmp/w19_bak/ (taken OUTSIDE the repo). `git checkout --` is FORBIDDEN: the milestone is uncommitted by construction and git checkout -- would delete it.",
+    "forbidden": [
+      "git add -A",
+      "git checkout --",
+      "editing the design doc",
+      "editing tools/launchd/* or scripts/mission_decisions.sh",
+      "editing verify_*.sh",
+      "editing design_docs/sketches/worlddapi.ail",
+      "touching ~/.ailang/state/mission-v1*"
+    ],
+    "planner_wrote_zero_repo_bytes": "All head/mutant probing used `go build/vet/test -overlay` with scratch files under /tmp/head94, /tmp/mu_stim, /tmp/mu_detach, /tmp/mu_revert. git status --porcelain empty and both sha256 unchanged afterwards. The EXECUTOR does not need -overlay: it edits the real files and restores from cp backups."
+  },
+  "handoff": {
+    "to": "sprint-executor",
+    "plan_path": "design_docs/planned/w-daemon-timeout-test-flake-sprint-plan.md",
+    "progress_path": "sprint_w-daemon-timeout-test-flake.json",
+    "estimated_duration": "0.25 days",
+    "total_changed_lines_estimate": 70,
+    "risk_level": "low",
+    "milestones": [
+      {
+        "id": "M1_DETERMINISTIC_STIMULUS",
+        "name": "Deterministic already-expired stimulus + mechanism pin + LIMITATION",
+        "estimated_days": 0.25,
+        "closes": [
+          "AC1",
+          "AC2",
+          "AC3",
+          "AC4",
+          "AC5",
+          "AC6",
+          "AC7",
+          "AC8"
+        ]
+      }
+    ],
+    "discovery": "Five findings (G1-G5). The plan-affecting one is G1: the doc's MU-DEADLINE-DETACH inverse red set omits TestDaemonReadDeadline/blocking-store, and the doc's own next sentence would score a correct mutant as a failed arm. Measured twice. G2 (gofmt reflow) is executor-affecting and resolved by quoting the landed forms. G3 corrects a 46x wall-clock budget error in the brief. G4 is a self-reported doc header undercount. G5 is a planner near-miss preserved as an executor trap.",
+    "carried_forward_out_of_scope": [
+      "w-daemon-late-read-503 - the ARM B contract (a post-read expiry check at all seven read sites), if ever wanted, with doc section 3's B.3 contract-violating-fixture question answered under its own quorum",
+      "The busy_timeout-vs-readDeadline ORDERING residual (doc section 11): the deadline does not govern lock waits, busy_timeout does (D18), and nothing in the code asserts busy_timeout (2s) < readDeadline (10s)"
+    ],
+    "unblocks_on_landing": [
+      "queue rows 20 and 21 become the next flake work with one fewer confounder in `go test ./...`; NO shared root cause with them is claimed (doc section 9)"
+    ]
+  },
+  "executor_record": {
+    "executor": "mission-control iteration 94, opus sprint-executor, sandboxed worktree, NO git write permission",
+    "date": "2026-08-19",
+    "worktree_head_at_execution": "ab6e4e1",
+    "note_on_base": "The sprint plan's stated base is 5380e6f; HEAD at execution is ab6e4e1 (the plan+JSON commit on top of it). Both target files' PRE sha256 are BYTE-IDENTICAL to the plan's section 0.1 PRE values, so the executor and the planner share a base for every file this sprint touches. Verified, not assumed.",
+    "milestone": "M1_DETERMINISTIC_STIMULUS",
+    "milestone_status": "COMPLETE - all eight ACs green, all three mutation arms as pre-registered, worktree left UNCOMMITTED for the controller",
+    "deliverable": "the worktree diff: host/daemon/read_deadline_test.go and host/daemon/handlers.go, modified, uncommitted",
+    "files_changed": {
+      "host/daemon/read_deadline_test.go": {
+        "git_numstat": "+43 / -2",
+        "plan_sizing_section_1_1": "+41 / -2",
+        "reconciled": "NOT a deviation. `git diff | grep -c '^+[^+]'` = 41 non-blank added lines, which is exactly the plan's +41; git numstat's 43 additionally counts the TWO BLANK separator lines that begin the const block and the pin test. Same bytes, two counting conventions. Measured both ways rather than asserted.",
+        "content": "(a) the 14-line expiredReadDeadline const block inserted after the import block's closing paren; (b) BOTH stimulus lines replaced with `d.readDeadline = expiredReadDeadline`; (c) the 27-line TestExpiredReadDeadlineExpiresAtConstruction appended"
+      },
+      "host/daemon/handlers.go": {
+        "git_numstat": "+27 / -0",
+        "plan_sizing_section_1_1": "+27 / -0",
+        "reconciled": "EXACT MATCH",
+        "content": "the LIMITATION(w-daemon-late-read-503) block appended to timedOut's doc comment. COMMENT-ONLY: zero behavioural bytes; timedOut's body, readCtx, writeReadTimeout and every handler are byte-unchanged."
+      },
+      "no_other_file_touched": "git status --porcelain shows exactly these two files as modified, at every checkpoint including post-mutation-table"
+    },
+    "site_readings_after_edit": {
+      "stimulus_sites_moved": "read_deadline_test.go:268 (was :254, TestDaemonReadDeadline/real-store-expired-deadline) and :540 (was :526, TestTimeoutStatusMirrorsSketch); both now `d.readDeadline = expiredReadDeadline`. Line numbers shifted by the 14-line const block, as expected.",
+      "50ms_site_untouched": ":285 `d.readDeadline = 50 * time.Millisecond` (was :271) - the blocking-store subtest, deliberately outside the pattern per doc AC5/D4. UNCHANGED.",
+      "three_expiredReadDeadline_writes": "grep counts THREE `d.readDeadline = expiredReadDeadline` writes at head (:268, :540, :779) - exactly the hazard sprint plan section 0.5(v) recorded. T-MU3 was therefore targeted BY ENCLOSING FUNCTION, never by a bare pattern.",
+      "readCtx_seam_unmoved": "handlers.go readCtx func line 269, WithTimeout line 270 - identical to the plan's section 0.3 seam reading, because the comment block is inserted BELOW them at timedOut."
+    },
+    "gates_in_brief_order": {
+      "gofmt_l_host_daemon": {
+        "result": "EMPTY (clean) on the FIRST pass, before any gofmt -w",
+        "finding": "The plan's section 0.5(ii) pre-registered that pasting the DOC's section 4.2/4.3 text verbatim leaves the tree non-gofmt-clean, and quoted the gofmt-clean landed forms in T1.2/T1.3. The executor pasted the PLAN's forms, and gofmt -l was empty immediately - so T1.4's `gofmt -w` fallback was never needed. The plan's correction is confirmed sufficient by construction."
+      },
+      "go_build_all": "rc=0",
+      "go_vet_all": "rc=0",
+      "pin_test_run_v_count_1": {
+        "command": "go test ./host/daemon -run '^TestExpiredReadDeadlineExpiresAtConstruction$' -v -count=1",
+        "rc": 0,
+        "counted_PASS_lines": 1,
+        "counted_FAIL_lines": 0,
+        "verdict": "PASS - and the verdict is the COUNTED line, not rc: at base this same command was a VACUOUS rc=0 with 0 PASS lines and `testing: warning: no tests to run`"
+      },
+      "go_test_host_daemon_count_1": "rc=0, ok 2.275s",
+      "verify_ail_sh": {
+        "rc": 0,
+        "observed": "verify gate PASSED: 10 required identities verified, 39 named tests pass; world package gate PASSED 9/9 steps performed non-zero work",
+        "pins_unmoved": "10 / 39 / 9-of-9 - exactly the plan's T1.8 pins. No .ail file is touched by this item, so this is unmoved by construction.",
+        "observatory_warning": "`Observatory: 303MB (warn threshold: 200MB)` present on stderr, gate still rc=0 - expected, the iteration-89 stderr-merge repair holds. Not a regression."
+      }
+    },
+    "acceptance_criteria_observed": {
+      "_ordering": "Run in the sprint plan's section 5 order, cheap-first. Every verdict below is the OBSERVED counted value, never rc alone.",
+      "AC6a": {
+        "LIMITATION(w-daemon-late-read-503)": 1,
+        "expected": 1,
+        "base": 0,
+        "control_writeReadTimeout": 7,
+        "control_expected": 7,
+        "verdict": "PASS - the zero-to-one carries its known-positive control in the same call"
+      },
+      "AC6b": {
+        "err.Error()": 5,
+        "expected": 5,
+        "base": 5,
+        "verdict": "PASS - UNMOVED, as required"
+      },
+      "AC6c": {
+        "command": "go build ./host/daemon/",
+        "rc": 0,
+        "verdict": "PASS"
+      },
+      "AC5a": {
+        "command": "sed 's://.*::' host/daemon/*.go | grep -c 'Nanosecond|Microsecond'",
+        "observed": 1,
+        "expected": 1,
+        "base": 2,
+        "single_hit_verbatim": "const expiredReadDeadline = -1 * time.Nanosecond",
+        "leading_minus_present": true,
+        "verdict": "PASS - base 2 -> head 1, and the surviving hit is the const with its leading minus"
+      },
+      "AC5b": {
+        "command": "find host cmd -name '*.go' -exec sed 's://.*::' {} + | grep -c ...",
+        "observed": 1,
+        "expected": 1,
+        "base": 2,
+        "rest_of_scope_not_host_daemon": 0,
+        "verdict": "PASS - composed from both measured halves (changed package 1 + rest-of-scope 0), not assumed from AC5a"
+      },
+      "AC5_instrument_control": {
+        "handlers_go_stripped_readDeadline": 6,
+        "handlers_go_raw_readDeadline": 7,
+        "expected": "6 / 7",
+        "base": "6 / 7",
+        "verdict": "PASS - UNMOVED by the section 4.3 comment; the strip still removes exactly the one comment mention and keeps all six code hits, so the instrument reads"
+      },
+      "AC5_raw_secondary_DECLARED_NOT_THE_GATE": {
+        "observed": 2,
+        "base": 2,
+        "note": "grep -rn 'Nanosecond|Microsecond' host/daemon/ reads 2 at base AND 2 at head - it cannot move, because section 4.1's const comment quotes the retired `1 * time.Nanosecond` spelling. RECORDED, NEVER GATING, exactly as the plan declares.",
+        "verdict": "recorded, non-gating"
+      },
+      "AC2": {
+        "command": "go test ./host/daemon -run '^TestExpiredReadDeadlineExpiresAtConstruction$' -v -count=1",
+        "rc": 0,
+        "counted_PASS_lines": 1,
+        "expected": "exactly 1",
+        "base": "0 PASS lines with a VACUOUS rc=0",
+        "verdict": "PASS"
+      },
+      "AC7": {
+        "verdict": "PASS - all three mutation arms executed end-to-end, every value matching the plan's section 0.4/4.2 pre-registration. Full ledger under `mutation_ledger`."
+      },
+      "AC8": {
+        "git_status_porcelain": " M host/daemon/handlers.go\n M host/daemon/read_deadline_test.go",
+        "only_two_intended_files": true,
+        "post_M1_sha256_read_deadline_test_go": "c5bc411084e9bfa8c88c4b1d6113f9e8abaa26dd559606efe557d72179da0eee",
+        "post_M1_sha256_handlers_go": "2d6c381c2a1d0624cac50b4ba9cd08fe68870465f66948062cb02196605e5959",
+        "hashes_after_full_mutation_table": "BOTH byte-identical to the post-M1 values above - the tree is the milestone again",
+        "no_stray_files": "backups live at /tmp/w19_bak/ (OUTSIDE the repo); no .orig/.bak beside the sources; no /tmp artefacts inside the repo",
+        "gofmt_l_final": "empty",
+        "verdict": "PASS"
+      },
+      "AC1_verify_ail": {
+        "rc": 0,
+        "observed": "10 identities / 39 named tests / world gate 9/9",
+        "verdict": "PASS"
+      },
+      "AC1_verify_go": {
+        "rc": 0,
+        "elapsed_seconds": 321,
+        "plan_budget_seconds": 162,
+        "ceiling_seconds": 720,
+        "observed": "0 binary blobs among 217 tracked files; driver drift gate: 6 tracked driver files, working tree matches HEAD; go gate PASSED: build clean, plain and race tests pass with pinned AILANG_BIN (AILANG v0.30.0)",
+        "tracked_file_count_note": "217 tracked files vs the plan's base reading of 215: HEAD ab6e4e1 added the sprint plan and this JSON on top of the plan's base 5380e6f. +2 accounted for exactly.",
+        "elapsed_note": "321s against a 162s budget - machine load, well inside the plan's 720s stop-and-report ceiling, so it was NOT killed and no count was lowered (plan risk R7).",
+        "driver_drift": "GREEN - tools/launchd/* untouched by this sprint, as required by D-WORLD-DRIVER-1",
+        "verdict": "PASS"
+      },
+      "AC3": {
+        "command": "go test ./host/daemon -run '^TestDaemonReadDeadline$/^real-store-expired-deadline$' -count=1000 -v",
+        "rc": 0,
+        "counted_PASS_real_store_expired_deadline": 1000,
+        "expected": "exactly 1000",
+        "counted_FAIL_lines": 0,
+        "base_flake_shape_status_200_want_503_occurrences": 0,
+        "elapsed_seconds": 9,
+        "base": "rc=1, 15/1000 and 6/1000 failing runs (planner-measured)",
+        "verdict": "PASS - the flake this item exists to kill is EXTINCT at head across 1000 consecutive runs"
+      },
+      "AC4": {
+        "command": "go test ./host/daemon -run '^TestTimeoutStatusMirrorsSketch$' -count=2000 -v",
+        "rc": 0,
+        "counted_PASS_TestTimeoutStatusMirrorsSketch": 2000,
+        "expected": "exactly 2000",
+        "counted_FAIL_lines": 0,
+        "base_flake_shape_answered_200_occurrences": 0,
+        "elapsed_seconds": 16,
+        "base": "rc=1, 26/2000 failing (planner-measured)",
+        "verdict": "PASS - 2000 consecutive runs, zero failures"
+      },
+      "all_eight_green": true
+    },
+    "mutation_ledger": {
+      "_protocol": "Every arm: cp backup OUTSIDE the repo -> anchor -> apply BY ENCLOSING FUNCTION -> sha256 MOVED + token grep (both halves of the landed-proof) -> go vet (and go build for the production-file arm) -> named killer -run-scoped reading COUNTED FAIL lines -> inverse arm -> cp restore -> sha256 byte-identical to PRE. `git checkout --` was NEVER used: the milestone is uncommitted by construction and it would have destroyed it.",
+      "PRE_read_deadline_test_go": "c5bc411084e9bfa8c88c4b1d6113f9e8abaa26dd559606efe557d72179da0eee",
+      "PRE_handlers_go": "2d6c381c2a1d0624cac50b4ba9cd08fe68870465f66948062cb02196605e5959",
+      "T-MU1_MU-STIM-POSITIVE": {
+        "file": "host/daemon/read_deadline_test.go (test-file one-shot)",
+        "anchor": "grep -n '^const expiredReadDeadline' -> exactly 1 hit at :35, `= -1 * time.Nanosecond`",
+        "edit": "dropped the minus: `const expiredReadDeadline = 1 * time.Nanosecond`",
+        "landed_proof_sha256_POST": "e254fe6ebfe39f004e191420d36a8eeac422cd354e82d2b1cd2362c7753c637b",
+        "landed_proof_sha256_moved": true,
+        "landed_proof_token_grep": 1,
+        "go_vet_rc": 0,
+        "KILL_arm": {
+          "command": "go test ./host/daemon -run '^TestExpiredReadDeadlineExpiresAtConstruction$' -v -count=1",
+          "rc": 1,
+          "counted_FAIL_lines": 1,
+          "counted_PASS_lines": 0,
+          "expected": "rc=1, exactly 1 --- FAIL:, the sign Fatalf",
+          "failure_text": "read_deadline_test.go:774: expiredReadDeadline = 1ns, want a negative duration - a positive value arms a timer and re-creates the 200-vs-503 race this constant exists to remove",
+          "verdict": "KILLED, exactly as pre-registered. ZERO TIMING DEPENDENCE: this is the arm that makes a ~1% race killable at -count=1."
+        },
+        "INVERSE_arm": {
+          "command": "go test ./host/daemon -skip '^TestExpiredReadDeadlineExpiresAtConstruction$' -count=1",
+          "rc": 0,
+          "counted_FAIL_lines": 0,
+          "expected": "rc=0",
+          "verdict": "PASS on the FIRST run - no base-flake red occurred, so the plan's priced ~2% re-measure-once allowance was NOT exercised"
+        },
+        "restore_sha256": "c5bc411084e9bfa8c88c4b1d6113f9e8abaa26dd559606efe557d72179da0eee",
+        "restore_byte_identical_to_PRE": true,
+        "arm_verdict": "PASS - fully as pre-registered"
+      },
+      "T-MU2_MU-DEADLINE-DETACH": {
+        "file": "host/daemon/handlers.go (PRODUCTION-file one-shot)",
+        "anchor": "grep -n 'return context.WithTimeout(r.Context(), d.readDeadline)' -> exactly 1 hit at :270, inside readCtx whose func line is :269 - identical to the plan's section 0.3 seam reading",
+        "edit": "the FIELD d.readDeadline became the 10s PACKAGE CONSTANT readDeadline (daemon.go:128)",
+        "landed_proof_sha256_POST": "cc463c5d105b9474146a06d8e4102a9eb3add56d80d23ccbccc322a56db6965d",
+        "landed_proof_sha256_moved": true,
+        "landed_proof_token_grep": 1,
+        "go_build_rc": 0,
+        "go_vet_rc": 0,
+        "compiles_note": "D16's 'both identifiers in scope' claim, executed first-party: the mutant COMPILES (build rc=0), so it is a real mutant and not an instrument failure",
+        "KILL_arm": {
+          "command": "go test ./host/daemon -run '^TestExpiredReadDeadlineExpiresAtConstruction$' -v -count=1",
+          "rc": 1,
+          "counted_FAIL_lines": 1,
+          "counted_PASS_lines": 0,
+          "failure_text": "read_deadline_test.go:783: readCtx under an already-expired deadline returned a LIVE context - the stimulus must be expired at construction, before any store read can begin",
+          "verdict": "KILLED in ONE run, exactly as pre-registered. The ctx.Err() assertion goes through PRODUCTION readCtx, so a readCtx that ignores the field reds here deterministically."
+        },
+        "INVERSE_arm": {
+          "command": "go test ./host/daemon -skip '^TestExpiredReadDeadlineExpiresAtConstruction$' -count=1 -v",
+          "rc": 1,
+          "counted_FAIL_lines": 4,
+          "enumerated_red_set": [
+            "--- FAIL: TestDaemonReadDeadline (2.02s)",
+            "    --- FAIL: TestDaemonReadDeadline/real-store-expired-deadline (0.01s)",
+            "    --- FAIL: TestDaemonReadDeadline/blocking-store (2.01s)",
+            "--- FAIL: TestTimeoutStatusMirrorsSketch (0.01s)"
+          ],
+          "required_PASS_witness": "--- PASS: TestDaemonReadDeadline/normal-deadline-answers-200 (0.01s) - OBSERVED",
+          "expected": "the PLAN's corrected set (section 0.5(i)): rc=1, exactly 4 --- FAIL: lines INCLUDING blocking-store, with normal-deadline-answers-200 green",
+          "reds_outside_the_set": 0,
+          "verdict": "PASS - reproduced the plan's corrected red set EXACTLY, member for member. This is a THIRD independent measurement of the doc defect (the planner measured it twice); see `doc_defect_confirmed_by_executor`."
+        },
+        "restore_sha256": "2d6c381c2a1d0624cac50b4ba9cd08fe68870465f66948062cb02196605e5959",
+        "restore_byte_identical_to_PRE": true,
+        "arm_verdict": "PASS - fully as pre-registered, including the plan's override of the doc's literal red set"
+      },
+      "T-MU3_MU-SITE-REVERT": {
+        "file": "host/daemon/read_deadline_test.go (test-file one-shot)",
+        "no_killer_test_by_design": "Doc section 6 states it plainly and the plan forbids inventing one: no committed test can kill this mutant, because a -count=1 run of the weakened test is green ~99.35% of the time. The row IS iteration 93's lesson expressed as a mutation.",
+        "anchor": "grep -n 'd.readDeadline = expiredReadDeadline' -> THREE hits (:268 real-store-expired-deadline, :540 TestTimeoutStatusMirrorsSketch, :779 the pin test's own write)",
+        "target_identified_by": "ENCLOSING FUNCTION - the edit was applied to the single occurrence inside the byte range of `func TestTimeoutStatusMirrorsSketch`, with an in-function count==1 assertion, never by a bare pattern (sprint plan section 0.5(v)'s recorded near-miss)",
+        "edit": "the mirrors-sketch site only -> `d.readDeadline = 1 * time.Nanosecond`, bypassing the constant",
+        "landed_proof_sha256_POST": "0a4d0ce5b9a6a5fc8904667ca4e864e1de4e980a4a69dca60d8f8ae69e343d27",
+        "landed_proof_sha256_moved": true,
+        "landed_proof_token_grep": "1 hit, at :540, and `awk '/^func TestTimeoutStatusMirrorsSketch/,/^}/' | grep -c 'time.Nanosecond'` = 1 - the hit IS inside the intended function",
+        "landed_proof_other_sites_intact": "the other two `d.readDeadline = expiredReadDeadline` writes still read 2 - the edit hit ONE site, not all three",
+        "go_vet_rc": 0,
+        "DETECTOR_the_only_one": {
+          "command": "sed 's://.*::' host/daemon/*.go | grep -c 'Nanosecond|Microsecond'",
+          "observed": 2,
+          "AC5_expects": 1,
+          "verdict": "RED -> DETECTED. AC5's static sweep is the only per-commit detector for a re-introduced sub-1% race, which is why its scope is the whole package plus host/ cmd/.",
+          "wider_scope_AC5b": 2,
+          "the_two_stripped_hits": [
+            "const expiredReadDeadline = -1 * time.Nanosecond",
+            "d.readDeadline = 1 * time.Nanosecond"
+          ]
+        },
+        "non_vacuity_of_the_no_killer_claim": {
+          "command": "go test ./host/daemon -run '^TestExpiredReadDeadlineExpiresAtConstruction$' -v -count=1",
+          "rc": 0,
+          "counted_PASS_lines": 1,
+          "counted_FAIL_lines": 0,
+          "verdict": "the pin test SURVIVES this mutant - measured, not asserted. This is what 'no committed test kills it' MEANS, demonstrated."
+        },
+        "PACKAGE_run": {
+          "command": "go test ./host/daemon -count=1",
+          "rc": 0,
+          "note": "green - the mutant is the base flake at ONE site (~1%). There is no -skip arm because there is no killer to skip.",
+          "verdict": "rc=0 green, as pre-registered"
+        },
+        "restore_sha256": "c5bc411084e9bfa8c88c4b1d6113f9e8abaa26dd559606efe557d72179da0eee",
+        "restore_byte_identical_to_PRE": true,
+        "post_restore_sweep": "AC5(a) back to 1",
+        "arm_verdict": "PASS - fully as pre-registered, including the deliberate absence of a killer test"
+      },
+      "all_three_arms_verdict": "PASS - every pre-registered value in sprint plan sections 0.4 and 4.2 reproduced first-party by the executor; zero deviations",
+      "restore_discipline": "All restores were `cp` from /tmp/w19_bak/. `git checkout --` was never invoked. Both files' final sha256 are byte-identical to their post-M1 values."
+    },
+    "doc_defect_confirmed_by_executor": {
+      "defect": "Design doc section 6, MU-DEADLINE-DETACH's inverse arm, states the red set as `real-store-expired-deadline` and `TestTimeoutStatusMirrorsSketch` only, and adds 'Any red outside that set is unexplained and fails the arm.'",
+      "measured_truth": "The red set has THREE members / FOUR --- FAIL: lines: TestDaemonReadDeadline (parent), TestDaemonReadDeadline/real-store-expired-deadline, TestDaemonReadDeadline/blocking-store, and TestTimeoutStatusMirrorsSketch - with normal-deadline-answers-200 PASS.",
+      "why_blocking_store_belongs": "It sets d.readDeadline = 50ms and parks a getter until ctx.Done(). The mutant makes readCtx ignore the FIELD and use the 10s package constant, so the park is never released inside test time and the subtest's own 2s watchdog fires. SAME PHENOTYPE as the other two reds - 'the field is ignored' - not an unexplained red.",
+      "measurement_count": "THREE independent measurements: the planner twice (sprint plan section 0.5(i), at both the base and the head stimulus) and the executor once (this run, at head).",
+      "consequence_if_unfixed": "An executor following the doc's literal sentence would score a CORRECT mutant as a FAILED ARM - the doc's own prescribed pass condition rejects the doc's own correct mutation.",
+      "plan_handled_it": "The sprint plan section 0.5(i) overrode the doc's literal sentence BY MEASUREMENT and carried the corrected set into T-MU2. The executor followed the plan and it was right. The doc's underlying intent - 'the red set is the assertion, an unexplained red fails the arm' - is preserved exactly.",
+      "controller_action": "The design doc is FROZEN to the executor (plan section 1.3). This is reported for the controller's record commit / doc amendment, not fixed here."
+    },
+    "deviations": {
+      "count_of_blocking_deviations": 0,
+      "count_of_pre_registered_value_mismatches": 0,
+      "recorded_non_blocking_observations": [
+        {
+          "id": "OBS-1",
+          "what": "git numstat reads +43/-2 for read_deadline_test.go where sprint plan section 1.1 says +41/-2.",
+          "resolution": "NOT a deviation - RECONCILED BY MEASUREMENT. `git diff -U0 | grep -c '^+[^+]'` = 41, exactly the plan's figure; numstat's 43 additionally counts the two BLANK separator lines opening the const block and the pin test. Identical bytes, two counting conventions. handlers.go is an exact +27/-0 match.",
+          "severity": "none"
+        },
+        {
+          "id": "OBS-2",
+          "what": "gofmt -l was EMPTY on the first pass; T1.4's `gofmt -w` fallback never fired.",
+          "resolution": "Expected and favourable. The plan's section 0.5(ii) gofmt-clean landed forms (quoted in T1.2/T1.3) were pasted instead of the doc's verbatim text, so the reflow the plan pre-registered had already been applied at authoring time. Confirms the plan's correction is sufficient by construction.",
+          "severity": "none"
+        },
+        {
+          "id": "OBS-3",
+          "what": "verify_go.sh took 321s against the plan's 162s budget, and reports 217 tracked files against the plan's base reading of 215.",
+          "resolution": "Both explained. The 321s is machine load, well inside the plan's 720s stop-and-report ceiling, so the run was NOT killed (plan risk R7). The +2 tracked files are the sprint plan and this JSON, committed at ab6e4e1 on top of the plan's base 5380e6f. rc=0 either way; drift gate green.",
+          "severity": "none"
+        },
+        {
+          "id": "OBS-4",
+          "what": "The executor's own first edit script asserted `'1 * time.Nanosecond' not in src` to prove no stimulus site survived; the assert FIRED and nothing was written.",
+          "resolution": "INSTRUMENT FAILURE IN THE ASSERTION, not in the edit. `const expiredReadDeadline = -1 * time.Nanosecond` CONTAINS `1 * time.Nanosecond` as a substring, so the guard could never pass on a correct tree. Re-scoped to the full statement `d.readDeadline = 1 * time.Nanosecond` and the edit applied cleanly. Worth recording because it is the same shape as the planner's section 0.5(v) near-miss from the other direction: there a real mutation was blocked by a correct assert; here a correct edit was blocked by an over-broad one. `git status --porcelain` was empty at the moment of failure - the fail-closed script wrote zero bytes, which is why the retry was clean.",
+          "severity": "none - self-caught, zero bytes written, no repo state to unwind"
+        }
+      ],
+      "base_shape_reds_encountered": "NONE. No `status = 200, want 503` / `answered 200` red occurred in any arm, at head or in any inverse arm. The plan's priced ~2.1% base-flake allowance and its re-measure-once rule were never exercised."
+    },
+    "not_done_as_instructed": [
+      "No git write operation of any kind: no git add / commit / stash / checkout / restore / push, no gh pr. The worktree is left MODIFIED AND UNCOMMITTED for the controller.",
+      "No production behaviour changed - handlers.go gained a comment only; daemon.go untouched; ARM B and ARM C not implemented and not 'improved toward'.",
+      "No assertion weakened, moved or re-worded; the 503/Timeout pins are byte-unchanged and only the stimulus moved.",
+      "No retry, no skip, no -count loop committed to CI.",
+      "The design doc was NOT edited; the section 0.5(i) defect is reported to the controller instead.",
+      "Nothing outside host/daemon/{read_deadline_test.go,handlers.go} was touched - tools/launchd/*, scripts/verify_*.sh, the frozen sketch, rows 20/21 and every .ail file are untouched.",
+      "No AST guard built (doc section 10 declines it); no successor rows filed (controller/record actions)."
+    ],
+    "handoff_to_controller": {
+      "worktree_state": "MODIFIED, UNCOMMITTED - exactly two files, hashes above",
+      "controller_must_re_derive": "Both full gates on the final tree and again on the merge commit (Gate 3b); AC2/AC3/AC4/AC5(a)(b)+controls/AC6(a)(b)(c) from the committed tree; at least one mutation arm re-executed first-party; the doc<->plan AC identity check against the committed doc.",
+      "controller_decisions_pending": [
+        "RESOLVED BEFORE THE EXECUTOR RAN (evaluator non-blocking finding 1, verified by diff 5380e6f..ab6e4e1): the design doc's SS6 red-set correction was already applied in commit ab6e4e1, the same commit that authored this sprint plan. No controller decision is outstanding.",
+        "OPEN, but as a QUEUE ROW not a decision: the deadline does not govern LOCK waits \u2014 busy_timeout does (measured 2.043s under a 300ms deadline), and nothing asserts busy_timeout < readDeadline. Filed by the controller in the charter queue, not fixed here (standing rule 1)."
+      ]
+    }
+  }
+}
