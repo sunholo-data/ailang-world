@@ -961,9 +961,8 @@
       "worktree_state": "MODIFIED, UNCOMMITTED - exactly two files, hashes above",
       "controller_must_re_derive": "Both full gates on the final tree and again on the merge commit (Gate 3b); AC2/AC3/AC4/AC5(a)(b)+controls/AC6(a)(b)(c) from the committed tree; at least one mutation arm re-executed first-party; the doc<->plan AC identity check against the committed doc.",
       "controller_decisions_pending": [
-        "Whether sprint plan section 0.5(i)'s red-set correction (now measured THREE times, once by the executor) is carried into the design doc or recorded as a sprint-plan finding.",
-        "Whether section 0.5(ii)'s gofmt reflow is carried into the doc's section 4.2/4.3 text so a future paster gets a clean tree from the DOC.",
-        "Filing the two named follow-ups: w-daemon-late-read-503 (the ARM B contract) and the busy_timeout-vs-readDeadline ordering residual (doc section 11)."
+        "RESOLVED BEFORE THE EXECUTOR RAN (evaluator non-blocking finding 1, verified by diff 5380e6f..ab6e4e1): the design doc's SS6 red-set correction was already applied in commit ab6e4e1, the same commit that authored this sprint plan. No controller decision is outstanding.",
+        "OPEN, but as a QUEUE ROW not a decision: the deadline does not govern LOCK waits \u2014 busy_timeout does (measured 2.043s under a 300ms deadline), and nothing asserts busy_timeout < readDeadline. Filed by the controller in the charter queue, not fixed here (standing rule 1)."
       ]
     }
   }
