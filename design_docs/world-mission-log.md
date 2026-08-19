@@ -10477,3 +10477,245 @@ the archive stderr site (**21**). Item 17 remains parked on `D-WORLD-19`.
 
 - `D-WORLD-19` — item 17's scope (one word: A or B). Unchanged since iteration 90.
 - `D-WORLD-20` — does `pi:deepseek` stay in the ratified executor chain (one word: A or B). **New.**
+
+## Iteration 94 — 2026-08-19 — **queue row 19 COMPLETE and LANDED (PR [#72](https://github.com/sunholo-data/ailang-world/pull/72) → squash `6c2a537`, Gate 3b GREEN on the MERGE commit SHA-addressed, evaluator `sonnet` 97/100 zero blocking)** (`metered=$0.2342`; controller `claude:claude-opus-5`; designer `claude:claude-fable-5`; planner `opus`; executor `opus` after the chain degraded twice; evaluator `sonnet`) — the iteration's spine is that **the design that shipped said "already-expired" and the test spelled it `1 * time.Nanosecond`, which in Go is a FUTURE deadline, so the pin on the entire 503/`Timeout` contract was a race the design doc had already described correctly and the implementation had silently weakened**
+
+**Pick.** Queue row 19, `w-daemon-timeout-test-flake`, the only `[NEXT]` row. Ghost-disciplined
+before routing: the row was measured by iteration 93 at `e4ba56d`, and HEAD had moved, so it was
+re-measured first-party at `0b368e1`.
+
+**THE MECHANISM, AND WHY IT IS THE DOC'S OWN WORD THAT WAS RIGHT.** `context.WithTimeout(parent,
+1ns)` computes `time.Until(deadline) > 0` and therefore arms a `time.AfterFunc` rather than
+taking `context.WithDeadline`'s `dur <= 0` synchronous-cancel branch. The store read can finish
+before that timer goroutine runs; the handler consults `timedOut` **only on the error path**; so
+a successful read under an expired deadline answers **200 with a real body** (captured bodies:
+`{"items":[]}`, a full object, a full world — the read genuinely succeeded). Item 18's own
+ratified design doc had described the arm correctly — *"an already-expired deadline against a
+real store"* (`w-daemon-read-cancellation.md:241`) — and the same sprint's store-layer test spells
+expiry correctly as `time.Now().Add(-time.Hour)`. **Only the daemon-side implementation
+mis-spelled it**, and nothing compared the two.
+
+**Rates, with the toolchain named** (rule 3b(viii) — the platform and toolchain are narrowings
+nobody types). Base, `GOTOOLCHAIN=go1.25.6` (the gate's own pin; `verify_go.sh` DENYLISTS the
+local go1.26.4 at `scripts/verify_go.sh:113-121`): `TestTimeoutStatusMirrorsSketch` **6/1000**,
+`TestDaemonReadDeadline/real-store-expired-deadline` **3/500**. Base, go1.26.4: **13/2000** and
+**4/500**. Toolchain-independent; route-agnostic (world, object and log-range all observed).
+Head: **0/2000** and **0/1000**, with **zero** `200, want 503` occurrences across 3000 runs.
+
+**MY FIRST MEASUREMENT PROVED NOTHING AND I SAID SO.** The first sample was `-count=20` → 0/20.
+At the row's stated ~5% that is 36% likely by chance; at the true ~0.65% it is 88% likely. A
+clean 20-run is not a refutation, and treating it as one would have closed a live defect. Widened
+to 200, then 500/1000/2000.
+
+**THE UNDER-COUNT, TWICE, IN ONE ITEM — AND THE SECOND ONE IS A NEW SURFACE FOR RULE 3b(ix).**
+(a) The queue row named ONE test. `grep -n "time.Nanosecond" host/daemon/read_deadline_test.go`
+returns **2** sites (`:254`, `:526`) in two different tests sharing one stimulus. A fix to one
+would have left the gate non-deterministic. (b) Independently, the design doc's §6
+`MU-DEADLINE-DETACH` row declared an inverse red SET of two tests and then added *"any red
+outside that set is unexplained and fails the arm."* The measured set is **four** `--- FAIL`
+lines: the parent `TestDaemonReadDeadline`, its `real-store-expired-deadline` and
+`blocking-store` subtests, and `TestTimeoutStatusMirrorsSketch`. `blocking-store` reds because it
+parks a getter behind a 50 ms FIELD deadline, so a `readCtx` that ignores the field never
+releases the park and the subtest's own 2 s watchdog fires — the mutant's own phenotype, not an
+unexplained red. **Implemented to the letter, the doc would have scored a CORRECT mutant as a
+FAILED arm.** Found by the planner, reproduced by me, again by the executor, and a fourth time by
+the evaluator (which additionally read `blocking-store`'s source rather than only running it).
+The doc was corrected by measurement in `ab6e4e1`, before the executor ran.
+**The generalisation: rule 3b(ix) is written about a COUNT; a red SET is a cardinality taken in a
+scope too, and this one was reasoned rather than run.** Nothing in the loop asks a mutation row
+to have EXECUTED its own inverse arm before the row is written down.
+
+**BOTH QUORUM ROUNDS BLOCKED, AND EVERY OBJECTION WAS A PREMISE OBJECTION I MEASURED RATHER THAN
+FORWARDED (rule 3f).** Round 1, `absent_reviewers: []`, both reject, `$0.0955`:
+- `gemini-3-1-pro`: no D-row proved `readDeadline = 10 * time.Second` or `readCtx`'s body.
+  **The objection was right about the DOC and the premise was TRUE** — measured
+  (`daemon.go:128`; `handlers.go:269-271`; same-file control `func (d *Daemon)` = 8). Handed the
+  designer the measurement, not the objection.
+- `gpt5-6-sol`: the doc asserted a mid-flight cancellation bound it had never verified — D6–D8
+  covered Go's context construction and `database/sql`'s PRE-acquisition check, not the driver's
+  behaviour once a read is in flight. **Correct, and running it was FAVOURABLE.** Probe: a
+  ~200,000,000-step recursive CTE through `modernc.org/sqlite v1.54.0`. Control arm (20 s
+  budget): **20.001040542 s**, `context deadline exceeded` — proving the query is genuinely long
+  and the instrument is not degenerate (the probe FATALs if it finishes under 500 ms). Cancel arm
+  (300 ms deadline, i.e. arriving long after execution began): **302.130667 ms**. The driver
+  interrupts an ALREADY-IN-FLIGHT read 2.13 ms after expiry.
+
+Round 2, `absent_reviewers: []`, `$0.1185`: **`gemini-3-1-pro` FLIPPED to PASS**; `gpt5-6-sol`
+rejected once more, narrowly and correctly — the revision had generalised D15 past its own
+evidence ("the wait itself stays bounded regardless"), on the mission's own bounded-waits axiom.
+
+**THE CARVE-OUT, AND ITS SECOND ARM PAID FOR ITSELF.** The remaining objection disputed
+COMPLETENESS, not DIRECTION (ARM A untouched), and carried a concrete reviewer-authored
+`proposed_fix`, so the narrow-refinement carve-out applied. Its first arm was a verbatim
+narrowing sentence, applied word-for-word. **Its second arm told the controller to go and measure
+lock contention** — and that measurement STRENGTHENED the objection rather than dissolving it:
+a lock-blocked `QueryRowContext` under a **300 ms** deadline, `busy_timeout(2000)`,
+`journal_mode(delete)`, lock held 10 s so whichever bound fires is identifiable, returned at
+**2.042929083 s** carrying `context deadline exceeded` (control, same call: the unlocked read
+returns in **448.458 µs**). **The path IS bounded, but by `busy_timeout`, not by the request
+deadline, which it overran 6.8× while still REPORTING as a context error.** The daemon has two
+read-wait regimes and the deadline governs only one. Filed as queue row **22**, not fixed here
+(standing rule 1). This is the cleanest instance yet of *a reviewer's objection is a claim too*
+working in the productive direction: two rounds, two premises, one refuted-favourably and one
+upheld-and-widened, and the loop learned something it could not have reasoned to.
+
+**A THIRD DEFECT NEITHER REVIEWER SAW, FOUND BEFORE ROUND 2: `AC5(a)` WAS UNSATISFIABLE AND
+VACUOUS AT ONCE.** The designer self-reported the risk and declined to run it, saying adversarial
+reviewers "may catch that". Measured: applying the doc's own §4.1 constant and comment to a
+scratch tree, AC5(a)'s verbatim `grep -rn 'Nanosecond\|Microsecond' host/daemon/` reads **2**
+against an AC demanding exactly **1** — and it reads 2 at base as well, so it can neither move nor
+fail for the right reason. Fixed to the comment-stripped form (this repo's own iter-92 `AC4′`
+precedent): base **2** → head **1**, instrument control `readDeadline` in `handlers.go` stripped
+**6** vs raw **7**. **The document had QUOTED both governing lessons** — iter-92's *a comment can
+quote a future code state* and iter-93's *AC5's grep counts comments* — applied them correctly to
+`handlers.go` in §4.3, and reproduced the identical defect in its own headline sweep. A lesson
+recorded in the very document it then defeats is the sharpest form of *a remedy is an instrument
+too*.
+
+**AND THE FIX BOUGHT A NEW BLINDNESS, WHICH THE DOC DECLARED, THE EVALUATOR EXPLOITED, AND I
+REPRODUCED.** `sed 's://.*::'` is TEXTUAL, not syntactic. Planting
+`_ = "see http://x"; d.readDeadline = 1 * time.Nanosecond` on one line: it compiles, `go vet`
+rc=0, the race returns (**3/400**), the STRIPPED gate reads **1** — blind — and the RAW secondary
+reading reads **3**. **The gate and the reading the doc explicitly demoted to NOT-THE-GATE have
+COMPLEMENTARY blindnesses, and keeping both on the page is what makes the pair recoverable.**
+The raw form cannot be the gate (it reds on innocent prose); the stripped form cannot see code
+hidden behind a `//` in a string. Neither alone is complete, and the doc says so.
+
+**What landed.** One named constant `expiredReadDeadline = -1 * time.Nanosecond` replacing both
+stimulus lines; `TestExpiredReadDeadlineExpiresAtConstruction`, which reds on the **sign** with
+zero timing dependence and therefore makes a sub-1% race killable at `-count=1`; and a
+`LIMITATION(w-daemon-late-read-503)` comment on `timedOut` naming the two-part residual. 3 files
+`+70/−2` plus the sprint record.
+
+**Controller re-ran every gate rather than banking the executor's** (generator≠judge):
+`go build ./...` and `go vet ./...` rc=0, `gofmt -l host/daemon/` empty, `go test ./... -count=1`
+**rc=0 across 17 packages, zero FAIL**, `verify_ail.sh` rc=0 with pins **UNMOVED** (10 identities
+/ 39 named tests / 9-of-9 world-package steps) and **0** `.ail` files changed (control: 3 files
+changed), `verify_go.sh` rc=0 in 327 s with the driver drift gate green. AC1–AC8 all re-derived
+independently: AC2 **1** counted PASS (base 0), AC3 **1000/1000**, AC4 **2000/2000**, AC5(a) **1**
+and AC5(b) **1** with the 6-vs-7 strip control, AC6(a) **1** with control **7**, AC6(b) **5**
+unmoved (item 18's live pin).
+
+**Three mutation arms; two re-run independently by me**, each with a sha256 landed-proof read
+BEFORE the verdict, a `go vet` (and `go build` for the production-file mutant), a `-run` KILL arm
+read as counted `--- FAIL` lines, an inverse arm, and a `cp` restore verified byte-identical —
+`git checkout --` never used on executor work. `MU-STIM-POSITIVE`: kill rc=1 with exactly 1 FAIL
+on the sign assert, inverse rc=0. `MU-SITE-REVERT`: **no killer test by design** — package
+`-count=1` is rc=0 under it, the pin test still PASSES, and AC5's static sweep reading **2**
+against an expected **1** is the only detector.
+
+**MY FIRST `MU-SITE-REVERT` NEVER LANDED, AND THE ASSERT IS THE ONLY REASON IT DID NOT SCORE AS A
+VACUOUS KILL.** The head file has **three** `d.readDeadline = expiredReadDeadline` writes (the
+new pin test adds one AFTER the target function), so a scope-bounded replace found 2 matches and
+refused to write. The `sweep = 1` I then read was a reading of the **pristine tree** — which is
+exactly the AC5-GREEN answer, i.e. the arm would have been recorded as passing when nothing had
+been mutated. **Three roles hit this same trap in one iteration**: the planner (matched two sites,
+wrote nothing), me, and the executor (whose guard `'1 * time.Nanosecond' not in src` could never
+pass, because `-1 * time.Nanosecond` contains it as a substring). Same shape, both directions —
+an over-broad guard blocking a correct edit, and an under-scoped match producing a silent no-op.
+
+**Gate 3b.** PR #72. `mergeable` read FIRST (`MERGEABLE`) before any dropped-event reasoning, per
+the rule that promotes the boring cause. Polled SHA-addressed with the completeness assert
+(`present == expected`, never "0 failures"): PR head **2/2 success**, then merged **in-turn on an
+observed green** rather than arming auto-merge (motoko-10's rule), then re-polled the **MERGE
+COMMIT** `6c2a537` — a different commit from the PR head — to **2/2 completed/success**.
+
+**MY OWN COMMIT MESSAGE WAS MANGLED BY zsh, AND rc WAS 0.** Backticks inside
+`git commit -m "…"` triggered command substitution and silently deleted
+`` `expiredReadDeadline = -1 * time.Nanosecond` `` and `` `dur <= 0` `` — the two most
+load-bearing identifiers in the message — leaving grammatical prose with holes and two
+`command not found` lines that scrolled past. Caught by reading the **artifact** (`git log -1
+--format=%B` + grepping the four tokens), not the exit code; repaired with `commit --amend -F`
+from a quoted heredoc and verified by re-grepping, with **16** surviving backticks as the control.
+The two earlier commits escaped only because they happened to contain no backticks. The shared
+skill records this exact mechanism for `gh issue close --comment`; it is unrecorded for
+`git commit -m`, which this loop runs several times per iteration.
+
+**EVALUATOR `sonnet` 97/100 PASS, ZERO BLOCKING — pointed at seven named targets (rule 3h(c))**,
+and it earned the score: it reproduced every AC and all three mutation arms first-party, read
+`blocking-store`'s source to confirm the mechanism rather than only running it, and probed the
+site the executor had NOT individually mutated (line 268 rather than 540), confirming T1's claim
+holds for both. Its precondition-neutering drill (T3) found **6 of 8 arms survive** neutering
+`seedReadRoutes`'s `Commit` — correctly explained: the timeout arms never reach the data layer,
+so seeded data is decorative for them, which is a sharper statement of what §5 already argues
+rather than a hollow-test finding. Its one process catch was real: the executor's JSON still
+carried a `controller_decisions_pending` note about a doc correction that had **already landed**
+in `ab6e4e1` — the judge diffed the commits to establish it. Cleared in `6d81e12`.
+
+**Routing, FLAGGED.** Designer rotation: last-used was `claude:claude-fable-5`, next is
+`codex:gpt-5.6-sol`, which probed **rc=1 first-party** (`usage limit … try again at Aug 20th,
+2026 5:34 AM` — the recorded exhaustion is NOT stale); gemini is not in World's rotation and its
+`managed_agents` lane is read-only anyway (server-side sandbox, no worktree writes), so the
+rotation fell back to `claude:claude-fable-5`. Planner: `derive-planner-lane.sh` returned
+**`opus fail-closed:env-pin`** and the reason token is copied verbatim; no codex probe was
+performed for the planner, as the rule requires. Executor: `pi` per the ratified chain, failed,
+fell to **opus** (the chain end — `MISSION_EXECUTOR_FALLBACK` is the same `pi` lane that just
+failed, so the chain's own no-loop-back rule sends it to `$MODEL`). Evaluator `sonnet` ≠ opus
+executor, so generator≠judge holds. All heavy roles were spawned as model-PINNED `claude-sub`
+CLI runs, which pin a full model id rather than the Agent tool's three aliases.
+
+**THE `pi` LANE IS NOW 5-FOR-5, BY A FIFTH MECHANISM, AND FOR THE FIRST TIME IT CHANGED BYTES.**
+It read the plan, made **10 `edit`** and **65 `bash`** tool calls, and modified both source files
+— then streamed until my **150 MB** ceiling killed it at **158,996,589 B** in ~5 minutes.
+Post-run assertions: `"stopReason":"length"` = **0** (so, again, NOT the recorded output-cap
+mechanism), `agent_end` = **0**, `turn_start` **15** > `turn_end` **14** — died mid-turn — and it
+made **10 calls to a hallucinated `exec_command` tool**, the same hallucination class recorded at
+iteration 91. **Assertion (b), the non-empty worktree diff, PASSED for the first time in five
+runs**, which is precisely why (c) matters: a lane can now produce a plausible diff and still
+have completed nothing. The partial edits were saved to `/tmp/w94_pi_partial.diff` and discarded;
+no gate, AC or mutation was ever reached. **The SIZE poll has been the only detector that fires on
+5 of 5; the `stopReason` tell the shared skill prescribes is 0-for-5.**
+
+**Cost.** `metered=$0.2342` of the $5 ceiling: quorum round 1 `$0.0955` + round 2 `$0.1185` + one
+dead `pi` run `$0.0202` (+ a `pi` probe). Controller, designer, planner, executor and evaluator
+all rode subscription buckets.
+
+**Platform.** darwin/arm64, `GOTOOLCHAIN=go1.25.6` (the gate's pin; local `go1.26.4` is on
+`verify_go.sh`'s denylist). `timeout(1)` is absent on this rig — every bounded wait used a
+`date +%s` deadline. The flake was measured under BOTH toolchains precisely so the fix could not
+be a toolchain artifact.
+
+**Ruled out.** (a) Concluding the flake was gone from my own first clean `-count=20` — 0/20 is
+uninformative at the measured rate, and I widened before claiming anything. (b) The **138 s** I
+handed the planner as a `-count=1000` budget under a VERIFIED-BY-ME label: it was the one-time
+`GOTOOLCHAIN=go1.25.6` toolchain acquisition, not the test, which runs in 3–6 s. **The planner
+refuted my own labelled fact and was right** — Gate 2 rule (d) working, and a reminder that
+"VERIFIED BY ME" certifies the command ran, not that I understood what it timed. (c) Reading the
+`pi` probe's `rc=0` as lane health (0-for-5 as a predictor). (d) Banking `pi`'s partial edits
+because the diff was finally non-empty (the run reached no gate). (e) Treating `blocking-store`'s
+red under `MU-DEADLINE-DETACH` as unexplained (mechanism read from source; four reproductions).
+(f) Reverting to `git checkout --` for any mutation restore. (g) Fixing rows 20, 21 or the new
+row 22 inline (standing rule 1).
+
+**Retro.** One **skill proposal** at the ≥2-friction bar and one process note.
+
+**Skill proposal (World cannot edit the shared skill — PROPOSED to Mark + V1, not applied).**
+*A mutation row's INVERSE arm must be EXECUTED before the row is written, and its criterion must
+be an enumerated red SET, never `rc=0`.* Two independent frictions, one from each mission, in the
+same 24 hours. **World, this iteration:** §6's `MU-DEADLINE-DETACH` declared a two-test red set
+plus "any red outside that set is unexplained and fails the arm"; the measured set is four, so
+the doc's literal criterion would score a CORRECT mutant as a failed arm. **V1, iteration 225**
+(reported on the cross-mission channel, and V1 filed it itself as *"watch-item, instance 1 — the
+skill prescribes that criterion unconditionally; bar for a skill edit is two"*): its drill
+harness's `-skip rc=0` criterion is **unsatisfiable for broad-blast-radius mutants**, which read
+as "4 vacuous arms" until the arms that redded were enumerated. Same defect from both ends — a
+red set stated rather than run, and an `rc=0` criterion that a correct mutant cannot satisfy.
+The rule to add, in rule 3j's neighbourhood: *for any mutant whose blast radius exceeds one test,
+the inverse arm's expected result is an ENUMERATED SET of failing test names, produced by running
+it, and "no unexplained reds" is checked against that set — `rc=0` is the correct criterion only
+for a mutant proven to be single-test.* World supplies instance 1 and V1 instance 2, so the bar
+is met without either mission's evidence standing alone.
+
+**Process note, instance 1 (watch-item; the bar is 2).** `git commit -m "<markdown>"` is a
+reporting channel this loop uses several times per iteration, and zsh eats backticks inside it
+with `rc=0`. The shared skill records the identical mechanism for `gh issue close --comment` and
+prescribes `--body-file`; nothing points it at `git commit`. The habit that closes it is the one
+already written for the other channel — write the message to a file and use `-F` — plus the
+artifact assert (`git log -1 --format=%B | grep` the load-bearing tokens). Recorded as a process
+note rather than a skill proposal because it is one friction; if a second lands, it is a skill
+edit in the same paragraph as the `gh` rule.
+
+**Next.** Rows **20** (`host/capsule` output-cap load flake, ~0.25 d), **21** (archive stderr in
+the manifest, ~0.5 d) and **22** (the lock-wait bound, ~0.5 d, needs a design doc) — all
+unblocked and all headless-routable. Item 17 remains parked on `D-WORLD-19`. **Two open asks**,
+both one-word: `D-WORLD-19` and `D-WORLD-20` (the latter now carrying a 5-for-5 record).

@@ -3,40 +3,51 @@
 *Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS),
 `world-mission-status-archive.md`, `world-mission-log.md`.*
 
-**As of** 2026-08-18, iteration **93** · `dev` @ `d21754f` · CI green (`checks=2`, both `success`)
+**As of** 2026-08-19, iteration **94** · `dev` @ `6c2a537` · CI green (`checks=2`, both `success`
+on the MERGE commit, SHA-addressed)
 
 ## Just landed
 
-**Item 18 `w-daemon-read-cancellation` — COMPLETE** (M1 `7ad24ea`, M2 `b3c5de0`, M3 `d21754f`;
-doc + plan → `implemented/`). Daemon reads are bounded (10 s → 503 `Timeout`), store reads are
-context-first, and `Internal` 500s are sanitized with the detail on the daemon's stderr.
+**Row 19 `w-daemon-timeout-test-flake` — COMPLETE** (PR #72 → `6c2a537`; evaluator `sonnet`
+**97/100**, zero blocking). The daemon read-deadline tests said "already expired" and spelled it
+`1 * time.Nanosecond` — which in Go is a **future** deadline that arms a timer, so a fast read
+finished first and the route answered 200. Now one constant, `-1 * time.Nanosecond`, which
+cancels synchronously at construction. Base 6/1000 and 3/500 → head 0/2000 and 0/1000.
 
-**The find**: a **seventh** `Internal` 500-echo site the design doc never counted, and **AC5 — the
-milestone's own headline gate — is blind to it by construction** (the grep is file-scoped to
-`handlers.go`; the site is in `daemon.go`). Proven by mutation: AC5 reads 5 on a tree that leaks.
+**The find**: the queue row named ONE test; there are **two** on the one stimulus. And the design
+doc's own mutation table declared a two-test red set with "any red outside that set fails the arm"
+— the measured set is **four**, so following the doc would have scored a *correct* mutant as a
+failed arm. Corrected by measurement, reproduced four times across three roles.
 
-## Next picks (all unblocked)
+**The reviewer earned their fee**: `gpt5-6-sol` blocked twice on premises nobody had measured.
+Running its own proposed fix produced row 22 below.
 
-1. **19 `w-daemon-timeout-test-flake`** — `TestTimeoutStatusMirrorsSketch` fails 1-in-20 at base.
-2. **20 `w-capsule-output-cap-load-flake`** — two caps race in one fixture; 1 of 2 full-suite runs.
-3. **21 `w-archive-stderr-in-manifest`** — `CombinedOutput()` writes the `Observatory:` stderr line
-   into the archive manifest, served as `/v1/health`'s `interpreter_version`. 4th site of the
-   iter-89 class, and the **first that persists into stored state**.
+## Next picks (all unblocked, none needing a human)
 
-Item 17 stays parked on `D-WORLD-19`.
+1. **20 `w-capsule-output-cap-load-flake`** — two caps race in one fixture; `go test ./...`
+   non-deterministic under load. ~0.25 d.
+2. **21 `w-archive-stderr-in-manifest`** — `CombinedOutput()` writes an `Observatory:` stderr line
+   into the content-addressed archive manifest, served as `interpreter_version`. ~0.5 d.
+3. **22 `w-daemon-lock-wait-not-deadline-bound`** *(new)* — a lock-blocked read is bounded by
+   `busy_timeout` (~2 s), **not** by the request deadline (measured 2.043 s under a 300 ms
+   deadline). Safe today only because 2 s < 10 s, an ordering nothing asserts. ~0.5 d, needs a doc.
 
-## Parked on Mark — TWO one-word asks
+## Loop cadence + routing
 
-- **`D-WORLD-19`** — may item 17's tranche 1 extend `host/store` with a bounded object read?
-  **A** = yes, adopt the reviewer's fix verbatim · **B** = no, record the residual with a named
-  successor. Open since iteration 90.
-- **`D-WORLD-20`** *(new)* — does `pi:deepseek` stay in the ratified executor chain?
-  **A** = suspend it (codex → opus) · **B** = keep it. The lane is **4-for-4 zero-byte failures**;
-  the ≥3-datapoint bar is met, but the chain is an attended ruling, so the loop may not change it.
+Controller `claude-opus-5`. Designer **rotation**: `claude:claude-fable-5` used (codex probed
+`rc=1`, exhausted until 2026-08-20 05:34). Planner **opus** (`derive-planner-lane.sh` →
+`opus fail-closed:env-pin`). Executor **opus** — the chain end; `pi:deepseek-v4-flash-0731` is
+now **5-for-5** dead. Evaluator **sonnet** (generator≠judge holds).
 
-## Routing + spend
+## Quota / cost posture
 
-Controller `claude:claude-opus-5` · evaluator `sonnet` (generator≠judge held) · no designer/planner.
-Executor chain codex → `pi:deepseek` → opus, and **both upper links are down**: codex exhausted
-until **2026-08-20 05:34** (probed rc=1), pi failing as above — executor has run on **opus** for
-three consecutive iterations, FLAGGED. `metered=$0.0203` of the $5 ceiling; tripwire **CLEAN**.
+`metered=$0.2342` of the $5 ceiling — two quorum rounds ($0.0955 + $0.1185) and one dead `pi` run
+($0.0202). fable/opus/sonnet are subscription buckets.
+
+## Parked on Mark — TWO open asks, both one-word
+
+- **`D-WORLD-19`** — item 17's scope: may tranche 1 extend `host/store` with a bounded object
+  read? **A** = yes (adopt the reviewer's fix verbatim) · **B** = no (declare the residual).
+- **`D-WORLD-20`** — does `pi:openrouter/deepseek/deepseek-v4-flash-0731` stay in the ratified
+  executor chain? **A** = suspend until re-qualified · **B** = keep as ratified. Now **5-for-5**
+  zero-completion; this run changed bytes for the first time and still died mid-turn.
