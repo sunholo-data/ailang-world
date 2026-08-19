@@ -10719,3 +10719,116 @@ edit in the same paragraph as the `gh` rule.
 the manifest, ~0.5 d) and **22** (the lock-wait bound, ~0.5 d, needs a design doc) — all
 unblocked and all headless-routable. Item 17 remains parked on `D-WORLD-19`. **Two open asks**,
 both one-word: `D-WORLD-19` and `D-WORLD-20` (the latter now carrying a 5-for-5 record).
+
+## Iteration 95 — 2026-08-19 — **one Mark comment, two answers, both consumed; item 17 parks again one layer deeper**
+
+**Pick.** A human directive, which outranks the queue. `scripts/mission_directives.sh --issue 68
+--since 2026-08-18T19:55:33Z` returned exactly one allowlisted comment, `MarkEdmondson1234` @
+`2026-08-19T04:57:30Z` (of 9), carrying two answers on two lines: `D world 19 - A yes` and
+`Remove deepseek flash`. Both open ledger rows resolved, both applied, in this iteration, with the
+ledger committed BEFORE either watermark advanced.
+
+**Outcome.** `D-WORLD-20` LANDED (`52bc9ec`). `D-WORLD-19` applied across two revision rounds and two
+quorums; item 17 PARKS again on a new one-word ask, `D-WORLD-21` (`7806cac`, `fd76fa0`, record
+this commit). No sprint, no Gate 3b landing — the deliverable is two consumed directives, a
+routing change proven with a negative control, a design doc 968 → 1295 lines, and one new queue row.
+
+**Routing evidence.**
+
+| role | pin | actual | note |
+|---|---|---|---|
+| controller | `$MODEL` | opus | quota lane |
+| designer | ROTATION | `claude:claude-fable-5` ×2 | **FLAGGED**: pointer read `claude`, so the next entry is `codex:gpt-5.6-sol` — probe rc=1, `"usage limit … try again at Aug 20th, 2026 5:34 AM"`. Gemini is read-only under CapRemoteSandbox and cannot edit a file, so the rotation WRAPPED rather than falling to `$MODEL`. |
+| planner | — | not run | no sprint this iteration |
+| executor | `pi:…:floor` (exported) | not run | the export was stale against the directive from the moment it was read — see below |
+| evaluator | `sonnet` | not run | no sprint |
+| quorum | — | `gpt5-6-sol`, `gemini-3-1-pro` | `absent_reviewers: []` on BOTH rounds, `--max-cost-usd 0.30` set before round 1 |
+
+`metered=$0.4591` (round 7 `$0.2147`, round 8 `$0.2444`) of the `$5` ceiling.
+
+**`D-WORLD-20` — the fix, and the instrument that nearly hid it.** The chain becomes codex → opus.
+Applied in `~/.config/ailang/mission-world.env`, not the driver, because `tools/launchd/*` is frozen
+core (`D-WORLD-DRIVER-1`): `mission-control.sh:331` defaults the tail with
+`${MISSION_EXECUTOR_FALLBACK:-pi:…:floor}` and sources this mission's env at `:58-59`, i.e. BEFORE
+that line, so the env value wins the default and the pi link is unreachable. Non-vacuity, one
+variable, and the arm is REAL rather than simulated because codex is genuinely dry: fix present →
+`falling back to 'opus'`; fix removed, byte-identical command → `falling back to
+'pi:openrouter/deepseek/deepseek-v4-flash-0731:floor'`; env restored `cmp -s` byte-identical after.
+**The established three-arm proof reads the driver's `DRY RUN ok:` roles line — and that line cannot
+be emitted on a rig where an iteration already holds the pidfile, because the driver yields first.**
+The `grep -o "executor=…"` came back EMPTY on all three arms, which is rule 3a's cheapest vacuous
+pass, and reading the raw output is what found both the correct instrument and the fact that the fix
+had already fired on the real path. Arm A (healthy codex → `codex:gpt-5.6-sol`, no fallback line at
+all) is honestly UNRUNNABLE until the bucket refills and is recorded as such rather than asserted.
+
+**`D-WORLD-19` — three rounds, one class, one layer deeper each time.**
+
+| round | what looked like a bound | why it was not one |
+|---|---|---|
+| 7 | a `context.Context` PARAMETER on `GetObject` | a parameter binds nothing until something arms it with a deadline |
+| 7b | `context.WithTimeout` derived inside `ValidateProof` | bounds the OPEN call, not the subsequent read loop |
+| 8 | the deadline reaching the read at all | `io.ReadCloser.Read` takes no context and is under no obligation to unblock on `ctx.Done()` |
+
+The round-7 sentence *"item 18 added `context.Context` (a WAIT bound)"* was **FALSE, and I wrote it**
+— into the directive, the doc, V36 and my own commit message. Measured:
+`host/store/context_read_test.go:370` declares `deadlineFreeReadPins` `{approve.go: 8,
+registry.go: 2, replay.go: 1}` = **11** production store reads passing `context.Background()` **by
+item 18's own ratified DR-2 deferral**, matched on
+`\.(GetObject|GetWorld|GetLogEntry|GetRegistryHead|SelectedHead)\(\s*context\.Background\(` and
+pinned by `TestNoNewDeadlineFreeStoreReads`, which reds only if the set GROWS. Item 18 bounded the
+SIGNATURE and made the residue VISIBLE; it bounded neither the bytes nor, at 11 named sites, the
+wait. Same family as iteration 94's finding one iteration earlier — there a "deadline" spelled
+`1 * time.Nanosecond` was a TIMER; here a context parameter is a TYPE. **The type is present and the
+property is absent, and nothing compares the two.**
+
+**The sharpest half, and it lands on the doc's own mutation table.** `gpt5-6-sol`: *"M22 uses a fake
+reader deliberately wired to observe the context, so it can pass while the real `host/store` reader
+blocks indefinitely."* M22 is **vacuous by construction, and the vacuity is supplied by the FIXTURE
+rather than by the production code**. That is iteration 92's finding arriving INVERTED — there a
+doc-prescribed fake returned exactly the value a neutered arm needed, so the mutant PASSED; here the
+fake is STRONGER than production, so the test passes where production would hang. Both directions
+share one gap: **nothing in this loop audits what a prescribed fake makes true.**
+
+**A reviewer refuted the fix the HUMAN had ratified.** `D-WORLD-19` arm A adopted
+`gemini-3-1-pro`'s round-6 `proposed_fix` verbatim, and `gemini-3-1-pro` rejected it in round 7:
+`OpenObject(ref) (io.ReadCloser, error)` drops the context, and the alternative `maxBytes`-on-
+`GetObject` arm changes a signature with **13** non-test out-of-tranche callers (6/2/2/1/1/1; two in
+`host/daemon` and `host/replay`, which §8.2 itself declares frozen), so that arm was unsatisfiable
+by construction. This is the SECOND time on this document that a verbatim-applied reviewer fix was
+refuted by its own author (rounds 3→4 was the first) — which is why round 7b's carve-out was paired
+with a **confirming re-quorum** instead of the straight-to-planner route the carve-out permits.
+That extra $0.24 is what produced round 8's finding.
+
+**Why it parks rather than taking a second carve-out.** `gpt5-6-sol`'s fix has two arms and they are
+not interchangeable: arm 1 (`ReadObject(ctx, ref, maxBytes) (ObjectMeta, []byte, error)`) makes
+cancellation enforceable and **retires the streaming reader** — the thing objection 6b demanded,
+`D-WORLD-19` arm A ratified, and `gemini-3-1-pro` has just PASSED; arm 2 keeps the reader and demands
+a context-aware reader contract naming a concrete store mechanism. The two reviewers want different
+things at one seam. Direction dispute → carve-out foreclosed for the **fifth consecutive time**, and
+for the first time by a dispute **between the two reviewers** rather than between a reviewer and the
+design. Filed as `D-WORLD-21`.
+
+**Ruled out / refuted.**
+
+- *"Item 18 already closed the OOM vector."* REFUTED by measurement: item 18 threaded `context` and
+  pinned 11 deadline-free reads; `context` cancels a slow read, it does not cap a fast
+  multi-gigabyte one. Both §3.3 and §8.2 now say so explicitly, because a reader checking "did 18
+  fix this?" finds a freshly context-threaded store and could reasonably conclude yes.
+- *The brief's control `.PutObject( → 22`.* REFUTED by the DESIGNER, correctly: 22 comes from a
+  command that does not exclude `_test` while the check it certifies does. Same scope it is **8**,
+  independently matching V28. Gate 2 rule (d) working.
+- *Queue row 23's first draft: "grep … returns ZERO".* REFUTED by my own re-run: it returns **3**,
+  and the known-positive control returned 3 as well — control and check were matching THE SAME
+  LINES. **Rule 3a(i-d) tells you to scope the control to the check's path; it says nothing about a
+  control scoped so identically that it stops discriminating. A control that can only fire on the
+  check's own hits is not a control.** Two of my own numbers refuted in one iteration, both by this
+  same rule, in opposite directions — one control too WIDE, one too NARROW.
+- *The `DRY RUN ok:` roles line as the routing instrument.* REFUTED: unusable while a pidfile is
+  held, and its silence is indistinguishable from a passing check.
+
+**New work filed.** Queue row **23** `w-store-deadline-free-residue-owner`: item 18's ratchet and the
+`D-WORLD-18` ruling both speak of "the follow-on item" owning `11 → 0`, and **no queue row is it**.
+A perfectly good counter with nothing on the other end of it — the blocked-row class inverted, a
+*measurement nobody owns* rather than a row nobody re-measures.
+
+**Next.** Rows 20/21/22/23, all four unblocked. **ONE** open ask: `D-WORLD-21`.

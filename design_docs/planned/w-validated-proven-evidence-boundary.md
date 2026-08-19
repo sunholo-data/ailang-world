@@ -403,8 +403,11 @@ runner, `runBounded`, is unexported and broker-internal (V35). The producer ther
 its own bounding inside `host/evidence`, on the pattern V35 measures in `runBounded`: wall time
 is bound by `context.WithTimeout` feeding `exec.CommandContext`, with the child in its own
 process group and the whole group killed on cancellation so a forked grandchild cannot outlive
-the deadline; output is read through a capped reader sized limit+1 bytes so overflow is detected
-rather than silently truncated; deadline overrun and output overflow are each producer refusals
+the deadline; both stdout and stderr are independently read through their own capped
+readers sized limit+1 bytes (gemini-3-1-pro's round-8 NON-BLOCKING fix, applied verbatim: a
+singular "capped reader" for a dual-stream capture leaves stderr's memory bound implicit, so an
+attacker-controlled checker could spam stderr and OOM the host while the parsed stream stays
+within its cap), so overflow on EITHER stream is detected rather than silently truncated; deadline overrun and output overflow are each producer refusals
 that emit and store no report. The producer departs from `runBounded` in exactly one measured
 property: `runBounded` merges stderr into stdout, while the producer captures the two streams
 SEPARATELY and parses JSON only from stdout, because this producer's output is parsed and a
@@ -1127,6 +1130,73 @@ Ledger row: `D-WORLD-19`.
 - **Pricing.** +0.25 day for the deadline machinery: tranche 1 moves 4.0 → 4.25 days, the
   decomposition total 10.0 → 10.25, and the tranche now exceeds the 3–4 day guardrail by a
   quarter day, stated in §9 rather than hidden.
+
+## 10.9 Round 8 quorum — ONE PASS, ONE REJECT, and the document PARKS on `D-WORLD-21`
+
+Round 8 was a CONFIRMING re-quorum, run after the round-7b carve-out revision even though the
+carve-out permits routing straight to sprint-planner. The reason is recorded in §10.8 and is
+document-specific: a verbatim-applied reviewer fix has been refuted by its own author twice here
+(rounds 3→4 and 6→7), so "applied verbatim" is not self-certifying on this doc.
+
+`absent_reviewers` empty, both slots present, `metered=$0.244360`.
+
+**`gemini-3-1-pro` → PASS.** Only the second reviewer flip to `pass` in this item's history (round 4
+was the first), and the first on a round where the store surface was in scope. Its one remaining
+concern was filed NON-BLOCKING: §3.4 said output is read through *a* capped reader (singular) for a
+capture the same paragraph describes as dual-stream, leaving stderr's bound implicit, so an
+attacker-controlled checker could spam stderr and OOM the host while the parsed stream stays inside
+its cap. Its one-sentence `proposed_fix` is applied VERBATIM in §3.4 in the same commit that records
+this round — deliberately, because the round-5 controller miss recorded in §10.6 was exactly a
+non-blocking note left unforwarded that returned one round later as a BLOCKING objection.
+
+**`gpt5-6-sol` → REJECT, and it is the same class one layer deeper for the third round running.**
+
+| round | the thing that looked like a bound | why it was not one |
+|---|---|---|
+| 7 | a `context.Context` PARAMETER on `GetObject` | a parameter binds nothing until something arms it with a deadline; 11 production reads pass `context.Background()` by ratified deferral DR-2 (V41) |
+| 7b fix | `context.WithTimeout` derived inside `ValidateProof` | bounds the OPEN call, not the subsequent read |
+| 8 | the deadline reaching the read at all | `OpenObject` returns an ordinary `io.ReadCloser`, whose `Read` takes no context and is under no obligation to unblock when `ctx` expires |
+
+The objection verbatim: *"`context.WithTimeout` therefore bounds the open operation but does not
+inherently bound the subsequent `io.LimitReader`/`Read` loop. M22 uses a fake reader deliberately
+wired to observe the context, so it can pass while the real `host/store` reader blocks
+indefinitely."*
+
+The second sentence is the sharper half and it lands on this document's own mutation table.
+**M22 is vacuous by construction, and the vacuity is supplied by the FIXTURE rather than by the
+production code** — a context-observing fake makes the mutation die for a property the real store
+reader has never been shown to have. That is iteration 92's finding arriving in its inverse
+direction (there, a doc-prescribed fake returned the exact value a neutered arm needed, so the
+mutant PASSED; here, the fake is STRONGER than production, so the test passes where production
+would hang), and nothing in this loop audits what a prescribed fake makes true.
+
+**WHY THIS PARKS RATHER THAN TAKING ANOTHER CARVE-OUT.** `gpt5-6-sol`'s `proposed_fix` offers two
+arms, and they are not interchangeable:
+
+- **Arm 1** — replace the seam with `ReadObject(ctx, ref, maxBytes) (ObjectMeta, []byte, error)`,
+  requiring the store to enforce `maxBytes` before materialization and perform the COMPLETE read
+  under the supplied context. This makes cancellation enforceable, and it **returns a byte slice** —
+  i.e. it retires the streaming reader that objection 6b demanded, that `D-WORLD-19` arm A ratified,
+  and that `gemini-3-1-pro` has just PASSED. Applying it verbatim would undo the round that finally
+  satisfied the other reviewer.
+- **Arm 2** — keep the reader and "define a context-aware reader contract whose reads are guaranteed
+  to terminate on `ctx.Done()` and document the concrete store mechanism that enforces it."
+
+So the two reviewers now want different things at the same seam: streaming to avoid materialization
+versus a complete-read-under-context to make cancellation enforceable. That is a DIRECTION dispute
+between reviewers, not a completeness defect, and §10.4's discriminator applies — *is what the fix
+REMOVES load-bearing for the doc's claim?* Arm 1 removes exactly the property the other reviewer's
+objection was about. **Fifth consecutive confirmation that a direction dispute forecloses the
+narrow-refinement carve-out**, and the first where the dispute is between the two REVIEWERS rather
+than between a reviewer and the design.
+
+Both arms also share one obligation that is not contingent on the answer, and it should be
+implemented whichever arm wins: `gpt5-6-sol`'s **real-store integration test** — a blocked or
+contended object read under `context.Background()`, relying only on `ObjectReadTimeout`, proving the
+read returns within the bound with no seal, and mutating **the actual cancellation mechanism rather
+than `WithTimeout`**. That is the arm that would have caught M22's fixture vacuity.
+
+**THE ASK IS ONE WORD** (`D-WORLD-21`).
 
 ## 11. Verification Log
 
