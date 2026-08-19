@@ -825,6 +825,29 @@ What this mission touches or overlaps, and the drawn boundaries:
 
 ## Guardrails (mission-specific; the skill's Standing Rules always apply on top)
 
+- **A NEGATIVE GREP CANNOT ESTABLISH A PREMISE ABOUT A CLASS OF STATEMENT — IT CAN ONLY FAIL TO
+  FIND THE SPELLINGS IT WAS WRITTEN FOR, AND ITS ZERO IS INDISTINGUISHABLE FROM THE TRUTH. ESTABLISH
+  IT BY POSITIVE ENUMERATION INSTEAD** (process fix, iter-96; instance 2 of *the control itself was
+  the defect*, after iter-95's control scoped so identically to its check that it could only fire on
+  the check's own hits). The existing rules cover an empty result (pair it with a control) and a
+  green check (state its scope). Neither covers the case where **the control fires, the scope is
+  right, and the pattern is still blind** — because the thing it is hunting has a spelling nobody
+  thought of. Measured: to establish that `host/store`'s `objects` table is insert-only,
+  `grep -rniE '\bUPDATE[[:space:]]+[a-z_]+[[:space:]]+SET\b'` returns **0 repo-wide, tests
+  included**, and the pattern is provably sound — it matches a synthetic `UPDATE objects SET …`.
+  Yet `store.go` carries **five genuine `ON CONFLICT(…) DO UPDATE SET` upserts** (`:618/:709/:759/
+  :836/:978`), invisible because the upsert spelling puts **no table name between `UPDATE` and
+  `SET`**. A broken pattern and a genuinely immutable table produce the identical zero, so the zero
+  proves nothing either way. **And the failure is symmetric, which is what makes it a rule rather
+  than a caution:** in the same iteration the controller handed the designer a `FROM objects|INTO
+  objects` enumeration reading **five**, and the designer measured **nine** — four `JOIN objects`
+  reads at `journal.go:744/792/918/966` that the adjacency pattern reads 0 on. One grep, two
+  spellings, and the author saw only the half being hunted for. **Rule:** to establish a premise
+  about what a body of code does or does not do, enumerate every site that NAMES the subject and
+  read them one by one; use negative greps to *narrow* an enumeration, never to *conclude* one. The
+  tell: you are about to write "there are no X" on the strength of a pattern that describes X's
+  most familiar spelling.
+
 - **AN ACTION THAT SILENTLY DID NOT HAPPEN RETURNS THE SAME RESULT AS A GENUINE NEGATIVE — ASSERT
   THE ACTION'S OWN *EFFECT*, NEVER MERELY ITS EXIT CODE** (process fix, iter-45; 2 instances in ONE
   iteration, both in the controller's own verification). The mission's instrument discipline covers
