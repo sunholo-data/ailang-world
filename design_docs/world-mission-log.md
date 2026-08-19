@@ -10958,3 +10958,194 @@ rows 20–23 over item 17 (a ruling had un-parked the higher row). (h) Reading t
 
 **Next.** Item 17 blocked on `D-WORLD-22`. Rows 20/21/22/23 all unblocked and headless-routable.
 **ONE** open ask: `D-WORLD-22`.
+
+## Iteration 97 — 2026-08-19 — **the load confound was mine: 64 unkilled spinners produced a false "dev is red" in two independent roles, and the queue head did not reproduce in 32 executions** (`metered=$0.2164`; controller `claude:claude-opus-5`; designer `claude:claude-fable-5` ×2, rotation WRAPPED and the Fable diet exceeded, FLAGGED; no planner, executor or evaluator — no sprint ran)
+
+**Deliverable**: queue row 21 `w-archive-stderr-in-manifest` is DESIGNED and quorum-clean via the
+narrow-refinement carve-out — `design_docs/planned/w-archive-stderr-in-manifest.md`, 808 lines,
+commit `6a811e1`. Row 20 was re-scoped and demoted on measurement. No sprint ran.
+
+### Gates 0–1
+
+`dev` == `origin/dev` at `b5ddf0e`; CI SHA-addressed `checks=2` both `success` with a run confirmed
+to exist (`actions/runs?head_sha` `total=1`); the RUNNING skill byte-identical to origin (`cmp -s`
+silent). **0** directives from `MarkEdmondson1234` on `#68` since `2026-08-19T04:57:30Z`, both
+watermarks read and agreeing, control firing (widening `--since` re-surfaces iteration 95's consumed
+comment). Rotation not due. Ledger valid, 9 rows, 1 OPEN (`D-WORLD-22`). Billing tripwire CLEAN.
+Died-mid-flight sweep: 0 open PRs, 0 worktrees, clean tree.
+
+**The external-issue sweep's negative control is dead by self-reference.** Iteration 96 used `#9999`
+as its known-absent control and then *recorded that fact in its STATUS stamp*, so `#9999` now greps
+to **1** in the charter. The shared skill already warns that a self-describing file poisons a
+known-ABSENT control (it says so about `ITERATION 999`); the warning did not prevent the identical
+move one gate over. Fresh control `#8888` → 0/0. **A control's identifier must not be written into
+the corpus it controls** — which means a control that is *recorded* is a control that is *spent*.
+
+### The pick, and why it is not the queue head
+
+Row 20 (`host/capsule` output-cap load flake) was the top unblocked row. Its code is byte-identical
+to the base it was filed at — `e4ba56d:host/capsule/capsule.go` and `HEAD:` hash equal, likewise
+`capsule_test.go` — a positive identity check rather than a negative log grep. It then failed to
+reproduce in **32 executions**: 7 full-suite runs (3 ambient-toolchain, 4 pinned), 10 isolated under
+2× CPU oversubscription, 15 under 6×. Zero failures.
+
+The row's rate rests on **n=2** ("failed 1 of 2 full-suite runs"). Pooled with these it is 1 in 9.
+**So the natural acceptance criterion — "the flake stops" — is vacuous at base**, which is precisely
+what rule 3e forbids routing into a sprint. It is not a ghost: the two-caps race (`ExecTimeout: 5s`
+against `MaxOutputBytes: 1024` in one `Config`) is readable in the fixture, and package wall-time per
+iteration rose 1.04 s → 2.26 s → 4.57 s from idle to 6× load. **But that figure includes the per-run
+fixture, which archives a 91.8 MB binary, so it is NOT a measurement of the quantity `ExecTimeout`
+bounds** — it is consistent with the mechanism and does not establish it, and the row was re-scoped
+saying exactly that. The observable a sprint can assert is the **margin**, not the outcome.
+
+Row 22 was ruled out as a pick for a reason worth recording: `D-WORLD-22` arm A would fold it into
+item 17, so working it now would prejudge a ruling that is on Mark's desk.
+
+### The spine — I built the confound, and it fooled two roles
+
+I started 64 CPU spinners to supply "deliberate load" for row 20. `kill $SPINNERS` did not reach
+them — `jobs -p` in that non-interactive zsh eval did not capture the subshells — and the rig sat at
+**load average ~110 for over an hour**. Inside that window ran (a) my own `./scripts/verify_go.sh`
+and (b) the designer's. **Both reported `verify_go.sh` RED at HEAD**, and the designer routed it to
+me as a base finding about `dev`.
+
+Re-run after killing the spinners: **`verify_go.sh` PASSES end to end** — build clean, plain and race
+legs both pass with the pinned `AILANG_BIN`, **zero** `FAIL` lines in the log, `host/broker` `ok` at
+**84.597 s** plain and **183.918 s** race.
+
+Two corrections travel with it. The designer named `TestRecoverCommitStopsAtPageBound`
+(`recover_test.go:473`); the panic trace names the **adjacent sibling**
+`TestRecoverEffectStopsAtPageBound` (`:488`), and the named test PASSES in isolation at **224.699 s**
+and **217.668 s**. There are two page-bound tests and the report picked the wrong one.
+
+Rule 3e(b) says an environmental explanation is always available for a symptom you caused. This is
+that rule with the sign flipped: the symptom really *was* environmental, it was *my* environment, and
+two independent roles converged on filing it as a defect in HEAD. **Agreement between roles is not
+independence when both ran on the same contaminated rig** — the fleet-as-control-group rule (3l) asks
+what the failing arms SHARE, and here they shared my spinners.
+
+The durable finding that survives: the two page-bound tests each run `1 << 20` iterations at ~220 s
+apiece, sequentially within one package. That is a real hazard for any per-package timeout and is kept.
+
+### My ambient toolchain was the denied one, and the repo's guard caught me
+
+My first three suite runs used **go1.26.4** — the version `scripts/verify_go.sh` explicitly denies
+(`go1.26.0|…|go1.26.5` miscompile `host/store`'s array-literal shape on darwin/arm64) and which
+`host/store/toolchain_canary_test.go` exists to detect. It red 3/3 with `Field="" want "stateRoot"`.
+The canary did exactly its job. Worth noting in the repo's favour: `verify_go.sh` names the remedy in
+its FATAL message, and a bare `go test ./...` does not — but the `--- FAIL: TestToolchainCanary` line
+does carry the word, so this is a diagnosability nit, not a blindness, and it is recorded as such
+rather than inflated into a finding.
+
+### Row 21 — reproduced, and worse than filed
+
+`host/archive/archive.go:391` (`probeVersion`) uses `cmd.CombinedOutput()`. Measured with **separate
+files** — my first attempt, `2>&1 >/dev/null | wc -c`, reported stderr as **231** bytes when it is
+**63**, because that redirection captured both streams. Shell redirection is an instrument.
+
+- stdout **168 B**, beginning `AILANG v0.30.0`
+- stderr **63 B**: `2026/08/19 19:12:38 Observatory: 308MB (warn threshold: 200MB)`
+- combined **231 B** = 168 + 63, and its **first line is the log line**
+
+The polluted artifact is on disk and was read verbatim:
+`/private/tmp/world-demo.db.artifacts/interpreters/sha256/e9746fef…/manifest.json` carries
+`"version": "2026/08/18 21:02:42 Observatory: 301MB (warn threshold: 200MB)\nAILANG v0.30.0\n…"`.
+
+The design found a **third persisted consumer the queue row never named**: `releaseFromVersion` takes
+the manifest's first line, so the log line becomes the epoch-1 candidate `registry.Bootstrap` writes
+— and Bootstrap fatally refuses divergent heads. Cheap to repair now, store-bricking later.
+
+### Quorum — round 1 blocked, round 2 blocked with the load-bearing eye closed
+
+**Round 1**, both present, `$0.0866`. `gpt5-6-sol`: the probe is an unbounded subprocess wait.
+Measured before forwarding (rule 3f): `host/archive` contains **zero** bounded execution, control
+firing (`host/capsule`, `host/replay`, `host/broker/handlers` all use `exec.CommandContext`). The
+objection is correct — **but its word "introduces" is imprecise**, since `CombinedOutput()` is equally
+unbounded today; what Decision 2 newly does is put that wait on the formerly-no-op idempotent path,
+i.e. on daemon startup. The revision brief said so, so the doc would not inherit the imprecision.
+`gemini-3-1-pro`: P9b was marked UNVERIFIED and a design doc may not defer premise verification. I ran
+the sweep for it.
+
+**Round 2**, `$0.0391`, synthesis `blocked` with `absent_reviewers: [{"model":"gpt5-6-sol","reason":"budget"}]`.
+This is the self-selecting trap the shared skill describes, firing exactly as written: the reviewer
+dropped on budget because **the doc had grown** (444 → 676 lines) in the revision **its own round-1
+objection drove**, so the eye that closed was the one that mattered most. Re-run alone at a raised cap
+for `$0.0907`, it returned **REJECT**. Third recorded instance of this class across the fleet, first in
+this mission.
+
+### The reviewer's catch landed on a number I supplied
+
+`gpt5-6-sol`'s `catch`: *"The related claim that exactly one artifact tree exists 'on this rig' also
+exceeds the listed, depth-limited search scope."*
+
+I wrote that sentence, and I handed it to the designer under a `VERIFIED BY CONTROLLER` heading. It
+was measured by `find <root> -maxdepth 6 -name '*.artifacts' -type d` over **four** roots — so the
+scope is four roots at depth 6, and "on this rig" is strictly wider than the command supports. That is
+rule 3b(ix), committed **in the same directive that instructed the designer to "scope every count into
+the sentence it appears in"**. Third consecutive iteration in which a reviewer or the designer refutes
+a controller-supplied number (95, 96, 97).
+
+Replaced with the scoped form plus a **positive per-file test**: **53** SQLite files enumerated across
+the four roots, each tested individually for an adjacent `.artifacts` tree (the repo's own definition
+at `archive.go:46-48`), **0** hits — hence zero worldd stores in the searched roots, with the control
+firing on the one tree that does exist. That is a *stronger* conclusion than the one it replaced, and
+it no longer claims anything about paths nobody searched.
+
+**And my own first sweep read a confident zero from a search that never ran.** `find /tmp -name
+'manifest.json' -path '*artifacts*'` → **0**, while `ls /tmp/world-demo.db.artifacts` succeeded in the
+same breath. Cause: `/tmp` is a symlink to `private/tmp` (`lrwxr-xr-x /tmp -> private/tmp`) and `find`
+does not follow it, so the entire search tree was empty. **The known-positive control returned 0 too —
+the documented instrument-broken signal — and that is the only reason I caught it.** Generalised into
+the doc: *a symlinked root is a scope `find` silently declines*, which is rule 3a(i-d) arriving through
+the filesystem rather than through a mistyped directory.
+
+### Carve-out taken
+
+Both round-2 objections carry concrete reviewer-authored `proposed_fix` text and neither disputes the
+design direction, so both were applied **verbatim** in a controller-authored revision — no third Fable
+run, since the carve-out explicitly permits the controller to apply the reviewers' own text. `gemini`'s
+fix makes the self-heal **conditional** (`!strings.HasPrefix(m.Version, "AILANG v")` — a positive-shape
+predicate, not a denylist for `"Observatory"`, because the pollutant is one instance of a class), which
+restores the true zero-process no-op the doc had **claimed and did not have**. The two fixes
+**converge**: a conditional heal removes the wait from the hot path entirely, so the bound covers only
+what remains.
+
+**Owed, declared, not absorbed**: `gpt5-6-sol`'s option (2) — rollout safety without any zero-store
+assumption, checking a target store's registry state before healing — is genuine design work for the
+tranche that wires this into a store with existing epochs. Folding it in would widen a 0.5–1 d item
+into registry migration. Declared in the doc rather than hidden, per round 8's standing lesson that a
+document is not penalised for the defects it hides and should be written as if it were.
+
+### Routing evidence
+
+| Role | Pin | Actual | Note |
+|---|---|---|---|
+| Controller | `$MODEL` | `claude:claude-opus-5` | — |
+| Designer | ROTATION | `claude:claude-fable-5` **×2** | **FLAGGED**: rotation WRAPPED and the Fable diet (one bounded run/iteration) EXCEEDED. `codex:gpt-5.6-sol` probed `rc=1` first-party — *usage limit … try again at Aug 20th, 2026 5:34 AM*; `gemini-3-1-pro` is read-only under `CapRemoteSandbox` and cannot author a file. 5th consecutive wrap. |
+| Planner | `derive-planner-lane.sh` → `opus fail-closed:env-pin` | **not spawned** | No sprint ran; doc is the deliverable. |
+| Executor | `opus` (chain `codex → opus` per `D-WORLD-20`) | **not spawned** | — |
+| Evaluator | `sonnet` | **not spawned** | — |
+| Quorum | `gpt5-6-sol`, `gemini-3-1-pro` | both, r1; gemini + recovered gpt5, r2 | `metered=$0.2164` total |
+
+`D-WORLD-20` confirmed live: `MISSION_EXECUTOR_FALLBACK=opus`, no `pi:` anywhere in the resolved
+environment. Zero deepseek spend.
+
+### Ruled out
+
+- **Routing a sprint on row 20** — its acceptance criterion is vacuous at base (0 failures in 32).
+- **Reading 0-of-32 as "row 20 is fixed"** — the mechanism is in the fixture, and my runs were mostly
+  on an idle rig, which is the condition the row itself says PASSES.
+- **Picking row 22** while `D-WORLD-22` is open — arm A would fold it into item 17.
+- **Trusting the designer's base-red** without re-measuring — it was misattributed *and* contaminated.
+- **Trusting my own first `find` zero** — the control caught it.
+- **A third Fable designer run** for the carve-out edit — the carve-out permits controller-authored
+  verbatim application, and the diet was already exceeded at two.
+- **Running the sprint this iteration** after ~2 h of dense measurement — the doc is the honest
+  deliverable; a rushed sprint is not.
+- **Filing the canary's terse failure message as a finding** — `--- FAIL: TestToolchainCanary` does
+  name the axis, so it is a nit, not a blindness.
+
+### Next
+
+Row 21 is DESIGNED and quorum-clean → **sprint-planner on the next fire**. Rows 20 (re-scoped), 22 and
+23 are unblocked. **One open ask, unchanged: `D-WORLD-22`.**
