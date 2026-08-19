@@ -11,6 +11,7 @@ import (
 	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -200,6 +201,25 @@ func Compare(local, cli Hashes) error {
 }
 
 // CrossCheck computes all hashes and compares them with one pinned CLI dry-run.
+//
+// The dry-run subprocess is read STDOUT-ONLY. `ailang publish --dry-run` prints
+// its parseable "  Tarball:/Content hash:/Interface hash:" lines to stdout and
+// its chatter (this rig's released binary logs an Observatory size warning) to
+// stderr, so merging the streams would feed parseDryRun data it never emitted:
+// a stderr line in dry-run SHAPE is parsed as data, and a second "Tarball:"
+// line from either stream is rejected as `duplicate dry-run Tarball line`. That
+// is the hazard TestCrossCheckStderrIsNotParsedAsDryRunData pins. On a non-zero
+// exit stderr is recovered from (*exec.ExitError).Stderr, which the standard
+// library populates precisely because c.Stderr is left nil here, so the error
+// path keeps every diagnostic byte the merge used to carry.
+//
+// BOUNDING IS THE CALLER'S OBLIGATION: CrossCheck runs the CLI with no
+// in-process deadline, deliberately. The sole production caller supplies the
+// bound -- scripts/verify_world_package.sh:183 invokes the helper under
+// `run_bounded 120`, which SIGKILLs the whole process group on expiry (exit
+// 124), so the ailang grandchild cannot outlive it. A second in-process
+// constant underneath that shell bound would mint a cross-language constant
+// ordering no test can pin; a new caller must bring its own bound instead.
 func CrossCheck(packageDir string, manifest Manifest, ailangBin string) (CrossCheckResult, error) {
 	content, err := ContentHash(packageDir)
 	if err != nil {
@@ -216,9 +236,13 @@ func CrossCheck(packageDir string, manifest Manifest, ailangBin string) (CrossCh
 	// every registry variable unset, not just the credential. The name list
 	// lives in host/childenv so this site cannot drift away from the others.
 	cmd.Env = childenv.Scrubbed(os.Environ())
-	out, err := cmd.CombinedOutput()
+	out, err := cmd.Output()
 	if err != nil {
-		return CrossCheckResult{Local: local}, fmt.Errorf("ailang publish --dry-run: %w: %s", err, out)
+		var ee *exec.ExitError
+		if errors.As(err, &ee) {
+			return CrossCheckResult{Local: local}, fmt.Errorf("ailang publish --dry-run: %w: stdout: %s: stderr: %s", err, out, ee.Stderr)
+		}
+		return CrossCheckResult{Local: local}, fmt.Errorf("ailang publish --dry-run: %w: stdout: %s", err, out)
 	}
 	cli, err := parseDryRun(out)
 	result := CrossCheckResult{Local: local, CLI: cli}
