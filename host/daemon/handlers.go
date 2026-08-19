@@ -279,6 +279,33 @@ func (d *Daemon) readCtx(r *http.Request) (context.Context, context.CancelFunc) 
 // misfile a real timeout as a 500 — the exact drift MU3 exists to catch.
 // errors.Is is kept as the second arm for the case where the context is still
 // live but the error itself carries the expiry.
+// LIMITATION(w-daemon-late-read-503): this classifier is consulted ONLY on the
+// error path — on a successful read err is nil and this function never runs.
+// D15 verifies prompt cancellation only for one CPU-bound query using
+// modernc.org/sqlite v1.54.0 on darwin/arm64. It does not establish a general
+// bound for lock-blocked or other driver waits; therefore this item makes no
+// general production bounded-wait claim. The residual is two things, not one:
+//
+//	 (i) a read that COMPLETES SUCCESSFULLY before the cancellation is
+//	     observed answers 200 with the real body even though it overran the
+//	     deadline;
+//	(ii) a read blocked on a LOCK is bounded by busy_timeout, NOT by the
+//	     request deadline (w-daemon-timeout-test-flake D18: under a 300ms
+//	     context deadline a lock-blocked read returned after 2.04s, governed
+//	     by busy_timeout's ~2s, the deadline exceeded 6.8x while the
+//	     busy-retry loop ran — and the error still surfaces as
+//	     deadline-exceeded, so the wire class is Timeout while the timing was
+//	     governed by a different mechanism entirely). Today that composition
+//	     is safe only because busy_timeout (2s) is shorter than the 10s
+//	     request deadline — an ORDERING nothing in this code asserts, not a
+//	     guarantee.
+//
+// Enforcing a stronger status contract means a post-read expiry check at all
+// seven read sites and a decision that completed work must be discarded; that
+// is the successor item named above, not a rider on a test fix. The
+// read-deadline tests deliberately use an ALREADY-EXPIRED stimulus
+// (expiredReadDeadline) precisely because a near-expiry one races the
+// completes-before-cancellation window.
 func timedOut(ctx context.Context, err error) bool {
 	if ctx.Err() != nil {
 		return true
