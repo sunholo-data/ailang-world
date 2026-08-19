@@ -825,6 +825,41 @@ What this mission touches or overlaps, and the drawn boundaries:
 
 ## Guardrails (mission-specific; the skill's Standing Rules always apply on top)
 
+- **A LOAD OR STRESS EXPERIMENT MUST PROVE ITS OWN TEARDOWN BEFORE ANY LATER MEASUREMENT ON THIS
+  RIG COUNTS AS EVIDENCE — AND "I RAN `kill`" IS NOT THAT PROOF** (process fix, iter-97; instance 2
+  of *the controller's own step contaminated the controller's own control*, after iter-94's
+  `MU-SITE-REVERT` mutation that never landed and was read from a pristine tree). Rule 3e(b) already
+  says a control is only a control if it runs from a tree in the baseline's state. It is written
+  about **files**, and it says nothing about **machine state**, which is shared by every role, every
+  gate, and every sibling mission on this rig. Measured: iteration 97 started **64** CPU spinners to
+  supply the "deliberate load" queue row 20 asks for, and `kill $SPINNERS` never reached them —
+  `jobs -p` inside a non-interactive `zsh -c` eval did not capture the backgrounded subshells, and
+  the command reported no error. Load average sat at **~110 on 16 cores for over an hour**. Inside
+  that window ran **two independent `./scripts/verify_go.sh` executions — the controller's and the
+  designer's — and BOTH reported `dev` RED at HEAD**, one of them routing it onward as a base
+  finding about the repository. Re-run after the spinners were killed, the gate **passes end to
+  end**: zero `FAIL` lines, `host/broker` `ok` at **84.597 s** plain and **183.918 s** race.
+  **The reason this earns a guardrail rather than a note is that it manufactures FALSE
+  CORROBORATION.** Two roles agreed, from separate processes, on a red neither had any reason to
+  invent — which is exactly the shape a controller is taught to trust. But agreement is only
+  evidence when the arms are independent, and a shared contaminated rig makes them one arm reported
+  twice. That is rule 3l (*the fleet is the control group; ask what the failing arms SHARE*) aimed
+  inward: the thing they shared was **me**. It also inverts rule 3e(b)'s warning — there the danger
+  is reaching for an environmental excuse for a symptom you caused; here the symptom genuinely
+  **was** environmental, and the pull was to file it as a defect in `HEAD`.
+  Rules: **(a)** any step that deliberately loads the machine (spinners, `-race` sweeps, parallel
+  suites, a GPU job) ends with a **verified** teardown — `pgrep -f '<pattern>' | wc -l` must read
+  **0** and `uptime` must be quoted — before the next measurement is taken, and the teardown
+  assertion is what counts, never the `kill` itself; **(b)** `jobs -p` is unreliable in this rig's
+  non-interactive tool shell, so capture PIDs explicitly (`pid=$!` per child, into an array) or kill
+  by pattern, and assert the count either way; **(c)** every gate result recorded in the charter or
+  handed to another role carries the **load average at which it was taken** — a timing-sensitive
+  gate result without a load reading is scoped no better than a `go test` without its toolchain;
+  **(d)** when two roles report the same environmental red, treat the agreement as **one**
+  observation until you can name something that differs between the arms; **(e)** this is
+  rig-global, not mission-local — three missions share this machine, so a leaked load experiment
+  corrupts siblings' measurements too, and they have no way to attribute it.
+
 - **A NEGATIVE GREP CANNOT ESTABLISH A PREMISE ABOUT A CLASS OF STATEMENT — IT CAN ONLY FAIL TO
   FIND THE SPELLINGS IT WAS WRITTEN FOR, AND ITS ZERO IS INDISTINGUISHABLE FROM THE TRUTH. ESTABLISH
   IT BY POSITIVE ENUMERATION INSTEAD** (process fix, iter-96; instance 2 of *the control itself was
