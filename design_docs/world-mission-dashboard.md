@@ -30,7 +30,7 @@
 
 ## Quota posture
 
-- codex: **DRY** until 2026-08-20 05:34 (probed first-party this iteration; note the probe prints
-  the usage-limit error and still exits **rc=0** — read the artifact, not the exit code)
+- codex: **DRY** until 2026-08-20 05:34 (probed first-party this iteration, unpiped: **rc=1**.
+  My first reading of `rc=0` was a `| tail` artifact, not a codex defect — corrected in the log)
 - Anthropic (fable/opus/sonnet): healthy, subscription lanes; billing tripwire CLEAN
 - metered this iteration: **$0.6326** of the $5 ceiling (quorum rounds 9 `$0.2978`, 10 `$0.3348`)

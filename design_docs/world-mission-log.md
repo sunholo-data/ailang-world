@@ -10853,13 +10853,20 @@ rounds (9, 10), `absent_reviewers` empty on both.
 | planner / executor / evaluator | — | not run | no sprint this iteration |
 | quorum | — | `gpt5-6-sol`, `gemini-3-1-pro` | `absent_reviewers` empty on BOTH rounds; `--max-cost-usd 0.35` set before round 9 |
 
-**A probe that prints its own failure and exits rc=0.** `codex exec --model gpt-5.6-sol` returned
-`ERROR: You've hit your usage limit … try again at Aug 20th, 2026 5:34 AM` on **stdout**, twice,
-and **exited 0**. The lane is dry; the exit code says healthy. This is the same class as iteration
-94's mangled-but-rc=0 commit message and the loop's standing rule that a command's exit code
-describes the request rather than the delivery — read the artifact. Recorded here because the
-skill's codex recipe gates on `[ "$rc" -eq 0 ]`, which on this rig would have routed a real
-directive to an exhausted lane.
+**A CORRECTION I OWE THIS ENTRY, MEASURED AFTER I HAD ALREADY WRITTEN THE OPPOSITE.** My first
+codex probe printed `ERROR: You've hit your usage limit … try again at Aug 20th, 2026 5:34 AM` and
+I read `rc=0`, and I wrote that up here as a codex defect that would defeat the skill's
+`[ "$rc" -eq 0 ]` gate. **That is FALSE, and the fault was mine: I ran the probe through
+`| tail`, so `$?` was `tail`'s status, not codex's.** Re-measured with one variable, same cwd, same
+command: **unpiped `rc=1`; piped through `tail`, `rc=0`** — with the control `false | tail -1`
+also returning 0. Unpiped rc=1 matches what iteration 95 recorded, so the two iterations never
+actually disagreed. The lane conclusion is unchanged (codex is dry until 2026-08-20 05:34) and the
+skill's gate is sound.
+**What makes this worth keeping rather than deleting: "exit codes through pipes lie" is a lesson
+this loop has already recorded, and I reproduced it in the same iteration whose headline finding is
+that a grep's zero can be an artifact of the grep's own spelling.** Two instrument-artifact
+findings in one iteration, and the one I nearly published as a defect in someone else's tool was
+mine. The tell is identical in both: a reading that arrives with no control beside it.
 
 **Round 9 — the ruling applied.** The seam becomes
 `ReadObject(ctx, ref, maxBytes) (ObjectMeta, []byte, error)`; the store enforces `maxBytes` BEFORE
