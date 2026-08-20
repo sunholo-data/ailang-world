@@ -196,6 +196,28 @@ Estimated effort is **1.0 day**: 0.25 day extraction and finite state-machine te
 - No claim that the historical 1-of-2 failure is reproduced, assigned a stable rate, or fixed by load sampling.
 - No `.ail`, Z3, kernel, package, CLI, or documentation-surface change beyond this design and the later Go implementation.
 
+**RESIDUAL CORRECTED POST-SPRINT (iteration 100, evaluator `sonnet` 93/100, reproduced first-party
+by the controller).** This document filed the surviving integration test's stale NAME as the residual
+of retiring the oracle. That undersells it, and the correction matters because it is the same shape
+this mission keeps recording: **the retired fixture was doing TWO jobs and only one of them was bad.**
+Job 1 — a wall-clock kill oracle started before `New(...).Run(...)`, i.e. outside the region
+`ExecTimeout` governs — is the flake, and retiring it is this item's whole point. Job 2 — emitting
+64 KiB so the child genuinely BLOCKED in `write()` on a full pipe — was real coverage, and it left
+with the oracle because nobody separated them. Measured: this rig's pipe capacity is **65536 bytes**
+(a Go probe writing to an undrained `os.Pipe` blocks after 65536); the surviving
+`TestF6OutputCapKillsChildBeyondOnePipeBuffer` emits `repeat(32)` = 32x16 + newline = **513 bytes**
+against a **64-byte** cap; and `readCapped` reads only `limit+1` bytes before stopping, so filling the
+pipe requires total output to exceed its remaining capacity, which 513 bytes cannot. **So no arm in
+the final suite — fake or real-interpreter — drives a live child blocked in `write()` being unblocked
+by `cmd.Process.Kill()`**, which is exactly the scenario `capsule.go`'s own "F6 must not decay into
+F5" comment describes. Non-blocking for the landed sprint, and that is measured rather than asserted:
+M-A is behaviour-preserving, confirmed by M6's kill set matching the predicted 7 tests across 2
+packages exactly, so the kill path is untouched. Owner: **queue row 25
+`w-capsule-blocked-child-kill-coverage`**, filed by iteration 100 in the same charter edit as this
+correction. NOT queue row 24, which owns the cleanup boundary and the non-group-wide overflow kill —
+a different mechanism. The generalisable point, worth more than the instance: **when you retire an
+instrument, enumerate every property it was supplying, not just the one that made you retire it.**
+
 The following lifecycle debt is **owed and not absorbed here**: a production boundary such as `CloseOutput() error`, `Wait(context.Context) error`, an explicit bounded cleanup context, and `errors.Join` surfacing of kill/close/wait failures. Its named owner is **queue row 24 `w-host-subprocess-cleanup-boundary`**, filed by iteration 99 in the same charter edit as this document's routing. (Queue row 21 *declared* this residual but LANDED on 2026-08-20, so it cannot own follow-on work — naming a completed row as an owner is exactly the defect queue row 23 exists to record.) The related non-group-wide overflow-kill defect remains owned by its separately filed queue row. Adding either behavior here would change `host/capsule` subprocess lifecycle and reorder separately owned work, so this tranche only states and tests the existing caller-supplied liveness contract. This is an explicit residual, not a claim that arbitrary readers or `Wait()` are intrinsically bounded.
 
 ## 8. Quorum verification log

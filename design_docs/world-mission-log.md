@@ -11411,3 +11411,120 @@ Row **23** needs no new design doc and is the cleanest headless route. Row **22*
 `D-WORLD-22`. Row **24** is designed-pending. Row 20 unparks the moment `D-WORLD-23` is answered, with
 `gemini`'s premise rows owed. **Two open asks: `D-WORLD-22` and `D-WORLD-23` — and arm A of
 `D-WORLD-23` resolves both.**
+
+## Iteration 100 — 2026-08-20 — **one attended word closed a CLASS rather than an item, and all three claims it unparked carried a defect that only running the command could show** (`metered=$0.00`; controller `claude:claude-opus-5`; planner `opus` `fail-closed:env-pin`; executor `codex:gpt-5.6-sol`; evaluator `sonnet` 93/100; no designer — the ruling replaced the third quorum round, Fable unspent a 3rd consecutive iteration)
+
+**Deliverable**: the human directive (which outranks the queue), then queue row 20
+`w-capsule-output-cap-load-flake` **LANDED** — PR [#74](https://github.com/sunholo-data/ailang-world/pull/74)
+→ squash `912009d`. Decision ledger ends the iteration at **10 rows, 0 OPEN**.
+
+### Gates 0–1
+Kill switch armed. `gh` on `sunholo-voight-kampff`. Billing tripwire **CLEAN**. Tree clean, `dev` ==
+`origin/dev` at `5a38ac0` on entry. Running skill **byte-identical to origin** (`cmp -s` silent).
+CI SHA-addressed `checks=2`, both `success`. Died-mid-flight sweep: **0** open PRs by this loop,
+**0** worktrees, clean main checkout. Weekly rotation NOT due (`#68` created `2026-08-17T19:19:43Z`,
+after the Monday-07:00 **local** boundary; 16 comments, cap 80). Inbox: 2 unread, both from
+`mission-v1` — one controlplane broadcast, one cross-mission triage verdict on World's own iter-99
+carve-out proposal (ACKNOWLEDGED, not adopted: V1 spent its one skill edit and found no first-party
+corroboration in its own artifacts). Neither auto-outranks; both read, neither obeyed.
+
+### The directive, and the one thing about it worth recording
+`MarkEdmondson1234` @ `2026-08-20T08:01:31Z` on `#68`, body: **`A`**. One character.
+
+It binds to **`D-WORLD-23`**, not `D-WORLD-22`, and the binding is recorded rather than assumed:
+iteration 99's report listed `D-WORLD-23` FIRST and as the `(new, one word)` ask, and listed
+`D-WORLD-22` beneath it as *"unchanged; A above resolves it as arm B"*. The competing reading leaves
+the new ask unanswered AND selects the arm that same report flagged as breaching Standing rule 1.
+**The interpretation is surfaced in the iteration report**, so a misread costs one word rather than
+one sprint — which is the right trade when the evidence is a single character and the loop cannot
+ask a follow-up.
+
+**`D-WORLD-23` arm A — a STANDING RULE, not an item disposition.** When a quorum objection's
+`proposed_fix` would fold separately-owned work into the tranche in front of it: keep scope, weaken
+the claim to exactly what is proven, name the residual's **OPEN** owner, and the controller applies
+that **without asking**. Three obligations were written into the ledger with it, each an
+already-earned lesson rather than new invention: **(i)** the owner must be an OPEN row *asserted by
+command* — a LANDED row cannot own follow-on work; **(ii)** the narrowed claim must PIN the
+composition condition it now depends on, because *a claim narrowed without a pin is a claim merely
+made quieter*; **(iii)** it licenses a SCOPE call ONLY — never a premise objection (rule 3f: measure
+it) and never a direction dispute (Standing rule 2: that still parks). `D-WORLD-22` resolved as arm
+B in consequence. Foreclosed on this axis **7×** before ratification; the carve-out gap World
+proposed to V1 as a shared-skill edit is now closed locally as a charter rule instead, which is the
+cheaper fix V1's own triage argued for.
+
+### The spine — the same shape three times in one iteration, from three different roles
+**A claim survives until someone runs the command, and each time the command returned something
+nobody had predicted.**
+
+1. **`gemini-3-1-pro`'s round-2 PREMISE objection** (three codebase facts with no establishing
+   command). Measured, not forwarded (rule 3f): all three TRUE. But running the command the reviewer
+   asked for surfaced a defect the objection did not predict — **`io.LimitReader` is at
+   `capsule.go:238`, not the `:237` the doc cited.** `:237` is the `func readCapped(` declaration
+   line, and the adjacent premise row cites `:237` **correctly for the FUNCTION**; §3 transcribed
+   that number onto the **CALL**. Rule 3b(v)(b) in miniature, and invisible to every prior round.
+2. **The executor's self-reported deviation on AC5.** Its first draft observed both phases but did
+   not FORBID an early `Wait`, so M7 survived; it added a `select`/`default` guard and said so.
+   Adjudicated in BOTH arms rather than on the report (rule 3h(b)): assertion present + M7 → AC5
+   **FAILS** (`wait-entry phase happened before reader release`, mutant builds and vets); assertion
+   removed + M7 → AC5 **PASSES**. So the deviation was load-bearing and **the plan was wrong** —
+   without it AC5 was a vacuous arm. A self-reported deviation is better evidence than a silent one.
+3. **The evaluator corrected this item's OWN residual**, and the controller reproduced it before
+   accepting the *non-blocking* label (a severity label is the judge's opinion, not a measurement).
+   The retired fixture was doing **two jobs and only one was bad**: a wall-clock kill oracle started
+   outside the region `ExecTimeout` governs (the flake — correctly retired), and emitting 64 KiB so
+   the child genuinely **BLOCKED in `write()`** (real coverage, silently lost with it). Measured:
+   pipe capacity **65536 B**; surviving test emits **513 B** against a **64 B** cap; `readCapped`
+   reads only `limit+1`. So nothing in the suite drives a blocked child being unblocked by `Kill()`
+   — the very scenario `capsule.go`'s own *"F6 must not decay into F5"* comment describes.
+
+### The sprint
+Three milestones, gates green at every boundary, reconstructed from the executor's cumulative
+snapshots and proven **byte-identical** by `shasum -c`: `df0414d` extract the post-`Start` lifecycle
+behind an injectable seam · `b6a0d6c` four deterministic arms witnessing the kill through a fake
+child's COUNTER · `9690b9f` retire the oracle. **Ordering forced, not stylistic**: under M1 the old
+test fails only at the `elapsed >= clock` line milestone C deletes.
+
+**The planner's measurement the design never carried: 4 of 7 mutants (M2/M3/M4/M7) SURVIVE the
+entire existing suite at base** — it ran them instead of predicting them, so four arms are teeth
+rather than decoration. All 7 killed on the final tree, each asserted to BUILD **and VET** before its
+red was read. It also caught three doc defects that would have wasted executor time: `_ = killOnce`
+fails `vet` copylocks (`_ = &killOnce`), M6's early `return` fails `vet` unreachable (sever at the
+call site), and M6 is broad-blast (7 tests, 2 packages) not single-row.
+
+**Sandbox honesty, both directions.** The executor labelled `verify_go.sh` and the broker arms
+`UNINFORMATIVE UNDER SANDBOX` (loopback bind denied). The controller re-ran every gate OUTSIDE the
+sandbox — **both rc=0**, so the sandbox had *invented* those failures. Capsule: **11 RUN / 11 PASS /
+0 SKIP**, `no tests to run` = 0, each new arm asserted present by name, nonsense-name control 0.
+AC4's script rc=0 at head and the **same script** finds all four forbidden tokens at base, so the
+criterion genuinely flipped.
+
+**A controller instrument error, caught by its own control.** My first AC4 check grepped the bare
+string `0123456789abcdef` and read `count=1`, which looked like a failure. The AC bans
+`dbl("0123456789abcdef"` — the *doubling* construct — and the survivor is a small over-cap `.ail`
+source, exactly what the milestone keeps. My grep, not the code; running the doc's script verbatim
+settled it in one command.
+
+### New queue row 25
+`w-capsule-blocked-child-kill-coverage` — restore the blocked-child arm **without** restoring a
+wall-clock oracle. Explicitly **NOT** row 24's (which owns the cleanup boundary and the
+non-group-wide overflow kill — a different mechanism); conflating them is the imprecise-owner defect
+arm A's obligation (i) exists to prevent. **The generalisable shape: when you retire an instrument,
+enumerate every property it was supplying, not just the one that made you retire it.**
+
+### Ruled out
+- **"The bare `A` is ambiguous, so park."** Rejected: iteration 99's report was constructed for a
+  one-word reply and states the consequence for `D-WORLD-22` explicitly. Parking would have spent
+  another human round-trip on a question already answered — the exact cost arm A exists to remove.
+- **A third quorum round on row 20.** Not purchased: the scope objection has a standing disposition
+  and the premise objection is carve-out eligible on its own terms. `metered=$0.00`.
+- **Iteration 98's guardrail (a carve-out fix must acquire its own AC and mutation) binding here.**
+  Checked and stated rather than assumed: every round-3 edit is documentation-only, so there is no
+  new behaviour for an AC to cover and nothing for a mutant to neuter.
+- **The evaluator's `verify_go.sh` red.** Self-contamination — it mutated the tree mid-run, caught
+  it, and re-ran clean. Exactly the hazard the "give the judge its own worktree" rule exists for,
+  reported from inside the judge rather than found by the controller.
+
+### Next
+Row **17**'s bounded revision (unparked, **no ask open**): narrow the claim and ship the assertion
+pinning `busy_timeout` < `ObjectReadTimeout`, re-asserting row 22 OPEN by command first. Then rows
+22/23/24/25. Nothing is parked on Mark.
