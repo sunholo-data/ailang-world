@@ -11288,3 +11288,126 @@ checked rather than inferred.
 Rows **20** (re-scoped: measure the MARGIN, not the outcome), **22** (the lock-wait bound) and **23**
 (the deadline-free residue owner) are all unblocked and headless-routable. Item 17 stays parked.
 **One open ask, unchanged: `D-WORLD-22`.**
+
+## Iteration 99 — 2026-08-20 — **the queue head's own filed fix targets the term with a ~330× margin while the dominant term is bounded by nothing — and the design that replaced it was blocked because its fakes supplied the very property its arm was meant to expose** (`metered=$0.108951`; controller `claude:claude-opus-5`; designer `codex:gpt-5.6-sol` ×2 — rotation ADVANCED from fable, Fable lane unspent a second consecutive iteration; no planner, executor or evaluator — no sprint ran)
+
+**Deliverable**: queue row 20 `w-capsule-output-cap-load-flake` is **DESIGNED and PARKED**
+`needs-human-review` on the new `D-WORLD-23`. Design doc `design_docs/planned/w-capsule-output-cap-load-flake.md`
+(`591c16d`, revision `40b7f19`). Two quorum rounds, **both reviewers present in both**. New queue row
+**24** `w-host-subprocess-cleanup-boundary` filed on its own controller-measured evidence.
+
+### Gates 0–1
+
+`dev` == `origin/dev` at `47e12cc` on entry. CI SHA-addressed: `checks=2`, both `success`, with a run
+CONFIRMED to exist (`actions/runs?head_sha` `total=1 event=push`). The RUNNING skill is
+**byte-identical to origin** (`cmp -s` silent).
+
+Gate 0: **0** directives from `MarkEdmondson1234` on `#68` since `2026-08-19T04:57:30Z` (of **14**
+comments). **Both** watermarks read and they AGREE. Instrument control fires: widening `--since` to
+`2026-08-18T00:00:00Z` re-surfaces iteration 95's consumed comment, so the zero is a measurement.
+Rotation NOT due (`#68` created `2026-08-17T19:19:43Z`, after the Monday-07:00 **local** boundary; 14
+comments, cap 80). External-issue sweep: **0 orphans of 1 enumerated**, list length asserted at **1**;
+positive control `#73` fires 2/1/0/1, negative control fired on a fresh unpublished literal. Inbox
+**0** unread. Ledger valid, **10** rows, **2** OPEN. Billing CLEAN. Died-mid-flight: **0** open PRs,
+**0** worktrees, clean main checkout.
+
+### The pick and the measurement that rewrote it
+
+Row 20 is the queue head now row 21 has landed. Not landed, no design doc existed.
+
+I split `capsule.Runner.Run` into phases with a throwaway package-local probe before spending any
+designer run (`GOTOOLCHAIN=go1.25.6`, `AILANG_BIN` set, 5 runs/arm, **0 skips asserted in the same
+call**):
+
+| arm | `archive.Resolve` | `verifyExecutable` | full `Run` |
+|---|---|---|---|
+| idle (load ~3) | 6–9 µs | **37.4–46.4 ms** | 57.6–59.4 ms |
+| loaded (48 spinners / 16 cores, load ~8) | 3–12 µs | **44.2–314.8 ms** | 123.8–268.5 ms |
+
+Teardown asserted: **0 orphans**, `pgrep` control firing (iteration 97's guardrail applied to my own
+experiment).
+
+`verifyExecutable` reads and sha256-hashes **91,826,738 bytes** at `capsule.go:134` — **before**
+`context.WithTimeout` at `:152`. So it is bounded by **nothing**, it is **65–78% of idle `Run`**, and it
+grew **6.8×** under load. The child exec `ExecTimeout` actually bounds is **~15 ms against a 5 s cap**.
+The row's filed fix — *raise the wall clock well past any plausible load* — enlarges the **largest**
+margin and leaves the dominant term unbounded. The test's `elapsed >= clock` assertion starts its
+stopwatch **outside** `Run`, so it charges the unbounded phase against the bounded cap: iteration 97
+recorded that contamination one level up, and it recurs inside the test's own load-bearing assertion.
+
+**My first probe reported `rc=0` / `ok 0.284s` on a silent SKIP** — `pinnedBinary` `t.Skip`s when
+`AILANG_BIN` is unset. Caught by reading the skip count, not the exit code. Every later arm asserts
+`skips=0` in the same call.
+
+### Design and quorum
+
+Designer `codex:gpt-5.6-sol` re-derived my numbers, **flagged where its instrument disagreed with mine**
+(standalone `shasum` 180–200 ms vs my in-Go 37–46 ms) rather than laundering it, and **refuted my own
+hoist/bound suggestion**: hoisting the context above verification redefines `ExecTimeout` from execution
+time to total time, and hoisting into `New` needs a TOCTOU analysis. Accepted. It chose instead to
+extract the output-collection lifecycle behind a testable seam and assert the causal state machine with
+prefilled readers and an observed fake child. Re-priced **0.25 d → 0.75 d**.
+
+**Round 1 BLOCKED, both present** (`$0.048867`). `gemini-3-1-pro` PREMISE — measured, not forwarded
+(rule 3f): `killOnce.Do` (:193), `func readCapped` (:237), `errOutputLimit` (:78) all exist, same-path
+controls firing both ways. Objection right that the log never established them; premise TRUE. Both
+fixes applied verbatim. `gpt5-6-sol` bounded-waits — empirical half measured: **nothing** closes the
+pipes on overflow, `WaitDelay` set **nowhere** in non-test `host/` (sole hit is a comment at
+`host/archive/archive.go:74`, row 21's declared residual; control `SysProcAttr` = 2). So production
+liveness is supplied **solely** by the ctx group-kill at `ExecTimeout` — the helper **inherits** the
+unboundedness rather than introducing it, and extraction's new harm is making it invisible to the
+suite, because every specified fake terminates immediately. That is item 17 §6.1's rule exactly: *a
+fake is inadmissible where it supplies the PROPERTY the mutation must expose.* Split: half 1 applied in
+full (AC5 blocks both drains and `Wait` until caller release, bounded watchdog so absence **fails**
+rather than hangs; M7 kills drain-before-wait sequencing); half 2 declared as an owed residual.
+
+**Round 2 BLOCKED, both present** (`$0.060084`), `absent_reviewers` **empty in both rounds** — neither
+block is a degraded quorum. `gemini-3-1-pro` returned three more premise rows, all measured TRUE by me
+(`TestF6OutputCapReturnsStructuredOverflow` :233, `io.LimitReader` **:238 not :237**, the pipe-occurrence
+claim) — pure completeness, carve-out eligible. `gpt5-6-sol` returned the same objection escalated, and
+its fix asks this tranche to implement the bounded cleanup path **including `WaitDelay`** — a SCOPE call
+folding separately-owned work into the tranche ahead of it. **Carve-out foreclosed on the scope axis for
+the seventh time.**
+
+### The measurement that turns the park into one word
+
+A fake interpreter forking a `sleep 30` grandchild that inherits stdout, overflowing a 1 KiB cap:
+`capsule.Run` returns at **3.005 s** against a **3 s** `ExecTimeout` carrying the correct
+`*OutputLimitError`, `overran=false`. Same-call control without the grandchild: **11.29 ms** (263×).
+So *"may wait indefinitely"* is **refuted** for `Run` as production configures it — the ctx group-kill
+does reach the grandchild. What **stands** is narrower: the bound is the **caller's**, the seam does not
+require it, and AC5's caller-released fakes prove the protocol rather than the production bound.
+
+**Unattributed residue, recorded as such**: the surrounding test took **33.38 s** against 3.005 s inside
+`Run`, coincident with the grandchild's lifetime. Something waits; I did **not** establish what.
+Mechanism unestablished — do not inherit this as a diagnosis (rule 3d).
+
+### New queue row 24
+
+Positive enumeration of **all four** kill sites in non-test `host/`: the OVERFLOW kill is not
+group-wide while the CANCELLATION kill is, in **both** packages — `capsule.go:193` vs `:165`,
+`broker/handlers.go:122` vs `:82` — with both files setting `Setpgid: true`, and capsule's own comment
+at `:158-160` giving the group-kill rationale **on the path that got it right**. Guard the helper, miss
+the call site. Row 24 also **owns** the `WaitDelay` residual: the revision had named **LANDED row 21** as
+that owner, and a completed row cannot own follow-on work — queue row 23's defect verbatim, produced by
+a role that had just been handed row 23's text. Corrected before landing.
+
+### Ruled out
+
+Routing the row's filed fix (refuted by my phase split); reading my first probe's `rc=0` as a
+measurement (silent skip); hoisting/bounding `verifyExecutable` in this tranche (designer refuted me,
+accepted); forwarding either premise objection instead of measuring it (rule 3f, both rounds); taking
+the carve-out on round 2 (a scope call needs controller judgment); weakening AC5's claim myself
+(iteration 96 ruled that IS arm B and the human's call); absorbing row 24 or the `WaitDelay` bound into
+row 20 (standing rule 1, and the exact shape of the open `D-WORLD-22`); applying `gemini`'s
+carve-out-eligible fixes in the parking commit (iteration 96 — an unreviewed edit after the round that
+parked it is the change nobody would review; recorded as owed on unpark); opening `D-WORLD-23` as a
+duplicate one-off ask rather than the CLASS question that also resolves `D-WORLD-22`; and taking a
+second backlog item after the park (standing rule 1).
+
+### Next
+
+Row **23** needs no new design doc and is the cleanest headless route. Row **22** stays behind
+`D-WORLD-22`. Row **24** is designed-pending. Row 20 unparks the moment `D-WORLD-23` is answered, with
+`gemini`'s premise rows owed. **Two open asks: `D-WORLD-22` and `D-WORLD-23` — and arm A of
+`D-WORLD-23` resolves both.**
