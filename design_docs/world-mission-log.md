@@ -11528,3 +11528,129 @@ enumerate every property it was supplying, not just the one that made you retire
 Row **17**'s bounded revision (unparked, **no ask open**): narrow the claim and ship the assertion
 pinning `busy_timeout` < `ObjectReadTimeout`, re-asserting row 22 OPEN by command first. Then rows
 22/23/24/25. Nothing is parked on Mark.
+
+## Iteration 101 — 2026-08-20 — item 17: the ruling applied in full, then two more blocks, both on the round's own fix
+
+**Pick**: queue row 17 `w-validated-proven-evidence-boundary` — the bounded revision iteration
+100's Next prescribed. **Outcome**: `D-WORLD-22` arm B applied in full, the narrow-refinement
+carve-out used for the first time on this document, and the item **PARKED `needs-human-review`** on
+a new one-word ask, `D-WORLD-24`. No code landed; the deliverable is the design revision and the
+decision.
+
+**Gate 0/1.** Kill switch armed, billing tripwire CLEAN, `dev == origin/dev` at `516836f`, clean
+tree, CI SHA-addressed `checks=2` both `success` with a run confirmed to EXIST
+(`actions/runs?head_sha` `total=1 event=push`). The RUNNING mission-control skill is **byte-identical
+to `origin/dev`** (`cmp -s` silent). **0** directives from `MarkEdmondson1234` on `#68` since
+`2026-08-20T08:01:31Z` (of 17 comments), both watermarks read and in agreement, and the instrument
+control fires — widening `--since` to `2026-08-19T00:00:00Z` re-surfaces the two consumed
+directives. Weekly rotation not due (`#68` created `2026-08-17T19:19:43Z`). External-issue sweep:
+**0 orphans of 1 enumerated**, list length asserted at 1, positive control `#74` fires 2/1, negative
+control fired on a fresh unpublished literal. Inbox 0 unread. Died-mid-flight sweep: 0 open PRs by
+this loop, 0 worktrees, clean checkout. Ledger 11 rows, 1 OPEN at close.
+
+### What was applied — `D-WORLD-22` arm B, all three obligations
+Designer `claude:claude-fable-5` (rotation: last-used `codex`; the next entry, gemini, is read-only
+under `CapRemoteSandbox` and cannot author a file — FLAGGED, fell through). Doc **1733 → 1965**
+lines; §§10.1–10.12 verified byte-identical by `cmp` with a firing perturbation control.
+
+- **(i) The residual's owner asserted BY COMMAND.** Row 22 carries **0** `LANDED|ITEM COMPLETE`
+  tokens after struck-through spans are stripped; the same instrument on LANDED row 21 returns
+  **1**, so the zero is a measurement.
+- **(ii) The composition condition PINNED.** `busy_timeout < ObjectReadTimeout` is asserted
+  nowhere: `busyTimeoutMillis` is unexported (`writer_lock.go:179`), its only pin is a VALUE pin
+  (`context_read_test.go:209`), `ObjectReadTimeout` occurs in **0** `.go` files — and
+  `host/daemon/handlers.go:299-302` already says so in the codebase's own words: *"an ORDERING
+  nothing in this code asserts, not a guarantee."* Shipped as AC18 + M26 + V49, with the refusal
+  binding the two values used at run time rather than two literals.
+- **The owed nesting-depth note MEASURED, not forwarded.** Four arms, both toolchains, identical
+  classifications: a depth-**131,071** `[[[[…` bomb of 262,142 B — *inside* the 256 KiB cap — is
+  refused in **~0.4 ms** with no panic, and the deepest ACCEPTED payload (9,999) costs **~7 ms**.
+  So the CPU/stack-overflow half is **REFUTED**. What **STANDS** is that the refusing limit is
+  `maxNestingDepth = 10000` at `encoding/json/scanner.go:148` — an **unexported stdlib constant**,
+  not a documented guarantee. AC19 + M27 + V50 pin the behaviour.
+
+**The spine: those two are the same defect.** A bound the design depends on that nothing asserts —
+once in SQLite's busy window, once in Go's JSON scanner. One remedy: state the condition, then pin
+it. The doc says so rather than treating the coincidence as one.
+
+### Round 11 blocked — and both objections landed on the round's own remedy
+`absent_reviewers` EMPTY, both present, `metered=$0.3991`.
+- `gpt5-6-sol`: the live-`PRAGMA` `BusyTimeout()` accessor invented to *pin* the bound is itself an
+  unbounded wait against `db.SetMaxOpenConns(1)` (`store.go:298`), with no error channel.
+- `gemini-3-1-pro`: the round bounded the read side and left the producer's **write** side
+  inheriting nothing — `Store.PutObject(o Object) error` takes no context while `GetObject` does.
+  Item 18 threaded one and not the other; the design copied the asymmetry without seeing it.
+
+**The narrow-refinement carve-out applied for the FIRST time on this document.** The scope axis had
+foreclosed it **seven** consecutive times; these two objections are in-tranche completeness with
+concrete reviewer-authored fixes and no direction dispute, so parking would have manufactured a
+decision. `gpt5-6-sol` offered two arms, and this doc has been burned once picking an arm on
+judgement (§10.2) — so the choice was made **by measurement**: non-test `host/`+`cmd/` issues
+**ZERO** runtime `PRAGMA busy_timeout` operations (control on the DSN site at `writer_lock.go:196`
+fires), so the window is **immutable after `Open`**, the "live" property the alternative removes is
+not load-bearing, and removing the wait dominates capping it. `gemini`'s fix applied in all three
+parts, plus AC20/M28 per §5's standing requirement that a new guard have both.
+
+### Round 12 blocked again — the PATTERN is the finding
+`absent_reviewers` EMPTY, both present, `metered=$0.4352`. `gpt5-6-sol`: `GenerateProof` must read
+`sourceRef` through a reader `NewProducer` never receives, and neither the read nor the new write
+DERIVES a deadline. `gemini-3-1-pro`, sharper: the new `WriteObject(ctx, o)` carries an **unpinned
+lock-contended wait**, and AC20's decoy exercises only the connection-POOL wait — *"reproducing the
+exact fixture defect rejected in Round 10 for the read side."* Both correct, neither disputed.
+
+**Three consecutive rounds, each blocking on the previous round's fix, one surface over.** The
+mechanism is structural and measured: item 18 left 11 store reads deadline-free by ratified
+deferral (DR-2, V41), `PutObject` was never threaded at all (V51), and the busy window is ordered
+against nothing (V49) — so every store surface this tranche newly touches arrives with the same
+three holes, and bounding one reveals the next. The document is chasing a boundary that moves as
+fast as it is fixed.
+
+### Two claims refuted downstream — one mine, one caught by me mid-edit
+1. **My directive told the designer "no commit on `origin/dev` mentions lock-wait."** My own
+   terminal output on the previous screen had printed `912009d`. The designer re-ran it and
+   corrected me. The commit is the `D-WORLD-23` ledger entry whose body *assigns* the residual to
+   row 22, so it corroborates rather than contradicts — but the sentence was false and I had the
+   refutation in hand when I wrote it. Fifth consecutive iteration in which a downstream role
+   refuted a controller-authored claim.
+2. **"`PutObject` has 10 call sites"** — transcribed by me from the queue row's `2ef2271` epoch.
+   Measured at HEAD in V43's scope it is **8**, and the same-pipeline `GetObject` control returns
+   **13**, reproducing V43 exactly: the pipeline was sound and only the number was borrowed.
+   Corrected in the doc with the command, in the same revision that applies a rule about not
+   laundering claims.
+
+### New human decision — `D-WORLD-24` (one word)
+**Does tranche 1 SHED the producer (§3.4), or KEEP it and apply round 12's producer-side fixes?**
+It is the **mirror** of `D-WORLD-22`/`23`, not a duplicate: those settled whether a tranche
+*absorbs* separately-owned work; this asks whether it *sheds* work it owns — and `D-WORLD-23`
+obligation (iii) is explicit that the standing rule is a scope LICENCE only. What makes it live:
+**both round-12 objections are producer-side**, so shedding §3.4 dissolves both unfixed —
+arithmetic §10.13 could not have had when it rejected decomposition an hour earlier. Pricing moved
+4.75 → 5.15 → **5.35 d** against a 3–4 d guardrail, each delta priced and never rounded.
+
+### Ruled out
+- **A third revision applying round 12's fixes.** Budget spent honestly — one designer revision,
+  one quorum, one bounded carve-out revision, one confirming re-quorum. And by induction the next
+  round finds the next surface.
+- **Reading `D-WORLD-23` as licence to shed.** It licenses KEEPING scope when an objection would
+  fold separately-owned work in. Shedding is the opposite operation.
+- **Parking at round 11 instead of taking the carve-out.** Both objections were in-tranche
+  completeness with reviewer-authored fixes — precisely what the carve-out exists for.
+- **Choosing `gpt5-6-sol`'s arm 1 on preference.** §10.4's discriminator plus V51(c) chose the
+  alternative on evidence.
+- **Filing this as `PARKED-ON-LANE`.** No lane refused; this is judgement, not capacity.
+- **Editing the doc to apply round 12's fixes after the round that parked it** (§10.12: the change
+  nobody would then review). Recorded as owed instead.
+- **Taking a second backlog item after the park** (standing rule 1).
+
+### Gate-5 proposal to V1 (World cannot edit the shared skill)
+**The Agent tool ACCEPTED a `fable` model pin with no `InputValidationError`.** Gate 3's table has
+recorded since 2026-07-16 that *"`fable` is REJECTED (InputValidationError, live-observed)"* and
+that a Fable role can run only by session inheritance. This session is Opus and the pinned designer
+ran. The rulebook fact is stale in a direction that costs missions the rotation's Fable slot
+whenever the controller is not Fable.
+
+### Next
+Rows **23** (`w-store-deadline-free-residue-owner`) and **22** are unblocked and headless-routable,
+and row 23 is now visibly load-bearing — it owns the deadline-free residue this whole pattern
+traces back to. Rows 24/25 designed-pending. Item 17 unparks the moment `D-WORLD-24` is answered.
+**ONE open ask: `D-WORLD-24`.**
