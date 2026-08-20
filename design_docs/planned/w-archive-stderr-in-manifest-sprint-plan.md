@@ -160,7 +160,7 @@ must handle, not discover:
    known-positive control `grep -c 'strings\.' host/daemon/daemon.go` → **2** in the same breath.
    The heal adds that import.
 
-#### C6 — **CONSTRAINT: `New`'s signature must not change.** `grep -rn --include='*.go' 'archive\.New(' host/ cmd/` → **9 call sites** across `host/daemon` (`daemon.go:440`), `host/broker` (3), `host/capsule` (1), `host/replay` (3). `Archive` today is `struct{ root string }` and `New(storeDBPath string) *Archive`. The doc's "field set from the constant by `New`" is therefore the *only* affordable wiring: add `probeTimeout time.Duration` to the struct, set it to `probeTimeout` in `New`, and leave all 9 callers untouched. Adding a parameter or an options struct would turn a 55-line change into a 5-package one.
+#### C6 — **CONSTRAINT: `New`'s signature must not change.** `grep -rn --include='*.go' 'archive\.New(' host/ cmd/` → **9 call sites** across `host/daemon` (1: `daemon.go:440`), `host/broker` (**4**: `episode_test.go:61`, `registry_publish_test.go:1245/1253/1275`), `host/capsule` (1), `host/replay` (3) — the per-package breakdown sums to the headline 9 only with broker at 4; an earlier draft read 3 and did not sum, caught by the iteration-98 evaluator and reproduced per-package by the controller. `Archive` today is `struct{ root string }` and `New(storeDBPath string) *Archive`. The doc's "field set from the constant by `New`" is therefore the *only* affordable wiring: add `probeTimeout time.Duration` to the struct, set it to `probeTimeout` in `New`, and leave all 9 callers untouched. Adding a parameter or an options struct would turn a 55-line change into a 5-package one.
 
 #### C7 — **T3 fixture traps, named so the executor does not pay for them.**
 
