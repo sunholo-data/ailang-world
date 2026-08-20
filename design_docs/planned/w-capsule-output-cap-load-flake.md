@@ -36,7 +36,8 @@ Every timing below is descriptive, not an acceptance threshold. Commands run fro
 | The test stopwatch includes preparation that `ExecTimeout` does not govern. | `sed -n '276,306p' host/capsule/capsule_test.go` together with the Run ordering command above. | `start := time.Now()` precedes `New(...).Run(...)`; context creation occurs inside `Run` after resolve, verify, and source staging. | Static control flow at HEAD. Re-derived first-party; agrees with the controller. |
 | Base and filed-base capsule sources are identical. | `git rev-parse e4ba56d:host/capsule/capsule.go HEAD:host/capsule/capsule.go; git rev-parse e4ba56d:host/capsule/capsule_test.go HEAD:host/capsule/capsule_test.go` | Matching pairs: `39f453…` and `93fa23…`. | Those two files only, between filed base and HEAD. |
 | The mutation targets `killOnce.Do`, `readCapped`, and `errOutputLimit` exist in the base source. The same call includes negative and positive controls. | `grep -cE 'zzNoSuchSymbolIter99' host/capsule/capsule.go; grep -cE 'func \(r \*Runner\) Run' host/capsule/capsule.go; grep -cE 'killOnce\.Do' host/capsule/capsule.go; grep -cE 'func readCapped' host/capsule/capsule.go; grep -cE 'errOutputLimit' host/capsule/capsule.go` | Counts `0, 1, 1, 1, 6`; target locations include `killOnce.Do` line 193, `readCapped` line 237, and the `errOutputLimit` declaration line 78. | Controller-verified at HEAD `47e12cc`; `host/capsule/capsule.go` only. The negative control establishes absence detection and the same-path positive control establishes pattern visibility. |
-| No capsule pipe is explicitly closed on overflow, and no non-test host command sets `WaitDelay`. | `grep -n 'Close()' host/capsule/capsule.go; rg -n 'WaitDelay|SysProcAttr' host --glob '!**/*_test.go'` | The first command has no pipe-close hit. `WaitDelay` has one repo-wide comment at `host/archive/archive.go:74` saying the general case is out of scope; `SysProcAttr` has two non-test hits, including capsule line 160. | Controller-verified at HEAD `47e12cc`; the `SysProcAttr` hits are a positive visibility control. Together with `stdoutPipe`/`stderrPipe` occurring only at creation and drain use, this establishes that current production liveness comes from `ExecTimeout` cancellation and group SIGKILL, not drain-local cleanup. |
+| M6's named existing integration test exists in the base source, and `readCapped`'s `io.LimitReader` cite is exact. | `grep -n 'func TestF6OutputCapReturnsStructuredOverflow' host/capsule/capsule_test.go; grep -c '^func Test' host/capsule/capsule_test.go; grep -c 'func TestZZQuxNotARealTestName' host/capsule/capsule_test.go; grep -n 'io.LimitReader' host/capsule/capsule.go` | `capsule_test.go:233 func TestF6OutputCapReturnsStructuredOverflow`; same-path positive control **7** `^func Test`; same-path negative control on a fresh literal **0**; `capsule.go:238 data, err := io.ReadAll(io.LimitReader(pipe, limit+1))`. | `host/capsule/{capsule,capsule_test}.go` only, at `5a38ac0`. **CORRECTION CARRIED INTO §3: the `io.LimitReader` call is at `:238`, not `:237`.** `:237` is the `func readCapped(` declaration line — the adjacent premise row cites `:237` correctly for the FUNCTION and §3 transcribed that number onto the CALL. Off-by-one, found only by running the command the objection asked for; the substantive claim (`readCapped` already uses `io.LimitReader`) is TRUE. The negative control fires, so the absence detection is live and the positives are not vacuous. |
+| No capsule pipe is explicitly closed on overflow, and no non-test host command sets `WaitDelay`. | `grep -n 'Close()' host/capsule/capsule.go; rg -n 'WaitDelay|SysProcAttr' host --glob '!**/*_test.go'; grep -nE 'stdoutPipe|stderrPipe' host/capsule/capsule.go; grep -cE 'killOnce' host/capsule/capsule.go` | The first command has no pipe-close hit. `WaitDelay` has one repo-wide comment at `host/archive/archive.go:74` saying the general case is out of scope; `SysProcAttr` has two non-test hits, including capsule line 160. The added third command returns **exactly four** hits — `stdoutPipe` at `:168` and `stderrPipe` at `:172` (creation, from `cmd.StdoutPipe()`/`cmd.StderrPipe()`), `:197` and `:198` (drain use) — and nowhere else; the same-path control `killOnce` returns **2**, so the four is a measurement rather than a broken pattern. | Controller-verified at HEAD `47e12cc` and re-measured at `5a38ac0` for the round-3 revision; the `SysProcAttr` hits and the `killOnce` count are positive visibility controls. The stdout/stderr sub-claim is now ESTABLISHED BY THE ROW'S OWN COMMAND rather than asserted in prose, which is what the round-2 premise objection asked for. Together these establish that current production liveness comes from `ExecTimeout` cancellation and group SIGKILL, not drain-local cleanup. |
 
 ## 3. Chosen design: deterministic output-collection core
 
@@ -74,7 +75,7 @@ The selected seam tests the causal state machine with pre-existing bytes and an 
 
 ### Conflict Surface
 
-`readCapped` already uses `io.LimitReader` at `host/capsule/capsule.go:237`; the design does not replace a missing standard-library cap. `io.LimitReader` supplies only a bounded byte view. It does not report that byte `limit+1` existed as a typed capsule overflow, kill the child exactly once across two concurrent drains, coordinate both drains with `Wait`, or enforce the domain precedence “overflow outranks deadline.” `context.WithCancel`/`WithTimeout` supplies a cancellation signal, and `exec.CommandContext` can act on it, but neither makes an arbitrary `io.Reader` cancellable nor combines stdout, stderr, kill, wait, and capsule error translation into this state machine. The unexported helper is required to compose those standard-library primitives and existing process effects; it does not attempt to supersede them or promise a new cleanup bound.
+`readCapped` already uses `io.LimitReader` at `host/capsule/capsule.go:238` (the function is declared at `:237`); the design does not replace a missing standard-library cap. `io.LimitReader` supplies only a bounded byte view. It does not report that byte `limit+1` existed as a typed capsule overflow, kill the child exactly once across two concurrent drains, coordinate both drains with `Wait`, or enforce the domain precedence “overflow outranks deadline.” `context.WithCancel`/`WithTimeout` supplies a cancellation signal, and `exec.CommandContext` can act on it, but neither makes an arbitrary `io.Reader` cancellable nor combines stdout, stderr, kill, wait, and capsule error translation into this state machine. The unexported helper is required to compose those standard-library primitives and existing process effects; it does not attempt to supersede them or promise a new cleanup bound.
 
 ## 4. Acceptance criteria
 
@@ -203,4 +204,42 @@ Revision round 1 had both reviewers present; there is no absent-reviewer hole. `
 
 - Applied the premise reviewer's proposed fix verbatim in substance and in both requested parts: the Premise Verification Log now proves `killOnce.Do`, `readCapped`, and `errOutputLimit` with the supplied same-path negative and positive controls, and the dedicated **Conflict Surface** explains why the existing `io.LimitReader` plus context primitives do not supply the composed state machine.
 - Applied design objection half 1 in full: the seam contract names the caller as liveness-bound owner; AC5 contains blocking readers and blocking `Wait`, caller-controlled releases, discovery assertions, and a bounded failure escape; M7 kills loss of the sequencing that makes the arm meaningful.
-- Declared design objection half 2 as an owned residual rather than absorbing or dropping it: queue row 21 owns `WaitDelay`/bounded cleanup and the requested `CloseOutput`, context-aware wait, cleanup context, and joined cleanup errors; the separately filed overflow-kill row retains its own scope.
+- Declared design objection half 2 as an owned residual rather than absorbing or dropping it: **queue row 24 `w-host-subprocess-cleanup-boundary`** owns `WaitDelay`/bounded cleanup and the requested `CloseOutput`, context-aware wait, cleanup context, and joined cleanup errors; the separately filed overflow-kill row retains its own scope. **(Round 2's `gpt5-6-sol` `catch` was correct that this bullet said row 21 while §7 said row 24 — row 21 LANDED on 2026-08-20 and cannot own follow-on work. Corrected here; §7 was the right half. Row 24 re-asserted OPEN by command at round 3, with LANDED row 21 as the firing control.)**
+
+### Round 3 — resolved by ratified ruling, not by a third quorum
+
+Round 2 blocked on two objections, both with `absent_reviewers` empty. Neither survives, and neither
+was re-litigated:
+
+- **`gpt5-6-sol` (DESIGN/SCOPE) — answered by `D-WORLD-23` arm A, ratified attended by Mark
+  2026-08-20T08:01:31Z (`#68`, one-word comment `A`).** Its `proposed_fix` folds a bounded cleanup
+  path — `CloseOutput`, a context-aware wait, an explicit cleanup context, `WaitDelay`, joined
+  cleanup errors — into this tranche. That is the exact shape the ruling now governs: **the tranche
+  keeps scope, weakens its claim to precisely what it proves, and records the residual with a named
+  OPEN owner.** §7 already does all three; the ruling makes it a disposition rather than an ask. The
+  objection is SUSTAINED as substantively correct — the helper's drains and `Wait()` are not
+  intrinsically bounded, and this document does not claim they are. What it claims, and what its
+  arms test, is narrower: the existing caller-supplied liveness contract, and the state machine
+  composed over it. Production liveness continues to come from `ExecTimeout` cancellation and the
+  group SIGKILL, measured in §2 and unchanged by this tranche.
+- **`gemini-3-1-pro` (PREMISE) — MEASURED first-party rather than forwarded (rule 3f), all three
+  claims TRUE, and its `proposed_fix` applied verbatim in both requested parts.** A new §2 row
+  establishes `TestF6OutputCapReturnsStructuredOverflow` (`capsule_test.go:233`) and the
+  `io.LimitReader` call, each with same-path positive and negative controls in the same call; the
+  final §2 row's establishing command now carries
+  `grep -nE 'stdoutPipe|stderrPipe' host/capsule/capsule.go`, exactly as asked, so its Scope column's
+  sub-claim is established by command instead of by prose. **The measurement carried a correction the
+  objection did not predict:** `io.LimitReader` is at `:238`, while §3 cited `:237` — that is the
+  `func readCapped(` declaration line, transcribed from the adjacent premise row's correct citation
+  of the FUNCTION. §3 is corrected. This is the "a value you transcribed is not a measurement" class,
+  and it was invisible until the command the reviewer asked for was actually run.
+
+**No third quorum was purchased.** Under the ratified ruling the scope objection has a standing
+disposition, and the premise objection is narrow-refinement carve-out eligible on its own terms
+(concrete reviewer-authored `proposed_fix`, no dispute of design DIRECTION). **Iteration 98's
+guardrail — a carve-out fix must acquire its own acceptance criterion and mutation before routing —
+is checked and does not bind here, which is stated rather than assumed:** every round-3 edit is
+DOCUMENTATION ONLY (three premise-log facts, one line number, one owner name). No acceptance
+criterion, mutation, seam, or line of Go changes, so there is no new behavior for an AC to cover and
+nothing for a mutant to neuter. The guardrail binds a fix that changes what the code DOES; this one
+changes only what the document can PROVE it already knew.

@@ -51,6 +51,21 @@ type Result struct {
 	Stderr []byte
 }
 
+// childProcess is the narrow slice of *os.Process the output lifecycle needs.
+// Production supplies the real child; tests supply a fake whose Kill and Wait
+// write their own observables.
+type childProcess interface {
+	Kill() error
+	Wait() error
+}
+
+type cmdChild struct {
+	cmd *exec.Cmd
+}
+
+func (c cmdChild) Kill() error { return c.cmd.Process.Kill() }
+func (c cmdChild) Wait() error { return c.cmd.Wait() }
+
 // HashMismatchError means the resolved interpreter bytes no longer match the
 // entry's content address. Execution is refused before the child is started.
 type HashMismatchError struct {
@@ -176,12 +191,28 @@ func (r *Runner) Run(entry Entry) (Result, error) {
 	if err := cmd.Start(); err != nil {
 		return Result{}, &ExecError{Path: execPath, Err: err}
 	}
+	res, runErr, err := collectOutput(ctx, stdoutPipe, stderrPipe, r.maxOutputBytes, r.execTimeout, cmdChild{cmd})
+	if err != nil {
+		return res, err
+	}
+	if runErr != nil {
+		return res, &ExecError{Path: execPath, Stderr: res.Stderr, Err: runErr}
+	}
+	return res, nil
+}
 
+// collectOutput coordinates the post-Start output lifecycle. The caller owns
+// the finite cleanup bound and must arrange that cancellation makes both
+// supplied readers and Wait return. collectOutput neither makes an arbitrary
+// io.Reader cancellable nor makes Wait() error bounded. Production supplies
+// that property via context.WithTimeout, exec.CommandContext, and cmd.Cancel's
+// group-wide SIGKILL. The residual lifecycle work is owned by queue row 24,
+// w-host-subprocess-cleanup-boundary.
+func collectOutput(ctx context.Context, stdoutPipe, stderrPipe io.Reader, limit int64, execTimeout time.Duration, child childProcess) (Result, error, error) {
 	var stdout, stderr []byte
 	var stdoutErr, stderrErr error
 	var killOnce sync.Once
 	var wg sync.WaitGroup
-	limit := r.maxOutputBytes
 	// F6 must not decay into F5. Past the cap nothing drains the pipe, so an
 	// unkilled child blocks in write() until the wall clock expires and the
 	// caller is told "timeout" for what is really an overflow. Kill on overflow,
@@ -190,7 +221,7 @@ func (r *Runner) Run(entry Entry) (Result, error) {
 		defer wg.Done()
 		*dst, *dstErr = readCapped(pipe, limit)
 		if errors.Is(*dstErr, errOutputLimit) {
-			killOnce.Do(func() { _ = cmd.Process.Kill() })
+			killOnce.Do(func() { _ = child.Kill() })
 		}
 	}
 	wg.Add(2)
@@ -198,25 +229,21 @@ func (r *Runner) Run(entry Entry) (Result, error) {
 	go drain(stderrPipe, &stderr, &stderrErr)
 	// Reads must complete before Wait, which closes the pipes (os/exec).
 	wg.Wait()
-	runErr := cmd.Wait()
+	runErr := child.Wait()
 
 	// Overflow outranks the deadline: killing the child is what let Wait return,
 	// and that must not be reported as a wall-clock expiry.
 	if errors.Is(stdoutErr, errOutputLimit) || errors.Is(stderrErr, errOutputLimit) {
-		return Result{Stdout: stdout, Stderr: stderr}, &OutputLimitError{Limit: limit}
+		return Result{Stdout: stdout, Stderr: stderr}, runErr, &OutputLimitError{Limit: limit}
 	}
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		return Result{Stdout: stdout, Stderr: stderr}, &TimeoutError{Limit: r.execTimeout}
+		return Result{Stdout: stdout, Stderr: stderr}, runErr, &TimeoutError{Limit: execTimeout}
 	}
 	if stdoutErr != nil || stderrErr != nil {
-		return Result{Stdout: stdout, Stderr: stderr},
+		return Result{Stdout: stdout, Stderr: stderr}, runErr,
 			fmt.Errorf("capsule: read output: %w", errors.Join(stdoutErr, stderrErr))
 	}
-	if runErr != nil {
-		return Result{Stdout: stdout, Stderr: stderr},
-			&ExecError{Path: execPath, Stderr: stderr, Err: runErr}
-	}
-	return Result{Stdout: stdout, Stderr: stderr}, nil
+	return Result{Stdout: stdout, Stderr: stderr}, runErr, nil
 }
 
 func verifyExecutable(path string, ref hashref.HashRef) error {
