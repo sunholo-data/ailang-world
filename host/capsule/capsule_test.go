@@ -1,12 +1,16 @@
 package capsule
 
 import (
+	"bytes"
+	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -263,6 +267,180 @@ export func main() -> string {
 	if int64(len(result.Stdout))+int64(len(result.Stderr)) > 2*limit {
 		t.Fatalf("captured %d bytes under %d-byte cap",
 			len(result.Stdout)+len(result.Stderr), limit)
+	}
+}
+
+var errWaitedWithoutKill = errors.New("fake child waited without kill")
+
+type fakeChild struct {
+	mu          sync.Mutex
+	killCount   int
+	killed      bool
+	waitCount   int
+	waitEntered chan struct{}
+	waitRelease chan struct{}
+}
+
+func (c *fakeChild) Kill() error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.killCount++
+	c.killed = true
+	return nil
+}
+
+func (c *fakeChild) Wait() error {
+	c.mu.Lock()
+	c.waitCount++
+	killed := c.killed
+	c.mu.Unlock()
+	if c.waitEntered != nil {
+		close(c.waitEntered)
+	}
+	if c.waitRelease != nil {
+		<-c.waitRelease
+	}
+	if !killed {
+		return errWaitedWithoutKill
+	}
+	return nil
+}
+
+func (c *fakeChild) state() (killCount, waitCount int) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.killCount, c.waitCount
+}
+
+func TestOutputCollectionOverflowKillsAndOutranksDeadline(t *testing.T) {
+	const limit = int64(16)
+	want := bytes.Repeat([]byte("x"), int(limit))
+	ctx, cancel := context.WithTimeout(context.Background(), 0)
+	cancel()
+	if !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+		t.Fatalf("context error = %v, want DeadlineExceeded", ctx.Err())
+	}
+	child := &fakeChild{}
+	result, runErr, err := collectOutput(ctx, bytes.NewReader(append(bytes.Clone(want), 'x')), bytes.NewReader(nil), limit, time.Second, child)
+	if !bytes.Equal(result.Stdout, want) {
+		t.Fatalf("stdout = %q, want %q", result.Stdout, want)
+	}
+	killCount, waitCount := child.state()
+	if killCount != 1 || waitCount != 1 {
+		t.Fatalf("killCount = %d, waitCount = %d; want 1, 1", killCount, waitCount)
+	}
+	if errors.Is(runErr, errWaitedWithoutKill) {
+		t.Fatalf("Wait did not observe Kill: %v", runErr)
+	}
+	var overflow *OutputLimitError
+	if !errors.As(err, &overflow) {
+		t.Fatalf("error = %T %v, want *OutputLimitError", err, err)
+	}
+	var timeout *TimeoutError
+	if errors.As(err, &timeout) {
+		t.Fatalf("error = %T %v, do not want *TimeoutError", err, err)
+	}
+}
+
+func TestOutputCollectionAtLimitDoesNotKill(t *testing.T) {
+	const limit = int64(16)
+	want := bytes.Repeat([]byte("x"), int(limit))
+	child := &fakeChild{}
+	result, runErr, err := collectOutput(context.Background(), bytes.NewReader(want), bytes.NewReader(nil), limit, time.Second, child)
+	if err != nil {
+		t.Fatalf("collection error = %v, want nil", err)
+	}
+	if !bytes.Equal(result.Stdout, want) {
+		t.Fatalf("stdout = %q, want %q", result.Stdout, want)
+	}
+	killCount, waitCount := child.state()
+	if killCount != 0 || waitCount != 1 {
+		t.Fatalf("killCount = %d, waitCount = %d; want 0, 1", killCount, waitCount)
+	}
+	if !errors.Is(runErr, errWaitedWithoutKill) {
+		t.Fatalf("Wait result = %v, want %v", runErr, errWaitedWithoutKill)
+	}
+}
+
+func TestOutputCollectionTwoOverflowsKillOnce(t *testing.T) {
+	const limit = int64(16)
+	overLimit := bytes.Repeat([]byte("x"), int(limit+1))
+	child := &fakeChild{}
+	_, runErr, err := collectOutput(context.Background(), bytes.NewReader(overLimit), bytes.NewReader(overLimit), limit, time.Second, child)
+	if runErr != nil {
+		t.Fatalf("Wait result = %v, want nil", runErr)
+	}
+	var overflow *OutputLimitError
+	if !errors.As(err, &overflow) {
+		t.Fatalf("error = %T %v, want *OutputLimitError", err, err)
+	}
+	killCount, _ := child.state()
+	if killCount != 1 {
+		t.Fatalf("killCount = %d, want 1", killCount)
+	}
+}
+
+type blockingReader struct {
+	entered chan<- struct{}
+	release <-chan struct{}
+	once    sync.Once
+}
+
+func (r *blockingReader) Read([]byte) (int, error) {
+	r.once.Do(func() { r.entered <- struct{}{} })
+	<-r.release
+	return 0, io.EOF
+}
+
+func TestOutputCollectionCallerReleaseUnblocksReadersAndWait(t *testing.T) {
+	const watchdog = 10 * time.Second
+	readerEntered := make(chan struct{}, 2)
+	readerRelease := make(chan struct{})
+	waitEntered := make(chan struct{})
+	waitRelease := make(chan struct{})
+	child := &fakeChild{waitEntered: waitEntered, waitRelease: waitRelease}
+	type outcome struct {
+		result Result
+		runErr error
+		err    error
+	}
+	done := make(chan outcome, 1)
+	go func() {
+		result, runErr, err := collectOutput(
+			context.Background(),
+			&blockingReader{entered: readerEntered, release: readerRelease},
+			&blockingReader{entered: readerEntered, release: readerRelease},
+			16, time.Second, child,
+		)
+		done <- outcome{result: result, runErr: runErr, err: err}
+	}()
+	for i := 0; i < 2; i++ {
+		select {
+		case <-readerEntered:
+		case <-time.After(watchdog):
+			t.Fatalf("reader-entry phase %d never happened", i+1)
+		}
+	}
+	close(readerRelease)
+	select {
+	case <-waitEntered:
+	case <-time.After(watchdog):
+		t.Fatal("wait-entry phase never happened")
+	}
+	close(waitRelease)
+	select {
+	case got := <-done:
+		if got.err != nil {
+			t.Fatalf("collection error = %v, want nil", got.err)
+		}
+		if !errors.Is(got.runErr, errWaitedWithoutKill) {
+			t.Fatalf("Wait result = %v, want %v", got.runErr, errWaitedWithoutKill)
+		}
+		if len(got.result.Stdout) != 0 || len(got.result.Stderr) != 0 {
+			t.Fatalf("result = %#v, want empty output", got.result)
+		}
+	case <-time.After(watchdog):
+		t.Fatal("helper-return phase never happened")
 	}
 }
 
