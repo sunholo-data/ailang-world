@@ -11654,3 +11654,131 @@ Rows **23** (`w-store-deadline-free-residue-owner`) and **22** are unblocked and
 and row 23 is now visibly load-bearing — it owns the deadline-free residue this whole pattern
 traces back to. Rows 24/25 designed-pending. Item 17 unparks the moment `D-WORLD-24` is answered.
 **ONE open ask: `D-WORLD-24`.**
+
+## Iteration 102 — 2026-08-20 — item 17: the ruling shed the producer, and the confirming round blocked on two gaps byte-identical to `HEAD` — so the pattern broke, and what replaced it is a Total nobody added the column for
+
+**Pick**: the human directive. `MarkEdmondson1234 @ 2026-08-20T16:04:52Z` on `#68` — a bare **`A`**
+— resolves `D-WORLD-24` as **arm A** and UNPARKS queue row 17, which a directive outranking the
+queue makes this iteration's pick. **Outcome**: arm A applied in full (round 13), the confirming
+quorum BLOCKED, the narrow-refinement carve-out taken for the **second** time on this document
+(round 13b) applying both reviewers' verbatim fixes, and the item is now **`[NEXT]`, routable to
+sprint-planner, with ZERO open asks**. New queue row **26** `w-bounded-z3-report-producer` carries
+the shed work. No code landed; the deliverable is the design and the record.
+
+**Gate 0/1.** Kill switch armed, `gh` on `sunholo-voight-kampff`, billing tripwire CLEAN,
+`dev == origin/dev` at `e312ddc`, clean tree, CI SHA-addressed `checks=2` both `success` with a run
+CONFIRMED to exist (`actions/runs?head_sha` `total=1 event=push`). The RUNNING mission-control skill
+is **byte-identical to `origin/dev`** (`cmp -s` silent). **1** directive from `MarkEdmondson1234` on
+`#68` since `2026-08-20T08:01:31Z` (of 19 comments); both watermarks read, they AGREED, both written
+after triage; the instrument control fires — widening `--since` to `2026-08-19T00:00:00Z`
+re-surfaces the two consumed directives, so the count is a measurement. Weekly rotation not due
+(`#68` created `2026-08-17T19:19:43Z`, after the Monday-07:00 **local** boundary; 19 comments, cap
+80). External-issue sweep: **0 orphans of 1 enumerated**, list length asserted at 1, positive control
+`#74` fires 3/2/0/1, negative control fired on a fresh unpublished literal. Inbox **2** unread, both
+`mission-v1`, both cross-mission class and neither auto-outranking: V1 **ADOPTED** this mission's
+fable-pin proposal into the shared skill (`8e27b0a12`, corroborated first-party in V1 before
+adoption, scope deliberately not widened past "the pin is accepted and the run completes"), plus its
+iteration-238 report. Died-mid-flight sweep: 0 open PRs by this loop, 0 worktrees, clean checkout.
+Ledger 11 rows, **1 OPEN on entry, 0 on exit**.
+
+### Round 13 — arm A applied
+Designer `codex:gpt-5.6-sol` (rotation advanced from `claude:claude-fable-5`; lane probed rc=0).
+§3.4 becomes a shed marker naming ordered queue row 26; `NewProducer`, `Producer.GenerateProof` and
+`ObjectWriter` leave the live §3.2 surface; **AC5/AC20 and M15/M28 are removed as DECLARED GAPS with
+no renumbering** — the charter and §§10.1–10.15 cite those numbers by name, so renumbering would
+silently void every citation — and **AC9's required-mutation enumeration is updated in the same
+edit**, which is the one enumeration this document has already broken once. §4/§5 weaken to
+hand-authored-fixture validation only: tranche 1 no longer claims an in-repo path from an `ai-check`
+run to an authenticated envelope. History intact — struck spans **2** before / **2** after with
+**0** removed, all seventeen §10.x sections present. Both round-12 objections leave **UNFIXED** with
+the producer, verbatim, into row 26, together with the AC20 connection-pool-not-lock-wait obligation
+and the missing-reader gap that §10.15 declared owed under BOTH arms.
+
+### The quorum blocked, and `absent_reviewers` was non-empty
+Round 13: `gemini-3-1-pro` REJECT (`$0.1299`), `gpt5-6-sol` **absent on `budget`**. The skill's rule
+fired rather than the green verdict speaking louder than the hole: re-run alone at a raised cap
+(`--max-cost-usd 0.60`, `$0.3046`) → **REJECT**. So the round is a **two-present block**, not a
+degraded pass, and the synthesis I would otherwise have quoted was a pass with a named hole.
+
+### The measurement that decided the disposition
+Rounds 11, 11b and 12 each blocked on the **previous round's own fix**, which is what made
+iteration 101's park correct. Round 13's two objections do **not**. Both land on text
+**byte-identical to `HEAD`**:
+
+- `gemini`'s — §3.3 step 10's "configured required identity set" sentence: working-tree line 454
+  hash-matches `HEAD` line 459 (`81a6a59b0d72` both).
+- `gpt5-6-sol`'s — §3.2's optional `busyWindowReporter`, shipped by round 11b: line 266 identical
+  both sides (`be71504cb653`).
+- **Control**: line 486, which round 13 *did* change, correctly DIFFERS (`60cb4eca5424` vs
+  `43bf479848ad`) — so the byte-identity readings are measurements, not a dead instrument.
+
+These are pre-existing gaps **twelve rounds walked past**, surfaced by the cut rather than caused by
+it. `gemini`'s is the sharper: **step 10 has mandated that the validator require a configured
+identity set since round 5, M14 has tested the refusal since round 5, and neither `NewValidator` nor
+`ValidateProof` ever took a parameter to receive it.**
+
+### Round 13b — the carve-out, second use on this document
+Both objections are in-tranche completeness carrying concrete reviewer-authored `proposed_fix` text,
+and neither disputes the design DIRECTION, so parking would have manufactured a decision. Applied
+verbatim: the validator gains a configured `requiredIdentities []string` with an empty-set
+constructor refusal (`ErrInvalidValidatorConfig`); `BusyTimeout()` becomes **mandatory** on
+`ObjectReader`, deleting a type-assert-and-skip that read absence-of-capability as
+absence-of-lock-wait. New **AC21/AC22** and **M29/M30**, the AC5/AC20/M15/M28 gaps left unfilled,
+AC9 re-enumerated to `M1–M5, M7–M14, M16–M27, M29–M30`.
+
+**The designer refuted my own directive mid-pass, and was right.** I told it to compare working-tree
+line 454 against `HEAD` line 454; round 13 had deleted five producer lines above that point, so the
+same-number comparison is the wrong instrument. My original measurement used 454-vs-459 and holds —
+but the directive's restatement of it was false, and it is recorded in §10.17/V54 rather than
+quietly fixed.
+
+### The spine: a Total is a claim about a column, and nobody added the column
+§9's tranche-1 table has not summed to its own Total for two rounds:
+
+| arm | rows sum | stated Total |
+|---|---:|---:|
+| pre-revision (`HEAD`) | **5.40 d** | 5.35 d |
+| round 13 as delivered | **4.60 d** | 4.35 d |
+| after correction | **4.70 d** | **4.70 d** |
+
+The pre-existing 0.05 d drift came in with round 11b's `+0.05` amendment to the ordering row and
+**passed a quorum twice**, because every reader — designer, two reviewers, controller — read the
+Total instead of adding the column. Round 13's larger gap had a different cause with the same shape:
+the prose deducted the producer's two ~0.10-day shares while the rows carrying them stayed at full
+value. Both shares are now deducted **in the rows that carry them**, and every step re-sums the
+column by command and quotes the output beside the Total (V53–V55). Tranche **4.70 d**,
+decomposition **11.70 d**, guardrail overage **0.70 d**. The number moved **away** from compliance
+and is stated rather than rounded — which is the only reason it is worth recording.
+
+### Routing evidence
+| Role | Pin | Actual | Note |
+|---|---|---|---|
+| Controller | session | `claude:claude-opus-5` | triage/pick/measure/record |
+| Designer | ROTATION | `codex:gpt-5.6-sol` ×2 (rounds 13, 13b) | advanced from `claude:claude-fable-5`; probe rc=0; state file written back |
+| Quorum | `gpt5-6-sol` + `gemini-3-1-pro` | both, after a raised-cap re-run | `absent_reviewers` non-empty → re-run rule fired |
+| Planner / executor / evaluator | — | none | no sprint ran; the deliverable is the design + the decision |
+
+`metered=$0.4345` of the $5 ceiling (quorum `$0.1299` + absent-reviewer re-run `$0.3046`). Quota:
+`codex` ×3 (probe + two designer runs), `opus` (controller). Fable unspent.
+
+### Ruled out
+- **Parking on the round-13 block.** Both objections are completeness with verbatim fixes and
+  neither disputes direction; the byte-identity measurement shows iteration 101's moving-boundary
+  rationale does not hold here, so a park would manufacture a decision the human does not have.
+- **Quoting the `$0.1299` synthesis as the verdict** — `absent_reviewers` was non-empty and the
+  absent reviewer, re-run, REJECTED.
+- **Accepting the delivered `4.35 d`** — its own column sums to 4.60.
+- **Rounding the overage** to 0.5 d, or leaving it at the inherited 0.35 d.
+- **Filling the AC5/AC20/M15/M28 gaps** with the new criteria, or renumbering anything.
+- **Re-asking Mark whether 4.70 d is acceptable** — he answered the scope question three hours
+  earlier; re-asking it in a different suit is the manufactured decision standing rule 8 warns of.
+- **Treating either round-12 producer objection as answered** — they are SHED, not fixed, and row 26
+  carries both verbatim plus the two obligations §10.15 declared owed under both arms.
+- **`PARKED-ON-LANE`** — no lane refused; `codex` probed rc=0 and ran twice.
+- **Taking a second backlog item** (standing rule 1).
+
+### Next
+Item 17 is `[NEXT]` and routable to **sprint-planner** with no ask open; the 0.70 d overage is a
+pricing fact to plan around, not a decision. Rows **23** (`w-store-deadline-free-residue-owner`,
+which row 26 is ordered behind) and **22** remain unblocked and headless-routable; rows 24/25/26 are
+designed-pending. **Zero open asks.**
