@@ -11149,3 +11149,142 @@ environment. Zero deepseek spend.
 
 Row 21 is DESIGNED and quorum-clean → **sprint-planner on the next fire**. Rows 20 (re-scoped), 22 and
 23 are unblocked. **One open ask, unchanged: `D-WORLD-22`.**
+
+---
+
+## Iteration 98 — 2026-08-20 — **row 21 LANDED, and the spine is that the design's own non-vacuity arms were themselves vacuous — AC7's deadline fixture reds against CORRECT code, and the round-2 quorum's own verbatim-applied fix shipped with nothing guarding it** (`metered=$0.0000`; controller `claude:claude-opus-5`; planner `opus`; executor `opus`; evaluator `sonnet` 97/100; no designer — the doc arrived quorum-clean, so the Fable lane went unspent for the first time in four iterations)
+
+**Deliverable**: queue row 21 `w-archive-stderr-in-manifest` is **LANDED** — PR
+[#73](https://github.com/sunholo-data/ailang-world/pull/73) → squash `9fa2647`, Gate 3b green on the
+**merge** commit, evaluator `sonnet` **97/100 with zero blocking findings**. stderr no longer reaches
+the archive manifest.
+
+### Gates 0–1
+
+`dev` == `origin/dev` at `236d6bc` on entry. CI SHA-addressed: `checks=2`, both `success`, and a run
+CONFIRMED to exist (`actions/runs?head_sha` `total=1`) — the zero-run case is UNVERIFIED, not green,
+so the existence assertion is not optional. The RUNNING skill is **byte-identical to origin**
+(`cmp -s` silent), so the rules I followed are the rules the mission agreed on.
+
+Gate 0: **0** directives from `MarkEdmondson1234` on `#68` since `2026-08-19T04:57:30Z` (of **13**
+comments). **Both** watermarks read — the skill-derived issue-scoped path and this mission's
+mission-scoped one — and they AGREE. The instrument control fires: widening `--since` to
+`2026-08-18T00:00:00Z` re-surfaces iteration 95's already-consumed `D world 19 - A yes` /
+`Remove deepseek flash` comment, so the zero is a measurement and not a dead channel.
+
+Weekly rotation NOT due: `#68` was created `2026-08-17T19:19:43Z`, *after* the Monday-07:00 **local**
+boundary, and carries 13 comments against the cap of 80. External-issue sweep: **0 orphans of 1
+enumerated** open issue, list length asserted at **1** in the same breath, and that one is `#68`
+itself (charter 6 / log 7 / archive 5). The negative control **fired**; its literal is deliberately
+not written down here, because iteration 97 established that publishing a known-ABSENT identifier is
+exactly what spends it, and this file is one of the corpora a later sweep greps.
+
+Inbox: **1** unread, triaged — a `mission-v1` iteration-232 report. Cross-mission, never
+auto-outranks, and it carries no demand on World. Decision ledger valid, **9** rows, **1** OPEN.
+Billing tripwire CLEAN. Died-mid-flight sweep: **0** open PRs by this loop, **0** worktrees, clean
+main checkout.
+
+### The pick — the queue head, as iteration 97's Next prescribed
+
+Row 21 was DESIGNED and quorum-clean. Reality-check before routing: not already landed (`git log
+origin/dev --grep` finds only the design commit `6a811e1` and the record `dd837e9`; the control on a
+known-landed term returns `6c2a537`), and the premise still live at HEAD —
+`archive.go:391 CombinedOutput()`, with all five non-test `exec.Command*` sites re-enumerated.
+
+**Two stale claims in the doc's own header, both fixed before routing (`7d79ad3`).** It read
+*"awaiting re-review"* — written after round 1 and never updated past the carve-out that closed it —
+and cited `design_docs/world-mission.md:3495`, which **one iteration later resolves to the tail of
+item 14** (`sed -n '3495p'` verified; row 21 sits at `:3530`). A charter that prepends a STATUS stamp
+every iteration makes any line citation into it rot *by construction*. Replaced with the row number
+and the grep that finds it.
+
+### The spine — a non-vacuity arm that is itself vacuous
+
+The doc's AC7 arm prescribes a fake shell script containing `sleep 10` and an assertion that the
+probe returns in under 5 s. It does not bound anything. `exec.CommandContext` SIGKILLs only the `sh`
+it started; the `sleep` is a **grandchild**, it inherits the stdout pipe, and `cmd.Wait()` blocks on
+the copy goroutines until it exits regardless of the context. Measured first-party at a 200 ms bound,
+3/3: **10.211 s / 10.081 s / 10.164 s**. With `exec sleep 10` — so `sh` *is* the sleeping process —
+3/3: **202 / 201 / 203 ms**.
+
+The consequence is worse than a slow test. Under the doc's fixture the **correct** implementation and
+the arm's own named mutant (M3: `CommandContext` → `Command`) both take ~10 s, so the arm cannot
+discriminate them **in either direction** — vacuous one way, a false red the other. The arm written to
+prove the bound was the one thing that could not observe it.
+
+Separately measured, same arm: the doc's 200 ms shrunk test bound is a **flake**. A cold first exec
+cost **227 ms** inside my own must-succeed control — i.e. the control would have fired the very
+deadline it existed to disprove. Ships at a 1 s bound / 20 s sleep / 8 s wall-clock assertion,
+`-count=5` → 5/5.
+
+### The second finding, and its provenance is the uncomfortable part
+
+Decision 2's **conditional** self-heal is `gemini-3-1-pro`'s round-2 `proposed_fix`, applied VERBATIM
+under the narrow-refinement carve-out. It arrived with **no acceptance criterion and no mutation**, so
+an *unconditional* heal passes AC1–AC7 unchanged. Verified at base: `grep -c 'strings\.'
+host/archive/archive.go` = **0** (control: `host/daemon/daemon.go` = 2).
+
+The carve-out is working as designed — it applies a reviewer's own text without re-litigating
+direction — but nothing in it asks **what guards the fix**, and a reviewer's own words are the last
+text anyone thinks to audit. Closed with AC8, an execution-counting fake, and a **dual** mutation
+pair: **M4a** (`if false && …`, the heal never fires) and **M4b** (`if true || …`, the heal always
+fires). `if false &&` cannot neuter a *skip*, so one mutation alone leaves half the predicate
+unguarded. Reproduced first-party, byte-identical sha256 revert proven: under M4a the `NoProbe` arm
+stays **PASS** while two others red; under M4b `NoProbe` is the **only** arm that reds. The pair
+partitions the guard exactly.
+
+### Verification — three independent passes over the same gates
+
+The executor reported green. That output had been reviewed by nobody, and the diff touches `host/`,
+so I re-ran both gates myself: `verify_ail.sh` rc=0, `verify_go.sh` rc=0, `FAIL`=0 with same-call
+controls at 34 `ok` / 3 `PASSED`, toolchain pinned `go1.25.6` and **0** hits for go1.26.
+
+A package-level `ok` is satisfied whether or not the new tests exist, which is this mission's
+recurring vacuous-pass shape aimed at a gate rather than a test. So I asserted the tests actually RAN:
+**7** `=== RUN`, **7** `--- PASS`, **0** *"no tests to run"* — with a nonsense-pattern control
+confirming the instrument does emit `[no tests to run]` when nothing matches. The evaluator then ran
+both gates and all five mutations a third time, independently, rather than accepting either report.
+
+### Fourth consecutive count refuted by a downstream role
+
+This time the evaluator refuted the **planner**: the sprint plan's per-package breakdown of the 9
+`archive.New(` sites read `broker (3)` and summed to **8**, not 9. Reproduced per package
+(broker 4 / capsule 1 / daemon 1 / replay 3). The headline **9** was correct, and the constraint it
+supports — *`New`'s signature must not change* — was unaffected, which is exactly why nothing
+scrutinised it: **a count wrong in a direction the conclusion does not care about gets no scrutiny at
+all.** Fixed in `61b852d`, with the files each figure came from written beside it.
+
+### My own experiment, and iteration 97's guardrail applied to it
+
+The probe I wrote to reproduce the fixture defect spawns `sleep` grandchildren — the same shape as
+iteration 97's 64 unreaped spinners. So I asserted its teardown rather than assuming it: `pgrep`
+returned **0** orphans with a firing instrument control. Rig load peaked at **12.2**, attributable to
+the concurrent `mission-v1` slot (pid 42009) and not to me — nothing like iteration 97's ~110, and I
+checked rather than inferred.
+
+### Routing evidence
+
+| Role | Pin | Actual | Note |
+|---|---|---|---|
+| Controller | `$MODEL` | `claude:claude-opus-5` | — |
+| Designer | ROTATION | **not spawned** | Doc arrived quorum-clean from iteration 97; no new/revised doc was needed. Fable lane **unspent** — first time in four iterations. |
+| Planner | `derive-planner-lane.sh` → `opus fail-closed:env-pin` | `opus` | Lane output used VERBATIM; no codex probe, per the rule for an `opus `-prefixed result. |
+| Executor | `opus` (chain `codex → opus` per `D-WORLD-20`) | `opus` | Ran locally, not under a codex sandbox, so its gate verdicts were informative — and re-run anyway. |
+| Evaluator | `sonnet` | `sonnet` | generator ≠ judge holds (opus executor). **97/100**, zero blocking. |
+| Quorum | — | **not run** | Doc was already quorum-clean; re-running would be re-litigation. `metered=$0.0000`. |
+
+### Ruled out
+
+- **Taking the executor's green as evidence** — re-ran both gates myself; the evaluator then ran them a third time.
+- **Taking the planner's three refutations on trust** — all three reproduced first-party before they reached the executor.
+- **Reading `errors.Is(err, context.DeadlineExceeded)` as proof of a bound** — it is `true` however long `Wait()` actually blocked, so the wall-clock assertion is the only load-bearing half. Confirmed by M3 reproducing at **20.2 s** with `err == nil`.
+- **Healing the real orphaned `/private/tmp/world-demo.db.artifacts` tree in place** — that tree is the physical witness every future `P9b` sweep depends on. The executor worked a byte-identical copy and proved the original still polluted afterwards.
+- **Re-running the quorum** on a doc that arrived quorum-clean.
+- **Picking rows 22 or 23** over the queue head — 22 is entangled with the open `D-WORLD-22`, and the head was ready.
+- **Filing the doc's stale `:3495` citation as a designer error** — it was correct when written; the defect is the citation *form*, which is why the fix replaces it with a grep rather than a newer line number.
+
+### Next
+
+Rows **20** (re-scoped: measure the MARGIN, not the outcome), **22** (the lock-wait bound) and **23**
+(the deadline-free residue owner) are all unblocked and headless-routable. Item 17 stays parked.
+**One open ask, unchanged: `D-WORLD-22`.**
