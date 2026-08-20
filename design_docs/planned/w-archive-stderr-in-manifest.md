@@ -1,9 +1,16 @@
 # w-archive-stderr-in-manifest — stderr in the version manifest: the first PERSISTED instance of the stderr-merge class
 
-**Status**: DESIGNED — REVISED round 1 (iteration 97, 2026-08-19; quorum returned BLOCKED with
-two objections, both applied — §Quorum verification log) — awaiting re-review.
-**Charter clause**: clause-2. Queue row 21 (`design_docs/world-mission.md:3495`) is the
-specification of record.
+**Status**: DESIGNED — quorum-clean, READY FOR sprint-planner (iteration 97, 2026-08-19).
+Rounds 1 and 2 both returned BLOCKED; round 2 additionally recovered `gpt5-6-sol` from a
+`budget` absence by a solo re-run at a raised cap (it returned reject). All four objections
+across the two rounds were applied — rounds 1's inline (§Quorum verification log) and round 2's
+VERBATIM under the shared skill's narrow-refinement carve-out (§Round-2 quorum …), which routes
+the doc to sprint-planner without a third round. **No re-review is outstanding.**
+**Charter clause**: clause-2. **Queue row 21** of `design_docs/world-mission.md` is the
+specification of record — locate it by row number
+(`grep -nE '^21\. ' design_docs/world-mission.md`), never by line number: the charter prepends
+a STATUS stamp per iteration, so any line citation into it rots by construction (the original
+`:3495` here already reads `3530` one iteration later).
 **Authorship**: design-doc-creator role, iteration 97, against HEAD `b5ddf0e` (branch `dev`,
 working tree clean). Controller measurements from the iteration-97 brief were **re-derived
 first-party in this session** before use; where a re-derivation refined a controller number, the

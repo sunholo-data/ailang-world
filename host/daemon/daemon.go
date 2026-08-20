@@ -377,8 +377,12 @@ type HealthResponse struct {
 	// InterpreterRef is the archived interpreter's canonical "algo:digest", or
 	// "" when serve was started without --ailang-bin.
 	InterpreterRef string `json:"interpreter_ref"`
-	// InterpreterVersion is the verbatim `ailang --version` output captured in
-	// the archive manifest, or "" when no interpreter was archived.
+	// InterpreterVersion is the verbatim `ailang --version` STDOUT captured in
+	// the archive manifest, or "" when no interpreter was archived. STDOUT
+	// specifically: the archive probe captures the two streams separately so
+	// interpreter chatter on stderr never becomes part of a content-addressed
+	// artifact's recorded identity, nor of the epoch-registry candidate
+	// releaseFromVersion derives from this same string.
 	InterpreterVersion string `json:"interpreter_version"`
 }
 
