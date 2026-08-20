@@ -3,7 +3,7 @@
 **Queue:** World mission row 20  
 **Status:** planned  
 **Scope:** `host/capsule` Go host code and tests only; no `.ail` change  
-**Estimate:** 0.75 day (the filed 0.25 day is too small for a non-vacuous redesign, mutation drill, and both full gates)
+**Estimate:** 1.0 day (revision-round-1 liveness coverage makes the prior 0.75 day estimate too small; the filed 0.25 day remains insufficient)
 
 ## 1. Problem statement
 
@@ -35,6 +35,8 @@ Every timing below is descriptive, not an acceptance threshold. Commands run fro
 | The controller's phase split identifies verification as the dominant, unbounded term. | Controller's package-local probe at HEAD `47e12cc`, five runs per idle/loaded arm, `GOTOOLCHAIN=go1.25.6`, `AILANG_BIN` set, zero skips asserted. | Resolve 3–12 us; verify 37.4–46.4 ms idle and 44.2–314.8 ms loaded; full Run 57.6–59.4 ms idle and 123.8–268.5 ms loaded; all OVERFLOW. | One fixture, darwin/arm64 16-core rig, stated loads. Relied on as controller-supplied. Static ordering and independent file/hash measurements were re-derived above; the exact phase timings were not reproduced by the standalone hash command and are not generalized beyond that scope. |
 | The test stopwatch includes preparation that `ExecTimeout` does not govern. | `sed -n '276,306p' host/capsule/capsule_test.go` together with the Run ordering command above. | `start := time.Now()` precedes `New(...).Run(...)`; context creation occurs inside `Run` after resolve, verify, and source staging. | Static control flow at HEAD. Re-derived first-party; agrees with the controller. |
 | Base and filed-base capsule sources are identical. | `git rev-parse e4ba56d:host/capsule/capsule.go HEAD:host/capsule/capsule.go; git rev-parse e4ba56d:host/capsule/capsule_test.go HEAD:host/capsule/capsule_test.go` | Matching pairs: `39f453…` and `93fa23…`. | Those two files only, between filed base and HEAD. |
+| The mutation targets `killOnce.Do`, `readCapped`, and `errOutputLimit` exist in the base source. The same call includes negative and positive controls. | `grep -cE 'zzNoSuchSymbolIter99' host/capsule/capsule.go; grep -cE 'func \(r \*Runner\) Run' host/capsule/capsule.go; grep -cE 'killOnce\.Do' host/capsule/capsule.go; grep -cE 'func readCapped' host/capsule/capsule.go; grep -cE 'errOutputLimit' host/capsule/capsule.go` | Counts `0, 1, 1, 1, 6`; target locations include `killOnce.Do` line 193, `readCapped` line 237, and the `errOutputLimit` declaration line 78. | Controller-verified at HEAD `47e12cc`; `host/capsule/capsule.go` only. The negative control establishes absence detection and the same-path positive control establishes pattern visibility. |
+| No capsule pipe is explicitly closed on overflow, and no non-test host command sets `WaitDelay`. | `grep -n 'Close()' host/capsule/capsule.go; rg -n 'WaitDelay|SysProcAttr' host --glob '!**/*_test.go'` | The first command has no pipe-close hit. `WaitDelay` has one repo-wide comment at `host/archive/archive.go:74` saying the general case is out of scope; `SysProcAttr` has two non-test hits, including capsule line 160. | Controller-verified at HEAD `47e12cc`; the `SysProcAttr` hits are a positive visibility control. Together with `stdoutPipe`/`stderrPipe` occurring only at creation and drain use, this establishes that current production liveness comes from `ExecTimeout` cancellation and group SIGKILL, not drain-local cleanup. |
 
 ## 3. Chosen design: deterministic output-collection core
 
@@ -47,11 +49,14 @@ Extract the post-`cmd.Start` output lifecycle from `Runner.Run` into an unexport
 
 It owns the existing two drains, the once-only kill on `errOutputLimit`, waiting, and the error-precedence decision. `Runner.Run` remains responsible for archive resolution, verification, staging, context creation, command construction, pipes, and `Start`; after `Start` it adapts the real process to the helper. Production semantics and exported APIs do not change.
 
+The seam has an explicit liveness precondition: **the caller owns the finite cleanup bound and must arrange that cancellation makes both supplied readers and `Wait` return**. In production, `Runner.Run` supplies that property through its existing `context.WithTimeout`, `exec.CommandContext`, group-wide `cmd.Cancel` SIGKILL, and `os/exec` pipe/process cleanup. The helper itself neither makes an arbitrary `io.Reader` cancellable nor makes `Wait() error` bounded. It may wait for both drains and then call `Wait` exactly as the current code does. Tests must therefore exercise the precondition rather than silently supplying already-terminated dependencies.
+
 Replace the timing-bearing assertion in `TestF6OutputCapKillsChildBeyondOnePipeBuffer` with deterministic package-local tests of this helper:
 
 1. **Overflow + expired context:** stdout is a `bytes.Reader` containing exactly `limit+1` bytes; stderr is empty. A fake child's `Kill` increments a counter and marks the fake killed. Its `Wait` reads that independently written killed state and returns an explicit “waited without kill” sentinel if false. Pass an already-expired context. Assert captured stdout is exactly `limit`, `Kill` was called exactly once, `Wait` observed the kill, and the result is `*OutputLimitError`, never `*TimeoutError`. No goroutine writes bytes, no pipe fills, and no duration is asserted.
 2. **Within-limit control:** provide exactly `limit` bytes and a live context. Assert byte identity, zero kills, one wait, and the fake wait result. This makes an unconditional-kill implementation fail.
 3. **Two-stream once control:** make both prefilled readers exceed the limit. Assert the child boundary records exactly one kill. This guards the `sync.Once` behavior without scheduler timing.
+4. **Caller-supplied liveness control:** use readers whose `Read` calls signal entry and then block on a test-owned release channel, plus a fake `Wait` that signals entry and blocks on a separate test-owned release channel. Run the helper in a goroutine; after both reader-entry signals, the test closes the reader-release channel; after the wait-entry signal, it closes the wait-release channel; then it asserts the helper returns with the expected non-overflow result. A short test-only watchdog fails with a phase-specific diagnostic instead of hanging the suite, but elapsed duration is not a product assertion. This arm can fail when the release contract or drain-before-wait ordering is absent; unlike the finite `bytes.Reader` arms, it does not smuggle termination in as an intrinsic property of the fake.
 
 Keep `TestF6OutputCapReturnsStructuredOverflow` as the real interpreter integration coverage with its small output. It proves production wiring reaches an `OutputLimitError`; the new tests prove the beyond-buffer kill/precedence algorithm. Delete the old outer stopwatch and the 64 KiB throughput fixture from the named test. The test no longer claims elapsed wall time measures `ExecTimeout`.
 
@@ -66,6 +71,10 @@ The fake's observables are deliberately written at the child boundary, not along
 **Raise the deadline or enlarge output.** Both merely change odds. A larger deadline attacks the term with the greatest measured margin; more output still depends on interpreter production, pipe behavior, and scheduling. Neither can support a non-vacuous base-red gate.
 
 The selected seam tests the causal state machine with pre-existing bytes and an independently observed kill. Load can delay the test process itself, but cannot change which input is available or which branch is correct; there is no competing real-time deadline.
+
+### Conflict Surface
+
+`readCapped` already uses `io.LimitReader` at `host/capsule/capsule.go:237`; the design does not replace a missing standard-library cap. `io.LimitReader` supplies only a bounded byte view. It does not report that byte `limit+1` existed as a typed capsule overflow, kill the child exactly once across two concurrent drains, coordinate both drains with `Wait`, or enforce the domain precedence “overflow outranks deadline.” `context.WithCancel`/`WithTimeout` supplies a cancellation signal, and `exec.CommandContext` can act on it, but neither makes an arbitrary `io.Reader` cancellable nor combines stdout, stderr, kill, wait, and capsule error translation into this state machine. The unexported helper is required to compose those standard-library primitives and existing process effects; it does not attempt to supersede them or promise a new cleanup bound.
 
 ## 4. Acceptance criteria
 
@@ -130,9 +139,20 @@ PY
 
 Expected after change: success. **At base:** fails on all four forbidden timing/throughput tokens. This AC is intentionally scoped to the named test body, so unrelated legitimate timing tests do not satisfy or red it.
 
+### AC5 — caller-supplied releases bound blocking drains and wait
+
+Command:
+
+```sh
+out="$(mktemp)"; go test ./host/capsule -run '^TestOutputCollectionCallerReleaseUnblocksReadersAndWait$' -count=1 -v >"$out" 2>&1
+rc=$?; grep -q '^=== RUN   TestOutputCollectionCallerReleaseUnblocksReadersAndWait$' "$out" && grep -q '^--- PASS: TestOutputCollectionCallerReleaseUnblocksReadersAndWait ' "$out" && [ "$rc" -eq 0 ]
+```
+
+Expected after change: success; both reads are observed blocked before the caller releases them, `Wait` is observed blocked before its independent caller release, and the helper then returns. The test has a bounded failure watchdog for each handshake and final return, so a missing release path or incorrect sequencing fails rather than hanging. It asserts no elapsed-time performance threshold. **At base:** fails because the named test does not exist and therefore the `RUN` grep is false.
+
 ### Completion gates (not acceptance evidence by themselves)
 
-After AC1–AC4 and the mutation drill pass, run both repository gates:
+After AC1–AC5 and the mutation drill pass, run both repository gates:
 
 ```sh
 GOTOOLCHAIN=go1.25.6 AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh
@@ -143,7 +163,7 @@ These are mandatory regression gates, but are not counted as ACs: both are expec
 
 ## 5. Mutation table
 
-Run every mutant with AC1–AC3's exact discovery assertion, then restore the file byte-identically and rerun the pristine control. Mutants must compile; use boolean neutering so an unused import cannot masquerade as a semantic kill.
+Run every mutant with its named AC's exact discovery assertion, then restore the file byte-identically and rerun the pristine control. Mutants must compile; use boolean neutering where possible so an unused import cannot masquerade as a semantic kill.
 
 | Mutation | Row it must kill | Observable moved | Which write the observable reads |
 |---|---|---|---|
@@ -153,17 +173,18 @@ Run every mutant with AC1–AC3's exact discovery assertion, then restore the fi
 | **M4 (remove once-only guard):** replace `killOnce.Do(func() { ... })` with the direct kill call while retaining all imports (for example `_ = killOnce; ...`). | AC3 | Two prefilled over-limit streams move `killCount` from 1 to 2. | Each helper invocation of fake `Kill` writes the counter; AC3 reads the final counter after both drains complete. |
 | **M5 (truncate without overflow):** in `readCapped`, return `data[:limit], nil` for `len(data) > limit`. | AC1 | Kill count becomes 0 and returned error ceases to be `OutputLimitError`. | `readCapped` writes `dstErr`; the helper's overflow guard reads it. Fake `Kill` is the sole counter writer; helper return is the error-kind writer. |
 | **M6 (production helper wiring severed):** after `cmd.Start`, bypass the new helper and return a fixed successful `Result` (retain the helper and imports so the mutant compiles). | Existing `TestF6OutputCapReturnsStructuredOverflow` | Integration result changes from `OutputLimitError` to nil. | The real interpreter writes the pipe in the pristine arm; `readCapped` writes overflow and the helper writes the returned `OutputLimitError`. The mutant bypasses that write, so the existing integration assertion reads nil. This proves `Runner.Run` reaches the tested helper; it does not make a new process-group-kill claim. |
+| **M7 (wait before drains finish):** move `runErr := child.Wait()` before the drain wait, leaving the later drain wait in place and retaining all declarations so the mutant compiles. | AC5 | The fake `Wait` is observed before both blocked readers have been released/completed; AC5 fails its ordered handshake (and its watchdog prevents a suite hang). | Reader-entry signals are written only by the blocking readers; wait-entry is written only by fake `Wait`. AC5 reads those independent events before releasing each phase. This kills loss of the current drain-before-wait sequencing and proves the liveness contract is exercised rather than assumed. |
 
 M6 is a design warning as much as a drill: an injected fake proves the algorithm only if production wiring remains covered. The executor must not record M6 as killed by compilation failure, global timeout, missing test discovery, or a skipped capsule test. Its command asserts `=== RUN`, `--- FAIL`, zero `SKIP`, and uses the pinned environment above.
 
 ## 6. Implementation sequence and cost
 
-1. Extract the unexported output-collection helper without changing `Runner.Run` behavior.
-2. Replace the named flaky timing fixture with the three deterministic tests and retain the existing real-interpreter structured-overflow integration test.
-3. Run AC1–AC4 at base/head as specified and execute M1–M6 with byte-identical restoration controls.
+1. Extract the unexported output-collection helper without changing `Runner.Run` behavior, and document its caller-owned liveness precondition beside the helper.
+2. Replace the named flaky timing fixture with the three deterministic state-machine tests, add the controlled blocking-reader/blocking-wait liveness arm, and retain the existing real-interpreter structured-overflow integration test.
+3. Run AC1–AC5 at base/head as specified and execute M1–M7 with byte-identical restoration controls.
 4. Run `gofmt`, the focused package tests with explicit discovery/skip assertions, then both full gates with `GOTOOLCHAIN=go1.25.6` and `AILANG_BIN=/tmp/ailang-v0300/ailang`.
 
-Estimated effort is **0.75 day**: 0.25 day extraction and tests, 0.25 day mutation drill and instrument controls, 0.25 day full plain/race gates and remediation allowance. The filed 0.25 day estimate fits only a deadline edit; it does not cover the deterministic seam and non-vacuous evidence required by the measurements and coding standard S6.
+Estimated effort is **1.0 day**: 0.25 day extraction and finite state-machine tests, 0.25 day controlled blocking fixtures plus liveness/debugging allowance, 0.25 day mutation drill and restoration controls, and 0.25 day full plain/race gates and remediation allowance. Half 1 makes the item larger than 0.75 day because the blocking protocol must be synchronized, watchdog-bounded, race-clean, and mutation-proven. The filed 0.25 day estimate fits only a deadline edit.
 
 ## 7. Non-goals and residuals
 
@@ -173,3 +194,13 @@ Estimated effort is **0.75 day**: 0.25 day extraction and tests, 0.25 day mutati
 - No cache or hoist of interpreter verification and no weakening of hash-before-exec.
 - No claim that the historical 1-of-2 failure is reproduced, assigned a stable rate, or fixed by load sampling.
 - No `.ail`, Z3, kernel, package, CLI, or documentation-surface change beyond this design and the later Go implementation.
+
+The following lifecycle debt is **owed and not absorbed here**: a production boundary such as `CloseOutput() error`, `Wait(context.Context) error`, an explicit bounded cleanup context, and `errors.Join` surfacing of kill/close/wait failures. Its named owner is **queue row 24 `w-host-subprocess-cleanup-boundary`**, filed by iteration 99 in the same charter edit as this document's routing. (Queue row 21 *declared* this residual but LANDED on 2026-08-20, so it cannot own follow-on work — naming a completed row as an owner is exactly the defect queue row 23 exists to record.) The related non-group-wide overflow-kill defect remains owned by its separately filed queue row. Adding either behavior here would change `host/capsule` subprocess lifecycle and reorder separately owned work, so this tranche only states and tests the existing caller-supplied liveness contract. This is an explicit residual, not a claim that arbitrary readers or `Wait()` are intrinsically bounded.
+
+## 8. Quorum verification log
+
+Revision round 1 had both reviewers present; there is no absent-reviewer hole. `gemini-3-1-pro` returned a blocking **PREMISE** objection, and `gpt5-6-sol` returned a blocking **DESIGN** objection; pick-time quorum was therefore blocked (metered cost `$0.048867`).
+
+- Applied the premise reviewer's proposed fix verbatim in substance and in both requested parts: the Premise Verification Log now proves `killOnce.Do`, `readCapped`, and `errOutputLimit` with the supplied same-path negative and positive controls, and the dedicated **Conflict Surface** explains why the existing `io.LimitReader` plus context primitives do not supply the composed state machine.
+- Applied design objection half 1 in full: the seam contract names the caller as liveness-bound owner; AC5 contains blocking readers and blocking `Wait`, caller-controlled releases, discovery assertions, and a bounded failure escape; M7 kills loss of the sequencing that makes the arm meaningful.
+- Declared design objection half 2 as an owned residual rather than absorbing or dropping it: queue row 21 owns `WaitDelay`/bounded cleanup and the requested `CloseOutput`, context-aware wait, cleanup context, and joined cleanup errors; the separately filed overflow-kill row retains its own scope.
