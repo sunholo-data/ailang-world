@@ -1,6 +1,6 @@
 # w-validated-proven-evidence-boundary — authority-bearing proof evidence
 
-- **Status**: **DIRECTION RATIFIED (`D-WORLD-17`); round-7 revision applied (`D-WORLD-19` arm A); round-7b carve-out revision applied; round-9 revision applied (`D-WORLD-21` arm A, attended 2026-08-19); round-9b carve-out revision applied; round-11 revision applied (`D-WORLD-22` arm B via the `D-WORLD-23` arm-A standing rule, Mark attended 2026-08-20, §10.13); round-11b carve-out revision applied (both round-11 objections, reviewers' verbatim fixes, §10.14)** — **round-10 quorum: `gemini-3-1-pro` PASS (2nd consecutive), `gpt5-6-sol` reject on the DECLARED residual; the round-10 park is ANSWERED — tranche 1 keeps scope, the wait-bound claim narrows to exactly what is proven, OPEN queue row 22 keeps the lock-wait residual, and `busy_timeout < ObjectReadTimeout` is pinned at construction (AC18)** — **round-11 quorum: BLOCKED, both present, on two NEW completeness defects in this round's own remedy; the narrow-refinement CARVE-OUT applied for the first time on this document (§10.14)** — **round-12 confirming quorum: BLOCKED, both present, and for the THIRD consecutive round the objections land on the PREVIOUS round's own fix; PARKED `needs-human-review` on `D-WORLD-24`, a one-word A/B on whether tranche 1 SHEDS the producer (§10.15)** — DESIGNED, not landed
+- **Status**: **`D-WORLD-24` ARM A APPLIED** — Mark Edmondson answered `A`, attended, on issue #68 at 2026-08-20T16:04:52Z; the bounded producer is shed to ordered queue item 26 (§10.16). Prior ratifications and round history remain recorded below. — DESIGNED, not landed
 - **Park reason**: the iteration-84 park is answered. Mark Edmondson attended and ratified option B
   on 2026-08-14: authenticate canonical proof reports with a single-host, host-held MAC key. This
   revision applies that direction. Round 4 further narrows tranche 1 to an explicitly
@@ -46,13 +46,15 @@
 - **Filed**: 2026-08-14, iteration 84
 - **Measurement base**: `bef0153` (rounds ≤ 4); `03c7892` (round 5); `52bc9ec` (round 7, V36–V38); `7806cac` (round 7b, V40–V42); `35fd875` (rounds 9 and 9b, V43–V48); `516836f` (round 11, V49–V50)
 - **Instrument**: `/tmp/ailang-v0300/ailang`, AILANG v0.30.0 (`e37b370`)
-- **This tranche estimate**: **5.35 days** (round 7 adds the ratified bounded store read; round
+- **This tranche estimate**: **4.70 days** after `D-WORLD-24` arm A sheds the producer into ordered queue item 26 (round 7 adds the ratified bounded store read; round
   7b adds the `ObjectReadTimeout` deadline machinery; round 9 nets +0.25 day — the streaming
   reader's removal against the real-store integration test's addition; round 9b adds 0.25 day
   for the one-snapshot read transaction and its concurrent-mutation test; round 11 adds 0.40
   day for the timeout-ordering and nesting-depth pins and round 11b a further 0.25 day for the
-  cached-accessor amendment and the bounded envelope write — each priced, not absorbed, §9)
-- **Decomposition**: **yes** — four ordered sprint-sized items, **11.35 days total** (§9)
+  cached-accessor amendment; round 13b adds 0.30 day for required validator identities and mandatory
+  wait-bound metadata with its refusal and wrapper tests; the producer and bounded envelope write
+  are no longer tranche-1 work — each priced, not absorbed, §9)
+- **Decomposition**: **yes** — five ordered items, **11.70 days total** (§9)
 - **Design result**: serialized proof references remain untrusted and grade `CLAIMED`; only a host
   validator may mint the sealed value from which only the minting validator's `Resolve` method
   returns authority-bearing `PROVEN`.
@@ -219,6 +221,11 @@ or deadline expiry — including expiry of the validator's own derived `ObjectRe
 `Unsupported` nor error contains an `EvidenceGrade`; no failure falls back to `CLAIMED`,
 `ATTESTED`, or `TESTED`.
 
+Constructor failures are sentinel errors, not `UnsupportedReason`s: `ErrInvalidValidatorConfig`
+covers a non-positive `ObjectReadTimeout`, an empty or unset required-identity set, and a negative
+(unknown) reader `BusyTimeout()`; `ErrUnorderedTimeouts` remains the distinct refusal for a positive
+reader window greater than or equal to `ObjectReadTimeout`.
+
 ## 3. Proposed change — tranche 1
 
 ### 3.1 Kernel representation in `world/types.ail`
@@ -262,16 +269,13 @@ Add these conceptual surfaces (names are binding; field layout is implementation
 ClaimedEvidence              // decoded untrusted constructors, including ProofReceipt
 ValidatedEvidence            // exported type, all fields unexported
 ValidationResult             // accessors expose Validated or Unsupported, not writable fields
-ObjectReader                 // minimal read seam the validator consumes; its one method is the ruled D-WORLD-21 arm-A signature (§8.2, §10.10): ReadObject(ctx context.Context, ref hashref.HashRef, maxBytes int64) (ObjectMeta, []byte, error)
-NewValidator(key [32]byte, reader, compilerConfig)   // configuration REQUIRES a positive ObjectReadTimeout; zero or negative is a constructor refusal (AC16); and when the supplied reader reports its lock-retry window — the real store does, via the additive store.BusyTimeout() accessor, a NONBLOCKING CACHED PROPERTY populated at Open from the resolved DSN and never queried through the pool (§8.2; gpt5-6-sol's round-11 alternative fix, applied verbatim under the carve-out, §10.14) — a POSITIVE ObjectReadTimeout <= that window is ALSO a constructor refusal, the dedicated ErrUnorderedTimeouts (AC18, round 11): the busy_timeout < ObjectReadTimeout composition condition is pinned against the two values actually used at run time, never two literals
+ObjectReader                 // mandatory two-method seam: ReadObject(ctx context.Context, ref hashref.HashRef, maxBytes int64) (ObjectMeta, []byte, error), the ruled D-WORLD-21 arm-A signature (§8.2, §10.10), plus BusyTimeout() time.Duration; zero means the implementation guarantees no independent lock-retry wait, positive reports its bound, and negative/unknown is invalid configuration
+NewValidator(key [32]byte, reader, compilerConfig, requiredIdentities []string)   // configuration REQUIRES a positive ObjectReadTimeout and a non-empty required-identity set; zero/negative timeout, empty/unset identities, or negative/unknown BusyTimeout() is a constructor refusal reusing ErrInvalidValidatorConfig (AC16, AC21); a POSITIVE ObjectReadTimeout <= a positive BusyTimeout() is the dedicated ErrUnorderedTimeouts (AC18, AC22): the ordering is pinned against the values actually used at run time, never two literals
 Validator.ValidateProof(ctx, reportRef, expectedSubject)   // derives context.WithTimeout(ctx, ObjectReadTimeout) before the object read, even under context.Background() (§3.3 step 2, AC16)
 DecodeProposal(raw)          // ProofReceipt remains an untrusted claim; raw capped at 256 KiB before any parse (§3.3)
 Validator.Resolve(sealed ValidatedEvidence) ResolutionResult   // method; sole ResolvedGradeProven source; refuses zero/unminted identities with ErrUnmintedAuthority, foreign seals with ErrForeignSeal
 ResolutionResult             // unexported fields; mutually exclusive Proven() (ResolvedGrade, bool) and Err() error; zero value is refusal
 ResolvedGrade                // host enum; ResolvedGradeProven is not serialized
-ObjectWriter                 // minimal write seam the producer stores envelopes through; its one method TAKES A CONTEXT — WriteObject(ctx context.Context, o store.Object) error (gemini-3-1-pro's round-11 fix, applied verbatim under the carve-out, §10.14): the round-11 spelling was "one PutObject-shaped method", and the real store's PutObject takes NO context (V43, re-verified V51), so the producer's envelope write was unbounded against the same one-connection pool AC16's read bound is built around. §3.4's "stores an authenticated envelope" requires a writer, and the validator keeps the read-only ObjectReader
-NewProducer(key [32]byte, checker, writer, execTimeout time.Duration, maxOutputBytes int64)   // §3.4's producer, configured at construction (gemini-3-1-pro's round-9 fix; departures from the verbatim spelling are enumerated in §10.11): key is the same caller-owned 32-byte MAC key NewValidator takes; checker pins the absolute AILANG_BIN path plus the exact executable hash and "AILANG v0.30.0" token §3.4 verifies before any run; writer is the ObjectWriter above; execTimeout bounds wall time via context.WithTimeout feeding exec.CommandContext (§3.4); maxOutputBytes is the PER-STREAM cap, applied independently to stdout and stderr through §3.4's limit+1 capped readers; non-positive execTimeout or maxOutputBytes is a constructor refusal (AC5); Producer.GenerateProof PASSES ITS OWN CONTEXT to the writer's WriteObject, so the envelope write is wait-bounded by the caller's deadline rather than by nothing (round 11b, AC20, M28) — the execution bounds are explicit and checkable at the API, per the bounded-waits axiom, not ambient configuration
-Producer.GenerateProof(ctx context.Context, sourceRef HashRef, requiredIdentities []string) (HashRef, error)   // the reviewer's round-9 signature, verbatim: resolves sourceRef through the ObjectReader above (ReadObject under the same 256 KiB bound — an over-bound subject module is refused, not proven), materializes the module bytes to a private temp file for the pinned checker, runs it under the configured bounds, and builds the report's verified set only from verify.results[].function entries with status == "verified" (V27); empty requiredIdentities is a refusal (§3.4); returns the stored authenticated envelope's HashRef only on full success — deadline overrun and either-stream overflow are refusals that emit and store nothing
 ```
 
 No `NewValidatedEvidence`, struct literal, `SetGrade`, raw-hash grade resolver, receipt resolver,
@@ -323,13 +327,12 @@ are unexported. The enforced guarantee is therefore per-identity: only a validat
 identity minted by the `NewValidator` call that produced a seal can resolve that seal.
 
 The ordering pin's seam is explicit, and the cross-package decision is written down rather than
-left implicit (round 11, `D-WORLD-23` obligation (ii)). `ObjectReader` keeps its ONE required
-method; the pin rides an optional capability interface, unexported in `host/evidence`:
-`busyWindowReporter`, one method, `BusyTimeout() time.Duration`. `NewValidator` type-asserts
-the supplied reader against it. A reader that reports no lock-retry window — a bounded test
-fake with no lock layer — skips the check: there is no window to order against, and a fake
-reporting one it does not have would supply the PROPERTY under test, §6.1's inadmissible
-class. The REAL `host/store.Store` does report one, through the additive exported accessor
+left implicit (round 11, `D-WORLD-23` obligation (ii)). Wait-bound metadata is mandatory:
+`ObjectReader` itself requires `BusyTimeout() time.Duration`; there is no optional
+`busyWindowReporter`, type assertion, or skip path. Zero means the implementation guarantees it
+has no independent lock-retry wait; a positive value reports that wait's bound; a negative value
+means unknown and `NewValidator` refuses it with `ErrInvalidValidatorConfig`. The REAL
+`host/store.Store` implements the method through the additive exported accessor
 `BusyTimeout() time.Duration` (§8.2). Round 11 specified that accessor as a LIVE
 `PRAGMA busy_timeout` read, and `gpt5-6-sol` rejected it for the reason this whole round
 exists to close: with `db.SetMaxOpenConns(1)` (`store.go:298`, V51) a context-free pragma query
@@ -354,19 +357,17 @@ constructor — the consumer that owns a deadline owns the refusal; the store ca
 consumer's deadline and contributes only the reporter. AC18 makes the refusal non-vacuous and
 M26 must red it.
 
-The new package depends on `host/hashref` and the minimal object reader and writer seams above
-— the writer existing solely for the producer's envelope store — not on daemon, replay, or
+The new package depends on `host/hashref` and the minimal object reader seam above, not on daemon, replay, or
 renderer. That avoids a cycle and makes the validator testable with a bounded fake.
 `NewValidator` copies an exactly 32-byte MAC key supplied directly by its caller; tranche 1 accepts
-no key path and neither creates nor loads key files. The proof producer receives the same
-caller-owned key material through its library constructor, `NewProducer` above. Consequently tranche 1 is explicitly
-**library-only and non-production**: it demonstrates the authenticated authority boundary but does
+no key path and neither creates nor loads key files. Consequently tranche 1 is explicitly
+**library-only and non-production**: it demonstrates validation of hand-authored authenticated envelopes and the authority boundary but does
 not wire a production composition root, provision durable key material, or claim startup/restart
 behavior. Those obligations belong to the named tranche-2 wiring item in §9.
 
 ### 3.3 Canonical `ProofReportV1`
 
-The producer encodes strict canonical JSON `ProofReportV1` bytes with these fields in this order:
+The validator accepts strict canonical JSON `ProofReportV1` bytes with these fields in this order:
 
 ```text
 schema             = "world/proof-report/v1"
@@ -456,8 +457,10 @@ Validation order is fixed:
 8. require report subject equals the expected subject;
 9. require compiler hash/version equals the configured pinned executable;
 10. require the report's `verified` field to be sorted and non-empty and to contain the configured
-   required identity set, plus `checkPassed`, `proofSucceeded`, zero errors, and zero
-   counterexamples; §3.4 binds producer emission of that field to `verify.results[]`;
+   required identity set copied from `NewValidator`'s non-empty `requiredIdentities []string`, plus
+   `checkPassed`, `proofSucceeded`, zero errors, and zero
+   counterexamples. Tranche 1 does not establish how those fields are produced; queue item 26
+   owns binding producer emission to `verify.results[]`;
 11. only then construct `ValidatedEvidence`.
 
 One landing between rounds 6 and 7 must not be misread as having closed this — in either
@@ -479,55 +482,19 @@ The validator never accepts a report merely because `store.PutObject` once check
 recomputes at consumption so alternate readers, corruption, and test fakes cannot bypass the
 integrity boundary. MAC verification follows strict decode because it needs the uniquely decoded
 report byte string, but precedes all attacker-controlled semantic assertions: a correct hash proves
-only integrity, while a correct tag proves that the host producer authenticated those exact bytes.
+only integrity, while a correct tag proves that a holder of the caller-supplied host key
+authenticated those exact bytes. Queue item 26 owns demonstrating that the bounded producer is
+such a holder and minted them from an `ai-check` result.
 
-### 3.4 First Z3 report producer
+### 3.4 SHED — bounded Z3 report producer
 
-Add `host/evidence/proof_producer.go`. It runs only the configured absolute `AILANG_BIN`, verifies
-the executable bytes and exact `AILANG v0.30.0` token, invokes `ai-check` for the subject, bounds
-wall time, stdout, and stderr, and parses JSON rather than trusting process rc. It may use
-`verify.verified>0` as a cheap precondition, but constructs the report's identity set only from
-`verify.results[].function` entries filtered by `status == "verified"`. It emits, MAC-tags, and
-stores an authenticated envelope only when `check.passed=true`, `verify.errors=0`,
-`verify.counterexample=0`, and that sorted set contains the configured required identity set.
-The store step is itself wait-bounded (round 11b, `gemini-3-1-pro`'s fix applied verbatim,
-§10.14): `GenerateProof` passes its own context to `ObjectWriter.WriteObject(ctx, o)`, whose
-real implementation performs the connection reservation and the insert under that context —
-analogous to `ReadObject` (§8.2). Round 11 bounded the read side and the subprocess and left
-the write side inheriting nothing, against the same one-connection pool (`store.go:298`, V51);
-the existing `Store.PutObject(o Object) error` takes no context at all (V43, re-verified V51)
-and is left untouched for its **8** existing call sites outside `host/store` (V51; the
-controller's first draft said 10, transcribed from an earlier epoch rather than measured — the
-same-pipeline `GetObject` control returns 13, reproducing V43 exactly, so the 8 is a
-measurement). AC20 pins the bound and M28 kills it.
-
-**Tranche 1 owns the bounded runner** (resolution (a) of the round-5 §3.4/§9 contradiction),
-because the bounded producer is tranche 1's named deliverable and cannot emit an authenticated
-report without executing the pinned checker, so the bounding primitive belongs to the tranche
-that executes. No exported bounded-subprocess helper exists for `host/evidence` to import: the
-repository's three non-test subprocess sites each bound locally, and the one general-purpose
-runner, `runBounded`, is unexported and broker-internal (V35). The producer therefore implements
-its own bounding inside `host/evidence`, on the pattern V35 measures in `runBounded`: wall time
-is bound by `context.WithTimeout` feeding `exec.CommandContext`, with the child in its own
-process group and the whole group killed on cancellation so a forked grandchild cannot outlive
-the deadline; both stdout and stderr are independently read through their own capped
-readers sized limit+1 bytes (gemini-3-1-pro's round-8 NON-BLOCKING fix, applied verbatim: a
-singular "capped reader" for a dual-stream capture leaves stderr's memory bound implicit, so an
-attacker-controlled checker could spam stderr and OOM the host while the parsed stream stays
-within its cap), so overflow on EITHER stream is detected rather than silently truncated; deadline overrun and output overflow are each producer refusals
-that emit and store no report. The producer departs from `runBounded` in exactly one measured
-property: `runBounded` merges stderr into stdout, while the producer captures the two streams
-SEPARATELY and parses JSON only from stdout, because this producer's output is parsed and a
-warning merged into the parsed stream voids the parse (V22 records that failure mode; V27
-separates the streams for the same reason). Reusing broker's runner is rejected, not deferred:
-it would add a `host/broker` dependency §3.2 excludes, and exporting it is a broker API change
-outside this tranche. The tranche-1 arithmetic in §9 already prices this construction inside the
-0.60-day producer row; no pricing change follows.
-
-The producer takes required identities from its caller; an empty set is refused. The first
-integration is a library API, not a daemon route or an agent tool. Therefore an agent cannot ask
-the host to prove arbitrary source and immediately attach the result through a public network
-surface. A later transition may call it only after separately ratifying that authority.
+`D-WORLD-24` arm A, ratified attended by Mark Edmondson on issue #68 at
+2026-08-20T16:04:52Z, sheds the bounded producer into ordered queue item 26. Tranche 1 therefore
+does not add `host/evidence/proof_producer.go`, a producer constructor or `GenerateProof`; it has
+no in-repository path from an `ai-check` run to an authenticated envelope, and every validator
+fixture is hand-authored. The shed item inherits this section's former producer specification,
+both unresolved round-12 objections, the AC20 connection-pool-versus-lock-wait vacuity
+obligation, and the missing-reader constructor gap. History remains in §§10.5–10.15 and V48.
 
 ### 3.5 What crosses the AILANG/Go boundary
 
@@ -577,7 +544,9 @@ counterexample (V25).
 
 The proof does **not** prove report existence, payload size, hash integrity, schema, subject,
 compiler identity, solver success, producer identity, decode provenance, or host refusal. Z3 sees
-only a `HashRef`. Those properties are enforced by the Go validator and its named mutation tests.
+only a `HashRef`. Tranche 1's Go validator and named mutation tests enforce the validation and
+authority properties against hand-authored fixtures; they do not demonstrate that an `ai-check`
+run can produce an authenticated envelope. Ordered queue item 26 owns that end-to-end claim.
 
 Most importantly, the proof cannot detect a **consistent lie**: changing both the contract and
 body to return `PROVEN` for an unvalidated constructor leaves Leg 1 green; this was measured in
@@ -591,7 +560,9 @@ may be inputs to revalidation.
 
 ## 5. Persistent non-vacuity
 
-The implementation has four persistent layers:
+The tranche-1 implementation has four persistent layers. These establish receipt containment,
+validator refusal behavior and sealed authority, not producer correctness or end-to-end proof
+production; ordered queue item 26 owns those additional layers:
 
 1. `gradeOf` stays named under `REQUIRED_VERIFIED["world/types.ail"]`; exact verified total stays
    10. Removing its contract or identity reds Leg 1.
@@ -616,6 +587,10 @@ lands with ordered tranche 3; until then replay has no route to `PROVEN`, which 
 default. Every observable is returned by or after the mutated mechanism, never a sibling value
 assigned beside it.
 
+The missing M15 and M28 numbers are deliberate: `D-WORLD-24` arm A moved both producer-side
+mutations, with their original identifiers, to ordered queue item 26. Existing citations are not
+renumbered.
+
 | ID / class | Exact file and neutered edit | Named check that fires | Downstream observable and predicted failure text |
 |---|---|---|---|
 | M1 **arbitrary** | `world/types.ail`: change only body arm `ProofReceipt(_) => CLAIMED` to `ProofReceipt(_) => PROVEN` | `gradeCode_test_7` plus `gradeOf` verification | Agent-authored receipt reaches canonical kernel `PROVEN`; runtime fails `got 4, want 1`, while the unchanged contract yields a counterexample. |
@@ -632,7 +607,6 @@ assigned beside it.
 | M12 **tool mismatch** | `host/evidence/validator.go`: change compiler hash/version guard to `if false && toolMismatch` | `TestMismatchedProofToolIsRefused` | Failure: `got proof_incomplete; want tool_mismatch`. |
 | M13 **proof failed** | `host/evidence/validator.go`: change success/error/counterexample guard to `if false && proofFailed` | `TestFailedProofReportIsRefused` | Failure: `got proof_incomplete; want proof_failed`. |
 | M14 **proof incomplete** | `host/evidence/validator.go`: change verified-identity guard to `if false && incomplete` | `TestIncompleteProofReportIsRefused` | An authenticated report missing a required identity seals; failure: `incomplete proof resolved PROVEN; want proof_incomplete`. |
-| M15 producer false-green | `host/evidence/proof_producer.go`: change `if verify.Errors != 0` to `if false && verify.Errors != 0` | `TestProofProducerRefusesVerifierErrors` | Producer stores a report despite JSON errors; `producer emitted report with verify.errors=1`. |
 | M16 seal bypass | `host/evidence/grade.go`: add a grade resolver accepting `HashRef`, `ProofReceipt`, raw `Evidence`, or kernel `EvidenceGrade` | `TestPublicAuthoritySurfaceIsFrozen` | External-package API inventory gains a forbidden resolver; `public authority surface exposes non-sealed PROVEN ingress`. |
 | M17 named-manifest removal | `scripts/verify_go.sh`: remove one literal required name, leaving the test present | `TestEvidenceNamedManifestRejectsUnpinnedTest` in `host/verifygate/evidence_manifest_gate_test.go` | Isolated gate sees an extra observed test; `evidence test set differs from REQUIRED_EVIDENCE_TESTS`. |
 | M18 projection drift | edit only `world/types.ail` | existing world-package step 3/9 | `projection hash mismatch: world/types.ail` (exact wording confirmed during implementation). |
@@ -644,8 +618,9 @@ assigned beside it.
 | M24 **oversize translation** | `host/evidence/validator.go`: change the typed-refusal mapping `if errors.As(err, &tooLarge)` to `if false && errors.As(err, &tooLarge)` | `TestOversizeProofReportIsRefused` | The store's `*store.ObjectTooLargeError` falls through to the generic operational-error branch instead of the `oversize` reason; failure: `got operational store-read error; want oversize`. Paired with M4: M4 proves the store guard is load-bearing, M24 proves the validator's reason mapping is — the byte-slice seam separates what the round-7b stream unified, so §5's every-refusal-branch rule demands both rows. |
 | M25 **one-snapshot probe/payload** | `host/store/store.go`: remove the read transaction from `ReadObject` — run the probe and the payload statement as two bare autocommit statements on the same reserved connection (the pre-round-9b spelling, restored as a mutant) | `TestConcurrentMutationCannotDesyncProbeAndPayload` (AC17) | Correct code: the transaction's snapshot pins the probed row, so the returned payload matches the probed length and re-hashes to the requested ref whichever way the injected writer lands (committed after the snapshot, or refused busy — AC17 accepts both). Under the mutant the hook-injected `UPDATE` lands between the two autocommit statements and the payload statement reads the NEW row; failure: `payload diverged from probed row: probe=100 bytes, payload=300 bytes; want one snapshot`. The kill is DETERMINISTIC — the scheduling hook forces the interleaving, so no retry classification participates — and NEEDS the real store: the mutated lines are `host/store` code any fake replaces. |
 | M26 **timeout ordering** | `host/evidence/validator.go`: change `NewValidator`'s ordering refusal `if window > 0 && cfg.ObjectReadTimeout <= window` (window is the reader's reported `BusyTimeout()`; exact spelling fixed at implementation — the neutered comparison is the ordering pin itself) to `if false && (window > 0 && cfg.ObjectReadTimeout <= window)` | `TestConstructorPinsBusyTimeoutBelowObjectReadTimeout` (AC18) | Correct code: constructing a validator over the REAL file-backed store with a POSITIVE `ObjectReadTimeout` of 1 s — merely <= the store's live 2000 ms busy window — is refused with the dedicated `ErrUnorderedTimeouts` naming both values. Under the mutant the unordered validator constructs; AC16's non-positive constructor refusal is a DIFFERENT, WEAKER guard and stays green on this stimulus (1 s is positive), which is exactly what makes the two arms distinguishable rather than one check wearing two names. Failure: `NewValidator accepted ObjectReadTimeout 1s <= busy_timeout 2s; want ErrUnorderedTimeouts`. The kill NEEDS the real store: only it reports a live busy window (§6.1). |
-| M28 **envelope-write bound** | `host/evidence/proof_producer.go`: in `GenerateProof`, replace the context passed to the writer — `writer.WriteObject(ctx, o)` becomes `writer.WriteObject(context.Background(), o)` (the round-11 state, restored as a mutant: a write inheriting no deadline; the mutant compiles and keeps the write) | `TestProducerEnvelopeWriteIsBoundedByCallerContext` (AC20) | Correct code: with the store's sole pooled connection occupied by a decoy holder and `GenerateProof` called under a short deadline, the producer returns a bounded operational error and stores NO envelope. Under the mutant the write's context is never done, so the call blocks on the connection reservation until the decoy releases and then stores the envelope; failure: `envelope written after the caller's deadline expired; want a bounded operational error and no stored object` (a test-side 20x watchdog reds the hang mode). The kill NEEDS the real store — the reservation wait it exercises is `database/sql` behaviour against `SetMaxOpenConns(1)`, which any in-memory fake writer replaces (§6.1). |
 | M27 **depth-bomb refusal** | `host/evidence/proposal_codec.go` (exact file fixed at implementation; the neutered branch is `DecodeProposal`'s own strict-decode refusal, not M9's report-codec branch): change the decode-error refusal `if err != nil` to `if false && err != nil`, returning the zero claim beside the swallowed error | `TestNestingDepthBombWithinByteCapIsRefused` (AC19) | Correct code: a depth-131,071 `[[[[…` payload inside the 256 KiB cap is refused typed — the stdlib scanner's `exceeded max depth` error surfaces as `DecodeProposal`'s decode refusal in well under a millisecond (V50). Under the mutant the depth bomb's error is swallowed and a zero `ClaimedEvidence` returns as success; failure: `depth bomb decoded as ClaimedEvidence; want typed decode refusal`. The same test's shallow depth-10 control keeps a refuse-everything mutant from passing the arm vacuously. |
+| M29 **required validator identities** | `host/evidence/validator.go`: change `NewValidator`'s empty/unset `requiredIdentities` refusal to `if false && len(requiredIdentities) == 0` | `TestConstructorRefusesEmptyRequiredIdentities` (AC21) | Correct code returns `ErrInvalidValidatorConfig`; under the mutant an empty set constructs and makes step 10's containment check vacuous. Failure: `NewValidator accepted empty required identities; want ErrInvalidValidatorConfig`. The positive control constructs with one identity and validates a report containing it. |
+| M30 **mandatory wait-bound metadata** | `host/evidence/validator.go`: change the negative/unknown `BusyTimeout()` refusal to treat that value as zero | `TestReaderWaitBoundsCannotBeLostThroughWrapper` (AC22) | Correct code refuses a wrapper whose `BusyTimeout()` is unknown/negative with `ErrInvalidValidatorConfig`, while the same wrapper forwarding the real store's positive 2000 ms value reaches the existing ordering refusal for `ObjectReadTimeout` = 1 s. Under the mutant the unknown wrapper constructs and silently loses the real store's lock-wait bound; failure: `NewValidator accepted wrapper with unknown wait bound; want ErrInvalidValidatorConfig`. |
 
 For M2–M14, the control first validates one good authenticated report for the same expected subject and observes
 that the minting validator's `Resolve` returns `ResolvedGradeProven`. Thus a mutant cannot pass
@@ -673,7 +648,9 @@ control is inside AC18's own test: over the SAME real store, the ordered arm
 authenticated report, and resolves `ResolvedGradeProven` — proving the ordering refusal does
 not refuse the ordered path and the fixture reaches minting — before the unordered arm asserts
 the refusal. M27's control is in-test: the same `DecodeProposal` accepts a depth-10 control
-payload before the depth-bomb arm asserts the typed refusal.
+   payload before the depth-bomb arm asserts the typed refusal. M29's positive control supplies
+   one configured identity and a report containing it. M30's same-path control wraps the real
+   store while forwarding `BusyTimeout()` and proves `ErrUnorderedTimeouts` still fires.
 
 ### 6.1 Fake audit — what each prescribed fake makes true (round 9)
 
@@ -695,8 +672,6 @@ the PROPERTY the mutation is supposed to expose. Row by row:
   an unshown production property.
 - **M10** — same class as M5: hand-authored envelope bytes are the INPUT; the MAC branch under
   mutation is validator code.
-- **M15** — the fixture checker emits `verify.errors=1` JSON; the parse-and-refuse path under
-  mutation is the producer's own code consuming that input.
 - **M16–M19** — no fakes (API-inventory, gate, projection, and golden mutations).
 - **M20, M21** — the refusals under test are pure Go value semantics; readers appear only as
   data suppliers in the mint-path controls.
@@ -713,20 +688,21 @@ the PROPERTY the mutation is supposed to expose. Row by row:
   test-authored by necessity: V47 verifies production has no mutation path on `objects`,
   which is exactly why the test must inject one.
 - **M26** — no fake participates in the kill: the killer constructs the validator over the
-  REAL store, because only the real store reports a live busy window. A fake reporting a
-  window it does not have would supply the PROPERTY under test — the exact inadmissible class
-  this section exists to name — so fakes simply do not implement the reporter and skip the
-  check by design (§3.2).
-- **M28** — no fake writer participates in the kill: the killer writes through the REAL
-  store, because the wait it mutates is `database/sql`'s connection reservation against
-  `SetMaxOpenConns(1)`. An in-memory fake writer never blocks, so it would supply the
-  PROPERTY under test (a write that always completes promptly) — the same inadmissible class
-  as M26's reporter, and the reason AC20 is a real-store criterion.
+  REAL store, whose mandatory `BusyTimeout()` reports its cached positive window.
 - **M27** — the depth bomb is test-authored INPUT bytes; the refusing mechanism (the stdlib
   scanner's depth limit surfacing through `DecodeProposal`'s own strict-decode refusal) is the
   code under mutation. No fake.
+- **M29** — the reader supplies input bytes only; the empty configured set and its refusal are
+  validator-owned configuration semantics.
+- **M30** — the wrapper surrounds the REAL store and is the test stimulus, not a substitute for
+  it. Its two arms either report unknown or forward the wrapped store's actual cached window; this
+  proves interface adaptation cannot silently erase the ordering check.
 
 ## 7. Acceptance criteria
+
+The missing AC5 and AC20 numbers are deliberate: `D-WORLD-24` arm A moved both producer-side
+criteria, with their original identifiers, to ordered queue item 26. Existing citations are not
+renumbered.
 
 1. **Authority surface.** `ValidatedEvidence` has no exported fields or public constructor.
    `Validator.ValidateProof` is the sole mint, and the `Validator.Resolve` method is the sole
@@ -763,14 +739,6 @@ the PROPERTY the mutation is supposed to expose. Row by row:
    agree.
 4. **No fallback.** Every validation failure yields its exact `UnsupportedReason` or an explicit
    operational error. No failure result carries any grade.
-5. **Producer.** The pinned executable is byte/version checked; execution is time/output bounded
-   by the tranche-1-owned runner inside `host/evidence` (§3.4, V35), with deadline overrun and
-   output overflow each a refusal that emits no report, and stdout/stderr captured separately;
-   the bounds are configured at the API, not ambient — `NewProducer` refuses a non-positive
-   `execTimeout` or `maxOutputBytes` (§3.2, round 9b);
-   JSON fields read from stdout—not rc—decide success; identities come from `verify.results[]`
-   entries with `status == "verified"`; an empty required identity set is refused; only
-   successfully MAC-tagged envelopes are stored.
 6. **Kernel mapping.** Add only `ProofReceipt(HashRef)` in tranche 1 and map it to `CLAIMED`; extend
    exact contract/body and integer policy case. No kernel Evidence constructor produces `PROVEN`.
 7. **AILANG pins.** Keep `gradeOf` named and `EXACT_TOTAL_VERIFIED=10`; add the observed seventh
@@ -778,7 +746,7 @@ the PROPERTY the mutation is supposed to expose. Row by row:
    `EXACT_TOTAL_MODULES`.
 8. **Go persistent gate.** Add the exact non-empty named-test manifest and exact count to
    `scripts/verify_go.sh`; add an isolated self-mutation test in `host/verifygate`.
-9. **Required mutations.** Every tranche-1 row M1–M5, M7–M19, and M20–M28 reds with its
+9. **Required mutations.** Every tranche-1 row M1–M5, M7–M14, M16–M27, M29–M30 reds with its
    named observable; controls green. M5 is the sole payload-hash mutation owner. M6 is an
    acceptance criterion of tranche 3 and replay remains unable to yield `PROVEN` before then.
 10. **Projection/golden.** Canonical/projected `types.ail` are byte-identical, the frozen four
@@ -903,8 +871,8 @@ the PROPERTY the mutation is supposed to expose. Row by row:
     words — "an ORDERING nothing in this code asserts, not a guarantee". The pin: `host/store`
     gains the additive exported accessor `BusyTimeout() time.Duration`, read from the LIVE
     `PRAGMA busy_timeout` on the store's own connection (never a re-export of the constant, so
-    a caller-overridden DSN reports its true window); `NewValidator` type-asserts its reader
-    for that optional capability and REFUSES a positive `ObjectReadTimeout` less than or equal
+    a caller-overridden DSN reports its true window); `ObjectReader` requires that method and
+    `NewValidator` REFUSES a positive `ObjectReadTimeout` less than or equal
     to the reported window with the dedicated `ErrUnorderedTimeouts`, naming both values. This
     binds the two values actually used at run time — the caller's configured timeout and the
     window SQLite will actually apply — never two literals: an assertion comparing two
@@ -916,9 +884,9 @@ the PROPERTY the mutation is supposed to expose. Row by row:
     refusal is a WEAKER check and stays green on the pin arm's stimulus — 1 s is positive — so
     the two criteria are distinguishable by construction; the same test also cross-checks the
     accessor against a direct `PRAGMA busy_timeout` query on the same store, so the accessor
-    cannot drift into a stale literal. A reader reporting NO window (a bounded fake with no
-    lock layer) skips the check: the refusal is scoped to compositions where a lock window
-    exists to order against (§3.2, §6.1).
+    cannot drift into a stale literal. A reader with no independent lock layer reports zero as
+    an explicit guarantee; absence of metadata is not representable through `ObjectReader`, and
+    negative/unknown metadata is refused under AC22 (§3.2, §6.1).
     **Round-11b amendment (`gpt5-6-sol`'s alternative fix, verbatim, §10.14).** The accessor is
     a NONBLOCKING CACHED property resolved once during `Open` from the DSN the store was opened
     with — not a live `PRAGMA` query, which with `SetMaxOpenConns(1)` could wait unboundedly for
@@ -951,26 +919,20 @@ the PROPERTY the mutation is supposed to expose. Row by row:
     because an unasserted dependency on an unexported internal is the defect shape this round
     closes twice (§10.13). Falsifiability rides on AC16's scope note: `host/evidence` does not
     exist at base, so every AC19 token is new by construction. M27 must red this arm.
-20. **The producer's envelope write is wait-bounded (round-11b, `gemini-3-1-pro`'s fix,
-    verbatim).** Round 11 bounded the READ side (AC16), the subprocess (AC5) and, in 11b, the
-    construction-time reporter — and left the producer's WRITE inheriting nothing, against the
-    same one-connection pool (`store.go:298`, V51). The existing `Store.PutObject(o Object)
-    error` takes no `context.Context` at all (V43, re-verified V51), so a `PutObject`-shaped
-    `ObjectWriter` is unbounded by construction. The fix: `ObjectWriter`'s one method becomes
-    `WriteObject(ctx context.Context, o store.Object) error` (§3.2); `host/store` gains that
-    additive method, performing the connection reservation and the insert under the supplied
-    context, analogous to `ReadObject` (§8.2); and `Producer.GenerateProof` passes its own
-    context to it (§3.4). Named test
-    `TestProducerEnvelopeWriteIsBoundedByCallerContext`, against the REAL file-backed store: a
-    decoy holds the sole pooled connection, `GenerateProof` runs under a short deadline, and the
-    criterion requires a bounded operational error and NO stored object — with a same-test
-    control in which the decoy is installed but releases immediately, proving the fixture reaches
-    the success path and stores the envelope, so a refuse-everything mutant cannot pass the arm
-    vacuously. `PutObject` itself is NOT changed and its **8** existing call sites outside
-    `host/store` are untouched (V51; same-pipeline control `GetObject` = 13, reproducing V43), for the same additive reason as `ReadObject`. Base/head falsifiability, scoped to
-    CODE: `func (s *Store) WriteObject(` reads 0 occurrences in `host/` at `516836f` (same-scope
-    control `func (s *Store) PutObject(` fires with 1, V51); at head ≥ 1 in non-test `host/store`.
-    M28 must red this arm.
+21. **Configured required identities are non-vacuous.** `NewValidator` accepts
+    `requiredIdentities []string`, copies it into validator configuration, and refuses an empty or
+    unset set with `ErrInvalidValidatorConfig`; step 10 checks every configured identity against
+    the report. `TestConstructorRefusesEmptyRequiredIdentities` first constructs with one identity
+    and validates a report containing it, then requires empty and nil sets to refuse. M14 remains
+    the missing-identity validation mutation; M29 kills the constructor refusal.
+22. **Wait-bound metadata is mandatory and survives wrapping.** `ObjectReader` requires
+    `BusyTimeout() time.Duration`: zero is a documented guarantee of no independent lock-retry
+    wait, positive is the bound, and negative means unknown and must make `NewValidator` return
+    `ErrInvalidValidatorConfig`. `TestReaderWaitBoundsCannotBeLostThroughWrapper` wraps the REAL
+    file-backed store. An unknown/negative reporting arm cannot construct; a forwarding arm exposes
+    the wrapped store's actual cached window and, with positive `ObjectReadTimeout` = 1 s against
+    the reported 2000 ms, must return `ErrUnorderedTimeouts`. Thus interface adaptation cannot
+    erase the ordering pin. M30 must red this arm.
 
 ### 8.1 Five coupled AILANG moves
 
@@ -987,8 +949,12 @@ the PROPERTY the mutation is supposed to expose. Row by row:
 
 ### 8.2 Go packages and gate
 
-- New `host/evidence`: codec, validator, producer, resolved-grade API, focused tests, mutation
-  harness.
+- New `host/evidence`: codec, validator, resolved-grade API, focused tests, mutation
+  harness. Validator configuration includes a copied non-empty `requiredIdentities []string` and
+  refuses empty/unset identities with `ErrInvalidValidatorConfig`; the same constructor error
+  refuses negative/unknown reader wait metadata. `ObjectReader` requires both `ReadObject` and
+  `BusyTimeout()`; zero explicitly guarantees no independent lock-retry wait, rather than silently
+  inferring that guarantee from an absent optional capability.
 - `host/store`: **IN the tranche**, by the attended `D-WORLD-19` arm-A ruling of 2026-08-19 —
   a ratified widening of the previously frozen package list, not scope creep. The store gains
   exactly THREE additive surfaces, none changing an existing signature. FIRST, the bounded
@@ -1060,15 +1026,11 @@ the PROPERTY the mutation is supposed to expose. Row by row:
   from the `_pragma` DSN parameter (`writer_lock.go:196`) and non-test `host/`+`cmd/` code
   issues ZERO runtime `PRAGMA busy_timeout` writes (V51). A caller-overridden DSN is therefore
   still reported at its true runtime value, and no production path acquires a connection to
-  learn it. Consumed by `host/evidence`'s constructor ordering refusal (§3.2, AC18, M26).
-  **THIRD (round 11b, `gemini-3-1-pro`'s fix, verbatim):** the additive
-  `WriteObject(ctx context.Context, o Object) error`, which performs the connection reservation
-  and the insert under the supplied context, analogous to `ReadObject` — the producer's envelope
-  write is otherwise unbounded against the same one-connection pool, because the existing
-  `PutObject(o Object) error` takes no context at all (V43, re-verified V51). `PutObject` is
-  NOT changed and its **8** existing call sites outside `host/store` are untouched (V51;
-  same-pipeline control `GetObject` = 13, reproducing V43) (§3.2, §3.4, AC20, M28). None of the
-  three changes the schema or an existing signature, and no new statement runs against
+  learn it. The accessor is mandatory wait-bound metadata on `host/evidence.ObjectReader`, consumed
+  by the constructor's invalid/unknown refusal and ordering refusal (§3.2, AC18, AC22, M26, M30).
+  The producer-side third surface proposed in round 11b, `WriteObject(ctx, …)`, moves to ordered
+  queue item 26 under `D-WORLD-24` arm A. Neither that surface nor its producer call path is part
+  of tranche 1. Neither remaining store change changes the schema or an existing signature, and no new statement runs against
   `objects` beyond the additive read and the additive insert; the 13 out-of-tranche
   `.GetObject(` call sites and 4 interface declarations above are untouched, for the same
   additive reason as `ReadObject`.
@@ -1101,28 +1063,29 @@ sprint.
 
 | Ordered document | Closes | Estimate |
 |---|---|---:|
-| **1. This document, `w-validated-proven-evidence-boundary`** | Library-only proof report schema/producer and authenticated envelope; caller-supplied 32-byte MAC key; Evidence codec; bounded/hash/type/success validation; bounded `host/store` object read (`D-WORLD-19` arm A; `D-WORLD-21` arm A `ReadObject` spelling with pre-materialization bound and one-snapshot probe/payload read transaction, round 9b); validator-imposed `ObjectReadTimeout` wait bound proven by the real-store blocked-read integration test; sealed mint authority; untrusted `ProofReceipt → CLAIMED`; host-only resolved `PROVEN`; refusal-branch mutations; persistent named gates; constructor-pinned `busy_timeout < ObjectReadTimeout` ordering (`D-WORLD-23` obligation (ii), AC18) and stdlib nesting-depth pin (AC19), round 11; nonblocking cached busy-window accessor and context-bounded envelope write (AC20), round 11b. Explicitly non-production. | **5.35 d** |
-| **2. `w-proven-evidence-production-key-wiring`** | Verify and name the actual production composition root and configuration/state mechanisms; provision/load durable MAC key material; retain the keyed validator before serving; abort startup closed. | **1.0 d** |
-| **3. `w-validated-replay-evidence-boundary`** | Typed replay report and untrusted replay receipt; integrate only successful full-episode replay; bind episode/log head and interpreter set; make missing/failed/divergent replay explicitly unsupported; M6 persistent mutation. `RecordedEffect` stays `ATTESTED`. | **3.0 d** |
-| **4. `w-proven-evidence-renderer-consumption`** | Renderer/read API that accepts only sealed or freshly revalidated evidence; display `PROVEN` only from that value; explicit `UNSUPPORTED` for every validation failure; end-to-end agent-forgery and restart/revalidation tests. | **2.0 d** |
-| **Total** | All reviewer obligations | **11.35 d** |
+| **1. This document, `w-validated-proven-evidence-boundary`** | Library-only proof report schema and authenticated-envelope validator; caller-supplied 32-byte MAC key; non-empty configured required identities; Evidence codec; bounded/hash/type/success validation; bounded `host/store` object read (`D-WORLD-19` arm A; `D-WORLD-21` arm A `ReadObject` spelling with pre-materialization bound and one-snapshot probe/payload read transaction, round 9b); validator-imposed `ObjectReadTimeout` wait bound proven by the real-store blocked-read integration test; sealed mint authority; untrusted `ProofReceipt → CLAIMED`; host-only resolved `PROVEN`; refusal-branch mutations; persistent named gates; mandatory reader wait-bound metadata and constructor-pinned `busy_timeout < ObjectReadTimeout` ordering (`D-WORLD-23` obligation (ii), AC18, AC22) and stdlib nesting-depth pin (AC19), round 11; nonblocking cached busy-window accessor. Every validator fixture is hand-authored; no in-repo `ai-check`-to-envelope path is claimed. Explicitly non-production. | **4.70 d** |
+| **2. `w-bounded-z3-report-producer` (queue item 26)** | Bounded Z3 report producer shed by `D-WORLD-24` arm A; authenticated-envelope write, producer mutations/criteria, and unresolved round-12 obligations. Ordered after queue row 23. | **1.0 d carried from tranche 1; pending design may revise** |
+| **3. `w-proven-evidence-production-key-wiring`** | Verify and name the actual production composition root and configuration/state mechanisms; provision/load durable MAC key material; retain the keyed validator before serving; abort startup closed. | **1.0 d** |
+| **4. `w-validated-replay-evidence-boundary`** | Typed replay report and untrusted replay receipt; integrate only successful full-episode replay; bind episode/log head and interpreter set; make missing/failed/divergent replay explicitly unsupported; M6 persistent mutation. `RecordedEffect` stays `ATTESTED`. | **3.0 d** |
+| **5. `w-proven-evidence-renderer-consumption`** | Renderer/read API that accepts only sealed or freshly revalidated evidence; display `PROVEN` only from that value; explicit `UNSUPPORTED` for every validation failure; end-to-end agent-forgery and restart/revalidation tests. | **2.0 d** |
+| **Total** | All reviewer obligations | **11.70 d** |
 
 Tranche 1 arithmetic:
 
 | Work | Time |
 |---|---:|
-| Strict report/envelope/Evidence codecs and object integration | 0.75 d |
+| Strict report/envelope/Evidence codecs and object integration (round 13: −0.10 d, the producer's object-writer/codec share, §10.16) | 0.65 d |
 | Bounded store read (`ReadObject` with `ObjectMeta`, pre-materialization length probe, typed refusal, one-snapshot read transaction), store-side tests including the concurrent-mutation test and its scheduling hook, M25 | 0.75 d |
 | `ObjectReadTimeout` configuration, `WithTimeout` derivation, real-store blocked-read integration test with its decoy rig, M22/M23/M24 | 0.50 d |
-| Bounded pinned proof producer, caller-key MAC integration, and fixtures | 0.60 d |
 | Validator, sealed authority, receipt containment, resolved-grade API | 0.75 d |
 | Kernel mapping, projection, golden, AILANG pins | 0.35 d |
 | Named Go-test manifest and self-mutation gate | 0.45 d |
-| Mutations, full pinned gates, review contingency | 0.60 d |
+| Mutations, full pinned gates, review contingency (round 13: −0.10 d, the AC5/M15 producer mutation share, §10.16) | 0.50 d |
 | Timeout-ordering pin: store `BusyTimeout()` cached accessor, constructor refusal, real-store AC18 test incl. its occupied-connection nonblocking arm, M26 (rounds 11 + 11b) | 0.30 d |
 | Nesting-depth pin: AC19 depth-bomb test with shallow control, M27 (round 11) | 0.15 d |
-| Bounded envelope write: additive store `WriteObject(ctx, …)`, `ObjectWriter`/`GenerateProof` context threading, real-store AC20 decoy test, M28 (round 11b) | 0.20 d |
-| **Total** | **5.35 d** |
+| Required-identity validator configuration, empty/unset constructor refusal, AC21 and M29 (round 13b) | 0.10 d |
+| Mandatory reader wait-bound metadata, unknown-bound refusal, wrapper-around-real-store AC22 test and M30 (round 13b) | 0.20 d |
+| **Total** | **4.70 d** |
 
 The tranche-1 estimate removes 0.5 day previously assigned to an unwired key lifecycle, and
 round 7 adds 0.50 day for the `D-WORLD-19` arm-A bounded store read — priced as its own row
@@ -1143,31 +1106,29 @@ day for the timeout-ordering pin (the store accessor, the constructor refusal, t
 AC18 test, M26) and +0.15 day for the nesting-depth pin (AC19 and M27); round 11b adds +0.05
 day to the ordering row (the accessor becomes a cached property and AC18 gains its
 occupied-connection nonblocking arm) and +0.20 day for the bounded envelope write (the additive
-store `WriteObject`, the context threading, AC20's real-store decoy test and M28). At
-**5.35 days** the tranche EXCEEDS the 3–4 day sprint guardrail by 1.35 days. That is stated rather than
+store `WriteObject`, the context threading, AC20's real-store decoy test and M28). Those figures
+are retained as pricing history. `D-WORLD-24` arm A removes the 0.60-day producer row, about 0.10 day of its object-writer/codec
+share, about 0.10 day of its AC5/M15 mutation share, and the separately priced 0.20-day bounded
+envelope write. **Controller arithmetic correction, round 13, measured rather than transcribed:**
+the pre-round-13 table's ROWS summed to **5.40 d** while its stated Total read **5.35 d** — a
+0.05-day drift inherited from round 11b's +0.05 amendment to the ordering row, found by summing
+the column rather than reading the Total (V53). The honest derivation is therefore
+**5.40 - 0.60 - 0.10 - 0.10 - 0.20 = 4.40 days**, and the two 0.10-day shares are now DEDUCTED IN
+THE ROWS THAT CARRY THEM (the codec row and the mutation row) rather than only in this sentence,
+so the table sums to its own Total. Round 13b adds 0.10 day for the required-identity constructor
+surface and its refusal test/mutation, plus 0.20 day for mandatory wait metadata, unknown-bound
+refusal, and the wrapper-around-real-store ordering test/mutation. The tranche therefore
+EXCEEDS the 3–4 day sprint guardrail by 0.70 day. That is stated rather than
 hidden — round 9's own standard refuses to disguise the number by leaving 4.0 because it was
 4.0 — and the re-scope question is answered here rather than deferred, because `D-WORLD-23`
 makes shedding scope the mirror of the standing rule, so the option was examined with
-arithmetic. DECOMPOSITION IS REJECTED. The only coherent piece separable without breaking the
-authority boundary is the producer (§3.4): the validator never calls it, and the validator's
-tests hand-author their envelopes (AC13 already does). Shedding it — the 0.60-day producer
-row, the `ObjectWriter` seam and envelope-store share of the codec row (~0.10 d), and
-M15/AC5's share of the mutation row (~0.10 d) — removes about 0.80 day and leaves **4.35
-days, still over the guardrail**: the decomposition fails its own purpose, while costing
-tranche 1 its end-to-end demonstration (no in-repo path from an `ai-check` run to an
-authenticated envelope; every validator fixture hand-authored) and deleting
-`NewProducer`/`Producer.GenerateProof`, the API surface a reviewer's round-9 fix forced INTO
-§3.2 one round ago. Every other candidate is unsheddable by authority or by ruling: the
-kernel arm is the item's design result; the validator/seal/`Resolve` chain and the
-named-manifest gate ARE the authority boundary; the bounded store read and both real-store
-integration tests are `D-WORLD-19`/`D-WORLD-21` arm-A obligations; and the two pins are
-`D-WORLD-23` obligation (ii) and the owed round-10 note, added by the same ruling that
-unparked the document. So the true number stands at 5.15, not rounded, and the 1.15-day
-excess buys, by name: (a) the ratified real-store bounded read with its blocked-read and
-concurrent-mutation integration tests; (b) the ordering pin that makes the narrowed claim
-more than a quieter claim; (c) the depth pin — together the property §10.12 records no
-reviewer had yet been shown: every load-bearing bound this tranche depends on asserted in the
-tree, not argued in prose.
+arithmetic. `D-WORLD-24` arm A now REQUIRES DECOMPOSITION: the producer is coherent and separable
+because the validator never calls it and its tests hand-author their envelopes (AC13 already does).
+The cost is explicit: tranche 1 loses the end-to-end demonstration, has no in-repo path from an
+`ai-check` run to an authenticated envelope, and deletes the `NewProducer`/
+`Producer.GenerateProof` conceptual surface added by the round-9b fix. Ordered queue item 26 owns
+that work and its unresolved defects. The remaining 0.35-day overage buys the ratified bounded
+store read and its integration tests, the timeout-ordering pin, and the nesting-depth pin.
 Authenticated-envelope canonicalization, mechanism-specific negative controls, and refusal-branch
 mutations remain; production provisioning/loading and composition-root tests move intact to
 tranche 2. No tranche adds a rotation protocol or a validator-side compiler execution path.
@@ -1181,10 +1142,8 @@ resulting keyed validator before serving requests, and abort startup on any fail
 integration test must start that actual composition root against missing, valid, symlinked,
 wrong-permission, and replaced key cases and observe the specified fail-closed behavior. For
 those production-wiring surfaces, no existing helper or path is assumed by tranche 1 and reuse
-decisions belong to that measured successor design. The bounded subprocess runner is the named
-exception and is NOT on tranche 2's list: tranche 1 owns it, measured its reuse decision in this
-document's own log (V35: the only general runner is unexported and broker-internal, so nothing
-reusable exists), and implements it inside `host/evidence` (§3.4).
+decisions belong to that measured successor design. The bounded subprocess runner is not a
+tranche-2 obligation; it travels with ordered queue item 26.
 
 Ordering is binding. Tranche 1 is non-production until tranche 2 wires key custody. Tranche 3
 cannot reuse raw proof receipts as replay receipts. Tranche 4 cannot infer trust from either
@@ -2085,6 +2044,89 @@ written and is owed regardless of which arm is chosen. And `gpt5-6-sol`'s reader
 (`GenerateProof` reads `sourceRef` through a reader `NewProducer` never receives) is a plain API
 incompleteness that holds under arm B and disappears with the producer under arm A.
 
+## 10.16 `D-WORLD-24` ruling — arm A, producer shed
+
+Mark Edmondson answered `A` on issue #68 at 2026-08-20T16:04:52Z, attended, resolving
+`D-WORLD-24`: shed §3.4's bounded Z3 report producer into its own ordered document. Queue item 26
+inherits the former §3.4 specification, `NewProducer`/`Producer.GenerateProof`, AC5, AC20, M15 and
+M28. Tranche 1 is now the validator, seal, boundary and their gates. It has no in-repository path
+from an `ai-check` run to an authenticated envelope; all validator fixtures are hand-authored.
+
+The two round-12 objections are not answered or fixed. They are out of tranche-1 scope and travel
+with the producer, verbatim, in queue item 26: `gpt5-6-sol`'s missing reader and derived-deadline
+defect, and `gemini-3-1-pro`'s unpinned lock-wait/decoy-vacuity defect. The latter carries the
+explicit obligation that AC20's decoy exercises the connection-pool wait, not the lock wait; the
+former carries the fact that `GenerateProof` reads `sourceRef` through a reader that
+`NewProducer` never receives. Shedding dissolves both objections unfixed because neither surface
+remains in tranche 1.
+
+The round-9b history is preserved: that revision added the two producer API tokens and V48 measured
+their 0 → non-zero transition. This revision removes them from the current §3.2 conceptual surface;
+V52 records the reverse measurement. Historical text in §§10.11–10.15 and append-only V48 remains
+unchanged as the record of what happened.
+
+**CONTROLLER ARITHMETIC CORRECTION, applied on top of the round-13 revision and recorded rather
+than absorbed (V53).** The revision as delivered priced tranche 1 at **4.35 d** and its own §9
+table did not sum to that: the prose deducted the producer's ~0.10-day codec share and ~0.10-day
+mutation share, while the rows carrying those shares were left at full value, so the column summed
+to **4.60 d**. Summing the column also surfaced a defect one round older — the PRE-revision table's
+rows summed to **5.40 d** against a stated Total of **5.35 d**, a 0.05-day drift inherited from
+round 11b's +0.05 amendment to the ordering row, which survived a quorum because every reader read
+the Total instead of adding the column. Both shares are now deducted IN the rows that carry them,
+the Total is **4.40 d**, and the guardrail overage is **0.40 d**, not 0.35 d. Nothing about the cut
+changed; only the number, and it moved AWAY from compliance, which is the direction that makes the
+correction worth recording. The generalisable half: **a Total is a claim about a column, and this
+document has now shipped two rounds in which nobody added the column.**
+
+## 10.17 Round 13b bounded carve-out revision — both confirming-quorum fixes
+
+This is the carve-out's bounded second revision on this document: it applies the two confirming-
+quorum reviewers' own fixes and changes nothing about the settled `D-WORLD-24` arm-A producer shed.
+Unlike the three previous rounds, each of which blocked on the previous round's own fix, both
+objections here predate round 13; neither lands on the round-13 edit (V54).
+
+**`gemini-3-1-pro`, objection verbatim:** “The validator API in §3.2 lacks a parameter for the
+'configured required identity set'. §3.3 step 10 mandates that the validator require the report to
+contain this configured set (and M14 tests this refusal), but neither NewValidator nor ValidateProof
+accepts the required identities (e.g., []string) to perform the check.” Applied at the configuration
+surface: `NewValidator` receives `requiredIdentities []string`, copies it, and refuses empty/unset
+sets with `ErrInvalidValidatorConfig`; step 10 consumes that configured set. AC21 and M29 pin the
+non-vacuous constructor rule. This is configuration, not a per-call argument.
+
+**`gpt5-6-sol`, strongest objection verbatim:** “The optional `busyWindowReporter` creates a silent
+fallback that violates the bounded-waits and no-silent-fallback axioms. `NewValidator` treats failure
+of the type assertion as proof that no lock-retry window exists, but an `ObjectReader` may wrap the
+real store—or otherwise perform lock-bound waits—without exposing `BusyTimeout()`. Such a reader
+silently bypasses `ErrUnorderedTimeouts`, so validation can exceed `ObjectReadTimeout` despite the
+document's construction-time ordering claim.” **Catch verbatim:** “Fix §3.2's statement that a reader
+which reports no window may skip the check. Absence of the optional capability does not establish
+absence of a lock wait, and none of V49–V51 or AC18 tests the wrapper/non-reporting case.”
+**Proposed fix, applied verbatim as the specification:** “Make wait-bound metadata mandatory rather
+than optional. For example, require `ObjectReader` to expose `BusyTimeout() time.Duration`, with a
+documented zero value meaning the implementation guarantees it has no independent lock-retry wait;
+reject negative/unknown values, and reject positive values where `ObjectReadTimeout <= BusyTimeout()`.
+Add an acceptance arm and mutation showing that a reader with unknown bounds cannot construct a
+validator, plus a wrapper-around-real-store test proving the ordering check cannot be lost through
+interface adaptation. Remove the current type-assert-and-skip behavior and the claim that non-
+reporting implies no window.” AC22 and M30 carry the unknown-bound and wrapper arms; AC18, §3.2,
+§6.1, and §8.2 no longer contain the optional capability or skip claim.
+
+**Pre-existence measurement.** Before this revision, the §3.2 constructor line at working-tree line
+266 hashed identically to `HEAD` (`5e728acdc4f330396113c0314022c8b242c909e9292b3f387a7f299e1d8f47fc`).
+The step-10 continuation at working-tree line 454 hashed
+`703e4ff7f38f0ba5f1fac2025dbbf0fd2538290b7e79b8908b3487f164718ae1` and matched the identical
+content at `HEAD` line 459; round 13's producer removal shifted that content by five lines, so a
+literal same-number `HEAD` line-454 comparison addresses step 7 rather than the objection. The firing
+control, working-tree line 486, differed from `HEAD` line 486
+(`cbc76eccd38bcc42f3173c8c6962a7c1435e0c80881a936316d759a108929733` versus
+`560a9a17a7d9e310090de1826844bfa986c127da5df2bc2d176f4b9f4b357df2`), exactly because round 13
+changed §3.4. V54 records the commands and outputs. The finding remains: both objection-bearing
+sentences are inherited from round 11b, while the round-13 control fires.
+
+**Pricing.** Two explicit §9 rows add 0.10 d and 0.20 d. The tranche-1 column now sums to **4.70 d**,
+the decomposition sums to **11.70 d**, and tranche 1 exceeds the 3–4 d guardrail by **0.70 d**.
+The column-sum command returned `4.70`; no figure is carried only in prose (V55).
+
 ## 11. Verification Log
 
 Rows V1–V8, V12–V14, V17, V21, and V27–V32 were rerun from repository root at
@@ -2185,6 +2227,11 @@ the ambient go1.26.4, because the behaviour it pins is stdlib, not repository co
 | V49 | The `busy_timeout < ObjectReadTimeout` composition condition is REAL and NOTHING in the tree asserts the ORDERING, at `516836f`. (a) `const busyTimeoutMillis = 2000` at `host/store/writer_lock.go:179`, UNEXPORTED, feeding the DSN pragma at `:196`; its own comment states the composition informally ("2000 ms sits well below the daemon's 10 s read deadline so the context always wins") — prose, not an assertion. (b) The only existing pin is a VALUE pin: `host/store/context_read_test.go:209` asserts `busyTimeoutMillis` equals the pinned 2000 — it orders the constant against no consumer's deadline. (c) `ObjectReadTimeout` occurs in ZERO `.go` files repo-wide (it is this document's proposed constant, so no code CAN assert an ordering against it yet — which is why AC18 places the assertion in the constructor where both values first coexist); same-scope control counting a different token, `busyTimeoutMillis`, fires with 2 files. AC18's own base tokens also read zero: `ErrUnorderedTimeouts` 0 in `*.go`, accessor spelling `func (s *Store) BusyTimeout(` 0 in `host/` (control `busyTimeoutMillis` 5 lines in `host/`). (d) `host/daemon/handlers.go:299–302` states the gap verbatim: "Today that composition is safe only because busy_timeout (2s) is shorter than the 10s request deadline — an ORDERING nothing in this code asserts, not a guarantee." (e) Obligation (i): queue row 22's head at `design_docs/world-mission.md:3583` carries **0** `LANDED\|ITEM COMPLETE` tokens after `~~…~~` spans are stripped, while the identical instrument on LANDED row 21 returns **1**; and the single `--grep='lock-wait'` commit on `origin/dev`, `912009d`, is the `D-WORLD-23` ledger commit whose body assigns ownership TO row 22 ("row 22 keeps ownership of the lock-wait bound") — corroborating openness, not contradicting it. | `sed -n '175,183p' host/store/writer_lock.go; grep -n 'busyTimeoutMillis' host/store/writer_lock.go host/store/context_read_test.go`; `sed -n '200,215p' host/store/context_read_test.go`; `grep -rn 'ObjectReadTimeout' --include='*.go' . \| wc -l` with control `grep -rln 'busyTimeoutMillis' --include='*.go' . \| wc -l`; `grep -rn 'ErrUnorderedTimeouts' --include='*.go' . \| wc -l; grep -rn 'func (s \*Store) BusyTimeout(' --include='*.go' host/ \| wc -l; grep -rn 'busyTimeoutMillis' --include='*.go' host/ \| wc -l`; `sed -n '292,305p' host/daemon/handlers.go`; `sed -n '3583,3608p' design_docs/world-mission.md \| perl -0pe 's/~~.*?~~//gs' \| grep -cE "LANDED\|ITEM COMPLETE"` beside the row-21 control; `git log origin/dev --oneline --grep='lock-wait'` | Constant and pragma at the cited lines; value pin fires at `:209`; `ObjectReadTimeout` **0** (control 2 files); `ErrUnorderedTimeouts` **0** and accessor spelling **0** (control 5 lines); the handlers comment verbatim as quoted; row-22 tokens **0** vs row-21 control **1**; exactly one `lock-wait` commit, `912009d`, the ledger entry. |
 | V50 | JSON nesting inside `DecodeProposal`'s 256 KiB cap: the panic/CPU half of the round-10 note is REFUTED and the unasserted-stdlib-internal half SUSTAINED. Probe: pure `[…]` nesting decoded into `interface{}` by BOTH `json.Decoder.Decode` and `json.Unmarshal`, under BOTH `GOTOOLCHAIN=go1.25.6` (pinned) and ambient go1.26.4 — classification IDENTICAL on every arm. go1.25.6 readings (Decode / Unmarshal): CONTROL-shallow, depth 10, 20 B → both `err=nil`, 375 µs / 6.5 µs; deepest ACCEPTED, depth 9,999, 19,998 B → both `err=nil`, 7.59 ms / 1.83 ms; just-over, depth 10,001, 20,002 B → both refuse `exceeded max depth`, 162 µs / 129 µs; deepest cap-fitting, depth 131,071, 262,142 B → both refuse, 506 µs / 133 µs. No panic on any arm; the worst case INSIDE the byte cap is a sub-millisecond refusal and the worst ACCEPTED case is single-digit milliseconds, bounded by construction (depth ≤ bytes/2). The refusing limit is `const maxNestingDepth = 10000` at `encoding/json/scanner.go:148` of the pinned toolchain's GOROOT — unexported, an implementation detail, not documented API. Controller ran the same four arms earlier this iteration with matching classifications (its timings: 7.03 ms worst-accepted, 418 µs worst-refused — timing noise only). | Probe source `/tmp/depth_probe_iter101/main.go` (four arms, both codecs, timed); `GOTOOLCHAIN=go1.25.6 go run .` and `GOTOOLCHAIN=go1.26.4 go run .`; `grep -n 'maxNestingDepth' "$(GOTOOLCHAIN=go1.25.6 go env GOROOT)/src/encoding/json/scanner.go"` | Four-arm table as in the claim, identical on both toolchains; `scanner.go:148: const maxNestingDepth = 10000`. |
 | V51 | Round-11b premises, all four measured first-party at `516836f` before either reviewer fix was applied. **(a) `gpt5-6-sol`'s premise — the single-connection pool — TRUE:** `db.SetMaxOpenConns(1)` at `host/store/store.go:298`. Instrument-scope note, recorded rather than smoothed: the same grep over non-test `host/store/` returns **2** lines, and the second (`journal.go:639`) is a COMMENT quoting the call — one code site, two matching lines, and a bare count would have said two. **(b) `gemini-3-1-pro`'s premise — the write side takes no context — TRUE:** `func (s *Store) PutObject(o Object) error` at `store.go:444`, against the same-file control `func (s *Store) GetObject(ctx context.Context, …)` at `:468`, already context-threaded by item 18. So the read side was threaded and the write side was not; the asymmetry is real, not a doc omission. **(c) The withdrawn LIVE-PRAGMA claim costs nothing — the busy window is IMMUTABLE after `Open`:** non-test `host/`+`cmd/` code issues **0** runtime `PRAGMA busy_timeout` reads or writes; the window is applied per physical connection from the `_pragma` DSN parameter built at `writer_lock.go:196`, which the same-call control finds (**1**), so the zero is a measurement. A property that cannot change after construction is exactly a cacheable one. **(d) AC20's base tokens and the call-site count:** `func (s *Store) WriteObject(` reads **0** in `host/` against the same-shape control `func (s *Store) PutObject(` = **1**; and `.PutObject(` outside `host/store`, non-test, is **8** (`broker/approve.go` 3, `broker/broker.go` 3, `registry` 1, `transitionreg` 1) — **not the 10 the controller's first draft transcribed from an earlier epoch** — with the same-pipeline `GetObject` control returning **13**, reproducing V43's figure exactly and proving the pipeline, not the number, is what was shared. | `grep -rn 'SetMaxOpenConns(1)' --include='*.go' host/store/ \| grep -v _test`; `grep -n 'func (s \*Store) PutObject(\|func (s \*Store) GetObject(' host/store/store.go`; `grep -rn 'PRAGMA busy_timeout' --include='*.go' host/ cmd/ \| grep -v _test \| wc -l` with control `grep -c 'busy_timeout(%d)' host/store/writer_lock.go`; `grep -rn 'func (s \*Store) WriteObject(' --include='*.go' host/ \| wc -l` with control `grep -rn 'func (s \*Store) PutObject(' --include='*.go' host/ \| wc -l`; `grep -rn '\.PutObject(' --include='*.go' host/ cmd/ \| grep -v '^host/store/' \| grep -v _test \| awk -F: '{print $1}' \| sort \| uniq -c` and the same pipeline for `.GetObject(` through `wc -l` | (a) `store.go:298` code + `journal.go:639` comment; (b) both signatures at the cited lines, write context-free, read context-bearing; (c) runtime pragma **0**, DSN control **1**; (d) `WriteObject` **0**, control **1**; `.PutObject(` **8** with the per-file breakdown as claimed, `.GetObject(` control **13**. |
+
+| V52 | Round-13 reverse measurement after `D-WORLD-24` arm A, scoped only to the current §3.2 conceptual surface: `NewProducer`/`Producer.GenerateProof` are absent. `NewValidator` is the same-range positive control, so the zero is not a bad section range or dead pattern. V48 remains the append-only record of the earlier 0 → non-zero transition. | `doc=design_docs/planned/w-validated-proven-evidence-boundary.md; start=$(grep -n '^### 3\.2' "$doc" \| cut -d: -f1); end=$(grep -n '^### 3\.3' "$doc" \| cut -d: -f1); sed -n "${start},${end}p" "$doc" \| grep -cE 'NewProducer\|Producer\.GenerateProof'; sed -n "${start},${end}p" "$doc" \| grep -c 'NewValidator'` | Range `257–362`; producer API check `0` (grep rc 1); same-range `NewValidator` control `9` matching lines (grep rc 0). |
+| V53 | Round-13 CONTROLLER arithmetic check of §9's tranche-1 table, scope: this document only. The revision's stated Total (**4.35 d**) did not equal the sum of its own rows (**4.40 d**), because the prose deducted two 0.10-day producer shares that the rows still carried at full value; and the PRE-revision table was already 0.05 d adrift (rows **5.40 d** vs stated Total **5.35 d**, inherited from round 11b's +0.05 amendment to the ordering row). Both shares are now deducted in the codec and mutation rows, the Total reads **4.40 d**, and the overage against the 3–4 d guardrail is **0.40 d**, not 0.35 d. The instrument is the column sum, not the Total: reading the Total is what let the drift survive two rounds. | `sed -n '/^Tranche 1 arithmetic:/,/^| \*\*Total\*\*/p' <doc> | grep -E '^\| ' | grep -v Total | grep -oE '\| [0-9]+\.[0-9]+ d \|' | grep -oE '[0-9]+\.[0-9]+' | awk '{s+=$1} END {printf "%.2f\n", s}'` — run against `git show HEAD:<doc>` (the pre-revision arm) and against the working tree (the post-revision arm), the two exit codes captured separately without a pipe | BEFORE rows `5.40` vs stated `5.35`; AFTER-designer rows `4.60` vs stated `4.35`; AFTER-correction rows `4.40` == stated `4.40`. The same instrument reads the decomposition table (known-positive control) as `11.40` against its stated `11.40`. |
+| V54 | Round-13b pre-edit provenance measurement, scoped to this document: both objection-bearing surfaces predate round 13. Working-tree line 266 and `HEAD` line 266 were byte-identical. The objection-bearing step-10 continuation at working-tree line 454 matched identical content at `HEAD` line 459; round 13's producer shed shifted the block by five lines, so literal `HEAD` line 454 is step 7 and is not the corresponding content. The firing control, line 486, differs because round 13 replaced the producer section. | For each numbered line: `sed -n "${n}p" "$doc" \| shasum -a 256` and `git show "HEAD:${doc}" \| sed -n "${n}p" \| shasum -a 256`; corresponding-content controls: capture working-tree line 454 and run `git show "HEAD:${doc}" \| grep -nFx "$needle"`, then capture `HEAD` line 454 and run `grep -nFx "$needle" "$doc"`; line 486 is the same-number firing control. All commands ran before round-13b edits. | Line 266: working tree = `HEAD` = `5e728acdc4f330396113c0314022c8b242c909e9292b3f387a7f299e1d8f47fc`. Working-tree line 454 hash `703e4ff7f38f0ba5f1fac2025dbbf0fd2538290b7e79b8908b3487f164718ae1`; exact match at `HEAD:459`. Reverse control finds `HEAD:454` at working-tree line 449, confirming the five-line shift. Firing control line 486: working tree `cbc76eccd38bcc42f3173c8c6962a7c1435e0c80881a936316d759a108929733`, `HEAD` `560a9a17a7d9e310090de1826844bfa986c127da5df2bc2d176f4b9f4b357df2`, unequal. |
+| V55 | Round-13b current-tree and arithmetic measurements. `host/store` does not yet expose the proposed exact method `func (s *Store) BusyTimeout(` in non-test Go; the same-path, same-shape `func withBusyTimeout(` control fires, so absence is measured rather than inferred. Every new price is a §9 row: tranche-1 rows sum to **4.70 d**, matching their Total; decomposition item estimates sum to **11.70 d**, matching their Total. | `rg -n '^func \(s \*Store\) BusyTimeout\(' host/store --glob='*.go' --glob='!*_test.go' > /tmp/round13b_busy 2>&1; rc=$?; wc -l < /tmp/round13b_busy`; same-path control `rg -n '^func withBusyTimeout\(' host/store --glob='*.go' --glob='!*_test.go'`; tranche command exactly as directed: `sed -n '/^Tranche 1 arithmetic:/,/^| \*\*Total\*\*/p' <doc> \| grep -E '^\| ' \| grep -v Total \| grep -oE '\| [0-9]+\.[0-9]+ d \|' \| grep -oE '[0-9]+\.[0-9]+' \| awk '{s+=$1} END {printf "%.2f\n", s}'`; decomposition control: `sed -n '/^| Ordered document |/,/^| \*\*Total\*\*/p' <doc> \| awk -F'|' '/^\| \*\*[1-5]\./ {x=$4; if (match(x, /[0-9]+\.[0-9]+/)) s+=substr(x,RSTART,RLENGTH)} END {printf "%.2f\n",s}'` | Exact method: `0` lines, `rc=1`; control: `host/store/writer_lock.go:186:func withBusyTimeout(params url.Values) url.Values {`, `rc=0`. Directed tranche sum: `4.70`; decomposition control: `11.70`; both equal their written Totals. |
 
 Final V33 re-run after all round-5 edits including revision 2: `grep -n 'GradeOfValidated'` on
 this file returns **8** hits at lines 9 (header), 85 (§2.2 drop-notice), 231 (§3.2 drop-notice),
