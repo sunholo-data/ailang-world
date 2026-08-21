@@ -26,6 +26,7 @@ export type Evidence
   | HumanApproval(HashRef)
   | AiReview(HashRef, float)
   | RecordedEffect(HashRef)
+  | ProofReceipt(HashRef)
 
 -- The four ratified trust grades. gradeOf is total over decoded Evidence and
 -- returns one of these four; absent/unreadable/malformed input is NOT a grade
@@ -44,7 +45,8 @@ ensures { result == match e {
   TestReport(_, _) => TESTED,
   HumanApproval(_) => ATTESTED,
   AiReview(_, _) => CLAIMED,
-  RecordedEffect(_) => ATTESTED
+  RecordedEffect(_) => ATTESTED,
+  ProofReceipt(_) => CLAIMED
 } }
 {
   match e {
@@ -52,7 +54,8 @@ ensures { result == match e {
     TestReport(_, _) => TESTED,
     HumanApproval(_) => ATTESTED,
     AiReview(_, _) => CLAIMED,
-    RecordedEffect(_) => ATTESTED
+    RecordedEffect(_) => ATTESTED,
+    ProofReceipt(_) => CLAIMED
   }
 }
 
@@ -65,7 +68,8 @@ tests [
   (TestReport({ algo: "sha256", digest: "tests-fail" }, false), 3),
   (HumanApproval({ algo: "sha256", digest: "approval" }), 2),
   (AiReview({ algo: "sha256", digest: "review" }, 0.8), 1),
-  (RecordedEffect({ algo: "sha256", digest: "effect" }), 2)
+  (RecordedEffect({ algo: "sha256", digest: "effect" }), 2),
+  (ProofReceipt({ algo: "sha256", digest: "receipt" }), 1)
 ]
 {
   match gradeOf(e) {
