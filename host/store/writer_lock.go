@@ -29,7 +29,9 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // writerLockSuffix is appended to the canonical database path to name the lock
@@ -195,6 +197,44 @@ func withBusyTimeout(params url.Values) url.Values {
 	}
 	out.Add("_pragma", fmt.Sprintf("busy_timeout(%d)", busyTimeoutMillis))
 	return out
+}
+
+// busyTimeoutFromParams resolves the final busy_timeout pragma exactly once at
+// Open. SQLite applies repeated pragmas in DSN order, so the last valid value is
+// the effective one.
+func busyTimeoutFromParams(params url.Values) time.Duration {
+	var timeout time.Duration
+	for _, pragma := range params["_pragma"] {
+		text := strings.TrimSpace(pragma)
+		if !strings.HasPrefix(text, "busy_timeout") {
+			continue
+		}
+		arg := strings.TrimSpace(strings.TrimPrefix(text, "busy_timeout"))
+		if strings.HasPrefix(arg, "(") && strings.HasSuffix(arg, ")") {
+			arg = strings.TrimSpace(arg[1 : len(arg)-1])
+		} else if strings.HasPrefix(arg, "=") {
+			arg = strings.TrimSpace(strings.TrimPrefix(arg, "="))
+		} else {
+			continue
+		}
+		millis, err := strconv.ParseInt(arg, 10, 64)
+		if err == nil {
+			timeout = time.Duration(millis) * time.Millisecond
+		}
+	}
+	return timeout
+}
+
+func busyTimeoutFromDSN(dsn string) time.Duration {
+	_, rawQuery, ok := strings.Cut(dsn, "?")
+	if !ok {
+		return 0
+	}
+	params, err := url.ParseQuery(rawQuery)
+	if err != nil {
+		return -1
+	}
+	return busyTimeoutFromParams(params)
 }
 
 // writeDSN renders the DSN handed to the driver for a WRITE handle. Parameters
