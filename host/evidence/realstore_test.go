@@ -139,6 +139,9 @@ func TestRealStoreBlockedObjectReadReturnsWithinObjectReadTimeout(t *testing.T) 
 	// default. Declare the instrument's precondition and enforce it instead of
 	// inheriting whatever the harness happens to set.
 	if prev := runtime.GOMAXPROCS(0); prev < 2 {
+		// Announce it. Every other precondition in this file is loud, and a
+		// precondition that silently corrects itself is one nobody can audit.
+		t.Logf("raising GOMAXPROCS %d -> 2 for the duration of this test: the stimulus needs two Ps to exist concurrently", prev)
 		defer runtime.GOMAXPROCS(prev)
 		runtime.GOMAXPROCS(2)
 	}
@@ -241,7 +244,14 @@ func TestConstructorPinsBusyTimeoutBelowObjectReadTimeout(t *testing.T) {
 	const callerWindow = 1500 * time.Millisecond
 	custom, customDSN := openEvidenceStoreWithBusyWindow(t, callerWindow)
 	if custom.BusyTimeout() == s.BusyTimeout() {
-		t.Fatalf("instrument failure: caller window %v equals the default %v, so this arm could not see a stale literal",
+		// TWO hypotheses reach this line and they are not the same severity, so
+		// name both rather than blaming the fixture: either callerWindow was set
+		// equal to the default (a real instrument failure, this arm is blind), or
+		// the accessor is ignoring the DSN and reporting one value for every
+		// store (a production defect, and the exact stale-literal drift this arm
+		// exists to catch). Do not read this red as harness flakiness.
+		t.Fatalf("caller window %v equals the default %v: either this arm is blind (callerWindow == the default) "+
+			"or BusyTimeout() ignores the DSN and reports one value for every store",
 			custom.BusyTimeout(), s.BusyTimeout())
 	}
 	db, err := sql.Open("sqlite", customDSN)
