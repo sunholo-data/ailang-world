@@ -12630,3 +12630,161 @@ out-of-sandbox re-run, and not for the usual reason: nothing in it binds a socke
 **wall-clock classified**, so a loaded sandbox can produce a false red indistinguishable from the
 M22/M23 mutant signature. Then `PE.F` last without exception, forced by its own `EXACT_EVIDENCE_TESTS`
 pin. **ZERO open asks.**
+
+## Iteration 107 — 2026-08-22 — item 17: `PE.E` landed, and three of the milestone's own checks could not fail
+
+**Pick**: queue row **17** `w-validated-proven-evidence-boundary`, milestone **`PE.E`** — item 17's
+own `NEXT`, set by iteration 106. Real-store integration proofs, 0.85 d, test-only. Not the queue head
+by position; an `[IN-SPRINT]` item with a landed plan and an explicit next milestone, so standing
+rule 1 keeps it. Reality-check at pick time: all four named tests absent (`0/0/0/0`) with the
+known-present control `TestPublicAuthoritySurfaceIsFrozen` at **1** — so the zeros are a measurement,
+not a silent grep.
+
+**Outcome**: **`PE.E` LANDED** — PR [#80](https://github.com/sunholo-data/ailang-world/pull/80) →
+squash [`daf48a6`](https://github.com/sunholo-data/ailang-world/commit/daf48a6), Gate 3b GREEN on the
+MERGE commit (SHA-addressed, `present=2 == expected=2`, both `success`, run CONFIRMED to exist
+`total=1 event=push`, parent control `total=1` from a **`rev-parse`d** SHA, 0 not-green). Judge
+`sonnet` **66/100 FAIL round 1** → repaired → **85/100 PASS round 2, zero blocking** → one further
+round of text-only fixes. **Five of six milestones are in; only `PE.F` remains.**
+
+**Gate 0/1.** Kill switch armed, `gh` on `sunholo-voight-kampff`, billing tripwire CLEAN, main
+checkout clean at 0 porcelain (re-asserted after the sandboxed executor run — the fence confines
+writes, and a defence you never verify is one you cannot claim). `dev` == `origin/dev` at `85093e5`,
+CI `checks=2` both `success`, parent control `checks=2`. **0** directives from `MarkEdmondson1234` on
+`#68` since `2026-08-21T12:46:23Z` (of 24 comments). Rotation NOT due — `#68` created
+`2026-08-17T19:19:43Z`, i.e. after the most recent Monday-07:00 **local** boundary, and 24 comments
+against the cap of 80. Weekly external-issue sweep not due either (it belongs to the first iteration
+after a rotation; the 08-17 rotation's sweep ran at iter-106). Decision ledger valid, **11** rows,
+**0 OPEN**, on entry and on exit. Died-mid-flight sweep: **0** open PRs on this repo by this loop,
+**0** worktrees, clean main checkout.
+
+**Inbox: 3 unread, all cross-mission — none auto-outranks.** `mission-motoko` iteration 17 (it landed
+its own iteration 16's orphaned milestones); `mission-v1` iteration 246; and the **ADOPTION verdict
+for this mission's `mission-gh-issue` namespacing proposal**, landed in the shared skill at
+`da771df73`. Worth recording that the proposal adopted there is the one iteration 106 filed *below*
+its own ≥2-friction bar and recorded rather than spending — the sibling had the second instance, and
+the two halves met in the shared skill. Watermarks advanced on BOTH paths (`mission-68-last-seen` and
+`mission-world-last-seen`) per the Repo Profile's older-of-two rule.
+
+**Gate 2 baseline — the directive's OWN gate list, run before it was sent.** Rule 3e(a) is written
+about a *planner's* acceptance list, and a milestone routed straight from an existing plan has no
+planner: the controller types the gates. So all three were measured on untouched `dev` first —
+`go build ./...` rc=0, `go vet` on the three packages rc=0, `go test` on the three packages rc=0 with
+**0** FAILs — which is what makes every red below attributable to a mutant rather than to the repo.
+
+**Executor `codex:gpt-5.6-sol`** (probe rc=0, 30-min bounded background run, rc=0, ~12 min). Delivered
+one file, `host/evidence/realstore_test.go`, 253 lines, test-only, no new exported production symbol.
+It self-reported one deviation and labelled four verdicts `UNINFORMATIVE UNDER SANDBOX`, which is the
+contract working.
+
+**The deviation, adjudicated ACCEPTABLE by measurement rather than by prior.** AC16 opens its store
+with `busy_timeout(0)`. It is *forced*, not discretionary: the decoy mechanism the doc prescribes caps
+the usable `ObjectReadTimeout` at ~2.6 ms (a 256 MiB read holds the sole pooled connection ~53 ms and
+the doc's floor is 20×), while any positive timeout ≤ the default 2000 ms window is refused at
+construction by the ordering pin `PE.D` landed. Zero is the doc's own documented "no independent
+lock-retry wait" value, and it *removes* a confound rather than adding one — the stimulus is the
+`database/sql` pooled-connection wait, which `busy_timeout` does not touch. Two of three cross-mission
+deviations on record came out in the executor's favour; a "deviations are suspect" prior would have
+got this one wrong too.
+
+**Controller re-runs outside the sandbox — the plan says these ARE the verdict.** AC16 ×15 unloaded
+and ×8 under 8 CPU spinners: **23/23 green**, hold ratio **26.7–30.2×** against the 20× floor, and the
+loaded arm moved the ratio the *safe* direction. First-party **M23**: LANDED (sha256), BUILDS
+(rc=0), red set exactly the named test, `-skip` inverse arm rc=0, restore byte-identical. First-party
+**M4**: LANDED, BUILDS, red set **two** — the named arm with its predicted text, plus PE.B's own
+probe/guard test, *explained*. Both full gates green.
+
+**AND MY OWN 23/23 WAS NOT ENOUGH — THE JUDGE FOUND THE LOAD AXIS I DID NOT VARY.** I varied *CPU
+contention* and concluded the timing was sound. The judge varied *parallelism* — `GOMAXPROCS=1` — and
+got **9–10/10 FAILs on unmutated, sha256-identical code**, with the text `blocked read returned after
+10–33ms`, which is indistinguishable from the M22/M23 mutant signature. Reproduced first-party with a
+two-arm control on the identical tree: `GOMAXPROCS=1` → **10/10 red**, default → **0/10 red**. The
+generalisable half is not "test under load": it is that **a stress control varies the axis you thought
+of, and the false-red lives on the axis you did not** — 23 green runs across one axis certified a
+knife-edge assertion, and more runs of the same shape would never have found it.
+
+**Judge round 1: 66/100 FAIL, two BLOCKING, two non-blocking. All four reproduced first-party before
+any was acted on; all four REAL, and one worse than filed.**
+
+1. **AC18's round-11b PRAGMA cross-check was tautological.** It opened a second `sql.DB` whose DSN
+   *the test itself* set to `busy_timeout(2000)` and compared that readback against `BusyTimeout()` —
+   the accessor against a literal the test supplied, on a store opened with no pragma at all.
+   Reproduced: a `return 2 * time.Second` accessor mutant — the exact stale-literal drift the
+   amendment exists to catch — leaves the whole named test **rc=0**. The round-11b anti-vacuity
+   requirement was unmet by the mechanism built to satisfy it.
+2. **The AC16 refusal ceiling asserted something the design doc does not.** AC16 classifies **seals**;
+   the implementation added a 2× ceiling on the **refusal** path, which measures scheduler latency
+   rather than the deadline. That is the `GOMAXPROCS=1` false red above.
+3. **AC22's forwarding arm survived its own precondition removed** (`busy: s.BusyTimeout()` →
+   hardcoded 2 s still passed), so it proved "a reader reporting ≥ 1 s refuses", never that the
+   wrapper forwards anything.
+4. **A refuted premise, not a code defect.** The plan lists **M26** and **M30** under "cannot be
+   killed without the REAL store" and §6.1 says "M26 — no fake participates in the kill". Reproduced:
+   under M26, PE.D's fake-based `TestConstructorNamesActuallyUsedUnorderedTimeouts` reds **in
+   isolation** (rc=1), no real store anywhere in it; M30 is the same shape via
+   `TestConstructorRefusesUnknownBusyTimeout`.
+
+**The repair, and the second mode it uncovered.** Fixes 1 and 3 are new discriminating arms (a
+caller-chosen 1500 ms window read back through its own DSN; an 1800 ms timeout that is ordered against
+1500 ms and unordered against the 2000 ms default). Fix 2 deleted the refusal ceiling — and that took
+`GOMAXPROCS=1` from 10/10 red to **2/10**, exposing a mode the deleted assertion had been masking:
+this driver's SQLite is pure Go, so on a single P the decoy monopolises it for the whole ~53 ms read
+and the blocked reader is never scheduled to join the pool queue at all — it runs only once the
+connection is free, wins it, and exhausts the retry budget. That is the doc's prescribed *loud
+instrument failure*, never a false pass, but still a red on good code. The test now **declares and
+enforces** its ≥2-P precondition instead of inheriting it: **0/10 red at `GOMAXPROCS=1`, 0/10 at
+default**. Note the shape — *removing a wrong assertion is what let the real precondition become
+visible*; the bad check had been absorbing the symptom of a second defect.
+
+**Re-drill after the repair, module-wide across `host/evidence` + `host/store` + `host/verifygate`.**
+M4 red=2 · M22 red=1 sole · M23 red=1 sole · M24 red=1 sole · M26 red=3 · M30 red=2, named arm in
+**every** set, every mutant asserted LANDED by sha256 and BUILDS by `go build ./...` rc=0 *before* any
+test result was read, every restore byte-identical from a `/tmp` copy and never `git checkout --`.
+**Deleting the refusal ceiling cost no kill** — M22 and M23 remain clean sole killers through the
+watchdog path, confirmed independently by the judge.
+
+**JUDGE ROUND 2: 85/100 PASS, ZERO BLOCKING**, aimed explicitly at the repair and told to attack it.
+Five non-blocking findings. Two were taken in a round-3 text-only commit, because a NON-BLOCKING label
+is the judge's opinion of severity and both were nearly free: the repaired AC18 arm killed the
+round-1 mutant on the *floor's* branch rather than the comparison's (a real red, but reported in the
+voice of a fixture problem — the floor now names both hypotheses that reach it), and
+`runtime.GOMAXPROCS(2)` was raised **silently** in a file where every other precondition is loud. The
+judge separately established the comparison has independent power by drilling a mutant I had not
+thought of (`return s.busyTimeout + 100*time.Millisecond`), which the comparison itself catches, and
+verified the `defer` restore does not leak into the next test. Three were recorded rather than
+patched: the superseded old forwarding arm, the default store's literal pin (no single-line mutation
+can exploit it while `withBusyTimeout` feeds cache and DSN from one pure function), and an
+exact-value substitution that is an inherent limit of black-box interface testing.
+
+**Routing evidence** — controller `claude:claude-opus-5` (session, driver-selected); designer **not
+spawned** (no new doc; rotation pointer untouched at `claude:claude-fable-5`, **unspent an EIGHTH
+consecutive iteration**); planner **not spawned** (plan landed at `cbd17de`); executor
+`codex:gpt-5.6-sol` ×2 (1-token probe + the real bounded run), delivered; evaluator `sonnet` ×2 rounds
+— generator≠judge holds by **provider** (OpenAI executor vs Anthropic judge), and the judge ran in its
+**own** worktree from the sprint commit, so its mutation drills could not race the controller's gate
+runs against the same tree.
+
+**Cost** — `metered=$0.00` of the $5 ceiling. No quorum purchased (in-sprint continuation on an
+existing, twelve-rounds-reviewed plan); no metered lane touched. Quota buckets: `opus` ×1
+(controller), `codex` ×2, `sonnet` ×2. No GPU, no `rig.lock`.
+
+**Ruled out** — (a) that the executor's `busy_timeout(0)` deviation was a shortcut: measured, it is
+forced by the interaction of the doc's own decoy mechanism with PE.D's ordering pin; (b) that 23
+green timing runs established the AC16 bound: refuted by the judge on an axis I never varied, then
+reproduced first-party; (c) that the `GOMAXPROCS=1` reds were the judge's machine contention:
+refuted by a two-arm control on the identical tree (10/10 vs 0/10); (d) that M26/M30 need the real
+store, as the plan states: refuted by running PE.D's fakes in isolation against both mutants.
+
+**Auto-close discipline** — all three commit messages and the PR body scanned with the closing-keyword
+matcher, **0** hits each, matcher proven live by a known-bad control string returning **1** in the
+same call.
+
+**Next** — **`PE.F`**, the last milestone: the persistent named-manifest gate in `scripts/verify_go.sh`
+(`REQUIRED_EVIDENCE_TESTS` plus an exact `EXACT_EVIDENCE_TESTS` count, parsing only terminal
+`Action=pass` events, with an explicit anti-vacuity floor), its own self-mutation test
+`TestEvidenceNamedManifestRejectsUnpinnedTest` in `host/verifygate`, AC12's zero-diff assertion over
+`host/daemon/`, `cmd/`, `host/replay/`, and the full 27-row re-drill. It is pinned last **without
+exception** because the count gate reds on any test landed after it — so `PE.F` must be the final
+change to `host/evidence`. Note for whoever writes it: this milestone added **four** tests to that
+package, and one of them adds sub-tests, so the observed count is what the gate must pin, never a
+number transcribed from the plan. **ZERO open asks.**

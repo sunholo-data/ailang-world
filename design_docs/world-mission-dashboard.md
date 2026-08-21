@@ -1,40 +1,40 @@
 # Mission Dashboard — Ailang World
 
 *Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS), `-status-archive.md`, `-log.md`.*
-**Iteration 106** · 2026-08-21 · `dev` @ `d1b7eae` · CI green (both jobs, SHA-addressed on the merge commit, run confirmed `event=push`)
+**Iteration 107** · 2026-08-22 · `dev` @ `daf48a6` · CI green (both jobs, SHA-addressed on the merge commit, run confirmed `event=push`)
 
-> **A removal proves a check FIRES; only an ADDITION proves it LOOKS.** The frozen-surface gate killed
-> the one mutation spelling the design doc names and was blind to three others — a pointer result, a
-> method, and a type alias — each minting PROVEN from a raw hash with no seal, whole package green.
+> **A stress control varies the axis you thought of; the false red lives on the one you didn't.**
+> I ran AC16's timing 23/23 green across CPU contention and called it sound. The judge varied
+> *parallelism* — `GOMAXPROCS=1` reds 10/10 on unmutated code, wearing the exact mutant signature it
+> exists to detect. More runs of the same shape would never have found it.
 
 ## In flight
-- **Item 17 `w-validated-proven-evidence-boundary`** `[IN-SPRINT]` — `PE.A`–`PE.F` (4.70 d), **four landed**.
-- **`PE.D` LANDED** — PR #79 → `d1b7eae`. The validator, the sealed mint authority (an unexported
-  pointer to a per-instance non-zero-size allocation), the resolved grade, and four separately-pinned
-  constructor refusals. `Resolve` runs mint-validity strictly before binding, because merged they
-  would compare the zero-zero pair EQUAL and the forge would resolve.
-- Judge `sonnet` **62/100 FAIL round 1** (two blocking, both real, both reproduced first-party) →
-  repaired → **95/100 PASS round 2**, zero blocking, judge aimed at the repair.
+- **Item 17 `w-validated-proven-evidence-boundary`** `[IN-SPRINT]` — `PE.A`–`PE.F` (4.70 d), **five landed**.
+- **`PE.E` LANDED** — PR #80 → `daf48a6`. Four real-store integration proofs, test-only, no new
+  exported production symbol; no fake participates in any kill.
+- Judge `sonnet` **66/100 FAIL round 1** (all four findings reproduced first-party, all four REAL) →
+  **85/100 PASS round 2**, zero blocking → round-3 text-only commit taking two of five non-blocking.
+- Three of the milestone's own checks could not fail; deleting the wrong one exposed a second defect it
+  had absorbed. Re-drilled module-wide: M4/M22/M23/M24/M26/M30 all red, named arm in every set.
 
 ## Next
-- **`PE.E`** — real-store integration proofs, 0.85 d, test-only ~700 lines. No fake participates in
-  any kill by construction. The plan flags it as the milestone most needing the out-of-sandbox re-run:
-  its verdicts are wall-clock classified, not socket-bound, so a loaded sandbox can fake the mutant
-  signature. Then `PE.F` last, forced by its own `EXACT_EVIDENCE_TESTS` pin.
-- Row 14's predicate has been flipped for thirteen iterations (blocked only on item 18, complete since
-  iter-93). It stays unpicked while item 17 is IN-SPRINT with an explicit NEXT — standing rule 1.
+- **`PE.F`**, the last milestone: the persistent named-manifest gate in `verify_go.sh`
+  (`REQUIRED_EVIDENCE_TESTS` + an exact count, terminal `Action=pass` only, anti-vacuity floor), its
+  self-mutation test in `host/verifygate`, AC12's zero-diff assertion, and the full 27-row re-drill.
+  Pinned last **without exception** — its count gate reds on any test landed after it, and PE.E added
+  four, so it pins the OBSERVED count, never one transcribed from the plan.
+- `PE.F` must also correct the plan: M26/M30 are listed as real-store-only kills; PE.D's fakes kill
+  both in isolation. Row 14's predicate stays flipped-but-unpicked while 17 is IN-SPRINT (rule 1).
 
 ## Loop + routing
-- Controller `opus` ×1 · executor `codex:gpt-5.6-sol` ×2 (probe + run) · judge `sonnet` ×2 (two rounds).
-- **Fable and the designer rotation unspent a SEVENTH consecutive iteration** — no new doc needed.
-- `metered=$0.00` of the $5 ceiling. No quorum purchased (in-sprint continuation), no GPU.
-- Gates need BOTH `AILANG_BIN=/tmp/ailang-v0300/ailang` and `GOTOOLCHAIN=go1.25.6`; `verify_go.sh`
-  fails closed without them, which is deliberate — a bare `go test` reports `ok` with the
-  load-bearing assertions silently skipped.
+- Controller `opus` ×1 · executor `codex:gpt-5.6-sol` ×2 · judge `sonnet` ×2 rounds, in its **own**
+  worktree so its mutation drills could not race the controller's gate runs.
+- **Fable and the designer rotation unspent an EIGHTH consecutive iteration.** `metered=$0.00` of $5.
+  No quorum purchased (in-sprint continuation), no GPU.
+- Gates need BOTH `AILANG_BIN=/tmp/ailang-v0300/ailang` and `GOTOOLCHAIN=go1.25.6` — `verify_go.sh`
+  fails closed without them by design, runs ~150 s, and there is no `timeout` binary on this rig.
 
-## Parked on Mark
-- **Nothing.** Decision ledger: 11 rows, **0 OPEN**. Zero open asks for the seventh iteration running.
-
-## Quota posture
-- Billing tripwire CLEAN (no `ANTHROPIC_API_KEY` / `ANTHROPIC_AUTH_TOKEN` in the loop's shells).
-- Bookkeeping thread `#68` (23 comments, cap 80); weekly rotation not due.
+## Parked on Mark · quota posture
+- **Nothing parked.** Decision ledger: 11 rows, **0 OPEN** — zero open asks for the eighth iteration.
+- Billing tripwire CLEAN. Thread `#68` (24 comments, cap 80); rotation not due (created after the
+  Monday-07:00 **local** boundary).
