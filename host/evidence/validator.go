@@ -61,8 +61,23 @@ type Validator struct {
 }
 
 func NewValidator(key [32]byte, reader ObjectReader, cfg CompilerConfig, requiredIdentities []string) (*Validator, error) {
-	if reader == nil || cfg.ObjectReadTimeout <= 0 || cfg.Compiler.IsZero() || cfg.CompilerVersion == "" {
-		return nil, fmt.Errorf("%w: reader, compiler identity, compiler version, and positive ObjectReadTimeout are required", ErrInvalidValidatorConfig)
+	// Four separate refusals rather than one compound condition. They share
+	// ErrInvalidValidatorConfig by design, but each carries a message naming only
+	// its own field, so each is separately observable and separately killable.
+	// Iteration 106 measured the compound form: three of its four disjuncts could
+	// be neutered independently with the whole host/evidence suite green, because
+	// one test stood in for four branches.
+	if reader == nil {
+		return nil, fmt.Errorf("%w: reader is nil", ErrInvalidValidatorConfig)
+	}
+	if cfg.ObjectReadTimeout <= 0 {
+		return nil, fmt.Errorf("%w: ObjectReadTimeout must be positive, got %s", ErrInvalidValidatorConfig, cfg.ObjectReadTimeout)
+	}
+	if cfg.Compiler.IsZero() {
+		return nil, fmt.Errorf("%w: compiler identity is unset", ErrInvalidValidatorConfig)
+	}
+	if cfg.CompilerVersion == "" {
+		return nil, fmt.Errorf("%w: compiler version is empty", ErrInvalidValidatorConfig)
 	}
 	if len(requiredIdentities) == 0 {
 		return nil, fmt.Errorf("%w: required identities are empty", ErrInvalidValidatorConfig)
@@ -132,10 +147,12 @@ func (v *Validator) ValidateProof(ctx context.Context, reportRef, expectedSubjec
 	if err != nil {
 		return unsupported(UnsupportedMalformed)
 	}
-	report, err := DecodeProofReportV1(envelope.Report)
-	if err != nil {
-		return unsupported(UnsupportedMalformed)
-	}
+	// No second decode, and deliberately no refusal branch here: the envelope
+	// decoder above has already run DecodeProofReportV1 over these exact bytes and
+	// refused the envelope on failure, so an `if err != nil` at this point would be
+	// unreachable in the correct program — a guard no mutation can discriminate.
+	// The malformed-report refusal is issued once, where it can actually fire.
+	report := envelope.decoded
 	mac := hmac.New(sha256.New, v.key[:])
 	_, _ = mac.Write(envelope.Report)
 	want := mac.Sum(nil)

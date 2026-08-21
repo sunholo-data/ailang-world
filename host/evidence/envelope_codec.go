@@ -46,10 +46,11 @@ func DecodeAuthenticatedEnvelope(raw []byte) (AuthenticatedEnvelope, error) {
 	if len(report) > MaxBytes {
 		return AuthenticatedEnvelope{}, refusal(RefusalOversize, "decoded report is %d bytes; limit is %d", len(report), MaxBytes)
 	}
-	if _, err := DecodeProofReportV1(report); err != nil {
+	decoded, err := DecodeProofReportV1(report)
+	if err != nil {
 		return AuthenticatedEnvelope{}, err
 	}
-	e := AuthenticatedEnvelope{Report: report}
+	e := AuthenticatedEnvelope{Report: report, decoded: decoded}
 	canonical := append([]byte(`{"report":`), mustJSON(reportText)...)
 	if len(ms) == 2 {
 		var macText string

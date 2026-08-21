@@ -469,6 +469,62 @@ func TestConstructorRefusesNonPositiveObjectReadTimeout(t *testing.T) {
 	}
 }
 
+// The three constructor refusals below were unpinned as delivered: iteration 106
+// measured each of them neutered independently with the ENTIRE host/evidence suite
+// green, because a single non-positive-timeout test stood in for a four-disjunct
+// compound guard. Each arm now asserts the branch's OWN message, not merely the
+// shared ErrInvalidValidatorConfig sentinel — the sentinel is produced by six
+// different refusals, so matching on it alone is an observable whose value set is
+// wider than the mechanism's.
+func TestConstructorRefusesNilReader(t *testing.T) {
+	cfg := evidence.CompilerConfig{Compiler: testCompiler, CompilerVersion: "AILANG v0.30.0", ObjectReadTimeout: time.Second}
+	_, err := evidence.NewValidator(testKey, nil, cfg, []string{"id"})
+	if !errors.Is(err, evidence.ErrInvalidValidatorConfig) || !strings.Contains(err.Error(), "reader is nil") {
+		t.Fatalf("nil-reader guard: got %v; want ErrInvalidValidatorConfig naming the reader", err)
+	}
+}
+
+func TestConstructorRefusesUnsetCompilerIdentity(t *testing.T) {
+	r := &fakeReader{}
+	cfg := evidence.CompilerConfig{CompilerVersion: "AILANG v0.30.0", ObjectReadTimeout: time.Second}
+	_, err := evidence.NewValidator(testKey, r, cfg, []string{"id"})
+	if !errors.Is(err, evidence.ErrInvalidValidatorConfig) || !strings.Contains(err.Error(), "compiler identity is unset") {
+		t.Fatalf("compiler-identity guard: got %v; want ErrInvalidValidatorConfig naming the compiler identity", err)
+	}
+}
+
+func TestConstructorRefusesEmptyCompilerVersion(t *testing.T) {
+	r := &fakeReader{}
+	cfg := evidence.CompilerConfig{Compiler: testCompiler, ObjectReadTimeout: time.Second}
+	_, err := evidence.NewValidator(testKey, r, cfg, []string{"id"})
+	if !errors.Is(err, evidence.ErrInvalidValidatorConfig) || !strings.Contains(err.Error(), "compiler version is empty") {
+		t.Fatalf("compiler-version guard: got %v; want ErrInvalidValidatorConfig naming the compiler version", err)
+	}
+}
+
+// The validator reads the report the ENVELOPE decoder already decoded rather than
+// decoding a second time, because the second decode's error branch is unreachable
+// and therefore unpinnable. That shortcut is only safe while the envelope really
+// does carry a faithfully decoded report, so pin the invariant rather than assume
+// it: a validated envelope must mint, and the same bytes must decode identically
+// through the public report decoder.
+func TestEnvelopeCarriesTheReportItAlreadyDecoded(t *testing.T) {
+	v, r, good := newFixture(t)
+	requireProvenControl(t, v, good)
+	env, err := evidence.DecodeAuthenticatedEnvelope(r.payload)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fresh, err := evidence.DecodeProofReportV1(env.Report)
+	if err != nil {
+		t.Fatalf("envelope accepted a report the public decoder refuses: %v", err)
+	}
+	want := reportFor(testSubject, testCompiler)
+	if !reflect.DeepEqual(fresh, want) {
+		t.Fatalf("envelope report bytes decode to %+v; want %+v", fresh, want)
+	}
+}
+
 func TestConstructorRefusesEmptyRequiredIdentities(t *testing.T) {
 	v, _, ref := newFixture(t)
 	requireProvenControl(t, v, ref)
