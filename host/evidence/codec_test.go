@@ -75,6 +75,47 @@ func TestProofReportStrictRefusals(t *testing.T) {
 	// error, nil error, or zero report cannot produce the same observable.
 }
 
+// TestTruncatedTailReportIsRefusedNotPanicked pins the report ARITY guard
+// (report_codec.go's `len(ms) != len(reportFields)`), which the iteration-105
+// evaluator found unpinned: neutered with `if false && …` the mutant BUILDS and
+// the whole suite stayed rc=0. The existing missing-member arm removes a MIDDLE
+// field, so the per-index name comparison mismatches at i=5 and the arity guard
+// is never the thing that fires — the gap is invisible precisely because a
+// sibling guard covers the common case. Omitting the FINAL field instead leaves
+// every remaining member correctly named AND ordered, so nothing mismatches and
+// the loop indexes past the end. §3.3's contract is that malformed untrusted
+// input becomes a typed refusal, never a panic; this arm is what makes that
+// claim falsifiable.
+func TestTruncatedTailReportIsRefusedNotPanicked(t *testing.T) {
+	raw, err := EncodeProofReportV1(goodReport())
+	if err != nil {
+		t.Fatal(err)
+	}
+	const tail = `,"proofSucceeded":true}`
+	if !strings.HasSuffix(string(raw), tail) {
+		t.Fatalf("instrument failure: canonical report does not end %s: %s", tail, raw)
+	}
+	truncated := []byte(strings.TrimSuffix(string(raw), tail) + "}")
+
+	// Control, in the SAME test: the untruncated bytes decode, so a
+	// refuse-everything implementation cannot pass this arm vacuously.
+	if _, err := DecodeProofReportV1(raw); err != nil {
+		t.Fatalf("control: canonical report was refused: %v", err)
+	}
+
+	got, err := DecodeProofReportV1(truncated)
+	if err == nil {
+		t.Fatalf("tail-truncated report decoded as %+v; want a typed refusal", got)
+	}
+	requireRefusal(t, err, RefusalMalformed)
+	// The observable is unique to the ARITY guard: a name/order mismatch reports
+	// "member N is ...", and only this branch reports a member COUNT.
+	var refused *DecodeRefusal
+	if !errors.As(err, &refused) || !strings.Contains(refused.Detail, "report has 8 members; want 9") {
+		t.Fatalf("refusal = %v; want the arity guard's own member-count refusal", err)
+	}
+}
+
 func TestProofReportCaps(t *testing.T) {
 	r := goodReport()
 	r.CompilerVersion = strings.Repeat("x", MaxStringBytes+1)

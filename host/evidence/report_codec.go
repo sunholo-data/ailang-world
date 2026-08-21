@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"sort"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
 )
@@ -88,12 +87,14 @@ func validateReport(r ProofReportV1) error {
 		if err := checkString(fmt.Sprintf("verified[%d]", i), identity); err != nil {
 			return err
 		}
+		// Strict pairwise increase gives sortedness AND uniqueness in one branch.
+		// A following sort.StringsAreSorted belt was removed at iteration 105: by
+		// transitivity it cannot fire on any input that reaches it, so it was an
+		// undeclared unreachable branch — a guard nothing can pin, which this
+		// milestone has already been bitten by once (see the AC19 arm).
 		if i > 0 && r.Verified[i-1] >= identity {
 			return refusal(RefusalMalformed, "verified identities are not sorted and unique")
 		}
-	}
-	if !sort.StringsAreSorted(r.Verified) {
-		return refusal(RefusalMalformed, "verified identities are not sorted")
 	}
 	return nil
 }
