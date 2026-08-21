@@ -57,6 +57,17 @@ type AuthenticatedEnvelope struct {
 	Report   []byte
 	MAC      []byte
 	MACValid bool
+
+	// decoded is the ProofReportV1 that DecodeAuthenticatedEnvelope already
+	// obtained from Report — it refuses the whole envelope if those bytes do not
+	// strictly decode, so by the time a caller holds an envelope the report has
+	// been decoded exactly once and successfully. Carrying it here is what lets
+	// the validator avoid a SECOND decode whose error branch could never execute.
+	// Iteration 106 measured that branch: neutered, the entire host/evidence
+	// suite stayed green, because TestMalformedProofReportIsRefused kills through
+	// the envelope decoder instead. A branch nothing can pin is not a guard.
+	// Unexported, so the public authority surface is unchanged.
+	decoded ProofReportV1
 }
 
 // ClaimedEvidence is decoded but untrusted proposal data. Its representation
