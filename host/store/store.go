@@ -26,6 +26,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
 
@@ -200,8 +201,9 @@ func IsInvalidRef(err error) bool {
 // single-connection embedded-library use of M1; concurrency correctness rests on
 // the single compare-and-append transaction, not on Go-level locking.
 type Store struct {
-	db  *sql.DB
-	sel selectedHead
+	db          *sql.DB
+	sel         selectedHead
+	busyTimeout time.Duration
 	// lock is the held single-writer lock (w-worldd-m2 Decision 2, arm A). It
 	// is nil for in-memory databases (nothing to exclude across processes) and
 	// for read-only handles (which never take writer authority).
@@ -239,7 +241,7 @@ func Open(path string) (*Store, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &Store{db: db}, nil
+		return &Store{db: db, busyTimeout: busyTimeoutFromDSN(path)}, nil
 	}
 
 	canonical, params, err := resolveDSN(path)
@@ -257,7 +259,7 @@ func Open(path string) (*Store, error) {
 		_ = lock.release()
 		return nil, err
 	}
-	return &Store{db: db, lock: lock}, nil
+	return &Store{db: db, lock: lock, busyTimeout: busyTimeoutFromParams(withBusyTimeout(params))}, nil
 }
 
 // OpenReadOnly opens an EXISTING file-backed database in SQLite's read-only
@@ -282,8 +284,13 @@ func OpenReadOnly(path string) (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Store{db: db}, nil
+	return &Store{db: db, busyTimeout: busyTimeoutFromParams(withBusyTimeout(params))}, nil
 }
+
+// BusyTimeout reports the immutable SQLite lock-retry window configured by the
+// DSN used at Open. The value is cached during Open, so this accessor never
+// acquires the store's sole pooled connection and cannot block behind its use.
+func (s *Store) BusyTimeout() time.Duration { return s.busyTimeout }
 
 // openSQLite opens the driver handle for dsn, reporting errors against the
 // caller-facing display path. applySchema is false for read-only handles.

@@ -29,7 +29,9 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // writerLockSuffix is appended to the canonical database path to name the lock
@@ -195,6 +197,55 @@ func withBusyTimeout(params url.Values) url.Values {
 	}
 	out.Add("_pragma", fmt.Sprintf("busy_timeout(%d)", busyTimeoutMillis))
 	return out
+}
+
+// busyTimeoutFromParams resolves the busy_timeout pragma exactly once at Open.
+//
+// It returns the FIRST valid busy_timeout in DSN order, because that is what the
+// pinned driver actually applies — MEASURED, not assumed: a DSN carrying
+// busy_timeout(100) then busy_timeout(7000) reads back `PRAGMA busy_timeout` =
+// 100, and the reversed order reads back 7000
+// (TestBusyTimeoutMatchesTheDriverUnderDuplicatePragmas). An earlier revision of
+// this function documented the opposite and returned the LAST value, so a
+// caller DSN with two pragmas made the accessor UNDER-report the real lock-retry
+// window — the unsafe direction for AC18's ObjectReadTimeout > BusyTimeout()
+// ordering, which is the whole point of exporting this.
+//
+// First-wins also matches withBusyTimeout, which returns early on ANY existing
+// busy_timeout precisely so an explicit caller value is never overridden.
+func busyTimeoutFromParams(params url.Values) time.Duration {
+	var timeout time.Duration
+	for _, pragma := range params["_pragma"] {
+		text := strings.TrimSpace(pragma)
+		if !strings.HasPrefix(text, "busy_timeout") {
+			continue
+		}
+		arg := strings.TrimSpace(strings.TrimPrefix(text, "busy_timeout"))
+		if strings.HasPrefix(arg, "(") && strings.HasSuffix(arg, ")") {
+			arg = strings.TrimSpace(arg[1 : len(arg)-1])
+		} else if strings.HasPrefix(arg, "=") {
+			arg = strings.TrimSpace(strings.TrimPrefix(arg, "="))
+		} else {
+			continue
+		}
+		millis, err := strconv.ParseInt(arg, 10, 64)
+		if err == nil {
+			return time.Duration(millis) * time.Millisecond
+		}
+	}
+	return timeout
+}
+
+func busyTimeoutFromDSN(dsn string) time.Duration {
+	_, rawQuery, ok := strings.Cut(dsn, "?")
+	if !ok {
+		return 0
+	}
+	params, err := url.ParseQuery(rawQuery)
+	if err != nil {
+		return -1
+	}
+	return busyTimeoutFromParams(params)
 }
 
 // writeDSN renders the DSN handed to the driver for a WRITE handle. Parameters

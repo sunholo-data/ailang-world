@@ -373,10 +373,10 @@ var deadlineFreeReadPins = map[string]int{
 	"host/replay/replay.go":     1,
 }
 
-// deadlineFreeReadCall matches a call of one of the five context-first read
+// deadlineFreeReadCall matches a call of one of the six context-first read
 // getters whose context argument is the deadline-free literal.
 var deadlineFreeReadCall = regexp.MustCompile(
-	`\.(GetObject|GetWorld|GetLogEntry|GetRegistryHead|SelectedHead)\(\s*context\.Background\(\)`)
+	`\.(GetObject|GetWorld|GetLogEntry|GetRegistryHead|SelectedHead|ReadObject)\(\s*context\.Background\(\)`)
 
 // TestNoNewDeadlineFreeStoreReads pins the deadline-free residue.
 //
