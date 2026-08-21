@@ -1,45 +1,40 @@
 # Mission Dashboard — Ailang World
 
 *Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS), `-status-archive.md`, `-log.md`.*
+**Iteration 105** · 2026-08-21 · `dev` @ `bd48f68` · CI green (both jobs, SHA-addressed, run confirmed `event=push`)
 
-**Iteration 104** · 2026-08-21 · `dev` @ `3ddacae` · CI green (both jobs, SHA-addressed, run confirmed)
-
-> **The judge scored 91/100, zero blocking — and two of its NON-blocking findings were this
-> milestone's own anti-vacuity contract failing.** Both reproduced first-party, both fixed; the
-> first remedy for the second was *itself* vacuous and its own drill caught it.
-
+> **PE.C's anti-vacuity pin was hollow and its drill passed anyway** — the M27 kill depended on an
+> UNREACHABLE branch. 2nd consecutive iteration whose real defect was in its own verification machinery.
 ## In flight
-- **Item 17 `w-validated-proven-evidence-boundary`** `[IN-SPRINT]` — six milestones `PE.A`–`PE.F`
-  (4.70 d), **two landed**.
-- **`PE.B` LANDED** — PR #77 → `3ddacae`, Gate 3b green on the merge (`present=2 == expected=2`,
-  run confirmed). `ReadObject` (one snapshot for probe and payload), cached `BusyTimeout()`, B5.
-- **NEXT: `PE.C`** (0.80 d) — `host/evidence` codecs, byte caps, nesting-depth pin. Then `PE.D` →
-  `PE.E` → `PE.F` in compile order; `PE.F` last (its `EXACT_EVIDENCE_TESTS` pin forces it).
+- **Item 17 `w-validated-proven-evidence-boundary`** `[IN-SPRINT]` — `PE.A`–`PE.F` (4.70 d), **three landed**.
+- **`PE.C` LANDED** — PR #78 → `bd48f68`. New `host/evidence`: strict canonical `ProofReportV1` (nine
+  fields in order) + envelope (`report`, `mac`) codecs, `DecodeProposal` with its 256 KiB pre-parse cap,
+  byte caps, AC19 depth pin. Judge `sonnet` **88/100, ZERO blocking**, in its own worktree.
+- **NEXT: `PE.D`** (0.92 d) — the largest: validator, sealed mint authority, resolved grade, three
+  constructor refusals, **15 mutations**. Then `PE.E` → `PE.F`; `PE.F` last without exception.
 
-## The finding worth carrying
-`busyTimeoutFromParams` reported the **last** `busy_timeout` pragma in a DSN; the pinned driver
-applies the **first** (measured both directions against a live `PRAGMA` readback). Reachable, since
-`withBusyTimeout` deliberately never overrides a caller's value — and under-reporting is the unsafe
-direction for AC18/AC22's `ObjectReadTimeout > BusyTimeout()` pin. Fixed to first-wins, pinned
-against the readback rather than against a comment.
+## The findings worth carrying
+Both ways on the identical tree: as delivered M27 → arm rc=1; with the unreachable `if err == nil` branch
+removed the unmutated suite is still rc=0 and the **same mutant survives**. The arm's observable ("some
+typed `malformed` refusal") is satisfied by the **trailing-JSON** bystander guard too — repaired by pinning
+the scanner's own `exceeded max depth`, not by keeping dead code. The judge's finding then **split**:
+`report_codec.go`'s arity guard is genuinely unpinned (mutant builds, suite rc=0, and a tail-truncated
+report **panics**, `index out of range [8] with length 8`, in code whose §3.3 mandate is "malformed input
+→ typed refusal, never a panic") — now pinned, sole killer; its claim about the **envelope** guard is
+**REFUTED** (neutering the whole condition reds `TestEnvelopeStrictRefusals/unknown` on a real assertion).
+One undeclared unreachable branch deleted.
 
-## Queue after item 17
-Rows **22**, **23** headless-routable · **24**–**27** designed-pending · **28**/**29** new, both
-from the judge and both declined as silent edits: `ReadObject`'s six unpinned refusal branches
-(sibling `GetObject`'s analogous branches *do* die), and its absent branch distinguishable from a
-zero-length payload only by an invariant the *writers* enforce. Row **5** stays blocked —
-`sunholo-data/ailang#764` re-measured OPEN today, 0 comments, untouched since 2026-08-17.
-
-## Parked on Mark
-**NONE.** Decision ledger: **11 rows, 0 OPEN** (`scripts/mission_decisions.sh --check`).
+## Queue / parked
+Rows **22**/**23** headless-routable · **24**–**27** designed-pending · **28**/**29** from iter-104 · **30**
+new (iter-105 judge finding 3). Row **5** blocked — `sunholo-data/ailang#764` re-measured today `OPEN`, 0
+comments, untouched since 2026-08-17, control answering. **Row 14 is UNBLOCKED** (blocker item 18 COMPLETE).
+Parked on Mark: **NONE**; decision ledger **11 rows, 0 OPEN** (`scripts/mission_decisions.sh --check`).
 
 ## Loop / routing / cost
-Controller `claude:claude-opus-5` · no planner/designer (plan existed) · executor
-`codex:gpt-5.6-sol` (probe rc=0) · judge `sonnet` in its OWN worktree (generator≠judge). Fable
-unspent a **5th** iteration. `metered=$0.00` of $5 · quota `opus` ×1 / `codex` ×2 / `sonnet` ×1.
-
+Controller `claude:claude-opus-5` · no planner/designer (plan existed) · executor `codex:gpt-5.6-sol`
+(probe rc=0) · judge `sonnet`, own worktree (generator≠judge). Fable unspent a **6th** iteration.
+`metered=$0.00` of $5 · quota `opus` ×1 / `codex` ×2 / `sonnet` ×1.
 ## Gates
-`AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh` ·
-`AILANG_BIN=… GOTOOLCHAIN=go1.25.6 ./scripts/verify_go.sh` — **both exports mandatory**; the go gate
-fails closed without `AILANG_BIN` and refuses the rig's default go1.26.4 outright. Pinned `v0.30.0`.
-`TestHandlerTimeoutKillsTheWholeProcessGroup` (`host/broker`) is load-flaky — charter-recorded 2/5.
+`AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh` · `AILANG_BIN=… GOTOOLCHAIN=go1.25.6
+./scripts/verify_go.sh` — **both exports mandatory**. Pinned `v0.30.0` (`e37b370`). Baseline measured rc=0
+on the pristine tree BEFORE the change. `TestHandlerTimeoutKillsTheWholeProcessGroup` load-flaky 2/5.

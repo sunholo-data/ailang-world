@@ -12233,3 +12233,181 @@ archived one rotation earlier) also present — the control fires, exactly as V1
 Then `PE.D` → `PE.E` → `PE.F` in compile order; `PE.F` last, forced by its `EXACT_EVIDENCE_TESTS`
 pin. Rows 22/23 remain unblocked and headless-routable; 24–29 designed-pending. Row 5 stays blocked
 on `sunholo-data/ailang#764`, re-measured this iteration. **ZERO open asks.**
+
+## Iteration 105 — 2026-08-21 — item 17: `PE.C` landed, and the drill that certified it was killing dead code
+
+**Pick**: queue row **17** `w-validated-proven-evidence-boundary`, milestone **`PE.C`** — item 17's
+own `NEXT` pointer, set by iteration 104. Not the queue head by position; it is an `[IN-SPRINT]`
+item with a landed plan and an explicit next milestone, so standing rule 1 keeps it.
+
+**Outcome**: **`PE.C` LANDED** — PR [#78](https://github.com/sunholo-data/ailang-world/pull/78) →
+squash `bd48f68`, Gate 3b GREEN on the MERGE commit (SHA-addressed, `present=2 == expected=2`, run
+CONFIRMED to exist: `actions/runs?head_sha` `total=1 event=push`). Judge `sonnet` **88/100, ZERO
+blocking**, in its own worktree. Three of six milestones are in.
+
+**Gate 0/1.** Kill switch armed, `gh` on `sunholo-voight-kampff`, billing tripwire CLEAN, main
+checkout clean at 0 porcelain. `dev` == `origin/dev` at `07c48ab`; CI SHA-addressed `checks=2` both
+`success`, run confirmed (`total=1`), parent control answering `checks=2`. **The running-skill drift
+check was run in the form its own 2026-08-21 sharpening requires** — `readlink` FIRST, then `cmp`
+against the RESOLVED target, with the two paths asserted to be the same file: inode `45241676` on
+both, matching the file this controller read; `cmp` rc=0, and a truncated-blob negative control
+rc=1, so the green is about the copy that actually runs rather than about a copy nothing executes.
+**0** directives from `MarkEdmondson1234` on `#68` since `2026-08-20T16:04:52Z` (of 22 comments),
+BOTH watermarks read per the Repo Profile's World-local rule and agreeing. Rotation not due (`#68`
+created after the Monday-07:00 **local** boundary; 22 comments, cap 80). Decision ledger valid, 11
+rows, 0 OPEN, on entry and on exit. Died-mid-flight sweep: 0 open PRs by this loop, 0 World
+worktrees, clean main checkout.
+
+**External-issue sweep**: **0 orphans of 1 enumerated** open issue, list length asserted at **1**;
+that one is `#68` itself (charter 11 / log 27 / archive 12 / dashboard 0). Positive control `#77`
+fires 2/1/0/1. Negative control FIRED on a fresh literal, deliberately unpublished per the
+control-spend rule. **The sweep's own instrument failed first and said so**: the negative-control
+loop used `grep -c … || echo 0`, which emits TWO lines when grep finds nothing, and the arithmetic
+died `bad math expression`. Rewritten to read grep's exit code (2 = no such file) and to assert the
+count is numeric before using it.
+
+**Two blocked-row predicates, both RUN rather than transcribed.** Row 5's blocker
+`sunholo-data/ailang#764`: `state=OPEN`, `comments=0`, `updatedAt=2026-08-17T23:34:55Z` — unflipped,
+with control `#676` answering through the same call at a different `updatedAt`, so the instrument
+discriminates rather than merely returning something. **Row 14's predicate HAS flipped and nobody
+had looked**: its live head reads *"Unparked; blocked only on item 18"*, and item 18 has been
+COMPLETE since iteration 93 — twelve iterations ago. Recorded, not picked, because item 17 is
+in-sprint; row 14 is now the first non-item-17 candidate. This is the circular-hole rule working:
+the row was never re-checked precisely because it was never picked.
+
+**Gate 2 freshness and baseline.** `PE.C` not landed — `git log origin/dev --grep 'PE\.C'` empty
+with the control on `PE\.B` returning both `3ddacae` and `07c48ab`; no PR under any state;
+`host/evidence` absent from the tree while PE.B's `ReadObject` is present at
+`host/store/read_object.go:43`. Doc/plan rot checked (rule 3b(vii)): **zero** commits touch the
+design doc since the plan's own commit, control on all paths non-empty — so the plan's `PE.C` → AC2
+/ AC19 / AC3-canonical-half mapping is current. **Both gates measured rc=0 on the PRISTINE tree
+before any change** (`verify_ail.sh` 10 identities / 40 named tests; `verify_go.sh` 0 FAIL lines
+over 110 output lines), so every green below is about this diff and not about the repository.
+
+**Executor `codex:gpt-5.6-sol`** (probe rc=0), ~7 minutes, 581 lines across 6 new files, no git
+write operations, main checkout untouched at 0 porcelain afterwards. **Its `verify_go.sh` rc=1 was a
+sandbox loopback-bind denial in `cmd/ailang-worldd`, `host/broker` and `host/daemon`; the executor
+labelled it `UNINFORMATIVE UNDER SANDBOX` and the controller re-ran both gates outside the sandbox
+before recording anything** — rc=0, 0 FAIL lines, `host/evidence` ok on BOTH the plain and race legs.
+
+**THE SPINE: A DRILL THAT PASSES IS NOT A DRILL THAT DISCRIMINATES, AND THIS ONE WAS KILLING DEAD
+CODE.** M27 reproduced first-party exactly as the executor reported it — mutation LANDED (sha256
+`198b17e4…` → `572a0cd9…`), mutant BUILDS `go build ./...` rc=0 **asserted before any test result
+was read**, named arm rc=1 with the exact assertion, measured red set size 1, `-skip` rc=0, restore
+byte-identical. Every prescribed box ticked. Then the counterfactual nobody had run.
+
+`DecodeProposal` shipped with an `if err == nil { … }` wrapper around its success path plus a
+trailing `return ClaimedEvidence{}, nil` that is **unreachable in the correct program** — the
+earlier `if err != nil` return guarantees it. Its only effect is on the mutant. Measured both ways
+on the identical tree, exit codes captured without a pipe:
+
+| arm | unmutated | + M27 |
+|---|---|---|
+| as delivered (unreachable branch present) | rc=0 | named arm **rc=1** |
+| natural spelling (branch removed) | **rc=0** | named arm **rc=0 — mutant SURVIVES** |
+
+So the kill was a property of dead code, not of the guard, and the natural spelling is not merely
+adequate — it is *identical* on every real input. The mechanism is the over-subscribed observable
+(the 2026-08-14 sharpening of rule 3i): the arm asserted *some* typed `RefusalMalformed` with a zero
+claim, and under the mutant the swallowed decode error falls through to the **trailing-JSON**
+bystander guard, which produces exactly that. Two branches, one observable.
+
+**Repaired rather than accepted, and repaired in the direction that removes code.** The unreachable
+branch is deleted and the arm now pins the stdlib scanner's own `exceeded max depth` text — measured
+first (`evidence: decode refused: malformed: invalid character '[' exceeded max depth`), and
+produced by nothing else on this path. Re-drilled on the repaired tree: mutation LANDED
+(`ed757fd9…` → `44a06aac…`), mutant BUILDS rc=0, named arm rc=1 reporting `trailing JSON; want the
+stdlib scanner's own max-depth refusal` — the failure text now literally names the bystander the
+old assertion could not distinguish — red set 1, `-skip` rc=0, restore byte-identical.
+
+**THE JUDGE'S NON-BLOCKING FINDING SPLIT UNDER FIRST-PARTY MEASUREMENT, IN BOTH DIRECTIONS.** The
+rule is that a NON-BLOCKING label is the judge's opinion of severity, not a measurement, and that a
+finding must be reproduced before it is acted on *and* before it is dismissed. Both halves paid.
+
+**REPRODUCED, and bigger than filed.** `report_codec.go`'s member-ARITY guard is genuinely unpinned:
+neutered with `if false && len(ms) != len(reportFields)` the mutant BUILDS and the whole suite stays
+**rc=0**. The gap is invisible because a sibling guard covers the common case — the existing
+missing-member arm removes a MIDDLE field, so the per-index name comparison mismatches at i=5 and
+the arity guard never fires. Omit the FINAL field instead and every remaining member is correctly
+named AND ordered, nothing mismatches, and the loop indexes past the end: **`panic: runtime error:
+index out of range [8] with length 8`**, confirmed first-party, in code whose §3.3 mandate is that
+malformed untrusted input becomes a typed refusal and never a panic. Pinned by
+`TestTruncatedTailReportIsRefusedNotPanicked` with an in-test control (the untruncated bytes must
+decode, defeating a refuse-everything mutant) and an observable unique to the branch — only the
+arity guard reports a member COUNT. Sole killer, red set 1.
+
+**REFUTED.** The same finding asserted the ENVELOPE shape guard survives identically. It does not.
+My first attempt at that arm was a *partial* neuter that left `ms[0].name != …` live, so it redded
+by panic — a red in the predicted direction for the wrong reason, caught by reading which test
+failed rather than the exit code. Redone as the judge's own arm (`if false && (…)` around the whole
+compound condition): mutant builds, suite **rc=1**, `TestEnvelopeStrictRefusals/unknown` failing on
+a genuine assertion (`non_canonical … want kind "malformed"`). E4 is pinned.
+
+**Finding 2 verified, then deleted rather than declared.** `sort.StringsAreSorted` sits after a loop
+that already refuses on `r.Verified[i-1] >= identity`, so by transitivity it cannot fire on any
+input reaching it. The milestone's own rule allows an unreachable branch *when declared* — but the
+argument that condemned the M27 wrapper condemns this too: a branch nothing can pin is not a guard.
+Deleted, with the contract it appeared to carry re-proved by a firing control: unsorted REFUSED,
+duplicate REFUSED, sorted-unique ACCEPTED. Finding 3 became queue row **30** rather than a silent
+edit, because it is a sibling of the defect this iteration already repaired and not part of PE.C's
+acceptance criteria.
+
+**Executor deviation adjudicated by measurement, not by its reasoning (rule 3h).** It self-reported
+that a missing `mac` is accepted with `MACValid=false` rather than refused, and stated the checkable
+proposition itself. Run in four arms with a real canonical report: control (full envelope) → decodes,
+`MACValid=true`; missing `mac` → decodes, `MACValid=false`; wrong-width `mac` → decodes,
+`MACValid=false`; missing `report` → typed refusal. That is §3.3's single classification exception,
+and it does not leak past `mac`. **My first version of this probe was the broken instrument** — it
+used `{"a":1}` as the payload, so the refusal was about the report's member count, not the tag; only
+rebuilding it on a genuine canonical report with a control made the reading mean anything.
+
+**A poll that declared victory six minutes early, and why the turn did not end.** My executor poll
+computed `done_marker=$(grep -c "codex rc=" … || echo 0)`, which emits TWO lines when grep finds
+nothing, so `[ "$done_marker" != "0" ]` was true on the first tick and the loop printed
+`WRAPPER FINISHED` while codex was still working. The same `|| echo 0` shape had already broken the
+Gate-0 sweep an hour earlier — one iteration, one construct, two gates. It was caught only because
+the wrapper log carried no `codex rc=` line, i.e. by reading the artifact the poll claimed to have
+seen rather than the poll's verdict. Re-polled correctly in-turn; the turn was never ended over a
+running background task (standing rule 7).
+
+**Routing evidence**
+
+| Role | Configured | Actual | Note |
+|---|---|---|---|
+| Controller | `$CONTROLLER_ID` | `claude:claude-opus-5` | session |
+| Designer | rotation (last-used `codex:gpt-5.6-sol`) | **not spawned** | plan and doc both existed; rotation pointer untouched — Fable unspent a 6th consecutive iteration |
+| Planner | `opus` | **not spawned** | `PE.C` is a milestone of a plan that landed at iteration 103 |
+| Executor | `codex:gpt-5.6-sol` | `codex:gpt-5.6-sol` | probe rc=0; 30-min cap, finished ~7 min; no fallback link traversed |
+| Evaluator | `sonnet` | `sonnet` | own worktree `.wt-iter105-eval`; provider ≠ executor's, generator≠judge holds |
+
+**Cost**: `metered=$0.00` of the $5 ceiling — no quorum purchased (an in-sprint continuation on an
+already-quorumed doc: 13 artifacts on disk) and no metered lane touched. Quota buckets: `opus` ×1,
+`codex` ×2 (probe + run), `sonnet` ×1.
+
+**Ruled out**
+
+| Hypothesis / available move | Why not |
+|---|---|
+| Bank the executor's in-sandbox `verify_go.sh` rc=1 | `workspace-write` denies loopback binds; indistinguishable from a regression in the exit code. Re-run outside → rc=0 |
+| Accept M27's kill on the executor's report | It reproduced exactly — and reproducing it is not the same as asking whether it discriminates. The counterfactual showed it did not |
+| Keep the unreachable branch because the doc's M27 row predicts a zero-claim mutant | The row predicts the mutant's *behaviour*; it does not license production dead code to produce it. The pin was strengthened instead, so the row's observable is now sharper than its prose |
+| Accept the judge's E4 claim | REFUTED by running the judge's own arm: suite rc=1, genuine assertion failure |
+| Dismiss the judge's R4 claim on its NON-BLOCKING label | Real, and worse than filed — the mutant panics on untrusted bytes |
+| *Declare* the unreachable `sort` branch instead of deleting it | The same argument that condemned the M27 wrapper: a branch nothing can pin is not a guard |
+| Re-quorum the design doc at pick time | In-sprint continuation, not a new or revised doc; 13 quorum artifacts already on disk |
+| Pick row 14 on its flipped predicate | Item 17 is `[IN-SPRINT]` with a landed plan and an explicit `NEXT`; standing rule 1. Recorded in the charter and the dashboard instead |
+| Absorb judge finding 3 into this milestone's diff | It is a sibling of the repaired defect, not part of PE.C's ACs — filed as row 30 |
+| Attribute my partial-E4 red to the guard | It redded by panic, in the predicted direction, for the wrong reason; read which test failed, not the exit code |
+
+**Rotation asserted in both directions.** Charter `^## STATUS 2026` == **3** after the write;
+arithmetic `after == before + 2 − 2×1` held at 3756 → 3756, asserted *before* writing; the moved
+stamp (iteration 102) greps **1** in the archive with control iteration 101 at **2**, and **0** as a
+header in the charter; a known queue row (`5.`) and the last row (`19.`) both still present; diff
+stat shows 3 files, +37/−40, not a mass deletion.
+
+**Next**: `PE.D` — validator, sealed mint authority, resolved grade, three distinct constructor
+refusals, `ObjectReader` as a mandatory two-method seam. 0.92 d, **15 mutations**, ~1150 LOC: the
+largest milestone in the sprint and the whole authority argument. Then `PE.E` (real-store
+integration proofs, the four kills no fake may make), then `PE.F` last without exception, because
+`EXACT_EVIDENCE_TESTS` pins the observed `host/evidence` test count and any test landed after it
+reds the gate. **ZERO open asks.**
