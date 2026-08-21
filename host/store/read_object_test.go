@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 	"testing"
@@ -87,22 +88,54 @@ func TestConcurrentMutationCannotDesyncProbeAndPayload(t *testing.T) {
 
 		fired := false
 		writerOutcome := "not-run"
+		writerRowsAffected := int64(-1)
 		mutated := []byte(strings.Repeat("changed", 50))
 		readObjectBetweenStatements = func() {
 			fired = true
-			_, writeErr := writer.ExecContext(context.Background(),
+			res, writeErr := writer.ExecContext(context.Background(),
 				`UPDATE objects SET payload = ? WHERE hash_ref = ?`, mutated, o.Hash.String())
 			if writeErr != nil {
 				writerOutcome = "busy-refused: " + writeErr.Error()
 				return
 			}
-			writerOutcome = "committed-after-snapshot"
+			// RowsAffected is the discriminating observable. "the statement
+			// succeeded" is ALSO what a removed statement looks like from the
+			// error value alone, so the outcome string must carry something
+			// only a real UPDATE can produce.
+			affected, affErr := res.RowsAffected()
+			if affErr != nil {
+				writerOutcome = "committed-after-snapshot: rows unknown: " + affErr.Error()
+				return
+			}
+			writerRowsAffected = affected
+			writerOutcome = fmt.Sprintf("committed-after-snapshot: %d row(s)", affected)
 		}
 		t.Cleanup(func() { readObjectBetweenStatements = nil })
 
 		meta, payload, err := s.ReadObject(context.Background(), o.Hash, 1024)
 		if !fired {
 			t.Fatal("mutating scheduling hook did not fire; pass would be vacuous")
+		}
+		// B3: "a green can never come from a writer that never ran." Asserting
+		// only that the HOOK fired is not that — a hook whose UPDATE is removed
+		// still sets fired, and the arm then passes under the M25 mutant too
+		// (measured). Nor is asserting the outcome STRING enough: a removed
+		// statement yields a nil error, so "committed-after-snapshot" is written
+		// by both a real write and no write at all — the observable's value set
+		// is wider than the mechanism's. The discriminator has to be a value
+		// only a real UPDATE produces, so this asserts the row count.
+		switch {
+		case writerOutcome == "not-run":
+			t.Fatal("the competing writer never executed; this arm cannot discriminate " +
+				"one snapshot from two and would pass under the M25 mutant")
+		case strings.HasPrefix(writerOutcome, "busy-refused: "):
+			// The rollback-journal outcome: the write was refused at
+			// busy_timeout. Real contention, and AC17 accepts it.
+		case writerRowsAffected != 1:
+			t.Fatalf("the competing writer reported success but touched %d row(s), "+
+				"want exactly 1: outcome=%q — a write that changed nothing cannot "+
+				"desync anything, so a pass here would be vacuous",
+				writerRowsAffected, writerOutcome)
 		}
 		t.Logf("writer observed outcome: %s", writerOutcome)
 		assertSnapshotRead(t, o.Hash, meta, payload, err)
@@ -206,4 +239,61 @@ func fileDSNWithPragma(path, pragma string) string {
 	q.Add("_pragma", pragma)
 	u.RawQuery = q.Encode()
 	return u.String()
+}
+
+// TestBusyTimeoutMatchesTheDriverUnderDuplicatePragmas pins BusyTimeout() against
+// what the DRIVER actually applies, not against a comment.
+//
+// withBusyTimeout returns early when the caller's DSN already carries any
+// busy_timeout, so a DSN with TWO of them reaches busyTimeoutFromParams
+// unmodified. The pinned driver applies the FIRST; reporting the LAST made the
+// accessor under-report the real lock-retry window in one order and over-report
+// it in the other — and under-reporting is the unsafe direction for AC18's
+// ObjectReadTimeout > BusyTimeout() ordering.
+func TestBusyTimeoutMatchesTheDriverUnderDuplicatePragmas(t *testing.T) {
+	cases := []struct{ name, first, second string }{
+		{"ascending", "busy_timeout(100)", "busy_timeout(7000)"},
+		{"descending", "busy_timeout(7000)", "busy_timeout(100)"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			params := url.Values{}
+			params.Add("_pragma", tc.first)
+			params.Add("_pragma", tc.second)
+			dsn := fileURI(t.TempDir()+"/dup.db", params)
+
+			db, err := sql.Open("sqlite", dsn)
+			if err != nil {
+				t.Fatalf("open raw handle: %v", err)
+			}
+			defer db.Close()
+			var appliedMS int64
+			if err := db.QueryRow("PRAGMA busy_timeout").Scan(&appliedMS); err != nil {
+				t.Fatalf("read back PRAGMA busy_timeout: %v", err)
+			}
+			applied := time.Duration(appliedMS) * time.Millisecond
+
+			if got := busyTimeoutFromParams(params); got != applied {
+				t.Fatalf("busyTimeoutFromParams = %v but the driver applied %v "+
+					"(DSN order: %s then %s)", got, applied, tc.first, tc.second)
+			}
+		})
+	}
+
+	// Control: the readback must be able to observe a value we chose, or the
+	// agreement above proves nothing.
+	params := url.Values{"_pragma": []string{"busy_timeout(3333)"}}
+	db, err := sql.Open("sqlite", fileURI(t.TempDir()+"/control.db", params))
+	if err != nil {
+		t.Fatalf("control open: %v", err)
+	}
+	defer db.Close()
+	var appliedMS int64
+	if err := db.QueryRow("PRAGMA busy_timeout").Scan(&appliedMS); err != nil {
+		t.Fatalf("control readback: %v", err)
+	}
+	if appliedMS != 3333 {
+		t.Fatalf("CONTROL FAILED: single pragma applied %dms, want 3333 — the "+
+			"readback instrument cannot see the DSN, so the arms above are vacuous", appliedMS)
+	}
 }

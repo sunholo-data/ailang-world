@@ -199,9 +199,20 @@ func withBusyTimeout(params url.Values) url.Values {
 	return out
 }
 
-// busyTimeoutFromParams resolves the final busy_timeout pragma exactly once at
-// Open. SQLite applies repeated pragmas in DSN order, so the last valid value is
-// the effective one.
+// busyTimeoutFromParams resolves the busy_timeout pragma exactly once at Open.
+//
+// It returns the FIRST valid busy_timeout in DSN order, because that is what the
+// pinned driver actually applies — MEASURED, not assumed: a DSN carrying
+// busy_timeout(100) then busy_timeout(7000) reads back `PRAGMA busy_timeout` =
+// 100, and the reversed order reads back 7000
+// (TestBusyTimeoutMatchesTheDriverUnderDuplicatePragmas). An earlier revision of
+// this function documented the opposite and returned the LAST value, so a
+// caller DSN with two pragmas made the accessor UNDER-report the real lock-retry
+// window — the unsafe direction for AC18's ObjectReadTimeout > BusyTimeout()
+// ordering, which is the whole point of exporting this.
+//
+// First-wins also matches withBusyTimeout, which returns early on ANY existing
+// busy_timeout precisely so an explicit caller value is never overridden.
 func busyTimeoutFromParams(params url.Values) time.Duration {
 	var timeout time.Duration
 	for _, pragma := range params["_pragma"] {
@@ -219,7 +230,7 @@ func busyTimeoutFromParams(params url.Values) time.Duration {
 		}
 		millis, err := strconv.ParseInt(arg, 10, 64)
 		if err == nil {
-			timeout = time.Duration(millis) * time.Millisecond
+			return time.Duration(millis) * time.Millisecond
 		}
 	}
 	return timeout
