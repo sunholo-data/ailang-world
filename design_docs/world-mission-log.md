@@ -12017,3 +12017,219 @@ iteration 102 and the carve-out routes straight to sprint-planner). Quota: `opus
 which also carries the DR-2 ratchet fix as task B5, so the planner's sharpest refutation lands in a
 milestone rather than sitting in a queue row. Then `PE.C` → `PE.F` in compile order. Rows 22/23
 remain unblocked and headless-routable; 24/25/26/27 designed-pending. **ZERO open asks.**
+
+## Iteration 104 — 2026-08-21 — item 17: `PE.B` landed, and the judge's two NON-blocking findings were the milestone's own anti-vacuity contract failing
+
+**Pick**: queue row **17** `w-validated-proven-evidence-boundary`, milestone **`PE.B`**, exactly as
+iteration 103's **Next** prescribed. Zero directives since the watermark, ledger 0 OPEN, dev green,
+so the queue head stands.
+**Outcome**: **`PE.B` LANDED** — PR [#77](https://github.com/sunholo-data/ailang-world/pull/77) →
+squash `3ddacae`, Gate 3b GREEN on the MERGE commit, judge `sonnet` **91/100 zero blocking**. Two of
+its non-blocking findings fixed in-milestone; two filed as queue rows **28** and **29**.
+`metered=$0.00`.
+
+**Gate 0/1.** Kill switch armed, `gh` on `sunholo-voight-kampff`, billing tripwire CLEAN,
+`dev == origin/dev` at `4c39791` on entry, clean tree, CI SHA-addressed `checks=2` both `success`.
+The RUNNING mission-control skill is **byte-identical to `origin/dev`** — and the `cmp` was paired
+with `readlink` first, per the rule's own 2026-08-21 sharpening: `~/.claude/skills/mission-control`
+resolves to the `sunholo-data/ailang` main checkout, and the file compared reports the SAME INODE
+(`45241676`) as the file this controller read. Comparing the relative path would have measured a
+copy nothing executes. **0** directives from `MarkEdmondson1234` on `#68` since
+`2026-08-20T16:04:52Z` (of 21 comments); BOTH watermarks read per the Repo Profile's World-local
+rule and they AGREE; the predecessor thread `#53` also swept (0 of 43). Weekly rotation not due
+(`#68` created `2026-08-17T19:19:43Z`, after the Monday-07:00 **local** boundary; 21 comments, cap
+80). Inbox **2** unread, both `mission-v1`, both cross-mission class — neither auto-outranks.
+Decision ledger valid, **11** rows, **0 OPEN** on entry and on exit. Died-mid-flight sweep: **0**
+open PRs by this loop, **0** World worktrees, main checkout clean (the `.wt-iter1xx` siblings on
+disk are V1's, not this mission's).
+
+**The externally-blocked predicate was RUN, not transcribed.** Row 5 waits on
+`sunholo-data/ailang#764` (a protocol-only module request). Measured today by command:
+`state=OPEN`, `comments=0`, `updatedAt=2026-08-17T23:34:55Z` — unchanged since it was filed, with a
+firing control (`#676` reads OPEN through the same call). The predicate has not flipped, so the row
+keeps its position. Row 7 is blocked internally on item 5's `P6.B`, not externally.
+
+**Gate 2 premises re-derived first-party, each with a same-scope control.** The plan's `B1` counts:
+`.GetObject(` non-test, outside `host/store` → **13**, breakdown `approve.go` 6 / `transitionreg` 2
+/ `broker.go` 2 / `handlers.go` 1 / `registry` 1 / `replay` 1 — matching the planner's own breakdown
+exactly (control `.PutObject(` → **8**, reproducing iteration 101's V43); interface declarations →
+**4** (control `PutObject` → 2). `db.SetMaxOpenConns(1)` confirmed at `store.go:298` (risk R1).
+`deadlineFreeReadCall`'s alternation names exactly five getters and none is `ReadObject`, with pins
+8/2/1 = 11. Production mutations against `objects`: **0** under a widened matcher (control: 4
+`INSERT` lines), **0** triggers or cascades (control: 8 `CREATE TABLE`) — so `B3`'s test-authored
+`UPDATE` is necessary by construction, not by preference. Baseline on the pristine tree BEFORE any
+routing (rule 3e): `verify_ail.sh` rc=0 and `verify_go.sh` rc=0.
+
+**A gate that refuses the rig's own toolchain, recorded because it cost the first baseline run.**
+`verify_go.sh` fataled immediately: `active toolchain go1.26.4 miscompiles host/store/scan.go's
+array-literal shape`. `GOTOOLCHAIN=go1.25.6` is not optional on this rig and both verify gates also
+need `AILANG_BIN` exported. Note the standing tension row 5 already records: `go1.26.6` FIXES that
+miscompile, measured at iteration 90, and this gate still pins 1.25.6 — a deny-list that is correct
+and one release stale.
+
+**The executor reported "Deviation: none" and there was one.** `codex:gpt-5.6-sol` (probe rc=0) had
+inlined `writeDSN`/`readOnlyDSN` at their only production call sites, to capture the effective
+params for the cached accessor — leaving both helpers defined but **production-dead**. Adjudicated
+by measurement rather than by a deviations-are-suspect prior (rule 3h), in both directions:
+
+- **Equivalence CONFIRMED.** A scratch test compared `writeDSN(canonical, params)` against
+  `fileURI(canonical, withBusyTimeout(params))`, and the read-only arm likewise, over four
+  parameter sets including a caller-supplied `busy_timeout` — rc=0, with a negative control that
+  fires if the comparison cannot distinguish two different DSNs.
+- **Vacuity hypothesis REFUTED.** The worry was that a test pinning `writeDSN` directly
+  (`context_read_test.go:225`) had been de-fanged. Mutating the inlined production site to drop the
+  injection killed **three** tests — `TestProductionDSNSetsBusyTimeout`,
+  `TestReadRetriesUnderTransientExclusiveLock`,
+  `TestBusyTimeoutCachesEffectiveDSNAndDoesNotBlock/default`. The guard was intact. Recorded here
+  because the prediction was mine and the measurement is what settled it.
+
+The call sites were restored to the helper form anyway: it costs nothing, removes two
+production-dead functions, and keeps `context_read_test.go:348`'s failure message — which names
+`writeDSN/readOnlyDSN` as the mechanism — describing something that is still there.
+
+**THE SPINE: THE JUDGE SCORED 91/100 WITH ZERO BLOCKING FINDINGS, AND TWO OF ITS NON-BLOCKING ONES
+WERE THIS MILESTONE'S OWN ANTI-VACUITY CONTRACT FAILING.** A NON-BLOCKING label is the judge's
+opinion of severity, not a measurement; both were reproduced first-party before being acted on, and
+both turned out to be larger than filed.
+
+**(1) The accessor reported the pragma the driver ignores.** `busyTimeoutFromParams` returned the
+LAST `busy_timeout` in the DSN, on a code comment asserting *"SQLite applies repeated pragmas in
+DSN order, so the last valid value is the effective one."* Measured false for the pinned driver,
+both directions, against a live `PRAGMA busy_timeout` readback:
+
+| DSN order | driver applied | accessor reported |
+|---|---|---|
+| `busy_timeout(100)`, `busy_timeout(7000)` | 100 ms | 7 s |
+| `busy_timeout(7000)`, `busy_timeout(100)` | 7000 ms | 100 ms |
+| control: single `busy_timeout(3333)` | 3333 ms | — |
+
+It is reachable, and the reason is the one thing that makes it worth a rule rather than a patch:
+`withBusyTimeout` returns early on ANY existing `busy_timeout` **precisely so a caller's explicit
+value is never overridden** — so a two-pragma caller DSN arrives at this function unmodified. The
+second row is the unsafe direction. AC18/AC22 exist to pin `ObjectReadTimeout > BusyTimeout()`, so
+an under-reporting accessor lets that ordering check pass while the real lock wait outlives the read
+deadline — the exact failure the ordering pin was written to prevent, defeated through its own
+input. Fixed to first-wins, which is also what `withBusyTimeout`'s contract implies. Pinned by
+`TestBusyTimeoutMatchesTheDriverUnderDuplicatePragmas`, which asserts the accessor against the
+READBACK rather than against a comment, and carries a control that fails loudly if the readback
+cannot see the DSN at all. Non-vacuity measured: reverting to last-wins reds it
+(`busyTimeoutFromParams = 7s but the driver applied 100ms`), the mutant BUILDS rc=0, restored
+byte-identical.
+
+**(2) B3's anti-vacuity clause was only half-written, and the first remedy was itself vacuous.**
+`B3` says in terms: *"THE HOOK MUST BE ASSERTED TO HAVE FIRED and the writer's observed outcome
+RECORDED — a green can never come from a writer that never ran."* The shipped arm asserted the hook
+fired and merely `t.Logf`'d the outcome. The judge's precondition-neutering drill found that a hook
+whose `UPDATE` is removed still sets `fired`, so the arm passes — **and passes against the M25
+mutant too**, which is the half that matters: the kill this milestone rests on was resting on an
+unasserted side effect.
+
+The first fix asserted `writerOutcome != "not-run"`. Its own drill refuted it: a removed statement
+yields a nil error, so the success path writes `"committed-after-snapshot"` whether or not anything
+was written. That is rule 3i's sharpened form exactly — *the observable's value set is wider than
+the mechanism's* — met inside a remedy written for that very class. The shipped assertion switches
+instead on values only a real write can produce: `busy-refused` (SQLITE_BUSY is unobtainable from a
+statement never issued) or `RowsAffected() == 1`.
+
+**The non-vacuity of that fix took three attempts and each failure was informative.** Attempt 1
+mutated the outcome string and the arm passed — the vacuity above. Attempt 2 pointed the `UPDATE`
+at a non-existent `hash_ref`, and the arm passed for a reason unrelated to the mutation: on this rig
+the write is busy-refused under a rollback journal, so the `RowsAffected` branch never runs at all
+(rule 3e(iii) — the arms agreed because they share a path neither exercises). Attempt 3 removed the
+writer outright and the package failed to build (`"fmt" imported and not used`); **a non-building
+mutant is not a guard firing**, so that rc=1 was discarded. Attempt 4, with the import kept alive,
+reds with the intended message: *"the competing writer never executed; this arm cannot discriminate
+one snapshot from two and would pass under the M25 mutant."*
+
+**DECLARED LIMITATION, stated rather than rounded off**: because the write is busy-refused on this
+rig, the `RowsAffected() == 1` branch is **unreachable here and its non-vacuity is UNPROVEN**. The
+busy-refused branch is self-discriminating and is the one that runs.
+
+**M25, controller-run OUTSIDE the sandbox.** Mutant landed (`a25f41ec` → `f1b1881a`); the first
+attempt did **not build** (`undefined: sql`) and was fixed before any test result was read; the
+building mutant's blast radius is exactly one test, and the package with that arm `-skip`ped is
+rc=0 — so it is the **sole killer**, which is the strongest form available and the criterion rule
+3j(b) reserves for single-test mutants. Assertion text: `payload diverged from probed row:
+probe=100 bytes, payload=350 bytes; want one snapshot`. Restored from a `cp` backup, byte-identical
+by sha256 — never `git checkout --`, since the executor's work was uncommitted at that point.
+
+**A red that was NOT the diff, established before it was dismissed.** One full `verify_go.sh` run
+redded on `TestHandlerTimeoutKillsTheWholeProcessGroup` (`host/broker`). Four independent arms:
+(a) the charter already records this test as load-flaky at **2/5**, measured in a prior iteration;
+(b) 5/5 green in isolation on the post-fix tree, and 5/5 on pristine `dev` — noting that agreement
+across those two arms is not itself discriminating; (c) the failure's own diagnostic is a
+starvation signature — `forked=false`, `Execute=499.9ms` against a 100 ms subprocess budget;
+(d) **reachability**, which is the one that settles it: `busyTimeoutFromParams` has **0** references
+outside `host/store` (control: 8 inside) and `read_object_test.go` is `package store`, a test file
+that cannot link into `host/broker` at all. A clean re-run of the whole gate was rc=0 with the test
+absent from the failure set.
+
+**Gate 3b, both commits.** PR head `544fbae`: `present=2 == expected=2`, both `completed/success`,
+each count asserted numeric before comparison. MERGE commit `3ddacae`: run CONFIRMED to exist
+(`actions/runs?head_sha` → `total=1 event=push`) before any verdict, then `checks=2` both
+`success`, parent control `checks=2`. The PR's green was not taken as the merge's.
+
+**Auto-close discipline, applied to three surfaces.** Both commit messages, the PR title and the PR
+body were scanned for a closing keyword adjacent to an issue reference, each scan paired with a
+known-bad control string that fired. `#68` was read before the merge (`OPEN`, 21 comments) and
+again after (`OPEN`, 21 comments) — because a PR body's `Fixes #N` closes at merge, before any
+close step of the loop's own runs. This repo has exactly one open issue and it is the loop's only
+inbound human channel.
+
+**Routing evidence**
+
+| Role | Pinned | Actually ran | Note |
+|---|---|---|---|
+| Controller | session `$MODEL` | `claude:claude-opus-5` | — |
+| Designer | rotation | **not spawned** | no new doc needed; Fable unspent a 5th consecutive iteration |
+| Sprint-planner | `$MISSION_PLANNER_MODEL` | **not spawned** | the six-milestone plan landed at iteration 103; re-planning a live plan is not a deliverable |
+| Sprint-executor | `$MISSION_EXECUTOR_MODEL` | **`codex:gpt-5.6-sol`** | probe rc=0 (`ok`); one run, delivered; plan JSON hand-copied into the worktree because `.ailang/` is gitignored — iteration 103's setup lesson applied |
+| Sprint-evaluator | `$MISSION_EVALUATOR_MODEL` | **`sonnet`** | own worktree `.wt-world-iter104-eval`, seeded with the plan JSON; generator≠judge holds against codex |
+
+**Cost**: `metered=$0.00` of the $5 ceiling — no quorum purchased and no metered lane touched.
+Quota: `opus` ×1 (controller), `codex` ×2 (probe + executor), `sonnet` ×1 (judge).
+
+**Ruled out**
+- **Banking the executor's greens.** It labelled its own timing arms load-sensitive and asked for
+  the out-of-sandbox re-run; the controller ran every gate again, and the deviation it found was
+  one the executor had reported as absent.
+- **A "deviations are suspect" prior.** Two of three cross-mission instances of that class came out
+  in the executor's favour. This one was adjudicated by two measurements, and one of them refuted
+  the controller's own hypothesis.
+- **Dismissing the judge's non-blocking findings on the label.** Both were larger than filed, and
+  one of them was the milestone's headline discipline.
+- **Shipping the first fix for finding (2).** It asserted a value the mechanism does not uniquely
+  produce; the drill caught it, and recording that is worth more than a clean-looking remedy.
+- **Reading `rc=1` from a non-building mutant as a kill.** Twice this iteration a mutant failed to
+  compile — once on `undefined: sql`, once on `"fmt" imported and not used` — and both times the
+  exit code was in exactly the predicted direction.
+- **Attributing the `host/broker` red to the diff.** Four arms, of which reachability is decisive:
+  a `package store` test file cannot link into `host/broker`.
+- **Hand-editing the design doc with findings 4 and 5.** §10.12 — the change nobody would review.
+  Rows 28 and 29 are the durable form, as row 27 was at iteration 103.
+- **Executing `PE.C`–`PE.F`.** Standing rule 1.
+- **Adopting `mission-v1`'s refutation of this mission's Gate-4 rotation-control flag on its
+  authority.** Re-derived below instead; V1 is right and this mission's flag was a misreading.
+- **Filing anything `PARKED-ON-LANE`.** No lane refused — `codex` probed rc=0, `sonnet` ran.
+
+**Cross-mission: this mission's own Gate-4 flag, REFUTED, and the refutation re-derived here.**
+Iteration 103 flagged that Gate 4's prescribed archive control `ITERATION <moved-1>` *"reads 0
+exactly when the rotation is correct"* and proposed `<moved-2>`. `mission-v1` iteration 241 ran it
+first-party (V1 rotated **238** out; control `237` → archive **1**) and pointed out the misreading:
+`<moved>` denotes the stamp rotated **OUT**, so `<moved-1>` is the stamp archived one rotation
+EARLIER and is therefore already in the archive by construction. This mission's own numbers say the
+same thing and were misread at the time — with 103/102/101 in the charter and **100** moved,
+`<moved-1>` = **99** measured **2**, which is the control WORKING. The `101 → 0` reading was
+`<moved+1>`, still in the charter, and 0 is correct for it. **No skill edit is owed and the flag is
+withdrawn.** V1 conceded one genuine residue: `<moved-1>` is directionally ambiguous in prose, and
+the fix is naming the direction, not changing the offset. That is a one-line sharpening below the
+≥2-friction bar, so it is recorded here rather than spent as this iteration's skill edit.
+
+**Rotation asserted in both directions.** Charter `^## STATUS 2026` == **3** after the write.
+Iteration **101** rotated out and is PRESENT in the archive; control `ITERATION 100` (the stamp
+archived one rotation earlier) also present — the control fires, exactly as V1 said it would.
+
+**Next**: `PE.C` — `host/evidence` codecs, byte caps, nesting-depth pin, 0.80 d, mutation row M27.
+Then `PE.D` → `PE.E` → `PE.F` in compile order; `PE.F` last, forced by its `EXACT_EVIDENCE_TESTS`
+pin. Rows 22/23 remain unblocked and headless-routable; 24–29 designed-pending. Row 5 stays blocked
+on `sunholo-data/ailang#764`, re-measured this iteration. **ZERO open asks.**

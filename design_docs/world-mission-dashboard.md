@@ -2,41 +2,44 @@
 
 *Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS), `-status-archive.md`, `-log.md`.*
 
-**Iteration 103** · 2026-08-21 · `dev` @ `cbd17de` · CI green (both jobs, SHA-addressed, run confirmed)
+**Iteration 104** · 2026-08-21 · `dev` @ `3ddacae` · CI green (both jobs, SHA-addressed, run confirmed)
 
-> **This fire died at Gate 4 and its own retry landed the record.** The 02:24 fire merged `PE.A` and
-> wrote the record into the main checkout, then died at 03:34 on `API Error: Connection lost
-> mid-response` before `git add`; the driver re-fired at 03:35. Same iteration, finished by its retry
-> — **not** an iteration 104. Every inherited claim re-derived first; one REFUTED (worktrees clean).
+> **The judge scored 91/100, zero blocking — and two of its NON-blocking findings were this
+> milestone's own anti-vacuity contract failing.** Both reproduced first-party, both fixed; the
+> first remedy for the second was *itself* vacuous and its own drill caught it.
 
 ## In flight
-- **Item 17 `w-validated-proven-evidence-boundary`** — `[IN-SPRINT]`. Six CI-green milestones
-  `PE.A`–`PE.F` (4.70 d; 27/27 live mutation rows mapped; zero human asks).
-- **`PE.A` LANDED** — PR #76 → `cbd17de`, Gate 3b green on the merge, judge `sonnet` 96/100 zero
-  blocking. Kernel `ProofReceipt` arm, projection, golden, gate pins.
-- **NEXT: `PE.B`** (0.83 d) — bounded one-snapshot store read + cached `BusyTimeout()`; also carries
-  the DR-2 ratchet fix (`TestNoNewDeadlineFreeStoreReads` cannot see `ReadObject`). Then `PE.C` →
-  `PE.D` → `PE.E` → `PE.F` in compile order; `PE.F` must be last.
+- **Item 17 `w-validated-proven-evidence-boundary`** `[IN-SPRINT]` — six milestones `PE.A`–`PE.F`
+  (4.70 d), **two landed**.
+- **`PE.B` LANDED** — PR #77 → `3ddacae`, Gate 3b green on the merge (`present=2 == expected=2`,
+  run confirmed). `ReadObject` (one snapshot for probe and payload), cached `BusyTimeout()`, B5.
+- **NEXT: `PE.C`** (0.80 d) — `host/evidence` codecs, byte caps, nesting-depth pin. Then `PE.D` →
+  `PE.E` → `PE.F` in compile order; `PE.F` last (its `EXACT_EVIDENCE_TESTS` pin forces it).
+
+## The finding worth carrying
+`busyTimeoutFromParams` reported the **last** `busy_timeout` pragma in a DSN; the pinned driver
+applies the **first** (measured both directions against a live `PRAGMA` readback). Reachable, since
+`withBusyTimeout` deliberately never overrides a caller's value — and under-reporting is the unsafe
+direction for AC18/AC22's `ObjectReadTimeout > BusyTimeout()` pin. Fixed to first-wins, pinned
+against the readback rather than against a comment.
 
 ## Queue after item 17
-Rows **22**, **23** unblocked and headless-routable · **24**–**27** designed-pending. Row **27**
-`w-interface-hash-does-not-cover-the-interface`: `interfaceHash` hashes only `ailang.toml`, so it does
-not move when an exported ADT gains a constructor — found at iteration 81, re-broken by item 17's §8.3.
+Rows **22**, **23** headless-routable · **24**–**27** designed-pending · **28**/**29** new, both
+from the judge and both declined as silent edits: `ReadObject`'s six unpinned refusal branches
+(sibling `GetObject`'s analogous branches *do* die), and its absent branch distinguishable from a
+zero-length payload only by an invariant the *writers* enforce. Row **5** stays blocked —
+`sunholo-data/ailang#764` re-measured OPEN today, 0 comments, untouched since 2026-08-17.
 
 ## Parked on Mark
 **NONE.** Decision ledger: **11 rows, 0 OPEN** (`scripts/mission_decisions.sh --check`).
 
-## Cross-mission
-`mission-v1` accepted the "a Total is a claim about a column" proposal **in principle**. Its own finding
-measured here first-party: **auto-close exposure is ZERO** (0 hits over 286 commit messages / 70 PR
-records, both controls firing). **A zero is not a guard** — it is a habit, and this repo's one open
-issue is `#68`, the loop's own human channel.
-
 ## Loop / routing / cost
-Controller `claude:claude-opus-5` · planner `opus` (`fail-closed:env-pin`) · executor
-`codex:gpt-5.6-sol` → `opus` (deepseek SUSPENDED, `D-WORLD-20`) · judge `sonnet` (generator≠judge).
-Designer rotation and Fable both unspent (4th consecutive iteration). `metered=$0.00` of $5 · quota
-`opus` ×2, `codex` ×2, `sonnet` ×1 · billing tripwire CLEAN.
+Controller `claude:claude-opus-5` · no planner/designer (plan existed) · executor
+`codex:gpt-5.6-sol` (probe rc=0) · judge `sonnet` in its OWN worktree (generator≠judge). Fable
+unspent a **5th** iteration. `metered=$0.00` of $5 · quota `opus` ×1 / `codex` ×2 / `sonnet` ×1.
 
 ## Gates
-`./scripts/verify_ail.sh` · `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_go.sh` (the export is mandatory — it fails closed without it). Pinned `AILANG v0.30.0`.
+`AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh` ·
+`AILANG_BIN=… GOTOOLCHAIN=go1.25.6 ./scripts/verify_go.sh` — **both exports mandatory**; the go gate
+fails closed without `AILANG_BIN` and refuses the rig's default go1.26.4 outright. Pinned `v0.30.0`.
+`TestHandlerTimeoutKillsTheWholeProcessGroup` (`host/broker`) is load-flaky — charter-recorded 2/5.
