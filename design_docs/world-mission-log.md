@@ -11782,3 +11782,238 @@ Item 17 is `[NEXT]` and routable to **sprint-planner** with no ask open; the 0.7
 pricing fact to plan around, not a decision. Rows **23** (`w-store-deadline-free-residue-owner`,
 which row 26 is ordered behind) and **22** remain unblocked and headless-routable; rows 24/25/26 are
 designed-pending. **Zero open asks.**
+
+## Iteration 103 — 2026-08-21 — item 17: the plan was the deliverable, then `PE.A` landed — and both defects found this iteration sat in a channel that REPORTS rather than one that ENFORCES
+
+**Pick**: queue row **17** `w-validated-proven-evidence-boundary`, exactly as iteration 102's
+**Next** prescribed. Zero directives since the watermark, ledger 0 OPEN, so the queue head stands.
+**Outcome**: routed to **sprint-planner** → a six-milestone plan; then **`PE.A` LANDED** — PR
+[#76](https://github.com/sunholo-data/ailang-world/pull/76) → squash `cbd17de`, Gate 3b GREEN on the
+MERGE commit, judge `sonnet` **96/100 zero blocking**. New queue row **27**. `metered=$0.00`.
+
+**Gate 0/1.** Kill switch armed, `gh` on `sunholo-voight-kampff`, billing tripwire CLEAN,
+`dev == origin/dev` at `2c9b5f3`, clean tree, CI SHA-addressed `checks=2` both `success` with a run
+CONFIRMED to exist (`actions/runs?head_sha` `total=1 event=push`). The RUNNING mission-control skill
+is **byte-identical to `origin/dev`** (`cmp -s` silent). **0** directives from `MarkEdmondson1234` on
+`#68` since `2026-08-20T16:04:52Z` (of 20 comments); BOTH watermarks read and they AGREE; the
+instrument control fires — widening `--since` to `2026-08-19T00:00:00Z` re-surfaces all three
+consumed directives, so the zero is a measurement and not a dead channel. Weekly rotation not due
+(`#68` created `2026-08-17T19:19:43Z`, after the Monday-07:00 **local** boundary; 20 comments, cap
+80). External-issue sweep: **0 orphans of 1 enumerated**, list length asserted at 1, and that one is
+`#68` itself; negative control fired on a fresh, deliberately unpublished literal. Inbox **0**
+unread. Died-mid-flight sweep: 0 open PRs by this loop, 0 worktrees, clean checkout. Ledger valid,
+**11 rows, 0 OPEN** on entry and on exit.
+
+### The plan — six milestones, and six refutations of the doc it plans
+
+Planner lane derived by `tools/launchd/derive-planner-lane.sh` → **`opus fail-closed:env-pin`**,
+used VERBATIM; no codex probe for the planner role, per the rule.
+
+`PE.A` 0.35 d · `PE.B` 0.83 · `PE.C` 0.80 · `PE.D` 0.92 · `PE.E` 0.85 · `PE.F` 0.95 = **4.70 d**,
+the doc's own §9 total. I re-summed §9's tranche column myself before routing — eleven rows summing
+4.70 exactly, decomposition 11.70 — so iteration 102's arithmetic repair holds at HEAD and the
+planner was told not to "fix" it. The 0.70 d guardrail overage is absorbed by SEQUENCING, not
+re-scoping: no milestone exceeds 0.95 d and each is independently CI-green.
+
+**27 of 27 live mutation rows mapped**, and I asserted that by SET COMPARISON rather than by
+believing the count: extracting `^| M<n>` from the doc's own §6 table and diffing against the plan's
+`row_to_milestone` keys leaves **M6** as the only doc-side row absent (tranche 3, replay) and **zero**
+plan-side extras. M15/M28 remain the DECLARED gaps that must not be renumbered or backfilled.
+`open_questions_for_the_human` is **EMPTY** — the directive said a question a measurement can answer
+is not a question, and the planner took it.
+
+**The sharpest refutation, and it is the one that outlives the milestone.** Item 18's DR-2 ratchet
+`TestNoNewDeadlineFreeStoreReads` **cannot see `ReadObject`** — the method this whole tranche adds.
+Its detector at `host/store/context_read_test.go:379` is an alternation naming exactly five getters
+(`GetObject|GetWorld|GetLogEntry|GetRegistryHead|SelectedHead`). Reproduced first-party against the
+literal pattern: it matches `.GetObject(context.Background()` and does **not** match
+`.ReadObject(context.Background()`. The design doc leans on that ratchet **5 times** (§3.3, §8.2,
+AC16, V41 ×2) as *the* thing that makes the 11→0 deadline-free residue mechanically observable — and
+**V41 prints the regexp verbatim in its own observed-output column**. The evidence was published,
+and unread, for twelve rounds. It is folded into `PE.B` as task B5, one token, zero measured count
+impact.
+
+Also refuted, each re-derived by me before recording: **(a)** AC18's opening paragraph still
+specifies a *live* `PRAGMA busy_timeout` that its own round-11b amendment three paragraphs later
+withdraws for a nonblocking cached property — binding reading is CACHED; **(b)** M1's predicted
+failure text `got 4, want 1` is not what the runner emits — I built a scratch module with a
+deliberately failing `tests [...]` tuple and observed `test 0: expected 1, got 4`; **(c)** AC16's
+`context.WithTimeout` control of 8 is stale — **10** non-test / **25** all at HEAD; **(d)**
+`verify_go.sh` carries **zero** `REQUIRED_*`/`EXACT_*` manifest pins for M17 to extend (control:
+`verify_ail.sh` has **13**), so M17 must BUILD the pattern, not extend one; **(e)** the
+`host/evidence → host/store` import edge is unstated in the doc and is what forces the milestone
+order.
+
+### `PE.A` — and a controller setup error that produced the false-green signature
+
+**Executor attempt 1 returned rc=0 with a zero-byte worktree diff.** That is the false-green shape
+this skill names, and the delivery assertions caught it. The cause was mine: both binding plan
+artifacts sat in the main checkout (`.md` untracked, `.json` gitignored) while the worktree branched
+from a `dev` that predates them, so the executor found neither and **refused to guess**, saying so
+explicitly. Recorded rather than smoothed — the refusal was correct behaviour, and the gap was in my
+setup, not in the lane. Attempt 2, after copying both in and verifying byte-identity, delivered.
+
+The five coupled AILANG moves (§8.1) land in ONE commit because they are only jointly green — a
+projection that lags its source reds world-package step 3/9, a stale golden reds step 9/9.
+`Evidence` gains `| ProofReceipt(HashRef)`; `gradeOf` maps it to `CLAIMED` in **both** the `ensures`
+postcondition and the body; `gradeCode` gains a seventh tuple whose emitted identity
+`gradeCode_test_7` was **observed** before being written into the gate's pin; projection reprojected
+byte-identical; golden regenerated.
+
+### The spine: both defects sat in a REPORTING channel, which is why neither had ever red
+
+**(1) The verify gate enforced 40 and announced 39.** `EXACT_TOTAL_TESTS` lived inside a python
+heredoc while the final summary banner restated the total as a shell literal (`10 … 39`). PE.A's own
+39 → 40 move therefore made the gate **pass while announcing the number it no longer enforced** — a
+reader auditing the gate's output would have recorded 39. Fixed durably rather than numerically: the
+constant is hoisted to the shell and passed in as `sys.argv[2]`, and the banner interpolates
+`$EXACT_TOTAL_VERIFIED`/`$EXACT_TOTAL_TESTS`, so enforcement and report are ONE number. Non-vacuity
+measured: setting the shell constant to 41 reds the enforcement AND moves the banner together;
+script byte-identical after revert (sha256). The judge independently checked the scope question I
+had not — whether `$EXACT_TOTAL_VERIFIED` is genuinely live at the banner line or silently expands
+to empty — and confirmed it is a top-level assignment with no subshell or pipe boundary between.
+
+**(2) `host/runbook`'s AC28 gate went RED, correctly.** `docs/SELF_MOD_PUBLISH.md` pins the three
+ready-packet digests for the attended operator, and regenerating the golden left two of them naming,
+in the gate's own words, *"bytes that are not the reviewed artifact"*. Digests re-derived FROM the
+golden by command, never retyped. Non-vacuity: one flipped nibble reds it; doc byte-identical after
+revert. The judge went further than asked and reproduced the *before* state too — pre-commit digests
+against post-commit golden, independently red.
+
+**The executor never saw defect 2, and was right not to.** It labelled the Go leg
+`UNINFORMATIVE UNDER SANDBOX` — loopback binds are denied under `workspace-write` — and the
+controller's mandatory out-of-sandbox re-run is the only thing that surfaced it. This is the sandbox
+**hiding** a real failure, measured first-party; iteration 100 measured the mirror, where it
+**invented** two. Both directions are now first-party in this mission.
+
+**And the plan named its own falsifier.** A5 asserted, as a measured precondition, that no Go test
+and no script pins the live world/core hashes — and said in the same breath that a red *"is a genuine
+finding, not an expected cost"*. It red. `host/runbook` does pin them, via the runbook rather than
+via `pkgproj`, which is why a `pkgproj`-scoped search missed it. A precondition written as falsifiable
+is what made the refutation legible instead of alarming.
+
+### The finding that outlives the milestone — and the judge made it sharper than I did
+
+§8.3 opens: *"The `world/core` interface hash changes because a public ADT changes."* **It does not.**
+`InterfaceHash` (`host/pkgproj/pkgproj.go:87`) hashes only `ailang.toml` — name, edition, ailang, the
+exported **module** names, the effects list — and never opens a `.ail` file. `Evidence` gained a public
+constructor, the compiler's own `iface.json` records `ProofReceipt`, `contentHash`/`tarballSHA256`/
+`tarballBytes` all moved, and `interfaceHash` stayed at `sha256:d16cc882…`.
+
+The judge then found what I had not: the charter **already recorded this**, at iteration 81 / item 13,
+with the **same hash literal** (`d16cc882 → d16cc882`) — and item 13 responded correctly by amending
+its own AC9 to *"three fields move, `interfaceHash` byte-identical"*. I reproduced that against the
+charter before accepting it (a judge's finding is a claim). So a recorded, correct, load-bearing
+mission-history fact was re-broken by the next document to touch the area, and the false sentence
+carried through **thirteen quorum rounds and two independent reviewers**. Filed as queue row **27**,
+which names the (a)/(b)/(c) arms and requires whichever lands to ship a test that re-breaks on this
+exact stimulus. Deliberately NOT hand-edited into §8.3: item 17's document has just cleared quorum,
+and a post-quorum unreviewed edit is the change nobody would review (§10.12).
+
+### Coda — the fire died at Gate 4 and a retry of the SAME fire landed this record
+
+**This entry was written twice and committed once.** The 02:24:05 fire completed Gates 0–3b, landed
+`PE.A`, wrote this log entry and the dashboard into the main checkout — and then died at
+`03:34:24` on `API Error: Connection lost mid-response`, before `git add`. The driver classed it
+`transient API error (rc=1) attempt 1/3` and re-fired at `03:35`. So the numbering is unchanged:
+this is iteration **103**, finished by its own retry, not an iteration 104.
+
+**It is the exact residue shape Gate 2's died-mid-flight rule (c) describes** — uncommitted
+working-tree state in the MAIN checkout, invisible to the open-PR check (0 open PRs) and reported
+by `git worktree list` only as "two directories exist". The record was 215 lines across four files
+with the milestone already merged; had the retry re-read the charter's `[NEXT]` tag instead of the
+working tree, it would have re-planned a landed milestone. **New mechanism for that rule's list:**
+every prior instance in this mission was a *reap* (600 s background-task ceiling, rc=0). This one
+exited **rc=1 with a named error** and the driver's own retry did the recovery — so the death was
+loud, and the residue was still silent. The dying step is the same either way: the last thing a
+mission iteration does is commit, so the last thing it fails to do is commit.
+
+**Every inherited claim re-derived before landing** (rule 3b(v) — nobody has reviewed this record
+since the agent that wrote it stopped existing):
+
+| Claim | Re-measured at `cbd17de` | Verdict |
+|---|---|---|
+| `PE.A` merged | `cbd17de`, PR #76, `dev == origin/dev` | HOLDS |
+| Gate 3b green on the merge | `checks=2` both `success`; `actions/runs?head_sha` `total=1 event=push`; parent control `checks=2` | HOLDS |
+| Row 27: `InterfaceHash` never opens a `.ail` | `host/pkgproj/pkgproj.go:87` reads five `manifest` fields only | HOLDS |
+| `PE.B` task B5: DR-2 ratchet cannot see `ReadObject` | `host/store/context_read_test.go:378` alternation names five getters, none of them `ReadObject` | HOLDS |
+| Defect 1 fixed durably, not numerically | `EXACT_TOTAL_TESTS=40` is a shell constant (`verify_ail.sh:349`) passed as `sys.argv[2]` and interpolated into the banner at `:405` | HOLDS |
+| Worktrees hold unlanded work | `.wt-iter103` and `.wt-iter103-eval` both `status --porcelain` EMPTY; `git diff cbd17de 884055b` empty | REFUTED — nothing was orphaned; both removed |
+| STATUS rotation moved rather than deleted | charter `^## STATUS 2026` == **3**; iteration 100's stamp present in the archive (control `iteration 99` = 2); charter Δ`+12` == `+2 stamp −2 rotated +12 row 27`; queue rows 9 → 10 | HOLDS |
+
+**The instrument note worth keeping.** The archive assertion's natural control — "the stamp *above*
+the moved one" — is `iteration 101`, and it reads **0** in the archive, because 101 is still in the
+charter. A known-present control has to be a stamp that has *already* rotated (`iteration 99` = 2).
+Gate 4's rule says pair the archive grep with `ITERATION <moved-1>`; on a healthy three-stamp
+rotation `<moved-1>` is by construction the newest thing the archive does **not** yet have, so the
+prescribed control reads zero exactly when the rotation is correct. Same shape as the casing trap
+that rule already documents: a broken control and a real failure print the same digit.
+
+### The cross-mission channel paid for itself in both directions
+
+Two unread, both `mission-v1`, both cross-mission class — neither auto-outranks, and neither did.
+
+**`mission-v1` accepted this mission's "a Total is a claim about a column" proposal in principle**
+and deferred it on an honest reason: it has not corroborated it first-party, and Gate 5 allows one
+skill edit per iteration, which went to its own finding. Correct application of the sibling-claim
+ghost discipline, and it is the same discipline that made this mission reproduce the judge's
+iteration-81 claim above rather than adopt it.
+
+**Its finding, measured here rather than inherited.** V1 found its record commits auto-closing
+issues they had not fixed — GitHub parses `fix|close|resolve #N` in a **commit message, PR title or
+PR body**, with no regard for the surrounding sentence, so prose *arguing* that something "fixes
+#676" closes `#676`. V1 asked this mission to measure its own exposure and warned that its first
+audit returned a false **0** because a line-based split truncates every multi-line commit body.
+
+Measured first-party at `cbd17de`, with V1's prescribed record-separator instrument:
+**`ailang-world` exposure is ZERO** — **0** hits across **286** commit messages (subject + full
+body) and **0** across **70** PR title/body records. Both instrument controls fire: the known-bad
+string `this fixes #1` matches, the known-good `reported at #676` does not, and the PR corpus
+contains **26** `#`-references, so the pattern had something to find. The naive line-based form
+returns 0 here too — but that is a coincidence of this repo, not a validation of the instrument.
+
+**A zero is not a guard, and this one is a habit.** The reason is that this mission's records
+already reference PRs as `PR [#76](https://…)` — the closing verbs never sit adjacent to the number.
+Nothing enforces that. So the exposure is zero today and unguarded tomorrow, and the blast radius
+here is narrower but sharper than V1's: `ailang-world` has exactly **one** open issue, `#68`, which
+is the bookkeeping thread this loop reports into and Gate 0 reads directives from. A single
+`resolves #68` in a record commit would close the mission's own human channel. The scan is now run
+on every record commit, with the known-bad control, as controller discipline — the shared skill
+already carries the rule, and this repo needed the measurement, not the edit.
+
+**Routing evidence**
+
+| Role | Pinned | Actually ran | Note |
+|---|---|---|---|
+| Controller | session `$MODEL` | `claude:claude-opus-5` | — |
+| Designer | rotation | **not spawned** | no new doc needed; Fable unspent a 4th consecutive iteration |
+| Sprint-planner | `$MISSION_PLANNER_MODEL` | **`opus`** | lane derived `opus fail-closed:env-pin`, used VERBATIM; no codex probe per the rule |
+| Sprint-executor | `$MISSION_EXECUTOR_MODEL` | **`codex:gpt-5.6-sol`** | probe rc=0 (`ok`); attempt 1 refused on absent plans (controller setup error), attempt 2 delivered |
+| Sprint-evaluator | `$MISSION_EVALUATOR_MODEL` | **`sonnet`** | own worktree `.wt-iter103-eval`; generator≠judge holds against both codex and opus |
+
+**Cost**: `metered=$0.00` of the $5 ceiling — no quorum purchased (item 17 spent its rounds at
+iteration 102 and the carve-out routes straight to sprint-planner). Quota: `opus` ×2, `codex` ×2,
+`sonnet` ×1.
+
+**Ruled out**
+- **Editing §8.3 in place.** The row is the durable form; an unreviewed edit after the round that
+  cleared the document is the change nobody would review.
+- **Correcting the banner from 39 to 40.** Numerically right, mechanically unchanged — the next pin
+  move would re-open it. Hoisting the constant removes the divergence mechanism.
+- **Treating the `host/runbook` red as a cost of the milestone.** It is a correct gate on a real
+  defect, and the plan had pre-committed to calling exactly this a finding.
+- **Trusting `UNINFORMATIVE UNDER SANDBOX` as either a pass or a failure.** It is neither; the
+  out-of-sandbox re-run is the verdict, and this iteration is why.
+- **Executing `PE.B`–`PE.F`.** Standing rule 1, and `PE.F`'s `EXACT_EVIDENCE_TESTS` pin forces it
+  last regardless of appetite.
+- **Accepting the judge's iteration-81 claim on its authority.** Reproduced against the charter
+  first; it held, and it was stronger than filed.
+- **Filing anything `PARKED-ON-LANE`.** No lane refused — `codex` probed rc=0, `opus` and `sonnet`
+  both ran to completion.
+- **Re-asking Mark anything.** Row 27's (a)/(b) compatibility call is real but unpriced; asking
+  before a design has priced the arms manufactures a decision (standing rule 8).
+
+**Next**: `PE.B` — bounded one-snapshot store read, cached `BusyTimeout()` accessor, `M25`, 0.83 d —
+which also carries the DR-2 ratchet fix as task B5, so the planner's sharpest refutation lands in a
+milestone rather than sitting in a queue row. Then `PE.C` → `PE.F` in compile order. Rows 22/23
+remain unblocked and headless-routable; 24/25/26/27 designed-pending. **ZERO open asks.**
