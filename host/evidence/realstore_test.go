@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -60,6 +61,28 @@ func openEvidenceStoreWithoutBusyWait(t *testing.T) *store.Store {
 	return s
 }
 
+// openEvidenceStoreWithBusyWindow opens a store whose lock-retry window is set
+// by the CALLER's DSN, deliberately away from the production default, so an
+// accessor that had drifted into the hardcoded 2000 ms literal reports a value
+// the driver is not applying.
+func openEvidenceStoreWithBusyWindow(t *testing.T, window time.Duration) (*store.Store, string) {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "evidence.db")
+	dsn := "file:" + filepath.ToSlash(path) + "?" + url.Values{
+		"_pragma": {fmt.Sprintf("busy_timeout(%d)", window.Milliseconds())},
+	}.Encode()
+	s, err := store.Open(dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := s.Close(); err != nil {
+			t.Errorf("close real store: %v", err)
+		}
+	})
+	return s, dsn
+}
+
 func putEvidenceObject(t *testing.T, s *store.Store, payload []byte) hashref.HashRef {
 	t.Helper()
 	ref := hashref.SumSHA256(payload)
@@ -107,6 +130,18 @@ func startDecoyRead(s *store.Store, ref hashref.HashRef) <-chan time.Duration {
 }
 
 func TestRealStoreBlockedObjectReadReturnsWithinObjectReadTimeout(t *testing.T) {
+	// The stimulus needs at least two Ps, and that is a measurement rather than
+	// a precaution: this driver's SQLite is pure Go, so at GOMAXPROCS=1 the decoy
+	// monopolizes the single P for its whole ~53 ms read and the blocked reader
+	// is never scheduled to join the pool queue at all -- it runs only after the
+	// connection is free, wins it, and exhausts the retry budget. Measured on
+	// unmutated code: 2/10 retry-exhaustion reds at GOMAXPROCS=1, 0/10 at the
+	// default. Declare the instrument's precondition and enforce it instead of
+	// inheriting whatever the harness happens to set.
+	if prev := runtime.GOMAXPROCS(0); prev < 2 {
+		defer runtime.GOMAXPROCS(prev)
+		runtime.GOMAXPROCS(2)
+	}
 	s := openEvidenceStoreWithoutBusyWait(t)
 	goodPayload := envelopeFor(t, testKey, reportFor(testSubject, testCompiler), "good")
 	goodRef := putEvidenceObject(t, s, goodPayload)
@@ -141,9 +176,13 @@ func TestRealStoreBlockedObjectReadReturnsWithinObjectReadTimeout(t *testing.T) 
 			if result.Err() == nil {
 				t.Fatalf("blocked read returned no operational error: unsupported=%v", unsupportedOf(result))
 			}
-			if elapsed >= 2*realStoreReadTimeout {
-				t.Fatalf("blocked read returned after %v; want below mutant bound %v", elapsed, 2*realStoreReadTimeout)
-			}
+			// AC16 classifies SEALS, not refusals. A refusal is the correct
+			// outcome however late the scheduler delivers it, and the 20x
+			// watchdog above is what bounds that lateness; a 2x ceiling on the
+			// REFUSAL path measures scheduler latency instead of the deadline.
+			// Measured on unmutated, sha256-identical code: GOMAXPROCS=1 reds
+			// 10/10 with "returned after 10-33ms", default GOMAXPROCS reds 0/10.
+			t.Logf("blocked read refused after %v (bound %v, watchdog %v)", elapsed, realStoreReadTimeout, 20*realStoreReadTimeout)
 			<-decoyDone
 			return
 		case <-time.After(20 * realStoreReadTimeout):
@@ -187,13 +226,25 @@ func TestOversizeProofReportIsRefused(t *testing.T) {
 }
 
 func TestConstructorPinsBusyTimeoutBelowObjectReadTimeout(t *testing.T) {
-	s, path := openEvidenceStore(t)
+	s, _ := openEvidenceStore(t)
 	good := putEvidenceObject(t, s, envelopeFor(t, testKey, reportFor(testSubject, testCompiler), "good"))
 	ordered := realValidator(t, s, 3*time.Second)
 	requireProvenControl(t, ordered, good)
 
-	dsn := "file:" + filepath.ToSlash(path) + "?" + url.Values{"_pragma": {"busy_timeout(2000)"}}.Encode()
-	db, err := sql.Open("sqlite", dsn)
+	// The round-11b cross-check, spelled so it can FAIL. Reading a PRAGMA back
+	// out of a handle whose DSN this test itself set to the production default
+	// compares the accessor against a literal the test supplied -- it survives an
+	// accessor hardcoded to 2 s, which is exactly the stale-literal drift the
+	// amendment exists to catch (measured: that mutant leaves this whole test
+	// green). So cross-check against a window the CALLER chose and the driver
+	// therefore actually applies, on a store whose connection is free.
+	const callerWindow = 1500 * time.Millisecond
+	custom, customDSN := openEvidenceStoreWithBusyWindow(t, callerWindow)
+	if custom.BusyTimeout() == s.BusyTimeout() {
+		t.Fatalf("instrument failure: caller window %v equals the default %v, so this arm could not see a stale literal",
+			custom.BusyTimeout(), s.BusyTimeout())
+	}
+	db, err := sql.Open("sqlite", customDSN)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -202,8 +253,8 @@ func TestConstructorPinsBusyTimeoutBelowObjectReadTimeout(t *testing.T) {
 	if err := db.QueryRow("PRAGMA busy_timeout").Scan(&pragmaMS); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := s.BusyTimeout(), time.Duration(pragmaMS)*time.Millisecond; got != want {
-		t.Fatalf("BusyTimeout() = %v; direct PRAGMA busy_timeout = %v", got, want)
+	if got, want := custom.BusyTimeout(), time.Duration(pragmaMS)*time.Millisecond; got != want {
+		t.Fatalf("BusyTimeout() = %v; the window the driver applies for this DSN is %v", got, want)
 	}
 
 	_, err = evidence.NewValidator(testKey, s, validatorConfig(time.Second), []string{"world/types.ail"})
@@ -248,6 +299,22 @@ func TestReaderWaitBoundsCannotBeLostThroughWrapper(t *testing.T) {
 		forwarding := waitBoundWrapper{reader: s, busy: s.BusyTimeout()}
 		if _, err := evidence.NewValidator(testKey, forwarding, cfg, []string{"world/types.ail"}); !errors.Is(err, evidence.ErrUnorderedTimeouts) {
 			t.Fatalf("forwarding wrapper lost real-store wait bound: got %v; want ErrUnorderedTimeouts", err)
+		}
+	})
+	// The arm above passes for ANY wrapper reporting >= 1 s, including one that
+	// forwards nothing and returns the 2 s default as a literal -- measured: it
+	// survives its own precondition being removed. This arm cannot: 1800 ms is
+	// ORDERED against a caller-chosen 1500 ms window and UNORDERED against the
+	// 2000 ms default, so a wrapper that stopped forwarding refuses here.
+	t.Run("forwarding-preserves-a-non-default-window", func(t *testing.T) {
+		const callerWindow = 1500 * time.Millisecond
+		custom, _ := openEvidenceStoreWithBusyWindow(t, callerWindow)
+		if custom.BusyTimeout() != callerWindow {
+			t.Fatalf("instrument failure: store reports %v; want the caller-chosen %v", custom.BusyTimeout(), callerWindow)
+		}
+		forwarding := waitBoundWrapper{reader: custom, busy: custom.BusyTimeout()}
+		if _, err := evidence.NewValidator(testKey, forwarding, validatorConfig(1800*time.Millisecond), []string{"world/types.ail"}); err != nil {
+			t.Fatalf("forwarding wrapper over a %v window refused an ORDERED 1800ms timeout: %v", callerWindow, err)
 		}
 	})
 }
