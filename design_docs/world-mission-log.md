@@ -12411,3 +12411,222 @@ largest milestone in the sprint and the whole authority argument. Then `PE.E` (r
 integration proofs, the four kills no fake may make), then `PE.F` last without exception, because
 `EXACT_EVIDENCE_TESTS` pins the observed `host/evidence` test count and any test landed after it
 reds the gate. **ZERO open asks.**
+
+---
+
+## Iteration 106 — 2026-08-21 — item 17: `PE.D` landed, and the gate the milestone rests on was blind to every spelling but the one the doc named
+
+**Pick**: queue row **17** `w-validated-proven-evidence-boundary`, milestone **`PE.D`** — item 17's
+own `NEXT` pointer, set by iteration 105. The largest milestone in the sprint (0.92 d, ~1150 LOC
+estimated, 15 named mutations, "the whole authority argument"). Not the queue head by position; it is
+an `[IN-SPRINT]` item with a landed plan and an explicit next milestone, so standing rule 1 keeps it.
+
+**Outcome**: **`PE.D` LANDED** — PR [#79](https://github.com/sunholo-data/ailang-world/pull/79) →
+squash [`d1b7eae`](https://github.com/sunholo-data/ailang-world/commit/d1b7eae), Gate 3b GREEN on the
+MERGE commit (SHA-addressed, `present=2 == expected=2`, both `success`, run CONFIRMED to exist
+`total=1 event=push`, parent control `checks=2`). Judge `sonnet` **62/100 FAIL round 1**, two BLOCKING
+findings, both real; repaired; **95/100 PASS round 2**, zero blocking. Four of six milestones are in.
+
+**Gate 0/1.** Kill switch armed, `gh` on `sunholo-voight-kampff`, billing tripwire CLEAN, main
+checkout clean at 0 porcelain. `dev` == `origin/dev` at `aea6b9b`; CI SHA-addressed `checks=2` both
+`success`, run confirmed (`total=1 event=push`), parent control `checks=2`. Running-skill drift check
+in the form its own sharpening requires — `readlink` FIRST, then `cmp` against the RESOLVED target,
+same inode (`45241676`) as the file this controller read; byte-identical to `origin/dev`. **0**
+directives from `MarkEdmondson1234` on `#68` since `2026-08-21T12:46:23Z` (of 23 comments), **and the
+zero is a measurement**: widening `--since` to `2026-08-17T00:00:00Z` re-surfaces all three consumed
+directives, so the channel is alive rather than merely quiet. Rotation not due (`#68` created
+`2026-08-17T19:19:43Z`, after the Monday-07:00 **local** boundary; 23 comments, cap 80). Decision
+ledger valid, 11 rows, 0 OPEN, on entry and on exit. Died-mid-flight sweep: 0 open PRs by this loop,
+0 World worktrees, clean main checkout.
+
+**A shared state key that is NOT namespaced, recorded rather than acted on.**
+`~/.ailang/state/mission-gh-issue` reads **745** — V1's bookkeeping issue, not World's. The driver
+exports `MISSION_GH_ISSUE=68` and that is what this loop used, so nothing was mis-read; but the Repo
+Profile still describes that unnamespaced path as where the number lives, and it is one file for
+three missions. Same class as the designer-rotation key the roles table already fixed and the
+dashboard path Gate 4 already fixed. Below the ≥2-friction bar as a first-party instance (World has
+not been harmed by it), so it is recorded here rather than spent as this iteration's skill edit.
+
+**External-issue sweep**: **0 orphans of 1 enumerated** open issue, list length asserted at **1**;
+that one is `#68` itself, tracked 54 times across the four mission files. Positive control `#78` fires
+1/1/0/1 across charter/log/archive/dashboard. Negative control FIRED on a fresh literal deliberately
+left unpublished (Gate 4's *a control you record is a control you spend*).
+
+**Inbox: 2 unread, both `mission-v1`, both cross-mission class — neither auto-outranks.** One is
+`mission-v1` iteration 244's report. The other is the **ADOPTION verdict for this mission's own
+iter-105 skill-fix proposal**: the `|| echo 0`-inside-`$()` rule landed in the shared skill at
+`3a484e626`, filed where this mission argued it belonged (Gate 2's rule 3a(i-c) remedy list, beside
+`set -- $var`, rather than as a war story), with a second V1 instance folded in and the framing quoted
+intact. **The claim was re-derived here rather than believed**: the running skill carries the rule
+(2 hits on its distinguishing phrase, control `rule 3a` = 22), so the copy this loop executes really
+does have it.
+
+**The externally-blocked predicate was RUN, not transcribed.** Row 5 waits on
+[`sunholo-data/ailang#764`](https://github.com/sunholo-data/ailang/issues/764): measured today
+`state=OPEN`, `comments=0`, `updatedAt=2026-08-17T23:34:55Z` — unflipped. The control discriminates
+rather than merely answering: `#676` through the same call shape reads `OPEN`, **3** comments,
+`updatedAt=2026-08-21T00:11:02Z`, a different value on every field, so an instrument returning the
+same triple for both would have been visible. Row 14's predicate remains flipped (blocked only on item
+18, complete since iter-93) and remains unpicked for the thirteenth iteration — item 17 is IN-SPRINT
+with an explicit NEXT, and standing rule 1 is one item.
+
+**Gate 2 freshness and baseline.** `PE.D` not landed — `git log origin/dev --grep 'PE\.D'` empty with
+the control on `PE\.[BC]` returning all four of their commits; 0 open PRs by any author. Rule 3b(vii)
+doc/plan rot: **zero** commits touch the design doc since the plan's own commit `cbd17de`, control on
+all paths returning five. **Both gates baselined rc=0 on the PRISTINE worktree before any change** —
+`verify_ail.sh` 10 identities / 40 named tests / 9-of-9 world-package steps, `verify_go.sh` 0 FAIL
+lines — so every green afterwards is about this diff.
+
+**A divergence I raised and then refuted myself.** The plan's `PE.D` row cites `AC4`, and
+`grep -cE '\bAC4\b'` over the design doc returns **0** while the control `AC13` returns **4** — the
+exact signature of the plan/doc rot rule 3b(vii) exists to catch. It is not one: §7's criteria are a
+NUMBERED MARKDOWN LIST, so `AC4` means list item 4 (*"No fallback"*) and the literal token is absent
+by construction, as are `AC6`/`AC7`/`AC8`/`AC10`. My matcher's scope was wrong, not the plan. Recorded
+because a false alarm that looks exactly like a real finding is worth as much as the finding.
+
+**Executor `codex:gpt-5.6-sol`** (probe rc=0), ~8 minutes, **554 lines across 2 new files** —
+`host/evidence/validator.go` (205) and `host/evidence/authority_test.go` (349, external package
+`evidence_test`). No git write operations; main checkout untouched at 0 porcelain. It correctly left
+`verify_go.sh` unrun and labelled `UNINFORMATIVE UNDER SANDBOX`. Its report said **"DEVIATIONS: none"**
+and, in the same breath, **"the 15 source mutations were not physically drilled"** — an honest residual
+that also happens to be the milestone's entire argument, so the drill became the controller's. 554
+lines against the plan's ~1150 estimate is a real gap in *volume*; it is not a gap in *coverage*, which
+is what the drill below actually measures.
+
+**THE DRILL — run outside the sandbox, every mutant asserted LANDED (sha256) and BUILDS (`go build
+./...` rc=0) BEFORE any test result was read.** Fourteen removal-direction mutants:
+
+| mutants | verdict |
+|---|---|
+| M2 M3 M5 M7 M8 M11 M12 M13 M14 M21 M29 | **SOLE KILLERS** — red set 1, and the package with the named arm `-skip`ped is rc=0 |
+| M9 | red set **6** — broad by construction (it lives in the shared `report_codec.go`), so rule 3j's rc=0 inverse is inapplicable; members are PE.C's own strict-refusal arms plus iteration 105's truncated-tail panic pin, all explained |
+| M10 | red set **2** — its two named MAC arms |
+| M20 | red set **2** — the binding arm plus the mint-distinctness arm, which reads the same check |
+
+Every mutant's failure text names its own mechanism, so a bystander guard cannot satisfy it. All files
+restored from `cp` backups (never `git checkout --`), byte-identity confirmed by sha256, suite rc=0
+after restore.
+
+**My own red-set instrument was wrong on the first pass, and the control is what caught it.** The
+enumeration used `grep -c '^    --- FAIL'`, which counts **sub**-tests; every one of the eleven genuine
+single-test kills therefore read `redset=0`. A matcher control on a known-red run printed
+`top-level 1 / subtest 0` and the whole enumeration was re-run against `^(    )?--- FAIL: `. A count of
+zero from a pattern that cannot match the thing being counted is rule 3a inside the drill itself — and
+note the direction of the error: it under-reported kills, so it would have manufactured eleven false
+"vacuous arm" findings rather than hiding a real one.
+
+**THE HEADLINE FINDING — A REMOVAL PROVES A CHECK *FIRES*; ONLY AN ADDITION PROVES IT *LOOKS*.**
+`M16` is the sprint's one ADDITION mutation (*"add a grade resolver accepting `HashRef`, `ProofReceipt`,
+raw `Evidence`, or kernel `EvidenceGrade`"*), and `TestPublicAuthoritySurfaceIsFrozen` as delivered
+enumerated only package-level funcs whose RESULT TYPE was the bare identifier `ResolvedGrade` or
+`ResolutionResult`. That is precisely the spelling §5's M16 row names, so the arm passed and every
+removal-direction drill in this file would have kept passing forever. Three other natural spellings of
+the same forbidden authority — each minting `ResolvedGradeProven` from a raw `HashRef` with **no seal
+at all** — left the whole package **GREEN**:
+
+```go
+func GradeOfRef(hashref.HashRef) *ResolutionResult         // *ast.StarExpr, not *ast.Ident
+func (RawGrader) Grade(hashref.HashRef) ResolvedGrade      // fn.Recv != nil, skipped
+type Grade = ResolvedGrade; func GradeOfClaim(...) Grade   // alias, name differs
+```
+
+Repaired by replacing the shape-matching scan with an **EXACT MANIFEST** of the package's **55**
+exported declarations — funcs, methods, types and values — complete **by construction** rather than by
+inspection, carrying an anti-vacuity floor (`t.Fatal("instrument failure")` on an empty parse or an
+empty result set, never a pass). Re-drilled: all four variants red, **sole killer each time**, and an
+unrelated new exported value is caught by name. This is the skill's own rule 3a(i-e) met first-party,
+on a gate whose branches were otherwise fully pinned — which is the whole point of that rule: coverage
+of a mechanism's branches says nothing about the completeness of its enumerator.
+
+**JUDGE ROUND 1: 62/100 FAIL, TWO BLOCKING — AND BOTH WERE REPRODUCED BEFORE BEING ACTED ON.**
+
+*(1) An unreachable refusal branch whose named test was killing somewhere else.* `ValidateProof`
+decoded the report a SECOND time and refused on error. `DecodeAuthenticatedEnvelope`
+(`envelope_codec.go:49`) already runs `DecodeProofReportV1` over those exact bytes and refuses the
+envelope on failure, so the validator's branch cannot execute in a correct program. Measured: neutered
+with `if false && err != nil`, mutant BUILDS rc=0, the **entire** `host/evidence` suite stays rc=0 —
+`TestMalformedProofReportIsRefused`, the arm named for the *"strict report-decode guard"*, is in fact
+killed by the ENVELOPE decoder. This is iteration 105's M27 class, **second consecutive instance**, and
+the **third consecutive iteration** whose real defect sat in its own verification machinery rather than
+in the code under test. Repaired STRUCTURALLY rather than declared, on iteration 105's own precedent
+that *a branch nothing can pin is not a guard*: the envelope now carries the report it already decoded
+in a new **unexported** `decoded` field and the validator reads it, so there is no second decode and no
+branch left to neuter. The shortcut's own invariant is pinned by
+`TestEnvelopeCarriesTheReportItAlreadyDecoded`; dropping the carried value reds **17** arms, so the
+invariant is load-bearing rather than decorative.
+
+*(2) One test standing in for four branches.* `NewValidator`'s first guard was a single compound
+condition with four disjuncts behind one message. Each neutered independently, mutant building every
+time:
+
+| disjunct | suite | |
+|---|---|---|
+| `reader == nil` | rc=0 | **UNPINNED** |
+| `cfg.ObjectReadTimeout <= 0` | rc=1 | pinned |
+| `cfg.Compiler.IsZero()` | rc=0 | **UNPINNED** |
+| `cfg.CompilerVersion == ""` | rc=0 | **UNPINNED** |
+
+Three of four, and `reader == nil` is the worst: it is undocumented in the design doc's §3.2 and a
+regression there panics two lines later at `reader.BusyTimeout()`. Split into four separate refusals,
+each with a message naming only its own field. They still share `ErrInvalidValidatorConfig` by design,
+but that sentinel is produced by **six** refusals, so an arm matching on it alone has an observable
+wider than its mechanism — the new arms assert their branch's own text. Re-drilled: all four are now
+**SOLE KILLERS**, one arm dying per mutant, every time.
+
+**JUDGE ROUND 2: 95/100 PASS, ZERO BLOCKING** — in its own worktree, resumed with its round-1 context
+and aimed explicitly at the REPAIR rather than at the original code, because a repair authored in
+response to a finding is exactly the change nobody else has reviewed. It re-derived all four
+constructor arms as sole killers 1-for-1, enumerated the 12 `return unsupported(...)` sites to confirm
+no `UnsupportedReason` became unreachable (11 distinct reasons; `Oversize` correctly PE.E scope), and
+established that the `decoded` cache cannot desync — it is unexported, and `ValidateProof` has no
+parameter through which a hand-built envelope can enter the mint path. It also confirmed three
+round-1 non-defects rather than quietly dropping them, including that `containsIdentity`'s binary
+search is safe because `DecodeProofReportV1` refuses an unsorted `Verified` list at decode.
+
+**Routing evidence**
+
+| role | pinned | actual | notes |
+|---|---|---|---|
+| controller | `$MODEL` | `opus` | triage, pick, drill, repair, record |
+| executor | `codex:gpt-5.6-sol` | `codex:gpt-5.6-sol` | probe rc=0; ~8 min; 554 lines; no git writes; sandbox verdicts correctly labelled |
+| evaluator | `sonnet` | `sonnet` ×2 | generator≠judge holds (Anthropic ≠ OpenAI); own worktree; round 2 resumed with round-1 context |
+| designer | ROTATION | **not spawned** | no new doc needed — 7th consecutive iteration the rotation and Fable go unspent |
+
+**Cost**: `metered=$0.00` of the $5 ceiling — no quorum purchased (an in-sprint continuation on an
+existing, already-quorumed plan), no metered lane touched. Quota buckets: `opus` ×1, `codex` ×2
+(probe + run), `sonnet` ×2. No GPU, so `rig.lock` untouched.
+
+**Ruled out**
+
+- Banking the executor's `rc=0` and its green package subset as the milestone's evidence. It had not
+  drilled a single mutation and said so; the drill *is* the deliverable for a milestone whose contract
+  is a set of refusals.
+- Reading `redset=0` from a sub-test-only matcher as eleven vacuous arms.
+- Accepting `M16` on the strength of the one spelling the design doc names.
+- Treating the judge's 62/100 as a judge error. Both blocking findings reproduced exactly as filed.
+- *Declaring* the unreachable decode branch unreachable instead of removing the double decode —
+  iteration 105 already settled that a branch nothing can pin is not a guard.
+- Splitting the compound constructor guard only in prose, without arms that die one-per-mutant.
+- Re-quorum on an in-sprint continuation; picking row 14 despite its flipped predicate (standing
+  rule 1); and filing anything `PARKED-ON-LANE` — no lane refused, `codex` probed rc=0 and `sonnet`
+  ran twice.
+- Spending this iteration's one skill edit on the unnamespaced `~/.ailang/state/mission-gh-issue`
+  key: it is a first-party observation with no first-party harm, below the ≥2-friction bar.
+
+**Auto-close discipline on four surfaces.** Both commit messages, the PR title and the PR body were
+scanned with `(clos(e|es|ed)|fix(e|es|ed)?|resolv(e|es|ed))\s*:?\s*#[0-9]+`, each scan paired with a
+known-bad control that fired and a known-good (`reported at #676`) that did not. `#68` read before the
+merge (OPEN, 23 comments) and again after (OPEN, 23). This repo has exactly one open issue and it is
+the loop's only inbound human channel, so a stray closing verb would shut the mission's own mailbox.
+
+**Rotation asserted in both directions.** Charter `^## STATUS 2026` == **3** after the edit; the
+arithmetic invariant `after == before + 2 − 2×len(moved)` held exactly (3765 == 3765); iteration 103's
+stamp is PRESENT in the archive (1) with the control `iteration 102` reading 2, so the destination
+gained what the source lost; and queue-row controls (rows 5, 17, 30) all still present after the edit.
+
+**Next**: **`PE.E`** — real-store integration proofs, 0.85 d, test-only ~700 lines, *no fake
+participates in any kill by construction*. The plan flags it as the milestone most needing the
+out-of-sandbox re-run, and not for the usual reason: nothing in it binds a socket, but E1/E2/E8 are
+**wall-clock classified**, so a loaded sandbox can produce a false red indistinguishable from the
+M22/M23 mutant signature. Then `PE.F` last without exception, forced by its own `EXACT_EVIDENCE_TESTS`
+pin. **ZERO open asks.**
