@@ -12788,3 +12788,43 @@ exception** because the count gate reds on any test landed after it — so `PE.F
 change to `host/evidence`. Note for whoever writes it: this milestone added **four** tests to that
 package, and one of them adds sub-tests, so the observed count is what the gate must pin, never a
 number transcribed from the plan. **ZERO open asks.**
+
+### Iteration 107 addendum — the record commit turned `dev` red, in this iteration's own test
+
+Written after the Gate-4 record was pushed, because that is when it happened.
+
+**`ac17d54` (docs-only) went RED** on `go host build + test gate`, failing step 7, one FAIL:
+`TestRealStoreBlockedObjectReadReturnsWithinObjectReadTimeout`. Attribution measured rather than
+assumed: `git diff --stat daf48a6 ac17d54 -- ':!design_docs'` is **EMPTY**, and the identical tree
+passed on the parent (`0` FAILs) — so the docs did not cause it, the parent's green was luck, and the
+arm is flaky on CI. This mission OWNS this repo, so the red outranked everything and became the
+deliverable.
+
+**Root cause, from the runner's own log**: `decoy hold=2.626683936s ObjectReadTimeout=2ms
+ratio=1313.3x` then `blocked read exceeded test-side 20x watchdog`. The stimulus scales with the
+machine and the bounds did not — the 256 MiB decoy read holds the sole pooled connection ~53 ms here
+and **2.63 s** on the runner, a **49×** difference, while `ObjectReadTimeout` (2 ms) and the watchdog
+(40 ms) were absolute constants calibrated on this laptop. The red it produces is, once again,
+indistinguishable from the M22/M23 mutant signature the arm exists to detect.
+
+**This is instance 2 of the watch item this iteration pre-registered one commit earlier**, and it
+arrived ninety minutes after the pre-registration. Three axes, three reds, none of which the previous
+fix anticipated: CPU contention (mine — 23/23 green), parallelism (the judge's — `GOMAXPROCS=1`,
+10/10 red), absolute machine speed (CI's). The sharpening the second instance buys is that "vary more
+axes" is the *weak* form of the lesson: **where a bound and its stimulus both depend on the machine,
+derive the bound FROM the measured stimulus rather than hardcoding wall-clock at all.** Every axis I
+could think of would still have left a constant meaning "my laptop".
+
+**Fixed at [`a87c723`](https://github.com/sunholo-data/ailang-world/commit/a87c723)** (PR
+[#81](https://github.com/sunholo-data/ailang-world/pull/81)): `readTimeout := hold / 20` makes the
+design doc's "hold > 20× `ObjectReadTimeout`" floor true **by construction** on any machine; the
+watchdog becomes the hold itself; `minDecoyHold` (20 ms) survives as a floor on the *stimulus*, not a
+calibration, so a decoy too fast to block anything is still a loud instrument failure. AC18's
+nonblocking arm carried the same defect and got the same treatment. Verified: 4 runs at
+`GOMAXPROCS=1` under 16 spinners with holds of 67.7/84.0/89.8/110.5 ms and derived timeouts of
+3.4/4.2/4.5/5.5 ms, **0 FAILs**; **M22 and M23 still die** at the derived watchdog, so scaling cost no
+kill; both full gates green; Gate 3b GREEN on the merge commit `a87c723` (`present=2 == expected=2`,
+both `success`, 0 not-green). **`dev` is green.**
+
+**Gate 5 lane, revised.** The pre-registration is now a two-instance finding and is PROPOSED to V1 on
+the cross-mission channel — World shares the skill and cannot edit it.

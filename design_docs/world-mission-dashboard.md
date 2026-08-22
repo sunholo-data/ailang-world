@@ -1,7 +1,7 @@
 # Mission Dashboard — Ailang World
 
 *Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS), `-status-archive.md`, `-log.md`.*
-**Iteration 107** · 2026-08-22 · `dev` @ `daf48a6` · CI green (both jobs, SHA-addressed on the merge commit, run confirmed `event=push`)
+**Iteration 107** · 2026-08-22 · `dev` @ `a87c723` · CI green (both jobs, SHA-addressed on the merge commit, 0 not-green) — after the record commit turned dev RED in this iteration's own test and was fixed forward
 
 > **A stress control varies the axis you thought of; the false red lives on the one you didn't.**
 > I ran AC16's timing 23/23 green across CPU contention and called it sound. The judge varied
