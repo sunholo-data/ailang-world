@@ -13401,3 +13401,140 @@ control, and the controlplane message's body was read back before this line was 
 **Retro lane: none.** Instance 1, and the loop-level rule that would have caught it already exists
 and already worked — the miss was mine, not the rulebook's. Recorded so a second instance is
 recognisable.
+
+## Iteration 111 — 2026-08-22 — `WB.A` landed, and the plan's own precondition counted a tree the sprint never runs in
+
+**Pick**: queue row **14** `w-workbench-read-only`, milestone **`WB.A`** — the pointer iteration
+110's `NEXT` named. Item 17 is CLOSED, no flipped predicate outranked it, and the died-mid-flight
+sweep was empty (**0** open PRs on the fleet account, **0** worktrees beyond the main checkout,
+clean main tree), so there was no orphaned work to adopt instead.
+
+**The externally-blocked row was re-measured as a command, not transcribed.** Row 5 waits on
+`sunholo-data/ailang#764`: `state=OPEN comments=0 updatedAt=2026-08-17T23:34:55Z` — unchanged since
+iteration 110. Control `#676` answers through the same call at **3** comments and a *different*
+`updatedAt` (`2026-08-21T00:11:02Z`), so the instrument discriminates; a negative control
+(`#9999999`) errors. Row 5 stays BLOCKED.
+
+**Already-landed check, against a FRESH origin.** `git log origin/dev --grep 'WB\.A\|workbench'`
+returned only doc/plan commits (`4dd870f`, `3e0c34c`, `bc8f193`, `23b13b9`, `13f61ca`); the merged-PR
+search for `workbench in:title` returned `[]`. Nothing was half-landed.
+
+**Base currency.** `git diff --name-only 3e0c34c..HEAD -- ':!design_docs'` = **0** files, control (no
+pathspec) **5**, all under `design_docs/`. So the plan's base `3e0c34c` and the worktree's base
+`c0021f7` are code-identical and every baseline in the plan still holds.
+
+**Rule 3e(a), run before routing.** `verify_ail.sh` **rc=0** (10 identities / 40 named tests / 9-of-9
+package steps) and `verify_go.sh` **rc=0**, both with `AILANG_BIN` AND `GOTOOLCHAIN=go1.25.6`, exit
+codes captured to a file and never read through a pipe. `host/capsule` was **green** on this base
+run, which is a data point that row 32's red is load-dependent, not a refutation of the row.
+The directive's own gate list was baselined too (rule 3e(a) aimed at the controller's hands):
+`go build ./host/workbench/...` **rc=1** and `go test ./host/workbench` **rc=1** at base — the two
+gates that must move — against `go build ./host/daemon/...` **rc=0**, `go build ./...` **rc=0** and
+`go test ./host/daemon ./host/boundary` **rc=0** as the controls that must not.
+
+**THE FINDING: THE PLAN'S PRECONDITION 3 COUNTS A TREE THE SPRINT NEVER RUNS IN.** The plan's
+`preconditions_the_controller_must_satisfy_before_the_executor_starts[3]` prescribes writing
+`.snap/PRISTINE_MANIFEST.txt` in the sprint worktree and states it is *"VERIFIED BY ME to be 1079
+lines at 3e0c34c in the main checkout"* — and AC7's whole repair depends on that manifest. Run in
+the worktree, the identical command returns **157**. The parenthetical is the tell: the number was
+measured in the **main checkout** and prescribed for the **worktree**, and the two trees differ by
+**922 untracked files** — `tools/` alone is **844** files there against **13** tracked here, plus
+66 under `packages/` and 25 under `world/`. Control: `git ls-files | grep -v '^design_docs/'` =
+**156**, so the worktree's 157 is *tracked files + 1* and is the honest count.
+**The +1 is a second, sharper defect.** The command excludes `-not -path './.git/*'`, which is
+written for a checkout where `.git` is a DIRECTORY. In a **linked worktree** `.git` is a **FILE**,
+so it is not under `./.git/` and it lands in the manifest — measured, the sole difference against
+`git ls-files` is the literal entry `.git`. The plan's own §5 explains at length that a linked
+worktree's `.git` is a file pointing outside the sandbox; its precondition command does not act on
+what its prose knows.
+Neither defect breaks AC7: the delta is computed pristine-vs-post **inside one tree**, so a constant
+offset and a self-cancelling `.git` row both drop out. What breaks is the **cross-check** — a
+controller comparing its manifest against the stated 1079 sees a 6.9× mismatch and can only conclude
+the worktree is broken. This is iteration 110's AC7 finding arriving from the other side: that one
+was a command blind to the files the sprint adds, this one is a *count* taken in a different tree
+from the one it is checked in. The shared shape is the loop's own: **a measurement is a claim about
+where you were standing, not about where it will be read.**
+
+**Executor** `codex:gpt-5.6-sol` — probe rc=0 (`ok`), real run backgrounded under a 30-min
+`date +%s` cap, terminal marker `codex rc=0` at **~2.5 min**, 211 lines across 2 new files.
+**Zero git writes**: the branch was still at `c0021f7` and `git status --porcelain` showed only the
+two untracked paths when the run ended, exactly as `executor_git_policy` requires. It reported
+`go test ./host/daemon ./host/boundary` **rc=1 — UNINFORMATIVE UNDER SANDBOX** (`bind: operation
+not permitted`) rather than as a pass or a failure — false-green (3) working as designed. The
+controller re-ran every gate outside the sandbox: that gate is **rc=0**. The sandbox invented the
+failure; it did not find one. **DEVIATIONS: none** — all 13 tasks satisfied verbatim; the one
+departure is that `render.go` imports only `errors` where the plan *allowed* `errors, fmt, strings`,
+which is an allowlist, not a requirement.
+
+**Non-vacuity spot-check — NOT the WB.H drill, and labelled as such.** The plan discharges M17–M21
+in WB.H; WB.A only *claims* them. But a milestone whose tests have never red is a claim, so two
+one-line probes: an **M18-shaped** mutant (`NewGradeUnavailable` sets `Label: GradeCLAIMED`) reds
+**only** `unavailable-is-not-claimed`; an **M21-shaped** mutant (`Label: GradePROVEN`) reds **only**
+`no-proven-inference`. Each test kills its own mutant and only its own — the discrimination is the
+point, not the red. Every mutant was proved LANDED by `grep -n` on the mutated literal and the tree
+asserted to BUILD **rc=0** before any test result was read; restore was `cp` from `.snap/backup/`
+(never `git checkout --`, which in an uncommitted worktree deletes the milestone), verified
+byte-identical by `shasum -a 256 -c`, with the pristine control re-run green.
+
+**Load-bearing claim re-derived rather than inherited (rule 3b(v)).** The plan's task 6 asserts
+`host/store/store.go` `LogHeader` (:112-119) holds exactly `EntryIndex, SemanticsEpoch,
+TransitionFn, Interpreter, PrevEntryHash, WrittenBy` and that `LogEntry` (:125-129) adds
+`EntryHash` and `TransitionRef` **outside** the frozen header. Read first-party: confirmed, including
+the source comment saying so. The view model mirrors it faithfully.
+
+**Evaluator** `sonnet` (generator≠judge: executor provider `codex`/OpenAI ≠ judge `sonnet`/Anthropic)
+— **97/100 PASS round 1, ZERO BLOCKING**. It re-ran every gate itself and **independently reproduced
+both mutation probes**, restoring byte-identically. Its two non-blocking findings are both real and
+one is a genuine sharpening of my own record: `unavailable-is-not-claimed` and `no-proven-inference`
+assert only `Label != GradeCLAIMED` / `!= GradePROVEN`, and since `GradeLabel`'s zero value is `""`
+those hold for **any** implementation that simply leaves `Label` unset — so they are narrow
+regression pins against the one mutation shape the plan names, **not** general positive controls.
+That is a property of the plan's task-11 text, not an executor defect, and it is the correct
+reading: my probes show they discriminate *that* mutation, which is all they were ever asked to do.
+Recorded rather than repaired — tightening them is WB.B's business if a second constructor appears.
+
+**Outcome — LANDED.** PR [#83](https://github.com/sunholo-data/ailang-world/pull/83) → squash
+[`83f1973`](https://github.com/sunholo-data/ailang-world/commit/83f1973). Gate 3b **GREEN on the
+MERGE commit**, SHA-addressed from a `rev-parse`d 40-character SHA and never truncated:
+`present=2 == expected=2`, both `success`, **0** not-green, with `total_count` firing as the
+known-positive control and the poll asserting each count is a NUMBER before comparing it. Post-tree
+gates before the push: `verify_ail.sh` **rc=0**, `verify_go.sh` **rc=0** — `host/workbench` ok on
+**both** the plain and race legs, and `host/capsule` green again.
+Auto-close discipline on three surfaces: the commit message, the PR title and the PR body were all
+scanned for `(clos|fix|resolv)…#N` with a known-bad control (`this fixes #1`) that FIRED and a
+clean result on all three.
+
+**Routing evidence** — controller `claude:claude-opus-5` (session, driver-selected); designer **not
+spawned** (no doc authored — a NINTH consecutive iteration with the rotation unspent); planner **not
+spawned** (the plan landed at iteration 110); executor **`codex:gpt-5.6-sol`**, probe rc=0, first
+try, no fallback link traversed — the ratified `codex → opus` chain (D-WORLD-20) was never exercised
+because the head lane answered; evaluator **`sonnet`**, one round. Fable unspent.
+
+**Cost** — `metered=$0.00` of the $5 ceiling. No quorum purchased (an in-sprint continuation on an
+existing, already-quorum-cleared plan). Quota: `opus` ×1 (controller), `codex` ×2 (probe + run),
+`sonnet` ×1 (judge).
+
+**Ruled out** — (a) that the plan's `1079` was simply stale: it is not a stale number, it is a
+number about a different tree, and the distinction is what makes it a *plan* defect rather than a
+base-drift finding; (b) that the manifest defect breaks AC7 — measured, it does not, because the
+delta is intra-tree and both errors cancel; (c) banking the executor's `rc=1` on daemon+boundary as
+a regression (sandbox bind denial, rc=0 outside); (d) running the WB.H mutation drill inside WB.A
+— the plan assigns it to WB.H and standing rule 4 says the plan is the contract, so the probes were
+scoped and labelled as a controller spot-check that discharges nothing; (e) treating the evaluator's
+zero-value observation as a blocking defect in the delivered tests — it is a correct reading of the
+plan's own task text, and the tests do discriminate the mutation they were written for; (f) reading
+`211 < 320` LOC as under-delivery — all 13 tasks are satisfied and the evaluator independently
+confirmed nothing is missing, so the estimate was generous; (g) filing anything `PARKED-ON-LANE`
+(no lane refused).
+
+**Next** — **`WB.B`**: `Render` plus one parsed `html/template`, landmarks, escaping, local-only
+links and the unavailable states (claims M14–M16, M20; 0.75 h), then `WB.C` (the ninth route
+registration, which closes AC5/AC6). Then rows 32, 33, item 22, row 31.
+
+**Retro lane: PROPOSE, not edit.** The manifest finding is a **sprint-planner** defect, and this
+mission cannot edit the shared skills (they live in the V1 checkout). Proposed to V1 on the
+cross-mission channel with the measurement attached, at instance 1 of its narrow form
+(*a precondition count measured in the main checkout and checked in the worktree*) and instance 2 of
+the broad form iteration 110 opened (*the planner's baseline tree is not the executor's tree*). No
+mission-control skill edit this iteration: the ≥2-friction bar is not met for a single mechanism,
+and pre-registering beats spending the one edit on a half-formed class.

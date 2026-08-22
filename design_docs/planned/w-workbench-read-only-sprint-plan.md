@@ -1,6 +1,6 @@
 # Sprint plan — `WB.A`–`WB.K` (queue item 14, `w-workbench-read-only`, clause-2)
 
-**Status**: PLANNED, not started · **Design doc**: [`w-workbench-read-only.md`](w-workbench-read-only.md) (AUTHORITATIVE — the doc wins on every divergence below) · **Planner**: mission-control iteration 110, opus lane (`derive-planner-lane.sh` → `opus fail-closed:env-pin`, token used VERBATIM).
+**Status**: IN SPRINT — **`WB.A` LANDED 2026-08-22 (iteration 111)**, 1 of 11 milestones; `WB.B` is next · **Design doc**: [`w-workbench-read-only.md`](w-workbench-read-only.md) (AUTHORITATIVE — the doc wins on every divergence below) · **Planner**: mission-control iteration 110, opus lane (`derive-planner-lane.sh` → `opus fail-closed:env-pin`, token used VERBATIM).
 
 - **Plan (machine)**: `.ailang/state/sprints/w-workbench-read-only.plan.json` — `jq -e .` passes.
 - **Design doc (AUTHORITATIVE)**: `design_docs/planned/w-workbench-read-only.md`, 894 lines.
@@ -87,7 +87,7 @@ that ends mid-drill resumes at the first mutant with no section.
 
 | Milestone | Deliverable | Doc ACs closed | Mutations (claim / discharge) | h |
 |---|---|---|---|---|
-| WB.A | `host/workbench` package, view model, grade/verdict constructors | — | claims M17, M18, M19, M21 | 0.75 |
+| ~~WB.A~~ **LANDED** `83f1973` | `host/workbench` package, view model, grade/verdict constructors | — | claims M17, M18, M19, M21 (still discharged by WB.H) | 0.75 |
 | WB.B | `Render` + one parsed `html/template`, landmarks, escaping, local-only links, unavailable states | — | claims M14, M15, M16, M20 | 0.75 |
 | WB.C | ninth registration `GET /workbench`, `handleWorkbench` happy path, security headers, §3.5 comment | **AC5, AC6** | claims M1, M22, M23 | 1.0 |
 | WB.D | closed query grammar + every refusal branch | — | claims M2–M9, M13, M31, M32 | 1.0 |
@@ -351,6 +351,36 @@ The plan JSON carries the same three rulings under
 `open_questions_for_controller[].controller_resolution`, so the executor reads them without needing
 this file. **The executor is not blocked on any human answer.**
 
+
+---
+
+## 7b. Precondition 3's manifest count is wrong for the tree it is checked in (iteration 111)
+
+`preconditions_the_controller_must_satisfy_before_the_executor_starts[3]` states the pristine
+manifest is *"VERIFIED BY ME to be 1079 lines at 3e0c34c in the main checkout"*. Run where the
+precondition actually applies — the **sprint worktree** — the identical command returns **157**.
+
+| reading | value |
+|---|---|
+| `find … \| sort \| wc -l` in the sprint worktree | **157** |
+| the same command in the MAIN checkout | **1079** |
+| control: `git ls-files \| grep -v '^design_docs/' \| wc -l` | **156** |
+
+The two trees differ by **922 untracked files** — `tools/` alone is **844** in the main checkout
+against **13** tracked, plus 66 under `packages/` and 25 under `world/`. A fresh worktree has only
+tracked files, so **157 = tracked + 1** is the honest count there.
+
+**The `+1` is a second defect.** The command excludes `-not -path './.git/*'`, which assumes `.git`
+is a **directory**. In a linked worktree `.git` is a **FILE**, so it is not under `./.git/` and it
+lands in the manifest — measured, the sole difference against `git ls-files` is the literal entry
+`.git`. §5 of this plan explains at length that a linked worktree's `.git` is a file pointing
+outside the sandbox; this command does not act on what that prose knows.
+
+**AC7 is NOT broken by either.** The delta is computed pristine-vs-post **inside one tree**, so a
+constant offset and a self-cancelling `.git` row both drop out. What breaks is the **cross-check**:
+a controller comparing its manifest against the stated 1079 sees a 6.9× mismatch and can only
+conclude its worktree is broken. Use the worktree's own count, or add
+`-not -name '.git'` and re-derive.
 
 ---
 
