@@ -17,7 +17,19 @@ import (
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
-const realStoreReadTimeout = 2 * time.Millisecond
+// minDecoyHold is a floor on the stimulus, not a calibration. Every wall-clock
+// bound in this file is DERIVED from the hold the decoy is measured to take on
+// the machine actually running the test, because that hold varies by ~50x
+// between a laptop and a CI runner (measured: 53 ms here, 2.63 s on a GitHub
+// runner). A hardcoded millisecond bound calibrated on the faster machine reds
+// on the slower one with a text indistinguishable from the M22/M23 mutant
+// signature -- which is exactly what it did.
+const minDecoyHold = 20 * time.Millisecond
+
+// decoyHoldRatio is the design doc's floor: the decoy must hold the sole pooled
+// connection for more than 20x ObjectReadTimeout. Deriving the timeout FROM the
+// hold satisfies that floor by construction on any machine.
+const decoyHoldRatio = 20
 
 type waitBoundWrapper struct {
 	reader *store.Store
@@ -153,15 +165,19 @@ func TestRealStoreBlockedObjectReadReturnsWithinObjectReadTimeout(t *testing.T) 
 
 	decoyRef := putEvidenceObject(t, s, []byte(strings.Repeat("d", 256<<20)))
 	hold := measureGetObject(t, s, decoyRef)
-	t.Logf("decoy hold=%v ObjectReadTimeout=%v ratio=%.1fx", hold, realStoreReadTimeout, float64(hold)/float64(realStoreReadTimeout))
-	if hold <= 20*realStoreReadTimeout {
-		t.Fatalf("instrument failure: decoy held connection for %v; want > 20x ObjectReadTimeout (%v)", hold, 20*realStoreReadTimeout)
+	if hold < minDecoyHold {
+		t.Fatalf("instrument failure: decoy held the connection for only %v; want at least %v for this stimulus to exist", hold, minDecoyHold)
 	}
-	v = realValidator(t, s, realStoreReadTimeout)
+	// Derive the bound from the hold rather than the other way round, so the
+	// doc's "hold > 20x ObjectReadTimeout" floor holds on every machine.
+	readTimeout := hold / decoyHoldRatio
+	watchdog := hold
+	t.Logf("decoy hold=%v -> derived ObjectReadTimeout=%v (ratio %dx), watchdog=%v", hold, readTimeout, decoyHoldRatio, watchdog)
+	v = realValidator(t, s, readTimeout)
 
 	for attempt := 1; attempt <= 5; attempt++ {
 		decoyDone := startDecoyRead(s, decoyRef)
-		time.Sleep(realStoreReadTimeout)
+		time.Sleep(readTimeout)
 		resultDone := make(chan evidence.ValidationResult, 1)
 		start := time.Now()
 		go func() { resultDone <- v.ValidateProof(context.Background(), goodRef, testSubject) }()
@@ -169,7 +185,7 @@ func TestRealStoreBlockedObjectReadReturnsWithinObjectReadTimeout(t *testing.T) 
 		case result := <-resultDone:
 			elapsed := time.Since(start)
 			_, sealed := result.Validated()
-			if sealed && elapsed < 2*realStoreReadTimeout {
+			if sealed && elapsed < 2*readTimeout {
 				<-decoyDone
 				continue // validation won the connection; retry honestly
 			}
@@ -185,11 +201,11 @@ func TestRealStoreBlockedObjectReadReturnsWithinObjectReadTimeout(t *testing.T) 
 			// REFUSAL path measures scheduler latency instead of the deadline.
 			// Measured on unmutated, sha256-identical code: GOMAXPROCS=1 reds
 			// 10/10 with "returned after 10-33ms", default GOMAXPROCS reds 0/10.
-			t.Logf("blocked read refused after %v (bound %v, watchdog %v)", elapsed, realStoreReadTimeout, 20*realStoreReadTimeout)
+			t.Logf("blocked read refused after %v (derived bound %v, watchdog %v)", elapsed, readTimeout, watchdog)
 			<-decoyDone
 			return
-		case <-time.After(20 * realStoreReadTimeout):
-			t.Fatal("blocked read exceeded test-side 20x watchdog")
+		case <-time.After(watchdog):
+			t.Fatalf("blocked read exceeded the test-side watchdog of %v (derived from the measured decoy hold)", watchdog)
 		}
 	}
 	t.Fatal("instrument failure: validator won the freed connection in all 5 attempts")
@@ -275,11 +291,11 @@ func TestConstructorPinsBusyTimeoutBelowObjectReadTimeout(t *testing.T) {
 	decoyRef := putEvidenceObject(t, s, []byte(strings.Repeat("n", 256<<20)))
 	hold := measureGetObject(t, s, decoyRef)
 	t.Logf("nonblocking decoy hold=%v", hold)
-	if hold <= 20*realStoreReadTimeout {
-		t.Fatalf("instrument failure: nonblocking decoy hold %v; want > %v", hold, 20*realStoreReadTimeout)
+	if hold < minDecoyHold {
+		t.Fatalf("instrument failure: nonblocking decoy hold %v; want at least %v", hold, minDecoyHold)
 	}
 	done := startDecoyRead(s, decoyRef)
-	time.Sleep(realStoreReadTimeout)
+	time.Sleep(hold / decoyHoldRatio)
 	start := time.Now()
 	if got := s.BusyTimeout(); got != 2*time.Second {
 		t.Fatalf("occupied BusyTimeout() = %v; want 2s", got)
