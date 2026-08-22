@@ -13337,3 +13337,39 @@ in a worktree that is a **sibling of the repo and never under `/tmp`**; then row
 then row 31.
 
 **Zero open asks.**
+
+### Retro (Gate 5)
+
+**No skill edit this iteration, and the reason is the bar rather than the absence of a candidate.**
+The candidate is real and is pre-registered as **instance 1**: this shared skill's codex executor
+recipe requires the directive to state that the executor performs *no git write operations at all*
+(the sandbox excludes a linked worktree's gitdir), and nothing anywhere warns that this makes every
+`git diff`-based acceptance criterion **blind to the entire sprint's output** — new files stay
+untracked from the first minute to the last. Item 14's `AC7` is the instance. A skill edit needs
+≥2 recorded frictions on the same gap; this is one, so it is written down here to be recognisable
+rather than rediscovered. The likely shape of the eventual fix, when a second arrives: the recipe
+already tells you to say "commits are the controller's job" — the missing half is "and therefore any
+acceptance criterion that reads tracked state is measuring nothing until the controller commits."
+That is this loop's named *guard the helper, miss the call site* shape, one level up.
+
+**Backlog lane**: the `go test -run` empty-selector property is filed as **queue row 33**
+`w-run-selector-acs-are-vacuous` — the SWEEP, explicitly not item 14's three instances, which its
+own plan already repairs.
+
+**Routing-policy change**: none. The evidence rule needs ≥3 rows and this iteration produced none.
+
+### Ruled out (retro)
+
+- **Row 8's `[IN-SPRINT]` tag as a third instance of the flipped-predicate class.** The evidence
+  arrived exactly in the direction the hypothesis predicted — the tag has stood for **43**
+  iterations, with **0** open PRs, **0** worktrees, and **0** of the log's **26** `**Pick**` lines
+  naming item 8 (the control fires: the pattern matches 26 entries, so the instrument works). Rule
+  3d says a red in the predicted direction needs a negative control as much as an empty result needs
+  a positive one, and the control refuted it: iterations **68, 69 and 70** each explicitly record
+  *"item 8 has no headless milestone left (`SM.D` is attended-only, iter-67)"*, and the row's own
+  live head agrees — `SM.D0` built the entrypoint, and what remains is *running* an attended
+  publish, which is deliberately never headless. The row is correctly deferred, `[IN-SPRINT]`
+  correctly means *mid-item*, and `mission-v1`'s co-filing request therefore stays at **two**
+  instances, not three. The residual is cosmetic and is not worth an iteration: standing rule 8
+  distinguishes a *judgment* park from a *capacity* park, and this is a third kind — an
+  attended-only procedure — that the tag vocabulary has no word for.
