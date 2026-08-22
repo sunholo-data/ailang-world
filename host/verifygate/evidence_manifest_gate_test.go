@@ -56,6 +56,13 @@ var syntheticEvidenceTests = []string{
 func newIsolatedEvidenceGateRoot(t *testing.T) string {
 	t.Helper()
 	root := filepath.Join(t.TempDir(), "iso")
+	// EVIDENCE_MANIFEST_GATE_SOURCE is a TEST-ONLY escape hatch, used to point an arm at a
+	// deliberately-mutated copy of the gate. It is set nowhere in CI, in scripts, or in the
+	// repository (the PE.F evaluator flagged it as a footgun and confirmed it is referenced only
+	// here). With it unset — which is every real run — the default branch below copies the LIVE
+	// scripts/verify_go.sh off disk, so this test executes the actual gate rather than a
+	// re-implementation of it. If it is ever set in an environment that runs the suite, this test
+	// silently stops testing the live gate, which is why it is named and bounded here.
 	if source := os.Getenv("EVIDENCE_MANIFEST_GATE_SOURCE"); source != "" {
 		in, err := os.ReadFile(source)
 		if err != nil {
@@ -107,6 +114,44 @@ func writeSyntheticEvidenceEvents(t *testing.T, root string, tests []string) str
 		t.Fatal(err)
 	}
 	return path
+}
+
+// writeSyntheticEvidenceEventsWithoutPackagePass emits the same terminal named-test passes as
+// writeSyntheticEvidenceEvents but OMITS the package-level pass event. It exists for the
+// zero-discovered-packages arm: §5's anti-vacuity floor has three branches, and a floor with no
+// arm is a guard nobody is protecting — a removal-shaped drill on the other two cannot reach it,
+// because every other helper emits the package event by construction.
+func writeSyntheticEvidenceEventsWithoutPackagePass(t *testing.T, root string, tests []string) string {
+	t.Helper()
+	path := filepath.Join(root, "observed-no-package.json")
+	var raw bytes.Buffer
+	enc := json.NewEncoder(&raw)
+	for _, name := range tests {
+		if err := enc.Encode(map[string]string{"Action": "pass", "Package": syntheticEvidencePackage, "Test": name}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(path, raw.Bytes(), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func runIsolatedEvidenceGateOn(t *testing.T, root, observed string, exact int) (int, string) {
+	t.Helper()
+	cmd := exec.Command(filepath.Join(root, "scripts", "verify_go.sh"), "--evidence-manifest-check", observed, strconv.Itoa(exact))
+	cmd.Dir = root
+	var output bytes.Buffer
+	cmd.Stdout, cmd.Stderr = &output, &output
+	err := cmd.Run()
+	if err == nil {
+		return 0, output.String()
+	}
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		return exitErr.ExitCode(), output.String()
+	}
+	t.Fatalf("start isolated evidence gate: %v", err)
+	return -1, output.String()
 }
 
 func runSyntheticEvidenceGate(t *testing.T, root string, tests []string, exact int) (int, string) {
@@ -196,6 +241,20 @@ func TestEvidenceNamedManifestRejectsUnpinnedTest(t *testing.T) {
 		rc, out := runSyntheticEvidenceGate(t, root, nil, len(syntheticEvidenceTests))
 		if rc != 1 || !strings.Contains(out, "FATAL INSTRUMENT FAILURE: observed terminal named-test pass set is empty") {
 			t.Fatalf("empty observed enumeration did not fail loudly: rc=%d\n%s", rc, out)
+		}
+	})
+	t.Run("zero discovered packages", func(t *testing.T) {
+		// The third anti-vacuity floor. Added after the PE.F evaluator observed that the other
+		// two floors had arms and this one did not: it fired correctly when exercised by hand,
+		// so it was live code that no test protected. The synthetic stream carries every
+		// terminal named-test pass and NO package-level pass, which is the only shape that
+		// reaches this branch — hence the dedicated writer.
+		root := newIsolatedEvidenceGateRoot(t)
+		requireSyntheticEvidenceControl(t, root)
+		observed := writeSyntheticEvidenceEventsWithoutPackagePass(t, root, syntheticEvidenceTests)
+		rc, out := runIsolatedEvidenceGateOn(t, root, observed, len(syntheticEvidenceTests))
+		if rc != 1 || !strings.Contains(out, "FATAL INSTRUMENT FAILURE: zero passing host/evidence packages discovered") {
+			t.Fatalf("zero discovered packages did not fail loudly: rc=%d\n%s", rc, out)
 		}
 	})
 }

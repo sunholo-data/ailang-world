@@ -14,13 +14,58 @@ Environment: repo root `/Users/voightkampff/dev/sunholo-data/.wt-iter108-pef`; G
 - Restore verified byte-identical: backup `323cb6d40317e3100d8367b7904a772069798ea9a282fa08064a668f57efed6f`; restored file `323cb6d40317e3100d8367b7904a772069798ea9a282fa08064a668f57efed6f`.
 - §6 divergence: wording differs (`expected 1, got 4`, not `got 4, want 1`), and `verify_ail.sh` stops at the contract counterexample before its named-test leg; the separately enumerated inline test nevertheless kills exactly as predicted.
 
-## M17 — named-manifest removal (round A snapshot; not re-run)
+## M17 — named-manifest removal (controller-run, live script)
 
-- Source: `.snap/S2/`, as directed. Round A removed one literal required evidence-test name from the isolated copy of `scripts/verify_go.sh` while leaving the observed synthetic test present.
-- LANDED/BUILDS/restore: already drilled and independently verified by the controller in round A; not mutated or re-run in this round, per directive. The S2 snapshot retains the landed manifest gate and its isolated test.
-- Exact killer command represented by the isolated test: `AILANG_BIN=/tmp/ailang-v0300/ailang GOTOOLCHAIN=go1.25.6 go test ./host/verifygate -run '^TestEvidenceNamedManifestRejectsUnpinnedTest$' -count=1`.
-- Observed RED from the round-A drill: `evidence test set differs from REQUIRED_EVIDENCE_TESTS`, with the still-observed removed literal reported as extra. Enumerated RED SET: `TestEvidenceNamedManifestRejectsUnpinnedTest` only (isolated gate self-mutation test); sole killer: yes. Its pristine synthetic control requires `all 37 required top-level evidence tests passed exactly once`.
-- Control GREEN/restored: round-A controller verified both; this row is a restatement, not a new empirical run.
+**Provenance corrected.** This row previously cited a `.snap/S2/` executor snapshot as its source.
+That directory is scaffolding and was not committed, so the row cited a path no reader could open —
+a record that cannot be re-derived is a claim, not evidence. It is replaced below by the
+controller's own drill, run against the **live** `scripts/verify_go.sh` in this worktree, which is
+reproducible from this commit alone. (The PE.F evaluator raised the provenance gap as non-blocking
+and independently reproduced the substance; both readings agree with what follows.)
+
+- Exact edit: `scripts/verify_go.sh`, delete the literal `"TestZeroValueForgeryCannotResolve",`
+  from `REQUIRED_EVIDENCE_TESTS` while leaving the test itself present in `host/evidence`.
+- LANDED: pre `27eab122f4b15ac1febe0fb3aed9886d900a03d6da65377878b08843f337cd2b`; mutant differs.
+- BUILDS: `GOTOOLCHAIN=go1.25.6 go build ./...` rc=0, asserted before any test result was read.
+- Exact command: `./scripts/verify_go.sh --evidence-manifest-check <live host/evidence -json> 37`.
+- Observed RED (rc=1):
+  `evidence test set differs from REQUIRED_EVIDENCE_TESTS` /
+  `extra=['TestZeroValueForgeryCannotResolve']` / `observed_unique=37 exact_required=37`.
+- Pristine control GREEN (rc=0): `✓ all 37 required top-level evidence tests passed exactly once`.
+- Restore: `cp` from a `/tmp` backup; sha256 re-read equals the pre value. Never `git checkout --`.
+
+**Three further arms the table does not name, run in the same session, because a removal proves a
+check FIRES and only an addition proves it LOOKS:**
+
+- *Bogus required literal* (add `"TestPefNeverExistedProbe",`) → RED,
+  `missing=['TestPefNeverExistedProbe']`. The missing branch is separately armed.
+- *Count-pin drift* (pass the shell literal `38` against an intact set) → RED,
+  `observed_unique=37 exact_required=38`. So `EXACT_EVIDENCE_TESTS` is **independently**
+  load-bearing and not redundant with set equality.
+- *ADDITION* — append one real, **passing** test to `host/evidence`
+  (`TestPefEnumeratorAdditionProbe`), `go build` rc=0, `go test ./host/evidence` rc=0 → the leg
+  goes RED, `extra=['TestPefEnumeratorAdditionProbe']`, `observed_unique=38 exact_required=37`.
+  This is the arm that substantiates *"PE.F must be the last change to `host/evidence`"*, and no
+  removal-shaped mutant in this table could have produced it. Test file restored byte-identical.
+
+**Enumerated RED SET for the isolated gate**, from neutering the comparison itself in the live
+script (`if missing or extra or … :` → `if False and (…)`), `go build ./...` rc=0, run
+`go test -json ./host/verifygate -run '^TestEvidenceNamedManifestRejectsUnpinnedTest$'`:
+`{TestEvidenceNamedManifestRejectsUnpinnedTest, …/extra_observed_test, …/missing_required_test,
+…/duplicate_observed_identity}` — **3 of the 5 then-existing arms**, with
+`empty_required_set` and `empty_observed_enumeration` staying GREEN because they sit behind
+separate earlier branches. The arms are therefore distinguishable rather than one check wearing
+five names. `TestEvidenceNamedManifestRejectsUnpinnedTest` is the sole top-level killer.
+
+**Sixth arm added after the evaluation.** The evaluator observed that §5's third anti-vacuity
+floor — *zero discovered `host/evidence` packages* — had no arm at all: every synthetic writer
+emitted the package-level pass event by construction, so no existing arm could reach that branch.
+Reproduced first-party (the floor's message appears once in the script and zero times in the
+test), then closed with a `zero discovered packages` arm and its own dedicated writer. Non-vacuity
+drill: neutering that floor (`if not package_passes:` → `if False and not package_passes:`),
+`go build ./...` rc=0, red set = `{TestEvidenceNamedManifestRejectsUnpinnedTest,
+…/zero_discovered_packages}` — the **sole** arm to die, the other five green. Script restored
+byte-identical.
 
 ## M2 — invalid proof ref
 
