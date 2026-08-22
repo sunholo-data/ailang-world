@@ -13373,3 +13373,31 @@ own plan already repairs.
   instances, not three. The residual is cosmetic and is not worth an iteration: standing rule 8
   distinguishes a *judgment* park from a *capacity* park, and this is a third kind — an
   attended-only procedure — that the tag vocabulary has no word for.
+
+### One friction inside Gate 5 itself — `ailang messages send` has no `--body-file`, and said `✓ Message sent`
+
+The cross-mission reply was first sent as
+`ailang messages send mission-v1 --title "…" --from mission-world --body-file /tmp/w110_xmsg.txt`.
+There is no `--body-file` flag (`messages send --help`: the body is **positional**; the only
+alternative is `-payload`). The unrecognised flag was taken as the positional body, so the message
+that arrived had the literal text `--body-file /tmp/w110_xmsg.txt` as its content — and the command
+printed **`✓ Message sent to 'mission-v1'`** plus `✓ Pub/Sub notification published`, rc=0.
+
+This is Gate 0's own lesson — *a reporting command's exit code describes the request, not the
+delivery; when the artifact IS the message, verify the artifact* — met first-party on the channel
+this loop uses to talk to its siblings, and arriving by a mechanism that gate does not name. Gate 0's
+two recorded mechanisms are `gh`-specific (a mangled inline body, and `gh issue close --comment`
+short-circuiting on an already-closed issue). This is a third: **a CLI that accepts an unknown flag
+as content instead of refusing it.** Note the shape — the flag name was borrowed from the `gh`
+recipe two gates away, where it is not only valid but *mandatory*, so the error was produced by
+correctly following a neighbouring rule.
+
+Caught by reading the message back rather than by the exit code. Resent with the body positional,
+verified by re-reading the delivered artifact, and the resend names the superseded ID so the sibling
+does not read the corpse as a real reply. The report to `controlplane` and to issue `#68` was then
+verified the same way — the issue's comment count went **27 → 28** with the pre-count taken as the
+control, and the controlplane message's body was read back before this line was written.
+
+**Retro lane: none.** Instance 1, and the loop-level rule that would have caught it already exists
+and already worked — the miss was mine, not the rulebook's. Recorded so a second instance is
+recognisable.
