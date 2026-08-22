@@ -457,8 +457,9 @@ mapping under which every row is actually RED-provable in the PR that claims it.
 and **M23** (no fake participates by construction — round 8's reject was precisely a fake that observed
 the context, making the mutant die for a property the real reader had never been shown to have),
 **M25** (the hook supplies a scheduling *input*; snapshot isolation is supplied by the real SQLite
-transaction), **M26** (only the real store reports a live busy window), **M30** (the wrapper
-*surrounds* the real store).
+transaction). **M26** and **M30** do not require the real store for their kills: the fake-based
+constructor tests isolate the ordering and unknown-bound refusals. Their real-store arms add
+integration evidence that the production store reports and forwards its live busy window.
 
 **M22's "EVERY context-taking call" is load-bearing.** Round 9b's one-snapshot spelling moved the
 connection **wait** — the very wait AC16's stimulus blocks on — out of `QueryRowContext` and into the

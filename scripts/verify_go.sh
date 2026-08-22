@@ -16,6 +16,107 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+check_evidence_manifest() {
+  python3 - "$1" "$2" <<'PY'
+import collections, json, sys
+
+REQUIRED_EVIDENCE_TESTS = {
+    "TestAttackerChosenValidatorCannotMintForHostAuthority",
+    "TestConstructorNamesActuallyUsedUnorderedTimeouts",
+    "TestConstructorPinsBusyTimeoutBelowObjectReadTimeout",
+    "TestConstructorRefusesEmptyCompilerVersion",
+    "TestConstructorRefusesEmptyRequiredIdentities",
+    "TestConstructorRefusesNilReader",
+    "TestConstructorRefusesNonPositiveObjectReadTimeout",
+    "TestConstructorRefusesUnknownBusyTimeout",
+    "TestConstructorRefusesUnsetCompilerIdentity",
+    "TestDecodeProposalCapsBeforeParse",
+    "TestEnvelopeCanonicalRoundTripAndMACDeferral",
+    "TestEnvelopeCarriesTheReportItAlreadyDecoded",
+    "TestEnvelopeStrictRefusals",
+    "TestFailedProofReportIsRefused",
+    "TestIncompleteProofReportIsRefused",
+    "TestInvalidProofRefIsRefused",
+    "TestMalformedProofReportIsRefused",
+    "TestMismatchedProofSubjectIsRefused",
+    "TestMismatchedProofToolIsRefused",
+    "TestMissingProofReportIsRefused",
+    "TestNestingDepthBombWithinByteCapIsRefused",
+    "TestOtherwisePerfectReportWithWrongMACIsUnauthenticated",
+    "TestOtherwisePerfectReportWithoutMACIsUnauthenticated",
+    "TestOversizeProofReportIsRefused",
+    "TestPayloadHashMismatchIsRefused",
+    "TestProofReportCanonicalRoundTrip",
+    "TestProofReportCaps",
+    "TestProofReportStrictRefusals",
+    "TestProposalStrictRefusals",
+    "TestPublicAuthoritySurfaceIsFrozen",
+    "TestReaderWaitBoundsCannotBeLostThroughWrapper",
+    "TestRealStoreBlockedObjectReadReturnsWithinObjectReadTimeout",
+    "TestTruncatedTailReportIsRefusedNotPanicked",
+    "TestValidatorMintIdentitiesAreDistinct",
+    "TestWrongInterfaceIsRefused",
+    "TestWrongSemanticIDIsRefused",
+    "TestZeroValueForgeryCannotResolve",
+}
+EXACT_EVIDENCE_TESTS = int(sys.argv[2])
+
+if not REQUIRED_EVIDENCE_TESTS:
+    sys.stderr.write("verify_go.sh: FATAL INSTRUMENT FAILURE: REQUIRED_EVIDENCE_TESTS is empty\n")
+    sys.exit(1)
+events = []
+try:
+    with open(sys.argv[1], encoding="utf-8") as stream:
+        for line in stream:
+            if line.strip():
+                events.append(json.loads(line))
+except Exception as exc:
+    sys.stderr.write("verify_go.sh: FATAL INSTRUMENT FAILURE: cannot parse evidence test JSON: %s\n" % exc)
+    sys.exit(1)
+
+package_passes = [e for e in events
+                  if e.get("Action") == "pass" and not e.get("Test")
+                  and e.get("Package", "").endswith("/host/evidence")]
+if not package_passes:
+    sys.stderr.write("verify_go.sh: FATAL INSTRUMENT FAILURE: zero passing host/evidence packages discovered\n")
+    sys.exit(1)
+
+terminal_passes = [e["Test"] for e in events
+                   if e.get("Action") == "pass" and e.get("Test") and "/" not in e["Test"]]
+if not terminal_passes:
+    sys.stderr.write("verify_go.sh: FATAL INSTRUMENT FAILURE: observed terminal named-test pass set is empty\n")
+    sys.exit(1)
+
+counts = collections.Counter(terminal_passes)
+duplicates = sorted(name for name, count in counts.items() if count != 1)
+observed = set(counts)
+missing = sorted(REQUIRED_EVIDENCE_TESTS - observed)
+extra = sorted(observed - REQUIRED_EVIDENCE_TESTS)
+skipped = sorted({e["Test"] for e in events if e.get("Action") == "skip" and e.get("Test")
+                  and "/" not in e["Test"] and e["Test"] in REQUIRED_EVIDENCE_TESTS})
+failed = sorted({e["Test"] for e in events if e.get("Action") == "fail" and e.get("Test")
+                 and "/" not in e["Test"] and e["Test"] in REQUIRED_EVIDENCE_TESTS})
+if missing or extra or skipped or failed or duplicates or len(observed) != EXACT_EVIDENCE_TESTS:
+    sys.stderr.write("evidence test set differs from REQUIRED_EVIDENCE_TESTS\n")
+    sys.stderr.write("  missing=%s\n  skipped=%s\n  failed=%s\n  duplicate=%s\n  extra=%s\n" %
+                     (missing, skipped, failed, duplicates, extra))
+    sys.stderr.write("  observed_unique=%d exact_required=%d\n" %
+                     (len(observed), EXACT_EVIDENCE_TESTS))
+    sys.exit(1)
+
+print("   ✓ all %d required top-level evidence tests passed exactly once" % EXACT_EVIDENCE_TESTS)
+PY
+}
+
+if [ "${1:-}" = "--evidence-manifest-check" ]; then
+  if [ "$#" -ne 3 ]; then
+    echo "usage: $0 --evidence-manifest-check JSON EXACT" >&2
+    exit 2
+  fi
+  check_evidence_manifest "$2" "$3"
+  exit $?
+fi
+
 if [ -z "${AILANG_BIN:-}" ]; then
   echo "✗ AILANG_BIN is unset — host/replay tests would t.Skip() silently and this gate would be false-green." >&2
   echo "  Export the pinned released binary, e.g. AILANG_BIN=/tmp/ailang-v0300/ailang" >&2
@@ -136,6 +237,21 @@ fi
 echo "── go build ./..."
 go version
 go build ./...
+
+echo "── focused host/evidence named-manifest gate (37 exact top-level tests)"
+evidence_json="$(mktemp "${TMPDIR:-/tmp}/verify-go-evidence.XXXXXX")"
+trap 'rm -f "$evidence_json"' EXIT
+set +e
+go test -json ./host/evidence -count=1 >"$evidence_json"
+evidence_test_rc=$?
+set -e
+check_evidence_manifest "$evidence_json" 37
+if [ "$evidence_test_rc" -ne 0 ]; then
+  echo "verify_go.sh: FATAL: host/evidence go test exited rc=$evidence_test_rc" >&2
+  exit "$evidence_test_rc"
+fi
+rm -f "$evidence_json"
+trap - EXIT
 
 echo "── go test ./... -count=1"
 go version
