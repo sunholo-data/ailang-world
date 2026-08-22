@@ -601,5 +601,5 @@ for nothing.
 
 ---
 
-**SPRINT_PLAN_PATH**: `design_docs/planned/w-validated-proven-evidence-boundary-sprint-plan.md`
+**SPRINT_PLAN_PATH**: `design_docs/implemented/w-validated-proven-evidence-boundary-sprint-plan.md`
 **SPRINT_JSON_PATH**: `.ailang/state/sprints/w-validated-proven-evidence-boundary.plan.json`

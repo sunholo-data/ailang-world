@@ -12953,3 +12953,176 @@ rots fastest and this one has not been re-measured since it was queued. Row **14
 flipped-but-unpicked and becomes eligible now that 17 no longer holds the sprint slot — read it in
 the same pass. The doc and plan for item 17 should move to `design_docs/implemented/` **with their
 sprint-plan companion** as a bookkeeping deliverable in the next iteration.
+
+---
+
+## Iteration 109 — 2026-08-22 — item 14 unblocked, revised and carve-out-complete; the reviewer that dropped out on `budget` was the one whose objection made the doc too big
+
+**Pick**: queue row **14** `w-workbench-read-only` — **not** the item iteration 108's `NEXT` named.
+108 pointed at row 22 and noted row 14 "becomes eligible in the same pass". Row 14 sits **above** row
+22 in a queue whose top is next, and the shared skill's blocked-predicate rule is explicit that a row
+whose predicate has flipped *"is this iteration's pick regardless of position, because the ordering it
+was competing under was computed from a fact that is no longer true."* Iterations 96–108 each recorded
+row 14 as flipped-and-unpicked, and each was right to decline it: item 17 was `[IN-SPRINT]` with a
+landed plan and standing rule 1 is one item. Item 17 closed last iteration, so the reason expired.
+Row 14's blocker is **internal** (item 18), which is why no external-predicate sweep had ever pointed
+at it.
+
+**Predicate RUN, not transcribed.** `git branch -r --contains d21754f` lists `origin/dev` — item 18
+`w-daemon-read-cancellation` is landed. The one genuinely *external* row got the same treatment and is
+**unflipped**: `sunholo-data/ailang#764` reads `state=OPEN comments=0 updatedAt=2026-08-17T23:34:55Z`,
+with control `#676` answering through the same call at 3 comments and a different `updatedAt`, so the
+instrument discriminates rather than returning a constant.
+
+**Reality-check at pick time**: **0** open PRs on the fleet account, **0** worktrees, clean main
+checkout — no died-mid-flight predecessor. No sprint plan exists for row 14, so the routing target is
+the designer, not the executor. Doc↔plan rot check is inapplicable (no plan).
+
+**Outcome**: **NO CODE SHIPPED, AND THAT IS THE DELIVERABLE.** Item 14's design doc is rebased,
+revised, re-quorumed, and carve-out-complete; item 17's doc and sprint plan are moved to
+`implemented/`; one new queue row filed. `metered=$0.127437` of the $5 ceiling. Quota `opus` ×1,
+`fable` ×1.
+
+### Routing evidence
+
+| Role | Pinned value | Actually ran on | Notes |
+|---|---|---|---|
+| Controller | session `$MODEL` | `opus` | triage / pick / measurement / carve-out / record |
+| Designer | **ROTATION** | **`claude:claude-fable-5`** | last-used was `codex:gpt-5.6-sol`; next entry gemini **SKIPPED** — managed_agents is read-only under `CapRemoteSandbox` and cannot author a file — so the rotation fell to the next entry. Agent-tool `model="fable"` pin **accepted and ran to completion** (~16 min), corroborating the skill's 2026-08-20 correction that `fable` is pinnable. Fable spent for the first time in ten iterations, inside the one-bounded-run diet. Rotation pointer written back to the **namespaced** `~/.ailang/state/mission-world-designer-rotation` |
+| Quorum R3 | `gpt5-6-sol`, `gemini-3-1-pro` | gemini present ($0.038412); **gpt5-6-sol ABSENT — `budget`** | verdict `blocked` |
+| Quorum R3b | `gpt5-6-sol` restored | `design-review --max-cost-usd 0.60`, rc=0, `present=true` ($0.089025) | mandatory under the absent-reviewer rule |
+| Planner / Executor / Evaluator | — | **none** | the deliverable is a document; no code to execute or judge |
+
+**Deviation adjudicated (rule 3h).** The designer self-reported one: my directive said an acceptance
+criterion already green at base is vacuous and must be replaced; it **kept** AC3/AC4, baselined their
+exact green output, and relabelled them *regression pins, never citable as feature evidence*. Upheld —
+and the directive is what was wrong. A regression pin is green at base **by definition**; the rule
+targets ACs cited as proof the FEATURE works. A self-reported deviation naming which instruction was
+under-specified is better evidence than a silent one.
+
+### The headline: an absent reviewer is a named hole, and the hole self-selects
+
+Round-3 re-quorum returned `blocked` with `absent_reviewers: [{gpt5-6-sol, budget}]`. The refusal
+reason is the whole finding: it refused because **the document had grown**, and it had grown
+answering *that reviewer's own* round-2 objection. Restored alone at a raised cap for **$0.089**:
+
+- **It did not repeat its round-2 objection.** The unbounded-store-wait block is genuinely
+  discharged, and what discharged it is the sequencing Mark ratified — the reviewer's *own* second
+  limb, *"otherwise defer `/workbench` until the separately proposed daemon read-cancellation item
+  lands."* It landed.
+- **It found a new, real defect the printed synthesis would have concealed:** §2.4's *"unknown
+  workbench query parameters are ignored"* is a **silent fallback**, so `?paylod=1` renders a
+  different view instead of refusing. That is this mission's own axiom turned on its own document.
+
+Banking the `blocked` synthesis as printed would have cost nothing visible and lost the only new
+defect the iteration found.
+
+### Measurement before routing (rule 3f), twelve rows handed to the designer as a table
+
+Every premise re-derived first-party at `93e1ba5` **before** the designer was spawned, each with a
+control; the designer then **re-ran all twelve and disagreed with none**. Six store getters take
+`ctx` (`store.go:475/530/559/636/810`, `read_object.go:43`); `handlers.go:270` derives
+`context.WithTimeout(r.Context(), d.readDeadline)`, `readDeadline = 10 * time.Second`
+(`daemon.go:128`); `handlers.go:324` emits an explicit `503`/`Timeout`; **8** `mux.HandleFunc`
+registrations (control `func ` = 22); status census 10×400 / 4×404 / 1×500 over 18 `writeAPIError`
+sites in 6 handler funcs; `UNSUPPORTED` = 0 across all four `.ail` modules with the **same-scope**
+control `CLAIMED` = 6; `wantFileCount = 1`; `busyTimeoutMillis = 2000`; baseline `go build ./...` and
+`go vet ./...` rc=0.
+
+**Two charter sentences refuted by their own measurement.** Row 14 said the `Internal` branches pass
+`err.Error()` verbatim to an unauthenticated localhost client. There is exactly **one** `"Internal"`
+site (`handlers.go:162`) and it passes the constant `internalErrorMessage = "internal store failure"`
+(`:132`), documented at `:118` as "the ONLY message a 500 ever carries on the wire"; the five
+`err.Error()` survivors are all 400s; negative control on an invented symbol = 0. Item 18's M3 fixed
+this eight days ago and nobody re-measured the row. The row's *other* correction had gone stale the
+same way: it says the route-table comment reads "seven patterns", and at `93e1ba5` it reads "The
+eight patterns below are the complete frozen v1 table" (`daemon.go:550`) — `grep -c 'seven patterns'`
+→ **0**, same-file control `patterns` → **1**. Both struck through in place rather than deleted.
+
+The doc itself was **70 commits / 65 non-`design_docs` files** stale, swept from its **oldest**
+declared base `9491a10` (not the newest, which is what makes the sweep honest). `V12`/`V14`/`V16`–
+`V19` were replaced as no-longer-true; `V20`–`V25` added; base rebased to `93e1ba5`; 641 → 894 lines.
+
+### The carve-out, applied verbatim and overriding nothing
+
+Both survivors carry concrete reviewer-authored `proposed_fix`es and neither disputes the design
+DIRECTION — one is determinism, the other completeness/attribution — so the narrow-refinement
+carve-out applies:
+
+- **`gpt5-6-sol`**: §2.4 now carries its replacement text **word-for-word** — closed grammar, five
+  accepted keys, unknown key / duplicate scalar key / unsupported combination → `400` with a constant
+  message, nothing ignored, no precedence fallback — pinned by
+  `TestWorkbenchRefusalBranches/unknown-parameter` and `/duplicate-parameter`, mutations `M31`/`M32`,
+  with AC1's fail-trigger range widened to reach them.
+- **`gemini-3-1-pro`**: `V26` is its asked-for row, and the measurement **confirms the document** —
+  `type readStore interface` at `daemon.go:323` with exactly five methods, every one context-first;
+  same-scope positive control 2, negative control 0. The reviewer was right that nobody had measured
+  it and wrong that it might be false, which is exactly why it was measured rather than forwarded for
+  a fourth designer round.
+
+### Bookkeeping, and the class it exposed
+
+Item 17's doc **and its sprint plan** moved to `design_docs/implemented/` (plans travel with their
+doc), self-references and both charter citations rewritten. No gate depends on the location:
+`scripts/`, `.github/` and `host/` swept, every hit a `//` comment.
+
+**That sweep became queue row 31.** The move itself is what manufactures stale citations, so the
+class grows by one every time an item completes: `w-worldd-m2` **2** files, `w-m1-ailang-hardening`
+**1**, `w-world-library-m1` **1** — positive control `w-self-mod-vertical` is correctly still in
+`planned/` with **4** valid citations, negative control on an invented doc name **0**. Batched with
+the designer's own find, reproduced first-party: `world/types.ail:40` reads "the ratified
+**five**-constructor representation" above a **six**-constructor `Evidence` (`:23-:29`), same-scope
+control `EvidenceGrade` genuinely 4. Filed, not fixed inline — it touches `.ail`, so it prices as a
+two-gate change, and this was a doc-only iteration.
+
+### The pre-commit gate reddened on a diff with zero code bytes — queue row 32
+
+`verify_ail.sh` rc=0 (10 identities / 40 named tests / 9-of-9 world-package steps). `verify_go.sh`
+**rc=1**, on `host/capsule`'s `TestF5WallClockTimeoutHasElapsedBound`:
+*"timeout returned after 2.909405834s, want <= 2s"* (`capsule_test.go:230`).
+
+**Attribution is by construction, not by argument.** `git diff --stat origin/dev -- ':!design_docs'`
+is **empty** — the non-doc bytes of this tree are identical to `origin/dev`, so no arm-vs-arm
+reasoning is needed. Isolated, the test is **10/10 PASS**. It fails only inside the gate, where
+`host/broker` (98.6 s) and `host/verifygate` (59.1 s) run concurrently and a race leg follows. The
+variable is load; the assertion is `if elapsed > 2*time.Second`, an absolute ceiling over a **40 ms**
+injected `ExecTimeout` whose real cost is subprocess spawn-and-teardown.
+
+This is the shared skill's **rule 3m** — the rule *this mission proposed* from iteration 107 and V1
+adopted the same day. What makes it worth a row rather than a re-run is that **the remedy is already
+committed in this repo**: `host/evidence/realstore_test.go` derives its bound from the stimulus
+measured in-test (`readTimeout := hold / 20`) and keeps a loud absolute `minDecoyHold` floor. It was
+applied to the package that hurt and never swept — *guard the helper, miss the call site*, aimed at
+this loop's own fix.
+
+Exposure, measured with controls: **4** `_test.go` files under `host/` carry a hardcoded absolute
+wall-clock ceiling (`archive`, `broker`, `capsule`, `store`); same-scope positive control **20** test
+files mention `time.Second`; negative control on a fresh invented literal **0**. And rule 3m's named
+blind axis is genuinely unturned here — exactly **1** test file anywhere under `host/` varies
+`GOMAXPROCS`. Filed as queue row **32**, positioned above item 22 because it reds `dev` on commits
+that cannot have caused it, including record commits, which is how a headless loop loses whole
+iterations.
+
+### Ruled out
+
+- Picking item 22 because iteration 108's `NEXT` named it — the flipped-predicate rule outranks a
+  stale pointer, and row 14 is higher in the queue.
+- Banking the `blocked` synthesis without restoring the `budget`-absent reviewer — it would have
+  hidden the only new defect found this iteration.
+- Forwarding `gemini-3-1-pro`'s premise objection to a fourth designer round instead of settling it
+  in one command.
+- Treating the designer's AC3/AC4 deviation as non-compliance.
+- Absorbing item 22's lock-wait residual into item 14 (`busyTimeoutMillis = 2000` unlinked from the
+  10 s `readDeadline` — named in the doc as external, deliberately not fixed).
+- Fixing row 31's stale citations inline during a doc-only iteration.
+- Attributing the `host/capsule` red to this diff; "fixing" it inline; or reading 10/10 isolated
+  greens as evidence the bound is sound — they are evidence that the LOAD is the variable.
+- Filing anything `PARKED-ON-LANE` — no lane refused; Fable ran and both reviewers ultimately
+  answered.
+
+### Next
+
+**Sprint-planner on item 14**, which is where the carve-out routes; then **row 32**
+`w-wallclock-ceilings-not-derived`; then item 22 `w-daemon-lock-wait-not-deadline-bound`; then row 31.
+
+**Zero open asks.** Decision ledger: 11 rows, 0 OPEN, on entry and on exit.
