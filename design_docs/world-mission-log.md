@@ -13126,3 +13126,214 @@ iterations.
 `w-wallclock-ceilings-not-derived`; then item 22 `w-daemon-lock-wait-not-deadline-bound`; then row 31.
 
 **Zero open asks.** Decision ledger: 11 rows, 0 OPEN, on entry and on exit.
+
+---
+
+## Iteration 110 — 2026-08-22 — the sprint plan for item 14 landed, and three of its acceptance criteria could not fail
+
+**Pick**: queue row **14** `w-workbench-read-only` — the item iteration 109's `NEXT` named, routed to
+the **sprint-planner**, which is what the narrow-refinement carve-out routes to once a doc is
+carve-out-complete. No flipped predicate outranked it.
+
+**The externally-blocked row was re-measured as a command, not transcribed.** Row 5's predicate is
+`sunholo-data/ailang#764`: `state=OPEN comments=0 updatedAt=2026-08-17T23:34:55Z` — unchanged since
+iteration 109. Control `#676` answers through the same call at **3** comments and a different
+`updatedAt`, so the instrument discriminates rather than returning a constant; a negative control on a
+nonexistent number errors rather than returning a plausible row. Row 5 stays BLOCKED. Rows 6, 7 and 8
+are blocked on internal items or on an attended-only procedure, so the external sweep does not reach
+them.
+
+**Reality-check at pick time**: **0** open PRs on the fleet account, **0** worktrees beyond the main
+checkout, clean main tree — no died-mid-flight predecessor. No sprint plan existed for row 14, so the
+routing target is the planner, not the executor. The doc↔plan rot check is inapplicable in the
+forward direction (there was no plan) and was performed in reverse: the plan's per-milestone AC lists
+were required to partition §7's set exactly, and they do.
+
+**Doc freshness (rule vi-b), swept from the declared base.** The doc declares one active measurement
+base, `93e1ba5`. `git diff --name-only 93e1ba5..HEAD -- ':!design_docs'` returns **0** files, control
+(no pathspec) **7**, all under `design_docs/` — so §11's rows are fresh at HEAD. `9491a10` and
+`d21754f` also appear in the doc, but as prose naming the *replaced* base and a *cited merge commit*;
+neither is a second active base, which is the distinction rule (vi-b) is easy to lose.
+
+**Outcome**: **NO CODE SHIPPED, AND THAT IS THE DELIVERABLE.** Item 14 has a tracked, executor-ready
+sprint plan; three vacuous acceptance criteria are repaired; three under-specified points are
+adjudicated rather than parked. `metered=$0.00` of the $5 ceiling. Quota `opus` ×2.
+
+### Routing evidence
+
+| Role | Pinned value | Actually ran on | Notes |
+|---|---|---|---|
+| Controller | session `$MODEL` | `opus` (`CONTROLLER_ID=claude:claude-opus-5`) | triage / pick / predicate re-measurement / first-party reproduction / adjudication / record |
+| Sprint-planner | `$MISSION_PLANNER_MODEL` = `opus` | **`opus`**, model-PINNED `Agent` sub-agent | `derive-planner-lane.sh design_docs/planned/w-workbench-read-only.md` → **`opus fail-closed:env-pin`**, rc=0, token copied VERBATIM. Gate 3 step 1b: an `opus ` result means the opus Agent path directly and **no codex probe** — none was run |
+| Designer | ROTATION | **none** | no doc was created or revised; the rotation pointer is untouched and Fable is unspent |
+| Quorum | — | **none** | the doc's round-3 carve-out closed at iteration 109; re-running it would be re-litigation, which Gate 2 forbids |
+| Executor / Evaluator | — | **none** | the deliverable is a plan; nothing to execute or judge |
+
+### The headline: `AC7` is vacuous because of this loop's own executor recipe
+
+`AC7` is *"only priced files changed"* — the criterion that stops scope creep. Its command is
+`git diff --name-only 93e1ba5 -- ':!design_docs'`, and **`git diff` does not see untracked files**.
+Every file this sprint adds is untracked for the sprint's whole life, because the sandboxed
+cross-provider executor performs **no git write operations at all** — a constraint this skill's own
+codex recipe imposes, since a linked worktree's `.git` is a file pointing outside
+`--sandbox workspace-write`. So the criterion passes green with every unpriced new file present.
+
+Reproduced first-party rather than inherited, because a finding handed up by a sub-agent is a claim
+whatever its provenance:
+
+| arm | command | observed |
+|---|---|---|
+| doc form, with a real untracked probe file present | `git diff --name-only 93e1ba5 -- ':!design_docs'` | **0** matches, **0** total lines |
+| positive control — the file genuinely exists | `ls host/daemon/zz_ctrl_probe_iter110.go` | listed |
+| positive control — another instrument sees it | `git status --porcelain \| grep -c` | **1** |
+| repaired form | `+ git ls-files --others --exclude-standard` | **1** |
+
+The probe was removed and the tree re-verified clean.
+
+**What makes this worth the headline is who could not have caught it.** The doc went through two full
+quorum rounds plus a restored third reviewer, and none of them had any way to see it: the defect is
+not in the design, it is in the interaction between a correct criterion and an operational constraint
+that lives in the *controller's* rulebook. That is this loop's own named shape — *guard the helper,
+miss the call site* — arriving from the tooling side of the boundary rather than the design side.
+The doc's **intent** is right and is not amended; only the plan's instrument is repaired.
+
+### The negative control that generalises past the two criteria it was run on
+
+`AC2` and `AC8` are both **rc=0 at base** while only one of each pair's two named tests exists —
+exactly **1** top-level `=== RUN` line each (`TestBareNetHTTPExemptionIsPerGroup`,
+`TestReadCtxCancelledAfterHandler`). Both docs' prose already says a base green "is not accepted as
+implementation evidence", so the *criterion* was right and the *command* could not enforce it.
+
+The negative control is the part worth keeping:
+
+```
+go test ./host/boundary -run 'TestZzNoSuchTestIter110' -count=1 -v   →   rc=0, 0 `=== RUN` lines
+```
+
+**`go test -run` exits 0 on an EMPTY match set.** So any acceptance criterion in this repo of the form
+*"`go test -run 'TestA|TestB'` passes"* is green **before either test is written**, and stays green if
+a later rename silently orphans the selector. That is a repo-wide instrument property, not an AC2/AC8
+accident. It is recorded here rather than swept: sweeping it is a change to many acceptance criteria
+across many docs, which is its own item, and this iteration's one backlog slot is spent.
+
+### Rule 3e(a), aimed at the base rather than at the plan
+
+Both gates baselined on the pristine tree at `3e0c34c` **before** routing, exit codes captured to file
+and never read through a pipe (`${PIPESTATUS[0]}` is silently empty in zsh):
+
+- `AILANG_BIN=/tmp/ailang-v0300/ailang GOTOOLCHAIN=go1.25.6 ./scripts/verify_ail.sh` → **rc=0**
+  (10 required identities, 40 named tests, 9/9 world-package steps).
+- `AILANG_BIN=… GOTOOLCHAIN=… ./scripts/verify_go.sh` → **rc=0** (build clean, plain and race).
+
+Both env vars are required; `verify_go.sh` fails loudly if `AILANG_BIN` is unset or ≠ v0.30.0.
+`host/capsule`'s `TestF5WallClockTimeoutHasElapsedBound` was **green today** — a data point that queue
+row 32's red is load-dependent rather than persistent, and explicitly **not** a refutation of the row.
+Platform stated because it is a parameter nobody types: every green above is **darwin/arm64**; the
+windows and ubuntu legs are unrun locally.
+
+### Q1–Q3 adjudicated, not parked — zero human asks manufactured
+
+The planner flagged three under-specified points and, correctly, declined to resolve them itself. All
+three are **completeness gaps**, not design-direction disputes, and the doc's own text — plus one
+measurement for Q1 — closes each uniquely. Standing rule 8's tell applies in reverse: an ask whose
+answer is already written down in the artifact is a manufactured decision, and the human's queue is
+this loop's scarcest channel. All three plan readings **UPHELD**.
+
+- **Q1 — the 503's body format.** Resolved by measurement. `writeReadTimeout` is
+  `writeAPIError(w, "Timeout", …, http.StatusServiceUnavailable)` and `writeAPIError`
+  (`host/daemon/handlers.go:134-136`) is `writeJSON(...)`. So §2.4's *"the same class the JSON routes
+  emit"* names the **class token**, and the envelope is a separate thing the existing code already
+  keeps separate. §2.4 fixes the media type for the sibling branches (*"a small HTML error page"*)
+  and §2.5 fixes `Content-Type: text/html` for the route, so a JSON 503 would contradict two sections
+  to satisfy a phrase that was never about the envelope. **Class ≠ envelope** is the entire ambiguity.
+- **Q2 — which parameter combinations are supported.** Resolved as the conjunction of two doc
+  sections rather than by controller invention: §2.2 pairs `from` with `entry`, while §6's **M10**
+  (*"payload remains opt-in"*, arm `TestWorkbenchPayloadPreviewBound/default-off`) requires
+  `{object}` **without** `payload` to be accepted — which is why both `{object}` and
+  `{object, payload}` belong in the set. Accepted sets: `{}`, `{world}`, `{from, entry}`, `{object}`,
+  `{object, payload}`; **`?from=0` alone is 400**, because a permissive reading would have to invent a
+  default for the absent `entry` and §2.4's verbatim carve-out text forbids exactly that.
+- **Q3 — a malformed `payload` value.** Resolved by the doc's own axiom. §2.4's omission of `payload`
+  from its malformed-value list is an **enumeration gap, not a permission**; treating `payload=true`
+  as `0` is the precise silent fallback (`?paylod=1` rendering a different view) that the restored
+  `gpt5-6-sol` reviewer found at round 3 and that the carve-out text exists to close.
+
+The rulings are written into **both** artifacts — the plan JSON's
+`open_questions_for_controller[].controller_resolution` and §7a of the tracked plan — so the executor
+reads them without needing either one specifically.
+
+### The tracked companion is load-bearing, not a convention
+
+`.ailang/` is gitignored (`.gitignore:3`, `**/.ailang/`), so **0 of 37** files in
+`.ailang/state/sprints/` are tracked — control: **15** tracked files in `design_docs/planned/`. A
+fresh `git worktree add` checkout therefore contains **no machine plan at all**, and the sprint runs
+in exactly such a worktree. `design_docs/planned/w-workbench-read-only-sprint-plan.md` (381 lines) is
+what the executor will actually be able to read, which is why it is created and committed rather than
+left as the untracked handoff.
+
+### The plan
+
+Eleven milestones `WB.A`–`WB.K`, 9.5 h + 2.5 h contingency ≈ **1.5 days**, inside §9's 1.5–2 day band.
+All **32** mutation IDs appear exactly once in `mutations[]`, claim-counts and discharge-counts
+reconcile mechanically, and the AC union is exactly {AC1…AC8} with no AC assigned twice. The four
+drill milestones are resumable at per-mutant granularity. One deliberate departure from §9's internal
+split is stated in the plan rather than hidden: the mutation drill is priced 3.75 h against §9's
+0.2 day, because 32 rows at build-assert + named-run + full red-set classification + verified restore
+cannot be done in 1.6 h. The total stays in band.
+
+The plan also surfaces a **medium implementation hazard** the doc's §8.2 conceals: the
+"cancelled-after-handler route table" is the *shared* `seedReadRoutes` helper
+(`read_deadline_test.go:53–70`), consumed by five tests, four of which `json.Unmarshal` the body via
+`assertErrorClass`. `/workbench` answers HTML, so editing the shared helper would red four inherited
+tests **for the wrong reason**. The plan forbids the edit (invariant INV8) and prescribes a local
+`append` inside `TestReadCtxCancelledAfterHandler` only.
+
+### Ruled out
+
+- **Re-running the quorum** on a doc the carve-out already closed at round 3 — Gate 2's quorum is a
+  pick-time gate, not a re-litigation, and the carve-out is one bounded round by construction.
+- **Forwarding Q1/Q2/Q3 to Mark as design-direction asks.** All three are completeness gaps their own
+  document closes; rule 3f says measure a premise rather than forward it, and standing rule 8 warns
+  against an ask whose answer is "it is already written down".
+- **Sweeping the `go test -run` empty-selector property repo-wide** inside a planning iteration. It
+  touches acceptance criteria across many docs and is its own item; standing rule 1 is one item.
+- **Absorbing row 32's `host/capsule` wall-clock ceiling** because the gate happened to be green
+  today. A green under a load that did not materialise is not evidence the bound is sound — it is
+  evidence the load is the variable, which is what the row already says.
+- **Treating AC7 as a defect in `w-workbench-read-only.md`** to be fixed in the design doc. The doc's
+  intent ("only priced files changed") is right; only its command is blind, and the blindness comes
+  from the executor recipe rather than from the design. Repaired plan-side.
+- **Filing anything `PARKED-ON-LANE`** — no lane refused; the opus planner lane fired first try.
+
+### Gate bookkeeping
+
+Gate 0: **0** directives from `MarkEdmondson1234` on `#68` since `2026-08-22T06:23:16Z` (of **27**
+comments). `scripts/mission_directives.sh` invoked by **absolute path** from the V1 checkout per the
+Repo Profile and never hand-rolled — the author allowlist lives in that script, not in prose a
+controller is trusted to retype. BOTH watermarks read per the Repo Profile's World-local rule
+(`mission-world-last-seen` and `mission-68-last-seen`) and they **AGREE**. Rotation NOT due (`#68`
+created after the Monday-07:00 **local** boundary; next boundary Mon 2026-08-24; 27 comments against
+the cap of 80). Weekly external-issue sweep not due — it belongs to the first iteration after a
+rotation. Inbox **2** unread, both cross-mission from `mission-v1`, neither auto-outranking; one
+registers this mission's flipped-predicate proposal as a watch-item with a V1 corroborating instance
+(a LANE park that rotted 17 iterations) and asks that the two be filed together on the next iteration
+meeting a third. Decision ledger valid, **11** rows, **0 OPEN** on entry and on exit. Billing tripwire
+**CLEAN**.
+
+Gate 1: `dev` == `origin/dev` at `3e0c34c`, clean tree; CI SHA-addressed `checks=2` with **0**
+not-green and `total_count` firing as the known-positive control. The RUNNING skill is
+**byte-identical to origin**, with the `cmp` PAIRED WITH `readlink` first and both paths asserted to
+be the same inode (`47397093`) — a relative path is a claim about where you are standing, not about
+which file runs.
+
+Gate 4: charter STATUS rotation asserted **before** writing — `after == before + 2 − 2×1`, held
+exactly; charter stamp count **3**; the rotated iteration-107 stamp **verified present in the
+archive** (control: iteration 106 also present), archive stamp count 121 → **122**; four queue-row
+greps fired after the edit, so the mass-deletion class is excluded by measurement rather than by
+care.
+
+**Next**: the **sprint-executor on `WB.A`**, on the `codex:gpt-5.6-sol` lane with the `opus` fallback,
+in a worktree that is a **sibling of the repo and never under `/tmp`**; then row 32, then item 22,
+then row 31.
+
+**Zero open asks.**
