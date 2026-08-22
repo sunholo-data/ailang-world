@@ -12828,3 +12828,128 @@ both `success`, 0 not-green). **`dev` is green.**
 
 **Gate 5 lane, revised.** The pre-registration is now a two-instance finding and is PROPOSED to V1 on
 the cross-mission channel — World shares the skill and cannot edit it.
+
+## Iteration 108 — 2026-08-22 — item 17: `PE.F` landed and the item is COMPLETE; a removal proves a check fires, only an addition proves it looks
+
+**Pick**: queue row **17** `w-validated-proven-evidence-boundary`, milestone **`PE.F`** — item 17's
+own `NEXT`, set by iteration 107, and the **last of six**. Not the queue head by position; an
+`[IN-SPRINT]` item with a landed plan and an explicit next milestone, so standing rule 1 keeps it.
+Reality-check at pick time: `git log origin/dev --grep 'PE\.F'` returns only iteration 107's *record*
+commit (`ac17d54`, which discusses PE.F) with the control `PE\.E` returning three real commits; zero
+PRs titled PE.F in any state; **zero** open PRs on the fleet account; `git worktree list` clean; main
+checkout clean. So no died-mid-flight predecessor and nothing already landed. Doc↔plan cross-check
+(the two rot independently): the plan's PE.F row claims AC8/AC9/AC11/AC12 and the doc's §7 numbering
+agrees — no divergence to adjudicate.
+
+**Outcome**: **`PE.F` LANDED — AND ITEM 17 IS COMPLETE, ALL SIX MILESTONES IN.** PR
+[#82](https://github.com/sunholo-data/ailang-world/pull/82) → squash
+[`189299b`](https://github.com/sunholo-data/ailang-world/commit/189299b). **Gate 3b GREEN on the
+MERGE commit** (SHA-addressed, `checks=2`, `present=2 == expected=2`, 0 not-green, run CONFIRMED to
+exist `total=1 event=push`, parent control `total=1` from a **`rev-parse`d** SHA — never
+hand-expanded — and a negative control at `total=0`). Judge `sonnet` **96/100 PASS round 1, zero
+blocking**; two of its three non-blocking findings were reproduced first-party and **fixed** in a
+round-3 commit (`16531ea`), the third recorded rather than patched. `metered=$0.00` of the $5
+ceiling (no quorum — in-sprint continuation on an existing plan); quota `opus` ×1, `codex` ×3,
+`sonnet` ×1.
+
+**What shipped.** **AC8** — a focused `host/evidence` leg in `scripts/verify_go.sh`, placed *before*
+the broad plain/race legs so it fails fast: `go test -json ./host/evidence -count=1`, reading only
+terminal `Action=pass` events for **top-level** `Test…` identities, requiring **set equality**
+against a non-empty `REQUIRED_EVIDENCE_TESTS` (missing, skipped, failed, **duplicate**, **extra**),
+with `EXACT_EVIDENCE_TESTS=37` supplied from the shell so the banner cannot drift from the
+assertion. Three anti-vacuity floors fail LOUDLY rather than print a checkmark. Its isolated
+self-mutation gate, `host/verifygate/evidence_manifest_gate_test.go`, copies the **live** script
+into a temp root and **executes it** — it does not re-implement the comparison, which is the
+difference between testing the artifact and testing your own arithmetic. **AC9** — the full
+**27-row** re-drill (`M1–M5 · M7–M14 · M16–M27 · M29 · M30`), recorded at
+`design_docs/verification/w-validated-proven-evidence-boundary/AC9-mutation-drill.md`. **AC12** —
+zero diff under `host/daemon/`, `cmd/`, `host/replay/` and renderer-shaped paths, with the same
+instrument firing non-empty elsewhere.
+
+**THE FINDING: a removal proves a check FIRES; only an ADDITION proves it LOOKS.** Every mutation
+discipline this loop owns is removal-shaped — neuter a branch, delete a literal, strip a guard — and
+a gate can survive all of them while being blind to the case it exists for. The controller's live
+drill on `verify_go.sh` ran four arms plus a pristine control: remove a required literal → RED
+`extra=[…]`; add a bogus required literal → RED `missing=[…]`; pass the shell literal `38` against an
+intact set → RED `observed_unique=37 exact_required=38`, proving `EXACT_EVIDENCE_TESTS` is
+**independently** load-bearing and not redundant with set equality. The fourth is the one that
+matters: **append one real, PASSING test to `host/evidence`** (`go build` rc=0, `go test` rc=0) → the
+leg goes **RED**, `extra=[TestPefEnumeratorAdditionProbe]`, count **37→38**. That arm is what
+substantiates the item's own standing claim that *"PE.F must be the last change to `host/evidence`"* —
+and no removal-direction mutant in the 27-row table could have produced it. Neutering the comparison
+itself (`if False and …`) reds **3 of the 5** then-existing isolated arms and leaves
+`empty_required_set` and `empty_observed_enumeration` GREEN, because those sit behind separate
+earlier branches: the arms are distinguishable rather than one check wearing five names.
+
+**A REFUTED PREMISE, CORRECTED IN PLACE (V56).** The sprint plan listed **M26** and **M30** under
+*"cannot be killed without the REAL store"*, and §6.1 said *"M26 — no fake participates in the
+kill"*. Both are FALSE. Reproduced first-party by the executor, by the controller and again by the
+judge: under M26 the fake-based `TestConstructorNamesActuallyUsedUnorderedTimeouts` reds in isolation
+(rc=1, `ordering refusal did not name runtime values: <nil>`) with no real store anywhere in it, and
+M30 is the same shape via `TestConstructorRefusesUnknownBusyTimeout` (`NewValidator accepted unknown
+BusyTimeout: <nil>`). §6.1's two rows, §6's killer column and the plan's list now say what is true —
+the real-store arms are **integration evidence** that production reports and forwards its live busy
+window, not a prerequisite for the branch kill. Iteration 107 measured this and recorded it as
+unfinished business; this iteration discharged it.
+
+**Twelve §6 divergences found and REPORTED, not patched away.** Source anchors that moved (`store.go`
+→ `read_object.go` for M4/M22/M25; `report_codec.go` → `envelope_codec.go` for M9; `grade.go` gone
+for M16), predicted failure text with a different successor (M3 reaches `hash_mismatch`, not
+`malformed`; M18 says `projection mismatch`), and red sets wider than the table names (M20 also reds
+`TestValidatorMintIdentitiesAreDistinct`; M26 also reds the AC22 forwarding subtest). The judge
+spot-checked four and found all four to be genuine documentation drift with no masked code defect.
+The drill's discipline held throughout: every mutant asserted **LANDED** by sha256 and **BUILDS** by
+`go build ./...` rc=0 *before* any test result was read, every red set **enumerated by running** the
+mutant rather than predicted, `-skip` rc=0 claimed only for mutants proven single-test (22 of 27
+sole killers; the other five have their extra members explained), and every restore by `cp` from a
+`/tmp` backup verified byte-identical — never `git checkout --`, which in an uncommitted sprint
+worktree would delete the milestone.
+
+**THE JUDGE FOUND A FLOOR WITH NO ARM, AND A RECORD CITING A PATH THE COMMIT HAD DELETED.** 96/100
+with zero blocking is exactly the score at which a controller stops reading, so both non-blocking
+findings were reproduced before being acted on — and both were real. **(1)** §5 names *three*
+anti-vacuity floors; the isolated test had arms for two. Measured: the *"zero passing host/evidence
+packages discovered"* message appears **once** in the script and **zero** times in the test, and
+every synthetic writer emitted the package-level pass event **by construction**, so no existing arm
+could reach that branch and no removal-shaped mutant on the other two would ever have revealed it —
+live code that no test protected. Closed with a sixth arm and its own writer; non-vacuity drill:
+neuter the floor, `go build` rc=0, red set = the new arm **alone**, other five green. **(2)** The
+AC9 record's M17 row cited `.snap/S2/` — executor scaffolding that was never committed — so the row
+pointed at a path no reader could open. A record that cannot be re-derived is a claim, not evidence;
+replaced with the controller's own live-script drill, reproducible from the commit alone. **(3)** The
+test-only `EVIDENCE_MANIFEST_GATE_SOURCE` override is recorded rather than patched: it is set nowhere
+in CI, scripts or the repo, it is what lets an arm point at a mutated copy, and its scope and failure
+mode are now named at the call site.
+
+**Routing evidence** — controller `claude:claude-opus-5` (session, driver-selected); designer **not
+spawned** (no new doc; rotation pointer untouched at `codex:gpt-5.6-sol`, **unspent a NINTH
+consecutive iteration**); planner **not spawned** (the sprint plan has existed since iteration 103);
+executor `codex:gpt-5.6-sol` (probe rc=0, three bounded 30-min backgrounded runs — round A the gate,
+round B six drill rows, round C the remaining 21); evaluator `sonnet` — **distinct provider from the
+codex executor, so generator≠judge holds without a re-route** — spawned in its **own** worktree so
+its mutation drills could not race the controller's gate runs. All three executor rounds ended with
+`codex rc=0`, a non-empty worktree diff, and a final-message file; the tree was verified
+byte-identical to its pre-drill sha256 manifest (350 files) after rounds B and C.
+**A measured narrowing, not an assumed one**: round B reported its own bottleneck — the three-package
+red-set enumeration cost ~27 s per row, essentially all of it `host/verifygate` — and across its five
+Go rows `host/verifygate` never appeared in a red set. Round C was told to narrow to
+`host/evidence + host/store` **only after running one explicit control** (M8 enumerated over all
+three, `host/verifygate` green in 27.7 s), and to write the narrowing into every row so it travels
+with the finding. Pace went from ~6 rows in 15 min to 21 rows in 19 min.
+
+**Ruled out** — (a) that PE.F was already landed or half-landed by a dead slot: the only `PE.F` hit
+in `origin/dev` is iteration 107's record commit, control `PE.E` returning three real commits, zero
+PRs, zero worktrees, clean tree; (b) that the executor's 6-of-27 stop in round B was a failure:
+it was an honest partial with every row restored and the remainder named, which is what the directive
+asked for and is better evidence than a complete drill asserted; (c) that the judge's three findings
+were cosmetic — two were real and reproduced, and only the third survived as record-not-patch;
+(d) that `EXACT_EVIDENCE_TESTS` is redundant given set equality — refuted by the count-pin arm, which
+reds on `38` against an intact 37-member set, and independently by the judge.
+
+**Next** — **item 17 is CLOSED**, so the queue head governs again. **Item 22
+`w-daemon-lock-wait-not-deadline-bound`** (clause-2) is next by position; re-verify its declared
+predicate at pick time by *command* before routing, since a blocker describing someone else's work
+rots fastest and this one has not been re-measured since it was queued. Row **14**'s predicate is
+flipped-but-unpicked and becomes eligible now that 17 no longer holds the sprint slot — read it in
+the same pass. The doc and plan for item 17 should move to `design_docs/implemented/` **with their
+sprint-plan companion** as a bookkeeping deliverable in the next iteration.
