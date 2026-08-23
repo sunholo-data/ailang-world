@@ -14081,3 +14081,171 @@ rotation unspent a **12th** consecutive iteration. `metered=$0.00` of the $5 cei
 
 **Next**: `WB.E` — payload opt-in, 64 KiB cap, 100-entry timeline cap (claims M10–M12). Then row
 37, row 36, row 35, row 34, row 32, row 33, item 22, row 31. **Zero open asks.**
+
+---
+
+## Iteration 115 — 2026-08-23 — the view-model seam leaks both ways, and a diff-anchored drill found the half a defect-anchored one would have missed
+
+**Pick.** Queue item 14 `w-workbench-read-only`, milestone `WB.E` (payload opt-in, 64 KiB preview
+cap, 100-entry timeline bound). Queue head, no contest. Item 14 stays `[IN-SPRINT]` at **5 of 11**.
+
+**Gate 0.** Kill switch armed-not-disabled. `gh` on `sunholo-voight-kampff`. Billing tripwire
+CLEAN (both Anthropic key vars empty). Pidfile `mission-world.pid` = 63253 = this process's own
+parent, so no overlap. Inbox: 0 unread. Directives: `0` from `MarkEdmondson1234` on `#68` since the
+watermark `2026-08-23T07:57:21Z`, run via the **absolute** path to the V1 checkout's
+`scripts/mission_directives.sh` (it does not exist in this repo — Repo Profile, iter-72) with
+`--repo sunholo-data/ailang-world`; the script enumerated all 34 comments. Both watermarks
+(`mission-68-last-seen`, `mission-world-last-seen`) read the same value, so the Repo Profile's
+take-the-older rule was a no-op this iteration. **No rotation**: the most recent Monday-07:00 local
+boundary is Mon 2026-08-17 07:00 CEST and `#68` was created 2026-08-17T19:19:43Z = 21:19 CEST,
+*after* it; 34 comments is under 80. Rotation falls due at the next boundary, Mon 2026-08-24 07:00.
+
+**Gate 1.** `origin/dev` == local `dev` at `48ef275`, clean tree. dev GREEN: `checks=2`
+(`ailang-code verify gate`, `go host build + test gate`) both `success`, parent control also `2`,
+run existence `total=1`. **Skill drift: NONE** — `readlink -f ~/.claude/skills/mission-control`
+resolves to the ailang checkout (inode `48267477`, same file), and `cmp` against
+`origin/dev:.claude/skills/mission-control/SKILL.md` is rc=0 at 332,323 bytes each. That closes
+iter-113's exit addendum, which found the running skill carrying an uncommitted edit; it is now
+committed and byte-identical to origin.
+
+**Blocked-external predicate, re-run rather than transcribed.** Row 5's blocker
+`sunholo-data/ailang#764`: `state=OPEN`, `updated=2026-08-23T14:31:39Z`, **1** comment and it is
+our own. No maintainer reply. Control `#498` resolves with 5 comments, so the instrument fires.
+Row 5 stays blocked; the predicate was run as a command, not read out of the row's prose.
+
+**Gate 2 reality-check.** No open PRs from this account in this repo, no stale worktrees, main
+checkout clean — no died-mid-flight iteration. `WB.E` not landed (`git log origin/dev --grep='WB.E'`
+empty, control `--grep='WB.D'` returns 3). Both constants the plan names exist
+(`MaxPayloadPreview`, `WorkbenchPageLimit` in `host/workbench/render.go`), negative control on a
+fresh absent literal returns 0.
+
+**THREE CONTROLLER ADJUDICATIONS BEFORE ROUTING, AND ONE OF THEM WAS WRONG.**
+
+- **ADJ-3 (correct).** The plan's narrow gate is `go test -run
+  '^TestWorkbench(PayloadPreviewBound|TimelineBound)$'`. Measured at base: **rc=0 with ZERO
+  `=== RUN` lines** — queue row 33's property exactly. So the AC's `rc=0` clause is vacuous and the
+  enumeration clause is the whole gate. Said so in the directive in those words.
+- **ADJ-2 (correct).** Plan task 3 says to set `TimelineView.Truncated`. Measured: `.Truncated`
+  appears **0** times in the template body against a same-scope control of **1** for
+  `PayloadTruncated`, and doc §3.2 requires a visible "truncated" marker for the **payload** only.
+  Ruled: set the field, add no render site (outside the milestone's file list), assert nothing on
+  it, and file the residue as a queue row.
+- **ADJ-1 (WRONG, and it cost a revert).** Plan task 5's oracle asserts on `data-entry-index="`,
+  which does not exist — **0** occurrences repo-wide, control `EntryIndex` = **37** — and emitting
+  it means editing `host/workbench/render.go`, outside the file list. I re-specified the oracle
+  against `<h3>entry {{.EntryIndex}}</h3>`, which the template already emits, and told the executor
+  to request `/workbench?from=0` so `Page.Selected` stays nil. **`?from=0` alone is a sixth state
+  in §2.2's closed enumeration and `WB.D` refuses it by design** — iter-114 adjudicated exactly
+  that, calling a new state "a design change, not glue". I read §2.2's enumeration in the doc and
+  never read `supportedWorkbenchQuery` in the code.
+
+**THE EXECUTOR CAUGHT MY DEFECT BY DISCLOSING RATHER THAN COMPLETING.** To satisfy the directive it
+widened `supportedWorkbenchQuery` by one disjunct (`|| query["from"] != nil`), re-aimed the
+`unsupported-combination` refusal arm at `world+object`, and **said so in its final report**. Rule
+3h says adjudicate a deviation by measurement in both directions: this one is not better than the
+plan, it silently reverses a ratified design decision from one milestone earlier — but the
+disclosure is the value, and the plan (my directive) is what needed fixing. The **empty query**
+does the identical job: state 1 of the enumeration, it defaults `from=0` *and* leaves
+`Page.Selected` nil by construction. Reverted — `supportedWorkbenchQuery` `diff`-identical to its
+parent, the `{"unsupported-combination", "/workbench?from=0", 400}` arm restored verbatim, the
+timeline test retargeted at `/workbench`. Production diff is then **12 insertions, 0 deletions**.
+
+**Gates, all re-run OUTSIDE the sandbox**, exit codes captured to files and never through a pipe:
+narrow gate rc=0 with **6** `=== RUN` lines / 0 FAIL / 0 SKIP (base: rc=0, **0** RUN);
+`go test ./host/daemon ./host/workbench -count=1` rc=0 (base rc=0);
+`go build ./host/workbench/... ./host/daemon/...` rc=0; `gofmt -l host/ cmd/` empty;
+`^TestWorkbench` run-lines **25 → 31**. The executor reported the full-package gate rc=1 and
+correctly labelled it `UNINFORMATIVE UNDER SANDBOX` (loopback bind denials) rather than as a
+failure — outside the sandbox it is rc=0, so the label was right and banking its rc would have been
+a fabricated regression.
+
+**MUTATION DRILL ANCHORED TO THE DIFF, NOT TO THE DEFECT (rule 3n) — AND THAT IS THE WHOLE
+FINDING.** Four hunks, four mutants; each asserted **LANDED** by sha256 and **BUILDS** rc=0 before
+any test result was read; each restored byte-identical from a `cp` backup, never `git checkout --`.
+
+| mutant | red set | inverse |
+|---|---|---|
+| `M10` `showPayload := true` | **sole killer** `TestWorkbenchPayloadPreviewBound` | `-skip` rc=0 |
+| `M11` drop the `MaxPayloadPreview` slice | **sole killer** `TestWorkbenchPayloadPreviewBound` | `-skip` rc=0 |
+| `M12` `WorkbenchPageLimit` 100→101 | **sole killer** `TestWorkbenchTimelineBound` | `-skip` rc=0 |
+| hunk 4 revert `page.Timeline.Truncated = …` | **REDS NOTHING** — rc=0, empty FAIL set | — |
+
+A defect-derived mutation set would have run the first three, found three sole killers, and
+reported a perfect drill. The fourth hunk is the one nobody would think to mutate, and it is the
+one that carried the finding.
+
+**THE FINDING → QUEUE ROW 38: THE TIMELINE'S PAGINATION SEAM IS UNWIRED AT BOTH ENDS.**
+`TimelineView.Truncated` is written by the handler and read by nothing — **1** writer, **0**
+non-test readers under `host/`, same-scope control `PayloadTruncated` = **3**. The judge supplied
+the mirror image and it is worse: `TimelineView.NextHref`/`PrevHref` are **read by the template and
+written by nothing** — **2** template actions at `render.go:140-141`, **0** occurrences anywhere in
+`host/daemon`, control `page.Timeline` assignments in that same file = **3**. Both links sit behind
+`{{if}}`, so the zero value renders *nothing at all*: there is no broken link to notice, which is
+why four milestones of renderer work walked past it. The consequence is user-visible rather than
+merely hygienic — the workbench caps the timeline at 100 entries and then offers no in-page route
+onward, and §2.2 refuses `?from=N` alone, so a reader must hand-craft `?from=100&entry=100`. And
+the signal a next-link needs is exactly the field `WB.E` shipped and discarded. Sibling of row 35;
+sequence the two together, same `render.go` seam.
+
+**Gate 3b.** PR [#87](https://github.com/sunholo-data/ailang-world/pull/87), `mergeable` read FIRST
+(`MERGEABLE`, the boring cause before any dropped-event lever). PR checks **OBSERVED green on the
+head SHA before merging** — never behind an armed auto-merge — `present=2 == expected=2`, 0
+not-green. Squash [`e563339`](https://github.com/sunholo-data/ailang-world/commit/e563339); GREEN
+on the MERGE commit, SHA-addressed from a `rev-parse`d 40-char SHA, every count asserted NUMERIC
+before comparison (the poll prints `INSTRUMENT FAILURE — not a verdict` otherwise), run existence
+`total=1 event=push`, and the parent control **`rev-parse`d rather than hand-expanded** (`total=1`,
+`check-runs=2`) so a fabricated SHA could not agree with me for the wrong reason. Auto-close scan on
+the commit message and PR body: **0** each, known-bad control firing at **1**; `#68` asserted still
+`OPEN` with 34 comments on both sides of the merge.
+
+**Routing evidence.**
+
+| Role | Pinned | Actual | Notes |
+|---|---|---|---|
+| Controller | session | `claude-opus-5` | triage/pick/adjudicate/drill/record |
+| Designer | rotation `claude:claude-fable-5` | **not spawned** | doc + plan both exist; pointer unspent |
+| Planner | `opus` | **not spawned** | plan exists (`w-workbench-read-only.plan.json`, WB_E) |
+| Executor | `codex:gpt-5.6-sol` | `codex:gpt-5.6-sol` | probe rc=0; ~7 min; zero git writes; 1 disclosed deviation |
+| Evaluator | `sonnet` | `sonnet` | own worktree at `4833cfc`; **95/100 PASS, zero blocking** |
+
+generator ≠ judge holds: OpenAI executor, Anthropic judge. `metered=$0.00` — both lanes are quota
+buckets, no metered call was made, so the $5 ceiling was never approached.
+
+**Evaluator.** 95/100, zero blocking, run in its own worktree at the sprint commit and pointed at
+three named targets (rule 3h(c)). It re-derived every measurement above, verified the grammar
+revert independently, and neutered each arm's **precondition** — 5/5 honest deaths, 0 vacuous. Two
+non-blocking returns, both reproduced first-party before being recorded: the `Truncated` write is
+*fully inert* rather than merely unrendered (sharpening, folded into row 38), and the
+`GetLogEntry(104)` non-vacuity control is redundant for the failure mode it names, since the count
+assertions already catch an under-run seed. **It refuted me in a useful direction:** I claimed the
+timeline oracle is safe because `Page.Selected` renders nowhere; it is safe for a stronger,
+already-enforced reason — the closed grammar keeps "empty query" and "entry selected" mutually
+exclusive — so the oracle survives a future milestone rendering `Selected`. Worth recording,
+because my weaker justification would have coupled row 38's eventual fix to this test.
+
+**Ruled out.**
+- *That `?from=0` is an accepted query state.* It is not, by design, and `WB.D` pins the refusal.
+  My directive asserted it implicitly and the executor's disclosure is what exposed it.
+- *That the executor's full-package rc=1 was a regression.* Sandbox loopback-bind denial; rc=0
+  outside. The executor's own `UNINFORMATIVE UNDER SANDBOX` label was correct.
+- *That plan task 5's `data-entry-index` marker exists.* 0 occurrences, control at 37.
+- *That `Page.Selected` is WB.E's problem.* It renders nowhere (0 in the template body, controls
+  `Timeline`=4 / `Object`=2 / `World`=3) but is out of scope; not folded in, per rule 3n(b).
+- *That the dashboard collision applies here.* Only the namespaced
+  `design_docs/world-mission-dashboard.md` was written; no bare `mission-dashboard.md` exists.
+
+**Retro (Gate 5), one lane each.**
+- **Skill fix: NONE this iteration.** The one candidate — *"a controller adjudication that
+  overrides a plan task is an acceptance list too, and rule 3e(a) does not reach it"* — has **1**
+  recorded instance (ADJ-1, this iteration). The skill's own bar is ≥2 frictions pointing at the
+  same gap, and filing below the bar is a defect this loop has already paid for once (iter-106).
+  Recorded here as a watch-item so a second instance is recognisable rather than rediscovered.
+  Note it is adjacent to, but NOT the same as, the codex recipe's false-green #4 (which polices the
+  *gate list* a controller writes into a directive); this is about a controller *re-specifying a
+  plan task* and never checking the new specification against landed code.
+- **Process fix: none needed.** The Repo Profile's absolute-path rule for `mission_directives.sh`
+  and its two-watermark rule both worked unmodified.
+- **Backlog:** queue row 38 added; row 5's predicate re-measured and left blocked.
+
+**Next.** `WB.F` — `TestWorkbenchReadDeadline` + `/workbench` in the cancelled-after-handler table,
+closing doc **AC8** (claims M29, M30). 6 of 11 milestones will remain after it.

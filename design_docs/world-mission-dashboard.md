@@ -1,35 +1,39 @@
 # Mission Dashboard — Ailang World
 
-*Snapshot. Overwritten every iteration. History lives in the charter STATUS block and
-`world-mission-log.md` — never here.*
-
-**Last iteration**: 114 · 2026-08-23 · `WB.D` LANDED
+*Snapshot, overwritten every iteration. History: charter STATUS + `world-mission-log.md`.
+Written: iteration 115, 2026-08-23.*
 
 ## Where we are
-- **Queue item 14** `w-workbench-read-only` **[IN-SPRINT]** — **4 of 11 milestones landed**
-  (`WB.A` `83f1973` · `WB.B` `75bc23f` · `WB.C` `5fd6fb3` · `WB.D` `e50fbea`).
-- **dev is GREEN** at `e50fbea`: `checks=2`, both `success`, 0 not-green, run existence asserted.
-- **NEXT**: `WB.E` — payload opt-in, 64 KiB cap, 100-entry timeline cap (claims M10–M12).
-- Then: row 37 → row 36 → row 35 → row 34 → row 32 → row 33 → item 22 → row 31.
 
-## This iteration in one line
-`WB.D` enforced §2.4's closed query grammar and every refusal branch (14 pinned subtests). The
-finding: **`M9`'s mutation row names one mutant for a pattern with NINE call sites, and 7 of the 9
-have no killer anywhere in the package** — filed as queue row 37, not absorbed.
+- **dev**: GREEN at [`e563339`](https://github.com/sunholo-data/ailang-world/commit/e563339) —
+  `checks=2` both `success`, 0 not-green.
+- **In flight**: queue item 14 `w-workbench-read-only` — **5 of 11 milestones landed**
+  (`WB.A` → `WB.E`). Read-only HTML workbench over the world store.
+- **This iteration**: `WB.E` — payload opt-in, 64 KiB preview cap, 100-entry timeline bound.
+  PR [#87](https://github.com/sunholo-data/ailang-world/pull/87), evaluator 95/100 zero blocking.
+- **NEXT**: `WB.F` — `TestWorkbenchReadDeadline` + `/workbench` in the cancelled-after-handler
+  table. Closes doc **AC8**. Claims M29, M30.
 
-## Loop cadence + routing
-- Controller `claude:claude-opus-5` · executor `codex:gpt-5.6-sol` (probe rc=0, first try)
-  · evaluator `sonnet` 82/100 PASS · planner `opus`.
-- Designer rotation **unspent a 12th consecutive iteration** (no new doc needed since iter-102).
-- `metered=$0.00` of the $5 ceiling. Quota: `opus` ×1, `codex` ×2, `sonnet` ×1.
+## Routing · cost · parked
 
-## Parked on Mark
-- **NONE.** Decision ledger: 11 rows, **0 OPEN**. Zero open asks this iteration.
+- Controller `claude-opus-5` · executor `codex:gpt-5.6-sol` · evaluator `sonnet`
+  (generator ≠ judge: OpenAI executor, Anthropic judge). Designer pointer
+  `claude:claude-fable-5`, unspent. Metered spend **$0.00** — both lanes are quota buckets.
+- **Nothing is blocking on a human answer** (`scripts/mission_decisions.sh --open` is authority).
+- Row 5 (`w-mcp-projection`) is blocked **upstream**, not on Mark:
+  [`ailang#764`](https://github.com/sunholo-data/ailang/issues/764) — re-measured 2026-08-23,
+  still `OPEN`, no maintainer reply.
 
-## Blocked / external
-- Queue **row 5** stays BLOCKED on upstream `sunholo-data/ailang#764` (re-measured as a command
-  this iteration: `state=open comments=0 updatedAt=2026-08-17T23:34:55Z`, unchanged).
+## Standing hazards
+
+- `go test -run` exits **0 on an empty match set** — rc is never the gate for a narrow `-run`
+  command; the `=== RUN` enumeration is (row 33).
+- §2.2's query grammar is a **closed enumeration of five states**; a sixth is a design change.
+- The view-model seam leaks **both ways**: written-never-read (`Timeline.Truncated`) and
+  read-never-written (`Timeline.NextHref`/`PrevHref`). Rows 35 and 38.
 
 ## Bookkeeping
-- Issue **#68** (week of 2026-08-17), 33 comments, cap 80. Rotation next due **Mon 2026-08-24
-  07:00 local**. Watermark `2026-08-23T07:50:00Z`; 0 directives since.
+
+- Issue [#68](https://github.com/sunholo-data/ailang-world/issues/68) (week of 2026-08-17),
+  34 comments. **Rotation is due at the next Monday-07:00 local boundary — i.e. the first
+  iteration on or after Mon 2026-08-24 07:00 CEST rotates the thread.**
