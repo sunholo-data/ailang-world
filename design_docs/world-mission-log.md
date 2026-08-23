@@ -13752,3 +13752,180 @@ manufactured emergency. The fix is one line — re-derive the comparand in the s
 it (`git show origin/dev:<path>` immediately before the `cmp`), never reuse a Gate-1 snapshot at
 Gate 5 — and it generalises past this file to every `/tmp` artifact this loop writes once and reads
 later.
+
+## Iteration 113 — 2026-08-23 — a test whose expected value IS the production constant cannot fail, and it was named as a mutant's killer
+
+**Pick**: queue row **14** `w-workbench-read-only`, milestone **`WB.C`** — the pointer iteration
+112 set, taken unchanged. No flipped predicate outranked it: dev CI was green
+(`checks=2`, both `success`, run existence `total=1 event=push`), the inbox held **0** unread,
+`mission_directives.sh` returned **0** directives from `MarkEdmondson1234` on `#68` since
+`2026-08-23T02:29:55Z` (of 31 comments), and the died-mid-flight sweep found **0** open PRs on the
+fleet account, **0** worktrees beyond the main checkout and a clean main tree.
+
+**The externally-blocked row was re-measured as a command, not transcribed.** Row 5 waits on
+`sunholo-data/ailang#764`: `state=OPEN comments=0 updatedAt=2026-08-17T23:34:55Z`, unchanged. The
+control fires and discriminates — `#676` answers through the identical call at **3** comments and a
+different `updatedAt` — and the negative control (`#9999999`) errors. Row 5 stays BLOCKED.
+
+**Rule 3e(a), run before routing, on WB.C's own acceptance list — and it corrected the plan.**
+Every one of WB.C's eight acceptance commands was measured on the sprint worktree's pristine base
+(`956316c`), outside any sandbox, exit codes captured to file and never read through a pipe.
+Three do not behave as the plan's numbers say:
+
+- **AC6 is GREEN at base, rc=0, where the plan records `executor_baseline_rc: 1`.** That baseline
+  was measured at `3e0c34c`, when `host/workbench` did not exist. `WB.A` created that directory, so
+  AC6's root `test -d host/workbench` assertion now passes and the whole compound is rc=0 **before
+  WB.C writes a line**. The criterion is still LIVE rather than dead — appending an `embed.FS`
+  token to `host/workbench/render.go` reds it, and restoring byte-identically (sha256 `007b0f0a…`
+  asserted both sides) returns it to rc=0 — so it is a genuine regression pin and **not** evidence
+  the milestone works. This is the plan's own D3 (*"AC1 goes green as soon as the directory
+  exists"*) arriving at its unswept sibling: D3 was written for AC1 and nobody asked which other
+  criteria root on the same `test -d`. The milestone table says WB.C *closes AC5 and AC6*; on the
+  measurement it closes **AC5 only**. The directive said so explicitly, so the executor could not
+  mistake a pin for evidence.
+- **The narrow gate is rc=0 with ZERO tests at base.**
+  `go test ./host/daemon -run '^TestWorkbench' -count=1 -v` exits 0 with 0 `=== RUN` lines and
+  `[no tests to run]` — queue row 33's property, live in this milestone's own gate. The
+  enumeration clause (`n == 3`) is therefore the whole gate, and the directive made it mandatory.
+- **The "prints NOTHING" greps are vacuous while the file is absent** (rc=2, no such file), so the
+  directive required each zero to be paired with a same-scope known-positive control.
+
+**Executor** `codex:gpt-5.6-sol` — probe rc=0 (`ok`), directive delivery ASSERTED before spawn
+(17,645 bytes, per-iteration filename), real run backgrounded under a 30-min `date +%s` cap with
+`< /dev/null`, terminal marker `codex rc=0` at ~4 min. **ZERO git writes**: branch still at
+`956316c`, one modified and two untracked paths, exactly as `executor_git_policy` requires. It
+labelled the whole-`host/daemon`-package run **rc=1 UNINFORMATIVE UNDER SANDBOX** rather than as a
+pass or a fail; the controller's out-of-sandbox re-run is **rc=0** — the sandbox invented that
+failure, it did not find one. False-green (3) working exactly as designed.
+
+**THE EXECUTOR DISCLOSED A DEVIATION, AND THE DISCLOSURE WAS WORTH MORE THAN THE CODE.** Plan
+task 13 requires the render test to assert that two distinct committed **object** hashes appear in
+the body. Measured, that is **unsatisfiable in WB.C scope**. An object hash reaches an `EntryView`
+only through `TransitionRef`, and the landed WB.B template renders no `TransitionRef` action at
+all: inside `{{range .Timeline.Entries}}`, `TransitionFn`, `Interpreter` and `TransitionRef` render
+**0** times each, against a same-scope known-positive control of five sibling fields
+(`EntryIndex`, `EntryHash`, `PrevEntryHash`, `SemanticsEpoch`, `WrittenBy`) that each render.
+All three are populated by the new handler. The executor's only two options were to widen into the
+landed renderer or to manufacture a carrier; it manufactured one — a production
+`page.Notice = "Timeline transition objects: " + strings.Join(transitionRefs, " ")` — **and said
+so plainly in its report**.
+
+**Two arms, one variable, and the fabrication was the SOLE carrier.** With the line present the
+test passes. Neutering **only** that line (`if false &&`, mutant asserted landed by occurrence
+count, tree asserted to BUILD rc=0 **before any test result was read**) reds the test on exactly
+the two hash assertions and nothing else; restored by `cp` with `shasum -a 256` byte-identity and
+the pristine control green. So the test pinned no rendering mechanism whatever. **Disposition,
+following §7c's precedent rather than inventing one:** the fabrication was removed, and the test
+now asserts the two entries' distinct `EntryHash` values plus the selected head world ref — values
+the timeline loop and the world block produce. The three unrendered fields were **filed as a queue
+row, not absorbed**: widening WB.C into the landed WB.B renderer is precisely the quiet widening
+rule 3n(b) forbids, and iteration 112 ruled the same way on the same sprint one milestone earlier.
+
+**One of my own mutants SURVIVED and the fault was mine, not the test's — recorded rather than
+quietly re-run.** My first attempt to neuter the timeline channel rewrote the append as
+`append(page.Timeline.Entries[:0], …)`. It landed, built rc=0, and left the package rc=0 with an
+empty `--- FAIL` set — because truncating on each pass still leaves the **last** entry, whose hash
+still rendered. The corrected mutant (loop bound → `index < 0`) reds the named test as the SOLE
+killer (`-skip` it → rc=0). A survival is a claim about the mutant until you have checked the
+mutant; this one was an instrument failure wearing a finding's clothes.
+
+**Evaluator** `sonnet` (generator≠judge: the executor ran on codex), **in its own worktree**,
+detached at the milestone commit: **82/100 PASS with ONE BLOCKING finding — and the judge was
+right.** Both findings were reproduced first-party before being accepted, and both are fixed in
+the shipped commit.
+
+**THE FINDING: `TestWorkbenchSecurityHeaders` ASSERTED THE CSP AGAINST THE PRODUCTION SYMBOL
+`workbenchCSP` ITSELF, SO EXPECTED AND ACTUAL MOVED TOGETHER AND M22 WAS INVISIBLE.** Reproduced:
+deleting the `default-src 'none'; ` token took its occurrence count **1 → 0**, the tree BUILT rc=0
+before any test result was read, and the whole package came back **rc=0 with an EMPTY `--- FAIL`
+set** while the arm the doc's §6 table and plan task 12 both name as M22's killer **PASSED**. This
+is not a drill artifact to be recorded as SURVIVED under §3 rule 5: a tautological oracle cannot
+fail at any point in the sprint, so there is no later milestone at which it would have been
+caught. The expectation is now a literal. Re-measured: **M22 reds `TestWorkbenchSecurityHeaders`
+ALONE** (`-skip` → rc=0), and **M23** (`no-store` → `public`) likewise reds it alone.
+
+**THE SPRINT'S THIRD INSTANCE OF ONE FAMILY, AND THE MECHANISM DIFFERS EACH TIME.** Iteration
+112's M20 pin read a `FAIL` token that a branch-selected `aria-label` also wrote — the observable
+**wider** than the mechanism. This iteration's `Notice` line **manufactured** exactly such a wider
+channel to satisfy an assertion. The CSP oracle is the third and it is not reachable by rule 3i's
+question at all: *what else writes this value?* — **nothing else did**. The observable was
+**equal** to the mechanism, so the comparison was a tautology. Rule 3i asks about competing
+writers; it has no form that catches an oracle that reads the mechanism's own definition.
+
+**The judge also corrected my own commit text and was right.** I had written that the entry
+hashes are produced "by nothing else on the page". True for entry 1 and the world head, **false
+for entry 0**: `store.Commit` chains the log, so entry 1's `PrevEntryHash` field renders entry 0's
+hash verbatim — measured, starting the timeline loop at index 1 (dropping entry 0 entirely) left
+the bare `strings.Contains` assertion GREEN. Fixed in the same milestone rather than deferred,
+because it lives in this milestone's own new file: the assertion now requires the hash inside
+`<dt>entry hash</dt><dd><span class="hash" title="…"`, syntax only the `{{.EntryHash}}` action
+produces. With that, the index-1 mutant reds it.
+
+**Controller adjudication, and the judge tested it rather than accepting it.** Plan task 12 needs
+a 400 driven by `?paylod=1`, but the closed query grammar is WB.D's deliverable. I ruled that
+WB.C ships the **minimal unknown-key guard only** — an `acceptedWorkbenchKeys` map plus one
+refusal — and that known keys with values are accepted and ignored until WB.D, on the ground that
+silently ignoring `?paylod=1` for one milestone would ship exactly the silent fallback §2.4's
+carve-out exists to forbid. The judge AGREED and checked the extension point: the guard touches
+key presence only, never values, duplicates or combinations, and WB.D's `len(vs) > 1` and value
+parsing drop into the existing `for key := range r.URL.Query()` loop without rewriting anything.
+
+**Gates, all run outside any sandbox on the post-milestone tree**, both with `AILANG_BIN` AND
+`GOTOOLCHAIN=go1.25.6`, exit codes captured to file and never read through a pipe: `go build ./...`
+rc=0; focused suite rc=0 with `n=3` asserted; whole `host/daemon` package rc=0; AC5 rc=0 (base 1 —
+MOVED); AC6 rc=0 (base 0 — PIN); forbidden context helpers **0** against a control of **2**;
+`d.readCtx(r)` **1** and `defer cancel()` **1**; `TestNoNewDeadlineFreeStoreReads` rc=0;
+`gofmt -l host/ cmd/` empty; `verify_ail.sh` rc=0 (10 required identities / 40 named tests / 9-of-9
+package steps); `verify_go.sh` rc=0 (build clean, plain AND race, pinned AILANG v0.30.0).
+`host/capsule` green on both legs of both full runs — a data point about load, not a refutation of
+row 32. AC7's manifest delta for this milestone is exactly **2 additions / 0 removals / 1 sha
+mismatch** (`daemon.go`, the one file WB.C modifies), computed with iteration 111's `-not -name
+'.git'` repair; the manifest reads **158**, equal to `git ls-files | grep -v '^design_docs/'`
+**exactly**, while the unrepaired doc form reads 159.
+
+**Gate 3b GREEN on the MERGE commit**, SHA-addressed from a `rev-parse`d 40-character SHA:
+`5fd6fb36a4892d87c410ba36c682f2e4e1f34479`, `present=2 == expected=2`, both `success`, **0**
+not-green, every count asserted to be a NUMBER before it was compared, run EXISTENCE asserted
+(`actions/runs?head_sha` `total=1 event=push`) with a `rev-parse`d parent control at `total=1` and
+that parent's own `check-runs` at **2**, which proves the control SHA resolves. Merged only after
+the PR's own checks were OBSERVED green on its head SHA — never behind an armed auto-merge. The
+commit message and PR body were scanned for auto-close keywords with a known-bad control string
+firing (**0** in the message, **1** in the control); `#68` asserted still `OPEN` after the merge.
+
+**Routing evidence**: controller `claude-opus-5` (quota `opus` ×1) · executor `codex:gpt-5.6-sol`,
+probe rc=0 first try, so the ratified `codex → opus` chain was never exercised and nothing is filed
+`PARKED-ON-LANE` (quota `codex` ×2 — the driver re-probes the pin it is handed) · evaluator
+`sonnet` ×1, generator≠judge · **designer did not fire — rotation unspent an ELEVENTH consecutive
+iteration**, still at `claude:claude-fable-5`. `metered=$0.00` of the $5 ceiling.
+
+**Ruled out**:
+- Reading the `Notice` fabrication as an executor defect. The plan's task 13 is unsatisfiable as
+  written; the executor found that, chose the only in-scope option available to it, and disclosed
+  it with its reasoning. Punishing that would punish exactly the behaviour the directive asks for.
+- Widening `WB.C` into `host/workbench/render.go` to render the three dropped fields "while
+  already in the file" — the quiet widening rule 3n(b) forbids, and the same call iteration 112
+  made on the same sprint.
+- Recording the CSP survival as SURVIVED and leaving it for WB.J's drill. §3 rule 5 governs the
+  discharge milestones; a tautological oracle is not a mutant that escaped a good test, it is a
+  test that cannot exist, and no later drill would have caught it either.
+- Believing my own `Entries[:0]` mutant's survival as a finding about the test.
+- Treating AC6's green-at-base as a reason to call the milestone incomplete — the milestone's own
+  deliverable landed; what is wrong is the plan's claim about which ACs it closes.
+- Attributing anything to `host/capsule`, green on all four legs this iteration.
+- Killing the stray `go run solution.go` (PID 28600, running since 2026-07-29) the evaluator found
+  holding the shared `GOCACHE` lock. It is not this mission's process; the judge worked around it
+  with an isolated `GOCACHE` and said so, which is the right call. Reported, not touched.
+
+**Retro lane — PROPOSE, NOT EDIT.** This mission shares the mission-control skill by symlink and
+cannot edit it. The candidate is the CSP oracle's shape, and it is honestly **instance 1** of a
+mechanism distinct from rule 3i's: rule 3i and its iteration-112 extension both ask *which other
+writer produces this observable*, and both are blind to an assertion whose expected value is
+**imported from the code under test**, because there is no other writer — the oracle and the
+mechanism are one symbol. The tell is syntactic and cheap: *a test file references a production
+constant by name inside its own expectation table*. Recorded here rather than proposed, because
+filing below the ≥2 bar is a defect this mission has already paid for once (iter-106); if a second
+instance lands, the proposal is a grep-able rule, not a restatement of 3i.
+
+**NEXT: `WB.D`** — the closed query grammar and every refusal branch (claims M2–M9, M13, M31,
+M32), extending WB.C's single unknown-key guard site; then row 35, row 34, row 32, row 33,
+item 22, row 31. **ZERO open asks.**

@@ -1,6 +1,6 @@
 # Sprint plan — `WB.A`–`WB.K` (queue item 14, `w-workbench-read-only`, clause-2)
 
-**Status**: IN SPRINT — **`WB.B` LANDED 2026-08-23 (iteration 112)**, 2 of 11 milestones; `WB.C` is next · **Design doc**: [`w-workbench-read-only.md`](w-workbench-read-only.md) (AUTHORITATIVE — the doc wins on every divergence below) · **Planner**: mission-control iteration 110, opus lane (`derive-planner-lane.sh` → `opus fail-closed:env-pin`, token used VERBATIM).
+**Status**: IN SPRINT — **`WB.C` LANDED 2026-08-23 (iteration 113)**, 3 of 11 milestones; `WB.D` is next · **Design doc**: [`w-workbench-read-only.md`](w-workbench-read-only.md) (AUTHORITATIVE — the doc wins on every divergence below) · **Planner**: mission-control iteration 110, opus lane (`derive-planner-lane.sh` → `opus fail-closed:env-pin`, token used VERBATIM).
 
 - **Plan (machine)**: `.ailang/state/sprints/w-workbench-read-only.plan.json` — `jq -e .` passes.
 - **Design doc (AUTHORITATIVE)**: `design_docs/planned/w-workbench-read-only.md`, 894 lines.
@@ -89,7 +89,7 @@ that ends mid-drill resumes at the first mutant with no section.
 |---|---|---|---|---|
 | ~~WB.A~~ **LANDED** `83f1973` | `host/workbench` package, view model, grade/verdict constructors | — | claims M17, M18, M19, M21 (still discharged by WB.H) | 0.75 |
 | ~~WB.B~~ **LANDED** | `Render` + one parsed `html/template`, landmarks, escaping, local-only links, unavailable states | — | claims M14, M15, M16, M20 (still discharged by WB.H; **M20's pin was hollow as specified — see §7c**) | 0.75 |
-| WB.C | ninth registration `GET /workbench`, `handleWorkbench` happy path, security headers, §3.5 comment | **AC5, AC6** | claims M1, M22, M23 | 1.0 |
+| ~~WB.C~~ **LANDED** `5fd6fb3` | ninth registration `GET /workbench`, `handleWorkbench` happy path, security headers, §3.5 comment | **AC5 only — AC6 is rc=0 at base and is a PIN, see §7d** | claims M1, M22, M23 (M22's pin was a TAUTOLOGY as delivered — see §7d) | 1.0 |
 | WB.D | closed query grammar + every refusal branch | — | claims M2–M9, M13, M31, M32 | 1.0 |
 | WB.E | payload opt-in, 64 KiB cap, 100-entry timeline cap | — | claims M10, M11, M12 | 0.75 |
 | WB.F | `TestWorkbenchReadDeadline` + `/workbench` in the cancelled-after-handler table | **AC8** | claims M29, M30 | 0.75 |
@@ -428,6 +428,90 @@ and the second member explained — it asserts the same local-href form; M16 sol
 `TestRenderUnavailableProvenanceEdge`; M20 sole killer after the repair). Every mutant was
 asserted LANDED by occurrence count and BUILDS rc=0 before any test result was read, and restored
 by `cp` from a controller backup with `shasum -a 256 -c` byte-identity — never `git checkout --`.
+
+---
+
+## 7d. `WB.C`: an AC that cannot move, a task that cannot be satisfied, and an oracle that cannot fail (iteration 113)
+
+Three defects, all measured on `WB.C`'s own base and all fixed or filed. None is an executor
+defect; the executor implemented what it could and disclosed what it could not.
+
+### (a) AC6 does not close at `WB.C`, and the milestone table says it does
+
+`acceptance_criteria.AC6.executor_baseline_rc` is `1`, measured at `3e0c34c` when
+`host/workbench` did not exist so the compound exited at its root `test -d host/workbench`.
+`WB.A` created that directory.
+
+| reading | value |
+|---|---|
+| AC6 executor form at `WB.C`'s base (`956316c`) | **rc=0** |
+| the same command with an `embed.FS` token injected into `render.go` | **rc=1** |
+| restored, sha256 asserted both sides (`007b0f0a…`) | **rc=0** |
+
+So AC6 is **green before `WB.C` writes a line**, and it is still *live* — its forbidden-token arm
+fires. It is therefore a **regression pin and never evidence**, and `WB.C` closes **AC5 only**.
+
+This is **D3's unswept sibling**. D3 already records *"AC1 goes green as soon as the directory
+exists"* — the identical mechanism, written for AC1, and nobody asked which other criteria root on
+the same `test -d`. When a milestone creates a directory, re-baseline every AC that tests for it.
+
+### (b) Task 13 is unsatisfiable in `WB.C` scope
+
+Task 13 requires the render test to assert two distinct committed **object** hashes appear in the
+body. An object hash reaches an `EntryView` only through `TransitionRef`, and the landed WB.B
+template renders no `TransitionRef` action:
+
+| field, inside `{{range .Timeline.Entries}}` | rendered |
+|---|---|
+| `TransitionFn` · `Interpreter` · `TransitionRef` | **0** each |
+| control — `EntryIndex` · `EntryHash` · `PrevEntryHash` · `SemanticsEpoch` · `WrittenBy` | each renders |
+
+All three unrendered fields are populated by `host/daemon/workbench.go`, `Href`s and all. The
+executor's only options were to widen into the landed renderer (forbidden) or to manufacture a
+carrier; it manufactured `page.Notice = "Timeline transition objects: " + …` **and disclosed it**.
+Two arms, one variable: neutering only that line (`if false &&`; mutant asserted LANDED by
+occurrence count, tree asserted to BUILD rc=0 before any test result was read) reds the test on
+exactly the two hash assertions — the fabrication was the **SOLE** carrier, so the test pinned no
+rendering mechanism at all.
+
+**Disposition, following §7c rather than inventing one:** fabrication removed; the test asserts the
+two entries' distinct `EntryHash` values plus the selected head world ref. The three unrendered
+fields are **charter queue row 35**, not absorbed — rule 3n(b).
+
+**The evaluator's correction, which is right:** a bare `strings.Contains(body, hash)` is not
+sole-sourced for entry **0**, because `store.Commit` chains the log and entry 1's `PrevEntryHash`
+renders entry 0's hash verbatim — measured, starting the loop at index 1 left the bare assertion
+GREEN. The assertion now requires the hash inside
+`<dt>entry hash</dt><dd><span class="hash" title="…"`, syntax only `{{.EntryHash}}` produces.
+
+### (c) `M22`'s pin was a TAUTOLOGY, and §3 rule 5 does not cover it
+
+`TestWorkbenchSecurityHeaders` asserted the CSP against the production symbol `workbenchCSP`
+itself, so expected and actual moved together.
+
+| arm | mutant LANDED | BUILDS | package rc | red set |
+|---|---|---|---|---|
+| `M22` against the pin as delivered | occurrences 1 → 0 | rc=0 | **0** | **empty — SURVIVED** |
+| `M22` against the repaired pin (literal) | same | rc=0 | 1 | `TestWorkbenchSecurityHeaders` **alone** |
+| `M23` against the repaired pin | occurrences 1 → 0 | rc=0 | 1 | `TestWorkbenchSecurityHeaders` **alone** |
+
+**Why §3 rule 5 does not govern this.** That rule — *record a survivor, do not repair the test* —
+exists to stop a **drill** being laundered, and it presumes a mutant escaping an otherwise-sound
+test. A tautological oracle is not sound and cannot become sound by waiting: there is no later
+milestone at which `WB.J` would have caught it, because the comparison can never fail in any
+tree. Iteration 112 established (§7c) that rule 5 governs the discharge milestones `WB.H`–`WB.K`;
+this is a spec defect found outside them, published here with its full measurement.
+
+### The family, and why rule 3i does not reach the third member
+
+| instance | mechanism | rule 3i's question *"what else writes this value?"* |
+|---|---|---|
+| iter-112, `M20` | a branch-selected `aria-label` also wrote `FAIL` — observable **WIDER** | answers correctly |
+| iter-113, `Notice` | the executor **MANUFACTURED** a wider channel to satisfy the assertion | answers correctly |
+| iter-113, CSP | expected value **IS** the mechanism — observable **EQUAL** | answers **"nothing"**, i.e. clean |
+
+The third is not reachable by asking about competing writers, because there are none. Its tell is
+syntactic and cheap: **a test file names a production constant inside its own expectation table.**
 
 ---
 
