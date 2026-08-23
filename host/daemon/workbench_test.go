@@ -1,10 +1,13 @@
 package daemon
 
 import (
+	"bytes"
 	"context"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/sunholo-data/ailang-world/host/hashref"
 )
 
 func TestWorkbenchRouteIsReadOnly(t *testing.T) {
@@ -121,5 +124,105 @@ func TestWorkbenchRendersSeededWorldAndTimeline(t *testing.T) {
 	}
 	if !strings.Contains(body, head.String()) {
 		t.Errorf("rendered body does not contain selected head world ref %q", head.String())
+	}
+}
+
+func TestWorkbenchRefusalBranches(t *testing.T) {
+	d := newHandlerDaemon(t)
+	genesis := seedGenesisEmbedded(t, d, "workbench-refusals")
+	commit := testCommit(genesis, 0, "workbench-refusals-entry")
+	if err := d.store.Commit(commit); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+
+	absentWorld := hashref.SumSHA256([]byte("workbench-absent-world")).String()
+	absentObject := hashref.SumSHA256([]byte("workbench-absent-object")).String()
+	world := commit.NextWorld.Ref.String()
+	object := commit.Objects[0].Hash.String()
+
+	tests := []struct {
+		name    string
+		target  string
+		status  int
+		class   string
+		message string
+		setup   func()
+	}{
+		{"unknown-parameter", "/workbench?paylod=1", http.StatusBadRequest, "BadRequest", "unsupported workbench query parameter", nil},
+		{"duplicate-parameter", "/workbench?world=" + world + "&world=" + world, http.StatusBadRequest, "BadRequest", "duplicate workbench query parameter", nil},
+		{"unsupported-combination", "/workbench?from=0", http.StatusBadRequest, "BadRequest", "unsupported workbench parameter combination", nil},
+		{"malformed-payload", "/workbench?object=" + object + "&payload=true", http.StatusBadRequest, "BadRequest", "malformed payload flag", nil},
+		{"malformed-world", "/workbench?world=not-a-hash", http.StatusBadRequest, "BadRequest", "malformed world reference", nil},
+		{"absent-world", "/workbench?world=" + absentWorld, http.StatusNotFound, "NotFound", "world reference not found", nil},
+		{"malformed-object", "/workbench?object=not-a-hash", http.StatusBadRequest, "BadRequest", "malformed object reference", nil},
+		{"absent-object", "/workbench?object=" + absentObject, http.StatusNotFound, "NotFound", "object reference not found", nil},
+		{"negative-from", "/workbench?from=-1&entry=0", http.StatusBadRequest, "BadRequest", "from index must be non-negative", nil},
+		{"malformed-entry", "/workbench?from=0&entry=not-an-index", http.StatusBadRequest, "BadRequest", "malformed entry index", nil},
+		{"absent-entry", "/workbench?from=0&entry=99", http.StatusNotFound, "NotFound", "log entry not found", nil},
+		{"from-overflow", "/workbench?from=9223372036854775807&entry=0", http.StatusBadRequest, "BadRequest", "from index overflows", nil},
+		{"store-error", "/workbench", http.StatusInternalServerError, "Internal", "internal store failure", func() {
+			d.reads = failingStore{Store: d.store}
+			d.errLog = &bytes.Buffer{}
+		}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			oldReads, oldErrLog := d.reads, d.errLog
+			defer func() {
+				d.reads, d.errLog = oldReads, oldErrLog
+			}()
+			if test.setup != nil {
+				test.setup()
+			}
+			rec := requestRecorder(t, d, http.MethodGet, test.target, nil)
+			if rec.Code != test.status {
+				t.Fatalf("status = %d, want %d; body=%s", rec.Code, test.status, rec.Body)
+			}
+			body := rec.Body.String()
+			if !strings.Contains(body, ">"+test.class+"<") {
+				t.Errorf("body does not contain class token %q: %s", test.class, body)
+			}
+			if !strings.Contains(body, ">"+test.message+"<") {
+				t.Errorf("body does not contain branch message %q: %s", test.message, body)
+			}
+			assertWorkbenchSecurityHeaders(t, rec.Header())
+		})
+	}
+
+	t.Run("accepted-keys-return-200", func(t *testing.T) {
+		// Exercise every member of the closed key vocabulary across exactly the
+		// four supported non-empty states; one all-keys query is intentionally
+		// invalid because the grammar is a set of states, not a key allowlist.
+		targets := []string{
+			"/workbench?world=" + world,
+			"/workbench?from=0&entry=0",
+			"/workbench?object=" + object,
+			"/workbench?object=" + object + "&payload=0",
+			"/workbench?object=" + object + "&payload=1",
+		}
+		for _, target := range targets {
+			rec := requestRecorder(t, d, http.MethodGet, target, nil)
+			if rec.Code != http.StatusOK {
+				t.Fatalf("%s: status = %d, want 200; body=%s", target, rec.Code, rec.Body)
+			}
+			assertWorkbenchSecurityHeaders(t, rec.Header())
+		}
+	})
+}
+
+func assertWorkbenchSecurityHeaders(t *testing.T, header http.Header) {
+	t.Helper()
+	wants := map[string]string{
+		"Content-Type":            "text/html; charset=utf-8",
+		"Cache-Control":           "no-store",
+		"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+		"X-Content-Type-Options":  "nosniff",
+		"Referrer-Policy":         "no-referrer",
+	}
+	for name, want := range wants {
+		if got := header.Get(name); got != want {
+			t.Errorf("%s = %q, want %q", name, got, want)
+		}
 	}
 }
