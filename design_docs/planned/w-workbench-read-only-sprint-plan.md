@@ -1,6 +1,6 @@
 # Sprint plan — `WB.A`–`WB.K` (queue item 14, `w-workbench-read-only`, clause-2)
 
-**Status**: IN SPRINT — **`WB.A` LANDED 2026-08-22 (iteration 111)**, 1 of 11 milestones; `WB.B` is next · **Design doc**: [`w-workbench-read-only.md`](w-workbench-read-only.md) (AUTHORITATIVE — the doc wins on every divergence below) · **Planner**: mission-control iteration 110, opus lane (`derive-planner-lane.sh` → `opus fail-closed:env-pin`, token used VERBATIM).
+**Status**: IN SPRINT — **`WB.B` LANDED 2026-08-23 (iteration 112)**, 2 of 11 milestones; `WB.C` is next · **Design doc**: [`w-workbench-read-only.md`](w-workbench-read-only.md) (AUTHORITATIVE — the doc wins on every divergence below) · **Planner**: mission-control iteration 110, opus lane (`derive-planner-lane.sh` → `opus fail-closed:env-pin`, token used VERBATIM).
 
 - **Plan (machine)**: `.ailang/state/sprints/w-workbench-read-only.plan.json` — `jq -e .` passes.
 - **Design doc (AUTHORITATIVE)**: `design_docs/planned/w-workbench-read-only.md`, 894 lines.
@@ -88,7 +88,7 @@ that ends mid-drill resumes at the first mutant with no section.
 | Milestone | Deliverable | Doc ACs closed | Mutations (claim / discharge) | h |
 |---|---|---|---|---|
 | ~~WB.A~~ **LANDED** `83f1973` | `host/workbench` package, view model, grade/verdict constructors | — | claims M17, M18, M19, M21 (still discharged by WB.H) | 0.75 |
-| WB.B | `Render` + one parsed `html/template`, landmarks, escaping, local-only links, unavailable states | — | claims M14, M15, M16, M20 | 0.75 |
+| ~~WB.B~~ **LANDED** | `Render` + one parsed `html/template`, landmarks, escaping, local-only links, unavailable states | — | claims M14, M15, M16, M20 (still discharged by WB.H; **M20's pin was hollow as specified — see §7c**) | 0.75 |
 | WB.C | ninth registration `GET /workbench`, `handleWorkbench` happy path, security headers, §3.5 comment | **AC5, AC6** | claims M1, M22, M23 | 1.0 |
 | WB.D | closed query grammar + every refusal branch | — | claims M2–M9, M13, M31, M32 | 1.0 |
 | WB.E | payload opt-in, 64 KiB cap, 100-entry timeline cap | — | claims M10, M11, M12 | 0.75 |
@@ -381,6 +381,53 @@ constant offset and a self-cancelling `.git` row both drop out. What breaks is t
 a controller comparing its manifest against the stated 1079 sees a 6.9× mismatch and can only
 conclude its worktree is broken. Use the worktree's own count, or add
 `-not -name '.git'` and re-derive.
+
+---
+
+## 7c. `M20`'s named killer did not kill it — the row is repaired (iteration 112)
+
+WB.B task 14 says: *extend `TestGradeViewRequiresTestVerdict/fail` to also `Render` a `Page`
+carrying that `GradeView` and assert the body contains BOTH `TESTED` and `FAIL`. **This is what
+makes M20 killable.*** The executor implemented that instruction **verbatim and correctly**.
+Measured, it does not make M20 killable.
+
+| arm | mutant LANDED | BUILDS | package rc | red set |
+|---|---|---|---|---|
+| M20 as the plan specified the pin | 2 literal occurrences, 0 remaining `{{.Grade.Verdict}}` actions | rc=0 | **0** | **empty — SURVIVED** |
+| M20 against the repaired pin | same | rc=0 | 1 | `TestGradeViewRequiresTestVerdict/fail` **alone** (`-skip` that arm → rc=0) |
+
+**Why the specified pin is hollow.** The FAIL span is
+`<span class="verdict-fail" aria-label="test verdict FAIL">✗ verdict: {{.Grade.Verdict}}</span>`,
+and the branch is selected by `{{if eq .Grade.Verdict "FAIL"}}` — which reads the **data**, not the
+rendered action. So under M20 the page still emits the literal `aria-label="test verdict FAIL"`,
+`strings.Contains(rendered, "FAIL")` is satisfied by a string the mutation never touches, and the
+assertion passes. This is the shared skill's rule 3i extension exactly: **the observable's value
+set is larger than the mechanism's** — ask not only *which write does this read?* but *what else
+writes this value?*
+
+**The repair, which is the ROW and not the code.** The assertion now requires `verdict: FAIL` — a
+string only the `{{.Grade.Verdict}}` action can produce, because the aria-label spells it without
+a colon — and, separately, the accessible label, keeping §2.6's dual channel pinned in its own
+right. Task 14's text is corrected in `plan.json` to specify those two observables instead of the
+bare token.
+
+**The tension with §3 rule 5, stated rather than papered over.** §3 says *"A mutant whose named
+test does not red is recorded as SURVIVED with its full output. Do not repair the mutant, do not
+repair the test to make it red, do not omit the row."* That rule exists to stop a **drill** being
+laundered into a pass, and it is right. This is not a drill: it is a spot-check of a *claim the
+milestone's own task text makes about itself*, the survival is published here and in the commit
+message with its full measurement, and the fix changes **which value is observed** rather than
+manufacturing a red. Left alone, WB.H's drill would record M20 SURVIVED and produce this identical
+repair one milestone later. Read strictly, though, §3 rule 5 covers this case and forbids it —
+so the honest reading is that §3 rule 5 needs the scope it was written with: **it governs the
+discharge milestones WB.H–WB.K, not a spec defect found outside them.**
+
+**What is NOT discharged.** WB.H still owns M14–M21. This section records a spot-check of four
+claims (M14 sole killer `TestRenderEscapesAllObjectText`; M15 red set of two, named arm included
+and the second member explained — it asserts the same local-href form; M16 sole killer
+`TestRenderUnavailableProvenanceEdge`; M20 sole killer after the repair). Every mutant was
+asserted LANDED by occurrence count and BUILDS rc=0 before any test result was read, and restored
+by `cp` from a controller backup with `shasum -a 256 -c` byte-identity — never `git checkout --`.
 
 ---
 
