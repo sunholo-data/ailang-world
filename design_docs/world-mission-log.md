@@ -13538,3 +13538,181 @@ cross-mission channel with the measurement attached, at instance 1 of its narrow
 the broad form iteration 110 opened (*the planner's baseline tree is not the executor's tree*). No
 mission-control skill edit this iteration: the ≥2-friction bar is not met for a single mechanism,
 and pre-registering beats spending the one edit on a half-formed class.
+
+---
+
+## Iteration 112 — 2026-08-23 — the pin the plan said would kill `M20` did not, and the judge found three shipped hunks pinned by nothing
+
+**Pick**: queue row **14** `w-workbench-read-only`, milestone **`WB.B`** — the pointer iteration
+111's `NEXT` named. Item 14 is `[IN-SPRINT]`, no flipped predicate outranked it, and the
+died-mid-flight sweep was empty (**0** open PRs on the fleet account, **0** worktrees beyond the
+main checkout, clean main tree), so there was no orphaned work to adopt instead.
+
+**The externally-blocked row was re-measured as a command, not transcribed.** Row 5 waits on
+`sunholo-data/ailang#764`: `state=OPEN comments=0 updatedAt=2026-08-17T23:34:55Z` — unchanged since
+iteration 111. Control `#676` answers through the same call at **3** comments and a *different*
+`updatedAt` (`2026-08-21T00:11:02Z`), so the instrument discriminates; a negative control
+(`#999999`) errors. Row 5 stays BLOCKED.
+
+**Already-landed check, against a FRESH origin.** `git log origin/dev --grep 'WB\.B'` returned
+**1** hit — iteration 111's own record commit naming `WB.B` as `NEXT` — against a control of **3**
+for `WB\.A`; the PR search for `WB.B in:title` returned `[]` while the same search for `WB.A`
+returned the merged `#83`. Nothing was half-landed.
+
+**Doc-vs-plan freshness (rule 3b(vii)), decided by ancestry rather than by a diff that cannot
+fail.** The natural check — `git diff <plan-commit>..HEAD -- <doc>` — is vacuous when the plan's
+newest commit *is* `HEAD`, and it duly returned empty with a control of **0**, i.e. an
+uninformative all-clear. Re-run from the plan's CREATION commit: `git merge-base --is-ancestor
+3e0c34c 4dd870f` is TRUE and the reverse is FALSE, so the doc predates the plan and has not been
+revised since it. Base currency from the same base: `4dd870f..HEAD -- ':!design_docs'` = exactly
+the two files `WB.A` shipped, no other code drift.
+
+**Rule 3e(a), run before routing, on WB.B's OWN five acceptance criteria — and four of the five
+are green at base.** Only criterion 1's *enumeration* clause can fail: `go test ./host/workbench
+-count=1 -v` is **rc=0 at base** with **2** top-level tests against the five the milestone
+requires. Criteria 2–5 (zero `--- SKIP`, no `<script>` in `render.go`, no forbidden imports,
+`gofmt` clean + `go build ./...` rc=0) are all already satisfied on the untouched tree; each was
+paired with a same-scope known-positive control so the zeros are measurements (`grep -c 'package'`
+= 1 beside the `<script>` zero; **2** files matching `package workbench` beside the empty
+forbidden-import result). The directive says so explicitly, so the executor could not mistake a
+regression pin for evidence its work succeeded.
+
+**Precondition 3, the defect iteration 111 recorded, was re-measured and its prescribed repair
+CONFIRMED first-party.** In this iteration's worktree the doc-form command returns **159** and the
+`-not -name '.git'` form returns **158**, which equals `git ls-files | grep -v '^design_docs/'`
+**exactly**. Iteration 111 measured 157/156 before `WB.A` added two files; 156 + 2 = 158. So the
+`+1` really is the linked worktree's `.git` **FILE**, the repair §7b prescribes removes it exactly,
+and the corrected count now agrees with git's own enumeration rather than merely being close to it.
+
+**Executor** `codex:gpt-5.6-sol` — probe rc=0 (`ok`), real run backgrounded under a 30-min
+`date +%s` cap with a terminal marker, `codex rc=0` at **~3.5 min**, 176 lines across the two
+in-scope files. **Zero git writes**: the branch was still at `95bda90`, `git stash list` empty, and
+`git status --porcelain` showed only the two modified files plus untracked `.snap/`. The main
+checkout was byte-clean throughout (containment check, post-hoc, because a fence you never verify
+is one you cannot claim). **No sandbox denial arose** — `host/workbench` is transport-free — so
+nothing was labelled `UNINFORMATIVE UNDER SANDBOX` this run. **Deviations: none reported and none
+found**; all 15 tasks executed verbatim.
+
+**THE FINDING: A MILESTONE TASK ASSERTED THAT ITS OWN TEST "MAKES M20 KILLABLE", AND MEASURED, IT
+DOES NOT.** WB.B task 14 reads: *extend `TestGradeViewRequiresTestVerdict/fail` to also `Render` a
+`Page` carrying that `GradeView` and assert the body contains BOTH `TESTED` and `FAIL`. **This is
+what makes M20 killable.*** The executor implemented that instruction verbatim and correctly. The
+M20 mutant — replace both `verdict: {{.Grade.Verdict}}` occurrences with the literal
+`verdict: PASS` — was asserted **LANDED** (2 literal occurrences, **0** remaining actions, sha256
+changed) and asserted to **BUILD** (`go build ./host/workbench/...` rc=0) *before any test result
+was read*, and the **entire package returned rc=0 with an empty `--- FAIL` set**. SURVIVED.
+
+The mechanism is the shared skill's rule 3i extension in its purest form — *ask not only which
+write does this read, but what else writes this value*. The FAIL span is
+`<span class="verdict-fail" aria-label="test verdict FAIL">✗ verdict: {{.Grade.Verdict}}</span>`,
+and the branch is selected by `{{if eq .Grade.Verdict "FAIL"}}`, which reads the **data** and not
+the rendered action. So under the mutant the page still emits the literal
+`aria-label="test verdict FAIL"`, `strings.Contains(rendered, "FAIL")` is satisfied by a string the
+mutation never touches, and the assertion passes. The observable's value set was strictly larger
+than the mechanism's.
+
+**The repair is the ROW, not the code (rule 3i(c)).** The assertion now requires `verdict: FAIL` —
+a substring only the `{{.Grade.Verdict}}` action can produce, because the aria-label spells the
+word without a colon — plus the accessible label separately, keeping §2.6's dual channel pinned in
+its own right. Against the same mutant the arm now reds, and `-skip`ping it returns **rc=0**, so it
+is the **SOLE killer**. Task 14's text is corrected in the plan (new §7c) and in `plan.json`.
+
+**The tension this creates with the plan's own §3 rule 5 is recorded rather than papered over.**
+§3 says *"do not repair the test to make it red."* I argued that rule governs the **discharge**
+milestones WB.H–WB.K, that this was a spot-check of a claim the milestone's task text makes about
+itself, that the survival was published rather than laundered, and that leaving it alone merely
+defers the identical repair to WB.H. **The judge partly disagreed, and it is right to**: §3's
+sentence carries no scope qualifier on its face, so the scoping is a defensible inference from §1's
+"claims are discharged only by WB.H–WB.K", not something the text states. Recorded as a judgment
+call made and disclosed, and the plan text now says explicitly which milestones §3 rule 5 governs.
+
+**Non-vacuity spot-check of WB.B's four CLAIMED mutations — NOT the WB.H drill, and labelled as
+such.** Every mutant asserted LANDED by **occurrence** count (not line count — the template is one
+long line, and `grep -c` would have read 2 occurrences as 1), asserted to BUILD rc=0 before any
+test result was read, restored by `cp` from a controller backup — never `git checkout --`, which in
+an uncommitted worktree deletes the milestone — and `shasum -a 256 -c` byte-identical after each.
+
+| mutant | LANDED | BUILDS | red set | verdict |
+|---|---|---|---|---|
+| M14 `safeHTML` bypass on one hostile field | yes | rc=0 | `TestRenderEscapesAllObjectText` | **sole killer** |
+| M15 `https://example.com/workbench` | yes | rc=0 | `TestRenderEmitsOnlyLocalLinks`, `TestRenderUnavailableProvenanceEdge` | named arm in set; 2nd member explained (asserts the same local-href form) |
+| M16 `if false && !edge.Available {` | yes | rc=0 | `TestRenderUnavailableProvenanceEdge` | **sole killer** |
+| M20 verdict → literal `PASS`, pin as specified | yes | rc=0 | **empty** | **SURVIVED** |
+| M20, pin repaired | yes | rc=0 | `TestGradeViewRequiresTestVerdict/fail` | **sole killer** (`-skip` → rc=0) |
+
+M15's blast radius is 2, so the `-skip … rc=0` criterion is inapplicable to it by construction and
+the enumerated-set form was used instead — the criterion is an instrument too.
+
+**Evaluator** `sonnet` (generator≠judge: the executor ran on codex), **in its own worktree** at the
+milestone commit, because a good judge mutates source and every rule in the shared skill tells it
+to. **91/100 PASS round 1, ZERO BLOCKING.** It reproduced the M20 survival independently by
+reverting my assertion to the plan's literal form, confirmed the repaired pin is not hollow in some
+other way (exactly one line in the package can emit the substring `verdict: `, and it is the
+mutated action), and refuted **none** of my measurements.
+
+**THE JUDGE'S OWN FINDING, WORTH MORE THAN ITS SCORE: THREE SHIPPED TEMPLATE HUNKS ARE PINNED BY
+NOTHING, AND THE DRILL THAT IS SUPPOSED TO CATCH THAT CANNOT REACH THEM.** Reproduced first-party
+for the most significant of the three: mutating `{{if .World.Available}}` to `{{if false}}` LANDS
+(0 remaining actions), BUILDS rc=0, and leaves the **whole package rc=0 with zero FAILs** — no test
+in `render_test.go` ever sets `World.Available` (**0** occurrences of `World:` against a control of
+**4** for `Object:`). The judge measured the same for the `PayloadTruncated` marker and the
+PASS-verdict span. **None of the three appears anywhere in the doc's 32-row §6 mutation table**
+(`grep -icE 'world.*available|truncat|verdict-pass'` over the table = **0**, control `verdict` =
+**2**), so WB.H–WB.K's discharge drill walks M1–M32 and will never reach them. This is rule 3n
+exactly — *your mutation set is derived from what the milestone FIXES, so it misses what the
+milestone SHIPS* — and here it is one level worse: the enumeration that would have caught it is the
+**design doc's own mutation table**, frozen before the template existed. Filed as queue row **34**,
+not absorbed (rule 3n(b): a hunk with no killer is a finding and a queue row, never a quiet
+widening of the sprint).
+
+**Gates, all run outside any sandbox on the post-milestone tree**, both with `AILANG_BIN` AND
+`GOTOOLCHAIN=go1.25.6`, exit codes captured to a file and never read through a pipe:
+`verify_ail.sh` **rc=0** (10 required identities, 40 named tests, 9/9 package steps performed
+non-zero work) and `verify_go.sh` **rc=0** (build clean, plain and race, pinned AILANG v0.30.0;
+`host/workbench` ok at 4.5s). `host/capsule` was **green** on this run — a data point that row 32's
+red is load-dependent, not a refutation of the row.
+
+**Gate 3b GREEN on the MERGE commit**, SHA-addressed from a `rev-parse`d 40-character SHA:
+`present=2 == expected=2`, both `success`, **0** not-green, every count asserted to be a NUMBER
+before it was compared, `total_count` firing as the known-positive control, the run's EXISTENCE
+asserted (`actions/runs?head_sha` `total=1 event=push`) and a `rev-parse`d parent control at
+`total=1`. PR [#84](https://github.com/sunholo-data/ailang-world/pull/84) → squash
+[`75bc23f`](https://github.com/sunholo-data/ailang-world/commit/75bc23f). Merged only after the
+PR's own checks were observed green — never behind an armed auto-merge.
+
+**Routing evidence**: controller `claude-opus-5` (quota `opus` ×1) · executor `codex:gpt-5.6-sol`
+(quota `codex` ×2 — one probe, one run; ratified chain `codex → opus`, and the fallback was never
+exercised because codex answered first try) · evaluator `sonnet` (quota `sonnet` ×1) ·
+**designer did not fire — rotation unspent a TENTH consecutive iteration**, still at
+`claude:claude-fable-5`. No planner ran: item 14's plan already exists. `metered=$0.00` of the
+$5 ceiling. Nothing was filed `PARKED-ON-LANE`: no lane refused.
+
+**Ruled out**:
+- Treating the M20 survival as an executor defect — the executor implemented task 14 verbatim; the
+  ROW is what was wrong, and saying otherwise would punish exactly the compliance the plan wants.
+- Repairing the *mutant* or *omitting the row* to make the drill look clean — both are what §3
+  rule 5 exists to forbid, and both were available and cheaper than what was done.
+- Reading the doc-vs-plan freshness diff's empty result as an all-clear: its control was **0**, so
+  it was an uninformative instrument, not a clean bill of health. Ancestry answered it instead.
+- Absorbing the judge's three unpinned hunks into WB.B — rule 3n(b) makes that a queue row, and
+  standing rule 1 is one item.
+- Widening WB.B to add renderer tests for `World.Available` / `PayloadTruncated` / the PASS span
+  while "already in the file" — the same quiet widening, wearing convenience.
+- Attributing anything to `host/capsule`: it was green on every run this iteration, which is a data
+  point about load, not a refutation of row 32.
+- Filing a human ask. Zero decisions were manufactured; the ledger stayed at 11 rows / 0 OPEN.
+
+**Retro lane — PROPOSE, NOT EDIT.** This mission shares the mission-control skill by symlink and
+cannot edit it. The candidate rule is a sharpening of rule 3i's extension, at **instance 2**:
+iteration 111's own record notes that WB.A's two subtests *"assert only `Label != GradeCLAIMED` /
+`!= GradePROVEN`"* and so hold for any implementation leaving `Label` unset — an observable wider
+than its mechanism, in the same package, one milestone earlier, recorded and not generalised. Both
+instances share a shape the existing rule does not name: **the wider writer is a sibling channel
+the design deliberately added for accessibility or defensiveness** — an `aria-label`, a zero value,
+a redundant label. Proposed to V1 on the cross-mission channel with both measurements attached; not
+filed as a skill edit here, because World cannot make one.
+
+**NEXT: `WB.C`** — the ninth registration `GET /workbench`, `handleWorkbench` happy path, security
+headers and the §3.5 comment; it closes **AC5 and AC6**, the first acceptance criteria any
+milestone in this sprint closes. Then row 34, then row 32, then row 33, then item 22, then row 31.
+**ZERO open asks.**

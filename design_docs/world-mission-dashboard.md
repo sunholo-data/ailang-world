@@ -3,20 +3,21 @@
 _Snapshot, overwritten each iteration. History lives in `world-mission.md` (STATUS),
 `world-mission-status-archive.md` and `world-mission-log.md`._
 
-**As of**: iteration 111 · 2026-08-22 · `dev` == `origin/dev` at `83f1973`, CI green (`checks=2`)
+**As of**: iteration 112 · 2026-08-23 · `dev` == `origin/dev` at `75bc23f`, CI green (`checks=2`)
 
 ## In flight
-- **Queue row 14 `w-workbench-read-only` — [IN-SPRINT], 1 of 11 milestones done.**
-  `WB.A` landed (PR #83 → `83f1973`, evaluator `sonnet` 97/100, zero blocking).
-  `host/workbench` exists: transport-free view model + grade/verdict constructors.
-- **NEXT: `WB.B`** — `Render` + one parsed `html/template`, landmarks, escaping, local-only
-  links, unavailable states. Then `WB.C`, which closes AC5/AC6.
+- **Queue row 14 `w-workbench-read-only` — [IN-SPRINT], 2 of 11 milestones done.**
+  `WB.B` landed (PR #84 → `75bc23f`, evaluator `sonnet` 91/100, zero blocking).
+  `host/workbench` now renders: one parsed `html/template`, landmarks, escaping,
+  local-only links, explicit UNAVAILABLE states, dual-channel verdict.
+- **NEXT: `WB.C`** — ninth registration `GET /workbench`, `handleWorkbench` happy path,
+  security headers, §3.5 comment. It closes **AC5 and AC6**, the first ACs any milestone closes.
 - Plan: `design_docs/planned/w-workbench-read-only-sprint-plan.md` (tracked — the machine
   plan under `.ailang/` is gitignored and absent from sprint worktrees).
 
 ## Then
-rows 32 (`host/capsule` load-dependent red) → 33 (`go test -run` empty-selector AC census)
-→ item 22 → row 31.
+rows 34 (three shipped template hunks pinned by nothing — new) → 32 (`host/capsule` load-dependent
+red) → 33 (`go test -run` empty-selector AC census) → item 22 → row 31.
 
 ## Blocked
 - **Row 5** — waits on `sunholo-data/ailang#764` (protocol-only module). Re-measured this
@@ -24,9 +25,9 @@ rows 32 (`host/capsule` load-dependent red) → 33 (`go test -run` empty-selecto
 
 ## Loop + routing
 - Cadence: launchd `dev.ailang.mission-world`, 6h hard timeout per iteration.
-- Controller `claude-opus-5` · planner `opus` · executor **`codex:gpt-5.6-sol`** → fallback
-  `opus` (D-WORLD-20: DeepSeek link removed) · evaluator `sonnet` (generator≠judge).
-- Designer rotation **unspent for 9 consecutive iterations** (no new doc authored).
+- Controller `claude-opus-5` · executor **`codex:gpt-5.6-sol`** → fallback `opus`
+  (D-WORLD-20: DeepSeek link removed) · evaluator `sonnet` (generator≠judge).
+- Designer rotation **unspent for 10 consecutive iterations** (no new doc authored).
 - Verify profile `ailang-code`; both gates need `AILANG_BIN=/tmp/ailang-v0300/ailang`
   **and** `GOTOOLCHAIN=go1.25.6`.
 
