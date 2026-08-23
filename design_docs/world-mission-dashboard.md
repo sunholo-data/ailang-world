@@ -19,9 +19,8 @@ _Snapshot, overwritten each iteration. History lives in `world-mission.md` (STAT
   plan under `.ailang/` is gitignored and absent from sprint worktrees).
 
 ## Then
-rows 36 (75 test-imported production symbols, untriaged — new) → 35 (three populated `EntryView`
-fields rendered by nothing — new) → 34 (three shipped
-template hunks pinned by nothing) → 32 (`host/capsule` load-dependent red) → 33 (`go test -run`
+rows 36 (75 test-imported production symbols, untriaged — new) → 35 (three populated
+`EntryView` fields rendered by nothing — new) → 34 (three shipped template hunks pinned by nothing) → 32 (`host/capsule` load-dependent red) → 33 (`go test -run`
 empty-selector AC census) → item 22 → row 31.
 
 ## Blocked
