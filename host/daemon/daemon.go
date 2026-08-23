@@ -547,8 +547,10 @@ func releaseFromVersion(version string) string {
 // method part of the pattern, so a non-GET on these paths is a 405 from the mux
 // rather than a hand-rolled check.
 //
-// The eight patterns below are the complete frozen v1 table. The registry
-// pattern deliberately uses a multi-segment wildcard: registry semantic IDs
+// The eight /v1 patterns below are the complete frozen v1 machine table (seven GET, one POST).
+// The ninth registration, GET /workbench, is the unversioned read-only operator renderer: it is
+// NOT part of the frozen table, its HTML may evolve, and it changes the semantics of none of the
+// eight. The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
 // such as "world/epoch-registry/v1" contain slashes.
 func (d *Daemon) Handler() http.Handler {
 	mux := http.NewServeMux()
@@ -560,6 +562,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/log", d.handleLogRange)
 	mux.HandleFunc("GET /v1/registry/{name...}", d.handleRegistry)
 	mux.HandleFunc("POST /v1/commit", d.handleCommit)
+	mux.HandleFunc("GET /workbench", d.handleWorkbench)
 	return mux
 }
 
