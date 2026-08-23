@@ -4017,6 +4017,32 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
     DESIGN DOC · gated on item 14's remaining milestones · queued iter-113 (executor-surfaced,
     controller-reproduced with firing same-scope controls).
 
+36. **w-test-oracles-imported-from-the-code-under-test** · clause-2 · **`workbenchCSP` IS NOT AN
+    ISOLATED SLIP: **75** PRODUCTION SYMBOLS IN `host/` ARE REFERENCED FROM `_test.go` FILES, AND
+    NOTHING IN THIS REPO HAS EVER TRIAGED WHICH OF THEM SIT IN AN *EXPECTATION* POSITION.** Filed
+    2026-08-23 (iter-113) off `WB.C`'s blocking finding, and filed as the SWEEP rather than fixed
+    inline — item 14's plan repairs its own one instance; the census is its own item, and standing
+    rule 1 is one item. **The mechanism, stated precisely, because the naive form of this row would
+    be wrong:** referencing a production constant from a test is *not* itself a defect — it is
+    correct wherever the constant IS the contract (`internalErrorMessage` is pinned that way on
+    purpose, V21). It becomes a **tautological oracle** exactly when the mutation table names that
+    test as the killer of a mutant that changes **the constant's own value**: expected and actual
+    then move together and the arm can never red. `WB.C` is the confirmed instance —
+    `TestWorkbenchSecurityHeaders` imported `workbenchCSP` while being named as `M22`'s killer, and
+    `M22` LANDED (occurrences 1 → 0), BUILT rc=0, and left the package **rc=0 with an empty
+    `--- FAIL` set**. **What is measured and what is not:** the population is 75 (instrument
+    validated — a fabricated symbol returns **0**, so the search discriminates); the count of
+    *tautological* ones is **UNKNOWN**, and that unknown is the row. Symbols worth looking at first
+    are the ones added by this mission's own recent anti-vacuity work, since a constant extracted
+    to make a bound derivable is exactly the kind a test then imports: `decoyHoldRatio`,
+    `minDecoyHold`, `watchdogBound` (row 32's fix), `expiredReadDeadline` (item 19's fix),
+    `deadlineFreeReadPins`, `frozenPublicSurface`. **This is rule 3i's blind spot, not another
+    instance of it** — 3i asks *what else writes this value*, and for an imported oracle the answer
+    is *nothing*, so the rule returns clean on the worst case. The tell is syntactic and greppable:
+    *a test file names a production constant inside its own expectation table.* · ~0.5 d · NEEDS A
+    DESIGN DOC · not gated on item 14 (the census spans the whole repo) · queued iter-113
+    (evaluator-found instance, controller-swept with a firing negative control).
+
 
 ## Premise Verification Log (quorum objection #1 — every load-bearing claim, with evidence)
 
