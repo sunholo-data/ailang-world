@@ -1,45 +1,35 @@
-# Mission Dashboard — AILANG World
+# Mission Dashboard — Ailang World
 
-_Snapshot, overwritten each iteration. History lives in `world-mission.md` (STATUS),
-`world-mission-status-archive.md` and `world-mission-log.md`._
+*Snapshot. Overwritten every iteration. History lives in the charter STATUS block and
+`world-mission-log.md` — never here.*
 
-**As of**: iteration 113 · 2026-08-23 · `dev` == `origin/dev` at `5fd6fb3`, CI green (`checks=2`)
+**Last iteration**: 114 · 2026-08-23 · `WB.D` LANDED
 
-## In flight
-- **Queue row 14 `w-workbench-read-only` — [IN-SPRINT], 3 of 11 milestones done.**
-  `WB.C` landed (PR #85 → `5fd6fb3`, evaluator `sonnet` 82/100, **1 blocking, fixed**).
-  `GET /workbench` is now the ninth mux registration; `handleWorkbench` reads through the
-  request-scoped deadline and sets the five security headers on every response, errors included.
-  **AC5 closed** (route cardinality, base rc=1 → 0). **AC6 did NOT close** — it is rc=0 at base
-  and is carried as a regression pin; see the STATUS stamp.
-- **NEXT: `WB.D`** — the closed query grammar and every refusal branch (claims M2–M9, M13,
-  M31, M32). `WB.C` shipped the minimal unknown-key guard only, by controller adjudication, and
-  `WB.D` extends that one site rather than rewriting it.
-- Plan: `design_docs/planned/w-workbench-read-only-sprint-plan.md` (tracked — the machine
-  plan under `.ailang/` is gitignored and absent from sprint worktrees).
+## Where we are
+- **Queue item 14** `w-workbench-read-only` **[IN-SPRINT]** — **4 of 11 milestones landed**
+  (`WB.A` `83f1973` · `WB.B` `75bc23f` · `WB.C` `5fd6fb3` · `WB.D` `e50fbea`).
+- **dev is GREEN** at `e50fbea`: `checks=2`, both `success`, 0 not-green, run existence asserted.
+- **NEXT**: `WB.E` — payload opt-in, 64 KiB cap, 100-entry timeline cap (claims M10–M12).
+- Then: row 37 → row 36 → row 35 → row 34 → row 32 → row 33 → item 22 → row 31.
 
-## Then
-rows 36 (75 test-imported production symbols, untriaged — new) → 35 (three populated
-`EntryView` fields rendered by nothing — new) → 34 (three shipped template hunks pinned by nothing) → 32 (`host/capsule` load-dependent red) → 33 (`go test -run`
-empty-selector AC census) → item 22 → row 31.
+## This iteration in one line
+`WB.D` enforced §2.4's closed query grammar and every refusal branch (14 pinned subtests). The
+finding: **`M9`'s mutation row names one mutant for a pattern with NINE call sites, and 7 of the 9
+have no killer anywhere in the package** — filed as queue row 37, not absorbed.
 
-## Blocked
-- **Row 5** — waits on `sunholo-data/ailang#764` (protocol-only module). Re-measured this
-  iteration as a command: `OPEN`, 0 comments, `updatedAt` unchanged since 2026-08-17
-  (control `#676` answers 3 comments / a different `updatedAt`; negative control errors).
+## Loop cadence + routing
+- Controller `claude:claude-opus-5` · executor `codex:gpt-5.6-sol` (probe rc=0, first try)
+  · evaluator `sonnet` 82/100 PASS · planner `opus`.
+- Designer rotation **unspent a 12th consecutive iteration** (no new doc needed since iter-102).
+- `metered=$0.00` of the $5 ceiling. Quota: `opus` ×1, `codex` ×2, `sonnet` ×1.
 
-## Loop + routing
-- Cadence: launchd `dev.ailang.mission-world`, 6h hard timeout per iteration.
-- Controller `claude-opus-5` · executor **`codex:gpt-5.6-sol`** → fallback `opus`
-  (D-WORLD-20: DeepSeek link removed) · evaluator `sonnet` (generator≠judge).
-- Designer rotation **unspent for 11 consecutive iterations** (no new doc authored).
-- Verify profile `ailang-code`; both gates need `AILANG_BIN=/tmp/ailang-v0300/ailang`
-  **and** `GOTOOLCHAIN=go1.25.6`.
+## Parked on Mark
+- **NONE.** Decision ledger: 11 rows, **0 OPEN**. Zero open asks this iteration.
 
-## Human
-- **Parked for Mark: none.** Decision ledger valid, 11 rows, **0 OPEN**.
-- Bookkeeping issue **#68** (rotates Mondays 07:00 local; next boundary Mon 2026-08-24).
+## Blocked / external
+- Queue **row 5** stays BLOCKED on upstream `sunholo-data/ailang#764` (re-measured as a command
+  this iteration: `state=open comments=0 updatedAt=2026-08-17T23:34:55Z`, unchanged).
 
-## Cost
-metered **$0.00** of the $5/iteration ceiling. Quota this iteration: `opus` ×1, `codex` ×2,
-`sonnet` ×1. Fable unspent.
+## Bookkeeping
+- Issue **#68** (week of 2026-08-17), 33 comments, cap 80. Rotation next due **Mon 2026-08-24
+  07:00 local**. Watermark `2026-08-23T07:50:00Z`; 0 directives since.

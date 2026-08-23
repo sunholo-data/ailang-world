@@ -13929,3 +13929,155 @@ instance lands, the proposal is a grep-able rule, not a restatement of 3i.
 **NEXT: `WB.D`** — the closed query grammar and every refusal branch (claims M2–M9, M13, M31,
 M32), extending WB.C's single unknown-key guard site; then row 35, row 34, row 32, row 33,
 item 22, row 31. **ZERO open asks.**
+
+## Iteration 114 — 2026-08-23 — a mutation row can name a mutant that does not identify a site, and seven of nine guards had no killer
+
+**Pick**: queue row **14** `w-workbench-read-only`, milestone **`WB.D`** — the pointer iteration
+113 set, taken unchanged. Nothing outranked it: dev CI green at `d198936` (`checks=2`, both
+`success`, 0 not-green, run existence `total=1 event=push`, parent control `total=1` /
+`check-runs=2`), inbox **0** unread, `mission_directives.sh` **0** directives from
+`MarkEdmondson1234` on `#68` since `2026-08-23T07:50:00Z` (of 33), died-mid-flight sweep **0** open
+PRs on the fleet account, **1** worktree (the main checkout), clean tree. Decision ledger valid,
+11 rows, **0 OPEN**.
+
+**A Gate-0 procedure error of mine, corrected in the same gate.** I first read Mark's comments with
+a hand-rolled `gh | jq` fallback because `scripts/mission_directives.sh` does not exist in this
+repo. That is exactly what the Repo Profile forbids: the allowlist lives in the script precisely so
+it is not retyped, and the profile says to invoke it **by absolute path from the V1 checkout**. I
+re-ran it properly. The corrected run returns **0** directives since the watermark, and a
+since-epoch control returns **3** historical `MarkEdmondson1234` comments — so the instrument is
+proven able to see a positive, which the hand-rolled version never established.
+
+**The externally-blocked row was re-measured as a command, not transcribed.** Row 5 waits on
+`sunholo-data/ailang#764`: `state=open comments=0 updatedAt=2026-08-17T23:34:55Z`, unchanged.
+Control `#676` answers through the identical call at **3** comments and a different `updatedAt`;
+the negative control 404s. Row 5 stays BLOCKED.
+
+**Three plan-flagged points adjudicated BEFORE routing; the judge upheld all three first-party.**
+The plan explicitly deferred them to the controller rather than guessing.
+
+- **`?from=5` alone is REFUSED.** §2.2 is a closed enumeration of exactly four query states, and
+  `{from}` is not one of them. Accepting it would add a fifth state — a design change requiring a
+  doc revision and a re-quorum, not milestone glue. It is also the safe direction: a 400 can be
+  relaxed later, a silently-accepted parameter cannot be withdrawn without breaking callers.
+- **`payload` must be exactly `0` or `1`**, and this is NOT plan-added as the plan modestly
+  claimed: §2.2 writes the value domain literally as `payload=0|1`. Ignoring a bad value is
+  precisely the silent fallback the round-3 carve-out was written to forbid.
+- **The two extra subtests are required** — they are the non-vacuity pins for the two rulings
+  above.
+
+**Rule 3e(a), applied to MY OWN gate list, which is the list no rule reaches.** Every gate I handed
+the executor was measured on the pristine tree first: build rc=0, `TestWorkbench*` rc=0 at 10 RUN
+lines, `gofmt` empty, and — the one that matters — `TestWorkbenchRefusalBranches` **rc=0 with ZERO
+RUN lines**, queue row 33's property live in this milestone's own gate. `go test -run` exits 0 on
+an empty match set, so `rc` is indistinguishable from a perfect pass. The directive made the
+ENUMERATION the gate (`14` subtests, `0` SKIP) and quoted the base count beside it.
+
+**The controller addition, and its measured payoff.** Every 400 branch writes the same class token
+`BadRequest`, so arms asserting only status-plus-class cannot tell each other apart: a mutant
+making everything 400 would pass all ten refusal arms. I therefore required (a) every refusal
+branch to carry its OWN constant message, (b) every arm to assert THAT message, and (c) every
+expectation to be a string **LITERAL, never the production identifier** — iter-113's tautological
+oracle, one milestone earlier. Verified first-party: **12** distinct named messages, and **0**
+production-constant identifiers used as oracles in the test (control: 71 literal strings). The
+payoff is measurable rather than argued — forcing `supportedWorkbenchQuery` to `return false` reds
+**eleven** arms including the positive control, and it reds `malformed-world`, `absent-object` and
+the rest *because each asserts its own message*. Under a class-token-only assertion those ten arms
+would all have passed that mutant.
+
+**THE FINDING — A MUTATION ROW THAT NAMES A MUTANT BUT NOT A SITE.** The evaluator reported that
+the `store-error` subtest reaches only `SelectedHead`, leaving **4 of 5** sibling guards unpinned.
+Reproduced first-party, and then swept across every occurrence the pattern actually has rather
+than the ones the judge happened to enumerate: `host/daemon/workbench.go` contains **nine**
+`if err != nil {` store-error guards, and **7 of the 9 have no killer anywhere in the package**
+(lines `89 139 179 190 214 230 245`; only `172` and `209` are killed). Each neuter was asserted
+LANDED by occurrence count, asserted to BUILD rc=0 **before any test result was read**, and
+restored by `cp` with sha256 byte-identity; the pristine control is green. The judge was right in
+direction and understated in magnitude — the same shape as iteration 111, where the judge
+sharpened the controller's own record.
+
+The consequence is a **wrong status code**, not merely thin coverage: `failingStore` returns
+`ok=false` *beside* its error, so a neutered guard lets a genuine store fault fall through to
+`NotFound`. A real store failure would be reported as **404** — destroying exactly the
+malformed-vs-absent-vs-error distinction §2.4 exists to preserve and that V20/V21 measured the
+JSON handlers already modelling.
+
+**Why this is not another instance of rule 3i, and what it is instead.** Rule 3i asks *what else
+writes this value*; here the observable is fine and the arm that exists genuinely kills the guard
+it reaches. The defect is one level up, in the TABLE: `M9`'s row is `if false && err != nil {` with
+**no site qualifier**, and the pattern now occurs nine times. A drill applying the row as written
+neuters whichever occurrence its tooling matches first and records `M9` DISCHARGED while seven
+siblings stay unpinned. That is rule **3a(i-e)**'s enumeration gap — *a removal proves the check
+FIRES, only an addition proves it LOOKS* — aimed at a quorum-reviewed **mutation table** rather
+than at a gate.
+
+This is the sprint's **fourth** hollow-pin instance and the mechanism has been new every time:
+`WB.A` an observable holding for any implementation leaving a field unset; `WB.B` observable
+**wider** than mechanism; `WB.C` observable **equal** to mechanism; `WB.D` the row does not
+identify a **site**. Filed as **queue row 37**, NOT absorbed — rule 3n(b), and the identical call
+iterations 112 and 113 made on rows 34 and 35.
+
+**A defect of mine that the executor caught by refusing to pretend.** My directive named
+`.ailang/state/sprints/w-workbench-read-only.plan.json` as a required read — and `.gitignore:3`
+ignores `**/.ailang/`, so that file is absent from **every** sprint worktree by construction, while
+the plan's own §0 calls it *"your gate"*. The executor said so plainly in `EVIDENCE.md`, worked
+from the tracked plan `.md` plus my adjudications, and explicitly noted that it invented no
+requirement to compensate. This is iteration 253's `git check-ignore` class arriving from the READ
+side: that rule is about `git add` silently skipping an ignored destination; this is an ignored
+path silently missing from a checkout. Recorded here; the durable fix belongs to whoever next
+edits the plan's §0, which should stop promising a file the worktree cannot contain.
+
+**Two of my own mutants did not land, and the LANDED assertion is the only reason I know.**
+`grep -c 'if !acceptedWorkbenchKeys[key] {'` treats `[key]` as a **character class**, so it can
+never match the literal (`grep -F` → 1, `grep` → 0); and I transcribed a signature as `url.Values`
+when it is `map[string][]string`. Both produced a perfectly plausible exit code and both were
+refused as meaningless. A mutation that silently did not apply reports a false SURVIVED, and in
+one of the two cases the surrounding output would have read as a clean pass.
+
+**Gates, all re-run OUTSIDE any sandbox, exit codes captured to file and never read through a
+pipe:** build rc=0 · `TestWorkbenchRefusalBranches` rc=0 with **exactly 14** subtest RUN lines, 0
+SKIP, 0 FAIL · all `TestWorkbench*` rc=0 at **25** RUN lines (base 10) · whole `host/daemon` rc=0 ·
+`gofmt -l host/ cmd/` empty. The executor labelled the whole-package run **rc=1 UNINFORMATIVE
+UNDER SANDBOX** (loopback bind denied); outside the sandbox it is **rc=0**, so the sandbox invented
+that failure — the fourth time this sprint.
+
+**Gate 3b.** PR [#86](https://github.com/sunholo-data/ailang-world/pull/86) → squash
+[`e50fbea`](https://github.com/sunholo-data/ailang-world/commit/e50fbea). `mergeable` was read
+FIRST (`MERGEABLE`, not `CONFLICTING`) before any dropped-event lever was considered — the boring
+cause first. The PR's own checks were OBSERVED green on its head SHA before merging, never behind
+an armed auto-merge. Green on the MERGE commit: SHA-addressed from a `rev-parse`d 40-char SHA,
+`present=2 == expected=2`, both `success`, 0 not-green, every count asserted NUMERIC before
+comparison, run existence `total=1 event=push`, parent control `total=1` with `check-runs=2`.
+Commit message and PR body scanned for auto-close keywords with a known-bad control firing; `#68`
+asserted still `OPEN` after the merge.
+
+**Process fix (charter, applied here — World owns this rule).** This charter's own queue
+enumerator is short by **19 of 42** rows. The rule added at iteration 88 — itself written to fix an
+under-count — prescribes `^[0-9]+[a-z]?\. \[`, which demands a `[` immediately after the space;
+rows are now written with **bold** heads, so the anchor fails on `14 17 20 21 22 23 24 25 26 27 28
+29 30 31 32 33 34 35 36`. A fresh absent row-head shape returns 0, so the pattern is narrow rather
+than broken. **Row 14 is `[IN-SPRINT]`** — the enumerator could not see the item the loop was
+working. Third instance, third distinct mechanism (struck-through dead heads → letter-suffixed
+sub-rows → bold heads), and the verdict survived a third time because every invisible row is
+LANDED or live. Amended in place to enumerate on `^[0-9]+[a-z]?\. ` paired with a widened control.
+
+**Ruled out**: absorbing row 37's seven unpinned guards into `WB.D` (rule 3n(b)); inheriting the
+judge's "4 of 5" without sweeping the pattern; reading either non-landing mutant as a SURVIVED
+finding; banking the executor's sandboxed rc=1 as a regression; treating the absent plan JSON as
+executor non-compliance (it is my directive's defect, and the disclosure was worth more than
+silence); re-litigating the doc's round-3 quorum, whose `blocked` synthesis was correctly resolved
+at iteration 109 by restoring the budget-absent reviewer and applying the narrow-refinement
+carve-out verbatim; killing the stray `go run solution.go` (PID 28600, up since 2026-07-29) — still
+not this mission's process, still untouched; and filing anything `PARKED-ON-LANE` (no lane refused
+— codex answered first try, so the ratified `codex → opus` chain was never exercised).
+
+**Routing evidence**: controller `claude:claude-opus-5` (session) · executor `codex:gpt-5.6-sol`
+(probe rc=0 first try, delivery asserted at 17,645+ B under a per-iteration filename, terminal
+marker `codex rc=0`, zero git writes) · evaluator `sonnet` **82/100 PASS**, run in its OWN worktree
+at the sprint commit, generator≠judge holding across providers (OpenAI executor, Anthropic judge) ·
+planner not invoked (the plan predates this iteration) · designer not invoked — Fable and the
+rotation unspent a **12th** consecutive iteration. `metered=$0.00` of the $5 ceiling; quota buckets
+`opus` ×1, `codex` ×2, `sonnet` ×1.
+
+**Next**: `WB.E` — payload opt-in, 64 KiB cap, 100-entry timeline cap (claims M10–M12). Then row
+37, row 36, row 35, row 34, row 32, row 33, item 22, row 31. **Zero open asks.**

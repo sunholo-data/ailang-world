@@ -515,6 +515,63 @@ syntactic and cheap: **a test file names a production constant inside its own ex
 
 ---
 
+## 7e. `WB.D`: `M9`'s row names a mutant but not a SITE, and the plan's §0 promises a file the worktree cannot contain (iteration 114)
+
+### (a) Seven of nine store-error guards have no killer
+
+`WB.D` shipped `host/daemon/workbench.go` with **nine** `if err != nil {` store-error guards.
+Neutered one at a time — each asserted LANDED by occurrence count, each asserted to BUILD rc=0
+**before any test result was read**, each restored by `cp` and verified byte-identical by sha256 —
+**seven leave `go test ./host/daemon -count=1` at rc=0 with zero `--- FAIL`**: lines
+`89 139 179 190 214 230 245`. Only `172` and `209` have killers. Pristine control green.
+
+The consequence is a wrong status code rather than thin coverage. `failingStore` returns
+`ok=false` **beside** its error, so a neutered guard lets a genuine store fault fall through to
+`NotFound` — a real store failure reported as **404**, which is precisely the
+malformed-vs-absent-vs-error distinction §2.4 exists to preserve.
+
+**`M9`'s §6 row is `if false && err != nil {` with no site qualifier.** A drill applying it as
+written neuters whichever occurrence its tooling matches first and records `M9` DISCHARGED while
+seven siblings stay unpinned. **`WB.I`/`WB.J` MUST PARAMETERISE `M9` OVER ALL NINE CALL SITES.**
+
+This is not another instance of rule 3i. 3i asks *what else writes this value*, and here the
+observable is fine — the arm that exists genuinely kills the guard it reaches. The defect is one
+level up: the table enumerates *mutations* where what needs enumerating is *call sites*. That is
+rule 3a(i-e)'s enumeration gap aimed at a quorum-reviewed mutation table, and it is this sprint's
+**fourth** hollow-pin mechanism (`WB.A` zero-value · `WB.B` observable wider · `WB.C` observable
+equal · `WB.D` row does not identify a site). Filed as **queue row 37**, not absorbed (rule 3n(b)).
+
+Two lower-severity siblings from the same sweep: `?from=abc` has no dedicated arm and its branch
+reuses the message `"from index must be non-negative"`, misleading for a parse failure; and
+`entry`'s `parsed < 0` half shares a guard with the tested `err != nil` half, so `?entry=-1` is
+unpinned.
+
+### (b) §0 names a required read that no sprint worktree can contain
+
+§0 tells the executor *"Everything you need is in `w-workbench-read-only.plan.json` and in this
+file."* **`.gitignore:3` ignores `**/.ailang/`**, so that JSON is untracked and therefore absent
+from every worktree created by `git worktree add` — for every milestone of this sprint, by
+construction. Iteration 114's executor hit it, reported it in `EVIDENCE.md` rather than inventing
+requirements to compensate, and worked from this file plus the controller's adjudications.
+
+This is iteration 253's `git check-ignore` class arriving from the READ side: that rule is about
+`git add` silently skipping an ignored destination; this is an ignored path silently missing from a
+checkout. **Whoever next revises §0 must either drop the promise or have the controller copy the
+JSON into the worktree as a precondition** — the current text is a claim the filesystem refutes.
+
+### (c) Three under-specified points adjudicated (controller, iteration 114)
+
+Recorded so later milestones do not re-open them. All three were upheld first-party by the
+evaluator.
+
+| point | ruling | basis |
+|---|---|---|
+| accepted key SETS; is `?from=5` alone legal? | **REFUSED 400** | §2.2 is a CLOSED enumeration of four query states; a fifth is a design change, not glue |
+| `payload` value domain | **exactly `0`/`1`, else 400** | §2.2 writes `payload=0|1` literally — this is doc text, NOT plan-added |
+| the two extra subtests | **required** | they are the non-vacuity pins for the two rulings above |
+
+---
+
 ## 8. Known base hazards — **not this sprint's fault, do not absorb**
 
 - **`host/capsule` `TestF5WallClockTimeoutHasElapsedBound`** asserts an absolute 2 s wall-clock
