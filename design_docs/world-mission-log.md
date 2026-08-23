@@ -13716,3 +13716,39 @@ filed as a skill edit here, because World cannot make one.
 headers and the §3.5 comment; it closes **AC5 and AC6**, the first acceptance criteria any
 milestone in this sprint closes. Then row 34, then row 32, then row 33, then item 22, then row 31.
 **ZERO open asks.**
+
+### Addendum (iteration 112) — the rulebook changed under me mid-iteration, and my exit check called it drift because I compared against a stale snapshot
+
+Gate 1 recorded *"the RUNNING skill is byte-identical to origin"*, with `readlink` paired to `cmp`
+and both paths asserted to be the same inode. True at **03:22**. The Gate-5 re-check returned
+`cmp rc=1`. It is **not** drift: the running skill is byte-identical to **current** `origin/dev`
+(`cmp rc=0`, control against a known-different file firing, same inode `47681680` both times).
+What moved is **origin** — `db71d2a16`, a sibling mission's Gate-5 skill edit, committed
+**2026-08-23T03:30:17+02:00**, about nine minutes into this iteration, +2,581 bytes.
+
+**Two findings, and the second is the more embarrassing one.**
+
+**(1) A Gate-1 skill-identity claim has a shelf life measured in minutes.** The Repo Profile says a
+skill edit *"is live for every mission the instant you save it"* — and the corollary nobody had
+written down is that the *verification* of that identity is equally instantaneous: it is a
+point-in-time reading, not a property of the iteration. So a STATUS stamp asserting "byte-identical
+to origin" is asserting it **against an origin that may no longer exist by the time the stamp is
+written**. Mine happens to be true against both, which is luck rather than method. The honest form
+is to date the claim, or re-check at Gate 5 and say which origin each reading was against.
+The material question — *did the change alter the rules I was following?* — is answered NO by
+reading the delta: `db71d2a16` amends the **Fable diet** (its unit is one bounded DOC, not one
+bounded RUN) and this iteration ran **no designer at all**, so nothing routed under the old text
+would have routed differently under the new.
+
+**(2) My exit check was the stale-artifact class, and it produced a confident WRONG answer rather
+than a silent one.** The shared skill's own rule says an artifact is an instrument too — assert it
+is **FRESH**, not merely present, because a path you write to twice holds the previous run's answer
+and reads as a result. I compared the live file against `/tmp/skill_origin_w112.md`, a snapshot
+taken at Gate 1 and never refreshed. `cmp` did exactly what it was asked and the *reading* was
+meaningless. Note the direction: rule 3a's classic trap is a control that does not fire, which
+announces itself; this one **fired wrongly**, in the alarming direction, and had I banked it the
+record would carry a fabricated drift incident and the next iteration would have opened on a
+manufactured emergency. The fix is one line — re-derive the comparand in the same block that uses
+it (`git show origin/dev:<path>` immediately before the `cmp`), never reuse a Gate-1 snapshot at
+Gate 5 — and it generalises past this file to every `/tmp` artifact this loop writes once and reads
+later.
