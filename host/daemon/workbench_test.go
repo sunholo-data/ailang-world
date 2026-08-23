@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/workbench"
 )
 
 func TestWorkbenchRouteIsReadOnly(t *testing.T) {
@@ -209,6 +212,123 @@ func TestWorkbenchRefusalBranches(t *testing.T) {
 			assertWorkbenchSecurityHeaders(t, rec.Header())
 		}
 	})
+}
+
+func commitWorkbenchPayload(t *testing.T, d *Daemon, payload []byte, label string) hashref.HashRef {
+	t.Helper()
+	genesis := seedGenesisEmbedded(t, d, label+"-genesis")
+	commit := testCommit(genesis, 0, label)
+	object := store.Object{
+		Hash:          hashref.SumSHA256(payload),
+		InterfaceHash: hashref.SumSHA256([]byte("interface-" + label)),
+		SemanticID:    "test/" + label,
+		Provenance:    "workbench-test",
+		Payload:       payload,
+	}
+	commit.Objects = []store.Object{object}
+	commit.Entry.TransitionRef = object.Hash
+	if err := d.store.Commit(commit); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	return object.Hash
+}
+
+func TestWorkbenchPayloadPreviewBound(t *testing.T) {
+	t.Run("default-off", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		ref := commitWorkbenchPayload(t, d, []byte("PAYLOAD-MARKER-7ac"), "payload-default-off")
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench?object="+ref.String(), nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200; body=%s", rec.Code, rec.Body)
+		}
+		if strings.Contains(rec.Body.String(), "PAYLOAD-MARKER-7ac") {
+			t.Fatal("payload rendered without payload=1")
+		}
+	})
+
+	t.Run("opt-in", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		ref := commitWorkbenchPayload(t, d, []byte("PAYLOAD-MARKER-7ac"), "payload-opt-in")
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench?object="+ref.String()+"&payload=1", nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200; body=%s", rec.Code, rec.Body)
+		}
+		if !strings.Contains(rec.Body.String(), "PAYLOAD-MARKER-7ac") {
+			t.Fatal("payload=1 did not render payload")
+		}
+	})
+
+	t.Run("small-renders-in-full", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		payload := []byte("0123456789abcdefghijklmnopqrstuv")
+		ref := commitWorkbenchPayload(t, d, payload, "payload-small")
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench?object="+ref.String()+"&payload=1", nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200; body=%s", rec.Code, rec.Body)
+		}
+		body := rec.Body.String()
+		if !strings.Contains(body, string(payload)) {
+			t.Fatal("small payload did not render in full")
+		}
+		if strings.Contains(body, "truncated") {
+			t.Fatal("small payload incorrectly marked truncated")
+		}
+	})
+
+	t.Run("oversize", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		payload := bytes.Repeat([]byte("x"), workbench.MaxPayloadPreview+4096)
+		copy(payload[len(payload)-len("TAIL-MARKER-3d1"):], "TAIL-MARKER-3d1")
+		ref := commitWorkbenchPayload(t, d, payload, "payload-oversize")
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench?object="+ref.String()+"&payload=1", nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200; body=%s", rec.Code, rec.Body)
+		}
+		body := rec.Body.String()
+		if !strings.Contains(body, "truncated") {
+			t.Fatal("oversize payload not marked truncated")
+		}
+		if strings.Contains(body, "TAIL-MARKER-3d1") {
+			t.Fatal("oversize payload rendered bytes beyond preview cap")
+		}
+	})
+}
+
+func TestWorkbenchTimelineBound(t *testing.T) {
+	d := newHandlerDaemon(t)
+	world := seedGenesisEmbedded(t, d, "workbench-timeline-bound")
+	started := time.Now()
+	for index := int64(0); index < int64(workbench.WorkbenchPageLimit+5); index++ {
+		commit := testCommit(world, index, "workbench-timeline-bound")
+		if err := d.store.Commit(commit); err != nil {
+			t.Fatalf("Commit(%d): %v", index, err)
+		}
+		world = commit.NextWorld
+		if time.Since(started) > 30*time.Second {
+			t.Fatalf("seeding exceeded 30 seconds after %d commits", index+1)
+		}
+	}
+	if _, ok, err := d.store.GetLogEntry(context.Background(), 104); err != nil || !ok {
+		t.Fatalf("positive control GetLogEntry(104): ok=%v err=%v", ok, err)
+	}
+
+	// The empty query is state 1 of the closed grammar of §2.2: it defaults from=0 and leaves
+	// Page.Selected nil, so only timeline rows emit entry headings. `?from=0` alone is NOT in
+	// the enumeration and is refused 400 by design (see the unsupported-combination arm above).
+	rec := requestRecorder(t, d, http.MethodGet, "/workbench", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body=%s", rec.Code, rec.Body)
+	}
+	body := rec.Body.String()
+	if got := strings.Count(body, "<h3>entry "); got != workbench.WorkbenchPageLimit {
+		t.Errorf("timeline entry count = %d, want %d", got, workbench.WorkbenchPageLimit)
+	}
+	if !strings.Contains(body, "<h3>entry 99</h3>") {
+		t.Error("timeline does not contain entry 99")
+	}
+	if strings.Contains(body, "<h3>entry 100</h3>") {
+		t.Error("timeline contains entry 100 beyond page bound")
+	}
 }
 
 func assertWorkbenchSecurityHeaders(t *testing.T, header http.Header) {

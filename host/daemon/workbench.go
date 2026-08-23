@@ -219,9 +219,20 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 			writeWorkbenchError(w, http.StatusNotFound, "NotFound", absentWorkbenchObjectMessage)
 			return
 		}
+		showPayload := false
+		if query.Get("payload") == "1" {
+			showPayload = true
+		}
+		preview := object.Payload
+		truncated := false
+		if len(preview) > workbench.MaxPayloadPreview {
+			preview = preview[:workbench.MaxPayloadPreview]
+			truncated = true
+		}
 		page.Object = &workbench.ObjectView{
 			Hash: object.Hash.String(), InterfaceHash: object.InterfaceHash.String(),
 			SemanticID: object.SemanticID, Provenance: object.Provenance,
+			PayloadShown: showPayload, PayloadPreview: string(preview), PayloadTruncated: truncated,
 		}
 	}
 
@@ -251,6 +262,7 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 		}
 		page.Timeline.Entries = append(page.Timeline.Entries, entryView(entry))
 	}
+	page.Timeline.Truncated = len(page.Timeline.Entries) == limit
 
 	_ = workbench.Render(w, page)
 }
