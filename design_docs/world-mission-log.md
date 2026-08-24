@@ -14249,3 +14249,21 @@ because my weaker justification would have coupled row 38's eventual fix to this
 
 **Next.** `WB.F` — `TestWorkbenchReadDeadline` + `/workbench` in the cancelled-after-handler table,
 closing doc **AC8** (claims M29, M30). 6 of 11 milestones will remain after it.
+
+---
+
+## Iteration 116 — 2026-08-24 — `WB.F` implemented and controller-verified, `PARKED-ON-LANE` before evaluation
+
+**Pick.** Queue item 14 `w-workbench-read-only`, milestone `WB.F`, exactly as iteration 115 named.
+
+**Outcome.** Codex implemented WB.F in an isolated sprint worktree and the controller committed it locally as `a96fd67`. The only tracked diff is +90 lines in `host/daemon/read_deadline_test.go`: three deadline arms plus a local `/workbench` addition to `TestReadCtxCancelledAfterHandler`; shared `seedReadRoutes` is unchanged. Controller re-check: repaired AC8 rc=0 with exactly 2 top-level / 5 total RUN lines (base 1), whole daemon package rc=0, daemon build rc=0, gofmt empty.
+
+**Gate 3 evaluator.** The independent Sonnet lane refused before running: rc=1, `weekly limit · resets 7am (Europe/Copenhagen)` at 04:09 CEST. Generator≠judge forbids Codex evaluating its own output. Classified `PARKED-ON-LANE`, not `needs-human-review`: no score, push, PR, merge, Gate 3b, or LANDED claim.
+
+**Routing evidence.** Controller Codex session · designer not invoked · planner not invoked · executor `codex:gpt-5.6-sol` completed · evaluator `sonnet` refused rc=1 before work · generator≠judge preserved · `metered=$0.00`.
+
+**Ruled out.** Substituting Codex as evaluator; starting WB.G; treating controller verification as evaluator PASS; pushing an unevaluated sprint; asking Mark to resolve a clock-based quota park.
+
+**Retro.** No skill edit, process change, or new backlog row. The capacity/judgment distinction and resume-predicate rule worked as written.
+
+**Next.** After Mon 2026-08-24 07:00 CEST, re-probe Sonnet. rc=0 → evaluate `a96fd67` in the existing evaluator worktree and proceed only on PASS; refusal → refresh the `PARKED-ON-LANE` predicate. Do not start WB.G. No open decisions.
