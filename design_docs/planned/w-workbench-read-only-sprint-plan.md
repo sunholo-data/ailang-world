@@ -572,6 +572,164 @@ evaluator.
 
 ---
 
+---
+
+## 7f. `WB.H` discharged M14–M21 — and the classification arm cannot run in the executor's lane (iteration 119)
+
+**All eight rows are discharged by measurement. No surviving mutant.** Every mutant was asserted
+LANDED by OCCURRENCE count (new literal up, original literal to 0), proved to BUILD `rc=0` **before
+any test result was read**, classified by the COMPLETE enumerated red set (never predicted, no
+`-skip` inverse arm), restored by `cp` from `.snap/backup/render.go` — never `git checkout --` — and
+verified byte-identical by `sha256`, with the pristine control re-run to `rc=0` after **every**
+mutant rather than once at the start.
+
+| mutant | site | LANDED | build | enumerated red set (subtest granularity) | verdict |
+|---|---|---|---|---|---|
+| M14 | `{{.Grade.Unavailable}}` → `{{rawText …}}` | 1/0 | rc=0 | `TestRenderEscapesAllObjectText` | SOLE KILLER |
+| M15 | `workbenchHref` href prefix | 1/0 | rc=0 | `TestRenderEmitsOnlyLocalLinks` + `TestRenderUnavailableProvenanceEdge` | MORE THAN NAMED, explained |
+| M16 | `if false && !edge.Available` | 1/0 | rc=0 | `TestRenderUnavailableProvenanceEdge` | SOLE KILLER |
+| M17 | `if false && !validGrade(label)` | 1/0 | rc=0 | `…/rejects-invalid-label` ALONE | SOLE KILLER |
+| M18 | `NewGradeUnavailable` → `CLAIMED/true` | 1/0 | rc=0 | `…/unavailable-is-not-claimed` ALONE | SOLE KILLER |
+| M19 | `if false && kind == KindTestReport …` | 1/0 | rc=0 | `…/missing` ALONE | SOLE KILLER |
+| M20 | both `verdict: {{.Grade.Verdict}}` → `verdict: PASS` | **2**/0 | rc=0 | `…/fail` ALONE | SOLE KILLER — §7c's repair HOLDS |
+| M21 | `NewGradeUnavailable` → `PROVEN/true` | 1/0 | rc=0 | `…/unavailable-is-not-claimed` + `…/no-proven-inference` | named arm PRESENT, explained |
+
+**The parent-level reading is not the discriminating one, and four of eight rows need the subtest
+one.** M17/M18/M21 all red `TestGradeViewRejectsUnavailableOrInvalidInput`, and M19/M20 both red
+`TestGradeViewRequiresTestVerdict` — at parent granularity those pairs are indistinguishable, so a
+drill that recorded only `--- FAIL:` parent lines would have "discharged" each row against a red it
+did not cause. Enumerated per subtest they are disjoint (`/rejects-invalid-label`,
+`/unavailable-is-not-claimed`, `/missing`, `/fail`), which is what makes each kill attributable.
+
+**M18 and M21 are NOT independent, and the PAIR is what proves `no-proven-inference` is non-vacuous.**
+Both mutate the same function and both set `Available: true`, which is why each trips
+`unavailable-is-not-claimed`'s second assertion. The load-bearing fact is asymmetric:
+`no-proven-inference` fires under M21 (`Label: GradePROVEN`) and appears **nowhere** in M18's
+enumerated red set (`Label: GradeCLAIMED`). So it is a genuinely distinct guard rather than a
+duplicate — a result neither mutant alone can produce.
+
+### (a) The M14 row named a site its own named test cannot detect, and the reason is structural
+
+Row M14 read *"wrap the object label in `template.HTML(...)`"*. Read literally, "the object label"
+is `GradeView.Label`. Measured first-party on the pristine tree before routing, both arms LANDED and
+BUILT `rc=0` before any test result was read, both restored byte-identical:
+
+| arm | build | classification | red set |
+|---|---|---|---|
+| `template.HTML` on `Grade.Label` | rc=0 | rc=0 | **EMPTY — SURVIVES** |
+| `template.HTML` on `Grade.Unavailable` | rc=0 | rc=1 | `TestRenderEscapesAllObjectText` **ALONE** |
+
+Arm A survives structurally, not accidentally: `NewGradeView` refuses any label outside the four
+constants — that is **M17's own guard** — so `GradeView.Label` can never carry attacker-controlled
+text. There is nothing there to escape, and the conversion changes no observable value, so it is not
+a real mutant of a real guard. `Grade.Unavailable` is the field the named test actually drives with
+hostile input. The **ROW** was wrong, not the test. Repaired before routing and published with its
+measurement, on §7c's own precedent and scoping: §3 rule 5 governs the drill, not a spec defect found
+and disclosed before it. Left alone, WB.H would have recorded M14 SURVIVED and produced this
+identical repair one milestone later — §7c's exact argument.
+
+### (b) The classification arm cannot run in a `workspace-write` sandbox, so WB.H is structurally controller-work
+
+`mutation_protocol.per_mutant_steps` step 5 and `features[WB_H].narrow_gate` both name
+`go test ./host/workbench ./host/daemon ./host/boundary`, and step 6 requires that same arm to
+return **rc=0** as a pristine control after **every** mutant. `host/daemon` binds real loopback
+sockets, which `--sandbox workspace-write` denies. So the control is **rc=1 by construction** in the
+executor lane, and the milestone's protocol is unsatisfiable there no matter how correct the work is.
+
+**Two INDEPENDENT bind paths, not one — and the first draft of this section misattributed both**
+(corrected by the `sonnet` evaluator, reproduced first-party before adoption). The draft cited
+`httptest.NewServer` at `daemon_test.go:561` and `handlers_test.go:420` for all three failing tests.
+Measured, only ONE of the three matches, and one of the two line numbers belongs to an unrelated test:
+
+| test | bind path | site |
+|---|---|---|
+| `TestBoundedGracefulShutdownDrainsInFlightRequest` (`daemon_test.go:328`) | `d.Listen()` → `net.Listen("tcp", addr)` | `host/daemon/daemon.go:634` |
+| `TestDaemonShutdownIsBoundedByTheD7Constant` (`daemon_test.go:407`) | `d.Listen()` → `net.Listen("tcp", addr)` | `host/daemon/daemon.go:634` |
+| `TestHealthAndHeadRoundTrip` (`daemon_test.go:545`) | `httptest.NewServer` | `daemon_test.go:561` |
+
+`handlers_test.go:420` is inside `TestRESTGenesisAndCommitAreByteEquivalent`, which is not one of the
+three. The defect was a scope error in the controller's own instrument: a grep over
+`host/daemon/*_test.go` for `httptest.NewServer|net.Listen` found the `httptest` sites and those were
+asserted to be the mechanism for tests never traced to them — while the direct `net.Listen` path lives
+in `daemon.go`, a NON-test file the grep could not see. Presence of a mechanism was read as
+attribution of it. **The conclusion is strengthened rather than weakened:** two independent socket-bind
+paths reach the denial, so the finding is not an artifact of one helper.
+
+Measured, two arms, same tree, same three tests:
+
+| arm | all three named tests |
+|---|---|
+| inside `--sandbox workspace-write` | FAIL — `listen tcp 127.0.0.1:0: bind: operation not permitted`, plus an IPv6 `httptest` panic |
+| outside the sandbox | **PASS**, package `rc=0` |
+
+The outcome DIFFERS across arms, so the red is the **instrument**, not the diff. The codex executor
+hit this at M14, labelled all three `UNINFORMATIVE UNDER SANDBOX` exactly as instructed, declined to
+record them as either pass or fail, and **STOPPED before M15** rather than assert a control it could
+not satisfy — the correct call, and the second consecutive milestone whose executor disclosed rather
+than completed. M14's own kill was still informative and is recorded above. The controller ran
+M15–M21 outside the sandbox under the identical protocol.
+
+This is the same structural finding charter queue row 4f recorded at iteration 50 for the
+`w-bench-load-confound` drill (*"the work is structurally controller-only: the daemon benchmarks bind
+loopback, which the executor's `workspace-write` sandbox denies"*). It was known, and this plan
+routed a loopback-bearing classification arm to a sandboxed lane anyway. **WB.I, WB.J and WB.K carry
+the identical arm and are therefore controller-work too** — WB.J in particular discharges M29–M32,
+which are daemon-side.
+
+### (c) The step-2 occurrence assertion fired live, and caught a FALSE SURVIVED
+
+M15's first application used a `perl -0pi` replacer whose pattern contained `/` and `"`; it failed to
+apply. The mutation did not land, the classification arm returned **rc=0**, and the red set was
+**empty** — which is byte-indistinguishable from a genuine SURVIVED. It was caught only by step 2's
+occurrence assertion (`new=0, original=1`), which is precisely the check the protocol adds for this
+reason, and is recorded in `MUTATIONS.md` as `INSTRUMENT FAILURE — not a verdict` with the corrected
+re-run appended after it. Note the shape: a broken *instrument* produced the drill's most interesting
+possible *result*. Any drill that asserts landing by anything weaker than an occurrence count on the
+mutated literal will manufacture survivors it cannot distinguish from real ones.
+
+### (d) The DoD names an evidence artifact the artifact policy deletes
+
+`definition_of_done` requires *"all 32 mutation rows discharged by MEASUREMENT in
+`.snap/M{8,9,10,11}/MUTATIONS.md`"*, while `expected_artifacts.scratch_not_committed` is `.snap/**`
+and `worktree_policy.cleanup` removes the worktree. Followed literally, the plan destroys its own
+evidence of record at cleanup, and WB.K's final acceptance has nothing to cite. This section is the
+durable form for M14–M21, on the pattern §7b–§7e already established; WB.I/WB.J/WB.K should each get
+one rather than relying on scratch that is deleted by design.
+
+### (e) The evaluator found a SURVIVING MUTANT on a guard no row in the catalogue covers
+
+Handed §7f's three headline claims as named targets to attack, the `sonnet` evaluator re-derived M14
+(both arms), M18, M20 and M21 independently, confirmed the subtest and M18/M21-asymmetry arguments,
+refuted the citation repaired in (b) — and added a mutant of its own aimed at a guard **no M14–M21 row
+touches**. Reproduced first-party by the controller before adoption:
+
+`host/workbench/render.go:101`, in `workbenchHref` — `if query != "" && query[0] == '?' {` mutated to
+`if query != "" {`, dropping the malformed-query check. LANDED (new literal 1, original guard
+occurrences 0), `go build ./...` **rc=0**, full classification arm **rc=0 with an EMPTY red set**,
+restored byte-identical. **SURVIVED.**
+
+No test in the repository supplies a non-empty, non-`?`-prefixed value to `workbenchHref`: every
+`Href`/`PrevHref`/`NextHref` in every test file already starts with `?`, so the guard's false branch is
+unreachable from the suite and the mutant cannot be detected. This does NOT invalidate WB.H, which
+claimed M14–M21 and nothing wider — but it is a real, named gap in the sprint's mutation catalogue,
+and it belongs with the three WB.B hunks already recorded as **charter queue row 34** (outside M1–M32,
+unreachable by this drill) rather than being absorbed here under Standing rule 1.
+
+The evaluator also noted a non-gap worth recording so it is not re-investigated: mutating
+`{{if .PayloadShown}}` to `{{if true}}` IS killed — but only by `host/daemon`'s
+`TestWorkbenchPayloadPreviewBound/default-off`, never by any `host/workbench` test. That guard is
+protected from a different package than the file it lives in, which is invisible to a
+`host/workbench`-scoped reading.
+
+**Evaluator verdict: 88/100 PASS, no blocking findings**, distinct provider from both the codex
+executor and the controller, in its own worktree at the sprint commit — generator ≠ judge held.
+Deductions: −5 the (b) citation, −3 that AC1 literally names `.snap/M8/MUTATIONS.md` (which the
+artifact policy in (d) deletes), −2 that plan.json's M14 text was under-specified. All three are
+adopted rather than argued: (b) is repaired above, (d) records the artifact tension, and the M14 row's
+funcmap signature is corrected to `func(s any) template.HTML` in `plan.json` — a `func(s string)`
+helper cannot take a `GradeLabel`, so applying the row verbatim to the ORIGINAL `Grade.Label` site
+produces a template *type* error rather than the empty red set that demonstrates the survival.
+
 ## 8. Known base hazards — **not this sprint's fault, do not absorb**
 
 - **`host/capsule` `TestF5WallClockTimeoutHasElapsedBound`** asserts an absolute 2 s wall-clock
