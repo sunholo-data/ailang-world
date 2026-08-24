@@ -14442,3 +14442,153 @@ environment the executor does not have.**
 **Next**: `WB.I` (9 of 11 — mutation drill 2/4, discharges M1–M9; **controller-work**, same
 loopback-bearing arm), then WB.J, WB.K, then rows 38, 37, 36, 35, 34, 32, 33, item 22, row 31.
 Row 5 BLOCKED on `ailang#764`. **Zero open asks.**
+
+## Iteration 120 — 2026-08-24 — a human directive outranked the queue: AILANG v0.33.2 VERIFIED as the unblock for row 5, behind a toolchain floor nobody had priced
+
+**Kind**: human directive (Mark, `#89` @ `2026-08-24T20:06:56Z`) — verification, **no code landed**.
+**Directive**: *"AILANG has done a new release please verify it's what you need to unblock"*.
+
+**Context / preflight (Gate 0–1)**
+- Kill switch NOT set. Billing tripwire **CLEAN**. gh account `sunholo-voight-kampff`. Pidfile
+  `mission-world.pid`=90607 = this run's own driver (no overlap). Tree clean, `dev` == `origin/dev`
+  == `783c911`.
+- **1** `MarkEdmondson1234` directive on `#89` and **0** on predecessor `#68`, both via the V1
+  checkout's `scripts/mission_directives.sh` by ABSOLUTE PATH — never a hand-rolled `gh|jq`.
+  Control fires: the same script over `#68` enumerates 41 comments and reports 0 directives.
+  Watermark read as the OLDER of the two files per the Repo Profile (both `2026-08-24T16:55:50Z`).
+- Inbox **3** unread — two `eval-suite` controlplane notices and the `release-manager` v0.33.2
+  notification. No regression, no cross-mission ask.
+- dev CI GREEN (`checks=2`, both `success`). Running skill **byte-identical to `origin/dev`**
+  (`cmp` rc=0 over 338,231 B), path taken from the **resolved** symlink target with an inode
+  comparison (`49625682` both sides), never the relative `.claude/skills/…`.
+- Decision ledger valid, 11 rows, **0 OPEN**. Died-mid-flight sweep clean: 0 open PRs, 1 worktree.
+- No rotation: `#89` created `07:03:49Z` (= 09:03 CEST) is AFTER this Monday's 07:00 **local**
+  boundary, and holds 7 comments (< 80). Weekly external-issue sweep not re-run (iter-117 owned it).
+
+**Gate 2 — pick**
+The directive OUTRANKS the queue (Gate 0.4), so `WB.I` was deferred and this became the pick. The
+blocked thing is charter row 5 `w-mcp-projection`, `[RE-BLOCKED ON UPSTREAM 2026-08-18 (iter-90)]`
+on [`ailang#764`](https://github.com/sunholo-data/ailang/issues/764) — the request for a
+protocol-only module, because `serveapi` is an API seam but not a **dependency** seam.
+
+**The work — three legs, each measured with a firing control**
+
+**(1) The package is in the tag, and it is early.** Upstream's own `#764` comment recommended
+delivery "by the already-authorized **v0.34.0** tag". It shipped in **v0.33.2** instead
+(tag `63e7909f`, cut `2026-08-24T19:26:28Z`, ~78 minutes after the `dev` landing comment).
+`serveapi/protocol/` is present at the tag: `a2a_wire.go`, `descriptor.go`, `envelope.go`,
+`interfaces.go`.
+
+Closure measured at the tag with `go list -deps` (go1.26.6, darwin/arm64):
+
+| package | total | non-stdlib |
+|---|---:|---:|
+| `serveapi/protocol` | 188 | **1** |
+| `serveapi` | 224 | 31 |
+| *(control)* `cmd/wasm` | 116 | 12 |
+| *(control)* `cmd/astdump` | 92 | 14 |
+| *(control)* `cmd/registry-validator` | 665 | 453 |
+
+Two of the three controls reproduce this mission's iter-90 figures exactly; the third reproduces
+**V1's correction** of our own mis-measurement (we filed 6, the true value is 453). Negative
+control re-run WITHOUT a pipe — `go list -deps ./serveapi/nosuchpkg` **rc=1** — after the first
+attempt read `rc=0` through a pipe, which is this repo's own recorded `pipestatus` hazard biting
+the controller in the same iteration it was relied on.
+
+**(2) The decisive arm is OUR gate, not upstream's `go list`.** Sibling-claim ghost discipline: the
+claim was reproduced first-party through the committed guardrail rather than accepted. In a
+worktree off `origin/dev`:
+- **Pristine control**: `TestDaemonDependencyAllowlist` **rc=0** over **244** transitive packages.
+- **Non-vacuity control** — probe-import `serveapi/protocol` into `host/daemon`, allowlist
+  UNCHANGED: gate **rc=1**, reporting `1 package(s) outside the zero-cloud allowlist` and naming
+  **`github.com/sunholo-data/ailang/serveapi/protocol`** and nothing else. This is the strongest
+  available form of the closure claim — measured *through the guardrail the claim is about*.
+- **One narrow allowlist line** (`…/serveapi/protocol`, the package path, NOT the module root):
+  gate **rc=0** over **250** packages. +6 packages, of which exactly **1** is non-stdlib.
+
+For contrast, iter-90 measured that importing `serveapi` would have added **476** disallowed
+packages across **86** module roots. The narrow entry matters: the matcher is prefix-based
+(`d == m || strings.HasPrefix(d, m+"/")`), so allowlisting the module root
+`github.com/sunholo-data/ailang` would silently admit `internal/apiserver` and the whole cloud
+subtree — it would gut the gate. Upstream flagged this unprompted and recommended the narrow form.
+
+**(3) THE FIND — a toolchain floor nobody had priced, and it is a hard stop.** v0.33.2's `go.mod`
+declares **`go 1.26.6`**; this repo's CI hard-pins `GOTOOLCHAIN: go1.25.6` (`ci.yml:21,102`)
+because go1.26.0–1.26.5 miscompile `host/store/scan.go`'s array-literal shape. Two arms, same tree:
+
+- `GOTOOLCHAIN=go1.25.6 go get github.com/sunholo-data/ailang@v0.33.2` → **rc=1**,
+  `requires go >= 1.26.6 (running go 1.25.6)`.
+- `GOTOOLCHAIN=go1.26.6` → **rc=0**.
+
+So the unblock is real but **not free**: row 5 cannot land without moving World's toolchain. The
+good news is that the repo already anticipated it — `verify_go.sh:214-224`'s deny-list enumerates
+exactly `go1.26.0`–`go1.26.5` and its own comment says *"Future go1.26.6 or go1.27.x versions are
+not covered here; the canary in this gate is the version-agnostic detector"*. Canary, three arms:
+
+| toolchain | `TestToolchainCanary` |
+|---|---|
+| `go1.25.6` | **rc=0** (known-good pin) |
+| `go1.26.5` | **rc=1** (miscompile — known-positive control FIRES) |
+| `go1.26.6` | **rc=0** (fixed) |
+
+**A first reading of this arm was VOID and is recorded rather than quietly re-run.** The three arms
+were first run in the probe worktree *after* `go get` had bumped `go.mod` to `go 1.26.6`, so
+go1.25.6 and go1.26.5 both returned rc=1 — not from a miscompile but from
+`go.mod requires go >= 1.26.6`. Byte-indistinguishable from a canary failure at the summary level,
+and it would have inverted the verdict on the known-good pin. Caught by asking why the *control*
+arm was red. The re-run above is on a pristine `go.mod` and the outcomes differ across arms, so it
+is a measurement.
+
+Full `verify_go.sh` re-run under `GOTOOLCHAIN=go1.26.6` on a pristine tree: **rc=0** — build clean,
+**38** package results `ok`, **0** FAIL (control string fires at 1), plain **and** `-race -timeout
+8m`, race-detector known-positive control armed (`Found 2 data race(s)`), driver-drift gate green,
+tracked-binary hygiene green, focused `host/evidence` 37-test manifest gate green.
+
+**(4) Upstream's guarantee is CI-enforced, not a snapshot.** `scripts/check_protocol_closure.sh`
+ships **in the tag**; `make check-protocol-closure` → **rc=0** (`protocol non-stdlib count: 1`) and
+its refusal self-test `make test-check-protocol-closure` → **rc=0** across **5** arms, including an
+intruder arm (`github.com/google/uuid`, count moves 1 → 2) and vacuity probes R1/R2/R3/R4/R6/R7
+that refuse with rc=2. So World's one allowlist line will not silently rot.
+
+**Scope change, named rather than discovered later**: `CallbackRunner`, the embedded A2A
+`http.Handler` and the MCP handler are deliberately **not** in `protocol`. Upstream measured that
+the MCP SDK spans 9 external module roots of which only `golang.org/x/sys` is in our 11-entry
+allowlist — putting it in `protocol` would make the package fail the exact gate it exists to pass.
+**World writes its own HTTP handlers and callback-bounding.** This is D-WORLD-5's ruling executing
+as written (a disallowed graph routes to Open Decision 4's default — ask upstream for a
+protocol-only module, never a broad relaxation), so it is **not** a new human decision.
+`go doc` confirms World's four named `#498` requirements are present in `protocol`:
+`SessionResolver`, `ToolSource`, `CallerSurface`/`AuthorizedSurface`, `ToolDescriptor`, plus
+`WriteMCPEnvelope`/`RequestID`/`ValidateMCPName` and the A2A wire types. `Mount` stays in
+`serveapi` and is not needed for a caller-owned mux.
+
+**Outcome**
+Row 5 moves `[RE-BLOCKED ON UPSTREAM]` → **`[UNBLOCKED 2026-08-24 (iter-120)]`**. Its first
+milestone is the toolchain + dependency precondition, which is a prerequisite rather than a
+redesign. No code landed this iteration by design: the directive asked for a verification, and
+Standing rule 1 gives one item.
+
+**Ruled out**
+- Accepting upstream's "one allowlist line" prescription on its authority — reproduced through our
+  own gate instead, which is also what produced the exactly-one-intruder evidence.
+- Reading the first canary sweep as a result once the go1.25.6 arm went red; the confound was
+  diagnosed before anything was recorded.
+- Reading `go list`'s negative control through a pipe (`rc=0`), the repo's own `pipestatus` hazard.
+- Allowlisting the module root `github.com/sunholo-data/ailang`, which passes the gate and guts it.
+- Treating the MCP-handler exclusion as a new human decision — D-WORLD-5 pre-authorized it.
+- Silently reordering the queue to put row 5 ahead of the in-flight item-14 sprint; that fork is
+  put to Mark as a one-word decision instead.
+- Modifying the main checkout: all probing happened in a throwaway worktree, and the canary re-run
+  in the main tree was read-only (`git status --porcelain` = 0 before and after).
+
+**Next**
+Row 5 `w-mcp-projection` if Mark says *"row 5"*; otherwise `WB.I` (9 of 11) and item 14 to
+completion. Either way the toolchain precondition is row 5's first milestone.
+
+**Retro**
+No skill edit (World shares the skill by symlink and cannot edit it). One friction worth naming at
+**instance 1**, recorded not proposed: *a version-floor in a dependency's `go.mod` is a blocker
+with no issue, no owner and no queue row* — `#764` tracked the dependency shape and was answered in
+full, while the thing that actually stops row 5 landing today is a `go` directive nobody was
+watching. The tell: you have verified that a dependency's *contents* unblock you, and have not
+checked what its *metadata* demands of your build. Bar is two.
