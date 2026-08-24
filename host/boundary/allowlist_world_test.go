@@ -904,6 +904,135 @@ func TestBareNetHTTPExemptionIsPerGroup(t *testing.T) {
 	}
 }
 
+func TestWorkbenchPackageRemainsTransportFree(t *testing.T) {
+	root := repoRoot(t)
+	daemonDeps, err := goListDeps(root, "", "./cmd/ailang-worldd/...")
+	if err != nil {
+		t.Fatal(err)
+	}
+	requireExactlyOneNetHTTP := func(deps []string) error {
+		if got := countDep(deps, "net/http"); got != 1 {
+			return fmt.Errorf("daemon closure contains net/http %d time(s), want exactly 1", got)
+		}
+		return nil
+	}
+
+	t.Run("daemon-closure-has-exactly-one-net-http", func(t *testing.T) {
+		if err := requireExactlyOneNetHTTP(daemonDeps); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("workbench-closure-is-transport-free", func(t *testing.T) {
+		wbDeps, err := goListDeps(root, "", "./host/workbench/...")
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, forbidden := range []string{
+			"net/http",
+			"database/sql",
+			"os/exec",
+			"github.com/sunholo-data/ailang-world/host/store",
+			"github.com/sunholo-data/ailang-world/host/registry",
+			"github.com/sunholo-data/ailang-world/host/broker",
+			"github.com/sunholo-data/ailang-world/host/daemon",
+		} {
+			if got := countDep(wbDeps, forbidden); got != 0 {
+				t.Errorf("workbench closure contains forbidden dependency %q %d time(s), want 0", forbidden, got)
+			}
+		}
+		if got := countDep(wbDeps, "net/url"); got != 1 {
+			t.Fatalf("workbench closure contains net/url %d time(s), want exactly 1 through html/template", got)
+		}
+		directForbidden := map[string]bool{
+			"net/http": true, "net/url": true, "database/sql": true, "os/exec": true,
+			"github.com/sunholo-data/ailang-world/host/store":    true,
+			"github.com/sunholo-data/ailang-world/host/registry": true,
+			"github.com/sunholo-data/ailang-world/host/broker":   true,
+			"github.com/sunholo-data/ailang-world/host/daemon":   true,
+		}
+		err = filepath.WalkDir(filepath.Join(root, "host/workbench"), func(path string, d os.DirEntry, err error) error {
+			if err != nil || d.IsDir() || filepath.Ext(path) != ".go" || strings.HasSuffix(path, "_test.go") {
+				return err
+			}
+			parsed, err := parser.ParseFile(token.NewFileSet(), path, nil, parser.ImportsOnly)
+			if err != nil {
+				return err
+			}
+			for _, spec := range parsed.Imports {
+				imp, err := strconv.Unquote(spec.Path.Value)
+				if err != nil {
+					return err
+				}
+				if directForbidden[imp] {
+					return fmt.Errorf("%s directly imports forbidden dependency %q", path, imp)
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := countDep(wbDeps, "html/template"); got != 1 {
+			t.Fatalf("workbench closure contains html/template %d time(s), want exactly 1: dependency enumeration may be vacuous", got)
+		}
+	})
+
+	t.Run("daemon-reaches-workbench-exactly-once", func(t *testing.T) {
+		const workbench = "github.com/sunholo-data/ailang-world/host/workbench"
+		if got := countDep(daemonDeps, workbench); got != 1 {
+			t.Fatalf("daemon closure contains %q %d time(s), want exactly 1", workbench, got)
+		}
+	})
+
+	insertTransport := func(src []byte) []byte {
+		anchor := []byte("import (\n")
+		if bytes.Count(src, anchor) != 1 {
+			t.Fatalf("mutation anchor count for host/workbench/render.go is %d, want 1", bytes.Count(src, anchor))
+		}
+		return bytes.Replace(src, anchor, []byte("import (\n\t_ \"net/http\"\n"), 1)
+	}
+
+	t.Run("detector-fires-under-overlay", func(t *testing.T) {
+		mutateViaOverlay(t, root, "host/workbench/render.go", "workbench-transport", insertTransport, func(ov overlay) error {
+			deps, err := goListDeps(root, ov.jsonPath, "./host/workbench/...")
+			if err != nil {
+				return err
+			}
+			if countDep(deps, "net/http") != 0 {
+				return fmt.Errorf("host/workbench/render.go: detector fired under the overlay: workbench closure contains net/http")
+			}
+			return nil // mutateViaOverlay reports that the detector did not fire.
+		})
+	})
+
+	t.Run("daemon-transport-control-fires", func(t *testing.T) {
+		mutateViaOverlay(t, root, "host/workbench/render.go", "workbench-daemon-transport-control", insertTransport, func(ov overlay) error {
+			deps, err := goListDeps(root, ov.jsonPath, "./cmd/ailang-worldd/...")
+			if err != nil {
+				return err
+			}
+			wbDeps, err := goListDeps(root, ov.jsonPath, "./host/workbench/...")
+			if err != nil {
+				return err
+			}
+			if countDep(wbDeps, "net/http") == 0 {
+				return nil // The overlay did not reach the renderer closure.
+			}
+			withoutTransport := make([]string, 0, len(deps))
+			for _, dep := range deps {
+				if dep != "net/http" {
+					withoutTransport = append(withoutTransport, dep)
+				}
+			}
+			if err := requireExactlyOneNetHTTP(withoutTransport); err != nil {
+				return fmt.Errorf("host/workbench/render.go: daemon transport control fired under the workbench overlay: %w", err)
+			}
+			return nil // mutateViaOverlay reports that the detector did not fire.
+		})
+	})
+}
+
 // TestEveryCommandDirectoryIsAProtectedGroup is AC31, and it exists because
 // protectedGoGroups was a HAND-MAINTAINED LIST.
 //
