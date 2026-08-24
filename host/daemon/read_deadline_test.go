@@ -326,6 +326,91 @@ func TestDaemonReadDeadline(t *testing.T) {
 	})
 }
 
+// TestWorkbenchReadDeadline proves that the unversioned HTML renderer inherits
+// the daemon's request-read deadline instead of creating a second timeout
+// policy. The three arms deliberately mirror the JSON-route gate while keeping
+// the HTML response assertions separate.
+func TestWorkbenchReadDeadline(t *testing.T) {
+	t.Run("normal-deadline-answers-200", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		seedGenesisEmbedded(t, d, "workbench-normal-deadline")
+		if d.readDeadline != readDeadline {
+			t.Fatalf("d.readDeadline = %s, want the shipped default %s", d.readDeadline, readDeadline)
+		}
+
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench", nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200 under the shipped %s deadline; body=%s",
+				rec.Code, readDeadline, rec.Body)
+		}
+		assertWorkbenchSecurityHeaders(t, rec.Header())
+	})
+
+	t.Run("real-store-expired-deadline", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		seedGenesisEmbedded(t, d, "workbench-expired-deadline")
+		d.readDeadline = expiredReadDeadline
+
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench", nil)
+		assertWorkbenchTimeout(t, rec)
+	})
+
+	t.Run("blocking-store", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		blocking := newBlockingStore(d.store)
+		d.reads = blocking
+		d.readDeadline = 50 * time.Millisecond
+		t.Cleanup(blocking.release)
+
+		done := make(chan *httptest.ResponseRecorder, 1)
+		go func() {
+			req := httptest.NewRequest(http.MethodGet, "/workbench", nil)
+			rec := httptest.NewRecorder()
+			d.Handler().ServeHTTP(rec, req)
+			done <- rec
+		}()
+
+		var rec *httptest.ResponseRecorder
+		select {
+		case rec = <-done:
+		case <-time.After(2 * time.Second):
+			t.Errorf("workbench handler still blocked after 2s — the %s deadline never fired", d.readDeadline)
+			blocking.release()
+			select {
+			case <-done:
+			case <-time.After(2 * time.Second):
+				t.Fatal("workbench handler did not exit even after the escape channel closed")
+			}
+			return
+		}
+		assertWorkbenchTimeout(t, rec)
+
+		releases := blocking.releases()
+		if len(releases) != 1 {
+			t.Fatalf("release count = %d, want 1; releases=%v", len(releases), releases)
+		}
+		if releases[0] != "ctx-done" {
+			t.Errorf("release = %q, want %q — the getter was unparked by the watchdog, not the deadline",
+				releases[0], "ctx-done")
+		}
+	})
+}
+
+func assertWorkbenchTimeout(t *testing.T, rec *httptest.ResponseRecorder) {
+	t.Helper()
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want 503; body=%s", rec.Code, rec.Body)
+	}
+	assertWorkbenchSecurityHeaders(t, rec.Header())
+	body := rec.Body.String()
+	if !strings.Contains(body, ">Timeout<") {
+		t.Errorf("body does not contain Timeout class token: %s", body)
+	}
+	if !strings.Contains(body, ">workbench read deadline exceeded<") {
+		t.Errorf("body does not contain the constant workbench deadline message: %s", body)
+	}
+}
+
 // ---------------------------------------------------------------------------
 // AC3/AC4' layer 3b — the context is the REQUEST's, not Background's
 // ---------------------------------------------------------------------------
@@ -413,6 +498,11 @@ func TestDaemonReadDisconnect(t *testing.T) {
 func TestReadCtxCancelledAfterHandler(t *testing.T) {
 	d := newHandlerDaemon(t)
 	routes := seedReadRoutes(t, d, "cancel-release")
+	routes = append(routes, readRoute{
+		name:   "workbench",
+		target: "/workbench",
+		getter: "SelectedHead/GetWorld/GetLogEntry",
+	})
 	recording := &recordingStore{Store: d.store}
 	d.reads = recording
 
