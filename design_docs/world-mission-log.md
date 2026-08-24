@@ -14323,3 +14323,122 @@ closing doc **AC8** (claims M29, M30). 6 of 11 milestones will remain after it.
 **Retro.** No skill edit — World shares the mission-control skill by symlink and cannot edit it (memory `world-cannot-edit-shared-skill`). One durable observation, recorded here rather than actioned, at **instance 1** of its class: rule 3e(a) makes the controller baseline every *acceptance command* before routing, and both of this iteration's plan-level defects (task 3b's unsatisfiable pair, task 3d's inverted polarity) live in **task bodies**, which no rule baselines and which a quorum reads for design soundness rather than for executability. The executor is currently the only role that ever runs them. If a second instance arrives, the fix is to baseline the task bodies' *assertions* — not merely the ACs — at pick time. Filed as a watch-item, not a rule: the bar is two.
 
 **Next.** `WB.H` (item 14, milestone 8 of 11 — mutation drill 1/4, discharges M14–M21), then WB.I, WB.J, WB.K, then queue rows 38, 37, 36, 35, 34, 32, 33, item 22, row 31. Row 5 remains BLOCKED on `ailang#764`. **Zero open asks.**
+
+---
+
+## Iteration 119 — 2026-08-24 — `WB.H` LANDED: M14–M21 discharged, no surviving mutant among them
+
+**Kind**: sprint milestone (queue item 14, `w-workbench-read-only`, milestone 8 of 11).
+**Landed**: PR [#91](https://github.com/sunholo-data/ailang-world/pull/91) → squash `5fd1069`.
+Evidence-only — **+158 lines in one file** (sprint plan §7f); no production and no test code changed.
+
+**Context / preflight (Gate 0–1)**
+- Kill switch NOT set. Billing tripwire **CLEAN**. gh account `sunholo-voight-kampff`. Pidfile
+  `mission-world.pid`=544 = this run's own driver (no overlap). Tree clean, `dev` == `origin/dev`
+  == `0e96d98`.
+- **0** `MarkEdmondson1234` directives on `#89` and **0** on predecessor `#68` (rotation-week
+  catch), both via the V1 checkout's `scripts/mission_directives.sh` by ABSOLUTE PATH — never a
+  hand-rolled `gh|jq`, since the author allowlist lives in that script. Control fires: the same
+  script over `#68` enumerates 41 comments and reports 0 directives against a known 3 since epoch.
+- Inbox **1** unread, an `eval-suite` controlplane notice — no regression, no directive, no
+  cross-mission ask. dev CI GREEN (`checks=2` both `success`, run existence `total=1 event=push`).
+- Running skill **byte-identical to `origin/dev`** (`cmp` rc=0), path taken from the **resolved**
+  symlink target with an inode comparison (`48427454` both sides), never the relative
+  `.claude/skills/…`. Weekly external-issue sweep not re-run (iter-117 owned this week's).
+- Decision ledger valid, 11 rows, **0 OPEN**. Died-mid-flight sweep clean: 0 open PRs, 1 worktree.
+
+**Gate 2 — pick + reality-check**
+- `WB.H` per iter-118's NEXT. All eight mutation sites verified live in `host/workbench/render.go`
+  by occurrence count, with a negative control at 0.
+- **Both acceptance gates baselined on pristine `dev` before routing** (rule 3e(a)/(4)(a)):
+  `go build ./...` rc=0 and `go test ./host/workbench ./host/daemon ./host/boundary` rc=0.
+- §7b's manifest arithmetic re-measured with its own repair applied: **160 == 160** tracked; the
+  `+1` `.git`-file offset is gone.
+
+**The work**
+All eight rows discharged by measurement. Each mutant asserted LANDED by OCCURRENCE count, proved
+to BUILD rc=0 **before any test result was read**, classified by the COMPLETE enumerated red set
+(never predicted; no `-skip` inverse arm), restored by `cp` from a backup — never
+`git checkout --` — and verified byte-identical by sha256, with the pristine control re-run to rc=0
+after **every** mutant. Final tree byte-identical, `gofmt` empty.
+
+Four of the eight are only attributable at **subtest** granularity (M17/M18/M21 share a parent
+test, M19/M20 share another); per subtest they are disjoint. M18 and M21 are **not independent** —
+both set `Available: true` — but `no-proven-inference` fires under M21 and appears nowhere in M18's
+red set, which is what proves it a distinct guard rather than a duplicate.
+
+**Findings**
+- **(a)** M14's row named a site its own named test cannot detect. `template.HTML` on
+  `Grade.Label` SURVIVES with an EMPTY red set; on `Grade.Unavailable` it is the SOLE KILLER. The
+  survival is structural — `NewGradeView` refuses any label outside the four constants (M17's own
+  guard), so `Label` can never carry hostile text. The ROW was wrong, not the test; repaired before
+  routing on §7c's precedent and published with its measurement.
+- **(b)** The classification arm is unsatisfiable in the executor lane **by construction**: it
+  names `./host/daemon`, which binds real loopback sockets that `--sandbox workspace-write` denies,
+  while step 6 requires that same arm rc=0 as a pristine control after every mutant. Two arms, same
+  tree: inside the sandbox all three daemon tests FAIL, outside all three PASS. The outcome
+  DIFFERED, so the red is the instrument. The `codex:gpt-5.6-sol` executor labelled them
+  `UNINFORMATIVE UNDER SANDBOX` and **stopped before M15** rather than assert a control it could not
+  satisfy — the correct call, and the second consecutive milestone whose executor disclosed rather
+  than completed. **WB.I/WB.J/WB.K carry the same arm and are controller-work too** — charter row
+  4f's iteration-50 finding, recurring.
+- **(c)** Step 2's occurrence assertion **fired live and caught a FALSE SURVIVED**: a replacer
+  failed to apply M15, the classification arm returned rc=0 and the red set was EMPTY —
+  byte-indistinguishable from a genuine survivor. Recorded as `INSTRUMENT FAILURE — not a verdict`
+  with the corrected re-run appended.
+- **(d)** The DoD names `.snap/M{8..11}/MUTATIONS.md` as the evidence of record while
+  `scratch_not_committed` is `.snap/**` and cleanup deletes the worktree. §7f is the durable form.
+
+**Evaluation**
+`sonnet` **88/100 PASS, ZERO BLOCKING**, in its own worktree at the sprint commit — distinct
+provider from both the Codex executor and the controller, so generator≠judge held. Handed the three
+headline claims as named targets to attack, it re-derived M14 (both arms), M18, M20 and M21
+independently and confirmed the subtest and asymmetry arguments, then:
+1. **Refuted the controller's own §7f(b) citation** — two of the three named tests bind via
+   `d.Listen()` → `net.Listen` (`daemon.go:634`), not `httptest.NewServer`, and
+   `handlers_test.go:420` belongs to an unrelated test. Reproduced first-party before adoption and
+   repaired; the conclusion **strengthens**, since two independent bind paths reach the denial. The
+   controller's defect: a grep over `host/daemon/*_test.go` found the `httptest` sites and asserted
+   them as the mechanism for tests never traced to them, while the `net.Listen` path lives in a
+   NON-test file the grep could not see — **presence of a mechanism read as attribution of it**.
+2. **Found a genuine SURVIVING MUTANT**, reproduced first-party: dropping `workbenchHref`'s
+   `'?'`-prefix guard LANDS, BUILDS rc=0 and reds NOTHING, because no test supplies a malformed
+   query. Out of WB.H's scope → recorded to **queue row 34**, not absorbed (Standing rule 1).
+All three of its deductions adopted rather than argued.
+
+**Gate 3b** — GREEN on the MERGE commit, SHA-addressed: `present=2 == expected=2`, both `success`,
+**0** not-green, every count asserted NUMERIC before comparison, run existence `total=1 event=push`,
+parent control `rev-parse`d → `check-runs=2`. PR checks OBSERVED green on the head SHA before
+merging, never behind an armed auto-merge; `mergeable` read FIRST (`MERGEABLE`/`CLEAN`). Commit
+message, PR title and PR body scanned for auto-close keywords: **0** each, known-bad control at 1.
+`#89` asserted OPEN/4 comments on both sides of the merge.
+
+**Ruled out**
+Accepting the judge's citation refutation on its authority instead of tracing the three tests
+first-party; accepting its surviving mutant without reproducing it; reading two `httptest` grep hits
+as attribution for three tests; treating the executor's mid-milestone stop as non-compliance rather
+than as the loop working; repairing M15's test or mutant to manufacture a red after the replacer
+failed; recording the drill at parent-test granularity, which cannot attribute four of the eight
+kills; absorbing the `workbenchHref` survivor into WB.H against Standing rule 1; committing
+`.snap/**`.
+
+**Routing evidence**
+| role | model | lane | outcome |
+|---|---|---|---|
+| controller | `claude-opus-5` | session | — |
+| executor | `codex:gpt-5.6-sol` | codex CLI, probe rc=0, `--sandbox workspace-write` | M14 only; stopped on an unsatisfiable control and disclosed — correct |
+| controller (drill) | `claude-opus-5` | outside the sandbox | M15–M21 under the identical protocol |
+| evaluator | `sonnet` | Agent tool, own worktree | 88/100 PASS, zero blocking; refuted one controller claim, found one survivor |
+
+`metered=$0.00` of $5. Quota: `opus` ×1, `codex` ×1, `sonnet` ×1. Fable + designer rotation unspent
+a **15th** consecutive iteration.
+
+**Retro** — no skill edit (World shares the skill by symlink and cannot edit it). The iter-118
+watch-item reached **instance 2** and is proposed to V1: rule 3e(a) baselines *acceptance commands*,
+and nothing baselines a plan's *task bodies* or *mutation rows*. A second, sharper instance landed
+in the same iteration: **baselining a gate list in the controller's environment certifies an
+environment the executor does not have.**
+
+**Next**: `WB.I` (9 of 11 — mutation drill 2/4, discharges M1–M9; **controller-work**, same
+loopback-bearing arm), then WB.J, WB.K, then rows 38, 37, 36, 35, 34, 32, 33, item 22, row 31.
+Row 5 BLOCKED on `ailang#764`. **Zero open asks.**
