@@ -14593,6 +14593,152 @@ full, while the thing that actually stops row 5 landing today is a `go` directiv
 watching. The tell: you have verified that a dependency's *contents* unblock you, and have not
 checked what its *metadata* demands of your build. Bar is two.
 
+## Iteration 122 — 2026-08-25 — `WB.J` LANDED: all ten rows discharged with no survivor, and `M12`'s named assertion turns out to be a tautology that contributes nothing to its own kill
+
+**Kind**: sprint milestone (queue item 14, `w-workbench-read-only`, milestone 10 of 11).
+**Landed**: PR [#93](https://github.com/sunholo-data/ailang-world/pull/93) → squash [`b0d973c`](https://github.com/sunholo-data/ailang-world/commit/b0d973c).
+Evidence-only — **+124 lines in one file** (sprint plan §7h); no production and no test code changed.
+
+**Context / preflight (Gate 0–1)**
+- Kill switch NOT set. Billing tripwire **CLEAN**. gh account `sunholo-voight-kampff`. Tree clean,
+  `dev` == `origin/dev` == `7a4e6c2`.
+- **0** `MarkEdmondson1234` directives on `#89` and **0** on predecessor `#68`, both since the
+  OLDER of the two watermarks (`2026-08-24T23:14:21Z`, per the Repo Profile's read-BOTH rule), via
+  the V1 checkout's `scripts/mission_directives.sh` by ABSOLUTE PATH — never a hand-rolled `gh|jq`,
+  since the author allowlist lives in that script. **Control fires**: the same script over `#68`
+  since epoch returns **3** genuine directives against 0 in-window, so both zeros are measurements.
+- Inbox **4** unread — `eval-suite` ×2, `nightly-eval` ×2 — all concerning `sunholo-data/ailang`,
+  which **V1 owns**. Recorded and left to the owner (Gate 1's owning-mission rule); no regression
+  affecting World, no directive, no cross-mission ask.
+- dev CI GREEN at entry (`checks=2`, both `success`; run existence asserted `total=1 event=push`).
+- Running skill **byte-identical to `origin/dev`** (`cmp` rc=0 over 341,644 B), path taken from the
+  **resolved** symlink target with an inode read (`49847168`), never the relative `.claude/skills/…`.
+- No rotation: `#89` created `2026-08-24T07:03:49Z` = 09:03 CEST, after this Monday's 07:00 **local**
+  boundary; 10 comments (< 80). Weekly external-issue sweep not re-run — iter-117 owned this week's.
+- Decision ledger valid, **12** rows, **0 OPEN**. Died-mid-flight sweep clean: 0 open PRs (fleet
+  filter), 1 worktree (the main checkout), clean tree.
+- **Blocked-external predicate re-run as a COMMAND, not transcribed** (the "still" rule):
+  [`ailang#764`](https://github.com/sunholo-data/ailang/issues/764) now reads **CLOSED**, 6 comments,
+  updated `2026-08-25T00:19:12Z` — control `#676` OPEN/3, negative control 404s. Row 5's blocker is
+  discharged at source, corroborating iteration 120's first-party v0.33.2 verification. Ordering is
+  unchanged and correct: Mark's `Finish 14` (`D-WORLD-25` arm B) places row 5 after item 14 closes.
+
+**Gate 2 — pick + reality-check**
+- `WB.J` per iter-121's NEXT, and **controller-work by construction**: §7f(b) established that the
+  classification arm names `./host/daemon`, which binds real loopback sockets that
+  `--sandbox workspace-write` denies. Run outside any sandbox throughout.
+- All ten mutation sites located before any mutation. **Eight of ten matched the catalogue; M31 and
+  M32 came back EMPTY.** Rule 3a: the control fired (eight hits, same file, same call), so the
+  instrument worked — I widened once rather than concluding. The guards are live and inline in
+  `handleWorkbench` at `workbench.go:118`/`:122`; the catalogue's `parseWorkbenchQuery` helper
+  returns **0** occurrences tree-wide, and its identifiers are wrong (`k`/`vs` vs `key`/`values`).
+  This CONFIRMS first-party the −3 deduction §7g already recorded from the iter-121 evaluator; it
+  travels with **queue row 34** and is not absorbed here.
+- Pristine control at entry: rc=0, **0** `--- FAIL`, all five named tests present
+  (`PayloadPreviewBound` 5 RUN-lines, `TimelineBound` 1, `RefusalBranches` 15, `SecurityHeaders` 3,
+  `ReadDeadline` 4) — a known-positive control on the enumeration, not just on the exit code.
+
+**The work — ten arms, no survivor**
+
+All ten rows discharged. Six are SOLE KILLERS at subtest granularity (M10 `/default-off`,
+M11 `/oversize`, M13 `/from-overflow`, M31 `/unknown-parameter`, M32 `/duplicate-parameter`,
+M12 `TestWorkbenchTimelineBound`). **Two pairs are not independent and the catalogue implies they
+are**: M22/M23 return `diff`-identical **22-member** red sets, because `workbench_test.go:41–50`
+asserts a shared `wants` header map on *every* workbench response, so any header change reds every
+workbench test at once; M29/M30 likewise share an identical 2-subtest set while the plan names only
+`blocking-store` for both. Strong pinning either way, but neither row is the sole killer its column
+implies, and that is recorded rather than smoothed over.
+
+**`M12`'s named assertion cannot detect `M12`.** `workbench_test.go:323` compares
+`strings.Count(body, "<h3>entry ")` against `workbench.WorkbenchPageLimit` — the very constant M12
+mutates — so expected and actual move together; the seeding loop at `:301` moves with it too. Proved
+by a decisive arm rather than argued: **MC1** (M12 alone) fails at `:330`, the hardcoded literal
+`<h3>entry 100</h3>`; **MC2** (M12 **plus** neutering only that literal) returns vet rc=0, build
+rc=0 and the test **PASSES**. So the pin is live and carries a decorative member. The risk is
+*latent*: generalising `:329` to track the constant — the natural cleanup — would hollow the pin
+silently. This is distinct from §7d(c)'s CSP case, which was a true SURVIVOR with an empty red set,
+and it is why §3 rule 5 does not apply: there is a killer here, so there is nothing to repair.
+
+**The §7d(c) tell was published at iteration 113 and never run as a sweep** — *guard the helper,
+miss the call site*, aimed at a diagnosis rather than at code. Swept now, scopes asserted with
+`test -d` (6/1/1 test files), fresh negative control **0**: **exactly one** assertion-side hit
+tree-wide, M12's own. `:280`/`:301` name production constants in SETUP only. The `workbenchCSP`
+occurrence sits inside the COMMENT documenting iter-113's repair — recorded because my own
+known-positive control returned **1** where I predicted **0**, i.e. it matched *prose*, which is
+rule 3a's trap aimed at the control instead of the check.
+
+**A harness instrument failure fired and refused a verdict.** `M22`'s first arm returned
+`LANDED=NO — INSTRUMENT FAILURE, not a verdict`. The landing predicate required the NEW literal's
+occurrence count to RISE; M22 is a DELETION, so the new literal is the empty string and
+`grep -c -F -- ""` matches **every line** — **268 before, 268 after** — making the predicate false
+*by construction* however perfectly the mutation applied. It was measuring the file's line count.
+Note the direction: it failed toward a **refusal**, not toward a false SURVIVED, and a `>=` in place
+of `>` would have had the arm certify the instrument against itself. Re-run under a
+shape-appropriate predicate (old count FALLS 1→0, plus the exact line-content assertion), M22 lands
+and is KILLED with a 22-member set. **Rule carried into `WB.K`: a landing predicate must be chosen
+for the mutation's SHAPE** — substitution → new count rises; deletion → old count falls; both → the
+exact line-content assertion.
+
+**Protocol.** Every arm LANDED by an occurrence count on the mutated literal PLUS an exact
+line-content assertion **whose expected value is written in the harness and never read back from the
+file under mutation**; BUILDS rc=0 asserted **before any test result was read**; classified by the
+COMPLETE enumerated red set at SUBTEST granularity (never predicted, no `-skip` inverse arm, per
+rule 3j's blast-radius amendment); restored by `cp` from `.snap/backup/` — never `git checkout --` —
+and verified byte-identical by `shasum -a 256`, with the pristine control re-run after EVERY arm.
+**The harness was itself negative-controlled before use**: fed a deliberately wrong expected line it
+printed `INSTRUMENT FAILURE`, returned rc=1, and restored the tree byte-identically. Final tree
+byte-identical; `git status --porcelain` empty. Rule 3n's diff anchoring is vacuous for this
+milestone by construction — `WB.J` ships no production or test diff, only §7h.
+
+**Routing evidence.** Controller `claude:claude-opus-5` (session) · designer not invoked (doc
+exists) · planner not invoked (plan exists) · executor not invoked — `WB.J` is controller-work under
+§7f(b), the same finding that made `WB.H`/`WB.I` controller-work · **evaluator NOT RUN — see the gap
+below** · `metered=$0.00` of the $5 ceiling; quota buckets: `opus` ×1 (controller). Fable and the
+designer rotation unspent an **18th** consecutive iteration.
+
+**⚠ Gap: the evaluator lane did not run, and it is load-bearing here.** Agent spawning was disabled
+for this session, so **generator≠judge was not satisfied** and no independent judge saw this work.
+Per Standing rule 8 this is a **CAPACITY** block, not a judgment one: it names the role that could
+not run (evaluator), the reason (agent spawning unavailable this session — a session capability, not
+a probe failure and not a quota), and its resume predicate (any iteration with the lane available).
+It therefore carries **no** ask into DECISIONS. But it is not harmless, and the record should not
+pretend otherwise: the iter-119 and iter-121 judges **each** found a genuine surviving mutant the
+controller had missed — **2 of 2** on exactly this milestone type. A retrospective judge pass over
+§7h is owed **before `WB.K`** and is recorded as owed rather than waived. The milestone is landed on
+the strength of measurements that are first-party, reproducible, and published *with* the commands
+that produced them; every number in §7h is re-derivable from the section itself.
+
+**Ruled out.** Banking M22's first arm when its landing predicate was unsatisfiable by construction;
+reading the empty-string `grep -c` of 268 as a mutation count; concluding M12 SURVIVED from the
+tautology without running MC2; concluding M12 was soundly pinned without asking *which* assertion
+killed it; repairing `:323` or `:329` inside a discharge milestone (§3 rule 5 — the pin is live, so
+unlike §7d(c) there is a killer and nothing to repair); absorbing the latent tautology or the
+M31/M32 catalogue text into `WB.J` against Standing rule 1; trusting the `workbenchCSP` control's
+`1` as a live tautology before reading the line it matched; inheriting §7g's M31/M32 deduction
+instead of re-measuring it; concluding M31/M32 had no sites when the first grep came back empty;
+letting V1's nightly-eval notices displace this pick; reporting `WB.J` as fully gated when the judge
+never ran.
+
+**Retro.** No skill edit — World shares the mission-control skill by symlink and cannot edit it
+(memory `world-cannot-edit-shared-skill`). **The iter-121 friction reached instance 2 and is
+PROPOSED to V1**: *an assertion whose EXPECTED value is derived from the same source as its ACTUAL
+value is not an assertion.* Instance 1 was the controller's own harness reading `1 == 1` off a
+zsh-corrupted `LINES`; instance 2 is `workbench_test.go:323`, in **committed test code** that had
+already passed a quorum, a sprint plan, an executor and an evaluator PASS. Rule 3i's amendment asks
+*"what else writes this value?"* and answers cleanly here — nothing does — so it does not reach the
+case where the expected side is *computed from the mutant's own source*. The tell is syntactic and
+cheap, and §7d(c) already published it at iteration 113 without ever sweeping for it: **a test names
+a production symbol inside its own expectation**. The generalisable half is about documentation
+rather than code — *a tell that is published but never run as a sweep is a diagnosis, not a guard.*
+
+**Next.** `WB.K` (item 14, milestone 11 of 11 — drill 4/4, discharges M24–M28, plus full gates and
+final acceptance; controller-work, same loopback-bearing arm), which also owes the retrospective
+judge pass over §7h. Then queue rows 38, 37, 36, 35, 34, 32, 33, item 22, row 31, then **row 5**
+`w-mcp-projection` — now UNBLOCKED, its first milestone the `go1.26.6` toolchain precondition.
+**Zero open asks.**
+
+---
+
 ## Iteration 121 — 2026-08-25 — `WB.I` LANDED: M1–M8 discharged, and `M9` survives at every site because two guards on one path mask each other
 
 **Kind**: sprint milestone + a human directive consumed (Mark, `#89` @ `2026-08-24T23:14:21Z`,

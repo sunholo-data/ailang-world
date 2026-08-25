@@ -2,35 +2,39 @@
 
 *Snapshot, overwritten every iteration. History lives in the charter STATUS + `world-mission-log.md`.*
 
-**Updated**: 2026-08-25 (iteration 121) · `dev` @ `2e7154b` · CI **GREEN** (`checks=2`, both success)
+**Updated**: 2026-08-25 (iteration 122) · `dev` @ `b0d973c` · CI **GREEN** (`checks=2`, both success)
 
 ## Where we are
 
-- **Mark answered the ordering fork**: `#89` @ `2026-08-24T23:14:21Z`, verbatim **"Finish 14"** —
-  **D-WORLD-25 arm B**. Item 14 completes before row 5. **Open asks are back to ZERO.**
-- **Queue item 14** `w-workbench-read-only`: `[IN-SPRINT]`, **9 of 11** landed (`WB.I` this
-  iteration). `WB.J` and `WB.K` remain — both **controller-work** (their classification arm binds
-  loopback; the sandboxed executor lane denies it).
-- **Queue row 5** `w-mcp-projection`: **UNBLOCKED** since iter-120, deliberately **not started** —
-  it is next after item 14 closes. Sole remaining blocker on **M4**, the value gate.
-- **Latest upstream release**: AILANG **v0.33.2**. **Pinned `.ail` compiler**: v0.30.0 at
-  `/tmp/ailang-v0300/ailang` (a separate axis from the Go library dependency).
+- **Queue item 14** `w-workbench-read-only`: `[IN-SPRINT]`, **10 of 11** landed (`WB.J` this
+  iteration). Only `WB.K` remains — **controller-work** (its classification arm binds loopback,
+  which the sandboxed executor lane denies).
+- **`WB.J` is the first drill milestone of four to end with NO surviving mutant.** All ten rows
+  discharged: M10–M13, M22, M23, M29–M32.
+- **Queue row 5** `w-mcp-projection`: **UNBLOCKED** — `ailang#764` now reads **CLOSED** (re-run as a
+  command, not transcribed). Deliberately not started: Mark's **"Finish 14"** (`D-WORLD-25` arm B)
+  puts it immediately after item 14 closes. Sole remaining blocker on **M4**, the value gate.
+- **Latest upstream release**: AILANG **v0.33.2**; pinned `.ail` compiler v0.30.0 (separate axis).
 
 ## In flight / next
 
-- **NEXT: `WB.J`** (10 of 11 — mutation drill 3/4, discharges M10–M13, M22, M23, M29–M32), then
-  `WB.K`, then rows 38, 37, 36, 35, 34, 32, 33, item 22, row 31, then **row 5**.
-- **`WB.I` found a mutant that cannot be killed.** M9's guard is masked by a sibling guard on the
-  same request path, so no single-site mutation of it is detectable. Recorded SURVIVED per the
-  protocol; residue stays with **queue row 37**, not absorbed.
-- **Row 5 carries a toolchain precondition, not a redesign**: v0.33.2 declares `go 1.26.6`; CI pins
-  `GOTOOLCHAIN: go1.25.6`. The repo's own canary already clears the move.
+- **NEXT: `WB.K`** (11 of 11 — drill 4/4, discharges M24–M28, plus full gates and final
+  acceptance), then rows 38, 37, 36, 35, 34, 32, 33, item 22, row 31, then **row 5**.
+- **`WB.K` owes a retrospective judge pass over §7h** — see the gap below.
+- **`M12` is killed by a hardcoded literal; the assertion its row names cannot detect it.** The
+  count comparison reads `workbench.WorkbenchPageLimit` — the constant M12 mutates — so both sides
+  move together. Pin is live but carries a decorative member; residue → **row 34**.
+- **The §7d(c) tautology tell (iter-113) was never swept.** Swept now: **one** hit tree-wide.
 
 ## Loop posture
 
 - **Cadence**: launchd `dev.ailang.mission-world`, staggered vs the V1 loop.
 - **Routing**: controller `claude:claude-opus-5`; executor chain **codex → opus** (D-WORLD-20
-  suspended the DeepSeek lane); evaluator Sonnet (**97/100 PASS, zero blocking** this iteration).
-- **Quota / cost**: metered **$0.00** of $5 (opus ×1 controller, sonnet ×1 evaluator; no executor,
-  planner or designer lane spent). Fable + designer rotation unspent a **17th** consecutive iteration.
+  suspended the DeepSeek lane).
+- **⚠ GAP: the evaluator lane did NOT run this iteration** — agent spawning was disabled for the
+  session, so **generator≠judge was not satisfied**. A capacity gap (Standing rule 8), not a
+  judgment one: resumes on any iteration with the lane available, no human answer needed. Not
+  harmless — the iter-119 and iter-121 judges each found a real survivor I had missed (**2 of 2**).
+- **Quota / cost**: metered **$0.00** of $5 (opus ×1 controller only). Fable + designer rotation
+  unspent an **18th** consecutive iteration.
 - **Bookkeeping issue**: **#89** (week of 2026-08-24; predecessor #68). Open asks: **0**.
