@@ -2,44 +2,50 @@
 
 *Snapshot, overwritten every iteration. History lives in the charter STATUS + `world-mission-log.md`.*
 
-**Updated**: 2026-08-25 (iteration 123) · `dev` @ `3dda87e` · CI **GREEN** (`checks=2`, both success)
+**Updated**: 2026-08-25 (iteration 124) · `dev` @ `612828b` · CI **GREEN** (`checks=2`, both success)
 
 ## Where we are
 
-- **Queue item 14** `w-workbench-read-only` is **COMPLETE — 11 of 11 milestones**, all **32**
-  mutation rows discharged by measurement. Doc + sprint plan moved to `design_docs/implemented/`.
-- **`WB.K` (drill 4/4) killed M24–M28 with no survivor** — the second clean drill milestone of four.
-- **The §7h retrospective judge pass owed by iteration 122 is discharged**: evaluator `sonnet`,
-  **93/100 PASS, zero blocking**, twelve named targets across §7h and §7i, none refuted.
-- **Queue row 5** `w-mcp-projection` is now the **queue head**: unblocked at source
-  (`ailang#764` CLOSED) and ordered here by Mark's **"Finish 14"** (`D-WORLD-25` arm B), which item
-  14 has now satisfied. Sole remaining blocker on **M4**, the reference-agent value gate.
-- **Latest upstream release**: AILANG **v0.33.2**; pinned `.ail` compiler v0.30.0 (separate axis).
+- **Queue head is row 5 `w-mcp-projection`** — live since item 14 completed and `D-WORLD-25`'s
+  `Finish 14` was discharged. It is the **sole remaining blocker on M4**, the value gate.
+- **The design doc was REVISED this iteration** (Fable designer; 641 → 974 lines) because upstream
+  shipping `serveapi/protocol` at `v0.33.2` **falsified its central premise**. The revision is
+  sound and re-derived rather than patched.
+- **Re-quorum BLOCKED at round 3** — both reviewers present, `absent_reviewers` empty. The blocking
+  objection was **confirmed first-party**, not inherited, and it is a scope finding:
 
-## In flight / next
+  > `serveapi/protocol` carries the whole **A2A** surface and the MCP **envelope** helpers, but
+  > **no MCP JSON-RPC dispatch**. Dispatch lives in `mcp_handler.go`, which delegates to the MCP
+  > SDK. Importing that SDK costs **+34 packages / 5 module roots / 28 allowlist violations**,
+  > including `golang.org/x/oauth2` — an outbound-credential stack in the daemon core, breaching
+  > clause 2 and clause 3. Writing our own dispatcher is forbidden by §3.7. Both routes closed.
 
-- **NEXT: row 5** `w-mcp-projection`. Its **first milestone is the toolchain precondition**, not a
-  decision: v0.33.2 declares `go 1.26.6` while CI pins `GOTOOLCHAIN: go1.25.6`; the repo's own
-  canary clears the move (`go1.25.6` rc=0, `go1.26.5` rc=1 miscompile, `go1.26.6` rc=0).
-  Then rows 38, 37, 36, 35, 34, 32, 33, item 22, row 31.
-- **Three of four landing legs read GREEN on a mutation that landed inside a comment** (§7i(a)).
-  Only a query against the file's **parsed form** refused it. Shape-specific: a substitution's
-  two-sided count predicate already refuses; the exposure is the one-sided predicate an *insertion*
-  forces, and M24 was the catalogue's only insertion-shaped row.
-- **Row 34 now carries seven hunks.** Sixth and seventh added this iteration by the evaluator:
-  `supportedWorkbenchQuery`'s pair-composition guards (`workbench.go:72`/`:75`, `&&` → `||`) both
-  **SURVIVE** with an empty red set, and both are live on the function's own truth table.
+- **Disposition: SPLIT** (a controller routing call, not a human ask). Upstream ask filed as
+  [`ailang#885`](https://github.com/sunholo-data/ailang/issues/885) — `D-WORLD-5`'s own prescribed
+  default, the same route that produced `#764` → `v0.33.2`.
 
-## Loop posture
+## What is executable right now — none of it blocked
 
-- **Cadence**: launchd `dev.ailang.mission-world`, staggered vs the V1 loop.
-- **Routing**: controller `claude:claude-opus-5`; evaluator **`sonnet`** (ran this iteration —
-  generator≠judge satisfied, and iteration 122's capacity gap is closed retrospectively); executor
-  chain **codex → opus** (D-WORLD-20 suspended the DeepSeek lane). Drill milestones are
-  controller-work by construction (§7f(b): loopback-binding classification arm).
-- **⚠ The RUNNING shared mission-control skill is 27 lines behind `origin/dev`** (3,757 vs 3,784,
-  hunk `origin:1108–1134` — V1 iteration 274's mutation-intended-effect rule). Read from origin and
-  applied anyway. **World cannot repair it**: the V1 checkout is off-limits from this repo. For V1.
-- **Quota / cost**: metered **$0.00** of $5 (opus ×1 controller, sonnet ×1 evaluator). Fable +
-  designer rotation unspent a **19th** consecutive iteration.
-- **Bookkeeping issue**: **#89** (week of 2026-08-24; predecessor #68). Open asks: **0**.
+| Milestone | Scope | Blocked on |
+|---|---|---|
+| **`P6.T`** | toolchain floor `go1.25.6 → go1.26.6` (~0.1d, independently mergeable) | nothing |
+| `P6.D` | pinned dep + **one** package-path allowlist line + narrowness test (~0.15d) | `P6.T` |
+| `P6.V` | the `"verified"` residual — a commit-boundary law in `world/*.ail` (~0.3d) | nothing |
+| `P6.B` A2A half | World-authored A2A handler over `protocol` | `D-WORLD-26` |
+| `P6.B` MCP half | — | **`ailang#885`** |
+
+## Loop cadence + routing
+
+Controller `opus` ×1 · designer **`fable` ×1** (rotation collapsed onto Fable and FLAGGED —
+`codex` is this doc's own quorum reviewer, `gemini` cannot author; diet ceiling of one doc hit
+exactly) · planner/executor/evaluator unspent. `metered=$0.1658` of $5 (re-quorum only).
+
+## Parked on Mark
+
+- **`D-WORLD-26` — ONE WORD.** Session credential carrier: **A** = `Authorization: Bearer`
+  (recommended) or **B** = `X-World-Session`. Gates only `P6.B`; **the queue does not stall on it.**
+
+## Known drift (not ours to fix)
+
+The **running shared skill is 27 lines behind `origin/dev`** (3,757 vs 3,784; V1 commit
+`065a4f16c`) — same as iteration 123, still unrepaired. World cannot edit it (frozen core).

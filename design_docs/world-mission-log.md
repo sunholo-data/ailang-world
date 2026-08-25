@@ -14593,6 +14593,144 @@ full, while the thing that actually stops row 5 landing today is a `go` directiv
 watching. The tell: you have verified that a dependency's *contents* unblock you, and have not
 checked what its *metadata* demands of your build. Bar is two.
 
+## Iteration 124 — 2026-08-25 — the seam shipped but carries only half the surface: `serveapi/protocol` has no MCP dispatch, and both routes around it are closed by this repo's own guardrails
+
+**Kind**: design revision + re-quorum + an upstream ask. **No sprint, no PR, no merge** — the
+picked row's own head required a design REVISION before any sprint, and the re-quorum blocked.
+
+**Context / preflight (Gate 0–1).** Kill switch armed; `gh` = `sunholo-voight-kampff`; tree clean;
+billing **CLEAN**. **0** `MarkEdmondson1234` directives on `#89` since the watermark
+`2026-08-25T11:58:24Z` — both watermark files agree, per the Repo Profile's read-BOTH-take-the-OLDER
+rule — via the V1 checkout's `scripts/mission_directives.sh` by **absolute path**, never a
+hand-rolled `gh|jq`: 12 comments seen, 0 directives. Inbox **0** unread. dev CI **GREEN** at entry,
+SHA-addressed on `612828b`: `checks=2`, `ailang-code verify gate` + `go host build + test gate`,
+both `success`. `dev` == `origin/dev`. Decision ledger valid, 12 rows, **0 OPEN** at entry.
+Died-mid-flight sweep clean: 0 open PRs, 1 worktree, clean tree.
+
+**⚠ The running shared skill is 27 lines behind `origin/dev` — the same drift iteration 123
+reported, still unrepaired.** Gate 1's `cmp` was run against the **resolved** symlink target
+(`/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control`, inode `49847168`),
+never the relative `.claude/skills/…` path — the running copy is **3,757** lines against origin's
+**3,784**, one hunk at `origin:1105–1134`, from V1 commit `065a4f16c` (V1 iteration 274's
+*"LANDED is necessary, not sufficient"* mutation rule). The delta was READ before proceeding. World
+cannot repair it — the V1 checkout is off-limits from this repo by the charter's hard rules.
+
+**Gate 2 — pick.** Queue head **row 5 `w-mcp-projection`**, live after `D-WORLD-25` (`Finish 14`)
+and item 14's completion. Every declared blocker was re-verified as a command rather than
+transcribed: `serveapi/protocol` present at `v0.33.2` (the latest tag — **`v0.34.0` does not
+exist**, correcting the charter row's mention of it); the `GOTOOLCHAIN: go1.25.6` pin still live at
+`ci.yml:21`,`:102`.
+
+**The toolchain precondition — two arms, control firing, arms asserted to differ.**
+`go get github.com/sunholo-data/ailang@v0.33.2` is **rc=1** under `GOTOOLCHAIN=go1.25.6`
+(`requires go >= 1.26.6`) and **rc=0** under `go1.26.6`, while the known-positive control
+`go get github.com/google/uuid@v1.6.0` is **rc=0** under the pin — so the refusal is the version
+floor, not a broken probe. Side-effect recorded and absent from the prior charter: the pin also
+bumps `go-isatty v0.0.20 → v0.0.22` and `x/sys v0.46.0 → v0.47.0` (both already-allowlisted roots)
+and moves `go.sum`.
+
+**The `protocol` arm, measured pristine-first over BOTH gated patterns.** Closure **249 → 250**;
+the single added package IS `serveapi/protocol` itself; removed set **EMPTY**; a sentinel control
+proved the `comm` diff can see an addition. The package imports **only stdlib** across all four of
+its files. The unmodified `TestDaemonDependencyAllowlist` reds naming **exactly one** intruder.
+
+**The revision (Gate 3, designer lane).** Fable, model-pinned, foreground. 641 → **974** lines,
++489/−156. It re-derived the falsified premise rather than patching it: prerequisites (1) and (2)
+DISCHARGED, (3) discharged in its Go surface with `"verified"` scoped as a new milestone `P6.V`;
+milestones re-cut to **P6.T → P6.D → P6.V → P6.B**, each independently CI-green and mergeable, each
+with named RED mutations. **It corrected two of the controller's own measurements**, which is the
+process working in the direction it is supposed to: the rig's base `go` binary is **`go1.26.4`** —
+IN `verify_go.sh`'s array-literal-miscompile deny-list — and the controller's `go version` had read
+`go1.26.6` only because its cwd was a `go 1.26.6` module and `GOTOOLCHAIN=auto` switched. *A `go
+version` reading is a claim about the module you are standing in, not about the toolchain
+installed.* Second: `bindCommitIntentTx` is `store.go:1025`, not the charter's `:1015`.
+
+**Re-quorum — BLOCKED at round 3, both reviewers PRESENT, `absent_reviewers` EMPTY**
+(`metered=$0.1658`; artifact `w-mcp-projection-2026-08-25T16-33-38Z.json`). The cap was raised to
+`$0.25` **pre-emptively**, because the doc had just grown and a reviewer dropping out on budget
+right after a doc grows is the skill's named self-selecting trap — the eye that closes is the one
+whose objection drove the revision.
+
+**The finding — `gpt5-6-sol`'s objection, confirmed first-party and direction-level.**
+`serveapi/protocol` carries the whole **A2A** wire surface and the MCP **envelope** helpers
+(`WriteMCPEnvelope`, `RequestID`, `ValidateMCPName`, `AuthorizationStatus`) — and **no JSON-RPC
+method dispatch**. Dispatch lives in `serveapi/mcp_handler.go`, which delegates to
+`github.com/modelcontextprotocol/go-sdk`. Control, in the same call: SDK import count **1** there
+vs **0** in `a2a_handler.go`, which is **180 lines over stdlib + `protocol`** and is the existence
+proof of the shape World needs. So the MCP half has exactly two routes and **both are closed**:
+reimplement JSON-RPC dispatch — forbidden by P1 / the Design Freeze / AC1 / DESIGN.md §3.7 — or
+import the SDK, measured at **249 → 283**, **+34 packages across 5 new module roots**, with the
+allowlist gate reding on **28** disallowed packages including `golang.org/x/oauth2`,
+`go-sdk/auth` and `go-sdk/oauthex`. An outbound-credential stack in the daemon core breaches
+clause 2 **and** clause 3. This is not a size problem; it is a guardrail problem.
+
+**My own known-positive control failed to fire, and that is what sharpened the finding.** Probing
+`mcp_handler.go` for `"tools/list"`/`"jsonrpc"` returned **0**, which reads as a refutation of the
+reviewer and was in fact the control not firing. The true reading is *stronger* than the grep was
+written to test: `mcp_handler.go` does not string-match method names **at all**, because it hands
+the entire dispatch to the SDK. **A second instrument slip, caught and recorded**: the first
+closure probe captured its `before` set **after** mutating, so `comm` compared a file with itself
+and printed an empty ADDED set — a vacuous clean, re-run correctly pristine-first.
+
+**Disposition — SPLIT.** A controller routing call, explicitly **not** `needs-human-review`
+(standing rule 8 forbids manufacturing a decision the human does not have). The narrow-refinement
+carve-out is foreclosed by its own terms, because the surviving objection disputes the design
+DIRECTION. Upstream ask filed as
+[`ailang#885`](https://github.com/sunholo-data/ailang/issues/885), carrying every number above plus
+the `a2a_handler.go` existence proof and three concrete shapes that would work — this is
+`D-WORLD-5`'s own prescribed default executing as written (a disallowed graph asks upstream, never
+a broad relaxation), the same route that produced `#764` → `v0.33.2`.
+
+**Objection-surface tracking** (skill rule: from round 3 on, record which surface each round's
+objections name). R1 — three objections, three surfaces. R2 — commit boundary + SSE socket
+lifetime. R3 — **MCP dispatch seam** + **status/fork self-consistency**. They have not localised,
+but R3 is itself the decomposition signal that rule exists to catch: two consumers with different
+readiness bundled under one doc, the harder holding the easier hostage.
+
+**Routing evidence.** Controller `claude:claude-opus-5` (session) · designer **`fable` ×1**,
+model-pinned, foreground · planner / executor / evaluator **unspent**. The designer rotation
+pointer read `claude:claude-fable-5` (last-used), so the next entry was `codex:gpt-5.6-sol` —
+**structurally unusable for THIS doc, and the reason is a REVIEWER COLLISION, not a probe failure**:
+`gpt5-6-sol` is one of this doc's two quorum reviewers and the objection under revision was its
+own. The next entry, `gemini`, cannot author at all (`CapRemoteSandbox`, read-only). The rotation
+therefore **collapsed onto Fable**, FLAGGED with the incapacity named per the skill's rule (a).
+This is a further first-party instance of the skill's pre-registered *"the usable authoring
+rotation has ONE entry"* defect; its fix is to split authoring lanes from review lanes, which is a
+routing-policy change on a shared file and therefore a human's call, not this loop's. The Fable
+diet's ceiling — one design DOC, i.e. authoring plus at most one protocol-mandated revision — was
+hit **exactly**, and **no second revision was taken**, which is why the split is next iteration's
+work. `metered=$0.1658` of $5.
+
+**Ruled out.** Applying the narrow-refinement carve-out (the objection disputes design DIRECTION,
+so it is foreclosed by its own terms); force-passing the doc to a sprint on the strength of sound
+premise work (standing rule 2 — the block is real); a second designer revision this iteration (the
+diet's ceiling is one doc, and an overspend is still an overspend when the work is good); importing
+the MCP SDK behind a widened allowlist (`D-WORLD-5` names a broad relaxation as precisely the thing
+not to do, and the closure carries OAuth); writing World's own JSON-RPC dispatcher (§3.7
+reinvention); filing the SPLIT as `needs-human-review`; trusting the designer's `Authorization`
+premise row without re-running it (it is **1**, an English word in a comment at
+`host/broker/approve.go:51`, not 0); trusting my own `go version` reading over the designer's
+correction; treating the failed `mcp_handler.go` grep as a refutation of the reviewer rather than
+as a control that did not fire.
+
+**Retro.** No skill edit — World shares the mission-control skill by symlink and cannot edit it.
+One friction reached **instance 2** and is **PROPOSED to V1**: *a control that matches PROSE rather
+than code is not a control.* Instance 1 is iteration 122's `workbenchCSP` sweep, whose
+known-positive control returned `1` off a comment; instance 2 is this iteration's `Authorization`
+count, which is an English word in a comment and which the controller **nearly published as a flat
+`0` in the charter's own evidence column** before re-running it. The tell is the same both times:
+the control's pattern is a word that appears in prose as naturally as in code.
+
+**Next.** Apply the SPLIT (one designer revision — carry `gpt5-6-sol`'s objection verbatim into the
+MCP doc's opening problem statement, leave the reviewer-clean remainder in the parent, re-quorum
+the reduced doc once), then sprint **`P6.T`** (toolchain floor `go1.25.6 → go1.26.6`, ~0.1d,
+independently mergeable, blocked on nothing), then `P6.D`, then `P6.V`. The A2A half proceeds; only
+the MCP half waits on `#885`.
+
+**ONE OPEN ASK: `D-WORLD-26`** — the session credential carrier, one word: **A**
+(`Authorization: Bearer`, recommended) or **B** (`X-World-Session`). It gates only `P6.B` and
+nothing earlier, so the queue does not stall on it.
+
 ## Iteration 123 — 2026-08-25 — `WB.K` LANDED: item 14 COMPLETE at 11 of 11, and three of the four landing legs read GREEN on a mutation that landed entirely inside a comment
 
 **Kind**: sprint milestone + item close (queue item 14, `w-workbench-read-only`, milestone 11 of 11).
