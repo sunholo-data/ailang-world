@@ -852,6 +852,45 @@ different zsh special parameter, and the general form is one the loop already ow
 guard: *an assertion whose expected value is computed from the same source as its actual value is
 not an assertion.* The tell: your "expected" count is derived rather than stated.
 
+### (d) The evaluator confirmed all three claims and found a SURVIVING MUTANT on a guard no row covers
+
+`sonnet` **97/100 PASS, ZERO BLOCKING**, in its own detached worktree at the sprint commit
+`f1dcbbb`, a distinct model from the controller who generated the work → generator ≠ judge held.
+Handed (b), the unreachability claim and (a) as **named targets to attack** (rule 3h(c)), it
+re-derived each independently: all three arms of the masking proof, with the failure text
+reproduced verbatim (`workbench_test.go:183: status = 200, want 500` and both
+`read_deadline_test.go:355/386: status = 200, want 503`); `MC2`'s red set `diff`-empty against
+`MC1`'s, plus a fourth single-site arm (`190` alone, EMPTY) so the aggregate could not be hiding a
+member; the nine occurrence line numbers and the 3/1/5 split; and the `WB.F`-after-`WB.D` dating by
+`git show`. It spot-checked M1, M6 and M7 — every red set an exact match, including M7's operator-
+precedence claim. It also reproduced (c)'s zsh defect directly (`zsh -c 'LINES=179,256; echo $LINES'`
+→ `256`). **It refuted nothing.**
+
+It then added a mutant of its own, aimed at a guard **no row in the 32-row catalogue touches**:
+`supportedWorkbenchQuery`'s cardinality gate at `host/daemon/workbench.go:69` —
+`if len(query) != 2 {` → `if false && len(query) != 2 {`. **Reproduced first-party by the controller
+before adoption** under the identical protocol: LANDED (new literal 1, original 0),
+`go build ./...` **rc=0**, full classification arm **rc=0 with an EMPTY red set**, restored
+byte-identical, pristine control rc=0. **SURVIVED.**
+
+The guard is live, not dead code: with it neutered a three-key query such as
+`?world=…&object=…&payload=1` falls past the `from`/`entry` pair test to
+`return query["object"] != nil && query["payload"] != nil`, which is **true** — so the request is
+accepted and renders `200` where the closed grammar of §4 requires `400`. The evaluator confirmed
+that behaviourally with a temporary probe (pristine `400 unsupported workbench parameter
+combination`, mutant `200`), removed before it finished. **No test anywhere supplies a three-key
+query**, so M31/M32 do not reach it — they pin the unknown-key and duplicate-key branches, which are
+a different guard.
+
+This is the closed grammar's **cardinality** half being unpinned while its **vocabulary** half is
+pinned twice. It is outside `WB.I`'s declared scope of M1–M9, so it goes to **charter queue row 34**
+(the home for findings outside M1–M32 that this drill cannot reach) rather than being absorbed here,
+exactly as §7f(e)'s `workbenchHref` survivor did.
+
+Deductions: **−3**, cosmetic and pre-existing — M31/M32's catalogue text places their guards in a
+`parseWorkbenchQuery` helper that no longer exists, the checks having been inlined into
+`handleWorkbench`. Not `WB.I`'s doing, but adjacent to the taxonomy work in (a), so it is recorded
+here and travels with row 34.
 ---
 
 ## 8. Known base hazards — **not this sprint's fault, do not absorb**
