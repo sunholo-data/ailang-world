@@ -14593,6 +14593,167 @@ full, while the thing that actually stops row 5 landing today is a `go` directiv
 watching. The tell: you have verified that a dependency's *contents* unblock you, and have not
 checked what its *metadata* demands of your build. Bar is two.
 
+## Iteration 123 — 2026-08-25 — `WB.K` LANDED: item 14 COMPLETE at 11 of 11, and three of the four landing legs read GREEN on a mutation that landed entirely inside a comment
+
+**Kind**: sprint milestone + item close (queue item 14, `w-workbench-read-only`, milestone 11 of 11).
+**Landed**: PR [#94](https://github.com/sunholo-data/ailang-world/pull/94) → squash [`3dda87e`](https://github.com/sunholo-data/ailang-world/commit/3dda87e).
+Evidence-only — **+234 lines** (sprint plan §7i) plus the `planned/` → `implemented/` move of the
+design doc and its plan; no production and no test code changed.
+
+**Context / preflight (Gate 0–1)**
+- Kill switch NOT set. Billing tripwire **CLEAN**. gh account `sunholo-voight-kampff`. Tree clean,
+  `dev` == `origin/dev` == `773bcd6`.
+- **0** `MarkEdmondson1234` directives on `#89` since the watermark (`2026-08-25T02:17:03Z`), via the
+  V1 checkout's `scripts/mission_directives.sh` by ABSOLUTE PATH — never a hand-rolled `gh|jq`, since
+  the author allowlist lives in that script. **11 comments** enumerated, 0 in-window directives.
+- Inbox **0** unread. Decision ledger valid, **12** rows, **0 OPEN**.
+- dev CI GREEN at entry (`checks=2`, both `success`; run existence asserted `total=1 event=push`).
+- Weekly external-issue sweep: **0 orphans of 1 enumerated** (`#89`, our own bookkeeping issue —
+  charter 4 / log 14 / archive 2 / dashboard 1). Fresh negative control (`#77321`) **0**;
+  known-positive (`#93`) **1**. No rotation this iteration (`#89` created 2026-08-24).
+- Died-mid-flight sweep clean: **0** open PRs by this account, **1** worktree (the main checkout),
+  clean tree in it.
+
+**⚠ THE RUNNING SHARED SKILL WAS 27 LINES BEHIND `origin/dev`, AND THE MISSING LINES WERE THIS
+MILESTONE'S GOVERNING RULE.** Gate 1's `cmp` fired, run against the **resolved** symlink target
+(`readlink -f ~/.claude/skills/mission-control` → the V1 checkout's working tree) rather than the
+relative path. Running **3,757** lines against origin's **3,784**; one deletion hunk,
+`origin:1108–1134`. Those 27 lines are V1 iteration 274's rule, added **the same day**: *"LANDED is
+necessary, not sufficient — a `sed`/regex mutant can change the file, build cleanly, and have
+mutated something other than what you named … assert the mutant's INTENDED EFFECT with a query
+against the system's own view, never against the file's bytes."* That is precisely the discipline a
+mutation drill 4/4 is about. Read from origin before proceeding, per the Repo Profile, and applied
+as the drill's fourth landing leg — **before it was readable in the copy this loop executes**. The
+divergence is the Repo Profile's one-way worktree-drift class; World **cannot** repair it (the V1
+checkout is off-limits from this repo by the charter's hard rules), so it is reported to Mark and V1.
+
+**Gate 2 — pick + reality-check**
+- `WB.K` per iter-122's NEXT, and **controller-work by construction**: §7f(b) established that the
+  classification arm names `./host/daemon`, which binds real loopback sockets that
+  `--sandbox workspace-write` denies. Three of the five arms name it. Run outside any sandbox.
+- All five sites located before any mutation, and **two catalogue rows are stale**. M25's row names
+  `countDep(daemonDeps, "net/http")`, which does not exist — the real site is `countDep(deps,
+  "net/http")` at `:914` inside the shared closure `requireExactlyOneNetHTTP`, while
+  `countDep(daemonDeps, …)` DOES occur once, at `:983`, as a *different* assertion belonging to a
+  *different* subtest. **Mutating the site the catalogue literally names would have exercised the
+  wrong guard and produced a red for an arm never run** — the exact failure the skill's same-day
+  rule describes. Control fired (the `countDep(` enumeration returns 8 hits in the same call), so
+  the empty result for the catalogue's literal is a measurement. M28's row cites line `1163`; the
+  constant is at `:1292` — harmless only because the mutator is line-addressed AND asserts the exact
+  pre-image, so a stale line number yields a refusal, never a silent mis-edit.
+- Pristine control at entry: rc=0, **0** `--- FAIL`, 15 s; named-test enumeration asserted present
+  (6/7/6/1 RUN-lines across the four named tests) with a fresh negative control at **0**.
+
+**The work — five arms, no survivor**
+
+M24, M25, M27 and M28 are **SOLE KILLERS** at subtest granularity; M26's red set is **4** members,
+all inside `TestNewRefusesNonLoopbackBind`. Every arm was proved to BUILD rc=0 **before any test
+result was read** (for the two `_test.go` mutants, `go vet` rc=0 **and** `go test -run '^$'` rc=0),
+classified by the COMPLETE enumerated red set at subtest granularity, restored by `cp` from
+`.snap/backup/` — never `git checkout --` — verified byte-identical by `shasum -a 256`, with the
+pristine control re-run after **every** arm (5/5 rc=0). Rule 3j's corollary applied to all five: the
+failure text was read to confirm the assertion that failed is the one the mutant targets.
+
+**§7i(a) is the finding, and the controls corrected the section's own first draft.** The landing
+predicate had FOUR legs — shape-appropriate occurrence counts (§7h's rule), an exact line-content
+assertion whose expected value lives in the harness (§7g's `LINES` lesson), `gofmt` asserted on **rc
+AND size**, and a query against the file's **parsed form** via a 60-line `go/parser` tool. Four
+negative controls were run **before** the drill, each restoring byte-identically. **NC4 is
+decisive**: with the mutant text inserted as `\t// _ "net/http"`, leg 1 reads `0 → 1`, leg 2 is
+satisfied **by construction** (the comment IS the line the harness asserted), leg 3 reads rc=0 with
+**0 bytes**, `go build` rc=0 — and **only the parsed-form query refuses**. But NC3 sharpened it:
+for a **substitution** the predicate is two-sided (the old literal must FALL), and a comment-landing
+leaves the old statement intact, so leg 1 refuses on its own. The blindness therefore belongs to the
+**one-sided** predicate an **insertion** forces — and **M24 is the only insertion-shaped row of the
+32**, so the single arm where leg 4 was load-bearing is the single arm that could have been fooled.
+Two further controls bound leg 3 honestly: a syntax break is `rc=2` (loud), but an **indentation**
+break is `rc=0` with **22 bytes** of output — a leg reading only the exit code accepts a
+non-canonical splice.
+
+**M25 turns §6's design-time claim into a measurement, and the mechanism is not the obvious one.**
+The assertion M25 neuters lives in a closure called by **two** subtests, yet the red set is
+`daemon-transport-control-fires` and its parent **and nothing else** —
+`daemon-closure-has-exactly-one-net-http` stays GREEN. On a pristine tree that subtest's assertion
+never fires, so removing it is invisible; the overlay arm is different in kind, because
+`mutateViaOverlay`'s contract makes a `nil` return *"the detector did not fire"*. So under
+**mutation** the plain count subtest is a decorative member (no catalogue row makes its condition
+false, and M24 does not — its red set does not contain it), while under **regression** it remains a
+real pin. Same family as §7h(a)'s M12, recorded and not repaired.
+
+**The retrospective judge pass owed by iteration 122 is discharged, and it found a survivor.**
+Evaluator `sonnet`, own worktree at `773bcd6`, distinct from the `opus` controller who generated
+both sections — **93/100 PASS, ZERO BLOCKING**. Twelve named targets across §7h and §7i, **none
+refuted**: it reproduced §7h's MC1/MC2 tautology arms, confirmed the M22/M23 and M29/M30 identical
+red sets, re-ran the §7d(c) sweep on an instrument it built itself with its own controls, and
+spot-checked five §7h arms rather than the two asked for. It also declined to inherit my AST tool
+and wrote its own before reproducing NC4.
+
+**And, 3 of 3 for this milestone type, it found a SURVIVING MUTANT the controller had missed** — two,
+on `supportedWorkbenchQuery`'s **pair-composition** guards (`workbench.go:72` and `:75`, `&&` →
+`||`), covered by no row in the 32-row catalogue. Each LANDED, `go build ./...` rc=0, full
+classification arm **rc=0 with an EMPTY red set** at 148 RUN lines, restored byte-identically.
+Reproduced first-party before adoption and proved **LIVE** on the function's own truth table with a
+temporary in-package probe: `world`+`from` flips `false` → `true` under the first, `world`+`payload`
+under the second — each opening a two-key combination §4's closed grammar requires to `400`. No test
+anywhere supplies a *rejected* two-key query, so the whole `len == 2` false path is unexercised.
+Distinct from row 34's fifth hunk (that is the **cardinality** gate). Routed to **row 34** as its
+sixth and seventh hunks, not absorbed and not repaired.
+
+**A false SURVIVED nearly landed in my own liveness probe.** The first truth-table run put both arms
+in one `for` loop whose zsh quoting mangled the pre-image strings: arm A's `python` assert failed and
+its stderr was swallowed by the `grep` the probe was piped into, and arm B's edit never applied — so
+B's table came back **identical to pristine**, which is exactly what a genuine survivor looks like.
+Nothing refused; the reading merely looked boring. It was caught only because arm A printed *nothing
+at all* and B's table was suspiciously perfect. Same family as §7h(b), one layer out and in the worse
+direction: that one failed toward a **refusal**, this one toward a **plausible wrong answer**.
+
+**Acceptance and gates.** AC1 1→0 (12 named `=== RUN`), AC2 1→0, AC3 0→0 (`✓ go gate PASSED`, 38
+`ok`, 0 FAIL, race control armed, `host/capsule` green in both legs so queue row 32's hazard did not
+fire), AC4 0→0 (`11 modules` / `10 required identities verified, 40 named tests pass` / `9/9 steps`),
+AC5 1→0, AC6 1→0, AC7 broken→0, AC8 1→0. `gofmt -l host/ cmd/` empty. **AC7 is sound for the first
+time in this sprint and was asserted sound rather than assumed**: a planted probe is seen **0** times
+by the doc's `git diff` form and **1** by the D1-repaired form, so D1 is still live and simply no
+longer *reachable* now that nothing is untracked — and the criterion returns exactly **7** paths,
+**4 `A` + 3 `M`, 0 `D`**, exactly §8.1's four additions and §8.2's three modifications, with the
+no-pathspec control at **15**.
+
+**Routing evidence.** Controller `claude:claude-opus-5` (session) · designer not invoked (doc
+exists) · planner not invoked (plan exists) · executor not invoked — `WB.K` is controller-work under
+§7f(b), the fourth consecutive drill milestone for that reason · **evaluator `sonnet`**,
+model-PINNED `Agent` sub-agent, own worktree, distinct provider-tier from the controller —
+generator≠judge SATISFIED, and the iteration-122 gap closed retrospectively in the same run ·
+`metered=$0.00` of the $5 ceiling; quota buckets: `opus` ×1 (controller), `sonnet` ×1 (evaluator).
+Fable and the designer rotation unspent a **19th** consecutive iteration.
+
+**Ruled out.** Mutating M25 at the site its catalogue row literally names (`countDep(daemonDeps, …)`
+exists, at a different assertion in a different subtest — the arm would have redded for a guard never
+under test); treating M24's first `LANDED=NO` as a mutation failure rather than as leg 3 reporting a
+non-canonical import order; reading `grep -c -F` alone as proof a mutation landed (NC4 measures that
+it is not); claiming the AST leg is load-bearing for every shape (NC3 refutes it for substitutions);
+banking the first liveness truth-table, whose arm B was byte-for-byte pristine; repairing either
+survivor or the tests that fail to reach them (§3 rule 5 — a survivor is a result); absorbing the
+survivors, the M25/M28 catalogue staleness, or the evaluator's recommended negative test into `WB.K`
+against Standing rule 1; and repairing the V1 checkout's stale skill from this repo (the charter's
+hard rules forbid touching the V1 checkout — it is reported, not fixed).
+
+**Retro.** No skill edit — World shares the mission-control skill by symlink and cannot edit it
+(memory `world-cannot-edit-shared-skill`). **One candidate rule recorded at instance 1** (bar is 2,
+so it is recorded here rather than proposed): *a landing predicate's legs must be negative-controlled
+against each other, not merely present* — three legs of a four-leg predicate read GREEN on NC4, and
+each of the three is a rule this loop earned separately and correctly. The generalisable half is that
+**redundant instruments are only redundant if you have measured which failure each one catches**;
+listing them is not the same as ranking them. The tell: a landing predicate has grown to N legs
+across N iterations and no arm has ever been run that only one leg refuses.
+
+**Next.** Item 14 is CLOSED — its doc and sprint plan are in `design_docs/implemented/`. The queue
+head is now **row 5** `w-mcp-projection`, unblocked at source ([`ailang#764`](https://github.com/sunholo-data/ailang/issues/764) CLOSED) and ordered here by Mark's
+`Finish 14` ruling (`D-WORLD-25` arm B) now that item 14 has closed; its **first milestone is the
+`go1.26.6` toolchain precondition** (v0.33.2 declares `go 1.26.6`, CI pins `GOTOOLCHAIN: go1.25.6`),
+and it is the sole remaining blocker on **M4**, the reference-agent value gate. Then queue rows 38,
+37, 36, 35, 34 (now carrying seven hunks), 32, 33, item 22, row 31. **Zero open asks.**
+
+---
+
 ## Iteration 122 — 2026-08-25 — `WB.J` LANDED: all ten rows discharged with no survivor, and `M12`'s named assertion turns out to be a tautology that contributes nothing to its own kill
 
 **Kind**: sprint milestone (queue item 14, `w-workbench-read-only`, milestone 10 of 11).
