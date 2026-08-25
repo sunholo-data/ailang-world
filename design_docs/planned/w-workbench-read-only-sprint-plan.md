@@ -893,6 +893,130 @@ Deductions: **−3**, cosmetic and pre-existing — M31/M32's catalogue text pla
 here and travels with row 34.
 ---
 
+## 7h. `WB.J` discharged M10–M13, M22, M23, M29–M32 — **no surviving mutant**; and `M12`'s named assertion is a TAUTOLOGY that contributes nothing to its own kill (iteration 122)
+
+**All ten rows are discharged by measurement. There is no survivor in this milestone.** Every arm
+was asserted LANDED by an occurrence count on the mutated literal **plus an exact line-content
+assertion at the site whose expected value is written in the harness, never read back from the file
+under mutation**; proved to BUILD `rc=0` **before any test result was read**; classified by the
+COMPLETE enumerated red set at **subtest granularity** (never predicted, no `-skip` inverse arm —
+§7f/§7g precedent and rule 3j's blast-radius amendment); restored by `cp` from `.snap/backup/` —
+never `git checkout --` — and verified byte-identical by `shasum -a 256`, with the pristine control
+re-run after **every** arm. Final tree byte-identical; `git status --porcelain` empty.
+
+Run **outside any sandbox**, per §7f(b): the classification arm names `./host/daemon`, which binds
+real loopback sockets, so `WB.J` is controller-work by construction — as §7f(b) predicted for
+`WB.I`/`WB.J`/`WB.K`. Pristine control at entry: `rc=0`, **0** `--- FAIL`, all five named tests
+present (`TestWorkbenchPayloadPreviewBound` 5 RUN-lines, `TestWorkbenchTimelineBound` 1,
+`TestWorkbenchRefusalBranches` 15, `TestWorkbenchSecurityHeaders` 3, `TestWorkbenchReadDeadline` 4).
+
+| arm | site | LANDED | build | enumerated red set (subtest granularity) | verdict |
+|---|---|---|---|---|---|
+| M10 | `workbench.go:222` `showPayload := false` → `true` | 1→0 / 0→1 | rc=0 | `TestWorkbenchPayloadPreviewBound/default-off` ALONE | SOLE KILLER |
+| M11 | `workbench.go:229` slice → `object.Payload` | 1→0 / 0→1 | rc=0 | `TestWorkbenchPayloadPreviewBound/oversize` ALONE | SOLE KILLER |
+| M12 | `render.go:9` `WorkbenchPageLimit = 100` → `101` | 1→0 / 0→1 | rc=0 | `TestWorkbenchTimelineBound` ALONE (no subtests) | SOLE KILLER — **but see (a)** |
+| M13 | `workbench.go:150` `if false && from > math.MaxInt64…` | 1→0 / 0→1 | rc=0 | `TestWorkbenchRefusalBranches/from-overflow` ALONE | SOLE KILLER |
+| M22 | `workbench.go:15` delete `default-src 'none'; ` | 1→0 | rc=0 | **22 members** — `TestWorkbenchSecurityHeaders/{success,bad_request}` + all 13 `RefusalBranches` subtests + all 3 `ReadDeadline` subtests + 3 parents | KILLED, broad-blast — **see (b)** |
+| M23 | `workbench.go:43` `no-store` → `public` | 1→0 / 0→1 | rc=0 | **22 members**, `diff`-identical to M22's | KILLED, broad-blast |
+| M29 | `workbench.go:165` `d.readCtx(r)` → `context.WithCancel(r.Context())` | 1→0 / 0→1 | rc=0 | `ReadDeadline/{blocking-store, real-store-expired-deadline}` + parent | KILLED — **not sole** |
+| M30 | `workbench.go:79` `if false && timedOut(ctx, err) {` | 1→0 / 0→1 | rc=0 | identical to M29's | KILLED — **not sole** |
+| M31 | `workbench.go:118` `if false && !acceptedWorkbenchKeys[key] {` | 1→0 / 0→1 | rc=0 | `RefusalBranches/unknown-parameter` ALONE | SOLE KILLER |
+| M32 | `workbench.go:122` `if false && len(values) > 1 {` | 1→0 / 0→1 | rc=0 | `RefusalBranches/duplicate-parameter` ALONE | SOLE KILLER |
+
+### (a) `M12` dies by a hardcoded literal; the assertion its row points at CANNOT detect it
+
+`TestWorkbenchTimelineBound` carries three assertions. The **headline** one —
+`workbench_test.go:323`, `if got := strings.Count(body, "<h3>entry ")); got != workbench.WorkbenchPageLimit` —
+compares the rendered count against **the very constant M12 mutates**, so expected and actual move
+together. The seeding loop at `:301` (`WorkbenchPageLimit+5`) moves with it too. The kill in fact
+comes from `:329`, a **hardcoded literal**: `if strings.Contains(body, "<h3>entry 100</h3>")`.
+
+Proved by a two-arm measurement rather than argued — the failure text names the line directly, and
+the decisive arm removes only the literal assertion:
+
+| arm | mutant | test edit | build | result |
+|---|---|---|---|---|
+| MC1 (= M12 above) | `WorkbenchPageLimit = 101` | none | rc=0 | **FAIL** — `workbench_test.go:330: timeline contains entry 100 beyond page bound` |
+| **MC2** | `WorkbenchPageLimit = 101` | `:329` → `if false && strings.Contains(…)` | vet rc=0, build rc=0 | **PASS**, `rc=0` |
+
+MC2 is the whole finding: with the sibling literal neutered and the mutant still in place, the
+count assertion **passes**. It cannot fail in any tree, for the same reason §7d(c)'s CSP pin could
+not. The distinction from §7d(c) matters and is why this is recorded rather than repaired: that one
+was a **survivor** (empty red set, the class had no killer at all); this one is a **live pin with a
+decorative member**. M12 is genuinely discharged. What is at risk is *latent*: if `:329`'s literal
+were ever generalised to track the constant — the natural "cleanup" — the pin would silently become
+hollow, and nothing in the suite would notice.
+
+**The §7d(c) tell was published at iteration 113 and never run as a sweep.** Its own words: *"its
+tell is syntactic and cheap: a test file names a production constant inside its own expectation
+table."* Iteration 113 repaired the one instance it had found and moved on; this is the loop's own
+*guard the helper, miss the call site* shape aimed at a diagnosis rather than at code. Sweep run
+now, scopes asserted with `test -d` (`host/daemon` 6 test files, `host/workbench` 1,
+`host/boundary` 1), negative control on a fresh absent symbol → **0**:
+
+- **assertion-side hits: exactly 1** — `workbench_test.go:323`, i.e. M12's, and no other.
+- `:280` (`workbench.MaxPayloadPreview+4096`) and `:301` name production constants in **setup**, not
+  in an expectation; they are the same shape one step removed and would become tautologies only if a
+  future row mutated those constants directly. No row in the 32-row catalogue does.
+- The `workbenchCSP` occurrence in `workbench_test.go` is **inside the comment documenting iter-113's
+  repair**, not in an assertion — so §7d(c)'s repair is complete. Recorded because my own
+  known-positive control returned **1** and I had predicted **0**: the control matched prose, which
+  is rule 3a's trap aimed at the control rather than at the check.
+
+### (b) The harness's landing predicate is unsatisfiable for a DELETION mutant, and it said so rather than banking a verdict
+
+`M22`'s first arm returned **`LANDED=NO — INSTRUMENT FAILURE, not a verdict`** and was correctly
+refused. Cause: the harness asserts landing by requiring the **new** literal's occurrence count to
+RISE. For a deletion mutant the new literal is the empty string, and `grep -c -F -- ""` matches
+**every line** — measured **268 before and 268 after**, so `after > before` is false *by
+construction*, however perfectly the mutation applied. The predicate was measuring the file's line
+count, not the mutation.
+
+This is worth recording because of which direction it fails in: it produced a **refusal**, not a
+false SURVIVED. Had the comparison been `>=` rather than `>`, the arm would have passed its landing
+check while proving nothing — a mutation-drill instrument certifying itself. Re-run under a
+deletion-appropriate predicate (**old** count must FALL `1 → 0`, **plus** the exact line-content
+assertion), M22 lands and is KILLED with a 22-member red set.
+
+**Rule for the remaining drill (`WB.K`):** a landing predicate must be chosen for the mutation's
+SHAPE. Substitution → the new literal's count rises. Deletion → the old literal's count falls.
+Both → the exact line-content assertion, whose expected value is written in the harness and never
+read back from the file under mutation. That last clause is iteration 121's `LINES` lesson
+(*an assertion whose expected value is derived from the same source as its actual value is not an
+assertion*) reaching **instance 2** — and note the two instances sit at opposite ends of the same
+drill: 121's in the controller's own instrument, this one in **committed test code** that had
+already passed a quorum, a sprint plan, an executor and an evaluator PASS.
+
+### (c) Two pairs of rows are not independent, and the plan's table implies they are
+
+- **M22 and M23** produce `diff`-identical 22-member red sets. Both are header mutations, and
+  `workbench_test.go:41–50` asserts the full header map on **every** workbench response via a
+  shared `wants` table — so any header change reds every workbench test at once. Strong pinning,
+  and it means neither row is attributable at test granularity; only the named
+  `TestWorkbenchSecurityHeaders` membership distinguishes them from a general regression.
+- **M29 and M30** likewise produce identical 2-subtest sets
+  (`ReadDeadline/{blocking-store, real-store-expired-deadline}`). The plan names only
+  `blocking-store` for both. Both members are on the deadline path and both mutants break it, so
+  the extra member is explained rather than anomalous — but neither row is a SOLE KILLER of its
+  named subtest, and the catalogue's "kills which mutation" column reads as though they were.
+
+### (d) M31/M32's catalogue text is confirmed stale — first-party, and it matches §7g's deduction
+
+§7g recorded (−3, from the evaluator) that M31/M32 name a `parseWorkbenchQuery` helper that no
+longer exists. Confirmed here by measurement rather than inherited: `grep -rn parseWorkbenchQuery
+host/` returns **0** across the whole tree, while the guards are live and inline in
+`handleWorkbench` at `workbench.go:118` and `:122`. The row literals are also wrong in their
+identifiers — the catalogue says `acceptedWorkbenchKeys[k]` and `len(vs) > 1`, the code says
+`[key]` and `len(values)`. Both mutants were applied at the **real** sites and both are SOLE
+KILLERS. The stale text travels with **queue row 34** as §7g already routed it; nothing here is
+absorbed into `WB.J`.
+
+**Residue routed, not absorbed** (Standing rule 1): the latent tautology at `workbench_test.go:323`
+and the §7d(c) sweep's standing obligation go to **queue row 34** alongside the M31/M32 text; no
+production or test code was changed by this milestone.
+
+---
+
 ## 8. Known base hazards — **not this sprint's fault, do not absorb**
 
 - **`host/capsule` `TestF5WallClockTimeoutHasElapsedBound`** asserts an absolute 2 s wall-clock
