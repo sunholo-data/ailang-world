@@ -14592,3 +14592,135 @@ with no issue, no owner and no queue row* — `#764` tracked the dependency shap
 full, while the thing that actually stops row 5 landing today is a `go` directive nobody was
 watching. The tell: you have verified that a dependency's *contents* unblock you, and have not
 checked what its *metadata* demands of your build. Bar is two.
+
+## Iteration 121 — 2026-08-25 — `WB.I` LANDED: M1–M8 discharged, and `M9` survives at every site because two guards on one path mask each other
+
+**Kind**: sprint milestone + a human directive consumed (Mark, `#89` @ `2026-08-24T23:14:21Z`,
+verbatim **"Finish 14"** → `D-WORLD-25` **arm B**).
+
+**Context / preflight (Gate 0–1)**
+- Kill switch NOT set. Billing tripwire **CLEAN**. gh account `sunholo-voight-kampff`.
+  Tree clean, `dev` == `origin/dev` == `ce7a26c`.
+- **1** `MarkEdmondson1234` directive on `#89`, **0** on predecessor `#68`, both since the OLDER of
+  the two watermarks (both `2026-08-24T20:06:56Z`), via the V1 checkout's
+  `scripts/mission_directives.sh` by ABSOLUTE PATH — never a hand-rolled `gh|jq`. **Control fires**:
+  the same script over `#68` since epoch returns **3** genuine directives, so the in-window `0` is a
+  measurement rather than a broken query.
+- Inbox **0** unread. dev CI GREEN (`checks=2`, both `success`; run existence `total=1 event=push`).
+- Running skill **byte-identical to `origin/dev`** (`cmp` rc=0), path taken from the **resolved**
+  symlink target (`…/ailang/.claude/skills/mission-control`, inode `49847168`), never the relative
+  `.claude/skills/…`.
+- Decision ledger valid, 12 rows. Died-mid-flight sweep clean: 0 open PRs, 1 worktree, clean tree.
+- No rotation (`#89` created `2026-08-24T07:03:49Z`, after Monday 07:00 local; 9 comments < 80).
+  Weekly external-issue sweep not re-run — iter-117 owned this week's.
+- **One routing fact re-measured before being trusted.** `D-WORLD-20`'s deepseek suspension is
+  ABSENT from `tools/launchd/mission-env/mission-world.env` in both the working tree and
+  `origin/dev`. That file is a *versioned copy*: the driver sources
+  `~/.config/ailang/mission-world.env` (`mission-control.sh:57-58`), where
+  `MISSION_EXECUTOR_FALLBACK="${MISSION_EXECUTOR_FALLBACK:-opus}"` is present at line 75. The
+  ratification IS in effect; the repo copy has drifted from the live one. V1-owned frozen core, so
+  it is reported and not touched.
+
+**Gate 2 — pick**
+The directive answers the ordering fork raised at iteration 120, so it does not displace the queue —
+it *confirms* it. `D-WORLD-25` flipped OPEN → RESOLVED (arm B) in this same iteration, **before** the
+watermark advanced, per the Gate-0 decision-recording contract. Pick: **`WB.I`**, mutation drill 2/4
+of item 14, the charter's recorded NEXT. Controller-work by construction — §7f(b) established that
+the classification arm names `./host/daemon`, which binds real loopback sockets that
+`--sandbox workspace-write` denies.
+
+**The work — seventeen arms, one protocol**
+Worktree `.wt-iter121-wbi` off `origin/dev` (sibling of the repo, never `/tmp`, per §5). Pristine
+control at entry rc=0 (`host/workbench` 0.335s · `host/daemon` 2.957s · `host/boundary` 2.793s).
+Each arm: cp-restore first; apply; assert LANDED by occurrence count on the mutated literal **plus an
+exact line-content assertion at the site**; `go build ./...` rc=0 **before any test result was read**;
+run the named test; enumerate the COMPLETE red set by RUNNING the classification arm; cp-restore;
+sha256 byte-identity; pristine control rc=0 again.
+
+| arm | site | red set (subtest granularity) | verdict |
+|---|---|---|---|
+| M1 | `daemon.go:565` route pattern | `TestWorkbenchRouteIsReadOnly` + `/DELETE` `/PATCH` `/POST` `/PUT` | SOLE KILLER |
+| M2–M8 | `workbench.go` `172` `194` `209` `218` `144` `158` `245` | one `TestWorkbenchRefusalBranches/…` subtest each, ALONE | SOLE KILLER ×7 |
+| M9a | `:179` `SelectedHead` store error | `TestWorkbenchReadDeadline/blocking-store` ALONE | killed — **not by its named test** |
+| M9b–M9e | `:190` `:214` `:241` `:256` | **EMPTY** | **SURVIVED** |
+| S89 / S139 | `:89` log guard · `:139` `?from=` parse | **EMPTY** | SURVIVED (not M9's family) |
+| MC1 | `:179` **+** `:256` | `…/store-error` + `…/blocking-store` + `…/real-store-expired-deadline` | **MINIMAL KILLER PAIR** |
+| MC2 | all five store-error guards | **identical to MC1** | `190`/`214`/`241` contribute nothing |
+| EV1 | `:69` `supportedWorkbenchQuery` cardinality gate | **EMPTY** | **SURVIVED** (evaluator's mutant) |
+
+**The finding.** `TestWorkbenchRefusalBranches/store-error` requests `/workbench` with an **empty
+query** and installs `failingStore`, which returns `ok=false` **beside** its error. Exactly two of the
+five store-error guards are on that path — `SelectedHead` at `:179` and the timeline `GetLogEntry` at
+`:256` — and each masks the other: neuter one and the request falls through to the sibling, which
+still emits the same `500`. Only the PAIR reds it (`workbench_test.go:183: status = 200, want 500`).
+So `M9` is not merely unpinned; it is **undischargeable as a one-line mutation**. Recorded SURVIVED
+per §3's `survived_is_a_result` — mutant not repaired, test not repaired, row not omitted.
+
+**Row 37's arithmetic was wrong and is corrected.** Its filing said *"seven of nine `if err != nil {`
+store-error guards have no killer"*. The nine occurrences are in fact **3 parse guards** (`139`,
+`172` = M2, `209` = M4), **1 log guard** (`89`) and **5 store-error guards** — so `172`/`209` were
+counted twice, once as killers and once as survivors, because the enumeration keyed on the *literal*
+rather than the *guard*. Its `179` reading was **stale, not wrong**: that guard's killer entered the
+tree at `8f0037c` (`WB.F`, #88), **after** `WB.D`'s `e50fbea` (#86) where the sweep ran. Measured by
+`git log -S`, not inferred.
+
+**Instrument failure, recorded rather than quietly re-run.** The multi-site arm first reported
+`sites=256`, `expected=1`, `LANDED=1` — a clean pass on an arm that had mutated one line while
+claiming two and five. It had assigned its site list to a shell variable named `LINES`, a **special
+integer parameter in `zsh`**, so `179,256` was evaluated as arithmetic (`,` is the comma operator)
+and stored as `256`. Controls: the same script with `SITES=$2` prints `179,256`. The assertion missed
+it because `n_expected` was derived from the **same corrupted variable** as the mutation, so the check
+compared the instrument against itself. Caught only because the harness echoed the site list it had
+actually parsed beside the one it was handed.
+
+**Routing evidence**
+| role | lane | outcome |
+|---|---|---|
+| controller | `claude:claude-opus-5` | ×1, whole iteration |
+| executor | — | **not spent** — the milestone is controller-work (loopback bind vs `workspace-write`) |
+| evaluator | `sonnet` | ×1, **97/100 PASS, zero blocking**, own detached worktree at `f1dcbbb` |
+| designer / planner / Fable | — | unspent, **17th** consecutive iteration |
+
+`metered=$0.00` of $5.
+
+**Evaluation**
+Handed all three headline claims as **named targets to attack** (rule 3h(c)). It re-derived every one
+— the three masking arms with the failure text verbatim, `MC2` `diff`-empty against `MC1` **plus a
+fourth single-site arm (`190` alone, EMPTY)** so the aggregate could not hide a member, the nine line
+numbers and the 3/1/5 split, the `WB.F`-after-`WB.D` dating by `git show`, and M1/M6/M7 spot-checks
+including M7's operator-precedence claim. **It refuted nothing.** It then found a **surviving mutant**
+on `supportedWorkbenchQuery`'s cardinality gate, a guard no catalogue row covers — reproduced
+first-party before adoption, routed to **queue row 34**, not absorbed. Deductions: −3, pre-existing
+plan drift (M31/M32's catalogue text names a `parseWorkbenchQuery` helper that no longer exists).
+
+**Gate 3b**
+GREEN on the merge commit `2e7154b`, SHA-addressed: `present=2 == expected=2`, both `success`, **0**
+not-green, every count asserted NUMERIC before comparison, run existence `total=1 event=push`, parent
+control `rev-parse`d → `check-runs=2`. PR checks OBSERVED green on the head SHA before merging, never
+behind an armed auto-merge; `mergeable` read FIRST. Auto-close scan over both commit messages, the PR
+title and the PR body: **0** each, known-bad control firing at **1**; `#89` `OPEN`/9 comments on both
+sides of the merge. A first commit carrying `(#91)` in its subject — WB.H's PR number, copied from the
+previous milestone's pattern — was amended out before push; the `(#N)` suffix is the squash-merge's to
+add.
+
+**Ruled out**
+- Repairing `M9`'s mutant or its test to manufacture a red; omitting the row because it survived.
+- Absorbing the cardinality-gate survivor into `WB.I` against Standing rule 1.
+- Accepting the evaluator's surviving mutant without reproducing it first-party.
+- Asserting `:190`/`:214`/`:241` unreachable from branch tracing alone, when an all-five arm settles
+  it without tracing a single branch.
+- Re-running the corrupted multi-site arm quietly instead of recording the `LINES` failure.
+- Carrying §7e's "nine store-error guards" forward unmeasured.
+- Reading `TestWorkbenchReadDeadline` as evidence that §7e was *wrong* rather than *earlier*.
+- Committing `.snap/**`; taking row 5 ahead of item 14 before the human answered.
+
+**Retro**
+No skill edit — World shares the mission-control skill by symlink and cannot edit it. One friction at
+**instance 1**, recorded not proposed: *an assertion whose EXPECTED value is derived from the same
+source as its ACTUAL value is not an assertion.* The bar is two, and iteration 119's
+controller-environment gate baseline is a different shape, so it does not count toward it.
+
+**Next**
+`WB.J` (10 of 11 — mutation drill 3/4, discharges M10–M13, M22, M23, M29–M32; controller-work, same
+loopback-bearing arm), then `WB.K`, then rows 38, 37, 36, 35, 34, 32, 33, item 22, row 31, then
+**row 5**, whose first milestone is the `go1.26.6` toolchain precondition. **ZERO open asks.**
