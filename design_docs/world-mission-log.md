@@ -14593,6 +14593,188 @@ full, while the thing that actually stops row 5 landing today is a `go` directiv
 watching. The tell: you have verified that a dependency's *contents* unblock you, and have not
 checked what its *metadata* demands of your build. Bar is two.
 
+## Iteration 125 — 2026-08-25 — a human directive closed round 3's second objection, the SPLIT landed, and the re-quorum immediately localised onto a third surface the repo has never built
+
+**Kind**: human directive consumed + design SPLIT + re-quorum (round 4) + a reviewer-surfaced,
+controller-measured queue row. **No sprint, no PR to `dev` beyond the record** — the queue head is
+still in its design phase and is not sprintable as it stands.
+
+**Context / preflight (Gate 0–1).** Kill switch armed; `gh` = `sunholo-voight-kampff`; tree clean;
+billing tripwire **CLEAN**; local `dev` == `origin/dev` at `2e44e3e`. dev CI **GREEN**,
+SHA-addressed on the merge commit: `checks=2`, `ailang-code verify gate` and
+`go host build + test gate` both `success`, zero NOT-GREEN rows. Inbox: 3 unread, **all**
+`eval-suite` notifications (6/6 passed ×2, one start) — no regression, no cross-mission request.
+Died-mid-flight sweep clean: **0** open PRs on the fleet account, **1** worktree (the main
+checkout itself), clean tree. Weekly external-issue sweep: **1** open issue enumerated in the whole
+repo (`#89`, the bookkeeping thread itself), **0 orphans of 1 enumerated**; per-issue counts
+published (charter 4 / log 18 / archive 3 / dashboard 0), positive control `#94` fires at 3,
+negative control fired on a fresh literal.
+
+**⚠ The running shared skill is STILL 27 lines behind `origin/dev`** — the third consecutive
+iteration to record this. `readlink -f ~/.claude/skills/mission-control` resolves to
+`~/dev/sunholo-data/ailang/.claude/skills/mission-control` (inode `49847168`), and the resolved
+target is **341,644 B** against origin's **344,185 B**; `cmp -s` DIFFERS, `diff` = 27 lines, all
+`<` (present upstream, absent locally), one hunk at `origin:1108–1134`. I read the delta before
+proceeding, as the rule requires: it is V1 iteration 274's rule that **"LANDED" is necessary but
+not sufficient for a mutation** — a `sed`/regex mutant can change the file, build cleanly, and
+have mutated something other than what you named, so the mutant's INTENDED EFFECT must be asserted
+against the system's own view (`make -pn | grep -c ...` going 1→0), never against the file's
+bytes. Directly relevant to this mission, whose last four iterations were mutation drills. World
+cannot edit this file (it is V1's, shared by symlink); reported, not applied.
+
+**A HUMAN DIRECTIVE OPENED THE ITERATION AND OUTRANKED THE QUEUE — and it landed on the queue
+head anyway.** `scripts/mission_directives.sh --issue 89 --since 2026-08-25T16:57:52Z` (run from
+the V1 checkout's copy; this repo has no local copy of that script) returned **1** directive of 14
+comments: `MarkEdmondson1234 @ 2026-08-25T19:06:41Z: A`. That answers **`D-WORLD-26`**, the
+session credential carrier. The ledger row moved `OPEN` → `RESOLVED` recording **ARM A —
+`Authorization: Bearer <session-credential>`**, with the two constraints the answer does NOT
+relax written into the row: **(i)** a `Bearer` value here is a SESSION credential and never an API
+key (the static `serve-api` key was measured process-wide at iter-24 and cannot represent a
+session), and **(ii)** clause 3 still binds, so the resolver fails closed on absent / malformed /
+unknown credentials rather than degrading to an unauthenticated surface. `--check` validates at
+**13 rows**, and `--open` now returns **empty**. The watermark advanced to `2026-08-25T19:06:41Z`
+**after** the row was written and **before** routing; a re-run of the directive script against the
+new watermark returns **0**, which is the confirmation that the channel was consumed rather than
+merely read.
+
+**Gate 2 — pick.** Queue head **row 5 `w-mcp-projection`**. The directive and the queue head
+converge on the same item: `D-WORLD-26` is that doc's own open fork. iter-124's prescribed next
+action was *"apply the split (one designer revision, next iteration), then sprint `P6.T`"*, so the
+pick was not a judgement call. **Blocked-external-row predicates re-run as commands, not
+transcribed**: [`ailang#885`](https://github.com/sunholo-data/ailang/issues/885) — the upstream ask
+for an SDK-free MCP dispatch seam — reads **OPEN, 0 comments**, created `2026-08-25T16:37:44Z`, and
+upstream's latest release is **still `v0.33.2`**; same-call control `#764` reads **CLOSED with 6
+comments**, so the instrument can see closure and comments and the zero is a measurement.
+
+**Gate 3 — the SPLIT (designer lane).** Fable, model-pinned (`model="fable"`), **foreground**
+(standing rule 7(a) — a synchronous spawn cannot be reaped by the 600 s ceiling, which is this
+mission's recorded cause of 2 of 2 orphaned slots). 17.4 min, 31 tool uses. Directive carried the
+adapting brief (the shared `design-doc-creator` skill assumes the `sunholo-data/ailang` layout,
+which this repo is not), both round-3 objections, and Mark's answer.
+
+- **Parent `w-mcp-projection.md`: 1040 → 1204 lines.** Retains `P6.A` (record), `P6.T`, `P6.D`,
+  `P6.V` and an A2A-only re-cut `P6.B-A2A`. Open Decisions now reads **zero forks**, with
+  `D-WORLD-26` written into Decision 3, AC6, the Design Freeze and the High-Impact table, plus two
+  new named mutations so the closure is testable (`MUT-ALT-HEADER`, `MUT-KEY-AS-SESSION`). The
+  clause-6 scope statement says explicitly that the parent delivers the A2A half plus enablers and
+  does **not** claim clause 6 discharged.
+- **Child `w-mcp-dispatch-projection.md`: new, 173 lines**, deliberately not sprint-ready —
+  estimating against an undelivered seam would be fiction. Carries `gpt5-6-sol`'s round-3
+  objection **verbatim**, the both-routes-closed evidence with `[R]`/`[I]` provenance labels, and
+  the blocking predicate **as runnable commands** rather than prose.
+
+**A CONTROLLER INSTRUMENT FAILED AND ITS CONTROL IS WHAT CAUGHT IT — the designer's claim was
+right and my check was wrong.** Verifying "the objection is verbatim", I ran a single-line
+`grep -c 'no MCP request parser or handler for JSON-RPC method dispatch'` against the child and
+got **0**, against **1** in the parent's round-3 log. Read naively that is a sub-agent
+over-claiming. It is not: the phrase spans a **wrapped block-quote line** (`…no MCP request\n>
+parser or handler…`), so a line-oriented pattern cannot match it in the child's quote while it
+matches fine in the parent's differently-wrapped one. Widening as rule 3a(ii) requires — strip the
+`> ` prefixes, collapse whitespace, compare — returns **True** against the child, the parent AND
+the directive, with an altered-quote negative control returning **False**. Recorded because the
+failure direction is the dangerous one: it manufactures a false accusation against a sub-agent,
+which is the mirror of the laundering Gate 2 forbids.
+
+**Re-quorum — round 4, BLOCKED, both reviewers PRESENT, `absent_reviewers` EMPTY**
+(`metered=$0.213298`; artifact `w-mcp-projection-2026-08-25T21-25-44Z.json`). Cap raised to `$0.35`
+pre-emptively because the doc had just grown 974 → 1204 — the skill's named self-selecting budget
+trap, where the reviewer that drops out on budget is systematically the one whose objection drove
+the revision. **It did not fire**; this is a full-strength N=2 block, not an N−1 degrade.
+
+- **`gemini-3-1-pro` → PASS** ($0.063068) — **its first pass in four rounds.** Sole remark is
+  non-blocking and narrow: `P6.V` said *"raising the floor from 10 identities"* unconditionally,
+  which an executor could read as a mandate even where the encodable-shape fallback fires and the
+  floor correctly stays at 10. **Applied verbatim** by the controller this iteration (milestone
+  body + merge criterion, now explicitly conditional).
+- **`gpt5-6-sol` → REJECT** ($0.15023) — *"The session-authority boundary is not executable … No
+  landed credential lookup, credential-to-episode/grants mapping, expiry/revocation source, or
+  authentication API is identified. `D-WORLD-26` selects the HTTP carrier only; it does not supply
+  these missing semantics."*
+
+**THE OBJECTION WAS MEASURED, NOT FORWARDED (rule 3f), AND THE MEASUREMENT MADE IT LARGER THAN
+FILED.** Audited over `host/` at `2e44e3e` (96 Go files, scope asserted with `test -d`), one call,
+counts are of matching LINES: `Bearer` **0**; `Authorization` **1** (a prose comment in
+`approve.go`, not a code path); `Credential` **128** — but **all OUTBOUND**,
+`RegistryCredentialProvider` / `FileRegistryCredentialProvider` /
+`AssertNoAmbientRegistryCredential` in `host/broker/credential.go`, i.e. a credential World
+*presents* to an upstream registry; `Authenticate` **29** — but **all evidence-envelope**,
+`AuthenticatedEnvelope` and its codec in `host/evidence/`, i.e. signed evidence, not HTTP session
+auth; and `func .*(GetSession|LookupSession|ResolveSession|SessionByID|FindSession)` over
+`host/ cmd/` → **0**, so **nothing in this repo resolves a session by string**. Same-scope,
+same-shape known-positive control (`'Session' host/`) → **181**; fresh negative literal → **0**.
+`host/broker/broker.go:87` reads `func NewSession(s *store.Store, episodeID string, grants
+[]Capability, registry Registry) *Session` — **the grants are an ARGUMENT**. So `D-WORLD-26`
+settled the credential **envelope** and the **contents** question — who mints a session
+credential, where the credential → (episode, grants) mapping lives, what expires or revokes it —
+was never built at all. Note the shape of the two large non-zero counts: both are real, both are
+about credentials, and **both point the wrong way**; a controller who had read `Credential: 128`
+as "credential machinery exists" would have refuted a true objection on a number that is correct
+in its own scope (rule 3b(ix) — a count is only true inside the scope it was taken in).
+
+**Disposition — SPLIT AGAIN, a controller routing call and explicitly NOT `needs-human-review`.**
+Two independent rules converge. **(1)** The decomposition rule fires exactly as written: objections
+that **localise onto one surface while another reviewer flips to pass** mean the doc's SCOPE is
+wrong, not its content. Round 3 was two objections on two surfaces; round 4 is one reviewer
+passing and the other rejecting on a single surface that belongs to `P6.B-A2A` alone. **(2)** Its
+clause (c) settles where the work goes: this is a defect the doc **fails to fix**, not one it
+**introduces** — clause 3 landed the session model deliberately in-process and no HTTP-facing
+authority was ever built — and *a pre-existing defect surfaced by a reviewer is a QUEUE ROW, not a
+revision*. Filing it as `needs-human-review` would manufacture a decision Mark does not have
+(standing rule 8). So: **new queue row 39 `w-session-authority`** (~0.5–0.8d, needs a design doc,
+gated on nothing), carrying the measurement above verbatim.
+
+**Objection-surface tracking (rounds 3+).** R1 — three objections, three surfaces. R2 — commit
+boundary + SSE socket lifetime. R3 — MCP dispatch seam + status/fork self-consistency. **R4 —
+session authority ONLY, other reviewer passing.** Monotone convergence: three surfaces, then two,
+then one-plus-a-nit, and every departing surface left as its own doc or row rather than as a
+deletion. `P6.T`, `P6.D` and `P6.V` have drawn **zero** objections in all four rounds.
+
+**Routing evidence.** Controller `claude:claude-opus-5` (session, quota bucket `opus`) · designer
+**`fable` ×1**, model-pinned, foreground, 17.4 min, quota bucket `fable` · quorum reviewers
+`gpt5-6-sol` **$0.15023** (27,886 in / 360 out) and `gemini-3-1-pro` **$0.063068** (30,214 in /
+220 out) · **no planner, no executor, no evaluator — no sprint ran.** `metered=$0.213298` against
+the $5 ceiling. **THE ROTATION SKIP IS A COLLISION, NOT A PROBE FAILURE, AND I MEASURED IT RATHER
+THAN INHERITING IT:** the pointer's next entry `codex:gpt-5.6-sol` **probed rc=0 and replied
+`ok`** — the lane is healthy. It was skipped because `gpt5-6-sol` is one of the two default quorum
+reviewers **and the author of the objection driving this split**, so routing it would make the doc
+its own judge on precisely the contested surface. gemini is read-only under `CapRemoteSandbox` and
+cannot author a file. The rotation therefore has **one** usable authoring lane, the pointer stays
+at `claude:claude-fable-5` because Fable really was last used, and it cannot advance. Third
+consecutive iteration with this shape; the loop cannot widen its own rotation, the human can.
+
+**Ruled out.** **(a)** Routing the objection back to the designer for a third revision — refused:
+the objection is about a surface that does not exist at HEAD, so a revision could only invent a
+design for it inside a doc already carrying three others. **(b)** Filing the session-authority gap
+as `needs-human-review` — refused, there is no fork for a human to answer; it is a design item.
+**(c)** Sprinting `P6.T` off the blocked doc because `P6.T` itself is objection-free — refused,
+standing rule 2: a BLOCKED quorum does not route to a planner, and picking the clean milestone out
+of a blocked doc is forcing a guardrail. It becomes available the moment split #2's re-quorum
+clears. **(d)** Reading `Credential: 128` / `Authenticate: 29` in `host/` as a refutation of the
+reviewer — refuted by reading where they live: outbound registry publish and evidence envelopes.
+**(e)** Believing my own single-line verbatim grep over the designer's report — refuted by
+widening; the grep was the broken instrument.
+
+**Retro.** No skill edit: World shares `mission-control` by symlink from the V1 checkout and cannot
+edit it (`world-cannot-edit-shared-skill`). Two frictions worth carrying, neither at the ≥2-instance
+bar for a proposal on its own: **(i)** the archive-side rotation assertion, which I first ran
+case-sensitively (`grep -c "ITERATION 122"`) and got **0** — with the control ALSO reading 0, which
+is the documented "instrument broken" signal, since World stamps `(iteration N)` in lower case. The
+skill already carries the `-ci` rule for the *charter-side* tell and I applied it there and not to
+the *archive-side* one two lines later — guard the helper, miss the call site, in my own hands.
+**(ii)** The negative control for the weekly sweep: my first fresh literal read **1**, because a
+prior World iteration published that literal in its own log record. That is *a control you record
+is a control you spend*, confirmed live rather than inherited.
+
+**Next.** Split #2: carve `P6.B-A2A` out of `w-mcp-projection` behind row 39, leaving
+`P6.T`/`P6.D`/`P6.V`; re-quorum that remainder ONCE; then sprint **`P6.T`** (toolchain floor
+`go1.25.6` → `go1.26.6`, ~0.1d, independently mergeable). Nothing is blocked on a human.
+
+**DECISIONS FOR MARK: none.** The ledger is **13 rows, 0 OPEN**. One thing is surfaced as *data*
+rather than as an ask: `w-mcp-projection` has now consumed **four quorum rounds** plus a carve-out
+revision to discover four surfaces of differing readiness, and the designer rotation has one usable
+authoring lane. Both are scoping/routing patterns only a human can act on.
+
+
 ## Iteration 124 — 2026-08-25 — the seam shipped but carries only half the surface: `serveapi/protocol` has no MCP dispatch, and both routes around it are closed by this repo's own guardrails
 
 **Kind**: design revision + re-quorum + an upstream ask. **No sprint, no PR, no merge** — the
