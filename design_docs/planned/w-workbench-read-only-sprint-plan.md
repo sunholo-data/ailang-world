@@ -730,6 +730,169 @@ funcmap signature is corrected to `func(s any) template.HTML` in `plan.json` —
 helper cannot take a `GradeLabel`, so applying the row verbatim to the ORIGINAL `Grade.Label` site
 produces a template *type* error rather than the empty red set that demonstrates the survival.
 
+## 7g. `WB.I` discharged M1–M8 — and **M9 SURVIVES AT EVERY ONE OF ITS SITES**, because two guards on one request path mask each other (iteration 121)
+
+**M1–M8 are discharged by measurement, each a SOLE KILLER at subtest granularity. M9 is NOT
+discharged: it is recorded SURVIVED at all five of its real call sites, and its named test is killed
+only by a PAIR of them.** Every arm was asserted LANDED by an occurrence count on the mutated
+literal (`if false &&` — 0 before, N after — plus an exact line-content assertion at the site),
+proved to BUILD `rc=0` **before any test result was read**, classified by the COMPLETE enumerated red
+set (never predicted, no `-skip` inverse arm), restored by `cp` from `.snap/backup/` — never
+`git checkout --` — and verified byte-identical by `shasum -a 256`, with the pristine control re-run
+to `rc=0` after **every** arm. Final tree byte-identical to the backup; `gofmt -l host/ cmd/` empty.
+
+Run **outside any sandbox**, per §7f(b): the classification arm names `./host/daemon`, which binds
+real loopback sockets, so the milestone is controller-work by construction. Pristine control at
+entry: `rc=0`, `host/workbench` `0.335s` · `host/daemon` `2.957s` · `host/boundary` `2.793s`.
+
+| arm | site | LANDED | build | enumerated red set (subtest granularity) | verdict |
+|---|---|---|---|---|---|
+| M1 | `daemon.go:565` `"GET /workbench"` → `"/workbench"` | 1/0 | rc=0 | `TestWorkbenchRouteIsReadOnly` + `/DELETE` `/PATCH` `/POST` `/PUT` | SOLE KILLER |
+| M2 | `workbench.go:172` world-ref parse | 1 | rc=0 | `…/malformed-world` ALONE | SOLE KILLER |
+| M3 | `workbench.go:194` `GetWorld` presence | 1 | rc=0 | `…/absent-world` ALONE | SOLE KILLER |
+| M4 | `workbench.go:209` object-ref parse | 1 | rc=0 | `…/malformed-object` ALONE | SOLE KILLER |
+| M5 | `workbench.go:218` `GetObject` presence | 1 | rc=0 | `…/absent-object` ALONE | SOLE KILLER |
+| M6 | `workbench.go:144` `if from < 0` | 1 | rc=0 | `…/negative-from` ALONE | SOLE KILLER |
+| M7 | `workbench.go:158` entry parse, `err != nil` half only | 1 | rc=0 | `…/malformed-entry` ALONE | SOLE KILLER |
+| M8 | `workbench.go:245` `GetLogEntry` presence | 1 | rc=0 | `…/absent-entry` ALONE | SOLE KILLER |
+| **M9a** | `workbench.go:179` `SelectedHead` store error | 1 | rc=0 | `TestWorkbenchReadDeadline/blocking-store` ALONE | killed — **but NOT by M9's named test** |
+| **M9b** | `workbench.go:190` `GetWorld` store error | 1 | rc=0 | **EMPTY** | **SURVIVED** |
+| **M9c** | `workbench.go:214` `GetObject` store error | 1 | rc=0 | **EMPTY** | **SURVIVED** |
+| **M9d** | `workbench.go:241` selected `GetLogEntry` store error | 1 | rc=0 | **EMPTY** | **SURVIVED** |
+| **M9e** | `workbench.go:256` timeline `GetLogEntry` store error | 1 | rc=0 | **EMPTY** | **SURVIVED** |
+| S89 | `workbench.go:89` internal-error **log** guard | 1 | rc=0 | **EMPTY** | SURVIVED (not a store-error guard — see (a)) |
+| S139 | `workbench.go:139` `?from=` **parse** guard | 1 | rc=0 | **EMPTY** | SURVIVED (§7e's unpinned `?from=abc`) |
+| **MC1** | `179` **+** `256` together | 2 | rc=0 | `…/store-error` + `TestWorkbenchReadDeadline/blocking-store` + `/real-store-expired-deadline` | **MINIMAL KILLER PAIR** |
+| **MC2** | all five store-error guards | 5 | rc=0 | **identical to MC1** | `190`/`214`/`241` contribute NOTHING |
+
+M7 applies its row to the `err != nil` half only — the live guard is
+`if err != nil || parsed < 0 {`, so the row-literal mutant is `if false && err != nil || parsed < 0 {`
+(`&&` binds tighter than `||`). The `parsed < 0` half stays live and is still unpinned, exactly as
+§7e recorded.
+
+### (a) §7e's taxonomy was loose, and the correction changes which rows are at risk
+
+§7e(a) reported *"nine `if err != nil {` store-error guards"* and *"seven of nine have no killer"*.
+The count of nine is right; **the classification is not.** Re-measured site by site, the nine
+occurrences are three different kinds of guard:
+
+| kind | sites | count |
+|---|---|---|
+| parse guards — already owned by M2/M4 and one unowned sibling | `139` (`?from=`), `172` (M2), `209` (M4) | 3 |
+| the internal-error **log** guard in `writeWorkbenchInternalError` | `89` | 1 |
+| genuine **store-error** guards, the M9 family | `179`, `190`, `214`, `241`, `256` | 5 |
+
+So M9's parameterisation is over **five** sites, not nine, and two of the "surviving seven" (`172`,
+`209`) are in fact the ones §7e itself measured as killed — they were counted twice, once as killers
+and once as survivors, because the enumeration keyed on the *literal* `if err != nil {` rather than
+on the *guard*. §7e's own remedy is the right one applied one level further down: the table
+enumerates mutations where what needs enumerating is call sites, and a call-site enumeration keyed
+on a syntactic literal will collect guards that are not the guard under test.
+
+**§7e's `179` reading is also stale rather than wrong, and the delta is dated.** It recorded `179`
+as surviving; it is now killed by `TestWorkbenchReadDeadline/blocking-store`. Measured provenance:
+that test entered the tree at `8f0037c` (`WB.F`, [#88](https://github.com/sunholo-data/ailang-world/pull/88)),
+**after** `WB.D`'s `e50fbea` ([#86](https://github.com/sunholo-data/ailang-world/pull/86)) which is
+where §7e's sweep ran. Coverage improved between the two milestones; the earlier reading was correct
+when taken. A drill result is a claim about a tree, not about a file.
+
+### (b) The masking mechanism, proved by three arms rather than argued
+
+`TestWorkbenchRefusalBranches/store-error` requests `/workbench` with an **empty query** and installs
+`failingStore`, which returns `ok=false` **beside** its error. On that path exactly **two** of the
+five store-error guards are reachable: `SelectedHead` at `179`, and the timeline `GetLogEntry` at
+`256`. Neuter either alone and the request falls through to the other, which still emits the same
+`500 Internal` — so **the observable survives, and the mutant is invisible**.
+
+| arm | `…/store-error` | status observed |
+|---|---|---|
+| `179` alone (M9a) | **PASS** | 500, produced by `256` |
+| `256` alone (M9e) | **PASS** | 500, produced by `179` |
+| `179` **+** `256` (MC1) | **FAIL** | `workbench_test.go:183: status = 200, want 500` |
+
+The pair also reds `TestWorkbenchReadDeadline/real-store-expired-deadline`
+(`read_deadline_test.go:355/386: status = 200, want 503`), which is masked the same way.
+
+**The other three store-error guards are unreachable with a failing store from anywhere in the
+repository, and MC2 proves it two ways.** Measured: `failingStore` is installed at exactly **two**
+sites — `workbench_test.go:167` (target `/workbench`, no query) and `read_deadline_test.go:756`,
+whose targets come from `seedReadRoutes`, a list of **six `/v1/…` JSON routes containing no
+`/workbench` entry at all**. With an empty query, `query["world"]` is nil so the `GetWorld` block
+(`190`) is never entered, `query["object"]` is nil so `GetObject` (`214`) is never entered, and
+`selectedIndex` is nil so the selected `GetLogEntry` (`241`) is never entered. Independently of that
+reading, MC2 neuters all five at once and produces a red set **byte-identical to MC1's** — three
+extra neutered guards changing nothing is the same fact arrived at without tracing a single branch.
+
+This is not §7e's mechanism restated. §7e's is *"the row does not identify a site"* (queue row 37).
+This one survives even after the site is identified: **the guard is masked by a sibling guard on the
+same request path, so no single-site mutant of it can ever be detected.** It is the sprint's fifth
+hollow-pin mechanism (`WB.A` zero-value · `WB.B` observable wider · `WB.C` observable equal · `WB.D`
+row does not identify a site · **`WB.I` observable reachable by a sibling guard**), and the tell is
+structural: *the test asserts a status code that more than one guard on the path can produce.*
+
+Per §3's `survived_is_a_result`, M9 is recorded SURVIVED with its full output. The mutant is not
+repaired, the test is not repaired, and the row is not omitted. The gap — `?from=abc` (S139), the
+`parsed < 0` half of the entry guard, the log guard at `89`, and the four store-error guards with no
+possible killer — is **outside M1–M9's discharge and belongs to charter queue row 37**, whose subject
+is exactly this class, rather than being absorbed here against Standing rule 1.
+
+### (c) The multi-site harness silently ran a one-site arm, and both halves of its own guard agreed
+
+The first MC1/MC2 runs reported `sites=256`, `expected=1`, `LANDED=1` — a clean pass on an arm that
+had mutated **one** line while claiming two and five. Cause: the harness assigned its site list to a
+shell variable named `LINES`, and **`LINES` is a special integer parameter in `zsh`**, so the string
+`179,256` was evaluated as arithmetic — where `,` is the comma operator — and stored as `256`.
+Controls: same script with `SITES=$2` prints `179,256`; `zsh -c 'echo $LINES'` prints a number.
+
+What makes it worth recording is *why the assertion missed it*: `n_expected` was derived from the
+same corrupted variable as the mutation itself, so the check compared the instrument against itself
+and read `1 == 1`. It was caught only by the harness **echoing the site list it had actually parsed**
+next to the one it was given. This is this repo's `pipestatus` note (Repo Profile, iter-37) with a
+different zsh special parameter, and the general form is one the loop already owns aimed at its own
+guard: *an assertion whose expected value is computed from the same source as its actual value is
+not an assertion.* The tell: your "expected" count is derived rather than stated.
+
+### (d) The evaluator confirmed all three claims and found a SURVIVING MUTANT on a guard no row covers
+
+`sonnet` **97/100 PASS, ZERO BLOCKING**, in its own detached worktree at the sprint commit
+`f1dcbbb`, a distinct model from the controller who generated the work → generator ≠ judge held.
+Handed (b), the unreachability claim and (a) as **named targets to attack** (rule 3h(c)), it
+re-derived each independently: all three arms of the masking proof, with the failure text
+reproduced verbatim (`workbench_test.go:183: status = 200, want 500` and both
+`read_deadline_test.go:355/386: status = 200, want 503`); `MC2`'s red set `diff`-empty against
+`MC1`'s, plus a fourth single-site arm (`190` alone, EMPTY) so the aggregate could not be hiding a
+member; the nine occurrence line numbers and the 3/1/5 split; and the `WB.F`-after-`WB.D` dating by
+`git show`. It spot-checked M1, M6 and M7 — every red set an exact match, including M7's operator-
+precedence claim. It also reproduced (c)'s zsh defect directly (`zsh -c 'LINES=179,256; echo $LINES'`
+→ `256`). **It refuted nothing.**
+
+It then added a mutant of its own, aimed at a guard **no row in the 32-row catalogue touches**:
+`supportedWorkbenchQuery`'s cardinality gate at `host/daemon/workbench.go:69` —
+`if len(query) != 2 {` → `if false && len(query) != 2 {`. **Reproduced first-party by the controller
+before adoption** under the identical protocol: LANDED (new literal 1, original 0),
+`go build ./...` **rc=0**, full classification arm **rc=0 with an EMPTY red set**, restored
+byte-identical, pristine control rc=0. **SURVIVED.**
+
+The guard is live, not dead code: with it neutered a three-key query such as
+`?world=…&object=…&payload=1` falls past the `from`/`entry` pair test to
+`return query["object"] != nil && query["payload"] != nil`, which is **true** — so the request is
+accepted and renders `200` where the closed grammar of §4 requires `400`. The evaluator confirmed
+that behaviourally with a temporary probe (pristine `400 unsupported workbench parameter
+combination`, mutant `200`), removed before it finished. **No test anywhere supplies a three-key
+query**, so M31/M32 do not reach it — they pin the unknown-key and duplicate-key branches, which are
+a different guard.
+
+This is the closed grammar's **cardinality** half being unpinned while its **vocabulary** half is
+pinned twice. It is outside `WB.I`'s declared scope of M1–M9, so it goes to **charter queue row 34**
+(the home for findings outside M1–M32 that this drill cannot reach) rather than being absorbed here,
+exactly as §7f(e)'s `workbenchHref` survivor did.
+
+Deductions: **−3**, cosmetic and pre-existing — M31/M32's catalogue text places their guards in a
+`parseWorkbenchQuery` helper that no longer exists, the checks having been inlined into
+`handleWorkbench`. Not `WB.I`'s doing, but adjacent to the taxonomy work in (a), so it is recorded
+here and travels with row 34.
+---
+
 ## 8. Known base hazards — **not this sprint's fault, do not absorb**
 
 - **`host/capsule` `TestF5WallClockTimeoutHasElapsedBound`** asserts an absolute 2 s wall-clock
