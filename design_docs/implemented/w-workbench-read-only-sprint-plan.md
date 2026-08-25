@@ -1,9 +1,9 @@
 # Sprint plan — `WB.A`–`WB.K` (queue item 14, `w-workbench-read-only`, clause-2)
 
-**Status**: IN SPRINT — **`WB.C` LANDED 2026-08-23 (iteration 113)**, 3 of 11 milestones; `WB.D` is next · **Design doc**: [`w-workbench-read-only.md`](w-workbench-read-only.md) (AUTHORITATIVE — the doc wins on every divergence below) · **Planner**: mission-control iteration 110, opus lane (`derive-planner-lane.sh` → `opus fail-closed:env-pin`, token used VERBATIM).
+**Status**: **COMPLETE — all 11 of 11 milestones LANDED; `WB.K` landed 2026-08-25 (iteration 123)**, all 32 mutation rows discharged by measurement · **Design doc**: [`w-workbench-read-only.md`](w-workbench-read-only.md) (AUTHORITATIVE — the doc wins on every divergence below) · **Planner**: mission-control iteration 110, opus lane (`derive-planner-lane.sh` → `opus fail-closed:env-pin`, token used VERBATIM).
 
 - **Plan (machine)**: `.ailang/state/sprints/w-workbench-read-only.plan.json` — `jq -e .` passes.
-- **Design doc (AUTHORITATIVE)**: `design_docs/planned/w-workbench-read-only.md`, 894 lines.
+- **Design doc (AUTHORITATIVE)**: `design_docs/implemented/w-workbench-read-only.md`, 894 lines.
 - **Base**: `3e0c34cd5b7373cbc028838640c8301cba8c7fa0` (`dev` == `origin/dev`, clean).
 - **Planner**: sprint-planner (opus, model-pinned, lane token `fail-closed:env-pin`), iteration 110.
 - **Platform for every measurement below**: darwin/arm64, go1.25.6, AILANG v0.30.0 pinned at
@@ -97,7 +97,7 @@ that ends mid-drill resumes at the first mutant with no section.
 | WB.H | mutation drill 1/4 | — | **discharges M14–M21** | 0.75 |
 | WB.I | mutation drill 2/4 | — | **discharges M1–M9** | 0.75 |
 | WB.J | mutation drill 3/4 | — | **discharges M10–M13, M22, M23, M29–M32** | 1.0 |
-| WB.K | mutation drill 4/4 + full gates + final acceptance | **AC1, AC3, AC4, AC7** | **discharges M24–M28** | 1.25 |
+| ~~WB.K~~ **LANDED** | mutation drill 4/4 + full gates + final acceptance | **AC1, AC3, AC4, AC7** | **discharges M24–M28 — all five KILLED, no survivor (§7i)** | 1.25 |
 
 Total 9.5 h + 2.5 h contingency = 12 h ≈ **1.5 days**, inside the doc's §9 price of 1.5–2 days.
 
@@ -1014,6 +1014,237 @@ absorbed into `WB.J`.
 **Residue routed, not absorbed** (Standing rule 1): the latent tautology at `workbench_test.go:323`
 and the §7d(c) sweep's standing obligation go to **queue row 34** alongside the M31/M32 text; no
 production or test code was changed by this milestone.
+
+---
+
+## 7i. `WB.K` discharged M24–M28 — **no surviving mutant**; and three of the four landing legs read GREEN on a mutation that landed entirely inside a comment (iteration 123)
+
+**All five rows are discharged by measurement. There is no survivor, and this is the second clean
+drill milestone of the four.** Run **outside any sandbox**, per §7f(b): three of the five
+classification arms name `./host/daemon`, which binds real loopback sockets that
+`--sandbox workspace-write` denies — so `WB.K`, like `WB.H`/`WB.I`/`WB.J`, is controller-work by
+construction. Pristine control at entry: `go test ./host/workbench ./host/daemon ./host/boundary
+-count=1` **rc=0**, **0** `--- FAIL`, 15 s; named-test enumeration asserted present before any
+mutation (`TestWorkbenchPackageRemainsTransportFree` 6 RUN-lines, `TestNewRefusesNonLoopbackBind` 7,
+`TestBoundedWaitsAndBodyLimit` 6, `TestBoundaryASTWriteGuard` 1) with a fresh negative control at
+**0**.
+
+| arm | site (measured, not inherited) | LANDED | build | enumerated red set (subtest granularity) | verdict |
+|---|---|---|---|---|---|
+| M24 | `render.go` insert `_ "net/http"` at the gofmt-canonical import slot (`:7`) | 4/4 legs | build rc=0 | `TestWorkbenchPackageRemainsTransportFree/workbench-closure-is-transport-free` + parent | **SOLE KILLER** |
+| M25 | `allowlist_world_test.go:914` `got != 1` → `false && got != 1` | 4/4 legs | vet rc=0, empty-run rc=0 | `TestWorkbenchPackageRemainsTransportFree/daemon-transport-control-fires` + parent | **SOLE KILLER** — see (b) |
+| M26 | `daemon.go:412` `if false && !isLoopbackHost(cfg.BindHost) {` | 4/4 legs | build rc=0 | `TestNewRefusesNonLoopbackBind` + `refused/{0.0.0.0, example.com, 192.168.1.10}` — **4 members** | KILLED; every member inside the named test |
+| M27 | `daemon.go:624` `WriteTimeout: writeTimeout` → `WriteTimeout: 0` | 4/4 legs | build rc=0 | `TestBoundedWaitsAndBodyLimit/a/server_timeouts_are_set_and_non-zero` + parent | **SOLE KILLER** |
+| M28 | `allowlist_world_test.go:1292` `const wantFileCount = 1` → `= 2` | 4/4 legs | vet rc=0, empty-run rc=0 | `TestBoundaryASTWriteGuard` ALONE (no subtests) | **SOLE KILLER** |
+
+Every arm was restored by `cp` from `.snap/backup/` — never `git checkout --` — verified
+byte-identical by `shasum -a 256`, with the pristine control re-run after **every** arm (5/5 rc=0).
+Final tree byte-identical on all three mutated files; `git status --porcelain` empty;
+`gofmt -l host/ cmd/` rc=0 and **0 bytes**. Per §7h's rule the landing predicate was chosen for each
+mutation's SHAPE — substitution → the old literal's count must FALL *and* the new literal's must
+RISE; insertion → the new literal's must RISE — and **rule 3j's corollary was applied to every arm**:
+the failure text was read to confirm the assertion that failed is the one the mutant targets
+(`allowlist_world_test.go:941`/`:974` for M24, the overlay helper's did-not-fire report for M25,
+`daemon_test.go:150` for M26, `daemon_test.go:279` for M27, `allowlist_world_test.go:1294` for M28).
+
+### (a) Three of the four landing legs read GREEN on a mutation that landed inside a comment — and only a query against the PARSED form refused it
+
+The drill used a **four-leg** landing predicate and the legs were measured against each other rather
+than assumed complementary. Leg 1 = occurrence counts, shape-appropriate (§7h's rule). Leg 2 = an
+exact line-content assertion whose expected value is written in the harness and never read back from
+the file under mutation (§7g's `LINES` lesson). Leg 3 = `gofmt -l`, asserting **both** `rc=0` **and
+0 bytes of output**. Leg 4 = a query against the file's **parsed form** — a 60-line `go/parser`
+tool answering *"does an `IfStmt` with condition `false && !isLoopbackHost(cfg.BindHost)` exist, and
+at which position?"* — never against the file's bytes.
+
+The harness was negative-controlled **before use**, four arms, each restoring byte-identically:
+
+| control | what was wrong | leg 1 | leg 2 | leg 3 | leg 4 | verdict |
+|---|---|---|---|---|---|---|
+| NC1 | expected line content deliberately wrong | pass | **FAIL** | pass | pass | refused |
+| NC2 | pre-image line deliberately wrong | — | — | — | — | mutator **refused to edit** |
+| NC3 | substitution text landed inside a trailing `//` comment | **FAIL** | pass | pass | **FAIL** | refused |
+| **NC4** | **insertion text landed inside a `//` comment** | **pass** | **pass** | **pass** | **FAIL** | **refused by leg 4 ALONE** |
+
+**NC4 is the finding.** The mutant text `_ "net/http"` was inserted as `\t// _ "net/http"`. A drill
+that greps for the literal a human would naturally grep for sees `0 → 1` and calls it landed; the
+exact line-content assertion is satisfied *by construction*, because the comment IS the line the
+harness asserted; and `gofmt` reads `rc=0`, **0 bytes**, because a comment is canonical Go. Only the
+parsed-form query returns **0**. Measured directly and separately as well: on a comment-landed
+`if false && …`, `grep -c -F` = **1**, `gofmt -l` = rc 0 / 0 bytes, `astq if-cond` = **0**.
+
+**And the sharpening the controls produced, which corrects the first draft of this very section:**
+NC3 shows leg 1 is *not* uniformly blind. For a **substitution** the predicate is two-sided — the old
+literal must FALL — and a comment-landing leaves the old statement intact, so leg 1 refuses on its
+own. The blindness is a property of the **one-sided** predicate that an **insertion** mutant forces,
+because an insertion has no old literal to fall. So the exposure is shape-specific and, of the 32
+rows in this catalogue, **M24 is the only insertion-shaped mutant** — the single arm where leg 4 was
+load-bearing is the single arm that could have been fooled.
+
+This corroborates first-party, in this repo's idiom, the rule V1 iteration 274 added to the shared
+skill on 2026-08-25 (*"a `sed`/regex mutant can change the file, build cleanly, and have mutated
+something other than what you named"*, with the trailing-comment case as its instance (b)) —
+**and it was applied here before it was readable in the running copy**: see §7i(e). Two controls also
+fired on `gofmt` itself and are recorded because they bound leg 3's real power: a syntax break is
+`rc=2` (loud), but an **indentation** break is `rc=0` **with 22 bytes of output** — so a leg that
+reads only the exit code silently accepts a non-canonical splice. Asserting rc AND size is what
+catches it.
+
+### (b) `M25` proves §6's own rationale by measurement — the plain count subtest cannot detect its own neutering, and only the overlay arm can
+
+§6 of the doc says: *"M25 requires the boundary test to exercise its own detector with an overlay …
+Merely asserting the dependency count once is not enough."* That is a design-time claim; the drill
+turns it into a measurement, and the mechanism is worth stating because it is not the obvious one.
+
+The assertion M25 neuters lives in a **shared closure**, `requireExactlyOneNetHTTP`
+(`allowlist_world_test.go:913–918`), called by **two** subtests —
+`daemon-closure-has-exactly-one-net-http` (`:920`) and `daemon-transport-control-fires` (`:1009`).
+A neutering that broad would be expected to red both. The enumerated red set is
+`daemon-transport-control-fires` **and its parent, and nothing else**:
+`daemon-closure-has-exactly-one-net-http` **stays GREEN**.
+
+The reason is structural. On the pristine tree the daemon closure genuinely contains `net/http`
+exactly once, so that subtest's assertion **never fires**, and removing an assertion that never fires
+is invisible. The overlay arm is different in kind: `mutateViaOverlay`'s contract is that the
+callback must RETURN an error (the detector fired) and a `nil` return is reported as *"the detector
+did not fire"*. Neutering the closure makes the callback return `nil` — so the overlay arm is the
+only member that can observe the loss.
+
+**The consequence, stated precisely rather than as an alarm.** Under *mutation*,
+`daemon-closure-has-exactly-one-net-http` is a decorative member: no row in the 32-row catalogue makes
+its condition false, and M24 does not (adding `net/http` to the **workbench** closure leaves the
+daemon closure at exactly one occurrence — confirmed by M24's red set, which does not contain it).
+Under *regression* it is still a real pin: a production change that pulled a second transport into
+the daemon closure would red it. This is the same family as §7h(a)'s M12 — a live pin carrying a
+member that cannot detect the mutation its neighbourhood is about — and it is recorded, not repaired
+(§3 rule 5: there is a killer, so there is nothing to repair).
+
+### (c) Two catalogue rows are stale in ways only a first-party site search finds — and one of them changed the mutation
+
+- **M25's row names `countDep(daemonDeps, "net/http") != 1`.** No such expression exists: the code
+  reads `countDep(deps, "net/http")` inside the shared closure above. `grep -c -F 'countDep(daemonDeps'`
+  returns **1** in the file — but it is `countDep(daemonDeps, workbench)` at `:983`, a *different*
+  assertion belonging to `daemon-reaches-workbench-exactly-once`. **Mutating the site the catalogue
+  literally names would have exercised the wrong guard and produced a red for an arm never run** —
+  precisely the failure the skill's 2026-08-25 rule describes. Caught by locating every site before
+  any mutation, with the eight-hit `countDep(` enumeration as the firing control.
+- **M28's row cites line `1163 at base`; the constant is at `:1292`.** Harmless here because the
+  mutator is line-addressed **and asserts the exact pre-image**, so a stale line number produces a
+  refusal (`MUTATOR REFUSED`), never a silent mis-edit — which is what NC2 exists to demonstrate.
+
+Both are the same class as §7g/§7h's M31/M32 finding and travel with **queue row 34**; nothing is
+absorbed into `WB.K` (Standing rule 1).
+
+### (d) The catalogue's prescribed insertion point for M24 produces a non-canonical file, and leg 3 is what said so
+
+M24 as written inserts `_ "net/http"` at the top of the import block — which is also what the repo's
+own `insertTransport` overlay helper (`:986–993`) does. Applied there, `gofmt -l` returns **rc=0 with
+78 bytes**: the import is out of sort order. The mutant compiles and has its intended effect either
+way, so this is not a defect in the row; it is the reason leg 3 asserts size and not just exit code.
+The arm was re-run at the canonical slot (after `"io"`, line 7) and passed 4/4. Recorded so a future
+reader does not treat the first `LANDED=NO` in the drill log as a mutation failure.
+
+### (e) The running shared skill was 27 lines behind `origin/dev`, and the missing lines were this milestone's governing rule
+
+Gate 1's `cmp` fired: the skill resolved through `~/.claude/skills/mission-control` (a symlink into
+the V1 checkout's working tree) was **3,757** lines against origin's **3,784**, one deletion hunk,
+`origin:1108–1134` absent. Those 27 lines are V1 iteration 274's rule added **the same day** —
+*"LANDED is necessary, not sufficient … assert the mutant's INTENDED EFFECT with a query against the
+system's own view, never against the file's bytes"* — i.e. the exact discipline a mutation drill 4/4
+is about. Read from origin before proceeding, per the Repo Profile, and applied as leg 4. The
+divergence is the Repo Profile's one-way worktree-drift class (a Gate-5 edit committed from a
+worktree never reaches the checkout the symlink resolves to); World **cannot** repair it — the V1
+checkout is off-limits from this repo by the charter's hard rules — so it is reported to Mark and V1
+rather than fixed here.
+
+### (f) The retrospective judge over §7h ran, and it found a SURVIVING MUTANT — 3 of 3 for this milestone type
+
+Iteration 122 landed `WB.J` with its evaluator lane unavailable and recorded a retrospective judge
+pass as **owed before `WB.K`**. That debt is discharged here: `sonnet` (distinct from the `opus`
+controller who generated both sections, so generator≠judge holds), in its own worktree at `773bcd6`,
+judging **§7h and §7i together** — **93/100 PASS, ZERO BLOCKING**.
+
+Handed twelve named claims as targets to attack — five from §7h (`M12`'s tautology reproduced via
+its own MC1/MC2 arms; the M22/M23 and M29/M30 identical red sets; the §7d(c) sweep's *exactly one*
+hit re-run on the judge's own instrument with its own controls; two §7h arms spot-checked
+first-party) and seven from §7i — it **refuted none of them**. Notable: it declined to inherit my
+sweep and rebuilt the instrument, and it declined to inherit my AST tool and wrote its own before
+reproducing NC4.
+
+**And, as at iterations 119 and 121, the judge found a survivor the controller had missed.** Two,
+on the same function and neither covered by any of the 32 catalogue rows —
+`supportedWorkbenchQuery` (`host/daemon/workbench.go:62–76`), the closed grammar's
+**pair-composition** half:
+
+| survivor | mutation | LANDED | build | classification arm | verdict |
+|---|---|---|---|---|---|
+| A | `:72` `query["from"] != nil` **&&** `query["entry"] != nil` → **`||`** | old 1→0, new 0→1, line-content OK, gofmt rc=0/0 B, AST `if-cond` = 1 | rc=0 | `./host/workbench ./host/daemon ./host/boundary -count=1 -v` **rc=0, red set EMPTY**, 148 RUN lines | **SURVIVES** |
+| B | `:75` `query["object"] != nil` **&&** `query["payload"] != nil` → **`||`** | old 1→0, new 0→1, line-content OK, gofmt rc=0/0 B | rc=0 | same arm, **rc=0, red set EMPTY**, 148 RUN lines | **SURVIVES** |
+
+Both reproduced by the controller first-party before adoption (sibling-claim ghost discipline), and
+both restored byte-identically. **The guards are LIVE, not dead code** — measured on the function's
+own truth table with a temporary in-package probe, deleted afterwards:
+
+| 2-key query | pristine | under A | under B |
+|---|---|---|---|
+| `world`+`from` | `false` (→ 400) | **`true` (→ 200)** | `false` |
+| `world`+`payload` | `false` (→ 400) | `false` | **`true` (→ 200)** |
+| `from`+`entry` | `true` | `true` | `true` |
+| `object`+`payload` | `true` | `true` | `true` |
+
+§4's closed grammar requires `400 Bad Request` for both flipped rows, and `:127`
+(`if !supportedWorkbenchQuery(query)`) is what turns the `false` into that refusal. So each mutant
+opens a parameter combination the grammar forbids, and **nothing in the suite reds**.
+
+**Why the suite cannot see them, stated as a mechanism rather than as a count.** Both are two-clause
+`&&` sub-expressions *inside* a helper the tests only ever observe through its single boolean
+result. `TestWorkbenchRefusalBranches/unsupported-combination` supplies a **one-key** query, which
+exits at the `len(query) == 1` branch and never reaches `:72`/`:75` at all; every other test supplies
+a combination the grammar **accepts**. No test anywhere supplies a *rejected two-key* combination —
+so the entire `len == 2` false path is unexercised. This is distinct from queue row 34's fifth hunk,
+which is the same function's **cardinality** gate (`if len(query) != 2`, iteration 121): that one is
+about how many keys, these are about which pairs. Recorded to **row 34** as its sixth hunk, not
+absorbed into `WB.K` (Standing rule 1), and not repaired (§3 rule 5).
+
+**A false SURVIVED nearly landed in the liveness probe, and the shape is this drill's own recurring
+one.** The first truth-table run put both arms in one `for` loop whose zsh quoting mangled the
+pre-image strings: arm A's `python` assert failed and its stderr was swallowed by the `grep` the
+probe was piped into, and arm B's edit never applied — so B's table came back **identical to
+pristine**, which is exactly what a genuine survivor looks like. Nothing refused; the reading simply
+looked boring. It was caught only because arm A printed *nothing at all* (an anomaly) and B's table
+was suspiciously perfect. Same family as §7h(b)'s unsatisfiable landing predicate, one layer out —
+that one failed toward a refusal, this one failed toward a **plausible wrong answer**, which is the
+worse direction. The fix is the same discipline the drill harness already carries and the ad-hoc
+probe did not: assert the edit landed before reading any result, and never read an instrument's
+output through a pipe that discards its exit code.
+
+### Acceptance — every criterion in its executor form, beside its measured base rc
+
+| AC | base rc (planner, `3e0c34c`) | post rc | evidence |
+|---|---|---|---|
+| AC1 | **1** | **0** | `go test ./host/workbench ./host/daemon -count=1 -v`, **12** named `=== RUN` lines = 12 required |
+| AC2 | **1** | **0** | `-v` form, exactly **2** named `=== RUN` lines |
+| AC3 | 0 (regression pin only) | **0** | `verify_go.sh` — see the row below |
+| AC4 | 0 (regression pin only) | **0** | `verify_ail.sh`: `11 modules`, `10 required identities verified, 40 named tests pass`, `9/9 steps` all present |
+| AC5 | **1** | **0** | `mux.HandleFunc` **9** total = 7 `GET /v1/` + 1 `POST /v1/commit` + 1 `GET /workbench` |
+| AC6 | **1** | **0** | compound form; no SSE/Flusher/FileServer/embed.FS under `host/workbench host/daemon` |
+| AC7 | **0, empty (BROKEN — D1)** | **0** | see below |
+| AC8 | **1** | **0** | 2 named `=== RUN` lines + the `blocking-store` arm present exactly once |
+
+**AC7 is measured in the controller's git form, which is valid only now** — D1's whole point is that
+`git diff` cannot see untracked files, and the sprint's four new files were untracked for the entire
+sprint. All eleven milestones are committed, so the instrument is finally sound, and it is asserted
+sound rather than assumed: a planted `host/daemon/zz_probe_iter123.go` is seen **0** times by the
+doc's form and **1** time by the D1-repaired form (`git diff` ∪ `git ls-files --others
+--exclude-standard`) — **so D1 is still live and still real**, it is simply no longer *reachable*
+once nothing is untracked. `git diff --name-only 93e1ba5 -- ':!design_docs'` returns exactly **7**
+paths, **4 `A` + 3 `M`, 0 `D`**, and they are exactly §8.1's four additions and §8.2's three
+modifications with no unpriced path; known-positive control: the same command without the pathspec
+returns **15**. The untracked leg returns **0**.
+
+**`gofmt -l host/ cmd/`** rc=0, **0 bytes**. **INV1–INV10** hold. **No `git` write command appears in
+the drill's shell history** — the only git writes this iteration are the controller's own worktree
+creation and the record commit, both outside the drill.
 
 ---
 
