@@ -118,3 +118,38 @@ ensures { result == (next.revision == w.revision + 1
     && next.stateRoot.algo == outputWorld.algo && next.stateRoot.digest == outputWorld.digest
     && next.logHead.algo == nextLogHead.algo && next.logHead.digest == nextLogHead.digest
 }
+
+-- Contract 5: commit boundary for one stable invocation/idempotency ID.
+-- Z3-PROVEN: deliberately all-scalar because an ADT-bearing parameter makes
+-- v0.30.0 report an unknown sort while ai-check exits zero.
+-- Clause map to Decision 6:
+--   accepted ↔ exactly one receipt: before acceptance there is no durable
+--     mutation; acceptance is the point of no return, and completion remains
+--     required for either value of clientDisconnected.
+--   receiptCount == 0 || intentJournaled: a durable receipt has prior intent.
+--   receiptCount <= 1: the stable invocation ID is idempotent.
+--   not(reportedNotCommitted) || outcomeKnown: an unknown outcome cannot be
+--     reported definitively as not committed.
+-- Honest gaps: scalar state does not prove a wall-clock bound for the critical
+-- section or the storage mechanism by which a receipt is queried/replayed;
+-- receiptCount abstracts the durable, queryable receipt supplied by the host.
+export func commitBoundaryHolds(
+  intentJournaled: bool,
+  accepted: bool,
+  receiptCount: int,
+  clientDisconnected: bool,
+  reportedNotCommitted: bool,
+  outcomeKnown: bool
+) -> bool ! {}
+ensures { result == (
+  (not(accepted) && receiptCount == 0 || accepted && receiptCount == 1)
+  && (receiptCount == 0 || intentJournaled)
+  && receiptCount <= 1
+  && (not(reportedNotCommitted) || outcomeKnown)
+) }
+{
+  (not(accepted) && receiptCount == 0 || accepted && receiptCount == 1)
+    && (receiptCount == 0 || intentJournaled)
+    && receiptCount <= 1
+    && (not(reportedNotCommitted) || outcomeKnown)
+}

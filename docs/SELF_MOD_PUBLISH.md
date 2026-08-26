@@ -82,9 +82,9 @@ identity of what you are about to publish permanently:
 
 | field | digest |
 |---|---|
-| `contentHash` | `sha256:7616498ed6a6b907f5460ec1401cc8b8509a9ac0c7a4c2a4008eb133aad4459d` |
+| `contentHash` | `sha256:e357bed67a4525f712f8ae2f7811fce3e89f643149fafb7bdbcf522842d7999f` |
 | `interfaceHash` | `sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083` |
-| `tarballSHA256` | `sha256:2f18c5e828eb1a509e66d99356aee5278dc7fa8f8e845a107e023a2ce7db3a21` |
+| `tarballSHA256` | `sha256:025f82d776981d0447d67ebe9a96f52240a2ce063f37cb8c0c0dedee56131d12` |
 
 They are gated against the golden by `host/runbook`, so this table cannot rot silently: change the
 package without reprojecting, or edit one nibble here, and the repository gate reds.

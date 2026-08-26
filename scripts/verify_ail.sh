@@ -273,7 +273,7 @@ mod = sys.argv[1]
 # Hardcoded manifest — keyed by (repo-relative module file, bare function name), V17.
 REQUIRED_VERIFIED = {
     "world/transitions.ail": {"applyRevision"},
-    "world/contracts.ail":   {"isValidNextWorld"},
+    "world/contracts.ail":   {"commitBoundaryHolds", "isValidNextWorld"},
     "world/logepoch.ail":    {"sameRef", "servesEntry"},
     "world/types.ail":       {"gradeOf", "timeoutOutcome", "timeoutFiredLegally",
                              "validEscalation", "validDefer", "wellFormedSchedule"},
@@ -320,7 +320,7 @@ if [ "$checked" -eq 0 ]; then
   exit 1
 fi
 
-EXACT_TOTAL_VERIFIED=10
+EXACT_TOTAL_VERIFIED=11
 if [ "$total_verified" -ne "$EXACT_TOTAL_VERIFIED" ]; then
   echo "✗ expected exactly $EXACT_TOTAL_VERIFIED proven world/ contracts, got $total_verified" >&2
   exit 1
