@@ -3,47 +3,38 @@
 > 30-second control context. Snapshot, not a record — history lives in `world-mission.md`,
 > the status archive and the log. Overwritten each iteration; namespaced on purpose.
 
-**Last iteration**: 128 · 2026-08-26 · `dev` GREEN at `74c47d5` · **PR #97 blocked on a declared
-GitHub Actions outage — built, evaluated, gated, NOT landed**
+**Last iteration**: 129 · 2026-08-26 · **`P41` LANDED** — PR #97 → squash `8e3c8cd`,
+Gate 3b green and taken after the Actions incident was marked resolved
 
 ## This iteration
-- **`P41` is BUILT and NOT LANDED — a named resume point, not a failure.** PR #97 @ `098f608`,
-  `MERGEABLE`/`CLEAN`. Gate 3b undischarged: `checks=0`/`runs total=0` with the known-positive
-  control rev-parsed and firing, against a declared **Partial System Outage / Incident with
-  Actions** (`15:11:58Z`) that began minutes after the push. Not auto-merged, not reverted.
-- **Design landed separately at `74c47d5`** so the iteration's reviewed artifact survives
-  independently of the outage. Two quorum rounds, both blocked at full strength, both answered
-  by measurement; **metered $0.2417** of $5.
-- **18 mutation arms, ZERO survivors.** M1/M2 — `P6.T`'s recorded SURVIVORS — both now RED.
-- **New finding, bigger than the objection that surfaced it (row 44):** the mission's own
-  miscompile instrument has been failing on **10 of the last 10** CI runs, hidden by
-  `continue-on-error: true`. Cause measured with a two-arm platform control: the defect is
-  darwin-only; CI is linux.
+- **Row 41 `w-setup-go-pin-unguarded` is LANDED and CLOSED.** Both toolchain-pin kinds are now
+  bound to the go.mod floor by static test, and `run.sh` no longer certifies a toolchain it never
+  probed. Built and judged at iteration 128 (evaluator `sonnet` **92/100 zero-blocking**, 18
+  mutation arms / zero survivors, M1+M2 — `P6.T`'s recorded survivors — both RED); iteration 129
+  was the landing gate only. **No sprint roles spent, metered $0.**
+- **The finding: a resolved incident does not replay its dropped deliveries.** The Actions
+  incident closed at `18:01:30Z`; ninety minutes later both dropped commits still read
+  `checks=0`/`total=0` (control rev-parsed and firing). An owed re-run must be *manufactured* —
+  it does not arrive. Recovered with Gate 3b's tree-identical empty commit through the git API:
+  `runs=0` → `runs=1`, `event=pull_request`, `jobs=2` in 20 s.
+- **New row 47 — the half of that gap with no lever at all.** `ci.yml` is the only workflow and
+  declares no `workflow_dispatch`, so a dropped push to `dev` leaves HEAD unverifiable: you can
+  advance `dev` (changing the commit you were verifying) or nothing. Instance resolved forward by
+  the merge; class open.
+- **Row 44 re-confirmed on an eleventh run** (1 `INSTRUMENT FAILURE`, 0 `RESULT:` banners,
+  same-log controls at 1 and 10, step 8 still reported `success`).
 
-## In flight / next
-1. **Discharge Gate 3b on #97** once the Actions incident is marked resolved — the re-run is
-   OWED, and a green taken during an open incident does not count.
-2. Rows **42** (canary control dies on a floor raise), **43** (floor-raise coupling inventory).
-3. Rows **44** (miscompile instrument inert in CI), **45** (pin-normalizer accepts a malformed
-   `GOTOOLCHAIN`), **46** (`ailang-worldd` CLI stderr-buffer data race) — all new this iteration.
-4. Row **39** `w-session-authority` (~0.5–0.8d) → unblocks row 40, which carries `P6.D`.
-
-## Blocked
-- Row 40 → row 39. `w-mcp-dispatch-projection` → [`ailang#885`](https://github.com/sunholo-data/ailang/issues/885).
-- Row 45 → row 41 landing.
+## Loop state
+- **Queue next**: rows **42**, **43**, **44**, **45**, **46**, **47**, then row **39**
+  (`w-session-authority`, the clause-3 blocker under row 40).
+- **Routing**: controller `opus`; designer rotation pointer at `pi:ollama/kimi-k3:cloud`
+  (advanced iter-128, first working non-Fable authoring lane); planner `opus fail-closed:env-pin`;
+  executor `codex:gpt-5.6-sol`; evaluator `sonnet` (generator≠judge).
+- **Gates**: `verify_ail.sh` (floor **11** identities / 40 tests) + `verify_go.sh`; CI = one
+  workflow, two jobs. Issue `#89` (18 comments, rotation not due). Ledger 13 rows, **0 OPEN**.
 
 ## Parked on Mark
-**NOTHING.** Decision ledger: **13 rows, 0 OPEN**. Zero open asks.
+**None.** Zero open asks.
 
-## Cadence / routing
-- Controller `opus` · designer **`pi:ollama/kimi-k3:cloud`** · planner `opus`
-  (`fail-closed:env-pin`) · executor `codex:gpt-5.6-sol` · evaluator `sonnet` (generator≠judge
-  held: codex ≠ Anthropic).
-- ✅ **The one-usable-authoring-lane defect did NOT fire.** First use of the rotation entry Mark
-  ratified attended 2026-08-26; probed rc=0, authored + revised, **Fable spend $0**, and the
-  pointer advanced for the first time in three iterations.
-- ⚠ **The pi runner the skill mandates invokes `pi` without the two `-e` sandbox/fence flags the
-  same skill mandates**, so both designer runs were unsandboxed. Compensated with the charter's
-  pi discipline: full sha256 manifest of the main checkout before/after each run, byte-identical
-  both times, `cmp` control fired.
-- ✅ Running shared skill IDENTICAL to `origin/dev` (resolved symlink target, same inode).
+## Quota posture
+`metered=$0` (landing + record only); prior iteration $0.2417 of $5. Billing tripwire **CLEAN**.
