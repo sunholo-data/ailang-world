@@ -118,3 +118,51 @@ ensures { result == (next.revision == w.revision + 1
     && next.stateRoot.algo == outputWorld.algo && next.stateRoot.digest == outputWorld.digest
     && next.logHead.algo == nextLogHead.algo && next.logHead.digest == nextLogHead.digest
 }
+
+-- Contract 5: commit boundary for one stable invocation/idempotency ID.
+-- Z3-PROVEN: deliberately all-scalar because an ADT-bearing parameter makes
+-- v0.30.0 report an unknown sort while ai-check exits zero.
+-- Clause map to Decision 6:
+--   accepted <-> exactly one receipt: before acceptance there is no durable
+--     mutation, and acceptance is the point of no return. THIS conjunct also
+--     already entails idempotency (see below).
+--   receiptCount == 0 || intentJournaled: a durable receipt has prior intent.
+--   receiptCount <= 1: RESTATES, does not add. Measured with a discriminating
+--     instrument (ensures stating conjunct 1 alone against a body computing
+--     conjunct 1 AND this clause): `verified`, with a firing positive control
+--     (the same shape carrying `receiptCount >= 1` yields a counterexample).
+--     Retained for legibility, credited with no independent proof work.
+--   not(reportedNotCommitted) || outcomeKnown: an unknown outcome cannot be
+--     reported definitively as not committed.
+-- Honest gaps, three and not two:
+--   1. Scalar state does not prove a wall-clock bound for the critical section.
+--   2. receiptCount abstracts the durable, queryable receipt the host supplies;
+--      the storage mechanism is not modelled here.
+--   3. clientDisconnected does NO logical work. It is declared and never
+--      referenced by `ensures` or the body (occurrences in this file: the
+--      parameter and these comments only; control: receiptCount appears
+--      throughout). So Decision 6's "may complete despite client disconnect"
+--      sentence is UNDISCHARGED by this law, not proven by it. The parameter is
+--      kept because MUT-DISCONNECT-EXCUSE reds if a later revision wires it in
+--      as an excuse for skipping the receipt -- that is regression coverage for
+--      a future edit, never evidence about the law as it stands today.
+export func commitBoundaryHolds(
+  intentJournaled: bool,
+  accepted: bool,
+  receiptCount: int,
+  clientDisconnected: bool,
+  reportedNotCommitted: bool,
+  outcomeKnown: bool
+) -> bool ! {}
+ensures { result == (
+  (not(accepted) && receiptCount == 0 || accepted && receiptCount == 1)
+  && (receiptCount == 0 || intentJournaled)
+  && receiptCount <= 1
+  && (not(reportedNotCommitted) || outcomeKnown)
+) }
+{
+  (not(accepted) && receiptCount == 0 || accepted && receiptCount == 1)
+    && (receiptCount == 0 || intentJournaled)
+    && receiptCount <= 1
+    && (not(reportedNotCommitted) || outcomeKnown)
+}
