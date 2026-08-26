@@ -4344,7 +4344,8 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
     before the ref moved): `runs=0` → `runs=1`, `event=pull_request`, `jobs=2` within 20 s. Evaluator
     `sonnet` **92/100, ZERO BLOCKING**; 18 mutation arms, ZERO survivors, with M1/M2 — `P6.T`'s
     recorded SURVIVORS — both now RED. The half of that gap with no lever at all (a dropped push to
-    `dev`) is **row 47**. **Prior head text follows.** ~~**[IN-SPRINT — RESUME POINT, NOT LANDED]**~~ **w-setup-go-pin-unguarded** · **BUILT, EVALUATED
+    `dev`) is **row 47**. Doc + sprint plan moved to `design_docs/implemented/`.
+    **Prior head text follows.** ~~**[IN-SPRINT — RESUME POINT, NOT LANDED]**~~ **w-setup-go-pin-unguarded** · **BUILT, EVALUATED
     `sonnet` 92/100 ZERO BLOCKING, ALL GATES GREEN OUTSIDE THE SANDBOX — BLOCKED ONLY ON A
     DECLARED GITHUB ACTIONS OUTAGE.** Design [`74c47d5`](https://github.com/sunholo-data/ailang-world/commit/74c47d5)
     (quorum-cleared, 2 rounds, narrow-refinement carve-out). Sprint
