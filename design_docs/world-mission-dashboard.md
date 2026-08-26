@@ -3,7 +3,8 @@
 > 30-second control context. Snapshot, not a record — history lives in `world-mission.md`,
 > the status archive and the log. Overwritten each iteration; namespaced on purpose.
 
-**Last iteration**: 127 · 2026-08-26 · `dev` GREEN at `699f592`
+**Last iteration**: 127 · 2026-08-26 · `dev` GREEN at `1cc8cf4` (record commit hit a transient
+Z3-asset HTTP 500 in CI — diagnosed as infrastructure with controls, cleared by re-run, not reverted)
 
 ## Shipped this iteration
 - **`P6.V` LANDED — and with it, charter row 5 `w-mcp-projection` CLOSES.** PR #96 → squash

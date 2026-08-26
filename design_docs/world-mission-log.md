@@ -15514,3 +15514,23 @@ The executor omitted `requires { receiptCount >= 0 }` from the plan's sample law
 
 **Next**
 Rows **41** (the `setup-go` pin no local or CI command turns red) and **42** (the canary control that stops being verifiable once the floor rises) — both ~0.15–0.2d, both honest non-kills iter-126 recorded rather than papered over. Then new row **43** (publish the six-file floor-raise coupling inventory). Then row **39** `w-session-authority`, which unblocks row 40 and carries `P6.D`. **ZERO open asks; nothing parked on Mark.**
+
+**ADDENDUM (post-record) — the record commit itself went RED, and it was the infrastructure.**
+`1cc8cf4` (docs-only, 4 `design_docs/` files) failed `ailang-code verify gate`. Diagnosed rather
+than reverted, with controls, per the skill's *a red can be the provider itself* rule: **(a)** the
+failing step is **#5 of 17, `Install Z3 4.16.0`**, with steps 6–8 (`ailang version`, the pinned
+binary install, the actual `ai-check` sweep) **`skipped`** — so **no repo command ever ran** and
+nothing in the diff was exercised; **(b)** the log's last line is
+`curl: (22) The requested URL returned error: 500` fetching the sha256-pinned Z3 release asset —
+a third-party CDN 500, not a gate result; **(c)** before-arm: the **parent** commit `699f592` shows
+the same job `success` minutes earlier; **(d)** the pinned URL probed directly returned **200**,
+and the same probe returned **404** for a deliberately non-existent asset, so the instrument
+discriminates present from absent; **(e)** GitHub status: *All Systems Operational*, 0 incidents.
+Disposition: **no revert, no fix-forward** — re-run, which is the strongest control available.
+`gh run rerun --failed` on the byte-identical tree returned **both jobs `success`**. Outcome
+divergence with zero code change is what makes this a measurement of the environment rather than
+a hunch. Final dev state at `1cc8cf4`: `checks=2`, `not_green=0`, both `success`.
+Worth recording for a reason beyond this incident: the pinned Z3 install is a **network dependency
+on the critical path of the verify gate**, and its failure mode is a red that looks exactly like a
+contract regression to anyone reading only the check name. Reading *which step* failed is what
+separated them in under a minute.
