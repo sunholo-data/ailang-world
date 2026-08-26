@@ -22,10 +22,13 @@ set -uo pipefail
 cd "$(dirname "$0")/repro" || exit 1
 
 KNOWN_BAD="go1.26.0 go1.26.3 go1.26.4 go1.26.5"
-KNOWN_GOOD="go1.25.6 go1.24.9"
+KNOWN_GOOD="go1.26.6 go1.25.6 go1.24.9"
+PINNED="go1.26.6"   # the toolchain go.mod pins; TestMiscompileInstrumentProbesPinnedToolchain
+                    # binds it to the `go` line — a floor raise that forgets it reds (M17).
 
 saw_bad=0
 saw_good=0
+saw_pinned_ok=0
 ran=0
 
 probe() { # $1=toolchain  $2=expectation label
@@ -48,7 +51,7 @@ probe() { # $1=toolchain  $2=expectation label
 		return 1
 	fi
 	case "$out" in
-	OK*) [ "$expect" = GOOD ] && saw_good=1 ;;
+	OK*) [ "$expect" = GOOD ] && saw_good=1; [ "$tc" = "$PINNED" ] && saw_pinned_ok=1 ;;
 	BUG*) [ "$expect" = BAD ] && saw_bad=1 ;;
 	esac
 	return 0
@@ -89,6 +92,13 @@ if [ "$saw_good" -eq 0 ]; then
 	echo "cannot be attributed to the compiler. Fix the harness before citing any result."
 	exit 1
 fi
+if [ "$saw_pinned_ok" -eq 0 ]; then
+	echo "INSTRUMENT FAILURE: the PINNED toolchain ($PINNED) never reported OK — it was"
+	echo "SKIPPED (unfetchable) or is absent from the probe lists. A success banner that"
+	echo "never probed the pin is a false clean; refusing to print it."
+	exit 1
+fi
 echo "RESULT: reproduction confirmed, and both controls fired."
 echo "  known-affected toolchain reported BUG : yes"
 echo "  known-good toolchain reported OK      : yes"
+echo "  pinned toolchain ($PINNED) reported OK  : yes"
