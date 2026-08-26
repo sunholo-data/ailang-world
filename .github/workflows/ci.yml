@@ -18,14 +18,14 @@ jobs:
     name: ailang-code verify gate
     runs-on: ubuntu-latest
     env:
-      GOTOOLCHAIN: go1.25.6
+      GOTOOLCHAIN: go1.26.6
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.6'
+          go-version: '1.26.6'
 
       - name: Install released ailang binary
         run: |
@@ -99,14 +99,14 @@ jobs:
     name: go host build + test gate
     runs-on: ubuntu-latest
     env:
-      GOTOOLCHAIN: go1.25.6
+      GOTOOLCHAIN: go1.26.6
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.6'
+          go-version: '1.26.6'
 
       - name: go version
         run: |
