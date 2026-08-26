@@ -115,6 +115,34 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   start — and mirror `ROOTS` rather than guessing the cwd. This is rule 3a(i) with the unusual
   twist that the broken instrument produces a *positive* result, not an empty one, so the
   "search found nothing" reflex does not fire.
+- **A DUPLICATE WEBHOOK DELIVERY MAKES `checks` EXCEED `expected`, AND GATE 3b's COMPLETENESS RULE
+  — WRITTEN ENTIRELY FOR A *SHORT* CHECK SET — THEN REFUSES TO REACH A VERDICT ON A PERFECTLY
+  GREEN COMMIT (process fix / watch-item, iter-129; 1 recorded instance, bar is 2 — NOT yet
+  proposed to V1).** The shared skill's rule (i) says to enumerate the workflows EXPECTED for the
+  diff and require every one to be PRESENT, *"else print `INSTRUMENT INCOMPLETE — no verdict` and
+  keep polling; a count of what you found is not a count of what exists."* Every word of that is
+  aimed at `present < expected`. The natural implementation is an equality — the skill's own
+  rule (c) even names `present == expected` — and equality fails in **both** directions.
+  **Measured first-party here, in the same incident-recovery window that caused the drops this
+  iteration was cleaning up:** the record push `68164ba` received **TWO** `CI` runs — same
+  workflow file, same `event=push`, the **same `created_at` second** (`19:46:43Z`), both
+  `run_attempt=1` — while the control commits `8e3c8cd`, `2d2513e`, `609e090`, `74c47d5` and
+  `fd490ca` each received exactly **1**. `commits/<sha>/check-runs` therefore returned
+  **`checks=4`** (each of the two jobs twice) against `expected=2`, so the naive rule prints
+  `INSTRUMENT INCOMPLETE — no verdict` and a bounded poll runs to **TIMEOUT and PARKS a landing
+  that is green**. Note this is the exact mirror of the failure the same gate already documents:
+  an aggregate over a SHORT set is vacuously *green*, and an equality over a LONG set is
+  spuriously *incomplete* — at-most-once and at-least-once delivery, one comparison, both
+  directions.
+  **The fix, and it is a no-op on the normal case, which is what makes it safe to adopt:** compare
+  **DISTINCT check NAMES**, not row count — `[.check_runs[].name]|unique|length`. Measured: on the
+  double-delivered commit `distinct=2 == expected=2` (verdict reachable) while `total_count=4`;
+  on the single-delivery control both readings are **2**, so the two rules differ only where they
+  must. Then require every distinct name to carry at least one success and **zero** hard reds
+  (`failure`/`cancelled`/`timed_out`) — a duplicate delivery can legitimately leave one copy
+  cancelled by concurrency rules, and a name-scoped read handles that while a row count cannot.
+  The tell: your Gate-3b completeness assertion is an `-eq`, and you have only ever asked what
+  happens when the number comes back too small.
 - **A QUEUE ROW KEEPS ITS OWN DEAD HEADS INLINE, SO A ROW-SCOPED GREP RETURNS THE LIVE HEAD AND
   EVERY SUPERSEDED ONE WITH NOTHING IN THE MATCH TO TELL THEM APART (process fix, iter-87; 1
   recorded instance — watch-item, bar is 2).** This charter's convention is that a row records its
