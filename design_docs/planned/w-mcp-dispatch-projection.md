@@ -131,6 +131,27 @@ parent: the session carrier ruling (`D-WORLD-26` = ARM A: `Authorization: Bearer
 verify → commit invocation path, the one-snapshot-per-request rule, and P6.V's verified
 commit-boundary law (which the parent lands and this half consumes).
 
+## Dependency admission — this doc carries it IF it unblocks first (added 2026-08-26, iteration 126)
+
+The parent's `P6.D` (the `v0.33.2` pin + the single `allowedDepModules` **package-path** entry
+`github.com/sunholo-data/ailang/serveapi/protocol` + its narrowness test) was DEFERRED out of the
+parent at quorum round 5, on `gpt5-6-sol`'s objection that pre-landing an unconsumed dependency
+behind a dead compile anchor is speculative core growth. Its prescribed fix moves the admission
+into *"whichever child first becomes unblocked, where a real handler or adapter import provides
+the compile-visible use"*.
+
+Two children can unblock: this one (on `#885`) and
+[`w-a2a-session-projection.md`](w-a2a-session-projection.md) (on charter queue row 39
+`w-session-authority`). **If THIS doc unblocks first, it carries the admission**, with its `/mcp/`
+handler's `protocol` import as the compile-visible use; the full specification, AC16, and the
+mutations `MUT-ALLOWLIST-ROOT`/`MUT-FACADE-IMPORT` are written out in the A2A child's `P6.D`
+section and are inherited verbatim. If the A2A child lands it first, this doc inherits an
+already-admitted dependency and adds nothing. Check before starting:
+`git grep -n 'serveapi/protocol' -- go.mod host/daemon/daemon_test.go`.
+
+Either way it requires the parent's `P6.T` (toolchain floor `go1.25.6 → go1.26.6`) to be green
+first: `v0.33.2` declares `go 1.26.6`.
+
 ## Non-negotiables that survive into any future draft
 
 - No local JSON-RPC/MCP dispatch implementation (parent P1 / Design Freeze / `DESIGN.md` §3.7).
