@@ -10,24 +10,62 @@ import (
 	"testing"
 )
 
-func normalizeToolchainPin(value string) string {
+func stripPinQuotes(value string) string {
 	value = strings.TrimSpace(value)
 	if len(value) >= 2 && ((value[0] == '\'' && value[len(value)-1] == '\'') ||
 		(value[0] == '"' && value[len(value)-1] == '"')) {
 		value = value[1 : len(value)-1]
 	}
+	return value
+}
+
+// canonicalizeVersionPin serves ONLY the conventions whose native spelling omits the
+// "go" prefix: actions/setup-go `go-version:` values and go.mod `go` directives
+// (design doc P8). Prepending is correct here and nowhere else.
+func canonicalizeVersionPin(value string) string {
+	value = stripPinQuotes(value)
 	if value != "" && !strings.HasPrefix(value, "go") {
 		value = "go" + value
 	}
 	return value
 }
 
-func pinValues(lines []string, key string) []string {
+// requireToolchainNamePin serves the conventions that carry a Go toolchain NAME:
+// ci.yml GOTOOLCHAIN pins and run.sh's PINNED=. Per https://go.dev/doc/toolchain
+// (where `go help environment` sends GOTOOLCHAIN readers), the setting's grammar is
+// <name>, <name>+auto, <name>+path, or the shorthands auto/local/path — but only the
+// bare <name> form PINS. The mode words and +suffix forms are VALID to Go — measured:
+// GOTOOLCHAIN=go1.26.6+auto is rc=0 and runs go1.26.6 (design doc P19) — so rejecting
+// them is a pin-stability POLICY choice, not a validity claim: they are selection
+// channels under which the resolved toolchain can move without this file changing.
+// The second arm is this REPOSITORY'S PIN POLICY, not a claim of equivalence with
+// the runtime's own name grammar (round-2 R1; custom `goV-suffix` names measured in
+// design doc P22). Both arms are Fatalf, and neither is an instrument-class floor — the
+// instrument is fine; the INPUT is not a pin. Stopping is still correct, because
+// every comparison downstream (the agreement loop, the go.mod-floor check) takes
+// this value as its operand: grading agreement over a non-pin is the E0
+// misattribution reproduced one call later (design doc P21). One defect, one
+// attributed message. Nothing is auto-corrected, because a value Go itself refuses
+// (`go: invalid GOTOOLCHAIN "1.26.6"`, measured) must never be repaired into a
+// value it would accept.
+func requireToolchainNamePin(t *testing.T, source, key, raw string) string {
+	t.Helper()
+	value := stripPinQuotes(raw)
+	switch {
+	case value == "auto" || value == "local" || value == "path" || strings.Contains(value, "+"):
+		t.Fatalf("%s: %s=%q is a toolchain-selection mode, not a pin; only a bare toolchain name (e.g. go1.26.6) pins", source, key, value)
+	case !version.IsValid(value):
+		t.Fatalf("%s: %s=%q is not an allowed standard Go toolchain pin; this repository requires a bare standard toolchain version accepted by go/version.IsValid (for example go1.26.6)", source, key, value)
+	}
+	return value
+}
+
+func keyedValues(lines []string, key string) []string {
 	var values []string
 	for _, line := range lines {
 		parts := strings.SplitN(strings.TrimSpace(line), ":", 2)
 		if len(parts) == 2 && parts[0] == key {
-			values = append(values, normalizeToolchainPin(parts[1]))
+			values = append(values, stripPinQuotes(parts[1]))
 		}
 	}
 	return values
@@ -42,7 +80,7 @@ func moduleGoFloor(t *testing.T, path string) string {
 	var floors []string
 	for _, line := range strings.Split(string(raw), "\n") {
 		if strings.HasPrefix(line, "go ") {
-			floors = append(floors, normalizeToolchainPin(strings.TrimPrefix(line, "go ")))
+			floors = append(floors, canonicalizeVersionPin(strings.TrimPrefix(line, "go ")))
 		}
 	}
 	if len(floors) != 1 {
@@ -98,11 +136,17 @@ func TestGoToolchainPinsAgreeAndMatchJobList(t *testing.T) {
 	wantJobs := []string{"ailang-verify", "go-verify"}
 	if !slices.Equal(jobs, wantJobs) {
 		t.Errorf("ci.yml: enumerated jobs=%v, want %v; GOTOOLCHAIN pins=%d go-version pins=%d",
-			jobs, wantJobs, len(pinValues(lines, "GOTOOLCHAIN")), len(pinValues(lines, "go-version")))
+			jobs, wantJobs, len(keyedValues(lines, "GOTOOLCHAIN")), len(keyedValues(lines, "go-version")))
 	}
 
-	goToolchains := pinValues(lines, "GOTOOLCHAIN")
-	goVersions := pinValues(lines, "go-version")
+	goToolchains := keyedValues(lines, "GOTOOLCHAIN")
+	for i, raw := range goToolchains {
+		goToolchains[i] = requireToolchainNamePin(t, "ci.yml", "GOTOOLCHAIN", raw)
+	}
+	goVersions := keyedValues(lines, "go-version")
+	for i, raw := range goVersions {
+		goVersions[i] = canonicalizeVersionPin(raw)
+	}
 	setupGoUses := strings.Count(src, "uses: actions/setup-go@")
 	if len(goToolchains) != len(wantJobs) {
 		t.Errorf("ci.yml: GOTOOLCHAIN keyed-line count=%d, want %d (one per enumerated expected job)", len(goToolchains), len(wantJobs))
@@ -241,7 +285,7 @@ func TestMiscompileInstrumentProbesPinnedToolchain(t *testing.T) {
 	}
 	pinned := ""
 	if len(pinnedAssignments) == 1 {
-		pinned = normalizeToolchainPin(pinnedAssignments[0])
+		pinned = requireToolchainNamePin(t, scriptPath, "PINNED", pinnedAssignments[0])
 	}
 	if pinned != floor {
 		t.Errorf("PINNED=%q, want go.mod floor %q", pinned, floor)
