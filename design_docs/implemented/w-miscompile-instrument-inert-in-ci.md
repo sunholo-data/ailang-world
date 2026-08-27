@@ -1,6 +1,6 @@
 # w-miscompile-instrument-inert-in-ci — on linux the instrument can only ever refuse, its second floor fires before any assertion runs, and the workflow is built to discard refusals
 
-**Status**: Planned
+**Status**: IMPLEMENTED (2026-08-27, iteration 133 — PR #100, squash `46add2c`)
 **Date**: 2026-08-27
 **Revision**: 2 (2026-08-27) — quorum round 2 BLOCKED 3/3 on ONE shared objection (M2's
 pin redded against M1's own comment bytes); closed by the ratified narrow-refinement
