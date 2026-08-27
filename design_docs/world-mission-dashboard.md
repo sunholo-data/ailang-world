@@ -1,41 +1,33 @@
-# Mission Dashboard — AILANG World
+# Mission Dashboard — Ailang World
 
-> 30-second control context. Snapshot, not a record — history lives in `world-mission.md`,
-> the status archive and the log. Overwritten each iteration; namespaced on purpose.
+*Snapshot, overwritten each iteration. History lives in `world-mission.md` STATUS + `world-mission-log.md`.*
 
-**Last iteration**: 131 · 2026-08-27 · **`P42` LANDED** — PR #98 → squash `58c8f7f`,
-Gate 3b green on the merge commit; iteration **130 died mid-flight** and was credited in the log
+**Iteration 132 — 2026-08-27 — `P43` LANDED.**
 
-## This iteration
-- **Row 42 `w-canary-control-does-not-survive-a-floor-raise` is LANDED and CLOSED.** The nested
-  repro module's `go 1.22` floor is now bound by static test to stay at or below the oldest
-  `KNOWN_BAD` toolchain, and the in-module canary is fenced against a re-added known-bad arm.
-- **The headline: iteration 130 died holding a finished sprint with ZERO trace of itself.** No
-  charter row, no log entry, no STATUS stamp, no PR — so two of the died-mid-flight sweep's three
-  traces came back empty. Only trace (c), **uncommitted working-tree state**, found the 561-line
-  plan and the four-file executor diff. Every state surface agreed row 42 was untouched.
-- **Verified, not adopted**: G0–G11 green with the two new names *counted* (2 RUN / 2 PASS / 0
-  FAIL, never exit-code'd); full drill re-run — **7 RED arms, zero survivors** + M2b's GREEN
-  boundary control; `verify_go.sh` and `verify_ail.sh` rc=0 outside any sandbox.
-- **The assert-landed rule earned its keep**: M5's first attempt never applied, and its `rc=0` was
-  indistinguishable from a survivor until the pre-read grep read 1 where 0 was required.
-- **Evaluator `sonnet` 97/100, zero blocking** — re-ran all 8 arms against the 4 required.
-- **Three new rows**: **48** (inherited from the dead iteration's quorum — `racecontrol/`'s
-  floor-bump-is-harmless claim REFUTED), **49** (Test B's `stateRoot` control passes a gutted
-  canary — reproduced first-party), **50** (`shellAssignmentValues` drops an indented assignment).
+## Latest
+- PR [#99](https://github.com/sunholo-data/ailang-world/pull/99) → squash [`ecfb62d`](https://github.com/sunholo-data/ailang-world/commit/ecfb62d).
+- Gate 3b **GREEN on the merge commit**: `present=2 == expected=2` (enumerated from `ci.yml`'s
+  own job list; `ci.yml` is the only workflow), `notdone=0`, both `success`, `runs=1 event=push`,
+  parent control `checks=2`, `mergeable` read first.
+- Row 43 CLOSED. The floor-raise coupling map now lives in `scripts/verify_ail.sh`'s head block
+  and `design_docs/coding-standards.md` §S8, bound by
+  `TestFloorRaiseInventoryNamesEveryCoupledFile`.
 
-## Loop state
-- **Queue next**: rows **43**, **44**, **45**, **46**, **47**, **48**, **49**, **50**, then row
-  **39** (`w-session-authority`, the clause-3 blocker under row 40).
-- **Routing**: controller `opus`; designer rotation pointer at `pi:ollama/kimi-k3:cloud`
-  (unchanged — no designer ran); planner `opus fail-closed:env-pin`; executor
-  `codex:gpt-5.6-sol`; evaluator `sonnet` (generator≠judge).
-- **Gates**: `verify_ail.sh` (floor **11** identities / 40 tests) + `verify_go.sh`; CI = one
-  workflow, two jobs. Issue `#89` (19 comments, rotation not due). Ledger 13 rows, **0 OPEN**.
+## In flight / next
+- Queue: rows **44**, **45**, **46**, **47**, **48**, **49**, **50**, **51** (new), then **39**.
+- Row 45's gate is DISCHARGED — it was "gated on row 41 landing", and row 41 landed at iteration 129.
+
+## Loop cadence + routing
+- Designer: rotation `claude:claude-fable-5` → `pi:ollama/kimi-k3:cloud`. This iteration the pi
+  entry **probed rc=0 and then failed the real run** on the provider's own
+  `503 model 'kimi-k3' is temporarily overloaded`; fell to Fable, FLAGGED. Pointer unchanged.
+- Planner `opus` (lane derived `opus fail-closed:env-pin`) · Executor `codex:gpt-5.6-sol`
+  (ChatGPT subscription, `$0`) · Evaluator `sonnet`.
+- Evaluator **failed round 1 at 62/100**, passed round 2 at **90/100** after a structural fix.
+
+## Cost
+- `metered=$0.2730` of the `$5` ceiling (two full-strength quorum rounds). All other lanes are
+  quota buckets.
 
 ## Parked on Mark
-**None.** Zero open asks.
-
-## Quota posture
-`metered=$0` (adopt + verify + land + record; no designer, planner or executor ran). Prior
-iteration $0. Billing tripwire **CLEAN**.
+- **Nothing.** Ledger: 13 rows, **0 OPEN**.

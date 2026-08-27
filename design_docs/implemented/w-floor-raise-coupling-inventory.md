@@ -133,7 +133,7 @@ Each premise is one or more Verification Log rows; a claim without a row does no
   level up. Each home carries the one-line Tier-2 forward reference — but the `interfaceHash`
   MUST-move branch STAYS in both homes: it is a statement about a digest's mechanism (P5,
   V14), not an enumeration of sites, and the reader must still learn not to "fix" a moving
-  `interfaceHash` on a module-set change nor a still one on a Tier-1 raise.
+  `interfaceHash` on a hashed-manifest change nor a still one on a Tier-1 raise.
 
 ## The inventory (the load-bearing artifact)
 
@@ -180,8 +180,10 @@ forward reference only.
   manifest `want` dict · `:119-122`, the expected tar entries · `:202`
 - `packages/world-core/ailang.toml` — the exports list (and through it the golden's
   `exports` array)
-- **and `interfaceHash` MOVES, by design** — exports are an input (P5, V14). On this shape a
-  *non-moving* `interfaceHash` is the defect.
+- **and `interfaceHash` MOVES, by design, IF AND ONLY IF a HASHED MANIFEST FIELD changes** —
+  exports and effects are inputs, the packaged-module census is not (P5, V14, **V29**). On an
+  export/effect/name/edition/AILANG-bound change a *non-moving* `interfaceHash` is the defect;
+  on a census-only change a *moving* one is.
 
 ## Decision — publish the map in two durable homes, bind both with one static test, repair one stale anchor
 
@@ -352,8 +354,9 @@ Gated on nothing. Neighbours named and not absorbed: **row 42** (landed, `58c8f7
 the repro-module floor binding this inventory cites as a pattern-sibling; **row 44** owns
 `run.sh` CI inertness; **row 49** owns the token-counting-control class. A floor-raiser's
 obligation after this lands, one sentence: open `scripts/verify_ail.sh`, read the block, edit
-all six in the same commit, and expect `interfaceHash` to hold still unless the module set
-changed.
+all six in the same commit, and expect `interfaceHash` to hold still unless a HASHED
+MANIFEST FIELD changed (name, edition, the AILANG bound, exports or effects — not the
+packaged-module census; V29).
 
 ## Files to Create/Modify
 
@@ -490,7 +493,7 @@ porcelain 0 after every arm.
 
 | # | Exact edit | Expected RED | Design-time status |
 |---|---|---|---|
-| M1 | delete the `docs/SELF_MOD_PUBLISH.md` line from the script block | test reds naming the missing needle | **RUN on fixture: `FAIL inventory block omits "docs/SELF_MOD_PUBLISH.md"` (V20 arm c)** |
+| M1 | delete the `SELF_MOD_PUBLISH.md` line from the script block (the needle is the bare filename, not the `docs/`-prefixed path — executor-corrected) | test reds naming the missing needle | **RUN on fixture: `FAIL inventory block omits "docs/SELF_MOD_PUBLISH.md"` (V20 arm c)** |
 | M2 | delete the entire block (or only its END marker) | test reds through the marker fatal, never a silent zero | **RUN: real base file → instrument RED; END-marker-only deletion → instrument RED (V20 arms a, d)** |
 | M3 | delete §S8 from `coding-standards.md` | test reds on the `## S8` heading assertion | sprint-run (same `Contains` mechanism V20 measured) |
 | M4 | edit `does not move for` in the block to `does move for` | test reds on the exact-phrase needle | sprint-run |
