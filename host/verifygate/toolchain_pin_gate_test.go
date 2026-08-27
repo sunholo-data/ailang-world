@@ -240,7 +240,7 @@ func TestMiscompileInstrumentProbesPinnedToolchain(t *testing.T) {
 	lines := strings.Split(src, "\n")
 	for _, control := range []string{"KNOWN_BAD=", "KNOWN_GOOD=", "PINNED="} {
 		if !strings.Contains(src, control) {
-			t.Errorf("instrument failure: %s does not contain known-positive control %q", scriptPath, control)
+			t.Fatalf("instrument failure: %s does not contain known-positive control %q", scriptPath, control)
 		}
 	}
 	shebangs := 0
@@ -250,7 +250,7 @@ func TestMiscompileInstrumentProbesPinnedToolchain(t *testing.T) {
 		}
 	}
 	if shebangs != 1 {
-		t.Errorf("instrument failure: %s exact shebang count=%d, want 1", scriptPath, shebangs)
+		t.Fatalf("instrument failure: %s exact shebang count=%d, want 1", scriptPath, shebangs)
 	}
 
 	goodAssignments := shellAssignmentValues(lines, "KNOWN_GOOD")
