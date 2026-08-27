@@ -6,10 +6,13 @@
 6th site controller-first-party, queued iter-127)
 **Estimated**: ~0.1 day (two verbatim-proposed documentation blocks — one new §S8 in
 `design_docs/coding-standards.md`, one comment block at the head of `scripts/verify_ail.sh`;
-one ~50 LOC static enforcement test in a NEW file `host/verifygate/floor_raise_inventory_test.go`;
+one ~60 LOC static enforcement test in a NEW file `host/verifygate/floor_raise_inventory_test.go`;
 one one-line stale-anchor repair in `docs/SELF_MOD_PUBLISH.md`; **zero executable lines of any
 gate changed, zero thresholds moved, zero existing test assertions touched**)
 **Designer**: `claude-fable-5` (design-doc-creator, iteration 132)
+**Revision**: 1 (2026-08-27) — quorum round 1 BLOCKED at full strength; all three objections
+applied, one in a discriminating form after its literal fix measured VACUOUS (§Quorum round 1,
+V26–V28)
 **Toolchain boundary**: every command below was run first-party in this worktree at `476069d`
 (clean tree; porcelain 0 re-checked after every arm), shell `zsh`, darwin/arm64, 2026-08-27.
 The pinned released binary `/tmp/ailang-v0300/ailang` (`AILANG v0.30.0`) drove the full gate
@@ -26,7 +29,9 @@ run (V16); no `.ail` source is written or changed by this design. Probe programs
 > first-party proof that the coupling is live: it quotes the marker as `✓ 10/10 …`, which was
 > true at iter-127 and is stale today — the landed literal is `✓ 11/11 required world/
 > identities verified across 11 module(s)` at `module_manifest_gate_test.go:128` (V4). The
-> repair is a MAP, not a mechanism: publish the inventory verbatim in two durable homes
+> repair is a MAP, not a mechanism: publish the inventory verbatim — Tier 1 ONLY; the
+> un-rehearsed Tier-2 enumeration was struck from the published homes at quorum round 1 — in
+> two durable homes
 > (`coding-standards.md` §S8 and a comment block at the head of `verify_ail.sh`), with the
 > regeneration recipe beside it — executed this session in its no-op form, byte-reproducing
 > (V15, V16) — and `interfaceHash`'s non-movement stated with its measured mechanism (V12–V14)
@@ -91,6 +96,9 @@ Each premise is one or more Verification Log rows; a claim without a row does no
   proposed block → PASS, fixture minus one site → RED naming `docs/SELF_MOD_PUBLISH.md`,
   fixture minus the END marker → loud RED (V20). The proposed test name does not collide and
   its naive `-run` form is `[no tests to run]` rc=0 at base — the AC1 vacuity trap (V18, V19).
+  At revision the probe was extended to the ninth (site-1) needle and the exactly-once marker
+  fatal, eight arms, both homes — including the arm proving the naive site-1 needle vacuous
+  (V26, V27).
 - **P7 — a live stale anchor of exactly the class this item repairs**:
   `docs/SELF_MOD_PUBLISH.md:39` says `verify_ail.sh` "invokes verify_world_package.sh at
   :224"; the call site is `:403` (V3, V17). Line numbers rot; literals do not — which is why
@@ -119,6 +127,13 @@ Each premise is one or more Verification Log rows; a claim without a row does no
   V11); the §S8 text is proposed VERBATIM below so the PR ratifies exactly what lands.
 - **`packages/world-core/**` is never hand-edited** — regeneration only (P4); this sprint
   does not touch it at all.
+- **The published homes carry Tier 1 ONLY** (quorum round 1, objection 2). The Tier-2 site
+  list is asserted-complete (one designer's code reads, V22/V25), not verified-complete, and
+  publishing an un-rehearsed enumeration as authoritative reproduces the row's own defect one
+  level up. Each home carries the one-line Tier-2 forward reference — but the `interfaceHash`
+  MUST-move branch STAYS in both homes: it is a statement about a digest's mechanism (P5,
+  V14), not an enumeration of sites, and the reader must still learn not to "fix" a moving
+  `interfaceHash` on a module-set change nor a still one on a Tier-1 raise.
 
 ## The inventory (the load-bearing artifact)
 
@@ -146,7 +161,15 @@ comment-only change, V9). Sites 3 and 6 are specific to raises of the verified-i
 floor. The test floor (`EXACT_TOTAL_TESTS=40`, `REQUIRED_TESTS`) lives entirely inside
 `verify_ail.sh` and is out of this row's scope.
 
-### Tier 2 — a raise that changes the module/export set (additional sites; enumerated from code, V22/V25, not from a rehearsed raise)
+### Tier 2 — a raise that changes the module/export set (DEFERRED SCOPE — NOT PUBLISHED)
+
+Asserted-complete only: enumerated from one designer's code reads (V22/V25 prove the cited
+anchors exist; they cannot prove no uncited anchor exists), never from a rehearsed raise —
+exactly the evidence grade the published map must not carry (quorum round 1, objection 2:
+Tier 1 is backed by three independent sweeps plus a rehearsed commit; Tier 2 has none of
+these). This list stays HERE, in the design doc, as the seed for the rehearsal-gated
+follow-up row (§Follow-up queue row); the two published homes carry Tier 1 plus a one-line
+forward reference only.
 
 - `scripts/verify_ail.sh` — `LEG1_MODULES=(` · `:140` (the exact `.ail` allowlist)
 - `host/verifygate/module_manifest_gate_test.go` — the isolated-copy census
@@ -166,6 +189,12 @@ floor. The test floor (`EXACT_TOTAL_TESTS=40`, `REQUIRED_TESTS`) lives entirely 
 Inserted after the existing header comment (after `:29`, before `set -uo pipefail`), plus one
 pointer line directly above the `REQUIRED_VERIFIED = {` heredoc at `:274` reading
 `# Before adding an identity here: read the FLOOR-RAISE COUPLING INVENTORY at the head of this file.`
+
+The pointer line deliberately repeats the phrase `FLOOR-RAISE COUPLING INVENTORY`, so every
+extractor — AC2's awk and the test alike — must anchor on the `# ── `-styled marker lines,
+never on the bare phrase: an unanchored awk range re-opens at the pointer and runs to EOF
+(measured: 32 lines ending in the script tail, vs exactly the 25-line block when anchored,
+V28; quorum round 1, objection 3).
 
 ```
 # ── FLOOR-RAISE COUPLING INVENTORY — charter row 43 ──────────────────────────
@@ -187,10 +216,9 @@ pointer line directly above the `REQUIRED_VERIFIED = {` heredoc at `:274` readin
 #                                                      vacuous (row 43's evaluator refutation)
 # interfaceHash does NOT move on this shape of raise: host/pkgproj.InterfaceHash hashes
 # manifest fields only (name, edition, ailang bound, sorted exports, sorted effects), never
-# .ail bytes. Do not "fix" the third digest. It MUST move only when the export/module set
-# changes — and that shape touches MORE sites: LEG1_MODULES below, the 13/11 census and
-# "module(s)" count in module_manifest_gate_test.go, build_world_package.sh's allowlist,
-# verify_world_package.sh's MODULES/EXPORTS/frozen manifest, packages/world-core/ailang.toml.
+# .ail bytes. Do not "fix" the third digest. It MUST move when the module/export set
+# changes — and a raise of that shape touches additional sites beyond these six; that
+# inventory is deferred to a future item pending a first-party rehearsal.
 # Recipe + rationale: design_docs/coding-standards.md §S8.
 # Enforced by: host/verifygate/floor_raise_inventory_test.go.
 # ── END FLOOR-RAISE COUPLING INVENTORY ───────────────────────────────────────
@@ -225,9 +253,9 @@ subset, and the full set existed only in commit `699f592`'s message. The map:
 
 **`interfaceHash` does NOT move** on this shape of raise — `host/pkgproj.InterfaceHash`
 hashes manifest fields only, never `.ail` bytes — so do not "fix" the third digest. It MUST
-move only when the export/module set changes, and that shape touches more sites (the
-allowlists and censuses; full list in the inventory block at the head of
-`scripts/verify_ail.sh`).
+move when the module/export set changes. A raise that changes the module/export set touches
+additional sites beyond these six; that inventory is deferred to a future item pending a
+first-party rehearsal.
 
 Recipe, all six in the SAME commit: edit 1 and 3 by hand → `./scripts/build_world_package.sh`
 (2) → run the pinned gate; step 9/9 reds printing the golden diff whose `+` line is the new
@@ -238,19 +266,31 @@ re-run to green; `go test ./host/runbook/` binds 5↔4. Enforced by
 
 ### (c) `host/verifygate/floor_raise_inventory_test.go` — one static test, `TestFloorRaiseInventoryNamesEveryCoupledFile(t)`
 
-Logic prototyped and measured this session (V20): read `scripts/verify_ail.sh`; locate the
-`FLOOR-RAISE COUPLING INVENTORY` … `END FLOOR-RAISE COUPLING INVENTORY` markers and
-`t.Fatalf` if either is absent or misordered (**the known-positive control: an empty or
-vanished enumeration fails loudly, never passes as zero**); assert the block contains each of
-eight needles — `packages/world-core/world/`, `REQUIRED_VERIFIED`, `EXACT_TOTAL_VERIFIED`,
+Logic prototyped and measured this session (V20, extended at revision by V26/V27): read
+`scripts/verify_ail.sh`; locate the block by the STYLED marker literals
+`# ── FLOOR-RAISE COUPLING INVENTORY` and `# ── END FLOOR-RAISE COUPLING INVENTORY`, and
+`t.Fatalf` unless each occurs EXACTLY ONCE with begin preceding end (**the known-positive
+control: an empty, vanished, duplicated, or misordered enumeration fails loudly, never
+passes as zero — and a bounded extractor can never silently run wide, V27 arms g/h**). The
+bare phrase must not be the anchor: the pointer line above `REQUIRED_VERIFIED` repeats it by
+design (V28). Assert the block contains each of NINE needles — the eight shared needles
+`packages/world-core/world/`, `REQUIRED_VERIFIED`, `EXACT_TOTAL_VERIFIED`,
 `world_package_ready_packet.golden.json`, `SELF_MOD_PUBLISH.md`,
-`module_manifest_gate_test.go`, `interfaceHash`, `does NOT move` — then read
-`design_docs/coding-standards.md`, assert the `## S8` heading exists, and assert the same
-eight needles in that section, so the two hand-authored homes cannot drift apart silently.
-Declared residual: site 1 (`world/<module>.ail`) has no distinctive greppable token — a
-`world/` needle matches everything and would be vacuous — so it is carried by prose in both
-homes and by needle-8's coupling (an identity lands via `REQUIRED_VERIFIED`). No
-`AILANG_BIN`, no subprocess; reuses `repoRoot` only.
+`module_manifest_gate_test.go`, `interfaceHash`, `does NOT move`, plus site 1's
+enumerated-row literal `#   1. world/<module>.ail` — then read
+`design_docs/coding-standards.md`, assert the `## S8` heading exists, and assert the eight
+shared needles plus site 1's table-row literal `` | 1 | `world/<module>.ail` `` in that
+section, so the two hand-authored homes cannot drift apart silently. Site 1's needle is
+enumerated-row-anchored BECAUSE THE BARE PATH WAS MEASURED VACUOUS: `world/<module>.ail` is
+a strict substring of site 2's row (`packages/world-core/world/<module>.ail`), so a fixture
+containing ONLY site 2's row satisfies the naive needle (`grep -c` → 1, V26; probe arms b/e
+PASS with the site-1 row deleted, in BOTH homes, V27), while the row-anchored form scores 0
+there (rc=1, control firing on the real row) and reds naming the missing needle (V26, V27
+arms c/f). The pre-revision text's declared residual — "site 1 has no distinctive greppable
+token" — was FALSE for the proposed text (7 occurrences of the literal in this doc's
+pre-revision blocks, controller-measured and reproduced, V26); what is true is that the
+BARE token is non-discriminating, which the row anchoring repairs. No `AILANG_BIN`, no
+subprocess; reuses `repoRoot` only.
 
 ### (d) `docs/SELF_MOD_PUBLISH.md:39` — one-line stale-anchor repair
 
@@ -310,8 +350,8 @@ changed.
 
 ## Files to Create/Modify
 
-- **CREATE** `host/verifygate/floor_raise_inventory_test.go` (~50 LOC; logic prototyped V20;
-  name collision-free V19).
+- **CREATE** `host/verifygate/floor_raise_inventory_test.go` (~60 LOC; logic prototyped V20,
+  extended at revision V26/V27; name collision-free V19).
 - **MODIFY** `scripts/verify_ail.sh` — comment block after `:29` + one pointer comment above
   `:274`; **zero non-comment lines changed** (AC5).
 - **MODIFY** `design_docs/coding-standards.md` — §S8 appended verbatim from §(b).
@@ -335,23 +375,39 @@ No other files. `packages/world-core/**`, the golden, the marker, `world/*.ail`,
   edit touches neither (V17's repo-wide sweep found the line bound by nothing; V24 lists the
   bound phrases).
 - **`coding-standards.md`** is read by every sprint role; §S8 appends and renumbers nothing.
-- **Future Tier-2 raises** will edit the block itself (the `13/11` census values it cites);
-  the test's needles are file-name-shaped, not value-shaped, so value drift inside the block
-  cannot red the test — declared residual, same class as prose everywhere.
+- **Future Tier-2 raises** no longer edit the block's site list — since quorum round 1 the
+  block carries no Tier-2 enumeration, only the stable forward-reference line; the census
+  values formerly cited there now live only in this doc's §Tier 2. Value drift inside the
+  block's remaining prose still cannot red the test (the needles are file-name- and
+  row-shaped, not value-shaped) — declared residual, same class as prose everywhere.
 
 ## Deferred Scope
 
 - **Row 44** (`run.sh` inert in CI) and **row 49** (token-counting controls prove mention,
   not testing) — named, untouched.
-- **A Tier-2 rehearsal** (actually adding a module and walking all ~11 sites): out of budget
-  for a 0.1d documentation item; Tier 2 is enumerated from code reads (V22/V25) and labelled
-  so.
+- **A Tier-2 rehearsal AND the Tier-2 publication that waits on it** — see §Follow-up queue
+  row. The §Tier 2 list in this doc is asserted-complete (code reads, V22/V25), never
+  rehearsed, and is therefore NOT published to either durable home (quorum round 1,
+  objection 2).
 - **The red-arm of the regeneration recipe** (step 9/9 printing the new golden in its diff):
   not executed this session — it requires mutating the tree, which this role is forbidden to
   do. It is labelled UNVERIFIED-THIS-SESSION in the recipe row (V16 note), with provenance:
   `P6.V` and its amend executed exactly this path twice, first-party, two days ago (V9), and
   `w-evidence-grade-mapping-sprint-plan.md` V13 records the same recipe with a golden-regen
   helper and a passing byte-identity control.
+
+## Follow-up queue row (controller to file)
+
+**`w-floor-raise-tier2-inventory`** — publish the module/export-set-raise coupling
+inventory, gated on a first-party rehearsal. This is not scope creep: the quorum-round-1
+deferral creates the obligation, and the controller files the row. Closing predicate: a
+first-party REHEARSED module/export-set raise (or removal) executed in a worktree — every
+touched site recorded from the actual red-gate sequence and the commit diff, completeness
+backed by the same evidence grade Tier 1 carries here (independent sweeps plus a rehearsed
+commit, the V5/V6/V7 + V9 shape), and `interfaceHash` measured to MOVE (the V14 counter-arm,
+run live) — and only then the Tier-2 enumeration promoted from this doc's §Tier 2 into both
+durable homes, replacing the forward-reference line. Until that row closes, the published
+map stays Tier-1-only and the forward reference is the only Tier-2 claim either home makes.
 
 ## Acceptance Criteria
 
@@ -364,14 +420,17 @@ Each AC carries its base observation on the unmodified tree at `476069d`, run th
   prints `[no tests to run]`. **Base: the verbatim command → `ok … [no tests to run]`, rc=0
   (V18)** — the naive form is green at base measuring nothing; the `=== RUN` clause is the
   binding form and is red at base (0 of 1).
-- **AC2 — the script block landed and names every site.**
-  `awk '/FLOOR-RAISE COUPLING INVENTORY/,/END FLOOR-RAISE COUPLING INVENTORY/' scripts/verify_ail.sh`
-  emits a non-empty block containing all eight needles of §(c), and
-  `grep -c 'FLOOR-RAISE COUPLING INVENTORY' scripts/verify_ail.sh` → 3 (begin, END line's
-  repetition, pointer-free; the exact expected count is fixed by the landed text and recorded
-  by the sprint). **Base: 0 occurrences (rc=1), with the same-file known-positive control
-  `grep -c 'Leg 1'` → 6 firing in the same call (V17)** — the zero is a measurement, not a
-  dead grep.
+- **AC2 — the script block landed, is cleanly bounded, and names every site.**
+  `awk '/^# ── FLOOR-RAISE COUPLING INVENTORY/,/^# ── END FLOOR-RAISE COUPLING INVENTORY/' scripts/verify_ail.sh`
+  emits exactly the 25-line block (first line the begin marker, last the END marker, V28)
+  containing all nine script-home needles of §(c), and
+  `grep -c 'FLOOR-RAISE COUPLING INVENTORY' scripts/verify_ail.sh` → 3 (begin marker, END
+  marker, pointer line — re-derived on the block-carrying fixture at revision, V28, not
+  transcribed: the count is 3 precisely BECAUSE the pointer line exists). The awk range MUST
+  stay anchored to the `# ── ` styling: the unanchored form re-opens at the pointer line and
+  runs to EOF (32 lines vs the bounded 25 on the fixture, V28; quorum round 1, objection 3).
+  **Base: 0 occurrences (rc=1), with the same-file known-positive control `grep -c 'Leg 1'`
+  → 6 firing in the same call (V17)** — the zero is a measurement, not a dead grep.
 - **AC3 — §S8 landed.** `grep -c '^## S8' design_docs/coding-standards.md` → 1. **Base: 0
   (rc=1), control `grep -c '^## S6'` → 1 in the same call (V17).**
 - **AC4 — the non-movement statement is in BOTH homes.** `grep -c 'interfaceHash'
@@ -395,7 +454,8 @@ Each AC carries its base observation on the unmodified tree at `476069d`, run th
 ## Non-Vacuity — named RED mutation for every added assertion
 
 All arms mutate the production side (the two documents), never the test. The prototype
-already ran the load-bearing arms at design time against fixtures (V20); the sprint re-runs
+already ran the load-bearing arms at design time against fixtures (V20; extended at revision
+by V26/V27, which also measured the arm the naive site-1 needle CANNOT red); the sprint re-runs
 every arm against the landed test, each restored byte-identically (sha256, house recipe),
 porcelain 0 after every arm.
 
@@ -407,6 +467,8 @@ porcelain 0 after every arm.
 | M4 | edit `does NOT move` in the block to `does move` | test reds on the exact-phrase needle | sprint-run |
 | M5 | delete one needle from §S8 while leaving the script block intact | test reds on the cross-home clause — the homes may not drift apart | sprint-run |
 | M6 | change `EXACT_TOTAL_VERIFIED=11` → `12` (the AC5 teeth) | AC5's non-comment diff is non-empty AND the gate reds (`expected exactly 12 … got 11`) | sprint-run; the gate branch is the long-established `:324` refusal |
+| M7 | delete ONLY the `#   1. world/<module>.ail` row from the script block, site 2's row intact | test reds naming the missing site-1 row needle — and the NAIVE bare-path needle must be shown NOT to red here (that green is the measured vacuity) | **RUN on fixture: anchored → `FAIL inventory block omits "#   1. world/<module>.ail"`; naive bare path under the SAME arm → PASS, i.e. vacuous as the reviewer proposed it (V26, V27 arms b/c)** |
+| M8 | delete ONLY site 1's table row from §S8, site 2's row intact | test reds naming the missing §S8 site-1 row needle | **RUN on fixture: anchored → `FAIL S8 omits` the row literal; naive bare path under the SAME arm → PASS, vacuous (V27 arms e/f)** |
 
 Green control for all arms: the unmutated post-sprint tree passes AC1–AC7.
 
@@ -427,7 +489,9 @@ All rows run first-party by the designer at `476069d` (clean tree, V1), shell `z
 darwin/arm64, 2026-08-27. Rows reproducing a controller measurement from the iteration-132
 brief are marked (C·x). KP = known-positive control in the same call. Probes V13/V14/V20 are
 standalone `/tmp` programs run against this module; nothing was written into the tree
-(porcelain 0 re-checked, V1).
+(porcelain 0 re-checked, V1). Revision rows V26–V28 ran the same way — `/tmp/inv_rev132/`
+fixtures and probe, zero tree writes, porcelain re-checked after the revision pass (only this
+doc, already untracked, appears).
 
 | # | Claim | Command | Observed |
 |---|---|---|---|
@@ -456,6 +520,40 @@ standalone `/tmp` programs run against this module; nothing was written into the
 | V23 | AC5's base identity | `diff <(grep -v '^[[:space:]]*#' scripts/verify_ail.sh) <(git show 476069d:scripts/verify_ail.sh \| grep -v '^[[:space:]]*#') \| wc -l` | `0` |
 | V24 | The runbook test bindings this item must not break, located | read `host/runbook/runbook_stageb_test.go` `:228-291` and `:330-382`; `grep -n 'verify_ail\|verify_world_package\|invokes' host/runbook/*.go` | AC28 at `:244`: regex `sha256:[0-9a-f]{64}` `:232`, golden-KP `want 3` `:259`, doc exact-3 `:263`, membership loop `:270-276`, distinctness `:279-285`, all-f negative control `:287-290`; AC30 `:341-381` scans `scripts/*.sh` + ci.yml for `world-publish`, fatal on any hit, KP `verify_world_package.sh`-in-`verify_ail.sh` bound `< 1` at `:364-374`; `runbook_commands_test.go:147` requires `./scripts/verify_world_package.sh` in Stage A (stands at doc `:25` regardless of the `:39` edit) |
 | V25 (C·V-C) | The nine-step gate's structure and the step-3/step-9 anchors | read `scripts/verify_world_package.sh` in full | step banners 1/9–9/9; step 3/9 per-module SHA-256 equality `:98-112`; step 9/9 golden `cmp -s` `:244` with `diff -u` on failure; `GOLDEN` `:32`; helper computes `contentHash/interfaceHash/tarballSHA256/tarballBytes` via `pkgproj` `:163-188` |
+| V26 | REVISION — the reviewer-proposed site-1 needle is VACUOUS as written: bare `world/<module>.ail` is a strict substring of site 2's row | `/tmp` fixture holding ONLY site 2's row: `grep -c 'world/<module>\.ail'`, then anchored `grep -c '^#   1\. world/<module>\.ail'` on the same fixture, then the anchored form on a site-1-bearing fixture (KP), then `grep -c 'world/<module>\.ail'` on the pre-revision doc (C·, controller measured 7) | naive → `1` rc=0 — fires on site 2 ALONE; anchored → `0` rc=1 on the same fixture; KP anchored on the real site-1 row → `1` rc=0; pre-revision doc → `7` with same-file KP `grep -c 'EXACT_TOTAL_VERIFIED'` → `17` firing in the same call |
+| V27 | REVISION — the discriminating ninth needle reds exactly where the naive form stays green, in BOTH homes, and the extractor fails loudly on missing/duplicated markers | `/tmp/inv_rev132/inv_probe3.go` (the §(c) logic verbatim, incl. the exactly-once styled-marker fatal), 8 arms: (a) full script fixture + anchored needle, (b) site-1 row deleted + NAIVE needle, (c) same deletion + anchored needle, (d) full §S8 fixture + anchored row needle, (e) §S8 minus site-1 row + NAIVE, (f) same + anchored, (g) END marker deleted, (h) block duplicated | a `PASS`; **b `PASS` — site 1 DELETED and the naive needle stays green: the vacuity, measured**; c `FAIL inventory block omits "#   1. world/<module>.ail"`; d `PASS`; **e `PASS` — same vacuity in the §S8 home**; f `FAIL S8 omits` the row literal; g `FAIL instrument: END marker count=0, want 1`; h `FAIL instrument: begin marker count=2, want 1` |
+| V28 | REVISION — the unanchored awk range re-opens at the pointer line and runs to EOF; the styled-anchor form bounds exactly; AC2's occurrence count re-derived, not transcribed | 38-line `/tmp` fixture = 3 header lines + the proposed 25-line block + `set -uo pipefail`, middle lines, the pointer line, a `REQUIRED_VERIFIED` heredoc and 2 tail lines; old-AC2 awk vs `awk '/^# ── FLOOR-RAISE COUPLING INVENTORY/,/^# ── END FLOOR-RAISE COUPLING INVENTORY/'`; `grep -c`/`grep -n 'FLOOR-RAISE COUPLING INVENTORY'` | unanchored → 32 lines, LAST LINE THE SCRIPT TAIL (`echo "tail line 2"`) — over-wide, silently; anchored → exactly 25, first line the begin marker, last the END marker; occurrence count → `3` (begin `:4`, END `:28`, pointer `:32` of the fixture) |
+
+### Quorum round 1 (2026-08-27, full strength — recorded so the next reader does not re-derive it)
+
+All three reviewers present (`absent_reviewers: []`); verdict BLOCKED on two rejects plus one
+pass-with-a-catch; the design DIRECTION was undisputed by any reviewer. All three objections
+applied in this one protocol-mandated revision:
+
+1. **`gpt5-6-sol`, REJECT (blocking)** — the test omitted site 1, so the durable inventory
+   could lose the law-source row while `TestFloorRaiseInventoryNamesEveryCoupledFile` still
+   passed; and the pre-revision declared residual ("site 1 has no distinctive greppable
+   token") was FALSE for the proposed text — both blocks contain `world/<module>.ail`
+   verbatim (controller-measured 7 occurrences, reproduced first-party in V26). **Applied —
+   but the reviewer's proposed fix as literally written was itself measured VACUOUS**: bare
+   `world/<module>.ail` is a strict substring of site 2's row, so the reviewer's own
+   non-vacuity arm (delete only the site-1 row, require RED) stays GREEN under it (V26; V27
+   arms b/e, both homes). Applied in a discriminating form instead: enumerated-row literals
+   per home (`#   1. world/<module>.ail` in the script block; site 1's table row in §S8),
+   measured to red under exactly that arm (V27 arms c/f; mutations M7/M8).
+2. **`oc-glm-5-2`, REJECT (blocking)** — the published Tier-2 enumeration was
+   asserted-complete, not verified-complete: Tier 1 has three independent sweeps plus a
+   rehearsed commit (V5/V6/V7, V9); Tier 2 had one designer's code reads (V22 proves the
+   cited anchors exist, not that no uncited anchor exists) — the row's own defect, one level
+   up. **Applied as written**: both published homes now carry Tier 1 only plus the one-line
+   forward reference; the `interfaceHash` MUST-move branch stays in both homes (a digest
+   mechanism, not a site enumeration); publication of Tier 2 is rehearsal-gated via
+   §Follow-up queue row.
+3. **`gemini-3-1-pro`, PASS with a catch (non-blocking)** — AC2's unanchored awk range
+   re-opens at the pointer line (which repeats the bare phrase by design) and runs to EOF.
+   **Applied**: the awk anchored to the `# ── ` styling (measured bounded, V28), the test's
+   extractor given the same anchoring plus an exactly-once marker fatal (V27 arms g/h), and
+   AC2's expected occurrence count re-derived at 3 rather than transcribed.
 
 ## Related Documents
 
