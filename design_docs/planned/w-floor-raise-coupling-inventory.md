@@ -194,7 +194,7 @@ pointer line directly above the `REQUIRED_VERIFIED = {` heredoc at `:274` readin
 The pointer line deliberately repeats the phrase `FLOOR-RAISE COUPLING INVENTORY`, so every
 extractor — AC2's awk and the test alike — must anchor on the `# ── `-styled marker lines,
 never on the bare phrase: an unanchored awk range re-opens at the pointer and runs to EOF
-(measured: 32 lines ending in the script tail, vs exactly the 25-line block when anchored,
+(measured: 32 lines ending in the script tail, vs the marker-bounded block when anchored,
 V28; quorum round 1, objection 3).
 
 ```
@@ -388,6 +388,21 @@ No other files. `packages/world-core/**`, the golden, the marker, `world/*.ail`,
   block's remaining prose still cannot red the test (the needles are file-name- and
   row-shaped, not value-shaped) — declared residual, same class as prose everywhere.
 
+**PLANNER-SURFACED, CONTROLLER-CONFIRMED (round 3).** Two collisions this section did not name:
+
+- **`TestNoRigAbsolutePaths` (`host/verifygate/ail_binary_gate_test.go:553`) globs
+  `host/verifygate/*.go`** and `t.Errorf`s on `/tmp/ailang`, `/Users/` and `/home/runner/`.
+  The new `floor_raise_inventory_test.go` lands inside that glob, so a provenance comment
+  naming the pinned binary's rig path would red the whole package. Confirmed first-party:
+  the glob, the assembled-needle list and the `len(entries)==0` instrument floor are all at
+  `:554-:575`. **The new file must contain no absolute rig path in code OR comment**, and the
+  acceptance sweep runs the whole `host/verifygate` package rather than only the new test.
+- **The pointer comment lands INSIDE a Python heredoc.** §(a) places it "directly above the
+  `REQUIRED_VERIFIED = {` heredoc at `:274`"; measured, the heredoc opens at `:270`
+  (`python3 - "$mod" "$tmp_json" <<'PY'`) and `:274` is *inside* it. The pointer must
+  therefore be a column-0 Python comment, matching the existing one at `:273` — a shell-style
+  indented `#` there is Python source, not a shell comment.
+
 ## Deferred Scope
 
 - **Row 44** (`run.sh` inert in CI) and **row 49** (token-counting controls prove mention,
@@ -430,7 +445,13 @@ Each AC carries its base observation on the unmodified tree at `476069d`, run th
   binding form and is red at base (0 of 1).
 - **AC2 — the script block landed, is cleanly bounded, and names every site.**
   `awk '/^# ── FLOOR-RAISE COUPLING INVENTORY/,/^# ── END FLOOR-RAISE COUPLING INVENTORY/' scripts/verify_ail.sh`
-  emits exactly the 25-line block (first line the begin marker, last the END marker, V28)
+  emits the block bounded by its own markers — asserted as **first line = the begin marker,
+  last line = the END marker, and the extracted block `diff`s EMPTY against §(a)'s block**,
+  never against a transcribed line count. **Re-derived at `50c3b91`: 28 lines** (V30). The
+  earlier "25" was measured by V28 against the PRE-REVISION block and went stale when
+  revision 1 and the round-2 carve-out added lines — this doc committing its own thesis'
+  defect, caught by the sprint planner. A count is a claim about the text that existed when
+  it was taken; AC2 therefore asserts a property, not a number.
   containing all nine script-home needles of §(c), and
   `grep -c 'FLOOR-RAISE COUPLING INVENTORY' scripts/verify_ail.sh` → 3 (begin marker, END
   marker, pointer line — re-derived on the block-carrying fixture at revision, V28, not
@@ -603,6 +624,8 @@ bounds its search between the `## S8` heading and the next `##` (or EOF).
 `oc-glm-5-2`: site 4's recipe published a `+`-line diff-format assertion whose red arm was
 never executed this session (V16) — softened in both homes to the verified mechanism, with
 the evidence grade stated inline.
+
+| V30 | ROUND-3 — §(a)'s block is **28** lines, not the 25 V28 recorded; the number went stale inside this very document when the revision passes added lines | `awk '/^# ── FLOOR-RAISE COUPLING INVENTORY/,/^# ── END FLOOR-RAISE COUPLING INVENTORY/' design_docs/planned/w-floor-raise-coupling-inventory.md | wc -l` at `50c3b91` | **28**. V28's 25 was correct against the pre-revision block and is a claim about that text. Surfaced by the sprint planner, confirmed first-party by the controller. AC2 no longer asserts any count: it asserts the marker bounds and a `diff`-empty against §(a). **This is the item's own generalisation firing on the item: a value transcribed rather than re-derived.** |
 
 ## Related Documents
 
