@@ -27,6 +27,34 @@
 # with BARE test names. Two test-bearing modules exist now (world/logepoch + world/contracts) with
 # distinct function names ⇒ no collision. A future colliding name would force Leg 2 to per-module
 # runs (documented escape hatch).
+# ── FLOOR-RAISE COUPLING INVENTORY — charter row 43 ──────────────────────────
+# Raising the verified-identity floor (a new identity in REQUIRED_VERIFIED below)
+# touches SIX files. No single gate enumerates the set — each site only reds
+# individually, in discovery order. Edit all six in the SAME commit:
+#   1. world/<module>.ail                              the new contract (the law)
+#   2. packages/world-core/world/<module>.ail          regenerate: ./scripts/build_world_package.sh
+#                                                      (step 3/9 byte-identity; never hand-edit)
+#   3. scripts/verify_ail.sh                           BOTH constants: REQUIRED_VERIFIED and
+#                                                      EXACT_TOTAL_VERIFIED
+#   4. scripts/world_package_ready_packet.golden.json  contentHash, tarballSHA256, tarballBytes;
+#                                                      step 9/9 reds printing a diff against the
+#                                                      committed golden; replace the golden with
+#                                                      the diff's new line and re-run
+#   5. docs/SELF_MOD_PUBLISH.md                        digest-table rows for contentHash and
+#                                                      tarballSHA256 (host/runbook binds doc↔golden)
+#   6. host/verifygate/module_manifest_gate_test.go    the pristine-control marker string —
+#                                                      hand-maintained BY DESIGN; deriving it from
+#                                                      EXACT_TOTAL_VERIFIED would make the control
+#                                                      vacuous (row 43's evaluator refutation)
+# interfaceHash does not move for .ail byte changes or packaged-module changes that leave
+# the hashed manifest fields unchanged. It MUST move when a hashed manifest field changes,
+# including name, edition, the optional AILANG bound, exports, or effects. Do not "fix" the
+# third digest on a Tier-1 raise. A raise that changes the hashed manifest fields (or the
+# packaged-module census) touches additional sites beyond these six; that inventory is
+# deferred to a future item pending a first-party rehearsal.
+# Recipe + rationale: design_docs/coding-standards.md §S8.
+# Enforced by: host/verifygate/floor_raise_inventory_test.go.
+# ── END FLOOR-RAISE COUPLING INVENTORY ───────────────────────────────────────
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -271,6 +299,7 @@ for i in "${!mods[@]}"; do
 import json, sys
 mod = sys.argv[1]
 # Hardcoded manifest — keyed by (repo-relative module file, bare function name), V17.
+# Before adding an identity here: read the FLOOR-RAISE COUPLING INVENTORY at the head of this file.
 REQUIRED_VERIFIED = {
     "world/transitions.ail": {"applyRevision"},
     "world/contracts.ail":   {"commitBoundaryHolds", "isValidNextWorld"},
