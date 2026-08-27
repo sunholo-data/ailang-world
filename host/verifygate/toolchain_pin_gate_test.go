@@ -1,6 +1,7 @@
 package verifygate
 
 import (
+	"go/version"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -266,5 +267,56 @@ func TestMiscompileInstrumentProbesPinnedToolchain(t *testing.T) {
 	}
 	if !strings.Contains(src, "INSTRUMENT FAILURE: the PINNED toolchain") {
 		t.Errorf("%s: pinned-toolchain fail-loud guard message is absent", scriptPath)
+	}
+}
+
+func TestReproModuleFloorStaysBelowKnownBadToolchains(t *testing.T) {
+	reproFloor := moduleGoFloor(t, filepath.Join(repoRoot, "design_docs", "verification", "w-race-gate-blindspot", "repro", "go.mod"))
+	if !version.IsValid(reproFloor) {
+		t.Fatalf("instrument failure: repro module floor %q is not a valid Go version", reproFloor)
+	}
+
+	scriptPath := filepath.Join(repoRoot, "design_docs", "verification", "w-race-gate-blindspot", "run.sh")
+	raw, err := os.ReadFile(scriptPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	badAssignments := shellAssignmentValues(strings.Split(string(raw), "\n"), "KNOWN_BAD")
+	if len(badAssignments) != 1 {
+		t.Fatalf("instrument failure: %s: KNOWN_BAD assignment count=%d, want 1", scriptPath, len(badAssignments))
+	}
+	bad := strings.Fields(badAssignments[0])
+	if len(bad) == 0 {
+		t.Fatalf("instrument failure: %s: KNOWN_BAD must contain at least one toolchain", scriptPath)
+	}
+	oldest := bad[0]
+	for _, tc := range bad {
+		if !version.IsValid(tc) {
+			t.Fatalf("instrument failure: KNOWN_BAD token %q is not a valid Go version; version.Compare would misorder it", tc)
+		}
+		if version.Compare(tc, oldest) < 0 {
+			oldest = tc
+		}
+	}
+	if version.Compare(reproFloor, oldest) > 0 {
+		t.Fatalf("repro module floor %q is above the oldest KNOWN_BAD toolchain %q: every deny-listed probe SKIPs, saw_bad stays 0, and run.sh reds for the wrong reason (the V10 rehearsal)", reproFloor, oldest)
+	}
+}
+
+func TestCanaryDeclaresPositiveArmOnly(t *testing.T) {
+	canaryPath := filepath.Join(repoRoot, "host", "store", "toolchain_canary_test.go")
+	raw, err := os.ReadFile(canaryPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := string(raw)
+	if count := strings.Count(src, "stateRoot"); count < 2 {
+		t.Fatalf("instrument failure: %s count(%q)=%d, want at least 2 before checking comment fences", canaryPath, "stateRoot", count)
+	}
+	if count := strings.Count(src, "GOTOOLCHAIN"); count != 0 {
+		t.Errorf("%s count(%q)=%d, want 0; known-bad arms belong in the nested repro module", canaryPath, "GOTOOLCHAIN", count)
+	}
+	if !strings.Contains(src, "POSITIVE ARM ONLY") {
+		t.Errorf("%s: required %q marker is absent", canaryPath, "POSITIVE ARM ONLY")
 	}
 }
