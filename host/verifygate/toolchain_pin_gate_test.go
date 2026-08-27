@@ -310,6 +310,25 @@ func TestMiscompileInstrumentProbesPinnedToolchain(t *testing.T) {
 	if !strings.Contains(src, "INSTRUMENT FAILURE: the PINNED toolchain") {
 		t.Errorf("%s: pinned-toolchain fail-loud guard message is absent", scriptPath)
 	}
+
+	// Direction pin (row 45, finding C): the site COUNT above cannot see the guard's
+	// comparison direction — flipping `-eq 0` to `-ne 0` preserves all 3 sites and
+	// every committed assertion (controller, iteration 134). Count comment-stripped
+	// CODE lines only: the guard and the prose explaining it must not compete for one
+	// namespace (iteration-133 lesson) — a comment may quote the literal freely.
+	guardLines := 0
+	for _, line := range lines {
+		code := line
+		if idx := strings.Index(code, "#"); idx >= 0 {
+			code = code[:idx]
+		}
+		if strings.Contains(code, `[ "$saw_pinned_ok" -eq 0 ]`) {
+			guardLines++
+		}
+	}
+	if guardLines != 1 {
+		t.Errorf("%s: executable pinned-OK guard-line count=%d, want exactly 1 — the floor must test ABSENCE of the OK flag (`-eq 0`); a flipped or duplicated guard is a different instrument", scriptPath, guardLines)
+	}
 }
 
 func TestReproModuleFloorStaysBelowKnownBadToolchains(t *testing.T) {
