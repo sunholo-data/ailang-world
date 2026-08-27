@@ -164,10 +164,13 @@ jobs:
         timeout-minutes: 25
         run: ./scripts/verify_go.sh
 
-      # run.sh exits 1 when no affected toolchain reproduces, which is the good
-      # "linux/amd64 is clean" outcome; this records evidence and is not a gate.
-      - name: Measure compiler reproducer on linux/amd64 (non-gating)
-        continue-on-error: true
+      # Platform-conditional and GATED (row 44): darwin/arm64 must reproduce the defect;
+      # linux/amd64 (here) must NOT (measured, iteration-46 AC6); every configured
+      # known-bad probe must run to completion and both known-good controls must fire.
+      # Any other host refuses — the verified contract set is exactly two pairs.
+      # exit 1 is a refusal again, not evidence nobody reads.
+      # Design: design_docs/implemented/w-miscompile-instrument-inert-in-ci.md
+      - name: Measure compiler reproducer (platform-conditional, gated)
         timeout-minutes: 15
         run: ./design_docs/verification/w-race-gate-blindspot/run.sh
 

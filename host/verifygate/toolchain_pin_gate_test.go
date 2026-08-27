@@ -182,12 +182,10 @@ func shellAssignmentValues(lines []string, name string) []string {
 //
 // DECLARED RESIDUAL: this is a STATIC text scan. It proves the LIST and PINNED carry the
 // floor token and that the pinned-guard machinery EXISTS as text (the saw_pinned_ok sites
-// and the failure message). The guard's firing is proven at sprint time by AC6's guard-trip
-// run and exercised on every CI invocation of run.sh (non-gating, continue-on-error: true,
-// ci.yml:172) — the round-1 SKIPPED hole (a banner printed with the pin unprobed) is closed
-// in run.sh itself, not merely narrowed here. What remains open by scope: nothing WATCHES
-// the non-gating log — a loud failure nobody reads is loud only on inspection; flipping
-// ci.yml:172 to gating is the named follow-up in Deferred Scope, paired with OD-1.
+// and the failure message). The guard's firing is proven at sprint time by AC5's guard-trip
+// and exercised on every gated CI invocation of run.sh. The round-1 SKIPPED hole (a banner
+// printed with the pin unprobed) is closed in run.sh itself, not merely narrowed here; the
+// row-44 wiring test below binds that a loud refusal remains gating.
 func TestMiscompileInstrumentProbesPinnedToolchain(t *testing.T) {
 	scriptPath := filepath.Join(repoRoot, "design_docs", "verification", "w-race-gate-blindspot", "run.sh")
 	raw, err := os.ReadFile(scriptPath)
@@ -318,5 +316,92 @@ func TestCanaryDeclaresPositiveArmOnly(t *testing.T) {
 	}
 	if !strings.Contains(src, "POSITIVE ARM ONLY") {
 		t.Errorf("%s: required %q marker is absent", canaryPath, "POSITIVE ARM ONLY")
+	}
+}
+
+const miscompileReproducerPath = "design_docs/verification/w-race-gate-blindspot/run.sh"
+
+// TestMiscompileInstrumentStepIsGatedInCI pins the row-44 wiring on two channels that
+// must not silently return. (1) `continue-on-error: true` converts an instrument's
+// loudest possible output into silence, so it is forbidden in the miscompile step's
+// own block. A flag on an unrelated step remains that step's business. (2) The
+// instrument's platform polarity reads the KERNEL (`uname`); `go env` honours the
+// env-var form of the platform tokens (measured in the design doc, P16), so executable
+// uses of that overridable channel are forbidden in run.sh, and both kernel reads are
+// asserted present so the probe cannot quietly revert.
+// DECLARED RESIDUAL: a step-level `if:` that never evaluates true disables the step
+// with this text intact (no actionlint runs in this repo — P41 V18); and these are
+// byte-substring pins — a computed assignment (`eval`, string concatenation) evades
+// them; the mechanism's runtime immunity is why that gap is acceptable (design doc,
+// residuals 2 and 3).
+func TestMiscompileInstrumentStepIsGatedInCI(t *testing.T) {
+	workflowPath := filepath.Join(repoRoot, ".github", "workflows", "ci.yml")
+	raw, err := os.ReadFile(workflowPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := string(raw)
+	if count := strings.Count(src, miscompileReproducerPath); count != 1 {
+		t.Fatalf("instrument failure: ci.yml count(%q)=%d, want exactly 1 — the step this test pins must exist", miscompileReproducerPath, count)
+	}
+	// Scope the flag check to the miscompile STEP's own block (quorum round-2 R1:
+	// "inspect only the miscompile step for continue-on-error … rather than banning
+	// legitimate GOOS/GOARCH use globally"). A flag on an unrelated step is that
+	// step's business; V19's scoping control proves this boundary holds.
+	lines := strings.Split(src, "\n")
+	start := -1
+	for i, l := range lines {
+		if strings.Contains(l, miscompileReproducerPath) {
+			for j := i; j >= 0; j-- {
+				if strings.HasPrefix(strings.TrimSpace(lines[j]), "- name:") {
+					start = j
+					break
+				}
+			}
+			break
+		}
+	}
+	if start < 0 {
+		t.Fatalf("instrument failure: could not locate the miscompile step block in ci.yml")
+	}
+	end := len(lines)
+	for j := start + 1; j < len(lines); j++ {
+		if strings.HasPrefix(strings.TrimSpace(lines[j]), "- name:") {
+			end = j
+			break
+		}
+	}
+	for i := start; i < end; i++ {
+		if strings.Contains(lines[i], "continue-on-error") {
+			t.Errorf("ci.yml:%d re-introduces %q in the miscompile step — row 44: a swallowed refusal is how this instrument died the first time", i+1, "continue-on-error")
+		}
+	}
+	runRaw, err := os.ReadFile(filepath.Join(repoRoot, miscompileReproducerPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	runSrc := string(runRaw)
+	// Require the kernel read (quorum R3), and reject only EXECUTABLE uses of the
+	// overridable channel — a comment may NAME the channel it exists to warn about.
+	// The round-1 form banned the bare tokens repo-wide and therefore redded against
+	// its own documentation on arrival (V19 arm A); this is round-2 R1's fix verbatim.
+	for _, need := range []string{"uname -s", "uname -m"} {
+		if !strings.Contains(runSrc, need) {
+			t.Errorf("run.sh no longer reads the kernel via %q — quorum R3's fix reverted; the polarity must not come from an overridable variable", need)
+		}
+	}
+	for i, line := range strings.Split(runSrc, "\n") {
+		code := line
+		if idx := strings.Index(code, "#"); idx >= 0 {
+			code = code[:idx]
+		}
+		for _, bad := range []string{"go env GOOS", "go env GOARCH"} {
+			if strings.Contains(code, bad) {
+				t.Errorf("run.sh:%d executable use of %q — the polarity must not read an overridable channel", i+1, bad)
+			}
+		}
+		if strings.Contains(code, "host_pair") && strings.Contains(code, "go env") {
+			t.Errorf("run.sh:%d derives host_pair from `go env` — quorum R3", i+1)
+		}
 	}
 }
