@@ -4675,7 +4675,7 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
     `absent_reviewers` so a recoverable verdict is not silently discarded; distinguish
     `unreachable` / `over-budget` / `unparseable` as three reasons with three different remedies;
     or retry an unparseable response once with a stricter output instruction rather than with a
-    bigger budget. Route as a cross-mission issue to V1 rather than working around it locally.
+    bigger budget. **FILED UPSTREAM 2026-08-27 (iter-133): [`sunholo-data/ailang#941`](https://github.com/sunholo-data/ailang/issues/941)**, with a cross-mission note to V1 on the `mission-control` channel. Routed rather than worked around locally, per the frozen-core rule.
     · ~0.2d (mostly upstream) · gated on nothing · surfaced iter-133 (controller-measured, with
     the recovered verdict and the solo re-run as corroboration).
 
