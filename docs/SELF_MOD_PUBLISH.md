@@ -36,7 +36,7 @@ loudly rather than skipping.
 ### 3. Run the full repo gate
 
 ```bash
-./scripts/verify_ail.sh   # invokes verify_world_package.sh at :224
+./scripts/verify_ail.sh   # its final leg invokes verify_world_package.sh
 ./scripts/verify_go.sh
 ```
 

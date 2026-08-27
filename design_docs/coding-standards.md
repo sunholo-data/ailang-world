@@ -87,6 +87,36 @@ rule's third-instance origin: the M1 fluency gap, the ailang-feature gap, and th
 schema that even the coordinator had to reverse-engineer from `cli_test.go`. "The tests show
 how" is not documentation; the evaluator scores it.
 
+## S8 — The floor-raise coupling inventory (added 2026-08-27, row 43)
+
+*A gate that is complete by construction can still have a coupling surface that is complete
+only by memory, and the memory lives in whoever last raised the floor.* Raising the
+verified-identity floor touches **six files**; at `P6.V` three roles each found a different
+subset, and the full set existed only in commit `699f592`'s message. The map:
+
+| # | File | What moves |
+|---|---|---|
+| 1 | `world/<module>.ail` | the new contract (the law itself) |
+| 2 | `packages/world-core/world/<module>.ail` | projection copy — regenerate with `./scripts/build_world_package.sh`, never hand-edit |
+| 3 | `scripts/verify_ail.sh` | BOTH constants: `REQUIRED_VERIFIED` and `EXACT_TOTAL_VERIFIED` |
+| 4 | `scripts/world_package_ready_packet.golden.json` | `contentHash`, `tarballSHA256`, `tarballBytes` |
+| 5 | `docs/SELF_MOD_PUBLISH.md` | the `contentHash` and `tarballSHA256` digest-table rows |
+| 6 | `host/verifygate/module_manifest_gate_test.go` | the pristine-control marker string — hand-maintained; deriving it from `EXACT_TOTAL_VERIFIED` would make the control vacuous (S6) |
+
+**`interfaceHash` does not move for `.ail` byte changes or packaged-module changes that
+leave the hashed manifest fields unchanged. It MUST move when a hashed manifest field
+changes, including `name`, `edition`, the optional AILANG bound, exports, or effects.**
+So do not "fix" the third digest on a Tier-1 raise. A raise that changes the hashed manifest
+fields (or the packaged-module census) touches additional sites beyond these six; that
+inventory is deferred to a future item pending a first-party rehearsal.
+
+Recipe, all six in the SAME commit: edit 1 and 3 by hand → `./scripts/build_world_package.sh`
+(2) → run the pinned gate; step 9/9 reds printing a diff against the committed golden;
+replace the golden with the diff's new line and re-run (4) *(step 9/9's red-arm diff format
+verified via the V25 mechanism, not re-executed this session — see the V16 note)* → copy the two moved digests into the runbook table (5) → update the marker (6) →
+re-run to green; `go test ./host/runbook/` binds 5↔4. Enforced by
+`host/verifygate/floor_raise_inventory_test.go`.
+
 ---
 *Changes to this document are ratification-class (human gate). It is deliberately short —
 every sprint reads it; token cost is a standing tax.*

@@ -1,0 +1,277 @@
+{
+  "sprint_id": "w-floor-raise-coupling-inventory",
+  "queue_item": 43,
+  "title": "Publish the floor-raise coupling inventory (the six files that move on every verified-identity floor raise) into two durable homes, bind both with one static Go test, and repair one stale doc anchor. Zero gate strength changed, zero thresholds moved, zero existing assertions touched.",
+  "status": "planned - awaiting sprint-executor",
+  "created": "2026-08-27",
+  "planner": "mission-control iteration 132, opus sprint-planner",
+  "design_doc": "design_docs/planned/w-floor-raise-coupling-inventory.md",
+  "sprint_plan": "design_docs/planned/w-floor-raise-coupling-inventory-sprint-plan.md",
+  "base_commit": "50c3b91",
+  "branch": "none - the executor performs NO git write operations; the controller commits",
+  "worktree": "the isolated worktree the controller assigns; work only there",
+  "github_issues": [],
+  "environment": {
+    "AILANG_BIN": "/tmp/ailang-v0300/ailang",
+    "ailang_version": "AILANG v0.30.0",
+    "exports_required_for_the_pinned_gate": "export AILANG_BIN=/tmp/ailang-v0300/ailang WORLD_PKG_AILANG_BIN=/tmp/ailang-v0300/ailang",
+    "notes": [
+      "THE SHARPEST FACT IN THIS SPRINT: `env -u AILANG_BIN go test ./host/verifygate/ -run '^TestFloorRaiseInventoryNamesEveryCoupledFile$' -count=1` is rc=0 AT BASE with `ok ... [no tests to run]`. Any acceptance step that reads that command's exit code is VACUOUS. The binding form adds -v and counts `=== RUN` / `--- PASS` / `--- FAIL` lines. Applies to EVERY -run-scoped test in this plan.",
+      "The inventory test itself takes NO AILANG_BIN and runs in any lane: it is static text scanning only, no subprocess, no requirePinned. It is run with `env -u AILANG_BIN` exactly as AC1 specifies.",
+      "The pinned gate ./scripts/verify_ail.sh is 6.0s wall and rc=0 at base (planner-measured in this worktree). AC5 clause 2 and mutation arm M6 both use it; neither is expensive, do not skip them.",
+      "Every ailang invocation prints `Observatory: NNNMB (warn threshold: 200MB)` on stderr and the gate is rc=0 with it present. NOT a regression, do not fix it.",
+      "`git status --porcelain` is NEVER 0 during this sprint. The deliverable is uncommitted by construction. Integrity is checked by sha256 against /tmp/p43-backup/POST_SPRINT.sha, never by porcelain.",
+      "RESTORES DURING THE MUTATION DRILL USE `cp` FROM /tmp/p43-backup/, NEVER `git checkout --`. Nothing is committed, so `git checkout -- scripts/verify_ail.sh` would DELETE the entire deliverable with no undo.",
+      "Do not widen any gate to `go test ./...`. This sprint's gates are ./host/verifygate/ and ./host/runbook/ only. Other packages carry recorded base flakes that are not this diff.",
+      "Do not run ./scripts/build_world_package.sh. This sprint changes no .ail byte; the projection is already byte-identical (design doc V15)."
+    ]
+  },
+  "executor_constraints": {
+    "git_writes": "FORBIDDEN. No add, commit, stash, checkout, branch, worktree, mv, restore, reset. Git READS (show, status, diff) are required and allowed - AC5 uses `git show 476069d:scripts/verify_ail.sh`.",
+    "snapshots": "On a multi-milestone run, after each milestone that changes files (M1, M2, M3) copy the FULL current content of every deliverable path that exists into .snap/M<k>/, mirroring the repo-relative path. Snapshots are CUMULATIVE (M3 contains M1's and M2's files at their M3 state) so the controller can reconstruct commits in order. Snapshot ONLY the four deliverable paths.",
+    "snapshot_safety": "Planner-verified: Go's ./... pattern ignores directories whose name begins with '.', and every repo scanner in play globs a fixed non-recursive directory (scripts/*.sh at runbook_stageb_test.go:332, host/verifygate/*.go at ail_binary_gate_test.go:554). A .snap/ copy is invisible to all of them. Do not rename it to something without the leading dot.",
+    "files_touched": [
+      "host/verifygate/floor_raise_inventory_test.go (CREATE, ~60 LOC)",
+      "scripts/verify_ail.sh (MODIFY, +29/-0: 28-line comment block after :29 plus one column-0 pointer comment above :274)",
+      "design_docs/coding-standards.md (MODIFY, +29/-0: section S8 appended after S7, before the ratification footer)",
+      "docs/SELF_MOD_PUBLISH.md (MODIFY, +1/-1: line 39 only)"
+    ],
+    "authoritative": "THE DESIGN DOC WINS over this plan. The three places this plan departs from a literal doc sentence are named in sprint plan section 1 (D1, D2, D3), each with the planner's own measurement of why the doc's literal text would red a correct landing."
+  },
+  "planner_findings": [
+    {
+      "id": "D1",
+      "severity": "HIGH",
+      "claim": "AC2's `emits exactly the 25-line block` is STALE. The design doc's own section (a) fenced block measures 28 lines. The 25 was correct when V28 measured it against the PRE-revision block; revision 1 and the round-2 carve-out grew it by three lines. An executor asserting = 25 against a correct landing reds AC2.",
+      "measurement": "awk '/^# ── FLOOR-RAISE COUPLING INVENTORY/,/^# ── END FLOOR-RAISE COUPLING INVENTORY/' design_docs/planned/w-floor-raise-coupling-inventory.md | wc -l  ->  28",
+      "resolution": "AC2 in the plan asserts the properties V28 actually established (first line is the begin marker, last line is the END marker, and the landed block diffs empty against the block extracted from the design doc) and RE-DERIVES the count in the same call. The executor never types a line count. This is the design doc's own defect class - a number transcribed rather than re-derived."
+    },
+    {
+      "id": "D2",
+      "severity": "MEDIUM",
+      "claim": "TestNoRigAbsolutePaths (host/verifygate/ail_binary_gate_test.go:552) globs host/verifygate/*.go and t.Errorf's on any source containing /tmp/ailang, /Users/ or /home/runner/. The new test file WILL be scanned. The design doc's Conflict Surface names the five module-manifest tests, AC30, AC28/AC29 and coding-standards.md - but not this one.",
+      "measurement": "Read at host/verifygate/ail_binary_gate_test.go:552-580; needles are assembled at runtime so the scanner does not match itself; known-positive control is the token AILANG_BIN.",
+      "resolution": "M1 forbids any absolute path in the new file, in code OR comments - cite provenance as V20/V26/V27 and the doc path, never a rig path. AC7 is widened in M4 to the whole-package run plus `grep -c 'rig-absolute path'` on its output."
+    },
+    {
+      "id": "D3",
+      "severity": "LOW",
+      "claim": "Section (a) says the pointer line goes directly above the `REQUIRED_VERIFIED = {` heredoc at :274. Measured: the heredoc OPENS at :270 (`python3 - \"$mod\" \"$tmp_json\" <<'PY'`) and REQUIRED_VERIFIED = { is at :274, i.e. INSIDE it. The pointer is Python source, not shell source.",
+      "measurement": "sed -n '270,278p' scripts/verify_ail.sh",
+      "resolution": "Place the pointer at column 0, matching the existing column-0 Python comment at :273, so Python tokenizes it as a comment. AC5's `grep -v '^[[:space:]]*#'` filter strips it either way, so AC5 stays empty. The full pinned gate re-run in M2 would die loudly on Leg 1 if the heredoc were broken."
+    },
+    {
+      "id": "N1",
+      "severity": "NOT-A-DEFECT",
+      "claim": "AC5 is green at base by identity (diff = 0 lines) and AC1 is green at base with rc=0. Neither is an anomaly to report: AC5 measures the sprint's CONSTRAINT and its teeth are mutation arm M6; AC1's base green IS the vacuity trap the brief flagged. Recorded so no downstream role re-derives them as findings.",
+      "measurement": "Both reproduced first-party by the planner and agreeing exactly with the controller's readings.",
+      "resolution": "Carried into the plan as stated base observations, not as sprint obligations."
+    }
+  ],
+  "base_state_verified": {
+    "provenance": "VERIFIED BY CONTROLLER at 50c3b91 in the main checkout, and RE-DERIVED BY PLANNER first-party in this worktree at 50c3b91. All seven agreed exactly.",
+    "AC1": "env -u AILANG_BIN go test ./host/verifygate/ -run '^TestFloorRaiseInventoryNamesEveryCoupledFile$' -count=1 -> rc=0, `ok ... 0.276s [no tests to run]`, 0 `=== RUN` lines",
+    "AC2": "grep -c 'FLOOR-RAISE COUPLING INVENTORY' scripts/verify_ail.sh -> 0 (rc=1); KP grep -c 'Leg 1' -> 6 firing",
+    "AC3": "grep -c '^## S8' design_docs/coding-standards.md -> 0 (rc=1); KP grep -c '^## S6' -> 1 firing",
+    "AC4": "grep -c 'interfaceHash' -> 0 in scripts/verify_ail.sh AND 0 in design_docs/coding-standards.md; KP grep -c 'EXACT_TOTAL_VERIFIED=11' scripts/verify_ail.sh -> 1 firing",
+    "AC5": "diff <(grep -v '^[[:space:]]*#' scripts/verify_ail.sh) <(git show 476069d:scripts/verify_ail.sh | grep -v '^[[:space:]]*#') | wc -l -> 0; and the pinned gate rc=0 in 6.0s with banner `11/11 required world/ identities verified across 11 module(s)` and `all 40 required named tests pass`",
+    "AC6": "grep -c 'at :224' docs/SELF_MOD_PUBLISH.md -> 1 (RED at base, as required); grep -c 'its final leg invokes verify_world_package.sh' -> 0; go test ./host/runbook/ -count=1 -> ok 1.364s",
+    "AC7": "go vet ./host/verifygate/ rc=0; gofmt -l host/verifygate/ empty",
+    "extra_planner_measurements": [
+      "git diff --stat 476069d HEAD -- scripts/verify_ail.sh -> empty, so AC5's diff base 476069d is runnable VERBATIM from 50c3b91",
+      "All nine needles present in BOTH proposed homes as the doc writes them (script block / S8): packages/world-core/world/ 1/1, REQUIRED_VERIFIED 2/1, EXACT_TOTAL_VERIFIED 2/2, world_package_ready_packet.golden.json 1/1, SELF_MOD_PUBLISH.md 1/1, module_manifest_gate_test.go 1/1, interfaceHash 1/1, 'does not move for' 1/1, site-1 row literal 1/1",
+      "The vacuity witness is real in BOTH homes: bare `world/<module>.ail` occurs 2x in each (site 1's row and site 2's row), so deleting site 1 leaves the bare needle firing at 1 - which is exactly what M7/M8 must record",
+      "Neither home contains the token `world-publish` (0/0), so AC30's fatal scanner cannot fire on the landing; AC30's KP (verify_world_package.sh in verify_ail.sh, bound < 1) is 1 at base and the block adds none of that token",
+      "The block collides with NO count-exactly-1 mutation anchor over verify_ail.sh source: `v0.30.0|OK`, `mods+=(\"${f#./}\")`, `(-dirty$|-[0-9]+-g[0-9a-f]+)`, `LEG1_MODULES=(` all 0 occurrences inside it",
+      "design_docs/coding-standards.md is bound by NO Go test - section S8's only enforcement will be the new inventory test",
+      "docs/SELF_MOD_PUBLISH.md's Stage-A control literal `./scripts/verify_world_package.sh` (required by runbook_commands_test.go:147) stands at :25 and `## Stage B` at :50; the :39 edit removes no such literal",
+      "repoRoot is a package-level var at host/verifygate/ail_binary_gate_test.go:27 in package verifygate, so the new file can reuse it as section (c) requires",
+      "go build ./... rc=0 in 1.5s"
+    ]
+  },
+  "milestone_ac_mapping": {
+    "note": "The design doc defines NO milestones - it defines four artifacts (Files to Create/Modify (a)-(d)) and seven acceptance criteria. This mapping is planner-derived by reading each AC's own subject back to the artifact that produces it. DIFFED AGAINST THE DOC'S AC LIST: every AC1-AC7 is claimed by exactly one milestone and no milestone claims an AC the doc attaches to a different artifact. NO DISAGREEMENT WITH THE DOC FOUND.",
+    "M1_INVENTORY_TEST_RED": {"artifact": "doc section (c)", "closes": ["AC7"], "reconfirms": []},
+    "M2_TWO_DURABLE_HOMES": {"artifact": "doc sections (a) and (b)", "closes": ["AC1", "AC2", "AC3", "AC4", "AC5"], "reconfirms": ["AC7"]},
+    "M3_RUNBOOK_ANCHOR_REPAIR": {"artifact": "doc section (d)", "closes": ["AC6"], "reconfirms": []},
+    "M4_ACCEPTANCE_SWEEP": {"artifact": "none - no edits", "closes": [], "reconfirms": ["AC1", "AC2", "AC3", "AC4", "AC5", "AC6", "AC7"]},
+    "M5_MUTATION_DRILL": {"artifact": "none - every arm restored", "closes": [], "reconfirms": ["AC1", "AC2", "AC3", "AC4", "AC5", "AC6", "AC7"]}
+  },
+  "velocity": {
+    "method": "Changed lines against the four-file touch set, cross-checked against the planner's first-party timing of every gate this sprint runs.",
+    "references": [
+      "row 42 (58c8f7f): a comparable documentation-plus-one-test item landed inside 0.1 d",
+      "this item: ~95 changed lines across 4 files, 1 created"
+    ],
+    "applied": "~95 changed lines over 0.1 d. The risk is NOT in the typing. It is in (a) transcribing the two verbatim blocks byte-exactly and (b) reading counted lines instead of exit codes. Budget the time there.",
+    "measured_cost_centres": {
+      "verify_ail_sh_pinned_gate": "6.0 s",
+      "go_build_all": "1.5 s",
+      "go_test_host_runbook": "1.4 s",
+      "scoped_verifygate_test": "~0.3 s",
+      "full_acceptance_sweep": "under 1 min",
+      "eight_arm_mutation_drill": "a few min (one arm runs the 6 s gate)"
+    },
+    "estimated_total_changed_lines": 95,
+    "estimated_days": 0.1
+  },
+  "features": [
+    {
+      "id": "M1_INVENTORY_TEST_RED",
+      "name": "Create host/verifygate/floor_raise_inventory_test.go and observe it RED through its own instrument fatal",
+      "description": "Design doc section (c), verbatim. One file, package verifygate, one test TestFloorRaiseInventoryNamesEveryCoupledFile. (1) Read filepath.Join(repoRoot, 'scripts', 'verify_ail.sh'). (2) Locate the block by the STYLED literals `# ── FLOOR-RAISE COUPLING INVENTORY` and `# ── END FLOOR-RAISE COUPLING INVENTORY`; t.Fatalf unless EACH occurs EXACTLY ONCE with begin preceding end - the known-positive control, so an empty, vanished, duplicated or misordered enumeration fails LOUDLY rather than passing as zero. NEVER anchor on the bare phrase: the pointer line repeats it by design (V28). (3) Assert the bounded block contains all NINE script-home needles, failure message shape `inventory block omits %q`. (4) Read design_docs/coding-standards.md; t.Fatalf unless the `## S8` heading exists; extract ONLY the text from that heading to the next `##` or EOF and assert the eight shared needles plus S8's site-1 row literal WITHIN THAT BOUNDED EXTRACT (round 2's non-blocking catch: a future S9 reusing a needle term must not satisfy S8's assertion), failure message shape `S8 omits %q`. FORBIDDEN in this file (finding D2): any absolute path in code or comments; no requirePinned, no AILANG_BIN, no subprocess. Reuse repoRoot only.",
+      "commits": 1,
+      "estimated_loc": 60,
+      "files": ["host/verifygate/floor_raise_inventory_test.go (CREATE)"],
+      "dependencies": [],
+      "needles_script_home": [
+        "packages/world-core/world/",
+        "REQUIRED_VERIFIED",
+        "EXACT_TOTAL_VERIFIED",
+        "world_package_ready_packet.golden.json",
+        "SELF_MOD_PUBLISH.md",
+        "module_manifest_gate_test.go",
+        "interfaceHash",
+        "does not move for",
+        "#   1. world/<module>.ail"
+      ],
+      "needles_s8_home": [
+        "packages/world-core/world/",
+        "REQUIRED_VERIFIED",
+        "EXACT_TOTAL_VERIFIED",
+        "world_package_ready_packet.golden.json",
+        "SELF_MOD_PUBLISH.md",
+        "module_manifest_gate_test.go",
+        "interfaceHash",
+        "does not move for",
+        "| 1 | `world/<module>.ail`"
+      ],
+      "acceptance_criteria": [
+        "AC7: gofmt -l host/verifygate/ | wc -l -> 0   [base: 0]",
+        "AC7: go vet ./host/verifygate/ -> rc=0   [base: rc=0]",
+        "go build ./... -> rc=0   [base: rc=0, 1.5s]",
+        "RED-BEFORE-GREEN, counted not rc: env -u AILANG_BIN go test ./host/verifygate/ -run '^TestFloorRaiseInventoryNamesEveryCoupledFile$' -count=1 -v 2>&1 | tee /tmp/p43-m1.txt ; then grep -c '^=== RUN' /tmp/p43-m1.txt -> 1 [base: 0] AND grep -c '^--- FAIL' /tmp/p43-m1.txt -> 1 AND grep -c 'begin marker count=0' /tmp/p43-m1.txt -> 1. A --- PASS here means the extractor found markers that cannot exist yet: STOP and diagnose."
+      ],
+      "snapshot": ".snap/M1/host/verifygate/floor_raise_inventory_test.go",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M2_TWO_DURABLE_HOMES",
+      "name": "Land the inventory in both durable homes: the verify_ail.sh head comment block plus pointer, and coding-standards section S8",
+      "description": "Design doc sections (a) and (b), VERBATIM. (a) Insert section (a)'s fenced block byte for byte after line 29 of scripts/verify_ail.sh (after the `NOTE (test-name collisions, V22)` header comment, before `set -uo pipefail`). EXTRACT IT WITH awk FROM THE DESIGN DOC, never retype: the box-drawing characters and column alignment must survive. Then insert the pointer line at COLUMN 0 directly above `REQUIRED_VERIFIED = {` (currently :274, INSIDE the <<'PY' heredoc that opens at :270 - finding D3), matching the existing column-0 Python comment at :273; the pointer text is `# Before adding an identity here: read the FLOOR-RAISE COUPLING INVENTORY at the head of this file.`. (b) Append section (b)'s fenced S8 verbatim after S7's last paragraph and BEFORE the `---` ratification footer; renumber nothing. coding-standards.md is ratification-class: the authorization is ratified queue row 43 itself (world-mission.md:4403), and the text is proposed verbatim precisely so the PR ratifies exactly what lands - land exactly it, no editorial improvements.",
+      "commits": 1,
+      "estimated_loc": 58,
+      "files": [
+        "scripts/verify_ail.sh (MODIFY, +29/-0)",
+        "design_docs/coding-standards.md (MODIFY, +29/-0)"
+      ],
+      "dependencies": ["M1_INVENTORY_TEST_RED"],
+      "acceptance_criteria": [
+        "AC2 (finding D1 applied - the count is RE-DERIVED, never typed): awk '/^# ── FLOOR-RAISE COUPLING INVENTORY/,/^# ── END FLOOR-RAISE COUPLING INVENTORY/' design_docs/planned/w-floor-raise-coupling-inventory.md > /tmp/p43-block.txt ; same awk over scripts/verify_ail.sh > /tmp/p43-landed.txt ; head -1 /tmp/p43-landed.txt must match the begin marker, tail -1 must match the END marker, and `diff /tmp/p43-block.txt /tmp/p43-landed.txt` must be EMPTY.   [base: the awk over the script emits nothing]",
+        "AC2: grep -c 'FLOOR-RAISE COUPLING INVENTORY' scripts/verify_ail.sh -> 3 (begin + END + pointer; 3 PRECISELY BECAUSE the pointer exists)   [base: 0, rc=1; KP grep -c 'Leg 1' -> 6 firing]",
+        "AC2 anchoring rule: the awk range MUST keep the `# ── ` styling. Unanchored on the bare phrase it re-opens at the pointer line and runs to EOF (V28 measured 32 lines ending in the script tail vs the bounded block).",
+        "AC3: grep -c '^## S8' design_docs/coding-standards.md -> 1   [base: 0, rc=1; KP grep -c '^## S6' -> 1 firing]",
+        "AC4: grep -c 'interfaceHash' scripts/verify_ail.sh -> >=1 AND grep -c 'interfaceHash' design_docs/coding-standards.md -> >=1   [base: 0 and 0; KP grep -c 'EXACT_TOTAL_VERIFIED=11' scripts/verify_ail.sh -> 1 firing]",
+        "AC5 clause 1: diff <(grep -v '^[[:space:]]*#' scripts/verify_ail.sh) <(git show 476069d:scripts/verify_ail.sh | grep -v '^[[:space:]]*#') | wc -l -> 0   [base: 0 by identity - green at base BY DESIGN; its teeth are drill arm M6]",
+        "AC5 clause 2: AILANG_BIN=/tmp/ailang-v0300/ailang WORLD_PKG_AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh -> rc=0 with the IDENTICAL banner: `11/11 required world/ identities verified across 11 module(s)` and `all 40 required named tests pass`   [base: rc=0 in 6.0s with exactly that banner]",
+        "AC1 (counted, never rc): env -u AILANG_BIN go test ./host/verifygate/ -run '^TestFloorRaiseInventoryNamesEveryCoupledFile$' -count=1 -v 2>&1 | tee /tmp/p43-m2.txt ; grep -c '^=== RUN' -> 1, grep -c '^--- PASS' -> 1, grep -c '^--- FAIL' -> 0   [base: rc=0 with `[no tests to run]` and 0 `=== RUN`]",
+        "AC1 paired nonsense control, run in the same pass to prove the counter can read a zero: env -u AILANG_BIN go test ./host/verifygate/ -run 'TestNoSuchInventoryZZZ' -count=1 -v 2>&1 | grep -c 'no tests to run' -> 1, and note its rc is 0. THIS is why rc is never the gate."
+      ],
+      "snapshot": ".snap/M2/ (test file + both edited files, full post-milestone content)",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M3_RUNBOOK_ANCHOR_REPAIR",
+      "name": "Repair the stale line anchor at docs/SELF_MOD_PUBLISH.md:39",
+      "description": "Design doc section (d). On line 39 ONLY, replace `./scripts/verify_ail.sh   # invokes verify_world_package.sh at :224` with `./scripts/verify_ail.sh   # its final leg invokes verify_world_package.sh`. The number was two refactors stale (the call site is :403). REMOVE the rotting number, do not refresh it - refreshing mints the next stale anchor (Alternatives rejected 4). The token verify_world_package.sh survives, so AC30's control count and runbook_commands_test.go:147 are unaffected.",
+      "commits": 1,
+      "estimated_loc": 2,
+      "files": ["docs/SELF_MOD_PUBLISH.md (MODIFY, +1/-1)"],
+      "dependencies": ["M2_TWO_DURABLE_HOMES"],
+      "acceptance_criteria": [
+        "AC6: grep -c 'at :224' docs/SELF_MOD_PUBLISH.md -> 0   [base: 1 - RED at base, as required]",
+        "AC6: grep -c 'its final leg invokes verify_world_package.sh' docs/SELF_MOD_PUBLISH.md -> 1   [base: 0]",
+        "AC6 KP (planner-added): grep -c '^\\./scripts/verify_world_package\\.sh$' docs/SELF_MOD_PUBLISH.md -> 1 - the Stage-A control literal runbook_commands_test.go:147 requires, at :25, untouched by this edit",
+        "AC6: AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/runbook/ -count=1 -> rc=0   [base: rc=0, ok 1.364s - green at base and re-run to prove the edit broke no binding]"
+      ],
+      "snapshot": ".snap/M3/ (all four files, full post-milestone content)",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M4_ACCEPTANCE_SWEEP",
+      "name": "Full AC1-AC7 sweep in one recorded pass, plus the whole-package run that catches finding D2",
+      "description": "No edits. Re-run AC1 through AC7 in order from the commands in M1-M3, and add the widened AC7 (finding D2): the whole host/verifygate package must run, so that TestNoRigAbsolutePaths actually scans the new file. Record every observed value next to its expectation. THIS IS THE GREEN CONTROL the design doc's Non-Vacuity section requires for all mutation arms - capture it BEFORE touching anything in M5.",
+      "commits": 0,
+      "estimated_loc": 0,
+      "files": [],
+      "dependencies": ["M3_RUNBOOK_ANCHOR_REPAIR"],
+      "acceptance_criteria": [
+        "AC1-AC6 all re-run and green, each recorded against its base observation",
+        "AC7: go vet ./host/verifygate/ -> rc=0; gofmt -l host/verifygate/ | wc -l -> 0; go build ./... -> rc=0",
+        "AC7 widened (D2): AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1 -v 2>&1 | tee /tmp/p43-pkg.txt ; grep -c '^--- FAIL' -> 0 AND grep -c 'rig-absolute path' -> 0 AND grep -c '^--- PASS' -> >=30 (29 pre-existing tests plus the new one)"
+      ],
+      "snapshot": "none - no edits in this milestone",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M5_MUTATION_DRILL",
+      "name": "The eight-arm mutation drill (M1-M8) with the green control on both sides, then hand off the uncommitted tree",
+      "description": "Every arm mutates the PRODUCTION side (the two published documents, or the gate constant). NO ARM EDITS THE TEST. Each arm must show three things in order: (1) the mutation LANDED, proved by a query against the system's own view - an occurrence count moving, a heading vanishing - NEVER by the file's bytes or a diff of them; (2) the tree still BUILDS - `go build ./...` and `bash -n scripts/verify_ail.sh` both rc=0, because a mutation that breaks the build reds every test for the wrong reason and proves nothing (iteration 131's lesson: a mutation that did not apply is a false green); (3) the expected single test REDS, judged by counted `--- FAIL` lines and the named message, never by rc. Backup is taken AFTER M3 from the POST-SPRINT tree into /tmp/p43-backup/ with its sha256s recorded in /tmp/p43-backup/POST_SPRINT.sha. RESTORE AFTER EVERY ARM WITH cp FROM THAT BACKUP - `git checkout -- scripts/verify_ail.sh` would delete this sprint's block because nothing is committed, and there is no undo.",
+      "commits": 0,
+      "estimated_loc": 0,
+      "files": [],
+      "dependencies": ["M4_ACCEPTANCE_SWEEP"],
+      "mutation_arms": [
+        {"arm": "M1", "edit": "delete the `#   5. docs/SELF_MOD_PUBLISH.md ...` line from the script block", "land_proof": "grep -c 'SELF_MOD_PUBLISH.md' scripts/verify_ail.sh moves 1 -> 0", "build_proof": "go build ./... rc=0 AND bash -n scripts/verify_ail.sh rc=0", "expected_red": "the inventory test only: 1 `--- FAIL` and output contains `inventory block omits \"docs/SELF_MOD_PUBLISH.md\"`", "design_time_status": "RUN on fixture at design time (V20 arm c)"},
+        {"arm": "M2", "edit": "delete ONLY the END marker line from the script block", "land_proof": "grep -c '^# ── END FLOOR-RAISE COUPLING INVENTORY' scripts/verify_ail.sh moves 1 -> 0 AND grep -c 'FLOOR-RAISE COUPLING INVENTORY' moves 3 -> 2", "build_proof": "go build ./... rc=0 AND bash -n scripts/verify_ail.sh rc=0", "expected_red": "the inventory test fatals through its INSTRUMENT: `END marker count=0, want 1`. It must NOT pass as a silent zero", "design_time_status": "RUN on fixture (V20 arm d, V27 arm g)"},
+        {"arm": "M3", "edit": "delete section S8 from design_docs/coding-standards.md", "land_proof": "grep -c '^## S8' design_docs/coding-standards.md moves 1 -> 0", "build_proof": "go build ./... rc=0", "expected_red": "the inventory test fatals on the `## S8` heading assertion", "design_time_status": "sprint-run (same Contains mechanism V20 measured)"},
+        {"arm": "M4", "edit": "in the script block, change `does not move for` to `does move for`", "land_proof": "grep -c 'does not move for' scripts/verify_ail.sh moves 1 -> 0 AND grep -c 'does move for' moves 0 -> 1", "build_proof": "go build ./... rc=0 AND bash -n scripts/verify_ail.sh rc=0", "expected_red": "the inventory test: `inventory block omits \"does not move for\"`", "design_time_status": "sprint-run"},
+        {"arm": "M5", "edit": "delete site 6's table row from S8 ONLY, script block intact", "land_proof": "grep -c 'module_manifest_gate_test.go' design_docs/coding-standards.md moves 1 -> 0 while the same grep over scripts/verify_ail.sh STAYS 1", "build_proof": "go build ./... rc=0", "expected_red": "the inventory test: `S8 omits \"module_manifest_gate_test.go\"` - the cross-home clause, the two hand-authored homes may not drift apart", "design_time_status": "sprint-run"},
+        {"arm": "M6", "edit": "EXACT_TOTAL_VERIFIED=11 -> EXACT_TOTAL_VERIFIED=12 (AC5's TEETH)", "land_proof": "grep -c 'EXACT_TOTAL_VERIFIED=12' scripts/verify_ail.sh moves 0 -> 1", "build_proof": "bash -n scripts/verify_ail.sh rc=0", "expected_red": "TWO reds, and NOT the inventory test: (i) AC5's non-comment diff line count becomes NON-ZERO; (ii) the pinned gate exits rc=1 with `expected exactly 12 proven world/ contracts, got 11` - the long-established :324 refusal. ~6 s", "design_time_status": "sprint-run"},
+        {"arm": "M7", "edit": "delete ONLY `#   1. world/<module>.ail` from the script block; site 2's row intact", "land_proof": "grep -c '^#   1\\. world/<module>\\.ail' scripts/verify_ail.sh moves 1 -> 0; AND THE VACUITY WITNESS: grep -c 'world/<module>\\.ail' scripts/verify_ail.sh moves 2 -> 1, i.e. the bare needle STILL FIRES", "build_proof": "bash -n scripts/verify_ail.sh rc=0 AND go build ./... rc=0", "expected_red": "the inventory test: `inventory block omits \"#   1. world/<module>.ail\"`. RECORD THE WITNESS: a naive bare-path needle would be GREEN under this exact arm - that green is the measured vacuity the reviewer's literal fix would have shipped", "design_time_status": "RUN on fixture (V26; V27 arms b/c)"},
+        {"arm": "M8", "edit": "delete ONLY site 1's table row from S8; site 2's row intact", "land_proof": "grep -c '^| 1 | `world/<module>\\.ail`' design_docs/coding-standards.md moves 1 -> 0; witness: grep -c 'world/<module>\\.ail' design_docs/coding-standards.md moves 2 -> 1", "build_proof": "go build ./... rc=0", "expected_red": "the inventory test: ``S8 omits \"| 1 | `world/<module>.ail`\"``; same naive-needle witness in the S8 home", "design_time_status": "RUN on fixture (V27 arms e/f)"}
+      ],
+      "not_mutated_and_declared": [
+        "The test file itself - no arm edits it; every red is produced from the production side",
+        "docs/SELF_MOD_PUBLISH.md - the design doc's Open Decision OD-2 declines to pin the runbook repair with a needle (a prose needle on a doc line no behaviour depends on is ceremony). AC6's greps are the check; AC28/AC30 guard what matters. DOC-SANCTIONED RESIDUAL - do not invent an arm for it.",
+        "The marker at module_manifest_gate_test.go:128, the golden, packages/world-core/** - out of scope; a mutation there tests row 42's work, not this one"
+      ],
+      "acceptance_criteria": [
+        "All eight arms show land-proof, build-proof and the named RED, in that order",
+        "Green control run on BOTH sides of the drill: the full M4 sweep before arm 1 and again after the last restore. A drill whose control runs only at the end cannot distinguish `the arms restored correctly` from `the arms never applied`.",
+        "After the last restore: shasum -a 256 scripts/verify_ail.sh design_docs/coding-standards.md equals /tmp/p43-backup/POST_SPRINT.sha, and git diff --stat shows ONLY the four expected paths",
+        "Hand off the UNCOMMITTED tree with .snap/M1, .snap/M2, .snap/M3 present. NO git write operation at any point."
+      ],
+      "snapshot": "none - no net edits; every arm restored",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "non_goals": [
+    "NO DERIVATION. The verifygate control's expected marker is never computed from EXACT_TOTAL_VERIFIED, REQUIRED_VERIFIED's cardinality, or any value the gate produces. A control whose expectation is computed from the value it checks cannot fail when that value is wrong. This was the controller's instinct at P6.V, the evaluator refuted it, and the refutation is BINDING here. This sprint adds zero derivation anywhere; the test compares, never generates.",
+    "No executable gate changes: no threshold, no assertion, no strength change. AC5 pins it.",
+    "No auto-generated inventory - a generator's sweep scope silently becomes the map, the same defect one level up.",
+    "No Tier-2 publication. The Tier 2 list stays in the design doc pending the rehearsal-gated follow-up row w-floor-raise-tier2-inventory, which the CONTROLLER files, not the executor. Both homes carry only the one-line forward reference.",
+    "No repair of w-mcp-projection.md's historical table; no run.sh work (row 44); no token-counting-control work (row 49).",
+    "No ./scripts/build_world_package.sh run - this sprint changes no .ail byte."
+  ],
+  "open_questions": [
+    "OD-1 (design doc): S8 as a top-level section (DEFAULT) vs an S6 subsection. Non-blocking; the text moves unchanged either way.",
+    "OD-2 (design doc): should the test also pin the runbook repair (AC6's needles)? DEFAULT NO. Non-blocking."
+  ],
+  "risk_level": "low"
+}
