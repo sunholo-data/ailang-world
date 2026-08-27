@@ -1,0 +1,290 @@
+{
+  "sprint_id": "w-miscompile-instrument-inert-in-ci",
+  "queue_item": 44,
+  "title": "The mission's own miscompile instrument has exited 1 on every observed dev CI run while GitHub reported the step success. Teach run.sh the measured platform asymmetry (kernel-read, fail-closed over exactly two verified host pairs), add a complete-coverage floor on the known-bad arm, then delete the single continue-on-error: true so the exit code carries its own meaning again - with one appended static test salting the ground the flag stood on. Three files modified, zero created, zero existing assertion bodies touched.",
+  "status": "planned - awaiting sprint-executor",
+  "created": "2026-08-27",
+  "planner": "mission-control iteration 133, claude-opus-5 sprint-planner",
+  "design_doc": "design_docs/planned/w-miscompile-instrument-inert-in-ci.md",
+  "sprint_plan": "design_docs/planned/w-miscompile-instrument-inert-in-ci-sprint-plan.md",
+  "base_commit": "aa0ab05",
+  "base_commit_note": "aa0ab05 = 80c2bd2 + the design-doc commit. PLANNER-MEASURED: `git diff --stat 80c2bd2 aa0ab05` touches ONE file (the design doc, +790 lines); all three sprint files are byte-identical across the two commits, so every `git show 80c2bd2:...` in the design doc is runnable VERBATIM. This plan uses aa0ab05.",
+  "branch": "none - the executor performs NO git write operations; the controller commits",
+  "worktree": "the isolated worktree the controller assigns; work only there",
+  "github_issues": [],
+  "environment": {
+    "AILANG_BIN": "/tmp/ailang-v0300/ailang",
+    "ailang_version": "AILANG v0.30.0 (commit e37b370)",
+    "export_required_for_whole_package_go_tests": "export AILANG_BIN=/tmp/ailang-v0300/ailang",
+    "PATH": "every shell invocation must begin `export PATH=/opt/homebrew/bin:$PATH` or gh/go/node fail rc=127",
+    "notes": [
+      "FINDING D1, THE SHARPEST ENVIRONMENT FACT: `go test ./host/verifygate/ -count=1` is rc=1 AT BASE with 17 `--- FAIL` lines, every message reading `AILANG_BIN is unset - the shim arms need the pinned released delegate to run the real gate`. With `AILANG_BIN=/tmp/ailang-v0300/ailang` it is rc=0 in 48.4s, 31 `--- PASS`, 0 FAIL, 0 SKIP. The design doc's AC7 omits the export and did not measure the base. A red whose text says `AILANG_BIN is unset` is NOT this diff - do not fix it, do not make those tests skip (they t.Fatalf on purpose).",
+      "SECOND SHARPEST FACT: `go test ./host/verifygate/ -run '^TestMiscompileInstrumentStepIsGatedInCI$' -count=1` is rc=0 AT BASE with `ok ... 0.172s [no tests to run]` and ZERO `=== RUN` lines. Any acceptance step reading that command's exit code is VACUOUS. Charter row 33. The binding form adds -v and counts `=== RUN` / `--- PASS` / `--- FAIL`, with a nonsense-pattern control in the same breath (base-measured: `-run '^TestNoSuchWiringGateZZZ$' -v` prints `no tests to run` 2x and exits 0).",
+      "The two SCOPED text-scanning tests (AC1, AC3) need NO AILANG_BIN - they are pure text scans over ci.yml / run.sh / go.mod with no subprocess. Run them unexported so their lane-independence stays visible.",
+      "`./scripts/verify_go.sh` legitimately emits exactly 2 `WARNING: DATA RACE` lines from its OWN known-positive control in design_docs/verification/w-race-gate-blindspot/racecontrol/, under the banner `-- race-detector known-positive control` (verify_go.sh:226/:229/:232). Three prior iterations have had to attribute these. NOT a finding. Do not report them.",
+      "Every `ailang` invocation prints `Observatory: NNNMB (warn threshold: 200MB)` on stderr; rc=0 with it present. NOT a regression.",
+      "`git status --porcelain` is NEVER empty during this sprint. The deliverable is uncommitted by construction. Integrity is checked by sha256 against /tmp/p44-backup/POST_SPRINT.sha, never by porcelain.",
+      "RESTORES DURING THE MUTATION DRILL USE `cp` FROM /tmp/p44-backup/, NEVER `git checkout --`. Nothing is committed, so `git checkout -- design_docs/verification/w-race-gate-blindspot/run.sh` would DELETE milestone M1 entirely with no undo. After arm X5 also `chmod +x` - cp does not restore the exec bit.",
+      "COST CENTRES, planner-measured on this rig: attended run.sh 3.3s WARM (all 7 toolchains already in GOMODCACHE at golang.org/toolchain@v0.0.1-go1.{24.9,25.6,26.0,26.3,26.5,26.6}.darwin-arm64, plus the default go1.26.4); whole host/verifygate package 48.4s; go build ./... 1.7s; scoped verifygate test ~0.2s; RD-1's four replays <1s total.",
+      "SANDBOX: the executor's workspace-write sandbox DENIES loopback socket binds. Nothing in this sprint binds a socket, so no step is expected to be UNINFORMATIVE on that account. run.sh needs OUTBOUND network only for a toolchain absent from GOMODCACHE - none are, today. If any probe other than the deliberately-fake go1.99.99 (drill arm X6) prints `SKIPPED (toolchain unavailable: ...)`, report that arm as UNINFORMATIVE UNDER SANDBOX and STOP; do not report a verdict. The controller re-runs it outside.",
+      "Do not widen any acceptance gate to `go test ./...`. The narrowest gate that can actually fail for this diff is `go test ./host/verifygate/ -count=1`. verify_go.sh:258 runs the wide form in CI; that is the CI leg's business, not the executor's instrument.",
+      "No .ail byte changes. This is a single-gate (Go) sprint: ./scripts/verify_ail.sh need not run and ./scripts/build_world_package.sh must not run."
+    ]
+  },
+  "executor_constraints": {
+    "git_writes": "FORBIDDEN. No add, commit, stash, checkout, branch, worktree, git-mv, restore, reset. Git READS (show, status, diff) are required and allowed - AC3 uses `git show aa0ab05:host/verifygate/toolchain_pin_gate_test.go`.",
+    "snapshots": "After each milestone that changes files (M1, M2) copy the FULL current content of every deliverable path that exists into .snap/M<k>/, mirroring the repo-relative path. Snapshots are CUMULATIVE (M2 contains M1's file at its M2 state) so the controller can reconstruct commits in order. Snapshot ONLY the three deliverable paths.",
+    "snapshot_safety": "Go's ./... pattern ignores directories whose name begins with '.', and TestNoRigAbsolutePaths (ail_binary_gate_test.go:554) globs a FIXED non-recursive directory host/verifygate/*.go. A .snap/ copy is invisible to both. Do not rename it to something without the leading dot.",
+    "files_touched": [
+      "design_docs/verification/w-race-gate-blindspot/run.sh (MODIFY, +57/-6 planner-measured on the candidate: six edits - declarations+kernel platform probe+fail-closed polarity case after :32; two probe() counter lines after :35 and :46; the :61 banner read swapped to $host_pair; :84-89 replaced by the three-floor block; :101-104 split per platform)",
+      ".github/workflows/ci.yml (MODIFY, +7/-4: lines 167-172 - delete the one continue-on-error: true, rename the step to `Measure compiler reproducer (platform-conditional, gated)`, replace the two comment lines with the six-line platform contract. timeout-minutes: 15 and the run: line unchanged)",
+      "host/verifygate/toolchain_pin_gate_test.go (MODIFY, +~45/-3: append `const miscompileReproducerPath` and `func TestMiscompileInstrumentStepIsGatedInCI` at EOF; reword ~3 lines INSIDE TestMiscompileInstrumentProbesPinnedToolchain's doc-comment at :186-190. ZERO existing assertion bodies touched. NO new imports needed - os, path/filepath, strings already imported at :5/:6/:9)"
+    ],
+    "files_forbidden": [
+      "tools/launchd/* (frozen core, FLEET-owned)",
+      "any .ail file",
+      "scripts/verify_go.sh and scripts/verify_ail.sh",
+      "host/store/toolchain_canary_test.go (row 49's surface)",
+      "normalizeToolchainPin at the TOP of toolchain_pin_gate_test.go (row 45's surface - this sprint appends at the END; disjoint hunks, flagged for whichever lands second)",
+      "design_docs/verification/w-race-gate-blindspot/repro/** and .../racecontrol/** (except drill arms X3/X4, both restored)",
+      "any ci.yml:172 citation elsewhere in the repo (row 31's census; this sprint's own edit renumbers ci.yml again - refreshing by hand mints the next stale number)"
+    ],
+    "authoritative": "THE DESIGN DOC WINS over this plan, and section `Quorum round 2` wins over earlier sections of the design doc. The five places this plan departs from a literal doc sentence are named in sprint plan section 1 (D1-D5), each with the planner's own first-party measurement of why the doc's literal text would red - or fail to red - a correct landing."
+  },
+  "constraint_1": {
+    "statement": "THE CONSTRAINT THAT OUTRANKS EVERYTHING: the change must not red `dev` on the next push. This is the one property whose failure is unrecoverable without a revert.",
+    "why_it_is_at_risk": "On linux the instrument's second floor (saw_bad==0) has fired on every observed run, so floors 3 and 4 have NEVER evaluated there. Nothing in the repo's history tells you what the linux leg does once the flag is gone. E0 (flip the flag, change nothing else) is measurably fatal: the next push reds with no recourse.",
+    "how_the_design_discharges_it": "Premise P17 replays P5's measured linux profile (ran=7, ran_bad=4 of bad_expected=4, saw_bad=0, saw_good=1, saw_pinned_ok=1) through the revised floors, and reads run 33069999131's own log for three agreeing in-run platform reports (Image: ubuntu-24.04; setup-go cache key setup-go-Linux-x64-ubuntu24-...; `AILANG v0.30.0 on Linux/x86_64`; `go1.26.6 linux/amd64` x7) plus the runs-on: ubuntu-latest census at ci.yml:19/:100.",
+    "how_THIS_PLAN_makes_the_executor_RE-DERIVE_it": "RD-1 is a BLOCKING gate inside milestone M1, run against the EXECUTOR'S OWN floor-block bytes, not inherited from the doc. Four replay arms plus five uname-shim arms. M2 (the flip) is not started until RD-1 is green on all of them. See sprint plan section 4, subsection RD-1, for the executable form.",
+    "planner_first_party_result": "RD-1 arm (a): P5's linux profile replayed through the planner's candidate floor block -> rc=0, printing `RESULT: linux/amd64 clean - no KNOWN-BAD toolchain reproduced here, matching / the iteration-46 AC6 measurement; all 4 known-bad and 7 total / probes ran, and the known-good and pinned (go1.26.6) toolchains both reported OK.` arm (b) P8's darwin profile -> rc=0 with output BYTE-IDENTICAL to base. arm (c) 3-of-4 partial on linux -> rc=1 coverage floor. arm (d) linux saw_bad=1 -> rc=1 PLATFORM ALARM. uname shim: Linux/x86_64 -> linux/amd64 expect_defect=0 rc=0 (the ubuntu-24.04 runner maps into the LISTED arm, not the refuse arm); Darwin/arm64 -> darwin/arm64 expect_defect=1 rc=0; Linux/aarch64, Darwin/x86_64, FreeBSD/riscv64 -> rc=1 refuse each; GOOS=windows GOARCH=amd64 exported -> still darwin/arm64 (P16's override-immunity claim re-derived).",
+    "reading_rule": "Read a=0 AND b=0 AND c=1 AND d=1 TOGETHER. a=0 alone is equally consistent with a floor block that cannot fail at all; the two negative controls are what make a=0 a measurement. If a is anything but 0, STOP - do not proceed to M2 - and report."
+  },
+  "planner_findings": [
+    {
+      "id": "D1",
+      "severity": "HIGH",
+      "claim": "AC7's clause `go test ./host/verifygate/ -count=1 -> rc=0` is FALSE at base. The design's own base note (`full-package run happens at sprint time (it runs the verify_ail shim arms; ~60 s)`) shows the designer did not run it. Without AILANG_BIN exported it is rc=1 with 17 `--- FAIL` lines, all reading `AILANG_BIN is unset`.",
+      "measurement": "go test ./host/verifygate/ -count=1 -> rc=1, 17 --- FAIL (ail_binary_gate_test.go:186/237/311/317/321/325/347/348/409/456/506/618 and module_manifest_gate_test.go:172/215/241/257/286). AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1 -v -> rc=0 in 48.4s, 39 `=== RUN`, 31 `--- PASS`, 0 `--- FAIL`, 0 `--- SKIP`.",
+      "why_it_matters": "An executor running AC7 verbatim reports a 17-failure RED against a correct landing, and the plausible next move - making those tests skip - is the exact false-green class this whole mission line exists to kill. Those tests t.Fatalf on purpose rather than skip.",
+      "resolution": "Sprint plan section 0 rule 4 and every AC7/M3 invocation carry AILANG_BIN=/tmp/ailang-v0300/ailang. The sweep additionally greps `AILANG_BIN is unset` and asserts 0, so a forgotten export is self-diagnosing. The SCOPED runs (AC1, AC3) stay unexported."
+    },
+    {
+      "id": "D2",
+      "severity": "HIGH (process)",
+      "claim": "AC6 cannot be closed by the executor at all. It requires reading `the landing PR's check run AND the first dev run after merge`. At sprint time there is no PR, no merge, and the executor is forbidden every git write.",
+      "measurement": "Design doc AC6 text, read against sprint plan section 0 rule 1 (no git writes) and the fact that the executor hands off an uncommitted tree.",
+      "why_it_matters": "The executor either fabricates a verdict from the PRE-landing run 33069999131 - which is the BASE contradiction (step success WITH refusal=1, RESULT banner=0), not the post state - or reports the sprint incomplete for a reason that is not its fault.",
+      "resolution": "AC6 is marked CONTROLLER-OWNED. The executor reports `NOT ATTEMPTED (controller-owned)` and nothing else. Its executor-side proxy - the thing AC6 would have measured about the SCRIPT - is RD-1, which the executor does run."
+    },
+    {
+      "id": "D3",
+      "severity": "HIGH",
+      "claim": "AC4(b)'s guard-trip is a revision-0 leftover that contradicts the shipped mechanism and asserts text that CANNOT appear. It says `mutate if [ \"$host_pair\" = \"darwin/arm64\" ] to \"darwin/amd64\" ... run -> rc=1 whose output names the PLATFORM ALARM text`. There is no `if [ \"$host_pair\" = ... ]` anywhere in the shipped design - quorum R1's fail-closed `case` replaced it - and the mutation the doc describes produces the REFUSE-arm text, not the alarm. Separately, AC4(c) is REFERENCED by the doc's mutation row M2 but never DEFINED in section Acceptance criteria.",
+      "measurement": "PLANNER-MEASURED against the candidate bytes on this darwin/arm64 rig. Mutation `darwin/arm64) expect_defect=1 ;;` -> `darwin/amd64) expect_defect=1 ;;`; landed-proof grep 0->1 and 1->0; result rc=1 with `INSTRUMENT FAILURE: no verified platform contract for darwin/arm64`; grep -c 'PLATFORM ALARM' = 0 (the doc predicts >= 1); grep -c 'no verified platform contract' = 1.",
+      "why_it_matters": "An executor asserting the PLATFORM ALARM text under AC4(b) reds a CORRECT landing, and the natural repair - editing the shipped case until the alarm text appears - would dismantle R1's fail-closed arm. The design's own section `What the round-2 revision deliberately STOPPED claiming teeth over` names exactly this defect class: a cell that no longer predicts the right result is worse than no cell. Its mutation row M2 already states the correct outcome; only AC4(b) was not re-derived when the mechanism changed.",
+      "resolution": "Split into two rehearsals, both planner-measured. AC4(b) = the REFUSE arm: same mutation, assert rc=1, `no verified platform contract for darwin/arm64` = 1 AND `PLATFORM ALARM` = 0. AC4(c) = the PLATFORM ALARM, NEWLY DEFINED: reachable on darwin only by flipping the arm's POLARITY, not its label - `darwin/arm64) expect_defect=1 ;;` -> `darwin/arm64) expect_defect=0 ;;`, landed-proof grep 0->1, result rc=1 with `INSTRUMENT FAILURE (PLATFORM ALARM): a KNOWN-BAD toolchain reported BUG on darwin/arm64`. Both measured by the planner."
+    },
+    {
+      "id": "D4",
+      "severity": "LOW",
+      "claim": "The design's network-flake framing (Declared residual 6, Quorum round 1: `six of seven probes` network-dependent) is true of CI but does not describe the LOCAL rehearsals, and could lead an executor to skip the behavioural drill arms on a false cost estimate.",
+      "measurement": "All seven toolchains are already present in GOMODCACHE (/Users/.../go/pkg/mod/golang.org/toolchain@v0.0.1-go1.{24.9,25.6,26.0,26.3,26.5,26.6}.darwin-arm64, plus the rig default go1.26.4). A warm attended run.sh is 3.3s wall, rc=0, 7/7 probes ran, 0 SKIPPED.",
+      "resolution": "The drill's darwin arms are cheap - run them all. Only arm X6 (go1.99.99) needs an outbound round-trip, and it SKIPs identically whether the answer is `toolchain not available` or a DNS failure, so its coverage-floor RED is robust to a network-denied sandbox. Section 0 rule 9 is the honest reading rule if any OTHER probe SKIPs."
+    },
+    {
+      "id": "D5",
+      "severity": "LOW - land it anyway",
+      "claim": "The proposed ci.yml comment ends `# Design: design_docs/implemented/w-miscompile-instrument-inert-in-ci.md` while the doc lives at design_docs/planned/ until the controller moves it on landing. Adjacent trivial nit: the new test's `filepath.Join(repoRoot, miscompileReproducerPath)` joins a slash-path directly where module_manifest_gate_test.go:54 uses filepath.FromSlash; identical on darwin and linux, and the repo carries both idioms.",
+      "measurement": "Repo-wide grep: no test or script reads the `# Design:` comment string. Nothing binds it.",
+      "resolution": "Land BOTH exactly as the design writes them - this matches the P43 precedent and the controller's doc move closes the forward reference. Flagged so the executor does not `correct` it to planned/, and so the controller knows the move is load-bearing for one comment line."
+    },
+    {
+      "id": "N1",
+      "severity": "NOT-A-DEFECT",
+      "claim": "Recorded so no downstream role re-derives these as findings: (a) AC1 is rc=0 at base with `[no tests to run]` - the vacuity trap, by design; (b) AC3's function-body diff is empty at base BY IDENTITY - its teeth are drill arm X7, which the planner ADDED because the design gives AC3 no mutation; (c) verify_go.sh's two `WARNING: DATA RACE` lines are its own known-positive control; (d) `Observatory: NNNMB` on ailang stderr is normal; (e) GOTOOLCHAIN appears twice in ci.yml and must stay twice - it is TestGoToolchainPinsAgreeAndMatchJobList's cardinality pin, untouched here.",
+      "measurement": "All five reproduced first-party by the planner at aa0ab05.",
+      "resolution": "Carried into the plan as stated base observations, not as sprint obligations."
+    }
+  ],
+  "base_state_verified": {
+    "provenance": "Controller-supplied facts RE-DERIVED first-party by the planner in the detached worktree /Users/voightkampff/dev/sunholo-data/.planner-wt-iter133 at aa0ab05, 2026-08-27, plus the planner's own additional measurements. Every row below was OBSERVED, not transcribed.",
+    "AC1": "go test ./host/verifygate/ -run '^TestMiscompileInstrumentStepIsGatedInCI$' -count=1 -v -> rc=0, `ok ... 0.172s [no tests to run]`, `=== RUN`=0, `--- PASS`=0. GREEN WHILE MEASURING NOTHING. Nonsense control `-run '^TestNoSuchWiringGateZZZ$' -v` -> rc=0, `no tests to run` count=2.",
+    "AC2": "block-scoped awk over ci.yml (from the miscompile step's own `- name:` to the next `- name:`) yields 4 lines; grep -c 'continue-on-error' on that block = 1; same-call path control grep -c 'design_docs/verification/w-race-gate-blindspot/run.sh' .github/workflows/ci.yml = 1. Repo-wide continue-on-error in ci.yml = 1 (RECORDED, not asserted - round-2 R1 forbids a repo-wide ban). Base block text: `- name: Measure compiler reproducer on linux/amd64 (non-gating)` / `continue-on-error: true` / `timeout-minutes: 15` / `run: ./design_docs/verification/w-race-gate-blindspot/run.sh`.",
+    "AC3": "Both function-body diffs empty by identity. go test ./host/verifygate/ -run 'TestMiscompileInstrumentProbesPinnedToolchain|TestReproModuleFloorStaysBelowKnownBadToolchains|TestGoToolchainPinsAgreeAndMatchJobList|TestCanaryDeclaresPositiveArmOnly' -count=1 -v -> rc=0, `=== RUN`=4, `--- PASS`=4, `--- FAIL`=0, ok 0.208s.",
+    "AC4a": "./design_docs/verification/w-race-gate-blindspot/run.sh -> rc=0. Output: `host: darwin/arm64   default toolchain: go1.26.4`; go1.26.0/1.26.3/1.26.4/1.26.5 all `BUG: Field=\"\" want \"stateRoot\" (rc=0)`; go1.26.6/1.25.6/1.24.9 all `OK (rc=0)`; -N -> OK, -l -> BUG; banner `RESULT: reproduction confirmed, and both controls fired.` + 3 detail lines. 7/7 probes ran, 0 SKIPPED. Warm wall time 3.3s.",
+    "AC5": "PLANNER-MEASURED ON THE CANDIDATE (floor 1 is byte-identical to base, so base behaves the same): mv repro/main.go -> .MUT; land-proof `no Go files in .../repro`; run -> rc=1, `no toolchain ran at all` count=1, `KNOWN-BAD probes completed` count=0. Floor 1 fires BEFORE the new coverage floor, as designed.",
+    "AC6": "CONTROLLER-OWNED (finding D2). Base contradiction on run 33069999131: step conclusion `success` WITH `INSTRUMENT FAILURE (or GOOD NEWS)`=1, `RESULT: reproduction confirmed`=0, control banner=1.",
+    "AC7": "bash -n .../run.sh -> rc=0. stat -f '%Sp' .../run.sh -> -rwxr-xr-x. gofmt -l host/verifygate/ -> empty. go vet ./host/verifygate/ -> rc=0. go build ./... -> rc=0 in 1.7s. AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1 -> rc=0 in 48.4s, 31 `--- PASS`, 0 FAIL. WITHOUT the export: rc=1, 17 FAIL (finding D1).",
+    "extra_planner_measurements": [
+      "THE PROPOSED run.sh WAS BUILT, NOT IMAGINED. The planner generated the exact bytes the design's M1 specifies (all six edits) into /tmp/p44-cand/run.sh: 156 lines, +57/-6 against base, `bash -n` rc=0. Every claim in this plan about post-landing behaviour is a reading off those bytes. THE EXECUTOR MUST REGENERATE THEM AND RE-RUN THE STEPS - do not copy a result from the plan.",
+      "RD-1 replay (constraint 1, re-derived not inherited): linux profile -> rc=0 with `RESULT: linux/amd64 clean ... all 4 known-bad and 7 total probes ran`; darwin profile -> rc=0 with output BYTE-IDENTICAL to base's tail on the P8 profile; 3-of-4 partial -> rc=1 coverage floor; linux saw_bad=1 -> rc=1 PLATFORM ALARM.",
+      "Platform probe exercised on five arms with a uname shim on PATH: Linux/x86_64 -> linux/amd64 expect_defect=0 rc=0; Darwin/arm64 -> darwin/arm64 expect_defect=1 rc=0; Linux/aarch64 -> rc=1 refuse; Darwin/x86_64 -> rc=1 refuse; FreeBSD/riscv64 -> rc=1 refuse. Override immunity: GOOS=windows GOARCH=amd64 exported still yields darwin/arm64.",
+      "EVERY bind of the two EXISTING static tests survives the candidate, re-derived as shell equivalents: exact-shebang count 1; column-0 KNOWN_BAD=\" / KNOWN_GOOD=\" / PINNED=\" 1 each; saw_pinned_ok sites 3; literal `INSTRUMENT FAILURE: the PINNED toolchain` 1; KNOWN_BAD and KNOWN_GOOD values byte-unchanged. The new top-level names (ran_bad, bad_expected, host_os, host_arch, host_pair) collide with NO name shellAssignmentValues looks for - row-50 deference holds.",
+      "The NEW test's run.sh assertions re-derived against the candidate: `uname -s` 1, `uname -m` 1; EXECUTABLE `go env GOOS`/`go env GOARCH` after stripping from the first `#` -> 0, with the known-positive control in the SAME call showing the token IS present at candidate :38 inside a comment - which is exactly the round-1 form's arrival-red (V19 arm A) and exactly what round 2's scoped form allows. `host_pair` + `go env` on one code line -> 0.",
+      "Three drill arms rehearsed end-to-end against the candidate with landed-proofs and sha256 restores: X3 (mv repro/main.go) -> rc=1, floor-1 text 1, coverage-floor text 0; X6 (append go1.99.99) -> rc=1 with `INSTRUMENT FAILURE: 4 of 5 KNOWN-BAD probes completed`; X5 (chmod -x) -> rc=126. go/version.IsValid(\"go1.99.99\")=true and oldest KNOWN_BAD stays go1.26.0, so X6's static layer correctly stays GREEN as the doc predicts.",
+      "NO OTHER ARTEFACT BINDS WHAT THIS SPRINT MOVES. Repo-wide: nothing in *.go/*.sh/*.yml reads the step NAME (only prose in world-mission.md, the log, and w-race-gate-blindspot.md:208 - all true history, all left alone). TestZ3PinDeclaredOnceAndInstalledInBothJobs (ail_binary_gate_test.go:668) reads ci.yml for Z3_VER:/Z3_SHA: counts, two literal install lines, and the controls `ailang-verify:` / `go-verify:` / `./scripts/verify_go.sh` - all untouched. TestNoCIStepOrScriptReachesThePublishEntrypoint (runbook_stageb_test.go:329, AC30) scans ci.yml + scripts/*.sh for `world-publish`: the proposed comment and step contain none of that token and its known-positive control `verify_go.sh` in ci.yml still fires; it does NOT scan design_docs/**, so run.sh is unconstrained by it.",
+      "TestNoRigAbsolutePaths (ail_binary_gate_test.go:552) globs host/verifygate/*.go and t.Errorf's on /tmp/ailang, /Users/, /home/runner/ (needles assembled at runtime). The file M2 appends to IS scanned. The design's sketch contains none - keep it that way; cite provenance as P16/P17/V19 and the doc path, never a rig path.",
+      "P15 re-derived: scripts/verify_go.sh:258 is `go test ./... -count=1` from the repo root, -race leg at :262. A host/verifygate red IS a CI-gate red.",
+      "The new test needs NO new imports: os (:5), path/filepath (:6), strings (:9) are already in the import block. repoRoot is a package-level var at ail_binary_gate_test.go:27 in package verifygate.",
+      "P13 census re-derived at aa0ab05: `ci.yml:17[02]` appears in 9 files - toolchain_pin_gate_test.go 2, world-mission.md 1, world-mission-status-archive.md 1, world-mission-log.md 1, w-setup-go-pin-unguarded.md 14, its sprint plan 1, w-canary-control-does-not-survive-a-floor-raise.md 4, its sprint plan 1, and the P44 design doc itself 5. Row 31's, not this sprint's."
+    ]
+  },
+  "milestone_ac_mapping": {
+    "note": "The design doc defines TWO milestones (M1, M2). This plan keeps their IDs and numbers and adds two non-editing milestones (M3 sweep, M4 drill) matching house practice. DIFFED AGAINST THE DOC'S AC LIST: every AC1-AC7 is claimed; AC6 is reassigned to the CONTROLLER with its reason (finding D2); AC4 is split into (a)/(b)/(c) with (b) corrected and (c) newly defined (finding D3); RD-1 is added by the planner as a BLOCKING gate carrying the constraint-1 property. No other disagreement with the doc found.",
+    "M1_RUNSH_PLATFORM_TRUTH": { "files": ["design_docs/verification/w-race-gate-blindspot/run.sh"], "closes": ["RD-1", "AC4a", "AC4b", "AC4c", "AC5", "AC7-bash-n", "AC7-exec-bit"], "reconfirms": ["AC3"] },
+    "M2_MAKE_IT_BINDING": { "files": [".github/workflows/ci.yml", "host/verifygate/toolchain_pin_gate_test.go"], "closes": ["AC1", "AC2", "AC3"], "reconfirms": ["AC7"] },
+    "M3_ACCEPTANCE_SWEEP": { "files": [], "closes": ["AC7"], "reconfirms": ["AC1", "AC2", "AC3", "AC4a", "AC4b", "AC4c", "AC5", "RD-1"] },
+    "M4_MUTATION_DRILL": { "files": [], "closes": [], "reconfirms": ["the drill's own arms X1-X9 plus the X1-C scoping control and the post-drill green control"] },
+    "AC6_POST_LANDING": { "owner": "CONTROLLER", "reason": "finding D2 - no PR exists at sprint time and the executor makes no git writes" }
+  },
+  "features": [
+    {
+      "id": "M1_RUNSH_PLATFORM_TRUTH",
+      "name": "run.sh learns the platform truth (still non-gating; ZERO CI risk), and RD-1 proves the revised floors cannot red dev",
+      "description": "Design doc Milestones section M1, verbatim. SIX edits to design_docs/verification/w-race-gate-blindspot/run.sh, transcribed from the doc's fenced blocks (the file indents with TABs throughout - every new case arm and floor body must too). (1) After `ran=0` at :32, insert the declarations block (ran_bad=0, bad_expected=0 at COLUMN 0, row-50 deference), the KERNEL platform probe (`case \"$(uname -s)\"` / `case \"$(uname -m)\"` normalised to Go naming, then host_pair=\"$host_os/$host_arch\") and the FAIL-CLOSED polarity case over EXACTLY two verified pairs (darwin/arm64 -> expect_defect=1; linux/amd64 -> expect_defect=0; `*)` -> echo `INSTRUMENT FAILURE: no verified platform contract for $host_pair`; exit 1). The kernel read is quorum R3's mechanism fix: `go env GOOS` honours a $GOOS environment variable (P16, planner re-derived), `uname` has no such channel. (2) In probe(), immediately after `local tc=\"$1\" expect=\"$2\" out rc bin` at :35, add `[ \"$expect\" = \"BAD\" ] && bad_expected=$((bad_expected + 1))` - a SKIP still counts, that is the point. (3) Immediately after `ran=$((ran + 1))` at :46, add `[ \"$expect\" = \"BAD\" ] && ran_bad=$((ran_bad + 1))`. set -e is ABSENT (:20 is `set -uo pipefail`) so the && one-liner form is safe - planner-verified at runtime. (4) Replace the banner read at :61 with `echo \"host: $host_pair   default toolchain: $(go version | awk '{print $3}')\"`, removing the file's last read of the overridable channel; the printed string is identical on both verified platforms. (5) Replace :84-89 (the unconditional saw_bad floor) with the THREE-floor block: complete-coverage floor (`[ \"$bad_expected\" -eq 0 ] || [ \"$ran_bad\" -ne \"$bad_expected\" ]`), then `expect_defect==1 && saw_bad -eq 0` (the existing GOOD NEWS text), then `expect_defect==0 && saw_bad -ne 0` (the new PLATFORM ALARM; R2's `-ne 0` form verbatim). Floors :80-83 and :90-100 stay BYTE-IDENTICAL. (6) Split the banner at :101-104 per platform: the darwin branch's four lines byte-identical to today's (so OUTPUTS.md section 5's transcript stays truthful - planner-verified byte-identical output on the P8 profile), the linux branch a DELIBERATELY DIFFERENT sentence so the mission's historical greps stay meaningful.",
+      "commits": 1,
+      "estimated_changed_lines": 63,
+      "files": ["design_docs/verification/w-race-gate-blindspot/run.sh (MODIFY, +57/-6)"],
+      "dependencies": [],
+      "acceptance_criteria": [
+        "HYGIENE FIRST (a syntax error makes every reading below meaningless): bash -n design_docs/verification/w-race-gate-blindspot/run.sh -> rc=0 [base: rc=0]; stat -f '%Sp' -> -rwxr-xr-x [base: -rwxr-xr-x]",
+        "RD-1 (BLOCKING - do NOT start M2 until green). Build the replay harness from the EXECUTOR'S OWN floor block (tail from the line `if [ \"$ran\" -eq 0 ]; then`), prefixed with `set -uo pipefail`, PINNED=\"go1.26.6\" and the profile variables. FOUR arms, rc captured DIRECTLY (never through a pipe; ${PIPESTATUS[0]} is empty in zsh) and printed side by side: (a) ran=7 ran_bad=4 bad_expected=4 saw_bad=0 saw_good=1 saw_pinned_ok=1 host_pair=linux/amd64 expect_defect=0 -> rc=0 with `RESULT: linux/amd64 clean` count 1 and `INSTRUMENT FAILURE` count 0; (b) the same with saw_bad=1 host_pair=darwin/arm64 expect_defect=1 -> rc=0 with `RESULT: reproduction confirmed` count 1; (c) ran=6 ran_bad=3 bad_expected=4 on linux -> rc=1 with `KNOWN-BAD probes completed` count 1; (d) saw_bad=1 on linux with expect_defect=0 -> rc=1 with `PLATFORM ALARM` count 1. READ a=0 AND b=0 AND c=1 AND d=1 TOGETHER: a=0 alone is equally consistent with a floor block that cannot fail at all. IF a IS ANYTHING BUT 0, STOP AND REPORT - landing M2 on top reds dev on the next push, recoverable only by revert.",
+        "RD-1 second half - the platform probe resolves to the LISTED arm on the real runner. Extract the head block (from `# Platform probe (row 44` through the refuse-arm line) into a harness that echoes host_pair and expect_defect. With a `uname` shim on PATH printing Linux/x86_64 -> `host_pair=linux/amd64 expect_defect=0`, rc=0 (P17's ubuntu-24.04 runner maps into the LISTED arm, NOT the refuse arm). With the REAL kernel on this rig -> `host_pair=darwin/arm64 expect_defect=1`, rc=0. FAIL-CLOSED controls, each rc=1 with the refuse text: Linux/aarch64, Darwin/x86_64, FreeBSD/riscv64. OVERRIDE IMMUNITY: `GOOS=windows GOARCH=amd64 bash /tmp/p44-head.sh` still prints darwin/arm64 (P16's mechanism claim).",
+        "AC4(a): ./design_docs/verification/w-race-gate-blindspot/run.sh -> rc=0 [base: rc=0, 3.3s warm]; grep -c 'RESULT: reproduction confirmed, and both controls fired\\.' -> 1; grep -c 'BUG: Field=\"\" want \"stateRoot\"' -> 5 (4 probes + the -l control); grep -c 'SKIPPED' -> 0. IF ANY probe prints SKIPPED, report UNINFORMATIVE UNDER SANDBOX and STOP. Also assert the darwin banner is BYTE-IDENTICAL to base's last four lines with $PINNED expanded.",
+        "AC4(b) THE REFUSE ARM (finding D3 - the design's text here is WRONG and would red a correct landing). Take the /tmp/p44-backup snapshot FIRST. Mutate `\\tdarwin/arm64) expect_defect=1 ;;` -> `\\tdarwin/amd64) expect_defect=1 ;;`. LANDED-PROOF PRINTED BEFORE ANY RESULT: grep -c 'darwin/amd64) expect_defect=1' 0->1 AND grep -c 'darwin/arm64) expect_defect=1' 1->0. Run -> rc=1 (AC4(a)'s rc was 0 - print both); grep -c 'no verified platform contract for darwin/arm64' -> 1; grep -c 'PLATFORM ALARM' -> 0 (THE DESIGN PREDICTS >=1 AND IS WRONG - planner-measured). Restore by `cp` from /tmp/p44-backup/run.sh, re-verify byte-identity by sha256.",
+        "AC4(c) THE PLATFORM ALARM (referenced by the doc's mutation row M2 but never DEFINED there; defined here). Mutate `\\tdarwin/arm64) expect_defect=1 ;;` -> `\\tdarwin/arm64) expect_defect=0 ;;` - a POLARITY flip, not a label swap. LANDED-PROOF: grep -c 'darwin/arm64) expect_defect=0' 0->1. Run -> rc=1; grep -c 'INSTRUMENT FAILURE (PLATFORM ALARM)' -> 1. Restore by cp + sha256.",
+        "AC5: mv design_docs/verification/w-race-gate-blindspot/repro/main.go{,.MUT}; LANDED-PROOF `(cd repro && GOTOOLCHAIN=go1.26.6 go build .)` -> rc!=0 with `no Go files in .../repro` quoted; run run.sh -> rc=1; grep -c 'no toolchain ran at all' -> 1; grep -c 'KNOWN-BAD probes completed' -> 0 (floor 1 must fire BEFORE the new coverage floor). Restore with mv; `git status --porcelain design_docs/verification/w-race-gate-blindspot/repro/` -> empty.",
+        "M1 IS DONE when RD-1 is green on all four replay arms AND all five uname-shim arms. Snapshot -> .snap/M1/design_docs/verification/w-race-gate-blindspot/run.sh"
+      ],
+      "snapshot": ".snap/M1/design_docs/verification/w-race-gate-blindspot/run.sh",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M2_MAKE_IT_BINDING",
+      "name": "Make the refusal binding, and salt the ground the flag stood on",
+      "description": "Two files. (a) .github/workflows/ci.yml: replace lines 167-172 with the design's Milestones-M2 block VERBATIM - delete the single `continue-on-error: true`, rename the step to `Measure compiler reproducer (platform-conditional, gated)`, replace the two comment lines with the six-line platform contract (which ends `# Design: design_docs/implemented/w-miscompile-instrument-inert-in-ci.md` - a forward reference the controller's doc move closes; finding D5, land as written). `timeout-minutes: 15` and the `run:` line are UNCHANGED. Do NOT renumber or refresh any ci.yml:172 citation elsewhere (row 31's census; this edit renumbers ci.yml again). (b) host/verifygate/toolchain_pin_gate_test.go: append at EOF `const miscompileReproducerPath = \"design_docs/verification/w-race-gate-blindspot/run.sh\"` and `func TestMiscompileInstrumentStepIsGatedInCI(t *testing.T)` - the design's Milestones-M2 sketch VERBATIM including its doc-comment and DECLARED RESIDUAL paragraph. THIS IS ROUND-2'S SCOPED FORM: it inspects only the miscompile STEP's own block for continue-on-error (walking back from the run.sh path line to the nearest `- name:` and forward to the next), and rejects only EXECUTABLE uses of `go env GOOS`/`go env GOARCH` in run.sh (comments strip at the first `#`) while REQUIRING `uname -s` and `uname -m` present. The round-1 repo-wide token ban REDS ON ITS OWN DOCUMENTATION - measured at V19 arm A and re-derived by the planner - so do not `simplify` it back. Then reword the ~3 stale lines INSIDE TestMiscompileInstrumentProbesPinnedToolchain's doc-comment at :186-190 (the `non-gating, continue-on-error: true, ci.yml:172` clause and the now-discharged residual sentence about flipping ci.yml:172 to gating being the named follow-up). COMMENT BYTES ONLY - AC3's body diff extracts from `^func` to `^}` and stays empty. NO new imports (os/path/filepath/strings already at :5/:6/:9). NO ABSOLUTE PATH anywhere in the file - TestNoRigAbsolutePaths scans it; cite provenance as P16/P17/V19 and the doc path.",
+      "commits": 1,
+      "estimated_changed_lines": 52,
+      "files": [".github/workflows/ci.yml (MODIFY, +7/-4)", "host/verifygate/toolchain_pin_gate_test.go (MODIFY, +~45/-3)"],
+      "dependencies": ["M1_RUNSH_PLATFORM_TRUTH"],
+      "acceptance_criteria": [
+        "AC2 (scoped per quorum round-2 R1, which FORBIDS a repo-wide ban): extract the miscompile step's own block with awk (from its `- name:` to the next `- name:`), assert `wc -l` > 0 first (else the awk found nothing and the zero below proves nothing), then grep -c 'continue-on-error' on the BLOCK -> 0 [base: 1]; SAME-CALL known-positive control grep -c 'design_docs/verification/w-race-gate-blindspot/run.sh' .github/workflows/ci.yml -> 1 [base: 1] proving the step still exists and the grep is live. RECORD but do NOT assert: repo-wide grep -c 'continue-on-error' .github/workflows/ci.yml -> 0 [base: 1], with grep -c 'timeout-minutes' >= 1 as that zero's control. A continue-on-error on any OTHER step must NOT fail this criterion.",
+        "AC1, COUNTED NOT rc: go test ./host/verifygate/ -run '^TestMiscompileInstrumentStepIsGatedInCI$' -count=1 -v > /tmp/p44-ac1.txt 2>&1 ; then grep -c '^=== RUN' -> 1 [base: 0] AND grep -c '^--- PASS' -> 1 [base: 0] AND grep -c '^--- FAIL' -> 0. PAIRED NONSENSE CONTROL IN THE SAME BREATH: -run '^TestNoSuchWiringGateZZZ$' -v -> `no tests to run` count 2 AND rc=0 [base-measured]. THIS is why rc is never the gate. NOTE: V19 tested the assertion LOGIC in a scratch module; it did NOT prove the test compiles inside package verifygate against the real repoRoot. THAT GAP IS AC1 AND IT IS THE EXECUTOR'S TO CLOSE.",
+        "AC3, the two coupled function BODIES byte-stable: for fn in TestMiscompileInstrumentProbesPinnedToolchain TestReproModuleFloorStaysBelowKnownBadToolchains, diff <(git show aa0ab05:host/verifygate/toolchain_pin_gate_test.go | awk \"/^func $fn/,/^}/\") <(awk \"/^func $fn/,/^}/\" host/verifygate/toolchain_pin_gate_test.go) -> EMPTY [base: empty by identity - green while measuring nothing; its teeth are drill arm X7]. Then the four-test scoped run -> `=== RUN`=4, `--- PASS`=4 [base: 4/4].",
+        "AC7 re-confirm after the edits: gofmt -l host/verifygate/ -> empty [base: empty]; go vet ./host/verifygate/ -> rc=0 [base: rc=0]; go build ./... -> rc=0 [base: rc=0, 1.7s].",
+        "Snapshot -> .snap/M2/ (all three deliverable paths at their M2 state)"
+      ],
+      "snapshot": ".snap/M2/ mirroring all three deliverable paths",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M3_ACCEPTANCE_SWEEP",
+      "name": "The full acceptance sweep, recorded in one pass - and the drill's green control",
+      "description": "No edits. Re-run AC1-AC5 and RD-1 from M1/M2, then AC7 in full, recording every OBSERVED value beside its expectation. This sweep IS the green control for the whole mutation drill and must be captured BEFORE anything in M4 is touched - a drill whose control runs only at the end cannot distinguish `the arms restored correctly` from `the arms never applied`.",
+      "commits": 0,
+      "estimated_changed_lines": 0,
+      "files": [],
+      "dependencies": ["M1_RUNSH_PLATFORM_TRUTH", "M2_MAKE_IT_BINDING"],
+      "acceptance_criteria": [
+        "bash -n design_docs/verification/w-race-gate-blindspot/run.sh -> rc=0 [base: rc=0]",
+        "stat -f '%Sp' design_docs/verification/w-race-gate-blindspot/run.sh -> -rwxr-xr-x [base: -rwxr-xr-x]",
+        "gofmt -l host/verifygate/ | wc -l -> 0 [base: 0]",
+        "go vet ./host/verifygate/ -> rc=0 [base: rc=0]",
+        "go build ./... -> rc=0 [base: rc=0, 1.7s]",
+        "FINDING D1 - THE EXPORT IS MANDATORY HERE: AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1 -v > /tmp/p44-pkg.txt 2>&1 -> rc=0 [base WITH the export: rc=0 in 48.4s; base WITHOUT it: rc=1, 17 FAIL]; grep -c '^--- FAIL' -> 0; grep -c 'AILANG_BIN is unset' -> 0 (if >0 you forgot the export - NOT a regression); grep -c 'rig-absolute path' -> 0 (TestNoRigAbsolutePaths on the edited file); grep -c '^--- PASS' -> >= 32 [base: 31]",
+        "AC6 IS CONTROLLER-OWNED (finding D2): report `NOT ATTEMPTED (controller-owned)`. Do NOT read run 33069999131 and call it AC6 - that run is the BASE contradiction (step success WITH refusal=1, RESULT=0), not the post state.",
+        "Every AC1-AC5 and RD-1 command re-run and recorded green in one pass"
+      ],
+      "snapshot": "none - no edits",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M4_MUTATION_DRILL",
+      "name": "The mutation drill - 9 RED arms (X1-X9), 1 scoping GREEN control (X1-C), 1 post-drill green control - then hand off uncommitted",
+      "description": "Arms are labelled X1-X9 to avoid colliding with milestone names; each maps 1:1 to the design doc's Named RED mutations rows M1-M8 (the doc's M7/M8 map to X9/X8), plus X1-C (the doc's scoping control) and X7 (the PLANNER'S ADDITION giving AC3 teeth the design does not supply). Venue: verify_go.sh:258 runs `go test ./... -count=1` from the repo root inside the gated go-verify job, so a verifygate RED and a step-exit RED are both CI-gate reds. EVERY ARM SHOWS THREE THINGS IN THIS ORDER: (1) the mutation LANDED - a grep/count that MOVED, printed BEFORE any result is read, because a mutation that did not apply is a false green; (2) the tree still builds - go build ./... rc=0 and bash -n run.sh rc=0 where the arm touches the script, since a mutation that breaks the build reds for the wrong reason and proves nothing; (3) the expected RED, judged by counted `--- FAIL` lines and the NAMED message, or by a DIRECTLY captured rc - never through a pipe. Backups are taken AFTER M2 from the POST-SPRINT tree into /tmp/p44-backup/ with a POST_SPRINT.sha; restores are `cp`, NEVER `git checkout --` (which would DELETE M1 - nothing is committed); after arm X5 also `chmod +x`, since cp does not restore the exec bit.",
+      "commits": 0,
+      "estimated_changed_lines": 0,
+      "files": [],
+      "dependencies": ["M3_ACCEPTANCE_SWEEP"],
+      "mutation_arms": [
+        {"arm": "X1", "doc_row": "M1", "edit": "insert `        continue-on-error: true` under the renamed step in ci.yml", "landed_proof": "grep -c 'continue-on-error' .github/workflows/ci.yml 0->1 AND the block-scoped count 0->1", "expected": "TestMiscompileInstrumentStepIsGatedInCI `--- FAIL` count = 1, message `re-introduces \"continue-on-error\" in the miscompile step` with the offending line number. MEASURED AT V19, not predicted."},
+        {"arm": "X1-C", "doc_row": "scoping control (NOT a red arm)", "edit": "plant `continue-on-error: true` on the UNRELATED `worldd benchmark smoke gate` step", "landed_proof": "repo-wide grep -c 'continue-on-error' 0->1 WHILE the block-scoped count STAYS 0", "expected": "GREEN: `--- PASS` count = 1. LOAD-BEARING: without it X1's red is equally consistent with the repo-wide ban that quorum round-2 R1 forbids. MEASURED AT V19."},
+        {"arm": "X2", "doc_row": "M2", "edit": "`\\tdarwin/arm64) expect_defect=1 ;;` -> `\\tlinux/amd64) expect_defect=1 ;;`", "landed_proof": "grep -c 'linux/amd64) expect_defect=1' 0->1 AND grep -c 'darwin/arm64) expect_defect=1' 1->0", "expected": "attended darwin: run.sh rc=1 with `no verified platform contract for darwin/arm64` = 1 (the fail-closed arm). Linux side is PROFILE-REPLAYED: re-run RD-1's harness with expect_defect=1 saw_bad=0 host_pair=linux/amd64 -> rc=1 `(or GOOD NEWS)`. A polarity lie now fails on BOTH platforms."},
+        {"arm": "X3", "doc_row": "M3", "edit": "mv repro/main.go repro/main.go.MUT", "landed_proof": "(cd repro && GOTOOLCHAIN=go1.26.6 go build .) -> rc!=0, `no Go files in .../repro` quoted", "expected": "run.sh rc=1, `no toolchain ran at all` = 1, `KNOWN-BAD probes completed` = 0. PLANNER-REHEARSED ON THE CANDIDATE: exactly this."},
+        {"arm": "X4", "doc_row": "M4", "edit": "repro/go.mod `go 1.22` -> `go 1.27`", "landed_proof": "grep '^go ' repro/go.mod prints `go 1.27`", "expected": "TWO LAYERS: go test ./host/verifygate/ -run '^TestReproModuleFloorStaysBelowKnownBadToolchains$' -count=1 -v -> `--- FAIL`=1 naming the floor; AND run.sh rc=1 via floor 1 (ran==0) with every probe SKIPping. Restore from /tmp/p44-backup/repro-go.mod."},
+        {"arm": "X5", "doc_row": "M5", "edit": "chmod -x run.sh", "landed_proof": "stat -f '%Sp' -> -rw-r--r--", "expected": "direct invocation rc=126 (PLANNER-MEASURED), AND go test -run '^TestMiscompileInstrumentProbesPinnedToolchain$' -v -> `--- FAIL`=1 with `is not executable`. RESTORE WITH chmod +x."},
+        {"arm": "X6", "doc_row": "M6", "edit": "append ` go1.99.99` to the KNOWN_BAD= assignment", "landed_proof": "grep -c 'go1.99.99' run.sh 0->1", "expected": "run.sh rc=1 with `INSTRUMENT FAILURE: 4 of 5 KNOWN-BAD probes completed` (PLANNER-MEASURED VERBATIM). The static layer stays GREEN BY DESIGN - go/version.IsValid(\"go1.99.99\")=true and oldest KNOWN_BAD is still go1.26.0, so TestReproModuleFloorStaysBelowKnownBadToolchains passes. RECORD that green: these teeth are behavioural. Robust to a network-denied sandbox - the probe SKIPs either way."},
+        {"arm": "X7", "doc_row": "NEW - the planner's addition, AC3's teeth", "edit": "delete the body line of the `saw_pinned_ok site count` guard inside TestMiscompileInstrumentProbesPinnedToolchain", "landed_proof": "grep -c 'saw_pinned_ok site count' host/verifygate/toolchain_pin_gate_test.go 1->0", "expected": "AC3's function-body diff becomes NON-EMPTY. Without this arm AC3's empty diff is green-by-identity and measures nothing. Restore."},
+        {"arm": "X8", "doc_row": "M8", "edit": "`case \"$(uname -s)\" in` -> `case \"$(echo Darwin)\" in`", "landed_proof": "grep -c 'uname -s' run.sh 1->0", "expected": "TestMiscompileInstrumentStepIsGatedInCI `--- FAIL`=1, `run.sh no longer reads the kernel via \"uname -s\"`. MEASURED AT V19 (M7b). The behavioural layer alone would MISS this on a darwin rig - the mutant still resolves darwin - which is why the static pin is the load-bearing arm."},
+        {"arm": "X9", "doc_row": "M7", "edit": "`host_pair=\"$host_os/$host_arch\"` -> `host_pair=\"$(go env GOOS)/$(go env GOARCH)\"`", "landed_proof": "grep -c 'host_pair=\"\\$(go env GOOS)' run.sh 0->1", "expected": "TestMiscompileInstrumentStepIsGatedInCI `--- FAIL`=1, `executable use of \"go env GOOS\"` (+GOARCH). MEASURED AT V19 (M7a)."}
+      ],
+      "acceptance_criteria": [
+        "Backup taken AFTER M2 from the POST-SPRINT tree: cp run.sh, ci.yml and repro/go.mod into /tmp/p44-backup/, shasum -a 256 all three into /tmp/p44-backup/POST_SPRINT.sha, and record those three hashes in the report",
+        "Every arm: landed-proof printed BEFORE the result; build proof; the RED read by counted lines or a directly-captured rc; restore by `cp` from /tmp/p44-backup (NEVER `git checkout --`); sha256 re-verified byte-identical after EACH arm; `git status --porcelain` re-checked and asserted to name ONLY the expected paths",
+        "X1-C must be GREEN. If it reds, the test has become a repo-wide ban and quorum round 2's blocking objection has been re-introduced - STOP and report",
+        "POST-DRILL GREEN CONTROL: re-run ALL of M3. Every AC green, the package run clean, and the three sha256s equal to POST_SPRINT.sha",
+        "Hand off UNCOMMITTED with .snap/M1/ and .snap/M2/ present. Report: the three touched paths, the M3 sweep table with every observed value beside its expectation, the ten drill arms with their landed-proofs and observed RED/GREEN lines, the post-drill green control, and the three sha256s"
+      ],
+      "snapshot": "none - every arm restored",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "velocity": {
+    "method": "Changed lines against the three-file touch set, cross-checked against the planner's first-party timing of every gate this sprint runs, measured in this worktree at aa0ab05.",
+    "references": [
+      "row 43 (ecfb62d): a comparable three-file documentation-plus-one-test item landed inside 0.1 d with a 5-milestone plan",
+      "this item: ~115 changed lines across 3 files, 0 created, but larger than row 43 by the run.sh rewrite and the behavioural drill"
+    ],
+    "applied": "~115 changed lines over ~0.35 d. THE RISK IS NOT IN THE TYPING - every proposed byte has been generated and exercised by the planner. Budget the time in (a) RD-1, the constraint-1 re-derivation, (b) the AC4(b)/(c) split that the design gets wrong, and (c) reading counted lines rather than exit codes.",
+    "measured_cost_centres": {
+      "attended_run_sh_warm": "3.3 s (all 7 toolchains cached in GOMODCACHE)",
+      "whole_host_verifygate_package": "48.4 s (the sprint's long pole, run ~3 times)",
+      "go_build_all": "1.7 s",
+      "scoped_verifygate_test": "~0.2 s",
+      "RD1_four_replays": "< 1 s total",
+      "full_acceptance_sweep": "~1 min",
+      "ten_arm_mutation_drill": "~10 min (five arms run the 3 s script, three run the 48 s package)"
+    },
+    "estimated_total_changed_lines": 115,
+    "estimated_days": 0.35
+  },
+  "risk_level": "medium",
+  "risks": [
+    {"id": "R1", "severity": "CRITICAL", "risk": "THE CONSTRAINT THAT OUTRANKS EVERYTHING: the change reds dev on the next push, recoverable only by revert. The linux leg has NEVER reached floors 3-4, so nothing in the repo's history tells you what they do there.", "mitigation": "RD-1 is a BLOCKING gate inside M1, RE-DERIVED not inherited: P5's measured linux profile replayed through the EXECUTOR'S OWN floor block -> rc=0, with two negative controls proving the block can still fail. M2 is not started until RD-1 is green. Planner has already run it once against candidate bytes: rc=0. Second half: the uname shim proves the ubuntu-24.04 runner maps into the LISTED linux/amd64 arm, not the refuse arm."},
+    {"id": "R2", "severity": "HIGH", "risk": "AC4(b) asserted as the design writes it -> false RED against a correct landing, and the natural repair dismantles quorum R1's fail-closed arm.", "mitigation": "Finding D3, MEASURED. AC4(b) asserts the REFUSE text and PLATFORM ALARM = 0; the alarm gets its own newly-defined AC4(c) via a polarity flip."},
+    {"id": "R3", "severity": "HIGH", "risk": "AC7's package run without AILANG_BIN -> 17 unrelated FAILs read as a regression, and the plausible repair (make them skip) is the false-green class this mission line exists to kill.", "mitigation": "Finding D1. Section 0 rule 4; the sweep greps `AILANG_BIN is unset` explicitly and asserts 0."},
+    {"id": "R4", "severity": "HIGH", "risk": "AC1 read as rc - the naive -run form is rc=0 at base with zero tests run (charter row 33).", "mitigation": "Every scoped run counts `=== RUN`/`--- PASS`/`--- FAIL` from -v; AC1 ships a paired nonsense-pattern control whose rc is ALSO 0."},
+    {"id": "R5", "severity": "MEDIUM", "risk": "The round-1 repo-wide GOOS/GOARCH token ban re-introduced by an executor `simplifying` the scoped test - it reds the tree ON ARRIVAL, not merely under mutation.", "mitigation": "Section 6 forbids it; V19 arm A measured the arrival-red on run.sh:37; drill arm X1-C is the boundary control."},
+    {"id": "R6", "severity": "MEDIUM", "risk": "`git checkout --` reflex during the drill deletes the uncommitted M1 with no undo.", "mitigation": "Section 5.1 states the consequence plainly; cp from /tmp/p44-backup only, plus chmod +x after X5."},
+    {"id": "R7", "severity": "MEDIUM", "risk": "A toolchain SKIPs under a network-denied sandbox, turning a behavioural arm into a silent wrong answer.", "mitigation": "Section 0 rule 9: any unexpected SKIPPED => report UNINFORMATIVE UNDER SANDBOX, never a verdict. All 7 toolchains are cached today; only X6's fake go1.99.99 needs the network, and it SKIPs either way."},
+    {"id": "R8", "severity": "MEDIUM", "risk": "TAB/space corruption when transcribing the case arms and floor bodies (the file indents with TABs throughout).", "mitigation": "bash -n is the first gate after every M1 edit; the real detector is the RD-1 replay, which fails loudly if a floor is mis-nested. Every sed-based mutation carries a landed-proof grep, so a `\\t` that did not match is caught before any result is read."},
+    {"id": "R9", "severity": "LOW", "risk": "A rig-absolute path in the appended test comment reds TestNoRigAbsolutePaths.", "mitigation": "Forbidden in M2; M3's sweep greps `rig-absolute path` on the package output."},
+    {"id": "R10", "severity": "LOW", "risk": "Row 45's item lands into the same test file.", "mitigation": "Disjoint hunks - row 45 edits normalizeToolchainPin at the TOP, this sprint appends at EOF. Flagged for whichever lands second; no action here."}
+  ],
+  "non_goals": [
+    "NO third CI job and NO darwin runner. Option B is priced in the design and deferred; it would couple into TestGoToolchainPinsAgreeAndMatchJobList's job-set cardinality.",
+    "NO repo-wide GOOS/GOARCH ban. Quorum round 2 blocked 3/3 on exactly that; the scoped form is the ratified fix and the repo-wide form reds the tree ON ARRIVAL (V19 arm A).",
+    "NO ci.yml:172 citation sweep. 25 lines across 8 files; that census is ROW 31's, and this sprint's own edit renumbers ci.yml again - refreshing by hand mints the next stale number (row 43's P7: line numbers rot, literals do not). The ONLY exception is the ~3 comment lines inside the doc-comment M2 must touch anyway, which would otherwise become FALSE RESIDUAL STATEMENTS rather than merely stale numbers. The historical step-name quotes at w-race-gate-blindspot.md:208 and bench/BASELINE.md stand as true history.",
+    "NO KNOWN_BAD membership-length bind. Declared latent narrowing, scoped out, partly covered behaviourally by the new coverage floor.",
+    "NO .ail byte changes, NO ./scripts/verify_ail.sh run, NO ./scripts/build_world_package.sh run. Single-gate (Go) sprint.",
+    "NO widening to `go test ./...`. The narrowest gate that can actually fail for this diff is `go test ./host/verifygate/ -count=1`.",
+    "NO work on rows 31, 45, 48, 49, 50 or 51. This design edits none of their surfaces - not normalizeToolchainPin (45), not racecontrol/ (48), not the canary fence or toolchain_canary_test.go (49), not shellAssignmentValues (50 - the new TOP-LEVEL assignments stay at column 0 in deference to it), not the inventory test (51).",
+    "NO git writes, NO PR, NO AC6 verdict."
+  ],
+  "open_questions": [
+    "The ci.yml comment's forward reference to design_docs/implemented/... (finding D5) is only true after the controller moves the doc on landing. Land as written; the move is load-bearing for one comment line. Non-blocking.",
+    "Declared residual 6's price goes LIVE with this landing: a SINGLE transient known-bad toolchain-fetch SKIP now reds dev. The design prices it against 42/42 observed probes and 0 SKIPs over 6 runs (rule-of-three bound ~7%/probe at 95%), a ~47 s step under a 15-minute ceiling, and an idempotent re-run. Accepted by the design; surfaced here because the FIRST time it fires it will look like a regression and it is not. Non-blocking."
+  ]
+}

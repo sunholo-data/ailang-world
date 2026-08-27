@@ -473,11 +473,24 @@ predicates over live files, each with a same-call known-positive control.
   **Base:** diff empty by identity; the four tests `--- PASS` at 0.125 s (P10).
 - **AC4 — darwin behavioural legs, attended (this rig's class).**
   (a) `./design_docs/verification/w-race-gate-blindspot/run.sh` → rc=0 and the darwin
-  banner present. (b) Guard-trip: mutate `if [ "$host_pair" = "darwin/arm64" ]` to
-  `"darwin/amd64"` (every platform in clean-mode), run → rc=1 whose output names the
-  PLATFORM ALARM text; restore, assert byte-identity by sha256, re-run → rc=0. **Base for
-  (a):** rc=0 with 4×`BUG: Field="" want ` + `"stateRoot"` (P8). This is row 41's AC6
-  guard-trip pattern applied to the new polarity floor.
+  banner present. **Base:** rc=0 with 4×`BUG: Field="" want ` + `"stateRoot"` (P8).
+  (b) **Fail-closed guard-trip** — mutate the `case` arm `darwin/arm64) expect_defect=1 ;;`
+  to `darwin/amd64) expect_defect=1 ;;`, run → rc=1 whose output names
+  `INSTRUMENT FAILURE: no verified platform contract for darwin/arm64`; restore, assert
+  byte-identity by sha256, re-run → rc=0.
+  (c) **Polarity guard-trip** — mutate that same arm's value `expect_defect=1` → `0`,
+  run → rc=1 whose output names the `PLATFORM ALARM` text; restore and re-verify as above.
+  **CORRECTED BY THE PLANNER AT SPRINT TIME, AND THE CORRECTION IS THE POINT.** Revision 1
+  of this doc wrote (b) against `if [ "$host_pair" = "darwin/arm64" ]` — a construct
+  quorum R1's fail-closed `case` had already replaced two sections earlier, so the AC named
+  a line the design does not ship. The planner ran it: rc=1 with the fail-closed refusal
+  text and `grep -c 'PLATFORM ALARM'` = **0**. An executor asserting the old text would
+  have redded a CORRECT landing, and the natural repair — making the alarm text appear —
+  dismantles R1's fail-closed arm. Mutation row M2 had the right outcome all along and
+  cited an `AC4(c)` this section never defined; (c) above is that definition. The class is
+  this document's own thesis pointed at itself: **a revision that corrects two sites and
+  leaves a third leaves the surviving site asserting the OLD design**, which is precisely
+  what iteration 132's retro recorded one row earlier.
 - **AC5 — the instrument floors still fire, platform-independently (rehearsal).**
   `mv design_docs/verification/w-race-gate-blindspot/repro/main.go{,.MUT}` → run.sh rc=1
   via the `no toolchain ran at all` floor; restore byte-identical. This is the V-D
