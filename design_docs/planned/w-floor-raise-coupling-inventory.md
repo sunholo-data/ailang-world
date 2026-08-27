@@ -161,7 +161,8 @@ comment-only change, V9). Sites 3 and 6 are specific to raises of the verified-i
 floor. The test floor (`EXACT_TOTAL_TESTS=40`, `REQUIRED_TESTS`) lives entirely inside
 `verify_ail.sh` and is out of this row's scope.
 
-### Tier 2 — a raise that changes the module/export set (DEFERRED SCOPE — NOT PUBLISHED)
+### Tier 2 — a raise that changes the HASHED MANIFEST FIELDS (exports / effects / name /
+### edition / AILANG bound) or the PACKAGED-MODULE CENSUS (DEFERRED SCOPE — NOT PUBLISHED)
 
 Asserted-complete only: enumerated from one designer's code reads (V22/V25 prove the cited
 anchors exist; they cannot prove no uncited anchor exists), never from a rehearsed raise —
@@ -207,18 +208,21 @@ V28; quorum round 1, objection 3).
 #   3. scripts/verify_ail.sh                           BOTH constants: REQUIRED_VERIFIED and
 #                                                      EXACT_TOTAL_VERIFIED
 #   4. scripts/world_package_ready_packet.golden.json  contentHash, tarballSHA256, tarballBytes;
-#                                                      take the new line from step 9/9's diff
+#                                                      step 9/9 reds printing a diff against the
+#                                                      committed golden; replace the golden with
+#                                                      the diff's new line and re-run
 #   5. docs/SELF_MOD_PUBLISH.md                        digest-table rows for contentHash and
 #                                                      tarballSHA256 (host/runbook binds doc↔golden)
 #   6. host/verifygate/module_manifest_gate_test.go    the pristine-control marker string —
 #                                                      hand-maintained BY DESIGN; deriving it from
 #                                                      EXACT_TOTAL_VERIFIED would make the control
 #                                                      vacuous (row 43's evaluator refutation)
-# interfaceHash does NOT move on this shape of raise: host/pkgproj.InterfaceHash hashes
-# manifest fields only (name, edition, ailang bound, sorted exports, sorted effects), never
-# .ail bytes. Do not "fix" the third digest. It MUST move when the module/export set
-# changes — and a raise of that shape touches additional sites beyond these six; that
-# inventory is deferred to a future item pending a first-party rehearsal.
+# interfaceHash does not move for .ail byte changes or packaged-module changes that leave
+# the hashed manifest fields unchanged. It MUST move when a hashed manifest field changes,
+# including name, edition, the optional AILANG bound, exports, or effects. Do not "fix" the
+# third digest on a Tier-1 raise. A raise that changes the hashed manifest fields (or the
+# packaged-module census) touches additional sites beyond these six; that inventory is
+# deferred to a future item pending a first-party rehearsal.
 # Recipe + rationale: design_docs/coding-standards.md §S8.
 # Enforced by: host/verifygate/floor_raise_inventory_test.go.
 # ── END FLOOR-RAISE COUPLING INVENTORY ───────────────────────────────────────
@@ -251,15 +255,17 @@ subset, and the full set existed only in commit `699f592`'s message. The map:
 | 5 | `docs/SELF_MOD_PUBLISH.md` | the `contentHash` and `tarballSHA256` digest-table rows |
 | 6 | `host/verifygate/module_manifest_gate_test.go` | the pristine-control marker string — hand-maintained; deriving it from `EXACT_TOTAL_VERIFIED` would make the control vacuous (S6) |
 
-**`interfaceHash` does NOT move** on this shape of raise — `host/pkgproj.InterfaceHash`
-hashes manifest fields only, never `.ail` bytes — so do not "fix" the third digest. It MUST
-move when the module/export set changes. A raise that changes the module/export set touches
-additional sites beyond these six; that inventory is deferred to a future item pending a
-first-party rehearsal.
+**`interfaceHash` does not move for `.ail` byte changes or packaged-module changes that
+leave the hashed manifest fields unchanged. It MUST move when a hashed manifest field
+changes, including `name`, `edition`, the optional AILANG bound, exports, or effects.**
+So do not "fix" the third digest on a Tier-1 raise. A raise that changes the hashed manifest
+fields (or the packaged-module census) touches additional sites beyond these six; that
+inventory is deferred to a future item pending a first-party rehearsal.
 
 Recipe, all six in the SAME commit: edit 1 and 3 by hand → `./scripts/build_world_package.sh`
-(2) → run the pinned gate; step 9/9 reds printing the golden diff whose `+` line is the new
-golden (4) → copy the two moved digests into the runbook table (5) → update the marker (6) →
+(2) → run the pinned gate; step 9/9 reds printing a diff against the committed golden;
+replace the golden with the diff's new line and re-run (4) *(step 9/9's red-arm diff format
+verified via the V25 mechanism, not re-executed this session — see the V16 note)* → copy the two moved digests into the runbook table (5) → update the marker (6) →
 re-run to green; `go test ./host/runbook/` binds 5↔4. Enforced by
 `host/verifygate/floor_raise_inventory_test.go`.
 ```
@@ -276,11 +282,12 @@ bare phrase must not be the anchor: the pointer line above `REQUIRED_VERIFIED` r
 design (V28). Assert the block contains each of NINE needles — the eight shared needles
 `packages/world-core/world/`, `REQUIRED_VERIFIED`, `EXACT_TOTAL_VERIFIED`,
 `world_package_ready_packet.golden.json`, `SELF_MOD_PUBLISH.md`,
-`module_manifest_gate_test.go`, `interfaceHash`, `does NOT move`, plus site 1's
+`module_manifest_gate_test.go`, `interfaceHash`, `does not move for`, plus site 1's
 enumerated-row literal `#   1. world/<module>.ail` — then read
-`design_docs/coding-standards.md`, assert the `## S8` heading exists, and assert the eight
-shared needles plus site 1's table-row literal `` | 1 | `world/<module>.ail` `` in that
-section, so the two hand-authored homes cannot drift apart silently. Site 1's needle is
+`design_docs/coding-standards.md`, extract the text bounded between the `## S8` heading and
+the next `##` heading (or EOF), assert the `## S8` heading exists, and assert the eight
+shared needles plus site 1's table-row literal `` | 1 | `world/<module>.ail` `` **within
+that bounded extract only** (so a future §S9 reusing a needle term cannot satisfy it), so the two hand-authored homes cannot drift apart silently. Site 1's needle is
 enumerated-row-anchored BECAUSE THE BARE PATH WAS MEASURED VACUOUS: `world/<module>.ail` is
 a strict substring of site 2's row (`packages/world-core/world/<module>.ail`), so a fixture
 containing ONLY site 2's row satisfies the naive needle (`grep -c` → 1, V26; probe arms b/e
@@ -404,8 +411,9 @@ deferral creates the obligation, and the controller files the row. Closing predi
 first-party REHEARSED module/export-set raise (or removal) executed in a worktree — every
 touched site recorded from the actual red-gate sequence and the commit diff, completeness
 backed by the same evidence grade Tier 1 carries here (independent sweeps plus a rehearsed
-commit, the V5/V6/V7 + V9 shape), and `interfaceHash` measured to MOVE (the V14 counter-arm,
-run live) — and only then the Tier-2 enumeration promoted from this doc's §Tier 2 into both
+commit, the V5/V6/V7 + V9 shape), and — only for a rehearsed HASHED-MANIFEST change — `interfaceHash`
+measured to MOVE (the V14 counter-arm, run live); a packaged-module-census-only rehearsal
+must instead show `interfaceHash` STABLE (V29 arm 1) — and only then the Tier-2 enumeration promoted from this doc's §Tier 2 into both
 durable homes, replacing the forward-reference line. Until that row closes, the published
 map stays Tier-1-only and the forward reference is the only Tier-2 claim either home makes.
 
@@ -464,7 +472,7 @@ porcelain 0 after every arm.
 | M1 | delete the `docs/SELF_MOD_PUBLISH.md` line from the script block | test reds naming the missing needle | **RUN on fixture: `FAIL inventory block omits "docs/SELF_MOD_PUBLISH.md"` (V20 arm c)** |
 | M2 | delete the entire block (or only its END marker) | test reds through the marker fatal, never a silent zero | **RUN: real base file → instrument RED; END-marker-only deletion → instrument RED (V20 arms a, d)** |
 | M3 | delete §S8 from `coding-standards.md` | test reds on the `## S8` heading assertion | sprint-run (same `Contains` mechanism V20 measured) |
-| M4 | edit `does NOT move` in the block to `does move` | test reds on the exact-phrase needle | sprint-run |
+| M4 | edit `does not move for` in the block to `does move for` | test reds on the exact-phrase needle | sprint-run |
 | M5 | delete one needle from §S8 while leaving the script block intact | test reds on the cross-home clause — the homes may not drift apart | sprint-run |
 | M6 | change `EXACT_TOTAL_VERIFIED=11` → `12` (the AC5 teeth) | AC5's non-comment diff is non-empty AND the gate reds (`expected exactly 12 … got 11`) | sprint-run; the gate branch is the long-established `:324` refusal |
 | M7 | delete ONLY the `#   1. world/<module>.ail` row from the script block, site 2's row intact | test reds naming the missing site-1 row needle — and the NAIVE bare-path needle must be shown NOT to red here (that green is the measured vacuity) | **RUN on fixture: anchored → `FAIL inventory block omits "#   1. world/<module>.ail"`; naive bare path under the SAME arm → PASS, i.e. vacuous as the reviewer proposed it (V26, V27 arms b/c)** |
@@ -554,6 +562,47 @@ applied in this one protocol-mandated revision:
    **Applied**: the awk anchored to the `# ── ` styling (measured bounded, V28), the test's
    extractor given the same anchoring plus an exactly-once marker fatal (V27 arms g/h), and
    AC2's expected occurrence count re-derived at 3 rather than transcribed.
+
+| V29 | ROUND-2 CARVE-OUT — `interfaceHash` moves for HASHED MANIFEST FIELDS ONLY, never for a packaged-module-census change. Four arms, one variable each, run by the CONTROLLER (not the designer) at `6c34d27` | a Go probe calling `pkgproj.InterfaceHash` directly, arms: (1) packaged-but-unexported module change = hashed fields untouched, (2) an export appended, (3) an effect added, (4) exports permuted | BASE `sha256:d16cc882…` — **equal to the committed `interfaceHash` in `docs/SELF_MOD_PUBLISH.md`, which is the known-positive control proving the probe builds the real manifest**; arm 1 **UNMOVED** (gpt5-6-sol's premise CONFIRMED); arm 2 → `sha256:0dcf526f…` MOVED (reproduces the designer's V14); arm 3 → `sha256:df50680e…` MOVED; arm 4 **UNMOVED** (exports are sorted before hashing). Source read in the same pass: `host/pkgproj/pkgproj.go:87` hashes `name`, `edition`, the optional `ailang` bound, sorted `Exports.Modules` and sorted `Effects.Max` — the packaged-module set never reaches it |
+
+## Quorum round 2 + the narrow-refinement carve-out (controller record)
+
+**Round 2 ran at FULL STRENGTH — `absent_reviewers: []`, all three reviewers present —
+and came back BLOCKED**, metered `$0.1484` (round 1 `$0.1246`; cumulative `$0.2730` of the
+`$5` ceiling). Verdicts moved: `gemini-3-1-pro` **reject → pass**, `oc-glm-5-2`
+**reject → pass**, `gpt5-6-sol` **reject → reject**, on a *different* surface.
+
+**Disposition: the narrow-refinement carve-out, applied as a bounded 2nd revision by the
+CONTROLLER using the reviewers' own verbatim text.** Its two conditions both hold: every
+surviving blocking objection carries a concrete reviewer-authored `proposed_fix`, and none
+disputes the design DIRECTION — round 2's single reject is a *precision* defect in one
+published sentence, and the other two reviewers passed the direction outright. The
+first-use-needs-Mark gate does not apply: World has applied this carve-out before
+(iteration 44, `w-ddl-gate-teeth` DG.B), so it is already ratified for this mission.
+
+**The surviving objection was MEASURED, not forwarded.** `gpt5-6-sol` objected that the
+published *"`interfaceHash` … MUST move when the module/export set changes"* is over-broad,
+because neither V12 nor V14 covers a module-set-only change. Read at
+`host/pkgproj/pkgproj.go:87`, `InterfaceHash` hashes the manifest's `name`, `edition`,
+optional AILANG bound, **sorted exports** and sorted effects — it never sees the packaged
+module set. Confirmed on four arms (V29), with the probe's base reproducing the committed
+digest as its known-positive control. **The reviewer is right**, and its verbatim
+replacement sentence is now the text in both homes.
+
+**One mechanical consequence the fix does not mention, and it would have shipped a red
+sprint.** The test's shared-needle list and mutation arm M4 both keyed on the exact literal
+`does NOT move`, which the reviewer's replacement sentence deletes. Applied blind, the
+landed comment block would no longer contain the needle its own enforcement test asserts —
+the test would red at sprint time for a reason unrelated to the design. Both the needle and
+M4 are realigned to `does not move for`. This is a consequence of the reviewer's own fix,
+not a controller-invented resolution.
+
+**Non-blocking catches, both applied verbatim.** `gemini-3-1-pro`: the §S8 extraction in
+§(c) was unbounded, so a future §S9 reusing a needle term could satisfy it — the test now
+bounds its search between the `## S8` heading and the next `##` (or EOF).
+`oc-glm-5-2`: site 4's recipe published a `+`-line diff-format assertion whose red arm was
+never executed this session (V16) — softened in both homes to the verified mechanism, with
+the evidence grade stated inline.
 
 ## Related Documents
 
