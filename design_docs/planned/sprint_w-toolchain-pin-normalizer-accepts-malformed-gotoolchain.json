@@ -1,0 +1,262 @@
+{
+  "sprint_id": "w-toolchain-pin-normalizer-accepts-malformed-gotoolchain",
+  "queue_item": 45,
+  "title": "One normalizer serves two grammars, so the strict convention inherits the lax one's tolerance: a GOTOOLCHAIN value the Go runtime refuses outright passes the pin gate. Split normalizeToolchainPin into a per-convention canonicalizer and a strict toolchain-name validator, flip Test B's two instrument floors to Fatalf, and add a comparison-direction pin on run.sh's pinned-OK guard. ONE file modified, zero created, zero .ail touched.",
+  "status": "planned - awaiting sprint-executor",
+  "created": "2026-08-28",
+  "planner": "mission-control iteration 134, claude-opus-5 sprint-planner",
+  "design_doc": "design_docs/planned/w-toolchain-pin-normalizer-accepts-malformed-gotoolchain.md",
+  "sprint_plan": "design_docs/planned/w-toolchain-pin-normalizer-accepts-malformed-gotoolchain-sprint-plan.md",
+  "base_commit": "f3790e4",
+  "base_commit_note": "f3790e4 = 07668e1 + the row-45 design-doc commit. The design doc's VERIFIED-BY-ME rows were measured at 07668e1; the planner re-derived every load-bearing one at f3790e4 and they agree, including run.sh's sha256 (b80109aa...d0bb, identical to the doc's P23).",
+  "branch": "none - the executor performs NO git write operations; the controller commits",
+  "worktree": "the isolated worktree the controller assigns; work only there",
+  "github_issues": [],
+  "risk_level": "low",
+  "velocity": {
+    "target_days": 0.15,
+    "estimated_changed_lines": 63,
+    "estimated_days": 0.15,
+    "note": "~+55/-20 in ONE file, matching the design doc's own estimate. Do not inflate. The cost is in the mutation drill (13 arms), not in the code."
+  },
+  "environment": {
+    "AILANG_BIN": "/tmp/ailang-v0300/ailang",
+    "ailang_version": "AILANG v0.30.0 (commit e37b370)",
+    "go_version": "go1.26.6 darwin/arm64",
+    "PATH": "every shell invocation must begin `export PATH=/opt/homebrew/bin:$PATH` or go/gh fail rc=127 and you will misread that as a broken toolchain",
+    "notes": [
+      "D1, THE SHARPEST ENVIRONMENT FACT (and the SECOND consecutive iteration in which a design doc shipped it): `go test ./host/verifygate/ -count=1` is rc=1 AT BASE with 17 `--- FAIL` lines, every message reading `AILANG_BIN is unset - the shim arms need the pinned released delegate to run the real gate`. With AILANG_BIN=/tmp/ailang-v0300/ailang it is rc=0 in 30.5s. The design doc's AC7 omits the export and did not measure the base. A red whose text says `AILANG_BIN is unset` is NOT this diff - do not fix it, and above all do not make those tests skip; they t.Fatalf on purpose.",
+      "The two SCOPED text-scanning runs need NO AILANG_BIN - they are pure text scans over ci.yml / run.sh / go.mod with no subprocess. Planner-measured rc=0 unexported. Run them unexported so their lane-independence stays visible.",
+      "ZSH HAS NO $PIPESTATUS. Planner hit this live: `... | tail -6; echo ${PIPESTATUS[0]}` prints `parameter not set` and the exit code is silently lost. Capture rc directly: `go test ... > /tmp/out 2>&1; rc=$?`. zsh's own array is $pipestatus[1], lowercase and 1-indexed.",
+      "`./scripts/verify_go.sh` legitimately emits exactly 2 `WARNING: DATA RACE` lines from its OWN known-positive control under the banner `-- race-detector known-positive control`. NOT a finding. Do not report them.",
+      "Every `ailang` invocation prints `Observatory: NNNMB (warn threshold: 200MB)` on stderr with rc=0. NOT a regression.",
+      "`git status --porcelain` is NEVER 0 during this sprint - the deliverable is uncommitted by construction. Integrity of the two MUTATION VENUES (ci.yml, run.sh) is checked by sha256 against base_state_verified.sha256, never by porcelain.",
+      "RESTORES USE `cp` FROM /tmp/p45-backup/, NEVER `git checkout --`. Nothing is committed, so `git checkout -- host/verifygate/toolchain_pin_gate_test.go` would DELETE M1+M2+M3 with no undo.",
+      "run.sh is mode -rwxr-xr-x and Test B asserts info.Mode()&0o111 != 0. cp preserves content; re-assert the exec bit after any cross-filesystem restore.",
+      "COST CENTRES, planner-measured on this rig: whole host/verifygate package 30.5s WITH AILANG_BIN; scoped Test A or Test B ~0.14-0.33s; go build ./... ~1s; ./scripts/verify_go.sh full run 116 lines, all 13 host packages ok; ./scripts/verify_ail.sh rc=0.",
+      "This sprint touches ZERO .ail files. ./scripts/verify_ail.sh must stay at its unchanged floor: `verify gate PASSED: 11 required identities verified, 40 named tests pass`. Movement there is a finding, not a result. ./scripts/build_world_package.sh must not run.",
+      "Do NOT widen any acceptance gate to `go test ./...`. The narrowest gate that can fail for this diff is `go test ./host/verifygate/ -count=1`."
+    ]
+  },
+  "base_state_verified": {
+    "commit": "f3790e4",
+    "porcelain_at_planning_entry_and_exit": 0,
+    "sha256": {
+      "host/verifygate/toolchain_pin_gate_test.go": "cb576cfb654fefbd5bda7fc8a2a84220964b5c662d7a64d41b4a087040ed6031",
+      ".github/workflows/ci.yml": "9c16e64ca28c58f889a8be122a1b2f48c7d240f2a559fba6faf312ec5166239c",
+      "design_docs/verification/w-race-gate-blindspot/run.sh": "b80109aa57882a3d261757fd268888cf84ea0326180bb34969ce2ce9d149d0bb",
+      "go.mod": "7a2983617bb9fc33747f664564fe8d8ab54fc3a177ec4dfb8c61b29ba79a7e52"
+    },
+    "gates_measured_green_at_base": [
+      "G1 `go build ./...` -> rc=0",
+      "G2 `gofmt -l host/verifygate/` -> empty, rc=0",
+      "G3 `go vet ./host/verifygate/` -> rc=0, no output",
+      "G4 `go test ./host/verifygate/ -run 'TestGoToolchainPinsAgreeAndMatchJobList|TestMiscompileInstrumentProbesPinnedToolchain' -count=1 -v` (unexported) -> rc=0, 2 === RUN, 2 --- PASS, ok 0.325s",
+      "G5 `go test ./host/verifygate/ -run '^TestNoSuchPinGateZZZ$' -count=1 -v` -> rc=0, `no tests to run`, 0 === RUN (AC1's nonsense control)",
+      "G6 `AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1` -> rc=0, ok 30.5s (rc=1 with 17 FAIL WITHOUT the export - D1)",
+      "G7 `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_go.sh` -> rc=0, 116 lines, all 13 host packages ok, banner `go gate PASSED`",
+      "G8 `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh` -> rc=0, `verify gate PASSED: 11 required identities verified, 40 named tests pass`",
+      "G9 `git check-ignore -v` on both deliverable paths -> rc=1 (NOT ignored), with same-call control `git check-ignore -v .ailang/state/x` -> rc=0 matching `.gitignore:3:**/.ailang/`. The instrument fires."
+    ],
+    "no_gate_in_this_plan_is_red_at_base": true
+  },
+  "executor_constraints": {
+    "git_writes": "FORBIDDEN. No add, commit, stash, checkout, branch, worktree, git-mv, restore, reset. Git READS (show, status, diff, log, check-ignore) are required and allowed.",
+    "files_touched": [
+      "host/verifygate/toolchain_pin_gate_test.go (MODIFY, ~+55/-20, the ONLY file this sprint edits)"
+    ],
+    "files_forbidden": [
+      ".github/workflows/ci.yml - mutation venue ONLY; must equal sha256 9c16e64c... at every milestone boundary",
+      "design_docs/verification/w-race-gate-blindspot/run.sh - mutation venue ONLY; must equal sha256 b80109aa... at every milestone boundary",
+      "go.mod, scripts/verify_go.sh, scripts/verify_ail.sh",
+      "host/store/toolchain_canary_test.go (row 49's surface; TestCanaryDeclaresPositiveArmOnly's GOTOOLCHAIN fence wants its count to stay 0)",
+      "host/verifygate/toolchain_pin_gate_test.go lines 318-407, TestMiscompileInstrumentStepIsGatedInCI (row 44's landed surface; disjoint from every edit here)",
+      "shellAssignmentValues (row 50's surface)",
+      "tools/launchd/* (frozen core, FLEET-owned)",
+      "any .ail file"
+    ],
+    "authoritative": "THE DESIGN DOC WINS over this plan, and its `## Quorum round 2` section wins over its own earlier sections - EXCEPT on the six points D1-D6 in sprint plan section 1, where the planner's first-party measurement showed the doc's literal text would red a correct landing (D1, D5, D6) or would pass vacuously (D2, D3, D4). On those six, this plan wins.",
+    "message_text_is_FROZEN": "requireToolchainNamePin must emit byte-exactly the two strings in the design doc's Decision sketch: `%s: %s=%q is a toolchain-selection mode, not a pin; only a bare toolchain name (e.g. go1.26.6) pins` and `%s: %s=%q is not an allowed standard Go toolchain pin; this repository requires a bare standard toolchain version accepted by go/version.IsValid (for example go1.26.6)`. Quorum round 2 R1 REWROTE the second one. The file must contain ZERO occurrences of `the Go runtime itself refuses` and `is not a valid Go toolchain name` - those are the doc's PREMISE prose (still present in its Thesis section), not shipped text."
+  },
+  "planner_findings": [
+    {
+      "id": "D1",
+      "severity": "HIGH",
+      "claim": "AC7's clause `go test ./host/verifygate/ -count=1 -> rc=0 on the unmutated tree` is FALSE at base.",
+      "measurement": "At f3790e4, tree clean: rc=1, 17 `--- FAIL`, all reading `AILANG_BIN is unset` (ail_binary_gate_test.go:186/237/311/317/321/325/347/348/409/456/506/618, module_manifest_gate_test.go:172/215/241/257/286). With AILANG_BIN=/tmp/ailang-v0300/ailang: rc=0, ok 30.5s.",
+      "why_it_matters": "An executor running AC7 verbatim reports a 17-failure RED against a correct landing, and the plausible next move - making those tests skip - is the exact false-green class this mission line exists to kill. This is the SECOND consecutive iteration a design doc shipped this error (iteration 133's planner filed it as its own D1 for row 44); it is now a standing rig fact.",
+      "resolution": "Every whole-package invocation in this plan carries the export; M1's gate block greps `AILANG_BIN is unset` and asserts 0 so a forgotten export is self-diagnosing. Scoped runs stay unexported."
+    },
+    {
+      "id": "D2",
+      "severity": "HIGH",
+      "claim": "Mutation M8 cannot fail for the milestone it is attached to. The doc predicts `single failure message, zero downstream` as `the sharpened prediction that distinguishes the shipped Fatalf from today's measured cascade` - but that is byte-identical to base behaviour.",
+      "measurement": "Base (Errorf, M2 NOT applied), append a second `#!/usr/bin/env bash`, landed-proof shebang lines 1->2: rc=1, EXACTLY ONE message `toolchain_pin_gate_test.go:209: instrument failure: <run.sh> exact shebang count=2, want 1`, zero downstream. Nothing downstream of :209 depends on shebang count, so Errorf and Fatalf are indistinguishable on this input.",
+      "why_it_matters": "M8 would report green whether or not M2 landed - a mutation arm that cannot detect the absence of the change it certifies.",
+      "resolution": "M8 retained and RETYPED as FLOOR-EXISTENCE ONLY. New planner-authored arm M8' added and base-measured: second shebang PLUS a duplicated `KNOWN_GOOD=` line -> base rc=1 with FIVE messages (:209, :216, :232, :240, :250); post-M2 must be exactly ONE. A 5->1 delta is what fatality actually looks like."
+    },
+    {
+      "id": "D3",
+      "severity": "HIGH",
+      "claim": "AC5 asserts the absence of two messages that never fire in its own arm - a dead grep, in the doc that states the rule against them.",
+      "measurement": "Base, M7 (`s/PINNED=\"/PINHOLE=\"/`, landed-proof `grep -c 'PINNED='` 1->0 with same-call control `grep -c 'KNOWN_BAD='`=1): rc=1, EXACTLY 3 messages - `:199 instrument failure: ... does not contain known-positive control \"PINNED=\"`, `:222 ... PINNED assignment count=0, want 1`, `:247 PINNED=\"\", want go.mod floor \"go1.26.6\"`. The exec-bit and guard-message assertions AC5 names do NOT fire and could not: the file keeps its mode and keeps its guard message.",
+      "why_it_matters": "Asserting zero for a string that is zero in every world makes AC5 partly vacuous, and hides the one number that is real.",
+      "resolution": "AC5 becomes a measured delta: message count 3->1, with the two OBSERVABLE downstream needles (`PINNED assignment count=`, `, want go.mod floor `) each going 1->0, and the base 3-message run as the same-session known-positive control. Exec-bit and guard-message dropped."
+    },
+    {
+      "id": "D4",
+      "severity": "MEDIUM",
+      "claim": "M4 and M9(b) are RED at base and stay RED; the mutation table's framing invites reading their RED as evidence M1 landed.",
+      "measurement": "M4 (`s/GOTOOLCHAIN:/GO_TOOLCHAIN:/g`, landed-proof 2->0 with same-call control GO_TOOLCHAIN: 0->2): base rc=1, ONE message `:108 ci.yml: GOTOOLCHAIN keyed-line count=0, want 2 (one per enumerated expected job)` - identical before and after. M9(b) (site 21 -> go1.25.6): base rc=1, TWO messages, both control strings present - identical before and after.",
+      "why_it_matters": "Seven arms must FLIP polarity for this sprint (M1, M2, M3, M5, M6 green->red; M7, M8' N-messages->1). Four must NOT (M4, M8, M9(b), AC6(b)). Conflating them turns a partial landing into a reported pass.",
+      "resolution": "Every row in the drill table carries a measured `base` column and a type: NEW TEETH / REGRESSION / CONTROL / FLOOR-EXISTENCE / MUST-STAY-GREEN, plus an explicit reading rule."
+    },
+    {
+      "id": "D5",
+      "severity": "MEDIUM",
+      "claim": "The doc's `Needle discipline` note is correct and sufficient for the two shipped validator literals, but does not close the reverse direction: the doc's own Thesis and finding-paragraph still carry round-1's `the Go runtime itself refuses` framing as premise prose.",
+      "measurement": "Verified the note's two named literals (`is not an allowed standard Go toolchain pin`, `is a toolchain-selection mode, not a pin`) match the Decision sketch byte-for-byte. Verified the doc's Thesis (line ~29) and finding paragraph still read `a value the Go runtime itself refuses` / `the Go runtime itself refuses with go: invalid GOTOOLCHAIN`.",
+      "why_it_matters": "Quorum round 2 R1's entire fix was removing that claim from the SHIPPED message. An executor writing the Fatalf text from the thesis rather than the sketch re-introduces the over-claim, and the quorum record stops matching the code.",
+      "resolution": "The two message strings are FROZEN in executor_constraints. AC7 gains four greps: the two shipped literals must each count 1, and `the Go runtime itself refuses` / `is not a valid Go toolchain name` must each count 0 - the zeros made non-vacuous by the same-call ones."
+    },
+    {
+      "id": "D6",
+      "severity": "LOW",
+      "claim": "Every line number the doc states is correct today, and every one of them MOVES.",
+      "measurement": "Verified at f3790e4: :13 normalizeToolchainPin, :25 pinValues, :30/:45/:244 its call sites, :78/:128 Test A's fatal floors, :108 keyed-count, :120 agreement loop, :150 floor comparison, :199/:209 Test B's two t.Errorf instrument floors, :263 saw_pinned_ok count, :318-:407 row 44's wiring test. All match. M1 inserts ~35 lines above Test B, so by M2 the two floors sit near :233 and :243.",
+      "why_it_matters": "`sed -i '' '199s/...'` after M1 edits the wrong line and reports success.",
+      "resolution": "All deliverable-file edits and assertions are content-anchored. The only positional seds act on ci.yml and run.sh, which this sprint never edits (line numbers stable by construction), and each still asserts the resulting line content."
+    },
+    {
+      "id": "D7",
+      "severity": "INFO",
+      "claim": "All four of the design's conflict claims HOLD, re-derived first-party rather than inherited; and one check the doc did not make also comes back clean.",
+      "measurement": "(1) Row 44's TestMiscompileInstrumentStepIsGatedInCI occupies :318-:407; this item edits :13-:34, the :104 region, :199, :209, :244 and inserts before :268 - disjoint, read in full. (2) TestReproModuleFloorStaysBelowKnownBadToolchains calls moduleGoFloor(repro/go.mod) and shellAssignmentValues(KNOWN_BAD) only; repro/go.mod:11 is `go 1.22` and canonicalizeVersionPin(\"1.22\")==normalizeToolchainPin(\"1.22\")==\"go1.22\" - byte-identical. (3) shellAssignmentValues is :167-:179, untouched. (4) `grep -c 'GOTOOLCHAIN' host/store/toolchain_canary_test.go` = 0 with same-call control `grep -c 'func Test'` = 1; the fence's subject is a DIFFERENT file from the one M1-M3 edit. PLUS: `grep -rn 'toolchain_pin_gate_test' --include='*.go' --include='*.sh' --include='*.yml' .` outside design_docs -> 0 hits with same-call known-positive control `ail_binary_gate_test` -> 1 hit, so the grep is live: NO fence over the deliverable file itself. evidence_manifest_gate_test.go and floor_raise_inventory_test.go were both read first-party and enumerate neither host/verifygate/*.go nor design_docs/planned/.",
+      "why_it_matters": "The doc's conflict section was the most likely place for an inherited claim to be wrong. It is not.",
+      "resolution": "No change needed. Recorded so the evaluator need not re-derive it."
+    },
+    {
+      "id": "D8",
+      "severity": "MEDIUM",
+      "claim": "Two implementation constraints are load-bearing and only implicit in the design doc.",
+      "measurement": "(a) keyedValues(lines,\"GOTOOLCHAIN\") is called for its LENGTH ONLY inside the job-enumeration t.Errorf at :100-:101. Putting the Fatalf inside the extractor makes that count call fatal and converts a job-enumeration mismatch into a pin-validity message - the misattribution this item exists to remove, reintroduced one layer down. (b) moduleGoFloor must NOT get the strict validator: repro/go.mod:11 is `go 1.22` and version.IsValid(\"1.22\") is FALSE, so routing it through requireToolchainNamePin reds Test B and TestReproModuleFloorStaysBelowKnownBadToolchains on a correct tree.",
+      "why_it_matters": "(b) is caught immediately by gate G4. (a) is caught by NO base gate - it is a review item.",
+      "resolution": "Both stated as explicit constraints in milestone M1 and in the risk table."
+    }
+  ],
+  "features": [
+    {
+      "id": "M1",
+      "name": "Split the normalizer; validate toolchain-name pins strictly",
+      "description": "Add stripPinQuotes, canonicalizeVersionPin (the two prefix-less conventions: setup-go go-version: and go.mod go directives) and requireToolchainNamePin (the two name-carrying conventions: ci.yml GOTOOLCHAIN and run.sh PINNED=), with both validator arms t.Fatalf so a non-pin never becomes the operand of a comparison. Rename pinValues -> keyedValues returning quote-stripped RAW values. Re-point all three call sites. Delete normalizeToolchainPin.",
+      "estimated_changed_lines": 45,
+      "dependencies": [],
+      "files": [
+        "host/verifygate/toolchain_pin_gate_test.go"
+      ],
+      "acceptance_criteria": [
+        "AC1: `go test ./host/verifygate/ -run 'TestGoToolchainPinsAgreeAndMatchJobList|TestMiscompileInstrumentProbesPinnedToolchain' -count=1 -v` -> rc=0 with 2 `=== RUN` and 2 `--- PASS`; paired nonsense control `-run '^TestNoSuchPinGateZZZ$' -v` prints `[no tests to run]` and 0 `=== RUN`.",
+        "AC2: derive the site set at execution time - `grep -n 'GOTOOLCHAIN:' .github/workflows/ci.yml` yields exactly 2 lines (== len(wantJobs); same-call control: non-zero). Run arms M1 and M2 against EACH derived site. No line number is asserted anywhere; the sed targets come from the grep.",
+        "AC3: arm M3 (one site -> `auto`) -> Test A rc!=0 with EXACTLY ONE message containing `is a toolchain-selection mode, not a pin`, `grep -c 'toolchain pins disagree'` = 0 and `grep -c 'disagrees with ci.yml toolchain pin'` = 0. Base measured: rc=1 with TWO misattributing messages (goauto).",
+        "AC4: arm M4 (all GOTOOLCHAIN: keys -> GO_TOOLCHAIN:) -> Test A rc!=0 via `GOTOOLCHAIN keyed-line count=0, want 2`. REGRESSION arm: red at base and red after; it proves the S6 vacuous-input floor survived the extraction split, NOT that M1 landed.",
+        "AC7a: `gofmt -l host/verifygate/` empty; `go vet ./host/verifygate/` rc=0; `go build ./...` rc=0.",
+        "AC7b: `AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1` -> rc=0, and `grep -c 'AILANG_BIN is unset'` on that output = 0.",
+        "AC7c: the name is dead with a live-grep control - `grep -c 'normalizeToolchainPin'` = 0 (base 4), `grep -c 'canonicalizeVersionPin'` >= 3 (base 0), `grep -c 'requireToolchainNamePin'` >= 3 (base 0), all in host/verifygate/toolchain_pin_gate_test.go.",
+        "AC7d (D5 message freeze): `grep -c 'is not an allowed standard Go toolchain pin'` = 1 AND `grep -c 'is a toolchain-selection mode, not a pin'` = 1 AND `grep -c 'the Go runtime itself refuses'` = 0 AND `grep -c 'is not a valid Go toolchain name'` = 0.",
+        "Venue integrity: sha256 of ci.yml and run.sh equal base_state_verified.sha256 after every rehearsal."
+      ],
+      "mutation_arms": [
+        "M1 NEW TEETH: ci.yml line 21 `GOTOOLCHAIN: go1.26.6` -> `GOTOOLCHAIN: 1.26.6`. LANDED: `grep -c 'GOTOOLCHAIN: go1.26.6'` 2->1 AND `grep -c 'GOTOOLCHAIN: 1\\.26\\.6'` 0->1, plus `sed -n '21p'` shows `      GOTOOLCHAIN: 1.26.6`. BASE (planner-measured): rc=0 `--- PASS`, 0 messages. REQUIRED: Test A rc!=0, exactly 1 message, containing `is not an allowed standard Go toolchain pin` and `\"1.26.6\"`.",
+        "M2 NEW TEETH: same flip at the OTHER collected site, line 102. LANDED: as M1 on the other keyed line. BASE (planner-measured; the doc did not measure this arm): rc=0 `--- PASS`, 0 messages. REQUIRED: rc!=0, 1 message, same literal, second site's value.",
+        "M3 NEW TEETH: one site -> `auto`. LANDED: `grep -c 'GOTOOLCHAIN: auto'` 0->1. BASE (planner-measured): rc=1, 2 messages, `:120 toolchain pins disagree: GOTOOLCHAIN=[goauto go1.26.6] go-version=[go1.26.6 go1.26.6]` and `:150 go.mod floor=\"go1.26.6\" disagrees with ci.yml toolchain pin=\"goauto\"`. REQUIRED: rc!=0, exactly 1 message, selection-mode literal, both other needles at 0.",
+        "M4 REGRESSION: `s/GOTOOLCHAIN:/GO_TOOLCHAIN:/g`. LANDED: `grep -c 'GOTOOLCHAIN:'` 2->0 with same-call control `grep -c 'GO_TOOLCHAIN:'` 0->2. BASE: rc=1, 1 message `:108 ci.yml: GOTOOLCHAIN keyed-line count=0, want 2 (one per enumerated expected job)`. REQUIRED: identical.",
+        "M5 NEW TEETH: run.sh line 26 `PINNED=\"go1.26.6\"` -> `PINNED=\"1.26.6\"`. LANDED: `grep -c 'PINNED=\"1\\.26\\.6\"'` 0->1. BASE (planner-measured; the doc had this code-derived only): rc=0 `--- PASS`, 0 messages - auto-correction makes it statically green while run.sh:87's byte compare could never set saw_pinned_ok. REQUIRED: Test B rc!=0, 1 message, `is not an allowed standard Go toolchain pin` with key PINNED.",
+        "M9(a) NEW TEETH: M1's flip. REQUIRED: `grep -c 'is not an allowed standard Go toolchain pin'` = 1, `grep -c 'toolchain pins disagree'` = 0, `grep -c 'disagrees with ci.yml toolchain pin'` = 0, total messages = 1.",
+        "M9(b) CONTROL, SAME PROBE SESSION: restore, then site 21 -> `go1.25.6`. LANDED: `grep -c 'GOTOOLCHAIN: go1\\.25\\.6'` 0->1 AND `grep -c 'GOTOOLCHAIN: go1\\.26\\.6'` 2->1. BASE (planner-measured): rc=1, 2 messages, BOTH of M9(a)'s absent strings PRESENT. REQUIRED: identical - this is what makes M9(a)'s two zeros measured absences rather than dead greps."
+      ],
+      "restore_recipe": "cp /tmp/p45-backup/ci.yml .github/workflows/ci.yml ; cp /tmp/p45-backup/run.sh design_docs/verification/w-race-gate-blindspot/run.sh ; shasum -a 256 both and compare to base_state_verified.sha256. NEVER `git checkout --`.",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "TWO CONSTRAINTS (D8): (a) the requireToolchainNamePin mapping happens at the Test A CALL SITE over the returned slice, NEVER inside keyedValues - keyedValues is also called for its length only inside the job-enumeration t.Errorf. (b) moduleGoFloor keeps canonicalizeVersionPin and must NOT get the strict validator: repro/go.mod is `go 1.22` and version.IsValid(\"1.22\") is false. No import-block change is needed: go/version and strings both stay used."
+    },
+    {
+      "id": "M2",
+      "name": "Test B's two instrument floors go fatal",
+      "description": "The t.Errorf at today's :199 (`instrument failure: %s does not contain known-positive control %q`) and today's :209 (`instrument failure: %s exact shebang count=%d, want 1`) become t.Fatalf, token-for-token otherwise unchanged - mirroring Test A's identical floors at :78/:128 and the Z3 precedent's 7-of-7. Content-anchored: after M1 these sit near :233 and :243.",
+      "estimated_changed_lines": 2,
+      "dependencies": [],
+      "files": [
+        "host/verifygate/toolchain_pin_gate_test.go"
+      ],
+      "acceptance_criteria": [
+        "AC5 (AMENDED per D3): arm M7 -> Test B rc!=0 with message count 3 -> 1; the surviving message contains `does not contain known-positive control` and `\"PINNED=\"`; `grep -c 'PINNED assignment count='` = 0 and `grep -c ', want go.mod floor '` = 0. The base 3-message run in the SAME session is the known-positive control proving both needles are observable. Exec-bit and guard-message assertions are NOT asserted - they never fire in this arm.",
+        "AC5' (ADDED per D2): arm M8' -> Test B rc!=0 with message count 5 -> 1; the single surviving message contains `exact shebang count=2, want 1`.",
+        "Landed-proof for the milestone itself: `grep -n 'instrument failure' host/verifygate/toolchain_pin_gate_test.go | grep -c 't.Errorf'` 2 -> 0 AND `| grep -c 't.Fatalf'` 9 -> 11, with total `grep -c 'instrument failure'` unmoved at 11. A count that moved plus a count that did not.",
+        "AC1, AC7a, AC7b re-run green."
+      ],
+      "mutation_arms": [
+        "M7 NEW TEETH (the real fatality discriminator): `sed -i '' 's/PINNED=\"/PINHOLE=\"/'` run.sh. LANDED: `grep -c 'PINNED='` 1->0 with same-call control `grep -c 'KNOWN_BAD='` = 1. BASE (planner-measured): rc=1, 3 messages - `:199 instrument failure: <run.sh> does not contain known-positive control \"PINNED=\"`, `:222 <run.sh>: PINNED assignment count=0, want 1`, `:247 PINNED=\"\", want go.mod floor \"go1.26.6\"`. REQUIRED: rc!=0 with exactly 1.",
+        "M8 FLOOR-EXISTENCE ONLY - NOT a fatality proof (D2): append `#!/usr/bin/env bash`. LANDED: `grep -c '^#!/usr/bin/env bash$'` 1->2. BASE (planner-measured): rc=1, EXACTLY 1 message `:209 instrument failure: <run.sh> exact shebang count=2, want 1`, zero downstream. REQUIRED: identical. Record as floor-existence; do NOT report as evidence M2 landed.",
+        "M8' NEW - planner-authored, base-measured: append `#!/usr/bin/env bash` AND append a duplicate of run.sh:25's KNOWN_GOOD line (`grep '^KNOWN_GOOD=\"' run.sh | head -1 >> run.sh`). LANDED: shebang lines 1->2 AND `grep -c '^KNOWN_GOOD=\"'` 1->2. BASE (planner-measured): rc=1, FIVE messages - :209 shebang floor, `:216 KNOWN_GOOD assignment count=2, want 1`, `:232 KNOWN_GOOD must contain at least one toolchain`, `:240 KNOWN_GOOD=[] does not probe the pinned toolchain go1.26.6 from go.mod`, `:250 PINNED=\"go1.26.6\" is absent from KNOWN_GOOD=[]...`. REQUIRED: rc!=0 with exactly 1, containing `exact shebang count=2, want 1`."
+      ],
+      "restore_recipe": "cp /tmp/p45-backup/run.sh design_docs/verification/w-race-gate-blindspot/run.sh ; shasum -a 256 must equal b80109aa57882a3d261757fd268888cf84ea0326180bb34969ce2ce9d149d0bb ; re-assert mode -rwxr-xr-x.",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "Do NOT sed by line number - after M1 the two floors have moved ~34 lines down (D6). Anchor on the two message literals."
+    },
+    {
+      "id": "M3",
+      "name": "Pinned-OK guard direction pin",
+      "description": "Add the guardLines block inside TestMiscompileInstrumentProbesPinnedToolchain, after the existing saw_pinned_ok site-count check and before the closing brace, reusing Test B's existing `lines` variable. It counts comment-stripped CODE lines containing the exact guard literal `[ \"$saw_pinned_ok\" -eq 0 ]` and reds on != 1 (two-sided: 0 = flipped/deleted, >=2 = duplicated), so it cannot pass vacuously on its own null case (S6).",
+      "estimated_changed_lines": 16,
+      "dependencies": [],
+      "files": [
+        "host/verifygate/toolchain_pin_gate_test.go"
+      ],
+      "acceptance_criteria": [
+        "AC6(a): arm M6 -> Test B rc!=0 with output containing `guard-line count=0, want exactly 1`. Base measured: rc=0 `--- PASS`, 0 messages - invisible to all committed assertions.",
+        "AC6(b) MUST STAY GREEN: restore, then append a COMMENT line quoting the guard literal verbatim -> Test B rc=0. Base measured rc=0. If this reds, M3 shipped the iteration-133 defect: a guard and the prose explaining it competing for one namespace.",
+        "Landed-proof for the milestone itself: `grep -c 'executable pinned-OK guard-line count'` 0 -> 1 and `grep -c 'saw_pinned_ok'` 3 -> >=4 in host/verifygate/toolchain_pin_gate_test.go.",
+        "AC1, AC7a, AC7b re-run green.",
+        "Message text frozen to the Decision sketch: `%s: executable pinned-OK guard-line count=%d, want exactly 1 - the floor must test ABSENCE of the OK flag (`-eq 0`); a flipped or duplicated guard is a different instrument`. This one is deliberately t.Errorf - it is not an instrument floor."
+      ],
+      "mutation_arms": [
+        "M6 NEW TEETH: `sed -i '' '140s/-eq 0/-ne 0/'` run.sh. LANDED: `grep -c 'saw_pinned_ok\" -eq 0'` 1->0 AND `grep -c 'saw_pinned_ok\" -ne 0'` 0->1 AND `grep -c 'saw_pinned_ok'` 3->3 (the count that must NOT move - that immobility IS the defect). BASE (planner-measured, third independent agreeing run after the doc's P14 and P23): rc=0 `--- PASS`, 0 messages. REQUIRED: rc!=0 with `guard-line count=0, want exactly 1`.",
+        "AC6(b) MUST-STAY-GREEN control: `printf '%s\\n' '# guard direction note: [ \"$saw_pinned_ok\" -eq 0 ] is the floor' >> run.sh`. LANDED: `grep -c 'saw_pinned_ok'` 3->4. BASE (planner-measured): rc=0, 0 messages. REQUIRED: rc=0 still."
+      ],
+      "restore_recipe": "cp /tmp/p45-backup/run.sh design_docs/verification/w-race-gate-blindspot/run.sh ; sha256 compare ; re-assert exec bit.",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "M3 reads Test B's `lines` variable, which M1 and M2 both leave in place - the only ordering dependency in the sprint. Recommended order M1 -> M2 -> M3."
+    }
+  ],
+  "milestone_ac_mapping": {
+    "M1": ["AC1", "AC2", "AC3", "AC4", "AC7a", "AC7b", "AC7c", "AC7d"],
+    "M2": ["AC5", "AC5'", "AC1", "AC7a", "AC7b"],
+    "M3": ["AC6(a)", "AC6(b)", "AC1", "AC7a", "AC7b"]
+  },
+  "mutation_reading_rule": {
+    "must_flip_polarity_because_of_this_sprint": ["M1 green->red", "M2 green->red", "M3 2-misattributing-messages->1-attributed", "M5 green->red", "M6 green->red", "M7 3-messages->1", "M8' 5-messages->1"],
+    "must_NOT_change_behaviour": ["M4 (red at base, red after)", "M8 (red-with-1-message at base, unchanged - D2)", "M9(b) (red-with-2-messages at base, unchanged - it is the control)", "AC6(b) (green at base, green after)"],
+    "statement": "If any of the seven flip-arms does not flip, the milestone did not land - do not report a pass. If any of the four no-change arms changes behaviour, that is a regression, not a win. `the mutation did not red` and `the mutation never ran` are the same exit code, which is why every arm above carries a landed-proof that MOVED."
+  },
+  "risks": [
+    {"risk": "Executor routes moduleGoFloor through the strict validator", "impact": "reds Test B and TestReproModuleFloorStaysBelowKnownBadToolchains on a correct tree", "mitigation": "D8(b), with the measured counter-example repro/go.mod `go 1.22` / IsValid false. Gate G4 catches it immediately."},
+    {"risk": "Executor puts validation inside keyedValues instead of at the call site", "impact": "a job-enumeration mismatch reports a pin-validity message - the misattribution this item removes, reintroduced one layer down", "mitigation": "D8(a). NOT caught by any base gate - this is a review item for the evaluator."},
+    {"risk": "Executor writes the Fatalf text from the doc's Thesis prose", "impact": "re-introduces the round-1 over-claim quorum round 2 R1 removed; the quorum record stops matching the code", "mitigation": "D5 freezes both strings; AC7d greps for the two banned phrases with same-call live-grep controls."},
+    {"risk": "Executor seds by line number in the deliverable file", "impact": "edits the wrong line after M1's ~35-line insertion and reports success", "mitigation": "D6: all deliverable-file edits content-anchored; positional seds only on the two never-edited venues, each with a content assertion."},
+    {"risk": "`git checkout --` used to restore a mutation", "impact": "deletes uncommitted milestone work with no undo", "mitigation": "environment.notes; restores are cp from /tmp/p45-backup with sha256 proof."},
+    {"risk": "Whole-package gate run without AILANG_BIN", "impact": "17-failure phantom RED, and the plausible 'fix' is the false-green class this mission kills", "mitigation": "D1; every invocation carries the export and M1's gate block greps `AILANG_BIN is unset` asserting 0."},
+    {"risk": "M8 reported as evidence M2 landed", "impact": "a milestone certified by an arm that cannot detect its absence", "mitigation": "D2; M8 retyped FLOOR-EXISTENCE ONLY and M8' carries the measured 5->1 delta."}
+  ],
+  "non_goals": [
+    "ci.yml, run.sh, go.mod, scripts/verify_go.sh, scripts/verify_ail.sh, host/store/toolchain_canary_test.go and tools/launchd/* all ship BYTE-UNTOUCHED.",
+    "Zero .ail files touched; ./scripts/verify_ail.sh must stay at `11 required identities verified, 40 named tests pass`; ./scripts/build_world_package.sh must not run.",
+    "Structural YAML extraction / actionlint adoption (design doc Option B), availability probing of a valid-shaped pin, strict validation of verify_go.sh's GOTOOLCHAIN surface, and generalizing the direction pin to run.sh's other floors are all Deferred Scope and stay out.",
+    "Do not widen any acceptance gate to `go test ./...`."
+  ],
+  "open_questions": []
+}
