@@ -1,0 +1,297 @@
+{
+  "sprint_id": "w-ci-recovery-lever-absent",
+  "queue_item": 47,
+  "title": "A dropped webhook to dev is permanently unverifiable because this repo declares no API-driven trigger. Add `workflow_dispatch:` to ci.yml's on: block (ONE line) and a static gate host/verifygate/dispatch_lever_gate_test.go (TestEveryWorkflowDeclaresDispatchLever + onBlockTriggerKeys) that pins EVERY enumerated workflow file to the lever. ONE file modified, ONE created, zero .ail touched.",
+  "status": "planned - awaiting sprint-executor",
+  "created": "2026-08-28",
+  "planner": "mission-control iteration 136, claude-opus-5 sprint-planner",
+  "design_doc": "design_docs/planned/w-ci-recovery-lever-absent.md",
+  "sprint_plan": "design_docs/planned/w-ci-recovery-lever-absent-sprint-plan.md",
+  "base_commit": "24e0ffc",
+  "base_commit_note": "24e0ffc = 3a98c79 + the row-47 design-doc commit. The design doc's VERIFIED-BY-ME rows were measured at 3a98c79; the planner re-derived every load-bearing one at 24e0ffc and they agree, except P12's whole-repo `workflow_dispatch` count which drifted 15 -> 64 because the design doc's own commit added the occurrences. P12's load-bearing half (CODE surfaces -> 0) is unchanged.",
+  "branch": "design/w-ci-recovery-lever-absent - the executor performs NO git write operations; the controller commits",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter136 - work ONLY there, never the main checkout",
+  "github_issues": [],
+  "risk_level": "low",
+  "id_disambiguation": "THE DESIGN DOC USES M1/M2 FOR ITS TWO MILESTONES AND M1-M9 FOR ITS NINE MUTATIONS. In this JSON the milestones are MS1/MS2 and the mutation arms keep the doc's M1-M9. MS1 = doc Milestone M1 (the lever line). MS2 = doc Milestone M2 (the gate).",
+  "velocity": {
+    "target_days": 0.1,
+    "estimated_changed_lines": 114,
+    "estimated_days": 0.1,
+    "note": "+1 line in .github/workflows/ci.yml and +113 lines in ONE new Go test file, matching the design doc's own ~0.10 day estimate. DO NOT INFLATE SCOPE. The cost is in the mutation drill (11 executed arms), not in the code."
+  },
+  "environment": {
+    "AILANG_BIN": "/tmp/ailang-v0300/ailang",
+    "ailang_version": "AILANG v0.30.0 (commit e37b370)",
+    "go_version": "go1.26.6 darwin/arm64",
+    "gh_version": "2.92.0",
+    "shell": "zsh",
+    "PATH": "every shell invocation must begin `export PATH=/opt/homebrew/bin:$PATH` or go/gh fail rc=127 and you will misread that as a broken toolchain",
+    "notes": [
+      "D1, THE SHARPEST ENVIRONMENT FACT (third consecutive iteration a design doc has shipped it): `go test ./host/verifygate/ -count=1` is rc=1 AT BASE with 17 `--- FAIL` lines, every message reading `AILANG_BIN is unset`. With AILANG_BIN=/tmp/ailang-v0300/ailang it is rc=0, 0 FAIL, ok 29.0s. Planner re-derived BOTH arms first-party at 24e0ffc. A red whose text says `AILANG_BIN is unset` is NOT your diff - do not fix it, and above all do not make those tests skip; they t.Fatalf on purpose.",
+      "D13, THE COMPLEMENT THE DOC OVERSTATES: the SCOPED run `go test ./host/verifygate/ -run TestEveryWorkflowDeclaresDispatchLever -count=1 -v` needs NO AILANG_BIN. Planner-measured deterministic unprefixed across all 11 probe arms (rc=0 clean, rc=1 with the expected message on every red arm). The new gate is a pure text scan: no subprocess, no socket, no pinned binary. RUN SCOPED ARMS UNPREFIXED so lane-independence stays visible; prefix only whole-package runs.",
+      "ZSH HAS NO $PIPESTATUS (bash-only, silently EMPTY). Capture rc without a pipe: `cmd > /tmp/out 2>&1; rc=$?`. zsh's own array is $pipestatus[1], lowercase and 1-indexed.",
+      "COUNT OCCURRENCES WITH `grep -o <needle> | wc -l`, NEVER `grep -c` (which counts LINES). M9 emits two messages; a line-count would collapse them if they ever shared a line.",
+      "Never `|| echo 0` inside $(...): grep -c exits 1 on a legitimate zero and you get the two-line string \"0\\n0\".",
+      "`git status --porcelain` is NEVER 0 during this sprint - the deliverables are uncommitted BY CONSTRUCTION and .snap/ is untracked (measured: `git check-ignore -v .snap/M1/x` rc=1, i.e. NOT ignored; same-call control `.ailang/state/x` rc=0 matching `.gitignore:3:**/.ailang/` - the instrument fires). Integrity of the mutation venues is checked by sha256 and by the workflows directory listing, NEVER by porcelain.",
+      "`.snap/` is INERT to every gate, planner-measured with a full snapshot planted in the probe: go vet ./... rc=0, go build ./... rc=0, gofmt -l . EMPTY, `go list ./... | grep -c snap` = 0. The Go tool and gofmt both skip dot-prefixed directories.",
+      "RESTORES USE `cp` FROM A /tmp BACKUP, NEVER `git checkout --`. host/verifygate/dispatch_lever_gate_test.go is UNTRACKED - `git checkout --` on it would delete the deliverable with no undo.",
+      "Every `ailang` invocation prints `Observatory: NNNMB (warn threshold: 200MB)` on stderr with rc=0. NOT a regression.",
+      "`./scripts/verify_go.sh` legitimately emits exactly 2 `WARNING: DATA RACE` lines from its OWN known-positive control. NOT a finding.",
+      "COST CENTRES, planner-measured: whole host/verifygate package 29.0s at base / 45.8s in the probe WITH AILANG_BIN; scoped run ~0.15-0.4s; `go build ./...` ~1s; `go vet ./host/verifygate/` <1s. Budget the full 11-arm drill at ~12 min wall clock.",
+      "This sprint touches ZERO .ail files. Do NOT widen any acceptance gate to `go test ./...`. The narrowest gate that can fail for this diff is `go test ./host/verifygate/ -count=1`."
+    ]
+  },
+  "base_state_verified": {
+    "commit": "24e0ffc",
+    "porcelain_at_planning_entry_and_exit": 0,
+    "sha256": {
+      ".github/workflows/ci.yml": "9c16e64ca28c58f889a8be122a1b2f48c7d240f2a559fba6faf312ec5166239c",
+      "host/verifygate/toolchain_pin_gate_test.go": "fc8efffc641b19e93897d9ddd925cb5faea6b82d239f3fbf96e323c3384f3614",
+      "host/verifygate/ail_binary_gate_test.go": "76b88ee109a763ce8085266fe30e9df5fc1021a18163b31f172ba7d752353dab"
+    },
+    "gates_measured_green_at_base": [
+      "G1 `gofmt -l .` -> rc=0, 0 bytes",
+      "G2 `go vet ./...` -> rc=0",
+      "G3 `go build ./...` -> rc=0",
+      "G4 `AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1` -> rc=0, 0 `--- FAIL`, ok 29.034s (WITHOUT the prefix: rc=1, 17 FAIL, 17 `AILANG_BIN is unset` - D1)",
+      "G5 `go test ./host/verifygate/ -run '^TestNoSuchGateZZZ$' -count=1 -v` -> rc=0, `[no tests to run]`, 0 `=== RUN` (AC2's nonsense control, measured at base)",
+      "G6 `git check-ignore -v` on BOTH planner deliverable paths -> rc=1 (NOT ignored), with same-call control `git check-ignore -v .ailang/state/x` -> rc=0 matching `.gitignore:3:**/.ailang/`. The instrument fires.",
+      "G7 AC1 base: `grep -cE '^  workflow_dispatch:$' .github/workflows/ci.yml` -> 0 (rc=1), same-call controls `grep -c 'pull_request'` -> 1 and `grep -cE '^  push:'` -> 1. RED AT BASE IS THE POINT - this is the finding the sprint reverses.",
+      "G8 no gate anywhere in host/ enumerates design_docs/planned/*, so the planner's two deliverable docs are inert (grep -rn 'design_docs' --include='*.go' host/ read in full: only sketches/, verification/ and coding-standards.md are referenced)."
+    ],
+    "no_gate_in_this_plan_is_red_at_base": true,
+    "prototype_note": "The planner built a FULL WORKING PROTOTYPE at /tmp/p47-probe (rsync -a --exclude='.git' of this worktree, so findRepoRoot()'s runtime.Caller-derived repoRoot resolves to the probe). The design doc's code sketch was extracted BYTE-VERBATIM (`sed -n '174,286p'`) and measured: gofmt-clean (gofmt -d empty), go vet rc=0, scoped run rc=0 with 1 `=== RUN` and 1 `--- PASS`, whole prefixed package rc=0 / 0 FAIL / ok 45.8s. EVERY mutation arm below was APPLIED, PROVEN LANDED and RUN there. No expected red set in this sprint was predicted. The real worktree was never mutated."
+  },
+  "executor_constraints": {
+    "git_writes": "FORBIDDEN. No add, commit, stash, checkout, restore, reset, branch, worktree, git-mv. Git READS (show, status, diff, log, check-ignore, ls-files) are required and allowed. The controller builds the commits.",
+    "snapshots": "After MS1 copy the cumulative changed set to .snap/MS1/; after MS2 to .snap/MS2/ (cumulative - MS2's snapshot contains BOTH files). Measured inert to every gate.",
+    "files_touched": [
+      ".github/workflows/ci.yml (MODIFY, +1 line, MS1)",
+      "host/verifygate/dispatch_lever_gate_test.go (CREATE, ~113 lines, MS2)"
+    ],
+    "files_forbidden": [
+      "host/verifygate/toolchain_pin_gate_test.go - SIBLING. Its `[ci.yml]`-exact list (the `if` at :206, the t.Errorf at :207) is DECLARED RESIDUAL 4, a future row's policy decision. When mutations M4/M5 red it, that is BY CONSTRUCTION. DO NOT 'fix' it.",
+      "host/verifygate/ail_binary_gate_test.go",
+      "scripts/verify_go.sh, scripts/verify_ail.sh",
+      "go.mod, go.sum",
+      "tools/launchd/* (frozen core, FLEET-owned)",
+      "any .ail file",
+      "any workflow file other than ci.yml (.github/workflows/deploy.yml exists ONLY inside mutation arms M4/M5 and is DELETED after)"
+    ],
+    "message_text_is_FROZEN": "Ship the design doc's code sketch (doc lines 174-286) BYTE-VERBATIM, including the full doc comment on TestEveryWorkflowDeclaresDispatchLever (the branch-protection / static-scan / enumerator paragraph IS the declared residual - do not trim it). Do not rename onBlockTriggerKeys, do not 'improve' the parser, do not re-word a message. The whole drill is keyed on these exact strings: \"has no top-level `on:` trigger block\"; \"top-level `on:` blocks, want exactly 1\"; \"`workflow_dispatch:` has scalar value %q; want an empty key or a mapping\"; \"lack workflow_dispatch — a dropped push to dev is permanently unverifiable\"; \"instrument failure: no workflow files enumerated under .github/workflows/\". A re-wording silently voids every mutation arm.",
+    "assertion_discipline": "Assert SUBSTRINGS, never whole messages and never absolute paths. onBlockTriggerKeys is called with the full Glob match, so its three messages print a rig-specific absolute path (e.g. /tmp/p47-probe/.github/workflows/ci.yml) while the loop's final t.Errorf prints filepath.Base(m) = ci.yml. An exact-message assertion will not reproduce in CI.",
+    "authoritative": "THE DESIGN DOC WINS over this plan - EXCEPT on the nine findings D1, D2, D3, D4, D5, D8, D9, D10, D13 in sprint plan section 2, where the planner's first-party measurement showed the doc's literal text would red a correct landing (D1, D8) or pass vacuously / mis-scope a result (D2, D3, D4, D5, D9, D10, D13). On those nine, this plan wins."
+  },
+  "planner_findings": [
+    {
+      "id": "D0",
+      "severity": "INFO",
+      "claim": "THE HEADLINE: the design doc's code sketch is shippable BYTE-VERBATIM. Zero adaptation needed.",
+      "measurement": "Extracted doc lines 174-286 into host/verifygate/dispatch_lever_gate_test.go with zero edits: `gofmt -l host/verifygate/` EMPTY (gofmt -d also empty), `go vet ./host/verifygate/` rc=0, scoped run rc=0 with one `=== RUN` and one `--- PASS`, whole prefixed package rc=0 / 0 FAIL. No import changes (P15 holds).",
+      "why_it_matters": "It removes the single largest source of divergence between a design doc and its landing. Every AC and mutation arm is keyed on the sketch's exact message strings.",
+      "resolution": "Instruction to the executor: ship the sketch verbatim. Do not improve it."
+    },
+    {
+      "id": "D1",
+      "severity": "HIGH",
+      "claim": "Every whole-package invocation must carry AILANG_BIN or it is red at base and vacuous.",
+      "measurement": "At 24e0ffc, tree clean: `go test ./host/verifygate/ -count=1` rc=1, 17 `--- FAIL`, 17 `AILANG_BIN is unset`. With AILANG_BIN=/tmp/ailang-v0300/ailang: rc=0, 0 FAIL, ok 29.034s. Arms differ, so the red is the environment.",
+      "why_it_matters": "An executor running an unprefixed whole-package command reports a 17-failure RED against a correct landing, and the plausible next move - making those tests skip - is the exact false-green class this mission line exists to close. Third consecutive iteration a design doc has shipped this error.",
+      "resolution": "Prefix on every whole-package run; AC6 additionally greps `AILANG_BIN is unset` and asserts 0 so a forgotten export is self-diagnosing."
+    },
+    {
+      "id": "D2",
+      "severity": "MEDIUM",
+      "claim": "Three sites in the doc still say the mutation set is M1-M6. It is M1-M9.",
+      "measurement": "Doc line 31 (Thesis): 'the removal-shaped and addition-shaped mutations, M1-M6'. Line 305 (Milestones): 'rehearse mutations M1-M6 in probe worktrees'. Line 326 (AC2): 'AC2's teeth are M1-M6.' The table at lines 366-377 holds NINE arms and the quorum record at line 489 says 'landed as M7, M8, M9'.",
+      "why_it_matters": "An executor reading the Milestones section rehearses six of nine arms and the three constructs the carve-out shipped (column-0 anchoring, duplicate detection, scalar-value rejection) go unexercised.",
+      "resolution": "The rehearsal set is M1-M9 plus M6b and M6+M6b = 11 executed arms. The three M1-M6 strings are stale range text, not a scope decision."
+    },
+    {
+      "id": "D3",
+      "severity": "MEDIUM",
+      "claim": "The mutation preamble misnames the test-file arm twice in one sentence.",
+      "measurement": "Doc lines 363-364: 'The two test-file arms (M5) use `go vet ./host/verifygate/` as their typecheck'. M5 creates .github/workflows/deploy.yml - a YAML arm. The ONLY test-file arm is M6, and there is one of it. Measured on M6: `go vet ./host/verifygate/` rc=0 AND `go build ./...` rc=0 (the mutant compiles).",
+      "why_it_matters": "The rule it states is right and load-bearing (P8: go build does not compile _test.go); its subject is wrong, so the typecheck could be attached to the wrong arm.",
+      "resolution": "The go vet typecheck attaches to M6 and M6+M6b."
+    },
+    {
+      "id": "D4",
+      "severity": "HIGH",
+      "claim": "MEASURED: the doc's multi-owner list is INCOMPLETE. M8 is multi-owner as literally described ('a second column-0 on: LATER IN THE FILE').",
+      "measurement": "M8 appended at END OF FILE (after `jobs:`): `-skip TestEveryWorkflowDeclaresDispatchLever` inverse rc=1 with 1 FAIL - TestGoToolchainPinsAgreeAndMatchJobList at toolchain_pin_gate_test.go:138 'ci.yml: enumerated jobs=[ailang-verify go-verify push], want [ailang-verify go-verify]'. M8 inserted IMMEDIATELY BEFORE `jobs:`: -skip inverse rc=0, 0 FAIL - SINGLE-OWNER. Mechanism: the duplicated block's `  push:` line matches the sibling's job regexp `^  ([a-z0-9-]+):$`, and the sibling counts job lines only after it has seen `jobs:`.",
+      "why_it_matters": "The doc's P13 finding (the trigger line's underscore excludes it from the job regexp) is true and re-derived, but it covers `workflow_dispatch:`, not the `push:` that M8's duplicated block drags along. An executor planting M8 at end-of-file and reading rc would attribute the sibling's red to its own gate.",
+      "resolution": "M8's canonical placement is BEFORE `jobs:` (single-owner, -skip rc=0 inverse available). The after-`jobs:` variant is recorded with its measured two-member set."
+    },
+    {
+      "id": "D5",
+      "severity": "MEDIUM",
+      "claim": "MEASURED: the shipped sketch emits TWO messages on M9, contradicting the Decision paragraph's 'it never cascades'.",
+      "measurement": "M9 (`  workflow_dispatch: garbage`), scoped: dispatch_lever_gate_test.go:101 '<abs>/ci.yml: `workflow_dispatch:` has scalar value \"garbage\"; want an empty key or a mapping' AND :103 'ci.yml: on-block triggers=[push pull_request] lack workflow_dispatch ...'. Structural: the scalar branch `continue`s without appending the key, so slices.Contains is then false and the outer t.Errorf fires too.",
+      "why_it_matters": "The doc's own M9 row does not require a single message, so code and mutation table agree; it is doc line 291's 'EXACTLY ONE attributed message per defect ... it never cascades' that overreaches. An executor holding the code to the prose would 'fix' a correct implementation.",
+      "resolution": "Ship the code unchanged (the doc wins, and its M9 row is satisfied). AC9 asserts message count = 2 so the second message is a MEASURED expectation, not a surprise."
+    },
+    {
+      "id": "D6",
+      "severity": "LOW",
+      "claim": "The cited line `toolchain_pin_gate_test.go:206` never appears in any output; the message is emitted at :207.",
+      "measurement": ":206 is `if !slices.Equal(workflowFiles, []string{\"ci.yml\"}) {`; :207 is the t.Errorf. Measured under M4: 'toolchain_pin_gate_test.go:207: workflow files=[ci.yml deploy.yml], want exactly [ci.yml]; a second workflow may carry unscanned toolchain pins'.",
+      "why_it_matters": "An executor grepping the output for ':206' finds nothing and may conclude the sibling did not red.",
+      "resolution": "Assert on the message TEXT (`want exactly [ci.yml]`), never on a line number."
+    },
+    {
+      "id": "D7",
+      "severity": "MEDIUM",
+      "claim": "The helper's three messages carry an ABSOLUTE path; the loop's message carries the base name. An exact-message assertion will not reproduce.",
+      "measurement": "onBlockTriggerKeys(t, m, src) is called with `m`, the full Glob match, so its Fatalf/Errorf messages printed '/tmp/p47-probe/.github/workflows/ci.yml' in every probe arm, while the loop's final t.Errorf printed 'ci.yml' via filepath.Base(m). Both observed in the same output for M9.",
+      "why_it_matters": "An AC that pins a whole message text embeds a rig-specific path and reds in CI on a correct landing.",
+      "resolution": "Every AC asserts substrings only (ci.yml, deploy.yml, 'has scalar value', 'no top-level', 'instrument failure: no workflow files enumerated')."
+    },
+    {
+      "id": "D8",
+      "severity": "HIGH",
+      "claim": "AC6's `git status --porcelain -> 0 lines` clause is FALSE BY CONSTRUCTION and would report a false red on a correct landing.",
+      "measurement": "The deliverables are uncommitted (the executor performs no git writes) and the executor's snapshots land in .snap/M<k>/, which is NOT gitignored: `git check-ignore -v .snap/M1/x` rc=1, same-call control `git check-ignore -v .ailang/state/x` rc=0 matching `.gitignore:3:**/.ailang/`. Separately measured: .snap/ is inert to every gate - with a full snapshot planted, `go vet ./...` rc=0, `go build ./...` rc=0, `gofmt -l .` EMPTY, `go list ./... | grep -c snap` = 0.",
+      "why_it_matters": "Porcelain measures the sprint's own by-construction state, not the change. It cannot detect an unrestored probe either, because it is non-zero in every world.",
+      "resolution": "Replaced by VENUE INTEGRITY: sha256 of ci.yml and toolchain_pin_gate_test.go against base_state_verified.sha256, `ls -1 .github/workflows/` = exactly ci.yml, `test -e .github/workflows/deploy.yml; echo $?` = 1, `test -d .github/workflows; echo $?` = 0."
+    },
+    {
+      "id": "D9",
+      "severity": "LOW",
+      "claim": "AC5's landed-proof produces its 0 from an ERROR, not from an empty directory.",
+      "measurement": "After `mv .github/workflows /tmp/wf_backup_$$` the directory does not exist, so `ls .github/workflows/ | wc -l` counts zero lines because ls errored to stderr. The same 0 would appear for a typo'd path.",
+      "why_it_matters": "A landed-proof that cannot distinguish 'the directory is empty' from 'I mistyped the path' is not a proof.",
+      "resolution": "`test -d .github/workflows; echo $?` 0->1 paired with `ls -1 .github/workflows 2>/dev/null | wc -l` 1->0."
+    },
+    {
+      "id": "D10",
+      "severity": "MEDIUM",
+      "claim": "M6 has NO OBSERVABLE on its own, and the doc's 'M6b' is referenced but is not a table row. The doc is right that M6 needs the combination; the numbers were never measured.",
+      "measurement": "M6 alone (floor deleted, workflows dir intact): scoped rc=0 `--- PASS`, whole prefixed package rc=0 with 0 FAIL - NO gate anywhere in the repo moves. M6b alone (floor intact, dir moved away) = AC5's arm: scoped rc=1 with the floor message at :89, whole package rc=1 with FOUR FAILs. M6+M6b: scoped rc=0 `--- PASS` (the proof the floor is load-bearing), whole package rc=1 with THREE FAILs, NONE of them mine.",
+      "why_it_matters": "Reading M6's verdict on the whole-package rc gives the wrong answer in both directions: rc=0 for M6 alone (looks like the floor is fine) and rc=1 for M6+M6b caused entirely by siblings (looks like the floor still fires).",
+      "resolution": "M6b promoted to an explicit arm. M6's verdict is read on the SCOPED run only. Both enumerated sibling sets are recorded so the executor can attribute every member."
+    },
+    {
+      "id": "D11",
+      "severity": "LOW",
+      "claim": "AC3's 'names ci.yml and workflow_dispatch exactly once' is measured-correct for M1 but is NOT a template.",
+      "measurement": "Occurrences in the scoped output, `grep -o ... | wc -l`: M1 ci.yml=1 workflow_dispatch=1 messages=1; M2 ci.yml=1 workflow_dispatch=2 (because `workflow_dispatcht` CONTAINS `workflow_dispatch`) messages=1; M3 1/1/1; M7 ci.yml=1 workflow_dispatch=0 (the message never names the trigger) messages=1; M9 ci.yml=2 workflow_dispatch=2 messages=2.",
+      "why_it_matters": "Reusing AC3's phrasing on M2 would assert 1 where the truth is 2; on M7 it would assert 1 where the truth is 0. Either is a dead or false gate.",
+      "resolution": "Each AC carries its own measured counts, and all counting is `grep -o | wc -l` (occurrences), never `grep -c` (lines)."
+    },
+    {
+      "id": "D12",
+      "severity": "INFO",
+      "claim": "One premise number has drifted since the doc was written; nothing else in the Premises table is false.",
+      "measurement": "P12 said 'whole repo -> 15'; re-measured at 24e0ffc it is 64 - the delta is the design doc's own commit. The load-bearing half is unchanged and re-derived: CODE surfaces (--include='*.go' --include='*.sh' --include='*.yml' --include='*.yaml') -> 0. Re-derived and HOLDING: P1, P2, P3, P4, P5, P7, P9, P13, P14, P15.",
+      "why_it_matters": "A drifted count in a premise row invites doubt about the rest. It is the only one.",
+      "resolution": "Recorded so the evaluator need not re-derive it."
+    },
+    {
+      "id": "D13",
+      "severity": "LOW",
+      "claim": "The doc's blanket 'Any command touching the gate package carries the AILANG_BIN prefix' is over-broad for the scoped arms.",
+      "measurement": "The scoped run was deterministic UNPREFIXED across all 11 probe arms. The new gate performs no subprocess call, no socket bind and no pinned-binary lookup.",
+      "why_it_matters": "Carrying the prefix everywhere is harmless but hides that the new gate is lane-independent - and it is exactly that independence that makes it sandbox-safe under codex workspace-write.",
+      "resolution": "Scoped arms run unprefixed and are stated as sandbox-safe; whole-package runs keep the prefix."
+    },
+    {
+      "id": "D14",
+      "severity": "INFO",
+      "claim": "COVERAGE GAP: the doc ships SIX acceptance criteria against NINE mutations. Every construct the quorum carve-out added (M7 column-0 anchoring, M8 duplicate detection, M9 scalar-value rejection) and the two trigger-parser arms (M2, M3) have no AC.",
+      "measurement": "AC3 names M1, AC4 names M4, AC5 names M6. No AC names M2, M3, M7, M8 or M9. Cross-checked in a per-property table: the code sketch, the ACs and M1-M9 describe the SAME parser - exact `l == \"on:\"` anchoring, duplicate-`on:` detection and scalar-value rejection all appear in the sketch and in the mutation table; they are simply absent from the AC list.",
+      "why_it_matters": "The reviewers' three carve-out fixes would ship with no acceptance criterion asserting they work - the precise failure mode iteration 135's retro named ('a gate built from a specific defect proven against a sample of one').",
+      "resolution": "AC3b, AC7, AC8 and AC9 added, each base-measured and each with its measured -skip rc=0 single-owner inverse. This adds ZERO code - it is a coverage repair inside the doc's declared scope."
+    }
+  ],
+  "features": [
+    {
+      "id": "MS1",
+      "name": "The lever: workflow_dispatch: in ci.yml's on: block",
+      "description": "Insert `  workflow_dispatch:` at trigger depth (lead 2), after `  pull_request:` at ci.yml:6, so the on: block reads `on:` / `  push:` / `    branches: [dev]` / `  pull_request:` / `  workflow_dispatch:`. The bare form - NO `inputs:` (Option B). Nothing else in ci.yml changes. This is doc Milestone M1.",
+      "estimated_changed_lines": 1,
+      "dependencies": [],
+      "files": [
+        ".github/workflows/ci.yml"
+      ],
+      "acceptance_criteria": [
+        "AC1: `grep -cE '^  workflow_dispatch:$' .github/workflows/ci.yml` -> 1, with same-call controls `grep -c 'pull_request'` -> 1 and `grep -cE '^  push:'` -> 1. BASE MEASURED: 0 (rc=1), controls 1 and 1. Red at base is the finding being reversed, not a broken criterion.",
+        "The lever alone reds nothing: `AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1` -> rc=0, 0 `--- FAIL`. PLANNER-MEASURED with the lever landed and no new test present. This confirms the doc's Decision claim that the addition is purely additive and P13's claim that the trigger line cannot corrupt the sibling's job set.",
+        "Hygiene unchanged: `gofmt -l .` empty, `go vet ./...` rc=0, `go build ./...` rc=0.",
+        "VENUE INTEGRITY (replaces porcelain, D8): `ls -1 .github/workflows/` = exactly `ci.yml`; `test -e .github/workflows/deploy.yml; echo $?` = 1; `shasum -a 256 host/verifygate/toolchain_pin_gate_test.go` still fc8efffc641b19e93897d9ddd925cb5faea6b82d239f3fbf96e323c3384f3614."
+      ],
+      "mutation_arms": [],
+      "restore_recipe": "Before ANY mutation: `mkdir -p /tmp/p47-backup && cp .github/workflows/ci.yml /tmp/p47-backup/ci.yml`. Restore with `cp /tmp/p47-backup/ci.yml .github/workflows/ci.yml`. NEVER `git checkout --`.",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "Snapshot to .snap/MS1/ when green. One line. Do not touch the env: block, the jobs, or anything else in ci.yml."
+    },
+    {
+      "id": "MS2",
+      "name": "The gate: TestEveryWorkflowDeclaresDispatchLever + onBlockTriggerKeys",
+      "description": "Create host/verifygate/dispatch_lever_gate_test.go from the design doc's code sketch (doc lines 174-286) BYTE-VERBATIM: `package verifygate`, the five-import block (os, path/filepath, slices, strings, testing), the onBlockTriggerKeys helper (column-0 `l == \"on:\"` anchoring, duplicate-on: floor, trigger-depth scan, comment skip, scalar-value rejection) and TestEveryWorkflowDeclaresDispatchLever (runtime filepath.Glob enumeration, anti-vacuity floor, known-positive `on:` control, one attributed message per file). Ship the FULL doc comment - the branch-protection / static-scan / enumerator paragraph IS declared residual 1/2/3. This is doc Milestone M2.",
+      "estimated_changed_lines": 113,
+      "dependencies": [
+        "MS1"
+      ],
+      "files": [
+        "host/verifygate/dispatch_lever_gate_test.go"
+      ],
+      "acceptance_criteria": [
+        "AC2: the file exists and is gofmt-clean (`gofmt -l host/verifygate/` empty). `go test ./host/verifygate/ -run TestEveryWorkflowDeclaresDispatchLever -count=1 -v` (UNPREFIXED, D13) -> rc=0 with exactly one `=== RUN` and one `--- PASS`. Paired nonsense control `go test ./host/verifygate/ -run '^TestNoSuchGateZZZ$' -count=1 -v` -> rc=0, `[no tests to run]`, 0 `=== RUN`. BASE MEASURED for the control: identical (it is a control, not teeth). AC2's teeth are M1-M9 plus M6b and M6+M6b.",
+        "AC3 (arm M1): scoped -> rc=1; occurrences (grep -o | wc -l) `ci.yml` = 1, `workflow_dispatch` = 1, message count = 1. SINGLE-OWNER PROOF: `AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1 -skip TestEveryWorkflowDeclaresDispatchLever` -> rc=0, 0 FAIL (planner-measured).",
+        "AC3b (arms M2 and M3, ADDED - the doc has no AC for either): both scoped rc=1 with the `lack workflow_dispatch` message; M2's triggers list reads `[push pull_request workflow_dispatcht]` and its output contains `workflow_dispatch` TWICE (the typo contains the needle); M3's reads `[push pull_request]`. -skip inverse rc=0 / 0 FAIL for both.",
+        "AC4 (arm M4): scoped rc=1 naming `deploy.yml`. ENUMERATED whole-package red set, EXACTLY 2 MEMBERS, both explained: (1) TestEveryWorkflowDeclaresDispatchLever - `deploy.yml: on-block triggers=[push] lack workflow_dispatch ...` - MINE, the single-owned assertion; (2) TestGoToolchainPinsAgreeAndMatchJobList - `toolchain_pin_gate_test.go:207: workflow files=[ci.yml deploy.yml], want exactly [ci.yml]` - MULTI-OWNER BY CONSTRUCTION (Conflict Surface / residual 4), the sibling's own policy, NOT a defect to fix. NO -skip inverse exists (it is rc=1). Assert on MY message text, never on bare rc.",
+        "AC5 (arm M6b): landed-proof `test -d .github/workflows; echo $?` 0->1 AND `ls -1 .github/workflows 2>/dev/null | wc -l` 1->0 (D9). Scoped rc=1 containing `instrument failure: no workflow files enumerated`. ENUMERATED whole-package red set, EXACTLY 4 MEMBERS: mine at dispatch_lever_gate_test.go:89, plus TestZ3PinDeclaredOnceAndInstalledInBothJobs (ail_binary_gate_test.go:672), TestGoToolchainPinsAgreeAndMatchJobList (toolchain_pin_gate_test.go:110) and TestMiscompileInstrumentStepIsGatedInCI (toolchain_pin_gate_test.go:404) - all three reading `open <abs>/.github/workflows/ci.yml: no such file or directory`, i.e. the siblings' hardcoded ci.yml read. Assert ONLY on my floor message.",
+        "AC6: `gofmt -l host/verifygate/` empty; `go vet ./host/verifygate/` rc=0 (also the typecheck for the M6 test-file mutation, P8/D3); `go build ./...` rc=0; `AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1` -> rc=0, 0 `--- FAIL`, and `grep -c 'AILANG_BIN is unset'` on that output = 0. BASE MEASURED: all four identical at 24e0ffc (prefixed package ok 29.0s). The doc's `git status --porcelain -> 0` clause is REPLACED by venue integrity (D8).",
+        "AC7 (arm M7, ADDED - nothing in the doc's AC list covers the column-0 anchoring the carve-out shipped): scoped rc=1 with EXACTLY ONE message containing `has no top-level` and `trigger block`; occurrences of `workflow_dispatch` in the output = 0 (the message never names the trigger - D11). -skip inverse rc=0 / 0 FAIL.",
+        "AC8 (arm M8 inserted IMMEDIATELY BEFORE `jobs:`, ADDED): scoped rc=1 with EXACTLY ONE message containing `has 2 top-level` and `blocks, want exactly 1`. -skip inverse rc=0 / 0 FAIL - SINGLE-OWNER AT THIS PLACEMENT ONLY (D4).",
+        "AC9 (arm M9, ADDED): scoped rc=1 with EXACTLY TWO messages (D5) - one containing `has scalar value \"garbage\"`, one containing `lack workflow_dispatch`. -skip inverse rc=0 / 0 FAIL.",
+        "VENUE INTEGRITY after every rehearsal: `shasum -a 256 .github/workflows/ci.yml` equals the post-MS1 value (base 9c16e64c...6239c differing by exactly the one added line); `shasum -a 256 host/verifygate/toolchain_pin_gate_test.go` = fc8efffc...3614 unchanged; `ls -1 .github/workflows/` = exactly ci.yml; `test -e .github/workflows/deploy.yml; echo $?` = 1."
+      ],
+      "mutation_arms": [
+        "M1 SINGLE-OWNER / NEW TEETH: delete the `  workflow_dispatch:` line from ci.yml. LANDED: `grep -cE '^  workflow_dispatch:$'` 1->0 AND `grep -c 'workflow_dispatch'` 1->0, same-call control `grep -c 'pull_request'` stays 1. MEASURED: scoped rc=1, ONE message `ci.yml: on-block triggers=[push pull_request] lack workflow_dispatch ...`; -skip inverse rc=0 / 0 FAIL.",
+        "M2 SINGLE-OWNER / NEW TEETH: `  workflow_dispatch:` -> `  workflow_dispatcht:`. LANDED: `grep -cE '^  workflow_dispatch:$'` 1->0 AND `grep -cE '^  workflow_dispatcht:$'` 0->1 (one call). MEASURED: scoped rc=1, ONE message, triggers=[push pull_request workflow_dispatcht]; -skip inverse rc=0 / 0 FAIL. NOTE: `workflow_dispatch` occurs TWICE in the output.",
+        "M3 SINGLE-OWNER / NEW TEETH: `  workflow_dispatch:` -> `  # workflow_dispatch: recovery lever`. LANDED: keyed `grep -cE '^  workflow_dispatch:$'` 1->0 WHILE raw `grep -c 'workflow_dispatch'` STAYS 1 - a count that moved plus a count that did not, which together prove 'commented out' rather than 'deleted'. MEASURED: scoped rc=1, ONE message, triggers=[push pull_request]; -skip inverse rc=0 / 0 FAIL. This is the arm a `strings.Count(src,\"workflow_dispatch\")>=1` gate would pass.",
+        "M4 MULTI-OWNER / NEW TEETH: create .github/workflows/deploy.yml with `name: Deploy` / blank / `on:` / `  push:` / blank / `jobs:` / `  noop:` / `    runs-on: ubuntu-latest` / `    steps:` / `      - run: 'true'` - NO lever. LANDED: `ls -1 .github/workflows | wc -l` 1->2 AND `grep -cE '^  workflow_dispatch:$' .github/workflows/deploy.yml` = 0. MEASURED: scoped rc=1 naming deploy.yml; whole package rc=1 with EXACTLY 2 FAILs (mine + toolchain_pin_gate_test.go:207); NO -skip inverse (rc=1). DELETE deploy.yml after.",
+        "M5 MULTI-OWNER / MUST-STAY-GREEN: same deploy.yml but WITH `  workflow_dispatch:` after `  push:`. LANDED: `ls -1 .github/workflows | wc -l` 1->2 AND `grep -cE '^  workflow_dispatch:$' deploy.yml` 0->1. MEASURED: scoped rc=0 with `--- PASS` <- THE ASSERTION (my gate must not over-fire on a second lever-bearing workflow). Whole package rc=1 with EXACTLY 1 FAIL, the sibling's :207 `[ci.yml]` list alone - enumerated and explained, NOT a failure of my gate. Assert MY test's PASS, never package rc. DELETE deploy.yml after.",
+        "M6 TEST-FILE / NEEDS M6b: delete the `if len(matches) == 0 { t.Fatal(...) }` guard from dispatch_lever_gate_test.go. LANDED: `grep -c 'instrument failure: no workflow files enumerated' host/verifygate/dispatch_lever_gate_test.go` 1->0. TYPECHECK: `go vet ./host/verifygate/` rc=0 (the mutant compiles); `go build ./...` is rc=0 too and is VACUOUS for test files (P8/D3). MEASURED ALONE: scoped rc=0 `--- PASS`, whole prefixed package rc=0 / 0 FAIL - M6 ALONE HAS NO OBSERVABLE. Combine with M6b.",
+        "M6b MULTI-OWNER / FLOOR PROOF (= AC5's arm, floor INTACT): `mv .github/workflows /tmp/p47-wfbak`. LANDED: `test -d .github/workflows; echo $?` 0->1 AND `ls -1 .github/workflows 2>/dev/null | wc -l` 1->0. MEASURED: scoped rc=1 with the floor message at :89; whole package rc=1 with EXACTLY 4 FAILs (enumerated in AC5). RESTORE with `mv /tmp/p47-wfbak .github/workflows`.",
+        "M6+M6b COMBINED / THE FLOOR PROOF: apply BOTH. MEASURED: scoped rc=0 with `--- PASS` <- the gate prints a checkmark on an empty enumeration once the floor is gone, which is exactly what makes the floor load-bearing. Whole package rc=1 with EXACTLY 3 FAILs, NONE OF THEM MINE (ail_binary_gate_test.go:672, toolchain_pin_gate_test.go:110, toolchain_pin_gate_test.go:404 - all `open <abs>/ci.yml: no such file or directory`). READ THE SCOPED RESULT ONLY; the whole-package rc is uninformative for this arm. Restore both.",
+        "M7 SINGLE-OWNER / NEW TEETH: delete the entire top-level `on:` block from ci.yml AND append a nested decoy `      - name: decoy step` / `        on:` / `          workflow_dispatch:`. LANDED: `grep -c '^on:$'` 1->0 AND `grep -c 'workflow_dispatch'` STAYS >=1 (the decoy is still in the file) - the pair proves a decoy was planted rather than the lever deleted. MEASURED: scoped rc=1, ONE message `dispatch_lever_gate_test.go:101: instrument failure: <abs>/ci.yml has no top-level `on:` trigger block`; occurrences of `workflow_dispatch` in output = 0; -skip inverse rc=0 / 0 FAIL. This is the arm a `strings.TrimSpace(l) == \"on:\"` parser would pass vacuously.",
+        "M8 SINGLE-OWNER AT THE STATED PLACEMENT / NEW TEETH: insert a second column-0 `on:` block (`on:` / `  push:`) IMMEDIATELY BEFORE `jobs:`. LANDED: `grep -c '^on:$'` 1->2. MEASURED: scoped rc=1, ONE message `:101: instrument failure: <abs>/ci.yml has 2 top-level `on:` blocks, want exactly 1`; -skip inverse rc=0 / 0 FAIL. IF INSTEAD APPENDED AFTER `jobs:` (D4): -skip inverse rc=1 with TestGoToolchainPinsAgreeAndMatchJobList at :138 `enumerated jobs=[ailang-verify go-verify push]` - the duplicated block's `  push:` matches the sibling's job regexp. Use the before-`jobs:` placement.",
+        "M9 SINGLE-OWNER / NEW TEETH: `  workflow_dispatch:` -> `  workflow_dispatch: garbage`. LANDED: `grep -cE '^  workflow_dispatch:$'` 1->0 AND `grep -c '^  workflow_dispatch: garbage$'` 0->1 (one call). MEASURED: scoped rc=1 with TWO messages (D5) - `:101 ... has scalar value \"garbage\"; want an empty key or a mapping` and `:103 ... lack workflow_dispatch`; -skip inverse rc=0 / 0 FAIL."
+      ],
+      "restore_recipe": "Before ANY mutation: `mkdir -p /tmp/p47-backup && cp .github/workflows/ci.yml /tmp/p47-backup/ci.yml && cp host/verifygate/dispatch_lever_gate_test.go /tmp/p47-backup/dispatch_lever_gate_test.go`. Restore with `cp` from there, plus `rm -f .github/workflows/deploy.yml` and `[ -d /tmp/p47-wfbak ] && mv /tmp/p47-wfbak .github/workflows`. NEVER `git checkout --` - dispatch_lever_gate_test.go is UNTRACKED and git would DELETE it with no undo.",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "Snapshot to .snap/MS2/ (cumulative - both files) when green. THE SKETCH IS SHIPPABLE VERBATIM (D0): the planner extracted doc lines 174-286 unmodified and measured gofmt-clean, vet-clean, passing. Do not rename onBlockTriggerKeys, do not improve the parser, do not re-word a message - the entire drill is keyed on those exact strings. Do NOT touch host/verifygate/toolchain_pin_gate_test.go when M4/M5 red it: its `[ci.yml]`-exact list is DECLARED RESIDUAL 4."
+    }
+  ],
+  "sandbox_posture": {
+    "executor": "codex:gpt-5.6-sol under --sandbox workspace-write",
+    "constraint": "workspace-write DENIES loopback socket binds.",
+    "sandbox_safe": "Every SCOPED arm (AC2, AC3, AC3b, AC7, AC8, AC9 and the scoped half of AC4/AC5) is a pure text scan over YAML with no subprocess, no socket and no pinned-binary lookup. Planner-measured deterministic unprefixed. These results stand as measured.",
+    "uninformative_under_sandbox": "The WHOLE-PACKAGE run `AILANG_BIN=... go test ./host/verifygate/ -count=1` drives scripts/verify_ail.sh through the shim arms, and the repo's wider suites include socket-touching daemon tests. Any gate result obtained inside the sandbox for a socket-touching suite MUST be labelled `UNINFORMATIVE UNDER SANDBOX` in the executor's log - reported, never silently dropped, and never read as a pass or a fail.",
+    "controller_action": "The controller re-runs the whole-package and repo-wide gates OUTSIDE the sandbox; the controller's numbers are the ones of record.",
+    "gh_not_required": "No acceptance criterion in this sprint needs `gh`. P16/P17 are design-time premises already measured by the controller, and the live dispatch rehearsal is Deferred Scope."
+  },
+  "deferred_scope": [
+    "Live end-to-end proof that a workflow_dispatch run is created and green against the tip of `dev` - a runtime action for the sprint's Verification Log, not a unit test.",
+    "The gate proves the lever is DECLARED, never that a run is created or that it is green. Nobody may read its green as the stronger claim.",
+    "Relaxing the sibling's `[ci.yml]`-only workflow list (residual 4). If a second workflow ever legitimately lands, toolchain_pin_gate_test.go:206/:207 must change in the SAME edit. NOT this row.",
+    "Structural YAML parsing / actionlint adoption. No linter runs in this repo (P9: 2 hits, both comments in host/verifygate/*_test.go). Not a row-47 repair."
+  ],
+  "residuals_inherited_unchanged": [
+    "1. The lever buys A VERDICT ON THE TIP OF A NAMED REF, never A MERGEABLE PR - a dispatch run's checks do not satisfy PR branch protection.",
+    "2. Static text scan over YAML: the gate sees the lever TEXT, never a run, never its result, never a step-level `if:`.",
+    "3. The enumerator sees only `.github/workflows/*` at one level - a singular `workflow` dir, a root-level .yaml, a dotfile, a case-mismatched name or a nested subdirectory is invisible. The floor makes an EMPTY enumeration loud; it cannot make an UNSEEN one loud.",
+    "4. The sibling's `[ci.yml]`-only list conflicts with ANY second workflow file, including one WITH the lever (M5). By construction; not this doc's to change.",
+    "5. `inputs:` deliberately omitted.",
+    "6. Adding the trigger does not change ordinary push/PR runs - stated from GitHub's documented event model, NOT live-measured against a hosted repo.",
+    "7. The lever re-verifies the TIP of a named ref; once `dev` advances, the dropped commit is no longer any ref's tip and remains permanently unverifiable."
+  ]
+}
