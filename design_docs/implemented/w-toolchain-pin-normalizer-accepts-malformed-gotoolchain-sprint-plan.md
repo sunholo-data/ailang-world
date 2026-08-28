@@ -1,6 +1,6 @@
 # Sprint plan — `w-toolchain-pin-normalizer-accepts-malformed-gotoolchain` (queue row 45)
 
-**Design doc**: `design_docs/planned/w-toolchain-pin-normalizer-accepts-malformed-gotoolchain.md`
+**Design doc**: `design_docs/implemented/w-toolchain-pin-normalizer-accepts-malformed-gotoolchain.md`
 (663 lines, committed at `f3790e4`; two quorum rounds, closed under the ratified
 narrow-refinement carve-out).
 **Planner**: mission-control iteration 134, `claude-opus-5` sprint-planner.
@@ -461,5 +461,5 @@ report a pass. If M4, M8, M9(b) or AC6(b) changes behavior, that is a regression
 
 ---
 
-**SPRINT_PLAN_PATH**: `design_docs/planned/w-toolchain-pin-normalizer-accepts-malformed-gotoolchain-sprint-plan.md`
-**SPRINT_JSON_PATH**: `design_docs/planned/sprint_w-toolchain-pin-normalizer-accepts-malformed-gotoolchain.json`
+**SPRINT_PLAN_PATH**: `design_docs/implemented/w-toolchain-pin-normalizer-accepts-malformed-gotoolchain-sprint-plan.md`
+**SPRINT_JSON_PATH**: `design_docs/implemented/sprint_w-toolchain-pin-normalizer-accepts-malformed-gotoolchain.json`
