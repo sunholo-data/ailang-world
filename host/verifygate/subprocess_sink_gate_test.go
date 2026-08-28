@@ -4,6 +4,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"go/types"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -17,28 +18,97 @@ type subprocessSinkViolation struct {
 	variable string
 }
 
+// sinkKind records how a declared bare sink is held, because the two forms bind
+// to cmd.Stderr differently: a value needs &x, a pointer is assigned directly.
+type sinkKind int
+
+const (
+	sinkValue sinkKind = iota + 1
+	sinkPointer
+)
+
+// bareSinkType reports whether expr names bytes.Buffer or strings.Builder — the
+// two sinks in this repo that carry no internal synchronisation.
 func bareSinkType(expr ast.Expr) bool {
 	selector, ok := expr.(*ast.SelectorExpr)
-	if !ok || (selector.Sel.Name != "Buffer" && selector.Sel.Name != "Builder") {
+	if !ok {
 		return false
 	}
 	pkg, ok := selector.X.(*ast.Ident)
-	return ok && ((pkg.Name == "bytes" && selector.Sel.Name == "Buffer") ||
-		(pkg.Name == "strings" && selector.Sel.Name == "Builder"))
+	if !ok {
+		return false
+	}
+	return (pkg.Name == "bytes" && selector.Sel.Name == "Buffer") ||
+		(pkg.Name == "strings" && selector.Sel.Name == "Builder")
 }
 
+// bareSinkExpr classifies an initialiser: bytes.Buffer{} is a value, and both
+// &bytes.Buffer{} and new(bytes.Buffer) are pointers. Anything else is not a
+// bare sink and is ignored.
+func bareSinkExpr(expr ast.Expr) (sinkKind, bool) {
+	switch expr := expr.(type) {
+	case *ast.CompositeLit:
+		if bareSinkType(expr.Type) {
+			return sinkValue, true
+		}
+	case *ast.UnaryExpr:
+		if expr.Op == token.AND {
+			if inner, ok := expr.X.(*ast.CompositeLit); ok && bareSinkType(inner.Type) {
+				return sinkPointer, true
+			}
+		}
+	case *ast.CallExpr:
+		if ident, ok := expr.Fun.(*ast.Ident); ok && ident.Name == "new" && len(expr.Args) == 1 {
+			if bareSinkType(expr.Args[0]) {
+				return sinkPointer, true
+			}
+		}
+	}
+	return 0, false
+}
+
+// inspectSubprocessFunction analyses ONE function INCLUDING every nested function
+// literal. Scoping the walk to a single function body instead would let the
+// defect be reassembled across a closure boundary — declare and bind the sink in
+// the outer function, call Start() inside `go func(){}()` — and evade detection
+// with the pattern fully intact. Over-approximating across the subtree can only
+// produce a LOUD false positive; under-approximating produces the silent miss
+// this gate exists to prevent.
 func inspectSubprocessFunction(fset *token.FileSet, body *ast.BlockStmt) ([]subprocessSinkViolation, bool) {
-	declared := make(map[string]bool)
+	declared := make(map[string]sinkKind)
 	hasStart := false
 	ast.Inspect(body, func(node ast.Node) bool {
 		switch node := node.(type) {
-		case *ast.FuncLit:
-			// A function literal is inspected separately from its enclosing function.
-			return node.Body == body
 		case *ast.ValueSpec:
 			if node.Type != nil && bareSinkType(node.Type) {
 				for _, name := range node.Names {
-					declared[name.Name] = true
+					declared[name.Name] = sinkValue
+				}
+			}
+			for i, value := range node.Values {
+				if i >= len(node.Names) {
+					break
+				}
+				if kind, ok := bareSinkExpr(value); ok {
+					declared[node.Names[i].Name] = kind
+				}
+			}
+		case *ast.AssignStmt:
+			// `buf := bytes.Buffer{}` and `buf := new(bytes.Buffer)` never produce
+			// a ValueSpec, and := is the more idiomatic form for a local sink.
+			if node.Tok != token.DEFINE {
+				return true
+			}
+			for i, lhs := range node.Lhs {
+				if i >= len(node.Rhs) {
+					break
+				}
+				name, ok := lhs.(*ast.Ident)
+				if !ok {
+					continue
+				}
+				if kind, ok := bareSinkExpr(node.Rhs[i]); ok {
+					declared[name.Name] = kind
 				}
 			}
 		case *ast.CallExpr:
@@ -54,9 +124,6 @@ func inspectSubprocessFunction(fset *token.FileSet, body *ast.BlockStmt) ([]subp
 
 	var violations []subprocessSinkViolation
 	ast.Inspect(body, func(node ast.Node) bool {
-		if literal, ok := node.(*ast.FuncLit); ok && literal.Body != body {
-			return false
-		}
 		assignment, ok := node.(*ast.AssignStmt)
 		if !ok {
 			return true
@@ -69,16 +136,34 @@ func inspectSubprocessFunction(fset *token.FileSet, body *ast.BlockStmt) ([]subp
 			if !ok || (target.Sel.Name != "Stderr" && target.Sel.Name != "Stdout") {
 				continue
 			}
-			address, ok := assignment.Rhs[i].(*ast.UnaryExpr)
-			if !ok || address.Op != token.AND {
-				continue
-			}
-			name, ok := address.X.(*ast.Ident)
-			if ok && declared[name.Name] {
+			rhs := assignment.Rhs[i]
+			// An inline &bytes.Buffer{} / new(bytes.Buffer) is the same defect with
+			// no name to look up.
+			if _, ok := bareSinkExpr(rhs); ok {
 				violations = append(violations, subprocessSinkViolation{
 					position: fset.Position(lhs.Pos()),
-					variable: name.Name,
+					variable: types.ExprString(rhs),
 				})
+				continue
+			}
+			switch rhs := rhs.(type) {
+			case *ast.UnaryExpr:
+				if rhs.Op != token.AND {
+					continue
+				}
+				if name, ok := rhs.X.(*ast.Ident); ok && declared[name.Name] == sinkValue {
+					violations = append(violations, subprocessSinkViolation{
+						position: fset.Position(lhs.Pos()),
+						variable: name.Name,
+					})
+				}
+			case *ast.Ident:
+				if declared[rhs.Name] == sinkPointer {
+					violations = append(violations, subprocessSinkViolation{
+						position: fset.Position(lhs.Pos()),
+						variable: rhs.Name,
+					})
+				}
 			}
 		}
 		return true
@@ -86,6 +171,9 @@ func inspectSubprocessFunction(fset *token.FileSet, body *ast.BlockStmt) ([]subp
 	return violations, true
 }
 
+// detectSubprocessSinks analyses each top-level function once. Returning false
+// from the FuncDecl/FuncLit cases stops ast.Inspect descending, so a nested
+// literal is never analysed a second time on its own and cannot double-count.
 func detectSubprocessSinks(fset *token.FileSet, file *ast.File) ([]subprocessSinkViolation, []token.Position) {
 	var violations []subprocessSinkViolation
 	var starts []token.Position
@@ -107,7 +195,7 @@ func detectSubprocessSinks(fset *token.FileSet, file *ast.File) ([]subprocessSin
 			starts = append(starts, fset.Position(body.Pos()))
 			violations = append(violations, found...)
 		}
-		return true
+		return false
 	})
 	return violations, starts
 }
@@ -148,12 +236,70 @@ func test() { var buf bytes.Buffer; cmd := exec.Command("helper"); cmd.Stderr = 
 				want: 1,
 			},
 			{
-				name: "negative guarded sink",
+				name: "positive short-assign composite",
+				src: `package fixture
+import ("bytes"; "os/exec")
+func test() { buf := bytes.Buffer{}; cmd := exec.Command("helper"); cmd.Stderr = &buf; _ = cmd.Start() }
+`,
+				want: 1,
+			},
+			{
+				name: "positive new pointer",
+				src: `package fixture
+import ("bytes"; "os/exec")
+func test() { buf := new(bytes.Buffer); cmd := exec.Command("helper"); cmd.Stderr = buf; _ = cmd.Start() }
+`,
+				want: 1,
+			},
+			{
+				name: "positive inline address of literal",
+				src: `package fixture
+import ("bytes"; "os/exec")
+func test() { cmd := exec.Command("helper"); cmd.Stderr = &bytes.Buffer{}; _ = cmd.Start() }
+`,
+				want: 1,
+			},
+			{
+				name: "positive start inside closure",
+				src: `package fixture
+import ("bytes"; "os/exec")
+func test() { var buf bytes.Buffer; cmd := exec.Command("helper"); cmd.Stderr = &buf; go func() { _ = cmd.Start() }() }
+`,
+				want: 1,
+			},
+			{
+				name: "positive strings.Builder sink",
+				src: `package fixture
+import ("os/exec"; "strings")
+func test() { var out strings.Builder; cmd := exec.Command("helper"); cmd.Stdout = &out; _ = cmd.Start() }
+`,
+				want: 1,
+			},
+			{
+				name: "negative guarded sink by name",
+				src: `package fixture
+import "os/exec"
+type syncBuf struct{}
+func (*syncBuf) Write(p []byte) (int, error) { return len(p), nil }
+func test() { var sink syncBuf; cmd := exec.Command("helper"); cmd.Stderr = &sink; _ = cmd.Start() }
+`,
+				want: 0,
+			},
+			{
+				name: "negative guarded sink composite",
 				src: `package fixture
 import "os/exec"
 type syncBuf struct{}
 func (*syncBuf) Write(p []byte) (int, error) { return len(p), nil }
 func test() { cmd := exec.Command("helper"); cmd.Stderr = &syncBuf{}; _ = cmd.Start() }
+`,
+				want: 0,
+			},
+			{
+				name: "negative bare buffer with no Start",
+				src: `package fixture
+import ("bytes"; "os/exec")
+func test() { var buf bytes.Buffer; cmd := exec.Command("helper"); cmd.Stderr = &buf; _ = cmd.Run() }
 `,
 				want: 0,
 			},
