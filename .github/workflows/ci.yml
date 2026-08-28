@@ -4,6 +4,7 @@ on:
   push:
     branches: [dev]
   pull_request:
+  workflow_dispatch:
 
 # The z3 pin is declared ONCE, at workflow scope, because BOTH jobs must install the SAME solver.
 # Job 1 runs `ai-check` directly; job 2 runs it THROUGH host/verifygate's shim arms, which drive
