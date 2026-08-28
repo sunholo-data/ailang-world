@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -47,6 +48,25 @@ type cliHeader struct {
 	EntryIndex, SemanticsEpoch               int64
 	TransitionFn, Interpreter, PrevEntryHash string
 	WrittenBy                                string
+}
+
+// syncBuffer protects diagnostics because os/exec's copier goroutine writes until
+// Wait returns, while two announcement-select branches read the sink before then.
+type syncBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (s *syncBuffer) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.buf.Write(p)
+}
+
+func (s *syncBuffer) String() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.buf.String()
 }
 
 func makeCLICommit(observed cliWorld, index int64, label string) cliCommit {
@@ -134,7 +154,7 @@ func TestCLIRealSubprocessEpisode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var daemonErr bytes.Buffer
+	var daemonErr syncBuffer
 	cmd.Stderr = &daemonErr
 	if err := cmd.Start(); err != nil {
 		t.Fatalf("start daemon: %v", err)
