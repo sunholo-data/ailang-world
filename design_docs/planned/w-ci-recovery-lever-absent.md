@@ -28,7 +28,7 @@ The pinned released AILANG binary used to run the gate package is
 > API-driven trigger that would re-run verification on the tip of a named ref (this repo's
 > `dev`, P17) without moving `dev` — is not declared. This doc adds that lever (P2, P3) and pins it with a static
 > gate in the existing `host/verifygate` family so it cannot be deleted silently (the
-> removal-shaped and addition-shaped mutations, M1–M6). The claim is scoped **exactly** to
+> removal-shaped and addition-shaped mutations, M1–M9). The claim is scoped **exactly** to
 > what the lever buys: `workflow_dispatch` buys **A VERDICT ON THE TIP OF A NAMED REF**
 > (`--ref dev` — P16, P17), never on an arbitrary commit SHA (residual 7); it does **NOT**
 > buy **A MERGEABLE PR** — a dispatch run's checks do not satisfy PR branch protection
@@ -301,7 +301,7 @@ Total **~0.10 day** — deliberately small; this is a one-line lever plus one ga
   same-call controls `pull_request` → 1 and `^  push:` → 1.
 - **M2 (0.05d)** — add `TestEveryWorkflowDeclaresDispatchLever` (+ `onBlockTriggerKeys`) to
   `host/verifygate/dispatch_lever_gate_test.go`; `gofmt`; run green under the prefixed
-  binary; rehearse mutations M1–M6 in probe worktrees (restore byte-identical, porcelain
+  binary; rehearse mutations M1–M9 in probe worktrees (restore byte-identical, porcelain
   0). Verify: AC1–AC6.
 
 No `.ail`, no `tools/launchd/*`, no other workflow file, no `go.mod`/dependency change.
@@ -323,7 +323,7 @@ restored byte-identical, porcelain 0 (house recipe).
   `AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -run TestEveryWorkflowDeclaresDispatchLever -count=1 -v`
   → rc=0 with one `=== RUN` and one `--- PASS`; paired nonsense control
   `-run '^TestNoSuchGateZZZ$'` prints `[no tests to run]`. **Base:** N/A (the test does not
-  exist at HEAD; the whole-package prefixed run is P6 rc=0/0 FAIL). AC2's teeth are M1–M6.
+  exist at HEAD; the whole-package prefixed run is P6 rc=0/0 FAIL). AC2's teeth are M1–M9.
 - **AC3 — removal-shaped: the gate REDS when the lever is deleted.** Probe worktree: remove
   the `workflow_dispatch:` trigger line from `ci.yml` (LANDED: `grep -cE '^  workflow_dispatch:'` → 0
   with same-call control `grep -c 'pull_request'` still 1); prefixed scoped run → rc≠0 whose
@@ -359,8 +359,8 @@ job (ci.yml:165) and refuses to run without `AILANG_BIN` (P10), so every arm bel
 CI-gate red; the local rehearsal command is the prefixed scoped test. House recipe per arm:
 prove LANDED by a count that MOVES before reading the result; restore byte-identical;
 porcelain 0. Cross-checked against the Decision: every arm targets a construct the design
-SHIPS (the lever line, the enumerator, the floor, the trigger-parser). The two test-file arms
-(M5) use `go vet ./host/verifygate/` as their typecheck, because `go build ./...` does not
+SHIPS (the lever line, the enumerator, the floor, the trigger-parser). The single test-file arm
+(M6) uses `go vet ./host/verifygate/` as their typecheck, because `go build ./...` does not
 compile `_test.go` (P8).
 
 | # | Mutation | File | What it neuters | Predicted result | Landed-proof before reading the result |
