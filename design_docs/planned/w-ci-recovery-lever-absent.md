@@ -450,6 +450,63 @@ test's message text instead.
    (branch protection): residual 1 bounds the PR case; this residual bounds the recoverable
    window even on `dev` itself. The code comment and Deferred Scope state it plainly.
 
+## In-PR hardening after the evaluator (iteration 136)
+
+The `sonnet` evaluator scored **82/100 PASS, zero blocking** (generator≠judge: the executor was
+OpenAI's codex) in its own worktree, and — the part that makes the verdict a measurement — it
+**named the attacks that FAILED**: a hidden dotfile, a nested subdirectory, case/extension variants,
+all nine canonical mutations, and the anti-vacuity floor's own precondition test. None produced a
+false green. **The gate's core promise — never silently certify a workflow that lacks the lever —
+held under every attack aimed at it.** What it found instead was the opposite failure mode: the
+line-scan parser fails LOUD on several forms of *valid, lever-declaring* YAML.
+
+**Two of its five findings were reproduced first-party and FIXED IN THIS PR** (`gofmt`/`vet` clean,
+full drill re-run below):
+
+1. **An inline `#` comment on the trigger line was misread as a scalar value.**
+   `  workflow_dispatch: # manual re-run lever` is valid YAML that declares the lever, and it is the
+   single most natural edit a maintainer makes to explain the line — yet it tripped the
+   scalar-value branch and redded CI with **two** cascading messages. **The discriminating control
+   is what makes this a mechanism rather than a guess:** the same comment on its OWN line was
+   rc=0/PASS=1, so the defect was specific to the inline form and the parser was not merely
+   comment-hostile. Fixed by stripping an inline comment before judging the value.
+2. **The doc asserted something false about its own shipped code.** Residual 7 claimed *"the code
+   comment and Deferred Scope state it plainly"* about the named-ref window; grepping the shipped
+   comment returned **0** hits for named-ref/tip/SHA, with the control firing at **2** for the
+   branch-protection sentence that IS there. The comment now states the named-ref limitation, so
+   a reader auditing only the code meets it. (This is the same shape as the residue the carve-out
+   left in the mutation ranges: a claim about a sibling artifact that nobody re-derived.)
+
+**The hardening was proven NON-WEAKENING before it was believed** — the risk of stripping comments
+is over-approximation, so the drill includes the arm that would catch it. Seven arms, one tree,
+each restored byte-identical (`sha256` equal to base):
+
+| Arm | Expectation | Observed |
+|---|---|---|
+| green control (pristine) | PASS | rc=0 RUN=1 PASS=1 |
+| inline comment (the finding) | now PASS | rc=0 RUN=1 PASS=1 |
+| M9 `workflow_dispatch: garbage` | still RED | rc=1 FAIL=1, `has scalar value "garbage"` |
+| **`garbage # note`** (over-approximation control) | **still RED** | rc=1 FAIL=1, `has scalar value "garbage"` — the value BEFORE the `#` is still judged |
+| M1 delete the lever | still RED | rc=1 FAIL=1, `lack workflow_dispatch` |
+| M8 duplicate top-level `on:` | still RED | rc=1 FAIL=1, `want exactly 1` |
+| M7 nested decoy, no top-level `on:` | still RED | rc=1 FAIL=1, `instrument failure` |
+| final green control | PASS | rc=0 RUN=1 PASS=1 |
+
+**Three findings are NOT fixed here and become a queue row rather than a silent scope widening**
+(they need a decision this item does not own — whether the gate adopts a structural YAML parser):
+the parser false-reds on the **quoted `"on":`** form (which is the standard remedy for YAML 1.1's
+`on` → boolean footgun, so this would break CI the day anyone applies it), on **flow-style**
+`on: {push: …, workflow_dispatch: }`, and on a **tab-indented** first trigger line (`TrimLeft(l, " ")`
+strips spaces only, so the block reads as already exited and the trigger set silently empties). All
+three fail LOUD, which is the accepted direction, and none is a silent pass. Also unfixed and
+declared: the scalar-value arm emits **two** messages rather than one, so the Decision's
+"never cascades" phrasing is an over-claim the planner's D5 already flagged.
+
+**A correction to D0, so the record is not stale:** the doc's sketch WAS shipped byte-verbatim by
+the executor and was measured green that way; the two hardening edits above were applied afterwards
+by the controller in response to the evaluator, so the shipped bytes are no longer identical to the
+sketch in `## Decision`.
+
 ## Quorum verification log
 
 Designer: `pi:ollama/deepseek-v4-flash:0731-cloud` (designer rotation; FIRST authoring run on this
