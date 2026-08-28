@@ -1,47 +1,43 @@
-# Mission Dashboard — Ailang World
+# Mission Dashboard — AILANG World
 
-*Snapshot, overwritten each iteration. History lives in `world-mission.md` STATUS + `world-mission-log.md`.*
+> 30-second control context. OVERWRITTEN every iteration; history lives in the charter STATUS
+> block and `design_docs/world-mission-log.md`. Namespaced path — never write the bare
+> `design_docs/mission-dashboard.md`, which is fleet-shared.
 
-**Iteration 135 — 2026-08-28 — `P46` LANDED.**
+**Last iteration:** 136 · 2026-08-28 · **`P47` LANDED**
 
-## Latest
-- PR [#102](https://github.com/sunholo-data/ailang-world/pull/102) → squash [`d8c2114`](https://github.com/sunholo-data/ailang-world/commit/d8c2114).
-- Gate 3b **GREEN on the merge commit**: `present=2 == expected=2` (enumerated from `ci.yml`'s own
-  `jobs:` block), `notgreen=0`, `notdone=0`, `runs=1`, parent control `checks=2`, `mergeable` read
-  first (`MERGEABLE`/`CLEAN`), head SHA length-asserted `== 40`.
-- Row 46 CLOSED. `TestCLIRealSubprocessEpisode` read a bare `bytes.Buffer` bound to `cmd.Stderr` on
-  the two select branches that never received from `waited` — an unsynchronised read against
-  `os/exec`'s still-live copier. Fixed with the mutex-guarded sink `host/store` already uses.
-- **Reachable only under load**, which is why a quiet-machine re-run returned rc=0 and settled
-  nothing: on an unloaded rig the `announced` branch wins and neither racy read executes.
-- New repo-wide AST gate `host/verifygate/subprocess_sink_gate_test.go` closes the class.
-
-## Two findings this iteration, both about instruments
-- **The gate certified the axis it varied.** Built from one mutation, it missed `buf := bytes.Buffer{}`,
-  `new(bytes.Buffer)` and a `Start()` split across a closure — all three reproduced first-party with a
-  firing control. Hardened in-PR (fixtures 2 → 9); three-arm mutation control on the real tree, all caught.
-- **`go build ./...` does not compile test files**, so the loop's standing *"the mutant builds"*
-  assertion is **vacuous for every test-file mutation**. Measured: an undefined symbol in a test file
-  gives `go build ./...` rc=0 and `go vet ./cmd/ailang-worldd/` rc=1. → skill proposal to V1.
+## Latest landing
+- PR [#103](https://github.com/sunholo-data/ailang-world/pull/103) → squash
+  [`2a01c43`](https://github.com/sunholo-data/ailang-world/commit/2a01c43). Queue row **47 CLOSED**.
+- `ci.yml` now declares `workflow_dispatch:`; `host/verifygate/dispatch_lever_gate_test.go` pins it
+  repo-wide with an anti-vacuity floor. A dropped webhook to `dev` is now recoverable — for the
+  **tip of a named ref**, never an arbitrary SHA, and it buys a verdict on a commit, not a
+  mergeable PR.
+- Gate 3b GREEN on the merge commit: `present=2 == expected=2` (enumerated from `ci.yml`'s own
+  `jobs:` block; 1 workflow file, so the enumeration is complete), `notdone=0`, `notgreen=0`,
+  `runs=1`, parent control `checks=2` rev-parsed.
 
 ## In flight / next
-- Queue: rows **47**, **48**, **49**, **50**, **51**, **52**, **53**, **54**, then **39**.
-- New row **54** — the World driver copy is **8 fleet commits / 430 lines** behind, and
-  `verify_go.sh`'s drift gate compares the copy **to itself** so it cannot see it.
+- **NEXT:** rows **48**, **49**, **50**, **51**, **52**, **53**, **54**, **55**, then **39**.
+- New row **55** this iteration: the dispatch-lever parser false-reds on valid YAML shapes
+  (quoted `"on":`, flow-style, tab indentation). Fails loud, never a silent pass.
+- Row **54** still open and still live: `launchd` runs THIS repo's driver copy, which is stale
+  against the fleet's, and `verify_go.sh`'s drift gate compares that copy to itself.
+  FLEET-owned (`D-WORLD-DRIVER-1`) — reported, not touched.
 
 ## Loop cadence + routing
-- Designer **not fired** (charter row 46 IS the spec: mechanism, file+lines, fix, and an in-repo
-  mirror). Rotation pointer untouched at `claude:claude-fable-5`. Fable diet **not spent**.
-- Planner **not fired** (~0.2d, single-file, no sprint-plan artifact).
-- Executor `codex:gpt-5.6-sol` — probe rc=0, run rc=0, honest `UNINFORMATIVE UNDER SANDBOX` label.
-- Evaluator `sonnet` — **78/100 PASS**, generator≠judge. Its findings were acted on, not filed.
-- `metered=$0` — every lane rode a quota bucket.
+- Controller `claude:claude-opus-5`. Designer **rotation advanced to
+  `pi:ollama/deepseek-v4-flash:0731-cloud`** — its FIRST authoring run under the 2026-08-28
+  amendment, verdict `ok` twice (authoring + revision), **$0** (flat-rate).
+- Planner `opus` (lane derived verbatim: `opus fail-closed:env-pin`). Executor
+  `codex:gpt-5.6-sol`, `metered=$0`. Evaluator `sonnet` **82/100 PASS, zero blocking**
+  (generator≠judge holds: executor is OpenAI's).
+- Quorum: **two rounds, both BLOCKED at full strength** (`absent_reviewers` EMPTY both times,
+  3/3 external present); closed under the ratified narrow-refinement carve-out.
+
+## Quota / spend
+- `metered=$0.1900` of `$5` (quorum reviewers only; both provider lanes were flat-rate or quota).
+- Billing tripwire **CLEAN**, re-checked before every nested provider call.
 
 ## Parked on Mark
-- **Ledger: 13 rows, 0 OPEN.** Nothing is waiting on you.
-- FYI only: the deepseek executor **fallback** returned fleet-wide on 2026-08-26 (recorded in the
-  shared skill as attended), superseding `D-WORLD-20`'s suspension. Recorded here as `D-WORLD-27`.
-  It is reached only when codex is dry, and codex was not dry this iteration.
-
-## Quota posture
-- Subscription-only; billing tripwire **CLEAN** at preflight. No API-key lane used.
+- **ZERO OPEN ASKS.** Decision ledger: 14 rows, **0 OPEN**.
