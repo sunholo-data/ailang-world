@@ -1,6 +1,10 @@
 package verifygate
 
 import (
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"go/version"
 	"os"
 	"path/filepath"
@@ -362,6 +366,91 @@ func TestReproModuleFloorStaysBelowKnownBadToolchains(t *testing.T) {
 	if version.Compare(reproFloor, oldest) > 0 {
 		t.Fatalf("repro module floor %q is above the oldest KNOWN_BAD toolchain %q: every deny-listed probe SKIPs, saw_bad stays 0, and run.sh reds for the wrong reason (the V10 rehearsal)", reproFloor, oldest)
 	}
+}
+
+// canaryAssertionShapeProblems parses the canary test source and reports any deviation from the
+// required assertion shape: TestToolchainCanary must exist exactly once and contain exactly one
+// top-level `if` whose condition is rows[0].field != "stateRoot". That if-body must contain
+// exactly one direct t.Fatalf expression statement, rather than merely a descendant call.
+func canaryAssertionShapeProblems(src string) []string {
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "", src, 0)
+	if err != nil {
+		return []string{fmt.Sprintf("parse error: %v", err)}
+	}
+
+	var funcs []*ast.FuncDecl
+	for _, decl := range f.Decls {
+		if fn, ok := decl.(*ast.FuncDecl); ok && fn.Name.Name == "TestToolchainCanary" {
+			funcs = append(funcs, fn)
+		}
+	}
+	if len(funcs) != 1 {
+		return []string{fmt.Sprintf("TestToolchainCanary func decl count=%d, want exactly 1", len(funcs))}
+	}
+
+	var assertions []*ast.IfStmt
+	for _, stmt := range funcs[0].Body.List {
+		ifStmt, ok := stmt.(*ast.IfStmt)
+		if !ok {
+			continue
+		}
+		binary, ok := ifStmt.Cond.(*ast.BinaryExpr)
+		if ok && binary.Op == token.NEQ && isRowsField(binary.X) && isStateRootLit(binary.Y) {
+			assertions = append(assertions, ifStmt)
+		}
+	}
+	if len(assertions) != 1 {
+		return []string{fmt.Sprintf("top-level `rows[0].field != \"stateRoot\"` assertion if-stmt count=%d, want exactly 1", len(assertions))}
+	}
+
+	directFatalf := 0
+	for _, stmt := range assertions[0].Body.List {
+		exprStmt, ok := stmt.(*ast.ExprStmt)
+		if !ok {
+			continue
+		}
+		call, ok := exprStmt.X.(*ast.CallExpr)
+		if ok && isTFatalfCall(call) {
+			directFatalf++
+		}
+	}
+	if directFatalf != 1 {
+		return []string{fmt.Sprintf("direct t.Fatalf expression statement in assertion body count=%d, want exactly 1", directFatalf)}
+	}
+	return nil
+}
+
+// isRowsField reports whether expr is structurally rows[0].field.
+func isRowsField(expr ast.Expr) bool {
+	selector, ok := expr.(*ast.SelectorExpr)
+	if !ok || selector.Sel.Name != "field" {
+		return false
+	}
+	index, ok := selector.X.(*ast.IndexExpr)
+	if !ok {
+		return false
+	}
+	rows, ok := index.X.(*ast.Ident)
+	if !ok || rows.Name != "rows" {
+		return false
+	}
+	literal, ok := index.Index.(*ast.BasicLit)
+	return ok && literal.Kind == token.INT && literal.Value == "0"
+}
+
+func isStateRootLit(expr ast.Expr) bool {
+	literal, ok := expr.(*ast.BasicLit)
+	return ok && literal.Kind == token.STRING && literal.Value == `"stateRoot"`
+}
+
+func isTFatalfCall(call *ast.CallExpr) bool {
+	selector, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok || selector.Sel.Name != "Fatalf" {
+		return false
+	}
+	receiver, ok := selector.X.(*ast.Ident)
+	return ok && receiver.Name == "t"
 }
 
 func TestCanaryDeclaresPositiveArmOnly(t *testing.T) {
