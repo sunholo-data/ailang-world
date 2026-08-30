@@ -460,8 +460,11 @@ func TestCanaryDeclaresPositiveArmOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	src := string(raw)
-	if count := strings.Count(src, "stateRoot"); count < 2 {
-		t.Fatalf("instrument failure: %s count(%q)=%d, want at least 2 before checking comment fences", canaryPath, "stateRoot", count)
+	if problems := canaryAssertionShapeProblems(src); len(problems) > 0 {
+		for _, problem := range problems {
+			t.Errorf("%s: %s", canaryPath, problem)
+		}
+		t.Fatalf("instrument failure: %s no longer asserts the miscompile shape", canaryPath)
 	}
 	if count := strings.Count(src, "GOTOOLCHAIN"); count != 0 {
 		t.Errorf("%s count(%q)=%d, want 0; known-bad arms belong in the nested repro module", canaryPath, "GOTOOLCHAIN", count)
