@@ -1,0 +1,297 @@
+{
+  "sprint_id": "w-inventory-test-blind-to-asymmetric-addition",
+  "queue_item": 51,
+  "title": "The floor-raise coupling-inventory gate asserts per-row uniqueness of six known rows and nothing else, so a fabricated seventh row added to EITHER home alone leaves it GREEN: add two enumerator regexes, a canonicalSiteSet helper, a per-home duplicate guard, a >= 6 cardinality floor with an instrument-failure Fatalf, and a SYMMETRIC set-difference between the two homes",
+  "status": "planned - ready for sprint-executor",
+  "created": "2026-08-31",
+  "planner": "mission-control iteration 141, opus sprint-planner",
+  "design_doc": "design_docs/planned/w-inventory-test-blind-to-asymmetric-addition.md",
+  "sprint_plan": "design_docs/planned/w-inventory-test-blind-to-asymmetric-addition-sprint-plan.md",
+  "base_commit": "f3681b0",
+  "base_commit_note": "dev @ f3681b0, git status --porcelain = 0 lines at planning entry AND exit. The planner applied the design doc's sketch, ran all 15 mutation arms, and restored the tree byte-identical (sha256 re-asserted on all three venues).",
+  "branch": "dev",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.planner-wt-iter141 (ephemeral planner worktree; the executor gets its own)",
+  "github_issues": [],
+  "risk_level": "low",
+  "environment": {
+    "AILANG_BIN": "/tmp/ailang-v0300/ailang",
+    "ailang_version": "AILANG v0.30.0 (e37b370, built 2026-07-19T09:27:00Z)",
+    "exports_required_on_every_command": "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=/tmp/ailang-v0300/ailang",
+    "GOTOOLCHAIN": "NOT PINNED - see notes",
+    "notes": [
+      "Ambient go version measured this session is go1.26.6 darwin/arm64 with go env GOTOOLCHAIN=auto. scripts/verify_go.sh:214-222 deny-lists go1.26.0-go1.26.5 ONLY. go1.26.6 is not on the list and the full gate ran rc=0 under it. DO NOT copy the GOTOOLCHAIN=go1.25.6 pin from this repo's older sprint plans - it was correct when the rig's ambient go was go1.26.4, and it is not this rig's state today.",
+      "verify_go.sh FATALs without AILANG_BIN, and a large slice of host/verifygate fails loudly by design. That red is a BASE CONDITION, not a regression.",
+      "Every ailang invocation prints 'Observatory: 513MB (DB=513MB WAL=0MB) - running retention cleanup' on stderr. verify_ail.sh is rc=0 with it present (measured). Do not 'fix' it.",
+      "rc=127 in this repo is a PATH gap, not a broken toolchain. export PATH=/opt/homebrew/bin:$PATH first.",
+      "A -run selector matching nothing exits 0 with 'testing: warning: no tests to run'. Never read rc alone; count the '=== RUN' and '--- PASS' lines.",
+      "A grep -c that legitimately counts 0 exits rc=1. Read the COUNT, never the exit code, and never wrap it in '|| echo 0'."
+    ]
+  },
+  "ratification": {
+    "status": "NOT REQUIRED - no open ask on this item",
+    "provenance": "Design doc: quorum round 1 BLOCKED, one designer revision, round 2 BLOCKED at full strength (oc-glm-5-2 restored by a single-reviewer re-run at a raised cap), then cleared by the bounded narrow-refinement carve-out with all three reviewers' fixes applied verbatim. Every carve-out fix carries its own AC and its own named mutation per the iteration-98 guardrail: R2-1 -> AC14/C1, R2-2 -> AC13 attribution clause/D1,D2, R2-3 -> AC15/C2. The design direction is settled and is NOT re-litigated by this plan.",
+    "authoritative": "THE DESIGN DOC WINS over this plan, EXCEPT on findings F1, F2, F3, F4, F5 and F6 (sprint plan section 4), where the planner's first-party measurement showed the doc's literal text would fail a correct landing (F1), prove nothing (F2, F3, F4), or red for the wrong reason (F5, F6). On those six, this plan wins."
+  },
+  "sandbox_posture": {
+    "executor": "codex exec --sandbox workspace-write",
+    "constraint": "workspace-write DENIES loopback socket binds.",
+    "sandbox_safe": "Every gate the executor owns is a file read, a grep, or 'go test ./host/verifygate/'. Measured: grep -rn 'net.Listen|ListenUnix|net.Dial|httptest' host/verifygate/*.go | wc -l -> 0. The package binds no socket and needs no network. These results stand as measured.",
+    "uninformative_under_sandbox": [
+      "./scripts/verify_go.sh - it runs 'go test ./...' plain AND -race, which includes host/daemon, and host/daemon/daemon.go:634 is 'ln, err := net.Listen(\"tcp\", addr)'. host/broker and host/daemon tests both bind loopback sockets. If the executor runs it anyway, the result MUST be labelled 'UNINFORMATIVE UNDER SANDBOX' in the sprint log - reported, never silently dropped, and never read as a pass or a fail."
+    ],
+    "controller_action": "The controller re-runs ./scripts/verify_go.sh OUTSIDE the sandbox, once, after the last milestone. Budget ~13 min. The controller's numbers are the ones of record.",
+    "gh_not_required": "No acceptance criterion in this sprint needs gh or the network."
+  },
+  "executor_constraints": {
+    "git_writes": "FORBIDDEN. No add, commit, stash, checkout, restore, reset, branch, worktree, git-mv. A linked worktree's .git is excluded by the sandbox, and 'git checkout -- host/verifygate/floor_raise_inventory_test.go' would DESTROY the entire deliverable, which is uncommitted by construction. Git READS (status, diff, show, log, check-ignore, ls-files) are required and allowed. THE CONTROLLER BUILDS THE COMMITS.",
+    "snapshots": "After M1: mkdir -p .snap/M1/host/verifygate && cp host/verifygate/floor_raise_inventory_test.go .snap/M1/host/verifygate/. After M2: the same into .snap/M2/ (cumulative). This is how the controller reconstructs ONE COMMIT PER MILESTONE from an uncommitted tree. Measured: git check-ignore -v .snap/M1/x -> rc=1 (NOT ignored) against the same-call control git check-ignore -v .ailang/state/x -> rc=0 matching .gitignore:3:**/.ailang/ - the instrument fires. Dot-prefixed directories are skipped by both the Go tool and gofmt, so snapshots cannot red a gate.",
+    "restores": "ALL restores use cp from /tmp/w51_backup/, verified by shasum -a 256 against the base values. NEVER git checkout --. C1's collision file is removed with rm (it is untracked; git cannot remove it).",
+    "files_touched": [
+      "host/verifygate/floor_raise_inventory_test.go (MODIFY, +64 / -0 measured on the planner's scratch application; 97 -> 161 lines)"
+    ],
+    "files_touched_transiently_inside_restored_drill_arms_only": [
+      "scripts/verify_ail.sh (arms A1, A3, A4, D1, R1, N1, C2)",
+      "design_docs/coding-standards.md (arms A2, A3, D2, R2)",
+      "host/verifygate/zz_c1_collision_test.go (arm C1 only: CREATE then rm)"
+    ],
+    "files_forbidden": [
+      "design_docs/coding-standards.md as a DELIVERABLE - section S8 is RATIFICATION-CLASS (human gate). The drill mutates and restores it; it is never edited as part of the change. Base sha256 b710a510be0c55d84b6ba92059a26c058d895df5b103d5dd5c2dd43c13f68329 must be re-asserted after every arm.",
+      "scripts/verify_ail.sh as a DELIVERABLE (base sha256 5a1bbe8963ebc54f68c8a50f8f1a5ede4aff82ab83b7b1080e6594418e41475a)",
+      "scripts/verify_go.sh",
+      "any sibling host/verifygate/*_test.go",
+      "go.mod, go.sum",
+      "tools/launchd/* (FROZEN CORE, FLEET-owned; a drift red means 'the fleet must commit', never 'absorb it')",
+      "any .ail file"
+    ],
+    "message_text_is_FROZEN": "The drill is keyed on these exact substrings; a re-wording silently voids the arms that assert them: 'duplicate coupled-site path %q in the verify_ail.sh inventory block - a duplicated row is a defect'; 'duplicate coupled-site path %q in the S8 table - a duplicated row is a defect'; 'inventory block enumerator matched %d sites, want >= 6 - instrument failure, not an empty inventory'; 'S8 enumerator matched %d sites, want >= 6 - instrument failure, not an empty inventory'; 'absent from the verify_ail.sh inventory block - the two homes disagree on their site set'; 'absent from the S8 table - the two homes disagree on their site set'; 'site-set cardinality mismatch: verify_ail.sh has %d sites, S8 has %d - the two homes disagree on their site set'. (The em-dashes are U+2014 in the source; ship the design doc's sketch byte-verbatim from doc lines 235-262 and 266-317.) Do not rename siteReScript, siteReTable or canonicalSiteSet - AC14 and mutation C1 are keyed on those identifiers.",
+    "assertion_discipline": "Assert on MESSAGE SUBSTRINGS, never on line numbers. The line numbers recorded in sprint plan section 3 (:129, :136, :142, :145, :150, :155, :159) are from the PLANNER's reference implementation; a one-line comment difference moves all of them.",
+    "gate_width": "Do not widen any gate to 'go test ./...'. The narrowest gate that can fail for this diff is 'go test ./host/verifygate/ -count=1'."
+  },
+  "base_state_verified": {
+    "commit": "f3681b0",
+    "porcelain_at_planning_entry_and_exit": 0,
+    "sha256": {
+      "host/verifygate/floor_raise_inventory_test.go": "a00790f1fb19f551a69478217aae7657ee12b590376b365e1d28ea9707dd113f",
+      "scripts/verify_ail.sh": "5a1bbe8963ebc54f68c8a50f8f1a5ede4aff82ab83b7b1080e6594418e41475a",
+      "design_docs/coding-standards.md": "b710a510be0c55d84b6ba92059a26c058d895df5b103d5dd5c2dd43c13f68329"
+    },
+    "acceptance_command_base_results": [
+      "AC1/AC10 T (scoped, -v) -> rc=0, '=== RUN'=1, '--- PASS'=1, '--- SKIP'=0, no 'no tests to run', 0.31s. GREEN AT BASE BY DESIGN - it is the control.",
+      "AC2 grep -c 'disagree on their site set' <file> -> 0 (grep rc=1). RED AT BASE, correct. Post-change measured 3.",
+      "AC3 grep -c 'instrument failure, not an empty inventory' <file> -> 0. RED AT BASE, correct. Post-change measured 2.",
+      "AC4 T with ARM A1 landed -> rc=0, '--- PASS'. RED AT BASE - the gate is blind; this IS the defect.",
+      "AC5 T with ARM A2 landed -> rc=0, '--- PASS'. RED AT BASE - blind in this direction too.",
+      "AC6 T with ARM A3 landed -> rc=0, '--- PASS'. GREEN AT BASE - regression guard, non-discriminating alone.",
+      "AC7 T with ARM A4 landed -> rc=0, '--- PASS'. GREEN AT BASE - regression guard.",
+      "AC8 T with R1 / R2 landed -> rc=1 for both (legacy per-row count==1 fires). GREEN AT BASE - non-regression guard.",
+      "AC9 not runnable at base (siteReScript / siteReTable do not exist). RED by non-existence.",
+      "AC11 gofmt -l host/verifygate/ -> 0 bytes; go vet ./host/verifygate/ -> rc=0; go build ./... -> rc=0. GREEN AT BASE.",
+      "AC12.1 ./scripts/verify_ail.sh -> rc=0 in 7.7s; 'world package gate PASSED: 9/9 steps performed non-zero work'; 'verify gate PASSED: 11 required identities verified, 40 named tests pass'. rc=0 CRITERION IS LEGITIMATE.",
+      "AC12.2 ./scripts/verify_go.sh -> rc=0, grep -c '^--- FAIL' = 0 (EMPTY failing-test set), host/verifygate 'ok' in BOTH legs (plain 116.349s, race 133.660s), whole gate ~13 min. THE DOC'S V6 BASE PREMISE IS REFUTED - see finding F1. Superseded by AC12.2-prime.",
+      "AC12.3 go test ./host/verifygate/ -count=1 -> rc=0, 63.8s; with -v: 52 '=== RUN' / 52 '--- PASS' / 0 '--- FAIL' / 0 '--- SKIP'. GREEN AT BASE - the narrowest gate that can actually fail for this diff.",
+      "AC13 not runnable at base (no duplicate guard). RED by non-existence. Post-change measured RED with 'want exactly 1' = 0 - the attribution clause HOLDS.",
+      "AC14 filtered count -> 0 with same-scope control 'grep -rn regexp.MustCompile --include=*.go host/ | wc -l' -> 9. GREEN AT BASE and STILL 0 post-change - see F7.",
+      "AC15 grep -c 'want exactly 1' -> 2 and grep -c 'scriptRows :=|s8Rows :=' -> 2. GREEN AT BASE - see F7."
+    ],
+    "structural_facts_rederived": [
+      "Both homes hold 6 rows: block-scoped count 6, S8-scoped count 6. Whole-file '#   N. ' count is ALSO 6, so it is not a safe proxy for the block count at base (it becomes the moving gate under ARM A4 - F4).",
+      "S8 IS the last '## ' section: grep -n '^## ' design_docs/coding-standards.md | tail -3 -> 73 (S6), 80 (S7), 90 (S8); file is 122 lines. The heading-to-next-## slice runs to EOF.",
+      "V12 re-derived: both regexes extract the IDENTICAL 6-element list in the same order (world/<module>.ail, packages/world-core/world/<module>.ail, scripts/verify_ail.sh, scripts/world_package_ready_packet.golden.json, docs/SELF_MOD_PUBLISH.md, host/verifygate/module_manifest_gate_test.go); sets equal True, cardinality equal True.",
+      "V13 re-derived by reading the file: :32 scriptRows, :40 loop, :43 strings.Count(block,needle)!=1, :77 s8Rows, :85 loop, :88 strings.Count(s8,needle)!=1, :58 and :93 the two strings.Contains sharedNeedle loops. Both loops use t.Errorf, never t.Fatalf. Every V13 line number is CORRECT.",
+      "repoRoot is defined once, host/verifygate/ail_binary_gate_test.go:27, package-level in package verifygate. The new helper needs no new plumbing.",
+      "Conflict-surface audit re-derived: proposed symbols repo-wide = 0 against a same-scope known-positive control of 9 regexp.MustCompile in host/. Nothing to extend."
+    ],
+    "defect_reproduced_first_party": "ARM A (script-home-only 7th row): sha 5a1bbe89 -> f97c4ec9, block count 6 -> 7, bash -n rc=0, T -> rc=0 '--- PASS'. ARM B (S8-only 7th row): sha b710a510 -> 63208d62, S8 count 6 -> 7, T -> rc=0 '--- PASS'. Both restored, both shas back to base, porcelain 0, control re-PASSED. The doc's V2/V3 sha values reproduce EXACTLY on this rig.",
+    "prototype_note": "The planner APPLIED the design doc's sketch (doc lines 235-262 and 266-317) into host/verifygate/floor_raise_inventory_test.go IN THIS WORKTREE, measured it (gofmt 0 bytes, go vet rc=0, T rc=0 RUN=1 PASS=1, file 97 -> 161 lines), RAN ALL FIFTEEN MUTATION ARMS against it, then restored it byte-identical (sha a00790f1...113f, porcelain 0, control re-PASSED). NO expected red in this plan is predicted; every one is measured.",
+    "no_gate_in_this_plan_is_red_at_base_for_a_reason_unrelated_to_the_change": true
+  },
+  "velocity": {
+    "method": "Changed-line count taken from the planner's own end-to-end scratch application of the whole change, cross-checked against recent comparable single-file host/verifygate test-hardening rows (P49 row 49, P47 row 47 ~113 new lines, P43 row 43 - the very inventory this row hardens).",
+    "measured_band": "0.1-0.25 d for a one-file host/verifygate test change with a full mutation drill. The cost is the drill and the gates, not the typing.",
+    "estimated_changed_lines": 64,
+    "estimated_days": 0.15,
+    "target_loc_per_day": 430,
+    "estimated_total_loc": 64,
+    "measured_cost_centres": {
+      "T_scoped_test": "0.31 s - 15 arms is ~1 min of test time",
+      "go_test_host_verifygate": "63.8 s plain, 63.2 s with -v (52 RUN / 52 PASS / 0 SKIP). Run once per milestone boundary, NOT per arm.",
+      "verify_ail_sh": "7.7 s",
+      "go_vet_host_verifygate": "<1 s",
+      "verify_go_sh": "~13 min (host/verifygate alone is 116 s plain + 134 s race). Run ONCE, by the CONTROLLER, OUTSIDE the sandbox."
+    }
+  },
+  "features": [
+    {
+      "id": "M1_ENUMERATORS_DUPGUARD_FLOOR",
+      "name": "The two enumerator regexes, canonicalSiteSet, the per-home duplicate guard, and the >= 6 cardinality floor with its instrument-failure Fatalf",
+      "description": "Design doc sketch lines 235-262 (add \"regexp\" to the import block between \"path/filepath\" and \"strings\"; add the package-level var block declaring siteReScript = regexp.MustCompile(`^#   [0-9]+\\.\\s+(\\S+)`) and siteReTable = regexp.MustCompile(`^\\| [0-9]+ \\| ([^|]+)`); add func canonicalSiteSet(home string, scriptHome bool) []string) plus the FIRST HALF of lines 266-317 appended at the END of the test body, after the S8 sharedNeedle loop at :92-96 where both `block` and `s8` are in scope: scriptSites/s8Sites extraction, the two duplicate-within-a-home guards (t.Fatalf), and the two >= 6 cardinality floors (t.Fatalf). STOP THERE - the set-difference is M2. Keep the sketch's comments verbatim: they ARE the Declared Precondition ((\\S+) assumes whitespace-free paths; ([^|]+) plus backtick-trim assumes a backtick-wrapped S8 path column).",
+      "commits": 1,
+      "estimated_changed_lines": 51,
+      "estimated_days": 0.06,
+      "dependencies": [],
+      "files": [
+        "host/verifygate/floor_raise_inventory_test.go (+51 / -0, measured: 97 -> 148 lines)"
+      ],
+      "closes_acceptance_criteria": ["AC3", "AC9", "AC11", "AC13", "AC14 (non-regression)"],
+      "boundary_measured_by_planner": {
+        "T_on_pristine_homes": "rc=0, RUN=1, PASS=1 - the boundary is GREEN and bisectable",
+        "gofmt_l_host_verifygate": "0 bytes",
+        "go_vet_host_verifygate": "rc=0",
+        "grep_instrument_failure": 2,
+        "grep_duplicate_coupled_site_path": 2,
+        "grep_disagree_on_their_site_set": 0,
+        "honest_non_claim": "T with ARM A1 landed -> rc=0, '--- PASS'. M1 does NOT yet close the row's named gap. M1 buys the anti-vacuity and anti-evasion guards; M2 buys the detection. Stating this is the point of a bisectable boundary.",
+        "already_live_at_M1": "T with ARM D1 landed -> rc=1, duplicate t.Fatalf, 'want exactly 1' = 0"
+      },
+      "mutation_arms": ["D1", "D2", "I1", "I2", "N2b", "N2a", "C1"],
+      "gates": [
+        "AC11: gofmt -l host/verifygate/ = 0 bytes; go vet ./host/verifygate/ rc=0; go build ./... rc=0",
+        "AC12.1: ./scripts/verify_ail.sh rc=0 (base rc=0)",
+        "AC12.3: go test ./host/verifygate/ -count=1 rc=0 (base rc=0, 63.8 s)"
+      ],
+      "snapshot": ".snap/M1/host/verifygate/floor_raise_inventory_test.go",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M2_SYMMETRIC_SET_DIFFERENCE",
+      "name": "The symmetric set-difference between the two homes plus the cardinality-mismatch Errorf - the row's point",
+      "description": "The SECOND HALF of design doc sketch lines 266-317: the two membership loops (t.Errorf, one per direction - `for _, site := range s8Sites { if !scriptSet[site] {...} }` and `for _, site := range scriptSites { if !s8Set[site] {...} }`) and the cardinality-mismatch t.Errorf. Three Errorfs, three occurrences of the frozen substring 'disagree on their site set'. NOTHING ELSE: scriptRows/s8Rows and both per-row count==1 loops stay BYTE-UNCHANGED (AC15), and sharedNeedles stays strings.Contains-only (Decision 4, declared residual 2). t.Errorf not t.Fatalf, so a mismatch reports EVERY divergent site.",
+      "commits": 1,
+      "estimated_changed_lines": 13,
+      "estimated_days": 0.09,
+      "dependencies": ["M1_ENUMERATORS_DUPGUARD_FLOOR"],
+      "files": [
+        "host/verifygate/floor_raise_inventory_test.go (+13 / -0, measured: 148 -> 161 lines)"
+      ],
+      "closes_acceptance_criteria": ["AC1", "AC2", "AC4", "AC5", "AC6", "AC7", "AC8", "AC10", "AC11", "AC12", "AC15"],
+      "boundary_measured_by_planner": {
+        "T_on_pristine_homes": "rc=0, RUN=1, PASS=1, SKIP=0",
+        "AC2_grep_disagree": 3,
+        "AC4_T_with_A1": "rc=1, '--- FAIL'=1, message names host/store/some_new_file.go",
+        "AC5_T_with_A2": "rc=1, '--- FAIL'=1, message names the site",
+        "AC6_T_with_A3": "rc=0, '--- PASS'=1 (the legitimate floor-raise path)",
+        "AC7_T_with_A4": "rc=0, '--- PASS'=1 (the extraction is bounded)",
+        "AC11": "gofmt 0 bytes, go vet rc=0, go build ./... rc=0",
+        "AC14_AC15": "filtered count still 0; 'want exactly 1' = 2; 'scriptRows :=|s8Rows :=' = 2"
+      },
+      "mutation_arms": ["A1", "A2", "A3", "A4", "R1", "R2", "N1", "C2", "D1 (carry-forward control)", "I1 (carry-forward control)"],
+      "gates": [
+        "AC11: gofmt -l host/verifygate/ = 0 bytes; go vet ./host/verifygate/ rc=0; go build ./... rc=0",
+        "AC12.1: ./scripts/verify_ail.sh rc=0",
+        "AC12.3: go test ./host/verifygate/ -count=1 rc=0",
+        "AC12.2-prime: CONTROLLER GATE, outside the sandbox - see acceptance_criteria_repairs"
+      ],
+      "snapshot": ".snap/M2/host/verifygate/floor_raise_inventory_test.go (cumulative)",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "mutation_drill": {
+    "protocol_binding_on_every_arm": [
+      "1. RESTORE FIRST by cp from /tmp/w51_backup/ so the previous mutant cannot leak in. NEVER git checkout -- <path>.",
+      "2. Run the pristine control (T -> rc=0, '--- PASS'=1) BEFORE the arm.",
+      "3. Apply the mutant.",
+      "4. Prove it LANDED two ways: (a) shasum -a 256 <venue> | cut -c1-8 differs from the base prefix; AND (b) the arm's intended-effect grep -c against the SYSTEM'S OWN VIEW must MOVE to the tabulated value. Never bytes alone.",
+      "5. Prove the tree still builds: go vet ./host/verifygate/ rc=0 - READ THIS BEFORE ANY TEST RESULT. (Exception: C1, whose entire verdict IS go vet rc!=0.) For shell-venue arms also bash -n scripts/verify_ail.sh rc=0.",
+      "6. Run T and record THE MESSAGE THAT FIRED, not the exit code. An arm that reds on a different assertion than its named one is a FALSE REPRODUCTION - report it as such, do not count it as a kill.",
+      "7. RESTORE by cp, assert shasum -a 256 equals the base value, and re-run the pristine control AFTER the arm."
+    ],
+    "why_step_4_is_mandatory": "The planner's own first attempt at N2a/N2b used a patch whose regex escaping was wrong. The mutation SILENTLY DID NOT LAND (grep -c ZZNEVERMATCHZZ = 0, grep -c 'instrument failure' still 2) and the run reported N2b -> GREEN and N2a -> RED, both BACKWARDS. The landed-proof caught it; the test result did not.",
+    "backups": "mkdir -p /tmp/w51_backup; cp host/verifygate/floor_raise_inventory_test.go scripts/verify_ail.sh design_docs/coding-standards.md /tmp/w51_backup/; shasum -a 256 /tmp/w51_backup/*",
+    "effect_queries": {
+      "BLK": "sed -n '/── FLOOR-RAISE COUPLING INVENTORY/,/── END FLOOR-RAISE/p' scripts/verify_ail.sh | grep -cE '^#   [0-9]+\\. '",
+      "S8C": "sed -n '/## S8/,/^## /p' design_docs/coding-standards.md | grep -cE '^\\| [0-9]+ \\| '",
+      "WF": "grep -cE '^#   [0-9]+\\. ' scripts/verify_ail.sh",
+      "AC14F": "grep -rn 'siteReScript\\|siteReTable\\|canonicalSiteSet' --include='*.go' . | grep -v floor_raise_inventory_test.go | wc -l"
+    },
+    "arms": [
+      {"id": "D1", "milestone": "M1", "venue": "scripts/verify_ail.sh", "mutant": "insert the FABRICATED 7th row '#   7. host/store/some_new_file.go   fabricated coupled site (repro)' TWICE inside the bounded block, numbered 7 and 8. It MUST be a fabricated path, never a duplicate of one of the six known rows - the pre-existing scriptRows loop at :40-43 would intercept a known row and the arm would red for the legacy reason.", "landed_and_effect": "sha 5a1bbe89 -> 8ad8923c (planner-measured); BLK 6 -> 8; bash -n rc=0", "expected": "RED rc=1", "assertion_that_must_fire": "duplicate coupled-site path \"host/store/some_new_file.go\" in the verify_ail.sh inventory block AND grep -c 'want exactly 1' /tmp/t = 0 (AC13 attribution: the legacy loop did NOT fire)", "planner_result": "RED rc=1, dup Fatalf fired, want-exactly-1 = 0. CONFIRMED."},
+      {"id": "D2", "milestone": "M1", "venue": "design_docs/coding-standards.md", "mutant": "insert the fabricated S8 row for host/store/some_new_file.go TWICE inside S8, numbered 7 and 8. Fabricated for the same reason as D1 (s8Rows loop at :85-88).", "landed_and_effect": "sha b710a510 -> 2ee0000a; S8C 6 -> 8", "expected": "RED rc=1", "assertion_that_must_fire": "duplicate coupled-site path \"host/store/some_new_file.go\" in the S8 table AND grep -c 'want exactly 1' /tmp/t = 0", "planner_result": "RED rc=1, dup Fatalf fired, want-exactly-1 = 0. CONFIRMED."},
+      {"id": "I1", "milestone": "M1", "venue": "host/verifygate/floor_raise_inventory_test.go", "mutant": "neuter siteReScript so it matches nothing, e.g. '^#   [0-9]+' -> '^ZZNEVERMATCHZZ[0-9]+'", "landed_and_effect": "test-file sha moves; grep -c ZZNEVERMATCHZZ 0 -> 1; go vet rc=0", "expected": "RED rc=1", "assertion_that_must_fire": "inventory block enumerator matched 0 sites, want >= 6 - instrument failure, not an empty inventory", "planner_result": "RED rc=1, the floor Fatalf fired with 'matched 0 sites'. CONFIRMED."},
+      {"id": "I2", "milestone": "M1", "venue": "host/verifygate/floor_raise_inventory_test.go", "mutant": "neuter siteReTable the same way, '^\\| [0-9]+ \\|' -> '^ZZNEVERMATCHZZ\\| [0-9]+ \\|'", "landed_and_effect": "test-file sha moves; grep -c ZZNEVERMATCHZZ 0 -> 1; go vet rc=0", "expected": "RED rc=1", "assertion_that_must_fire": "S8 enumerator matched 0 sites, want >= 6 - instrument failure, not an empty inventory", "planner_result": "RED rc=1, the S8 floor Fatalf fired with 'matched 0 sites'. CONFIRMED."},
+      {"id": "N2b", "milestone": "M1", "venue": "host/verifygate/floor_raise_inventory_test.go", "mutant": "PAIRED CONTROL: land I1 AND I2 together, floor PRESENT. RUN N2b BEFORE N2a - it is the control that gives N2a its meaning.", "landed_and_effect": "grep -c ZZNEVERMATCHZZ 0 -> 2 AND grep -c 'instrument failure, not an empty inventory' in the SOURCE stays 2; go vet rc=0", "expected": "RED rc=1", "assertion_that_must_fire": "inventory block enumerator matched 0 sites, want >= 6 - instrument failure, not an empty inventory", "planner_result": "RED rc=1. CONFIRMED - the floor is what makes the instrument-failure arm loud."},
+      {"id": "N2a", "milestone": "M1", "venue": "host/verifygate/floor_raise_inventory_test.go", "mutant": "land I1 AND I2 together AND delete both floor t.Fatalf blocks", "landed_and_effect": "grep -c ZZNEVERMATCHZZ 0 -> 2 AND grep -c 'instrument failure, not an empty inventory' in the SOURCE 2 -> 0; go vet rc=0", "expected": "GREEN rc=0", "assertion_that_must_fire": "NONE - the vacuous pass the floor exists to prevent: both sets empty, every membership loop vacuous, cardinality 0 == 0. The proof is the ABSENCE of N2b's red under the identical enumerator mutant.", "planner_result": "GREEN rc=0, RUN=1, PASS=1. CONFIRMED."},
+      {"id": "C1", "milestone": "M1", "venue": "host/verifygate/zz_c1_collision_test.go (CREATE)", "mutant": "create host/verifygate/zz_c1_collision_test.go in PACKAGE verifygate declaring a second `var siteReScript = regexp.MustCompile(`^collision`)`. PLANNER REPAIR F2: the design doc says 'any other host/ file', which is FALSE - measured, the same declaration in host/broker leaves BOTH go vet ./host/verifygate/ AND go vet ./host/broker/ at rc=0, because Go redeclaration is PACKAGE-scoped. The collision MUST be in package verifygate. Clean up with rm (the file is untracked).", "landed_and_effect": "PLANNER REPAIR F3: AC14's FILTERED count moves 0 -> 1. The doc's '1 -> 2' is wrong on both readings - the UNFILTERED siteReScript count post-change is 3 (comment, declaration, and the `re = siteReScript` assignment), and the filtered count is 0.", "expected": "RED - the package stops BUILDING", "assertion_that_must_fire": "go vet ./host/verifygate/ rc=1 with 'siteReScript redeclared in this block' - a build failure, read before any test result", "planner_result": "vet rc=1, 'vet: host/verifygate/zz_c1_collision_test.go:5:5: siteReScript redeclared in this block'; AC14 filtered 0 -> 1. CONFIRMED. host/broker placement measured as a NO-OP (both vets rc=0)."},
+      {"id": "A1", "milestone": "M2", "venue": "scripts/verify_ail.sh", "mutant": "the fabricated 7th row in the script block ONLY", "landed_and_effect": "sha 5a1bbe89 -> f97c4ec9; BLK 6 -> 7; bash -n rc=0", "expected": "RED rc=1, '--- FAIL'=1", "assertion_that_must_fire": "verify_ail.sh site \"host/store/some_new_file.go\" absent from the S8 table - the two homes disagree on their site set. (The cardinality Errorf also fires - '7 sites, S8 has 6' - but the NAMED assertion is the membership Errorf, because AC4 requires the divergent SITE to be named.)", "planner_result": "RED rc=1, FAIL=1, both Errorfs fired, want-exactly-1 = 0. CONFIRMED."},
+      {"id": "A2", "milestone": "M2", "venue": "design_docs/coding-standards.md", "mutant": "the fabricated 7th row in S8 ONLY", "landed_and_effect": "sha b710a510 -> 63208d62; S8C 6 -> 7", "expected": "RED rc=1, '--- FAIL'=1", "assertion_that_must_fire": "S8 site \"host/store/some_new_file.go\" absent from the verify_ail.sh inventory block - the two homes disagree on their site set", "planner_result": "RED rc=1, FAIL=1. CONFIRMED - the comparison is genuinely symmetric."},
+      {"id": "A3", "milestone": "M2", "venue": "both", "mutant": "the fabricated 7th row in BOTH homes, consistently", "landed_and_effect": "BOTH shas move; BLK 6 -> 7 AND S8C 6 -> 7", "expected": "PASS rc=0, '--- PASS'=1", "assertion_that_must_fire": "NONE. A red here means the legitimate floor-raise path is broken and the design is unusable - S8's own recipe requires exactly this.", "planner_result": "PASS rc=0, RUN=1, PASS=1. CONFIRMED."},
+      {"id": "A4", "milestone": "M2", "venue": "scripts/verify_ail.sh", "mutant": "a '#   7. host/store/some_new_file.go   fabricated OUTSIDE the block (repro)' row inserted immediately AFTER the END marker", "landed_and_effect": "PLANNER REPAIR F4: the design doc's gate is 'BLK STAYS 6', but the drill protocol requires a grep -c that MOVES - a static gate cannot distinguish 'landed outside' from 'the perl did nothing'. The moving gate is WF 6 -> 7 (planner-measured), PAIRED WITH BLK staying 6. sha 5a1bbe89 -> 75a447ab; bash -n rc=0.", "expected": "PASS rc=0", "assertion_that_must_fire": "NONE - the extraction is bounded to the block", "planner_result": "PASS rc=0; WF 6 -> 7; BLK stayed 6; bash -n rc=0. CONFIRMED."},
+      {"id": "R1", "milestone": "M2", "venue": "scripts/verify_ail.sh", "mutant": "delete the '#   3. scripts/verify_ail.sh ...' row from the block", "landed_and_effect": "BLK 6 -> 5; bash -n rc=0", "expected": "RED rc=1", "assertion_that_must_fire": "PLANNER REPAIR F6 - BOTH must be present: 'inventory block site 3 row \"#   3. scripts/verify_ail.sh\" count=0, want exactly 1' AND 'inventory block enumerator matched 5 sites, want >= 6'. Asserting only rc=1 would let a LOST per-row authority pass as a healthy gate.", "planner_result": "RED rc=1 with both messages. R1 is clean on the script side because REQUIRED_VERIFIED appears TWICE in the block (V9), so the sharedNeedle loop stays quiet. CONFIRMED."},
+      {"id": "R2", "milestone": "M2", "venue": "design_docs/coding-standards.md", "mutant": "PLANNER REPAIR F5: delete ROW 1 ('| 1 | `world/<module>.ail`'), NOT row 3. The doc names row 3, but that S8 cell is the ONLY place REQUIRED_VERIFIED appears in the S8 slice (the doc's own V9 records s8=1), so R2-on-row-3 reds on THREE assertions including 'S8 omits \"REQUIRED_VERIFIED\"' - a confound. Row 1's 'What moves' cell contains no sharedNeedle.", "landed_and_effect": "S8C 6 -> 5", "expected": "RED rc=1", "assertion_that_must_fire": "BOTH: 'S8 site 1 row \"| 1 | `world/<module>.ail`\" count=0, want exactly 1' AND 'S8 enumerator matched 5 sites, want >= 6'. ALSO assert grep -c 'S8 omits' /tmp/t = 0 - a non-zero there means the confounded row was used.", "planner_result": "Row 3 measured CONFOUNDED (three messages incl. 'S8 omits \"REQUIRED_VERIFIED\"'); row 1 measured CLEAN (exactly the two intended messages). CONFIRMED."},
+      {"id": "N1", "milestone": "M2", "venue": "host/verifygate/floor_raise_inventory_test.go + scripts/verify_ail.sh", "mutant": "delete the two membership t.Errorfs AND the cardinality-mismatch t.Errorf, and land A1 simultaneously. The cardinality Errorf MUST be neutered too: under A1 the counts differ (7 vs 6), so leaving it in would fire and mask the proof.", "landed_and_effect": "grep -c 'disagree on their site set' in the SOURCE 3 -> 0 AND BLK 6 -> 7; go vet rc=0", "expected": "GREEN rc=0, '--- PASS'=1", "assertion_that_must_fire": "NONE - A1's expected '--- FAIL' is GONE. That absence is the proof that the set-equality, not the floor, is what makes A1 red.", "planner_result": "GREEN rc=0, RUN=1, PASS=1. CONFIRMED - the set-equality is load-bearing and not shadowed by the floor."},
+      {"id": "C2", "milestone": "M2", "venue": "host/verifygate/floor_raise_inventory_test.go + scripts/verify_ail.sh", "mutant": "delete the entry '\"#   3. scripts/verify_ail.sh\",' from the hardcoded scriptRows literal, then land ARM R1 (delete that same row from the script block)", "landed_and_effect": "scriptRows entries 6 -> 5 while grep -c 'want exactly 1' in the SOURCE stays 2; BLK 6 -> 5; go vet rc=0", "expected": "RED rc=1, but with a strictly WEAKER verdict", "assertion_that_must_fire": "grep -c 'want exactly 1' /tmp/t goes 1 -> 0 - R1 stops redding on the per-row message and is caught ONLY by the cardinality floor. That delta is the proof that the hardcoded lists are the independent authority Decision 3 names them as.", "planner_result": "want-exactly-1 in the output = 0; only 'inventory block enumerator matched 5 sites, want >= 6' fired. CONFIRMED."}
+    ]
+  },
+  "acceptance_criteria_repairs": {
+    "AC12.2-prime": {
+      "supersedes": "AC12 part 2 as written in the design doc",
+      "reason": "Finding F1 - the doc's V6 base premise (rc=1 with exactly one failing test, TestHandlerTimeoutKillsTheWholeProcessGroup) is REFUTED by the planner's first-party re-derivation on this rig this session: rc=0 with an EMPTY failing-test set and host/verifygate 'ok' in both legs. The right reading is that the test is a RIG-LOCAL FLAKE (a 100 ms process-group-kill deadline under parallel-package load), red in the designer's session and green in the planner's - not a deterministic base red.",
+      "criterion": "Run ./scripts/verify_go.sh ONCE, after the last milestone, OUTSIDE the sandbox (controller gate). Let S_after be the sorted set of test names on '^--- FAIL' lines. The criterion is: S_after minus {TestHandlerTimeoutKillsTheWholeProcessGroup} == the empty set (the base set measured this session), AND host/verifygate reports 'ok' in BOTH the plain and the race leg. If any OTHER name appears, that is a real regression and the sprint stops.",
+      "rc0_still_forbidden": "Reading rc is STILL forbidden as the criterion - not because the gate is always red, but because it is FLAKY. An rc=0 requirement would fail a correct landing whenever the known flake recurs; an rc=1 expectation would fail a correct landing whenever it does not."
+    },
+    "AC8_strengthened": "Finding F6 - AC8 asks only for rc=1, but measured post-change R1 and R2 red on the legacy per-row 'want exactly 1' AND on the new >= 6 floor. Assert BOTH messages present, so a reader cannot mistake a LOST per-row authority for a healthy gate. This lines AC8 up with what mutation C2 proves.",
+    "AC14_C1_venue": "Finding F2 - the collision file MUST be created in host/verifygate/ (package verifygate). 'Any other host/ file' is false: a second siteReScript in host/broker breaks nothing (both vets measured rc=0).",
+    "C1_landed_gate": "Finding F3 - the landed gate is AC14's FILTERED count moving 0 -> 1, paired with go vet ./host/verifygate/ moving rc=0 -> rc=1. The doc's '1 -> 2' is wrong on both readings (unfiltered post-change count is 3).",
+    "A4_effect_gate": "Finding F4 - the moving gate is the whole-file count WF 6 -> 7, paired with the block count BLK staying 6. A gate that must NOT move violates the drill protocol's own rule.",
+    "R2_row_choice": "Finding F5 - delete S8 row 1, not row 3. Row 3's cell is the only home of the REQUIRED_VERIFIED sharedNeedle in the S8 slice."
+  },
+  "planner_findings": [
+    {"id": "F1", "severity": "HIGH", "summary": "AC12 part 2's base premise is REFUTED on this rig this session: ./scripts/verify_go.sh is rc=0 with an EMPTY '--- FAIL' set, not rc=1 with TestHandlerTimeoutKillsTheWholeProcessGroup. The test is a flake, not a deterministic base red. Repaired as AC12.2-prime (set comparison against an empty base set plus a named flake allowlist; rc still forbidden as the criterion). OWED DOC AMENDMENT to the design doc's V6 and Declared Residual 5."},
+    {"id": "F2", "severity": "HIGH", "summary": "Mutation C1 is a NO-OP as literally written. Go redeclaration is package-scoped; a second siteReScript 'in any other host/ file' that lands in host/broker leaves go vet rc=0 for BOTH packages (measured). C1 must create its collision file in host/verifygate/ (package verifygate), where it was measured to break the build with 'siteReScript redeclared in this block'."},
+    {"id": "F3", "severity": "MEDIUM", "summary": "C1's landed gate 'count moves 1 -> 2' is wrong on both possible readings. Measured post-change: the unfiltered siteReScript count is 3; AC14's filtered count is 0. The correct gate is the filtered count moving 0 -> 1."},
+    {"id": "F4", "severity": "MEDIUM", "summary": "ARM A4's effect gate is specified as 'block count STAYS 6', which violates the drill protocol's own requirement that the intended-effect grep -c must MOVE - a static gate cannot distinguish 'landed outside the block' from 'the perl did nothing'. Repaired to the whole-file count moving 6 -> 7 (measured) paired with the block count staying 6."},
+    {"id": "F5", "severity": "MEDIUM", "summary": "ARM R2's named row (S8 row 3, scripts/verify_ail.sh) is CONFOUNDED: that cell is the only home of the REQUIRED_VERIFIED sharedNeedle in the S8 slice (the doc's own V9 records s8=1), so R2-on-row-3 reds on three assertions including 'S8 omits \"REQUIRED_VERIFIED\"'. Repaired to row 1 (world/<module>.ail), measured clean."},
+    {"id": "F6", "severity": "LOW", "summary": "AC8's removal arms now produce a DUAL verdict post-change - the legacy per-row 'want exactly 1' AND the new >= 6 floor both fire. AC8 asks only for rc=1, so a lost per-row authority could pass as a healthy gate. Strengthened to assert both messages."},
+    {"id": "F7", "severity": "INFO", "summary": "AC14 and AC15 are GREEN AT BASE at exactly their required values (0/9 and 2/2) and AC14 is still 0 post-change. They are correctly-designed non-regression criteria whose only teeth are mutations C1 and C2 - which is why the carve-out bound each applied fix to its own named mutation. Recorded so the evaluator does not read 'green at base' as 'vacuous'."},
+    {"id": "F8", "severity": "INFO", "summary": "A -v-less package run prints no '--- SKIP' lines at all, so AC12.3's skip clause is only meaningful with -v. Measured with -v at base: 52 RUN / 52 PASS / 0 FAIL / 0 SKIP in 63.2 s."},
+    {"id": "F9", "severity": "INFO", "summary": "No GOTOOLCHAIN pin is required this session: ambient go is go1.26.6 and verify_go.sh's deny-list covers go1.26.0-go1.26.5 only. Do not copy the GOTOOLCHAIN=go1.25.6 pin from this repo's older sprint plans."}
+  ],
+  "doc_premises_rederived_and_UPHELD": [
+    "V2/V3: the ARM A / ARM B sha values (5a1bbe89 -> f97c4ec9, b710a510 -> 63208d62) reproduce EXACTLY, and the gate is GREEN under both - the blindness is real in both directions.",
+    "V5: ./scripts/verify_ail.sh rc=0 at pristine base.",
+    "V7: go vet ./host/verifygate/ rc=0; gofmt -l host/verifygate/ empty.",
+    "V8: whole-file '#   N. ' count == block count == 6 at base.",
+    "V10: S8 is the last '## ' section; the slice runs to EOF.",
+    "V12: both regexes extract the identical 6-element list in the same order; sets equal, cardinality equal.",
+    "V13: every line number is correct (:32, :40, :43, :77, :85, :88, :58, :93) and both per-row loops use t.Errorf.",
+    "V14: proposed symbols repo-wide = 0 against a same-scope control of 9 regexp.MustCompile in host/.",
+    "The Implementation sketch COMPILES AS WRITTEN: gofmt 0 bytes, go vet rc=0, scoped test rc=0 RUN=1 PASS=1."
+  ],
+  "residuals_inherited_unchanged": [
+    "Declared residual 1: a symmetric wrongness - a fabricated 7th row added to BOTH homes consistently - is indistinguishable from a legitimate floor-raise and PASSES (arm A3, measured PASS). Inherent to the two-homes-must-agree model; it is the price of AC6.",
+    "Declared residual 2: sharedNeedles duplication remains permitted (strings.Contains only). Decision 4 measured a count==1 promotion as a FALSE RED (REQUIRED_VERIFIED 2x in the block, EXACT_TOTAL_VERIFIED 2x in both homes).",
+    "Declared residual 3: a row renamed identically in BOTH homes is not caught - same symmetric-wrongness class as residual 1.",
+    "Declared residual 4: the S8 slice runs to EOF today; the existing heading-to-next-## logic already handles a future section after S8.",
+    "Declared residual 5: SUPERSEDED IN PART by finding F1 - verify_go.sh is not deterministically red at pristine base on this rig; TestHandlerTimeoutKillsTheWholeProcessGroup is a FLAKE. Fixing the rig cost remains a queue item, not this sprint's scope."
+  ],
+  "deferred_scope": [
+    "No edit to design_docs/coding-standards.md S8's text - ratification-class (human gate). Merging the two homes, or giving S8 an explicit cardinality statement, is a parked human decision.",
+    "No new package, no new script, no new CI job, no .ail, no Z3 contract, no kernel change. The Conflict Surface audit found nothing to extend.",
+    "No promotion of sharedNeedles to counts.",
+    "No fix for TestHandlerTimeoutKillsTheWholeProcessGroup - F1 upgrades what is known about it (flaky, not deterministically red); that is a QUEUE NOTE, not this sprint's work.",
+    "S7 is not engaged: nothing user-facing is added, so no docs/QUICKSTART.md change.",
+    "If the sprint uncovers a genuinely separate defect, FILE it as a 'for the queue, not this sprint' note in the sprint log. Do not absorb it."
+  ],
+  "definition_of_done": [
+    "Two commits on dev, reconstructed by the controller from .snap/M1/ and .snap/M2/, each individually green on go test ./host/verifygate/ -count=1, gofmt -l host/verifygate/, go vet ./host/verifygate/, go build ./... and ./scripts/verify_ail.sh.",
+    "AC1-AC15 all recorded with their measured base result attached, and AC12 part 2 replaced by AC12.2-prime.",
+    "All fifteen mutation arms recorded, each with the moving landed-proof, the go vet rc read BEFORE the test result, THE MESSAGE THAT FIRED, and a sha-verified cp restore with the pristine control re-run on both sides.",
+    "git status --porcelain shows ONLY host/verifygate/floor_raise_inventory_test.go modified plus the two .snap/ trees. Both drill venues back at their base sha256 (5a1bbe89...475a, b710a510...8329); host/verifygate/zz_c1_collision_test.go GONE.",
+    "git status --porcelain -- tools/launchd/ empty (no driver drift).",
+    "Findings F1-F9 carried into the iteration log, with F1 flagged as an OWED DOC AMENDMENT to the design doc's V6 and Declared Residual 5 rather than silently absorbed."
+  ],
+  "handoff": {
+    "type": "plan_ready",
+    "correlation_id": "sprint_w-inventory-test-blind-to-asymmetric-addition_20260831",
+    "next_agent": "sprint-executor",
+    "estimated_duration": "0.15 d (~1.35 h)",
+    "total_loc_estimate": 64,
+    "risk_level": "low",
+    "discovery": "The design doc's implementation sketch was applied and all fifteen mutation arms were RUN by the planner before this plan was written; no expected red is predicted. Six defects in the doc's own drill text were found and repaired (F1-F6), including one arm that is a no-op as written (C1) and one base-state premise that the planner's re-derivation refutes (verify_go.sh is rc=0 with an empty failing set on this rig this session)."
+  }
+}

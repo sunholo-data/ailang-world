@@ -3,9 +3,37 @@ package verifygate
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 )
+
+var (
+	// siteReScript matches `#   N. path` rows in the verify_ail.sh inventory block.
+	siteReScript = regexp.MustCompile(`^#   [0-9]+\.\s+(\S+)`)
+	// siteReTable matches `| N | `path` |` rows in the §S8 table; capture up to the
+	// next pipe and trim backticks/space so the canonical path is the bare file path.
+	siteReTable = regexp.MustCompile(`^\| [0-9]+ \| ([^|]+)`)
+)
+
+// canonicalSiteSet extracts the ordered set of coupled-site file paths from a home's
+// row lines. scriptHome=true parses `#   N. path` rows; false parses `| N | `path` |`
+// table rows. It returns the paths in row order; callers compare them as sets.
+func canonicalSiteSet(home string, scriptHome bool) []string {
+	re := siteReTable
+	if scriptHome {
+		re = siteReScript
+	}
+	var sites []string
+	for _, line := range strings.Split(home, "\n") {
+		m := re.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		sites = append(sites, strings.Trim(m[1], "` \t"))
+	}
+	return sites
+}
 
 func TestFloorRaiseInventoryNamesEveryCoupledFile(t *testing.T) {
 	scriptBytes, err := os.ReadFile(filepath.Join(repoRoot, "scripts", "verify_ail.sh"))
@@ -93,5 +121,56 @@ func TestFloorRaiseInventoryNamesEveryCoupledFile(t *testing.T) {
 		if !strings.Contains(s8, needle) {
 			t.Errorf("S8 omits %q", needle)
 		}
+	}
+
+	scriptSites := canonicalSiteSet(block, true)
+	s8Sites := canonicalSiteSet(s8, false)
+
+	// Duplicate-within-a-home guard: a duplicated coupled-site row is a defect in its own
+	// right, and it is what makes a one-directional membership check evadable (a duplicate
+	// in one home can mask an asymmetric addition by keeping the counts equal). Assert no
+	// path repeats within EITHER home before comparing.
+	scriptSet := make(map[string]bool, len(scriptSites))
+	for _, s := range scriptSites {
+		if scriptSet[s] {
+			t.Fatalf("duplicate coupled-site path %q in the verify_ail.sh inventory block — a duplicated row is a defect", s)
+		}
+		scriptSet[s] = true
+	}
+	s8Set := make(map[string]bool, len(s8Sites))
+	for _, s := range s8Sites {
+		if s8Set[s] {
+			t.Fatalf("duplicate coupled-site path %q in the S8 table — a duplicated row is a defect", s)
+		}
+		s8Set[s] = true
+	}
+
+	// Cardinality floor with instrument-failure branch: if the enumerator matches nothing,
+	// both sets are empty and equal, so the set-equality below would pass vacuously. The
+	// floor makes that a LOUD red. It is a MINIMUM (>= 6), never an equality, because the
+	// legitimate floor-raise path adds a 7th row to BOTH homes and must pass.
+	if len(scriptSites) < 6 {
+		t.Fatalf("inventory block enumerator matched %d sites, want >= 6 — instrument failure, not an empty inventory", len(scriptSites))
+	}
+	if len(s8Sites) < 6 {
+		t.Fatalf("S8 enumerator matched %d sites, want >= 6 — instrument failure, not an empty inventory", len(s8Sites))
+	}
+
+	// Symmetric set-difference assertion: the two homes must agree on their SITE SET, not
+	// merely on the presence of each known site. Report anything in EITHER home absent from
+	// the OTHER — both directions — so the divergent site is always NAMED. This is the
+	// comparison between the two homes that detects asymmetric addition.
+	for _, s := range s8Sites {
+		if !scriptSet[s] {
+			t.Errorf("S8 site %q absent from the verify_ail.sh inventory block — the two homes disagree on their site set", s)
+		}
+	}
+	for _, s := range scriptSites {
+		if !s8Set[s] {
+			t.Errorf("verify_ail.sh site %q absent from the S8 table — the two homes disagree on their site set", s)
+		}
+	}
+	if len(scriptSites) != len(s8Sites) {
+		t.Errorf("site-set cardinality mismatch: verify_ail.sh has %d sites, S8 has %d — the two homes disagree on their site set", len(scriptSites), len(s8Sites))
 	}
 }
