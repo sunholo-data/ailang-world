@@ -16004,3 +16004,25 @@ Round 2: **2 reject / 1 pass** (`gemini-3-1-pro` flipped, its remaining catch it
 **Retro**: the green baseline was a false green in the exact class the skill warns about: a malformed test selector returned rc=0 with `[no tests to run]`. No skill edit: this is a rule-broken instance, not a new gap.
 
 **Next**: rows 49, 50, 51, 52, 53, 54, 55, then 39; row 48 waits on D-WORLD-28.
+
+---
+
+## Iteration 138 — 2026-08-31 — inherited P49 verified; PARKED-ON-LANE awaiting independent evaluator
+
+**Kind**: died-mid-flight recovery and verification; no new backlog item routed.
+
+**Context / preflight**: world kill switch armed; correct GitHub account; billing CLEAN; inbox empty; zero allowlisted Mark directives on #89 since `2026-08-27T18:20:00Z`; dev CI green at origin `0bbb1a9` with 2/2 checks successful and one completed CI run. The main checkout is one commit behind origin, so origin was the state base and this record was written from a fresh `origin/dev` worktree. The shared skill is sourced from the AILANG checkout; World has no `.claude/skills` path in its own origin, so the repo-local cmp form is inapplicable rather than a skill mismatch.
+
+**Pick**: Gate 2 found iteration 138 died mid-flight on queue row 49. Branch `sprint/world-iter138-canary-fence` contains three clean milestone commits (`ca2ecd6`, `345a73a`, `7d51e02`), while the separate evaluator worktree remained at the same tip. There was no open PR and no mission record. Driver evidence shows the prior controller reached “running the required independent evaluation,” then the provider returned a usage-limit error and exited rc=1.
+
+**Outcome**: `P49` is **PARKED-ON-LANE**, not `needs-human-review`. The implementation is not merged because the independent evaluator never ran. Resume predicate: re-probe the configured `sonnet` evaluator after the Anthropic weekly reset at Monday 07:00 local; on rc=0, evaluate in `.wt-world-iter138-eval`, then verify and land the existing branch. No decision is requested from Mark.
+
+**Verification re-derived first-party**: branch diff is 3 files / 1,001 insertions / 2 deletions; porcelain 0. Controller gates outside the executor sandbox: gofmt 0 lines; scoped `go vet` rc=0; `go build ./...` rc=0; both named tests exactly 1 RUN/1 PASS; `verify_go.sh` PASS including full plain and race suites; `verify_ail.sh` PASS at 11 identities, 40 named tests, and 9/9 package steps; zero `.ail` files changed. The known race-control warnings were attributed to the deliberate `racecontrol/main.go:16` positive control.
+
+**Routing evidence**: inherited designer `pi:ollama/deepseek-v4-flash:0731-cloud`; planner `opus`; executor `codex:gpt-5.6-sol`; evaluator `sonnet` failed to start on provider capacity. This controller is also Codex, so substituting it as judge would violate generator≠judge. `metered=$0.00` this recovery iteration.
+
+**Ruled out**: redoing the sprint; merging without evaluation; treating provider capacity as a human judgment ask; trusting the previous executor's greens without re-running them.
+
+**Retro**: the prior slot failed loudly (`rc=1`) and left complete recoverable work, so Gate 2's three-trace recovery rule worked. No new two-instance skill gap and no routing-policy change.
+
+**Next**: re-probe and finish row 49 after Monday 07:00 local; otherwise rows 50–55 then 39 remain routable. Row 48 separately waits on D-WORLD-28.
