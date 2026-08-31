@@ -155,4 +155,22 @@ func TestFloorRaiseInventoryNamesEveryCoupledFile(t *testing.T) {
 	if len(s8Sites) < 6 {
 		t.Fatalf("S8 enumerator matched %d sites, want >= 6 — instrument failure, not an empty inventory", len(s8Sites))
 	}
+
+	// Symmetric set-difference assertion: the two homes must agree on their SITE SET, not
+	// merely on the presence of each known site. Report anything in EITHER home absent from
+	// the OTHER — both directions — so the divergent site is always NAMED. This is the
+	// comparison between the two homes that detects asymmetric addition.
+	for _, s := range s8Sites {
+		if !scriptSet[s] {
+			t.Errorf("S8 site %q absent from the verify_ail.sh inventory block — the two homes disagree on their site set", s)
+		}
+	}
+	for _, s := range scriptSites {
+		if !s8Set[s] {
+			t.Errorf("verify_ail.sh site %q absent from the S8 table — the two homes disagree on their site set", s)
+		}
+	}
+	if len(scriptSites) != len(s8Sites) {
+		t.Errorf("site-set cardinality mismatch: verify_ail.sh has %d sites, S8 has %d — the two homes disagree on their site set", len(scriptSites), len(s8Sites))
+	}
 }
