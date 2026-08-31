@@ -1,6 +1,10 @@
 package verifygate
 
 import (
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"go/version"
 	"os"
 	"path/filepath"
@@ -364,6 +368,91 @@ func TestReproModuleFloorStaysBelowKnownBadToolchains(t *testing.T) {
 	}
 }
 
+// canaryAssertionShapeProblems parses the canary test source and reports any deviation from the
+// required assertion shape: TestToolchainCanary must exist exactly once and contain exactly one
+// top-level `if` whose condition is rows[0].field != "stateRoot". That if-body must contain
+// exactly one direct t.Fatalf expression statement, rather than merely a descendant call.
+func canaryAssertionShapeProblems(src string) []string {
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "", src, 0)
+	if err != nil {
+		return []string{fmt.Sprintf("parse error: %v", err)}
+	}
+
+	var funcs []*ast.FuncDecl
+	for _, decl := range f.Decls {
+		if fn, ok := decl.(*ast.FuncDecl); ok && fn.Name.Name == "TestToolchainCanary" {
+			funcs = append(funcs, fn)
+		}
+	}
+	if len(funcs) != 1 {
+		return []string{fmt.Sprintf("TestToolchainCanary func decl count=%d, want exactly 1", len(funcs))}
+	}
+
+	var assertions []*ast.IfStmt
+	for _, stmt := range funcs[0].Body.List {
+		ifStmt, ok := stmt.(*ast.IfStmt)
+		if !ok {
+			continue
+		}
+		binary, ok := ifStmt.Cond.(*ast.BinaryExpr)
+		if ok && binary.Op == token.NEQ && isRowsField(binary.X) && isStateRootLit(binary.Y) {
+			assertions = append(assertions, ifStmt)
+		}
+	}
+	if len(assertions) != 1 {
+		return []string{fmt.Sprintf("top-level `rows[0].field != \"stateRoot\"` assertion if-stmt count=%d, want exactly 1", len(assertions))}
+	}
+
+	directFatalf := 0
+	for _, stmt := range assertions[0].Body.List {
+		exprStmt, ok := stmt.(*ast.ExprStmt)
+		if !ok {
+			continue
+		}
+		call, ok := exprStmt.X.(*ast.CallExpr)
+		if ok && isTFatalfCall(call) {
+			directFatalf++
+		}
+	}
+	if directFatalf != 1 {
+		return []string{fmt.Sprintf("direct t.Fatalf expression statement in assertion body count=%d, want exactly 1", directFatalf)}
+	}
+	return nil
+}
+
+// isRowsField reports whether expr is structurally rows[0].field.
+func isRowsField(expr ast.Expr) bool {
+	selector, ok := expr.(*ast.SelectorExpr)
+	if !ok || selector.Sel.Name != "field" {
+		return false
+	}
+	index, ok := selector.X.(*ast.IndexExpr)
+	if !ok {
+		return false
+	}
+	rows, ok := index.X.(*ast.Ident)
+	if !ok || rows.Name != "rows" {
+		return false
+	}
+	literal, ok := index.Index.(*ast.BasicLit)
+	return ok && literal.Kind == token.INT && literal.Value == "0"
+}
+
+func isStateRootLit(expr ast.Expr) bool {
+	literal, ok := expr.(*ast.BasicLit)
+	return ok && literal.Kind == token.STRING && literal.Value == `"stateRoot"`
+}
+
+func isTFatalfCall(call *ast.CallExpr) bool {
+	selector, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok || selector.Sel.Name != "Fatalf" {
+		return false
+	}
+	receiver, ok := selector.X.(*ast.Ident)
+	return ok && receiver.Name == "t"
+}
+
 func TestCanaryDeclaresPositiveArmOnly(t *testing.T) {
 	canaryPath := filepath.Join(repoRoot, "host", "store", "toolchain_canary_test.go")
 	raw, err := os.ReadFile(canaryPath)
@@ -371,8 +460,11 @@ func TestCanaryDeclaresPositiveArmOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	src := string(raw)
-	if count := strings.Count(src, "stateRoot"); count < 2 {
-		t.Fatalf("instrument failure: %s count(%q)=%d, want at least 2 before checking comment fences", canaryPath, "stateRoot", count)
+	if problems := canaryAssertionShapeProblems(src); len(problems) > 0 {
+		for _, problem := range problems {
+			t.Errorf("%s: %s", canaryPath, problem)
+		}
+		t.Fatalf("instrument failure: %s no longer asserts the miscompile shape", canaryPath)
 	}
 	if count := strings.Count(src, "GOTOOLCHAIN"); count != 0 {
 		t.Errorf("%s count(%q)=%d, want 0; known-bad arms belong in the nested repro module", canaryPath, "GOTOOLCHAIN", count)
