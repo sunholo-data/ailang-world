@@ -4785,6 +4785,35 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
     `continue-on-error: true` stands (row 44). Do not let this row grow into that one.
     · ~0.3d · gated on nothing · surfaced iter-139.
 
+57. **w-approvals-spine-prints-a-green-no-pending-under-the-row-it-just-listed** · clause-2 ·
+    **EVERY MISSION-LOOP-AUTHORED ROW ON THE DECISION SPINE IS TYPED `notification`, NOT
+    `approval_request` — SO `ailang coordinator pending` LISTS THE ASK AND THEN PRINTS
+    `✓ No pending approval requests` DIRECTLY BENEATH IT.** Measured iter-139, first-party, while
+    posting `D-WORLD-28` to the spine. **The split is by AUTHOR CLASS and it is total:** of 12 rows
+    in the `approvals` inbox, all **6** authored by `coordinator` carry `message_type=approval_request`
+    and all **6** authored by a mission loop (`mission-v1` ×3, `mission-motoko` ×1, `mission-world`
+    ×1, `audit-r1` ×1) carry `notification`. So this is not one controller's typo; it is what the
+    shared skill's Gate-5 snippet produces for every mission on the rig. **The prescribed flag is
+    accepted and silently ignored:** `ailang messages send … --type approval_request` exits **0**,
+    emits no warning, and stores `notification`. **A flag-ordering hypothesis was tested and
+    REFUTED** — Go's `flag` package stops at the first non-flag argument, so the natural theory is
+    that the skill's body-positional-first form leaves the flags unparsed; two arms sent to a
+    throwaway inbox (`-type` AFTER the body vs `-type` BEFORE it) both stored `notification`, while
+    `-title` and `-from` landed correctly in both. The discriminator collapsed, and here the
+    collapse IS the finding: the control is that `approval_request` is representable in this store
+    (6 rows prove it), so the value is not being rejected — it is not being applied on this send
+    path. **SCOPE, STATED HONESTLY — the ask is NOT lost.** `ailang coordinator pending` unions the
+    unread `approvals` inbox and DID surface the row (verified in the same call). What is wrong is
+    the second line it prints: the typed sub-query finds zero `approval_request` rows and reports
+    `✓ No pending approval requests` — a green checkmark, under the row it just listed. That is the
+    vacuous-pass shape this mission keeps closing, aimed at the one surface whose whole job is to
+    say what is waiting on a human, and the green line is exactly the kind of sentence that gets
+    quoted onward. Whether the Discord "🔔 Approval needed" push filters on the type is **NOT
+    established** and must be measured before this row claims it. **Fleet-scoped, not World-owned:**
+    the fix is in `ailang messages send` (or in the shared skill's snippet), so it routes to
+    `sunholo-data/ailang` as an issue plus a cross-mission note, per the frozen-core rule — this row
+    tracks World's side of it. · ~0.2d · gated on nothing · surfaced iter-139.
+
 ## Premise Verification Log (quorum objection #1 — every load-bearing claim, with evidence)
 
 | Premise | Verified | Evidence |
