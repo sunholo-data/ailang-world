@@ -1,19 +1,41 @@
-# Ailang World Mission Dashboard
+# Mission Dashboard — Ailang World
 
-## Latest
-- Iteration **140**: row **50** `w-shell-assignment-parser-drops-an-indented-assignment` **PARKED** `needs-human-review` on new decision **`D-WORLD-29`**. Design doc written, revised once and banked; two quorum rounds, both BLOCKED. No code routed.
-- **The doc and the queue row disagree, and the row is the one that needs amending.** The doc rejected row 50's own "tolerate whitespace, require total 1" as a weakening; quorum round 2 refuted its rationale, and I measured it: **indentation is not syntax in bash** — an indented top-level assignment executes exactly like a column-0 one. So the loud red the doc was defending fires because the scanner cannot *see* a real assignment.
-- **Row 58 is new and it is about our own instrument**: `scripts/verify_go.sh` is **rc=1 on pristine `dev`** — same 4-test failing set in a loaded and an unloaded arm — while **dev CI is GREEN on the same commit**. Mechanism isolated: a freshly-copied binary costs 1336 ms on first exec vs 96 ms pinned (macOS provenance check), against a 10 s deadline. Rig-local, so every `verify_go.sh rc=0` acceptance criterion is currently broken as written.
+*Snapshot, overwritten each iteration. History: `world-mission.md` STATUS + `world-mission-log.md`.*
+**As of** 2026-08-31, iteration **141** · `dev` = [`d195717`](https://github.com/sunholo-data/ailang-world/commit/d195717) · CI **GREEN** (2/2 on the merge commit)
 
-## Next
-- Rows **51–58**, then **39**.
-- Rows **48** and **50** are blocked, each on one open decision.
+## Just landed
+- **Row 51** — the floor-raise coupling-inventory gate was blind to an **asymmetric addition**: a 7th
+  coupled-file row in one of the two homes passed with no count moving. Now a symmetric
+  set-difference + per-home duplicate guard + a `>= 6` instrument-failure floor.
+  PR [#108](https://github.com/sunholo-data/ailang-world/pull/108) · evaluator `sonnet` **97/100 PASS**,
+  zero blocking · **6 real mutants were invisible to the old test** (7 of 9 arms survived it).
 
-## Routing / spend
-- Designer `claude:claude-fable-5` (rotation entry after deepseek; probe rc=0; authoring + one protocol-mandated revision = the Fable one-DOC ceiling, met not exceeded). Planner lane derived `opus fail-closed:env-pin` but **never spawned** — no plan is owed for a parked doc. Executor/evaluator: none.
-- `metered=$0.2514` of `$5` — quorum R1 $0.0997, R2 $0.1314, restored reviewer $0.0203. Billing tripwire CLEAN.
-- Quorum round 2 was **full strength**: `oc-glm-5-2` recorded absent (`invalid`) in both rounds was re-run alone and returned PASS, so 2 rejects to 1 pass with `absent_reviewers` closed.
+## Next up (ready, gated on nothing)
+1. **Row 52** — wiring test attributes a step to the previous one under key reorder.
+2. **Row 53** — a quorum reviewer can be silenced by its own review content.
+3. **Row 59** *(new)* — a `grep -c` cannot prove an assertion is *live*: wrap row 51's own new block
+   in `if false {}` and its acceptance criterion still reads green. Row 49's defect one layer up.
 
-## Parked on Mark
-- **`D-WORLD-28` (OPEN)** — one word, A or B: how should `verify_go.sh` guarantee its nested race-control module can execute? Recommendation **A**.
-- **`D-WORLD-29` (OPEN, new)** — one word, A or B: should a single *indented* shell assignment be ACCEPTED (A, recommended — row 50's own text, whitespace-tolerant total == 1) or REJECTED (B — the doc's two-sided invariant)? Answering also amends row 50's text, which carries the same false premise.
+## Parked on Mark — 2 open decisions, both one word
+- **`D-WORLD-28`** — how should `verify_go.sh` guarantee its nested race-control module can execute?
+  **A (recommended)**: fail closed unless `ACTIVE_GO` is at-or-above the root module floor. **B**: keep
+  ambient auto-selection, pin `racecontrol/go.mod` independently.
+- **`D-WORLD-29`** — after the whitespace-tolerant rewrite of `shellAssignmentValues`, should a single
+  *indented* assignment be **ACCEPTED** (**A**, recommended) or **REJECTED** (**B**)? Answering also
+  amends ratified queue row 50, which is why the loop may not settle it.
+*Default if unanswered: rows 48 and 50 stay parked and the queue advances past them.*
+
+## Loop cadence + routing
+Nightly launchd, one queue item per iteration. Controller `opus` · designer **rotation**
+(`claude:claude-fable-5` ↔ `pi:ollama/deepseek-v4-flash:0731-cloud` — the pi lane is now **2-for-2**
+with typed `ok` verdicts and non-empty diffs) · planner `opus` · executor `codex:gpt-5.6-sol` ·
+evaluator `sonnet`. generator≠judge held four ways this iteration.
+
+## Quota posture
+`metered = $0.3427` of the `$5` iteration ceiling, all of it design quorum. Every other lane is a
+subscription/flat-rate bucket. Pinned `ailang` v0.30.0 at `/tmp/ailang-v0300`.
+
+## Standing rig caveat
+`scripts/verify_go.sh` is **FLAKY on this rig**, not deterministically red — 4 runs in ~90 min gave
+2 red / 2 green over 3 different failing sets while dev CI stayed green. An `rc=0` criterion for it
+is unsafe in both directions; use a set comparison. Row **58**.
