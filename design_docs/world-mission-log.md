@@ -16307,3 +16307,147 @@ run. `metered=$0.13903` of $5.
 - Treating row 61 as a defect in the needle set. The needles do exactly what a static scan can do;
   the residual is a dataflow break, which is why row 61 is its own row.
 - Reading `ailang design-review --json` at a top-level `.verdict`. It is `.result.verdict`.
+
+## Iteration 146 — 2026-09-01 — row 50 unparked by an attended ruling, revised to it, then RE-PARKED: the ruling's own rationale is false for the one shape nobody had measured [REFUTATION]
+
+**Pick:** queue row 50 `w-shell-assignment-parser-drops-an-indented-assignment`, the queue head,
+unparked by `D-WORLD-29` (Mark, attended 2026-09-01). No code was routed — the row re-parked at
+Gate 2/3 before any sprint lane — so no planner, executor or evaluator ran.
+
+**Progress:** goal unmoved. 54 of 61 queue rows closed, unchanged from iteration 145. This
+iteration converted one parked row into a *correctly scoped* parked row: the design now matches
+the ratified direction and the one thing blocking it is a single named decision rather than an
+unreviewed doc.
+
+### The attended channel worked, and its provenance was checked rather than assumed
+
+`D-WORLD-29` ratified option **A** — one whitespace-tolerant scan, `len(values) == 1` — which
+**reverses** the banked doc's rule B (two-sided invariant, helper returning `(values, indented)`,
+four new call-site assertions). Under the origin skill's ATTENDED LEDGER EDITS rule (b), an
+attended ruling counts as a human answer only if the commit that flipped the row was not authored
+by the fleet account. Measured: `git log -1 -S'| D-WORLD-29 | RESOLVED' -- <charter>` returns
+**`Mark Edmondson <mark@aitanalabs.com>`**, not `sunholo-voight-kampff`. `D-WORLD-30` checks
+identically. Not a self-resolution.
+
+### The row is real, and rule A closes it — both measured first-party
+
+Scratch worktree (sibling of the repo, never `/tmp`), every arm with the mutant asserted LANDED by
+sha256, the intended effect asserted against the system's own view rather than bytes, `bash -n`
+rc=0, `go vet` rc=0 read **before** any test result, restored byte-identical from a `cp` backup,
+pristine control green before **and** after the batch, porcelain 0.
+
+- **ARM A (silent)** — a second, indented `KNOWN_BAD` beside the column-0 one, base helper:
+  **rc=0 RUN=2 PASS=2**. The gate is blind while bash genuinely narrows the deny-list.
+- **ARM B (loud)** — indented-only, base helper: **rc=1 RUN=2 PASS=0 FAIL=2**,
+  `count=0, want 1` at `:267` and `:351`.
+- **ARM A under the ratified rule-A helper**: **rc=1 RUN=2 PASS=0 FAIL=2** with
+  **`KNOWN_BAD assignment count=2, want 1`** at `:269` and `:353` — the row's whole defect closed
+  by the *pre-existing* message, with no new assertion at any of the four call sites.
+
+### The finding that parks it: the ruling's rationale has a scope
+
+`D-WORLD-29` justifies A because an indented assignment's value is *"what bash actually does"*.
+True for a **top-level** indented assignment — the shape that was in front of Mark. **False for an
+assignment inside a multi-line branch that never executes.** With the only `KNOWN_BAD` inside
+`if false; then` / `fi` and no column-0 copy: base helper **rc=1 `count=0, want 1`** (correctly
+loud) → rule-A helper **rc=0 RUN=2 PASS=2**, while the runtime control
+`bash -c 'if false; then KNOWN_BAD="x"; fi; echo "${KNOWN_BAD:-<UNSET>}"'` prints **`<UNSET>`**.
+Rule A binds the toolchain floor against a deny-list that does not exist at runtime.
+
+This is a defect the change **INTRODUCES**, not one it fails to fix — Gate 2's own discriminator,
+and the reason it is a decision rather than a queue row. And it is not a corner: `run.sh` carries
+**17** control-flow openers and **65** indented lines (fresh negative control: 0), so there are 17
+live positions where a refactorer can put one, every one loud before and silent after. Declared as
+**residual 6**, pinned by **unit arm 11**, recorded as `V-ARMC1`/`V-ARMC2` with the runtime
+control. The paired control in the same batch proves the helper is not merely permissive.
+
+### Quorum round 3 — full strength, blocked, both objections measured rather than forwarded
+
+3 of 3 PRESENT, `.synthesis.absent_reviewers` **`[]`** cross-checked by
+`[.reviewers[]|select(.present==false)]` with `has("synthesis")` as the sibling control, verdicts
+read at the NESTED `.result.verdict` path. `metered=$0.15101`. `gemini-3-1-pro` **pass**.
+
+**`oc-glm-5-2` reject — a PREMISE objection, and it was right.** AC7 hardcoded a 4-name base
+`--- FAIL` set measured at `9c0ad0b` while the doc targets `cb73cab`. Run twice on the **identical**
+pristine worktree at `cb73cab` (porcelain 0 between runs; known-positive control 19 `ok`/`---`
+lines): **run 1 rc=1 with `{TestHandlerTimeoutKillsTheWholeProcessGroup}`; run 2 rc=0 with an EMPTY
+set.** The hardcoded set matches **neither**, and the gate is confirmed **flaky on one tree** —
+queue row 58 corroborated first-party, from the opposite direction to the way it was filed. Fixed
+with the reviewer's own verbatim alternative: AC7 part 2 now takes its base reading at **drill
+start**, same worktree, same commit, twice, treating only names common to both runs as the base
+(`V-ARM-GO`).
+
+**`gpt5-6-sol` reject — this one disputes the DIRECTION**, on `V-ARMC2`: *"labeling this a residual
+does not make the regression acceptable"*, with the verbatim disposition *"If that migration is out
+of scope, keep the row blocked rather than accepting the demonstrated V-ARMC2 false green."* The
+carve-out's precondition fails by its own terms, the one-revision-one-requorum allowance is spent,
+and choosing between "accept the residual" and "migrate to a declarative fixture" is controller
+judgment over a contested direction — Standing rule 2, park. **`D-WORLD-29` is NOT reopened**; the
+ask is the new, uniquely-named **`D-WORLD-31`**, because the fact it rests on was measured after the
+ruling.
+
+### Row 50's ratified text amended, under the ruling's explicit authorisation
+
+The ruling said *"AMEND queue row 50 in the same iteration … this ruling authorises exactly that
+edit"*; iteration 145 did not do it. The clause *"an indented **only** assignment likewise reads 0
+and fatals"*, listed among the helper's **correct** loud behaviours, is retracted as a statement of
+correctness — the observation is accurate, the premise attached to it is false. Prior head preserved
+struck-through per the charter's dead-head convention.
+
+### The running skill is not the ratified skill
+
+Gate 1's drift check, run against the **resolved** symlink target, fired for the first time in
+thirteen iterations: running copy **3,929** lines vs `origin/dev`'s **4,076** — `147` added, `0`
+removed, so the running file is a strict prefix. Cause measured: the V1 checkout the symlink
+resolves into is **22 commits behind**, **6** of them touching `SKILL.md`, plus a `+64`-line
+uncommitted in-place Gate-5 edit. **V1's to fix — World may not edit or commit the shared skill.**
+I read the delta and followed the **origin** rules where they differ. The load-bearing missing rule
+is ATTENDED LEDGER EDITS — the exact channel this pick depends on. Also missing: the per-gate
+`mission-heartbeat.sh` stamps (**the script does not exist in this checkout**; `tools/launchd/` is
+frozen core here, so it is recorded, not worked around), the round-2+ evaluator-directive staleness
+rule, and the sub-agent half of standing rule 7 (applied by hand in the designer directive).
+
+### Routing
+
+Controller `claude:claude-opus-5`. Designer **`pi:ollama/deepseek-v4-flash:0731-cloud`** — the
+rotation's next entry after `claude:claude-fable-5`, probed rc=0, run through the V1 checkout's
+`scripts/mission_pi_run.sh` by **absolute path** (a V1 artifact, absent from this repo, takes
+`--workdir`, so no fork — same shape as `mission_directives.sh`). **Typed verdict `ok`** (rc=0,
+112 s, `worktree_changed_files=1`, 9 tool executions), read from the verdict JSON rather than from
+`rc` or `stopReason`, both of which the skill records as evadable. Rotation advanced. This is the
+first of the two consecutive `ok`-with-non-empty-diff runs the PROMOTION RULE counts, though that
+rule scopes to the **executor** rotation, not this one. Planner/executor/evaluator did not run; the
+`codex:gpt-5.6-sol` executor lane was probed rc=0 and left unused. `metered=$0.15101` of $5.
+
+A direction change is authoring work, not the narrow-refinement carve-out — the carve-out applies a
+reviewer's verbatim fix to an *uncontested* direction, and iteration 145 had just paid $0.139 to
+learn that a ruling recorded as prose and not propagated into the normative sections is a real
+defect. Hence a designer rather than a controller edit.
+
+### Retro — instance 2 of a bar this loop pre-registered at iteration 142
+
+Iteration 142 recorded *"a hedged `pass` is syntactically indistinguishable from a clean one"* as
+instance 1: it voted `pass` in a note naming the very hole two reviewers then rejected on, costing
+$0.1489. The same fork arrived here — I had measured `V-ARMC2` and could have filed it as a residual
+and voted a hedged `pass`. Instead I **closed my own finding first** (residual 6, arm 11, two
+verification rows) and then voted `pass` as the strongest reading of my own note. The ≥2 bar is
+**MET**. It is a **skill** fix and World cannot edit the shared skill, so it is **PROPOSED to V1**
+on the cross-mission channel rather than applied. Note what the outcome argues: `gpt5-6-sol`
+rejected on that same finding anyway, so closing it did not buy a pass — it bought a *correctly
+scoped* block, on the direction rather than on my omission.
+
+### Ruled out / do not re-chase
+
+- Applying `D-WORLD-29` as a controller carve-out edit. It reverses the doc's central decision;
+  that is authoring, and the carve-out forbids it over a direction change.
+- A cheap "refuse if the script contains control flow" structural floor as a third option for
+  `D-WORLD-31`. **Measured dead**: `run.sh` has 17 control-flow openers, so it would fatal on the
+  pristine script.
+- A hybrid that also requires column-0 count ≥ 1. That is rule B on the exact point `D-WORLD-29`
+  decided, so it is not offered.
+- Re-opening `D-WORLD-29`. The recording contract forbids re-asking a resolved row; a new fact gets
+  a new uniquely-named decision.
+- Trusting the doc's hardcoded `verify_go.sh` base FAIL set. Measured at `cb73cab` it matches
+  neither of two consecutive runs on one tree.
+- Reading the pi lane's `rc` or `stopReason` as evidence work happened. The typed verdict and the
+  worktree diff are the load-bearing reads.

@@ -1,37 +1,37 @@
 # w-shell-assignment-parser-drops-an-indented-assignment
 
-**Status**: **PARKED `needs-human-review` 2026-08-31 (World iter-140) on decision `D-WORLD-29`** — NOT ready to route.
+**Status**: **REVISED under human ruling `D-WORLD-29` (attended 2026-09-01)** — direction ratified as
+option A; ready to route.
 
 > **⚠ READ THIS BEFORE IMPLEMENTING ANY OF THE DESIGN BELOW.** Two quorum rounds both BLOCKED. The
-> surviving objection (`gpt5-6-sol`, round 2) disputes the design DIRECTION, and the controller
+> surviving objection (`gpt5-6-sol`, round 2) disputed the design DIRECTION, and the controller
 > MEASURED its premise TRUE: **leading whitespace is not syntax in bash.** A script setting `COL0=`,
 > a space-indented `INDENTED=` and a tab-indented `TABBED=` at top level prints all three values,
-> rc=0; the paired control confirms that a genuinely *conditional* assignment is what changes
-> behaviour (`NARROW` unset → `wide list`, set → `narrow`). So §Solution Design's central rationale —
-> that an indented assignment is a "conditional/nested shadow" and must be counted as a DEVIATION
-> rather than extracted — is **FALSE**, and the two-sided invariant built on it rejects valid shell.
+> rc=0. So the earlier design's central rationale — that an indented assignment is a
+> "conditional/nested shadow" and must be counted as a DEVIATION rather than extracted — is
+> **FALSE**, and the two-sided invariant built on it rejects valid shell.
 >
-> `gpt5-6-sol`'s verbatim `proposed_fix`, which is also charter row 50's own prescription, is the
-> likely resolution: *one* whitespace-tolerant scan — trim leading spaces/tabs, ignore comments,
-> extract `NAME="…"` regardless of indentation, require `len(values) == 1`. The addition mutant then
-> yields count=2 and REDS (the row's purpose is served); an indented-only assignment yields count=1
-> and supplies its value. Under that rule §Solution Design, AC3, AC9 and unit arms 2/3/7 all need
-> rewriting.
+> The item was parked for the human. The human has now ruled (D-WORLD-29, attended 2026-09-01,
+> VERBATIM — normative, not to be argued with): **"ANSWERED — A — ACCEPT the indented assignment.
+> One whitespace-tolerant scan: trim leading spaces/tabs, ignore comments, extract NAME=\"...\"
+> regardless of indentation, require len(values) == 1. B's stated rationale ('an indented
+> assignment is a conditional/nested shadow') is measured FALSE, and defence-in-depth bought with a
+> false premise is not worth a loud red on a benign re-indent."** This document is revised to that
+> ruling: option A, with every trace of the rejected option B removed — not annotated, not kept as
+> an alternative.
 >
-> This is parked rather than revised because the bounded one-revision-one-requorum allowance is
-> spent, and because **charter row 50 itself encodes the same false premise** (it lists "an indented
-> *only* assignment likewise reads 0 and fatals" among the correct loud behaviours) — amending
-> ratified queue text is a human decision, not a controller routing call. See `D-WORLD-29`.
+> Two further findings survive EITHER rule and must not be lost: (1) `oc-glm-5-2` (restored from
+> `absent`, verdict PASS) observes that declared residual 1 — an `export KNOWN_BAD="…"` inside the
+> same `if` — leaves the IDENTICAL silent-narrowing hole open; (2) `gemini-3-1-pro` is right that
+> the pre-existing failure message hardcodes `KNOWN_BAD` for all four call sites, so a `KNOWN_GOOD`
+> or `PINNED` deviation would emit a false variable name; template it. Both are carried as named
+> residuals below (residual 1 and a note under Call sites), not absorbed into this change.
 >
-> Two further findings that survive EITHER rule and must not be lost: (1) `oc-glm-5-2` (restored
-> from `absent`, verdict PASS) observes that declared residual 1 — an `export KNOWN_BAD="…"` inside
-> the same `if` — leaves the IDENTICAL silent-narrowing hole open; (2) `gemini-3-1-pro` is right that
-> the prescribed failure message hardcodes `KNOWN_BAD` for all four call sites, so a `KNOWN_GOOD` or
-> `PINNED` deviation would emit a false variable name; template it.
->
-> Everything else in this doc stands and was verified: the two measured arms, the reuse audit, the
-> declared-residual list, the anti-vacuity floors, and every command — each of which the controller
-> re-executed verbatim after the round-1 repair.
+> Everything else in this doc stands and was verified: the reuse audit, the declared-residual
+> list, the anti-vacuity floors, and every command — each of which the controller re-executed
+> verbatim after the round-1 repair. The controller's first-party measurements at HEAD this
+> iteration (ARM 0 / ARM A / ARM B at `cb73cab`) are recorded in the Verification Log and re-derived
+> under ruling A in the mutation table.
 **Target**: current iteration (World iter-140 / queue row 50)
 **Priority**: P2 (latent gap, not a live defect)
 **Estimated**: ~0.1d (~1h)
@@ -54,11 +54,9 @@ this row is closing a **silent failure mode**, not fixing broken behavior.
 What makes the gap worth a row is the **asymmetry**, measured first-party by the controller in
 this worktree:
 
-- Every *other* malformed shape fails **LOUDLY** through the instrument-failure floors. An
-  indented-**only** assignment reads as 0 → `KNOWN_BAD assignment count=0, want 1` in both
-  consumers, rc=1 RUN=2 FAIL=2 (V-E). A single-quoted `KNOWN_BAD='…'` likewise contributes 0
-  values and trips the same `count=0, want 1` floor. A commented-out `# KNOWN_BAD=` is correctly
-  ignored.
+- Every *other* malformed shape fails **LOUDLY** through the instrument-failure floors. A
+  single-quoted `KNOWN_BAD='…'` contributes 0 values and trips the `count=0, want 1` floor. A
+  commented-out `# KNOWN_BAD=` is correctly ignored.
 - The one **SILENT** case is a **second, indented** assignment beside the valid column-0 one —
   exactly the shape a refactor produces when someone wraps a narrowing override in a conditional:
 
@@ -69,11 +67,11 @@ this worktree:
   fi
   ```
 
-  Measured (V-D): with this mutation landed (sha-asserted, valid-shell-asserted, effect asserted
-  via gates G1 = 1 beside G2 = 1 — gate commands printed under the mutation table), **both consumers
-  stay GREEN** — rc=0, RUN=2 PASS=2. The count stays 1, the pin checks all read the top-level
-  value, and `TestReproModuleFloorStaysBelowKnownBadToolchains` binds the repro-module floor
-  against the WIDE deny-list `go1.26.0 go1.26.3 go1.26.4 go1.26.5` while `run.sh` would at
+  Measured (V-D, ARM A): with this mutation landed (sha-asserted, valid-shell-asserted, effect
+  asserted via gates G1 = 1 beside G2 = 1 — gate commands printed under the mutation table), **both
+  consumers stay GREEN** — rc=0, RUN=2 PASS=2. The count stays 1, the pin checks all read the
+  top-level value, and `TestReproModuleFloorStaysBelowKnownBadToolchains` binds the repro-module
+  floor against the WIDE deny-list `go1.26.0 go1.26.3 go1.26.4 go1.26.5` while `run.sh` would at
   runtime narrow it to `go1.26.0`. The gate would then certify a floor bound against a deny-list
   the instrument no longer probes.
 
@@ -84,18 +82,19 @@ loudly instead of narrowing the deny-list in silence — and add one arm per sha
 ## Goals
 
 **Primary Goal:** make a second, whitespace-indented `NAME="…"` assignment in `run.sh` a **named
-RED** in both consumers of `shellAssignmentValues`, without weakening any shape that fails loudly
-today (indented-only, single-quoted, empty) and without changing which line supplies the counted
-value (column 0).
+RED** in both consumers of `shellAssignmentValues`, by extracting values regardless of indentation
+and requiring `len(values) == 1` — without weakening any shape that fails loudly today
+(single-quoted, empty) and without changing which line supplies the counted value.
 
 **Success Metrics:**
-- The V-D mutant (second indented `KNOWN_BAD=` beside a valid column-0 one) reds BOTH consumers
-  with an attributed message naming the indented count, where today it passes 2/2.
-- The V-E arm (indented-only) still reds with the byte-unchanged `assignment count=0, want 1`
-  messages — the fix tolerates whitespace when **counting deviations**, never when **extracting
-  the value**.
-- All three names (KNOWN_GOOD, KNOWN_BAD, PINNED) and both consumers inherit the check through
-  the one shared helper; no call site re-implements the scan (V-H1, V-I).
+- The V-D / ARM A mutant (second indented `KNOWN_BAD=` beside a valid column-0 one) reds BOTH
+  consumers with the pre-existing `assignment count=2, want 1` message, where today it passes 2/2.
+- The V-E / ARM B arm (indented-only) is **GREEN** (rc=0, RUN=2, PASS=2) — a deliberate, ratified
+  behaviour change: today's red fires because the scanner cannot SEE a real assignment, not because
+  anything is wrong.
+- All three names (KNOWN_GOOD, KNOWN_BAD, PINNED) and both consumers inherit the fix through the
+  one shared helper; no call site re-implements the scan (V-H1, V-I), and no new assertion is added
+  at any call site.
 - Commented assignments — column-0 `# KNOWN_BAD="…"` AND indented `   # KNOWN_BAD="…"` — remain
   ignored, proven by unit-test arms, not assumed.
 - What the parser still cannot see is **declared** — in a code comment, pinned by unit-test arms,
@@ -105,15 +104,15 @@ value (column 0).
 
 | Decision | Why High Impact | Chosen By | Deadline | Change Cost |
 |----------|-----------------|-----------|----------|-------------|
-| The invariant is **two-sided**: column-0 assignment count = 1 (unchanged) **AND** indented assignment count = 0 (new) — NOT the naive "whitespace-tolerant total = 1" reading of the row text | The naive reading is a **weakening**: under "tolerant total = 1" alone, V-E's indented-only arm counts 1 and every downstream pin check reads a plausible value → the loudest existing floor (`count=0, want 1`) goes GREEN. The two-sided form reds BOTH deviations: the addition (indented ≠ 0) and the displacement (column-0 ≠ 1), and keeps value extraction anchored to the line `bash` top-level execution actually runs first | agent | design | low |
-| Fix lives in the shared helper as **one scan returning both facts** (`values []string, indented int`), not a second parallel scanner | Two scanners over the same prefix grammar drift independently — the exact defect class this row closes. One scan means the tolerance and the anchor cannot disagree (V-H1 shows the helper is already the only value scan; keep it that way) | agent | design | low |
-| Indented occurrences are **counted on prefix match alone** (no closing-quote requirement) | The indented count is a deviation detector, not a value extractor; an indented malformed assignment is still a second assignment shape, and counting it errs on the loud side | agent | sprint | low |
+| The invariant is **one whitespace-tolerant scan**: trim leading spaces/tabs, ignore comments, extract `NAME="…"` regardless of indentation, require `len(values) == 1` | The naive reading of the row text is the CORRECT one. Under it, the addition mutant (a second indented assignment beside the column-0 one) yields count=2 and REDS via the pre-existing `assignment count=%d, want 1` check — the row's whole purpose is served. An indented-only assignment yields count=1 and supplies its value, which is what bash actually does. Consequence: today's loud red on the indented-only shape disappears — and it is measured to fire because the scanner cannot SEE a real assignment, not because anything is wrong. The rejected alternative (a two-sided invariant counting indented occurrences as deviations) was built on a premise the controller measured FALSE | **human** (D-WORLD-29, attended 2026-09-01) | design | low |
+| Fix lives in the shared helper as **one scan** (`func shellAssignmentValues(lines []string, name string) []string`), signature unchanged, no second fact returned | One scanner over the prefix grammar means the tolerance and the anchor cannot disagree (V-H1 shows the helper is already the only value scan; keep it that way). No call site changes, no new assertion | agent | design | low |
 | `export`/`local`/unquoted/here-doc forms are **declared residuals**, not covered | Covering them opens token-normalization scope (arbitrary declaration prefixes) on a ~0.1d row; each is loud in the replacement direction (column-0 count drops to 0) and pinned as a residual by a unit arm so a future cover is a deliberate change, not drift | agent | design | low |
 
 ## Design Freeze
 
-None. Every decision above is agent-resolvable inside the sprint; no human ratification is
-required. (No quorum triggers fire: no design-freeze items, no shared-machinery override — the
+The design DIRECTION is **human-ratified** under `D-WORLD-29` (attended 2026-09-01): option A is
+accepted verbatim. No further human ratification is required; the remaining decisions are
+agent-resolvable inside the sprint. (No quorum triggers fire: no shared-machinery override — the
 helper's only consumers are the two tests in the same file — no cost/KPI/schema surface, all
 premises verified in-repo.)
 
@@ -128,29 +127,27 @@ premises verified in-repo.)
 ### Overview
 
 Modify `shellAssignmentValues` (the single definition, `toolchain_pin_gate_test.go:215-227`,
-V-A/V-I) to scan each line with leading whitespace trimmed, classify matches by whether the line
-was indented, and return **both** the column-0 values (unchanged semantics) and the indented
-count:
+V-A/V-I) to scan each line with leading whitespace trimmed and extract the value regardless of
+indentation. The signature is **unchanged** — `func shellAssignmentValues(lines []string, name
+string) []string` — and there is no second return value:
 
 ```go
-// shellAssignmentValues returns the values of column-0 NAME="…" assignments, in order,
-// plus the count of NAME="…" assignments whose only lead-in is whitespace (spaces/tabs).
-// Column-0 extraction is deliberate: bash executes the top-level assignment; an indented
-// one is a conditional/nested shadow and is counted as a DEVIATION, never as the value.
+// shellAssignmentValues returns the values of NAME="…" assignments, in order,
+// regardless of leading whitespace (spaces/tabs). A commented assignment begins
+// with `#` after trimming and can never begin NAME + "=\"", so it is ignored.
 // DECLARED RESIDUAL: this scanner cannot see `export NAME="…"`, `local NAME="…"`,
 // an unquoted/single-quoted NAME=…, a mid-line assignment after another token
-// (`if …; then NAME="x"; fi` on one line), or NAME="…" text inside a here-doc body
+// (`if …; then NAME="x"; fi` on one line), an assignment inside a MULTI-LINE branch
+// that never executes (`if false; then\n    NAME="x"\nfi` — COUNTED and its value
+// SUPPLIED, though bash leaves NAME unset), or NAME="…" text inside a here-doc body
 // (which it would COUNT — a false RED, the loud direction; run.sh has no here-docs, V-K).
 // Each residual is pinned by an arm of TestShellAssignmentValuesShapes.
-func shellAssignmentValues(lines []string, name string) (values []string, indented int) {
+func shellAssignmentValues(lines []string, name string) []string {
 	prefix := name + "=\""
+	var values []string
 	for _, line := range lines {
 		trimmed := strings.TrimLeft(line, " \t")
 		if !strings.HasPrefix(trimmed, prefix) {
-			continue
-		}
-		if trimmed != line {
-			indented++
 			continue
 		}
 		rest := strings.TrimPrefix(trimmed, prefix)
@@ -158,7 +155,7 @@ func shellAssignmentValues(lines []string, name string) (values []string, indent
 			values = append(values, rest[:end])
 		}
 	}
-	return values, indented
+	return values
 }
 ```
 
@@ -166,50 +163,48 @@ func shellAssignmentValues(lines []string, name string) (values []string, indent
 after `TrimLeft(line, " \t")`, a commented assignment — `# KNOWN_BAD="…"`, `#   KNOWN_BAD="…"`,
 or `    # KNOWN_BAD="…"` — begins with the byte `#`, which can never begin the prefix
 `NAME + "=\""` (every scanned name starts with an ASCII letter), so `HasPrefix` is false and the
-line contributes to neither `values` nor `indented`. This is the same first-byte argument in both
-the column-0 and indented positions, and it gets explicit unit arms (d)/(e) rather than resting
-on the argument.
+line contributes nothing. This is the same first-byte argument in both the column-0 and indented
+positions, and it gets explicit unit arms (d)/(e) rather than resting on the argument.
 
 ### Call sites and inheritance
 
 The helper has exactly one definition and four call sites (V-A), all in the same file; no other
 file, script, or workflow reads the `run.sh` assignments (V-H1), and no other code constructs the
-`name+"=\""` scan (V-I). Every consumer therefore inherits the fix from the one edit, plus one
-new assertion each:
+`name+"=\""` scan (V-I). Every consumer therefore inherits the fix from the one helper edit. There
+is **no new assertion at any call site** — the four existing `assignment count=%d, want 1` checks
+and their messages are **byte-unchanged** and are what does all of the work:
 
-| Site | Consumer | Name | New assertion |
-|---|---|---|---|
-| `:260` | `TestMiscompileInstrumentProbesPinnedToolchain` | KNOWN_GOOD | `t.Errorf` if indented ≠ 0 |
-| `:261` | same | KNOWN_BAD | `t.Errorf` if indented ≠ 0 |
-| `:262` | same | PINNED | `t.Errorf` if indented ≠ 0 |
-| `:349` | `TestReproModuleFloorStaysBelowKnownBadToolchains` | KNOWN_BAD | `t.Fatalf("instrument failure: …")` if indented ≠ 0 — a floor, matching that test's idiom: the deny-list read is not healthy while a shadow assignment exists |
-
-Message shape, uniform across all four sites so the drill and the ACs can count them textually:
-
-```go
-t.Errorf("%s: KNOWN_BAD indented assignment count=%d, want 0 — a nested/conditional assignment can narrow or shadow the counted column-0 value silently", scriptPath, badIndented)
-```
+| Site | Consumer | Name |
+|---|---|---|
+| `:260` | `TestMiscompileInstrumentProbesPinnedToolchain` | KNOWN_GOOD |
+| `:261` | same | KNOWN_BAD |
+| `:262` | same | PINNED |
+| `:349` | `TestReproModuleFloorStaysBelowKnownBadToolchains` | KNOWN_BAD |
 
 The four existing `assignment count=%d, want 1` checks and their messages are **byte-unchanged**
-(AC3 pins the V-E messages verbatim).
+(AC3 pins the V-E messages verbatim). Note for the sprint: those pre-existing messages hardcode
+`KNOWN_BAD` for all four sites (`gemini-3-1-pro`'s finding) — a `KNOWN_GOOD` or `PINNED`
+deviation would emit a false variable name. That is pre-existing and out of scope for this row;
+template it as a separate queue note, not here.
 
 ### New unit test: one arm per shape
 
 `TestShellAssignmentValuesShapes` (same file, table-driven over inline `[]string` lines — **no
-on-disk fixture needed**), asserting `(len(values), indented)` exactly per arm:
+on-disk fixture needed**), asserting `len(values)` exactly per arm:
 
-| # | Arm (lines) | want values | want indented | Pins |
-|---|---|---|---|---|
-| 1 | `NAME="v"` | `["v"]` | 0 | baseline extraction |
-| 2 | `  NAME="v"` (spaces) | `[]` | 1 | the new tolerance counts, never extracts |
-| 3 | `\tNAME="v"` (tab) | `[]` | 1 | tabs are whitespace too |
-| 4 | `# NAME="v"` and `#   NAME="v"` | `[]` | 0 | column-0 comment ignored (shape d) |
-| 5 | `    # NAME="v"` | `[]` | 0 | indented comment ignored (shape e) |
-| 6 | `NAME='v'` | `[]` | 0 | single-quoted still contributes 0 → `count=0, want 1` floor keeps firing |
-| 7 | `NAME="v"` + `  NAME="w"` | `["v"]` | 1 | the V-D silent arm, now visible |
-| 8 | `export NAME="v"` | `[]` | 0 | DECLARED residual, pinned |
-| 9 | `NAME=$OTHER` (unquoted) | `[]` | 0 | DECLARED residual, pinned |
-| 10 | `NAME="v` (no closing quote) | `[]` | 0 | pre-existing extraction behavior pinned unchanged |
+| # | Arm (lines) | want len(values) | Pins |
+|---|---|---|---|
+| 1 | `NAME="v"` | 1 (`["v"]`) | baseline extraction |
+| 2 | `  NAME="v"` (spaces) | 1 (`["v"]`) | whitespace tolerated; value EXTRACTED |
+| 3 | `\tNAME="v"` (tab) | 1 (`["v"]`) | tabs are whitespace too |
+| 4 | `# NAME="v"` and `#   NAME="v"` | 0 | column-0 comment ignored (shape d) |
+| 5 | `    # NAME="v"` | 0 | indented comment ignored (shape e) |
+| 6 | `NAME='v'` | 0 | single-quoted still contributes 0 → `count=0, want 1` floor keeps firing |
+| 7 | `NAME="v"` + `  NAME="w"` | 2 (`["v","w"]`) | the V-D / ARM A silent arm, now visible → count=2 reds |
+| 8 | `export NAME="v"` | 0 | DECLARED residual, pinned |
+| 9 | `NAME=$OTHER` (unquoted) | 0 | DECLARED residual, pinned |
+| 10 | `NAME="v` (no closing quote) | 0 | pre-existing extraction behavior pinned unchanged |
+| 11 | `if false; then` + `    NAME="v"` + `fi` (multi-line, never taken) | 1 (`["v"]`) | DECLARED residual 6, pinned: counted and supplied though bash leaves NAME unset |
 
 ### What the new parser still CANNOT see (declared residuals)
 
@@ -220,7 +215,9 @@ unit arm above, and (iii) carried by AC8 — a named gap, not an assumed one:
    with `e`/`l`, not the name. *Replacement* direction is loud (column-0 count drops to 0 → the
    existing `count=0, want 1` floor). *Addition* direction (an indented or top-level `export`
    beside the plain assignment) remains silent — accepted: covering it means normalizing
-   arbitrary declaration prefixes, out of proportion for this row. Pinned by arm 8.
+   arbitrary declaration prefixes, out of proportion for this row. This is `oc-glm-5-2`'s
+   non-blocking objection, and it leaves the IDENTICAL silent-narrowing hole open under EITHER
+   candidate rule — carried verbatim as a declared, named residual. Pinned by arm 8.
 2. **Unquoted / variable-valued `KNOWN_BAD=$OTHER`** — contributes 0, unchanged. Loud on
    replacement via the same floor; silent on addition. Pinned by arm 9.
 3. **Single-quoted `KNOWN_BAD='…'`** — contributes 0, **deliberately unchanged**: the row
@@ -229,17 +226,28 @@ unit arm above, and (iii) carried by AC8 — a named gap, not an assumed one:
    invisible; the trimmed line starts with `if`. Declared only (no arm; the shape space of
    "assignment somewhere mid-line" is unbounded and every bounded probe of it would be
    decorative).
+6. **Assignment inside a MULTI-LINE branch that never executes** — e.g.
+   `if false; then` / `    KNOWN_BAD="…"` / `fi` as three lines, with no column-0 assignment
+   anywhere. Under the REJECTED rule B this redded loudly (column-0 count 0 → `count=0, want 1`).
+   Under ratified rule A it is **counted as 1 and its value is SUPPLIED**, so the two consumers
+   pass and the toolchain floor is bound against a deny-list that **does not exist at runtime**.
+   Measured first-party by the controller at `cb73cab` (V-ARMC1/V-ARMC2 below), including the
+   runtime control: `bash -c 'if false; then KNOWN_BAD="x"; fi; echo "${KNOWN_BAD:-<UNSET>}"'`
+   prints `<UNSET>`. **This is a real narrowing of loudness that ruling A accepts**, and it is
+   strictly wider than residual 4: residual 4 covers only the ONE-LINE form, while the
+   multi-line form is the shape a refactorer actually writes. It is declared rather than fixed
+   because closing it needs branch-reachability analysis, which is out of proportion for a ~0.1d
+   row — and because the row's own defect (a SECOND assignment silently narrowing the list) is
+   fully closed either way, measured at `count=2, want 1`. Pinned by arm 11.
 5. **Here-doc body text** matching `NAME="…"` at (possibly indented) line start — after this
-   change it would be *counted* (column-0 → count=2; indented → indented=1), i.e. a **false
-   RED**, which is the loud direction of the asymmetry and therefore acceptable. `run.sh`
-   contains no here-docs today (V-K).
+   change it would be *counted* (count=2), i.e. a **false RED**, which is the loud direction of
+   the asymmetry and therefore acceptable. `run.sh` contains no here-docs today (V-K).
 
 ## Files to Modify/Create
 
-- `host/verifygate/toolchain_pin_gate_test.go` — the ONLY file touched (~+60/-5 LOC): helper
-  signature `[]string` → `(values []string, indented int)` with whitespace-tolerant scan and
-  residual comment; four call sites updated; four new indented-count assertions (3 Errorf, 1
-  instrument-failure Fatalf); new `TestShellAssignmentValuesShapes` table test.
+- `host/verifygate/toolchain_pin_gate_test.go` — the ONLY file touched (~+15/-5 LOC): the helper
+  body becomes one whitespace-tolerant scan with the residual comment; signature unchanged; **no
+  call-site edits, no new assertions**; new `TestShellAssignmentValuesShapes` table test.
 
 No new files, no fixtures, no new dependencies, **no `.ail` file in scope** (this row proposes no
 AILANG code), no script or workflow edits, nothing under `tools/launchd/**`.
@@ -250,23 +258,26 @@ API. There is no package-shaped surface here; the change cannot land anywhere el
 
 ## Examples
 
-**Before (today, measured V-D):** land the conditional-narrowing mutant, then run cmd V-C
+**Before (today, measured V-D / ARM A):** land the conditional-narrowing mutant, then run cmd V-C
 (Verification Log, printed in full there) → rc=0, RUN=2 PASS=2.
 The floor test certifies `repro/go.mod`'s floor against all four deny-listed toolchains while the
 script would probe one.
 
-**After (this item):** the same mutant →  rc=1, and BOTH consumers name the cause:
+**After (this item):** the same mutant → rc=1, and BOTH consumers name the cause with the
+pre-existing message:
 
 ```
 --- FAIL: TestMiscompileInstrumentProbesPinnedToolchain
-    …run.sh: KNOWN_BAD indented assignment count=1, want 0 — a nested/conditional assignment can narrow or shadow the counted column-0 value silently
+    …run.sh: KNOWN_BAD assignment count=2, want 1
 --- FAIL: TestReproModuleFloorStaysBelowKnownBadToolchains
-    instrument failure: …run.sh: KNOWN_BAD indented assignment count=1, want 0 — …
+    instrument failure: …run.sh: KNOWN_BAD assignment count=2, want 1
 ```
 
-**Unchanged (V-E shape):** an indented-only assignment still reds with the byte-identical
-pre-existing messages (`KNOWN_BAD assignment count=0, want 1` at both sites) — plus, now, the
-indented-count message. Nothing loud got quieter.
+**Deliberately changed (V-E / ARM B shape):** an indented-ONLY assignment is now **GREEN**
+(rc=0, RUN=2, PASS=2) — the value is extracted and supplied, which is what bash actually does.
+This is the ratified consequence of ruling A: today's red fires because the scanner cannot SEE a
+real assignment, not because anything is wrong. Nothing else got quieter — single-quoted and empty
+shapes still red with the byte-unchanged `count=0, want 1` messages.
 
 ## Acceptance Criteria
 
@@ -282,19 +293,21 @@ table-cell escaping is exactly why an earlier revision's commands were not runna
 
 - **AC1 (run-existence, unit arms).**
   `go test ./host/verifygate/ -run TestShellAssignmentValuesShapes -v > /tmp/ac1 2>&1; rc=$?` →
-  rc=0 AND `grep -c -- '--- PASS' /tmp/ac1` ≥ 10 (one per table arm, subtests counted) AND
+  rc=0 AND `grep -c -- '--- PASS' /tmp/ac1` ≥ 11 (one per table arm, subtests counted) AND
   `grep -c '=== RUN' /tmp/ac1` ≥ 1. A `[no tests to run]` line anywhere in `/tmp/ac1` FAILS this AC.
-- **AC2 (the silent arm is closed — the V-D mutant reds).** With the canonical addition mutant
-  landed in `run.sh` (protocol below; effect gates G1 = 1 AND G2 = 1 — gate commands in the
+- **AC2 (the silent arm is closed — the V-D / ARM A mutant reds).** With the canonical addition
+  mutant landed in `run.sh` (protocol below; effect gates G1 = 1 AND G2 = 1 — gate commands in the
   fenced block under the mutation table):
   `go test ./host/verifygate/ -run 'TestMiscompileInstrumentProbesPinnedToolchain|TestReproModuleFloorStaysBelowKnownBadToolchains' -v > /tmp/ac2 2>&1; rc=$?`
   → rc=1, `grep -c -- '--- FAIL' /tmp/ac2` = 2, and
-  `grep -c 'KNOWN_BAD indented assignment count=1, want 0' /tmp/ac2` = 2 (both consumers, by name).
-- **AC3 (no loud shape weakened — the V-E arm still reds, same words).** With the indented-ONLY
+  `grep -c 'KNOWN_BAD assignment count=2, want 1' /tmp/ac2` = 2 (both consumers, by name). The
+  row's entire purpose is served by the pre-existing message, with NO new assertion at any call
+  site.
+- **AC3 (REVERSED by the ruling — the indented-ONLY arm is GREEN).** With the indented-ONLY
   mutant landed (effect gates: G1 = 1 AND G2 = 0): the same test command captured to `/tmp/ac3`
-  (`> /tmp/ac3 2>&1; rc=$?`) →
-  rc=1 and `grep -c 'KNOWN_BAD assignment count=0, want 1' /tmp/ac3` = 2 — the byte-unchanged
-  pre-existing messages, proving value extraction stayed column-0-anchored.
+  (`> /tmp/ac3 2>&1; rc=$?`) → **rc=0, RUN=2 PASS=2 FAIL=0**. This is intended and ratified: the
+  value is extracted and supplied, which is what bash actually does; today's red fired because the
+  scanner could not SEE a real assignment, not because anything was wrong.
 - **AC4 (commented shapes stay green).** With mutant (d) landed (a column-0 `# KNOWN_BAD="…"`
   line added; effect gate G5 moves 0→1) the two consumers pass
   rc=0 RUN=2 PASS=2; likewise mutant (e) (indented comment; G6 moves 0→1). Both are
@@ -321,12 +334,28 @@ table-cell escaping is exactly why an earlier revision's commands were not runna
      grep -E '^(ok|FAIL).*host/verifygate' /tmp/ac7-go   # must be an `ok` line
      ```
 
-     Base `--- FAIL` set (rig-local, measured at pristine dev = `9c0ad0b`, identical in two arms
-     — under concurrent load and alone): `TestEpisodeLiveReplayThreeArmsAndEvidence`
-     (host/broker), `TestHandlerTimeoutKillsTheWholeProcessGroup` (host/broker),
-     `TestF1PinnedInterpreterHashMismatchRefusedBeforeExec` (host/capsule),
-     `TestFixtureEpisodeReplaysBitForBit` (host/replay). Any name appearing or disappearing
-     fails this AC.
+     **The base set is measured AT DRILL START, in the same worktree and at the same commit —
+     never quoted from a doc** (`oc-glm-5-2`, quorum round 3, verbatim alternative fix; adopted
+     because it is also the only form robust to queue row 58's finding that this gate is FLAKY
+     on this rig, not deterministically red — four runs within ~90 minutes on trees differing by
+     one test file gave FAIL counts of 4, 1, 1 and 0). The previously hardcoded set was measured
+     at `9c0ad0b`, and this doc targets `cb73cab`; those are different commits, so a planner
+     executing the old criterion could fail the AC for reasons unrelated to this change, or pass
+     it vacuously if the base set shrank. So:
+
+     ```zsh
+     # BEFORE any edit, in the drill worktree, at the same commit the drill will run on:
+     ./scripts/verify_go.sh > /tmp/ac7-base 2>&1; echo "base rc=$?"
+     grep -E '^--- FAIL' /tmp/ac7-base | sort > /tmp/ac7-base-set
+     wc -l < /tmp/ac7-base-set        # record this number in the sprint evidence row
+     ```
+
+     The criterion is then `diff /tmp/ac7-base-set <(grep -E '^--- FAIL' /tmp/ac7-go | sort)`
+     being EMPTY. Because the gate is flaky, take the base reading TWICE and, if the two differ,
+     record both and treat only names present in BOTH as the stable base — a name that moves
+     between two pristine runs is the gate's flake, not this diff's doing, and attributing it
+     here would be exactly the co-occurrence error rule 3d names. Any name appearing or
+     disappearing relative to the stable base fails this AC.
   3. The gate that CAN fail for this diff — the narrowest gate that can fail is preferred over
      the widest that looks thorough: `go test ./host/verifygate/ > /tmp/ac7-narrow 2>&1; rc=$?`
      → rc=0.
@@ -341,11 +370,13 @@ table-cell escaping is exactly why an earlier revision's commands were not runna
 - **AC8 (residuals are declared, not assumed).**
   `grep -c 'DECLARED RESIDUAL' host/verifygate/toolchain_pin_gate_test.go` increases by ≥1 over
   the baseline of 3 (V-J), AND `grep -n 'export' host/verifygate/toolchain_pin_gate_test.go`
-  hits the helper's residual comment, AND unit arms 6/8/9/10 exist (subtest names in `/tmp/ac1`).
-- **AC9 (per-name, per-consumer inheritance).**
-  `grep -c 'indented assignment count' host/verifygate/toolchain_pin_gate_test.go` = **4**
-  (KNOWN_GOOD, KNOWN_BAD, PINNED in the probe test; KNOWN_BAD floor in the floor test) — plus
-  however many occurrences the unit test's expectations add, counted and stated in the sprint log.
+  hits the helper's residual comment, AND unit arms 6/8/9/10/11 exist (subtest names in `/tmp/ac1`).
+- **AC9 (per-name, per-consumer inheritance — no new assertion).**
+  `grep -c 'shellAssignmentValues' host/verifygate/toolchain_pin_gate_test.go` = 5 (1 def + 4
+  calls, V-A); the helper signature is unchanged
+  (`func shellAssignmentValues(lines []string, name string) []string`); and `git diff` for this
+  sprint shows no hunk touching any of the four `assignment count=%d, want 1` sites
+  (`:263-271`, `:350-355`). All four consumers inherit the fix from the single helper edit.
 - **AC10 (pristine control).** On the untouched fixture (sha256 equal to V-B/V-F's
   `b80109aa5788…` baseline): the two consumers pass rc=0 RUN=2 PASS=2 before AND after the drill.
 
@@ -353,8 +384,8 @@ table-cell escaping is exactly why an earlier revision's commands were not runna
 
 **The reuse question, audited — not waived:** does this repo already carry shell-parsing
 machinery (a parser, tokenizer, library, or dependency) that this row should route to instead of
-extending `shellAssignmentValues`? Measured repo-wide (V-L, V-M, V-N; commands and outputs in
-the Verification Log):
+extending `shellAssignmentValues`? Measured repo-wide (V-L, V-M, V-N; commands and outputs in the
+Verification Log):
 
 - **Dependencies (V-L):** `go.mod` declares exactly ONE direct dependency,
   `modernc.org/sqlite v1.54.0`; every other module line is `// indirect`. No shell-parsing
@@ -373,7 +404,9 @@ the Verification Log):
 
 **Conclusion: nothing to reuse.** One adjacent tokenizer exists, with a different grammar,
 unexported, in another package's test file. This row stays a deliberately narrow prefix grammar
-local to one gate test, and its complete consumer set is enumerated in-file (V-A, V-H1).
+local to one gate test, and its complete consumer set is enumerated in-file (V-A, V-H1). Under
+ruling A the change is strictly SMALLER than the rejected alternative (one helper body, no
+call-site edits), so the reuse surface is unchanged and the conclusion holds a fortiori.
 
 Two adjacent scanners in the SAME file are deliberately NOT touched and must stay byte-identical:
 `moduleGoFloor` (`:86`, whose column-0 `"go "` anchor is load-bearing —
@@ -391,25 +424,30 @@ removals and replacements (V-E) while never looking at additions (V-D). Arm (a) 
 Per the doc convention, the table cells reference named gate commands G1–G9; the commands
 themselves are in the fenced block below the table, runnable as printed.
 
-| Arm | Mutant (target) | Landed/effect gate | Expected post-fix | Kills which mutation / proves what |
+The controller measured ARM 0 / ARM A / ARM B at HEAD (`cb73cab`) under the REJECTED rule B. Under
+ruling A the post-fix expectations below are **PREDICTED** — derived from the controller's
+measurements and the ratified implementation, but not yet run under A. Rows marked **PREDICTED**
+must be RUN by the planner, not inherited as measurements.
+
+| Arm | Mutant (target) | Landed/effect gate | Expected post-fix (under A) | Kills which mutation / proves what |
 |---|---|---|---|---|
-| (a) | **ADDITION**: second `KNOWN_BAD="go1.26.0"` indented inside an `if [ -n "${NARROW_DENYLIST:-}" ]` block, beside the valid column-0 line (V-D verbatim) | G8 sha256 moves off `b80109aa5788…`; G7 rc=0; G1 = 1 AND G2 = 1 | **RED**, both consumers, `indented assignment count=1, want 0` ×2 (AC2) | The row's silent arm — proves the new count LOOKS at lines the old scan never saw |
-| (b) | indented-ONLY assignment (V-E verbatim) | G1 = 1, G2 = 0; G7 rc=0 | **RED**, `assignment count=0, want 1` ×2, byte-unchanged messages (AC3) | Proves the fix did not weaken the displacement floor: tolerance counts deviations, never feeds extraction |
-| (c) | single-quoted `KNOWN_BAD='…'` replacing the column-0 line | G3 0→1, G4 1→0; G7 rc=0 | **RED**, `count=0, want 1` ×2 (AC5) | Proves quote grammar unchanged; the loud single-quote floor survives |
-| (d) | commented assignment at column 0 (`# KNOWN_BAD="go1.0"` added) | G5 0→1; G8 sha moved; G7 rc=0 | **GREEN**, rc=0 RUN=2 PASS=2 (AC4) | Proves `#` at trimmed-first-byte is ignored in the column-0 position |
-| (e) | commented assignment, indented (`   # KNOWN_BAD="go1.0"` added) | G6 0→1; G8 sha moved; G7 rc=0 | **GREEN**, rc=0 RUN=2 PASS=2 (AC4) | Proves `#` is ignored in the indented position too — the tolerance did not start counting comments |
-| (f) | **neuter the tolerance itself**: in the helper, `strings.TrimLeft(line, " \t")` → `line` (Go-side) | test-file sha moved (G8 on the test file); G9 **rc=0** BEFORE reading any test result (a plain build does NOT compile test files and cannot serve here) | **RED**: `TestShellAssignmentValuesShapes` arms 2/3/7 fail (indented want 1, got 0) | Proves the new machinery is non-vacuous: remove the tolerance and a named test says so |
-| (g1) | neuter the new probe-test KNOWN_BAD `indented != 0` Errorf (delete the block) | test-file sha moved; G9 rc=0 | With shell arm (a) simultaneously landed and ONLY `TestMiscompileInstrumentProbesPinnedToolchain` run: the previously-expected `indented…want 0` failure is GONE from that test's output (the floor test still reds — read WHICH test failed) | Proves the probe-test check is load-bearing, not shadowed by its neighbor |
-| (g2) | neuter the new floor-test instrument-failure Fatalf | same G9 gate | With arm (a) landed and ONLY `TestReproModuleFloorStaysBelowKnownBadToolchains` run: rc=0 — the floor test alone goes green | Proves the floor is a floor: without it the deny-list read certifies a shadowed list |
-| (g3) | neuter a pre-existing floor: `len(badAssignments) != 1` Fatalf in the floor test (`:350`) | same G9 gate | With shell arm (b) landed and ONLY the floor test run: the `count=0, want 1` instrument failure is GONE (the later `must contain at least one toolchain` floor now catches it instead — record WHICH message fired) | One arm per FLOOR, not per branch: proves each refusal is individually alive, and documents which floor is next in line when one dies |
-| (g4) | neuter the probe test's known-positive control loop (`:245-249`, drop `"KNOWN_BAD="` from the control list) | same G9 gate | With a `run.sh` stripped of every `KNOWN_BAD` line landed and ONLY the probe test run: the `does not contain known-positive control` Fatalf is GONE; the failure shifts to `count=0, want 1` — record the shift | The control floor is the instrument's own health check — systematically the last thing anyone pins |
+| (a) | **ADDITION**: second `KNOWN_BAD="go1.26.0"` indented inside an `if [ -n "${NARROW_DENYLIST:-}" ]` block, beside the valid column-0 line (V-D / ARM A verbatim) | G8 sha256 moves off `b80109aa5788…`; G7 rc=0; G1 = 1 AND G2 = 1 | **RED**, both consumers, `KNOWN_BAD assignment count=2, want 1` ×2 (AC2) — **PREDICTED** | The row's silent arm — proves the tolerant scan now LOOKS at lines the old scan never saw, and that the pre-existing `count != 1` check is what closes it |
+| (b) | indented-ONLY assignment (V-E / ARM B verbatim) | G1 = 1, G2 = 0; G7 rc=0 | **GREEN**, rc=0 RUN=2 PASS=2 (AC3) — **PREDICTED** | Proves the ratified behaviour change: the value is extracted and supplied, which is what bash actually does |
+| (c) | single-quoted `KNOWN_BAD='…'` replacing the column-0 line | G3 0→1, G4 1→0; G7 rc=0 | **RED**, `count=0, want 1` ×2 (AC5) — **PREDICTED** | Proves quote grammar unchanged; the loud single-quote floor survives |
+| (d) | commented assignment at column 0 (`# KNOWN_BAD="go1.0"` added) | G5 0→1; G8 sha moved; G7 rc=0 | **GREEN**, rc=0 RUN=2 PASS=2 (AC4) — **PREDICTED** | Proves `#` at trimmed-first-byte is ignored in the column-0 position |
+| (e) | commented assignment, indented (`   # KNOWN_BAD="go1.0"` added) | G6 0→1; G8 sha moved; G7 rc=0 | **GREEN**, rc=0 RUN=2 PASS=2 (AC4) — **PREDICTED** | Proves `#` is ignored in the indented position too — the tolerance did not start counting comments |
+| (f) | **neuter the tolerance itself**: in the helper, `strings.TrimLeft(line, " \t")` → `line` (Go-side) | test-file sha moved (G8 on the test file); G9 **rc=0** BEFORE reading any test result (a plain build does NOT compile test files and cannot serve here) | **RED**: `TestShellAssignmentValuesShapes` arms 2/3/7 fail (indented values want 1/1/2, got 0) — **PREDICTED** | Proves the new machinery is non-vacuous: remove the tolerance and a named test says so |
+| (g1) | neuter the pre-existing `count != 1` Errorf in the probe test (`:263-271`) | test-file sha moved; G9 rc=0 | With shell arm (a) simultaneously landed and ONLY `TestMiscompileInstrumentProbesPinnedToolchain` run: the previously-expected `count=2, want 1` failure is GONE from that test's output (the floor test still reds — read WHICH test failed) — **PREDICTED** | Proves the pre-existing count check is load-bearing for the silent arm, not shadowed by its neighbor |
+| (g2) | neuter the pre-existing `count != 1` Fatalf in the floor test (`:350-355`) | same G9 gate | With arm (a) landed and ONLY `TestReproModuleFloorStaysBelowKnownBadToolchains` run: rc=0 — the floor test alone goes green — **PREDICTED** | Proves the floor is a floor: without it the deny-list read certifies a shadowed list |
+| (g3) | neuter a pre-existing floor: `len(badAssignments) != 1` Fatalf in the floor test (`:350`) | same G9 gate | With shell arm (c) landed and ONLY the floor test run: the `count=0, want 1` instrument failure is GONE (the later `must contain at least one toolchain` floor now catches it instead — record WHICH message fired) — **PREDICTED** | One arm per FLOOR, not per branch: proves each refusal is individually alive, and documents which floor is next in line when one dies |
+| (g4) | neuter the probe test's known-positive control loop (`:245-249`, drop `"KNOWN_BAD="` from the control list) | same G9 gate | With a `run.sh` stripped of every `KNOWN_BAD` line landed and ONLY the probe test run: the `does not contain known-positive control` Fatalf is GONE; the failure shifts to `count=0, want 1` — record the shift — **PREDICTED** | The control floor is the instrument's own health check — systematically the last thing anyone pins |
 
 **Gate commands** referenced by the table above and by ACs 2–5 (repo root, zsh, runnable as
 printed):
 
 ```zsh
 RS=design_docs/verification/w-race-gate-blindspot/run.sh
-grep -cE '^[[:space:]]+KNOWN_BAD=' "$RS"      # G1 — indented-assignment count
+grep -cE '^[[:space:]]+KNOWN_BAD=' "$RS"      # G1 — indented-assignment count (effect gate for the drill)
 grep -cE '^KNOWN_BAD=' "$RS"                  # G2 — column-0 assignment count
 grep -cE "^KNOWN_BAD='" "$RS"                 # G3 — single-quoted column-0 count
 grep -cE '^KNOWN_BAD="' "$RS"                 # G4 — double-quoted column-0 count
@@ -440,6 +478,8 @@ code alone.
 - No general shell parser: this remains a deliberately narrow prefix grammar with its residuals
   now *named*. Covering `export`/`local`/mid-line/here-doc shapes is out of scope (declared
   residuals 1/2/4/5).
+- No new assertion at any call site, and no change to the four pre-existing
+  `assignment count=%d, want 1` messages (they are byte-unchanged and do all of the work).
 - No `.ail` code, no `scripts/` edits, no CI workflow edits, nothing under `tools/launchd/**`.
 - If the sprint uncovers a genuinely separate defect, it is FILED as a "for the queue, not this
   sprint" note in the sprint log — not absorbed here.
@@ -462,17 +502,25 @@ code alone.
 
 ## Timeline / Milestones
 
-Single milestone, ~0.1d: (1) helper + call sites + unit table (~45 min); (2) mutation drill, all
-arms with restores (~30 min); (3) gates + ACs recorded (~15 min).
+Single milestone, ~0.1d: (1) helper body + unit table (~30 min); (2) mutation drill, all arms
+with restores (~30 min); (3) gates + ACs recorded (~15 min). Under ruling A the change is
+strictly SMALLER than the rejected alternative — one helper body, no call-site edits, no new
+assertions — so the milestone is correspondingly lighter.
 
 ## Risks & Mitigations
 
-- **Risk:** the two-return signature ripples further than the four call sites. **Mitigation:**
-  V-A/V-H1 enumerate the complete consumer set (four sites, one file); the compiler enforces
-  completeness — a missed site is a build error, not a silent pass.
-- **Risk:** an indented-count check reds at baseline because `run.sh` already contains an
-  indented or here-doc match. **Mitigation:** measured — zero indented name-matches and zero
-  here-docs at baseline (V-K); the only matches are the three column-0 lines 24-26.
+- **Risk:** the indented-ONLY shape going GREEN is read as a regression by a future reviewer.
+  **Mitigation:** it is the ratified consequence of ruling A (D-WORLD-29, attended 2026-09-01),
+  recorded verbatim in the status block and AC3; today's red fired because the scanner could not
+  SEE a real assignment, not because anything was wrong.
+- **Risk:** a benign re-indent that ADDS a second assignment (column-0 + indented) now reds with
+  `count=2, want 1`. **Mitigation:** that is the row's entire purpose — a refactor that adds a
+  conditional branch reds loudly instead of narrowing the deny-list in silence. The message is
+  the pre-existing one, byte-unchanged.
+- **Risk:** the whitespace-tolerant scan starts counting here-doc body text or comments.
+  **Mitigation:** comments are excluded by the first-byte argument (a `#` can never begin
+  `NAME + "=\""`), pinned by unit arms (d)/(e); here-doc text would be a false RED (the loud
+  direction, acceptable) and `run.sh` has no here-docs at baseline (V-K).
 - **Risk:** drill arm (g1)/(g2) misread because the OTHER consumer's red masks the neutered one.
   **Mitigation:** the protocol runs each (g) arm against ONLY the test containing the neutered
   floor and records which message fired.
@@ -482,9 +530,12 @@ arms with restores (~30 min); (3) gates + ACs recorded (~15 min).
 Rows V-A..V-G are the controller's first-party measurements (iteration 140, this worktree),
 reused. Rows V-H..V-K were measured by the designer in this worktree, 2026-08-31. Rows V-L..V-N
 are the conflict-surface reuse audit (designer, 2026-08-31; results independently re-derived by
-the controller in this worktree). Negative results carry a known-positive control in the same
-call, same path. Per the doc-wide convention, **no runnable command sits in a table cell**: each
-row's command is in the matching fenced block under "Commands", byte-for-byte as executed.
+the controller in this worktree). Rows V-ARM0 / V-ARMA / V-ARMB are the controller's first-party
+measurements at HEAD this iteration (`cb73cab`), taken under the REJECTED rule B; their
+conclusions are re-derived under ruling A in the mutation table. Negative results carry a
+known-positive control in the same call, same path. Per the doc-wide convention, **no runnable
+command sits in a table cell**: each row's command is in the matching fenced block under
+"Commands", byte-for-byte as executed.
 
 **Transcription-defect note (quorum round 1, objection upheld in part):** the previous revision
 printed the V-B, V-C, and V-K commands inside table cells with markdown-escaped pipes (`\|`). In
@@ -504,8 +555,8 @@ below, and the structural fix is that no runnable command lives in a table cell 
 | V-A | `shellAssignmentValues` is defined once, column-0 anchored, with exactly 4 call sites | 5 grep lines = 1 def + 4 calls: def `host/verifygate/toolchain_pin_gate_test.go:215`; calls `:260` (KNOWN_GOOD), `:261` (KNOWN_BAD), `:262` (PINNED) in `TestMiscompileInstrumentProbesPinnedToolchain`, `:349` (KNOWN_BAD) in `TestReproModuleFloorStaysBelowKnownBadToolchains`. Body matches `strings.HasPrefix(line, name+"=\"")` |
 | V-B | `run.sh` sets each name exactly once, at column 0 — the gap is LATENT | lines 24 / 25 / 26 respectively, rc=0 (re-run 2026-08-31 with the repaired command) |
 | V-C | Pristine baseline: both consumers pass | rc=0, RUN=2 PASS=2 FAIL=0 (re-run 2026-08-31 with the repaired command) |
-| V-D | **The silent arm, measured**: second indented `KNOWN_BAD="go1.26.0"` inside an `if [ -n "${NARROW_DENYLIST:-}" ]` block beside the valid column-0 line → both consumers GREEN | **rc=0, RUN=2 PASS=2 FAIL=0** — the gate is blind; the floor test binds the repro floor against the WIDE list `go1.26.0 go1.26.3 go1.26.4 go1.26.5` while run.sh would narrow to `go1.26.0`. Mutant landed sha256 `b80109aa5788…` → `2a703e885a6f…`; G7 rc=0; G1 = 1, G2 = 1 |
-| V-E | **The loud control, measured**: the same assignment indented with NO column-0 one | **rc=1, RUN=2 PASS=0 FAIL=2**: `toolchain_pin_gate_test.go:267: …: KNOWN_BAD assignment count=0, want 1` and `:351: instrument failure: …: KNOWN_BAD assignment count=0, want 1` — the asymmetry is measured, not argued. G1 = 1, G2 = 0 |
+| V-D | **The silent arm, measured under B**: second indented `KNOWN_BAD="go1.26.0"` inside an `if [ -n "${NARROW_DENYLIST:-}" ]` block beside the valid column-0 line → both consumers GREEN | **rc=0, RUN=2 PASS=2 FAIL=0** — the gate is blind under B; the floor test binds the repro floor against the WIDE list `go1.26.0 go1.26.3 go1.26.4 go1.26.5` while run.sh would narrow to `go1.26.0`. Mutant landed sha256 `b80109aa5788…` → `2a703e885a6f…`; G7 rc=0; G1 = 1, G2 = 1. **Under ruling A this mutant reds** via `KNOWN_BAD assignment count=2, want 1` at both consumers (PREDICTED — see mutation arm (a)) |
+| V-E | **The loud control, measured under B**: the same assignment indented with NO column-0 one | **rc=1, RUN=2 PASS=0 FAIL=2**: `toolchain_pin_gate_test.go:267: …: KNOWN_BAD assignment count=0, want 1` and `:351: instrument failure: …: KNOWN_BAD assignment count=0, want 1` — the asymmetry is measured, not argued. G1 = 1, G2 = 0. **Under ruling A this arm is GREEN** (rc=0, RUN=2, PASS=2) — deliberate, ratified (PREDICTED — see mutation arm (b)) |
 | V-F | Restore verified byte-identical; pristine control re-passes | sha256 back to `b80109aa5788…`; rc=0 RUN=2 PASS=2; porcelain 0 lines |
 | V-G | Gate baseline on the untouched worktree (build/vet/fmt) | rc=0; rc=0; 0 bytes. (`verify_go.sh` / `verify_ail.sh` baselines are controller-recorded — see AC7 and Non-Goals for the verify_go.sh base-red measurement) |
 | V-H1 | No file outside the gate test reads the `run.sh` assignments — the helper fix covers every reader | **10** hits (controller re-derived 2026-08-31; an earlier revision said 9 while listing 10 line numbers — the count was a transcription slip, the enumeration and conclusion unchanged), ALL in `host/verifygate/toolchain_pin_gate_test.go` (`:245,:261,:267,:283,:301,:349,:351,:355,:360,:367`); 0 hits in `cmd/`, `scripts/`, `.github/` — `verify_go.sh` and `ci.yml` never re-scan the names |
@@ -516,6 +567,12 @@ below, and the structural fix is that no runnable command lives in a table cell 
 | V-L | The module graph carries NO shell-parsing dependency | Exactly ONE direct dependency: `modernc.org/sqlite v1.54.0`; every other module line is `// indirect` |
 | V-M | Repo-wide, the only shell-parsing-shaped symbol is one test-file `tokenize`; the instrument can see a positive | 4 hits, ALL the single symbol `tokenize` in `host/runbook/runbook_stageb_test.go` (doc comment `:473`, def `:478`, calls `:609`, `:636`); zero hits for every library name. Same-scope control `HasPrefix`: 59 hits |
 | V-N | The single V-M hit is a DIFFERENT grammar, unexported, in another package's `_test.go` — nothing to reuse | "tokenize splits ONE runbook command line into argv, honouring double quotes … a tiny, total subset of shell"; `func tokenize(t *testing.T, line string, session map[string]string) []string` — argv splitting, not line-start assignment detection; unexported; not importable by `host/verifygate` |
+| V-ARM0 | **Pristine control at `cb73cab`** (before AND after the batch), package `host/verifygate`, arms `-run 'TestMiscompileInstrumentProbesPinnedToolchain\|TestReproModuleFloorStaysBelowKnownBadToolchains'` | vet rc=0, test rc=0, RUN=2 PASS=2 FAIL=0 |
+| V-ARMA | **The silent arm at `cb73cab`** — a SECOND, INDENTED `KNOWN_BAD="go1.26.0"` added beside the column-0 one, inside `if true; then … fi` | mutant LANDED (sha256 differs), `bash -n` rc=0, intended effect asserted against the system's own view (indented `KNOWN_BAD="` lines 0 → 1), vet rc=0, test rc=0, RUN=2 PASS=2 FAIL=0 — **the gate is blind under B** while the deny-list is genuinely narrowed at runtime (bash takes the last assignment). Under ruling A this mutant reds via `count=2, want 1` (PREDICTED) |
+| V-ARMB | **The loud arm at `cb73cab`** — the assignment indented ONLY, no column-0 copy | mutant LANDED, `bash -n` rc=0, intended effect col0 1 → 0 and indented 0 → 1, vet rc=0, test rc=1, RUN=2 PASS=0 FAIL=2, with `KNOWN_BAD assignment count=0, want 1` at BOTH consumer sites (`toolchain_pin_gate_test.go:267` and `:351`). Under ruling A this arm is GREEN (rc=0, RUN=2, PASS=2) — deliberate, ratified (PREDICTED) |
+| V-ARMC1 | **The conditional-branch shape under the CURRENT (base) helper**, at `cb73cab`: the ONLY `KNOWN_BAD` moved inside a never-taken `if false; then` / `fi` multi-line branch, no column-0 copy | mutant LANDED (sha256 differs), `bash -n` rc=0, intended effect col0 1→0 and indented 0→1, `go vet` rc=0 read BEFORE the test result; **test rc=1, RUN=2 PASS=0 FAIL=2**, `KNOWN_BAD assignment count=0, want 1` at `:267` and `:351`. Runtime control in the same batch: `bash -c 'if false; then KNOWN_BAD="x"; fi; echo "${KNOWN_BAD:-<UNSET>}"'` prints **`<UNSET>`**, so today's red is CORRECT for this shape |
+| V-ARMC2 | **The same shape under the RATIFIED rule-A helper** (the Overview body applied verbatim to a scratch worktree), at `cb73cab` | helper LANDED (sha256 differs), intended effect asserted against the system's own view (`TrimLeft` present = 1), `go vet` rc=0 read BEFORE the test result; **test rc=0, RUN=2 PASS=2 FAIL=0** — the gate accepts a deny-list bash never sets. Paired control in the same batch, proving the helper is not simply permissive: the row's own SILENT arm under the SAME helper is **rc=1, RUN=2 PASS=0 FAIL=2**, `KNOWN_BAD assignment count=2, want 1` at `:269` and `:353`. Both files restored byte-identical (sha256 re-asserted), worktree porcelain 0. **This is what residual 6 declares** |
+| V-ARM-GO | **`./scripts/verify_go.sh` base behaviour at `cb73cab`**, TWICE on the IDENTICAL pristine worktree (`git status --porcelain` = 0 between runs), answering `oc-glm-5-2`'s round-3 premise objection by measurement rather than forwarding it | **run 1: rc=1**, `--- FAIL` set = `{TestHandlerTimeoutKillsTheWholeProcessGroup}` (count 1). **run 2: rc=0**, `--- FAIL` set = **empty** (count 0). Known-positive control in the same call: 19 `ok`/`---` lines, so the empty set is a measurement and not a broken instrument. **Two conclusions.** (a) The doc's previously hardcoded 4-name base set (measured at `9c0ad0b`) matches **NEITHER** run at `cb73cab` — the objection is CONFIRMED. (b) The gate is **FLAKY, not deterministically red**: one tree, two consecutive runs, two different verdicts — corroborating queue row 58 first-party. The stable base set (names present in BOTH runs) is therefore **EMPTY**, which is why AC7 part 2 now takes its base reading at drill start and treats only names common to two pristine runs as the base |
 
 ### Commands (runnable as printed)
 
@@ -552,6 +609,21 @@ grep -c '=== RUN' /tmp/vc; grep -c -- '--- PASS' /tmp/vc
 # V-F restore check, additionally:
 git status --porcelain
 # observed: 0 lines
+```
+
+```zsh
+# V-ARM0 / V-ARMA / V-ARMB — controller first-party at HEAD this iteration (cb73cab),
+# package host/verifygate, arms -run 'TestMiscompileInstrumentProbesPinnedToolchain|TestReproModuleFloorStaysBelowKnownBadToolchains'
+go vet ./host/verifygate/
+go test ./host/verifygate/ -run 'TestMiscompileInstrumentProbesPinnedToolchain|TestReproModuleFloorStaysBelowKnownBadToolchains' -v > /tmp/varm 2>&1; rc=$?
+grep -c '=== RUN' /tmp/varm; grep -c -- '--- PASS' /tmp/varm; grep -c -- '--- FAIL' /tmp/varm
+# observed: ARM0 — vet rc=0, test rc=0, RUN=2 PASS=2 FAIL=0 (pristine, before AND after the batch)
+#           ARMA — mutant LANDED, bash -n rc=0, indented KNOWN_BAD=" lines 0->1, vet rc=0,
+#                  test rc=0, RUN=2 PASS=2 FAIL=0 (gate blind under B)
+#           ARMB — mutant LANDED, bash -n rc=0, col0 1->0 and indented 0->1, vet rc=0,
+#                  test rc=1, RUN=2 PASS=0 FAIL=2, `KNOWN_BAD assignment count=0, want 1`
+#                  at :267 and :351
+# Both mutants restored byte-identical (sha256 re-asserted against the pre-mutation backup).
 ```
 
 ```zsh
