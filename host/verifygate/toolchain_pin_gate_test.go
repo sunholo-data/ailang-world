@@ -560,3 +560,97 @@ func TestMiscompileInstrumentStepIsGatedInCI(t *testing.T) {
 		}
 	}
 }
+
+func p1FloorGateRegion(t *testing.T, src string) (comparator, gate string, start int) {
+	t.Helper()
+	const sentinel = "# --- P1 (queue row 48"
+	const success = `echo "   ✓ toolchain floor gate:`
+	if count := strings.Count(src, sentinel); count != 1 {
+		t.Fatalf("P1 block sentinel %q count=%d, want 1: the D-WORLD-28 fail-closed block is absent or duplicated", sentinel, count)
+	}
+	if count := strings.Count(src, success); count != 1 {
+		t.Fatalf("P1 success-line sentinel %q count=%d, want 1: the D-WORLD-28 fail-closed block cannot be delimited", success, count)
+	}
+	start = strings.Index(src, sentinel)
+	end := strings.Index(src, success)
+	if end < start {
+		t.Fatalf("P1 success-line sentinel precedes the block sentinel: the D-WORLD-28 floor gate cannot be delimited")
+	}
+	end += len(success)
+	region := src[start:end]
+	closeAt := strings.Index(region, "\n}\n")
+	if closeAt < 0 {
+		t.Fatalf("P1 comparator function has no closing line: the three-way comparison contract cannot be inspected")
+	}
+	closeAt += len("\n}\n")
+	return region[:closeAt], region[closeAt:], start
+}
+
+func TestRaceControlFloorStaysBelowRootToolchain(t *testing.T) {
+	raceFloor := moduleGoFloor(t, filepath.Join(repoRoot, "design_docs", "verification", "w-race-gate-blindspot", "racecontrol", "go.mod"))
+	if !version.IsValid(raceFloor) {
+		t.Fatalf("instrument failure: racecontrol module floor %q is not a valid Go version", raceFloor)
+	}
+	rootFloor := moduleGoFloor(t, filepath.Join(repoRoot, "go.mod"))
+	if !version.IsValid(rootFloor) {
+		t.Fatalf("instrument failure: root module floor %q is not a valid Go version", rootFloor)
+	}
+	if version.Compare(raceFloor, rootFloor) > 0 {
+		t.Fatalf("racecontrol module floor %q is above the root module floor %q: the control refuses before it can fire and verify_go.sh FATALs that the race detector is not armed for the wrong reason", raceFloor, rootFloor)
+	}
+
+	verifyPath := filepath.Join(repoRoot, "scripts", "verify_go.sh")
+	raw, err := os.ReadFile(verifyPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := string(raw)
+	const p2Needle = `GOTOOLCHAIN="$ACTIVE_GO" go run -race .`
+	p2At := strings.Index(src, p2Needle)
+	if count := strings.Count(src, p2Needle); count != 1 {
+		t.Fatalf("%s: execution-binding needle %q count=%d, want 1: the race control can silently return to nested auto-selection", verifyPath, p2Needle, count)
+	}
+
+	comparator, gate, p1At := p1FloorGateRegion(t, src)
+	for _, needle := range []string{
+		`[ "$root_go_lines" -ne 1 ]`,
+		"is BELOW the root module floor",
+		"cannot order toolchain tokens",
+	} {
+		if count := strings.Count(gate, needle); count != 1 {
+			t.Fatalf("P1 floor-read/refusal branch %q count=%d, want 1: a refusal branch of the D-WORLD-28 floor gate was removed or reworded", needle, count)
+		}
+	}
+	if count := strings.Count(gate, "verify_go.sh: FATAL:"); count != 3 {
+		t.Fatalf("P1 floor gate FATAL refusal count=%d, want 3: all three failure modes must remain separately attributed", count)
+	}
+	if count := strings.Count(gate, "exit 1"); count != 3 {
+		t.Fatalf("P1 block has %d `exit 1` statements, want 3 (one per refusal)", count)
+	}
+	if count := strings.Count(gate, "exit 0"); count != 0 {
+		t.Fatalf("P1 refusal gate has %d `exit 0` statements, want 0: a refusal must not report success", count)
+	}
+	for _, exit := range []string{"exit 0", "exit 1", "exit 2"} {
+		if !strings.Contains(comparator, exit) {
+			t.Fatalf("P1 comparator is missing %q: its >= / < / malformed three-way contract was gutted", exit)
+		}
+	}
+	const comparatorCall = `go_version_ge "$ACTIVE_GO" "$ROOT_FLOOR"`
+	if count := strings.Count(gate, comparatorCall); count != 1 {
+		t.Fatalf("P1 comparator call %q count=%d, want 1: operand order must remain ACTIVE_GO >= ROOT_FLOOR", comparatorCall, count)
+	}
+	if versions := regexp.MustCompile(`go1\.[0-9]+\.[0-9]+`).FindAllString(comparator+gate, -1); len(versions) != 0 {
+		t.Fatalf("P1 block contains hardcoded Go version literal(s) %v: the root floor must be read from go.mod", versions)
+	}
+	const floorRead = `awk '/^go /{print $2; exit}' go.mod`
+	if count := strings.Count(gate, floorRead); count != 1 {
+		t.Fatalf("P1 derived root-floor read %q count=%d, want 1: the floor must be read, never hardcoded", floorRead, count)
+	}
+	denyAt := strings.Index(src, `case "$ACTIVE_GO" in`)
+	if denyAt < 0 {
+		t.Fatalf("instrument failure: verify_go.sh deny-list case is absent, so P1 ordering cannot be checked")
+	}
+	if !(denyAt < p1At && p1At < p2At) {
+		t.Fatalf("P1 floor gate is out of order (deny-list@%d, P1@%d, race leg@%d): it must vet after the deny-list and before the race control", denyAt, p1At, p2At)
+	}
+}
