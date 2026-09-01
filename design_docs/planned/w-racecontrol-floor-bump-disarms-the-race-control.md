@@ -617,11 +617,15 @@ Each AC carries its vacuity self-test and its **observed result on the unmodifie
   includes `host/verifygate`; a test added there therefore executes in CI. Three greps, each
   with its own control: `grep -n 'run: ./scripts/verify_go.sh' .github/workflows/ci.yml` → ≥1
   match at `:166` (control: step name at `:163` is "go build + test gate (replay tests run
-  against pinned AILANG_BIN)"); `grep -cn '^go test \./\.\.\. -count=1$' scripts/verify_go.sh` → exactly **1**, at `:258`
-  (the loose `grep -n 'go test ./\.\.\.'` form this AC used to carry returns **3** — `:5` a
-  header comment, `:256` an `echo`, `:258` the executable line — so it could be satisfied by a
-  comment alone; the anchored form cannot. Control: the loose form still returns 3, proving the
-  file was read); `go list ./... | grep verifygate` →
+  against pinned AILANG_BIN)"); `grep -cE '^go test \./\.\.\. -count=1$' scripts/verify_go.sh` → exactly **1** (at `:258`
+  pre-sprint, `:293` post-sprint — **the AC binds the count, never the line number**, because P1
+  adds 35 lines above it). The loose `grep -n 'go test ./\.\.\.'` form this AC used to carry is
+  satisfiable by a comment alone and is used only as the read-control. **Correction, measured
+  post-sprint at iteration 145: that loose form returns 4, not 3** — the planner's §4.5(b)
+  enumeration listed `:5` (header comment), `:256` (`echo`) and `:258` (the executable line) and
+  **missed `:262`, the `-race` leg's own `echo`**; the base tree returns 4 as well, so this is a
+  miscount in the refutation and not a change the sprint introduced. Control: the loose form
+  returns 4 at base and 4 post-sprint, proving the file was read; `go list ./... | grep verifygate` →
   `host/verifygate` (control: the package resolves). **Base @HEAD 8bb9214: all three readings
   recorded (V10).** RED: a committed edit that repoints the CI job elsewhere, drops the `./...`
   leg, or renames the package must make the corresponding grep red while its paired control
