@@ -1,0 +1,206 @@
+{
+  "sprint_id": "w-wiring-test-step-scoping-imprecise-under-key-reorder",
+  "title": "Row 52: harden the miscompile-step locator to the ratified shallowest-`steps:` line scan + expectedStepCol pin",
+  "queue_item": 52,
+  "design_doc": "design_docs/planned/w-wiring-test-step-scoping-imprecise-under-key-reorder.md",
+  "sprint_plan": "design_docs/planned/w-wiring-test-step-scoping-imprecise-under-key-reorder-sprint-plan.md",
+  "created": "2026-09-02",
+  "planner": "claude:claude-opus-5",
+  "status": "ready",
+  "risk_level": "low",
+  "branch": "dev",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.planner-wt-iter147",
+  "base_commit": "f6773dc",
+  "base_commit_note": "detached planner worktree, identical to dev; `git status --porcelain` = 0 lines at plan time and after the 15-arm drill; ci.yml sha256 aed8e186... before and after every arm.",
+  "base_state_verified": {
+    "go vet ./host/verifygate/": "rc=0",
+    "gofmt -l host/verifygate/": "rc=0, zero lines",
+    "AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -run '^TestMiscompileInstrumentStepIsGatedInCI$' -count=1 -v": "rc=0, `=== RUN` present, `--- PASS`",
+    "AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1": "rc=0 (~67s)",
+    "AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh": "rc=0 (11 identities / 40 named tests / 9-of-9 package steps)",
+    "shasum -a 256 .github/workflows/ci.yml": "aed8e186fb57036eb6b03509cbb668850d577d46e6cc68b30e7a4c042108ed85",
+    "FORBIDDEN go build ./host/verifygate/": "rc=1 at base — test-only package, 'no non-test Go files'. Use go vet.",
+    "FORBIDDEN bare go test ./host/verifygate/ -count=1": "rc=1, 17 FAIL, all 'AILANG_BIN is unset' refusals. Always export AILANG_BIN.",
+    "FORBIDDEN bare ./scripts/verify_ail.sh": "rc=1, 'AILANG_BIN refused [DEV_BUILD]: v0.34.0-247-g4bd58bef6-dirty'.",
+    "FORBIDDEN ./scripts/verify_go.sh": "row-58 flake (4 runs, 2 red / 2 green, 3 different failing sets). No AC in this sprint cites it."
+  },
+  "environment": {
+    "path_export": "export PATH=/opt/homebrew/bin:$PATH",
+    "ailang_bin": "/tmp/ailang-v0300/ailang",
+    "yaml_oracle": "ruby -ryaml (measurement oracle on this rig only; NEVER inside the gate)",
+    "note": "Every test command carries AILANG_BIN=/tmp/ailang-v0300/ailang. Three of the four obvious gate commands are red at base without it."
+  },
+  "executor_constraints": [
+    "Direction is human-ratified as D-WORLD-30 (shallowest enclosing `steps:` line scan + Mechanism step 1b `expectedStepCol = 6`). Do NOT propose a YAML parser, a new go.mod dependency, or any alternative locator. Only Mark can reverse it.",
+    "Restore mutants with `cp` from a backup that lives OUTSIDE the repo and OUTSIDE /tmp. NEVER `git checkout --` — the tree holds uncommitted work.",
+    "Assert each mutant LANDED by MATCHING its pinned sha256, not by 'sha differs'. For MUT-A/C/D/E/F/G/I no pin exists: derive one, record it in the sprint notes, and re-use it for the restore check.",
+    "Assert the intended EFFECT against `ruby -ryaml` (step count, per-step key list, continue-on-error value) BEFORE reading any verdict. Bytes are not the effect.",
+    "Read `go vet ./host/verifygate/` rc BEFORE any test result in every arm.",
+    "Re-assert ci.yml byte identity by sha256 (aed8e186...) after EVERY arm, and re-run the pristine control after the batch.",
+    "Every verdict is read from the TARGETED AC1 command. No arm may carry a `-skip <test>` rc=0 criterion — the package-wide red set for ci.yml mutants is unmeasured.",
+    "Only `host/verifygate/toolchain_pin_gate_test.go` changes at landing. `.github/workflows/ci.yml` must be byte-identical."
+  ],
+  "planner_findings": [
+    {
+      "id": "F1",
+      "severity": "blocking",
+      "title": "AC8 cannot fail: step 1b's expectedStepCol pin is unreachable on MUT-Q",
+      "detail": "Under the RATIFIED shallowest anchor, MUT-Q's derivation captures the OTHER JOB's `steps:` key (Declared Residual 8) and returns stepCol=6, which EQUALS expectedStepCol=6, so the pin's inequality branch is never taken. Measured on the locator prototype: MUT-Q with step 1b -> FATAL via Invariant A, block [96,99); MUT-Q with step 1b NEUTERED -> FATAL via Invariant A, block [96,99). No flip. Both halves of AC8 pass identically in a build with step 1b and in a build without it. AC8's own neuter arm concedes this ('must still red via Invariant A or B'). By the mission's own MUT-N rule this is a grep in disguise.",
+      "resolution": "AC8 replaced by AC8' built on new arm MUT-R (both job bodies re-indented two columns right): pin fires (stepCol=8 != 6), and with 1b neutered the same mutant is rc=0 GREEN. That rc=1 -> rc=0 flip is the liveness proof AC8 lacked. MUT-Q retained as AC8'-b, honestly relabelled as proving Invariant A / Residual 8 rather than the pin."
+    },
+    {
+      "id": "F2",
+      "severity": "doc-refutation",
+      "title": "The MUT-Q row's landed-assertion is FALSE: the mutant the doc pins does not parse to 10 steps",
+      "detail": "The MUT-Q row says 'assert LANDED by sha-differs from aed8e186... and by the ruby view still parsing to 10 steps.' The mutant that reproduces the doc's own pinned V31 sha 4fd378c4... yields `ailang-verify: steps=7` and `go-verify: steps=NIL`. Shifting only the `steps:` block two columns right moves the key from indent 4 (a job key) to indent 6, where it becomes a member of the `env:` mapping. The document still parses, so 'valid YAML' is true, but the go-verify job is destroyed. The executor cannot satisfy the assertion and MUST NOT weaken it.",
+      "doc_line_to_correct": "the `| MUT-Q |` row of the Mutation Drill table, its 'assert LANDED ... still parsing to 10 steps' clause",
+      "resolution": "Corrected arm MUT-Q2 shifts the WHOLE go-verify job body (line 100 onward) two columns right: sha e50029d14bb1acb8374c279310594186c763b06643a601902d5313a535dd7311, ruby view ailang-verify: steps=7 / go-verify: steps=10. All of V31's MEASUREMENTS are correct and reproduced exactly; only the assertion prose is wrong."
+    },
+    {
+      "id": "F3",
+      "severity": "stale",
+      "title": "The doc's Milestones section predates the round-3 carve-out",
+      "detail": "The MS1/MS2/MS3 split is structurally right (locator / drill / write-up) and is kept. Contents are one revision stale: MS1 never mentions Mechanism step 1b (expectedStepCol), which is the entire round-3 gpt5-6-sol fix; MS2 says 'MUT-A through MUT-P', so MUT-Q is owned by no milestone; MS2 maps to 'AC2-AC5, AC7', so AC8 is ORPHANED; MS2 also claims AC7, which is a landing check, not a drill check.",
+      "resolution": "MS1 gains step 1b explicitly (items 3 and 5). MS2 covers MUT-A..MUT-R and owns AC2/AC3/AC4/AC5/AC8'/AC8'-b. MS3 owns AC6 and AC7."
+    },
+    {
+      "id": "F4",
+      "severity": "minor",
+      "title": "Three mutants carry no sha pin; three prose numbers drift",
+      "detail": "MUT-A, MUT-D and MUT-I have no pinned sha256, so the doc's 'assert LANDED by MATCHING the pinned hash' rule cannot be applied to them; the executor must pin its own and record it. ARM A's blamed line is 167 in the planner's construction, 166 in V2, 164 in V21 — same defect class, three constructions — so AC3 must say 'a line belonging to another step as the ruby oracle sees it', never a fixed line number. The MUT-O prose says the in-scalar `steps:` decoy sits at col 12; measured, `steps:` is at col 10 and the decoy dash at col 12 (which is what makes the nearest anchor derive stepCol=12, as V25 records). Cosmetic; V25's numbers are right."
+    },
+    {
+      "id": "F5",
+      "severity": "informational",
+      "title": "The ratified mechanism is sound on every arm run; no reason found to dispute D-WORLD-30",
+      "detail": "The locator prototype (Mechanism steps 1, 1b, 2, 3, 4, 5, both anchor derivations) produced exactly the doc's NEW column on all 15 arms, and every V21/V23/V25/V31 number reproduced to the line: MUT-B start=174 end=183 RED coe@181; MUT-O shallowest stepCol=6 start=174 end=184, nearest stepCol=12; MUT-Q shallowest stepCol=6 start=96 end=99 FATAL InvA; MUT-J and MUT-K both start==i==174. Residual 8 (cross-job capture) is real, reproduced, and fails loud in every arm run."
+    }
+  ],
+  "drill_arms_run_by_planner": {
+    "protocol": "mutant generated from the doc's own recipe; sha256 printed and matched against the doc's pin where one exists; effect asserted with `ruby -ryaml`; `go vet ./host/verifygate/` rc read before every test result (rc=0, 15/15); AC1 run; ci.yml restored by `cp` and re-asserted byte-identical (aed8e186..., 15/15); pristine control green before and after; no git write operation.",
+    "pins_reproduced_first_try_from_prose": ["MUT-B c1903a86...", "MUT-O 72acc72d...", "MUT-P 1917c413...", "MUT-J 96f51f64...", "MUT-K 58a2dd93...", "MUT-Q 4fd378c4..."],
+    "old_verdicts_measured": {
+      "MUT-A": "rc=1, ci.yml:167 = the UNRELATED step's own flag line — the false positive is LIVE",
+      "MUT-B": "rc=0 --- PASS with ruby step[6] coe=true — the FAIL-OPEN is LIVE",
+      "MUT-C": "rc=1, ci.yml:176",
+      "MUT-D": "rc=1, ci.yml:175 blaming the stranger — exact match to V17",
+      "MUT-E": "rc=1, instrument failure count(path)=2",
+      "MUT-F": "rc=0",
+      "MUT-G": "rc=0 --- PASS (OLD pins no name)",
+      "MUT-I": "rc=1, ci.yml:176",
+      "MUT-J": "rc=1, ci.yml:177",
+      "MUT-K": "rc=0",
+      "MUT-O": "rc=1, ci.yml:182 — exact match to V28",
+      "MUT-P": "rc=1, ci.yml:181 — exact match to V24",
+      "MUT-Q": "rc=0 --- PASS — exact match to V31",
+      "MUT-Q2": "rc=0 (new arm)",
+      "MUT-R": "rc=0 --- PASS (new arm; the landed gate silently absorbs it)"
+    },
+    "new_verdicts_prototyped_shallowest_anchor": {
+      "BASE": "GREEN stepCol=6 start=174 end=178",
+      "MUT-A": "GREEN stepCol=6 start=175 end=179",
+      "MUT-B": "RED coe@181 start=174 end=183",
+      "MUT-C": "RED coe@176",
+      "MUT-D": "GREEN start=177 end=181",
+      "MUT-F": "GREEN",
+      "MUT-G": "FATAL Invariant B",
+      "MUT-I": "RED coe@176 start=174",
+      "MUT-J": "RED coe@177, start == i == 174",
+      "MUT-K": "GREEN, start == i == 174",
+      "MUT-O": "RED coe@182 stepCol=6 start=174 end=184 (nearest anchor: stepCol=12)",
+      "MUT-P": "RED coe@181",
+      "MUT-Q": "FATAL Invariant A, block [96,99), stepCol=6 from the OTHER JOB",
+      "MUT-Q2": "FATAL Invariant A, block [96,99)",
+      "MUT-R": "FATAL step 1b PIN, derived step column 8 != expectedStepCol 6"
+    },
+    "step_1b_neuter_probe": "MUT-Q: FATAL->FATAL (no flip). MUT-Q2: FATAL->FATAL (no flip). MUT-R: FATAL->GREEN rc=0 (FLIPS). Hence F1."
+  },
+  "features": [
+    {
+      "id": "MS1",
+      "name": "Rewrite the locator, including Mechanism step 1b",
+      "description": "Inside TestMiscompileInstrumentStepIsGatedInCI in host/verifygate/toolchain_pin_gate_test.go ONLY (func at :492; the two offending HasPrefix(strings.TrimSpace(...), \"- name:\") scans at :511 and :524). Add `indentOf` helper; `const miscompileStepName`; `const expectedStepCol = 6`. Step 1: derive stepCol from the SHALLOWEST enclosing `steps:` above i, tie broken at the minimal indent toward the nearest such line (a total rule); stepCol = indent of the first following line with trimmed prefix `- `; either lookup failing is a t.Fatalf(\"instrument failure: ...\"). Step 1b: immediately after, `if stepCol != expectedStepCol { t.Fatalf(\"instrument failure: derived step column %d; update expectedStepCol after an intentional ci.yml re-indent\", stepCol) }`. Step 2: start walks back from j := i INCLUSIVE to the nearest line with trimmed prefix `- ` AND indent exactly stepCol. Step 3: end from start+1 is the first dash line at exactly stepCol, or the first non-blank non-comment line at indent strictly less than stepCol, else EOF; blank and `#` lines never terminate. Invariant A: start <= i < end else t.Fatalf. Invariant B: the block must contain a line whose trimmed text is exactly \"- name: \"+miscompileStepName or \"name: \"+miscompileStepName, else t.Fatalf. The existing continue-on-error loop over [start,end) and everything after it is UNCHANGED. Update the function doc-comment: the DECLARED RESIDUAL block's scoping sentence and its reference to the ROW-44 doc's V19 now describe the new mechanism, and the comment names ruling D-WORLD-30. CORRECTS the design doc's MS1, which omits step 1b entirely (planner finding F3).",
+      "estimated_changed_lines": 45,
+      "estimated_days": 0.05,
+      "dependencies": [],
+      "files": ["host/verifygate/toolchain_pin_gate_test.go"],
+      "acceptance_criteria": [
+        "AC1: `AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -run '^TestMiscompileInstrumentStepIsGatedInCI$' -count=1 -v` -> rc=0 AND the output contains `=== RUN   TestMiscompileInstrumentStepIsGatedInCI` (the -v RUN line is the proof the pattern reached the function; a green from a run that never entered it proves nothing). BASE MEASURED: rc=0 with the RUN line present.",
+        "AC6a: `go vet ./host/verifygate/` -> rc=0. BASE MEASURED: rc=0. (`go build ./host/verifygate/` is rc=1 at base — test-only package — and must NOT be used.)",
+        "AC6b: `gofmt -l host/verifygate/` prints nothing. BASE MEASURED: rc=0, zero lines, against a firing control that DOES name the file when it is deliberately misformatted (doc V29).",
+        "AC6c: `AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1` -> rc=0. BASE MEASURED: rc=0 in ~67s. The export is load-bearing: without it the same command is rc=1 with 17 'AILANG_BIN is unset' refusals.",
+        "Prototype cross-check (planner-measured): on the pristine ci.yml the new locator must derive stepCol=6, start=174, end=178 and stay GREEN — identical to the landed gate's verdict, so MS1 alone is independently CI-green."
+      ],
+      "mutation_arms": [],
+      "restore_recipe": "MS1 touches no ci.yml. Before ANY later mutation: `mkdir -p ../row52-backup && cp .github/workflows/ci.yml ../row52-backup/ci.yml` (a SIBLING of the repo, never /tmp, never inside the repo). Restore with `cp ../row52-backup/ci.yml .github/workflows/ci.yml`. NEVER `git checkout --`.",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "Ratified mechanism, D-WORLD-30. Do not substitute a YAML parser or add a go.mod dependency."
+    },
+    {
+      "id": "MS2",
+      "name": "Mutation drill, MUT-A through MUT-R (16 arms)",
+      "description": "No production change. Run every arm against the AC1 command with the MS1 locator landed. Per arm: generate the mutant from its recipe; assert LANDED by MATCHING the pinned sha256 where one exists (MUT-B c1903a86..., MUT-O 72acc72d..., MUT-P 1917c413..., MUT-J 96f51f64..., MUT-K 58a2dd93..., MUT-Q 4fd378c4..., MUT-Q2 e50029d1..., MUT-R 575e8788...) or derive-and-record one where none does (MUT-A, MUT-C, MUT-D, MUT-E, MUT-F, MUT-G, MUT-I — planner finding F4); assert the intended effect with `ruby -ryaml` BEFORE reading any verdict; read `go vet ./host/verifygate/` rc BEFORE the test result; run AC1; record rc AND the message text; `cp`-restore; re-assert sha256 aed8e186...; re-run the pristine control after the batch. MUT-N and the AC8' neuter are TEST-SOURCE edits via `if false && ...` (neutered, NOT deleted, so a compile error cannot masquerade as the guard firing), reverted afterwards. CORRECTS the design doc's MS2, which stops at MUT-P and orphans AC8 (planner finding F3).",
+      "estimated_changed_lines": 0,
+      "estimated_days": 0.04,
+      "dependencies": ["MS1"],
+      "files": [".github/workflows/ci.yml (mutated and restored byte-identical, never committed changed)", "host/verifygate/toolchain_pin_gate_test.go (temporary neuters, reverted)"],
+      "acceptance_criteria": [
+        "AC2 (the fail-open family dies): MUT-B (sha c1903a86..., ruby shows step[6] coe=true) -> rc=1 naming a line INSIDE the miscompile step's own block as the ruby oracle sees it; and MUT-I -> rc=1 on the step's own flag line. Restore to aed8e186... after each. PLANNER-MEASURED OLD: MUT-B rc=0 --- PASS over a live forbidden flag (the defect this sprint closes); MUT-I rc=1 ci.yml:176.",
+        "AC3 (the false-positive / key-order family closes): MUT-A (coe on the unrelated `go build + test gate` step + miscompile key reorder; ruby shows step[5] coe=true, step[6] coe=nil) -> rc=0; and MUT-K (sha 58a2dd93...) -> rc=0. DO NOT pin a line number in this AC — the arm's flag line is 167/166/164 across three legitimate constructions of the same class (planner finding F4). PLANNER-MEASURED OLD: MUT-A rc=1 blaming the unrelated step's own flag line (the defect this sprint closes); MUT-K rc=0.",
+        "AC4 (the original kill still fires, in every layout): MUT-C -> rc=1; and MUT-J (sha 96f51f64...) -> rc=1 naming the step's own flag line. PLANNER-MEASURED OLD: rc=1 ci.yml:176 and rc=1 ci.yml:177.",
+        "AC5 (Invariant B live, proven by a FLIP not a grep): MUT-G -> rc=1 with an `instrument failure` message from Invariant B; then with Invariant B neutered via `if false && ...` the SAME MUT-G -> rc=0. Revert both. PLANNER-MEASURED OLD: MUT-G rc=0 --- PASS, so the arm is non-vacuous.",
+        "AC8' (the column pin is live, proven by a FLIP — REPLACES the design doc's AC8, which cannot fail; see planner finding F1): MUT-R (sha 575e8788210be5499fe22aeb106c0849a5e469e1aae59ec3993a2190f28bb953; ruby oracle MUST show `ailang-verify: steps=7` AND `go-verify: steps=10`) -> rc=1 whose message is step 1b's `derived step column 8`; then with step 1b's t.Fatalf neutered via `if false && ...` the SAME MUT-R -> rc=0. Revert both, sha back to aed8e186... PLANNER-MEASURED OLD: MUT-R rc=0 --- PASS, so the arm is non-vacuous; prototype: FATAL(pin) with 1b, GREEN without.",
+        "AC8'-b (Residual 8 fails LOUD, not silent): MUT-Q2 (sha e50029d14bb1acb8374c279310594186c763b06643a601902d5313a535dd7311; ruby oracle `ailang-verify: steps=7`, `go-verify: steps=10`) -> rc=1 carrying an `instrument failure`, AND the record must state WHICH refusal fired. PLANNER-MEASURED on the prototype: Invariant A, block [96,99) — the cross-job capture of Declared Residual 8, NOT the pin. The doc's MUT-Q (sha 4fd378c4...) may be run as a third arm ONLY with the corrected landed-assertion of finding F2 (`go-verify: steps=NIL`), never with 'still parsing to 10 steps'.",
+        "MUT-E, MUT-F, MUT-D, MUT-O, MUT-P are run and recorded as supporting arms: MUT-E rc=1 count(path)=2 fatal (uniqueness precondition, explicitly NOT addition coverage); MUT-F rc=0; MUT-D rc=0 under the new locator (PLANNER-MEASURED OLD: rc=1 blaming the stranger at ci.yml:175 — the discriminating addition, verdict flips); MUT-O rc=1 on ci.yml:182 (the ruling-named `steps:`-decoy attack); MUT-P rc=1 on ci.yml:181 (the position control that stops the doc claiming the decoy construct always fails open).",
+        "NO arm may carry a `-skip <test>` rc=0 criterion. Every verdict is read from the targeted AC1 command; the package-wide red set for ci.yml mutants is UNMEASURED and no AC depends on it.",
+        "NO acceptance criterion in this sprint cites `./scripts/verify_go.sh` (queue row 58 flake: 4 runs, 2 red / 2 green, 3 different failing sets)."
+      ],
+      "mutation_arms": ["MUT-A", "MUT-B", "MUT-C", "MUT-D", "MUT-E", "MUT-F", "MUT-G", "MUT-I", "MUT-J", "MUT-K", "MUT-N", "MUT-O", "MUT-P", "MUT-Q", "MUT-Q2", "MUT-R"],
+      "restore_recipe": "`cp ../row52-backup/ci.yml .github/workflows/ci.yml` then `shasum -a 256 .github/workflows/ci.yml` must print aed8e186fb57036eb6b03509cbb668850d577d46e6cc68b30e7a4c042108ed85. After every single arm, not just at the end. NEVER `git checkout --` — the tree holds uncommitted work. Backup lives in a SIBLING of the repo, never /tmp.",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "MUT-H is DECLARED not demonstrable — no valid-YAML mutant reaches Invariant A under the new locator per the doc's reasoning; do not fake a row for it. Note that MUT-Q/MUT-Q2 DO fire Invariant A, which is the cross-job capture of Residual 8, not the MUT-H shape."
+    },
+    {
+      "id": "MS3",
+      "name": "Landing hygiene and evidence write-up",
+      "description": "Assert no collateral, run the full verify gate with the pin, and write the sprint notes carrying every arm's rc, message text and sha256. Move the design doc to design_docs/implemented/ per repo flow. CORRECTS the design doc's MS2, which claimed AC7 as a drill check when it is a landing check (planner finding F3).",
+      "estimated_changed_lines": 0,
+      "estimated_days": 0.01,
+      "dependencies": ["MS1", "MS2"],
+      "files": ["design_docs/planned/w-wiring-test-step-scoping-imprecise-under-key-reorder.md (moves to implemented/)"],
+      "acceptance_criteria": [
+        "AC7a: `shasum -a 256 .github/workflows/ci.yml` -> aed8e186fb57036eb6b03509cbb668850d577d46e6cc68b30e7a4c042108ed85 at landing. BASE MEASURED: same value, and restored to it 15/15 times across the planner's drill.",
+        "AC7b: `git status --porcelain` shows ONLY host/verifygate/toolchain_pin_gate_test.go plus the intended doc/plan changes. BASE MEASURED: 0 lines.",
+        "AC7c: `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_ail.sh` -> rc=0. BASE MEASURED: rc=0, 11 required identities / 40 named tests / 9-of-9 package steps. The export is load-bearing: the bare command is rc=1 at base ('AILANG_BIN refused [DEV_BUILD]: v0.34.0-247-g4bd58bef6-dirty').",
+        "AC6 re-run clean after MS2's temporary neuters are reverted: `go vet ./host/verifygate/` rc=0, `gofmt -l host/verifygate/` empty, `AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1` rc=0.",
+        "The sprint notes record, for every arm in MS2, the derived sha256, the ruby-oracle effect line, the go vet rc read before the test, the AC1 rc, the verbatim failure message, and the post-restore sha256."
+      ],
+      "mutation_arms": [],
+      "restore_recipe": "n/a — MS3 mutates nothing.",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "Also record findings F1 and F2 in the landing notes: AC8 was replaced because it could not fail, and the design doc's MUT-Q landed-assertion is factually wrong."
+    }
+  ],
+  "velocity": {
+    "target_days": 0.1,
+    "estimated_changed_lines": 45,
+    "estimated_total_loc": 45,
+    "estimated_days": 0.1,
+    "note": "~45 changed lines in ONE function in ONE test file, matching the design doc's own ~0.1d estimate. DO NOT INFLATE SCOPE. The cost is in the 16-arm mutation drill, not in the code."
+  },
+  "deferred_scope": [
+    "Bounding the backward `steps:` scan to the enclosing job — would close Declared Residual 8 outright, but it is a mechanism change nobody has ratified. Named as follow-up, not taken.",
+    "Any YAML parser or new go.mod dependency — REJECTED BY THE HUMAN (D-WORLD-30). A reviewer objection in that direction is answered by quoting the ruling, not re-litigated.",
+    "actionlint in CI — rig-dependent, and would not catch either arm (both mutants are valid workflow YAML)."
+  ],
+  "residuals_inherited_unchanged": [1, 2, 3, 4, 5, 6, 7, 8],
+  "sandbox_posture": "Planner ran read-and-mutate-and-restore in the detached worktree /Users/voightkampff/dev/sunholo-data/.planner-wt-iter147 only. No git write operation (add/commit/stash/checkout/worktree) was run. The design doc's normative sections were NOT edited; corrections live in this plan (findings F1-F4).",
+  "id_disambiguation": "MUT-Q2 and MUT-R are PLANNER-ADDED arms and do not appear in the design doc. MUT-R is the AC8' arm. MUT-Q2 is the corrected form of the doc's MUT-Q.",
+  "github_issues": []
+}

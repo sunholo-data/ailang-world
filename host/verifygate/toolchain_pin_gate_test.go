@@ -475,6 +475,10 @@ func TestCanaryDeclaresPositiveArmOnly(t *testing.T) {
 }
 
 const miscompileReproducerPath = "design_docs/verification/w-race-gate-blindspot/run.sh"
+const miscompileStepName = "Measure compiler reproducer (platform-conditional, gated)"
+const expectedStepCol = 6
+
+func indentOf(s string) int { return len(s) - len(strings.TrimLeft(s, " ")) }
 
 // TestMiscompileInstrumentStepIsGatedInCI pins the row-44 wiring on two channels that
 // must not silently return. (1) `continue-on-error: true` converts an instrument's
@@ -484,11 +488,15 @@ const miscompileReproducerPath = "design_docs/verification/w-race-gate-blindspot
 // env-var form of the platform tokens (measured in the design doc, P16), so executable
 // uses of that overridable channel are forbidden in run.sh, and both kernel reads are
 // asserted present so the probe cannot quietly revert.
-// DECLARED RESIDUAL: a step-level `if:` that never evaluates true disables the step
-// with this text intact (no actionlint runs in this repo — P41 V18); and these are
-// byte-substring pins — a computed assignment (`eval`, string concatenation) evades
-// them; the mechanism's runtime immunity is why that gap is acceptable (design doc,
-// residuals 2 and 3).
+// The step scope is an indentation-aware line scan anchored at the shallowest
+// enclosing `steps:` key, as ratified by D-WORLD-30. DECLARED RESIDUAL: the scan is
+// text-level and unbounded to the enclosing job; a future re-indent therefore fails
+// loudly until expectedStepCol is intentionally updated (this replaces the row-44
+// design doc's V19 scoping assumption). A step-level `if:` that never evaluates true
+// also disables the step with this text intact (no actionlint runs in this repo — P41
+// V18); and these are byte-substring pins — a computed assignment (`eval`, string
+// concatenation) evades them; the mechanism's runtime immunity is why that gap is
+// acceptable (design doc, residuals 2 and 3).
 func TestMiscompileInstrumentStepIsGatedInCI(t *testing.T) {
 	workflowPath := filepath.Join(repoRoot, ".github", "workflows", "ci.yml")
 	raw, err := os.ReadFile(workflowPath)
@@ -504,15 +512,41 @@ func TestMiscompileInstrumentStepIsGatedInCI(t *testing.T) {
 	// legitimate GOOS/GOARCH use globally"). A flag on an unrelated step is that
 	// step's business; V19's scoping control proves this boundary holds.
 	lines := strings.Split(src, "\n")
-	start := -1
+	identifyingLine := -1
 	for i, l := range lines {
 		if strings.Contains(l, miscompileReproducerPath) {
-			for j := i; j >= 0; j-- {
-				if strings.HasPrefix(strings.TrimSpace(lines[j]), "- name:") {
-					start = j
-					break
-				}
-			}
+			identifyingLine = i
+			break
+		}
+	}
+	anchor := -1
+	anchorCol := len(lines) + 1
+	for j := identifyingLine; j >= 0; j-- {
+		if strings.TrimSpace(lines[j]) == "steps:" && indentOf(lines[j]) < anchorCol {
+			anchor = j
+			anchorCol = indentOf(lines[j])
+		}
+	}
+	if anchor < 0 {
+		t.Fatalf("instrument failure: could not locate a steps: anchor above the miscompile identifying line in ci.yml")
+	}
+	stepCol := -1
+	for j := anchor + 1; j < len(lines); j++ {
+		if strings.HasPrefix(strings.TrimSpace(lines[j]), "- ") {
+			stepCol = indentOf(lines[j])
+			break
+		}
+	}
+	if stepCol < 0 {
+		t.Fatalf("instrument failure: could not derive the step column below ci.yml:%d", anchor+1)
+	}
+	if stepCol != expectedStepCol {
+		t.Fatalf("instrument failure: derived step column %d; update expectedStepCol after an intentional ci.yml re-indent", stepCol)
+	}
+	start := -1
+	for j := identifyingLine; j >= 0; j-- {
+		if strings.HasPrefix(strings.TrimSpace(lines[j]), "- ") && indentOf(lines[j]) == stepCol {
+			start = j
 			break
 		}
 	}
@@ -521,10 +555,26 @@ func TestMiscompileInstrumentStepIsGatedInCI(t *testing.T) {
 	}
 	end := len(lines)
 	for j := start + 1; j < len(lines); j++ {
-		if strings.HasPrefix(strings.TrimSpace(lines[j]), "- name:") {
+		trimmed := strings.TrimSpace(lines[j])
+		if (strings.HasPrefix(trimmed, "- ") && indentOf(lines[j]) == stepCol) ||
+			(trimmed != "" && !strings.HasPrefix(trimmed, "#") && indentOf(lines[j]) < stepCol) {
 			end = j
 			break
 		}
+	}
+	if !(start <= identifyingLine && identifyingLine < end) {
+		t.Fatalf("instrument failure: located step block [%d,%d) does not contain the identifying line %d", start, end, identifyingLine)
+	}
+	foundName := false
+	for j := start; j < end; j++ {
+		trimmed := strings.TrimSpace(lines[j])
+		if trimmed == "- name: "+miscompileStepName || trimmed == "name: "+miscompileStepName {
+			foundName = true
+			break
+		}
+	}
+	if !foundName {
+		t.Fatalf("instrument failure: located block is not the miscompile step %q", miscompileStepName)
 	}
 	for i := start; i < end; i++ {
 		if strings.Contains(lines[i], "continue-on-error") {
