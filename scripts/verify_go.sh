@@ -223,10 +223,45 @@ case "$ACTIVE_GO" in
     exit 1 ;;
 esac
 
+# --- P1 (queue row 48 / D-WORLD-28): the SELECTED toolchain must be at-or-above the
+# root module floor. Below it, the nested race-control module's own floor can exceed
+# the toolchain that runs it and the known-positive control at :229 goes silently
+# unarmed. The floor is READ from ./go.mod, never hardcoded.
+go_version_ge() {   # rc 0 = $1 >= $2 ; rc 1 = $1 < $2 ; rc 2 = a token is not a release version
+  awk -v a="$1" -v b="$2" 'BEGIN{
+    if (a !~ /^go1\.[0-9]+(\.[0-9]+)?$/ || b !~ /^go1\.[0-9]+(\.[0-9]+)?$/) exit 2
+    sub(/^go/,"",a); sub(/^go/,"",b)
+    na=split(a,A,"."); nb=split(b,B,".")
+    n=(na>nb?na:nb)
+    for(i=1;i<=n;i++){x=(i<=na?A[i]+0:0); y=(i<=nb?B[i]+0:0)
+      if(x>y) exit 0; if(x<y) exit 1}
+    exit 0}'
+}
+root_go_lines=$(awk '/^go /{n++} END{print n+0}' go.mod)
+if [ "$root_go_lines" -ne 1 ]; then
+  echo "verify_go.sh: FATAL: root go.mod has $root_go_lines column-0 'go ' lines, want exactly 1;" >&2
+  echo "  the root module floor cannot be read, so the race-detector control cannot be bounded." >&2
+  exit 1
+fi
+ROOT_FLOOR="go$(awk '/^go /{print $2; exit}' go.mod)"
+set +e
+go_version_ge "$ACTIVE_GO" "$ROOT_FLOOR"; floor_rc=$?
+set -e
+case "$floor_rc" in
+  0) ;;
+  1) echo "verify_go.sh: FATAL: active toolchain $ACTIVE_GO is BELOW the root module floor $ROOT_FLOOR;" >&2
+     echo "  the race-detector known-positive control would be disarmed. Pin GOTOOLCHAIN to $ROOT_FLOOR or above." >&2
+     exit 1 ;;
+  *) echo "verify_go.sh: FATAL: cannot order toolchain tokens (ACTIVE_GO=$ACTIVE_GO ROOT_FLOOR=$ROOT_FLOOR);" >&2
+     echo "  at least one is not a well-formed goX.Y[.Z] release version." >&2
+     exit 1 ;;
+esac
+echo "   ✓ toolchain floor gate: $ACTIVE_GO >= root module floor $ROOT_FLOOR"
+
 echo "── race-detector known-positive control"
 go version
 set +e
-race_control_output="$(cd design_docs/verification/w-race-gate-blindspot/racecontrol && go run -race . 2>&1)"
+race_control_output="$(cd design_docs/verification/w-race-gate-blindspot/racecontrol && GOTOOLCHAIN="$ACTIVE_GO" go run -race . 2>&1)"
 set -e
 printf '%s\n' "$race_control_output"
 if ! grep -q 'WARNING: DATA RACE' <<<"$race_control_output"; then
