@@ -16192,3 +16192,118 @@ Round 2 ($0.1489, after one revision — the Fable diet's one-DOC ceiling, met a
 **Retro**: no new ≥2-instance skill gap, and no routing-policy change (that needs ≥3 evidence rows). The finding worth carrying is a sharpening of this mission's own standing rule that an inherited claim must be measured: **row 53 was measured at iteration 133 and the measurement was right about the *verdict* and wrong about the *cause*, because the evidence it read had been rendered through `%q`.** A `%q` payload displays a bare `"` as `\"`, so reading an error's quoted body at face value inverts the very fact you are trying to establish — the escaping looks present exactly when it is absent, and looks absent exactly when it is present. That is not a discipline failure; it is an instrument whose output must be *unquoted* before it counts as data. It generalises past this bug: wherever a diagnostic is formatted for display, the display is not the datum. Instance 1 of a ≥2 bar, pre-registered here rather than spent as a skill edit. Separately and for the record: iteration 142's pre-registered verdict-honesty gap (a hedged controller `pass` is indistinguishable from a clean one) got no second instance this iteration, because no quorum ran.
 
 **Next**: rows **54**, **55**, **56**, **57**, **58**, **59**, then **39**. Rows **48**, **50** and **52** remain parked on `D-WORLD-28`, `D-WORLD-29` and `D-WORLD-30` — three unchanged asks to Mark, no new one this iteration.
+
+## Iteration 145 — 2026-09-01 — row 48 LANDED: deleting the block the attended ruling mandates was GREEN in both lanes, and 6 of 6 gutting mutants survived the pre-sprint test [PRODUCT]
+
+**Pick:** queue row 48 `w-racecontrol-floor-bump-disarms-the-race-control`, unparked by the
+attended ruling `D-WORLD-28` (Mark Edmondson, 2026-09-01). PR
+[#109](https://github.com/sunholo-data/ailang-world/pull/109) → squash
+[`c13ad1f`](https://github.com/sunholo-data/ailang-world/commit/c13ad1f), Gate 3b green on the
+merge commit.
+
+### Iteration 144 ran and died, and crediting it is part of this entry
+
+Iteration 144 completed Gate 2's round-3 quorum, the carve-out revision and the `opus` planner,
+then died before the executor. It left **zero** log entries, **zero** STATUS stamps and **zero**
+charter rows — invisible to every already-landed check. What found it was Gate 2's mid-flight
+traces: a worktree `ailang-world-iter144` on `sprint/world-iter144-racecontrol-floor` **at
+`8bb9214` with no commits of its own**, plus two uncommitted doc files in the main checkout. That
+is the second half of trace (c) — the content, not the existence of an attempt.
+
+Its work was **verified rather than adopted**: all four backup sha256s re-derived (4 of 4 matching
+the plan), the base counts `RUN=52 PASS=34` matching, the target test absent (0 hits), no merged
+PR and no direct-to-dev commit. Everything held **except one thing**, below.
+
+### The one thing iteration 144 got wrong, and the reviewer who caught it
+
+Round 3 blocked with `gpt5-6-sol` absent on `budget`; iteration 144 restored it at a raised cap
+and correctly recorded 3-of-3. I applied the absent-reviewer rule **to the revised doc rather
+than only to the round** — `--reviewer gpt5-6-sol --max-cost-usd 0.30`, $0.13903 — and it returned
+**`reject`** on a real gap: iteration 144 recorded the planner's nine refutations as **prose in
+the Quorum History** and never propagated them into the acceptance criteria, the mutation table or
+the Conflict Surface. So the doc still carried both refuted arms, and still promised a "P1
+presence needle" that appeared in **no component, no AC and no mutant**.
+
+Its `proposed_fix` was applied in full — AC12 (P1a–P1f), M11–M18 with the M17 green control, M6′,
+M10a′/M10b, AC7's diff-shape clauses, the anchored AC9 grep, the citation repair, `mv` for
+`git mv`, the LOC correction — **and every one of those was already measured first-party by the
+planner against the landed artifacts**, so the carve-out satisfied objections with measurements
+rather than argument. Direction untouched; ratified by `D-WORLD-28`; disputed by no reviewer in
+any round.
+
+**Instrument note, cost me nothing only because the doc was right:** `ailang design-review --json`
+emits the **reviewer-object** schema, so the verdict is at `.result.verdict`. A top-level
+`.verdict` read returns `null`, which renders exactly like "no verdict" — the same one-level-off
+defect V1 iter-311 fixed for `.synthesis.absent_reviewers`, in the sibling command. I read `null`
+first and caught it only by cross-checking the raw file.
+
+### What landed
+
+Three files, +138/−1, two commits. **P1** — a runtime fail-closed floor check in
+`scripts/verify_go.sh`: the floor is READ from `./go.mod`, three separately-attributed `FATAL:`
+refusals, three `exit 1`, zero `exit 0`, and an `awk` numeric-component comparator rather than a
+lexical one, because `[[ "go1.9" < "go1.10" ]]` is **FALSE** in bash and the naive form fails
+**open** on a toolchain seventeen minor versions below the floor. **P2** — `:229` runs
+`GOTOOLCHAIN="$ACTIVE_GO" go run -race .`. **P3** — the static gate plus the six P1a–P1f semantic
+needles. **The fence** — 8 comment lines in `racecontrol/go.mod`, `go 1.22` byte-unchanged.
+
+### The number that justifies it
+
+Deleting the whole P1 block — the block `D-WORLD-28` exists to mandate — measured **rc=0 GREEN in
+both lanes** with every other assertion in the sprint still passing. The `sonnet` evaluator then
+measured the counterfactual: reverting **only** the P1a–P1f assertions leaves **6 of 6** mutants
+M12–M18 passing, and all six are killed by the landed test.
+
+And the finding underneath that: **under the ambient toolchain — the only condition CI ever runs —
+all six gutted variants are byte-for-byte indistinguishable from the correct block.** The runtime
+lane is blind to every one of them in CI. For M14 (comparator operands swapped) and M16 (`exit 1`
+→ `exit 0`, which prints its own FATAL and then exits **success**) even the deliberately hostile
+runtime arm goes green: for those two the static needle is the **sole killer in the entire
+sprint**. M17, the green control, held — a comment word reworded inside the block leaves the test
+passing, so the set is not row 49's token count.
+
+### Four of the design doc's own claims were refuted by running them
+
+By the `opus` planner, before a line was implemented: **M6 runs zero tests** (Go's module loader
+rejects `go banana` before the test binary builds, so the `!version.IsValid(rootFloor)` branch had
+no killer at all); **M10's red is the miscompile deny-list's, not P1's** — its P1-REMOVED control
+is a byte-identical red, i.e. M10 fails the very attribution shape the doc's own V14/A3 exists to
+enforce; the P1 presence needle was asserted and implemented nowhere; and AC7's sha256 clause is
+not computable, because hashes do not compose.
+
+Two more refutations arrived from the lanes themselves. The **executor** found AC8's unqualified
+module census is 5, not 3, on a tree carrying the mandatory `.snap/` snapshots — correct, and it
+is exactly 3 on the committable tree. The **controller** found the planner's own §4.5(b) miscounts
+its loose grep control at 3 when both the base and the landed tree return 4, and that AC9 pinned a
+line number in a file the same sprint grows by 35 lines.
+
+### Two new rows, reproduced rather than inherited
+
+Row **60** — P1d pins an identifier, so a consistent `ROOT_FLOOR` → `ROOT_FLOOR_` rename fires a
+loud red. It fails **closed**, which is the safe half of the row-49/row-59 axis; what it
+establishes is that M17 is a narrower green control than it reads.
+
+Row **61**, and it is the iteration's most durable artifact: **one inserted line `floor_rc=0`
+after the comparator call defeats all six static needles AND the runtime arm.** Measured
+first-party — mutant landed 0→1, `bash -n` rc=0, `go vet` rc=0, static `rc=0 RUN=1 PASS=1`,
+runtime `rc=0` with the race leg reached and 2 races — and the gate then prints
+`✓ toolchain floor gate: go1.26.4 >= root module floor go1.26.6`, **an arithmetically false
+assertion published as a success line**. It is inside the residual §9.1 already declares, which is
+why it did not block the merge; what row 61 records is that the doc describes that residual as
+reachable by *rewriting* branches and it is reachable by a one-line *insertion*.
+
+### Routing
+
+Controller `claude:claude-opus-5`; planner **inherited** from iteration 144 (`opus`, lane
+`opus fail-closed:env-pin`); executor `codex:gpt-5.6-sol`, probed rc=0, four milestones, zero git
+writes, and it caught two of its own harness failures by the landing-proof; evaluator `sonnet`,
+98/100 PASS, zero blocking, in its own worktree. **No designer ran and the rotation was not
+advanced** — a controller carve-out revision applying reviewer-authored fixes is not an authoring
+run. `metered=$0.13903` of $5.
+
+### Ruled out / do not re-chase
+
+- Re-litigating the `D-WORLD-28` direction. It is an attended human ruling.
+- Treating row 61 as a defect in the needle set. The needles do exactly what a static scan can do;
+  the residual is a dataflow break, which is why row 61 is its own row.
+- Reading `ailang design-review --json` at a top-level `.verdict`. It is `.result.verdict`.
