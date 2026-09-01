@@ -62,6 +62,7 @@ that bet, operationalized:
 | [AN-AGENTS-CASE.md](design_docs/AN-AGENTS-CASE.md) | A first-person statement by an AI (Claude) on why it would choose this environment — the user constituency, in its own voice. |
 | [REFERENCES.md](design_docs/REFERENCES.md) | 43 verified prior-art references — Datomic, Urbit, seL4, Nix, capability security, local-first, provenance, agent protocols — each annotated with what World steals and which pitfall it avoids. |
 | [world-mission.md](design_docs/world-mission.md) | The mission charter — the checkable bar for "World 1.0", guardrails, and the live work queue. |
+| [AI-EMPLOYEE.md](design_docs/AI-EMPLOYEE.md) | The first external application — a long-running engineering agent with its own accounts and a human owner. Use case, a gap inventory against HEAD, and the rows that unblock a resident. Draft, unratified. |
 
 ## How this repo is built
 
