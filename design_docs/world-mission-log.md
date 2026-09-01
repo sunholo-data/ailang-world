@@ -16451,3 +16451,142 @@ scoped* block, on the direction rather than on my omission.
   neither of two consecutive runs on one tree.
 - Reading the pi lane's `rc` or `stopReason` as evidence work happened. The typed verdict and the
   worktree diff are the load-bearing reads.
+
+---
+
+## Iteration 147 — 2026-09-02 — row 52 LANDED: the step locator was wrong in BOTH directions, and this iteration's two best findings are refutations of its own work [PRODUCT]
+
+**Pick:** queue row 52 `w-wiring-test-step-scoping-imprecise-under-key-reorder`, the queue head,
+unparked by the attended ruling `D-WORLD-30`. The row's own header text still read `PARKED`; the
+decision ledger is authoritative over STATUS prose, so the tag was stale, not the state.
+
+**Progress:** **55 of 63 queue rows closed** (54 of 61 at iteration 146; row 52 closes and rows 62
+and 63 open, both from this iteration's judge). This iteration moved the goal: it closed a live
+CI-instrument defect that was wrong in both directions, and it added two rows rather than absorbing
+two findings.
+
+**Outcome:** LANDED. PR [#110](https://github.com/sunholo-data/ailang-world/pull/110) → squash
+[`a1744d3`](https://github.com/sunholo-data/ailang-world/commit/a1744d3); Gate 3b GREEN on the merge
+commit, `present=2 == expected=2`, both `success`, parent control resolving at 2.
+
+**What landed:** one function in one file, `host/verifygate/toolchain_pin_gate_test.go`, +63/−13.
+The locator derives `stepCol` from the SHALLOWEST enclosing `steps:` key, pins it against
+`expectedStepCol = 6` with a loud `t.Fatalf`, locates the step block by exact indentation rather
+than by the `- name:` token, and refuses loudly on containment (Invariant A) and identity
+(Invariant B).
+
+**The row's claim was re-derived, not inherited.** It was this loop's own iteration-142
+measurement, which makes it an inherited claim under rule 3b(v). In a scratch worktree that is a
+sibling of the repo (never `/tmp`), every mutant asserted LANDED by sha256, the intended effect
+asserted against `ruby -ryaml` — the system's own view of the file — rather than against bytes,
+`go vet` rc=0 read BEFORE every test result, restored byte-identical from a `cp` backup, pristine
+control green either side: **ARM A** (flag on the previous *unrelated* step + a key reorder of the
+guarded step) was **rc=1 blaming `ci.yml:164`, which IS the unrelated step's own flag line**;
+**ARM B** (flag live on the guarded step + a `- name:`-shaped decoy inside its own `run: |` scalar)
+was **rc=0 `--- PASS` over a live forbidden flag**, `step[6].continue-on-error = true` in the YAML
+view. Against the landed code these are **rc=0 GREEN** and **rc=1 @ `ci.yml:181`** respectively,
+re-run by me outside the executor sandbox with ARM B's mutant sha matching the doc's pin.
+
+**A refinement the row does not state, found by a control I ran because the construct looked too
+easy:** `ARM B0` — the SAME decoy placed BEFORE the path line instead of after it — is still
+**CAUGHT** (rc=1 @ `ci.yml:181`), because the backward scan then anchors ON the decoy and WIDENS
+the range instead of narrowing it. So "a `- name:`-shaped line inside the block scalar" is not
+sufficient to fail the gate open; the decoy's POSITION decides it. The doc now says so, so no later
+reader can over-read the row.
+
+**The two refutations of this iteration's own work, which are its best output.** (1) At quorum
+round 3 I applied `gpt5-6-sol`'s verbatim fix — the `expectedStepCol = 6` pin — and the `opus`
+planner then **measured that the assertion could not fail** on the arm the doc named: the cross-job
+capture also yields `stepCol=6`, so the pin's branch is never taken and Invariant A does all the
+work; the neuter probe goes FATAL→FATAL with **no flip**. It replaced AC8 with **AC8′** on a new
+arm **MUT-R** (both job bodies re-indented), where the pin fires `stepCol=8` and neutered goes
+**rc=0 GREEN** — the flip AC8 lacked. It also found **MUT-Q's landed-assertion unsatisfiable as
+written**: at the doc's own pinned sha the `go-verify` `steps:` key parses to **NIL**, because
+shifting only the `steps:` line moves it under `env:`. (2) The `sonnet` judge then found two
+false-positive shapes nobody had declared, now rows 62 and 63.
+
+**The durable artifact is Declared Residual 8**, and it exists because `gpt5-6-sol`'s objection was
+MEASURED rather than forwarded: the backward `steps:` scan is **unbounded**, so on a re-indented
+file the shallowest anchor **leaves the JOB** — `stepCol=6` taken from the *other* job's key, block
+`[96,99)`, Invariant A fatal — while the nearest anchor quietly returns `stepCol=8` and GREEN. That
+is a defect the RATIFIED rule INTRODUCES. It is recorded as a residual rather than escalated to
+Mark on this mission's own discriminator: **it fails LOUD, never silent** — unlike row 50's
+`D-WORLD-31`, where the ratified rule turns a correct RED into a GREEN. The judge attacked it and
+could not construct a silent green: the `count==1` uniqueness fatal forbids duplicating the
+identifying line into another job.
+
+**The counterfactual, which is the number that decides whether the sprint was worth its cost:** the
+judge reverted only the locator hunk, kept the file compiling, and re-ran the arms against the OLD
+test — **7 of 14 arms are newly load-bearing** (ARM A, ARM B, ARM D where the old scan blamed the
+wrong step, ARM G where Invariant B is a capability the old test did not have at all, and Q/Q2/R
+which the old scan absorbed at rc=0). The other 7 are the same verdict either way, and the record
+says so rather than claiming them.
+
+**Quorum:** round 3, FULL STRENGTH (`.synthesis.absent_reviewers` `[]`, cross-checked against
+`[.reviewers[]|select(.present==false)]` with `has("synthesis")` as the sibling control, verdicts
+read at the nested `.result.verdict`), **BLOCKED**, `metered=$0.18372421`. Per-surface record per
+the round-3+ discipline: the two rejections land on **different, newly-introduced** surfaces, not
+on one surface while another clears — an immature revision, **not** a SPLIT signal. `oc-glm-5-2`
+**pass** (its first since round 1). `gemini-3-1-pro` reject on AC baselining — half unfounded
+(`gofmt` clean at base, with a control that DOES name a deliberately misformatted file) and half
+correct in a way that mattered: **`./scripts/verify_ail.sh` is genuinely rc=1 on the pristine tree
+on this rig** (the PATH `ailang` is `-dirty` and the gate's own guard refuses it), so AC7 was
+unsatisfiable as written. `gpt5-6-sol` reject on ruling fidelity — Residual 7 had reclassified the
+ruling's *"fatal until the constant is updated"* clause as belonging to the unadopted alternative,
+and the reviewer is right that the loop does not get to pick which half of a human's sentence was
+operative; the reclassification is WITHDRAWN and both halves are now implemented.
+
+**Gates, all re-run by the controller outside the codex sandbox:** `go vet ./...` rc=0 ·
+`gofmt -l host/ cmd/` **0 bytes** · `AILANG_BIN=<pinned v0.30.0> go test ./host/verifygate/
+-count=1` **rc=0** (67.8 s) · the named test **RUN=1 PASS=1 FAIL=0** · `AILANG_BIN=<pinned>
+./scripts/verify_ail.sh` **rc=0** at 11 identities / 40 named tests / 9-of-9 package steps ·
+`ci.yml` byte-identical `aed8e186…` · **0** `.ail` files touched · porcelain 0. Milestone snapshots
+were byte-identical across M1/M2/M3 (`f0667a28…` four ways), so the reconstruction is one source
+commit and its sha256 proof is trivial rather than skipped. `.snap/` was checked with
+`git check-ignore` (rc=1 — NOT ignored) and deliberately left uncommitted; named files were staged,
+never `git add -A`.
+
+**Routing evidence**: controller `claude:claude-opus-5` (session). Designer
+**`claude:claude-fable-5`** — the rotation's next entry after `pi:ollama/deepseek-v4-flash:0731-cloud`;
+probed rc=0 via `claude-sub` (subscription-only by construction, both Anthropic key variables
+stripped); it revised the doc 627 → 874 lines in one run and rotation state was advanced. **The
+Fable diet bound at ONE design doc, authoring run only** — the round-3 fixes were a controller
+carve-out applying reviewers' verbatim text, which is not an authoring run. Planner **`opus`**, lane
+derived `opus fail-closed:env-pin` and used VERBATIM. Executor **`codex:gpt-5.6-sol`**, probed rc=0,
+rc=0, three milestones, 17 arms, ZERO git writes. Evaluator **`sonnet`**, **93/100 PASS, zero
+blocking**, in its OWN worktree. generator≠judge holds three ways (OpenAI executor, Anthropic
+judge, Anthropic controller on a different model). `metered=$0.18372421` of `$5` — all of it the
+single quorum round; every other lane is a quota bucket.
+
+**Ruled out**: parking on the round-3 block (all three objections carry concrete reviewer-authored
+`proposed_fix` text and none disputes the design DIRECTION, which is in any case human-ratified and
+not re-litigable by a reviewer — parking would have manufactured a decision Mark does not have);
+a fourth quorum round (the carve-out routes straight to the planner, and a fourth round is unbounded
+re-litigation); treating the AI-EMPLOYEE.md commit as a directive (it is attended, and it says of
+itself *"Draft, unratified; steers nothing until placed on #1"* — the human wrote the placement
+condition into the artifact, so acting on it would be the loop reading its own preference into a
+human's draft); escalating Declared Residual 8 to Mark (it fails loud, never silent, so it is a
+residual, not a decision — the D-WORLD-31 discriminator applied in the other direction); absorbing
+the judge's two findings into this sprint rather than filing them; committing `.snap/` or the
+gitignored `.ailang/` quorum artifacts; letting the stale `PARKED` header on row 52 override the
+ledger; re-probing gemini for the designer role (a capability limit, not a probe failure).
+
+**Retro**: no new ≥2-instance skill gap, and no routing-policy change (that needs ≥3 evidence rows).
+The friction worth recording is **mine, and it is the same shape twice in one iteration**: I applied
+a reviewer's verbatim fix under the carve-out and did not ask whether the assertion it adds can
+FAIL. The planner did, and it could not. This is rule 3j's own principle — *a guard is not a gate
+until something reds when you remove it* — aimed at the carve-out rather than at a sprint, and the
+carve-out is exactly where it is easiest to skip, because applying a reviewer's own words feels like
+satisfying an objection rather than like writing an assertion. The generalisable form: **a fix
+applied verbatim is still a fix you authored the placement of**, and its non-vacuity is yours to
+show. Instance 1 of a ≥2 bar, pre-registered here rather than spent as a skill edit; if a second
+arrives it is a skill fix, and World cannot edit the shared skill, so it would be PROPOSED to V1.
+Separately, and closing a bar I opened at iteration 146: the verdict-honesty rule (a controller
+verdict must be the strongest reading of its own note) got its **second use** here — I had an owed
+`NOT MEASURED` cell in the drill, I closed it as V28 before voting rather than voting a hedged pass,
+and the finding it produced (the ratified anchor prevents a regression this doc would have
+introduced rather than closing a live hole) is now written into the doc where a reader will meet it.
+
+**Next**: rows **54**, **55**, **56**, **57**, **58**, **59**, **60**, **61**, **62**, **63**, then
+**39**. Row **50** remains parked on `D-WORLD-31` — this iteration's one unchanged ask to Mark, and
+it adds no new one.
