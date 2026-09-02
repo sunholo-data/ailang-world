@@ -1,41 +1,41 @@
-# Mission Dashboard — Ailang World
+# Mission Dashboard — AILANG World
 
-*Snapshot, overwritten each iteration. History: `world-mission.md` STATUS + `world-mission-log.md`.*
-**As of** 2026-09-02, iteration **147** · `dev` = [`a1744d3`](https://github.com/sunholo-data/ailang-world/commit/a1744d3) · CI **GREEN** (2/2 on the merge commit) · **55 of 63** rows closed
+_Snapshot, overwritten every iteration. History lives in `world-mission.md` (STATUS) and
+`world-mission-log.md`._
 
-## This iteration (PRODUCT — row 52 LANDED via PR [#110](https://github.com/sunholo-data/ailang-world/pull/110))
-- **The row-44 wiring test's step locator was wrong in BOTH directions, and both were live at HEAD.**
-  ARM A false positive: it blamed an *unrelated* step's `continue-on-error` flag (`rc=1 @ ci.yml:164`).
-  ARM B fail-open: `rc=0 --- PASS` over a live forbidden flag on the guarded step. Re-derived
-  first-party, not inherited.
-- **Direction was human-ratified (`D-WORLD-30`) and hardened at quorum round 3.** The locator now
-  anchors on the SHALLOWEST enclosing `steps:`, pins `expectedStepCol = 6` loudly, and refuses on
-  containment and identity. Round 3 blocked at full strength; all three objections were MEASURED
-  rather than forwarded and closed under the narrow-refinement carve-out.
-- **Counterfactual, the number that justifies the sprint:** the judge reverted only the locator hunk
-  and re-ran the arms — **7 of 14 are newly load-bearing** (both live defects, a third false
-  positive, a wholly new identity invariant, and three re-indent arms the old scan absorbed at rc=0).
-- **Two of this iteration's own claims were refuted by its own lanes.** The planner measured that the
-  `expectedStepCol` pin I added at round 3 is *unreachable* on the arm the doc named (AC8 could not
-  fail) and replaced it; the judge then found two false-positive shapes nobody had declared.
+**As of:** 2026-09-02 · iteration 148 · `dev` = [`14036ee`](https://github.com/sunholo-data/ailang-world/commit/14036ee) · CI green (2/2)
 
-## Loop / routing
-controller `claude:claude-opus-5` · designer `claude:claude-fable-5` (rotation; advanced) ·
-planner `opus` (`opus fail-closed:env-pin`) · executor `codex:gpt-5.6-sol` · evaluator `sonnet`
-(**93/100 PASS, zero blocking**; generator≠judge three ways). `metered=$0.18372` of $5.
+## In flight / just landed
+- **LANDED iter-148 — row 54 `w-driver-copy-stale-and-the-drift-gate-compares-it-to-itself`**
+  (PRODUCT/HARNESS boundary → **HARNESS**). PR [#111](https://github.com/sunholo-data/ailang-world/pull/111)
+  → squash `14036ee`, Gate 3b green on the merge commit. The `D-WORLD-DRIVER-1` gate compared the
+  driver copy to itself, so **11 commits / 705 differing lines** of staleness read green. Adds a
+  fleet-comparison arm (+ `--driver-fleet-check`). Evaluator **86/100**, one blocking finding fixed
+  in-sprint.
+- **Expected and intended:** `./scripts/verify_go.sh` on the RIG is now **RED** until the fleet
+  lands a current driver. That red means "the fleet must commit", never "absorb it into World".
+  CI is unaffected (the arm loud-skips; measured in the ubuntu job log, not assumed).
 
-## Next (banked, all gated on nothing)
-`54` driver copy stale · `55` dispatch-lever parser false-reds · `56` canary fence blind to a
-skipped canary · `57` approvals spine green-under-the-row · `58` verify_go.sh flaky at base ·
-`59` static grep cannot prove an assertion live · `60` P1 needle reds on an inert rename ·
-`61` P1 gate fails open on one inserted line · **`62`/`63` new, from this iteration's judge** ·
-then `39` session authority.
+## Next picks
+1. **55** `w-dispatch-lever-parser-false-reds-on-valid-yaml` · ~0.3d
+2. **56** `w-canary-fence-blind-to-a-skipped-canary`
+3. **57** `w-approvals-spine-prints-a-green-no-pending-under-the-row-it-just-listed`
+then 58–64, then **39** `w-session-authority`. Row **50** stays parked on `D-WORLD-31`.
 
 ## Parked on Mark
-- **`D-WORLD-31` (row 50)** — one word. Ship the ratified rule A as-is (residual declared and
-  pinned), or hold row 50 for the declarative-fixture migration `gpt5-6-sol` asked for?
-  Default if unanswered: row 50 stays parked, the queue advances.
+- **`D-WORLD-31`** (row 50) — ONE WORD: ship the ratified rule A as-is, or hold row 50 for the
+  fixture migration? Unchanged since iter-146. **No new ask this iteration.**
+- `design_docs/AI-EMPLOYEE.md` remains an attended draft that says it "steers nothing until placed
+  on #1" — still not treated as a directive.
 
-## Quota posture
-Anthropic available (`MISSION_ANTHROPIC_AVAILABLE=1`); billing tripwire CLEAN; Fable diet spent on
-ONE design doc (authoring run only — the round-3 fixes were a controller carve-out, not a designer run).
+## Loop cadence + routing
+- Fires ~2-hourly via `launchd`; one backlog item per iteration.
+- designer **rotation** (`claude:claude-fable-5` → `pi:ollama/deepseek-v4-flash:0731-cloud`);
+  this iteration used **deepseek** (flat-rate, $0) — pointer now advanced to deepseek.
+- planner `opus` (`derive-planner-lane.sh` → `opus fail-closed:env-pin`) · executor
+  `codex:gpt-5.6-sol` · evaluator `sonnet` (generator≠judge).
+
+## Quota / spend
+- **metered this iteration: $0.26775** of the $5 ceiling — all of it quorum reviewers
+  (2 full-strength rounds + one restored reviewer). Everything else rode quota buckets or flat-rate.
+- Decision ledger: **18 rows, `--check` valid, ONE OPEN** (`D-WORLD-31`).

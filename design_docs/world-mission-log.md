@@ -16590,3 +16590,167 @@ introduced rather than closing a live hole) is now written into the doc where a 
 **Next**: rows **54**, **55**, **56**, **57**, **58**, **59**, **60**, **61**, **62**, **63**, then
 **39**. Row **50** remains parked on `D-WORLD-31` — this iteration's one unchanged ask to Mark, and
 it adds no new one.
+
+## Iteration 148 — 2026-09-02 — row 54 LANDED: the gate whose name is "driver drift" compared the copy to itself, and the judge then found the same defect one level up in my fix [HARNESS]
+
+**Pick:** queue row 54 `w-driver-copy-stale-and-the-drift-gate-compares-it-to-itself`, the queue
+head, unblocked and ungated. No directive, no attended ruling, no regression outranked it.
+
+**Progress:** **56 of 64 queue rows closed** (55 of 63 at iteration 147; row 54 closes and row 64
+opens from this iteration's own evaluator finding). Row 50 remains parked on `D-WORLD-31`.
+
+**Outcome:** LANDED. PR [#111](https://github.com/sunholo-data/ailang-world/pull/111) → squash
+[`14036ee`](https://github.com/sunholo-data/ailang-world/commit/14036ee). Gate 3b GREEN on the PR
+head AND on the MERGE commit, SHA-addressed, `present=2 == expected=2`, both `success`.
+
+**What landed:** one file, `scripts/verify_go.sh`, +145/−1. A `check_driver_fleet()` arm comparing
+World's COMMITTED driver blobs against the fleet checkout's HEAD blobs, plus a
+`--driver-fleet-check` isolated mode placed before the `AILANG_BIN` gate. Phase 1 = tracked paths
+(`DIFFERING` / `MISSING_IN_FLEET`), Phase 2 = an explicit `REQUIRED_FLEET_PATHS` set whose first
+member is `tools/launchd/lib/pin-root.sh` (`MISSING_LOCALLY`), Phase 3 = fleet-only paths that are
+neither tracked nor required, reported loudly and **counted, non-fatal**. The pre-existing
+working-tree arm and its path-liveness control are untouched, now labelled `(working-tree arm)`.
+`tools/launchd/*` was never modified: sha256 of `mission-control.sh` identical before and after the
+whole drill, `git status --porcelain -- tools/launchd/` empty.
+
+**The row was WORSE than filed, and re-measuring is what showed it.** Filed at iteration 135 as
+8 commits / 586 differing lines; measured at pick time as **11 commits / 705 differing lines**, with
+**3 of 6** tracked driver paths DIFFERING — and the gate green throughout. The exposure grows
+monotonically while the gate stays green, which is the row's own thesis measured a second time.
+
+**Found off-pick and handed to the designer as evidence:** World is the only mission on this rig
+that never performs the driver PIN re-exec — no `tools/launchd/lib/`, `grep -c pin_root` = **0**
+against a fleet control of **1**, `MISSION_WORKDIR` empty in this fire, and the local driver deriving
+`REPO` from `$0`. Meanwhile `~/.ailang-driver-pin/world` exists and is a worktree of `ailang` (not
+`ailang-world`), 7 days stale against V1's same-day control, referenced by **0** files in this repo.
+A stale unused directory named `world` is the only visible evidence of a pin that does not happen.
+
+**I declined a reviewer's verbatim fix, on a measurement.** All three round-1 reviewers rejected on
+one surface and `gpt5-6-sol`'s `proposed_fix` was *enumerate the union of both trees and require
+every path to exist and match*. Measured: **6** local / **48** fleet / **42** missing-locally / **0**
+missing-in-fleet, and the 42 are other missions' plists and env files, fleet-only scripts and 12
+planner-lane testdata fixtures World must **not** carry. The literal union therefore reds permanently
+on correctly-absent files that World cannot fix (frozen core) — which is exactly the failure mode the
+doc had already rejected Option C for. Adopted the principle (an explicit `REQUIRED_FLEET_PATHS` set
++ a non-fatal unclassified count), not the literal form. `oc-glm-5-2`'s success line went in
+**verbatim**. `gemini-3-1-pro`'s `MISSING_IN_FLEET` fix went in with a **synthetic** test arm, because
+the real count is 0 today and the branch would otherwise be untested.
+
+**The defect that cost both quorum rounds is mine as much as the designer's.** `verify_go.sh` runs
+under `set -euo pipefail`, so a bare `check_driver_fleet` returning 2 — the CI loud skip — exits
+before `rc=$?`, turning CI permanently red: the precise outcome the chosen option exists to avoid,
+and invisible on the happy path because the all-match branch returns 0. I measured it at round 1
+(two arms, `rc=2` with the mapping line never printed vs `rc=0` with it printed, asserted to differ).
+The revision fixed the main-flow call site and **missed the sibling isolated-mode call site ten lines
+above it** — *guard the helper, miss the call site*, this loop's own named shape — and all three
+reviewers caught it independently at round 2.
+
+**Quorum:** TWO FULL-STRENGTH rounds, **3 of 3 external reviewers present in both**. Round 1
+`.synthesis.absent_reviewers` `[]`, cross-checked against `[.reviewers[]|select(.present==false)]`,
+control `has("synthesis")` true; all three reject; $0.09614. Round 2: `gpt5-6-sol` absent on
+**`budget`** — `estimated cost $0.1006 … exceeds cap $0.1000`, a refusal over **$0.0006** — the other
+two reject; $0.08439. **Restored rather than waived** for **$0.087215** at a raised cap, because it
+was precisely the reviewer whose verbatim fix I had declined, so its opinion was the most load-bearing
+available: it returned `reject` on the same isolated-mode defect and **did not re-raise the union
+objection**, which is the evidence that the 42/0/48 disposition was accepted rather than merely
+unreviewed. **Instance 2 of the absent-reviewer-restoration rule paying for itself** (instance 1 was
+iteration 70, $0.14). Round 3 closed under the **narrow-refinement carve-out** — already ratified for
+this mission at iteration 13 — on the `if` form that `gpt5-6-sol` and `gemini-3-1-pro` proposed
+**identically**, so the applied text is the reviewers' own and not a controller invention. Its
+non-vacuity was **shown, not asserted**: the guarding AC fails on the pre-fix block (`rc=2`) and
+passes on the post-fix block (`rc=0`), asserted to differ.
+
+**The planner refuted EIGHT of the design doc's own premises** — the most valuable output of the
+iteration, and the second consecutive iteration in which the best findings are refutations of this
+loop's own work. Chief among them: the doc's **entire AC-baseline table was wrong** (it baselined the
+FULL `verify_go.sh` while the ACs run `--driver-fleet-check`, which at base falls into the
+`AILANG_BIN` gate and exits 1, so five ACs' bare `exit != 0` clause was **already satisfied at base**,
+for the wrong reason); **AC8 could not fire at all** (`touch` leaves `git status --porcelain` empty,
+same-path control fires on an appended byte); and a **real fail-open** in the doc's Phase 1, which
+enumerated with `git ls-files` while the arm's claim and its Phase 3 are HEAD-based, so a
+`git rm --cached` silently drops the driver's main file with nothing reporting it. It also found that
+no AC exercised the GREEN path and that one mutant survived the doc's whole mutation table.
+
+**Then my own full-gate run caught what the executor's scoped battery could not.** The executor left
+a stray blank line inside the embedded Python heredoc — residue of a mis-insertion it self-reported —
+which broke `TestEvidenceNamedManifestRejectsUnpinnedTest/empty_required_set` with `required-set
+mutation anchors missing`. Attributed two-arm before blaming the diff: pristine base **rc=0**, tree
+with the change **rc=1**, so it was mine and not pre-existing. **The miss is attributable to MY
+directive**, which deliberately scoped the executor away from the slow full gate (V5). The scoping was
+correct — it moved the discovery to the controller — but it only worked because I actually ran the
+full gate rather than banking the executor's 13/13.
+
+**Evaluator `sonnet`, own worktree (iteration-199 rule), 86/100 PASS, ONE BLOCKING finding — and it
+is this row's own defect one level up, inside my fix.** `compared` was unpinned, so a stray
+`continue` in Phase 1 silently shrinks the compared set while the arm still prints `✓ … tracked copy
+is current`: the dropped path is not `differing` (never compared), not `missing_in_fleet` (branch
+never reached) and not `unclassified` (Phase 3 skips it because World tracks it). Reproduced
+first-party before acting — 8 → 7, `rc=0`, currency claim intact — then closed with a **two-counter
+Phase-1 accounting invariant**, and proven non-vacuous rather than asserted:
+
+| Mutant | Skip placed | Result | Caught by |
+|---|---|---|---|
+| MUT-A (the judge's) | AFTER the counter | rc=1, `offered 8, saw 8, verdict on 7` | `dispositioned` |
+| MUT-B (harder) | BEFORE the counter | rc=1, `offered 8, saw 7, verdict on 7` | `expected_enumerated` (separate call) |
+
+Control: unmutated fixture rc=0 at 8 files. **Both counters are load-bearing** — each catches a shape
+the other misses, so neither is decorative.
+
+**Two of my own reproduction attempts did not LAND, and the sha256 check is the only reason I know.**
+The first used an anchor that appears **twice** (Phase 1 and Phase 3 share the two-line
+`required=0` / `for rp in …` sequence), so the `count==1` assert fired; the second cloned the sprint
+worktree while my accounting change was still **uncommitted**, so the fixture carried the pre-fix
+script and the anchor was absent. In both, *the mutation didn't red* and *the mutation never ran*
+would have looked identical.
+
+**Gate 3b closed the one assumption nobody could establish.** Both the planner and the executor filed
+"whether GitHub's runner exports `CI=true`" under *could not establish*, and it is the single
+assumption "CI stays green" rests on. The ubuntu job log settles it first-party:
+`⚠ fleet-comparison arm SKIPPED (fleet checkout absent at /home/runner/dev/sunholo-data/ailang)`,
+with the rig-refusal FATAL branch firing **0** times and the working-tree arm's line present as a
+control. Measured, not assumed.
+
+**Gates, all re-run by the controller OUTSIDE the codex sandbox** (darwin/arm64, bash 3.2, exit codes
+captured without a pipe): `bash -n scripts/verify_go.sh` rc=0 · simulated-CI
+(`CI=true AILANG_FLEET_REPO=/nonexistent AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_go.sh`)
+**rc=0, 0 FAILs, 38 `ok` lines** · `./scripts/verify_ail.sh` **rc=0** (11 identities, 40 named tests) ·
+the four isolated-mode branches each measured with their arms asserted to differ.
+
+**STANDING CONSEQUENCE, intended and declared:** `./scripts/verify_go.sh` on the **RIG** is now RED
+until the fleet lands a current driver. That red means "the fleet must commit", never "absorb it into
+World". CI is unaffected. Later iterations must not read this red as their own regression.
+
+**Routing evidence**: controller `claude:claude-opus-5` (session). Designer
+**`pi:ollama/deepseek-v4-flash:0731-cloud`** — the rotation's next entry after
+`claude:claude-fable-5`; probed rc=0, ran via `mission_pi_run.sh` (V1 checkout, absolute path — World
+has no local copy), verdict `ok` twice (295s / 416s, 1 changed file each), **$0 flat-rate**, pointer
+advanced. **FLAGGED:** `mission_pi_run.sh` does not apply the `-e` sandbox/worktree-fence extensions
+the shared skill's pi recipe mandates, and its hardcoded `pi` invocation gives no way to add them; the
+run was confined to a dedicated worktree and the mandated post-hoc `git -C <main-checkout> status
+--short` was clean after both runs. Planner **`opus`**, lane from
+`tools/launchd/derive-planner-lane.sh` → `opus fail-closed:env-pin`, used VERBATIM (no codex probe).
+Executor **`codex:gpt-5.6-sol`**, probe rc=0, `--sandbox workspace-write`, 30-min bounded wrapper,
+per-iteration directive file, no git writes. Evaluator **`sonnet`** in its OWN worktree —
+generator≠judge holds (codex executor vs Anthropic judge). **metered=$0.26775** of $5, every cent of
+it quorum reviewers; all other lanes were quota buckets or flat-rate.
+
+**Ruled out**: (1) applying `gpt5-6-sol`'s union fix verbatim — measured to produce a permanently-red
+gate on 42 correctly-absent files. (2) My own hypothesis that a top-level `[ "$rc" -eq 2 ] && rc=0`
+would itself trip `set -e` when the test is false — **refuted**, measured `REACHED-AFTER-AND: rc=1`;
+there is ONE `set -e` defect in the isolated mode, not two, and it is recorded so no later round
+re-litigates it. (3) Folding the evaluator's non-blocking finding into row 54 — it is a pre-existing
+scope question, so it is row 64, not a sprint widening. (4) Treating the rig-side red as a defect to
+fix: it is the intended signal and CLAUDE.md already rules the disposition.
+
+**Retro**: no skill edit. The two frictions worth naming both point at gaps that are already written
+down (`guard the helper, miss the call site`; a mutation that did not LAND), so neither is a new
+≥2-instance gap — they are instances of rules working. One new candidate pre-registered at instance 1:
+**a runner script that omits a guard the skill mandates gives the caller no way to add it back** —
+`mission_pi_run.sh` hardcodes its `pi` invocation with no `-e` extension flags, so the sandbox/fence
+the pi recipe requires is unreachable through the sanctioned runner. If a second instance appears, the
+fix is a skill/runner change, and it is V1's file, so World proposes rather than applies. No
+routing-policy change (that needs ≥3 evidence rows).
+
+**Next**: rows **55**, **56**, **57**, **58**, **59**, **60**, **61**, **62**, **63**, **64**, then
+**39**. Row **50** stays parked on `D-WORLD-31`. Decision ledger: 18 rows, ONE OPEN, **no new ask this
+iteration**. Designer rotation next = **`claude:claude-fable-5`**.
