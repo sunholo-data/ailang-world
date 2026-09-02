@@ -126,6 +126,19 @@ check_driver_fleet() {
   if [ -d "$AILANG_FLEET_REPO" ] && git -C "$AILANG_FLEET_REPO" rev-parse --git-dir >/dev/null 2>&1; then
     fleet_head="$(git -C "$AILANG_FLEET_REPO" rev-parse HEAD)"
     compared=0
+    # PHASE-1 ACCOUNTING (iter-148 evaluator, BLOCKING #1). `compared` alone cannot
+    # detect a path that Phase 1 skips without a verdict: such a path is not
+    # `differing` (never compared), not `missing_in_fleet` (that branch is never
+    # reached) and not `unclassified` (Phase 3 skips it because World tracks it), so
+    # the arm prints a green "tracked copy is current" over a silently smaller set —
+    # which is this row's own defect (a claim wider than the axis measured) one level
+    # up. Two independent counters close it: `dispositioned` must account for every
+    # path the loop SAW, and `expected_enumerated` — computed by a SEPARATE call, so a
+    # skip placed before the in-loop increment cannot hide from it — must equal the
+    # number the loop saw.
+    expected_enumerated=$(git ls-tree -r --name-only HEAD -- tools/launchd scripts/mission_decisions.sh | wc -l | tr -d " ")
+    enumerated=0
+    dispositioned=0
     differing=""
     missing_in_fleet=""
     missing_locally=""
@@ -135,24 +148,35 @@ check_driver_fleet() {
     # REQUIRED paths (those are owned by Phase 2).
     while IFS= read -r path; do
       [ -z "$path" ] && continue
+      enumerated=$((enumerated + 1))
       required=0
       for rp in ${REQUIRED_FLEET_PATHS[@]+"${REQUIRED_FLEET_PATHS[@]}"}; do
         [ "$rp" = "$path" ] && required=1 && break
       done
-      [ "$required" -eq 1 ] && continue
+      if [ "$required" -eq 1 ]; then
+        dispositioned=$((dispositioned + 1))   # owned by Phase 2
+        continue
+      fi
       local_blob="$(git rev-parse --verify "HEAD:$path" 2>/dev/null || true)"
       fleet_blob="$(git -C "$AILANG_FLEET_REPO" rev-parse --verify "HEAD:$path" 2>/dev/null || true)"
       if [ -z "$fleet_blob" ]; then
         missing_in_fleet="$missing_in_fleet
   $path (tracked by World, absent in fleet)"
+        dispositioned=$((dispositioned + 1))
         continue
       fi
       compared=$((compared + 1))
+      dispositioned=$((dispositioned + 1))
       if [ "$local_blob" != "$fleet_blob" ]; then
         differing="$differing
   $path (local $local_blob != fleet $fleet_blob)"
       fi
     done < <(git ls-tree -r --name-only HEAD -- tools/launchd scripts/mission_decisions.sh)
+
+    if [ "$enumerated" -ne "$expected_enumerated" ] || [ "$dispositioned" -ne "$enumerated" ]; then
+      echo "verify_go.sh: FATAL: fleet-comparison arm PHASE-1 ACCOUNTING BROKEN — ls-tree offered $expected_enumerated paths, the loop saw $enumerated and reached a verdict on $dispositioned; a tracked driver path was skipped without a verdict, so every 'matches fleet' result is void" >&2
+      return 1
+    fi
 
     # Phase 2 — REQUIRED_FLEET_PATHS.
     for path in ${REQUIRED_FLEET_PATHS[@]+"${REQUIRED_FLEET_PATHS[@]}"}; do
