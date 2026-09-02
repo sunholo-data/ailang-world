@@ -250,6 +250,16 @@ func onBlockTriggerKeys(t *testing.T, path, src string) []string {
 // workflow currently declares (P2). This gate asserts EVERY enumerated workflow file declares
 // the lever as a trigger in its on: block.
 //
+> **HISTORICAL EXHIBIT — DO NOT UPDATE.** The listing below quotes the gate's code *as it
+> shipped at row 47*, before row 55 hardened it. It therefore still carries the two claims
+> row 55 measured FALSE — that the enumerator "cannot see … a hidden file" and that a nested
+> subdirectory is unseen. Go's `filepath.Glob` DOES return `.hidden.yml`, and a nested
+> subdirectory is a loud `os.ReadFile` "is a directory", not an invisible one. Left verbatim
+> on purpose so the exhibit stays a faithful record of the old code; the LIVE comment and the
+> Residual-3 prose above are the ones row 55 corrected. Flagged after row 55's `sonnet`
+> evaluator found this fourth occurrence, which row 55's own needle audit missed because its
+> needles targeted the Residual-3 paragraph rather than this embedded quote.
+
 // DECLARED RESIDUAL: this is a STATIC text scan over YAML. It proves the lever is DECLARED,
 // never that a dispatch RUN is created or is green. And a workflow_dispatch run is NOT
 // equivalent to the event it replaces: its checks do not satisfy PR branch protection

@@ -357,6 +357,35 @@ func TestOnBlockFailureMessagesUnchanged(t *testing.T) {
 			t.Errorf("message=%q, want %q", got, want)
 		}
 	})
+	// THE TWO NEW SENTINELS. Added by the controller after the sprint's own evaluator found
+	// that this row's HEADLINE deliverable was pinned by nothing: defect (c)'s whole premise is
+	// that a tab-indented trigger must stop claiming the block is ABSENT and say what actually
+	// happened. Reproduced first-party before fixing -- replacing the honest message with a
+	// nonsense string left the ENTIRE package rc=0 (mutant LANDED by sha256, compile fence rc=0),
+	// so the sentence the row exists to produce was unprotected. These two arms are what make
+	// that mutant red. `TestEveryWorkflowDeclaresDispatchLever` cannot cover this branch, because
+	// this repo's only workflow file is canonical block form and never reaches it.
+	t.Run("msg_tab_indent_is_honest_not_absent", func(t *testing.T) {
+		got := onBlockFailureMessage("fixture.yml", &onBlockParseError{kind: errTabIndent, line: 3})
+		want := "instrument failure: fixture.yml line 3: tab in indentation — this line scan computes YAML trigger shape and depth conservatively"
+		if got != want {
+			t.Errorf("message=%q, want %q", got, want)
+		}
+		// The defect this row closes: the message must NOT claim the block is absent.
+		if strings.Contains(got, "has no top-level") {
+			t.Errorf("message regressed to the absent-block claim: %q", got)
+		}
+	})
+	t.Run("msg_unhandled_on_form_is_honest_not_absent", func(t *testing.T) {
+		got := onBlockFailureMessage("fixture.yml", &onBlockParseError{kind: errUnhandledOnForm, line: 2, detail: "push"})
+		want := "instrument failure: fixture.yml line 2: unsupported top-level `on:` form \"push\" — this line scan computes YAML trigger shape and depth conservatively"
+		if got != want {
+			t.Errorf("message=%q, want %q", got, want)
+		}
+		if strings.Contains(got, "has no top-level") {
+			t.Errorf("message regressed to the absent-block claim: %q", got)
+		}
+	})
 }
 
 // TestEveryWorkflowDeclaresDispatchLever pins queue-item 47's lever so it cannot be deleted
