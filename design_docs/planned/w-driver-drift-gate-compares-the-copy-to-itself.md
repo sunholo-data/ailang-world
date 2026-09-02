@@ -492,3 +492,47 @@ Full-strength quorum: all three external reviewers present, `absent_reviewers` e
 | ABSENT | **`gpt5-6-sol` dropped out of round 2 on `budget`** — `estimated cost $0.1006 (doc ~13981 input tok) exceeds cap $0.1000 (pre-flight refusal, zero spend)`, i.e. refused over **$0.0006**. `.synthesis.absent_reviewers` = `[{"model":"gpt5-6-sol","reason":"budget"}]`, cross-checked against `[.reviewers[]\|select(.present==false)\|.model]` = `["gpt5-6-sol"]`, control `has("synthesis")` = true. | **Restored, not waived.** This is the self-selecting trigger the shared skill names: the reviewer drops out on budget precisely because the revision GREW the doc, and it was gpt5-6-sol whose round-1 `proposed_fix` the controller had **declined** (the literal union), so its opinion was the most load-bearing available. Re-run alone at `--max-cost-usd 0.25` for **$0.087215**: verdict **reject**, on the same CB1-bis defect, with the same `if`-form fix — and it did **not** re-raise the union objection, which is the evidence that the 42/0/48 disposition was accepted rather than merely unreviewed. Round 2 is therefore recorded as **full strength, 3 of 3 present**, never as "proceed at N−1". |
 
 The 42/0/48 measurement (V32–V36) is the load-bearing constraint: it is why the arm's domain is the intersection **plus** an explicit REQUIRED set **plus** a non-fatal unclassified report, rather than the full union, and why the success line is scoped to the tracked copy.
+
+---
+
+## 11. Evaluator round 1 (sonnet, own worktree) — score 86/100 PASS, one BLOCKING finding, fixed in-sprint
+
+**BLOCKING #1 — `compared` was unpinned, so the arm could under-certify while printing currency.**
+The judge found, and the controller reproduced first-party, that a one-line regression in Phase 1
+(a stray `continue`) silently drops a tracked driver path from the comparison and **nothing catches
+it**: the path is not `differing` (never compared), not `missing_in_fleet` (that branch is never
+reached for it), and not `unclassified` (Phase 3 skips it because World still tracks it). The arm
+prints `✓ ... tracked copy is current` over a quietly smaller set. That is **this row's own defect
+one level up** — a success claim wider than the axis actually measured — so shipping it would have
+undercut the row. Reproduced on an 8-path green fixture: mutant LANDED (sha256), PARSES
+(`bash -n` rc=0), `rc=0`, count **8 → 7**, currency claim still printed.
+
+**Fix (controller, in-sprint): a two-counter Phase-1 accounting invariant.** `dispositioned` must
+account for every path the loop SAW, and `expected_enumerated` — computed by a **separate**
+`git ls-tree ... | wc -l` call, so a skip placed *before* the in-loop increment cannot hide from it
+— must equal the number the loop saw. Mismatch is a typed FATAL, never a green.
+
+**Non-vacuity shown, not asserted** (the standing lesson: a fix the controller places is a fix whose
+placement the controller must show can fail). Two mutants, both LANDED by sha256 and both parsing:
+
+| Mutant | Skip placed | Result | Which counter caught it |
+|---|---|---|---|
+| MUT-A (the judge's) | AFTER the counter | rc=1, `ACCOUNTING BROKEN`, no currency claim — `offered 8, saw 8, verdict on 7` | `dispositioned` |
+| MUT-B (harder) | BEFORE the counter | rc=1, `ACCOUNTING BROKEN`, no currency claim — `offered 8, saw 7, verdict on 7` | `expected_enumerated` |
+
+Control: the unmutated fixture is `rc=0` at 8 files. **Both counters are load-bearing** — each
+catches a shape the other misses, so neither is decorative.
+
+**NON-BLOCKING #2, accepted as a declared residual (see §7).** Phase 3's loud-residual net is scoped
+to the same fixed pathspec as Phase 1, so a fleet-only driver file *outside* `tools/launchd/` and the
+literal `scripts/mission_decisions.sh` is invisible — not even counted as unclassified. The judge
+demonstrated it with an addition-shaped mutant (`scripts/mission_decisions_v2.sh`) and then measured
+that it does **not** currently materialise against the real fleet. Latent, not live; filed to the
+queue rather than fixed here (a pre-existing scope question is a queue row, not a sprint widening).
+
+**Judge verdicts on the named targets:** T1 (the controller's own post-executor revert) PASS —
+no shipped hunk perturbs any anchor `host/verifygate` matches on, whole package green; T2 (`set -e`
+call sites) PASS; T3 (`set -u` + empty array, whitespace/glob paths) PASS, the suspicion **refuted**;
+T4 no reproducible bug; T5 disclosed, not new; T6 real but latent (#2 above); T7 one vacuity gap
+(#1 above).
+
