@@ -1,0 +1,307 @@
+{
+  "sprint_id": "w-driver-drift-gate-compares-the-copy-to-itself",
+  "queue_item": 54,
+  "title": "The gate named 'driver drift' compares World's driver copy to ITSELF (working tree vs local HEAD), so a stale-but-COMMITTED copy is invisible by construction - green today on a copy 11 commits and 705 lines behind the fleet. Add a check_driver_fleet() arm to scripts/verify_go.sh that compares World's COMMITTED blobs against the fleet checkout's HEAD blobs, plus a --driver-fleet-check isolated mode. ONE file modified, zero files created, zero .ail touched.",
+  "status": "planned - awaiting sprint-executor",
+  "created": "2026-09-02",
+  "planner": "mission-control iteration 148, claude-opus-5 sprint-planner",
+  "design_doc": "design_docs/planned/w-driver-drift-gate-compares-the-copy-to-itself.md",
+  "sprint_plan": "design_docs/planned/w-driver-drift-gate-compares-the-copy-to-itself-sprint-plan.md",
+  "base_commit": "7d3aa00ef880657cc8a769f6726bb700aa54b5e0",
+  "base_commit_note": "dev is f34cb6d00d5013f12e31823d160070d530aea8d5; the executor worktree is at 7d3aa00. Planner re-derived: `git diff --name-only 7d3aa00 f34cb6d -- scripts/verify_go.sh tools/launchd/ scripts/mission_decisions.sh .github/workflows/ci.yml` is EMPTY. f34cb6d adds ONLY the 494-line design doc, so the code baseline at both commits is byte-identical. All planner measurements were taken in the worktree at 7d3aa00.",
+  "branch": "sprint/w-iter148-driver-drift - the executor performs NO git write operations; the controller commits",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter148 - work ONLY there, never the main checkout",
+  "github_issues": [],
+  "risk_level": "medium",
+  "risk_note": "Not code volume (~145 changed lines in ONE file). The risk is (a) `set -e` semantics at the two call sites - this burned quorum rounds 1 and 2 - and (b) AC vacuity. The planner measured both: the doc's shipped code is CORRECT under bash 3.2 + set -euo pipefail (verified by executing a byte-faithful harness), and five of the doc's eight ACs were half-vacuous and are repaired here.",
+  "id_disambiguation": "THE DESIGN DOC USES AC1-AC8 FOR CRITERIA AND AN UNNUMBERED 9-ROW MUTATION TABLE. This plan keeps AC1-AC8 (AC8 REPAIRED twice, AC1/AC3/AC4/AC5/AC6 repaired with a negative clause, AC2 repaired) and ADDS AC9-AC13. Mutation arms are numbered M1-M10 here; M9 and M10 are planner-added. Planner findings are P1-P13 and do NOT collide with the doc's V1-V44 verification rows.",
+  "environment": {
+    "platform": "darwin/arm64 (Darwin arm64). CI leg is ubuntu-latest (.github/workflows/ci.yml:20 and :101).",
+    "bash": "scripts/verify_go.sh is `#!/usr/bin/env bash`, which on this rig resolves to GNU bash 3.2.57(1)-release (Apple-shipped). CI runs bash 5.x. STATE WHICH GREENS ARE SINGLE-PLATFORM.",
+    "AILANG_BIN": "/tmp/ailang-v0300/ailang - the FILE. `/tmp/ailang-v0300` alone is a DIRECTORY and setting AILANG_BIN to it fails.",
+    "ailang_version": "AILANG v0.30.0 (commit e37b370)",
+    "go_version": "go1.26.6 darwin/arm64",
+    "shell": "zsh",
+    "fleet_checkout": "~/dev/sunholo-data/ailang at HEAD 722e19c77bd7c5c4b7a8a47c9a31909e5387cc9d - READ ONLY. Never modify it. Every fleet-side fixture in this sprint is a /tmp repo.",
+    "notes": [
+      "P1, THE SHARPEST ENVIRONMENT FACT: on the UNMODIFIED tree `./scripts/verify_go.sh --driver-fleet-check` is rc=1 with output `✗ AILANG_BIN is unset ...` - because --driver-fleet-check is not yet a recognised mode and $1 falls past the --evidence-manifest-check branch (line 111) into the AILANG_BIN gate (line 120). The design doc's AC baseline table says all seven baseline at 'exits 0, prints working tree matches HEAD'. THAT IS WRONG FOR ALL SEVEN, measured. Consequence: the `exit != 0` clause of AC1/AC3/AC4/AC5/AC6 is SATISFIED AT BASE for the wrong reason. Every such AC in this plan carries a negative clause: output must NOT contain `AILANG_BIN is unset`.",
+      "P2: `touch tools/launchd/mission-control.sh` does NOT dirty git. Measured: `git status --porcelain -- tools/launchd/ scripts/mission_decisions.sh` -> EMPTY after touch; same-path known-positive control (append a byte) -> ` M tools/launchd/mission-control.sh`. The doc's AC8 as written cannot fire.",
+      "P3: `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_go.sh` on a CLEAN tree is NOT reliably green at base: run #1 rc=1 in 179s (`--- FAIL: TestCLIRealSubprocessEpisode (8.66s) ... daemon announcement timed out`), run #2 rc=0 in 216s, and the same test passes in ISOLATION in 1s (rc=0). This is the mission's known load-flaky wall-clock test. READ WHICH TEST FAILED, NEVER THE EXIT CODE.",
+      "AC8 is therefore SCOPED TO THE GATE: the driver arm is reached BEFORE the go legs, so a dirty run exits 1 in ~1s. Assert the FATAL present AND `go build ./...` ABSENT. Measured both arms with the clean run as the complementary control.",
+      "ZSH HAS NO $PIPESTATUS (bash-only, silently EMPTY). Capture rc without a pipe: `cmd > /tmp/out 2>&1; rc=$?`.",
+      "Never `|| echo 0` inside $(...): grep -c exits 1 on a legitimate zero and you get the two-line string \"0\\n0\".",
+      "grep rc 1 = no match, rc 2 = no such file. `| wc -l` throws that away. Quote glob-shaped flag values: --include='*.sh'.",
+      "`git status --porcelain` is NOT empty in this worktree at entry: `?? design_docs/planned/w-driver-drift-gate-compares-the-copy-to-itself.md` (the worktree is at 7d3aa00, one commit behind the doc commit). SCOPE every integrity check to `-- tools/launchd/ scripts/mission_decisions.sh` and to sha256, never to a bare porcelain.",
+      "MUTATION-ENGINE WARNING, learned the hard way this session: `awk sub(pat,rep)` treats pat as a REGEX. The planner's first 8 mutants all produced BYTE-IDENTICAL files and only the 'did it land' sha256 guard caught it. Use literal index()/substr() replacement and ALWAYS verify sha256 changed before believing any red or green.",
+      "`./scripts/verify_go.sh` legitimately emits 2 `WARNING: DATA RACE` lines and `Found 2 data race(s)` from its OWN known-positive racecontrol. NOT a finding.",
+      "COST CENTRES, planner-measured: each --driver-fleet-check arm is sub-second; AC8 dirty run 1s; the full script 179-216s. Budget the whole 13-AC battery + 10-arm drill at well under 10 minutes wall clock. DO NOT run the full script per AC - that is the CB2 error the doc already fixed.",
+      "No `timeout(1)` on this box. `export PATH=/opt/homebrew/bin:$PATH` before any `gh`."
+    ]
+  },
+  "base_state_verified": {
+    "commit": "7d3aa00ef880657cc8a769f6726bb700aa54b5e0",
+    "porcelain_scoped_to_driver_paths_at_entry_and_exit": "EMPTY (git status --porcelain -- tools/launchd/ scripts/mission_decisions.sh)",
+    "sha256": {
+      "tools/launchd/mission-control.sh": "1632b31b0403411986237709d0d7a92102bb22cbb2a7b4fbc51c020cbd0440a8"
+    },
+    "verify_go_sh_line_count": 311,
+    "line_numbers_re_derived": {
+      "16": "set -euo pipefail",
+      "109": "} - closes check_evidence_manifest; the function + REQUIRED_FLEET_PATHS go AFTER this",
+      "111": "if [ \"${1:-}\" = \"--evidence-manifest-check\" ]; then",
+      "116_117": "check_evidence_manifest \"$2\" \"$3\" ; exit $? - A BARE CALL. Benign only by accident. DO NOT COPY THIS SHAPE (C3).",
+      "118": "fi - end of the evidence-manifest isolated mode",
+      "119": "INSERT the --driver-fleet-check block HERE, before the AILANG_BIN gate",
+      "120": "if [ -z \"${AILANG_BIN:-}\" ]; then - the AILANG_BIN gate",
+      "190": "# DRIVER DRIFT GATE - D-WORLD-DRIVER-1, RESOLVED B",
+      "200_203": "driver_tracked path-liveness control (C4: DO NOT WEAKEN)",
+      "205_211": "driver_drift working-tree diff (C4: DO NOT WEAKEN)",
+      "212": "success line - relabel to '... working tree matches HEAD (working-tree arm)' and insert the main-flow call site immediately after",
+      "247_249_263_265_279_282": "set +e / set -e pairs - ALL AFTER the call site, so they do NOT protect it"
+    },
+    "doc_figures_re_derived_and_AGREEING": {
+      "local_driver_paths": 6,
+      "fleet_driver_paths": 48,
+      "missing_locally": 42,
+      "missing_in_fleet": 0,
+      "union": 48,
+      "unclassified_today": 41,
+      "commits_behind_since_2026_08_15": 11,
+      "newest_missing_commit": "aca6908bd feat(mission-driver): controller fallback is now a chain - codex, then flat-rate GLM-5.3, then its OpenRouter twin (Mark directive 2026-08-31)",
+      "differing_lines": "615 fleet-only + 90 local-only = 705",
+      "line_counts": "local 550, fleet 1075",
+      "mission_control_blobs": "local c8c92a5c569a51bb649b2a833475641c1e70e5ee != fleet 253154ad54548b46b521ac20dd23a302c959c077",
+      "pin_root_fleet_blob": "5902a60c049f0fac0301eacf56ee578e893e3bc5",
+      "V20_per_path_verdicts": "MATCH mission_decisions.sh / DIFFER derive-planner-lane.sh / DIFFER mission-control.sh / MATCH mission-template.plist / DIFFER test_mission_routing.sh / MATCH testdata/planner-lane/n-no-backtick-bullet.md - identical to the doc",
+      "section_4_3_predicted_compared": 7
+    },
+    "no_ac_in_this_plan_is_red_at_base_for_a_reason_unrelated_to_the_change": true,
+    "prototype_note": "The planner built a BYTE-FAITHFUL HARNESS of design-doc sections 4.1 and 4.2 at /tmp/p148/harness.sh (function + vars + isolated mode + main-flow call site, under `set -euo pipefail`) and executed it under bash 3.2.57 with cwd = the real worktree. ALL EIGHT refusal branches fire correctly; the CI loud skip returns 0 through BOTH call sites; the main-flow site reaches its end with fleet_rc=2. CB1 and CB1-bis are GENUINELY FIXED in the doc as shipped. The green path was reached in a throwaway clone and printed `compared`=7 exactly as section 4.3 predicts. EVERY mutation arm below was APPLIED to that harness, PROVEN LANDED by sha256, PROVEN PARSING by `bash -n`, and RUN against the full 13-criterion battery. No red set in this plan is predicted; all are measured. The real worktree and scripts/verify_go.sh were NEVER mutated."
+  },
+  "planner_findings": [
+    {
+      "id": "P1",
+      "severity": "HIGH",
+      "claim": "REFUTES THE DOC: every row of the AC baseline table is wrong, and it makes five ACs half-vacuous.",
+      "measurement": "On the unmodified tree, all seven arms of `./scripts/verify_go.sh --driver-fleet-check` (with each AC's own fixture and env) return rc=1 with `✗ AILANG_BIN is unset ...`. `working tree matches HEAD` is ABSENT from all seven captures. The doc reports the baseline of the FULL script instead.",
+      "why_it_matters": "AC1/AC3/AC4/AC5/AC6 assert `exit != 0`. That clause PASSES AT BASE. It would also pass against an implementation that put the isolated mode AFTER the AILANG_BIN gate, or that returned 1 unconditionally. Only the string clause discriminates.",
+      "resolution": "Every AC asserting `exit != 0` gains a same-call negative clause: output must NOT contain `AILANG_BIN is unset`. THIS PLAN WINS over the doc's baseline table."
+    },
+    {
+      "id": "P2",
+      "severity": "HIGH",
+      "claim": "REFUTES THE DOC: AC8 as written cannot fire - `touch` does not dirty git.",
+      "measurement": "`touch tools/launchd/mission-control.sh` then `git status --porcelain -- tools/launchd/ scripts/mission_decisions.sh` -> EMPTY. Known-positive control on the SAME path in the SAME call (`printf '\\n# probe\\n' >>`) -> ` M tools/launchd/mission-control.sh`. Restored from a cp backup; sha256 identical.",
+      "why_it_matters": "The doc says AC8 'passes at base'. It does not: the run would be against a clean tree, the working-tree arm would pass, and AC8's assertions would FAIL. A broken regression guard is worse than none.",
+      "resolution": "AC8 uses a real content change plus a cp-backup restore. THIS PLAN WINS."
+    },
+    {
+      "id": "P3",
+      "severity": "HIGH",
+      "claim": "AC8's gate (the full script) is not reliably green at base: 1 of 2 runs red, on a 3-minute run.",
+      "measurement": "Run #1 rc=1 / 179s / `--- FAIL: TestCLIRealSubprocessEpisode (8.66s) ... daemon announcement timed out`. Run #2 rc=0 / 216s. Scoped control `go test ./cmd/ailang-worldd/ -count=1 -run TestCLIRealSubprocessEpisode` rc=0 / 1s. Known load-flaky wall-clock test per the charter's own carry note.",
+      "why_it_matters": "A gate red at base half the time measures the repo, not the change.",
+      "resolution": "AC8 is scoped to the driver gate, which is reached BEFORE the go legs. Assert `rc != 0` AND `FATAL: DRIVER DRIFT (D-WORLD-DRIVER-1)` present AND `go build ./...` ABSENT. Measured: dirty rc=1 in 1s (FATAL present, `go build` absent); clean control rc=0 (FATAL absent, `go build` present). Immune to the flake and 180x cheaper. THIS PLAN WINS."
+    },
+    {
+      "id": "P4",
+      "severity": "MEDIUM",
+      "claim": "A REAL FAIL-OPEN in section 4.1: Phase 1 enumerates with `git ls-files` while the arm's claim, Phase 3's `git cat-file -e HEAD:$path`, and the doc's own domain measurement V32 are all HEAD-based.",
+      "measurement": "Clean tree: the two enumerators AGREE (diff of sorted lists rc=0, both 6) so the divergence is invisible today. In a THROWAWAY CLONE: `git rm --cached tools/launchd/mission-control.sh` (in HEAD, out of index) -> ls-files 6->5, ls-tree HEAD still 6; the driver's MAIN FILE is silently dropped from Phase 1 (grep 'mission-control.sh (local' rc=1), Phase 3 skips it too because HEAD still has it, `compared` stays 5 so the liveness control does NOT fire, and the unclassified count is unchanged at 41. Same-clone unmutated CONTROL compares it (rc=0).",
+      "why_it_matters": "In the main flow the existing working-tree arm catches a staged deletion first - but the ISOLATED --driver-fleet-check mode has no such protection, and that is the mode all seven ACs drive.",
+      "resolution": "ONE LINE: Phase 1 uses `done < <(git ls-tree -r --name-only HEAD -- tools/launchd scripts/mission_decisions.sh)`. Measured: closes the hole AND is behaviour-identical on the clean tree (full-output diff between fixed and unfixed harness rc=0). THIS IS THE ONLY CODE CHANGE THIS PLAN ASKS FOR BEYOND THE DOC."
+    },
+    {
+      "id": "P5",
+      "severity": "MEDIUM",
+      "claim": "No acceptance criterion exercises the GREEN path. Section 4.3 specifies the success line verbatim and nothing tests it.",
+      "measurement": "An implementation that never emits `✓ fleet-comparison arm: ...` passes all eight of the doc's ACs. Planner reached the green path (throwaway clone with tools/launchd/lib/pin-root.sh committed locally + a controlled fleet carrying the identical blob): rc=0 and `✓ fleet-comparison arm: 7 tracked frozen-core files match fleet HEAD 894dccc0... — tracked copy is current (untracked fleet additions not certified)`. compared = 7, exactly as section 4.3 predicts.",
+      "why_it_matters": "The success line is the arm's only positive output and the whole subject of quorum objection 3.",
+      "resolution": "Added as AC9."
+    },
+    {
+      "id": "P6",
+      "severity": "MEDIUM",
+      "claim": "A SURVIVING MUTANT: nothing in the doc's 9-row table tests the `unclassified` counter, and Residual 4's '41 unclassified' is a load-bearing claim.",
+      "measurement": "Mutant `unclassified=$((unclassified + 0))`: LANDED (sha 69a8b1e0a856 != base 675d231c1191), PARSES (`bash -n` rc=0), and killed NOTHING - all 11 criteria in the pre-repair battery passed. The per-path `⚠` report is a SIBLING write and survives, so AC10 alone cannot see it.",
+      "why_it_matters": "G5's rule: an assertion observing a value set ALONGSIDE the mechanism cannot fail for the reason it claims.",
+      "resolution": "AC13 asserts the count line `1 unclassified fleet-only paths not certified`. Measured to kill M9 single-arm."
+    },
+    {
+      "id": "P7",
+      "severity": "MEDIUM",
+      "claim": "One mutant is NOT single-arm, so 'everything else still passes' is invalid for it.",
+      "measurement": "M2 (Phase 1 MISSING_IN_FLEET neutered) measured red set = {AC4, AC6}, TWO arms. Mechanism: neutering removes the `continue`, so `compared` reaches 6 on the empty-fleet fixture, the `compared -eq 0` liveness refusal never fires, and AC4 reads `DRIVER DRIFT vs FLEET` instead of `0 comparable driver files`. Every other mutant measured single-arm (M10 is {AC10, AC13}, both Phase-3 observers, by construction).",
+      "why_it_matters": "G5 permits 'everything else still passes' only for a PROVEN single-arm mutant.",
+      "resolution": "M2's expected red set is recorded as two members. Do not treat an AC4 red under M2 as a second defect."
+    },
+    {
+      "id": "P8",
+      "severity": "LOW",
+      "claim": "LATENT AND PER-OS: `set -u` plus an EMPTY REQUIRED_FLEET_PATHS is a hard failure on bash 3.2.",
+      "measurement": "bash 3.2.57: `set -euo pipefail; A=(); for x in \"${A[@]}\"; do ...` -> rc=1, `A[@]: unbound variable`. Same-construct non-empty control -> rc=0, prints `one` / `REACHED`. Bash 5 could NOT be measured (no /opt/homebrew/bin/bash, ls rc=1).",
+      "why_it_matters": "The set has one member today. The day the fleet lands lib/pin-root.sh and someone cleans up the satisfied entry, verify_go.sh hard-fails on the RIG with an opaque error while staying green on ubuntu bash 5.",
+      "resolution": "NON-BLOCKING recommendation: a comment forbidding an empty set, or `${REQUIRED_FLEET_PATHS[@]+\"${REQUIRED_FLEET_PATHS[@]}\"}`."
+    },
+    {
+      "id": "P9",
+      "severity": "LOW",
+      "claim": "AC2's third clause is a tautology.",
+      "measurement": "AC2 asserts output does not contain `driver is current`. Section 4.3 removed that bare phrase from the entire design; grepped all 13 measured output captures -> 0 hits, with a same-pattern known-positive control on a synthesized file (rc=0). No implementation of this design can violate it.",
+      "why_it_matters": "A negative that cannot fail is not a criterion.",
+      "resolution": "Assert instead that the SKIP output does NOT contain `tracked copy is current` - a string the implementation genuinely emits on the green path (measured in P5), so the negative has a real positive counterpart. Measured: green path emits it, skip path does not."
+    },
+    {
+      "id": "P10",
+      "severity": "INFO-OPERATIONAL",
+      "claim": "THE MOMENT THIS LANDS, ./scripts/verify_go.sh ON THE RIG IS RED. The controller must be told, not surprised.",
+      "measurement": "The faithful harness against the REAL fleet checkout: rc=1, 41 unclassified warnings, then `FATAL: DRIVER DRIFT vs FLEET (D-WORLD-DRIVER-1) — the committed copy differs from fleet HEAD 722e19c7...` naming THREE paths: tools/launchd/derive-planner-lane.sh (52674b04 != 918291f9), tools/launchd/mission-control.sh (c8c92a5c != 253154ad), tools/launchd/test_mission_routing.sh (56c9541e != b46dbb0e). After the fleet lands those three, the next run reds again on MISSING LOCALLY for tools/launchd/lib/pin-root.sh.",
+      "why_it_matters": "CLAUDE.md's hard rule is 'nothing lands red'. Section 8 of the doc declares this red intended ('that red is the point'), and CI stays green via the loud skip - but the tension must be stated, not discovered.",
+      "resolution": "The landing gate for this PR is CI, which loud-skips and is green. The rig red is the DESIGNED signal that the fleet must commit. The executor must NOT fix it, must NOT edit or absorb the driver (C1), and must NOT soften the arm. Name it in the PR body as a declared, intended red."
+    },
+    {
+      "id": "P11",
+      "severity": "LOW",
+      "claim": "Base-commit and porcelain trap.",
+      "measurement": "dev = f34cb6d, worktree = 7d3aa00. Code diff over all in-scope paths is EMPTY (f34cb6d adds only the 494-line design doc). But the worktree's bare `git status --porcelain` is NOT empty at entry: `?? design_docs/planned/w-driver-drift-gate-compares-the-copy-to-itself.md`.",
+      "why_it_matters": "An executor asserting a clean porcelain will misread the untracked design doc as its own contamination.",
+      "resolution": "Scope every integrity check to `-- tools/launchd/ scripts/mission_decisions.sh` and to sha256."
+    },
+    {
+      "id": "P12",
+      "severity": "INFO",
+      "claim": "The C1 mutation carve-out is needed EXACTLY ONCE, and not by any mutation row.",
+      "measurement": "Every fleet-side fixture, including the addition-shaped arm the doc phrases as mutating the 'fleet repo', works entirely in a /tmp git repo - planner executed all of them that way, touching neither tools/launchd/ nor ~/dev/sunholo-data/ailang. The only frozen-core modification is AC8's, executed and restored: sha256 1632b31b04034119... before and after, porcelain empty.",
+      "why_it_matters": "It removes eight opportunities to leave the frozen core dirty.",
+      "resolution": "Only AC8 uses the carve-out, and only with a cp backup - NEVER `git checkout --`, because the executor's own work in this worktree is uncommitted by construction."
+    },
+    {
+      "id": "P13",
+      "severity": "INFO",
+      "claim": "G2 CLEAN BILL: every figure in the design doc was re-derived first-party and AGREES. Nothing was refuted.",
+      "measurement": "See base_state_verified.doc_figures_re_derived_and_AGREEING - 6/48/42/0/48, 41 unclassified, 11 commits, 615+90=705, 550/1075, both mission-control blobs, the pin-root fleet blob, all six V20 verdicts, and every cited line number (111/120/190/200/205/212). Additionally: `grep -rn --include='*.sh' --include='*.yml' 'CI:-\\|CI=true' scripts .github tools` -> rc=1 (NO hits), with a same-paths same-flags known-positive control (AILANG_BIN) -> rc=0, 43 hits, confirming section 8's 'no existing consumer' and Residual 6.",
+      "why_it_matters": "The doc's measurements are trustworthy; the defects are all in the ACCEPTANCE layer, not the measurement layer.",
+      "resolution": "Ship sections 4.1 and 4.2 verbatim except for P4's one line."
+    }
+  ],
+  "features": [
+    {
+      "id": "MS1",
+      "name": "Fleet-comparison arm in scripts/verify_go.sh",
+      "description": "Add AILANG_FLEET_REPO (default $HOME/dev/sunholo-data/ailang), REQUIRED_FLEET_PATHS (first member tools/launchd/lib/pin-root.sh), and check_driver_fleet() after line 109; add the --driver-fleet-check isolated mode at line 119 (before the AILANG_BIN gate at 120); add the set -e-safe `if`-form call site after the working-tree success line at 212; relabel that line to '... working tree matches HEAD (working-tree arm)'. Ship design-doc sections 4.1 and 4.2 VERBATIM except for P4's one-line enumerator swap. The existing working-tree-vs-HEAD arm and its driver_tracked path-liveness control (lines 200-212) are UNCHANGED (C4).",
+      "estimated_changed_lines": 145,
+      "files": [
+        "scripts/verify_go.sh"
+      ],
+      "dependencies": [],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "ONE milestone is correct for this scope (~0.3d, ONE file). Do not split. The success-line relabel is a single line inside the same edit. .github/workflows/ci.yml is NOT touched: V17/:166 already runs ./scripts/verify_go.sh, re-derived.",
+      "restore_recipe": "Before ANY mutation: `mkdir -p /tmp/p148-bak && cp scripts/verify_go.sh /tmp/p148-bak/verify_go.sh && cp tools/launchd/mission-control.sh /tmp/p148-bak/mission-control.sh`. Restore with `cp /tmp/p148-bak/<f> <path>`. NEVER `git checkout --` - the deliverable is uncommitted by construction and checkout would delete it with no undo. After AC8, assert `shasum -a 256 tools/launchd/mission-control.sh` == 1632b31b0403411986237709d0d7a92102bb22cbb2a7b4fbc51c020cbd0440a8 AND `git status --porcelain -- tools/launchd/ scripts/mission_decisions.sh` is EMPTY.",
+      "set_e_discipline": "verify_go.sh runs under `set -euo pipefail` from line 16, and every `set +e` (247/263/279) is AFTER the call site. BOTH call sites MUST use the `if` form: `rc=0; if check_driver_fleet; then :; else rc=$?; fi; [ \"$rc\" -eq 2 ] && rc=0`. DO NOT copy the neighbouring `check_evidence_manifest \"$2\" \"$3\"; exit $?` at lines 116-117 - that bare call is benign only by accident and is exactly the shape that burned quorum rounds 1 and 2. Planner verified the `if` form works under bash 3.2 in a byte-faithful harness: CI loud skip returns 0 through BOTH sites, main-flow site reaches its end with fleet_rc=2.",
+      "frozen_message_strings": [
+        "FATAL: DRIVER DRIFT vs FLEET (D-WORLD-DRIVER-1)",
+        "enumerated 0 comparable driver files",
+        "World-tracked paths MISSING IN FLEET",
+        "REQUIRED fleet paths MISSING LOCALLY",
+        "fleet-comparison arm SKIPPED (fleet checkout absent at",
+        "driver currency NOT certified here",
+        "fleet source $AILANG_FLEET_REPO is absent",
+        "✓ fleet-comparison arm: $compared tracked frozen-core files match fleet HEAD $fleet_head — tracked copy is current (untracked fleet additions not certified)",
+        "⚠ unclassified fleet-only path (not tracked, not required): $path",
+        "⚠ $unclassified unclassified fleet-only paths not certified (see above)"
+      ],
+      "fixtures": [
+        "F_DIFF   - /tmp git repo: World's 6 tracked paths, with '# fleet-only drift' appended to tools/launchd/mission-control.sh",
+        "F_EMPTY  - /tmp git repo: `git init` + one empty commit",
+        "F_PIN    - /tmp git repo: World's 6 paths PLUS tools/launchd/lib/pin-root.sh",
+        "F_NOTRACK- /tmp git repo: World's 6 paths MINUS tools/launchd/test_mission_routing.sh",
+        "G        - throwaway clone of the worktree with tools/launchd/lib/pin-root.sh COMMITTED locally (the only way to reach the green path today, since World lacks pin-root at HEAD)",
+        "GFLEET   - /tmp git repo matching G's driver tree exactly (green path)",
+        "F_ADD    - GFLEET PLUS a fleet-only tools/launchd/lib/new-helper.sh (addition-shaped)",
+        "F_NOPIN  - G's driver tree MINUS pin-root.sh in the fleet (REQUIRED path absent in fleet)",
+        "F_PINDIFF- G's driver tree with pin-root.sh ALTERED in the fleet (REQUIRED path differing)"
+      ],
+      "acceptance_criteria": [
+        "AC1 CONTENT DRIFT: `AILANG_FLEET_REPO=$F_DIFF ./scripts/verify_go.sh --driver-fleet-check` -> rc != 0 AND output contains `DRIVER DRIFT vs FLEET` AND names `tools/launchd/mission-control.sh` AND does NOT contain `AILANG_BIN is unset` (P1 repair). BASE MEASURED: rc=1 with `✗ AILANG_BIN is unset ...`; `DRIVER DRIFT vs FLEET` absent (grep rc=1). The rc clause alone is satisfied at base for the WRONG reason - the negative clause is what makes this fail at base.",
+        "AC2 CI LOUD SKIP, HONEST: `CI=true AILANG_FLEET_REPO=/nonexistent ./scripts/verify_go.sh --driver-fleet-check` -> rc == 0 AND contains `SKIPPED` AND does NOT contain `tracked copy is current` (P9 repair: the doc's `driver is current` is a tautology - that phrase appears nowhere in the design). BASE MEASURED: rc=1, `SKIPPED` absent. Genuinely FAILS at base.",
+        "AC3 RIG TYPED REFUSAL: `env -u CI AILANG_FLEET_REPO=/nonexistent ./scripts/verify_go.sh --driver-fleet-check` -> rc != 0 AND contains `fleet source` AND `absent` AND NOT `AILANG_BIN is unset`. BASE MEASURED: rc=1 from the AILANG_BIN gate; `fleet source` absent.",
+        "AC4 PATH-LIVENESS CONTROL: `AILANG_FLEET_REPO=$F_EMPTY ./scripts/verify_go.sh --driver-fleet-check` -> rc != 0 AND contains `0 comparable driver files` AND NOT `AILANG_BIN is unset`. BASE MEASURED: rc=1 from the AILANG_BIN gate; string absent.",
+        "AC5 REQUIRED PATH MISSING LOCALLY: `AILANG_FLEET_REPO=$F_PIN ./scripts/verify_go.sh --driver-fleet-check` -> rc != 0 AND contains `MISSING LOCALLY` AND names `tools/launchd/lib/pin-root.sh` AND NOT `AILANG_BIN is unset`. BASE MEASURED: rc=1 from the AILANG_BIN gate; string absent.",
+        "AC6 MISSING IN FLEET (synthetic - the branch is empty in the wild, V35=0): `AILANG_FLEET_REPO=$F_NOTRACK ./scripts/verify_go.sh --driver-fleet-check` -> rc != 0 AND contains `MISSING IN FLEET` AND names `tools/launchd/test_mission_routing.sh` AND NOT `AILANG_BIN is unset`. BASE MEASURED: rc=1 from the AILANG_BIN gate; string absent.",
+        "AC7 CB1 GUARD - CI BRANCH EXITS ZERO: `CI=true AILANG_FLEET_REPO=/nonexistent ./scripts/verify_go.sh --driver-fleet-check` -> rc == 0. BASE MEASURED: rc=1. Genuinely FAILS at base. Keep this alongside AC2 - it is the named CB1 guard.",
+        "AC8 REGRESSION GUARD, REPAIRED (P2+P3): cp tools/launchd/mission-control.sh to /tmp/p148-bak FIRST; `printf '\\n# ac8 probe\\n' >> tools/launchd/mission-control.sh` (NOT `touch` - measured to leave porcelain EMPTY); `AILANG_BIN=/tmp/ailang-v0300/ailang ./scripts/verify_go.sh`; restore with cp. Assert rc != 0 AND contains `FATAL: DRIVER DRIFT (D-WORLD-DRIVER-1)` AND does NOT contain `go build ./...` (proves it aborted AT the gate, immune to the downstream flake). BASE MEASURED: PASSES - dirty rc=1 in 1s with FATAL present and `go build ./...` absent; clean control run rc=0 with FATAL absent and `go build ./...` present. This AC passes at base and MUST still pass after the change.",
+        "AC9 GREEN PATH (new, P5): from G, `AILANG_FLEET_REPO=$GFLEET ./scripts/verify_go.sh --driver-fleet-check` -> rc == 0 AND contains `tracked copy is current`. BASE MEASURED: rc=1 (AILANG_BIN gate); success line absent. Without this AC nothing tests the success line section 4.3 specifies.",
+        "AC10 ADDITION-SHAPED / PROVES THE ARM LOOKS (new): from G, `AILANG_FLEET_REPO=$F_ADD ./scripts/verify_go.sh --driver-fleet-check` -> rc == 0 AND contains `unclassified fleet-only path (not tracked, not required): tools/launchd/lib/new-helper.sh` AND contains `tracked copy is current`. BASE MEASURED: rc=1 (AILANG_BIN gate); neither string present. Run this from G, NOT from the worktree: from the worktree the run reds on MISSING LOCALLY and the rc clause would be satisfied by an unrelated branch.",
+        "AC11 REQUIRED PATH ABSENT IN FLEET (new): from G, `AILANG_FLEET_REPO=$F_NOPIN ./scripts/verify_go.sh --driver-fleet-check` -> rc != 0 AND contains `MISSING IN FLEET` naming `tools/launchd/lib/pin-root.sh` AND NOT `AILANG_BIN is unset`. BASE MEASURED: rc=1 from the AILANG_BIN gate; string absent. AC6 cannot reach Phase 2's branch - this is the only arm that kills M4.",
+        "AC12 REQUIRED PATH DIFFERING (new): from G, `AILANG_FLEET_REPO=$F_PINDIFF ./scripts/verify_go.sh --driver-fleet-check` -> rc != 0 AND contains `DRIVER DRIFT vs FLEET` naming `tools/launchd/lib/pin-root.sh` AND NOT `AILANG_BIN is unset`. BASE MEASURED: rc=1 from the AILANG_BIN gate; string absent. AC1 cannot reach Phase 2's branch - this is the only arm that kills M5.",
+        "AC13 UNCLASSIFIED COUNT (new, P6): from G, `AILANG_FLEET_REPO=$F_ADD ./scripts/verify_go.sh --driver-fleet-check` -> rc == 0 AND contains `1 unclassified fleet-only paths not certified`. BASE MEASURED: rc=1 (AILANG_BIN gate); string absent. This is the ONLY arm that kills M9, which survived the doc's entire 9-row table."
+      ],
+      "mutation_arms": [
+        "M1 SINGLE-ARM: Phase 1 DIFFERING -> `if false && [ \"$local_blob\" != \"$fleet_blob\" ]` (1st occurrence). LANDED sha 5d5617570930 != base 675d231c1191, 2 diff lines. PARSES bash -n rc=0. MEASURED RED SET {AC1}. The assertion reads the `differing` string, appended ONLY inside the != branch and printf'd by the FATAL. 'Everything else still passes' is VALID here.",
+        "M2 TWO-ARM (P7): Phase 1 MISSING_IN_FLEET -> `if false && [ -z \"$fleet_blob\" ]` (1st occurrence). LANDED sha 4b4ce001dcaf, 2 diff lines. PARSES rc=0. MEASURED RED SET {AC4, AC6} - NOT single-arm. Neutering removes the `continue`, so `compared` reaches 6 on F_EMPTY, the liveness refusal never fires, and AC4 reads `DRIVER DRIFT vs FLEET` instead of `0 comparable driver files`. 'Everything else still passes' is INVALID for this row; expect exactly these two.",
+        "M3 SINGLE-ARM: Phase 2 MISSING_LOCALLY -> `if false && ! git cat-file -e \"HEAD:$path\" 2>/dev/null`. LANDED sha b61d43d8848c, 2 diff lines. PARSES rc=0. MEASURED RED SET {AC5}. Reads `missing_locally`, written only in the required-absent branch.",
+        "M4 SINGLE-ARM: Phase 2 MISSING_IN_FLEET -> `if false && [ -z \"$fleet_blob\" ]` (2nd occurrence). LANDED sha 2c2948373023, 2 diff lines. PARSES rc=0. MEASURED RED SET {AC11}. AC6 CANNOT reach this branch (its missing path is World-tracked, i.e. Phase 1) - AC11 is why this mutant is killable at all.",
+        "M5 SINGLE-ARM: Phase 2 DIFFERING -> `if false && [ \"$local_blob\" != \"$fleet_blob\" ]` (2nd occurrence). LANDED sha 58de00776905, 2 diff lines. PARSES rc=0. MEASURED RED SET {AC12}. AC1 CANNOT reach this branch - AC12 is why this mutant is killable.",
+        "M6 SINGLE-ARM: path-liveness -> `if false && [ \"$compared\" -eq 0 ]`. LANDED sha 4712515a9a31, 2 diff lines. PARSES rc=0. MEASURED RED SET {AC4}. Reads the `0 comparable driver files` FATAL, written only in that branch.",
+        "M7 SINGLE-ARM: CI loud skip -> `if false && [ -n \"${CI:-}\" ]`. LANDED sha 3066ce6fbbe0, 2 diff lines. PARSES rc=0. MEASURED RED SET {AC2}. With the branch dead the arm falls through to the rig refusal and rc becomes 1. AC7 survives it in the battery only because AC7 duplicates AC2's rc clause; keep both - AC7 is the CB1 guard by name.",
+        "M8 SINGLE-ARM: rig typed refusal -> `if false && [ -z \"${CI:-}\" ]`. LANDED sha 7d1711eb3a94, 2 diff lines. PARSES rc=0. MEASURED RED SET {AC3}. With it dead the function reaches the trailing `return 0`.",
+        "M9 SINGLE-ARM, THE SURVIVOR (P6): counter -> `unclassified=$((unclassified + 0))`. LANDED sha 69a8b1e0a856, 2 diff lines. PARSES rc=0. MEASURED RED SET {AC13} - and {} against the doc's own criteria. The per-path `⚠` report is a SIBLING write and survives, so AC10 alone cannot see this; only the count line reads `$unclassified`.",
+        "M10 TWO-ARM, ADDITION-SHAPED / PROVES THE ARM LOOKS: Phase 3 enumerates the LOCAL tree instead of the fleet -> `done < <(git ls-tree -r --name-only HEAD -- tools/launchd scripts/mission_decisions.sh)` (drop `-C \"$AILANG_FLEET_REPO\"`). LANDED sha a4b33cd83f6d, 2 diff lines. PARSES rc=0. MEASURED RED SET {AC10, AC13} - both Phase-3 observers, by construction. Removal-shaped mutants prove the check FIRES; only this one proves it LOOKS at the right tree, which is the gap the doc's round-1 mutant had."
+      ],
+      "mutation_engine_warning": "The planner's first attempt used `awk sub(pat,rep)`, which treats the pattern as a REGEX - all eight mutants produced BYTE-IDENTICAL files and only the sha256 'did it land' guard caught it. Use literal index()/substr() replacement (or fully-escaped sed) and ALWAYS verify sha256 changed before believing any red or green. A mutant that did not land is not evidence of anything."
+    }
+  ],
+  "velocity": {
+    "target_days": 0.3,
+    "estimated_changed_lines": 145,
+    "estimated_days": 0.3,
+    "note": "~+144 added and ~1 modified line in ONE file (scripts/verify_go.sh). Matches the row's own ~0.3d. DO NOT INFLATE SCOPE and DO NOT ADD MILESTONES. The cost is in the 13-criterion battery and the 10-arm mutation drill, not in the code - and both are cheap: every isolated-mode arm is sub-second and AC8 is 1s, so the whole verification is well under 10 minutes wall clock."
+  },
+  "deferred_scope": [
+    "Landing tools/launchd/lib/pin-root.sh in World. FLEET-OWNED (C1). The arm DETECTS it (typed MISSING LOCALLY) and that is World's whole job here.",
+    "Updating the stale driver itself. FLEET-OWNED (C1). The arm reports; the fleet commits.",
+    "Certifying driver currency in CI. Structurally out of reach with Option B - the arm loud-skips there. Declared residual 1.",
+    "Certifying the 41 unclassified fleet-only paths. Declared residual 4; a path becomes certified only by deliberate addition to REQUIRED_FLEET_PATHS.",
+    "The bash-3.2 empty-array guard (P8). Latent, non-blocking; a one-line comment or the `${A[@]+\"${A[@]}\"}` idiom would close it if the controller wants it in scope.",
+    "Fixing TestCLIRealSubprocessEpisode's load flake (P3). Unrelated to this diff; AC8's repair routes around it."
+  ],
+  "residuals_inherited_unchanged": [
+    "R1 CI cannot certify driver currency - the fleet arm is loud-skipped there.",
+    "R2 A fleet advance between rig runs is caught only at the next rig run.",
+    "R3 The arm depends on the fleet checkout being present and CURRENT on the rig; a stale fleet checkout compares against a stale fleet HEAD.",
+    "R4 41 unclassified fleet-only paths are reported and counted but not certified (planner re-derived: 41).",
+    "R5 The arm does not detect a working-tree change to the driver that is also present in the fleet - that is the existing working-tree arm's job, and it is preserved (C4).",
+    "R6 The CI env-var heuristic is GitHub-Actions-specific; a non-CI run exporting CI=true would loud-skip when the fleet checkout is absent. Planner confirmed no existing consumer of CI in this repo (grep rc=1 with a firing same-scope control)."
+  ],
+  "could_not_establish": [
+    "THAT THE CI LOUD SKIP ACTUALLY FIRES ON ubuntu-latest. It requires GitHub Actions to export CI=true AND $HOME/dev/sunholo-data/ailang to be absent on the runner. `grep -n \"CI=\" .github/workflows/ci.yml` -> rc=1 (no explicit set), so the arm relies on the runner's implicit default. Neither leg is observable from this rig. THIS IS THE SINGLE ASSUMPTION ON WHICH 'CI STAYS GREEN' RESTS - if it is wrong, CI reds on the rig-refusal branch. Flagged so a CI red on the first run is read correctly rather than mistaken for a code defect.",
+    "bash 5.x behaviour of the empty-array construct (P8) - no bash >= 4 on this rig.",
+    "Whether TestCLIRealSubprocessEpisode also flakes on ubuntu - observed 1-of-2 on darwin under full-suite load only.",
+    "The long-run flake rate: two full-suite runs is a small sample; 1-of-2 is a lower bound on the nuisance, not a rate.",
+    "Whether ~/.ailang-driver-pin/world participates in what launchd actually executes. The doc's V13/V15 establish it exists and that nothing in this repo references it; the plan does not depend on it and the arm does not measure it."
+  ],
+  "sandbox_posture": "All planner probes ran in /tmp (fleet fixtures, throwaway clones, the byte-faithful harness and every mutant). scripts/verify_go.sh was NEVER modified. tools/launchd/mission-control.sh was modified exactly once, for the AC8 measurement, and restored from a cp backup with sha256 verified identical (1632b31b0403411986237709d0d7a92102bb22cbb2a7b4fbc51c020cbd0440a8) and scoped porcelain empty. ~/dev/sunholo-data/ailang was read-only throughout. Zero git write operations were performed in the repo or the worktree.",
+  "executor_constraints": {
+    "git_writes": "FORBIDDEN. No add, commit, stash, checkout, restore, reset, branch, worktree, git-mv. Git READS (show, status, diff, log, ls-files, ls-tree, rev-parse, cat-file) are required and allowed. The controller builds the commits.",
+    "frozen_core": "tools/launchd/* is FLEET-OWNED and FROZEN (C1). Never edit, absorb, vendor or sync the driver. The ONE temporary modification is AC8's, and it must (1) cp to a /tmp backup FIRST, (2) append a REAL content change (touch does nothing - P2), (3) restore with cp, NEVER `git checkout --`, (4) assert sha256 and scoped porcelain afterwards. NO mutation row needs this carve-out (P12).",
+    "files_touched": [
+      "scripts/verify_go.sh (MODIFY, ~+144/-0 plus 1 modified line, MS1)"
+    ],
+    "files_forbidden": [
+      "tools/launchd/* - FROZEN CORE, except AC8's temporary probe on mission-control.sh which MUST be restored byte-identically from a cp backup",
+      "~/dev/sunholo-data/ailang - the fleet checkout, READ ONLY; every fleet fixture is a /tmp repo",
+      "scripts/mission_decisions.sh",
+      "scripts/verify_ail.sh",
+      ".github/workflows/ci.yml - NOT required (V17/:166 already runs verify_go.sh); C2 admits it only if genuinely required, and it is not",
+      "go.mod, go.sum",
+      "any .ail file",
+      "~/.ailang/state/mission-v1* and the V1 checkout"
+    ],
+    "do_not_weaken": "C4: lines 200-212's driver_tracked path-liveness control and driver_drift working-tree diff are UNTOUCHED. Only the success-line TEXT at 212 gains ' (working-tree arm)'.",
+    "assertion_discipline": "Assert SUBSTRINGS, never whole lines and never absolute paths - the FATAL messages interpolate $AILANG_FLEET_REPO and $fleet_head, which are rig-specific. Capture rc WITHOUT a pipe. Count with `grep -o <needle> | wc -l`, never `grep -c` (which counts LINES).",
+    "expected_red": "P10: after MS1 lands, ./scripts/verify_go.sh on the RIG reds with three DIFFERING driver paths, and later with MISSING LOCALLY for lib/pin-root.sh. That red is the DESIGNED signal that the fleet must commit. DO NOT fix it, DO NOT touch the driver, DO NOT soften the arm. CI is the landing gate and it loud-skips.",
+    "authoritative": "THE DESIGN DOC WINS over this plan - EXCEPT on P1, P2, P3, P4, P5, P6, P7 and P9, where the planner's first-party measurement showed the doc's literal text would pass vacuously (P1, P9), fail to fire at all (P2), measure the repo rather than the change (P3), fail open (P4), leave the success path untested (P5), leave a surviving mutant (P6), or misstate a blast radius (P7). On those eight, THIS PLAN WINS."
+  }
+}
