@@ -16754,3 +16754,140 @@ routing-policy change (that needs ≥3 evidence rows).
 **Next**: rows **55**, **56**, **57**, **58**, **59**, **60**, **61**, **62**, **63**, **64**, then
 **39**. Row **50** stays parked on `D-WORLD-31`. Decision ledger: 18 rows, ONE OPEN, **no new ask this
 iteration**. Designer rotation next = **`claude:claude-fable-5`**.
+
+---
+
+## Iteration 149 — 2026-09-02 — row 55 LANDED: the dispatch-lever gate false-redded on the standard remedy for a famous Actions footgun, and the planner then showed `go build ./...` cannot see a `_test.go` at all [HARNESS]
+
+**Pick:** queue row 55 `w-dispatch-lever-parser-false-reds-on-valid-yaml`, the queue head,
+ungated and unblocked. No directive, no attended ruling, no regression outranked it.
+
+**Progress:** **57 of 66 queue rows closed** (56 of 64 at iteration 148; row 55 closes, rows 65
+and 66 open from this iteration's own planner and judge findings). Row 50 remains parked on
+`D-WORLD-31`.
+
+**Outcome:** LANDED. PR [#112](https://github.com/sunholo-data/ailang-world/pull/112) → squash
+[`165b9fd`](https://github.com/sunholo-data/ailang-world/commit/165b9fd). **Gate 3b GREEN on the
+MERGE commit**, SHA-addressed, `present=2 == expected=2`, both `success`; the PR head was polled
+to the same standard first, and every count was asserted numeric before comparison so an
+extraction failure could not read as a completion.
+
+**What landed:** `host/verifygate/dispatch_lever_gate_test.go` (+394/−67 across the sprint) and
+prose corrections in `design_docs/planned/w-ci-recovery-lever-absent.md`. No `go.mod` change, no
+new dependency, frozen core byte-identical.
+
+**The row was a BRITTLENESS row and I kept it one.** The row-47 gate never silently passes a
+lever-less workflow — the evaluator's 11 adversarial fixtures this iteration failed to build one,
+as its original attack set had. What it did was red-light three shapes of *valid, lever-declaring*
+YAML: a quoted `"on":` key (the standard fix for YAML 1.1 reading bare `on` as boolean `true`, so
+the gate broke CI the day anyone applied the recommended remedy), flow style `on: {…}`, and a
+TAB-indented first trigger. The third is the interesting one: `TrimLeft(l, " ")` strips spaces
+only, so the block read as already exited and the message became `triggers=[] lack
+workflow_dispatch` — **misreporting a parse limitation as total absence.** The defect was never
+the red; it was the sentence.
+
+**Ghost discipline on an evaluator-sourced row.** All three reproduced first-party at `234d9da`
+with two known-positive controls in the same call — a canonical fixture, and the real `ci.yml` at
+the path the gate actually reads. The scalar-arm cascade reproduced too (two messages, not the
+"exactly one" the doc claimed). And the row's carried claims about the row-47 doc's Residual-3
+were confirmed **wrong in the safe direction**: Go's `filepath.Glob` DOES return `.hidden.yml`
+(it is not POSIX shell globbing), and a nested subdirectory is a loud `is a directory`, not an
+invisible one.
+
+**The row's blocking question had already been answered, and saying so correctly was the whole
+routing call.** Row 55 was filed as a row rather than fixed inline because closing it "needs a
+decision this item does not own — whether the gate adopts a structural YAML parser instead of a
+line scan." `D-WORLD-30` (attended, Mark, 2026-09-01) answered exactly that for a SIBLING gate and
+chose LINE SCAN, hardened, on rationale that is a property of this repo rather than of that gate:
+a repo-internal tripwire is not an adversarial boundary, and a second direct dependency is not
+worth it in a `go.mod` with exactly one. I routed it as **precedent**, said explicitly in the doc
+that it does **not** resolve row 55, and raised **no new decision** — standing rule 8: do not
+manufacture a decision the human does not have. The ruling also carries row-52-specific mechanics
+(a shallowest-`steps:` anchor, an indent-constant residual) that do **not** transfer, and the doc
+now splits the two halves.
+
+**Quorum: TWO FULL-STRENGTH rounds, both BLOCKED, all three external reviewers rejecting both
+times** ($0.0936 + $0.1275). `.synthesis.absent_reviewers` was `[]` in both, cross-checked against
+`[.reviewers[]|select(.present==false)]`, with `has("synthesis")` as the control that the path
+resolves at all — no verdict was read through a `null` and no reviewer was waived.
+
+**Every objection was a PREMISE objection, so I measured each rather than forwarding it (rule
+3f), and each one was partly right in a different way.** `gpt5-6-sol`'s reuse hypothesis was
+**refuted with its own named instrument** — `go list -deps ./...` returns **0 of 257** packages
+matching `yaml` (controls: `modernc` 30, `encoding/json` 1, a fresh absent literal 0), which is
+complete by construction rather than by inspection — while its **scope** complaint was correct
+and widened the conflict surface to a third file, `host/runbook/runbook_stageb_test.go`, that the
+doc's `host/verifygate`-scoped enumeration had excluded **by construction**. `gemini-3-1-pro` was
+right on both halves, and its second was a live defect in the doc's own AC6: the known-positive
+control `grep -c 'anti-vacuity floor'` reads **0** in the Go file because the file writes it
+UPPERCASE (case-insensitively 1; repo-wide 2 case-sensitive vs 22 insensitive) — **the acceptance
+criterion would have failed at its own control**, which is Gate 4's `-ci` lesson arriving inside
+an AC. `oc-glm-5-2` was right that §3.1 cited `D-WORLD-30` with no verification row at all.
+
+**Round 2 closed under the narrow-refinement carve-out** (ratified for this mission at iter-13),
+conditions checked before use rather than assumed: every remaining objection carried a concrete
+reviewer-authored `proposed_fix`, and **none disputed the design DIRECTION** — line scan, no
+dependency, brittleness scope went unchallenged by all three. The fixes were applied as the
+reviewers wrote them: `oc-glm-5-2`'s flow-guard specification pasted verbatim (which also
+discharges `gpt5-6-sol`'s "typed error rather than partial interpretation" — the two converge),
+`gemini-3-1-pro`'s V-row run exactly as prescribed, and `gpt5-6-sol`'s own alternative arm taken
+("narrow the claim to the measured scope").
+
+**The planner refuted SIX of the doc's premises, two severe — and the sharpest is this
+iteration's real finding.** `go build ./...` **is not a compile fence for a `_test.go`**.
+Measured, mutant LANDED by sha256 and restored byte-identical: a hard type error inside the test
+file leaves `go build ./...` at **rc=0**, while `go test -count=1 -run '^$' ./host/verifygate/`
+and `go vet ./host/verifygate/` both red at rc=1. Every assertion in this sprint lives in a test
+file, so the doc's mutant-BUILDS fence was vacuous — and the shared `mission-control` skill
+prescribes exactly that fence, so the gap is fleet-wide. Filed as row 65 and proposed upstream.
+The planner also found MUT-E **redded nothing** as written (no fixture reached the L128 control),
+and that a naive "replace lines 291-293" would have deleted a TRUE adjacent sentence.
+
+**Execution — `codex:gpt-5.6-sol`:** 11/11 ACs, 5/5 mutants each LANDED by sha256, each
+compile-fenced, each with an ENUMERATED expected `--- FAIL` set matching exactly. No
+`-skip … rc=0` criterion anywhere, because several mutants reach more than one arm and that
+criterion is unsatisfiable by construction for them. Commits were reconstructed per milestone from
+the executor's snapshots and **proven byte-identical to its final tree by `shasum -c`**; M1 and M2
+collapse into one commit because the drill restores, and I said so rather than inventing a
+difference.
+
+**Evaluation — `sonnet`, in its OWN worktree, 95/100 PASS, zero blocking.** It reproduced all five
+mutants byte-for-byte, ran a precondition-removal drill over the whole arm set, and threw 11
+adversarial fixtures at the gate trying to construct a silent false green — nested-too-deep keys,
+decoy keys after dedent, quoted commas and colons inside flow collections, an unclosed multi-line
+flow, an `on:` smuggled into a block scalar, case variants — and could not.
+
+**Its top non-blocking finding was real, and I reproduced it before acting, because a NON-BLOCKING
+label is a judge's severity opinion and not a measurement.** `onBlockFailureMessage`'s text for the
+two NEW sentinels was pinned by nothing: replacing the honest message with a nonsense string left
+the **entire package rc=0** (mutant landed, compile fence rc=0). So **this row's headline
+deliverable shipped unprotected** — the sentence the row exists to produce. Closed in-PR with two
+arms, and **proven non-vacuous rather than asserted**: MUT-F regresses the message back to the
+exact absent-block claim row 55 removes, and with the arms in place it reds both, with the specific
+regression assertion firing by name rather than only the equality.
+
+**Ruled out / refuted:**
+- **My own line numbers, twice, both caught downstream.** I told the designer the stale comment
+  was at `dispatch_lever_gate_test.go:258-261`; the file is 136 lines and the real site is
+  `:110-111` — I had transcribed a line number out of a *document that embeds the code*, which is
+  rule 3b(v)(b) exactly. The designer then also corrected `ANTI-VACUITY` from my `:116` to `:117`.
+  Two instances of one class in one iteration, from the same habit: reading an offset off a
+  `sed`/`grep` window instead of re-deriving it against the repo.
+- **`gpt5-6-sol`'s reuse hypothesis** — no YAML machinery exists to reuse (0 of 257 packages;
+  19 parse-shaped funcs enumerated repo-wide, none parsing YAML or a flow collection; the closest,
+  `transitionreg`'s JSON `parseValue`, does not transfer because JSON has no significant
+  indentation and no block/flow duality).
+- **That the `verify_go.sh` red was new.** Attributed by MECHANISM, not by redness: markers
+  `exec_started=false forked=false`, byte-identical to row 58's recorded flake signature.
+- **That the row-54 standing red might have cleared.** Re-run as a command rather than
+  transcribed: the driver copy is now **759** diff-lines behind, up from 705. It grows every fire.
+
+**Routing evidence:** designer `claude:claude-fable-5` (rotation; probe rc=0 via `claude-sub`,
+billing guard verified, ONE doc = initial run + one protocol-mandated revision, which is the
+Fable diet's exact ceiling, not an overspend) · planner `opus` (lane
+`derive-planner-lane.sh` → `opus fail-closed:env-pin`, used VERBATIM) · executor
+`codex:gpt-5.6-sol` (probe rc=0, `workspace-write`, no git writes, per-milestone snapshots) ·
+evaluator `sonnet` in its own worktree (generator≠judge: sonnet ≠ codex). **metered=$0.2211** of
+$5, all of it quorum; every other lane was a quota bucket.
+
+**Next:** rows **56**–**66**, then **39**. Row 50 stays parked on `D-WORLD-31`.
