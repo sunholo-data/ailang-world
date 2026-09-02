@@ -374,7 +374,7 @@ func TestReproModuleFloorStaysBelowKnownBadToolchains(t *testing.T) {
 // exactly one direct t.Fatalf expression statement, rather than merely a descendant call.
 func canaryAssertionShapeProblems(src string) []string {
 	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, "", src, 0)
+	f, err := parser.ParseFile(fset, "", src, parser.ParseComments)
 	if err != nil {
 		return []string{fmt.Sprintf("parse error: %v", err)}
 	}
@@ -418,7 +418,61 @@ func canaryAssertionShapeProblems(src string) []string {
 	if directFatalf != 1 {
 		return []string{fmt.Sprintf("direct t.Fatalf expression statement in assertion body count=%d, want exactly 1", directFatalf)}
 	}
-	return nil
+	// A5 — reachability: no t.Skip / t.Skipf / t.SkipNow call anywhere in the body, INCLUDING
+	// inside nested func literals. A t.Skip on the outer `t` inside a closure still Goexits
+	// TestToolchainCanary (V30: the assertion after it never runs), so descending is not merely
+	// conservative — it is correct. The selector set is CLOSED by construction against
+	// `go doc testing.T`'s three skip methods (Skip, Skipf, SkipNow) — see V27.
+	var problems []string
+	skipCalls := 0
+	ast.Inspect(funcs[0].Body, func(n ast.Node) bool {
+		if c, ok := n.(*ast.CallExpr); ok {
+			if sel, ok := c.Fun.(*ast.SelectorExpr); ok {
+				if id, ok := sel.X.(*ast.Ident); ok && id.Name == "t" &&
+					(sel.Sel.Name == "Skip" || sel.Sel.Name == "Skipf" || sel.Sel.Name == "SkipNow") {
+					skipCalls++
+				}
+			}
+		}
+		return true
+	})
+	if skipCalls != 0 {
+		problems = append(problems, fmt.Sprintf("t.Skip/t.Skipf/t.SkipNow call count=%d, want 0 (a skipped canary asserts nothing)", skipCalls))
+	}
+
+	// A6 — reachability: no early return in the body. The assertion is the last statement,
+	// so any return before it neuters it. Traversal STOPS at *ast.FuncLit: a return inside a
+	// nested func literal exits the literal, not TestToolchainCanary (V30), so counting it
+	// would false-red a canary whose assertion still runs (V31, the row-55 class).
+	returns := 0
+	ast.Inspect(funcs[0].Body, func(n ast.Node) bool {
+		if _, ok := n.(*ast.FuncLit); ok {
+			return false
+		}
+		if _, ok := n.(*ast.ReturnStmt); ok {
+			returns++
+		}
+		return true
+	})
+	if returns != 0 {
+		problems = append(problems, fmt.Sprintf("return statement count=%d, want 0 (an early return neuters the assertion)", returns))
+	}
+
+	// A7 — reachability: no build constraint on the file. A build tag can exclude the
+	// canary from the build entirely, so the assertion never runs.
+	buildTags := 0
+	for _, cg := range f.Comments {
+		for _, c := range cg.List {
+			if strings.HasPrefix(c.Text, "//go:build") || strings.HasPrefix(c.Text, "// +build") {
+				buildTags++
+			}
+		}
+	}
+	if buildTags != 0 {
+		problems = append(problems, fmt.Sprintf("build constraint count=%d, want 0 (a build tag can exclude the canary from the build)", buildTags))
+	}
+
+	return problems
 }
 
 // isRowsField reports whether expr is structurally rows[0].field.
