@@ -288,8 +288,8 @@ func TestEveryWorkflowDeclaresDispatchLever(t *testing.T) {
 
 This matches the sibling idiom: `repoRoot`/`findRepoRoot` (`ail_binary_gate_test.go:27,31`),
 known-positive control floors, line-based parsing over YAML, the anti-vacuity floor on a
-derived set, and EXACTLY ONE attributed message per defect (the `t.Errorf` names the file
-and the absent lever; it never cascades — P5's precedent). It reuses the sibling's import set
+derived set, and attributed failure messages that remain defense-in-depth: the scalar-valued
+lever arm deliberately emits TWO messages, while the absent-lever arm alone emits one. It reuses the sibling's import set
 (P15), so no imports change.
 
 ## Milestones
@@ -419,12 +419,13 @@ test's message text instead.
    that a dispatch RUN is created, never its result, and never a step-level `if:` that
    disables a job at runtime. A workflow_dispatch is valid syntax whether or not its jobs
    run; only a live dispatch rehearses the run.
-3. **The enumerator sees only `.github/workflows/*` at one level.** A workflow added as
-   `.github/workflow` (singular — a documented footgun), a root-level `.yaml`, a hidden
-   file (Glob `*` skips dotfiles), a case-mismatched filename, or a nested subdirectory is
-   invisible — though GitHub itself also does not scan nested subdirectories, so the
-   top-level Glob is aligned with the platform's actual behavior. The anti-vacuity floor
-   (AC5/M6) makes an EMPTY enumeration loud; it cannot make an UNSEEN enumeration loud.
+3. **The enumerator sees only `.github/workflows/*` at one level.** The bare `*` enumerates
+   dotfiles and case-mismatched names. A nested subdirectory is also enumerated and then
+   fails LOUD when `os.ReadFile` reports `is a directory`; it is not invisible. A workflow
+   outside `.github/workflows/` entirely — for example under singular `.github/workflow` or
+   as a root-level `.yaml` — remains genuinely invisible (inferred from the Glob path literal
+   at `dispatch_lever_gate_test.go:113`). The anti-vacuity floor (AC5/M6) makes an EMPTY
+   enumeration loud; it cannot make an UNSEEN enumeration loud.
 4. **The sibling's `[ci.yml]`-only list conflicts with ANY second workflow file (P5).**
    Adding a second workflow — even one WITH the lever (M5) — reds
    `TestGoToolchainPinsAgreeAndMatchJobList:206`. The two gates currently agree (one

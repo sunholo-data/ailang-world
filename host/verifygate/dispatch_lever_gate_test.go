@@ -383,8 +383,8 @@ func TestOnBlockFailureMessagesUnchanged(t *testing.T) {
 //
 // It
 // also cannot see a workflow added OUTSIDE .github/workflows/ (a singular `workflow` dir, a
-// root-level .yaml, a hidden file), a case-mismatched filename (the Glob is case-sensitive),
-// or a nested subdirectory (which GitHub itself does not scan either).
+// root-level .yaml). The bare `*` enumerates dotfiles and case-mismatched filenames. It also
+// enumerates a nested subdirectory, which fails LOUD when os.ReadFile reports `is a directory`.
 func TestEveryWorkflowDeclaresDispatchLever(t *testing.T) {
 	matches, err := filepath.Glob(filepath.Join(repoRoot, ".github", "workflows", "*"))
 	if err != nil {
