@@ -108,6 +108,128 @@ print("   ✓ all %d required top-level evidence tests passed exactly once" % EX
 PY
 }
 
+# FLEET-COMPARISON ARM — D-WORLD-DRIVER-1, iter-148 round 2. The working-tree-vs-HEAD
+# arm cannot see a stale-but-COMMITTED copy (it compares the copy to itself). This arm
+# compares the committed copy against the FLEET source, which is where the driver
+# actually lives. The driver is FLEET-owned; World detects and reports, the fleet
+# commits. This arm is World's own file and is in scope.
+AILANG_FLEET_REPO="${AILANG_FLEET_REPO:-$HOME/dev/sunholo-data/ailang}"
+
+# This array may become empty after the fleet lands pin-root. Keep the guarded array
+# expansion below: bash 3.2 + set -u rejects an unguarded empty "${array[@]}".
+REQUIRED_FLEET_PATHS=(
+  "tools/launchd/lib/pin-root.sh"
+)
+
+check_driver_fleet() {
+  # Returns 0 (green), 1 (FATAL/typed refusal), or 2 (loud skip in CI).
+  if [ -d "$AILANG_FLEET_REPO" ] && git -C "$AILANG_FLEET_REPO" rev-parse --git-dir >/dev/null 2>&1; then
+    fleet_head="$(git -C "$AILANG_FLEET_REPO" rev-parse HEAD)"
+    compared=0
+    differing=""
+    missing_in_fleet=""
+    missing_locally=""
+    unclassified=0
+
+    # Phase 1 — every path World tracks at HEAD under the driver prefix, except
+    # REQUIRED paths (those are owned by Phase 2).
+    while IFS= read -r path; do
+      [ -z "$path" ] && continue
+      required=0
+      for rp in ${REQUIRED_FLEET_PATHS[@]+"${REQUIRED_FLEET_PATHS[@]}"}; do
+        [ "$rp" = "$path" ] && required=1 && break
+      done
+      [ "$required" -eq 1 ] && continue
+      local_blob="$(git rev-parse --verify "HEAD:$path" 2>/dev/null || true)"
+      fleet_blob="$(git -C "$AILANG_FLEET_REPO" rev-parse --verify "HEAD:$path" 2>/dev/null || true)"
+      if [ -z "$fleet_blob" ]; then
+        missing_in_fleet="$missing_in_fleet
+  $path (tracked by World, absent in fleet)"
+        continue
+      fi
+      compared=$((compared + 1))
+      if [ "$local_blob" != "$fleet_blob" ]; then
+        differing="$differing
+  $path (local $local_blob != fleet $fleet_blob)"
+      fi
+    done < <(git ls-tree -r --name-only HEAD -- tools/launchd scripts/mission_decisions.sh)
+
+    # Phase 2 — REQUIRED_FLEET_PATHS.
+    for path in ${REQUIRED_FLEET_PATHS[@]+"${REQUIRED_FLEET_PATHS[@]}"}; do
+      if ! git cat-file -e "HEAD:$path" 2>/dev/null; then
+        missing_locally="$missing_locally
+  $path (REQUIRED by World, absent locally)"
+        continue
+      fi
+      local_blob="$(git rev-parse --verify "HEAD:$path" 2>/dev/null || true)"
+      fleet_blob="$(git -C "$AILANG_FLEET_REPO" rev-parse --verify "HEAD:$path" 2>/dev/null || true)"
+      if [ -z "$fleet_blob" ]; then
+        missing_in_fleet="$missing_in_fleet
+  $path (REQUIRED by World, absent in fleet)"
+        continue
+      fi
+      compared=$((compared + 1))
+      if [ "$local_blob" != "$fleet_blob" ]; then
+        differing="$differing
+  $path (local $local_blob != fleet $fleet_blob)"
+      fi
+    done
+
+    # Phase 3 — fleet paths World neither tracks nor requires are loud, counted,
+    # non-fatal residuals.
+    while IFS= read -r path; do
+      [ -z "$path" ] && continue
+      if git cat-file -e "HEAD:$path" 2>/dev/null; then
+        continue
+      fi
+      required=0
+      for rp in ${REQUIRED_FLEET_PATHS[@]+"${REQUIRED_FLEET_PATHS[@]}"}; do
+        [ "$rp" = "$path" ] && required=1 && break
+      done
+      [ "$required" -eq 1 ] && continue
+      unclassified=$((unclassified + 1))
+      echo "   ⚠ unclassified fleet-only path (not tracked, not required): $path" >&2
+    done < <(git -C "$AILANG_FLEET_REPO" ls-tree -r --name-only HEAD -- tools/launchd scripts/mission_decisions.sh)
+
+    if [ "$compared" -eq 0 ]; then
+      echo "verify_go.sh: FATAL: fleet-comparison arm enumerated 0 comparable driver files against $AILANG_FLEET_REPO; the instrument is broken, so every 'matches fleet' result is void" >&2
+      return 1
+    fi
+    if [ -n "$differing" ]; then
+      echo "verify_go.sh: FATAL: DRIVER DRIFT vs FLEET (D-WORLD-DRIVER-1) — the committed copy differs from fleet HEAD $fleet_head:" >&2
+      printf '%s\n' "$differing" >&2
+      echo "  The driver is fleet-owned; land the current driver as a fleet-authored commit. World's controller must not edit or absorb it." >&2
+      return 1
+    fi
+    if [ -n "$missing_in_fleet" ]; then
+      echo "verify_go.sh: FATAL: DRIVER DRIFT vs FLEET (D-WORLD-DRIVER-1) — World-tracked paths MISSING IN FLEET:" >&2
+      printf '%s\n' "$missing_in_fleet" >&2
+      echo "  A World-tracked driver path is absent from the fleet; reconcile which tree owns it." >&2
+      return 1
+    fi
+    if [ -n "$missing_locally" ]; then
+      echo "verify_go.sh: FATAL: DRIVER DRIFT vs FLEET (D-WORLD-DRIVER-1) — REQUIRED fleet paths MISSING LOCALLY:" >&2
+      printf '%s\n' "$missing_locally" >&2
+      echo "  The driver is fleet-owned; land the required file as a fleet-authored commit. World's controller must not edit or absorb it." >&2
+      return 1
+    fi
+    echo "   ✓ fleet-comparison arm: $compared tracked frozen-core files match fleet HEAD $fleet_head — tracked copy is current (untracked fleet additions not certified)"
+    if [ "$unclassified" -gt 0 ]; then
+      echo "   ⚠ $unclassified unclassified fleet-only paths not certified (see above)" >&2
+    fi
+    return 0
+  fi
+  if [ -n "${CI:-}" ]; then
+    echo "   ⚠ fleet-comparison arm SKIPPED (fleet checkout absent at $AILANG_FLEET_REPO) — driver currency NOT certified here"
+    return 2
+  fi
+  if [ -z "${CI:-}" ]; then
+    echo "verify_go.sh: FATAL: DRIVER DRIFT (D-WORLD-DRIVER-1) — fleet source $AILANG_FLEET_REPO is absent; the fleet-comparison arm cannot run, so driver currency is NOT certified" >&2
+    return 1
+  fi
+  return 0
+}
+
 if [ "${1:-}" = "--evidence-manifest-check" ]; then
   if [ "$#" -ne 3 ]; then
     echo "usage: $0 --evidence-manifest-check JSON EXACT" >&2
@@ -115,6 +237,17 @@ if [ "${1:-}" = "--evidence-manifest-check" ]; then
   fi
   check_evidence_manifest "$2" "$3"
   exit $?
+fi
+
+if [ "${1:-}" = "--driver-fleet-check" ]; then
+  rc=0
+  if check_driver_fleet; then
+    :
+  else
+    rc=$?
+  fi
+  [ "$rc" -eq 2 ] && rc=0
+  exit "$rc"
 fi
 
 if [ -z "${AILANG_BIN:-}" ]; then
@@ -209,7 +342,18 @@ if [ -n "$driver_drift" ]; then
   echo "  The driver is fleet-owned; land this as a fleet-authored commit. World's controller must not edit or absorb it." >&2
   exit 1
 fi
-echo "   ✓ driver drift gate: $driver_tracked tracked driver files, working tree matches HEAD"
+echo "   ✓ driver drift gate: $driver_tracked tracked driver files, working tree matches HEAD (working-tree arm)"
+
+fleet_rc=0
+if check_driver_fleet; then
+  :
+else
+  fleet_rc=$?
+fi
+if [ "$fleet_rc" -eq 1 ]; then
+  exit 1
+fi
+# rc=2 is the CI loud skip: non-fatal by design, and already printed above.
 
 # This deny-list is the measured set: go1.26.0-go1.26.5 on darwin/arm64.
 # Future go1.26.6 or go1.27.x versions are not covered here; the canary in this
