@@ -1,0 +1,339 @@
+{
+  "sprint_id": "W-ROW55-LEVER-PARSER",
+  "title": "Harden the row-47 dispatch-lever gate line scan against three shapes of valid YAML",
+  "queue_row": 55,
+  "clause": "clause-2",
+  "scope_class": "BRITTLENESS, not soundness",
+  "design_doc": "design_docs/planned/w-dispatch-lever-parser-false-reds-on-valid-yaml.md",
+  "sprint_plan": "design_docs/planned/w-dispatch-lever-parser-false-reds-on-valid-yaml-sprint-plan.md",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-iter149-row55",
+  "branch": "sprint/w-dispatch-lever-parser",
+  "base_commit": "95c17be",
+  "code_base_commit": "234d9da3ff6c76a0ab8b32b36f1fdfb4ab383c23",
+  "github_issues": [],
+  "risk_level": "low",
+  "constraints": [
+    "No go.mod or go.sum change; no new dependency. Stdlib-only imports may be added.",
+    "Never modify tools/launchd/* (frozen core).",
+    "No .ail change, so scripts/verify_ail.sh and the pinned-binary surface are untouched.",
+    "Only host/verifygate/dispatch_lever_gate_test.go and design_docs/planned/w-ci-recovery-lever-absent.md are edited.",
+    "Every test acceptance criterion sets AILANG_BIN=/tmp/ailang-v0300/ailang: the bare command is rc=1 at base (17 tests fail 'AILANG_BIN is unset'), so a bare-form AC is vacuously red.",
+    "No acceptance criterion has the form 'verify_go.sh rc=0': that script is rc=1 at base on this rig for two reasons owned elsewhere (host/broker flake TestHandlerTimeoutKillsTheWholeProcessGroup, queue row 58; and the row-54 fleet-drift arm).",
+    "Mutants are neutered by inserting a guard (if false && ... or an early continue), never by deleting code, and never by editing the acceptedOnForms slice literal.",
+    "Every go test invocation uses -count=1 so no cached verdict is read."
+  ],
+  "measured_baselines": [
+    {
+      "command": "go build ./...",
+      "result": "rc=0",
+      "provenance": "planner, first-party, this worktree"
+    },
+    {
+      "command": "go vet ./...",
+      "result": "rc=0 (8.7s)",
+      "provenance": "planner, first-party, this worktree"
+    },
+    {
+      "command": "go test -count=1 -run '^$' ./host/verifygate/",
+      "result": "rc=0, 'ok ... [no tests to run]' (4.0s)",
+      "provenance": "planner, first-party, this worktree"
+    },
+    {
+      "command": "AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/",
+      "result": "rc=0 in 114.9s",
+      "provenance": "planner, first-party, this worktree (the design doc deferred this re-run to M2; it is now measured)"
+    },
+    {
+      "command": "go test ./host/verifygate/ -count=1 (no AILANG_BIN)",
+      "result": "rc=1, exactly 17 '--- FAIL', all 'AILANG_BIN is unset'",
+      "provenance": "planner, first-party, this worktree"
+    },
+    {
+      "command": "git diff --stat -- go.mod go.sum",
+      "result": "empty",
+      "provenance": "planner, first-party, this worktree"
+    },
+    {
+      "command": "grep -c 'skips dotfiles' design_docs/planned/w-ci-recovery-lever-absent.md",
+      "result": "1 (L424)",
+      "provenance": "planner, first-party"
+    },
+    {
+      "command": "grep -c 'a hidden file' host/verifygate/dispatch_lever_gate_test.go",
+      "result": "1 (L110)",
+      "provenance": "planner, first-party"
+    },
+    {
+      "command": "grep -c 'the Glob is case-sensitive' host/verifygate/dispatch_lever_gate_test.go",
+      "result": "1 (L110)",
+      "provenance": "planner, first-party"
+    },
+    {
+      "command": "grep -c 'EXACTLY ONE attributed message' design_docs/planned/w-ci-recovery-lever-absent.md",
+      "result": "1 (L291)",
+      "provenance": "planner, first-party"
+    },
+    {
+      "command": "grep -c 'never cascades' design_docs/planned/w-ci-recovery-lever-absent.md",
+      "result": "2 (L292, L503)",
+      "provenance": "planner, first-party"
+    },
+    {
+      "command": "grep -ci 'is a directory' on both M3 target files",
+      "result": "0 and 0 (so AC7's presence needle can fail)",
+      "provenance": "planner, first-party"
+    },
+    {
+      "command": "grep -ci 'anti-vacuity' on both M3 target files",
+      "result": "doc 9, Go file 1 (AC6 control, PRESENCE >=1, case-insensitive)",
+      "provenance": "planner, first-party"
+    }
+  ],
+  "premises_refuted": [
+    {
+      "id": "R-1",
+      "severity": "severe",
+      "doc_claim": "AC4: every mutant builds ('go build ./...' rc=0 on the mutated tree - a non-building mutant proves nothing)",
+      "refutation": "go build ./... does not compile _test.go files, and the entire mutation table lives in a _test.go file. Appending 'func zzBroken() { var x int = \"not an int\"; _ = x }' to dispatch_lever_gate_test.go left go build ./... at rc=0, while go vet ./host/verifygate/ and go test -count=1 -run '^$' ./host/verifygate/ both reported the type error. The AC cannot do the one thing it claims to do.",
+      "command": "printf '\\nfunc zzBroken() { var x int = \"not an int\"; _ = x }\\n' >> host/verifygate/dispatch_lever_gate_test.go; go build ./...; echo rc=$?",
+      "fix": "The mutant build fence is 'go test -count=1 -run \"^$\" ./host/verifygate/' rc=0 (AC3b, AC4 clause i). go build ./... is retained only as a non-test-code fence."
+    },
+    {
+      "id": "R-2",
+      "severity": "severe",
+      "doc_claim": "MUT-E reds 'table case: quoted key via the GATE-path wrapper arm, using the runs-on:-FREE fixture'",
+      "refutation": "The L128 control lives inside TestEveryWorkflowDeclaresDispatchLever, whose input is filepath.Glob(repoRoot/.github/workflows/*). repoRoot is a package-level var computed from runtime.Caller (ail_binary_gate_test.go:27) and is not injectable, and toolchain_pin_gate_test.go:209-211 asserts the workflow set is EXACTLY [ci.yml], which the design doc's own section 5 relies on. No fixture can reach L128. MUT-E as specified reds NOTHING - an undetectable mutant presented as evidence for the shared needle set.",
+      "command": "sed -n '26,29p' host/verifygate/ail_binary_gate_test.go; sed -n '201,212p' host/verifygate/toolchain_pin_gate_test.go",
+      "fix": "M1 extracts the L128 control into a pure predicate srcDeclaresOnKey(src string) bool, called from L128, with its own table test TestOnBlockControlNeedle. MUT-E then has a real single-subtest red set (control_quoted_no_runs_on)."
+    },
+    {
+      "id": "R-3a",
+      "severity": "medium",
+      "doc_claim": "MUT-E is a 'shared-slice mutant' narrowing the L128 needle set, distinct from MUT-A",
+      "refutation": "Section 3.2 makes acceptedOnForms a slice shared by matchTopLevelOn and the L128 control. Narrowing a SHARED slice narrows both sites, so MUT-E's red set would strictly contain MUT-A's and the two mutants would not be separable - the table would measure one edit twice.",
+      "command": "derived from the doc's own section 3.2 design plus V16 (one call site); no separate command",
+      "fix": "The mutation protocol forbids editing acceptedOnForms. MUT-A inserts a guard inside matchTopLevelOn's loop; MUT-E inserts a guard inside srcDeclaresOnKey. srcDeclaresOnKey must consume acceptedOnForms DIRECTLY, not via matchTopLevelOn. The two red sets are then disjoint and enumerated."
+    },
+    {
+      "id": "R-3b",
+      "severity": "medium",
+      "doc_claim": "AC2: grep -c 'errTabIndent\\|errUnhandledOnForm\\|\"on\":' host/verifygate/dispatch_lever_gate_test.go >= 3 hits",
+      "refutation": "The third alternative matches the five bytes quote-o-n-quote-colon. A conventional Go interpreted string literal for that form is written with escapes, whose bytes do not contain the needle; only a BACKTICK raw-string literal matches. Measured: a file containing both forms greps 1 hit, on the backtick line only. AC2 therefore reds a correct implementation. Also, grep -c counts matching LINES, not hits, so '>= 3 hits' is not what the command measures.",
+      "command": "printf 'x := \"\\\\\"on\\\\\":\"\\ny := `\"on\":`\\n' > /tmp/gostr.txt; grep -n '\"on\":' /tmp/gostr.txt   # -> only line 2, the backtick form",
+      "fix": "AC2 drops the literal needle and uses only compiler-enforced identifiers plus the 19 pinned subtest names, each checked for presence >= 1. Quoted-form coverage is proven by the named table subtests and MUT-A."
+    },
+    {
+      "id": "R-4",
+      "severity": "medium",
+      "doc_claim": "Section 3.4 item 1 / V11: the wrong sentence at w-ci-recovery-lever-absent.md spans lines 291-293; replace it",
+      "refutation": "The wrong claim ends mid-line-292 at \"P5's precedent).\". Lines 292-293 then carry a SEPARATE and TRUE sentence: 'It reuses the sibling's import set (P15), so no imports change.' A wholesale replacement of 291-293 deletes a correct statement.",
+      "command": "sed -n '288,295p' design_docs/planned/w-ci-recovery-lever-absent.md",
+      "fix": "M3's edit is pinned to the clause only, and AC8 gains Control B: grep -c 'It reuses the sibling.s import set' -> exactly 1 after M3."
+    },
+    {
+      "id": "R-5",
+      "severity": "low",
+      "doc_claim": "Section 3.2: the wrapper 'preserves TODAY'S messages byte-for-byte for the existing arms (so row-47's mutation evidence for those arms stays valid)'",
+      "refutation": "No acceptance criterion in the design doc checks this, and no test in the repo asserts those strings today. The promise cannot fail: a refactor that silently reworded the Fatalf strings would pass every AC in the doc.",
+      "command": "grep -rn 'instrument failure: %s has no top-level' --include='*.go' .   # -> 1 hit, the producer at dispatch_lever_gate_test.go:31; no assertion anywhere",
+      "fix": "M1 adds a pure formatter onBlockFailureMessage plus TestOnBlockFailureMessagesUnchanged (2 subtests), and AC1's --- PASS name list includes it."
+    }
+  ],
+  "premises_confirmed": [
+    "Helper onBlockTriggerKeys spans L14-84 and its sole caller TestEveryWorkflowDeclaresDispatchLever spans L112-136 (the design doc is right; the controller's task brief said L14-83).",
+    "L25 l == \"on:\"; L43 and L50 strings.TrimLeft(l, \" \"); L113 Glob; L117 ANTI-VACUITY FLOOR; L128 strings.Contains(src, \"on:\"); L131 the one call site - all exact.",
+    "L110-111 comment quoted byte-for-byte in section 1(e).",
+    "V1 quoted, V2 flow, V3 tab (keys=[] with NO Fatal), V4 canonical control, V5 real ci.yml [push pull_request workflow_dispatch], V6 cascade (two messages), V21 scalar/sequence, V22 inline and own-line comment - all re-run first-party via a throwaway probe test; probe deleted, porcelain 0.",
+    "V9 exactly: quoted+runs-on=true, quoted+NO-runs-on=false, real ci.yml=true.",
+    "V13's 7 read sites across 3 files at exactly the named lines, including host/runbook/runbook_stageb_test.go:339,361.",
+    "V16 3 hits; V17 yaml=0 in go.mod, 1 yaml-mentioning Go file (the gate); V8 one direct require + 9 indirect; V23(a) 257 packages, 0 yaml, 30 modernc, 1 encoding/json.",
+    "V18 and V19 grep counts exact, including the case-sensitive 0 vs case-insensitive 1 for anti-vacuity in the Go file.",
+    "V10, V11 doc line numbers exact; Residual 3 block is lines 422-427.",
+    "D-WORLD-30 at design_docs/world-mission.md:740 quoted verbatim; charter row 55 at :4829.",
+    "ci.yml: one file in .github/workflows/, bare on: at column 0, two runs-on: lines, workflow_dispatch: carries no value (so MUT-D leaves the gate green)."
+  ],
+  "velocity": {
+    "target_loc_per_day": 900,
+    "estimated_total_loc": 195,
+    "estimated_days": 0.2
+  },
+  "features": [
+    {
+      "id": "M1_PURE_CORE_AND_HARDENINGS",
+      "description": "Split onBlockTriggerKeys into a pure parse core plus a test-verdict wrapper in host/verifygate/dispatch_lever_gate_test.go, and close the three measured false-red shapes. Deliverables: (1) var acceptedOnForms holding the three accepted column-0 forms - bare, double-quoted, single-quoted - never edited by any mutant; (2) matchTopLevelOn(line) (rest string, ok bool), column-0 anchored, consuming acceptedOnForms, feeding BOTH the block finder and the duplicate counter, preserving P14's rationale that a trimmed comparison would anchor on any nested on:; (3) srcDeclaresOnKey(src string) bool, the L128 known-positive control extracted into a pure predicate, consuming acceptedOnForms DIRECTLY and NOT via matchTopLevelOn (this is what keeps MUT-A and MUT-E disjoint), with L128 rewritten to call it and its Fatalf message unchanged; (4) sentinels errNoOnBlock, errDuplicateOnBlock, errTabIndent, errUnhandledOnForm carried by a typed error that Unwraps to the sentinel so errors.Is works and whose Error() renders the user-facing text; (5) parseOnBlockTriggers(src) (keys, scalarValued, err) with no *testing.T and no I/O, implementing section 3.3 - quoted forms accepted; flow mapping accepted ONLY when the comment-stripped trimmed rest both starts with { and ends with } (oc-glm-5-2's verbatim guard), else errUnhandledOnForm; any tab in a scanned line's indentation prefix returns errTabIndent; any other non-empty rest returns errUnhandledOnForm; the scalar-value rule applies in block and flow with inline # stripped before judging (the eb215c3 fix, V22); (6) onBlockFailureMessage(path, err) string, a pure formatter the wrapper Fatalfs with; (7) the wrapper onBlockTriggerKeys with unchanged signature and unchanged behaviour on every arm that exists today, emitting one Errorf per scalarValued entry - the cascade is KEPT deliberately per section 3.3 row d; (8) three table tests with pinned subtest names. M1 must NOT touch L108-111 of the base file - M3 owns that comment and AC6's Go-site base counts are measured against HEAD.",
+      "estimated_loc": 180,
+      "dependencies": [],
+      "pinned_subtest_names": {
+        "TestOnBlockTriggerParserShapes": [
+          "canonical_block",
+          "real_ci_yml",
+          "quoted_double",
+          "quoted_single",
+          "flow_mapping",
+          "flow_scalar_violation",
+          "flow_unclosed",
+          "tab_indent",
+          "scalar_on",
+          "sequence_on",
+          "duplicate_mixed",
+          "no_on_block",
+          "block_scalar_violation",
+          "inline_comment_value"
+        ],
+        "TestOnBlockControlNeedle": [
+          "control_quoted_no_runs_on",
+          "control_real_ci_yml",
+          "control_absent"
+        ],
+        "TestOnBlockFailureMessagesUnchanged": [
+          "msg_no_on_block",
+          "msg_duplicate_on_block"
+        ]
+      },
+      "acceptance_criteria": [
+        "AC1: AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1 -v -run 'TestOnBlockTriggerParserShapes|TestOnBlockControlNeedle|TestOnBlockFailureMessagesUnchanged|TestEveryWorkflowDeclaresDispatchLever' returns rc=0 AND the -v output contains a '--- PASS:' line for ALL FOUR test names. WHAT WOULD STILL PASS IF THE CLAIM WERE FALSE: rc=0 on zero matched tests, which is why the four-name --- PASS check is the load-bearing half; and a refactor handling none of the three shapes still passes TestEveryWorkflowDeclaresDispatchLever because ci.yml is canonical block form (V5), so the table subtests are what red; a MISSING subtest passes everything, which is why AC2 pins names and M2 pins mutants.",
+        "AC2: each of the identifiers errTabIndent, errUnhandledOnForm, matchTopLevelOn, srcDeclaresOnKey, parseOnBlockTriggers returns grep -c <ident> host/verifygate/dispatch_lever_gate_test.go >= 1, AND each of the 19 pinned subtest names returns >= 1. All needles are Go identifiers or string literals this sprint itself writes, so case-sensitive matching is correct. WHAT WOULD STILL PASS IF FALSE: grep proves text, not behaviour - AC2 exists only to make M2's red sets addressable by name; behaviour is AC4's job.",
+        "AC3: git diff --stat -- go.mod go.sum is empty (base: empty, measured). WHAT WOULD STILL PASS IF FALSE: nothing - any dependency addition touches go.mod.",
+        "AC3b: go test -count=1 -run '^$' ./host/verifygate/ returns rc=0 (base: 'ok ... [no tests to run]', 4.0s) AND go build ./... returns rc=0. WHAT WOULD STILL PASS IF FALSE: go build ./... alone passes a test file that does not compile (R-1, measured first-party) - the go test -run '^$' half is what fails.",
+        "AC3c: git diff -U0 -- host/verifygate/dispatch_lever_gate_test.go for M1's commit contains no hunk overlapping lines 108-111 of the base file. WHAT WOULD STILL PASS IF FALSE: nothing mechanical if hunk headers drift - the evaluator reads the diff. This is a cheap fence so AC6's measured base counts survive M1."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M2_MUTATION_RUN_AND_REGRESSION",
+      "description": "Run the five-mutant table against M1's pinned subtest names, then re-run the full-package baseline. Mutation protocol is binding: neuter by INSERTING a guard (if false && ... or an early continue) so every identifier and import stays in use; never delete code; never edit the acceptedOnForms slice literal (R-3a). After each mutant run the compile fence go test -count=1 -run '^$' ./host/verifygate/ (NOT go build ./..., see R-1), then the four-test -v run, recording the exact set of '--- FAIL:' subtest names. Restore from a copy taken before mutating (git checkout is forbidden in this worktree) and confirm porcelain returns to M1's state. Every run uses -count=1. No '-skip <arm> && rc=0' criterion is used anywhere: every mutant is judged on an ENUMERATED failing set, because several mutants reach more than one named subtest. Blast radius is bounded by V16 (onBlockTriggerKeys has exactly one production call site) and by the fact that Go test helpers are not importable across packages: the four tests are the complete consumer set.",
+      "estimated_loc": 0,
+      "dependencies": [
+        "M1_PURE_CORE_AND_HARDENINGS"
+      ],
+      "mutation_table": [
+        {
+          "mutant": "MUT-A",
+          "target": "quoted-form acceptance in matchTopLevelOn",
+          "edit": "inside matchTopLevelOn's loop over acceptedOnForms, insert: if form != acceptedOnForms[0] { continue }",
+          "expected_fail_set": [
+            "TestOnBlockTriggerParserShapes/quoted_double",
+            "TestOnBlockTriggerParserShapes/quoted_single",
+            "TestOnBlockTriggerParserShapes/duplicate_mixed"
+          ],
+          "must_stay_green": [
+            "all other TestOnBlockTriggerParserShapes subtests",
+            "ALL of TestOnBlockControlNeedle (this is what proves the control is fed by the slice directly, not via matchTopLevelOn, and is what keeps MUT-A disjoint from MUT-E)",
+            "TestEveryWorkflowDeclaresDispatchLever (ci.yml is bare on:, measured)"
+          ],
+          "blast_radius": "one test, three subtests"
+        },
+        {
+          "mutant": "MUT-B",
+          "target": "the flow-mapping parse branch",
+          "edit": "flow-mapping branch behind if false && ..., so it falls through to errUnhandledOnForm",
+          "expected_fail_set": [
+            "TestOnBlockTriggerParserShapes/flow_mapping",
+            "TestOnBlockTriggerParserShapes/flow_scalar_violation"
+          ],
+          "must_stay_green": [
+            "TestOnBlockTriggerParserShapes/flow_unclosed (already errUnhandledOnForm - proves MUT-B is specific, not blanket)",
+            "all other tests"
+          ],
+          "blast_radius": "one test, two subtests"
+        },
+        {
+          "mutant": "MUT-C",
+          "target": "tab-in-indentation detection",
+          "edit": "the tab-in-indent check behind if false && ...",
+          "expected_fail_set": [
+            "TestOnBlockTriggerParserShapes/tab_indent"
+          ],
+          "must_stay_green": [
+            "all other subtests",
+            "all other tests"
+          ],
+          "blast_radius": "one test, one subtest"
+        },
+        {
+          "mutant": "MUT-D",
+          "target": "the scalar-value judging branch",
+          "edit": "the value-judging branch behind if false && ... (key appended, no violation recorded)",
+          "expected_fail_set": [
+            "TestOnBlockTriggerParserShapes/block_scalar_violation",
+            "TestOnBlockTriggerParserShapes/flow_scalar_violation"
+          ],
+          "must_stay_green": [
+            "TestOnBlockTriggerParserShapes/inline_comment_value (must stay NON-violating - this is what proves MUT-D's red is the check vanishing, not the comment-strip)",
+            "TestEveryWorkflowDeclaresDispatchLever (measured: ci.yml's workflow_dispatch: carries no value, so the gate is green either way)"
+          ],
+          "blast_radius": "one test, two subtests"
+        },
+        {
+          "mutant": "MUT-E",
+          "target": "the L128 known-positive control needle set",
+          "edit": "inside srcDeclaresOnKey, insert: if form != acceptedOnForms[0] { continue } - narrowing the control back to the bare form only. acceptedOnForms itself is UNTOUCHED, so matchTopLevelOn is unaffected and MUT-E's red set stays disjoint from MUT-A's.",
+          "expected_fail_set": [
+            "TestOnBlockControlNeedle/control_quoted_no_runs_on"
+          ],
+          "must_stay_green": [
+            "TestOnBlockControlNeedle/control_real_ci_yml",
+            "TestOnBlockControlNeedle/control_absent",
+            "ALL TestOnBlockTriggerParserShapes subtests",
+            "TestEveryWorkflowDeclaresDispatchLever (ci.yml carries both a bare on: and runs-on:)"
+          ],
+          "blast_radius": "one test, one subtest",
+          "fixture_note": "LOAD-BEARING: control_quoted_no_runs_on's fixture must be the runs-on:-FREE quoted form. A fixture carrying runs-on: satisfies the narrowed needle incidentally (V9, re-measured first-party: quoted+runs-on=true, quoted+NO-runs-on=false) and the mutant would walk straight through, giving MUT-E an empty red set again."
+        }
+      ],
+      "acceptance_criteria": [
+        "AC4: for each of MUT-A through MUT-E: (i) go test -count=1 -run '^$' ./host/verifygate/ returns rc=0 on the mutated tree; (ii) the observed set of '--- FAIL:' subtest names equals the mutant's expected_fail_set EXACTLY - no more and no fewer; (iii) every name in must_stay_green appears as '--- PASS:'. WHAT WOULD STILL PASS IF FALSE: a mutant that reds EVERYTHING passes a naive 'the mutant reds' check - clause (ii)'s exactly and clause (iii) are what fail it; a mutant that does not compile passes the design doc's go build ./... fence - clause (i) is what fails it (R-1, measured); a mutant whose target case does not exist (MUT-E before srcDeclaresOnKey is extracted) reds nothing and would pass a 'no unexpected failures' reading - clause (ii)'s equality in BOTH directions is what fails it.",
+        "AC5: on the final, fully reverted tree, AILANG_BIN=/tmp/ailang-v0300/ailang go test ./host/verifygate/ -count=1 returns rc=0. Base measured first-party by the planner: rc=0 in 114.9s, so this AC is red-able and not vacuous. WHAT WOULD STILL PASS IF FALSE: a test DELETED by the diff passes AC5 - AC1's four-name --- PASS list and AC2's subtest-name presence floor cover that; a hang does not pass (go test's 10m default timeout reds).",
+        "AC5b: go build ./... rc=0 AND go vet ./... rc=0 (base: both rc=0, vet 8.7s). This is the blast-radius fence in lieu of a verify_go.sh AC: verify_go.sh is rc=1 at base on this rig for two reasons owned elsewhere (row 58's host/broker flake and row 54's fleet-drift arm), and the change is confined to one _test.go file in package verifygate whose helpers are not importable across packages (V16), so go test ./host/verifygate/ IS the complete blast radius. WHAT WOULD STILL PASS IF FALSE: go vet ./... would not catch a behavioural regression in another package - but no other package can reach this code, which is the measured claim it fences."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M3_PROSE_CORRECTIONS",
+      "description": "Correct the three measured-wrong prose sites in ONE commit. Site 1: design_docs/planned/w-ci-recovery-lever-absent.md - replace ONLY the clause 'and EXACTLY ONE attributed message per defect (... it never cascades - P5's precedent).' (starts L291, ends mid-L292) with the measured truth that the scalar arm emits TWO messages (V6) deliberately, as defense-in-depth, while the absent-lever arm alone is one message. LEAVE the adjacent true sentence 'It reuses the sibling's import set (P15), so no imports change.' intact - R-4 refuted the doc's 291-293 edit range, which would have deleted it. L503's historical record of the over-claim stays. Site 2: same file, Residual 3, lines 422-427 - rewrite per V7: Glob * DOES enumerate dotfiles and case-mismatched names, and a nested subdirectory is a LOUD t.Fatal ('is a directory'), not invisible; what remains genuinely invisible is a workflow outside .github/workflows/ entirely, labelled as inference from the Glob path literal at dispatch_lever_gate_test.go:113. Site 3: host/verifygate/dispatch_lever_gate_test.go lines 110-111 - rewrite the wrong clauses in the COMMENT'S OWN WORDS (V18: the doc's phrasings grep 0 in the Go file): 'a hidden file' is seen, 'the Glob is case-sensitive' is irrelevant to a bare * pattern, and the nested-subdirectory case is a loud 'is a directory' Fatal rather than unseen.",
+      "estimated_loc": 15,
+      "dependencies": [
+        "M1_PURE_CORE_AND_HARDENINGS"
+      ],
+      "acceptance_criteria": [
+        "AC6: removal needles, each with a measured base count >= 1 in ITS OWN file so each zero can fail. Doc site: grep -c 'skips dotfiles' design_docs/planned/w-ci-recovery-lever-absent.md -> 0 (base 1, L424, measured). Go site: grep -c 'a hidden file' host/verifygate/dispatch_lever_gate_test.go -> 0 AND grep -c 'the Glob is case-sensitive' (same file) -> 0 (base 1 each, measured). Known-positive control in the same call, per file: grep -ci 'anti-vacuity' <file> >= 1 in EACH file (measured: doc 9, Go file 1 at L117 written '// ANTI-VACUITY FLOOR:'), read as PRESENCE and never as an exact count - the case-sensitive lowercase form greps 0 in the Go file (measured), which is the defect this control was repaired for. WHAT WOULD STILL PASS IF FALSE: a rewording that keeps the wrong claim without those literal phrases, e.g. 'Glob omits hidden files' - hence AC7.",
+        "AC7: the rewritten Residual-3 block and the rewritten code comment each contain BOTH corrected facts - dotfiles and case-mismatches ARE enumerated, and a nested subdirectory is a LOUD 'is a directory' Fatal. Mechanical floor: grep -ci 'is a directory' >= 1 in EACH of the two files. Base measured 0 in BOTH files, so this presence needle can fail. -ci so a future re-caser cannot make it read zero on a healthy file. WHAT WOULD STILL PASS IF FALSE: the phrase present but negated - accepted residual; the evaluator reads the sentence, the grep is the floor and not the assertion.",
+        "AC8: grep -c 'EXACTLY ONE attributed message' design_docs/planned/w-ci-recovery-lever-absent.md -> 0 (base 1). Control A: grep -c 'never cascades' (same file) -> exactly 1 (base 2: L292 removed, L503's historical record survives). Control B (added per R-4): grep -c 'It reuses the sibling.s import set' (same file) -> exactly 1 - the true sentence adjacent to the removed clause must survive. WHAT WOULD STILL PASS IF FALSE: deleting L503 too gives 0/0, and Control A's 'exactly 1' is what fails that; replacing the whole 291-293 block deletes the import sentence, and Control B is what fails that - which is exactly the outcome the design doc's own edit range would have produced."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "refer_to_the_queue": [
+    {
+      "title": "go build ./... is used repo-wide as a 'the tests still compile' fence, and it cannot be one",
+      "why_not_a_milestone": "Pre-existing property of HEAD and of many already-implemented sprint plans; outside row 55's scope. This sprint fixes only its own instance (AC3b/AC4 clause i).",
+      "evidence": "Measured first-party: a type error inside a _test.go file leaves go build ./... at rc=0 while go vet and go test -run '^$' both fail. git grep -l 'go build \\./\\.\\.\\.' returns 20+ tracked files, including CLAUDE.md's hard-rule verify gate and many design_docs/implemented/*sprint-plan.md mutant fences.",
+      "not_a_ci_hole": "scripts/verify_go.sh runs go build ./... AND go test ./... -count=1, and the latter compiles test files - so this is an acceptance-criteria instrument-class defect, not a CI hole.",
+      "suggested_size": "~0.1d, clause-2"
+    },
+    {
+      "title": "The L128 known-positive control is not column-0 anchored, so runs-on: satisfies it",
+      "why_not_a_milestone": "Pre-existing property of HEAD. This sprint broadens the needle set but does not anchor the control at column 0, and after M1 the helper accepts quoted forms, which removes the only measured consequence.",
+      "evidence": "V9, re-measured first-party: a workflow with a quoted \"on\": trigger block and any runs-on: line passes the control on a file whose trigger block the control cannot see.",
+      "recommendation": "Flagged for completeness, NOT recommended for filing - low value after this sprint."
+    }
+  ],
+  "handoff": {
+    "next_agent": "sprint-executor",
+    "commit_boundaries": [
+      "M1 implementation and tests",
+      "M2 mutation evidence (the tree returns to M1's state; if M2 produces no file change it folds into the record commit)",
+      "M3 prose corrections"
+    ],
+    "note": "The planner does NOT commit; the controller commits."
+  }
+}
