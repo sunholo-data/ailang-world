@@ -33,3 +33,16 @@ AILANG. It is built by an autonomous mission loop with human ratification gates.
 ## Operating the daemon
 
 Build/run/commit/read walkthrough (executed-verbatim, S7-maintained): [docs/QUICKSTART.md](docs/QUICKSTART.md).
+
+## Pushing dev — automatic, fast-forward only
+
+`scripts/hooks/push_dev_on_stop.sh` runs as a `Stop` hook and pushes when local `dev` is
+ahead of origin **and not behind**. You do not need to remember to push.
+
+It refuses when the branch is ahead *and* behind — that needs a real merge, done by hand.
+Opt out for a session with `AILANG_AUTOPUSH=0`; arms in
+`scripts/hooks/test_push_dev_on_stop.sh`.
+
+Ported from the ailang repo 2026-09-02, where commits had stranded on local `dev` for days
+(25 of them) because nothing in the attended workflow pushed. This repo is a SEPARATE
+GitHub repo, so it does not inherit that fix through `dev` — the copy here is its own.
