@@ -3,6 +3,7 @@ package verifygate
 import (
 	"fmt"
 	"go/ast"
+	"go/build/constraint"
 	"go/parser"
 	"go/token"
 	"go/version"
@@ -374,7 +375,7 @@ func TestReproModuleFloorStaysBelowKnownBadToolchains(t *testing.T) {
 // exactly one direct t.Fatalf expression statement, rather than merely a descendant call.
 func canaryAssertionShapeProblems(src string) []string {
 	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, "", src, 0)
+	f, err := parser.ParseFile(fset, "", src, parser.ParseComments)
 	if err != nil {
 		return []string{fmt.Sprintf("parse error: %v", err)}
 	}
@@ -418,7 +419,106 @@ func canaryAssertionShapeProblems(src string) []string {
 	if directFatalf != 1 {
 		return []string{fmt.Sprintf("direct t.Fatalf expression statement in assertion body count=%d, want exactly 1", directFatalf)}
 	}
-	return nil
+	// A5 — reachability: no t.Skip / t.Skipf / t.SkipNow call anywhere in the body, INCLUDING
+	// inside nested func literals. A t.Skip on the outer `t` inside a closure still Goexits
+	// TestToolchainCanary (V30: the assertion after it never runs), so descending is not merely
+	// conservative — it is correct. The selector set is CLOSED by construction against
+	// `go doc testing.T`'s three skip methods (Skip, Skipf, SkipNow) — see V27.
+	var problems []string
+	skipCalls := 0
+	ast.Inspect(funcs[0].Body, func(n ast.Node) bool {
+		if c, ok := n.(*ast.CallExpr); ok {
+			if sel, ok := c.Fun.(*ast.SelectorExpr); ok {
+				if id, ok := sel.X.(*ast.Ident); ok && id.Name == "t" &&
+					(sel.Sel.Name == "Skip" || sel.Sel.Name == "Skipf" || sel.Sel.Name == "SkipNow") {
+					skipCalls++
+				}
+			}
+		}
+		return true
+	})
+	if skipCalls != 0 {
+		problems = append(problems, fmt.Sprintf("t.Skip/t.Skipf/t.SkipNow call count=%d, want 0 (a skipped canary asserts nothing)", skipCalls))
+	}
+
+	// A6 — reachability: no early return in the body. The assertion is the last statement,
+	// so any return before it neuters it. Traversal STOPS at *ast.FuncLit: a return inside a
+	// nested func literal exits the literal, not TestToolchainCanary (V30), so counting it
+	// would false-red a canary whose assertion still runs (V31, the row-55 class).
+	returns := 0
+	ast.Inspect(funcs[0].Body, func(n ast.Node) bool {
+		if _, ok := n.(*ast.FuncLit); ok {
+			return false
+		}
+		if _, ok := n.(*ast.ReturnStmt); ok {
+			returns++
+		}
+		return true
+	})
+	if returns != 0 {
+		problems = append(problems, fmt.Sprintf("return statement count=%d, want 0 (an early return neuters the assertion)", returns))
+	}
+
+	// A8 — reachability: no goto in the body. A `goto` over the assertion is dead-code
+	// elision that leaves every shape check byte-identical AND leaves the canary reporting
+	// `--- PASS`, so it is strictly QUIETER than a skip, which at least prints `--- SKIP`
+	// (V35: mutant sha256 f7d6d640257d9f61, canary `--- PASS`, extended fence rc=0 before
+	// this check existed). It is statically visible — `go vet` flags it `unreachable code`
+	// — but `scripts/verify_go.sh` does not run vet, so nothing in the enforced gate caught
+	// it. Traversal STOPS at *ast.FuncLit, like A6 and for the same reason: Go forbids a
+	// goto crossing a function boundary, so a goto inside a closure cannot jump past the
+	// outer assertion, and counting it would be a row-55-class false red.
+	gotos := 0
+	ast.Inspect(funcs[0].Body, func(n ast.Node) bool {
+		if _, ok := n.(*ast.FuncLit); ok {
+			return false
+		}
+		if b, ok := n.(*ast.BranchStmt); ok && b.Tok == token.GOTO {
+			gotos++
+		}
+		return true
+	})
+	if gotos != 0 {
+		problems = append(problems, fmt.Sprintf("goto statement count=%d, want 0 (a goto can jump past the assertion)", gotos))
+	}
+
+	// A7 — reachability: no build constraint on the file. A build tag can exclude the
+	// canary from the build entirely, so the assertion never runs.
+	//
+	// ONE NARROWING, proven load-bearing by its own differ-test. It exists to kill a
+	// row-55-class FALSE RED, not to weaken the check — a build tag Go would actually honour
+	// still reds, in both the modern (M-BUILDTAG) and legacy (M-BUILDTAG-PLUS) forms.
+	//
+	// GRAMMAR — match with go/build/constraint, Go's OWN parser, never a byte prefix.
+	// `strings.HasPrefix(c.Text, "// +build")` reds on `// +buildAlerts is a codename`, which
+	// Go reads as ordinary prose: IsGoBuild and IsPlusBuild are both false, `go vet` is silent,
+	// and the file is NOT excluded from the build — yet the prefix form redded the fence over a
+	// canary that runs and passes (V36: mutant sha256 50f83fc840f7f68f, canary `--- PASS`,
+	// prefix-A7 rc=1). `//go:buildFoo bar` is the same shape one constraint over. A prefix match
+	// is strictly cruder than the grammar Go itself applies, and the gap is a false red.
+	//
+	// A POSITION narrowing was written, measured and DELETED rather than shipped (V37). The
+	// theory was that only a comment group closing before the package clause can be a
+	// constraint, so a grammar-valid `//go:build` quoted later in the file should not red.
+	// It is unpinnable: Go REJECTS a misplaced `//go:build` outright — `go vet` rc=1
+	// `misplaced //go:build comment` and the compile fence rc=1 — both after the package
+	// clause and inside a function body. So the guard can only change the verdict on a tree
+	// that does not build, and a gate's reading on an unbuildable tree is not a verdict. Its
+	// differ-test "passes" for exactly that vacuous reason. Shipping it would have added a
+	// branch no arm can ever reach: the anti-vacuity-floor class this charter tracks.
+	buildTags := 0
+	for _, cg := range f.Comments {
+		for _, c := range cg.List {
+			if constraint.IsGoBuild(c.Text) || constraint.IsPlusBuild(c.Text) {
+				buildTags++
+			}
+		}
+	}
+	if buildTags != 0 {
+		problems = append(problems, fmt.Sprintf("build constraint count=%d, want 0 (a build tag can exclude the canary from the build)", buildTags))
+	}
+
+	return problems
 }
 
 // isRowsField reports whether expr is structurally rows[0].field.
