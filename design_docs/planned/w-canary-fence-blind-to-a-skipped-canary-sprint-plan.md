@@ -314,3 +314,138 @@ design docs are untracked; nothing tracked is modified.
    shows only the intended change plus the design docs.
 7. `./scripts/verify_go.sh` is NOT run as a gate (§0.3), and `go build` appears nowhere as a compile
    fence (§0.1).
+
+---
+
+## 8. ROUND 2 — the `sonnet` evaluator FAILED round 1 at 52/100, and both blocking findings were real
+
+Round 1 (commit `8d7b110`) shipped A5/A6/A7 and passed every gate in §3 and every arm in §4.1.
+The adversarial evaluator (`sonnet`; generator≠judge) scored it **52/100 FAIL** on two arms the
+plan's mutation table never ran. **Both were reproduced first-party by the controller before being
+actioned** (ghost discipline — an evaluator claim is a lead, not a fact), and both are now closed.
+
+### 8.1 BLOCKING 1 (CONFIRMED) — `goto` jumps past the assertion and the fence stayed GREEN
+
+The mutant (`V35`, canary sha256(16) `f7d6d640257d9f61`) inserts `goto End` above the assertion and
+`End:` after it. Controller re-measurement, first-party:
+
+| | |
+|---|---|
+| `go test -count=1 -run '^$' ./host/store/` | **rc=0** — it compiles |
+| `go vet ./host/store/` | rc=1 `unreachable code` — **statically visible** |
+| canary | **`--- PASS`** |
+| extended fence (round 1) | **rc=0 `--- PASS`** — green over a canary that asserts nothing |
+
+This is **worse than the `t.Skip` hole the row exists to close**: a skip at least prints `--- SKIP`,
+while a `goto` reports a confident `--- PASS`. It sits squarely inside the row's own declared scope
+("statically visible reachability"), and `scripts/verify_go.sh` does not run `go vet`, so nothing in
+the enforced gate would have caught it either. **The evaluator's refutation of the round-1 thesis is
+accepted: three checks did not close statically-visible reachability. Four do.**
+
+**Fix — A8**: zero-needle on `*ast.BranchStmt` with `Tok == token.GOTO` in the body, **stopping at
+`*ast.FuncLit`** (Go forbids a goto crossing a function boundary, so a closure-local goto cannot
+skip the outer assertion; counting it would be a row-55-class false red — proven by `D2`).
+
+### 8.2 BLOCKING 2 (CONFIRMED) — A7's byte-prefix match false-redded a benign doc comment
+
+`strings.HasPrefix(c.Text, "// +build")` fires on `// +buildAlerts is an unrelated internal
+codename…` (`V36`, sha256(16) `50f83fc840f7f68f`), which **Go does not read as a constraint**:
+
+```
+go/build/constraint.IsPlusBuild("// +buildAlerts is an unrelated internal codename")  ->  false
+go/build/constraint.IsGoBuild  ("//go:buildFoo bar")                                  ->  false
+go/build/constraint.IsGoBuild  ("//go:build ignore_canary")                           ->  true
+go/build/constraint.IsPlusBuild("// +build linux")                                    ->  true
+```
+
+Measured on that mutant: `go vet` **rc=0** (Go's own `buildtags` analyzer is silent), the file is
+**not excluded** (canary `--- PASS`), yet round-1 A7 reported **rc=1**. A textbook row-55 false red,
+caused by a byte prefix standing in for a grammar.
+
+**Fix**: match with `go/build/constraint` — Go's own parser — instead of `strings.HasPrefix`.
+One new import (`go/build/constraint`); this supersedes §1's "no new import" line.
+
+### 8.3 A THIRD NARROWING WAS WRITTEN, MEASURED, AND DELETED RATHER THAN SHIPPED (`V37`)
+
+Alongside 8.2 the controller added a **position** guard (`cg.End() >= f.Package -> continue`), on
+the theory that a grammar-valid `//go:build` quoted in prose *after* the package clause is inert and
+should not red. Its differ-test "passed" (rc=0 with the guard, rc=1 without) — **and the pass is
+vacuous.** Go rejects a misplaced `//go:build` outright, both after the package clause and inside a
+function body:
+
+```
+host/store/toolchain_canary_test.go:21:2: misplaced //go:build comment
+go vet rc=1 · go test -count=1 -run '^$' ./host/store/ rc=1 · the canary never runs
+```
+
+So the guard can only change the verdict on a tree **that does not build**, and a gate's reading on
+an unbuildable tree is not a verdict. Shipping it would have added a branch **no arm can ever
+reach** — the anti-vacuity-floor class this charter tracks in its Repo Profile watch-item, arriving
+in the fix for a false red rather than in the gate it protects. **It was deleted.** The lesson is
+that a differ-test only certifies a branch if the tree it differs on is one the toolchain accepts:
+*pair every differ-test with the compile fence on the SAME tree, or a rejected tree will sell you a
+dead branch.*
+
+### 8.4 Round-2 arm table — 12 arms, every mutant compiles (`CF=0` on all 12)
+
+| Arm | sha256(16) | vet | canary | fence rc | owner |
+|---|---|---|---|---|---|
+| M-SKIP | `3d7c343ce10c0472` | 0 | `--- SKIP` | **1** | A5 |
+| M-SKIPF | `9c8778abdd21c8ae` | 0 | `--- SKIP` | **1** | A5 |
+| M-SKIPNOW | `8311cfeff59be3ae` | 0 | `--- SKIP` | **1** | A5 |
+| M-SKIP-FUNCLIT | `13c85ea2e880f350` | 0 | `--- SKIP` | **1** | A5 (descends) |
+| M-RETURN | `2ff015dccd545c3c` | 1 † | `--- PASS` | **1** | A6 |
+| M-BUILDTAG | `43596b333f39ee1f` | 0 | no test ran | **1** | A7 (modern) |
+| M-BUILDTAG-PLUS | `bfc770f860a5b455` | 0 | no test ran | **1** | A7 (legacy) |
+| **M-GOTO** | `f7d6d640257d9f61` | 1 † | `--- PASS` | **1** | **A8 (new)** |
+| M-RETURN-FUNCLIT | `7cbabbb1378e2d7e` | 0 | `--- PASS` | **0** | must stay green |
+| **M-GOTO-FUNCLIT** | `126b3fde0eab654c` | 0 | `--- PASS` | **0** | must stay green |
+| **M-PROSE-DOC** | `50f83fc840f7f68f` | 0 | `--- PASS` | **0** | must stay green (8.2) |
+| **M-GOBUILD-LOOKALIKE** | `4e96af10770a5197` | 0 | `--- PASS` | **0** | must stay green |
+
+† `unreachable code` — the ANALYZER, not a compile failure; both arms are `CF=0`. Not a gate.
+
+Each red arm produced **exactly one** `--- FAIL` and **exactly one** problem line.
+
+### 8.5 Non-vacuity — each check neutered in turn, red set is EXACTLY the arms it owns
+
+Neutering `if <counter> != 0` to `if false && <counter> != 0`:
+
+| Neutered | Arms that went GREEN | Arms owned |
+|---|---|---|
+| A5 `skipCalls` | M-SKIP M-SKIPF M-SKIPNOW M-SKIP-FUNCLIT | identical |
+| A6 `returns` | M-RETURN | identical |
+| A7 `buildTags` | M-BUILDTAG M-BUILDTAG-PLUS | identical |
+| A8 `gotos` | M-GOTO | identical |
+
+No neuter moved an arm it does not own — so no check is carrying another's evidence.
+
+### 8.6 Four differ-tests, all asserted with `-ne`
+
+| | shipped | variant | verdict |
+|---|---|---|---|
+| **D1** A7 grammar vs `strings.HasPrefix` (on M-PROSE-DOC) | rc=0 | rc=1 | DIFFER — the grammar match is load-bearing |
+| **D2** A8's FuncLit stop (on M-GOTO-FUNCLIT) | rc=0 | rc=1 | DIFFER — prevents a false red |
+| **D3** A7 parse mode `ParseComments` vs `0` (on M-BUILDTAG) | rc=1 | rc=0 | DIFFER — A7 not vacuous |
+| **D4** A6's FuncLit stop (on M-RETURN-FUNCLIT) | rc=0 | rc=1 | DIFFER — load-bearing |
+
+### 8.7 Non-blocking evaluator findings, accepted as declared residuals
+
+- `panic()` + deferred `recover()` neuters the assertion and leaves the fence green — the design doc
+  declared it; the evaluator **measured** it first-party (canary `--- PASS`, fence `--- PASS`). Out
+  of scope, correctly declared.
+- The shape checks still `return` early, so A5–A8 do not run when a shape check fails. The evaluator
+  confirmed this masks the *message*, never the *verdict*: with both a shape break and a skip landed,
+  the fence still reds (rc=1) and merely reports the shape problem. Fail-closed, so it stands.
+- A5's receiver is hardcoded to the ident `t`. Pre-existing: row 49's `isTFatalfCall` has the
+  identical hardcoding, so a renamed receiver breaks the whole fence, not just the new checks. Not
+  introduced here; not closed here.
+- `M-ALIAS` (`s := t.Skip; s("x")`) and `M-HELPER` (`helperSkip(t)`) remain green by design.
+
+### 8.8 Gates, round 2
+
+`gofmt -l` **0 lines** · `go vet ./host/verifygate/ ./host/store/` **rc=0** ·
+`go test -count=1 ./host/verifygate/ ./host/store/` **rc=0, 0 `--- FAIL`** with
+`AILANG_BIN=/tmp/ailang-v0300/ailang` (`AILANG v0.30.0`) ·
+`./scripts/verify_ail.sh` **rc=0** (11 required identities verified, 40 named tests pass) — run even
+though no `.ail` changed, as the repo-wide control.
