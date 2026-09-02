@@ -198,3 +198,34 @@ jobs:
             sed -n '1,80p' "$err" >&2
             exit 1
           fi
+
+  launchd-drivers:
+    name: launchd drivers (bash 3.2)
+    # macOS DELIBERATELY: the rig runs bash 3.2.57 and GitHub's macOS runners still
+    # ship 3.2 as /bin/bash, while ubuntu ships bash 5. A suite green on bash 5
+    # proves nothing about the constraint that actually bites here.
+    #
+    # This job exists because the world driver had ZERO coverage on 2026-09-02, the
+    # day its stall watchdog killed three consecutive iterations on a false idleness
+    # test that a single arm would have caught.
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Confirm /bin/bash really is 3.2 (guard against a silent runner upgrade)
+        run: |
+          /bin/bash --version | head -1
+          case "$(/bin/bash -c 'echo $BASH_VERSION')" in
+            3.2*) ;;
+            *) echo "runner /bin/bash is no longer 3.2 — this job no longer proves what it claims"; exit 1 ;;
+          esac
+
+      - name: Driver test suites
+        run: |
+          /bin/bash tools/launchd/test_mission_stall.sh
+          /bin/bash tools/launchd/test_mission_routing.sh
+
+      - name: bash 3.2 syntax over every driver
+        run: |
+          for f in tools/launchd/*.sh; do /bin/bash -n "$f" || exit 1; done
