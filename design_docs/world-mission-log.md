@@ -17320,3 +17320,170 @@ live defect in `messages list`.
 **Next:** rows **58**, **59**, **60**, **61**, **62**–**66**, **68**–**75**, then **39**. Row **50**
 stays parked on `D-WORLD-31`; row **57** is now **tracking-only** on upstream `#984`/`#1036`, and
 its predicate must be RUN at pick time (an upstream disposition), never transcribed.
+
+## Iteration 153 — 2026-09-03 — row 58 lands: the probe timeout is a concurrency defect, not a speed one, so the fix is attribution rather than a bigger number [HARNESS]
+
+**Pick:** the queue head, row **58**
+(`w-verify-go-is-red-at-pristine-base-on-the-rig-while-ci-is-green`, as amended iter-141), ungated.
+Already-landed checks all clean against a fresh origin: `0` open PRs on this account, the one stale
+worktree `.wt-iter150` still `porcelain=0` with its work landed as `a7b58dd`, and `porcelain=0` in
+the main checkout.
+
+**Progress:** **goal unmoved.** No product surface changed — this is loop-machinery work on the
+verification gates. The row census stays **carried, not measured** (row 72's own subject).
+
+**Outcome:** LANDED. PR [#115](https://github.com/sunholo-data/ailang-world/pull/115) → squash
+[`12b8c87`](https://github.com/sunholo-data/ailang-world/commit/12b8c87). Gate 3b GREEN on the
+**merge** commit, SHA-addressed: `present=3 == expected=3`, `not_green=0`, `runs_total=1`,
+`event=push`, parent control `checks=3`. The PR head was polled to the same standard first, and
+every count was asserted numeric before any comparison.
+
+### The row's amended headline is still wrong, and the axis is the whole finding
+
+Row 58 as filed claimed `verify_go.sh` was `rc=1` on pristine `dev`. Iteration 141 corrected that to
+**flaky** and named two likely drivers: the macOS first-exec provenance assessment, and a
+per-invocation Observatory retention cleanup over a then-513 MB database. Both halves are now
+measured. One of them is refuted, and the surviving one is not the shape iter-141 described.
+
+Pinned v0.30.0 on Darwin/arm64, `--version` through the same code path the probe uses:
+
+| arm | result |
+|---|---|
+| warm exec, established path | 47, 48, 48, 49, 52 ms |
+| FIRST exec of a freshly-copied path | 1211, 1218, 1241, 1278, 1294 ms |
+| **8 concurrent** first execs | 1289, 2332, 3396, 4436, 5531, 6747, 7788, **8871** ms |
+| **12 concurrent** first execs | 1255, 2377, 3482, 4595, 5739, 6824, 7949, 9079, 10313, 11419, 12555, **13691** ms |
+| *negative control:* 8 concurrent **warm** execs | 61, 86, 123, 146, 196, 283, 314, **348** ms |
+| *refuted:* first exec under 16 CPU spinners | 1322, 1373, 1385 ms |
+
+**The cold series is linear, not parallel.** macOS assesses a never-before-executed binary under a
+global serializing lock, so N concurrent first execs cost N × ~1.13 s for the last one to return.
+`probeTimeout` is a **per-probe** wall-clock bound, so it is crossed at **N ≥ 9** *regardless of how
+fast any single probe is*. That is the entire flake, and it explains every observation the row
+carries: green package-by-package, flaky under `go test ./...` (which schedules up to 16 packages,
+at least five of which archive the pinned interpreter into a fresh `t.TempDir()`), and never red on
+Linux CI, which has no Gatekeeper.
+
+The warm-concurrency arm is the load-bearing negative control: the same eight-way concurrency
+against an **already-assessed** path maxes out at 348 ms, so the linearity belongs to *first* exec
+and not to concurrency as such. Had that arm also come back linear, the diagnosis would have been
+wrong in the direction I was predicting — rule 3d.
+
+**Refuted by the same measurements, rather than argued away.** CPU contention — the axis iter-141
+varied — moves a cold exec to 1322/1373/1385 ms, i.e. it is the decorative axis. And the Observatory
+cleanup (now a 553 MB database, deleting 0 rows per invocation) is paid by the ~50 ms warm arm, so
+it cannot be worth seconds. This is rule 3m aimed at a **bound** rather than at a stress control:
+the stimulus scales with a dimension the bound cannot observe.
+
+### Disposition: a deliberate non-change
+
+`probeTimeout` is **not** raised. Rule 3m's remedy — derive the bound from its measured stimulus —
+is unavailable here, because the probe cannot see how many siblings are queued ahead of it, so any
+constant merely relocates the cliff. Pre-warming or ad-hoc-signing the archived copy is rig surgery
+outside this row's scope, and bounding the Observatory cleanup is refuted above.
+
+So the deliverable is the one the row itself named: **attribution**. `archive.EnvironmentFailure`
+classifies `KindExecFailure` **and** `context.DeadlineExceeded` as an instrument failure;
+`archive.AttributeFailure` labels it at the 8 `Archive()` call sites across `host/broker`,
+`host/capsule`, `host/replay` and `host/archive`. Both conjuncts are load-bearing:
+`KindExecFailure` alone covers a genuinely broken interpreter, which must keep its own attribution.
+**Nothing is skipped and nothing is suppressed** — a test that hits this still fails; it now says
+which of the two things went wrong and carries the command that discriminates.
+
+### Mutation drill — 6 mutants, 6 RED
+
+Each landed by sha256, `go vet` rc=0 read *before* any test result, restored byte-identical,
+pristine control green either side.
+
+| mutant | killed by |
+|---|---|
+| M1 Kind check neutered | the wrong-Kind row |
+| M2 deadline check neutered | both exec-defect rows + both label arms |
+| M3 ReplayError requirement neutered | wrong-Kind + bare-deadline rows |
+| M4 always label | the defect-branch arms |
+| M5 never label | the instrument arms |
+| **M6 `probeVersion` drops its `%w`** | **the SHIPPED-path arm ALONE** |
+
+M6 is the load-bearing one: it is killed only by the arm that runs the real `Archive()` against a
+blocking interpreter, so that arm is demonstrably not redundant with the error literals typed into
+the test file (rule 3k).
+
+**A correction against my own first drill run.** M1 and M2's first forms did not compile — `go vet`
+rc=1, unused `re` — and the harness nonetheless reported `test_rc=0` for them, because
+`local out=$(…)` **swallows the exit code**. That is rule 3 ("exit codes through pipes lie")
+arriving through a shell builtin rather than a pipe, and it is exactly the shape that would have let
+two mutants be recorded as survivors or as kills on no evidence. Both were re-run as compiling
+mutants with the rc captured directly; the verdicts above are the second run's.
+
+**M7 — not a mutant, but the proof the floor reaches production call sites.** With `probeTimeout`
+forced to `1ns`, all three tests row 58 names fail carrying the ENVIRONMENT label and the guidance:
+`host/replay` `TestFixtureEpisodeReplaysBitForBit`, `host/capsule`
+`TestF1PinnedInterpreterHashMismatchRefusedBeforeExec`, `host/broker`
+`TestEpisodeLiveReplayThreeArmsAndEvidence`. Restored byte-identical; all three green on the
+pristine tree either side.
+
+### A second defect, found in the file I was already editing
+
+`host/archive` resolved the pinned interpreter from a hardcoded `/tmp/ailang-v0300/ailang`.
+Iteration 151 moved the pin to `~/.pinned-ailang` because macOS wipes `/private/tmp` on boot — so
+that literal had been dead **on every machine**: CI never had it, and the rig no longer did.
+`TestArchivePinnedInterpreter` was therefore a silent SKIP with no red anywhere, i.e. the one arm
+that exercises a real released interpreter end to end had gone vacuous unnoticed.
+
+It now resolves `AILANG_BIN` exactly as its two sibling packages do — which is what `ci.yml`'s own
+comment, one job over, already asked for: *"Without AILANG_BIN, pinnedBinary(t) t.Skip()s and CI is
+false-green."* Measured SKIP → PASS (0.95 s) locally, and green in CI on the merge commit, where it
+had never run before.
+
+### A third finding, filed as row 76 rather than absorbed — and it is this row's own acceptance command
+
+`./scripts/verify_go.sh` is **rc=1 in 0.99 s** at pristine base, with
+`FATAL: DRIVER DRIFT vs FLEET (D-WORLD-DRIVER-1)` naming three World-committed driver blobs behind
+fleet HEAD `5e860afeb`. The red is **correct** — `CLAUDE.md` says it means *"the fleet must
+commit"*, never *"absorb it"* — and the defect is the **ordering**: the drift arm fatals at
+`scripts/verify_go.sh:224`, while `go build ./...` is at `:443` and `go test ./... -count=1` at
+`:462`. A fleet-owned condition therefore suspends every Go assertion behind it, with no opt-out
+(`grep` for a skip-shaped variable returns 0; only `$CI` bypasses the arm, which is why CI is green
+while the rig cannot run the gate at all).
+
+It stayed invisible because iterations 150, 151 and 152 each recorded *"verify gate green, both
+legs"* using `verify_ail.sh` plus a hand-rolled `go build && go test` — the right assertions,
+reached by a route that skips the drift arm. So the gate every acceptance row here names has not
+actually been run since the drift opened, and its unavailability produced no red anywhere. Rule 3g's
+hand-picked-subset gap, aimed at a controller's *substitute* for a gate rather than at the gate's
+own command list — and the same shape as this iteration's pick: a rig-owned condition wearing the
+clothes of a code verdict.
+
+**Ruled out:**
+- **"Raise `probeTimeout` above the first-exec cost."** Refuted quantitatively: the 12-way arm
+  crosses 10 s at the ninth caller and reaches 13.7 s at the twelfth, and the series has no ceiling
+  the probe can see. Any constant moves the cliff.
+- **"CPU contention is the driver" (iter-141's mechanism).** Refuted: 1322/1373/1385 ms under 16
+  spinners against 1211–1294 ms unloaded.
+- **"The Observatory retention cleanup is the driver."** Refuted: the warm arm pays that cleanup on
+  every invocation and still returns in ~50 ms against a 553 MB database.
+- **"The gate is deterministically red at base."** Refuted for a second, different reason than
+  iter-141 gave: `go build ./... && go test ./... -count=1` is **rc=0** at base with an EMPTY failing
+  set (19 packages `ok`), while `verify_go.sh` is rc=1 for the unrelated driver-drift reason above.
+- **Absorbing the driver drift.** Explicitly forbidden by `CLAUDE.md` and `D-WORLD-DRIVER-1`; filed
+  as row 76 with a fleet-side proposal instead.
+
+**Routing evidence:** controller-authored direct fix — no design-doc-creator, no sprint-planner, no
+sprint-executor, no sprint-evaluator spawned. `metered=$0.00` of the $5 ceiling; quota buckets: opus
+(controller session) only. The designer rotation pointer was not read or advanced, because no design
+doc was authored. Quorum: not applicable — no doc.
+
+**Verify gate, both legs, at base AND on the delivered tree:** `./scripts/verify_ail.sh` **rc=0**
+(11 required identities, 40 named tests, 9/9 world-package steps non-vacuous,
+`compiler pinned by exact bytes: AILANG v0.30.0 on Darwin/arm64`); `go build ./... && go test ./...
+-count=1` **rc=0** (19 packages `ok`, 0 FAIL).
+
+**Base reconcile, performed rather than escalated:** after the merge, local `dev` was 1 behind and 0
+ahead, and every dirty file was byte-identical to its incoming blob, so
+`git checkout origin/dev -- <7 paths>` then `git checkout -B dev origin/dev`. Re-verified 7/7 files
+byte-identical against a pre-reconcile backup, so no byte on disk changed and Gate 4 wrote the
+record in place.
+
+**Next:** rows **59**, **60**, **61**, **62**–**66**, **68**–**76**, then **39**. Row **50** stays
+parked on `D-WORLD-31`; row **57** remains tracking-only on upstream `#984`/`#1036`, and its
+predicate must be RUN at pick time, never transcribed.

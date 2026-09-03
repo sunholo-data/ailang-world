@@ -2,34 +2,32 @@
 
 _Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS), `world-mission-log.md`._
 
-**As of:** 2026-09-03 · iter 152 · `dev` = [`6874a98`](https://github.com/sunholo-data/ailang-world/commit/6874a98) · CI green (3/3) · local verify gate green both legs
+**As of:** 2026-09-03 · iter 153 · `dev` = [`12b8c87`](https://github.com/sunholo-data/ailang-world/commit/12b8c87) · CI green (3/3) on the merge commit · local verify gate green both legs
 
 ## Last iteration
-**No PR to this repo's code — the fix is upstream.** **REFUTATION** · metered **$0.00** (controller-authored; no sub-agent spawned).
+**Row 58 LANDED** · **HARNESS** · PR [#115](https://github.com/sunholo-data/ailang-world/pull/115) → [`12b8c87`](https://github.com/sunholo-data/ailang-world/commit/12b8c87) · metered **$0.00** (controller-authored; no sub-agent spawned).
 
-**Row 57's causal claim died, and the issue it kills is one this mission filed itself.** The row said `ailang messages send --type` is dropped, so a "typed sub-query" finds zero `approval_request` rows and `coordinator pending` prints a green all-clear under a live ask. Measured at ailang `origin/dev`: **there is no typed sub-query and one is not expressible** — `printApprovalsInboxPending` applies no type filter (proven empirically: it *listed* a row typed `notification`), and `InboxListOptions` has 10 filter fields, none for message type. The green comes from a **different store**: `FROM approval_requests WHERE status='pending'` (local SQLite) vs the inbox (Firestore). **Two-arm control: at 0 and at 1 unread inbox rows the green line is byte-identical** — provably invariant to the inbox. So fixing the type would change nothing.
+**The probe timeout is a CONCURRENCY defect, not a speed one — and row 58's headline was still wrong after one amendment.** The archived interpreter's `--version` probe costs **47–52 ms** warm and **1211–1294 ms** on a first exec at a fresh path. macOS serializes that assessment **globally**: 8 concurrent first execs return at 1289…**8871 ms**, 12 at 1255…**13691 ms**, linear at ~1.13 s each. `probeTimeout` is a **per-probe** bound, so it is crossed at **N ≥ 9** no matter how fast one probe is. That is the whole flake — green package-by-package, flaky under `go test ./...`, never red on Linux CI.
 
-**`--type` is real but MISFILED, not ignored:** `messages_send.go:42` binds it to `Category`; `:132` hardcodes `MessageType`. All 18 `approvals` rows split totally by author class (12 mission `notification`/`approval_request`, 6 coordinator `approval_request`/empty). Where it actually hurts: `messages activity` reports **zero** `approval_request` (29 notification, 1 completion) while listing `1 approvals`; plus template routing and sweep classification.
+**Two candidate causes refuted by the same measurements:** CPU contention (iter-141's axis) moves it only to 1322/1373/1385 ms under 16 spinners; the Observatory cleanup over a 553 MB DB is paid by the ~50 ms warm arm. Negative control: 8 concurrent **warm** execs max at **348 ms**, so the linearity belongs to *first* exec.
 
-**Settled in the safe direction — the row's own open question:** the Discord push does **not** filter on type (`messageNotification` references `MessageType` 0 times; switches on `ToInbox`; live from `daemon.go:204`). **Mission approvals do reach Discord.** The ask is not lost.
+**Disposition — a deliberate non-change.** `probeTimeout` was **not** raised: the cost scales with a dimension the probe cannot observe, so a constant only moves the cliff. The deliverable is attribution — `archive.EnvironmentFailure` / `AttributeFailure` label the deadline an ENVIRONMENT failure at 8 call sites. Nothing skipped, nothing suppressed: the test still FAILS and now names which of the two things went wrong. **6 mutants, 6 RED**; M6 (drop `probeVersion`'s `%w`) is killed by the shipped-path arm alone.
 
-Upstream: correction on [ailang#984](https://github.com/sunholo-data/ailang/issues/984) (0→1 comments asserted) · real cause filed as [ailang#1036](https://github.com/sunholo-data/ailang/issues/1036) · cross-mission note sent.
-
-**Second finding, remediated:** the shared skill cites `make check-no-personal-email` as enforcement — **no such target exists** in either repo, while this PUBLIC repo carried a personal address in 7 doc locations. Redacted (7→0, balanced 7+/7− diff). The missing gate is **new row 74**.
+**Second defect, fixed here:** `host/archive` resolved the pin from a hardcoded `/tmp/ailang-v0300/ailang` — dead on **every** machine since iter-151 moved it — so `TestArchivePinnedInterpreter` was a silent SKIP with no red anywhere. Now reads `AILANG_BIN` like its sibling packages. SKIP → PASS, and it runs in CI for the first time.
 
 ## Goal distance
-**Goal unmoved** (no product surface changed). Row census remains **carried, not measured** — row 72 tracks that; three re-derivations disagreed. Row 57 is now **tracking-only** on upstream. Row 50 parked on `D-WORLD-31`.
+**Goal unmoved** (no product surface changed; loop-machinery work). Row census remains **carried, not measured** — row 72 tracks that. Row 57 tracking-only upstream; row 50 parked on `D-WORLD-31`.
 
 ## Next picks
-1. **Row 58** `w-verify-go-is-red-at-pristine-base` — AMENDED: the gate is **flaky**, not deterministically red; wants an instrument-failure floor so a rig cost can't wear a correctness defect's clothes.
-2. **Row 59** `w-static-grep-cannot-prove-an-assertion-is-live` — an AC proved "load-bearing" by `grep -c`, which cannot tell a live assertion from a compiled-and-unreached one.
-3. **Row 74** `w-the-personal-email-gate-...-does-not-exist` — build the gate the rulebook already claims exists, with a non-vacuity mutation arm. Then 60–66, 68–73, then 39.
+1. **Row 59** `w-static-grep-cannot-prove-an-assertion-is-live` — an AC proved "load-bearing" by `grep -c`, which cannot tell a live assertion from a compiled-and-unreached one.
+2. **Row 76** (NEW) `w-verify-go-driver-drift-gate-short-circuits-the-entire-local-go-gate` — `verify_go.sh` is rc=1 in 0.99 s at base on a **fleet-owned** drift red that fatals at `:224`, before `go build` at `:443`. Correct red, wrong ordering, no opt-out — so the gate every AC here names cannot answer "is this tree's Go code green?".
+3. **Row 74** `w-the-personal-email-gate-...-does-not-exist` — build the gate the rulebook already claims exists. Then 60–66, 68–73, 75, then 39.
 
 ## Routing / cadence
-Controller `claude:claude-opus-5`. Designer rotation pointer: `claude:claude-fable-5` (not advanced — no designer ran). Verify profile `ailang-code`; pin **v0.30.0** at `~/.pinned-ailang/ailang` (PATH's `ailang` is `-dirty` and is never used for gates).
+Controller `claude:claude-opus-5`. Designer rotation pointer unchanged at `claude:claude-fable-5` (no designer ran). Verify profile `ailang-code`; pin **v0.30.0** at `~/.pinned-ailang/ailang` (PATH's `ailang` is `-dirty` and is never used for gates).
 
 ## Parked on Mark
-**`D-WORLD-31`** — ONE WORD: ship rule A as ratified, or hold row 50 for the fixture migration? Re-asked unchanged; **no new ask this iteration**. Re-posted to the approvals spine (prior rows had all been marked read, so the ask was invisible there).
+**`D-WORLD-31`** — ONE WORD: ship rule A as ratified, or hold row 50 for the fixture migration? Re-asked unchanged; **no new ask this iteration**.
 
 ## Quota posture
 metered **$0.00** of $5 this iteration. Billing tripwire CLEAN.
