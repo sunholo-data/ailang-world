@@ -12,7 +12,8 @@
 # LOUDLY if AILANG_BIN is unset OR the binary it names does not report v0.30.0,
 # turning a would-be false-green into a red local gate that mirrors CI (where
 # the go-verify job exports AILANG_BIN before invoking this script). Locally,
-# the operator exports AILANG_BIN=/tmp/ailang-v0300/ailang.
+# the operator exports AILANG_BIN=$HOME/.pinned-ailang/ailang (moved off /tmp 2026-09-03:
+# macOS wipes /private/tmp on boot, and it took the pin with it — see the charter Repo Profile).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

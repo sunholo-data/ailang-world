@@ -16973,3 +16973,102 @@ Rows 68 and 69 are fleet-owned; World hands them over with the measurement and d
 
 **Next:** rows **57**, **58**, **59**, **60**, **61**, **62**–**66**, **68**, **69**, **70**, then
 **39**.
+
+## Iteration 151 — 2026-09-03 — two dead slots in a row, and the second is datable to the second: the rig rebooted 286s after Gate 4 and took /tmp with it [HARNESS]
+
+**Pick:** **not** the queue head, and not a red either — `origin/dev` was green 3/3. The pick came
+from Gate 2's died-mid-flight traces, which returned **two** consecutive orphaned iterations. Gate 2
+is explicit about the disposition when the work is already landed: the deliverable is the
+bookkeeping, and you verify rather than redo. No directive, no attended ruling, no regression, and
+the one cross-mission message did not outrank anything.
+
+**Progress:** the carried count is **59 of 72 queue rows closed** — iteration 150's 58 of 70, plus
+row 56 (which had landed untagged) and rows 71/72 filed here. **It is carried, not measured**, and
+that distinction is now row 72 rather than a footnote; see *the census I did not publish* below.
+Row 50 remains parked on `D-WORLD-31`.
+
+**Outcome:** no PR. Bookkeeping repair + a precondition restore, landed direct to `dev` as two
+commits: iteration 150's own record, committed verbatim, and this one.
+
+**Slot 1 — unnumbered, 2026-09-02, and it left nothing.** An iteration designed, executed and
+merged row 56 as PR [#113](https://github.com/sunholo-data/ailang-world/pull/113) → squash
+[`725ad5a`](https://github.com/sunholo-data/ailang-world/commit/725ad5a) at `2026-09-02T19:26:21Z`,
+then died before Gate 4. It wrote **zero** charter rows, **zero** log entries, **zero** STATUS
+stamps and **zero** dashboard lines: `grep -cE '#113\b'` reads **0** in all four mission documents,
+against a known-positive control of `#114` = **2** in the charter and **1** in the log. Its only
+surviving traces were the merged PR and a `prunable` `/private/tmp/wt-row56` entry in
+`git worktree list`. **Iteration 150 read `725ad5a` in the very next fire and used it only as a CI
+negative control** — the SHA passed through a gate and nobody asked what it was. The heartbeat is
+what makes the slot datable at all: it stamped `gate-0` at `18:27:39Z` and `gate-1` at `18:28:00Z`
+and then nothing, while demonstrably running through Gate 3 and merging an hour later.
+
+**Slot 2 — iteration 150, and this one is measured to the second.** It stamped `gate-4` at epoch
+`1788394743` and wrote its whole record to the working tree. `kern.boottime` = `1788395029`. That
+is **286 seconds — 4m46s — later**, compared epoch-to-epoch so no timezone can be wrong. The rig
+rebooted, macOS wiped `/private/tmp`, and the record sat uncommitted until this iteration found it.
+
+**Verified, not adopted.** Nobody had reviewed slot 1's work since the agent that wrote it stopped
+existing, so it was re-derived rather than trusted: row 56's Gate 3b re-polled SHA-addressed on the
+**merge** commit (`checks=2 == expected=2`, both `success`; 2 and not 3 because the third CI job
+arrived later with `e308577`), and its claimed deliverable confirmed live at
+`host/verifygate/toolchain_pin_gate_test.go:510`. Iteration 150's record was cross-checked against
+an independent read of `a7b58dd` (3/3 `success`, one file changed) before being committed verbatim.
+
+**The precondition nobody would have noticed, and the reason this is not just bookkeeping.**
+`/tmp/ailang-v0300/ailang` — the pin the charter names and every gate in this repo runs on — **was
+gone** (`ls` rc=1), taken by the same reboot. The gate fails **closed**, which is the design
+working: `verify_go.sh` refuses loudly rather than letting `host/replay` `t.Skip()` into a false
+green. The bad half is that the loop is then simply *unable to verify anything*, and nothing tells
+anyone. Restored to **`~/.pinned-ailang/ailang`** — **the path CI already uses**, so rig and CI now
+name the same location and `$HOME` survives a boot. Verified rather than assumed: published
+`shasum -a 256 -c` **OK**, `--version` = `AILANG v0.30.0` commit `e37b370`, sha256
+`e9746fef…3fb5`; and the strongest control is the gate's own, `verify_ail.sh` step 9/9 printing
+`compiler pinned by exact bytes: AILANG v0.30.0 on Darwin/arm64`.
+
+**Verify gate, both legs, after the restore:** `./scripts/verify_ail.sh` **rc=0** (11 required
+identities, 40 named tests, 9/9 world-package steps performed non-zero work) and
+`go build ./... && go test ./...` **rc=0** (**19** packages `ok`, **0** FAIL). That last number
+also retires a standing attribution by measurement rather than by argument: the 18-failure class
+iteration 150 blamed on `AILANG_BIN` being unset was this same wiped pin, one fire earlier.
+
+**The census I did not publish.** Every STATUS stamp carries an `N of M rows closed` headline, and
+it is an increment chain. Two attempts to re-derive it this iteration read **36 of 72** and
+**53 of 70**, against the carried **58 of 70**. The second attempt's own enumeration control fired
+first and caught that the naive form had stopped at row 66 (a row body contains a line beginning
+`## `) — and the corrected form is *still* demonstrably over-counting, because it classes the open
+row **57** as closed on prose inside its body. Three numbers, none agreeing. `mission-v1`'s
+iter-321 note had warned about exactly this shape — a whole-line grep over-counting a status field
+— and it is what stopped me from publishing any of them. Filed as row 72.
+
+**Ruled out:**
+- **A stall-watchdog kill for slot 2.** The driver's watchdog needs four arms to agree and fails
+  open without a progress instrument; more to the point the reboot is a sufficient and
+  independently-timestamped cause, 286 s after the last stamp. Not pursued further.
+- **`/tmp` being cleaned by the macOS periodic job.** That job deletes files unused for 3 days;
+  these were written hours earlier. `kern.boottime` is the discriminator and it is unambiguous.
+- **A sibling mission's dirty work in the shared tree.** World's checkout is its own clone
+  (`git-common-dir` = `.git`, remote `ailang-world.git`), re-measured this iteration rather than
+  inherited — which is also why `mission-v1`'s shared-clone warning about `git worktree list` does
+  not bind here.
+- **Re-running row 56.** Acting on its untagged `[NEXT]` would have re-done a merged, green,
+  verified milestone. This is the exact outcome the died-mid-flight traces exist to prevent.
+
+**Routing evidence:** controller-authored throughout; no designer, planner, executor or evaluator
+spawned. **metered = $0.00** of the $5 ceiling. Justified by the shape of the work — the deliverable
+was verification and bookkeeping over existing artifacts, and routing a sprint before restoring the
+pin would have produced a sprint whose gate could not run.
+
+**Findings filed rather than absorbed:** row **71** — the toolchain pin, the driver's *only* crash
+log and sprint worktrees all lived in `/tmp`; the pin half is closed here, and the other two are
+**fleet-owned** (`LOG=/tmp/ailang-mission-${MISSION_NAME}.log`, `mission-control.sh:76`) so every
+mission on this rig carries the identical exposure. Row **72** — the unauditable progress count.
+
+**Recorded as a limit, not a verdict:** slot 1's cause is **unrecoverable**. The driver log is the
+only place `HARD TIMEOUT` and `STALL:` are written, and the reboot destroyed it five hours after
+that fire died. Slot 2 is datable only because `kern.boottime` happens to outlive `/tmp`.
+
+**Two dead slots in a row is reported as a pattern, not as two incidents.** This loop cannot
+diagnose why its own slots die; it can make the frequency visible to someone who can — and it can
+stop the evidence being deleted, which is row 71.
+
+**Next:** rows **57**, **58**, **59**, **60**, **61**, **62**–**66**, **68**–**72**, then **39**.
