@@ -116,32 +116,92 @@ func TestGoToolchainPinsAgreeAndMatchJobList(t *testing.T) {
 	}
 	src := string(raw)
 	lines := strings.Split(src, "\n")
-	for _, control := range []string{"ailang-verify:", "go-verify:", "uses: actions/setup-go@v5", "./scripts/verify_go.sh"} {
+	for _, control := range []string{"ailang-verify:", "go-verify:", "launchd-drivers:", "uses: actions/setup-go@v5", "./scripts/verify_go.sh"} {
 		if !strings.Contains(src, control) {
 			t.Fatalf("instrument failure: %s does not contain known-positive control %q", workflowPath, control)
 		}
 	}
 
+	// Jobs are enumerated WITH THEIR BODIES, because "how many jobs are there" and
+	// "which jobs must carry a Go pin" stopped being the same question on 2026-09-02.
+	// The `launchd-drivers` job (bash 3.2 on macos-latest) needs no Go toolchain at
+	// all, so counting pins against the JOB count demanded a third pin that must not
+	// exist. That conflation is what took dev red on the merge commit 68403ea: two
+	// textually non-conflicting branches — one adding the job, one carrying this
+	// gate — were each green alone and jointly red, and the gate was RIGHT to red,
+	// it just could not say which of the two facts it objected to.
 	jobLine := regexp.MustCompile(`^  ([a-z0-9-]+):$`)
 	seenJobs := false
 	var jobs []string
+	jobBody := map[string][]string{}
+	current := ""
 	for _, line := range lines {
-		if strings.TrimSpace(line) == "jobs:" {
-			seenJobs = true
+		if !seenJobs {
+			if strings.TrimSpace(line) == "jobs:" {
+				seenJobs = true
+			}
 			continue
 		}
-		if seenJobs {
-			if match := jobLine.FindStringSubmatch(line); match != nil {
-				jobs = append(jobs, match[1])
-			}
+		if match := jobLine.FindStringSubmatch(line); match != nil {
+			current = match[1]
+			jobs = append(jobs, current)
+			continue
+		}
+		if current != "" {
+			jobBody[current] = append(jobBody[current], line)
 		}
 	}
 	slices.Sort(jobs)
-	// A third job moves this hand-maintained set in the same edit or this test reds.
-	wantJobs := []string{"ailang-verify", "go-verify"}
+	// TWO hand-maintained sets, and a new job must be classified in BOTH edits or this
+	// test reds: wantJobs says the job exists on purpose, wantGoPinnedJobs says whether
+	// it is a Go job. A non-Go job added to wantJobs alone is still asserted to carry
+	// ZERO Go pins, so "classified out" is a claim the gate checks rather than a hole.
+	wantJobs := []string{"ailang-verify", "go-verify", "launchd-drivers"}
+	wantGoPinnedJobs := []string{"ailang-verify", "go-verify"}
 	if !slices.Equal(jobs, wantJobs) {
 		t.Errorf("ci.yml: enumerated jobs=%v, want %v; GOTOOLCHAIN pins=%d go-version pins=%d",
 			jobs, wantJobs, len(keyedValues(lines, "GOTOOLCHAIN")), len(keyedValues(lines, "go-version")))
+	}
+	for _, job := range wantGoPinnedJobs {
+		if !slices.Contains(wantJobs, job) {
+			t.Fatalf("instrument failure: Go-pinned job %q is not in the enumerated job set %v", job, wantJobs)
+		}
+	}
+
+	// PER-JOB ATTRIBUTION, not a repo-wide count. A count over the whole file cannot
+	// tell WHICH job carries a pin, so two GOTOOLCHAIN lines in one job and none in
+	// the other satisfied the old arms exactly as well as one each — a fail-open the
+	// gate has always had and which the job-kind split would otherwise have widened.
+	pinKinds := []string{"GOTOOLCHAIN", "go-version", "actions/setup-go"}
+	perJob := map[string][3]int{}
+	var summed [3]int
+	for _, job := range jobs {
+		body := jobBody[job]
+		counts := [3]int{len(keyedValues(body, "GOTOOLCHAIN")), len(keyedValues(body, "go-version")), 0}
+		for _, line := range body {
+			if strings.Contains(line, "uses: actions/setup-go@") {
+				counts[2]++
+			}
+		}
+		perJob[job] = counts
+		for i := range summed {
+			summed[i] += counts[i]
+		}
+	}
+	if len(jobBody) == 0 {
+		t.Fatalf("instrument failure: parsed %d job name(s) from %s but zero job bodies", len(jobs), workflowPath)
+	}
+	for _, job := range jobs {
+		want := 0
+		if slices.Contains(wantGoPinnedJobs, job) {
+			want = 1
+		}
+		counts := perJob[job]
+		for i, kind := range pinKinds {
+			if counts[i] != want {
+				t.Errorf("ci.yml: job %q carries %d %s line(s), want %d (Go-pinned jobs=%v)", job, counts[i], kind, want, wantGoPinnedJobs)
+			}
+		}
 	}
 
 	goToolchains := keyedValues(lines, "GOTOOLCHAIN")
@@ -153,14 +213,23 @@ func TestGoToolchainPinsAgreeAndMatchJobList(t *testing.T) {
 		goVersions[i] = canonicalizeVersionPin(raw)
 	}
 	setupGoUses := strings.Count(src, "uses: actions/setup-go@")
-	if len(goToolchains) != len(wantJobs) {
-		t.Errorf("ci.yml: GOTOOLCHAIN keyed-line count=%d, want %d (one per enumerated expected job)", len(goToolchains), len(wantJobs))
+	// Whole-file counts must equal the per-job sums, or a pin sits OUTSIDE every
+	// enumerated job — a workflow-level `env: GOTOOLCHAIN`, or a job this parser
+	// failed to attribute. Either way the per-job arms above were reading a set
+	// smaller than the file, which is the one way they can be vacuously satisfied.
+	for i, total := range []int{len(goToolchains), len(goVersions), setupGoUses} {
+		if total != summed[i] {
+			t.Errorf("ci.yml: %s whole-file count=%d but per-job sum=%d; a pin sits outside every enumerated job", pinKinds[i], total, summed[i])
+		}
 	}
-	if len(goVersions) != len(wantJobs) {
-		t.Errorf("ci.yml: go-version keyed-line count=%d, want %d (one per enumerated expected job)", len(goVersions), len(wantJobs))
+	if len(goToolchains) != len(wantGoPinnedJobs) {
+		t.Errorf("ci.yml: GOTOOLCHAIN keyed-line count=%d, want %d (one per Go-pinned job)", len(goToolchains), len(wantGoPinnedJobs))
 	}
-	if setupGoUses != len(wantJobs) {
-		t.Errorf("ci.yml: actions/setup-go use count=%d, want %d (one per enumerated expected job)", setupGoUses, len(wantJobs))
+	if len(goVersions) != len(wantGoPinnedJobs) {
+		t.Errorf("ci.yml: go-version keyed-line count=%d, want %d (one per Go-pinned job)", len(goVersions), len(wantGoPinnedJobs))
+	}
+	if setupGoUses != len(wantGoPinnedJobs) {
+		t.Errorf("ci.yml: actions/setup-go use count=%d, want %d (one per Go-pinned job)", setupGoUses, len(wantGoPinnedJobs))
 	}
 	allPins := append(append([]string{}, goToolchains...), goVersions...)
 	if len(allPins) > 0 {
