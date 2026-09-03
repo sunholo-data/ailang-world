@@ -16326,7 +16326,7 @@ unreviewed doc.
 four new call-site assertions). Under the origin skill's ATTENDED LEDGER EDITS rule (b), an
 attended ruling counts as a human answer only if the commit that flipped the row was not authored
 by the fleet account. Measured: `git log -1 -S'| D-WORLD-29 | RESOLVED' -- <charter>` returns
-**`Mark Edmondson <mark@aitanalabs.com>`**, not `sunholo-voight-kampff`. `D-WORLD-30` checks
+**an ATTENDED (non-fleet) author**, not `sunholo-voight-kampff`. `D-WORLD-30` checks
 identically. Not a self-resolution.
 
 ### The row is real, and rule A closes it — both measured first-party
@@ -17101,3 +17101,199 @@ since the queue was untouched **because** the PR had already merged, so complete
 unstarted.
 
 **Next:** rows **57**, **58**, **59**, **60**, **61**, **62**–**66**, **68**–**73**, then **39**.
+
+---
+
+## Iteration 152 — 2026-09-03 — row 57's causal claim is refuted, and the issue it kills is one this mission filed itself: `--type` is misfiled, not ignored, and fixing it would leave the false green byte-identical [REFUTATION]
+
+**Pick:** the queue head, row 57
+(`w-approvals-spine-prints-a-green-no-pending-under-the-row-it-just-listed`), ungated. It survived
+every already-landed check — `git log origin/dev --grep='row 57'` returns exactly **1** commit and
+that commit is `9c0ad0b`, the iteration-139 addendum that *filed* the row (control: `row 67`
+returns 2, its fix plus its record). Died-mid-flight traces were clean: **0** open PRs on this
+account, one stale worktree `.wt-iter150` with `porcelain=0` whose branch content landed as
+`a7b58dd` — a leftover directory, not orphaned work — and `porcelain=0` in the main checkout.
+
+**Progress:** **goal unmoved.** No product surface changed; the deliverable is a measurement and
+two upstream issues. The row census stays **carried, not measured** (row 72's own subject) — I did
+not re-derive it, because iteration 151 established that three attempts disagree and that
+publishing a fourth unverified number is worse than publishing none.
+
+**Outcome:** no PR to this repo's code. The fix is in `sunholo-data/ailang`, so per the
+frozen-core rule the deliverable is measurement + upstream issues + a cross-mission note, and
+**not** a local workaround. Doc-only commit direct to `dev` (`dev` == `origin/dev` at entry, so
+Gate 4's stale-base hazard does not apply and the record is written in place).
+
+### The refutation, and it is against an issue I filed myself
+
+Row 57 (and `ailang#984`, which this mission opened on 2026-08-31) says: `ailang messages send
+--type` is silently ignored, therefore every mission-authored approvals row is typed
+`notification`, therefore `coordinator pending`'s *typed sub-query* finds zero `approval_request`
+rows and prints `✓ No pending approval requests` under the ask it just listed. The symptom is
+real and reproduced live. **The causal chain is false at its middle link, and the fix it implies
+would change nothing.**
+
+**There is no typed sub-query over inbox `message_type`, and one is not expressible.**
+`printApprovalsInboxPending` (`cmd/ailang/coordinator_pending_spine.go`) queries
+`InboxListOptions{Inbox:"approvals", UnreadOnly:true, Limit:50}` — no type filter — and that is
+established **empirically rather than by reading the code**, because in the live repro it *listed*
+a row whose `message_type` is `notification` (my own spine post, `inbox_1788448377647_d836d0e8`).
+`messaging.InboxListOptions` (`internal/messaging/inbox.go:82-93`) declares **10** filter fields —
+`Inbox`, `Status`, `UnreadOnly`, `FromAgent`, `Limit`, `IncludeRead`, `Collapsed`, `DupOf`,
+`StartDate`, `EndDate` — and **none** filters on message type, so the query the row describes
+cannot be written against this API at all. That is the structural half: not "the filter is wrong"
+but "the filter does not exist and could not".
+
+**The green line is a verdict about a different store.** `coordinator_list.go:137` prints it when
+`store.ListPendingApprovals(ctx)` is empty, and that is `SELECT ... FROM approval_requests WHERE
+status = 'pending'` (`internal/coordinator/store_sqlite_approvals.go:88`) — local SQLite, a
+different table, and on a `storage=gcp` node like this rig a different **backend** from the
+Firestore inbox printed immediately above it. That file references `inbox_messages` **0** times
+(control: `approval_requests` **16** times in the same file).
+
+**The load-bearing negative control.** My result arrived in exactly the direction I had predicted,
+which is rule 3d's trap, so it needed an arm that could have refuted it: two runs of `ailang
+coordinator pending` differing only in inbox state — **0** unread rows, then **1** — printed a
+**byte-identical** `✓ No pending approval requests`. The verdict is provably invariant to the
+inbox; the only delta between arms is the spine block appearing above it. `approval_requests` held
+zero pending rows throughout, so the green is a true statement about its own source and a false
+statement about the command.
+
+**⇒ Setting `message_type=approval_request` on the send path would leave the false green
+byte-identical.** `#984`'s proposed direction does not close the defect `#984` is named for.
+
+### Defect 1, restated correctly: misfiled, not ignored
+
+`cmd/ailang/messages_send.go:42` binds `--type` to `Category`; `:132` **hardcodes**
+`MessageType: messaging.InboxTypeNotification`; `:137` sets `Category: category`. The value is
+stored — in the wrong field. Across all **18** rows in the `approvals` inbox the split is total and
+by author class: **12** mission-loop rows (`mission-v1` ×5, `mission-world` ×4, `mission-motoko`
+×2, `audit-r1` ×1) are `type=notification`/`category=approval_request`; **6** `coordinator` rows are
+`type=approval_request`/`category=` empty. My own send reproduced it live, and the flag's own help
+string reads *"Message category"* — so the **flag name** may be the actual bug.
+
+**Its real blast radius, which the row never identified.** Nothing repo-wide compares
+`message_type` to `approval_request` (the sole hit is a *writer*,
+`internal/coordinator/daemon_tasks_exec_run.go:612`), so the misfiling is invisible on the two
+surfaces the row worried about — and it is **not** cosmetic, because `message_type` is read by
+live consumers elsewhere. `cmd/ailang/messages_activity.go:59` aggregates `ByType[m.MessageType]`,
+and `ailang messages activity` live reports `by type: 29 notification, 1 completion` with **zero
+`approval_request`** while simultaneously listing `1 approvals` under busiest inboxes — fleet
+approval traffic is invisible to that view. `internal/coordinator/agent_registry.go:56` routes
+inbound templates via `TemplateByMessageType`, so a mission-authored approval can never match an
+`approval_request` template. `backstop_sweep.go:157,202` and `message_adapter.go:51` both key
+`Kind` off `MessageType`.
+
+### The row's one explicitly-unmeasured claim, settled — and in the safe direction
+
+Row 57 closes with genuine discipline: whether the Discord "🔔 Approval needed" push filters on
+the type is *"NOT established and must be measured before this row claims it"*. Measured.
+`internal/daemon/messageNotification` (`handlers.go:104`) references `MessageType` **0** times —
+controls: `ToInbox` **7** in the same file, `MessageType` **106** repo-wide, and a fresh absent
+literal **0** — switches on `m.ToInbox`, and `humanTriageInbox` accepts `approvals`. It is **live**,
+established by a CALLER search rather than a call-site grep: `internal/daemon/daemon.go:204`, with
+the only other callers being tests. **So mission-authored approvals do reach Discord as "🔔
+Approval needed" despite the wrong type.** The ask is not lost from the human channel, which lowers
+this whole class from *asks are invisible* to *asks are mis-typed in aggregation and routing*.
+
+That is the second time in three iterations that this loop's own filed claim came back **better**
+than filed once someone actually ran it, and it is worth naming as a pattern rather than a
+pleasant surprise: a row filed as a by-product of doing something else inherits the verification
+debt of the thing that was actually being done.
+
+### Found in passing
+
+`cmd/ailang/coordinator_pending_spine.go:9`'s own doc comment says the function *"lists unread
+approval_request messages"* — describing a filter the code does not have. It is the likely origin
+of the row's wrong mechanism: I read the comment as a specification. Carried in `#1036`.
+
+**Ruled out:**
+- *"`--type` is silently ignored / dropped."* Refuted — it is stored in `Category`
+  (`messages_send.go:42`/`:137`), empirically visible on all 12 mission-authored rows.
+- *"A typed sub-query over inbox `message_type` finds zero rows and prints the green."* Refuted
+  twice over: no type filter is applied (the listing showed a `notification` row), and
+  `InboxListOptions` has no type-filter field, so such a query is not expressible.
+- *"Fixing the type will close the false green."* Refuted by the two-arm control — the verdict line
+  is byte-identical at 0 and 1 unread inbox rows.
+- *"The Discord push may filter on type, so asks may not reach Mark."* Refuted — the notification
+  path keys on `ToInbox` and never reads `MessageType`; live from `daemon.go:204`.
+- *"`make check-no-personal-email` enforces the address rule."* Refuted — the target does not exist
+  in `ailang-world` **or** in V1's `Makefile` (grep 0 in both). The rule cites an enforcement that
+  was never built.
+- **Not** ruled out and deliberately not claimed: whether the right fix for defect 1 is to bind
+  `--type` to `message_type` (validated against `InboxMessageTypes`) or to rename the flag and keep
+  the vocabularies separate. That is a maintainer call, not mine, and I said so upstream rather
+  than picking one.
+
+### A second, unrelated finding: remediated, and half-filed
+
+The shared skill's ATTENDED-LEDGER-EDITS contract states that `make check-no-personal-email` fails
+the build if a personal address reaches a tracked file. **No such target exists** — `grep -rn
+'check-no-personal-email'` returns **0** in this repo (Makefile, `scripts/`, `.github/`) and **0**
+in V1's `Makefile`. Meanwhile `sunholo-data/ailang-world` is `"visibility":"PUBLIC"` and carried
+the address in **7** doc locations: **4** in the charter (the `D-WORLD-28/29/30` evidence cells and
+row 50's provenance sentence), **1** in the log, **2** in the status archive. Every one was written
+on **2026-09-01** — the day *before* the rule existed — so no controller violated it, and nothing
+existed to catch them.
+
+Remediated in this iteration by pure substitution to `an ATTENDED (non-fleet) author` / `commit
+author`: **7 → 0**, with `git diff --stat` a balanced **7 insertions(+), 7 deletions(-)** across 3
+files, so no line was added or lost, and the verdict the rule actually wants — *attended*, not
+*fleet* — is preserved in every cell. Negative control: a fresh absent literal read 0 in the same
+call; post-check control: the replacement literal reads 4 in the charter. Checked and **not**
+published: the address had reached **0** comments on `#107`, so the report channel had not yet
+carried it. `scripts/mission_answer.sh:69`'s
+`ATT_EMAIL="${MISSION_ATTENDED_EMAIL:-mark@…}"` is deliberately **left alone** — it is a functional
+config default, not an evidence cell, and redacting it would break the script.
+
+The missing gate is **new row 74**, filed rather than absorbed: a one-time redaction with no gate
+behind it just waits for the next mission to record an attended provenance check. Reported on the
+cross-mission channel, since V1 lacks the gate too and all four missions run the skill that cites
+it.
+
+**And the first recurrence came from this iteration itself, ninety seconds after the redaction.**
+Row 74's own write-up originally quoted `mission_answer.sh:69` verbatim — address included — so
+documenting the cleanup re-introduced an 8th occurrence into the file I had just cleaned. The
+post-edit `grep -rc` over `design_docs/` caught it one command before the commit; nothing else
+would have. This is Gate 4's *a record is not inert* and *a control you record is a control you
+spend* arriving together and aimed at a **remediation** rather than at a measurement: the write-up
+of a redaction is itself a publication channel. I am recording it rather than quietly fixing it,
+because it is the strongest available evidence for row 74's thesis — a fresh rulebook and a
+deliberate, attentive cleanup produced a recurrence **inside the same iteration**, which is exactly
+why the deliverable has to be a gate that runs in CI over the mission docs after the loop writes
+them, and not a habit a controller is trusted to remember. Controls after the fix: docs **0**,
+`scripts/mission_answer.sh` **1** (positive control, proving the grep fires), fresh absent literal
+**0**.
+
+**Verify gate — GREEN, both legs, at base:** `./scripts/verify_ail.sh` **rc=0** (11 required
+identities, 40 named tests, 9/9 world-package steps non-vacuous, `compiler pinned by exact bytes:
+AILANG v0.30.0 on Darwin/arm64`) and `go build ./... && go test ./...` **rc=0** (**19** packages
+`ok`, **0** FAIL). The pinned binary is `~/.pinned-ailang/ailang` at `v0.30.0`/`e37b370`; PATH's
+`ailang` is `v0.34.0-414-g267a94e92-dirty` and was used only to exercise the CLI defect under
+study, never as a gate.
+
+**Routing evidence:** controller `claude:claude-opus-5` (session). **No designer, planner, executor
+or evaluator spawned** — the deliverable is a measurement plus upstream filings, and there is no
+sprint for this repo to execute, so routing a design doc would have manufactured work. Designer
+rotation pointer left at `claude:claude-fable-5`, correctly **not** advanced (no designer ran).
+`metered=$0.00` of $5. Quota buckets: opus (controller) only. Fable diet untouched — zero runs.
+
+**Upstream artifacts, each asserted rather than assumed:** correction comment on
+[ailang#984](https://github.com/sunholo-data/ailang/issues/984) with the comment count asserted
+**0 → 1** (it had 0 comments and no labels, so nothing had been built on the bad premise — this is
+the cheapest moment such a correction will ever be); new issue
+[ailang#1036](https://github.com/sunholo-data/ailang/issues/1036) for the real cause, asserted
+`OPEN`; cross-mission note to `mission-control` (`inbox_1788448675286_e0797635`, body read back and
+confirmed 4,010 bytes with no flag-string leak); and the `D-WORLD-31` spine post
+(`inbox_1788448377647_d836d0e8`, body read back, `status=unread`).
+
+**One process note on the spine.** All 18 pre-existing `approvals` rows were `read`, including
+every prior `D-WORLD-31` post — so the mission's only open ask was invisible on the surface whose
+entire job is to show what is waiting on a human. Re-posting it was both the protocol-required
+`awaiting_approval` action and, conveniently, the exact precondition the false-green repro needed.
+Worth watching: if a re-ask is marked read each week, the spine trends toward always-empty while
+the ledger still has an OPEN row.
+
+**Next:** rows **58**, **59**, **60**, **61**, **62**–**66**, **68**–**74**, then **39**. Row **50**
+stays parked on `D-WORLD-31`; row **57** is now **tracking-only** on upstream `#984`/`#1036`, and
+its predicate must be RUN at pick time (an upstream disposition), never transcribed.

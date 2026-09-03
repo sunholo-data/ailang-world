@@ -2,30 +2,34 @@
 
 _Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS), `world-mission-log.md`._
 
-**As of:** 2026-09-03 · iter 151 · `dev` = [`a7b58dd`](https://github.com/sunholo-data/ailang-world/commit/a7b58dd) · CI green (3/3) · local verify gate **restored to green**
+**As of:** 2026-09-03 · iter 152 · `dev` = [`6874a98`](https://github.com/sunholo-data/ailang-world/commit/6874a98) · CI green (3/3) · local verify gate green both legs
 
 ## Last iteration
-**No PR — bookkeeping repair + a precondition restore.** **HARNESS** · metered **$0.00** (controller-authored; no sub-agent spawned).
+**No PR to this repo's code — the fix is upstream.** **REFUTATION** · metered **$0.00** (controller-authored; no sub-agent spawned).
 
-**Two consecutive slots died — of two DIFFERENT causes, one already fixed.** Slot 1 (unnumbered, 2026-09-02) merged row 56 as PR [#113](https://github.com/sunholo-data/ailang-world/pull/113) → `725ad5a` and left **zero** trace in all four mission docs; it was killed `rc=143` by the **stall watchdog 61 s after the merge**, on the pre-`e308577` CPU-only idleness arm the driver's own comment records as false-premised (*"4 V1 and 3 world iterations killed"* that day). `e308577` fixed it 1h41m too late for that slot. Slot 2 (iter-150) ran **with** the fix, stamped `gate-4` at epoch `1788394743`, and met `kern.boottime` `1788395029` — a reboot **286 s later** that wiped `/private/tmp`. Both records now landed, row 56 tagged with retroactive Gate-3b evidence, stale worktree pruned.
+**Row 57's causal claim died, and the issue it kills is one this mission filed itself.** The row said `ailang messages send --type` is dropped, so a "typed sub-query" finds zero `approval_request` rows and `coordinator pending` prints a green all-clear under a live ask. Measured at ailang `origin/dev`: **there is no typed sub-query and one is not expressible** — `printApprovalsInboxPending` applies no type filter (proven empirically: it *listed* a row typed `notification`), and `InboxListOptions` has 10 filter fields, none for message type. The green comes from a **different store**: `FROM approval_requests WHERE status='pending'` (local SQLite) vs the inbox (Firestore). **Two-arm control: at 0 and at 1 unread inbox rows the green line is byte-identical** — provably invariant to the inbox. So fixing the type would change nothing.
 
-**The reboot had also deleted the toolchain pin** `/tmp/ailang-v0300/ailang` — the binary every gate here runs on. It fails *closed*, so nothing was falsely green; but the loop could not verify anything and nothing said so. Restored to **`~/.pinned-ailang/ailang`** (CI's own path; `$HOME` survives a boot), checksum- and version-verified; `verify_ail.sh` step 9/9 now prints `compiler pinned by exact bytes: AILANG v0.30.0 on Darwin/arm64`.
+**`--type` is real but MISFILED, not ignored:** `messages_send.go:42` binds it to `Category`; `:132` hardcodes `MessageType`. All 18 `approvals` rows split totally by author class (12 mission `notification`/`approval_request`, 6 coordinator `approval_request`/empty). Where it actually hurts: `messages activity` reports **zero** `approval_request` (29 notification, 1 completion) while listing `1 approvals`; plus template routing and sweep classification.
+
+**Settled in the safe direction — the row's own open question:** the Discord push does **not** filter on type (`messageNotification` references `MessageType` 0 times; switches on `ToInbox`; live from `daemon.go:204`). **Mission approvals do reach Discord.** The ask is not lost.
+
+Upstream: correction on [ailang#984](https://github.com/sunholo-data/ailang/issues/984) (0→1 comments asserted) · real cause filed as [ailang#1036](https://github.com/sunholo-data/ailang/issues/1036) · cross-mission note sent.
+
+**Second finding, remediated:** the shared skill cites `make check-no-personal-email` as enforcement — **no such target exists** in either repo, while this PUBLIC repo carried a personal address in 7 doc locations. Redacted (7→0, balanced 7+/7− diff). The missing gate is **new row 74**.
 
 ## Goal distance
-**59 of 72 rows closed — carried, not measured.** Two re-derivations read 36/72 and 53/70 against the carried 58/70, and the better one still over-counts (it classes the open row 57 as closed on prose). Now row 72. Row 50 parked on `D-WORLD-31`.
+**Goal unmoved** (no product surface changed). Row census remains **carried, not measured** — row 72 tracks that; three re-derivations disagreed. Row 57 is now **tracking-only** on upstream. Row 50 parked on `D-WORLD-31`.
 
 ## Next picks
-1. **Row 57** `w-approvals-spine-prints-a-green-no-pending` — queue head, ungated.
-2. **Row 71** `w-mission-critical-state-lives-in-a-directory-the-os-wipes-on-boot` — pin half closed; the driver's **only** crash log and sprint worktrees are still in `/tmp`. Fleet-owned.
-3. **Row 73** `w-gate-0-cannot-see-the-drivers-own-crash-notices` — the driver announces every dead fire on the bookkeeping issue and Gate 0's author allowlist filters it out. Then 58–66, 68–72, then 39.
+1. **Row 58** `w-verify-go-is-red-at-pristine-base` — AMENDED: the gate is **flaky**, not deterministically red; wants an instrument-failure floor so a rig cost can't wear a correctness defect's clothes.
+2. **Row 59** `w-static-grep-cannot-prove-an-assertion-is-live` — an AC proved "load-bearing" by `grep -c`, which cannot tell a live assertion from a compiled-and-unreached one.
+3. **Row 74** `w-the-personal-email-gate-...-does-not-exist` — build the gate the rulebook already claims exists, with a non-vacuity mutation arm. Then 60–66, 68–73, then 39.
 
-## Loop + routing
-Controller `claude:claude-opus-5` · designer ROTATION, last used **`claude:claude-fable-5`** (next: `pi:ollama/deepseek-v4-flash:0731-cloud`) · planner `opus` · executor `codex:gpt-5.6-sol` · evaluator `sonnet` (generator≠judge). Iter-151 spawned **no** role: the deliverable was verification and bookkeeping over existing artifacts, and routing a sprint before restoring the pin would have produced a sprint whose gate could not run.
+## Routing / cadence
+Controller `claude:claude-opus-5`. Designer rotation pointer: `claude:claude-fable-5` (not advanced — no designer ran). Verify profile `ailang-code`; pin **v0.30.0** at `~/.pinned-ailang/ailang` (PATH's `ailang` is `-dirty` and is never used for gates).
 
 ## Parked on Mark
-**`D-WORLD-31`** — one word. Ship `D-WORLD-29`'s rule A as ratified, or hold row 50 for the fixture migration. Unchanged, re-asked. Nothing else is blocked; the queue advances either way.
+**`D-WORLD-31`** — ONE WORD: ship rule A as ratified, or hold row 50 for the fixture migration? Re-asked unchanged; **no new ask this iteration**. Re-posted to the approvals spine (prior rows had all been marked read, so the ask was invisible there).
 
-## Standing reds — owned elsewhere, none is a World failure
-- **`verify_go.sh` RED on the rig:** the fleet arm — World's driver copy is behind fleet HEAD, i.e. *the fleet must commit*. **CI unaffected** (that arm loud-skips there). Both charter hard-rule legs are **GREEN** this iteration: `verify_ail.sh` rc=0, and `go build ./... && go test ./...` rc=0 (19 ok / 0 FAIL) — row 58's flake did not fire.
-- **The running `mission-control` skill is byte-identical to `origin/dev`** (`cmp` against the resolved symlink target).
-- **`tools/launchd/mission-heartbeat.sh` is absent here** (row 69) — this iteration lost its `gate-0` stamp to it before switching to V1's absolute path.
+## Quota posture
+metered **$0.00** of $5 this iteration. Billing tripwire CLEAN.
