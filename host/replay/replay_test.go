@@ -113,7 +113,7 @@ func newFixtureEnv(t *testing.T) *fixtureEnv {
 	a := archive.New(dbPath)
 	interp, err := a.Archive(bin)
 	if err != nil {
-		t.Fatalf("archive pinned binary: %v", err)
+		t.Fatalf("%s", archive.AttributeFailure("archive pinned binary", err))
 	}
 
 	rawSource := readTestdata(t, "transition_fixture.ail")
@@ -550,7 +550,7 @@ func TestInterpreterMemberChangeDrivesRealReplayEndToEnd(t *testing.T) {
 
 	interp2, err := env.archive.Archive(wrapperPath)
 	if err != nil {
-		t.Fatalf("archive second (wrapper) interpreter: %v", err)
+		t.Fatalf("%s", archive.AttributeFailure("archive second (wrapper) interpreter", err))
 	}
 	if interp2.String() == env.interp.String() {
 		t.Fatal("wrapper interpreter must be a DISTINCT HashRef from the real binary")
@@ -712,7 +712,7 @@ func TestSidecarPresentExecutableAbsentResolvesAbsent(t *testing.T) {
 	// state the M4 evaluator called out.
 	interp, err := a.Archive(bin)
 	if err != nil {
-		t.Fatalf("archive: %v", err)
+		t.Fatalf("%s", archive.AttributeFailure("archive", err))
 	}
 	if _, err := a.ReadManifest(interp); err != nil {
 		t.Fatalf("manifest should be present: %v", err)

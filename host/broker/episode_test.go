@@ -61,7 +61,7 @@ func runEpisodeCapsule(t *testing.T, binary string) (string, hashref.HashRef) {
 	a := archive.New(filepath.Join(t.TempDir(), "archive.db"))
 	interpreter, err := a.Archive(binary)
 	if err != nil {
-		t.Fatalf("archive pinned interpreter: %v", err)
+		t.Fatalf("%s", archive.AttributeFailure("archive pinned interpreter", err))
 	}
 	source := []byte("module host/capsule/main\n\nexport func main() -> string { \"capsule-transition\" }\n")
 	got, err := capsule.New(a, capsule.Config{}).Run(capsule.Entry{
