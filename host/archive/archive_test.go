@@ -13,11 +13,31 @@ import (
 	"github.com/sunholo-data/ailang-world/host/hashref"
 )
 
-// pinnedInterpreter is the dev interpreter of record. Tests that need a real
+// pinnedInterpreter resolves the dev interpreter of record from AILANG_BIN, the
+// same way host/capsule and host/replay do. Tests that need a real
 // `ailang --version` skip when it is absent so CI (which has no pinned binary)
 // stays green; the core archival/idempotence/mismatch paths use synthetic
 // fixtures instead.
-const pinnedInterpreter = "/tmp/ailang-v0300/ailang"
+//
+// It was a hardcoded "/tmp/ailang-v0300/ailang" until 2026-09-03, and by then
+// that path had been dead for a day: iteration 151 moved the pin to
+// ~/.pinned-ailang/ailang because macOS wipes /private/tmp on boot. The literal
+// therefore skipped on EVERY machine -- CI never had it, and the rig no longer
+// did -- so the one arm that exercises a real released interpreter end to end
+// had become vacuous with no red anywhere. A pin resolved from the environment
+// cannot rot that way, and the two sibling packages already did it.
+func pinnedInterpreter(t *testing.T) string {
+	t.Helper()
+	bin := os.Getenv("AILANG_BIN")
+	if bin == "" {
+		t.Skip("AILANG_BIN not set; skipping the real-interpreter arm")
+	}
+	info, err := os.Stat(bin)
+	if err != nil || !info.Mode().IsRegular() {
+		t.Skipf("AILANG_BIN %q is not a usable executable: %v", bin, err)
+	}
+	return bin
+}
 
 // fakeInterpreter writes a synthetic executable that echoes a fixed version
 // string when invoked with --version, and returns its path plus the exact bytes
@@ -222,13 +242,11 @@ func TestResolveZeroRefIsReplayError(t *testing.T) {
 // when present. It is skipped in CI (no pinned binary) so the synthetic tests
 // above carry the core coverage.
 func TestArchivePinnedInterpreter(t *testing.T) {
-	if _, err := os.Stat(pinnedInterpreter); err != nil {
-		t.Skipf("pinned interpreter %s absent; skipping", pinnedInterpreter)
-	}
+	pinned := pinnedInterpreter(t)
 	a := New(storeDBPath(t))
-	ref, err := a.Archive(pinnedInterpreter)
+	ref, err := a.Archive(pinned)
 	if err != nil {
-		t.Fatalf("Archive(pinned): %v", err)
+		t.Fatalf("%s", AttributeFailure("Archive(pinned)", err))
 	}
 	if _, err := a.Resolve(ref); err != nil {
 		t.Fatalf("Resolve(pinned): %v", err)

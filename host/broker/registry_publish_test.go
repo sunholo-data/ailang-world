@@ -1244,7 +1244,7 @@ func driveArchiveVersionProbe(t *testing.T, probe string) {
 	t.Helper()
 	a := archive.New(filepath.Join(t.TempDir(), "world.db"))
 	if _, err := a.Archive(probe); err != nil {
-		t.Fatalf("archive.Archive: %v", err)
+		t.Fatalf("%s", archive.AttributeFailure("archive.Archive", err))
 	}
 }
 
@@ -1253,7 +1253,7 @@ func driveCapsuleRun(t *testing.T, probe string) {
 	a := archive.New(filepath.Join(t.TempDir(), "world.db"))
 	ref, err := a.Archive(probe)
 	if err != nil {
-		t.Fatalf("archive.Archive: %v", err)
+		t.Fatalf("%s", archive.AttributeFailure("archive.Archive", err))
 	}
 	// The probe is not an interpreter, so Run's output will not be a valid
 	// transition result. The subprocess launch is the measurement.
@@ -1275,7 +1275,7 @@ func driveReplayEntry(t *testing.T, probe string) {
 	a := archive.New(filepath.Join(t.TempDir(), "world.db"))
 	ref, err := a.Archive(probe)
 	if err != nil {
-		t.Fatalf("archive.Archive: %v", err)
+		t.Fatalf("%s", archive.AttributeFailure("archive.Archive", err))
 	}
 	source, err := replay.SourceObject([]byte("module world/transition\n"),
 		"world/source/v1", "host/broker/registry_publish_test.go")

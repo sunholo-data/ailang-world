@@ -42,7 +42,7 @@ func archiveExecutable(t *testing.T, path string) archivedFixture {
 	a := archive.New(filepath.Join(t.TempDir(), "world.db"))
 	ref, err := a.Archive(path)
 	if err != nil {
-		t.Fatalf("archive interpreter: %v", err)
+		t.Fatalf("%s", archive.AttributeFailure("archive interpreter", err))
 	}
 	resolved, err := a.Resolve(ref)
 	if err != nil {
