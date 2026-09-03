@@ -16891,3 +16891,85 @@ evaluator `sonnet` in its own worktree (generator≠judge: sonnet ≠ codex). **
 $5, all of it quorum; every other lane was a quota bucket.
 
 **Next:** rows **56**–**66**, then **39**. Row 50 stays parked on `D-WORLD-31`.
+
+## Iteration 150 — 2026-09-03 — row 67 LANDED: dev went red at a merge of two fine branches, because one constant answered two questions [HARNESS]
+
+**Pick:** **not** the queue head. `origin/dev` was RED at `68403ea` (`checks=3`, `go host build +
+test gate: failure`), World owns this repo, and Gate 1 makes a red outrank the queue. No directive,
+no attended ruling, no cross-mission request outranked it either.
+
+**Progress:** **58 of 70 queue rows closed** (57 of 66 at iteration 149; row 67 opens and closes in
+this iteration, rows 68/69/70 open from its own measurements). Row 50 remains parked on
+`D-WORLD-31`.
+
+**Outcome:** LANDED. PR [#114](https://github.com/sunholo-data/ailang-world/pull/114) → squash
+[`a7b58dd`](https://github.com/sunholo-data/ailang-world/commit/a7b58dd). Gate 3b polled the PR
+head to green first (`present=3 == expected=3`, all `success`), then the MERGE commit to the same
+standard, SHA-addressed, every count asserted numeric before comparison so an extraction failure
+could not read as a completion.
+
+**What landed:** `host/verifygate/toolchain_pin_gate_test.go`, +84/−15, one file. No `go.mod`
+change, no new dependency, frozen core byte-identical, `ci.yml` byte-identical (sha256 verified
+before and after the mutation drill).
+
+**The defect is a merge semantic conflict, and naming it that way is most of the work.** `e308577`
+added a third CI job — `launchd-drivers`, bash 3.2 on macos-latest, with no Go anywhere in it —
+and `725ad5a` carried a gate whose single hand-maintained `wantJobs` constant was doing two jobs at
+once: *which jobs exist* and *how many `GOTOOLCHAIN`/`go-version`/`setup-go` pins there must be*.
+Each branch is green alone; the pair is red. The gate was RIGHT to refuse, and could not say which
+of the two facts it objected to — its message reported the job list mismatch and the pin counts in
+one breath, which reads as one complaint and is two.
+
+**The obvious fix is refuted, not argued.** Widening `wantJobs` to three entries — the change any
+reader reaches for first, and the one the gate's own comment invites ("a third job moves this
+hand-maintained set in the same edit") — is **rc=1 on the pristine `ci.yml`**, because the count
+arms then demand three pins where two exist. Measured before it was rejected, as a variant test
+file run against the unmutated workflow. That measurement is what made the two-list split
+necessary rather than merely tidy.
+
+**Ghost discipline on the red itself.** Reproduced first-party at HEAD before anything was
+touched; negative control, parent `725ad5a`, CI `success` on both jobs minutes earlier. And the
+commit that armed it, `e308577`, carries **zero check-runs** — it was never verified on its own, so
+the merge was the first CI run in which the two facts could meet. That is row 70.
+
+**Ruled out:**
+- *"CI is red, so something in the diff regressed."* No: the failing test is a static text scan
+  over `ci.yml` and both inputs were individually green. Attribution was established by the parent
+  control, not by the red's direction.
+- *"The other 18 test failures in the first full-suite pass are mine."* No: they are `AILANG_BIN`
+  being unset, which this repo fails closed on by design. Re-running the package with the pinned
+  v0.30.0 binary and `z3` on PATH leaves **one** failure at base — the gate test — and zero after
+  the fix. An environmental explanation was available for a symptom I might have caused, so it was
+  measured rather than assumed.
+- *`mission-v1`'s shared-clone warning binds World.* It does not: World's checkout is its own clone
+  (`git-common-dir` = `.git`, remote `ailang-world.git`), so `git worktree list` IS ownership proof
+  here. Measuring it rather than inheriting it is what surfaced row 68.
+
+**Mutation drill — 7 mutants, and the one that matters is the one that survived.** Each mutant
+LANDED by sha256, `go vet` rc=0 as the compile fence (`go build ./...` cannot see a `_test.go` at
+all — row 65), `ci.yml` restored byte-identical from a copy (never `git checkout --`), pristine
+control green either side. M1 a 4th non-Go job, M2 drop `go-verify`'s GOTOOLCHAIN, M3 drop
+`ailang-verify`'s setup-go step, M4 a GOTOOLCHAIN added to the non-Go job, M5 move `go-verify`'s
+pin into `ailang-verify` (whole-file count UNCHANGED), M6 a pin at workflow scope outside every
+job, M7 a 4th job that IS fully Go-pinned — all RED, each with the assertion text read rather than
+the exit code alone. Then the arm this loop keeps learning to run: **revert just the per-job hunk**
+(green at base) and re-run all seven — **M5 survives rc=0 with no assertion fired.** So the per-job
+attribution is M5's sole killer, every other mutant is killed by the count arms alone, and that
+gradient is in the record rather than flattened into "7 of 7 red".
+
+**Routing evidence:** controller-authored direct fix; no designer, planner, executor or evaluator
+spawned. `metered=$0.00`; quota bucket: controller session only. Rationale: the deliverable is a
+~40-line change to one test file whose correctness is decided by a mutation drill the controller
+must run anyway, and Gate 1 had already made it the pick. Recorded as a routing choice, not as a
+skipped gate: no independent judge saw this diff, which is a real narrowing and is stated as one.
+
+**Findings filed rather than absorbed:** row 68 (a pin worktree named `world` that is a worktree of
+the **`ailang`** clone and holds no `world-mission.md`), row 69 (`tools/launchd/mission-heartbeat.sh`
+does not exist in this repo, so the skill's mandated per-gate stamp is `No such file or directory`
+here — the stamps in `~/.ailang/state/mission-world-heartbeat` were made by controllers reaching for
+V1's absolute path, as I did six times this iteration), row 70 (Gate 1 reads only HEAD, so a
+direct-to-dev commit with zero check-runs is invisible until something downstream trips over it).
+Rows 68 and 69 are fleet-owned; World hands them over with the measurement and does not fix them.
+
+**Next:** rows **57**, **58**, **59**, **60**, **61**, **62**–**66**, **68**, **69**, **70**, then
+**39**.
