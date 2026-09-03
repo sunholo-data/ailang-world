@@ -17063,12 +17063,41 @@ log and sprint worktrees all lived in `/tmp`; the pin half is closed here, and t
 **fleet-owned** (`LOG=/tmp/ailang-mission-${MISSION_NAME}.log`, `mission-control.sh:76`) so every
 mission on this rig carries the identical exposure. Row **72** — the unauditable progress count.
 
-**Recorded as a limit, not a verdict:** slot 1's cause is **unrecoverable**. The driver log is the
-only place `HARD TIMEOUT` and `STALL:` are written, and the reboot destroyed it five hours after
-that fire died. Slot 2 is datable only because `kern.boottime` happens to outlive `/tmp`.
+**Correction, made before this iteration closed, against my own record.** I wrote above that slot
+1's cause was unrecoverable because the reboot destroyed the driver log. That was wrong, and it was
+wrong in the ordinary way: I had not looked in the one channel that survived. **The driver had
+already posted its own crash notice** — `#107` comment `2026-09-02T19:27:22Z`, *"⚠️ Mission
+iteration FAILED to complete (rc=143 — timeout or crash)"* — **61 seconds after the merge**.
+`rc=143` is a deliberate watchdog kill (`mission-control.sh:597` breaks the retry loop on
+`143|137`). **Stall, not hard timeout, by elimination:** `HARD_TIMEOUT` is `21600`s and the fire
+started at `18:27:39Z`, so ~60 minutes of a 6-hour budget rules out the only other `143` producer;
+the stall arithmetic corroborates independently (`STALL_GRACE` 2400s → first check ~`19:07:39Z`,
+then 5 × 120s → earliest kill ~`19:17:39Z`).
 
-**Two dead slots in a row is reported as a pattern, not as two incidents.** This loop cannot
-diagnose why its own slots die; it can make the frequency visible to someone who can — and it can
-stop the evidence being deleted, which is row 71.
+**And the mechanism is named first-party in the driver itself, dated the same day.** The
+pre-`e308577` idleness arm was an instantaneous `ps %cpu` sum whose premise — *"we miss late
+stalls, never kill live work"* — its own comment now records as **false**: sampled against a live
+controller whose transcript grew 15–45 KB per 30 s, it read **0.10 / 0.30 / 0.80 / 1.40** against a
+**2%** floor, because an agent spends its wall-clock blocked on the model API, not on CPU. Cost, in
+the driver's words: *"4 V1 and 3 world iterations killed"* in one day — including a V1 session
+killed at 21:13 while committing its own record, **14 minutes before World's 21:27 kill**. Slot 1
+is one of that three. **The fix was already in flight and arrived 1h41m too late for it:**
+`e308577` ported `_mc_progress_bytes` here at 23:08 local. Slot 2 then ran at 23:34 **with** the fix
+and died to the reboot instead.
 
-**Next:** rows **57**, **58**, **59**, **60**, **61**, **62**–**66**, **68**–**72**, then **39**.
+**So the two dead slots have two different causes, one already fixed, and "a pattern the loop
+cannot diagnose" was the wrong reading.** I am recording the correction rather than the tidier
+headline, because the tidier headline would have asked the fleet for a fix that already exists.
+
+**What remains unfixed is why I almost missed it, and it is structural — filed as row 73.** Gate 0
+reads the bookkeeping issue through an author allowlist of `MarkEdmondson1234`, which is correct
+and must not be widened; it is the only thing stopping arbitrary commenters on a public issue from
+steering the loop. But the **driver** posts its crash notices to that same issue, so they are
+filtered out by construction. Two consecutive fires read `#107` and neither saw the announcement of
+its predecessor's death sitting in it; I found it by chasing a comment timestamp while moving the
+watermark, at Gate 5, by accident. The notice's own closing words are what made it safe to ignore:
+*"The queue is untouched; the next interval will retry"* — true and false-reassuring together,
+since the queue was untouched **because** the PR had already merged, so completed work read as
+unstarted.
+
+**Next:** rows **57**, **58**, **59**, **60**, **61**, **62**–**66**, **68**–**73**, then **39**.

@@ -7,7 +7,7 @@ _Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS), `w
 ## Last iteration
 **No PR — bookkeeping repair + a precondition restore.** **HARNESS** · metered **$0.00** (controller-authored; no sub-agent spawned).
 
-**Two consecutive slots died.** Slot 1 (unnumbered, 2026-09-02) merged row 56 as PR [#113](https://github.com/sunholo-data/ailang-world/pull/113) → `725ad5a` and left **zero** trace in all four mission docs — iter-150 then read that SHA as a CI negative control without asking what it was. Slot 2 (iter-150) stamped `gate-4` at epoch `1788394743`; `kern.boottime` = `1788395029`, so the rig rebooted **286 s later** and macOS wiped `/private/tmp`. Both records now landed, row 56 tagged with retroactive Gate-3b evidence, stale worktree pruned.
+**Two consecutive slots died — of two DIFFERENT causes, one already fixed.** Slot 1 (unnumbered, 2026-09-02) merged row 56 as PR [#113](https://github.com/sunholo-data/ailang-world/pull/113) → `725ad5a` and left **zero** trace in all four mission docs; it was killed `rc=143` by the **stall watchdog 61 s after the merge**, on the pre-`e308577` CPU-only idleness arm the driver's own comment records as false-premised (*"4 V1 and 3 world iterations killed"* that day). `e308577` fixed it 1h41m too late for that slot. Slot 2 (iter-150) ran **with** the fix, stamped `gate-4` at epoch `1788394743`, and met `kern.boottime` `1788395029` — a reboot **286 s later** that wiped `/private/tmp`. Both records now landed, row 56 tagged with retroactive Gate-3b evidence, stale worktree pruned.
 
 **The reboot had also deleted the toolchain pin** `/tmp/ailang-v0300/ailang` — the binary every gate here runs on. It fails *closed*, so nothing was falsely green; but the loop could not verify anything and nothing said so. Restored to **`~/.pinned-ailang/ailang`** (CI's own path; `$HOME` survives a boot), checksum- and version-verified; `verify_ail.sh` step 9/9 now prints `compiler pinned by exact bytes: AILANG v0.30.0 on Darwin/arm64`.
 
@@ -17,7 +17,7 @@ _Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS), `w
 ## Next picks
 1. **Row 57** `w-approvals-spine-prints-a-green-no-pending` — queue head, ungated.
 2. **Row 71** `w-mission-critical-state-lives-in-a-directory-the-os-wipes-on-boot` — pin half closed; the driver's **only** crash log and sprint worktrees are still in `/tmp`. Fleet-owned.
-3. **Row 69** `w-heartbeat-script-absent` — fleet-owned port. Then 58–66, 68, 70, 72, then 39.
+3. **Row 73** `w-gate-0-cannot-see-the-drivers-own-crash-notices` — the driver announces every dead fire on the bookkeeping issue and Gate 0's author allowlist filters it out. Then 58–66, 68–72, then 39.
 
 ## Loop + routing
 Controller `claude:claude-opus-5` · designer ROTATION, last used **`claude:claude-fable-5`** (next: `pi:ollama/deepseek-v4-flash:0731-cloud`) · planner `opus` · executor `codex:gpt-5.6-sol` · evaluator `sonnet` (generator≠judge). Iter-151 spawned **no** role: the deliverable was verification and bookkeeping over existing artifacts, and routing a sprint before restoring the pin would have produced a sprint whose gate could not run.
