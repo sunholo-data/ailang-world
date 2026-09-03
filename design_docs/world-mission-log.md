@@ -17294,6 +17294,29 @@ entire job is to show what is waiting on a human. Re-posting it was both the pro
 Worth watching: if a re-ask is marked read each week, the spine trends toward always-empty while
 the ledger still has an OPEN row.
 
-**Next:** rows **58**, **59**, **60**, **61**, **62**–**66**, **68**–**74**, then **39**. Row **50**
+### A third defect, hit live at my own Gate 0
+
+Triaging the inbox I typed `ailang messages list approvals --unread` and read rows from
+`controlplane`, `pkg:*` and `aitana-platform`. The positional inbox is **accepted and ignored**,
+and because Go's `flag` package stops parsing at the first non-flag argument, **every flag after it
+is discarded too** — `-unread`, `-json` and `-limit` alike — so the command exits **0** and prints
+the unfiltered default listing.
+
+Three arms. ARM A, the wrong form: rows from every inbox, read and unread, and `-json` not honoured
+either — which is the tell that caught it, since a JSON parse of the output fails rather than
+returning a plausible list. ARM B, the control that proves the filter works
+(`-inbox approvals -unread -json`): `n=1`, `{approvals: 1}`, `{unread: 1}`. ARM C, a nonsense
+positional: **rc=0** and the default listing, no warning.
+
+The direction is what makes it worth filing: the result is a **superset**, and a superset reads as
+a healthy inbox, whereas an error or an empty list would be noticed immediately. All four missions
+on this rig triage their inbox with this command every fire, and Gate 0's verdict decides whether a
+message outranks the queue. Filed as
+[ailang#1037](https://github.com/sunholo-data/ailang/issues/1037) and **new row 75**; World's side
+is simply to use the `-inbox` flag form. Note it is the same parser behaviour row 57's own text
+cites for a *different* command — there as a refuted hypothesis about `messages send`, here as a
+live defect in `messages list`.
+
+**Next:** rows **58**, **59**, **60**, **61**, **62**–**66**, **68**–**75**, then **39**. Row **50**
 stays parked on `D-WORLD-31`; row **57** is now **tracking-only** on upstream `#984`/`#1036`, and
 its predicate must be RUN at pick time (an upstream disposition), never transcribed.
