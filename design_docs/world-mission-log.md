@@ -17487,3 +17487,147 @@ record in place.
 **Next:** rows **59**, **60**, **61**, **62**–**66**, **68**–**76**, then **39**. Row **50** stays
 parked on `D-WORLD-31`; row **57** remains tracking-only on upstream `#984`/`#1036`, and its
 predicate must be RUN at pick time, never transcribed.
+
+---
+
+## Iteration 154 — 2026-09-04 — row 59 is designed and quorum-cleared, and what earned the rounds is that the doc kept committing its own thesis [HARNESS]
+
+**Pick:** the queue head, row **59** (`w-static-grep-cannot-prove-an-assertion-is-live`), ungated —
+and it is also what the attended ruling on `D-WORLD-31` requires, since that hold is explicitly
+*"contingent on row 59 actually being taken next"*. Already-landed checks clean against a fresh
+origin: no design doc existed (`grep -ril` over `design_docs/` returned only the charter and the
+dashboard), no merged PR, no `origin/dev` commit, `0` open PRs on this account, `0` worktrees,
+`porcelain=0` in the main checkout.
+
+**Progress:** **goal unmoved.** No product surface changed — this is loop-machinery work on the
+verification gates. The row census stays **carried, not measured** (row 72's own subject).
+
+**Outcome:** DESIGN LANDED, no sprint. The deliverable is
+`design_docs/planned/w-load-bearing-criteria-need-a-mutation-not-a-grep.md` (620 lines),
+quorum-cleared under the controller carve-out, with `sprint-planner` as the next pick.
+`metered=$0.19522` of $5.
+
+### An attended ruling arrived between fires, and it is acknowledged rather than re-asked
+
+`D-WORLD-31` is **RESOLVED** (`a1e4e4c`, **Attended ruling 2026-09-03**): *neither option as
+offered*. Row 50 holds at zero cost, and option B's fixture migration is **folded into row 59's
+design**, because row 59 is the same defect class demonstrated with the same construction — shipping
+ratified rule A would spend 0.1d to ADD a fresh instance of the class the next row exists to remove.
+The ledger is now **18 rows, `--check` valid, ZERO OPEN**, so this iteration asks Mark for nothing.
+
+**Provenance, stated honestly rather than simulated.** The flip is authored by the fleet bot. That is
+NOT self-resolution, and the reason is recorded one commit earlier: `79d80d9` (mirroring ailang
+`8369877d9`) landed the same night precisely because `mission_answer.sh` had been stamping
+*"provenance is the commit author"* into every resolved row — a claim false by construction on a rig
+whose git identity is the bot in Mark's own sessions too. Authorship is not evidence here; the
+control is the charter rule that the unattended loop may not resolve a row on its own behalf, and
+this loop did not.
+
+### The design kept committing its own thesis
+
+A document whose entire point is *"a criterion that greps for an assertion measures that somebody
+typed it; only a mutation measures that anybody runs it"* shipped, in round 1, a `grep -c` of the
+fixture's own shape as the load-bearing discharge for its central claim — and in round 2, a `source`
+line whose execution was guarded by a `grep` for that line's text. Both were caught by reviewers, not
+by the controller. That is the finding worth carrying: the vacuous-discharge shape is not a
+carelessness failure, it is what a careful author reaches for when the property is a *runtime* one
+and the tool at hand is a *text scan*.
+
+**Two full-strength quorum rounds**, 3/3 present both times — `.synthesis.absent_reviewers` `[]`,
+cross-checked against `[.reviewers[]|select(.present==false)]`, verdicts read from `.result.verdict`
+(the `jq` paths the shared skill's own correction prescribes, rather than the top-level ones that
+return `null`). **R1 blocked**, 3 rejects, `$0.08615`. **R2 blocked** — `gemini-3-1-pro` **PASS**, its
+first, and `gpt5-6-sol` / `oc-glm-5-2` reject — `$0.10906`.
+
+**Objection 1, `gpt5-6-sol`, confirmed first-party rather than forwarded (rule 3f).** The
+"data-only by construction" fixture is data-only to the **static scan** and **code to bash**. Probe:
+a scratch file holding `KNOWN_BAD="$(touch /tmp/fixprobe_iter154/PWNED)"`, `KNOWN_GOOD="go1.26.6"`
+and `PATH="/nonsense"`. All three **match the doc's own grammar** (`grep -cE` = **3**); sourcing it
+**created the `PWNED` sentinel** and **clobbered `PATH`**; the negative control (`echo hello`) read
+**0**, so the grammar was not matching everything. The design would have shipped arbitrary code
+execution behind a gate that reads the file as data, and it would have shipped it under the words
+"data-only by construction". Fixed to a bounded fail-loud parser per the reviewer's verbatim
+prescription: name allow-list, inert value character class, `printf -v`, refusal on
+unknown/duplicate/malformed, all-three-present check.
+
+**Objection 2, `oc-glm-5-2`.** `AC2` discharged *"row 50's defect is provably gone"* with a
+`grep -cE` of the fixture's own shape, disclaimed as an "instrument-health control". The reviewer's
+point is exact: a disclaimer is not an argument, and M1/M2/M8 were already the real discharges, so
+the grep was redundant dead weight handing a future reviewer a ready-made instance of the defect.
+Deleted, replaced with the reviewer's verbatim AC text.
+
+**`gemini-3-1-pro` passed and still volunteered a real refinement** — a multi-line `if false; then …
+fi` mutant truncates the scratch prologue's closing `fi`, so the runtime test would die of a bash
+syntax error rather than a clean miss; AC4 now requires the Go test to intercept `exec.Command`
+errors and still emit its named substring. Taken.
+
+### The carve-out, declared as a judgment call at its boundary
+
+After the one re-quorum both survivors carried concrete reviewer-authored fixes and neither reversed
+the design's direction — the fixture, both gates and the runtime test all survive; what changed is
+the *consumption mechanism* and one AC — so a bounded 2nd revision applied their **verbatim** fixes
+and routed on without a third round. This is recorded as a call rather than buried: `gpt5-6-sol`'s
+fix asks to widen a declared Non-Goal ("no rewrite of run.sh's logic"), which is the closest this
+came to a direction dispute. The Fable diet is not engaged — the designer ran on
+`pi:ollama/deepseek-v4-flash:0731-cloud`, a flat-rate lane, at `$0.00` for all three runs.
+
+### Two drills the controller ran rather than asserted
+
+**`M9` DISCHARGED**, which is what turned `oc-glm-5-2`'s *"M9 is asserted, not discharged"* from an
+objection into a verification row. The canary assertion `if rows[0].field != "stateRoot" {
+t.Fatalf(…) }` wrapped verbatim in `if false { … }`; mutant LANDED by sha256
+`a23cfa79419ae691` → `6ddd8ca5209a3d37`; **`go vet ./host/store/ ./host/verifygate/` rc=0 read BEFORE
+any test result** (row 65: `go build ./...` is not a compile fence for a `_test.go`); test **rc=1**,
+`--- FAIL`=1, carrying the exact substring **`assertion if-stmt count=0, want exactly 1`**; restored
+**byte-identical** (sha back to `a23cfa79419ae691`) with the pristine control green either side.
+
+**`V-19`, which no reviewer asked for, and which fails in the direction that fakes a pass.** The
+parser `gpt5-6-sol` prescribed, written with the regex INLINE
+(`if [[ "$line" =~ ^([A-Z_]+)="([^"]*)"…$ ]]`), is a **bash 3.2 syntax error** — and this rig's
+`/bin/bash` is `3.2.57(1)-release`, the exact version the `launchd drivers (bash 3.2)` CI job pins.
+All four fixtures returned **rc=2** `syntax error in conditional expression: unexpected token ')'`,
+**including the good one**, so M11/M12/M13 would each have read "rejected" while the parser rejected
+everything — three vacuously-green mutation arms in a document about vacuous discharges. With the
+regex in a variable: good **rc=0** (all three names parsed, trailing comment handled); M11 **rc=1**
+`value for 'KNOWN_BAD' contains a disallowed character` with the `PWNED` sentinel **not created**, so
+the value was never executed; M13 **rc=1** `unknown name 'PATH'`; M1 **rc=1** `malformed line`. The
+doc's snippet now carries the variable form and a comment saying why.
+
+**Ruled out:**
+
+- **"Row 51's AC2 had no mutation at all."** Refuted by reading it: at
+  `design_docs/planned/w-inventory-test-blind-to-asymmetric-addition.md:378`, AC2's second sentence
+  is *"Load-bearing proof is mutation arm N1"* — a real arm. The row-59 finding survives (the grep
+  half reads 3 under an `if false { … }` wrapper, so the FIRST clause reads as a self-sufficient
+  discharge and that is what a reader discharges), but the doc's first draft **overstated** the
+  defect and now carries the correction as `V-18`. This makes the rule sharper, not weaker: the
+  failure mode is a criterion whose opening clause looks complete, not one with no mutation anywhere.
+- **"The doc's D2 Arm 1 delivers new mechanical enforcement for Go assertions."** It does not, and
+  the doc now says so: Arm 1 cites an *existing* gate guarding exactly one canary file, so after this
+  ships the rule fires mechanically on the shell fixture and on that one canary, and is prose-only
+  everywhere else. Widening it to a repo-wide AST pass is named as a follow-up, not sold as included.
+- **"`--author sunholo-voight-kampff` open PRs / stale worktrees need adjudicating."** Both returned
+  empty this iteration, so there was nothing to attribute.
+- **"A `verify_go.sh` green is available as an acceptance command."** Row 76 stands: it is rc=1 at
+  pristine base on a FLEET-OWNED drift arm that fatals before its Go legs. The two-leg substitute was
+  used and is what the doc's `AC5` names.
+
+**Routing evidence:** controller `claude:claude-opus-5` (session). Designer
+`pi:ollama/deepseek-v4-flash:0731-cloud` via `scripts/mission_pi_run.sh` from the V1 checkout by
+ABSOLUTE PATH (row 69 class — absent here), **3 runs**, typed verdict `ok` each
+(81 s / 92 s / 121 s; `worktree_changed_files=1`, `pi_rc=0`, `agent_end_events=1` each), probe rc=0
+first. Rotation pointer advanced `claude:claude-fable-5` → `pi:ollama/deepseek-v4-flash:0731-cloud`
+and written to the **namespaced** `~/.ailang/state/mission-world-designer-rotation`. No planner, no
+executor, no evaluator spawned — the iteration stops at a banked design. `metered=$0.19522` of $5
+(quorum reviewers only; the designer lane is flat-rate). **Containment note:** `mission_pi_run.sh`
+does not wire the sandbox `-e` extensions the shared skill's pi recipe prescribes, so the designer
+ran unfenced; main-checkout `git status --short` was **empty** after all three runs.
+
+**Verify gate, both legs, with the doc present:** `./scripts/verify_ail.sh` **rc=0** (11 required
+identities, 40 named tests, 9/9 world-package steps non-vacuous, `compiler pinned by exact bytes:
+AILANG v0.30.0 on Darwin/arm64`) and `go build ./... && go test ./... -count=1` **rc=0** (**19**
+packages `ok`, **0** FAIL), with `AILANG_BIN=~/.pinned-ailang/ailang` (`v0.30.0`/`e37b370`).
+
+**Next:** row **59**'s sprint (`sprint-planner` on the banked doc — the queue head), then rows
+**60**, **61**, **62**–**66**, **68**–**76**, then **39**. Row **50** is no longer
+`needs-human-review`: it now closes as a consequence of row 59, and its own doc is superseded.
