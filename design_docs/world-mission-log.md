@@ -17629,5 +17629,10 @@ AILANG v0.30.0 on Darwin/arm64`) and `go build ./... && go test ./... -count=1` 
 packages `ok`, **0** FAIL), with `AILANG_BIN=~/.pinned-ailang/ailang` (`v0.30.0`/`e37b370`).
 
 **Next:** row **59**'s sprint (`sprint-planner` on the banked doc — the queue head), then rows
-**60**, **61**, **62**–**66**, **68**–**76**, then **39**. Row **50** is no longer
+**60**, **61**, **62**–**66**, **68**–**78**, then **39**. Two new rows filed from this iteration's
+retro, both **first instances**, so neither may spend the one-per-iteration skill edit: **77** —
+`resolve-role-spawn.sh designer` echoes `$MISSION_DESIGNER_MODEL` back and never returns the
+rotation's next entry, so the skill's "follow the resolver VERBATIM" and its "the seed is not a
+pin" are jointly unsatisfiable; **78** — `mission_pi_run.sh:155` invokes `pi` with no `-e` flag,
+so the two containment extensions the pi recipe mandates are never wired. Row **50** is no longer
 `needs-human-review`: it now closes as a consequence of row 59, and its own doc is superseded.
