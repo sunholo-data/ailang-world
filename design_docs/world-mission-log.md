@@ -17787,3 +17787,134 @@ never absorbed into this change.
 (the Astra evidence-applicability and requirement-change designs Mark queued attended today) stay
 `[PARKED — DESIGN REVIEW]` pending their own quorum and his approval; by their own text they do not
 reorder existing release work.
+
+---
+
+## Iteration 156 — 2026-09-05 — row 60 lands, and the row was right about the defect and wrong about its size: one needle named, three found [HARNESS]
+
+**Kind**: controller-authored direct fix (~0.1d row with an existing first-party diagnosis; no
+designer, planner, executor or evaluator spawned — iteration 153's precedent). PR
+[#117](https://github.com/sunholo-data/ailang-world/pull/117) → squash
+[`3417088`](https://github.com/sunholo-data/ailang-world/commit/3417088), Gate 3b GREEN on the
+merge commit.
+
+**Progress**: charter clause-2 gate-hardening queue — **row 60 LANDED**. Queue head moves to row
+61. One new row filed (**82**), from a defect this iteration inflicted on itself.
+
+**Context / preflight**
+- Kill switch `~/.ailang/state/mission-world.disabled`: NOT set (armed, namespaced path). Billing
+  tripwire **CLEAN**. `gh` = `sunholo-voight-kampff`. Pin present at `~/.pinned-ailang/ailang`,
+  **AILANG v0.30.0**.
+- **0** `MarkEdmondson1234` directives on `#107` since the OLDER of the two watermarks
+  (`2026-09-04T00:59:09Z`; issue-scoped) — of 20 comments — via the V1 checkout's
+  `mission_directives.sh` by ABSOLUTE PATH (row 69). Decision ledger **18 rows, `--check` valid,
+  ZERO OPEN**; no ledger row changed since the watermark, so no attended ruling and no
+  self-resolution. No rotation owed (`#107` created 2026-08-31, after Monday 07:00 local); no
+  weekly sweep owed.
+- Inbox 15 unread, **0** addressed to World (V1's `approvals` ask to Mark, `sprint-planner` and
+  `pkg:*` task notices, two of World's own iter-139 probe artifacts). No `[nightly-eval]` issues.
+- `dev` == `origin/dev` == `d3bda63`, tree clean but for one untracked FLEET artifact. Running
+  skill **byte-identical to `origin/dev`** (`cmp` against the RESOLVED symlink target). CI GREEN
+  3/3 with `runs_total=1` and the parent at `checks=3` as a firing control. **0** open PRs, **0**
+  stale worktrees.
+
+**Pick**: queue row **60** (`w-p1-needle-reds-on-a-semantically-inert-rename`), the queue head.
+Rows 79/80 are `[PARKED — DESIGN REVIEW]` by their own text and did not displace it. No design doc
+existed and none was owed: the row carries its own diagnosis and prescribes two dispositions.
+
+**THE FINDING: A ROW IS A CLAIM ABOUT A DEFECT'S SHAPE AS WELL AS ITS EXISTENCE, AND THE SHAPE IS
+THE HALF THAT WAS WRONG.** Row 60 said `P1d` pins an identifier so a consistent rename reds CI.
+True, and reproduced first-party before any code: the P1 block extracted and executed standalone
+returns byte-identical verdicts on all four arms under the rename (above-floor `rc=0`; below-floor
+`rc=1` *is BELOW the root module floor*; malformed `rc=1` *cannot order toolchain tokens*), with
+`bash -n` rc=0, while the needle count went 1 → 0. What the row did not contain:
+
+1. **One call site named, three found.** Relaxing `P1d` left the rename redding on `P2`'s
+   `GOTOOLCHAIN="$ACTIVE_GO" go run -race .`; relaxing that left it redding on the deny-list
+   anchor `case "$ACTIVE_GO" in`. Each was invisible until the one before it was fixed. This is
+   this repo's own named *guard the helper, miss the call site* shape three deep in one function
+   — and it was found only because the green control was RUN as a real mutation rather than
+   asserted. Post-fix enumeration across `host/verifygate/*.go`: 4 hits, 3 comments, **0**
+   executable pins remaining; negative control on an invented identifier fired.
+2. **The predecessor bound less than it read, and was fail-open.** Nothing tied `$ROOT_FLOOR` to
+   the go.mod floor read, so the inversion `P1d` exists to catch is reachable by swapping the two
+   ASSIGNMENTS rather than the call — **measured, the old literal count stays 1 (GREEN)** while
+   the gate compares floor >= active. Row 48's `V21` records `P1d` as the sole killer for `M14`
+   and `M16` in that entire sprint, so the fail-open was sitting under the strongest claim the
+   needle set makes.
+3. **M17 is narrower than it reads, and a drill-only green arm decays.** The set is now
+   `p1NeedleSet(t, src)`, a function of the file's TEXT, and the green arm runs THAT rather than
+   the binding helpers — so a needle added later is covered without anyone remembering to widen
+   the arm.
+
+**Disposition**: row 60's **option (a)** — relax the needles to bind operand ORDER and each
+operand's DERIVATION, and add a rename arm to the green-control set. Option (b), recording the
+identifier as part of the contract, is **not** also taken, per the row's "do not do both". The set
+is net strictly stronger, with two assertions the literals could not express: `$ACTIVE_GO` must not
+be shadowed inside the block, and the toolchain the floor gate vets must be the same variable the
+race control runs under.
+
+**Verification**
+- **File-level drill, 8 mutants** in `scripts/verify_go.sh`, each landed by sha256, `bash -n` and
+  `go vet` rc=0 read BEFORE any test result, each restored byte-identical, pristine control green
+  either side. Consistent rename → **GREEN** (predecessor literal 0 — the old red). Call-operand
+  swap, reassignment swap, self-comparison, `GOTOOLCHAIN` dropped, `GOTOOLCHAIN` underived, P1
+  block deleted, floor hardcoded → all **RED**, each naming the right conjunct. The reassignment
+  swap is the load-bearing one: **predecessor literal 1, i.e. the old needle read GREEN**.
+- **Green-arm non-vacuity**: re-introducing a spelling pin into the set makes the green arm the
+  **SOLE** detector, with the production test still passing.
+- **Sensitivity drill — and the first commit FAILED it.** Neutering 4 of the 7 conjuncts left
+  **every arm green**, because the arms asserted only `err != nil` and a neighbouring conjunct
+  caught the same mutant. A conjunct with no sole killer is one that can be deleted without a red.
+  `assertRed` now requires the mutant to be rejected AND rejected for the stated reason — which
+  **corrected two attributions the controller had predicted wrong** — and two arms were added.
+  Re-run: **7 of 7 conjuncts have a sole killer**.
+- **Gate, both legs, out of the drill**: `./scripts/verify_ail.sh` rc=0 (11 required identities,
+  40 named tests, 9/9 world-package steps non-vacuous, `compiler pinned by exact bytes: AILANG
+  v0.30.0 on Darwin/arm64`); `go build ./... && go vet ./... && go test ./... -count=1` rc=0,
+  **19** packages ok, **0** FAIL. `verify_go.sh` deliberately NOT used — row 76.
+- **Gate 3b**: `present=3 == expected=3`, expected ENUMERATED from `ci.yml`'s own job list
+  (`ailang-verify`, `go-verify`, `launchd-drivers`), `ci.yml` the only workflow so the enumeration
+  is complete; `not_green=0`, `runs_total=1 event=push`, parent control `checks=3`, `mergeable`
+  read FIRST (`MERGEABLE`/`CLEAN`). Polled on the PR head to the same standard first.
+
+**A DEFECT THE LOOP INFLICTED ON ITSELF — recorded, not buried, and filed as new row 82.** The
+drill harness used `git checkout -- <file>` as its restore step. That restores to **HEAD**, and
+the subject under test — the fix — was still uncommitted, so on the arm that mutated the test file
+the "restore" destroyed ~250 lines of finished, verified work and the harness printed a plausible
+per-arm verdict on the next line. *A drill exists to make a destructive edit safe, and its own
+safety step was the destructive one.* It failed **loudly** only because the harness asserted the
+post-restore sha256 against a captured baseline and printed `RESTORE FAILED`; the ordinary
+`git checkout -- <f> && echo restored` form is silent, and the remaining arms would then have run
+against a tree missing the subject — row 81's *a gate that measures the wrong tree reports the
+right answer for the wrong reason*, aimed at the restore step. The work was rebuilt and then
+committed BEFORE any further drill, which makes HEAD and the baseline the same tree and removes
+the trap.
+
+**Routing evidence**
+| Role | Lane | Outcome |
+|---|---|---|
+| Controller | `claude:claude-opus-5` (session) | picked, fixed, drilled, recorded |
+| Designer | none | not owed — the row carries its own diagnosis and prescribes the dispositions |
+| Planner / Executor | none | ~0.1d single-file test change; iteration 153's controller-fix precedent |
+| Evaluator | **none — STATED PLAINLY, generator == judge for this item** | no independent judge ran. Compensating discipline: every claim is a landed-and-restored mutation, not an assertion; and the sensitivity drill caught a real defect in the controller's own first commit |
+
+**Cost**: `metered=$0.00` of the $5 iteration ceiling. No sub-agent, no quorum round owed.
+
+**Ruled out**
+- *Filing the P2 and deny-list call sites as separate queue rows.* Refuted by this repo's own
+  history: iteration 155's `V-20` is literally "iter-154 fixed the RECORD regex and left the
+  WHITELIST regex inline ONE CALL SITE OVER". Filing them would have knowingly repeated that, so
+  they were fixed in the same change and the widening is stated rather than hidden.
+- *Row 60's option (b) (record the identifier as part of the contract).* The row forbids doing
+  both, and (b) leaves the false red in place while (a) also closes a measured fail-open.
+- *Forcing a sole killer per conjunct by contriving mutants.* Not needed once `assertRed` pinned
+  the messages — the attribution, not the mutant, was the missing half.
+
+**Containment**: the main checkout's only untracked file remains
+`tools/launchd/mission-control.sh.tmp.astra`, a fleet artifact of the 2026-09-05 attended rotation
+amendment (mtime predates this iteration). Frozen core — left alone and reported, second iteration
+running.
+
+**Next**: row **61**, then **62–66**, **68–78**, **81**, **82**, then **39**. Rows **79/80** stay
+`[PARKED — DESIGN REVIEW]`. Decision ledger: **18 rows, ZERO OPEN** — nothing parked on Mark.
