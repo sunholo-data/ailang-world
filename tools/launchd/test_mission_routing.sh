@@ -24,8 +24,49 @@ driver="$ROOT/tools/launchd/mission-control.sh"
 mission_doc="${MISSION_DOC_PATH:-$ROOT/design_docs/world-mission.md}"
 grep -q 'MISSION_EXECUTOR_MODEL:-codex:gpt-5.6-sol' "$driver" \
   && ok "executor remains Codex Sol primary" || bad "executor remains Codex Sol primary" "missing default"
-grep -q 'MISSION_EXECUTOR_FALLBACK:-pi:openrouter/deepseek/deepseek-v4-flash-0731:floor' "$driver" \
-  && ok "executor remains DeepSeek v4 Flash fallback" || bad "executor remains DeepSeek v4 Flash fallback" "missing fallback"
+# Chain now leads with the FLAT-RATE ollama rung and keeps the metered OpenRouter twin
+# behind it — same weights, so exhaustion degrades the ROUTE, not the model (matches the
+# shared ailang driver, 2026-09-05).
+grep -q 'MISSION_EXECUTOR_FALLBACK:-pi:ollama/deepseek-v4-flash:0731-cloud,pi:openrouter/deepseek/deepseek-v4-flash-0731:floor' "$driver" \
+  && ok "executor chain is flat-rate ollama -> metered twin" || bad "executor chain is flat-rate ollama -> metered twin" "missing fallback"
+
+# ─── QUOTA-DROUGHT SURVIVAL (2026-09-05, Mark attended) ───────────────────────────────
+# World is a separate repo and had missed every routing fix in sunholo-data/ailang. Before
+# this, its pre-flight probed the EXECUTOR and nothing else, so on a dry Anthropic bucket
+# the designer (fable), planner (opus) and evaluator (sonnet) all died mid-iteration.
+grep -q '_an_probed' "$driver" && grep -q '_mc_probe "\$an_model"' "$driver" \
+  && ok "anthropic lanes get a role pre-flight" || bad "anthropic lanes get a role pre-flight" "no anthropic role probe"
+[ "$(grep -c 'for role in DESIGNER PLANNER EXECUTOR EVALUATOR; do' "$driver")" = "3" ] \
+  && ok "all three provider loops cover all four roles" \
+  || bad "all three provider loops cover all four roles" "a provider loop is missing or role-limited"
+# The planner's fallback used to be `opus` — the very model it was pinned to.
+grep -q 'MISSION_PLANNER_FALLBACK:-opus}' "$driver" \
+  && bad "planner fallback is not itself" "planner still falls back to opus, the model it is pinned to" \
+  || ok "planner fallback is not itself"
+grep -q 'MISSION_PLANNER_FALLBACK:-codex:gpt-5.6-sol' "$driver" \
+  && ok "planner falls to codex first" || bad "planner falls to codex first" "planner chain missing"
+grep -q 'MISSION_DESIGNER_FALLBACK:-codex:gpt-6-astra' "$driver" \
+  && ok "designer has a codex rung" || bad "designer has a codex rung" "designer chain missing"
+grep -q 'MISSION_EVALUATOR_FALLBACK:-pi:ollama/minimax-m3:cloud' "$driver" \
+  && ok "evaluator has a chain at all" || bad "evaluator has a chain at all" "evaluator was sonnet-or-nothing"
+# codex must stay the evaluator's LAST rung: the executor is codex:gpt-5.6-sol, so a codex
+# judge is the vendor-level generator==judge collision, acceptable only as the last resort.
+grep -q 'MISSION_EVALUATOR_FALLBACK:-codex:' "$driver" \
+  && bad "codex is the evaluator's LAST rung" "a codex judge was promoted to the head of the chain" \
+  || ok "codex is the evaluator's LAST rung"
+# The ledger must be EMITTED, not just accumulated. World's five silently-demoted
+# iterations (18/19/21/22) are why the shared driver grew one; world never got the emit side.
+grep -q 'LANES DEGRADED THIS FIRE' "$driver" \
+  && ok "lane degradation is reported before the iteration starts" \
+  || bad "lane degradation is reported before the iteration starts" "ledger accumulates with no emit site"
+# Astra sits BETWEEN the Anthropic rungs, and the selector must dispatch on provider or the
+# codex entry would be handed to the claude CLI.
+grep -q 'PREFS="\${MISSION_MODEL_PREFS:-claude-opus-5,codex:gpt-6-astra' "$driver" \
+  && ok "astra sits between the Anthropic controller rungs" \
+  || bad "astra sits between the Anthropic controller rungs" "controller ladder not updated"
+grep -q 'PROVIDER-DISPATCHED since 2026-09-05' "$driver" \
+  && ok "controller ladder dispatches on provider" \
+  || bad "controller ladder dispatches on provider" "a codex PREFS entry would go to the claude CLI"
 grep -q 'MISSION_CONTROLLER_FALLBACK:-codex:gpt-5.6-sol' "$driver" \
   && ok "controller has Codex Sol fallback" || bad "controller has Codex Sol fallback" "missing fallback"
 

@@ -207,8 +207,11 @@ _mc_stalled() {
 # ----------------------------------------------------------------------------
 
 # --- model selection (fleet Phase A) -----------------------------------------
-PREFS="${MISSION_MODEL_PREFS:-claude-opus-5,claude-opus-4-8,claude-fable-5}"
-CONTROLLER_FALLBACK="${MISSION_CONTROLLER_FALLBACK:-codex:gpt-5.6-sol}"
+# ASTRA RUNG (2026-09-05, Mark attended). Opus still leads; astra sits BETWEEN the
+# Anthropic rungs so a dry bucket reaches a working controller after one failed probe
+# instead of three. Matches the shared driver's ladder, which world had never received.
+PREFS="${MISSION_MODEL_PREFS:-claude-opus-5,codex:gpt-6-astra,claude-opus-4-8,claude-fable-5-1}"
+CONTROLLER_FALLBACK="${MISSION_CONTROLLER_FALLBACK:-codex:gpt-5.6-sol,codex:gpt-6-astra,pi:ollama/glm-5.3:cloud}"
 QUOTA_SIG="usage limit|rate.?limit|quota|exceeded|too many requests|weekly limit"
 PROBE_TIMEOUT="${MISSION_PROBE_TIMEOUT:-120}"   # per-probe wall-clock cap, seconds
 
@@ -275,6 +278,7 @@ _mc_set_controller() {
   MODEL_WHY="$2"
   case "$requested" in
     codex:*) CONTROLLER_PROVIDER=codex; MODEL="${requested#codex:}"; MISSION_ANTHROPIC_AVAILABLE=0 ;;
+    pi:*) CONTROLLER_PROVIDER=pi; MODEL="${requested#pi:}"; MISSION_ANTHROPIC_AVAILABLE=0 ;;
     claude:*) CONTROLLER_PROVIDER=claude; MODEL="${requested#claude:}"; MISSION_ANTHROPIC_AVAILABLE=1 ;;
     *) CONTROLLER_PROVIDER=claude; MODEL="$requested"; MISSION_ANTHROPIC_AVAILABLE=1 ;;
   esac
@@ -297,27 +301,76 @@ select_model() {
       _mc_set_controller "$ov_model" "override file"; return 0
     fi
   fi
-  # 3. ordered preference probing
+  # 3. ordered preference probing.
+  #
+  # PROVIDER-DISPATCHED since 2026-09-05 (Mark, attended: "put astra ahead of each
+  # fable instance, that falls back to fable"). This list used to be Anthropic-only —
+  # every entry went to `_mc_probe`, the claude CLI probe — so a non-Anthropic model
+  # could ONLY be expressed in CONTROLLER_FALLBACK, which is reached after EVERY
+  # Anthropic candidate has failed. There was therefore no way to say
+  # "opus, then astra, then fable": a codex entry could sit before opus (never) or
+  # after fable (too late), but not BETWEEN them. That ordering is the whole ask.
+  #
+  # Bare and `claude:`-prefixed entries keep the exact 0/1/2 quota-vs-unusable
+  # semantics they had; only the dispatch is new. _mc_set_controller already parses
+  # every prefix, so a matched entry needs no special-casing beyond its probe.
   local m why rcode
   for m in $(printf '%s' "$PREFS" | tr ',' ' '); do
-    _mc_probe "$m"; rcode=$?
-    case "$rcode" in
-      0) _mc_set_controller "$m" "probe ok"; return 0 ;;
-      1) log "model $m quota-limited — falling through" ;;
-      2) log "model $m unusable (auth/transient) — falling through" ;;
+    case "$m" in
+      codex:*)
+        if _mc_probe_codex "${m#codex:}"; then
+          _mc_set_controller "$m" "probe ok"; return 0
+        fi
+        log "controller preference $m unusable — falling through"
+        ;;
+      pi:*)
+        _mc_bounded "$PROBE_TIMEOUT" pi --mode json --no-session --no-tools --model "${m#pi:}" -p 'reply with exactly: ok'
+        rcode=$?
+        if [ "$rcode" -eq 0 ]; then _mc_set_controller "$m" "probe ok"; return 0; fi
+        log "controller preference $m probe failed (rc=$rcode within ${PROBE_TIMEOUT}s) — falling through"
+        ;;
+      *)
+        _mc_probe "$m"; rcode=$?
+        case "$rcode" in
+          0) _mc_set_controller "$m" "probe ok"; return 0 ;;
+          1) log "model $m quota-limited — falling through" ;;
+          2) log "model $m unusable (auth/transient) — falling through" ;;
+        esac
+        ;;
     esac
   done
-  case "$CONTROLLER_FALLBACK" in
-    codex:*)
-      m="${CONTROLLER_FALLBACK#codex:}"
-      log "all Anthropic controller candidates unavailable — probing $CONTROLLER_FALLBACK"
-      if _mc_probe_codex "$m"; then
-        _mc_set_controller "$CONTROLLER_FALLBACK" "Anthropic unavailable; subscription fallback"
-        return 0
-      fi
-      ;;
-    *) log "unsupported MISSION_CONTROLLER_FALLBACK '$CONTROLLER_FALLBACK' (expected codex:<model>)" ;;
-  esac
+  # 4. cross-provider fallback CHAIN, walked in order (Mark 2026-08-31 — see the
+  # CONTROLLER_FALLBACK comment above). Every rung is probe-gated; an unsupported
+  # entry is skipped loudly rather than aborting the walk, so one typo cannot
+  # disable the rungs behind it.
+  log "all Anthropic controller candidates unavailable — walking fallback chain ($CONTROLLER_FALLBACK)"
+  local fb
+  for fb in $(printf '%s' "$CONTROLLER_FALLBACK" | tr ',' ' '); do
+    case "$fb" in
+      codex:*)
+        m="${fb#codex:}"
+        if _mc_probe_codex "$m"; then
+          _mc_set_controller "$fb" "Anthropic unavailable; subscription fallback"
+          return 0
+        fi
+        ;;
+      pi:*)
+        m="${fb#pi:}"
+        # Same probe shape as the role-lane pi loop: --no-tools keeps it ~1 reply
+        # token, --no-session avoids polluting ~/.pi/sessions; rc is the verdict.
+        # rc captured explicitly: after `if cmd; then...fi` falls through, $? is the
+        # IF's status (0), not cmd's — logging it would report every failure as rc=0.
+        _mc_bounded "$PROBE_TIMEOUT" pi --mode json --no-session --no-tools --model "$m" -p 'reply with exactly: ok'
+        rcode=$?
+        if [ "$rcode" -eq 0 ]; then
+          _mc_set_controller "$fb" "Anthropic+codex unavailable; pi fallback rung"
+          return 0
+        fi
+        log "pi controller rung '$m' probe failed (rc=$rcode within ${PROBE_TIMEOUT}s) — falling through"
+        ;;
+      *) log "unsupported CONTROLLER_FALLBACK entry '$fb' (expected codex:<model> or pi:<model>) — skipping" ;;
+    esac
+  done
   return 1
 }
 # ----------------------------------------------------------------------------
@@ -389,6 +442,9 @@ export MISSION_GH_ISSUE
 # Agent tool pins only sonnet|opus|haiku (F1, iteration 31), so under an opus-first controller a
 # bare "fable" would silently fall back to opus. claude:claude-fable-5 = a REAL bounded Fable run.
 export MISSION_DESIGNER_MODEL="${MISSION_DESIGNER_MODEL:-claude:claude-fable-5}"
+# Designer chain (2026-09-05) — world had none. Same rungs and order as the skill's
+# fable -> astra -> deepseek rotation, so a PINNED designer degrades the way a rotating one does.
+export MISSION_DESIGNER_FALLBACK="${MISSION_DESIGNER_FALLBACK:-codex:gpt-6-astra,pi:ollama/deepseek-v4-flash:0731-cloud,pi:openrouter/deepseek/deepseek-v4-flash-0731}"
 # Per-iteration METERED-spend ceiling (2026-07-18, Mark: "make sure costs don't go crazy"):
 # the sum of all metered-API spend (codex $ + gemini $) within ONE iteration must stay under
 # this. Enforced by the skill's Gate-3 metered ledger; quota-bucket (subscription) spend is
@@ -399,58 +455,11 @@ export MISSION_EXECUTOR_MODEL="${MISSION_EXECUTOR_MODEL:-codex:gpt-5.6-sol}"
 # EXECUTOR FALLBACK CHAIN — ailang#611 (2026-08-11). Ratified: codex default,
 # deepseek the replacement when codex is dry, opus the last resort. Kept identical
 # to the V1 driver so both missions route the same way.
-export MISSION_EXECUTOR_FALLBACK="${MISSION_EXECUTOR_FALLBACK:-pi:openrouter/deepseek/deepseek-v4-flash-0731:floor}"
-export MISSION_PLANNER_FALLBACK="${MISSION_PLANNER_FALLBACK:-opus}"
+export MISSION_EXECUTOR_FALLBACK="${MISSION_EXECUTOR_FALLBACK:-pi:ollama/deepseek-v4-flash:0731-cloud,pi:openrouter/deepseek/deepseek-v4-flash-0731:floor}"
+# The planner's fallback used to be `opus` — the model it was already pinned to, so on a
+# dry Anthropic bucket it fell back onto the failure. codex first, then the flat-rate pi rung.
+export MISSION_PLANNER_FALLBACK="${MISSION_PLANNER_FALLBACK:-codex:gpt-5.6-sol,pi:ollama/kimi-k3:cloud,pi:openrouter/moonshotai/kimi-k3}"
 export MISSION_PLANNER_ANTHROPIC_FALLBACK="${MISSION_PLANNER_ANTHROPIC_FALLBACK:-codex:gpt-5.6-sol}"
-# Codex-lane pre-flight (2026-07-27): subscription quota is invisible until it errors, so probe
-# once per fire. Any probe failure → fall back to opus THIS fire only (logged, never wedged).
-#
-# The probe MUST carry --model (#486, 2026-07-27): without it codex exercises its DEFAULT model,
-# so a pinned-but-unreachable model false-greens the lane. Live evidence that day: codex-cli
-# 0.137.0 answered the model-less probe on gpt-5.5 (rc=0) while `--model gpt-5.6-sol` returned a
-# 400 "requires a newer version of Codex" — the driver exported the codex pin as healthy and the
-# failure only surfaced inside the skill's Gate-3 recipe, one silent fallback later.
-#
-# Fall back on ANY non-zero rc, not just quota signatures: an unusable model pin is exactly as
-# fatal to the lane as a spent quota, and the old quota-only gate is what let #486 through. The
-# skill's Gate-3 recipe re-probes and would fall back anyway; doing it here keeps the EXPORTED
-# env honest, which is what the routing-evidence row reports.
-case "$MISSION_EXECUTOR_MODEL" in codex:*)
-  cx_model="${MISSION_EXECUTOR_MODEL#codex:}"
-  _mc_bounded "$PROBE_TIMEOUT" codex exec --skip-git-repo-check --model "$cx_model" 'reply with exactly: ok'
-  cx_rc=$?; cx_out="$MC_BOUNDED_OUT"
-  if [ $cx_rc -ne 0 ]; then
-    if [ $cx_rc -eq 124 ]; then cx_why="probe timed out after ${PROBE_TIMEOUT}s"
-    elif printf '%s' "$cx_out" | grep -qiE "$QUOTA_SIG"; then cx_why="quota-limited"
-    else cx_why="probe failed (rc=$cx_rc)"; fi
-    # Hand off to the NEXT link, not straight to opus (ailang#611). The pi loop
-    # below probes a `pi:*` value and degrades to opus itself — that is what makes
-    # codex -> deepseek -> opus a real chain rather than two independent cliffs.
-    _fb="${MISSION_EXECUTOR_FALLBACK:-opus}"
-    log "codex executor lane $cx_why for model '$cx_model' -> falling back to '$_fb' for this fire"
-    log "codex probe output: $(printf '%s' "$cx_out" | tail -3 | tr '\n' ' ')"
-    MISSION_EXECUTOR_MODEL="$_fb"; export MISSION_EXECUTOR_MODEL
-  fi
-  ;;
-esac
-# pi-lane pre-flight (ported from the V1 driver, ailang#611, 2026-08-11). World had
-# NO pi loop, so before this a `pi:*` value here ran UNPROBED — mission-world.env
-# said exactly that. Probe is ~1 reply-token; the OpenRouter key rides
-# ~/.pi/agent/models.json (custom provider), not env, so it is headless-safe.
-# BASH 3.2 (L19): no associative arrays, no ${var,,}.
-case "$MISSION_EXECUTOR_MODEL" in pi:*)
-  pi_model="${MISSION_EXECUTOR_MODEL#pi:}"
-  _mc_bounded "$PROBE_TIMEOUT" pi --mode json --no-session --no-tools --model "$pi_model" -p 'reply with exactly: ok'
-  pi_rc=$?; pi_out="$MC_BOUNDED_OUT"
-  if [ $pi_rc -ne 0 ]; then
-    if [ $pi_rc -eq 124 ]; then pi_why="probe timed out after ${PROBE_TIMEOUT}s"
-    else pi_why="probe failed (rc=$pi_rc)"; fi
-    log "pi executor lane $pi_why for model '$pi_model' -> falling back to opus for this fire"
-    log "pi probe output: $(printf '%s' "$pi_out" | tail -3 | tr '\n' ' ')"
-    MISSION_EXECUTOR_MODEL="opus"; export MISSION_EXECUTOR_MODEL
-  fi
-  ;;
-esac
 # evaluator default = sonnet (2026-07-16, Mark directive on #399: "default can be gemini (if able
 # to git clone the codebase etc)? otherwise sonnet-5"). gemini managed_agents is NOT viable as the
 # evaluator today — VERIFIED iteration 38: (1) architecturally the request body carries only
@@ -462,6 +471,238 @@ esac
 # tests locally). This also RETIRES the per-iteration fable→sonnet re-route (iters 31/36) into a
 # standing default. gemini-as-evaluator is a queued follow-up (diff-bridge + backend reliability).
 export MISSION_EVALUATOR_MODEL="${MISSION_EVALUATOR_MODEL:-sonnet}"
+# Evaluator chain (2026-09-05) — world had none at all: sonnet or nothing, which wedged
+# Gate 4 on every Anthropic outage. codex is LAST on purpose: the executor is
+# codex:gpt-5.6-sol, so an astra judge is the vendor-level generator==judge collision.
+# minimax (independent vendor) takes the first rung; astra stands only between "judged by
+# the executor's own vendor" and no judge at all.
+export MISSION_EVALUATOR_FALLBACK="${MISSION_EVALUATOR_FALLBACK:-pi:ollama/minimax-m3:cloud,pi:openrouter/minimax/minimax-m3,codex:gpt-6-astra}"
+
+# ─── ROLE-GENERIC LANE PRE-FLIGHT — PORTED FROM THE SHARED AILANG DRIVER 2026-09-05 ───
+# World is a SEPARATE GitHub repo carrying its own copy of this driver and has no
+# lib/pin-root.sh, so it never re-execs from the driver pin and has silently missed every
+# routing fix made in sunholo-data/ailang. What stood here until now probed the EXECUTOR
+# and nothing else: planner (opus), designer (fable) and evaluator (sonnet) were never
+# probed by anything, so a dry Anthropic bucket killed three of five roles mid-iteration.
+#
+# Worse, the lane-degradation LEDGER below was written BECAUSE of this mission — the World
+# mission spent five iterations (18/19/21/22) silently demoted from codex to opus, each
+# mis-attributed to a spent quota — and world is the one mission that never received it.
+#
+# This block is a verbatim port. Keep it verbatim: it is the same code the shared driver
+# runs, and the whole point of de-forking world later is that this stops being a copy.
+# Codex-lane pre-flight, ROLE-GENERIC (m-planner-codex-lane): probe once per DISTINCT
+# codex model, fall back per-role on ANY non-zero rc (#486: probe MUST carry --model;
+# an unusable pin is exactly as fatal as spent quota). Export AFTER fallback so the
+# EXPORTED env — what the routing-evidence row reports — stays honest.
+# BASH 3.2 (L19): ':'-delimited string sets, NOT associative arrays; no ${var,,}.
+#
+# The probe MUST carry --model (#486, 2026-07-27): without it codex exercises its DEFAULT model,
+# so a pinned-but-unreachable model false-greens the lane. Live evidence that day: codex-cli
+# 0.137.0 answered the model-less probe on gpt-5.5 (rc=0) while `--model gpt-5.6-sol` returned a
+# 400 "requires a newer version of Codex" — the driver exported the codex pin as healthy and the
+# failure only surfaced inside the skill's Gate-3 recipe, one silent fallback later.
+#
+# Fall back on ANY non-zero rc, not just quota signatures: an unusable model pin is exactly as
+# fatal to the lane as a spent quota, and the old quota-only gate is what let #486 through. The
+# skill's Gate-3 recipe re-probes and would fall back anyway; doing it here keeps the EXPORTED
+# env honest, which is what the routing-evidence row reports.
+_cx_probed=":"   # models probed this fire (dedupe: planner+executor share the default model)
+_cx_failed=":"   # models whose probe failed
+# LANE-DEGRADATION LEDGER (motoko mission iteration 0, 2026-08-12; Mark ratified the fix).
+# Until now a lane demotion was `log`ged here and NOWHERE ELSE — none of this driver's four
+# `gh issue comment` sites covers it, so the human channel saw nothing. That is exactly how the
+# World mission spent FIVE iterations (18/19/21/22) silently demoted from codex to opus, each
+# mis-attributed to a spent quota, before iter-23 found the real cause. A fallback visible only in
+# a routing-evidence row written AFTER the fact is still a silent fallback (Critical Principle 2):
+# by then the iteration has already run on the wrong lane.
+# ROLE FALLBACK CHAINS (2026-08-26). MISSION_<ROLE>_FALLBACK may now be a
+# COMMA-SEPARATED chain, walked left to right, with opus as the implicit tail:
+#
+#   codex -> pi:ollama/<m>:cloud -> pi:openrouter/<twin> -> opus
+#            flat-rate             metered                 Anthropic
+#
+# The Ollama Cloud quota is a subscription with an UNPUBLISHED denominator
+# (/api/usage reports consumption but no limit), so we cannot predict exhaustion
+# — only survive it. The OpenRouter rung is the same weights on a metered route,
+# so exhaustion degrades the ROUTE and not the model.
+# bash 3.2 (L19/L21): plain string splitting, no arrays or ${x//}.
+_chain_head() { printf '%s' "${1%%,*}"; }
+_chain_tail() { case "$1" in *,*) printf '%s' "${1#*,}" ;; *) printf '' ;; esac; }
+
+# Accumulate here; emit ONCE below, AFTER every early exit and BEFORE the iteration starts.
+# bash 3.2 (L19/L21): no associative arrays — ';'-delimited "model=rc", newline-delimited ledger.
+_lane_degraded=""   # newline-delimited markdown bullets, one per degraded role
+_cx_rcmap=""        # "model=rc;" so the emit site names the probe's exit code, not just the lane
+_pi_rcmap=""
+# ANTHROPIC-LANE PRE-FLIGHT, ROLE-GENERIC (2026-09-05, Mark attended: "give me rotation
+# and fallbacks to codex so we can keep going on the missions ... before we usually ran out
+# of quota on friday"). THIS is the rung that was missing, and its absence is why a drought
+# did not pause the fleet so much as half-run it.
+#
+# The two loops below only ever look at `codex:*` and `pi:*` values, so a role pinned to an
+# ANTHROPIC model — the `sonnet` evaluator, a `claude:*` designer — was never probed by
+# anything. On a dry bucket the controller would fall to its own codex rung and the
+# iteration would START, then die at the first Anthropic-only gate. Continues the
+# NO-SINGLE-PROVIDER-ROLE directive (Mark 2026-08-26) from declaring chains to actually
+# walking them: MISSION_<ROLE>_FALLBACK existed for the evaluator since that day, and
+# nothing on any code path read it (the skill greps zero MISSION_*_FALLBACK, verified).
+#
+# Placed BEFORE the codex loop on purpose: a role handed from anthropic to `codex:gpt-6-astra`
+# is then probed by that loop, and on to pi by the next — one chain across three providers,
+# not three disconnected pre-flights.
+#
+# Cost is one `claude -p` per DISTINCT anthropic model per fire (deduped, same as the codex
+# and pi loops), and `_mc_probe` already distinguishes quota-limited (rc=1) from unusable
+# (rc=2) — a distinction the degradation ledger reports, because "Friday" and "broken pin"
+# have very different resume conditions.
+# BASH 3.2 (L19/L21): ':'-delimited string sets, no associative arrays, no ${var,,}.
+_an_probed=":"   # anthropic models probed this fire
+_an_failed=":"   # anthropic models whose probe failed
+_an_rcmap=""     # "model=rc;" so the emit site names the probe's exit code
+for role in DESIGNER PLANNER EXECUTOR EVALUATOR; do
+  var="MISSION_${role}_MODEL"; val="${!var:-}"
+  # Only anthropic-shaped values: a bare Agent alias (sonnet/opus) or an explicit claude: pin.
+  case "$val" in
+    ""|codex:*|pi:*) continue ;;
+  esac
+  an_model="${val#claude:}"
+  case "$_an_probed" in *":${an_model}:"*) : ;; *)   # not yet probed
+    _an_probed="${_an_probed}${an_model}:"
+    _mc_probe "$an_model"; an_rc=$?
+    if [ "$an_rc" -ne 0 ]; then
+      _an_failed="${_an_failed}${an_model}:"
+      if [ "$an_rc" -eq 1 ]; then an_why="quota-limited"; else an_why="unusable (rc=$an_rc)"; fi
+      log "anthropic model '$an_model' $an_why"
+      _an_rcmap="${_an_rcmap}${an_model}=${an_rc};"
+    fi
+  ;; esac
+  case "$_an_failed" in *":${an_model}:"*)
+    role_lc=$(printf '%s' "$role" | tr 'A-Z' 'a-z')   # ${role,,} is bash-4.0-only (L21)
+    fbvar="MISSION_${role}_FALLBACK"; _chain="${!fbvar:-}"
+    _an_rc_for=$(printf '%s' "$_an_rcmap" | tr ';' '\n' | grep "^${an_model}=" | head -1 | cut -d= -f2)
+    [ -n "$_an_rc_for" ] || _an_rc_for="unknown"
+    # NO implicit opus tail here, unlike the codex loop. Opus IS anthropic, so on the exact
+    # failure this loop exists for it is the one destination guaranteed to be dry too —
+    # handing to it would launder a drought into a second failure one gate later. A role
+    # with no chain keeps its pin and is reported, which the skill can see and act on.
+    if [ -z "$_chain" ]; then
+      log "anthropic ${role_lc} lane '$an_model' $an_why and NO fallback chain configured — pin kept, reported to the ledger"
+      _lane_degraded="${_lane_degraded}
+- \`${role_lc}\`: **anthropic** lane \`${an_model}\` unusable (probe rc=\`${_an_rc_for}\`) → NO fallback chain, pin kept"
+      continue
+    fi
+    fb=$(_chain_head "$_chain")
+    remvar="MISSION_${role}_CHAIN_REMAINING"
+    printf -v "$remvar" '%s' "$(_chain_tail "$_chain")"; export "$remvar"
+    log "anthropic ${role_lc} lane -> falling back to '$fb' for this fire (model '$an_model', $an_why)"
+    _lane_degraded="${_lane_degraded}
+- \`${role_lc}\`: **anthropic** lane \`${an_model}\` unusable (probe rc=\`${_an_rc_for}\` — ${an_why}) → handed to \`${fb}\`"
+    printf -v "$var" '%s' "$fb"; export "$var"
+  ;; esac
+done
+
+for role in DESIGNER PLANNER EXECUTOR EVALUATOR; do
+  var="MISSION_${role}_MODEL"; val="${!var}"
+  case "$val" in codex:*)
+    cx_model="${val#codex:}"
+    case "$_cx_probed" in *":${cx_model}:"*) : ;; *)   # not yet probed
+      _cx_probed="${_cx_probed}${cx_model}:"
+      _mc_bounded "$PROBE_TIMEOUT" codex exec --skip-git-repo-check --model "$cx_model" 'reply with exactly: ok'
+      cx_rc=$?; cx_out="$MC_BOUNDED_OUT"
+      if [ "$cx_rc" -ne 0 ]; then
+        _cx_failed="${_cx_failed}${cx_model}:"
+        # why-classification happens ONCE, at probe time (timeout / quota-sig / other)
+        if [ "$cx_rc" -eq 124 ]; then cx_why="probe timed out after ${PROBE_TIMEOUT}s"
+        elif printf '%s' "$cx_out" | grep -qiE "$QUOTA_SIG"; then cx_why="quota-limited"
+        else cx_why="probe failed (rc=$cx_rc)"; fi
+        log "codex model '$cx_model' unusable: $cx_why"
+        log "codex probe output: $(printf '%s' "$cx_out" | tail -3 | tr '\n' ' ')"
+        _cx_rcmap="${_cx_rcmap}${cx_model}=${cx_rc};"
+      fi
+    ;; esac
+    case "$_cx_failed" in *":${cx_model}:"*)
+      role_lc=$(printf '%s' "$role" | tr 'A-Z' 'a-z')   # ${role,,} is bash-4.0-only (L21)
+      # Hand off to the NEXT link, not straight to opus (#611). A `pi:*` value here
+      # is probed by the pi loop below, which degrades to opus on its own failure —
+      # that is what makes codex -> deepseek -> opus a real chain. `%s` rather than
+      # a bare format string: the value is data, and a stray % would be a directive.
+      # Continue an in-flight chain if the anthropic pre-flight already started one,
+      # otherwise start this role's chain from the top. Without this an
+      # anthropic->codex handoff whose codex rung then fails would RESTART at the
+      # head of _FALLBACK — i.e. hand back to the codex rung that just failed.
+      remvar="MISSION_${role}_CHAIN_REMAINING"; _chain="${!remvar:-}"
+      [ -n "$_chain" ] || { fbvar="MISSION_${role}_FALLBACK"; _chain="${!fbvar:-opus}"; }
+      fb=$(_chain_head "$_chain")
+      # Remember what is left so the pi loop can advance instead of jumping to opus.
+      remvar="MISSION_${role}_CHAIN_REMAINING"
+      printf -v "$remvar" '%s' "$(_chain_tail "$_chain")"; export "$remvar"
+      log "codex ${role_lc} lane -> falling back to '$fb' for this fire (model '$cx_model')"
+      _cx_rc_for=$(printf '%s' "$_cx_rcmap" | tr ';' '\n' | grep "^${cx_model}=" | head -1 | cut -d= -f2)
+      [ -n "$_cx_rc_for" ] || _cx_rc_for="unknown"
+      _lane_degraded="${_lane_degraded}
+- \`${role_lc}\`: **codex** lane \`${cx_model}\` unusable (probe rc=\`${_cx_rc_for}\`$([ "$_cx_rc_for" = "124" ] && printf ' — TIMEOUT after %ss' "$PROBE_TIMEOUT")) → handed to \`${fb}\`"
+      printf -v "$var" '%s' "$fb"; export "$var"
+    ;; esac
+  ;; esac
+done
+# pi-lane pre-flight, ROLE-GENERIC (mirrors the codex loop above; added 2026-08-06,
+# Mark: DeepSeek executor lane — trial record in models.yml pi-or-deepseek-v4-flash).
+# Probe once per DISTINCT pi model, fall back per-role on ANY non-zero rc — an
+# unusable pin is exactly as fatal as a spent bucket (#486). The OpenRouter key
+# rides ~/.pi/agent/models.json (custom provider), not env, so this probe is
+# headless-safe. --no-tools keeps it ~1 reply-token; --no-session avoids polluting
+# ~/.pi/sessions. BASH 3.2 (L19): ':'-delimited string sets, NOT associative arrays.
+_pi_probed=":"   # models probed this fire (dedupe: planner+executor could share one)
+_pi_failed=":"   # models whose probe failed
+for role in DESIGNER PLANNER EXECUTOR EVALUATOR; do
+  var="MISSION_${role}_MODEL"
+  # while-loop so a chain advance re-enters the probe for the NEW value; a
+  # non-pi value (or a settled pi value) breaks out at the bottom.
+  while :; do
+  val="${!var}"
+  case "$val" in pi:*)
+    pi_model="${val#pi:}"
+    case "$_pi_probed" in *":${pi_model}:"*) : ;; *)   # not yet probed
+      _pi_probed="${_pi_probed}${pi_model}:"
+      _mc_bounded "$PROBE_TIMEOUT" pi --mode json --no-session --no-tools --model "$pi_model" -p 'reply with exactly: ok'
+      pi_rc=$?; pi_out="$MC_BOUNDED_OUT"
+      if [ "$pi_rc" -ne 0 ]; then
+        _pi_failed="${_pi_failed}${pi_model}:"
+        if [ "$pi_rc" -eq 124 ]; then pi_why="probe timed out after ${PROBE_TIMEOUT}s"
+        else pi_why="probe failed (rc=$pi_rc)"; fi
+        log "pi model '$pi_model' unusable: $pi_why"
+        log "pi probe output: $(printf '%s' "$pi_out" | tail -3 | tr '\n' ' ')"
+        _pi_rcmap="${_pi_rcmap}${pi_model}=${pi_rc};"
+      fi
+    ;; esac
+    case "$_pi_failed" in *":${pi_model}:"*)
+      role_lc=$(printf '%s' "$role" | tr 'A-Z' 'a-z')   # ${role,,} is bash-4.0-only (L21)
+      _pi_rc_for=$(printf '%s' "$_pi_rcmap" | tr ';' '\n' | grep "^${pi_model}=" | head -1 | cut -d= -f2)
+      [ -n "$_pi_rc_for" ] || _pi_rc_for="unknown"
+      # Advance along the chain rather than jumping to opus. The Ollama Cloud rung
+      # can be exhausted by a quota whose denominator is unpublished, so the
+      # OpenRouter twin — same weights, metered route — is the rung that keeps the
+      # loop on the SAME model instead of degrading capability.
+      remvar="MISSION_${role}_CHAIN_REMAINING"; _rem="${!remvar:-}"
+      if [ -n "$_rem" ]; then
+        _next=$(_chain_head "$_rem")
+        printf -v "$remvar" '%s' "$(_chain_tail "$_rem")"; export "$remvar"
+        log "pi ${role_lc} lane '$pi_model' unusable -> advancing to '$_next'"
+        _lane_degraded="${_lane_degraded}
+- \`${role_lc}\`: **pi** lane \`${pi_model}\` unusable (probe rc=\`${_pi_rc_for}\`$([ "$_pi_rc_for" = "124" ] && printf ' — TIMEOUT after %ss' "$PROBE_TIMEOUT")) → advanced to \`${_next}\`"
+        printf -v "$var" '%s' "$_next"; export "$var"
+        continue
+      fi
+      log "pi ${role_lc} lane -> falling back to opus for this fire (model '$pi_model')"
+      _lane_degraded="${_lane_degraded}
+- \`${role_lc}\`: **pi** lane \`${pi_model}\` unusable (probe rc=\`${_pi_rc_for}\`$([ "$_pi_rc_for" = "124" ] && printf ' — TIMEOUT after %ss' "$PROBE_TIMEOUT")) → handed to \`opus\` (end of chain)"
+      printf -v "$var" 'opus'; export "$var"
+    ;; esac
+  ;; esac
+  break
+  done
+done
 
 # 1. Kill switch — the intended "off" state, exit silently.
 if [ -f "$KILL_SWITCH" ]; then
@@ -486,7 +727,14 @@ fi
 
 # 3. Dry run — verify wiring without spending tokens (no probes fired).
 if [ "${MISSION_DRY_RUN:-0}" = "1" ]; then
-  log "DRY RUN ok: mission=$MISSION_NAME repo-slug=$MISSION_REPO doc=$MISSION_DOC workdir=$REPO pidfile=$PIDFILE prefs=$PREFS timeout=${HARD_TIMEOUT}s | roles: designer=$MISSION_DESIGNER_MODEL planner=$MISSION_PLANNER_MODEL executor=$MISSION_EXECUTOR_MODEL evaluator=$MISSION_EVALUATOR_MODEL"; exit 0
+  # lanes= mirrors the shared driver, so a drought can be SIMULATED here rather than waited for:
+  #   MISSION_PROFILE=world MISSION_DRY_RUN=1 MISSION_EVALUATOR_MODEL=claude-drought-sim
+  if [ -n "$_lane_degraded" ]; then
+    _dry_lanes="DEGRADED($(printf '%s' "$_lane_degraded" | grep -c '^- '))$(printf '%s' "$_lane_degraded" | tr '\n' ' ')"
+  else
+    _dry_lanes="ok"
+  fi
+  log "DRY RUN ok: mission=$MISSION_NAME repo-slug=$MISSION_REPO doc=$MISSION_DOC workdir=$REPO pidfile=$PIDFILE prefs=$PREFS timeout=${HARD_TIMEOUT}s | roles: designer=$MISSION_DESIGNER_MODEL planner=$MISSION_PLANNER_MODEL executor=$MISSION_EXECUTOR_MODEL evaluator=$MISSION_EVALUATOR_MODEL | lanes=$_dry_lanes"; exit 0
 fi
 
 # 4. Select the model (probe doubles as the subscription-auth check: API keys
@@ -526,6 +774,13 @@ if [ -f "$EXEC_ONCE_FILE" ]; then
   fi
 fi
 
+# LANE DEGRADATION REPORT. World's five silently-demoted iterations (18/19/21/22, 2026-07)
+# are why the shared driver grew a ledger; world never got the emit side. This is the
+# minimum honest version: one line per degraded role, in the launchd log, BEFORE the
+# iteration starts — never only in a routing-evidence row written after the fact.
+if [ -n "$_lane_degraded" ]; then
+  log "LANES DEGRADED THIS FIRE ($(printf '%s' "$_lane_degraded" | grep -c '^- ') role(s)):$(printf '%s' "$_lane_degraded" | tr '\n' ' ')"
+fi
 log "=== mission iteration starting (controller=$CONTROLLER_ID via ${MODEL_WHY}, timeout=${HARD_TIMEOUT}s | roles: designer=$MISSION_DESIGNER_MODEL planner=$MISSION_PLANNER_MODEL executor=$MISSION_EXECUTOR_MODEL evaluator=$MISSION_EVALUATOR_MODEL) ==="
 
 PROMPT="Run one mission-control iteration: invoke the mission-control skill for \
