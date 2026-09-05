@@ -1074,6 +1074,101 @@ func TestMiscompileInstrumentStepIsGatedInCI(t *testing.T) {
 	}
 }
 
+// readVerifyGoSh returns verify_go.sh's text; a read failure is an instrument failure, never
+// a verdict about the gate.
+func readVerifyGoSh(t *testing.T) string {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join(repoRoot, "scripts", "verify_go.sh"))
+	if err != nil {
+		t.Fatalf("instrument failure: cannot read verify_go.sh: %v", err)
+	}
+	return string(raw)
+}
+
+// shellAssignmentCount counts line-anchored occurrences of a literal shell assignment, so a
+// mention inside a diagnostic string (`... ACTIVE_GO=$ACTIVE_GO ...`) is not miscounted as one.
+func shellAssignmentCount(src, assignment string) int {
+	return len(regexp.MustCompile(`(?m)^[ \t]*`+regexp.QuoteMeta(assignment)).FindAllString(src, -1))
+}
+
+// p1ComparatorCallRe matches the P1 floor gate's comparator call with its two operands captured
+// by NAME rather than pinned by spelling. Queue row 60.
+var p1ComparatorCallRe = regexp.MustCompile(`go_version_ge "\$([A-Za-z_][A-Za-z0-9_]*)" "\$([A-Za-z_][A-Za-z0-9_]*)"`)
+
+// p1ComparatorBinding is P1d: the D-WORLD-28 floor gate's comparator must take the OBSERVED
+// active toolchain first and the go.mod-DERIVED root floor second.
+//
+// Queue row 60: the contract is the operand ORDER and each operand's DERIVATION, never the
+// variables' spelling. The predecessor assertion pinned the literal
+// `go_version_ge "$ACTIVE_GO" "$ROOT_FLOOR"`, so a consistent rename -- semantically inert,
+// `bash -n` clean, the gate behaving identically -- dropped the count to 0 and redded CI. It
+// also bound LESS than it read: nothing tied the second operand to the go.mod floor read, so an
+// operand reversal achieved by swapping the two ASSIGNMENTS passed it (measured: the predecessor
+// literal count stayed 1). Binding the derivation closes both.
+//
+// Returns the two operand names, or a non-nil error naming the failing conjunct.
+func p1ComparatorBinding(src, gate string) (activeName, floorName string, err error) {
+	calls := p1ComparatorCallRe.FindAllStringSubmatch(gate, -1)
+	if len(calls) != 1 {
+		return "", "", fmt.Errorf("P1 comparator call `go_version_ge \"$X\" \"$Y\"` count=%d, want 1: the toolchain floor comparison was removed, duplicated or reshaped", len(calls))
+	}
+	activeName, floorName = calls[0][1], calls[0][2]
+	if activeName == floorName {
+		return "", "", fmt.Errorf("P1 comparator compares $%s with itself: the floor gate is vacuously true", activeName)
+	}
+	floorLit := floorName + `="go$(awk '/^go /{print $2; exit}' go.mod)"`
+	if n := len(regexp.MustCompile(`(?m)^[ \t]*`+regexp.QuoteMeta(floorLit)).FindAllString(gate, -1)); n != 1 {
+		return "", "", fmt.Errorf("P1 comparator's SECOND operand $%s is assigned from the go.mod floor read %d times inside the P1 block, want 1: the operands are reversed, or the second operand is not the derived root floor", floorName, n)
+	}
+	if n := shellAssignmentCount(src, activeName+`=$(go env GOVERSION)`); n != 1 {
+		return "", "", fmt.Errorf("P1 comparator's FIRST operand $%s is assigned from `go env GOVERSION` %d times in verify_go.sh, want 1: the operands are reversed, or the first operand is not the observed active toolchain", activeName, n)
+	}
+	if n := len(regexp.MustCompile(`(?m)^[ \t]*`+regexp.QuoteMeta(activeName)+`=`).FindAllString(gate, -1)); n != 0 {
+		return "", "", fmt.Errorf("P1 block reassigns $%s %d times, want 0: the observed active toolchain must not be shadowed inside the gate", activeName, n)
+	}
+	return activeName, floorName, nil
+}
+
+// p1NeedleBindings runs the three identifier-bound needles as one unit: P1d's comparator
+// binding, P2's execution binding, and the cross-binding that ties them together. The control
+// test below evaluates mutants through this same function, so no conjunct is left without a
+// red arm.
+func p1NeedleBindings(src, gate string) (activeName string, err error) {
+	activeName, _, err = p1ComparatorBinding(src, gate)
+	if err != nil {
+		return "", err
+	}
+	_, p2Name, err := p2ExecutionBinding(src)
+	if err != nil {
+		return "", err
+	}
+	if activeName != p2Name {
+		return "", fmt.Errorf("P1 floor gate vets $%s while the race control runs under $%s: the gate does not vet the toolchain the control it protects actually uses", activeName, p2Name)
+	}
+	return activeName, nil
+}
+
+// p2RaceExecRe matches the race control's execution binding with the GOTOOLCHAIN variable
+// captured by NAME rather than pinned by spelling. Queue row 60, second call site.
+var p2RaceExecRe = regexp.MustCompile(`GOTOOLCHAIN="\$([A-Za-z_][A-Za-z0-9_]*)" go run -race \.`)
+
+// p2ExecutionBinding is P2: the race-detector known-positive control must run under the OBSERVED
+// active toolchain, never under nested auto-selection. Like P1d it binds the variable's
+// DERIVATION rather than its spelling -- measured this iteration, the predecessor literal was the
+// SECOND needle in this file that redded on a consistent, semantically inert rename, one call
+// site over from the one queue row 60 named.
+func p2ExecutionBinding(src string) (at int, name string, err error) {
+	locs := p2RaceExecRe.FindAllStringSubmatchIndex(src, -1)
+	if len(locs) != 1 {
+		return -1, "", fmt.Errorf("P2 execution-binding needle `GOTOOLCHAIN=\"$X\" go run -race .` count=%d, want 1: the race control can silently return to nested toolchain auto-selection", len(locs))
+	}
+	name = src[locs[0][2]:locs[0][3]]
+	if n := shellAssignmentCount(src, name+`=$(go env GOVERSION)`); n != 1 {
+		return -1, "", fmt.Errorf("P2 pins GOTOOLCHAIN to $%s, which is assigned from `go env GOVERSION` %d times in verify_go.sh, want 1: the race control is not bound to the OBSERVED active toolchain", name, n)
+	}
+	return locs[0][0], name, nil
+}
+
 func p1FloorGateRegion(t *testing.T, src string) (comparator, gate string, start int) {
 	t.Helper()
 	const sentinel = "# --- P1 (queue row 48"
@@ -1112,16 +1207,21 @@ func TestRaceControlFloorStaysBelowRootToolchain(t *testing.T) {
 		t.Fatalf("racecontrol module floor %q is above the root module floor %q: the control refuses before it can fire and verify_go.sh FATALs that the race detector is not armed for the wrong reason", raceFloor, rootFloor)
 	}
 
-	verifyPath := filepath.Join(repoRoot, "scripts", "verify_go.sh")
-	raw, err := os.ReadFile(verifyPath)
+	p1NeedleSet(t, readVerifyGoSh(t))
+}
+
+// p1NeedleSet is the whole P1/P2 needle set as a function of verify_go.sh's TEXT, so the
+// anti-brittleness green control below can run the SAME assertions against a mutated source.
+// Queue row 60: the predecessor set was reachable only through a disk read, so its one green
+// control (M17, a reworded comment) could not be widened to cover an identifier rename -- and
+// THREE separate needles turned out to pin an identifier, each one invisible until the one
+// before it was relaxed.
+func p1NeedleSet(t *testing.T, src string) {
+	t.Helper()
+	const verifyPath = "scripts/verify_go.sh"
+	p2At, _, err := p2ExecutionBinding(src)
 	if err != nil {
-		t.Fatal(err)
-	}
-	src := string(raw)
-	const p2Needle = `GOTOOLCHAIN="$ACTIVE_GO" go run -race .`
-	p2At := strings.Index(src, p2Needle)
-	if count := strings.Count(src, p2Needle); count != 1 {
-		t.Fatalf("%s: execution-binding needle %q count=%d, want 1: the race control can silently return to nested auto-selection", verifyPath, p2Needle, count)
+		t.Fatalf("%s: %v", verifyPath, err)
 	}
 
 	comparator, gate, p1At := p1FloorGateRegion(t, src)
@@ -1148,9 +1248,9 @@ func TestRaceControlFloorStaysBelowRootToolchain(t *testing.T) {
 			t.Fatalf("P1 comparator is missing %q: its >= / < / malformed three-way contract was gutted", exit)
 		}
 	}
-	const comparatorCall = `go_version_ge "$ACTIVE_GO" "$ROOT_FLOOR"`
-	if count := strings.Count(gate, comparatorCall); count != 1 {
-		t.Fatalf("P1 comparator call %q count=%d, want 1: operand order must remain ACTIVE_GO >= ROOT_FLOOR", comparatorCall, count)
+	p1Active, err := p1NeedleBindings(src, gate)
+	if err != nil {
+		t.Fatalf("%s: %v", verifyPath, err)
 	}
 	if versions := regexp.MustCompile(`go1\.[0-9]+\.[0-9]+`).FindAllString(comparator+gate, -1); len(versions) != 0 {
 		t.Fatalf("P1 block contains hardcoded Go version literal(s) %v: the root floor must be read from go.mod", versions)
@@ -1159,11 +1259,148 @@ func TestRaceControlFloorStaysBelowRootToolchain(t *testing.T) {
 	if count := strings.Count(gate, floorRead); count != 1 {
 		t.Fatalf("P1 derived root-floor read %q count=%d, want 1: the floor must be read, never hardcoded", floorRead, count)
 	}
-	denyAt := strings.Index(src, `case "$ACTIVE_GO" in`)
+	// Row 60, THIRD call site: the deny-list anchor is located by the same derived toolchain
+	// variable P1d and P2 bind, so it too is inert under a consistent rename.
+	denyLit := `case "$` + p1Active + `" in`
+	denyAt := strings.Index(src, denyLit)
 	if denyAt < 0 {
-		t.Fatalf("instrument failure: verify_go.sh deny-list case is absent, so P1 ordering cannot be checked")
+		t.Fatalf("instrument failure: verify_go.sh deny-list case %q is absent, so P1 ordering cannot be checked", denyLit)
 	}
 	if !(denyAt < p1At && p1At < p2At) {
 		t.Fatalf("P1 floor gate is out of order (deny-list@%d, P1@%d, race leg@%d): it must vet after the deny-list and before the race control", denyAt, p1At, p2At)
 	}
+}
+
+// assertRed requires a mutant to be rejected AND to be rejected for the stated reason.
+//
+// Measured this iteration: the needle set's conjuncts overlap, so four of them have no SOLE
+// killer -- neutering any one leaves every arm green because another conjunct catches the same
+// mutant. Pinning the message is what stops an arm from silently re-attributing to a different
+// conjunct when one is weakened, which a bare `err != nil` cannot see.
+func assertRed(t *testing.T, err error, wantSubstring, why string) {
+	t.Helper()
+	if err == nil {
+		t.Errorf("%s: the binding accepted the mutant", why)
+		return
+	}
+	if !strings.Contains(err.Error(), wantSubstring) {
+		t.Errorf("%s: rejected, but for the wrong reason -- want a message containing %q, got: %v", why, wantSubstring, err)
+	}
+}
+
+// TestP1NeedleSetIsInertUnderRenameAndCatchesReversal is the DURABLE green/red control pair for
+// the P1/P2 needle set (queue row 60).
+//
+// Row 48 shipped the set with one green control, M17, which rewords a COMMENT word inside the P1
+// block. That supports "the set is not any-edit-reds" for comments and leaves it UNMEASURED for
+// identifiers -- and the identifier case is exactly where the set redded on a semantically inert
+// edit. A drill-only green arm also decays the moment the drill stops being re-run, so the rename
+// arm lives here as a test.
+//
+// The GREEN arm runs `p1NeedleSet` itself rather than the two binding helpers, so a needle added
+// to the set later is covered without anyone remembering to widen this test. That matters: fixing
+// the one needle row 60 named surfaced a second, and fixing that one surfaced a third.
+//
+// A green arm alone would be satisfiable by an assertion that never fails, so it is paired with
+// five red arms, each naming a distinct fail-OPEN reshaping of the comparison.
+func TestP1NeedleSetIsInertUnderRenameAndCatchesReversal(t *testing.T) {
+	src := readVerifyGoSh(t)
+	_, gate, _ := p1FloorGateRegion(t, src)
+
+	activeName, floorName, err := p1ComparatorBinding(src, gate)
+	if err != nil {
+		t.Fatalf("instrument failure: the P1d binding must hold on the pristine verify_go.sh, got: %v", err)
+	}
+	if _, _, err := p2ExecutionBinding(src); err != nil {
+		t.Fatalf("instrument failure: the P2 binding must hold on the pristine verify_go.sh, got: %v", err)
+	}
+	floorLit := floorName + `="go$(awk '/^go /{print $2; exit}' go.mod)"`
+	callLit := `go_version_ge "$` + activeName + `" "$` + floorName + `"`
+	raceLit := `GOTOOLCHAIN="$` + activeName + `" go run -race .`
+
+	// bind re-derives the P1 region from a mutated source and evaluates BOTH identifier-bound
+	// needles, so a red arm cannot pass by escaping the one it was aimed at. A mutation that
+	// breaks the region delimiters is an instrument failure, not a scored red.
+	bind := func(t *testing.T, mutated string) error {
+		t.Helper()
+		if mutated == src {
+			t.Fatal("instrument failure: the mutation changed nothing")
+		}
+		_, mutGate, _ := p1FloorGateRegion(t, mutated)
+		_, err := p1NeedleBindings(mutated, mutGate)
+		return err
+	}
+
+	t.Run("GREEN/consistent rename is inert across the WHOLE needle set", func(t *testing.T) {
+		renamed := strings.ReplaceAll(src, floorName, "P1RenamedFloor")
+		renamed = strings.ReplaceAll(renamed, activeName, "P1RenamedActive")
+		if renamed == src {
+			t.Fatal("instrument failure: the rename changed nothing")
+		}
+		if strings.Contains(renamed, activeName) || strings.Contains(renamed, floorName) {
+			t.Fatalf("instrument failure: the rename is not consistent -- %q or %q survives", activeName, floorName)
+		}
+		p1NeedleSet(t, renamed)
+	})
+
+	t.Run("RED/operands swapped in the call", func(t *testing.T) {
+		swapped := strings.Replace(src, callLit, `go_version_ge "$`+floorName+`" "$`+activeName+`"`, 1)
+		assertRed(t, bind(t, swapped), "is assigned from the go.mod floor read 0 times",
+			"swapping the comparator's operands inverts the floor gate and must red")
+	})
+
+	t.Run("RED/operands swapped by reassignment", func(t *testing.T) {
+		// The same inversion reached without touching the call: shadow the observed toolchain
+		// inside the block and hand the derived floor to the FIRST operand. Measured this
+		// iteration, the predecessor literal needle read GREEN on exactly this.
+		reassigned := strings.Replace(src, floorLit,
+			floorName+`=$(go env GOVERSION)`+"\n"+activeName+`="go$(awk '/^go /{print $2; exit}' go.mod)"`, 1)
+		assertRed(t, bind(t, reassigned), "is assigned from the go.mod floor read 0 times",
+			"inverting the gate by swapping the two assignments must red")
+	})
+
+	t.Run("RED/active toolchain shadowed inside the block", func(t *testing.T) {
+		// Sole killer for the shadow conjunct: the floor assignment is untouched, so only the
+		// shadow check can see that the vetted value is no longer the observed one.
+		shadowed := strings.Replace(src, floorLit, activeName+`=$(cat /dev/null)`+"\n"+floorLit, 1)
+		assertRed(t, bind(t, shadowed), "must not be shadowed inside the gate",
+			"reassigning the observed toolchain inside the block makes the gate vet a value it did not observe")
+	})
+
+	t.Run("RED/active toolchain not read from go env GOVERSION", func(t *testing.T) {
+		// Sole killer for the active-derivation conjunct: a plausible-looking substitute source
+		// that is not the authoritative one.
+		unobserved := strings.Replace(src, activeName+`=$(go env GOVERSION)`,
+			activeName+`=$(go version | awk '{print $3}')`, 1)
+		assertRed(t, bind(t, unobserved), "P1 comparator's FIRST operand",
+			"the vetted toolchain must be read from `go env GOVERSION`, not from a parsed substitute")
+	})
+
+	t.Run("RED/comparator compares one operand with itself", func(t *testing.T) {
+		vacuous := strings.Replace(src, callLit, `go_version_ge "$`+activeName+`" "$`+activeName+`"`, 1)
+		assertRed(t, bind(t, vacuous), "with itself: the floor gate is vacuously true",
+			"a self-comparison makes the floor gate vacuously true and must red")
+	})
+
+	t.Run("RED/race control unbound from the observed toolchain", func(t *testing.T) {
+		unbound := strings.Replace(src, raceLit, `go run -race .`, 1)
+		assertRed(t, bind(t, unbound), "count=0, want 1: the race control can silently return",
+			"dropping GOTOOLCHAIN returns the race control to nested auto-selection and must red")
+	})
+
+	t.Run("RED/floor gate vets a different toolchain than the race control runs", func(t *testing.T) {
+		// A second, genuinely observed variable: each needle passes on its own, and only the
+		// cross-binding notices that the gate no longer vets the toolchain it protects.
+		divergent := strings.Replace(src, raceLit, `GOTOOLCHAIN="$P1OtherGo" go run -race .`, 1)
+		divergent = strings.Replace(divergent, activeName+`=$(go env GOVERSION)`,
+			activeName+`=$(go env GOVERSION)`+"\n"+`P1OtherGo=$(go env GOVERSION)`, 1)
+		assertRed(t, bind(t, divergent), "the gate does not vet the toolchain the control it protects actually uses",
+			"the floor gate must vet the same toolchain variable the race control runs under")
+	})
+
+	t.Run("RED/race control bound to an underived variable", func(t *testing.T) {
+		hijacked := strings.Replace(src, raceLit, `GOTOOLCHAIN="$P1Unobserved" go run -race .`, 1)
+		assertRed(t, bind(t, hijacked), "the race control is not bound to the OBSERVED active toolchain",
+			"binding GOTOOLCHAIN to a variable never read from `go env GOVERSION` must red")
+	})
 }
