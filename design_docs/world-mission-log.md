@@ -17918,3 +17918,129 @@ running.
 
 **Next**: row **61**, then **62–66**, **68–78**, **81**, **82**, then **39**. Rows **79/80** stay
 `[PARKED — DESIGN REVIEW]`. Decision ledger: **18 rows, ZERO OPEN** — nothing parked on Mark.
+
+---
+
+## Iteration 157 — 2026-09-05 — row 61 lands, and the row's own preferred fix is measured fail-open even unmutated [HARNESS]
+
+**Kind**: controller-authored direct fix (~0.2d row carrying its own first-party diagnosis; no
+designer, planner, executor or evaluator spawned — iterations 153/156 precedent).
+
+**Progress**: charter clause-2 gate-hardening queue — **row 61 LANDED**. Queue head moves to row
+62. No new rows filed.
+
+**Context / preflight**
+- Kill switch `~/.ailang/state/mission-world.disabled`: NOT set (armed, namespaced path). Billing
+  tripwire **CLEAN**. `gh` = `sunholo-voight-kampff`. Pin present at `~/.pinned-ailang/ailang`,
+  **AILANG v0.30.0**.
+- **0** `MarkEdmondson1234` directives on `#107` since watermark `2026-09-05T19:04:00Z` (22
+  comments) and **0** on the predecessor `#89` (44 comments), via the V1 checkout's
+  `mission_directives.sh` by ABSOLUTE PATH (row 69: it and `mission-heartbeat.sh` are still absent
+  here, which is why no per-gate heartbeat stamp fired). The script's allowlist guard was
+  exercised as a positive control — `MISSION_DIRECTIVE_AUTHORS=""` is REFUSED, so the instrument
+  is demonstrably live rather than silently permissive.
+- Decision ledger **18 rows, `--check` valid, ZERO OPEN**; no ledger row changed, so no attended
+  ruling and no self-resolution. No rotation owed (`#107` created `2026-08-31T09:26:51Z` = 11:26
+  local, AFTER Monday 07:00 local; 22 of 80 comments). No weekly sweep owed.
+- Inbox 14 unread, **0** addressed to World (V1's `approvals` ask to Mark, `pkg:*` task notices,
+  `aitana-platform` threads, World's own `world-probe-i139` arms). No `[nightly-eval]` issues.
+- Running skill **byte-identical to `origin/dev`** (`cmp` against the RESOLVED symlink target via
+  `readlink -f`; inode `67997727`, the same file the invocation named as authoritative).
+- **A fleet session is live in this shared checkout and advanced `origin/dev` mid-gate**:
+  `808e78f` → `81ca5d7c` at `21:55:01`, two minutes into Gate 0. Every subsequent read was
+  re-taken against the new head and all sprint work went to a worktree (rule 4). CI **GREEN 3/3**
+  on `81ca5d7c` with `runs_total=1 event=push` and the parent `808e78f` at `checks=3` as a firing
+  control. **0** open PRs, **0** stale worktrees.
+
+**Pick**: queue row **61** (`w-p1-gate-fails-open-on-one-inserted-line-past-every-arm-in-the-sprint`),
+the queue head, `~0.2d`, gated on nothing. Not landed (no commit, no merged PR, no design doc). The
+row carries its own diagnosis and names two candidate dispositions, so no design doc was owed.
+
+**THE FINDING: THE ROW WAS RIGHT ABOUT THE DEFECT, UNDERSTATED ITS BLAST RADIUS, AND ONE OF THE
+TWO FIXES IT OFFERED IS FAIL-OPEN BEFORE ANYONE MUTATES IT.**
+
+1. **Reproduced first-party before any code (rule 3f), and it is bigger than the row says.** The
+   P1 block extracted and run standalone: pristine `rc=0` above floor, `rc=1` below floor, `rc=1`
+   malformed. With one inserted `floor_rc=0`, **all three arms return `rc=0`** — so the mutant
+   opens not only the below-floor branch the row named but the **malformed-token instrument
+   floor**, which then prints `✓ toolchain floor gate: devel >= root module floor go1.26.6`. That
+   line is not merely false, it is meaningless: the gate publishes a success assertion about two
+   values it has just failed to order. Landed in the real file, `grep -c '^floor_rc=0$'` **0 → 1**,
+   `bash -n` rc=0, `go vet` rc=0, `TestRaceControlFloorStaysBelowRootToolchain` **`ok`**; restored
+   byte-identical against a captured sha256 baseline (row 82 — `git checkout --` restores to HEAD,
+   never to an uncommitted baseline).
+
+2. **The row's option (a), taken literally, does not work — measured, not argued.** "Branch
+   directly on the call" written as `go_version_ge …` followed by `case "$?"` is **fail-OPEN with
+   no mutation at all**: below-floor input, `rc=0`. The cause is that the `set -e` restoring
+   errexit sits between the comparison and the read, and `set -e` is itself a successful command,
+   so it resets `$?`. A control at the same shape with the assignment left in place behaves
+   correctly, which is what isolates the cause. This matters beyond this gate: *removing an
+   intermediate variable does not remove the intermediate* — `$?` is one, and a shorter-lived one.
+
+3. **The `if`/`else` form is the one that holds, and the reason is worth stating.** Every arm of
+   the attributing `case $?` exits, so a dataflow break can change WHICH refusal is reported but
+   cannot manufacture a success. Measured on the shipped shape: pristine `rc=0`/`rc=1`/`rc=1`; one
+   inserted line in the `else` branch → **`rc=1`** with attribution shifted from *is BELOW the root
+   module floor* to *cannot order toolchain tokens*; one inserted line in the `then` branch →
+   **`rc=1`** unchanged. The attribution shift is a declared, measured limitation; the safety
+   property is preserved.
+
+4. **Two new conjuncts, each with a proven SOLE killer.** N1 — neutering the `if`-condition
+   binding reds **only** `RED/comparator verdict not consumed directly by the branch`. N2 —
+   neutering the `<var>=$?` check reds **only** `RED/comparator verdict re-laundered through a
+   reassignable variable`. Each mutant landed by sha256, `go vet` rc=0 read BEFORE any test result
+   (row 65), restored byte-identical, pristine control green either side. `assertRed` pins the
+   expected message, which is what makes "sole killer" a measurement rather than a hope (the
+   iteration-156 lesson: an arm asserting only `err != nil` cannot see re-attribution).
+
+5. **Production-path regression proof.** The row-61 mutant class landed in the real
+   `scripts/verify_go.sh` — `bash -n` rc=0, `go vet` rc=0, and **GREEN at base** — is now **RED**,
+   naming `P1 comparator call \`if go_version_ge "$X" "$Y"; then\` count=0 … its verdict is no
+   longer consumed directly by the branch (queue row 61)`. Restored byte-identical, tree clean.
+
+6. **Row 48's declared residual widened**, as the row required, from "rewrite" to any dataflow
+   break including an insertion — and it now states what remains rather than trailing off: a
+   comparator-BODY rewrite (inverting the `awk` exit codes), which changes the meaning while
+   satisfying every needle, and is covered by the `exit 0`/`exit 1`/`exit 2` contract needle and
+   V15's 13-case battery, not by the consumption-shape binding.
+
+**Verification (controller, first-party)**
+- `./scripts/verify_ail.sh` **rc=0**; `go build ./...` **rc=0**; `go vet ./...` **rc=0**;
+  `go test ./... -count=1` **rc=0** (**19** packages `ok`, **0** FAIL); `bash -n
+  scripts/verify_go.sh` **rc=0**. Baseline on the pristine tree was identical (rule 3e), so the
+  green measures the change and not the repo.
+- `scripts/verify_go.sh` deliberately NOT used as the gate — row 76: it is **rc=1 at base** on the
+  FLEET-OWNED driver-drift arm, which now names three drifted files against fleet HEAD
+  `59571d77`. That red means "the fleet must commit", never "absorb it into this change".
+- Commit-message auto-close scan run with a known-bad control (`this fixes #1` → matcher fires);
+  **0** hits in the message.
+
+**Routing evidence**
+| Role | Configured | Actual | Note |
+|---|---|---|---|
+| Controller | `claude:claude-opus-5` (session) | `claude:claude-opus-5` | triage/pick/fix/drill/record |
+| Designer | rotation | **not spawned** | row carries its own diagnosis; no doc owed. Rotation pointer UNCHANGED at `pi:ollama/deepseek-v4-flash:0731-cloud` — nothing consumed a turn |
+| Planner | `opus` | **not spawned** | ~0.2d single-file disposition |
+| Executor | `codex:gpt-5.6-sol` | **not spawned** | controller-authored |
+| Evaluator | `sonnet` | **not spawned** | **generator == judge for this item, stated rather than concealed**; the compensating discipline is that every claim is a landed-and-restored mutation |
+
+**Cost**: `metered=$0.00` of the $5 iteration ceiling. No sub-agent, no quorum round owed.
+
+**Ruled out / corrections the loop made against itself**
+- **My own Gate-1 CI poll was the instrument that failed.** `set -- $raw` does not word-split in
+  zsh, so three counts arrived as one string; the numeric floor printed `INSTRUMENT FAILURE — not
+  a verdict` twenty times instead of a green. That is the floor working exactly as prescribed, on
+  a rig fact this mission has already recorded — and the correct response was to kill the poller
+  (rule d-bis) and read the check set directly, not to loosen the floor.
+- **REFUTED: "dropping the intermediate variable closes the class."** It does not; see finding 2.
+  The row asserted it as the cheapest honest fix and it is fail-open unmutated.
+- **REFUTED: "the mutant opens the below-floor branch."** It opens all three, including the
+  malformed-token instrument floor (finding 1).
+- Adding a runtime self-check (the row's option b) was considered and NOT taken: it needs a second
+  `go_version_ge` call, which breaks the P1d count==1 binding, and it is strictly weaker than the
+  structural fix — a second call to the same comparator cannot see a corrupted comparator body,
+  which is the only class the structural fix leaves open anyway.
+
+**Next**: row **62**, then **63–66**, **68–78**, **81**, **82**, then **39**. Rows **79/80** stay
+`[PARKED — DESIGN REVIEW]`.

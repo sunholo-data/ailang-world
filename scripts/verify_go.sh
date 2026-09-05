@@ -413,18 +413,27 @@ if [ "$root_go_lines" -ne 1 ]; then
   exit 1
 fi
 ROOT_FLOOR="go$(awk '/^go /{print $2; exit}' go.mod)"
-set +e
-go_version_ge "$ACTIVE_GO" "$ROOT_FLOOR"; floor_rc=$?
-set -e
-case "$floor_rc" in
-  0) ;;
-  1) echo "verify_go.sh: FATAL: active toolchain $ACTIVE_GO is BELOW the root module floor $ROOT_FLOOR;" >&2
-     echo "  the race-detector known-positive control would be disarmed. Pin GOTOOLCHAIN to $ROOT_FLOOR or above." >&2
-     exit 1 ;;
-  *) echo "verify_go.sh: FATAL: cannot order toolchain tokens (ACTIVE_GO=$ACTIVE_GO ROOT_FLOOR=$ROOT_FLOOR);" >&2
-     echo "  at least one is not a well-formed goX.Y[.Z] release version." >&2
-     exit 1 ;;
-esac
+# Row 61: the comparator's verdict is consumed by `if` DIRECTLY. There is no intermediate
+# variable and no `$?` read on the success path, so a dataflow break between the comparison and
+# the branch cannot open the gate. The predecessor laundered the verdict through a reassignable
+# `floor_rc`, and ONE inserted line (`floor_rc=0`) reopened ALL THREE refusal branches at once --
+# below-floor AND malformed-token -- while the gate went on printing an arithmetically false
+# success line. Note what does NOT fix it: dropping the variable and reading `case "$?"` is
+# fail-OPEN even unmutated, because the intervening `set -e` is itself a successful command that
+# resets `$?` (measured). `$?` is still read below, but only to ATTRIBUTE the refusal: every arm
+# of that `case` exits, so a broken attribution is still a refusal.
+if go_version_ge "$ACTIVE_GO" "$ROOT_FLOOR"; then
+  :
+else
+  case $? in
+    1) echo "verify_go.sh: FATAL: active toolchain $ACTIVE_GO is BELOW the root module floor $ROOT_FLOOR;" >&2
+       echo "  the race-detector known-positive control would be disarmed. Pin GOTOOLCHAIN to $ROOT_FLOOR or above." >&2
+       exit 1 ;;
+    *) echo "verify_go.sh: FATAL: cannot order toolchain tokens (ACTIVE_GO=$ACTIVE_GO ROOT_FLOOR=$ROOT_FLOOR);" >&2
+       echo "  at least one is not a well-formed goX.Y[.Z] release version." >&2
+       exit 1 ;;
+  esac
+fi
 echo "   ✓ toolchain floor gate: $ACTIVE_GO >= root module floor $ROOT_FLOOR"
 
 echo "── race-detector known-positive control"

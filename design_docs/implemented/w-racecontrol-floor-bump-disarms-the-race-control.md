@@ -838,6 +838,34 @@ run at all — a host whose base Go is below the root floor with no network to f
 fail-closes loudly before the race leg; that loud FATAL stays the backstop and now names the
 floor mismatch rather than a spurious race-detector failure.
 
+**Widened 2026-09-05 (queue row 61, iteration 157).** This residual was written as if the static
+needle set's blind spot were reachable only by *rewriting* an existing branch (`case "$floor_rc"
+in` → `case "0" in`, or inverting the comparator's awk verdicts). It was reachable by a one-line
+**INSERTION**, which is strictly larger and much likelier as an accident. Measured first-party at
+HEAD before the fix: `floor_rc=0` inserted immediately after `go_version_ge "$ACTIVE_GO"
+"$ROOT_FLOOR"; floor_rc=$?` is `bash -n` clean, `go vet` clean, leaves every one of P1a–P1f green
+(`TestRaceControlFloorStaysBelowRootToolchain` `ok`), and opens **all three** refusal branches at
+once — not only the below-floor branch the row named, but the malformed-token instrument floor
+too, which then printed `✓ toolchain floor gate: devel >= root module floor go1.26.6`. The
+success line is an assertion, and a fail-open gate publishes it as a false one.
+
+The disposition is **structural**, not another needle: the comparator's verdict is now consumed
+by `if` directly, and every arm of the attributing `case` exits, so a dataflow break can change
+*which* refusal is reported but cannot produce a success. Measured on the new shape: an inserted
+line in the `else` branch keeps `rc=1` (attribution shifts from the below-floor message to the
+cannot-order message); an inserted line in the `then` branch changes nothing. Note the option
+this rules OUT — dropping the variable and reading `case "$?"` directly is fail-**open even
+unmutated**, because the intervening `set -e` is itself a successful command that resets `$?`
+(measured: below-floor input, no mutation, `rc=0`). Two new conjuncts back the shape: the call
+must be the `if` condition, and the gate must contain no `<var>=$?`.
+
+**The residual that remains, stated in its widened form:** a static scan of `verify_go.sh` cannot
+follow dataflow, so it bounds the *shape* of the verdict path and not its *meaning*. What is now
+closed is every break that leaves the shape intact — insertion included. What is not closed is a
+rewrite of the comparator's own body (inverting the `awk` exit codes), which changes the meaning
+while satisfying every needle; that class is covered by the comparator's `exit 0`/`exit 1`/
+`exit 2` contract needle and by V15's 13-case battery, not by the consumption-shape binding.
+
 ## Axiom Compliance
 
 **Scoring**
