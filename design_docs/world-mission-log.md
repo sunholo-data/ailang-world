@@ -18064,3 +18064,147 @@ enumeration is complete), `not_green=0`, `runs_total=1 event=push`, parent `81ca
 
 **Next**: row **62**, then **63–66**, **68–78**, **81**, **82**, **83**, then **39**. Rows
 **79/80** stay `[PARKED — DESIGN REVIEW]`.
+
+## Iteration 158 — 2026-09-06 — row 62 lands, and for the second iteration running the row's own proposed remedy is measured fail-open [HARNESS]
+
+**Kind**: controller-authored direct fix (~0.1d row carrying its own first-party diagnosis; no
+designer, planner, executor or evaluator spawned — iterations 153/156/157 precedent).
+
+**Progress**: charter clause-2 gate-hardening queue — **row 62 LANDED**. Rows 58–62 have now
+landed on five consecutive iterations. Queue head moves to row 63. No new rows filed.
+
+**Context / preflight**
+- Kill switch `~/.ailang/state/mission-world.disabled`: NOT set (armed, namespaced path). Billing
+  tripwire **CLEAN**. `gh` = `sunholo-voight-kampff`. Overlap pidfile holds my own PID. Pin
+  present at `~/.pinned-ailang/ailang`, **AILANG v0.30.0**.
+- **0** `MarkEdmondson1234` directives on `#107` since watermark `2026-09-05T19:04:00Z` (23
+  comments) and **0** on the predecessor `#89` (44 comments), via the V1 checkout's
+  `mission_directives.sh` by ABSOLUTE PATH (row 69: it and `mission-heartbeat.sh` are still absent
+  here, which is why no per-gate heartbeat stamp fired). The allowlist guard was exercised as a
+  positive control — `MISSION_DIRECTIVE_AUTHORS=""` is REFUSED — so the instrument is
+  demonstrably live rather than silently permissive.
+- Decision ledger **18 rows, `--check` valid, ZERO OPEN**; no ledger row changed, so no attended
+  ruling and no self-resolution. No rotation owed (`#107` created `2026-08-31T09:26:51Z` = 11:26
+  local, AFTER Monday 07:00 local; 23 of 80 comments). No weekly sweep owed.
+- Inbox 14 unread, **0** addressed to World. No `[nightly-eval]` issues.
+- Running skill **byte-identical to `origin/dev`** (`cmp` against the RESOLVED symlink target via
+  `readlink -f`; inode `67997727`).
+- **Local `dev` was 2 behind `origin/dev` with 0 ahead** (`81ca5d7` vs `ae9a615`) — the routine
+  post-iteration state of this shared checkout, since every landing goes by worktree and PR. All
+  mission state was read FROM ORIGIN and both the sprint and this record were written in
+  worktrees branched on `origin/dev`. No reconcile was attempted: the four obligations do hold
+  here (zero ahead-commits, the incoming diff disjoint from the one dirty path, that path being
+  the fleet's untracked `mission-control.sh.tmp.astra`), but standing authorisation for a
+  reconcile is a HUMAN decision and this charter carries none, and routing around it costs this
+  loop nothing because it works in worktrees anyway.
+- CI **GREEN 3/3** on `ae9a615` with the parent at `checks=3` as a firing control. **0** open PRs,
+  **0** stale worktrees.
+
+**Pick**: queue row **62**
+(`w-flag-scan-false-positives-on-an-explicit-false-and-on-benign-script-text`), the queue head,
+`~0.1d`, gated on nothing. Not landed (no commit, no merged PR, no design doc). The row carries
+its own diagnosis and names candidate fixes, so no design doc was owed.
+
+**THE FINDING: THE ROW WAS EXACTLY RIGHT ABOUT THE DEFECT — LINE NUMBERS INCLUDED — AND ITS
+PROPOSED REMEDY, TAKEN LITERALLY, IS FAIL-OPEN.**
+
+1. **Reproduced first-party before any code (rule 3f).** The row-52 sprint scoped *where* the
+   miscompile step block is; it never touched *what the scan looks for inside it*, and that loop
+   was a bare `strings.Contains(line, "continue-on-error")` over the block. On the real `ci.yml`,
+   mutants landed by sha256 and restored byte-identical against a captured backup, pristine
+   control green either side:
+   - **(a)** `continue-on-error: false` on the guarded step — a legitimate, explicit opt-OUT that
+     changes nothing about failure swallowing — gave **rc=1 at `ci.yml:175`**.
+   - **(b)** a benign `echo "note: never add continue-on-error to this step"` inside that step's
+     own `run:` scalar gave **rc=1 at `ci.yml:177`** — a red over script TEXT with no flag
+     present at all.
+   - **(c)** the discriminating control, the identical `echo` in an UNRELATED step, stayed
+     **rc=0**. That is what makes this a scan defect rather than a repo-wide text ban, and it is
+     also the row-52 sprint's V19 boundary still holding.
+   Both line numbers match the row's own filing exactly, which is worth saying: the row was
+   filed by the `sonnet` evaluator at the row-52 landing and it transcribed nothing.
+
+2. **Row 83's discipline fired on its first outing, and it paid.** Row 83 — filed one iteration
+   ago — says the loop live-repros a queue row's DEFECT claim and then takes its PROPOSED REMEDY
+   on trust. Row 62 proposed *"match the KEY at the step's own key indentation … and treat a
+   `false` value as compliant"*. Measured, that is **fail-OPEN**: a step's FIRST key rides the
+   block-sequence dash at `stepCol`, two columns left of every sibling key at `stepCol+2`, so
+   `- continue-on-error: true` — valid YAML, and the shape an author who writes the flag first
+   would reach for — evades an indentation rule written only for siblings. Drill arm **N1**
+   neuters exactly that case and its **sole** killer is
+   `true_riding_the_block-sequence_dash_is_refused`. Two consecutive iterations, two rows, two
+   proposed remedies fail-open as written. That is now the second instance of row 83's class,
+   which is what makes it eligible to spend a future Gate-5 skill edit — but World cannot edit
+   the shared skill, so it is proposed rather than applied (see Retro).
+
+3. **The fix, and the value half the row got right.** `continueOnErrorRefusalsIn` reads the
+   step's own block-mapping key at BOTH positions and then reads its VALUE. Only a literal
+   `false` (any case, quoted or not, with or without a trailing comment) is an accepted opt-out.
+   `true`, an empty value and a `${{ }}` expression are all refusals — the expression because its
+   run-time value is not decidable here, so the scan fails CLOSED on anything it cannot read as
+   false. Row 62 is about false POSITIVES, and widening it into a fail-open would trade this
+   instrument for its opposite. A step written as a YAML **flow mapping** hides its keys from an
+   indentation rule, so that is an instrument FAILURE, not a green.
+
+4. **The line already existed one screen below, in the same function.** The neighbouring `run.sh`
+   check rejects only EXECUTABLE uses of `go env GOOS` and explicitly lets a comment name the
+   channel it warns about — quorum round-2 R1's own fix. *Guard the helper, miss the call site*,
+   this time inside a single test function: the same distinction between a mention and a use,
+   drawn correctly for one channel and not for the other.
+
+**Production-path drill, real `ci.yml`, after the fix** — six arms, `go vet` rc=0 read before
+every verdict, each mutant landed by sha256 and restored byte-identical:
+`A` (`: false`) green · `B` (benign echo) green · `D` (`: true`) **RED** · `E` (`true` on the
+dash) **RED** · `F` (`${{ }}`) **RED** · `C` (unrelated step) green.
+
+**Sensitivity drill, 7 neuterings, every conjunct killed and four sole**: `N1` dash position →
+**sole**; `N2` value check → the four refusal arms; `N3` false-is-compliant → the four compliant
+arms; `N4` flow-mapping guard → **sole**; `N5` key-boundary colon → **sole**; `N6` inline-comment
+strip → **sole**; `N7` revert to the bare substring → 8 arms. Pristine control green either side
+of all seven; every restore asserted byte-identical against a captured sha256 rather than by
+`git checkout --` (row 82).
+
+**Verify gate — GREEN, both legs, outside any sandbox**: `verify_ail.sh` **rc=0** (11 identities,
+40 named tests, 9/9 world-package steps, `AILANG v0.30.0` pinned by exact bytes) · `go build
+./...` rc=0 · `go vet ./...` rc=0 · `go test ./... -count=1` **rc=0** (**19** `ok`, **0** FAIL).
+
+**Ruled out**
+- *That `verify_go.sh` could serve as this iteration's gate.* Re-measured rather than
+  transcribed (the blocked-external-predicate rule): **rc=1 at base** on the FLEET-OWNED
+  driver-drift arm, and the fleet HEAD it names has MOVED — `f516881a` this iteration against
+  `59571d77` last. Row 76's two-leg substitute stands, and the drift is cleared by a fleet
+  commit, never by a World edit.
+- *That the row's proposed remedy could be implemented as written.* Refuted by measurement, not
+  by argument — see finding 2.
+- *That "treat a `false` value as compliant" implies "reject only `true`".* Refuted at design
+  time and pinned by an arm: an expression value is not statically decidable and must fail
+  closed.
+
+**Routing evidence**
+| role | pinned | actual | note |
+|---|---|---|---|
+| controller | `$MODEL` | `claude:claude-opus-5` | triage/pick/fix/record/retro |
+| designer | rotation | **not spawned** | ~0.1d row with its own diagnosis; no doc owed |
+| planner | `codex:gpt-5.6-sol` | **not spawned** | single-file fix, no plan owed |
+| executor | `codex:gpt-5.6-sol` | **not spawned** | controller-authored |
+| evaluator | `sonnet` | **NOT SPAWNED — generator == judge, stated** | compensated by 7 neuterings + a 6-arm production-path drill, each landed and restored |
+
+`metered=$0.00` of the $5 ceiling — no metered lane was used.
+
+**LANDED**: PR [#119](https://github.com/sunholo-data/ailang-world/pull/119) -> squash
+[`dcf534f`](https://github.com/sunholo-data/ailang-world/commit/dcf534f). Gate 3b GREEN on the
+MERGE commit: `present=3 == expected=3` with expected ENUMERATED from `ci.yml`'s own job list
+(`ailang-verify`, `go-verify`, `launchd-drivers`; `ci.yml` is the only workflow in the repo, so
+the enumeration is complete), `not_green=0`, `runs_total=1 event=push`, parent control `ae9a615`
+at `checks=3`, `mergeable` read FIRST (`MERGEABLE/UNSTABLE` -> `MERGEABLE/CLEAN`, never banked on
+the first non-CONFLICTING reading), and `#107` asserted still OPEN after the merge. Every poll
+count asserted numeric before comparison; the commit message and PR body were both scanned for
+auto-close keywords with a known-bad control firing.
+
+**Containment**: the main checkout's only untracked file remains
+`tools/launchd/mission-control.sh.tmp.astra` — a fleet artifact, frozen core, left alone and
+reported for the fourth iteration running.
+
+**Next**: row **63** (`w-locator-derivation-refusals-are-unpinned-and-undeclared`), then rows
+**64**–**66**, **68**–**78**, **81**, **82**, **83**, then **39**. Rows **79**/**80** remain
+`[PARKED — DESIGN REVIEW]` by their own text.
