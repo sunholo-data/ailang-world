@@ -943,6 +943,88 @@ const expectedStepCol = 6
 
 func indentOf(s string) int { return len(s) - len(strings.TrimLeft(s, " ")) }
 
+// stripYAMLInlineComment removes a trailing `# …` comment from a scalar value. A value that
+// opens with a quote is read to its closing quote first, so a `#` inside the quotes stays data.
+func stripYAMLInlineComment(v string) string {
+	v = strings.TrimLeft(v, " ")
+	if len(v) > 0 && (v[0] == '"' || v[0] == '\'') {
+		if k := strings.IndexByte(v[1:], v[0]); k >= 0 {
+			return v[:k+2]
+		}
+		return v
+	}
+	if k := strings.Index(v, " #"); k >= 0 {
+		return v[:k]
+	}
+	if strings.HasPrefix(v, "#") {
+		return ""
+	}
+	return v
+}
+
+// stepMappingValue returns the value of `key` when `line` is one of the step's OWN block-mapping
+// keys, and reports whether it matched. A step's keys are exactly the ones at stepCol+2: either
+// riding the block-sequence dash (`<stepCol>- key: v`, which is where a step's FIRST key sits and
+// which an indentation rule written only for sibling lines misses) or on a sibling line
+// (`<stepCol+2>key: v`). Anything deeper belongs to a nested mapping or to a block scalar — a
+// `run:` script — and is therefore NOT the step's key, which is the whole of queue row 62(b).
+func stepMappingValue(line string, stepCol int, key string) (string, bool) {
+	ind := indentOf(line)
+	rest := line[ind:]
+	switch {
+	case ind == stepCol && strings.HasPrefix(rest, "- "):
+		rest = rest[2:]
+	case ind == stepCol+2:
+	default:
+		return "", false
+	}
+	if !strings.HasPrefix(rest, key+":") {
+		return "", false
+	}
+	return strings.TrimSpace(stripYAMLInlineComment(rest[len(key)+1:])), true
+}
+
+// continueOnErrorIsCompliant reports whether an EXPLICIT continue-on-error value is a static
+// opt-OUT. Only a literal false is: `true`, an empty value and a `${{ … }}` expression are all
+// refusals, the last because its run-time value is not decidable here and may be true. The scan
+// therefore fails CLOSED on any value it cannot read as false — queue row 62 is about false
+// POSITIVES, and widening it into a fail-open would trade this instrument for its opposite.
+func continueOnErrorIsCompliant(v string) bool {
+	return strings.EqualFold(strings.Trim(strings.TrimSpace(v), `"'`), "false")
+}
+
+// continueOnErrorRefusalsIn scans the step block [start,end) for the step's own
+// `continue-on-error` key and returns one refusal message per non-compliant setting. Queue row
+// 62: the predecessor was `strings.Contains(line, "continue-on-error")` over the same range, so
+// an explicit `continue-on-error: false` (a legitimate opt-OUT that swallows nothing) and a
+// comment or `echo` merely NAMING the flag inside the step's own `run:` scalar both read as
+// re-introductions — measured first-party at ci.yml:175 and ci.yml:177 before this fix, with the
+// identical `echo` in an unrelated step staying green as the discriminating control.
+//
+// The neighbouring run.sh check one screen below already draws exactly this line, rejecting only
+// EXECUTABLE uses of `go env GOOS` while letting a comment name the channel it warns about. This
+// is that rule applied to the call site it missed.
+//
+// A second return value carries an instrument failure: the scan reads BLOCK mappings, so a step
+// written as a YAML flow mapping (`- {continue-on-error: true, …}`) is refused loudly rather
+// than passed over silently.
+func continueOnErrorRefusalsIn(lines []string, start, end, stepCol int) (refusals []string, instrumentErr string) {
+	for i := start; i < end && i < len(lines); i++ {
+		if indentOf(lines[i]) == stepCol && strings.HasPrefix(strings.TrimSpace(lines[i]), "- {") {
+			return nil, fmt.Sprintf("ci.yml:%d expresses the step as a YAML flow mapping; this scan reads block mappings only", i+1)
+		}
+		v, ok := stepMappingValue(lines[i], stepCol, "continue-on-error")
+		if !ok {
+			continue
+		}
+		if continueOnErrorIsCompliant(v) {
+			continue
+		}
+		refusals = append(refusals, fmt.Sprintf("ci.yml:%d sets %q to %q in the miscompile step — row 44: a swallowed refusal is how this instrument died the first time; only a literal false is an accepted opt-out", i+1, "continue-on-error", v))
+	}
+	return refusals, ""
+}
+
 // TestMiscompileInstrumentStepIsGatedInCI pins the row-44 wiring on two channels that
 // must not silently return. (1) `continue-on-error: true` converts an instrument's
 // loudest possible output into silence, so it is forbidden in the miscompile step's
@@ -1039,10 +1121,12 @@ func TestMiscompileInstrumentStepIsGatedInCI(t *testing.T) {
 	if !foundName {
 		t.Fatalf("instrument failure: located block is not the miscompile step %q", miscompileStepName)
 	}
-	for i := start; i < end; i++ {
-		if strings.Contains(lines[i], "continue-on-error") {
-			t.Errorf("ci.yml:%d re-introduces %q in the miscompile step — row 44: a swallowed refusal is how this instrument died the first time", i+1, "continue-on-error")
-		}
+	refusals, instrumentErr := continueOnErrorRefusalsIn(lines, start, end, stepCol)
+	if instrumentErr != "" {
+		t.Fatalf("instrument failure: %s", instrumentErr)
+	}
+	for _, r := range refusals {
+		t.Error(r)
 	}
 	runRaw, err := os.ReadFile(filepath.Join(repoRoot, miscompileReproducerPath))
 	if err != nil {
@@ -1436,4 +1520,128 @@ func TestP1NeedleSetIsInertUnderRenameAndCatchesReversal(t *testing.T) {
 		assertRed(t, bind(t, hijacked), "the race control is not bound to the OBSERVED active toolchain",
 			"binding GOTOOLCHAIN to a variable never read from `go env GOVERSION` must red")
 	})
+}
+
+// stepScanFixture renders a two-step block-sequence job whose FIRST step is the guarded one, so
+// every arm below is scoped exactly as the production scan is: `- ` at column 6, the step's own
+// keys at column 8, a `run:` block scalar at column 10, and an unrelated sibling step after it.
+// guarded is spliced verbatim between the dash line and the run scalar; extra rides the dash.
+func stepScanFixture(dashKey, guarded, runBody string) (lines []string, start, end, stepCol int) {
+	dash := "      - name: guarded"
+	if dashKey != "" {
+		dash = "      - " + dashKey
+	}
+	src := []string{
+		"jobs:",
+		"  j:",
+		"    steps:",
+		dash,
+	}
+	if dashKey != "" {
+		src = append(src, "        name: guarded")
+	}
+	if guarded != "" {
+		src = append(src, "        "+guarded)
+	}
+	src = append(src,
+		"        run: |",
+		"          "+runBody,
+		"      - name: unrelated",
+		"        continue-on-error: true",
+		"        run: echo other",
+	)
+	return src, 3, len(src) - 3, 6
+}
+
+// TestContinueOnErrorStepScanReadsTheKeyNotTheText is queue row 62's non-vacuous guard. Each arm
+// names the conjunct it is the sole killer for; the mutation drill in the iteration record lands
+// each neutering separately and confirms only the arm below goes red.
+func TestContinueOnErrorStepScanReadsTheKeyNotTheText(t *testing.T) {
+	cases := []struct {
+		name     string
+		dashKey  string
+		guarded  string
+		runBody  string
+		wantRed  bool
+		wantsVal string
+	}{
+		// The row-44 property this instrument exists for. Killer for: rejecting a true value.
+		{name: "explicit true on a sibling key is refused", guarded: "continue-on-error: true", runBody: "./run.sh", wantRed: true, wantsVal: "true"},
+		// Queue row 62(a): a legitimate explicit opt-OUT swallows nothing.
+		{name: "explicit false on a sibling key is compliant", guarded: "continue-on-error: false", runBody: "./run.sh"},
+		{name: "quoted and cased false is compliant", guarded: `continue-on-error: "False"`, runBody: "./run.sh"},
+		{name: "false with a trailing comment is compliant", guarded: "continue-on-error: false # deliberate, row 62", runBody: "./run.sh"},
+		// Queue row 62(b): script TEXT inside the step's own run: scalar is not a key.
+		{name: "the flag named inside the run scalar is not a key", runBody: `echo "note: never add continue-on-error to this step"`},
+		{name: "the flag named in a comment inside the block is not a key", guarded: "# never add continue-on-error here", runBody: "./run.sh"},
+		// The hole in row 62's OWN proposed remedy: a step's first key rides the dash, two
+		// columns left of every sibling key, so an indentation rule written only for siblings
+		// is fail-OPEN on the shape an author is most likely to reach for.
+		{name: "true riding the block-sequence dash is refused", dashKey: "continue-on-error: true", runBody: "./run.sh", wantRed: true, wantsVal: "true"},
+		{name: "false riding the block-sequence dash is compliant", dashKey: "continue-on-error: false", runBody: "./run.sh"},
+		// Not statically decidable, so it fails CLOSED rather than passing as "not true".
+		{name: "an expression value is refused", guarded: "continue-on-error: ${{ github.event_name == 'push' }}", runBody: "./run.sh", wantRed: true, wantsVal: "${{ github.event_name == 'push' }}"},
+		{name: "an empty value is refused", guarded: "continue-on-error:", runBody: "./run.sh", wantRed: true, wantsVal: ""},
+		// A different key that merely starts with the same text is not this key.
+		{name: "a longer key with the same prefix is not this key", guarded: "continue-on-error-policy: strict", runBody: "./run.sh"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			lines, start, end, stepCol := stepScanFixture(c.dashKey, c.guarded, c.runBody)
+			refusals, instrumentErr := continueOnErrorRefusalsIn(lines, start, end, stepCol)
+			if instrumentErr != "" {
+				t.Fatalf("instrument failure: %s", instrumentErr)
+			}
+			if c.wantRed {
+				if len(refusals) != 1 {
+					t.Fatalf("want exactly 1 refusal, got %d: %v", len(refusals), refusals)
+				}
+				if !strings.Contains(refusals[0], `to "`+c.wantsVal+`"`) {
+					t.Errorf("refusal does not report the value %q it read: %s", c.wantsVal, refusals[0])
+				}
+				return
+			}
+			if len(refusals) != 0 {
+				t.Errorf("want no refusal, got %v", refusals)
+			}
+		})
+	}
+}
+
+// TestContinueOnErrorStepScanIsBoundedToItsOwnStep is the boundary control the row-52 sprint's
+// V19 arm established, re-asserted against the new scan: the fixture's UNRELATED step sets
+// `continue-on-error: true`, and every arm above is green on it. This is the known-POSITIVE half
+// — move the range over that step and the same scan must refuse — so a green above proves the
+// scope holds rather than that the scan stopped working.
+func TestContinueOnErrorStepScanIsBoundedToItsOwnStep(t *testing.T) {
+	lines, _, _, stepCol := stepScanFixture("", "continue-on-error: false", "./run.sh")
+	unrelated := len(lines) - 3
+	if got := strings.TrimSpace(lines[unrelated]); got != "- name: unrelated" {
+		t.Fatalf("instrument failure: fixture's unrelated step moved to %q", got)
+	}
+	refusals, instrumentErr := continueOnErrorRefusalsIn(lines, unrelated, len(lines), stepCol)
+	if instrumentErr != "" {
+		t.Fatalf("instrument failure: %s", instrumentErr)
+	}
+	if len(refusals) != 1 {
+		t.Fatalf("control did not fire: scanning the unrelated step must refuse its `continue-on-error: true`, got %v", refusals)
+	}
+}
+
+// TestContinueOnErrorStepScanRefusesAFlowMapping pins the fail-CLOSED disposition for the one
+// YAML shape the scan cannot read: a step written as a flow mapping hides its keys from an
+// indentation rule, so the scan reports an instrument failure instead of a green.
+func TestContinueOnErrorStepScanRefusesAFlowMapping(t *testing.T) {
+	lines := []string{
+		"    steps:",
+		"      - {name: guarded, continue-on-error: true, run: ./run.sh}",
+		"      - name: unrelated",
+	}
+	refusals, instrumentErr := continueOnErrorRefusalsIn(lines, 1, 2, 6)
+	if instrumentErr == "" {
+		t.Fatalf("a flow-mapping step must be an instrument failure, not a silent pass (refusals=%v)", refusals)
+	}
+	if !strings.Contains(instrumentErr, "flow mapping") {
+		t.Errorf("instrument failure does not name the shape it could not read: %s", instrumentErr)
+	}
 }
