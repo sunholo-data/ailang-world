@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  World mission driver — launchd job.
+
+  VERSIONED 2026-09-05. Until now this plist existed ONLY in ~/Library/LaunchAgents and
+  was unversioned entirely, so its schedule was unreviewable and no change to it left a
+  trace — the same trap the motoko plist recorded and fixed on 2026-08-17. Installed
+  plists are COPIES, not symlinks: editing this file changes nothing until it is copied
+  to ~/Library/LaunchAgents and the job is reloaded.
+
+  SCHEDULE: KeepAlive + ThrottleInterval, NOT StartInterval (Mark, attended 2026-09-05).
+  StartInterval re-arms from the job's EXIT, not its start — world measured a 14390s gap
+  against its 14400s interval, so the real period was duration + interval, and 19.0 of
+  world's 24 hours were idle. ThrottleInterval is measured from the START, so the period
+  becomes max(duration, 14400) rather than duration + 14400. The nominal 4h spacing is
+  UNCHANGED; only the wasted slot goes. Projected 4.75 -> 6.0 iterations/day on a mean
+  duration of 3785s (n=2 — thin, and the durable slot-verdict log added in the same change
+  is what will make it n>2).
+
+  ThrottleInterval is load-bearing: the yield paths (kill switch, overlap guard, memory
+  gate) exit in seconds and bare KeepAlive would respawn them in a tight loop.
+
+  PREREQUISITE, already landed: world had NO memory gate and NO boot stagger. Raising a
+  loop's rate on a box that took three jetsam events in 48h, while that loop is the one
+  mission with no admission control, would trade an idle problem for an OOM problem. Both
+  are ported and covered by tools/launchd/test_mission_memgate.sh (PASS=24).
+
+  Contends with v1 (90m), docs (6h) and motoko (13h). Do not re-tighten more than one loop
+  at a time: on 2026-09-02 three were tightened together and the fleet stall rate went
+  6% -> 33% with NO extra starts. Re-read it the next day.
+
+  Revert: delete KeepAlive + ThrottleInterval, restore <key>StartInterval</key> 14400.
+-->
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>MISSION_PROFILE</key>
+		<string>world</string>
+	</dict>
+	<key>Label</key>
+	<string>dev.ailang.mission-world</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/voightkampff/dev/sunholo-data/ailang-world/tools/launchd/mission-control.sh</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/tmp/ailang-mission-world.launchd.log</string>
+	<key>StandardOutPath</key>
+	<string>/tmp/ailang-mission-world.launchd.log</string>
+	<key>KeepAlive</key>
+	<true/>
+	<key>ThrottleInterval</key>
+	<integer>14400</integer>
+</dict>
+</plist>
