@@ -1093,7 +1093,17 @@ func shellAssignmentCount(src, assignment string) int {
 
 // p1ComparatorCallRe matches the P1 floor gate's comparator call with its two operands captured
 // by NAME rather than pinned by spelling. Queue row 60.
-var p1ComparatorCallRe = regexp.MustCompile(`go_version_ge "\$([A-Za-z_][A-Za-z0-9_]*)" "\$([A-Za-z_][A-Za-z0-9_]*)"`)
+//
+// Queue row 61: the call must be the `if` CONDITION, so the verdict travels from the comparator
+// to the branch with nothing in between that could rewrite it. The predecessor matched the call
+// wherever it appeared, which left the consumption shape unbound -- and the consumption shape is
+// the whole defect: one inserted `floor_rc=0` after `floor_rc=$?` reopened every refusal branch
+// while all six static needles stayed green.
+var p1ComparatorCallRe = regexp.MustCompile(`if go_version_ge "\$([A-Za-z_][A-Za-z0-9_]*)" "\$([A-Za-z_][A-Za-z0-9_]*)"; then`)
+
+// p1VerdictLaunderRe matches any assignment of `$?` -- the shape queue row 61 showed is
+// re-breakable by a single inserted line.
+var p1VerdictLaunderRe = regexp.MustCompile(`(?m)^[ \t]*[A-Za-z_][A-Za-z0-9_]*=\$\?`)
 
 // p1ComparatorBinding is P1d: the D-WORLD-28 floor gate's comparator must take the OBSERVED
 // active toolchain first and the go.mod-DERIVED root floor second.
@@ -1110,7 +1120,7 @@ var p1ComparatorCallRe = regexp.MustCompile(`go_version_ge "\$([A-Za-z_][A-Za-z0
 func p1ComparatorBinding(src, gate string) (activeName, floorName string, err error) {
 	calls := p1ComparatorCallRe.FindAllStringSubmatch(gate, -1)
 	if len(calls) != 1 {
-		return "", "", fmt.Errorf("P1 comparator call `go_version_ge \"$X\" \"$Y\"` count=%d, want 1: the toolchain floor comparison was removed, duplicated or reshaped", len(calls))
+		return "", "", fmt.Errorf("P1 comparator call `if go_version_ge \"$X\" \"$Y\"; then` count=%d, want 1: the toolchain floor comparison was removed, duplicated, or its verdict is no longer consumed directly by the branch (queue row 61)", len(calls))
 	}
 	activeName, floorName = calls[0][1], calls[0][2]
 	if activeName == floorName {
@@ -1125,6 +1135,9 @@ func p1ComparatorBinding(src, gate string) (activeName, floorName string, err er
 	}
 	if n := len(regexp.MustCompile(`(?m)^[ \t]*`+regexp.QuoteMeta(activeName)+`=`).FindAllString(gate, -1)); n != 0 {
 		return "", "", fmt.Errorf("P1 block reassigns $%s %d times, want 0: the observed active toolchain must not be shadowed inside the gate", activeName, n)
+	}
+	if n := len(p1VerdictLaunderRe.FindAllString(gate, -1)); n != 0 {
+		return "", "", fmt.Errorf("P1 gate launders the comparator verdict through %d `<var>=$?` assignment(s), want 0: queue row 61 -- a verdict held in a reassignable variable is reopened by a single inserted line, and the gate then prints an arithmetically false success line", n)
 	}
 	return activeName, floorName, nil
 }
@@ -1380,6 +1393,26 @@ func TestP1NeedleSetIsInertUnderRenameAndCatchesReversal(t *testing.T) {
 		vacuous := strings.Replace(src, callLit, `go_version_ge "$`+activeName+`" "$`+activeName+`"`, 1)
 		assertRed(t, bind(t, vacuous), "with itself: the floor gate is vacuously true",
 			"a self-comparison makes the floor gate vacuously true and must red")
+	})
+
+	t.Run("RED/comparator verdict not consumed directly by the branch", func(t *testing.T) {
+		// Queue row 61, sole killer for the consumption-shape conjunct: the call, both operands
+		// and every refusal branch survive verbatim, and the gate is nonetheless fail-OPEN
+		// because the disjunction makes the condition unconditionally true. It carries no
+		// `<var>=$?`, so the laundering conjunct cannot reach it.
+		disjoined := strings.Replace(src, "if "+callLit+"; then", "if "+callLit+" || true; then", 1)
+		assertRed(t, bind(t, disjoined), "no longer consumed directly by the branch",
+			"the comparator's verdict must reach the branch unmediated; a disjunction opens the gate while every needle-visible byte survives")
+	})
+
+	t.Run("RED/comparator verdict re-laundered through a reassignable variable", func(t *testing.T) {
+		// Queue row 61, sole killer for the laundering conjunct: the `if` form is untouched, so
+		// only the `<var>=$?` check can see that the verdict has been copied somewhere an
+		// inserted line could rewrite. This is the shape the row measured as fail-open.
+		relaundered := strings.Replace(src, "\nfi\n"+`echo "   ✓ toolchain floor gate:`,
+			"\nfi\nfloor_rc=$?\n"+`echo "   ✓ toolchain floor gate:`, 1)
+		assertRed(t, bind(t, relaundered), "launders the comparator verdict through",
+			"copying the verdict into a reassignable variable restores the row 61 fail-open shape and must red")
 	})
 
 	t.Run("RED/race control unbound from the observed toolchain", func(t *testing.T) {
