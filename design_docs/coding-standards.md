@@ -77,6 +77,14 @@ modules found, zero obligations proven, zero tests discovered, `verify.errors > 
 by a zero exit code. When you find such a case (as `w-m1-ailang-hardening` did with
 `ai-check`'s exit code), fix the gate AND file the upstream issue.
 
+### Load-bearing criteria require mutations
+
+A criterion that claims an assertion is load-bearing must be discharged by a **MUTATION** that
+makes the test red, never by a static count of the assertion's own text. This binds both
+design-doc acceptance criteria and sprint-plan test-plan rows: each load-bearing claim must name
+the mutant and the single assertion that fires when it lands. A grep may appear only as an
+explicitly labelled instrument-health control; it cannot discharge the load-bearing claim.
+
 ## S7 — Usage surfaces ship usage docs (the discoverability rule; added 2026-07-28, Mark)
 
 Every user-facing surface (CLI verb, REST route, package API) lands WITH: (a) `--help` /

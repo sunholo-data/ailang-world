@@ -1,7 +1,15 @@
 # w-shell-assignment-parser-drops-an-indented-assignment
 
-**Status**: **REVISED under human ruling `D-WORLD-29` (attended 2026-09-01)** — direction ratified as
-option A; ready to route.
+> **SUPERSEDED.** The attended ruling `D-WORLD-31` (2026-09-03) folded this work into
+> `w-load-bearing-criteria-need-a-mutation-not-a-grep.md`; do not fund row 50 separately. Row 50's
+> defect—a deny-list silently narrowed by an indented assignment—is provably gone because
+> `KNOWN_BAD`, `KNOWN_GOOD`, and `PINNED` now live in a data-only fixture whose every non-blank,
+> non-comment line must match the column-0-anchored record grammar. An indented assignment cannot
+> exist there without `TestToolchainPinFixtureIsDataOnly` redding (AC2, discharged by mutations
+> M1/M2/M8).
+
+**Status**: **SUPERSEDED under attended ruling `D-WORLD-31` (2026-09-03)** by
+`w-load-bearing-criteria-need-a-mutation-not-a-grep.md`.
 
 > **⚠ READ THIS BEFORE IMPLEMENTING ANY OF THE DESIGN BELOW.** Two quorum rounds both BLOCKED. The
 > surviving objection (`gpt5-6-sol`, round 2) disputed the design DIRECTION, and the controller
