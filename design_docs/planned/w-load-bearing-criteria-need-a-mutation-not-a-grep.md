@@ -228,6 +228,7 @@ while IFS= read -r line || [ -n "$line" ]; do
   # are a SYNTAX ERROR on bash 3.2 (macOS system bash, the version the "launchd
   # drivers (bash 3.2)" CI job pins) — measured, V-19.
   RE='^([A-Z_]+)="([^"]*)"([[:space:]]+#.*)?$'
+  BADCHARS='[^A-Za-z0-9._+:/ -]'
   if [[ "$line" =~ $RE ]]; then
     name="${BASH_REMATCH[1]}"; value="${BASH_REMATCH[2]}"
     case "$name" in
@@ -236,7 +237,11 @@ while IFS= read -r line || [ -n "$line" ]; do
       PINNED)     seen_pinned=$((seen_pinned+1)) ;;
       *) echo "toolchain_pins.conf: unknown name '$name' (only KNOWN_BAD, KNOWN_GOOD, PINNED allowed)" >&2; exit 1 ;;
     esac
-    if [[ "$value" =~ [^A-Za-z0-9._+:/ -] ]]; then
+    # BADCHARS MUST stay in a variable: the inline form `=~ [^A-Za-z0-9._+:/ -]` is a
+    # bash 3.2 SYNTAX ERROR (rc=2 `syntax error near \`-]\'`) on THIS rig, including on a
+    # good value -- so every M11/M12/M13 arm would read "rejected" while the parser
+    # rejected everything. Same class as V-19, one call site over. See V-20.
+    if [[ "$value" =~ $BADCHARS ]]; then
       echo "toolchain_pins.conf: value for '$name' contains a disallowed character (only toolchain tokens and spaces allowed)" >&2; exit 1
     fi
     printf -v "$name" '%s' "$value"
@@ -340,7 +345,7 @@ mutation, never by a count of the assertion's own text.
 |---|---|---|
 | 1 | `design_docs/verification/w-race-gate-blindspot/toolchain_pins.conf` | **CREATE** — the data-only fixture (D4). |
 | 2 | `design_docs/verification/w-race-gate-blindspot/run.sh` | **MODIFY** — delete the three data lines (V-3, lines 24–26); add the bounded fail-loud parser (D4) that loads the fixture before the `cd`. No other logic changes. |
-| 3 | `host/verifygate/toolchain_pin_gate_test.go` | **MODIFY** — repoint the four `shellAssignmentValues` call sites (V-2) from run.sh to the fixture; add the fixture-shape gate test (AC1) and the runtime fixture-execution test `TestRunShExecutesToolchainPinFixture` (AC4). |
+| 3 | `host/verifygate/toolchain_pin_gate_test.go` | **MODIFY** — repoint the four `shellAssignmentValues` call sites (V-2) **and the fifth reader, the known-positive control loop at line 315 (V-22)**, from run.sh to the fixture; add the fixture-shape gate test (AC1) and the runtime fixture-execution test `TestRunShExecutesToolchainPinFixture` (AC4). |
 | 4 | `design_docs/coding-standards.md` | **MODIFY** — add the S6 sub-clause (D3). |
 | 5 | `design_docs/planned/w-shell-assignment-parser-drops-an-indented-assignment.md` | **SUPERSEDED** — row 50's doc is folded into this one (D-WORLD-31); mark it superseded, do not fund it separately. |
 
@@ -357,6 +362,13 @@ Every test and every frozen message string that could be disturbed is named here
   `shellAssignmentValues` at lines 330–332. After the migration these read the fixture.
 - `TestReproModuleFloorStaysBelowKnownBadToolchains` — reads `KNOWN_BAD` via `shellAssignmentValues`
   at line 419. After the migration it reads the fixture.
+- **`TestMiscompileInstrumentProbesPinnedToolchain`'s known-positive control loop at line 315 — the
+  FIFTH reader, which V-2 did not enumerate because it does not call `shellAssignmentValues`** (V-22).
+  It scans run.sh's raw text for the literal strings `KNOWN_BAD=`, `KNOWN_GOOD=` and `PINNED=` and
+  `t.Fatalf`s `instrument failure: … does not contain known-positive control %q` when any is missing.
+  Deleting run.sh's data lines therefore REDS this test at the MS1 boundary, breaking bisectability,
+  unless the loop is repointed at the fixture in the same commit. Repoint it — do NOT delete it: it
+  is the instrument-health control that proves the scan can see a positive.
 
 **Tests that read run.sh's STRUCTURE and must NOT be disturbed (their needles stay in run.sh):**
 
@@ -413,8 +425,12 @@ PRISTINE tree. None is red at base (V-6, V-7). None uses `grep -c <assertion tex
 discharge of a load-bearing claim.
 
 - **AC1 — the fixture exists and is data-only by construction.**
-  `go test ./host/verifygate/ -run 'TestToolchainPinFixtureIsDataOnly'` → rc=0. (New test; the
-  fixture-shape gate. Baseline: the test is new, so it is green only after the fixture lands.)
+  `go test ./host/verifygate/ -run 'TestToolchainPinFixtureIsDataOnly' -v 2>&1 | tee /dev/stderr
+  | grep -q -- '--- PASS: TestToolchainPinFixtureIsDataOnly'` → rc=0, AND the same run must NOT
+  print `no tests to run`. **The bare `-run` form is VACUOUS at base and was wrong here (V-21):**
+  `go test -run '<a name that does not exist>'` exits **rc=0** printing `[no tests to run]`, so the
+  original discharge passed before the test was written -- this document's own thesis, committed by
+  the document. Baseline under the hardened form: **rc=1** at base, rc=0 once the test lands.
 - **AC2 — row 50's defect is provably gone (Q4).** The three names live in `toolchain_pins.conf`
   and the fixture-shape gate `TestToolchainPinFixtureIsDataOnly` passes (AC1). The mutation table
   M1/M2/M8 discharges the load-bearing claim that an indented or control-flow-wrapped assignment
@@ -423,9 +439,10 @@ discharge of a load-bearing claim.
   `go test ./host/verifygate/ -run 'TestMiscompileInstrumentProbesPinnedToolchain|TestReproModuleFloorStaysBelowKnownBadToolchains'`
   → rc=0. (Baseline: both pass at base; they must still pass after repointing to the fixture.)
 - **AC4 — run.sh actually EXECUTES the fixture at runtime (bounded).**
-  `go test ./host/verifygate/ -run 'TestRunShExecutesToolchainPinFixture'` → rc=0. (New test; the
-  runtime fixture-execution gate. Baseline: the test is new, so it is green only after the fixture
-  lands.) The test copies the run.sh prologue through the fixture-load point and a sentinel
+  `go test ./host/verifygate/ -run 'TestRunShExecutesToolchainPinFixture' -v 2>&1 | tee /dev/stderr
+  | grep -q -- '--- PASS: TestRunShExecutesToolchainPinFixture'` → rc=0, AND the same run must NOT
+  print `no tests to run` (V-21, exactly as AC1 -- the bare `-run` form is rc=0 at base).
+  Baseline under the hardened form: **rc=1** at base, rc=0 once the test lands. The test copies the run.sh prologue through the fixture-load point and a sentinel
   fixture into `t.TempDir()`, appends a command that prints the loaded variables, and executes it
   under a Go `context.WithTimeout` of ≤30s. It asserts the sentinel values are observed, and
   `t.Fatalf`s LOUDLY if `bash` is unavailable (a silent skip is the vacuous pass this document
@@ -467,7 +484,7 @@ and revert. No row uses `grep -c <assertion text> == N` as the discharge of a lo
 | M4 | Add a second `KNOWN_BAD` line to the fixture | `TestMiscompileInstrumentProbesPinnedToolchain` | `KNOWN_BAD assignment count=2, want 1` |
 | M5 | Change `KNOWN_BAD` to include the pinned floor | `TestMiscompileInstrumentProbesPinnedToolchain` | `incorrectly labels the pinned toolchain` |
 | M6 | Change `PINNED` to a selection mode (`go1.26.6+auto`) | `requireToolchainNamePin` | `is a toolchain-selection mode, not a pin` |
-| M7 | Change `PINNED` to a different floor | `TestMiscompileInstrumentProbesPinnedToolchain` | `PINNED=…, want go.mod floor` |
+| M7 | Change `PINNED` to a different floor | `TestMiscompileInstrumentProbesPinnedToolchain` | `want go.mod floor` (V-23: the row previously quoted `PINNED=…, want go.mod floor`, which can never appear literally — the format string is `PINNED=%q, want go.mod floor %q`, so the `…` is not a real substring. Match the invariant tail.) |
 | M8 | Add a non-assignment line to the fixture (`echo hello`) | fixture-shape gate | `does not match the anchored assignment grammar` |
 | M9 | Wrap the canary assertion `if rows[0].field != "stateRoot" { t.Fatalf(…) }` in `if false { … }` | `TestCanaryDeclaresPositiveArmOnly` (via `canaryAssertionShapeProblems`) | `assertion if-stmt count=0, want exactly 1` |
 | M10 | Wrap the fixture `source` line in `if false; then … fi` in run.sh | `TestRunShExecutesToolchainPinFixture` (runtime) | `run.sh did not execute toolchain_pins.conf` |
@@ -556,6 +573,10 @@ results are paired with a known-positive control in the same command. All measur
 | V-17 | The fixture's own grammar accepts executable shell expansion inside a quoted value, so sourcing it executes the file as code — the "data-only by construction" claim is TRUE of the STATIC SCAN and FALSE of the RUNTIME CONSUMPTION | controller first-party, iteration 154: probe file `f.conf` with three lines — `KNOWN_BAD="$(touch /tmp/fixprobe_iter154/PWNED)"`, `KNOWN_GOOD="go1.26.6"`, `PATH="/nonsense"`; command 1 `grep -cE '^[A-Z_]+="[^"]*"([[:space:]]+#.*)?$' f.conf`; command 2 `( set -uo pipefail; . ./f.conf; echo "KNOWN_BAD=[$KNOWN_BAD] PATH_now=[$PATH]" )`; negative control `echo hello` → same grep → 0 | command 1 observed `3` — ALL THREE hostile lines match the doc's own grammar; command 2 observed `KNOWN_BAD=[] PATH_now=[/nonsense]` and the file `/tmp/fixprobe_iter154/PWNED` WAS CREATED — `source` executed the command substitution and an arbitrary fourth name (PATH) was clobbered; negative control observed `0`, so the grammar is not matching everything. Conclusion: the gate reads the file as data; bash reads it as code. |
 | V-18 | Row 51's AC2 carried a REAL mutation arm as its second sentence — the document's earlier claim that it discharged the claim WITH the grep overstates the defect | `sed -n '378p' design_docs/planned/w-inventory-test-blind-to-asymmetric-addition.md` | `**AC2 (set-equality assertion is present and load-bearing).** grep -c 'disagree on their site set' host/verifygate/floor_raise_inventory_test.go ≥ 3 (…). Load-bearing proof is mutation arm N1: with the set-equality neutered … and ARM A1 landed, the test goes GREEN (see Mutation Drill).` — AC2 carried a real mutation arm as its second sentence. The row-59 finding still stands: the grep half reads 3 under an `if false { … }` wrapper, so the FIRST sentence is a self-sufficient-LOOKING vacuous discharge, and that is what a reader discharges. This makes the rule SHARPER rather than weaker: the failure mode is a criterion whose first clause reads as a complete discharge, not a criterion with no mutation anywhere. |
 | V-19 | The parser snippet as first drafted is a **bash 3.2 SYNTAX ERROR**, and it fails in the direction that fakes a pass: all three reject-arms M11/M12/M13 would read "rejected" while the GOOD fixture also fails | controller first-party, iteration 154, on `GNU bash, version 3.2.57(1)-release (arm64-apple-darwin25)` — the version the `launchd drivers (bash 3.2)` CI job pins. Ran the drafted parser against four fixtures: a good one, M11 (`KNOWN_BAD="$(touch …/PWNED)"`), M13 (`PATH="/nonsense"`), M1 (indented `KNOWN_BAD`) | **Inline form** (`if [[ "$line" =~ ^([A-Z_]+)="([^"]*)"…$ ]]`): all four rc=2 with `syntax error in conditional expression: unexpected token ')'` — including the GOOD fixture, so the reject-arms would have been vacuously green. **Regex-in-a-variable form** (`RE='…'; if [[ "$line" =~ $RE ]]`): good rc=0 parsing all three names with the trailing comment handled; M11 rc=1 `value for 'KNOWN_BAD' contains a disallowed character` with the `PWNED` sentinel **NOT created** (the value was never executed); M13 rc=1 `unknown name 'PATH'`; M1 rc=1 `malformed line`. The snippet above now carries the variable form and a comment saying why. **Controller factual correction applied directly** — it overrides no objection and resolves nothing that was contested. |
+| V-20 | **V-19 fixed the RECORD regex and left the WHITELIST regex inline, so the snippet was STILL a bash 3.2 syntax error — instance 2 of V-19's own class, one call site over** | controller first-party, iteration 155, `/bin/bash --version` = `GNU bash, version 3.2.57(1)-release (arm64-apple-darwin25)`. Two scratch scripts differing only in the regex's placement, each with the GOOD value `value="go1.26.6"`: inline `if [[ "$value" =~ [^A-Za-z0-9._+:/ -] ]]` vs `BADCHARS='[^A-Za-z0-9._+:/ -]'; if [[ "$value" =~ $BADCHARS ]]`. Both `bash -n` and executed. Surfaced by the sprint-planner and reproduced by the controller before acting (rule 3f). | **Inline**: `bash -n` **rc=2**, `syntax error in conditional expression` / ``syntax error near `-]' `` — and identically rc=2 when EXECUTED, on the GOOD value. So M11/M12/M13 would each have read "rejected" while the parser rejected everything, including the fixture it is meant to accept. **Variable**: `bash -n` **rc=0**, execution rc=0 printing `ACCEPT`. Positive control: a knowingly-broken script (`if [ x`) reports `syntax error: unexpected end of file`, so `bash -n` discriminates. Doc corrected to the variable form with `BADCHARS` declared beside `RE`. **Guard the helper, miss the call site** — aimed at the fix for that very shape. |
+| V-21 | **AC1 and AC4 were discharged by a command that is rc=0 BEFORE the test exists — the document committing its own thesis for the third time** | controller first-party, iteration 155, on a pristine tree at `32369dc`. Paired run: `go test ./host/verifygate/ -run 'TestToolchainPinFixtureIsDataOnly'` (the not-yet-written test named by AC1) and `go test ./host/verifygate/ -run 'TestMiscompileInstrumentProbesPinnedToolchain'` (a test that exists, as the known-positive control). Surfaced by the sprint-planner, reproduced by the controller before acting. | Nonexistent test: **rc=0**, `ok … [no tests to run]`. Existing test: **rc=0**, `ok`. The two are indistinguishable by exit code, so AC1's and AC4's stated baseline (*"green only after the fixture lands"*) was **false** — both were green at base, vacuously. This is precisely the `grep -c`-as-discharge defect this document exists to kill, wearing `go test -run`'s clothes. Both ACs hardened to require a `--- PASS: <TestName>` line and to refuse on `no tests to run`; under the hardened form the baseline is genuinely rc=1. |
+| V-22 | **A FIFTH reader of run.sh's data lines that V-2 did not enumerate, because it does not call `shellAssignmentValues`** | controller first-party, iteration 155: `grep -n "KNOWN_BAD\|KNOWN_GOOD\|PINNED" host/verifygate/toolchain_pin_gate_test.go \| grep -v shellAssignmentValues`, plus `sed -n '308,320p'` for context, plus a negative control on an absent name (`grep -c "KNOWN_UGLY"`). Surfaced by the sprint-planner, reproduced by the controller. | `toolchain_pin_gate_test.go:315`: `for _, control := range []string{"KNOWN_BAD=", "KNOWN_GOOD=", "PINNED="} { if !strings.Contains(src, control) { t.Fatalf("instrument failure: %s does not contain known-positive control %q", …) } }` — a raw-text scan of run.sh, invisible to a `shellAssignmentValues` grep. Negative control `KNOWN_UGLY` → **0**, so the grep was not matching everything. Consequence: deleting run.sh's data lines REDS `TestMiscompileInstrumentProbesPinnedToolchain` at the MS1 boundary and breaks bisectability. Conflict Surface and the Files table corrected; the loop is REPOINTED at the fixture, never deleted — it is the instrument-health control. **V-2's enumeration was anchored to a function name rather than to the fact it claimed**, which is the same shape as its own subject. |
+| V-23 | M7's quoted assertion substring cannot appear literally | controller first-party, iteration 155: read the format string at `toolchain_pin_gate_test.go:365`. | The `t.Errorf` is `PINNED=%q, want go.mod floor %q` — so `PINNED=…, want go.mod floor` is not a substring of any real output (the `…` is prose, not a wildcard). Mutation row M7 corrected to match the invariant tail `want go.mod floor`. The other 12 rows' substrings were confirmed present. |
 
 ---
 
