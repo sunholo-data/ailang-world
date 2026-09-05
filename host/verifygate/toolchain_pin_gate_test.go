@@ -1,6 +1,8 @@
 package verifygate
 
 import (
+	"context"
+	"crypto/sha256"
 	"fmt"
 	"go/ast"
 	"go/build/constraint"
@@ -8,11 +10,13 @@ import (
 	"go/token"
 	"go/version"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 )
 
 func stripPinQuotes(value string) string {
@@ -312,11 +316,13 @@ func TestMiscompileInstrumentProbesPinnedToolchain(t *testing.T) {
 	}
 	src := string(raw)
 	lines := strings.Split(src, "\n")
-	for _, control := range []string{"KNOWN_BAD=", "KNOWN_GOOD=", "PINNED="} {
-		if !strings.Contains(src, control) {
-			t.Fatalf("instrument failure: %s does not contain known-positive control %q", scriptPath, control)
-		}
+	fixturePath := filepath.Join(repoRoot, "design_docs", "verification", "w-race-gate-blindspot", "toolchain_pins.conf")
+	fixtureRaw, err := os.ReadFile(fixturePath)
+	if err != nil {
+		t.Fatal(err)
 	}
+	fixtureSrc := string(fixtureRaw)
+	fixtureLines := strings.Split(fixtureSrc, "\n")
 	shebangs := 0
 	for _, line := range lines {
 		if line == "#!/usr/bin/env bash" {
@@ -327,17 +333,22 @@ func TestMiscompileInstrumentProbesPinnedToolchain(t *testing.T) {
 		t.Fatalf("instrument failure: %s exact shebang count=%d, want 1", scriptPath, shebangs)
 	}
 
-	goodAssignments := shellAssignmentValues(lines, "KNOWN_GOOD")
-	badAssignments := shellAssignmentValues(lines, "KNOWN_BAD")
-	pinnedAssignments := shellAssignmentValues(lines, "PINNED")
+	goodAssignments := shellAssignmentValues(fixtureLines, "KNOWN_GOOD")
+	badAssignments := shellAssignmentValues(fixtureLines, "KNOWN_BAD")
+	pinnedAssignments := shellAssignmentValues(fixtureLines, "PINNED")
 	if len(goodAssignments) != 1 {
-		t.Errorf("%s: KNOWN_GOOD assignment count=%d, want 1", scriptPath, len(goodAssignments))
+		t.Errorf("%s: KNOWN_GOOD assignment count=%d, want 1", fixturePath, len(goodAssignments))
 	}
 	if len(badAssignments) != 1 {
-		t.Errorf("%s: KNOWN_BAD assignment count=%d, want 1", scriptPath, len(badAssignments))
+		t.Errorf("%s: KNOWN_BAD assignment count=%d, want 1", fixturePath, len(badAssignments))
 	}
 	if len(pinnedAssignments) != 1 {
-		t.Errorf("%s: PINNED assignment count=%d, want 1", scriptPath, len(pinnedAssignments))
+		t.Errorf("%s: PINNED assignment count=%d, want 1", fixturePath, len(pinnedAssignments))
+	}
+	for _, control := range []string{"KNOWN_BAD=", "KNOWN_GOOD=", "PINNED="} {
+		if !strings.Contains(fixtureSrc, control) {
+			t.Fatalf("instrument failure: %s does not contain known-positive control %q", fixturePath, control)
+		}
 	}
 	var good, bad []string
 	if len(goodAssignments) == 1 {
@@ -350,7 +361,7 @@ func TestMiscompileInstrumentProbesPinnedToolchain(t *testing.T) {
 		t.Errorf("%s: KNOWN_GOOD must contain at least one toolchain", scriptPath)
 	}
 	if len(bad) == 0 {
-		t.Errorf("%s: KNOWN_BAD must contain at least one toolchain", scriptPath)
+		t.Errorf("%s: KNOWN_BAD must contain at least one toolchain", fixturePath)
 	}
 
 	floor := moduleGoFloor(t, filepath.Join(repoRoot, "go.mod"))
@@ -359,7 +370,7 @@ func TestMiscompileInstrumentProbesPinnedToolchain(t *testing.T) {
 	}
 	pinned := ""
 	if len(pinnedAssignments) == 1 {
-		pinned = requireToolchainNamePin(t, scriptPath, "PINNED", pinnedAssignments[0])
+		pinned = requireToolchainNamePin(t, fixturePath, "PINNED", pinnedAssignments[0])
 	}
 	if pinned != floor {
 		t.Errorf("PINNED=%q, want go.mod floor %q", pinned, floor)
@@ -411,18 +422,18 @@ func TestReproModuleFloorStaysBelowKnownBadToolchains(t *testing.T) {
 		t.Fatalf("instrument failure: repro module floor %q is not a valid Go version", reproFloor)
 	}
 
-	scriptPath := filepath.Join(repoRoot, "design_docs", "verification", "w-race-gate-blindspot", "run.sh")
-	raw, err := os.ReadFile(scriptPath)
+	fixturePath := filepath.Join(repoRoot, "design_docs", "verification", "w-race-gate-blindspot", "toolchain_pins.conf")
+	raw, err := os.ReadFile(fixturePath)
 	if err != nil {
 		t.Fatal(err)
 	}
 	badAssignments := shellAssignmentValues(strings.Split(string(raw), "\n"), "KNOWN_BAD")
 	if len(badAssignments) != 1 {
-		t.Fatalf("instrument failure: %s: KNOWN_BAD assignment count=%d, want 1", scriptPath, len(badAssignments))
+		t.Fatalf("instrument failure: %s: KNOWN_BAD assignment count=%d, want 1", fixturePath, len(badAssignments))
 	}
 	bad := strings.Fields(badAssignments[0])
 	if len(bad) == 0 {
-		t.Fatalf("instrument failure: %s: KNOWN_BAD must contain at least one toolchain", scriptPath)
+		t.Fatalf("instrument failure: %s: KNOWN_BAD must contain at least one toolchain", fixturePath)
 	}
 	oldest := bad[0]
 	for _, tc := range bad {
@@ -436,6 +447,231 @@ func TestReproModuleFloorStaysBelowKnownBadToolchains(t *testing.T) {
 	if version.Compare(reproFloor, oldest) > 0 {
 		t.Fatalf("repro module floor %q is above the oldest KNOWN_BAD toolchain %q: every deny-listed probe SKIPs, saw_bad stays 0, and run.sh reds for the wrong reason (the V10 rehearsal)", reproFloor, oldest)
 	}
+}
+
+const toolchainPinParserEnd = "# toolchain_pins.conf parser ends here."
+const sentinelToolchainFixture = "KNOWN_BAD=\"sentinel-bad\"\nKNOWN_GOOD=\"sentinel-good\"\nPINNED=\"sentinel-pinned\"\n"
+
+func toolchainPinParserPrologue(t *testing.T) string {
+	t.Helper()
+	scriptPath := filepath.Join(repoRoot, "design_docs", "verification", "w-race-gate-blindspot", "run.sh")
+	raw, err := os.ReadFile(scriptPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(string(raw), "\n")
+	end := -1
+	for i, line := range lines {
+		if line == toolchainPinParserEnd {
+			if end != -1 {
+				t.Fatalf("instrument failure: %s contains the parser-end marker more than once", scriptPath)
+			}
+			end = i
+		}
+	}
+	if end == -1 {
+		t.Fatalf("instrument failure: could not locate %q in %s", toolchainPinParserEnd, scriptPath)
+	}
+	return strings.Join(lines[:end+1], "\n") + "\n"
+}
+
+func requireBash(t *testing.T) string {
+	t.Helper()
+	bash, err := exec.LookPath("bash")
+	if err != nil {
+		t.Fatalf("bash is required to execute the toolchain pin fixture: %v", err)
+	}
+	return bash
+}
+
+func writeExecutableAt(t *testing.T, path, contents string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte(contents), 0o755); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func runBoundedBash(t *testing.T, bash, script string, env []string) ([]byte, error) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, bash, script)
+	cmd.Env = env
+	out, err := cmd.CombinedOutput()
+	if ctx.Err() != nil {
+		t.Fatalf("run.sh did not execute toolchain_pins.conf: %v", ctx.Err())
+	}
+	return out, err
+}
+
+func writeToolchainFixture(t *testing.T, dir, contents string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(dir, "toolchain_pins.conf"), []byte(contents), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func fileSHA256(t *testing.T, path string) string {
+	t.Helper()
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return fmt.Sprintf("%x", sha256.Sum256(raw))
+}
+
+func requireChildExitCode(t *testing.T, err error) int {
+	t.Helper()
+	exitErr, ok := err.(*exec.ExitError)
+	if !ok {
+		t.Fatalf("scratch parser did not report an exit status: %v", err)
+	}
+	return exitErr.ExitCode()
+}
+
+func assertWritableSentinel(t *testing.T, sentinel string) {
+	t.Helper()
+	file, err := os.Create(sentinel)
+	if err != nil {
+		t.Fatalf("known-positive writable-directory control could not create %s: %v", sentinel, err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(sentinel); err != nil {
+		t.Fatalf("known-positive writable-directory control did not create %s: %v", sentinel, err)
+	}
+	if err := os.Remove(sentinel); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// TestRunShExecutesToolchainPinFixture executes only a scratch copy of run.sh's
+// prologue through the bounded parser. Bash syntax checks are instrument health;
+// the observed sentinel values and rejection/non-execution arms are the runtime proof.
+func TestRunShExecutesToolchainPinFixture(t *testing.T) {
+	bash := requireBash(t)
+	prologue := toolchainPinParserPrologue(t)
+
+	t.Run("loads sentinel values", func(t *testing.T) {
+		dir := t.TempDir()
+		script := filepath.Join(dir, "run.sh")
+		writeExecutableAt(t, script, prologue+`printf '%s|%s|%s\n' "$KNOWN_BAD" "$KNOWN_GOOD" "$PINNED"`+"\n")
+		writeToolchainFixture(t, dir, sentinelToolchainFixture)
+
+		if syntax, err := exec.Command(bash, "-n", script).CombinedOutput(); err != nil {
+			t.Fatalf("run.sh did not execute toolchain_pins.conf: scratch syntax check failed: %v: %s", err, syntax)
+		}
+		out, err := runBoundedBash(t, bash, script, os.Environ())
+		if err != nil {
+			t.Fatalf("run.sh did not execute toolchain_pins.conf: %v: %s", err, out)
+		}
+		if got, want := strings.TrimSpace(string(out)), "sentinel-bad|sentinel-good|sentinel-pinned"; got != want {
+			t.Fatalf("run.sh did not execute toolchain_pins.conf: output=%q, want %q", got, want)
+		}
+	})
+
+	for _, tc := range []struct {
+		name     string
+		sentinel string
+		badLine  func(string) string
+	}{
+		{"rejects command substitution without execution", "sentinel_m11", func(path string) string { return `KNOWN_BAD="$(touch ` + path + `)"` }},
+		{"rejects backticks without execution", "sentinel_m12", func(path string) string { return "KNOWN_BAD=\"`touch " + path + "`\"" }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			sentinel := filepath.Join(dir, tc.sentinel)
+			assertWritableSentinel(t, sentinel)
+			script := filepath.Join(dir, "run.sh")
+			writeExecutableAt(t, script, prologue)
+			fixture := filepath.Join(dir, "toolchain_pins.conf")
+			writeToolchainFixture(t, dir, sentinelToolchainFixture)
+			before := fileSHA256(t, fixture)
+			writeToolchainFixture(t, dir, tc.badLine(sentinel)+"\nKNOWN_GOOD=\"sentinel-good\"\nPINNED=\"sentinel-pinned\"\n")
+			mutant := fileSHA256(t, fixture)
+			if mutant == before {
+				t.Fatal("mutation did not change the scratch fixture")
+			}
+
+			out, err := runBoundedBash(t, bash, script, os.Environ())
+			if err == nil {
+				t.Fatalf("run.sh accepted executable fixture value; output=%q", out)
+			}
+			childRC := requireChildExitCode(t, err)
+			const rejection = "value for 'KNOWN_BAD' contains a disallowed character"
+			if !strings.Contains(string(out), rejection) {
+				t.Fatalf("run.sh rejection=%q, want substring %q", out, rejection)
+			}
+			if _, statErr := os.Stat(sentinel); !os.IsNotExist(statErr) {
+				t.Fatalf("fixture value executed: sentinel %s stat error=%v, want os.IsNotExist", sentinel, statErr)
+			}
+			writeToolchainFixture(t, dir, sentinelToolchainFixture)
+			after := fileSHA256(t, fixture)
+			if after != before {
+				t.Fatalf("scratch fixture restore sha256=%s, want %s", after, before)
+			}
+			t.Logf("observed parser rejection: %s; child_rc=%d sha256 before=%s mutant=%s after=%s", rejection, childRC, before, mutant, after)
+		})
+	}
+
+	t.Run("rejects PATH without clobbering it", func(t *testing.T) {
+		dir := t.TempDir()
+		pathOut := filepath.Join(dir, "path.out")
+		const childPath = "/usr/bin:/bin:/known-child-path"
+		observer := `trap 'printf "%s" "$PATH" > "$PATHOUT"' EXIT` + "\n"
+		observedPrologue := strings.Replace(prologue, "set -uo pipefail\n", "set -uo pipefail\n"+observer, 1)
+		if observedPrologue == prologue {
+			t.Fatal("instrument failure: could not install PATH observer before the parser")
+		}
+		script := filepath.Join(dir, "run.sh")
+		writeExecutableAt(t, script, observedPrologue)
+		fixture := filepath.Join(dir, "toolchain_pins.conf")
+		writeToolchainFixture(t, dir, sentinelToolchainFixture)
+		before := fileSHA256(t, fixture)
+		writeToolchainFixture(t, dir, "KNOWN_BAD=\"sentinel-bad\"\nPATH=\"/nonsense\"\nKNOWN_GOOD=\"sentinel-good\"\nPINNED=\"sentinel-pinned\"\n")
+		mutant := fileSHA256(t, fixture)
+		if mutant == before {
+			t.Fatal("mutation did not change the scratch fixture")
+		}
+		env := append(os.Environ(), "PATH="+childPath, "PATHOUT="+pathOut)
+		out, err := runBoundedBash(t, bash, script, env)
+		if err == nil {
+			t.Fatalf("run.sh accepted unknown fixture name; output=%q", out)
+		}
+		childRC := requireChildExitCode(t, err)
+		const rejection = "unknown name 'PATH' (only KNOWN_BAD, KNOWN_GOOD, PINNED allowed)"
+		if !strings.Contains(string(out), rejection) {
+			t.Fatalf("run.sh rejection=%q, want substring %q", out, rejection)
+		}
+		recorded, readErr := os.ReadFile(pathOut)
+		if readErr != nil {
+			t.Fatalf("PATH observer did not record the refusing shell's PATH: %v", readErr)
+		}
+		if got := string(recorded); got != childPath {
+			t.Fatalf("parser clobbered PATH before refusal: got %q, want %q", got, childPath)
+		}
+
+		controlOut := filepath.Join(dir, "path-control.out")
+		control := filepath.Join(dir, "path-control.sh")
+		writeExecutableAt(t, control, "#!/usr/bin/env bash\nset -uo pipefail\nPATH=/nonsense\ntrap 'printf \"%s\" \"$PATH\" > \"$PATHOUT\"' EXIT\n")
+		if output, controlErr := runBoundedBash(t, bash, control, append(os.Environ(), "PATHOUT="+controlOut)); controlErr != nil {
+			t.Fatalf("known-positive PATH observer control failed: %v: %s", controlErr, output)
+		}
+		controlRecorded, readErr := os.ReadFile(controlOut)
+		if readErr != nil {
+			t.Fatalf("known-positive PATH observer control wrote no observation: %v", readErr)
+		}
+		if got := string(controlRecorded); got != "/nonsense" {
+			t.Fatalf("known-positive PATH observer control recorded %q, want /nonsense", got)
+		}
+		writeToolchainFixture(t, dir, sentinelToolchainFixture)
+		after := fileSHA256(t, fixture)
+		if after != before {
+			t.Fatalf("scratch fixture restore sha256=%s, want %s", after, before)
+		}
+		t.Logf("observed parser rejection: %s; child_rc=%d sha256 before=%s mutant=%s after=%s", rejection, childRC, before, mutant, after)
+	})
 }
 
 // canaryAssertionShapeProblems parses the canary test source and reports any deviation from the

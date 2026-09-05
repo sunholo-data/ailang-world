@@ -19,12 +19,42 @@
 
 set -uo pipefail
 
-cd "$(dirname "$0")/repro" || exit 1
+# Bounded fail-loud parser for the data-only fixture. Accepts ONLY the three
+# names KNOWN_BAD, KNOWN_GOOD, PINNED; values must be inert toolchain tokens
+# (character class [A-Za-z0-9._+:/ -]) plus spaces. Refuses loudly on anything
+# else. This is a parser, not a source: it never evaluates the file as code.
+conf="$(dirname "$0")/toolchain_pins.conf"
+seen_bad=0; seen_good=0; seen_pinned=0
+while IFS= read -r line || [ -n "$line" ]; do
+	case "$line" in
+		''|\#*) continue ;;
+	esac
+	# Both regexes must live in variables: their inline forms are syntax errors
+	# under bash 3.2, which this repository's launchd lane pins.
+	RE='^([A-Z_]+)="([^"]*)"([[:space:]]+#.*)?$'
+	BADCHARS='[^A-Za-z0-9._+:/ -]'
+	if [[ "$line" =~ $RE ]]; then
+		name="${BASH_REMATCH[1]}"; value="${BASH_REMATCH[2]}"
+		case "$name" in
+			KNOWN_BAD)  seen_bad=$((seen_bad+1)) ;;
+			KNOWN_GOOD) seen_good=$((seen_good+1)) ;;
+			PINNED)     seen_pinned=$((seen_pinned+1)) ;;
+			*) echo "toolchain_pins.conf: unknown name '$name' (only KNOWN_BAD, KNOWN_GOOD, PINNED allowed)" >&2; exit 1 ;;
+		esac
+		if [[ "$value" =~ $BADCHARS ]]; then
+			echo "toolchain_pins.conf: value for '$name' contains a disallowed character (only toolchain tokens and spaces allowed)" >&2; exit 1
+		fi
+		printf -v "$name" '%s' "$value"
+	else
+		echo "toolchain_pins.conf: malformed line (must be NAME=\"value\" at column 0): $line" >&2; exit 1
+	fi
+done < "$conf"
+if [ "$seen_bad" -ne 1 ] || [ "$seen_good" -ne 1 ] || [ "$seen_pinned" -ne 1 ]; then
+	echo "toolchain_pins.conf: expected exactly one each of KNOWN_BAD, KNOWN_GOOD, PINNED (got $seen_bad/$seen_good/$seen_pinned)" >&2; exit 1
+fi
+# toolchain_pins.conf parser ends here.
 
-KNOWN_BAD="go1.26.0 go1.26.3 go1.26.4 go1.26.5"
-KNOWN_GOOD="go1.26.6 go1.25.6 go1.24.9"
-PINNED="go1.26.6"   # the toolchain go.mod pins; TestMiscompileInstrumentProbesPinnedToolchain
-                    # binds it to the `go` line — a floor raise that forgets it reds (M17).
+cd "$(dirname "$0")/repro" || exit 1
 
 saw_bad=0
 saw_good=0
