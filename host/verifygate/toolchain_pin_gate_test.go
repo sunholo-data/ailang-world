@@ -546,6 +546,64 @@ func assertWritableSentinel(t *testing.T, sentinel string) {
 	}
 }
 
+// TestToolchainPinFixtureIsDataOnly makes the fixture's column-zero scan complete
+// by construction. The bash -n arm is instrument health for the bounded parser;
+// the fixture mutations are the load-bearing proof of the data-only claim.
+func TestToolchainPinFixtureIsDataOnly(t *testing.T) {
+	fixturePath := filepath.Join(repoRoot, "design_docs", "verification", "w-race-gate-blindspot", "toolchain_pins.conf")
+	raw, err := os.ReadFile(fixturePath)
+	if err != nil {
+		t.Fatalf("read toolchain pin fixture: %v", err)
+	}
+	record := regexp.MustCompile(`^([A-Z_]+)="([^"]*)"([[:space:]]+#.*)?$`)
+	counts := map[string]int{}
+	records := 0
+	for lineNumber, line := range strings.Split(string(raw), "\n") {
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		match := record.FindStringSubmatch(line)
+		if match == nil {
+			t.Errorf("%s:%d line %q does not match the anchored assignment grammar", fixturePath, lineNumber+1, line)
+			continue
+		}
+		records++
+		counts[match[1]]++
+	}
+	if records == 0 {
+		t.Fatalf("instrument failure: %s contains zero assignment records", fixturePath)
+	}
+	for _, name := range []string{"KNOWN_BAD", "KNOWN_GOOD", "PINNED"} {
+		if counts[name] != 1 {
+			t.Errorf("%s: %s assignment count=%d, want exactly 1", fixturePath, name, counts[name])
+		}
+	}
+	if len(counts) != 3 {
+		t.Errorf("%s: assignment names=%v, want exactly KNOWN_BAD, KNOWN_GOOD, PINNED", fixturePath, counts)
+	}
+
+	scriptPath := filepath.Join(repoRoot, "design_docs", "verification", "w-race-gate-blindspot", "run.sh")
+	scriptRaw, err := os.ReadFile(scriptPath)
+	if err != nil {
+		t.Fatalf("read run.sh: %v", err)
+	}
+	const fixtureReference = `conf="$(dirname "$0")/toolchain_pins.conf"`
+	if count := strings.Count(string(scriptRaw), fixtureReference); count != 1 {
+		t.Errorf("%s fixture-reference count=%d, want exactly 1", scriptPath, count)
+	}
+
+	bash := requireBash(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, bash, "-n", scriptPath)
+	if output, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("instrument failure: bash could not parse %s: %v: %s", scriptPath, err, output)
+	}
+	if ctx.Err() != nil {
+		t.Fatalf("instrument failure: bash syntax check timed out for %s: %v", scriptPath, ctx.Err())
+	}
+}
+
 // TestRunShExecutesToolchainPinFixture executes only a scratch copy of run.sh's
 // prologue through the bounded parser. Bash syntax checks are instrument health;
 // the observed sentinel values and rejection/non-execution arms are the runtime proof.
