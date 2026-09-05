@@ -8,12 +8,14 @@
 
 ## Where the mission is
 
-- **Latest landed**: row **61** — the P1 toolchain-floor gate now consumes its verdict directly,
+- **Latest landed**: row **61** (PR [#118](https://github.com/sunholo-data/ailang-world/pull/118)
+  -> squash `8b600fd`, CI green 3/3 on the merge commit) — the P1 toolchain-floor gate now consumes its verdict directly,
   so one inserted line can no longer open it (and the row's own preferred alternative was
   measured fail-open *unmutated*).
 - **Goal distance**: charter clause-2 gate-hardening queue. Rows 58–61 landed on consecutive
   iterations; head moves to row **62**.
 - **In flight**: none. No open PRs, no stale worktrees.
+- **New row filed**: **83** (first instance — may not spend the Gate-5 skill edit).
 
 ## Up next (banked, ready)
 
@@ -21,7 +23,8 @@
 2. **63–66** — clause-2 gate-hardening rows
 3. **68–78** — gate/infra rows, incl. **76** (verify_go.sh rc=1 at base on the fleet-owned drift
    arm) and **69** (heartbeat/directives/resolver/pi-runner scripts absent in this repo)
-4. **81**, **82**, then **39**
+4. **81**, **82**, **83** (new: a queue row's proposed REMEDY is a claim too — row 61's
+   "cheapest honest fix" was fail-open unmutated), then **39**
 
 **Parked for design review**: rows **79**, **80** (by their own text — not human-blocked).
 

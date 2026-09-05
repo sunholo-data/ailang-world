@@ -18042,5 +18042,25 @@ TWO FIXES IT OFFERED IS FAIL-OPEN BEFORE ANYONE MUTATES IT.**
   structural fix — a second call to the same comparator cannot see a corrupted comparator body,
   which is the only class the structural fix leaves open anyway.
 
-**Next**: row **62**, then **63–66**, **68–78**, **81**, **82**, then **39**. Rows **79/80** stay
-`[PARKED — DESIGN REVIEW]`.
+**Gate 3b**: PR [#118](https://github.com/sunholo-data/ailang-world/pull/118) green 3/3 on the PR
+head with `mergeable` read FIRST (`MERGEABLE/UNSTABLE` -> `MERGEABLE/CLEAN`; the first
+non-CONFLICTING reading was never banked). Squash-merged to
+[`8b600fd`](https://github.com/sunholo-data/ailang-world/commit/8b600fd); CI on the **merge
+commit** GREEN 3/3 with `present=3 == expected=3`, expected ENUMERATED from `ci.yml`'s own job
+list (`ailang-verify`, `go-verify`, `launchd-drivers` — `ci.yml` is the only workflow, so the
+enumeration is complete), `not_green=0`, `runs_total=1 event=push`, parent `81ca5d7c` at
+`checks=3` as a firing control.
+
+**Retro — one new row, a FIRST instance, so it may not spend the Gate-5 skill edit**
+- **83** (`w-a-queue-rows-proposed-remedy-is-a-claim-too-and-nobody-checks-it`). Gate 2's ghost
+  discipline and rule 3f both point at a row's *defect* claim; nothing points at its *proposed
+  remedy*, which is the half a later iteration actually executes. Row 61's preferred fix was
+  fail-open unmutated (finding 2). The asymmetry is what earns the row: an unverified defect costs
+  an iteration on a ghost and is caught the moment you try to reproduce it, while an unverified
+  remedy is caught only after it ships, by whatever it was supposed to guard.
+- The zsh word-splitting poll failure (Ruled out, above) is a **known** rig fact already recorded
+  in this charter and already documented in the shared skill's own Gate-3b war story. It cost
+  nothing this iteration because the numeric floor caught it, so it is not routed to a new lane.
+
+**Next**: row **62**, then **63–66**, **68–78**, **81**, **82**, **83**, then **39**. Rows
+**79/80** stay `[PARKED — DESIGN REVIEW]`.
