@@ -41,7 +41,11 @@ REPO="${MISSION_WORKDIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
 cd "$REPO" || exit 1
 
 # launchd PATH is restricted; claude lives in ~/.local/bin, go tools in ~/go/bin.
-export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH"
+# /usr/sbin appended 2026-09-05 — same fix as the shared driver. World inherits launchd's
+# default PATH today so sysctl resolves by luck, not by design; the moment this plist gains
+# an EnvironmentVariables PATH (as v1 and docs have) the boot stagger would go inert with
+# only a log line to show for it. Guarantee it here instead.
+export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH:/usr/sbin:/sbin"
 
 # Dead-slot fix (Mark, attended 2026-08-10). The harness terminates background
 # tasks at 600s. A controller that spawns its executor as a background Agent and
