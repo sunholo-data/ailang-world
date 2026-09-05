@@ -1,33 +1,47 @@
-# Mission Dashboard — AILANG World
+# Mission Dashboard — Ailang World
 
-_Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS), `world-mission-log.md`._
+**Snapshot: 2026-09-05, after iteration 155.** Overwritten every iteration; history lives in
+`design_docs/world-mission.md` (STATUS block), `world-mission-status-archive.md` and
+`world-mission-log.md`.
 
-**As of:** 2026-09-04 · iter 154 · `dev` = `79d80d9` + this record · CI green (3/3) on the base commit · local verify gate green both legs
+## State
+- `dev` == `origin/dev` == `d353ef1`. CI **GREEN 3/3** on that merge commit
+  (`ailang-code verify gate`, `go host build + test gate`, `launchd drivers (bash 3.2)`).
+- Verify gate = **two legs**: `AILANG_BIN=~/.pinned-ailang/ailang ./scripts/verify_ail.sh`
+  and `go build ./... && go test ./... -count=1`. Pin is **AILANG v0.30.0 / `e37b370`**.
+  `scripts/verify_go.sh` is **rc=1 at base** on a FLEET-OWNED driver-drift arm (row 76) — do not
+  use it as a gate; use the two legs.
+- Bookkeeping issue **#107** (prev #89). Decision ledger: **18 rows, ZERO OPEN**.
 
-## Last iteration
-**Row 59 DESIGNED + QUORUM-CLEARED** · **HARNESS** · doc `design_docs/planned/w-load-bearing-criteria-need-a-mutation-not-a-grep.md` (620 lines) · metered **$0.19522** of $5 (two quorum rounds; the designer lane is flat-rate, $0.00).
-
-**An attended ruling landed between fires and this iteration acted on it.** `D-WORLD-31` is **RESOLVED** (`a1e4e4c`, attended 2026-09-03): *neither option as offered* — row 50 holds at zero cost, and its option-B fixture migration is **folded into row 59's design**, because both rows are the same defect class shown with the same construction. The ledger is now **18 rows, ZERO OPEN**. Row 59 was taken next, which is exactly the condition the ruling attached.
-
-**The design kept committing its own thesis, and that is what earned the rounds.** A doc whose point is *"only a mutation proves an assertion runs"* shipped a `grep -c` as its own load-bearing discharge in round 1, and a `source` line guarded by a `grep` in round 2. Two full-strength quorum rounds (3/3 present both times), both blocked; `gemini-3-1-pro` flipped to PASS in R2.
-
-**Two objections paid for themselves, both confirmed first-party rather than forwarded.** `gpt5-6-sol`: the "data-only by construction" fixture is data-only to the **static scan** and **code to bash** — measured, `KNOWN_BAD="$(touch …/PWNED)"` and `PATH="/nonsense"` both match the doc's own grammar, sourcing created the sentinel and clobbered `PATH`, negative control 0. The design would have shipped arbitrary code execution behind a gate that reads the file as data. `oc-glm-5-2`: `AC2` discharged *"row 50's defect is provably gone"* with a `grep -cE` of the fixture's own shape.
-
-**Two drills the controller ran rather than asserted.** `M9` **discharged** (canary assertion wrapped in `if false { … }`: mutant landed by sha256, `go vet` rc=0 read before any test result, rc=1 with the named substring, restored byte-identical). And **`V-19`, which no reviewer asked for**: the prescribed parser with the regex INLINE is a **bash 3.2 syntax error** on this rig's `3.2.57` — the exact version CI pins — and **all four fixtures returned rc=2 including the good one**, so its three reject-arms would have read "rejected" vacuously.
-
-## Goal distance
-**Goal unmoved** (no product surface changed; loop-machinery work). Row census remains **carried, not measured** — row 72 tracks that. Row 57 tracking-only upstream. Row 50 is no longer `needs-human-review`.
+## Just landed (iteration 155)
+- **Row 59 LANDED** and **row 50 LANDED as its consequence** — PR #116, rebase-merged so the three
+  milestone commits survive. Evaluator `sonnet` **PASS 96/100**, zero blocking.
+- The toolchain pins moved out of `run.sh`'s code into a data-only fixture with a bounded fail-loud
+  parser; `coding-standards.md` S6 now carries the rule: *a criterion that greps for an assertion
+  measures that somebody TYPED it; only a mutation measures that anybody RUNS it.*
 
 ## Next picks
-1. **Row 59 sprint** — `sprint-planner` on the banked, quorum-cleared doc. 3 milestones: the fixture + bounded parser + repointed call sites; the fixture-shape gate + the ≤30s runtime execution test; the `S6` prose rule and row 50's closure.
-2. **Row 76** `w-verify-go-driver-drift-gate-short-circuits-the-entire-local-go-gate` — `verify_go.sh` is rc=1 at base on a **fleet-owned** drift red that fatals before `go build`. Correct red, wrong ordering, no opt-out.
-3. **Row 74** `w-the-personal-email-gate-...-does-not-exist` — build the gate the rulebook already claims exists. Then 60–66, 68–73, 75, then 39.
-
-## Routing / cadence
-Controller `claude:claude-opus-5`. Designer `pi:ollama/deepseek-v4-flash:0731-cloud` (3 runs, typed verdict `ok` each, 81/92/121 s); rotation pointer advanced from `claude:claude-fable-5` and written to the **namespaced** path. Verify profile `ailang-code`; pin **v0.30.0** at `~/.pinned-ailang/ailang`. `verify_go.sh` still unusable at base (row 76) — two-leg substitute used.
+1. **Row 60** — queue head.
+2. **Row 61**, then **62–66**, **68–78**, then **39**.
+3. **Rows 79 / 80** (Astra evidence-applicability, requirement-change vertical) — `[PARKED —
+   DESIGN REVIEW]`, queued attended 2026-09-05. They need their own quorum and Mark's approval;
+   by their own text they do not reorder existing release work.
 
 ## Parked on Mark
-**None.** `D-WORLD-31` was the last open row and it is answered; this iteration adds no ask.
+**Nothing.** The ledger has zero open decisions.
+
+## Loop / routing
+Controller `claude:claude-opus-5` · planner `opus` (`fail-closed:env-pin`) · executor
+`codex:gpt-5.6-sol` · evaluator `sonnet` · designer = **rotation**, amended attended 2026-09-05 to
+`codex:gpt-6-astra` → `pi:ollama/deepseek-v4-flash:0731-cloud` (astra takes the fable slot; fable is
+now astra's fallback).
 
 ## Quota posture
-metered **$0.19522** of $5 this iteration (quorum reviewers only). Billing tripwire CLEAN.
+Iteration 155 spent **`metered=$0.00`** of the $5 ceiling — every lane was a quota/subscription
+bucket. No quorum round was owed.
+
+## Known local gaps (not defects in this repo's code)
+- `mission_directives.sh`, `mission-heartbeat.sh`, `resolve-role-spawn.sh` and `mission_pi_run.sh`
+  are **absent here** and are reached by ABSOLUTE PATH into the V1 checkout (row 69).
+- `tools/launchd/mission-control.sh.tmp.astra` is an untracked **fleet** artifact in this checkout
+  (frozen core) — left alone deliberately.

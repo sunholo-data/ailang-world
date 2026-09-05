@@ -17636,3 +17636,154 @@ rotation's next entry, so the skill's "follow the resolver VERBATIM" and its "th
 pin" are jointly unsatisfiable; **78** — `mission_pi_run.sh:155` invokes `pi` with no `-e` flag,
 so the two containment extensions the pi recipe mandates are never wired. Row **50** is no longer
 `needs-human-review`: it now closes as a consequence of row 59, and its own doc is superseded.
+
+## Iteration 155 — 2026-09-05 — row 59 LANDS and row 50 closes with it, but only after the planner found the quorum-cleared doc committing its own thesis for a third and fourth time [HARNESS]
+
+**Kind**: full inner loop — design correction → plan → execute → evaluate → land. Rows **59** and
+**50** both close. PR [#116](https://github.com/sunholo-data/ailang-world/pull/116), rebase-merged
+so the three milestone commits survive on `dev` (bisectability was an explicit plan requirement, and
+a squash would have destroyed it).
+
+**Progress**: charter clause-2 gate-hardening queue — **row 59 LANDED and row 50 LANDED as its
+consequence**, so the open queue goes from 20 rows to 18. This iteration moved 2 rows.
+
+**Context / preflight**
+- Kill switch `~/.ailang/state/mission-world.disabled`: NOT set (armed, namespaced path). Billing
+  tripwire **CLEAN**. gh: `sunholo-voight-kampff`. Local `dev` == `origin/dev` == `32369dc` at start.
+- Running skill **byte-identical to `origin/dev`** — `cmp` against the RESOLVED symlink target
+  (`readlink -f ~/.claude/skills/mission-control` → the V1 checkout), never the relative path.
+- **0** `MarkEdmondson1234` directives on `#107` since watermark `2026-09-04T00:59:09Z` (of 19
+  comments), via the V1 checkout's `mission_directives.sh` by ABSOLUTE PATH — row 69: that script,
+  the heartbeat, the resolver and the pi runner are all still absent from this repo.
+- Decision ledger **18 rows, `--check` valid, ZERO OPEN**. No rotation owed (`#107` created
+  2026-08-31, 19 of 80 comments); no weekly sweep owed.
+- CI on `origin/dev` HEAD `32369dc`: **GREEN 3/3** with run existence asserted (`runs_total=1`,
+  `event=push`) and the parent commit at `checks=3` as a firing control.
+- Inbox: no unread. **0** open PRs, **0** stale worktrees before the sprint.
+
+**Pick**: queue row **59**'s sprint — the queue head, and what the attended ruling `D-WORLD-31`'s
+own load-bearing condition requires (*"this hold is contingent on row 59 actually being taken
+next"*). Doc banked and quorum-cleared at iter-154; no plan existed, so the route was
+`sprint-planner`. Rows 79 and 80 were added to the charter earlier today at Mark's attended request
+and are `[PARKED — DESIGN REVIEW]` by their own text, which says explicitly that they do not
+reorder existing release work — so they did not displace this pick.
+
+**THE FINDING: A QUORUM-CLEARED DOC IS STILL A CLAIM, AND THE PLANNER IS THE FIRST ROLE THAT HAS TO
+RUN IT.** The doc cleared two full-strength quorum rounds (3/3 present both times) plus the
+controller carve-out. The planner raised **three BLOCKING objections** anyway, and the controller
+reproduced all three first-party before acting (rule 3f — measure the objection, never forward it).
+Every one is the document committing the exact defect it exists to kill, which is what makes them
+worth a log entry rather than a diff:
+
+1. **V-20 — the parser was STILL a bash 3.2 syntax error.** Iteration 154's `V-19` found this,
+   fixed the RECORD regex, and left the WHITELIST regex inline one call site over. Measured on this
+   rig's `/bin/bash 3.2.57`: the inline form is rc=2 ``syntax error near `-]' `` **on the GOOD
+   value**, so M11/M12/M13 would each have read "rejected" while the parser rejected everything.
+   The variable form is rc=0 `ACCEPT`; positive control (a knowingly-broken script) reports a
+   syntax error, so `bash -n` discriminates. **Guard the helper, miss the call site — aimed at the
+   fix for that very shape, one iteration later.**
+2. **V-21 — AC1 and AC4 were VACUOUS AT BASE.** `go test -run '<a test that does not exist>'` exits
+   **rc=0** printing `ok … [no tests to run]`, and the existing-test control also exits rc=0 — the
+   two are indistinguishable by exit code. So the two ACs whose stated baseline was *"green only
+   after the fixture lands"* were green **before** anything was written. This is the
+   `grep -c`-as-discharge defect the whole row exists to kill, wearing `go test -run`'s clothes.
+   Both ACs hardened to require a `--- PASS: <TestName>` line and refuse on `no tests to run`.
+3. **V-22 — a FIFTH reader of run.sh's data lines.** `toolchain_pin_gate_test.go:315` is a
+   known-positive control loop scanning run.sh's raw text for `KNOWN_BAD=`/`KNOWN_GOOD=`/`PINNED=`.
+   It was invisible to V-2's enumeration because V-2 anchored on the *function name*
+   `shellAssignmentValues` rather than on the fact it claimed. Deleting the data lines would have
+   redded the MS1 boundary and broken bisectability. Negative control `KNOWN_UGLY` → 0, so the grep
+   was not matching everything. Repointed at the fixture, never deleted — it is the instrument-health
+   control that proves the scan can see a positive.
+4. **V-23** — M7's quoted assertion substring can never appear literally; the format string is
+   `PINNED=%q, want go.mod floor %q`. Matched to the invariant tail.
+
+All four landed as a doc correction (`5928453`) BEFORE any code was written.
+
+**Work done**
+- **MS1** `fb8bc29` — the data-only fixture `toolchain_pins.conf`; a bounded fail-loud parser in
+  `run.sh` (name allow-list, inert value class, `printf -v`, refusal on unknown/duplicate/malformed,
+  all-three-present check) placed BEFORE the `cd`, because `$0` is relative in CI; **five** readers
+  repointed; `TestRunShExecutesToolchainPinFixture` added, which `t.Fatalf`s loudly rather than
+  skipping when bash is unavailable.
+- **MS2** `5d84209` — `TestToolchainPinFixtureIsDataOnly`, the fixture-shape gate, with its M1/M2/M8
+  red arms.
+- **MS3** `d353ef1` — the S6 sub-clause in `coding-standards.md`; row 50's doc marked SUPERSEDED per
+  `D-WORLD-31`.
+- Each boundary measured green (`go vet`, the verifygate package, `bash -n`) BEFORE it was committed;
+  the judge independently re-ran the full gate suite at `fb8bc29` and `5d84209` standalone and
+  confirmed both are independently landable.
+
+**Verification (controller, OUTSIDE the executor's sandbox — an executor's own green is not evidence)**
+- `AILANG_BIN=~/.pinned-ailang/ailang ./scripts/verify_ail.sh` → **rc=0**, 11 required identities,
+  40 named tests, 9/9 world-package steps non-vacuous, `compiler pinned by exact bytes: AILANG
+  v0.30.0 on Darwin/arm64`.
+- `go build ./... && go test ./... -count=1` → **rc=0**, **19** packages `ok`, **0** FAIL.
+- `go vet ./host/...` → rc=0, read BEFORE any test result (row 65).
+- `/bin/bash -n run.sh` → rc=0.
+- `verify_go.sh` deliberately NOT used — row 76, it is rc=1 at base on the FLEET-OWNED drift arm.
+- **Controller's own M1 drill**: mutant landed by sha256 `9fab6db09e7ee576` → `85e83c105da9975e`,
+  `go vet` rc=0 read first, test **rc=1** carrying `does not match the anchored assignment grammar`,
+  restored **byte-identical**, pristine control green either side.
+- Reconstruction proved faithful: the committed tree is byte-identical to the executor's final tree
+  by `shasum -c` over all five files.
+
+**Gate 3b**: PR #116 green 3/3, `MERGEABLE CLEAN`; rebase-merged to `d353ef1`; CI on the **merge
+commit** green 3/3 with `present == expected` and `runs_total=1` asserted. **LANDED.**
+
+**Evaluation**: `sonnet` (executor was `codex:gpt-5.6-sol`, so generator≠judge holds), own worktree.
+**PASS 96/100**, round 1, **zero BLOCKING findings**. The judge did better than replay the
+executor's mutants: it built its own **sensitivity** drills — weakening `BADCHARS` to accept `$`,
+`(`, `)` and backticks, and weakening the name allow-list to accept `PATH` — and confirmed that
+exactly the corresponding subtests, and only those, go red. A pristine pass proves a test runs; only
+that weakening proves it *guards* something. Two NON-BLOCKING findings, both recorded rather than
+waved through: **F1** — AC4's claim that the canonical substring fires *"regardless of the specific
+bash failure mode"* is oversold by one notch; under M10 it fires in 1 of 4 subtests (the gate still
+reds correctly, and the other three fail on their own substring checks). **F2** — the doc's Timeline
+says *"add the `source`"* while its Solution Design says the parser *"never sources it"*; the code
+and the authoritative section agree, so it is a wording inconsistency. The judge also found **nothing
+wrong or stale** in the controller's handed-down measurements, re-deriving the M1 sha256 pair
+byte-for-byte.
+
+**Routing evidence**
+| Role | Pinned | Actual | Notes |
+|---|---|---|---|
+| Controller | `$CONTROLLER_ID` | `claude:claude-opus-5` | quota bucket; `metered=$0.00` |
+| Designer | — | **not run** | doc already banked and quorum-cleared at iter-154 |
+| Planner | `opus` | `opus` (Agent tool) | `derive-planner-lane.sh` → `opus fail-closed:env-pin`, used VERBATIM; resolver agreed (`agent-tool opus fail-closed:env-pin`). Quota bucket. Returned 3 blocking objections, all confirmed. |
+| Executor | `codex:gpt-5.6-sol` | `codex:gpt-5.6-sol` | probe rc=0; real run rc=0 in **22 min** under the 30-min cap; `--sandbox workspace-write`; subscription lane, `metered=$0.00` |
+| Evaluator | `sonnet` | `sonnet` (Agent tool) | distinct provider from the codex executor → generator≠judge; own worktree; quota bucket |
+
+`metered=$0.00` of $5 — every lane this iteration was a quota/subscription bucket. No quorum round
+was owed (the doc was already cleared).
+
+**Containment**: the executor ran under `--sandbox workspace-write`; the main checkout's
+`git status --short` after the run showed exactly one untracked file,
+`tools/launchd/mission-control.sh.tmp.astra` — **not ours**. Its mtime is `13:19`, five minutes
+BEFORE the executor started at `13:24`, and it carries 11 `astra`/`DESIGNER` hits, i.e. it is a
+fleet artifact of today's attended designer-rotation amendment. Frozen core: left alone, reported,
+never absorbed into this change.
+
+**Ruled out / corrections the loop made against itself**
+- **My own baseline was a false green, and the planner caught it.** My Gate-2 baseline script
+  printed `go_test rc=0` — that was `tail`'s exit code through a pipe (verification rule 3), and the
+  suite was in fact rc=1 with 17 loud failures because `AILANG_BIN` was unset. Re-measured with the
+  export: rc=0, 19 `ok`, 0 FAIL. A sub-agent contradicting a fact the controller handed it is the
+  loop WORKING.
+- **My first commit reconstruction was wrong and I rebuilt it.** `git add design_docs host` staged
+  whatever was on disk rather than the snapshot's named files, so MS1's commit swallowed MS3's two
+  doc files — destroying the per-milestone bisectability the plan explicitly demanded. Caught by
+  reading `git show --stat` per commit rather than trusting three successful `git commit` calls.
+  Rebuilt with named-file staging and a boundary gate that refuses to commit on a red.
+- **A zsh word-splitting trap ate the retry.** The rebuild's first attempt passed a space-separated
+  path list as `$CORE` unquoted; zsh does not word-split unquoted expansions, so all three paths
+  arrived as ONE argument, `cp` failed, and **the boundary gates still printed `vet=0 verifygate=0`**
+  — because they ran against the untouched final tree. A gate that measures the wrong tree reports
+  the right answer for the wrong reason. Only `git status` showing nothing staged caught it.
+- Not attempted: re-running M9. It was discharged first-party at iter-154 (V-14) and carried forward
+  with its sha256 evidence rather than re-paid for.
+
+**Next**: row **60**, then **61**, **62**–**66**, **68**–**78**, then **39**. Rows **79** and **80**
+(the Astra evidence-applicability and requirement-change designs Mark queued attended today) stay
+`[PARKED — DESIGN REVIEW]` pending their own quorum and his approval; by their own text they do not
+reorder existing release work.
