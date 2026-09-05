@@ -273,6 +273,75 @@ _mc_probe_codex() {
   return "$rc"
 }
 
+_mc_uptime_secs() {
+  local b now
+  b=$(sysctl -n kern.boottime 2>/dev/null | awk -F'sec *= *' 'NF>1 {printf "%d", $2+0; exit}')
+  [ -n "$b" ] && [ "$b" -gt 0 ] 2>/dev/null || return 1
+  now=$(date +%s)
+  echo $(( now - b ))
+}
+
+# _mc_boot_offset NAME — seconds this mission waits out of a boot stampede.
+# Spacing is 7 minutes, which is longer than a controller's probe+startup
+# preamble (the v1 slot that burned 240s on opus probes is the worst measured),
+# so each mission's spawn burst has finished before the next one begins. v1 is 0
+# because it has the shortest interval (90m) and the deepest ladder — it is the
+# loop we least want to delay. Unknown missions get 0: a new mission must be
+# added here deliberately, and defaulting it into someone else's slot would be
+# worse than leaving it at boot.
+_mc_boot_offset() {
+  case "${1:-}" in
+    v1)     echo 0    ;;
+    world)  echo 420  ;;
+    docs)   echo 840  ;;
+    motoko) echo 1260 ;;
+    *)      echo 0    ;;
+  esac
+}
+
+# _mc_mem_snapshot — echo "AVAIL_MB COMPRESSED_MB", rc=1 if vm_stat cannot answer.
+#
+# AVAIL = free + inactive + speculative + purgeable. NOT `free` alone: at the
+# 09-05 09:23 event free was 4030 pages (66 MB) while inactive held 506169
+# (7.7 GB) that the pager could still reclaim, so a free-only threshold would
+# have to sit absurdly low to avoid firing constantly. Measured separation with
+# this expression: ~7.8 GB at each of the three OOM events, ~104 GB on a healthy
+# idle box — two orders of magnitude apart, so the threshold is not delicate.
+#
+# The compressor arm is the second signal, for the case where `inactive` still
+# looks healthy but the machine is already paging hard: 66 GB compressed (holding
+# 131 GB) at every event, 0 on a fresh boot.
+#
+# NOT memoryPressure: the kernel's own flag read `false` throughout the 09-03
+# panic. .claude/rules/local-models.md carries that trap.
+_mc_mem_snapshot() {
+  command -v vm_stat >/dev/null 2>&1 || return 1
+  vm_stat 2>/dev/null | awk '
+    /page size of/ { for (i=1; i<=NF; i++) if ($i == "of") { ps=$(i+1); break } }
+    /^Pages free:/                    { free=$3 }
+    /^Pages inactive:/                { inact=$3 }
+    /^Pages speculative:/             { spec=$3 }
+    /^Pages purgeable:/               { purge=$3 }
+    /^Pages occupied by compressor:/  { comp=$5 }
+    END {
+      if (ps == "" || free == "") exit 1
+      gsub(/\./, "", free); gsub(/\./, "", inact); gsub(/\./, "", spec)
+      gsub(/\./, "", purge); gsub(/\./, "", comp)
+      printf "%d %d\n", (free+inact+spec+purge) * ps / 1048576, comp * ps / 1048576
+    }'
+}
+
+# _mc_mem_ok AVAIL_MB COMPRESSED_MB — 0 = there is room to start an iteration.
+# Thresholds are STARTING VALUES, not measured ones: nobody has profiled an
+# iteration's peak footprint. They are chosen to sit far from both observed
+# states (refuse at 7.8 GB avail / 66 GB compressed, pass at 104 GB / 0) and are
+# logged with the live numbers on every fire so the log tells us the real values.
+_mc_mem_ok() {
+  [ "${1:-0}" -ge "${MEM_MIN_AVAIL_MB:-16384}" ] || return 1
+  [ "${2:-0}" -le "${MEM_MAX_COMP_MB:-49152}" ]  || return 1
+  return 0
+}
+
 _mc_set_controller() {
   local requested="$1"
   MODEL_WHY="$2"
@@ -535,6 +604,88 @@ _chain_tail() { case "$1" in *,*) printf '%s' "${1#*,}" ;; *) printf '' ;; esac;
 _lane_degraded=""   # newline-delimited markdown bullets, one per degraded role
 _cx_rcmap=""        # "model=rc;" so the emit site names the probe's exit code, not just the lane
 _pi_rcmap=""
+# ─── PHASE ORDER CORRECTED + BOOT STAGGER / MEMORY GATE PORTED 2026-09-05 ───
+# World ran its lane pre-flights BEFORE the kill switch and the overlap guard, so a
+# DISABLED mission and a mission yielding to its own previous iteration both still
+# paid a full round of probe tokens. Upstream orders these deliberately: kill switch,
+# overlap, stagger, memory gate, THEN probes — a fire that is not going to run should
+# spend nothing. Moving world's guards up is that same ordering.
+#
+# The stagger and the gate are ported verbatim. World is now on a KeepAlive schedule,
+# which makes both load-bearing rather than nice-to-have: KeepAlive restarts the job
+# the moment it exits, so without the gate a box already out of memory would get a new
+# iteration added to it immediately instead of at the next interval.
+
+# 1. Kill switch — the intended "off" state, exit silently.
+if [ -f "$KILL_SWITCH" ]; then
+  log "kill switch present ($KILL_SWITCH) — skip"; exit 0
+fi
+
+# 1b. ONE iteration at a time (2026-07-10, continuous mode): two concurrent
+#     controllers would stomp the charter/log in the main tree and could pick
+#     the same queue item. If one is still running, yield this slot.
+#     PIDFILE-based (2026-07-16): the old `pgrep -f "claude -p Run one mission"`
+#     matched ANY process whose cmdline contained the phrase — including a
+#     human's monitoring shell (`pgrep -f "claude -p Run one mission"` itself!),
+#     which made a kickstarted fire yield against its own observer. A pidfile
+#     + liveness check cannot false-positive.
+if [ -f "$PIDFILE" ]; then
+  oldpid=$(head -1 "$PIDFILE" 2>/dev/null)
+  if [ -n "$oldpid" ] && kill -0 "$oldpid" 2>/dev/null; then
+    log "previous iteration still running (pid $oldpid) — yield (next interval retries)"; exit 0
+  fi
+  rm -f "$PIDFILE"   # stale pidfile from a crashed/killed run — proceed
+fi
+
+# 3b. BOOT STAGGER (2026-09-05). See _mc_boot_offset for the measurement. Placed
+#     AFTER the kill switch, the overlap yield and the dry run — a disabled
+#     mission, a yielding one and a wiring check must all still be instant — and
+#     BEFORE the probes, so a staggered fire spends zero tokens while it waits.
+#     Holding the job for the offset is safe: launchd will not start a second
+#     copy of a StartInterval job while the first is still running, so the worst
+#     case is one skipped slot on a mission whose interval is 90m or longer.
+BOOT_WINDOW="${MISSION_BOOT_WINDOW:-900}"
+_up=$(_mc_uptime_secs || echo "")
+_off=$(_mc_boot_offset "$MISSION_NAME")
+if [ -z "$_up" ]; then
+  log "boot stagger: kern.boottime unreadable — stagger SKIPPED this fire (not silent: gate disabled, not passed)"
+elif [ "$_up" -lt "$BOOT_WINDOW" ] && [ "$_off" -gt 0 ]; then
+  log "boot stagger: up ${_up}s (< ${BOOT_WINDOW}s window) — waiting ${_off}s so $MISSION_NAME does not start alongside the other missions"
+  sleep "$_off"
+fi
+
+# 3c. MEMORY GATE (2026-09-05). Refuses to ADD an iteration to a box that is
+#     already out of memory. Waits rather than skipping outright, because a
+#     skipped slot costs motoko 13h — a transient spike should delay a fire, not
+#     cancel it. On expiry it yields exactly like the overlap guard above:
+#     exit 0, no notification, mission-recovery and the next interval retry.
+MEM_MIN_AVAIL_MB=$(( ${MISSION_MIN_AVAIL_GB:-16} * 1024 ))
+MEM_MAX_COMP_MB=$(( ${MISSION_MAX_COMPRESSED_GB:-48} * 1024 ))
+MEM_WAIT="${MISSION_MEM_WAIT:-600}"
+MEM_POLL="${MISSION_MEM_POLL:-60}"
+_mem_deadline=$(( $(date +%s) + MEM_WAIT ))
+while :; do
+  _snap=$(_mc_mem_snapshot || echo "")
+  if [ -z "$_snap" ]; then
+    # Fail OPEN, loudly. vm_stat is macOS-only; refusing on a box that cannot
+    # answer would wedge every mission rather than protect anything, and the
+    # gate is an admission control, not a correctness guarantee.
+    log "memory gate: vm_stat unavailable — gate DISABLED for this fire"
+    break
+  fi
+  _avail=${_snap%% *}; _comp=${_snap##* }
+  if _mc_mem_ok "$_avail" "$_comp"; then
+    log "memory gate: ok (avail=${_avail}MB >= ${MEM_MIN_AVAIL_MB}MB, compressed=${_comp}MB <= ${MEM_MAX_COMP_MB}MB)"
+    break
+  fi
+  if [ "$(date +%s)" -ge "$_mem_deadline" ]; then
+    log "memory gate: STILL SHORT after ${MEM_WAIT}s (avail=${_avail}MB, compressed=${_comp}MB) — yield (next interval retries)"
+    exit 0
+  fi
+  log "memory gate: low memory (avail=${_avail}MB, compressed=${_comp}MB) — waiting ${MEM_POLL}s"
+  sleep "$MEM_POLL"
+done
+
 # ANTHROPIC-LANE PRE-FLIGHT, ROLE-GENERIC (2026-09-05, Mark attended: "give me rotation
 # and fallbacks to codex so we can keep going on the missions ... before we usually ran out
 # of quota on friday"). THIS is the rung that was missing, and its absence is why a drought
@@ -704,26 +855,6 @@ for role in DESIGNER PLANNER EXECUTOR EVALUATOR; do
   done
 done
 
-# 1. Kill switch — the intended "off" state, exit silently.
-if [ -f "$KILL_SWITCH" ]; then
-  log "kill switch present ($KILL_SWITCH) — skip"; exit 0
-fi
-
-# 1b. ONE iteration at a time (2026-07-10, continuous mode): two concurrent
-#     controllers would stomp the charter/log in the main tree and could pick
-#     the same queue item. If one is still running, yield this slot.
-#     PIDFILE-based (2026-07-16): the old `pgrep -f "claude -p Run one mission"`
-#     matched ANY process whose cmdline contained the phrase — including a
-#     human's monitoring shell (`pgrep -f "claude -p Run one mission"` itself!),
-#     which made a kickstarted fire yield against its own observer. A pidfile
-#     + liveness check cannot false-positive.
-if [ -f "$PIDFILE" ]; then
-  oldpid=$(head -1 "$PIDFILE" 2>/dev/null)
-  if [ -n "$oldpid" ] && kill -0 "$oldpid" 2>/dev/null; then
-    log "previous iteration still running (pid $oldpid) — yield (next interval retries)"; exit 0
-  fi
-  rm -f "$PIDFILE"   # stale pidfile from a crashed/killed run — proceed
-fi
 
 # 3. Dry run — verify wiring without spending tokens (no probes fired).
 if [ "${MISSION_DRY_RUN:-0}" = "1" ]; then
@@ -844,6 +975,12 @@ _mc_run_once() {
 # Run with transient-retry. On a non-zero exit that is NOT a deliberate watchdog
 # kill (143/137) AND whose THIS-attempt output carries a transient signature,
 # back off and re-run — up to TRANSIENT_RETRIES total attempts.
+# DURATION CLOCK (2026-09-05). World wrote no durable record of how long an iteration
+# takes — the only trace was the /tmp driver log, which does not survive a reboot, so
+# after the 09-05 restart world was the ONE mission with zero duration history and its
+# idle time could not be estimated at all. Same file and format as the shared driver's
+# slot-verdict log, so the same tooling reads all four missions.
+_mc_iter_start=$(date +%s)
 attempt=1
 while : ; do
   logpos=$(wc -l < "$LOG" 2>/dev/null || echo 0)
@@ -862,6 +999,17 @@ while : ; do
 done
 
 rm -f "$PIDFILE"   # this instance owns the run; yield paths above never reach here
+
+# Durable one-line record per completed slot: ~/.ailang/state survives the reboots that
+# wipe /tmp. Written for EVERY outcome, not just rc=0 — a crashed slot's elapsed time is
+# exactly what tells a timeout apart from an instant refusal.
+_mc_iter_elapsed=$(( $(date +%s) - _mc_iter_start ))
+case "$RC" in 0) _mc_iter_verdict=COMPLETED ;; 143|137) _mc_iter_verdict=KILLED ;; *) _mc_iter_verdict=CRASHED ;; esac
+printf '%s verdict=%s rc=%s attempt=%s/%s elapsed_s=%s controller=%s\n' \
+  "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" "$_mc_iter_verdict" "$RC" "$attempt" "$TRANSIENT_RETRIES" \
+  "$_mc_iter_elapsed" "${CONTROLLER_ID:-unknown}" \
+  >> "$STATE_DIR/mission-${MISSION_NAME}-slot-verdicts.log" 2>/dev/null || true
+log "slot-verdict: $_mc_iter_verdict rc=$RC attempt=$attempt/$TRANSIENT_RETRIES elapsed_s=$_mc_iter_elapsed mission=$MISSION_NAME"
 
 if [ "$RC" -ne 0 ]; then
   log "iteration exited rc=$RC"
