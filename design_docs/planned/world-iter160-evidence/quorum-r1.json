@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-fleet-residual-net-shares-phase-1-pathspec.md",
+  "iso_ts": "2026-09-06T05:52:19Z",
+  "reviewers": [
+    {
+      "model": "gpt5-6-sol",
+      "cost_usd": 0.032615000000000005,
+      "tokens_in": 4711,
+      "tokens_out": 302,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The design changes existing success and residual-summary strings but does not verify the consumer conflict surface. It merely names “shell output consumers” without locating callers, parsers, snapshots, or documentation that may depend on those exact strings; V4 verifies only function callers and V6 only the absence of one test mode. Therefore the claim that verifier behavior remains compatible apart from wording is unverified.",
+        "catch": "Search the entire tracked repository for the old success phrase, residual-summary phrase, `--driver-fleet-check` invocations, and output parsing of this mode. Classify every hit and state whether exact-text consumers must be updated or whether the old line must remain stable. Also clarify that the proposed prose is human-readable unless a stable machine-readable format is actually defined.",
+        "proposed_fix": "Add a verification-log row such as: `V12 | git grep -n -e 'tracked copy is current' -e 'untracked fleet additions not certified' -e 'unclassified fleet-only paths' -e 'driver-fleet-check' -- . | Enumerate every hit by production caller, test, documentation, and parser; identify exact-string dependencies and required edits.` Replace the conflict paragraph with a hit-by-hit analysis. If any external or untracked consumer cannot be ruled out, preserve the existing line and append separate scope lines, or introduce an explicitly versioned structured output mode rather than silently replacing text."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.012636,
+      "tokens_in": 5268,
+      "tokens_out": 175,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "AC4 dictates asserting the exact literal string 'REQUIRED fleet paths MISSING LOCALLY' when a required file is omitted, but the Verification Log never confirms that this specific string exists in the current codebase (V2 and V3 summarize phase 2's logic and return codes, but do not capture its error output).",
+        "catch": "Unverified premise: literal error string for missing required paths in AC4.",
+        "proposed_fix": "Add a verification log entry (e.g., `grep 'MISSING LOCALLY' scripts/verify_go.sh`) to confirm the current phase-2 error string, or alter AC4 to only require rc=1 and the exact path name without asserting the unverified literal prose."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-2",
+      "cost_usd": 0.01379992,
+      "tokens_in": 4676,
+      "tokens_out": 2202,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc changes specific output strings in `check_driver_fleet()` (success wording, residual summary) but never verifies via `git grep` or equivalent whether any script, test, CI pipeline, or document depends on the exact current wording. The conflict surface section names 'shell output consumers' abstractly without enumerating a single concrete consumer, and V10 itself reveals that the row-54 sprint plan 'pins old success/residual strings' — yet the doc does not resolve whether changing those pinned strings conflicts with row-54's acceptance criteria or any other consumer. An unverified conflict surface is grounds for rejection.",
+        "catch": "Run `git grep -n 'untracked fleet additions not certified'` and `git grep -n 'untracked fleet additions'` across the entire repo to enumerate every consumer of the strings being changed. Also verify whether row-54's sprint plan acceptance criteria are still open and whether they assert the exact strings this doc proposes to modify. The doc must either list all consumers and confirm none breaks, or justify why the wording change is safe against each.",
+        "proposed_fix": "Add a verification-log row (e.g., V12) that runs `git grep -n -e 'untracked fleet additions' -e 'unclassified fleet-only paths' -- ':!design_docs/planned/w-fleet-residual-net-shares-phase-1-pathspec.md'` and records every hit. For each hit, state whether the consumer depends on the exact wording or only on rc/structured fields, and whether the change is compatible. Expand the conflict-surface section to enumerate these concrete consumers by file and line instead of referring to 'shell output consumers' abstractly. If the row-54 sprint plan pins the old strings as acceptance criteria, add a decision row stating whether that plan is amended, superseded, or unaffected, and justify the answer."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Measured synthetic baseline and additions support narrow reporting correction; preserve exact pathspecs, required-path checking and return codes. Astra authored: Sol substitutes OpenAI reviewer seat for independence."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gpt5-6-sol: The design changes existing success and residual-summary strings but does not verify the consumer conflict surface. It merely names “shell output consumers” without locating callers, parsers, snapshots, or documentation that may depend on those exact strings; V4 verifies only function callers and V6 only the absence of one test mode. Therefore the claim that verifier behavior remains compatible apart from wording is unverified.",
+      "gemini-3-1-pro: AC4 dictates asserting the exact literal string 'REQUIRED fleet paths MISSING LOCALLY' when a required file is omitted, but the Verification Log never confirms that this specific string exists in the current codebase (V2 and V3 summarize phase 2's logic and return codes, but do not capture its error output).",
+      "oc-glm-5-2: The doc changes specific output strings in `check_driver_fleet()` (success wording, residual summary) but never verifies via `git grep` or equivalent whether any script, test, CI pipeline, or document depends on the exact current wording. The conflict surface section names 'shell output consumers' abstractly without enumerating a single concrete consumer, and V10 itself reveals that the row-54 sprint plan 'pins old success/residual strings' — yet the doc does not resolve whether changing those pinned strings conflicts with row-54's acceptance criteria or any other consumer. An unverified conflict surface is grounds for rejection."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.05905092000000001,
+    "total_tokens_in": 14655,
+    "total_tokens_out": 2679
+  }
+}
