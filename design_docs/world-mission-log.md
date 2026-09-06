@@ -18529,4 +18529,6 @@ Task edits stayed in a sibling worktree. Designer mutations restored; pristine b
 **Retro (Gate5)**
 One World process clarification: pristine baselines must be isolated from ANY mutating role, including designers; own overlap was discarded and remeasured. No shared skill or routing-policy edit. Existing rows77/78 cover observed resolver/runner gaps; no duplicate backlog rows. docs/sprint-retros absent, coding-standards existence control fired.
 
+**Report-instrument correction**: `ailang messages read <id> --peek --json` ignored trailing flags and marked the newly-created approval read. Exact body verification caught the status change. Only this iteration's own approval was restored with `messages unack`; `messages read --peek --json <id>` then confirmed exact payload and unread status. Route to the existing positional-flag backlog class (row75/upstream1037); no new policy or duplicate issue. Approval ID: inbox_1788689217176_901d5ebb.
+
 **Next**: row66 (quoted flow-key trim), row68 (fleet-owned pinned-repo guard routing), then the banked queue. Row39 remains next product work; rows79/80 remain parked design review. Row65 waits on D-WORLD-33.
