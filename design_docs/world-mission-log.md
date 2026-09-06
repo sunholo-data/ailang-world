@@ -18541,7 +18541,7 @@ One World process clarification: pristine baselines must be isolated from ANY mu
 **Progress**: seven-clause 1.0 bar; goal unmoved. Dev CI remains red on the attended DE-FORK commit; no additional clause certified.
 
 **Context / preflight**
-- Armed; gh sunholo-voight-kampff; billing tripwire CLEAN. `tools/launchd/mission-heartbeat.sh` is absent in this repo, so heartbeat stamps could not run; row69's absolute-helper gap remains the explanation rather than a new local script.
+- Armed; gh sunholo-voight-kampff; billing tripwire CLEAN. The repo-relative heartbeat helper is absent, so gates used the canonical absolute helper in the sibling AILANG checkout; no local copy was created.
 - Local and origin dev agree at e92594c; main clean. Issue107 and mission-world watermarks both 2026-09-06T09:45:47Z; 0 Mark directives since then. Ledger20 rows/2 OPEN on entry.
 - Canonical GCP messages were verified with the bad-store control; `ailang storage status` remains local. No open bot PRs for World.
 - Gate4 `ailang mission rotate-log world --keep 20` is unavailable in the installed CLI (`unknown command 'mission'`), so no helper rotation ran; manual status rotation kept the latest three STATUS stamps and ledger validation stayed green.
@@ -18562,7 +18562,7 @@ One World process clarification: pristine baselines must be isolated from ANY mu
 | Quorum r2 | Astra/Gemini/GLM | Gemini/GLM reject; Astra absent budget; $0.02132311 |
 | Planner | not spawned | design quorum blocked; gate forbids planning |
 | Executor | not spawned | design quorum blocked; no implementation authorized |
-| Evaluator | fallback gpt-5.5 codex CLI | Agent wait/list unavailable after resume; no prior evaluator artifact on disk. Independent fallback judge PASS90/100 for parking, no blocking findings. |
+| Evaluator | fallback gpt-5.5 via Agent tool | Configured `pi:ollama/minimax-m3:cloud` and its OpenRouter twin were not exposed by this controller's mandatory Agent-tool model surface; the chain's Astra tail equalled the designer. Separate gpt-5.5 judge preserved generator-not-equal-judge and returned PASS90/100 for parking, no blocking findings. |
 
 **Evaluator report quality**
 Fallback evaluator verified first-party CI red/parent green, active consumers, docs-only parking commit, and charter authority at D-WORLD-DRIVER-1/row76. It filed no blocking findings against parking and one nonblocking revision note: future design should quote the authority text directly.
@@ -18591,6 +18591,6 @@ D-WORLD-32 and D-WORLD-33 remain OPEN.
 Edits stayed in the sibling iteration worktree. No code, frozen path, shared skill, V1 checkout, launchd state, installed runtime, account credential or release action was changed.
 
 **Retro (Gate5)**
-No shared skill edit and no routing-policy change. Recorded the Agent-tool resume limitation as a routing deviation with a fallback judge, not as a missing evaluator. The design's missing direct authority quote is a future revision input, not a controller license to settle the authority question.
+No shared skill edit and no routing-policy change. Recorded the unavailable configured pi/Minimax Agent-tool lane and distinct gpt-5.5 fallback as a routing deviation, not as a missing evaluator. The design's missing direct authority quote is a future revision input, not a controller license to settle the authority question.
 
 **Next**: D-WORLD-34 if answered; otherwise row66 then row68. Row65 remains parked on D-WORLD-33; rows79/80 remain parked design review; row39 remains next product work.
