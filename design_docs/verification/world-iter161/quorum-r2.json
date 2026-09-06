@@ -1,0 +1,65 @@
+{
+  "doc": "design_docs/planned/w-go-test-compile-fence.md",
+  "iso_ts": "2026-09-06T10:00:43Z",
+  "reviewers": [
+    {
+      "model": "gpt6-astra",
+      "cost_usd": 0.13040000000000002,
+      "tokens_in": 11210,
+      "tokens_out": 366,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The proposed guard silently misses the exact Markdown assertion this document identifies as dangerous. Its enumerator, `go build[^`]*(rc=0|compil|build)`, cannot match '`go build ./...` rc=0 \u2014 the mutant compiles' because the closing backtick separates the command from the assertion. Consequently, an ordinary `_test.go` sole-fence claim can produce zero candidates and exit green. Failing closed during classification does not protect candidates excluded by enumeration.",
+        "catch": "R13 supplies this exact command/assertion formatting, yet M2 leaves fixture wording discretionary and execution pending. A conveniently worded positive control would establish only that one fixture matches, not that the guard detects the documented regression. This is ordinary source formatting, not the renamed or obfuscated syntax covered by the residual-risk disclaimer.",
+        "proposed_fix": "Replace \u00a73.3's assertion-filtered enumeration with: 'Enumerate every literal `go build` occurrence in the operative corpus, regardless of Markdown delimiters or assertion placement. Classify each occurrence within an explicitly defined record boundary; an unresolved subject or companion relationship is RED-for-review. A companion must establish the same mutant package's test-compilation fence, not merely mention `go vet` in explanatory or negated prose.' Make M2 require a fixture containing 'For the `_test.go` mutant: `go build ./...` rc=0 \u2014 the mutant compiles' with no companion and require rc=1. Add equivalent fixtures with the assertion before the command and on an adjacent line, plus paired and explanatory-negative controls. Keep AC3 pending until these fixtures and the real corpus scan execute successfully."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.027138,
+      "tokens_in": 11967,
+      "tokens_out": 267,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The verification log uses non-executable pseudo-commands (e.g., 'read imports', 'read plan; grep', 'grep L119-120') for rows R7b and R9-R15, leaving the claims about these files' contents and import closures unverified and not machine-reproducible.",
+        "catch": "R7b asserts the imports are 'stdlib-only' and R9-R15 cite specific lines, but the commands provided to prove these claims are plain English or invalid shell syntax.",
+        "proposed_fix": "Update R7b's command to an executable Go query like `go list -test -f '{{join .TestImports \"\\n\"}}' ./host/verifygate/` to actually verify the import closure. Update R9-R15 commands to use exact, runnable shell invocations like `sed -n '119,120p' design_docs/planned/w-ci-recovery-lever-absent-sprint-plan.md` or `grep -n 'go build' <filepath>` instead of 'grep L...' pseudocode."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-2",
+      "cost_usd": 0.02416057,
+      "tokens_in": 11173,
+      "tokens_out": 2905,
+      "present": false,
+      "absent_reason": "invalid",
+      "error": "reviewer returned non-JSON or malformed response: invalid character '|' in string escape code (raw: \"{\\n  \\\"verdict\\\": \\\"reject\\\",\\n  \\\"strongest_objection\\\": \\\"The doc asserts in at least four places (\u00a73.3, \u00a73.4, Design Freeze, AC4) that a new additive leg can be inserted into `scripts/verify_ail.sh` without\")",
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "reject",
+    "note": "Revision's guard is not valid as specified. Controller executed its exact grep -nE pattern on an ordinary Markdown sole-fence fixture (Mutate gate_test.go; backtick go build ./... backtick rc=0 \u2014 the mutant compiles): rc1/no match, while same plain unquoted text rc0/match. The backtick exclusion skips the exact in-scope syntax. Same/adjacent fence-record classification is unspecified; nearby go vet does not prove SAME mutant compilation; whole-repo target does not establish non-test subject. This is a new prose-inference guard with disputed soundness, not a frozen fix. R8 says12 matching files; exact git grep -l go build -- design_docs/planned/*sprint-plan*.md returns13. Claimed all-corpus compliance is not established by file-level companion presence. Require explicit operational scope and sound non-vacuous design, no bypass via instrument-health label or manual fallback."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gpt6-astra: The proposed guard silently misses the exact Markdown assertion this document identifies as dangerous. Its enumerator, `go build[^`]*(rc=0|compil|build)`, cannot match '`go build ./...` rc=0 \u2014 the mutant compiles' because the closing backtick separates the command from the assertion. Consequently, an ordinary `_test.go` sole-fence claim can produce zero candidates and exit green. Failing closed during classification does not protect candidates excluded by enumeration.",
+      "gemini-3-1-pro: The verification log uses non-executable pseudo-commands (e.g., 'read imports', 'read plan; grep', 'grep L119-120') for rows R7b and R9-R15, leaving the claims about these files' contents and import closures unverified and not machine-reproducible.",
+      "controller (in-session): Revision's guard is not valid as specified. Controller executed its exact grep -nE pattern on an ordinary Markdown sole-fence fixture (Mutate gate_test.go; backtick go build ./... backtick rc=0 \u2014 the mutant compiles): rc1/no match, while same plain unquoted text rc0/match. The backtick exclusion skips the exact in-scope syntax. Same/adjacent fence-record classification is unspecified; nearby go vet does not prove SAME mutant compilation; whole-repo target does not establish non-test subject. This is a new prose-inference guard with disputed soundness, not a frozen fix. R8 says12 matching files; exact git grep -l go build -- design_docs/planned/*sprint-plan*.md returns13. Claimed all-corpus compliance is not established by file-level companion presence. Require explicit operational scope and sound non-vacuous design, no bypass via instrument-health label or manual fallback."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "oc-glm-5-2",
+        "reason": "invalid"
+      }
+    ],
+    "total_cost_usd": 0.18169857,
+    "total_tokens_in": 34350,
+    "total_tokens_out": 3538
+  }
+}

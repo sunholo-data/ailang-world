@@ -1,0 +1,14 @@
+{
+  "verdict": "ok",
+  "rc": 0,
+  "model": "ollama/deepseek-v4-flash:0731-cloud",
+  "pi_rc": 0,
+  "elapsed_seconds": 232,
+  "worktree_changed_files": 1,
+  "tool_executions": 19,
+  "agent_end_events": 1,
+  "ndjson_bytes_filtered": 1517247,
+  "ndjson": "/tmp/world161-designer-revision.ndjson",
+  "snapshot": "/tmp/world161-designer-revision.ndjson.snapshot.ndjson",
+  "stderr": "/tmp/world161-designer-revision.ndjson.stderr"
+}

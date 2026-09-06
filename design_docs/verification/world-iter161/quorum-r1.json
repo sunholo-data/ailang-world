@@ -1,0 +1,65 @@
+{
+  "doc": "design_docs/planned/w-go-test-compile-fence.md",
+  "iso_ts": "2026-09-06T09:54:22Z",
+  "reviewers": [
+    {
+      "model": "gpt6-astra",
+      "cost_usd": 0.09462999999999999,
+      "tokens_in": 7483,
+      "tokens_out": 396,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The central deliverable\u2014a durable recurrence guard\u2014is neither specified nor verified. R8 only enumerates occurrences of 'go build'; it cannot distinguish a sole test-mutant fence from a valid companion fence. R15's controls include files outside R8's planned-sprint-plan scope, and R16 never executes a synthetic defective fixture through the proposed guard. Nevertheless, these rows claim confirmed same-scope control coverage. No mandatory invocation point is identified, so documenting this grep does not establish that recurrence will be detected.",
+        "catch": "Separate candidate enumeration, semantic classification, and enforcement. Mark M2 as unexecuted rather than treating R15\u2013R16 as its evidence. The canon also incorrectly says '-count=1 forces recompile': it disables test-result caching, not the build cache. R7's local grep does not establish side-effect freedom because imported packages can run initialization code.",
+        "proposed_fix": "Replace the guard claim with: 'This is a mandatory manual instrument-health check at the existing planned-doc review checkpoint, not an automatic semantic lint. Enumerate candidates with a documented command and scope; classify each mutation drill by mutated file and the fence actually used to discharge its compilation claim. Unclassified candidates fail review.' Identify and verify that existing checkpoint and justify reusing it instead of adding another lint. Add M2 evidence showing the exact same procedure rejects an in-scope sole-fence fixture, accepts a paired-fence fixture, and reports execution errors separately from a clean scan; ensure scratch fixtures are actually included by the enumerator. Until executed, label these verification rows pending. Correct the caching statement and narrow R7 to 'no local init/TestMain found'; require dependency-initialization assessment before claiming execution is safe. Give all verification commands an explicit wall-clock deadline with timeout treated as failure."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.018712,
+      "tokens_in": 8072,
+      "tokens_out": 214,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The primary goal is to 'pin a durable guard' to prevent silent recurrence, but the design explicitly defers building a reusable lint in favor of a 'documented grep' living only inside this one-off design doc. A grep command buried in a completed sprint plan provides zero continuous enforcement, will never be executed by future agents, and fails its purpose as a guard. It identifies existing machinery (scripts/ linting) but dismisses it without valid justification, violating the conflict-surface reuse requirement.",
+        "catch": "Section 3.3 Phase 2 and Deferred Decision 1 allow the guard to be a passive grep command documented in this design file instead of an active executable lint.",
+        "proposed_fix": "Resolve Unresolved Choice 1 by mandating a standalone executable lint script (e.g., scripts/lint_planned_fences.sh) to mechanically enforce the negative-existence grep. Wire this script into standard verification to ensure continuous, non-vacuous enforcement rather than inert documentation."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-2",
+      "cost_usd": 0.0160718,
+      "tokens_in": 7462,
+      "tokens_out": 1923,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The 'instrument-health guard' (M2/AC3) is a documented grep command with no automated trigger: the doc explicitly forbids touching verify_go.sh, verify_ail.sh, ci.yml, scripts/, or any .ail, yet also defers adding a standalone lint. A grep that is written in a markdown table but never invoked by any verify leg or CI gate is not a guard \u2014 it is a convention that silently degrades to 'no guard' the moment a future executor skips reading this doc. This directly contradicts the 'no silent fallbacks' axiom: the guard's absence is itself a silent fallback.",
+        "catch": "The verification-log rows R9\u2013R14 assert specific line-number contents in other planned docs (e.g., R13 'L119 go build rc=0 \u2014 the mutant compiles', R14 'L370\u2013371/L420', 'L460/L489/L668') without quoting the actual grepped lines \u2014 these citations are unverified premises about the codebase. At minimum R13/R14 should include the actual `git grep -n` output lines, not a paraphrase.",
+        "proposed_fix": "Wire the negative-existence grep into an existing automated verify surface. The minimal option consistent with the doc's scope is a single-line addition to scripts/verify_ail.sh (or a new scripts/check_test_fence.sh sourced by it) that runs `git grep -n 'go build.*mutant.*compiles\\|mutant.*builds.*go build' -- 'design_docs/planned/*sprint-plan.md'` and reds on any match, with the M2 positive-control fixture proving the pattern is non-vacuous. If touching scripts/ is truly out of scope, then the doc must add a 'Guard Lifecycle' section specifying the exact invocation trigger (e.g., 'this grep MUST be run as part of every sprint-plan merge review, enforced by the controller') \u2014 a triggerless grep is a non-guard and the AC3 criterion is vacuous."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "reject",
+    "note": "The proposed recurrence guard is not specified as an executable durable check or wired to CI; mechanism is still an open choice, so no closure instrument exists. R8 claims all planned sprint plans compliant but R15 positive control is outside that corpus and R16 is not a planted same-scope control. Correct false claim that -count=1 forces recompilation (it disables test-result caching), and account for dependency init effects. Freeze exact guard and scoped audit before planning."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gpt6-astra: The central deliverable\u2014a durable recurrence guard\u2014is neither specified nor verified. R8 only enumerates occurrences of 'go build'; it cannot distinguish a sole test-mutant fence from a valid companion fence. R15's controls include files outside R8's planned-sprint-plan scope, and R16 never executes a synthetic defective fixture through the proposed guard. Nevertheless, these rows claim confirmed same-scope control coverage. No mandatory invocation point is identified, so documenting this grep does not establish that recurrence will be detected.",
+      "gemini-3-1-pro: The primary goal is to 'pin a durable guard' to prevent silent recurrence, but the design explicitly defers building a reusable lint in favor of a 'documented grep' living only inside this one-off design doc. A grep command buried in a completed sprint plan provides zero continuous enforcement, will never be executed by future agents, and fails its purpose as a guard. It identifies existing machinery (scripts/ linting) but dismisses it without valid justification, violating the conflict-surface reuse requirement.",
+      "oc-glm-5-2: The 'instrument-health guard' (M2/AC3) is a documented grep command with no automated trigger: the doc explicitly forbids touching verify_go.sh, verify_ail.sh, ci.yml, scripts/, or any .ail, yet also defers adding a standalone lint. A grep that is written in a markdown table but never invoked by any verify leg or CI gate is not a guard \u2014 it is a convention that silently degrades to 'no guard' the moment a future executor skips reading this doc. This directly contradicts the 'no silent fallbacks' axiom: the guard's absence is itself a silent fallback.",
+      "controller (in-session): The proposed recurrence guard is not specified as an executable durable check or wired to CI; mechanism is still an open choice, so no closure instrument exists. R8 claims all planned sprint plans compliant but R15 positive control is outside that corpus and R16 is not a planted same-scope control. Correct false claim that -count=1 forces recompilation (it disables test-result caching), and account for dependency init effects. Freeze exact guard and scoped audit before planning."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.1294138,
+    "total_tokens_in": 23017,
+    "total_tokens_out": 2533
+  }
+}

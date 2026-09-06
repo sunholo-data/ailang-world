@@ -18466,3 +18466,67 @@ Shared main still has only tools/launchd/mission-control.sh.tmp.astra untracked;
 World-owned process fix: reporting/configuration diagnostics must preserve measured provenance, rubric arithmetic and field-level reads. No shared skill edit and no routing-policy change. Report-quality failures, lost-export resolver refusals and timestamp corrections are recorded as measured friction; existing shared absolute helpers handled missing local tools. docs/sprint-retros is absent (coding-standards existence control fired).
 
 **Next**: row65 (test-file compile fences), row66 (quoted flow-key trim), row68 (fleet-owned pinned-repo guard), then the banked queue; row39 remains next product work. Rows79/80 remain parked design review.
+
+
+## Iteration 161 — 2026-09-06 — row65 parks after its proposed guard fails its own Markdown example [HARNESS]
+
+**Kind**: queue-head design iteration; one designer revision and one re-quorum, then judgment park.
+
+**Progress**: seven-clause 1.0 bar; goal unmoved. Row65 is parked, no additional clause certified.
+
+**Context / preflight**
+- Armed; own driver ancestry confirmed; gh sunholo-voight-kampff; billing tripwire CLEAN.
+- Initial origin09726ae CI3/3 green;24 canonical GCP unread messages, no actionable World directive/regression. Issue107 and predecessor89 yielded0 allowlisted directives. No nightly-eval issue; issue107 below weekly rotation thresholds. Watermarks mirrored after triage.
+- Ledger19 rows/1 OPEN on entry (D-WORLD-32); no owner ruling arrived. External predicates rechecked: upstream1036/1037/1042/1043 remain open and pending/list/resolver/pi-callsite defects reproduce. Other human-gated rows remain parked; no upstream state changed by this run.
+- Initial shared main81ca5d7 had one untracked fleet artifact. A concurrent external fleet commit5634d55 advanced main/origin and tracked that artifact; its CI is3/3 green. Integration rebased onto it without modifying its three driver/routing paths.
+- The authoritative runtime skill changed mid-run from2781 lines to a560-line index and seven gate resources. All seven extracted gate texts match current upstream sections exactly; they were read in full. The extraction is uncommitted external V1 work; the verification protocol includes new rule3o. No V1 checkout/state or skill edits performed.
+
+**Pick**: row65, `w-go-build-is-not-a-compile-fence-for-a-test-file`. No prior design/open PR/orphan worktree for this item. Sent a canonical controlplane CLAIM before routing.
+
+**Work done**
+- Reproduced on pristine09726ae: deliberately type-invalid `_test.go` leaves go build rc0 while go vet and go test compile-only selection return1 naming the type error. Captured-byte restore and clean controls pass. This is an instrument test, not a compiling behavioral-mutant kill.
+- DeepSeek authored a design and the one mandated revision. R1's triggerless grep rejected by all3 external reviewers. R2 adds an executable prose-lint proposal but the exact regex misses a normal backtick-wrapped sole-fence assertion (no match/rc1), while the same plain-text control matches (rc0).
+- Controller enumeration confirms88 tracked files mention go build,13 matching planned sprint plans (draft says12). File-level companion presence does not prove each mutation drill is compiled. All-corpus-clean claim remains UNVERIFIED.
+- R2: Astra/Gemini reject; GLM invalid JSON/absent, billed usage retained. No pass was claimed and no absent-reviewer retry was required to restore a nonexistent pass. Record boundary and same-mutant evidence association need design judgment; applying snippets would invent a resolution, so no narrow-refinement carve-out.
+- Rejected draft and compact machine evidence banked at [verification/world-iter161](verification/world-iter161/README.md). No lint, Go code, AILANG code, verifier or workflow was changed.
+
+**Routing evidence**
+| Stage | Actual lane | Outcome / evidence |
+|---|---|---|
+| Controller | codex:gpt-6-astra | inherited running slot; quota subscription; future fleet fallback changed externally to Sol |
+| Designer initial | pi:ollama/deepseek-v4-flash:0731-cloud | probe0, typed ok,324s,43 tools, one design file |
+| Designer revision | same DeepSeek lane | typed ok,232s,19 tools; doc hash changed, one file |
+| Quorum r1 | Astra/Gemini/GLM |3 present,3 reject,0 absent; $0.1294138 |
+| Quorum r2 | Astra/Gemini/GLM |2 present,2 reject, GLM absent invalid; $0.18169857 |
+| Planner / executor / evaluator | not run | second design quorum blocked; evaluator N/A, no invented score |
+
+Designer resolver echoed driver seed Astra, inconsistent with the next rotation entry after Astra. Followed the authoritative rotation to DeepSeek, advanced only World's pointer; existing row77/upstream1042 retains the mismatch. Shared pi runner lacks its two mandated extension flags: a temporary PATH wrapper supplied both sandbox/worktree-fence extensions and PI_FENCE_ROOT, without shared code changes (row78/upstream1043). Main post-role state is clean at the external fleet commit.
+
+**Verification**
+- Controller outside sandbox: pinned-v0.30.0 verify_ail rc0 (11 identities/40 named tests/9 package checks); build/vet rc0. Isolated pristine `go test ./... -count=1` rc0,19 packages. Designer-overlapped baseline was discarded and repeated separately; no mixed-tree verdict banked.
+- Compile-fence proof commands each bounded120s; full pristine suite bounded900s. Mutated file restored to captured SHA256, focused controls green.
+- Initial local full verify_go rc1 on three pre-existing fleet differences, before its Go leg; not a full-green verifier claim. The concurrent fleet commit is independently remote-green.
+- Guard command outputs, failed controls, reviewer usage and typed role verdicts are tracked artifacts; ignored bulk transcripts remain local.
+
+**Landing / Gate3b**
+No implementation lands in this iteration. The record is a docs-only PR based on5634d55. Its expected checks, enumerated from the sole CI workflow, are `ailang-code verify gate`, `go host build + test gate`, and `launchd drivers (bash 3.2)`. The terminal PR/merge check evidence and record commit link are reported to issue107 after SHA-pinned verification; the queue outcome is PARKED regardless of record delivery.
+
+**Metered ledger**: $0.31111237 of$5; six reviewer calls,57367 input/6071 output tokens, including malformed GLM output. Designer and controller quota stages post zero metered cost/tokens; failed quorum stages remain failed and design decision awaits approval.
+
+**Ruled out / not chased**
+- CI compile coverage missing: refuted; full Go test already compiles test files.
+- Proposed prose lint is fail-closed: refuted at candidate enumeration, before classification.
+-13 matching files are a proof of all-drill compliance: false scope; no such claim banked.
+- Rewriting historical evidence, editing fleet-owned scripts/shared skills, account rotation and release actions: not performed.
+- A typed ok or a restored tree validates overlapping baseline measurements: refuted; separate pristine control required.
+
+**Parked for human**
+D-WORLD-32 remains OPEN; existing credential-rotation approval is not duplicated. D-WORLD-33 asks REDESIGN explicit compile-evidence records through fresh gates (recommended) or DEFER row65. Default DEFER immediately while unattended; next rows remain available. Ledger20 rows/2 OPEN.
+
+**Containment**
+Task edits stayed in a sibling worktree. Designer mutations restored; pristine baseline tree clean. Main's external fleet changes and the V1 skill extraction were preserved. No shared checkout pull/reset/stash/cleanup.
+
+**Retro (Gate5)**
+One World process clarification: pristine baselines must be isolated from ANY mutating role, including designers; own overlap was discarded and remeasured. No shared skill or routing-policy edit. Existing rows77/78 cover observed resolver/runner gaps; no duplicate backlog rows. docs/sprint-retros absent, coding-standards existence control fired.
+
+**Next**: row66 (quoted flow-key trim), row68 (fleet-owned pinned-repo guard routing), then the banked queue. Row39 remains next product work; rows79/80 remain parked design review. Row65 waits on D-WORLD-33.

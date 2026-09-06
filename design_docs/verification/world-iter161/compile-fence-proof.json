@@ -1,0 +1,79 @@
+{
+  "base": "09726ae943dbdd6b8b90cd8780318cf18f33664a",
+  "restore_sha256": "2f4d0efa13ad9dab015b85ce5eb7482d0888e3a338c8a7f4f24777dbd60bef2e",
+  "timeout_seconds_per_command": 120,
+  "results": [
+    {
+      "arm": "pristine",
+      "command": [
+        "go",
+        "vet",
+        "./host/verifygate/"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "arm": "mutant",
+      "command": [
+        "go",
+        "build",
+        "./..."
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "arm": "mutant",
+      "command": [
+        "go",
+        "vet",
+        "./host/verifygate/"
+      ],
+      "rc": 1,
+      "stdout": "",
+      "stderr": "# github.com/sunholo-data/ailang-world/host/verifygate\n# [github.com/sunholo-data/ailang-world/host/verifygate]\nvet: host/verifygate/dispatch_lever_gate_test.go:443:46: cannot use \"not an int\" (untyped string constant) as int value in variable declaration\n"
+    },
+    {
+      "arm": "mutant",
+      "command": [
+        "go",
+        "test",
+        "-count=1",
+        "-run",
+        "^$",
+        "./host/verifygate/"
+      ],
+      "rc": 1,
+      "stdout": "FAIL\tgithub.com/sunholo-data/ailang-world/host/verifygate [build failed]\nFAIL\n",
+      "stderr": "# github.com/sunholo-data/ailang-world/host/verifygate [github.com/sunholo-data/ailang-world/host/verifygate.test]\nhost/verifygate/dispatch_lever_gate_test.go:443:46: cannot use \"not an int\" (untyped string constant) as int value in variable declaration\n"
+    },
+    {
+      "arm": "restored",
+      "command": [
+        "go",
+        "vet",
+        "./host/verifygate/"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "arm": "restored",
+      "command": [
+        "go",
+        "test",
+        "-count=1",
+        "-run",
+        "^$",
+        "./host/verifygate/"
+      ],
+      "rc": 0,
+      "stdout": "ok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.272s [no tests to run]\n",
+      "stderr": ""
+    }
+  ]
+}
