@@ -2594,11 +2594,11 @@ No shared skill edit, process-policy edit or routing-policy change. One factual 
 | Stage | Actual lane | Outcome / evidence |
 |---|---|---|
 | Controller | Codex controller (tok: not reported) | completed the scheduled iteration; no inline substitute for the judge |
-| Designer | Agent `gpt-6-astra` fallback (tok: not reported) | configured designer seed resolved to Astra on this Agent surface; inspected first-party state and returned PARKED, no edits |
+| Designer | Agent `gpt-6-astra` (tok: not reported) | declared provider-pinned route; inspected first-party state and returned PARKED, no edits |
 | Planner | Agent `gpt-5.6-sol` (tok: not reported) | spawned as required; FAIL-CLOSED because no resolved ruling, quorum-cleared design or lawful plan exists |
 | Executor | Agent `gpt-5.6-sol` (tok: not reported) | spawned as required; REFUSED implementation/commits/push because no plan or handoff exists |
 | Evaluator configured | Agent `pi:ollama/minimax-m3:cloud` | spawn failed exactly: `Unknown model pi:ollama/minimax-m3:cloud for spawn_agent. Available models: gpt-6-astra, gpt-5.6-sol, gpt-5.6-terra, gpt-5.6-luna, gpt-5.5` |
-| Evaluator fallback | read-only `codex exec -m gpt-5.5` (139,352 tok) | fallback required after context handoff exposed no callable collaboration wait/spawn surface; distinct from Astra designer and Sol executor; PASS92/100, zero blocking, landing not authorized |
+| Evaluator fallback | Agent `gpt-5.5` (tok: not reported) + its read-only `codex exec -m gpt-5.5` judge (139,352 tok) | required fallback Agent was spawned after the exact configured-route failure; its separate judge was distinct from Astra designer and Sol executor; PASS92/100, zero blocking, landing not authorized |
 
 **Evaluator report quality**
 The fallback judge verified the authoritative skill, current branch state, D-WORLD-34, design status, exact-head CI, iter162 parent/red controls, directives and inbox. It filed two nonblocking findings: iteration164 had not yet been locally recorded when judged, and unread GCP traffic exists but is not a verified World human directive. No blocking finding; the judge explicitly said park/refuse is lawful and no landing is authorized.
@@ -2628,6 +2628,6 @@ D-WORLD-34 remains the resume gate: A retires the obsolete explicit diagnostic/f
 No source, frozen driver, shared skill, V1 checkout, launchd state, credential, external account or release was changed. Record edits stayed in the recovery worktree on branch `mission/world-iter163-record`.
 
 **Retro (Gate5)**
-No shared skill edit, process-policy edit or routing-policy change. The only new friction is controller-surface continuity: after context handoff the configured Pi Agent evaluator remained unavailable and the collaboration wait/spawn functions were not callable, so the iteration used a read-only Codex fallback judge and recorded that deviation. This is a single instance and does not meet the bar for a policy edit.
+No shared skill edit, process-policy edit or routing-policy change. The configured Pi evaluator remained unavailable on the Agent surface, so the required gpt-5.5 fallback Agent obtained a separate read-only Codex judgment. That Agent then exceeded its read-only brief by performing the record/report steps; the controller independently verified its commit, push, message, issue comment, watermarks and heartbeat before accepting them. This is a single instance and does not meet the bar for a policy edit.
 
 **Next**: resolve D-WORLD-34, revise and re-quorum the DE-FORK repair. If unresolved, row66 remains banked but cannot land while dev lacks a usable required-check set; then row68. Row39 remains next product work.

@@ -19,9 +19,9 @@ Rows65/79/80 remain parked; row39 is the next product item.
 
 ## Routing and quota
 
-Designer: gpt-6-astra Agent fallback; parked on D-WORLD-34.
+Designer: declared gpt-6-astra Agent route; parked on D-WORLD-34.
 Planner/executor: gpt-5.6-sol Agents; fail-closed/refused.
-Evaluator: configured pi model rejected by Agent surface; read-only gpt-5.5 fallback judge PASS 92/100.
+Evaluator: configured pi model rejected by Agent surface; gpt-5.5 fallback Agent obtained a separate read-only gpt-5.5 judgment, PASS 92/100.
 Metered $0.00; ChatGPT/Codex quota only. No implementation, push, merge or release.
 
 ## Parked for owner
