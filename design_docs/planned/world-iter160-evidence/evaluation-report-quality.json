@@ -1,0 +1,26 @@
+{
+  "implementation_sha": "54ecb6f1014c675588a5f4daf1c2f6b7b9d99a10",
+  "reports": [
+    {
+      "run": 1,
+      "reported_score": 99,
+      "claim": "Custom 99-point rubric and invented review committee deduction.",
+      "disposition": "Superseded; independent source tests and mutation evidence retained."
+    },
+    {
+      "run": 2,
+      "reported_score": 88,
+      "claim": "No function >50 lines; invented evidence paths and unprescribed scoring deductions.",
+      "disposition": "Refuted: Go AST measures TestDriverFleetResidualScope108 lines; actual evidence is under world-iter160-evidence."
+    },
+    {
+      "run": 3,
+      "reported_score": 88,
+      "claim": "Misattributes controller outside-sandbox full tests to executor and a blocked correction run; names wrong existing drift arm.",
+      "disposition": "Corrected by controller transcription against first independent tool transcript and controller logs; numerical verdict unchanged."
+    }
+  ],
+  "final_verdict": "PASS",
+  "final_score": 88,
+  "normalization": "Controller transcribed verdict and score; corrected factual attribution only, using banked independent and controller command records."
+}

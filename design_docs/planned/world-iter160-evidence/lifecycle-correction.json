@@ -1,0 +1,11 @@
+{
+  "before": {
+    "started": "2026-09-06T06:05:00Z",
+    "completed": "2026-09-06T06:16:08Z"
+  },
+  "after": {
+    "started": "2026-09-06T06:10:03Z",
+    "completed": "2026-09-06T06:20:16Z"
+  },
+  "basis": "Filesystem birth times of bounded executor stdout log and terminal rc artifact, observed by controller; original agent timestamps were inconsistent with role launch."
+}

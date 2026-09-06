@@ -1,0 +1,14 @@
+{
+  "verdict": "ok",
+  "rc": 0,
+  "model": "ollama/minimax-m3:cloud",
+  "pi_rc": 0,
+  "elapsed_seconds": 253,
+  "worktree_changed_files": 1,
+  "tool_executions": 110,
+  "agent_end_events": 1,
+  "ndjson_bytes_filtered": 2527379,
+  "ndjson": "/tmp/world-i160-evaluator.ndjson",
+  "snapshot": "/tmp/world-i160-evaluator.ndjson.snapshot.ndjson",
+  "stderr": "/tmp/world-i160-evaluator.ndjson.stderr"
+}

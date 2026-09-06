@@ -1,0 +1,25 @@
+=== RUN   TestDriverFleetResidualScope
+=== RUN   TestDriverFleetResidualScope/outside_boundary_unenumerated
+    driver_fleet_scope_gate_test.go:41: missing phase-3 boundary/unenumerated disclosure:
+           ✓ fleet-comparison arm: 3 tracked frozen-core files match fleet HEAD 516c39305512a48158f4d7ed4a6b9841f40fbd92 — tracked copy is current (untracked fleet additions not certified)
+=== RUN   TestDriverFleetResidualScope/baseline_disclosure
+    driver_fleet_scope_gate_test.go:60: fleet-scope success/disclosure missing: rc=0
+           ✓ fleet-comparison arm: 3 tracked frozen-core files match fleet HEAD 82957dec11c59ddc2f0bf272086b3a279da339ee — tracked copy is current (untracked fleet additions not certified)
+=== RUN   TestDriverFleetResidualScope/inside_boundary_positive_control
+    driver_fleet_scope_gate_test.go:77: inside-boundary command lost its rc=0/three-match control: rc=0
+           ⚠ unclassified fleet-only path (not tracked, not required): tools/launchd/new-helper.sh
+           ✓ fleet-comparison arm: 3 tracked frozen-core files match fleet HEAD 89ee4788e8f5eec4556526d20155f86edf25741f — tracked copy is current (untracked fleet additions not certified)
+           ⚠ 1 unclassified fleet-only paths not certified (see above)
+=== RUN   TestDriverFleetResidualScope/required_path_missing
+=== RUN   TestDriverFleetResidualScope/empty_required_list
+    driver_fleet_scope_gate_test.go:131: empty required list was not safely disclosed: rc=0
+           ✓ fleet-comparison arm: 3 tracked frozen-core files match fleet HEAD 0bdc67ae3b3aded4c04be22b54a12c292f2fffe0 — tracked copy is current (untracked fleet additions not certified)
+--- FAIL: TestDriverFleetResidualScope (0.82s)
+    --- FAIL: TestDriverFleetResidualScope/outside_boundary_unenumerated (0.08s)
+    --- FAIL: TestDriverFleetResidualScope/baseline_disclosure (0.17s)
+    --- FAIL: TestDriverFleetResidualScope/inside_boundary_positive_control (0.09s)
+    --- PASS: TestDriverFleetResidualScope/required_path_missing (0.17s)
+    --- FAIL: TestDriverFleetResidualScope/empty_required_list (0.17s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/verifygate	0.982s
+FAIL

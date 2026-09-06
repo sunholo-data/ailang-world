@@ -1,0 +1,112 @@
+[
+  {
+    "command": "bash -n scripts/verify_go.sh && echo \"rc=$?\"",
+    "isError": false,
+    "output": "rc=0\n"
+  },
+  {
+    "command": "go test ./host/verifygate -run '^$' -count=1 -timeout=60s 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "# ./host/verifygate\nopen /Users/voightkampff/Library/Caches/go-build/19/19d9b0435a880df6be922402dcb8f26b6c3a6a05a44fa44947287712ab4d4882-d: operation not permitted\nFAIL\t./host/verifygate [setup failed]\nFAIL\nrc=1\n"
+  },
+  {
+    "command": "go test -count=1 -timeout=60s ./host/verifygate -run '^$' 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "# ./host/verifygate\nopen /Users/voightkampff/Library/Caches/go-build/19/19d9b0435a880df6be922402dcb8f26b6c3a6a05a44fa44947287712ab4d4882-d: operation not permitted\nFAIL\t./host/verifygate [setup failed]\nFAIL\nrc=1\n"
+  },
+  {
+    "command": "GOCACHE=/tmp/evaluator-go-cache go test ./host/verifygate -run '^$' -count=1 -timeout=60s 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "failed to initialize build cache at /tmp/evaluator-go-cache: mkdir /tmp/evaluator-go-cache: operation not permitted\nrc=1\n"
+  },
+  {
+    "command": "mkdir -p /private/tmp/evaluator-go-cache-160 && GOCACHE=/private/tmp/evaluator-go-cache-160 go test ./host/verifygate -run '^$' -count=1 -timeout=60s 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "mkdir: /private/tmp/evaluator-go-cache-160: Operation not permitted\nrc=1\n"
+  },
+  {
+    "command": "# try sandbox-friendly cwd\nGOCACHE=/Users/voightkampff/.cache/go-build-eval-160 go test ./host/verifygate -run '^$' -count=1 -timeout=60s 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "failed to initialize build cache at /Users/voightkampff/.cache/go-build-eval-160: mkdir /Users/voightkampff/.cache/go-build-eval-160: operation not permitted\nrc=1\n"
+  },
+  {
+    "command": "go test ./host/verifygate -run '^$' -count=1 -timeout=60s 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "# ./host/verifygate\nopen /Users/voightkampff/Library/Caches/go-build/19/19d9b0435a880df6be922402dcb8f26b6c3a6a05a44fa44947287712ab4d4882-d: operation not permitted\nFAIL\t./host/verifygate [setup failed]\nFAIL\nrc=1\n"
+  },
+  {
+    "command": "mkdir -p /Users/voightkampff/go/cache-eval-160 && GOCACHE=/Users/voightkampff/go/cache-eval-160 go test ./host/verifygate -run '^$' -count=1 -timeout=60s 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "mkdir: /Users/voightkampff/go/cache-eval-160: Operation not permitted\nrc=1\n"
+  },
+  {
+    "command": "mkdir -p /Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.gocache && GOCACHE=/Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.gocache go test ./host/verifygate -run '^$' -count=1 -timeout=60s 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "ok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.341s [no tests to run]\nrc=0\n"
+  },
+  {
+    "command": "GOCACHE=/Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.gocache go test ./host/verifygate -run '^TestDriverFleetResidualScope$' -count=1 -timeout=60s -v 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "=== RUN   TestDriverFleetResidualScope\n=== RUN   TestDriverFleetResidualScope/outside_boundary_unenumerated\n=== RUN   TestDriverFleetResidualScope/baseline_disclosure\n=== RUN   TestDriverFleetResidualScope/inside_boundary_positive_control\n=== RUN   TestDriverFleetResidualScope/required_path_missing\n=== RUN   TestDriverFleetResidualScope/empty_required_list\n--- PASS: TestDriverFleetResidualScope (0.95s)\n    --- PASS: TestDriverFleetResidualScope/outside_boundary_unenumerated (0.09s)\n    --- PASS: TestDriverFleetResidualScope/baseline_disclosure (0.20s)\n    --- PASS: TestDriverFleetResidualScope/inside_boundary_positive_control (0.10s)\n    --- PASS: TestDriverFleetResidualScope/required_path_missing (0.19s)\n    --- PASS: TestDriverFleetResidualScope/empty_required_list (0.20s)\nPASS\nok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t1.118s\nrc=0\n"
+  },
+  {
+    "command": "GOCACHE=/Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.gocache go vet ./host/verifygate 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "rc=0\n"
+  },
+  {
+    "command": "sha256sum scripts/verify_go.sh host/verifygate/driver_fleet_scope_gate_test.go 2>&1",
+    "isError": false,
+    "output": "2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d  scripts/verify_go.sh\ne6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5  host/verifygate/driver_fleet_scope_gate_test.go\n"
+  },
+  {
+    "command": "cp scripts/verify_go.sh /Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.drill-m1/verify_go.sh.mutant\n\n# Apply the wording mutation: revert success and summary to base, drop new disclosure lines\npython3 - <<'PY'\nimport pathlib\npath = pathlib.Path('/Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.drill-m1/verify_go.sh.mutant')\nraw = path.read_text()\n\n# Old success and unqualified summary from row 54 (base d81ac42) \u2014 match the design's old wording:\nold_block = \"\"\"    echo \"   \u2713 fleet-comparison arm: $compared files match fleet HEAD $fleet_head; checked set: World-tracked paths under tools/launchd and exact file scripts/mission_decisions.sh, plus explicit REQUIRED_FLEET_PATHS\"\n    echo \"   explicit required paths (checked separately): ${REQUIRED_FLEET_PATHS[*]:-(none)}\"\n    echo \"   phase-3 residual enumeration only: tools/launchd and exact file scripts/mission_decisions.sh; files outside this boundary are unenumerated (not zero), not certified by phase 3\"\n    if [ \"$unclassified\" -gt 0 ]; then\n      echo \"   \u26a0 $unclassified unclassified fleet-only paths within the phase-3 boundary not certified (see above)\" >&2\n    fi\"\"\"\n\nbase_block = \"\"\"    echo \"   \u2713 fleet-comparison arm: $compared tracked frozen-core files match fleet HEAD $fleet_head \u2014 tracked copy is current (untracked fleet additions not certified)\"\n    if [ \"$unclassified\" -gt 0 ]; then\n      echo \"   \u26a0 $unclassified unclassified fleet-only paths not certified (see above)\" >&2\n    fi\"\"\"\n\nassert old_block in raw, \"old block not found exactly once\"\nnew_raw = raw.replace(old_block, base_block)\nassert new_raw.count(base_block) == 1, \"base block placed more than once\"\nassert base_block not in raw[:raw.index(old_block)], \"replacement did not change content\"\n# Verify the new disclosure lines are gone\nassert \"checked set: World-tracked paths\" not in new_raw, \"checked-set disclosure still present\"\nassert \"explicit required paths (checked separately)\" not in new_raw, \"required-path disclosure still present\"\nassert \"phase-3 residual enumeration only\" not in new_raw, \"residual boundary disclosure still present\"\nassert \"within the phase-3 boundary\" not in new_raw, \"qualified summary still present\"\n\npath.write_text(new_raw)\nprint(\"mutant written; size\", len(new_raw))\nPY\necho \"rc=$?\"\nsha256sum /Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.drill-m1/verify_go.sh.mutant",
+    "isError": false,
+    "output": "mutant written; size 23807\nrc=0\n3f4972ab30b7e825b40d0fa182d12cbe6c48ad1771554350ee8d35f1940c2647  /Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.drill-m1/verify_go.sh.mutant\n"
+  },
+  {
+    "command": "bash -n /Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.drill-m1/verify_go.sh.mutant && echo \"rc=$?\"",
+    "isError": false,
+    "output": "rc=0\n"
+  },
+  {
+    "command": "# We have .drill-m1/verify_go.sh.orig containing the original\nsha256sum .drill-m1/verify_go.sh.orig scripts/verify_go.sh 2>&1",
+    "isError": false,
+    "output": "2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d  .drill-m1/verify_go.sh.orig\n2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d  scripts/verify_go.sh\n"
+  },
+  {
+    "command": "# Temporarily install mutant\ncp /Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.drill-m1/verify_go.sh.mutant /Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/scripts/verify_go.sh\nsha256sum scripts/verify_go.sh\necho \"--- bash syntax check ---\"\nbash -n scripts/verify_go.sh && echo \"rc=$?\"\necho \"--- compile fence (test compile only, no tests run) ---\"\nGOCACHE=/Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.gocache go test ./host/verifygate -run '^$' -count=1 -timeout=60s 2>&1\necho \"rc=$?\"",
+    "isError": false,
+    "output": "3f4972ab30b7e825b40d0fa182d12cbe6c48ad1771554350ee8d35f1940c2647  scripts/verify_go.sh\n--- bash syntax check ---\nrc=0\n--- compile fence (test compile only, no tests run) ---\nok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.195s [no tests to run]\nrc=0\n"
+  },
+  {
+    "command": "GOCACHE=/Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.gocache go test ./host/verifygate -run '^TestDriverFleetResidualScope$' -count=1 -timeout=60s -v 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "=== RUN   TestDriverFleetResidualScope\n=== RUN   TestDriverFleetResidualScope/outside_boundary_unenumerated\n    driver_fleet_scope_gate_test.go:41: missing phase-3 boundary/unenumerated disclosure:\n           \u2713 fleet-comparison arm: 3 tracked frozen-core files match fleet HEAD 8b726cf8775d1f1e2c7cd5bea5f4c41096467a8e \u2014 tracked copy is current (untracked fleet additions not certified)\n=== RUN   TestDriverFleetResidualScope/baseline_disclosure\n    driver_fleet_scope_gate_test.go:60: fleet-scope success/disclosure missing: rc=0\n           \u2713 fleet-comparison arm: 3 tracked frozen-core files match fleet HEAD a0921900c6486a9ea3202eca7d5992193b2946dc \u2014 tracked copy is current (untracked fleet additions not certified)\n=== RUN   TestDriverFleetResidualScope/inside_boundary_positive_control\n    driver_fleet_scope_gate_test.go:77: inside-boundary command lost its rc=0/three-match control: rc=0\n           \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/new-helper.sh\n           \u2713 fleet-comparison arm: 3 tracked frozen-core files match fleet HEAD 5a9ed8508166dce1139844f94dac18c2a7de0de6 \u2014 tracked copy is current (untracked fleet additions not certified)\n           \u26a0 1 unclassified fleet-only paths not certified (see above)\n=== RUN   TestDriverFleetResidualScope/required_path_missing\n=== RUN   TestDriverFleetResidualScope/empty_required_list\n    driver_fleet_scope_gate_test.go:131: empty required list was not safely disclosed: rc=0\n           \u2713 fleet-comparison arm: 3 tracked frozen-core files match fleet HEAD 422e8c9dd08a15611654acaf0c5d82b019511a62 \u2014 tracked copy is current (untracked fleet additions not certified)\n--- FAIL: TestDriverFleetResidualScope (0.82s)\n    --- FAIL: TestDriverFleetResidualScope/outside_boundary_unenumerated (0.08s)\n    --- FAIL: TestDriverFleetResidualScope/baseline_disclosure (0.17s)\n    --- FAIL: TestDriverFleetResidualScope/inside_boundary_positive_control (0.09s)\n    --- PASS: TestDriverFleetResidualScope/required_path_missing (0.17s)\n    --- FAIL: TestDriverFleetResidualScope/empty_required_list (0.17s)\nFAIL\nFAIL\tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.969s\nFAIL\nrc=1\n"
+  },
+  {
+    "command": "# Restore from captured bytes\ncp /Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.drill-m1/verify_go.sh.orig /Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/scripts/verify_go.sh\nsha256sum scripts/verify_go.sh /Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.drill-m1/verify_go.sh.orig",
+    "isError": false,
+    "output": "2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d  scripts/verify_go.sh\n2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d  /Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.drill-m1/verify_go.sh.orig\n"
+  },
+  {
+    "command": "GOCACHE=/Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.gocache go test ./host/verifygate -run '^TestDriverFleetResidualScope$' -count=1 -timeout=60s -v 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "=== RUN   TestDriverFleetResidualScope\n=== RUN   TestDriverFleetResidualScope/outside_boundary_unenumerated\n=== RUN   TestDriverFleetResidualScope/baseline_disclosure\n=== RUN   TestDriverFleetResidualScope/inside_boundary_positive_control\n=== RUN   TestDriverFleetResidualScope/required_path_missing\n=== RUN   TestDriverFleetResidualScope/empty_required_list\n--- PASS: TestDriverFleetResidualScope (0.84s)\n    --- PASS: TestDriverFleetResidualScope/outside_boundary_unenumerated (0.08s)\n    --- PASS: TestDriverFleetResidualScope/baseline_disclosure (0.19s)\n    --- PASS: TestDriverFleetResidualScope/inside_boundary_positive_control (0.09s)\n    --- PASS: TestDriverFleetResidualScope/required_path_missing (0.17s)\n    --- PASS: TestDriverFleetResidualScope/empty_required_list (0.17s)\nPASS\nok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.991s\nrc=0\n"
+  },
+  {
+    "command": "sha256sum scripts/verify_go.sh host/verifygate/driver_fleet_scope_gate_test.go 2>&1",
+    "isError": false,
+    "output": "2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d  scripts/verify_go.sh\ne6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5  host/verifygate/driver_fleet_scope_gate_test.go\n"
+  },
+  {
+    "command": "GOCACHE=/Users/voightkampff/dev/sunholo-data/.evaluator-wt-world-iter160/.gocache go vet ./host/verifygate 2>&1; echo \"rc=$?\"",
+    "isError": false,
+    "output": "rc=0\n"
+  },
+  {
+    "command": "echo \"=== Current hashes ===\"\nsha256sum scripts/verify_go.sh host/verifygate/driver_fleet_scope_gate_test.go\necho \"\"\necho \"=== Captured pre-drill hash from executor ===\"\necho \"2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d  scripts/verify_go.sh\"\necho \"e6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5  host/verifygate/driver_fleet_scope_gate_test.go\"",
+    "isError": false,
+    "output": "=== Current hashes ===\n2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d  scripts/verify_go.sh\ne6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5  host/verifygate/driver_fleet_scope_gate_test.go\n\n=== Captured pre-drill hash from executor ===\n2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d  scripts/verify_go.sh\ne6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5  host/verifygate/driver_fleet_scope_gate_test.go\n"
+  }
+]

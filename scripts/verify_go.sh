@@ -200,8 +200,9 @@ check_driver_fleet() {
       fi
     done
 
-    # Phase 3 — fleet paths World neither tracks nor requires are loud, counted,
-    # non-fatal residuals.
+    # Phase 3 — fleet paths under tools/launchd and the exact file
+    # scripts/mission_decisions.sh that World neither tracks nor requires are loud,
+    # counted, non-fatal residuals. Paths outside that fixed boundary are not enumerated.
     while IFS= read -r path; do
       [ -z "$path" ] && continue
       if git cat-file -e "HEAD:$path" 2>/dev/null; then
@@ -238,9 +239,11 @@ check_driver_fleet() {
       echo "  The driver is fleet-owned; land the required file as a fleet-authored commit. World's controller must not edit or absorb it." >&2
       return 1
     fi
-    echo "   ✓ fleet-comparison arm: $compared tracked frozen-core files match fleet HEAD $fleet_head — tracked copy is current (untracked fleet additions not certified)"
+    echo "   ✓ fleet-comparison arm: $compared files match fleet HEAD $fleet_head; checked set: World-tracked paths under tools/launchd and exact file scripts/mission_decisions.sh, plus explicit REQUIRED_FLEET_PATHS"
+    echo "   explicit required paths (checked separately): ${REQUIRED_FLEET_PATHS[*]:-(none)}"
+    echo "   phase-3 residual enumeration only: tools/launchd and exact file scripts/mission_decisions.sh; files outside this boundary are unenumerated (not zero), not certified by phase 3"
     if [ "$unclassified" -gt 0 ]; then
-      echo "   ⚠ $unclassified unclassified fleet-only paths not certified (see above)" >&2
+      echo "   ⚠ $unclassified unclassified fleet-only paths within the phase-3 boundary not certified (see above)" >&2
     fi
     return 0
   fi

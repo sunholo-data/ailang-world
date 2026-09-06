@@ -1,0 +1,10 @@
+{
+  "roots": [
+    "/Users/voightkampff/dev/sunholo-data/ailang/tools/launchd",
+    "/Users/voightkampff/dev/sunholo-data/ailang/scripts"
+  ],
+  "rc": 1,
+  "matches": "",
+  "errors": "",
+  "same_scope_control_rc": 0
+}

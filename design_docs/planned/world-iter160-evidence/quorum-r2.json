@@ -1,0 +1,60 @@
+{
+  "doc": "design_docs/planned/w-fleet-residual-net-shares-phase-1-pathspec.md",
+  "iso_ts": "2026-09-06T05:58:06Z",
+  "reviewers": [
+    {
+      "model": "gpt5-6-sol",
+      "cost_usd": 0.04342,
+      "tokens_in": 7760,
+      "tokens_out": 154,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The closest concern is that changing human-readable success text may break external or dynamically constructed exact-text consumers that repository-scoped searches cannot discover.",
+        "catch": "Before landing, verify the focused regression and mutation drill exactly as specified, and confirm no controller-owned integration outside the tracked repository parses the replaced success or summary literals.",
+        "proposed_fix": "Add an implementation verification-log row recording the final production diff, focused test RUN/PASS with bounded timeouts, AC5 mutant failure and restoration hashes, plus the controller’s check for any known external exact-text consumer. If such a consumer exists, migrate it to return-code/semantic-clause handling or explicitly version the output contract before landing."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.01966,
+      "tokens_in": 8870,
+      "tokens_out": 160,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The closest concern is that the exact prefix 'unclassified fleet-only path...' for per-path warnings asserted in the Python reproduction (V7) is not explicitly quoted in the static V-log source readings (V2/V3), relying entirely on the dynamic `.count()` check to prove its existence.",
+        "catch": "Ensure the bash array `REQUIRED_FLEET_PATHS` is safely converted to a printable string without syntax errors if it is ever empty.",
+        "proposed_fix": "When replacing the output block, use an array expansion like `${REQUIRED_FLEET_PATHS[@]:-(none)}` to safely format the explicit required paths list."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-2",
+      "cost_usd": 0.02798965,
+      "tokens_in": 7797,
+      "tokens_out": 5003,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "V7's three-state reproduction (the core premise that out-of-boundary additions yield rc=0 with zero filename mentions) depends on `/tmp/world-i160-repro-root`, a pre-existing local fixture with commit hashes `9703e22`/`4242d1e`/`debcc52` that is not in the repository and cannot be independently reproduced by any reviewer or implementer. Unlike V15, which constructs all fixtures from scratch with a self-contained Python script, V7's evidence for the 'outside addition' scenario is unverifiable without that ephemeral artifact.",
+        "catch": "V7 references `source=pathlib.Path('/tmp/world-i160-repro-root')` and resets to pre-existing commits, but never documents how those repos and commits were created. A reviewer cannot confirm the fixture trees match what AC2 describes. The implementer must independently construct AC2 fixtures to verify the premise, meaning the designer's premise evidence for the primary regression killer (AC2) is not self-contained.",
+        "proposed_fix": "Replace the V7 reproduction command with a self-contained fixture-creation script modeled on V15's missing-required fixture: create `world` and `fleet` repos under `tempfile.TemporaryDirectory`, commit identical `tools/launchd/control.sh`, `tools/launchd/lib/pin-root.sh`, and `scripts/mission_decisions.sh` from scratch, then create the outside-addition branch by committing only `scripts/mission_decisions_v2.sh` to fleet, and the inside-addition branch by also committing `tools/launchd/new-helper.sh`. This eliminates the dependency on `/tmp/world-i160-repro-root` and makes the core premise independently reproducible at design time."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Independent tracked consumer search:92 lines/8 files; only script producers/callers, historical row54 wording prospectively superseded. Missing required synthetic arm rc1 exact message with healthy rc0 control. Human-readable wording intentional per row64. Astra author; Sol substitutes reviewer."
+  },
+  "synthesis": {
+    "verdict": "proceed",
+    "blocking_objections": null,
+    "absent_reviewers": [],
+    "total_cost_usd": 0.09106965,
+    "total_tokens_in": 24427,
+    "total_tokens_out": 5317
+  }
+}
