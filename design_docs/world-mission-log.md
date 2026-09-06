@@ -2446,3 +2446,65 @@ One World process clarification: pristine baselines must be isolated from ANY mu
 **Report-instrument correction**: `ailang messages read <id> --peek --json` ignored trailing flags and marked the newly-created approval read. Exact body verification caught the status change. Only this iteration's own approval was restored with `messages unack`; `messages read --peek --json <id>` then confirmed exact payload and unread status. Route to the existing positional-flag backlog class (row75/upstream1037); no new policy or duplicate issue. Approval ID: inbox_1788689217176_901d5ebb.
 
 **Next**: row66 (quoted flow-key trim), row68 (fleet-owned pinned-repo guard routing), then the banked queue. Row39 remains next product work; rows79/80 remain parked design review. Row65 waits on D-WORLD-33.
+
+---
+## Iteration 162 — 2026-09-06 — DE-FORK CI repair parks at the authority gate [HARNESS]
+
+**Kind**: own-repo CI-red design iteration; no implementation after blocked quorum.
+
+**Progress**: seven-clause 1.0 bar; goal unmoved. Dev CI remains red on the attended DE-FORK commit; no additional clause certified.
+
+**Context / preflight**
+- Armed; gh sunholo-voight-kampff; billing tripwire CLEAN. `tools/launchd/mission-heartbeat.sh` is absent in this repo, so heartbeat stamps could not run; row69's absolute-helper gap remains the explanation rather than a new local script.
+- Local and origin dev agree at e92594c; main clean. Issue107 and mission-world watermarks both 2026-09-06T09:45:47Z; 0 Mark directives since then. Ledger20 rows/2 OPEN on entry.
+- Canonical GCP messages were verified with the bad-store control; `ailang storage status` remains local. No open bot PRs for World.
+- Gate4 `ailang mission rotate-log world --keep 20` is unavailable in the installed CLI (`unknown command 'mission'`), so no helper rotation ran; manual status rotation kept the latest three STATUS stamps and ledger validation stayed green.
+
+**Pick**: own-repo dev CI red at e92594c outranked row66. Parent b7e4a8e was green; tip run34028333254 failed `launchd drivers (bash 3.2)` and `go host build + test gate`, while `ailang-code verify gate` passed.
+
+**Work done**
+- Diagnosed the red to active consumers of deleted local driver files: launchd job cannot open `tools/launchd/mission-control.sh`; `scripts/verify_go.sh` calls missing `tools/launchd/test_mission_routing.sh`.
+- Preserved the attended DE-FORK ownership boundary: no restoration of deleted driver files, no V1 checkout/shared skill/launchd state edits.
+- Banked `planned/w-de-fork-ci-ownership.md` as the design/park artifact. It proposes a World-owned mission-config check but parks before planning on the row76/D-WORLD-DRIVER-1 authority conflict.
+
+**Routing evidence**
+| Stage | Actual lane | Outcome / evidence |
+|---|---|---|
+| Controller | Codex controller, resumed | completed; main tree clean; no hidden human input |
+| Designer | gpt-6-astra via Agent tool | spawned before resume; commit c1149b6 records designer; one design file |
+| Quorum r1 | Astra/Gemini/GLM | 3 present,3 reject,0 absent; $0.06860000 |
+| Quorum r2 | Astra/Gemini/GLM | Gemini/GLM reject; Astra absent budget; $0.02132311 |
+| Planner | not spawned | design quorum blocked; gate forbids planning |
+| Executor | not spawned | design quorum blocked; no implementation authorized |
+| Evaluator | fallback gpt-5.5 codex CLI | Agent wait/list unavailable after resume; no prior evaluator artifact on disk. Independent fallback judge PASS90/100 for parking, no blocking findings. |
+
+**Evaluator report quality**
+Fallback evaluator verified first-party CI red/parent green, active consumers, docs-only parking commit, and charter authority at D-WORLD-DRIVER-1/row76. It filed no blocking findings against parking and one nonblocking revision note: future design should quote the authority text directly.
+
+**Verification**
+- Remote CI evidence: run34028333254 at e92594c has checks=3, failures in launchd/go-host and success in ailang-code; parent run34026879032 at b7e4a8e success.
+- Quorum artifacts read from `.wt-world-iter162/.ailang/state/mission-quorum/`; r2 `.synthesis.absent_reviewers` names gpt6-astra budget, so no proceed was degraded by absence.
+- Charter authority checked at D-WORLD-DRIVER-1 and row76; frozen-core text exists. No product gates were rerun because no implementation was produced.
+
+**Landing / Gate3b**
+No implementation lands. The record/design commit remains on branch `mission/world-iter162`; dev stays red until D-WORLD-34 is answered and a revised design passes. Gate3b landing green is not claimed.
+
+**Metered ledger**: $0.08992311 of $5 for quorum reviewers. Fallback evaluator consumed ChatGPT/Codex quota, not metered dollars. No planner/executor spend.
+
+**Ruled out / not chased**
+- Recreating deleted `tools/launchd` files: rejected as undoing attended DE-FORK ownership.
+- Treating the Gemini AC7 objection as enough to proceed: false; GLM's authority objection remains.
+- Controller-only parking verdict: rejected; fallback independent evaluator ran and passed.
+- Planner/executor execution: not authorized after blocked design quorum.
+
+**Parked for human**
+D-WORLD-34: choose whether DE-FORK supersedes row76/D-WORLD-DRIVER-1 enough to retire the obsolete live `--driver-fleet-check` diagnostic, or preserve it and limit repair to default product verification. Recommendation A; unattended default B/park.
+D-WORLD-32 and D-WORLD-33 remain OPEN.
+
+**Containment**
+Edits stayed in the sibling iteration worktree. No code, frozen path, shared skill, V1 checkout, launchd state, installed runtime, account credential or release action was changed.
+
+**Retro (Gate5)**
+No shared skill edit and no routing-policy change. Recorded the Agent-tool resume limitation as a routing deviation with a fallback judge, not as a missing evaluator. The design's missing direct authority quote is a future revision input, not a controller license to settle the authority question.
+
+**Next**: D-WORLD-34 if answered; otherwise row66 then row68. Row65 remains parked on D-WORLD-33; rows79/80 remain parked design review; row39 remains next product work.
