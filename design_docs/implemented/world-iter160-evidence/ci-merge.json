@@ -1,0 +1,23 @@
+{
+  "verdict": "green",
+  "sha": "bf15c73f143651a4a32aeec956a878efb1ae328c",
+  "present": 3,
+  "expected": 3,
+  "missing": [],
+  "checks": {
+    "ailang-code verify gate": {
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "launchd drivers (bash 3.2)": {
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "go host build + test gate": {
+      "status": "completed",
+      "conclusion": "success"
+    }
+  },
+  "runs": 1,
+  "seconds": 423
+}
