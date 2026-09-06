@@ -59,7 +59,10 @@
     "unique_files_touched": 4,
     "closest_comparator": "row 54 implementation 14036ee: two files, +213/-1",
     "estimated_production_changed_lines": 15,
-    "estimated_test_loc_range": [140, 180],
+    "estimated_test_loc_range": [
+      140,
+      180
+    ],
     "estimated_total_loc": 175,
     "estimated_days": 0.2,
     "note": "Seven-day numbers are churn, not a claimed LOC/day rate. One milestone matches the design and recent small harness cadence."
@@ -152,10 +155,10 @@
       "compile_fence": "go test ./host/verifygate -run '^$' -count=1 -timeout=60s",
       "focused_test": "go test ./host/verifygate -run '^TestDriverFleetResidualScope$' -count=1 -timeout=60s -v",
       "passes": true,
-      "started": "2026-09-06T06:05:00Z",
-      "completed": "2026-09-06T06:16:08Z",
+      "started": "2026-09-06T06:10:03Z",
+      "completed": "2026-09-06T06:20:16Z",
       "actual_loc": 300,
-      "notes": "AC1-AC6 pass in the executor worktree. bash -n, the _test.go compile fence, and the focused named test are green with five named subtests and no skips. The production-only old-wording mutant kept rc=0/three matches and failed first at outside_boundary_unenumerated for the missing phase-3 boundary/unenumerated disclosure. Captured verifier/test hashes 2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d and e6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5 were restored exactly."
+      "notes": "AC1-AC6 pass in the executor worktree. bash -n, the _test.go compile fence, and the focused named test are green with five named subtests and no skips. The production-only old-wording mutant kept rc=0/three matches and failed first at outside_boundary_unenumerated for the missing phase-3 boundary/unenumerated disclosure. Captured verifier/test hashes 2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d and e6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5 were restored exactly. Controller corrected lifecycle timestamps to observed executor-log creation and terminal-rc artifact creation; these are role lifecycle bounds, not a performance measurement."
     }
   ],
   "mutation": {

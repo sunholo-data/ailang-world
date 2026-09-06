@@ -1,0 +1,51 @@
+{
+  "head": "54ecb6f1014c675588a5f4daf1c2f6b7b9d99a10",
+  "before": {
+    "scripts/verify_go.sh": "2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d",
+    "host/verifygate/driver_fleet_scope_gate_test.go": "e6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5"
+  },
+  "gates": [
+    {
+      "name": "syntax",
+      "rc": 0,
+      "path": "/tmp/world-i160-mut-syntax.log"
+    },
+    {
+      "name": "compile",
+      "rc": 0,
+      "path": "/tmp/world-i160-mut-compile.log"
+    },
+    {
+      "name": "focused-red",
+      "rc": 1,
+      "path": "/tmp/world-i160-mut-focused-red.log"
+    },
+    {
+      "name": "script-controls",
+      "rc": 0,
+      "path": "/tmp/world-i160-mut-script-controls.log"
+    },
+    {
+      "name": "restored-green",
+      "rc": 0,
+      "path": "/tmp/world-i160-mut-restored-green.log"
+    }
+  ],
+  "mutant_hash": "3f4972ab30b7e825b40d0fa182d12cbe6c48ad1771554350ee8d35f1940c2647",
+  "replacement_count": 1,
+  "failed_subtests": [
+    "--- FAIL: TestDriverFleetResidualScope/outside_boundary_unenumerated (0.08s)",
+    "--- FAIL: TestDriverFleetResidualScope/baseline_disclosure (0.17s)",
+    "--- FAIL: TestDriverFleetResidualScope/inside_boundary_positive_control (0.09s)",
+    "--- FAIL: TestDriverFleetResidualScope/empty_required_list (0.17s)"
+  ],
+  "mutant_outside_script": {
+    "rc": 0,
+    "three_old_style_matches": true,
+    "scope_present": false
+  },
+  "restored": {
+    "scripts/verify_go.sh": "2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d",
+    "host/verifygate/driver_fleet_scope_gate_test.go": "e6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5"
+  }
+}

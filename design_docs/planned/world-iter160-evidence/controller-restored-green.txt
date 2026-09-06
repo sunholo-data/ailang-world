@@ -1,0 +1,14 @@
+=== RUN   TestDriverFleetResidualScope
+=== RUN   TestDriverFleetResidualScope/outside_boundary_unenumerated
+=== RUN   TestDriverFleetResidualScope/baseline_disclosure
+=== RUN   TestDriverFleetResidualScope/inside_boundary_positive_control
+=== RUN   TestDriverFleetResidualScope/required_path_missing
+=== RUN   TestDriverFleetResidualScope/empty_required_list
+--- PASS: TestDriverFleetResidualScope (0.84s)
+    --- PASS: TestDriverFleetResidualScope/outside_boundary_unenumerated (0.08s)
+    --- PASS: TestDriverFleetResidualScope/baseline_disclosure (0.17s)
+    --- PASS: TestDriverFleetResidualScope/inside_boundary_positive_control (0.09s)
+    --- PASS: TestDriverFleetResidualScope/required_path_missing (0.17s)
+    --- PASS: TestDriverFleetResidualScope/empty_required_list (0.17s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	0.990s

@@ -1,0 +1,70 @@
+{
+  "head": "54ecb6f1014c675588a5f4daf1c2f6b7b9d99a10",
+  "scope": "Controller outside-sandbox checks on Darwin/arm64; pinned AILANG v0.30.0, Go1.26.6. Full verifier expected red on existing fleet drift.",
+  "checks": [
+    {
+      "name": "load-before",
+      "rc": 0,
+      "seconds": 0.01,
+      "output": " 8:21  up 19:21, 2 users, load averages: 1.57 1.48 1.89\n"
+    },
+    {
+      "name": "syntax",
+      "rc": 0,
+      "seconds": 0.01
+    },
+    {
+      "name": "format",
+      "rc": 0,
+      "seconds": 0.02,
+      "output_empty": true
+    },
+    {
+      "name": "compile",
+      "rc": 0,
+      "seconds": 0.53,
+      "output": "ok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.196s [no tests to run]\n"
+    },
+    {
+      "name": "focused",
+      "rc": 0,
+      "seconds": 1.26,
+      "output": "=== RUN   TestDriverFleetResidualScope\n=== RUN   TestDriverFleetResidualScope/outside_boundary_unenumerated\n=== RUN   TestDriverFleetResidualScope/baseline_disclosure\n=== RUN   TestDriverFleetResidualScope/inside_boundary_positive_control\n=== RUN   TestDriverFleetResidualScope/required_path_missing\n=== RUN   TestDriverFleetResidualScope/empty_required_list\n--- PASS: TestDriverFleetResidualScope (0.82s)\n    --- PASS: TestDriverFleetResidualScope/outside_boundary_unenumerated (0.08s)\n    --- PASS: TestDriverFleetResidualScope/baseline_disclosure (0.17s)\n    --- PASS: TestDriverFleetResidualScope/inside_boundary_positive_control (0.09s)\n    --- PASS: TestDriverFleetResidualScope/required_path_missing (0.17s)\n    --- PASS: TestDriverFleetResidualScope/empty_required_list (0.17s)\nPASS\nok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.972s\n"
+    },
+    {
+      "name": "ail",
+      "rc": 0,
+      "seconds": 4.2,
+      "output_tail": "\u2500\u2500 World package step 4/9: frozen manifest\n   \u2713 exact package fields, 4 exports, and empty effects\n\u2500\u2500 World package step 5/9: package check and tests\n   \u2713 package check passed and tests reported 43 activity line(s)\n\u2500\u2500 World package step 6/9: bounded smoke execution\n   \u2713 plan \u2192 verify \u2192 commit smoke completed within 30s\n\u2500\u2500 World package step 7/9: dry-run identity and full pkgproj hashes\n   \u2713 dry-run identity/exports/effects and 3 full hashes agree; tarball byte length agrees\n\u2500\u2500 World package step 8/9: exact tar entry allowlist\n   cache control fired on 33 non-.ail file(s); observed zero cached .ail files\n   \u2713 tar contains exactly 6 allowlisted entries\n\u2500\u2500 World package step 9/9: canonical ready-packet golden\n2026/09/06 08:21:28 Observatory: 528MB (DB=528MB WAL=0MB) \u2014 running retention cleanup\n2026/09/06 08:21:28 Observatory cleanup: deleted spans=0 summaries=0 metrics=0 chat=0 tools=0 (size 528MB \u2192 528MB)\n   \u2713 compiler pinned by exact bytes: AILANG v0.30.0 on Darwin/arm64\n   \u2713 canonical JSON equals committed golden byte-for-byte\n\u2713 world package gate PASSED: 9/9 steps performed non-zero work\n\u2713 verify gate PASSED: 11 required identities verified, 40 named tests pass"
+    },
+    {
+      "name": "full-verifier",
+      "rc": 1,
+      "seconds": 0.69,
+      "output": "\u2500\u2500 AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.30.0\nCommit: e37b370\nFull:   e37b370d1d7a9c4e7136b319e38bec4d5f2bd9a0\nBuilt:  2026-07-19T09:27:00Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026)\n\u2500\u2500 tracked-binary hygiene gate\n   \u2713 0 binary blobs among 303 tracked files\n\u2500\u2500 mission routing + decision-ledger gate\n  PASS: planner remains fail-closed to Opus while Anthropic is available\n  PASS: planner falls back to Codex Sol when Anthropic is unavailable\n  PASS: planner Anthropic fallback is configurable\n  PASS: executor remains Codex Sol primary\n  PASS: executor chain is flat-rate ollama -> metered twin\n  PASS: anthropic lanes get a role pre-flight\n  PASS: all three provider loops cover all four roles\n  PASS: planner fallback is not itself\n  PASS: planner falls to codex first\n  PASS: designer has a codex rung\n  PASS: evaluator has a chain at all\n  PASS: codex is the evaluator's LAST rung\n  PASS: lane degradation is reported before the iteration starts\n  PASS: astra sits between the Anthropic controller rungs\n  PASS: controller ladder dispatches on provider\n  PASS: controller has Codex Sol fallback\n  PASS: decision ledger validates\n  PASS: resolved routing decision is not re-asked\n  PASS: controller selector traverses Anthropic to Codex\n\n==== 19 passed, 0 failed ====\n   \u2713 driver drift gate: 9 tracked driver files, working tree matches HEAD (working-tree arm)\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/cron-kicker.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/dev.ailang.coordinator.plist.template\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/dev.ailang.mission-control.plist\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/dev.ailang.mission-docs.plist\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/dev.ailang.mission-motoko.plist\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/dev.ailang.mission-recovery-motoko.plist\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/dev.ailang.mission-recovery.plist\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/dev.ailang.nightly-eval.plist\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/dev.ailang.os-rotation-filler.plist\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/dev.ailang.rig-watchdog.plist\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/dev.ailang.server.plist\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/dev.ollama.serve.plist\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/install_coordinator.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/mission-env/README.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/mission-env/mission-docs.env\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/mission-env/mission-motoko.env\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/mission-env/mission-v1.env\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/mission-env/mission-world.env\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/mission-heartbeat.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/mission-recovery.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/nightly-eval.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/nightly-lang-eval.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/os-rotation-filler.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/resolve-role-spawn.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/rig-lock.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/rig-watchdog.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/spawn-pin-hook.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/test_controller_chain.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/test_cron_kicker.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/test_driver_notify.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/test_hook_stdout.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/test_mission_heartbeat.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/test_pin_root.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/test_spawn_pin_hook.sh\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/a-unlisted-language-path.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/b-field-missing.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/c-clean-infra.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/f-future-internal-path.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/g-mixed-infra-language.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/h-malformed-files-section.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/i-duplicate-files-sections.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/j-prose-first-bullet.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/k-alternate-heading.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/l-field-invalid.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/m-opus-required.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/o-docs-mission-paths.md\n   \u26a0 unclassified fleet-only path (not tracked, not required): tools/launchd/testdata/planner-lane/p-docs-traversal-escape.md\nverify_go.sh: FATAL: DRIVER DRIFT vs FLEET (D-WORLD-DRIVER-1) \u2014 the committed copy differs from fleet HEAD 19d6b03c79ab092e6109bd86256a9cef768c476e:\n\n  tools/launchd/derive-planner-lane.sh (local 52674b04ba7abe16df101a9dfb5f7b76b5023dd4 != fleet 918291f9e5dc6bdd2598db1d9fafd1760ac197ce)\n  tools/launchd/mission-control.sh (local d3709d2aa8cd3852c430c98c9709800850e0f73f != fleet f09972e72f41043c7323bfb74cf620f0eb65aed1)\n  tools/launchd/test_mission_routing.sh (local 518ab5dc50bb02c479f7245388b87c5e748f58f3 != fleet 8da2e846a8b56808a798669a0a2e7c01b15fcec6)\n  The driver is fleet-owned; land the current driver as a fleet-authored commit. World's controller must not edit or absorb it.\n"
+    },
+    {
+      "name": "build",
+      "rc": 0,
+      "seconds": 0.66
+    },
+    {
+      "name": "vet",
+      "rc": 0,
+      "seconds": 0.4
+    },
+    {
+      "name": "test",
+      "rc": 0,
+      "seconds": 68.24,
+      "ok_packages": 19,
+      "fail_lines": 0
+    },
+    {
+      "name": "load-after",
+      "rc": 0,
+      "seconds": 0.01,
+      "output": " 8:22  up 19:22, 2 users, load averages: 2.80 1.94 2.03\n"
+    }
+  ]
+}
