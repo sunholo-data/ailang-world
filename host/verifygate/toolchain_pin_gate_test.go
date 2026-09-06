@@ -1025,6 +1025,59 @@ func continueOnErrorRefusalsIn(lines []string, start, end, stepCol int) (refusal
 	return refusals, ""
 }
 
+// stepBlockAnchors derives, for the line that identifies a step, (1) the `steps:` anchor above it
+// — the OUTERMOST one, so a deeper `steps:` cannot shadow the job's own — and (2) the column the
+// job's block-sequence dashes sit at. It is a function rather than inline code so its two refusal
+// branches can carry committed killer arms; queue row 63 filed them as the two branches of the
+// row-52 locator that nothing reds for.
+//
+// Both refusals are REACHABLE, fired first-party against the real ci.yml at iteration 159, and the
+// two mutations are NOT equally benign:
+//
+//   - anchor: renaming every `steps:` above the identifying line still parses as YAML, but the job
+//     then carries no `steps` key at all, so Actions would reject the workflow. A malformed input.
+//   - stepCol: rewriting each `      - key: v` as a bare `      -` with the mapping on the lines
+//     below is a pure RE-STYLE — the parsed document is deep-equal to the pristine one, so Actions
+//     runs it identically while this derivation cannot read it. That is a LEGITIMATE input the
+//     instrument must refuse loudly rather than guess at, which is why it earns an arm rather than
+//     an unreachability note (the MUT-H precedent's other disposition).
+//
+// Refusing is the whole contract: every caller pins a column, and a guessed column silently
+// rescopes the scans that consume it.
+//
+// DECLARED RESIDUAL, measured rather than argued: the production call site could discard the
+// refusal (`_, stepCol, _ := …`) and stay green on a pristine ci.yml, which is queue row 61's
+// shape one file over. Landing BOTH mutations together — the discard plus the bare-dash ci.yml —
+// still reds, because a refusal returns stepCol = -1 and the `stepCol != expectedStepCol` check
+// consumes it. So the residual is a MIS-ATTRIBUTION, not a fail-open: the surviving message reads
+// "derived step column -1; update expectedStepCol after an intentional ci.yml re-indent", which
+// blames an indentation change for a shape this scan cannot read. Returning -1 on every refusal
+// is what makes that backstop hold; do not "tidy" it to 0.
+func stepBlockAnchors(lines []string, identifyingLine int) (anchor, stepCol int, instrumentErr string) {
+	anchor = -1
+	anchorCol := len(lines) + 1
+	for j := identifyingLine; j >= 0; j-- {
+		if strings.TrimSpace(lines[j]) == "steps:" && indentOf(lines[j]) < anchorCol {
+			anchor = j
+			anchorCol = indentOf(lines[j])
+		}
+	}
+	if anchor < 0 {
+		return -1, -1, "could not locate a steps: anchor above the miscompile identifying line in ci.yml"
+	}
+	stepCol = -1
+	for j := anchor + 1; j < len(lines); j++ {
+		if strings.HasPrefix(strings.TrimSpace(lines[j]), "- ") {
+			stepCol = indentOf(lines[j])
+			break
+		}
+	}
+	if stepCol < 0 {
+		return anchor, -1, fmt.Sprintf("could not derive the step column below ci.yml:%d", anchor+1)
+	}
+	return anchor, stepCol, ""
+}
+
 // TestMiscompileInstrumentStepIsGatedInCI pins the row-44 wiring on two channels that
 // must not silently return. (1) `continue-on-error: true` converts an instrument's
 // loudest possible output into silence, so it is forbidden in the miscompile step's
@@ -1064,26 +1117,9 @@ func TestMiscompileInstrumentStepIsGatedInCI(t *testing.T) {
 			break
 		}
 	}
-	anchor := -1
-	anchorCol := len(lines) + 1
-	for j := identifyingLine; j >= 0; j-- {
-		if strings.TrimSpace(lines[j]) == "steps:" && indentOf(lines[j]) < anchorCol {
-			anchor = j
-			anchorCol = indentOf(lines[j])
-		}
-	}
-	if anchor < 0 {
-		t.Fatalf("instrument failure: could not locate a steps: anchor above the miscompile identifying line in ci.yml")
-	}
-	stepCol := -1
-	for j := anchor + 1; j < len(lines); j++ {
-		if strings.HasPrefix(strings.TrimSpace(lines[j]), "- ") {
-			stepCol = indentOf(lines[j])
-			break
-		}
-	}
-	if stepCol < 0 {
-		t.Fatalf("instrument failure: could not derive the step column below ci.yml:%d", anchor+1)
+	_, stepCol, derivationErr := stepBlockAnchors(lines, identifyingLine)
+	if derivationErr != "" {
+		t.Fatalf("instrument failure: %s", derivationErr)
 	}
 	if stepCol != expectedStepCol {
 		t.Fatalf("instrument failure: derived step column %d; update expectedStepCol after an intentional ci.yml re-indent", stepCol)
@@ -1644,4 +1680,106 @@ func TestContinueOnErrorStepScanRefusesAFlowMapping(t *testing.T) {
 	if !strings.Contains(instrumentErr, "flow mapping") {
 		t.Errorf("instrument failure does not name the shape it could not read: %s", instrumentErr)
 	}
+}
+
+// stepAnchorFixture renders a TWO-job workflow whose second job holds the identifying line, so the
+// derivation must scan upward past an earlier job's `steps:` at the same indentation and must scan
+// downward from the anchor it chose rather than across the whole file. anchorKey renames every
+// `steps:` key; bareDash rewrites the SECOND job's block-sequence entries as a bare `-` with the
+// mapping on the following lines — valid YAML that parses deep-equal to the block form, and the
+// first job keeps its `- name:` entries either way, so a refusal proves the scan is anchored rather
+// than globally blind.
+func stepAnchorFixture(anchorKey string, bareDash bool) (lines []string, identifyingLine, wantAnchor int) {
+	key := "steps:"
+	if anchorKey != "" {
+		key = anchorKey
+	}
+	src := []string{
+		"jobs:",
+		"  first:",
+		"    " + key,
+		"      - name: earlier job step",
+		"        run: echo first",
+		"  second:",
+		"    " + key,
+	}
+	wantAnchor = len(src) - 1
+	step := func(name, run string) []string {
+		if bareDash {
+			return []string{"      -", "        name: " + name, "        run: " + run}
+		}
+		return []string{"      - name: " + name, "        run: " + run}
+	}
+	src = append(src, step("guarded", "./run.sh")...)
+	identifyingLine = len(src) - 1
+	src = append(src, step("trailing", "echo last")...)
+	return src, identifyingLine, wantAnchor
+}
+
+// TestStepBlockAnchorDerivationRefusalsAreArmed is queue row 63: the row-52 locator's two
+// DERIVATION refusals had no committed killer arm, so both could be deleted outright with the
+// whole suite still green — a guard, not a gate, by this mission's own standing rule. Each arm
+// below names the branch it is the sole killer for; the iteration record lands each neutering
+// separately and confirms only that arm reds.
+func TestStepBlockAnchorDerivationRefusalsAreArmed(t *testing.T) {
+	t.Run("block-sequence steps derive the nearest anchor and the step column", func(t *testing.T) {
+		lines, identifying, wantAnchor := stepAnchorFixture("", false)
+		anchor, stepCol, instrumentErr := stepBlockAnchors(lines, identifying)
+		if instrumentErr != "" {
+			t.Fatalf("pristine fixture must derive cleanly, got instrument failure: %s", instrumentErr)
+		}
+		// The known-POSITIVE half: the fixture carries TWO `steps:` keys, so a green here proves
+		// the upward scan stopped at the second job's rather than running on to the first's.
+		if anchor != wantAnchor {
+			t.Errorf("anchor = %d, want the second job's steps: at %d", anchor, wantAnchor)
+		}
+		if stepCol != expectedStepCol {
+			t.Errorf("stepCol = %d, want %d", stepCol, expectedStepCol)
+		}
+	})
+	// Sole killer for `anchor < 0`. Measured reachable on the real ci.yml at iteration 159:
+	// renaming both `steps:` keys above the identifying line fires exactly this message.
+	t.Run("no steps: key above the identifying line is refused", func(t *testing.T) {
+		lines, identifying, _ := stepAnchorFixture("stepz:", false)
+		anchor, stepCol, instrumentErr := stepBlockAnchors(lines, identifying)
+		if instrumentErr == "" {
+			t.Fatalf("a workflow with no steps: anchor must be an instrument failure, got anchor=%d stepCol=%d", anchor, stepCol)
+		}
+		if !strings.Contains(instrumentErr, "could not locate a steps: anchor") {
+			t.Errorf("refusal does not name the anchor it could not find: %s", instrumentErr)
+		}
+	})
+	// Sole killer for `stepCol < 0`. Measured reachable on the real ci.yml at iteration 159 by a
+	// mutation whose parsed document is deep-equal to the pristine one — a legitimate re-style, not
+	// a malformed file, so the loud refusal is the only honest disposition.
+	t.Run("a bare block-sequence dash is refused rather than guessed at", func(t *testing.T) {
+		lines, identifying, wantAnchor := stepAnchorFixture("", true)
+		anchor, stepCol, instrumentErr := stepBlockAnchors(lines, identifying)
+		if instrumentErr == "" {
+			t.Fatalf("a job whose steps ride a bare dash must be an instrument failure, got anchor=%d stepCol=%d", anchor, stepCol)
+		}
+		if !strings.Contains(instrumentErr, "could not derive the step column") {
+			t.Errorf("refusal does not name the column it could not derive: %s", instrumentErr)
+		}
+		// The anchor was found; only the column derivation failed. Reporting anchor+1 in the
+		// message is what makes the refusal actionable, so pin that it survives the refusal.
+		if anchor != wantAnchor {
+			t.Errorf("anchor = %d, want %d — the step-column refusal must still report where it looked", anchor, wantAnchor)
+		}
+		if !strings.Contains(instrumentErr, fmt.Sprintf("ci.yml:%d", wantAnchor+1)) {
+			t.Errorf("refusal does not report the anchor line it scanned from: %s", instrumentErr)
+		}
+		// Discriminating control: the file DOES contain `- name:` entries — in the first job,
+		// above the anchor. A refusal here therefore proves the scan is anchored, not that the
+		// fixture simply has no dashes anywhere.
+		dashes := 0
+		for _, l := range lines {
+			if strings.HasPrefix(strings.TrimSpace(l), "- ") {
+				dashes++
+			}
+		}
+		if dashes == 0 {
+			t.Fatalf("control did not fire: the fixture must still carry block-sequence dashes above the anchor")
+		}
+	})
 }
