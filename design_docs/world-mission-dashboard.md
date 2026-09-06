@@ -21,7 +21,7 @@ Rows79/80 remain parked design review; row39 is the next product item.
 ## Routing and quota
 
 Designer: gpt-6-astra via Agent tool. Planner/executor not spawned: quorum blocked.
-Evaluator: Agent-tool wait/list unavailable after resume; fallback gpt-5.5 codex CLI judge.
+Evaluator: configured pi/Minimax aliases unavailable through the mandatory Agent-tool model surface; fallback gpt-5.5 Agent-tool judge, distinct from the Astra designer.
 Quorum cost $0.08992311; evaluator fallback quota bucket; no metered implementation spend.
 No World edits to frozen files, shared skills, V1 checkout, launchd state or installed runtime.
 
