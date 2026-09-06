@@ -1,0 +1,203 @@
+{
+  "sprint_id": "w-fleet-residual-net-shares-phase-1-pathspec",
+  "title": "Row 64: disclose the fixed driver pathspec boundary and prove it with one synthetic host regression",
+  "queue_item": 64,
+  "iteration": 160,
+  "class": "HARNESS",
+  "design_doc": "design_docs/planned/w-fleet-residual-net-shares-phase-1-pathspec.md",
+  "sprint_plan": "design_docs/planned/w-fleet-residual-net-shares-phase-1-pathspec-sprint-plan.md",
+  "created": "2026-09-06",
+  "planner_role": "planner",
+  "status": "ready",
+  "risk_level": "low",
+  "duration_days": 0.2,
+  "base_commit": "f8cd08871c43f8c4347307f5b02c4f4defb45b40",
+  "source_base_commit": "d81ac424460e181c2a36a2ed11894415edca8048",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.planner-wt-world-iter160",
+  "detached_head": true,
+  "base_commit_note": "At entry git status --porcelain=v1 -uall was empty. f8cd088 adds only the 353-line design and two quorum JSON records over d81ac424; git diff d81ac424..f8cd088 -- scripts/verify_go.sh host/verifygate is empty. The live verifier SHA-256 is 4614363ed51839a8b8a8a190429838b6d15315c91792ac585f08f3ab781b444a.",
+  "quorum": {
+    "status": "PROCEED",
+    "round": 2,
+    "present": 3,
+    "expected": 3,
+    "passes": 3,
+    "absent_reviewers": [],
+    "recorded_at": "2026-09-06T05:58:06Z"
+  },
+  "environment": {
+    "platform": "Darwin arm64",
+    "go": "go1.26.6 darwin/arm64",
+    "bash": "GNU bash 3.2.57(1)-release",
+    "pinned_ailang": "v0.30.0",
+    "path_export": "export PATH=/opt/homebrew/bin:$PATH",
+    "sandbox_rule": "Socket denials are UNINFORMATIVE UNDER SANDBOX."
+  },
+  "controller_baseline_facts": {
+    "pinned_v0.30.0_verify_ail": "rc=0",
+    "go_build_all": "rc=0 with Go 1.26.6",
+    "go_vet_all": "rc=0 with Go 1.26.6",
+    "go_test_all": "rc=0 with Go 1.26.6",
+    "isolated_verify_go_driver_fleet": "rc=1 on the existing three FLEET-owned driver differences",
+    "full_verify_go": "rc=1 on the existing three FLEET-owned driver differences",
+    "provenance": "Supplied by the controller; not re-run or re-labelled as planner measurements. No full-green verifier is claimed."
+  },
+  "planner_base_measurements": {
+    "bash_n_scripts_verify_go_sh": "rc=0",
+    "compile_fence": "go test ./host/verifygate -run '^$' -count=1 -timeout=60s -> rc=0, [no tests to run]",
+    "future_named_test_probe": "go test ./host/verifygate -run '^TestDriverFleetResidualScope$' -count=1 -timeout=60s -v -> rc=0 with warning: no tests to run; RED by identity because the named RUN/PASS is absent",
+    "live_baseline_fixture": "rc=0; old broad success present; new disclosures absent",
+    "live_outside_fixture": "rc=0; 3 matches; zero residual warnings and sibling mentions; new boundary disclosure absent",
+    "live_inside_fixture": "rc=0; helper warning once; old unqualified summary present; qualified summary absent",
+    "fixture_safety": "Fresh temporary World/fleet/home only; local Git identity; hooks/signing/system/global config disabled; inherited GIT_*, CI and AILANG_BIN cleared; explicit synthetic AILANG_FLEET_REPO; every subprocess timeout 10 seconds; automatic cleanup."
+  },
+  "velocity": {
+    "window_days": 7,
+    "relevant_non_merge_commits": 15,
+    "relevant_additions": 2074,
+    "relevant_deletions": 162,
+    "unique_files_touched": 4,
+    "closest_comparator": "row 54 implementation 14036ee: two files, +213/-1",
+    "estimated_production_changed_lines": 15,
+    "estimated_test_loc_range": [140, 180],
+    "estimated_total_loc": 175,
+    "estimated_days": 0.2,
+    "note": "Seven-day numbers are churn, not a claimed LOC/day rate. One milestone matches the design and recent small harness cadence."
+  },
+  "scope": {
+    "production": "Reporting and adjacent phase-3 comments inside check_driver_fleet() for the unchanged fixed pathspec only.",
+    "test": "One new host/verifygate file containing the single top-level TestDriverFleetResidualScope regression and its local helpers/subtests.",
+    "required_paths": "REQUIRED_FLEET_PATHS remains separately checked and separately rendered; it is not merged into either git ls-tree pathspec.",
+    "pathspec": [
+      "tools/launchd",
+      "scripts/mission_decisions.sh"
+    ],
+    "out_of_scope": [
+      "broader fleet discovery, ownership, inventory, comparison, certification, listing or counting",
+      "changes to tools/launchd, .ail files, charter, mission log, workflow, go.mod, go.sum, shared skills, real fleet, HOME or V1",
+      "new dependencies or structured-output protocol",
+      "Git writes, GitHub import or messages from the planner lane"
+    ]
+  },
+  "executor_constraints": [
+    "Keep both existing git ls-tree HEAD pathspecs, phase-1 accounting, phase-2 checks, phase-3 eligibility/counting, per-path warning, rc mapping and call sites semantically unchanged.",
+    "Render the required-path line from REQUIRED_FLEET_PATHS with Bash-3.2-safe guarded expansion and print (none) when empty.",
+    "Use copyGateFile so the test executes the live working-tree verifier bytes by default.",
+    "All repositories, HOME directories, required-array edits and production-wording mutations must live under synthetic temporary roots; never mutate the real fleet, HOME, frozen driver or planner/executor source worktree for a drill.",
+    "Use local synthetic Git identity, disable hooks/signing/system/global Git configuration, clear inherited Git redirection variables, CI and AILANG_BIN, and bound fixture subprocesses to 10 seconds.",
+    "Capture mutation verdicts without pipelines; a command rc=0 is expected for the reverted script and the test must fail on the independent disclosure assertion.",
+    "Before the drill capture exact bytes and SHA-256 for scripts/verify_go.sh and host/verifygate/driver_fleet_scope_gate_test.go; restore from those captured bytes, never from HEAD, and verify both hashes before rerunning green.",
+    "Do not interpret the inherited verify_go rc=1 as a sprint failure and do not claim a full-green verifier."
+  ],
+  "features": [
+    {
+      "id": "M1",
+      "name": "Honest residual boundary and durable synthetic regression",
+      "description": "Narrow check_driver_fleet() human-readable reporting to the unchanged tracked and phase-3 pathspecs, render the separate required list, add one self-contained host/verifygate regression, execute the production wording-reversion drill in a disposable copy, and record evidence.",
+      "estimated_loc": 175,
+      "estimated_days": 0.2,
+      "dependencies": [],
+      "files": {
+        "modify": [
+          "scripts/verify_go.sh",
+          "design_docs/planned/w-fleet-residual-net-shares-phase-1-pathspec.md (implementation evidence only)"
+        ],
+        "create": [
+          "host/verifygate/driver_fleet_scope_gate_test.go"
+        ]
+      },
+      "acceptance_criteria": [
+        {
+          "id": "AC1",
+          "name": "Baseline disclosure is complete",
+          "oracle": "baseline_disclosure subtest: rc=0, 3 matches, checked-set clause, required member line exactly once, phase-3 boundary/unenumerated clause; reject skip/binary/zero-comparable output",
+          "expected_pre_change_red_reason": "Current script is rc=0 but lacks all new disclosures and emits the old broad success wording."
+        },
+        {
+          "id": "AC2",
+          "name": "Outside-boundary additions are unenumerated, not zero",
+          "oracle": "outside_boundary_unenumerated subtest: committed sibling exists at fleet HEAD; rc=0, 3 matches, zero warnings and filename mentions, complete phase-3 boundary and unenumerated (not zero) clause",
+          "expected_pre_change_red_reason": "Current script keeps rc=0 and silence for the sibling but omits the load-bearing boundary/unenumerated sentence.",
+          "primary_regression_killer": true
+        },
+        {
+          "id": "AC3",
+          "name": "Same-boundary positive control reports exactly one",
+          "oracle": "inside_boundary_positive_control subtest: both additions at fleet HEAD; rc=0, 3 matches, zero sibling mentions, helper warning once, qualified count-one summary once, disclosure present",
+          "expected_pre_change_red_reason": "Current per-path warning fires but its summary is unqualified and the new disclosure is absent.",
+          "positive_health_control": true
+        },
+        {
+          "id": "AC4",
+          "name": "Separate required-path refusal remains intact",
+          "oracle": "required_path_missing subtest: World HEAD omits and fleet HEAD contains pin-root; rc=1 with exact required-missing class/path; reject success, skip, binary, zero, missing-in-fleet, differing and accounting outputs",
+          "expected_pre_change_red_reason": "None for the underlying branch; this is a measured compatibility and attribution control. Before implementation the top-level named test identity itself is absent.",
+          "positive_health_control": true
+        },
+        {
+          "id": "AC5",
+          "name": "Empty required list renders safely",
+          "oracle": "empty_required_list subtest mutates one array block in its copied verifier only; bash -n rc=0; comparison rc=0; 3 phase-1 matches; exactly one (none) line; no unbound-variable output",
+          "expected_pre_change_red_reason": "The new renderer does not exist yet; the planner prototype establishes the future empty-array shape under Bash 3.2.",
+          "positive_health_control": true
+        },
+        {
+          "id": "AC6",
+          "name": "Production wording reversion kills the claim and restore is exact",
+          "oracle": "In a disposable implementation copy, exact-one replacement restores base success/summary and removes new disclosure lines. The ordinary named test goes red specifically in outside_boundary_unenumerated while the copied script command remains rc=0 with 3 matches. Restore captured bytes; both source hashes equal pre-drill values; focused named test returns green with RUN/PASS and no skips.",
+          "expected_mutation_red_reason": "Missing phase-3 boundary and unenumerated (not zero) wording; not syntax, compilation, fixture, timeout, skip or changed command rc.",
+          "load_bearing_mutation": true
+        }
+      ],
+      "compile_fence": "go test ./host/verifygate -run '^$' -count=1 -timeout=60s",
+      "focused_test": "go test ./host/verifygate -run '^TestDriverFleetResidualScope$' -count=1 -timeout=60s -v",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "mutation": {
+    "id": "MUT-WORDING-REVERSION",
+    "target": "the copied production reporting block in scripts/verify_go.sh",
+    "change": "Replace exactly one new success/required/boundary/qualified-summary block with the base success and unqualified summary strings, removing new required/scope disclosure lines only.",
+    "must_not_change": [
+      "git ls-tree pathspecs",
+      "comparison or accounting logic",
+      "fixtures",
+      "CLI dispatch",
+      "test assertions or expected strings"
+    ],
+    "expected_script_rc": 0,
+    "expected_compared_files": 3,
+    "expected_test_red": "TestDriverFleetResidualScope/outside_boundary_unenumerated fails for missing phase-3 boundary/unenumerated wording.",
+    "planner_prototype_hashes": {
+      "live_pre_implementation": "4614363ed51839a8b8a8a190429838b6d15315c91792ac585f08f3ab781b444a",
+      "post_implementation_pre_drill": "8c997533a305491cf9cf2c6bf24c110bdd52b4dedac5059f9b89f1e90cc8a3ea",
+      "wording_reversion_mutant": "0e63e575cfba94073b54d0ff7e1b66539ce61666e7145da020ad2c77c1fe0461",
+      "restored": "8c997533a305491cf9cf2c6bf24c110bdd52b4dedac5059f9b89f1e90cc8a3ea"
+    },
+    "executor_restore_requirement": "Record the executor's actual post-implementation pre-drill SHA-256 for both landing source files, restore captured bytes rather than HEAD, and require exact hash equality before the final green rerun."
+  },
+  "planner_prototype_results": {
+    "baseline": "rc=0; 3 matches; all disclosures; required member exactly once",
+    "outside": "rc=0; 3 matches; zero sibling mentions and residual warnings; disclosure present",
+    "inside": "rc=0; helper warning and qualified summary exactly once; sibling silent; disclosure present",
+    "missing_required": "rc=1; required FATAL/path present; wrong outputs absent",
+    "empty_required": "rc=0; 3 matches; (none) exactly once; no unbound variable",
+    "wording_reversion": "exact-one replacement; copied script rc=0 and 3 old-style matches; disclosure absent; AC2 oracle false for the intended reason",
+    "restore": "hash equal to pre-drill; outside fixture rc=0; disclosure restored"
+  },
+  "final_verification": [
+    "bash -n scripts/verify_go.sh",
+    "go test ./host/verifygate -run '^$' -count=1 -timeout=60s",
+    "go test ./host/verifygate -run '^TestDriverFleetResidualScope$' -count=1 -timeout=60s -v",
+    "Named top-level and subtest RUN/PASS lines present; no no-tests warning and no skips",
+    "Mutation red reason and script rc recorded",
+    "Both actual pre-drill and restored SHA-256 values recorded and equal",
+    "Design verification log updated with scoped implementation evidence",
+    "No broader fleet inventory/ownership claim and no full-green verify_go claim"
+  ],
+  "deferred_judgment": "If implementation evidence says the fixed pathspec itself must change, stop and park that as genuine new judgment for the controller; do not expand this sprint.",
+  "github_issues": []
+}
