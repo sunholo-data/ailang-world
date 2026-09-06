@@ -5,7 +5,7 @@ loop; it exists so a rotated entry can still be read in full when something need
 The one-line history of EVERY iteration, including these, is in the index beside it.
 
 
-## Iteration 0 — 2026-07-23 — charter advisory quorum; ratification PARKED for Mark
+## 0 — 2026-07-23 — charter advisory quorum; ratification PARKED for Mark
 
 **Kind**: iteration-0 bootstrap prep (no sprint routed — the queue is un-ratified; the charter
 forbids routing any sprint before ratification).
@@ -87,7 +87,7 @@ machine-half prep to make his attended session short.
 
 ---
 
-## Iteration 1 — 2026-07-23 — w-log-epoch-decision: D2/D3 settled, D1 replay-pin PARKED for Mark
+## 1 — 2026-07-23 — w-log-epoch-decision: D2/D3 settled, D1 replay-pin PARKED for Mark
 
 **Kind**: first post-ratification sprint (NEW-DOC decision doc, clause-1). One backlog item.
 
@@ -185,7 +185,7 @@ repo-layout coupling: instance 1 for the world repo). No skill edit (needs ≥2 
 
 ---
 
-## Iteration 2 — 2026-07-23 — queue HUMAN-BLOCKED on D1; no sprint (bookkeeping-only)
+## 2 — 2026-07-23 — queue HUMAN-BLOCKED on D1; no sprint (bookkeeping-only)
 
 **Kind**: no-actionable-item iteration. The entire queue is blocked on Mark's D1 decision (parked
 iter-1). No forcing; single bookkeeping deliverable + honest report (Standing rule 2).
@@ -255,7 +255,7 @@ headless back-off cadence when a queue is 100% human-blocked (avoid per-fire rep
 
 ---
 
-## Iteration 3 — 2026-07-24 — queue still HUMAN-BLOCKED on D1; turned the idle fire into D1 decision-support (evidence on ailang#471)
+## 3 — 2026-07-24 — queue still HUMAN-BLOCKED on D1; turned the idle fire into D1 decision-support (evidence on ailang#471)
 
 **Kind**: no-actionable-item iteration (2nd consecutive), but NOT a pure no-op — spent the fire
 reducing the top blocker's human-decision cost with non-speculative, non-forcing evidence-gathering.
@@ -345,7 +345,7 @@ framing — plus bounded bookkeeping and NO re-nag; never force a speculative do
 checkout; also avoids racing V1's concurrent skill edits). Proposed patch routed to Mark + V1 in the
 report. No mission-doc/process change this iteration.
 
-## Iteration 4 — 2026-07-24 — queue still HUMAN-BLOCKED on D1 (3rd consecutive); no new decision-support to add — bookkeeping-only + escalate the idle-fire cost
+## 4 — 2026-07-24 — queue still HUMAN-BLOCKED on D1 (3rd consecutive); no new decision-support to add — bookkeeping-only + escalate the idle-fire cost
 
 **Kind**: no-actionable-item iteration (3rd consecutive). Unlike iter-3, there was **no NEW
 decision-support left to extract** — iter-3 already reduced D1 to its irreducible values-call core and
@@ -438,7 +438,7 @@ escalation). **Lane = PROPOSED skill fix, not applied** (V1-checkout guardrail);
 in the report with the sharpened rule text. No mission-doc/process change this iteration (the guardrails
 already handle the mechanics; the gap is genuinely in the shared skill).
 
-## Iteration 5 — 2026-07-24 — queue still HUMAN-BLOCKED on D1 (4th consecutive); confirm-and-report bookkeeping-only; standing pause offer unanswered (NOT re-nagged)
+## 5 — 2026-07-24 — queue still HUMAN-BLOCKED on D1 (4th consecutive); confirm-and-report bookkeeping-only; standing pause offer unanswered (NOT re-nagged)
 
 **Kind**: no-actionable-item iteration (4th consecutive). Same class as iter-4: decision-support floor
 still hit, nothing upstream moved, pause offer already standing from iter-4. The honest deliverable is a
@@ -524,7 +524,7 @@ designed). Memory `human-blocked-queue-no-backoff` updated to instance-4 (standi
 
 ---
 
-## Iteration 6 — 2026-07-24 — FIRST REAL SPRINT: w-world-library-m1 design doc written (codex designer) & quorum-direction-accepted; M1 SPRINT PARKED on a carve-out first-use gate
+## 6 — 2026-07-24 — FIRST REAL SPRINT: w-world-library-m1 design doc written (codex designer) & quorum-direction-accepted; M1 SPRINT PARKED on a carve-out first-use gate
 
 **Kind**: First post-D1-unblock design iteration. D1 ratified (c7864bf) → queue unblocked → picked the
 [NEXT] kernel item `w-world-library-m1`. No design doc existed → routed to the ROTATION designer. Deliverable
@@ -626,7 +626,7 @@ and (b) the §14 replay-orchestration framing. The design itself is complete and
 
 ---
 
-## Iteration 7 — 2026-07-24 — queue HEAD still HUMAN-BLOCKED (w-world-library-m1 sprint on Mark's carve-out OK); confirm-and-report heartbeat + durable backlog capture
+## 7 — 2026-07-24 — queue HEAD still HUMAN-BLOCKED (w-world-library-m1 sprint on Mark's carve-out OK); confirm-and-report heartbeat + durable backlog capture
 
 **Kind**: bookkeeping-only heartbeat (no sprint routed — the top actionable item is parked
 `needs-human-review` on a human gate surfaced <1 day ago; no other queue item is workable).
@@ -687,7 +687,7 @@ and (b) the §14 replay-orchestration framing. The design itself is complete and
   replay-reuse framing instead → bounded designer revision. If the block persists, later iterations
   stay minimal heartbeats until a human/regression signal arrives.
 
-## Iteration 8 — 2026-07-24 — M1 UNBLOCKED & BUILDING: w-world-library-m1 milestone 1 (pure AILANG library) LANDED on dev, CI green
+## 8 — 2026-07-24 — M1 UNBLOCKED & BUILDING: w-world-library-m1 milestone 1 (pure AILANG library) LANDED on dev, CI green
 
 **Kind**: full inner-loop sprint pass on ONE item (`w-world-library-m1`) — planner → executor →
 evaluator → land. First shipped CODE of the mission. Milestone 1 of 6 (per the sprint plan).
@@ -777,7 +777,7 @@ Anthropic subscription Agent-tool pins). Budget ceiling ($5) not approached.
 
 ---
 
-## Iteration 9 — 2026-07-24 — M1 milestone 2 (Go host bootstrap: host/hashref + host/canon) LANDED on dev, CI green (2 jobs)
+## 9 — 2026-07-24 — M1 milestone 2 (Go host bootstrap: host/hashref + host/canon) LANDED on dev, CI green (2 jobs)
 
 **Kind**: inner-loop sprint pass on ONE item (`w-world-library-m1`), executor → evaluator → land.
 Plan already existed (iter-8) → no planner/designer this iteration. Milestone 2 of 6.
@@ -880,7 +880,7 @@ subscription Agent-tool pins). Budget ceiling ($5) not approached.
   a fresh worktree → evaluator (sonnet). Item stays [IN-SPRINT] until M6 lands the epoch registry +
   replay-doubling + verify_go.sh, then → [LANDED] and the doc moves to `implemented/`.
 
-## Iteration 10 — 2026-07-24 — M1 milestone 3 (SQLite store + atomic append-only log, Decision 4) LANDED on dev, CI green (2 jobs)
+## 10 — 2026-07-24 — M1 milestone 3 (SQLite store + atomic append-only log, Decision 4) LANDED on dev, CI green (2 jobs)
 
 **Kind**: inner-loop sprint pass on ONE item (`w-world-library-m1`), executor → evaluator → land.
 Plan already existed (iter-8) → no planner/designer this iteration. Milestone 3 of 6.
@@ -980,7 +980,7 @@ subscription Agent-tool pins). Budget ceiling ($5) not approached.
 
 ---
 
-## Iteration 11 — 2026-07-24 — `w-m1-ailang-hardening` design doc DONE + quorum-cleared via the RATIFIED narrow-refinement carve-out; auditable reproduction fixtures committed (`aa542a1`)
+## 11 — 2026-07-24 — `w-m1-ailang-hardening` design doc DONE + quorum-cleared via the RATIFIED narrow-refinement carve-out; auditable reproduction fixtures committed (`aa542a1`)
 
 **Kind**: design + carve-out iteration on ONE item (`w-m1-ailang-hardening`, top `[NEXT]`,
 Mark-directed). Produced the design doc (rotation designer, Fable) through two quorum rounds and
@@ -1087,7 +1087,7 @@ first-use park." **Next iteration**: sprint-planner (opus) → the doc's §Imple
 -executor (opus, worktree: 3 `.ail` modules + the `verify_ail.sh` manifest gate, both negative tests)
 → evaluator (sonnet, generator≠judge) → PR → CI green → [LANDED], then resume `w-world-library-m1` M4.
 
-## Iteration 12 — 2026-07-24 — `w-m1-ailang-hardening` EXECUTE attempted; Phase 1 (logepoch) LANDED on branch, Phases 2–4 BLOCKED by a v0.30.0 encoder limit invalidating doc claim V5 → PARKED for a designer revision + re-quorum (autonomous, not human-blocked); upstream issue #477 filed
+## 12 — 2026-07-24 — `w-m1-ailang-hardening` EXECUTE attempted; Phase 1 (logepoch) LANDED on branch, Phases 2–4 BLOCKED by a v0.30.0 encoder limit invalidating doc claim V5 → PARKED for a designer revision + re-quorum (autonomous, not human-blocked); upstream issue #477 filed
 
 **Kind**: execute iteration on ONE item (`w-m1-ailang-hardening`, top of queue). Ran the full inner
 loop (planner → executor); executor STOPPED at Phase 2 on a design-contradicting empirical finding
@@ -1195,7 +1195,7 @@ V8/§5 pattern) → **re-quorum ONCE** → resume Phases 2–4 (transitions `app
 `isValidNextWorld` + the corrected manifest gate + NT1/NT2) on the existing branch → evaluator
 (sonnet) → PR → CI green → [LANDED]; then resume `w-world-library-m1` M4.
 
-## Iteration 13 — 2026-07-24 — `w-m1-ailang-hardening` LANDED (PR #5 → squash `d0009c8`, dev CI green): 4 Z3-proven contracts + 14 inline tests + a hardcoded bounded non-vacuous required-check-manifest gate; two new toolchain findings (V26 bounded-waits, V27 z3-on-CI) landed as fixes
+## 13 — 2026-07-24 — `w-m1-ailang-hardening` LANDED (PR #5 → squash `d0009c8`, dev CI green): 4 Z3-proven contracts + 14 inline tests + a hardcoded bounded non-vacuous required-check-manifest gate; two new toolchain findings (V26 bounded-waits, V27 z3-on-CI) landed as fixes
 
 **Kind**: execute iteration on ONE item (`w-m1-ailang-hardening`, top of queue) — ran the pre-authorized
 autonomous iter-12 "Next" path end-to-end (empirical grounding → designer revision → re-quorum →
@@ -1291,7 +1291,7 @@ the shared `ailang-code` verify-profile guidance if a 2nd mission hits it). **(2
 exported types, not toy fixtures). **Next iteration: `w-world-library-m1` M4** — interpreter artifact archive + epoch-1
 registry bootstrap (`world/epoch-registry/v1`); also fold the M3 carry-forward (`store_heads` → `schema.sql`).
 
-## Iteration 14 — 2026-07-24 — `w-world-library-m1` M4 LANDED (PR #6 → squash `8133573`, dev CI green, both jobs): interpreter artifact archive + epoch-1 registry bootstrap (Decisions 5+6) + the M3 `store_heads` carry-forward
+## 14 — 2026-07-24 — `w-world-library-m1` M4 LANDED (PR #6 → squash `8133573`, dev CI green, both jobs): interpreter artifact archive + epoch-1 registry bootstrap (Decisions 5+6) + the M3 `store_heads` carry-forward
 
 **Kind**: execute iteration on ONE item (`w-world-library-m1`, top of queue, IN-SPRINT). Mid-sprint EXECUTE — the
 doc was quorum-direction-accepted and the 6-milestone plan approved at M1 (iter-8); M1–M3 landed (iter-8/9/10). No
@@ -1383,7 +1383,7 @@ interpreter-HashRef stamp lands here, and it folds the two M4 carry-forwards.
 
 ---
 
-## Iteration 15 — 2026-07-24 — `w-world-library-m1` M5 LANDED (PR #7 → squash `ef06937`, dev CI green, both jobs): replay engine + replay-doubling + fixture episode (Decision 7); evaluator PASS 73/100 with an in-PR CI false-green fix (B1)
+## 15 — 2026-07-24 — `w-world-library-m1` M5 LANDED (PR #7 → squash `ef06937`, dev CI green, both jobs): replay engine + replay-doubling + fixture episode (Decision 7); evaluator PASS 73/100 with an in-PR CI false-green fix (B1)
 
 **Kind**: execute iteration on ONE item (`w-world-library-m1`, top of queue, IN-SPRINT). Mid-sprint EXECUTE — the
 doc was quorum-direction-accepted and the 6-milestone plan approved at M1 (iter-8); M1–M4 landed (iter-8/9/10/14).
@@ -1485,7 +1485,7 @@ test-skip guards). **5th consecutive clean-landed sprint** on opus-executor / so
 finalize + `scripts/verify_go.sh` + final green sweep → then item `[LANDED]` + doc → `implemented/`. M6 also picks
 up the documented carry-forwards NB2 (interpreter-member end-to-end re-verify) and NB5 (`verify_go.sh`).
 
-## Iteration 16 — 2026-07-27 — `w-world-library-m1` M6 LANDED (PR #8 → squash `a07ac96`, dev CI green, both jobs): CI Go gate + `scripts/verify_go.sh` (anti-false-green) + NB2 end-to-end — **the entire w-world-library-m1 item LANDED (all 6 milestones); doc → implemented/**
+## 16 — 2026-07-27 — `w-world-library-m1` M6 LANDED (PR #8 → squash `a07ac96`, dev CI green, both jobs): CI Go gate + `scripts/verify_go.sh` (anti-false-green) + NB2 end-to-end — **the entire w-world-library-m1 item LANDED (all 6 milestones); doc → implemented/**
 
 **Kind**: execute iteration on ONE item (`w-world-library-m1`, top of queue, IN-SPRINT). Mid-sprint EXECUTE, the
 final milestone (M6). The doc was quorum-direction-accepted and the 6-milestone plan approved at M1 (iter-8);
@@ -1591,7 +1591,7 @@ a ~2d sprint-sized item — decompose into milestones at planning if needed.
 
 ---
 
-## Iteration 17 — 2026-07-27 — `w-worldd-m2` (clause-2 local daemon) NEW-DOC authored + quorum-run (2 rounds) → **PARKED needs-human-review** on ONE ratification-class decision (single-writer enforcement)
+## 17 — 2026-07-27 — `w-worldd-m2` (clause-2 local daemon) NEW-DOC authored + quorum-run (2 rounds) → **PARKED needs-human-review** on ONE ratification-class decision (single-writer enforcement)
 
 **Kind**: NEW-DOC design iteration (design-doc-creator → pick-time quorum). Parked at the quorum
 gate for a human decision; no sprint routed (Standing rule 2 — never force a guardrail).
@@ -1716,7 +1716,7 @@ daemon shell, so prefer waiting for the unpark unless Mark redirects.
 
 ---
 
-## Iteration 18 — 2026-07-27 — `w-worldd-m2` UNPARKED on Mark's ratification: r3 revision applied + sprint planned + **M2.A/A1 LANDED** (PR #10 → squash `b0deedb`, dev CI green, both jobs) — the RATIFIED single-writer kernel change is now ENFORCED across processes
+## 18 — 2026-07-27 — `w-worldd-m2` UNPARKED on Mark's ratification: r3 revision applied + sprint planned + **M2.A/A1 LANDED** (PR #10 → squash `b0deedb`, dev CI green, both jobs) — the RATIFIED single-writer kernel change is now ENFORCED across processes
 
 **Kind**: full-chain iteration — human-directive unpark → designer revision r3 (+ a controller-review
 fix pass r3b) → sprint-planner → sprint-executor → sprint-evaluator → PR → CI-green merge.
@@ -1879,7 +1879,7 @@ loopback guard, D7 bound constants + the four `http.Server` timeouts, bounded sh
 (bench harness + `bench/BASELINE.md` + `scripts/bench_worldd.sh --smoke` + the CI bench-smoke step)
 completes M2.A; then M2.B, M2.C.
 
-## Iteration 19 — 2026-07-27 — `w-worldd-m2` **M2.A/A2 LANDED** (PR #11 → squash `39b2115`, dev CI green, both jobs): the `ailang-worldd` daemon shell — loopback guard, D7 bounds, `/v1/health` + `/v1/head`, and zero-cloud ENFORCED by a dependency allowlist
+## 19 — 2026-07-27 — `w-worldd-m2` **M2.A/A2 LANDED** (PR #11 → squash `39b2115`, dev CI green, both jobs): the `ailang-worldd` daemon shell — loopback guard, D7 bounds, `/v1/health` + `/v1/head`, and zero-cloud ENFORCED by a dependency allowlist
 
 **Kind**: mid-sprint EXECUTE iteration ("Plan exists" lane) — no new design doc, no quorum, no
 planner. Executor → evaluator → **round-2 fix on a BLOCKING finding** → re-verify → PR → CI-green
@@ -2092,7 +2092,7 @@ M2.A; then M2.B, M2.C.
 
 ---
 
-## Iteration 20 — 2026-07-27 — `w-worldd-m2` **M2.A/A3 LANDED → MILESTONE M2.A COMPLETE** (PR #12 → squash `9579fe1`, dev CI green, both jobs): Decision 6's perf harness + committed day-1 baseline + a bench-smoke gate that fails BY NAME — and the codex `gpt-5.6-sol` executor lane's first successful real run
+## 20 — 2026-07-27 — `w-worldd-m2` **M2.A/A3 LANDED → MILESTONE M2.A COMPLETE** (PR #12 → squash `9579fe1`, dev CI green, both jobs): Decision 6's perf harness + committed day-1 baseline + a bench-smoke gate that fails BY NAME — and the codex `gpt-5.6-sol` executor lane's first successful real run
 
 **Kind**: mid-sprint EXECUTE iteration ("Plan exists" lane) — no new design doc, no quorum, no
 planner. Executor → controller verification → evaluator → PR → CI-green merge. One round; zero
@@ -2288,7 +2288,7 @@ subprocess e2e + baseline refresh + close-out) lands the item.
 
 ---
 
-## Iteration 21 — 2026-07-27 — `w-worldd-m2` **M2.B LANDED** (PR #13 → squash `b412699`, dev CI green, both jobs): the full REST v1 surface — and a genesis commit the kernel accepts that the API could not express, caught by the judge and the controller independently
+## 21 — 2026-07-27 — `w-worldd-m2` **M2.B LANDED** (PR #13 → squash `b412699`, dev CI green, both jobs): the full REST v1 surface — and a genesis commit the kernel accepts that the API could not express, caught by the judge and the controller independently
 
 **Kind**: mid-sprint EXECUTE iteration ("Plan exists" lane) — no new design doc, no quorum, no
 planner. Executor → controller verification → evaluator (BLOCK) → bounded controller fix → evaluator
@@ -2513,7 +2513,7 @@ daemon), and close-out. Folds CF-B-1 and CF-B-4. **That milestone LANDS the item
 no longer needs an M2.C refresh (CF-A3-4 is closed early — the full surface is measured with no
 PENDING rows), so M2.C's baseline work is a re-measure-and-diff, not a fill-in.
 
-## Iteration 22 — 2026-07-27 — `w-worldd-m2` **M2.C LANDED → ITEM COMPLETE** (PR #14 → squash `73d3486`, dev CI green, both jobs): CLI client verbs over the full REST surface, a real-subprocess end-to-end episode, and an executor that refused to fabricate for the third milestone running
+## 22 — 2026-07-27 — `w-worldd-m2` **M2.C LANDED → ITEM COMPLETE** (PR #14 → squash `73d3486`, dev CI green, both jobs): CLI client verbs over the full REST surface, a real-subprocess end-to-end episode, and an executor that refused to fabricate for the third milestone running
 
 **Pick**: queue item 3, `w-worldd-m2`, milestone **M2.C** — the "Plan exists" lane (design doc
 quorum-cleared and r3-applied, sprint plan approved, three milestones already landed). No new doc,
@@ -2698,7 +2698,7 @@ Conflict Surface treatment the charter requires for anything touching effects.
 
 ---
 
-## Iteration 23 — 2026-07-27 — `w-effect-broker-m3` (clause-3 effect broker) NEW-DOC authored + quorum-run (2 rounds) → **PARKED `needs-human-review`** on ONE scope question; and a four-iteration PATH mis-diagnosis closed — the defect was ours, not the frozen driver
+## 23 — 2026-07-27 — `w-effect-broker-m3` (clause-3 effect broker) NEW-DOC authored + quorum-run (2 rounds) → **PARKED `needs-human-review`** on ONE scope question; and a four-iteration PATH mis-diagnosis closed — the defect was ours, not the frozen driver
 
 **Pick**: queue item 4, `w-effect-broker-m3` — the **NEW-DOC** lane. The tag was verified as a FACT
 before spending anything: `grep -ri "w-effect-broker-m3" design_docs/` returned only charter/log/
@@ -2888,7 +2888,7 @@ question is answered — the doc needs no re-design, and `gemini`'s fix applies 
 in. If the park persists past the next fire, the queue's next actionable item is
 **`w-mcp-projection`** (clause-6, ~1 d), which is independent of the broker.
 
-## Iteration 24 — 2026-07-28 — `w-mcp-projection` (clause-6 protocol boundary) NEW-DOC authored + 2 quorum rounds + carve-out revision → **LANDED as a record, item RE-TAGGED `BLOCKED` on three named prerequisites**; the queue row's own premise did not survive the binary, and the gap is upstream as `ailang#498`
+## 24 — 2026-07-28 — `w-mcp-projection` (clause-6 protocol boundary) NEW-DOC authored + 2 quorum rounds + carve-out revision → **LANDED as a record, item RE-TAGGED `BLOCKED` on three named prerequisites**; the queue row's own premise did not survive the binary, and the gap is upstream as `ailang#498`
 
 **Pick**: item 4 `w-effect-broker-m3` remained PARKED (no `@MarkEdmondson1234` answer to its binary
 (a)/(b) question yet — 1 iteration old, and the queue is not fully blocked, so the default was NOT
@@ -3191,7 +3191,7 @@ under **both** answers to the parked question, so it can start without waiting o
 `w-effect-broker-m3` (item 4) unparks the moment the (a)/(b) question is answered.
 `w-mcp-projection` unparks only when `#498` ships a seam **and** clause 3 lands.
 
-## Iteration 25 — 2026-07-28 — `w-store-durability` (clause-1 kernel durability) NEW-DOC authored + 2 quorum rounds + carve-out revision → **DOC LANDED, item PARKED on a RATIFICATION PACKET**; the one-field defect measured out to eight, and a reviewer caught an arithmetic error in my own evidence
+## 25 — 2026-07-28 — `w-store-durability` (clause-1 kernel durability) NEW-DOC authored + 2 quorum rounds + carve-out revision → **DOC LANDED, item PARKED on a RATIFICATION PACKET**; the one-field defect measured out to eight, and a reviewer caught an arithmetic error in my own evidence
 
 **Pick**: item 4 `w-effect-broker-m3` remained PARKED — still no `@MarkEdmondson1234` answer to its
 binary (a)/(b) question, now **2 iterations old**. The recorded default `(b)` was again NOT
@@ -3467,7 +3467,7 @@ confirmation before implementing. The honest statement is that this loop is now 
 
 ---
 
-## Iteration 26 — 2026-07-28 — `w-human-surface` (clause-5 founding UX) **PICK-TIME QUORUM COMPLETE — 2 rounds, 4 objections, all applied → doc v0.1→v0.3, item PARKED on §7 ratification**; two reviewers independently found Standing Rule 6 missing from the UX layer, and the doc's cardinal-sin anti-pattern turned out to be unenforceable against the landed kernel
+## 26 — 2026-07-28 — `w-human-surface` (clause-5 founding UX) **PICK-TIME QUORUM COMPLETE — 2 rounds, 4 objections, all applied → doc v0.1→v0.3, item PARKED on §7 ratification**; two reviewers independently found Standing Rule 6 missing from the UX layer, and the doc's cardinal-sin anti-pattern turned out to be unenforceable against the landed kernel
 
 **Pick**: items 4 and 4b stayed PARKED — still no `@MarkEdmondson1234` answer, now **3 and 2
 iterations old**. Iteration 25 closed by recording "the queue has **no unblocked actionable item
@@ -3624,7 +3624,7 @@ covering three items rather than two.
 
 ---
 
-## Iteration 27 — 2026-07-28 — `w-store-durability` **REPRO-FIXTURE HALF LANDED** (PR #16 → squash `e8ba7b2`, dev CI green both jobs, evaluator PASS 93/100) — and re-measuring the defect first-party **corrected the mission's own written record**: the field iter-25 called "degenerate-but-readable" is the only unrecoverable one
+## 27 — 2026-07-28 — `w-store-durability` **REPRO-FIXTURE HALF LANDED** (PR #16 → squash `e8ba7b2`, dev CI green both jobs, evaluator PASS 93/100) — and re-measuring the defect first-party **corrected the mission's own written record**: the field iter-25 called "degenerate-but-readable" is the only unrecoverable one
 
 **Pick**: for the second iteration running, **the pick itself is the first finding.** Items 4, 4b
 and 6b all still wait on one unanswered `@MarkEdmondson1234` comment, and iteration 26 closed by
@@ -3826,7 +3826,7 @@ another iteration or two, but none of it is critical path: **the critical path i
 
 ---
 
-## Iteration 28 — 2026-07-28 — `w-store-durability` **SD.A LANDED — CF-B-2 IS CLOSED AT THE KERNEL WRITE PATH** (PR #17 → squash `86d1276`, dev CI green, judge PASS 91 → MERGE 97) — and the iteration's two best findings were both **the mission's own artifacts disagreeing with each other**: a corrected count that never reached the code, and a fix of mine that only fixed the path my tests covered
+## 28 — 2026-07-28 — `w-store-durability` **SD.A LANDED — CF-B-2 IS CLOSED AT THE KERNEL WRITE PATH** (PR #17 → squash `86d1276`, dev CI green, judge PASS 91 → MERGE 97) — and the iteration's two best findings were both **the mission's own artifacts disagreeing with each other**: a corrected count that never reached the code, and a fix of mine that only fixed the path my tests covered
 
 **Pick**: item **4b `w-store-durability`**, the FIX half — unblocked by the triple ratification
 (`bc467f1`, Mark attended). Routing was pre-authorised by the row itself ("unparks straight to
@@ -3950,7 +3950,7 @@ boundary row + AC9's counts 25→26 / 32→33), or the drift test will certify t
 
 ---
 
-## Iteration 29 — 2026-07-28 — `w-store-durability` **SD.B LANDED — the durable journal + in-tx commit receipts** (PR #18 → squash `d5774eb`, dev CI green, judge PASS 94/100 zero-blocking) — and the two best findings were both **a prescribed fix that was itself vacuous**, caught by measuring it before adopting it
+## 29 — 2026-07-28 — `w-store-durability` **SD.B LANDED — the durable journal + in-tx commit receipts** (PR #18 → squash `d5774eb`, dev CI green, judge PASS 94/100 zero-blocking) — and the two best findings were both **a prescribed fix that was itself vacuous**, caught by measuring it before adopting it
 
 **Pick**: item **4b `w-store-durability`**, milestone **SD.B** (journal substrate + commit
 receipts) — the queue head, unblocked by the triple ratification (`bc467f1`) and by SD.A landing
@@ -4078,7 +4078,7 @@ never auto-re-execute), the two journal benchmarks into the hardcoded smoke mani
 item 4 `w-effect-broker-m3`, which the ratification made depend on this journal. No human gate is
 outstanding for SD.C.
 
-## Iteration 30 — 2026-07-28 — `w-store-durability` **SD.C LANDED → ITEM 4b IS COMPLETE** (PR #19 → squash `6811604`, dev CI green both jobs, judge PASS 88/100 zero-blocking) — and the iteration's three findings all came from **re-measuring something that had already passed**: the executor's own headline number was wrong by 2×, the AC whose mutation reds was proving nothing, and a stale JSON block sat one line under a heading saying CURRENT
+## 30 — 2026-07-28 — `w-store-durability` **SD.C LANDED → ITEM 4b IS COMPLETE** (PR #19 → squash `6811604`, dev CI green both jobs, judge PASS 88/100 zero-blocking) — and the iteration's three findings all came from **re-measuring something that had already passed**: the executor's own headline number was wrong by 2×, the AC whose mutation reds was proving nothing, and a stale JSON block sat one line under a heading saying CURRENT
 
 **Pick**: item **4b `w-store-durability`**, milestone **SD.C** — the queue head and the LAST
 milestone of the item. Reality-checked before routing: `crash_test.go` / `recover_test.go` absent
@@ -4227,7 +4227,7 @@ timeout/output-cap mutations stays pre-approved to apply verbatim. No human gate
 
 ---
 
-## Iteration 31 — 2026-07-28 — `w-effect-broker-m3` **M3.A LANDED** (PR #20 → squash `2edf2ef`, dev CI green, judge PASS 84/100 zero-blocking) — and the iteration's spine is that **the ratification's plain reading is not executable against the substrate that was built to satisfy it**: the landed journal is a COMMIT journal, the broker needs an EFFECT journal, and no one had noticed because the correction that announced the fix never left the prose
+## 31 — 2026-07-28 — `w-effect-broker-m3` **M3.A LANDED** (PR #20 → squash `2edf2ef`, dev CI green, judge PASS 84/100 zero-blocking) — and the iteration's spine is that **the ratification's plain reading is not executable against the substrate that was built to satisfy it**: the landed journal is a COMMIT journal, the broker needs an EFFECT journal, and no one had noticed because the correction that announced the fix never left the prose
 
 **Pick**: item **4 `w-effect-broker-m3`**, the queue head, unparked by iter-30. Reality-checked
 before routing: no `host/broker/`, no PR, no commit on a freshly-fetched `origin/dev`; doc present
@@ -4449,7 +4449,7 @@ Recorded because this is the second and third instance of the hand-rolled-poll c
 (iteration 107 was the first), and because the cheap tell is worth naming: **if a poll compares
 against anything captured before the loop, ask what happens when the thing it names moves.**
 
-## Iteration 32 — 2026-07-28 — `w-effect-broker-m3` **M3.B0 LANDED — the ratified third arm** (PR #21 → squash `9401f2d`, dev CI green both jobs, judge PASS 88/100 zero-blocking) — and the iteration's spine is that **a gate which no production change could fail had been sitting in landed code for a full milestone**, invisible to a judge who passed it 84/100 with zero blocking findings, and it was found by asking of an already-green gate: *what would have to break for this to red?*
+## 32 — 2026-07-28 — `w-effect-broker-m3` **M3.B0 LANDED — the ratified third arm** (PR #21 → squash `9401f2d`, dev CI green both jobs, judge PASS 88/100 zero-blocking) — and the iteration's spine is that **a gate which no production change could fail had been sitting in landed code for a full milestone**, invisible to a judge who passed it 84/100 with zero blocking findings, and it was found by asking of an already-green gate: *what would have to break for this to red?*
 
 **Pick**: item **4 `w-effect-broker-m3`**, the queue head. Reality-checked on a freshly-fetched
 `origin/dev` before routing: no `handlers_git.go`/`handlers_model.go`/`approve.go`, no
@@ -4577,7 +4577,7 @@ landable. Then **M3.C**, then **M3.D** (option (i), `blocked_on` cleared, `MUT-A
 a production mutation that discharges CF-H-1), then item **4c `w-effect-journal`**. The plan and
 handoff are durable at `.ailang/state/sprints/w-effect-broker-m3.{plan.json,handoff.md}`.
 
-## Iteration 33 — 2026-07-29 — `w-effect-broker-m3` **M3.B LANDED** (PR #22 → squash `10beb83`, dev CI green both jobs, judge sonnet PASS 88/100 zero-blocking) — and the iteration's spine is that **a bounded-wait guarantee did not hold on linux, in a mission whose Standing Rule 6 is "every wait is bounded"**, hidden by darwin, already solved in this repo's own shell gate, and exposed only because a CI-robustness fix WIDENED a discrimination gap instead of loosening an assertion
+## 33 — 2026-07-29 — `w-effect-broker-m3` **M3.B LANDED** (PR #22 → squash `10beb83`, dev CI green both jobs, judge sonnet PASS 88/100 zero-blocking) — and the iteration's spine is that **a bounded-wait guarantee did not hold on linux, in a mission whose Standing Rule 6 is "every wait is bounded"**, hidden by darwin, already solved in this repo's own shell gate, and exposed only because a CI-robustness fix WIDENED a discrimination gap instead of loosening an assertion
 
 **Pick**: item **4 `w-effect-broker-m3`**, milestone **M3.B** — the queue head, `[IN-SPRINT]`, no
 human gate outstanding (Mark's `c26b27d` ratification was executed by M3.B0 last iteration).
@@ -4711,7 +4711,7 @@ flipping AC18's checkbox (CF-K-2). Then **M3.D** (ratified option (i)) and item 
 `w-effect-journal`**. The dispatch→record crash window remains OPEN and AC19 still forbids claiming
 otherwise.
 
-## Iteration 34 — 2026-07-29 — `w-effect-broker-m3` **M3.C LANDED** (PR #23 → squash `cae04d2`, dev CI green both jobs, judge sonnet PASS 88/100 zero-blocking) — and the iteration's spine is that **the controller's own headline finding was refuted by the judge, using premise rows this repository had held all along**: the "silent skip" I filed as a third V27/B1 instance was measured, documented as V14, and deliberately excluded from the gate at M1, and the honest move was to retract it in the same commit that gathers the honest-claim gate's evidence
+## 34 — 2026-07-29 — `w-effect-broker-m3` **M3.C LANDED** (PR #23 → squash `cae04d2`, dev CI green both jobs, judge sonnet PASS 88/100 zero-blocking) — and the iteration's spine is that **the controller's own headline finding was refuted by the judge, using premise rows this repository had held all along**: the "silent skip" I filed as a third V27/B1 instance was measured, documented as V14, and deliberately excluded from the gate at M1, and the honest move was to retract it in the same commit that gathers the honest-claim gate's evidence
 
 **Pick**: item **4 `w-effect-broker-m3`**, milestone **M3.C** — the queue head, `[IN-SPRINT]`, no
 human gate outstanding (M3.D was ratified attended at `c26b27d`), doc twice-quorumed so no
@@ -4904,7 +4904,7 @@ AC19 still forbids claiming otherwise.
 
 ---
 
-## Iteration 35 — 2026-07-29 — `w-effect-broker-m3` **M3.D LANDED → THE ITEM IS COMPLETE** (PR #24 → squash `4c4ff69`, dev CI green both jobs, judge sonnet PASS 93/100 zero-blocking) — and the iteration's spine is that **a mutation that was never applied is indistinguishable from a mutation that was survived**: the run that "proved" the paging discipline untested was a silent no-op whose all-green output looked exactly like a real result, and the conclusion it supported happened to be true
+## 35 — 2026-07-29 — `w-effect-broker-m3` **M3.D LANDED → THE ITEM IS COMPLETE** (PR #24 → squash `4c4ff69`, dev CI green both jobs, judge sonnet PASS 93/100 zero-blocking) — and the iteration's spine is that **a mutation that was never applied is indistinguishable from a mutation that was survived**: the run that "proved" the paging discipline untested was a silent no-op whose all-green output looked exactly like a real result, and the conclusion it supported happened to be true
 
 **Pick**: item **4 `w-effect-broker-m3`**, milestone **M3.D** — the queue head, `[IN-SPRINT]`, the
 item's LAST milestone, ratified attended by Mark at `c26b27d` so no human gate outstanding, doc
@@ -5108,7 +5108,7 @@ IN PRINCIPLE by `c26b27d`; **its design still quorums at pick** (NEW-DOC → des
 entry after `codex:gpt-5.6-sol`). The dispatch→record window remains **OPEN** and AC19 still forbids
 claiming otherwise.
 
-## Iteration 36 — 2026-07-29 — `w-effect-journal` (item 4c) **NEW-DOC LANDED + QUORUM-CLEARED** (PR #25 → squash `fe582b5`, dev CI green both jobs SHA-addressed on the merge commit; no sprint routed — a design iteration) — and the iteration's spine is that **the queue row's own costing claim was false, and the gate it cited as proof is inert**: three compiling mutations show that nothing in this repository guards the journal table's DDL, that the gate's own named mutation reds by a different mechanism than the one it is documented as having, and that the documented mechanism is dead code
+## 36 — 2026-07-29 — `w-effect-journal` (item 4c) **NEW-DOC LANDED + QUORUM-CLEARED** (PR #25 → squash `fe582b5`, dev CI green both jobs SHA-addressed on the merge commit; no sprint routed — a design iteration) — and the iteration's spine is that **the queue row's own costing claim was false, and the gate it cited as proof is inert**: three compiling mutations show that nothing in this repository guards the journal table's DDL, that the gate's own named mutation reds by a different mechanism than the one it is documented as having, and that the documented mechanism is dead code
 
 **Pick**: item **4c `w-effect-journal`** (clause-3, ~1–1.5d) — the queue head, `[NEXT]`, unblocked by
 item 4 completing at iter-35. NEW-DOC, so the designer rotation fires and the design quorums at
@@ -5289,7 +5289,7 @@ ordinal mint, AC7b's concurrency + exhaustion tests). Then item **4d `w-ddl-gate
 (~0.25–0.5d) whenever the queue allows — and **necessarily before any future item that needs a DDL
 change**, since today such a change ships fail-open.
 
-## Iteration 37 — 2026-07-29 — `w-effect-journal` **MJ.A LANDED** (PR #26 → squash `82d9128`, dev CI green both jobs SHA-addressed on the merge commit, judge sonnet PASS 86/100 zero-blocking) — and the iteration's spine is that **a test which fails deterministically has been sitting in landed, twice-judged code for four milestones, because the gate that would see it is never run**: `-race` appears nowhere in CI or in either verify script, and under it a `host/store` test fails 5/5 on clean `dev` with one struct field silently empty
+## 37 — 2026-07-29 — `w-effect-journal` **MJ.A LANDED** (PR #26 → squash `82d9128`, dev CI green both jobs SHA-addressed on the merge commit, judge sonnet PASS 86/100 zero-blocking) — and the iteration's spine is that **a test which fails deterministically has been sitting in landed, twice-judged code for four milestones, because the gate that would see it is never run**: `-race` appears nowhere in CI or in either verify script, and under it a `host/store` test fails 5/5 on clean `dev` with one struct field silently empty
 
 **Pick.** Item 4c `w-effect-journal`, the `[NEXT]` row. Doc landed iter-36 (PR #25 → `fe582b5`), quorum-cleared over two rounds, so it routed **straight to sprint-planner** — no re-design, no re-quorum. Gate-2 reality-check: doc present (73,796 B), two quorum artifacts, **nothing implemented** (`git log origin/dev --grep` shows only the doc + bookkeeping commits; the only PR was #25), no sprint plan. Toolchain confirmed live: pinned `ailang` v0.30.0 `e37b370` at `/tmp/ailang-v0300`, codex-cli 0.145.0, go1.26.4, z3 4.16.0.
 
@@ -5345,7 +5345,7 @@ Prior open and unchanged: **CF-N-1**, **CF-N-4**, **CF-M-1**, **CF-M-2**, **CF-L
 
 ---
 
-## Iteration 38 — 2026-07-29 — `w-effect-journal` **MJ.B LANDED** (PR #27 → squash `3ef5510`, dev CI green both jobs SHA-addressed on the merge commit, judge sonnet PASS 86/100 zero-blocking) — and the iteration's spine, **corrected in the Gate-5 retro after this entry first shipped it as novel**, is that **a written rule is not a control**: this charter already forbade `git checkout` as a mutation revert, in two places, since iter-34 — and the controller did it anyway four iterations later, destroying the milestone's `broker.go` and leaving a green suite running on `origin/dev`'s code. Both times the thing that actually caught it was the **sha256**, not the prose.
+## 38 — 2026-07-29 — `w-effect-journal` **MJ.B LANDED** (PR #27 → squash `3ef5510`, dev CI green both jobs SHA-addressed on the merge commit, judge sonnet PASS 86/100 zero-blocking) — and the iteration's spine, **corrected in the Gate-5 retro after this entry first shipped it as novel**, is that **a written rule is not a control**: this charter already forbade `git checkout` as a mutation revert, in two places, since iter-34 — and the controller did it anyway four iterations later, destroying the milestone's `broker.go` and leaving a green suite running on `origin/dev`'s code. Both times the thing that actually caught it was the **sha256**, not the prose.
 
 **Pick.** Item 4c `w-effect-journal`, `[IN-SPRINT]` — MJ.A landed iter-37, MJ.B is the next milestone. Gate-2 reality-check: not already landed (`git log origin/dev --grep="MJ.B"` returns only the doc + bookkeeping commits, with a known-positive `--grep="MJ.A"` control in the same call returning the real `82d9128`; no open PRs). Plan already exists (`.ailang/state/sprints/w-effect-journal.plan.json`, MJ.A/MJ.B/MJ.C), quorum cleared at iter-36 → routed straight to sprint-executor, no re-design, no re-quorum. Toolchain live: pinned `ailang` v0.30.0 `e37b370`, codex-cli 0.145.0 `auth_mode=chatgpt`.
 
@@ -5406,7 +5406,7 @@ Still open from MJ.A: **CF-MJA-1**, **CF-MJA-2** (both MJ.C close-out), **CF-MJA
 
 **Next** — **MJ.C**, the last milestone of item 4c: CF-N-2/CF-N-3 discharge (all three LAW-3 rows landing atomically per PD2), the bench re-measure, and the close-out — now also folding **CF-MJA-1/2/4/5** and **CF-MJB-2/3/4/5**. Then items **4d `w-ddl-gate-teeth`** and **4e `w-race-gate-blindspot`**, both small gate-integrity items of this mission's signature shape.
 
-## Iteration 39 — 2026-07-29 — `w-effect-journal` **MJ.C LANDED → ITEM 4c IS COMPLETE** (PR #28 → squash `460ade3`, dev CI green both jobs SHA-addressed on the merge commit, judge sonnet PASS 85/100 zero-blocking) — and the iteration's spine is that **a delta against a baseline captured under different conditions is not a measurement of the change, it is a measurement of the conditions**: a 6.06× benchmark "regression" this item was about to bank as its own cost was the sibling V1 mission's eval suite running on the same rig, and the only thing that distinguished them was a control.
+## 39 — 2026-07-29 — `w-effect-journal` **MJ.C LANDED → ITEM 4c IS COMPLETE** (PR #28 → squash `460ade3`, dev CI green both jobs SHA-addressed on the merge commit, judge sonnet PASS 85/100 zero-blocking) — and the iteration's spine is that **a delta against a baseline captured under different conditions is not a measurement of the change, it is a measurement of the conditions**: a 6.06× benchmark "regression" this item was about to bank as its own cost was the sibling V1 mission's eval suite running on the same rig, and the only thing that distinguished them was a control.
 
 **Pick.** Item 4c `w-effect-journal`, `[IN-SPRINT]` — MJ.A landed iter-37, MJ.B iter-38, MJ.C is the last milestone. Gate-2 reality-check: not already landed (`git log origin/dev --grep="MJ.C"` returns only the two bookkeeping commits, with a known-positive `--grep="MJ.B"` control in the same call returning the real `3ef5510`; no open PRs). Plan already exists from iter-37 → routed straight to sprint-executor, no re-plan, no re-quorum. Toolchain live and probed: pinned `ailang` v0.30.0 `e37b370`, z3 4.16.0, codex-cli 0.145.0 probed **WITH `--model`** (iter-19 process fix) rc=0, `auth_mode=chatgpt`.
 
@@ -5464,7 +5464,7 @@ All MJ.A/MJ.B carry-forwards (CF-MJA-1/2/4/5, CF-MJB-2/3/4/5) are **DISCHARGED**
 
 **Next** — the three small gate-integrity items now at the queue head, all of this mission's signature shape: **4d `w-ddl-gate-teeth`** (the DDL-drift gate is inert where it is cited, and DDL changes ship fail-open), **4e `w-race-gate-blindspot`** (scope widened this iteration to two distinct symptoms), and **4f `w-bench-load-confound`** (raised this iteration). They are cheap, they are all *"a gate that cannot fail"*, and three of them queued together is itself a signal worth reading.
 
-## Iteration 40 — 2026-07-30 — `w-race-gate-blindspot` (item 4e) **MECHANISM IDENTIFIED — doc + re-runnable reproduction fixture LANDED, remediation PARKED for ratification** (PR #29 → squash `c90713b`, dev CI green SHA-addressed on the merge commit; quorum 2 rounds both BLOCKED, narrow-refinement carve-out revision applied; `metered=$0.123`) — and the iteration's spine is that **the compiler is an instrument too, and nothing in this repository was checking it**: the `-race` failure that sat in landed code for four milestones is a **Go 1.26 code-generation regression**, present through **1.26.5 (the latest stable)**, reproducible in 52 dependency-free lines **with no `-race` at all**.
+## 40 — 2026-07-30 — `w-race-gate-blindspot` (item 4e) **MECHANISM IDENTIFIED — doc + re-runnable reproduction fixture LANDED, remediation PARKED for ratification** (PR #29 → squash `c90713b`, dev CI green SHA-addressed on the merge commit; quorum 2 rounds both BLOCKED, narrow-refinement carve-out revision applied; `metered=$0.123`) — and the iteration's spine is that **the compiler is an instrument too, and nothing in this repository was checking it**: the `-race` failure that sat in landed code for four milestones is a **Go 1.26 code-generation regression**, present through **1.26.5 (the latest stable)**, reproducible in 52 dependency-free lines **with no `-race` at all**.
 
 **Pick.** Item 4e `w-race-gate-blindspot`, the second of the three small gate-integrity items at the queue head. Queue-order note, stated rather than glossed: 4d is positionally first, but its own row conditions it on *"when a DDL change is next contemplated"* — none is, 4c having completed — while 4e was the only head item whose **mechanism was UNKNOWN**, i.e. the only one with unbounded risk, and it blocks CF-MJC-1 (*"owner: whoever picks 4e"*). Gate-2 reality-check, all first-party at HEAD `8ed04c0`: not already landed (`git log origin/dev --grep` for the item returned only the iter-37 bookkeeping commit, with a known-positive `--grep="effect-journal"` control in the same call returning `460ade3`); no open PRs; the NEW-DOC tag is TRUE (`grep -rl` over `design_docs/` finds the id only in the mission doc and log, with `w-effect-journal` as the control correctly appearing in `implemented/`); and the row's root-enabler claim — `-race` appears nowhere in `.github/workflows/` or `scripts/` — re-verified with a known-positive `go test` control in the same call.
 
@@ -5523,7 +5523,7 @@ Round 2 (both present, $0.067): `gpt5-6-sol` showed that **adding P12 had made m
 
 ---
 
-## Iteration 41 — 2026-07-30 — `w-ddl-gate-teeth` (item 4d) **DOC LANDED + 5 MEASUREMENTS; DG.A PARKED `needs-human-review` on a GUARDRAIL CONFLICT** (PR #30 → squash `d56da6f`, dev CI green both jobs SHA-addressed on the merge commit and the step logs read to prove they ran; quorum 2 rounds, **both BLOCKED**, carve-out **deliberately NOT applied**; `metered=$0.1155`) — and the iteration's spine is that **a gate whose sanctioned repair re-greens it is not a gate: the documented fix IS the vulnerability**.
+## 41 — 2026-07-30 — `w-ddl-gate-teeth` (item 4d) **DOC LANDED + 5 MEASUREMENTS; DG.A PARKED `needs-human-review` on a GUARDRAIL CONFLICT** (PR #30 → squash `d56da6f`, dev CI green both jobs SHA-addressed on the merge commit and the step logs read to prove they ran; quorum 2 rounds, **both BLOCKED**, carve-out **deliberately NOT applied**; `metered=$0.1155`) — and the iteration's spine is that **a gate whose sanctioned repair re-greens it is not a gate: the documented fix IS the vulnerability**.
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN**. gh `sunholo-voight-kampff`. Pidfile `mission-world.pid`=21232 = this run's own driver (verified by `ps`, no overlap). Local `dev` == `origin/dev` == `e5027df` — and the sync check was read by **exit code**, not by its silence (`git rev-parse dev origin/dev` without `--short`, rc=0). Main tree clean, re-confirmed with an **absolute path** at the moment of use after a persisted `cd` had made one check read the worktree instead (the iter-4 defect, caught by its own rule). CI `CI` on dev: **completed/success** @ `e5027dff1`. Inbox: 6 unread, **zero directives** — 2 `eval-suite` partials (V1's, noise), 1 `mission-v1` iteration-121 report (cross-mission, never outranks), and 3 of **this loop's own outgoing** iter-40 messages. All acked; 0 unread after. Bookkeeping issue **#9**, **38** comments; **zero** `@MarkEdmondson1234` comments since the watermark `2026-07-27T08:55:11Z`, which is itself the timestamp of the single Mark comment on #9 and therefore already processed. **Rotation NOT due, and the timezone is why**: #9 was created `2026-07-27T05:51:13Z` = 07:51 **CEST**, i.e. **after** the Monday-07:00-local boundary (05:00Z) — read as UTC it would have spuriously rotated at three days old. 38 < 80 comments. No `[nightly-eval]` issues exist in this repo; the only open issue is #9 itself.
 
@@ -5572,7 +5572,7 @@ Round 2 (both present, $0.067): `gpt5-6-sol` showed that **adding P12 had made m
 
 **Routing evidence** — controller `claude-opus-5` (session: triage, all five measurements, both quorum rounds, the OD-5 packet, the honesty-gap catch, the `:h` isolation) · **designer `codex:gpt-5.6-sol`** (the **rotation** entry after `claude:claude-fable-5`; pre-flight probe rc=0, `auth_mode` = "Logged in using ChatGPT", so **subscription, `metered=$0.00`**) fired **twice** — the original doc (389 lines) and the **one sanctioned revision pass** (420 lines), each backgrounded under a bounded 30-min `date +%s` cap with the directive-delivery assertions in the wrapper, each returning rc=0 having touched **only** the target file. **Rotation pointer ADVANCED to `codex:gpt-5.6-sol`** (a designer that ran does advance it, unlike iter-40 where none fired). · planner **not fired** — there is no sprint to plan: DG.A is blocked on OD-5, and routing a plan for a parked milestone would be work the human may discard. · executor **not fired** — same reason; the doc is explicitly *"a specification, not an authorization."* · evaluator **not fired** — nothing to judge but a document, and the two independent cross-provider quorum reviewers (`gpt5-6-sol` OpenAI, `gemini-3-1-pro` Google) served as the adversarial read, so generator≠judge holds by construction. · **`metered=$0.1155`** — two quorum rounds ($0.0547 + $0.0608) against the **$5** ceiling; designer and controller both on quota buckets. · Gates: dev CI **green on the merge commit `d56da6f`, SHA-addressed via `commits/<sha>/check-runs`** (never `--limit 1`), **both** jobs, and **verified rather than read** — the step logs show `✓ 4/4 required world/ identities verified across 11 module(s)`, `✓ all 14 required named tests pass (failed_tests=0)`, **Z3 4.16.0 present** (so not a V27 silent skip), and **10** Go packages reporting `ok`.
 
-## Iteration 42 — 2026-08-03 — `w-bench-load-confound` (item 4f) **NEW DESIGN DOC LANDED (PR #31 → squash `b986c7a`, dev CI green both jobs SHA-addressed on the merge commit and the step logs read to prove they ran); THE ITEM ITSELF PARKED `needs-human-review` ON OD-6** (quorum 2 rounds, r1 BLOCKED both-reject, r2 BLOCKED 1-pass/1-reject; narrow-refinement carve-out **deliberately NOT applied**; `metered=$0.2104`) — and the iteration's spine is that **the recorder captures the load and the gate that blesses the pair never reads it**
+## 42 — 2026-08-03 — `w-bench-load-confound` (item 4f) **NEW DESIGN DOC LANDED (PR #31 → squash `b986c7a`, dev CI green both jobs SHA-addressed on the merge commit and the step logs read to prove they ran); THE ITEM ITSELF PARKED `needs-human-review` ON OD-6** (quorum 2 rounds, r1 BLOCKED both-reject, r2 BLOCKED 1-pass/1-reject; narrow-refinement carve-out **deliberately NOT applied**; `metered=$0.2104`) — and the iteration's spine is that **the recorder captures the load and the gate that blesses the pair never reads it**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (`ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` both empty). gh `sunholo-voight-kampff`. Pidfile `mission-world.pid`=95264 confirmed to be **this run's own driver** by `ps` (ppid chain checked), no overlap. Local `dev` == `origin/dev` == `c1e6125` at Gate 1; dev CI green on HEAD. **The RUNNING skill was diffed against `origin/dev` and is byte-identical** (`cmp -s` silent, 83,123 B both sides) — the iter-128 diverged-checkout class does not bite this iteration. Mark-comment channel: the **single** `MarkEdmondson1234` comment on issue #9 is dated exactly `2026-07-27T08:55:11Z`, equal to the watermark, so it was already processed; a known-positive control confirmed the query finds that one comment and the watermark filter correctly excludes it. **No new human directive.** Inbox: 74 unread, sender census `eval-suite`×72 + `nightly-eval`×2 — **all sibling-V1 controlplane traffic, zero `--from mission-*` cross-mission requests** (the empty `--from mission-v1` result was control-checked against the census rather than trusted).
 
@@ -5633,7 +5633,7 @@ Round 2 (both present, $0.067): `gpt5-6-sol` showed that **adding P12 had made m
 - Blocking objections (return to author before planning):
   - gpt5-6-sol: The checker labels an independently recorded parent/variant pair as a mechanically valid cost claim even when the two runs experienced materially different load. R4 compares hardware and toolchain fields but neither load nor temporal pairing, and it accepts any control block whose commit matches `variant.parent`, including a stale control recorded much earlier. Therefore an idle variant can be paired with a loaded control—or vice versa—and pass, contradicting the document’s central claim that this A/B form is “correct under any load” and defeating the confound it is meant to remove.
 
-## Iteration 43 — 2026-08-03 — `w-ddl-gate-teeth` (item 4d) **DG.A LANDED — THE DE-FANG HALF SHIPPED, THE ITEM STAYS OPEN ON `DG.B`** (PR #33 → squash `ad619d8`, dev CI green both jobs SHA-addressed on the merge commit and the step logs read to prove they ran; evaluator `sonnet` **PASS 91/100 zero-blocking**; `metered=$0.00`) — and the iteration's spine is that **a change detector that costs one line to silence is not a gate, and the repair is an asymmetry rather than a stronger pin**
+## 43 — 2026-08-03 — `w-ddl-gate-teeth` (item 4d) **DG.A LANDED — THE DE-FANG HALF SHIPPED, THE ITEM STAYS OPEN ON `DG.B`** (PR #33 → squash `ad619d8`, dev CI green both jobs SHA-addressed on the merge commit and the step logs read to prove they ran; evaluator `sonnet` **PASS 91/100 zero-blocking**; `metered=$0.00`) — and the iteration's spine is that **a change detector that costs one line to silence is not a gate, and the repair is an asymmetry rather than a stronger pin**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (both Anthropic vars empty). gh `sunholo-voight-kampff`. Local `dev` == `origin/dev` == `ef8e104` at Gate 1; dev CI green on HEAD; **the RUNNING skill was diffed against V1's `origin/dev` and is byte-identical** (`cmp -s` silent) — resolved via `readlink`, which shows `~/.claude/skills/mission-control` is a **symlink into the V1 checkout**, so the iter-128 diverged-checkout class does not bite. Mark-comment channel: **zero** `MarkEdmondson1234` comments on the current issue **#32**, and the rotation-week catch was applied — predecessor **#9** holds exactly one, dated `2026-07-27T08:55:11Z`, equal to the watermark, therefore already processed. Both reads were control-checked (an unfiltered comment census proved the reader sees comments at all). **No new human directive arrived this iteration** — but the previous one had not yet been executed. Inbox: 2 unread, both `eval-suite` controlplane noise from the sibling V1 mission, zero `--from mission-*` requests. Weekly rotation **NOT due**, computed in **local** time as the rule requires: the most recent Monday 07:00 CEST = `05:00Z`, and #32 was created `06:15:41Z` — *after* the boundary — with 1 comment, far under the 80 cap.
 
@@ -5674,7 +5674,7 @@ Round 2 (both present, $0.067): `gpt5-6-sol` showed that **adding P12 had made m
 
 **Gate 5 — process fix (ONE, charter).** `OD-<n>` is now a **mission-global namespace with a registry table** in Guardrails, listing all eight live IDs with their item, question and state, plus the next free ID. Rules: enumerate `### OD-` headings across **every** `design_docs/planned/` doc before allocating (with a known-positive control); register in the same edit; **always write `4d/OD-3`, never a bare `OD-3`**, anywhere a human reads it; and **do not renumber existing IDs** — renaming an ID a human has already ruled on is how a collision becomes a silent contradiction. Two recorded frictions back this: iter-31's ID collision and this iteration's near-inversion of an attended ratification. No skill edit this iteration (World cannot edit the shared skill; nothing rose to a proposal).
 
-## Iteration 44 — 2026-08-03 — `w-ddl-gate-teeth` (item 4d) **DG.B DESIGNED — the version pin, and the freshness test that called a populated store empty** (PR #34 → squash `6b8e77e`, dev CI green both jobs SHA-addressed on the merge commit and the step logs read to prove they ran; quorum 2 rounds **both BLOCKED** + the narrow-refinement carve-out **applied**; `metered=$0.3192`) — and the iteration's spine is that **a known-positive control proves an instrument CAN fire, never that it fires only where it should, and the untested half is the exclusion boundary**
+## 44 — 2026-08-03 — `w-ddl-gate-teeth` (item 4d) **DG.B DESIGNED — the version pin, and the freshness test that called a populated store empty** (PR #34 → squash `6b8e77e`, dev CI green both jobs SHA-addressed on the merge commit and the step logs read to prove they ran; quorum 2 rounds **both BLOCKED** + the narrow-refinement carve-out **applied**; `metered=$0.3192`) — and the iteration's spine is that **a known-positive control proves an instrument CAN fire, never that it fires only where it should, and the untested half is the exclusion boundary**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (both Anthropic vars empty). gh `sunholo-voight-kampff`. Local `dev` == `origin/dev` == `6246ee6` at Gate 1, dev CI green on HEAD, and the **running skill diffed byte-identical to V1's `origin/dev`** (`cmp -s` silent; `readlink` confirms `~/.claude/skills/mission-control` is a symlink into the V1 checkout, so the iter-128 diverged-checkout class does not bite). Mark-comment channel: **zero** `MarkEdmondson1234` comments on issue **#32**; the rotation-week catch was applied to predecessor **#9**, whose single Mark comment is dated `2026-07-27T08:55:11Z` — equal to the watermark, therefore already processed. Inbox: 7 unread, **all** sibling-V1 `eval-suite`/`mission-v1` controlplane noise, zero `--from mission-*` requests. Weekly rotation **NOT due**, computed in **local** time as the rule requires: the most recent Monday 07:00 CEST = `05:00Z`, and #32 was created `06:15:41Z` — *after* the boundary — with 2 comments, far under the 80 cap. **Weekly external-issue sweep run**: `#32` is the only open issue in the repo and it *is* the bookkeeping thread, so there are zero unmentioned issues to triage.
 
@@ -5712,7 +5712,7 @@ Round 2 (both present, $0.067): `gpt5-6-sol` showed that **adding P12 had made m
 
 **Gate 5 — process fix (ONE, charter).** **A known-positive control proves an instrument CAN fire; it never proves it fires ONLY where it should.** The mission's instrument discipline is built on pairing empty/negative results with a known positive — correct, and **one-sided**: it certifies the inclusion half of a filter and says nothing about the exclusion half, though a filter is a claim about both. Two instances this iteration, one expensive: V-K's `sqlite_%` limb (certified LIVE by a known-positive control while hiding a store-corrupting misclassification, caught by `gpt5-6-sol` and then measured as V-S), and Gate 4's stale-base tell (V1's uppercase `ITERATION <N>` returning 0/0 against this charter's lowercase `(iteration N)` — harmless, because the control did its job). Rules landed: run a **two-sided** control on any predicate that decides something (one value that must be caught, one that must **survive**); treat "excludes only X" / "matches just the Y" as the grammatical tell that you have tested the set and claimed the complement; escape wildcard characters in literals (`_` in `LIKE`, `.` in regex, `*`/`?` in globs) **and** prove the escape with a negative control; and this mission's own Gate-4 tell is `grep -c "(iteration <N-1>)"` with `(iteration <N-2>)` as control plus `^## STATUS 2026` == 3. No skill edit (World cannot edit the shared skill; the casing mismatch is a single friction and mission-local, so it did not meet the ≥2-instance bar for a proposal).
 
-## Iteration 45 — 2026-08-03 — `w-ddl-gate-teeth` (item 4d) **DG.B LANDED — ITEM COMPLETE, AND THE `OD-7` SWEEP CAME BACK CLEAN** (PR #35 → squash `e6ece55`, dev CI green both jobs SHA-addressed on the merge commit and the step logs read to prove they ran; evaluator `sonnet` **PASS 96/100, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a mutation you did not prove APPLIED is not a mutation: "the mutation did not red" and "the mutation never ran" are the same exit code, and the second wears the first's clothes**
+## 45 — 2026-08-03 — `w-ddl-gate-teeth` (item 4d) **DG.B LANDED — ITEM COMPLETE, AND THE `OD-7` SWEEP CAME BACK CLEAN** (PR #35 → squash `e6ece55`, dev CI green both jobs SHA-addressed on the merge commit and the step logs read to prove they ran; evaluator `sonnet` **PASS 96/100, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a mutation you did not prove APPLIED is not a mutation: "the mutation did not red" and "the mutation never ran" are the same exit code, and the second wears the first's clothes**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (both Anthropic vars empty). gh `sunholo-voight-kampff`. Local `dev` == `origin/dev` == `e506ed7` at Gate 1, tree clean, dev CI green on HEAD, and the **running skill diffed byte-identical to V1's `origin/dev`** (`cmp -s` silent; `readlink` re-confirms `~/.claude/skills/mission-control` is a symlink into the V1 checkout) — so the rules executed are the rules the mission agreed on. Mark-comment channel: **zero** `MarkEdmondson1234` comments on issue **#32**, and the empty result was **control-verified** rather than trusted — the same author filter returns **1** on predecessor **#9**, so the filter works and the absence is real; #32's three comments are all the bot's. Watermark advanced to `2026-08-03T15:44:55Z` before routing. Weekly rotation **NOT due**, computed in **local** time: the most recent Monday 07:00 CEST = `05:00Z`, #32 was created `06:15:41Z` — after the boundary — with 3 comments, far under the 80 cap. **Weekly external-issue sweep: CLEAN** — `#32` is the only open issue in the repo and it *is* the bookkeeping thread; zero unmentioned issues to triage. Inbox: 12 unread, all sibling-V1 `eval-suite` noise plus one `mission-control` "no usable model" notice timestamped one minute before this run (a sibling driver's refusal, not a directive and not this mission's); **zero** `--from mission-*` cross-mission requests.
 
@@ -5746,7 +5746,7 @@ Round 2 (both present, $0.067): `gpt5-6-sol` showed that **adding P12 had made m
 
 **Gate 5 — process fix (ONE, charter).** **An ACTION THAT SILENTLY DID NOT HAPPEN RETURNS THE SAME RESULT AS A GENUINE NEGATIVE — so assert the action's own EFFECT, never merely its exit code.** The mission's instrument discipline already covers *searches* that come back empty (rule 3a) and *checks* that come back green (3b). Both are about reading a result. This iteration paid twice for the step **before** the reading — the action itself never occurring: (1) a `perl -0pi` mutation that matched nothing, left the file byte-identical, and produced a **passing test** that would have been recorded as "the mutation does not discriminate", refuting a real finding; and (2) two `find` sweeps killed mid-traversal whose **empty** output was indistinguishable from "no stores exist on this rig" — and which, unnoticed, would have discharged a **human ratification gate** on no evidence at all. Rules landed: after any mutation or edit, **prove the file changed** (sha256 before/after, or an asserted replacement count) *before* running the test that interprets it, and prove it changed **back** afterwards; prefer `python3` with an asserted `count()` over shell-quoted `perl`/`sed` for anything whose escaping is non-trivial; treat a killed, capped or timed-out command's output as **VOID**, never as a negative result, and say so in the record; and every sweep whose emptiness is load-bearing must carry a **known-positive target that must appear in its own output** — if the control is missing from the output, the sweep proved nothing regardless of exit code. Also folded into the charter's zsh list as **(d)**: **zsh arrays are 1-INDEXED** (bash is 0-indexed), which shifted all four reconstruction commit messages by one this iteration — instance **5** of the zsh class, caught by reading the log, repaired by discarding the four commits and rebuilding with an explicit `case` after proving the tree content identical. No skill edit (World cannot edit the shared skill; both findings are mission-local and land in the charter).
 
-## Iteration 46 — 2026-08-04 — `w-race-gate-blindspot` (item 4e) **RG.A LANDED — ITEM COMPLETE, THE REPO HAS A `-race` LEG FOR THE FIRST TIME, AND BOTH RATIFIED DECISIONS ARE DISCHARGED** (PR #36 → squash `f19acac`, dev CI green both jobs SHA-addressed on the merge commit and the step logs read to prove the leg actually ran; evaluator `sonnet` **PASS 96/100, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a range you stopped measuring at is just a wider single number**
+## 46 — 2026-08-04 — `w-race-gate-blindspot` (item 4e) **RG.A LANDED — ITEM COMPLETE, THE REPO HAS A `-race` LEG FOR THE FIRST TIME, AND BOTH RATIFIED DECISIONS ARE DISCHARGED** (PR #36 → squash `f19acac`, dev CI green both jobs SHA-addressed on the merge commit and the step logs read to prove the leg actually ran; evaluator `sonnet` **PASS 96/100, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a range you stopped measuring at is just a wider single number**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (both Anthropic vars empty). gh `sunholo-voight-kampff`. Local `dev` == `origin/dev` @ `7550ee9` at Gate 1; clean tree. **The RUNNING skill was diffed against origin and is IDENTICAL** (`~/.claude/skills/mission-control` is a symlink into the V1 checkout — `readlink` confirmed, 95,426 B both sides) — World has no repo-local `.claude/skills/`, so it executes V1's copy and the iter-128 diverged-checkout hazard does not apply this fire. Bookkeeping issue **#32** (created 2026-08-03T06:15Z, i.e. AFTER the Monday-07:00 local boundary, 4 comments → **no rotation**). **Zero new Mark comments**, and that negative is a measurement: the allowlist filter returns 4 bot authors on #32 and correctly finds **1** Mark comment on the predecessor #9, so the instrument fires. Inbox: 2 unread, both triaged — mission-v1's iter-136 cross-mission note (informational, *"no action requested"*, no queue impact) and an eval-suite start notice (noise). **Weekly external-issue sweep: CLEAN** — one open issue in this repo, `#32` itself, zero-mention count **0**.
 
@@ -5785,7 +5785,7 @@ Round 2 (both present, $0.067): `gpt5-6-sol` showed that **adding P12 had made m
 
 **Gate 5 — process fix (ONE, charter).** **A REMEDY THAT FIXES ONE NAMESPACE AND NOT ITS SIBLING IS THE SAME SHAPE AS THIS MISSION'S GATE DEFECTS.** Iteration 43 gave `OD-<n>` a mission-global registry after a collision landed inside a human ratification. `CF-<letter>-<n>` was left alone — and it is allocated far more often, by more roles, with no table anywhere. Found by the RG.A planner, confirmed first-party: **`CF-K-1` names two different things** (`:4554` M3.D `putRecord` legibility vs `:5514` milestone RG.A), so two ledger lines list "the same" open item and mean different ones; and **`CF-K-3` silently vanished** from the `:5567` list with no closure. Fourth instance of the ID-collision class. The fix widens the existing OD rules rather than inventing a mechanism: mission-wide uniqueness check with a control before allocating, always write `4e/CF-K-1` never bare `CF-K-1`, never renumber an existing collision (disambiguate in prose), and a carry-forward may only leave a ledger with an explicit closure line naming where it was discharged. No skill edit this iteration.
 
-## Iteration 47 — 2026-08-04 — `w-bench-load-confound` (item 4f) **BRANCH A DESIGNED AND LANDED; THE ITEM RE-PARKS ON `4f/OD-8` — not on what the mechanism does, but on what it is allowed to claim** (PR #37 → squash `2529d4f`, dev CI green both jobs SHA-addressed on the merge commit and corroborated by a direct per-workflow read at the same SHA; quorum **rounds 3, 4 and 5, all BLOCKED**; `metered=$0.3007`) — and the iteration's spine is that **a remedy that changes the process and not the state has fixed nothing that already exists, and the already-existing cases are the dangerous ones because they are already cited**
+## 47 — 2026-08-04 — `w-bench-load-confound` (item 4f) **BRANCH A DESIGNED AND LANDED; THE ITEM RE-PARKS ON `4f/OD-8` — not on what the mechanism does, but on what it is allowed to claim** (PR #37 → squash `2529d4f`, dev CI green both jobs SHA-addressed on the merge commit and corroborated by a direct per-workflow read at the same SHA; quorum **rounds 3, 4 and 5, all BLOCKED**; `metered=$0.3007`) — and the iteration's spine is that **a remedy that changes the process and not the state has fixed nothing that already exists, and the already-existing cases are the dangerous ones because they are already cited**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (both Anthropic vars empty, re-checked per shell). gh `sunholo-voight-kampff`. Local `dev` == `origin/dev` @ `61348b9` at Gate 1, clean tree — no divergence to route around. **The RUNNING skill was diffed against origin and is byte-identical** (`cmp` on the symlink-resolved real path `…/ailang/.claude/skills/mission-control/SKILL.md`, 99,825 B both sides) — the rules executed are the rules the mission agreed on. Mark-comment read on `#32` returned **zero**, and the allowlist filter was **control-verified against two issues where Mark HAS commented** (`#559` → 1, `#9` → 1), so the empty result is a measurement rather than a broken instrument. Watermark advanced to `2026-08-04T02:50:23Z`. dev CI green at Gate 1, SHA-addressed. `./scripts/verify_ail.sh` rc=0 locally on the base (4/4 identities, 14/14 named tests). Weekly external-issue sweep **CLEAN** — one open issue (`#32`, the bookkeeping thread), zero-mention count **0**, control `#31` → 1. Cross-mission: mission-v1's iter-138 note triaged, informational, no action requested; its decision 2 (a release tag once Lane B lands, carrying `#477`) is the only line with downstream relevance here, since World pins AILANG **v0.30.0**.
 
@@ -5825,7 +5825,7 @@ Round 2 (both present, $0.067): `gpt5-6-sol` showed that **adding P12 had made m
 
 ---
 
-## Iteration 48 — 2026-08-04 — `w-bench-load-confound` (item 4f) **`4f/OD-8` ANSWERED AND MILESTONE `BC.A′` LANDED — THE PAIR RECORDER EXISTS, AND A REAL FOUR-LEG SESSION EMITS A PAIR WHOSE EVERY INTEGRITY FIELD RECOMPUTES INDEPENDENTLY** (PR #38 → squash `0b72019`, dev CI green both jobs SHA-addressed on the merge commit and corroborated by a direct per-workflow read at the same SHA; evaluator `sonnet` **PASS 87/100, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a document is only as fresh as its OLDEST measurement, and a sweep of the rows someone already named is not a sweep — it is a re-reading of their notes**
+## 48 — 2026-08-04 — `w-bench-load-confound` (item 4f) **`4f/OD-8` ANSWERED AND MILESTONE `BC.A′` LANDED — THE PAIR RECORDER EXISTS, AND A REAL FOUR-LEG SESSION EMITS A PAIR WHOSE EVERY INTEGRITY FIELD RECOMPUTES INDEPENDENTLY** (PR #38 → squash `0b72019`, dev CI green both jobs SHA-addressed on the merge commit and corroborated by a direct per-workflow read at the same SHA; evaluator `sonnet` **PASS 87/100, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a document is only as fresh as its OLDEST measurement, and a sweep of the rows someone already named is not a sweep — it is a re-reading of their notes**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN**. gh `sunholo-voight-kampff`. Local `dev` == `origin/dev` @ `ea5e405`, clean tree. **The RUNNING skill was diffed against origin and is byte-identical** (`cmp` on the symlink-resolved real path — `~/.claude/skills/mission-control` → `…/ailang/.claude/skills/mission-control`). Mark-comment read on `#32` returned **zero**; the allowlist filter was control-checked by listing all six comment authors (all `sunholo-voight-kampff`), so the empty result is a measurement. Watermark advanced to `2026-08-04T08:25:01Z`. dev CI green at Gate 1. **No thread rotation**: `#32` was created `2026-08-03T06:15:41Z` = 08:15 CEST, i.e. AFTER the Monday-07:00-local boundary, and holds 6 comments (<80). Weekly external-issue sweep **CLEAN** — one open issue (`#32`, the bookkeeping thread itself), zero-mention count **0**. Base gates green before any work: `verify_ail.sh` rc=0 (4/4 identities, 14/14 named tests), `verify_go.sh` rc=0.
 
@@ -5860,7 +5860,7 @@ Round 2 (both present, $0.067): `gpt5-6-sol` showed that **adding P12 had made m
 
 **Gate 5 — process fix (ONE, skill).** **A BLANKET INSTRUCTION IS APPLIED TO ITS EXCEPTION TOO, FAITHFULLY, BY A ROLE THAT CANNOT KNOW BETTER.** Two recorded frictions pointing at the same gap: iteration 48's `GOTOOLCHAIN=go1.25.6` directive, which was right for every `go` call except the one probe whose purpose is to observe the ambient toolchain — and iteration 47's designer directive, whose "verify every codebase claim" rule had to be restated *to the designer* because a cross-provider role cannot read this repo's skills. Both are the same shape: the controller states a rule that is correct in general, the sub-agent applies it universally because it has no basis to carve out an exception, and the exception is exactly where the rule inverts the intent. See the Gate-5 entry below for the skill edit.
 
-## Iteration 49 — 2026-08-04 — `w-bench-load-confound` (item 4f) **MILESTONE `BC.B′` CODE LANDED — AND THE GATE REDDED A PAIR THE RECORDER HAD JUST EMITTED, BECAUSE A PYTHON CLOSURE MADE EVERY SECTION READ THE LAST SECTION** (PR #39 → squash `d357474`, dev CI green both jobs SHA-addressed on the merge commit and corroborated by a direct per-workflow read at the same SHA; evaluator `sonnet` **PASS 77/100, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a gate that has never seen the thing it guards is untested no matter how many mutations it REDs, and the mutations it passes are exactly the ones that made it look tested**
+## 49 — 2026-08-04 — `w-bench-load-confound` (item 4f) **MILESTONE `BC.B′` CODE LANDED — AND THE GATE REDDED A PAIR THE RECORDER HAD JUST EMITTED, BECAUSE A PYTHON CLOSURE MADE EVERY SECTION READ THE LAST SECTION** (PR #39 → squash `d357474`, dev CI green both jobs SHA-addressed on the merge commit and corroborated by a direct per-workflow read at the same SHA; evaluator `sonnet` **PASS 77/100, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a gate that has never seen the thing it guards is untested no matter how many mutations it REDs, and the mutations it passes are exactly the ones that made it look tested**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (`ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` both empty). gh `sunholo-voight-kampff` active. Main checkout clean, `dev == origin/dev` @ `5ff281b` at Gate 1. **Running skill vs origin: IDENTICAL** (`git show origin/dev:.claude/skills/mission-control/SKILL.md | cmp -s -` → equal, 103,794 B both) — checked at the resolved path, which for this repo is the V1 checkout via the `~/.claude/skills` symlink, since `ailang-world` has no repo-local `.claude/skills`. dev CI green at Gate 1 (both jobs, `5ff281b`). Inbox: one unread cross-mission message (mission-v1 iter-141) — informational, triaged, marked read; it records V1 adopting **World's own** oldest-declared-base freshness sweep into the shared skill as rule 3b(vi-b), so the propose-to-V1 channel worked end to end. Bookkeeping issue `#32`, created 2026-08-03T06:15Z = 08:15 CEST, i.e. **after** the Monday-07:00 **local** boundary → **no rotation** (8 comments, far under 80). **Zero Mark comments** on `#32` (the watermark read returned nothing AND the all-comments control also returned 0, so the emptiness is real, not an instrument failure); predecessor `#9` re-checked per the rotation-week catch — its single Mark comment is dated 2026-07-27, long before the `2026-08-04T08:25:01Z` watermark, so already processed. **Weekly external-issue sweep: CLEAN** — one open issue (`#32` itself), zero-mention count **0**.
 
@@ -5899,7 +5899,7 @@ Round 2 (both present, $0.067): `gpt5-6-sol` showed that **adding P12 had made m
 
 ---
 
-## Iteration 50 — 2026-08-05 — `w-bench-load-confound` (item 4f) **ITEM COMPLETE — controller pass `C2b` discharged the last five mutations, the census turned out to be a transcription, and the run that was meant to CONFIRM a doc prediction REFUTED it** (no code change; doc → `design_docs/implemented/`; `metered=$0.00`) — and the iteration's spine is that **a secondary observable a cache can erase is not evidence — it is worse than no observable, because it gives a reviewer a plausible reason to stop looking**
+## 50 — 2026-08-05 — `w-bench-load-confound` (item 4f) **ITEM COMPLETE — controller pass `C2b` discharged the last five mutations, the census turned out to be a transcription, and the run that was meant to CONFIRM a doc prediction REFUTED it** (no code change; doc → `design_docs/implemented/`; `metered=$0.00`) — and the iteration's spine is that **a secondary observable a cache can erase is not evidence — it is worse than no observable, because it gives a reviewer a plausible reason to stop looking**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (`ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` both empty). gh `sunholo-voight-kampff` active. Main checkout clean, `dev == origin/dev` @ `de80792` at Gate 1 and re-confirmed at Gate 4 with `git diff --stat origin/dev` empty on charter and log. **Running skill vs origin: IDENTICAL** (`git show origin/dev:.claude/skills/mission-control/SKILL.md | cmp -s -` → equal), checked at the resolved path — for this repo that is the V1 checkout via the `~/.claude/skills` symlink, since `ailang-world` has no repo-local `.claude/skills`; the V1 checkout itself is `dev == origin/dev` @ `b1f9d7c`. Overlap guard: `~/.ailang/state/mission-world.pid` = 48397, which `ps` identifies as **this run's own parent**, not a sibling. dev CI green at Gate 1 (`de80792`, and the two commits before it). Inbox: 4 unread — 2 eval-suite telemetry (V1's nightly, noise), 1 mission-world (this loop's own iteration-49 report), 1 mission-v1 (iteration 142, triaged below). Bookkeeping issue `#32` created 2026-08-03T06:15Z = **08:15 CEST**, i.e. after the Monday-07:00 **local** boundary → **no rotation** (9 comments, far under 80). **Zero Mark comments** on `#32` since the `2026-08-04T08:25:01Z` watermark. **Weekly external-issue sweep: CLEAN** — one open issue (`#32` itself), zero-mention count **0**, and zero open PRs.
 
@@ -5932,7 +5932,7 @@ Round 2 (both present, $0.067): `gpt5-6-sol` showed that **adding P12 had made m
 
 **Gate 5 — backlog lane (no skill edit, no process fix).** No friction this iteration reaches the ≥2-instances-of-one-gap bar for a skill edit. The two candidates were both handled by rules the shared skill already carries and which behaved correctly here: rule 3d's negative-control demand caught the AC6 vacuity arm before it could green, and rule 3b(v-b)'s re-derive-quantities-by-command demand caught the census. The one genuinely new shape — **P47b, a supersession recorded only in the superseding row** — is instance **1**; it is pre-registered as a watch-item rather than written into a gate, and the bar is two. If a second instance appears, the fix is a one-line addition to Gate 4: *when a row supersedes another, the marker goes in the SUPERSEDED row, not only in the superseding one.* Backlog entry for the next iteration: **item 8 routes to design-doc-creator, and its VERIFY-FIRST clause is binding at pick — live-repro `ailang publish` auth + vendor-registration mechanics against the pinned v0.30.0 binary before any milestone is written.**
 
-## Iteration 51 — 2026-08-05 — `w-self-mod-vertical` (item 8) **DESIGN DOC LANDED — the binding VERIFY-FIRST clause returned a fact that reframes the item: there is no vendor namespace to claim, and the credential that could publish under anyone's name is sitting in this loop's own environment** (PR #40 → squash `269f1fe`, dev CI green both jobs SHA-addressed on the merge commit and corroborated by a direct per-workflow read at the same SHA; `metered≈$0.96`) — and the iteration's spine is that **a check that passes everything confers no authority, and the cheapest way to launder a convention into ownership is to name it after one**
+## 51 — 2026-08-05 — `w-self-mod-vertical` (item 8) **DESIGN DOC LANDED — the binding VERIFY-FIRST clause returned a fact that reframes the item: there is no vendor namespace to claim, and the credential that could publish under anyone's name is sitting in this loop's own environment** (PR #40 → squash `269f1fe`, dev CI green both jobs SHA-addressed on the merge commit and corroborated by a direct per-workflow read at the same SHA; `metered≈$0.96`) — and the iteration's spine is that **a check that passes everything confers no authority, and the cheapest way to launder a convention into ownership is to name it after one**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (`ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` both empty). gh `sunholo-voight-kampff` active. Main checkout clean; `dev == origin/dev` @ `dd2c173` at Gate 1. **Running skill byte-identical to `origin/dev`** (`git show origin/dev:.claude/skills/mission-control/SKILL.md | cmp -s -` → identical, 107,401 B both sides) — the rulebook I followed is the rulebook the mission agreed on, checked rather than assumed. Pidfile `mission-world.pid` = 85682 = my own parent process, so no overlap. Dev CI green at HEAD. Inbox: 2 unread, both informational (mission-v1 iter-143 report — its three DECISIONS are V1-internal, nothing asked of World; eval-suite start notice), both read. **No new `MarkEdmondson1234` comments on `#32` since watermark `2026-08-04T08:25:01Z`.** Rotation not due: `#32` created `2026-08-03T06:15:41Z` = 08:15 **local**, AFTER the Monday-07:00-local boundary (05:00Z), and 10 comments « 80. **Weekly external-issue sweep CLEAN**: one open issue (`#32` itself), zero-mention count **0**, zero open PRs.
 
@@ -5985,7 +5985,7 @@ Compose the last four and the finding is not decorative: **any process inheritin
 
 **Next.** Item **8**'s **sprint-planner** run — gated on nothing, and `SM.A–SM.C` are routable without `8/OD-1`. The planner's first two prices are already written into the queue row: the `schema.sql` change vs the `w-ddl-gate-teeth` DDL gate that reds on *any* schema edit **by design** (its fixture update belongs in the same milestone, not after it), and whether 4–5 d is one queue item or splits at SM.B. Neither has had two pairs of eyes — round 2 ran one reviewer and round 3 was the carve-out.
 
-## Iteration 52 — 2026-08-05 — `w-self-mod-vertical` (item 8) **SPRINT-PLANNED — 6 milestones, not 4 — and the planner refuted the design's own reuse plan by reading a path the doc had already cited three times** (no code landed; artifacts `.ailang/state/sprints/w-self-mod-vertical.{plan.json,handoff.md}`; `metered=$0.00`) — and the iteration's spine is that **a path is a permission boundary, not just a location, and this doc cited `internal/pkg/…` as evidence FOR a reuse plan that the word `internal` forbids**
+## 52 — 2026-08-05 — `w-self-mod-vertical` (item 8) **SPRINT-PLANNED — 6 milestones, not 4 — and the planner refuted the design's own reuse plan by reading a path the doc had already cited three times** (no code landed; artifacts `.ailang/state/sprints/w-self-mod-vertical.{plan.json,handoff.md}`; `metered=$0.00`) — and the iteration's spine is that **a path is a permission boundary, not just a location, and this doc cited `internal/pkg/…` as evidence FOR a reuse plan that the word `internal` forbids**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (`ANTHROPIC_API_KEY` and `ANTHROPIC_AUTH_TOKEN` both empty). gh `sunholo-voight-kampff` active. Main checkout clean; `dev == origin/dev` @ `c0ca1df` at Gate 1. **Running skill byte-identical to `origin/dev`** (`git show origin/dev:.claude/skills/mission-control/SKILL.md | cmp -s -` → identical, 107,401 B both sides; the skill resolves through a symlink into the *ailang* checkout, whose `dev == origin/dev` @ `c3120df`) — the rulebook I followed is the rulebook the mission agreed on, checked rather than assumed. Dev CI green at HEAD on **both** jobs, read SHA-addressed off the commit (`gh api …/commits/c0ca1df/check-runs` → `ailang-code verify gate: completed/success`, `go host build + test gate: completed/success`) rather than off an unpinned run list. Rotation not due: `#32` created `2026-08-03T06:15:41Z` = 08:15 **local**, AFTER the Monday-07:00-local boundary (05:00Z), and 12 comments « 80. **Weekly external-issue sweep CLEAN**: one open issue (`#32` itself), zero-mention count **0**. Inbox: 1 unread (mission-v1 iter-144 report) — informational, nothing asked of World.
 
@@ -6035,7 +6035,7 @@ Compose the last four and the finding is not decorative: **any process inheritin
 
 ---
 
-## Iteration 53 — 2026-08-05 — `w-self-mod-vertical` (item 8) **MILESTONE `SM.A` LANDED — the sprint's one gating unknown came back GREEN on two platforms and two Go toolchains, and the assumption that made CI *look* pinned had expired the day before** (PR #41 → squash `13315da`, dev CI green both jobs SHA-addressed on the merge commit and step-log verified; `metered=$0.00`) — and the iteration's spine is that **a recorded prediction of future breakage is not a monitor; it expires silently unless something re-measures it**
+## 53 — 2026-08-05 — `w-self-mod-vertical` (item 8) **MILESTONE `SM.A` LANDED — the sprint's one gating unknown came back GREEN on two platforms and two Go toolchains, and the assumption that made CI *look* pinned had expired the day before** (PR #41 → squash `13315da`, dev CI green both jobs SHA-addressed on the merge commit and step-log verified; `metered=$0.00`) — and the iteration's spine is that **a recorded prediction of future breakage is not a monitor; it expires silently unless something re-measures it**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (both Anthropic env vars empty). gh `sunholo-voight-kampff` active. Main checkout clean; `dev == origin/dev` @ `af0c3b4` at Gate 1. **Running skill byte-identical to `origin/dev`** (`git show origin/dev:.claude/skills/mission-control/SKILL.md | cmp -s -` → identical; the skill resolves through a symlink into the *ailang* checkout, whose `dev == origin/dev` @ `88d9cc6`) — the rulebook I followed is the rulebook the mission agreed on. Dev CI green at HEAD on both jobs. Rotation not due (`#32` created `2026-08-03T06:15:41Z` = 08:15 **local**, after the Monday-07:00-local boundary; 13 comments « 80). **Weekly external-issue sweep CLEAN**: one open issue (`#32` itself). Inbox: 1 unread (mission-v1 iter-145 report) — informational, nothing asked of World.
 
@@ -6079,7 +6079,7 @@ Compose the last four and the finding is not decorative: **any process inheritin
 
 ---
 
-## Iteration 54 — 2026-08-05 — `w-self-mod-vertical` (item 8) **MILESTONE `SM.B1` LANDED — and both of this iteration's findings are the same defect wearing different clothes: a check that was never pointed at the thing it guards** (PR #43 → squash `1856bfb`, dev CI green both jobs SHA-addressed on the merge commit; plus a hygiene landing PR #42 → squash `e24a6f0`; `metered=$0.00`) — and the iteration's spine is that **a mutation shaped to the check tests the check, not the threat**
+## 54 — 2026-08-05 — `w-self-mod-vertical` (item 8) **MILESTONE `SM.B1` LANDED — and both of this iteration's findings are the same defect wearing different clothes: a check that was never pointed at the thing it guards** (PR #43 → squash `1856bfb`, dev CI green both jobs SHA-addressed on the merge commit; plus a hygiene landing PR #42 → squash `e24a6f0`; `metered=$0.00`) — and the iteration's spine is that **a mutation shaped to the check tests the check, not the threat**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (both Anthropic env vars empty). gh `sunholo-voight-kampff` active. Main checkout clean; `dev == origin/dev` @ `0eb58f5` at Gate 1. **Running skill byte-identical to `origin/dev`** (`git show origin/dev:.claude/skills/mission-control/SKILL.md | cmp -s -` → identical, 112,813 B both sides; the skill resolves through a symlink into the *ailang* checkout) — the rulebook I followed is the rulebook the mission agreed on. Dev CI green at HEAD. Rotation not due (`#32` created `2026-08-03T06:15:41Z` = 08:15 **local**, after the Monday-07:00-local boundary; 14 comments « 80). **Weekly external-issue sweep CLEAN**: one open issue (`#32` itself), zero-mention count **0**, control fired (closed issues `15`/`9`/`1` enumerated). Inbox: 1 unread (mission-v1 iter-146 report) — informational, nothing asked of World.
 
@@ -6119,7 +6119,7 @@ Compose the last four and the finding is not decorative: **any process inheritin
 
 **ADDENDUM — dev went RED on this iteration's own docs-only bookkeeping commit, and it is a third instance of the same family.** `ailang-code verify gate` failed on `a6cc473` with exit **141** (= 128+13, **SIGPIPE**) inside SM.A's *Install PINNED v0.30.0 ailang for the world-package leg only* step. `a6cc473` is docs-only, so **the red had no cause in its own diff** — which is the tell for a race rather than a regression. Mechanism: `"$BIN" --version | grep -q 'AILANG v0.30.0'` under `set -o pipefail`; `grep -q` exits at its FIRST match while `--version` still has **6 of its 7 lines** to write, the writer takes SIGPIPE, and `pipefail` promotes that to the step's status. Rule 3d demanded the negative control before crediting the theory, and the numbers are the evidence: piped form **3/40** runs non-zero against the real binary, no-pipe form **0/200**, plus a deterministic repro (`{ echo match; seq 1 200000; } | grep -q match` under `pipefail` → **141**, every time). **The first fix was WRONG and the stress arm caught it before it shipped**: capturing to a variable is not sufficient, because `echo "$big" | grep -q` reproduces 141 too — the builtin writer blocks on the same pipe — so the fix had to be *no pipe at all* (`case`). **Both** sites were converted, not just the one that redded: the `AILANG_BIN` site has never failed, but **only by accident of size** — `--version` is **167 bytes** and fits the 64 KiB pipe buffer, so `echo` never blocks. That is a property of the output LENGTH, not of the shape, and it is the same race one verbose release away — leaving it would have been precisely the "recorded prediction is not a monitor" failure iteration 53 had just paid for. Non-vacuity preserved (a `v0.33.0` string still exits 1; `case` treats `.` literally, so the check is marginally STRICTER than the `grep` it replaces). Validated: `actionlint` rc=0, all **6** `run:` blocks `bash -n` rc=0, and no code-level `| grep -q` remaining against a firing control (the pattern still matches the new comment, proving the search was live). PR #44 → squash **`bbee51c`**, **dev CI green both jobs SHA-addressed**. **The iteration's three findings rhyme**: a ledger check that never looked at the threat it names, a gate suite that never looked at file *types*, and a version assertion whose *plumbing* could fail independently of anything it asserted. Also worth recording as a small process miss: this iteration's digest ran **2,060 characters** against the skill's **≤1,500** cap — over by ~37%, noted rather than quietly ignored.
 
-## Iteration 55 — 2026-08-06 — `w-self-mod-vertical` (item 8) **`AC12` REPAIRED — the carry-forward the last two iterations wrote down was discharged early, and discharging it early is what found the hole** (PR #45 → squash `1761a9c`, dev CI green both jobs SHA-addressed on the merge commit; `metered=$0.00`) — and the iteration's spine is that **an exception is a claim about one thing, and the cheapest way to lose a guard is to express that exception as an omission from a shared list**
+## 55 — 2026-08-06 — `w-self-mod-vertical` (item 8) **`AC12` REPAIRED — the carry-forward the last two iterations wrote down was discharged early, and discharging it early is what found the hole** (PR #45 → squash `1761a9c`, dev CI green both jobs SHA-addressed on the merge commit; `metered=$0.00`) — and the iteration's spine is that **an exception is a claim about one thing, and the cheapest way to lose a guard is to express that exception as an omission from a shared list**
 
 **Context / preflight.** Kill switch NOT set. Billing tripwire **CLEAN** (both Anthropic env vars empty). gh `sunholo-voight-kampff` active. Main checkout clean; `dev == origin/dev` @ `ff5d5cc`; CI green at that SHA. **Running skill vs origin: IDENTICAL** — `git show origin/dev:.claude/skills/mission-control/SKILL.md | cmp -s -` against the resolved symlink target (`~/.claude/skills/mission-control` → the V1 checkout; `ailang-world` has no repo-local `.claude/skills/`), so the rules followed are the rules the mission agreed on. No rotation due: `#32` created `2026-08-03T06:15:41Z` = **08:15 CEST**, AFTER the Monday-07:00 **local** boundary, 16 comments (<80).
 
@@ -6173,7 +6173,7 @@ Compose the last four and the finding is not decorative: **any process inheritin
 
 **Next.** Milestone **`SM.B2a`** — the brokered publish handler, the de-ambient credential and the typed indeterminate outcome (~780 LOC, handoff §6, ACs `AC7`/`AC10`/`AC11`). Gated on nothing. **Read before starting**: (1) the AC12 *positive* half is still unproven — `host/broker` has zero `net/http` deps and the gate's green control only checks non-emptiness; (2) `AC9b`'s concurrent-collision error class belongs to SM.B2b, not here; (3) consider landing **item 10** first, since SM.B2a lengthens the broker suite and widens the live-tree mutation window.
 
-## Iteration 56 — 2026-08-06 — `w-boundary-gate-tree-mutation` (item 10, **promoted ahead of the queue head**) **DESIGN DOC LANDED — the gate that guards the tree can poison it, and the build cannot see it** (PR #46 → squash `ca25ed6`, dev CI green both jobs SHA-addressed on the merge commit; `metered=$0.154`) — and the iteration's spine is that **a green result must be unable to mean "the check never ran"**, a shape found three times: in the gate, in its own fix, and in its own audit
+## 56 — 2026-08-06 — `w-boundary-gate-tree-mutation` (item 10, **promoted ahead of the queue head**) **DESIGN DOC LANDED — the gate that guards the tree can poison it, and the build cannot see it** (PR #46 → squash `ca25ed6`, dev CI green both jobs SHA-addressed on the merge commit; `metered=$0.154`) — and the iteration's spine is that **a green result must be unable to mean "the check never ran"**, a shape found three times: in the gate, in its own fix, and in its own audit
 
 **Pick.** Queue head was item 8's `SM.B2a`. Item 10 carried iter-55's open invitation *"consider ordering BEFORE `SM.B2a`"*. The promotion was decided by measurement, not by the invitation.
 
@@ -6218,7 +6218,7 @@ Both kill paths are inside the repo's own gate: `scripts/verify_go.sh` runs `go 
 
 **Open asks for Mark: NONE.** `8/OD-2`, `10/OD-1`, `10/OD-2` open, all non-blocking with controller defaults recorded.
 
-## Iteration 57 — 2026-08-06 — `w-boundary-gate-tree-mutation` (item 10) **SPRINT-PLANNED — and the plan's real product was four vacuity-capable acceptance criteria in a doc that had already passed two quorum rounds** (`metered=$0.00`) — and the iteration's spine is that **a threshold whose noise is the size of its signal cannot fail informatively**
+## 57 — 2026-08-06 — `w-boundary-gate-tree-mutation` (item 10) **SPRINT-PLANNED — and the plan's real product was four vacuity-capable acceptance criteria in a doc that had already passed two quorum rounds** (`metered=$0.00`) — and the iteration's spine is that **a threshold whose noise is the size of its signal cannot fail informatively**
 
 **Pick.** Queue head, unchanged: item 10, whose declared next unit of work was the sprint-planner run. No promotion, no re-ordering. No code landed **by design** — see Next.
 
@@ -6274,7 +6274,7 @@ Zero code change already sits at **1.43–1.53×** the AC's own constant in the 
 
 ---
 
-## Iteration 58 — 2026-08-06 — `w-boundary-gate-tree-mutation` (item 10) **`BG.A` LANDED — the boundary gate now proves its teeth without writing the tree it guards** (PR #47 → squash `278f102`; evaluator sonnet **PASS 89/100 r1, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a checker that cannot read the tree finds no forbidden imports**, a shape met three times: inside the fix, inside the doc and plan that specified it, and inside my own known-positive control
+## 58 — 2026-08-06 — `w-boundary-gate-tree-mutation` (item 10) **`BG.A` LANDED — the boundary gate now proves its teeth without writing the tree it guards** (PR #47 → squash `278f102`; evaluator sonnet **PASS 89/100 r1, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a checker that cannot read the tree finds no forbidden imports**, a shape met three times: inside the fix, inside the doc and plan that specified it, and inside my own known-positive control
 
 **Pick.** Queue head, unchanged: item 10, whose declared next unit of work was milestone `BG.A`. First code for this item.
 
@@ -6357,7 +6357,7 @@ Outcomes **differ**, so the green measures the mechanism and not the environment
 - *"The first `ailang-code verify gate` red was a one-off transient."* **Refuted by its own re-run** — it reproduced twice, which is what turned "probably infrastructure" into a measured incident-window attribution rather than a hopeful one.
 - *"My AC4 no-op control fired."* **Refuted** — armed=0 and unset=0 is an instrument that cannot see a positive, not a clean result. `V16c` explains it, and the corrected control reads armed=1 / unset=0.
 
-## Iteration 59 — 2026-08-06 — **dev RED at HEAD, diagnosed as provider outage — no code landed, and the deliverable is the diagnosis** (`metered=$0.00`; controller-only) — and the iteration's spine is that **a green obtained during an open incident is a sample, not a settlement**, a claim bought by the iteration immediately before this one
+## 59 — 2026-08-06 — **dev RED at HEAD, diagnosed as provider outage — no code landed, and the deliverable is the diagnosis** (`metered=$0.00`; controller-only) — and the iteration's spine is that **a green obtained during an open incident is a sample, not a settlement**, a claim bought by the iteration immediately before this one
 
 **Pick.** Not the queue head. Gate 1's standing rule — *a RED dev outranks the queue* — fired: `origin/dev` @ `4e959bf` was `completed/failure` on CI, while the state I inherited asserted CI was green at HEAD. That contradiction is the pick.
 
@@ -6416,7 +6416,7 @@ Control 5 is the one that closes it: CI *does* execute a script under `design_do
 
 ---
 
-## Iteration 60 — 2026-08-07 — `w-boundary-gate-tree-mutation` (item 10) **`BG.B` LANDED — one confined writer, and a guard that proves it can see** (PR #48 → squash `39130ec`, dev CI green **both jobs, SHA-addressed, step-log verified**; evaluator sonnet **PASS 88/100 r1, zero blocking**; `metered=$0.024`) — and the iteration's spine is that **a test that replays a mechanism instead of driving it is testing its own replay**, found in the very test written to prove the writer was confined
+## 60 — 2026-08-07 — `w-boundary-gate-tree-mutation` (item 10) **`BG.B` LANDED — one confined writer, and a guard that proves it can see** (PR #48 → squash `39130ec`, dev CI green **both jobs, SHA-addressed, step-log verified**; evaluator sonnet **PASS 88/100 r1, zero blocking**; `metered=$0.024`) — and the iteration's spine is that **a test that replays a mechanism instead of driving it is testing its own replay**, found in the very test written to prove the writer was confined
 
 **Pick.** The queue head, `BG.B`, unblocked. Gate 1 first had to settle the state iteration 59 handed over — *dev RED at HEAD* — and it settled in `BG.B`'s favour, so the outage clause did **not** claim this iteration.
 
@@ -6476,7 +6476,7 @@ Control 5 is the one that closes it: CI *does* execute a script under `design_do
 
 **Asks for Mark: none.** Both shared-skill fixes World proposed at iteration 59 came back **accepted** in the same window: V1 iteration 156 landed the green-during-an-open-incident rule in `74dd06bb6` (corroborated first-party in V1's repo before adoption, per the sibling-claim ghost discipline) and queued the `grep -ci` stale-charter tell as its iteration 157 skill edit. The running skill was diffed against `origin/dev` at Gate 1 and is **identical**, so this iteration executed the rules the mission agreed on.
 
-## Iteration 61 — 2026-08-07 — `w-boundary-gate-tree-mutation` (item 10) **`BG.C` LANDED — ITEM 10 IS COMPLETE, all three milestones shipped** (PR #49 → squash `c6a14c0`, dev CI green **both jobs, SHA-addressed, step-log verified**; evaluator sonnet **PASS 94/100 r1, zero blocking**; `metered=$0.024`) — and the iteration's spine is that **a probe that certifies one filesystem cannot license an assertion about another**, a gap the plan left open by RECORDING both numbers and never COMPARING them
+## 61 — 2026-08-07 — `w-boundary-gate-tree-mutation` (item 10) **`BG.C` LANDED — ITEM 10 IS COMPLETE, all three milestones shipped** (PR #49 → squash `c6a14c0`, dev CI green **both jobs, SHA-addressed, step-log verified**; evaluator sonnet **PASS 94/100 r1, zero blocking**; `metered=$0.024`) — and the iteration's spine is that **a probe that certifies one filesystem cannot license an assertion about another**, a gap the plan left open by RECORDING both numbers and never COMPARING them
 
 **Pick.** The queue head, `BG.C`, gated on nothing. Gate 1 found local `dev` == `origin/dev` at `a29a15c`, CI green at HEAD, the running skill byte-identical to `origin/dev` (so iter-157's `grep -ci` fix — this mission's own P2 proposal — is live and the local workaround retires), GitHub status API **All Systems Operational / 0 incidents** (so unlike iterations 58–60 a green is attributable here, not a sample), zero open PRs, zero stale worktrees, no new Mark comments since the `2026-08-05T08:25:00Z` watermark, and exactly one open issue (`#32`, the bookkeeping thread — no rotation due: created `2026-08-03T06:15:41Z`, *after* the Monday-07:00-local boundary, 23 comments).
 
@@ -6535,7 +6535,7 @@ State the limit honestly: this is a **bounded** result, not the numbers. `verify
 
 **Parked for the human — ZERO ASKS.**
 
-## Iteration 62 — 2026-08-07 — `w-self-mod-vertical` (item 8) **`SM.B2a` LANDED — the brokered publish handler, the de-ambient credential, and the typed indeterminate outcome** (PR #50 → squash `3fd889f`, dev CI green **both jobs, SHA-addressed, step-log verified**; evaluator sonnet **PASS 98/100 r1, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a criterion that must ENUMERATE AND DRIVE cannot be satisfied by a system that only claims**, which is how a replaced acceptance criterion found a live irreversible-publish credential already leaking into two subprocess sites
+## 62 — 2026-08-07 — `w-self-mod-vertical` (item 8) **`SM.B2a` LANDED — the brokered publish handler, the de-ambient credential, and the typed indeterminate outcome** (PR #50 → squash `3fd889f`, dev CI green **both jobs, SHA-addressed, step-log verified**; evaluator sonnet **PASS 98/100 r1, zero blocking**; `metered=$0.00`) — and the iteration's spine is that **a criterion that must ENUMERATE AND DRIVE cannot be satisfied by a system that only claims**, which is how a replaced acceptance criterion found a live irreversible-publish credential already leaking into two subprocess sites
 
 **Pick.** The queue head, item 8 milestone `SM.B2a`, gated on nothing. Gate 1 found local `dev` == `origin/dev` at `0c47667`, CI green at HEAD (both jobs, SHA-addressed check-runs = 2), GitHub status API **All Systems Operational / 0 incidents**, zero open PRs from this loop, zero stale worktrees, no new Mark comments since the `2026-08-05T08:25:00Z` watermark (control: 1 Mark comment total, at exactly the watermark), and exactly one open issue (`#32`, the bookkeeping thread — no rotation due: created `2026-08-03T06:15:41Z` = 08:15 CEST, *after* the Monday-07:00-local boundary, 25 comments < 80).
 
@@ -6603,7 +6603,7 @@ Both leaking sites inherited the process environment **wholesale**, and `AILANG_
 
 ---
 
-## Iteration 63 — 2026-08-08 — `w-self-mod-vertical` (item 8) **`SM.B2b` LANDED — attended-stamp binding and single-use approval consumption; the milestone was INHERITED from a dead iteration, and the function whose whole job is to refuse had thirteen ways to say no and pins for none of them**
+## 63 — 2026-08-08 — `w-self-mod-vertical` (item 8) **`SM.B2b` LANDED — attended-stamp binding and single-use approval consumption; the milestone was INHERITED from a dead iteration, and the function whose whole job is to refuse had thirteen ways to say no and pins for none of them**
 
 **Pick.** The queue head, item 8 milestone `SM.B2b`, gated on nothing. Gate 1: local `dev` == `origin/dev` == `3189d39`, tree clean, CI green at HEAD both jobs SHA-addressed (`checks=2`, both `success`). Inbox empty. Zero new `@MarkEdmondson1234` comments since the watermark `2026-08-05T08:25:00Z` — **control fired** (`total_mark_comments=1`, so the filter can see a positive). Weekly external-issue sweep: **1 open issue repo-wide, and it is our own bookkeeping thread `#32`** — zero unmentioned, zero `[nightly-eval]` alarms. No thread rotation owed: `#32` was created `2026-08-03T06:15:41Z` = `08:15` **local**, which is AFTER the Monday-07:00 local boundary, and it holds 26 comments (< 80).
 
@@ -6667,7 +6667,7 @@ Control arm (unmutated) `rc=0`; `approve.go` restored to `6a9db6a7…0cb0` after
 
 **Next.** `SM.C` — probe-then-resolve reconciliation with a same-pass control, replay evidence, the clean-room fixture, and the attended runbook. Gated on nothing. Carry `NB-2` (redirect origin, only partially discharged), the `journal.go` unreachable-fallback declaration, and the doc's un-repaired self-contradiction.
 
-## Iteration 65 — 2026-08-08 — `w-self-mod-vertical` (item 8) **`SM.C` LANDED — probe-then-resolve reconciliation, and a clean `rc=0` is what a dead iteration looks like** (PR #52 → squash `0cd00eb`, evaluator `sonnet` **93/100, zero blocking**)
+## 65 — 2026-08-08 — `w-self-mod-vertical` (item 8) **`SM.C` LANDED — probe-then-resolve reconciliation, and a clean `rc=0` is what a dead iteration looks like** (PR #52 → squash `0cd00eb`, evaluator `sonnet` **93/100, zero blocking**)
 
 **Pick.** The queue head, item 8 milestone `SM.C`, gated on nothing. Gate 0: kill switch armed · tree clean · `gh` on `sunholo-voight-kampff` · billing tripwire **CLEAN** · zero unread inbox · zero new `MarkEdmondson1234` comments on `#32` (watermark `2026-08-05T08:25:00Z`; the mission-scoped and issue-scoped files agree, so the World-local read-both-take-older rule was a no-op this iteration; known-positive control fires — 27 comments, 1 from Mark, at exactly the watermark). No rotation: `#32` created `2026-08-03T06:15:41Z` = **08:15 CEST**, after the Monday-07:00 boundary, and 27 < 80 comments. External-issue sweep: exactly one open issue repo-wide, and it is `#32` itself. Gate 1: `dev == origin/dev` @ `2ef4a23`, running skill byte-identical to `origin/dev` (`cmp` silent), dev **GREEN at HEAD** both jobs SHA-addressed (`checks=2`), status API **All Systems Operational, 0 incidents** — so the baseline green is attributable and rule 3e is satisfied by CI at the base rather than by a local run.
 
@@ -6714,7 +6714,7 @@ Control arm (unmutated) `rc=0`; `approve.go` restored to `6a9db6a7…0cb0` after
 
 **Next.** **Not item 8.** `SM.D` is blocked on `8/OD-1`, an attended human decision, and must never run headless or in CI — so the next iteration should pick a different queue item (item 5 `w-mcp-projection` remains blocked on the transition registry; the load-flaky `cmd/ailang-worldd` wall-clock tests flagged at iter-63 are still unqueued and are a good candidate). **Parked on Mark: `8/OD-1`, plus the driver env-var proposal.**
 
-## Iteration 66 — 2026-08-10 — `w-verify-binary-lockfile` (item 9) **the headless-safe half LANDED — and the control written to justify it found a live false-green in the sibling gate** (PR #54 → squash `d8cfc9c`, dev CI green both jobs SHA-addressed, `present=2` asserted; evaluator `sonnet` **95/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **a version check that matches a SUBSTRING is satisfied by every build it exists to reject**
+## 66 — 2026-08-10 — `w-verify-binary-lockfile` (item 9) **the headless-safe half LANDED — and the control written to justify it found a live false-green in the sibling gate** (PR #54 → squash `d8cfc9c`, dev CI green both jobs SHA-addressed, `present=2` asserted; evaluator `sonnet` **95/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **a version check that matches a SUBSTRING is satisfied by every build it exists to reject**
 
 **Pick.** Not the queue head — item 8 has none left. Gate 0: kill switch armed · tree clean · `gh` on `sunholo-voight-kampff` · billing tripwire **CLEAN** · zero new `MarkEdmondson1234` comments since the watermark (control: the author filter returns **1** total, so the instrument fires). Gate 1: local `dev` **==** `origin/dev` at `8ca9b65`, zero worktrees, running skill byte-identical to `origin/dev` (`cmp` silent). dev CI **green both jobs, SHA-addressed** (`checks=2`). Weekly external-issue sweep (first iteration past the Monday-07:00 local boundary): **one** open issue in the repo and it is the bookkeeping thread itself — nothing to triage.
 
@@ -6742,7 +6742,7 @@ Control arm (unmutated) `rc=0`; `approve.go` restored to `6a9db6a7…0cb0` after
 
 **Next.** Item 9's remaining half is human-gated on **`9/OD-10`**. With `8/OD-1` also outstanding, **the queue has no headless-routable code item left** — the next iteration should expect a bookkeeping/analysis pick unless Mark rules on either ask. `9/CF-A-1` (committed shim fixture) is routable and small if a filler is wanted.
 
-## Iteration 67 — 2026-08-10 — `w-self-mod-vertical` (item 8) **`SM.D0` LANDED — the attended-publish entrypoint now exists, and its central deliverable is a fence rather than a feature** (PR #55 → squash `a4452d1`, dev CI green **both jobs, SHA-addressed, step-log verified**, 0-incident window; evaluator `sonnet` **88/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **a non-vacuity claim asserted without being run as literally described is the same vacuous pass this mission keeps closing, and it is most invisible when the code it describes is CORRECT**
+## 67 — 2026-08-10 — `w-self-mod-vertical` (item 8) **`SM.D0` LANDED — the attended-publish entrypoint now exists, and its central deliverable is a fence rather than a feature** (PR #55 → squash `a4452d1`, dev CI green **both jobs, SHA-addressed, step-log verified**, 0-incident window; evaluator `sonnet` **88/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **a non-vacuity claim asserted without being run as literally described is the same vacuous pass this mission keeps closing, and it is most invisible when the code it describes is CORRECT**
 
 **Pick.** The queue head, and the attended session's own `[NEXT]`. Gate 0 clean: kill switch armed, tree clean, `sunholo-voight-kampff` active, billing tripwire **CLEAN**, `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0` live in-process (the attended session's driver fix, working). No rotation owed — `#53` was created `05:37:35Z`, **after** the Monday-07:00-local boundary (`05:00Z`), and carries 3 comments. Zero Mark comments after the watermark on `#53` **or** on the predecessor `#32` (rotation-week catch applied; control on `#32` fires at 1 total, so the allowlist filter is proven working). External-issue sweep: exactly one open issue repo-wide, `#53` itself. dev green at pick (`6d1dce0`, `checks=2`). Running skill `cmp`-identical to V1 `origin/dev` — no rulebook drift.
 
@@ -6776,7 +6776,7 @@ Control arm (unmutated) `rc=0`; `approve.go` restored to `6a9db6a7…0cb0` after
 
 **Next.** Item 8 has **no headless-routable milestone left** — `SM.D` is attended-only and `8/CF-D0-1` is a carry, not a milestone. The routable work is **item 9's three pieces** under the `9/OD-10` ACCEPT ruling: the is-a-release assertion (which cannot red on an upstream release, which is what made it routable), the `9/CF-A-1` committed shim fixture, and `9/CF-A-2` (under ACCEPT the DRIFT warning now fires on every run, and a warning that always fires is not a signal). **ZERO OPEN ASKS.**
 
-## Iteration 68 — 2026-08-10 — `w-verify-binary-lockfile` (item 9) **`VL.A` LANDED — ITEM 9 IS COMPLETE; the `.ail` gate now refuses a dev build, and TWO local greens each answered a different question than the one asked** (PR #56 → squash `9789b87`, dev CI green **both jobs, SHA-addressed, `present=2` = expected 2, step-log verified**, 0-incident window; evaluator `sonnet` **38/100 FAIL r1 — the judge was RIGHT**; `metered=$0.00`) — the iteration's spine is that **a green proves the tree passes where you ran it, never where it must; and the repair that silences a warning in the lane you tested can re-arm it in the lane you did not**
+## 68 — 2026-08-10 — `w-verify-binary-lockfile` (item 9) **`VL.A` LANDED — ITEM 9 IS COMPLETE; the `.ail` gate now refuses a dev build, and TWO local greens each answered a different question than the one asked** (PR #56 → squash `9789b87`, dev CI green **both jobs, SHA-addressed, `present=2` = expected 2, step-log verified**, 0-incident window; evaluator `sonnet` **38/100 FAIL r1 — the judge was RIGHT**; `metered=$0.00`) — the iteration's spine is that **a green proves the tree passes where you ran it, never where it must; and the repair that silences a warning in the lane you tested can re-arm it in the lane you did not**
 
 **Pick.** Item 9's three headless pieces, made routable by Mark's attended `9/OD-10` ACCEPT. Item 8 has no headless milestone left (`SM.D` is attended-only, iter-67), items 5/6/7 are blocked or parked, item 10 is complete — so this was the queue head and the only routable work.
 
@@ -6814,7 +6814,7 @@ Control arm (unmutated) `rc=0`; `approve.go` restored to `6a9db6a7…0cb0` after
 
 **Next.** Item 9 is **COMPLETE**. Item 8 has no headless milestone (`SM.D` attended-only). The queue's remaining routable work needs a decision: item 5 `w-mcp-projection` is blocked on ONE prereq — the **transition registry**, still absent at HEAD — so the next unit is either writing that registry or re-scoping P6.B around its absence.
 
-## Iteration 69 — 2026-08-11 — `w-verify-binary-lockfile` (item 9) **`VL.B` LANDED — Z3 in CI job 2, and the accept contract now rejects a solverless gate; `9/OD-11` RATIFIED and DISCHARGED** (PR #57 → squash `32b086c`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2, all 14 job-2 steps success**, 0-incident window; evaluator `sonnet` **91/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **a control that cannot fail for the reason you think is worse than no control, and the ambient environment is where that hides**
+## 69 — 2026-08-11 — `w-verify-binary-lockfile` (item 9) **`VL.B` LANDED — Z3 in CI job 2, and the accept contract now rejects a solverless gate; `9/OD-11` RATIFIED and DISCHARGED** (PR #57 → squash `32b086c`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2, all 14 job-2 steps success**, 0-incident window; evaluator `sonnet` **91/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **a control that cannot fail for the reason you think is worse than no control, and the ambient environment is where that hides**
 
 **Pick.** Not the queue head. Mark's comment on issue #53 — *"Yes you can install z3 on cicd"* — is an allowlisted human directive answering the one open ask `9/OD-11`, and an answer to a parked item unparks it and makes it the pick (Gate 0.6). Watermark advanced to `2026-08-10T18:11:54Z` before routing.
 
@@ -6844,7 +6844,7 @@ Control arm (unmutated) `rc=0`; `approve.go` restored to `6a9db6a7…0cb0` after
 
 **Next.** Item 9 stays COMPLETE with zero open asks; item 8 has no headless milestone (`SM.D` is attended-only). The next routable unit is item 5 `w-mcp-projection`'s single remaining prerequisite — the transition registry, still absent at HEAD — either written, or `P6.B` re-scoped around its absence.
 
-## Iteration 70 — 2026-08-11 — `w-mcp-projection` (item 5) **the blocker is now DESIGNED, not absent — `w-transition-registry` LANDED, and restoring a budget-absent reviewer flipped a `proceed` into a `reject`** (PR #58 → squash `11fb1fd`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, 0-incident window; quorum BLOCKED r1 → revision → r2 N−1 `proceed` → reviewer re-run REJECTED → carve-out; `metered=$0.21259`) — the iteration's spine is that **a quorum that degrades to N−1 still prints `proceed`, and the missing reviewer is exactly the one whose objection you have not heard**
+## 70 — 2026-08-11 — `w-mcp-projection` (item 5) **the blocker is now DESIGNED, not absent — `w-transition-registry` LANDED, and restoring a budget-absent reviewer flipped a `proceed` into a `reject`** (PR #58 → squash `11fb1fd`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, 0-incident window; quorum BLOCKED r1 → revision → r2 N−1 `proceed` → reviewer re-run REJECTED → carve-out; `metered=$0.21259`) — the iteration's spine is that **a quorum that degrades to N−1 still prints `proceed`, and the missing reviewer is exactly the one whose objection you have not heard**
 
 **Pick.** The queue head is item 5 and it has been `[STILL BLOCKED]` for 20 iterations on ONE prerequisite — the clause-3 transition registry — which had **no design doc**. Iteration 69's own `[NEXT]` named it: *"either written, or `P6.B` re-scoped around its absence."* Gate 0 clean: kill switch armed, tree clean, `sunholo-voight-kampff` active, billing tripwire **CLEAN**. Zero Mark comments after the watermark `2026-08-10T18:11:54Z` on `#53` (`mission_directives.sh`, allowlist enforced in-script, 0 of 8 comments). No rotation owed — `#53` was created `05:37:35Z`, **after** the Monday-07:00-local boundary (`05:00Z`), and carries 8 comments (< 80). External-issue sweep: **0 orphans of 1 enumerated** — the only open issue repo-wide is `#53` itself (charter=1 log=2 dashboard=1; control `#57` charter=2 log=1 fires). Running skill `cmp`-identical to V1 `origin/dev` — no rulebook drift. No open PRs by this loop, no stale worktrees, main checkout clean — nothing died mid-flight.
 
@@ -6879,7 +6879,7 @@ Control arm (unmutated) `rc=0`; `approve.go` restored to `6a9db6a7…0cb0` after
 
 **Next.** Sprint-plan `w-transition-registry` (`TR.A` → `TR.B` → `TR.C`) and execute `TR.A`. P6.B's prerequisite is satisfied only when **`TR.C`** is green — `TR.A`+`TR.B` alone deliver the mechanism, not the enforcement, and the doc now says so in seven places. **Zero open asks.**
 
-## Iteration 71 — 2026-08-11 — `w-transition-registry` (item 11) **`TR.A1` LANDED — the executor honestly deferred six mutation arms, and running them found two guards that no test protected** (PR #59 → squash `93df1ec`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, 0-incident window; evaluator `sonnet` **94/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **a refusal test which asserts only *that* an error occurred pins no branch at all, and a codec with a canonical-form backstop gives every guard a second refuser to hide behind**
+## 71 — 2026-08-11 — `w-transition-registry` (item 11) **`TR.A1` LANDED — the executor honestly deferred six mutation arms, and running them found two guards that no test protected** (PR #59 → squash `93df1ec`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, 0-incident window; evaluator `sonnet` **94/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **a refusal test which asserts only *that* an error occurred pins no branch at all, and a codec with a canonical-form backstop gives every guard a second refuser to hide behind**
 
 **Pick.** The queue head, item 11, and iteration 70's own `[NEXT]`: sprint-plan `w-transition-registry` and execute its first milestone. Gate 0 clean: kill switch armed, tree clean, `sunholo-voight-kampff` active, billing tripwire **CLEAN**. Zero Mark comments after the watermark `2026-08-10T18:11:54Z` on `#53` (`mission_directives.sh`, allowlist enforced in-script, 0 of 9 comments). No rotation owed — `#53` was created `05:37:35Z`, **after** the Monday-07:00-local boundary (`05:00Z`), and carries 9 comments (< 80). External-issue sweep: **0 orphans of 1 enumerated** (`jq length` = 1 and `gh issue list | wc -l` = 1 agree, so the enumeration is asserted, not assumed); the only open issue repo-wide is `#53` itself (charter=1 log=3 dashboard=1; control `#58` charter=3 log=1 fires). Running skill `cmp`-identical to V1 `origin/dev` — no rulebook drift. No open PRs by this loop, no worktrees, main checkout clean — nothing died mid-flight.
 
@@ -6907,7 +6907,7 @@ Control arm (unmutated) `rc=0`; `approve.go` restored to `6a9db6a7…0cb0` after
 
 **Next.** **`TR.A2`** — the plan's T5–T8, already measured and scoped, needing no re-design. Then `TR.B`, then `TR.C`. P6.B's prerequisite is satisfied only when **`TR.C`** is green. **Zero open asks.**
 
-## Iteration 72 — 2026-08-11 — `w-transition-registry` (item 11) **`TR.A2` LANDED — `TR.A` IS COMPLETE, and the evaluator found three refusal branches that no test protected in a milestone whose own mutation sweep ran 20 arms clean** (PR #60 → squash `1a12042`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, 0-incident window; evaluator `sonnet` **86/100**, both blocking findings reproduced and **FIXED in-PR**; `metered=$0.00`) — the iteration's spine is that **a rule-3j audit anchored to a list of DECISIONS cannot, by construction, contain the branches the sprint itself writes**
+## 72 — 2026-08-11 — `w-transition-registry` (item 11) **`TR.A2` LANDED — `TR.A` IS COMPLETE, and the evaluator found three refusal branches that no test protected in a milestone whose own mutation sweep ran 20 arms clean** (PR #60 → squash `1a12042`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, 0-incident window; evaluator `sonnet` **86/100**, both blocking findings reproduced and **FIXED in-PR**; `metered=$0.00`) — the iteration's spine is that **a rule-3j audit anchored to a list of DECISIONS cannot, by construction, contain the branches the sprint itself writes**
 
 **Pick.** The queue head, item 11, and iteration 71's own `[NEXT]`: execute `TR.A2`, the plan's T5–T8. Gate 0 clean: kill switch armed, tree clean, `sunholo-voight-kampff` active, billing tripwire **CLEAN**. Zero Mark comments after the watermark `2026-08-10T18:11:54Z` on `#53` (`mission_directives.sh`, allowlist enforced in-script, 0 of 10 comments — note the script lives in the **V1 checkout**, not here, so it was invoked by absolute path). No rotation owed: `#53` was created `05:37:35Z`, **after** the Monday-07:00-**local** boundary (`05:00Z`), and carries 10 comments (< 80). External-issue sweep: **0 orphans of 1 enumerated** — the only open issue repo-wide is `#53` itself (charter=1 log=4 dashboard=1), with control `#59` firing (charter=2 log=1 dashboard=1). Running skill `cmp`-identical to V1 `origin/dev` — no rulebook drift. No open PRs by this loop, no worktrees, main checkout clean: nothing died mid-flight.
 
@@ -6937,7 +6937,7 @@ Control arm (unmutated) `rc=0`; `approve.go` restored to `6a9db6a7…0cb0` after
 
 **Next.** **`TR.B`** — capability snapshot + declared-effect confinement, closing AC5/AC6/AC7 — then **`TR.C`**, the binding gate. P6.B's prerequisite is satisfied only when `TR.C` is green; `TR.A`+`TR.B` deliver the mechanism, not the enforcement. **Zero open asks.**
 
-## Iteration 73 — 2026-08-11 — `w-transition-registry` (item 11) **`TR.B1` LANDED — TR.B was split on the planner's price, the bound invoker would have redded TR.C, and two more call sites turned out to be guarded by nothing** (PR #61 → squash `6e207ca`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, `unresolved_incidents=0`; evaluator `sonnet` **84/100**, its blocking finding reproduced first-party and **FIXED in-PR**; `metered=$0.00`) — the iteration's spine is that **unifying N call sites into one mechanism makes you test the mechanism and stop testing the sites**
+## 73 — 2026-08-11 — `w-transition-registry` (item 11) **`TR.B1` LANDED — TR.B was split on the planner's price, the bound invoker would have redded TR.C, and two more call sites turned out to be guarded by nothing** (PR #61 → squash `6e207ca`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, `unresolved_incidents=0`; evaluator `sonnet` **84/100**, its blocking finding reproduced first-party and **FIXED in-PR**; `metered=$0.00`) — the iteration's spine is that **unifying N call sites into one mechanism makes you test the mechanism and stop testing the sites**
 
 **Pick.** The queue head, item 11, and iteration 72's own `[NEXT]`: `TR.B`, capability snapshot + declared-effect confinement (AC5/AC6/AC7). Gate 0 clean: kill switch armed, tree clean, `sunholo-voight-kampff` active, billing tripwire **CLEAN**. Zero Mark comments after the watermark `2026-08-11T09:32:22Z` on `#53` (`mission_directives.sh`, allowlist enforced in-script, **0 of 11** comments; the script lives in the **V1 checkout**, invoked by absolute path). No rotation owed: `#53` was created `05:37:35Z` = **07:37 local**, after the Monday-07:00-**local** boundary (`05:00Z`), and carries 11 comments (< 80). External-issue sweep: **0 orphans of 1 enumerated** (`jq length` = 1 and `gh issue list | wc -l` = 1 agree, so the enumeration is asserted rather than assumed) — the only open issue repo-wide is `#53` itself. Running skill **`cmp`-identical** to V1 `origin/dev` — no rulebook drift. Inbox: 8 unread, all informational (6 `eval-suite`, 1 V1 iteration report, 1 cross-mission ACK that World's iter-72 rule-3j proposal was ADOPTED upstream at `02c552339`) — nothing outranking. No open PRs by this loop, no worktrees, main checkout clean: nothing died mid-flight.
 
@@ -6977,7 +6977,7 @@ Control arm (unmutated) `rc=0`; `approve.go` restored to `6a9db6a7…0cb0` after
 
 **Next.** **`TR.B2`** — descriptor-bound confinement and the two-session fixture, closing AC6/AC7; the plan's §3 T4–T5 already scope it, so no re-planning is owed. Then **`TR.C`**, the binding gate. P6.B's prerequisite is satisfied only when `TR.C` is green — `TR.A`+`TR.B` deliver the mechanism, not the enforcement. **Zero open asks.**
 
-## Iteration 74 — 2026-08-12 — `w-transition-registry` (item 11) **`TR.B2` LANDED — `TR.B` IS COMPLETE, and the one branch 21 clean executor arms could not see was the second refusal inside a two-branch helper** (PR #62 → squash `88eb850`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, `unresolved_incidents=0`; evaluator `sonnet` **96/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **"guard the helper, miss the call site" has a mirror image, and the instrument that catches only one direction is the reason this class keeps recurring**
+## 74 — 2026-08-12 — `w-transition-registry` (item 11) **`TR.B2` LANDED — `TR.B` IS COMPLETE, and the one branch 21 clean executor arms could not see was the second refusal inside a two-branch helper** (PR #62 → squash `88eb850`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, `unresolved_incidents=0`; evaluator `sonnet` **96/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **"guard the helper, miss the call site" has a mirror image, and the instrument that catches only one direction is the reason this class keeps recurring**
 
 **Pick.** The queue head, item 11, and iteration 73's own `[NEXT]`: `TR.B2`, descriptor-bound confinement + the two-session fixture (AC6/AC7). Gate 0 clean: kill switch armed, tree clean, `sunholo-voight-kampff` active, billing tripwire **CLEAN**. Zero Mark comments after the watermark `2026-08-11T09:32:22Z` on `#53` (`mission_directives.sh`, allowlist enforced in-script, **0 of 12** comments; the script lives in the **V1 checkout**, invoked by absolute path). No rotation owed: `#53` was created `05:37:35Z` = **07:37 local**, after the Monday-07:00-**local** boundary, and carries 12 comments (< 80). External-issue sweep: **0 orphans of 1 enumerated** — per-issue counts printed with a firing known-positive control (`#61` → charter 2 / log 1 / dash 1) and a known-absent control (`#999` → all 0), so the zero is a measurement rather than a broken pattern; the only open issue repo-wide is `#53` itself. Running skill **`cmp`-identical** to V1 `origin/dev` — no rulebook drift. Inbox: 6 unread, none outranking — 4 `eval-suite`, 1 V1 iteration report, and 1 cross-mission reply recording World's iter-73 rule-3j call-site proposal as **CORROBORATED-PENDING** upstream (V1 has no first-party instance yet; a sibling mission cannot set this mission's priorities, and it did not try to). No open PRs by this loop, no worktrees, main checkout clean: nothing died mid-flight.
 
@@ -7009,7 +7009,7 @@ Control arm (unmutated) `rc=0`; `approve.go` restored to `6a9db6a7…0cb0` after
 
 **Next.** **`TR.C`** — the binding gate, and the last milestone of item 11. `TR.A`+`TR.B` deliver the *mechanism*; without `TR.C` the undeclared-effect guard is an unenforced helper and item 5 `P6.B`'s prerequisite is **not** satisfied. It is an AST gate pinning the 3 legacy `Invoke` sites by identity and by exact count, already protected in advance by `AC-INVOKE3` (`n=3 p=3` re-measured green this iteration). Then item 12, then item 16. **Zero open asks.**
 
-## Iteration 75 — 2026-08-12 — `w-transition-registry` (item 11) **`TR.C` LANDED — ITEM 11 IS COMPLETE, and the judge defeated the gate with a method value** (PR #63 → squash `625fb89`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, `unresolved_incidents=0`; evaluator `sonnet` **63/100 FAIL**, its one blocking finding reproduced first-party and **FIXED IN-PR**; `metered=$0.00`) — the iteration's spine is that **a refusal gate needs its own shape space enumerated, not just its branches: 32 mutation arms agreed because every one of them spelled the forbidden thing the same way**
+## 75 — 2026-08-12 — `w-transition-registry` (item 11) **`TR.C` LANDED — ITEM 11 IS COMPLETE, and the judge defeated the gate with a method value** (PR #63 → squash `625fb89`, dev CI green **both jobs, SHA-addressed, `checks=2` = expected 2**, `unresolved_incidents=0`; evaluator `sonnet` **63/100 FAIL**, its one blocking finding reproduced first-party and **FIXED IN-PR**; `metered=$0.00`) — the iteration's spine is that **a refusal gate needs its own shape space enumerated, not just its branches: 32 mutation arms agreed because every one of them spelled the forbidden thing the same way**
 
 **Pick.** The queue head, item 11, and iteration 74's own `[NEXT]`: `TR.C`, the binding gate and the
 last milestone of the item. Gate 0 clean: kill switch armed, tree clean, `sunholo-voight-kampff`
@@ -7150,7 +7150,7 @@ activated — they are subtests of `detector_controls`); repairing the `host/bro
 then item **16** (the base flake, a standing tax on every future sweep). **Item 5's `P6.B`
 prerequisite is now SATISFIED** — TR.A and TR.B merged and TR.C green, as of `625fb89`.
 
-## Iteration 76 — 2026-08-12 — `w-ail-gate-module-pin` (item 12) **DESIGNED, not landed — and the measurement killed the queue row's own prescription** (design doc `d201a1e`, 557 lines, quorum 2 rounds BOTH BLOCKED with 2 external reviewers present in each, narrow-refinement carve-out applied to round 2; `metered=$0.169`) — the iteration's spine is that **a reviewer's objection is a claim too, and the hardest shape to handle is the one whose defect is real while its stated mechanism is false, because the fix is obviously good and nothing in the loop prompts you to check the reasoning**
+## 76 — 2026-08-12 — `w-ail-gate-module-pin` (item 12) **DESIGNED, not landed — and the measurement killed the queue row's own prescription** (design doc `d201a1e`, 557 lines, quorum 2 rounds BOTH BLOCKED with 2 external reviewers present in each, narrow-refinement carve-out applied to round 2; `metered=$0.169`) — the iteration's spine is that **a reviewer's objection is a claim too, and the hardest shape to handle is the one whose defect is real while its stated mechanism is false, because the fix is obviously good and nothing in the loop prompts you to check the reasoning**
 
 **Pick.** The queue head, item 12, and iteration 75's own `[NEXT]`. It is the queue's first
 `NEEDS A DESIGN DOC` head since iter-71, so the routing step is **designer → quorum**, not
@@ -7299,7 +7299,7 @@ own fallback if the planner prices the Leg-1 loop restructure higher, and names 
 arm). Then item **16** (`w-broker-base-flake`, the ~18% base flake that taxes every mutation sweep).
 Item 5 `w-mcp-projection` `P6.B` remains UNBLOCKED.
 
-## Iteration 77 — 2026-08-12 — `w-ail-gate-module-pin` (item 12) **LANDED — ITEM 12 IS COMPLETE, and the judge defeated the gate the milestone had just landed, with a capital letter** (PR #64 → squash `40164ea`, dev CI green **both jobs on the merge commit, SHA-addressed, `present=2` = expected 2**, `unresolved_incidents=0`; evaluator `sonnet` **93/100 PASS, zero blocking**, its one non-blocking finding reproduced first-party and **FIXED IN-PR**; `metered=$0.00`) — the iteration's spine is that **a recogniser's coverage is a property of its ENUMERATOR, one level below its branches: five arms and ten mutations all agreed because every one of them spelled the extension lowercase, and `find -name` is case-sensitive**
+## 77 — 2026-08-12 — `w-ail-gate-module-pin` (item 12) **LANDED — ITEM 12 IS COMPLETE, and the judge defeated the gate the milestone had just landed, with a capital letter** (PR #64 → squash `40164ea`, dev CI green **both jobs on the merge commit, SHA-addressed, `present=2` = expected 2**, `unresolved_incidents=0`; evaluator `sonnet` **93/100 PASS, zero blocking**, its one non-blocking finding reproduced first-party and **FIXED IN-PR**; `metered=$0.00`) — the iteration's spine is that **a recogniser's coverage is a property of its ENUMERATOR, one level below its branches: five arms and ten mutations all agreed because every one of them spelled the extension lowercase, and `find -name` is case-sensitive**
 
 **Pick.** The queue head, item 12, and iteration 76's own `[NEXT]`: the **sprint**, not another doc —
 the design doc landed last iteration quorum-cleared, so the routing step is planner → executor →
@@ -7501,7 +7501,7 @@ Then item **13** `w-evidence-grade-mapping`. Item 5 `P6.B` remains **UNBLOCKED**
 at the next convenient pick: move `w-ail-gate-module-pin.md` and its `-sprint-plan.md` companion to
 `design_docs/implemented/`.
 
-## Iteration 78 — 2026-08-13 — `w-broker-base-flake` (item 16) **DESIGNED and PARKED `needs-human-review` — two quorum rounds, both BLOCKED, and the second objection reverses the doc's central architectural choice** (doc `design_docs/planned/w-broker-base-flake.md`, 586 lines; both rounds had 2 external reviewers PRESENT, `absent_reviewers` empty; `metered=$0.202435`) — the iteration's spine is that **a faithful mock of a mechanism is not a faithful mock of its INPUTS: my 1,987-run exoneration of `runBounded` re-used one warm fixture inode while the real test writes a fresh one every run, and on darwin that difference is 3 ms vs 103 ms — the same order as the 100 ms deadline under test**
+## 78 — 2026-08-13 — `w-broker-base-flake` (item 16) **DESIGNED and PARKED `needs-human-review` — two quorum rounds, both BLOCKED, and the second objection reverses the doc's central architectural choice** (doc `design_docs/planned/w-broker-base-flake.md`, 586 lines; both rounds had 2 external reviewers PRESENT, `absent_reviewers` empty; `metered=$0.202435`) — the iteration's spine is that **a faithful mock of a mechanism is not a faithful mock of its INPUTS: my 1,987-run exoneration of `runBounded` re-used one warm fixture inode while the real test writes a fresh one every run, and on darwin that difference is 3 ms vs 103 ms — the same order as the 100 ms deadline under test**
 
 **Pick.** The queue head, item 16, and iteration 77's own `[NEXT]`. It is a `NEEDS A DESIGN DOC`
 head, so the routing step is **designer → quorum**, not planner → executor.
@@ -7719,7 +7719,7 @@ other lane a quota bucket.
 **Next.** Item 16 unblocks on a one-word answer (A or B). Failing that, item **13**
 `w-evidence-grade-mapping`. Item 5 `P6.B` remains UNBLOCKED.
 
-## Iteration 79 — 2026-08-13 — `w-evidence-grade-mapping` (item 13) **DESIGNED and QUORUM-CLEARED for the sprint-planner** (doc `design_docs/planned/w-evidence-grade-mapping.md`, 620 lines, committed `6d12a79`; two quorum rounds, both external reviewers PRESENT in both with `absent_reviewers` empty; R2 = `gemini-3-1-pro` PASS + `gpt5-6-sol` REJECT resolved under the narrow-refinement carve-out; `metered=$0.177493`) — the iteration's spine is that **a limitation the repo had already recorded about itself was NARROWER than its own comment invited, and measuring the boundary opened a design option the ratified text did not know existed**
+## 79 — 2026-08-13 — `w-evidence-grade-mapping` (item 13) **DESIGNED and QUORUM-CLEARED for the sprint-planner** (doc `design_docs/planned/w-evidence-grade-mapping.md`, 620 lines, committed `6d12a79`; two quorum rounds, both external reviewers PRESENT in both with `absent_reviewers` empty; R2 = `gemini-3-1-pro` PASS + `gpt5-6-sol` REJECT resolved under the narrow-refinement carve-out; `metered=$0.177493`) — the iteration's spine is that **a limitation the repo had already recorded about itself was NARROWER than its own comment invited, and measuring the boundary opened a design option the ratified text did not know existed**
 
 **Pick.** Item 13. Not the queue head by tag — item 16 is still `[PARKED needs-human-review]` on
 Mark's one-word A/B from iteration 78, and iteration 78's own `[NEXT]` named item 13 as the fallback
@@ -7989,7 +7989,7 @@ skill, so it goes to V1 as a proposal with both instances named.
 
 ---
 
-## Iteration 80 — 2026-08-13 — `w-broker-base-flake` (item 16) **COMPLETE and LANDED — unparked by a one-word human directive** (PR [#65](https://github.com/sunholo-data/ailang-world/pull/65) → squash `d9712dd`; Gate 3b GREEN on the merge commit itself, `checks=2` = expected 2, `present == expected` asserted, 0 non-success; evaluator `sonnet` **96/100, zero blocking**; `metered=$0.148857`) — the iteration's spine is that **a test seam which REPLACES rather than WRAPS makes every mutation of the replaced body vacuous, and the mutation table cannot show it because the table names the right file, the right line and the right one-line edit throughout**
+## 80 — 2026-08-13 — `w-broker-base-flake` (item 16) **COMPLETE and LANDED — unparked by a one-word human directive** (PR [#65](https://github.com/sunholo-data/ailang-world/pull/65) → squash `d9712dd`; Gate 3b GREEN on the merge commit itself, `checks=2` = expected 2, `present == expected` asserted, 0 non-success; evaluator `sonnet` **96/100, zero blocking**; `metered=$0.148857`) — the iteration's spine is that **a test seam which REPLACES rather than WRAPS makes every mutation of the replaced body vacuous, and the mutation table cannot show it because the table names the right file, the right line and the right one-line edit throughout**
 
 **Pick.** Item 16, by **human directive**, which outranks the queue. Mark Edmondson
 (`@MarkEdmondson1234`) commented `option A` on bookkeeping issue **#53** at
@@ -8228,7 +8228,7 @@ Gate-3b `set --` array fix at 3 instances.
 iteration 79, `6d12a79`, ~0.65d). Item 5 `P6.B` remains UNBLOCKED. **Zero items are parked on
 Mark, and there are no open asks.**
 
-## Iteration 81 — 2026-08-13 — `w-evidence-grade-mapping` (item 13) **COMPLETE and LANDED — the repo's 5th Z3-proven identity** (PR [#66](https://github.com/sunholo-data/ailang-world/pull/66) → squash `36f0c7a`; Gate 3b GREEN on the merge commit itself, `checks=2` = expected 2, `present == expected` asserted, 0 non-success; evaluator `sonnet` **89/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **an acceptance criterion can be unsatisfiable BY CONSTRUCTION, and that is worse than one that cannot fail, because the only way to satisfy it is to falsify the evidence — AC9 demanded a hash move that the hash function cannot produce, while its own next clause forbade the single act that would have produced it**
+## 81 — 2026-08-13 — `w-evidence-grade-mapping` (item 13) **COMPLETE and LANDED — the repo's 5th Z3-proven identity** (PR [#66](https://github.com/sunholo-data/ailang-world/pull/66) → squash `36f0c7a`; Gate 3b GREEN on the merge commit itself, `checks=2` = expected 2, `present == expected` asserted, 0 non-success; evaluator `sonnet` **89/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **an acceptance criterion can be unsatisfiable BY CONSTRUCTION, and that is worse than one that cannot fail, because the only way to satisfy it is to falsify the evidence — AC9 demanded a hash move that the hash function cannot produce, while its own next clause forbade the single act that would have produced it**
 
 **Pick.** Item 13 `w-evidence-grade-mapping`, the queue head — `[NEXT]`, designed and
 quorum-cleared at iter-79. No human directive outranked it; the one directive the Gate-0 query
@@ -8398,7 +8398,7 @@ this iteration and both sub-agent lanes were quota buckets. Cap $5, untouched.
 **Next.** Item 17 `w-validated-proven-evidence-boundary` — item 13's declared residual, now also
 carrying the AC7 no-persistent-guard finding.
 
-## Iteration 82 — 2026-08-13 — `w-workbench-read-only` (item 14) **DESIGNED and PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-workbench-read-only.md`, 641 lines, designer `codex:gpt-5.6-sol`; TWO quorum rounds, both BLOCKED, all four reviewer slots `present=true`; `metered=$0.160575`) — the iteration's spine is that **a queue row's PRESCRIPTION can be falsified by the very item it was waiting on, and it rots silently because a row reads as a specification rather than as a claim**
+## 82 — 2026-08-13 — `w-workbench-read-only` (item 14) **DESIGNED and PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-workbench-read-only.md`, 641 lines, designer `codex:gpt-5.6-sol`; TWO quorum rounds, both BLOCKED, all four reviewer slots `present=true`; `metered=$0.160575`) — the iteration's spine is that **a queue row's PRESCRIPTION can be falsified by the very item it was waiting on, and it rots silently because a row reads as a specification rather than as a claim**
 
 **Pick.** Item 14 `w-workbench-read-only` — **and this is not the item the previous iteration
 named.** Iteration 81's log `Next` field says item **17**. Item 17's own charter row says, in its
@@ -8537,7 +8537,7 @@ blocks item 7), unless Mark's one-word A/B unparks item 14 first.
 
 ---
 
-## Iteration 83 — 2026-08-14 — `w-decision-lifecycle-freeze` (item 15) **DESIGNED and PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-decision-lifecycle-freeze.md`, 694 lines, commit `2104631`, designer `claude:claude-fable-5`; TWO quorum rounds, all four reviewer slots `present=true`; R1 both reject, **R2 `gemini-3-1-pro` PASS / `gpt5-6-sol` REJECT**; `metered=$0.224892`) — the iteration's spine is that **a reviewer's objection can be substantively CORRECT while its `proposed_fix` is unimplementable by construction, and the narrow-refinement carve-out has no slot for that shape, because the carve-out's whole safeguard is applying the reviewer's VERBATIM words**
+## 83 — 2026-08-14 — `w-decision-lifecycle-freeze` (item 15) **DESIGNED and PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-decision-lifecycle-freeze.md`, 694 lines, commit `2104631`, designer `claude:claude-fable-5`; TWO quorum rounds, all four reviewer slots `present=true`; R1 both reject, **R2 `gemini-3-1-pro` PASS / `gpt5-6-sol` REJECT**; `metered=$0.224892`) — the iteration's spine is that **a reviewer's objection can be substantively CORRECT while its `proposed_fix` is unimplementable by construction, and the narrow-refinement carve-out has no slot for that shape, because the carve-out's whole safeguard is applying the reviewer's VERBATIM words**
 
 **Pick.** Item 15 `w-decision-lifecycle-freeze` — the queue head by position and the item iteration
 82 named as `Next`. Zero Gate-0 directives, so nothing outranked it: `mission_directives.sh` returned
@@ -8677,7 +8677,7 @@ intended doc, and every probe and isolated tree lived outside the repo.
 answers unpark item 14 or item 15 first. **TWO open asks, both one-word**: item 14's A/B from
 iteration 82, still unanswered, and item 15's §7.3 freeze-timing A/B filed here.
 
-## Iteration 84 — 2026-08-14 — `w-validated-proven-evidence-boundary` (item 17) **DESIGNED and PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-validated-proven-evidence-boundary.md`, 566 lines, commits `169d6bc` → `bc3965d` → `323baf6`, designer `codex:gpt-5.6-sol`; TWO quorum rounds, all four reviewer slots `present=true`, both rounds BLOCKED; `metered=$0.179422`) — the iteration's spine is that **a reviewer's proposed fix can be perfectly RUNNABLE and still be a DOWNGRADE, and the carve-out's one safeguard — applying the reviewer's verbatim words — is precisely what would ship it**
+## 84 — 2026-08-14 — `w-validated-proven-evidence-boundary` (item 17) **DESIGNED and PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-validated-proven-evidence-boundary.md`, 566 lines, commits `169d6bc` → `bc3965d` → `323baf6`, designer `codex:gpt-5.6-sol`; TWO quorum rounds, all four reviewer slots `present=true`, both rounds BLOCKED; `metered=$0.179422`) — the iteration's spine is that **a reviewer's proposed fix can be perfectly RUNNABLE and still be a DOWNGRADE, and the carve-out's one safeguard — applying the reviewer's verbatim words — is precisely what would ship it**
 
 **Pick.** Item 17, the queue head by position and iteration 83's named `NEXT`. Zero Gate-0
 directives (`mission_directives.sh --issue 53` → **0** of 24 comments from `MarkEdmondson1234`
@@ -8798,7 +8798,7 @@ A/B from iteration 82. Three consecutive iterations have now ended in a parked d
 loop cannot unpark itself, and the rate at which asks accumulate is worth Mark's attention on its
 own.
 
-## Iteration 85 — 2026-08-14 — `w-decision-lifecycle-freeze` (item 15) **COMPLETE and LANDED — the v1 `DecisionPacket` is frozen and the repo's Z3-proven identity count doubles, 5 → 10** (PR [#67](https://github.com/sunholo-data/ailang-world/pull/67) → squash `aaada20`; Gate 3b GREEN on the merge commit itself, `present(2) == expected(2)`, control fires; evaluator `sonnet` **96/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **this slot's own predecessor died mid-flight after doing the work, and the safety net installed to stop that had already deleted the only instrument that could see it fail**
+## 85 — 2026-08-14 — `w-decision-lifecycle-freeze` (item 15) **COMPLETE and LANDED — the v1 `DecisionPacket` is frozen and the repo's Z3-proven identity count doubles, 5 → 10** (PR [#67](https://github.com/sunholo-data/ailang-world/pull/67) → squash `aaada20`; Gate 3b GREEN on the merge commit itself, `present(2) == expected(2)`, control fires; evaluator `sonnet` **96/100, zero blocking**; `metered=$0.00`) — the iteration's spine is that **this slot's own predecessor died mid-flight after doing the work, and the safety net installed to stop that had already deleted the only instrument that could see it fail**
 
 **Pick — NOT chosen from the queue, INHERITED from a corpse.** Gate 2's died-mid-flight sweep
 found a worktree `.wt-iter85` on branch `sprint/w-decision-lifecycle-freeze`, holding a planner
@@ -8952,7 +8952,7 @@ round* rather than a new design (the MAC seam, the V27 repair pointing §3.3/§3
 
 ---
 
-## Iteration 86 — 2026-08-14 — `w-daemon-read-cancellation` (item 18) **DESIGNED and PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-daemon-read-cancellation.md`, 673 lines, designer `claude:claude-fable-5`; TWO quorum rounds, all four reviewer slots `present=true`, **both rounds `blocked`**; `metered=$0.2299`) — the iteration's spine is that **one enumeration was wrong at three different scopes in a single iteration — the queue row under-counted it, the controller mis-located it inside a VERIFIED-BY-ME directive, and the designer's own correction re-stated it as a false universal — because a count is only true inside the scope it was taken in, and the scope is the part nobody writes down**
+## 86 — 2026-08-14 — `w-daemon-read-cancellation` (item 18) **DESIGNED and PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-daemon-read-cancellation.md`, 673 lines, designer `claude:claude-fable-5`; TWO quorum rounds, all four reviewer slots `present=true`, **both rounds `blocked`**; `metered=$0.2299`) — the iteration's spine is that **one enumeration was wrong at three different scopes in a single iteration — the queue row under-counted it, the controller mis-located it inside a VERIFIED-BY-ME directive, and the designer's own correction re-stated it as a false universal — because a count is only true inside the scope it was taken in, and the scope is the part nobody writes down**
 
 **Pick.** Queue head, item **18** `w-daemon-read-cancellation`, taken as `[NEXT]` from iteration
 85's STATUS stamp. NEEDS A DESIGN DOC, gated on nothing, and — since Mark's attended option-B
@@ -9131,7 +9131,7 @@ item 18 unparks straight to sprint-planner as written.
 
 ---
 
-## Iteration 87 — 2026-08-15 — `w-validated-proven-evidence-boundary` (item 17) **REVISED TWICE and re-PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-validated-proven-evidence-boundary.md`, 566 → 711 lines, designer `codex:gpt-5.6-sol` ×2; quorum rounds **3 and 4** overall, `absent_reviewers: []` both, round 4 the **first reviewer flip to `pass`** in this item's history; `metered=$0.266188`) — the iteration's spine is that **the reviewer's own verbatim alternative was the trap: applying `gpt5-6-sol`'s round-3 `proposed_fix` exactly as written produced the round-4 objection from the same reviewer, because arm 2 and "authority boundary" are incompatible and only applying it revealed that**
+## 87 — 2026-08-15 — `w-validated-proven-evidence-boundary` (item 17) **REVISED TWICE and re-PARKED `needs-human-review`, not landed** (doc `design_docs/planned/w-validated-proven-evidence-boundary.md`, 566 → 711 lines, designer `codex:gpt-5.6-sol` ×2; quorum rounds **3 and 4** overall, `absent_reviewers: []` both, round 4 the **first reviewer flip to `pass`** in this item's history; `metered=$0.266188`) — the iteration's spine is that **the reviewer's own verbatim alternative was the trap: applying `gpt5-6-sol`'s round-3 `proposed_fix` exactly as written produced the round-4 objection from the same reviewer, because arm 2 and "authority boundary" are incompatible and only applying it revealed that**
 
 **Pick.** Item **17** `w-validated-proven-evidence-boundary`, the `[NEXT]` tag set by iteration 86.
 Not a new design: iteration 84 parked it, Mark's attended **Option B** ratification (host-held
@@ -9295,7 +9295,7 @@ states no byte bound before parsing, unlike `ValidateProof`'s 256 KiB envelope c
 
 **TWO open asks** — items 17 and 18, both phrased for one-word replies.
 
-## Iteration 88 — 2026-08-15 — item **5** `w-mcp-projection` **UNBLOCKED — all three P6.B prerequisites discharged, measured first-party; no code landed and nothing routed** (charter row 5 rewritten, STATUS rotated, dashboard rebuilt, upstream `#498` annotated; `metered=$0.00`) — the iteration's spine is that **a blocker's STATE is not its PURPOSE: `ailang#498` is still `OPEN` and untouched since 2026-08-04, which iteration 87 read as blocking, while the thing it was filed to obtain shipped in `v0.33.1` and has been sitting in a public package for eleven days**
+## 88 — 2026-08-15 — item **5** `w-mcp-projection` **UNBLOCKED — all three P6.B prerequisites discharged, measured first-party; no code landed and nothing routed** (charter row 5 rewritten, STATUS rotated, dashboard rebuilt, upstream `#498` annotated; `metered=$0.00`) — the iteration's spine is that **a blocker's STATE is not its PURPOSE: `ailang#498` is still `OPEN` and untouched since 2026-08-04, which iteration 87 read as blocking, while the thing it was filed to obtain shipped in `v0.33.1` and has been sitting in a public package for eleven days**
 
 **Pick.** None from the queue — the queue head was believed fully blocked. Iteration 87 recorded
 *"THE HEADLESS QUEUE IS NOW FULLY BLOCKED … the two outstanding A/Bs are the ONLY things that unblock
@@ -9443,7 +9443,7 @@ it.
 
 ---
 
-## Iteration 89 — 2026-08-17 — **the local verify gate was 100% dead on a green tree and CI could not see it — `verify_ail.sh` refusing and all 17 `host/verifygate` arms failing because an unrelated stderr log line was being merged into output that gets parsed; FIXED, proven in three arms, and landed** — with the queue itself fully blocked (re-verified first-party across all 24 rows' live heads), so the rest is containment of a live-but-uncommitted fleet bundle, the weekly thread rotation, and one new one-word ask (`metered=$0.00`; controller `claude:claude-opus-5`; no designer, planner, executor or evaluator spawned) — the iteration's second spine is that **the driver this loop executes is not in git, and neither was the ledger that defines its open decisions: launchd runs the working-tree copy, Gate 1's `cmp` guards only `SKILL.md`, and Mark's "authoritative current state" existed solely as unversioned bytes in a shared checkout**
+## 89 — 2026-08-17 — **the local verify gate was 100% dead on a green tree and CI could not see it — `verify_ail.sh` refusing and all 17 `host/verifygate` arms failing because an unrelated stderr log line was being merged into output that gets parsed; FIXED, proven in three arms, and landed** — with the queue itself fully blocked (re-verified first-party across all 24 rows' live heads), so the rest is containment of a live-but-uncommitted fleet bundle, the weekly thread rotation, and one new one-word ask (`metered=$0.00`; controller `claude:claude-opus-5`; no designer, planner, executor or evaluator spawned) — the iteration's second spine is that **the driver this loop executes is not in git, and neither was the ledger that defines its open decisions: launchd runs the working-tree copy, Gate 1's `cmp` guards only `SKILL.md`, and Mark's "authoritative current state" existed solely as unversioned bytes in a shared checkout**
 
 **Pick.** None from the queue, and this time the fully-blocked verdict is measured rather than
 inherited. Iteration 87 asserted it and was wrong; iteration 88 corrected it and unblocked item 5's
@@ -9607,7 +9607,7 @@ one-way drift is unguarded one file over. Not a skill edit yet — and World can
 answered: `D-WORLD-5` (unblocks the most — items 6 and 7 sit behind item 5 landing), `D-WORLD-17`,
 `D-WORLD-18`, `D-WORLD-DRIVER-1`.
 
-## Iteration 90 — 2026-08-18 — **an attended human ratification of all four open decisions had been sitting UNCOMMITTED in the shared working tree for three days; landed it (`03c7892`, Gate 3b green), then falsified item 5's freshly-ratified arm A by measurement and re-parked item 17 after two more quorum rounds** (`metered=$0.328765`; controller `claude:claude-opus-5`; designer `claude:claude-fable-5` ×2; no planner, executor or evaluator) — the iteration's spine is that **Gate 2's died-mid-flight sweep is written entirely about iterations that die, and the thing it caught here was a session that finished cleanly and handed its last two commands to a human who never ran them**
+## 90 — 2026-08-18 — **an attended human ratification of all four open decisions had been sitting UNCOMMITTED in the shared working tree for three days; landed it (`03c7892`, Gate 3b green), then falsified item 5's freshly-ratified arm A by measurement and re-parked item 17 after two more quorum rounds** (`metered=$0.328765`; controller `claude:claude-opus-5`; designer `claude:claude-fable-5` ×2; no planner, executor or evaluator) — the iteration's spine is that **Gate 2's died-mid-flight sweep is written entirely about iterations that die, and the thing it caught here was a session that finished cleanly and handed its last two commands to a human who never ran them**
 
 **Gate 0.** Kill switch armed-off; `sunholo-voight-kampff` active; billing tripwire **CLEAN**. Inbox
 **4** unread — my own `mission-control` note, `mission-v1`'s iteration-218 controlplane report, two
@@ -9819,7 +9819,7 @@ $0.15: **a per-iteration aggregate is assembled by hand from stages the controll
 round it forgot is invisible in exactly the record built to make spend visible.** Watch-item,
 instance 1.
 
-## Iteration 91 — 2026-08-18 — **item 18's M1 went design→plan→execute→evaluate→LANDED in one iteration (PR #69 → squash `7ad24ea`, Gate 3b green SHA-addressed, evaluator `sonnet` 92/100)** (`metered=$0.0238`; controller `claude:claude-opus-5`; planner `opus`; executor `opus` after the chain degraded; evaluator `sonnet`; no designer round) — the iteration's spine is that **the executor lane failed twice returning `rc=0` with zero bytes changed, in a shape the shared skill's own detector cannot see: `stopReason` read `stop`, the normal success state, at 625 output tokens against a 65,536 budget**
+## 91 — 2026-08-18 — **item 18's M1 went design→plan→execute→evaluate→LANDED in one iteration (PR #69 → squash `7ad24ea`, Gate 3b green SHA-addressed, evaluator `sonnet` 92/100)** (`metered=$0.0238`; controller `claude:claude-opus-5`; planner `opus`; executor `opus` after the chain degraded; evaluator `sonnet`; no designer round) — the iteration's spine is that **the executor lane failed twice returning `rc=0` with zero bytes changed, in a shape the shared skill's own detector cannot see: `stopReason` read `stop`, the normal success state, at 625 output tokens against a 65,536 budget**
 
 **Gate 0.** Kill switch armed-off; `sunholo-voight-kampff` active; billing tripwire **CLEAN**. Inbox
 **0** unread. Directives: **0** from `MarkEdmondson1234` on `#68` (3 comments, all the loop's own)
@@ -10032,7 +10032,7 @@ D7 test extension), gated on nothing — but **E3 must be settled as its first a
 stays in `planned/` until all three land. **One open ask unchanged**: `D-WORLD-19` (item 17's scope,
 one word). The fleet-authored driver commit remains owed under `D-WORLD-DRIVER-1` arm B.
 
-## Iteration 92 — 2026-08-18 — **item 18's M2 landed (PR #70 → squash `b3c5de0`, Gate 3b green SHA-addressed, evaluator `sonnet` 99/100 with zero blocking findings)** (`metered=$0.0205`; controller `claude:claude-opus-5`; executor `opus` after the chain degraded twice; evaluator `sonnet`; no designer, no planner — the plan already covered M2) — the iteration's spine is that **the design doc's own prescribed test fake could not kill the design doc's own mutation, because the fake hands the arm the mutation left alive exactly the value that arm needs**
+## 92 — 2026-08-18 — **item 18's M2 landed (PR #70 → squash `b3c5de0`, Gate 3b green SHA-addressed, evaluator `sonnet` 99/100 with zero blocking findings)** (`metered=$0.0205`; controller `claude:claude-opus-5`; executor `opus` after the chain degraded twice; evaluator `sonnet`; no designer, no planner — the plan already covered M2) — the iteration's spine is that **the design doc's own prescribed test fake could not kill the design doc's own mutation, because the fake hands the arm the mutation left alive exactly the value that arm needs**
 
 **Gate 0.** Kill switch armed-off; `sunholo-voight-kampff` active; billing tripwire **CLEAN**. Inbox
 **0** unread. Directives: **0** from `MarkEdmondson1234` on `#68` (4 comments, all the loop's own)
@@ -10284,7 +10284,7 @@ BadRequest sites, which must NOT be over-sanitized), `TestInternalErrorsAreSanit
 QUICKSTART S7 re-execution. Gated on nothing; the M3 baseline is verified unchanged by M2. **One open
 ask unchanged:** `D-WORLD-19` (item 17's scope, one word).
 
-## Iteration 93 — 2026-08-18 — **item 18 is COMPLETE: M3 landed (PR [#71](https://github.com/sunholo-data/ailang-world/pull/71) → squash `d21754f`, Gate 3b GREEN on the MERGE commit SHA-addressed, evaluator `sonnet` 96/100 zero blocking), doc + plan → `implemented/`** (`metered=$0.0203`; controller `claude:claude-opus-5`; executor `opus` after the chain degraded twice; evaluator `sonnet`; no designer, no planner — the plan already covered M3) — the iteration's spine is that **there is a SEVENTH `Internal` 500-echo site and AC5, the milestone's own headline gate, is blind to it by construction, so the gate passes on a tree that leaks**
+## 93 — 2026-08-18 — **item 18 is COMPLETE: M3 landed (PR [#71](https://github.com/sunholo-data/ailang-world/pull/71) → squash `d21754f`, Gate 3b GREEN on the MERGE commit SHA-addressed, evaluator `sonnet` 96/100 zero blocking), doc + plan → `implemented/`** (`metered=$0.0203`; controller `claude:claude-opus-5`; executor `opus` after the chain degraded twice; evaluator `sonnet`; no designer, no planner — the plan already covered M3) — the iteration's spine is that **there is a SEVENTH `Internal` 500-echo site and AC5, the milestone's own headline gate, is blind to it by construction, so the gate passes on a tree that leaks**
 
 ### Pick
 
@@ -10479,7 +10479,7 @@ the archive stderr site (**21**). Item 17 remains parked on `D-WORLD-19`.
 - `D-WORLD-19` — item 17's scope (one word: A or B). Unchanged since iteration 90.
 - `D-WORLD-20` — does `pi:deepseek` stay in the ratified executor chain (one word: A or B). **New.**
 
-## Iteration 94 — 2026-08-19 — **queue row 19 COMPLETE and LANDED (PR [#72](https://github.com/sunholo-data/ailang-world/pull/72) → squash `6c2a537`, Gate 3b GREEN on the MERGE commit SHA-addressed, evaluator `sonnet` 97/100 zero blocking)** (`metered=$0.2342`; controller `claude:claude-opus-5`; designer `claude:claude-fable-5`; planner `opus`; executor `opus` after the chain degraded twice; evaluator `sonnet`) — the iteration's spine is that **the design that shipped said "already-expired" and the test spelled it `1 * time.Nanosecond`, which in Go is a FUTURE deadline, so the pin on the entire 503/`Timeout` contract was a race the design doc had already described correctly and the implementation had silently weakened**
+## 94 — 2026-08-19 — **queue row 19 COMPLETE and LANDED (PR [#72](https://github.com/sunholo-data/ailang-world/pull/72) → squash `6c2a537`, Gate 3b GREEN on the MERGE commit SHA-addressed, evaluator `sonnet` 97/100 zero blocking)** (`metered=$0.2342`; controller `claude:claude-opus-5`; designer `claude:claude-fable-5`; planner `opus`; executor `opus` after the chain degraded twice; evaluator `sonnet`) — the iteration's spine is that **the design that shipped said "already-expired" and the test spelled it `1 * time.Nanosecond`, which in Go is a FUTURE deadline, so the pin on the entire 503/`Timeout` contract was a race the design doc had already described correctly and the implementation had silently weakened**
 
 **Pick.** Queue row 19, `w-daemon-timeout-test-flake`, the only `[NEXT]` row. Ghost-disciplined
 before routing: the row was measured by iteration 93 at `e4ba56d`, and HEAD had moved, so it was
@@ -10721,7 +10721,7 @@ the manifest, ~0.5 d) and **22** (the lock-wait bound, ~0.5 d, needs a design do
 unblocked and all headless-routable. Item 17 remains parked on `D-WORLD-19`. **Two open asks**,
 both one-word: `D-WORLD-19` and `D-WORLD-20` (the latter now carrying a 5-for-5 record).
 
-## Iteration 95 — 2026-08-19 — **one Mark comment, two answers, both consumed; item 17 parks again one layer deeper**
+## 95 — 2026-08-19 — **one Mark comment, two answers, both consumed; item 17 parks again one layer deeper**
 
 **Pick.** A human directive, which outranks the queue. `scripts/mission_directives.sh --issue 68
 --since 2026-08-18T19:55:33Z` returned exactly one allowlisted comment, `MarkEdmondson1234` @
@@ -10834,7 +10834,7 @@ A perfectly good counter with nothing on the other end of it — the blocked-row
 
 **Next.** Rows 20/21/22/23, all four unblocked. **ONE** open ask: `D-WORLD-21`.
 
-## Iteration 96 — 2026-08-19 — **`D-WORLD-21` answered and applied, the carve-out taken on both round-9 objections, `gemini-3-1-pro` PASSES for the second consecutive round — and item 17 parks again on `D-WORLD-22`, because the reject landed on a residual the document itself DECLARED** (`metered=$0.6326`; controller `claude:claude-opus-5`; designer `claude:claude-fable-5` ×2, FLAGGED; no planner, executor or evaluator — no sprint ran)
+## 96 — 2026-08-19 — **`D-WORLD-21` answered and applied, the carve-out taken on both round-9 objections, `gemini-3-1-pro` PASSES for the second consecutive round — and item 17 parks again on `D-WORLD-22`, because the reject landed on a residual the document itself DECLARED** (`metered=$0.6326`; controller `claude:claude-opus-5`; designer `claude:claude-fable-5` ×2, FLAGGED; no planner, executor or evaluator — no sprint ran)
 
 **Pick.** Item 17, `w-validated-proven-evidence-boundary`, revision round 9. `D-WORLD-21` was
 ruled attended (arm A) and recorded at `35fd875` on entry, which un-parks the row — so the top
@@ -10960,7 +10960,7 @@ rows 20–23 over item 17 (a ruling had un-parked the higher row). (h) Reading t
 **Next.** Item 17 blocked on `D-WORLD-22`. Rows 20/21/22/23 all unblocked and headless-routable.
 **ONE** open ask: `D-WORLD-22`.
 
-## Iteration 97 — 2026-08-19 — **the load confound was mine: 64 unkilled spinners produced a false "dev is red" in two independent roles, and the queue head did not reproduce in 32 executions** (`metered=$0.2164`; controller `claude:claude-opus-5`; designer `claude:claude-fable-5` ×2, rotation WRAPPED and the Fable diet exceeded, FLAGGED; no planner, executor or evaluator — no sprint ran)
+## 97 — 2026-08-19 — **the load confound was mine: 64 unkilled spinners produced a false "dev is red" in two independent roles, and the queue head did not reproduce in 32 executions** (`metered=$0.2164`; controller `claude:claude-opus-5`; designer `claude:claude-fable-5` ×2, rotation WRAPPED and the Fable diet exceeded, FLAGGED; no planner, executor or evaluator — no sprint ran)
 
 **Deliverable**: queue row 21 `w-archive-stderr-in-manifest` is DESIGNED and quorum-clean via the
 narrow-refinement carve-out — `design_docs/planned/w-archive-stderr-in-manifest.md`, 808 lines,
@@ -11153,7 +11153,7 @@ Row 21 is DESIGNED and quorum-clean → **sprint-planner on the next fire**. Row
 
 ---
 
-## Iteration 98 — 2026-08-20 — **row 21 LANDED, and the spine is that the design's own non-vacuity arms were themselves vacuous — AC7's deadline fixture reds against CORRECT code, and the round-2 quorum's own verbatim-applied fix shipped with nothing guarding it** (`metered=$0.0000`; controller `claude:claude-opus-5`; planner `opus`; executor `opus`; evaluator `sonnet` 97/100; no designer — the doc arrived quorum-clean, so the Fable lane went unspent for the first time in four iterations)
+## 98 — 2026-08-20 — **row 21 LANDED, and the spine is that the design's own non-vacuity arms were themselves vacuous — AC7's deadline fixture reds against CORRECT code, and the round-2 quorum's own verbatim-applied fix shipped with nothing guarding it** (`metered=$0.0000`; controller `claude:claude-opus-5`; planner `opus`; executor `opus`; evaluator `sonnet` 97/100; no designer — the doc arrived quorum-clean, so the Fable lane went unspent for the first time in four iterations)
 
 **Deliverable**: queue row 21 `w-archive-stderr-in-manifest` is **LANDED** — PR
 [#73](https://github.com/sunholo-data/ailang-world/pull/73) → squash `9fa2647`, Gate 3b green on the
@@ -11290,7 +11290,7 @@ Rows **20** (re-scoped: measure the MARGIN, not the outcome), **22** (the lock-w
 (the deadline-free residue owner) are all unblocked and headless-routable. Item 17 stays parked.
 **One open ask, unchanged: `D-WORLD-22`.**
 
-## Iteration 99 — 2026-08-20 — **the queue head's own filed fix targets the term with a ~330× margin while the dominant term is bounded by nothing — and the design that replaced it was blocked because its fakes supplied the very property its arm was meant to expose** (`metered=$0.108951`; controller `claude:claude-opus-5`; designer `codex:gpt-5.6-sol` ×2 — rotation ADVANCED from fable, Fable lane unspent a second consecutive iteration; no planner, executor or evaluator — no sprint ran)
+## 99 — 2026-08-20 — **the queue head's own filed fix targets the term with a ~330× margin while the dominant term is bounded by nothing — and the design that replaced it was blocked because its fakes supplied the very property its arm was meant to expose** (`metered=$0.108951`; controller `claude:claude-opus-5`; designer `codex:gpt-5.6-sol` ×2 — rotation ADVANCED from fable, Fable lane unspent a second consecutive iteration; no planner, executor or evaluator — no sprint ran)
 
 **Deliverable**: queue row 20 `w-capsule-output-cap-load-flake` is **DESIGNED and PARKED**
 `needs-human-review` on the new `D-WORLD-23`. Design doc `design_docs/planned/w-capsule-output-cap-load-flake.md`
@@ -11413,7 +11413,7 @@ Row **23** needs no new design doc and is the cleanest headless route. Row **22*
 `gemini`'s premise rows owed. **Two open asks: `D-WORLD-22` and `D-WORLD-23` — and arm A of
 `D-WORLD-23` resolves both.**
 
-## Iteration 100 — 2026-08-20 — **one attended word closed a CLASS rather than an item, and all three claims it unparked carried a defect that only running the command could show** (`metered=$0.00`; controller `claude:claude-opus-5`; planner `opus` `fail-closed:env-pin`; executor `codex:gpt-5.6-sol`; evaluator `sonnet` 93/100; no designer — the ruling replaced the third quorum round, Fable unspent a 3rd consecutive iteration)
+## 100 — 2026-08-20 — **one attended word closed a CLASS rather than an item, and all three claims it unparked carried a defect that only running the command could show** (`metered=$0.00`; controller `claude:claude-opus-5`; planner `opus` `fail-closed:env-pin`; executor `codex:gpt-5.6-sol`; evaluator `sonnet` 93/100; no designer — the ruling replaced the third quorum round, Fable unspent a 3rd consecutive iteration)
 
 **Deliverable**: the human directive (which outranks the queue), then queue row 20
 `w-capsule-output-cap-load-flake` **LANDED** — PR [#74](https://github.com/sunholo-data/ailang-world/pull/74)
@@ -11530,7 +11530,7 @@ Row **17**'s bounded revision (unparked, **no ask open**): narrow the claim and 
 pinning `busy_timeout` < `ObjectReadTimeout`, re-asserting row 22 OPEN by command first. Then rows
 22/23/24/25. Nothing is parked on Mark.
 
-## Iteration 101 — 2026-08-20 — item 17: the ruling applied in full, then two more blocks, both on the round's own fix
+## 101 — 2026-08-20 — item 17: the ruling applied in full, then two more blocks, both on the round's own fix
 
 **Pick**: queue row 17 `w-validated-proven-evidence-boundary` — the bounded revision iteration
 100's Next prescribed. **Outcome**: `D-WORLD-22` arm B applied in full, the narrow-refinement
@@ -11656,7 +11656,7 @@ and row 23 is now visibly load-bearing — it owns the deadline-free residue thi
 traces back to. Rows 24/25 designed-pending. Item 17 unparks the moment `D-WORLD-24` is answered.
 **ONE open ask: `D-WORLD-24`.**
 
-## Iteration 102 — 2026-08-20 — item 17: the ruling shed the producer, and the confirming round blocked on two gaps byte-identical to `HEAD` — so the pattern broke, and what replaced it is a Total nobody added the column for
+## 102 — 2026-08-20 — item 17: the ruling shed the producer, and the confirming round blocked on two gaps byte-identical to `HEAD` — so the pattern broke, and what replaced it is a Total nobody added the column for
 
 **Pick**: the human directive. `MarkEdmondson1234 @ 2026-08-20T16:04:52Z` on `#68` — a bare **`A`**
 — resolves `D-WORLD-24` as **arm A** and UNPARKS queue row 17, which a directive outranking the
@@ -11784,7 +11784,7 @@ pricing fact to plan around, not a decision. Rows **23** (`w-store-deadline-free
 which row 26 is ordered behind) and **22** remain unblocked and headless-routable; rows 24/25/26 are
 designed-pending. **Zero open asks.**
 
-## Iteration 103 — 2026-08-21 — item 17: the plan was the deliverable, then `PE.A` landed — and both defects found this iteration sat in a channel that REPORTS rather than one that ENFORCES
+## 103 — 2026-08-21 — item 17: the plan was the deliverable, then `PE.A` landed — and both defects found this iteration sat in a channel that REPORTS rather than one that ENFORCES
 
 **Pick**: queue row **17** `w-validated-proven-evidence-boundary`, exactly as iteration 102's
 **Next** prescribed. Zero directives since the watermark, ledger 0 OPEN, so the queue head stands.
@@ -12019,7 +12019,7 @@ which also carries the DR-2 ratchet fix as task B5, so the planner's sharpest re
 milestone rather than sitting in a queue row. Then `PE.C` → `PE.F` in compile order. Rows 22/23
 remain unblocked and headless-routable; 24/25/26/27 designed-pending. **ZERO open asks.**
 
-## Iteration 104 — 2026-08-21 — item 17: `PE.B` landed, and the judge's two NON-blocking findings were the milestone's own anti-vacuity contract failing
+## 104 — 2026-08-21 — item 17: `PE.B` landed, and the judge's two NON-blocking findings were the milestone's own anti-vacuity contract failing
 
 **Pick**: queue row **17** `w-validated-proven-evidence-boundary`, milestone **`PE.B`**, exactly as
 iteration 103's **Next** prescribed. Zero directives since the watermark, ledger 0 OPEN, dev green,
@@ -12235,7 +12235,7 @@ Then `PE.D` → `PE.E` → `PE.F` in compile order; `PE.F` last, forced by its `
 pin. Rows 22/23 remain unblocked and headless-routable; 24–29 designed-pending. Row 5 stays blocked
 on `sunholo-data/ailang#764`, re-measured this iteration. **ZERO open asks.**
 
-## Iteration 105 — 2026-08-21 — item 17: `PE.C` landed, and the drill that certified it was killing dead code
+## 105 — 2026-08-21 — item 17: `PE.C` landed, and the drill that certified it was killing dead code
 
 **Pick**: queue row **17** `w-validated-proven-evidence-boundary`, milestone **`PE.C`** — item 17's
 own `NEXT` pointer, set by iteration 104. Not the queue head by position; it is an `[IN-SPRINT]`
@@ -12415,7 +12415,7 @@ reds the gate. **ZERO open asks.**
 
 ---
 
-## Iteration 106 — 2026-08-21 — item 17: `PE.D` landed, and the gate the milestone rests on was blind to every spelling but the one the doc named
+## 106 — 2026-08-21 — item 17: `PE.D` landed, and the gate the milestone rests on was blind to every spelling but the one the doc named
 
 **Pick**: queue row **17** `w-validated-proven-evidence-boundary`, milestone **`PE.D`** — item 17's
 own `NEXT` pointer, set by iteration 105. The largest milestone in the sprint (0.92 d, ~1150 LOC
@@ -12632,7 +12632,7 @@ out-of-sandbox re-run, and not for the usual reason: nothing in it binds a socke
 M22/M23 mutant signature. Then `PE.F` last without exception, forced by its own `EXACT_EVIDENCE_TESTS`
 pin. **ZERO open asks.**
 
-## Iteration 107 — 2026-08-22 — item 17: `PE.E` landed, and three of the milestone's own checks could not fail
+## 107 — 2026-08-22 — item 17: `PE.E` landed, and three of the milestone's own checks could not fail
 
 **Pick**: queue row **17** `w-validated-proven-evidence-boundary`, milestone **`PE.E`** — item 17's
 own `NEXT`, set by iteration 106. Real-store integration proofs, 0.85 d, test-only. Not the queue head
@@ -12830,7 +12830,7 @@ both `success`, 0 not-green). **`dev` is green.**
 **Gate 5 lane, revised.** The pre-registration is now a two-instance finding and is PROPOSED to V1 on
 the cross-mission channel — World shares the skill and cannot edit it.
 
-## Iteration 108 — 2026-08-22 — item 17: `PE.F` landed and the item is COMPLETE; a removal proves a check fires, only an addition proves it looks
+## 108 — 2026-08-22 — item 17: `PE.F` landed and the item is COMPLETE; a removal proves a check fires, only an addition proves it looks
 
 **Pick**: queue row **17** `w-validated-proven-evidence-boundary`, milestone **`PE.F`** — item 17's
 own `NEXT`, set by iteration 107, and the **last of six**. Not the queue head by position; an
@@ -12957,7 +12957,7 @@ sprint-plan companion** as a bookkeeping deliverable in the next iteration.
 
 ---
 
-## Iteration 109 — 2026-08-22 — item 14 unblocked, revised and carve-out-complete; the reviewer that dropped out on `budget` was the one whose objection made the doc too big
+## 109 — 2026-08-22 — item 14 unblocked, revised and carve-out-complete; the reviewer that dropped out on `budget` was the one whose objection made the doc too big
 
 **Pick**: queue row **14** `w-workbench-read-only` — **not** the item iteration 108's `NEXT` named.
 108 pointed at row 22 and noted row 14 "becomes eligible in the same pass". Row 14 sits **above** row
@@ -13130,7 +13130,7 @@ iterations.
 
 ---
 
-## Iteration 110 — 2026-08-22 — the sprint plan for item 14 landed, and three of its acceptance criteria could not fail
+## 110 — 2026-08-22 — the sprint plan for item 14 landed, and three of its acceptance criteria could not fail
 
 **Pick**: queue row **14** `w-workbench-read-only` — the item iteration 109's `NEXT` named, routed to
 the **sprint-planner**, which is what the narrow-refinement carve-out routes to once a doc is
@@ -13403,7 +13403,7 @@ control, and the controlplane message's body was read back before this line was 
 and already worked — the miss was mine, not the rulebook's. Recorded so a second instance is
 recognisable.
 
-## Iteration 111 — 2026-08-22 — `WB.A` landed, and the plan's own precondition counted a tree the sprint never runs in
+## 111 — 2026-08-22 — `WB.A` landed, and the plan's own precondition counted a tree the sprint never runs in
 
 **Pick**: queue row **14** `w-workbench-read-only`, milestone **`WB.A`** — the pointer iteration
 110's `NEXT` named. Item 17 is CLOSED, no flipped predicate outranked it, and the died-mid-flight
@@ -13542,7 +13542,7 @@ and pre-registering beats spending the one edit on a half-formed class.
 
 ---
 
-## Iteration 112 — 2026-08-23 — the pin the plan said would kill `M20` did not, and the judge found three shipped hunks pinned by nothing
+## 112 — 2026-08-23 — the pin the plan said would kill `M20` did not, and the judge found three shipped hunks pinned by nothing
 
 **Pick**: queue row **14** `w-workbench-read-only`, milestone **`WB.B`** — the pointer iteration
 111's `NEXT` named. Item 14 is `[IN-SPRINT]`, no flipped predicate outranked it, and the
@@ -13754,7 +13754,7 @@ it (`git show origin/dev:<path>` immediately before the `cmp`), never reuse a Ga
 Gate 5 — and it generalises past this file to every `/tmp` artifact this loop writes once and reads
 later.
 
-## Iteration 113 — 2026-08-23 — a test whose expected value IS the production constant cannot fail, and it was named as a mutant's killer
+## 113 — 2026-08-23 — a test whose expected value IS the production constant cannot fail, and it was named as a mutant's killer
 
 **Pick**: queue row **14** `w-workbench-read-only`, milestone **`WB.C`** — the pointer iteration
 112 set, taken unchanged. No flipped predicate outranked it: dev CI was green
@@ -13931,7 +13931,7 @@ instance lands, the proposal is a grep-able rule, not a restatement of 3i.
 M32), extending WB.C's single unknown-key guard site; then row 35, row 34, row 32, row 33,
 item 22, row 31. **ZERO open asks.**
 
-## Iteration 114 — 2026-08-23 — a mutation row can name a mutant that does not identify a site, and seven of nine guards had no killer
+## 114 — 2026-08-23 — a mutation row can name a mutant that does not identify a site, and seven of nine guards had no killer
 
 **Pick**: queue row **14** `w-workbench-read-only`, milestone **`WB.D`** — the pointer iteration
 113 set, taken unchanged. Nothing outranked it: dev CI green at `d198936` (`checks=2`, both
@@ -14085,7 +14085,7 @@ rotation unspent a **12th** consecutive iteration. `metered=$0.00` of the $5 cei
 
 ---
 
-## Iteration 115 — 2026-08-23 — the view-model seam leaks both ways, and a diff-anchored drill found the half a defect-anchored one would have missed
+## 115 — 2026-08-23 — the view-model seam leaks both ways, and a diff-anchored drill found the half a defect-anchored one would have missed
 
 **Pick.** Queue item 14 `w-workbench-read-only`, milestone `WB.E` (payload opt-in, 64 KiB preview
 cap, 100-entry timeline bound). Queue head, no contest. Item 14 stays `[IN-SPRINT]` at **5 of 11**.
@@ -14253,7 +14253,7 @@ closing doc **AC8** (claims M29, M30). 6 of 11 milestones will remain after it.
 
 ---
 
-## Iteration 116 — 2026-08-24 — `WB.F` implemented and controller-verified, `PARKED-ON-LANE` before evaluation
+## 116 — 2026-08-24 — `WB.F` implemented and controller-verified, `PARKED-ON-LANE` before evaluation
 
 **Pick.** Queue item 14 `w-workbench-read-only`, milestone `WB.F`, exactly as iteration 115 named.
 
@@ -14271,7 +14271,7 @@ closing doc **AC8** (claims M29, M30). 6 of 11 milestones will remain after it.
 
 ---
 
-## Iteration 117 — 2026-08-24 — the `PARKED-ON-LANE` predicate fired on schedule: Sonnet re-probed, `WB.F` evaluated 96/100, landed 6 of 11
+## 117 — 2026-08-24 — the `PARKED-ON-LANE` predicate fired on schedule: Sonnet re-probed, `WB.F` evaluated 96/100, landed 6 of 11
 
 **Pick.** Resume queue item 14 `w-workbench-read-only`, milestone `WB.F`. This was iteration 116's `PARKED-ON-LANE` item, blocked on a capacity predicate — the Sonnet evaluator's weekly subscription bucket, which resets 7am Europe/Copenhagen. At Gate 2 the predicate was re-measured, not assumed: local time 08:36 CEST (= 08:36 Europe/Copenhagen), past the reset, and the driver had already re-probed Anthropic available at 08:34 and switched the controller back to `claude-opus-4-8`. Standing-rule-8 resume: a capacity park unblocks on a clock, needs no human, and its resume is a predicate re-probe.
 
@@ -14293,7 +14293,7 @@ closing doc **AC8** (claims M29, M30). 6 of 11 milestones will remain after it.
 
 **Next.** `WB.G` (item 14, milestone 7 of 11), then queue rows 38, 37, 36, 35, 34, 32, 33, item 22, row 31. Row 5 remains BLOCKED on `ailang#764`. **Zero open asks.**
 
-## Iteration 118 — 2026-08-24 — the plan's own non-vacuity control made one of its assertions unsatisfiable, and the executor disclosed it instead of quietly dropping a check
+## 118 — 2026-08-24 — the plan's own non-vacuity control made one of its assertions unsatisfiable, and the executor disclosed it instead of quietly dropping a check
 
 **Pick.** Queue item 14 `w-workbench-read-only`, milestone `WB.G` (7 of 11) — the queue head, exactly as iteration 117 declared. Gate 2 reality checks before routing: `TestWorkbenchPackageRemainsTransportFree` absent at HEAD (grep rc=1, same-scope control `TestBareNetHTTPExemptionIsPerGroup` rc=0 with 2 hits, exit codes captured without a pipe); no `git log --grep` hit; **0** open fleet PRs; `git worktree list` showed only the main checkout; main checkout clean. No iteration died mid-flight. Doc/plan freshness (rule 3b(vii)): the design doc's newest commit is `3e0c34c` (2026-08-22), the plan's is `48ef275` (2026-08-23) — the plan is the LATER document, so the doc cannot have rotted it.
 
@@ -14327,7 +14327,7 @@ closing doc **AC8** (claims M29, M30). 6 of 11 milestones will remain after it.
 
 ---
 
-## Iteration 119 — 2026-08-24 — `WB.H` LANDED: M14–M21 discharged, no surviving mutant among them
+## 119 — 2026-08-24 — `WB.H` LANDED: M14–M21 discharged, no surviving mutant among them
 
 **Kind**: sprint milestone (queue item 14, `w-workbench-read-only`, milestone 8 of 11).
 **Landed**: PR [#91](https://github.com/sunholo-data/ailang-world/pull/91) → squash `5fd1069`.
@@ -14444,7 +14444,7 @@ environment the executor does not have.**
 loopback-bearing arm), then WB.J, WB.K, then rows 38, 37, 36, 35, 34, 32, 33, item 22, row 31.
 Row 5 BLOCKED on `ailang#764`. **Zero open asks.**
 
-## Iteration 120 — 2026-08-24 — a human directive outranked the queue: AILANG v0.33.2 VERIFIED as the unblock for row 5, behind a toolchain floor nobody had priced
+## 120 — 2026-08-24 — a human directive outranked the queue: AILANG v0.33.2 VERIFIED as the unblock for row 5, behind a toolchain floor nobody had priced
 
 **Kind**: human directive (Mark, `#89` @ `2026-08-24T20:06:56Z`) — verification, **no code landed**.
 **Directive**: *"AILANG has done a new release please verify it's what you need to unblock"*.
@@ -14594,7 +14594,7 @@ full, while the thing that actually stops row 5 landing today is a `go` directiv
 watching. The tell: you have verified that a dependency's *contents* unblock you, and have not
 checked what its *metadata* demands of your build. Bar is two.
 
-## Iteration 121 — 2026-08-25 — `WB.I` LANDED: M1–M8 discharged, and `M9` survives at every site because two guards on one path mask each other
+## 121 — 2026-08-25 — `WB.I` LANDED: M1–M8 discharged, and `M9` survives at every site because two guards on one path mask each other
 
 **Kind**: sprint milestone + a human directive consumed (Mark, `#89` @ `2026-08-24T23:14:21Z`,
 verbatim **"Finish 14"** → `D-WORLD-25` **arm B**).
@@ -14728,7 +14728,7 @@ loopback-bearing arm), then `WB.K`, then rows 38, 37, 36, 35, 34, 32, 33, item 2
 
 ---
 
-## Iteration 122 — 2026-08-25 — `WB.J` LANDED: all ten rows discharged with no survivor, and `M12`'s named assertion turns out to be a tautology that contributes nothing to its own kill
+## 122 — 2026-08-25 — `WB.J` LANDED: all ten rows discharged with no survivor, and `M12`'s named assertion turns out to be a tautology that contributes nothing to its own kill
 
 **Kind**: sprint milestone (queue item 14, `w-workbench-read-only`, milestone 10 of 11).
 **Landed**: PR [#93](https://github.com/sunholo-data/ailang-world/pull/93) → squash [`b0d973c`](https://github.com/sunholo-data/ailang-world/commit/b0d973c).
@@ -14874,7 +14874,7 @@ judge pass over §7h. Then queue rows 38, 37, 36, 35, 34, 32, 33, item 22, row 3
 
 ---
 
-## Iteration 123 — 2026-08-25 — `WB.K` LANDED: item 14 COMPLETE at 11 of 11, and three of the four landing legs read GREEN on a mutation that landed entirely inside a comment
+## 123 — 2026-08-25 — `WB.K` LANDED: item 14 COMPLETE at 11 of 11, and three of the four landing legs read GREEN on a mutation that landed entirely inside a comment
 
 **Kind**: sprint milestone + item close (queue item 14, `w-workbench-read-only`, milestone 11 of 11).
 **Landed**: PR [#94](https://github.com/sunholo-data/ailang-world/pull/94) → squash [`3dda87e`](https://github.com/sunholo-data/ailang-world/commit/3dda87e).
@@ -15035,7 +15035,7 @@ and it is the sole remaining blocker on **M4**, the reference-agent value gate. 
 
 ---
 
-## Iteration 124 — 2026-08-25 — the seam shipped but carries only half the surface: `serveapi/protocol` has no MCP dispatch, and both routes around it are closed by this repo's own guardrails
+## 124 — 2026-08-25 — the seam shipped but carries only half the surface: `serveapi/protocol` has no MCP dispatch, and both routes around it are closed by this repo's own guardrails
 
 **Kind**: design revision + re-quorum + an upstream ask. **No sprint, no PR, no merge** — the
 picked row's own head required a design REVISION before any sprint, and the re-quorum blocked.
@@ -15173,7 +15173,7 @@ the MCP half waits on `#885`.
 (`Authorization: Bearer`, recommended) or **B** (`X-World-Session`). It gates only `P6.B` and
 nothing earlier, so the queue does not stall on it.
 
-## Iteration 125 — 2026-08-25 — a human directive closed round 3's second objection, the SPLIT landed, and the re-quorum immediately localised onto a third surface the repo has never built
+## 125 — 2026-08-25 — a human directive closed round 3's second objection, the SPLIT landed, and the re-quorum immediately localised onto a third surface the repo has never built
 
 **Kind**: human directive consumed + design SPLIT + re-quorum (round 4) + a reviewer-surfaced,
 controller-measured queue row. **No sprint, no PR to `dev` beyond the record** — the queue head is
@@ -15354,7 +15354,7 @@ rather than as an ask: `w-mcp-projection` has now consumed **four quorum rounds*
 revision to discover four surfaces of differing readiness, and the designer rotation has one usable
 authoring lane. Both are scoping/routing patterns only a human can act on.
 
-## Iteration 126 — 2026-08-26 — split #2 landed, round 5 blocked on two narrow surfaces, both fixes applied verbatim — and the premise row that quorum corrected went on to fail twice more, each time with a differently-drawn boundary
+## 126 — 2026-08-26 — split #2 landed, round 5 blocked on two narrow surfaces, both fixes applied verbatim — and the premise row that quorum corrected went on to fail twice more, each time with a differently-drawn boundary
 
 **Kind**: design SPLIT #2 + re-quorum (round 5) + narrow-refinement carve-out + SPRINT (`P6.T` LANDED, Gate 3b GREEN)
 
@@ -15433,7 +15433,7 @@ No skill edit (World shares the skill by symlink and cannot edit it). **One fric
 **Next**
 `P6.V` (~0.3d, verified commit-boundary law in `world/*.ail` + `REQUIRED_VERIFIED`) — the parent's last milestone, objection-free in five rounds, blocked on nothing. Then rows 41/42 (both one-liners surfaced by this iteration's own drill), then row 39 `w-session-authority`, which unblocks the A2A child, which carries the deferred dependency admission. The MCP child stays blocked on [`ailang#885`](https://github.com/sunholo-data/ailang/issues/885) — re-measured this iteration by command: **OPEN, 0 comments**, upstream latest still `v0.33.2`; control `#764` **CLOSED, 6 comments**. **ZERO open asks — the decision ledger is 13 rows, 0 OPEN.**
 
-## Iteration 127 — 2026-08-26 — `P6.V` LANDED and charter row 5 CLOSES: the verified floor moves 10 → 11, the milestone's real touch set was SIX files against the two its doc named, and the judge then found two conjuncts credited with proof work they do not do
+## 127 — 2026-08-26 — `P6.V` LANDED and charter row 5 CLOSES: the verified floor moves 10 → 11, the milestone's real touch set was SIX files against the two its doc named, and the judge then found two conjuncts credited with proof work they do not do
 
 **Kind**: SPRINT (`P6.V` LANDED, Gate 3b GREEN on the merge commit) — no designer, no quorum round (the doc was already carve-out-cleared at round 5)
 
@@ -15537,7 +15537,7 @@ separated them in under a minute.
 
 ---
 
-## Iteration 128 — 2026-08-26 — `P41` built, evaluated 92/100 and fully gated, then held as a resume point by a declared Actions outage — and the round-2 objection, measured rather than answered, exposed a live instrument that has been failing invisibly in CI for ten merges
+## 128 — 2026-08-26 — `P41` built, evaluated 92/100 and fully gated, then held as a resume point by a declared Actions outage — and the round-2 objection, measured rather than answered, exposed a live instrument that has been failing invisibly in CI for ten merges
 
 **Kind**: SPRINT (`P41` BUILT, **NOT LANDED** — Gate 3b undischarged on a declared GitHub Actions outage) + DESIGN (new doc, 2 quorum rounds, narrow-refinement carve-out) + 3 new queue rows
 
@@ -15597,7 +15597,7 @@ Disposition: this is a defect the doc **fails to fix**, not one it introduces, s
 
 `metered=$0.2417` of $5. **ZERO OPEN ASKS.**
 
-## Iteration 129 — 2026-08-26 — `P41` LANDED: the outage's dropped events were recovered with the git-API lever, and the half of that gap with no lever at all became a new row
+## 129 — 2026-08-26 — `P41` LANDED: the outage's dropped events were recovered with the git-API lever, and the half of that gap with no lever at all became a new row
 
 **Kind**: RESUME + LAND (`P41`, Gate 3b discharged post-incident) + 1 new queue row. No designer, no planner, no executor, no evaluator — the sprint was built and judged at iteration 128; this iteration's whole deliverable is the landing gate and its record.
 
@@ -15633,7 +15633,7 @@ Every count asserted NUMERIC before comparison (`case "$v" in ''|*[!0-9]*)` → 
 **Next**
 Rows **42**, **43**, **44**, **45**, **46**, **47**, then row **39**.
 
-## Iteration 130 — 2026-08-27 — DIED MID-FLIGHT (no record of its own; reconstructed and credited by iteration 131)
+## 130 — 2026-08-27 — DIED MID-FLIGHT (no record of its own; reconstructed and credited by iteration 131)
 
 **Kind**: ORPHANED SLOT. Recorded here by iteration 131 so the log does not silently skip a number and a later reader can tell that this iteration RAN rather than never fired.
 
@@ -15646,7 +15646,7 @@ Rows **42**, **43**, **44**, **45**, **46**, **47**, then row **39**.
 **Next**
 Inherited by iteration 131.
 
-## Iteration 131 — 2026-08-27 — `P42` LANDED: an iteration died holding a finished sprint that left no trace anywhere, and the only thing that found it was the uncommitted-working-tree clause
+## 131 — 2026-08-27 — `P42` LANDED: an iteration died holding a finished sprint that left no trace anywhere, and the only thing that found it was the uncommitted-working-tree clause
 
 **Kind**: ADOPT + VERIFY + LAND (`P42`, row 42 CLOSED) + 3 new queue rows + 1 orphaned iteration credited. No designer, no planner, no executor — all three were spent by iteration 130. One evaluator (`sonnet`). `metered=$0`.
 
@@ -15695,7 +15695,7 @@ Rows **43**, **44**, **45**, **46**, **47**, **48**, **49**, **50**, then row **
 
 ---
 
-## Iteration 132 — 2026-08-27 — `P43` LANDED: the evaluator broke the sprint on its own thesis one site over, and the rotation's designer lane passed its probe and then died on the provider's 503
+## 132 — 2026-08-27 — `P43` LANDED: the evaluator broke the sprint on its own thesis one site over, and the rotation's designer lane passed its probe and then died on the provider's 503
 
 **Kind**: FULL INNER LOOP (`P43`, row 43 CLOSED) + 1 new queue row + 1 gate discharged + 1 skill-fix proposal. Designer `claude:claude-fable-5` (rotation FALLBACK — the rotation's own next entry failed), planner `opus`, executor `codex:gpt-5.6-sol` (two rounds), evaluator `sonnet` (two rounds). `metered=$0.2730` of `$5`.
 
@@ -15756,7 +15756,7 @@ On a **loaded** rig `verify_go.sh` went **rc=1** on `TestCLIRealSubprocessEpisod
 - **The friction worth naming is my own.** The carve-out edit corrected the two PUBLISHED homes and left **three** residues in the surrounding prose plus one stale mutation-table needle — all four found by the *executor*, not by me. That is the same shape the item documents: a correction applied where it was objected to, and not swept across the document that carries it. One recorded instance; not proposed.
 - **The judge earned its keep at the exact point the loop was most confident.** Round 1's gates were all green, the drill was eight-for-eight, and the blocking defect sat in the one home nobody had cross-checked against the other. A green suite is what makes this class invisible.
 
-## Iteration 133 — 2026-08-27 — `P44` LANDED: the instrument's `success` over a refusal becomes `success` over a certification, and the quorum's sharpest catch was the guard redding against its own documentation
+## 133 — 2026-08-27 — `P44` LANDED: the instrument's `success` over a refusal becomes `success` over a certification, and the quorum's sharpest catch was the guard redding against its own documentation
 
 **Kind**: FULL INNER LOOP (`P44`, row 44 CLOSED) + 2 new queue rows. Designer `pi:ollama/kimi-k3:cloud` (rotation's second lane, **first successful authoring run**), planner `opus`, executor `codex:gpt-5.6-sol`, evaluator `sonnet`. `metered=$0.3530` of `$5`.
 
@@ -15817,7 +15817,7 @@ Disposition: the **ratified narrow-refinement carve-out** (ratified for this mis
 
 **Next**: rows **45**, **46**, **47**, **48**, **49**, **50**, **51**, **52**, **53**, then **39**.
 
-## Iteration 134 — 2026-08-28 — `P45` LANDED: the pin gate certified a workflow in which every subsequent `go` command would have refused to run, because one normalizer served two grammars
+## 134 — 2026-08-28 — `P45` LANDED: the pin gate certified a workflow in which every subsequent `go` command would have refused to run, because one normalizer served two grammars
 
 **Kind**: FULL INNER LOOP (`P45`, row 45 CLOSED). Designer `claude:claude-fable-5` (rotation entry 1; pointer had `pi:ollama/kimi-k3:cloud` as LAST-USED), planner `opus` (lane `opus fail-closed:env-pin`, used verbatim from `derive-planner-lane.sh`), executor `codex:gpt-5.6-sol`, evaluator `sonnet`. `metered=$0.2742` of `$5` — quorum reviewers only; every other lane is a quota bucket.
 
@@ -15868,7 +15868,7 @@ Round 2: **2 reject / 1 pass** (`gemini-3-1-pro` flipped, its remaining catch it
 
 **Next**: rows **46**, **47**, **48**, **49**, **50**, **51**, **52**, **53**, then **39**.
 
-## Iteration 135 — 2026-08-28 — `P46` LANDED: the fix took an hour and the gate that was supposed to make it permanent failed the same test it was built to apply
+## 135 — 2026-08-28 — `P46` LANDED: the fix took an hour and the gate that was supposed to make it permanent failed the same test it was built to apply
 
 **Kind**: FULL INNER LOOP (`P46`, row 46 CLOSED) + 1 new queue row + 1 new ledger row + 1 skill proposal. Designer **not fired**, planner **not fired**, executor `codex:gpt-5.6-sol`, evaluator `sonnet`. `metered=$0` of `$5` — every lane rode a quota bucket.
 
@@ -15926,7 +15926,7 @@ Round 2: **2 reject / 1 pass** (`gemini-3-1-pro` flipped, its remaining catch it
 
 **Next**: rows **47**, **48**, **49**, **50**, **51**, **52**, **53**, **54**, then **39**.
 
-## Iteration 136 — 2026-08-28 — `P47` LANDED: four perfectly symmetrical mutation arms, and the green control was the only thing standing between me and banking a drill that never ran a test
+## 136 — 2026-08-28 — `P47` LANDED: four perfectly symmetrical mutation arms, and the green control was the only thing standing between me and banking a drill that never ran a test
 
 **Kind**: FULL INNER LOOP (`P47`, row 47 CLOSED) + 1 new queue row (55) + in-PR hardening after the evaluator. Designer `pi:ollama/deepseek-v4-flash:0731-cloud` (rotation, **first authoring run on this lane**), planner `opus`, executor `codex:gpt-5.6-sol`, evaluator `sonnet`. `metered=$0.1900` of `$5` — quorum reviewers only; both provider lanes were flat-rate or quota.
 
@@ -15987,7 +15987,7 @@ Round 2: **2 reject / 1 pass** (`gemini-3-1-pro` flipped, its remaining catch it
   - gemini-3-1-pro: The V9 verification log for the existing tests is falsified or misinterpreted. The command uses `-run 'Test...\|Test...'`. In Go's RE2 `regexp` syntax, `\|` escapes the pipe and matches a literal `|` character rather than acting as an alternation operator. This regex matches exactly 0 tests. `go test` still returns exit code 0 and prints `ok ... [no tests to run]`, but the log explicitly omits the `[no tests to run]` suffix for the existing tests to falsely claim they were successfully executed, while accurately including it for the single-test vacuity trap. The baseline green state was not actually verified.
   - oc-glm-5-2: The core invariant — 'ACTIVE_GO >= root floor, therefore racecontrol floor <= root floor implies racecontrol floor <= ACTIVE_GO' — is only measured under GOTOOLCHAIN=auto (V3). The doc's declared residual claims that a host with GOTOOLCHAIN=local and base < root floor 'fails the entire root module before this control runs,' but this is unverified on two counts: (a) `go env GOVERSION` is a metadata command that returns the base binary version regardless of the root module's `go 1.26.6` directive — it does not fail, and (b) the doc never shows what verify_go.sh executes before :217, so the claim that a root-module build/test fails before ACTIVE_GO is captured is unmeasured. Concretely: under GOTOOLCHAIN=local with base go1.25.0, ACTIVE_GO would be go1.25.0 (below root floor go1.26.6, above the deny-list range go1.26.0–go1.26.5, so the deny-list does not catch it), and the M2 equality case (racecontrol floor bumped to go1.26.6 = root floor) passes the static gate (go1.26.6 <= go1.26.6 = GREEN) but fails at runtime (GOTOOLCHAIN=go1.25.0 go run -race . with floor go1.26.6 refuses). The static gate is not a proof in this lane; it is a proxy with an unmeasured hole.
 
-## Iteration 137 — 2026-08-28 — P48 PARKED after two full-strength quorum blocks
+## 137 — 2026-08-28 — P48 PARKED after two full-strength quorum blocks
 
 **Kind**: DESIGN + QUORUM; no sprint execution.
 
@@ -16007,7 +16007,7 @@ Round 2: **2 reject / 1 pass** (`gemini-3-1-pro` flipped, its remaining catch it
 
 ---
 
-## Iteration 138 — 2026-08-31 — inherited P49 verified; PARKED-ON-LANE awaiting independent evaluator
+## 138 — 2026-08-31 — inherited P49 verified; PARKED-ON-LANE awaiting independent evaluator
 
 **Kind**: died-mid-flight recovery and verification; no new backlog item routed.
 
@@ -16027,7 +16027,7 @@ Round 2: **2 reject / 1 pass** (`gemini-3-1-pro` flipped, its remaining catch it
 
 **Next**: re-probe and finish row 49 after Monday 07:00 local; otherwise rows 50–55 then 39 remain routable. Row 48 separately waits on D-WORLD-28.
 
-## Iteration 139 — 2026-08-31 — `P49` LANDED: the judge measured the fence we replaced and 22 of 23 mutations walked straight through it [PRODUCT]
+## 139 — 2026-08-31 — `P49` LANDED: the judge measured the fence we replaced and 22 of 23 mutations walked straight through it [PRODUCT]
 
 **Kind**: resume of a `PARKED-ON-LANE` row whose predicate fired; sprint verification, independent evaluation, and landing. No new design doc, no planner, no executor run this iteration.
 
@@ -16055,7 +16055,7 @@ Round 2: **2 reject / 1 pass** (`gemini-3-1-pro` flipped, its remaining catch it
 
 **Next**: rows **50**, **51**, **52**, **53**, **54**, **55**, **56**, then **39**. Row **48** remains blocked on `D-WORLD-28`, which is OPEN and is this iteration's single ask to Mark.
 
-## Iteration 140 — 2026-08-31 — `P50` PARKED on `D-WORLD-29`: the design, and the queue row behind it, rest on a shell-semantics premise I measured false [REFUTATION]
+## 140 — 2026-08-31 — `P50` PARKED on `D-WORLD-29`: the design, and the queue row behind it, rest on a shell-semantics premise I measured false [REFUTATION]
 
 **Kind**: design-doc iteration. Doc authored, quorum-blocked, revised once, re-quorum-blocked, banked and parked. No plan, no executor, no evaluator — no code was routed.
 

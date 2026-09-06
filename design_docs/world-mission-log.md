@@ -9,7 +9,7 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## Iteration 141 — 2026-08-31 — row 51 LANDED: 7 of 9 arms walked through the old test, so 6 real mutants were invisible until today [PRODUCT]
+## 141 — 2026-08-31 — row 51 LANDED: 7 of 9 arms walked through the old test, so 6 real mutants were invisible until today [PRODUCT]
 
 **Kind**: full inner loop — designer, quorum ×2, controller carve-out, planner, executor, evaluator, PR, Gate 3b.
 
@@ -37,7 +37,7 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 
 **Next**: rows **52**, **53**, **54**, **55**, **56**, **57**, **58**, **59**, then **39**. Rows **48** and **50** remain parked on `D-WORLD-28` and `D-WORLD-29` — this iteration's two unchanged asks to Mark.
 
-## Iteration 142 — 2026-09-01 — row 52 PARKED on `D-WORLD-30`: the row said "non-exploitable"; it is exploitable in BOTH directions, and two quorum rounds then killed two successive locators [REFUTATION]
+## 142 — 2026-09-01 — row 52 PARKED on `D-WORLD-30`: the row said "non-exploitable"; it is exploitable in BOTH directions, and two quorum rounds then killed two successive locators [REFUTATION]
 
 **Kind**: design-doc iteration. Doc authored, quorum-blocked, revised once, re-quorum-blocked at full strength, banked and parked. No plan, no executor, no evaluator — no code was routed.
 
@@ -80,7 +80,7 @@ Round 2 ($0.1489, after one revision — the Fable diet's one-DOC ceiling, met a
 
 **Next**: rows **53**, **54**, **55**, **56**, **57**, **58**, **59**, then **39**. Rows **48**, **50** and **52** wait on `D-WORLD-28`, `D-WORLD-29` and `D-WORLD-30` respectively — the three open asks.
 
-## Iteration 143 — 2026-09-01 — row 53 routed and World-side complete: the row blamed literals that were escaped correctly, and the real class is behind three known vacuous passes [REFUTATION]
+## 143 — 2026-09-01 — row 53 routed and World-side complete: the row blamed literals that were escaped correctly, and the real class is behind three known vacuous passes [REFUTATION]
 
 **Kind**: triage / route-upstream iteration. No design doc, no quorum, no plan, no executor, no evaluator — the fix lives in `sunholo-data/ailang`, which is frozen core for this mission, so the deliverable is measurement plus the upstream filing.
 
@@ -108,7 +108,7 @@ Round 2 ($0.1489, after one revision — the Fable diet's one-DOC ceiling, met a
 
 **Next**: rows **54**, **55**, **56**, **57**, **58**, **59**, then **39**. Rows **48**, **50** and **52** remain parked on `D-WORLD-28`, `D-WORLD-29` and `D-WORLD-30` — three unchanged asks to Mark, no new one this iteration.
 
-## Iteration 145 — 2026-09-01 — row 48 LANDED: deleting the block the attended ruling mandates was GREEN in both lanes, and 6 of 6 gutting mutants survived the pre-sprint test [PRODUCT]
+## 145 — 2026-09-01 — row 48 LANDED: deleting the block the attended ruling mandates was GREEN in both lanes, and 6 of 6 gutting mutants survived the pre-sprint test [PRODUCT]
 
 **Pick:** queue row 48 `w-racecontrol-floor-bump-disarms-the-race-control`, unparked by the
 attended ruling `D-WORLD-28` (Mark Edmondson, 2026-09-01). PR
@@ -223,7 +223,7 @@ run. `metered=$0.13903` of $5.
   the residual is a dataflow break, which is why row 61 is its own row.
 - Reading `ailang design-review --json` at a top-level `.verdict`. It is `.result.verdict`.
 
-## Iteration 146 — 2026-09-01 — row 50 unparked by an attended ruling, revised to it, then RE-PARKED: the ruling's own rationale is false for the one shape nobody had measured [REFUTATION]
+## 146 — 2026-09-01 — row 50 unparked by an attended ruling, revised to it, then RE-PARKED: the ruling's own rationale is false for the one shape nobody had measured [REFUTATION]
 
 **Pick:** queue row 50 `w-shell-assignment-parser-drops-an-indented-assignment`, the queue head,
 unparked by `D-WORLD-29` (Mark, attended 2026-09-01). No code was routed — the row re-parked at
@@ -369,7 +369,7 @@ scoped* block, on the direction rather than on my omission.
 
 ---
 
-## Iteration 147 — 2026-09-02 — row 52 LANDED: the step locator was wrong in BOTH directions, and this iteration's two best findings are refutations of its own work [PRODUCT]
+## 147 — 2026-09-02 — row 52 LANDED: the step locator was wrong in BOTH directions, and this iteration's two best findings are refutations of its own work [PRODUCT]
 
 **Pick:** queue row 52 `w-wiring-test-step-scoping-imprecise-under-key-reorder`, the queue head,
 unparked by the attended ruling `D-WORLD-30`. The row's own header text still read `PARKED`; the
@@ -506,7 +506,7 @@ introduced rather than closing a live hole) is now written into the doc where a 
 **39**. Row **50** remains parked on `D-WORLD-31` — this iteration's one unchanged ask to Mark, and
 it adds no new one.
 
-## Iteration 148 — 2026-09-02 — row 54 LANDED: the gate whose name is "driver drift" compared the copy to itself, and the judge then found the same defect one level up in my fix [HARNESS]
+## 148 — 2026-09-02 — row 54 LANDED: the gate whose name is "driver drift" compared the copy to itself, and the judge then found the same defect one level up in my fix [HARNESS]
 
 **Pick:** queue row 54 `w-driver-copy-stale-and-the-drift-gate-compares-it-to-itself`, the queue
 head, unblocked and ungated. No directive, no attended ruling, no regression outranked it.
@@ -672,7 +672,7 @@ iteration**. Designer rotation next = **`claude:claude-fable-5`**.
 
 ---
 
-## Iteration 149 — 2026-09-02 — row 55 LANDED: the dispatch-lever gate false-redded on the standard remedy for a famous Actions footgun, and the planner then showed `go build ./...` cannot see a `_test.go` at all [HARNESS]
+## 149 — 2026-09-02 — row 55 LANDED: the dispatch-lever gate false-redded on the standard remedy for a famous Actions footgun, and the planner then showed `go build ./...` cannot see a `_test.go` at all [HARNESS]
 
 **Pick:** queue row 55 `w-dispatch-lever-parser-false-reds-on-valid-yaml`, the queue head,
 ungated and unblocked. No directive, no attended ruling, no regression outranked it.
@@ -807,7 +807,7 @@ $5, all of it quorum; every other lane was a quota bucket.
 
 **Next:** rows **56**–**66**, then **39**. Row 50 stays parked on `D-WORLD-31`.
 
-## Iteration 150 — 2026-09-03 — row 67 LANDED: dev went red at a merge of two fine branches, because one constant answered two questions [HARNESS]
+## 150 — 2026-09-03 — row 67 LANDED: dev went red at a merge of two fine branches, because one constant answered two questions [HARNESS]
 
 **Pick:** **not** the queue head. `origin/dev` was RED at `68403ea` (`checks=3`, `go host build +
 test gate: failure`), World owns this repo, and Gate 1 makes a red outrank the queue. No directive,
@@ -889,7 +889,7 @@ Rows 68 and 69 are fleet-owned; World hands them over with the measurement and d
 **Next:** rows **57**, **58**, **59**, **60**, **61**, **62**–**66**, **68**, **69**, **70**, then
 **39**.
 
-## Iteration 151 — 2026-09-03 — two dead slots in a row, and the second is datable to the second: the rig rebooted 286s after Gate 4 and took /tmp with it [HARNESS]
+## 151 — 2026-09-03 — two dead slots in a row, and the second is datable to the second: the rig rebooted 286s after Gate 4 and took /tmp with it [HARNESS]
 
 **Pick:** **not** the queue head, and not a red either — `origin/dev` was green 3/3. The pick came
 from Gate 2's died-mid-flight traces, which returned **two** consecutive orphaned iterations. Gate 2
@@ -1019,7 +1019,7 @@ unstarted.
 
 ---
 
-## Iteration 152 — 2026-09-03 — row 57's causal claim is refuted, and the issue it kills is one this mission filed itself: `--type` is misfiled, not ignored, and fixing it would leave the false green byte-identical [REFUTATION]
+## 152 — 2026-09-03 — row 57's causal claim is refuted, and the issue it kills is one this mission filed itself: `--type` is misfiled, not ignored, and fixing it would leave the false green byte-identical [REFUTATION]
 
 **Pick:** the queue head, row 57
 (`w-approvals-spine-prints-a-green-no-pending-under-the-row-it-just-listed`), ungated. It survived
@@ -1236,7 +1236,7 @@ live defect in `messages list`.
 stays parked on `D-WORLD-31`; row **57** is now **tracking-only** on upstream `#984`/`#1036`, and
 its predicate must be RUN at pick time (an upstream disposition), never transcribed.
 
-## Iteration 153 — 2026-09-03 — row 58 lands: the probe timeout is a concurrency defect, not a speed one, so the fix is attribution rather than a bigger number [HARNESS]
+## 153 — 2026-09-03 — row 58 lands: the probe timeout is a concurrency defect, not a speed one, so the fix is attribution rather than a bigger number [HARNESS]
 
 **Pick:** the queue head, row **58**
 (`w-verify-go-is-red-at-pristine-base-on-the-rig-while-ci-is-green`, as amended iter-141), ungated.
@@ -1405,7 +1405,7 @@ predicate must be RUN at pick time, never transcribed.
 
 ---
 
-## Iteration 154 — 2026-09-04 — row 59 is designed and quorum-cleared, and what earned the rounds is that the doc kept committing its own thesis [HARNESS]
+## 154 — 2026-09-04 — row 59 is designed and quorum-cleared, and what earned the rounds is that the doc kept committing its own thesis [HARNESS]
 
 **Pick:** the queue head, row **59** (`w-static-grep-cannot-prove-an-assertion-is-live`), ungated —
 and it is also what the attended ruling on `D-WORLD-31` requires, since that hold is explicitly
@@ -1552,7 +1552,7 @@ pin" are jointly unsatisfiable; **78** — `mission_pi_run.sh:155` invokes `pi` 
 so the two containment extensions the pi recipe mandates are never wired. Row **50** is no longer
 `needs-human-review`: it now closes as a consequence of row 59, and its own doc is superseded.
 
-## Iteration 155 — 2026-09-05 — row 59 LANDS and row 50 closes with it, but only after the planner found the quorum-cleared doc committing its own thesis for a third and fourth time [HARNESS]
+## 155 — 2026-09-05 — row 59 LANDS and row 50 closes with it, but only after the planner found the quorum-cleared doc committing its own thesis for a third and fourth time [HARNESS]
 
 **Kind**: full inner loop — design correction → plan → execute → evaluate → land. Rows **59** and
 **50** both close. PR [#116](https://github.com/sunholo-data/ailang-world/pull/116), rebase-merged
@@ -1705,7 +1705,7 @@ reorder existing release work.
 
 ---
 
-## Iteration 156 — 2026-09-05 — row 60 lands, and the row was right about the defect and wrong about its size: one needle named, three found [HARNESS]
+## 156 — 2026-09-05 — row 60 lands, and the row was right about the defect and wrong about its size: one needle named, three found [HARNESS]
 
 **Kind**: controller-authored direct fix (~0.1d row with an existing first-party diagnosis; no
 designer, planner, executor or evaluator spawned — iteration 153's precedent). PR
@@ -1836,7 +1836,7 @@ running.
 
 ---
 
-## Iteration 157 — 2026-09-05 — row 61 lands, and the row's own preferred fix is measured fail-open even unmutated [HARNESS]
+## 157 — 2026-09-05 — row 61 lands, and the row's own preferred fix is measured fail-open even unmutated [HARNESS]
 
 **Kind**: controller-authored direct fix (~0.2d row carrying its own first-party diagnosis; no
 designer, planner, executor or evaluator spawned — iterations 153/156 precedent).
@@ -1980,7 +1980,7 @@ enumeration is complete), `not_green=0`, `runs_total=1 event=push`, parent `81ca
 **Next**: row **62**, then **63–66**, **68–78**, **81**, **82**, **83**, then **39**. Rows
 **79/80** stay `[PARKED — DESIGN REVIEW]`.
 
-## Iteration 158 — 2026-09-06 — row 62 lands, and for the second iteration running the row's own proposed remedy is measured fail-open [HARNESS]
+## 158 — 2026-09-06 — row 62 lands, and for the second iteration running the row's own proposed remedy is measured fail-open [HARNESS]
 
 **Kind**: controller-authored direct fix (~0.1d row carrying its own first-party diagnosis; no
 designer, planner, executor or evaluator spawned — iterations 153/156/157 precedent).
@@ -2124,7 +2124,7 @@ reported for the fourth iteration running.
 **64**–**66**, **68**–**78**, **81**, **82**, **83**, then **39**. Rows **79**/**80** remain
 `[PARKED — DESIGN REVIEW]` by their own text.
 
-## Iteration 159 — 2026-09-06 — row 63 lands, and the half the row left unfired is the worse half: `stepCol < 0` is reachable from a re-style that parses deep-equal to the pristine file [HARNESS]
+## 159 — 2026-09-06 — row 63 lands, and the half the row left unfired is the worse half: `stepCol < 0` is reachable from a re-style that parses deep-equal to the pristine file [HARNESS]
 
 **Kind**: controller-authored direct fix (~0.1d row carrying its own first-party diagnosis; no
 designer, planner, executor or evaluator spawned — iterations 153/156/157/158 precedent).
@@ -2318,7 +2318,7 @@ fleet artifact, frozen core, left alone and reported for the fifth iteration run
 
 ---
 
-## Iteration 160 — 2026-09-06 — row64 lands with explicit residual boundaries [HARNESS]
+## 160 — 2026-09-06 — row64 lands with explicit residual boundaries [HARNESS]
 
 **Kind**: one authorized queue-head harness sprint through designer, quorum, planner, executor and independent evaluator.
 
@@ -2382,7 +2382,7 @@ World-owned process fix: reporting/configuration diagnostics must preserve measu
 
 **Next**: row65 (test-file compile fences), row66 (quoted flow-key trim), row68 (fleet-owned pinned-repo guard), then the banked queue; row39 remains next product work. Rows79/80 remain parked design review.
 
-## Iteration 161 — 2026-09-06 — row65 parks after its proposed guard fails its own Markdown example [HARNESS]
+## 161 — 2026-09-06 — row65 parks after its proposed guard fails its own Markdown example [HARNESS]
 
 **Kind**: queue-head design iteration; one designer revision and one re-quorum, then judgment park.
 
