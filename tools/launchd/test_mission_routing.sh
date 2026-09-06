@@ -61,9 +61,9 @@ grep -q 'LANES DEGRADED THIS FIRE' "$driver" \
   || bad "lane degradation is reported before the iteration starts" "ledger accumulates with no emit site"
 # Astra sits BETWEEN the Anthropic rungs, and the selector must dispatch on provider or the
 # codex entry would be handed to the claude CLI.
-grep -q 'PREFS="\${MISSION_MODEL_PREFS:-claude-opus-5,codex:gpt-6-astra' "$driver" \
-  && ok "astra sits between the Anthropic controller rungs" \
-  || bad "astra sits between the Anthropic controller rungs" "controller ladder not updated"
+grep -q 'PREFS="\${MISSION_MODEL_PREFS:-claude-opus-5,codex:gpt-5.6-sol' "$driver" \
+  && ok "sol sits between the Anthropic controller rungs (astra removed 2026-09-06)" \
+  || bad "sol sits between the Anthropic controller rungs (astra removed 2026-09-06)" "controller ladder not updated"
 grep -q 'PROVIDER-DISPATCHED since 2026-09-05' "$driver" \
   && ok "controller ladder dispatches on provider" \
   || bad "controller ladder dispatches on provider" "a codex PREFS entry would go to the claude CLI"
