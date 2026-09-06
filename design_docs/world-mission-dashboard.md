@@ -1,11 +1,11 @@
 # Mission Dashboard — Ailang World
 
-Snapshot: 2026-09-06, iteration 164. History: world-mission-log.md.
+Snapshot: 2026-09-07, iteration 165. History: world-mission-log.md.
 
 - Dev CI remains RED at 9166de0; Go and launchd jobs still consume deleted DE-FORK driver files.
-- Iter164 found no Mark directive or new technical fact resolving D-WORLD-34.
+- Iter165 found no Mark directive or new technical fact resolving D-WORLD-34.
 - Designer parked; planner/executor refused substantive work; no plan, handoff, code or merge occurred.
-- Independent gpt-5.5 fallback evaluator PASS 92/100; no landing authorized.
+- Independent gpt-5.5 fallback evaluator PASS 91/100; no landing authorized.
 - Goal: seven-clause 1.0 bar; goal unmoved; no additional clause certified.
 - Latest implementation remains row64, PR124, bf15c73. No release cut.
 
@@ -21,7 +21,7 @@ Rows65/79/80 remain parked; row39 is the next product item.
 
 Designer: declared gpt-6-astra Agent route; parked on D-WORLD-34.
 Planner/executor: gpt-5.6-sol Agents; fail-closed/refused.
-Evaluator: configured pi model rejected by Agent surface; gpt-5.5 fallback Agent obtained a separate read-only gpt-5.5 judgment, PASS 92/100.
+Evaluator: configured pi model rejected by Agent surface with `Unknown model`; gpt-5.5 fallback Agent supplied the distinct read-only judgment, PASS 91/100.
 Metered $0.00; ChatGPT/Codex quota only. No implementation, push, merge or release.
 
 ## Parked for owner

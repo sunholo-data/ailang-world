@@ -2571,6 +2571,66 @@ No shared skill edit, process-policy edit or routing-policy change. One factual 
 **Next**: resolve D-WORLD-34, revise and re-quorum the DE-FORK repair. If unresolved, row66 remains banked but cannot land while dev lacks a usable required-check set; then row68. Row39 remains next product work.
 
 ---
+## Iteration 165 — 2026-09-07 — DE-FORK repair remains parked; four required Agent roles confirm the authority gate [HARNESS]
+
+**Kind**: inherited own-repo CI-red resume; mandatory four-role audit and independent parking evaluation; no implementation.
+
+**Progress**: seven-clause 1.0 bar; goal unmoved. Dev remains red and no additional clause was certified.
+
+**Context / preflight**
+- Armed; `gh` = `sunholo-voight-kampff`; Anthropic billing tripwire CLEAN; shared running skill byte-identical to its origin. Repo-relative mission helpers remain absent, so gate stamps and base records used the canonical sibling-checkout helpers.
+- Local `dev` and `origin/dev` agree at `9166de05c42d0c3430d0ebb87c99db378b72420c`; main clean. Gate4 routing base: `9166de05c42d0c3430d0ebb87c99db378b72420c@2026-09-06T22:59:34Z`.
+- Canonical GCP World inbox returned no unread rows. Issue107 had zero allowlisted Mark directives after `2026-09-06T19:14:28Z`; no human ruling was inferred. Current time was before Monday 07:00 local, so weekly rotation/sweep was not due.
+- Authoritative `dev` ledger validates at20 rows with D-WORLD-32/33 OPEN; the recovery record branch carries the unmerged iteration162 D-WORLD-34 row and validates at21 rows/3 OPEN.
+
+**Pick**: own-repo dev CI red still outranks row66. Exact-head run34033464096 has three checks: AILANG success, Go failure at deleted `tools/launchd/test_mission_routing.sh`, and launchd failure extracting from deleted `tools/launchd/mission-control.sh`.
+
+**Work done**
+- Re-ran the two local failure paths at pristine base: stall suite rc1 with failed driver extraction; pinned-binary `verify_go.sh` rc127 at the missing routing suite. The Gate1/Gate2 shared ref remained steady.
+- Re-read the inherited iter162 design, DE-FORK commit, D-WORLD-DRIVER-1 and queue row76. No commit after DE-FORK changed the relevant CI/verifier surfaces or supplied authority.
+- Spawned every operator-required role through the Agent tool. Designer parked; planner produced no plan; executor refused with an empty authorized diff. No design revision, quorum retry, code, commit, PR, merge or release was attempted by those roles.
+
+**Routing evidence**
+| Stage | Actual lane | Outcome / evidence |
+|---|---|---|
+| Controller | Codex controller (tok: not reported) | completed scheduled gates; no controller verdict substituted for evaluation; base=`9166de05c42d0c3430d0ebb87c99db378b72420c@2026-09-06T22:59:34Z` |
+| Designer | Agent `gpt-6-astra` (tok: not reported) | resolver `recipe codex:gpt-6-astra declared:provider-pin`; PARK, no edits |
+| Planner | Agent `gpt-5.6-sol` (tok: not reported) | resolver `recipe codex:gpt-5.6-sol anthropic-fallback:fail-closed:path-not-in-codex-allowlist`; fail-closed PARK, no plan |
+| Executor | Agent `gpt-5.6-sol` (tok: not reported) | resolver `recipe codex:gpt-5.6-sol declared:provider-pin`; REFUSE/PARK, authorized diff empty |
+| Evaluator configured | Agent `pi:ollama/minimax-m3:cloud` | spawn failed exactly: `Unknown model pi:ollama/minimax-m3:cloud`; Agent surface listed only Codex-family models |
+| Evaluator fallback | Agent `gpt-5.5` (tok: not reported) | distinct from Astra designer and Sol executor; PASS91/100 for parking, zero blockers, no code authorized |
+
+**Evaluator report quality**
+The judge independently checked the exact-head check set, pre-DE-FORK green parent, active deleted-file consumers, charter authority and ledger. Its nonblocking corrections are reflected here: call the outcome PARKED, quote the evaluator fallback error, and state that planner had no valid plan and executor's diff was empty.
+
+**Verification**
+- Exact-head remote CI: run34033464096, 3 checks present; one success and two failures as above. Parent `b7e4a8e` had all three checks green before DE-FORK.
+- First-party local reproduction: stall rc1; pinned AILANG v0.30.0 verifier rc127. Positive file controls confirmed the caller suite and verifier exist while their consumed files do not.
+- `mission_decisions.sh --check` is valid at20 rows on `dev` and21 rows on this record branch. No product-green claim was made.
+
+**Landing / Gate3b**
+No implementation or queue item lands. The record remains branch/PR bookkeeping while required checks are red; Gate3b green is not claimed. Frozen/shared surfaces remain byte-identical.
+
+**Metered ledger**: $0.00 of $5. Agent roles used ChatGPT/Codex quota; provider token counts were not reported.
+
+**Ruled out / not chased**
+- Treating unattended default B as implementation authority: refuted by its explicit park text.
+- Re-running quorum or inventing a conditional plan: blocked by the unresolved ratified authority question.
+- Skipping planner/executor/evaluator because no implementation was possible: rejected by the operator's standing request; all were invoked, and the configured evaluator failure plus fallback are recorded.
+- Proceeding on controller-only judgment: rejected; distinct gpt-5.5 independently passed the park.
+
+**Parked for human**
+D-WORLD-34 remains the resume gate: RETIRE the obsolete explicit diagnostic/fixtures after DE-FORK, or PRESERVE them byte-identical and limit the repair to default product verification. Recommendation RETIRE; unattended default PRESERVE-and-park. D-WORLD-32 and D-WORLD-33 remain open and unchanged.
+
+**Containment**
+No source, frozen driver, shared skill, V1 checkout, launchd runtime, credential, account or release changed. Record edits stayed on the existing recovery branch descended from the full current dev base.
+
+**Retro (Gate5)**
+The same evaluator-route limitation and authority park recurred, but no new rulebook defect was found; the existing exact fallback disclosure and judgment/capacity distinction handled it. No skill, process-policy or routing-policy edit.
+
+**Next**: resolve D-WORLD-34, revise and re-quorum the DE-FORK repair. If unresolved, row66 remains banked until dev has a usable landing gate; then row68. Row39 remains next product work.
+
+---
 ## Iteration 164 — 2026-09-06 — DE-FORK repair parks again on D-WORLD-34 with fallback independent judge [HARNESS]
 
 **Kind**: inherited own-repo CI-red resume; four-role audit plus documented evaluator fallback; no implementation.
