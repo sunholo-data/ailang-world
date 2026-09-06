@@ -1,6 +1,6 @@
 # Fleet Residual Reporting: State the Enumeration Boundary
 
-**Status:** Implemented in executor worktree — controller commit and broader validation pending
+**Status:** Implemented — PR124 merged as `bf15c73f143651a4a32aeec956a878efb1ae328c`; merge CI GREEN3/3.
 **Target:** World iteration 160, queue row 64 (clause-2)
 **Priority:** P2 · **Estimated:** ~0.2d · **Class:** HARNESS
 **Dependencies:** None · **Planner-Lane:** codex-ok
@@ -320,8 +320,8 @@ claim. No hard violations.
 
 ## Related Documents and Review Handoff
 
-- [Row-54 design](w-driver-drift-gate-compares-the-copy-to-itself.md) and
-  [sprint plan](w-driver-drift-gate-compares-the-copy-to-itself-sprint-plan.md): textual
+- [Row-54 design](../planned/w-driver-drift-gate-compares-the-copy-to-itself.md) and
+  [sprint plan](../planned/w-driver-drift-gate-compares-the-copy-to-itself-sprint-plan.md): textual
   coverage check read these; retain their comparison mechanism, revise the ambiguous
   residual claim. This is row 64's separately authorized follow-up, not a duplicate
   source-comparison feature. Their historical measurements/status are not current evidence.

@@ -1,0 +1,139 @@
+{
+  "source": "mission:world/iter-160",
+  "stages": [
+    {
+      "role": "controller",
+      "provider": "codex",
+      "quota_bucket": "gpt-6-astra",
+      "status": "completed",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "role": "designer",
+      "provider": "codex",
+      "quota_bucket": "gpt-6-astra",
+      "status": "completed",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "role": "designer-revision",
+      "provider": "codex",
+      "quota_bucket": "gpt-6-astra",
+      "status": "completed",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "role": "planner",
+      "provider": "codex",
+      "quota_bucket": "gpt-5.6-sol",
+      "status": "completed",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "role": "executor",
+      "provider": "codex",
+      "quota_bucket": "gpt-5.6-sol",
+      "status": "completed",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "role": "evaluator-source-review",
+      "provider": "pi",
+      "quota_bucket": "ollama-minimax-m3-cloud",
+      "status": "completed",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "role": "evaluator-report-correction-1",
+      "provider": "pi",
+      "quota_bucket": "ollama-minimax-m3-cloud",
+      "status": "failed",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "role": "evaluator-report-correction-2",
+      "provider": "pi",
+      "quota_bucket": "ollama-minimax-m3-cloud",
+      "status": "failed",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0
+    },
+    {
+      "role": "quorum-r1-reject",
+      "provider": "openai",
+      "model": "gpt5-6-sol",
+      "cost_usd": 0.032615000000000005,
+      "tokens_in": 4711,
+      "tokens_out": 302,
+      "status": "completed"
+    },
+    {
+      "role": "quorum-r1-reject",
+      "provider": "google",
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.012636,
+      "tokens_in": 5268,
+      "tokens_out": 175,
+      "status": "completed"
+    },
+    {
+      "role": "quorum-r1-reject",
+      "provider": "openrouter",
+      "model": "oc-glm-5-2",
+      "cost_usd": 0.01379992,
+      "tokens_in": 4676,
+      "tokens_out": 2202,
+      "status": "completed"
+    },
+    {
+      "role": "quorum-r2-pass",
+      "provider": "openai",
+      "model": "gpt5-6-sol",
+      "cost_usd": 0.04342,
+      "tokens_in": 7760,
+      "tokens_out": 154,
+      "status": "completed"
+    },
+    {
+      "role": "quorum-r2-pass",
+      "provider": "google",
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.01966,
+      "tokens_in": 8870,
+      "tokens_out": 160,
+      "status": "completed"
+    },
+    {
+      "role": "quorum-r2-pass",
+      "provider": "openrouter",
+      "model": "oc-glm-5-2",
+      "cost_usd": 0.02798965,
+      "tokens_in": 7797,
+      "tokens_out": 5003,
+      "status": "completed"
+    },
+    {
+      "role": "D-WORLD-32-owner-credential-rotation",
+      "provider": "human",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "status": "awaiting_approval"
+    }
+  ]
+}

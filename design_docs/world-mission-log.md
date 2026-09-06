@@ -18400,3 +18400,69 @@ fleet artifact, frozen core, left alone and reported for the fifth iteration run
 
 **Next**: row **64** (`w-fleet-residual-net-shares-phase-1-pathspec`), then **65**, **66**,
 **68**–**78**, **81**, **82**, **83**, then **39**.
+
+---
+
+## Iteration 160 — 2026-09-06 — row64 lands with explicit residual boundaries [HARNESS]
+
+**Kind**: one authorized queue-head harness sprint through designer, quorum, planner, executor and independent evaluator.
+
+**Progress**: seven-clause 1.0 bar; goal unmoved. Row64 landed; no additional clause certified.
+
+**Context / preflight**
+- Kill switch absent; own driver ancestry confirmed; gh account sunholo-voight-kampff; Anthropic billing tripwire clean.
+- Shared main started six commits behind origin, with only the untracked fleet artifact. Read authoritative state from origin `bf15c73`'s pre-sprint ancestor `d81ac42`; all task edits used sibling worktrees.
+- Canonical GCP inbox:16 unread initially, none requiring World action. Issue107 and predecessor89 had zero new human directives. Both watermark keys mirrored to2026-09-06T05:40:46Z. No nightly-eval issue. Ledger initially18 rows,0 OPEN.
+- Parent CI at d81ac42:3/3 success. Issue107 did not meet weekly rotation conditions. Shared authoritative mission skill used; no frozen-file edits.
+
+**Pick**: queue row64, `w-fleet-residual-net-shares-phase-1-pathspec`, narrow-claim option already authorized. Synthetic outside addition stayed rc0 with zero filename mentions; an inside addition produced exactly one warning. Missing-required fixture rc1 hit the exact intended class.
+
+**Work done**
+- Precise tracked/phase3 scope, separately rendered required paths, qualified residual count, and unenumerated-outside wording. Comparison logic and return codes unchanged.
+- Durable live-script-copy test with five subtests: baseline, outside addition, inside positive control, missing required, empty required array.
+- Designer revision answered exact-text consumer inventory and refusal-literal objections. Full tracked search:92 hits/8 files; known V1 integration script search:0 old-phrase hits, same-scope positive control fired. External consumers are not universally excluded.
+- Completed design, companion plan/JSON, evaluation record and compact evidence moved together to World's flat implemented directory.
+
+**Routing evidence**
+| Stage | Actual lane | Outcome / evidence |
+|---|---|---|
+| Controller | codex:gpt-6-astra | completed, subscription; main tree preserved |
+| Designer + one revision | codex:gpt-6-astra | bounded probes/runs rc0; driver had selected Astra after Anthropic unavailability; rotation pointer advanced to actual Astra |
+| Quorum r1 | Sol/Gemini/GLM | 3 present,3 reject,0 absent; $0.05905092 |
+| Quorum r2 | Sol/Gemini/GLM | 3 present,3 pass,0 absent; $0.09106965; Sol replaced author Astra's reviewer seat |
+| Planner | codex:gpt-5.6-sol | `anthropic-fallback:fail-closed:planner-lane-field-missing`; local derive and shared resolver agreed with preserved driver exports; two real artifacts validated |
+| Executor | codex:gpt-5.6-sol | declared provider pin, probe/run rc0; five paths only; actual role lifecycle timestamps corrected from filesystem evidence |
+| Evaluator | pi:ollama/minimax-m3:cloud | distinct provider; independent source PASS; final score88/100; typed runs ok with110/16/25 tool calls,253/71/71 seconds |
+
+Initial resolver calls from some tool shells lacked the driver exports and refused; preserving the measured driver environment supplied the effective answers above. No routing policy was changed. The shared pi runner lacks explicit extension flags at its callsite; a temporary PATH wrapper supplied both required sandbox/worktree-fence extensions without modifying shared code. Pi cache/temp denials were resolved inside its isolated worktree.
+
+**Evaluator report quality**
+Three report drafts contained unsupported prose: custom rubric/committee, nonexistent paths and false function-length claims, then incorrect actor attribution and drift-arm identity. Controller AST measurement found one108-line test function and all other new functions<=36. The final numerical rubric is88/100. Controller banked a labeled transcription of that unchanged independent verdict plus actual command records, correcting factual provenance. No contested implementation finding was overridden. Report-quality defects and original invocation verdicts are in the evidence bundle.
+
+**Verification**
+- Controller outside sandbox: pinned-v0.30.0 verify_ail rc0; Go1.26.6 build/vet/fulltest rc0 (19 packages,0 FAIL lines). Focused five-subtest RUN/PASS and _test.go compile fence rc0; formatting/syntax clean.
+- Full local verify_go rc1 before/after on the same three FLEET-owned differences: derive-planner-lane.sh, mission-control.sh, test_mission_routing.sh. This is not a full-green verifier claim.
+- Independent evaluator and controller each reverted one production reporting block. Mutant compiled, script rc0/three old-style matches, primary outside arm red for missing scope; four disclosure subtests red and required refusal stayed green. Captured verifier/test hashes restored exactly and focused run green. Banked hashes and raw discriminating output are linked in implemented/world-iter160-evidence.
+
+**Landing**
+PR [#124](https://github.com/sunholo-data/ailang-world/pull/124) → [`bf15c73`](https://github.com/sunholo-data/ailang-world/commit/bf15c73f143651a4a32aeec956a878efb1ae328c). PR and merge CI GREEN: present3=expected3, no missing/non-green checks, one correctly SHA-pinned workflow run. Expected jobs enumerated from the sole workflow. Mergeability read before interpreting checks; initial empty merge check set was kept pending. Issue107 verified OPEN after merge.
+
+**Metered ledger**: $0.15012057 of$5 (six reviewer bills,39082 input/7996 output tokens); Astra/Sol subscription and MiniMax Ollama Cloud quota calls post zero metered dollars/tokens. Report-correction failures remain failed stages; owner action remains awaiting_approval in the chain.
+
+**Ruled out / not chased**
+- Widening the fixed pathspec or absorbing fleet files: outside row64 authority.
+- Treating unenumerated paths as zero or treating the baseline fleet drift as a sprint regression.
+- Inline controller substitution for required design/planning/implementation/judging roles.
+- Silently accepting report prose merely because a role exited0. The numerical verdict is banked with separately verified provenance.
+- Frozen driver/skill updates, product scope, GPU work and release publishing: none performed.
+
+**Parked for human**
+D-WORLD-32: a configuration context read exposed a local authentication credential in the tool transcript. Value omitted from all messages/GitHub artifacts. Owner rotation/revocation is recommended; no account changes while unattended. Controlplane and approval-spine messages were sent and read back with body verified. Ledger19 rows,1 OPEN.
+
+**Containment**
+Shared main still has only tools/launchd/mission-control.sh.tmp.astra untracked; it remains fleet-owned. Planner/evaluator/mutation worktrees removed after artifact and restore checks. The main checkout was never pulled, reset, stashed or cleaned.
+
+**Retro (Gate5)**
+World-owned process fix: reporting/configuration diagnostics must preserve measured provenance, rubric arithmetic and field-level reads. No shared skill edit and no routing-policy change. Report-quality failures, lost-export resolver refusals and timestamp corrections are recorded as measured friction; existing shared absolute helpers handled missing local tools. docs/sprint-retros is absent (coding-standards existence control fired).
+
+**Next**: row65 (test-file compile fences), row66 (quoted flow-key trim), row68 (fleet-owned pinned-repo guard), then the banked queue; row39 remains next product work. Rows79/80 remain parked design review.

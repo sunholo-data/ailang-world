@@ -1,51 +1,33 @@
 # Mission Dashboard — Ailang World
 
-*Snapshot, overwritten every iteration. History lives in `world-mission.md` (STATUS),
-`world-mission-status-archive.md` and `world-mission-log.md`.*
+Snapshot: 2026-09-06, iteration160. History: world-mission-log.md.
 
-**As of**: 2026-09-06 · iteration **159** · `dev` @ [`2115172`](https://github.com/sunholo-data/ailang-world/commit/2115172) · CI **GREEN 3/3**
-
-## Latest landing
-
-- **Row 63** — `w-locator-derivation-refusals-are-unpinned-and-undeclared` ·
-  PR [#121](https://github.com/sunholo-data/ailang-world/pull/121) → squash `2115172`.
-  The row-52 step locator's two derivation refusals were deletable with the whole suite green.
-  Both are now armed via an extracted `stepBlockAnchors`, and the branch the row left unfired
-  turns out to be reachable from a **re-style that parses deep-equal to the pristine `ci.yml`**.
-- Rows **58–63** have landed on six consecutive iterations.
+- Latest implementation: row64, PR124, `bf15c73`; merge CI GREEN3/3.
+- Release: no release cut this iteration; verification compiler pinned v0.30.0.
+- Row64 reports the exact residual enumeration boundary and separate required list.
+- Independent evaluator: MiniMax-M3 PASS88/100; controller verified full Go/Ail gates.
+- Evaluator prose required correction; raw independent command evidence is banked.
+- Goal: seven-clause1.0 bar; goal unmoved; no additional clause certified.
 
 ## Next picks
 
-| # | item | size |
-|---|---|---|
-| **64** | `w-fleet-residual-net-shares-phase-1-pathspec` | ~0.1d |
-| 65 | `w-go-build-is-not-a-compile-fence-for-a-test-file` | ~0.1d |
-| 66 | `w-flow-key-quote-trim-is-uncovered` | ~0.1d |
-| 68–78, 81, 82, 83 | remaining clause-2 gate-hardening rows | small |
-| 39 | next non-gate-hardening item | — |
+1. Row65 — correct test-file compilation fences.
+2. Row66 — cover quoted flow-key trimming.
+3. Row68 — fleet-owned pinned-repo guard, route upstream.
 
-Rows **79 / 80** are `[PARKED — DESIGN REVIEW]` by their own text.
+Rows79/80 remain parked for design review; row39 is the next product item.
 
-## Loop cadence & routing
+## Routing and quota
 
-- Controller: `claude:` CLI, opus, quota bucket. Metered budget **$5/iteration**;
-  recent iterations spend **$0.00** (small rows are controller-authored direct fixes).
-- Designer `claude:claude-fable-5` · planner `opus` · executor `codex:gpt-5.6-sol` ·
-  evaluator `sonnet` — **not spawned** for ~0.1d rows; when that happens the record states
-  plainly that generator == judge.
-- Verify gate: `scripts/verify_ail.sh` + `go build`/`go vet`/`go test ./...` with `AILANG_BIN`
-  set to the pinned **v0.30.0** at `~/.pinned-ailang/ailang`.
-  `scripts/verify_go.sh` is **rc=1 at base** on the FLEET-owned driver-drift arm (row 76) —
-  only a fleet commit clears it, never a World edit.
+Controller Codex Astra; designer Astra (driver fallback); planner/executor Sol;
+evaluator pi/Ollama Cloud MiniMax-M3. Metered$0.15012057 of$5, quorum only.
+Shared absolute helpers supplied heartbeat/directive/resolver gaps; frozen files untouched.
+Full local verify_go is rc1 on three existing FLEET-owned differences; Go/Ail gates pass.
 
-## Parked on Mark
+## Parked for owner
 
-**Nothing.** Decision ledger: **18 rows, `--check` valid, ZERO OPEN.**
+D-WORLD-32 OPEN: rotate/revoke and replace the local credential exposed in a tool transcript.
+Recommended: rotate. Default unattended: no account changes; wait for owner confirmation.
+Approval message: inbox_1788674300667_58de2db6. Ledger19 rows,1 OPEN.
 
-## Known standing conditions
-
-- `scripts/mission_directives.sh` and `tools/launchd/mission-heartbeat.sh` are absent from this
-  repo (row 69) — directives are read via the V1 checkout's copy by absolute path, and no
-  per-gate heartbeat stamp fires here.
-- `tools/launchd/mission-control.sh.tmp.astra` sits untracked in the shared main checkout: a
-  fleet artifact, frozen core, left alone.
+Shared main retains its untracked fleet artifact tools/launchd/mission-control.sh.tmp.astra.
