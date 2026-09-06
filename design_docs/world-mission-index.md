@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 164 | 2026-09-06 | DE-FORK repair parks again on D-WORLD-34 with fallback independent judge [HARNESS] |
 | 163 | 2026-09-06 | DE-FORK repair remains parked after every Agent role fails closed [HARNESS] |
 | 162 | 2026-09-06 | DE-FORK CI repair parks at the authority gate [HARNESS] |
 | 161 | 2026-09-06 | row65 parks after its proposed guard fails its own Markdown example [HARNESS] |

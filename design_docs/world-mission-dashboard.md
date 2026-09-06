@@ -1,11 +1,11 @@
 # Mission Dashboard — Ailang World
 
-Snapshot: 2026-09-06, iteration 163. History: world-mission-log.md.
+Snapshot: 2026-09-06, iteration 164. History: world-mission-log.md.
 
-- Dev CI is RED at 9166de0; DE-FORK left two active consumers of deleted driver files.
-- Iter163 resumed the parked repair and confirmed no new human ruling or technical fact changes D-WORLD-34.
-- All four roles ran through the Agent tool; planner/executor correctly refused substantive work.
-- Independent gpt-5.5 evaluator PASS 94/100; no code or frozen interface changed.
+- Dev CI remains RED at 9166de0; Go and launchd jobs still consume deleted DE-FORK driver files.
+- Iter164 found no Mark directive or new technical fact resolving D-WORLD-34.
+- Designer parked; planner/executor refused substantive work; no plan, handoff, code or merge occurred.
+- Independent gpt-5.5 fallback evaluator PASS 92/100; no landing authorized.
 - Goal: seven-clause 1.0 bar; goal unmoved; no additional clause certified.
 - Latest implementation remains row64, PR124, bf15c73. No release cut.
 
@@ -19,10 +19,10 @@ Rows65/79/80 remain parked; row39 is the next product item.
 
 ## Routing and quota
 
-Designer: gpt-6-astra Agent fallback (configured pi designer unavailable on Agent surface).
-Planner/executor: gpt-5.6-sol Agents; both spawned and returned fail-closed/refused.
-Evaluator: gpt-5.5 Agent fallback, distinct from Astra author and Sol executor; PASS 94/100.
-Metered $0.00; ChatGPT quota only. No implementation, push, merge or release.
+Designer: gpt-6-astra Agent fallback; parked on D-WORLD-34.
+Planner/executor: gpt-5.6-sol Agents; fail-closed/refused.
+Evaluator: configured pi model rejected by Agent surface; read-only gpt-5.5 fallback judge PASS 92/100.
+Metered $0.00; ChatGPT/Codex quota only. No implementation, push, merge or release.
 
 ## Parked for owner
 

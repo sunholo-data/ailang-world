@@ -2569,3 +2569,65 @@ No source, frozen driver, shared skill, V1 checkout, launchd state, credential, 
 No shared skill edit, process-policy edit or routing-policy change. One factual evaluator correction was recovered in-turn by resuming the same judge; it is evidence for careful cross-iteration provenance, not a new two-instance rule.
 
 **Next**: resolve D-WORLD-34, revise and re-quorum the DE-FORK repair. If unresolved, row66 remains banked but cannot land while dev lacks a usable required-check set; then row68. Row39 remains next product work.
+
+---
+## Iteration 164 — 2026-09-06 — DE-FORK repair parks again on D-WORLD-34 with fallback independent judge [HARNESS]
+
+**Kind**: inherited own-repo CI-red resume; four-role audit plus documented evaluator fallback; no implementation.
+
+**Progress**: seven-clause 1.0 bar; goal unmoved. Dev remains red and no additional clause was certified.
+
+**Context / preflight**
+- Armed; `gh` = `sunholo-voight-kampff`; billing tripwire CLEAN; shared running skill byte-identical to origin. The repo-relative heartbeat helper is still absent, so gate stamps used the canonical absolute helper in the sibling AILANG checkout.
+- Local `dev` and `origin/dev` agree at `9166de05c42d0c3430d0ebb87c99db378b72420c`; main clean. Gate4 base recorded as `9166de05c42d0c3430d0ebb87c99db378b72420c@2026-09-06T19:03:23Z`.
+- Issue107 had zero allowlisted Mark directives after watermark `2026-09-06T15:03:52Z`; no new human ruling was inferred. Canonical GCP inbox reads showed only reports/claims/approval requests, not a World directive.
+- Ledger21 rows/3 OPEN: D-WORLD-32, D-WORLD-33 and D-WORLD-34. No rotation of the weekly GitHub issue was due. Gate4 `ailang mission rotate-log world --keep 20` failed on `open missions: no such file or directory`, so the existing manual index/STATUS rotation path remained in force.
+
+**Pick**: own-repo dev CI red still outranks row66. Exact-head run34033464096 is red: `ailang-code verify gate` succeeds; `go host build + test gate` fails when `scripts/verify_go.sh` reaches deleted `tools/launchd/test_mission_routing.sh`; `launchd drivers (bash 3.2)` fails when its driver suite extracts from deleted `tools/launchd/mission-control.sh`. Four later Go-job steps remain skipped/unmeasured.
+
+**Work done**
+- Re-read the iter162 design `planned/w-de-fork-ci-ownership.md`, the iter162/163 records, D-WORLD-34, exact-head CI, and the active deleted-file consumers. No new fact changed the authority boundary.
+- Designer preserved the existing `Needs Human Review` park; planner and executor refused substantive work because D-WORLD-34 still says unattended default B parks planning/execution until explicit authority resolves the ratified-row conflict.
+- No design revision, quorum retry, plan, handoff, implementation, PR, merge, release or credential action was produced.
+
+**Routing evidence**
+| Stage | Actual lane | Outcome / evidence |
+|---|---|---|
+| Controller | Codex controller (tok: not reported) | completed the scheduled iteration; no inline substitute for the judge |
+| Designer | Agent `gpt-6-astra` fallback (tok: not reported) | configured designer seed resolved to Astra on this Agent surface; inspected first-party state and returned PARKED, no edits |
+| Planner | Agent `gpt-5.6-sol` (tok: not reported) | spawned as required; FAIL-CLOSED because no resolved ruling, quorum-cleared design or lawful plan exists |
+| Executor | Agent `gpt-5.6-sol` (tok: not reported) | spawned as required; REFUSED implementation/commits/push because no plan or handoff exists |
+| Evaluator configured | Agent `pi:ollama/minimax-m3:cloud` | spawn failed exactly: `Unknown model pi:ollama/minimax-m3:cloud for spawn_agent. Available models: gpt-6-astra, gpt-5.6-sol, gpt-5.6-terra, gpt-5.6-luna, gpt-5.5` |
+| Evaluator fallback | read-only `codex exec -m gpt-5.5` (139,352 tok) | fallback required after context handoff exposed no callable collaboration wait/spawn surface; distinct from Astra designer and Sol executor; PASS92/100, zero blocking, landing not authorized |
+
+**Evaluator report quality**
+The fallback judge verified the authoritative skill, current branch state, D-WORLD-34, design status, exact-head CI, iter162 parent/red controls, directives and inbox. It filed two nonblocking findings: iteration164 had not yet been locally recorded when judged, and unread GCP traffic exists but is not a verified World human directive. No blocking finding; the judge explicitly said park/refuse is lawful and no landing is authorized.
+
+**Verification**
+- Remote exact-head run34033464096: `headSha=9166de05c42d0c3430d0ebb87c99db378b72420c`, workflow `CI`, conclusion `failure`; ailang-code success, Go and launchd failures above.
+- Iter162 controls: run34028333254 red at `e92594c23d76f51a195f36f31448ecedb5eddcfd`; parent run34026879032 green at `b7e4a8e3609b7be82dec114f51ea21c1692b6900`.
+- `git ls-tree -r 9166de05... -- tools/launchd/mission-control.sh tools/launchd/test_mission_routing.sh scripts/verify_go.sh .github/workflows/ci.yml` lists only `ci.yml` and `scripts/verify_go.sh`, confirming the two local driver paths are absent at the failing head.
+- `mission_decisions.sh --check --file design_docs/world-mission.md` remained valid at21 rows after prior recovery; no product verification was claimed because no product bytes changed and dev itself remains red.
+
+**Landing / Gate3b**
+No implementation or queue item lands. This record is branch-only while dev required checks are red; Gate3b green is not claimed. The inherited explicit diagnostic and every frozen/shared path remain byte-identical.
+
+**Metered ledger**: $0.00 of $5. Agent roles and the fallback Codex evaluator used ChatGPT/Codex quota, not provider-metered dollars.
+
+**Ruled out / not chased**
+- Treating unattended default B as authority to proceed: refuted by D-WORLD-34's explicit park text.
+- A third designer revision or quorum retry: no human ruling changed the two blocked rounds.
+- Recreating copied driver files, editing the frozen diagnostic, or touching shared V1/launchd runtime: outside authority and contrary to DE-FORK.
+- Proceeding on controller-only judgment: rejected; independent gpt-5.5 fallback judge ran and passed the park.
+- Calling dev green from local Go/Ail checks: rejected; the remote required check set is red.
+
+**Parked for human**
+D-WORLD-34 remains the resume gate: A retires the obsolete explicit diagnostic/fixtures; B preserves them and authorizes only removal from default product verification. Either answer still requires a design revision and fresh quorum. D-WORLD-32 and D-WORLD-33 remain open and unchanged.
+
+**Containment**
+No source, frozen driver, shared skill, V1 checkout, launchd state, credential, external account or release was changed. Record edits stayed in the recovery worktree on branch `mission/world-iter163-record`.
+
+**Retro (Gate5)**
+No shared skill edit, process-policy edit or routing-policy change. The only new friction is controller-surface continuity: after context handoff the configured Pi Agent evaluator remained unavailable and the collaboration wait/spawn functions were not callable, so the iteration used a read-only Codex fallback judge and recorded that deviation. This is a single instance and does not meet the bar for a policy edit.
+
+**Next**: resolve D-WORLD-34, revise and re-quorum the DE-FORK repair. If unresolved, row66 remains banked but cannot land while dev lacks a usable required-check set; then row68. Row39 remains next product work.
