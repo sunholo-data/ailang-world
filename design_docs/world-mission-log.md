@@ -18208,3 +18208,195 @@ reported for the fourth iteration running.
 **Next**: row **63** (`w-locator-derivation-refusals-are-unpinned-and-undeclared`), then rows
 **64**–**66**, **68**–**78**, **81**, **82**, **83**, then **39**. Rows **79**/**80** remain
 `[PARKED — DESIGN REVIEW]` by their own text.
+
+## Iteration 159 — 2026-09-06 — row 63 lands, and the half the row left unfired is the worse half: `stepCol < 0` is reachable from a re-style that parses deep-equal to the pristine file [HARNESS]
+
+**Kind**: controller-authored direct fix (~0.1d row carrying its own first-party diagnosis; no
+designer, planner, executor or evaluator spawned — iterations 153/156/157/158 precedent).
+
+**Progress**: charter clause-2 gate-hardening queue — **row 63 LANDED**. Rows 58–63 have now
+landed on six consecutive iterations. Queue head moves to row 64. No new rows filed.
+
+**Context / preflight**
+- Kill switch `~/.ailang/state/mission-world.disabled`: NOT set (armed, namespaced path). Billing
+  tripwire **CLEAN**. `gh` = `sunholo-voight-kampff`. Pin present at `~/.pinned-ailang/ailang`,
+  **AILANG v0.30.0**.
+- **0** `MarkEdmondson1234` directives on `#107` since watermark `2026-09-05T21:42:00Z` (24
+  comments) and **0** on the predecessor `#89` (44 comments), via the V1 checkout's
+  `mission_directives.sh` by ABSOLUTE PATH (row 69: it and `mission-heartbeat.sh` are still absent
+  here, which is why no per-gate heartbeat stamp fired). The allowlist guard was exercised as a
+  positive control — `MISSION_DIRECTIVE_AUTHORS=""` is REFUSED — so the instrument is
+  demonstrably live rather than silently permissive.
+- Decision ledger **18 rows, `--check` valid, ZERO OPEN**; no ledger row changed, so no attended
+  ruling and no self-resolution. No rotation owed (`#107` created `2026-08-31T09:26:51Z` = 11:26
+  local, AFTER Monday 07:00 local; 24 of 80 comments). No weekly sweep owed.
+- Inbox 12 unread, **0** addressed to World. No `[nightly-eval]` issues.
+- Running skill **byte-identical to `origin/dev`** (`cmp` against the RESOLVED symlink target via
+  `readlink -f`).
+- **Local `dev` was 4 behind `origin/dev` with 0 ahead** (`81ca5d7` vs `834d2d0`) — the routine
+  post-iteration state of this shared checkout, since every landing goes by worktree and PR. All
+  mission state was read FROM ORIGIN and both the sprint and this record were written in
+  worktrees branched on `origin/dev`. No reconcile attempted: standing authorisation for one is a
+  HUMAN decision this charter does not carry, and routing around it costs this loop nothing.
+- CI **GREEN 3/3** on `834d2d0`. **0** open PRs, **0** stale worktrees.
+- `verify_go.sh` **rc=1 at base** on the FLEET-OWNED driver-drift arm (row 76), re-measured rather
+  than transcribed: it now names fleet HEAD `19d6b03c`, where one iteration ago it named
+  `f516881a`. The fleet has moved again, exactly as row 76 predicts, so the two-leg substitute
+  (`verify_ail.sh` + `go build`/`go vet`/`go test`) stands.
+
+**Pick**: queue row **63** (`w-locator-derivation-refusals-are-unpinned-and-undeclared`), the
+queue head, `~0.1d`, gated on nothing. Not landed (no commit, no merged PR, no design doc). The
+row carries its own diagnosis and names two candidate dispositions, so no design doc was owed.
+
+**THE FINDING: THE ROW WAS RIGHT THAT NOTHING PINS THESE TWO BRANCHES, AND ITS GUESS ABOUT WHICH
+ONE WAS SAFE IS BACKWARDS.**
+
+1. **Reproduced first-party before any code (rule 3f), and the reproduction is the whole case.**
+   The row says the row-52 locator has five loud refusal branches and the drill pins three; the
+   two DERIVATION refusals — `anchor < 0` and `stepCol < 0` — have no killer arm. Measured by
+   neutering each to a silent fallback (`anchor = 0`; `stepCol = expectedStepCol`) and running the
+   whole package: **rc=0 both times**. Both branches are deletable with the entire committed suite
+   still green. The discriminating positive control — neutering the `continue-on-error` value
+   check in the same harness — reds **5** arms, so the instrument can see a red; these two simply
+   had nothing to trip. By this mission's standing rule (*a guard is not a gate until something
+   reds when you remove it*) they were guards.
+
+2. **Both refusals are REACHABLE, and the mutants are not equally benign — which is the part the
+   row did not have.** Each mutation was landed on the real `.github/workflows/ci.yml` by sha256
+   and restored byte-identical, `go vet` rc=0 read before every verdict, pristine control green
+   either side.
+   - `anchor < 0`: renaming both `steps:` keys above the identifying line gives **rc=1**,
+     `instrument failure: could not locate a steps: anchor above the miscompile identifying line
+     in ci.yml`. Parsed with a real YAML loader the mutant is valid YAML, but `jobs.go-verify` has
+     **no `steps` key** — so Actions would reject the workflow. This confirms the row's own
+     caveat, which it had recorded honestly and which is why it filed the branch as *"no killer
+     is COMMITTED"* rather than *"no killer exists"*.
+   - `stepCol < 0`, which the row recorded as **unfired** and *plausibly* unreachable: rewriting
+     each `      - key: v` as a bare `      -` with the mapping on the following lines gives
+     **rc=1**, `instrument failure: could not derive the step column below ci.yml:104`. And the
+     mutant is a pure **re-style**: loaded with a YAML parser it is **deep-equal to the pristine
+     document**, so Actions runs it identically. All 14 dash lines below the anchor had to be
+     converted for the branch to fire, which is exactly why nobody had fired it by hand.
+
+   That inverts the row's expectation. The branch it left unfired is the one reachable from a
+   **legitimate** input, and the one it fired needs a malformed workflow.
+
+**THE FIX**
+
+The derivation moves out of the test body into
+`stepBlockAnchors(lines []string, identifyingLine int) (anchor, stepCol int, instrumentErr string)`,
+with **both refusal messages byte-identical** so nothing downstream changes. Extracting it is what
+makes committed arms possible at all: the production test only ever reads the real `ci.yml`, so
+until the derivation was a function, the only way to fire either branch was to mutate the
+repository's own workflow. This is the same shape `continueOnErrorRefusalsIn` / `stepScanFixture`
+established one screen below, at row 62.
+
+`stepAnchorFixture` renders a **two-job** workflow whose second job holds the identifying line, so
+the upward scan must pass an earlier job's `steps:` at the same indentation and the downward scan
+must start from the anchor it chose. Three arms:
+
+- **pristine** — derives cleanly; asserts the anchor is the *second* job's, which is the
+  known-positive half: the fixture carries two candidate anchors, so a green proves the scan
+  stopped at the right one.
+- **no `steps:` key above the identifying line** — sole killer for `anchor < 0`.
+- **a bare block-sequence dash** — sole killer for `stepCol < 0`. It additionally asserts the
+  anchor survives the refusal and is reported in the message (`ci.yml:<anchor+1>`), which is what
+  makes the refusal actionable, and carries a discriminating control: the fixture still holds
+  `- name:` entries **above** the anchor, so the refusal proves the scan is anchored rather than
+  that the fixture simply has no dashes anywhere.
+
+**SENSITIVITY DRILL — 6 neuterings, every conjunct killed, three sole**
+
+Each mutant landed by exact-count substitution (the mutator refuses unless the target text occurs
+exactly once), `go vet` rc=0 read BEFORE every test verdict, each restored byte-identical against
+a captured sha256, pristine control green either side.
+
+| # | conjunct neutered | arms that red |
+|---|---|---|
+| N1 | the `anchor < 0` refusal | **sole**: `no steps: key above the identifying line is refused` |
+| N2 | the `stepCol < 0` refusal | **sole**: `a bare block-sequence dash is refused rather than guessed at` |
+| N3 | outermost-anchor selection (`<` → `<=`) | the pristine arm + the bare-dash arm |
+| N4 | anchoring of the downward scan (`anchor+1` → `0`) | **sole**: the bare-dash arm |
+| N5 | the dash-plus-space requirement (`"- "` → `"-"`) | **sole**: the bare-dash arm |
+
+**My first N3 was not a verdict, and it said so.** Deleting the `indentOf(lines[j]) < anchorCol`
+conjunct leaves `anchorCol` unused, so `go vet` returned **rc=1** and the test binary never built —
+the empty failing-arm list was read as a build failure rather than as a green. Re-run in a
+compiling form (`<` → `<=`), which reds the two arms above. This is the reason the drill reads
+`go vet` *before* the test result rather than after, a discipline this repo adopted at iteration
+156 and which has now paid twice.
+
+**DECLARED RESIDUAL — measured, and it is a mis-attribution rather than a fail-open**
+
+Extracting the derivation creates a new way to break it: the production call site could discard
+the refusal (`_, stepCol, _ := …`), which is queue row 61's shape one file over. On a pristine
+`ci.yml` that discard is green. So the two mutations were landed **together** — the discard *and*
+the bare-dash `ci.yml` — and the production test still came back **rc=1**, because a refusal
+returns `stepCol = -1` and the existing `stepCol != expectedStepCol` check consumes it. The
+surviving message is `derived step column -1; update expectedStepCol after an intentional ci.yml
+re-indent`, which blames an indentation change for a shape the scan cannot read.
+
+The honest statement is therefore not "the call site is unpinned" but "the call site is
+backstopped, and the backstop mis-attributes". Both halves are now written into the helper's doc
+comment together with the measurement, matching the MUT-H precedent of declaring a disposition
+with the evidence that supports it rather than leaving it silent, and the comment says why
+returning `-1` on every refusal must not be tidied away.
+
+**Routing evidence**
+
+| stage | lane | model | status | cost |
+|---|---|---|---|---|
+| controller | `claude:` CLI (this session) | opus | completed | quota bucket, `metered=$0.00` of $5 |
+| designer | not spawned | — | n/a — ~0.1d row carrying its own diagnosis | $0.00 |
+| planner | not spawned | — | n/a | $0.00 |
+| executor | not spawned | — | n/a | $0.00 |
+| evaluator | **not spawned** | — | **n/a — generator == judge, stated** | $0.00 |
+
+**NO INDEPENDENT JUDGE RAN.** The compensating discipline is that every claim above is a
+landed-and-restored mutation with a captured sha256 and a pristine control, not an assertion.
+
+**Verification**
+
+- `verify_ail.sh` rc=0 — 11 required identities, 40 named tests, 9/9 world-package steps, pinned
+  `AILANG v0.30.0`.
+- `go build ./...` rc=0 · `go vet ./...` rc=0 · `gofmt -l` clean ·
+  `go test ./... -count=1` rc=0 (**19** `ok`, **0** FAIL), `AILANG_BIN` set.
+- `verify_go.sh` deliberately NOT used as the gate — row 76, rc=1 at base on the FLEET-owned
+  drift arm.
+
+**Landing**
+
+PR [#121](https://github.com/sunholo-data/ailang-world/pull/121) →
+squash [`2115172`](https://github.com/sunholo-data/ailang-world/commit/2115172).
+Gate 3b GREEN on the **merge commit**: `present=3 == expected=3` with expected ENUMERATED from
+`ci.yml`'s own job list (`ailang-verify`, `go-verify`, `launchd-drivers`; `ci.yml` is the only
+workflow in the repo, so the enumeration is complete by construction), `not_green=0`,
+`runs_total=1 event=push`, parent control `834d2d0` at `checks=3`, `mergeable` read FIRST
+(`MERGEABLE/UNSTABLE` → `MERGEABLE/CLEAN`).
+
+**My own Gate-3b poll failed first, and printed `INSTRUMENT FAILURE` rather than a verdict.** An
+inline `jq` expression was mangled by the shell and came back empty; the numeric floor caught it
+before any comparison, the filter moved to a file, and the first read on the merge commit
+(`present=0 expected=3`) was correctly kept polling rather than greened — which is the
+completeness rule working, since an aggregate over an empty check set is vacuously green.
+
+**Ruled out / not chased**
+
+- **Declaring either branch unreachable.** The row offered that as an alternative disposition. It
+  is refuted for both: each was fired first-party. Writing an unreachability note would have been
+  the same claim class the row-52 doc criticises elsewhere in its own text.
+- **A source-text arm pinning the call site's consumption of the refusal.** Drafted, then dropped:
+  the needle's own string literal appears in the file it greps, so the check is self-referential
+  and needs concatenation tricks to avoid matching itself. Measuring the backstop was both cheaper
+  and more informative, and it produced the declared residual above.
+- **Widening scope to the other three refusal branches** (`count != 1`, `stepCol != expectedStepCol`,
+  `!foundName`, block containment). Row 63 is scoped to the two derivation refusals; the others are
+  not this row's item.
+
+**Containment**
+
+The main checkout's only untracked file remains `tools/launchd/mission-control.sh.tmp.astra` — a
+fleet artifact, frozen core, left alone and reported for the fifth iteration running.
+
+**Next**: row **64** (`w-fleet-residual-net-shares-phase-1-pathspec`), then **65**, **66**,
+**68**–**78**, **81**, **82**, **83**, then **39**.
