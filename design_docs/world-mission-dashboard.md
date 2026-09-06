@@ -3,52 +3,49 @@
 *Snapshot, overwritten every iteration. History lives in `world-mission.md` (STATUS),
 `world-mission-status-archive.md` and `world-mission-log.md`.*
 
-**As of** 2026-09-06, iteration **158** · bookkeeping issue
-[#107](https://github.com/sunholo-data/ailang-world/issues/107)
+**As of**: 2026-09-06 · iteration **159** · `dev` @ [`2115172`](https://github.com/sunholo-data/ailang-world/commit/2115172) · CI **GREEN 3/3**
 
-## Where the mission is
+## Latest landing
 
-- **Latest landed**: row **62** (PR [#119](https://github.com/sunholo-data/ailang-world/pull/119)
-  -> squash `dcf534f`, CI green 3/3 on the merge commit) — the CI flag scan now reads the guarded
-  step's own mapping key and its VALUE, so an explicit `continue-on-error: false` and a comment
-  or `echo` merely naming the flag no longer red, while `true`, an empty value and a `${{ }}`
-  expression still refuse.
-- **Goal distance**: charter clause-2 gate-hardening queue. Rows 58–62 landed on five
-  consecutive iterations; head moves to row **63**.
-- **In flight**: none. No open PRs, no stale worktrees.
-- **New rows filed**: none this iteration.
+- **Row 63** — `w-locator-derivation-refusals-are-unpinned-and-undeclared` ·
+  PR [#121](https://github.com/sunholo-data/ailang-world/pull/121) → squash `2115172`.
+  The row-52 step locator's two derivation refusals were deletable with the whole suite green.
+  Both are now armed via an extracted `stepBlockAnchors`, and the branch the row left unfired
+  turns out to be reachable from a **re-style that parses deep-equal to the pristine `ci.yml`**.
+- Rows **58–63** have landed on six consecutive iterations.
 
-## Up next (banked, ready)
+## Next picks
 
-1. **63** — `w-locator-derivation-refusals-are-unpinned-and-undeclared` (clause-2, same gate)
-2. **64–66** — clause-2 gate-hardening rows
-3. **68–78** — gate/infra rows, incl. **76** (verify_go.sh rc=1 at base on the fleet-owned drift
-   arm) and **69** (heartbeat/directives/resolver/pi-runner scripts absent in this repo)
-4. **81**, **82**, **83**, then **39**
+| # | item | size |
+|---|---|---|
+| **64** | `w-fleet-residual-net-shares-phase-1-pathspec` | ~0.1d |
+| 65 | `w-go-build-is-not-a-compile-fence-for-a-test-file` | ~0.1d |
+| 66 | `w-flow-key-quote-trim-is-uncovered` | ~0.1d |
+| 68–78, 81, 82, 83 | remaining clause-2 gate-hardening rows | small |
+| 39 | next non-gate-hardening item | — |
 
-**Parked for design review**: rows **79**, **80** (by their own text — not human-blocked).
+Rows **79 / 80** are `[PARKED — DESIGN REVIEW]` by their own text.
 
-## Loop cadence + routing
+## Loop cadence & routing
 
-- Controller `claude:claude-opus-5`. Designer rotation pointer unchanged at
-  `pi:ollama/deepseek-v4-flash:0731-cloud` — no designer spawned. (The rotation itself was
-  amended attended on 2026-09-05 to add `codex:gpt-6-astra` as a third, fable-class entry.)
-- Recent picks have been controller-authored direct fixes on ~0.1–0.2d rows: **no independent
-  judge runs on those**, stated explicitly each time, with landed-and-restored mutation drills as
-  the compensating discipline.
-- Verify gate = `verify_ail.sh` + `go build/vet/test` with `AILANG_BIN` set. `verify_go.sh` is
-  **rc=1 at base** on the FLEET-OWNED driver-drift arm (row 76), re-measured this iteration and
-  now naming fleet HEAD `f516881a` — a fleet commit clears it, never a World edit.
-- The shared main checkout sits behind `origin/dev` between iterations by construction (every
-  landing goes by worktree + PR). Mission state is read from origin; no reconcile is attempted
-  without a human standing authorisation.
+- Controller: `claude:` CLI, opus, quota bucket. Metered budget **$5/iteration**;
+  recent iterations spend **$0.00** (small rows are controller-authored direct fixes).
+- Designer `claude:claude-fable-5` · planner `opus` · executor `codex:gpt-5.6-sol` ·
+  evaluator `sonnet` — **not spawned** for ~0.1d rows; when that happens the record states
+  plainly that generator == judge.
+- Verify gate: `scripts/verify_ail.sh` + `go build`/`go vet`/`go test ./...` with `AILANG_BIN`
+  set to the pinned **v0.30.0** at `~/.pinned-ailang/ailang`.
+  `scripts/verify_go.sh` is **rc=1 at base** on the FLEET-owned driver-drift arm (row 76) —
+  only a fleet commit clears it, never a World edit.
 
 ## Parked on Mark
 
-**Nothing.** Decision ledger: **18 rows, `--check` valid, ZERO OPEN**. Five consecutive
-iterations have asked for nothing.
+**Nothing.** Decision ledger: **18 rows, `--check` valid, ZERO OPEN.**
 
-## Quota posture
+## Known standing conditions
 
-`metered=$0.00` of the $5 per-iteration ceiling; every lane used was a subscription/quota bucket.
-Billing tripwire CLEAN (`ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN` both unset).
+- `scripts/mission_directives.sh` and `tools/launchd/mission-heartbeat.sh` are absent from this
+  repo (row 69) — directives are read via the V1 checkout's copy by absolute path, and no
+  per-gate heartbeat stamp fires here.
+- `tools/launchd/mission-control.sh.tmp.astra` sits untracked in the shared main checkout: a
+  fleet artifact, frozen core, left alone.
