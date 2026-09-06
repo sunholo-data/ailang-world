@@ -180,3 +180,20 @@ This establishes that the proposed assertions discriminate the wording defect wh
 - Any new source file beyond the one named Go regression, any production behavior beyond reporting/comments, or any ownership change is out of scope.
 
 No human confirmation is required for this already-authorized sprint. No message handoff or Git write is part of the planner lane; the controller imports and commits the two artifacts.
+
+## 8. Executor completion evidence
+
+M1 completed in the controller-provided worktree on 2026-09-06. The implementation changes
+only `check_driver_fleet()` reporting/adjacent phase-3 comments and adds the single planned
+Go regression source. AC1–AC6 passed. The Bash 3.2 empty-array arm produced exactly one
+`(none)` disclosure without an unbound-variable failure.
+
+Scoped gates returned rc=0 for shell syntax, `_test.go` compilation, and the focused named
+test. The focused run reported RUN/PASS for the top-level test and all five subtests with no
+skip. The disposable old-wording mutant kept script rc=0 and three matches but made the
+ordinary named test red first at `outside_boundary_unenumerated` for the missing phase-3
+boundary/unenumerated disclosure. Verifier/test pre-drill hashes were respectively
+`2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d` and
+`e6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5`;
+restored hashes matched exactly. Broader validation and commits remain controller-owned;
+the known full `verify_go.sh` fleet-drift red is not represented as green.

@@ -1,6 +1,6 @@
 # Fleet Residual Reporting: State the Enumeration Boundary
 
-**Status:** Planned — design only; implementation and mutation results pending
+**Status:** Implemented in executor worktree — controller commit and broader validation pending
 **Target:** World iteration 160, queue row 64 (clause-2)
 **Priority:** P2 · **Estimated:** ~0.2d · **Class:** HARNESS
 **Dependencies:** None · **Planner-Lane:** codex-ok
@@ -99,29 +99,29 @@ with the later implementation; this designer neither changes code nor commits.
 
 ### Acceptance Criteria and Testing Strategy
 
-- [ ] **AC1 — Baseline disclosure.** New named test runs without skips. Copy the live
+- [x] **AC1 — Baseline disclosure.** New named test runs without skips. Copy the live
   `scripts/verify_go.sh` using `copyGateFile`; make synthetic World/fleet Git repos under
   `t.TempDir()`. Commit identical minimal `tools/launchd/control.sh`,
   `tools/launchd/lib/pin-root.sh`, and `scripts/mission_decisions.sh` in both. Invoke
   `bash scripts/verify_go.sh --driver-fleet-check` with World as cwd, explicit synthetic
   `AILANG_FLEET_REPO`, and CI/AILANG_BIN unset. Require rc=0, three compared files, all
   three disclosure statements, and the required member printed exactly once on its line.
-- [ ] **AC2 — Addition outside.** Commit only `scripts/mission_decisions_v2.sh` to the
+- [x] **AC2 — Addition outside.** Commit only `scripts/mission_decisions_v2.sh` to the
   synthetic fleet. Assert `git ls-tree` sees it at HEAD (fixture health), then run the
   same command. Require rc=0, three matches, zero per-path residual warnings, and the
   complete statement that phase 3 only enumerates the two stated paths and that outside
   files are unenumerated (not zero). Assert the sibling is not individually reported.
   This success/disclosure assertion is the primary regression killer.
-- [ ] **AC3 — Same-scope positive control.** Keep the sibling and commit
+- [x] **AC3 — Same-scope positive control.** Keep the sibling and commit
   `tools/launchd/new-helper.sh` to fleet. Require rc=0, three matches, exactly one existing
   per-path warning naming the helper, summary count one qualified by “within the phase-3
   boundary,” and the same disclosure. Check both additions exist at HEAD. Never infer
   global zero from the silent sibling. AC2 and AC3 must run in the same test invocation.
-- [ ] **AC4 — Required checks remain clear.** In a separate synthetic case, omit the
+- [x] **AC4 — Required checks remain clear.** In a separate synthetic case, omit the
   required pin-root file from World's committed tree while keeping it in fleet. Require
   rc=1, `REQUIRED fleet paths MISSING LOCALLY`, and its exact path. Reject success, skip,
   and `AILANG_BIN is unset` output. This is a compatibility guard, not the row-64 killer.
-- [ ] **AC5 — Production wording mutation kills the claim.** After green, mutate only
+- [x] **AC5 — Production wording mutation kills the claim.** After green, mutate only
   the copied production reporting block back to the base success/summary strings and
   remove its new scope/required disclosures. Do not alter comparison logic, fixtures,
   CLI dispatch, assertions, or expected strings. Run the identical AC2 oracle against
@@ -132,7 +132,7 @@ with the later implementation; this designer neither changes code nor commits.
   record the ordinary named test going red with this mutation applied to the production
   script in a disposable implementation checkout. Restore captured pre-drill bytes,
   verify their hash, rerun green; do not restore from HEAD over uncommitted work.
-- [ ] **AC6 — All tests passing (scoped); documentation updated.** Run
+- [x] **AC6 — All tests passing (scoped); documentation updated.** Run
   `bash -n scripts/verify_go.sh`,
   `go test ./host/verifygate -run '^$'` (test compilation fence), and
   `go test ./host/verifygate -run '^TestDriverFleetResidualScope$' -count=1 -timeout=60s -v`.
@@ -226,6 +226,11 @@ measurements are not adopted as current facts.
 | V13 | `git grep -n -e 'verify_go.sh' -e 'fleet-comparison arm' -- .github scripts host Makefile`; read `.github/workflows/ci.yml:155–170`, `scripts/verify_go.sh:267–276,365–385`, `host/verifygate/toolchain_pin_gate_test.go:1345–1380`; evidence test helpers V5 | CI runs `./scripts/verify_go.sh` directly; isolated/main function callers handle rc, not prose. Evidence helpers use `--evidence-manifest-check`; toolchain assertions are region-scoped to floor/comparator. No executable consumer of replaced literals was found in V12; no universal absence claim. |
 | V14 | Read row-54 sprint plan §3 and AC table, JSON header and matched fields; `world-mission.md:4843,5236–5256`; `world-mission-log.md:16600–16618,16660–16672`; archive line 9 | Exact pins and stale JSON planned label are real. Authoritative row 54 is LANDED, merge `14036ee`; current row 64 authorizes narrowing the claim. Success/summary pins prospectively superseded with precise AC mapping above; historical files untouched. |
 | V15 | Live two-arm missing-required fixture described below, 10-second timeout per subprocess; read `scripts/verify_go.sh:180–198,219–245` | Byte-identical live script SHA256 `4614363ed51839a8b8a8a190429838b6d15315c91792ac585f08f3ab781b444a`. Healthy rc=0, **3** matches. Removing only synthetic World’s committed required member gives rc=1 and exact `REQUIRED fleet paths MISSING LOCALLY:` plus `tools/launchd/lib/pin-root.sh (REQUIRED by World, absent locally)`. All assertions passed; correct phase-2 failure, not skip/binary gate/zero-comparable/difference/missing-in-fleet/accounting failure. |
+| V16 | Pre-change `go test ./host/verifygate -run '^TestDriverFleetResidualScope$' -count=1 -timeout=60s -v` after adding the regression but before changing production | rc=1. Synthetic command rc remained 0 with three old-style matches; `baseline_disclosure`, `outside_boundary_unenumerated`, `inside_boundary_positive_control`, and `empty_required_list` red because the new disclosures/qualified summary were absent. `required_path_missing` passed, preserving attribution. |
+| V17 | Post-change `bash -n scripts/verify_go.sh`; compile fence; focused named test | All rc=0. The compile fence compiled `_test.go` and reported `[no tests to run]` as intended. The focused run printed the top-level RUN/PASS plus RUN/PASS for `outside_boundary_unenumerated`, `baseline_disclosure`, `inside_boundary_positive_control`, `required_path_missing`, and `empty_required_list`; no skips or no-test warning. |
+| V18 | Durable self-contained fixture controls | Fresh committed World/fleet repos per case, explicit synthetic fleet and HOME, inherited `GIT_*`/CI/AILANG_BIN/HOME cleared, system/global Git config and hooks/signing disabled, and each subprocess bounded to 10 seconds. Baseline/outside/inside rc=0 with three matches; missing-required rc=1 with the exact refusal; empty array rc=0 with one `(none)` line and no nounset failure on Bash 3.2. |
+| V19 | Disposable production-only wording reversion under `/private/tmp`; exact-one new reporting block replaced with the base success/unqualified summary and disclosures removed | Pre-drill hashes: verifier `2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d`, test `e6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5`. Mutant verifier hash changed to `3f4972ab30b7e825b40d0fa182d12cbe6c48ad1771554350ee8d35f1940c2647`; old success and old summary each occurred once. Compile fence rc=0. Ordinary named test rc=1: its first failing arm was `outside_boundary_unenumerated`, specifically `missing phase-3 boundary/unenumerated disclosure`; captured output independently showed the copied script rc=0 and three old-style matches. Required-path control still passed. |
+| V20 | Restore from captured pre-drill bytes, hash comparison, and restored focused rerun | Restored verifier/test hashes exactly equalled `2e80…b33d` / `e6e5…31b5`; the four new reporting literals each occurred exactly once. `bash -n`, compile fence, and focused named test returned rc=0 with all named RUN/PASS lines and no skips. No worktree production source was mutated by the drill. |
 
 ### Missing-required live fixture (revision evidence)
 

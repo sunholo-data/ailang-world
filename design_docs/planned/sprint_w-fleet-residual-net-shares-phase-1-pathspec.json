@@ -8,7 +8,7 @@
   "sprint_plan": "design_docs/planned/w-fleet-residual-net-shares-phase-1-pathspec-sprint-plan.md",
   "created": "2026-09-06",
   "planner_role": "planner",
-  "status": "ready",
+  "status": "completed",
   "risk_level": "low",
   "duration_days": 0.2,
   "base_commit": "f8cd08871c43f8c4347307f5b02c4f4defb45b40",
@@ -151,10 +151,11 @@
       ],
       "compile_fence": "go test ./host/verifygate -run '^$' -count=1 -timeout=60s",
       "focused_test": "go test ./host/verifygate -run '^TestDriverFleetResidualScope$' -count=1 -timeout=60s -v",
-      "passes": null,
-      "started": null,
-      "completed": null,
-      "notes": null
+      "passes": true,
+      "started": "2026-09-06T06:05:00Z",
+      "completed": "2026-09-06T06:16:08Z",
+      "actual_loc": 300,
+      "notes": "AC1-AC6 pass in the executor worktree. bash -n, the _test.go compile fence, and the focused named test are green with five named subtests and no skips. The production-only old-wording mutant kept rc=0/three matches and failed first at outside_boundary_unenumerated for the missing phase-3 boundary/unenumerated disclosure. Captured verifier/test hashes 2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d and e6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5 were restored exactly."
     }
   ],
   "mutation": {
@@ -171,6 +172,14 @@
     "expected_script_rc": 0,
     "expected_compared_files": 3,
     "expected_test_red": "TestDriverFleetResidualScope/outside_boundary_unenumerated fails for missing phase-3 boundary/unenumerated wording.",
+    "executor_actual_hashes": {
+      "post_implementation_pre_drill_verifier": "2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d",
+      "post_implementation_pre_drill_test": "e6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5",
+      "wording_reversion_mutant_verifier": "3f4972ab30b7e825b40d0fa182d12cbe6c48ad1771554350ee8d35f1940c2647",
+      "restored_verifier": "2e80cca964a6b56a9f2b4fca06d59d707c236c6fe6f9865ecf85c70ec84cb33d",
+      "restored_test": "e6e5230a39649be412dfe87d4e1d6305f7a517b5c3fa9b9f2ac1372917bd31b5"
+    },
+    "executor_result": "Exact-one reporting reversion made the ordinary named test rc=1. outside_boundary_unenumerated was the first failing arm and reported missing phase-3 boundary/unenumerated disclosure while its copied script command remained rc=0 with three matches. Exact captured-byte restore returned the focused test to green.",
     "planner_prototype_hashes": {
       "live_pre_implementation": "4614363ed51839a8b8a8a190429838b6d15315c91792ac585f08f3ab781b444a",
       "post_implementation_pre_drill": "8c997533a305491cf9cf2c6bf24c110bdd52b4dedac5059f9b89f1e90cc8a3ea",
