@@ -1,33 +1,32 @@
 # Mission Dashboard — Ailang World
 
-Snapshot: 2026-09-06, iteration162. History: world-mission-log.md.
+Snapshot: 2026-09-06, iteration 163. History: world-mission-log.md.
 
-- Dev CI is RED at e92594c after attended DE-FORK removed the local driver copy.
-- Iter162 parks the repair design before planning: two blocked design quorums.
-- Independent fallback evaluator PASS 90/100 for parking; no code should land.
-- Blocking authority question: whether DE-FORK supersedes D-WORLD-DRIVER-1/row76 enough to retire the frozen live diagnostic.
-- Goal: seven-clause1.0 bar; goal unmoved; no additional clause certified.
-- Latest implementation remains row64, PR124, bf15c73.
-- Row65 remains parked on D-WORLD-33; no release cut.
+- Dev CI is RED at 9166de0; DE-FORK left two active consumers of deleted driver files.
+- Iter163 resumed the parked repair and confirmed no new human ruling or technical fact changes D-WORLD-34.
+- All four roles ran through the Agent tool; planner/executor correctly refused substantive work.
+- Independent gpt-5.5 evaluator PASS 94/100; no code or frozen interface changed.
+- Goal: seven-clause 1.0 bar; goal unmoved; no additional clause certified.
+- Latest implementation remains row64, PR124, bf15c73. No release cut.
 
 ## Next picks
 
-1. Resume row162/D-WORLD-34 if Mark answers the authority question.
-2. Row66 — quoted flow-key trim coverage.
+1. Resume DE-FORK repair after D-WORLD-34 is resolved and the revised design clears quorum.
+2. Row66 — quoted flow-key trim coverage, once dev has a usable landing gate.
 3. Row68 — route the fleet-owned pinned-repo guard upstream.
 
-Rows79/80 remain parked design review; row39 is the next product item.
+Rows65/79/80 remain parked; row39 is the next product item.
 
 ## Routing and quota
 
-Designer: gpt-6-astra via Agent tool. Planner/executor not spawned: quorum blocked.
-Evaluator: configured pi/Minimax aliases unavailable through the mandatory Agent-tool model surface; fallback gpt-5.5 Agent-tool judge, distinct from the Astra designer.
-Quorum cost $0.08992311; evaluator fallback quota bucket; no metered implementation spend.
-No World edits to frozen files, shared skills, V1 checkout, launchd state or installed runtime.
+Designer: gpt-6-astra Agent fallback (configured pi designer unavailable on Agent surface).
+Planner/executor: gpt-5.6-sol Agents; both spawned and returned fail-closed/refused.
+Evaluator: gpt-5.5 Agent fallback, distinct from Astra author and Sol executor; PASS 94/100.
+Metered $0.00; ChatGPT quota only. No implementation, push, merge or release.
 
 ## Parked for owner
 
 D-WORLD-32: rotate/revoke and replace exposed credential; default no account changes.
 D-WORLD-33: REDESIGN explicit compile-evidence records, or DEFER row65.
-D-WORLD-34: DE-FORK authority boundary for retiring vs preserving the frozen live diagnostic.
-Ledger21 rows,3 OPEN. Full asks and evidence are in world-mission.md.
+D-WORLD-34: retire or preserve the frozen live diagnostic after DE-FORK.
+Ledger 21 rows, 3 OPEN. Full asks and evidence are in world-mission.md.

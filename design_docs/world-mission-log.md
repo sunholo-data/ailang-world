@@ -2508,3 +2508,64 @@ Edits stayed in the sibling iteration worktree. No code, frozen path, shared ski
 No shared skill edit and no routing-policy change. Recorded the unavailable configured pi/Minimax Agent-tool lane and distinct gpt-5.5 fallback as a routing deviation, not as a missing evaluator. The design's missing direct authority quote is a future revision input, not a controller license to settle the authority question.
 
 **Next**: D-WORLD-34 if answered; otherwise row66 then row68. Row65 remains parked on D-WORLD-33; rows79/80 remain parked design review; row39 remains next product work.
+
+---
+## Iteration 163 — 2026-09-06 — DE-FORK repair remains parked after every Agent role fails closed [HARNESS]
+
+**Kind**: inherited own-repo CI-red resume; four-role independent gate audit; no implementation.
+
+**Progress**: seven-clause 1.0 bar; goal unmoved. Dev remains red and no additional clause was certified.
+
+**Context / preflight**
+- Armed; gh `sunholo-voight-kampff`; billing tripwire CLEAN; shared running skill byte-identical to its origin copy.
+- Local `dev` and `origin/dev` agree at `9166de05c42d0c3430d0ebb87c99db378b72420c`; main clean. Gate1 base recorded at `2026-09-06T14:47:54Z`; Gate4 base at `2026-09-06T15:00:32Z`.
+- Canonical GCP World inbox returned no unread messages. Issue107 yielded zero allowlisted directives after the older dual watermark `2026-09-06T11:20:11Z`; no decision was inferred or self-resolved.
+- Ledger21 rows/3 OPEN after inheriting iteration162's record: D-WORLD-32, D-WORLD-33 and D-WORLD-34.
+
+**Pick**: own-repo dev CI red still outranks row66. Exact-head run34033464096 is red: the Go job invokes deleted `tools/launchd/test_mission_routing.sh`; the launchd job extracts watchdog functions from deleted `tools/launchd/mission-control.sh`. Four later steps are skipped/unmeasured. Changes after DE-FORK are bookkeeping-only and do not alter either cause.
+
+**Work done**
+- Recovered iteration162's clean branch and design instead of restarting it. Rebased its three record commits onto current origin after the log rotation/heading normalization, with no conflict and no content loss.
+- Re-read `planned/w-de-fork-ci-ownership.md`, both blocked quorum results, D-WORLD-DRIVER-1/row76 and D-WORLD-34. No new fact or human provenance changes the authority boundary.
+- Spawned every requested role through the Agent tool. Designer, planner and executor each independently stopped at the same missing authority/quorum prerequisite; no plan, handoff, implementation or mutation artifact was produced.
+- Spawned a separate evaluator and corrected its first routing summary when it confused iteration162's non-spawns with this iteration's explicit fail-closed spawns. The corrected verdict is PASS94/100 with zero blocking findings.
+
+**Routing evidence**
+| Stage | Actual lane | Outcome / evidence |
+|---|---|---|
+| Controller | Codex controller | completed; no inline substitute for any required role |
+| Designer | Agent `gpt-6-astra` fallback | configured next pi authoring lane cannot be represented by the mandatory Agent-tool model surface; inspected first-party state and returned PARKED, no edits |
+| Planner | Agent `gpt-5.6-sol` | spawned as required; FAIL-CLOSED because no resolved ruling, quorum-cleared design or lawful plan exists |
+| Executor | Agent `gpt-5.6-sol` | spawned as required; REFUSED implementation/commits/push because no plan or handoff exists |
+| Evaluator | Agent `gpt-5.5` fallback | configured pi/Minimax aliases cannot be represented on the Agent-tool surface; gpt-5.5 is distinct from Astra designer and Sol executor; corrected PASS94/100, zero blocking |
+
+**Evaluator report quality**
+The evaluator's first report incorrectly carried iteration162's “planner/executor not spawned” fact into this run. It was resumed with the four Agent receipts, distinguished spawned refusal from absence, raised the score 92→94, and preserved the parked verdict. No implementation finding was overruled.
+
+**Verification**
+- Remote exact-head run34033464096: `ailang-code verify gate` success; `go host build + test gate` and `launchd drivers (bash 3.2)` failure on the two missing-file consumers above.
+- First-party worktree and origin searches confirm deleted files remain absent and active consumers remain unchanged. The inherited design is still `Needs Human Review`; both quorum syntheses are blocked.
+- `mission_decisions.sh --check --file design_docs/world-mission.md` passes at21 rows. No product verification was claimed because no product bytes changed and dev itself remains red.
+
+**Landing / Gate3b**
+No implementation or queue item lands. This record remains branch-only while dev's required checks are red; Gate3b green is not claimed. The inherited explicit diagnostic and every frozen/shared path remain byte-identical.
+
+**Metered ledger**: $0.00 of $5. All four Agent roles used ChatGPT quota; no provider-metered call ran. Designer/planner/executor are recorded as completed role audits whose substantive disposition is parked/refused; evaluator completed.
+
+**Ruled out / not chased**
+- Treating unattended default B as authority to proceed: refuted by the decision row's explicit “park planning/execution” text.
+- A third designer revision or quorum retry: forbidden after two blocked rounds without a human ruling.
+- Recreating copied driver files or editing the frozen diagnostic: outside authority and contrary to DE-FORK.
+- Skipping planner/executor because they could not implement: rejected by this run's operator instruction; both were spawned and their refusals recorded.
+- Landing on the controller's verdict: rejected; independent gpt-5.5 judge ran and its corrected verdict is banked.
+
+**Parked for human**
+D-WORLD-34 remains the resume gate: A retires the obsolete explicit diagnostic/fixtures; B preserves them and authorizes only removal from default product verification. Either answer still requires a design revision and fresh quorum. D-WORLD-32/33 remain open and unchanged.
+
+**Containment**
+No source, frozen driver, shared skill, V1 checkout, launchd state, credential, external account or release was changed. Record reconstruction occurred in a new sibling worktree from the full Gate4 base.
+
+**Retro (Gate5)**
+No shared skill edit, process-policy edit or routing-policy change. One factual evaluator correction was recovered in-turn by resuming the same judge; it is evidence for careful cross-iteration provenance, not a new two-instance rule.
+
+**Next**: resolve D-WORLD-34, revise and re-quorum the DE-FORK repair. If unresolved, row66 remains banked but cannot land while dev lacks a usable required-check set; then row68. Row39 remains next product work.
