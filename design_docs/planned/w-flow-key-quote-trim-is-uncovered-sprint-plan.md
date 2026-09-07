@@ -353,36 +353,36 @@ sprint.
 
 | ID | Command | Exit status | Observed output |
 |---|---|---|---|
-| B1a | `git rev-parse HEAD` | | |
-| B1b | `git status --porcelain` | | |
-| B1c | `shasum -a 256 host/verifygate/dispatch_lever_gate_test.go` | | |
-| B2 | `go vet ./host/verifygate/` | | |
-| B3 | `go test ./host/verifygate/ -count=1` | | |
-| B4 | `go test ./... -count=1` | | (paste the FAIL/ok summary lines; name any pre-existing failure) |
+| B1a | `git rev-parse HEAD` | 0 | `eff74891141567d63d9ba3bf1cba6ca54b624a54` |
+| B1b | `git status --porcelain` | 0 | ` M design_docs/world-mission.md`; `?? design_docs/planned/w-flow-key-quote-trim-is-uncovered-sprint-plan.md`; `?? design_docs/planned/w-flow-key-quote-trim-is-uncovered.md` |
+| B1c | `shasum -a 256 host/verifygate/dispatch_lever_gate_test.go` | 0 | `2f4d0efa13ad9dab015b85ce5eb7482d0888e3a338c8a7f4f24777dbd60bef2e` |
+| B2 | `go vet ./host/verifygate/` | 0 | (no output; rc=0) |
+| B3 | `go test ./host/verifygate/ -count=1` | 0 | `ok  github.com/sunholo-data/ailang-world/host/verifygate  47.743s` |
+| B4 | `go test ./... -count=1` | 0 | all 19 packages `ok`; rc=0. No pre-existing failure. |
 
 ### 7.2 M0
 
 | ID | Command | Exit status | Observed output |
 |---|---|---|---|
-| AC0 | (§6 AC0 grep) | | |
-| AC0-count | (§6 AC0 `grep -c`) | | |
-| V17 | `sed -n '5370,5395p' design_docs/world-mission.md` | | (paste row 87 verbatim) |
-| M0-commit | `git commit -m "docs(mission): …"` + `git log --oneline -1` | | |
+| AC0 | (§6 AC0 grep) | 0 | `5370:87. **w-lever-gate-quoted-key-refusal-contract** · clause-2 · **THE DISPATCH-LEVER GATE READS` (exactly ONE line, begins `5370:87. `) |
+| AC0-count | (§6 AC0 `grep -c`) | 0 | `1` |
+| V17 | `sed -n '5370,5395p' design_docs/world-mission.md` | 0 | `87. **w-lever-gate-quoted-key-refusal-contract** · clause-2 · **THE DISPATCH-LEVER GATE READS` / `    INVALID YAML — AND VALID YAML NAMING A DIFFERENT KEY — AS DECLARING THE \`workflow_dispatch\`` / `    LEVER, AT BOTH TRIM SITES, WITH NO ERROR.** SPLIT OUT of row 66 at iteration 169 by controller` / `    disposition: across three quorum rounds every objection landed on this surface while row 66's` / `    own deliverable (arms pinning the two existing trims) drew none, so row 66 was reduced to the` / `    uncontested part and this is the remainder. \`strings.Trim\` with a cutset strips ANY run of` / `    quote characters from EITHER end, so at \`dispatch_lever_gate_test.go:237\` (block path) all of` / `    \`"workflow_dispatch:\`, \`"workflow_dispatch':\` and \`workflow_dispatch":\` parse to` / `    \`keys=[workflow_dispatch] err=nil\` — the first two are INVALID YAML (Psych: *found unexpected` / `    end of stream while scanning a quoted scalar*) and the third is VALID YAML whose key is` / `    literally \`workflow_dispatch"\`, which is NOT the lever (designer-measured, V5/V7/V11). The flow` / `    path at \`:162\` refuses the unterminated forms upstream in \`splitFlowItems\` but shares the` / `    defect for doubled quotes: \`on: {""workflow_dispatch"": }\` → \`keys=["workflow_dispatch"]\` and` / `    \`on: {workflow_dispatch"": }\` → the non-lever key (V10/V11). **The asymmetry between the two` / `    sites is itself undeclared.** **AND ANY FIX IS CONDITIONAL, NOT UNCONDITIONAL** —` / `    \`gpt6-astra\`'s round-2 objection, which the controller then reproduced first-party at base:` / `    \`on:\n  ""workflow_dispatch"":\n  workflow_dispatch:\n\` and its flow equivalent both return` / `    \`keys=[workflow_dispatch workflow_dispatch] err=<nil>\`, so a co-occurring bare key satisfies` / `    the lever check regardless of how the malformed token is handled. A design that reads the` / `    malformed token as a non-lever key therefore does NOT make the gate red on invalid YAML in` / `    general, and any proposal here must prove its claim on MIXED fixtures, not isolated tokens.` / `    **THE ITEM:** decide the gate's refusal contract — does its job include refusing a workflow` / `    file GitHub itself would reject? — then implement it and pin it. Two reviewer inputs travel` / `    with this row as INPUTS, not conclusions: the round-2 \`unquoteKey\` design (strip exactly one` / `    matching pair; \`ok=false\` routes to \`errUnhandledOnForm\` at both sites), and` / `    \`gemini-3-1-pro\`'s round-3 question of why \`strconv.Unquote\` is not reused (it rejects` (row 87 verbatim, lines 5370–5395) |
+| M0-commit | `git commit -m "docs(mission): …"` + `git log --oneline -1` | 0 | `[mission/world-iter169-row66 88c8105] docs(mission): row 87 R0 split-out + row 66 design and sprint plan (M0)` / `88c8105 docs(mission): row 87 R0 split-out + row 66 design and sprint plan (M0)` |
 
 ### 7.3 M1 construction
 
 | ID | Command | Exit status | Observed output |
 |---|---|---|---|
-| M1.1 | `wc -l /tmp/iter169_row66_rows.txt`; `od -c` first line | | |
-| M1.2a | `sed -n '299p' …` (anchor) | | |
-| M1.2b | `awk 'NR>=298 && NR<=303 …'` after insert | | |
-| M1.3a | `gofmt -l host/verifygate/dispatch_lever_gate_test.go` | | |
-| M1.3b | `go vet ./host/verifygate/` | | |
-| AC1 | (§6 AC1) | | (paste all 3 lines verbatim + the `wc -l` count) |
-| AC2a | (§6 AC2a) | | (the printed NUMBER) |
-| AC2b | (§6 AC2b) | | |
-| AC2c | (§6 AC2c) | | |
-| M1.5 | `git commit` + `shasum -a 256` | | **SHA_M1 = ______** |
+| M1.1 | `wc -l /tmp/iter169_row66_rows.txt`; `od -c` first line | 0 | `3 /tmp/iter169_row66_rows.txt`; `0000000   \t  \t   {   "` (two real TAB bytes) |
+| M1.2a | `sed -n '299p' …` (anchor) | 0 | line 299 = `		{"inline_comment_value", "on:\n  push:\n  workflow_dispatch: # manual re-run lever\n", []string{"push", "workflow_dispatch"}, nil, nil},`; line 300 = `	}` |
+| M1.2b | `awk 'NR>=298 && NR<=303 …'` after insert | 0 | 300=`flow_quoted_keys`, 301=`block_quoted_keys`, 302=`flow_unterminated_quote_key`, 303=`	}` |
+| M1.3a | `gofmt -l host/verifygate/dispatch_lever_gate_test.go` | 0 | (no filename printed; empty output) |
+| M1.3b | `go vet ./host/verifygate/` | 0 | (no output; rc=0) |
+| AC1 | (§6 AC1) | 0 | `    --- PASS: TestOnBlockTriggerParserShapes/flow_quoted_keys (0.00s)` / `    --- PASS: TestOnBlockTriggerParserShapes/block_quoted_keys (0.00s)` / `    --- PASS: TestOnBlockTriggerParserShapes/flow_unterminated_quote_key (0.00s)`; `wc -l` = `3` |
+| AC2a | (§6 AC2a) | 0 | `0` (printed number) |
+| AC2b | (§6 AC2b) | 0 | ` host/verifygate/dispatch_lever_gate_test.go | 3 +++` / ` 1 file changed, 3 insertions(+)` (no deletions) |
+| AC2c | (§6 AC2c) | 0 | `162:				key := strings.Trim(strings.TrimSpace(item[:i]), "'\"")` / `237:		key := strings.Trim(strings.TrimSpace(kv[0]), "'\"")` |
+| M1.5 | `git commit` + `shasum -a 256` | 0 | `[mission/world-iter169-row66 089aed9] test(verifygate): pin both quoted-trigger-key trims of the lever gate line scan (row 66 M1)` / `089aed9 test(verifygate): pin both quoted-trigger-key trims of the lever gate line scan (row 66 M1)` / **SHA_M1 = `2ff462227c77dd564f27a0c9062a849688dc1781a2cab4ca54f682fdbe28ed5b`** |
 
 ### 7.4 Mutation drill — one block per mutant (AC3)
 
@@ -390,35 +390,51 @@ sprint.
 
 | Field | Value |
 |---|---|
-| Pre-mutation sha256 | |
-| Pre-mutation porcelain | |
-| `sed -n '162p'` BEFORE | |
-| `git diff --stat` (mutant landed?) | |
-| `sed -n '162p'` AFTER | |
-| `go vet` rc | |
-| `--- FAIL:` list (sorted, verbatim) | |
-| package rc | |
-| Control `flow_unterminated_quote_key` in FAIL list? | expect **no** — record observed |
-| Post-restore sha256 | |
-| Post-restore porcelain | |
+| Pre-mutation sha256 | `2ff462227c77dd564f27a0c9062a849688dc1781a2cab4ca54f682fdbe28ed5b` |
+| Pre-mutation porcelain | (empty) |
+| `sed -n '162p'` BEFORE | `				key := strings.Trim(strings.TrimSpace(item[:i]), "'\"")` |
+| `git diff --stat` (mutant landed?) | `1 file changed, 1 insertion(+), 1 deletion(-)` — NON-EMPTY, landed |
+| `sed -n '162p'` AFTER | `				key := strings.TrimSpace(item[:i])` |
+| `go vet` rc | 0 |
+| `--- FAIL:` list (sorted, verbatim) | `    --- FAIL: TestOnBlockTriggerParserShapes/flow_quoted_keys (0.00s)` |
+| package rc | 1 |
+| Control `flow_unterminated_quote_key` in FAIL list? | **no** (observed) |
+| Post-restore sha256 | `2ff462227c77dd564f27a0c9062a849688dc1781a2cab4ca54f682fdbe28ed5b` |
+| Post-restore porcelain | (empty) |
 
 **M-237** — same table, with line 237 and `strings.TrimSpace(kv[0])`.
+
+| Field | Value |
+|---|---|
+| Pre-mutation sha256 | `2ff462227c77dd564f27a0c9062a849688dc1781a2cab4ca54f682fdbe28ed5b` |
+| Pre-mutation porcelain | (empty) |
+| `sed -n '237p'` BEFORE | `		key := strings.Trim(strings.TrimSpace(kv[0]), "'\"")` |
+| `git diff --stat` (mutant landed?) | `1 file changed, 1 insertion(+), 1 deletion(-)` — NON-EMPTY, landed |
+| `sed -n '237p'` AFTER | `		key := strings.TrimSpace(kv[0])` |
+| `go vet` rc | 0 |
+| `--- FAIL:` list (sorted, verbatim) | `    --- FAIL: TestOnBlockTriggerParserShapes/block_quoted_keys (0.00s)` |
+| package rc | 1 |
+| Control `flow_unterminated_quote_key` in FAIL list? | **no** (observed) |
+| Post-restore sha256 | `2ff462227c77dd564f27a0c9062a849688dc1781a2cab4ca54f682fdbe28ed5b` |
+| Post-restore porcelain | (empty) |
 
 ### 7.5 Final gates
 
 | ID | Command | Exit status | Observed output | Tree at time of run (HEAD sha / file sha256) |
 |---|---|---|---|---|
-| AC4a | `go test ./host/verifygate/ -count=1` | | | |
-| AC4b | `go test ./... -count=1` | | | |
-| AC4c | `./scripts/verify_ail.sh` | | | |
-| AC5a | `git diff --stat origin/dev -- tools/launchd .github scripts world` | | | |
-| AC5b | `git diff --name-only origin/dev \| sort` | | | |
+| AC4a | `go test ./host/verifygate/ -count=1` | 0 | `ok  github.com/sunholo-data/ailang-world/host/verifygate  46.854s` | `089aed904b0f52ff333fbe9c5ab7e7200734c03a` / `2ff462227c77dd564f27a0c9062a849688dc1781a2cab4ca54f682fdbe28ed5b` |
+| AC4b | `go test ./... -count=1` | 0 | all 19 packages `ok`; rc=0 | `089aed904b0f52ff333fbe9c5ab7e7200734c03a` / `2ff462227c77dd564f27a0c9062a849688dc1781a2cab4ca54f682fdbe28ed5b` |
+| AC4c | `./scripts/verify_ail.sh` | 0 | `✓ verify gate PASSED: 11 required identities verified, 40 named tests pass`; `✓ world package gate PASSED: 9/9 steps performed non-zero work` | `089aed904b0f52ff333fbe9c5ab7e7200734c03a` / `2ff462227c77dd564f27a0c9062a849688dc1781a2cab4ca54f682fdbe28ed5b` |
+| AC5a | `git diff --stat origin/dev -- tools/launchd .github scripts world` | 0 | (empty output — frozen core and workflow untouched) | `089aed904b0f52ff333fbe9c5ab7e7200734c03a` / `2ff462227c77dd564f27a0c9062a849688dc1781a2cab4ca54f682fdbe28ed5b` |
+| AC5b | `git diff --name-only origin/dev \| sort` | 0 | `design_docs/planned/w-flow-key-quote-trim-is-uncovered-sprint-plan.md` / `design_docs/planned/w-flow-key-quote-trim-is-uncovered.md` / `design_docs/world-mission.md` / `host/verifygate/dispatch_lever_gate_test.go` (exactly these four) | `089aed904b0f52ff333fbe9c5ab7e7200734c03a` / `2ff462227c77dd564f27a0c9062a849688dc1781a2cab4ca54f682fdbe28ed5b` |
 
 ### 7.6 Summary
 
-- ACs passed: ___ / 6
-- Commits made (sha + subject): ___
-- Anything that deviated from this plan, and what you did: ___
+- ACs passed: 6 / 6
+- Commits made (sha + subject):
+  - `88c8105` — `docs(mission): row 87 R0 split-out + row 66 design and sprint plan (M0)`
+  - `089aed9` — `test(verifygate): pin both quoted-trigger-key trims of the lever gate line scan (row 66 M1)`
+- Anything that deviated from this plan, and what you did: **None.** Every command was executed verbatim from the plan; all expected outputs matched (B1 sha, SHA_M1, AC0 line `5370:87. `, AC1 3 PASS lines, AC2a `0`, AC2b `3 insertions(+)`, AC2c lines 162/237, M-162 reds exactly `flow_quoted_keys`, M-237 reds exactly `block_quoted_keys`, control green under both, AC4a/b/c rc=0, AC5a empty, AC5b exactly four paths).
 
 ---
 
