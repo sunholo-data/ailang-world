@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 170 | 2026-09-08 | row 68 CLOSED on the fleet de-fork guard `8c56c5863` (12/12 ACs, pin confirmed holding); row 70 LANDED reduced by a controller SPLIT — `scripts/gate1_range_check.sh` + 18-arm suite + CI step, attribution half → new row 88; 3 quorum rounds, restored reviewer decisive again, evaluator PASS 88/100 (1 blocking finding fixed + proven) |
 | 169 | 2026-09-07 | row 66 LANDED: the row named one trim site of two and called a false GREEN a false RED; three quorum rounds localised onto one surface, SPLIT OUT as row 87 |
 | 168 | 2026-09-07 | reconcile the five stranded records 162–166 from PRs #127/#128 onto the rotated log; the PRs are superseded unmerged [HARNESS] |
 | 167 | 2026-09-07 | the DE-FORK red was a suspended gate, not a failing check; three roles each found a different way the repair could have been vacuous [HARNESS] |

@@ -1,45 +1,53 @@
 # Mission Dashboard — Ailang World
 
-Snapshot: 2026-09-07, iteration 169. History: world-mission-log.md.
+Snapshot: 2026-09-08, iteration 170. History: world-mission-log.md.
 
-- **Row 66 LANDED** — PR #133 → squash `f69873e`; `dev` GREEN, CI 2/2 on the merge commit.
-  Three rows in `TestOnBlockTriggerParserShapes` now pin the quoted-trigger-key trims at
-  **both** sites of the dispatch-lever gate. **No parser change; zero lines removed.**
-- **The queue row named half the surface.** Row 66 cited one trim (`:162`); there are two —
-  `:237` carries the same call and its mutant survived at base identically. The enumeration
-  was anchored to the code surface, not to the row's prose.
-- **The row's *direction* was also half wrong.** It declares a false RED. The block path also
-  reads **invalid YAML** (`"workflow_dispatch:`) and a **valid non-lever key**
-  (`workflow_dispatch"`) as declaring the lever, `err=nil` — a **false GREEN**. Those are left
-  OPEN, deliberately and in writing, and tracked as new row **87**.
-- Independent evaluation **PASS 96/100, zero blocking** (`sonnet` judge vs `pi:deepseek`
-  executor). The judge re-ran every AC and both mutants from scratch in its own worktree and
-  added a half-mutant the drill never prescribed.
-- Roles: designer `claude:claude-fable-5-1` · planner `opus` · executor
-  `pi:ollama/deepseek-v4-flash:0731-cloud` · evaluator `sonnet`. Generator ≠ judge.
-- Goal: seven-clause 1.0 bar; goal unmoved.
+- **Row 70 LANDED (reduced)** — `scripts/gate1_range_check.sh` + an 18-arm suite + one additive CI
+  step. Gate 1 can now name a zero-check commit that `origin/dev`'s HEAD has moved past. It reports
+  `ZERO-CHECK-CANDIDATE` and says *"a controller must look"* — it deliberately makes NO claim about
+  push tips, because local git topology cannot establish one.
+- **Row 68 CLOSED** — the fleet's de-fork guard (`8c56c5863`) is in and is an ancestor of the pinned
+  ref this rig runs; the pin is back ON and confirmed holding first-party (12/12 fleet ACs). Docs →
+  `implemented/`.
+- **New row 88** — `w-gate1-push-boundary-attribution`, the hard half split out of row 70 at the
+  quorum's own signal. Needs an authoritative *persisted* push-boundary record; both the GitHub
+  events API and local topology are measured out.
 
-## Findings worth carrying
-- **The absent-reviewer rule paid for the THIRD time.** `gpt6-astra` was refused at round 1
-  over **$0.0130** of budget; restored alone for **$0.0858** it returned the round's strongest
-  objection, and it was right both times it spoke. A `blocked`/`proceed` verdict with a
-  non-empty `absent_reviewers` is a verdict with a named hole.
-- **`mission_pi_run.sh` reports `empty_worktree` for a well-behaved executor — INSTANCE 2.**
-  rc=10 / `worktree_changed_files: 0` on a sprint carrying 3 commits / 927 insertions. It reads
-  `git status --porcelain` while the contract mandates committing, and the prescribed fallback
-  would discard finished, judged work. Row **84**, filed upstream as `ailang#1096`; fleet-owned.
-- **When every round's objections land on the same surface, split — don't keep revising.**
-  Three rounds, six verdicts, all on one helper; row 66's own deliverable drew none.
+## Queue head (next picks)
 
-## Parked for Mark
-- Nothing. Decision ledger: **22 rows, ZERO OPEN**.
+1. **69** `w-heartbeat-script-absent` — fleet-gated; predicate re-checked this fire, still false
+   (`tools/launchd/mission-heartbeat.sh` absent here, present in the fleet checkout).
+2. **71** `w-mission-critical-state-lives-in-a-directory-the-os-wipes-on-boot` — ungated, ~0.2d.
+3. **72** `w-queue-closed-count-is-an-increment-chain-no-instrument-reproduces` — ungated, ~0.3d.
 
-## Next
-- Rows 68–78, 81–87, then 39. Row 65 DEFERRED per `D-WORLD-33`; rows 79/80 remain parked.
-  New row this iteration: **87** (`w-lever-gate-quoted-key-refusal-contract`, the split-out
-  refusal contract, carrying live measured false GREENs).
+Then 73–78, 81–88, then 39. Row 65 DEFERRED per `D-WORLD-33`.
 
-## Posture
-- Verification compiler pinned v0.30.0 (`~/.pinned-ailang/ailang`); no release cut.
-- `tools/launchd/*` frozen core, untouched. Metered spend **$0.2732** of $5 (quorum only).
-  Billing tripwire CLEAN. FLAGGED: Fable diet overspend — three designer runs on one doc.
+## Loop cadence + routing
+
+- Fires 4-hourly via `dev.ailang.mission-world` (FLEET driver; World's local copy retired at the
+  DE-FORK, `D-WORLD-DRIVER-1`). Driver pin ACTIVE at `48c4a6e49`.
+- Controller `claude:claude-opus-5`. Designer ROTATION `fable-5-1 → gpt-6-astra → pi:deepseek`.
+  Planner per `resolve-role-spawn.sh`/`derive-planner-lane.sh`. Executor `pi:deepseek`.
+  Evaluator `sonnet` (generator ≠ judge, enforced on model AND vendor).
+- Verify gate: `./scripts/verify_ail.sh` + `go vet ./...` + `go test ./... -count=1`, against the
+  pinned `~/.pinned-ailang/ailang` v0.30.0. **Not** `verify_go.sh` — row 76's fleet driver-drift arm
+  fatals before `go build` and suspends every Go assertion behind it.
+
+## Standing constraints worth re-reading before a sprint
+
+- `tools/launchd/*` is FROZEN CORE. The shared `mission-control` SKILL.md is the V1 checkout's file
+  and World may not edit it — skill gaps are PROPOSALS to Mark + the fleet.
+- The pinned v0.30.0 binary's quorum roster does **not** resolve `gpt6-astra` or `oc-glm-5-2`
+  (measured iter-170: `unknown-model`). Usable reviewers here: `gpt5-6-sol`, `gemini-3-1-pro`.
+- No `timeout(1)` and no `gtimeout` on this rig; `gh api` has no `--timeout`. Login shell is zsh and
+  the scripts are bash — invoke them as `bash <script>` or you are measuring the shell.
+
+## Parked on Mark
+
+**Nothing.** Decision ledger: 22 rows, `--check` valid, **ZERO OPEN**.
+
+## Quota posture
+
+Metered this iteration **$0.2322** of $5 (quorum only). Codex/ChatGPT bucket **ration-blocked** on
+the last three fires — astra was skipped for that reason (and for a self-review collision). Anthropic
+and the `pi:ollama` flat-rate lane both healthy.
