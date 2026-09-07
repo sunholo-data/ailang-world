@@ -5367,6 +5367,37 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
     what happened, so the gap is a fact rather than an absence. · ~0.2d · gated on nothing ·
     surfaced iter-168 (executor-measured, first instance).
 
+87. **w-lever-gate-quoted-key-refusal-contract** · clause-2 · **THE DISPATCH-LEVER GATE READS
+    INVALID YAML — AND VALID YAML NAMING A DIFFERENT KEY — AS DECLARING THE `workflow_dispatch`
+    LEVER, AT BOTH TRIM SITES, WITH NO ERROR.** SPLIT OUT of row 66 at iteration 169 by controller
+    disposition: across three quorum rounds every objection landed on this surface while row 66's
+    own deliverable (arms pinning the two existing trims) drew none, so row 66 was reduced to the
+    uncontested part and this is the remainder. `strings.Trim` with a cutset strips ANY run of
+    quote characters from EITHER end, so at `dispatch_lever_gate_test.go:237` (block path) all of
+    `"workflow_dispatch:`, `"workflow_dispatch':` and `workflow_dispatch":` parse to
+    `keys=[workflow_dispatch] err=nil` — the first two are INVALID YAML (Psych: *found unexpected
+    end of stream while scanning a quoted scalar*) and the third is VALID YAML whose key is
+    literally `workflow_dispatch"`, which is NOT the lever (designer-measured, V5/V7/V11). The flow
+    path at `:162` refuses the unterminated forms upstream in `splitFlowItems` but shares the
+    defect for doubled quotes: `on: {""workflow_dispatch"": }` → `keys=["workflow_dispatch"]` and
+    `on: {workflow_dispatch"": }` → the non-lever key (V10/V11). **The asymmetry between the two
+    sites is itself undeclared.** **AND ANY FIX IS CONDITIONAL, NOT UNCONDITIONAL** —
+    `gpt6-astra`'s round-2 objection, which the controller then reproduced first-party at base:
+    `on:\n  ""workflow_dispatch"":\n  workflow_dispatch:\n` and its flow equivalent both return
+    `keys=[workflow_dispatch workflow_dispatch] err=<nil>`, so a co-occurring bare key satisfies
+    the lever check regardless of how the malformed token is handled. A design that reads the
+    malformed token as a non-lever key therefore does NOT make the gate red on invalid YAML in
+    general, and any proposal here must prove its claim on MIXED fixtures, not isolated tokens.
+    **THE ITEM:** decide the gate's refusal contract — does its job include refusing a workflow
+    file GitHub itself would reject? — then implement it and pin it. Two reviewer inputs travel
+    with this row as INPUTS, not conclusions: the round-2 `unquoteKey` design (strip exactly one
+    matching pair; `ok=false` routes to `errUnhandledOnForm` at both sites), and
+    `gemini-3-1-pro`'s round-3 question of why `strconv.Unquote` is not reused (it rejects
+    single-quoted strings longer than one char and actively unescapes contents). Full evidence:
+    `design_docs/planned/w-flow-key-quote-trim-is-uncovered.md` §6/R0, rows V5/V10/V11/V12. · ~0.3d
+    · gated on nothing · surfaced iter-169 (quorum-found, split out of row 66; astra's conditional
+    -fix finding is controller-reproduced).
+
 
 ## Premise Verification Log (quorum objection #1 — every load-bearing claim, with evidence)
 
