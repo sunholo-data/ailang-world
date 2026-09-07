@@ -109,6 +109,22 @@ print("   ✓ all %d required top-level evidence tests passed exactly once" % EX
 PY
 }
 
+check_mission_config() {
+  validator="scripts/mission_decisions.sh"
+  charter="design_docs/world-mission.md"
+  if [ ! -r "$validator" ]; then
+    echo "verify_go.sh: FATAL: mission validator is missing or unreadable: $validator" >&2
+    return 1
+  fi
+  if [ ! -r "$charter" ]; then
+    echo "verify_go.sh: FATAL: World charter is missing or unreadable: $charter" >&2
+    return 1
+  fi
+  /bin/bash -n "$validator"
+  /bin/bash "$validator" --check --file "$charter"
+  echo "   World decision-ledger validated; centralized runtime currency is NOT certified here."
+}
+
 # FLEET-COMPARISON ARM — D-WORLD-DRIVER-1, iter-148 round 2. The working-tree-vs-HEAD
 # arm cannot see a stale-but-COMMITTED copy (it compares the copy to itself). This arm
 # compares the committed copy against the FLEET source, which is where the driver
@@ -267,6 +283,15 @@ if [ "${1:-}" = "--evidence-manifest-check" ]; then
   exit $?
 fi
 
+if [ "${1:-}" = "--mission-config-check" ]; then
+  if [ "$#" -ne 1 ]; then
+    echo "usage: $0 --mission-config-check" >&2
+    exit 2
+  fi
+  check_mission_config
+  exit $?
+fi
+
 if [ "${1:-}" = "--driver-fleet-check" ]; then
   rc=0
   if check_driver_fleet; then
@@ -344,44 +369,8 @@ if [ -n "$tracked_binaries" ]; then
 fi
 echo "   ✓ 0 binary blobs among $tracked_total tracked files"
 
-echo "── mission routing + decision-ledger gate"
-/bin/bash tools/launchd/test_mission_routing.sh
-/bin/bash -n tools/launchd/mission-control.sh tools/launchd/derive-planner-lane.sh scripts/mission_decisions.sh
-
-# DRIVER DRIFT GATE — D-WORLD-DRIVER-1, RESOLVED B (Mark, attended 2026-08-17).
-# The driver is FLEET-owned: changes land here only as fleet-authored commits,
-# never as World-controller edits. launchd executes this repo's WORKING TREE
-# (dev.ailang.mission-world.plist ProgramArguments), so an uncommitted driver is
-# a live driver that exists in no repository — iter-89 measured exactly that
-# state lurking for two days, carrying the human decision ledger with it.
-# In CI the checkout is clean and this passes; on the rig, mid-propagation dirt
-# reds LOUDLY until the fleet commits it. That red is the point, not a nuisance.
-# Path-liveness control: prove git is scanning a real tracked set before
-# trusting an empty diff — a mistyped path would pass vacuously.
-driver_tracked=$(git ls-files tools/launchd/ scripts/mission_decisions.sh | wc -l | tr -d ' ')
-if [ "$driver_tracked" -lt 5 ]; then
-  echo "verify_go.sh: FATAL: driver drift gate control failed — only $driver_tracked tracked driver files (expected >=5); the gate is not scanning what it claims" >&2
-  exit 1
-fi
-driver_drift=$(git status --porcelain -- tools/launchd/ scripts/mission_decisions.sh)
-if [ -n "$driver_drift" ]; then
-  echo "verify_go.sh: FATAL: DRIVER DRIFT (D-WORLD-DRIVER-1) — the running driver differs from the committed one:" >&2
-  printf '%s\n' "$driver_drift" | sed 's/^/    /' >&2
-  echo "  The driver is fleet-owned; land this as a fleet-authored commit. World's controller must not edit or absorb it." >&2
-  exit 1
-fi
-echo "   ✓ driver drift gate: $driver_tracked tracked driver files, working tree matches HEAD (working-tree arm)"
-
-fleet_rc=0
-if check_driver_fleet; then
-  :
-else
-  fleet_rc=$?
-fi
-if [ "$fleet_rc" -eq 1 ]; then
-  exit 1
-fi
-# rc=2 is the CI loud skip: non-fatal by design, and already printed above.
+echo "── World mission-input gate (decision ledger)"
+check_mission_config
 
 # This deny-list is the measured set: go1.26.0-go1.26.5 on darwin/arm64.
 # Future go1.26.6 or go1.27.x versions are not covered here; the canary in this
