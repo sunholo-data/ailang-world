@@ -2816,3 +2816,48 @@ Docs-only PR on `mission/world-iter166-defork-pin`, based on `9166de0`. The two 
 **Retro (Gate 5)**: the durable lesson is that **an anti-vacuity control is a claim too**. This iteration shipped a control against "delete until green" and the planner measured that the control, as designed, would have passed a deletion — because a banner and the command it announces are different lines. That is the same shape the mission keeps finding one level up: a gate that reports on itself rather than on the thing. Second: the absent-reviewer rule paid out again, and both payouts have been on a *revision* round, which is when a reviewer drops out on budget because the doc just grew — i.e. exactly when its opinion is most load-bearing.
 
 **Next**: rebase and land #127/#128 (five stranded records), then rows 66, 68–78, 81, 82, 83, then 39. Row 65 is DEFERRED per `D-WORLD-33`.
+
+## 168 — 2026-09-07 — reconcile the five stranded records 162–166 from PRs #127/#128 onto the rotated log; the PRs are superseded unmerged [HARNESS]
+
+**Kind**: docs reconciliation (no Go, no `.ail`, no `tools/launchd/*`, no `scripts/*`). Every file touched is under `design_docs/`. This is a rebase/reconcile, not a ruling.
+
+**Progress**: seven-clause 1.0 bar; goal unmoved, no product code landed, by design. Authority is `D-WORLD-35` = **A** (attended, 2026-09-07): docs-only mission-record PRs may merge when the charter-declared ailang-code verify gate passes on the exact head and remaining reds are demonstrated inherited against the base; *"Reconcile all pending ledger records, including D-WORLD-34, without overwriting attended rulings."*
+
+**Context / preflight**
+- Kill switch armed (`~/.ailang/state/mission-world.disabled`); `gh` = `sunholo-voight-kampff`; billing tripwire **CLEAN**; pin `~/.pinned-ailang/ailang` = `AILANG v0.30.0`.
+- Ledger **22 rows, `--check` valid, ZERO OPEN**. `D-WORLD-34` is RESOLVED on dev; `D-WORLD-35` is RESOLVED on dev. PRs #127 and #128 each carry a stale `| D-WORLD-XX | OPEN |` hunk that this sprint must NOT apply — reopening or duplicating an attended ruling is the exact overwrite `D-WORLD-35`'s own text forbids. `bash /tmp/i168_rulings.sh` stays rc=0 and the ledger block between the `decision-ledger:start`/`end` markers stays byte-identical to base.
+- The base red on `verify_go.sh` is the known `TestCLIRealSubprocessEpisode` load/timing flake (base B23, §1.1); isolated `-count=2` re-run is green. It is inherited against the exact base, not caused by this docs-only sprint.
+
+**Pick**: the reconcile itself. Iterations 162–166 produced records that landed on two PRs (#127 `world-iter163-record`, #128 `world-iter166-defork-pin`) which are now CONFLICTING/DIRTY against `dev` after log-rotation, heading-normalization and the iteration-167 advance. The blocker is a rebase, not a ruling.
+
+**Authority**: `D-WORLD-35` = A is the attending directive. PR #127's charter diff contained nothing but a stale `OPEN` ledger row for `D-WORLD-34` and three STATUS stamps (already resolved/provided on dev); PR #128 carried a stale `OPEN` row for `D-WORLD-35`. Neither hunk is applied. The status-archive `(iteration 159)` stamp, the shared 2449-line prefix, and the byte-stable `(iteration 160)`/`161` stamp text were all confirmed by `git show` before splicing.
+
+**Work done**
+- **M1** — spliced entries 162–166 into `world-mission-log.md`, reordered to ascending numeric order (165 physically precedes 164 on #127; the recipe reorders), headings renormalized from `## Iteration N` to `## N`, positioned before `## 167`. The `dev` prefix and the `## 167` entry are untouched.
+- **M2** — added index rows 162–167 to `world-mission-index.md` (167 was missing too — I2 failed at base with exactly that error).
+- **M3** — landed PR #128's four defork-pin design docs byte-identically; kept `w-de-fork-ci-ownership.md` at dev's newer revision.
+- **M4** — refreshed queue row 68 with #128's text (the row's predicted condition fired); rotated charter STATUS to `167, 166, 165`; left the ledger literally untouched.
+- **M5** — prepended STATUS stamps 164, 163, 162, 161, 160 to the archive above the `(iteration 159)` stamp.
+- **M6** — forward-updated the dashboard; iteration-167's product findings survived verbatim.
+
+**The one authored artefact**: iteration 166's charter STATUS stamp did not exist (PR #128 wrote a log entry only). This sprint inserted a **`RECONSTRUCTED AT ITERATION 168`**-labelled stamp that is a quotation of the landed log entry 166 — it must never be read as a measurement taken at iteration 168.
+
+**Historical stamps caveat**: stamps 162–165 assert state that was true when written ("Ledger 21 rows / 3 OPEN", "D-WORLD-32/33 remain OPEN") and is no longer current. They are records, not live claims; they were moved verbatim, not rewritten. A future reader should treat archived stamps as history.
+
+**Verify gate** (charter-declared standard on the exact head): `go vet ./...` rc=0; `./scripts/verify_ail.sh` rc=0 (11 identities, 40 named tests); `go test ./... -count=1` rc=0 (19 `ok`, 0 FAIL); `./scripts/verify_go.sh` rc=1 with the failing-test set a subset of `{TestCLIRealSubprocessEpisode}` (isolated `-race -count=2` control rc=0 — the known flake, inherited not regressed); `mission_decisions.sh --check` rc=0 (22 rows).
+
+**Commits** (all `docs(mission)`):
+- `2f1f484` splice iterations 162-166 into the rotated log, renormalized and in order
+- `18d8e74` index rows for iterations 162-167 (167 was missing too)
+- `836f3df` land PR #128's four defork-pin design docs, keep dev's w-de-fork-ci-ownership
+- `22179a5` charter — refresh queue row 68, rotate STATUS to 167/166/165, ledger untouched
+- `9301b4f` rotate STATUS stamps 160-164 into the archive, newest at top
+- `ecd1563` dashboard — records reconciled, #127/#128 superseded
+
+**Out of scope defects recorded for the controller (not fixed here)**: (1) the charter's `## STATUS (rotation rule)` body has been stranded in the archive (the rule text sits at `world-mission-status-archive.md` lines 18–19); (2) `world-mission-index.md` has no rows for iterations 64 and 144, and neither log file carries `## 64`/`## 144`. Also flagged: nothing in CI or `scripts/` reads the log/index/dashboard, so correctness rests entirely on the `/tmp` instruments I1/I2 — promoting them into `scripts/` and wiring them into `verify_go.sh` is a candidate queue row deliberately not taken here (it would move the sprint out of `design_docs/**`).
+
+**Containment**: all work in worktrees; no edit to `tools/launchd/*`, the V1 checkout, `~/.ailang/state/mission-v1*`, or any skill file. Scope proof: `git diff --name-only origin/dev...HEAD | grep -vc '^design_docs/'` → 0.
+
+**Retro (Gate 5)**: the reconciling hazard this sprint exists to name is the *silent regression hiding inside a mechanical splice* — a stale status stamp, a reopened attended ruling, or an older dashboard snapshot landing undetected because the surrounding file still looks right. Every criterion here is either anchored to a byte hash (strongest, most brittle) or guarded by a mutation whose named killer was actually observed red and then restored byte-identical by sha256. When a splice is automatic, the drift you must fear is the one that looks green.
+
+**Next**: rows 66, 68–78, 81, 82, 83, then 39. (#127/#128 are SUPERSEDED by this reconciliation; close them unmerged.)

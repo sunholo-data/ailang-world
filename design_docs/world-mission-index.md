@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 168 | 2026-09-07 | reconcile the five stranded records 162–166 from PRs #127/#128 onto the rotated log; the PRs are superseded unmerged [HARNESS] |
 | 167 | 2026-09-07 | the DE-FORK red was a suspended gate, not a failing check; three roles each found a different way the repair could have been vacuous [HARNESS] |
 | 166 | 2026-09-07 | the loaded gun in row 68 fired: the driver pin ran this mission inside the WRONG REPOSITORY, and every health instrument read green [HARNESS] |
 | 165 | 2026-09-07 | DE-FORK repair remains parked; four required Agent roles confirm the authority gate [HARNESS] |
