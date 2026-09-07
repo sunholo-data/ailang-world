@@ -214,3 +214,32 @@ shows a pinned driver with the controller still in `sunholo-data/ailang-world`.
 External clone, launchd, live-controller, and rig-env verdicts made by the World executor are
 **UNINFORMATIVE UNDER SANDBOX**; the controller must reproduce those facts before filing and owns
 the live proof.
+
+---
+
+## Addendum — a gap the independent judge found in AC-F8, before you implement
+
+World's iteration-166 evaluator (an independent Anthropic lane, distinct from the OpenAI executor
+that wrote this body) implemented BOTH the specified `_set_pin_workdir` and AC-F8's own named RED
+mutant ("ignores the flag entirely, always infers") and ran AC-F8's literal command against each:
+
+```
+AILANG_DRIVER_MISSION_IS_DE_FORKED=1; MISSION_WORKDIR=<ailang-world>; _set_pin_workdir /tmp/pinwt <ailang>
+  correct impl -> rc=0 MISSION_WORKDIR=/Users/voightkampff/dev/sunholo-data/ailang-world
+  mutant  impl -> rc=0 MISSION_WORKDIR=/Users/voightkampff/dev/sunholo-data/ailang-world   (IDENTICAL)
+```
+
+**AC-F8 is therefore vacuous as written.** Because world's real origin genuinely differs from
+ailang's, ignoring the flag and falling back to inference produces the same answer as honouring it,
+so no implementation that drops the flag can be caught by this criterion. The doc's prose smuggles
+in an unstated extra condition ("with flag `1` and a **mis-read URL**") that the command never
+exercises.
+
+Fix it before implementing, not after: exercise the flag against a case where the flag and the
+inference **disagree** — e.g. set `AILANG_DRIVER_MISSION_IS_DE_FORKED=1` with `MISSION_WORKDIR`
+pointed at a clone whose origin MATCHES `$src` (a temp clone of `ailang`, or `ailang-motoko`), and
+assert the work repo is KEPT rather than redirected. Under a flag-ignoring implementation that case
+redirects to the pin worktree and the criterion reds.
+
+AC-F5, AC-F10 and AC-F12 were checked by the same judge and are sound; AC-F8 is the one that needs
+rewriting.
