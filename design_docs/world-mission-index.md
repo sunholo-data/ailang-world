@@ -12,6 +12,12 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 167 | 2026-09-07 | the DE-FORK red was a suspended gate, not a failing check; three roles each found a different way the repair could have been vacuous [HARNESS] |
+| 166 | 2026-09-07 | the loaded gun in row 68 fired: the driver pin ran this mission inside the WRONG REPOSITORY, and every health instrument read green [HARNESS] |
+| 165 | 2026-09-07 | DE-FORK repair remains parked; four required Agent roles confirm the authority gate [HARNESS] |
+| 164 | 2026-09-06 | DE-FORK repair parks again on D-WORLD-34 with fallback independent judge [HARNESS] |
+| 163 | 2026-09-06 | DE-FORK repair remains parked after every Agent role fails closed [HARNESS] |
+| 162 | 2026-09-06 | DE-FORK CI repair parks at the authority gate [HARNESS] |
 | 161 | 2026-09-06 | row65 parks after its proposed guard fails its own Markdown example [HARNESS] |
 | 160 | 2026-09-06 | row64 lands with explicit residual boundaries [HARNESS] |
 | 159 | 2026-09-06 | row 63 lands, and the half the row left unfired is the worse half: `stepCol < 0` is reachable from a re-style that parses deep-equal to the pristin... |
