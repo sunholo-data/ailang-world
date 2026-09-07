@@ -297,6 +297,9 @@ func TestOnBlockTriggerParserShapes(t *testing.T) {
 		{"no_on_block", "jobs:\n  build:\n", nil, nil, errNoOnBlock},
 		{"block_scalar_violation", "on:\n  push:\n  workflow_dispatch: garbage\n", []string{"push"}, map[string]string{"workflow_dispatch": "garbage"}, nil},
 		{"inline_comment_value", "on:\n  push:\n  workflow_dispatch: # manual re-run lever\n", []string{"push", "workflow_dispatch"}, nil, nil},
+		{"flow_quoted_keys", "on: {\"push\": {branches: [dev]}, 'workflow_dispatch': }\n", []string{"push", "workflow_dispatch"}, nil, nil},
+		{"block_quoted_keys", "on:\n  \"push\":\n  'workflow_dispatch':\n", []string{"push", "workflow_dispatch"}, nil, nil},
+		{"flow_unterminated_quote_key", "on: {\"workflow_dispatch: }\n", nil, nil, errUnhandledOnForm},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
