@@ -166,6 +166,26 @@ arm_gh_timeout() {
   rm -rf "$dir" "$stub"
 }
 
+# AC-M2-2 — the report format: the per-commit line names ZERO-CHECK-CANDIDATE, the exit-1
+# summary reads "a controller must look: N zero-check candidate(s)", and the output does NOT
+# contain the string "unverified" (the instrument surfaces; it does not adjudicate).
+arm_report() {
+  local dir base a b stub out rc
+  dir="$(mktemp -d)"
+  base="$(make_throwaway_repo "$dir")"
+  a="$(commit_in "$dir" a.txt "a" "commit a")"
+  b="$(commit_in "$dir" b.txt "b" "commit b")"
+  stub="$(mktemp)"
+  make_stub_gh "$stub" "$a:$ZERO_FIXTURE" "$b:$VERIFIED_FIXTURE"
+  out="$(/bin/bash "$SCRIPT_UT" --repo-dir "$dir" --repo test/test --base "$base" --head "$b" --gh-bin "$stub" 2>&1)"
+  rc=$?
+  if [ "$rc" -eq 1 ]; then ok "report exits 1"; else notok "report rc=$rc: $out"; fi
+  echo "$out" | /usr/bin/grep -q 'ZERO-CHECK-CANDIDATE' && ok "report per-commit line names ZERO-CHECK-CANDIDATE" || notok "report no ZERO-CHECK-CANDIDATE: $out"
+  echo "$out" | /usr/bin/grep -q 'a controller must look: 1 zero-check candidate(s)' && ok "report summary reads 'a controller must look'" || notok "report summary wrong: $out"
+  echo "$out" | /usr/bin/grep -q 'unverified' && notok "report contains 'unverified'" || ok "report does not claim 'unverified'"
+  rm -rf "$dir" "$stub"
+}
+
 # ── dispatcher ───────────────────────────────────────────────────────────────
 run_arm() {
   case "$1" in
@@ -175,6 +195,7 @@ run_arm() {
     merge-head-coverage) arm_merge_head_coverage ;;
     gh-missing) arm_gh_missing ;;
     gh-timeout) arm_gh_timeout ;;
+    report) arm_report ;;
     *) echo "unknown arm: $1" >&2; exit 2 ;;
   esac
 }
@@ -192,7 +213,7 @@ fi
 if [ -n "$ONLY" ]; then
   run_arm "$ONLY"
 else
-  for arm in check-count candidate head-excluded merge-head-coverage gh-missing gh-timeout; do
+  for arm in check-count candidate head-excluded merge-head-coverage gh-missing gh-timeout report; do
     run_arm "$arm"
   done
 fi
