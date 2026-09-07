@@ -1,35 +1,34 @@
 # Mission Dashboard — Ailang World
 
-Snapshot: 2026-09-06, iteration161. History: world-mission-log.md.
+Snapshot: 2026-09-07, iteration 167. History: world-mission-log.md.
 
-- Row65 PARKED — needs-human-review, D-WORLD-33; no implementation shipped.
-- Compile-fence defect reproduced: bad _test.go leaves go build green; vet/test red.
-- Designer: DeepSeek V4 Flash, initial + one revision, typed verdicts ok.
-- Quorum r1: 3/3 reject. R2: Astra/Gemini reject; GLM invalid/absent.
-- Proposed prose lint misses ordinary Markdown backticks; guard remains undesigned.
-- Goal: seven-clause1.0 bar; goal unmoved; no additional clause certified.
-- Latest implementation remains row64, PR124, bf15c73 (merge CI3/3 green).
-- Verification compiler remains pinned v0.30.0; no release cut.
+- **`dev` is GREEN again** — `37a78ab`, CI 2/2. First green since the attended DE-FORK `e92594c`.
+- The red was a **suspended gate**: `verify_go.sh` exited 127 before `go build`, so the whole
+  Go product suite had been unrun in CI (not failing) since 2026-09-06.
+- Landed: PR #130 — retire the `launchd-drivers` job and the obsolete `--driver-fleet-check`
+  diagnostic; replace them with `--mission-config-check` (validates World's own 22-row ledger).
+- Authority: `D-WORLD-34` = A (attended, 2026-09-07). Its two limits — preserve World
+  application verification, no blanket deletion of product checks — are enforced by AC9 + M7/M8.
+- Independent evaluation PASS 95/100, zero blocking; all 13 mutations re-run by the judge.
+- Roles: designer fable · planner opus · executor codex/gpt-5.6-sol · evaluator sonnet.
+  Generator ≠ judge.
+- Executor hit its 45-min deadline mid-drill; commits were clean, but every mutation was
+  treated as UNMEASURED and re-run by the evaluator rather than banked.
+- Goal: seven-clause 1.0 bar; goal unmoved, no additional clause certified.
 
-## Next picks
+## Blocked (work, not a decision)
+- **PRs #127 and #128 are CONFLICTING/DIRTY** — five iterations of records (162–166) stranded
+  against the rotated log (`37a10f5`) and normalized headings (`9166de0`). `D-WORLD-35` = A
+  already authorises the merge; the blocker is a **rebase**, and it is the next pick.
 
-1. Row66 — quoted flow-key trim coverage.
-2. Row68 — route the fleet-owned pinned-repo guard upstream.
+## Parked for Mark
+- Nothing. Decision ledger: **22 rows, ZERO OPEN**.
 
-Rows79/80 remain parked design review; row39 is the next product item.
+## Next
+- Rebase + land #127/#128, then rows 66, 68–78, 81, 82, 83, then 39.
+- Row 65 DEFERRED per `D-WORLD-33`; rows 79/80 remain parked design review.
 
-## Routing and quota
-
-Actual controller Codex Astra (inherited running slot); designer pi/Ollama DeepSeek.
-Planner, executor and evaluator did not run: second design quorum blocked.
-Metered$0.31111237 of$5; ChatGPT and Ollama Cloud quota buckets.
-Concurrent fleet commit5634d55 moved future controller fallback to Sol; CI3/3 green.
-Shared skill was externally extracted into gate files mid-run; content matches upstream.
-No World edits to frozen files, shared skills or the V1 checkout.
-
-## Parked for owner
-
-D-WORLD-32: rotate/revoke and replace exposed credential; default no account changes.
-D-WORLD-33: REDESIGN explicit compile-evidence records, or DEFER row65.
-Recommendation REDESIGN through fresh gates; unattended default DEFER immediately.
-Ledger20 rows,2 OPEN. Full asks and evidence are in world-mission.md.
+## Posture
+- Verification compiler pinned v0.30.0 (`~/.pinned-ailang/ailang`); no release cut.
+- `tools/launchd/*` frozen core, untouched; residue there is the fleet's to remove.
+- Billing tripwire CLEAN; all roles on subscription buckets.
