@@ -2446,3 +2446,75 @@ One World process clarification: pristine baselines must be isolated from ANY mu
 **Report-instrument correction**: `ailang messages read <id> --peek --json` ignored trailing flags and marked the newly-created approval read. Exact body verification caught the status change. Only this iteration's own approval was restored with `messages unack`; `messages read --peek --json <id>` then confirmed exact payload and unread status. Route to the existing positional-flag backlog class (row75/upstream1037); no new policy or duplicate issue. Approval ID: inbox_1788689217176_901d5ebb.
 
 **Next**: row66 (quoted flow-key trim), row68 (fleet-owned pinned-repo guard routing), then the banked queue. Row39 remains next product work; rows79/80 remain parked design review. Row65 waits on D-WORLD-33.
+
+## 166 — 2026-09-07 — the loaded gun in row 68 fired: the driver pin ran this mission inside the WRONG REPOSITORY, and every health instrument read green [HARNESS]
+
+**Kind**: regression iteration; the defect was in the loop's own root, so it outranked the queue. Full four-role route, two blocked quorums, narrow-refinement carve-out, mitigation LANDED, durable fix HANDED TO THE FLEET.
+
+**Progress**: seven-clause 1.0 bar; goal unmoved. No product code landed — by design: the durable fix is frozen core.
+
+**Context / preflight**
+- Kill switch armed (`~/.ailang/state/mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing tripwire CLEAN.
+- Codex and pi lanes both probed rc=0 with real replies at 08:57, after the 04:44 fire had found every Anthropic and codex lane unusable and died rc=1 on an ollama 429 — the ChatGPT bucket refilled at the Monday reset. Gate-0 directive read on issue #107 since `2026-09-06T19:14:28Z`: **0 allowlisted directives** of 42 comments.
+- **Gate 1 read GREEN and was measuring the wrong repository.** `git fetch origin` + `rev-parse` agreed, `mission-base.sh record gate1` banked `878939117`, and the running-skill-vs-`origin/dev` `cmp` was byte-identical — every one of those readings was taken inside `~/.ailang-driver-pin/world`, a worktree of `sunholo-data/ailang`. The tell was `ls design_docs/world-mission.md` → `No such file or directory`.
+- Heartbeat stamps were made by ABSOLUTE path (`~/dev/sunholo-data/ailang/tools/launchd/mission-heartbeat.sh`) — queue row 69's standing condition, unchanged.
+
+**Pick**: not the queue head. The controller cannot read the queue from where the driver put it, so the blocker WAS the iteration. Grepping the index found the item already tracked: **row 68, `w-driver-pin-named-world-points-at-the-wrong-repo`**, surfaced iteration 150 and written as a prediction — *"the residue is a loaded gun for the day World's plist is pointed at a pin-rooted driver."*
+
+**The mechanism, measured first-party**
+- The DE-FORK (`e92594c`) deleted World's own driver copy; the regenerated plist runs the FLEET driver at `~/dev/sunholo-data/ailang/tools/launchd/mission-control.sh`.
+- That driver separates the two roots on purpose (`MC_DRIVER_ROOT` vs `REPO`, lines 40-48) and its pin block asserts *"MISSION_WORKDIR keeps `$REPO` pointing at the mission's work repo across the re-exec"* (~line 894). **That sentence is false.** `tools/launchd/lib/pin-root.sh` does `MISSION_WORKDIR="$wt"; export …; exec …` unconditionally, and `$wt` is always a worktree of `$src`, which is derived from the DRIVER's `$0`.
+- Result this fire: `MISSION_WORKDIR` = `pwd` = `~/.ailang-driver-pin/world`; `git remote -v` → `sunholo-data/ailang`; `git rev-parse --git-common-dir` → `~/dev/sunholo-data/ailang/.git`; charter absent. Driver log: `driver pin: running committed origin/dev @ 878939117 … (source clone … was 0 behind)` — i.e. **`PIN_STATUS=pinned`, drift 0, no warning on any channel.**
+- Discriminator measured, with controls: origins are `ailang` / `ailang` / `ailang-world` for `ailang`, `ailang-motoko`, `ailang-world` — so the origin URL separates the de-fork case while `git-common-dir` (`…/ailang/.git`, `…/ailang-motoko/.git`, `…/ailang-world/.git` — all three DIFFER) would misclassify motoko as a different repository and break it.
+
+**Work done**
+- **Design** `design_docs/planned/w-defork-pin-redirects-work-repo.md` (588 lines). Splits by OWNERSHIP: M1 world-landable stopgap, M2 fleet-owned guard, M3 hand-back gate.
+- **Quorum r1 BLOCKED** — gemini (raw URL equality is fragile across SSH/HTTPS/`.git`) and glm (an unset origin silently drops the redirect with no runtime signal). Astra ABSENT on a pre-flight budget refusal at $0.1224 > $0.10 cap.
+- **Revision** answered both: canonical `host/path` normalisation, an authoritative-when-set `AILANG_DRIVER_MISSION_IS_DE_FORKED` flag with inference as the default, and `_pin_stale` on the indeterminate case so the refusal rides the channel that already posts *"driver ran UNPINNED"*.
+- **Quorum r2 BLOCKED** on a REAL and previously-unseen defect: astra and gemini independently found that the draft called the helper inside a **command substitution**, so `_pin_stale` ran in a subshell and `PIN_STATUS=STALE` could never reach the driver — the loud-failure guarantee the whole revision was built on. astra added that `MISSION_WORKDIR="$(…)"` assigns captured stdout BEFORE `|| return 1`, blanking the work dir on the failure path. glm ABSENT (ollama 429).
+- **Narrow-refinement carve-out applied** (both objections carry a concrete reviewer-authored fix; neither disputes the direction). gemini's verbatim fix — mutate in the current shell, `_set_pin_workdir "$wt" "$src" || return 1` — was applied and **subsumes astra's second hazard by construction**: with no substitution there is nothing to capture. `AC-F12` was added to pin the call-site form, because every other AC passes under the defective one.
+- **Plan** (codex) repaired the design rather than restating it: **P2** the design's AC3 could not red on its own named mutation; **P3** AC4's `grep -c … >= 1` passes on log HISTORY; **P5** row 68 already exists — refresh, do not duplicate; **P12** the file list omitted the hand-off artefacts. It also made the sandbox split explicit, since the file M1 changes lives outside the executor's writable worktree.
+- **Executor** (codex) refreshed row 68 in place and wrote the 216-line fleet issue body, then reported its own suite as **not wholly green**: AC-E4 is RED at baseline from a pre-existing unrelated `TODO` at charter line 2034 and its `$files` scalar does not word-split under zsh; AC-E5 has no named RED mutation and inspects neither changed artefact; and it **REFUSED AC-E3's mutation because performing it required editing `tools/launchd/*`** — frozen core.
+- **Controller (out of sandbox)** applied M1: `AILANG_DRIVER_PIN=0` appended to `~/.config/ailang/mission-world.env` behind a pre-edit backup, with an idempotency guard and a refusal on any conflicting assignment.
+
+**Routing evidence**
+| Stage | Actual lane | Outcome / evidence |
+|---|---|---|
+| Controller | `claude:claude-opus-5` | driver probe ok; tok: not reported at record time |
+| Designer initial | `pi:ollama/deepseek-v4-flash:0731-cloud` | rotation entry after astra; probe rc=0; typed verdict `ok`, 193 s, 24 tools, 1 file (1.75 M per-turn tok, summed) |
+| Designer revision | same DeepSeek lane | typed verdict `ok`, 678 s, 89 tools, 1 file (24.7 M per-turn tok, summed — pi re-sends context per turn) |
+| Quorum r1 | astra / gemini / glm | 2 present, **2 reject**; astra ABSENT (budget, $0.1224 > $0.10, zero spend); $0.04441749 |
+| Quorum r2 | astra / gemini / glm | 2 present, **2 reject**; glm ABSENT (ollama 429); $0.139366 |
+| Planner | `codex:gpt-5.6-sol` | resolver said `agent-tool opus fail-closed:planner-lane-field-missing`; **the pin was followed instead**, per the skill's resolver-vs-hook rule — the hook would have denied the alias. 149,040 tok |
+| Executor | `codex:gpt-5.6-sol` | rc=0, 2 files, 217 insertions / 1 deletion; 73,501 tok |
+| Evaluator | `sonnet` (Agent tool, `declared:alias-pin`) | **94/100 PASS, zero blocking findings**; 142,492 tok |
+
+generator≠judge held: executor OpenAI/codex, evaluator Anthropic/sonnet. Designer rotation pointer advanced astra → deepseek.
+
+**The judge's independent findings** (all three reproduced first-hand by it, none of them ours)
+- **AC-F8 is vacuous.** It implemented BOTH the specified `_set_pin_workdir` and AC-F8's own named mutant ("ignore the flag, always infer") and got byte-identical output, because world's origin genuinely differs from ailang's — so no flag-dropping implementation can be caught by that criterion as written. Appended to the fleet issue body with the fix (exercise the flag where flag and inference DISAGREE).
+- **AC-E3 has an expiring precondition** — it gates on `git status --short`, so it reads `handoff-paths=0` once the work is committed. The substantive claim survives via `git diff --name-only 9166de0..HEAD`.
+- **`D-WORLD-34` does not exist in the committed ledger** (`rg` → 0 hits; positive control `D-WORLD-DRIVER-1` → hits). It lives only on unmerged PR #127. Two iterations relied on a park `scripts/mission_decisions.sh --open` cannot see. Filed as **D-WORLD-35**.
+
+**Verification**
+- AC-C1 `pin-optout=1 backup=present`; AC-C2 byte-idempotent (sha unchanged on a second run); AC-C3 `PIN=0 WD=…/ailang-world`; AC-C4 `PIN_STATUS=disabled WD=…/ailang-world` from the REAL fleet helper.
+- **Mutation drill, run and restored:** commenting the opt-out reds AC-C1 (`count=0`), AC-C3 (exact-match fails) and AC-C4 (`env opt-out absent`, refusing before the helper is even called). Restore verified **byte-identical by sha256**.
+- AC-C5/AC-C6 are fire-dependent and DEFERRED to the next fire; the baseline they need is captured (`/tmp/w-defork-pin-disabled-count.before` = 0).
+- No edit to `tools/launchd/*` in either repository; `~/dev/sunholo-data/ailang` working tree clean.
+
+**Landing / Gate 3b**
+Docs-only PR on `mission/world-iter166-defork-pin`, based on `9166de0`. The two reds `launchd drivers (bash 3.2)` and `go host build + test gate` are INHERITED — they fail on `origin/dev` at the base commit, because the attended DE-FORK deleted the files those jobs invoke — and are parked; this branch does not touch them. The charter-declared Gate-3b job is `CI` / `ailang-code verify gate`.
+
+**Metered ledger**: $0.183783 of $5 (two quorum rounds, four reviewer calls). Designer (ollama flat-rate), planner, executor and controller all bill $0 metered against subscription/flat-rate buckets — which is exactly why the per-role token counts above are the only cost signal that exists.
+
+**Ruled out / not chased**
+- *"World should patch `pin-root.sh`"* — refused. `D-WORLD-DRIVER-1` is RESOLVED and ratified attended: World's controller never edits `tools/launchd/*`. The executor refused a mutation drill on the same grounds rather than score a point.
+- *"Fix the two red CI checks"* — not attempted. Parked under the D-WORLD-34 proposal, whose unattended default is to land no code, and reversing a prior iteration's disposition is not an unattended call.
+- *`git-common-dir` as the repo discriminator* — REFUTED by measurement: all three clones have distinct common dirs, so it would break motoko and docs.
+- *A narrower env-file lever than `AILANG_DRIVER_PIN=0`* — refuted: the env file is sourced at driver line 71, after `REPO` is computed at line 48 and after the `cd`, so only a variable that stops the pin running at all can help.
+- *Claiming the mitigation is proven* — it is not. Everything verified today is a hand-run simulation; only a real unattended fire exercises the launchd path. That is the judge's own strongest objection and it is recorded rather than answered.
+
+**Next**
+1. **The next fire must run AC-C5 and AC-C6 first** and record the result — that is the only evidence that closes this item.
+2. The fleet files the M2 guard (issue prepared; AC-F8 must be rewritten before implementing).
+3. D-WORLD-35 for Mark: are mission RECORDS hostage to the parked CI reds? Five iterations of state now sit on unmerged branches.

@@ -1,35 +1,37 @@
 # Mission Dashboard — Ailang World
 
-Snapshot: 2026-09-06, iteration161. History: world-mission-log.md.
+Snapshot: 2026-09-07, iteration 166. History: world-mission-log.md.
 
-- Row65 PARKED — needs-human-review, D-WORLD-33; no implementation shipped.
-- Compile-fence defect reproduced: bad _test.go leaves go build green; vet/test red.
-- Designer: DeepSeek V4 Flash, initial + one revision, typed verdicts ok.
-- Quorum r1: 3/3 reject. R2: Astra/Gemini reject; GLM invalid/absent.
-- Proposed prose lint misses ordinary Markdown backticks; guard remains undesigned.
-- Goal: seven-clause1.0 bar; goal unmoved; no additional clause certified.
-- Latest implementation remains row64, PR124, bf15c73 (merge CI3/3 green).
+- **The driver pin ran this mission inside `sunholo-data/ailang`, not `ailang-world`.** Row 68's
+  iter-150 prediction fired: after the DE-FORK the plist runs the FLEET driver, and pin-root.sh
+  exports `MISSION_WORKDIR=<pin worktree>` unconditionally. Charter unreachable; pin logged success.
+- M1 LANDED (rig-local, reversible): `AILANG_DRIVER_PIN=0` in `~/.config/ailang/mission-world.env`,
+  backup taken. AC-C1..C4 pass; all three named RED mutations fired; restore byte-identical.
+- M2 is FLEET work — `tools/launchd/*` is frozen core (D-WORLD-DRIVER-1). Issue body prepared.
+- Quorum blocked twice; carve-out applied on the reviewers' verbatim fix. Judge: **94/100 PASS**,
+  zero blocking findings, and it found an AC-F8 vacuity none of us did.
+- Goal: seven-clause 1.0 bar; goal unmoved. No product code landed, deliberately.
 - Verification compiler remains pinned v0.30.0; no release cut.
 
 ## Next picks
 
-1. Row66 — quoted flow-key trim coverage.
-2. Row68 — route the fleet-owned pinned-repo guard upstream.
-
-Rows79/80 remain parked design review; row39 is the next product item.
+1. **AC-C5/AC-C6 on the NEXT fire** — the only evidence that closes row 68.
+2. Row 66 — quoted flow-key trim coverage.
+3. Row 65 stays parked on D-WORLD-33.
 
 ## Routing and quota
 
-Actual controller Codex Astra (inherited running slot); designer pi/Ollama DeepSeek.
-Planner, executor and evaluator did not run: second design quorum blocked.
-Metered$0.31111237 of$5; ChatGPT and Ollama Cloud quota buckets.
-Concurrent fleet commit5634d55 moved future controller fallback to Sol; CI3/3 green.
-Shared skill was externally extracted into gate files mid-run; content matches upstream.
-No World edits to frozen files, shared skills or the V1 checkout.
+Controller opus; designer pi/ollama DeepSeek (rotation, initial + one revision, typed `ok` both);
+planner and executor codex Sol (pin followed over the resolver's fail-closed opus, per the
+resolver-vs-hook rule); evaluator sonnet via the Agent tool. generator≠judge held.
+Per-role tokens: planner 149,040 · executor 73,501 · evaluator 142,492 · controller not reported.
+Metered $0.183783 of $5 (quorum only). No World edits to frozen files or the V1 checkout.
 
 ## Parked for owner
 
-D-WORLD-32: rotate/revoke and replace exposed credential; default no account changes.
-D-WORLD-33: REDESIGN explicit compile-evidence records, or DEFER row65.
-Recommendation REDESIGN through fresh gates; unattended default DEFER immediately.
-Ledger20 rows,2 OPEN. Full asks and evidence are in world-mission.md.
+D-WORLD-32: rotate/revoke the exposed local credential, or defer. Default: no account change.
+D-WORLD-33: REDESIGN row65 around explicit compile-evidence records, or DEFER. Default: DEFER.
+D-WORLD-35 (NEW): may a docs-only mission-record PR merge while the DE-FORK CI reds stay parked?
+  Five iterations of records now sit on unmerged branches; the committed ledger cannot even see
+  D-WORLD-34, which lives only on PR #127. Default while unattended: HOLD.
+Ledger 21 rows, 3 OPEN. Full asks and evidence are in world-mission.md.
