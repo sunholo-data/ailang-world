@@ -109,153 +109,20 @@ print("   ✓ all %d required top-level evidence tests passed exactly once" % EX
 PY
 }
 
-# FLEET-COMPARISON ARM — D-WORLD-DRIVER-1, iter-148 round 2. The working-tree-vs-HEAD
-# arm cannot see a stale-but-COMMITTED copy (it compares the copy to itself). This arm
-# compares the committed copy against the FLEET source, which is where the driver
-# actually lives. The driver is FLEET-owned; World detects and reports, the fleet
-# commits. This arm is World's own file and is in scope.
-AILANG_FLEET_REPO="${AILANG_FLEET_REPO:-$HOME/dev/sunholo-data/ailang}"
-
-# This array may become empty after the fleet lands pin-root. Keep the guarded array
-# expansion below: bash 3.2 + set -u rejects an unguarded empty "${array[@]}".
-REQUIRED_FLEET_PATHS=(
-  "tools/launchd/lib/pin-root.sh"
-)
-
-check_driver_fleet() {
-  # Returns 0 (green), 1 (FATAL/typed refusal), or 2 (loud skip in CI).
-  if [ -d "$AILANG_FLEET_REPO" ] && git -C "$AILANG_FLEET_REPO" rev-parse --git-dir >/dev/null 2>&1; then
-    fleet_head="$(git -C "$AILANG_FLEET_REPO" rev-parse HEAD)"
-    compared=0
-    # PHASE-1 ACCOUNTING (iter-148 evaluator, BLOCKING #1). `compared` alone cannot
-    # detect a path that Phase 1 skips without a verdict: such a path is not
-    # `differing` (never compared), not `missing_in_fleet` (that branch is never
-    # reached) and not `unclassified` (Phase 3 skips it because World tracks it), so
-    # the arm prints a green "tracked copy is current" over a silently smaller set —
-    # which is this row's own defect (a claim wider than the axis measured) one level
-    # up. Two independent counters close it: `dispositioned` must account for every
-    # path the loop SAW, and `expected_enumerated` — computed by a SEPARATE call, so a
-    # skip placed before the in-loop increment cannot hide from it — must equal the
-    # number the loop saw.
-    expected_enumerated=$(git ls-tree -r --name-only HEAD -- tools/launchd scripts/mission_decisions.sh | wc -l | tr -d " ")
-    enumerated=0
-    dispositioned=0
-    differing=""
-    missing_in_fleet=""
-    missing_locally=""
-    unclassified=0
-
-    # Phase 1 — every path World tracks at HEAD under the driver prefix, except
-    # REQUIRED paths (those are owned by Phase 2).
-    while IFS= read -r path; do
-      [ -z "$path" ] && continue
-      enumerated=$((enumerated + 1))
-      required=0
-      for rp in ${REQUIRED_FLEET_PATHS[@]+"${REQUIRED_FLEET_PATHS[@]}"}; do
-        [ "$rp" = "$path" ] && required=1 && break
-      done
-      if [ "$required" -eq 1 ]; then
-        dispositioned=$((dispositioned + 1))   # owned by Phase 2
-        continue
-      fi
-      local_blob="$(git rev-parse --verify "HEAD:$path" 2>/dev/null || true)"
-      fleet_blob="$(git -C "$AILANG_FLEET_REPO" rev-parse --verify "HEAD:$path" 2>/dev/null || true)"
-      if [ -z "$fleet_blob" ]; then
-        missing_in_fleet="$missing_in_fleet
-  $path (tracked by World, absent in fleet)"
-        dispositioned=$((dispositioned + 1))
-        continue
-      fi
-      compared=$((compared + 1))
-      dispositioned=$((dispositioned + 1))
-      if [ "$local_blob" != "$fleet_blob" ]; then
-        differing="$differing
-  $path (local $local_blob != fleet $fleet_blob)"
-      fi
-    done < <(git ls-tree -r --name-only HEAD -- tools/launchd scripts/mission_decisions.sh)
-
-    if [ "$enumerated" -ne "$expected_enumerated" ] || [ "$dispositioned" -ne "$enumerated" ]; then
-      echo "verify_go.sh: FATAL: fleet-comparison arm PHASE-1 ACCOUNTING BROKEN — ls-tree offered $expected_enumerated paths, the loop saw $enumerated and reached a verdict on $dispositioned; a tracked driver path was skipped without a verdict, so every 'matches fleet' result is void" >&2
-      return 1
-    fi
-
-    # Phase 2 — REQUIRED_FLEET_PATHS.
-    for path in ${REQUIRED_FLEET_PATHS[@]+"${REQUIRED_FLEET_PATHS[@]}"}; do
-      if ! git cat-file -e "HEAD:$path" 2>/dev/null; then
-        missing_locally="$missing_locally
-  $path (REQUIRED by World, absent locally)"
-        continue
-      fi
-      local_blob="$(git rev-parse --verify "HEAD:$path" 2>/dev/null || true)"
-      fleet_blob="$(git -C "$AILANG_FLEET_REPO" rev-parse --verify "HEAD:$path" 2>/dev/null || true)"
-      if [ -z "$fleet_blob" ]; then
-        missing_in_fleet="$missing_in_fleet
-  $path (REQUIRED by World, absent in fleet)"
-        continue
-      fi
-      compared=$((compared + 1))
-      if [ "$local_blob" != "$fleet_blob" ]; then
-        differing="$differing
-  $path (local $local_blob != fleet $fleet_blob)"
-      fi
-    done
-
-    # Phase 3 — fleet paths under tools/launchd and the exact file
-    # scripts/mission_decisions.sh that World neither tracks nor requires are loud,
-    # counted, non-fatal residuals. Paths outside that fixed boundary are not enumerated.
-    while IFS= read -r path; do
-      [ -z "$path" ] && continue
-      if git cat-file -e "HEAD:$path" 2>/dev/null; then
-        continue
-      fi
-      required=0
-      for rp in ${REQUIRED_FLEET_PATHS[@]+"${REQUIRED_FLEET_PATHS[@]}"}; do
-        [ "$rp" = "$path" ] && required=1 && break
-      done
-      [ "$required" -eq 1 ] && continue
-      unclassified=$((unclassified + 1))
-      echo "   ⚠ unclassified fleet-only path (not tracked, not required): $path" >&2
-    done < <(git -C "$AILANG_FLEET_REPO" ls-tree -r --name-only HEAD -- tools/launchd scripts/mission_decisions.sh)
-
-    if [ "$compared" -eq 0 ]; then
-      echo "verify_go.sh: FATAL: fleet-comparison arm enumerated 0 comparable driver files against $AILANG_FLEET_REPO; the instrument is broken, so every 'matches fleet' result is void" >&2
-      return 1
-    fi
-    if [ -n "$differing" ]; then
-      echo "verify_go.sh: FATAL: DRIVER DRIFT vs FLEET (D-WORLD-DRIVER-1) — the committed copy differs from fleet HEAD $fleet_head:" >&2
-      printf '%s\n' "$differing" >&2
-      echo "  The driver is fleet-owned; land the current driver as a fleet-authored commit. World's controller must not edit or absorb it." >&2
-      return 1
-    fi
-    if [ -n "$missing_in_fleet" ]; then
-      echo "verify_go.sh: FATAL: DRIVER DRIFT vs FLEET (D-WORLD-DRIVER-1) — World-tracked paths MISSING IN FLEET:" >&2
-      printf '%s\n' "$missing_in_fleet" >&2
-      echo "  A World-tracked driver path is absent from the fleet; reconcile which tree owns it." >&2
-      return 1
-    fi
-    if [ -n "$missing_locally" ]; then
-      echo "verify_go.sh: FATAL: DRIVER DRIFT vs FLEET (D-WORLD-DRIVER-1) — REQUIRED fleet paths MISSING LOCALLY:" >&2
-      printf '%s\n' "$missing_locally" >&2
-      echo "  The driver is fleet-owned; land the required file as a fleet-authored commit. World's controller must not edit or absorb it." >&2
-      return 1
-    fi
-    echo "   ✓ fleet-comparison arm: $compared files match fleet HEAD $fleet_head; checked set: World-tracked paths under tools/launchd and exact file scripts/mission_decisions.sh, plus explicit REQUIRED_FLEET_PATHS"
-    echo "   explicit required paths (checked separately): ${REQUIRED_FLEET_PATHS[*]:-(none)}"
-    echo "   phase-3 residual enumeration only: tools/launchd and exact file scripts/mission_decisions.sh; files outside this boundary are unenumerated (not zero), not certified by phase 3"
-    if [ "$unclassified" -gt 0 ]; then
-      echo "   ⚠ $unclassified unclassified fleet-only paths within the phase-3 boundary not certified (see above)" >&2
-    fi
-    return 0
-  fi
-  if [ -n "${CI:-}" ]; then
-    echo "   ⚠ fleet-comparison arm SKIPPED (fleet checkout absent at $AILANG_FLEET_REPO) — driver currency NOT certified here"
-    return 2
-  fi
-  if [ -z "${CI:-}" ]; then
-    echo "verify_go.sh: FATAL: DRIVER DRIFT (D-WORLD-DRIVER-1) — fleet source $AILANG_FLEET_REPO is absent; the fleet-comparison arm cannot run, so driver currency is NOT certified" >&2
+check_mission_config() {
+  validator="scripts/mission_decisions.sh"
+  charter="design_docs/world-mission.md"
+  if [ ! -r "$validator" ]; then
+    echo "verify_go.sh: FATAL: mission validator is missing or unreadable: $validator" >&2
     return 1
   fi
-  return 0
+  if [ ! -r "$charter" ]; then
+    echo "verify_go.sh: FATAL: World charter is missing or unreadable: $charter" >&2
+    return 1
+  fi
+  /bin/bash -n "$validator"
+  /bin/bash "$validator" --check --file "$charter"
+  echo "   World decision-ledger validated; centralized runtime currency is NOT certified here."
 }
 
 if [ "${1:-}" = "--evidence-manifest-check" ]; then
@@ -267,15 +134,18 @@ if [ "${1:-}" = "--evidence-manifest-check" ]; then
   exit $?
 fi
 
-if [ "${1:-}" = "--driver-fleet-check" ]; then
-  rc=0
-  if check_driver_fleet; then
-    :
-  else
-    rc=$?
+if [ "${1:-}" = "--mission-config-check" ]; then
+  if [ "$#" -ne 1 ]; then
+    echo "usage: $0 --mission-config-check" >&2
+    exit 2
   fi
-  [ "$rc" -eq 2 ] && rc=0
-  exit "$rc"
+  check_mission_config
+  exit $?
+fi
+
+if [ "$#" -gt 0 ]; then
+  echo "verify_go.sh: unrecognized first argument: $1" >&2
+  exit 2
 fi
 
 if [ -z "${AILANG_BIN:-}" ]; then
@@ -344,44 +214,8 @@ if [ -n "$tracked_binaries" ]; then
 fi
 echo "   ✓ 0 binary blobs among $tracked_total tracked files"
 
-echo "── mission routing + decision-ledger gate"
-/bin/bash tools/launchd/test_mission_routing.sh
-/bin/bash -n tools/launchd/mission-control.sh tools/launchd/derive-planner-lane.sh scripts/mission_decisions.sh
-
-# DRIVER DRIFT GATE — D-WORLD-DRIVER-1, RESOLVED B (Mark, attended 2026-08-17).
-# The driver is FLEET-owned: changes land here only as fleet-authored commits,
-# never as World-controller edits. launchd executes this repo's WORKING TREE
-# (dev.ailang.mission-world.plist ProgramArguments), so an uncommitted driver is
-# a live driver that exists in no repository — iter-89 measured exactly that
-# state lurking for two days, carrying the human decision ledger with it.
-# In CI the checkout is clean and this passes; on the rig, mid-propagation dirt
-# reds LOUDLY until the fleet commits it. That red is the point, not a nuisance.
-# Path-liveness control: prove git is scanning a real tracked set before
-# trusting an empty diff — a mistyped path would pass vacuously.
-driver_tracked=$(git ls-files tools/launchd/ scripts/mission_decisions.sh | wc -l | tr -d ' ')
-if [ "$driver_tracked" -lt 5 ]; then
-  echo "verify_go.sh: FATAL: driver drift gate control failed — only $driver_tracked tracked driver files (expected >=5); the gate is not scanning what it claims" >&2
-  exit 1
-fi
-driver_drift=$(git status --porcelain -- tools/launchd/ scripts/mission_decisions.sh)
-if [ -n "$driver_drift" ]; then
-  echo "verify_go.sh: FATAL: DRIVER DRIFT (D-WORLD-DRIVER-1) — the running driver differs from the committed one:" >&2
-  printf '%s\n' "$driver_drift" | sed 's/^/    /' >&2
-  echo "  The driver is fleet-owned; land this as a fleet-authored commit. World's controller must not edit or absorb it." >&2
-  exit 1
-fi
-echo "   ✓ driver drift gate: $driver_tracked tracked driver files, working tree matches HEAD (working-tree arm)"
-
-fleet_rc=0
-if check_driver_fleet; then
-  :
-else
-  fleet_rc=$?
-fi
-if [ "$fleet_rc" -eq 1 ]; then
-  exit 1
-fi
-# rc=2 is the CI loud skip: non-fatal by design, and already printed above.
+echo "── World mission-input gate (decision ledger)"
+check_mission_config
 
 # This deny-list is the measured set: go1.26.0-go1.26.5 on darwin/arm64.
 # Future go1.26.6 or go1.27.x versions are not covered here; the canary in this

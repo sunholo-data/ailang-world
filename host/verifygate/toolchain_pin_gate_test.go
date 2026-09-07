@@ -120,20 +120,15 @@ func TestGoToolchainPinsAgreeAndMatchJobList(t *testing.T) {
 	}
 	src := string(raw)
 	lines := strings.Split(src, "\n")
-	for _, control := range []string{"ailang-verify:", "go-verify:", "launchd-drivers:", "uses: actions/setup-go@v5", "./scripts/verify_go.sh"} {
+	for _, control := range []string{"ailang-verify:", "go-verify:", "uses: actions/setup-go@v5", "./scripts/verify_go.sh"} {
 		if !strings.Contains(src, control) {
 			t.Fatalf("instrument failure: %s does not contain known-positive control %q", workflowPath, control)
 		}
 	}
 
 	// Jobs are enumerated WITH THEIR BODIES, because "how many jobs are there" and
-	// "which jobs must carry a Go pin" stopped being the same question on 2026-09-02.
-	// The `launchd-drivers` job (bash 3.2 on macos-latest) needs no Go toolchain at
-	// all, so counting pins against the JOB count demanded a third pin that must not
-	// exist. That conflation is what took dev red on the merge commit 68403ea: two
-	// textually non-conflicting branches — one adding the job, one carrying this
-	// gate — were each green alone and jointly red, and the gate was RIGHT to red,
-	// it just could not say which of the two facts it objected to.
+	// "which jobs must carry a Go pin" are independent assertions. Keeping the
+	// inventories separate makes any future non-Go job an explicit classification.
 	jobLine := regexp.MustCompile(`^  ([a-z0-9-]+):$`)
 	seenJobs := false
 	var jobs []string
@@ -160,7 +155,7 @@ func TestGoToolchainPinsAgreeAndMatchJobList(t *testing.T) {
 	// test reds: wantJobs says the job exists on purpose, wantGoPinnedJobs says whether
 	// it is a Go job. A non-Go job added to wantJobs alone is still asserted to carry
 	// ZERO Go pins, so "classified out" is a claim the gate checks rather than a hole.
-	wantJobs := []string{"ailang-verify", "go-verify", "launchd-drivers"}
+	wantJobs := []string{"ailang-verify", "go-verify"}
 	wantGoPinnedJobs := []string{"ailang-verify", "go-verify"}
 	if !slices.Equal(jobs, wantJobs) {
 		t.Errorf("ci.yml: enumerated jobs=%v, want %v; GOTOOLCHAIN pins=%d go-version pins=%d",
