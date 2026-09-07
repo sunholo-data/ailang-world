@@ -1,6 +1,6 @@
 # Mission Dashboard — Ailang World
 
-Snapshot: 2026-09-07, iteration 167. History: world-mission-log.md.
+Snapshot: 2026-09-07, iteration 168 (records reconciliation). Iteration 167's product findings below are unchanged. History: world-mission-log.md.
 
 - **`dev` is GREEN again** — `37a78ab`, CI 2/2. First green since the attended DE-FORK `e92594c`.
 - The red was a **suspended gate**: `verify_go.sh` exited 127 before `go build`, so the whole
@@ -17,15 +17,16 @@ Snapshot: 2026-09-07, iteration 167. History: world-mission-log.md.
 - Goal: seven-clause 1.0 bar; goal unmoved, no additional clause certified.
 
 ## Blocked (work, not a decision)
-- **PRs #127 and #128 are CONFLICTING/DIRTY** — five iterations of records (162–166) stranded
-  against the rotated log (`37a10f5`) and normalized headings (`9166de0`). `D-WORLD-35` = A
-  already authorises the merge; the blocker is a **rebase**, and it is the next pick.
+- **Nothing.** Iteration 168 reconciled the five stranded records (162–166) from PRs #127/#128
+  onto the rotated log (`37a10f5`) and canonical headings (`9166de0`) under `D-WORLD-35` = A.
+  `world-mission-index.md` now covers 162–167 — the 167 row was missing too — and the charter
+  STATUS series is gapless through 167. PRs #127/#128 are SUPERSEDED; close them unmerged.
 
 ## Parked for Mark
 - Nothing. Decision ledger: **22 rows, ZERO OPEN**.
 
 ## Next
-- Rebase + land #127/#128, then rows 66, 68–78, 81, 82, 83, then 39.
+- Rows 66, 68–78, 81, 82, 83, then 39. (#127/#128 superseded by iteration 168's reconciliation.)
 - Row 65 DEFERRED per `D-WORLD-33`; rows 79/80 remain parked design review.
 
 ## Posture
