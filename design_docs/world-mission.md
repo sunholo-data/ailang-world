@@ -5329,9 +5329,10 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
     `status --porcelain` so both an uncommitted and a committed executor read non-empty. Add a
     `worktree_commits` field beside `worktree_changed_files` so the verdict distinguishes
     "nothing happened" from "everything was committed". `scripts/` in the V1 checkout is
-    fleet-owned from here, so the code half is filed upstream plus an `ailang messages send
-    mission-control` note; this row exists so the next World controller adjudicates the verdict
-    instead of obeying it. · ~0.1d (the upstream filing + a controller-side adjudication note)
+    fleet-owned from here, so the code half is filed upstream as
+    [`ailang#1096`](https://github.com/sunholo-data/ailang/issues/1096) plus an `ailang messages
+    send mission-control` note (both sent iter-168, message body asserted intact on read-back);
+    this row exists so the next World controller adjudicates the verdict instead of obeying it. · ~0.1d (the upstream filing + a controller-side adjudication note)
     · gated on the fleet for the code · surfaced iter-168 (controller-measured, first instance).
 
 85. **w-charter-status-rotation-rule-body-is-stranded-in-the-archive** · clause-2 · The charter's
