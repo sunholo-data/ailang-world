@@ -149,13 +149,13 @@ func newMissionFixture(t *testing.T, ledger string, controlledStop bool) string 
 		refusal := `if [ "$#" -gt 0 ]; then
   echo "verify_go.sh: unrecognized first argument: $1" >&2
   exit 2
-}
+fi
 
 `
 		script = exactReplace(t, script, refusal, "")
 	}
 	if controlledStop {
-		script = exactReplace(t, script, "\ncheck_mission_config\n", "\ncheck_mission_config\necho 'CONTROLLED_STAGE_AFTER_MISSION'\nexit 0\n")
+		script = exactReplace(t, script, "\n# This deny-list is the measured set", "\necho 'CONTROLLED_STAGE_AFTER_MISSION'\nexit 0\n\n# This deny-list is the measured set")
 	}
 	writeFile(t, filepath.Join(root, "scripts", "verify_go.sh"), []byte(script), 0o755)
 	validator, err := os.ReadFile(filepath.Join(repoRoot, "scripts", "mission_decisions.sh"))
@@ -180,7 +180,11 @@ func newMissionFixture(t *testing.T, ledger string, controlledStop bool) string 
 const validFixtureRows = "| ID | Status | Decision | Evidence |\n|---|---|---|---|\n| D-WORLD-5 | RESOLVED | yes | measured |\n"
 
 func TestMissionConfigRealCharter(t *testing.T) {
-	rc, out, timedOut := runMissionCommand(t, repoRoot, missionEnv(), "/bin/bash", "scripts/verify_go.sh", "--mission-config-check")
+	dir := repoRoot
+	if os.Getenv("MISSION_CONFIG_TEST_MUTATION") == "M3" {
+		dir = newMissionFixture(t, fixtureLedger(validFixtureRows), false)
+	}
+	rc, out, timedOut := runMissionCommand(t, dir, missionEnv(), "/bin/bash", "scripts/verify_go.sh", "--mission-config-check")
 	if timedOut || rc != 0 {
 		t.Fatalf("real mission-config mode failed: rc=%d timeout=%v\n%s", rc, timedOut, out)
 	}
@@ -193,6 +197,7 @@ func TestMissionConfigRealCharter(t *testing.T) {
 func TestMissionConfigRejectsBadLedger(t *testing.T) {
 	cases := []struct{ name, ledger, want string }{
 		{"absent_ledger_block", "# no ledger\n", "expected exactly one decision-ledger block (start=0 end=0)"},
+		{"duplicate_ledger_block", fixtureLedger(validFixtureRows) + fixtureLedger(validFixtureRows), "expected exactly one decision-ledger block (start=2 end=2)"},
 		{"zero_row_ledger", fixtureLedger("| ID | Status | Decision | Evidence |\n|---|---|---|---|\n"), "decision ledger has no rows"},
 		{"duplicate_id", fixtureLedger(validFixtureRows + "| D-WORLD-5 | OPEN | again | measured |\n"), "duplicate decision ID: D-WORLD-5"},
 		{"invalid_status", fixtureLedger("| D-WORLD-5 | MAYBE | yes | measured |\n"), "invalid status for D-WORLD-5: MAYBE"},
@@ -387,4 +392,118 @@ func TestRetiredModeIsRefused(t *testing.T) {
 			t.Fatalf("fixture retired mode was not refused before preflight: rc=%d timeout=%v\n%s", rc, timedOut, out)
 		}
 	})
+}
+
+// baseVerifyGoProductFixture is the source-shaped slice of
+// 565d0b2:scripts/verify_go.sh that carries every V20 default-flow anchor. It
+// deliberately retains the retired routing block, proving the parser accepts
+// the real pre-repair ordering before it examines the repaired script.
+var baseVerifyGoProductFixture = strings.Join([]string{
+	`if [ -z "${AILANG_BIN:-}" ]; then`,
+	`  echo "✗ AILANG_BIN is unset — host/replay tests would t.Skip() silently and this gate would be false-green." >&2`,
+	`ver_tok="$(printf '%s\n' "$ver" | head -1 | awk '{print $2}')"`,
+	`if [ "$ver_tok" != 'v0.30.0' ]; then`,
+	`echo "── AILANG_BIN=$AILANG_BIN ($ver)"`,
+	`echo "── tracked-binary hygiene gate"`,
+	`tracked_total=$(printf '%s\n' "$binary_numstat" | grep -c . || true)`,
+	`if [ "$tracked_total" -eq 0 ]; then`,
+	`echo "   ✓ 0 binary blobs among $tracked_total tracked files"`,
+	`echo "── mission routing + decision-ledger gate"`,
+	`/bin/bash tools/launchd/test_mission_routing.sh`,
+	`ACTIVE_GO=$(go env GOVERSION)      # observe; never assign`,
+	`case "$ACTIVE_GO" in`,
+	`root_go_lines=$(awk '/^go /{n++} END{print n+0}' go.mod)`,
+	`echo "   ✓ toolchain floor gate: $ACTIVE_GO >= root module floor $ROOT_FLOOR"`,
+	`echo "── race-detector known-positive control"`,
+	`if ! grep -q 'WARNING: DATA RACE' <<<"$race_control_output"; then`,
+	`echo "── go build ./..."`,
+	`go build ./...`,
+	`echo "── focused host/evidence named-manifest gate (37 exact top-level tests)"`,
+	`check_evidence_manifest "$evidence_json" 37`,
+	`echo "── go test ./... -count=1"`,
+	`go test ./... -count=1`,
+	`echo "── go test ./... -count=1 -race -timeout 8m"`,
+	`cmd = ["go", "test", "./...", "-count=1", "-race", "-timeout", "8m"]`,
+	`    print("verify_go.sh: FATAL: -race leg timed out after 600s", file=sys.stderr)`,
+	`    sys.exit(124)`,
+	`echo "✓ go gate PASSED: build clean, plain and race tests pass with pinned AILANG_BIN ($ver)"`,
+}, "\n")
+
+func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bool) {
+	t.Helper()
+	missionBanner := `echo "── mission routing + decision-ledger gate"`
+	missionAnchor := `/bin/bash tools/launchd/test_mission_routing.sh`
+	if repaired {
+		missionBanner = `echo "── World mission-input gate (decision ledger)"`
+		missionAnchor = `check_mission_config`
+	}
+	needles := []string{
+		`if [ -z "${AILANG_BIN:-}" ]; then`,
+		`if [ "$ver_tok" != 'v0.30.0' ]; then`,
+		`echo "── AILANG_BIN=$AILANG_BIN ($ver)"`,
+		`echo "── tracked-binary hygiene gate"`,
+		`if [ "$tracked_total" -eq 0 ]; then`,
+		`echo "   ✓ 0 binary blobs among $tracked_total tracked files"`,
+		missionBanner,
+		missionAnchor,
+		`ACTIVE_GO=$(go env GOVERSION)      # observe; never assign`,
+		`root_go_lines=$(awk '/^go /{n++} END{print n+0}' go.mod)`,
+		`echo "   ✓ toolchain floor gate: $ACTIVE_GO >= root module floor $ROOT_FLOOR"`,
+		`echo "── race-detector known-positive control"`,
+		`if ! grep -q 'WARNING: DATA RACE' <<<"$race_control_output"; then`,
+		`echo "── go build ./..."`,
+		`go build ./...`,
+		`echo "── focused host/evidence named-manifest gate (37 exact top-level tests)"`,
+		`check_evidence_manifest "$evidence_json" 37`,
+		`echo "── go test ./... -count=1"`,
+		`go test ./... -count=1`,
+		`echo "── go test ./... -count=1 -race -timeout 8m"`,
+		`cmd = ["go", "test", "./...", "-count=1", "-race", "-timeout", "8m"]`,
+		`    print("verify_go.sh: FATAL: -race leg timed out after 600s", file=sys.stderr)`,
+		`    sys.exit(124)`,
+		`echo "✓ go gate PASSED: build clean, plain and race tests pass with pinned AILANG_BIN ($ver)"`,
+	}
+	position := -1
+	for _, needle := range needles {
+		exactLine := needle == `go build ./...` || needle == `go test ./... -count=1` || (repaired && needle == `check_mission_config`)
+		count := strings.Count(src, needle)
+		next := strings.Index(src, needle)
+		if exactLine {
+			count = 0
+			next = -1
+			offset := 0
+			for _, line := range strings.SplitAfter(src, "\n") {
+				if strings.TrimSuffix(line, "\n") == needle {
+					count++
+					if next < 0 {
+						next = offset
+					}
+				}
+				offset += len(line)
+			}
+		}
+		if count != 1 {
+			t.Errorf("%s: executable/banner anchor %q has count %d, want 1", label, needle, count)
+			continue
+		}
+		if next <= position {
+			t.Errorf("%s: anchor %q is out of order at byte %d after %d", label, needle, next, position)
+		}
+		position = next
+	}
+}
+
+func TestVerifyGoProductCheckSequence(t *testing.T) {
+	if !strings.Contains(baseVerifyGoProductFixture, "mission routing + decision-ledger gate") {
+		t.Fatal("instrument failure: embedded base fixture does not retain the retired block")
+	}
+	requireVerifyGoProductSequence(t, "embedded 565d0b2 base fixture", baseVerifyGoProductFixture, false)
+	src := string(missionGateSource(t))
+	if os.Getenv("MISSION_CONFIG_TEST_MUTATION") == "M1" {
+		src = exactReplace(t, src, "\ncheck_mission_config\n", "\n")
+	}
+	if strings.Contains(src, "mission routing + decision-ledger gate") {
+		t.Error("repaired verify_go.sh still contains the retired default-flow banner")
+	}
+	requireVerifyGoProductSequence(t, "repaired scripts/verify_go.sh", src, true)
 }

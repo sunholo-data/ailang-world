@@ -26,8 +26,8 @@ AILANG. It is built by an autonomous mission loop with human ratification gates.
   language gaps route to `sunholo-data/ailang` as issues + an `ailang messages send
   mission-control` note — no local workarounds, no vendored forks. The driver is FLEET-owned
   (`D-WORLD-DRIVER-1`, ratified 2026-08-17): updates land here only as fleet-authored commits,
-  and `verify_go.sh`'s drift gate reds while the working-tree driver diverges from HEAD — that
-  red means "the fleet must commit", never "absorb it into your change".
+  and `D-WORLD-34` retires World's local-copy certification; shared-driver verification remains
+  the fleet's responsibility, never something to absorb into a World change.
 - **Never touch** `~/.ailang/state/mission-v1*` or the V1 checkout from work in this repo.
 
 ## Operating the daemon
