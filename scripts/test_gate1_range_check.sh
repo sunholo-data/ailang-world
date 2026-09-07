@@ -96,18 +96,27 @@ arm_candidate() {
   rm -rf "$dir" "$stub"
 }
 
-# AC-M1-9 — a range that is a single commit (the head) must not report the head; GREEN.
+# AC-M1-9 — the range's head is never reported, on a LINEAR history; GREEN.
+#
+# The range is deliberately 2+ commits (a, then head), NOT a single commit. A one-commit
+# range is degenerate: base+1 == head, so under AC-M1-10's `base..head^` mutation the range
+# collapses to empty and this arm exits 3 -- i.e. it would red for a reason that has nothing
+# to do with head exclusion, and AC-M1-10's independence from this arm could not be shown.
+# Found by the independent evaluator (iteration 170) and reproduced first-party by the
+# controller before this widening; see the design doc's AC-M1-9 note.
 arm_head_excluded() {
-  local dir base a stub out rc
+  local dir base a b stub out rc
   dir="$(mktemp -d)"
   base="$(make_throwaway_repo "$dir")"
   a="$(commit_in "$dir" a.txt "a" "commit a")"
+  b="$(commit_in "$dir" b.txt "b" "commit b")"
   stub="$(mktemp)"
-  make_stub_gh "$stub" "$a:$ZERO_FIXTURE"
-  out="$(/bin/bash "$SCRIPT_UT" --repo-dir "$dir" --repo test/test --base "$base" --head "$a" --gh-bin "$stub" 2>&1)"
+  make_stub_gh "$stub" "$a:$VERIFIED_FIXTURE" "$b:$ZERO_FIXTURE"
+  out="$(/bin/bash "$SCRIPT_UT" --repo-dir "$dir" --repo test/test --base "$base" --head "$b" --gh-bin "$stub" 2>&1)"
   rc=$?
   if [ "$rc" -eq 0 ]; then ok "head-excluded exits 0"; else notok "head-excluded rc=$rc: $out"; fi
   echo "$out" | /usr/bin/grep -q 'ZERO-CHECK-CANDIDATE' && notok "head-excluded reported the head as a candidate" || ok "head-excluded head not reported"
+  echo "$out" | /usr/bin/grep -q "${a:0:9}" && ok "head-excluded classifies the non-head commit" || notok "head-excluded never reached the loop: $out"
   rm -rf "$dir" "$stub"
 }
 

@@ -322,10 +322,22 @@ ACs marked M1 are green after M1; ACs marked M2 are green after M2. The test scr
   instrument.)
 
 - **AC-M1-9** — the range's head is excluded (not double-reported). The `head-excluded` arm builds a
-  throwaway repo whose range is a single commit (the head) and asserts the head is NOT reported as
-  `ZERO-CHECK-CANDIDATE` and the verdict is GREEN:
-  `scripts/test_gate1_range_check.sh --only head-excluded` → `ok head-excluded` and exit 0. (Red at base:
-  no instrument.)
+  throwaway repo with a **LINEAR history of 2+ commits** (a, then the head) and asserts the head is NOT
+  reported as `ZERO-CHECK-CANDIDATE`, that the non-head commit IS classified, and that the verdict is
+  GREEN: `scripts/test_gate1_range_check.sh --only head-excluded` → `ok head-excluded` and exit 0. (Red
+  at base: no instrument.)
+  **⚠ THE 2+-COMMIT RANGE IS LOAD-BEARING, NOT INCIDENTAL** (corrected at iteration 170 by the
+  independent evaluator, and reproduced first-party by the controller before the fix). This arm was
+  first written with a range of exactly ONE commit — base+1 == head. That is degenerate: under
+  AC-M1-10's mutation `head^` resolves to `base` itself, so the range collapses to empty and the arm
+  exits **3** ("no new commits"), i.e. it reds for a reason that has nothing to do with head exclusion.
+  Measured both ways: with the one-commit range, AC-M1-10's mutation redded *both* arms
+  (`merge-head-coverage` rc=1 **and** `head-excluded` rc=3), so the independence claimed below was
+  **false as shipped**; with the widened range it reds `merge-head-coverage` (rc=1) while
+  `head-excluded` stays GREEN (rc=0). The general claim was always true for 2+-commit linear ranges —
+  the 3-commit `check-count` arm stayed green under the same mutation throughout — so the defect was in
+  this arm's construction, not in the design. The third assertion (`classifies the non-head commit`) is
+  what makes the collapse visible rather than silent.
 
 - **AC-M1-10** — a MERGE head does not hide its second parent's lineage (round-3 quorum, `gpt5-6-sol`'s
   acceptance arm applied verbatim). The `merge-head-coverage` arm “creates a merge head with unique
@@ -376,8 +388,10 @@ fires.
 - **AC-M1-10** — mutation: replace the SHA-equality head filter with `git rev-list "$base..$head^"`.
   The second-parent zero-check commit vanishes from the enumeration, so it is never reported and the
   run exits 0 instead of 1 → the `ok merge-head-coverage` assertion reds. **Catches the merge-head
-  coverage hole. AC-M1-9 stays GREEN under this same mutation (its history is linear), which is what
-  makes AC-M1-10 non-redundant rather than a second arm on the same property.**
+  coverage hole. AC-M1-9 stays GREEN under this same mutation — MEASURED at iteration 170, and only
+  after AC-M1-9's arm was widened to a 2+-commit linear range; see the correction recorded under
+  AC-M1-9 above. That green is what makes AC-M1-10 non-redundant rather than a second arm on the same
+  property, and it is an assertion about this suite that must be re-measured, never assumed.**
 - **AC-M2-1** — mutation: remove the CI step. `grep` finds nothing → the step assertion reds.
 - **AC-M2-2** — mutation: the exit-1 message claims "commit is unverified" instead of "a controller must
   look". The message assertion reds. **Catches the "instrument adjudicates" overclaim.**
