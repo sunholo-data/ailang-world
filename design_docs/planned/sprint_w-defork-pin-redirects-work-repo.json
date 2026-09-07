@@ -1,0 +1,253 @@
+{
+  "sprint_id": "w-defork-pin-redirects-work-repo",
+  "queue_item": 68,
+  "title": "Disable World's driver pin in the rig-local mission env, prove a fresh controller fire stays in ailang-world, and prepare the World-owned fleet hand-off without editing frozen core",
+  "status": "planned - awaiting sprint-executor and controller-only rig step",
+  "created": "2026-09-07",
+  "planner": "mission-control iteration 166, Codex sprint-planner",
+  "design_doc": "design_docs/planned/w-defork-pin-redirects-work-repo.md",
+  "sprint_plan": "design_docs/planned/w-defork-pin-redirects-work-repo-sprint-plan.md",
+  "base_commit": "0195b139444739e5d4df9fa4a146818182db9fcf",
+  "base_commit_note": "The design measured code at 9166de05c42d0c3430d0ebb87c99db378b72420c. Planner re-derived `git diff --name-status 9166de05c42d0c3430d0ebb87c99db378b72420c 0195b139444739e5d4df9fa4a146818182db9fcf`: the only change is the added design doc. This JSON uses the planner worktree HEAD required by the controller.",
+  "branch": "mission/world-iter166-defork-pin",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter166",
+  "github_issues": [
+    {
+      "repository": "sunholo-data/ailang",
+      "title": "pin-root: preserve a de-forked mission work repository across driver pin re-exec",
+      "body_file": "design_docs/planned/w-defork-pin-redirects-work-repo-fleet-issue.md",
+      "filed_by": "controller only",
+      "status": "body to be prepared by executor; controller files after external-path evidence is reproduced"
+    }
+  ],
+  "risk_level": "high",
+  "risk_note": "The code volume is zero and the rig mutation is one line, but attribution risk is high: the operational file is outside the executor sandbox, the current pin reports success while selecting the wrong repository, and a sandboxed claim of mutation would be a false green. Frozen-core ownership also makes an accidental tools/launchd edit a policy violation. The plan therefore separates executor documentation from controller mutation and live proof.",
+  "id_disambiguation": "The design uses M1/M2/M3 for product sequencing and AC1-AC4 plus AC-F1-AC-F12. This sprint uses M1A for executor-owned hand-off artifacts and M1B for the controller-owned portion of design M1. Acceptance IDs are AC-E1-AC-E5 and AC-C1-AC-C6. M2 implementation and M3 re-enable are not sprint milestones.",
+  "environment": {
+    "platform": "darwin/arm64",
+    "shell": "zsh for orchestration; fleet helper is Bash 3.2 compatible",
+    "path_requirement": "Every command starts with `export PATH=/opt/homebrew/bin:$PATH`; otherwise gh, go, and node resolve with rc=127 on this rig.",
+    "planner_worktree": "/Users/voightkampff/dev/sunholo-data/.planner-wt-iter166",
+    "executor_worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter166",
+    "rig_env_file": "/Users/voightkampff/.config/ailang/mission-world.env",
+    "rig_env_backup": "/Users/voightkampff/.config/ailang/mission-world.env.pre-w-defork-pin-redirects-work-repo-iter166",
+    "world_repo": "/Users/voightkampff/dev/sunholo-data/ailang-world",
+    "fleet_repo": "/Users/voightkampff/dev/sunholo-data/ailang",
+    "motoko_repo": "/Users/voightkampff/dev/sunholo-data/ailang-motoko",
+    "pin_worktree": "/Users/voightkampff/.ailang-driver-pin/world",
+    "measured_origins": {
+      "ailang": "https://github.com/sunholo-data/ailang.git",
+      "ailang-motoko": "https://github.com/sunholo-data/ailang.git",
+      "ailang-world": "https://github.com/sunholo-data/ailang-world.git"
+    },
+    "measured_common_dirs": {
+      "ailang": "/Users/voightkampff/dev/sunholo-data/ailang/.git",
+      "ailang-motoko": "/Users/voightkampff/dev/sunholo-data/ailang-motoko/.git",
+      "ailang-world": "/Users/voightkampff/dev/sunholo-data/ailang-world/.git"
+    },
+    "base_env_state": "`AILANG_DRIVER_PIN=0` exact active count is 0; same-file positive control `MISSION_WORKDIR=` count is 1; file length is 109 lines.",
+    "gate_3b": "GitHub Actions run 34033464096 at dev head 9166de05c42d0c3430d0ebb87c99db378b72420c: ailang-code verify gate success; go host build + test gate failure; launchd drivers (bash 3.2) failure. Failed logs name deleted tools/launchd/test_mission_routing.sh and tools/launchd/mission-control.sh. Inherited, parked by controller-supplied D-WORLD-34; do not repair in this sprint.",
+    "sandbox_rule": "Any executor verdict touching sockets, launchd, or a path outside the executor worktree is UNINFORMATIVE UNDER SANDBOX. Controller-only ACs run outside sandbox."
+  },
+  "base_state_verified": {
+    "commit": "0195b139444739e5d4df9fa4a146818182db9fcf",
+    "design_doc_lines": 588,
+    "world_queue_row_68_count": 1,
+    "world_queue_row_68_stale_inert_phrase_count": 1,
+    "rig_env_pin_optout_count": 0,
+    "rig_env_mission_workdir_positive_control_count": 1,
+    "pin_worktree_origin": "https://github.com/sunholo-data/ailang.git",
+    "pin_worktree_world_charter": "absent",
+    "real_world_clone_world_charter": "present",
+    "direct_helper_probe": "PIN_STATUS=disabled MISSION_WORKDIR=/Users/voightkampff/dev/sunholo-data/ailang-world when AILANG_DRIVER_PIN=0 is supplied directly; premise evidence only, not acceptance for the env mutation",
+    "git_write_operations": 0
+  },
+  "planner_findings": [
+    {
+      "id": "P1",
+      "severity": "INFO",
+      "claim": "The planning base advances the design's measured base only by the design document.",
+      "measurement": "`git diff --name-status 9166de05c42d0c3430d0ebb87c99db378b72420c 0195b139444739e5d4df9fa4a146818182db9fcf` prints only the added design doc.",
+      "resolution": "Use planner HEAD 0195b139444739e5d4df9fa4a146818182db9fcf."
+    },
+    {
+      "id": "P2",
+      "severity": "HIGH",
+      "claim": "Design AC3 is vacuous for the env-file mutation because it injects AILANG_DRIVER_PIN=0 on the command line.",
+      "measurement": "Deleting the proposed env-file line cannot change a command that supplies the value independently.",
+      "resolution": "AC-C4 sources the real env file and refuses before the helper call if the opt-out is absent."
+    },
+    {
+      "id": "P3",
+      "severity": "HIGH",
+      "claim": "Design AC4 can pass on an old log marker.",
+      "measurement": "A `grep -c` threshold of at least one does not attribute the matching line to the post-edit fire.",
+      "resolution": "Capture the count before editing; AC-C5 requires a strict increase, and AC-C6 independently checks live cwd, origin, and charter."
+    },
+    {
+      "id": "P4",
+      "severity": "MEDIUM",
+      "claim": "D-WORLD-34 is not present in the committed charter at this base.",
+      "measurement": "`rg -n 'D-WORLD-34' design_docs/world-mission.md` has zero hits, paired with a same-file positive hit for D-WORLD-DRIVER-1.",
+      "resolution": "Treat the controller-supplied D-WORLD-34 park/land-no-code instruction as binding context; do not invent a ledger edit."
+    },
+    {
+      "id": "P5",
+      "severity": "MEDIUM",
+      "claim": "Existing queue row 68 is the right hand-off row but its inert-today premise is stale.",
+      "measurement": "The row occurs exactly once and contains the stale phrase exactly once.",
+      "resolution": "Refresh row 68 in place; do not add a duplicate queue item."
+    },
+    {
+      "id": "P6",
+      "severity": "HIGH",
+      "claim": "Origin URL discriminates the real clones correctly; common-dir identity does not.",
+      "measurement": "ailang and ailang-motoko have the same origin and different absolute common dirs; ailang-world has a different origin and a third common dir.",
+      "resolution": "Preserve the design's normalized-origin direction and AC-F5; the executor only documents it."
+    },
+    {
+      "id": "P7",
+      "severity": "MEDIUM",
+      "claim": "The AC-F11 normalization examples reproduce without creating temporary git repositories.",
+      "measurement": "Under Bash, SSH and HTTPS ailang URLs both canonicalize to github.com/sunholo-data/ailang; the World URL canonicalizes to github.com/sunholo-data/ailang-world.",
+      "resolution": "Keep AC-F11 in the fleet hand-off; no planner git mutation was necessary."
+    },
+    {
+      "id": "P8",
+      "severity": "HIGH",
+      "claim": "The rig-local mitigation is absent at base.",
+      "measurement": "Exact opt-out count is 0 while the same env file's MISSION_WORKDIR assignment count is 1.",
+      "resolution": "Controller adds exactly one active line and preserves a named pre-edit backup."
+    },
+    {
+      "id": "P9",
+      "severity": "INFO",
+      "claim": "The fleet helper's disabled branch behaves as designed when the value is supplied.",
+      "measurement": "Direct probe returned PIN_STATUS=disabled and preserved the World path.",
+      "resolution": "Use as premise evidence only; AC-C4 binds it to the actual env file."
+    },
+    {
+      "id": "P10",
+      "severity": "HIGH",
+      "claim": "The current pin worktree is demonstrably the wrong repository.",
+      "measurement": "Its origin is sunholo-data/ailang and the World charter is absent; the real World clone contains the charter.",
+      "resolution": "AC-C6 binds cwd, origin, and charter on a fresh fire."
+    },
+    {
+      "id": "P11",
+      "severity": "INFO",
+      "claim": "The current two-job Gate 3b failure is inherited and caused by deleted fleet-driver paths.",
+      "measurement": "GitHub Actions run 34033464096 shows exactly the two named failed jobs and logs missing test_mission_routing.sh and mission-control.sh.",
+      "resolution": "Record the inherited red; do not repair or mask it."
+    },
+    {
+      "id": "P12",
+      "severity": "MEDIUM",
+      "claim": "The design's file list omits the required World-owned M2 hand-off artifacts.",
+      "measurement": "The sprint direction explicitly requires a charter queue row and a GitHub issue body while forbidding World implementation of M2.",
+      "resolution": "M1A contains exactly those two artifacts."
+    }
+  ],
+  "features": [
+    {
+      "id": "M1A",
+      "name": "World-owned repo-local fleet hand-off",
+      "description": "Refresh existing queue row 68 and create a ready-to-file fleet GitHub issue body. This is the executor's complete share. It is documentation and routing, not the M2 implementation.",
+      "estimated_changed_lines": 180,
+      "estimated_hours": 1.2,
+      "estimated_days": 0.15,
+      "files": [
+        "design_docs/world-mission.md",
+        "design_docs/planned/w-defork-pin-redirects-work-repo-fleet-issue.md"
+      ],
+      "dependencies": [],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "acceptance_criteria": [
+        "AC-E1: exactly one row 68 remains, it contains `THE LATENT CONDITION FIRED`, and the stale `It is inert **today** only because` phrase has zero hits. Expected `row=1 active=1 stale=0`; the positive row and active counts control the zero claim.",
+        "AC-E2: the nonempty fleet issue body contains the authoritative flag, exact plain-call form, AC-F1 through AC-F12, D-WORLD-DRIVER-1, and the sandbox warning. Deleting any one required label or the plain call makes the check red.",
+        "AC-E3: diff from base is empty under tools/launchd, pin-root.sh remains absent in World, the charter is changed, the issue body is nonempty, and scoped status contains exactly two paths.",
+        "AC-E4: both hand-off artifacts contain a known-positive subject marker and contain zero forbidden placeholders.",
+        "AC-E5: sprint JSON parses and sprint plan is nonempty; no product-gate result is attributed to the documentation milestone."
+      ],
+      "notes": "Executor runs only repo-local static checks. External-path repeats are UNINFORMATIVE UNDER SANDBOX and cannot accept the milestone."
+    },
+    {
+      "id": "M1B",
+      "name": "Controller-only rig opt-out and fresh-fire proof",
+      "description": "Outside the executor sandbox, preserve a named pre-edit backup, add exactly one AILANG_DRIVER_PIN=0 line idempotently, prove sourcing and helper behavior, then prove a new controller fire starts in the World repository and sees its charter.",
+      "estimated_changed_lines": 1,
+      "estimated_hours": 0.8,
+      "estimated_days": 0.1,
+      "files": [
+        "/Users/voightkampff/.config/ailang/mission-world.env",
+        "/Users/voightkampff/.config/ailang/mission-world.env.pre-w-defork-pin-redirects-work-repo-iter166"
+      ],
+      "dependencies": [
+        "M1A executor hand-off complete",
+        "controller running outside codex workspace-write sandbox"
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "acceptance_criteria": [
+        "AC-C1: exact active opt-out count is 1 and the named pre-edit backup exists. Base is genuinely red at count 0.",
+        "AC-C2: re-running the exact edit block leaves the env-file SHA-256 unchanged.",
+        "AC-C3: sourcing the actual env file with the plist World path yields exactly `PIN=0 WD=/Users/voightkampff/dev/sunholo-data/ailang-world`.",
+        "AC-C4: after sourcing the actual env file, the real fleet helper returns to the caller with exactly `PIN_STATUS=disabled WD=/Users/voightkampff/dev/sunholo-data/ailang-world`; the precondition refuses before helper invocation if the line is missing.",
+        "AC-C5: the count of the pin-disabled marker in the live World log is strictly greater after the next fire than the count captured before the edit.",
+        "AC-C6: inside the newly fired controller before sprint-worktree creation, pwd is the real World clone, origin is sunholo-data/ailang-world, and design_docs/world-mission.md exists."
+      ],
+      "restore_command": "export PATH=/opt/homebrew/bin:$PATH; cp -p /Users/voightkampff/.config/ailang/mission-world.env.pre-w-defork-pin-redirects-work-repo-iter166 /Users/voightkampff/.config/ailang/mission-world.env",
+      "notes": "Only controller evidence outside sandbox counts. Calendar completion waits for a new scheduled fire."
+    }
+  ],
+  "executor_constraints": {
+    "git_writes": "FORBIDDEN. No add, commit, checkout, stash, branch, restore, reset, or worktree operations. The controller commits.",
+    "worktree": "Work only in /Users/voightkampff/dev/sunholo-data/.wt-world-iter166.",
+    "files_touched": [
+      "design_docs/world-mission.md (modify existing row 68)",
+      "design_docs/planned/w-defork-pin-redirects-work-repo-fleet-issue.md (create)"
+    ],
+    "files_forbidden": [
+      "tools/launchd/*, including temporary probes",
+      "/Users/voightkampff/.config/ailang/mission-world.env",
+      "/Users/voightkampff/dev/sunholo-data/ailang",
+      "/Users/voightkampff/dev/sunholo-data/ailang-motoko",
+      "/Users/voightkampff/dev/sunholo-data/ailang-world outside the executor worktree",
+      "any launchd plist, service, socket, process, or live controller state"
+    ],
+    "external_effects": "The executor does not edit the rig env and does not file the GitHub issue. Both are controller actions.",
+    "frozen_core": "D-WORLD-DRIVER-1 is binding. World never edits tools/launchd/*. M2 is fleet-owned.",
+    "gate_3b": "Expect inherited failures in `go host build + test gate` and `launchd drivers (bash 3.2)` due to deleted tools/launchd paths. Do not fix or mask them."
+  },
+  "sandbox_posture": "The executor's only authoritative verdicts are static checks over its two repo-local hand-off artifacts. Any executor result involving external clones, the rig env, launchd, sockets, the live log, or a live controller is UNINFORMATIVE UNDER SANDBOX. Controller AC-C1 through AC-C6 run outside sandbox and are never attributed to the executor.",
+  "velocity": {
+    "target_days": 0.25,
+    "estimated_changed_lines": 181,
+    "estimated_hours": 2.0,
+    "estimated_days": 0.25,
+    "note": "Small by design: about 1.2 hours executor documentation/routing and 0.8 hour controller active work, plus waiting for the next fire. No product code is in scope."
+  },
+  "could_not_establish": [
+    "The result of the first post-edit scheduled launchd fire; it has not happened yet and only controller AC-C5/AC-C6 can establish it.",
+    "A repository citation for D-WORLD-34 at base 0195b139; it is absent from the committed charter. The controller supplied its binding disposition externally.",
+    "The future fleet issue number or URL; the controller creates it after reviewing the prepared body.",
+    "That the M2 fleet implementation works; no M2 code exists in this World sprint and World is forbidden to edit it."
+  ],
+  "deferred_scope": [
+    "M2 implementation in tools/launchd/lib/pin-root.sh and all fleet-side production tests.",
+    "Any World edit, copy, vendor, or sync of tools/launchd/*.",
+    "M3 removal or commenting of AILANG_DRIVER_PIN=0 until the hand-back predicate passes.",
+    "Repairing the two inherited Gate 3b failures parked by controller-supplied D-WORLD-34.",
+    "A repository script or verification harness for the rig-local env file; it cannot provide authoritative executor evidence across the sandbox boundary."
+  ],
+  "residuals_inherited_unchanged": [
+    "Disabling the pin reopens the unpinned-driver provenance risk for World until M2 lands.",
+    "The stale pin worktree remains present and unused during M1.",
+    "oc-glm-5-2 was absent from quorum round 2 on an ollama 429; its round-1 loud-indeterminate objection was addressed in the doc but was not re-reviewed by that reviewer.",
+    "The normalized-origin inference and loud indeterminate path remain fleet implementation obligations, not World guarantees.",
+    "Current dev CI has two inherited failures caused by deleted fleet-driver files."
+  ]
+}
