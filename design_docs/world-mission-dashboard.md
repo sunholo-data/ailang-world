@@ -1,40 +1,45 @@
 # Mission Dashboard — Ailang World
 
-Snapshot: 2026-09-07, iteration 168. History: world-mission-log.md.
+Snapshot: 2026-09-07, iteration 169. History: world-mission-log.md.
 
-- **The five stranded records are landed.** PR #132 → squash `3305e2e`; iterations **162–166**
-  are now in the log, the index and the archive. `dev` GREEN, CI 2/2 on the merge commit.
-- PRs **#127 and #128 are CLOSED unmerged** — superseded, not lost. They could not be rebased:
-  their log appends target a file reshaped by the rotation (`37a10f5`) and the heading
-  normalization (`9166de0`). #132 reconciled their CONTENT onto the current structure.
-- **One hunk was deliberately not taken.** Both PRs carried a stale `| D-WORLD-nn | OPEN |`
-  ledger row for an ID already RESOLVED by an attended ruling; replaying it would have
-  duplicated the ID and reopened the ruling. The ledger block is byte-identical to its
-  pre-merge state. Authority: `D-WORLD-35` = A (attended, 2026-09-07).
-- Independent evaluation **PASS 97/100, zero blocking**; the judge re-ran all 46 acceptance
-  criteria and all 12 mutation arms first-party.
-- Roles: **no designer** (no design doc in this pick) · planner `opus` · executor
+- **Row 66 LANDED** — PR #133 → squash `f69873e`; `dev` GREEN, CI 2/2 on the merge commit.
+  Three rows in `TestOnBlockTriggerParserShapes` now pin the quoted-trigger-key trims at
+  **both** sites of the dispatch-lever gate. **No parser change; zero lines removed.**
+- **The queue row named half the surface.** Row 66 cited one trim (`:162`); there are two —
+  `:237` carries the same call and its mutant survived at base identically. The enumeration
+  was anchored to the code surface, not to the row's prose.
+- **The row's *direction* was also half wrong.** It declares a false RED. The block path also
+  reads **invalid YAML** (`"workflow_dispatch:`) and a **valid non-lever key**
+  (`workflow_dispatch"`) as declaring the lever, `err=nil` — a **false GREEN**. Those are left
+  OPEN, deliberately and in writing, and tracked as new row **87**.
+- Independent evaluation **PASS 96/100, zero blocking** (`sonnet` judge vs `pi:deepseek`
+  executor). The judge re-ran every AC and both mutants from scratch in its own worktree and
+  added a half-mutant the drill never prescribed.
+- Roles: designer `claude:claude-fable-5-1` · planner `opus` · executor
   `pi:ollama/deepseek-v4-flash:0731-cloud` · evaluator `sonnet`. Generator ≠ judge.
-  Codex was ration-gate-blocked this fire, so the driver degraded both codex lanes to pi.
-- Goal: seven-clause 1.0 bar; goal unmoved, no product code landed, by design.
+- Goal: seven-clause 1.0 bar; goal unmoved.
 
-## Finding worth carrying
-- **`mission_pi_run.sh` reports `empty_worktree` for a well-behaved executor.** Its one
-  load-bearing assertion reads `git status --porcelain` — the working tree — while the skill's
-  executor contract mandates committing per milestone. It returned rc=10 on a sprint carrying
-  7 commits / 2,892 insertions, and the prescribed response to rc≠0 is to fall back and re-run,
-  i.e. discard finished, judged work. Row **84**; the code is fleet-owned.
+## Findings worth carrying
+- **The absent-reviewer rule paid for the THIRD time.** `gpt6-astra` was refused at round 1
+  over **$0.0130** of budget; restored alone for **$0.0858** it returned the round's strongest
+  objection, and it was right both times it spoke. A `blocked`/`proceed` verdict with a
+  non-empty `absent_reviewers` is a verdict with a named hole.
+- **`mission_pi_run.sh` reports `empty_worktree` for a well-behaved executor — INSTANCE 2.**
+  rc=10 / `worktree_changed_files: 0` on a sprint carrying 3 commits / 927 insertions. It reads
+  `git status --porcelain` while the contract mandates committing, and the prescribed fallback
+  would discard finished, judged work. Row **84**, filed upstream as `ailang#1096`; fleet-owned.
+- **When every round's objections land on the same surface, split — don't keep revising.**
+  Three rounds, six verdicts, all on one helper; row 66's own deliverable drew none.
 
 ## Parked for Mark
 - Nothing. Decision ledger: **22 rows, ZERO OPEN**.
 
 ## Next
-- Rows 66, 68–78, 81–86, then 39. Row 65 DEFERRED per `D-WORLD-33`; rows 79/80 remain parked
-  design review. New rows this iteration: 84 (pi-runner verdict), 85 (the charter's
-  `## STATUS (rotation rule)` body is stranded in the archive), 86 (iterations 64 and 144 have
-  no log heading and no index row anywhere).
+- Rows 68–78, 81–87, then 39. Row 65 DEFERRED per `D-WORLD-33`; rows 79/80 remain parked.
+  New row this iteration: **87** (`w-lever-gate-quoted-key-refusal-contract`, the split-out
+  refusal contract, carrying live measured false GREENs).
 
 ## Posture
 - Verification compiler pinned v0.30.0 (`~/.pinned-ailang/ailang`); no release cut.
-- `tools/launchd/*` frozen core, untouched. Metered spend $0.00 of $5 — all lanes on
-  subscription or flat-rate buckets. Billing tripwire CLEAN.
+- `tools/launchd/*` frozen core, untouched. Metered spend **$0.2732** of $5 (quorum only).
+  Billing tripwire CLEAN. FLAGGED: Fable diet overspend — three designer runs on one doc.
