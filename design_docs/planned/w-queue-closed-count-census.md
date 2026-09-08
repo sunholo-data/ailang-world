@@ -181,6 +181,12 @@ control: row=79 expect=open got=PARKED ok
 census: 41 closed / 89 rows (tagged-open 4, untagged 44) [LANDED 40, ROUTED 1, RULED OUT 0; PARKED 3, IN-SPRINT 1, NEXT 0] [queue_census.sh, charter-blob 2dda66a36a6bc60ab280a73b3f0b3c6be89ed399, controls 1/79]
 ```
 
+**The block above is the reading at the BASE charter `8b15153`** (`heading_line=1610`, blob
+`2dda66a3…`). At the commit this item lands, M2's three Repo Profile bullets shift the heading to
+`1613` and the blob to `52aaf9e8…`, and the count is unchanged at `41 closed / 89 rows` — which is
+the point of citing the blob rather than a line number. Every blob literal in this document is
+labelled with the tree it was read from; none is a claim about the current tree.
+
 Rows print **sorted by row number** regardless of file order; `line=` is the row-start line in the
 doc. The `preamble:` line reports any column-0 `**[` block after the heading that is not a numbered
 row (exactly one today, V4) — counted **out** of `rows`, always printed (even `0`), so the
@@ -421,12 +427,32 @@ not only to the defect it fixes.
 | `snapshot` | fixture regenerated from a different commit / any classifier drift | `snapshot` only |
 | `blob-oid` | OID computed on the wrong path (e.g. `$0`), or hashed via `sha256sum` instead of `git hash-object` | `blob-oid` only |
 | `blob-unavailable` | missing git swallowed (field omitted, no token) or turned into exit 2 | `blob-unavailable` only |
-| AC-M2-5 | live step's `--doc` pointed at the snapshot fixture (table still plausible, blob wrong) | AC-M2-5 |
+| AC-M2-2 | live step's `--doc` pointed at the snapshot fixture (table still plausible, blob wrong) | **AC-M2-2**, not AC-M2-5 — corrected post-evaluation (judge finding F-NB-5, measured): AC-M2-5 runs the *instrument* against the live charter path and is independent of what the CI step's `--doc` says, so this mutation is caught by AC-M2-2's grep on the run line, not by AC-M2-5. |
 | AC-M2-6 | citation bullet written after the heading, or quoting a `@ <sha>` form | AC-M2-6 |
 | AC-M1-14 grep | CI suite step removed | AC-M1-14 |
 | AC-M2-1/2 | live step removed, or control row re-pointed to an UNTAGGED row | AC-M2-2 / AC-M2-1 |
 | AC-M2-3 | `[ROUTED]` not appended, or appended to a *new* `## Queue…` line (count becomes 2) | AC-M2-3 |
 | AC-M2-4 | rule written after the heading (inside a row) | AC-M2-4 |
+
+**Post-evaluation correction — this table's "expected red" column systematically UNDER-states the
+coupling, and the independent judge measured it** (findings F-NB-1, F-NB-2, F-NB-3, and the
+`heading-tail` row). Four rows predict a one- or two-arm red set where the real one is much wider,
+because almost every success arm greps the census total line, so any mutation that changes the
+line's shape or a class count reds all of them. The direction is safe — every mutation is caught by
+**more** arms than predicted, never fewer, and the judge confirmed **no mutation escapes the suite**
+— but a prediction that is wrong in the generous direction is still a prediction nobody can use to
+localise a regression.
+
+**Reproduced first-party by the controller before it was recorded** (not banked from the judge):
+mutating the total line's wording (`closed / ` → `closed of `) with a `cp`-captured backup and a
+sha256-asserted restore gives **`58 passed, 10 failed`** — ten failing assertions across **nine**
+arms (`body-heading`, `closed-vocab`, `enumerate`, `heading-tail`, `open-vocab`, `preamble`,
+`prose-not-tag`, `report`, `snapshot`, `untagged`), against this table's predicted `report` only.
+Restore verified sha-identical and the suite returned to `68 passed, 0 failed`. The judge reported
+11 arms for the same mutation; the difference is arms-vs-assertions counting, and the class is the
+same. **A future revision should either widen these predictions to what is measured, or decouple
+the arms from the total line so a localised mutation reds a localised set** — the second is the
+better fix and is out of scope here.
 
 **Floor reachability is itself asserted:** each floor arm's `ok` requires the floor's own message,
 so a harness change that makes a floor unreachable (e.g. a helper that starts auto-inserting the
