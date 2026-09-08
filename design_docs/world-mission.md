@@ -801,6 +801,9 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
     and to distrust valid gate results under another. **Remedy at instance 2**: at Gate 3, diff the
     plan's `executor` field against the role's env value and, where they differ, state in the
     directive which plan constraints are thereby VOID — never leave the executor to infer it.
+- **Queue tag position (read by `scripts/queue_census.sh`)** — a queue row's closure/parking tag is the FIRST token after `^<n>. `, tolerant only of a leading run of `[` and `*`. A tag after the slug is UNTAGGED and the census reports it by number rather than guessing. Closed: `LANDED`, `ROUTED`, `RULED OUT`. Open (tagged): `PARKED`, `NEXT`, `IN-SPRINT`.
+- **Queue census citation form (read by `scripts/queue_census.sh`)** — a closed-row count is published in a STATUS stamp or a mission-log `**Progress:**` line ONLY as the script's own total line, byte-for-byte: `census: N closed / M rows (tagged-open T, untagged U) [LANDED X, ROUTED Y, RULED OUT Z; PARKED P, IN-SPRINT Q, NEXT R] [queue_census.sh, charter-blob <oid>, controls a/b]`. Never carried. A line reading `charter-blob unavailable` is not publishable. No fresh reading → no number.
+- **Queue census control re-point (read by `scripts/queue_census.sh`)** — the live CI step passes `--control-closed 1 --control-open 79`; when a control row changes class the census exits 2 `CONTROL MISMATCH` and the SAME commit re-points the flag in `.github/workflows/ci.yml`. The mismatch is the control working, not a defect.
 
 ---
 
@@ -1607,7 +1610,7 @@ mission in `~/.config/ailang/mission-world.env`:
   gemini when the executor is codex.
 - Otherwise: inherits the shared defaults.
 
-## Queue (top = next; tags: [NEXT] [IN-SPRINT] [PARKED] [LANDED] [RULED OUT])
+## Queue (top = next; tags: [NEXT] [IN-SPRINT] [PARKED] [LANDED] [RULED OUT] [ROUTED])
 
 <!-- Every open item carries a clause tag. Estimates are honest guesses at bootstrap;
      iteration 0 re-scores. NEW-DOC items start with design-doc-creator. -->
