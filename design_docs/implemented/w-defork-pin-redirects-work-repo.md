@@ -1,6 +1,19 @@
 # w-defork-pin-redirects-work-repo — stop the pin from moving the World controller into the wrong repository
 
-- **Status:** planned (design only; nothing implemented, no git write performed)
+- **Status:** IMPLEMENTED / CLOSED 2026-09-08 (World iteration 170). M1 (the rig-local
+  `AILANG_DRIVER_PIN=0` stopgap) is SUPERSEDED by M3; M2 landed as a FLEET-authored commit,
+  `8c56c5863` *"fix(mission): preserve foreign work repository across pinned driver re-exec"*
+  (2026-09-07 11:13 +0200, on the fleet's `origin/dev`, and an ANCESTOR of the pinned ref
+  `48c4a6e49` this rig actually runs); M3 (re-enable the pin) was deployed attended on 2026-09-07
+  and is confirmed HOLDING first-party this fire — pin ACTIVE (`AILANG_DRIVER_PIN=1`,
+  `AILANG_DRIVER_PINNED=48c4a6e49`) with `MISSION_WORKDIR` and `pwd` both
+  `/Users/voightkampff/dev/sunholo-data/ailang-world`, while the pin worktree
+  `~/.ailang-driver-pin/world-ollama-gauge-48c4a6e49` still has origin
+  `github.com/sunholo-data/ailang` — the wrong repo the loop is no longer in.
+  **AC-F1 through AC-F12: 12/12 PASS**, verified by the controller at iteration 170.
+  ⚠ **Run them under `bash`.** The controller's first pass ran them in the login shell (zsh) and
+  got `rc=2` ("indeterminate origin identity") on AC-F4/F5/F11 — a pure INSTRUMENT artifact, since
+  `pin-root.sh` is bash. Re-run under `bash -c`, every AC matched its stated expectation exactly.
 - **Date:** 2026-09-07
 - **Owning queue row:** new — surfaced by the controller this fire (iter-166); the de-fork (commit `e92594c`) deleted World's own driver copy and the shared driver's pin now redirects `MISSION_WORKDIR` into a worktree of the **wrong** repository.
 - **Base commit measured at:** `9166de0` (== `origin/dev`), worktree `.wt-world-iter166`

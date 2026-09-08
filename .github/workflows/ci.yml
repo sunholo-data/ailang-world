@@ -198,3 +198,7 @@ jobs:
             sed -n '1,80p' "$err" >&2
             exit 1
           fi
+
+      - name: Gate-1 range instrument suite
+        timeout-minutes: 2
+        run: bash scripts/test_gate1_range_check.sh
