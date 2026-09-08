@@ -64,7 +64,7 @@
 62. **[LANDED 2026-09-06 (iter-158), CI green 3/3 on the merge commit `dcf534f`] — PR [#119](https://github.com/sunhol
 63. **[LANDED 2026-09-06 (iter-159), CI green 3/3 on the merge commit `2115172`] — PR [#121](https://github.com/sunhol
 64. [**LANDED 2026-09-06 (iter-160), PR124, merge `bf15c73`, CI GREEN3/3**] **w-fleet-residual-net-shares-phase-1-pathsp
-65. **w-go-build-is-not-a-compile-fence-for-a-test-file** · **[PARKED — needs-human-review, iter161, D-WORLD-33]** �
+65. **w-go-build-is-not-a-compile-fence-for-a-test-file** · **[PARKED — needs-human-review, iter161, D-WORLD-33]** 
 66. **w-flow-key-quote-trim-is-uncovered** · **[LANDED 2026-09-07 (iter-169) — REDUCED BY A CONTROLLER SPLIT; the ref
 82. **w-mutation-drill-restore-target-is-HEAD-not-your-baseline** · clause-2 · **THE SHARED SKILL'S MUTATION-DRILL REC
 83. **w-a-queue-rows-proposed-remedy-is-a-claim-too-and-nobody-checks-it** · clause-2 · **THE LOOP
@@ -83,7 +83,7 @@
 73. **w-gate-0-cannot-see-the-drivers-own-crash-notices** · clause-2 · **THE DRIVER ANNOUNCES EVERY
 74. **w-the-personal-email-gate-the-shared-skill-cites-as-enforcement-does-not-exist** · clause-2 ·
 75. **w-messages-list-silently-drops-every-flag-after-a-positional-and-exits-0** · clause-2 ·
-76. **w-verify-go-driver-drift-gate-short-circuits-the-entire-local-go-gate** · clause-2 · **`scripts/verify_go.sh` �
+76. **w-verify-go-driver-drift-gate-short-circuits-the-entire-local-go-gate** · clause-2 · **`scripts/verify_go.sh` 
 77. **w-resolve-role-spawn-does-not-implement-the-designer-rotation-it-is-told-to-obey** · clause-2 · **THE SKILL SAYS
 78. **w-mission-pi-run-does-not-wire-the-sandbox-the-pi-recipe-mandates** · clause-2 · **THE SHARED SKILL'S pi RECIPE 
 79. **[PARKED — DESIGN REVIEW AND USER APPROVAL] w-evidence-applicability** · clause-5 companion, **not a new release

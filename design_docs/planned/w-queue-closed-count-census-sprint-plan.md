@@ -22,7 +22,7 @@ reads, and the rule that says how its number may be published:
 scripts/queue_census.sh          # anchored leading-tag classifier; mandatory closed+open controls;
                                  # ordered floors F0-F6; report stamped with the charter's blob OID
 scripts/test_queue_census.sh     # 19 self-contained arms, --only <arm>, "N passed, M failed"
-scripts/testdata/queue_census_rowstarts_8b15153.md   # generated, 91 lines / 10038 bytes
+scripts/testdata/queue_census_rowstarts_8b15153.md   # generated, 91 lines / 10034 bytes (post-iconv; see the doc's V23)
 ```
 
 **The instrument does not read the row body at all.** That is the whole design. Row 72 was filed
@@ -166,7 +166,11 @@ costs a commit.
 1. Record the three boundary gates **green before touching anything** (they are, per B-a — confirm,
    don't assume).
 2. Write `scripts/queue_census.sh`; `chmod +x`; fence with `bash -n scripts/queue_census.sh`.
-3. **Generate** the fixture with the §3 command; verify 91 lines / 10038 bytes / the pinned sha256.
+3. **Generate** the fixture with the §3 command; verify 91 lines / **10034** bytes / sha256
+   `9424152cdbc9194ce19cd27fc6685bc50876d223641f542b8866d15aa03395b0`. **The `git show 8b15153:` and
+   `iconv -c -f UTF-8 -t UTF-8` parts of that command are not optional** — without them the fixture
+   contains two half-cut multi-byte characters, and mawk on `ubuntu-latest` drops the two rows that
+   carry them while the rig's BWK awk does not. This cost one CI red; see the doc's V23.
 4. Write `scripts/test_queue_census.sh` (19 arms); `chmod +x`; `bash -n` fence.
 5. Run every `AC-M1-*` command, then the full suite.
 6. Run the M1 mutation rows under the backup/restore discipline below.
@@ -242,8 +246,8 @@ awk '/^## Queue/{h=NR; print substr($0,1,120); next} h && (/^[0-9]+\. / || /^\*\
 invalid-UTF-8 lines (P3). Post-generation assertions, all measured by the planner:
 
 ```text
-wc -lc  → "      91   10038"                                                    (matches V18)
-shasum -a 256 → 42fe74686d105871046c84c6c081780ca117d1715f9dd77f4a008ac717fd54c1
+wc -lc  → "      91   10034"   (post-iconv; pre-iconv was 10038 and byte-invalid — doc V23)
+shasum -a 256 → 9424152cdbc9194ce19cd27fc6685bc50876d223641f542b8866d15aa03395b0   (pre-iconv was 42fe7468…)
 line 1 = the queue heading; line 2 = the "**[LANDED 2026-07-24 (iter-13) …] w-m1-ailang-hardening"
 preamble; line 3 = row 1; line 89 = row 79
 its own census = 41 closed / 89 rows (tagged-open 4, untagged 44); numbers exactly 1..89, zero dups
