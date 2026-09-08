@@ -1,53 +1,40 @@
 # Mission Dashboard — Ailang World
 
-Snapshot: 2026-09-08, iteration 170. History: world-mission-log.md.
+_Snapshot, overwritten every iteration. History lives in `world-mission.md` (STATUS),
+`world-mission-status-archive.md` and `world-mission-log.md`._
 
-- **Row 70 LANDED (reduced)** — `scripts/gate1_range_check.sh` + an 18-arm suite + one additive CI
-  step. Gate 1 can now name a zero-check commit that `origin/dev`'s HEAD has moved past. It reports
-  `ZERO-CHECK-CANDIDATE` and says *"a controller must look"* — it deliberately makes NO claim about
-  push tips, because local git topology cannot establish one.
-- **Row 68 CLOSED** — the fleet's de-fork guard (`8c56c5863`) is in and is an ancestor of the pinned
-  ref this rig runs; the pin is back ON and confirmed holding first-party (12/12 fleet ACs). Docs →
-  `implemented/`.
-- **New row 88** — `w-gate1-push-boundary-attribution`, the hard half split out of row 70 at the
-  quorum's own signal. Needs an authoritative *persisted* push-boundary record; both the GitHub
-  events API and local topology are measured out.
+**As of**: iteration **172** — 2026-09-08 · repo `sunholo-data/ailang-world` · branch `dev` @ `82d7ef7`
 
-## Queue head (next picks)
+## Where the mission is
 
-1. **69** `w-heartbeat-script-absent` — fleet-gated; predicate re-checked this fire, still false
-   (`tools/launchd/mission-heartbeat.sh` absent here, present in the fleet checkout).
-2. **71** `w-mission-critical-state-lives-in-a-directory-the-os-wipes-on-boot` — ungated, ~0.2d.
-3. **72** `w-queue-closed-count-is-an-increment-chain-no-instrument-reproduces` — ungated, ~0.3d.
+- **Latest landing**: row **72** — `scripts/queue_census.sh`, the queue-closure census instrument
+  (PR [#136](https://github.com/sunholo-data/ailang-world/pull/136) → squash `82d7ef7`, CI 2/2 green
+  on the merge, evaluator **PASS 87/100 zero blocking**).
+- **Queue census (the loop's own progress metric, now measured rather than carried)**:
+  `census: 41 closed / 89 rows (tagged-open 4, untagged 44) [LANDED 40, ROUTED 1, RULED OUT 0; PARKED 3, IN-SPRINT 1, NEXT 0]`
+  read at the pre-record charter. 44 rows are UNTAGGED because their tag is not in the leading
+  position; five of them (16, 18, 66, 68, 70) are in fact closed and are reported by number rather
+  than guessed. Re-run it yourself:
+  `bash scripts/queue_census.sh --doc design_docs/world-mission.md --control-closed 1 --control-open 79`
+- **Milestones shipped**: M1 (semantic world library) · M2 (`ailang-worldd` daemon) — both complete.
+- **Queue head**: rows **69** (fleet-gated), **73–78**, **81–89**, then **39**.
+  Row **65** deferred per `D-WORLD-33`.
 
-Then 73–78, 81–88, then 39. Row 65 DEFERRED per `D-WORLD-33`.
+## Loop cadence and routing
 
-## Loop cadence + routing
+- launchd `dev.ailang.mission-world`; kill switch `~/.ailang/state/mission-world.disabled` (armed).
+- Bookkeeping issue **#129** (rotates weekly). Verify profile `ailang-code`; pinned binary
+  `~/.pinned-ailang/ailang` **v0.30.0**.
+- This iteration's roles: designer `claude:claude-fable-5-1` (rotation) · planner `opus` ·
+  executor `pi:ollama/deepseek-v4-flash:0731-cloud` · evaluator `pi:ollama/minimax-m3:cloud`.
+  Generator ≠ judge held on model **and** vendor.
 
-- Fires 4-hourly via `dev.ailang.mission-world` (FLEET driver; World's local copy retired at the
-  DE-FORK, `D-WORLD-DRIVER-1`). Driver pin ACTIVE at `48c4a6e49`.
-- Controller `claude:claude-opus-5`. Designer ROTATION `fable-5-1 → gpt-6-astra → pi:deepseek`.
-  Planner per `resolve-role-spawn.sh`/`derive-planner-lane.sh`. Executor `pi:deepseek`.
-  Evaluator `sonnet` (generator ≠ judge, enforced on model AND vendor).
-- Verify gate: `./scripts/verify_ail.sh` + `go vet ./...` + `go test ./... -count=1`, against the
-  pinned `~/.pinned-ailang/ailang` v0.30.0. **Not** `verify_go.sh` — row 76's fleet driver-drift arm
-  fatals before `go build` and suspends every Go assertion behind it.
+## Waiting on Mark
 
-## Standing constraints worth re-reading before a sprint
-
-- `tools/launchd/*` is FROZEN CORE. The shared `mission-control` SKILL.md is the V1 checkout's file
-  and World may not edit it — skill gaps are PROPOSALS to Mark + the fleet.
-- The pinned v0.30.0 binary's quorum roster does **not** resolve `gpt6-astra` or `oc-glm-5-2`
-  (measured iter-170: `unknown-model`). Usable reviewers here: `gpt5-6-sol`, `gemini-3-1-pro`.
-- No `timeout(1)` and no `gtimeout` on this rig; `gh api` has no `--timeout`. Login shell is zsh and
-  the scripts are bash — invoke them as `bash <script>` or you are measuring the shell.
-
-## Parked on Mark
-
-**Nothing.** Decision ledger: 22 rows, `--check` valid, **ZERO OPEN**.
+**Nothing.** Decision ledger: **22 rows, ZERO OPEN**. This iteration asks for no decision.
 
 ## Quota posture
 
-Metered this iteration **$0.2322** of $5 (quorum only). Codex/ChatGPT bucket **ration-blocked** on
-the last three fires — astra was skipped for that reason (and for a self-review collision). Anthropic
-and the `pi:ollama` flat-rate lane both healthy.
+Metered **$0.24** of the $5 iteration ceiling — all of it design-quorum reviewers across two rounds
+(`gpt5-6-sol` $0.169, `gemini-3-1-pro` $0.072). Both ollama lanes are flat-rate; fable and opus are
+subscription buckets.

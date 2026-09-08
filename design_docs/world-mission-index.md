@@ -8,10 +8,23 @@ log (2.8 MB, ~715k tokens) has not been for a long time.
 
 Regenerated wholesale by `ailang mission rotate-log`, never appended to: an
 append-only index drifts the moment an entry is edited, and an index that answers
+
+> **⚠ THE REGENERATOR DOES NOT EXIST ON THIS MISSION'S PINNED BINARY, SO THIS FILE IS
+> HAND-MAINTAINED AND HAS ALREADY SILENTLY LOST A ROW** (measured iteration 172):
+> `~/.pinned-ailang/ailang mission rotate-log world --keep 31` prints `Error: unknown command
+> 'mission'` on **v0.30.0**, the binary this mission's Repo Profile requires, with the positive
+> control (`design-quorum --help`) resolving fine. The consequence was already on disk when this
+> was found: iteration **171** had **no row here** (`grep -c '^| 171 |'` → 0, control `170` → 1)
+> while its log entry existed — charter row 86's class, now with a root cause rather than an
+> incident. Rows 171 and 172 below were added **by hand**. Until the pin gains the command, adding
+> the row is a manual Gate-4 step, and a missing row is a pin-version gap, not a controller lapse.
+
 confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 172 | 2026-09-08 | row 72 LANDED: `scripts/queue_census.sh` — the loop's own closed-row count becomes a READING with mandatory controls and seven floors, not an increment chain; the row's premise was half-rotted and the doc says so; first CI push RED on the fixture's BYTES (`substr` counts bytes, mawk drops a half-cut em dash, F4 named both missing rows), evaluator PASS 87/100 zero blocking |
+| 171 | 2026-09-08 | row 71 LANDED: critical mission state never lives where the OS wipes; all four roles on pi lanes, and the required evaluator's own handshake exposed a pi session-protocol transport gap the controller repaired worktree-scoped (new row 89) [HARNESS] |
 | 170 | 2026-09-08 | row 68 CLOSED on the fleet de-fork guard `8c56c5863` (12/12 ACs, pin confirmed holding); row 70 LANDED reduced by a controller SPLIT — `scripts/gate1_range_check.sh` + 18-arm suite + CI step, attribution half → new row 88; 3 quorum rounds, restored reviewer decisive again, evaluator PASS 88/100 (1 blocking finding fixed + proven) |
 | 169 | 2026-09-07 | row 66 LANDED: the row named one trim site of two and called a false GREEN a false RED; three quorum rounds localised onto one surface, SPLIT OUT as row 87 |
 | 168 | 2026-09-07 | reconcile the five stranded records 162–166 from PRs #127/#128 onto the rotated log; the PRs are superseded unmerged [HARNESS] |
