@@ -202,3 +202,11 @@ jobs:
       - name: Gate-1 range instrument suite
         timeout-minutes: 2
         run: bash scripts/test_gate1_range_check.sh
+
+      - name: Queue census instrument suite
+        timeout-minutes: 2
+        run: bash scripts/test_queue_census.sh
+
+      - name: Queue census (live charter, controlled)
+        timeout-minutes: 2
+        run: bash scripts/queue_census.sh --doc design_docs/world-mission.md --control-closed 1 --control-open 79
