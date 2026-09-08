@@ -143,6 +143,16 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   this repo's own recurring shape aimed at a *filesystem* rather than at a path variable: **a pin
   stored in a volatile directory is a claim about the last boot, not about the toolchain.** The
   tell: your reproducibility anchor lives somewhere the OS is allowed to delete.
+- **CRITICAL MISSION STATE LIVES IN A DIRECTORY THE OS MAY DELETE — THREE KINDS MUST SURVIVE A
+  REBOOT (process fix, iter-151, generalized from the pin's "a claim about the last boot" rule).**
+  (a) ROLE AND EVALUATOR WORKTREES: never place a worktree under `/tmp` — macOS wipes
+  `/private/tmp` on boot — always under a persistent sibling of this repo
+  (`/Users/voightkampff/dev/sunholo-data/.wt-*` / `.eval-*`). (b) ANY STATE WHOSE LOSS DESTROYS
+  EVIDENCE — crash forensics (the driver's `HARD TIMEOUT|STALL` logs) and uncommitted sprint
+  work — must live under a `$HOME`-anchored path (`~/.ailang/state/mission-world-*` or inside the
+  repo), never in `/tmp`. The tell is the pin's own: an anchor stored in a volatile directory is a
+  claim about the last boot, not about the evidence — and a fire that dies becomes undiagnosable
+  the moment the rig reboots. `/tmp` is for scratch it is acceptable to lose, and nothing else.
 - **THE RIG'S SHELL IS `zsh`, AND THREE OF THE SKILL'S OWN INSTRUMENT IDIOMS BREAK HERE — TWO OF
   THEM SILENTLY (process fix, iter-37, 2 instances in ONE iteration, both in the controller's own
   Gate-2 verification; extended iter-159 with (c), a third instance in a different mechanism).**
