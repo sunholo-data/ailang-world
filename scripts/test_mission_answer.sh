@@ -78,6 +78,14 @@ MISSION_ATTENDED_NAME="Test Human" MISSION_ATTENDED_EMAIL="human@example.com" \
 after=$(shasum "$FIX" | cut -d' ' -f1)
 [ "$before" = "$after" ] && ok "5a --dry-run does not write" || notok "5a --dry-run wrote"
 
+# ARM 6 — with no MISSION_ATTENDED_EMAIL override, the DEFAULT identity is the GitHub noreply
+# form (row 74): a personal address as the default is exactly what the privacy gate forbids.
+write_fixture
+out=$(env -u MISSION_ATTENDED_EMAIL MISSION_ATTENDED_NAME="Test Human" \
+	"$SCRIPT_UT" --id D-2 --answer "x" --file "$FIX" --dry-run 2>&1); rc=$?
+[ $rc -eq 0 ] && ok "6a default identity accepted on --dry-run" || notok "6a default identity refused: $out"
+echo "$out" | grep -q 'attended identity .*<3155884+MarkEdmondson1234@users.noreply.github.com>' && ok "6b default identity is the noreply form" || notok "6b default identity is not the noreply form"
+
 echo "---"
 echo "$pass passed, $fail failed"
 [ "$fail" -eq 0 ]

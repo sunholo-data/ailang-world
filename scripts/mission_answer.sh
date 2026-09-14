@@ -66,7 +66,7 @@ case "$ID" in D-*) ;; *) die "--id must look like D-… , got: $ID" ;; esac
 # a row resolved under the loop's own identity is self-direction, which is the one
 # failure this whole channel has to make impossible.
 ATT_NAME="${MISSION_ATTENDED_NAME:-Mark Edmondson}"
-ATT_EMAIL="${MISSION_ATTENDED_EMAIL:-mark@aitanalabs.com}"
+ATT_EMAIL="${MISSION_ATTENDED_EMAIL:-3155884+MarkEdmondson1234@users.noreply.github.com}"
 FLEET_PATTERN="${MISSION_FLEET_ACCOUNT:-sunholo-voight-kampff}"
 case "$ATT_EMAIL" in *"$FLEET_PATTERN"*) die "attended identity is the fleet bot ($ATT_EMAIL) — refusing; an attended ruling must not be authored by the loop" ;; esac
 case "$ATT_NAME" in *[Bb]ot*) die "attended identity looks like a bot ($ATT_NAME) — refusing" ;; esac
@@ -121,6 +121,7 @@ rc=$?
 
 if [ "$DRYRUN" -eq 1 ]; then
 	diff -u "$DOC" "$TMP" | head -40
+	note "--dry-run: attended identity $ATT_NAME <$ATT_EMAIL>"
 	note "--dry-run: $DOC not modified"
 	exit 0
 fi
