@@ -1,6 +1,6 @@
 # w-check-no-personal-email — a real, non-vacuous privacy gate over the loop-written tracked surface, wired into CI's go-verify job directly
 
-- Status: **planned** · Date: 2026-09-14 · Designer: pi:ollama/deepseek-v4-flash:0731-cloud (iter-175; rotation entry codex:gpt-6-astra was ration-blocked this fire) · Base commit: a295291bea069d793960e08f055e501c6f9661f4 · Owning queue row: 74 · Scope class: HARNESS — enforcement of the attended-ledger privacy contract · Verify profile: ailang-code
+- Status: **planned** · Date: 2026-09-14 (revised once 2026-09-14 — quorum r1: gpt5-6-sol reject on AC-M1-3/AC-M1-9, gemini-3-1-pro reject on D3's conditional and D1's undefined filter; all four measured by the controller and applied; artifact w-check-no-personal-email-2026-09-14T09-39-09Z.json) · Designer: pi:ollama/deepseek-v4-flash:0731-cloud (iter-175; rotation entry codex:gpt-6-astra was ration-blocked this fire) · Base commit: a295291bea069d793960e08f055e501c6f9661f4 · Owning queue row: 74 · Scope class: HARNESS — enforcement of the attended-ledger privacy contract · Verify profile: ailang-code
 
 ## §1 Problem
 
@@ -21,7 +21,13 @@ Row 74's premise is that the shared mission-control skill's ATTENDED LEDGER EDIT
 
 **Contract.**
 
-- **Inputs**: `git ls-files | grep -E "$SCOPE_RE"` — the loop-written tracked surface, filtered by World's scope regex (see D2). Files are skipped when they match the binary-extension probe (the same extensions the fleet's precedent skips).
+- **Inputs**: `git ls-files | grep -E "$SCOPE_RE"` — the loop-written tracked surface, filtered by World's scope regex (see D2). Files are skipped when they match the binary-extension probe — the fleet precedent's filter, verbatim, a bash `case` inside the file loop:
+  ```
+      case "$f" in
+          *.png|*.jpg|*.gif|*.pdf|*.zip) continue ;;
+      esac
+  ```
+  On today's 34/36-file surface it matches zero files (controller-measured: `git ls-files | grep -E "$SCOPE_RE" | grep -cE '\.(png|jpg|gif|pdf|zip)$'` → 0), so it is carried for parity and is not load-bearing.
 - **Address regex**: `PAT='[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'`.
 - **Exclusion list (verbatim, anchored)**:
   ```
@@ -43,7 +49,7 @@ Row 74's premise is that the shared mission-control skill's ATTENDED LEDGER EDIT
 
 ### D2 — Scope regex is World's own
 
-**[controller-measured 2026-09-14 at a295291]** F7: World's in-scope tracked files under the fleet's regex are `design_docs/world-mission.md`, `world-mission-log.md`, `world-mission-log-archive.md`, `world-mission-status-archive.md`, `world-mission-dashboard.md`, `world-mission-index.md` (6) + 28 under `scripts/` = **34**. World has **NO `.claude/skills/`** directory (the mission-control skill resolves through a symlink into the V1 checkout), so that regex alternative matches nothing here.
+**[controller-measured 2026-09-14 at a295291]** F7: World's in-scope tracked files under the fleet's regex are `design_docs/world-mission.md`, `world-mission-log.md`, `world-mission-log-archive.md`, `world-mission-status-archive.md`, `world-mission-dashboard.md`, `world-mission-index.md` (6) + 28 under `scripts/` = **34 (at base, at a295291)**. World has **NO `.claude/skills/`** directory (the mission-control skill resolves through a symlink into the V1 checkout), so that regex alternative matches nothing here.
 
 **Decision: drop** `.claude/skills/.*` and **keep** `scripts/.*` and the mission-doc alternative. World's scope regex is:
 ```
@@ -63,7 +69,21 @@ ATT_EMAIL="${MISSION_ATTENDED_EMAIL:-3155884+MarkEdmondson1234@users.noreply.git
 ```
 The noreply default does not contain `sunholo-voight-kampff`, so arms 4a–4d are unaffected. The exclusion list already permits `users.noreply.github.com`, so the gate stays simple: **the row's "allow-list for functional defaults" is explicitly declared NOT built**, for exactly this reason. An allow-list would re-introduce the very escape (a private allow-listed domain) the gate exists to close; the noreply default removes the need for one.
 
-**One new arm in `scripts/test_mission_answer.sh`**: with `MISSION_ATTENDED_EMAIL` UNSET, `--dry-run` on the fixture must succeed (rc 0) and the script's resolved identity must be the noreply address. Precise form: the arm runs the fixture under `MISSION_ATTENDED_EMAIL= env -u MISSION_ATTENDED_EMAIL bash scripts/mission_answer.sh … --dry-run` and greps a `--dry-run` line that names the identity. If the script does not print the identity on `--dry-run`, this milestone adds **one line** to the script's `note`/dry-run output that prints the resolved `ATT_EMAIL`. The arm asserts rc 0 AND the noreply address on that printed line.
+**One new arm in `scripts/test_mission_answer.sh`** (ARM 6, "default identity is the noreply form"): M1 adds exactly one line to `scripts/mission_answer.sh` inside the `if [ "$DRYRUN" -eq 1 ]; then` block, immediately BEFORE the existing `note "--dry-run: $DOC not modified"` line:
+```
+	note "--dry-run: attended identity $ATT_NAME <$ATT_EMAIL>"
+```
+and the new arm in `scripts/test_mission_answer.sh` is:
+```
+# ARM 6 — with no MISSION_ATTENDED_EMAIL override, the DEFAULT identity is the GitHub noreply
+# form (row 74): a personal address as the default is exactly what the privacy gate forbids.
+write_fixture
+out=$(env -u MISSION_ATTENDED_EMAIL MISSION_ATTENDED_NAME="Test Human" \
+	"$SCRIPT_UT" --id D-2 --answer "x" --file "$FIX" --dry-run 2>&1); rc=$?
+[ $rc -eq 0 ] && ok "6a default identity accepted on --dry-run" || notok "6a default identity refused: $out"
+echo "$out" | grep -q 'attended identity .*<3155884+MarkEdmondson1234@users.noreply.github.com>' && ok "6b default identity is the noreply form" || notok "6b default identity is not the noreply form"
+```
+The arm asserts rc 0 (arm 6a) AND the noreply address on the printed dry-run identity line (arm 6b).
 
 ### D4 — CI wiring
 
@@ -118,7 +138,7 @@ The per-hit line embeds the matched address, so the line itself carries no perso
 |---|---|---|---|
 | `scripts/check_no_personal_email.sh` | create | +~70 | new executable instrument (D1), `SCOPE_RE` from D2, anchored exclusion, exit-2 floor |
 | `scripts/test_check_no_personal_email.sh` | create | +~90 | new self-test, arms A–H (D5), runtime-concatenated fixtures |
-| `scripts/mission_answer.sh` | modify | 1 line | line 69 default → noreply form (D3); +1 dry-run identity line if absent |
+| `scripts/mission_answer.sh` | modify | 2 lines (line 69 default; +1 dry-run identity note) | line 69 default → noreply form (D3); +1 dry-run identity note line before the existing `--dry-run: $DOC not modified` note |
 | `scripts/test_mission_answer.sh` | modify | +1 arm | new default-identity arm (D3) |
 | `.github/workflows/ci.yml` | modify | +2 steps | appended to `go-verify` (D4) |
 
@@ -132,13 +152,22 @@ Each AC is a command with expected output. M denotes a milestone executor step; 
 
 - **AC-M1-1** `test -x scripts/check_no_personal_email.sh` → true. (Mode bit: a previous iteration lost one to `mv` from /tmp; the executable bit is asserted explicitly.)
 - **AC-M1-2** `bash scripts/check_no_personal_email.sh; echo rc=$?` → `✓ check-no-personal-email: no personal addresses in the loop-written surface`, `rc=0`, on the sprint tree (after D3's fix).
-- **AC-M1-3** the SAME command at BASE a295291bea069d793960e08f055e501c6f9661f4 → `rc=1`, the ✗ line naming `scripts/mission_answer.sh` (proves the instrument sees the very hit row 74 named, BEFORE D3's fix).
+- **AC-M1-3** the same instrument at BASE a295291bea069d793960e08f055e501c6f9661f4, run in a SIBLING worktree (never `/tmp` — worktrees under `/tmp` are forbidden here):
+  ```
+  BASEWT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)/.base-world-iter175"
+  git worktree add --detach "$BASEWT" a295291bea069d793960e08f055e501c6f9661f4
+  cp scripts/check_no_personal_email.sh "$BASEWT/scripts/"
+  ( cd "$BASEWT" && bash scripts/check_no_personal_email.sh ); rc=$?
+  git worktree remove --force "$BASEWT"
+  echo "rc=$rc"
+  ```
+  Expected: `rc=1`, and the ✗ line names `scripts/mission_answer.sh`. (Note: at base the two new scripts are absent from `git ls-files`, so the copied instrument scans the 34-file base surface — which is what makes this the honest before-state reading; the copied script is untracked there and is not itself scanned.)
 - **AC-M1-4** `bash scripts/test_check_no_personal_email.sh` → `8 passed, 0 failed` (arms A–H).
-- **AC-M1-5** `bash scripts/test_mission_answer.sh` → all arms pass, including the new default-identity arm (arm asserting rc 0 and the noreply identity under `env -u MISSION_ATTENDED_EMAIL`).
+- **AC-M1-5** `bash scripts/test_mission_answer.sh` → all arms pass including ARM 6 (6a, 6b).
 - **AC-M1-6** `/usr/bin/grep -c 'check_no_personal_email' .github/workflows/ci.yml` → `2` (the two new `run:` steps).
 - **AC-M1-7** `git diff --stat a295291 -- tools/launchd/` → empty (no frozen-core touch).
 - **AC-M1-8** `go vet ./...` → rc 0; `go test ./... -count=1` with `AILANG_BIN=$HOME/.pinned-ailang/ailang` → rc 0; `bash ./scripts/verify_ail.sh` → rc 0 (11 identities / 40 named tests); profile `ailang-code`. (No `.ail` files touched by this item; `go build` is not a compile fence for `_test.go`.)
-- **AC-M1-9** `git ls-files | grep -cE '^(design_docs/[^/]*mission[^/]*\.md|scripts/.*)$'` → `34` — the in-scope count, the D1 floor's positive control (the same surface the gate scans must number 34, so the floor is not silently vacuous).
+- **AC-M1-9** `git ls-files | grep -cE '^(design_docs/[^/]*mission[^/]*\.md|scripts/.*)$'` → `36` on the sprint tree (34 base files + the 2 new tracked scripts). The base-tree count is 34 — it is the number AC-M1-3's worktree scan reads; 36 is the in-scope count after this change, the D1 floor's positive control on the surface the gate actually scans on the sprint tree.
 - **AC-M1-10** after D3: in-scope address scan over the tree → 0 hits, AND `grep -c 'users\.noreply\.github\.com' scripts/mission_answer.sh` → `1` (the literal noreply form appears exactly once, on line 69).
 - **C** queue row 74 tag → LANDED; repo profile note records the gate's location.
 
@@ -156,6 +185,7 @@ Each mutation is applied by `cp` backup + `sed`, then restored by `cp` back; res
 | M6 | `$` anchor removed from the exclusion (reverts to fleet parity) | arm H (expects `a@example.com.evil.net` to be a HIT) red | yes |
 | M7 | `scripts/mission_answer.sh` default reverted to a raw address | AC-M1-2 red: the LIVE gate catches it. This is the ONE mutation the live gate kills, and it is the row's whole point. | yes |
 | M8 | GREEN control: reword a comment inside the script | every arm stays green | n/a — control |
+| M9 | drop the dry-run identity note line inside the `if [ "$DRYRUN" -eq 1 ]; then` block | arm 6b RED (the resolved identity line is missing) | yes — sole killer |
 
 M7 is the mutation that closes the loop: it proves the gate is not merely self-test-consistent but actually guards the live surface it is wired to scan — the single hit row 74 named dies under the real gate.
 
@@ -183,6 +213,7 @@ Provenance key: `[controller-measured 2026-09-14 at a295291]` = measured first-p
 | V10 | this session | `git rev-parse HEAD` | `a295291bea069d793960e08f055e501c6f9661f4` |
 | V11 | this session | `ls scripts/check_no_personal_email.sh scripts/mission_answer.sh scripts/test_mission_answer.sh` | `check_no_personal_email.sh` → No such file (gate absent); `mission_answer.sh` and `test_mission_answer.sh` present |
 | V12 | this session | `sed -n '60,75p' scripts/mission_answer.sh` | line 69 `ATT_EMAIL="${MISSION_ATTENDED_EMAIL:-<personal address>}"`; guards and `FLEET_PATTERN` as quoted |
+| V13 | `[controller-measured 2026-09-14 at a295291]` | `env -u MISSION_ATTENDED_EMAIL bash scripts/mission_answer.sh --id D-2 --answer x --file <fixture> --dry-run` (fixture ledger with one OPEN row) | rc=0; output = unified diff of the row rewrite followed by ONE note line `• --dry-run: <file> not modified` — the identity is NOT printed on `--dry-run`; `ATT_EMAIL` used at exactly four places: line 69 (the default), line 71 (the fleet-bot guard), line 82 (exported into the awk environment, where only ATT_NAME is written into the row), and lines 138/145 (the `--commit` path: `git -c user.email="$ATT_EMAIL"` and `ok "committed as $ATT_NAME <$ATT_EMAIL>"`); `note() { echo -e "${YELLOW}• $*${RESET}"; }` at line 38 |
 
 No designer-run measurement contradicts an F-row; this session only confirmed existence/location (V10–V12), no new arithmetic.
 
@@ -195,7 +226,7 @@ Estimate ~**0.3d** (the instrument and self-test are near-copies of a known-good
 
 ## §9 Risks and declared residuals
 
-- **Scope is deliberately narrow**: design docs under `planned/`/`implemented/` are NOT scanned. These are sprint artifacts (ephemeral working docs, this one included), not durable loop-written surfaces, and their transient content is reviewed at ratification. Widening the surface is a follow-up row, not this one. The gate is deliberately scoped to mission docs + `scripts/` (the 34-file durable loop-written surface).
+- **Scope is deliberately narrow**: design docs under `planned/`/`implemented/` are NOT scanned. These are sprint artifacts (ephemeral working docs, this one included), not durable loop-written surfaces, and their transient content is reviewed at ratification. Widening the surface is a follow-up row, not this one. The gate is deliberately scoped to mission docs + `scripts/` (the 36-file (34 at base) durable loop-written surface).
 - **Tracked-files-only**: the gate reads `git ls-files` — an untracked draft is invisible until `git add`. That is correct: a draft not staged for landing is not yet "in the loop-written surface," and CI runs on tracked state only. Flagged so a future editor does not assume draft protection.
 - **Regex false positives on `user@host`-style shell strings in `scripts/`**: possible in theory, measured none today (V5 — the only in-scope hit is the functional default, itself fixed by D3). Any future shell string shaped like an address can be handled by a comment + a deliberate scope decision, not by weakening the exclusion.
 - **The one deviation from fleet parity** (the `$` anchor, D5/H) could surprise a future maintainer expecting byte-identical behaviour. It is documented in the script header and here, and pinned by arm H.
