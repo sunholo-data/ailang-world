@@ -210,3 +210,7 @@ jobs:
       - name: Queue census (live charter, controlled)
         timeout-minutes: 2
         run: bash scripts/queue_census.sh --doc design_docs/world-mission.md --control-closed 1 --control-open 79
+
+      - name: Gate-0 self-notice instrument suite
+        timeout-minutes: 2
+        run: bash scripts/test_gate0_self_notices.sh
