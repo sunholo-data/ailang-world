@@ -214,3 +214,11 @@ jobs:
       - name: Gate-0 self-notice instrument suite
         timeout-minutes: 2
         run: bash scripts/test_gate0_self_notices.sh
+
+      - name: Refuse a personal email in the loop-written surface
+        timeout-minutes: 2
+        run: bash scripts/check_no_personal_email.sh
+
+      - name: Personal-email gate self-test
+        timeout-minutes: 2
+        run: bash scripts/test_check_no_personal_email.sh
