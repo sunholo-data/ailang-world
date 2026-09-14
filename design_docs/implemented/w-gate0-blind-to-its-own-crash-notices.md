@@ -854,3 +854,68 @@ own account to its own issue and filters it with the same allowlist.
 Filed as a GitHub issue on `sunholo-data/ailang` and an `ailang messages send mission-control`
 note (AC-M3-1/2). Not proposed: any change to the allowlist, any local driver edit, any vendored
 copy of `mission_directives.sh`.
+
+---
+
+## §11 Landing record (controller, iteration 174 — 2026-09-14)
+
+Designed and quorum-closed by iteration 173, whose slot was then killed at gate-3 (rc=143,
+2026-09-08T07:33:01Z) before a plan existed; planned, executed, judged and landed by iteration 174.
+Status: **implemented**. M1 → PR sunholo-data/ailang-world#137, squash **`50103fd`**, CI green on the
+merge (`ailang-code verify gate`, `go host build + test gate`; the latter's new
+`Gate-0 self-notice instrument suite` step is the GNU `date` measurement AC-M1-17 asked for:
+86/86 on ubuntu, including all ten `watermark-strict` assertions). M2 → the Repo Profile bullet
+(`70b19e0`). M3 → sunholo-data/ailang#1160 and note `inbox_1789370541088_c82428d1`.
+
+Corrections to this document's own claims, measured at landing rather than smoothed:
+
+- **§3/§8 "22 arms" → 24.** Quorum r2 added `watermark-strict` and `watermark-parser-control`
+  without bumping the count (planner P2). The dispatcher, `--only` list and CI-green report carry 24;
+  the suite prints `88 passed, 0 failed` (assertion lines, not arms — planner P7).
+- **§5 `snapshot-107` row, mutation "`other=` computed as `comments − crash`": its killer is
+  `self-filter`, not `snapshot-107`.** The independent judge (round 1, BLOCKING) found the mutant
+  survived all 86 assertions because every fixture printing an `issue:` line has `comments == self`.
+  Fixed at `1ed9775`: `self-filter` — the one fixture with foreign authors (3 comments, 1 self) —
+  asserts the ` self=1 ` and ` other=0` tokens of its `issue:` line. With the mutant applied the red
+  set is `{self-filter}` alone (87 passed / 1 failed); pristine 88/0. D3's arithmetic is pinned by
+  exactly one arm, with no redundancy (judge round 2, N8).
+- **§3's claim that the frozen `_107.json` still "contains the negative control that a substring
+  classifier fails" is FALSE for the instrument's exact literal** (controller, confirmed by the
+  judge as N5). V3 measured the over-count with the loose jq needle `test("FAILED to complete")`;
+  the iteration-151 correction quotes the notice **without** the `**` bold markers, so
+  `body.find(SIG) == -1` on that comment and a `find`-based substring classifier over the frozen
+  fixture classifies exactly the same four notices. The anchoring is instead pinned by
+  `anchored-signature`'s synthetic (iii)/(iv) fixtures: the `find`-based substring mutant reds
+  `anchored-signature` alone (controller drill). Note the executor's simpler `startswith → in`
+  mutant reds nothing, because the rc extractor still slices at offset 0 — the real mutant must
+  also slice at the match.
+- **§5 "kills which arm" cells that are wider than written, measured (judge N1–N3, controller):**
+  `prev-issue` ignored → `{prev-issue, report}` (report's verdict count is downstream of the
+  prev-issue read); rc hard-coded → `{prev-issue, rc-extract, snapshot-107}` (both assert full
+  `crash:` lines carrying `rc=`); `watermark-strict` order → `{watermark-invalid, watermark-strict}`
+  (the `--since not-a-date` sub-case builds no stub, so deferred validation hits F1 first);
+  `watermark-strict` ceiling inverted → 20 arms (the validator gates every `--since` literal the
+  suite uses). Each named arm is IN its set; the extra members are explained, not coupling defects.
+  Sole killers measured: report, since-window, watermark-invalid (chosen-minimum), watermark-strict
+  (ceiling), substring classifier (find-based), case-sensitive author, F8 removed, `A FIRE DIED`
+  reworded, F5 removed, epoch default, DEGRADED line dropped, `other=` arithmetic (post-fix).
+- **AC-M2-3's expected `rc=0` was written before the notice it could not foresee.** The live
+  reading at landing is **rc=1 — A FIRE DIED (newest rc=143 at 2026-09-08T07:33:01Z on #129)**:
+  the killed iteration-173 slot's own notice, in-window against both watermarks
+  (`2026-09-08T06:19:00Z`), already credited as an orphan at this iteration's Gate 2. `issue: 129
+  comments=15 self=15 crash=1 other=14`; `issue: 107 comments=43 self=43 crash=4 other=39`; control
+  `107:4` ok; signature-source ok; watermarks 2/2. Recorded, not predicted, as the AC's own clause
+  requires.
+- **AC-M3-2's needle `msg_` assumed an id format the store does not emit.** The Firestore-backed
+  `ailang messages send` returned `inbox_1789370541088_c82428d1`; the note was read back by that id
+  and holds the §10 text (not a path). Row 73's tag carries the real id; the `msg_` grep reads 0 and
+  that zero is the AC's assumption failing, not the delivery.
+- **D6's line order was restored by the controller** (the executor printed the header after the
+  `watermark:` lines) and a no-op `rm -f /tmp/…` was removed; no arm asserts line order (judge 8(b)).
+- **Process:** the executor's drill used `sed … > /tmp/mut.sh && mv /tmp/mut.sh scripts/…`, which
+  replaced the inode and dropped the executable bit; every later `cp`-restore preserved the wrong
+  mode and `shasum -a 256 -c` reported OK because it hashes content, not mode. Caught by `test -x`
+  (AC-M1-1) before commit; the suite never notices because it invokes `/bin/bash "$SCRIPT_UT"`.
+  A restore assertion needs a mode check beside the digest (judge N7).
+- **Row 73's `mission-control.sh:617` is stale** (`:1992` at `9845acf2c`); the check is content, not
+  line. Left as ratified text.
