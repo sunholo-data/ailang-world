@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test_check_no_personal_email.sh — 8 arms (A–H) for scripts/check_no_personal_email.sh (row 74).
+# test_check_no_personal_email.sh — 10 arms (A–J) for scripts/check_no_personal_email.sh (row 74).
 #
 # Rule 3k: every arm runs the REAL instrument as a process — `bash "$SCRIPT_UT"` from inside a
 # throwaway `git init` repo (arms B–H) or the real repo (arm A) — and asserts rc AND the three
@@ -40,6 +40,17 @@ RESERVED_ORG="you";      RESERVED_ORG="${RESERVED_ORG}@example.org"
 RESERVED_NET="you";      RESERVED_NET="${RESERVED_NET}@example.net"
 RESERVED_INV="test";     RESERVED_INV="${RESERVED_INV}@example.invalid"
 PREFIX_ONLY="a";         PREFIX_ONLY="${PREFIX_ONLY}@example.com.evil.net"
+# Arm I: a personal domain that merely CONTAINS an exclusion token, or a local part that merely
+# ENDS in noreply — every one must be a HIT (the round-1 judge's blocking finding).
+SUBSTR_NOREPLY="attacker-noreply"; SUBSTR_NOREPLY="${SUBSTR_NOREPLY}@evil-personal-domain.com"
+SUBSTR_GH="x";        SUBSTR_GH="${SUBSTR_GH}@users.noreply.github.com.evil-personal.net"
+SUBSTR_GSA="y";       SUBSTR_GSA="${SUBSTR_GSA}@gserviceaccount.com.evil-personal.net"
+SUBSTR_SENTRY="z";    SUBSTR_SENTRY="${SUBSTR_SENTRY}@sentry.io.evil-personal.net"
+# Arm J: the legitimate machine identities the anchors must still admit (measured on both surfaces).
+LEGIT_NOREPLY="noreply"; LEGIT_NOREPLY="${LEGIT_NOREPLY}@anthropic.com"
+LEGIT_GSA="sa-cloudbuild"; LEGIT_GSA="${LEGIT_GSA}@some-project.iam.gserviceaccount.com"
+LEGIT_SENTRY="alerts";   LEGIT_SENTRY="${LEGIT_SENTRY}@sentry.io"
+LEGIT_BOT="151556158+sunholo-voight-kampff"; LEGIT_BOT="${LEGIT_BOT}@users.noreply.github.com"
 
 # A — the real repo is clean (the gate's live assertion; this is what CI's first new step runs).
 ck "A real repo clean" "$(probe "$SCRIPT_UT")" "rc=0 hit=0 ok=1 floor=0"
@@ -84,6 +95,16 @@ ck "G hit in scripts/ caught" "$(probe scripts/check_no_personal_email.sh)" "rc=
 rm -f scripts/some_tool.sh
 echo "contact $PREFIX_ONLY" > design_docs/world-mission.md; stage
 ck "H example.com-as-prefix is a HIT (anchored)" "$(probe scripts/check_no_personal_email.sh)" "rc=1 hit=1 ok=0 floor=0"
+
+# I — a domain that merely CONTAINS an exclusion token, or a local part merely ENDING in noreply,
+# is a HIT: every exclusion clause is anchored to the whole token. Four tokens, four hit lines.
+printf 'a %s\nb %s\nc %s\nd %s\n' "$SUBSTR_NOREPLY" "$SUBSTR_GH" "$SUBSTR_GSA" "$SUBSTR_SENTRY" > design_docs/world-mission.md; stage
+ck "I substring-of-exclusion domains -> rc 1, 4 hits" "$(probe scripts/check_no_personal_email.sh)" "rc=1 hit=4 ok=0 floor=0"
+
+# J — the anchors must still ADMIT every legitimate machine identity (an anchor that is too tight
+# reds the real surface, which carries the bot's noreply identity and a service account).
+printf 'a %s\nb %s\nc %s\nd %s\n' "$LEGIT_NOREPLY" "$LEGIT_GSA" "$LEGIT_SENTRY" "$LEGIT_BOT" > design_docs/world-mission.md; stage
+ck "J legitimate machine identities still allowed" "$(probe scripts/check_no_personal_email.sh)" "rc=0 hit=0 ok=1 floor=0"
 
 # F — the anti-vacuity floor: a repo with ZERO in-scope tracked files reads rc 2, no ✓ line.
 # The instrument lives OUTSIDE scripts/ here (tools/ is not in SCOPE_RE) so the scope is empty.

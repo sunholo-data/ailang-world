@@ -20,9 +20,13 @@
 #
 # Allowed: GitHub noreply addresses (attributable, expose nothing), example.com/org/net and
 # .invalid/.test/.localhost placeholders (RFC 2606/6761 reserved, cannot be real), and machine
-# identities such as GCP service accounts — none of which is a person. The reserved-TLD exclusion
-# is ANCHORED (`@example\.(com|org|net)$`): an address at example.com.evil.net is a HIT. World's one
-# deliberate deviation from the fleet precedent (sunholo-data/ailang f0d44915d), pinned by arm H.
+# identities such as GCP service accounts — none of which is a person. EVERY exclusion clause is
+# ANCHORED to the whole token (`$` on each domain suffix, `^` on the noreply local part): an
+# address at example.com.evil.net, or at a personal domain that merely CONTAINS `sentry.io`,
+# `gserviceaccount.com` or `users.noreply.github.com`, or whose local part merely ENDS in
+# `noreply`, is a HIT. A privacy gate must not whitelist a substring. World's deliberate deviation
+# from the fleet precedent (sunholo-data/ailang f0d44915d, which anchors none of them), pinned by
+# arms H and I; arm J proves the anchors still admit every legitimate machine identity.
 #
 # Exit codes: 0 clean; 1 at least one address hit; 2 instrument failure (zero in-scope files —
 # a gate that scans nothing must never print ✓).
@@ -53,7 +57,7 @@ while IFS= read -r f; do
     esac
     [ -f "$f" ] || continue
     found=$(LC_ALL=C /usr/bin/grep -oE "$PAT" "$f" 2>/dev/null \
-        | /usr/bin/grep -vE 'users\.noreply\.github\.com|noreply@|@example\.(com|org|net)$|\.(invalid|test|localhost)$|gserviceaccount\.com|@sentry\.io' \
+        | /usr/bin/grep -vE '@users\.noreply\.github\.com$|^noreply@|@example\.(com|org|net)$|\.(invalid|test|localhost)$|\.gserviceaccount\.com$|@sentry\.io$' \
         | sort -u)
     if [ -n "$found" ]; then
         while IFS= read -r addr; do
