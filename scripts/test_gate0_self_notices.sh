@@ -153,6 +153,12 @@ EOF
   if [ "$c" -eq 1 ]; then ok "self-filter one crash line"; else notok "self-filter crash count=$c"; fi
   /usr/bin/grep -q '^crash: issue=5 at=2026-09-01T00:00:00Z' "$d/out" && ok "self-filter carries Ta" || notok "self-filter missing Ta"
   /usr/bin/grep -q 'at=2026-09-02T00:00:00Z\|at=2026-09-03T00:00:00Z' "$d/out" && notok "self-filter classified foreign author" || ok "self-filter no foreign author"
+  # D3 arithmetic on the ONE fixture where comments != self: self= counts the --self author only,
+  # other= is self - crash (never comments - crash). Added at evaluator round 1 (B1): the
+  # `other=$((COMMENTS-CRASH))` mutant survived all 86 assertions because every other fixture has
+  # comments == self. Two tokens this arm's behaviour sets; not a full issue: line (row 90).
+  /usr/bin/grep '^issue: 5 ' "$d/out" | /usr/bin/grep -q ' self=1 ' && ok "self-filter self=1 token" || notok "self-filter self= token wrong: $(/usr/bin/grep '^issue: 5 ' "$d/out")"
+  /usr/bin/grep '^issue: 5 ' "$d/out" | /usr/bin/grep -q ' other=0$' && ok "self-filter other=0 token (self-crash, not comments-crash)" || notok "self-filter other= token wrong: $(/usr/bin/grep '^issue: 5 ' "$d/out")"
 }
 
 # ── arm 5: prev-issue (AC-M1-6) ───────────────────────────────────────────────
