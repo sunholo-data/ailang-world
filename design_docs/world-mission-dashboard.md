@@ -17,7 +17,16 @@ _Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS), th
 - **Queue census**: `census: 44 closed / 91 rows (tagged-open 4, untagged 43) [LANDED 43, ROUTED 1, RULED OUT 0; PARKED 3, IN-SPRINT 1, NEXT 0]`
   — moved by one closed and one row. Re-run:
   `bash scripts/queue_census.sh --doc design_docs/world-mission.md --control-closed 1 --control-open 79`
-- **Queue head**: rows **69** (fleet-gated), **75–78**, **81–91**, then **39**. Row **65** deferred per `D-WORLD-33`.
+- **Queue head — REGROOMED 2026-09-21 (Mark, attended); see the GROOMED block atop the charter Queue**:
+  **8** (`SM.D`, clause-7, **ATTENDED-ONLY — surface to Mark, never run in-loop**) → **39**
+  (session authority, clause-3, hard 1.0 blocker) → **92** (NEW: clause-5 value demonstration —
+  what World is FOR) → **34/35/38** (workbench) → **40** → **27** → **93** (NEW: clause-4 floor
+  run) → **75** → daemon robustness **22–26, 32**.
+  **Maintenance, sweep-only, NOT iteration work**: 69, 76, 77, 78, 83, 84, 85, 86, 88, 89, 90, 91
+  and 28, 29, 30, 33, 36, 37, 81, 87. Rows 76/77/78/84/89 belong to the SHARED harness in
+  `sunholo-data/ailang` — route upstream, do not work here. Row **65** deferred per `D-WORLD-33`.
+  Why: 27 of 34 open rows were clause-2 catch-all, 13 of them pure mission-harness, while the
+  clause-5 value proof and the clause-4 floor run were **not rows at all**.
 
 ## Loop cadence and routing
 

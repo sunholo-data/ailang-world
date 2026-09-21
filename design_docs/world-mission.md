@@ -1681,6 +1681,86 @@ mission in `~/.config/ailang/mission-world.env`:
 <!-- Every open item carries a clause tag. Estimates are honest guesses at bootstrap;
      iteration 0 re-scores. NEW-DOC items start with design-doc-creator. -->
 
+### GROOMED 2026-09-21 (Mark, attended) — THIS ORDER OVERRIDES PHYSICAL POSITION
+
+**What the grooming measured.** 34 open rows, **27 of them clause-2 (79%)** — and clause-2 had
+become the catch-all rather than "local-first daemon". Of those 27, **thirteen are mission-harness
+or bookkeeping rows that are not World product at all** (`resolve-role-spawn`, `mission_pi_run`,
+the verify-go drift gate, log/index hygiene, census arms, the personal-email gate), and **eight
+more are tests about tests**. Row 83 is `w-a-queue-rows-proposed-remedy-is-a-claim-too-and-nobody-
+checks-it` — the queue writing rows about the quality of its own rows.
+
+Meanwhile the clause that says what World is FOR — **clause 5's provenance teeth**, *"capability
+the shell cannot express at any pass-rate"* — had **three** open rows, all workbench render
+defects, and **the 1.0 value demonstration itself was not a row at all.** Neither was clause 4's
+non-inferiority floor run. The two deliverables that decide whether World 1.0 exists were absent
+from the queue that is supposed to deliver it. They are now rows **92** and **93**.
+
+This is the same failure the fleet's Gate-2 admissibility rule was added for on the same day, one
+level up: **every row was real, and they summed to a mission maintaining itself instead of
+shipping 1.0.** Local correctness does not aggregate.
+
+**PICK IN THIS ORDER.** Harness rows are subject to Gate 2 admissibility — *real is not enough*;
+it must BLOCK the rung.
+
+| # | Row | Why here |
+|---|---|---|
+| 1 | **8** `w-self-mod-vertical` (clause-7) | IN-SPRINT. `SM.D` is the LAST milestone and it is **ATTENDED-ONLY — never headless, never CI**. One human step from clause 7 being PROVEN. Surface it to Mark; do not attempt it in-loop |
+| 2 | **39** `w-session-authority` (clause-3) | The repo has **no inbound credential → session resolution at all**. Hard 1.0 blocker, and row 40 depends on it |
+| 3 | **92** (new, clause-5) | The value demonstration. This is what World is FOR |
+| 4 | **34, 35, 38** (clause-5) | The workbench human surface the demonstration runs through |
+| 5 | **40** `w-a2a-session-projection` (clause-6) | After 39 |
+| 6 | **27** `w-interface-hash-does-not-cover-the-interface` (clause-1) | Kernel correctness: the field whose NAME promises interface coverage has manifest coverage |
+| 7 | **93** (new, clause-4) | The non-inferiority floor run |
+| 8 | **75** (clause-2) | A real product CLI bug with a measured attribution hazard: a filtered query returns a strict superset **indistinguishable from a correct answer**. Admissible under Gate 2 on those grounds |
+| 9 | **22, 23, 24, 25, 26, 32** | Genuine daemon robustness — the rows clause-2 is actually about |
+
+**MAINTENANCE — sweep-eligible, NOT iteration work.** Fleet rule 2026-09-21: harness work is
+admissible only when it BLOCKS the rung; one maintenance sweep per week drains these.
+
+- Mission-harness + bookkeeping: **69, 76, 77, 78, 83, 84, 85, 86, 88, 89, 90, 91**
+- Tests about tests: **28, 29, 30, 33, 36, 37, 81, 87**
+
+**Rows 76, 77, 78, 84 and 89 are about the SHARED mission harness in `sunholo-data/ailang`, not
+World.** Route them upstream as issues rather than working them here — World may not edit the
+shared skill anyway, so working them here produces proposals, not fixes.
+
+92. **w-provenance-teeth-value-demonstration** · clause-5 · **THE 1.0 VALUE PROOF HAS NEVER
+    BEEN A QUEUE ROW.** Clause 5 states the bar precisely: *on ≥3 REAL "why did X happen"
+    questions (arising from actual operation, not synthetic), a provenance walk yields the
+    verified answer in ≤5 minutes each, where the pre-World method was a grep/log archaeology
+    session.* That is the sentence which makes World worth building — clause 4 only proves the
+    cost is not paid in resident-agent regression — and nothing in the queue delivered it.
+    Measured at grooming 2026-09-21: `grep -c "provenance walk|why did X happen"` over this
+    charter returns **2**, both inside the clause definition itself, zero in any row. **THE
+    ITEM:** (a) harvest ≥3 genuine "why did X happen" questions from this mission's own recorded
+    operation — the mission log and the incident rows are full of them, e.g. *why did iteration
+    171 have a log entry and no index row*, *why did three designer runs go unfenced*, *why did
+    the faithfulness proof pass on a destroyed split*; (b) answer each by a provenance walk on
+    World, timed; (c) record the pre-World baseline method and its cost for the same question;
+    (d) the artifact is the comparison, not the tooling. Note the R1 framing in clause 5: **this
+    mission's own operation IS the control arm**, so the questions must come from it rather than
+    be invented. · ~1d · gated on nothing · **filed at grooming 2026-09-21 (attended, Mark)
+    because the 1.0 bar named it and the queue never did.**
+
+93. **w-resident-agent-non-inferiority-floor-run** · clause-4 · **THE FLOOR GATE HAS NEVER BEEN
+    RUN AND WAS NOT A QUEUE ROW.** Clause 4 specifies it fully: TWO reference agents from
+    different providers (Claude Code agent mode and codex CLI), paired arms *shell* (native
+    tools) vs *World* (MCP transition tools only), same model, same benchmark set (standard
+    tier), **N≥3 runs per arm**; the floor holds only if BOTH show World pass-rate ≥ shell
+    pass-rate − 2pp AND median wall-clock overhead ≤ +25%. It also specifies the **stability
+    precondition** that decides whether the gate is even valid: a reference agent is
+    gate-eligible only if its SHELL arm completes N≥3 runs with zero harness-fault failures
+    (`api_error` / `resource_limit` / harness classes) and pass-rate range ≤5pp — and if both
+    agents are ineligible the gate **PAUSES for instrumentation**, which is explicitly a
+    measurement problem and NOT a value-park. **THE ITEM:** run the eligibility precondition
+    first and report it separately from the gate outcome; only then run the paired arms.
+    Ordered AFTER the clause-5 demonstration deliberately — clause 4 is the floor, not the
+    value, and a floor measured before there is value to protect measures nothing. motoko is an
+    OPTIONAL third arm, informative and never gate-blocking. · ~1.5d · gated on row 92 for
+    ordering, not for capability · **filed at grooming 2026-09-21 (attended, Mark).**
+
+
 **[LANDED 2026-07-24 (iter-13), CI green on dev `d0009c8`] w-m1-ailang-hardening** · clause-1 ·
 The M1 AILANG surface now USES AILANG's distinguishing features. Doc
 `design_docs/implemented/w-m1-ailang-hardening.md` (Fable r1 designer; **codex/gpt-5.6-sol iter-13
