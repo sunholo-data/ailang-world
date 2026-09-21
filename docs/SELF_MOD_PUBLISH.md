@@ -104,6 +104,16 @@ first field that differs.
 
 ### 6. Set the session variables and build the command
 
+**There is a helper: `./scripts/self_mod_publish.sh`.** It does not automate the publish and
+cannot satisfy any fence for you — it exists because both failures of the first attended attempt
+were ENVIRONMENT rather than decision (`fence=store reason=unopenable`, then
+`fence=tty reason=stdin-is-not-the-controlling-terminal`). It sets the variables, runs the
+preflight below, and invokes `approve` with stdin connected to `/dev/tty`, which is the fence's
+own requirement rather than a way around it — you still type the phrase. It keeps mint, rehearse
+and spend as **separate invocations** (`preflight` · `approve` · `dry-run` · `live`) for the
+reason stated in step 7. The manual path below remains authoritative.
+
+
 The store's PARENT DIRECTORY must exist — the store refuses to create it, and on a machine that
 has never published there is nothing to create it. Measured 2026-09-21, on the first real attended
 attempt: `STOP fence=store reason=unopenable … resolve parent of "…/world/world.db": no such file
