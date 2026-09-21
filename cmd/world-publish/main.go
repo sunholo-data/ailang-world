@@ -47,6 +47,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -383,6 +384,31 @@ func reportPublishResult(out, errw io.Writer, result broker.AttendedPublishResul
 		return exitError
 	default:
 		fmt.Fprintf(errw, "FAILED. %v\n", err)
+		// SAY WHY. EffectFailedError's message names the effect, the scope and
+		// the record, and nothing else; the handler's detail hangs off it via
+		// Unwrap and `%v` never asks. Measured on the first real attended
+		// publish, 2026-09-21: the operator spent a one-shot approval, typed the
+		// phrase twice, and was told only that "Registry.Publish failed", with
+		// the publisher's own account of the failure discarded at the surface
+		// and absent from the persisted record — which stores THAT it failed,
+		// not WHY. A definite failure whose cause is unrecoverable makes the
+		// next attempt as blind as the last, on a procedure whose whole point
+		// is that there may not be a next attempt.
+		//
+		// PublishDispatchError.Detail is already redactSecret'd at construction,
+		// so printing it cannot leak the credential.
+		var dispatch *broker.PublishDispatchError
+		if errors.As(err, &dispatch) {
+			fmt.Fprintf(errw, "  status %s\n", dispatch.Status)
+			if d := strings.TrimSpace(dispatch.Detail); d != "" {
+				fmt.Fprintln(errw, "  publisher said:")
+				for _, line := range strings.Split(d, "\n") {
+					fmt.Fprintf(errw, "    %s\n", line)
+				}
+			}
+		} else if cause := errors.Unwrap(err); cause != nil {
+			fmt.Fprintf(errw, "  cause: %v\n", cause)
+		}
 		return exitError
 	}
 }
