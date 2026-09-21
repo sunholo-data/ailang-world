@@ -109,7 +109,7 @@ export WORLD_STORE="$HOME/.ailang/world/world.db"
 export WORLD_BIN="$(mktemp -d)/world-publish"
 export WORLD_REGISTRY="https://storage.googleapis.com/ailang-registry"
 export WORLD_CREDENTIAL="$HOME/.config/ailang/registry.key"
-export WORLD_COMPILER="/tmp/ailang-v0300/ailang"
+export WORLD_COMPILER="$HOME/.pinned-ailang/ailang"   # NOT /tmp — macOS wipes it on boot
 ```
 
 ```bash
@@ -120,6 +120,12 @@ The binary is built into a temp directory on purpose. `go run` is **not** used h
 is measured: on go1.25.6 `go run` exits `1` for a child that exited `3`, printing `exit status 3` to
 stderr instead of propagating it. The STOP contract is an exit code, so the runbook uses a binary
 whose code survives.
+
+**`WORLD_COMPILER` was `/tmp/ailang-v0300/ailang` until 2026-09-21 and that path does not
+survive a reboot** — macOS wipes `/tmp`, and `host/archive/archive_test.go` already records
+`~/.pinned-ailang/ailang` as the durable location for exactly this reason. Measured at pre-flight
+on 2026-09-21: absent. The durable pin is the one Stage A's step 9 verifies by exact bytes
+(`AILANG v0.30.0`, commit `e37b370`).
 
 `WORLD_CREDENTIAL` must name a mode-`0600` file **outside the working tree**. The API key is never
 read from the environment: if `AILANG_REGISTRY_API_KEY` is set in your shell, the production handler
