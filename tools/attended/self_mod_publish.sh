@@ -51,8 +51,30 @@ die() { printf '\n  ✗ %s\n\n' "$*" >&2; exit 1; }
 has_tty() { ( : < /dev/tty ) 2>/dev/null; }
 ok()  { printf '  ✓ %s\n' "$*"; }
 
+# build_bin — ALWAYS builds. Never reuses a prebuilt binary.
+#
+# It used to return early when WORLD_BIN named an existing file, and that is
+# exactly how a STALE binary answered for a current tree: the operator still had
+# WORLD_BIN exported from a build made BEFORE the v0.30.0 -> v0.41.0 migration,
+# so `packet` recomputed compilerVersion from the OLD frozenCompilerVersion and
+# reported drift against a golden that was correct —
+#
+#   STOP fence=packet reason=drift
+#     compilerVersion differs: recomputed "AILANG v0.30.0", golden "AILANG v0.41.0"
+#
+# — which reads as "the package is wrong" when the truth was "the tool is old".
+# The fence was right and the diagnosis it invited was wrong, which is the worst
+# shape a correct error can have.
+#
+# A build takes seconds and this procedure is irreversible. There is no version
+# of this trade worth making, so the cache is gone: WORLD_BIN is now only a
+# PLACE to build, never a thing to trust.
 build_bin() {
-  if [ -n "$BIN" ] && [ -x "$BIN" ]; then return 0; fi
+  if [ -n "$BIN" ]; then
+    printf '  · rebuilding into WORLD_BIN (%s) — a prebuilt binary is never trusted\n' "$BIN"
+    ( cd "$REPO_ROOT" && go build -o "$BIN" ./cmd/world-publish )
+    return 0
+  fi
   BIN="$(mktemp -d)/world-publish"
   # A BINARY, never `go run`: on go1.25.6 `go run` exits 1 for a child that
   # exited 3, and the STOP contract IS an exit code.
