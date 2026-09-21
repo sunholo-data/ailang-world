@@ -1741,7 +1741,11 @@ shared skill anyway, so working them here produces proposals, not fixes.
     (d) the artifact is the comparison, not the tooling. Note the R1 framing in clause 5: **this
     mission's own operation IS the control arm**, so the questions must come from it rather than
     be invented. · ~1d · gated on nothing · **filed at grooming 2026-09-21 (attended, Mark)
-    because the 1.0 bar named it and the queue never did.**
+    because the 1.0 bar named it and the queue never did.** Doc:
+    [`design_docs/planned/w-prove-the-1-0-bar.md`](planned/w-prove-the-1-0-bar.md) — Phase A.
+    **Read §2 before starting**: `verified` forbids an answer whose only source is the walk
+    being assessed, so a question with no INDEPENDENT ground truth is not eligible however
+    real it is.
 
 93. **w-resident-agent-non-inferiority-floor-run** · clause-4 · **THE FLOOR GATE HAS NEVER BEEN
     RUN AND WAS NOT A QUEUE ROW.** Clause 4 specifies it fully: TWO reference agents from
@@ -1758,7 +1762,11 @@ shared skill anyway, so working them here produces proposals, not fixes.
     Ordered AFTER the clause-5 demonstration deliberately — clause 4 is the floor, not the
     value, and a floor measured before there is value to protect measures nothing. motoko is an
     OPTIONAL third arm, informative and never gate-blocking. · ~1.5d · gated on row 92 for
-    ordering, not for capability · **filed at grooming 2026-09-21 (attended, Mark).**
+    ordering, not for capability · **filed at grooming 2026-09-21 (attended, Mark).** Doc:
+    [`design_docs/planned/w-prove-the-1-0-bar.md`](planned/w-prove-the-1-0-bar.md) — Phase B.
+    **Read §6 before starting**: the eligibility precondition is defined in terms of
+    `error_category`, and `api_error` is the fleet's catch-all for *cause unknown* rather than
+    a model verdict — so the precondition inherits whatever that classifier gets wrong.
 
 
 **[LANDED 2026-07-24 (iter-13), CI green on dev `d0009c8`] w-m1-ailang-hardening** · clause-1 ·
