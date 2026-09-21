@@ -104,7 +104,13 @@ first field that differs.
 
 ### 6. Set the session variables and build the command
 
+The store's PARENT DIRECTORY must exist — the store refuses to create it, and on a machine that
+has never published there is nothing to create it. Measured 2026-09-21, on the first real attended
+attempt: `STOP fence=store reason=unopenable … resolve parent of "…/world/world.db": no such file
+or directory`. The refusal is correct and loud; the omission was this runbook's.
+
 ```bash
+mkdir -p "$HOME/.ailang/world"
 export WORLD_STORE="$HOME/.ailang/world/world.db"
 export WORLD_BIN="$(mktemp -d)/world-publish"
 export WORLD_REGISTRY="https://storage.googleapis.com/ailang-registry"
@@ -132,6 +138,15 @@ read from the environment: if `AILANG_REGISTRY_API_KEY` is set in your shell, th
 refuses to be constructed at all.
 
 ### 7. Mint the one-shot approval, then spend it
+
+**This step cannot be delegated to an agent, by design.** `approve` requires a controlling
+terminal (`STOP fence=tty reason=no-controlling-terminal`), and `cmd/world-publish/tty.go` records
+why: every weaker candidate — an environment variable, the typed phrase alone, a sentinel file, a
+naive isatty check — was rejected by asking *"can THIS loop satisfy it?"*, and each one could be.
+A controlling terminal is the one candidate the loop is structurally unable to satisfy, measured
+first-party. If you are reading this because an agent could not complete the publish: that is the
+fence working, not a defect to route around.
+
 
 Minting and spending are two separate invocations, deliberately. One command that did both would
 collapse two human acts into one keystroke and hide the single-use property at the very surface
