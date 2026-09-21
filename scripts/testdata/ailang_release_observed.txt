@@ -8,7 +8,20 @@
 #   v0.30.0 — the documented local pin (CLAUDE.md, charter Verification Log). Operators export
 #             AILANG_BIN to this binary, so it is the token the local lane resolves.
 #
+#   v0.41.0 — the local pin FROM 2026-09-21, attended. It replaced v0.30.0 for the world-package
+#             lane because the registry grew publish quality gates after that package froze, and
+#             v0.30.0's tarball builder does not include CHANGELOG.md (measured: 9156 bytes vs
+#             9785 for the identical tree), so PUB001 was unsatisfiable through it however the
+#             file was authored. Reviewed rather than assumed: world/core's contentHash and
+#             interfaceHash are BYTE-IDENTICAL across the two compilers (sha256:0c8c6061… and
+#             sha256:d16cc882…, 53 signatures) — only compilerVersion and the tarball moved, and
+#             the tarball moved because it gained a file. The full package gate passes 9/9 on it.
+#
+# v0.30.0 is RETAINED, not superseded: the replay goldens are still v0.30.0-scoped and that pin
+# deliberately did not move. Two pins, two reasons to be frozen.
+#
 # Adding an entry is a REVIEW, not a formality: it records that someone looked at what the primary
 # .ail gate switched to. Blank lines and `#` comments are ignored; an empty set fails the gate loudly.
+v0.41.0
 v0.33.0
 v0.30.0

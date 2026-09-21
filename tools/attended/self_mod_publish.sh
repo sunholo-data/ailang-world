@@ -165,20 +165,58 @@ approval_ref() {
   printf '%s' "$ref"
 }
 
+# print_live_command — `live` PRINTS, it does not invoke.
+#
+# host/runbook's AC30 guard forbids any automated surface from reaching the
+# publish entrypoint, and its reasoning is right: "a CI step that TRIES is a
+# design error, not a near miss". The tty fence would refuse automation anyway;
+# the guard is about what the repository is SHAPED to allow.
+#
+# This helper therefore stops at the boundary. It prepares everything, rehearses
+# everything, and hands the irreversible command to a human to paste — which is
+# also the runbook's own principle that minting and spending are two human acts.
+# The printed command carries `< /dev/tty` because the fence compares stdin to
+# the controlling terminal with os.SameFile, and an interactive shell's stdin is
+# the pty, a different file.
+print_live_command() {
+  ref="$(approval_ref)"
+  cat <<BANNER
+
+  ⚠ THE IRREVERSIBLE PUBLIC WRITE IS NOT RUN BY THIS SCRIPT, BY DESIGN.
+    world/core@0.1.0 · the registry is immutable (409 on re-publish).
+
+    Everything above is ready. Paste this, in this terminal:
+
+BANNER
+  printf '      %s publish --live \\
+' "$BIN"
+  printf '        --store %s \\
+' "$STORE"
+  printf '        --registry-origin %s \\
+' "$REGISTRY"
+  printf '        --publisher %s \\
+' "$COMPILER"
+  printf '        --credential-file %s \\
+' "$CREDENTIAL"
+  printf '        --approval-ref %s \\
+' "$ref"
+  printf '        --now 2 --expires 1000 < /dev/tty
+'
+  cat <<'BANNER'
+
+    Read the outcome:
+      exit 0  PUBLISHED      done, no reconciliation
+      exit 1  FAILED         over; the cause now prints beneath the FAILED line
+      exit 1  INDETERMINATE  DO NOT RETRY — run this helper's `reconcile`
+BANNER
+}
+
 do_publish() {
-  mode="$1"   # --dry-run | --live
+  mode="$1"   # --dry-run only; --live prints instead (see print_live_command)
   build_bin
   has_tty || die "no controlling terminal (opening /dev/tty failed).
     publish runs the same tty fence as approve. Run this from a real shell."
   ref="$(approval_ref)"
-  if [ "$mode" = "--live" ]; then
-    printf '\n  ⚠ THIS IS THE IRREVERSIBLE PUBLIC WRITE.\n'
-    printf '    world/core@0.1.0 · the registry is immutable (409 on re-publish).\n'
-    printf '    On INDETERMINATE: DO NOT RETRY — run "%s reconcile".\n\n' "$0"
-    printf '    Type YES to proceed: '
-    read -r go < /dev/tty
-    [ "$go" = "YES" ] || die "aborted (nothing was sent)"
-  fi
   set +e
   # < /dev/tty on BOTH publish modes, not just approve.
   #
@@ -226,7 +264,7 @@ case "${1:-}" in
   preflight) preflight ;;
   approve)   do_approve ;;
   dry-run)   do_publish --dry-run ;;
-  live)      do_publish --live ;;
+  live)      build_bin; print_live_command ;;
   reconcile) build_bin; ( cd "$REPO_ROOT" && env -u AILANG_REGISTRY_API_KEY "$BIN" reconcile --store "$STORE" --registry-origin "$REGISTRY" --probe ) ;;
   *) cat <<USAGE
 SM.D attended publish helper — one human act per invocation, by design.
@@ -234,7 +272,7 @@ SM.D attended publish helper — one human act per invocation, by design.
   $0 preflight    checks + packet drift + receipts. No writes.
   $0 approve      mints the ONE-SHOT approval. You type the phrase at /dev/tty.
   $0 dry-run      rehearses every fence. Makes no request.
-  $0 live         the irreversible public write. Asks YES first.
+  $0 live         PRINTS the irreversible command for you to paste. Runs nothing.
   $0 reconcile    read-only: resolve an INDETERMINATE attempt.
 
 Runbook: docs/SELF_MOD_PUBLISH.md (it wins on any disagreement).

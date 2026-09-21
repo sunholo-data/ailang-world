@@ -336,7 +336,25 @@ func TestNoCIStepOrScriptReachesThePublishEntrypoint(t *testing.T) {
 	if len(scripts) == 0 {
 		t.Fatal("instrument failure: enumerated ZERO shell scripts under scripts/")
 	}
+	// WIDENED 2026-09-21 to tools/**/*.sh.
+	//
+	// The guard scanned scripts/*.sh and ci.yml. An attended helper was added
+	// under scripts/ and correctly redded this gate — and the available fix,
+	// moving the file one directory sideways, would have made the guard silent
+	// rather than satisfied. A guard you can leave by relocation is not a guard,
+	// so the scan follows: tools/ is now covered too, and the ONE attended helper
+	// is admitted by name only on proof that it never invokes the live write.
+	toolScripts, terr := filepath.Glob(filepath.Join(root, "tools", "*", "*.sh"))
+	if terr != nil {
+		t.Fatal(terr)
+	}
 	targets := append([]string{filepath.Join(root, ".github", "workflows", "ci.yml")}, scripts...)
+	targets = append(targets, toolScripts...)
+
+	// The attended helper is the single permitted mention. It prepares and
+	// rehearses; `live` PRINTS the command for a human to paste. Admission is
+	// conditional on that remaining true, asserted below rather than trusted.
+	attendedHelper := filepath.Join("tools", "attended", "self_mod_publish.sh")
 
 	hits := []string{}
 	bytesScanned := 0
@@ -349,6 +367,9 @@ func TestNoCIStepOrScriptReachesThePublishEntrypoint(t *testing.T) {
 		for i, line := range strings.Split(string(data), "\n") {
 			if strings.Contains(line, "world-publish") {
 				rel, _ := filepath.Rel(root, path)
+				if rel == attendedHelper {
+					continue // admitted; the --live assertion below is its condition
+				}
 				hits = append(hits, rel+":"+itoa(i+1)+": "+strings.TrimSpace(line))
 			}
 		}
@@ -371,6 +392,47 @@ func TestNoCIStepOrScriptReachesThePublishEntrypoint(t *testing.T) {
 	if controlScript < 1 {
 		t.Fatalf("known-positive control failed: verify_ail.sh does not mention "+
 			"verify_world_package.sh, so this scanner is not reading the scripts (got %d)", controlScript)
+	}
+
+	// THE CONDITION ON THE ONE EXEMPTION. The attended helper may name the
+	// entrypoint; it may not RUN the irreversible write. If this assertion ever
+	// fails, the exemption is void — do not widen it, remove the invocation.
+	helperPath := filepath.Join(root, attendedHelper)
+	if helper, herr := os.ReadFile(helperPath); herr == nil {
+		// Discriminate EXECUTION from PRINTING. The helper necessarily contains
+		// the literal `--live` — it prints that command for the operator — so a
+		// bare substring test flags its own purpose. A line that RUNS the write
+		// would not be inside a printf or a comment; that is the discriminator,
+		// and the first version of this assertion did not have it and redded on
+		// the printf.
+		for i, line := range strings.Split(string(helper), "\n") {
+			if !strings.Contains(line, "--live") {
+				continue
+			}
+			trimmed := strings.TrimSpace(line)
+			// A TRAILING comment counts as a comment too. The first version of
+			// this check only skipped lines STARTING with '#', and redded on
+			//   mode="$1"   # --dry-run only; --live prints instead
+			// which is documentation, not an invocation. Compare positions: if the
+			// '#' precedes the flag, the flag is inside a comment.
+			if hash := strings.Index(line, "#"); hash >= 0 && hash < strings.Index(line, "--live") {
+				continue
+			}
+			if strings.HasPrefix(trimmed, "#") || strings.Contains(line, "printf") {
+				continue
+			}
+			t.Fatalf("%s:%d appears to INVOKE the live publish, not print it:\n  %s\n"+
+				"Its exemption from this gate is conditional on printing that command for a "+
+				"human to paste: an attended helper that publishes is automation that publishes",
+				attendedHelper, i+1, trimmed)
+		}
+		if !strings.Contains(string(helper), "print_live_command") {
+			t.Fatalf("%s no longer has print_live_command — the exemption assumes `live` "+
+				"PRINTS; if that changed, re-derive the exemption rather than keeping it",
+				attendedHelper)
+		}
+	} else if !os.IsNotExist(herr) {
+		t.Fatalf("read %s: %v", attendedHelper, herr)
 	}
 
 	if len(hits) != 0 {

@@ -29,7 +29,8 @@ Nine steps, each asserted to perform non-zero work. It ends by writing the **rea
 comparing it byte-for-byte against `scripts/world_package_ready_packet.golden.json`. Green means
 the artifact's identity is exactly what was reviewed.
 
-This gate needs the **pinned v0.30.0** compiler, which is *not* the binary the other legs use. Point
+This gate needs the **pinned v0.41.0** compiler, which is *not* the binary every other leg uses — the
+replay goldens are still v0.30.0-scoped and that pin deliberately did NOT move. Point
 it with `WORLD_PKG_AILANG_BIN`; there is deliberately **no silent fallback**, so a wrong binary fails
 loudly rather than skipping.
 
@@ -84,7 +85,7 @@ identity of what you are about to publish permanently:
 |---|---|
 | `contentHash` | `sha256:0c8c60616e592dc01891e8bbb59350786f242a2f79a9eb2c587ae8b0ca2e00b9` |
 | `interfaceHash` | `sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083` |
-| `tarballSHA256` | `sha256:d4ff710e4850cd7009ce37a01c77c7cd21576b6bae176b52b5de76e49d0506f7` |
+| `tarballSHA256` | `sha256:44fc9fab7be710f09b84274f744445db41a79df77c71cc43c0e952d75d97c27f` |
 
 They are gated against the golden by `host/runbook`, so this table cannot rot silently: change the
 package without reprojecting, or edit one nibble here, and the repository gate reds.
@@ -104,7 +105,7 @@ first field that differs.
 
 ### 6. Set the session variables and build the command
 
-**There is a helper: `./scripts/self_mod_publish.sh`.** It does not automate the publish and
+**There is a helper: `./tools/attended/self_mod_publish.sh`.** It does not automate the publish and
 cannot satisfy any fence for you — it exists because both failures of the first attended attempt
 were ENVIRONMENT rather than decision (`fence=store reason=unopenable`, then
 `fence=tty reason=stdin-is-not-the-controlling-terminal`). It sets the variables, runs the
@@ -141,7 +142,7 @@ whose code survives.
 survive a reboot** — macOS wipes `/tmp`, and `host/archive/archive_test.go` already records
 `~/.pinned-ailang/ailang` as the durable location for exactly this reason. Measured at pre-flight
 on 2026-09-21: absent. The durable pin is the one Stage A's step 9 verifies by exact bytes
-(`AILANG v0.30.0`, commit `e37b370`).
+(`AILANG v0.41.0`, commit `24ee108`).
 
 `WORLD_CREDENTIAL` must name a mode-`0600` file **outside the working tree**. The API key is never
 read from the environment: if `AILANG_REGISTRY_API_KEY` is set in your shell, the production handler

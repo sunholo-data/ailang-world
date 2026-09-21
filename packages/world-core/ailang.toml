@@ -6,6 +6,20 @@ ailang = ">=0.30.0"
 module_prefix = "world"
 description = "AILANG World's pure semantic core"
 
+# PUB002: the registry refuses a publish that does not declare what kind of
+# release this is. 0.1.0 is the first publish of this package, so `feature`.
+[release]
+kind = "feature"
+
+[metadata]
+# PUB021 wants a GitHub tree URL: without one, no agent serves the pkg:world/core
+# inbox. The four modules are PROJECTED from host/ail/world/, so the tree URL
+# names the projection output that is actually published.
+repository = "https://github.com/sunholo-data/ailang-world/tree/dev/packages/world-core"
+homepage = "https://ailang.sunholo.com/docs/packages/world/core"
+ai_summary = "AILANG World's pure semantic core: the content-addressed world-graph types, the Z3-proven validity contracts, the pure transition functions and the log-epoch semantics. No effects."
+tags = ["world", "semantic-core", "pure"]
+
 [exports]
 modules = ["world/types", "world/contracts", "world/transitions", "world/logepoch"]
 

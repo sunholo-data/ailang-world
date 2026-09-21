@@ -130,7 +130,16 @@ func CreateTarball(packageDir string) ([]byte, error) {
 			return fmt.Errorf("unsafe package path %q", rel)
 		}
 		forward := filepath.ToSlash(rel)
-		if forward == "ailang.toml" || strings.HasSuffix(forward, ".ail") || forward == "AGENT.md" || strings.HasPrefix(forward, "assets/") {
+		// CHANGELOG.md joined this set on 2026-09-21. The registry grew publish
+		// quality gates after world/core froze, and PUB001 requires a non-empty
+		// `## <version>` section — which the registry can only see if the file is
+		// IN THE TARBALL. This re-implementation exists because the upstream
+		// hashing lives in internal/ and cannot be imported across modules (DD-1),
+		// and the mandatory cross-check against the CLI in step 7 of
+		// verify_world_package.sh is what caught the omission: local=9156 vs
+		// cli=9785 bytes for the same tree. Two implementations of one rule drift;
+		// the cross-check is the thing that makes the drift loud.
+		if forward == "ailang.toml" || forward == "CHANGELOG.md" || strings.HasSuffix(forward, ".ail") || forward == "AGENT.md" || strings.HasPrefix(forward, "assets/") {
 			files[forward] = path
 		}
 		return nil

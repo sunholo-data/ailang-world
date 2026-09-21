@@ -65,10 +65,15 @@ jobs:
       # also fails that gate's own package-test step (measured on the rig: "5 properties never
       # ran (no generator)"). This installs the pin to a SEPARATE path and hands it to that leg
       # alone via WORLD_PKG_AILANG_BIN, leaving PATH `ailang` — and thus legs 1-2 — untouched.
-      - name: Install PINNED v0.30.0 ailang for the world-package leg only
+      - name: Install PINNED v0.41.0 ailang for the world-package leg only
         run: |
           set -euo pipefail
-          base="https://github.com/sunholo-data/ailang/releases/download/v0.30.0"
+          # v0.41.0 since 2026-09-21. The registry grew publish quality gates after
+          # world/core froze, and v0.30.0 does not put CHANGELOG.md in the tarball
+          # (9156 bytes vs 9785 for the same tree), so PUB001 was unsatisfiable.
+          # The REPLAY leg below keeps its own v0.30.0 pin — different artifact,
+          # different reason to be frozen. Do not unify them.
+          base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
           curl -fsSL -o pinned.tar.gz "$base/linux.x64.ailang.tar.gz"
           curl -fsSL -o pinned.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
           # the published checksum names the release asset, not our local filename
@@ -88,8 +93,8 @@ jobs:
           pinned_ver="$("$HOME/.pinned-ailang/ailang" --version)"
           echo "$pinned_ver"
           case "$pinned_ver" in
-            *'AILANG v0.30.0'*) ;;
-            *) echo "✗ pinned world-package binary is not v0.30.0" >&2; exit 1 ;;
+            *'AILANG v0.41.0'*) ;;
+            *) echo "✗ pinned world-package binary is not v0.41.0" >&2; exit 1 ;;
           esac
           echo "WORLD_PKG_AILANG_BIN=$HOME/.pinned-ailang/ailang" >> "$GITHUB_ENV"
 

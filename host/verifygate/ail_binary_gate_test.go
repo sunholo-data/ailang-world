@@ -46,8 +46,16 @@ func requirePinned(t *testing.T) {
 	// Output(), never CombinedOutput(): the binary writes operational warnings to stderr, and
 	// merging them prefixes the banner so this HasPrefix check fails on a correct pinned
 	// release (measured 2026-08-17 — an `Observatory: …MB` warning failed all 17 arms here).
+	// Pin moved v0.30.0 -> v0.41.0 on 2026-09-21 with the world package. NOT a
+	// bump for its own sake: the registry grew publish quality gates after the
+	// package froze, and v0.30.0's tarball builder omits CHANGELOG.md, so PUB001
+	// was unsatisfiable through it. contentHash and interfaceHash are unchanged
+	// across the move, which is the evidence the migration is semantically inert.
+	//
+	// The REPLAY goldens keep their own v0.30.0 pin and deliberately did not move
+	// — a different artifact with a different reason to be frozen.
 	out, err := exec.Command(pinned, "--version").Output()
-	if err != nil || !strings.HasPrefix(string(out), "AILANG v0.30.0") {
+	if err != nil || !strings.HasPrefix(string(out), "AILANG v0.41.0") {
 		t.Fatalf("pinned delegate %q unavailable or wrong (never skip): err=%v output=%q", pinned, err, out)
 	}
 }
@@ -462,7 +470,7 @@ func TestReleaseChangeNotice(t *testing.T) {
 		version string
 	}{
 		{"ArmCILatest", "AILANG v0.33.0"}, // upstream releases/latest — CI's legs 1-2
-		{"ArmLocalPin", "AILANG v0.30.0"}, // the documented local pin — CLAUDE.md
+		{"ArmLocalPin", "AILANG v0.41.0"}, // the documented local pin — CLAUDE.md
 	}
 	quietCounts := map[string]int{}
 	for _, arm := range quiet {
@@ -482,7 +490,7 @@ func TestReleaseChangeNotice(t *testing.T) {
 		t.Fatalf("ArmUnrecognised: expected exactly 1 notice, got %d\n%s", countB, outB)
 	}
 	// The notice must name the token it refused AND the expected set it checked against.
-	for _, want := range []string{"v0.34.0", "v0.33.0", "v0.30.0"} {
+	for _, want := range []string{"v0.41.0", "v0.34.0", "v0.33.0", "v0.30.0"} {
 		if !strings.Contains(outB, want) {
 			t.Fatalf("ArmUnrecognised: notice omits %q\n%s", want, outB)
 		}
@@ -600,7 +608,7 @@ func TestExpectedReleaseSetIsNonEmpty(t *testing.T) {
 		t.Fatalf("expected-release set has %d entries (%v); both real lanes must be listed or the notice fires on every run of one of them", len(entries), entries)
 	}
 	// Known-positive control: the file is not merely non-empty, it contains the two lane tokens.
-	for _, want := range []string{"v0.33.0", "v0.30.0"} {
+	for _, want := range []string{"v0.41.0", "v0.33.0", "v0.30.0"} {
 		if !slices.Contains(entries, want) {
 			t.Fatalf("expected-release set %v is missing %q", entries, want)
 		}

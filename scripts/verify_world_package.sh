@@ -24,8 +24,14 @@ readonly SMOKE="$PACKAGE_DIR/_smoke.ail"
 # by downloading the published tarball (its own published .sha256 verified `OK` as the control).
 compiler_sha_for_platform() {
   case "$(uname -s)/$(uname -m)" in
-    Darwin/arm64) printf '%s' 'e9746fef8570bc42b8cc52c0e88b7088468a5d2bd38bb8c42e27e5859b8f3fb5' ;;
-    Linux/x86_64) printf '%s' '1e594d158dffa68834b21a192519b1ee98f86052b594f8c1c36c8cdc11d6cc50' ;;
+    # v0.41.0 (commit 24ee108). Moved from v0.30.0 on 2026-09-21: the registry
+    # grew publish quality gates after this package froze in July, and v0.30.0's
+    # tarball builder does not include CHANGELOG.md — measured, 9156 bytes vs
+    # 9785 for the same tree — so PUB001 could never be satisfied through it
+    # however the file was authored. Both SHAs are over the BINARY extracted
+    # from the signed release asset, whose own sha256 was verified first.
+    Darwin/arm64) printf '%s' '1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f' ;;
+    Linux/x86_64) printf '%s' '8e7a275da6f26c38127352518ce7cdf855375dadff49547216ed90790ed25fb5' ;;
     *) return 1 ;;
   esac
 }
@@ -115,8 +121,23 @@ printf '%s\n' '── World package step 4/9: frozen manifest'
 python3 - "$MANIFEST" <<'PY' || exit 1
 import sys, tomllib
 with open(sys.argv[1], "rb") as f: got = tomllib.load(f)
+# The frozen manifest gained [release] and [metadata] on 2026-09-21. The registry
+# grew publish QUALITY GATES after this package was frozen in July, and refused
+# the first real attended publish on two of them:
+#   PUB001 CHANGELOG.md has no non-empty `## 0.1.0` section
+#   PUB002 [release] kind is not declared
+# [metadata] closes PUB021, which warns that no agent serves the pkg:world/core
+# inbox without a GitHub tree URL. These are ADDITIONS to a frozen structure and
+# are listed exactly, so the freeze still refuses anything not named here.
 want = {
   "package": {"name":"world/core", "version":"0.1.0", "edition":"1", "ailang":">=0.30.0", "module_prefix":"world", "description":"AILANG World's pure semantic core"},
+  "release": {"kind":"feature"},
+  "metadata": {
+    "repository":"https://github.com/sunholo-data/ailang-world/tree/dev/packages/world-core",
+    "homepage":"https://ailang.sunholo.com/docs/packages/world/core",
+    "ai_summary":"AILANG World's pure semantic core: the content-addressed world-graph types, the Z3-proven validity contracts, the pure transition functions and the log-epoch semantics. No effects.",
+    "tags":["world", "semantic-core", "pure"],
+  },
   "exports": {"modules":["world/types", "world/contracts", "world/transitions", "world/logepoch"]},
   "effects": {"max":[]},
 }
@@ -129,10 +150,50 @@ PY
 
 printf '%s\n' '── World package step 5/9: package check and tests'
 ( cd "$PACKAGE_DIR" && run_bounded 120 "$tmp_check" "$AILANG_BIN" check --package ) || { cat "$tmp_check" >&2; exit 1; }
-( cd "$PACKAGE_DIR" && run_bounded 180 "$tmp_test" "$AILANG_BIN" test world/ ) || { cat "$tmp_test" >&2; exit 1; }
+# --allow-skips, PINNED — not a blanket permission.
+#
+# The v0.41.0 toolchain refuses to exit 0 while any property never ran. Four
+# never run here, and NEITHER IS FIXABLE IN THIS REPOSITORY: generators are
+# DERIVED, not authored — there is no generator syntax to write — and
+# internal/testing/derive.go states the coverage exactly: "M3 arms: scalars,
+# unit (), anonymous/nested record types, tuple types, and SAME-FILE named type
+# declarations. AlgebraicType (ADTs) and TypeApp over user types are
+# intentionally M4 and fall through to nil, nil until then."
+#
+#   World    is a record in types.ail, the properties are in contracts.ail
+#            and transitions.ail -> CROSS-FILE named type, outside M3.
+#   Evidence is an ADT -> intentionally M4.
+#
+# So this is an upstream toolchain gap with a named milestone, and this
+# mission's charter is explicit that language gaps "route BACK to
+# sunholo-data/ailang as issues/backlog items, never worked around locally".
+#
+# The allowance is therefore PINNED rather than blanket: the skip count must be
+# EXACTLY 4, every skip must be the no-generator kind, and each must name one of
+# the four known properties. A FIFTH skip, a skip for any other reason, or a
+# rename reds this gate — which is the property a bare --allow-skips would throw
+# away, and the "check that looks like verification" class this repository has
+# paid for repeatedly.
+( cd "$PACKAGE_DIR" && run_bounded 180 "$tmp_test" "$AILANG_BIN" test --allow-skips world/ ) || { cat "$tmp_test" >&2; exit 1; }
 test_activity="$(grep -Ec 'PASS|pass|test' "$tmp_test" || true)"
 [ "$test_activity" -gt 0 ] || { printf '%s\n' '✗ package test output showed zero test activity' >&2; cat "$tmp_test" >&2; exit 1; }
+
+# STRIP ANSI FIRST. The runner colours its summary, so the literal bytes are
+# `⊘ Skipped:<ESC>[0m 4` — and a pattern that skips non-digits after "Skipped:"
+# captures the 0 from the reset sequence, not the count. Measured: this read 0
+# skips on a run with 4, and the pin fired as a false REGRESSION. A parser that
+# reads a colour code as data is the same class as every other check in this
+# repository that looked like verification.
+skipped_count="$(sed $'s/\033\[[0-9;]*m//g' "$tmp_test" | sed -n 's/.*Skipped:[^0-9]*\([0-9][0-9]*\).*/\1/p' | tail -1)"
+[ -n "$skipped_count" ] || { printf '%s\n' '✗ could not read a Skipped count from the test output' >&2; cat "$tmp_test" >&2; exit 1; }
+[ "$skipped_count" -eq 4 ] || { printf '✗ expected exactly 4 skipped properties, got %s — a new skip is a REGRESSION, not a licence\n' "$skipped_count" >&2; cat "$tmp_test" >&2; exit 1; }
+nogen_count="$(grep -c 'no generator for parameter' "$tmp_test" || true)"
+[ "$nogen_count" -eq 4 ] || { printf '✗ expected 4 no-generator skips, got %s — some property skipped for a DIFFERENT reason\n' "$nogen_count" >&2; cat "$tmp_test" >&2; exit 1; }
+for prop in isValidNextWorld_property_1 applyRevision_property_1 applyRevision_property_2 gradeOf_property_1; do
+  grep -q "$prop" "$tmp_test" || { printf '✗ known-skipped property missing from output: %s\n' "$prop" >&2; cat "$tmp_test" >&2; exit 1; }
+done
 printf '   ✓ package check passed and tests reported %s activity line(s)\n' "$test_activity"
+printf '   ✓ exactly 4 skips, all no-generator, all named (upstream M4 / cross-file derive gap)\n' 
 
 printf '%s\n' '── World package step 6/9: bounded smoke execution'
 ( cd "$PACKAGE_DIR" && run_bounded 30 "$tmp_smoke" "$AILANG_BIN" run _smoke.ail )
@@ -199,7 +260,7 @@ else
   printf '%s\n' '   .ailang directory absence asserted explicitly'
 fi
 grep '^entry=' "$tmp_proj" | sed 's/^entry=//' > "$tmp_entries"
-printf '%s\n' ailang.toml _smoke.ail world/types.ail world/contracts.ail world/transitions.ail world/logepoch.ail | sort > "$tmp_expected_entries"
+printf '%s\n' ailang.toml CHANGELOG.md _smoke.ail world/types.ail world/contracts.ail world/transitions.ail world/logepoch.ail | sort > "$tmp_expected_entries"
 sort -o "$tmp_entries" "$tmp_entries"
 entry_count="$(wc -l < "$tmp_entries" | tr -d '[:space:]')"
 expected_entry_count="$(wc -l < "$tmp_expected_entries" | tr -d '[:space:]')"
@@ -210,14 +271,14 @@ printf '   ✓ tar contains exactly %s allowlisted entries\n' "$entry_count"
 
 printf '%s\n' '── World package step 9/9: canonical ready-packet golden'
 compiler_version="$($AILANG_BIN --version | sed -n '1p')"
-[ "$compiler_version" = 'AILANG v0.30.0' ] || { printf '✗ wrong compiler version: %s\n' "$compiler_version" >&2; exit 1; }
+[ "$compiler_version" = 'AILANG v0.41.0' ] || { printf '✗ wrong compiler version: %s\n' "$compiler_version" >&2; exit 1; }
 measured_compiler_sha="$(python3 - "$AILANG_BIN" <<'PY'
 import hashlib, sys
 with open(sys.argv[1], "rb") as f: print(hashlib.sha256(f.read()).hexdigest())
 PY
 )"
 expected_compiler_sha="$(compiler_sha_for_platform)" || {
-  printf '✗ no pinned v0.30.0 SHA-256 recorded for platform %s/%s — refusing to pass an unpinned compiler\n' "$(uname -s)" "$(uname -m)" >&2; exit 1; }
+  printf '✗ no pinned v0.41.0 SHA-256 recorded for platform %s/%s — refusing to pass an unpinned compiler\n' "$(uname -s)" "$(uname -m)" >&2; exit 1; }
 [ -n "$expected_compiler_sha" ] || { printf '%s\n' '✗ platform SHA table returned empty' >&2; exit 1; }
 [ "$measured_compiler_sha" = "$expected_compiler_sha" ] || { printf '✗ compiler SHA-256 mismatch on %s/%s: measured=%s expected=%s (binary=%s)\n' "$(uname -s)" "$(uname -m)" "$measured_compiler_sha" "$expected_compiler_sha" "$AILANG_BIN" >&2; exit 1; }
 printf '   ✓ compiler pinned by exact bytes: %s on %s/%s\n' "$compiler_version" "$(uname -s)" "$(uname -m)"

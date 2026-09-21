@@ -74,7 +74,18 @@ const frozenPackageVersion = "0.1.0"
 // with. It is stated here INDEPENDENTLY of the golden so the comparison in
 // R-PACKET-DRIFT has two sources: a golden whose compilerVersion drifted away
 // from this constant reds rather than being copied into the recomputation.
-const frozenCompilerVersion = "AILANG v0.30.0"
+// Moved v0.30.0 -> v0.41.0 on 2026-09-21, with the ready packet re-projected
+// and its golden regenerated in the same change. NOT a version bump for its own
+// sake: the registry grew publish quality gates after this package froze, and
+// v0.30.0's tarball builder does not include CHANGELOG.md — measured at 9156
+// bytes against 9785 for the identical tree — so PUB001 could never be
+// satisfied through it however the file was authored.
+//
+// What did NOT move, which is the evidence the migration is semantically inert:
+// contentHash and interfaceHash are byte-identical across the two compilers
+// (sha256:0c8c6061… and sha256:d16cc882…, 53 signatures). Only compilerVersion
+// and the tarball changed, and the tarball changed because it gained a file.
+const frozenCompilerVersion = "AILANG v0.41.0"
 
 // stopError is a fence refusal. It is a value rather than a printf because the
 // STOP line has to be produced identically everywhere it is produced.
