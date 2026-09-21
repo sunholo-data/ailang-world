@@ -22,7 +22,7 @@ _Snapshot, overwritten every iteration. History: `world-mission.md` (STATUS), th
   (session authority, clause-3, hard 1.0 blocker) → **92** (NEW: clause-5 value demonstration —
   what World is FOR) → **34/35/38** (workbench) → **40** → **27** → **93** (NEW: clause-4 floor
   run) → **75** → daemon robustness **22–26, 32**.
-  **Maintenance, sweep-only, NOT iteration work**: 69, 76, 77, 78, 83, 84, 85, 86, 88, 89, 90, 91
+  **Maintenance — ATTENDED SESSIONS ONLY, never a loop iteration; if one blocks you, ESCALATE (file + say so in the digest + end the iteration) rather than fix**: 69, 76, 77, 78, 83, 84, 85, 86, 88, 89, 90, 91
   and 28, 29, 30, 33, 36, 37, 81, 87. Rows 76/77/78/84/89 belong to the SHARED harness in
   `sunholo-data/ailang` — route upstream, do not work here. Row **65** deferred per `D-WORLD-33`.
   Why: 27 of 34 open rows were clause-2 catch-all, 13 of them pure mission-harness, while the

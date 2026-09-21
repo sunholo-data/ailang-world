@@ -1713,10 +1713,13 @@ it must BLOCK the rung.
 | 6 | **27** `w-interface-hash-does-not-cover-the-interface` (clause-1) | Kernel correctness: the field whose NAME promises interface coverage has manifest coverage |
 | 7 | **93** (new, clause-4) | The non-inferiority floor run |
 | 8 | **75** (clause-2) | A real product CLI bug with a measured attribution hazard: a filtered query returns a strict superset **indistinguishable from a correct answer**. Admissible under Gate 2 on those grounds |
-| 9 | **22, 23, 24, 25, 26, 32** | Genuine daemon robustness — the rows clause-2 is actually about |
+| 9 | **22, 23, 24, 25, 26, 32** | Genuine daemon robustness — the rows clause-2 is actually about. These ARE World product and remain loop work |
 
-**MAINTENANCE — sweep-eligible, NOT iteration work.** Fleet rule 2026-09-21: harness work is
-admissible only when it BLOCKS the rung; one maintenance sweep per week drains these.
+**MAINTENANCE — NOT loop work at all.** Fleet rule 2026-09-21 (tightened same day,
+`a6e810920`): **harness work happens in ATTENDED SESSIONS ONLY.** It is outside this loop's
+authority row. If one of these blocks you, the move is **escalate, not fix** — file it, say it is
+blocking in the Gate-5 digest, pick the next admissible item, and if nothing is admissible end the
+iteration with the escalation as the outcome. That is a successful iteration.
 
 - Mission-harness + bookkeeping: **69, 76, 77, 78, 83, 84, 85, 86, 88, 89, 90, 91**
 - Tests about tests: **28, 29, 30, 33, 36, 37, 81, 87**
