@@ -25,13 +25,18 @@
 # Runbook: docs/SELF_MOD_PUBLISH.md. Where they disagree, the runbook wins.
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# ../.. — this file lives at tools/attended/, TWO levels down. It was one level
+# down under scripts/, and the move left this at ".." so every repo-relative
+# path resolved under tools/. Caught by the golden read failing, which is the
+# only reason it was not a silently wrong root.
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 STORE="${WORLD_STORE:-$HOME/.ailang/world/world.db}"
 REGISTRY="${WORLD_REGISTRY:-https://storage.googleapis.com/ailang-registry}"
 CREDENTIAL="${WORLD_CREDENTIAL:-$HOME/.config/ailang/registry.key}"
 COMPILER="${WORLD_COMPILER:-$HOME/.pinned-ailang/ailang}"
 BIN="${WORLD_BIN:-}"
 REF_FILE="$HOME/.ailang/world/.last_approval_ref"
+GOLDEN_FILE="scripts/world_package_ready_packet.golden.json"
 
 die() { printf '\n  ✗ %s\n\n' "$*" >&2; exit 1; }
 
@@ -73,10 +78,21 @@ preflight() {
   ok "credential is outside the working tree"
 
   [ -x "$COMPILER" ] || die "pinned compiler missing: $COMPILER"
+  # DERIVE the expected version from the golden; do not restate it.
+  #
+  # This script hardcoded "AILANG v0.30.0". When the pin moved to v0.41.0 the
+  # other eleven files were updated and this one was not, so the helper refused
+  # the very compiler the gate had just accepted — a second source of truth
+  # drifting from the first, which is the defect this whole session kept finding
+  # in other people's code. The golden's compilerVersion IS the authority on what
+  # projected the packet, so read it there and there is nothing left to drift.
+  want_compiler="$(sed -n 's/.*"compilerVersion":"\([^"]*\)".*/\1/p' "$REPO_ROOT/$GOLDEN_FILE")"
+  [ -n "$want_compiler" ] || die "could not read compilerVersion from $GOLDEN_FILE"
   ver=$("$COMPILER" --version 2>/dev/null | head -1 || true)
   case "$ver" in
-    "AILANG v0.30.0") ok "pinned compiler: $ver" ;;
-    *) die "compiler is '$ver', expected 'AILANG v0.30.0' — the ready packet was projected with that exact build" ;;
+    "$want_compiler") ok "pinned compiler: $ver (matches the golden)" ;;
+    *) die "compiler is '$ver', expected '$want_compiler' — the ready packet was projected with that exact build.
+    Expected version READ FROM $GOLDEN_FILE, not hardcoded here." ;;
   esac
 
   if [ -n "${AILANG_REGISTRY_API_KEY:-}" ]; then
