@@ -133,6 +133,8 @@ approval_ref() {
 do_publish() {
   mode="$1"   # --dry-run | --live
   build_bin
+  has_tty || die "no controlling terminal (opening /dev/tty failed).
+    publish runs the same tty fence as approve. Run this from a real shell."
   ref="$(approval_ref)"
   if [ "$mode" = "--live" ]; then
     printf '\n  ⚠ THIS IS THE IRREVERSIBLE PUBLIC WRITE.\n'
@@ -143,9 +145,23 @@ do_publish() {
     [ "$go" = "YES" ] || die "aborted (nothing was sent)"
   fi
   set +e
+  # < /dev/tty on BOTH publish modes, not just approve.
+  #
+  # `publish` runs the SAME tty fence as `approve` — "runs every fence" in the
+  # runbook means every fence. The first version of this script wired the
+  # terminal for approve only, so the mint succeeded and the rehearse died at
+  # `fence=tty reason=stdin-is-not-the-controlling-terminal`.
+  #
+  # And the fence needs the redirect even at a REAL terminal: it compares stdin
+  # to an opened /dev/tty with os.SameFile, and an interactive shell's stdin is
+  # the pty (/dev/ttysNNN), which is a different file from /dev/tty. So a
+  # genuine attended operator fails the SameFile check unless stdin IS /dev/tty.
+  # Measured 2026-09-21 on a normal zsh session. Conservative and fail-closed,
+  # but it is the reason this helper has to exist at all.
   ( cd "$REPO_ROOT" && env -u AILANG_REGISTRY_API_KEY "$BIN" publish "$mode" \
       --store "$STORE" --registry-origin "$REGISTRY" --publisher "$COMPILER" \
-      --credential-file "$CREDENTIAL" --approval-ref "$ref" --now 2 --expires 1000 )
+      --credential-file "$CREDENTIAL" --approval-ref "$ref" --now 2 --expires 1000 \
+      < /dev/tty )
   rc=$?
   set -e
   printf '\n  exit=%d  ' "$rc"
