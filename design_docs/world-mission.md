@@ -1744,7 +1744,12 @@ shared skill anyway, so working them here produces proposals, not fixes.
     (no tests discovered) is blocked on an UPSTREAM gap (`m-package-test-discovery` — inline test
     blocks are not discovered in package mode). They are not equal, and "close all the gates" is
     the same navel-gazing this queue was groomed to end. Pick by clause value, never by gate
-    count. · ~0.5d · gated on nothing · **filed 2026-09-21 (attended, Mark).**
+    count. **PUB012 IS ROUTED UPSTREAM, not ours to close**: `ailang messages send ailang-core`
+    2026-09-21, `inbox_1790021135115_a86c000b` — the quality report says 0 tests for a package
+    whose 48 inline tests pass, and `--strict` would promote that false negative to a gate.
+    The generator gap blocking the 4 properties is routed in the same pass,
+    `inbox_1790021093233_d01ba84a`. · ~0.5d · gated on nothing for PUB011; PUB012 gated on the
+    fleet · **filed 2026-09-21 (attended, Mark).**
 
 92. **w-provenance-teeth-value-demonstration** · clause-5 · **THE 1.0 VALUE PROOF HAS NEVER
     BEEN A QUEUE ROW.** Clause 5 states the bar precisely: *on ≥3 REAL "why did X happen"
