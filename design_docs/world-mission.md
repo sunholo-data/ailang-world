@@ -1728,6 +1728,24 @@ iteration with the escalation as the outcome. That is a successful iteration.
 World.** Route them upstream as issues rather than working them here — World may not edit the
 shared skill anyway, so working them here produces proposals, not fixes.
 
+94. **w-kernel-exports-carry-no-contract** · clause-1 · **8 OF WORLD/CORE'S 19 EXPORTED
+    FUNCTIONS CARRY NO CONTRACT, IN THE PACKAGE WHOSE ENTIRE CLAIM IS Z3-PROVEN SEMANTICS.**
+    Surfaced by `ailang pkg quality --strict packages/world-core` on 2026-09-21, immediately
+    after the first publish: the registry's own floor passes (`✓ no gates`), and the ladder
+    above it does not — `PUB011 8 exported function(s) carry no contract`. Clause 1 is the
+    deterministic kernel and contracts are how it is deterministic, so this is capability work,
+    not hygiene: `contracts: ✓ 11/11 verified` is a true statement about the 11 that HAVE one.
+    **THE ITEM:** enumerate the 8, and for each either write the `requires`/`ensures` or record
+    in the code why it is genuinely uncontractable (an unencodable body is a real answer — see
+    the D2/V24 note on `isValidNextWorld`, which had to inline to field equality because an
+    unencodable-bodied callee errors). Then adopt `--strict` in CI so the floor ratchets rather
+    than drifts. **CAUTION, and it is the lesson of the 2026-09-21 grooming:** a gate ladder can
+    become its own treadmill. PUB011 is clause-1 capability; PUB020 (no AGENT.md) is docs; PUB012
+    (no tests discovered) is blocked on an UPSTREAM gap (`m-package-test-discovery` — inline test
+    blocks are not discovered in package mode). They are not equal, and "close all the gates" is
+    the same navel-gazing this queue was groomed to end. Pick by clause value, never by gate
+    count. · ~0.5d · gated on nothing · **filed 2026-09-21 (attended, Mark).**
+
 92. **w-provenance-teeth-value-demonstration** · clause-5 · **THE 1.0 VALUE PROOF HAS NEVER
     BEEN A QUEUE ROW.** Clause 5 states the bar precisely: *on ≥3 REAL "why did X happen"
     questions (arising from actual operation, not synthetic), a provenance walk yields the
