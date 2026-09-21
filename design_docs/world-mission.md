@@ -1705,7 +1705,7 @@ it must BLOCK the rung.
 
 | # | Row | Why here |
 |---|---|---|
-| 1 | **8** `w-self-mod-vertical` (clause-7) | IN-SPRINT. `SM.D` is the LAST milestone and it is **ATTENDED-ONLY — never headless, never CI**. One human step from clause 7 being PROVEN. Surface it to Mark; do not attempt it in-loop |
+| ~~1~~ | ~~**8** `w-self-mod-vertical` (clause-7)~~ | **DONE 2026-09-21 — clause 7 PROVEN.** `world/core@0.1.0` published attended; record `sha256:a5e4afd4…`, reconcile `succeeded-reconciled`. Row 8 is closed |
 | 2 | **39** `w-session-authority` (clause-3) | The repo has **no inbound credential → session resolution at all**. Hard 1.0 blocker, and row 40 depends on it |
 | 3 | **92** (new, clause-5) | The value demonstration. This is what World is FOR |
 | 4 | **34, 35, 38** (clause-5) | The workbench human surface the demonstration runs through |
@@ -2814,7 +2814,30 @@ discoverability (`.mcp.json` + upstream #476). Effects/package-extensions correc
    **w-approval-inbox** · clause-5 · the approval inbox + provenance
    walk, first as CLI/generated projection (SCENARIOS.md scenario 1/3), **built to
    HUMAN-SURFACE.md** · ~2d
-8. [**[IN-SPRINT] — `SM.D0` LANDED 2026-08-10 (iter-67), PR #55 → squash `a4452d1`, dev CI green BOTH jobs SHA-addressed and step-log verified on the merge commit (`ailang-code verify gate` 11/11 · `go host build + test gate` 13/13, `failed=0`, `checks=2` = expected 2) in a 0-incident window. Evaluator `sonnet` **88/100, ZERO BLOCKING**. THE ENTRYPOINT NOW EXISTS: `SM.D` IS A REAL PROCEDURE AND IS ATTENDED-ONLY — never headless, never CI. THIS ITEM HAS NO HEADLESS-ROUTABLE MILESTONE LEFT; item 9's three pieces are the routable work.**
+8. [**[LANDED 2026-09-21 — ROW COMPLETE. CLAUSE 7 IS PROVEN.** `world/core@0.1.0` was
+    PUBLISHED, attended, through World's own propose → verify → commit pipeline. Record
+    `sha256:a5e4afd42ebc603a1cfb63ddb8a7d4a0f0a9794ef06b1410dd35eb69c1e0a6b2`. Verified
+    INDEPENDENTLY rather than on the exit code: `reconcile --probe` reports
+    `state=succeeded-reconciled absent=0 detail="served metadata matches all three expected
+    digests"`, and `ailang pkg info world/core` serves v0.1.0 (effects Pure, release feature).
+    **WHAT THE FIRST ATTEMPT FOUND, all of it environment rather than decision:** the runbook
+    omitted a `mkdir` for the store parent (`fence=store reason=unopenable`); `WORLD_COMPILER`
+    named a `/tmp` path macOS had wiped; the tty fence needs `< /dev/tty` even at a REAL
+    terminal, because it compares stdin to the controlling terminal with `os.SameFile` and an
+    interactive shell's stdin is the pty, a different file. **AND THE FAILURE THAT MATTERED:**
+    the registry grew publish QUALITY GATES after this package froze in July and refused it on
+    PUB001/PUB002 — a definite FAILED whose cause the broker discarded at the surface, so the
+    operator was told only that `Registry.Publish` failed. Fixed at `03aa20c`; the cause now
+    prints. Closing it required moving the pin v0.30.0 → v0.41.0, because v0.30.0's tarball
+    builder does not include CHANGELOG.md (measured: 9156 bytes vs 9785 on the identical tree),
+    so PUB001 was unsatisfiable through it however the file was authored. `contentHash` and
+    `interfaceHash` are BYTE-IDENTICAL across the two compilers, which is the evidence the
+    migration was semantically inert. **CARRY FORWARD:** `frozenPackageVersion = "0.1.0"` means
+    this command can publish exactly one thing and will refuse `0.1.1` — future `world/*`
+    versions need either a scoped `world/*` registry key on the normal `ailang pkg publish`
+    path (how `sunholo/*` and the autonomous cascade already work) or a deliberate decision to
+    keep them attended. That is a clause-3 authority question, not a packaging one.**]
+    ~~[IN-SPRINT] — `SM.D0` LANDED 2026-08-10 (iter-67), PR #55 → squash `a4452d1`, dev CI green BOTH jobs SHA-addressed and step-log verified on the merge commit (`ailang-code verify gate` 11/11 · `go host build + test gate` 13/13, `failed=0`, `checks=2` = expected 2) in a 0-incident window. Evaluator `sonnet` **88/100, ZERO BLOCKING**. THE ENTRYPOINT NOW EXISTS: `SM.D` IS A REAL PROCEDURE AND IS ATTENDED-ONLY — never headless, never CI. THIS ITEM HAS NO HEADLESS-ROUTABLE MILESTONE LEFT; item 9's three pieces are the routable work.**
 
     **WHAT `SM.D0` SETTLED.** `cmd/world-publish` (`packet | approve | publish | reconcile`, default outcome **STOP**, exit 3, `STOP fence=<name>`), `host/broker/publish_op.go` (the wiring — `MintAttendedApproval` through the LANDED traversal, `InvokeAttendedPublish` with exactly one dispatch), `host/pkgproj/readypacket.go`, and a runbook whose **Stage B now carries commands**. +4735/−24, 15 files. The load-bearing fence is a **controlling-terminal check**, chosen because it is the one thing this loop is structurally unable to satisfy (stdin is a socket; `open(/dev/tty)` → *device not configured*), with an `os.SameFile(stdin, ctty)` branch because **`/dev/null` IS a character device** and a naive isatty would admit `--live < /dev/null`. `R-CI` is a DECLARED TRIPWIRE, not the fence. **14 refusal branches, 22 mutations, 22 killed**, each with anchor count, pre/post sha256, a rc=0 build on the mutant, a `-run`-scoped kill and an inverse `-skip` arm.
 
