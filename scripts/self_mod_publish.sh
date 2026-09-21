@@ -124,10 +124,45 @@ do_approve() {
   printf '\nNext:  %s dry-run      (rehearses every fence, makes NO request)\n\n' "$0"
 }
 
+# valid_ref — a minted ref is sha256: plus 64 LOWERCASE hex. The fence checks
+# this too, but by then the operator has already typed YES to an irreversible
+# write and is reading a STOP instead of a result.
+valid_ref() {
+  case "$1" in
+    sha256:*) : ;;
+    *) return 1 ;;
+  esac
+  printf '%s' "${1#sha256:}" | grep -qE '^[0-9a-f]{64}$'
+}
+
 approval_ref() {
-  if [ -n "${WORLD_APPROVAL:-}" ]; then printf '%s' "$WORLD_APPROVAL"; return; fi
-  [ -f "$REF_FILE" ] || die "no approval ref; run '$0 approve' first, or export WORLD_APPROVAL"
-  cat "$REF_FILE"
+  # VALIDATE an exported WORLD_APPROVAL before trusting it over the saved ref.
+  #
+  # Measured 2026-09-21: the hand-written instructions that preceded this script
+  # said `export WORLD_APPROVAL="sha256:<the ref that was printed>"`, the
+  # operator pasted the block verbatim — entirely reasonably — and the literal
+  # placeholder then SHADOWED the good ref this script had saved. The result was
+  # a STOP at fence=approval reason=malformed, after the YES prompt, on a run
+  # that was otherwise ready. Failing here, by name, costs one command instead.
+  if [ -n "${WORLD_APPROVAL:-}" ]; then
+    if valid_ref "$WORLD_APPROVAL"; then printf '%s' "$WORLD_APPROVAL"; return; fi
+    saved=""
+    [ -f "$REF_FILE" ] && saved="$(cat "$REF_FILE")"
+    if [ -n "$saved" ] && valid_ref "$saved"; then
+      die "WORLD_APPROVAL is set but is not a valid ref:
+      $WORLD_APPROVAL
+    A VALID minted ref IS saved at $REF_FILE:
+      $saved
+    The exported value wins by default, so clear it and re-run:
+      unset WORLD_APPROVAL && $0 ${mode:+${mode#--}}"
+    fi
+    die "WORLD_APPROVAL is set but is not a valid ref: $WORLD_APPROVAL
+    Expected sha256: followed by 64 lowercase hex characters."
+  fi
+  [ -f "$REF_FILE" ] || die "no approval ref; run '$0 approve' first, or export a valid WORLD_APPROVAL"
+  ref="$(cat "$REF_FILE")"
+  valid_ref "$ref" || die "saved ref at $REF_FILE is malformed: $ref"
+  printf '%s' "$ref"
 }
 
 do_publish() {
@@ -164,13 +199,26 @@ do_publish() {
       < /dev/tty )
   rc=$?
   set -e
+  # MODE-AWARE. The first version printed "PUBLISHED — done" on a successful
+  # DRY-RUN, directly under the child's own "REHEARSAL — no request of any kind
+  # was made". A wrapper that tells the operator they published when they
+  # rehearsed is worse than no wrapper, and on an irreversible procedure it is
+  # the single most dangerous line in the script. Measured 2026-09-21.
   printf '\n  exit=%d  ' "$rc"
-  case "$rc" in
-    0) printf '(PUBLISHED — done, no reconciliation)\n' ;;
-    1) printf '(FAILED or INDETERMINATE — read the line above. If INDETERMINATE, DO NOT RETRY)\n' ;;
-    3) printf '(STOP — a fence refused; it names itself above)\n' ;;
-    *) printf '\n' ;;
-  esac
+  if [ "$mode" = "--dry-run" ]; then
+    case "$rc" in
+      0) printf '(REHEARSED — every fence passed, NOTHING was sent. Next: %s live)\n' "$0" ;;
+      3) printf '(STOP — a fence refused during the rehearsal; it names itself above)\n' ;;
+      *) printf '(rehearsal did not complete — read the line above)\n' ;;
+    esac
+  else
+    case "$rc" in
+      0) printf '(PUBLISHED — the public write landed. Done, no reconciliation)\n' ;;
+      1) printf '(FAILED or INDETERMINATE — read the line above. If INDETERMINATE, DO NOT RETRY; run "%s reconcile")\n' "$0" ;;
+      3) printf '(STOP — a fence refused BEFORE any network reach; nothing was sent)\n' ;;
+      *) printf '\n' ;;
+    esac
+  fi
   return "$rc"
 }
 
