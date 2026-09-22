@@ -1,0 +1,531 @@
+{
+  "sprint_id": "w-session-authority",
+  "queue_item": 39,
+  "title": "The inbound Authorization: Bearer credential->(episode, grants) boundary: host/authority mint/resolve/deny over a persisted session_credentials table (schema v3), operator-fenced session mint|revoke CLI verbs, daemon SessionMiddleware on POST /v1/commit, and handleCommit bound to the resolved session",
+  "status": "planned",
+  "created": "2026-09-21",
+  "planner": "mission-control iteration 176, pi:ollama/kimi-k3:cloud sprint-planner",
+  "design_doc": "design_docs/planned/w-session-authority.md",
+  "sprint_plan": "design_docs/planned/w-session-authority-sprint-plan.md",
+  "base_commit": "cf6cbf029a720a06b95f94b8b9ac449b6cf754a7",
+  "branch": "sprint/w-session-authority",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter176",
+  "github_issues": [],
+  "environment": {
+    "AILANG_BIN": "$HOME/.pinned-ailang/ailang",
+    "ailang_version": "AILANG v0.41.0 (24ee1088776e21cd06a3781ed18e77f40be06db3, built 2026-09-21T15:50:02Z, Darwin/arm64)",
+    "notes": [
+      "(a) scripts/verify_go.sh is NOT a gate on this rig (charter row 76) — it never appears in an acceptance criterion.",
+      "(b) Remote CI's go-verify job is RED at base due to a KNOWN harness defect being escalated separately (ci.yml still exports the old v0.30.0 pin where the host now wants v0.41.0; the world-package leg pins v0.41.0 into $HOME/.pinned-ailang). The sprint's gates all run LOCALLY and local gates are GREEN at base (measured below). A red remote go-verify is a base condition to REPORT, never a sprint regression.",
+      "(c) A bare go test ./... WITHOUT AILANG_BIN fails — always export AILANG_BIN=$HOME/.pinned-ailang/ailang. Base condition, never a regression.",
+      "(d) tools/launchd/* is frozen fleet core — never touch."
+    ],
+    "baseline_measured": {
+      "where": "this planning worktree (sunholo-data/ailang-world detached at cf6cbf0), 2026-09-21, by this planner",
+      "go_vet": "go vet ./... -> rc=0",
+      "verify_ail": "bash ./scripts/verify_ail.sh -> rc=0; '\u2713 verify gate PASSED: 11 required identities verified, 40 named tests pass'; '\u2713 world package gate PASSED: 9/9 steps performed non-zero work'",
+      "go_test": "go test ./... -count=1 (AILANG_BIN exported) -> rc=0; 19 ok, 0 FAIL",
+      "agreement": "matches the controller's measurement at b65a9ec recorded in the design doc (F10/V13); nothing red at base locally",
+      "post_m1_target_arithmetic": "19 base ok + 1 new host/authority test package = 20 ok expected at both milestone exits (AC-M4-1's '19 ok or better')"
+    }
+  },
+  "pre_registered": {
+    "note": "The mutation battery is PRE-REGISTERED here and runs AFTER the executor finishes, against the landed tree. It is a controller/evaluator act, not executor work. Every arm: cp -p backup, sed with an asserted occurrence count, sha256 landed-proof (pre != post), a compile/vet assert BEFORE any test result is read, the scoped observable read (never the exit code alone), the named test required as the SOLE failure, then restore by cp from the .bak — restore asserted by shasum -a 256 equality AND test -x where a mode bit matters — and NEVER git checkout -- (the tree may be dirty; a checkout would silently discard unrelated work).",
+    "runs_after": "the executor finishes M2 and snapshots .snap/M2/",
+    "baseline_gate_outcomes": {
+      "go_vet": "rc=0",
+      "verify_ail": "rc=0; 11 identities / 40 named tests / 9-of-9 steps",
+      "go_test_all": "rc=0; 19 ok, 0 FAIL at base (cf6cbf0)"
+    },
+    "restore_discipline": "cp <file> <file>.bak && sed -i '...' <file>; <run target test>; restore cp <file>.bak <file>; restore asserted by shasum -a 256 <file> == pre-mutation digest AND test -x <file> where a mode bit matters (the .bak is cp -p so the mode bit survives); never git checkout --",
+    "mutation_matrix": [
+      {
+        "id": "M1",
+        "target_file": "host/authority/resolver.go",
+        "mutation": "Introduce a direct == comparison of token material into the resolver (e.g. replace the hash-then-index with if presentedHash == storedHash)",
+        "sole_killer": "TestAuthority_NoDirectTokenCompare",
+        "guards_ac": ["AC-M3-1"],
+        "mechanism": "the AC-M3-1 source-scan test over host/authority/*.go reds on any direct equality (==/bytes.Equal/strings.EqualFold/strings.Contains) of token or credential-hash material"
+      },
+      {
+        "id": "M2",
+        "target_file": "host/authority/resolver.go",
+        "mutation": "Collapse DenialUnknown into the absent branch (unknown token -> SessionAbsent/401)",
+        "sole_killer": "TestResolve_TypedDenialTaxonomy",
+        "guards_ac": ["AC-M2-1", "AC-M2-3"],
+        "mechanism": "the taxonomy test asserts unknown and absent are distinct kinds"
+      },
+      {
+        "id": "M3",
+        "target_file": "host/authority/resolver.go",
+        "mutation": "Remove the now < expires_at check at resolve (ignore expiry)",
+        "sole_killer": "TestResolve_ExpiryEnforced",
+        "guards_ac": ["AC-M2-4"],
+        "mechanism": "the expiry test mints --ttl 1, advances now, asserts DenialExpired"
+      },
+      {
+        "id": "M4",
+        "target_file": "host/authority/mint.go",
+        "mutation": "Mint prints/logs the token twice (duplicate print)",
+        "sole_killer": "TestMint_PrintsOnce",
+        "guards_ac": ["AC-M1-1"],
+        "mechanism": "asserts the raw token appears exactly once in mint output"
+      },
+      {
+        "id": "M5",
+        "target_file": "host/authority/revoke.go",
+        "mutation": "Revocation leaves the row (the DELETE is omitted — revoke becomes a no-op against the store)",
+        "sole_killer": "TestRevoke_DeletesRow",
+        "guards_ac": ["AC-M2-5"],
+        "mechanism": "asserts the row is absent post-revoke and resolve of a revoked token is Unknown"
+      },
+      {
+        "id": "M6",
+        "target_file": "host/daemon/middleware.go",
+        "mutation": "Fall back to reading X-World-Session when Authorization is absent",
+        "sole_killer": "TestNoAlternateHeader",
+        "guards_ac": ["AC-M2-6"],
+        "mechanism": "the carrier test sends only X-World-Session and demands DenialAbsent"
+      },
+      {
+        "id": "M7",
+        "target_file": "host/authority/resolver.go",
+        "mutation": "GREEN CONTROL — reword a comment in the resolver (no behavior change)",
+        "sole_killer": "none — all tests must STAY GREEN",
+        "guards_ac": [],
+        "mechanism": "proves the mutant-detection matrix is not vacuously green"
+      }
+    ],
+    "load_bearing_named_tests": [
+      "TestMint_PrintsOnce",
+      "TestResolve_TypedDenialTaxonomy",
+      "TestResolve_ExpiryEnforced",
+      "TestRevoke_DeletesRow",
+      "TestNoAlternateHeader",
+      "TestAuthority_NoDirectTokenCompare"
+    ],
+    "schema_version_expectations": {
+      "currentSchemaVersion": "2 -> 3 (host/store/store.go:42)",
+      "expectedCurrentSchemaVersion": "2 -> 3 (host/store/schema_version_test.go:19)",
+      "frozenFutureSchemaVersion": "3 -> 4 (host/store/schema_version_test.go:17)",
+      "migration_rows": "add exactly one v3 migration row; keep journal_test.go fixtures non-vacuous",
+      "fresh_store": "initializes at v3 with the session_credentials table",
+      "v2_store": "refused via LegacySchemaVersionError with the doc-pointer message (AC-M4-3)"
+    }
+  },
+  "doc_defects_found": [
+    {
+      "id": "DEF-1",
+      "severity": "minor-but-authoritative-fix-collision",
+      "summary": "\u00a73 file table contradicts the round-2 quorum fix: schema.sql row still lists a secondary index.",
+      "detail": "The host/store/schema.sql row of \u00a73 reads 'add session_credentials table + idx_session_credential_lookup (D2 DDL)', but \u00a72 D2 (round-2 quorum fix applied verbatim) and \u00a77 V18 removed the secondary CREATE INDEX ('the TEXT PRIMARY KEY already carries the unique index a point lookup needs').",
+      "resolution": "Recorded, doc NOT edited. Sprint plan \u00a73/§7 instructs the executor to follow D2/V18: table DDL only, no secondary index. No AC is affected (AC-M3-2 asserts exactly one indexed SELECT WHERE credential_id = ?, which the PK satisfies)."
+    },
+    {
+      "id": "DEF-2",
+      "severity": "minor-cross-reference-numbering",
+      "summary": "\u00a72 residual references do not match \u00a79's numbering; no R4 exists.",
+      "detail": "D6 cites 'residual R3 (\u00a79)' for deferred read-route enforcement and D7 cites 'residual R4' for commit effect-ledger re-recording, but \u00a79 numbers these R1 and R3 respectively (R2 is live-session teardown, R13 is the daemon mint endpoint; R4 does not exist).",
+      "resolution": "Recorded, doc NOT edited. The plan and this JSON use \u00a79's numbering: R1 read routes, R2 live sessions, R3 effect-ledger re-record, R13 daemon-owned mint endpoint."
+    },
+    {
+      "id": "DEF-3",
+      "severity": "sequencing-would-red-M1",
+      "summary": "\u00a78 lists 'update schema_version_test' in M2 while M1 owns the schema version bump.",
+      "detail": "M1 carries currentSchemaVersion 2->3, but host/store/schema_version_test.go:19 asserts currentSchemaVersion == expectedCurrentSchemaVersion; deferring the test bump to M2 leaves M1's host/store RED at its own exit gate.",
+      "resolution": "Recorded, doc NOT edited. The plan assigns the schema_version_test.go constant bump (expectedCurrentSchemaVersion 2->3, frozenFutureSchemaVersion 3->4), the v3 migration row, and the journal fixtures to M1 alongside the store change. \u00a73's file table is milestone-neutral and AC-M4-3's text is untouched, so no AC amendment is needed."
+    },
+    {
+      "id": "DEF-4",
+      "severity": "trivial-pseudo-code-typo",
+      "summary": "D6 middleware sketch reads classFor(*out.Denial); the type field is Denied.",
+      "detail": "D5's ResolveOutcome declares 'Denied *DenialKind'; there is no Denial field. The D6 block is marked pseudo-code, so nothing runnable is affected.",
+      "resolution": "Recorded only. The executor writes compiling code against the real type; no doc edit and no plan adjustment."
+    }
+  ],
+  "acceptance_criteria_amendments": [],
+  "features": [
+    {
+      "id": "M1_AUTHORITY_PACKAGE_STORE_V3",
+      "name": "host/authority package + store schema v3 (mint/resolve/revoke primitives, D2 D3 D5)",
+      "description": "New host/authority package owning mint, resolve, and denial: Resolver interface, four-kind DenialKind taxonomy, ResolveOutcome (typed, never nil-outcome-on-non-error), SessionBinding{EpisodeID, Caps, ExpiresAt, CreatedAt} with no credential hash exposed, FromContext typed-context accessor. Mint: crypto/rand 32 bytes -> 64 lowercase hex, store persists sha256(token_hex) only, raw token printed exactly once (or --out at mode 0600). Resolve: hash-then-index — sha256 of the presented token into exactly one indexed SELECT ... WHERE credential_id = ? on the PK; no crypto/subtle anywhere (a post-hit compare would be vacuous); absent short-circuits before any store touch. Revoke: DELETE in a transaction (delete-from-mapping = unknown). Store: append session_credentials DDL verbatim from the round-2 quorum fix (no revoked column, NO secondary index), currentSchemaVersion 2->3, MintSession/ResolveSession/RevokeSession methods, and — travelling with this milestone per DEF-3 — expectedCurrentSchemaVersion 2->3, frozenFutureSchemaVersion 3->4, the v3 migration row, and non-vacuous journal fixtures.",
+      "commits": 1,
+      "files": [
+        "host/authority/resolver.go",
+        "host/authority/mint.go",
+        "host/authority/revoke.go",
+        "host/authority/resolver_test.go",
+        "host/authority/mint_test.go",
+        "host/store/schema.sql",
+        "host/store/store.go",
+        "host/store/schema_version_test.go",
+        "host/store/journal_test.go"
+      ],
+      "closes_acceptance_criteria": [
+        "AC-M1-3",
+        "AC-M3-1",
+        "AC-M3-2",
+        "AC-M4-3"
+      ],
+      "advances_acceptance_criteria": [
+        "AC-M1-1",
+        "AC-M1-2",
+        "AC-M2-1",
+        "AC-M2-2",
+        "AC-M2-3",
+        "AC-M2-4",
+        "AC-M2-5",
+        "AC-M2-6",
+        "AC-M4-1",
+        "AC-M4-2"
+      ],
+      "estimated_loc": 394,
+      "estimated_days": 0.6,
+      "estimated_days_breakdown": {
+        "store_schema_v3_plus_version_constants": 0.15,
+        "authority_resolver_mint_revoke": 0.25,
+        "named_tests_incl_source_scan_and_bounded_lookup": 0.2
+      },
+      "dependencies": [],
+      "acceptance_criteria": [
+        "AC-M1-3 resolve returns episode+grants+expiry. Resolve(\"Bearer <token>\", now<expires) -> Success with EpisodeID==e1, Caps matching the minted grant, ExpiresAt==mint+3600. Resolve NEVER returns the raw token.",
+        "AC-M2-1 (resolver half) absent header. Resolve(\"\", now) -> DenialAbsent.",
+        "AC-M2-2 (resolver half) malformed header. Resolve(\"Key abc\", ...) and Resolve(\"Bearer\", ...) and Resolve(\"Bearer z\" /*1 char*/, ...) -> DenialMalformed. A non-64-hex token is malformed, never unknown.",
+        "AC-M2-3 (resolver half) unknown token. Resolve(\"Bearer deadbeef...64hex-unknown\", ...) -> DenialUnknown. The static serve-api key value as Bearer -> DenialUnknown (constraint (i) — never a session).",
+        "AC-M2-4 (resolver half) expired. Mint with --ttl 1, sleep 2, resolve -> DenialExpired, distinct from DenialUnknown.",
+        "AC-M2-5 (store/resolver half) revocation. RevokeSession(<credential_id-hash>) deletes the row, then resolve of the same token -> DenialUnknown (delete-from-mapping = unknown, D4).",
+        "AC-M2-6 (resolver half) no alternate-header fallback. The resolver reads ONLY the Authorization value; a credential presented via any other carrier is DenialAbsent (HTTP carrier assertion lands at M2).",
+        "AC-M3-1 no direct secret comparison. A source-scan test over host/authority/*.go FAILS if any direct equality (==, bytes.Equal, strings.EqualFold, strings.Contains) is applied to token or credential-hash material. Killers: mutation M1.",
+        "AC-M3-2 bounded lookup. The resolve path issues exactly one SQL query: a counting observer on the store/DB seam asserts query count == 1 with the single indexed SELECT ... WHERE credential_id = ?.",
+        "AC-M4-3 store schema bump: a v2 store DB opened by the new binary is refused (LegacySchemaVersionError); a fresh DB initializes at v3 and the migrate row/constraints in schema_version_test.go are updated and green.",
+        "Exit gates (all with AILANG_BIN=$HOME/.pinned-ailang/ailang): go vet ./... rc=0; go test ./host/authority/... -count=1 ok; go test ./... -count=1 -> 20 ok / 0 FAIL; bash ./scripts/verify_ail.sh unchanged (11 identities, 40 tests, 9/9 steps).",
+        "Snapshot: every created-or-modified file copied into .snap/M1/ (full content)."
+      ],
+      "traps": [
+        "schema.sql: NO secondary CREATE INDEX (round-2 quorum fix; DEF-1) — the PRIMARY KEY already carries the point-lookup index AC-M3-2 bounds.",
+        "Three version constants move TOGETHER (currentSchemaVersion, expectedCurrentSchemaVersion, frozenFutureSchemaVersion 3->4) plus one v3 migration row; moving fewer reds host/store at schema_version_test.go:19.",
+        "The source-scan test must scan token/credential-hash material only — a scan that reds on any == in the package would false-positive on unrelated comparisons.",
+        "Absent must short-circuit BEFORE the store is touched (bounded by construction, D5); a resolve that queries on an empty header breaks AC-M3-2's count==1.",
+        "Mint output: exactly one raw-token occurrence — the one-line confirmation carries episode, grant count, expiry epoch, path; never the credential.",
+        "host/authority imports host/broker one-way; it must NOT import host/daemon (round-2 fix; that is why the middleware lives in the daemon package at M2)."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+      "name": "session mint|revoke CLI verbs + tty fence (D1 D4) + daemon middleware + handleCommit session binding (D6 D7)",
+      "description": "Operator-facing verbs on the established flag CLI: session mint --episode <id> [--grant EFFECT=SCOPE:BUDGET]... [--ttl 3600] [--out <path>] and session revoke <credential_id-hash>, dispatched via case \"session\" in main.go's switch verb, talking DIRECTLY to the store DB path (--db, default matching serve --db) — never a new HTTP endpoint (daemon-owned mint is residual R13). Tty fence ported from cmd/world-publish/tty.go: refuse with no controlling terminal (os.Open(\"/dev/tty\") ENXIO), Y/N confirmation read from /dev/tty. Daemon side (round-2 quorum placement): host/daemon/middleware.go SessionMiddleware.Wrap(protected, mux) calling in-package writeAPIError — absent/unknown/expired -> 401 with distinct classes SessionAbsent/SessionUnknown/SessionExpired, malformed -> 400 InvalidSession; success -> typed context value read via authority.FromContext. Handler() wraps the mux; protected = POST /v1/commit only (eight GET routes unauthenticated this sprint — residual R1, a config flip later). handleCommit reads the binding and builds broker.NewSession(d.store, binding.EpisodeID, binding.Caps, registry); store Commit semantics unchanged; effect-ledger re-record is residual R3. X-World-Session is never read anywhere.",
+      "commits": 1,
+      "files": [
+        "cmd/ailang-worldd/session.go",
+        "cmd/ailang-worldd/main.go",
+        "host/daemon/middleware.go",
+        "host/daemon/daemon.go",
+        "host/daemon/handlers.go"
+      ],
+      "closes_acceptance_criteria": [
+        "AC-M1-1",
+        "AC-M1-2",
+        "AC-M2-1",
+        "AC-M2-2",
+        "AC-M2-3",
+        "AC-M2-4",
+        "AC-M2-5",
+        "AC-M2-6",
+        "AC-M4-1",
+        "AC-M4-2"
+      ],
+      "advances_acceptance_criteria": [],
+      "estimated_loc": 190,
+      "estimated_days": 0.6,
+      "estimated_days_breakdown": {
+        "cli_verbs_plus_tty_fence": 0.25,
+        "middleware_and_handler_wiring": 0.2,
+        "handlecommit_binding_plus_full_ac_battery": 0.15
+      },
+      "dependencies": [
+        "M1_AUTHORITY_PACKAGE_STORE_V3"
+      ],
+      "acceptance_criteria": [
+        "AC-M1-1 mint prints exactly once. ailang-worldd session mint --db <tmp>/world.db --episode e1 --grant fs.read=/tmp/b:1 --ttl 3600 under a PTTY (test drives os.Open(\"/dev/tty\") via the fencing seam) -> prints the raw 64-hex token exactly once and stores one row. Count raw-token occurrences in the output: exactly 1.",
+        "AC-M1-2 distinct credentials per mint. Mint twice for the same episode; the two printed tokens differ (and both rows have distinct credential_id). test \"$a\" != \"$b\" -> 0 (distinct).",
+        "AC-M2-1 (HTTP half) POST /v1/commit with no Authorization -> 401 SessionAbsent.",
+        "AC-M2-2 (HTTP half) malformed header -> 400 InvalidSession. A non-64-hex token is malformed -> 400, never 401.",
+        "AC-M2-3 (HTTP half) unknown token -> 401 SessionUnknown. The static serve-api key value as Bearer -> 401 (constraint (i) — never a session).",
+        "AC-M2-4 (HTTP half) expired -> 401 SessionExpired, distinct from SessionUnknown.",
+        "AC-M2-5 (CLI half) session revoke <credential_id-hash> then resolve of the same token -> DenialUnknown (delete-from-mapping = unknown, D4).",
+        "AC-M2-6 (HTTP half) no alternate-header fallback. Request with ONLY X-World-Session: <a valid minted token> and no Authorization -> 401 SessionAbsent (must NOT resolve).",
+        "AC-M4-1 go test ./... -count=1 -> 19 ok or better (20 expected: 19 base + host/authority). go vet ./... -> rc=0.",
+        "AC-M4-2 bash ./scripts/verify_ail.sh with AILANG_BIN=$HOME/.pinned-ailang/ailang -> '\u2713 verify gate PASSED: 11 required identities verified, 40 named tests pass' and '\u2713 world package gate PASSED: 9/9 steps' (unchanged — this item adds no .ail).",
+        "AC-M4-3 re-proved at this exit: v2 store refused (LegacySchemaVersionError); fresh DB at v3; schema_version_test.go migrate row/constraints green.",
+        "Full AC battery green including the resolver-level ACs landed at M1 (AC-M1-3, AC-M3-1, AC-M3-2) — M2's exit re-runs all of design-doc \u00a74.",
+        "Snapshot: every created-or-modified file copied into .snap/M2/ (cumulative — includes M1's files, full content). Executor STOPS here; the pre-registered mutation battery is the controller's next act."
+      ],
+      "traps": [
+        "The tty fence is the controlling-terminal fence (os.Open(\"/dev/tty\") ENXIO), NOT an isatty heuristic — /dev/null IS a character device and a naive ModeCharDevice check admits it (measured in cmd/world-publish/tty.go's header).",
+        "The PTTY AC (AC-M1-1) drives the fence through its seam in-process; any verdict that requires a process actually serving a socket is UNINFORMATIVE UNDER SANDBOX — label it, never report pass/fail.",
+        "session mint takes --db, never --addr: it must not depend on a running daemon and must not cross the HTTP surface it authorizes.",
+        "Middleware lives in host/daemon and writes errors via the in-package writeAPIError; host/authority must not import host/daemon (round-2 import-cycle fix).",
+        "handleCommit keeps the store's Commit semantics unchanged — the session is the capability/budget gate between the HTTP body and the store write; do NOT re-record the commit into the effect ledger (residual R3, row 40's).",
+        "Never read X-World-Session — not as fallback, not as preference (D-WORLD-26; killed by mutation M6).",
+        "The benchmark host/daemon/bench_test.go:474 calls broker.NewSession directly with a literal grant — the new session layer must not change its behavior (design doc \u00a76)."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "acceptance_criteria_map": {
+    "AC-M1-1": {
+      "closed_by": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+      "advanced_by": ["M1_AUTHORITY_PACKAGE_STORE_V3"],
+      "reproved_by": ["M4"],
+      "observable": "PTTY-fenced mint prints the raw 64-hex token exactly once and stores one row; the print-once primitive (host/authority/mint.go) is unit-tested at M1 by TestMint_PrintsOnce"
+    },
+    "AC-M1-2": {
+      "closed_by": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+      "advanced_by": ["M1_AUTHORITY_PACKAGE_STORE_V3"],
+      "observable": "two mints for one episode print differing tokens with distinct credential_id rows (test \"$a\" != \"$b\" rc 0)"
+    },
+    "AC-M1-3": {
+      "closed_by": "M1_AUTHORITY_PACKAGE_STORE_V3",
+      "observable": "Resolve returns Success{EpisodeID==e1, Caps as minted, ExpiresAt==mint+3600}; the raw token is never returned"
+    },
+    "AC-M2-1": {
+      "closed_by": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+      "resolver_half_closed_by": "M1_AUTHORITY_PACKAGE_STORE_V3",
+      "reproved_by": ["M2"],
+      "observable": "Resolve(\"\", now) -> DenialAbsent at M1; POST /v1/commit with no Authorization -> 401 SessionAbsent at M2"
+    },
+    "AC-M2-2": {
+      "closed_by": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+      "resolver_half_closed_by": "M1_AUTHORITY_PACKAGE_STORE_V3",
+      "observable": "Key abc / bare Bearer / 1-char token -> DenialMalformed at M1; HTTP -> 400 InvalidSession at M2 (never 401)"
+    },
+    "AC-M2-3": {
+      "closed_by": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+      "resolver_half_closed_by": "M1_AUTHORITY_PACKAGE_STORE_V3",
+      "reproved_by": ["M2"],
+      "observable": "unknown 64-hex token -> DenialUnknown at M1; HTTP -> 401 SessionUnknown at M2, including the static serve-api key presented as Bearer (constraint (i))"
+    },
+    "AC-M2-4": {
+      "closed_by": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+      "resolver_half_closed_by": "M1_AUTHORITY_PACKAGE_STORE_V3",
+      "reproved_by": ["M3"],
+      "observable": "mint --ttl 1, sleep 2 -> DenialExpired at M1; HTTP 401 SessionExpired at M2, distinct from SessionUnknown"
+    },
+    "AC-M2-5": {
+      "closed_by": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+      "resolver_half_closed_by": "M1_AUTHORITY_PACKAGE_STORE_V3",
+      "reproved_by": ["M5"],
+      "observable": "row absent post-revoke and resolve -> DenialUnknown at M1 (TestRevoke_DeletesRow); session revoke <hash> CLI path at M2"
+    },
+    "AC-M2-6": {
+      "closed_by": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+      "resolver_half_closed_by": "M1_AUTHORITY_PACKAGE_STORE_V3",
+      "reproved_by": ["M6"],
+      "observable": "X-World-Session-only request -> DenialAbsent/401 SessionAbsent; under mutation M6 it resolves, so green proves the absence is enforced"
+    },
+    "AC-M3-1": {
+      "closed_by": "M1_AUTHORITY_PACKAGE_STORE_V3",
+      "reproved_by": ["M1"],
+      "observable": "source-scan test fails on ==/bytes.Equal/strings.EqualFold/strings.Contains over token or credential-hash material in host/authority/*.go; unknown-vs-known traverse the identical single-query path"
+    },
+    "AC-M3-2": {
+      "closed_by": "M1_AUTHORITY_PACKAGE_STORE_V3",
+      "observable": "counting observer on the store/DB seam asserts exactly one SQL query per resolve: the indexed SELECT ... WHERE credential_id = ?"
+    },
+    "AC-M4-1": {
+      "closed_by": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+      "advanced_by": ["M1_AUTHORITY_PACKAGE_STORE_V3"],
+      "observable": "go test ./... -count=1 20 ok / 0 FAIL (19 base + host/authority; criterion floor is 19-or-better); go vet rc=0; re-run at both milestone exits"
+    },
+    "AC-M4-2": {
+      "closed_by": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+      "advanced_by": ["M1_AUTHORITY_PACKAGE_STORE_V3"],
+      "observable": "verify_ail.sh unchanged: 11 identities verified, 40 named tests, 9/9 package steps (no .ail added); re-run at both milestone exits"
+    },
+    "AC-M4-3": {
+      "closed_by": "M1_AUTHORITY_PACKAGE_STORE_V3",
+      "confirmed_by": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+      "observable": "v2 store refused by LegacySchemaVersionError; fresh store initializes at v3; schema_version_test.go migrate row/constraints updated and green"
+    },
+    "mutations": {
+      "M1": {
+        "killer_test": "TestAuthority_NoDirectTokenCompare",
+        "mutation": "direct == comparison of token material in the resolver",
+        "guards_ac": ["AC-M3-1"]
+      },
+      "M2": {
+        "killer_test": "TestResolve_TypedDenialTaxonomy",
+        "mutation": "collapse DenialUnknown into the absent branch",
+        "guards_ac": ["AC-M2-1", "AC-M2-3"]
+      },
+      "M3": {
+        "killer_test": "TestResolve_ExpiryEnforced",
+        "mutation": "remove the now < expires_at check at resolve",
+        "guards_ac": ["AC-M2-4"]
+      },
+      "M4": {
+        "killer_test": "TestMint_PrintsOnce",
+        "mutation": "mint prints/logs the token twice",
+        "guards_ac": ["AC-M1-1"]
+      },
+      "M5": {
+        "killer_test": "TestRevoke_DeletesRow",
+        "mutation": "revocation omits the DELETE (no-op)",
+        "guards_ac": ["AC-M2-5"]
+      },
+      "M6": {
+        "killer_test": "TestNoAlternateHeader",
+        "mutation": "fall back to X-World-Session when Authorization is absent",
+        "guards_ac": ["AC-M2-6"]
+      },
+      "M7": {
+        "killer_test": "none — GREEN CONTROL, all tests stay green",
+        "mutation": "reword a resolver comment, no behavior change",
+        "guards_ac": ["non-vacuity of the whole battery"]
+      }
+    }
+  },
+  "velocity": {
+    "method": "Per-file LOC from the design doc's \u00a73 table, cross-checked against measured base facts (store.go:42, schema_version_test.go:17-19). Tests are ~40% of new LOC; the mutation battery is post-execution controller work and is priced outside the executor milestones.",
+    "precedent": "Base gates measured twice on identical outcomes (controller at b65a9ec, this planner at cf6cbf0): 19 ok / 0 FAIL. The '20 ok' post-M1 target is arithmetic from that measurement, not hope.",
+    "estimated_total_loc": 584,
+    "loc_breakdown": {
+      "M1_AUTHORITY_PACKAGE_STORE_V3": "394 (resolver 80, mint 70, revoke 30, tests 150, schema.sql +9, store.go +35, version tests/fixtures +20)",
+      "M2_CLI_MIDDLEWARE_COMMIT_BINDING": "190 (session.go 90, main.go +10, middleware.go 50, daemon.go+handlers.go +40)"
+    },
+    "note_vs_doc": "584 computed from the table's per-file entries vs the doc's '~+570' headline — the delta is rounding on ~-marked entries, not scope added",
+    "estimated_days": 1.2,
+    "estimated_days_cap": 2,
+    "estimated_days_per_milestone": {
+      "M1_AUTHORITY_PACKAGE_STORE_V3": 0.6,
+      "M2_CLI_MIDDLEWARE_COMMIT_BINDING": 0.6
+    }
+  },
+  "pricing": {
+    "design_doc_total_days": 2.0,
+    "plan_total_days": 1.2,
+    "verdict": "AGREE that each milestone fits its \u22641d band with headroom; plan prices 1.2d of executor work against the doc's \u22642d, the difference being planner-done baseline measurement and a pre-registered battery the controller runs.",
+    "bands": [
+      {
+        "work": "store schema v3: DDL append, currentSchemaVersion 2->3, three coupled version constants + v3 migration row + journal fixtures",
+        "doc": null,
+        "plan": 0.15,
+        "driver": "+64 LOC but three constants must move together or host/store reds at schema_version_test.go:19 (measured); DEF-1 means the executor must NOT add the index the \u00a73 row still names"
+      },
+      {
+        "work": "host/authority resolver+mint+revoke (180 LOC)",
+        "doc": null,
+        "plan": 0.25,
+        "driver": "types are fully specified in D5 verbatim; the only real choices are test-seam wiring"
+      },
+      {
+        "work": "M1 named tests incl. source-scan + bounded-lookup (150 LOC)",
+        "doc": null,
+        "plan": 0.2,
+        "driver": "six named killers pre-registered; the counting-observer seam is the one non-obvious piece (AC-M3-2)"
+      },
+      {
+        "work": "CLI verbs + tty fence (~100 LOC)",
+        "doc": null,
+        "plan": 0.25,
+        "driver": "cmd/world-publish/tty.go is a proven in-repo port source; the PTTY fencing-seam drive-under-test (AC-M1-1) is the cost"
+      },
+      {
+        "work": "middleware + Handler wiring + handleCommit binding (~90 LOC)",
+        "doc": null,
+        "plan": 0.2,
+        "driver": "middleware logic given near-verbatim in D6; placement settled by the round-2 quorum"
+      },
+      {
+        "work": "full AC battery re-run + snapshots",
+        "doc": null,
+        "plan": 0.15,
+        "driver": "gates scripted; each local full-suite run is ~3 min measured"
+      }
+    ],
+    "objections": [
+      "The doc's +~20 LOC for schema_version_test/journal fixtures understates the coupling, not the size: the version constants, the migration row, and the refusal-path expectations are one atomic edit (DEF-3). Priced inside M1 at 0.15d.",
+      "AC-M1-1's PTTY requirement is the schedule risk in M2, not the middleware: if the fencing seam cannot be driven in-process on this rig, the honest verdict is UNINFORMATIVE UNDER SANDBOX for the live-tty run with the in-process seam test standing as the gate. Priced 0.25d either way."
+    ]
+  },
+  "split_verdict": {
+    "decision": "NO SPLIT inside either milestone; M1 -> M2 order is structural, not chosen",
+    "seams_tested": [
+      {
+        "seam": "host/authority package first, store v3 second",
+        "reds": "compile: resolver/mint/revoke call store.MintSession/ResolveSession/RevokeSession and the session_credentials table — the package cannot build against a v2 store"
+      },
+      {
+        "seam": "store v3 bump first, schema_version_test constants second",
+        "reds": "go test ./host/store/ RED at schema_version_test.go:19 (currentSchemaVersion == expectedCurrentSchemaVersion) — read from the base file, not re-run; this is DEF-3 and the reason the test bump travels with M1"
+      },
+      {
+        "seam": "M2 artifacts (CLI verbs, middleware) before M1",
+        "reds": "compile: cmd/ailang-worldd/session.go and host/daemon/middleware.go reference authority.Resolver/SessionBinding and store session methods that only M1 creates"
+      }
+    ],
+    "note": "Seams are compile/test-certainties read from the base tree (go:embed schema.sql + version-gated enforceSchemaVersion + the :19 assertion); no experimental split run was needed or done."
+  },
+  "risk_level": "medium",
+  "top_risks": [
+    "R1 — full /v1/* read-route enforcement deferred (D6): eight GET routes stay unauthenticated this sprint; a real authority gap on read paths, named for a follow-up queue row, mitigated by the middleware's route-agnostic protected set (a config flip later)",
+    "R2 — live in-process sessions survive revoke/expiry (D4): an already-constructed broker.Session finishes its grant budget after its credential dies; expiry/revocation gate NEW resolutions only — declared, not hidden",
+    "R3 — commit effect-ledger re-record deferred (D7): handleCommit is session-gated but the commit is not re-recorded through broker.Session's replay path; owned by row 40's propose -> verify -> commit sequence",
+    "R13 — no daemon-owned mint endpoint (D1): mint writes the store DB directly (local-first); a remote operator cannot mint against a live daemon — explicit follow-up if ever needed",
+    "Schema-version-bump risk: existing v2 operator DBs are REFUSED by the new binary (LegacySchemaVersionError) until re-initialized/migrated — a deliberately loud operator-facing behavior change, covered by AC-M4-3 and the doc-pointer refusal message"
+  ],
+  "handoff": {
+    "to": "sprint-executor",
+    "plan_path": "design_docs/planned/w-session-authority-sprint-plan.md",
+    "progress_path": "sprint_w-session-authority.json",
+    "estimated_duration": "1.2 days (hard cap 2)",
+    "total_loc_estimate": 584,
+    "executor_constraints": [
+      "Run IN the worktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter176 on branch sprint/w-session-authority (created by the controller from cf6cbf029a720a06b95f94b8b9ac449b6cf754a7). A sibling of the repo; never /tmp.",
+      "NO git write operations at all — no git add/commit/stash/checkout/branch. The controller builds commits.",
+      "After EACH milestone, snapshot every created-or-modified file into .snap/M<k>/ — cumulative full content (.snap/M2/ includes M1's files). .snap/ is an untracked working artifact, never committed.",
+      "Gates per milestone, ALL with AILANG_BIN=$HOME/.pinned-ailang/ailang exported: go vet ./... ; go test ./host/authority/... -count=1 (M1 onward); go test ./... -count=1 (both milestones — expect 20 ok / 0 FAIL: 19 base + the new host/authority package); bash ./scripts/verify_ail.sh (unchanged 11 identities / 40 tests / 9-of-9).",
+      "A bare go test ./... WITHOUT AILANG_BIN fails — base condition, never report as a regression.",
+      "scripts/verify_go.sh is NOT a gate on this rig (charter row 76) — never an acceptance criterion; remote CI's red go-verify job is a KNOWN escalated harness defect (old v0.30.0 pin) — base condition to REPORT, not to fix.",
+      "Any verdict about a process actually serving a socket (live daemon listener, curl batteries) is UNINFORMATIVE UNDER SANDBOX — label it, never report pass/fail; the informative HTTP assertions are in-process (httptest).",
+      "A gate red at BASE is a finding to REPORT, not an obstacle — never fix it, never plan around it silently.",
+      "Never touch tools/launchd/* (frozen fleet core). No .ail changes — verify_ail's outcome must stay byte-identical (AC-M4-2).",
+      "Restore discipline for any probing or mutation: cp -p backup + shasum -a 256 assertion (AND test -x where a mode bit matters); NEVER git checkout -- .",
+      "Executor STOPS after .snap/M2/. The pre-registered mutation battery (M1-M7) and the controller bookkeeping milestone are not executor work."
+    ],
+    "carried_forward_out_of_scope": [
+      "R1 full /v1/* read-route enforcement — follow-up queue row (middleware protected-set flip)",
+      "R2 live-session teardown on revoke/expiry — rejected this sprint (no handle path; breaks epoch serialization)",
+      "R3 commit re-record into the effect-ledger through broker.Session — row 40's propose -> verify -> commit sequence",
+      "R13 daemon-owned mint endpoint — follow-up if a remote operator ever needs it",
+      "Controller bookkeeping milestone (NOT an executor feature row): file the w-a2a-session-projection.md unblock per design-doc \u00a76 (row-40 adapter over authority.Resolver.Resolve) and spawn queue rows for the \u00a79 residuals as the controller decides"
+    ]
+  },
+  "execution": {
+    "iteration": 176,
+    "note": "Planned by the iteration-176 sprint-planner; not yet executed. Baseline gates re-measured green at cf6cbf0 by this planner (go vet rc=0; verify_ail 11/40 + 9/9; go test 19 ok / 0 FAIL with AILANG_BIN exported), matching the controller's b65a9ec measurement.",
+    "commit": null,
+    "pull_request": null,
+    "milestones": [
+      {
+        "id": "M1_AUTHORITY_PACKAGE_STORE_V3",
+        "status": "pending",
+        "passes": null,
+        "commit": null
+      },
+      {
+        "id": "M2_CLI_MIDDLEWARE_COMMIT_BINDING",
+        "status": "pending",
+        "passes": null,
+        "commit": null
+      }
+    ]
+  }
+}
