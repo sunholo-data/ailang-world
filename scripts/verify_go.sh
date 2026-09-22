@@ -6,14 +6,17 @@
 # so it runs from any cwd (like verify_ail.sh).
 #
 # ANTI-FALSE-GREEN GUARD (Standing Rule / V27 / B1): the host/replay tests
-# `t.Skip()` silently when AILANG_BIN is unset (pinnedBinary), so a bare
+# `t.Skip()` silently when neither binary env var is set (pinnedBinary), so a bare
 # `go test` would report `ok` with the load-bearing replay assertions never
 # running — the exact silent-skip class the mission forbids. This gate FAILS
-# LOUDLY if AILANG_BIN is unset OR the binary it names does not report v0.30.0,
-# turning a would-be false-green into a red local gate that mirrors CI (where
-# the go-verify job exports AILANG_BIN before invoking this script). Locally,
-# the operator exports AILANG_BIN=$HOME/.pinned-ailang/ailang (moved off /tmp 2026-09-03:
-# macOS wipes /private/tmp on boot, and it took the pin with it — see the charter Repo Profile).
+# LOUDLY if AILANG_BIN is unset OR the binary it names does not report v0.41.0 —
+# ONE pin, tracking current AILANG — turning a would-be false-green into a red local
+# gate that mirrors CI (where the go-verify job exports it before invoking this script).
+# Locally, the operator exports AILANG_BIN=$HOME/.pinned-ailang/ailang (moved off /tmp
+# 2026-09-03: macOS wipes /private/tmp on boot, and it took the pin with it — see the
+# charter Repo Profile). The replay goldens were re-verified byte-exact on v0.41.0
+# (2026-09-22), so the old separate v0.30.0 replay pin is gone: world exercises the
+# language it ships against, not an eleven-release-old snapshot of it.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -149,8 +152,8 @@ if [ "$#" -gt 0 ]; then
 fi
 
 if [ -z "${AILANG_BIN:-}" ]; then
-  echo "✗ AILANG_BIN is unset — host/replay tests would t.Skip() silently and this gate would be false-green." >&2
-  echo "  Export the pinned released binary, e.g. AILANG_BIN=/tmp/ailang-v0300/ailang" >&2
+  echo "✗ AILANG_BIN is unset — host/replay and host/verifygate tests would t.Skip() silently and this gate would be false-green." >&2
+  echo "  Export the pinned released v0.41.0 binary, e.g. AILANG_BIN=$HOME/.pinned-ailang/ailang" >&2
   exit 1
 fi
 
@@ -164,15 +167,16 @@ ver="$("$AILANG_BIN" --version 2>/dev/null)" || {
   echo "✗ AILANG_BIN=$AILANG_BIN could not be executed for a version check" >&2
   exit 1
 }
-# EXACT TOKEN, NEVER A SUBSTRING (iter-66). This assertion used `grep -q 'v0.30.0'`, which the
-# string `v0.30.0-205-g54d6bd191-dirty` SATISFIES — so the anti-false-green guard admitted exactly
+# EXACT TOKEN, NEVER A SUBSTRING (iter-66). This assertion used `grep -q 'v0.41.0'`, which the
+# string `v0.41.0-205-g54d6bd191-dirty` SATISFIES — so the anti-false-green guard admitted exactly
 # the dirty dev build CLAUDE.md forbids, measured against the real script before the fix. The
-# released binary reports the bare token in both arms that matter: `AILANG v0.30.0` locally
-# (/tmp/ailang-v0300/ailang) and `AILANG v0.30.0` on the linux runner (CI step log, run
-# 31249744703, `go host build + test gate`), so tightening this cannot red CI.
+# released binary reports the bare token in both arms that matter: `AILANG v0.41.0` locally
+# (/Users/voightkampff/.pinned-ailang/ailang) and `AILANG v0.41.0` on the linux runner, so
+# tightening this cannot red CI. The world-package / verifygate pin moved v0.30.0→v0.41.0 on
+# 2026-09-21 (7a262c3, "with the world package").
 ver_tok="$(printf '%s\n' "$ver" | head -1 | awk '{print $2}')"
-if [ "$ver_tok" != 'v0.30.0' ]; then
-  echo "✗ AILANG_BIN=$AILANG_BIN does not report exactly v0.30.0 (got: ${ver_tok:-<none>}) — replay goldens are v0.30.0-scoped." >&2
+if [ "$ver_tok" != 'v0.41.0' ]; then
+  echo "✗ AILANG_BIN=$AILANG_BIN does not report exactly v0.41.0 (got: ${ver_tok:-<none>}) — the world-package / verifygate pin moved to v0.41.0 on 2026-09-21." >&2
   echo "  A -dirty or -N-g<sha> suffix is a REJECTION, not a match: dev builds are forbidden by CLAUDE.md." >&2
   exit 1
 fi

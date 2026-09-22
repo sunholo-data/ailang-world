@@ -165,7 +165,7 @@ fi
 	writeFile(t, filepath.Join(root, "scripts", "mission_decisions.sh"), validator, 0o755)
 	writeFile(t, filepath.Join(root, "design_docs", "world-mission.md"), []byte(ledger), 0o644)
 	if controlledStop {
-		shim := "#!/bin/sh\nif [ \"${1:-}\" = --version ]; then echo 'AILANG v0.30.0'; exit 0; fi\nexit 0\n"
+		shim := "#!/bin/sh\nif [ \"${1:-}\" = --version ]; then echo 'AILANG v0.41.0'; exit 0; fi\nexit 0\n"
 		writeFile(t, filepath.Join(root, "bin", "ailang"), []byte(shim), 0o755)
 		for _, args := range [][]string{{"init", "-q"}, {"add", "."}, {"-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "fixture"}} {
 			rc, out, timedOut := runMissionCommand(t, root, missionEnv(), "git", args...)
@@ -433,13 +433,21 @@ func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bo
 	t.Helper()
 	missionBanner := `echo "── mission routing + decision-ledger gate"`
 	missionAnchor := `/bin/bash tools/launchd/test_mission_routing.sh`
+	// The pin anchor diverges with the repaired script the same way the routing block
+	// does: the embedded 565d0b2 fixture predates the 2026-09-22 pin move (AILANG_BIN
+	// v0.30.0 → v0.41.0), so the unrepaired fixture keeps the old token and only the
+	// repaired repo script carries the current one. The PASSED line is shared again —
+	// it echoes $ver rather than naming a version, so it survives the next pin move.
+	verTokAnchor := `if [ "$ver_tok" != 'v0.30.0' ]; then`
 	if repaired {
 		missionBanner = `echo "── World mission-input gate (decision ledger)"`
 		missionAnchor = `check_mission_config`
+		verTokAnchor = `if [ "$ver_tok" != 'v0.41.0' ]; then`
 	}
+	passedAnchor := `echo "✓ go gate PASSED: build clean, plain and race tests pass with pinned AILANG_BIN ($ver)"`
 	needles := []string{
 		`if [ -z "${AILANG_BIN:-}" ]; then`,
-		`if [ "$ver_tok" != 'v0.30.0' ]; then`,
+		verTokAnchor,
 		`echo "── AILANG_BIN=$AILANG_BIN ($ver)"`,
 		`echo "── tracked-binary hygiene gate"`,
 		`if [ "$tracked_total" -eq 0 ]; then`,
@@ -461,7 +469,7 @@ func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bo
 		`cmd = ["go", "test", "./...", "-count=1", "-race", "-timeout", "8m"]`,
 		`    print("verify_go.sh: FATAL: -race leg timed out after 600s", file=sys.stderr)`,
 		`    sys.exit(124)`,
-		`echo "✓ go gate PASSED: build clean, plain and race tests pass with pinned AILANG_BIN ($ver)"`,
+		passedAnchor,
 	}
 	position := -1
 	for _, needle := range needles {

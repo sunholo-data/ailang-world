@@ -20,11 +20,18 @@ import (
 // ---------------------------------------------------------------------------
 
 // pinnedBinary resolves the SHIPPED released AILANG binary the replay engine
-// drives as a subprocess. Per the sprint verify profile it MUST be the clean
-// released v0.30.0 artifact (AILANG_BIN=/tmp/ailang-v0300/ailang), never the
-// -dirty dev build on PATH. Tests that need it skip cleanly when it is absent
-// so the package still builds/vets everywhere; the mission gate always sets
-// AILANG_BIN, so a skip in CI is itself a red flag surfaced by the runner.
+// drives as a subprocess, from AILANG_BIN — the single pin, tracking current AILANG.
+//
+// These goldens (testdata/recorded_result.bytes, recorded_world_hash.txt) were
+// recorded under v0.30.0, and world stayed pinned there on the assumption that they
+// were version-scoped. MEASURED 2026-09-22: they are not. All ten arms below
+// reproduce byte-exactly under v0.41.0, so the separate frozen artifact was removed
+// rather than carried. If a future tag DOES move the bytes, that is a real finding
+// about the language and belongs in a red run here — not behind a pin that hides it.
+//
+// A skip when AILANG_BIN is unset keeps the package building and vetting everywhere;
+// CI always exports it, so a skip there is itself the red flag (see verify_go.sh,
+// which refuses to run at all without it rather than letting the gate go false-green).
 func pinnedBinary(t *testing.T) string {
 	t.Helper()
 	bin := os.Getenv("AILANG_BIN")

@@ -71,8 +71,8 @@ jobs:
           # v0.41.0 since 2026-09-21. The registry grew publish quality gates after
           # world/core froze, and v0.30.0 does not put CHANGELOG.md in the tarball
           # (9156 bytes vs 9785 for the same tree), so PUB001 was unsatisfiable.
-          # The REPLAY leg below keeps its own v0.30.0 pin — different artifact,
-          # different reason to be frozen. Do not unify them.
+          # Both legs are on v0.41.0 as of 2026-09-22: the replay goldens were
+          # re-verified byte-exact on that tag, so the old v0.30.0 replay pin is gone.
           base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
           curl -fsSL -o pinned.tar.gz "$base/linux.x64.ailang.tar.gz"
           curl -fsSL -o pinned.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
@@ -119,20 +119,31 @@ jobs:
           go version
           go env GOVERSION
 
-      - name: Install PINNED v0.30.0 ailang binary (replay goldens are v0.30.0-scoped)
+      - name: Install PINNED v0.41.0 ailang (AILANG_BIN — one pin, current AILANG)
         run: |
           set -euo pipefail
-          # The replay tests drive the released ailang as a subprocess and
-          # byte-compare its output against goldens generated with v0.30.0
-          # (testdata/recorded_result.bytes, recorded_world_hash.txt). Pin the
-          # TAG, not `latest`: any drift would break the byte-for-byte replay.
-          # Without AILANG_BIN, pinnedBinary(t) t.Skip()s and CI is false-green.
-          base="https://github.com/sunholo-data/ailang/releases/download/v0.30.0"
-          curl -fsSL -o linux.x64.ailang.tar.gz "$base/linux.x64.ailang.tar.gz"
-          curl -fsSL -o linux.x64.ailang.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
-          sha256sum -c linux.x64.ailang.tar.gz.sha256
+          # ONE pin, and it tracks current AILANG. World was pinned to v0.30.0 because the
+          # replay tests drive the released ailang as a subprocess and byte-compare its
+          # output against goldens (testdata/recorded_result.bytes, recorded_world_hash.txt)
+          # that were recorded under v0.30.0 — so the pin was assumed to be load-bearing.
+          # MEASURED 2026-09-22: it is not. All 10 replay tests reproduce the goldens
+          # byte-exactly under v0.41.0, with a discriminating control (binary unset -> 13
+          # SKIPs, so the arms really do drive the subprocess). The goldens are stable
+          # across v0.30.0 -> v0.41.0, so a second frozen artifact bought nothing and cost
+          # world eleven releases of drift against the language it exists to exercise.
+          #
+          # Pin the TAG, not `latest`: a silent bump is how a goldens mismatch or a
+          # world-package hash break arrives without a red step naming it. Moving this pin
+          # is a deliberate edit, and host/replay re-verifies the goldens on the new tag.
+          # Without AILANG_BIN, host/replay's pinnedBinary and verifygate's requirePinned
+          # t.Skip() and CI is false-green — hence the loud assert below.
+          base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
+          curl -fsSL -o pinned.tar.gz "$base/linux.x64.ailang.tar.gz"
+          curl -fsSL -o pinned.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
+          # the published checksum names the release asset, not our local filename
+          echo "$(cut -d' ' -f1 pinned.tar.gz.sha256)  pinned.tar.gz" | sha256sum -c -
           mkdir -p "$HOME/.local/bin"
-          tar -xzf linux.x64.ailang.tar.gz -C "$HOME/.local/bin" ailang
+          tar -xzf pinned.tar.gz -C "$HOME/.local/bin" ailang
           chmod +x "$HOME/.local/bin/ailang"
           # Assert the pinned version loudly so a tag drift is a red step here,
           # not a silent goldens mismatch downstream.
@@ -144,8 +155,8 @@ jobs:
           ver="$("$HOME/.local/bin/ailang" --version)"
           echo "$ver"
           case "$ver" in
-            *'v0.30.0'*) ;;
-            *) echo "✗ AILANG_BIN is not v0.30.0" >&2; exit 1 ;;
+            *'AILANG v0.41.0'*) ;;
+            *) echo "✗ AILANG_BIN is not v0.41.0" >&2; exit 1 ;;
           esac
           echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
 
