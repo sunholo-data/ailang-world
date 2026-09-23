@@ -125,8 +125,9 @@ Protocol per arm (verbatim from design doc §5): `cp <file> <file>.bak && sed -i
 | M3 | Remove the `now < expires_at` check at resolve (ignore expiry) | `TestResolve_ExpiryEnforced` | AC-M2-4 |
 | M4 | Mint prints/logs the token twice (duplicate print) | `TestMint_PrintsOnce` | AC-M1-1 |
 | M5 | Revocation leaves the row (the `DELETE` is omitted — revoke becomes a no-op against the store) | `TestRevoke_DeletesRow` | AC-M2-5 |
-| M6 | Fall back to reading `X-World-Session` when `Authorization` is absent | `TestNoAlternateHeader` | AC-M2-6 |
+| M6 | Fall back to reading `X-World-Session` when `Authorization` is absent | `TestSessionMiddleware_NoAlternateHeaderFallback` (host/daemon) | AC-M2-6 — **corrected evaluator round-2:** the mutation is only expressible at the middleware, so the originally-named `TestNoAlternateHeader` (resolver-level) stays green under it; reproduced first-party by the controller. |
 | M7 (green control) | Reword a comment in the resolver (no behavior change) | **all tests stay green** | non-vacuity of the whole battery |
+| M8 (added round-2, judge finding D-1) | Neuter `handleCommit`'s `authority.FromContext` presence check (`!ok` → `!ok && false` — the handler wired without the middleware no longer fails closed) | `TestHandleCommit_DirectCallWithoutBindingFailsClosed` (host/daemon, added round-2) | defense-in-depth gate for direct handler wiring; **proved round-2 by the controller: mutant compiles, fail-count exactly 1 (sole killer), restore byte-identical, package green after restore** |
 
 Also pre-registered: **baseline gate outcomes** (§0) as the base state; **schema-version expectations** — `currentSchemaVersion` 2→3, `expectedCurrentSchemaVersion` 2→3, `frozenFutureSchemaVersion` 3→4, one new v3 migration row, fresh store initializes at v3, v2 store refused via `LegacySchemaVersionError` (AC-M4-3); the six **load-bearing named tests** listed above.
 
