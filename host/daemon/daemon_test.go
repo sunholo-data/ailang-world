@@ -290,13 +290,14 @@ func TestBoundedWaitsAndBodyLimit(t *testing.T) {
 	// not simply rejecting every commit.
 	t.Run("b/commit body cap rejects only oversized requests", func(t *testing.T) {
 		d := newHandlerDaemon(t)
+		auth := authHeader(t, d) // commit is session-gated (D6/D7); the 413 comes from the body cap past the middleware
 		oversized := bytes.NewReader(bytes.Repeat([]byte{'x'}, maxCommitBytes+1))
-		assertErrorClass(t, requestRecorder(t, d, http.MethodPost, "/v1/commit", oversized),
+		assertErrorClass(t, requestRecorderAuth(t, d, auth, http.MethodPost, "/v1/commit", oversized),
 			http.StatusRequestEntityTooLarge, "PayloadTooLarge")
 
 		genesis := seedGenesisEmbedded(t, d, "body-cap")
 		valid := testCommit(genesis, 1, "body-cap")
-		rec := requestRecorder(t, d, http.MethodPost, "/v1/commit", bytes.NewReader(encodeCommit(valid)))
+		rec := requestRecorderAuth(t, d, auth, http.MethodPost, "/v1/commit", bytes.NewReader(encodeCommit(valid)))
 		if rec.Code != http.StatusOK {
 			t.Fatalf("small valid commit after oversized body: status=%d body=%s", rec.Code, rec.Body)
 		}

@@ -11,7 +11,10 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/sunholo-data/ailang-world/host/authority"
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -33,6 +36,33 @@ func newHandlerDaemon(t *testing.T) *Daemon {
 func requestRecorder(t *testing.T, d *Daemon, method, target string, body io.Reader) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest(method, target, body)
+	rec := httptest.NewRecorder()
+	d.Handler().ServeHTTP(rec, req)
+	return rec
+}
+
+// authHeader mints a session credential into d's store and returns the
+// Authorization header value for it. POST /v1/commit is session-gated
+// (w-session-authority D6/D7), so every commit test needs one to reach the
+// handler past the middleware.
+func authHeader(t *testing.T, d *Daemon) string {
+	t.Helper()
+	tok, _, _, err := authority.Mint(context.Background(), d.store, "ep-test",
+		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 3600, time.Now().Unix(), nil)
+	if err != nil {
+		t.Fatalf("mint test session: %v", err)
+	}
+	return "Bearer " + tok
+}
+
+// requestRecorderAuth is requestRecorder with an optional Authorization header
+// so a session-gated commit request can carry its credential.
+func requestRecorderAuth(t *testing.T, d *Daemon, auth, method, target string, body io.Reader) *httptest.ResponseRecorder {
+	t.Helper()
+	req := httptest.NewRequest(method, target, body)
+	if auth != "" {
+		req.Header.Set("Authorization", auth)
+	}
 	rec := httptest.NewRecorder()
 	d.Handler().ServeHTTP(rec, req)
 	return rec
@@ -252,14 +282,15 @@ func TestGETRoutesRejectOtherMethods(t *testing.T) {
 
 func TestStaleHeadConflictBodySupportsReplan(t *testing.T) {
 	d := newHandlerDaemon(t)
+	auth := authHeader(t, d) // POST /v1/commit is session-gated (D6/D7)
 	genesis := seedGenesisEmbedded(t, d, "conflict")
 	first := testCommit(genesis, 1, "winner")
-	if rec := requestRecorder(t, d, http.MethodPost, "/v1/commit", bytes.NewReader(encodeCommit(first))); rec.Code != 200 {
+	if rec := requestRecorderAuth(t, d, auth, http.MethodPost, "/v1/commit", bytes.NewReader(encodeCommit(first))); rec.Code != 200 {
 		t.Fatalf("first commit: status=%d body=%s", rec.Code, rec.Body)
 	}
 
 	stale := testCommit(genesis, 2, "stale")
-	conflictRec := requestRecorder(t, d, http.MethodPost, "/v1/commit", bytes.NewReader(encodeCommit(stale)))
+	conflictRec := requestRecorderAuth(t, d, auth, http.MethodPost, "/v1/commit", bytes.NewReader(encodeCommit(stale)))
 	body := assertErrorClass(t, conflictRec, http.StatusConflict, "HeadConflict")
 	observed, err := hashref.Parse(body.Error.ObservedHead)
 	if err != nil {
@@ -280,7 +311,7 @@ func TestStaleHeadConflictBodySupportsReplan(t *testing.T) {
 		t.Fatalf("GetWorld(selected from 409): ok=%v err=%v", ok, err)
 	}
 	replanned := testCommit(selectedWorld, 2, "replanned")
-	rec := requestRecorder(t, d, http.MethodPost, "/v1/commit", bytes.NewReader(encodeCommit(replanned)))
+	rec := requestRecorderAuth(t, d, auth, http.MethodPost, "/v1/commit", bytes.NewReader(encodeCommit(replanned)))
 	if rec.Code != http.StatusOK {
 		t.Fatalf("replanned commit: status=%d body=%s", rec.Code, rec.Body)
 	}
@@ -374,9 +405,15 @@ func genesisCommit(label string) store.Commit {
 	}
 }
 
-func postCommit(t *testing.T, baseURL string, c store.Commit) {
+func postCommit(t *testing.T, baseURL string, c store.Commit, auth string) {
 	t.Helper()
-	resp, err := http.Post(baseURL+"/v1/commit", "application/json", bytes.NewReader(encodeCommit(c)))
+	req, err := http.NewRequest(http.MethodPost, baseURL+"/v1/commit", bytes.NewReader(encodeCommit(c)))
+	if err != nil {
+		t.Fatalf("build REST commit: %v", err)
+	}
+	req.Header.Set("Authorization", auth) // commit is session-gated (D6/D7)
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("REST POST /v1/commit: %v", err)
 	}
@@ -404,6 +441,7 @@ func postCommit(t *testing.T, baseURL string, c store.Commit) {
 func TestRESTGenesisAndCommitAreByteEquivalent(t *testing.T) {
 	embedded := newHandlerDaemon(t)
 	rest := newHandlerDaemon(t)
+	restAuth := authHeader(t, rest) // the REST daemon's commit requires a session
 
 	genesis := genesisCommit("equivalence")
 	successor := testCommit(genesis.NextWorld, 1, "equivalence")
@@ -419,8 +457,8 @@ func TestRESTGenesisAndCommitAreByteEquivalent(t *testing.T) {
 	// Arm 2: the same episode, entirely over REST.
 	server := httptest.NewServer(rest.Handler())
 	defer server.Close()
-	postCommit(t, server.URL, genesis)
-	postCommit(t, server.URL, successor)
+	postCommit(t, server.URL, genesis, restAuth)
+	postCommit(t, server.URL, successor, restAuth)
 
 	embeddedHead, okE, errE := embedded.store.SelectedHead(context.Background())
 	restHead, okR, errR := rest.store.SelectedHead(context.Background())
@@ -479,6 +517,7 @@ func TestRESTGenesisAndCommitAreByteEquivalent(t *testing.T) {
 // a zero there that store.GetLogEntry cannot read back.
 func TestGenesisRefLenienceIsExactlyOneField(t *testing.T) {
 	d := newHandlerDaemon(t)
+	auth := authHeader(t, d) // commit is session-gated (D6/D7); 400s come from the handler body parse
 	for _, test := range []struct{ name, field string }{
 		{"nextWorld.ref", "nextWorld.ref"},
 		{"nextWorld.stateRoot", "nextWorld.stateRoot"},
@@ -501,7 +540,7 @@ func TestGenesisRefLenienceIsExactlyOneField(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			got := assertErrorClass(t, requestRecorder(t, d, http.MethodPost, "/v1/commit", bytes.NewReader(body)),
+			got := assertErrorClass(t, requestRecorderAuth(t, d, auth, http.MethodPost, "/v1/commit", bytes.NewReader(body)),
 				http.StatusBadRequest, "BadRequest")
 			if !strings.Contains(got.Error.Message, test.field) {
 				t.Fatalf("400 message %q does not name the offending field %q", got.Error.Message, test.field)

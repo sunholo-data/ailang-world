@@ -144,6 +144,17 @@ func run(args []string, stdout, stderr io.Writer) int {
 	case "commit":
 		return runCommit(*addr, rest[1:], stdout, stderr)
 
+	case "session":
+		// (w-session-authority D1/D4) session mint|revoke speak directly to the
+		// store DB path via --db, never to a daemon HTTP endpoint, so --addr is
+		// not a session flag — reject it exactly as serve rejects --addr.
+		if addrGiven {
+			fmt.Fprintln(stderr, "ailang-worldd: --addr is a client flag and is not valid for 'session'; "+
+				"session mint/revoke act on --db directly, not on a running daemon")
+			return exitUsage
+		}
+		return runSession(rest[1:], stdout, stderr)
+
 	case "help":
 		fmt.Fprint(stdout, usage)
 		return exitOK

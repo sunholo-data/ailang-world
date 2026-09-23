@@ -17,8 +17,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/authority"
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/store"
 )
 
 type cliCommit struct {
@@ -139,6 +142,15 @@ func requireCLIOK(t *testing.T, addr string, args ...string) string {
 // cli.go, never through a test-side HTTP call.
 func TestCLIRealSubprocessEpisode(t *testing.T) {
 	temp := t.TempDir()
+	dbPath := filepath.Join(temp, "world.db")
+
+	// Mint a session credential into the store BEFORE the daemon starts:
+	// `serve` takes sole writer authority over the DB (single-writer lock), so no
+	// session can be minted while it runs. POST /v1/commit is now session-gated
+	// (w-session-authority D6/D7), so the real-subprocess commit calls below must
+	// carry this token via --session.
+	sessToken := testCLISession(t, dbPath)
+
 	binary := filepath.Join(temp, "ailang-worldd")
 	buildCtx, cancelBuild := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelBuild()
@@ -149,7 +161,7 @@ func TestCLIRealSubprocessEpisode(t *testing.T) {
 	}
 
 	daemonCtx, cancelDaemon := context.WithTimeout(context.Background(), 30*time.Second)
-	cmd := exec.CommandContext(daemonCtx, binary, "serve", "--db", filepath.Join(temp, "world.db"), "--bind", "127.0.0.1:0")
+	cmd := exec.CommandContext(daemonCtx, binary, "serve", "--db", dbPath, "--bind", "127.0.0.1:0")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		t.Fatal(err)
@@ -207,7 +219,7 @@ func TestCLIRealSubprocessEpisode(t *testing.T) {
 
 	genesis := makeCLICommit(cliWorld{}, 0, "genesis")
 	genesisFile := writeCommitFile(t, temp, "genesis", genesis)
-	commitBody := requireCLIOK(t, addr, "commit", "--file", genesisFile)
+	commitBody := requireCLIOK(t, addr, "commit", "--file", genesisFile, "--session", sessToken)
 	if !strings.Contains(commitBody, genesis.NextWorld.Ref) {
 		t.Fatalf("genesis commit content=%s", commitBody)
 	}
@@ -233,9 +245,9 @@ func TestCLIRealSubprocessEpisode(t *testing.T) {
 	}
 
 	winner := makeCLICommit(genesis.NextWorld, 1, "winner")
-	requireCLIOK(t, addr, "commit", "--file", writeCommitFile(t, temp, "winner", winner))
+	requireCLIOK(t, addr, "commit", "--file", writeCommitFile(t, temp, "winner", winner), "--session", sessToken)
 	stale := makeCLICommit(genesis.NextWorld, 1, "stale")
-	code, _, conflict := runCLI(t, addr, "commit", "--file", writeCommitFile(t, temp, "stale", stale))
+	code, _, conflict := runCLI(t, addr, "commit", "--file", writeCommitFile(t, temp, "stale", stale), "--session", sessToken)
 	if code != exitUsage || !strings.Contains(conflict, "HTTP 409 HeadConflict") ||
 		!strings.Contains(conflict, "observedHead="+genesis.NextWorld.Ref) ||
 		!strings.Contains(conflict, "selectedHead="+winner.NextWorld.Ref) {
@@ -248,10 +260,32 @@ func TestCLIRealSubprocessEpisode(t *testing.T) {
 	replannedBase := winner.NextWorld
 	replannedBase.Ref = selected[1]
 	replanned := makeCLICommit(replannedBase, 2, "replanned")
-	replannedBody := requireCLIOK(t, addr, "commit", "--file", writeCommitFile(t, temp, "replanned", replanned))
+	replannedBody := requireCLIOK(t, addr, "commit", "--file", writeCommitFile(t, temp, "replanned", replanned), "--session", sessToken)
 	if !strings.Contains(replannedBody, replanned.NextWorld.Ref) {
 		t.Fatalf("replanned commit content=%s", replannedBody)
 	}
+}
+
+// testCLISession mints a session credential into a store before a daemon serves
+// it, returning the raw 64-hex token. It is the test-side twin of `session mint`,
+// used because the real-subprocess daemon holds the writer lock while it runs
+// (minting live against the same DB would hit WriterAlreadyActive). The token is
+// then passed to `commit --session`.
+func testCLISession(t *testing.T, dbPath string) string {
+	t.Helper()
+	st, err := store.Open(dbPath)
+	if err != nil {
+		t.Fatalf("open store for session mint: %v", err)
+	}
+	tok, _, _, err := authority.Mint(context.Background(), st, "cli-episode",
+		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 3600, time.Now().Unix(), nil)
+	if err != nil {
+		t.Fatalf("mint cli session: %v", err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatalf("close store after mint: %v", err)
+	}
+	return tok
 }
 
 func TestClientDeadlineAgainstAcceptingServer(t *testing.T) {

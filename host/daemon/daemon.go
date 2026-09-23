@@ -49,6 +49,7 @@ import (
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/archive"
+	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/registry"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -261,6 +262,13 @@ type Daemon struct {
 	srv   *http.Server
 	ln    net.Listener
 
+	// resolver maps an inbound Authorization: Bearer session credential to a
+	// binding (w-session-authority D5/D6). New wires it to authority.New over
+	// the SAME store the daemon serves, so the session_credentials table and
+	// the world tables live in one database. It is consulted by the session
+	// middleware before any protected handler runs.
+	resolver authority.Resolver
+
 	// reads is the read seam every /v1 GET route goes through. New always wires
 	// it to the SAME *store.Store held in `store`, so the production path is
 	// unchanged and passes through one extra interface dispatch — the seam
@@ -436,7 +444,7 @@ func New(cfg Config) (*Daemon, error) {
 		cfg: cfg, store: s, reads: s, drainTimeout: shutdownTimeout,
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
-		scanTimeBudget: integrityScanTimeBudget,
+		scanTimeBudget: integrityScanTimeBudget, resolver: authority.New(s),
 	}
 	release := unpinnedRelease
 
@@ -563,7 +571,16 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/registry/{name...}", d.handleRegistry)
 	mux.HandleFunc("POST /v1/commit", d.handleCommit)
 	mux.HandleFunc("GET /workbench", d.handleWorkbench)
-	return mux
+	return NewSessionMiddleware(d.resolver).Wrap(d.isProtected, mux)
+}
+
+// isProtected reports whether a request must carry a valid session credential
+// (w-session-authority D6). This sprint it is ONLY POST /v1/commit — the
+// daemon's sole mutation. The eight GET routes pass through unauthenticated as
+// declared residual R1 (full /v1/* read enforcement is a follow-up queue row; a
+// config flip here later is a rewrite-free change).
+func (d *Daemon) isProtected(r *http.Request) bool {
+	return r.Method == http.MethodPost && r.URL.Path == "/v1/commit"
 }
 
 // handleHealth serves GET /v1/health.
