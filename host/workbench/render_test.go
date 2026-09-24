@@ -357,3 +357,64 @@ func TestWorkbenchViewFieldsAllRender(t *testing.T) {
 		t.Fatalf("field census checked %d fields, want >= 10", checked)
 	}
 }
+
+// provenanceWalkBody returns the trimmed text between the provenance-walk
+// section's </h2> and its </section>, failing if either marker is missing.
+func provenanceWalkBody(t *testing.T, body string) string {
+	t.Helper()
+	const start = `<h2>Provenance walk</h2>`
+	i := strings.Index(body, start)
+	if i < 0 {
+		t.Fatalf("no provenance-walk heading in %q", body)
+	}
+	rest := body[i+len(start):]
+	j := strings.Index(rest, "</section>")
+	if j < 0 {
+		t.Fatalf("provenance-walk section is not closed in %q", body)
+	}
+	return strings.TrimSpace(rest[:j])
+}
+
+func TestRenderProvenanceWalkNeverBlank(t *testing.T) {
+	for _, tc := range []struct {
+		name, want, unwanted string
+		page                 Page
+	}{
+		{"no-object", `<p><span class="unavailable" role="note">UNAVAILABLE: no object selected</span></p>`, "no provenance edges were supplied", Page{}},
+		{"object-without-edges", `<p><span class="unavailable" role="note">UNAVAILABLE: no provenance edges were supplied for this object</span></p>`, "no object selected", Page{Object: &ObjectView{}}},
+		{"supplied-edges", `<p>interface: <a href="/workbench?object=abc"`, "UNAVAILABLE", Page{Object: &ObjectView{Edges: []EdgeView{{Relation: "interface", Available: true, Target: "abc", Href: "?object=abc"}}}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			walk := provenanceWalkBody(t, renderPage(t, tc.page))
+			if walk == "" {
+				t.Fatal("provenance walk rendered a heading followed by nothing")
+			}
+			if !strings.Contains(walk, tc.want) {
+				t.Errorf("provenance walk missing %q: %q", tc.want, walk)
+			}
+			if strings.Contains(walk, tc.unwanted) {
+				t.Errorf("provenance walk contains %q: %q", tc.unwanted, walk)
+			}
+		})
+	}
+}
+
+func TestRenderGradeReasonNeverEmpty(t *testing.T) {
+	for _, tc := range []struct {
+		name, want, unwanted string
+		grade                GradeView
+	}{
+		{"zero-grade", `<p>GRADE UNAVAILABLE — no grade reason was supplied</p>`, `GRADE UNAVAILABLE — </p>`, GradeView{}},
+		{"supplied-reason", `<p>GRADE UNAVAILABLE — named reason</p>`, "no grade reason was supplied", NewGradeUnavailable("named reason")},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			body := renderPage(t, Page{Title: "grade", Object: &ObjectView{Grade: tc.grade}})
+			if !strings.Contains(body, tc.want) {
+				t.Errorf("grade line missing %q: %q", tc.want, body)
+			}
+			if strings.Contains(body, tc.unwanted) {
+				t.Errorf("grade line contains %q: %q", tc.unwanted, body)
+			}
+		})
+	}
+}

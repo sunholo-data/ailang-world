@@ -151,13 +151,13 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem}dt{font-we
 <dl><dt>object</dt><dd><span class="hash" title="{{.Hash}}" aria-label="{{.Hash}}">{{.Hash}}</span></dd>
 <dt>interface</dt><dd><span class="hash" title="{{.InterfaceHash}}" aria-label="{{.InterfaceHash}}">{{.InterfaceHash}}</span></dd>
 <dt>semantic ID</dt><dd>{{.SemanticID}}</dd><dt>provenance</dt><dd>{{.Provenance}}</dd></dl>
-{{if .Grade.Available}}<p><span>{{.Grade.Label}}</span>{{if .Grade.HasVerdict}} {{if eq .Grade.Verdict "FAIL"}}<span class="verdict-fail" aria-label="test verdict FAIL">✗ verdict: {{.Grade.Verdict}}</span>{{else}}<span class="verdict-pass" aria-label="test verdict PASS">✓ verdict: {{.Grade.Verdict}}</span>{{end}}{{end}}</p>{{else}}<p>GRADE UNAVAILABLE — {{.Grade.Unavailable}}</p>{{end}}
+{{if .Grade.Available}}<p><span>{{.Grade.Label}}</span>{{if .Grade.HasVerdict}} {{if eq .Grade.Verdict "FAIL"}}<span class="verdict-fail" aria-label="test verdict FAIL">✗ verdict: {{.Grade.Verdict}}</span>{{else}}<span class="verdict-pass" aria-label="test verdict PASS">✓ verdict: {{.Grade.Verdict}}</span>{{end}}{{end}}</p>{{else}}<p>GRADE UNAVAILABLE — {{with .Grade.Unavailable}}{{.}}{{else}}no grade reason was supplied{{end}}</p>{{end}}
 {{if .PayloadShown}}<p id="payload-label">raw bytes, not interpreted HTML</p><pre class="payload" aria-labelledby="payload-label">{{.PayloadPreview}}</pre>{{if .PayloadTruncated}}<p>truncated</p>{{end}}{{end}}
 {{end}}
 </section>
 <section aria-label="provenance walk">
 <h2>Provenance walk</h2>
-{{with .Object}}{{range .Edges}}{{template "edge" .}}{{end}}{{end}}
+{{with .Object}}{{range .Edges}}{{template "edge" .}}{{else}}<p><span class="unavailable" role="note">UNAVAILABLE: no provenance edges were supplied for this object</span></p>{{end}}{{else}}<p><span class="unavailable" role="note">UNAVAILABLE: no object selected</span></p>{{end}}
 </section>
 </main>
 </body>
