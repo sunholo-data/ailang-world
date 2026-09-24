@@ -2,7 +2,8 @@
 
 - Status: **planned** · Date: **2026-09-24** · Row **34** (clause-5)
 - Iteration: 185, designer role · Measurement base: `origin/dev` = `fd99840` (V0)
-- Scope: **test-only.** Charter row 34 lists seven hunks. Re-measured here, two are already killed (H1, H2; §1.1) and five still survive (H3–H7). A rule-3n enumeration of every conditional and boolean hunk on the three surfaces those five sit on (`supportedWorkbenchQuery`, `workbenchHref`, and the grade/verdict template line `render.go:154`) executed **55** compiling mutants. **20 survive** the whole suite: the five charter hunks, 14 more that the suite does not kill today, and 1 equivalent mutant that no test can kill (§2e). This sprint adds tests that kill all 19 killable survivors, each by a named test. It changes no production code: no guard was measured dead or wrong (§2a).
+- Scope: **test-only.** Charter row 34 lists seven hunks. Re-measured here, two are already killed (H1, H2; §1.1) and five still survive (H3–H7). A rule-3n enumeration of every conditional and boolean hunk on the three surfaces those five sit on (`supportedWorkbenchQuery`, `workbenchHref`, and the grade/verdict template line `render.go:154`) executed **56** compiling mutants. **20 survive** the whole suite: the five charter hunks, 14 more that the suite does not kill today, and 1 equivalent mutant that no test can kill (§2e). This sprint adds tests that kill all 19 killable survivors, each by a named test. It changes no production code: no guard was measured dead or wrong (§2a).
+- Revision 1 (quorum r1: astra REJECT upheld — counts; glm REJECT refuted by measurement; gemini PASS): every prose mutant total is corrected to agree with the transcripts and the §7 table. There are 56 mutants, not 55: 36 were killed before this sprint, and 55 non-equivalent mutants must be killed after it. The table and the drill were already right; only the totals in the text were off by one. The ancestry of `9574d08` and the absence of any in-flight overlap are now measured (V20). See §11.
 - Query grammar: **unchanged** (§4). The accepted-state set is correct; it was only unpinned.
 - Estimate: **~0.25 day, ~90 LOC, tests only.** The figure comes from a prototype written, run and deleted at design time: +84 insertions across 2 test files, `go vet ./...` rc=0, `go test ./...` rc=0, and all 19 targeted mutants killed (V14, V15). Two milestones (§8).
 
@@ -95,7 +96,7 @@ The five charter hunks were each found one at a time by different evaluators (it
 condition forced to `true`/`false`, relational operator negated, `&&`/`||` swapped, each operand
 dropped, each operand negated, and each `return` literal flipped. For the template line it was:
 each `{{if}}` forced both ways, the `eq`→`ne` swap, and each attribute/text on the PASS span.
-That gave **55 mutants, all of which compile.** **20 survive** (V3; §7 lists every row):
+That gave **56 mutants** (34 grammar + 10 href + 10 grade line + H1/H2), **all of which compile.** **20 survive** (V3; §7 lists every row):
 
 - **`supportedWorkbenchQuery`: 34 mutants, 11 survivors.** H5–H7 plus Q18 (`len != 2` → `return true`, which
   opens 16 subsets with 3 or more keys), Q19/Q20 (each operand of the `from`/`entry` pair
@@ -334,7 +335,7 @@ simply never tested.
 
 | Touched | How | Consequence |
 |---|---|---|
-| `TestWorkbenchRefusalBranches` (`workbench_test.go:134-216`) | +3 table rows | Existing rows are unchanged. The loop body already asserts status, class token, message and security headers for each row. The earlier sprint `w-workbench-timeline-seam` treated this function as byte-identical (its AC5). That constraint was specific to that sprint and has no force here |
+| `TestWorkbenchRefusalBranches` (`workbench_test.go:134-216`) | +3 table rows | Existing rows are unchanged. The loop body already asserts status, class token, message and security headers for each row. The earlier sprint `w-workbench-timeline-seam` treated this function as byte-identical (its AC5). That constraint was specific to that sprint and has no force here: that sprint has landed (`9574d08` is an ancestor of the base `fd99840`, V20). No in-flight sprint touches `TestWorkbenchRefusalBranches`: there are 0 open PRs, and the only other worktree is `.wt-world-iter182`, which is row 92 and has already landed as `157d6f9` (V20) |
 | `TestGradeViewRequiresTestVerdict/pass` (`render_test.go:86-95`) | +8 lines, a render arm | Uses the same `Render`/`bytes.Buffer` idiom as `/fail` (`:68-84`) |
 | `TestWorkbenchViewFieldsAllRender` | not touched | No view-model field is added or removed |
 | Production `render.go`, `workbench.go` | **not touched** (AC5) | Every row-34 line anchor stays where it is |
@@ -375,7 +376,7 @@ Files the implementation changes: `host/daemon/workbench_test.go` and
   rc of `go test ./host/workbench ./host/daemon ./host/boundary -count=1`, and the red set.
   Restore by `cp` from a backup, and check that `git status --porcelain` is empty on the committed
   sprint tree before moving to the next row. Pass condition:
-  - all **54** non-equivalent rows: build rc=0, suite rc=1, and the named killer from §7 in the
+  - all **55** non-equivalent rows: build rc=0, suite rc=1, and the named killer from §7 in the
     red set;
   - **Q17**: build rc=0 and suite rc=0. This is the equivalence control; the row must survive;
   - H3–H7, Q18–Q20, Q23, Q26, Q27, Q30, W5, W8, V2, V4, V6, V7 and V9 (the 19 survivors): also
@@ -457,8 +458,8 @@ marks a newline inside a multi-line match; indentation tabs are elided.
 | V8 | render.go | `{{if .Grade.Available}}` → `{{if false}}` | y | killed (2 red) | `TestGradeViewRequiresTestVerdict/fail (existing)` | killed (5 red) |
 | V9 | render.go | `{{if .Grade.Available}}` → `{{if true}}` | y | **SURVIVED** | `TestRenderGradeWithoutVerdictClaim/unavailable` | killed (2 red) |
 
-**Tally.** 55 mutants, all of which compile. **Before:** 35 killed and 20 survive (H3–H7, Q17–Q20,
-Q23, Q26, Q27, Q30, W5, W8, V2, V4, V6, V7, V9). **After:** 54 killed and 1 survives (Q17,
+**Tally.** 56 mutants, all of which compile. The count by prefix is H7 + Q31 + W9 + V9 = 56, measured with `grep -cE '^[HQWV][0-9]+ ' drill_before.txt` → `56` (the same command on `drill_after.txt` → `56`; per prefix, `grep -cE "^H[0-9]+ "` etc. → 7/31/9/9). **Before:** 36 killed and 20 survive (H3–H7, Q17–Q20,
+Q23, Q26, Q27, Q30, W5, W8, V2, V4, V6, V7, V9). **After:** 55 killed and 1 survives (Q17,
 equivalent, §2e). Every row that was killed before is still killed after. Each of the 19 rows that
 the sprint turns from SURVIVED into killed has its named killer in the measured after-state red
 set. The generator asserted this membership when it built the table (V15).
@@ -472,7 +473,7 @@ Each milestone ends green on AC1 and AC2.
 | M | Content | ~LOC | Exit |
 |---|---|---|---|
 | **M1 — the grammar** | `workbench_test.go`: `TestSupportedWorkbenchQueryTruthTable` and the three `TestWorkbenchRefusalBranches` rows (§3.1) | ~37 | AC1, AC2; H5–H7, Q17–Q20, Q23, Q26, Q27, Q30 drilled |
-| **M2 — href and grade line** | `render_test.go`: the `/pass` render arm, `TestRenderGradeWithoutVerdictClaim`, `TestWorkbenchHrefAppendsOnlyQueryStrings` (§3.2) | ~47 | AC1–AC7; all 55 rows drilled |
+| **M2 — href and grade line** | `render_test.go`: the `/pass` render arm, `TestRenderGradeWithoutVerdictClaim`, `TestWorkbenchHrefAppendsOnlyQueryStrings` (§3.2) | ~47 | AC1–AC7; all 56 rows drilled |
 
 ---
 
@@ -520,7 +521,7 @@ same-command positive control.
 | V0 | Base is `origin/dev` `fd99840` | `git rev-parse HEAD origin/dev` | both `fd998400a1cc…` |
 | V1 | Pinned binary | `$AILANG_BIN --version` | `AILANG v0.41.0` (commit `24ee108`) |
 | V2 | The base is green on the drill arm | `go build ./... && go test ./host/workbench ./host/daemon ./host/boundary -count=1` | build rc=0; `ok` ×3 |
-| V3 | Before-drill: 55 mutants, all compile, 20 survive | `python3 mutdrive.py` (for each row: exact single-occurrence replace → `go build ./...` → the 3-package suite → `cp` restore) → `drill_before.txt` | every row `compiles=y`; SURVIVED: H3 H4 H5 H6 H7 Q17 Q18 Q19 Q20 Q23 Q26 Q27 Q30 W5 W8 V2 V4 V6 V7 V9; every other row `rc=1 KILLED`; final `git status --porcelain` = `''` |
+| V3 | Before-drill: 56 mutants, all compile, 36 killed, 20 survive | `python3 mutdrive.py` (for each row: exact single-occurrence replace → `go build ./...` → the 3-package suite → `cp` restore) → `drill_before.txt` | every row `compiles=y`; SURVIVED: H3 H4 H5 H6 H7 Q17 Q18 Q19 Q20 Q23 Q26 Q27 Q30 W5 W8 V2 V4 V6 V7 V9; every other row `rc=1 KILLED`; final `git status --porcelain` = `''` |
 | V4 | Red sets for H1/H2 | same run | H1 `rc=1 reds=1 TestWorkbenchRendersSeededWorldAndTimeline`; H2 `rc=1 reds=2 TestWorkbenchPayloadPreviewBound TestWorkbenchPayloadPreviewBound/oversize` |
 | V5 | H1/H2 survive the render package on its own | `TESTCMD="go test ./host/workbench -count=1" python3 mutdrive.py H1 H2` | `H1 compiles=y rc=0 SURVIVED`, `H2 compiles=y rc=0 SURVIVED`. Control: the same mutants are killed by the 3-package arm (V4) |
 | V6 | Where H1/H2's killers come from | `grep -n 'head.String()' host/daemon/workbench_test.go`; `git log -S'selected head world ref'` / `-S'oversize payload not marked truncated' -- host/daemon/workbench_test.go` | `:129-130`; the oversize check at `:289-290` in `t.Run("oversize")` (`:279`); introduced by `5fd6fb3` (WB.C, #85) and `e563339` (#87), both 2026-08-23 |
@@ -532,11 +533,12 @@ same-command positive control.
 | V12 | The daemon never sets `Grade`; the production grade text has no reason | `grep -rn Grade host/daemon --include='*.go' \| grep -v _test \| wc -l`; control `grep -c PayloadTruncated host/daemon/workbench.go`; V7 probe `GET /workbench?object=<stored>` | `0`; control `1`; status 200, text `"GRADE UNAVAILABLE — </p>\n…"` |
 | V13 | No test calls the two functions directly | `grep -rn supportedWorkbenchQuery host --include='*_test.go' \| wc -l`; same with `--include='*.go'`; the same pair for `workbenchHref(` / `workbenchHref` | `0` / `4`; `0` / `8` |
 | V14 | The prototype compiles, is clean and green; LOC | apply §3 → `gofmt -l host/` (only V18's three pre-existing files listed), `go vet ./...`, `go test ./... -count=1`, the AC4 `-run` command, `git diff --numstat`; saved `prototype.diff`; restored by `cp` | vet rc=0; test rc=0 (no non-`ok` lines); **59** `--- PASS` lines; numstat `37 0 host/daemon/workbench_test.go`, `47 0 host/workbench/render_test.go`; `git status --porcelain` empty after restore |
-| V15 | After-drill with the prototype in place | `python3 mutdrive.py` → `drill_after.txt`; `table7.md` generated from both drills, with an `assert` that each named killer is in the after red set | 54 `KILLED`, 1 `SURVIVED` (Q17); the asserts passed (table generated) |
+| V15 | After-drill with the prototype in place | `python3 mutdrive.py` → `drill_after.txt`; `table7.md` generated from both drills, with an `assert` that each named killer is in the after red set | 55 `KILLED`, 1 `SURVIVED` (Q17), 0 `compiles=n` over 56 rows; the asserts passed (table generated) |
 | V16 | Q17 is equivalent | V8 probe under Q17 | accepted set identical to pristine (`∅`, `world`, `object`, `entry+from`, `object+payload`) on all 32 subsets; `:64-69` return for len 0/1 (`sed -n 63,77p host/daemon/workbench.go`) |
 | V17 | `.ail` gate baseline | `./scripts/verify_ail.sh` | rc=0; `✓ verify gate PASSED: 11 required identities verified, 40 named tests pass` |
 | V18 | Pre-existing gofmt debt | `gofmt -l host/` on the pristine tree | `host/daemon/session_middleware_test.go`, `host/store/schema_version_test.go`, `host/store/store.go` (none of them in this sprint's file set) |
 | V19 | Anchor drift | `sed -n 63,77p host/daemon/workbench.go`; `cat -n host/workbench/render.go \| sed -n '97,102p;130p;154,155p'` | `if len(query) != 2 {` `:70`, from/entry pair `:73`, object/payload return `:76`; `workbenchHref` guard `render.go:98`; `{{if .World.Available}}` `:130`; grade line `:154`; payload line `:155` |
+| V20 | (r1, glm) `9574d08` has landed in the base, and nothing in flight overlaps | `git merge-base --is-ancestor 9574d08 fd99840 && echo yes`; control `git merge-base --is-ancestor fd99840 9574d08; echo $?`; `gh pr list --repo sunholo-data/ailang-world --state open --json number \| jq length`; `git worktree list` (main checkout) | `yes`; control rc=`1`, so the check discriminates; `0` open PRs; the worktrees are only the main checkout (`fd99840 [dev]`), `.wt-world-iter182` (`sprint/w-prove-1-0-phase-a`, row 92, landed `157d6f9`) and this sprint's `.wt-world-iter185`. Measured by the controller at about 17:55Z on 2026-09-24 and reproduced by the designer |
 
 ---
 
@@ -544,4 +546,6 @@ same-command positive control.
 
 | Round | Reviewer | Verdict | Objection (one line) | Disposition |
 |---|---|---|---|---|
-| — | — | — | — | — |
+| r1 | gpt6-astra | reject | §7 has 56 rows (H7+Q31+W9+V9), yet V3/V15 claim 55 mutants, and AC6 requires only 54 non-equivalent kills plus Q17 | **Upheld.** The controller measured the designer's own transcripts: `drill_before.txt` has 56 rows (36 KILLED, 20 SURVIVED, 0 `compiles=n`), and `drill_after.txt` has 55 KILLED and 1 SURVIVED (Q17). The table and the drill were right; the prose totals were off by one. The header, §1.3, AC6, the §7 Tally (with the counting command), §8 and V3/V15 are corrected. The 20-survivor list is unchanged: 5 charter hunks + 14 new + Q17 |
+| r1 | oc-glm-5-2 | reject | No verification row shows that `9574d08` is an ancestor of `fd99840`, and overlap with in-flight work is not checked | **Refuted by measurement (V20).** `9574d08` is an ancestor of `fd99840` (the reverse check has rc=1, so the check discriminates). There are 0 open PRs, and the only other worktree is row 92, already landed as `157d6f9`. §5 now cites V20. No design change |
+| r1 | gemini-3-1-pro | pass | — | — |
