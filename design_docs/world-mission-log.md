@@ -3304,3 +3304,50 @@ The shipped code was right, but nothing pinned it. The controller reproduced bot
 **Progress:** rows **35 and 38 LANDED** (`9574d08`). Of the groom's position-4 workbench rows, only 34 remains. Clause 5's human surface now has a working provenance hop: selected entry → transitionFn / interpreter / transitionRef objects. New rows **98–101**.
 
 **Next**: row 34 (grammar negative tests), **98** (provenance-walk section blank), **40** (adapter contract), 27, **93** (clause-4 floor run), 96, 97, 99, 100. **Decision ledger: 23 rows, ZERO OPEN.**
+
+## 185 — 2026-09-24 — row 34 LANDED: the workbench's closed grammar, href guard and verdict line are pinned — 20 surviving mutants now each have a named killer, test-only, and the judge's one survivor was closed in-sprint [PRODUCT]
+
+**Kind**: full inner loop on a fresh pick (designer → quorum ×2 → planner → executor → evaluator ×2). No orphan: 0 open PRs; the only stale worktree `.wt-world-iter182` is row 92's (landed `157d6f9`).
+
+**Picked.** Row **34**, the last open row at groom position 4. Premise re-measured at `fd99840` by the controller (`gate2_probe_mut185.sh`: exact single-occurrence replace → `go build` rc=0 → 3-package suite → restore). Of the row's seven hunks, **H1 and H2 are now KILLED** (by `TestWorkbenchRendersSeededWorldAndTimeline` and `TestWorkbenchPayloadPreviewBound/oversize`, both added after the row was written). **H3–H7 still SURVIVE**: the PASS-span aria-label, the `workbenchHref` `?` guard, and the cardinality and two pair guards of `supportedWorkbenchQuery`.
+
+**Design.** Designer `claude:claude-opus-5-5` via `claude-sub`. Rotation: last-used claude → astra, but the driver's `ration gate: blocked buckets … codex ollama openrouter` covered both astra and deepseek, so the pick fell back through them to claude (FLAGGED; a capacity skip, not a probe failure). Probe rc=0. Doc `c9094d9`, 547 lines. It ran a rule-3n enumeration of every condition on the three surfaces: 56 mutants, 20 surviving, **14 of them new**. Q17 (`len != 2` → `> 2`) is equivalent. V2 is the worst new one: a PROVEN grade with no verdict rendered a "✓ verdict" PASS span. The fix is test-only and was prototyped at design time.
+
+**Quorum.**
+- **r1 BLOCKED 2/3.**
+  - **astra UPHELD**: §7 had 56 rows, but the prose said 55 mutants, 35 killed and 54 kills. The controller recounted the designer's own transcripts: 56 rows, 36/20 before, 55/1 after. The prose was off by one everywhere.
+  - **glm REFUTED**: `9574d08` is an ancestor of `fd99840`, the control fires, there are 0 open PRs, and no other sprint worktree exists.
+  - One designer revision `2612b63`, with the measurements handed over rather than the objections.
+- **r2: gemini PASS, glm PASS, astra REJECT** on a new surface: the no-verdict test only checked that the expected paragraph appeared somewhere, so an appended false PASS span would pass. It carried a concrete `proposed_fix`, so the **narrow-refinement carve-out** applied it verbatim (`aa5df54`). The controller added a negative assertion (no `class="verdict-` and no `aria-label="test verdict` anywhere) and a mutation-control row V10. V10 **survives pristine and the r1 prototype** and is killed by both new subtests. The controller re-ran the whole drill with V10: **57 rows → 56 KILLED / 1 SURVIVED (Q17) / 0 non-compiling**.
+
+**Plan.** Planner `opus` via the Agent tool (`fail-closed:env-pin`). It prototyped before planning: pristine 36/21, M1-only 46/11, M1+M2 56/1, +90 LOC measured. Plan `0bb3c7e`. Its findings were stale prose only (LOC +84→+90, V10 missing from the sole-killer list, "56 rows"); the controller fixed them in `8d99105`.
+
+**Execute.** Executor `opus` via the Agent tool, foreground: M1 `133a83f` (truth table over all 32 key subsets, plus 3 HTTP refusal witnesses), M2 `5ee393b` (href unit test, exact PASS span, verdict-less and unavailable grades with the negative claim assertion), record `2c3b997`. Drills: M1 10 killed + Q17 survives; M2 10/10; full 56/1. The 20 fixed survivors all still **survive against `origin/dev`'s tests**. Production files are byte-identical. The controller re-derived: vet 0, **20 ok / 0 FAIL**, `verify_ail.sh` PASS, H6 and V10 killed as named.
+
+**Judge.**
+- **r1**: evaluator `sonnet` (own worktree `.eval-world-iter185` @ `2c3b997`), **PASS 95/100, zero blocking**. It re-derived all gates and AC4/AC7, spot-checked H6/H4/V6/V10/Q17, proved the milestone split at `133a83f`, and proved Q17 equivalent algebraically. Of 3 self-chosen mutants, 1 was killed, 1 was equivalent, and **1 SURVIVED**: the FAIL span's glyph `✗`→`✓`.
+- **Controller closure**: reproduced it, plus a second survivor (FAIL `class="verdict-fail"`→`"verdict-pass"`). `/fail` now asserts the exact span and is the sole killer of both; the G3 control was already killed. Committed `121682d`.
+- **r2 judge on that delta: PASS 98/100**. It re-proved survival at `2c3b997` and the kill at `121682d`; its own class-swap mutant is killed only by the new lines.
+- Reports: `~/.ailang/state/mission-world-iter185-evidence/EVAL_REPORT_iter185{,_r2}.md`.
+
+**Land.** Doc and plan moved to `implemented/` with §13 (`4506bb5`). The closing-keyword scan was 0, with its control at 1. PR [#144](https://github.com/sunholo-data/ailang-world/pull/144) went 2/2 green on its head, `MERGEABLE/CLEAN`, and was squash-merged as **`158d8ee`**. Gate 3b's SHA-pinned read of the merge: present 2 / completed 2 / success 2, 1 run `push/completed/success`. Drift since Gate 1 = 1 commit, my own squash.
+
+**Ruled out / process findings**
+- **(a) H1/H2 had closed without anyone recording it.** A row's hunk list is a claim with a date. Re-running it at pick time shrank the scope from 7 to 5 before the designer started.
+- **(b) A mutation table's TOTALS are a claim separate from its ROWS.** r1's upheld objection was pure arithmetic, and the transcripts settled it in one `grep -c`. Hand the designer the recount, not the objection.
+- **(c) Presence-only assertions do not establish a "never shows X" invariant.** Astra's r2 catch, and the r1 judge's FAIL-glyph survivor, are the same class from two sides: a test that checks the right thing appears, but not that the wrong thing is absent. The PASS and FAIL spans are now both pinned exactly.
+- **(d) A designer's rule-3n enumeration found 3× the row's survivors** (5 → 20 including Q17). The row named the hunks a drill had stumbled on, not the surface they sat on.
+
+**Routing evidence**: base=`158d8ee35f1533b13b2416fe2791c5532a9c2ee8`@`2026-09-24T18:49:42Z` (Gate 3b; Gate 1 base `fd998400a1cc456e27e8b3b6d8e837bcba5fa78e`@`2026-09-24T17:29:41Z`; drift at Gate 3b = 1 commit, my own squash).
+- Controller `claude:claude-opus-5-5` (session; tok: not reported).
+- Designer **`claude:claude-opus-5-5`** via `claude-sub` (resolver `recipe claude:claude-opus-5-5 declared:provider-pin`; rotation astra and deepseek skipped on ration-gate capacity, FLAGGED). Draft 52,012 out / 3.25M cache-read, 33 turns. Revision (protocol-mandated, within the one-doc diet) 5,029 out / 0.99M cache-read, 6 turns. The CLI's notional $2.87 is not metered: billing CLEAN, wrapper strips the keys.
+- Quorum: r1 BLOCKED 2/3 → r2 2 PASS / 1 REJECT → carve-out. Reviewers `gpt6-astra`, `gemini-3-1-pro`, `oc-glm-5-2`; absent_reviewers `[]` both rounds.
+- Planner **`opus`** via the Agent tool (`fail-closed:env-pin`), 128,045 tok.
+- Executor **`opus`** via the Agent tool (`declared:alias-pin`), 88,089 tok. The driver fell back through codex/pi, over ration.
+- Evaluator **`sonnet`** via the Agent tool (`declared:alias-pin`): r1 114,676 tok, r2 61,446 tok.
+- Generator ≠ judge on model: opus → sonnet.
+- Metered **$0.48** (quorum r1 $0.2366 + r2 $0.2465).
+
+**Progress:** row **34 LANDED** (`158d8ee`). All of groom position 4 (rows 34, 35, 38) is now done. Clause 5's human surface has its closed grammar, href guard and verdict line pinned by named tests. New row **102** (every object page renders `GRADE UNAVAILABLE — ` with an empty reason: `host/daemon` has 0 non-test references to `Grade`).
+
+**Next**: **98** (provenance-walk section blank), **102** (grade never supplied), **40** (adapter contract), 27, **93** (clause-4 floor run), 96, 97, 99, 100. **Decision ledger: 23 rows, ZERO OPEN.**
