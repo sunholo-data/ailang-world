@@ -363,7 +363,9 @@ def check_fixtures(outdir: pathlib.Path, interpreter: str) -> int:
 
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--out", default="commits", help="output directory")
+    parser.add_argument("--out",
+                        default=str(pathlib.Path(__file__).resolve().parent / "commits"),
+                        help="output directory (default: the commits/ directory next to this script)")
     parser.add_argument("--check", action="store_true",
                         help="re-read emitted fixtures and verify schema/hashes/chain")
     args = parser.parse_args(argv)
