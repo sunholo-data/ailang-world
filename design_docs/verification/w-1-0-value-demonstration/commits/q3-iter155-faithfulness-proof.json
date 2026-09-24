@@ -1,0 +1,51 @@
+{
+  "observedHead": "sha256:22567594c4c250297512b0b4a2f2a5c598b23aa436ec1d5e6ef6aff6af15e0ee",
+  "objects": [
+    {
+      "hash": "sha256:cacf22c211a74d8c28c94c4dafecf2d2f78e4ee41854b37290889fe7944b40dd",
+      "interfaceHash": "sha256:cca7a1ba281879dbf7cfc070cdbc6fa69d69339c5c05d15bebe73136434b0546",
+      "semanticId": "world/mission/incident/iter155-faithfulness-proof",
+      "provenance": "w-prove-1-0-phase-a",
+      "payload": "eyJxdWVzdGlvbiI6IldoeSBkaWQgYSBncmVlbiBgc2hhc3VtIC1jYCBmYWl0aGZ1bG5lc3MgcHJvb2YgcGFzcyBvdmVyIGEgZGVzdHJveWVkIGNvbW1pdCBzcGxpdD8iLCJhbnN3ZXIiOiJUaGUgcHJlc2NyaWJlZCBtYW5pZmVzdCBjb3ZlcnMgdGhlICoqZmluYWwgdHJlZSoqLCBpZGVudGljYWwgd2hldGhlciB0aGUgc3BsaXQgaXMgY29ycmVjdCBvciBjb2xsYXBzZWQ7IGBnaXQgYWRkIGRlc2lnbl9kb2NzIGhvc3RgIHN0YWdlZCBkaXNrIHN0YXRlLCBNUzEgc3dhbGxvd2VkIE1TMydzIGZpbGVzLCBNUzMgY29tbWl0dGVkIG5vdGhpbmcsIGFuZCBgc2hhc3VtIC1jYCByZXR1cm5lZCBPSyBvbiBldmVyeSBmaWxlLiIsImRpYWdub3NlZF9hdCI6IjIwMjYtMDktMDUiLCJzb3VyY2VzIjpbInNoYTI1NjpiZThiYzNmMTQ5ZjE4YzRjMDMwNzRkMjU5MzMyYTA4ZjI5OGViZWM0Y2RkZmEyMTg5OTQ0NTA3YWVjNWJhMzAxIiwic2hhMjU2Ojg1NGRkNGM2NTFlYWQ4ZTFhYzFmYzFhYzVmYmYyNWRjY2E2NzRmZWI2MDYyM2I3NGI1NmNhZTdiMDcyMjY2NTAiLCJzaGEyNTY6YThjMmEwNjFiOTYwYzVhNTEzNzcyNjUxNTQ5OTEwNDgwN2U4OTI5MWQ5MWVhYWNjOWUzYTcwNDhkNTFjNjBlMCJdfQ=="
+    },
+    {
+      "hash": "sha256:be8bc3f149f18c4c03074d259332a08f298ebec4cddfa2189944507aec5ba301",
+      "interfaceHash": "sha256:f35f73372ffc267f1df90986eeac17e5cd471d418dc79b843def759034abf2f9",
+      "semanticId": "world/mission/evidence/iter155-faithfulness-proof/0",
+      "provenance": "w-prove-1-0-phase-a",
+      "payload": "eyJraW5kIjoibWFuaWZlc3QiLCJyZWYiOiJ3b3JsZC1taXNzaW9uLm1kIHJvdyA4MSIsImNoZWNrIjoiZ3JlcCAtbiBcIm1hbmlmZXN0IGlzIG92ZXIgdGhlIEZJTkFMIFRSRUVcIiB3b3JsZC1taXNzaW9uLm1kIiwiZXhjZXJwdCI6IioqVGhhdCBtYW5pZmVzdCBpcyBvdmVyIHRoZSBGSU5BTCBUUkVFLioqIEJpc2VjdGFiaWxpdHkgaXMgYSBwcm9wZXJ0eSBvZiB0aGUgU1BMSVQsIGFuZCB0aGUgZmluYWwgdHJlZSBpcyBpZGVudGljYWwgd2hldGhlciB0aGUgc3BsaXQgaXMgY29ycmVjdCBvciB3aGV0aGVyIGNvbW1pdCAxIHN3YWxsb3dlZCBldmVyeXRoaW5nIGFuZCBjb21taXRzIDItMyBhcmUgZW1wdHkuIn0="
+    },
+    {
+      "hash": "sha256:854dd4c651ead8e1ac1fc1ac5fbf25dcca674feb60623b74b56cae7b07226650",
+      "interfaceHash": "sha256:98280c4c2a49b77a940838395dea46f4a431d91e7cba11612cca2306c49ba454",
+      "semanticId": "world/mission/evidence/iter155-faithfulness-proof/1",
+      "provenance": "w-prove-1-0-phase-a",
+      "payload": "eyJraW5kIjoibG9nIiwicmVmIjoid29ybGQtbWlzc2lvbi1sb2cubWQgIyMgMTU1IiwiY2hlY2siOiJnaXQgc2hvdyAtLXN0YXQgcGVyIGNvbW1pdDsgcmVidWlsdCByb3ctNTkgc3BsaXQgaW4gZ2l0IGhpc3RvcnkiLCJleGNlcnB0IjoiKipNeSBmaXJzdCBjb21taXQgcmVjb25zdHJ1Y3Rpb24gd2FzIHdyb25nIGFuZCBJIHJlYnVpbHQgaXQuKiogYGdpdCBhZGQgZGVzaWduX2RvY3MgaG9zdGAgc3RhZ2VkIHdoYXRldmVyIHdhcyBvbiBkaXNrIHJhdGhlciB0aGFuIHRoZSBzbmFwc2hvdCdzIG5hbWVkIGZpbGVzLCBzbyBNUzEncyBjb21taXQgc3dhbGxvd2VkIE1TMydzIHR3byBkb2MgZmlsZXMuIn0="
+    },
+    {
+      "hash": "sha256:a8c2a061b960c5a5137726515499104807e89291d91eaacc9e3a7048d51c60e0",
+      "interfaceHash": "sha256:e728cfc637823290319c439ac2d459fded956ac9ee45b6906a226bad3a023ce6",
+      "semanticId": "world/mission/evidence/iter155-faithfulness-proof/2",
+      "provenance": "w-prove-1-0-phase-a",
+      "payload": "eyJraW5kIjoicmV0cnkiLCJyZWYiOiJ3b3JsZC1taXNzaW9uLWxvZy5tZCAjIyAxNTUiLCJjaGVjayI6InJlYnVpbGQgYm91bmRhcnkgZ2F0ZTsgenNoIHdvcmQtc3BsaXR0aW5nIHRyYXAiLCJleGNlcnB0IjoienNoIGRvZXMgbm90IHdvcmQtc3BsaXQgdW5xdW90ZWQgZXhwYW5zaW9ucywgc28gYWxsIHRocmVlIHBhdGhzIGFycml2ZWQgYXMgT05FIGFyZ3VtZW50LCBgY3BgIGZhaWxlZCwgYW5kIHRoZSBib3VuZGFyeSBnYXRlcyBzdGlsbCBwcmludGVkIGB2ZXQ9MCB2ZXJpZnlnYXRlPTBgLiJ9"
+    }
+  ],
+  "nextWorld": {
+    "ref": "sha256:749fc1728b737e8764d5ce09a70ed51a7693ab184f60c6190bccde1026534457",
+    "revision": 2,
+    "stateRoot": "sha256:02073cce3da3f9faaa8c1b719daf1a07548c14c06ab4e4a38790294698600e10",
+    "logHead": "sha256:af33ffe45e6a0dc099020337ebbce65f762564684d719161df2e49008c8d9e28"
+  },
+  "entry": {
+    "header": {
+      "entryIndex": 2,
+      "semanticsEpoch": 1,
+      "transitionFn": "sha256:5e670bae3ff5816cd7f6faed983dd61e2942d5b0268a3c66a53a9ea6bc1d3f1d",
+      "interpreter": "sha256:1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+      "prevEntryHash": "sha256:8549b68c5dd3074c9ed9ebf5fc908fc0ee8e7f7da7ab7d22c164e8a88e55a446",
+      "writtenBy": "w-prove-1-0-phase-a"
+    },
+    "entryHash": "sha256:af33ffe45e6a0dc099020337ebbce65f762564684d719161df2e49008c8d9e28",
+    "transitionRef": "sha256:cacf22c211a74d8c28c94c4dafecf2d2f78e4ee41854b37290889fe7944b40dd"
+  }
+}
