@@ -1,0 +1,501 @@
+{
+  "sprint_id": "w-prove-1-0-phase-a",
+  "queue_item": 92,
+  "title": "Phase A of w-prove-the-1-0-bar (clause-5 value demonstration): harvest >=3 REAL 'why did X happen' questions from this mission's own record (with a rejection log), source pre-World baselines from the record (UNMEASURED where it is silent), answer each by a timed provenance walk on a scratch worldd (session-gated commits of incident+evidence objects, log-range/object-get queries), verify every answer against independent ground truth outside World, land the comparison-table artifact at design_docs/verification/w-1-0-value-demonstration.md, and regression-guard it with one small host/daemon replay test",
+  "status": "planned",
+  "created": "2026-09-24",
+  "planner": "mission-control iteration 182, pi:openrouter/moonshotai/kimi-k3 sprint-planner",
+  "design_doc": "design_docs/planned/w-prove-the-1-0-bar.md",
+  "sprint_plan": "design_docs/planned/w-prove-the-1-0-bar-phase-a-sprint-plan.md",
+  "base_commit": "8dd867663d0b9db4d6f6f5e51bbdfb10acf939c6",
+  "branch": "sprint/w-prove-1-0-phase-a",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter182",
+  "github_issues": [],
+  "environment": {
+    "AILANG_BIN": "$HOME/.pinned-ailang/ailang",
+    "ailang_version": "AILANG v0.41.0 (24ee1088776e21cd06a3781ed18e77f40be06db3, Darwin/arm64) — the pinned released binary is the verification gate, never a -dirty build",
+    "notes": [
+      "(a) scripts/verify_go.sh is NOT a gate on this rig (charter row 76) — it never appears in an acceptance criterion.",
+      "(b) A bare go test ./... WITHOUT AILANG_BIN fails — always export AILANG_BIN=$HOME/.pinned-ailang/ailang. Base condition, never a regression.",
+      "(c) tools/launchd/* is frozen fleet core — never touch. No .ail file is touched anywhere in this sprint; verify_ail.sh's outcome must stay byte-identical (11 identities / 40 named tests / 9-of-9 package steps).",
+      "(d) Q1's ground truth needs the v0.30.0 binary, NOT the current pin: $HOME/.pinned-ailang/ailang.v0.30.0 survives on the rig and reproduces Error: unknown command 'mission' (planner-measured 2026-09-24). The current v0.41.0 pin HAS the mission group — a check against it would contradict the incident (DEF-1).",
+      "(e) POST /v1/commit is session-gated since a036062 (row 39 landed iter-181) with a tty-fenced mint; the live walk mints through a python3 pty.spawn wrapper (sprint plan M4). Both a listener refusal and a pty refusal are pre-registered NOT-RUN(TRANSPORT) outcomes, labelled, never pass/fail.",
+      "(f) Never touch ~/.ailang/state/mission-v1* — Q2's incident-time script lived in the V1 checkout; the plan verifies Q2 against the LIVE fleet file via gh api (read-only) and the in-git charter row 78, never the V1 checkout."
+    ],
+    "baseline_measured": {
+      "where": "this planning worktree (sunholo-data/ailang-world detached at 8dd8676), 2026-09-24, by this planner",
+      "go_build": "go build ./... -> rc=0",
+      "go_vet": "go vet ./... -> rc=0",
+      "verify_ail": "bash ./scripts/verify_ail.sh -> rc=0; '✓ verify gate PASSED: 11 required identities verified, 40 named tests pass'; '✓ world package gate PASSED: 9/9 steps performed non-zero work'; compiler pinned by exact bytes: AILANG v0.41.0 on Darwin/arm64",
+      "go_test": "go test ./... -count=1 (AILANG_BIN exported) -> rc=0; 20 ok, 0 FAIL",
+      "post_sprint_target_arithmetic": "20 base ok + 0 new packages (the durability test lands in the existing host/daemon package) = 20 ok expected at every milestone exit",
+      "ground_truths_spot_verified": [
+        "$HOME/.pinned-ailang/ailang.v0.30.0 mission rotate-log world --keep 31 -> 'Error: unknown command 'mission'' (Q1, live)",
+        "gh api repos/sunholo-data/ailang/contents/scripts/mission_pi_run.sh -> invocation 'pi --mode json --no-session --model \"$MODEL\" < \"$DIRECTIVE\"' at :165, zero -e flags, zero PI_FENCE_ROOT; issue ailang#1043 OPEN (Q2, live)",
+        "git merge-base --is-ancestor a036062 HEAD -> yes; git show a036062 -- host/daemon/bench_test.go adds req.Header.Set(\"Authorization\", auth) (C4 eligibility, in-git)"
+      ]
+    }
+  },
+  "pre_registered": {
+    "note": "Two things are pre-registered here. (1) WHAT A FAILED WALK LOOKS LIKE: the honest-failure classes below are results (doc §4 — a demonstration that cannot fail demonstrates nothing); if World cannot answer a question the artifact records it and it counts as clause-5 evidence. (2) The mutation battery MU-1..MU-4, which runs AFTER the executor finishes M3 and snapshots .snap/M3/, against the landed tree — a controller/evaluator act, not executor work. Every arm: cp -p backup, sed with an asserted occurrence count, sha256 landed-proof (pre != post), a compile/vet assert BEFORE any test result is read, the scoped observable read (never the exit code alone), the named test required as the SOLE failure, then restore by cp from the .bak — restore asserted by shasum -a 256 equality AND test -x where a mode bit matters — and NEVER git checkout --.",
+    "failed_walk_classes": {
+      "FAIL-TIME": "the walk produced a verified answer but needed >300 s — recorded with the actual duration; counts as clause-5 evidence against the bar, never hidden",
+      "UNVERIFIED": "the walk produced an answer but no source outside World confirmed it — does NOT count toward the >=3 (doc §2)",
+      "UNANSWERABLE": "the walk could not produce the answer from the committed record — recorded as-is; substituting an easier question is forbidden",
+      "NOT-RUN(TRANSPORT)": "the sandbox refused the loopback listener (PF-1) or both pty mint paths (PF-2) — labelled transport, never reported pass/fail; the M3 durability test stands as the regression guard and the block is reported as a finding",
+      "PF-3": "a live verification source is unavailable (gh/network down for Q2's fleet check; ailang.v0.30.0 removed) — fall back to the named in-git record as primary, mark the live check UNAVAILABLE; the answer counts only if an independent record still confirms it"
+    },
+    "runs_after": "the executor finishes M3 and snapshots .snap/M3/",
+    "baseline_gate_outcomes": {
+      "go_build": "rc=0",
+      "go_vet": "rc=0",
+      "verify_ail": "rc=0; 11 identities / 40 named tests / 9-of-9 steps",
+      "go_test_all": "rc=0; 20 ok, 0 FAIL at base (8dd8676)"
+    },
+    "restore_discipline": "cp -p <file> <file>.bak && sed -i '' ... <file>; <run scoped test>; restore cp <file>.bak <file>; restore asserted by shasum -a 256 <file> == pre-mutation digest AND test -x <file> where a mode bit matters; never git checkout --",
+    "mutation_matrix": [
+      {
+        "id": "MU-1",
+        "target_file": "host/daemon/value_demonstration_test.go",
+        "mutation": "Replace Q1's expected answer string in the expectation table with a wrong value (sed occurrence count asserted = 1)",
+        "sole_killer": "TestValueDemo_AnswersMatchRecord",
+        "guards_ac": ["AC-M3-1"],
+        "mechanism": "proves the replay assertion compares answer CONTENT against the record, not mere presence of a payload"
+      },
+      {
+        "id": "MU-2",
+        "target_file": "host/daemon/value_demonstration_test.go",
+        "mutation": "Collapse the evidence-fetch loop to _ = incident.Sources (skip resolution of sources[])",
+        "sole_killer": "TestValueDemo_EvidenceChainComplete",
+        "guards_ac": ["AC-M3-2"],
+        "mechanism": "the evidence-chain test asserts every sources[] hash resolves via object get and its excerpt matches the expectation table"
+      },
+      {
+        "id": "MU-3",
+        "target_file": "design_docs/verification/w-1-0-value-demonstration/commits/q1-iter171-index-row.json",
+        "mutation": "Flip one base64 character in the incident object's payload (sed occurrence count asserted = 1)",
+        "sole_killer": "TestValueDemo_AnswersMatchRecord",
+        "guards_ac": ["AC-M3-1"],
+        "mechanism": "the store content-verifies hash == sha256(payload), so the replay POST 400s — or, if the flip lands outside the answer bytes and the hash is recomputed, the answer comparison mismatches; either way the fixture is proved load-bearing, not decorative"
+      },
+      {
+        "id": "MU-4",
+        "target_file": "host/daemon/value_demonstration_test.go",
+        "mutation": "GREEN CONTROL — reword one comment, no behavior change",
+        "sole_killer": "none — all tests must STAY GREEN",
+        "guards_ac": [],
+        "mechanism": "proves the mutant-detection matrix is not vacuously green"
+      }
+    ],
+    "load_bearing_named_tests": [
+      "TestValueDemo_AnswersMatchRecord",
+      "TestValueDemo_EvidenceChainComplete"
+    ]
+  },
+  "doc_defects_found": [
+    {
+      "id": "DEF-1",
+      "severity": "minor-time-sensitive-ground-truth",
+      "summary": "§3 candidate 1 says 'Checkable against the binary and the index' — the current pin (v0.41.0) HAS the mission command group and the index no longer shows the hole.",
+      "detail": "Planner-measured 2026-09-24: $HOME/.pinned-ailang/ailang (v0.41.0) answers 'failed to read mission registry missions', NOT 'unknown command' — a naive live check against the current pin would contradict the incident. And grep -c '^| 171 |' design_docs/world-mission-index.md is 1 NOW because the row was added manually after iteration 172's rule — the current index shows the repair, not the incident. The v0.30.0 binary survives at $HOME/.pinned-ailang/ailang.v0.30.0 and reproduces Error: unknown command 'mission' (measured).",
+      "resolution": "Recorded, doc NOT edited. The plan's Q1 verification uses ailang.v0.30.0 plus git log -S'| 171 |' over the index (first appearance = the manual repair), never the current pin or the current index state."
+    },
+    {
+      "id": "DEF-2",
+      "severity": "trivial-line-drift",
+      "summary": "Row 78's ground truth cites scripts/mission_pi_run.sh:155; the live fleet file has the invocation at :165.",
+      "detail": "Planner-measured via gh api 2026-09-24: the pi invocation sits at line 165 at fleet HEAD, still with zero -e flags and zero PI_FENCE_ROOT; issue sunholo-data/ailang#1043 is OPEN. Row 78 recorded :155 at iter-154 — correct then, drifted now.",
+      "resolution": "Recorded, doc NOT edited (the row is a historical record). The plan's Q2 verification asserts the PROPERTY (no -e flag, no PI_FENCE_ROOT anywhere in the file), never the line number."
+    },
+    {
+      "id": "DEF-3",
+      "severity": "mechanics-gap-in-doc",
+      "summary": "§4 says 'answer each by a provenance walk on World' but World has no semantic-ID query route; the walk entry point is a log-range scan.",
+      "detail": "Planner-measured at base: GET /v1/objects/{ref} parses a hashref ONLY (handleObject), and POST /v1/commit cannot register names in epoch_registry_heads — its only writers are registry.Bootstrap, broker approve, and transitionreg. A walker must therefore scan log range and fetch each transitionRef object's metadata until the semanticId matches.",
+      "resolution": "Recorded, doc NOT edited. The plan encodes the log-range scan as the walk's locate step and seeds artifact finding F-1 (proposed queue row w-object-lookup-by-semantic-id) — a finding, NOT scope (doc §9)."
+    },
+    {
+      "id": "DEF-4",
+      "severity": "doc-predates-row-39-land",
+      "summary": "Phase A's commit path is session-gated with a tty-fenced mint since a036062 (iter-181); the doc's Phase A mentions no credential setup.",
+      "detail": "The doc was groomed 2026-09-21, before row 39 landed. POST /v1/commit now requires Authorization: Bearer <64-hex> resolved by the session middleware, and session mint refuses without a controlling terminal (os.OpenFile /dev/tty + y/N confirm).",
+      "resolution": "Recorded, doc NOT edited. The plan's M4 carries the pty.spawn mint wrapper (with script -q /dev/null as alternate) and pre-registers NOT-RUN(TRANSPORT) if neither satisfies the fence."
+    }
+  ],
+  "acceptance_criteria_amendments": [],
+  "features": [
+    {
+      "id": "M1_HARVEST_BASELINE_ARTIFACT_SKELETON",
+      "name": "Harvest log (3 taken + C4 eligibility-gated + C5/C6 rejections) + record-sourced baselines + artifact skeleton at design_docs/verification/w-1-0-value-demonstration.md",
+      "description": "Create the deliverable artifact with the exact section set the plan prescribes: harvest log (the three mandatory questions Q1 iter171-index-row / Q2 iter154-unfenced-pi / Q3 iter155-faithfulness-proof with ground-truth citations; the C4 iter181-ci-bench-401 eligibility check run and pasted verbatim — TAKE iff 'git merge-base --is-ancestor a036062 HEAD' AND the bench Authorization grep AND the STATUS-181 citation all hold, else REJECT with the failing check; the C5/C6 rejections with their circularity reasons), baselines (method quoted from world-mission.md rows 86/78/81 + world-mission-log.md ## 154/155/172 + STATUS-181, with file+section citations; cost quoted from the record or the literal UNMEASURED — never imputed, doc §4.2/§8), walk protocol, empty Timing/Verification/Comparison tables in the prescribed formats, and Findings seeded with F-1 (no semantic-ID query route) and F-2 (registry names not commit-settable). No code.",
+      "commits": 1,
+      "files": [
+        "design_docs/verification/w-1-0-value-demonstration.md"
+      ],
+      "closes_acceptance_criteria": ["AC-M1-1", "AC-M1-2", "AC-M1-3"],
+      "advances_acceptance_criteria": ["AC-M4-3"],
+      "estimated_loc": 0,
+      "estimated_days": 0.2,
+      "estimated_days_breakdown": {
+        "harvest_log_and_c4_eligibility": 0.05,
+        "baseline_re_read_and_quotation": 0.1,
+        "skeleton_tables_and_findings": 0.05
+      },
+      "dependencies": [],
+      "acceptance_criteria": [
+        "AC-M1-1 harvest log lists >=3 taken questions with ground-truth citations AND >=2 rejected candidates with reasons: grep -c \"REJECT\" <artifact> >= 2 and grep -c \"world/mission/incident/\" <artifact> >= 3.",
+        "AC-M1-2 every baseline row carries a record citation (world-mission.md / world-mission-log.md + section) and its cost cell is a quoted figure with citation or the literal UNMEASURED; grep -c \"UNMEASURED\" <artifact> >= 3 is EXPECTED (doc §8 anticipates silent records); zero empty cost cells.",
+        "AC-M1-3 the C4 decision is recorded with its eligibility-check output pasted verbatim; if TAKE, the slug iter181-ci-bench-401 appears in the harvest log.",
+        "G1 (AILANG_BIN exported): go build ./... rc=0; go vet ./... rc=0; go test ./... -count=1 -> 20 ok / 0 FAIL; bash ./scripts/verify_ail.sh unchanged (11 identities / 40 tests / 9-of-9).",
+        "Snapshot: the artifact copied into .snap/M1/ (full content)."
+      ],
+      "traps": [
+        "Never impute a baseline cost: an iteration's whole-fire metered $ is NOT the diagnosis cost (doc §4.2). UNMEASURED is the honest cell and is expected for all four questions.",
+        "Q1's ground-truth citation is the v0.30.0 binary, NOT the current pin — the current v0.41.0 pin HAS the mission group (DEF-1); citing it would invert the incident.",
+        "C5 and C6 stay REJECTED even though they are vivid: their only surviving record is the charter text itself, which the walk would be citing as its own source (doc §2 circularity).",
+        "The artifact is the deliverable — M1 is not 'prep', it is the first third of the deliverable."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M2_COMMIT_FIXTURES",
+      "name": "Deterministic commit-fixture generator + checked-in commit JSON fixtures (one chained commit per question: incident object + evidence objects)",
+      "description": "Write design_docs/verification/w-1-0-value-demonstration/gen_fixtures.py (~130 LOC, stdlib json/hashlib/base64/pathlib/argparse) carrying the FACTS table (slugs, questions, answers, evidence items quoted from the record per the plan's §2/§4 — never paraphrased) and emitting commits/q1-iter171-index-row.json, q2-iter154-unfenced-pi.json, q3-iter155-faithfulness-proof.json, and conditionally q4-iter181-ci-bench-401.json. Wire schema EXACTLY host/daemon/handlers.go commitRequest (decoder is DisallowUnknownFields): observedHead, objects[{hash,interfaceHash,semanticId,provenance,payload(base64)}], nextWorld{ref,revision,stateRoot,logHead}, entry{header{entryIndex,semanticsEpoch,transitionFn,interpreter,prevEntryHash,writtenBy},entryHash,transitionRef}. Q1 is genesis (observedHead \"\"; prevEntryHash a REAL sha256 — a zero prevEntryHash is writable but unreadable); successors chain observedHead/prevEntryHash. Every object hash == sha256:<hex> of the payload bytes (the store content-verifies). header.interpreter == sha256 of the live bytes of $HOME/.pinned-ailang/ailang, computed by the generator reading the binary (never hard-coded), so health's interpreter_ref matches at walk time (the replay pin). transitionRef = the incident object's hash; writtenBy/provenance = w-prove-1-0-phase-a. --check mode re-verifies everything from the emitted files.",
+      "commits": 1,
+      "files": [
+        "design_docs/verification/w-1-0-value-demonstration/gen_fixtures.py",
+        "design_docs/verification/w-1-0-value-demonstration/commits/q1-iter171-index-row.json",
+        "design_docs/verification/w-1-0-value-demonstration/commits/q2-iter154-unfenced-pi.json",
+        "design_docs/verification/w-1-0-value-demonstration/commits/q3-iter155-faithfulness-proof.json",
+        "design_docs/verification/w-1-0-value-demonstration/commits/q4-iter181-ci-bench-401.json (iff C4 taken at M1)"
+      ],
+      "closes_acceptance_criteria": ["AC-M2-1", "AC-M2-2", "AC-M2-3"],
+      "advances_acceptance_criteria": ["AC-M3-1", "AC-M3-2"],
+      "estimated_loc": 130,
+      "estimated_days": 0.25,
+      "estimated_days_breakdown": {
+        "facts_table_from_record": 0.05,
+        "generator_and_chaining": 0.12,
+        "check_mode_and_gate_runs": 0.08
+      },
+      "dependencies": ["M1_HARVEST_BASELINE_ARTIFACT_SKELETON"],
+      "acceptance_criteria": [
+        "AC-M2-1 python3 design_docs/verification/w-1-0-value-demonstration/gen_fixtures.py --check -> rc=0 (recomputes every object hash == sha256 of the decoded payload; asserts exact top-level/object/header key sets; entryIndex 0..N contiguous; prevEntryHash chaining; interpreter == the pinned binary's current sha256).",
+        "AC-M2-2 ls design_docs/verification/w-1-0-value-demonstration/commits/q*.json | wc -l is 3, or 4 iff C4 was taken at M1 — and equals the harvest log's taken count.",
+        "AC-M2-3 grep -L 'w-prove-1-0-phase-a' design_docs/verification/w-1-0-value-demonstration/commits/q*.json prints nothing (every fixture carries the sprint provenance) and every semanticId is world/mission/{incident,evidence}/... .",
+        "G1 green (20 ok / 0 FAIL; verify_ail unchanged — no .ail).",
+        "Snapshot: generator + fixtures + the artifact copied into .snap/M2/ (cumulative — includes M1's file, full content)."
+      ],
+      "traps": [
+        "DisallowUnknownFields: any extra key anywhere (e.g. a 'kind' at top level, a 'name' on an object) makes the daemon answer 400 at replay — the generator must emit EXACTLY the schema keys and --check must assert the key sets.",
+        "Genesis prevEntryHash must be a REAL hash (sha256 of a fixed string), never the zero value — store.Commit writes it but store.GetLogEntry cannot read a zero back (TestGenesisRefLenienceIsExactlyOneField).",
+        "payload is base64 in JSON (Go []byte); hash is over the DECODED bytes — mismatching these is the classic fixture bug and MU-3's target.",
+        "Compute the interpreter ref from the pinned binary's live bytes; a hard-coded digest goes stale the day the pin bumps and the M4 replay-pin pre-check would fail opaquely.",
+        "Answer/excerpt strings come from the plan's FACTS verbatim — the executor never paraphrases the record into the fixtures."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M3_DURABILITY_TEST",
+      "name": "host/daemon/value_demonstration_test.go — replay the checked-in fixtures through the real daemon stack and assert the walk queries return the recorded answers",
+      "description": "One new Go test file (~140 LOC) in package daemon (reusing newHandlerDaemon, authHeader, and the existing httptest patterns — NO new package, so the suite stays 20 ok). It reads the checked-in fixtures from ../../design_docs/verification/w-1-0-value-demonstration/commits/, POSTs them in order through httptest.NewServer(d.Handler()) with the minted session header, then performs the walk IN-PROCESS: GET /v1/log?from=0, scan each entry's transitionRef, GET /v1/objects/<ref> metadata until the incident semanticId matches, GET ?payload=true and decode. TestValueDemo_AnswersMatchRecord: each taken question's incident object exists and its payload answer byte-equals the expectation table (killers MU-1, MU-3). TestValueDemo_EvidenceChainComplete: every hash in every incident's sources[] resolves via object get with a payload whose excerpt byte-equals the expectation table (killer MU-2). The expectation table is keyed by slug and mirrors the generator's FACTS verbatim.",
+      "commits": 1,
+      "files": [
+        "host/daemon/value_demonstration_test.go"
+      ],
+      "closes_acceptance_criteria": ["AC-M3-1", "AC-M3-2", "AC-M3-3"],
+      "advances_acceptance_criteria": [],
+      "estimated_loc": 140,
+      "estimated_days": 0.2,
+      "estimated_days_breakdown": {
+        "replay_scaffold_reusing_helpers": 0.08,
+        "two_named_tests_and_expectation_table": 0.08,
+        "gate_runs_and_snapshot": 0.04
+      },
+      "dependencies": ["M2_COMMIT_FIXTURES"],
+      "acceptance_criteria": [
+        "AC-M3-1 go test ./host/daemon/ -run 'TestValueDemo' -count=1 -v -> TestValueDemo_AnswersMatchRecord PASS: every taken question's incident object is located by semanticId and its answer byte-equals the expectation table. Killers: MU-1 (wrong expected answer), MU-3 (corrupted fixture payload).",
+        "AC-M3-2 same command -> TestValueDemo_EvidenceChainComplete PASS: every sources[] hash resolves via GET /v1/objects/<hash>?payload=true and its excerpt byte-equals the expectation table. Killer: MU-2 (evidence loop skipped).",
+        "AC-M3-3 G1 green with 20 ok / 0 FAIL (the test lands in the existing host/daemon package — no new package) and verify_ail.sh byte-identical (no .ail).",
+        "Snapshot: cumulative .snap/M3/ (M1+M2 files + the test). Executor STOPS here; the pre-registered mutation battery MU-1..MU-4 is the controller's next act."
+      ],
+      "traps": [
+        "Reuse newHandlerDaemon/authHeader — do NOT re-mint through the CLI in-process and do NOT construct broker.Session (host/daemon is not a broker owner; the middleware boundary is the point).",
+        "The fixture path is ../../design_docs/... relative to the package dir (go test's working directory); an absolute path would break on any other rig.",
+        "The test asserts byte-equality against its own expectation table, not against strings re-derived from the fixtures — a test that reads its expectations from the subject under test is vacuous (MU-1 exists to prove this).",
+        "Order matters: POST q1 before q2 — observedHead chaining makes an out-of-order replay a 409, which the test treats as a fixture defect, not a daemon verdict.",
+        "Do not touch bench_test.go or any existing test; the only new symbol space is value_demonstration_test.go."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M4_LIVE_WALK_ARTIFACT_COMPLETION",
+      "name": "Live timed provenance walks on a scratch worldd (pty-minted session) + ground-truth verifications + artifact tables filled + walk transcript",
+      "description": "Build the binary into .walk-scratch/ (untracked, EXCLUDED from snapshots), serve --db .walk-scratch/walk.db --bind 127.0.0.1:7654 --ailang-bin $AILANG_BIN, health + replay-pin pre-check (interpreter_ref == sha256 of the pinned binary), mint via printf 'y\\n' | python3 -c \"import pty,sys; pty.spawn(sys.argv[1:])\" ... session mint --db ... --episode w-1-0-value-demo --grant fs.read=/tmp:1 --ttl 3600 --out .walk-scratch/token (alternate: script -q /dev/null), commit the fixtures in order via commit --file <f> --session $(cat token). Then per question, timer STARTS AT THE QUESTION: log range --from 0 -> object get per transitionRef until the incident semanticId matches -> object get --payload (base64 -d) -> follow every sources[] hash -> assemble the answer -> VERIFY against the plan's per-question ground-truth commands (ailang.v0.30.0 grep + git log -S for Q1; gh api fleet file + issue #1043 OPEN for Q2, with the PF-3 fallback; row-81/log-155 greps + git show --stat of the rebuilt row-59 split for Q3; git show a036062 bench diff + STATUS-181 grep for Q4) -> stop clock, record duration and verdict from the closed set {PASS, FAIL-TIME, UNVERIFIED, UNANSWERABLE, NOT-RUN(TRANSPORT)}. Fill the artifact's Timing/Verification/Comparison tables in the prescribed formats and append raw command output to walk-transcript.md. SIGTERM the daemon and record the drain line.",
+      "commits": 1,
+      "files": [
+        "design_docs/verification/w-1-0-value-demonstration.md",
+        "design_docs/verification/w-1-0-value-demonstration/walk-transcript.md"
+      ],
+      "closes_acceptance_criteria": ["AC-M4-1", "AC-M4-2", "AC-M4-3", "AC-M4-4"],
+      "advances_acceptance_criteria": [],
+      "estimated_loc": 0,
+      "estimated_days": 0.35,
+      "estimated_days_breakdown": {
+        "setup_serve_mint_commits": 0.08,
+        "four_timed_walks_with_verification": 0.15,
+        "tables_transcript_findings": 0.08,
+        "gate_runs_and_snapshot": 0.04
+      },
+      "dependencies": ["M3_DURABILITY_TEST"],
+      "acceptance_criteria": [
+        "AC-M4-1 every taken question has a Timing-log row with a verdict from the closed set and a numeric duration_s ('-' iff NOT-RUN(TRANSPORT)): grep -cE '\\| (PASS|FAIL-TIME|UNVERIFIED|UNANSWERABLE|NOT-RUN)' <artifact> >= taken count, and grep -c \"TBD\" <artifact> == 0.",
+        "AC-M4-2 every PASS row has duration_s <= 300 (timer started at the question, doc §4.3) and its Verification row names a source OUTSIDE World whose command appears verbatim in walk-transcript.md.",
+        "AC-M4-3 the Comparison table carries the six prescribed columns (question, baseline method, baseline cost, walk time, verification source, verdict) with >=3 rows, and the harvest log WITH ITS REJECTIONS is present in the same artifact (doc §4.5 — the artifact is the deliverable).",
+        "AC-M4-4 G1 green; verify_ail.sh unchanged; the Findings section carries F-1 (semantic-ID query gap -> proposed queue row w-object-lookup-by-semantic-id) and F-2 (registry names not commit-settable) plus any fired PF-1/PF-2/PF-3 transport findings.",
+        "Snapshot: cumulative .snap/M4/ (M1–M3 files + the filled artifact + walk-transcript.md); .walk-scratch/ is EXCLUDED (untracked scratch). Executor STOPS here."
+      ],
+      "traps": [
+        "The timer starts at the QUESTION, before the first query — starting it at the first successful query is the vacuity doc §4.3 names.",
+        "A verdict about binding the listener or satisfying the tty fence under sandbox is NOT-RUN(TRANSPORT) — label it, never report pass/fail (PF-1/PF-2).",
+        "Q1 verification must NOT run the current pin: v0.41.0 HAS the mission group (DEF-1). Use ailang.v0.30.0 and git log -S over the index.",
+        "Q2 verification asserts the PROPERTY (zero -e / zero PI_FENCE_ROOT), never row 78's :155 line number (DEF-2 drift; invocation is at :165 today).",
+        "Read-only git only (log/show/grep) — the executor runs NO git write operations; the controller commits from .snap/M4/.",
+        "Commit fixtures in filename order; a 409 HeadConflict means the chain or the order is wrong — fix the setup, never force a commit.",
+        "An answer only the walk confirms is UNVERIFIED and does not count toward the >=3 (doc §2) — say so in the table rather than upgrading it."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "acceptance_criteria_map": {
+    "AC-M1-1": {
+      "closed_by": "M1_HARVEST_BASELINE_ARTIFACT_SKELETON",
+      "observable": ">=3 taken questions with ground-truth citations and >=2 rejections with reasons, grep-verified (REJECT >= 2; world/mission/incident/ >= 3)"
+    },
+    "AC-M1-2": {
+      "closed_by": "M1_HARVEST_BASELINE_ARTIFACT_SKELETON",
+      "observable": "every baseline row cites the record (file+section) and its cost is quoted-with-citation or the literal UNMEASURED; zero empty cost cells; >=3 UNMEASURED expected per doc §8"
+    },
+    "AC-M1-3": {
+      "closed_by": "M1_HARVEST_BASELINE_ARTIFACT_SKELETON",
+      "observable": "C4 eligibility-check output pasted verbatim with a TAKE/REJECT decision; TAKE adds slug iter181-ci-bench-401 to the harvest log"
+    },
+    "AC-M2-1": {
+      "closed_by": "M2_COMMIT_FIXTURES",
+      "observable": "gen_fixtures.py --check rc=0: hash==sha256(payload) per object, exact schema key sets, contiguous entryIndex, prevEntryHash chaining, interpreter == live sha256 of the pinned binary"
+    },
+    "AC-M2-2": {
+      "closed_by": "M2_COMMIT_FIXTURES",
+      "observable": "fixture count in {3,4} equals the harvest log's taken count"
+    },
+    "AC-M2-3": {
+      "closed_by": "M2_COMMIT_FIXTURES",
+      "observable": "grep -L 'w-prove-1-0-phase-a' over the fixtures prints nothing; all semanticIds under world/mission/"
+    },
+    "AC-M3-1": {
+      "closed_by": "M3_DURABILITY_TEST",
+      "reproved_by": ["MU-1", "MU-3"],
+      "observable": "TestValueDemo_AnswersMatchRecord PASS: fixtures replayed through httptest + session-gated POST; each incident answer byte-equals the expectation table"
+    },
+    "AC-M3-2": {
+      "closed_by": "M3_DURABILITY_TEST",
+      "reproved_by": ["MU-2"],
+      "observable": "TestValueDemo_EvidenceChainComplete PASS: every sources[] hash resolves and every excerpt byte-equals the expectation table"
+    },
+    "AC-M3-3": {
+      "closed_by": "M3_DURABILITY_TEST",
+      "observable": "go test ./... -count=1 20 ok / 0 FAIL (no new package); verify_ail.sh byte-identical outcome"
+    },
+    "AC-M4-1": {
+      "closed_by": "M4_LIVE_WALK_ARTIFACT_COMPLETION",
+      "observable": "one Timing-log row per taken question with a closed-set verdict and numeric duration_s; zero TBD cells"
+    },
+    "AC-M4-2": {
+      "closed_by": "M4_LIVE_WALK_ARTIFACT_COMPLETION",
+      "observable": "every PASS row has duration_s <= 300 and a named verification source outside World with its command pasted verbatim in walk-transcript.md"
+    },
+    "AC-M4-3": {
+      "closed_by": "M4_LIVE_WALK_ARTIFACT_COMPLETION",
+      "advanced_by": ["M1_HARVEST_BASELINE_ARTIFACT_SKELETON"],
+      "observable": "the six-column Comparison table with >=3 rows plus the harvest/rejection log in the same artifact — the doc §4.5 deliverable"
+    },
+    "AC-M4-4": {
+      "closed_by": "M4_LIVE_WALK_ARTIFACT_COMPLETION",
+      "observable": "G1 green; verify_ail unchanged; Findings carries F-1, F-2 and any fired PF-1/PF-2/PF-3"
+    },
+    "mutations": {
+      "MU-1": {
+        "killer_test": "TestValueDemo_AnswersMatchRecord",
+        "mutation": "wrong expected answer string in the expectation table",
+        "guards_ac": ["AC-M3-1"]
+      },
+      "MU-2": {
+        "killer_test": "TestValueDemo_EvidenceChainComplete",
+        "mutation": "evidence-fetch loop skipped (_ = incident.Sources)",
+        "guards_ac": ["AC-M3-2"]
+      },
+      "MU-3": {
+        "killer_test": "TestValueDemo_AnswersMatchRecord",
+        "mutation": "one base64 character flipped in q1 fixture payload",
+        "guards_ac": ["AC-M3-1"]
+      },
+      "MU-4": {
+        "killer_test": "none — GREEN CONTROL, all tests stay green",
+        "mutation": "reword a test comment, no behavior change",
+        "guards_ac": ["non-vacuity of the whole battery"]
+      }
+    }
+  },
+  "velocity": {
+    "method": "Per-milestone LOC scoped against measured base facts (handlers.go:72-107 wire schema read first-party; host/daemon test helpers reused verbatim; 20 ok / 0 FAIL measured at base). Code is a small fraction of this sprint by design — the artifact is the deliverable (doc §4.5); tests are ~52% of new code LOC.",
+    "precedent": "Base gates measured by this planner at 8dd8676 (20 ok / 0 FAIL; verify_ail 11/40 + 9/9), matching the controller's iter-181 measurement of the same numbers at the row-39 land; the '20 ok' exit target is arithmetic from that measurement (no new package), not hope.",
+    "estimated_total_loc": 270,
+    "loc_breakdown": {
+      "M1_HARVEST_BASELINE_ARTIFACT_SKELETON": "0 code (artifact md ~200 lines, prose not code)",
+      "M2_COMMIT_FIXTURES": "130 python (gen_fixtures.py) + 3-4 generated fixture JSONs (generated, checked in as produced)",
+      "M3_DURABILITY_TEST": "140 Go (value_demonstration_test.go)",
+      "M4_LIVE_WALK_ARTIFACT_COMPLETION": "0 code (artifact tables + walk-transcript.md)"
+    },
+    "within_budget": "270 total new code LOC against the <= ~300 LOC new-code sprint target; the only Go is M3's 140, inside the <= ~150 per-milestone band",
+    "estimated_days": 1.0,
+    "estimated_days_cap": 1.5,
+    "estimated_days_per_milestone": {
+      "M1_HARVEST_BASELINE_ARTIFACT_SKELETON": 0.2,
+      "M2_COMMIT_FIXTURES": 0.25,
+      "M3_DURABILITY_TEST": 0.2,
+      "M4_LIVE_WALK_ARTIFACT_COMPLETION": 0.35
+    }
+  },
+  "pricing": {
+    "design_doc_total_days": 1.0,
+    "plan_total_days": 1.0,
+    "verdict": "AGREE with the doc's ~1d (row 92's own estimate): the plan prices 1.0d of executor work, the difference from a naive reading being that the planner pre-read the record (baselines, ground truths, wire schema, walk mechanics) and pre-registered the failure classes and mutation battery, so the executor executes rather than investigates.",
+    "bands": [
+      {
+        "work": "M1 harvest log + record-sourced baselines + artifact skeleton",
+        "doc": null,
+        "plan": 0.2,
+        "driver": "the harvest is prescribed (3 taken + C4 eligibility check + C5/C6 rejections); the executor re-reads and quotes rather than searches; the only real work is resisting imputation on the cost cells"
+      },
+      {
+        "work": "M2 generator + fixtures (130 LOC python)",
+        "doc": null,
+        "plan": 0.25,
+        "driver": "the wire schema, genesis prevEntryHash lenience, and DisallowUnknownFields traps are all named with their source lines; the FACTS table is quoted from the plan, not authored"
+      },
+      {
+        "work": "M3 durability test (140 LOC Go)",
+        "doc": null,
+        "plan": 0.2,
+        "driver": "all helpers exist in package (newHandlerDaemon, authHeader, httptest patterns); the two named tests and their mutation killers are pre-registered"
+      },
+      {
+        "work": "M4 live walk + tables + transcript",
+        "doc": null,
+        "plan": 0.35,
+        "driver": "step-by-step commands are written literally including the pty mint and per-question verification blocks; the schedule risk is transport (listener/pty/network), pre-registered as NOT-RUN(TRANSPORT)/PF-3 rather than priced as work"
+      }
+    ],
+    "objections": [
+      "All four baselines are expected UNMEASURED on cost: the record states method, not duration (doc §8 names this in advance). The comparison table's baseline-cost column will look empty; that is the honest measurement, and the baseline-METHOD column (with citations and recorded step counts) is what arms the ≤5-minute claim.",
+      "M4's four timed walks at ~0.15d assumes the listener binds and the pty mint works on this rig; if either fails the time is not spent — the verdicts flip to NOT-RUN(TRANSPORT) and the artifact records the block. The 0.35d is a cap either way."
+    ]
+  },
+  "split_verdict": {
+    "decision": "NO SPLIT inside any milestone; M1 -> M2 -> M3 -> M4 order is structural, not chosen",
+    "seams_tested": [
+      {
+        "seam": "fixtures (M2) before the harvest decision (M1)",
+        "reds": "AC-M2-2: the fixture count must equal the harvest log's taken count — a fixture set built before the C4 decision is either short (C4 taken, 3 fixtures) or carrying an unharvested question (C4 rejected, 4 fixtures)"
+      },
+      {
+        "seam": "durability test (M3) before fixtures (M2)",
+        "reds": "compile/run: the test reads ../../design_docs/verification/w-1-0-value-demonstration/commits/q*.json — no fixtures, both named tests fail at replay setup"
+      },
+      {
+        "seam": "live walk (M4) before the durability test (M3)",
+        "reds": "ordering, not red: the walk would be unguarded — the whole point of M3 is that the demonstration is regression-guarded before it is performed live; also M4's artifact greps (AC-M4-1/2/3) pattern-match table formats the M1 skeleton defines"
+      }
+    ],
+    "note": "Seams are read from the base tree (fixture paths, AC cross-references, table-format contracts); no experimental split run was needed or done."
+  },
+  "risk_level": "medium",
+  "top_risks": [
+    "R-TRANSPORT — the executor sandbox refuses the loopback listener or the pty mint (PF-1/PF-2): the live walk flips to NOT-RUN(TRANSPORT), the M3 test stands as the regression guard, and the artifact records the block. Pre-registered; honest, but the sprint then demonstrates the walk in-process only — flagged for the controller to consider an attended re-run of M4's timed steps.",
+    "R-NETWORK — Q2's live ground truth needs gh/api.github.com (PF-3): if unavailable, the in-git row-78 record is the primary source and the live check is marked UNAVAILABLE; the answer still counts iff the in-git record independently confirms it.",
+    "R-UNMEASURED — every baseline cost is expected UNMEASURED: the comparison table arms the ≤5-minute claim on method+citation rather than a measured pre-World duration. Doc §8 pre-names this; the artifact must not paper over it.",
+    "R-FIXTURE-SCHEMA — DisallowUnknownFields + content-verified hashes make fixture authoring brittle (a stray key or a hash-over-base64 mismatch 400s at replay): mitigated by G2's --check and by MU-3 proving the failure mode is loud.",
+    "R-CIRCULARITY — the harvest's taken questions all live in the same record the walk replays: mitigated by per-question verification sources OUTSIDE World (binary, fleet file, git history) and by the C5/C6 rejections existing precisely on this axis."
+  ],
+  "handoff": {
+    "to": "sprint-executor",
+    "plan_path": "design_docs/planned/w-prove-the-1-0-bar-phase-a-sprint-plan.md",
+    "progress_path": "sprint_w-prove-1-0-phase-a.json",
+    "estimated_duration": "1.0 days (hard cap 1.5)",
+    "total_loc_estimate": 270,
+    "executor_constraints": [
+      "Run IN the worktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter182 on branch sprint/w-prove-1-0-phase-a (created by the controller from 8dd867663d0b9db4d6f6f5e51bbdfb10acf939c6).",
+      "NO git write operations at all — no git add/commit/stash/checkout/branch/push. Read-only git log/show/grep is REQUIRED for the verification steps and is not a mutation. The controller builds commits.",
+      "After EACH milestone, snapshot every created-or-modified file into .snap/M<k>/ — cumulative full content (.snap/M4/ includes M1–M3's files). .snap/ and .walk-scratch/ are untracked working artifacts, never committed; .walk-scratch/ is EXCLUDED from snapshots.",
+      "Gates per milestone, ALL with AILANG_BIN=$HOME/.pinned-ailang/ailang exported: G1 every milestone (go build rc=0; go vet rc=0; go test ./... -count=1 -> 20 ok / 0 FAIL; bash ./scripts/verify_ail.sh unchanged at 11 identities / 40 tests / 9-of-9); G2 at M2 (gen_fixtures.py --check rc=0); G3 at M3 (go test ./host/daemon/ -run 'TestValueDemo' -count=1 -v, both PASS); G4 at M4 (artifact-completeness greps per the plan).",
+      "A bare go test ./... WITHOUT AILANG_BIN fails — base condition, never report as a regression. scripts/verify_go.sh is NOT a gate on this rig (charter row 76).",
+      "A gate red at BASE is a finding to REPORT, not an obstacle — never fix it, never plan around it silently.",
+      "Never touch tools/launchd/* (frozen fleet core), ~/.ailang/state/mission-v1*, or any .ail file — verify_ail's outcome must stay byte-identical.",
+      "The verdict closed set {PASS, FAIL-TIME, UNVERIFIED, UNANSWERABLE, NOT-RUN(TRANSPORT)} is exhaustive; honest failure is a RESULT — record it, never substitute an easier question (doc §4). Any listener/pty refusal is NOT-RUN(TRANSPORT): label it, never report pass/fail.",
+      "Where the walk needs a feature World does not have, record a FINDING with a proposed queue row (F-1/F-2 are pre-seeded) — do NOT build provenance tooling (doc §9).",
+      "Restore discipline for any probing: cp -p backup + shasum -a 256 assertion (AND test -x where a mode bit matters); NEVER git checkout -- .",
+      "Executor STOPS after .snap/M3/ until the controller confirms the pre-registered mutation battery MU-1..MU-4 ran; final STOP after .snap/M4/. The battery and all commits are controller acts."
+    ],
+    "carried_forward_out_of_scope": [
+      "Phase B / row 93 (the clause-4 non-inferiority floor) — explicitly OUT of this sprint (doc §5; ordered after Phase A deliberately)",
+      "w-object-lookup-by-semantic-id — proposed queue row from finding F-1 (semantic-ID/by-name object query route; possibly covering F-2's commit-settable registry names), recorded in the artifact's findings, NOT built here (doc §9)",
+      "Any provenance tooling beyond the fixtures and the one replay test — the artifact is the deliverable, not tooling (doc §4.5/§9)",
+      "Upstream ailang#1043 (the mission_pi_run.sh -e wiring) — Q2's ground-truth source; fleet-owned, untouched by this sprint",
+      "Controller bookkeeping milestone (NOT an executor feature row): run the MU-1..MU-4 battery post-M3, commit per milestone from .snap/M<k>/, and file the artifact's proposed queue rows as the controller decides"
+    ]
+  },
+  "execution": {
+    "iteration": 182,
+    "note": "Planned by the iteration-182 sprint-planner; not yet executed. Baseline gates re-measured green at 8dd8676 by this planner (build rc=0; vet rc=0; go test 20 ok / 0 FAIL with AILANG_BIN exported; verify_ail 11 identities / 40 tests / 9-of-9 steps). Ground truths spot-verified live: ailang.v0.30.0 reproduces unknown command 'mission'; the fleet mission_pi_run.sh still wires no -e flags (#1043 OPEN); a036062 (the bench Authorization fix) is an ancestor of base.",
+    "commit": null,
+    "pull_request": null,
+    "milestones": [
+      {
+        "id": "M1_HARVEST_BASELINE_ARTIFACT_SKELETON",
+        "status": "pending",
+        "passes": null,
+        "commit": null
+      },
+      {
+        "id": "M2_COMMIT_FIXTURES",
+        "status": "pending",
+        "passes": null,
+        "commit": null
+      },
+      {
+        "id": "M3_DURABILITY_TEST",
+        "status": "pending",
+        "passes": null,
+        "commit": null
+      },
+      {
+        "id": "M4_LIVE_WALK_ARTIFACT_COMPLETION",
+        "status": "pending",
+        "passes": null,
+        "commit": null
+      }
+    ]
+  }
+}
