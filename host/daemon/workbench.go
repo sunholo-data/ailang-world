@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/workbench"
 )
@@ -104,11 +105,42 @@ func entryView(entry store.LogEntry) workbench.EntryView {
 		EntryHash:      entry.EntryHash.String(),
 		PrevEntryHash:  entry.Header.PrevEntryHash.String(),
 		SemanticsEpoch: entry.Header.SemanticsEpoch,
-		TransitionFn:   workbench.EdgeView{Available: true, Target: entry.Header.TransitionFn.String(), Href: "?object=" + entry.Header.TransitionFn.String()},
-		Interpreter:    workbench.EdgeView{Available: true, Target: entry.Header.Interpreter.String(), Href: "?object=" + entry.Header.Interpreter.String()},
-		TransitionRef:  workbench.EdgeView{Available: true, Target: entry.TransitionRef.String(), Href: "?object=" + entry.TransitionRef.String()},
 		WrittenBy:      entry.Header.WrittenBy,
 	}
+}
+
+// pageHref is the only builder of a from/entry workbench query: every paging
+// and row-selection link uses the existing from+entry grammar state.
+func pageHref(from, entry int64) string {
+	return "?from=" + strconv.FormatInt(from, 10) + "&entry=" + strconv.FormatInt(entry, 10)
+}
+
+// entryEdges checks each of the entry's three edge targets once. A stored target
+// is a link; an unstored one is UNAVAILABLE with its ref visible; a store error
+// is returned so the caller answers 5xx rather than "not stored".
+func (d *Daemon) entryEdges(ctx context.Context, entry store.LogEntry) ([]workbench.EdgeView, error) {
+	refs := []struct {
+		relation string
+		ref      hashref.HashRef
+	}{
+		{"transitionFn", entry.Header.TransitionFn},
+		{"interpreter", entry.Header.Interpreter},
+		{"transitionRef", entry.TransitionRef},
+	}
+	edges := make([]workbench.EdgeView, 0, len(refs))
+	for _, item := range refs {
+		target := item.ref.String()
+		_, ok, err := d.reads.GetObject(ctx, item.ref)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			edges = append(edges, workbench.EdgeView{Relation: item.relation, Target: target, Missing: "object " + target + " is not stored"})
+			continue
+		}
+		edges = append(edges, workbench.EdgeView{Relation: item.relation, Available: true, Target: target, Href: "?object=" + target})
+	}
+	return edges, nil
 }
 
 func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
@@ -247,6 +279,12 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		selected := entryView(entry)
+		edges, err := d.entryEdges(ctx, entry)
+		if err != nil {
+			d.writeWorkbenchStoreError(w, r, ctx, err)
+			return
+		}
+		selected.Edges = edges
 		page.Selected = &selected
 	}
 
@@ -260,9 +298,37 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			break
 		}
-		page.Timeline.Entries = append(page.Timeline.Entries, entryView(entry))
+		view := entryView(entry)
+		view.SelectHref = pageHref(from, view.EntryIndex)
+		page.Timeline.Entries = append(page.Timeline.Entries, view)
 	}
-	page.Timeline.Truncated = len(page.Timeline.Entries) == limit
+	// Probe, don't infer: a paging link is emitted only after this request has
+	// read the entry it selects, so every emitted paging link resolves.
+	next := from + int64(limit)             // cannot overflow: the from bound above refused from > MaxInt64-limit
+	if next <= math.MaxInt64-int64(limit) { // the link's own from must pass that bound on the next request
+		_, ok, err := d.reads.GetLogEntry(ctx, next)
+		if err != nil {
+			d.writeWorkbenchStoreError(w, r, ctx, err)
+			return
+		}
+		if ok {
+			page.Timeline.NextHref = pageHref(next, next)
+		}
+	}
+	if from > 0 {
+		prev := from - int64(limit)
+		if prev < 0 {
+			prev = 0
+		}
+		_, ok, err := d.reads.GetLogEntry(ctx, prev)
+		if err != nil {
+			d.writeWorkbenchStoreError(w, r, ctx, err)
+			return
+		}
+		if ok {
+			page.Timeline.PrevHref = pageHref(prev, prev)
+		}
+	}
 
 	_ = workbench.Render(w, page)
 }

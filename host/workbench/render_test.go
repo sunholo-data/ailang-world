@@ -3,6 +3,7 @@ package workbench
 import (
 	"bytes"
 	"errors"
+	"reflect"
 	"regexp"
 	"strings"
 	"testing"
@@ -177,5 +178,125 @@ func TestRenderUnavailableProvenanceEdge(t *testing.T) {
 		if !strings.Contains(rendered, want) {
 			t.Errorf("rendered page missing %q: %q", want, rendered)
 		}
+	}
+}
+
+func renderPage(t *testing.T, p Page) string {
+	t.Helper()
+	var body bytes.Buffer
+	if err := Render(&body, p); err != nil {
+		t.Fatal(err)
+	}
+	return body.String()
+}
+
+// selectedArticle returns the substring from the selected-entry marker to the
+// first </article> after it, or "" when the marker is absent.
+func selectedArticle(body string) string {
+	const marker = `<article aria-label="selected entry">`
+	start := strings.Index(body, marker)
+	if start < 0 {
+		return ""
+	}
+	end := strings.Index(body[start:], "</article>")
+	if end < 0 {
+		return body[start:]
+	}
+	return body[start : start+end]
+}
+
+func TestRenderSelectedEntry(t *testing.T) {
+	p := Page{Title: "selected", Selected: &EntryView{
+		EntryIndex: 7,
+		EntryHash:  "SEL-HASH-7",
+		Edges: []EdgeView{
+			{Relation: "transitionRef", Available: true, Target: "abc", Href: "?object=abc"},
+			{Relation: "interpreter", Target: "def", Missing: "object def is not stored"},
+		},
+	}}
+	article := selectedArticle(renderPage(t, p))
+	if article == "" {
+		t.Fatal(`rendered page has no <article aria-label="selected entry">`)
+	}
+	for _, want := range []string{
+		`<h3>selected entry 7</h3>`,
+		`title="SEL-HASH-7"`,
+		`transitionRef: <a href="/workbench?object=abc"`,
+		`interpreter: <span class="unavailable" role="note">UNAVAILABLE: object def is not stored</span>`,
+	} {
+		if !strings.Contains(article, want) {
+			t.Errorf("selected-entry article missing %q: %q", want, article)
+		}
+	}
+	// CONTROL: the article is Selected's and nothing else's.
+	if body := renderPage(t, Page{Title: "unselected"}); strings.Contains(body, `aria-label="selected entry"`) {
+		t.Errorf("Selected=nil still rendered a selected-entry article: %q", body)
+	}
+}
+
+func TestRenderTimelineRowSelectLink(t *testing.T) {
+	body := renderPage(t, Page{Title: "rows", Timeline: TimelineView{Entries: []EntryView{{EntryIndex: 3, SelectHref: "?from=0&entry=3"}}}})
+	if want := `<a href="/workbench?from=0&amp;entry=3">select entry 3</a>`; !strings.Contains(body, want) {
+		t.Errorf("row select link %q missing: %q", want, body)
+	}
+}
+
+func TestRenderTimelinePagingLinks(t *testing.T) {
+	t.Run("prev", func(t *testing.T) {
+		body := renderPage(t, Page{Title: "prev", Timeline: TimelineView{PrevHref: "?from=0&entry=0"}})
+		if want := `<a href="/workbench?from=0&amp;entry=0">previous</a>`; !strings.Contains(body, want) {
+			t.Errorf("previous link %q missing: %q", want, body)
+		}
+	})
+	t.Run("next", func(t *testing.T) {
+		body := renderPage(t, Page{Title: "next", Timeline: TimelineView{NextHref: "?from=100&entry=100"}})
+		if want := `<a href="/workbench?from=100&amp;entry=100">next</a>`; !strings.Contains(body, want) {
+			t.Errorf("next link %q missing: %q", want, body)
+		}
+	})
+	t.Run("neither", func(t *testing.T) {
+		body := renderPage(t, Page{Title: "neither"})
+		for _, unwanted := range []string{">previous</a>", ">next</a>"} {
+			if strings.Contains(body, unwanted) {
+				t.Errorf("zero TimelineView rendered %q", unwanted)
+			}
+		}
+	})
+}
+
+// unrenderedExempt names the view-model fields that are deliberately not
+// rendered (row candidate R-a). The self-checking arm below fails if one of
+// them starts rendering, so an exemption cannot outlive its reason.
+var unrenderedExempt = map[string]bool{
+	"TimelineView.From":  true,
+	"TimelineView.Limit": true,
+}
+
+// TestWorkbenchViewFieldsAllRender is the I3 class ratchet: a view-model field
+// that the handler writes and the template never reads fails here. The check is
+// lexical and name-based by design; specific mutations name specific killers.
+func TestWorkbenchViewFieldsAllRender(t *testing.T) {
+	text := pageHTML + partialsHTML
+	checked := 0
+	for _, typ := range []reflect.Type{reflect.TypeOf(EntryView{}), reflect.TypeOf(TimelineView{}), reflect.TypeOf(Page{})} {
+		for i := 0; i < typ.NumField(); i++ {
+			name := typ.Field(i).Name
+			key := typ.Name() + "." + name
+			rendered := strings.Contains(text, "."+name)
+			if unrenderedExempt[key] {
+				if rendered {
+					t.Errorf("%s is exempt as unrendered but the template now renders .%s; remove the exemption", key, name)
+				}
+				continue
+			}
+			checked++
+			if !rendered {
+				t.Errorf("%s is never rendered by the workbench template (no .%s action)", key, name)
+			}
+		}
+	}
+	// CONTROL: the census must have walked real fields, not an empty set.
+	if checked < 10 {
+		t.Fatalf("field census checked %d fields, want >= 10", checked)
 	}
 }

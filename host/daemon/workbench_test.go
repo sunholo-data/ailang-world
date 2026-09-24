@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -84,13 +85,13 @@ func TestWorkbenchRendersSeededWorldAndTimeline(t *testing.T) {
 		t.Fatalf("second Commit: %v", err)
 	}
 
-	// The observable is the log entry hash, NOT the committed object hash. The
-	// object hash reaches an EntryView only through TransitionRef, and the WB.B
-	// template renders no TransitionRef action at all (see the sprint plan's
-	// s7d) -- so asserting on the object hash here would be asserting on a
-	// value this route cannot emit. The entry hash is written by the timeline
-	// loop and by nothing else on the page, which is what makes it a pin on the
-	// mechanism rather than on a sibling channel.
+	// The observable is the log entry hash, NOT the committed object hash. On
+	// `/workbench` (no selection) the timeline rows render no edges, so the
+	// object hash reaches the page only through the selected entry's
+	// transitionRef edge -- pinned by TestWorkbenchSelectedEntry, not here. The
+	// entry hash is written by the timeline loop and by nothing else on this
+	// page, which is what makes it a pin on the mechanism rather than on a
+	// sibling channel.
 	entryHashes := make([]string, 0, 2)
 	for index := int64(0); index < 2; index++ {
 		entry, ok, err := d.store.GetLogEntry(context.Background(), index)
@@ -294,11 +295,14 @@ func TestWorkbenchPayloadPreviewBound(t *testing.T) {
 	})
 }
 
-func TestWorkbenchTimelineBound(t *testing.T) {
-	d := newHandlerDaemon(t)
+// seedWorkbenchLog commits n chained testCommit entries (indices 0..n-1) on a
+// fresh genesis. Every entry's TransitionRef object is stored; its TransitionFn
+// and Interpreter targets are not (testCommit).
+func seedWorkbenchLog(t *testing.T, d *Daemon, n int) {
+	t.Helper()
 	world := seedGenesisEmbedded(t, d, "workbench-timeline-bound")
 	started := time.Now()
-	for index := int64(0); index < int64(workbench.WorkbenchPageLimit+5); index++ {
+	for index := int64(0); index < int64(n); index++ {
 		commit := testCommit(world, index, "workbench-timeline-bound")
 		if err := d.store.Commit(commit); err != nil {
 			t.Fatalf("Commit(%d): %v", index, err)
@@ -308,6 +312,11 @@ func TestWorkbenchTimelineBound(t *testing.T) {
 			t.Fatalf("seeding exceeded 30 seconds after %d commits", index+1)
 		}
 	}
+}
+
+func TestWorkbenchTimelineBound(t *testing.T) {
+	d := newHandlerDaemon(t)
+	seedWorkbenchLog(t, d, workbench.WorkbenchPageLimit+5)
 	if _, ok, err := d.store.GetLogEntry(context.Background(), 104); err != nil || !ok {
 		t.Fatalf("positive control GetLogEntry(104): ok=%v err=%v", ok, err)
 	}
@@ -344,5 +353,340 @@ func assertWorkbenchSecurityHeaders(t *testing.T, header http.Header) {
 		if got := header.Get(name); got != want {
 			t.Errorf("%s = %q, want %q", name, got, want)
 		}
+	}
+}
+
+// workbenchRegion returns the substring from start to the first end after it.
+func workbenchRegion(body, start, end string) (string, bool) {
+	i := strings.Index(body, start)
+	if i < 0 {
+		return "", false
+	}
+	j := strings.Index(body[i:], end)
+	if j < 0 {
+		return "", false
+	}
+	return body[i : i+j], true
+}
+
+const (
+	selectedEntryStart = `<article aria-label="selected entry">`
+	timelineStart      = `<section aria-label="timeline">`
+)
+
+// objectFailingStore fails GetObject only, so the entry-edge check is the one
+// read that errors while every log and world read still reaches the real store.
+type objectFailingStore struct {
+	readStore
+}
+
+func (objectFailingStore) GetObject(context.Context, hashref.HashRef) (store.Object, bool, error) {
+	return store.Object{}, false, errSentinelInternal
+}
+
+func TestWorkbenchSelectedEntry(t *testing.T) {
+	d := newHandlerDaemon(t)
+	genesis := seedGenesisEmbedded(t, d, "workbench-selected")
+	commit := testCommit(genesis, 0, "workbench-selected")
+	if err := d.store.Commit(commit); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	header := commit.Entry.Header
+	transitionRef := commit.Entry.TransitionRef.String()
+	transitionFn := header.TransitionFn.String()
+	interpreter := header.Interpreter.String()
+	// POSITIVE CONTROLS: the fixture must hold one stored and two unstored targets,
+	// or the stored/unstored arms below assert nothing.
+	for _, control := range []struct {
+		name string
+		ref  hashref.HashRef
+		want bool
+	}{
+		{"TransitionRef", commit.Entry.TransitionRef, true},
+		{"TransitionFn", header.TransitionFn, false},
+		{"Interpreter", header.Interpreter, false},
+	} {
+		if _, ok, err := d.store.GetObject(context.Background(), control.ref); err != nil || ok != control.want {
+			t.Fatalf("control GetObject(%s): ok=%v err=%v, want ok=%v", control.name, ok, err, control.want)
+		}
+	}
+
+	selectedBody := func(t *testing.T) string {
+		t.Helper()
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench?from=0&entry=0", nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200; body=%s", rec.Code, rec.Body)
+		}
+		article, ok := workbenchRegion(rec.Body.String(), selectedEntryStart, "</article>")
+		if !ok {
+			t.Fatalf("no selected-entry article in %s", rec.Body)
+		}
+		return article
+	}
+
+	t.Run("stored-edge-links", func(t *testing.T) {
+		article := selectedBody(t)
+		if want := `transitionRef: <a href="/workbench?object=` + transitionRef + `"`; !strings.Contains(article, want) {
+			t.Errorf("selected entry missing stored edge link %q: %s", want, article)
+		}
+	})
+
+	t.Run("unstored-edge-unavailable", func(t *testing.T) {
+		article := selectedBody(t)
+		for _, edge := range []struct{ relation, ref string }{{"transitionFn", transitionFn}, {"interpreter", interpreter}} {
+			want := edge.relation + `: <span class="unavailable" role="note">UNAVAILABLE: object ` + edge.ref + ` is not stored</span>`
+			if !strings.Contains(article, want) {
+				t.Errorf("selected entry missing %q: %s", want, article)
+			}
+		}
+		if unwanted := `href="/workbench?object=` + transitionFn + `"`; strings.Contains(article, unwanted) {
+			t.Errorf("unstored transitionFn rendered as a link %q", unwanted)
+		}
+	})
+
+	t.Run("row-select-link", func(t *testing.T) {
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench", nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200; body=%s", rec.Code, rec.Body)
+		}
+		body := rec.Body.String()
+		if want := `href="/workbench?from=0&amp;entry=0">select entry 0</a>`; !strings.Contains(body, want) {
+			t.Errorf("timeline row missing select link %q", want)
+		}
+		if strings.Contains(body, `aria-label="selected entry"`) {
+			t.Error("/workbench with no entry= rendered a selected-entry article")
+		}
+	})
+
+	t.Run("object-store-error", func(t *testing.T) {
+		oldReads, oldErrLog := d.reads, d.errLog
+		defer func() { d.reads, d.errLog = oldReads, oldErrLog }()
+		d.reads = objectFailingStore{readStore: d.store}
+		d.errLog = &bytes.Buffer{}
+		// CONTROL: the same store serves the unselected page, so only the edge
+		// check can be what fails below.
+		if rec := requestRecorder(t, d, http.MethodGet, "/workbench", nil); rec.Code != http.StatusOK {
+			t.Fatalf("control: /workbench status = %d, want 200; body=%s", rec.Code, rec.Body)
+		}
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench?from=0&entry=0", nil)
+		if rec.Code != http.StatusInternalServerError {
+			t.Fatalf("status = %d, want 500; body=%s", rec.Code, rec.Body)
+		}
+		if !strings.Contains(rec.Body.String(), ">Internal<") {
+			t.Errorf("body does not contain >Internal<: %s", rec.Body)
+		}
+	})
+}
+
+var workbenchLinkPattern = regexp.MustCompile(`<a href="([^"]*)"[^>]*>([^<]*)</a>`)
+var selectEntryText = regexp.MustCompile(`^select entry [0-9]+$`)
+
+func TestWorkbenchTimelinePaging(t *testing.T) {
+	d := newHandlerDaemon(t)
+	seedWorkbenchLog(t, d, workbench.WorkbenchPageLimit+5)
+	if _, ok, err := d.store.GetLogEntry(context.Background(), 104); err != nil || !ok {
+		t.Fatalf("positive control GetLogEntry(104): ok=%v err=%v", ok, err)
+	}
+	get := func(t *testing.T, target string) string {
+		t.Helper()
+		rec := requestRecorder(t, d, http.MethodGet, target, nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("%s: status = %d, want 200; body=%s", target, rec.Code, rec.Body)
+		}
+		return rec.Body.String()
+	}
+
+	t.Run("head-page-has-next", func(t *testing.T) {
+		body := get(t, "/workbench")
+		if want := `href="/workbench?from=100&amp;entry=100">next</a>`; !strings.Contains(body, want) {
+			t.Errorf("head page missing next link %q", want)
+		}
+		if strings.Contains(body, ">previous</a>") {
+			t.Error("head page (from=0) rendered a previous link")
+		}
+	})
+
+	t.Run("last-page-has-prev-no-next", func(t *testing.T) {
+		body := get(t, "/workbench?from=100&entry=100")
+		if got := strings.Count(body, "<h3>entry "); got != 5 {
+			t.Errorf("last page entry count = %d, want 5", got)
+		}
+		for _, want := range []string{
+			`href="/workbench?from=0&amp;entry=0">previous</a>`,
+			`href="/workbench?from=100&amp;entry=104">select entry 104</a>`,
+		} {
+			if !strings.Contains(body, want) {
+				t.Errorf("last page missing %q", want)
+			}
+		}
+		if strings.Contains(body, ">next</a>") {
+			t.Error("last page rendered a next link past the log end")
+		}
+	})
+
+	t.Run("exactly-limit-no-next", func(t *testing.T) {
+		body := get(t, "/workbench?from=5&entry=5")
+		// CONTROL: the page is exactly full, so the old len==limit predicate holds here.
+		if got := strings.Count(body, "<h3>entry "); got != workbench.WorkbenchPageLimit {
+			t.Fatalf("control: entry count = %d, want %d", got, workbench.WorkbenchPageLimit)
+		}
+		if strings.Contains(body, ">next</a>") {
+			t.Error("exactly-full last page rendered a next link to an empty page (F4)")
+		}
+		if want := `href="/workbench?from=0&amp;entry=0">previous</a>`; !strings.Contains(body, want) {
+			t.Errorf("from=5 page missing clamped previous link %q", want)
+		}
+	})
+
+	t.Run("emitted-links-resolve", func(t *testing.T) {
+		counts := map[string]int{}
+		for _, page := range []struct {
+			target      string
+			hasSelected bool
+		}{
+			{"/workbench", false},
+			{"/workbench?from=100&entry=100", true},
+			{"/workbench?from=5&entry=5", true},
+		} {
+			body := get(t, page.target)
+			timeline, ok := workbenchRegion(body, timelineStart, "</section>")
+			if !ok {
+				t.Fatalf("%s: no timeline region", page.target)
+			}
+			regions := []struct{ name, text string }{{"timeline", timeline}}
+			selected, hasSelected := workbenchRegion(body, selectedEntryStart, "</article>")
+			if hasSelected != page.hasSelected {
+				t.Fatalf("%s: selected-entry region present=%v, want %v", page.target, hasSelected, page.hasSelected)
+			}
+			if hasSelected {
+				regions = append(regions, struct{ name, text string }{"selected", selected})
+			}
+			for _, region := range regions {
+				matches := workbenchLinkPattern.FindAllStringSubmatch(region.text, -1)
+				// Nothing escapes classification: every anchor must be a pattern match.
+				if anchors := strings.Count(region.text, "<a "); anchors != len(matches) {
+					t.Fatalf("%s %s region: %d anchors but %d pattern matches", page.target, region.name, anchors, len(matches))
+				}
+				for _, match := range matches {
+					href, text := match[1], match[2]
+					category := ""
+					switch {
+					case region.name == "timeline" && (text == "previous" || text == "next"):
+						category = "paging"
+					case region.name == "timeline" && selectEntryText.MatchString(text):
+						category = "select"
+					case region.name == "selected" && strings.HasPrefix(href, "/workbench?object="):
+						category = "stored-edge"
+					default:
+						t.Errorf("%s %s region: unclassified link href=%q text=%q", page.target, region.name, href, text)
+						continue
+					}
+					counts[category]++
+					target := strings.ReplaceAll(href, "&amp;", "&")
+					if rec := requestRecorder(t, d, http.MethodGet, target, nil); rec.Code != http.StatusOK {
+						t.Errorf("%s: %s link %q returned %d, want 200", page.target, category, target, rec.Code)
+					}
+				}
+			}
+		}
+		// CONTROL: every category must be exercised, or a dead extractor passes vacuously.
+		for _, category := range []string{"paging", "select", "stored-edge"} {
+			if counts[category] == 0 {
+				t.Errorf("category %s matched 0 links across the three pages", category)
+			}
+		}
+	})
+}
+
+// denseLogStore answers every non-negative index with a copy of stored entry 0,
+// so the from bound can be exercised without writing 2^63 entries.
+type denseLogStore struct {
+	readStore
+}
+
+func (s denseLogStore) GetLogEntry(ctx context.Context, index int64) (store.LogEntry, bool, error) {
+	if index < 0 {
+		return store.LogEntry{}, false, nil
+	}
+	entry, ok, err := s.readStore.GetLogEntry(ctx, 0)
+	if err != nil || !ok {
+		return entry, ok, err
+	}
+	entry.Header.EntryIndex = index
+	return entry, true, nil
+}
+
+func TestWorkbenchNextLinkOverflowGuard(t *testing.T) {
+	d := newHandlerDaemon(t)
+	genesis := seedGenesisEmbedded(t, d, "workbench-overflow")
+	if err := d.store.Commit(testCommit(genesis, 0, "workbench-overflow")); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	d.reads = denseLogStore{readStore: d.store}
+
+	// MaxInt64-100 is the largest from the handler's from bound accepts; its next
+	// link would carry from=MaxInt64, which that bound refuses, so none may render.
+	rec := requestRecorder(t, d, http.MethodGet, "/workbench?from=9223372036854775707&entry=9223372036854775707", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200; body=%s", rec.Code, rec.Body)
+	}
+	if strings.Contains(rec.Body.String(), ">next</a>") {
+		t.Error("from=MaxInt64-100 rendered a next link whose own from overflows")
+	}
+	// CONTROL: one page earlier, the dense store does produce a next link.
+	rec = requestRecorder(t, d, http.MethodGet, "/workbench?from=9223372036854775607&entry=9223372036854775607", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("control status = %d, want 200; body=%s", rec.Code, rec.Body)
+	}
+	if want := `href="/workbench?from=9223372036854775707&amp;entry=9223372036854775707">next</a>`; !strings.Contains(rec.Body.String(), want) {
+		t.Errorf("control: missing next link %q", want)
+	}
+}
+
+// probeFailingStore fails GetLogEntry at exactly one index, so a paging probe
+// can be made to error while every timeline row read still succeeds.
+type probeFailingStore struct {
+	readStore
+	failAt int64
+}
+
+func (s probeFailingStore) GetLogEntry(ctx context.Context, index int64) (store.LogEntry, bool, error) {
+	if index == s.failAt {
+		return store.LogEntry{}, false, errSentinelInternal
+	}
+	return s.readStore.GetLogEntry(ctx, index)
+}
+
+func TestWorkbenchPagingProbeStoreError(t *testing.T) {
+	d := newHandlerDaemon(t)
+	seedWorkbenchLog(t, d, 105)
+	for _, tc := range []struct {
+		name   string
+		path   string
+		failAt int64
+	}{
+		// /workbench reads rows 0-99; only the next probe reads entry 100.
+		{"next-probe", "/workbench", 100},
+		// from=5 reads rows 5-104 and probes 105 (absent); only the previous probe reads entry 0.
+		{"prev-probe", "/workbench?from=5&entry=5", 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			oldReads, oldErrLog := d.reads, d.errLog
+			defer func() { d.reads, d.errLog = oldReads, oldErrLog }()
+			d.errLog = &bytes.Buffer{}
+			// CONTROL: failing an index no read touches leaves the page at 200.
+			d.reads = probeFailingStore{readStore: d.store, failAt: 1 << 40}
+			if rec := requestRecorder(t, d, http.MethodGet, tc.path, nil); rec.Code != http.StatusOK {
+				t.Fatalf("control: %s status = %d, want 200; body=%s", tc.path, rec.Code, rec.Body)
+			}
+			d.reads = probeFailingStore{readStore: d.store, failAt: tc.failAt}
+			rec := requestRecorder(t, d, http.MethodGet, tc.path, nil)
+			if rec.Code != http.StatusInternalServerError {
+				t.Fatalf("%s with entry %d failing: status = %d, want 500; body=%s", tc.path, tc.failAt, rec.Code, rec.Body)
+			}
+			if !strings.Contains(rec.Body.String(), ">Internal<") {
+				t.Errorf("body does not contain >Internal<: %s", rec.Body)
+			}
+		})
 	}
 }

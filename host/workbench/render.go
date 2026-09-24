@@ -60,20 +60,17 @@ type EntryView struct {
 	EntryHash      string
 	PrevEntryHash  string
 	SemanticsEpoch int64
-	TransitionFn   EdgeView
-	Interpreter    EdgeView
-	TransitionRef  EdgeView
 	WrittenBy      string
+	SelectHref     string
 	Edges          []EdgeView
 }
 
 type TimelineView struct {
-	From      int64
-	Limit     int
-	Entries   []EntryView
-	Truncated bool
-	NextHref  string
-	PrevHref  string
+	From     int64
+	Limit    int
+	Entries  []EntryView
+	NextHref string
+	PrevHref string
 }
 
 type WorldView struct {
@@ -141,14 +138,15 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem}dt{font-we
 {{if .Timeline.NextHref}}<a href="{{workbenchHref .Timeline.NextHref}}">next</a>{{end}}
 {{range .Timeline.Entries}}
 <article><h3>entry {{.EntryIndex}}</h3><dl>
-<dt>entry hash</dt><dd><span class="hash" title="{{.EntryHash}}" aria-label="{{.EntryHash}}">{{.EntryHash}}</span></dd>
-<dt>previous entry</dt><dd><span class="hash" title="{{.PrevEntryHash}}" aria-label="{{.PrevEntryHash}}">{{.PrevEntryHash}}</span></dd>
-<dt>semantics epoch</dt><dd>{{.SemanticsEpoch}}</dd><dt>written by</dt><dd>{{.WrittenBy}}</dd>
-</dl></article>
+{{template "entryFields" .}}
+</dl><p><a href="{{workbenchHref .SelectHref}}">select entry {{.EntryIndex}}</a></p></article>
 {{end}}
 </section>
 <section aria-label="inspector">
 <h2>Inspector</h2>
+{{with .Selected}}<article aria-label="selected entry"><h3>selected entry {{.EntryIndex}}</h3><dl>
+{{template "entryFields" .}}
+</dl>{{range .Edges}}{{template "edge" .}}{{end}}</article>{{end}}
 {{with .Object}}
 <dl><dt>object</dt><dd><span class="hash" title="{{.Hash}}" aria-label="{{.Hash}}">{{.Hash}}</span></dd>
 <dt>interface</dt><dd><span class="hash" title="{{.InterfaceHash}}" aria-label="{{.InterfaceHash}}">{{.InterfaceHash}}</span></dd>
@@ -159,16 +157,21 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem}dt{font-we
 </section>
 <section aria-label="provenance walk">
 <h2>Provenance walk</h2>
-{{with .Object}}{{range .Edges}}<p>{{.Relation}}: {{if edgeUnavailable .}}<span class="unavailable" role="note">UNAVAILABLE: {{.Missing}}</span>{{else}}<a href="{{workbenchHref .Href}}" class="hash" title="{{.Target}}" aria-label="{{.Target}}">{{.Target}}</a>{{end}}</p>{{end}}{{end}}
+{{with .Object}}{{range .Edges}}{{template "edge" .}}{{end}}{{end}}
 </section>
 </main>
 </body>
 </html>`
 
-var pageTemplate = template.Must(template.New("workbench").Funcs(template.FuncMap{
+const partialsHTML = `{{define "edge"}}<p>{{.Relation}}: {{if edgeUnavailable .}}<span class="unavailable" role="note">UNAVAILABLE: {{.Missing}}</span>{{else}}<a href="{{workbenchHref .Href}}" class="hash" title="{{.Target}}" aria-label="{{.Target}}">{{.Target}}</a>{{end}}</p>{{end}}
+{{define "entryFields"}}<dt>entry hash</dt><dd><span class="hash" title="{{.EntryHash}}" aria-label="{{.EntryHash}}">{{.EntryHash}}</span></dd>
+<dt>previous entry</dt><dd><span class="hash" title="{{.PrevEntryHash}}" aria-label="{{.PrevEntryHash}}">{{.PrevEntryHash}}</span></dd>
+<dt>semantics epoch</dt><dd>{{.SemanticsEpoch}}</dd><dt>written by</dt><dd>{{.WrittenBy}}</dd>{{end}}`
+
+var pageTemplate = template.Must(template.Must(template.New("workbench").Funcs(template.FuncMap{
 	"edgeUnavailable": edgeUnavailable,
 	"workbenchHref":   workbenchHref,
-}).Parse(pageHTML))
+}).Parse(pageHTML)).Parse(partialsHTML))
 
 func Render(w io.Writer, p Page) error { return pageTemplate.Execute(w, p) }
 
