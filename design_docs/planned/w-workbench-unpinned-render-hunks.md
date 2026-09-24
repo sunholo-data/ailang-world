@@ -4,6 +4,7 @@
 - Iteration: 185, designer role · Measurement base: `origin/dev` = `fd99840` (V0)
 - Scope: **test-only.** Charter row 34 lists seven hunks. Re-measured here, two are already killed (H1, H2; §1.1) and five still survive (H3–H7). A rule-3n enumeration of every conditional and boolean hunk on the three surfaces those five sit on (`supportedWorkbenchQuery`, `workbenchHref`, and the grade/verdict template line `render.go:154`) executed **56** compiling mutants. **20 survive** the whole suite: the five charter hunks, 14 more that the suite does not kill today, and 1 equivalent mutant that no test can kill (§2e). This sprint adds tests that kill all 19 killable survivors, each by a named test. It changes no production code: no guard was measured dead or wrong (§2a).
 - Revision 1 (quorum r1: astra REJECT upheld — counts; glm REJECT refuted by measurement; gemini PASS): every prose mutant total is corrected to agree with the transcripts and the §7 table. There are 56 mutants, not 55: 36 were killed before this sprint, and 55 non-equivalent mutants must be killed after it. The table and the drill were already right; only the totals in the text were off by one. The ancestry of `9574d08` and the absence of any in-flight overlap are now measured (V20). See §11.
+- Revision 2 (quorum r2: gemini-3-1-pro PASS, oc-glm-5-2 PASS, gpt6-astra REJECT with a concrete `proposed_fix`; narrow-refinement carve-out, controller-applied, the reviewer's fix verbatim): `TestRenderGradeWithoutVerdictClaim` now also rejects `class="verdict-` and `aria-label="test verdict` anywhere in the rendered page; new mutation-control row **V10** (an unconditional PASS span appended after the grade paragraph) SURVIVES the r1 prototype and pristine `fd99840`, and is killed by both subtests (V21); I3 is scoped to the constructor-produced grade states the tests cover. Totals are now **57** mutants: **36** killed before, **21** survive before, **56** killed after, Q17 survives. See §11.
 - Query grammar: **unchanged** (§4). The accepted-state set is correct; it was only unpinned.
 - Estimate: **~0.25 day, ~90 LOC, tests only.** The figure comes from a prototype written, run and deleted at design time: +84 insertions across 2 test files, `go vet ./...` rc=0, `go test ./...` rc=0, and all 19 targeted mutants killed (V14, V15). Two milestones (§8).
 
@@ -288,8 +289,14 @@ func TestRenderGradeWithoutVerdictClaim(t *testing.T) {
 			if err := Render(&body, Page{Title: "test", Object: &ObjectView{Grade: tc.grade}}); err != nil {
 				t.Fatal(err)
 			}
-			if rendered := body.String(); !strings.Contains(rendered, tc.want) {
+			rendered := body.String()
+			if !strings.Contains(rendered, tc.want) {
 				t.Fatalf("rendered grade, want %q in %q", tc.want, rendered)
+			}
+			for _, claim := range []string{`class="verdict-`, `aria-label="test verdict`} {
+				if strings.Contains(rendered, claim) {
+					t.Fatalf("grade without a verdict rendered a verdict claim %q in %q", claim, rendered)
+				}
 			}
 		})
 	}
@@ -317,8 +324,13 @@ func TestWorkbenchHrefAppendsOnlyQueryStrings(t *testing.T) {
   subtest.
 - **I2.** `workbenchHref` returns `"/workbench"+q` exactly when `q` starts with `?`, and returns
   `"/workbench"` otherwise.
-- **I3.** The page shows a PASS span only when there is a `Verdict == PASS`. A grade with no
-  verdict shows no verdict span, and an unavailable grade shows its reason.
+- **I3.** Scoped to the constructor-produced grade states the tests cover (`NewGradeView` with a
+  PASS verdict, with no verdict, and `NewGradeUnavailable`): the page shows a PASS span only when
+  there is a `Verdict == PASS`. For a grade with no verdict and for an unavailable grade, the
+  rendered page contains **no** `class="verdict-` and **no** `aria-label="test verdict` anywhere
+  (not merely the expected paragraph somewhere), and an unavailable grade shows its reason. The
+  page's CSS names `.verdict-pass`/`.verdict-fail` as selectors only, so the `class="` form does not
+  match it (V21). This is not claimed as an unrestricted rendering invariant.
 
 ---
 
@@ -376,10 +388,10 @@ Files the implementation changes: `host/daemon/workbench_test.go` and
   rc of `go test ./host/workbench ./host/daemon ./host/boundary -count=1`, and the red set.
   Restore by `cp` from a backup, and check that `git status --porcelain` is empty on the committed
   sprint tree before moving to the next row. Pass condition:
-  - all **55** non-equivalent rows: build rc=0, suite rc=1, and the named killer from §7 in the
+  - all **56** non-equivalent rows: build rc=0, suite rc=1, and the named killer from §7 in the
     red set;
   - **Q17**: build rc=0 and suite rc=0. This is the equivalence control; the row must survive;
-  - H3–H7, Q18–Q20, Q23, Q26, Q27, Q30, W5, W8, V2, V4, V6, V7 and V9 (the 19 survivors): also
+  - H3–H7, Q18–Q20, Q23, Q26, Q27, Q30, W5, W8, V2, V4, V6, V7, V9 and V10 (the 20 survivors): also
     re-run each against `origin/dev`'s *tests* and confirm it **SURVIVES** there. That shows the
     new tests are what kill it.
 - **AC7 — gofmt and size.** `gofmt -l host/daemon/workbench_test.go host/workbench/render_test.go`
@@ -457,12 +469,22 @@ marks a newline inside a multi-line match; indentation tabs are elided.
 | V7 | render.go | `✓ verdict: {{.Grade.Verdict}}` → `✓ verdict: ` | y | **SURVIVED** | `TestGradeViewRequiresTestVerdict/pass` | killed (2 red) |
 | V8 | render.go | `{{if .Grade.Available}}` → `{{if false}}` | y | killed (2 red) | `TestGradeViewRequiresTestVerdict/fail (existing)` | killed (5 red) |
 | V9 | render.go | `{{if .Grade.Available}}` → `{{if true}}` | y | **SURVIVED** | `TestRenderGradeWithoutVerdictClaim/unavailable` | killed (2 red) |
+| V10 | render.go | `{{.Grade.Unavailable}}</p>{{end}}` → `{{.Grade.Unavailable}}</p>{{end}}<span class="verdict-pass" aria-label="test verdict PASS">✓ verdict: PASS</span>` (r2 mutation control, astra) | y | **SURVIVED** (also SURVIVES the r1 prototype) | `TestRenderGradeWithoutVerdictClaim/no-verdict` and `/unavailable` (both required) | killed (3 red) |
 
 **Tally.** 56 mutants, all of which compile. The count by prefix is H7 + Q31 + W9 + V9 = 56, measured with `grep -cE '^[HQWV][0-9]+ ' drill_before.txt` → `56` (the same command on `drill_after.txt` → `56`; per prefix, `grep -cE "^H[0-9]+ "` etc. → 7/31/9/9). **Before:** 36 killed and 20 survive (H3–H7, Q17–Q20,
 Q23, Q26, Q27, Q30, W5, W8, V2, V4, V6, V7, V9). **After:** 55 killed and 1 survives (Q17,
 equivalent, §2e). Every row that was killed before is still killed after. Each of the 19 rows that
 the sprint turns from SURVIVED into killed has its named killer in the measured after-state red
 set. The generator asserted this membership when it built the table (V15).
+
+**Tally after revision 2 (supersedes the counts above for AC6).** **57** mutants: the 56 above plus
+V10. Before (pristine `fd99840` tests): 36 killed, **21** survive (the 20 above plus V10, measured by
+`v10_control.sh` against the pristine suite: build rc=0, suite rc=0). V10 also **survives the r1
+prototype** (build rc=0, suite rc=0), so the r2 negative assertion is what kills it. After (the r2
+prototype, `prototype_r2_controller.diff`): the whole drill was re-run by the controller with V10
+added (`r2/mutdrive_r2.py` → `r2/drill_after_r2.txt`): **56 KILLED, 1 SURVIVED (Q17), 0
+`compiles=n`, 0 NOT-LANDED** over 57 rows; V10's red set is `TestRenderGradeWithoutVerdictClaim`,
+`/no-verdict`, `/unavailable` (V21).
 
 ---
 
@@ -539,6 +561,7 @@ same-command positive control.
 | V18 | Pre-existing gofmt debt | `gofmt -l host/` on the pristine tree | `host/daemon/session_middleware_test.go`, `host/store/schema_version_test.go`, `host/store/store.go` (none of them in this sprint's file set) |
 | V19 | Anchor drift | `sed -n 63,77p host/daemon/workbench.go`; `cat -n host/workbench/render.go \| sed -n '97,102p;130p;154,155p'` | `if len(query) != 2 {` `:70`, from/entry pair `:73`, object/payload return `:76`; `workbenchHref` guard `render.go:98`; `{{if .World.Available}}` `:130`; grade line `:154`; payload line `:155` |
 | V20 | (r1, glm) `9574d08` has landed in the base, and nothing in flight overlaps | `git merge-base --is-ancestor 9574d08 fd99840 && echo yes`; control `git merge-base --is-ancestor fd99840 9574d08; echo $?`; `gh pr list --repo sunholo-data/ailang-world --state open --json number \| jq length`; `git worktree list` (main checkout) | `yes`; control rc=`1`, so the check discriminates; `0` open PRs; the worktrees are only the main checkout (`fd99840 [dev]`), `.wt-world-iter182` (`sprint/w-prove-1-0-phase-a`, row 92, landed `157d6f9`) and this sprint's `.wt-world-iter185`. Measured by the controller at about 17:55Z on 2026-09-24 and reproduced by the designer |
+| V21 | (r2, astra) the no-verdict/unavailable subtests reject verdict claims; V10 control | evidence dir `~/.ailang/state/mission-world-iter185-evidence/`: `v10_control.sh` run against (a) the r2 prototype, (b) the r1 prototype, (c) pristine `fd99840`; then `r2/mutdrive_r2.py` (57 rows) against the r2 prototype; `grep -c 'verdict-' host/workbench/render.go` | (a) build rc=0, suite rc=1, red = `TestRenderGradeWithoutVerdictClaim` + `/no-verdict` + `/unavailable`; (b) build rc=0, suite rc=0 (SURVIVES); (c) build rc=0, suite rc=0 (SURVIVES); full drill 56 KILLED / 1 SURVIVED (Q17) / 0 compiles=n; `verdict-` occurs on 2 lines: the CSS selectors at `:122` (`.verdict-fail{`, `.verdict-pass`) and the spans at `:154` — the CSS carries no `class="` prefix, so the negative assertion cannot self-match. Measured by the controller, 2026-09-24 |
 
 ---
 
@@ -549,3 +572,6 @@ same-command positive control.
 | r1 | gpt6-astra | reject | §7 has 56 rows (H7+Q31+W9+V9), yet V3/V15 claim 55 mutants, and AC6 requires only 54 non-equivalent kills plus Q17 | **Upheld.** The controller measured the designer's own transcripts: `drill_before.txt` has 56 rows (36 KILLED, 20 SURVIVED, 0 `compiles=n`), and `drill_after.txt` has 55 KILLED and 1 SURVIVED (Q17). The table and the drill were right; the prose totals were off by one. The header, §1.3, AC6, the §7 Tally (with the counting command), §8 and V3/V15 are corrected. The 20-survivor list is unchanged: 5 charter hunks + 14 new + Q17 |
 | r1 | oc-glm-5-2 | reject | No verification row shows that `9574d08` is an ancestor of `fd99840`, and overlap with in-flight work is not checked | **Refuted by measurement (V20).** `9574d08` is an ancestor of `fd99840` (the reverse check has rc=1, so the check discriminates). There are 0 open PRs, and the only other worktree is row 92, already landed as `157d6f9`. §5 now cites V20. No design change |
 | r1 | gemini-3-1-pro | pass | — | — |
+| r2 | gpt6-astra | reject | `TestRenderGradeWithoutVerdictClaim` only checks the expected paragraph occurs somewhere; a renderer that keeps it and appends a false PASS span passes both subtests, so killing V2 does not establish I3 | **Upheld and applied under the narrow-refinement carve-out** (the objection carries a concrete `proposed_fix` and does not dispute the design direction). Applied verbatim: both subtests now reject `class="verdict-` and `aria-label="test verdict` anywhere in the page; mutation-control row V10 added and measured (survives pristine and the r1 prototype, killed by both subtests); drill totals updated (57 / 36 / 21 / 56); I3 scoped to the constructor-produced grade states. Controller-applied, V21 |
+| r2 | gemini-3-1-pro | pass | (non-blocking) §3.2's `pass` arm uses `view` without showing its definition | Noted for the executor: `view` is the variable the existing `t.Run("pass", …)` body already binds (the prototype compiled, V14) |
+| r2 | oc-glm-5-2 | pass | (non-blocking) §4 cites `acceptedWorkbenchKeys` at `workbench.go:34-40` without a V-row | Noted for the executor: re-anchor at execution time |
