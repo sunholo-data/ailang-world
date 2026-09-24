@@ -3,6 +3,7 @@
 - Status: **planned** (design only; nothing implemented) · Date: **2026-09-21** · Rows **92** (clause-5) and **93** (clause-4) · Filed at the attended grooming of 2026-09-21 (`72eace9`)
 - Scope: ONE doc for BOTH rows, deliberately. Clause 4 is the floor that proves clause 5's value is not paid for with resident-agent regression — they are two halves of one argument, and splitting them would double the review cost without separating any decision.
 - Revision 1 (quorum r1 objection): Conflict Surface section added
+- Revision 2 (quorum r2 objections; narrow-refinement carve-out, controller-authored, applying both reviewers' verbatim fixes): Conflict Surface corrected — the existing runner drives its own agent loop and has NO agent/toolset flags (V8a/V8b measured), so Phase B explicitly REQUIRES an agent/tool adapter interfacing with the existing harness (smallest extension), with explicit per-run/suite deadlines and timeout classified as a visible harness fault
 
 ---
 
@@ -157,15 +158,25 @@ and this doc should not add another.
 This is true and needs to be precise, because the word "harness" points at two different machines
 and only one of them is Phase B's.
 
-**Phase B reuses the fleet's agent-benchmark machinery — invoked, not forked.** The standard-tier
-benchmark set and the reference-agent arms run under `ailang eval --benchmark <name>` (one AI
-benchmark) and `ailang eval-suite --models <csv>` (the full suite), the same evaluation tooling
-this mission's clause-2 rows and the fleet's eval KPI already lean on. Phase B introduces **no
-parallel benchmark script**: nothing new that decides pass/fail or renders wall-clock is written
-and owned inside this repo. The pairing of the two arms (shell native tools vs World MCP transition
-tools) is an *invocation-layer* concern — which `-model` / `-benchmark` flags and models each arm
-passes into the existing suite — not a second runner. Reusing the harness is exactly what keeps
-Phase B a measurement of World, not a measurement of new tooling.
+**Phase B reuses the fleet's agent-benchmark machinery — its benchmark corpus and result schema — with the smallest extension the arms require: an agent/tool ADAPTER.** The standard-tier
+benchmark set and the per-run result records (`compile_ok` / `runtime_ok` / `stdout_ok`,
+`duration_ms` / `llm_wall_ms`, `error_category`, `cost_usd` — V8b) belong to `ailang eval
+--benchmark <name>` and `ailang eval-suite --models <csv>`, the same evaluation tooling this
+mission's clause-2 rows and the fleet's eval KPI already lean on. **Phase B will require writing
+an agent/tool adapter to interface with the existing harness** (quorum r2, both reviewers): the
+runner as shipped drives its OWN agent loop — it resolves `-model` to a provider and generates
+the code itself (V8b) — and exposes NO flag to select an external agent CLI or a tool allowlist
+(V8a), so it can neither create nor attest the shell-native-tools vs World-MCP-arms that the
+clause-4 experiment is. The adapter is the smallest extension to the existing harness rather
+than a claim that invocation flags already suffice (quorum r2, gpt5-6-sol): it drives the
+reference agents (Claude Code agent mode, codex CLI) over the same benchmark corpus, applies
+each arm's tool allowlist (shell arm: native tools, MCP off; World arm: World MCP transition
+tools only), records the EFFECTIVE tool configuration of every run in the result record, and
+emits pass/fail, wall-clock and `error_category` in the harness's own schema. Every arm run
+carries an explicit per-run deadline and every suite a suite deadline, and a timeout is
+classified as a visible harness fault — an external-agent run never waits indefinitely (quorum
+r2 catch). Reusing corpus + schema is what keeps Phase B a measurement of World, not a
+measurement of new tooling.
 
 **The other harness is out of Phase B's scope.** This repository's own benchmark machinery,
 `scripts/bench_worldd.sh` + `bench/BASELINE.md`, is a **non-vacuous daemon smoke benchmark**: it
@@ -193,7 +204,8 @@ even started during the demonstration.
 | V5 | `api_error` is a catch-all, not a model verdict | the fleet's own operating rule (CLAUDE.md instrument table) | confirms §6's dependency |
 | V6 | Stage A of the self-mod publish is green, so clause 7 is one attended step away | ran `build_world_package.sh` + `verify_world_package.sh` 2026-09-21 | **9/9 PASSED**, ready packet equals the committed golden byte-for-byte, projection reproduces with zero git drift |
 | V7 | This repo's benchmark machinery is a daemon smoke benchmark, not an agent runner: `scripts/bench_worldd.sh` + `bench/BASELINE.md`, running `go test -bench` on `./host/daemon/` | read `scripts/bench_worldd.sh` + `bench/BASELINE.md` at HEAD `2678c1f` | `bench_worldd.sh` invokes `go test -bench . -benchtime 1x -run '^$' ./host/daemon/` and validates benchmark evidence blocks (`BenchmarkStoreCommit`, `BenchmarkRESTCommit`, ...); BASELINE is the day-1 kernel/broker wall-clock budget — daemon-scoped, no agent scaffolding. **Measures daemon wall-clock/load; not an agent benchmark runner; out of Phase B's scope** |
-| V8 | Phase B's agent-benchmark machinery is the fleet's `ailang eval`/`eval-suite` | ran `ailang help` + `ailang eval run --help` at HEAD `2678c1f` | `ailang help` lists `eval — Benchmarks: run one, or a subcommand (suite, report, elo, ...)` and shows `ailang eval --benchmark fizzbuzz --mock` and `ailang eval-suite --models gpt5,claude-sonnet-4-6`; `eval run --help` exposes `-model` and `-benchmark`. Confirms arm pairing is an invocation-layer (flags/models) concern, not a parallel runner |
+| V8 | Phase B's agent-benchmark machinery is the fleet's `ailang eval`/`eval-suite`, and its runner has NO agent or toolset flags | ran `ailang help` + `ailang eval run --help` at HEAD `2678c1f` (ailang v0.41.0 pin) | `ailang help` lists `eval — Benchmarks: run one, or a subcommand (suite, report, elo, ...)`; the runner's complete flag set is `-benchmark -langs -list-models -mock -model -openrouter-categories -openrouter-referer -openrouter-title -output -prompt-version -seed -self-repair -timeout` — **no agent flag, no toolset/tool-allowlist flag** |
+| V8b | The harness produces per-run pass/fail, wall-clock and `error_category`; and its agent is its OWN loop, not an external agent CLI | executed `ailang eval run --benchmark fizzbuzz --mock -model gpt5 --output …` (ailang repo, 2026-09-24; mock = no AI spend). First attempt refused: `--mock` still requires a resolvable provider (Claude OAuth expired) — itself evidence the runner drives its own agent | run completed; result record `out/standard/fizzbuzz_python_gpt5_<ts>.json` carries `compile_ok, runtime_ok, stdout_ok, duration_ms, compile_ms, execute_ms, llm_wall_ms, error_category:"none", cost_usd, cost_provenance, seed`; the run generated code from the model and executed it — **no field anywhere attests a tool configuration, and no flag selects Claude Code agent mode or codex CLI** |
 
 **Not verified, and named as such:** the pre-World baseline COST for each of the three candidate
 questions. The record states what went wrong and how it was found; whether it states how long that
@@ -210,4 +222,4 @@ as unmeasured rather than estimated.
   recorded and applied to both arms.
 - **Proving superiority.** Clause 4 is non-inferiority by design.
 - **Clause 7.** Row 8's `SM.D` is a separate, attended, irreversible step.
-- **Writing a parallel benchmark runner.** §Conflict Surface: Phase B invokes the fleet's `ailang eval`/`eval-suite`; it does not fork them, and `scripts/bench_worldd.sh`/`bench/BASELINE.md` (daemon smoke) is out of scope.
+- **Writing a parallel benchmark runner.** §Conflict Surface: Phase B reuses the fleet's benchmark corpus and result schema through the smallest extension the arms need — an agent/tool ADAPTER — it does not fork the runner; `scripts/bench_worldd.sh`/`bench/BASELINE.md` (daemon smoke) is out of scope.
