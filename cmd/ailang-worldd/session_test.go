@@ -18,9 +18,9 @@ import (
 // fence + confirmation can be driven from a test (the driven tty-fencing seam).
 type fakeTerm struct{ r io.Reader }
 
-func (f *fakeTerm) Read(p []byte) (int, error) { return f.r.Read(p) }
+func (f *fakeTerm) Read(p []byte) (int, error)  { return f.r.Read(p) }
 func (f *fakeTerm) Write(p []byte) (int, error) { return len(p), nil }
-func (f *fakeTerm) Close() error                  { return nil }
+func (f *fakeTerm) Close() error                { return nil }
 
 // testMintEnv returns a sessionEnv that reports a controlling terminal whose
 // confirmation reader yields `answer`, with a fixed clock.
