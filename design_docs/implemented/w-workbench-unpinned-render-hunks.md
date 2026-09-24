@@ -1,6 +1,6 @@
 # w-workbench-unpinned-render-hunks — pin the five surviving workbench hunks and the fourteen more the full enumeration found next to them
 
-- Status: **planned** · Date: **2026-09-24** · Row **34** (clause-5)
+- Status: **implemented** (iteration 185: judged PASS 95/100 + r2 98/100, zero blocking; see §13) · Date: **2026-09-24** · Row **34** (clause-5)
 - Iteration: 185, designer role · Measurement base: `origin/dev` = `fd99840` (V0)
 - Scope: **test-only.** Charter row 34 lists seven hunks. Re-measured here, two are already killed (H1, H2; §1.1) and five still survive (H3–H7). A rule-3n enumeration of every conditional and boolean hunk on the three surfaces those five sit on (`supportedWorkbenchQuery`, `workbenchHref`, and the grade/verdict template line `render.go:154`) executed **56** compiling mutants. **20 survive** the whole suite: the five charter hunks, 14 more that the suite does not kill today, and 1 equivalent mutant that no test can kill (§2e). This sprint adds tests that kill all 19 killable survivors, each by a named test. It changes no production code: no guard was measured dead or wrong (§2a).
 - Revision 1 (quorum r1: astra REJECT upheld — counts; glm REJECT refuted by measurement; gemini PASS): every prose mutant total is corrected to agree with the transcripts and the §7 table. There are 56 mutants, not 55: 36 were killed before this sprint, and 55 non-equivalent mutants must be killed after it. The table and the drill were already right; only the totals in the text were off by one. The ancestry of `9574d08` and the absence of any in-flight overlap are now measured (V20). See §11.
@@ -649,3 +649,10 @@ content is covered by the vet, whole-repo test and touched-package race legs abo
    plan's `…/exec/`. No content difference.
 
 No production file, `.ail` file, or other test was changed.
+
+## §13 Evaluation
+
+- **r1** — evaluator `sonnet` (Agent tool, own detached worktree `.eval-world-iter185` @ `2c3b997`): **PASS 95/100, zero blocking.** It re-derived every gate, AC4 and AC7; spot-checked H6, H4, V6, V10 and Q17 exactly; confirmed the milestone split (H5 killed at M1 `133a83f`, V6 survives there); and proved Q17 equivalent algebraically. Of its 3 self-chosen mutants, 1 was killed, 1 was equivalent (pair-check reorder), and **1 SURVIVED**: the FAIL span's glyph `✗ verdict:` → `✓ verdict:`. Report: `~/.ailang/state/mission-world-iter185-evidence/EVAL_REPORT_iter185.md`.
+- **Controller closure** — the survivor was reproduced first-party, along with a second same-class survivor (FAIL span `class="verdict-fail"` → `"verdict-pass"`). `TestGradeViewRequiresTestVerdict/fail` now asserts the exact FAIL span, as `/pass` does, and is the sole killer of both; the G3 control (drop the verdict text) was already killed. Committed `121682d` (+4 lines; `render.go` byte-identical). Drill: `controller_g/{before,after}.txt`.
+- **r2** — judge on that delta (own worktree @ `121682d`): **PASS 98/100, zero blocking.** It reproduced the survivor at `2c3b997` and the kill at `121682d`, and ran 3 further FAIL-span mutants, all killed. The class swap is killed only by the new lines. Report: `…/EVAL_REPORT_iter185_r2.md`.
+- Final size: `git diff --shortstat fd99840 -- host/` → 2 files, **94** insertions, 0 deletions.
