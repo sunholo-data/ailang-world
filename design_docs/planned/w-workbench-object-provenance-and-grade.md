@@ -11,8 +11,18 @@
   prototype (V15): 62 production lines, 227 test lines. Two milestones (§8). Go host only; no `.ail`
   change.
 - S3 ("why is this not a package?"): this is the host HTML adapter's projection of store rows. It
-  adds no policy. The grade policy stays in AILANG (`gradeOf`, `world/types.ail`), and this design
-  deliberately does **not** transcribe it (§2b).
+  adds no policy. Two grade mechanisms already exist, AILANG `gradeOf` (`world/types.ail`) and Go
+  `evidence.Validator`/`Resolve` (`host/evidence`). This design deliberately neither transcribes nor
+  integrates either of them (§2b).
+- Revision 1 (quorum r1 BLOCKED on gpt6-astra's upheld objection; the controller measured it): the
+  r0 grade reason said "evidence grades are computed only by gradeOf". That was false, because
+  `host/evidence/validator.go:200-221` also resolves a grade (`ResolvedGradeProven`). The reason is
+  now the reviewer's verbatim text. §2b and F5 describe both mechanisms, V20 traces the handler's
+  grade construction and both mechanisms' outputs, and AC4 requires the corrected reason. The
+  non-blocking notes are folded in: F4/V8 now cover every `store.Object` producer, including
+  client commits, and the manifest-hash sites, which build no object; V21 logs the `entryEdges`
+  body that `checkedEdge` is extracted from. All 22 mutants were re-run against the re-applied
+  prototype and the totals were recounted (§7, V19). See §11.
 
 ---
 
@@ -48,20 +58,37 @@ keys (`objects.hash_ref`, `log_entries.entry_index`) and the `verification_cache
 daemon's `readStore` seam has five methods, all point reads by primary key (V6). No read can answer
 "which log entry or world references object X" without walking the log.
 
-**F4 — in production, an interface target is never a stored object.** Every production producer
-sets `InterfaceHash = SumSHA256([]byte(semanticID))`, a hash of a label string (broker, registry,
-replay, journal, evidence; V8). On the probe store, the interface of the real epoch-registry
-bootstrap object is not stored, and neither is the test object's interface (`GetObject` ok=false;
-controls ok=true, V9). A checked interface edge therefore renders `UNAVAILABLE` in production today.
-This is stated up front and chosen deliberately in §2a.
+**F4 — for host-produced objects, the interface target is a label hash, and it was measured as
+unstored.** Six non-test sites construct a `store.Object` (V8):
+- four set `InterfaceHash = SumSHA256([]byte(semanticID))`, a hash of a label string
+  (`broker/record.go:118`, `registry/registry.go:94`, `replay/replay.go:391`, `store/journal.go:312`);
+- `transitionreg.go:256` sets the fixed constant `InterfaceHashV1` (`transitionreg/codec.go:30`);
+- `daemon/handlers.go:658` stores **whatever interface hash a `POST /v1/commit` client sends**.
 
-**F5 — the daemon holds nothing that could compute a grade.** `gradeOf` exists only in
-`world/types.ail`. **0** Go files name `gradeOf` or `EvidenceGrade` (V10). **0** non-test Go files
-import `host/evidence` (control: 3 daemon files import `host/store`, V10). The only path to
-`PROVEN` is `evidence.Validator.ValidateProof` followed by `Resolve`. It needs a 32-byte HMAC key, a
-compiler identity and version, a required-identity list and the **subject** ref the proof is
-about (`validator.go:63-95, 120-183, 211-221`, V12). Outside `host/workbench`, no Go code names
-`TestReport` (V18). `gradeOf` never yields `PROVEN` (V11).
+The manifest-derived hashes at `broker/approve.go:401` (`hashes.InterfaceHash`) and
+`broker/registry_publish.go:603` (`pkgproj.InterfaceHash(manifest)`, `pkgproj/pkgproj.go:87`) are
+`string` fields of `PublishApprovalScope`/`PublishHashes`. They never become a `store.Object`'s
+interface (V8), so they cannot be an edge source. On the probe store, the interface of the real
+epoch-registry bootstrap object is not stored, and neither is the test object's interface
+(`GetObject` ok=false; controls ok=true, V9). So the interface edge is **measured** `UNAVAILABLE`
+for the bootstrap registry object. This doc does **not** claim it is unavailable for every object:
+a client commit may name a stored object as its interface, and the edge then renders as a link
+(this is the `/interface-stored-link` test fixture). Whether the `transitionreg` constant's
+preimage is ever stored was not measured. §2a accepts both outcomes, because the edge is
+existence-checked on every request.
+
+**F5 — two grade mechanisms exist, and the workbench handler invokes neither.** (i) AILANG
+`gradeOf` (`world/types.ail:42-59`) maps an `Evidence` value to one of four grades. It never yields
+`PROVEN` (V11), and its only caller is the in-module test adapter `gradeCode` (`:75`, V20). (ii) Go
+`evidence.Validator` checks an authenticated proof envelope with `ValidateProof` against an expected
+**subject**, and `Resolve` then returns `ResolvedGradeProven` (`validator.go:120-183, 200-221`, V12).
+The validator needs a 32-byte HMAC key, a compiler identity and version, and a required-identity
+list (`:63-95`). The daemon holds none of these, and **0** non-test Go files import `host/evidence`
+(control: 3 daemon files import `host/store`, V10). No non-test code calls `ValidateProof` or
+`Validator.Resolve`. The three non-test `.Resolve(` hits are other types' methods: `archive.Resolve`
+twice and the session resolver once (V20). The handler constructs no grade at all at `6127ff3`
+(V3, V20). Outside `host/workbench`, no Go code names `TestReport` (V18). This design integrates
+**neither** mechanism (§2b).
 
 ---
 
@@ -87,7 +114,7 @@ The walk's edge list is fixed and ordered. It holds `interface` (checked), then 
 - `committedBy`: `the store records no commit-to-object relation, and the provenance field is a free-text label, not a reference`
 - `referencedBy`: `no store index maps an object to the log entries or worlds that reference it`
 
-The `interface` edge renders `UNAVAILABLE` in production today (F4). It is kept anyway for two
+The `interface` edge was measured `UNAVAILABLE` for the host-produced objects probed (F4). It is kept anyway for two
 reasons. It is the envelope's only typed reference, so it is the one edge the store answers
 exactly. And any producer that stores its schema bytes turns it into a working link with no further
 change. Presenting `interface` as a provenance relation stretches the word "provenance". That is
@@ -105,15 +132,26 @@ while production still shows a named gap and never a blank.
 
 | Object kind | What a grade would need | Derivable from stored data? |
 |---|---|---|
-| labelled as a proof envelope (`SemanticID` `world/proof-report/v1`) | `Validator` + HMAC key + compiler config + required identities + the **subject** ref. The resulting grade belongs to the subject, not to the envelope. The daemon imports `host/evidence` 0 times (V10, V12). Its semantic ID is also a caller-supplied label (V7), so a grade keyed on it would be grade laundering | **no** |
-| `TestReport` / any `Evidence` | `Evidence` exists only as AILANG values. No Go decoder exists, and no stored `TestReport` kind exists (V10, V18) | **no** |
+| labelled as a proof envelope (`SemanticID` `world/proof-report/v1`) | `Validator` + HMAC key + compiler config + required identities + the **subject** ref. The resulting grade (`ResolvedGradeProven`) belongs to the subject, not to the envelope. The daemon imports `host/evidence` 0 times and holds no key (V10, V12, V20). Its semantic ID is also a caller-supplied label (V7), so a grade keyed on it would be grade laundering | **no** |
+| `TestReport` / any `Evidence` | `gradeOf`'s input is the AILANG `Evidence` type. In Go, `host/evidence.DecodeProposal` yields only opaque, untrusted `ClaimedEvidence` (`proposal_codec.go:11`, `types.go` "only validation in a later milestone may confer authority on it"), and no non-test code imports that package (V10). No stored `TestReport` kind exists (V18) | **no** |
 | every other object (registries, broker, journal, replay sources, client objects) | no evidence relation at all | **no** |
 
-No row is derivable, so the daemon has **one** constant reason and **no** per-kind branch. A branch
-on `SemanticID` would trust a label (§2a). The reason reuses the original design's wording (§2.6,
-V13) and adds the measured cause:
+No row is derivable **by this handler**, so the daemon has **one** constant reason and **no**
+per-kind branch. A branch on `SemanticID` would trust a label (§2a).
 
-`no canonical host projection: evidence grades are computed only by gradeOf in world/types.ail, and the store records no decoded evidence for an object`
+Two grade mechanisms already exist, and they are distinct. `world/types.ail`'s `gradeOf` is the
+canonical AILANG mapping from a decoded `Evidence` value to a grade. `host/evidence`'s
+`Validator.ValidateProof` plus `Resolve` is a Go path that grades an authenticated proof about a
+**subject** as `ResolvedGradeProven`. **This workbench handler invokes neither, and this change
+deliberately integrates neither.** Integrating `gradeOf` would need a decoded `Evidence` value, and
+no stored object provides one. Integrating the validator would need key material and a
+subject-to-evidence binding that the daemon does not hold (V12, V20), and it would make a read-only
+page into a place where authority is exercised. That work is P-c (§9). The reason therefore states
+what this handler does not do, not a claim about where grades are computed. It is the
+reviewer's text, verbatim, and it keeps the original design's `no canonical host projection`
+prefix (§2.6, V13):
+
+`no canonical host projection: this workbench handler does not resolve subject-bound evidence into an object grade`
 
 **The empty-reason guard: the render layer fails closed. `NewGradeUnavailable("")` is not
 refused.** The template's `{{else}}` arm becomes
@@ -150,7 +188,7 @@ span byte-for-byte, so the page has one visual idiom for "unavailable".
 // Named reasons for what the object inspector cannot show. Each names the
 // missing store fact; none is a guess at the value it stands in for.
 const (
-	objectGradeUnavailableReason = "no canonical host projection: evidence grades are computed only by gradeOf in world/types.ail, and the store records no decoded evidence for an object"
+	objectGradeUnavailableReason = "no canonical host projection: this workbench handler does not resolve subject-bound evidence into an object grade"
 	objectCommittedByMissing     = "the store records no commit-to-object relation, and the provenance field is a free-text label, not a reference"
 	objectReferencedByMissing    = "no store index maps an object to the log entries or worlds that reference it"
 )
@@ -187,7 +225,9 @@ func (d *Daemon) objectEdges(ctx context.Context, object store.Object) ([]workbe
 ```
 
 1. **`checkedEdge` is extracted from `entryEdges` (`:121-144`).** It is the loop body's three
-   branches, verbatim. `entryEdges` keeps its `refs` table and its loop, and the loop body becomes
+   branches: the `GetObject` read, the error return, the unstored `Missing` view and the stored
+   link view. Their conditions and `EdgeView` literals are verbatim from the base body (V21); only
+   the `append`/`continue` plumbing becomes `return`. `entryEdges` keeps its `refs` table and its loop, and the loop body becomes
    `edge, err := d.checkedEdge(ctx, item.relation, item.ref); if err != nil { return nil, err }; edges = append(edges, edge)`.
    The object walk and the selected entry then share one existence-check path. Row 35+38's
    killers still kill through it (§5; mutants H7, H8, H13).
@@ -270,7 +310,9 @@ Files the implementation changes: `host/workbench/render.go`, `host/workbench/re
     `SumSHA256("world/authenticated-proof-envelope/v1")`). **Control**: `GetRegistryHead(EpochRegistryV1)`
     returns ok (the real bootstrap-written object). Six subtests: {`test-object`, `proof-labelled`,
     `registry`} × {``, `&payload=1`}. Each does `GET /workbench?object=<ref><suffix>` → 200. The
-    count of `<p>GRADE UNAVAILABLE — ` + `objectGradeUnavailableReason` + `</p>` must be **exactly 1**.
+    count of `<p>GRADE UNAVAILABLE — ` + `objectGradeUnavailableReason` + `</p>` must be **exactly 1**,
+    and the landed constant must be exactly `no canonical host projection: this workbench handler does not resolve subject-bound evidence into an object grade`
+    (AC6 checks the source text).
     **Absence**: none of `GRADE UNAVAILABLE — </p>`, `no grade reason was supplied`,
     `<span>PROVEN</span>`, `<span>TESTED</span>`, `<span>ATTESTED</span>`, `<span>CLAIMED</span>`.
   - `TestWorkbenchObjectProvenanceWalk` (daemon). One commit stores `plain` (the `testCommit`
@@ -293,7 +335,9 @@ Files the implementation changes: `host/workbench/render.go`, `host/workbench/re
   → rc=0. The same holds for `/^var acceptedWorkbenchKeys/,/^}/`, and for `/^func TestWorkbenchRefusalBranches/,/^}/` on `workbench_test.go`.
 - **AC6 — the dead reads are fed. These are instrument-health controls only (S6); AC7 carries the
   load-bearing claims.** `grep -c 'Grade: workbench.NewGradeUnavailable(objectGradeUnavailableReason)' host/daemon/workbench.go`
-  → `1`. `grep -c 'Edges: edges,' host/daemon/workbench.go` → `1`. `grep -c 'NewGradeView' host/daemon/workbench.go`
+  → `1`. `grep -c 'objectGradeUnavailableReason = "no canonical host projection: this workbench handler does not resolve subject-bound evidence into an object grade"' host/daemon/workbench.go`
+  → `1`, and `grep -c 'computed only by gradeOf' host/daemon/workbench.go` → `0` (the r0 text must not land).
+  `grep -c 'Edges: edges,' host/daemon/workbench.go` → `1`. `grep -c 'NewGradeView' host/daemon/workbench.go`
   → `0` (the daemon never constructs a grade label). Control: `grep -c PayloadTruncated host/daemon/workbench.go` → `1`.
 - **AC7 — mutation drill.** Apply each §7 row on its own to the landed code. For each row: `go vet ./host/workbench ./host/daemon`
   → rc=0 (it **compiles**), `go test ./host/workbench ./host/daemon -count=1 -v` → rc=1, and the
@@ -316,7 +360,10 @@ commit. For each row, the driver copied the prototype into place, applied the si
 (asserting it matched exactly once), ran `go vet ./host/workbench ./host/daemon` and then
 `go test ./host/workbench ./host/daemon -count=1 -v`, and parsed the `--- FAIL:` lines. It then
 re-ran the suite with the **`6127ff3` test files** against the same mutant ("base suite"), and
-restored everything by `cp`. A base-suite rc of 0 means **the mutant survives the suite at `6127ff3`**,
+restored everything by `cp`. **Revision 1 re-ran all 22 rows** against a prototype re-applied
+with the corrected reason constant (the r0 driver and prototype had been deleted, so both were
+rebuilt from §3 and AC4). Every row's compiles/rc/killer/leaves/base-suite outcome matched r0, and
+H16's `old` text is now the r1 constant. A base-suite rc of 0 means **the mutant survives the suite at `6127ff3`**,
 so the new tests are what kill it. A base-suite rc of 1 means a pre-existing test already kills it,
 and the table names that test. The pristine control P0 was vet 0, suite 0, base suite 0.
 
@@ -418,18 +465,20 @@ Every zero is paired with a positive control in the same scope.
 | V5 | No index; no reverse lookup by ref | `/usr/bin/grep -c 'CREATE INDEX\|CREATE UNIQUE INDEX' host/store/schema.sql host/store/store.go`; `/usr/bin/grep -c 'CREATE TABLE' host/store/schema.sql`; `/usr/bin/grep -rn --include='*.go' -E 'WHERE (transition_ref\|transition_fn_ref\|interpreter_ref\|state_root\|object_ref)' host/store \| grep -v _test`; control `… -E 'WHERE (entry_index\|hash_ref) '` | indexes `0` / `0`; tables `9`; ref-column WHERE: only `store.go:790` (`verification_cache` pair); control: `store.go:484` objects by `hash_ref`, `:572` log by `entry_index`, `:699`, `scan.go:60`, `read_object.go:31,33` |
 | V6 | The daemon's read seam is 5 point reads | `sed -n 331,337p host/daemon/daemon.go` | `GetObject(ref)`, `GetWorld(ref)`, `GetLogEntry(index)`, `GetRegistryHead(name)`, `SelectedHead()` |
 | V7 | Provenance values are producer labels or client text | `/usr/bin/grep -rn 'Provenance:' --include='*.go' host cmd \| grep -v _test` | `broker/record.go:120 "host/broker"`, `transitionreg.go:256 "host/transitionreg"`, `registry.go:96 "epoch-registry-bootstrap"`, `replay.go:393 provenance` (caller arg), `journal.go:313 "store/journal"`, `handlers.go:660 object.Provenance` (the `POST /v1/commit` request body) |
-| V8 | Production interface hashes are hashes of label strings | `/usr/bin/grep -rn 'InterfaceHash' --include='*.go' host cmd \| grep -v _test` (read at each producer) | `record.go:118`, `registry.go:95`, `replay.go:392`, `journal.go:313`: `SumSHA256([]byte(semanticID))`; `evidence/validator.go:19`: `SumSHA256([]byte("world/authenticated-proof-envelope/v1"))`; `transitionreg/codec.go:30` a fixed constant |
+| V8 | Every `store.Object` producer's interface source; the manifest-hash sites build no object | `/usr/bin/grep -rn --include='*.go' -E 'store\.Object\{$\|store\.Object\{Hash' host cmd \| grep -v _test`; `/usr/bin/grep -rn --include='*.go' -E 'return Object\{\|= Object\{' host/store \| grep -v _test`; `/usr/bin/grep -rn --include='*.go' -E 'InterfaceHash: +hashref' host cmd \| grep -v _test`; `sed -n 359,370p;394,405p host/broker/approve.go`; `sed -n 89,95p;598,606p host/broker/registry_publish.go`; `sed -n 650,661p host/daemon/handlers.go` | constructors: `broker/record.go:116`, `transitionreg.go:256` (`InterfaceHash: InterfaceHashV1`), `handlers.go:658` (`InterfaceHash: iface`, parsed from the request's `objects[i].interfaceHash`), `registry.go:90`, `replay.go:389`, and in-package `journal.go:311` (the other `Object{` hits are `GetObject` returns). `SumSHA256([]byte(semanticID))` at `record.go:118`, `registry.go:94`, `replay.go:391`, `journal.go:312` (the control pattern finds exactly these 4). `approve.go:401 InterfaceHash: hashes.InterfaceHash` is a `string` field of `type PublishApprovalScope struct` (`:359`), rendered into a scope string by `PublishApprovalScopeFor` (`:394`). `registry_publish.go:603 InterfaceHash: pkgproj.InterfaceHash(manifest)` fills `type PublishHashes struct` (`:89`). Neither is a `store.Object` |
 | V9 | **Live page at base** (probe) | throwaway `host/daemon/zz_probe186_test.go`: `newHandlerDaemon` + `seedGenesisEmbedded` + one `testCommit`; GET four targets; log the `<p>GRADE UNAVAILABLE[^<]*</p>` match and the provenance-walk section; `GetObject` on the interface refs. `go test ./host/daemon -run TestZZProbe186 -count=1 -v`. **Deleted afterwards** | `?object=X` and `?object=X&payload=1`: 200, grade `"<p>GRADE UNAVAILABLE — </p>"`, section `"<section aria-label=\"provenance walk\">\n<h2>Provenance walk</h2>\n\n</section>"`; `/workbench` and `?from=0&entry=0`: 200, 0 `GRADE`, the same blank section. `GetObject(testObject.InterfaceHash)` ok=false (control `GetObject(obj.Hash)` ok=true); epoch-registry head ok=true, object `sid="world/epoch-registry/v1" prov="epoch-registry-bootstrap"`, its interface stored=**false**; transition-registry head ok=false |
-| V10 | No Go grade code; the daemon cannot reach the validator | `/usr/bin/grep -rlE 'gradeOf\|EvidenceGrade' --include='*.go' . \| wc -l`, control `/usr/bin/grep -lE gradeOf world/*.ail`; `/usr/bin/grep -rl --include='*.go' 'ailang-world/host/evidence"' . \| grep -v _test.go \| wc -l`, control `/usr/bin/grep -l 'ailang-world/host/store"' host/daemon/*.go \| grep -v _test \| wc -l` | `0`, control `world/types.ail`; `0`, control `3` |
+| V10 | No Go transcription of `gradeOf`; no non-test importer of `host/evidence` (this supports "the handler does not invoke either mechanism", not an exclusivity claim) | `/usr/bin/grep -rlE 'gradeOf\|EvidenceGrade' --include='*.go' . \| wc -l`, control `/usr/bin/grep -lE gradeOf world/*.ail`; `/usr/bin/grep -rl --include='*.go' 'ailang-world/host/evidence"' . \| grep -v _test.go \| wc -l`, control `/usr/bin/grep -l 'ailang-world/host/store"' host/daemon/*.go \| grep -v _test \| wc -l` | `0`, control `world/types.ail`; `0`, control `3` |
 | V11 | `gradeOf` never yields PROVEN | `sed -n 42,59p world/types.ail \| /usr/bin/grep -c PROVEN`; control `sed -n 15,40p world/types.ail` | `0`; the type declares `PROVEN \| TESTED \| ATTESTED \| CLAIMED`; `ProofReceipt(_) => CLAIMED` |
 | V12 | PROVEN needs key, config, identities and subject | `sed -n 63,95p;120,183p;211,221p host/evidence/validator.go` | `NewValidator(key [32]byte, reader, cfg CompilerConfig, requiredIdentities)` refuses nil reader, zero compiler, empty version, empty identities; `ValidateProof(ctx, reportRef, expectedSubject)` checks semantic ID, interface, MAC, subject, tool, proof, identities; `Resolve` → `ResolvedGradeProven` only for its own seal |
 | V13 | The original design's grade and walk rules | `sed -n 206,214p;255,262p design_docs/implemented/w-workbench-read-only.md` | `GRADE UNAVAILABLE — no canonical host projection`; "does not downgrade the object to `CLAIMED`"; "object `provenance` text is not parsed as a reference, and payload bytes are not searched for hash-shaped substrings" |
 | V14 | `NewGradeUnavailable` has no production caller | `/usr/bin/grep -rn 'NewGradeUnavailable' --include='*.go' .` | definition `render.go:187`; callers only `render_test.go:43, 53, 121, 168` |
-| V15 | *prototype*: the design compiles, the suite is green, size | prototype applied to the four files (§3), then `go vet ./...`; `go test ./... -count=1`; `git diff --shortstat -- host/`; `git diff --numstat -- host/`; `grep -c GetObject` and `grep -c context.Background` on the prototype `workbench.go`; `grep -c StateRoot` on the prototype diff; `gofmt -l` on the prototype files | vet rc=0; test rc=0 (no non-`ok` line); `4 files changed, 277 insertions(+), 12 deletions(-)`; numstat `48 10 workbench.go`, `161 0 workbench_test.go`, `2 2 render.go`, `66 0 render_test.go`; `GetObject` 2 (base 2); `context.Background` 0; `StateRoot` 0; gofmt clean |
+| V15 | *prototype* (re-measured in r1 with the corrected constant; identical numbers): the design compiles, the suite is green, size | prototype applied to the four files (§3), then `go vet ./...`; `go test ./... -count=1`; `git diff --shortstat -- host/`; `git diff --numstat -- host/`; `grep -c GetObject` and `grep -c context.Background` on the prototype `workbench.go`; `grep -c StateRoot` on the prototype diff; `gofmt -l` on the prototype files | vet rc=0; test rc=0 (no non-`ok` line); `4 files changed, 277 insertions(+), 12 deletions(-)`; numstat `48 10 workbench.go`, `161 0 workbench_test.go`, `2 2 render.go`, `66 0 render_test.go`; `GetObject` 2 (base 2); `context.Background` 0; `StateRoot` 0; gofmt clean |
 | V16 | *prototype*: the new render tests are red at base | the prototype `render_test.go` run against the `6127ff3` `render.go`, `go test ./host/workbench -run 'TestRenderProvenanceWalkNeverBlank\|TestRenderGradeReasonNeverEmpty' -v` | FAIL `/no-object`, FAIL `/object-without-edges`, FAIL `/zero-grade`; PASS `/supplied-edges`, PASS `/supplied-reason` (controls). The daemon tests do not compile at base (`undefined: objectGradeUnavailableReason`), so their base behaviour is carried by mutants H1/H2, which restore it and survive the base suite |
 | V17 | Pinned binary; `.ail` gate is unaffected | `$AILANG_BIN --version`; *prototype* `bash ./scripts/verify_ail.sh` | `AILANG v0.41.0` (`24ee108`); rc=0, `verify gate PASSED: 11 required identities verified, 40 named tests pass` |
 | V18 | No stored `TestReport` kind | `/usr/bin/grep -rn --include='*.go' TestReport host cmd \| grep -v _test \| grep -v host/workbench \| wc -l`; control `/usr/bin/grep -c KindTestReport host/workbench/render.go` | `0`; control `2` |
 | V19 | §7 totals, recounted from the table | `D=design_docs/planned/w-workbench-object-provenance-and-grade.md; T=$(/usr/bin/grep -E '^\| (R\|H)[0-9]+ \|' $D)`; rows `echo "$T" \| wc -l`; compiles `echo "$T" \| awk -F'\|' '$5 ~ /^ y $/' \| wc -l`; red `… '$6 ~ /^ 1 $/'`; killer `… '$7 ~ /Test/'`; sole `… '$8 ~ /^ y/'`; survive base `… '$9 ~ /^ 0/'` | 22; 22; 22; 22; 14; 17 |
+| V20 | (r1) Trace of the handler's grade construction, and what each existing mechanism outputs | handler: `/usr/bin/grep -n 'Grade' host/daemon/workbench.go` at `6127ff3`, then *prototype* `/usr/bin/grep -n 'Grade\|objectGradeUnavailableReason' host/daemon/workbench.go`; `gradeOf`: `sed -n 36,59p;70,78p world/types.ail`, callers `/usr/bin/grep -rn gradeOf --include='*.ail' world packages`; validator: `sed -n 198,221p host/evidence/validator.go`, callers `/usr/bin/grep -rn --include='*.go' -E '\.(ValidateProof\|Resolve)\(' . \| grep -v _test.go`, control the same pattern over `host/evidence/*_test.go \| wc -l` | handler at base: **no** `Grade` line, so `page.Object.Grade` is the zero `GradeView` (V1, V9: `<p>GRADE UNAVAILABLE — </p>`). Prototype: the constant declaration and exactly one construction, `Grade: workbench.NewGradeUnavailable(objectGradeUnavailableReason),` inside the `page.Object` literal, with no other `GradeView`/`NewGradeView` in the file. `gradeOf` outputs: `CompilerOutput`/`HumanApproval`/`RecordedEffect` → `ATTESTED`, `TestReport` → `TESTED`, `AiReview`/`ProofReceipt` → `CLAIMED`, never `PROVEN`; its only caller is `gradeCode` at `world/types.ail:75` (and the projection copy `packages/world-core/world/types.ail:75`). Validator outputs: `ResolvedGradeProven ResolvedGrade = 1` (`:200`), and `Resolve` returns `ResolutionResult{grade: ResolvedGradeProven, ok: true}` (`:221`) only for a seal minted by the same validator, else `ErrUnmintedAuthority`/`ErrForeignSeal`. Non-test callers: 3 hits, all other types (`capsule.go:145 r.archive.Resolve`, `replay.go:180 e.archive.Resolve`, `middleware.go:49 m.resolver.Resolve`), so **0** calls of `ValidateProof` or `Validator.Resolve`; control: `22` call sites in `host/evidence` tests |
+| V21 | (r1) The `entryEdges` body at base, the source of the `checkedEdge` extraction | `sed -n 118,144p host/daemon/workbench.go` | the loop body is `target := item.ref.String()`; `_, ok, err := d.reads.GetObject(ctx, item.ref)`; `if err != nil { return nil, err }`; `if !ok { edges = append(edges, workbench.EdgeView{Relation: item.relation, Target: target, Missing: "object " + target + " is not stored"}); continue }`; `edges = append(edges, workbench.EdgeView{Relation: item.relation, Available: true, Target: target, Href: "?object=" + target})`. `checkedEdge` (§3.2) keeps the same read, conditions and both `EdgeView` literals, with `item.relation`/`item.ref` → parameters `relation`/`ref`, and `append`/`continue` → `return`
 
 ---
 
@@ -437,4 +486,7 @@ Every zero is paired with a positive control in the same scope.
 
 | Round | Reviewer | Verdict | Objection (one line) | Disposition |
 |---|---|---|---|---|
-| — | — | — | — | — |
+| r1 | gemini-3-1-pro | pass | — | — |
+| r1 | oc-glm-5-2 | pass (non-blocking note) | The claim that `checkedEdge` is "the loop body's three branches, verbatim" has no logged evidence | **Applied.** V21 logs the base `entryEdges` body, and §3.2 item 1 now states exactly what is verbatim (the read, the conditions, both literals) and what changes (the `append`/`continue` plumbing) |
+| r1 | gpt6-astra | reject | Absent on budget in the quorum run, then re-run alone at a $0.40 cap: the proposed reason says grades are "computed only by gradeOf in world/types.ail", but `host/evidence/validator.go:200-221` defines `ResolvedGradeProven` and `Resolve` returns it (`:221`), which the doc's own V12 documents. The empty reason would become a false one | **Upheld by controller measurement; applied verbatim.** `objectGradeUnavailableReason` = `no canonical host projection: this workbench handler does not resolve subject-bound evidence into an object grade` everywhere. §2b describes `gradeOf` and `Validator`/`Resolve` as distinct existing mechanisms, neither invoked by the handler and neither integrated by this change. F5 no longer implies exclusivity. V20 traces the handler's grade construction and both mechanisms' outputs. AC4/AC6 require the corrected text and forbid the r0 text. H2/H3/H4/H16 and every other §7 row were re-run against the re-applied prototype (§7, V19) |
+| r1 | controller | note | F4 said every production producer uses `SumSHA256(semanticID)`, but `broker/approve.go:401` and `broker/registry_publish.go:603` use manifest-derived hashes | **Applied, measured.** Those sites fill `string` fields of `PublishApprovalScope`/`PublishHashes`, never a `store.Object` (V8). F4 now lists all six `store.Object` constructors, including the client-supplied interface at `handlers.go:658`, and is narrowed to what V9 measured |
