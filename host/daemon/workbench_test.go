@@ -727,3 +727,193 @@ func TestWorkbenchPagingProbeStoreError(t *testing.T) {
 		})
 	}
 }
+
+const provenanceWalkStart = `<section aria-label="provenance walk">`
+
+// provenanceWalkSection returns the provenance-walk section of a workbench page
+// up to its </section>, failing if the section is missing.
+func provenanceWalkSection(t *testing.T, body string) string {
+	t.Helper()
+	section, ok := workbenchRegion(body, provenanceWalkStart, "</section>")
+	if !ok {
+		t.Fatalf("no provenance-walk section in %s", body)
+	}
+	return section
+}
+
+// refFailingStore fails GetObject for one ref only, so the object read itself
+// succeeds while the walk's existence check on that ref errors.
+type refFailingStore struct {
+	readStore
+	fail hashref.HashRef
+}
+
+func (s refFailingStore) GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error) {
+	if ref == s.fail {
+		return store.Object{}, false, errSentinelInternal
+	}
+	return s.readStore.GetObject(ctx, ref)
+}
+
+func workbenchTestObject(label, semanticID string, iface hashref.HashRef) store.Object {
+	payload := []byte("payload-" + label)
+	return store.Object{Hash: hashref.SumSHA256(payload), InterfaceHash: iface, SemanticID: semanticID, Provenance: "workbench-test", Payload: payload}
+}
+
+func TestWorkbenchObjectGrade(t *testing.T) {
+	d := newHandlerDaemon(t)
+	genesis := seedGenesisEmbedded(t, d, "workbench-grade")
+	commit := testCommit(genesis, 0, "workbench-grade")
+	proof := workbenchTestObject("workbench-grade-proof", "world/proof-report/v1", hashref.SumSHA256([]byte("world/authenticated-proof-envelope/v1")))
+	commit.Objects = append(commit.Objects, proof)
+	if err := d.store.Commit(commit); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	// CONTROL: the registry object is the real bootstrap-written one, not a fixture.
+	registry, ok, err := d.store.GetRegistryHead(context.Background(), store.EpochRegistryV1)
+	if err != nil || !ok {
+		t.Fatalf("control GetRegistryHead(%s): ok=%v err=%v", store.EpochRegistryV1, ok, err)
+	}
+	want := `<p>GRADE UNAVAILABLE — ` + objectGradeUnavailableReason + `</p>`
+	for _, object := range []struct {
+		name string
+		ref  hashref.HashRef
+	}{{"test-object", commit.Objects[0].Hash}, {"proof-labelled", proof.Hash}, {"registry", registry}} {
+		for _, suffix := range []struct{ name, query string }{{"", ""}, {"-payload", "&payload=1"}} {
+			t.Run(object.name+suffix.name, func(t *testing.T) {
+				rec := requestRecorder(t, d, http.MethodGet, "/workbench?object="+object.ref.String()+suffix.query, nil)
+				if rec.Code != http.StatusOK {
+					t.Fatalf("status = %d, want 200; body=%s", rec.Code, rec.Body)
+				}
+				body := rec.Body.String()
+				if got := strings.Count(body, want); got != 1 {
+					t.Errorf("grade line %q appears %d times, want 1", want, got)
+				}
+				for _, unwanted := range []string{`GRADE UNAVAILABLE — </p>`, "no grade reason was supplied", `<span>PROVEN</span>`, `<span>TESTED</span>`, `<span>ATTESTED</span>`, `<span>CLAIMED</span>`} {
+					if strings.Contains(body, unwanted) {
+						t.Errorf("object page contains %q", unwanted)
+					}
+				}
+			})
+		}
+	}
+}
+
+func TestWorkbenchObjectProvenanceWalk(t *testing.T) {
+	d := newHandlerDaemon(t)
+	genesis := seedGenesisEmbedded(t, d, "workbench-walk")
+	commit := testCommit(genesis, 0, "workbench-walk")
+	plain := commit.Objects[0]
+	schema := workbenchTestObject("workbench-walk-schema", "test/schema", hashref.SumSHA256([]byte("interface-workbench-walk-schema")))
+	typed := workbenchTestObject("workbench-walk-typed", "test/typed", schema.Hash)
+	commit.Objects = append(commit.Objects, schema, typed)
+	if err := d.store.Commit(commit); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	// CONTROLS: one interface target is stored and one is not, or the link and
+	// UNAVAILABLE arms below assert nothing.
+	if _, ok, err := d.store.GetObject(context.Background(), schema.Hash); err != nil || !ok {
+		t.Fatalf("control GetObject(schema): ok=%v err=%v, want ok=true", ok, err)
+	}
+	if _, ok, err := d.store.GetObject(context.Background(), plain.InterfaceHash); err != nil || ok {
+		t.Fatalf("control GetObject(plain.InterfaceHash): ok=%v err=%v, want ok=false", ok, err)
+	}
+	get := func(t *testing.T, target string) string {
+		t.Helper()
+		rec := requestRecorder(t, d, http.MethodGet, target, nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("%s: status = %d, want 200; body=%s", target, rec.Code, rec.Body)
+		}
+		return rec.Body.String()
+	}
+	plainTarget := "/workbench?object=" + plain.Hash.String()
+	typedTarget := "/workbench?object=" + typed.Hash.String()
+
+	t.Run("interface-stored-link", func(t *testing.T) {
+		section := provenanceWalkSection(t, get(t, typedTarget))
+		href := "/workbench?object=" + schema.Hash.String()
+		if want := `<p>interface: <a href="` + href + `"`; !strings.Contains(section, want) {
+			t.Fatalf("walk missing stored interface link %q: %s", want, section)
+		}
+		get(t, href)
+	})
+
+	t.Run("interface-unstored-unavailable", func(t *testing.T) {
+		body := get(t, plainTarget)
+		iface := plain.InterfaceHash.String()
+		want := `<p>interface: <span class="unavailable" role="note">UNAVAILABLE: object ` + iface + ` is not stored</span></p>`
+		if section := provenanceWalkSection(t, body); !strings.Contains(section, want) {
+			t.Errorf("walk missing %q: %s", want, section)
+		}
+		if unwanted := `href="/workbench?object=` + iface + `"`; strings.Contains(body, unwanted) {
+			t.Errorf("unstored interface rendered as a link %q", unwanted)
+		}
+	})
+
+	t.Run("named-stops", func(t *testing.T) {
+		for _, target := range []string{plainTarget, typedTarget + "&payload=1"} {
+			section := provenanceWalkSection(t, get(t, target))
+			for _, want := range []string{
+				`<p>committedBy: <span class="unavailable" role="note">UNAVAILABLE: ` + objectCommittedByMissing + `</span></p>`,
+				`<p>referencedBy: <span class="unavailable" role="note">UNAVAILABLE: ` + objectReferencedByMissing + `</span></p>`,
+			} {
+				if !strings.Contains(section, want) {
+					t.Errorf("%s: walk missing named stop %q: %s", target, want, section)
+				}
+			}
+			if strings.Contains(section, "no provenance edges were supplied") {
+				t.Errorf("%s: daemon object page fell back to the render-layer stop: %s", target, section)
+			}
+		}
+	})
+
+	t.Run("edge-order", func(t *testing.T) {
+		// The walk is a fixed, ordered list (design §2a): interface, then
+		// committedBy, then referencedBy, each exactly once.
+		for _, target := range []string{plainTarget, typedTarget} {
+			section := provenanceWalkSection(t, get(t, target))
+			last := -1
+			for _, relation := range []string{"<p>interface: ", "<p>committedBy: ", "<p>referencedBy: "} {
+				if n := strings.Count(section, relation); n != 1 {
+					t.Fatalf("%s: %q occurs %d times, want 1: %s", target, relation, n, section)
+				}
+				at := strings.Index(section, relation)
+				if at <= last {
+					t.Errorf("%s: %q is out of order: %s", target, relation, section)
+				}
+				last = at
+			}
+		}
+	})
+
+	t.Run("never-blank", func(t *testing.T) {
+		for _, target := range []string{"/workbench", "/workbench?from=0&entry=0", plainTarget, typedTarget + "&payload=1"} {
+			section := provenanceWalkSection(t, get(t, target))
+			_, after, ok := strings.Cut(section, "</h2>")
+			if !ok || strings.TrimSpace(after) == "" {
+				t.Errorf("%s: provenance walk is a heading followed by nothing: %q", target, section)
+			}
+			if strings.Contains(section, "UNAVAILABLE: </span>") {
+				t.Errorf("%s: walk rendered a stop with an empty reason: %s", target, section)
+			}
+		}
+	})
+
+	t.Run("interface-store-error", func(t *testing.T) {
+		oldReads, oldErrLog := d.reads, d.errLog
+		defer func() { d.reads, d.errLog = oldReads, oldErrLog }()
+		d.reads = refFailingStore{readStore: oldReads, fail: schema.Hash}
+		d.errLog = &bytes.Buffer{}
+		// CONTROL: the same store serves a page whose walk does not read schema.
+		if rec := requestRecorder(t, d, http.MethodGet, plainTarget, nil); rec.Code != http.StatusOK {
+			t.Fatalf("control: %s status = %d, want 200; body=%s", plainTarget, rec.Code, rec.Body)
+		}
+		rec := requestRecorder(t, d, http.MethodGet, typedTarget, nil)
+		if rec.Code != http.StatusInternalServerError {
+			t.Fatalf("status = %d, want 500; body=%s", rec.Code, rec.Body)
+		}
+		if !strings.Contains(rec.Body.String(), ">Internal<") {
+			t.Errorf("body does not contain >Internal<: %s", rec.Body)
+		}
+	})
+}
