@@ -2,6 +2,7 @@
 
 - Status: **planned** (design only; nothing implemented) · Date: **2026-09-21** · Rows **92** (clause-5) and **93** (clause-4) · Filed at the attended grooming of 2026-09-21 (`72eace9`)
 - Scope: ONE doc for BOTH rows, deliberately. Clause 4 is the floor that proves clause 5's value is not paid for with resident-agent regression — they are two halves of one argument, and splitting them would double the review cost without separating any decision.
+- Revision 1 (quorum r1 objection): Conflict Surface section added
 
 ---
 
@@ -147,6 +148,40 @@ and this doc should not add another.
 
 ---
 
+## Conflict Surface
+
+> Phase B evaluates against the standard tier. This OVERLAPS with the existing mission-harness.
+> Phase B will strictly REUSE the existing harness rather than introducing a parallel benchmark
+> script.
+
+This is true and needs to be precise, because the word "harness" points at two different machines
+and only one of them is Phase B's.
+
+**Phase B reuses the fleet's agent-benchmark machinery — invoked, not forked.** The standard-tier
+benchmark set and the reference-agent arms run under `ailang eval --benchmark <name>` (one AI
+benchmark) and `ailang eval-suite --models <csv>` (the full suite), the same evaluation tooling
+this mission's clause-2 rows and the fleet's eval KPI already lean on. Phase B introduces **no
+parallel benchmark script**: nothing new that decides pass/fail or renders wall-clock is written
+and owned inside this repo. The pairing of the two arms (shell native tools vs World MCP transition
+tools) is an *invocation-layer* concern — which `-model` / `-benchmark` flags and models each arm
+passes into the existing suite — not a second runner. Reusing the harness is exactly what keeps
+Phase B a measurement of World, not a measurement of new tooling.
+
+**The other harness is out of Phase B's scope.** This repository's own benchmark machinery,
+`scripts/bench_worldd.sh` + `bench/BASELINE.md`, is a **non-vacuous daemon smoke benchmark**: it
+runs `go test -bench . -benchtime 1x` on `./host/daemon/` and validates the benchmark evidence
+blocks, measuring the daemon's wall-clock/load behavior (V7). It is not an agent benchmark runner
+and has nothing to say about shell-vs-World pass rates. It is explicitly **out of Phase B's scope**;
+Phase B neither edits it nor loads it, so the daemon-smoke gate and the clause-4 floor stay cleanly
+separate measurements.
+
+**Phase A (row 92) touches no benchmark machinery at all.** Its only executable surface is the
+provenance walk against the worldd daemon query API — harvesting, timing, and verifying answers to
+the mission's recorded questions. No `ailang eval`, no `bench_worldd`; nothing Phase B reuses is
+even started during the demonstration.
+
+---
+
 ## §8 Verification log
 
 | # | Claim | How verified | Result |
@@ -157,6 +192,8 @@ and this doc should not add another.
 | V4 | The three candidate questions are real and recorded | read the charter rows and mission log | rows 86 (index row), 78 (unfenced pi), 81 (faithfulness proof) |
 | V5 | `api_error` is a catch-all, not a model verdict | the fleet's own operating rule (CLAUDE.md instrument table) | confirms §6's dependency |
 | V6 | Stage A of the self-mod publish is green, so clause 7 is one attended step away | ran `build_world_package.sh` + `verify_world_package.sh` 2026-09-21 | **9/9 PASSED**, ready packet equals the committed golden byte-for-byte, projection reproduces with zero git drift |
+| V7 | This repo's benchmark machinery is a daemon smoke benchmark, not an agent runner: `scripts/bench_worldd.sh` + `bench/BASELINE.md`, running `go test -bench` on `./host/daemon/` | read `scripts/bench_worldd.sh` + `bench/BASELINE.md` at HEAD `2678c1f` | `bench_worldd.sh` invokes `go test -bench . -benchtime 1x -run '^$' ./host/daemon/` and validates benchmark evidence blocks (`BenchmarkStoreCommit`, `BenchmarkRESTCommit`, ...); BASELINE is the day-1 kernel/broker wall-clock budget — daemon-scoped, no agent scaffolding. **Measures daemon wall-clock/load; not an agent benchmark runner; out of Phase B's scope** |
+| V8 | Phase B's agent-benchmark machinery is the fleet's `ailang eval`/`eval-suite` | ran `ailang help` + `ailang eval run --help` at HEAD `2678c1f` | `ailang help` lists `eval — Benchmarks: run one, or a subcommand (suite, report, elo, ...)` and shows `ailang eval --benchmark fizzbuzz --mock` and `ailang eval-suite --models gpt5,claude-sonnet-4-6`; `eval run --help` exposes `-model` and `-benchmark`. Confirms arm pairing is an invocation-layer (flags/models) concern, not a parallel runner |
 
 **Not verified, and named as such:** the pre-World baseline COST for each of the three candidate
 questions. The record states what went wrong and how it was found; whether it states how long that
@@ -173,3 +210,4 @@ as unmeasured rather than estimated.
   recorded and applied to both arms.
 - **Proving superiority.** Clause 4 is non-inferiority by design.
 - **Clause 7.** Row 8's `SM.D` is a separate, attended, irreversible step.
+- **Writing a parallel benchmark runner.** §Conflict Surface: Phase B invokes the fleet's `ailang eval`/`eval-suite`; it does not fork them, and `scripts/bench_worldd.sh`/`bench/BASELINE.md` (daemon smoke) is out of scope.
