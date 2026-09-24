@@ -327,6 +327,10 @@ func BenchmarkRESTCommit(b *testing.B) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	current := genesis
 	samples := make([]time.Duration, 0, b.N)
+	// POST /v1/commit is session-gated (w-session-authority D6/D7): mint a
+	// live session once, outside the timed region, and send it on every POST
+	// so the benchmark exercises the real authenticated surface.
+	auth := authHeader(b, d)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		commit := testCommit(current, int64(i), fmt.Sprintf("rest-bench-%d", i))
@@ -336,6 +340,7 @@ func BenchmarkRESTCommit(b *testing.B) {
 			b.Fatalf("build POST: %v", err)
 		}
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", auth)
 		start := time.Now()
 		resp, err := client.Do(req)
 		if err != nil {

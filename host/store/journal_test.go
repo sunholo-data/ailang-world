@@ -841,6 +841,13 @@ var canonicalTableDDL = map[string]string{
     request_ref  TEXT NOT NULL,
     invocation_id TEXT NOT NULL UNIQUE
 )`,
+	"session_credentials": `CREATE TABLE session_credentials (
+    credential_id TEXT PRIMARY KEY,
+    episode_id   TEXT NOT NULL CHECK (episode_id <> ''),
+    grants_json  TEXT NOT NULL,
+    expires_at   INTEGER NOT NULL,
+    created_at   INTEGER NOT NULL
+)`,
 }
 
 // normalizeDDL collapses whitespace only; it does not lowercase, reorder,

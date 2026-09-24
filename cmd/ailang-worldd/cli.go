@@ -93,6 +93,49 @@ func execute(addr, method, path string, body io.Reader, stdout, stderr io.Writer
 	return reportResponse(path, status, data, stdout, stderr)
 }
 
+// doAuth is do with an optional Authorization header. It is the transport path a
+// session-gated commit uses (w-session-authority D7): once POST /v1/commit
+// requires a session credential, the CLI commit client must be able to present
+// its Bearer token.
+func (c *client) doAuth(ctx context.Context, method, path string, body io.Reader, auth string) (int, []byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, c.timeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, method, c.base+path, body)
+	if err != nil {
+		return 0, nil, fmt.Errorf("build %s %s%s: %w", method, c.base, path, err)
+	}
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if auth != "" {
+		req.Header.Set("Authorization", auth)
+	}
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return 0, nil, fmt.Errorf("%s %s%s: %w", method, c.base, path, err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	limited := io.LimitReader(resp.Body, maxClientResponseBytes+1)
+	data, err := io.ReadAll(limited)
+	if err != nil {
+		return resp.StatusCode, nil, fmt.Errorf("read %s%s response: %w", c.base, path, err)
+	}
+	if len(data) > maxClientResponseBytes {
+		return resp.StatusCode, nil, fmt.Errorf("response from %s%s exceeds %d bytes", c.base, path, maxClientResponseBytes)
+	}
+	return resp.StatusCode, data, nil
+}
+
+// executeWithAuth is execute for a session-bearing request.
+func executeWithAuth(addr, method, path string, body io.Reader, auth string, stdout, stderr io.Writer) int {
+	status, data, err := newClient(addr).doAuth(context.Background(), method, path, body, auth)
+	if err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd: %v\n", err)
+		return exitUsage
+	}
+	return reportResponse(path, status, data, stdout, stderr)
+}
+
 func runClientGet(addr, path string, args []string, stdout, stderr io.Writer) int {
 	if len(args) != 0 {
 		fmt.Fprintf(stderr, "ailang-worldd: unexpected argument %q\n", args[0])
@@ -176,6 +219,7 @@ func runCommit(addr string, args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("ailang-worldd commit", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	file := fs.String("file", "", "commit JSON file")
+	session := fs.String("session", "", "session credential (64-hex Bearer token) for the session-gated /v1/commit")
 	if err := fs.Parse(args); err != nil || len(fs.Args()) != 0 || *file == "" {
 		if *file == "" {
 			fmt.Fprintln(stderr, "ailang-worldd commit: --file is required")
@@ -201,5 +245,9 @@ func runCommit(addr string, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "ailang-worldd commit: commit file is empty")
 		return exitUsage
 	}
-	return execute(addr, http.MethodPost, "/v1/commit", bytes.NewReader(data), stdout, stderr)
+	if *session == "" {
+		// No session flag: unchanged path.
+		return execute(addr, http.MethodPost, "/v1/commit", bytes.NewReader(data), stdout, stderr)
+	}
+	return executeWithAuth(addr, http.MethodPost, "/v1/commit", bytes.NewReader(data), "Bearer "+*session, stdout, stderr)
 }

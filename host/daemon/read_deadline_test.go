@@ -778,20 +778,31 @@ func TestInternalErrorsAreSanitized(t *testing.T) {
 	t.Run("commit-route", func(t *testing.T) {
 		// POST /v1/commit's 500 is the one internal branch NOT on the read seam
 		// (it is store.Commit, the write path, which this item deliberately does
-		// not put behind an interface). Closing the store is how the existing
-		// suite already produces a real store failure on a live route, so this
-		// arm exercises the shipped branch with a REAL error rather than a fake.
+		// not put behind an interface). Because /v1/commit is now session-gated
+		// (w-session-authority D6/D7), the pre-M2 trick of CLOSING the store to
+		// force a write failure no longer works: a closed store fails the
+		// middleware's resolve first (401), never reaching the handler. We drive a
+		// genuine non-conflict store failure with a LIVE store instead — a
+		// session resolves fine, and handleCommit hands store.Commit a commit whose
+		// object payload does not match its declared hash, so store.Commit's
+		// content verification (verifyObject) returns a real internal error -> 500.
 		d := newHandlerDaemon(t)
+		auth := authHeader(t, d) // commit is session-gated; the session must resolve
 		genesis := seedGenesisEmbedded(t, d, "sanitize-commit")
-		payload := encodeCommit(testCommit(genesis, 1, "sanitize-commit"))
-		if err := d.store.Close(); err != nil {
-			t.Fatalf("close store: %v", err)
+		var req commitRequest
+		if err := json.Unmarshal(encodeCommit(testCommit(genesis, 1, "sanitize-commit")), &req); err != nil {
+			t.Fatalf("decode commit request: %v", err)
+		}
+		req.Objects[0].Payload = []byte("tampered-payload-not-matching-declared-hash")
+		tampered, err := json.Marshal(req)
+		if err != nil {
+			t.Fatalf("marshal tampered commit: %v", err)
 		}
 
 		var errLog bytes.Buffer
 		d.errLog = &errLog
 
-		rec := requestRecorder(t, d, http.MethodPost, "/v1/commit", bytes.NewReader(payload))
+		rec := requestRecorderAuth(t, d, auth, http.MethodPost, "/v1/commit", bytes.NewReader(tampered))
 		body := assertErrorClass(t, rec, http.StatusInternalServerError, "Internal")
 		if body.Error.Message != internalErrorMessage {
 			t.Errorf("commit 500 message = %q, want the fixed %q; body=%s",

@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -535,6 +536,28 @@ func (d *Daemon) handleRegistry(w http.ResponseWriter, r *http.Request) {
 // The daemon adds NO semantics: every ref is parsed at the boundary and the
 // assembled store.Commit is handed to the kernel unchanged.
 func (d *Daemon) handleCommit(w http.ResponseWriter, r *http.Request) {
+	// Session gate (w-session-authority D6/D7): the middleware guarantees a
+	// resolved binding is present for POST /v1/commit. Fail closed if one is
+	// absent — i.e. a caller that wired handleCommit directly without the
+	// middleware. The binding carries the session's EpisodeID + Caps and is the
+	// authorizing session context under which this commit lands.
+	//
+	// NOTE — deviation from the design's literal D7 pseudo-code, which wrote
+	// `broker.NewSession(d.store, binding.EpisodeID, binding.Caps, nil)`. A
+	// broker.Session is deliberately NOT constructed here: (1) the broker's
+	// structural gate TR.C (invoke_boundary_test.go) forbids Session
+	// construction outside host/broker, and host/daemon is not a broker owner;
+	// (2) residual R3 defers re-recording this commit through the Session's
+	// effect ledger to the row-40 consumer, so a session built here would be a
+	// dead no-op. The authority hop is already enforced: the middleware resolved
+	// the credential and stored the binding in context (D6); this read pins that
+	// boundary, and the store Commit below is unchanged. Self-reported in the
+	// M2 executor report.
+	if _, ok := authority.FromContext(r.Context()); !ok {
+		writeAPIError(w, authority.DenialAbsent.String(), "a session credential is required", http.StatusUnauthorized)
+		return
+	}
+
 	r.Body = http.MaxBytesReader(w, r.Body, maxCommitBytes)
 	defer func() { _ = r.Body.Close() }()
 

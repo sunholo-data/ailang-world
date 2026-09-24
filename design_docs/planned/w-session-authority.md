@@ -258,7 +258,7 @@ Each mutation: `cp <file> <file>.bak && sed -i '…' <file>; <run target test>`;
 | M3 | Remove the `now < expires_at` check at resolve (ignore expiry) | `TestResolve_ExpiryEnforced` | the expiry test mints `--ttl 1`, advances `now`, asserts `DenialExpired` (AC-M2-4). |
 | M4 | Mint prints/logs the token twice (duplicate print) | `TestMint_PrintsOnce` | asserts raw token appears exactly once in mint output (AC-M1-1). |
 | M5 | Revocation leaves the row (the `DELETE` is omitted — revoke becomes a no-op against the store) | `TestRevoke_DeletesRow` | asserts the row is absent post-revoke and resolve of a revoked token is `Unknown` (AC-M2-5). |
-| M6 | Fall back to reading `X-World-Session` when `Authorization` is absent | `TestNoAlternateHeader` | the carrier test sends only `X-World-Session` and demands `DenialAbsent` (AC-M2-6). |
+| M6 | Fall back to reading `X-World-Session` when `Authorization` is absent | `TestSessionMiddleware_NoAlternateHeaderFallback` (host/daemon) | the carrier test sends only `X-World-Session` through the full `Handler()` and demands 401 `SessionAbsent` (AC-M2-6). **Corrected evaluator round-2 (judge finding, reproduced first-party):** the mutation is only expressible at the MIDDLEWARE — the resolver receives a header VALUE and has no alternate-header concept by construction — so the plan's original sole-killer name `TestNoAlternateHeader` (resolver-level, feeds `Resolve("")`) stays green under it; the middleware test is the actual killer. Both tests stand: the resolver one pins the resolver-level absent contract. |
 | M7 (green control) | Reword a comment in the resolver (no behavior change) | **all tests stay green** | proves the mutant-detection matrix is not vacuously green. |
 
 ## §6 Conflict surface

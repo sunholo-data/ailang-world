@@ -94,3 +94,17 @@ CREATE TABLE IF NOT EXISTS approval_claims (
     request_ref  TEXT NOT NULL,
     invocation_id TEXT NOT NULL UNIQUE
 );
+
+-- SESSION credentials -> (episode, grants, expiry) — w-session-authority D2.
+-- This table is the inbound Authorization: Bearer credential boundary minted
+-- and resolved locally-first. credential_id stores ONLY sha256(token_hex) of
+-- the once-printed raw token (D3); the raw token is never persisted. The PK
+-- is the unique index a point lookup needs; there is NO secondary index and NO
+-- revoked column (D4 revokes by DELETE, making a revoked credential "unknown").
+CREATE TABLE IF NOT EXISTS session_credentials (
+    credential_id TEXT PRIMARY KEY,
+    episode_id   TEXT NOT NULL CHECK (episode_id <> ''),
+    grants_json  TEXT NOT NULL,
+    expires_at   INTEGER NOT NULL,
+    created_at   INTEGER NOT NULL
+);
