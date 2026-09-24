@@ -155,6 +155,9 @@ func TestWorkbenchRefusalBranches(t *testing.T) {
 		{"unknown-parameter", "/workbench?paylod=1", http.StatusBadRequest, "BadRequest", "unsupported workbench query parameter", nil},
 		{"duplicate-parameter", "/workbench?world=" + world + "&world=" + world, http.StatusBadRequest, "BadRequest", "duplicate workbench query parameter", nil},
 		{"unsupported-combination", "/workbench?from=0", http.StatusBadRequest, "BadRequest", "unsupported workbench parameter combination", nil},
+		{"unsupported-pair-world-from", "/workbench?world=" + world + "&from=0", http.StatusBadRequest, "BadRequest", "unsupported workbench parameter combination", nil},
+		{"unsupported-pair-world-payload", "/workbench?world=" + world + "&payload=1", http.StatusBadRequest, "BadRequest", "unsupported workbench parameter combination", nil},
+		{"unsupported-triple-world-object-payload", "/workbench?world=" + world + "&object=" + object + "&payload=1", http.StatusBadRequest, "BadRequest", "unsupported workbench parameter combination", nil},
 		{"malformed-payload", "/workbench?object=" + object + "&payload=true", http.StatusBadRequest, "BadRequest", "malformed payload flag", nil},
 		{"malformed-world", "/workbench?world=not-a-hash", http.StatusBadRequest, "BadRequest", "malformed world reference", nil},
 		{"absent-world", "/workbench?world=" + absentWorld, http.StatusNotFound, "NotFound", "world reference not found", nil},
@@ -213,6 +216,40 @@ func TestWorkbenchRefusalBranches(t *testing.T) {
 			assertWorkbenchSecurityHeaders(t, rec.Header())
 		}
 	})
+}
+
+// TestSupportedWorkbenchQueryTruthTable walks every subset of the five-key
+// vocabulary. The function reads only key presence and count, so these 32
+// subsets are its whole reachable domain: exactly five are accepted states.
+func TestSupportedWorkbenchQueryTruthTable(t *testing.T) {
+	keys := []string{"entry", "from", "object", "payload", "world"}
+	accepted := map[string]bool{"none": true, "world": true, "object": true, "entry+from": true, "object+payload": true}
+	seen := 0
+	for mask := 0; mask < 1<<len(keys); mask++ {
+		query := map[string][]string{}
+		var names []string
+		for i, key := range keys {
+			if mask&(1<<i) != 0 {
+				query[key] = []string{"x"}
+				names = append(names, key)
+			}
+		}
+		name := strings.Join(names, "+")
+		if name == "" {
+			name = "none"
+		}
+		if accepted[name] {
+			seen++
+		}
+		t.Run(name, func(t *testing.T) {
+			if got := supportedWorkbenchQuery(query); got != accepted[name] {
+				t.Fatalf("supportedWorkbenchQuery(%s) = %v, want %v", name, got, accepted[name])
+			}
+		})
+	}
+	if seen != len(accepted) {
+		t.Fatalf("accepted states enumerated = %d, want %d", seen, len(accepted))
+	}
 }
 
 func commitWorkbenchPayload(t *testing.T, d *Daemon, payload []byte, label string) hashref.HashRef {
