@@ -84,13 +84,13 @@ func TestWorkbenchRendersSeededWorldAndTimeline(t *testing.T) {
 		t.Fatalf("second Commit: %v", err)
 	}
 
-	// The observable is the log entry hash, NOT the committed object hash. The
-	// object hash reaches an EntryView only through TransitionRef, and the WB.B
-	// template renders no TransitionRef action at all (see the sprint plan's
-	// s7d) -- so asserting on the object hash here would be asserting on a
-	// value this route cannot emit. The entry hash is written by the timeline
-	// loop and by nothing else on the page, which is what makes it a pin on the
-	// mechanism rather than on a sibling channel.
+	// The observable is the log entry hash, NOT the committed object hash. On
+	// `/workbench` (no selection) the timeline rows render no edges, so the
+	// object hash reaches the page only through the selected entry's
+	// transitionRef edge -- pinned by TestWorkbenchSelectedEntry, not here. The
+	// entry hash is written by the timeline loop and by nothing else on this
+	// page, which is what makes it a pin on the mechanism rather than on a
+	// sibling channel.
 	entryHashes := make([]string, 0, 2)
 	for index := int64(0); index < 2; index++ {
 		entry, ok, err := d.store.GetLogEntry(context.Background(), index)
@@ -345,4 +345,126 @@ func assertWorkbenchSecurityHeaders(t *testing.T, header http.Header) {
 			t.Errorf("%s = %q, want %q", name, got, want)
 		}
 	}
+}
+
+// workbenchRegion returns the substring from start to the first end after it.
+func workbenchRegion(body, start, end string) (string, bool) {
+	i := strings.Index(body, start)
+	if i < 0 {
+		return "", false
+	}
+	j := strings.Index(body[i:], end)
+	if j < 0 {
+		return "", false
+	}
+	return body[i : i+j], true
+}
+
+const (
+	selectedEntryStart = `<article aria-label="selected entry">`
+	timelineStart      = `<section aria-label="timeline">`
+)
+
+// objectFailingStore fails GetObject only, so the entry-edge check is the one
+// read that errors while every log and world read still reaches the real store.
+type objectFailingStore struct {
+	readStore
+}
+
+func (objectFailingStore) GetObject(context.Context, hashref.HashRef) (store.Object, bool, error) {
+	return store.Object{}, false, errSentinelInternal
+}
+
+func TestWorkbenchSelectedEntry(t *testing.T) {
+	d := newHandlerDaemon(t)
+	genesis := seedGenesisEmbedded(t, d, "workbench-selected")
+	commit := testCommit(genesis, 0, "workbench-selected")
+	if err := d.store.Commit(commit); err != nil {
+		t.Fatalf("Commit: %v", err)
+	}
+	header := commit.Entry.Header
+	transitionRef := commit.Entry.TransitionRef.String()
+	transitionFn := header.TransitionFn.String()
+	interpreter := header.Interpreter.String()
+	// POSITIVE CONTROLS: the fixture must hold one stored and two unstored targets,
+	// or the stored/unstored arms below assert nothing.
+	for _, control := range []struct {
+		name string
+		ref  hashref.HashRef
+		want bool
+	}{
+		{"TransitionRef", commit.Entry.TransitionRef, true},
+		{"TransitionFn", header.TransitionFn, false},
+		{"Interpreter", header.Interpreter, false},
+	} {
+		if _, ok, err := d.store.GetObject(context.Background(), control.ref); err != nil || ok != control.want {
+			t.Fatalf("control GetObject(%s): ok=%v err=%v, want ok=%v", control.name, ok, err, control.want)
+		}
+	}
+
+	selectedBody := func(t *testing.T) string {
+		t.Helper()
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench?from=0&entry=0", nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200; body=%s", rec.Code, rec.Body)
+		}
+		article, ok := workbenchRegion(rec.Body.String(), selectedEntryStart, "</article>")
+		if !ok {
+			t.Fatalf("no selected-entry article in %s", rec.Body)
+		}
+		return article
+	}
+
+	t.Run("stored-edge-links", func(t *testing.T) {
+		article := selectedBody(t)
+		if want := `transitionRef: <a href="/workbench?object=` + transitionRef + `"`; !strings.Contains(article, want) {
+			t.Errorf("selected entry missing stored edge link %q: %s", want, article)
+		}
+	})
+
+	t.Run("unstored-edge-unavailable", func(t *testing.T) {
+		article := selectedBody(t)
+		for _, edge := range []struct{ relation, ref string }{{"transitionFn", transitionFn}, {"interpreter", interpreter}} {
+			want := edge.relation + `: <span class="unavailable" role="note">UNAVAILABLE: object ` + edge.ref + ` is not stored</span>`
+			if !strings.Contains(article, want) {
+				t.Errorf("selected entry missing %q: %s", want, article)
+			}
+		}
+		if unwanted := `href="/workbench?object=` + transitionFn + `"`; strings.Contains(article, unwanted) {
+			t.Errorf("unstored transitionFn rendered as a link %q", unwanted)
+		}
+	})
+
+	t.Run("row-select-link", func(t *testing.T) {
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench", nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status = %d, want 200; body=%s", rec.Code, rec.Body)
+		}
+		body := rec.Body.String()
+		if want := `href="/workbench?from=0&amp;entry=0">select entry 0</a>`; !strings.Contains(body, want) {
+			t.Errorf("timeline row missing select link %q", want)
+		}
+		if strings.Contains(body, `aria-label="selected entry"`) {
+			t.Error("/workbench with no entry= rendered a selected-entry article")
+		}
+	})
+
+	t.Run("object-store-error", func(t *testing.T) {
+		oldReads, oldErrLog := d.reads, d.errLog
+		defer func() { d.reads, d.errLog = oldReads, oldErrLog }()
+		d.reads = objectFailingStore{readStore: d.store}
+		d.errLog = &bytes.Buffer{}
+		// CONTROL: the same store serves the unselected page, so only the edge
+		// check can be what fails below.
+		if rec := requestRecorder(t, d, http.MethodGet, "/workbench", nil); rec.Code != http.StatusOK {
+			t.Fatalf("control: /workbench status = %d, want 200; body=%s", rec.Code, rec.Body)
+		}
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench?from=0&entry=0", nil)
+		if rec.Code != http.StatusInternalServerError {
+			t.Fatalf("status = %d, want 500; body=%s", rec.Code, rec.Body)
+		}
+		if !strings.Contains(rec.Body.String(), ">Internal<") {
+			t.Errorf("body does not contain >Internal<: %s", rec.Body)
+		}
+	})
 }
