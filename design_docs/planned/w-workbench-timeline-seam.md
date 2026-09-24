@@ -5,6 +5,7 @@
 - Scope: ONE doc for BOTH rows, as row 38 asks ("both touch the same `TimelineView`/`EntryView` seam in `render.go`, so designing them together is likely cheaper than twice"). The two rows are also one defect class seen from both ends: view-model fields the handler writes and the template never reads (35, `Truncated`, `Selected`), and template actions that read fields the handler never writes (`NextHref`/`PrevHref`).
 - Query grammar: **unchanged** (§4). `supportedWorkbenchQuery` stays byte-identical, so charter row 34's open hunks there are neither fixed nor moved.
 - Estimate: ~1 day, ~270 LOC including tests, three milestones (§8). Go-host only; no `.ail` changes.
+- Revision 1 (quorum r1, BLOCKED 3/3): I1 narrowed to the timeline and selected-entry regions, word for word as gpt6-astra asked. `emitted-links-resolve` now isolates those two DOM regions and requires ≥1 link in each category. The world-pane exclusion is measured (V15: the seeded world's `StateRoot` link returns 404, and R-c stays open). The gemini and glm objections were measured and refuted (V16, V17a/b). The design and code are unchanged. See §11.
 
 ---
 
@@ -298,8 +299,14 @@ new `context.Background()`.
 
 ### 3.4 Invariants this sprint makes persistent
 
-- **I1** Every `href` the workbench emits on a 200 page resolves to 200 when fetched. This covers
-  paging links, select links and stored-edge links. Pinned by `TestWorkbenchTimelinePaging/emitted-links-resolve`.
+- **I1** Every timeline paging link, timeline row-selection link, and stored-target link in the
+  selected-entry article resolves to 200 against an unchanged store, absent store errors or deadline
+  expiry. Existing world-pane and object-pane links are outside this invariant; R-c remains open.
+  Pinned by `TestWorkbenchTimelinePaging/emitted-links-resolve`. (The exclusion is measured, not
+  assumed: when no `?world` is given, `handleWorkbench` resolves the world from the selected head, so the
+  world pane renders on the paging pages too. On the seeded test world, its `StateRoot` link returns
+  **404** [V15]. A whole-page href sweep would therefore red at base because of R-c, not because of
+  this sprint.)
 - **I2** A missing edge target is `UNAVAILABLE`, never a link, and a store failure on the check is
   5xx, never `UNAVAILABLE`.
 - **I3** No `EntryView`, `TimelineView` or `Page` field goes unrendered unless it is on a named,
@@ -370,7 +377,7 @@ Each item is a command or a named test with its exact assertion. `export AILANG_
     `/head-page-has-next` — `GET /workbench` contains `href="/workbench?from=100&amp;entry=100">next</a>` and no `>previous</a>`;
     `/last-page-has-prev-no-next` — `GET /workbench?from=100&entry=100`: `strings.Count(body, "<h3>entry ")` = 5, contains `href="/workbench?from=0&amp;entry=0">previous</a>`, contains `href="/workbench?from=100&amp;entry=104">select entry 104</a>`, and no `>next</a>`;
     `/exactly-limit-no-next` — `GET /workbench?from=5&entry=5`: **control** `strings.Count(body, "<h3>entry ")` = 100 (so the old predicate `len == limit` holds), no `>next</a>` (F4), and contains `href="/workbench?from=0&amp;entry=0">previous</a>` (clamp 5−100 → 0);
-    `/emitted-links-resolve` — for each of the three pages above, extract every `href="(/workbench\?[^"]*)"`, replace `&amp;` with `&`, and GET each one: every status is 200. **Control:** each page yields ≥1 `from=` href.
+    `/emitted-links-resolve` (pins I1) — run on each of the three pages above. **Region isolation:** (i) the *timeline region* is the substring from `<section aria-label="timeline">` to the first `</section>` after it (the timeline section has nested `<article>`s but no nested `<section>`); (ii) the *selected-entry region* is the substring from `<article aria-label="selected entry">` to the first `</article>` after it (the article has nothing nested inside it). If the timeline start marker is missing, the test fails. On `/workbench` the selected-entry marker must be absent, and on the two `entry=`-bearing pages it must be present. Nothing outside these two regions is scanned, so the `<nav aria-label="world browser">` world link and the inspector/provenance-walk sections are excluded (I1; V15). **Classification, not filtering:** every `<a href="(/workbench\?[^"]*)"[^>]*>([^<]*)</a>` match inside a region is put in exactly one category: *paging* (timeline region, text `previous` or `next`), *select* (timeline region, text `select entry N`), or *stored-edge* (selected-entry region, href `/workbench?object=…`). A match that fits no category fails the test, and none is dropped. Each classified href has `&amp;` replaced with `&` and is fetched against the same unchanged store. Every status must be 200, and the failure message names the category and href. **Control (per category, over the three pages):** paging ≥1 (`/workbench` has `next`, the other two have `previous`), select ≥1 (every page has rows), stored-edge ≥1 (`?from=100&entry=100` and `?from=5&entry=5` each select a `testCommit` entry whose `TransitionRef` object is stored, V7b). A category with 0 links fails the test, so a region extractor that matches nothing cannot pass vacuously.
   - `TestWorkbenchNextLinkOverflowGuard` (daemon): `d.reads = denseLogStore{readStore: d.store}`, whose `GetLogEntry` returns a copy of stored entry 0 with `EntryIndex = index` for every `index ≥ 0`. `GET /workbench?from=9223372036854775707&entry=9223372036854775707` (= MaxInt64−100, the largest `from` that `:150` accepts) → 200 and no `>next</a>`. **Control:** `?from=9223372036854775607&entry=9223372036854775607` → 200 and contains `href="/workbench?from=9223372036854775707&amp;entry=9223372036854775707">next</a>`.
 - **AC5 — the grammar is byte-identical.** For each of `supportedWorkbenchQuery`, `acceptedWorkbenchKeys` and `TestWorkbenchRefusalBranches`: `diff <(git show origin/dev:host/daemon/workbench.go | sed -n '/^func supportedWorkbenchQuery/,/^}/p') <(sed -n '/^func supportedWorkbenchQuery/,/^}/p' host/daemon/workbench.go)` → rc=0, and likewise with `/^var acceptedWorkbenchKeys/,/^}/` on `workbench.go` and `/^func TestWorkbenchRefusalBranches/,/^}/` on `workbench_test.go`.
 - **AC6 — the dead fields are gone and the dead reads are fed.** `grep -rnw --include='*.go' Truncated host/workbench host/daemon | wc -l` → `0` (control: `grep -rn --include='*.go' PayloadTruncated host | wc -l` ≥ `3`); `grep -cE '^\s+(TransitionFn|Interpreter|TransitionRef)\s+EdgeView' host/workbench/render.go` → `0` (control: `grep -cE '^\s+Edges\s+\[\]EdgeView' host/workbench/render.go` → `2`); `grep -cE 'Timeline\.(NextHref|PrevHref) = ' host/daemon/workbench.go` → `2`; `grep -c 'Selected' host/workbench/render.go` ≥ `2`.
@@ -403,7 +410,7 @@ compiles. "Killer" names the one test that must red. Other tests may also red.
 | H3 | workbench.go · next check | replace the check with `if len(page.Timeline.Entries) == limit {` (the old predicate) | `TestWorkbenchTimelinePaging/exactly-limit-no-next` |
 | H4 | workbench.go · next check | `if next <= math.MaxInt64-int64(limit) {` → `if true {` | `TestWorkbenchNextLinkOverflowGuard` |
 | H5 | workbench.go · prev check | delete `page.Timeline.PrevHref = pageHref(prev, prev)` | `TestWorkbenchTimelinePaging/last-page-has-prev-no-next` |
-| H6 | workbench.go · prev check | delete `if prev < 0 { prev = 0 }` | `TestWorkbenchTimelinePaging/exactly-limit-no-next` (expects `from=0` previous) |
+| H6 | workbench.go · prev check | delete `if prev < 0 { prev = 0 }` | `TestWorkbenchTimelinePaging/exactly-limit-no-next`. The killer input is `from=5` < `limit=100`, a state the grammar accepts because `from` is any non-negative integer parsed at `:136-147` [V17b]. Unclamped, `prev = −95` and `GetLogEntry(−95)` returns `ok=false`, so no previous link renders. The test expects `href="/workbench?from=0&amp;entry=0">previous</a>` |
 | H7 | workbench.go · prev check | `if from > 0 {` → `if true {` | `TestWorkbenchTimelinePaging/head-page-has-next` (asserts no previous) |
 | H8 | workbench.go · `pageHref` | return `"?from=" + strconv.FormatInt(from, 10)` (drop `&entry=`) | `TestWorkbenchTimelinePaging/emitted-links-resolve` (400 on fetch) |
 | H9 | workbench.go · `entryEdges` | delete the `if !ok { …; continue }` block | `TestWorkbenchSelectedEntry/unstored-edge-unavailable` |
@@ -451,7 +458,8 @@ measured and is for the controller to file or drop. This doc does not file them.
   entry's edges are the page's only working provenance hop.
 - **R-c (row candidate) — the world's `StateRoot` edge is `Available: true` without checking the
   target** (`workbench.go:201`). This is the F6 pattern on the world pane. `testCommit`'s state
-  roots are unstored hashes.
+  roots are unstored hashes, and the link returns 404 on the paging pages themselves [V15]. That is
+  why I1 and `emitted-links-resolve` exclude the world pane explicitly (revision 1).
 - Carrying the current selection across paging (§2b). A newest-first/head-anchored timeline (§2a).
   The timeline stopping at the first index gap in a non-contiguous log (existing behaviour, original
   design §3.2). Combining `world=` with timeline paging (paging links carry no `world`, and the
@@ -490,3 +498,17 @@ All commands were run in this worktree at `82e3630` on 2026-09-24. Template coun
 | V12 | `from` alone is refused today and tested | `grep -n 'unsupported-combination' host/daemon/workbench_test.go` | `:156` `"/workbench?from=0"` → 400 |
 | V13 | Row 34's grammar hunks sit at `:69`/`:72`/`:75`, above every line this sprint edits | `sed -n 62,76p host/daemon/workbench.go` | confirmed; the first edited line is `:101` (`entryView`) |
 | V14 | `failingStore` fails every method, so it cannot isolate the edge check | `grep -n 'func (failingStore)' host/daemon/read_deadline_test.go` | 5 methods overridden (`:697-713`), hence the new `objectFailingStore` |
+| V15 | (r1) The world pane's `StateRoot` link on the paging pages returns 404, so I1 excludes it (R-c) | throwaway `host/daemon/zz_probe_r1_test.go` (run, then **deleted**; not in the diff): `newHandlerDaemon` + `seedGenesisEmbedded(…, "probe")` + one `testCommit(genesis, 0, "probe")`. For `GET /workbench` and `GET /workbench?from=0&entry=0`, extract the `<a href="/workbench?object=…"` inside `<nav aria-label="world browser">`, call `d.store.GetObject` on its ref, then GET the href. `AILANG_BIN=~/.pinned-ailang/ailang go test ./host/daemon -run TestZZProbeStateRoot -count=1 -v` | on both pages: page status `200`, world `sha256:dde9258f…57e3` (the head, resolved with no `?world`), href `/workbench?object=sha256:ad312da4…f170` (= `commit.NextWorld.StateRoot`, `isCommitStateRoot=true`), `GetObject` `ok=false err=<nil>`, GET status **`404`**. The probe test PASSed only as a logger, then was removed (`git status --short` clean). Run at `919a10b`, whose `host/` tree is identical to `82e3630` (`git diff --stat 82e3630 919a10b -- host` is empty) |
+| V16 | (r1, gemini) `entryEdges`' ref fields are `hashref.HashRef` on the store types it reads. The `string` fields cited are a JSON wire struct | `sed -n 112,128p host/store/store.go`; `sed -n 149,157p host/store/journal.go` | `LogHeader`: `TransitionFn   hashref.HashRef` (`:115`), `Interpreter    hashref.HashRef` (`:116`); `LogEntry`: `TransitionRef hashref.HashRef` (`:128`). The `string`-typed `TransitionFn`/`TransitionRef`/`Interpreter` at `journal.go:155-157` are fields of `type intentWire struct` (`:149`, JournalIntent's JSON wire form), not `store.LogEntry` |
+| V17a | (r1, glm) `"math"` is already imported and used in `workbench.go` | `sed -n 3,13p host/daemon/workbench.go`; `grep -n math host/daemon/workbench.go` | import block line `:7` `"math"`; use at `:150` `if from > math.MaxInt64-int64(limit) {` |
+| V17b | (r1, glm) The prev clamp is reachable: `0 < from < limit` is an accepted state | `sed -n 136,150p host/daemon/workbench.go` | `from` is `strconv.ParseInt` of any `?from=` text, refused only if `< 0` (`:136-147`) or `> MaxInt64−limit` (`:150`). With `limit = 100`, `?from=5&entry=5` passes both, so `prev = 5−100 < 0` is reached. It is AC4's `/exactly-limit-no-next` input and H6's killer |
+
+---
+
+## §11 Quorum log
+
+| Round | Reviewer | Verdict | Objection (one line) | Disposition |
+|---|---|---|---|---|
+| r1 | gpt6-astra | reject | I1 ("every href on a 200 page resolves") and `emitted-links-resolve` contradict the deferred R-c. The world-pane `StateRoot` link is emitted `Available: true` without a check and renders on the paging pages | **Upheld; applied verbatim.** I1 replaced with the reviewer's text (§3.4). `emitted-links-resolve` now scans only the timeline section and the selected-entry article, and requires ≥1 link per category (AC4). The exclusion is substantiated by V15 (404) |
+| r1 | gemini-3-1-pro | reject | `entryEdges` assigns `string` fields to a `hashref.HashRef` | **Refuted, V16.** gemini r1 objection refuted: `store.LogHeader.TransitionFn`/`.Interpreter` and `store.LogEntry.TransitionRef` are `hashref.HashRef` (`store.go:115,116,128`). The `string` fields cited are `intentWire`, the journal's JSON wire struct (`journal.go:149-157`). No change |
+| r1 | oc-glm-5-2 | reject | (a) `math` is not imported for the next-probe guard; (b) the prev clamp `prev < 0 → 0` is unreachable | **Refuted on both halves, V17a/V17b.** glm r1 objection refuted: (a) `"math"` is imported at `workbench.go:7` and used at `:150`; (b) `from` is any non-negative parsed integer (`:136-147`), so `?from=5&entry=5` (from=5 < limit=100) is accepted, reaches the clamp, and is H6's killer (`/exactly-limit-no-next`). No change |
