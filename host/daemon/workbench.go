@@ -302,6 +302,33 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 		view.SelectHref = pageHref(from, view.EntryIndex)
 		page.Timeline.Entries = append(page.Timeline.Entries, view)
 	}
+	// Probe, don't infer: a paging link is emitted only after this request has
+	// read the entry it selects, so every emitted paging link resolves.
+	next := from + int64(limit)             // cannot overflow: the from bound above refused from > MaxInt64-limit
+	if next <= math.MaxInt64-int64(limit) { // the link's own from must pass that bound on the next request
+		_, ok, err := d.reads.GetLogEntry(ctx, next)
+		if err != nil {
+			d.writeWorkbenchStoreError(w, r, ctx, err)
+			return
+		}
+		if ok {
+			page.Timeline.NextHref = pageHref(next, next)
+		}
+	}
+	if from > 0 {
+		prev := from - int64(limit)
+		if prev < 0 {
+			prev = 0
+		}
+		_, ok, err := d.reads.GetLogEntry(ctx, prev)
+		if err != nil {
+			d.writeWorkbenchStoreError(w, r, ctx, err)
+			return
+		}
+		if ok {
+			page.Timeline.PrevHref = pageHref(prev, prev)
+		}
+	}
 
 	_ = workbench.Render(w, page)
 }
