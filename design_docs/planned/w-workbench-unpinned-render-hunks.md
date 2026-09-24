@@ -6,7 +6,7 @@
 - Revision 1 (quorum r1: astra REJECT upheld — counts; glm REJECT refuted by measurement; gemini PASS): every prose mutant total is corrected to agree with the transcripts and the §7 table. There are 56 mutants, not 55: 36 were killed before this sprint, and 55 non-equivalent mutants must be killed after it. The table and the drill were already right; only the totals in the text were off by one. The ancestry of `9574d08` and the absence of any in-flight overlap are now measured (V20). See §11.
 - Revision 2 (quorum r2: gemini-3-1-pro PASS, oc-glm-5-2 PASS, gpt6-astra REJECT with a concrete `proposed_fix`; narrow-refinement carve-out, controller-applied, the reviewer's fix verbatim): `TestRenderGradeWithoutVerdictClaim` now also rejects `class="verdict-` and `aria-label="test verdict` anywhere in the rendered page; new mutation-control row **V10** (an unconditional PASS span appended after the grade paragraph) SURVIVES the r1 prototype and pristine `fd99840`, and is killed by both subtests (V21); I3 is scoped to the constructor-produced grade states the tests cover. Totals are now **57** mutants: **36** killed before, **21** survive before, **56** killed after, Q17 survives. See §11.
 - Query grammar: **unchanged** (§4). The accepted-state set is correct; it was only unpinned.
-- Estimate: **~0.25 day, ~90 LOC, tests only.** The figure comes from a prototype written, run and deleted at design time: +84 insertions across 2 test files, `go vet ./...` rc=0, `go test ./...` rc=0, and all 19 targeted mutants killed (V14, V15). Two milestones (§8).
+- Estimate: **~0.25 day, ~90 LOC, tests only.** The figure comes from a prototype written, run and deleted at design time: +84 insertions across 2 test files at r1 (**+90** after the r2 negative assertion, measured by the planner: 37 in `workbench_test.go`, 53 in `render_test.go`), `go vet ./...` rc=0, `go test ./...` rc=0, and all 19 targeted mutants killed (V14, V15). Two milestones (§8).
 
 ---
 
@@ -192,7 +192,7 @@ does (V15).
 ### (f) Sole killers.
 
 At subtest granularity the new tests are the **only** killers for H3, H4, W5, W8, V2, V4, V6, V7,
-V9 (the measured red set is that one test, plus its parent when the killer is a subtest), Q19 and Q27 (truth-table subtests only). For H5–H7,
+V9, V10 (the measured red set is that one test, plus its parent when the killer is a subtest), Q19 and Q27 (truth-table subtests only). For H5–H7,
 Q18, Q20, Q23, Q26 and Q30, the truth table is the named killer, and the §2b HTTP witnesses
 co-kill some of them. That co-killing is deliberate: it is defence in depth for the wiring, not
 redundancy that hides a gap. §7 gives the measured red-set size for every row.
@@ -495,7 +495,7 @@ Each milestone ends green on AC1 and AC2.
 | M | Content | ~LOC | Exit |
 |---|---|---|---|
 | **M1 — the grammar** | `workbench_test.go`: `TestSupportedWorkbenchQueryTruthTable` and the three `TestWorkbenchRefusalBranches` rows (§3.1) | ~37 | AC1, AC2; H5–H7, Q17–Q20, Q23, Q26, Q27, Q30 drilled |
-| **M2 — href and grade line** | `render_test.go`: the `/pass` render arm, `TestRenderGradeWithoutVerdictClaim`, `TestWorkbenchHrefAppendsOnlyQueryStrings` (§3.2) | ~47 | AC1–AC7; all 56 rows drilled |
+| **M2 — href and grade line** | `render_test.go`: the `/pass` render arm, `TestRenderGradeWithoutVerdictClaim`, `TestWorkbenchHrefAppendsOnlyQueryStrings` (§3.2) | ~53 (measured, r2) | AC1–AC7; all 57 rows drilled |
 
 ---
 
