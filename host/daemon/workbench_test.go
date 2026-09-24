@@ -867,6 +867,25 @@ func TestWorkbenchObjectProvenanceWalk(t *testing.T) {
 		}
 	})
 
+	t.Run("edge-order", func(t *testing.T) {
+		// The walk is a fixed, ordered list (design §2a): interface, then
+		// committedBy, then referencedBy, each exactly once.
+		for _, target := range []string{plainTarget, typedTarget} {
+			section := provenanceWalkSection(t, get(t, target))
+			last := -1
+			for _, relation := range []string{"<p>interface: ", "<p>committedBy: ", "<p>referencedBy: "} {
+				if n := strings.Count(section, relation); n != 1 {
+					t.Fatalf("%s: %q occurs %d times, want 1: %s", target, relation, n, section)
+				}
+				at := strings.Index(section, relation)
+				if at <= last {
+					t.Errorf("%s: %q is out of order: %s", target, relation, section)
+				}
+				last = at
+			}
+		}
+	})
+
 	t.Run("never-blank", func(t *testing.T) {
 		for _, target := range []string{"/workbench", "/workbench?from=0&entry=0", plainTarget, typedTarget + "&payload=1"} {
 			section := provenanceWalkSection(t, get(t, target))
