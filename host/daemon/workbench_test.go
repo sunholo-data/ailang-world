@@ -642,3 +642,51 @@ func TestWorkbenchNextLinkOverflowGuard(t *testing.T) {
 		t.Errorf("control: missing next link %q", want)
 	}
 }
+
+// probeFailingStore fails GetLogEntry at exactly one index, so a paging probe
+// can be made to error while every timeline row read still succeeds.
+type probeFailingStore struct {
+	readStore
+	failAt int64
+}
+
+func (s probeFailingStore) GetLogEntry(ctx context.Context, index int64) (store.LogEntry, bool, error) {
+	if index == s.failAt {
+		return store.LogEntry{}, false, errSentinelInternal
+	}
+	return s.readStore.GetLogEntry(ctx, index)
+}
+
+func TestWorkbenchPagingProbeStoreError(t *testing.T) {
+	d := newHandlerDaemon(t)
+	seedWorkbenchLog(t, d, 105)
+	for _, tc := range []struct {
+		name   string
+		path   string
+		failAt int64
+	}{
+		// /workbench reads rows 0-99; only the next probe reads entry 100.
+		{"next-probe", "/workbench", 100},
+		// from=5 reads rows 5-104 and probes 105 (absent); only the previous probe reads entry 0.
+		{"prev-probe", "/workbench?from=5&entry=5", 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			oldReads, oldErrLog := d.reads, d.errLog
+			defer func() { d.reads, d.errLog = oldReads, oldErrLog }()
+			d.errLog = &bytes.Buffer{}
+			// CONTROL: failing an index no read touches leaves the page at 200.
+			d.reads = probeFailingStore{readStore: d.store, failAt: 1 << 40}
+			if rec := requestRecorder(t, d, http.MethodGet, tc.path, nil); rec.Code != http.StatusOK {
+				t.Fatalf("control: %s status = %d, want 200; body=%s", tc.path, rec.Code, rec.Body)
+			}
+			d.reads = probeFailingStore{readStore: d.store, failAt: tc.failAt}
+			rec := requestRecorder(t, d, http.MethodGet, tc.path, nil)
+			if rec.Code != http.StatusInternalServerError {
+				t.Fatalf("%s with entry %d failing: status = %d, want 500; body=%s", tc.path, tc.failAt, rec.Code, rec.Body)
+			}
+			if !strings.Contains(rec.Body.String(), ">Internal<") {
+				t.Errorf("body does not contain >Internal<: %s", rec.Body)
+			}
+		})
+	}
+}

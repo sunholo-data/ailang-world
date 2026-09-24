@@ -1122,3 +1122,12 @@ against the sprint's `:70-77`. Row 34's next drill must re-anchor by content (+1
 No code deviation. The §0 P1/P2/P3 corrections (H9, H3, H14 moved to M3) were applied as the plan
 prescribes. Nothing else was changed: no `.ail`, no `tools/launchd/*`, no `.claude/`, and the three
 un-gofmt'd base files were not touched.
+
+### Controller addendum (iteration 184, after the judge)
+
+The evaluator (`sonnet`, own worktree @ `88855dd`, **PASS 95/100, zero blocking**) found two survivors of its own
+choosing: `if err != nil` → `if false && err != nil` on the next-probe and on the prev-probe `GetLogEntry` (M3). The
+shipped code was correct; nothing pinned it. The controller added `TestWorkbenchPagingProbeStoreError`
+(`probeFailingStore` fails exactly one index; per-subtest control fails an unread index → 200). Measured: with
+the test present, each mutant lands (1 occurrence), compiles, and reds **only** `TestWorkbenchPagingProbeStoreError`
+in `./host/workbench ./host/daemon`; restored byte-identical by sha256. Test-only delta; no production change.
