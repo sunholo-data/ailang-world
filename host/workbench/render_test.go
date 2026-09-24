@@ -81,6 +81,10 @@ func TestGradeViewRequiresTestVerdict(t *testing.T) {
 		if rendered := body.String(); !strings.Contains(rendered, "TESTED") || !strings.Contains(rendered, "verdict: FAIL") || !strings.Contains(rendered, `aria-label="test verdict FAIL"`) {
 			t.Fatalf("rendered test grade and verdict = %q", rendered)
 		}
+		want := `<p><span>TESTED</span> <span class="verdict-fail" aria-label="test verdict FAIL">✗ verdict: FAIL</span></p>`
+		if rendered := body.String(); !strings.Contains(rendered, want) || strings.Contains(rendered, `aria-label="test verdict PASS"`) {
+			t.Fatalf("rendered FAIL verdict, want %q in %q", want, rendered)
+		}
 	})
 
 	t.Run("pass", func(t *testing.T) {
@@ -92,7 +96,60 @@ func TestGradeViewRequiresTestVerdict(t *testing.T) {
 		if view.Label != GradeTESTED || view.Verdict != VerdictPass || !view.HasVerdict {
 			t.Fatalf("view = %+v", view)
 		}
+		var body bytes.Buffer
+		if err := Render(&body, Page{Title: "test", Object: &ObjectView{Grade: view}}); err != nil {
+			t.Fatal(err)
+		}
+		want := `<p><span>TESTED</span> <span class="verdict-pass" aria-label="test verdict PASS">✓ verdict: PASS</span></p>`
+		if rendered := body.String(); !strings.Contains(rendered, want) || strings.Contains(rendered, `aria-label="test verdict FAIL"`) {
+			t.Fatalf("rendered PASS verdict, want %q in %q", want, rendered)
+		}
 	})
+}
+
+func TestRenderGradeWithoutVerdictClaim(t *testing.T) {
+	proven, err := NewGradeView(GradePROVEN, "", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name  string
+		grade GradeView
+		want  string
+	}{
+		{"no-verdict", proven, `<p><span>PROVEN</span></p>`},
+		{"unavailable", NewGradeUnavailable("no canonical host projection"), `<p>GRADE UNAVAILABLE — no canonical host projection</p>`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var body bytes.Buffer
+			if err := Render(&body, Page{Title: "test", Object: &ObjectView{Grade: tc.grade}}); err != nil {
+				t.Fatal(err)
+			}
+			rendered := body.String()
+			if !strings.Contains(rendered, tc.want) {
+				t.Fatalf("rendered grade, want %q in %q", tc.want, rendered)
+			}
+			for _, claim := range []string{`class="verdict-`, `aria-label="test verdict`} {
+				if strings.Contains(rendered, claim) {
+					t.Fatalf("grade without a verdict rendered a verdict claim %q in %q", claim, rendered)
+				}
+			}
+		})
+	}
+}
+
+func TestWorkbenchHrefAppendsOnlyQueryStrings(t *testing.T) {
+	for _, tc := range []struct{ in, want string }{
+		{"", "/workbench"},
+		{"?object=abc", "/workbench?object=abc"},
+		{"object=abc", "/workbench"},
+		{"//evil.example/x", "/workbench"},
+		{"javascript:alert(1)", "/workbench"},
+	} {
+		if got := workbenchHref(tc.in); got != tc.want {
+			t.Errorf("workbenchHref(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
 }
 
 func TestRenderEscapesAllObjectText(t *testing.T) {
