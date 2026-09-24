@@ -1,0 +1,44 @@
+{
+  "observedHead": "sha256:749fc1728b737e8764d5ce09a70ed51a7693ab184f60c6190bccde1026534457",
+  "objects": [
+    {
+      "hash": "sha256:722751941829c9165764b76d78d435f83ea7ef3aeadd573c7b29d4fdaf629d2b",
+      "interfaceHash": "sha256:8dc8c03857020a11a4c39f31616c82de40a553548b1cfc4a6b4bb54d2537294f",
+      "semanticId": "world/mission/incident/iter181-ci-bench-401",
+      "provenance": "w-prove-1-0-phase-a",
+      "payload": "eyJxdWVzdGlvbiI6IldoeSBkaWQgUFIgIzE0MSdzIHJlbW90ZSBDSSBnbyByZWQgb24gYEJlbmNobWFya1JFU1RDb21taXRgIHdoZW4gZXZlcnkgbG9jYWwgZ2F0ZSB3YXMgZ3JlZW4/IiwiYW5zd2VyIjoiYTAzNjA2MiBpcyBhbiBhbmNlc3RvciBvZiBiYXNlIGFuZCBpdHMgZGlmZiBhZGRzIGByZXEuSGVhZGVyLlNldChcIkF1dGhvcml6YXRpb25cIiwgYXV0aClgIHRvIGJlbmNoX3Rlc3QuZ28g4oCUIHRoZSBiZW5jaCBwcmVkYXRlZCB0aGUgc2Vzc2lvbiBnYXRlIGFuZCBQT1NUZWQgdG8gdGhlIG5vdy1wcm90ZWN0ZWQgL3YxL2NvbW1pdCB1bmF1dGhlbnRpY2F0ZWQsIDQwMSAodGhlIG1pZGRsZXdhcmUgd29ya2luZyBhcyBkZXNpZ25lZCkuIiwiZGlhZ25vc2VkX2F0IjoiMjAyNi0wOS0yNCIsInNvdXJjZXMiOlsic2hhMjU2OjQzYmMxNGRlOTkzMjA0ZjgwYmNiNjJiZWFiYTkzZmQ2ZjViZjc5NDAxMDhhZDgyYzI5ZWJmYjVmYTBmMzViMDMiLCJzaGEyNTY6NDgzMTExZjRjNDQxMDg1YTljZDllZGU1MmYyMTIxODg4NGQ3Y2RlNmEwMWJlN2QyY2JmNTVlMWQyMDNjNDNhMyJdfQ=="
+    },
+    {
+      "hash": "sha256:43bc14de993204f80bcb62beaba93fd6f5bf7940108ad82c29ebfb5fa0f35b03",
+      "interfaceHash": "sha256:45c71bfd3c3fc4ab746413ea5a8607d44fc9c5a8e00e1ff5700996757d9dd20a",
+      "semanticId": "world/mission/evidence/iter181-ci-bench-401/0",
+      "provenance": "w-prove-1-0-phase-a",
+      "payload": "eyJraW5kIjoiY29tbWl0IiwicmVmIjoiZ2l0IGEwMzYwNjIiLCJjaGVjayI6ImdpdCBzaG93IGEwMzYwNjIgLS0gaG9zdC9kYWVtb24vYmVuY2hfdGVzdC5nbyB8IGdyZXAgLWMgJ3JlcS5IZWFkZXIuU2V0KFwiQXV0aG9yaXphdGlvblwiLCBhdXRoKScgPj0gMSIsImV4Y2VycHQiOiJgYTAzNjA2MmAgaXMgYW4gYW5jZXN0b3Igb2YgYmFzZSBhbmQgaXRzIGRpZmYgYWRkcyBgcmVxLkhlYWRlci5TZXQoXCJBdXRob3JpemF0aW9uXCIsIGF1dGgpYCB0byBgYmVuY2hfdGVzdC5nb2Ag4oCUIHRoZSBiZW5jaCBwcmVkYXRlZCB0aGUgc2Vzc2lvbiBnYXRlIGFuZCA0MDEnZC4ifQ=="
+    },
+    {
+      "hash": "sha256:483111f4c441085a9cd9ede52f21218884d7cde6a01be7d2cbf55e1d203c43a3",
+      "interfaceHash": "sha256:3086fadea53b17252d066f33222727e9c8f1d2793cdee4df92a890244a24bdaa",
+      "semanticId": "world/mission/evidence/iter181-ci-bench-401/1",
+      "provenance": "w-prove-1-0-phase-a",
+      "payload": "eyJraW5kIjoic3RhdHVzIiwicmVmIjoid29ybGQtbWlzc2lvbi5tZCBTVEFUVVMgMjAyNi0wOS0yNCAoaXRlci0xODEpIiwiY2hlY2siOiJncmVwIFwiYmVuY2ggcHJlZGF0ZXMgdGhlIHNwcmludFwiIHdvcmxkLW1pc3Npb24ubWQiLCJleGNlcnB0IjoicmVtb3RlIENJIG9uIFBSICMxNDEgdGhlbiBjYXVnaHQgd2hhdCBldmVyeSBsb2NhbCBnYXRlIG1pc3NlZCDigJQgYEJlbmNobWFya1JFU1RDb21taXRgIFBPU1RpbmcgdG8gdGhlIG5vdy1wcm90ZWN0ZWQgYC92MS9jb21taXRgIHVuYXV0aGVudGljYXRlZCAoNDAxOiB0aGUgbWlkZGxld2FyZSB3b3JraW5nIGFzIGRlc2lnbmVkOyB0aGUgYmVuY2ggcHJlZGF0ZXMgdGhlIHNwcmludCBhbmQgd2FzIG5vdCBpbiB0aGUgcGxhbidzIGxvY2FsIGdhdGUgbGlzdCkuIn0="
+    }
+  ],
+  "nextWorld": {
+    "ref": "sha256:ef2d72ebf335c265f47efcaf29a1f469349e593700d9d1f9e0a6fa4064f135aa",
+    "revision": 3,
+    "stateRoot": "sha256:2c0a7769fdce54d7f7e685ca92af7432408915aff95cbbd05f0556e6ac031875",
+    "logHead": "sha256:23a8b9bb7e62b98c11543a9fbb66031fd791e458d033584a6e7055cfce29070f"
+  },
+  "entry": {
+    "header": {
+      "entryIndex": 3,
+      "semanticsEpoch": 1,
+      "transitionFn": "sha256:5e670bae3ff5816cd7f6faed983dd61e2942d5b0268a3c66a53a9ea6bc1d3f1d",
+      "interpreter": "sha256:1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+      "prevEntryHash": "sha256:af33ffe45e6a0dc099020337ebbce65f762564684d719161df2e49008c8d9e28",
+      "writtenBy": "w-prove-1-0-phase-a"
+    },
+    "entryHash": "sha256:23a8b9bb7e62b98c11543a9fbb66031fd791e458d033584a6e7055cfce29070f",
+    "transitionRef": "sha256:722751941829c9165764b76d78d435f83ea7ef3aeadd573c7b29d4fdaf629d2b"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "observedHead": "",
+  "objects": [
+    {
+      "hash": "sha256:c07048332f5cd09d5d632a1059941f56ba1aa2914846f9be1c5228d6979d6206",
+      "interfaceHash": "sha256:c604ef41412830eae9cead714250e42c65accb445d92888387c25da902fd6a42",
+      "semanticId": "world/mission/incident/iter171-index-row",
+      "provenance": "w-prove-1-0-phase-a",
+      "payload": "eyJxdWVzdGlvbiI6IldoeSBkaWQgaXRlcmF0aW9uIDE3MSBoYXZlIGEgZnVsbCBsb2cgZW50cnkgYW5kIG5vIGluZGV4IHJvdz8iLCJhbnN3ZXIiOiJUaGUgcGlubmVkIHYwLjMwLjAgYmluYXJ5IGxhY2tzIHRoZSBtaXNzaW9uIGNvbW1hbmQgZ3JvdXA6IGBhaWxhbmcudjAuMzAuMCBtaXNzaW9uIHJvdGF0ZS1sb2cgd29ybGQgLS1rZWVwIDMxYCBwcmludHMgYEVycm9yOiB1bmtub3duIGNvbW1hbmQgJ21pc3Npb24nYDsgdGhlIGluZGV4IGhvbGUgaXMgdmlzaWJsZSBpbiBnaXQgaGlzdG9yeSBvZiB3b3JsZC1taXNzaW9uLWluZGV4Lm1kICh0aGUgcm93IGV4aXN0cyB0b2RheSBiZWNhdXNlIGl0IHdhcyBhZGRlZCBtYW51YWxseSBhZnRlciB0aGUgaXRlci0xNzIgcnVsZSkuIiwiZGlhZ25vc2VkX2F0IjoiMjAyNi0wOS0wOCIsInNvdXJjZXMiOlsic2hhMjU2OjAwNmU1YzZkYjI4MDc4NTY1ODUyYTQ1ZGRkMmY0YjQ5NzdlZjg4N2U3NGZmMTg3MGEzMWMzYjQ0Yzc2NDkzZjEiLCJzaGEyNTY6YjQxOWEwZGU5YzEyYmE1MmRiNDJiZTdlYzNiZTljODhjM2UyZDFjZDYxNTIxZWYyNzhlMTY0Y2Q3OGM0MmVmMCIsInNoYTI1NjoyOGY2OThiMzVjNjdlODM5OWUzMDVkMzEzZWMxNzdiNmE1YTUyZjQ4NGU2OWZmNjI5ZTI0NDhkMTBhYjc2YzMyIl19"
+    },
+    {
+      "hash": "sha256:006e5c6db28078565852a45ddd2f4b4977ef887e74ff1870a31c3b44c76493f1",
+      "interfaceHash": "sha256:3a858de2d0dd343a6c3d63e7d6497211d0a2b4753d68850d34817604b67ad05d",
+      "semanticId": "world/mission/evidence/iter171-index-row/0",
+      "provenance": "w-prove-1-0-phase-a",
+      "payload": "eyJraW5kIjoiYmluYXJ5IiwicmVmIjoiJEhPTUUvLnBpbm5lZC1haWxhbmcvYWlsYW5nLnYwLjMwLjAiLCJjaGVjayI6ImFpbGFuZy52MC4zMC4wIG1pc3Npb24gcm90YXRlLWxvZyB3b3JsZCAtLWtlZXAgMzEgPT4gRXJyb3I6IHVua25vd24gY29tbWFuZCAnbWlzc2lvbiciLCJleGNlcnB0IjoiVGhlIHBpbm5lZCB2MC4zMC4wIGJpbmFyeSBoYXMgbm8gYGFpbGFuZyBtaXNzaW9uYCBjb21tYW5kIGF0IGFsbDogYH4vLnBpbm5lZC1haWxhbmcvYWlsYW5nIG1pc3Npb24gcm90YXRlLWxvZyB3b3JsZCAtLWtlZXAgMzFgIHByaW50cyAqKmBFcnJvcjogdW5rbm93biBjb21tYW5kICdtaXNzaW9uJ2AqKi4ifQ=="
+    },
+    {
+      "hash": "sha256:b419a0de9c12ba52db42be7ec3be9c88c3e2d1cd61521ef278e164cd78c42ef0",
+      "interfaceHash": "sha256:0ce86572e372e3bdc7a8ffce6e63c692a025547cd26c461b2b7a9acbbbb57e11",
+      "semanticId": "world/mission/evidence/iter171-index-row/1",
+      "provenance": "w-prove-1-0-phase-a",
+      "payload": "eyJraW5kIjoiaW5kZXgiLCJyZWYiOiJ3b3JsZC1taXNzaW9uLWluZGV4Lm1kIChnaXQgaGlzdG9yeSkiLCJjaGVjayI6ImdyZXAgLWMgJ158IDE3MSB8JyB3b3JsZC1taXNzaW9uLWluZGV4Lm1kID0+IDEgTk9XICh0aGUgbWFudWFsIHJlcGFpciwgbm90IGl0ZXItMTcxJ3MgR2F0ZSA0KSIsImV4Y2VycHQiOiJpdGVyYXRpb24gKioxNzEqKiBoYWQgYSBmdWxsIGxvZyBlbnRyeSBhbmQgKipubyBpbmRleCByb3cqKiAoYGdyZXAgLWMgJ158IDE3MSB8J2AgLT4gKiowKiosIGNvbnRyb2wgYDE3MGAgLT4gKioxKiopLiJ9"
+    },
+    {
+      "hash": "sha256:28f698b35c67e8399e305d313ec177b6a5a52f484e69ff629e2448d10ab76c32",
+      "interfaceHash": "sha256:771d0a8f41e0ba830062ffe1105d01b3b503b22ab38ed205d68b5991be221b0f",
+      "semanticId": "world/mission/evidence/iter171-index-row/2",
+      "provenance": "w-prove-1-0-phase-a",
+      "payload": "eyJraW5kIjoicmVjb3JkIiwicmVmIjoid29ybGQtbWlzc2lvbi5tZCB+bGluZXMgODItMTAxOyBsb2cgIyMgMTcyIiwiY2hlY2siOiJyZWFkIHRoZSBgbWlzc2lvbmAtY29tbWFuZCBwaW4tdmVyc2lvbi1nYXAgYnVsbGV0IiwiZXhjZXJwdCI6InRoZSBmYWlsdXJlIGlzIFNJTEVOVCBpbiB0aGUgZGlyZWN0aW9uIHRoYXQgbWF0dGVyczogR2F0ZSAyJ3MgZmlyc3QgaW5zdHJ1Y3Rpb24gaXMgdG8gZ3JlcCB0aGUgaW5kZXggYmVmb3JlIHBpY2tpbmcsIHNvIGEgbWlzc2luZyByb3cgZG9lcyBub3QgcHJvZHVjZSBhbiBlcnJvci4ifQ=="
+    }
+  ],
+  "nextWorld": {
+    "ref": "sha256:a3ae98dcd018dc0bcd18f27f78f8d53bfa4f9ade3aa2521bb4c3858f457e75eb",
+    "revision": 0,
+    "stateRoot": "sha256:4c776523caa819a9c77f2e54061dae608a53ee391e68f1a3814cb0c081228831",
+    "logHead": "sha256:cd8180864257c0510a64981eed25e913a35f278f81d9a9247d6258fd69a44ee5"
+  },
+  "entry": {
+    "header": {
+      "entryIndex": 0,
+      "semanticsEpoch": 1,
+      "transitionFn": "sha256:5e670bae3ff5816cd7f6faed983dd61e2942d5b0268a3c66a53a9ea6bc1d3f1d",
+      "interpreter": "sha256:1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+      "prevEntryHash": "sha256:ee2957a18e7806d9854f199f6533effdd3ccab4b04cf9126cc054818cfe26900",
+      "writtenBy": "w-prove-1-0-phase-a"
+    },
+    "entryHash": "sha256:cd8180864257c0510a64981eed25e913a35f278f81d9a9247d6258fd69a44ee5",
+    "transitionRef": "sha256:c07048332f5cd09d5d632a1059941f56ba1aa2914846f9be1c5228d6979d6206"
+  }
+}
