@@ -1,6 +1,6 @@
 # w-workbench-timeline-seam — make the timeline a paged, selectable surface whose entries lead to objects
 
-- Status: **planned** (design only; nothing implemented) · Date: **2026-09-24** · Rows **35** and **38** (both clause-5), plus the unfiled same-class `Page.Selected` defect (§1 F3)
+- Status: **implemented** (iteration 184: PR #143 squash-merged as `9574d08`, CI green on the merge; judged PASS 95/100 + r2 100/100, zero blocking) · Date: **2026-09-24** · Rows **35** and **38** (both clause-5), plus the unfiled same-class `Page.Selected` defect (§1 F3)
 - Iteration: 184, designer role · Measurement base: `origin/dev` = `82e3630` (V0)
 - Scope: ONE doc for BOTH rows, as row 38 asks ("both touch the same `TimelineView`/`EntryView` seam in `render.go`, so designing them together is likely cheaper than twice"). The two rows are also one defect class seen from both ends: view-model fields the handler writes and the template never reads (35, `Truncated`, `Selected`), and template actions that read fields the handler never writes (`NextHref`/`PrevHref`).
 - Query grammar: **unchanged** (§4). `supportedWorkbenchQuery` stays byte-identical, so charter row 34's open hunks there are neither fixed nor moved.
