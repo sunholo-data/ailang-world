@@ -1013,3 +1013,112 @@ Risks, in honest order:
    sprint does **not** fix it (doc §9).
 7. **CI-only steps (§1.2)** are not reproduced locally. The binding gate is CI on the PR head and
    on the merge commit.
+
+---
+
+## Execution record (iteration 184)
+
+Executed by the sprint executor on 2026-09-24 in this worktree, branch `sprint/w-workbench-timeline-seam`,
+starting from `0a69f1a` (the plan with the controller's AC9 re-baseline). Every command ran with
+`export AILANG_BIN=$HOME/.pinned-ailang/ailang` (AILANG v0.41.0). `origin/dev` = `82e36306d32f…` (measured).
+Evidence (per-row `vet.*`/`test.*` outputs, drill logs, full test outputs) is under
+`~/.ailang/state/world-iter184/`. The drill runner is §2.3's text, verbatim.
+
+### Commits
+
+| Milestone | SHA | Files | numstat vs parent |
+|---|---|---|---|
+| M1 the seam | `750f8f6` | render.go, render_test.go, daemon/workbench.go | 19/16, 121/0, 0/4 (= prototype) |
+| M2 selection edges | `01acc46` | daemon/workbench.go, daemon/workbench_test.go | 45+ / 136+ (173+/8− total) |
+| M3 paging | `db94908` | daemon/workbench.go, daemon/workbench_test.go | 204+/3− total |
+
+Final `git diff --numstat origin/dev -- host/` is byte-for-byte the prototype's: workbench.go 71/5,
+workbench_test.go 306/10, render.go 19/16, render_test.go 121/0.
+
+### Per-milestone exit gates
+
+| Gate | M1 (`750f8f6`) | M2 (`01acc46`) | M3 (`db94908`) |
+|---|---|---|---|
+| `go vet ./...` | rc=0 | rc=0 | rc=0 |
+| `go test ./... -count=1` | rc=0; 20 `ok`, 0 FAIL | rc=0; 20 `ok`, 0 FAIL | rc=0; 20 `ok`, 0 FAIL |
+| scoped `gofmt -l host/workbench host/daemon/workbench.go host/daemon/workbench_test.go` | empty | empty | empty |
+| `go test -race ./host/workbench ./host/daemon -count=1` | ok / ok (daemon 4.96 s) | ok / ok (4.96 s) | ok / ok (12.59 s) |
+| milestone-specific | 4 × `--- PASS` (§3.4); `Truncated` 0 (control `PayloadTruncated` 3); dead EdgeView fields 0 (control `Edges []EdgeView` 2) | `TestWorkbenchSelectedEntry` + 4 subtests PASS; `-run 'TestWorkbenchRefusalBranches\|TestReadCtx\|TestWorkbench'` ok; `context.Background` 0 (control `readCtx` 1) | full AC set below |
+
+No known flaker (`TestHandlerTimeoutKillsTheWholeProcessGroup`, `TestCLIRealSubprocessEpisode`) went red in
+any run, so no re-run was needed.
+
+### Mutation drill (AC8) — 26/26 killed by the named test
+
+Every row: `count=1`, run one at a time, restored with `git checkout -- <file>`, then `git diff --quiet -- host/` rc=0.
+`git status --short -- host/` was empty after each block.
+
+| Row | Landed | Compiled | Red set | Named killer red? | Restored |
+|---|---|---|---|---|---|
+| R1 | y | y | TestRenderSelectedEntry, TestWorkbenchViewFieldsAllRender | y (TestRenderSelectedEntry) | y |
+| R2 | y | y | TestRenderSelectedEntry | y | y |
+| R3 | y | y | TestRenderSelectedEntry | y | y |
+| R4 | y | y | TestRenderSelectedEntry, TestRenderUnavailableProvenanceEdge | y (TestRenderUnavailableProvenanceEdge) | y |
+| R5 | y | y | TestRenderUnavailableProvenanceEdge | y | y |
+| R6 | y | y | TestRenderTimelineRowSelectLink, TestWorkbenchViewFieldsAllRender | y (TestRenderTimelineRowSelectLink) | y |
+| R7 | y | y | TestWorkbenchRendersSeededWorldAndTimeline | y | y |
+| R8 | y | y | TestRenderTimelinePagingLinks{,/next}, TestWorkbenchViewFieldsAllRender | y (…/next) | y |
+| R9 | y | y | TestRenderTimelinePagingLinks{,/prev}, TestWorkbenchViewFieldsAllRender | y (…/prev) | y |
+| R10 | y | y | TestWorkbenchViewFieldsAllRender | y | y |
+| R11 | y | y | TestWorkbenchViewFieldsAllRender | y | y |
+| H9 (§0 P1 form) | y | y | TestWorkbenchSelectedEntry{,/unstored-edge-unavailable} | y | y |
+| H10 | y | y | TestWorkbenchSelectedEntry{,/object-store-error} | y | y |
+| H11 | y | y | TestWorkbenchSelectedEntry{,/stored-edge-links,/unstored-edge-unavailable} | y (…/stored-edge-links) | y |
+| H12 | y | y | TestWorkbenchSelectedEntry{,/object-store-error} | y | y |
+| H13 | y | y | TestWorkbenchSelectedEntry{,/row-select-link} | y | y |
+| H1 | y | y | TestWorkbenchTimelinePaging{,/head-page-has-next}, TestWorkbenchNextLinkOverflowGuard | y (…/head-page-has-next) | y |
+| H2 | y | y | TestWorkbenchTimelinePaging{,/head-page-has-next,/last-page-has-prev-no-next,/exactly-limit-no-next,/emitted-links-resolve}, TestWorkbenchNextLinkOverflowGuard | y (…/exactly-limit-no-next) | y |
+| H3 (§0 P2 form) | y | y | TestWorkbenchTimelinePaging{,/exactly-limit-no-next,/emitted-links-resolve} | y (…/exactly-limit-no-next) | y |
+| H4 | y | y | TestWorkbenchNextLinkOverflowGuard | y | y |
+| H5 | y | y | TestWorkbenchTimelinePaging{,/last-page-has-prev-no-next,/exactly-limit-no-next} | y (…/last-page-has-prev-no-next) | y |
+| H6 | y | y | TestWorkbenchTimelinePaging{,/exactly-limit-no-next} | y | y |
+| H7 (pre-check `grep -c 'if from > 0 {'` = 1) | y | y | TestWorkbenchTimelinePaging{,/head-page-has-next} | y | y |
+| H8 | y | y | TestWorkbenchTimelinePaging{,/head-page-has-next,/last-page-has-prev-no-next,/exactly-limit-no-next,/emitted-links-resolve}, TestWorkbenchSelectedEntry{,/row-select-link}, TestWorkbenchNextLinkOverflowGuard | y (…/emitted-links-resolve) | y |
+| H14 (moved to M3, §0 P3) | y | y | TestWorkbenchTimelinePaging{,/last-page-has-prev-no-next} | y | y |
+| H15 | y | y | TestWorkbenchTimelinePaging{,/head-page-has-next}, TestWorkbenchNextLinkOverflowGuard | y (…/head-page-has-next) | y |
+
+No row failed to compile, no row survived, no row had count≠1. Every red set equals the planner's measured set.
+
+### Final gates on `db94908` (load average 2.72 at start)
+
+| Gate | Command | Result |
+|---|---|---|
+| AC1 | `go vet ./...` | rc=0 |
+| AC2 | `go test ./... -count=1` | rc=0; 20 `ok`, 0 `FAIL`/`--- FAIL` (no flake, no re-run) |
+| race | `go test -race ./host/workbench ./host/daemon -count=1` | rc=0; workbench 1.29 s, daemon 13.20 s |
+| AC3 | `./scripts/verify_ail.sh` · `git diff --name-only origin/dev -- '*.ail' \| wc -l` | rc=0 (`world package gate PASSED: 9/9`, `verify gate PASSED: 11 required identities verified, 40 named tests pass`) · 0 |
+| email | `bash scripts/check_no_personal_email.sh` | rc=0 |
+| gofmt (scoped) | `gofmt -l host/workbench host/daemon/workbench.go host/daemon/workbench_test.go` | empty |
+| AC4 | the 7-name `-run` | rc=0; 7 `--- PASS`, 0 `--- FAIL` (Paging 0.45 s) |
+| AC5 | the three `diff` extractions vs `origin/dev` | rc=0 ×3; extraction sizes 15 / 7 / 83 lines (non-empty controls) |
+| AC6 | the six greps | 0 · 3 · 0 · 2 · 2 · 2 — PASS |
+| AC7 | the three greps | 0 · 1 · 1 — PASS |
+| AC8 | the 26 drill rows | 26/26 `count=1 landed=y compiled=y killed=y restored=y` — PASS |
+| AC9 | `git diff --shortstat origin/dev -- host/` · `… ':!*_test.go'` | **total 548** (517+/31−) ≤ 600 · **non-test 111** (90+/21−) ≤ 150 — PASS under the controller's re-baseline (the doc's original ≤ 320 would be red, as §0 P4 predicted) |
+
+AC1–AC9: **all PASS**. CI on the PR head and the merge commit remains the binding gate (§1.2); it was not
+run here (no push, no PR from this role).
+
+§0 P5 confirmed: `if len(query) != 2` moved `:69` → `:70`, and `origin/dev:69-76` diffs clean (rc=0)
+against the sprint's `:70-77`. Row 34's next drill must re-anchor by content (+1 line).
+
+### Deviations from the plan
+
+1. **Commit staging.** §2.2 step 4 says `git add host/`. Per the controller's brief, each milestone staged
+   its exact files by name instead. The staged set is identical (only those files were modified).
+2. **M1 AC2 tally re-run.** §2.2's G-common AC2 line ends in `| head`, which shows only 10 of the 20 `ok`
+   lines, so it cannot show "20 ok" by itself. For M1 the full suite was re-run with explicit
+   `grep -cE '^ok'` / `grep -cE '^(FAIL|--- FAIL)'` counts (20 / 0). For M2, M3 and the final gate the
+   counted form was used from the start. The instrument, not the code, was changed.
+3. **The M3 probes' position.** They were inserted directly after the timeline loop's closing `}`, where
+   M1 removed the `Truncated` line. The blank line before `_ = workbench.Render(w, page)` is kept. The
+   final numstat equals the prototype's, which is consistent with the same placement.
+
+No code deviation. The §0 P1/P2/P3 corrections (H9, H3, H14 moved to M3) were applied as the plan
+prescribes. Nothing else was changed: no `.ail`, no `tools/launchd/*`, no `.claude/`, and the three
+un-gofmt'd base files were not touched.
