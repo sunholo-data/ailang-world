@@ -31,6 +31,14 @@ const (
 	workbenchInternalStoreFailureMessage = internalErrorMessage
 )
 
+// Named reasons for what the object inspector cannot show. Each names the
+// missing store fact; none is a guess at the value it stands in for.
+const (
+	objectGradeUnavailableReason = "no canonical host projection: this workbench handler does not resolve subject-bound evidence into an object grade"
+	objectCommittedByMissing     = "the store records no commit-to-object relation, and the provenance field is a free-text label, not a reference"
+	objectReferencedByMissing    = "no store index maps an object to the log entries or worlds that reference it"
+)
+
 var acceptedWorkbenchKeys = map[string]bool{
 	"world":   true,
 	"object":  true,
@@ -129,18 +137,43 @@ func (d *Daemon) entryEdges(ctx context.Context, entry store.LogEntry) ([]workbe
 	}
 	edges := make([]workbench.EdgeView, 0, len(refs))
 	for _, item := range refs {
-		target := item.ref.String()
-		_, ok, err := d.reads.GetObject(ctx, item.ref)
+		edge, err := d.checkedEdge(ctx, item.relation, item.ref)
 		if err != nil {
 			return nil, err
 		}
-		if !ok {
-			edges = append(edges, workbench.EdgeView{Relation: item.relation, Target: target, Missing: "object " + target + " is not stored"})
-			continue
-		}
-		edges = append(edges, workbench.EdgeView{Relation: item.relation, Available: true, Target: target, Href: "?object=" + target})
+		edges = append(edges, edge)
 	}
 	return edges, nil
+}
+
+// checkedEdge checks one edge target once. A stored target is a link; an
+// unstored one is UNAVAILABLE with its ref visible; a store error is returned so
+// the caller answers 5xx rather than "not stored".
+func (d *Daemon) checkedEdge(ctx context.Context, relation string, ref hashref.HashRef) (workbench.EdgeView, error) {
+	target := ref.String()
+	_, ok, err := d.reads.GetObject(ctx, ref)
+	if err != nil {
+		return workbench.EdgeView{}, err
+	}
+	if !ok {
+		return workbench.EdgeView{Relation: relation, Target: target, Missing: "object " + target + " is not stored"}, nil
+	}
+	return workbench.EdgeView{Relation: relation, Available: true, Target: target, Href: "?object=" + target}, nil
+}
+
+// objectEdges is the object's provenance walk from what the store records: the
+// envelope's one typed reference, its interface, is existence-checked; the two
+// relations the store cannot answer exactly are named stops, never a blank.
+func (d *Daemon) objectEdges(ctx context.Context, object store.Object) ([]workbench.EdgeView, error) {
+	iface, err := d.checkedEdge(ctx, "interface", object.InterfaceHash)
+	if err != nil {
+		return nil, err
+	}
+	return []workbench.EdgeView{
+		iface,
+		{Relation: "committedBy", Missing: objectCommittedByMissing},
+		{Relation: "referencedBy", Missing: objectReferencedByMissing},
+	}, nil
 }
 
 func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
@@ -261,10 +294,16 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 			preview = preview[:workbench.MaxPayloadPreview]
 			truncated = true
 		}
+		edges, err := d.objectEdges(ctx, object)
+		if err != nil {
+			d.writeWorkbenchStoreError(w, r, ctx, err)
+			return
+		}
 		page.Object = &workbench.ObjectView{
 			Hash: object.Hash.String(), InterfaceHash: object.InterfaceHash.String(),
 			SemanticID: object.SemanticID, Provenance: object.Provenance,
 			PayloadShown: showPayload, PayloadPreview: string(preview), PayloadTruncated: truncated,
+			Grade: workbench.NewGradeUnavailable(objectGradeUnavailableReason), Edges: edges,
 		}
 	}
 
