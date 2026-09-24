@@ -3351,3 +3351,47 @@ The shipped code was right, but nothing pinned it. The controller reproduced bot
 **Progress:** row **34 LANDED** (`158d8ee`). All of groom position 4 (rows 34, 35, 38) is now done. Clause 5's human surface has its closed grammar, href guard and verdict line pinned by named tests. New row **102** (every object page renders `GRADE UNAVAILABLE — ` with an empty reason: `host/daemon` has 0 non-test references to `Grade`).
 
 **Next**: **98** (provenance-walk section blank), **102** (grade never supplied), **40** (adapter contract), 27, **93** (clause-4 floor run), 96, 97, 99, 100. **Decision ledger: 23 rows, ZERO OPEN.**
+
+## 186 — 2026-09-25 — rows 98+102 LANDED: the workbench object page's provenance walk and grade line are never blank — one exact edge existence-checked, two named stops, one true grade reason; full inner loop, judged 97 + r2 100 [PRODUCT]
+
+**Kind**: full inner loop on a fresh pick (designer → quorum ×2 + two single-reviewer re-runs → planner → executor → evaluator ×2). No orphan: 0 open PRs; the only stale worktree `.wt-world-iter182` is row 92's (landed `157d6f9`).
+
+**Picked.** Rows **98 + 102** as ONE design, as iteration 185's Next listed them: both are the object inspector (`GET /workbench?object=<hash>`), and both are the handler never writing a field the template reads. Premises re-measured at `6127ff3`: the only non-test `Edges` write in `host/daemon` is `:287 selected.Edges = edges` (the selected log entry, not the object); `Grade` appears in 0 non-test daemon files, control `PayloadTruncated` → 1.
+
+**Design.** Designer `claude:claude-opus-5-5` via `claude-sub` (rotation: last-used claude → astra, but `ration gate: blocked buckets … codex ollama openrouter` covered astra and deepseek — FLAGGED capacity skip, third consecutive fire). Doc `af7617d`, 440 lines. Decisions: the object's only exactly-derivable typed reference is its `InterfaceHash`, so the walk shows that edge existence-checked (a `checkedEdge` helper extracted verbatim from `entryEdges`) plus two named stops — `committedBy` (the store records no commit→object link; `provenance` is free text) and `referencedBy` (0 indexes over 9 tables; `readStore` is point reads only). Every object page gets one constant grade reason; a per-kind branch on `SemanticID` would trust a caller-supplied label. Template `{{else}}` fallbacks make a blank walk or empty reason impossible even for an unsupplied view.
+
+**Quorum.**
+- **r1 PROCEED at N−1** — gemini PASS, glm PASS, **astra ABSENT (budget)**. Per the absent-reviewer rule astra was re-run alone at a $0.40 cap → **REJECT**: the proposed reason text said grades are "computed only by gradeOf in world/types.ail". The controller measured it TRUE — `host/evidence/validator.go:200-221` defines and returns `ResolvedGradeProven`, which the doc's own V12 cited. One designer revision via `--resume` (`581c8cf`, 24k out) applied astra's verbatim reason and reworded F4/F5 to what was measured.
+- **r2 BLOCKED** — glm PASS; **gemini REJECT** (F1/F2 quote `render.go:154/:160` with no V-row reading them); astra absent again → re-run alone → **REJECT** (§2b's "no stored object provides one" and V18's "no stored TestReport kind" are storage claims an identifier search cannot establish). Both carried a concrete `proposed_fix` and neither disputed direction → **narrow-refinement carve-out**: fixes applied verbatim, V22/V23 measured by the controller (`61c6e33`).
+
+**Plan.** Planner `opus` via the Agent tool (`fail-closed:env-pin`) prototyped the whole design before writing: 22/22 compile and are killed by the named test, 14 sole; M1-only and base-suite drills confirm the milestone split; 289 LOC (57 prod / 232 test). Findings P1–P9: four mutation anchors were non-unique (`if err != nil {` occurs 13× in the file), stale LOC figures corrected. Plan `c6cbdd0`, with sha256-pinned half-diffs and drill runner banked.
+
+**Execute.** Executor `opus` via the Agent tool, foreground: M1 `f5d74a6` (render guards), M2 `e1c07c5` (daemon supplies grade reason + walk). All gates green at both milestones; 22/22 killed (14 sole); against `6127ff3`'s tests 17 survive and 5 are killed, matching §7. Controller re-derived: vet 0, **20 ok / 0 FAIL**, `verify_ail.sh` PASS, gofmt clean.
+
+**Judge.**
+- **r1**: evaluator `sonnet` (own worktree `.eval-world-iter186` @ `e1c07c5`), **PASS 97/100, zero blocking**. Re-verified the two stop reasons against the store at HEAD, the 5xx on a store error, no SemanticID branch. Re-ran R1/R4 (against M1's own diff), H2, H7. Self-chosen: relation swap killed, error-swallowed-as-"not stored" killed, **edge reorder SURVIVED** (all walk assertions were `strings.Contains`).
+- **Controller closure**: `TestWorkbenchObjectProvenanceWalk/edge-order` (each relation exactly once, in order) is the sole killer of the reorder, swap-stops and duplicate-interface mutants (`e6922a1`); restore byte-identical.
+- **r2 judge** (resumed via SendMessage, polled on its report file): **PASS 100/100**; reorder survives with the test file reverted to `e1c07c5`, killed only by the new lines; its own duplicate-edge mutant also killed.
+- Reports: `~/.ailang/state/mission-world-iter186-evidence/EVAL_REPORT_iter186{,_r2}.md`.
+
+**Land.** Doc + plan moved to `implemented/` with §12/§13 (`e7fb0a8`). Closing-keyword scan 0 (control 1). PR [#145](https://github.com/sunholo-data/ailang-world/pull/145) 2/2 green on head, `MERGEABLE/CLEAN`, squash-merged **`909f27f`**. Gate 3b SHA-pinned read of the merge: present 2 / completed 2 / success 2, 1 run `push/completed/success`; drift since Gate 1 = 1 commit, my own squash.
+
+**Ruled out / process findings**
+- **(a) The absent-reviewer rule paid twice in one iteration.** astra dropped on budget in BOTH quorum rounds and both solo re-runs ($0.14, $0.16) returned a real, upheld objection. Without them the doc would have shipped a false reason string to every object page. Instance 3+ for World.
+- **(b) A "what we can't show" string is a factual claim.** The r0 reason text was an honesty defect in the very feature meant to be honest — an UNAVAILABLE reason needs the same verification as a positive claim.
+- **(c) Presence-only assertions again** (iter-185's lesson (c), new surface): order and cardinality of a fixed list are invariants a `Contains` test cannot see.
+- **(d) A mutation table's anchor text is an instrument** — the planner found 4 rows whose `old` text matched 5–13 sites; a design-time drill that applied them must have used a different anchor than the one written down.
+
+**Routing evidence**: base=`909f27f010c0fb3698c4527cade1779f29dff39d`@`2026-09-24T22:38:49Z` (Gate 3b; Gate 1 base `6127ff32491e37067e05e6b80f7b839c1ee6df24`@`2026-09-24T21:29:34Z`; drift = 1 commit, my own squash).
+- Controller `claude:claude-opus-5-5` (session; tok: not reported).
+- Designer **`claude:claude-opus-5-5`** via `claude-sub` (resolver `recipe claude:claude-opus-5-5 declared:provider-pin`; astra and deepseek skipped on ration-gate capacity, FLAGGED). Draft 69,766 out / 4.43M cache-read, 39 turns; revision (protocol-mandated, within the one-doc diet) 24,066 out, 18 turns. Subscription; billing CLEAN, wrapper strips keys.
+- Quorum: r1 PROCEED N−1 → astra solo REJECT (upheld) → revision → r2 BLOCKED (gemini REJECT, glm PASS, astra solo REJECT) → carve-out. Reviewers `gpt6-astra`, `gemini-3-1-pro`, `oc-glm-5-2`.
+- Planner **`opus`** via the Agent tool (`fail-closed:env-pin`), 175,668 tok.
+- Executor **`opus`** via the Agent tool (`declared:alias-pin`), 74,451 tok. The driver fell back through codex/pi, over ration.
+- Evaluator **`sonnet`** via the Agent tool (`declared:alias-pin`): r1 125,819 tok, r2 (resumed) 139,466 tok cumulative.
+- Generator ≠ judge on model: opus → sonnet. No role failed to spawn.
+- Metered **$0.41** (quorum r1 $0.0517 + astra solo $0.1357 + r2 $0.0580 + astra solo $0.1625).
+
+**Progress:** rows **98 + 102 LANDED** (`909f27f`). Clause 5's object inspector now states, for every object, what it can show and why it cannot show the rest — no silent blanks remain on the object page. New rows **103** (object reference index), **104** (commit→object membership), **105** (grade projection, PARKED).
+
+**Next**: **40** (adapter contract), 27, **93** (clause-4 floor run), 99 (reuse `checkedEdge`), 100, 96, 97, 103, 104. **Decision ledger: 23 rows, ZERO OPEN.**
