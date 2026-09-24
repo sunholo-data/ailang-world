@@ -575,3 +575,77 @@ same-command positive control.
 | r2 | gpt6-astra | reject | `TestRenderGradeWithoutVerdictClaim` only checks the expected paragraph occurs somewhere; a renderer that keeps it and appends a false PASS span passes both subtests, so killing V2 does not establish I3 | **Upheld and applied under the narrow-refinement carve-out** (the objection carries a concrete `proposed_fix` and does not dispute the design direction). Applied verbatim: both subtests now reject `class="verdict-` and `aria-label="test verdict` anywhere in the page; mutation-control row V10 added and measured (survives pristine and the r1 prototype, killed by both subtests); drill totals updated (57 / 36 / 21 / 56); I3 scoped to the constructor-produced grade states. Controller-applied, V21 |
 | r2 | gemini-3-1-pro | pass | (non-blocking) §3.2's `pass` arm uses `view` without showing its definition | Noted for the executor: `view` is the variable the existing `t.Run("pass", …)` body already binds (the prototype compiled, V14) |
 | r2 | oc-glm-5-2 | pass | (non-blocking) §4 cites `acceptedWorkbenchKeys` at `workbench.go:34-40` without a V-row | Noted for the executor: re-anchor at execution time |
+
+---
+
+## §12 Execution record
+
+Executed 2026-09-24 by mission-control iteration 185 (sprint-executor) in
+`/Users/voightkampff/dev/sunholo-data/.wt-world-iter185`, branch
+`sprint/w-workbench-unpinned-render-hunks`, from `8d99105` (the plan's `aa5df54` plus the
+planner-findings doc commit; `git diff fd99840 8d99105 -- host cmd scripts` is empty). `origin/dev`
+= `fd99840` throughout (re-fetched before the survival check). `AILANG_BIN=~/.pinned-ailang/ailang`
+(`AILANG v0.41.0`, commit `24ee108`), `go1.26.6 darwin/arm64`. The test code was applied from
+`prototype_r2_controller.diff` per file (`git apply --include=<file>`), so it is byte-identical to
+the plan's §3.2/§4.2 blocks. Evidence: `~/.ailang/state/mission-world-iter185-evidence/executor/`
+(`drill.py` = the planner's runner, sha256 `a4c00ade…fcfa4c5`, unedited; `m1_gates.txt`,
+`m2_gates.txt`, `m1_ac.txt`, `m2_ac4.txt`, `drill_m1.txt`, `drill_m2.txt`, `drill_final.txt`,
+`drill_origin_dev.txt`, `verify_ail.txt`, `ci_list.txt` and the per-step `ci_*.txt`).
+
+| Milestone | Commit | Files |
+|---|---|---|
+| M1 — the grammar | `133a83f` | `host/daemon/workbench_test.go` (+37/−0) |
+| M2 — href and grade line | `5ee393b` | `host/workbench/render_test.go` (+53/−0) |
+
+**Gates.**
+
+| Gate | M1 | M2 (final tree) |
+|---|---|---|
+| AC1 `go vet ./...` | rc=0 | rc=0 |
+| AC2 `go test ./... -count=1` | rc=0; 20 `ok`, 0 `FAIL` | rc=0; 20 `ok`, 0 `FAIL` |
+| `gofmt -l` (the two test files) | empty | empty |
+| `go test -race ./host/workbench ./host/daemon -count=1` | both `ok` | both `ok` |
+| M1 exit (`-run 'TestSupportedWorkbenchQueryTruthTable\|TestWorkbenchRefusalBranches'`) | rc=0; 51 PASS / 32 / 17 / 0 FAIL / 3 new refusal rows | — |
+| AC3 `./scripts/verify_ail.sh` | — | rc=0; `✓ world package gate PASSED: 9/9 steps performed non-zero work`; `✓ verify gate PASSED: 11 required identities verified, 40 named tests pass`; `.ail` files changed vs `origin/dev`: 0 |
+| AC4 (the §6 `-run` command) | — | rc=0; **59** `--- PASS`, 0 `--- FAIL`; 32 truth-table subtests; one PASS line each for the three new refusal rows, `/pass`, `/no-verdict`, `/unavailable`, `TestWorkbenchHrefAppendsOnlyQueryStrings` |
+| AC5 `git diff --quiet origin/dev -- host/workbench/render.go host/daemon/workbench.go` | rc=0 | rc=0 (also after every drill); `--name-only origin/dev -- host/` = the two test files |
+| AC7 size | `1 file changed, 37 insertions(+)` | `git diff --shortstat fd99840 -- host/` → **`2 files changed, 90 insertions(+)`** (numstat 37/0, 53/0) |
+| `bash scripts/check_no_personal_email.sh` | — | ✓ |
+
+**Mutation drills** (plan §2.3 runner; every row: exact single-occurrence replace, `go build ./...`
+before the suite, `go test ./host/workbench ./host/daemon ./host/boundary -count=1`, `cp` restore).
+
+| Drill | Tree | Rows | KILLED (named killer in reds) | SURVIVED | `compiles=n` / NOT-LANDED / `killer_in_reds=n` | Final `STATUS` |
+|---|---|---|---|---|---|---|
+| M1 | `133a83f` | H5 H6 H7 Q17 Q18 Q19 Q20 Q23 Q26 Q27 Q30 | 10 (reds 15/9/9/19/4/6/12/6/4/12) | 1 (Q17, rc=0) | 0 | `''` |
+| M2 | `5ee393b` | H3 H4 W5 W8 V2 V4 V6 V7 V9 V10 | 10 (reds 2/1/1/1/2/2/2/2/2/3) | 0 | 0 | `''` |
+| full | `5ee393b` | all 57 | **56** | **1** (Q17) | 0 | `''` |
+| survival on `origin/dev`'s tests | detached sibling worktree `.exec-base-iter185` at `fd99840` (removed afterwards) | the 20 (H3–H7, Q18–Q20, Q23, Q26, Q27, Q30, W5, W8, V2, V4, V6, V7, V9, V10) | 0 | **20** (`compiles=y rc=0 SURVIVED`) | 0 | `''` |
+
+The full drill's per-row red counts equal the §7 "After" column on all 57 rows (compared by
+script: 57 parsed from each side, 0 differences). The full drill took about 3 min (20:18:02 →
+20:21:05, load average ≈ 5.5).
+
+**CI command list (plan §1.3), run locally on the final tree.** `ailang --version` → v0.41.0;
+`verify_ail.sh` rc=0 (above); `go version` → go1.26.6; `go build ./...` rc=0;
+`w-race-gate-blindspot/run.sh` rc=0 (affected toolchain BUG, known-good OK, pinned OK);
+`bench_worldd.sh --smoke` rc=0 (PASSED); `--check-claims` rc=0 (PASSED);
+`test_gate1_range_check.sh` 18/0; `test_queue_census.sh` 68/0; `queue_census.sh --doc
+design_docs/world-mission.md --control-closed 1 --control-open 79` rc=0 (both controls ok);
+`test_gate0_self_notices.sh` 88/0; `check_no_personal_email.sh` ✓; `test_check_no_personal_email.sh`
+10/0. `verify_go.sh` was not run locally (standing rig rule, plan §1.3); its build/test/race
+content is covered by the vet, whole-repo test and touched-package race legs above.
+
+**Deviations.**
+
+1. *Recorder-refusal arm not reproducible on this rig.* `bench_worldd.sh --record-pair --variant .
+   --control .` did fail as required (rc=1), but its stderr is `✗ record-pair REFUSED: control commit
+   is not the variant parent`, not `probe FAILED: sysctl -n hw.ncpu`. Why: the arm asserts the
+   *off-rig* (Linux runner) refusal; on this macOS host `sysctl -n hw.ncpu` succeeds, so the recorder
+   refuses at a later check. Evidence: `ci_rec_err.txt`; the step's own CI text calls it "the
+   off-rig runner"; `git diff --quiet fd99840 -- scripts .github` → rc=0 (this sprint changes neither
+   the script nor the workflow). CI is the binding gate for that step.
+2. *Evidence directory name.* Transcripts are under `…/executor/` (the controller's brief), not the
+   plan's `…/exec/`. No content difference.
+
+No production file, `.ail` file, or other test was changed.
