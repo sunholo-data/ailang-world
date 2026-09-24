@@ -104,9 +104,6 @@ func entryView(entry store.LogEntry) workbench.EntryView {
 		EntryHash:      entry.EntryHash.String(),
 		PrevEntryHash:  entry.Header.PrevEntryHash.String(),
 		SemanticsEpoch: entry.Header.SemanticsEpoch,
-		TransitionFn:   workbench.EdgeView{Available: true, Target: entry.Header.TransitionFn.String(), Href: "?object=" + entry.Header.TransitionFn.String()},
-		Interpreter:    workbench.EdgeView{Available: true, Target: entry.Header.Interpreter.String(), Href: "?object=" + entry.Header.Interpreter.String()},
-		TransitionRef:  workbench.EdgeView{Available: true, Target: entry.TransitionRef.String(), Href: "?object=" + entry.TransitionRef.String()},
 		WrittenBy:      entry.Header.WrittenBy,
 	}
 }
@@ -262,7 +259,6 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 		}
 		page.Timeline.Entries = append(page.Timeline.Entries, entryView(entry))
 	}
-	page.Timeline.Truncated = len(page.Timeline.Entries) == limit
 
 	_ = workbench.Render(w, page)
 }
