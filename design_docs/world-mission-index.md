@@ -23,6 +23,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 184 | 2026-09-24 | rows 35+38 LANDED: workbench timeline paged + selectable (w-workbench-timeline-seam) — PR #143 squash `9574d08`, CI green on the merge; opus-5.5 designer, quorum r1 3/3 block (1 upheld, 2 refuted by measurement) → r2 carve-out; opus planner prototyped the design and caught 3 more broken mutation rows + AC9 2× low; opus executor 26/26 mutants; sonnet judge 95 + r2 100 (two survivors closed by a controller test); new rows 98–101 [PRODUCT] |
 | 183 | 2026-09-24 | row 92 LANDED: clause-5 1.0 value demonstration — PR #142 squash `157d6f9`, CI green on the merge; 4/4 real questions walked in 10–20 s and verified outside World (retrieval of recorded diagnoses; baselines UNMEASURED); orphan 182's M1–M3 verified+committed, opus M4, sonnet judge 94/100 zero blocking; MU-3 exposed content-mismatch→500 (row 97); semantic-ID lookup gap (row 96) |
 | 182 | 2026-09-24 | ORPHANED: row 92 doc revised r1/r2 (quorum carve-out) + plan `10cce28` (kimi-k3), pi executor did M1–M3; controller killed at gate-3 rc=143 by the stall watchdog; credited and landed by iteration 183 |
 | 181 | 2026-09-24 | row 39 LANDED: PR #141 squash-merged `a036062`, CI green on the merge — first pi-controller land here, on the attended D-WORLD-36 harness fix; gofmt miss + unauthenticated bench (CI's bench-smoke gate, rule 3g) found and fixed on the way; judged 97/100 (r1) + 100/100 (r2) this fire, zero blocking; row 40 unblocked, row 95 resolved [PRODUCT] |

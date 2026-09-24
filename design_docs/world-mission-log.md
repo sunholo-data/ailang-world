@@ -3241,3 +3241,66 @@ Docs-only PR on `mission/world-iter166-defork-pin`, based on `9166de0`. The two 
 **Progress:** row **92 LANDED** (`157d6f9`). Clause 5's value demonstration exists as a committed artifact with a durable replay test in CI. New rows **96** (semantic-ID lookup; F-1/F-2) and **97** (content mismatch → 500).
 
 **Next**: rows 34/35/38, **40** (adapter contract, unblocked by 39), 27, **93** (Phase B, the clause-4 floor run, ordered after 92, which is now satisfied), 96, 97. **Decision ledger: 23 rows, ZERO OPEN.**
+
+## 184 — 2026-09-24 — rows 35+38 LANDED: the workbench timeline is a paged, selectable surface whose entries lead to objects — the full inner loop, with every role checking the one before it [PRODUCT]
+
+**Kind**: full inner loop (designer → quorum ×2 → planner → executor → evaluator ×2) on a fresh pick. No orphan this fire: the only stale worktree, `.wt-world-iter182`, belongs to row 92, which landed at `157d6f9`.
+
+**Picked.** Rows **35+38** at groom position 4 (row 92 at position 3 landed in iteration 183). They were designed as ONE doc because row 38 asks for exactly that. Premises re-measured at `82e3630`:
+- `Truncated`: 1 writer (`workbench.go:265`), 0 readers.
+- `NextHref`/`PrevHref`: 0 writers in `host/daemon`, 2 template reads.
+- The three `EntryView` edges: 0 template actions.
+- **New, same class:** `Page.Selected` is rendered nowhere (`grep -c Selected host/workbench/render.go` → 1, the struct field only).
+- Row 38's declared blocker (item 14) was LANDED at `3dda87e`.
+
+**Design.** Designer `claude:claude-opus-5-5` via `claude-sub`. The rotation pointer moved deepseek → claude; probe rc=0. First draft at `919a10b`, 492 lines. Its decisions:
+- (a) The timeline is PAGED. A link is emitted only after the handler has read the entry it selects, which also fixes the `len == limit` case that would have linked to an empty page.
+- (b) No grammar change: links use the existing `?from=N&entry=N`.
+- (c) The three edges render on the selected entry only, each existence-checked.
+- (d) `Selected` is in scope.
+
+**Quorum r1 BLOCKED 3/3. Each objection was measured before routing (rule 3f):**
+- **astra: UPHELD.** I1 claimed every emitted href resolves, but the world pane's StateRoot link is unchecked. The designer's probe then measured that link at 404.
+- **gemini: REFUTED.** It claimed `entryEdges` assigns strings to `HashRef`. `store.LogHeader`/`LogEntry` fields are `hashref.HashRef` (`store.go:115-128`); gemini had read `intentWire` (`journal.go:149-157`).
+- **glm: REFUTED.** It claimed `math` was not imported and the clamp was unreachable. `math` is imported at `:7`, and `?from=5&entry=5` reaches the clamp.
+
+One designer revision followed (`f21ec85`). **r2: gemini PASS, glm PASS, astra REJECT** on a single mutation row: deleting `selected.Edges = edges` leaves `edges` unused, so Go refuses to compile it. The controller applied astra's verbatim fix under the narrow-refinement carve-out (`edges[:0]`, with compiled y/n recorded separately in AC8) → `3d77c61`.
+
+**Plan.** Planner `opus` via the Agent tool (resolver `agent-tool opus fail-closed:env-pin`; no provider pin, so the hook raised no conflict). It **prototyped the entire design on a scratch branch** and measured 7/7 tests and 26/26 mutants before writing a line of the plan, then deleted the scratch branches. That surfaced five design defects the quorum missed:
+- **H9 and H3 do not compile.** This is the same defect astra found in H11, in two more rows.
+- **H14 is in the wrong milestone.** Its killer test only exists in M3.
+- **AC9's ≤320 LOC bound is about 2× low**: 548 total, 111 non-test.
+- **§5 claimed row 34's lines do not move.** They move by 1.
+
+Plan at `474f8c8`. The controller re-baselined AC9 before execution (non-test ≤150, total ≤600) → `0a69f1a`.
+
+**Execute.** Executor `opus` via the Agent tool, foreground. M1 `750f8f6` (the seam), M2 `01acc46` (selection edges), M3 `db94908` (paging), execution record `88855dd`. **26/26 mutants were killed by their named test**, with compilation recorded separately; AC1–AC9 PASS. The controller re-derived the gates: `go vet` rc=0, `go test ./... -count=1` **20 ok / 0 FAIL**, `verify_ail.sh` PASS.
+
+**Judge.** Evaluator `sonnet` via the Agent tool, in its own detached worktree `.eval-world-iter184` @ `88855dd`: **PASS 95/100, zero blocking.** It re-ran every gate and AC, and spot-checked R7, H8 and H11 exactly. It ran five mutants of its own choosing:
+- 3 killed: an off-by-one on each page boundary, and a relation/ref swap.
+- **2 survived**: `if err != nil` → `if false && err != nil` on the next-probe and prev-probe `GetLogEntry` calls.
+
+The shipped code was right, but nothing pinned it. The controller reproduced both survivors and added `TestWorkbenchPagingProbeStoreError` (`probeFailingStore` fails exactly one index; each subtest's control fails an unread index and gets 200). Each mutant now reds **only** that test. Committed `198ca46`. The **round-2 judge scored that delta PASS 100/100**. It re-proved both survivals with the test removed and verified that each failing index is read exactly once per request. Reports: `~/.ailang/state/mission-world-iter184-evidence/EVAL_REPORT_iter184{,_r2}.md`.
+
+**Land.** Doc and plan moved to `implemented/` (`c92ba2c`). The closing-keyword scan came back clean, with its control firing. PR [#143](https://github.com/sunholo-data/ailang-world/pull/143) went 2/2 green on its head and was squash-merged as **`9574d08`**. Gate 3b's SHA-pinned read of the merge: present 2, completed 2, success 2; 1 run with `event=push`, `success`.
+
+**Ruled out / process findings**
+- **(a) A quorum does not compile code, so a mutation table is a claim no reviewer can check by reading.** Four of the 26 mutation rows (H3, H9, H11, H14) were wrong: three did not compile and one sat in the wrong milestone. One reviewer caught one of them by reasoning about Go's unused-variable rule. The planner caught the other three by building the design. Rule 3i's class, one role earlier: the fix is that the plan's mutation rows are *executed* at plan time, not reviewed.
+- **(b) Two of three r1 objections were premise errors by the reviewer**: a wrong struct, and an import that was already present. Measuring them cost two `sed` calls and saved a revision cycle. That is rule 3f working as written, not a new finding.
+- **(c) The poll instrument failed safe.** My first PR-check poll ran under zsh, where `set -- $out` does not word-split. It printed `INSTRUMENT FAILURE` for 10 minutes rather than a verdict (the numeric-floor rule working as intended), and the direct per-check read then confirmed 2/2. Gate 3b was re-run under explicit `bash -c`.
+- **(d) A LOC bound written by a designer is an estimate, not a correctness bound.** It was re-baselined BEFORE execution, on a measured prototype, rather than failed afterwards or met by cutting tests.
+- **(e) Pre-existing gofmt drift on 3 files, and no CI gofmt gate.** Filed as row 101 (maintenance, attended-only), not fixed.
+
+**Routing evidence**: base=`9574d08431f3b3e0b4b9c93e48ecfee2c4c189c6`@`2026-09-24T14:38:51Z` (Gate 3b; Gate 1 base `82e36306d32fe34d87ce4eeeab1422b2e61d3f7f`@`2026-09-24T13:29:43Z`; drift at Gate 3b = 1 commit, my own squash).
+- Controller `claude:claude-opus-5-5` (session; tok: not reported).
+- Designer **`claude:claude-opus-5-5`** via the `claude-sub` recipe (resolver `recipe claude:claude-opus-5-5 declared:provider-pin`; subscription). Draft: 49,677 out / 1.67M cache-read, 31 turns. Revision (protocol-mandated, within the one-doc diet): 9,164 out / 0.60M cache-read, 16 turns. The CLI printed a notional $2.20 + $0.75; this is not metered because billing was CLEAN and the wrapper strips the keys.
+- Quorum: r1 BLOCKED 3/3 → r2 2 PASS, 1 REJECT → carve-out. Reviewers `gpt6-astra`, `gemini-3-1-pro`, `oc-glm-5-2`, none absent.
+- Planner **`opus`** via the Agent tool (`fail-closed:env-pin`), 177,144 tok.
+- Executor **`opus`** via the Agent tool (`declared:alias-pin`), 118,045 tok. The driver fell back through codex/pi, all rc=75 over ration.
+- Evaluator **`sonnet`** via the Agent tool (`declared:alias-pin`): r1 135,493 tok, r2 66,227 tok.
+- Generator ≠ judge on model: opus → sonnet.
+- Metered **$0.41** (quorum only).
+
+**Progress:** rows **35 and 38 LANDED** (`9574d08`). Of the groom's position-4 workbench rows, only 34 remains. Clause 5's human surface now has a working provenance hop: selected entry → transitionFn / interpreter / transitionRef objects. New rows **98–101**.
+
+**Next**: row 34 (grammar negative tests), **98** (provenance-walk section blank), **40** (adapter contract), 27, **93** (clause-4 floor run), 96, 97, 99, 100. **Decision ledger: 23 rows, ZERO OPEN.**
