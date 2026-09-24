@@ -81,6 +81,10 @@ func TestGradeViewRequiresTestVerdict(t *testing.T) {
 		if rendered := body.String(); !strings.Contains(rendered, "TESTED") || !strings.Contains(rendered, "verdict: FAIL") || !strings.Contains(rendered, `aria-label="test verdict FAIL"`) {
 			t.Fatalf("rendered test grade and verdict = %q", rendered)
 		}
+		want := `<p><span>TESTED</span> <span class="verdict-fail" aria-label="test verdict FAIL">✗ verdict: FAIL</span></p>`
+		if rendered := body.String(); !strings.Contains(rendered, want) || strings.Contains(rendered, `aria-label="test verdict PASS"`) {
+			t.Fatalf("rendered FAIL verdict, want %q in %q", want, rendered)
+		}
 	})
 
 	t.Run("pass", func(t *testing.T) {
