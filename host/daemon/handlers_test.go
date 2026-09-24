@@ -45,7 +45,7 @@ func requestRecorder(t *testing.T, d *Daemon, method, target string, body io.Rea
 // Authorization header value for it. POST /v1/commit is session-gated
 // (w-session-authority D6/D7), so every commit test needs one to reach the
 // handler past the middleware.
-func authHeader(t *testing.T, d *Daemon) string {
+func authHeader(t testing.TB, d *Daemon) string {
 	t.Helper()
 	tok, _, _, err := authority.Mint(context.Background(), d.store, "ep-test",
 		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 3600, time.Now().Unix(), nil)
