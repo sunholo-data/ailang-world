@@ -74,6 +74,11 @@ func TestNewRefusesBusyTimeoutAtOrAboveReadDeadline(t *testing.T) {
 			if !errors.As(err, &se) || se.Stage != StageStoreOpen {
 				t.Fatalf("New error = %v, want a StartupError at %q", err, StageStoreOpen)
 			}
+			// The operator-facing Detail is the half of the refusal a human reads
+			// first; pin it so it cannot regress to a generic message.
+			if want := "the store's lock-retry window is not below the read deadline"; se.Detail != want {
+				t.Fatalf("StartupError.Detail = %q, want %q", se.Detail, want)
+			}
 			if !errors.Is(err, ErrUnorderedTimeouts) {
 				t.Fatalf("New error = %v, want ErrUnorderedTimeouts", err)
 			}
