@@ -1182,6 +1182,7 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 		"host/archive/archive.go": driveArchiveVersionProbe,
 		"host/capsule/capsule.go": driveCapsuleRun,
 		"host/pkgproj/pkgproj.go": drivePkgprojCrossCheck,
+		"host/pkgproj/iface.go":   drivePkgprojQueryInterface,
 		"host/replay/replay.go":   driveReplayEntry,
 	}
 	if len(drivers) != len(files) {
@@ -1267,6 +1268,12 @@ func drivePkgprojCrossCheck(t *testing.T, probe string) {
 	// CrossCheck fails on the probe's output, which is expected: the site it
 	// launches is what is under test.
 	_, _ = pkgproj.CrossCheck(dir, manifest, probe)
+}
+
+func drivePkgprojQueryInterface(t *testing.T, probe string) {
+	t.Helper()
+	dir, manifest := publishFixtureDir(t)
+	_, _ = pkgproj.QueryInterface(context.Background(), dir, manifest, probe)
 }
 
 func driveReplayEntry(t *testing.T, probe string) {
