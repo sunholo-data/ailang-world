@@ -47,10 +47,10 @@ A new file `host/pkgproj/iface.go` holds two functions and one type.
 - `hash_v2` that is absent or does not match `^sha256:ifacev2:[0-9a-f]{64}$`;
 - `hash_v1` that is absent or does not match `^sha256:[0-9a-f]{64}$`.
 
-**`QueryInterface(dir, manifest, ailangBin) (InterfaceIdentity, error)`** is the effect:
+**`QueryInterface(ctx, dir, manifest, ailangBin) (InterfaceIdentity, error)`** is the effect:
 - It runs `ailang pkg quality --json --no-run .` with `cmd.Dir = dir` and `cmd.Env = childenv.Scrubbed(os.Environ())`.
-- It reads **stdout only**, the same discipline and reasoning as `CrossCheck` (`pkgproj.go:214-229`).
-- It is bounded by the caller, exactly as `CrossCheck` is. The only production caller, step 7, already runs under `run_bounded 120`.
+- It reads **stdout only**, the same discipline and reasoning as `CrossCheck` (`pkgproj.go:214-229`). Stderr is collected separately for diagnostics.
+- **It bounds its own wait (revised r1; see D1a).** It does not rely on the caller. `run_bounded 120` around step 7 stays as the **outer** safety net only.
 - It accepts **exit 0 or 2**. Upstream documents 2 as "one or more gates". Under `--no-run`, v0.41.0 *always* exits 2 with a spurious `PUB015 _smoke.ail failed` gate, even on the pristine package (V8, §11 O1). Any other exit is refused even when stdout parses (the arm that kills `MUT-RC1-ACCEPTED`).
 - It then applies the **free cross-check**: if the binary's `hash_v1` ≠ `pkgproj.InterfaceHash(manifest)`, it refuses with both values named. This is a second, independent check of the Go re-implementation of v1 and of `worldCoreManifest`, alongside step 7's dry-run prefix compare.
 
@@ -75,8 +75,47 @@ The `InterfaceIdentity` type is `{V1, V2 string; Signatures int}`. `Signatures` 
 | Missing key | named refusal |
 | Exit 1 | refusal |
 | v1 disagreement | refusal naming both values |
+| **Hang** (the child never exits) | `*QueryTimeoutError{Timeout: 30s}`, returned at the deadline (T14) |
+| **A descendant holds stdout** after the child is killed | `*QueryTimeoutError`, returned at deadline + `WaitDelay` (T15). The descendant is **not** killed (D1a residual). |
+| stdout exceeds 1 MiB | `ErrQualityOutputOverflow`. Checked before the timeout because it is definitive (T16). |
+| The caller's ctx is cancelled or expires | `fmt.Errorf("… cancelled by caller: %w", ctx.Err())`. **Never** mislabelled as our bound (T17). |
 
 Tests fail with `t.Fatal`, never skip, when `AILANG_BIN` is unset. This is the `requirePinned` pattern (`host/verifygate/ail_binary_gate_test.go:39`), not the skipping `pinnedBinary` pattern of `host/replay`.
+
+### D1a — Bounded waits for the new subprocess (added in r1, answering astra)
+
+**Measured baseline.** Of the five production launch sites at `1a1d929`, four are `exec.CommandContext`-bounded (V21):
+- `archive.go:470`, with `probeTimeout = 10s`;
+- `broker/handlers.go:93`, via `runBounded`;
+- `capsule.go:169`;
+- `replay.go:327`.
+
+The only unbounded site is `pkgproj.go:242`, `CrossCheck`. r0's D1 copied it, so the objection is **true for the site this doc introduces**. Leaving `CrossCheck` itself unbounded is pre-existing and **not** fixed here (§11 O5).
+
+**The mechanism, all within `queryInterface(ctx, …, bounds)`.** `QueryInterface` passes the production bounds; the tests pass small bounds.
+
+| Piece | What it does | Value / justification |
+|---|---|---|
+| `runCtx, cancel := context.WithTimeout(ctx, queryInterfaceTimeout)` + `exec.CommandContext(runCtx, …)` | SIGKILLs the **direct** child at the deadline | `queryInterfaceTimeout = 30 * time.Second`. The measured call is 0.28–0.85 s (V17, V22), so this is about 35× headroom. It is also **below** step 7's `run_bounded 120`, so the named error fires before the shell's exit 124. That is the same shape of reasoning as `archive.go:59-75`. |
+| `cmd.WaitDelay = queryInterfaceWaitDelay` | After the kill, `Wait` stops waiting for a descendant that inherited stdout: the pipes are closed and `Run` returns | `2 * time.Second`. This is the gap `archive.go:69-74` names and leaves out of its own scope. |
+| `cmd.Stdout = &cappedBuffer{limit: maxQualityOutputBytes}`, and a 64 KiB cap on stderr | Bounded collection. A write past the cap fails, sets `over`, and `Run` returns. | `1 << 20`. The real document is 3,286 bytes (V3), so this is about 300× headroom. |
+| Result order | 1. overflow → `ErrQualityOutputOverflow`; 2. `ctx.Err() != nil` → caller's error (wrapped); 3. `runCtx` `DeadlineExceeded` → `*QueryTimeoutError`; 4. exit code; 5. parse; 6. v1 cross-check | Rule 2 comes **before** rule 3. A caller's deadline also marks `runCtx` `DeadlineExceeded`, and the prototype's first draft reported it as our 30 s bound. T17 caught that (V22). |
+
+**Tension with `CrossCheck`'s own comment, faced.** `pkgproj.go:225-232` rejects an in-process constant beneath the shell bound because it "would mint a cross-language constant ordering no test can pin". The same comment also says "a new caller must bring its own bound". D1a takes the second half as the rule, because the live Go tests call `QueryInterface` **outside** any shell wrapper (astra's point).
+
+The ordering (30 s < 120 s) is pinned by T18 against the **literal** 120, not against the shell's value. That residual is declared: if `run_bounded 120` is lowered below 30, the outer net fires first with exit 124. That is still bounded, just not named.
+
+**Why not reuse the existing machinery.**
+- `broker.runBounded` is unexported, lives in a package that **imports `pkgproj`** (`registry_publish.go:18`), so using it here would be an import cycle. It also merges stderr into stdout (`cmd.Stderr = cmd.Stdout`, `handlers.go:114`), which breaks the stdout-only parse.
+- `capsule.readCapped`/`collectOutput` are unexported and tied to capsule's `Result` type.
+
+Exporting either would widen a clause-3 surface to serve one caller. The copy is about 25 LOC with its own tests. Consolidating into a shared bounded-exec package belongs to **row 24** (`w-host-subprocess-cleanup-boundary`, the owner named at `capsule.go:208-210`).
+
+**What is and is not asserted about surviving processes.**
+- **Asserted:** the call **returns** with the named error within timeout + `WaitDelay`. That was 1.30 s at bounds of 1 s + 0.3 s, measured 3/3 runs (V22). The direct child is dead because `CommandContext` SIGKILLs it.
+- **Not asserted, and measured to be false:** that the descendant is gone. T15 logs `descendant pid … alive after return: true` on every run and then reaps it itself. Killing descendants needs a process group (`Setpgid` + group SIGKILL, as `runBounded` and `capsule` do). That lifecycle belongs to **row 24**, not to this row.
+
+For the real `ailang` binary this residual is theoretical: it is one compiled binary, and `archive.go:70-72` makes the same observation. `WaitDelay` is what makes a violation of that assumption **bounded**, not free.
 
 ### D2 — v2 joins the ready packet, generated by the gate
 
@@ -144,8 +183,8 @@ The prototype diff touches **none** of `registry_publish.go` or `approve.go`; it
 
 | File | Change |
 |---|---|
-| `host/pkgproj/iface.go` (new, ~80 LOC) | `InterfaceIdentity`, `ParseQualityInterface`, `QueryInterface` |
-| `host/pkgproj/iface_test.go` (new) | T1–T7 (§6) |
+| `host/pkgproj/iface.go` (new, ~150 LOC) | `InterfaceIdentity`, `ParseQualityInterface`, `QueryInterface(ctx, …)`, the D1a constants, `QueryTimeoutError`, `ErrQualityOutputOverflow`, `cappedBuffer` |
+| `host/pkgproj/iface_test.go` (new) | T1–T6, T14–T18 (§6), with shell-script **test doubles** for hang, descendant and overflow. These are not parsed-output fixtures. |
 | `host/pkgproj/testdata/gen_quality_fixtures.sh` (new) + 3 generated + 3 derived fixtures | §7 |
 | `host/pkgproj/readypacket.go` / `_test.go` | field, frozen list, `Field`, parameter; Equal-table row |
 | `host/pkgproj/pkgproj.go` | comments only (D5) |
@@ -169,6 +208,7 @@ The prototype diff touches **none** of `registry_publish.go` or `approve.go`; it
   - T8 pins the same outcome offline, against the **captured** served document.
 - **AC6.** `go vet ./... && AILANG_BIN=… go test ./...` exits 0, and `./scripts/verify_ail.sh` is green.
 - **AC7.** `git diff --stat` shows no change to `host/broker/registry_publish.go` or `host/broker/approve.go`.
+- **AC9 (bounded waits).** T14–T18 are green. The hang double returns `*QueryTimeoutError` within timeout + 0.1 s. The descendant double returns within timeout + `WaitDelay` + 0.1 s. Each call runs under a 5 s `runWithin` guard, so a mutant **fails** rather than hangs the suite. `MUT-NO-DEADLINE`, `MUT-NO-WAITDELAY`, `MUT-NO-CAP`, `MUT-TIMEOUT-UNNAMED`, `MUT-PROD-TIMEOUT-HUGE`, `MUT-TIMEOUT-DROPS-CALLER-CTX` and `MUT-CALLER-CHECK-OFF` each red.
 - **AC8.** §8.3's first sentence no longer claims that v1 moves. `grep -c 'interface hash changes because a public ADT changes' design_docs/implemented/w-validated-proven-evidence-boundary.md` returns 0. As a control, the same grep against `git show 1a1d929:<path>` returns 1.
 
 ## §6 Test plan and mutation matrix: every row was RUN against the prototype
@@ -194,10 +234,19 @@ The prototype is a copy of the repo at `1a1d929` under `~/.ailang/state/iter188-
 | — | existing fence tests, real golden | `MUT-FENCE-CONST` (last nibble flipped) | **KILLED** by 2 existing tests (D3) |
 | T13 | `TestRunbookInterfaceV2DigestAppearsVerbatimInTheCommittedGolden` | `MUT-RUNBOOK-ROW-DROPPED` | **KILLED** |
 | AC4 | package gate step 9 | `MUT-GATE-PY-OMITS-V2` | **KILLED** (gate rc=1; control rc=0) |
+| T14 | `TestQueryInterfaceTimesOutOnAHangingBinary`: double `exec sleep 30`, bounds 1 s / 0.3 s | `MUT-NO-DEADLINE` (`WithTimeout` → `WithCancel`) | **KILLED**: T14 and T15 both hit the 5.00 s `runWithin` guard |
+| T14 | (same) | `MUT-TIMEOUT-UNNAMED` (the `QueryTimeoutError` branch deleted) | **KILLED** (T14 1.01 s, T15 1.31 s: wrong error type) |
+| T15 | `TestQueryInterfaceReturnsWhileADescendantHoldsStdout`: double `sleep 30 & echo $! > pid; wait` | `MUT-NO-WAITDELAY` | **KILLED** (T15 hit the 5.01 s guard: `Wait` held open by the descendant) |
+| T16 | `TestQueryInterfaceCapsStdout`: double `head -c 100000 /dev/zero`, cap 4096 | `MUT-NO-CAP` | **KILLED** |
+| T17 | `TestQueryInterfaceHonoursCallerCancellation`: caller ctx 1.5 s, internal bound 4 s | `MUT-TIMEOUT-DROPS-CALLER-CTX` (`WithTimeout(context.Background(), …)`) | **KILLED**. It SURVIVED until T17 existed. |
+| T17 | (same) | `MUT-CALLER-CHECK-OFF` (caller-first rule 2 disabled) | **KILLED**. It was the r1 prototype's own bug: the first draft mislabelled the caller's deadline. |
+| T18 | `TestQueryInterfaceUsesFiniteProductionBounds`: 0 < timeout < 120 s, and `WaitDelay` > 0, cap > 0 | `MUT-PROD-TIMEOUT-HUGE` (3600 s) | **KILLED** |
 
-**Tally (final prototype): 17 mutations run, 17 killed, 0 survivors.** The first pass had 6 survivors:
-- 5 were fixed by a stricter assertion or a new arm: `ABSENT-V2-OK`, `V2-SHAPE`, `V1-GUARD`, `SCHEMA`, `WP-DROP`;
-- 1 was fixed by deleting an unreachable guard: `SIGS-UNCHECKED`.
+**Tally (r1 prototype): 24 mutations run, 24 killed, 0 survivors.**
+- **The original 17** were all re-run against the revised bounded code and are still killed (V23). Their first pass had 6 survivors:
+  - 5 were fixed by a stricter assertion or a new arm: `ABSENT-V2-OK`, `V2-SHAPE`, `V1-GUARD`, `SCHEMA`, `WP-DROP`;
+  - 1 was fixed by deleting an unreachable guard: `SIGS-UNCHECKED`.
+- **The 7 bounded-wait mutations are new in r1.** Their first pass had 1 survivor, `DROPS-CALLER-CTX`, fixed by T17. T17 then exposed the caller-deadline mislabel, which was fixed in code (D1a result order).
 
 The executor re-runs this matrix against the real change. It is a claim until then.
 
@@ -221,6 +270,7 @@ The executor re-runs this matrix against the real change. It is a claim until th
 ## §8 Conflict surface
 
 - **AC10(a)** (`registry_publish_test.go:1133`) enumerates every production `exec.Command`. The new site made it red until a driver was added: the prototype measured `N = 6 production subprocess launch sites in 6 files` (V17). The driver is required.
+- **Bounded-subprocess siblings:** `broker.runBounded`, `capsule.collectOutput` and `archive.probeTimeout` are **read, not modified**. D1a copies their pattern rather than exporting them. Row 24 owns consolidation and process-group cleanup, and `CrossCheck` stays as it is (§11 O5).
 - **S8 floor-raise inventory:** golden row 4 now carries `interfaceHashV2`, which does not move on a contract-only raise (V6). No new inventory row is needed.
 - **Existing reconcile tests:** `metadataDocument`, `reconcileCfg` and three R6 message assertions change. The prototype diff is +15/−9.
 - **Future `world/` ADT or export changes:** these red the fence tests (D3). A queued row that adds a constructor must plan a version bump.
@@ -244,14 +294,14 @@ The executor re-runs this matrix against the real change. It is a claim until th
 - The world-graph object `interfaceHash` is out of scope.
 - The pre-existing tension that a floor raise moves the "0.1.0" golden's `contentHash` away from the published bytes is not addressed here (§11 O4).
 
-## §10 Milestones (≈0.8 d total)
+## §10 Milestones (≈0.95 d total)
 
-- **M1 — `pkgproj` v2 query and parser (0.35 d).**
-  - Work: `iface.go`, `iface_test.go` (T1–T6), the generator plus 6 fixtures, and the AC10(a) driver.
-  - Accept: `cd <repo> && AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/pkgproj/ ./host/broker/ -run 'InterfaceV2|QueryInterface|ParseQuality|EverySubprocessSite' -count=1 -v` shows all PASS. Re-run `MUT-V2-IS-V1`, `-IS-SOURCE`, `-ABSENT-V2-OK`, `-NO-V1-CROSSCHECK`, `-RC1-ACCEPTED`, `-V2-SHAPE`, `-V1-GUARD`, `-SCHEMA`; each must red.
+- **M1 — `pkgproj` v2 query, bounded, and parser (0.5 d).**
+  - Work: `iface.go` including D1a, `iface_test.go` (T1–T6, T14–T18), the generator plus 6 fixtures, and the AC10(a) driver.
+  - Accept: `cd <repo> && AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/pkgproj/ ./host/broker/ -run 'InterfaceV2|QueryInterface|ParseQuality|EverySubprocessSite' -count=1 -v` shows all PASS, and AC9 holds. Re-run `MUT-V2-IS-V1`, `-IS-SOURCE`, `-ABSENT-V2-OK`, `-NO-V1-CROSSCHECK`, `-RC1-ACCEPTED`, `-RC2-REFUSED`, `-V2-SHAPE`, `-V1-GUARD`, `-SCHEMA` and the 7 D1a mutations; each must red. Afterwards, `pgrep -f 'sleep 30'` must be empty once the reap in T15 has run.
 - **M2 — packet, gate, fence, reconcile (0.3 d).**
   - Work: D2, D3, D4, T7–T13, and the `SELF_MOD_PUBLISH.md` v2 row. The golden is regenerated **by the gate's own red diff** (the S8 recipe), never hand-edited.
-  - Accept: AC3, AC4, AC5, AC7, and the full `go vet ./... && go test ./...`. Re-run the remaining 9 mutations.
+  - Accept: AC3, AC4, AC5, AC7, and the full `go vet ./... && go test ./...`. Re-run the remaining 8 mutations.
 - **M3 — honesty (0.15 d).**
   - Work: D5 (runbook prose, `pkgproj.go` comments, `verify_ail.sh:49`, §8.3 plus a dated correction note).
   - Accept: AC8, AC6, `./scripts/verify_ail.sh`.
@@ -263,6 +313,8 @@ The executor re-runs this matrix against the real change. It is a claim until th
 - **O2.** Binding v2 into the publish payload and approval scope is deferred to the next version's publish design. For 0.1.0, the registry itself refuses PUB005 on publisher/validator v2 skew (V2). That is **only** when the header is sent: a v2 build failure is shadow-mode, meaning it is logged and not refused.
 - **O3 (optional, ratification-class, Mark).** S8 could add: "`interfaceHashV2` does not move on a contract-only or body-only raise (measured iter-188)."
 - **O4.** The golden is labelled 0.1.0 but floor raises move its `contentHash` away from the published bytes. That is pre-existing and orthogonal. Candidate for a new row.
+- **O5 (new queue-row candidate, for the controller to file).** `pkgproj.CrossCheck` (`pkgproj.go:242`) is the last production `exec.Command` without a context. Its bound is delegated to `run_bounded 120` (`pkgproj.go:225-232` states this deliberately). This is **pre-existing** and not fixed here. The D1a pattern is the ready template for it.
+- **O6 (row 24).** Descendant or process-group cleanup for the new site is deferred to `w-host-subprocess-cleanup-boundary`. The residual is measured in V22: the descendant survives the return.
 - **Controller correction to M1.** The controller wrote that the validator "refuses PUB005 on disagreement". Measured: it refuses only when the publisher **sends** `X-Interface-Hash-V2` and the value differs; otherwise v2 is shadow-mode (V2). Also, `pkg quality`'s `signatures` is an integer count; the set appears only in registry metadata as `interface_signatures`.
 
 ## §12 Verification Log
@@ -291,3 +343,23 @@ All `ailang` runs used `~/.pinned-ailang/ailang`, which reports `AILANG v0.41.0 
 | V18 | Live reconcile: prototype four digests, base three | `go run ./cmd/world-publish reconcile --store $S/empty.db --registry-origin https://storage.googleapis.com/ailang-registry --probe`, in proto and then in the repo at `1a1d929` | proto: `state=succeeded-reconciled package=world/core@0.1.0 … detail="served metadata matches all four expected digests"`. base: `… detail="served metadata matches all three expected digests"` |
 | V19 | Mutation matrix | `$S/mutate.sh <ID> <file> '<perl>' <pkg> '<re>'` per §6 row; gate mutation by perl on step 9 python, then `verify_world_package.sh` | As tabulated in §6. Gate mutant: `rc=1`, `✗ ready packet differs byte-for-byte from golden`; unmutated control `rc=0` |
 | V20 | Package gate green with the v2 golden | `AILANG_BIN=$B WORLD_PKG_AILANG_BIN=$B ./scripts/verify_world_package.sh` (proto) | `rc=0`, `✓ canonical JSON equals committed golden byte-for-byte`, `✓ world package gate PASSED: 9/9` |
+| V21 | 4 of 5 production launch sites are ctx-bounded; `CrossCheck` is not; reuse is blocked | `git grep -n "exec.CommandContext\|exec.Command(" -- '*.go' \| grep -v _test`; `sed -n 55,76p host/archive/archive.go`; `sed -n 88,130p host/broker/handlers.go`; `grep -n host/pkgproj host/broker/registry_publish.go` | `archive.go:470`, `handlers.go:93`, `capsule.go:169` and `replay.go:327` are `CommandContext`; `pkgproj.go:242` is `exec.Command`. `probeTimeout = 10 * time.Second` has the "SCOPE OF THE BOUND … needs cmd.WaitDelay … out of scope" note. `runBounded` is lowercase and sets `cmd.Stderr = cmd.Stdout`. `registry_publish.go:18` imports `host/pkgproj`, so reusing `runBounded` from `pkgproj` would be a cycle. |
+| V22 | Bounded-wait tests, 3 consecutive runs | `cd $S/proto && for i in 1 2 3; do AILANG_BIN=$B go test ./host/pkgproj/ -count=1 -v \| grep -E 'hang:\|descendant:\|caller cancel\|^ok'; done`. The caller-cancel draft was run once before the fix. | Every run: `hang: named timeout after 1.00s`, `descendant: named timeout after 1.30s; descendant pid <n> alive after return: true`, `caller cancel: returned after 1.50s`, `ok`. Pre-fix T17: `want the caller's context error, not the internal bound: ailang pkg quality exceeded its 4s bound`. Real-binary T1 0.85 s at worst. At 200 ms test bounds, T15's double lost the race to write its pid on first exec (`pid: no such file`), so the test bounds are 1 s / 0.3 s. |
+| V23 | r1 mutation re-run, suite, gate, live | `$S/mutate.sh …` for all 24; `go vet ./... && AILANG_BIN=$B go test ./...`; gate; gate with the step-9 python mutant; `go run ./cmd/world-publish reconcile … --probe` (proto, r1 code) | 24/24 KILLED (§6). vet rc=0, test rc=0, 21 `ok`, 61 s. Gate `rc=0` 9/9; gate mutant `rc=1`. Live: `state=succeeded-reconciled … all four expected digests`. `grep exec.Command host/pkgproj/*.go` shows `iface.go:118: exec.CommandContext(runCtx, …)`. |
+
+## §13 Quorum log
+
+- **r1 reviewers:**
+  - `gemini-3-1-pro`: **PASS**, and noted the bounded-wait concern as non-blocking.
+  - `oc-glm-5-2`: **ABSENT** (Ollama 429 session limit, a capacity problem that cannot be restored this round).
+  - `gpt6-astra`, re-run alone: **REJECT**. Objection: *"D1 does not establish the bounded-waits axiom for the new subprocess … QueryInterface uses exec.Command without a context or deadline and delegates its bound to run_bounded … The live Go tests also call QueryInterface outside that wrapper."* The controller measured the objection as TRUE for the introduced site (V21).
+- **Changes in this revision (r1):**
+  - D1 is now bounded in-process.
+  - New D1a covers: context + `CommandContext`, a 30 s named timeout justified from measured call time, `WaitDelay` 2 s, stdout capped at 1 MiB, a named `QueryTimeoutError`, caller-cancellation precedence, the copy-vs-export reasoning, and an honest survivor residual.
+  - The failure table has 4 new rows.
+  - New tests: T14–T18, using hang, descendant and overflow doubles.
+  - New mutations (7), all killed. The original 17 were re-run, all killed.
+  - AC9 is new; M1 was re-priced to 0.5 d.
+  - §11 O5 (`CrossCheck`, a new row candidate) and O6 (row 24) are new.
+  - V21–V23 are new.
+- **Unchanged:** the arm, the reconcile design, the wire freeze and the fixture discipline.
