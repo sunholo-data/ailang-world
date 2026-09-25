@@ -49,6 +49,7 @@ type ReadyPacket struct {
 	Effects         []string `json:"effects"`
 	Exports         []string `json:"exports"`
 	InterfaceHash   string   `json:"interfaceHash"`
+	InterfaceHashV2 string   `json:"interfaceHashV2"`
 	Package         string   `json:"package"`
 	TarballBytes    int      `json:"tarballBytes"`
 	TarballSHA256   string   `json:"tarballSHA256"`
@@ -61,7 +62,7 @@ type ReadyPacket struct {
 // host/broker/registry_publish.go.
 var ReadyPacketFields = []string{
 	"compilerVersion", "contentHash", "effects", "exports", "interfaceHash",
-	"package", "tarballBytes", "tarballSHA256", "version",
+	"interfaceHashV2", "package", "tarballBytes", "tarballSHA256", "version",
 }
 
 // EncodeReadyPacket renders the canonical document, INCLUDING the trailing
@@ -128,7 +129,7 @@ func LoadReadyPacket(path string) (ReadyPacket, error) {
 // interface and tarball digests are all computed here from the projection
 // directory, exactly as RegistryPublishHandler.Execute recomputes them
 // immediately before dispatch.
-func RecomputeReadyPacket(dir string, manifest Manifest, compilerVersion string) (ReadyPacket, error) {
+func RecomputeReadyPacket(dir string, manifest Manifest, compilerVersion, interfaceHashV2 string) (ReadyPacket, error) {
 	content, err := ContentHash(dir)
 	if err != nil {
 		return ReadyPacket{}, fmt.Errorf("pkgproj: recompute content hash: %w", err)
@@ -143,6 +144,7 @@ func RecomputeReadyPacket(dir string, manifest Manifest, compilerVersion string)
 		Effects:         normalizedList(manifest.Effects.Max),
 		Exports:         normalizedList(manifest.Exports.Modules),
 		InterfaceHash:   InterfaceHash(manifest),
+		InterfaceHashV2: interfaceHashV2,
 		Package:         manifest.Package.Name,
 		TarballBytes:    len(tarball),
 		TarballSHA256:   TarballHash(tarball),
@@ -188,6 +190,8 @@ func (p ReadyPacket) Field(name string) string {
 		return renderList(p.Exports)
 	case "interfaceHash":
 		return p.InterfaceHash
+	case "interfaceHashV2":
+		return p.InterfaceHashV2
 	case "package":
 		return p.Package
 	case "tarballBytes":

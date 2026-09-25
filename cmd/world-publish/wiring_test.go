@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"flag"
 	"go/ast"
 	"go/parser"
@@ -485,8 +486,16 @@ func TestWorldCoreManifestMatchesTheCommittedGolden(t *testing.T) {
 	if err != nil {
 		t.Fatalf("load committed golden: %v", err)
 	}
+	bin := os.Getenv("AILANG_BIN")
+	if bin == "" {
+		t.Fatal("AILANG_BIN unset: interfaceHashV2 needs the pinned binary; never skip")
+	}
+	iface, err := pkgproj.QueryInterface(context.Background(), filepath.Join(root, defaultPackageDir), worldCoreManifest, bin)
+	if err != nil {
+		t.Fatalf("query interface identity: %v", err)
+	}
 	recomputed, err := pkgproj.RecomputeReadyPacket(
-		filepath.Join(root, defaultPackageDir), worldCoreManifest, frozenCompilerVersion)
+		filepath.Join(root, defaultPackageDir), worldCoreManifest, frozenCompilerVersion, iface.V2)
 	if err != nil {
 		t.Fatalf("recompute the packet from the real projection: %v", err)
 	}
@@ -556,5 +565,14 @@ func TestReconcileConfigIsBuiltFromTheReadyPacket(t *testing.T) {
 		t.Fatalf("the command chose a probe control (%s/%s@%s); the shipped default must be used "+
 			"so the control always travels the target's own key-space",
 			cfg.ControlVendor, cfg.ControlName, cfg.ControlVersion)
+	}
+}
+
+func TestReconcileConfigCarriesThePacketsInterfaceV2(t *testing.T) {
+	packet := pkgproj.ReadyPacket{Package: "world/core", Version: "0.1.0",
+		TarballSHA256: "t", ContentHash: "c", InterfaceHash: "i", InterfaceHashV2: frozenInterfaceHashV2}
+	cfg := reconcileConfigFor(options{}, packet)
+	if cfg.ExpectedInterfaceV2 != frozenInterfaceHashV2 {
+		t.Fatalf("ExpectedInterfaceV2 = %q, want the packet's %q", cfg.ExpectedInterfaceV2, frozenInterfaceHashV2)
 	}
 }

@@ -87,6 +87,10 @@ const frozenPackageVersion = "0.1.0"
 // and the tarball changed, and the tarball changed because it gained a file.
 const frozenCompilerVersion = "AILANG v0.41.0"
 
+// frozenInterfaceHashV2 is the registry-recorded interface identity (v2) of the
+// immutable world/core@0.1.0.
+const frozenInterfaceHashV2 = "sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8"
+
 // stopError is a fence refusal. It is a value rather than a printf because the
 // STOP line has to be produced identically everywhere it is produced.
 type stopError struct {
@@ -311,7 +315,7 @@ func requireUndriftedPacket(packageDir, goldenPath string) (pkgproj.ReadyPacket,
 			Detail: fmt.Sprintf("the golden names version %q; this command publishes only %q",
 				golden.Version, frozenPackageVersion)}
 	}
-	recomputed, recomputeErr := pkgproj.RecomputeReadyPacket(packageDir, worldCoreManifest, frozenCompilerVersion)
+	recomputed, recomputeErr := pkgproj.RecomputeReadyPacket(packageDir, worldCoreManifest, frozenCompilerVersion, frozenInterfaceHashV2)
 	if recomputeErr != nil {
 		return pkgproj.ReadyPacket{}, &stopError{Fence: fencePacket, Reason: "unrecomputable",
 			Detail: recomputeErr.Error()}

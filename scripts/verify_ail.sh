@@ -46,7 +46,8 @@
 #                                                      hand-maintained BY DESIGN; deriving it from
 #                                                      EXACT_TOTAL_VERIFIED would make the control
 #                                                      vacuous (row 43's evaluator refutation)
-# interfaceHash does not move for .ail byte changes or packaged-module changes that leave
+# interfaceHash (v1, manifest coverage only; the exported-interface digest is
+# interfaceHashV2) does not move for .ail byte changes or packaged-module changes that leave
 # the hashed manifest fields unchanged. It MUST move when a hashed manifest field changes,
 # including name, edition, the optional AILANG bound, exports, or effects. Do not "fix" the
 # third digest on a Tier-1 raise. A raise that changes the hashed manifest fields (or the
