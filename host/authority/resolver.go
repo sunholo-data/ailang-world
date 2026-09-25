@@ -91,6 +91,15 @@ type Resolver interface {
 	// Resolve maps the ENTIRE Authorization header value (or "" if absent)
 	// plus a caller-supplied now (Unix seconds) to a typed outcome.
 	Resolve(header string, now int64) ResolveOutcome
+	// ResolveContext is Resolve with a caller-supplied context threading
+	// one bounded request deadline into the store's single-connection wait
+	// (w-a2a-session-projection P6.A-CTX). Credential policy is IDENTICAL to
+	// Resolve; the ONE behavioural difference is that a store read failure
+	// (including context.Canceled / context.DeadlineExceeded while the query
+	// waits for the pooled connection) is returned as a non-nil error with a
+	// zero outcome — never collapsed into DenialUnknown — so a transport
+	// deadline can never be misreported to the caller as a bad credential.
+	ResolveContext(ctx context.Context, header string, now int64) (ResolveOutcome, error)
 }
 
 // New builds a Resolver over a CredentialStore.
@@ -110,48 +119,68 @@ const tokenHexLen = 64
 // absent header is refused before any store touch (bounded by construction);
 // a present-shaped token is hashed once and looked up by the single indexed
 // PK query (bounded by design).
+//
+// Resolve is exactly ResolveContext over context.Background(): the credential
+// policy lives in ONE place so the two entry points can never drift apart
+// (P6.A-CTX policy equivalence), and the /v1/commit middleware keeps today's
+// context-less behaviour byte-for-byte, including the store-error ->
+// DenialUnknown collapse (a residual the projection does not inherit).
 func (r *resolver) Resolve(header string, now int64) ResolveOutcome {
-	if header == "" {
-		denied := DenialAbsent
-		return ResolveOutcome{Denied: &denied}
-	}
-	fields := splitHeader(header)
-	if len(fields) != 2 || fields[0] != "Bearer" {
-		denied := DenialMalformed
-		return ResolveOutcome{Denied: &denied}
-	}
-	token := fields[1]
-	if !isHexToken(token) {
-		denied := DenialMalformed
-		return ResolveOutcome{Denied: &denied}
-	}
-	credentialID := hashHexToken(token)
-	row, ok, err := r.st.ResolveSession(context.Background(), credentialID)
+	out, err := r.ResolveContext(context.Background(), header, now)
 	if err != nil {
 		// A store read failure is not a denial the caller can act on; fail
 		// closed to the same surface as an unknown credential.
 		denied := DenialUnknown
 		return ResolveOutcome{Denied: &denied}
 	}
+	return out
+}
+
+// ResolveContext implements the resolve policy once for both entry points.
+// Everything up to the store call (header shape, token shape, hash) is pure
+// and identical to Resolve; the store call receives the caller's ctx so a
+// bounded request deadline bounds the wait for the store's single pooled
+// connection (store.SetMaxOpenConns(1)), and a store error surfaces as an
+// error, not a credential denial.
+func (r *resolver) ResolveContext(ctx context.Context, header string, now int64) (ResolveOutcome, error) {
+	if header == "" {
+		denied := DenialAbsent
+		return ResolveOutcome{Denied: &denied}, nil
+	}
+	fields := splitHeader(header)
+	if len(fields) != 2 || fields[0] != "Bearer" {
+		denied := DenialMalformed
+		return ResolveOutcome{Denied: &denied}, nil
+	}
+	token := fields[1]
+	if !isHexToken(token) {
+		denied := DenialMalformed
+		return ResolveOutcome{Denied: &denied}, nil
+	}
+	credentialID := hashHexToken(token)
+	row, ok, err := r.st.ResolveSession(ctx, credentialID)
+	if err != nil {
+		return ResolveOutcome{}, fmt.Errorf("authority: resolve: %w", err)
+	}
 	if !ok {
 		denied := DenialUnknown
-		return ResolveOutcome{Denied: &denied}
+		return ResolveOutcome{Denied: &denied}, nil
 	}
 	if now > row.ExpiresAt {
 		denied := DenialExpired
-		return ResolveOutcome{Denied: &denied}
+		return ResolveOutcome{Denied: &denied}, nil
 	}
 	grants, err := unmarshalGrants(row.GrantsJSON)
 	if err != nil {
 		denied := DenialUnknown
-		return ResolveOutcome{Denied: &denied}
+		return ResolveOutcome{Denied: &denied}, nil
 	}
 	return ResolveOutcome{Success: &SessionBinding{
 		EpisodeID: row.EpisodeID,
 		Caps:      grants,
 		ExpiresAt: row.ExpiresAt,
 		CreatedAt: row.CreatedAt,
-	}}
+	}}, nil
 }
 
 // splitHeader tokenizes the Authorization header value.
