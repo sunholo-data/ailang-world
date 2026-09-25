@@ -48,11 +48,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sunholo-data/ailang/serveapi/protocol"
+
 	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/projection"
 	"github.com/sunholo-data/ailang-world/host/registry"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/transitionreg"
 )
 
 // Version is the daemon's own release string, reported by GET /v1/health. It
@@ -308,6 +312,14 @@ type Daemon struct {
 	scanTimeBudget time.Duration
 	integrity      IntegrityReport
 
+	// projection serves the two additive A2A surface routes
+	// (GET /.well-known/agent.json, POST /a2a/; w-a2a-session-projection
+	// P6.B-A2A-CARD) over THIS daemon's one resolver, one store handle and one
+	// read seam — no second store, credential path or policy engine. The
+	// routes are NOT in isProtected: the projection resolves the session
+	// itself so /a2a/ can answer in JSON-RPC form.
+	projection *projection.Handler
+
 	// Health facts resolved once at startup and served verbatim.
 	interpreterRef     string
 	interpreterVersion string
@@ -473,6 +485,36 @@ func New(cfg Config) (*Daemon, error) {
 	}
 
 	d.integrity = d.scanIntegrity()
+
+	// The A2A projection (w-a2a-session-projection) mounts two additive routes
+	// over the handles New already owns: the ONE resolver instance (F3), the
+	// registry reader over the ONE open store (the projection holds no store
+	// handle at all — P5 made structural), and the read seam for the B3
+	// absent-head pre-check. The card-route denial writer is the
+	// middleware's own writeSessionDenial so a card denial is byte-identical
+	// to the /v1/commit denial (B1); the card route's 503/504 failures reuse
+	// the daemon's writeAPIError envelope — the envelope stays daemon-owned
+	// and projection never formats it (AC1). MaxWait is the D7 readDeadline:
+	// a projection request IS store reads below the transport, so the same
+	// proven bound applies.
+	proj, err := projection.New(projection.Config{
+		Resolver: d.resolver,
+		Reader:   transitionreg.NewReader(d.store),
+		Heads:    d.reads,
+		Deny:     writeSessionDenial,
+		Fail:     writeAPIError,
+		Agent: protocol.AgentInfo{
+			Name:        "ailang-worldd",
+			Description: "AILANG World daemon: session-scoped transition-registry projection (A2A agent card; /a2a/ admission is fail-closed — transition invocation is not available in this daemon)",
+			Version:     Version,
+		},
+		MaxWait: readDeadline,
+	})
+	if err != nil {
+		return nil, d.abort(StageConfig, "cannot construct the A2A projection", err)
+	}
+	d.projection = proj
+
 	d.srv = newServer(d.Handler())
 	return d, nil
 }
@@ -571,6 +613,12 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/registry/{name...}", d.handleRegistry)
 	mux.HandleFunc("POST /v1/commit", d.handleCommit)
 	mux.HandleFunc("GET /workbench", d.handleWorkbench)
+	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
+	// are ADDITIVE: the frozen /v1/ table above is untouched, and the routes
+	// are NOT in isProtected — the projection handler resolves the session
+	// itself so /a2a/ can answer in JSON-RPC form (B5).
+	mux.HandleFunc("GET /.well-known/agent.json", d.projection.AgentCard)
+	mux.HandleFunc("POST /a2a/", d.projection.A2A)
 	return NewSessionMiddleware(d.resolver).Wrap(d.isProtected, mux)
 }
 

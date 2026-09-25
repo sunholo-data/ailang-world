@@ -13,16 +13,21 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/authority"
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/registry"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/transitionreg"
 )
 
 // ---------------------------------------------------------------------------
@@ -736,27 +741,37 @@ func TestReleaseFromVersion(t *testing.T) {
 // Zero-cloud dependency allowlist (Decision 4: enforced, not asserted)
 // ---------------------------------------------------------------------------
 
-// allowedDepModules is the closed set of non-stdlib module roots the daemon
-// core (host/daemon + cmd/ailang-worldd) may reach, directly or transitively.
-// The charter guardrail "local-first is inviolable" is enforced here: a cloud
-// SDK, telemetry shim or network client cannot enter the build graph without
-// this literal being edited, which is a reviewable event.
+// allowedDepModules is the closed set of non-stdlib module roots or package
+// paths the daemon core (host/daemon + cmd/ailang-worldd) may reach, directly
+// or transitively. The charter guardrail "local-first is inviolable" is
+// enforced here: a cloud SDK, telemetry shim or network client cannot enter
+// the build graph without this literal being edited, which is a reviewable
+// event.
+//
+// Entries are matched as PATH PREFIXES (disallowedDeps), so an entry may be a
+// whole module root (the wide form) or ONE package path (the narrow form).
+// The ailang entry below is deliberately the narrow form: the daemon core
+// reaches exactly the pinned A2A wire package of the ailang module
+// (w-a2a-session-projection P6.D) — the module ROOT would silently admit the
+// rest of that module (e.g. internal/apiserver's measured 476 packages),
+// which the narrowness test below proves stays refused.
 //
 // Everything below modernc.org/sqlite is the indirect chain that the pure-Go
 // SQLite driver drags in; it is all local computation (libc shim, allocator,
 // bignum, strftime, tty probe, uuid) with no outbound network capability.
 var allowedDepModules = []string{
-	"github.com/sunholo-data/ailang-world", // this repo
-	"modernc.org/sqlite",                   // pure-Go SQLite driver (host/store)
-	"modernc.org/libc",                     // indirect: sqlite
-	"modernc.org/mathutil",                 // indirect: sqlite
-	"modernc.org/memory",                   // indirect: sqlite
-	"golang.org/x/sys",                     // indirect: sqlite
-	"github.com/dustin/go-humanize",        // indirect: sqlite
-	"github.com/google/uuid",               // indirect: sqlite
-	"github.com/mattn/go-isatty",           // indirect: sqlite
-	"github.com/ncruces/go-strftime",       // indirect: sqlite
-	"github.com/remyoudompheng/bigfft",     // indirect: sqlite
+	"github.com/sunholo-data/ailang-world",             // this repo
+	"modernc.org/sqlite",                               // pure-Go SQLite driver (host/store)
+	"modernc.org/libc",                                 // indirect: sqlite
+	"modernc.org/mathutil",                             // indirect: sqlite
+	"modernc.org/memory",                               // indirect: sqlite
+	"golang.org/x/sys",                                 // indirect: sqlite
+	"github.com/dustin/go-humanize",                    // indirect: sqlite
+	"github.com/google/uuid",                           // indirect: sqlite
+	"github.com/mattn/go-isatty",                       // indirect: sqlite
+	"github.com/ncruces/go-strftime",                   // indirect: sqlite
+	"github.com/remyoudompheng/bigfft",                 // indirect: sqlite
+	"github.com/sunholo-data/ailang/serveapi/protocol", // w-a2a-session-projection P6.D: ONE pinned A2A wire package (ailang v0.33.2), never the module root
 }
 
 // daemonCorePatterns are the two package trees the allowlist governs.
@@ -934,4 +949,247 @@ func TestDaemonDependencyAllowlist(t *testing.T) {
 		t.Logf("zero-cloud allowlist enforced over %d transitive packages for %s",
 			len(deps), strings.Join(daemonCorePatterns, " "))
 	})
+}
+
+// TestAilangProtocolAdmissionIsNarrow is P6.D's narrowness gate (the killer of
+// mutation MUT-ALLOWLIST-ROOT): the ONE new allowlist entry admits exactly the
+// pinned A2A wire package path and nothing else of the ailang module. With
+// the entry in place the module's internals (internal/apiserver — the
+// measured 476-package-wide tree), the serveapi facade (mutation
+// MUT-FACADE-IMPORT's shape) and a representative cloud SDK path must all
+// still be REFUSED; the control leg proves the wire package itself is
+// admitted, so the gate cannot pass by the entry having gone missing either.
+func TestAilangProtocolAdmissionIsNarrow(t *testing.T) {
+	refused := []string{
+		"github.com/sunholo-data/ailang/internal/apiserver",
+		"github.com/sunholo-data/ailang/serveapi",
+		"cloud.google.com/go/storage",
+	}
+	bad, err := disallowedDeps(refused)
+	if err != nil {
+		t.Fatalf("disallowedDeps: %v", err)
+	}
+	if strings.Join(bad, ",") != strings.Join(refused, ",") {
+		t.Fatalf("disallowedDeps(ailang internals + cloud path) refused %v, want ALL of %v — "+
+			"the serveapi/protocol package-path entry must NOT widen to the module root", bad, refused)
+	}
+
+	// Control: the pinned wire package itself IS admitted (the entry is live,
+	// narrow, and package-scoped — a future subpackage rides the same prefix).
+	wire, err := disallowedDeps([]string{
+		"github.com/sunholo-data/ailang/serveapi/protocol",
+		"github.com/sunholo-data/ailang/serveapi/protocol/subpkg",
+	})
+	if err != nil {
+		t.Fatalf("disallowedDeps: %v", err)
+	}
+	if len(wire) != 0 {
+		t.Fatalf("the admitted wire package was refused: %v — the P6.D entry must allow exactly the package path", wire)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// A2A projection mount (w-a2a-session-projection P6.B-A2A-CARD): additive
+// routes over the daemon's one resolver/store/read seam.
+// ---------------------------------------------------------------------------
+
+// seedTransitionRegistry publishes a revision-1 transition registry into the
+// daemon's own store (the seam host/projection reads), returning the head.
+// Descriptors are canonically ID-ordered, mirroring transitionreg's encode
+// invariant, and use real World stable-ID grammar (dots and slashes, F6).
+func seedTransitionRegistry(t *testing.T, st *store.Store, idEffect ...string) hashref.HashRef {
+	t.Helper()
+	if len(idEffect)%2 != 0 {
+		t.Fatalf("seedTransitionRegistry wants ID/effect pairs, got %d strings", len(idEffect))
+	}
+	entries := make([]transitionreg.Descriptor, 0, len(idEffect)/2)
+	for i := 0; i < len(idEffect); i += 2 {
+		entries = append(entries, transitionreg.Descriptor{
+			ID: idEffect[i], TransitionFn: hashref.SumSHA256([]byte("fn-" + idEffect[i])), Interpreter: hashref.SumSHA256([]byte("interp")),
+			SemanticsEpoch: 1, InputSchema: []byte(`{}`), OutputSchema: []byte(`{}`),
+			Access:          transitionreg.EffectRequirement{Effect: idEffect[i+1], Scope: "world", Cost: 1},
+			DeclaredEffects: []transitionreg.EffectRequirement{{Effect: idEffect[i+1], Scope: "world", Cost: 1}},
+			Title:           "title-" + idEffect[i], Description: "description-" + idEffect[i],
+		})
+	}
+	sort.Slice(entries, func(i, j int) bool { return entries[i].ID < entries[j].ID })
+	payload, err := transitionreg.EncodeRevision(transitionreg.Revision{
+		SemanticID: transitionreg.SemanticIDV1, InterfaceHash: transitionreg.InterfaceHashV1,
+		Revision: 1, Entries: entries,
+	})
+	if err != nil {
+		t.Fatalf("encode revision: %v", err)
+	}
+	obj := store.Object{
+		Hash: hashref.SumSHA256(payload), InterfaceHash: transitionreg.InterfaceHashV1,
+		SemanticID: transitionreg.SemanticIDV1, Provenance: "daemon-test", Payload: payload,
+	}
+	if err := st.PutObject(obj); err != nil {
+		t.Fatalf("put object: %v", err)
+	}
+	if err := st.CompareAndSetRegistryHead(store.TransitionRegistryV1, hashref.HashRef{}, obj.Hash); err != nil {
+		t.Fatalf("cas head: %v", err)
+	}
+	return obj.Hash
+}
+
+// mintSessionGrants mints a session credential into d's store whose grants are
+// live-capable (ExpiresAt set so the broker admits them during the test).
+func mintSessionGrants(t *testing.T, d *Daemon, episode string, effects ...string) string {
+	t.Helper()
+	grants := make([]broker.Capability, 0, len(effects))
+	for _, e := range effects {
+		grants = append(grants, broker.Capability{Effect: e, Scope: "world", ExpiresAt: time.Now().Unix() + 7200, Budget: 10})
+	}
+	tok, _, _, err := authority.Mint(context.Background(), d.store, episode, grants, 3600, time.Now().Unix(), nil)
+	if err != nil {
+		t.Fatalf("mint session: %v", err)
+	}
+	return tok
+}
+
+// TestProjectionRoutes_MountedAndNotProtected is AC9's route-table half +
+// B5 (MUT-ISPROTECTED-EXPAND's killer): the two A2A routes are mounted,
+// reachable, and EXCLUDED from d.isProtected — the projection resolves the
+// session itself so /a2a/ can answer in JSON-RPC form (an /a2a/ denial under
+// the middleware would be a REST 401, and TestA2A_DenialMatrix in
+// host/projection pins the 200+A2AError wire). The unauthenticated health
+// route is the regression control.
+func TestProjectionRoutes_MountedAndNotProtected(t *testing.T) {
+	d := newHandlerDaemon(t)
+	for _, target := range []string{"/.well-known/agent.json", "/a2a/"} {
+		req := httptest.NewRequest(http.MethodGet, target, nil)
+		if d.isProtected(req) {
+			t.Fatalf("isProtected(%s) = true — the projection routes are self-resolving and must stay OUT of the middleware set (POST /v1/commit only)", target)
+		}
+	}
+	// Predicate control: the one protected route still is.
+	if !d.isProtected(httptest.NewRequest(http.MethodPost, "/v1/commit", nil)) {
+		t.Fatal("isProtected(POST /v1/commit) = false — the predicate probe is vacuous")
+	}
+
+	// Mounted + self-resolving: the card route without a session is the
+	// projection's OWN denial (401 SessionAbsent), not a mux 404.
+	rec := requestRecorder(t, d, http.MethodGet, "/.well-known/agent.json", nil)
+	if rec.Code != http.StatusUnauthorized || errorClass(t, rec.Body.Bytes()) != "SessionAbsent" {
+		t.Fatalf("unauthenticated card route = (%d, %q), want (401, SessionAbsent) — mounted?", rec.Code, errorClass(t, rec.Body.Bytes()))
+	}
+	// /a2a/ without a session is a JSON-RPC -32001 on an HTTP 200 carrier,
+	// proving the route is NOT middleware-wrapped (the middleware would 401).
+	recA := requestRecorder(t, d, http.MethodPost, "/a2a/", strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"tasks/send"}`))
+	if recA.Code != http.StatusOK || !strings.Contains(recA.Body.String(), `"code":-32001`) {
+		t.Fatalf("unauthenticated /a2a/ = (%d, %s), want (200, JSON-RPC code -32001)", recA.Code, recA.Body)
+	}
+	// Regression control: the unauthenticated health route is untouched (P6).
+	health := requestRecorder(t, d, http.MethodGet, "/v1/health", nil)
+	if health.Code != http.StatusOK {
+		t.Fatalf("unauthenticated health = %d, want 200 (REST route regression)", health.Code)
+	}
+}
+
+// TestCardDenial_ByteIdenticalToCommitMiddleware is B1's wire proof
+// (MUT-CARD-ENVELOPE's killer): under the SAME bad credential, the card
+// route's denial body is BYTE-IDENTICAL to the /v1/commit middleware's —
+// the daemon injects its own writeSessionDenial into the projection, so the
+// envelope, class, message and status can never drift.
+func TestCardDenial_ByteIdenticalToCommitMiddleware(t *testing.T) {
+	d := newHandlerDaemon(t)
+
+	badAuths := []string{
+		"",                                  // absent -> 401 SessionAbsent
+		"Bearer " + strings.Repeat("b", 64), // unknown -> 401 SessionUnknown
+		"Token abc",                         // malformed -> 400 InvalidSession
+		"Bearer z",                          // malformed (bad token shape)
+	}
+	// Also an EXPIRED credential, minted against the daemon's own store.
+	expiredTok, _, _, err := authority.Mint(context.Background(), d.store, "ep-expired",
+		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 60, time.Now().Unix()-3600, nil)
+	if err != nil {
+		t.Fatalf("mint expired: %v", err)
+	}
+	badAuths = append(badAuths, "Bearer "+expiredTok)
+
+	for _, auth := range badAuths {
+		commit := postCommitAuth(t, d, auth)
+		card := requestRecorderAuth(t, d, auth, http.MethodGet, "/.well-known/agent.json", nil)
+		if commit.Code != card.Code {
+			t.Fatalf("auth %q: commit status=%d vs card status=%d — the card denial must reuse the F2 mapping", auth, commit.Code, card.Code)
+		}
+		if !bytes.Equal(commit.Body.Bytes(), card.Body.Bytes()) {
+			t.Fatalf("auth %q: denial bodies differ:\ncommit: %s\ncard:   %s", auth, commit.Body, card.Body)
+		}
+	}
+}
+
+// TestAgentCard_ViaDaemon_SessionScoped is the mount-level AC2/AC5
+// integration proof over the REAL stack the executor ships (daemon ->
+// resolver -> store -> transitionreg): two sessions see their exact distinct
+// skill sets, and the /a2a/ admission gate over the same mount answers the
+// constant -32603 for an authorized skill and -32602 for a guessed one.
+func TestAgentCard_ViaDaemon_SessionScoped(t *testing.T) {
+	d := newHandlerDaemon(t)
+	seedTransitionRegistry(t, d.store, "tools.echo", "alpha", "world/recovery-transition/v1", "beta")
+
+	tokA := mintSessionGrants(t, d, "ep-a", "alpha")
+	tokB := mintSessionGrants(t, d, "ep-b", "beta")
+
+	cardOf := func(tok string) map[string]any {
+		rec := requestRecorderAuth(t, d, "Bearer "+tok, http.MethodGet, "/.well-known/agent.json", nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("card status=%d body=%s", rec.Code, rec.Body)
+		}
+		var card map[string]any
+		if err := json.Unmarshal(rec.Body.Bytes(), &card); err != nil {
+			t.Fatalf("card not JSON: %v", err)
+		}
+		return card
+	}
+	skillSet := func(card map[string]any) []string {
+		skills := card["skills"].([]any)
+		ids := make([]string, 0, len(skills))
+		for _, s := range skills {
+			ids = append(ids, s.(map[string]any)["id"].(string))
+		}
+		return ids
+	}
+	if got := skillSet(cardOf(tokA)); !reflect.DeepEqual(got, []string{"tools.echo"}) {
+		t.Fatalf("session A card = %v, want [tools.echo]", got)
+	}
+	if got := skillSet(cardOf(tokB)); !reflect.DeepEqual(got, []string{"world/recovery-transition/v1"}) {
+		t.Fatalf("session B card = %v, want [world/recovery-transition/v1]", got)
+	}
+	// The daemon-injected AgentInfo reaches the wire.
+	if got := cardOf(tokA); got["name"] != "ailang-worldd" || got["version"] != Version {
+		t.Fatalf("card agent identity = %v/%v, want ailang-worldd/%s", got["name"], got["version"], Version)
+	}
+
+	send := `{"jsonrpc":"2.0","id":9,"method":"tasks/send","params":{"metadata":{"skill_id":"%s"}}}`
+	// Authorized skill -> the constant -32603 over the full mounted stack.
+	recAuth := requestRecorderAuth(t, d, "Bearer "+tokA, http.MethodPost, "/a2a/", strings.NewReader(fmt.Sprintf(send, "tools.echo")))
+	if recAuth.Code != http.StatusOK || !strings.Contains(recAuth.Body.String(), `"code":-32603`) ||
+		!strings.Contains(recAuth.Body.String(), "transition invocation is not available in this daemon") {
+		t.Fatalf("authorized /a2a/ over the mount = (%d, %s), want (200, constant -32603)", recAuth.Code, recAuth.Body)
+	}
+	// Guessed skill -> -32602.
+	recGuess := requestRecorderAuth(t, d, "Bearer "+tokA, http.MethodPost, "/a2a/", strings.NewReader(fmt.Sprintf(send, "tools.nope")))
+	if !strings.Contains(recGuess.Body.String(), `"code":-32602`) {
+		t.Fatalf("guessed /a2a/ skill = %s, want -32602", recGuess.Body)
+	}
+}
+
+// TestAgentCard_ViaDaemon_AbsentHeadZeroSkills is the daemon-level
+// AC-ABSENT-HEAD witness: a fresh daemon (its store has the bootstrapped
+// EPOCH registry but NO transition-registry head — F8's production default)
+// answers an authenticated card fetch with HTTP 200 and an explicit empty
+// skills array — never a 5xx, never unauthenticated.
+func TestAgentCard_ViaDaemon_AbsentHeadZeroSkills(t *testing.T) {
+	d := newHandlerDaemon(t)
+	tok := mintSessionGrants(t, d, "ep-a", "alpha")
+	rec := requestRecorderAuth(t, d, "Bearer "+tok, http.MethodGet, "/.well-known/agent.json", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("fresh-daemon card status=%d, want 200 (absent transition-registry head is legitimate); body=%s", rec.Code, rec.Body)
+	}
+	if !strings.Contains(rec.Body.String(), `"skills":[]`) {
+		t.Fatalf("fresh-daemon card body = %s, want an explicit empty skills array", rec.Body)
+	}
 }

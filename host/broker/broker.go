@@ -63,6 +63,18 @@ type CapabilitySnapshot struct {
 	grants []Capability
 }
 
+// NewCapabilitySnapshot captures an immutable capability reading directly
+// from a grant set — no session, no ledger, no store. It exists for the
+// host-boundary projection (w-a2a-session-projection): the authority binding's
+// grant set IS already an immutable per-session snapshot (P2), so the
+// capability filter needs a CapabilitySnapshot from grants alone, and TR.C's
+// dispatch-binding gate forbids constructing a live *Session outside this
+// package. Epoch is 0: a binding has no ledger, and Allows reads only grants
+// and Now.
+func NewCapabilitySnapshot(grants []Capability, now int64) CapabilitySnapshot {
+	return CapabilitySnapshot{Epoch: 0, Now: now, grants: append([]Capability(nil), grants...)}
+}
+
 // CapabilitySnapshot returns a detached view of the current ledger.
 func (s *Session) CapabilitySnapshot(now int64) CapabilitySnapshot {
 	s.mu.Lock()
