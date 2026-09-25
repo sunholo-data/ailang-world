@@ -1,13 +1,6 @@
 # w-a2a-session-projection — Session-Scoped A2A Agent Card + Fail-Closed `/a2a/` (SPLIT child of `w-mcp-projection`)
 
-**Status**: Planned — **UNBLOCKED (row 39 `w-session-authority` landed `a036062`, iter-181);
-REVISED iter-187 against row 39's ACTUAL landed contract; DESCOPED by controller SPLIT to the
-buildable now — a session-scoped A2A agent card plus a fail-closed `/a2a/` endpoint on row 39's
-`host/authority.Resolver`; transition INVOCATION is moved verbatim to a "Deferred to invocation"
-section gated on a coordinator that does not exist; NOT yet quorum-cleared; QUORUM ROUND 1 (iter-187 r1): three REJECTions
-(gpt6-astra, gemini-3-1-pro, oc-glm-5-2) MEASURED and each answered — see "Quorum round 1".** The A2A projection
-design substance (the parent's `P6.B-A2A`, reviewer-refined across four quorum rounds) is
-carried where it still applies and preserved verbatim where it must wait for invocation.
+**Status**: **Implemented 2026-09-25 (iteration 187)** — the session-scoped A2A agent card (`GET /.well-known/agent.json`) and fail-closed `/a2a/` shipped in `host/projection`, with P6.A-CTX (`authority.ResolveContext`) and P6.D (ailang v0.33.2 `serveapi/protocol`, one package-path allowlist line). Quorum: r1 BLOCKED 3/3 (measured, revised), r2 BLOCKED 3/3 on one surface (narrow-refinement carve-out, fixes verbatim). Transition INVOCATION remains in the "Deferred to invocation" section, gated on a coordinator that does not exist (F7) and a production registry publisher (F8). See "Implementation record" at the end.
 **Item**: split child #2 of `w-mcp-projection` (charter clause 6, queue row 5; the long-time
 blocker was queue row 39 `w-session-authority`)  
 **Clause**: clause-6 — *"the transition registry is served over MCP (capability-filtered per
@@ -733,3 +726,25 @@ Charter clause 6 (F12) is partitioned across THREE docs:
   (the in-process model row 39 extended to the HTTP-facing boundary)
 - [w-store-durability.md](../implemented/w-store-durability.md) — the commit-boundary Go surface
   whose proof is consumed only by the deferred invocation half
+
+## Implementation record (iteration 187)
+
+- **Commits** (branch `sprint/w-a2a-session-card`): design revision `1c00979`, r1 revision `6b77840`,
+  r2 carve-out `4ff25f9`, plan `bb24171`, **M1** `cc801ec` (P6.A-CTX), **M2+M3** `fa0cb19` (fused,
+  per plan §2: `go mod tidy` would drop an unimported requirement), judge-survivor pins `90fbf0d` (test-only).
+- **Gates** (controller re-derived on `fa0cb19`, judge re-derived on `90fbf0d`): `go vet` rc=0,
+  `go test ./... -count=1` **21 ok / 0 FAIL** (base 20), `verify_ail.sh` rc=0 (11 identities / 40 named
+  tests, 9/9 world-package steps), dependency closure **250 → 253** (plan D3: `serveapi/protocol` +
+  same-module `host/projection`, `host/transitionreg`), module bumps isatty/x/sys/x/sync (plan D4).
+- **Deviations** D1–D9 (sprint plan §5) all adjudicated as justified by the judge; the material ones
+  are D1 (`broker.NewCapabilitySnapshot` instead of `broker.NewSession`, which needs a store handle and
+  would breach P5) and D6 (the middleware's denial switch extracted into `writeSessionDenial`,
+  behaviour-preserving, so the card route reuses one writer).
+- **Non-vacuity**: planner drill 30/30 KILLED on the prototype; executor re-drill 15/15 KILLED on the
+  landed commits; judge r1 own mutations 2/6 killed — the 4 survivors were closed by `90fbf0d`, each
+  test proven the sole and load-bearing killer; judge r2 **PASS 98/100**, zero blocking (r1 93/100).
+- **Residuals**: `/v1/commit`'s middleware still resolves without a request deadline; no invocation
+  path (every authorized `/a2a/` call gets the constant -32603); the transition registry is never
+  populated in production, so a live daemon serves the zero-skills card until a publisher lands;
+  `protocol.CallerSurface`'s MCP name grammar rejects World stable IDs (travels to the MCP child).
+

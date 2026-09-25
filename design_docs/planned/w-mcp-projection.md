@@ -21,7 +21,7 @@ disposition, per-round surface table and round count: `## Quorum verification lo
 all four rounds" was true of rounds 1–4 and round 5 then found two narrow ones).** Planned — **SPLIT #2 APPLIED 2026-08-26 (iteration 126): ROUND 4'S BLOCKING
 OBJECTION IS DISCHARGED BY SPLIT, NOT ANSWERED — `P6.B-A2A`, the whole A2A projection surface,
 the session-authority objection it drew, and `D-WORLD-26`'s operative force are carved out into
-the child [`w-a2a-session-projection.md`](w-a2a-session-projection.md), honestly BLOCKED on
+the child [`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md), honestly BLOCKED on
 charter queue row 39 `w-session-authority`. WHAT REMAINS HERE — `P6.A` (record), `P6.T`, `P6.D`,
 `P6.V` — HAS DRAWN ZERO OBJECTIONS ACROSS ALL FOUR QUORUM ROUNDS AND WAITS ON NOTHING.** Clause 6
 is now partitioned across THREE docs (see the clause-6 scope statement below). Full disposition
@@ -76,7 +76,7 @@ partitioned across THREE docs: this parent (`P6.T`/`P6.D`/`P6.V` — the enabler
 consume, blocked on nothing); child #1
 [`w-mcp-dispatch-projection.md`](w-mcp-dispatch-projection.md) — "project the transition
 registry over MCP", blocked UPSTREAM on `ailang#885`; and child #2
-[`w-a2a-session-projection.md`](w-a2a-session-projection.md) — "publish the A2A agent card" plus
+[`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md) — "publish the A2A agent card" plus
 session-scoped A2A invocation, blocked LOCALLY on charter queue row 39 `w-session-authority`.
 Each child carries its blocking predicate as a runnable command with controls. Clause 6 is NOT
 satisfied by this parent alone — nor by any two of the three docs — and this doc does not
@@ -121,7 +121,7 @@ capabilities of each session. This is an authority boundary, not documentation: 
 transition must be absent from discovery, absent from the A2A card, and rejected if invoked by
 name. That boundary is now delivered by the two split children — the A2A surface (the agent card
 at `/.well-known/agent.json`, the A2A endpoint at `/a2a/`, and session-scoped invocation through
-propose → verify → commit) by [`w-a2a-session-projection.md`](w-a2a-session-projection.md),
+propose → verify → commit) by [`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md),
 blocked on charter row 39, and the MCP surface by
 [`w-mcp-dispatch-projection.md`](w-mcp-dispatch-projection.md), blocked on the upstream dispatch
 seam (`ailang#885`). **This doc delivers the three enabling milestones** — toolchain floor,
@@ -305,7 +305,7 @@ envelope HELPERS (`WriteMCPEnvelope`, `RequestID`, `ValidateMCPName`, `Authoriza
 `a2a_handler.go` → **2**), because it hands the entire dispatch to
 `github.com/modelcontextprotocol/go-sdk`. Therefore **World writes its own A2A HTTP handler and
 callback-bounding — work that since split #2 lives in the A2A child,
-[`w-a2a-session-projection.md`](w-a2a-session-projection.md)** — and the MCP handler question
+[`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md)** — and the MCP handler question
 moves to child #1 until `#885` delivers a dispatch seam. That is D-WORLD-5 (ARM A: import
 upstream, pinned) executing as written on the half it can reach, not a new human ask.
 
@@ -323,7 +323,7 @@ inherited), and re-enforced here first-party by the allowlist gate.
 ## Decision 3 — Session-Scoped Projection in worldd (A2A) — MOVED TO THE A2A CHILD (split #2)
 
 Carried in full, identifier preserved, by
-[`w-a2a-session-projection.md`](w-a2a-session-projection.md) — with its responsibility 1
+[`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md) — with its responsibility 1
 re-bound to the row-39 resolver interface per the round-4 `proposed_fix`: this doc's former text
 equated `host/broker.NewSession` (a session CONSTRUCTOR whose grants are an argument) with a
 credential resolver, which is exactly what round 4 caught. Nothing in P6.T/P6.D/P6.V consumes
@@ -332,7 +332,7 @@ Decision 3.
 ## Decision 4 — Surface Identity, A2A Card, and Compatibility — MOVED TO THE A2A CHILD (split #2)
 
 Carried unchanged, identifier preserved, by
-[`w-a2a-session-projection.md`](w-a2a-session-projection.md). (The cross-surface MCP≡A2A
+[`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md). (The cross-surface MCP≡A2A
 equality obligation it recorded remains with the MCP dispatch child, as before.)
 
 ## Decision 5 — Process, Endpoint, and Package Layout (S2/S3)
@@ -433,7 +433,7 @@ handler will exist.
 Retained as record: the upstream finding was filed (`sunholo-data/ailang#764`, following `#498`)
 and this design landed. That finding is now **RESOLVED BY DELIVERY** — see Upstream Findings.
 The frozen two-session conformance fixture carries forward unchanged: its A2A leg into the A2A
-child ([`w-a2a-session-projection.md`](w-a2a-session-projection.md), since split #2), its MCP
+child ([`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md), since split #2), its MCP
 leg with the MCP dispatch child.
 
 ### P6.T — Toolchain floor `go1.25.6 → go1.26.6` (~0.1d) — **FIRST, and independently mergeable**
@@ -511,7 +511,7 @@ the single `allowedDepModules` **package-path** entry
 and the 249 → 250 closure assertion — **occurs atomically with its first real consumer and is
 never pre-landed.** It is carried by whichever child unblocks first:
 
-- [`w-a2a-session-projection.md`](w-a2a-session-projection.md) — blocked on charter queue row 39
+- [`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md) — blocked on charter queue row 39
   `w-session-authority`; carries the admission as its milestone step 1 (its A2A handler import is
   the compile-visible use).
 - [`w-mcp-dispatch-projection.md`](w-mcp-dispatch-projection.md) — blocked on
@@ -557,7 +557,7 @@ regardless of which path was taken.
 
 The session projection + A2A conformance milestone (~0.7d) is carried, unchanged in substance
 and under its own identifier, by
-[`w-a2a-session-projection.md`](w-a2a-session-projection.md) — honestly BLOCKED on charter
+[`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md) — honestly BLOCKED on charter
 queue row 39 `w-session-authority`, with the round-4 objection travelling verbatim in its
 opening problem statement. It starts only after row 39's session-authority design lands AND
 P6.T/P6.D/P6.V are green. Nothing in this doc's three milestones depends on it.
@@ -658,7 +658,7 @@ has none. The child also adds a row-39-overlap entry the round-4 `catch` demande
 - **The A2A half of clause 6 — SPLIT OUT at split #2, not silently deferred.** P6.B-A2A,
   premises P2–P6, Decisions 3 and 4, the bounded-wait contract, acceptance criteria
   AC1–AC9/AC11–AC14 with their named mutations, and the projection conflict-surface entries are
-  carried by [`w-a2a-session-projection.md`](w-a2a-session-projection.md), blocked on charter
+  carried by [`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md), blocked on charter
   queue row 39 `w-session-authority` (no inbound credential→session resolution exists — round-4
   finding, confirmed first-party).
 - Designing or landing the clause-3 capability law, broker, in-process session model, or
@@ -1241,7 +1241,7 @@ fields (`strongest_objection`, `catch`, `proposed_fix`) are carried VERBATIM —
 character-for-character against the round-4 artifact
 (`.ailang/state/mission-quorum/w-mcp-projection-2026-08-25T21-25-44Z.json`), with a mutated-quote
 negative control — into the opening problem statement of the new child,
-[`w-a2a-session-projection.md`](w-a2a-session-projection.md). The pre-existing gap the objection
+[`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md). The pre-existing gap the objection
 surfaced (no inbound credential→session resolution anywhere in `host/ cmd/` — the controller's
 first-party iteration-125 measurement, re-run at `fcf18fa` in the split-#2 session with identical
 values) is **charter queue row 39 `w-session-authority`**: a defect this doc *fails to fix*, not
@@ -1341,7 +1341,7 @@ no objection in five rounds.
 - [w-mcp-dispatch-projection.md](w-mcp-dispatch-projection.md) — SPLIT child #1: carries the
   MCP dispatch half and the round-3 objection verbatim; blocked on `ailang#885`; NOT
   quorum-cleared
-- [w-a2a-session-projection.md](w-a2a-session-projection.md) — SPLIT child #2: carries the A2A
+- [w-a2a-session-projection.md](../implemented/w-a2a-session-projection.md) — SPLIT child #2: carries the A2A
   projection half and the round-4 objection verbatim; blocked on charter queue row 39
   `w-session-authority`; NOT quorum-cleared
 - [world-mission.md](../world-mission.md) — clause 6, queue row 5, **queue row 39
