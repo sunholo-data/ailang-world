@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 189 | 2026-09-25 | row 22 LANDED: the daemon refuses to start unless the store's effective busy_timeout is below its read deadline; row 93 re-gated on capability... |
 | 188 | 2026-09-25 | row 27 LANDED: `interfaceHash` is honestly labelled as manifest coverage, and upstream's own `InterfaceHashV2` travels beside it through packet, ga... |
 | 187 | 2026-09-25 | row 40 card half LANDED: a session-scoped A2A agent card and a fail-closed `/a2a/` on row 39's session boundary — after a measured SPLIT, because t... |
 | 186 | 2026-09-25 | rows 98+102 LANDED: the workbench object page's provenance walk and grade line are never blank — one exact edge existence-checked, two named stops,... |

@@ -949,3 +949,60 @@ So arm (a) would make every reconcile of the immutable 0.1.0 a `conflict`, and a
 **Progress:** row **27 LANDED** (`73e06ae`), clause 1. The field that promised interface coverage now has a genuine interface-covering sibling, which the registry also records, and reconcile checks it. Upstream issue `sunholo-data/ailang#1305` (`--no-run` misreports the un-run smoke as failed). New rows **109** (`CrossCheck` has no in-process bound) and **110** (the "0.1.0" golden's `contentHash` drifts on floor raises).
 
 **Next**: **93** (clause-4 floor run), 75, 106 (needs a design doc), 107, 109, 99, 100, 96, 97, 103, 104. **Decision ledger: 23 rows, ZERO OPEN.**
+
+## 189 — 2026-09-25 — row 22 LANDED: the daemon refuses to start unless the store's effective busy_timeout is below its read deadline, and a test reds on a reorder in either direction. Rows 93 and 75 were re-measured first: 93 is blocked on capability, 75 was solved upstream. Judged 97, r2 99 [PRODUCT]
+
+**Kind**: full inner loop on a fresh pick (designer + one revision → quorum ×2 → controller carve-out → planner → executor → evaluator + r2), plus two re-measured queue rows. No orphan: 0 open PRs; the only stale worktree `.wt-world-iter182` is row 92's (landed).
+
+**Why not 93 or 75.** Groom position 7 (row 93, the clause-4 floor run) was re-measured, and it is **blocked on capability, not ordering**. Its World arm is "MCP transition tools only", and World has **0** non-test files that mention `tools/call`/`tools/list`/`mcp` (control: `a2a` matches 3). It also has no invocation coordinator (row 106) and no populated transition registry (row 107). The MCP half (row 108) waits on upstream `ailang#885`: reopened today (09:18Z), with `serveapi/protocol` blobs identical at v0.42.0, the latest release. The row's "gated on row 92 for ordering, not for capability" was true when filed and is false for the World arm. Position 8 (row 75) is **solved upstream**: `ailang#1037` was closed COMPLETED on 2026-09-13. On the pinned v0.41.0, `messages list zzz_… -json -limit 2` exits rc=1 with `unexpected argument … takes only flags`, and the `-inbox` flag-form control exits rc=0. Both close as bookkeeping, so the substantive pick was position 9's first row.
+
+**Picked.** Row **22** `w-daemon-lock-wait-not-deadline-bound`. Premise re-measured at `a5090f0`: `busyTimeoutMillis = 2000` (`writer_lock.go:181`) and `readDeadline = 10 s` (`daemon.go:133`). No file names both: the grep is empty, and a case-insensitive re-run in r2 is empty too, with the control firing on 8 files. The same ordering is already enforced one package over, in `evidence.NewValidator`'s `ErrUnorderedTimeouts`.
+
+**Design.** Designer `claude:claude-opus-5-5` via `claude-sub`. Rotation last-used was claude, then astra, which was SKIPPED because codex is over ration (59% against 50% allowed). Deepseek was SKIPPED because Ollama is over its daily ration and OpenRouter is at $3.09 against $2.33. These are capacity skips, and the lane returned to claude. Probe rc=0. Doc `f82fa83`, 235 lines. It prototyped BOTH arms:
+- **Arm A** (per-request `PRAGMA busy_timeout` capped to the remaining budget) works: 315.7 ms under a 300 ms deadline, against 2.046 s today. But a skipped restore poisons the pool: it reads 37 against a configured 2000. The store is `SetMaxOpenConns(1)`, so that is the writer's connection. A would also touch all 8 ctx-taking store methods, which collides with row 23.
+- **Arm B** was chosen: a startup refusal in `daemon.New` driven by the opened store's effective `BusyTimeout()`, which respects any DSN override. 14/14 mutations killed.
+- New finding: a lock-blocked `GET /v1/head` answers **500 Internal in 2.047 s**, not 503, so the store comment "the context always wins" is false as written.
+
+It also corrected my directive: F3's control output was truncated by my own `head -3`, and the control actually fires on 6 files.
+
+**Quorum.** Reviewers were gpt6-astra, gemini-3-1-pro and oc-glm-5-3, with the author's vendor sitting out. The cap was raised to $0.40 per reviewer after 188's systematic budget absences, and **all three were present in both rounds.**
+- **r1 BLOCKED 2 reject / 1 pass.**
+  - gemini: a DSN `busy_timeout(-1)` is reachable and safe, and the doc refused it. **Upheld by controller probe:** it opens, `BusyTimeout()` is −1 ms, PRAGMA reads 0, and SQLITE_BUSY comes back in 41 µs. Controls: 0 gave 25.6 µs; 2000 gave 2.043 s.
+  - astra: a configuration ordering does not bound runtime. **Upheld:** the doc's own V11 shows a 15.7 ms overrun near the boundary.
+  - One designer revision via `--resume`, `c4fd591`: negatives accepted, arm B scoped to configuration validation, 15/15 mutations killed, near-boundary probe 10/10 overran by 13–26 ms.
+- **r2 BLOCKED 2 reject / 1 pass** (gemini PASS).
+  - astra: the deferral rationale wrongly said A's value was "503 at the deadline", but min(2 s, 10 s) = 2 s.
+  - glm: `host/archive` sits in V3's control with no §8 row; the grep was case-sensitive; B2 ran daemon-only; V19 was duplicated; no V-row covered `timedOut`.
+  - Surfaces are disjoint, neither disputes arm B, and both carry concrete fixes, so I used the **narrow-refinement carve-out** and applied them verbatim in `6756396`. The controller measured V22–V24: archive names `readDeadline` only in 2 comments and imports neither `store` nor `database/sql`; the widened B2 (readDeadline 1 s, pin updated, full suite) is **21/21 green**; `timedOut` is false for SQLITE_BUSY under a live context. Round count 2.
+
+**Plan.** Planner `opus` via the Agent tool (resolver `opus fail-closed:env-pin`) prototyped first. Plan `55ba69c`: 19/19 killed after DV3 (N2/N3 survived until an assertion was added on the refusal message). DV2 found a third false comment (`daemon.go:124-127`, "This constant does."). F1 (`daemon.go:505-507`) was flagged, not edited.
+
+**Execute.** Executor `opus` via the Agent tool in `.wt-world-iter189`: M1 `1eeab0c` (+23 in `daemon.go`, +107 in the test), M2 `0cac9fb` (comments only; residual (i) shasum identical). 19/19 killed on the committed tree. Non-vacuity was measured against M1's own call block. My re-derivation: vet 0, **21 ok / 0 FAIL**, verify_ail PASS (11 identities / 40 tests, 9/9). I reproduced R1 (busy 15 s) as killed by AC1 and restored the tree clean.
+
+**Judge.** Evaluator `sonnet` in its own worktree `.eval-world-iter189`: **PASS 97/100, zero blocking**. It retuned both directions itself, and its comment truth-check came back TRUE on all four claims.
+- **E3 survived:** `Detail` → `"config error"` with `Err` intact. I reproduced it and closed it with a test-only pin, `f1ccd13`: FAIL at `:80` with the mutation applied, then `daemon.go` restored byte-identical.
+- **Round 2** (the judge resumed with its transcript): **PASS 99/100**, E3 CLOSED, E1/E2/E4/E5 still killed.
+- F1 carried forward, out of scope, to row 111.
+
+**Land.** Doc and plan moved to `implemented/` with a §14 record (`a4f0888`). The PR body passed the closing-keyword scan (control fired). PR [#148](https://github.com/sunholo-data/ailang-world/pull/148) was 2/2 green on head and `MERGEABLE/CLEAN`, and was squash-merged as **`e34416f`**. The SHA-pinned read of the merge shows 2/2/2 plus 1 push run `success`.
+
+**Ruled out / process findings**
+- **(a) A row's "ordering, not capability" gate is a claim with a date on it.** Row 93 said so when filed (2026-09-21). Row 40's split (iter-187) is what made it false, by showing there is nothing to dispatch into. The rule "re-verify the blocker, not just the item" applied here to a row's *non*-blocker annotation.
+- **(b) A queue row gated on upstream is re-checked by running the predicate, not by reading its prose.** Row 75 had been closed upstream for 12 days with the row still reading "gated on upstream". One command against the pinned binary closed it.
+- **(c) The raised per-reviewer cap ($0.40) kept all three reviewers present in both rounds.** Iteration 188 had an absent-on-budget astra in both rounds. Instance 1 of a cap fix; watch it.
+- **(d) My own control output was truncated by `| head -3`**, and the designer caught it (F3). That is rule 3a aimed at my pipe: a control you truncate is a control you cannot quote.
+- **(e) The designer chose the smaller arm on a measured hazard, not on preference**, and found a status defect (500 vs 503) that no row owned. That is now row 111.
+
+**Routing evidence**: base=`e34416f1e399156abfa30e2658086b9ffa498b38`@Gate 3b (`2026-09-25T10:35:28Z`). Gate 1 base `a5090f0382bb0b5923fb67d879735c717de67a61`@`2026-09-25T09:29:42Z`. Drift at worktree creation: 4 commits, all mine (3 design commits + plan), then the squash.
+- Controller `claude:claude-opus-5-5` (session; tok: not reported).
+- Designer **`claude:claude-opus-5-5`** via `claude-sub` (resolver `recipe claude:claude-opus-5-5 declared:provider-pin`). Draft: 40 turns, 49,336 out / 3.02M cache-read. Revision (protocol-mandated, within the one-doc diet): 14 turns, 21,899 out. Subscription; billing CLEAN. Rotation state written `claude:claude-opus-5-5`.
+- Quorum: r1 3/3 present, BLOCKED 2/1 → revision → r2 3/3 present, BLOCKED 2/1 → carve-out. The author's vendor (claude-sonnet-5) sat out. No self-review collision.
+- Planner **`opus`** via the Agent tool (`fail-closed:env-pin`): 111,787 tok.
+- Executor **`opus`** via the Agent tool (`declared:alias-pin`; codex over ration): 71,562 tok.
+- Evaluator **`sonnet`** via the Agent tool (`declared:alias-pin`): r1 117,653 tok; r2 (resumed) 127,362 tok cumulative.
+- Generator ≠ judge: opus → sonnet. No role failed to spawn.
+- **Metered $0.44**: r1 $0.195 (astra 0.102, gemini 0.021, glm 0.071), r2 $0.245 (astra 0.129, gemini 0.028, glm 0.088). Under the $5 ceiling.
+
+**Progress:** row **22 LANDED** (`e34416f`), clause 2, groom position 9 (1 of 6 rows). Row 75 closed (solved upstream). Row 93 re-gated on 106 + 107 + 108 (upstream #885). New row **111**.
+
+**Next**: 23, 24, 25, 26, 32 (position 9), 106 (needs a design doc; unblocks 93 with 107 and 108), 107, 109, 111, 99, 100. **Decision ledger: 23 rows, ZERO OPEN.**

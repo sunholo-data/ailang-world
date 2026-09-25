@@ -1,21 +1,27 @@
-# Mission Dashboard — World (snapshot 2026-09-25, iteration 188)
+# Mission Dashboard — World (snapshot 2026-09-25, iteration 189)
 
-- **State**: **row 27 LANDED** (`w-interface-hash-covers-the-interface`, clause 1). PR #147 was squash-merged as **`73e06ae`**, and remote CI is **green on the merge** (2/2, Gate 3b SHA-pinned). The `interfaceHash` field is now honestly labelled as **manifest coverage**. Beside it, **upstream's own `InterfaceHashV2`**, read from the pinned v0.41.0 via `pkg quality --json --no-run`, travels through the ready packet, the package gate, the `world-publish` fence and reconcile. Reconcile now checks **four** digests against the registry, which already serves v2 for 0.1.0.
-  - `QueryInterface` is bounded: a named 30 s timeout, `WaitDelay`, capped output, and an overflow cancels the child. It checks gates too: exit 2 is accepted only for the spurious PUB015.
-  - Its test fails on the row's own trigger: adding a constructor to an exported ADT moves v2 and not v1.
-- **Named consequence**: any future change to world-core's exported interface reds the publish fence until a version-bump design exists.
+- **State**: **row 22 has landed** (`w-daemon-lock-wait-not-deadline-bound`, clause 2). PR #148 was squash-merged as **`e34416f`**, and remote CI is **green on the merge** (2/2, Gate 3b SHA-pinned).
+  - `daemon.New` now refuses to start unless the opened store's effective `BusyTimeout()` is strictly below `readDeadline`.
+  - A test goes red when the two constants are reordered in either direction.
+  - Three false comments were corrected. The strongest said "the context always wins", but a lock-blocked read actually answers **500 at the 2 s busy window**.
+- **Queue re-measured**:
+  - **Row 93** (the clause-4 floor run) is **blocked on capability**. World has no MCP surface, which needs rows 106, 107 and 108 (upstream `ailang#885`, reopened today).
+  - **Row 75** was **solved upstream** (`ailang#1037`). On the pinned v0.41.0 an unknown positional now gets rc=1.
 - **Quality**:
-  - Planner: 32/33 mutations killed, 1 equivalent.
-  - Executor: 32/33 plus 9 of its own 10.
-  - Judge: **PASS 97/100, zero blocking** (sonnet, own worktree); 6/6 of its own mutations killed, and the live reconcile reported "all four expected digests".
-- **Design gate**: r1 had astra absent on budget; re-run alone it rejected, and the objection was upheld (unbounded wait). After one revision, r2 blocked 3/3, all on the subprocess boundary, and was closed with the reviewers' fixes applied verbatim. Astra's solo re-runs changed the outcome in both rounds.
-- **Upstream**: `sunholo-data/ailang#1305` — `pkg quality --no-run` reports the un-run smoke as a PUB015 failure.
-- **Next**: **93** (clause-4 floor run), 75, 106 (needs a design doc), 107, **109** (`CrossCheck` has no in-process bound), 99, 100, 96, 97, 103, 104, **110** (the golden's `contentHash` drifts on floor raises).
+  - Planner: 19/19 mutations killed.
+  - Executor: 19/19 killed.
+  - Judge: **PASS 97/100, zero blocking** (sonnet, own worktree). Its one survivor (E3, the operator-facing `Detail` text) was closed by a test-only pin, and the r2 judge scored **99/100**.
+- **Design gate**:
+  - r1 blocked 2/1, both objections upheld by controller probes: a DSN `busy_timeout(-1)` is safe, and a config ordering is not a runtime bound.
+  - r2 blocked 2/1 on two disjoint surfaces and was closed by applying the reviewers' fixes verbatim.
+  - All three reviewers were present in both rounds (cap raised to $0.40 per reviewer).
+- **New row**: **111**. A lock-blocked read answers 500, not 503. Residual (i) has no owner, and per-request busy capping (arm A) should come after row 23.
+- **Next**: 23, 24, 25, 26, 32 (groom position 9), 106 (needs a design doc; with 107 and 108 it unblocks 93), 107, 109, 111, 99, 100.
 - **Parked for Mark**: **nothing — ledger 23 rows, ZERO OPEN.**
 - **Cadence/routing**:
-  - **Roles:** controller `claude-opus-5-5`; designer `claude-opus-5-5` (rotation); planner, executor and evaluator on Agent-tool opus/opus/sonnet.
-  - **Spend:** **$0.34 metered**, all quorum.
+  - **Roles:** controller `claude-opus-5-5`. Designer `claude-opus-5-5`: astra and deepseek were skipped on capacity. Planner, executor and evaluator ran on the Agent tool as opus, opus and sonnet.
+  - **Spend:** **$0.44 metered**, all quorum.
   - **Ration:** codex, Ollama and OpenRouter are over ration.
 - **Maintenance for an attended session**:
-  - `rotate-log` needs the V1 checkout as its CWD, and it drops index rows for orphaned iterations (row 182 was restored by hand).
+  - `rotate-log` needs the V1 checkout as its CWD, and it drops index rows for orphaned iterations.
   - Row 101: `gofmt -l` is red at base on 2 `host/store` files.
