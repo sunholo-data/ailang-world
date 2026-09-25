@@ -4,7 +4,8 @@
 REVISED iter-187 against row 39's ACTUAL landed contract; DESCOPED by controller SPLIT to the
 buildable now — a session-scoped A2A agent card plus a fail-closed `/a2a/` endpoint on row 39's
 `host/authority.Resolver`; transition INVOCATION is moved verbatim to a "Deferred to invocation"
-section gated on a coordinator that does not exist; NOT yet quorum-cleared.** The A2A projection
+section gated on a coordinator that does not exist; NOT yet quorum-cleared; QUORUM ROUND 1 (iter-187 r1): three REJECTions
+(gpt6-astra, gemini-3-1-pro, oc-glm-5-2) MEASURED and each answered — see "Quorum round 1".** The A2A projection
 design substance (the parent's `P6.B-A2A`, reviewer-refined across four quorum rounds) is
 carried where it still applies and preserved verbatim where it must wait for invocation.
 **Item**: split child #2 of `w-mcp-projection` (charter clause 6, queue row 5; the long-time
@@ -13,7 +14,7 @@ blocker was queue row 39 `w-session-authority`)
 session) and an A2A agent card is published; no new wire protocols"*. The A2A half of clause 6
 that ships HERE is **publishing the card** (F12: clause 6's A2A half requires publishing the
 card; it does not by itself require A2A task invocation).  
-**Estimate**: **~0.55d = card milestone P6.B-A2A-CARD ~0.4d + P6.D dependency admission
+**Estimate**: **~0.65d = P6.B-A2A-CARD card ~0.4d + P6.A-CTX bounded-resolution prerequisite ~0.1d + P6.D dependency admission
 ~0.15d** (descoped from the inherited ~0.7d invocation-bearing P6.B-A2A line)  
 **Author**: rotation designer, split #2 round, 2026-08-26 (iteration 126); this revision is the
 revision mandated by the doc's own blocking predicate, executed iter-187  
@@ -123,6 +124,8 @@ broken instrument.
 | **F4** | the five protocol files (`a2a_wire.go, descriptor.go, descriptor_test.go, envelope.go, interfaces.go`) have BYTE-IDENTICAL blob SHAs at tags `v0.33.2` and `v0.42.0` — pinning `v0.33.2` stays valid, nothing new shipped | `gh api '…/contents/serveapi/protocol/<file>?ref=v0.33.2\|v0.42.0' --jq '.sha'` for all five | **confirmed**: identical SHAs at both tags, e.g. `interfaces.go` `dbe401d…86`, `a2a_wire.go` `48cedfb…81d` — equal at v0.33.2 and v0.42.0 (all five re-run) |
 | **F5** | `interfaces.go`: `type Session any`; `SessionResolver{ResolveSession(ctx,*http.Request)(Session,error)}`; `ToolSource{Tools(ctx,Session)([]ToolDescriptor,error)}`; `Invoker{Invoke(ctx,Session,Invocation)(InvocationResult,error)}`; `AgentInfo{Name,Description,Version string}`; `AuthorizationError{Status int; Err error}` with `HTTPStatus()`. NO AGENT-CARD TYPE; upstream `serveapi/a2a_handler.go` builds the card as a `map[string]any` with keys `name,description,url,version,capabilities{streaming:false,pushNotifications:false,stateTransitionHistory:false},defaultInputModes,defaultOutputModes,skills[{id,name,description,tags,examples}]` | `gh api '…/interfaces.go?ref=v0.33.2' --jq '.content' \| base64 -d`; `…/a2a_handler.go?ref=v0.33.2' … \| grep 'map\[string\]any\|"name"\|"capabilities"'` | **confirmed**: both signatures and the exact card keys from `a2a_handler.go:79-84`; card is a `map[string]any` literal — no agent-card type anywhere |
 
+| **F5b** | `a2a_wire.go` (verified v0.33.2): `type A2ARequest struct { JSONRPC string `json:"jsonrpc"`; Method string `json:"method"`; ID json.RawMessage `json:"id"`; Params json.RawMessage `json:"params"` }`; `A2ATaskSendParams{ ID string; Message A2AMessage; Metadata map[string]any }` (tags id/message/metadata); `A2AMessage{ Role string; Parts []A2AContent }`; `A2AContent{ Type, Text string; Data map[string]any }`. `func A2AError(w http.ResponseWriter, id json.RawMessage, code int, msg string)` and `func A2AResult(w http.ResponseWriter, id json.RawMessage, result any)` BOTH write HTTP **200**. Upstream `a2a_handler.go` reads the skill from `params.Metadata["skill_id"].(string)` — this doc does the same and says so | `gh api '…/contents/serveapi/protocol/a2a_wire.go?ref=v0.33.2' --jq .content \| base64 -d` | **VERIFIED BY CONTROLLER iter-187 r1**: exact struct/signature text above from `a2a_wire.go` at `v0.33.2`; `A2AError`/`A2AResult` both `w.WriteHeader(http.StatusOK)` then encode — so a `/a2a/` denial is a JSON-RPC error body at HTTP **200** |
+
 ### NAME-GRAMMAR conflict (F6)
 
 | # [RR] | Claim | Command | Observed OUTPUT |
@@ -145,6 +148,18 @@ broken instrument.
 | **F11** | sibling MCP dispatch child: `ailang#885` was CLOSED 2026-09-13 as "Delivered" (the unread mission-control message, iter-187), but F4 shows protocol unchanged since v0.33.2 → no MCP dispatch shipped; the MCP child stays BLOCKED | `gh api 'repos/sunholo-data/ailang/issues/885' --jq '.state,.title,.closed_at'` | **confirmed**: `closed`, title `serveapi/protocol has no MCP dispatch…`, `closed_at 2026-09-13T15:52:56Z`; protocol blob SHAs unchanged (F4). **Sentence: the MCP dispatch child stays blocked** — `ailang#885` closed without the MCP dispatch seam shipping |
 | **F12** | charter clause 6 (`world-mission.md:1001`): "the transition registry is served over MCP (capability-filtered per session) and an A2A agent card is published; no new wire protocols". Its A2A half REQUIRES publishing the card; it does not by itself require A2A task invocation | `grep -n 'transition registry is served over MCP' design_docs/world-mission.md` + `read :1001` | **confirmed** at `:1001`; the card is the mandatory half, task invocation is not stated |
 | row 39 | `w-session-authority` LANDED `a036062` (PR #141 squash, iter-181, judged PASS ×3) | `grep -n 'w-session-authority' design_docs/world-mission.md` | **confirmed**: queue row 39 record shows **[LANDED 2026-09-24 (iter-181) — PR #141 squash `a036062`**…**]** |
+
+### Row 39's contract re-verified iter-187 r1 (VERIFIED BY CONTROLLER iter-187 r1)
+
+Round 1 surfaced three objections the controller measured (rows **R1-CTX / R1-HEAD / R1-WIRE** +
+**F5b**); each fix below is grounded in the cited measurement. The P6.A-CTX row is the load-bearing
+one for the bounded-wait answer; B3 + AC-ABSENT-HEAD consume R1-HEAD; F5b consumes R1-WIRE.
+
+| # | Claim | Command | Observed OUTPUT (VERIFIED BY CONTROLLER iter-187 r1) |
+|---|---|---|---|
+| **R1-CTX** | `Resolver.Resolve(header, now)` takes NO context (resolver.go:93), so it ignores any request deadline; `host/store/store.go:305` `db.SetMaxOpenConns(1)` = ONE connection, so a resolve can wait behind any in-flight query/commit; `(*Store).ResolveSession` (store.go:1101) already uses `QueryRowContext` so a ctx WOULD be honoured; resolver.go:130-134 maps a store error to `DenialUnknown` (401 "unknown credential") — a naive ctx fix would mis-report a deadline as a denial. REQUIRED FIX = milestone **P6.A-CTX** (`Resolver.ResolveContext(ctx, header, now)` returns a non-nil `error` on store failure, never a denial) | `read host/authority/resolver.go:129` + `read host/store/store.go:305` + `read host/store/store.go:1101` + `read host/authority/resolver.go:130-134` | **confirmed**: `row, ok, err := r.st.ResolveSession(context.Background(), credentialID)` (resolver.go:129); `db.SetMaxOpenConns(1)` (store.go:305); `s.db.QueryRowContext(ctx, ...)` (store.go:1101); `DenialUnknown` mapping (resolver.go:130-134). `Resolve` still lands on `/v1/commit` unchanged (F2); residual declared |
+| **R1-HEAD** | GetRegistryHead seam: `store.go:636` `(s *Store) GetRegistryHead(ctx, name) (hashref.HashRef, bool, error)` — `sql.ErrNoRows`→`(zero,false,nil)` (:641-642), other scan error→wrapped error (:643-644), bad ref→error (:647-648); `daemon.go:331-337` `readStore` already includes `GetRegistryHead`; registry name `store.TransitionRegistryV1 = "world/transition-registry/v1"` (store.go:88) is the same name `transitionreg.ReadSnapshot` reads (transitionreg.go:74) | `read host/store/store.go:636-648` + `read host/daemon/daemon.go:331-337` + `grep -n 'TransitionRegistryV1' host/store/store.go host/transitionreg/transitionreg.go` | **confirmed** at all cited lines. FIX: verification row added here; B3 + AC-ABSENT-HEAD cite the lines and specify the head race (publish between check and `NewRequest`; see B3); a test covers "check says absent" |
+| **R1-WIRE** | A2A wire types were unverified until row **F5b** (added): the struct/method signatures in `a2a_wire.go` and the HTTP-200 behaviour of `A2AError`/`A2AResult` | see F5b | see F5b (VERIFIED BY CONTROLLER iter-187 r1). FIX: JSON-RPC denial codes on `/a2a/` specified (-32001 / -32600, see Quorum round 1) + AC/MUT rows added |
 
 ## Row 39's landed contract — what this doc CONSUMES (this supersedes the blocked-era "Blocking predicate" section)
 
@@ -241,7 +256,7 @@ projection surface** with two responsibilities that are buildable now, mounted a
    `skills` array, still authenticated against the session); `err != nil` or a later
    `NewRequest` failure → **5xx fail-closed**. This distinguishes the two without modifying the
    landed `transitionreg` (minimal-frozen-core: prefer a host-boundary injection over a change
-   to landed core). A test must cover both.
+   to landed core). A test must cover both. **Head race (specified, per R1-HEAD):** the head can be published between the `GetRegistryHead` check and `NewRequest`. If the check saw absent and `NewRequest` then succeeds, use `NewRequest`'s result (the head arrived — succeed). If the check saw a head and `NewRequest` fails, answer 5xx (a present-but-unreadable registry is a failure, not an absent state). A test covers "check says absent" at minimum.
 4. **Serve `/a2a/` POST fail-closed (B4):** resolve the session exactly as (1); parse with
    `protocol.A2ARequest`; non-`"2.0"` → **-32600**; `method != "tasks/send"` → **-32601**; a
    `skill_id` not in this session's `Allowed` set → **-32602** `"not authorized"` (stale/guessed
@@ -310,16 +325,22 @@ skill-ID set.
 ### Bounded wait — carried from the parent's Decision 6, DESCOPED to resolution + snapshot reads
 
 Every projection request derives one bounded context whose deadline is the earlier of the client
-cancellation/deadline and a configured finite server maximum. The server maximum is mandatory,
-positive, finite, and validated at startup; zero, negative, or an omitted value does not mean
-"unlimited." The same context is propagated without replacement through session resolution and
-registry/capability snapshot acquisition. Client disconnect cancels that context and all work
-started for the request; each dependency observes cancellation, releases request-owned resources,
-and returns promptly. A deadline-expiry/cancellation on these read-only endpoints is returned as
-a 503/504 via the appropriate envelope (the APIError envelope on the card route, `A2AError` -32603
-on `/a2a/`); it is never retried or made to fall back. The commit-boundary, `/v1/commit`-bound and
-OS-level socket-closure material applies to invocation only and is **MOVED verbatim** to the
-Deferred section.
+cancellation/deadline and a configured finite, positive server maximum (validated at startup;
+zero/negative/omitted ≠ "unlimited"), passed WITHOUT replacement through both session resolution
+and registry/capability snapshot acquisition. Resolution uses **P6.A-CTX**'s `ResolveContext(ctx,
+header, now)` — NOT the context-less `Resolve(header, now)` the `/v1/commit` middleware still
+uses; the store holds ONE connection (`SetMaxOpenConns(1)`, store.go:305), so the bounded context
+bounds a wait behind any in-flight query/commit. `ResolveContext` returns a store error (incl.
+`context.Canceled`/`DeadlineExceeded`) as a non-nil `error`, never a `DenialUnknown` 401. The
+**card route** answers a resolution error **503** (store / unavailable upstream) or **504**
+(deadline hit waiting on the single pooled connection); the **`/a2a/` route** answers `A2AError`
+**-32603** with the constant message (F5b; `A2AError` always writes HTTP 200). **Declared
+residual:** `/v1/commit`'s `SessionMiddleware` STILL resolves without a request deadline (`Resolve`
+→ `ResolveContext(context.Background(), …)`, error mapped to `DenialUnknown` exactly as today);
+this doc does not change it. Client disconnect cancels the bounded context; every dependency
+observes cancellation and returns promptly. Resolution runs on the calling goroutine, no worker
+spawned (`MUT-DROP-DEADLINE-PROJ`). The `/v1/commit`-bound and OS socket-closure material is
+invocation-only, **MOVED verbatim** to the Deferred section.
 
 ### Files (rows moved from the parent's table; iter-187 descope)
 
@@ -330,6 +351,37 @@ Deferred section.
 | `host/daemon/daemon.go` | P6.B-A2A-CARD | Additive mounting of the two World-owned routes; inject the existing resolver + writes seam into the projection config at mount |
 | `host/daemon/daemon_test.go` | P6.D + card | P6.D allowlist narrowness line + test; REST single-writer/route regression half |
 | `go.mod` / `go.sum` | P6.D | `+github.com/sunholo-data/ailang v0.33.2`; `go-isatty`→0.0.22, `x/sys`→0.47.0 |
+
+## Milestone P6.A-CTX — bounded, context-aware session resolution in `host/authority` (~0.1d; PREREQUISITE, FIRST)
+
+SEQUENCED FIRST, before P6.D / P6.B-A2A-CARD. Adds one `host/authority` entry point that keeps row
+39's credential policy byte-for-byte (R1-CTX) so both projection routes resolve within a bounded
+deadline (Decision 6) without waiting unboundedly on the store's single connection and without
+misclassifying a deadline as an unknown credential.
+**Surface** — add to the `Resolver` interface alongside `Resolve`:
+`func (r *resolver) ResolveContext(ctx context.Context, header string, now int64) (ResolveOutcome,
+error)`. Header parsing, hashing, the indexed PK lookup, expiry and grant decoding stay IDENTICAL to
+`Resolve`. Exactly two differences: (1) the store call receives `ctx` (`ResolveSession(ctx,id)`
+uses `QueryRowContext` — database/sql honours it while waiting for the single pooled connection);
+(2) a store error (incl. `context.Canceled`/`DeadlineExceeded`) is returned as a non-nil `error`,
+NOT a denial, so the caller answers 503/504 (or A2A -32603) instead of a false 401.
+**Unchanged / residual:** `Resolve(header, now)` keeps today's behaviour — delegates to
+`ResolveContext(context.Background(), …)` and maps a non-nil error to `DenialUnknown` — so
+`/v1/commit`'s `SessionMiddleware` is byte-identical and STILL resolves without a request deadline
+(declared residual; this doc does not change it). Both projection routes call `ResolveContext` with
+the ONE bounded context from Decision 6.
+**AC (P6.A-CTX):** policy unchanged (every existing `host/authority` test still passes); a deadline
+test HOLDS the store's single connection (e.g. an open transaction in the test), calls
+`ResolveContext` with a short deadline, and asserts an error wrapping `context.DeadlineExceeded`
+within the bound and no goroutine left running (resolution runs on the calling goroutine; assert at
+source level: no `go ` statement in the resolve path).
+**Mutations (RED-gate the ACs / policy-equivalence):** `MUT-RESOLVE-BACKGROUND` (passes
+`context.Background()` → deadline test REDs); `MUT-CTX-ERR-AS-UNKNOWN` (maps the store error to
+`DenialUnknown` → non-nil-error test REDs); `MUT-RESOLVE-POLICY-DRIFT` (change one policy branch
+only, e.g. expiry `>`→`>=` → an equivalence test running `Resolve` and `ResolveContext` over the
+same fixture table REDs).
+**LOC / estimate:** ~40-60 LOC in `host/authority/resolver.go` (interface + method, no new file) +
+~10 LOC of tests; +~0.1d, in the top-line bump.
 
 ## Milestone P6.D — Dependency admission, ATOMIC WITH THIS DOC'S FIRST REAL CONSUMER (~0.15d)
 
@@ -609,6 +661,13 @@ F7/F8 land (the card and `/a2a/` admission surface already lay the foundation).
 now **revised iter-187** against row 39's landed contract as its own blocking predicate demanded.
 At pick time the doc MUST go through the full design quorum (`ailang design-quorum`,
 reject-by-default synthesis). Nothing in this doc pre-authorizes a sprint.
+
+#### Quorum round 1 (iter-187 r1) — three REJECTions, Measured and Answered
+
+Round 1: **gpt6-astra / gemini-3-1-pro / oc-glm-5-2 all REJECT** (oc re-run alone after malformed first reply); the controller MEASURED every objection (rows **R1-CTX / R1-HEAD / R1-WIRE** + **F5b**, VERIFIED BY CONTROLLER iter-187 r1). Each answered here:
+1. **gpt6-astra — bounded wait cannot reach resolution.** Measured: no ctx (resolver.go:129), one connection (store.go:305), naive fix→false 401 (resolver.go:130-134). **Answered:** prerequisite **P6.A-CTX** (FIRST) — `ResolveContext(ctx,…)` returns non-nil `error` on store failure, never a denial; both routes use one bounded ctx; `Resolve`/`/v1/commit` unchanged (residual). Card 503/504; `/a2a/` -32603 constant.
+2. **gemini-3-1-pro — GetRegistryHead never verified.** Measured: store.go:636-648 (`sql.ErrNoRows`→`(zero,false,nil)`, scan errors wrapped, bad ref→error), daemon.go:331-337 reads seam, store.go:88 / transitionreg.go:74 same name. **Answered:** verification row added; B3 + AC-ABSENT-HEAD cite the lines; head race in B3 (absent-check + `NewRequest` success → use its result; head + fail → 5xx); test covers "check says absent".
+3. **oc-glm-5-2 — A2A wire types never verified.** Measured (gh api @ v0.33.2): struct + `A2AError`/`A2AResult` sigs; `A2AError` ALWAYS HTTP 200; handler reads `params.Metadata["skill_id"]`. **Answered:** row **F5b** added; /a2a/ DENIAL = JSON-RPC error body at HTTP 200 — **-32001** absent/unknown/expired, **-32600** malformed. AC `AC-DENIAL-JSONRPC`; MUT `MUT-DENIAL-401`.
 
 ## Relationship to the parent and to charter clause 6
 
