@@ -296,10 +296,18 @@ func (d *Daemon) readCtx(r *http.Request) (context.Context, context.CancelFunc) 
 //	     by busy_timeout's ~2s, the deadline exceeded 6.8x while the
 //	     busy-retry loop ran — and the error still surfaces as
 //	     deadline-exceeded, so the wire class is Timeout while the timing was
-//	     governed by a different mechanism entirely). Today that composition
-//	     is safe only because busy_timeout (2s) is shorter than the 10s
-//	     request deadline — an ORDERING nothing in this code asserts, not a
-//	     guarantee.
+//	     governed by a different mechanism entirely). The CONFIGURED ordering
+//	     (busy_timeout below the read deadline) is now validated at startup
+//	     by checkReadOrdering and pinned by
+//	     TestProductionBusyTimeoutConfiguredBelowReadDeadline — configuration
+//	     validation, not deadline enforcement. The lock-wait regime still
+//	     exists and the deadline still does not govern it: a configured
+//	     window below the deadline does not guarantee the read ends before
+//	     the deadline, and at production settings (2s against 10s) a
+//	     lock-blocked read was measured surfacing as 500 Internal at
+//	     ~busy_timeout, not 503 (w-daemon-lock-wait-not-deadline-bound P3).
+//	     Tests that shrink d.readDeadline AFTER New bypass the check by
+//	     construction.
 //
 // Enforcing a stronger status contract means a post-read expiry check at all
 // seven read sites and a decision that completed work must be discarded; that

@@ -124,7 +124,12 @@ const (
 	// readDeadline bounds the ELAPSED TIME of every store read a GET handler
 	// performs (D7 addendum, w-daemon-read-cancellation). The four http.Server
 	// timeouts above bound the transport; none of them bounds the wait that
-	// happens BELOW the transport, inside database/sql. This constant does.
+	// happens BELOW the transport, inside database/sql. This constant does,
+	// EXCEPT for a read blocked on a SQLite lock: SQLite's busy-retry sleep does
+	// not stop on the driver's interrupt, so busy_timeout bounds that wait
+	// instead. New only validates that the store's CONFIGURED busy_timeout is
+	// below this value (checkReadOrdering) — configuration validation, not
+	// deadline enforcement (w-daemon-lock-wait-not-deadline-bound).
 	//
 	// It must stay well below writeTimeout: the 503 must be writable inside the
 	// connection's remaining write window. At 10 s against a 30 s writeTimeout,
@@ -234,6 +239,24 @@ const (
 // is what makes Decision 4's refusal assertable (errors.Is) instead of a string
 // match on a message.
 var ErrNonLoopbackBind = errors.New("daemon: bind host is not loopback")
+
+// ErrUnorderedTimeouts is the named sentinel for a store whose CONFIGURED SQLite
+// lock-retry window (busy_timeout) is not numerically below the CONFIGURED read
+// deadline. This is configuration validation only: the deadline does not govern
+// a read blocked on a lock, and a window below the deadline does not guarantee
+// such a read completes before it (SQLite's retry granularity can exceed the
+// gap). Real deadline enforcement is deferred.
+var ErrUnorderedTimeouts = errors.New("daemon: store busy_timeout is not below the read deadline")
+
+// checkReadOrdering refuses a configured lock-retry window at or above the
+// configured read deadline. A window <= 0 disables SQLite's busy handler (a
+// lock conflict fails immediately) and is accepted.
+func checkReadOrdering(window, deadline time.Duration) error {
+	if window >= deadline {
+		return fmt.Errorf("%w: busy_timeout %s must be below read deadline %s", ErrUnorderedTimeouts, window, deadline)
+	}
+	return nil
+}
 
 // StartupError is the structured fatal error of the serve lifecycle. Every
 // startup refusal is one of these: nothing in the lifecycle degrades silently,
@@ -450,6 +473,11 @@ func New(cfg Config) (*Daemon, error) {
 				"(single-writer is enforced, not conventional)"
 		}
 		return nil, &StartupError{Stage: StageStoreOpen, Detail: detail, Err: err}
+	}
+	if err := checkReadOrdering(s.BusyTimeout(), readDeadline); err != nil {
+		_ = s.Close()
+		return nil, &StartupError{Stage: StageStoreOpen,
+			Detail: "the store's lock-retry window is not below the read deadline", Err: err}
 	}
 
 	d := &Daemon{
