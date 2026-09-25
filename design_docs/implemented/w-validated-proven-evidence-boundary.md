@@ -1049,10 +1049,17 @@ renumbered.
 
 ### 8.3 Package and wire compatibility
 
-The `world/core` interface hash changes because a public ADT changes. Content and tarball hashes
+The `world/core` interface identity v2 (`interfaceHashV2`) changes because a public ADT changes; the
+manifest-coverage `interfaceHash` (v1) does not — measured `d16cc882 → d16cc882` at iter-81 and again
+at row 27 (iter-188). Content and tarball hashes
 and normally byte length change. Export count remains four and tar entry count remains six (V13).
 Consumers matching `Evidence` must add the new arm; the exact kernel proof catches canonical
 mapping totality, but downstream package compilation is the compatibility oracle.
+
+> **Correction (2026-09-25, row 27, `w-interface-hash-covers-the-interface`).** This section
+> originally said the interface hash changes. The manifest-coverage `interfaceHash` (v1) hashes only
+> manifest fields and never moves on an ADT change; the digest that moves is upstream's
+> `interfaceHashV2`, now carried in the ready packet.
 
 Proof-report objects introduce semantic ID `world/proof-report/v1` and its fixed interface hash.
 They use the existing objects table; no database migration or registry head is added. The report

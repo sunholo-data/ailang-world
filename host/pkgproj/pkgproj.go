@@ -34,9 +34,14 @@ type Manifest struct {
 
 // Package is the [package] table of an ailang.toml.
 //
-// Version is carried here but is deliberately NOT an input to InterfaceHash:
-// the interface hash is the shape of what the package EXPORTS, and bumping a
-// version does not change that shape. It exists because the ready packet's
+// Version is carried here but is deliberately NOT an input to InterfaceHash.
+// InterfaceHash (v1) covers the MANIFEST only — name, edition, the AILANG
+// bound, the export module NAMES and effects — never module contents, so it
+// does not move when an exported type or signature changes (identical at
+// upstream origin/dev internal/pkg/hasher.go). The exported-interface digest
+// is upstream's v2, obtained by QueryInterface (iface.go).
+//
+// Version exists here because the ready packet's
 // `version` field has to come from somewhere, and the manifest is where the
 // version lives on disk. TestInterfaceHashIgnoresTheVersion measures the
 // independence rather than asserting it here.

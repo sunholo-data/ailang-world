@@ -63,7 +63,8 @@ so an operator can walk the exact keystrokes before the real one.
 ### 4. Review the ready packet
 
 Read `scripts/world_package_ready_packet.golden.json`. It carries `package`, `version`, `exports`,
-`effects`, `tarballSHA256`, `contentHash`, `interfaceHash`, `tarballBytes` and `compilerVersion`.
+`effects`, `tarballSHA256`, `contentHash`, `interfaceHash`, `interfaceHashV2`, `tarballBytes` and
+`compilerVersion`.
 `compilerSHA256` is provenance about the *machine*, not the package, and is deliberately kept out
 of the byte-compared golden.
 
@@ -78,7 +79,7 @@ whole gate log, and zero truncated ones either. The dry-run's displayed hashes a
 instruction to "compare the digests against the gate's output" is therefore impossible to follow;
 this step used to say exactly that, and this paragraph is its repair.
 
-So the eyeball check is **document against artifact, at full length**. These three digests are the
+So the eyeball check is **document against artifact, at full length**. These four digests are the
 identity of what you are about to publish permanently:
 
 | field | digest |
@@ -179,7 +180,8 @@ The stamp is an `ApprovalRequestV1` → `ApprovalDecisionV1` pair. `Session.Invo
 `payload.approvalRef` → the landed decision → its request → the canonical scope, and refuses
 **before** the credential is loaded and **before** any POST. Single use is enforced by
 `approval_claims`' PRIMARY KEY — durably, not by in-memory budget — so the stamp cannot be spent
-twice even across a process restart. The scope binds the three digests above, so an approval minted
+twice even across a process restart. The scope binds `contentHash`, `interfaceHash` and `tarballSHA256` above (not
+`interfaceHashV2`: the frozen 0.1.0 scope grammar does not carry it), so an approval minted
 for these bytes authorizes no other bytes, and an approval for `0.1.0` cannot authorize `0.1.1`.
 
 Rehearse first. This runs every fence and makes no request:
@@ -216,7 +218,7 @@ is `GET`. It resolves to exactly one of four states:
 
 | State | Meaning | Next action |
 |---|---|---|
-| `succeeded-reconciled` | Served metadata matches all three expected digests | Done — the publish landed |
+| `succeeded-reconciled` | Served metadata matches all four expected digests | Done — the publish landed |
 | `conflict` | A document exists but does not match | **Stop.** Someone else won the immutable version, or the bytes differ. Human decision |
 | `not-published` | Bounded repeated absence, every sample with a firing same-pass control | A live retry is permitted — **but it requires a NEW attended approval/grant** |
 | `probe-unavailable` | The instrument was not shown to be working | **Stop.** Human required. This is a refusal to decide, not a third answer |
