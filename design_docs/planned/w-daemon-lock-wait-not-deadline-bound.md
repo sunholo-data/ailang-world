@@ -1,7 +1,12 @@
-# w-daemon-lock-wait-not-deadline-bound — assert and pin at startup that busy_timeout is below the read deadline; per-request capping is feasible but deferred
+# w-daemon-lock-wait-not-deadline-bound — validate at startup that the configured busy_timeout is below the configured read deadline; runtime deadline enforcement (per-request capping) is feasible but deferred
 
 - Status: **planned** · Date: 2026-09-25 · Designer: claude-opus-5-5 (iter-189) · Base commit: `a5090f0` · Owning queue row: **22** · Scope class: daemon robustness (clause-2) · Verify profile: go-host (no `.ail` change)
-- Prototype: scratch worktree `../.design-wt-iter189` at `a5090f0`, now removed. Its diff, test file, probes and mutation harness are saved under `~/.ailang/state/iter189-design/`.
+- **Revision 1 (quorum r1), 2026-09-25.** Round 1 BLOCKED 2 reject / 1 pass, with all three reviewers present. Both objections were upheld after measurement:
+  - gemini-3-1-pro: a negative `busy_timeout` is reachable and safe, so it is now **accepted**;
+  - gpt6-astra: arm B is **configuration validation, not a runtime bound**.
+
+  The r1 prototype is in scratch worktree `../.design-wt-iter189r1` at `f82fa83`, now removed. Its mutation matrix was re-run: **15/15 killed**. See §13.
+- Prototype (r0): scratch worktree `../.design-wt-iter189` at `a5090f0`, now removed. Its diff, test file, probes and mutation harness are saved under `~/.ailang/state/iter189-design/`. The r1 versions carry the `.r1` suffix, and the r1 harness is in `mut-r1/`.
 
 ## §1 Problem
 
@@ -34,16 +39,18 @@ This section restates row 22 using this iteration's measurements. Every claim ha
   - A lock-bypassing raw handle holding `BEGIN EXCLUSIVE` does block it: 2.044 s (P-B 2b).
   - Production uses the driver's default journal mode (no non-test `journal_mode` pragma, V8).
 
-## §2 Decision: arm B, assert and pin the ordering. Arm A is feasible but deferred, for a measured reason.
+## §2 Decision: arm B, validate the configured ordering at startup and pin it. Arm A is feasible but deferred, for a measured reason.
 
 Row 22 poses the choice. I prototyped both arms against the pinned driver.
 
 | Arm | Verdict | Measured reason |
 |---|---|---|
 | **A: the deadline dominates.** Cap the effective busy wait by the remaining context budget. | **Feasible, deferred** | **What works:** pin a connection (`db.Conn(ctx)`), run `PRAGMA busy_timeout = min(configured, remaining)`, run the read, then restore. Under a 300 ms deadline this returned at **315.7 ms**, a 15.7 ms overrun from SQLite's sleep granularity. Under 700 ms it returned at 721.7 ms. Each PRAGMA costs **1.16 µs**, against 5.38 µs per unlocked read (P-A). Sources: no busy-handler API in the driver (`grep -c BusyHandler` → 0, V10), and `RegisterConnectionHook` runs only at connection open. **What it costs, measured:** (1) The restore cannot use the request context, because by then it has expired: `restore-with-req-ctx err=context deadline exceeded`, `restore-with-bg err=<nil>` (P-A). (2) A skipped or failed restore **poisons the pool**. A `db.Conn` that was capped to 37 ms and returned without a restore leaves `PRAGMA busy_timeout` reading **37** on the next pool use, against a configured 2000 (P-B 1). The store is `SetMaxOpenConns(1)` (V8), so that connection is the **writer's** connection: the next `Commit` would fail `SQLITE_BUSY` at once instead of riding out a commit burst. (3) The work lives in the store, not the daemon, because the daemon holds no `*sql.DB`. Every one of the **8** ctx-taking `(*Store)` methods (V14) would have to move from `s.db` to a pinned connection with set and restore. That is the same signature surface row 23 is threading contexts through. |
-| **B: the ordering is asserted and pinned.** | **Chosen** | This is the smallest honest change, and it mirrors this repo's own precedent: `evidence.NewValidator` reads `reader.BusyTimeout()` and refuses with `ErrUnorderedTimeouts` (`validator.go:85-90`, V5). The daemon already holds the opened `*store.Store` (`daemon.go:456`, V5), and `(*Store).BusyTimeout()` returns the **effective**, DSN-resolved window (`store.go:293`, V5). Prototype: +23 lines in `daemon.go` and a 97-line test file. **14 of 14 mutations killed, and both pre-fix baseline retunes were measured (B1 caught only by accident, B2 green)** (§6). |
+| **B: the configured ordering is validated and pinned.** It is configuration validation only, **not** a runtime bound on a lock-blocked read (§7). | **Chosen** | This is the smallest honest change, and it mirrors this repo's own precedent: `evidence.NewValidator` reads `reader.BusyTimeout()` and refuses with `ErrUnorderedTimeouts` (`validator.go:85-90`, V5). The daemon already holds the opened `*store.Store` (`daemon.go:456`, V5), and `(*Store).BusyTimeout()` returns the **effective**, DSN-resolved window (`store.go:293`, V5). r1 prototype: +21 lines in `daemon.go` and a 101-line test file. **15 of 15 mutations killed, and both pre-fix baseline retunes were measured (B1 caught only by accident, B2 green)** (§6). |
 
-**Why defer A instead of rejecting it.** P5 shows the lock-wait regime is reachable only by a lock-bypassing process, and P3 shows the daemon already bounds it at 2 s. A's real value is a *503 at the deadline* instead of a *500 at the busy window*. That is a status-contract change, which is what the missing successor for residual (i) owns (§11 O1). A's poisoning hazard lands on the writer's only connection, so paying that cost belongs in the item that also changes the status contract. It should not ride on a 0.5 d ordering fix.
+**Arm B satisfies row 22 as written.** The row says: *"decide whether the deadline should dominate (cap the effective busy wait by the remaining context budget) or whether the ordering is merely asserted and pinned; either way a test must red when the two constants are reordered."* Arm B is the second alternative. Its reorder test goes red for R1, R2 and R3 (§6). Arm B does **not** deliver runtime deadline dominance, and it does not claim to (§7). If runtime dominance were required to close row 22, arm B could not close it. The row makes it one option, not the requirement. Real deadline enforcement stays with O1's successor (§11).
+
+**Why defer A instead of rejecting it.** P5 shows the lock-wait regime is reachable only by a lock-bypassing process. P3 shows that, at production settings, the busy window ended such a read at a measured ~2.05 s, well inside the 10 s deadline. That is a measured margin, not a bound. A's real value is a *503 at the deadline* instead of a *500 at the busy window*. That is a status-contract change, which is what the missing successor for residual (i) owns (§11 O1). A's poisoning hazard lands on the writer's only connection, so paying that cost belongs in the item that also changes the status contract. It should not ride on a 0.5 d ordering fix.
 
 ## §3 Design
 
@@ -52,14 +59,18 @@ Row 22 poses the choice. I prototyped both arms against the pinned driver.
 `host/daemon/daemon.go` gains a sentinel, a pure helper, and one call site. The code below is the prototype's exact shape:
 
 ```go
-// ErrUnorderedTimeouts is the named sentinel for a store whose SQLite lock-retry
-// window (busy_timeout) is not strictly below the read deadline. ...
+// ErrUnorderedTimeouts is the named sentinel for a store whose CONFIGURED SQLite
+// lock-retry window (busy_timeout) is not numerically below the CONFIGURED read
+// deadline. This is configuration validation only: the deadline does not govern
+// a read blocked on a lock, and a window below the deadline does not guarantee
+// such a read completes before it (SQLite's retry granularity can exceed the
+// gap). Real deadline enforcement is deferred.
 var ErrUnorderedTimeouts = errors.New("daemon: store busy_timeout is not below the read deadline")
 
+// checkReadOrdering refuses a configured lock-retry window at or above the
+// configured read deadline. A window <= 0 disables SQLite's busy handler (a
+// lock conflict fails immediately) and is accepted.
 func checkReadOrdering(window, deadline time.Duration) error {
-	if window < 0 {
-		return fmt.Errorf("%w: busy_timeout is unknown (%s)", ErrUnorderedTimeouts, window)
-	}
 	if window >= deadline {
 		return fmt.Errorf("%w: busy_timeout %s must be below read deadline %s", ErrUnorderedTimeouts, window, deadline)
 	}
@@ -80,22 +91,31 @@ The call sits **immediately after `store.Open` succeeds, before `d` is built**:
 **Design points**
 
 - **The window comes from `s.BusyTimeout()`, not the constant.** An operator can set the window through the `--db` DSN, for example `file:w.db?_pragma=busy_timeout(20000)`. `withBusyTimeout` never overrides an explicit caller value, and `busyTimeoutFromParams` reports the value the driver actually applied, first-wins (`read_object_test.go:247-280`). A check against the constant would let a DSN-configured window of 20 s through. Mutation M5 kills that.
-- **The comparison is strict: `window >= deadline` refuses.** At equality, the lock wait ends at the deadline plus up to one SQLite sleep interval, which is an overrun. Mutation M4 kills a `>` comparison.
+- **The comparison is strict: `window >= deadline` refuses.** An equal configuration is refused because it is plainly unordered. Mutation M4 kills a `>` comparison. Strictness does **not** make a lock-blocked read finish before the deadline. At the *accepted* configuration window = deadline − 1 ms, the near-boundary probe (V20) overran a 300 ms deadline on **10 of 10** runs, by 13.4–26.4 ms. That is SQLite's retry granularity plus execution overhead exceeding a 1 ms gap. This is recorded as a measured margin, not a bound (§7).
 - **The check runs before any lifecycle side effect.** The refusal must happen before `archive.Archive` and `registry.Bootstrap` write to the store. The test proves that no registry head exists after a refusal, with a control showing an accepted startup does create one. Mutation M13 kills a late placement.
 - **Stage `StageStoreOpen`, with no new stage.** The incompatibility belongs to the store the daemon just opened. Adding a Stage constant would widen an enumerated public set for no new operator decision.
-- **The `window < 0` branch cannot be reached through `New` today, and I measured that.** `store.Open(":memory:?_pragma=%zz")` fails first with `invalid URL escape` (P-C). The branch is kept because `BusyTimeout()`'s contract allows −1 (`busyTimeoutFromDSN`, `writer_lock.go:246`). It is killed at the helper level (M9, M12).
-- **Window 0 is accepted.** An in-memory store has no busy window (control: `store.Open(":memory:")` → `0s`, P-C). With no busy window, a lock conflict fails immediately, so it is trivially ordered.
+- **A window ≤ 0 is accepted, because it disables the busy handler (r1, gemini, upheld).** The r0 claim that a negative window "cannot be reached through `New`" was **false**. It rested on a malformed-escape DSN, which proves only that URL parsing rejects `%zz`. The measurements (V19):
+  - A valid DSN, `file:<tmp>/w.db?_pragma=busy_timeout(-1)`, **opens**.
+  - `BusyTimeout()` reports `-1ms`, and `PRAGMA busy_timeout` reads back `0`.
+  - A read under a raw `BEGIN EXCLUSIVE` holder fails `SQLITE_BUSY` in 151.7 µs.
+  - Controls in the same run: `busy_timeout(0)` → `0s`, PRAGMA `0`, 28.4 µs; `busy_timeout(2000)` → `2s`, PRAGMA `2000`, 2.048 s.
+
+  So a negative or zero window means the busy handler is disabled and a lock conflict fails immediately. Such a store passes the plain `window < deadline` comparison and is accepted. There is no `window < 0` refusal branch.
+
+  The file-backed `Open` and `OpenReadOnly` report `busyTimeoutFromParams`, which has no parse-failure value (`store.go:262,287`). The in-memory branch (`store.go:244`) uses `busyTimeoutFromDSN`, which does return `-1` when `url.ParseQuery` fails. That −1 still never reaches `BusyTimeout()`: `Open` rejects every such DSN first. `invalid URL escape "%zz"` and `invalid semicolon separator in query` were both measured (V19). A valid in-memory `busy_timeout(-1)` reports `-1ms`.
+
+  The DSN arm `disabled (negative)` kills a refusal of negatives (M12a). The `disabled (zero)` arm kills a refusal of zero (M12b).
 - **The projection is covered too.** `projection.Config.MaxWait` is also `readDeadline` (`daemon.go:511`, V7). The one check covers both consumers.
 
 ### D2 — Honesty edits: retire the false claim and narrow the LIMITATION
 
 - **`host/store/writer_lock.go:175-180`.** Replace "*the request context remains the outer bound, and 2000 ms sits well below the daemon's 10 s read deadline so the context always wins*". P3 shows that sentence is false as written. The replacement says:
   - `busy_timeout`, not the request context, bounds a lock-blocked read, because the driver's interrupt does not break SQLite's busy-retry sleep;
-  - `daemon.New` refuses to start unless this window is strictly below its read deadline (`ErrUnorderedTimeouts`);
-  - at 2000 ms against 10 s, a lock-blocked daemon read ends at the busy window with `SQLITE_BUSY`, which the daemon reports as a sanitized 500.
+  - `daemon.New` validates configuration only: it refuses to start unless this CONFIGURED window is numerically below its CONFIGURED read deadline (`ErrUnorderedTimeouts`). That does not guarantee a lock-blocked read completes before the deadline, because SQLite's retry granularity can exceed the gap;
+  - at 2000 ms against 10 s, a lock-blocked daemon read was measured ending at ~2.05 s with `SQLITE_BUSY`, which the daemon reports as a sanitized 500. That is a measured margin, not a bound.
 - **`host/daemon/handlers.go:283-309`.** Keep the `LIMITATION(w-daemon-late-read-503)` tag and residual (i) word for word. Rewrite residual (ii) from "*an ORDERING nothing in this code asserts, not a guarantee*" to say three things:
-  - the ordering is now **asserted at startup** by `checkReadOrdering` and pinned by `TestReadDeadlineDominatesProductionBusyTimeout`;
-  - the lock-wait regime still exists: the deadline still does not govern it, and at production settings it surfaces as **500 Internal at ~busy_timeout** (P3), not 503;
+  - the CONFIGURED ordering is now **validated at startup** by `checkReadOrdering` and pinned by `TestProductionBusyTimeoutConfiguredBelowReadDeadline`. This is configuration validation, not deadline enforcement;
+  - the lock-wait regime still exists and the deadline still does not govern it. A configured window below the deadline does not guarantee the read ends before the deadline. At production settings it was measured surfacing as **500 Internal at ~busy_timeout** (P3), not 503;
   - tests that shrink `d.readDeadline` *after* `New` bypass the check by construction (§7).
 
 ### D3 — What does NOT change
@@ -111,34 +131,41 @@ The call sits **immediately after `store.Open` succeeds, before `d` is built**:
 
 | File | Change | Prototype LOC |
 |---|---|---|
-| `host/daemon/daemon.go` | `ErrUnorderedTimeouts`, `checkReadOrdering`, call in `New` | +23 |
-| `host/daemon/lock_wait_order_test.go` (new) | 3 tests (§5) | +97 |
+| `host/daemon/daemon.go` | `ErrUnorderedTimeouts`, `checkReadOrdering`, call in `New` | +21 (r1) |
+| `host/daemon/lock_wait_order_test.go` (new) | 3 tests (§5) | +101 (r1) |
 | `host/daemon/handlers.go` | residual (ii) comment rewrite (D2) | ~±15 (comment only) |
 | `host/store/writer_lock.go` | `busyTimeoutMillis` comment rewrite (D2) | ~±6 (comment only) |
 
 ## §5 Acceptance criteria
 
-- **AC1. Reorder test.** `TestReadDeadlineDominatesProductionBusyTimeout` calls `New` on a plain temp path. It must succeed, and `d.store.BusyTimeout()` must be `> 0` (non-vacuity guard) and `< d.readDeadline`. It **must go red when the two constants are retuned into the wrong order**, even when each constant's own literal pin is updated to match (R1, R2, R3).
-- **AC2. The refusal is driven by the opened store's value.** `TestNewRefusesBusyTimeoutAtOrAboveReadDeadline` sets the window through the DSN at `readDeadline − 1ms` (accepted), `== readDeadline` (refused) and `+ 1ms` (refused).
-  - The accepted arm asserts that `BusyTimeout()` equals the DSN value. This makes sure the arm is really driving the window.
+- **AC1. Reorder test.** `TestProductionBusyTimeoutConfiguredBelowReadDeadline` (renamed in r1 from `TestReadDeadlineDominatesProductionBusyTimeout`) calls `New` on a plain temp path. It must succeed, and `d.store.BusyTimeout()` must be `> 0` (non-vacuity guard) and `< d.readDeadline`. It **must go red when the two constants are retuned into the wrong order**, even when each constant's own literal pin is updated to match (R1, R2, R3).
+- **AC2. The refusal is driven by the opened store's value.** `TestNewRefusesBusyTimeoutAtOrAboveReadDeadline` sets the window through the DSN at five values:
+  - `-1ms` (accepted: busy handler disabled);
+  - `0` (accepted: busy handler disabled);
+  - `readDeadline − 1ms` (accepted);
+  - `== readDeadline` (refused);
+  - `+ 1ms` (refused).
+
+  Assertions:
+  - Each accepted arm asserts that `BusyTimeout()` equals the DSN value. This makes sure the arm is really driving the window.
   - Each refused arm asserts all of the following:
     - a `*StartupError` with `Stage == StageStoreOpen`;
     - `errors.Is(err, ErrUnorderedTimeouts)`;
     - writer authority is released: `store.Open` on the same DSN succeeds;
     - no registry head was written, with the accepted arm as the positive control.
-- **AC3. Helper branches.** `TestCheckReadOrderingRefusesUnknownWindow`: a window of `-1` is refused with `ErrUnorderedTimeouts`, and `0` is accepted.
+- **AC3. Disabled windows at the helper.** `TestCheckReadOrderingAcceptsDisabledWindow` checks that `checkReadOrdering` accepts both `-1ms` and `0`. It replaces r0's `TestCheckReadOrderingRefusesUnknownWindow`.
 - **AC4. Honesty edits land (D2).** The `writer_lock.go` sentence "the context always wins" is gone. Residual (ii) in `handlers.go` names `checkReadOrdering` and the measured 500-at-busy-window behaviour. The `LIMITATION(w-daemon-late-read-503)` tag and residual (i) are unchanged. This AC is a text AC. A grep is its instrument-health control and is not claimed as load-bearing (S6).
 - **AC5. Gates.** `go vet ./...` is clean. `go test ./... -count=1` is green with `AILANG_BIN` set to the pinned v0.41.0. `./scripts/verify_ail.sh` is unaffected because no `.ail` file changes.
 
-**No wall-clock assertions.** No new test measures elapsed time: every AC is a construction-time refusal or a value comparison. The only timings in this doc are probe measurements (P-A, P-B, P-C) that justify the decision, and none is asserted by a test. That follows the repo's measured history of 1 s bounds flaking 3/3 under full-suite load.
+**No wall-clock assertions.** No new test measures elapsed time: every AC is a construction-time refusal or a value comparison. The only timings in this doc are probe measurements (P-A, P-B, P-C, V19, V20) that justify the decision, and none is asserted by a test. That follows the repo's measured history of 1 s bounds flaking 3/3 under full-suite load.
 
-## §6 Test plan and mutation matrix — every row was RUN against the prototype
+## §6 Test plan and mutation matrix — every row was RUN against the prototype (re-run in full on the r1 prototype)
 
-Harness: `~/.ailang/state/iter189-design/.mut/run.sh`. It applies a Python edit, runs `go test -run 'ReadDeadlineDominates|BusyTimeoutAtOrAbove|CheckReadOrdering' -count=1`, and restores the files. R1/R3 also run `./host/store/`. The B rows run whole packages with no `-run` filter.
+Harness: `~/.ailang/state/iter189-design/mut-r1/run.sh`. It applies a Python edit, runs `go test -run 'ProductionBusyTimeoutConfigured|BusyTimeoutAtOrAbove|CheckReadOrdering' -count=1`, and restores the files. R1/R3 also run `./host/store/`. The B rows run whole packages with no `-run` filter.
 
-| # | Mutation | Anchored to | Killed by | Result |
+| # | Mutation | Anchored to | Killed by | r1 result |
 |---|---|---|---|---|
-| R1 | `busyTimeoutMillis` → 15000 **and** `wantBusyTimeoutMS` → 15000 (retune with the pin updated) | the row's own scenario | AC1 `TestReadDeadlineDominatesProductionBusyTimeout` | **KILLED** |
+| R1 | `busyTimeoutMillis` → 15000 **and** `wantBusyTimeoutMS` → 15000 (retune with the pin updated) | the row's own scenario | AC1 `TestProductionBusyTimeoutConfiguredBelowReadDeadline` | **KILLED** |
 | R2 | `readDeadline` → 1 s **and** the D7 pin → 1 s (retune with the pin updated) | the row's scenario, other direction | AC1 | **KILLED** |
 | R3 | `busyTimeoutMillis` → 10000 = `readDeadline` (equality retune, pin updated) | boundary | AC1 | **KILLED** |
 | M3 | drop the startup check (`false && err != nil`) | the fix | AC2 `/equal`, `/above` | **KILLED** |
@@ -147,13 +174,15 @@ Harness: `~/.ailang/state/iter189-design/.mut/run.sh`. It applies a Python edit,
 | M6 | omit `_ = s.Close()` on refusal | **the diff** (new early return after `store.Open`) | AC2 re-open assertion | **KILLED** |
 | M7 | refuse with `Stage: StageConfig` | the diff (stage choice) | AC2 stage assertion | **KILLED** |
 | M8 | `%w` → `%v` (sentinel not wrapped) | the diff (new sentinel) | AC2 `errors.Is` | **KILLED** |
-| M9 | drop the `window < 0` branch | the diff (helper branch) | AC3 | **KILLED** |
+| ~~M9~~ | ~~drop the `window < 0` branch~~ | **Retired in r1.** The branch no longer exists (gemini, §13). | — | — |
 | M10 | compare against `writeTimeout` instead of `readDeadline` | the diff: the neighbouring constant in the same `const` block, which D2's comment also names | AC2 `/equal`, `/above` | **KILLED** |
-| M11 | arguments swapped: `checkReadOrdering(readDeadline, s.BusyTimeout())` | the diff (helper signature) | AC1 and AC2 `/just_below`, `/above` | **KILLED** |
-| M12 | `window < 0` → `window <= 0` (zero refused) | the diff (in-memory stores) | AC3 | **KILLED** |
+| M11 | arguments swapped: `checkReadOrdering(readDeadline, s.BusyTimeout())` | the diff (helper signature) | AC1 and AC2 `/disabled_(negative)`, `/disabled_(zero)`, … | **KILLED** |
+| M12a | refuse negative windows: `window < 0 \|\| window >= deadline` (r0's refusal restored) | the r1 diff (removed branch) | AC2 `/disabled_(negative)` and AC3 | **KILLED** |
+| M12b | refuse zero-or-negative: `window <= 0 \|\| window >= deadline` | the r1 diff (disabled-handler semantics) | AC2 `/disabled_(negative)`, `/disabled_(zero)` and AC3 | **KILLED** |
 | M13 | move the check after `registry.Bootstrap`/projection, still closing the store | the diff (placement) | AC2 no-registry-head assertion | **KILLED** |
+| M14 | refuse exactly `-1ms`, r0's "unknown" sentinel reading: `window == -time.Millisecond \|\| …` | the r1 diff (the sentinel ambiguity D1 resolves) | AC2 `/disabled_(negative)` and AC3 | **KILLED** |
 
-**Tally: 14 mutations run on the prototype, 14 killed, 0 survivors, 0 equivalent.** Adding the two baseline rows below gives **16 runs in total**, plus one isolation rerun of B1.
+**Tally (r1 prototype): 15 mutations run, 15 killed, 0 survivors, 0 equivalent.** r0 had 14/14. M9 was retired, and M12 was re-thought as M12a/M12b, with M14 added. The two pre-fix baseline rows below were r0 runs against HEAD and are unaffected by r1. Harness output: V21.
 
 **Pre-fix baseline.** These rows use HEAD's `daemon.go` with the new test file removed, and show what the gates catch today:
 
@@ -164,10 +193,10 @@ Harness: `~/.ailang/state/iter189-design/.mut/run.sh`. It applies a Python edit,
 
 ## §7 What is NOT fixed (declared residuals)
 
-- **The lock-wait regime still ignores the deadline.** Arm B guarantees only that the busy window ends first. A lock-blocked read is bounded by `busy_timeout`, currently 2 s, and in production it answers **500 Internal**, not 503 (P3).
+- **Arm B enforces only that the configured SQLite busy_timeout is numerically below the configured daemon read deadline. It does not guarantee that a lock-blocked read completes before that deadline: SQLite retry granularity and execution overhead can exceed the gap, including for the accepted deadline-minus-1-ms configuration. Actual deadline enforcement remains deferred.** (r1: gpt6-astra's replacement sentence, adopted verbatim.) Near-boundary probe V20: busy_timeout 299 ms against a 300 ms context deadline overran on 10/10 runs, by 13.4–26.4 ms. At production settings, 2 s against 10 s, a lock-blocked read was measured ending at ~2.05 s and answering **500 Internal**, not 503 (P3). Both are measured margins, not bounds.
 - **Short test deadlines still overrun.** `d.readDeadline` is a field that tests set after `New` (`daemon.go:296-302`), so the ordering is not checked for them. A lock-blocked read under such a deadline still overruns it by up to the busy window. The existing read-deadline tests avoid this by using an already-expired stimulus (`expiredReadDeadline`), not a lock.
 - **Residual (i) is untouched.** A read that completes before cancellation still answers 200. That is `LIMITATION(w-daemon-late-read-503)`, and its tag and text are kept.
-- **The `window < 0` branch cannot be reached through `New`** (D1). It is killed only at the helper level.
+- **A disabled busy handler (window ≤ 0) is accepted.** Under that configuration, a lock conflict fails with `SQLITE_BUSY` immediately (V19), which the daemon reports as a 500. That is the same status-classification residual as P3, and it is owned by O1.
 
 ## §8 Conflict surface
 
@@ -186,8 +215,8 @@ Harness: `~/.ailang/state/iter189-design/.mut/run.sh`. It applies a Python edit,
 
 ## §10 Milestones (≈0.3 d total)
 
-- **M1 — startup ordering check + tests (~120 LOC).** Add D1 to `daemon.go` and create `lock_wait_order_test.go`.
-  - *Acceptance:* AC1–AC3 green, and every mutation from R1 to M13 is re-run and killed, with the tally recorded in the sprint's Verification Log.
+- **M1 — startup configuration check + tests (~125 LOC).** Add D1 to `daemon.go` and create `lock_wait_order_test.go`.
+  - *Acceptance:* AC1–AC3 green, and every mutation in §6's r1 matrix (R1–R3, M3–M8, M10–M14) is re-run and killed, with the tally recorded in the sprint's Verification Log.
 - **M2 — honesty edits (~25 LOC, comments only).** Make the D2 rewrites in `writer_lock.go` and `handlers.go`.
   - *Acceptance:* AC4, plus AC5 on the merged tree: `go vet ./...` and `AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./... -count=1` both green.
 
@@ -218,13 +247,17 @@ All commands were run at base `a5090f0` in `/Users/voightkampff/dev/sunholo-data
 | V10 | `grep -n 'modernc.org/sqlite' go.mod`; `grep -n 'func RegisterConnectionHook\|c.interrupt(c.db)' $GOMODCACHE/modernc.org/sqlite@v1.54.0/sqlite.go`; `grep -c 'BusyHandler\|busy_handler' …/sqlite.go` | `7: modernc.org/sqlite v1.54.0` · `101: c.interrupt(c.db)` · `645:func RegisterConnectionHook` · busy-handler count **0** |
 | V11 (P-A) | prototype worktree: `go run ./probe189` (source `~/.ailang/state/iter189-design/probe189/main.go`) | `control unlocked read: 128.833µs` · `per-request PRAGMA exec: 1.159µs; per unlocked read: 5.38µs` · `deadline 300ms, today (busy 2000ms): elapsed 2.045763333s, err=context deadline exceeded` · `deadline 300ms, arm A (busy capped to 299ms): elapsed 315.730416ms overrun 15.730416ms, err=database is locked (5) (SQLITE_BUSY) …; restore-with-req-ctx err=context deadline exceeded, restore-with-bg err=<nil>` · `deadline 700ms, today: elapsed 2.045831834s, err=database is locked (5)` · `deadline 700ms, arm A: elapsed 721.658834ms overrun 21.658834ms` · `pool busy_timeout after arm A: 2000` |
 | V12 (P-B) | prototype worktree: `go run ./probe189b` | `(1) pool busy_timeout after a skipped restore: 37 (configured 2000)` · `(2) writer store BusyTimeout()=2s` · `(2a) writer-store read while a mode=ro reader holds SHARED: 79.209µs err=<nil>` · `(2b) writer-store read while a raw handle holds EXCLUSIVE: 2.044035375s err=store: read selected head: context deadline exceeded` |
-| V13 (P-C) | prototype worktree: scratch `zz_probe189_test.go`, `go test ./host/daemon/ -run ZZProbe -v` (deleted after the run) | `store.Open(":memory:?_pragma=%zz") err=store: enable foreign keys: invalid URL escape "%zz"` · `control store.Open(:memory:) BusyTimeout=0s` · `control unlocked GET /v1/head: 404 in 145.041µs` · `lock-blocked GET /v1/head (deadline 10s, busy 2s): 500 in 2.046774458s body={"error":{"class":"Internal","message":"internal store failure"}}` |
+| V13 (P-C) | prototype worktree: scratch `zz_probe189_test.go`, `go test ./host/daemon/ -run ZZProbe -v` (deleted after the run) | `store.Open(":memory:?_pragma=%zz") err=store: enable foreign keys: invalid URL escape "%zz"`. **r1 correction:** this proves only that URL parsing rejects `%zz`. It does NOT show that a negative window is unreachable, and V19 shows it is reachable. · `control store.Open(:memory:) BusyTimeout=0s` · `control unlocked GET /v1/head: 404 in 145.041µs` · `lock-blocked GET /v1/head (deadline 10s, busy 2s): 500 in 2.046774458s body={"error":{"class":"Internal","message":"internal store failure"}}` |
 | V14 | `grep -n '^func (s \*Store) [A-Za-z]*(ctx context.Context' host/store/*.go \| grep -v _test \| wc -l`; `grep -c 'd\.reads\.' host/daemon/handlers.go host/daemon/daemon.go` | `8` · `handlers.go:5`, `daemon.go:1` |
 | V15 | `grep -n 'busy_timeout\|busy' docs/QUICKSTART.md` | no hits. Control: the same `grep -n` shape fires on `writer_lock.go` (V1) |
 | V16 | `grep -n 'deadlineFreeReadPins = ' -A5 host/store/context_read_test.go` | `370:var deadlineFreeReadPins = map[string]int{` · `approve.go: 8` · `registry.go: 2` · `replay.go: 1` |
 | V17 | prototype worktree: `go vet ./...`; `go test ./host/daemon/ ./host/store/ -count=1`; `AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./... -count=1` | `VET-OK` · `ok host/daemon 2.632s` · `ok host/store 6.435s` · full suite: **21 `ok`, 0 `FAIL`**. Without `AILANG_BIN`, `host/verifygate` fails loudly by design ("AILANG_BIN is unset …"), as expected. |
 | V18 | `grep -nE '^[0-9]+\. \*\*w-daemon-late-read' design_docs/world-mission.md`; control `grep -nE '^[0-9]+\. \*\*w-daemon-lock-wait' …`; `grep -c 'w-daemon-late-read-503' …`; `ls design_docs/planned design_docs/implemented \| grep -c late-read` | check: no rows, rc=1. Control: `4219:22. **w-daemon-lock-wait-not-deadline-bound**` · 2 prose hits · 0 docs |
 | V19 | prototype worktree: mutation harness, 14 fix rows plus 2 baseline rows plus the B1 isolation rerun | as tabulated in §6. The raw lines are in this iteration's transcript, and the harness is at `~/.ailang/state/iter189-design/.mut/run.sh`. |
+
+| V19 (r1, gemini) | r1 worktree at `f82fa83`: controller's probe `~/.ailang/state/world-iter189/zz_probe189_test.go`, `go test ./host/store/ -run ZZProbe189 -count=1 -v`; plus scratch `zz_mem189_test.go` (deleted) | `v=-1 BusyTimeout()=-1ms PRAGMA=0 holdErr=<nil> blockedRead=151.708µs err=database is locked (5) (SQLITE_BUSY)` · `v=0 BusyTimeout()=0s PRAGMA=0 … blockedRead=28.375µs … (SQLITE_BUSY)` · `v=2000 BusyTimeout()=2s PRAGMA=2000 … blockedRead=2.048148625s … (SQLITE_BUSY)`. In-memory: `":memory:?_pragma=busy_timeout(-1)" BusyTimeout()=-1ms` · `":memory:?_pragma=busy_timeout(5);x=1" open err=… invalid semicolon separator in query` · `":memory:?_pragma=%zz" open err=… invalid URL escape "%zz"` · control `":memory:" BusyTimeout()=0s`. `grep -n busyTimeoutFrom host/store/store.go` → `244: busyTimeoutFromDSN(path)` · `262:`, `287: busyTimeoutFromParams(…)` |
+| V20 (r1, astra: near-boundary probe) | r1 worktree: scratch `zz_near189_test.go` (deleted). `store.Open("file:<tmp>/w.db?_pragma=busy_timeout(299)")`, raw `BEGIN EXCLUSIVE` holder, `SelectedHead` under a 300 ms context deadline, ×10 | `BusyTimeout()=299ms deadline=300ms`. Elapsed per run: 318.1, 313.8, 323.9, 316.2, 318.2, 314.0, 319.4, 313.4, 316.7, 326.4 ms. **Overrun 13.4–26.4 ms on 10/10**, with `ctxErr=context deadline exceeded`. Errors: run 0 `context deadline exceeded`, runs 1–9 `database is locked (5) (SQLITE_BUSY)`. This is a measured margin (negative here), not a bound. It agrees with V11's arm-A reading of 315.7 ms at 299/300. |
+| V21 (r1) | r1 worktree: harness `mut-r1/run.sh` (15 rows); `go vet ./...`; `go test ./host/daemon/ ./host/store/ -count=1`; `AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./... -count=1` | every row prints `KILLED`, as in §6 · `VET-OK` · `ok host/daemon 2.700s` · `ok host/store 6.382s` · full suite **21 `ok`, 0 `FAIL`** (`~/.ailang/state/iter189-design/fullsuite.r1.txt`) |
 
 **Controller claims checked:**
 - F1: TRUE, and stronger. The comment is not only unchecked but **false as written** (P3).
@@ -233,3 +266,33 @@ All commands were run at base `a5090f0` in `/Users/voightkampff/dev/sunholo-data
 - F4: TRUE, at slightly different lines, 283-309.
 - F5: TRUE.
 - F6: TRUE, reproduced at 2.0458 s (V11).
+
+**Controller claims checked in r1:**
+- The two upheld objections: TRUE, both reproduced (V19, V20).
+- "Store uses busyTimeoutFromParams (store.go:262,287), NOT busyTimeoutFromDSN": **FALSE as stated**. `store.go:244`, the in-memory branch of `Open`, does use `busyTimeoutFromDSN`. The conclusion drawn from it still holds in practice: every `ParseQuery`-failing DSN tried was rejected by `Open` before the −1 sentinel could reach `BusyTimeout()` (V19).
+
+## §13 Quorum log
+
+**Round 1: BLOCKED, 2 reject / 1 pass, all three reviewers present.** The controller measured both objections before forwarding them, and both are upheld.
+
+- **O-r1-1, gemini-3-1-pro (reject), UPHELD, RESOLVED.**
+  - *Objection:* the claim that the `window < 0` branch cannot be reached through `New` rested on a malformed URL (`%zz`). A valid `?_pragma=busy_timeout(-1)` is reachable and safely disables SQLite's busy handler, and the design wrongly refused it.
+  - *Measurement:* reproduced first-party (V19). The DSN opens, `BusyTimeout()` = −1 ms, the PRAGMA reads 0, and a blocked read fails `SQLITE_BUSY` in 151.7 µs.
+  - *Resolution, the proposed fix applied verbatim:*
+    - the `window < 0` refusal is removed from `checkReadOrdering`;
+    - D1 now states that a window ≤ 0 is accepted because it disables the busy handler;
+    - AC3 is now `TestCheckReadOrderingAcceptsDisabledWindow`, asserting −1 ms and 0 are accepted;
+    - AC2 gains DSN arms `disabled (negative)` and `disabled (zero)`, both accepted by `New`;
+    - M9 is dropped;
+    - M12 is re-thought as M12a (refuse negatives) and M12b (refuse zero-or-negative), and M14 (refuse exactly −1 ms) is added. All three are killed.
+  - V13's `%zz` conclusion is corrected in place.
+- **O-r1-2, gpt6-astra (reject), UPHELD, RESOLVED.**
+  - *Objection:* §7's "guarantees only that the busy window ends first" overstates the design. AC2 accepts deadline − 1 ms, while P-A measured 15–22 ms overruns.
+  - *Measurement:* a dedicated near-boundary probe in arm-B shape (V20). A configured window of 299 ms against a 300 ms deadline overran on 10/10 runs, by 13.4–26.4 ms.
+  - *Resolution, the proposed fix applied verbatim:*
+    - §7's first bullet is replaced with astra's sentence word for word;
+    - the reorder test is renamed `TestProductionBusyTimeoutConfiguredBelowReadDeadline`;
+    - the title, §2 (arm B row and heading), D1 (sentinel and helper comments, the strictness point) and D2 (both proposed comments) now say "configured … numerically below" and "configuration validation, not deadline enforcement";
+    - V20 is recorded as a measured margin, not a bound.
+  - *On astra's closing condition* ("if runtime deadline dominance is required for closing row 22, Arm B cannot close it"): row 22 does not require it. It offers "deadline dominates" **or** "ordering merely asserted and pinned", with "either way a test must red when the two constants are reordered". §2 now quotes the row and says so explicitly. Real deadline enforcement stays owned by O1's successor (§11).
+- **The passing reviewer:** no objection to resolve.
