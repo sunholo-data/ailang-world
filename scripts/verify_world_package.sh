@@ -226,6 +226,7 @@ package main
 import (
   "archive/tar"
   "bytes"
+  "context"
   "compress/gzip"
   "fmt"
   "io"
@@ -236,13 +237,14 @@ func main() {
   m := pkgproj.Manifest{Package: pkgproj.Package{Name:"world/core", Edition:"1", AILANG:">=0.30.0"}, Exports:pkgproj.Exports{Modules:[]string{"world/types","world/contracts","world/transitions","world/logepoch"}}, Effects:pkgproj.Effects{Max:[]string{}}}
   r, err := pkgproj.CrossCheck("packages/world-core", m, os.Args[1]); if err != nil { panic(err) }
   data, err := pkgproj.CreateTarball("packages/world-core"); if err != nil { panic(err) }
-  fmt.Printf("contentHash=%s\ninterfaceHash=%s\ntarballSHA256=%s\ntarballBytes=%d\n", r.Local.Content, r.Local.Interface, r.Local.Tarball, r.Local.TarballBytes)
+  id, err := pkgproj.QueryInterface(context.Background(), "packages/world-core", m, os.Args[1]); if err != nil { panic(err) }
+  fmt.Printf("contentHash=%s\ninterfaceHash=%s\ninterfaceHashV2=%s\ntarballSHA256=%s\ntarballBytes=%d\n", r.Local.Content, r.Local.Interface, id.V2, r.Local.Tarball, r.Local.TarballBytes)
   zr, err := gzip.NewReader(bytes.NewReader(data)); if err != nil { panic(err) }; tr := tar.NewReader(zr)
   for { h, err := tr.Next(); if err == io.EOF { break }; if err != nil { panic(err) }; fmt.Printf("entry=%s\n", h.Name) }
 }
 GO
 run_bounded 120 "$tmp_proj" env -u AILANG_REGISTRY_API_KEY go run "$tmp_helper" "$AILANG_BIN" || { cat "$tmp_proj" >&2; exit 1; }
-for key in contentHash interfaceHash tarballSHA256 tarballBytes; do
+for key in contentHash interfaceHash interfaceHashV2 tarballSHA256 tarballBytes; do
   count="$(grep -Ec "^${key}=" "$tmp_proj" || true)"
   [ "$count" -eq 1 ] || { printf '✗ pkgproj emitted %s %s times\n' "$key" "$count" >&2; cat "$tmp_proj" >&2; exit 1; }
 done
@@ -294,10 +296,10 @@ values = {}
 for line in open(sys.argv[1], encoding="utf-8"):
     if "=" in line:
         k, v = line.rstrip("\n").split("=", 1); values[k] = v
-required = ("contentHash", "interfaceHash", "tarballSHA256", "tarballBytes")
+required = ("contentHash", "interfaceHash", "interfaceHashV2", "tarballSHA256", "tarballBytes")
 if any(not values.get(k) for k in required):
     sys.stderr.write("✗ ready packet input is incomplete\n"); sys.exit(1)
-packet = {"compilerVersion":sys.argv[3], "contentHash":values["contentHash"], "effects":[], "exports":["world/types","world/contracts","world/transitions","world/logepoch"], "interfaceHash":values["interfaceHash"], "package":"world/core", "tarballBytes":int(values["tarballBytes"]), "tarballSHA256":values["tarballSHA256"], "version":"0.1.0"}
+packet = {"compilerVersion":sys.argv[3], "contentHash":values["contentHash"], "effects":[], "exports":["world/types","world/contracts","world/transitions","world/logepoch"], "interfaceHash":values["interfaceHash"], "interfaceHashV2":values["interfaceHashV2"], "package":"world/core", "tarballBytes":int(values["tarballBytes"]), "tarballSHA256":values["tarballSHA256"], "version":"0.1.0"}
 with open(sys.argv[2], "wb") as f: f.write((json.dumps(packet, sort_keys=True, separators=(",", ":")) + "\n").encode())
 PY
 [ -s "$tmp_ready" ] || { printf '%s\n' '✗ ready packet enumeration was zero-length' >&2; exit 1; }

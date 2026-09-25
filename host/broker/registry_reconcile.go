@@ -77,6 +77,9 @@ type ReconcileConfig struct {
 	// Expected are the three digests the durable publish request bound. A
 	// present document must match all three or the pass resolves `conflict`.
 	Expected PublishHashes
+	// ExpectedInterfaceV2 is the ready packet's interfaceHashV2. It is NOT in
+	// PublishHashes: the frozen payload and approval scope do not carry it.
+	ExpectedInterfaceV2 string
 
 	// ControlVendor/Name/Version select the same-pass known-positive control.
 	// Left entirely zero they default to sunholo/auth@0.4.1. The control is
@@ -160,6 +163,9 @@ type RegistryMetadata struct {
 	TarballHash   string `json:"tarball_hash"`
 	ContentHash   string `json:"content_hash"`
 	InterfaceHash string `json:"interface_hash"`
+	// InterfaceHashV2 is a pointer so JSON null and an absent key are both
+	// distinguishable from a served value; both refuse.
+	InterfaceHashV2 *string `json:"interface_hash_v2"`
 }
 
 // metadataObjectURL builds the ONE URL shape reconciliation is allowed to
@@ -260,9 +266,9 @@ func reconcileRegistryPublish(
 	}
 	// R6 — an empty expected digest would make a present document compare equal
 	// to anything, turning `conflict` into `succeeded-reconciled`.
-	if cfg.Expected.TarballSHA256 == "" || cfg.Expected.ContentHash == "" || cfg.Expected.InterfaceHash == "" {
+	if cfg.Expected.TarballSHA256 == "" || cfg.Expected.ContentHash == "" || cfg.Expected.InterfaceHash == "" || cfg.ExpectedInterfaceV2 == "" {
 		return ReconcileReceipt{}, &PublishRefusalError{
-			Why: "reconciliation requires all three expected digests"}
+			Why: "reconciliation requires all four expected digests"}
 	}
 	// R7 — a window that cannot close is not a bound.
 	if cfg.AbsentSamplesRequired < 1 || cfg.MaxAttempts < cfg.AbsentSamplesRequired {
@@ -368,8 +374,20 @@ func resolvePresent(receipt ReconcileReceipt, body []byte, cfg ReconcileConfig) 
 		receipt.Detail = err.Error()
 		return receipt, nil
 	}
+	// P4 — interface identity v2. Absent or null is NOT success.
+	if served.InterfaceHashV2 == nil {
+		receipt.State = ReconcileConflict
+		receipt.Detail = "served document carries no interface_hash_v2; expected " + cfg.ExpectedInterfaceV2
+		return receipt, nil
+	}
+	if *served.InterfaceHashV2 != cfg.ExpectedInterfaceV2 {
+		receipt.State = ReconcileConflict
+		receipt.Detail = fmt.Sprintf("served interface-v2 hash %s does not match the expected %s",
+			*served.InterfaceHashV2, cfg.ExpectedInterfaceV2)
+		return receipt, nil
+	}
 	receipt.State = ReconcileSucceededReconciled
-	receipt.Detail = "served metadata matches all three expected digests"
+	receipt.Detail = "served metadata matches all four expected digests"
 	return receipt, nil
 }
 

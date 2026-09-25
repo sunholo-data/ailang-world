@@ -503,6 +503,7 @@ func reconcileConfigFor(opts options, packet pkgproj.ReadyPacket) broker.Reconci
 			ContentHash:   packet.ContentHash,
 			InterfaceHash: packet.InterfaceHash,
 		},
+		ExpectedInterfaceV2: packet.InterfaceHashV2,
 	}
 }
 

@@ -231,6 +231,27 @@ func readRunbook(t *testing.T) string {
 
 var fullDigest = regexp.MustCompile(`sha256:[0-9a-f]{64}`)
 
+// ifaceV2Digest is DISJOINT from fullDigest: "sha256:ifacev2:" never matches
+// sha256:[0-9a-f]{64}, so the three-digest guard above is blind to it.
+var ifaceV2Digest = regexp.MustCompile(`sha256:ifacev2:[0-9a-f]{64}`)
+
+func TestRunbookInterfaceV2DigestAppearsVerbatimInTheCommittedGolden(t *testing.T) {
+	root := repoRoot(t)
+	doc := readRunbook(t)
+	golden, err := os.ReadFile(filepath.Join(root, goldenPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	inGolden := ifaceV2Digest.FindAllString(string(golden), -1)
+	if len(inGolden) != 1 {
+		t.Fatalf("instrument failure: %d v2 digests in %s, want 1", len(inGolden), goldenPath)
+	}
+	inDoc := ifaceV2Digest.FindAllString(doc, -1)
+	if len(inDoc) != 1 || inDoc[0] != inGolden[0] {
+		t.Fatalf("%s names v2 digests %v; the golden carries %s", runbookPath, inDoc, inGolden[0])
+	}
+}
+
 const goldenPath = "scripts/world_package_ready_packet.golden.json"
 
 // TestRunbookDigestsAppearVerbatimInTheCommittedGolden is AC28, and it is rule

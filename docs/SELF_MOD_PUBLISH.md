@@ -84,7 +84,8 @@ identity of what you are about to publish permanently:
 | field | digest |
 |---|---|
 | `contentHash` | `sha256:0c8c60616e592dc01891e8bbb59350786f242a2f79a9eb2c587ae8b0ca2e00b9` |
-| `interfaceHash` | `sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083` |
+| `interfaceHash` (manifest coverage only) | `sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083` |
+| `interfaceHashV2` (exported interface) | `sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8` |
 | `tarballSHA256` | `sha256:44fc9fab7be710f09b84274f744445db41a79df77c71cc43c0e952d75d97c27f` |
 
 They are gated against the golden by `host/runbook`, so this table cannot rot silently: change the

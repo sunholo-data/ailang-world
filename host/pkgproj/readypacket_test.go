@@ -145,11 +145,12 @@ func TestReadyPacketEqualNamesTheFirstDifferingField(t *testing.T) {
 			p.Exports[0], p.Exports[len(p.Exports)-1] = p.Exports[len(p.Exports)-1], p.Exports[0]
 			return p
 		},
-		"interfaceHash": func(p ReadyPacket) ReadyPacket { p.InterfaceHash = flipHexNibble(p.InterfaceHash); return p },
-		"package":       func(p ReadyPacket) ReadyPacket { p.Package = "world/other"; return p },
-		"tarballBytes":  func(p ReadyPacket) ReadyPacket { p.TarballBytes++; return p },
-		"tarballSHA256": func(p ReadyPacket) ReadyPacket { p.TarballSHA256 = flipHexNibble(p.TarballSHA256); return p },
-		"version":       func(p ReadyPacket) ReadyPacket { p.Version = "0.1.1"; return p },
+		"interfaceHash":   func(p ReadyPacket) ReadyPacket { p.InterfaceHash = flipHexNibble(p.InterfaceHash); return p },
+		"interfaceHashV2": func(p ReadyPacket) ReadyPacket { p.InterfaceHashV2 = flipHexNibble(p.InterfaceHashV2); return p },
+		"package":         func(p ReadyPacket) ReadyPacket { p.Package = "world/other"; return p },
+		"tarballBytes":    func(p ReadyPacket) ReadyPacket { p.TarballBytes++; return p },
+		"tarballSHA256":   func(p ReadyPacket) ReadyPacket { p.TarballSHA256 = flipHexNibble(p.TarballSHA256); return p },
+		"version":         func(p ReadyPacket) ReadyPacket { p.Version = "0.1.1"; return p },
 	}
 	if len(mutations) != len(ReadyPacketFields) {
 		t.Fatalf("this test drives %d fields but the frozen list has %d: a field would go untested",

@@ -1,0 +1,33 @@
+{
+  "schema": "ailang.package-metadata/v1",
+  "name": "sunholo/auth",
+  "version": "0.4.1",
+  "published_at": "2026-03-27T15:21:39Z",
+  "published_by": "",
+  "content_hash": "sha256:753c1a4eb553815a258bc8640166f6359591a11770086ecd3b416d6e47fd19b4",
+  "interface_hash": "sha256:670b5608d292d9e58e06e367adfa516b3c14f838d646efbbd75eb894cc2cee81",
+  "tarball_hash": "sha256:3a8d7fbad6bea7ec548b0937316cad8a0c8e9744bd319fcee33aec7402b42eed",
+  "tarball_size_bytes": 4580,
+  "validation": {
+    "compiles": true,
+    "effects_valid": true,
+    "contracts_verified": 0,
+    "contracts_total": 0,
+    "contracts_skipped": 0,
+    "ailang_version": "AILANG dev\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026"
+  },
+  "manifest": {
+    "edition": "1",
+    "effects_max": [],
+    "exports": [
+      "sunholo/auth/keys",
+      "sunholo/auth/bearer"
+    ],
+    "stability": "experimental",
+    "ai_summary": "Pure API key validation (SHA-256 hash comparison, constant-time) and bearer token extraction",
+    "has_agent_doc": true,
+    "repository": "https://github.com/sunholo-data/ailang-packages/tree/main/packages/auth",
+    "homepage": "https://ailang.sunholo.com/docs/packages/sunholo/auth",
+    "license_url": "https://github.com/sunholo-data/ailang-packages/blob/main/LICENSE"
+  }
+}

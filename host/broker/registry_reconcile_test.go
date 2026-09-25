@@ -231,11 +231,12 @@ func controlKey() string {
 // of the pair drifting together in silence.
 func metadataDocument(name, version string, h PublishHashes) []byte {
 	body, err := json.Marshal(map[string]any{
-		"name":           name,
-		"version":        version,
-		"tarball_hash":   h.TarballSHA256,
-		"content_hash":   h.ContentHash,
-		"interface_hash": h.InterfaceHash,
+		"name":              name,
+		"version":           version,
+		"tarball_hash":      h.TarballSHA256,
+		"content_hash":      h.ContentHash,
+		"interface_hash":    h.InterfaceHash,
+		"interface_hash_v2": reconcileExpectedV2,
 	})
 	if err != nil {
 		panic("metadataDocument: " + err.Error())
@@ -268,6 +269,7 @@ func reconcileCfg(b *fakeBucket) ReconcileConfig {
 		Name:                  fixtureName,
 		Version:               fixtureVersion,
 		Expected:              reconcileExpected,
+		ExpectedInterfaceV2:   reconcileExpectedV2,
 		AbsentSamplesRequired: 1,
 		MaxAttempts:           2,
 		RequestTimeout:        10 * time.Second,
@@ -1307,6 +1309,7 @@ func TestReconcileRefusalSetWithAPassingPositiveControl(t *testing.T) {
 			RegistryOrigin: dead,
 			Vendor:         fixtureVendor, Name: fixtureName, Version: fixtureVersion,
 			Expected:              reconcileExpected,
+			ExpectedInterfaceV2:   reconcileExpectedV2,
 			AbsentSamplesRequired: 1, MaxAttempts: 2,
 			RequestTimeout: time.Second,
 		}
@@ -1343,13 +1346,13 @@ func TestReconcileRefusalSetWithAPassingPositiveControl(t *testing.T) {
 		}, "is the probe target itself"},
 		{"R6/tarball", func(c *ReconcileConfig) {
 			c.Expected.TarballSHA256 = ""
-		}, "requires all three expected digests"},
+		}, "requires all four expected digests"},
 		{"R6/content", func(c *ReconcileConfig) {
 			c.Expected.ContentHash = ""
-		}, "requires all three expected digests"},
+		}, "requires all four expected digests"},
 		{"R6/interface", func(c *ReconcileConfig) {
 			c.Expected.InterfaceHash = ""
-		}, "requires all three expected digests"},
+		}, "requires all four expected digests"},
 		{"R7/zero-window", func(c *ReconcileConfig) {
 			c.AbsentSamplesRequired, c.MaxAttempts = -1, 4
 		}, "absence window is unsatisfiable"},
@@ -1554,7 +1557,8 @@ func TestResolvePresentRefusalsP1P3(t *testing.T) {
 	base := ReconcileReceipt{State: ReconcileProbeUnavailable}
 	cfg := ReconcileConfig{
 		Vendor: fixtureVendor, Name: fixtureName, Version: fixtureVersion,
-		Expected: reconcileExpected,
+		Expected:            reconcileExpected,
+		ExpectedInterfaceV2: reconcileExpectedV2,
 	}
 
 	t.Run("P1/typed-decode-failure", func(t *testing.T) {
@@ -1704,3 +1708,5 @@ func TestEveryReconcileRequestWasLoopbackAndAGet(t *testing.T) {
 	}
 	t.Logf("enumerated %d requests across %d loopback fake buckets", len(requests), len(origins))
 }
+
+const reconcileExpectedV2 = "sha256:ifacev2:" + "4444444444444444444444444444444444444444444444444444444444444444"

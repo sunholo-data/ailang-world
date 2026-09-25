@@ -1,0 +1,169 @@
+{
+  "schema": "ailang.package-metadata/v2",
+  "name": "world/core",
+  "version": "0.1.0",
+  "published_at": "2026-09-21T19:39:38Z",
+  "published_by": "",
+  "content_hash": "sha256:0c8c60616e592dc01891e8bbb59350786f242a2f79a9eb2c587ae8b0ca2e00b9",
+  "interface_hash": "sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083",
+  "tarball_hash": "sha256:44fc9fab7be710f09b84274f744445db41a79df77c71cc43c0e952d75d97c27f",
+  "tarball_size_bytes": 9785,
+  "validation": {
+    "compiles": true,
+    "effects_valid": true,
+    "contracts_verified": 11,
+    "contracts_total": 11,
+    "contracts_skipped": 0,
+    "ailang_version": "AILANG v0.41.0\nCommit: 24ee108\nFull:   24ee1088776e21cd06a3781ed18e77f40be06db3\nBuilt:  2026-09-21T16:21:40Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026"
+  },
+  "manifest": {
+    "edition": "1",
+    "effects_max": [],
+    "exports": [
+      "world/types",
+      "world/contracts",
+      "world/transitions",
+      "world/logepoch"
+    ],
+    "stability": "",
+    "ai_summary": "AILANG World's pure semantic core: the content-addressed world-graph types, the Z3-proven validity contracts, the pure transition functions and the log-epoch semantics. No effects.",
+    "has_agent_doc": false,
+    "repository": "https://github.com/sunholo-data/ailang-world/tree/dev/packages/world-core",
+    "homepage": "https://ailang.sunholo.com/docs/packages/world/core"
+  },
+  "interface_hash_v2": "sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8",
+  "interface_signatures": [
+    "world/contracts:func:commitAllowed:(World\\,Proposal\\,Verification)-\u003ebool:",
+    "world/contracts:func:commitBoundaryHolds:(bool\\,bool\\,int\\,bool\\,bool\\,bool)-\u003ebool:",
+    "world/contracts:func:isValidNextWorld:(World\\,World\\,HashRef\\,HashRef)-\u003ebool:",
+    "world/contracts:func:proposalMatchesWorld:(World\\,Proposal)-\u003ebool:",
+    "world/contracts:func:verificationMatchesProposal:(Proposal\\,Verification)-\u003ebool:",
+    "world/logepoch:func:cacheKey:(LogHeader)-\u003estring:",
+    "world/logepoch:func:renderRef:(HashRef)-\u003estring:",
+    "world/logepoch:func:sameRef:(HashRef\\,HashRef)-\u003ebool:",
+    "world/logepoch:func:servesEntry:(EpochRecord\\,LogHeader)-\u003ebool:",
+    "world/logepoch:type:EpochRecord/0",
+    "world/logepoch:type:HashRef/0",
+    "world/logepoch:type:LogHeader/0",
+    "world/logepoch:type:ObjectEnvelope/0",
+    "world/transitions:func:applyRevision:(World\\,HashRef\\,HashRef)-\u003eWorld:",
+    "world/transitions:func:commit:(World\\,Proposal\\,Verification\\,HashRef\\,HashRef)-\u003eCommitResult:",
+    "world/transitions:func:plan:(World\\,HashRef\\,HashRef\\,string)-\u003eProposal:",
+    "world/transitions:func:verify:(World\\,Proposal)-\u003eVerification:",
+    "world/types:ctor:CommitResult:Applied(World\\, Transition)",
+    "world/types:ctor:CommitResult:Denied(string)",
+    "world/types:ctor:Evidence:AiReview(HashRef\\, float)",
+    "world/types:ctor:Evidence:CompilerOutput(HashRef)",
+    "world/types:ctor:Evidence:HumanApproval(HashRef)",
+    "world/types:ctor:Evidence:ProofReceipt(HashRef)",
+    "world/types:ctor:Evidence:RecordedEffect(HashRef)",
+    "world/types:ctor:Evidence:TestReport(HashRef\\, bool)",
+    "world/types:ctor:EvidenceGrade:ATTESTED",
+    "world/types:ctor:EvidenceGrade:CLAIMED",
+    "world/types:ctor:EvidenceGrade:PROVEN",
+    "world/types:ctor:EvidenceGrade:TESTED",
+    "world/types:ctor:TimeoutOutcome:EscalateWithNewDeadline",
+    "world/types:ctor:TimeoutOutcome:ExecuteUnderPriorAuthority",
+    "world/types:ctor:TimeoutOutcome:ResolveRejectedTimeout",
+    "world/types:ctor:TimeoutPolicy:Cancel",
+    "world/types:ctor:TimeoutPolicy:EscalateBounded",
+    "world/types:ctor:TimeoutPolicy:ExecuteIfGranted",
+    "world/types:func:gradeOf:(Evidence)-\u003eEvidenceGrade:",
+    "world/types:func:timeoutFiredLegally:(int\\,int)-\u003ebool:",
+    "world/types:func:timeoutOutcome:(TimeoutPolicy\\,int\\,bool)-\u003eTimeoutOutcome:",
+    "world/types:func:validDefer:(int\\,int\\,int)-\u003ebool:",
+    "world/types:func:validEscalation:(int\\,int\\,int\\,int)-\u003ebool:",
+    "world/types:func:wellFormedSchedule:(int\\,int\\,int)-\u003ebool:",
+    "world/types:type:Capability/0",
+    "world/types:type:CommitResult/0",
+    "world/types:type:DecisionPacket/0",
+    "world/types:type:Evidence/0",
+    "world/types:type:EvidenceGrade/0",
+    "world/types:type:Proposal/0",
+    "world/types:type:RecordedTransition/0",
+    "world/types:type:TimeoutOutcome/0",
+    "world/types:type:TimeoutPolicy/0",
+    "world/types:type:Transition/0",
+    "world/types:type:Verification/0",
+    "world/types:type:World/0"
+  ],
+  "quality": {
+    "schema": "ailang.package-quality/v1",
+    "package": "world/core",
+    "version": "0.1.0",
+    "stability": "",
+    "mode": "server",
+    "compile": {
+      "source": "server",
+      "ok": true,
+      "files": 4
+    },
+    "contracts": {
+      "source": "server",
+      "verified": 11,
+      "total": 11,
+      "counterexample": 0,
+      "skipped": 0,
+      "errors": 0,
+      "uncontracted_exports": 8,
+      "wall_seconds": 0.88257561
+    },
+    "tests": {
+      "source": "attested",
+      "files": 0,
+      "passed": 0,
+      "failed": 0,
+      "notes": "no *_test.ail files; inline test blocks are not yet discovered in package mode (m-package-test-discovery)"
+    },
+    "smoke": {
+      "source": "attested",
+      "present": true,
+      "passed": true,
+      "seconds": 0.058239875
+    },
+    "interface": {
+      "source": "server",
+      "hash_v1": "sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083",
+      "hash_v2": "sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8",
+      "signatures": 53
+    },
+    "effects": {
+      "source": "server",
+      "max": [],
+      "ceiling_declared": true
+    },
+    "release": {
+      "source": "server",
+      "kind": "feature",
+      "changelog_section": true,
+      "notes": "**The first publish of AILANG World's pure semantic core** — the four frozen modules the\nworld graph is defined in, projected deterministically from their canonical sources in this\nrepository and published through World's own propose → verify → commit pipeline (clause 7,\ncontrolled self-modification proven once).\n\n- **`world/types`** — the immutable, content-addressed world-graph vocabulary.\n- **`world/contracts`** — `isValidNextWorld` and the validity predicates, Z3-proven.\n- **`world/transitions`** — `applyRevision` and the pure transition functions; a transition\n  is a value, so replay reconstructs state from pure transitions plus recorded effect\n  results rather than from a log of mutations.\n- **`world/logepoch`** — `sameRef` / `servesEntry`, the log-epoch semantics that let the\n  interpreter version be pinned and transition functions be content-addressed (DESIGN.md\n  open question 11), decided before the log format froze.\n\nEffects: **none**. All 19 exported functions are pure, and the package declares an empty\neffect ceiling — the core is a pure semantic kernel by construction, and the broker is the\nonly path to the outside world (clause 3).\n\nContracts: **11 verified, 0 refuted** under the pinned compiler. The projection is\nbyte-identical to its canonical sources, asserted by sha256 per module, and the published\ntarball's identity is fixed by a committed ready-packet golden that the readiness gate\ncompares field by field before any publish is permitted."
+    },
+    "docs": {
+      "agent_md": false,
+      "ai_summary": true
+    },
+    "style": {
+      "exported_funcs": 19,
+      "pure_exports": 19,
+      "pure_ratio": 1
+    },
+    "gates": [],
+    "badges": [
+      {
+        "code": "PUB011",
+        "level": "warn",
+        "msg": "8 exported function(s) carry no contract"
+      },
+      {
+        "code": "PUB020",
+        "level": "info",
+        "msg": "no AGENT.md — agents get no usage guidance for this package"
+      },
+      {
+        "code": "PUB012",
+        "level": "info",
+        "msg": "no tests discovered (*_test.ail or inline test blocks)"
+      }
+    ]
+  }
+}
