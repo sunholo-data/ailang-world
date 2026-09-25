@@ -173,11 +173,17 @@ func canonicalDBPath(path string) (string, error) {
 }
 
 // busyTimeoutMillis is the lock-layer retry window applied to every production
-// connection (w-daemon-read-cancellation §2.2). It is the LOCK policy, not the
-// elapsed-time bound: the request context remains the outer bound, and 2000 ms
-// sits well below the daemon's 10 s read deadline so the context always wins.
-// It is large enough to ride out a writer's commit burst instead of failing
-// instantly with SQLITE_BUSY.
+// connection (w-daemon-read-cancellation §2.2). It is the LOCK policy, and it
+// — not the request context — bounds a read blocked on a lock: the driver's
+// interrupt does not break SQLite's busy-retry sleep. daemon.New validates
+// configuration only: it refuses to start unless this CONFIGURED window is
+// numerically below its CONFIGURED read deadline (ErrUnorderedTimeouts). That
+// does not guarantee a lock-blocked read completes before the deadline, because
+// SQLite's retry granularity can exceed the gap. At 2000 ms against 10 s, a
+// lock-blocked daemon read was measured ending at ~2.05 s with SQLITE_BUSY,
+// which the daemon reports as a sanitized 500 — a measured margin, not a bound
+// (w-daemon-lock-wait-not-deadline-bound P3). It is large enough to ride out a
+// writer's commit burst instead of failing instantly with SQLITE_BUSY.
 const busyTimeoutMillis = 2000
 
 // withBusyTimeout returns params with a busy_timeout pragma added, UNLESS the

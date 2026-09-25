@@ -124,7 +124,12 @@ const (
 	// readDeadline bounds the ELAPSED TIME of every store read a GET handler
 	// performs (D7 addendum, w-daemon-read-cancellation). The four http.Server
 	// timeouts above bound the transport; none of them bounds the wait that
-	// happens BELOW the transport, inside database/sql. This constant does.
+	// happens BELOW the transport, inside database/sql. This constant does,
+	// EXCEPT for a read blocked on a SQLite lock: SQLite's busy-retry sleep does
+	// not stop on the driver's interrupt, so busy_timeout bounds that wait
+	// instead. New only validates that the store's CONFIGURED busy_timeout is
+	// below this value (checkReadOrdering) — configuration validation, not
+	// deadline enforcement (w-daemon-lock-wait-not-deadline-bound).
 	//
 	// It must stay well below writeTimeout: the 503 must be writable inside the
 	// connection's remaining write window. At 10 s against a 30 s writeTimeout,
