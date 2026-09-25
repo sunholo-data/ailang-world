@@ -235,6 +235,24 @@ const (
 // match on a message.
 var ErrNonLoopbackBind = errors.New("daemon: bind host is not loopback")
 
+// ErrUnorderedTimeouts is the named sentinel for a store whose CONFIGURED SQLite
+// lock-retry window (busy_timeout) is not numerically below the CONFIGURED read
+// deadline. This is configuration validation only: the deadline does not govern
+// a read blocked on a lock, and a window below the deadline does not guarantee
+// such a read completes before it (SQLite's retry granularity can exceed the
+// gap). Real deadline enforcement is deferred.
+var ErrUnorderedTimeouts = errors.New("daemon: store busy_timeout is not below the read deadline")
+
+// checkReadOrdering refuses a configured lock-retry window at or above the
+// configured read deadline. A window <= 0 disables SQLite's busy handler (a
+// lock conflict fails immediately) and is accepted.
+func checkReadOrdering(window, deadline time.Duration) error {
+	if window >= deadline {
+		return fmt.Errorf("%w: busy_timeout %s must be below read deadline %s", ErrUnorderedTimeouts, window, deadline)
+	}
+	return nil
+}
+
 // StartupError is the structured fatal error of the serve lifecycle. Every
 // startup refusal is one of these: nothing in the lifecycle degrades silently,
 // which is the explicit requirement for a divergent registry head.
@@ -450,6 +468,11 @@ func New(cfg Config) (*Daemon, error) {
 				"(single-writer is enforced, not conventional)"
 		}
 		return nil, &StartupError{Stage: StageStoreOpen, Detail: detail, Err: err}
+	}
+	if err := checkReadOrdering(s.BusyTimeout(), readDeadline); err != nil {
+		_ = s.Close()
+		return nil, &StartupError{Stage: StageStoreOpen,
+			Detail: "the store's lock-retry window is not below the read deadline", Err: err}
 	}
 
 	d := &Daemon{
