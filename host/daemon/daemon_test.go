@@ -1121,6 +1121,78 @@ func TestCardDenial_ByteIdenticalToCommitMiddleware(t *testing.T) {
 	}
 }
 
+// TestCardDenial_ExactClassAndMessagePerKind pins the card route's per-kind
+// denial WIRE over the real mount: status, class AND the exact constant
+// message for each of the four kinds. The byte-identity test above cannot see
+// a message swap between kinds (the card and /v1/commit share
+// writeSessionDenial, so both would move together), and host/projection's card
+// matrix uses a reference writer — so the daemon's msgFor text is pinned here,
+// as literals, asserted pairwise distinct.
+func TestCardDenial_ExactClassAndMessagePerKind(t *testing.T) {
+	d := newHandlerDaemon(t)
+	expiredTok, _, _, err := authority.Mint(context.Background(), d.store, "ep-expired",
+		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 60, time.Now().Unix()-3600, nil)
+	if err != nil {
+		t.Fatalf("mint expired: %v", err)
+	}
+	cases := []struct {
+		kind, auth string
+		wantStatus int
+		wantClass  string
+		wantMsg    string
+	}{
+		{"absent", "", http.StatusUnauthorized, "SessionAbsent",
+			"a session credential is required: no Authorization Bearer header was present"},
+		{"unknown", "Bearer " + strings.Repeat("b", 64), http.StatusUnauthorized, "SessionUnknown",
+			"unknown session credential: no session matches this token"},
+		{"expired", "Bearer " + expiredTok, http.StatusUnauthorized, "SessionExpired",
+			"session credential has expired"},
+		{"malformed", "Token abc", http.StatusBadRequest, "InvalidSession",
+			"malformed Authorization header: expected a Bearer <64-hex-credential>"},
+	}
+	seen := map[string]string{}
+	for _, tc := range cases {
+		if prev, dup := seen[tc.wantMsg]; dup {
+			t.Fatalf("kinds %q and %q share a message — the per-kind pin would be vacuous", prev, tc.kind)
+		}
+		seen[tc.wantMsg] = tc.kind
+	}
+	for _, tc := range cases {
+		rec := requestRecorderAuth(t, d, tc.auth, http.MethodGet, "/.well-known/agent.json", nil)
+		var api APIError
+		if err := json.Unmarshal(rec.Body.Bytes(), &api); err != nil {
+			t.Fatalf("%s: card denial body is not the APIError envelope: %v (%s)", tc.kind, err, rec.Body)
+		}
+		if rec.Code != tc.wantStatus || api.Error.Class != tc.wantClass || api.Error.Message != tc.wantMsg {
+			t.Fatalf("%s: card denial = (%d, %q, %q), want (%d, %q, %q)", tc.kind,
+				rec.Code, api.Error.Class, api.Error.Message, tc.wantStatus, tc.wantClass, tc.wantMsg)
+		}
+	}
+}
+
+// TestAgentCardRoute_GETOnly pins the card route's METHOD: it is mounted as
+// "GET /.well-known/agent.json", so any other method (POST, DELETE) is refused
+// by the mux with 405 Method Not Allowed and never reaches the card handler. A
+// method-less pattern would route POST into AgentCard (a 401 SessionAbsent
+// here). The GET control in the same test proves the path is mounted and the
+// handler is reached.
+func TestAgentCardRoute_GETOnly(t *testing.T) {
+	d := newHandlerDaemon(t)
+	get := requestRecorder(t, d, http.MethodGet, "/.well-known/agent.json", nil)
+	if get.Code != http.StatusUnauthorized || errorClass(t, get.Body.Bytes()) != "SessionAbsent" {
+		t.Fatalf("control: unauthenticated GET card = (%d, %s), want (401, SessionAbsent) from the card handler", get.Code, get.Body)
+	}
+	for _, method := range []string{http.MethodPost, http.MethodDelete} {
+		rec := requestRecorder(t, d, method, "/.well-known/agent.json", nil)
+		if rec.Code != http.StatusMethodNotAllowed {
+			t.Fatalf("%s /.well-known/agent.json = (%d, %s), want 405 — the card route is GET-only", method, rec.Code, rec.Body)
+		}
+		if allow := rec.Header().Get("Allow"); !strings.Contains(allow, http.MethodGet) {
+			t.Fatalf("%s /.well-known/agent.json Allow=%q, want it to name GET", method, allow)
+		}
+	}
+}
+
 // TestAgentCard_ViaDaemon_SessionScoped is the mount-level AC2/AC5
 // integration proof over the REAL stack the executor ships (daemon ->
 // resolver -> store -> transitionreg): two sessions see their exact distinct

@@ -480,6 +480,42 @@ func TestAgentCard_UpstreamKeySet(t *testing.T) {
 	}
 }
 
+// TestProjection_ContentTypeJSON pins the media type both routes declare: the
+// card is served as application/json (AgentCard sets it itself — a dropped
+// Header().Set would otherwise leave net/http to sniff the body), and the
+// /a2a/ admission outcomes carry protocol.A2AError's application/json. The
+// zero-skills card (absent head) is checked too, so every 200 shape is covered.
+func TestProjection_ContentTypeJSON(t *testing.T) {
+	st := openStore(t)
+	tok := mintToken(t, st, "ep-a", []broker.Capability{liveGrant("alpha")})
+
+	// Absent head: the zero-skills 200 card.
+	h := mustHandler(t, testConfig(st))
+	rec := getCard(t, h, "Bearer "+tok)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("absent-head card status=%d, want 200; body=%s", rec.Code, rec.Body)
+	}
+	if ct := rec.Header().Get("Content-Type"); ct != "application/json" {
+		t.Fatalf("absent-head card Content-Type=%q, want application/json", ct)
+	}
+
+	// Seeded registry: the populated 200 card, and both /a2a/ admission outcomes.
+	seedRegistry(t, st, descriptor("tools.echo", "alpha"))
+	rec = getCard(t, h, "Bearer "+tok)
+	if rec.Code != http.StatusOK || len(skillIDs(t, rec.Body.Bytes())) != 1 {
+		t.Fatalf("seeded card = (%d, %s), want 200 with one skill", rec.Code, rec.Body)
+	}
+	if ct := rec.Header().Get("Content-Type"); ct != "application/json" {
+		t.Fatalf("card Content-Type=%q, want application/json", ct)
+	}
+	for _, skill := range []string{"tools.echo", "tools.guessed"} {
+		recA := postA2A(t, h, "Bearer "+tok, tasksSendBody(skill))
+		if ct := recA.Header().Get("Content-Type"); ct != "application/json" {
+			t.Fatalf("/a2a/ skill %q Content-Type=%q, want application/json", skill, ct)
+		}
+	}
+}
+
 func sortStrings(s []string) {
 	for i := 1; i < len(s); i++ {
 		for j := i; j > 0 && s[j] < s[j-1]; j-- {
@@ -639,15 +675,27 @@ func TestA2A_DenialMatrix(t *testing.T) {
 	st := openStore(t)
 	h := mustHandler(t, testConfig(st))
 	expiredTok := mintExpiredToken(t, st)
+	// wantMsg pins the EXACT constant wire message per kind as a literal (not
+	// the package constant), and the four are asserted pairwise distinct
+	// below, so a swap between kinds (e.g. the unknown case answering the
+	// absent message) or a constant edit REDs here.
 	cases := []struct {
 		name     string
 		auth     string
 		wantCode int
+		wantMsg  string
 	}{
-		{"absent", "", -32001},
-		{"unknown", "Bearer " + strings.Repeat("b", 64), -32001},
-		{"expired", "Bearer " + expiredTok, -32001},
-		{"malformed", "Token abc", -32600},
+		{"absent", "", -32001, "session credential is absent: send Authorization: Bearer <session-credential>"},
+		{"unknown", "Bearer " + strings.Repeat("b", 64), -32001, "unknown session credential"},
+		{"expired", "Bearer " + expiredTok, -32001, "session credential has expired"},
+		{"malformed", "Token abc", -32600, "malformed Authorization header: expected Bearer <64-hex-credential>"},
+	}
+	seenMsg := map[string]string{}
+	for _, tc := range cases {
+		if prev, dup := seenMsg[tc.wantMsg]; dup {
+			t.Fatalf("denial kinds %q and %q share a message — the per-kind pin would be vacuous", prev, tc.name)
+		}
+		seenMsg[tc.wantMsg] = tc.name
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -655,12 +703,15 @@ func TestA2A_DenialMatrix(t *testing.T) {
 			if rec.Code != http.StatusOK {
 				t.Fatalf("/a2a/ denial status=%d, want HTTP 200 (F5b: A2AError always writes 200); body=%s", rec.Code, rec.Body)
 			}
+			if ct := rec.Header().Get("Content-Type"); ct != "application/json" {
+				t.Fatalf("/a2a/ denial Content-Type=%q, want application/json", ct)
+			}
 			code, msg, id := a2aErr(t, rec.Body.Bytes())
 			if code != tc.wantCode {
 				t.Fatalf("code=%d, want %d (denial matrix)", code, tc.wantCode)
 			}
-			if msg == "" {
-				t.Fatal("denial message is empty — every kind has a constant message")
+			if msg != tc.wantMsg {
+				t.Fatalf("%s denial message=%q, want the exact per-kind constant %q", tc.name, msg, tc.wantMsg)
 			}
 			if string(id) != "null" && len(id) != 0 {
 				t.Fatalf("denial error id = %s, want null/omitted (the request ID is not trusted before parse)", id)
