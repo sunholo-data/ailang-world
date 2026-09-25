@@ -8,36 +8,26 @@ log (2.8 MB, ~715k tokens) has not been for a long time.
 
 Regenerated wholesale by `ailang mission rotate-log`, never appended to: an
 append-only index drifts the moment an entry is edited, and an index that answers
-
-> **⚠ THE REGENERATOR DOES NOT EXIST ON THIS MISSION'S PINNED BINARY, SO THIS FILE IS
-> HAND-MAINTAINED AND HAS ALREADY SILENTLY LOST A ROW** (measured iteration 172):
-> `~/.pinned-ailang/ailang mission rotate-log world --keep 31` prints `Error: unknown command
-> 'mission'` on **v0.30.0**, the binary this mission's Repo Profile requires, with the positive
-> control (`design-quorum --help`) resolving fine. The consequence was already on disk when this
-> was found: iteration **171** had **no row here** (`grep -c '^| 171 |'` → 0, control `170` → 1)
-> while its log entry existed — charter row 86's class, now with a root cause rather than an
-> incident. Rows 171 and 172 below were added **by hand**. Until the pin gains the command, adding
-> the row is a manual Gate-4 step, and a missing row is a pin-version gap, not a controller lapse.
-
 confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
-| 187 | 2026-09-25 | row 40 card half LANDED: session-scoped A2A agent card + fail-closed /a2a/ (w-a2a-session-projection) — PR #146 squash `8bb8502`, CI green on the merge; SPLIT on 3 measured premise failures (no invocation coordinator, registry never published in prod, CallerSurface rejects World IDs); ailang#885 found ghost-closed; deepseek designer, quorum r1 3/3 block (astra upheld → P6.A-CTX ResolveContext) → r2 one-surface carve-out; kimi planner prototyped 30/30 (ollama 429 → openrouter $2.63); opus executor; sonnet judge 93 + r2 98 (4 survivors closed); new rows 106–108 [PRODUCT] |
-| 186 | 2026-09-25 | rows 98+102 LANDED: workbench object page's provenance walk + grade reason never blank (w-workbench-object-provenance-and-grade) — PR #145 squash `909f27f`, CI green on the merge; interface edge existence-checked via extracted `checkedEdge`, committedBy/referencedBy named stops, one constant grade reason; quorum r1 N−1 → astra solo REJECT upheld (false 'only gradeOf' reason) → revision; r2 carve-out (gemini + astra verbatim); opus planner prototyped 22/22; sonnet judge 97 + r2 100 (edge-order survivor closed); new rows 103–105 [PRODUCT] |
-| 185 | 2026-09-24 | row 34 LANDED: workbench closed grammar + href guard + verdict line pinned (w-workbench-unpinned-render-hunks) — PR #144 squash `158d8ee`, CI green on the merge; test-only, 20 surviving mutants each given a named killer (rule-3n sweep found 14 beyond the row), Q17 equivalent; quorum r1 2/3 block (1 upheld, 1 refuted) → r2 carve-out + V10 control; judged 95 + r2 98 (FAIL-glyph survivor closed in-sprint); new row 102 [PRODUCT] |
-| 184 | 2026-09-24 | rows 35+38 LANDED: workbench timeline paged + selectable (w-workbench-timeline-seam) — PR #143 squash `9574d08`, CI green on the merge; opus-5.5 designer, quorum r1 3/3 block (1 upheld, 2 refuted by measurement) → r2 carve-out; opus planner prototyped the design and caught 3 more broken mutation rows + AC9 2× low; opus executor 26/26 mutants; sonnet judge 95 + r2 100 (two survivors closed by a controller test); new rows 98–101 [PRODUCT] |
-| 183 | 2026-09-24 | row 92 LANDED: clause-5 1.0 value demonstration — PR #142 squash `157d6f9`, CI green on the merge; 4/4 real questions walked in 10–20 s and verified outside World (retrieval of recorded diagnoses; baselines UNMEASURED); orphan 182's M1–M3 verified+committed, opus M4, sonnet judge 94/100 zero blocking; MU-3 exposed content-mismatch→500 (row 97); semantic-ID lookup gap (row 96) |
+| 188 | 2026-09-25 | row 27 LANDED: `interfaceHash` is honestly labelled as manifest coverage, and upstream's own `InterfaceHashV2` travels beside it through packet, ga... |
+| 187 | 2026-09-25 | row 40 card half LANDED: a session-scoped A2A agent card and a fail-closed `/a2a/` on row 39's session boundary — after a measured SPLIT, because t... |
+| 186 | 2026-09-25 | rows 98+102 LANDED: the workbench object page's provenance walk and grade line are never blank — one exact edge existence-checked, two named stops,... |
+| 185 | 2026-09-24 | row 34 LANDED: the workbench's closed grammar, href guard and verdict line are pinned — 20 surviving mutants now each have a named killer, test-onl... |
+| 184 | 2026-09-24 | rows 35+38 LANDED: the workbench timeline is a paged, selectable surface whose entries lead to objects — the full inner loop, with every role check... |
+| 183 | 2026-09-24 | row 92 LANDED: the clause-5 1.0 value demonstration — 4/4 real questions answered by a provenance walk in 10–20 s and verified outside World; the a... |
 | 182 | 2026-09-24 | ORPHANED: row 92 doc revised r1/r2 (quorum carve-out) + plan `10cce28` (kimi-k3), pi executor did M1–M3; controller killed at gate-3 rc=143 by the stall watchdog; credited and landed by iteration 183 |
-| 181 | 2026-09-24 | row 39 LANDED: PR #141 squash-merged `a036062`, CI green on the merge — first pi-controller land here, on the attended D-WORLD-36 harness fix; gofmt miss + unauthenticated bench (CI's bench-smoke gate, rule 3g) found and fixed on the way; judged 97/100 (r1) + 100/100 (r2) this fire, zero blocking; row 40 unblocked, row 95 resolved [PRODUCT] |
-| 180 | 2026-09-23 | row 39 SPRINT COMPLETE & JUDGED (PASS 95/100 zero blocking) but UNLANDABLE: four orphaned slots (176–179) credited, M2 verified+committed, independent minimax judge, 2 findings fixed; fleet prepush-gate extension unpassable here (no Makefile, escape hatch unimplemented) → parked on D-WORLD-36, defect row 95 [HARNESS] |
-| 175 | 2026-09-14 | row 74 LANDED: `scripts/check_no_personal_email.sh` — a real personal-email gate over the loop-written surface (six mission docs + `scripts/`), every exclusion clause anchored, exit-2 floor, 10-arm suite, `mission_answer.sh` default → GitHub noreply, two CI steps; pi designer (astra ration-blocked), two quorum rounds (carve-out, one objection refuted), opus planner, pi executor; evaluator r1 FAIL 77 with ONE blocking (substring whitelist — the fleet's copy has the same) fixed, r2 PASS 95 zero blocking; new row 91 (widen the scan) [HARNESS] |
-| 174 | 2026-09-14 | row 73 LANDED: `scripts/gate0_self_notices.sh` — Gate 0's second, no-authority read for the driver's own crash notices (both issues, anchored prefix, strict-UTC watermarks, two controls, 24-arm suite, CI step, Repo Profile rule, fleet issue ailang#1160); inherited iteration 173's orphaned doc; the live reading was rc=1 on iteration 173's own death; evaluator r1 84 with one blocking (other= arithmetic unpinned) fixed → r2 PASS 98/100; the executor's drill dropped the script's exec bit via `mv` from /tmp and sha256 could not see it [HARNESS] |
-| 173 | 2026-09-08 | ORPHANED: row 73 design doc authored (fable) + two quorum rounds (carve-out), committed `ab78129`; slot KILLED at gate-3 rc=143 while the planner ran; kill switch then held the mission off for 30 fires; credited by iteration 174 [HARNESS] |
-| 172 | 2026-09-08 | row 72 LANDED: `scripts/queue_census.sh` — the loop's own closed-row count becomes a READING with mandatory controls and seven floors, not an increment chain; the row's premise was half-rotted and the doc says so; first CI push RED on the fixture's BYTES (`substr` counts bytes, mawk drops a half-cut em dash, F4 named both missing rows), evaluator PASS 87/100 zero blocking |
-| 171 | 2026-09-08 | row 71 LANDED: critical mission state never lives where the OS wipes; all four roles on pi lanes, and the required evaluator's own handshake exposed a pi session-protocol transport gap the controller repaired worktree-scoped (new row 89) [HARNESS] |
-| 170 | 2026-09-08 | row 68 CLOSED on the fleet de-fork guard `8c56c5863` (12/12 ACs, pin confirmed holding); row 70 LANDED reduced by a controller SPLIT — `scripts/gate1_range_check.sh` + 18-arm suite + CI step, attribution half → new row 88; 3 quorum rounds, restored reviewer decisive again, evaluator PASS 88/100 (1 blocking finding fixed + proven) |
-| 169 | 2026-09-07 | row 66 LANDED: the row named one trim site of two and called a false GREEN a false RED; three quorum rounds localised onto one surface, SPLIT OUT as row 87 |
+| 181 | 2026-09-24 | row 39 LANDED: the parked twice-judged sprint merged with CI green on the attended harness fix — and CI's bench gate caught what every local gate m... |
+| 180 | 2026-09-23 | row 39 COMPLETE but UNLANDABLE from a pi-controller slot: the orphaned sprint executed, the independent judge passed it 95/100 — and the fleet's pr... |
+| 175 | 2026-09-14 | row 74 LANDED: a real check-no-personal-email gate in World's CI — and the judge's one blocking finding was a substring whitelist the fleet's own c... |
+| 174 | 2026-09-14 | row 73 LANDED: Gate 0 has a second, no-authority read for the driver's own crash notices — and its first live run named the death of the iteration ... |
+| 173 | 2026-09-08 | ORPHANED SLOT: the row-73 design doc was authored and quorum-closed, then the slot was KILLED at gate-3 (rc=143) while the planner ran — credited h... |
+| 172 | 2026-09-08 | row 72 LANDED: the loop's own progress metric is a reading with controls, not an increment chain; and the first CI push went red on the fixture's B... |
+| 171 | 2026-09-08 | Row 71 LANDED: critical state never lives where the OS wipes, and the required evaluator's own handshake taught this loop a transport lesson [HARNESS] |
+| 170 | 2026-09-08 | a fleet blocker flipped so row 68 closed on the fleet's own guard (12/12 ACs), and row 70 landed reduced by a controller split into new row 88 [HAR... |
+| 169 | 2026-09-07 | row 66 LANDED: the quoted-trigger-key trims are pinned at BOTH sites, and three quorum rounds localised onto one surface that was SPLIT OUT as row ... |
 | 168 | 2026-09-07 | reconcile the five stranded records 162–166 from PRs #127/#128 onto the rotated log; the PRs are superseded unmerged [HARNESS] |
 | 167 | 2026-09-07 | the DE-FORK red was a suspended gate, not a failing check; three roles each found a different way the repair could have been vacuous [HARNESS] |
 | 166 | 2026-09-07 | the loaded gun in row 68 fired: the driver pin ran this mission inside the WRONG REPOSITORY, and every health instrument read green [HARNESS] |

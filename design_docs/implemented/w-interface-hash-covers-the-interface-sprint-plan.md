@@ -1,6 +1,6 @@
 # Sprint plan — w-interface-hash-covers-the-interface (iteration 188, queue row 27)
 
-**Design doc**: `design_docs/planned/w-interface-hash-covers-the-interface.md`. Quorum r1 and r2 closed it under the narrow-refinement carve-out (§13); T19 and T20 were CLAIMS when it closed.
+**Design doc**: `design_docs/implemented/w-interface-hash-covers-the-interface.md`. Quorum r1 and r2 closed it under the narrow-refinement carve-out (§13); T19 and T20 were CLAIMS when it closed.
 **Base commit**: `903c17a`. It differs from the designer's prototype base `1a1d929` only by the design doc (`git diff --stat 1a1d929 903c17a` shows 1 file, +378).
 **Planner**: planner-role, iter-188. **Verify profile**: go-host. No `.ail` change and no Z3 change.
 
