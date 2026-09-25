@@ -222,12 +222,29 @@ Row 39 landed `host/authority.Resolver`. The additive `host/projection` adapter 
 projection surface** with two responsibilities that are buildable now, mounted additively (B5):
 
 1. **Resolve the session** — for BOTH routes, call the daemon's existing resolver instance:
-   `header := r.Header.Get("Authorization"); out := resolver.Resolve(header, now)` where `now =
-   time.Now().Unix()`. **D-WORLD-26 = ARM A** carried unchanged: **(i)** never an API key, **(ii)**
+   `header := r.Header.Get("Authorization"); out, err := resolver.ResolveContext(ctx, header, now)`
+   (P6.A-CTX; `ctx` is the ONE bounded request context) where `now = time.Now().Unix()`.
+   **D-WORLD-26 = ARM A** carried unchanged: **(i)** never an API key, **(ii)**
    fail closed on absent/malformed/unknown/expired, never degrading to an unauthenticated
-   surface; Arm B `X-World-Session` is REJECTED and must not be read, even as a fallback. A
-   denial returns the **same status mapping as the middleware** (F2): absent/unknown/expired →
-   401, malformed → 400.
+   surface; Arm B `X-World-Session` is REJECTED and must not be read, even as a fallback.
+   *(r2 carve-out, gemini-3-1-pro verbatim:)* A denial returns the F2 status mapping (401/400) on
+   the *card route*, but emits protocol.A2AError at HTTP 200 with code -32001/-32600 on the
+   */a2a/* route. See the **Denial matrix** below, which is authoritative.
+
+   **Denial matrix (authoritative; r2 carve-out, gpt6-astra verbatim).** Card route uses the
+   injected daemon APIError writer with HTTP 401 for absent/unknown/expired and HTTP 400 for
+   malformed; /a2a/ uses protocol.A2AError at HTTP 200, with -32001 for absent/unknown/expired and
+   -32600 for malformed, constant messages, and no REST envelope. -32001 is an
+   implementation-defined JSON-RPC server-error code (the JSON-RPC 2.0 reserved range
+   -32000..-32099). A denied request on either route never acquires a registry snapshot and never
+   reaches skill admission.
+
+   | Denial kind | Card route (`/.well-known/agent.json`) | `/a2a/` route |
+   |---|---|---|
+   | absent | HTTP 401, APIError `SessionAbsent` | HTTP 200, `A2AError` -32001, constant message |
+   | unknown | HTTP 401, APIError `SessionUnknown` | HTTP 200, `A2AError` -32001, constant message |
+   | expired | HTTP 401, APIError `SessionExpired` | HTTP 200, `A2AError` -32001, constant message |
+   | malformed | HTTP 400, APIError `InvalidSession` | HTTP 200, `A2AError` -32600, constant message |
    **Body decision (B1):** deny on the **card route** (`/.well-known/agent.json`) is emitted with
    the daemon's **REST `daemon.APIError` envelope** by REUSING the daemon's `writeAPIError`
    writer, which the daemon injects into the projection config at mount. Justification against
@@ -486,16 +503,20 @@ two sessions with unequal caps get unequal exact skill sets.
   error (**-32603**), never a success.
 - [ ] **AC6 — session failure, carrier fixed (D-WORLD-26 = A):** the resolver reads the session
   credential from the standard `Authorization: Bearer` header ONLY; absent, malformed, unknown,
-  or expired credentials fail closed for BOTH routes with the F2 status mapping (absent/unknown/
-  expired→401, malformed→400); no default/global capability set is used; the static serve-api key
+  or expired credentials fail closed on both routes, encoded per route as the **Denial matrix**
+  specifies (r2 carve-out, glm/gemini verbatim): the CARD route uses the F2 HTTP status mapping
+  (401/400) with the APIError envelope; the `/a2a/` route uses JSON-RPC error codes at HTTP 200
+  via `protocol.A2AError` — -32001 for absent/unknown/expired, -32600 for malformed; no
+  default/global capability set is used; the static serve-api key
   is never accepted as a session credential (constraint i); no alternative header (including
   rejected Arm-B `X-World-Session`) is read, even as a fallback.
 - [ ] **AC7 — one-snapshot consistency:** a request never mixes registry/capability epochs;
   concurrent registry/session change is observed only on a subsequent request.
 - [ ] **AC8 — A2A protocol conformance (AMENDED iter-187 — discovery + `/a2a/` admission):** the
   card route emits the upstream `map[string]any` keyset (F5) with the exact skill-ID set; the
-  `/a2a/` route emits ONLY `protocol.A2AError` bodies with the four JSON-RPC codes
-  (-32600/-32601/-32602/-32603); no success path exists for invocation.
+  `/a2a/` route emits ONLY `protocol.A2AError` bodies (always HTTP 200, F5b) with the JSON-RPC
+  codes -32001 (session denial, per the Denial matrix), -32600, -32601, -32602 and -32603; no
+  success path exists for invocation. *(r2 carve-out: the four-code restriction is removed.)*
 - [ ] **AC9 — landed behavior preserved:** REST v1 route/body regressions and cross-process
   writer-lock tests remain green; the two new routes are NOT in `d.isProtected` (adding them to
   the predicate is a mutation that must RED); projection never opens a store.
@@ -519,10 +540,18 @@ two sessions with unequal caps get unequal exact skill sets.
   200 (still authenticated); a real store/read error (or a later `NewRequest` failure) → **5xx
   fail-closed**. The two are told apart by checking `GetRegistryHead` first (B3). A test covers
   both.
-- [ ] **AC-A2A-CODES (NEW-iter187):** `/a2a/` returns `-32600` for non-`"2.0"`, `-32601` for
+- [ ] **AC-A2A-CODES (NEW-iter187; r2: -32001 added):** `/a2a/` returns `-32001` for an
+  absent/unknown/expired session and `-32600` for a malformed one (Denial matrix), `-32600` for
+  non-`"2.0"`, `-32601` for
   method ≠ `tasks/send`, `-32602` `"not authorized"` for unlisted/guessed/stale `skill_id`, and
   a constant-message `-32603` for an authorized `skill_id`; every body is `protocol.A2AError`,
   never REST `APIError`, never success, never a store write.
+- [ ] **AC-DENIAL-JSONRPC (r2 carve-out, gpt6-astra + oc-glm-5-2 verbatim):** all four denial
+  kinds are tested on BOTH routes. On `/a2a/`: HTTP 200 carrier, `protocol.A2AError` body, -32001
+  for absent/unknown/expired and -32600 for malformed, constant messages, no REST envelope. On the
+  card route: HTTP 401/401/401/400 with the APIError envelope. For every denied request on either
+  route, the test asserts that no registry snapshot was acquired and skill admission was never
+  reached (e.g. a counting registry reader / `GetRegistryHead` observer reads **0** calls).
 
 ## Non-Vacuity — Named RED Mutation for Every Gate
 
@@ -547,6 +576,8 @@ two sessions with unequal caps get unequal exact skill sets.
 | AC-CARD-DENIALS `MUT-CARD-ENVELOPE` | emit a plain JSON body (not the daemon's APIError envelope) for a card-route denial | APIError-envelope assertion REDs on the card route |
 | AC-ABSENT-HEAD `MUT-ABSENT-HEAD` | treat absent head (`ok==false`) as a real read error → 5xx | the zero-skills-at-200 test REDs; the read-error-5xx half stays green (control) |
 | AC-A2A-CODES `MUT-A2A-MESSAGE-INTERP` | interpolate the `skill_id` (or request content) into the not-available message instead of a constant | the constant-message assertion REDs on `/a2a/` |
+| AC-DENIAL-JSONRPC `MUT-DENIAL-401` | *(r2 carve-out, oc-glm-5-2 verbatim)* emit HTTP 401 instead of HTTP 200 + JSON-RPC error for a session denial on `/a2a/` | the new AC REDs on status code |
+| AC-DENIAL-JSONRPC `MUT-DENIAL-SNAPSHOT-FIRST` | move the registry-snapshot acquisition (or `GetRegistryHead`) ahead of session resolution on either route | the zero-snapshot-on-denial assertion REDs (counting reader observes ≥1 call on a denied request) |
 | AC13/Decision-6 (proj) `MUT-DROP-DEADLINE-PROJ` | replace the propagated request context with `context.Background()` before session resolution or snapshot reads | bounded-wait fault-injection test exceeds the configured bound and REDs |
 | zero-skip `MUT-SKIP-SOCKET` | add `t.Skip` on listen failure | zero-skip CI assertion/source check REDs |
 | AC11 `MUT-CLOUD-DEP` | add `cloud.google.com/go/storage` to projection imports | `TestDaemonDependencyAllowlist` reports it by name |
@@ -668,6 +699,10 @@ Round 1: **gpt6-astra / gemini-3-1-pro / oc-glm-5-2 all REJECT** (oc re-run alon
 1. **gpt6-astra — bounded wait cannot reach resolution.** Measured: no ctx (resolver.go:129), one connection (store.go:305), naive fix→false 401 (resolver.go:130-134). **Answered:** prerequisite **P6.A-CTX** (FIRST) — `ResolveContext(ctx,…)` returns non-nil `error` on store failure, never a denial; both routes use one bounded ctx; `Resolve`/`/v1/commit` unchanged (residual). Card 503/504; `/a2a/` -32603 constant.
 2. **gemini-3-1-pro — GetRegistryHead never verified.** Measured: store.go:636-648 (`sql.ErrNoRows`→`(zero,false,nil)`, scan errors wrapped, bad ref→error), daemon.go:331-337 reads seam, store.go:88 / transitionreg.go:74 same name. **Answered:** verification row added; B3 + AC-ABSENT-HEAD cite the lines; head race in B3 (absent-check + `NewRequest` success → use its result; head + fail → 5xx); test covers "check says absent".
 3. **oc-glm-5-2 — A2A wire types never verified.** Measured (gh api @ v0.33.2): struct + `A2AError`/`A2AResult` sigs; `A2AError` ALWAYS HTTP 200; handler reads `params.Metadata["skill_id"]`. **Answered:** row **F5b** added; /a2a/ DENIAL = JSON-RPC error body at HTTP 200 — **-32001** absent/unknown/expired, **-32600** malformed. AC `AC-DENIAL-JSONRPC`; MUT `MUT-DENIAL-401`.
+
+#### Quorum round 2 (iter-187 r2) — BLOCKED 3/3 on ONE surface; closed under the narrow-refinement carve-out
+
+Round 2 (`absent_reviewers` empty): **gpt6-astra, gemini-3-1-pro, oc-glm-5-2 all REJECT, all on the same surface**. The r1 answer promised `AC-DENIAL-JSONRPC` and `MUT-DENIAL-401`, but neither reached the AC or mutation tables, so AC6 and Decision 3 still demanded HTTP 401/400 on `/a2a/`, where `protocol.A2AError` always writes HTTP 200 (F5b). The controller confirmed the gap by grep (each ID occurred once, only in the r1 history prose). Every objection carried a concrete reviewer-authored `proposed_fix` and none disputed the design direction, so the controller applied the fixes **verbatim** (no reviewer overridden, nothing controller-invented): the authoritative **Denial matrix** in Decision 3 (astra), the route-split wording of Decision 3 responsibility 1 (gemini) and AC6 (glm/gemini), AC8's code set widened to include -32001 (astra), -32001 added to AC-A2A-CODES (glm), plus **AC-DENIAL-JSONRPC** and **MUT-DENIAL-401** (astra/glm). Two sentences are the **controller's own consistency edits**, labelled as such: Decision 3 responsibility 1 now names `ResolveContext` (the r1 P6.A-CTX fix had left the old `Resolve` call in that sentence), and `MUT-DENIAL-SNAPSHOT-FIRST` gives astra's "denied requests never acquire registry snapshots" clause a named mutation. Surface count across rounds: r1 = three surfaces (resolution deadline, head seam, wire types); r2 = one (denial encoding, introduced by r1's own answer). No split is owed.
 
 ## Relationship to the parent and to charter clause 6
 
