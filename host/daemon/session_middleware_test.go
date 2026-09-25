@@ -68,10 +68,10 @@ func TestSessionMiddleware_AbsentHeader(t *testing.T) {
 func TestSessionMiddleware_MalformedHeader(t *testing.T) {
 	d := newHandlerDaemon(t)
 	for _, h := range []string{
-		"Key abc",                      // wrong scheme
-		"Bearer",                       // no token
-		"Bearer z",                     // token too short
-		"Bearer " + strings.Repeat("z", 64), // 64 chars but not hex
+		"Key abc",                            // wrong scheme
+		"Bearer",                             // no token
+		"Bearer z",                           // token too short
+		"Bearer " + strings.Repeat("z", 64),  // 64 chars but not hex
 		"Bearer " + strings.Repeat("ab", 10), // 20 chars (not 64), valid hex
 	} {
 		rec := postCommitAuth(t, d, h)

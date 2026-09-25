@@ -883,3 +883,33 @@ func TestReplayRejectsMismatchedRequest(t *testing.T) {
 		t.Fatalf("mismatch error = %v, want ReplayGapError", err)
 	}
 }
+
+// TestNewCapabilitySnapshot_DetachedFromCallerSlice pins the defensive copy in
+// NewCapabilitySnapshot (w-a2a-session-projection D1): the snapshot is an
+// IMMUTABLE reading, so mutating the caller's grants slice after construction
+// (an element overwrite AND an in-place field edit) must not change what the
+// snapshot reports through Grants() or Len().
+func TestNewCapabilitySnapshot_DetachedFromCallerSlice(t *testing.T) {
+	grants := []Capability{
+		{Effect: "fs.read", Scope: "/tmp", ExpiresAt: 200, Budget: 3},
+		{Effect: "net.get", Scope: "example", ExpiresAt: 200, Budget: 1},
+	}
+	want := append([]Capability(nil), grants...)
+	snap := NewCapabilitySnapshot(grants, 100)
+	if snap.Epoch != 0 || snap.Now != 100 {
+		t.Fatalf("snapshot (Epoch, Now) = (%d, %d), want (0, 100)", snap.Epoch, snap.Now)
+	}
+	if !reflect.DeepEqual(snap.Grants(), want) {
+		t.Fatalf("fresh snapshot grants = %+v, want %+v", snap.Grants(), want)
+	}
+
+	grants[0] = Capability{Effect: "proc.exec", Scope: "/", ExpiresAt: 999, Budget: 99}
+	grants[1].Budget = 0
+
+	if got := snap.Grants(); !reflect.DeepEqual(got, want) {
+		t.Fatalf("snapshot grants changed after the caller mutated its slice:\n got  %+v\n want %+v", got, want)
+	}
+	if snap.Len() != len(want) {
+		t.Fatalf("snapshot Len = %d, want %d", snap.Len(), len(want))
+	}
+}
