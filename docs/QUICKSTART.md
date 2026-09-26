@@ -90,6 +90,60 @@ caller re-plans from; stale writers get facts, not corruption.
 
 SIGTERM (Ctrl-C / `kill`) drains bounded and releases the writer lock.
 
+## 6. Publish a transition skill to the A2A card *(attended — pending first verbatim run)*
+
+The transition registry is written by an **attended, local** operator verb, never by the daemon
+and never over the network. It needs single-writer authority, so the daemon must be **stopped**
+(step 5). Capture the daemon's pinned interpreter first — every published descriptor pins it:
+
+```bash
+/tmp/ailang-worldd health   # before step 5: note "interpreter_ref"
+```
+
+A publishable source must be a **self-contained** module: publication runs the pinned
+interpreter's `check` on it in an empty scratch root, so a module importing `world/*` is refused
+with `LDR001` (that is why no landed `world/*.ail` is publishable yet).
+
+```bash
+cat > /tmp/echo.ail <<'EOF'
+module quickstart/echo
+
+export func echo(x: string) -> string { x }
+EOF
+cat > /tmp/transitions.json <<'EOF'
+[{"id": "tools.echo", "title": "Echo", "description": "quickstart transition",
+  "transitionFnFile": "/tmp/echo.ail",
+  "inputSchema": {"type": "object"}, "outputSchema": {"type": "object"},
+  "access": {"effect": "world.apply", "scope": "world", "cost": 1},
+  "declaredEffects": [{"effect": "world.apply", "scope": "world", "cost": 1}]}]
+EOF
+go build -o /tmp/world-publish ./cmd/world-publish
+/tmp/world-publish transitions --store /tmp/world-demo.db --manifest /tmp/transitions.json \
+  --interpreter-ref <interpreter_ref from health>
+```
+
+Type the confirmation phrase when asked. Output: `semantics epoch 1 derived from
+world/epoch-registry/v1 for interpreter release "…"` then `published transition registry revision
+1 (head sha256:…)`. Running it again prints `transition registry UNCHANGED at revision 1` — an
+identical republish writes nothing. `semanticsEpoch` is omitted on purpose: it is derived from the
+epoch registry the daemon bootstrapped, never defaulted.
+
+Mint a session that holds the skill's capability, restart the daemon, and read the card:
+
+```bash
+/tmp/ailang-worldd session mint --db /tmp/world-demo.db --episode quickstart \
+  --grant world.apply=world:10 --out /tmp/qs-session
+/tmp/ailang-worldd serve --db /tmp/world-demo.db --ailang-bin /tmp/ailang-v0300/ailang &
+curl -s -H "Authorization: Bearer $(cat /tmp/qs-session)" http://127.0.0.1:7644/.well-known/agent.json
+```
+
+The card lists `tools.echo` / `Echo`. A session minted without `world.apply` gets the same 200
+with **zero** skills — the card is capability-filtered per session. What publication does and does
+not establish: the source object exists and passes standalone `check` under the pinned
+interpreter, and its epoch is one the registry nominates for that interpreter's release; it does
+**not** establish that the transition can be invoked (`/a2a/` refuses every invocation until the
+invocation coordinator lands).
+
 ---
 **Not yet in this quickstart** (arrives with the queue): effect broker + receipts (item 4),
 MCP projection — drive commits from any MCP client (item 5), the approval-inbox workbench

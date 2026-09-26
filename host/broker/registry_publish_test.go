@@ -1184,6 +1184,11 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 		"host/pkgproj/pkgproj.go": drivePkgprojCrossCheck,
 		"host/pkgproj/iface.go":   drivePkgprojQueryInterface,
 		"host/replay/replay.go":   driveReplayEntry,
+		// w-transition-registry-production-publisher (row 107): the publish-time
+		// source-loadability check launches the ARCHIVED interpreter
+		// (archive.CheckSource); its child env must be scrubbed like every other
+		// World-launched subprocess.
+		"host/archive/check.go": driveArchiveCheckSource,
 	}
 	if len(drivers) != len(files) {
 		t.Fatalf("AC10(a): %d files carry subprocess sites %v but %d have drivers; "+
@@ -1260,6 +1265,21 @@ func driveCapsuleRun(t *testing.T, probe string) {
 	// transition result. The subprocess launch is the measurement.
 	_, _ = capsule.New(a, capsule.Config{ExecTimeout: 20 * time.Second}).
 		Run(capsule.Entry{Interpreter: ref, Source: []byte("module world/transition\n")})
+}
+
+// driveArchiveCheckSource drives the publish-time loadability check's
+// subprocess site: archive.CheckSource launches the archived "interpreter"
+// (the env-dumping probe) as `<probe> check <file>` under the scrubbed child
+// environment. The probe's dump is what the AC10 assertion reads; the
+// launch — and its env — is the measurement.
+func driveArchiveCheckSource(t *testing.T, probe string) {
+	t.Helper()
+	a := archive.New(filepath.Join(t.TempDir(), "world.db"))
+	ref, err := a.Archive(probe)
+	if err != nil {
+		t.Fatalf("%s", archive.AttributeFailure("archive.Archive", err))
+	}
+	_, _ = a.CheckSource(context.Background(), ref, []byte("module world/transition\n"))
 }
 
 func drivePkgprojCrossCheck(t *testing.T, probe string) {

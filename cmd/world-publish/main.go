@@ -96,6 +96,9 @@ type options struct {
 	decidedBy      string
 	now            int64
 	expires        int64
+	manifest       string
+	interpreterRef string
+	ailangBin      string
 	dryRun         bool
 	live           bool
 	probe          bool
@@ -111,6 +114,7 @@ type options struct {
 // compares this list with the FlagSet as an exact set, so ADDING a flag reds
 // even if it is never passed.
 var flagNames = []string{
+	"ailang-bin",
 	"approval-ref",
 	"credential-file",
 	"decided-by",
@@ -118,7 +122,9 @@ var flagNames = []string{
 	"episode",
 	"expires",
 	"golden",
+	"interpreter-ref",
 	"live",
+	"manifest",
 	"now",
 	"package-dir",
 	"probe",
@@ -152,6 +158,9 @@ func newFlagSet(opts *options) *flag.FlagSet {
 	fs.BoolVar(&opts.dryRun, "dry-run", false, "rehearse the publish: every fence, no request")
 	fs.BoolVar(&opts.live, "live", false, "PERFORM THE IRREVERSIBLE PUBLIC WRITE")
 	fs.BoolVar(&opts.probe, "probe", false, "reconcile: issue the read-only metadata GETs")
+	fs.StringVar(&opts.manifest, "manifest", "", "transitions: descriptor manifest file (JSON array)")
+	fs.StringVar(&opts.interpreterRef, "interpreter-ref", "", "transitions: archived interpreter HashRef pinned into every descriptor")
+	fs.StringVar(&opts.ailangBin, "ailang-bin", "", "transitions: interpreter binary to archive now, as the daemon does at startup")
 	return fs
 }
 
@@ -162,6 +171,7 @@ const usageText = `world-publish — the attended entrypoint for an IRREVERSIBLE
   world-publish publish    --store S --registry-origin O --publisher P \
                            --credential-file C --approval-ref R --now N --expires E (--live | --dry-run)
   world-publish reconcile  --store S [--registry-origin O] [--probe]
+  world-publish transitions --store S --manifest M (--ailang-bin B | --interpreter-ref R)  [local registry write]
 
 Exit codes: 0 done · 1 failed · 2 usage · 3 STOP (a fence refused; nothing happened)
 `
@@ -191,6 +201,8 @@ func run(args []string, in io.Reader, out, errw io.Writer, env environment) int 
 		return runPublish(opts, in, out, errw, env)
 	case "reconcile":
 		return runReconcile(opts, out, errw)
+	case "transitions":
+		return runTransitions(opts, in, out, errw, env)
 	default:
 		fmt.Fprintf(errw, "world-publish: unknown verb %q\n\n%s", verb, usageText)
 		return exitUsage
