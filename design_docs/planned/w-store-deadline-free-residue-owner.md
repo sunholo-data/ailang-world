@@ -149,7 +149,9 @@ local-variable Background hoists (M25), renamed `c "context"` imports with `c.Ba
 (M30), `context.WithoutCancel(ctx)` references (M31), function-valued
 `f := context.Background; ... f()` references (M32), package-level
 `var rootCtx = context.Background()` (M33), and standalone `context.TODO()` roots (M34).
-M35 witnesses the separate surface guard against a new non-test Go tree. These are syntax
+A dot import (`import . "context"` with a bare `Background()`) is rejected by a separate rule, not by
+selector counting (M36, counts unchanged at 15/0/0). M35 witnesses the separate surface guard against a
+new non-test Go tree, and M37 its allow-list-existence requirement. These are syntax
 witnesses, not exhaustive dataflow proofs. With the behavioral tests, the exercised paths pass
 their caller's context to real store reads.
 
@@ -270,8 +272,10 @@ compiled and failed a named test assertion. Detailed commands/output are `M01.tx
 | AC18 package-level root is visible | M33 add var rootCtx = context.Background() | `TestProductionContextRoots`: package owner, Background=16 | **1/1 killed** |
 | AC19 TODO root is visible independently of getters | M34 add standalone context.TODO() | `TestProductionContextRoots`: TODO=1 | **1/1 killed** |
 | AC20 new source tree cannot bypass census | M35 create mutation_surface_probe/root.go | `TestProductionGoSurface`: unexpected non-test Go file | **1/1 killed** |
+| AC21 dot context import is rejected by its own rule | M36 add `host/broker/zz_m36_dot.go` with `import . "context"` and `var dotProbeCtx = Background()` | `TestProductionContextRoots`: `dot context import in host/broker/zz_m36_dot.go`, while the logged counts stay **Background=15 TODO=0 WithoutCancel=0** — the failure originates in the dot-import rule, not in selector counting | **1/1 killed** (controller-executed, quorum r2 carve-out) |
+| AC22 allow-listed reproducers must exist | M37 delete `design_docs/verification/w-race-gate-blindspot/repro/main.go` | `TestProductionGoSurface`: `allow-listed reproducer missing: …/repro/main.go` | **1/1 killed** (controller-executed, quorum r2 carve-out) |
 
-**Total: 35/35 killed, 0 survived, 0 build-error-only kills.** M13–M22 and M28 are derived from
+**Total: 37/37 killed, 0 survived, 0 build-error-only kills** (M01–M35 designer-executed; M36–M37 controller-executed under the quorum r2 narrow-refinement carve-out, transcripts `M36-controller.txt`/`M37-controller.txt`, both restored and re-run green). M13–M22 and M28 are derived from
 the shipped signature/wiring/error-handling diff, not merely reinsertion of the original bug.
 M30–M34 independently exercise all five added syntactic witnesses. No new mutation survived;
 no scanner detection defect was exposed or required a fix. Round 2 adds separate constructor
@@ -306,7 +310,7 @@ ratchet/root scans live in store. The temporary guard/probe files are **not** pa
 | Row 112, archive/replay subprocess groups | **Same replay.go file**, different function. Keep runPinnedTransition unchanged; reconcile context signatures independently. Its existing root stays named. Archive has no edit here (Vfiles, Vrules). |
 | Row 113, pkgproj descendants | **No proposed file overlap**; its subprocess lifetime remains its own owner (Vfiles, Vrules). |
 | Row 25, blocked-child kill coverage | **No proposed file overlap**; no capsule kill/output fixture is altered. Do not count read cancellation as blocked-child coverage (Vfiles, Vrules). |
-| Existing callers / S7 | `New`, Bootstrap, DecideApproval, MintAttendedApproval, ReplayEntry/Episode, GetVerifyResult become source-incompatible. Migrate the measured in-repo calls together. External consumers are UNMEASURED. Add package API usage notes naming “read ctx only,” and a runnable cancellation example via the new tests; update any documented API snippets found at implementation time. |
+| Existing callers / S7 | `New`, Bootstrap, DecideApproval, MintAttendedApproval, ReplayEntry/Episode, GetVerifyResult become source-incompatible. Migrate the measured in-repo calls together. External and out-of-census callers: none found (Vrepro) — the two allow-listed reproducers reference none of the changed APIs and are a separate nested module (`repro/go.mod`), so they sit outside `./...` and cannot break on this change; the module path `github.com/sunholo-data/ailang-world` has no `replace` directive. Consumers outside this repository remain UNMEASURED; M3's API usage notes document the migration for them. Add package API usage notes naming “read ctx only,” and a runnable cancellation example via the new tests; update any documented API snippets found at implementation time. |
 
 ## §8 Milestones, each ≤150 production LOC
 
@@ -378,6 +382,8 @@ literals. No git write command was used.
 | Vcalls | `go run ~/.ailang/state/world-iter194/design/census-round1.go` (banked original tool used before edits) | `census-before.txt`: production/test calls Bootstrap 1/7, DecideApproval 0/1, decideApproval 2/7, MintAttendedApproval 1/0, mintAttendedApproval 1/4, daemon.New 1/15, ReplayEntry 1/1, ReplayEpisode 0/18, GetVerifyResult 1/13; 58 production files; 27 roots. Distinct Bootstrap/mint production calls control negative replay/exported-decide counts. |
 | Vguard | `python3 /Users/voightkampff/.ailang/state/world-iter194/design/guard_probe.py` | `guard-control.txt` exit0, eight arms pass. `guard-reject.txt` exit1: mint/free, publish/free, startup/free, resolve/free fail; bounded four pass. Temporary eight-method guard restored in finally; probe sources banked under broker/daemon/authority artifact folders. |
 | Vmut | `python3 /Users/voightkampff/.ailang/state/world-iter194/design/mutate.py` | `mutations-run.txt`: M01–M35 KILLED; TALLY 35 35. Each transcript contains `--- FAIL:`; none counted on compile failure. |
+| Vmut2 | controller, outside the sandbox: M36 (dot-import probe file) and M37 (delete one allow-listed reproducer), each followed by removal/restore and a green re-run | `M36-controller.txt`: FAIL `dot context import`, counts 15/0/0; `M37-controller.txt`: FAIL `allow-listed reproducer missing`; both re-runs `ok`; `git status --porcelain design_docs/verification` empty after restore. |
+| Vrepro | `grep -nE 'daemon\.New\(\|registry\.Bootstrap\(\|DecideApproval\(\|MintAttendedApproval\(\|ReplayEntry\(\|ReplayEpisode\(\|GetVerifyResult\(' design_docs/verification/w-race-gate-blindspot/{racecontrol,repro}/main.go`; control `grep -cE 'registry\.Bootstrap\(' host/daemon/daemon.go`; `head -1 go.mod`; `go list ./design_docs/...`; `grep -n replace go.mod`; `ls design_docs/verification/w-race-gate-blindspot/repro` | grep rc=1 (no references) with control **1**; module `github.com/sunholo-data/ailang-world`; `go list` → `matched no packages` because `repro/` carries its own `go.mod` (nested module); no `replace`. Artifact `Vrepro-controller.txt`. |
 | Vreadsites | `rg -n '\.(GetObject\|GetWorld\|GetLogEntry\|GetRegistryHead\|GetVerifyResult\|SelectedHead\|ReadObject\|ResolveSession)\(' host cmd --glob '*.go' --glob '!**/*_test.go'; rg -n 'ValidateProof\(\|ReadSnapshot\(\|\.Publish\(' host cmd --glob '*.go' --glob '!**/*_test.go'; rg -n 'WithTimeout\|objectReadTimeout' host/evidence/validator.go host/projection/projection.go` | Prototype enumerates 34 exported-read call sites: all pass a ctx variable; validator derives ObjectReadTimeout, projection derives maxWait. API-only transition Publish/validator and replay are distinguished from in-repo production roots; positive ReadSnapshot/bounded-read calls control absent root claims. |
 | Vcomposition | `rg -n 'readCtx\(\|func .*Workbench\|func .*workbench' host/daemon/workbench.go; rg -n 'NewReplaySession\(\|newSession\(' host/broker/broker.go host/broker/publish_op.go; rg -n 'func .*ScanUnreadable\|Query\(' host/store/scan.go; git rev-parse --short HEAD` | Workbench calls d.readCtx; Replay-mode constructor is separate from the three Live publish sessions. ScanUnreadableLog/Worlds use context-free Query. HEAD b5b4a7d. These are retained composition limits, not converted reads. |
 | Vcompile | `go test ./... -run '^$'` | `compile.txt`: 23 ok, 0 FAIL. Deliberately compilation-only, not behavioral evidence. |
@@ -386,7 +392,8 @@ literals. No git write command was used.
 | Vtarget2 | `go test ./host/store -run '^(TestProductionContextRoots\|TestNoNewDeadlineFreeStoreReads\|TestProductionGoSurface)$' -v -count=1` | `targeted-round2.txt`: all 3 pass, exit0. Ratchet 0 / 58 files; roots Background=15 / TODO=0 / WithoutCancel=0; surface 58 inside / 2 allowed. These gates were not sandbox-affected. |
 | Vtest0 | `go test ./... -count=1` in restricted sandbox, AILANG_BIN unset | `test.txt`: 17 ok, 6 FAIL. Loopback bind refused and pinned-binary-required tests fail. **UNINFORMATIVE UNDER SANDBOX**; controller independently reran the pinned gate outside the sandbox (Vtest). |
 | Vpin | `/Users/voightkampff/.pinned-ailang/ailang --version` | AILANG v0.41.0, commit 24ee1088776e21cd06a3781ed18e77f40be06db3. System PATH binary instead reports v0.43.1-8-ga2256b1c5-dirty; not used for full Go validation. |
-| Vtest | `AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang go test ./... -count=1` with loopback-enabled execution | `test-pinned.txt`: **23 ok, 0 FAIL, exit0** (round-1 prototype; controller also independently confirmed 23 ok / 0 FAIL outside the sandbox before this revision). Pin is needed by full Go tests even though no standalone verify_ail run is requested. |
+| Vtest2 | controller, outside the sandbox, 2026-09-26 11:58 local, on the round-1 prototype tree: `cd .design-wt-iter194 && go vet ./... && AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./... -count=1` | `~/.ailang/state/world-iter194/ctl-proto-fulltest.txt`: **23 `ok` lines, 0 `FAIL`**; vet rc=0. Independent of `test-pinned.txt`. Round-2 changes touched only `host/store/context_roots_test.go`; its three tests re-ran green outside the sandbox. |
+| Vtest | `AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang go test ./... -count=1` with loopback-enabled execution | `test-pinned.txt`: **23 ok, 0 FAIL, exit0** (round-1 prototype, designer run). Pin is needed by full Go tests even though no standalone verify_ail run is requested. |
 
 The controller's **F4 test-call count is the sole refuted F1–F8 numerical assertion**. F7 is
 correct as a textual line count, but would be false if interpreted as 29 executable roots.
@@ -473,7 +480,9 @@ banked copy `~/.ailang/state/world-iter194/quorum_r1.json`.
 - R3: census cited a perishable path — §10 now cites banked census sources; Vroots rerun
   from the durable path, with the original tool preserved as census-round1.go for Vcalls.
 
-This revision answers the recorded objections; no round-2 quorum verdict is claimed.
+Round 2: **BLOCKED 2/1, all present** — oc-glm-5-3 **pass** (catch: out-of-census callers of the changed APIs unmeasured), oc-kimi-k3 reject (dot-import rejection and allow-list existence asserted but not mutation-witnessed; proposed M36/M37), claude-sonnet-5@claude-p reject (the controller's independent full-suite run had no row of its own; proposed a distinct Vtest2 row). Artifact `.ailang/state/mission-quorum/w-store-deadline-free-residue-owner-2026-09-26T10-05-47Z.json`, banked `~/.ailang/state/world-iter194/quorum_r2.json`.
+
+**Narrow-refinement carve-out applied (controller, round 2).** Neither remaining reject disputes the direction and both carry a concrete reviewer-authored fix, so the controller applied them verbatim rather than parking: M36 and M37 were executed (both killed, AC21/AC22, Vmut2); the controller's out-of-sandbox run is its own dated row (Vtest2) and the unlogged parenthetical was struck from Vtest; glm's pass-catch is answered by Vrepro and the amended S7 row. No design direction, §5 decision or measurement changed.
 §5's policy ratification remains separately owed to Mark.
 
 Local completion record: doc, 28-file prototype patch, 35 mutation transcripts, eight guard
