@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 195 | 2026-09-26 | row 107 LANDED: world-publish transitions → transitionreg.PublishSet (presence + pinned `check` + per-interpreter epoch nomination + same-ID CAS conflict), card lists published skills; no landed .ail publishable yet (R7); dev CI red from groom list fixed; D-WORLD-38 phrase... |
 | 194 | 2026-09-26 | row 23 plumbing LANDED: 11 store reads inherit the caller context, empty ratchet + 15-root census + host/cmd surface guard; strict guard + Commit parked on D-WORLD-37 (A recommended)... |
 | 193 | 2026-09-26 | row 24 LANDED: group-wide overflow kill, joined kill error, one cleanup deadline bounding drain + direct-child wait (procbound); orphans 190-192 credited (two killed by their own kill(-1) probe)... |
 | 189 | 2026-09-25 | row 22 LANDED: the daemon refuses to start unless the store's effective busy_timeout is below its read deadline; row 93 re-gated on capability... |

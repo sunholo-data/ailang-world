@@ -1,24 +1,23 @@
-# Mission Dashboard — World (snapshot 2026-09-26, iteration 194)
+# Mission Dashboard — World (snapshot 2026-09-26, iteration 195)
 
-- **State**: **row 23's plumbing tranche has landed** (`w-store-deadline-free-residue-owner`, clause 2). PR #150 was squash-merged as **`b9ecabe`**, and remote CI is **green on the merge** (2/2, Gate 3b SHA-pinned).
-  - All 11 store reads that used to pass a literal `context.Background()` (approve 8, registry 2, replay 1) now receive the caller's context. `HumanHandler.Execute` no longer discards its ctx.
-  - The ratchet is an **empty map**. A new root census pins the 15 remaining named roots (hoists, renamed and dot imports, `WithoutCancel` are all caught). A surface guard keeps the census domain honest.
-  - **No deadline value, no store-boundary guard, no `Commit` change.** Those are D-WORLD-18's policy questions, now ledger row **`D-WORLD-37`**.
+- **State**: **row 107 has landed** (`w-transition-registry-production-publisher`, clause 6, groom position 1 on the critical path). PR #151 was squash-merged as **`b7cfbdb`**, and remote CI is **green on the merge** (2/2, Gate 3b SHA-pinned).
+  - The transition registry finally has a production writer: `world-publish transitions`, behind the attended-operator fence, publishes through `transitionreg.PublishSet`.
+  - `PublishSet` refuses an absent source, a source the pinned interpreter's `check` refuses, an epoch the epoch registry does not nominate for that descriptor's OWN interpreter, and a same-ID CAS-retry conflict.
+  - A daemon test shows the A2A card listing a skill published this way, and an unauthorised session seeing zero.
+  - **Honest limit (Residual 7):** no landed `.ail` source can be published yet. `world/transitions.ail` imports `world/*` and is refused hermetically (LDR001). The first real card content needs a self-contained transition module or row 106's staging.
+- **Also this iteration**: dev's CI was **red** at the attended regroom `ad13c7b`. The queue census read the regroom's `1./2./3.` rule list as duplicate queue rows. The fix is format-only (`0aa53e6`), CI green.
 - **Quality**:
-  - Design quorum: r1 BLOCKED 3/3 → revision; r2 BLOCKED 2/1 (glm pass) → narrow-refinement carve-out with the reviewers' verbatim fixes. **37/37** mutations killed.
-  - Controller rebuild: one commit per milestone, every boundary green outside the sandbox, final tree sha256-identical.
-  - Judge: **PASS 98/100, zero blocking** (sonnet, own worktree). 9/9 of its own mutations were killed.
-- **Unblocked**: row 26 (bounded Z3 producer; its row-23 gate is met) and row 111 arm A.
-- **Next**: 25, 26, 32, 112, 111, 106, 107, 109, 113, 99, 100.
-- **Parked for Mark**: **`D-WORLD-37`** — one word, the direction of row 23's policy tranche.
-  - **A (recommended):** finite active operations. Keep the strict guard, give startup, approval I/O, validation and credential lookup finite budgets, and make `Commit` cancellable and all-or-nothing.
-  - **B:** keep deadline-free attended and startup paths as documented exceptions.
-  - A strict guard today would break 4 production root paths (measured).
+  - Quorum: r1 BLOCKED 3/3 → glm revision; r2 BLOCKED 2/1 (gemini pass) → narrow-refinement carve-out; astra re-run → one more claim-weakening, applied verbatim. astra's binding-record proposal was refuted by ratified D1.
+  - The planner found a real macOS/Linux divergence in the source check (MOD010); fixed with one line, reproduced by the controller.
+  - Executor 19/19 mutations; judge **PASS 93 → 96/100, zero blocking** (sonnet, own worktree). Its one surviving mutation was closed by a controller test pin (sole killer).
+- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · 5 UNMET (row 114, waits on a real question) · 6 UNMET, moved this iteration (next: 106; 108 blocked on `ailang#885`, blobs identical at v0.44.0).
+- **Next**: 106 (position 2, routable), 108 (when #885 ships), 93, 114, 94.
+- **Parked for Mark**: **`D-WORLD-38`** — one word: the verb's typed confirmation phrase.
+  - **A (shipped default, designer's pick):** keep the shared `publish world/core@0.1.0 irreversibly`.
+  - **B (loop's lean):** its own phrase `publish transition registry irreversibly` (~5 lines), so the operator confirms what they are actually doing.
 - **Cadence/routing**:
-  - **Roles:** controller `claude-opus-5-5`, designer `codex:gpt-6-astra` (rotation), planner and executor `codex:gpt-6-sol`, evaluator `sonnet` (Agent tool). Every role spawned; none fell back.
-  - **Spend:** **$0.45 metered** (quorum only).
-  - **Ration:** Ollama is over ration; codex is within.
+  - **Roles:** controller `claude-opus-5-5`, designer `pi:ollama/glm-5.3:cloud` (rotation; first World turn, authored correctly), planner and executor `opus` (codex over daily ration), evaluator `sonnet` (Agent tool). Every role spawned; none failed.
+  - **Spend:** **$0.91 metered** (quorum + one reviewer re-run).
 - **Maintenance for an attended session**:
-  - An executor's `.snap/` Go copies trip the new `TestProductionGoSurface` if left in the tree. Move snapshots out before running gates.
-  - Row 101's class: `host/store/schema_version_test.go` is `gofmt -l`-dirty on `dev` (inherited).
-  - The planner resolver still answers `fail-closed:planner-lane-field-missing` while the driver pins a provider. The pin wins.
+  - The running skill (V1 main checkout) is 21 commits behind the fleet's `origin/dev`, including the Gate-2 critical-path check. This iteration read origin's version by hand.
+  - QUICKSTART §6 (publish a transition) is marked *pending attended run*. It needs a TTY and a typed phrase, so only an attended session can execute it verbatim.
