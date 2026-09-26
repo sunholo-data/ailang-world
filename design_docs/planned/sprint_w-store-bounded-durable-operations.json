@@ -1,0 +1,126 @@
+{
+  "sprint_id": "w-store-bounded-durable-operations",
+  "design_doc": "design_docs/planned/w-store-bounded-durable-operations.md",
+  "base": "dev e33378a + uncommitted designer prototype",
+  "scope": "M1 only, split M1a-M1d; no duration value; nothing merges until Mark ratifies bound table (doc §9)",
+  "milestones": [
+    {
+      "id": "M1a",
+      "title": "Durable core, three context methods, and Close worker lifetime",
+      "files": [
+        "host/store/durable.go",
+        "host/store/store.go",
+        "host/store/journal.go",
+        "host/store/durable_test.go",
+        "host/store/context_roots_test.go",
+        "host/store/durable_measure_test.go",
+        "host/daemon/startup_measure_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/store -run 'TestDurableOpsHonourHeldConnection|TestCommitCancelledMidBodyIsAllOrNothing|TestDurableStallAtCutoffIsUncertainAndReconciles|TestUncertainBareCommitReconcilesByLogIndexNotHead|TestCloseKeepsWriterLockUntilDurableWorkerSettles|TestProductionContextRoots' -count=1"
+      ],
+      "mutations": [
+        "A01",
+        "A02",
+        "A03",
+        "A04",
+        "A05",
+        "A06",
+        "A07",
+        "A08",
+        "A09",
+        "A10",
+        "A11",
+        "A12",
+        "A13",
+        "A14"
+      ]
+    },
+    {
+      "id": "M1b",
+      "title": "Commit in-body stall points",
+      "files": [
+        "host/store/store.go",
+        "host/store/durable_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/store -run '^TestCommitBodyHookPhases$' -count=1"
+      ],
+      "mutations": [
+        "B01",
+        "B02"
+      ]
+    },
+    {
+      "id": "M1c",
+      "title": "AppendIntent mid-body cancellation",
+      "files": [
+        "host/store/journal.go",
+        "host/store/durable_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/store -run '^TestAppendIntentCancelledMidBodyIsNotCommitted$' -count=1"
+      ],
+      "mutations": [
+        "C01"
+      ]
+    },
+    {
+      "id": "M1d",
+      "title": "Post-COMMIT driver fault and context-use pin",
+      "files": [
+        "host/store/durable_driver_fault_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/store -run 'TestDriverCommitErrorAfterRealCommitIsUncertainAndReconciles|TestCommitBodyUsesCallerContext|TestCommitBodyHookPhases|TestAppendIntentCancelledMidBodyIsNotCommitted' -count=1"
+      ],
+      "mutations": [
+        "D01",
+        "B01",
+        "B02"
+      ]
+    }
+  ],
+  "blocked_not_planned": [
+    {
+      "id": "M2",
+      "prerequisite": "awaits Mark's ratification of the bound table (doc §9)"
+    },
+    {
+      "id": "M3",
+      "prerequisite": "awaits Mark's ratification of the bound table (doc §9)"
+    },
+    {
+      "id": "M4",
+      "prerequisite": "awaits Mark's ratification of the bound table (doc §9)"
+    },
+    {
+      "id": "M5a",
+      "prerequisite": "awaits Mark's ratification of the bound table (doc §9)"
+    },
+    {
+      "id": "M5b",
+      "prerequisite": "awaits Mark's ratification of the bound table (doc §9)"
+    },
+    {
+      "id": "M6a",
+      "prerequisite": "awaits Mark's ratification of the bound table (doc §9)"
+    },
+    {
+      "id": "M6b",
+      "prerequisite": "awaits Mark's ratification of the bound table (doc §9)"
+    },
+    {
+      "id": "M7",
+      "prerequisite": "awaits Mark's ratification of the bound table (doc §9)"
+    }
+  ]
+}
