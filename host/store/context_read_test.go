@@ -368,7 +368,6 @@ func TestReadRetriesUnderTransientExclusiveLock(t *testing.T) {
 // what makes the follow-on item's progress mechanically observable, 11 -> 0, and
 // what lets the store-boundary reject land exactly when this reads zero.
 var deadlineFreeReadPins = map[string]int{
-	"host/broker/approve.go":    8,
 	"host/registry/registry.go": 2,
 	"host/replay/replay.go":     1,
 }

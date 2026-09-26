@@ -252,7 +252,9 @@ func runApprove(opts options, in io.Reader, out, errw io.Writer, env environment
 	}
 	defer func() { _ = db.Close() }()
 
-	ref, err := broker.MintAttendedApproval(db, plan)
+	// Named CLI root: preserve the former mint-internal background lifetime.
+	// A finite active-I/O deadline is the row-23 policy decision, not plumbing.
+	ref, err := broker.MintAttendedApproval(context.Background(), db, plan)
 	if err != nil {
 		fmt.Fprintln(errw, "world-publish: mint approval: "+err.Error())
 		return exitError

@@ -98,7 +98,7 @@ type observedDecisionWire struct {
 	Decision json.RawMessage `json:"decision"`
 }
 
-func (h *HumanHandler) Execute(_ context.Context, req EffectRequest, payload []byte) ([]byte, error) {
+func (h *HumanHandler) Execute(ctx context.Context, req EffectRequest, payload []byte) ([]byte, error) {
 	switch req.Effect {
 	case EffectHumanApprove:
 		var input approvalInputWire
@@ -115,7 +115,7 @@ func (h *HumanHandler) Execute(_ context.Context, req EffectRequest, payload []b
 		if err := h.store.PutObject(requestObj); err != nil {
 			return nil, fmt.Errorf("broker: put approval request: %w", err)
 		}
-		if err := appendApprovalHead(h.store, requestObj.Hash, hashref.HashRef{}); err != nil {
+		if err := appendApprovalHead(ctx, h.store, requestObj.Hash, hashref.HashRef{}); err != nil {
 			return nil, err
 		}
 		return pendingBytes(requestObj.Hash), nil
@@ -129,7 +129,7 @@ func (h *HumanHandler) Execute(_ context.Context, req EffectRequest, payload []b
 		if err != nil {
 			return nil, fmt.Errorf("broker: poll approval requestRef: %w", err)
 		}
-		decision, found, err := findApprovalDecision(h.store, requestRef)
+		decision, found, err := findApprovalDecision(ctx, h.store, requestRef)
 		if err != nil {
 			return nil, err
 		}
@@ -146,17 +146,17 @@ func (h *HumanHandler) Execute(_ context.Context, req EffectRequest, payload []b
 
 // DecideApproval is an operator entry point, not an effect. It creates one
 // immutable decision object and moves only the approvals registry head.
-func DecideApproval(
+func DecideApproval(ctx context.Context,
 	s *store.Store,
 	requestRef hashref.HashRef,
 	decision string,
 	decidedBy string,
 	now int64,
 ) (hashref.HashRef, error) {
-	return decideApproval(s, requestRef, decision, decidedBy, now)
+	return decideApproval(ctx, s, requestRef, decision, decidedBy, now)
 }
 
-func decideApproval(
+func decideApproval(ctx context.Context,
 	s approvalStore,
 	requestRef hashref.HashRef,
 	decision string,
@@ -166,14 +166,14 @@ func decideApproval(
 	if decision != "approve" && decision != "deny" {
 		return hashref.HashRef{}, ErrInvalidApprovalDecision
 	}
-	request, ok, err := s.GetObject(context.Background(), requestRef)
+	request, ok, err := s.GetObject(ctx, requestRef)
 	if err != nil {
 		return hashref.HashRef{}, fmt.Errorf("broker: read approval request: %w", err)
 	}
 	if !ok || request.SemanticID != ApprovalRequestV1 {
 		return hashref.HashRef{}, ErrApprovalRequestNotFound
 	}
-	if _, found, err := findApprovalRequest(s, requestRef); err != nil {
+	if _, found, err := findApprovalRequest(ctx, s, requestRef); err != nil {
 		return hashref.HashRef{}, err
 	} else if !found {
 		return hashref.HashRef{}, ErrApprovalRequestNotFound
@@ -185,14 +185,14 @@ func decideApproval(
 	if err := s.PutObject(obj); err != nil {
 		return hashref.HashRef{}, fmt.Errorf("broker: put approval decision: %w", err)
 	}
-	if err := appendApprovalHead(s, requestRef, obj.Hash); err != nil {
+	if err := appendApprovalHead(ctx, s, requestRef, obj.Hash); err != nil {
 		return hashref.HashRef{}, err
 	}
 	return obj.Hash, nil
 }
 
-func appendApprovalHead(s approvalStore, requestRef, decisionRef hashref.HashRef) error {
-	previous, ok, err := s.GetRegistryHead(context.Background(), ApprovalsV1)
+func appendApprovalHead(ctx context.Context, s approvalStore, requestRef, decisionRef hashref.HashRef) error {
+	previous, ok, err := s.GetRegistryHead(ctx, ApprovalsV1)
 	if err != nil {
 		return fmt.Errorf("broker: read approvals head: %w", err)
 	}
@@ -213,16 +213,16 @@ func appendApprovalHead(s approvalStore, requestRef, decisionRef hashref.HashRef
 	return nil
 }
 
-func findApprovalRequest(s approvalStore, requestRef hashref.HashRef) (store.Object, bool, error) {
-	return walkApprovalHead(s, requestRef, false)
+func findApprovalRequest(ctx context.Context, s approvalStore, requestRef hashref.HashRef) (store.Object, bool, error) {
+	return walkApprovalHead(ctx, s, requestRef, false)
 }
 
-func findApprovalDecision(s approvalStore, requestRef hashref.HashRef) (store.Object, bool, error) {
-	return walkApprovalHead(s, requestRef, true)
+func findApprovalDecision(ctx context.Context, s approvalStore, requestRef hashref.HashRef) (store.Object, bool, error) {
+	return walkApprovalHead(ctx, s, requestRef, true)
 }
 
-func walkApprovalHead(s approvalStore, requestRef hashref.HashRef, wantDecision bool) (store.Object, bool, error) {
-	head, ok, err := s.GetRegistryHead(context.Background(), ApprovalsV1)
+func walkApprovalHead(ctx context.Context, s approvalStore, requestRef hashref.HashRef, wantDecision bool) (store.Object, bool, error) {
+	head, ok, err := s.GetRegistryHead(ctx, ApprovalsV1)
 	if err != nil || !ok {
 		return store.Object{}, false, err
 	}
@@ -231,7 +231,7 @@ func walkApprovalHead(s approvalStore, requestRef hashref.HashRef, wantDecision 
 	// to contain itself. A future indexed approval surface should replace this
 	// linear walk rather than weakening that immutable-chain invariant.
 	for !head.IsZero() {
-		obj, found, getErr := s.GetObject(context.Background(), head)
+		obj, found, getErr := s.GetObject(ctx, head)
 		if getErr != nil {
 			return store.Object{}, false, getErr
 		}
@@ -248,7 +248,7 @@ func walkApprovalHead(s approvalStore, requestRef hashref.HashRef, wantDecision 
 				if err != nil {
 					return store.Object{}, false, err
 				}
-				decision, found, err := s.GetObject(context.Background(), ref)
+				decision, found, err := s.GetObject(ctx, ref)
 				if err != nil || !found {
 					return store.Object{}, false, err
 				}
@@ -258,7 +258,7 @@ func walkApprovalHead(s approvalStore, requestRef hashref.HashRef, wantDecision 
 				return decision, true, nil
 			}
 			if !wantDecision {
-				request, found, err := s.GetObject(context.Background(), requestRef)
+				request, found, err := s.GetObject(ctx, requestRef)
 				return request, found, err
 			}
 		}
@@ -482,7 +482,7 @@ type approvalObjectReader interface {
 // an ApprovalDecisionV1 object, whose RequestRef names an ApprovalRequestV1
 // object, whose canonical Scope names the exact bytes. Nothing here trusts a
 // configuration field, and nothing here is re-derivable from memory.
-func validatePublishApproval(
+func validatePublishApproval(ctx context.Context,
 	s approvalObjectReader,
 	payload []byte,
 	req EffectRequest,
@@ -492,7 +492,7 @@ func validatePublishApproval(
 		return hashref.HashRef{}, fmt.Errorf("%w: %s", ErrPublishApprovalMalformed, err.Error())
 	}
 
-	decisionObj, ok, err := s.GetObject(context.Background(), id.ApprovalRef)
+	decisionObj, ok, err := s.GetObject(ctx, id.ApprovalRef)
 	if err != nil {
 		return hashref.HashRef{}, fmt.Errorf("broker: read publish approval decision: %w", err)
 	}
@@ -519,7 +519,7 @@ func validatePublishApproval(
 		return hashref.HashRef{}, fmt.Errorf(
 			"%w: decision requestRef: %s", ErrPublishApprovalMalformed, err.Error())
 	}
-	requestObj, ok, err := s.GetObject(context.Background(), requestRef)
+	requestObj, ok, err := s.GetObject(ctx, requestRef)
 	if err != nil {
 		return hashref.HashRef{}, fmt.Errorf("broker: read publish approval request: %w", err)
 	}

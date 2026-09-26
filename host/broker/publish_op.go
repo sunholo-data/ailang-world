@@ -120,11 +120,12 @@ var ErrAttendedApprovalNotObserved = errors.New(
 // invocations of world-publish (Decision D4) so that the operator can review
 // the minted ref, and so that the durable claim is spent by a command that
 // could not have created it.
-func MintAttendedApproval(s *store.Store, plan AttendedPublishPlan) (hashref.HashRef, error) {
-	return mintAttendedApproval(s, plan)
+// ctx governs the reads, not the context-free writes or human think time.
+func MintAttendedApproval(ctx context.Context, s *store.Store, plan AttendedPublishPlan) (hashref.HashRef, error) {
+	return mintAttendedApproval(ctx, s, plan)
 }
 
-func mintAttendedApproval(s approvalStore, plan AttendedPublishPlan) (hashref.HashRef, error) {
+func mintAttendedApproval(ctx context.Context, s approvalStore, plan AttendedPublishPlan) (hashref.HashRef, error) {
 	scope := plan.ApprovalScope()
 	human := newHumanHandler(s)
 
@@ -132,7 +133,7 @@ func mintAttendedApproval(s approvalStore, plan AttendedPublishPlan) (hashref.Ha
 	requestSession := newSession(s, plan.EpisodeID+"-approve", []Capability{
 		{Effect: EffectHumanApprove, Scope: scope, ExpiresAt: plan.ExpiresAt, Budget: PublishCost},
 	}, Registry{EffectHumanApprove: human}, Live, nil)
-	pending, _, err := requestSession.Invoke(context.Background(), EffectRequest{
+	pending, _, err := requestSession.Invoke(ctx, EffectRequest{
 		Effect: EffectHumanApprove, Scope: scope, Cost: PublishCost, Now: plan.RequestedAt,
 	}, mustApprovalJSON(approvalInputWire{Requester: plan.Requester}))
 	if err != nil {
@@ -148,7 +149,7 @@ func mintAttendedApproval(s approvalStore, plan AttendedPublishPlan) (hashref.Ha
 	}
 
 	// Leg 2: the landed operator entry point mints the immutable decision.
-	decisionRef, err := decideApproval(s, requestRef, "approve", plan.DecidedBy, plan.DecidedAt)
+	decisionRef, err := decideApproval(ctx, s, requestRef, "approve", plan.DecidedBy, plan.DecidedAt)
 	if err != nil {
 		return hashref.HashRef{}, fmt.Errorf("broker: decide approval: %w", err)
 	}
@@ -159,7 +160,7 @@ func mintAttendedApproval(s approvalStore, plan AttendedPublishPlan) (hashref.Ha
 	pollSession := newSession(s, plan.EpisodeID+"-poll", []Capability{
 		{Effect: EffectHumanPollApproval, Scope: scope, ExpiresAt: plan.ExpiresAt, Budget: PublishCost},
 	}, Registry{EffectHumanPollApproval: human}, Live, nil)
-	polled, _, err := pollSession.Invoke(context.Background(), EffectRequest{
+	polled, _, err := pollSession.Invoke(ctx, EffectRequest{
 		Effect: EffectHumanPollApproval, Scope: scope, Cost: PublishCost, Now: plan.DecidedAt,
 	}, mustApprovalJSON(approvalInputWire{RequestRef: requestRef.String()}))
 	if err != nil {

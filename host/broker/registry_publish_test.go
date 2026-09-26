@@ -497,7 +497,7 @@ func decideAndPollLandedApproval(
 	requestRef hashref.HashRef, decision string, times approvalTimes,
 ) hashref.HashRef {
 	t.Helper()
-	decisionRef, err := decideApproval(base, requestRef, decision, "attended-operator", times.decide)
+	decisionRef, err := decideApproval(context.Background(), base, requestRef, decision, "attended-operator", times.decide)
 	if err != nil {
 		t.Fatalf("landed DecideApproval(%q): %v", decision, err)
 	}
@@ -549,7 +549,7 @@ func (f publishFixture) landApprovalOverRawRequest(
 	if err := base.PutObject(requestObj); err != nil {
 		t.Fatalf("put raw approval request: %v", err)
 	}
-	if err := appendApprovalHead(base, requestObj.Hash, hashref.HashRef{}); err != nil {
+	if err := appendApprovalHead(context.Background(), base, requestObj.Hash, hashref.HashRef{}); err != nil {
 		t.Fatalf("head raw approval request: %v", err)
 	}
 	decisionRef := decideAndPollLandedApproval(
@@ -1815,7 +1815,7 @@ func landNonPublishApproval(
 		t.Fatalf("non-publish Human.Approve: %v", err)
 	}
 	requestRef = decodePendingRef(t, pending)
-	decisionRef, err = decideApproval(base, requestRef, "approve", "attended-operator", times.decide)
+	decisionRef, err = decideApproval(context.Background(), base, requestRef, "approve", "attended-operator", times.decide)
 	if err != nil {
 		t.Fatalf("non-publish DecideApproval: %v", err)
 	}
@@ -2100,10 +2100,10 @@ func TestPublishApprovalRefusalSetWithALandedPositiveControl(t *testing.T) {
 	// falls over at the broker's own decode.
 	undecodableRequest := putRawApprovalObject(t, base, ApprovalRequestV1,
 		[]byte(`{"unknownRequestField":1}`))
-	if err := appendApprovalHead(base, undecodableRequest, hashref.HashRef{}); err != nil {
+	if err := appendApprovalHead(context.Background(), base, undecodableRequest, hashref.HashRef{}); err != nil {
 		t.Fatal(err)
 	}
-	decisionOverUndecodableRequest, err := decideApproval(
+	decisionOverUndecodableRequest, err := decideApproval(context.Background(),
 		base, undecodableRequest, "approve", "attended-operator", 11)
 	if err != nil {
 		t.Fatalf("decide over an undecodable request: %v", err)
