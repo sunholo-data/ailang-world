@@ -1,27 +1,24 @@
-# Mission Dashboard — World (snapshot 2026-09-26, iteration 193)
+# Mission Dashboard — World (snapshot 2026-09-26, iteration 194)
 
-- **State**: **row 24 has landed** (`w-host-subprocess-cleanup-boundary`, clause 2). PR #149 was squash-merged as **`24df816`**, and remote CI is **green on the merge** (2/2, Gate 3b SHA-pinned).
-  - In capsule and broker the output-overflow kill is now **process-group-wide**, so a forked grandchild can no longer hold the pipe.
-  - A failed kill is joined behind the typed error, with ESRCH filtered.
-  - One cleanup deadline bounds the pipe drain **and** the direct-child wait even when every kill fails (`host/procbound`, with an exact admission reservation).
-  - The linux merge gate (V34/V35) was read from CI's new `-v` step before merge.
-- **Orphans credited: 190, 191, 192** (four dead World slots in a row).
-  - 190 and 191 were killed by their own probe tests, which ran `kill(-1, SIGKILL)` with a pid parsed from a missing file. That left no exit line and no crash notice.
-  - 192 was STALL-killed while sitting on a 31-minute mutation drill.
-  - All shipped tests now signal only through the `host/proctest` pid guard (mutation-proven).
+- **State**: **row 23's plumbing tranche has landed** (`w-store-deadline-free-residue-owner`, clause 2). PR #150 was squash-merged as **`b9ecabe`**, and remote CI is **green on the merge** (2/2, Gate 3b SHA-pinned).
+  - All 11 store reads that used to pass a literal `context.Background()` (approve 8, registry 2, replay 1) now receive the caller's context. `HumanHandler.Execute` no longer discards its ctx.
+  - The ratchet is an **empty map**. A new root census pins the 15 remaining named roots (hoists, renamed and dot imports, `WithoutCancel` are all caught). A surface guard keeps the census domain honest.
+  - **No deadline value, no store-boundary guard, no `Commit` change.** Those are D-WORLD-18's policy questions, now ledger row **`D-WORLD-37`**.
 - **Quality**:
-  - Controller drills per milestone: **19/19, 5/5 and 22/22 killed**.
-  - Judge: **PASS 98/100, zero blocking** (sonnet, own worktree). Its one survivor (`sync.Once` → bool) is equivalent on the single-consumer call graph, as measured.
-- **New rows**:
-  - **112**: the archive `--version` probe and replay wait out a grandchild (30.37 s against a 10 s bound). This explains row 24's old "33 s" residue.
-  - **113**: the `pkgproj/iface.go` descendant leak, unmeasured.
-- **Next**: 23 (ungated), 25, 26, 32, 106, 107, 109, 111, 112, 113, 99, 100.
-- **Parked for Mark**: **nothing — ledger 23 rows, ZERO OPEN.**
+  - Design quorum: r1 BLOCKED 3/3 → revision; r2 BLOCKED 2/1 (glm pass) → narrow-refinement carve-out with the reviewers' verbatim fixes. **37/37** mutations killed.
+  - Controller rebuild: one commit per milestone, every boundary green outside the sandbox, final tree sha256-identical.
+  - Judge: **PASS 98/100, zero blocking** (sonnet, own worktree). 9/9 of its own mutations were killed.
+- **Unblocked**: row 26 (bounded Z3 producer; its row-23 gate is met) and row 111 arm A.
+- **Next**: 25, 26, 32, 112, 111, 106, 107, 109, 113, 99, 100.
+- **Parked for Mark**: **`D-WORLD-37`** — one word, the direction of row 23's policy tranche.
+  - **A (recommended):** finite active operations. Keep the strict guard, give startup, approval I/O, validation and credential lookup finite budgets, and make `Commit` cancellable and all-or-nothing.
+  - **B:** keep deadline-free attended and startup paths as documented exceptions.
+  - A strict guard today would break 4 production root paths (measured).
 - **Cadence/routing**:
-  - **Roles:** controller `claude-opus-5-5`, planner `pi:openrouter/moonshotai/kimi-k3`, executor `pi:openrouter/deepseek/deepseek-v4.1-flash`, evaluator `sonnet` (Agent tool). No designer was needed (the design was complete from orphan 192).
-  - **Spend:** **$0.92 metered**: kimi $0.87, deepseek $0.04.
-  - **Ration:** codex and Ollama are over ration; OpenRouter is within.
+  - **Roles:** controller `claude-opus-5-5`, designer `codex:gpt-6-astra` (rotation), planner and executor `codex:gpt-6-sol`, evaluator `sonnet` (Agent tool). Every role spawned; none fell back.
+  - **Spend:** **$0.45 metered** (quorum only).
+  - **Ration:** Ollama is over ration; codex is within.
 - **Maintenance for an attended session**:
-  - `rotate-log` needs the V1 checkout as its CWD, and it drops index rows for orphaned iterations.
-  - Row 101: `gofmt -l` is red at base on 2 `host/store` files.
-  - The planner resolver answers `fail-closed:planner-lane-field-missing` while the driver pins pi. The provider pin wins; see role-spawn-routing §2.
+  - An executor's `.snap/` Go copies trip the new `TestProductionGoSurface` if left in the tree. Move snapshots out before running gates.
+  - Row 101's class: `host/store/schema_version_test.go` is `gofmt -l`-dirty on `dev` (inherited).
+  - The planner resolver still answers `fail-closed:planner-lane-field-missing` while the driver pins a provider. The pin wins.
