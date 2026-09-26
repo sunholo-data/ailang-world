@@ -358,21 +358,15 @@ func TestReadRetriesUnderTransientExclusiveLock(t *testing.T) {
 // T1.8 — the §2.8 ratchet.
 // -----------------------------------------------------------------------------
 
-// deadlineFreeReadPins is the EXACT set of production store reads this item
-// leaves deadline-free, by ratified deferral DR-2. Each is today's behaviour
-// made visible at the call site rather than hidden in a context-free signature.
-//
-// The set may SHRINK — threading a real context through one of these sites is a
-// one-line edit here in the same diff — but it may never GROW: a new
-// deadline-free store read anywhere under host/ or cmd/ reds this test. That is
-// what makes the follow-on item's progress mechanically observable, 11 -> 0, and
-// what lets the store-boundary reject land exactly when this reads zero.
+// deadlineFreeReadPins is empty after row 23. This is a syntax ratchet, not
+// proof of a deadline. The root census and behavioral threading tests compose
+// with it; the boundary guard remains a ratified-policy decision for Mark.
 var deadlineFreeReadPins = map[string]int{}
 
-// deadlineFreeReadCall matches a call of one of the six context-first read
+// deadlineFreeReadCall matches a call of one of the seven context-first read
 // getters whose context argument is the deadline-free literal.
 var deadlineFreeReadCall = regexp.MustCompile(
-	`\.(GetObject|GetWorld|GetLogEntry|GetRegistryHead|SelectedHead|ReadObject)\(\s*context\.Background\(\)`)
+	`\.(GetObject|GetWorld|GetLogEntry|GetRegistryHead|SelectedHead|ReadObject|GetVerifyResult)\(\s*context\.(?:Background|TODO)\(\)`)
 
 // TestNoNewDeadlineFreeStoreReads pins the deadline-free residue.
 //

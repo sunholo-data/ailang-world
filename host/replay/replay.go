@@ -155,6 +155,7 @@ type ReplayResult struct {
 // structured error (store / archive.ReplayError). idx is the entry ordinal used
 // only for error context.
 // ctx governs source/cache reads; subprocess lifetime is separately owned.
+// Pass the caller's intended source/cache-read ctx; this API supplies no default timeout.
 func (e *Engine) ReplayEntry(ctx context.Context, ep Episode, idx int, entry EpisodeEntry) (ReplayResult, error) {
 	// Step 1: load transitionFn canonical bytes and verify content address.
 	src, ok, err := e.store.GetObject(ctx, entry.TransitionFn)
@@ -257,6 +258,7 @@ func (e *Engine) ReplayEntry(ctx context.Context, ep Episode, idx int, entry Epi
 // ReplayEpisode replays every entry of an episode in order and returns the
 // per-entry results. The first divergence or structured error stops the episode
 // and is returned.
+// Pass the caller's intended source/cache-read ctx; this API supplies no default timeout.
 func (e *Engine) ReplayEpisode(ctx context.Context, ep Episode) ([]ReplayResult, error) {
 	results := make([]ReplayResult, 0, len(ep.Entries))
 	for i, entry := range ep.Entries {

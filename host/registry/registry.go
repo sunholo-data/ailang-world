@@ -117,6 +117,7 @@ type bootstrapStore interface {
 	SetRegistryHead(string, hashref.HashRef) error
 }
 
+// Pass the caller's intended read ctx; this API supplies no default timeout.
 func Bootstrap(ctx context.Context, s *store.Store, releaseString string) (Registry, hashref.HashRef, error) {
 	return bootstrap(ctx, s, releaseString)
 }

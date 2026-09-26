@@ -452,6 +452,7 @@ func resolveErrorLog(w io.Writer) io.Writer {
 // Every failure after store.Open closes the store, releasing the writer lock:
 // a refused startup must not strand writer authority.
 // ctx is threaded to bootstrap reads; it does not bound every startup operation.
+// Pass the caller's intended bootstrap-read ctx; this API supplies no default timeout.
 func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	if !isLoopbackHost(cfg.BindHost) {
 		return nil, &StartupError{

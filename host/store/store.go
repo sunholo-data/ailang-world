@@ -778,6 +778,7 @@ func (s *Store) PutVerifyResult(r VerifyResult) error {
 
 // GetVerifyResult looks up a cached verify result by the pair
 // (transitionFn, interpreter) EXCLUSIVELY; ok=false on a miss.
+// Pass the caller's intended cache-read ctx; this API supplies no default timeout.
 func (s *Store) GetVerifyResult(ctx context.Context, transitionFn, interpreter hashref.HashRef) (VerifyResult, bool, error) {
 	var (
 		epoch    int64

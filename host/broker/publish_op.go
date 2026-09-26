@@ -121,6 +121,7 @@ var ErrAttendedApprovalNotObserved = errors.New(
 // the minted ref, and so that the durable claim is spent by a command that
 // could not have created it.
 // ctx governs the reads, not the context-free writes or human think time.
+// Pass the caller's intended read ctx; this API supplies no default timeout.
 func MintAttendedApproval(ctx context.Context, s *store.Store, plan AttendedPublishPlan) (hashref.HashRef, error) {
 	return mintAttendedApproval(ctx, s, plan)
 }

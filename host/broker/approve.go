@@ -146,6 +146,7 @@ func (h *HumanHandler) Execute(ctx context.Context, req EffectRequest, payload [
 
 // DecideApproval is an operator entry point, not an effect. It creates one
 // immutable decision object and moves only the approvals registry head.
+// Pass the caller's intended read ctx; this API supplies no default timeout.
 func DecideApproval(ctx context.Context,
 	s *store.Store,
 	requestRef hashref.HashRef,
