@@ -1,0 +1,157 @@
+{
+  "sprint_id": "w-transition-invocation-coordinator",
+  "design_doc": "design_docs/planned/w-transition-invocation-coordinator.md",
+  "base": "dev 32f44c6 + uncommitted designer prototype",
+  "scope": "M1-M4c; no production caller; M5/M6 blocked on queue row 23 D-WORLD-37 policy tranche",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Capsule argument and cancellation boundary",
+      "files": [
+        "host/capsule/capsule.go",
+        "host/capsule/runcontext_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/capsule -run 'TestRunContext(Args|Cancel|RelaxedModule)$' -count=1",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/capsule -count=1"
+      ],
+      "mutations": [
+        "CAP-ARGS",
+        "CAP-CTX",
+        "CAP-RELAX"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Narrow broker binder",
+      "files": [
+        "host/broker/binder.go",
+        "host/broker/binder_test.go",
+        "host/broker/invoke_boundary_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/broker -run 'TestOpenBinder|TestRegistryDispatchBindingBoundary' -count=1"
+      ],
+      "mutations": [
+        "BINDER-RAW",
+        "BINDER-DECLARED",
+        "TRC-SCOPE"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Pure invocation plan and refusal types",
+      "files": [
+        "host/coordinator/plan.go",
+        "host/coordinator/errors.go",
+        "host/coordinator/plan_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/coordinator -run 'TestPlan(Law|RecordSkillID)' -count=1"
+      ],
+      "mutations": [
+        "PLAN-REV",
+        "PLAN-STATE",
+        "PLAN-LOG",
+        "PLAN-PREV",
+        "PLAN-OBSERVED",
+        "PLAN-SKILL",
+        "R13-JOURNAL"
+      ]
+    },
+    {
+      "id": "M4a",
+      "title": "Coordinator types and helpers",
+      "files": [
+        "host/coordinator/coordinator.go",
+        "host/coordinator/new_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/coordinator -run 'TestNew|TestPlan' -count=1"
+      ],
+      "mutations": [
+        "CFG-NIL",
+        "CFG-CAP",
+        "R1-TASK",
+        "R1-INPUT",
+        "R9-INCOMPAT",
+        "R12-OUTPUT",
+        "ID-NS"
+      ]
+    },
+    {
+      "id": "M4b",
+      "title": "Dispatch composition and receipt reconciliation",
+      "files": [
+        "host/coordinator/coordinator.go",
+        "host/coordinator/coordinator_test.go",
+        "host/coordinator/plan_test.go",
+        "host/coordinator/new_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/coordinator -run 'TestPlan|TestNew|TestDispatch|TestCommitBoundary|TestReplayCommittedInvocation' -count=1",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/broker -run '^TestRegistryDispatchBindingBoundary$' -count=1"
+      ],
+      "mutations": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R15",
+        "R16",
+        "POSTCOMMIT-SUCCESS"
+      ]
+    },
+    {
+      "id": "M4c",
+      "title": "In-flight invocation guard",
+      "files": [
+        "host/coordinator/coordinator.go",
+        "host/coordinator/errors.go",
+        "host/coordinator/inflight_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/coordinator -run '^TestInFlightGuard$' -count=1",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/coordinator -count=1",
+        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/broker -run '^TestRegistryDispatchBindingBoundary$' -count=1"
+      ],
+      "mutations": [
+        "R17-CHECK",
+        "R17-RELEASE",
+        "R17-PANIC-RELEASE"
+      ]
+    }
+  ],
+  "blocked_not_planned": [
+    {
+      "id": "M5",
+      "prerequisite": "queue row 23 D-WORLD-37 policy tranche: bounded durable operations"
+    },
+    {
+      "id": "M6",
+      "prerequisite": "M5 and queue row 23 D-WORLD-37 policy tranche"
+    }
+  ]
+}
