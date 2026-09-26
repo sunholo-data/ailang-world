@@ -146,6 +146,42 @@ func TestCommitCancelledMidBodyIsAllOrNothing(t *testing.T) {
 	}
 }
 
+func TestCommitBodyHookPhases(t *testing.T) {
+	s := openFileStore(t)
+	c := journalCommitFixture(t, s, "body-phases")
+	if _, _, err := s.AppendIntent("body-phases", testCommitIntent("body-phases", c)); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	previous := commitBodyHook
+	visits := 0
+	commitBodyHook = func(got context.Context) {
+		if got != ctx {
+			t.Fatal("body hook did not receive caller context")
+		}
+		visits++
+		if visits == 2 {
+			cancel()
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+	defer func() { commitBodyHook = previous }()
+	err := s.CommitContext(ctx, c)
+	if visits != 2 {
+		t.Fatalf("body hook visits = %d; want head read and world insert", visits)
+	}
+	if !errors.Is(err, context.Canceled) || IsUncertain(err) {
+		t.Fatalf("err = %v; want definite Canceled", err)
+	}
+	if _, ok, err := s.GetWorld(context.Background(), c.NextWorld.Ref); err != nil || ok {
+		t.Fatalf("cancelled world: found=%v err=%v", ok, err)
+	}
+	if rc, _, err := s.GetReceipt("body-phases"); err != nil || rc.State != ReceiptIndeterminate {
+		t.Fatalf("receipt = %v, err = %v; want indeterminate", rc.State, err)
+	}
+}
+
 // TestDurableStallAtCutoffIsUncertainAndReconciles stalls the durable step of
 // each durable write past the caller deadline: the caller gets *UncertainError
 // (not a ctx error) within budget+epsilon, the finishing goroutine exits once

@@ -935,6 +935,8 @@ func (s *Store) SelectHead(ref hashref.HashRef) error {
 // split-transaction mutation observably red.
 var commitBeforeOutcomeHook = func() {}
 
+var commitBodyHook = func(context.Context) {}
+
 // Commit is CommitContext without a caller lifetime. It is a compatibility
 // wrapper, removed when its callers migrate (row 23 policy tranche, M6b).
 func (s *Store) Commit(c Commit) error {
@@ -1004,6 +1006,7 @@ func (s *Store) CommitContext(ctx context.Context, c Commit) (err error) {
 	}
 
 	// Step 1 continued: compare-and-append guard.
+	commitBodyHook(ctx)
 	selected, hasSelected, err := selectedHeadTx(ctx, tx)
 	if err != nil {
 		return err
@@ -1031,6 +1034,7 @@ func (s *Store) CommitContext(ctx context.Context, c Commit) (err error) {
 
 	// Step 3: next immutable world row.
 	w := c.NextWorld
+	commitBodyHook(ctx)
 	if _, err := tx.ExecContext(ctx,
 		`INSERT OR IGNORE INTO worlds (world_ref, revision, state_root, log_head)
 		 VALUES (?, ?, ?, ?);`,
