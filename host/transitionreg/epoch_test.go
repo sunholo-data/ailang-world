@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"testing"
+
+	"github.com/sunholo-data/ailang-world/host/hashref"
 )
 
 // TestEpochsForInterpreterRefusesAbsentAndUnnominated is M3's direct pin of
@@ -30,5 +32,71 @@ func TestEpochsForInterpreterRefusesAbsentAndUnnominated(t *testing.T) {
 
 	if _, _, err := NewReader(s).EpochsForInterpreter(context.Background(), ref); !errors.As(err, new(*PublisherArchiveRequiredError)) {
 		t.Fatalf("bare-reader derivation = %v, want *PublisherArchiveRequiredError", err)
+	}
+}
+
+// TestPublishSetEpochTwinInterpretersKeepDistinctPins is AC-EPOCH-TWIN
+// (quorum r2, gpt6-astra; adopted in the form that pins D1's true
+// behaviour). The epoch check is ADVISORY release nomination: two archived
+// interpreters with DIFFERENT hashes and an IDENTICAL first --version line
+// are both epoch-eligible under the same nomination — and each published
+// descriptor keeps its OWN Interpreter HashRef (the authoritative pin, D1),
+// never a release-level stand-in, so card, invocation and replay can never
+// conflate them. (b) A release the registry does not nominate is refused
+// with the typed mismatch and the head is unchanged.
+func TestPublishSetEpochTwinInterpretersKeepDistinctPins(t *testing.T) {
+	const release = "TWIN-FAKE v1"
+	s, arch, first := publisherStore(t, release, release)
+	second, err := arch.Archive(fakeInterpreterScript(t, release+"\nCommit: twin-second", 0))
+	if err != nil {
+		t.Fatalf("archive twin interpreter: %v", err)
+	}
+	if first == second {
+		t.Fatal("premise: the twin interpreters must have different hashes")
+	}
+	ctx := context.Background()
+	pub := NewPublisher(s, arch)
+	for _, ref := range []hashref.HashRef{first, second} {
+		epochs, got, err := pub.EpochsForInterpreter(ctx, ref)
+		if err != nil || got != release || len(epochs) != 1 || epochs[0] != 1 {
+			t.Fatalf("EpochsForInterpreter(%s) = (%v, %q, %v), want ([1], %q)", ref, epochs, got, err, release)
+		}
+	}
+
+	alpha := storedSourceDescriptor(t, s, first, "tools.alpha")
+	beta := storedSourceDescriptor(t, s, second, "tools.beta")
+	res, err := pub.PublishSet(ctx, []Change{{ID: alpha.ID, Descriptor: &alpha}, {ID: beta.ID, Descriptor: &beta}})
+	if err != nil || res.Revision != 1 || res.Unchanged {
+		t.Fatalf("twin publish = (%+v, %v), want revision 1 with both entries", res, err)
+	}
+	snap, err := NewReader(s).ReadSnapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := snap.List()
+	if len(got) != 2 || got[0].ID != "tools.alpha" || got[1].ID != "tools.beta" {
+		t.Fatalf("twin entries = %+v, want tools.alpha and tools.beta", got)
+	}
+	if got[0].Interpreter != first || got[1].Interpreter != second {
+		t.Fatalf("published pins = (%s, %s), want each descriptor's OWN interpreter (%s, %s): the epoch nominates a release, the HashRef stays authoritative",
+			got[0].Interpreter, got[1].Interpreter, first, second)
+	}
+
+	other, err := arch.Archive(fakeInterpreterScript(t, "TWIN-OTHER v2", 0))
+	if err != nil {
+		t.Fatal(err)
+	}
+	gamma := storedSourceDescriptor(t, s, other, "tools.gamma")
+	_, err = pub.PublishSet(ctx, []Change{{ID: gamma.ID, Descriptor: &gamma}})
+	var mismatch *InterpreterEpochMismatchError
+	if !errors.As(err, &mismatch) || mismatch.ID != "tools.gamma" || mismatch.Release != "TWIN-OTHER v2" || len(mismatch.Nominating) != 0 {
+		t.Fatalf("non-nominated release = %v, want *InterpreterEpochMismatchError for tools.gamma with no nominating epoch", err)
+	}
+	after, err := NewReader(s).ReadSnapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if after.Head != snap.Head || after.Revision != 1 || len(after.List()) != 2 {
+		t.Fatalf("after refusal: head %s rev %d entries %d, want unchanged (%s, 1, 2)", after.Head, after.Revision, len(after.List()), snap.Head)
 	}
 }
