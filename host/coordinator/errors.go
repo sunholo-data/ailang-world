@@ -76,3 +76,11 @@ func (e *UnconfirmedError) Error() string {
 	return fmt.Sprintf("coordinator: invocation %s outcome not confirmed: %v", e.InvocationID, e.Err)
 }
 func (e *UnconfirmedError) Unwrap() error { return e.Err }
+
+// InFlightError (R17) refuses a concurrent retry of the same invocation ID.
+// The caller may resend after the current call finishes to reconcile its receipt.
+type InFlightError struct{ InvocationID string }
+
+func (e *InFlightError) Error() string {
+	return fmt.Sprintf("coordinator: invocation %s is in flight", e.InvocationID)
+}

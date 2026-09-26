@@ -14,6 +14,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/capsule"
@@ -51,7 +52,11 @@ type Config struct {
 }
 
 // Coordinator dispatches authorized invocations.
-type Coordinator struct{ cfg Config }
+type Coordinator struct {
+	cfg Config
+	// inFlight protects one process's in-progress invocation IDs. The store's single-process writer premise bounds this guard.
+	inFlight sync.Map
+}
 
 // New validates cfg: a missing seam or a non-positive cap is a construction
 // error, never "unlimited".
@@ -194,6 +199,10 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 		return Result{}, err
 	}
 	id := InvocationID(call.EpisodeID, call.TaskID)
+	if _, loaded := c.inFlight.LoadOrStore(id, struct{}{}); loaded {
+		return Result{}, &InFlightError{InvocationID: id} // R17
+	}
+	defer c.inFlight.Delete(id)
 	// Reconcile before anything runs: a resent task id is answered from the
 	// journal and never re-executed or re-committed.
 	rc, seen, err := c.cfg.Store.GetReceipt(id)
