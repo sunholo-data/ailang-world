@@ -1,6 +1,6 @@
 # w-transition-invocation-coordinator — The propose → verify → commit coordinator behind `/a2a/` `tasks/send` (row 106)
 
-**Status**: Planned — design + prototype (iteration 196, designer `claude:claude-opus-5-5`; the previous rotation entry `pi:ollama/kimi-k3` was quota-cut after research only, so nothing is inherited from it).
+**Status**: Planned — **REVISION 1** after quorum round 1 (BLOCKED 2/2; see "Quorum log"). Design + prototype (iteration 196, designer `claude:claude-opus-5-5`; the previous rotation entry `pi:ollama/kimi-k3` was quota-cut after research only, so nothing is inherited from it).
 **Item**: queue row 106 of `design_docs/world-mission.md` (`w-transition-invocation-coordinator`), regroom position 2, now the head of the clause-6 critical path after row 107 landed (`b7cfbdb`).
 **Clauses**: clause-6 (*"the transition registry is served over MCP (capability-filtered per session) and an A2A agent card is published; no new wire protocols"*) and clause-3 (*"every effect goes through the broker with a capability + budget check; effect results are recorded (replay input); capsules run with a physical isolation floor … No ambient-authority path exists from an agent to the outside world"*). It is also the World arm of row 93 (non-inferiority floor run). Row 108 (MCP dispatch, blocked upstream) will dispatch into the same coordinator.
 **Estimate**: ~2d as the row says. Seven milestones of ≤ ~150 production code lines each, sized from the prototype's measured code lines (V27). **First landable slice = M1–M5**, which makes `/a2a/` answer a real result. M6 (the real-interpreter daemon end-to-end run plus the QUICKSTART) closes the slice if velocity matches row 107, which landed 7 milestones in one iteration. The fallback split point is after M4: the coordinator lands with tests, and `/a2a/` keeps refusing until M5.
@@ -64,6 +64,12 @@ All commands were run in `/Users/voightkampff/dev/sunholo-data/.design-wt-iter19
 | V21 | Kernel commit laws the Go plan must satisfy | `sed -n 45,95p world/transitions.ail` → `verify` accepts iff `proposalMatchesWorld` (input world = current `stateRoot`); `applyRevision` `ensures result.revision == w.revision + 1 && stateRoot == outputWorld && logHead == nextLogHead` |
 | V22 | Clause 7's package pipeline is attended-only (so it cannot be reused for server-side invocation) | `grep -n "func requireAttendedOperator\|func refuseAutomationEnvironment" cmd/world-publish/fences.go` → `:226`, `:182` (controlling-TTY probe + typed phrase + CI-env refusal, row 107 F9) |
 | V23 | Baseline green for the packages this row touches | `AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/capsule/ ./host/transitionreg/ ./host/projection/ ./host/store/` → 4 × `ok` (30.5s / 16.0s / 0.9s / 11.0s) |
+
+| V30 | (revision 1, objection 2) The durable steps take no context. The pool is a single connection. `busy_timeout` bounds lock waits only | `grep -n "func (s \*Store) AppendIntent\|func (s \*Store) Commit(" host/store/*.go` → `journal.go:411 AppendIntent(id string, intent JournalIntent)`, `store.go:874 Commit(c Commit) error` (no `context.Context` parameter on either, nor on `journal.go:813 GetReceipt(id string)`); `grep -n "s.db.Begin()"` → `store.go:909`, `journal.go:420` (`Begin`, not `BeginTx(ctx, …)`); `grep -n SetMaxOpenConns host/store/store.go` → `:305 db.SetMaxOpenConns(1)`; `sed -n 180,187p host/store/writer_lock.go` → `const busyTimeoutMillis = 2000`, commented "a measured margin, not a bound". **Control** (the instrument can see a ctx-taking store call): `grep -n "func (s \*Store) GetObject" host/store/store.go` → `:475 GetObject(ctx context.Context, ref hashref.HashRef)` |
+| V31 | A commit-bound `Commit` writes its `committed` outcome in the same transaction as the world | `sed -n 992,1000p host/store/store.go` → `// Step 6: append the receipt in this same transaction.` … `Status: "committed", ResultRef: c.NextWorld.Ref`; `:1019` `tx.Commit()` is the single commit |
+| V32 | (revision 1, objection 1) The skill ID is `Descriptor.ID`. It is the card's `skills[].id` and the key `Bind` looks up | `grep -n "^\tID " host/transitionreg/transitionreg.go` → `:22 ID string` (first field of `Descriptor`); `grep -n '"id": d.ID' host/projection/projection.go` → `:240 "id": d.ID, "name": d.Title, …`; `grep -n "snap.Lookup(id)" host/transitionreg/bind.go` → `:65 d, ok := snap.Lookup(id)`; `grep -n "SkillID: d.ID" host/coordinator/plan.go` → `:79` |
+| V33 | Broker recovery reports an intent without an outcome and never resolves it | `sed -n 16,18p host/broker/recover.go` → "Recovery only reports this ambiguity; it never calls an effect handler or writes a journal outcome." |
+| V34 | Pre-existing macOS flake in `host/capsule` (not caused by this row) | `TestOrdinaryOverflowCarriesNoESRCH` failed once in the revision-1 `go test ./host/coordinator/ ./host/capsule/ ./host/broker/` run: `capsule: overflow kill: operation not permitted` (EPERM from `kill(-pgid)`). Stress, with both binaries run concurrently under the same load: prototype `capsule.go` **3/320** failures, pristine `HEAD` `capsule.go` (built from `git show HEAD:…`, then restored byte-identical, `cmp` OK) **3/320**. The two agree, so the fault is pre-existing: macOS returns EPERM, not ESRCH, for a zombie-only group. Out of scope; filed as an observation for the controller (row 24's ESRCH handling does not cover EPERM) |
 
 Prototype-era rows (V24+) are listed under **Prototype** below.
 
@@ -179,12 +185,15 @@ The method is **`Dispatch`**, not `Invoke`. A projection-side call `c.Invoke(...
 
 ### Order of operations — ONE bounded context
 
-The **deadline source** is the `/a2a/` handler: `ctx, cancel := context.WithTimeout(r.Context(), h.invokeWait)`. Here `invokeWait` is a new required `projection.Config.InvokeWait`. The daemon sets it to `invokeDeadline = 20 * time.Second`, which is below `writeTimeout = 30s` (V14) so the JSON-RPC answer can always be written. `projection.New` refuses `InvokeWait <= 0` and `InvokeWait >= writeTimeout` is refused by the daemon's construction. That same `ctx` flows unreplaced through resolution → snapshot → every coordinator step → `capsule.RunContext` (whose child context is `WithTimeout(ctx, 60s)`, so the earlier deadline wins).
+The **deadline source** is the `/a2a/` handler: `ctx, cancel := context.WithTimeout(r.Context(), h.invokeWait)`. Here `invokeWait` is a new required `projection.Config.InvokeWait`. The daemon sets it to `invokeDeadline = 20 * time.Second`, which is below `writeTimeout = 30s` (V14), leaving a 10 s margin for the durable steps and the response write in the common case. `projection.New` refuses `InvokeWait <= 0`, and the daemon's construction refuses `InvokeWait >= writeTimeout`. That same `ctx` flows unreplaced through resolution → snapshot → every coordinator step that accepts a context → `capsule.RunContext` (whose child context is `WithTimeout(ctx, 60s)`, so the earlier deadline wins).
+
+**What the deadline bounds, stated exactly as strong as the code (revision 1, objection 2).** The invocation deadline bounds steps 1–9 and the pre-boundary check at the start of step 10. **It does not bound the durable steps.** `GetReceipt` (step 1b), `AppendIntent` and `Commit` (step 10) take no context, so no invocation deadline reaches them. They are bounded only by what the store itself bounds; see "Bounded waits — what is and is not bounded" below. **Nothing in this design guarantees that a JSON-RPC answer is written before `writeTimeout`.** What it guarantees instead is that (i) a commit that landed is never reported as a failure, and (ii) a client that got no answer can learn the outcome by resending the same task id, without anything re-executing (reconciliation, below).
 
 | Step | What | Composes | Refusal (typed) |
 |---|---|---|---|
 | 0 | (projection) resolve session; capture ONE `transitionreg.Request` | `authority.ResolveContext`, `transitionreg.NewRequest` (existing) | existing denials |
 | 1 | validate call: `TaskID` non-empty and ≤ 128 bytes of `[A-Za-z0-9._-]`; canonical input = `json.Marshal(Input)` ≤ `MaxInput` | pure | **R1** `*InvalidCallError{Field}` |
+| 1b | **reconcile**: `GetReceipt(id)` (no ctx). **Resolved** → read the committed record/output/world back and return that result with `Reconciled: true`, with **no** execution and **no** commit. **Intent without outcome** → refuse. **Absent** → continue | store journal | **R15** `*NotCommittedError` |
 | 2 | **propose**: `bound := transitionreg.Bind(call.Request.Registry, SkillID, call.Request.Caps, cfg.Binder(EpisodeID, grants))` | `transitionreg.Bind` → `broker.SessionBinder.Bind` | **R2** `*transitionreg.TransitionAbsentError`, **R3** `*transitionreg.AccessDeniedError`, **R4** bind error (wrapped) |
 | 3 | **verify (pins)**: build `Proposal` from the bound descriptor, with `TransitionFn` replaced by `*PinnedFn` when the caller pinned one; `bound.Check(p)` | `Bound.Check` | **R5** `*transitionreg.ProposalMismatchError` |
 | 4 | effect floor: `len(d.DeclaredEffects) != 0` → refuse (capsule is `--caps ""`) | pure | **R8** `*EffectsUnsupportedError` |
@@ -193,9 +202,30 @@ The **deadline source** is the `/a2a/` handler: `ctx, cancel := context.WithTime
 | 7 | **execute**: `RunContext(ctx, Entry{d.Interpreter, src, Args: json.Marshal(string(canonicalInput))})` | capsule | **R9** `*IncompatibleError` (stderr carries the pinned interpreter's `ARG_DECODE_MISMATCH` or `entrypoint 'main' not found`); **R10** `*ExecutionError` (any other exec failure, output limit, capsule timeout); **R11** `ctx.Err()` (deadline/cancel, returned wrapped so `errors.Is(err, context.DeadlineExceeded)` holds) |
 | 8 | output: strip one trailing `\n`, `len ≤ MaxOutput`, must decode to a JSON object | pure | **R12** `*OutputError` |
 | 9 | **plan commit** (pure core, M3): input/output/record objects, next world, entry, intent | pure `planInvocation` | — (pure, total on validated inputs) |
-| 10 | **commit boundary**: `if err := ctx.Err(); err != nil` → return R11 (**no durable mutation**). Then `AppendIntent(id, intent)`, then `Commit(store.Commit{InvocationID: id, …})` | store journal | **R13** `*store.DuplicateInvocationError` (task id reused with different content); **R14** `*store.ConflictError` (world head moved during execution: retryable); other store errors wrapped |
+| 10 | **commit boundary**: `if err := ctx.Err(); err != nil` → return R11 (**no durable mutation**). Then `AppendIntent(id, intent)`, then `Commit(store.Commit{InvocationID: id, …})`. Neither takes ctx. **After `Commit` returns nil the result is success, whatever the ctx state** | store journal | `AppendIntent` error → returned as-is, and `Commit` was never called, so nothing landed (a typed `*store.DuplicateInvocationError` is defensive only: step 1b answers a seen id first). **R14** `*store.ConflictError`, returned bare: the store compares the head before any write in the same transaction and rolls back (V17), so it definitively did not land. **R16** `*UnconfirmedError` for any other `Commit` error: the outcome is not confirmed to this caller |
 
-The **invocation ID** is `"a2a:" + EpisodeID + ":" + TaskID`. The `effect:` namespace the journal refuses is never produced (V17). After step 10 begins, the store's own transaction makes the commit all-or-nothing. An intent without an outcome is the landed journal's recoverable-receipt state (`PendingIntents`), the same shape the effect journal already recovers.
+The **invocation ID** is `"a2a:" + EpisodeID + ":" + TaskID`. The `effect:` namespace the journal refuses is never produced (V17). After step 10 begins, the store's own transaction makes the commit all-or-nothing. A commit-bound `Commit` writes its `committed` outcome in the same transaction as the world, log and head rows (V31), so **resolved receipt ⇔ commit landed**. An intent without an outcome is the landed journal's indeterminate state, which broker recovery only *reports* and never resolves (V33). The coordinator follows the same rule: it never writes an outcome itself, never re-executes, and never re-commits.
+
+### Bounded waits — what is and is not bounded (revision 1, objection 2)
+
+| Wait | Bounded by | Measured |
+|---|---|---|
+| Session resolution, registry/capability snapshot, source/head/world reads | the invocation `ctx` (row 23's plumbing: store reads inherit the caller's context) | existing, row 39/40 |
+| Capsule execution | `min(ctx deadline, 60 s exec allowance)`, with process-group kill | AC-CAP-CTX, MUT-CTX-BG (V26) |
+| Waiting for the **single pooled connection** in `GetReceipt` / `AppendIntent` / `Commit` | **nothing**. `s.db.Begin()` without a context (`store.go:909`, `journal.go:420`) on a `SetMaxOpenConns(1)` pool (`store.go:305`) waits behind every in-flight in-process store call. Context-carrying reads end at their own deadlines; context-free writers (`/v1/commit`, other invocations' commits) do not | **not bounded** (V30) |
+| SQLite lock waits inside those transactions | `busy_timeout(2000)` per connection (`writer_lock.go:187`), which bounds SQLite *lock* waits only. The daemon's own comment calls the observed ~2.05 s "a measured margin, not a bound" | V30 |
+| Transaction body and fsync | nothing in the store | **not bounded** |
+
+So the durable tail is unbounded in the worst case, and the 10 s margin between `InvokeWait` and `writeTimeout` is a margin, **not a bound**. The fix, a context-accepting `Commit`/`AppendIntent` that is cancellable before the durable commit (all-or-nothing, with uncertain outcomes reconciled and never blindly retried), is ratified policy `D-WORLD-37` = A and is owned by **row 23's policy tranche**. This row does **not** change `store.Commit` (R-106-11).
+
+### What the client sees when the durable tail overruns (revision 1, objection 2(b))
+
+- **Commit lands, response written in time**: `A2AResult`.
+- **Commit lands after the write deadline.** `net/http`'s `WriteTimeout` does not stop the handler. The handler finishes, the commit stays durable, and the response write fails, so the client sees a **transport error** (a closed connection or read timeout), not a JSON-RPC error. This is `net/http`'s documented behaviour, not re-measured here; M6 turns it into `TestA2AResendAfterWriteTimeout` on a real loopback server. The client is therefore **never sent a "failed" body for a commit that landed**. It is sent nothing. Resending the same task id returns the committed result from the journal (step 1b, `Reconciled: true`). `TestDispatchRefuses/R13_resend_reconciles_committed` pins that, and asserts the transition did not re-run.
+- **The deadline fires *during* `Commit` and the commit lands**: `Dispatch` returns success, and ctx is not re-checked after `Commit` (`TestCommitBoundary/deadline_during_commit_reports_success`, killed by MUT-POSTCOMMIT-CTX).
+- **`Commit` returns an untyped error**: `-32603 invocation outcome is not confirmed; resend the same task id`. The wire says *unconfirmed*, never *failed*. `R16_unconfirmed_then_reconciled` makes `Commit` land and then report an error. The first answer is `UnconfirmedError`, and the resend reconciles to the landed commit.
+- **The resend finds an intent with no outcome**: `-32603 invocation was not committed; send a new task id` (R15). This holds because the store is single-connection and single-process-writer (writer lock, row 107 F8): the receipt read cannot run while that id's commit is in flight in this process, and no other process can hold the writer. An intent with no outcome therefore did not commit. **Stated limit:** this relies on the single-connection pool, and it becomes a residual if row 23 or any later row widens the pool (R-106-11).
+- **Honest gap**: a client that never resends gets no answer after an overrun. The journal holds the truth, and there is no push channel (the card says `pushNotifications: false`).
 
 ### The pure core (M3): `planInvocation` — the kernel laws, transcribed
 
@@ -206,11 +236,13 @@ type plan struct {
 	Entry   store.LogEntry
 	Intent  store.JournalIntent
 }
-func planInvocation(w store.World, id string, d transitionreg.Descriptor,
-	input, output []byte, episodeID string, logicalTime int64) plan
+func planInvocation(w store.World, id, episodeID string, d transitionreg.Descriptor,
+	input, output []byte, logicalTime int64) plan
 ```
 
-- Objects: `world/invocation-input/v1` (canonical input bytes), `world/invocation-output/v1` (output bytes), `world/invocation-record/v1` (the canonical JSON record: invocation ID, episode, skill ID, `TransitionFn`, `Interpreter`, `SemanticsEpoch`, input ref, output ref). Each object's `Hash = SHA-256(payload)` and `InterfaceHash = SHA-256(semanticID)`, the `replay.SourceObject` convention.
+The **skill ID is `d.ID`**, the descriptor's own `ID string` field (`host/transitionreg/transitionreg.go:22`). It is the same field the A2A card emits as `skills[].id` (`host/projection/projection.go:240`, `"id": d.ID`) and the same key `transitionreg.Bind` looks up (`snap.Lookup(id)`, `bind.go:65`). So the planner needs no separate `skillID` parameter: the descriptor it receives *is* the one bound under that ID (V32). The record's `skillId` is written as `SkillID: d.ID` (`host/coordinator/plan.go:79`), and `TestPlanRecordSkillID` kills MUT-SKILLID.
+
+- Objects: `world/invocation-input/v1` (canonical input bytes), `world/invocation-output/v1` (output bytes), `world/invocation-record/v1` (the canonical JSON record: invocation ID, episode, **skill ID = `Descriptor.ID`**, `TransitionFn`, `Interpreter`, `SemanticsEpoch`, input ref, output ref). Each object's `Hash = SHA-256(payload)` and `InterfaceHash = SHA-256(semanticID)`, the `replay.SourceObject` convention.
 - **Law `applyRevision` (V21):** `Next.Revision == w.Revision + 1`, `Next.StateRoot == outputRef`, `Next.LogHead == Entry.EntryHash`.
 - **Law `proposalMatchesWorld` (V21):** the commit's `ObservedHead == w.Ref`. `store.Commit`'s CAS turns a moved head into R14, so the verify contract is enforced *by the store at the commit boundary* and not only by the planner.
 - Entry: `EntryIndex = w.Revision + 1`, `PrevEntryHash = w.LogHead`, `TransitionFn`/`Interpreter`/`SemanticsEpoch` from the descriptor, `WrittenBy = "coordinator:a2a"`, `TransitionRef = recordRef`. `EntryHash = SHA-256(canonical JSON of header + TransitionRef)`. `Next.Ref = SHA-256(canonical JSON of {revision, stateRoot, logHead})`.
@@ -244,7 +276,10 @@ When the daemon has **no** pinned interpreter (`cfg.AilangBin == ""`, V16), it h
 | R1 invalid call, bad parts, bad `transition_fn` | -32602 | `invalid params` (existing `msgInvalidParams`) |
 | R2 absent (raced out after admission), R3 access denied | -32602 | `not authorized` (existing `msgNotAuthorized`; never names the gap) |
 | R5 proposal pin mismatch | -32602 | `proposal does not match the registered transition` |
-| R13 duplicate task id | -32602 | `task id already used in this session` |
+| R13 resent task id, committed | — | **success**: `A2AResult` carrying the originally committed result (reconciled from the journal) |
+| R15 resent task id, intent without outcome | -32603 | `invocation was not committed; send a new task id` |
+| R16 `Commit` returned an untyped error | -32603 | `invocation outcome is not confirmed; resend the same task id` |
+| `*store.DuplicateInvocationError` (defensive; unreachable after step 1b) | -32602 | `task id already used in this session` |
 | R4 bind error, R6 source error, other store errors | -32603 | `transition invocation is not available in this daemon` (existing `notAvailableMessage`) |
 | R7 no world | -32603 | `no world is selected; commit a genesis world first` |
 | R8 effects declared | -32603 | `transitions that declare effects cannot be invoked in this daemon` |
@@ -252,7 +287,7 @@ When the daemon has **no** pinned interpreter (`cfg.AilangBin == ""`, V16), it h
 | R10 execution failed | -32603 | `transition execution failed` |
 | R11 deadline/cancel | -32603 | `invocation exceeded its deadline` |
 | R12 output invalid | -32603 | `transition output is not a JSON object` |
-| R14 conflict | -32603 | `world head moved during invocation; retry` |
+| R14 conflict | -32603 | `world head moved during invocation; not committed; send a new task id` |
 
 The mapping is a single `switch` over `errors.As` in `projection.dispatchError`, and each arm is a mutation unit (see Non-Vacuity). No stderr, path, skill name or store detail is ever interpolated.
 
@@ -266,11 +301,12 @@ The mapping is a single `switch` over `errors.As` in `projection.dispatchError`,
 | **M2** | `broker.OpenBinder` / `SessionBinder` (TR.C count stays 3; add the NEG detector control `NEG-session-binder`) | `host/broker/binder.go`, `binder_test.go`, `invoke_boundary_test.go` (+1 control row) | ~20 |
 | **M3** | coordinator pure core: `planInvocation`, record codec, refusal types + the five law tests | `host/coordinator/plan.go` (94), `errors.go` (28), law tests | 122 (measured) |
 | **M4a** | seams + construction: `Store`/`Runner`/`BinderFor`, `Config`, `New`, `Call`/`Result`, `InvocationID`, `validateCall`, `classifyExec`, `parseOutput` | `host/coordinator/coordinator.go` (first half) | ~90 |
-| **M4b** | `Dispatch` composition (steps 1–10), fake-runner tests for every refusal, real-interpreter tests (echo / zero-arity / replay) | `host/coordinator/coordinator.go` (Dispatch), `coordinator_test.go` | ~100 (M4a+M4b = 188 measured) |
+| **M4b** | `Dispatch` composition (steps 1–10), fake-runner tests for every refusal, real-interpreter tests (echo / zero-arity / replay) | `host/coordinator/coordinator.go` (Dispatch), `coordinator_test.go` | ~100 |
+| **M4c** | (revision 1) step 1b reconciliation: `GetReceipt` lookup, `committed` read-back, `NotCommittedError`/`UnconfirmedError`, bare-conflict rule, no post-commit ctx check; tests R13/R15/R16 + `deadline_during_commit_reports_success` | `host/coordinator/coordinator.go`, `errors.go`, `coordinator_test.go` | ~55 (M4a+M4b+M4c = 231 + 40 errors.go, measured) |
 | **M5** | `/a2a/` wiring: `InvokeWait`, `Coordinator` config, `allowedDescriptors` returns the `Request`, `dispatchError` mapping, `A2AResult`; daemon constructs the runner and coordinator iff an interpreter is archived; card description sentence updated | `host/projection/projection.go`, `projection_test.go`, `host/daemon/daemon.go` | ~120 |
 | **M6** | Daemon end-to-end (real pinned interpreter, in-process `httptest` recorder, no sockets): genesis commit → `PublishSet` the echo transition → `/a2a/ tasks/send` → result + `GET /v1/log/{i}` shows the entry → AC-REPLAY; `docs/QUICKSTART.md` §7 "invoke a published transition" (S7), marked *attended — pending first verbatim run* | `host/daemon/invoke_e2e_test.go`, `docs/QUICKSTART.md` | ~30 prod-doc + test |
 
-**First landable slice: M1–M5**, with M6 in the same iteration if velocity holds. **The prototype already implements M1–M4b** (see Prototype). **Split point if not**: M1–M4b land as "coordinator exists, tested, no production caller", and `/a2a/` stays constant until M5. That is honest, but the clause-6 value appears only at M5.
+**First landable slice: M1–M5**, with M6 in the same iteration if velocity holds. **The prototype already implements M1–M4c** (see Prototype). **Split point if not**: M1–M4c land as "coordinator exists, tested, no production caller", and `/a2a/` stays constant until M5. That is honest, but the clause-6 value appears only at M5.
 
 ## Acceptance Criteria
 
@@ -286,7 +322,11 @@ All commands run with `export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$H
 | AC-BINDER | `OpenBinder(...).Bind` returns a `BoundInvoker` whose `Request` refuses an undeclared triple | `go test ./host/broker/ -run TestOpenBinder` |
 | AC-LAW-REV / -STATE / -LOG / -PREV / -OBSERVED | Each kernel law named above holds on the plan | `go test ./host/coordinator/ -run 'TestPlanLaw'` |
 | AC-HAPPY | echo transition: `Dispatch` returns the output object, commits exactly one entry at revision+1, and the head moves | `go test ./host/coordinator/ -run 'TestDispatchEchoRealInterpreter'` |
-| AC-R1…R14 | Each refusal branch returns its typed error and **no durable mutation** (selected head unchanged, no intent row) — R13/R14 assert the intent row state explicitly | `go test ./host/coordinator/ -run 'TestDispatchRefuses'` |
+| AC-R1…R16 | Each refusal branch returns its typed error. Every pre-boundary refusal leaves **no durable mutation** (selected head unchanged, no receipt). R14 asserts a *bare* conflict (not `UnconfirmedError`). R15 and R13 assert the transition is **not re-executed** on a resend | `go test ./host/coordinator/ -run 'TestDispatchRefuses'` |
+| AC-SKILLID | (revision 1) the record's `skillId` equals `Descriptor.ID` and is non-empty | `go test ./host/coordinator/ -run 'TestPlanRecordSkillID'` |
+| AC-RECONCILE | (revision 1) a resent task id returns the originally committed result (`Reconciled: true`, same world/entry/record/output) without executing; a commit that landed but reported an error reconciles on resend | `go test ./host/coordinator/ -run 'TestDispatchRefuses/(R13_resend\|R16_unconfirmed)'` |
+| AC-POSTCOMMIT | (revision 1) a deadline that expires during the durable steps does not turn a landed commit into an error | `go test ./host/coordinator/ -run 'TestCommitBoundary/deadline_during_commit'` |
+| AC-RESEND-WIRE (M6) | (revision 1) on a real loopback server with a `writeTimeout` shorter than an injected `Commit` delay, the first request gets a transport error, the commit is durable, and a resend of the same task id gets `A2AResult` with the committed output | `go test ./host/daemon/ -run 'TestA2AResendAfterWriteTimeout'` |
 | AC-BOUNDARY | Cancel immediately before step 10 → no intent, head unchanged; a completed Dispatch → exactly one intent + one outcome (receipt) | `go test ./host/coordinator/ -run 'TestCommitBoundary'` |
 | AC-REPLAY | Re-executing the committed record's pins + input reproduces the committed output bytes | `go test ./host/coordinator/ -run 'TestReplayCommittedInvocation'` |
 | AC-INCOMPAT | Residual 8(c): the zero-arity fixture (checks, V10) returns `*IncompatibleError` | `go test ./host/coordinator/ -run 'TestDispatchIncompatibleRealInterpreter'` |
@@ -326,6 +366,12 @@ The prototype column reports the mutations executed in this worktree (see **Prot
 | MUT-R12 | `coordinator.go`: `err := json.Unmarshal(out, &obj); err != nil \|\| obj == nil` → `err := json.Unmarshal(out, new(any)); err != nil` | `TestDispatchRefuses/R12_output_not_object` | **KILLED** |
 | MUT-R13-JOURNAL | `plan.go`: `InvocationID: id, ObservedHead: w.Ref, Objects` → `InvocationID: "", …` (commit unbound from its intent) | `TestCommitBoundary/receipt` | **KILLED** |
 | MUT-R14-REBASE | `coordinator.go`: before `planInvocation`, re-read `SelectedHead`/`GetWorld` and plan against the new world (silent re-base) | `TestDispatchRefuses/R14_head_moved` | **KILLED** |
+| MUT-SKILLID | (rev 1) `plan.go`: `SkillID: d.ID,` → `SkillID: "",` | `TestPlanRecordSkillID` | **KILLED** |
+| MUT-RECONCILE-SKIP | (rev 1) `coordinator.go`: `if seen {` → `if false && seen {` | `TestDispatchRefuses/R13_resend_reconciles_committed` | **KILLED** |
+| MUT-R15 | (rev 1) `coordinator.go`: `if rc.State == store.ReceiptResolved {` → `if true {` | `TestDispatchRefuses/R15_resend_not_committed` | **KILLED** |
+| MUT-R16 | (rev 1) `coordinator.go`: `return Result{}, &UnconfirmedError{InvocationID: id, Err: err} // R16` → `return Result{}, err // R16` | `TestDispatchRefuses/R16_unconfirmed_then_reconciled` | **KILLED** |
+| MUT-R14-TYPED | (rev 1) `coordinator.go`: `if store.IsConflict(err) { // R14` → `if false { // R14` (conflict becomes "unconfirmed") | `TestDispatchRefuses/R14_head_moved` (asserts a bare conflict) | **KILLED** |
+| MUT-POSTCOMMIT-CTX | (rev 1) `coordinator.go`: insert `if err := ctx.Err(); err != nil { return Result{}, err }` after a successful `Commit` | `TestCommitBoundary/deadline_during_commit_reports_success` | **KILLED** |
 | MUT-ID-NS | `coordinator.go`: `return "a2a:" + episodeID` → `return "effect:" + episodeID` | `TestDispatchEchoRealInterpreter` (the journal refuses the namespace) | **KILLED** |
 | MUT-R4-BIND | `Dispatch`: swallow a binder error (fake `BinderFor` whose `Bind` fails) | `TestDispatchRefuses/R4_bind_error` (to add) | planned. The prototype has no R4 test; a validated registry cannot produce a failing `Bind`, so it needs a fake binder |
 | MUT-MAP-<Rn> (×12) | `projection.dispatchError`: map the arm to `codeInternal, notAvailableMessage` (for -32602 arms) or to `codeInvalidParams` (for -32603 arms) | `TestA2ADispatch/<Rn>` | planned (M5) |
@@ -365,7 +411,8 @@ The prototype column reports the mutations executed in this worktree (see **Prot
 - **R-106-6**: `protocol.Invoker` adapter for MCP. Owner: row 108.
 - **R-106-7**: `host/replay.Engine` passes `Args` for invocation entries. Owner: the next replay row. AC-REPLAY covers slice 1.
 - **R-106-8**: the transition sees only its input, not the current world state. Passing `{state, input}` needs a convention for state-object payloads, which today are arbitrary bytes. Owner: row 93's design, if its skills need state.
-- **R-106-9**: an idempotent *replay of the result* for a retried identical task (today: R13). Owner: executor's judgement (a `GetReceipt` lookup).
+- **R-106-9**: ~~idempotent replay of the result for a retried identical task~~. **Resolved in revision 1** (step 1b, M4c): a resent task id is answered from the journal.
+- **R-106-11** (revision 1, objection 2). **Unbounded durable tail.** `GetReceipt`, `AppendIntent` and `Commit` take no context (V30), so the invocation deadline does not bound them. Owner: **queue row 23's policy tranche**, ratified `D-WORLD-37` = A ("`Commit` accepts a ctx and may be cancelled before the durable commit, all-or-nothing; an uncertain outcome is reconciled, never blindly retried"). This row does not change `store.Commit`. **When it lands, this row adopts it as follows:** pass the invocation `ctx` unreplaced into the ctx-accepting `GetReceipt`/`AppendIntent`/`Commit`. Delete the separate pre-boundary `ctx.Err()` check if `Commit`'s own pre-durable cancellation subsumes it (keep MUT-R11-BOUNDARY's test either way). Map a pre-durable cancellation to R11 ("not committed"). Map an uncertain outcome to R16, reconciled by the step-1b resend. Keep "no ctx check after a successful `Commit`". It also owns the R15 inference's dependence on the single-connection pool: if the pool widens, R15 ("not committed") must become "indeterminate; resend later" until the in-flight commit is excluded.
 - **R-106-10**: an invocation does not debit the session's budget. The binding's caps are an immutable per-session snapshot (row 39). Clause 3's budget check applies to *effects*, and slice 1 has none (R8). Owner: R-106-3.
 
 ## Estimate honesty
@@ -398,10 +445,10 @@ AC13's invocation half is discharged at the Go level by AC-CAP-CTX (a blocked ca
 | `host/capsule/runcontext_test.go` | new: `TestRunContextArgs`, `TestRunContextCancel`, `TestRunContextRelaxedModule` | test |
 | `host/broker/binder.go` | new | 7 |
 | `host/broker/binder_test.go` | new: `TestOpenBinder` | test |
-| `host/coordinator/errors.go` | new | 28 |
+| `host/coordinator/errors.go` | new | 40 (rev 1; was 28) |
 | `host/coordinator/plan.go` | new | 94 |
-| `host/coordinator/coordinator.go` | new | 188 (to split M4a/M4b) |
-| `host/coordinator/coordinator_test.go` | new: 5 law tests, 3 real-interpreter tests, 16 refusal subtests, 2 boundary subtests, construction test | test |
+| `host/coordinator/coordinator.go` | new | 231 (rev 1; was 188), split M4a/M4b/M4c |
+| `host/coordinator/coordinator_test.go` | new: 5 law tests + `TestPlanRecordSkillID`, 3 real-interpreter tests, 18 refusal subtests (rev 1: R13 → resend-reconciles, + R15, R16; R14 asserts a bare conflict), 3 boundary subtests (rev 1: + `deadline_during_commit_reports_success`), construction test | test |
 
 **Verification rows for the prototype:**
 
@@ -414,9 +461,29 @@ AC13's invocation half is discharged at the Go level by AC-CAP-CTX (a blocked ca
 | V28 | `verify_ail.sh` sweeps only `design_docs/` and `world/` | `grep -n "ROOTS=" -A3 scripts/verify_ail.sh` → `"design_docs\|."`, `".\|world"`; exact manifest `LEG1_MODULES` at `:169` |
 | V29 | Mutation harness: every file restored byte-identical | `/tmp/iter196mut/mut.py` backs up with `shutil.copy`, applies each edit only if its anchor occurs exactly once, runs `go test -count=1 <pkg> -run <killer>`, restores from the backup, and asserts `filecmp.cmp(..., shallow=False)`. After the run, `git status --short` lists only this row's files (capsule.go modified; binder*, runcontext_test.go, host/coordinator/, this doc new) |
 
-**Mutation results: 26 of 26 executed mutations KILLED, 0 survived** (the table in Non-Vacuity; 5 planned rows are M5/M6/R4 obligations). Two honest notes from the run. (1) `MUT-R6-HASH`'s first form did not compile (`sum` unused); it was re-expressed and then killed. (2) Before execution, a read of the first draft found that `MUT-R7` would survive there: a second `GetWorld` guard also returned `WorldAbsentError`. This was reasoned, not executed against that draft. The draft was changed so that a head without a world row is store damage (untyped) and not "no world". The typed branch is now single and load-bearing.
+**Mutation results (revision 1): 32 of 32 executed mutations KILLED, 0 survived.** The whole harness was re-run after the revision-1 code change, including all 26 original mutations, whose anchors all still matched exactly once. Earlier, the original round was **26 of 26 KILLED, 0 survived** (the table in Non-Vacuity; 5 planned rows are M5/M6/R4 obligations). Two honest notes from the run. (1) `MUT-R6-HASH`'s first form did not compile (`sum` unused); it was re-expressed and then killed. (2) Before execution, a read of the first draft found that `MUT-R7` would survive there: a second `GetWorld` guard also returned `WorldAbsentError`. This was reasoned, not executed against that draft. The draft was changed so that a head without a world row is store damage (untyped) and not "no world". The typed branch is now single and load-bearing.
 
 **Design observations the prototype surfaced (folded into the design above):**
 
 - A parent-deadline expiry inside the capsule surfaces as `*capsule.TimeoutError{Limit: execTimeout}` (the capsule labels any `DeadlineExceeded` with its own allowance). The coordinator therefore checks **its own** `ctx.Err()` first on a runner error (R11 before R9/R10). MUT-R11-EXEC proves that order is load-bearing.
 - Input canonicalisation is `json.Marshal(map[string]any)` (sorted keys). Numbers arrive as `float64` from the upstream `A2AContent.Data` decoding, so integers above 2^53 lose precision *before* World sees them. That is an upstream wire-type property, recorded here and not fixed.
+
+**Revision-1 re-verification.** `go vet ./...` → clean. `AILANG_BIN=… go test -count=1 ./host/coordinator/ ./host/capsule/ ./host/broker/` → coordinator `ok`, broker `ok`; capsule hit the pre-existing EPERM flake once (V34). A standalone re-run of `go test -count=1 ./host/capsule/` → `ok` (19.0 s).
+
+## Quorum log
+
+### Round 1 (iteration 196): BLOCKED 2/2 (gemini-3-1-pro, gpt6-astra present; glm and kimi ABSENT on the Ollama weekly limit)
+
+**Objection 1 (gemini-3-1-pro), verbatim:** "The pure core signature `planInvocation` in M3 is missing the `skillID` parameter. Step 9 explicitly requires the `skill ID` to be written into the `world/invocation-record/v1` canonical JSON record. Because `transitionreg.Descriptor` does not store the skill ID (it is the registry key), the pure function has no way to read it and cannot construct the record object as specified."
+
+*Controller measurement:* premise **FALSE**. `transitionreg.Descriptor` has `ID string` (`host/transitionreg/transitionreg.go:22`), and the prototype's `plan.go:79` already writes `SkillID: d.ID`. The doc never *said* that the skill ID is `Descriptor.ID`, so a reader could not see it.
+
+*Changed:* the pure-core section now states that the skill ID is `d.ID`, and that this is the same field the card emits as `skills[].id` (`projection.go:240`) and the key `Bind` looks up (`bind.go:65`). The record bullet says **skill ID = `Descriptor.ID`**. The signature block now matches the prototype's real parameter order. New Verification row **V32** (greps with file:line). New **AC-SKILLID**, new test `TestPlanRecordSkillID`, and new mutation **MUT-SKILLID** (`SkillID: d.ID,` → `SkillID: "",`): **KILLED**.
+
+**Objection 2 (gpt6-astra), verbatim:** "The claimed end-to-end invocation deadline stops at step 10. AppendIntent and Commit take no context, and checking ctx.Err() before calling them does not bound either call. The document provides no verified upper bound for their lock acquisition, database waits, or transaction completion. Consequently, the claim that a 20-second invocation deadline inside a 30-second write timeout guarantees an answer is unsupported and violates the bounded-waits gate."
+
+*Controller measurement:* premise **TRUE**. `func (s *Store) Commit(c Commit) error` (`store.go:874`) opens `s.db.Begin()` with no context. The pool is `SetMaxOpenConns(1)` (`store.go:305`), so an in-process caller can wait for the single connection with no bound. `busy_timeout` is 2000 ms (`writer_lock.go:187`), which bounds SQLite lock waits only. The ratified policy `D-WORLD-37` = A is owned by row 23's policy tranche (not landed), and `store.Commit` must not change in this row.
+
+*Changed:* (a) The claim is weakened to match the code. The deadline paragraph now says the invocation deadline bounds steps 1–9 and the pre-boundary check. It does **not** bound `GetReceipt`/`AppendIntent`/`Commit`, and "nothing in this design guarantees that a JSON-RPC answer is written before `writeTimeout`". The prior phrase "so the JSON-RPC answer can always be written" is **removed**, and the 10 s gap is called a margin, not a bound. A new "Bounded waits" table lists what bounds each wait and what does not (**V30**, with a positive control; `AppendIntent` was checked the same way: `journal.go:411`/`:420`, no ctx, `Begin()`). (b) A new section, "What the client sees when the durable tail overruns", covers the write timeout firing mid-commit. The handler finishes and the commit is durable, so the client gets a transport error, **never a "failed" body**. A resend of the same task id is answered from the journal (resolved ⇒ the committed result, and nothing re-runs). An untyped `Commit` error is answered **"not confirmed; resend the same task id"**, never "failed". A conflict is answered "not committed" only because the store proves the rollback (V17). This required new code, implemented and tested in the prototype (M4c): step 1b reconciliation, `NotCommittedError` (R15), `UnconfirmedError` (R16), the bare-conflict rule, and no ctx check after a successful `Commit`. It carries 5 new mutations (MUT-RECONCILE-SKIP, MUT-R15, MUT-R16, MUT-R14-TYPED, MUT-POSTCOMMIT-CTX), **all KILLED**, and 4 new/changed tests. The honest remaining gap is stated: a client that never resends gets no answer after an overrun. (c) New residual **R-106-11** names row 23's policy tranche (`D-WORLD-37` = A) as the owner of a ctx-accepting `Commit`/`AppendIntent`/`GetReceipt`, and states what this row adopts when it lands. `store.Commit` is untouched. (d) The prototype's `Dispatch` doc comment now says the durable steps take no context and are bounded only by the store. `go vet ./...` is clean. The full mutation harness (32 mutations, including the 26 originals) was re-run: 32/32 KILLED.
+
+**Also found during revision 1 (not an objection):** V34, the pre-existing macOS EPERM flake in `host/capsule`'s `TestOrdinaryOverflowCarriesNoESRCH`. It fails 3/320 on both the pristine and the prototype `capsule.go` under the same load. Reported, not fixed here.
