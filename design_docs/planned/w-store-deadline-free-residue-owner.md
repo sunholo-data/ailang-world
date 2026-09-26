@@ -31,6 +31,9 @@ Why this is not a package: this proposal changes Go call signatures and SQLite r
 propagation at the existing host boundary. No world semantics, `.ail`, schema, or compiler
 change is proposed. S2/S3 and DESIGN §14 favor leaving this plumbing at that boundary (Vrefs).
 
+The root census covers **host/ and cmd/**. A separate surface guard rejects non-test Go
+files elsewhere, except the two explicitly named compiler-regression reproducers (§3, Vsurface).
+
 ## §2 Decisions Q1–Q3: thread existing lifetimes, without choosing a duration
 
 ### Q1 — approvals: all eight reads receive the real invoking context
@@ -112,9 +115,9 @@ to OPEN row 112. Do not silently thread the new read ctx through that subprocess
 ## §3 Q4 — empty ratchet plus an independent root census
 
 **Measured baseline:** the controller's grep returns 29 lines, but two are comments; AST parsing
-finds **27 executable constructor calls across 58 production files**. In broker/registry/replay,
+finds **27 executable constructor calls across 58 production files in host/ and cmd/**. In broker/registry/replay,
 there are **14** calls: broker 10 (8 reads + 2 mint roots), registry 2, replay 2 (read + subprocess).
-After the prototype: **15** roots repository-wide, **1** in those three packages (F7, Vcalls,
+After the prototype: **15** roots in host/ and cmd/, **1** in those three packages (F7, Vcalls,
 Vroots). These numbers justify strengthening the gate; a direct-argument-only test misses the
 very hoisting failure this row is meant to expose.
 
@@ -129,15 +132,26 @@ very hoisting failure this row is meant to expose.
    replay's read entry points. Assert ≥58 scanned files plus seven mandatory anchors:
    approve.go, publish_op.go, registry.go, replay.go, daemon.go, cmd/world-publish/main.go,
    and store.go. Empty or partial scans cannot satisfy the new empty expectation.
+   `TestProductionGoSurface` walks the module root (excluding .git and vendor directories),
+   rejecting any non-test Go file outside host/ and cmd/ except exactly
+   `design_docs/verification/w-race-gate-blindspot/racecontrol/main.go` and
+   `design_docs/verification/w-race-gate-blindspot/repro/main.go`. It checks untracked files too
+   and requires both allow-listed files to exist. Vsurface measures 58 inside / 2 outside;
+   both exceptions have zero `context.` matches. M35 proves a new top-level tree fails.
 4. Pair syntax with real-store cancellation and exact-context identity witnesses. The broker
    mint witness requires **5 object + 4 head reads**, covering all six non-publish sites;
    invoke validation requires **2 object reads**. These are dynamic fixture counts, distinct
    from the eight unique source sites (Vbehavior).
 
 **What zero proves:** in the scanned production files, the named getter calls contain no direct
-Background/TODO spelling. With the second test, unapproved context-root selector references
-cannot be introduced anywhere in the two scanned trees, including a local-variable hoist.
-With the behavioral tests, the exercised paths pass their caller's context to real store reads.
+Background/TODO spelling. The root census rejects the drilled introductions in host/ and cmd/:
+local-variable Background hoists (M25), renamed `c "context"` imports with `c.Background()`
+(M30), `context.WithoutCancel(ctx)` references (M31), function-valued
+`f := context.Background; ... f()` references (M32), package-level
+`var rootCtx = context.Background()` (M33), and standalone `context.TODO()` roots (M34).
+M35 witnesses the separate surface guard against a new non-test Go tree. These are syntax
+witnesses, not exhaustive dataflow proofs. With the behavioral tests, the exercised paths pass
+their caller's context to real store reads.
 
 **What it does not prove:** a deadline exists; an external caller supplied a non-nil context;
 a custom Context implementation obeys the contract; every possible dataflow preserves ctx;
@@ -148,11 +162,11 @@ supply the intended lifetime, and the read chain must preserve it.* The context-
 cancellation assertions pin that condition on the touched chains. The runtime boundary guard
 is still needed to reject all deadline-free inputs, including ones source analysis cannot see.
 
-## §4 Every remaining root, with reason
+## §4 Every remaining root in host/ and cmd/, with reason
 
 All rows are AST-observed once in the prototype (Vroots); behavior/classification comes from
 F3/F5 and Vguardpaths/Votherroots/Vwrites. These are **compatibility exceptions**, not approval
-of permanent deadline-free operation. No other Background/TODO root is silently introduced.
+of permanent deadline-free operation. The census pins Background/TODO/WithoutCancel references in host/ and cmd/.
 
 | File / function (`context.Background`) | Why it remains / store implication |
 |---|---|
@@ -232,7 +246,7 @@ values Mark has never seen. The guard remains declared, and row 23 remains its n
 No elapsed-time oracle is used by the new behavioral tests. Exact error identity
 `errors.Is(err, context.Canceled)`, store-delegating context witnesses, read counts, and live
 controls are the oracles (Vbehavior). The harness restores each file in `finally`; all mutants
-compiled and failed a named test assertion. Detailed commands/output are `M01.txt`–`M29.txt`;
+compiled and failed a named test assertion. Detailed commands/output are `M01.txt`–`M35.txt`;
 `mutate.py` and `mutations.json` preserve the mutations and selectors (Vmut).
 
 | Acceptance | Mutation executed on prototype | Assertion / selector | Result |
@@ -250,13 +264,19 @@ compiled and failed a named test assertion. Detailed commands/output are `M01.tx
 | AC11 hoisting is visible | M25 assign Background to Execute's local ctx before helpers | `TestProductionContextRoots`: unapproved constructor in Execute | **1/1 killed** |
 | AC12 direct literal regression is red at zero | M26 getter gets TODO; M27 gets Background | `TestNoNewDeadlineFreeStoreReads`: count exceeds empty pin | **2/2 killed** |
 | AC13 errors from newly threaded getter propagate | M28 cache error arm returns nil | `TestVerifyResultCallerCancellation` | **1/1 killed** |
+| AC15 renamed import resolution | M30 rename context to c in approve.go and add c.Background() | `TestProductionContextRoots`: Background=16 | **1/1 killed** |
+| AC16 cancellation detachment is visible | M31 add context.WithoutCancel(ctx) | `TestProductionContextRoots`: WithoutCancel=1 | **1/1 killed** |
+| AC17 function-valued constructor is visible | M32 assign context.Background to f then call f() | `TestProductionContextRoots`: Background=16 | **1/1 killed** |
+| AC18 package-level root is visible | M33 add var rootCtx = context.Background() | `TestProductionContextRoots`: package owner, Background=16 | **1/1 killed** |
+| AC19 TODO root is visible independently of getters | M34 add standalone context.TODO() | `TestProductionContextRoots`: TODO=1 | **1/1 killed** |
+| AC20 new source tree cannot bypass census | M35 create mutation_surface_probe/root.go | `TestProductionGoSurface`: unexpected non-test Go file | **1/1 killed** |
 
-**Total: 29/29 killed, 0 survived, 0 build-error-only kills.** M13–M22 and M28 are derived from
+**Total: 35/35 killed, 0 survived, 0 build-error-only kills.** M13–M22 and M28 are derived from
 the shipped signature/wiring/error-handling diff, not merely reinsertion of the original bug.
-Renamed imports, function-valued constructor references, and WithoutCancel are implemented in
-the scanner but not independently mutation-drilled here; do not claim mutation coverage of
-those extra syntactic forms. The required local hoist, direct Background/TODO, cancelled callers,
-and both empty/partial scan null cases were actually executed.
+M30–M34 independently exercise all five added syntactic witnesses. No new mutation survived;
+no scanner detection defect was exposed or required a fix. Round 2 adds separate constructor
+count logging and the surface guard; every M01–M35 mutation was rerun with restoration in
+`finally`, including removal of M35's temporary directory.
 
 AC14 is the release gate: compile all test files, `go vet ./...`, full pinned `go test ./...
 -count=1`, and the targeted tests above. Gate results and environmental limitations are in §10.
@@ -350,20 +370,23 @@ literals. No git write command was used.
 | Votherroots | `sed -n '30,43p' cmd/ailang-worldd/cli.go; sed -n '95,110p' cmd/ailang-worldd/cli.go; sed -n '465,489p' host/broker/registry_reconcile.go; sed -n '52,74p' host/authority/mint.go; cat host/authority/revoke.go; sed -n '771,786p' host/daemon/daemon.go; sed -n '186,202p' host/capsule/capsule.go; sed -n '465,476p' host/archive/archive.go; sed -n '326,340p' host/replay/replay.go; sed -n '918,940p' host/store/store.go` | REST do/doAuth derive client timeout; reconcile NewRequestWithContext uses RequestTimeout; Mint calls MintSession without ctx, Revoke forwards ctx to write; drain/archive/capsule/replay roots each derive an existing timeout; Commit root persists. |
 | Vnocallers | `rg -n 'ReplayEntry\(\|ReplayEpisode\(\|DecideApproval\(\|NewValidator\(' host cmd --glob '*.go' --glob '!**/*_test.go'; rg -n 'registry.Bootstrap\(\|broker.MintAttendedApproval\(' host/daemon/daemon.go cmd/world-publish/main.go` | Prototype production results: ReplayEntry only called by ReplayEpisode; no outside replay invocation; exported DecideApproval definition only; NewValidator definition only. Independent positive controls: registry.Bootstrap in daemon and MintAttendedApproval in CLI. |
 | Vpolicy | `git diff --unified=0 -- '*.go' \| grep -E '^\+.*(WithTimeout\|WithDeadline\|func.*ctx\|Bootstrap\(ctx\|MintAttendedApproval\(context.Background)' ` | Added context signatures/Bootstrap forwarding and explicit CLI mint root are present. No added WithTimeout/WithDeadline in tracked Go diff; ctx signatures are distinct positive controls. New tests have deadlines solely as bounded controls. No duration was added to production. |
-| Vroots | `go run /private/tmp/world194-census.go` | Prototype AST: 58 production files, 15 Background roots; broker/registry/replay has only runPinnedTransition. Every root is listed in §4. Source parser counts calls, not comments/strings. |
+| Vroots | `go run ~/.ailang/state/world-iter194/design/census.go`; `rg 'root references' ~/.ailang/state/world-iter194/design/M3[0-4].txt` | Re-run from banked source: 58 host/cmd production files; **Background=15, TODO=0, WithoutCancel=0**. Positive mutation controls: M30/M32/M33 **16/0/0**, M31 **15/0/1**, M34 **15/1/0** (Background/TODO/WithoutCancel). All five fail TestProductionContextRoots. Broker/registry/replay retains only runPinnedTransition. Census counts calls, not comments/strings; scanner mutation controls count selector references. |
+| Vsurface | `git ls-files -- '*.go' ':!:*_test.go' \| grep -cvE '^(host|cmd)/'`; same with `-cE` and `-vE`; `grep -c "context\." design_docs/verification/w-race-gate-blindspot/racecontrol/main.go design_docs/verification/w-race-gate-blindspot/repro/main.go`; `go test ./host/store -run '^TestProductionGoSurface$' -v -count=1` | **2 outside, 58 inside**. Outside files are exactly the two §3 reproducers; context matches **0 each** (grep exit1 means no matches). Walk guard passes with 58 inside / 2 allowed. M35's new top-level non-test Go file fails the guard; restored in finally. |
 | Vfiles | `git diff --numstat; git ls-files --others --exclude-standard` | 8 modified production files; final production diff +67/-46 = 113 changed lines. 28 Go files total including six new tests. Exact final list in §11. No archive/pkgproj/capsule production file in patch; broker/replay/store/daemon positive controls visible. |
 | Vbehavior | `go test ./host/broker ./host/registry ./host/replay ./host/daemon ./host/store -run 'Test(ApprovalContextIdentity\|ApprovalCallerCancellation\|Bootstrap.*Cancellation\|Replay.*Cancellation\|StartupCallerCancellation\|VerifyResultCallerCancellation\|ProductionContextRoots\|NoNewDeadlineFreeStoreReads)$' -v -count=1` | 10 top-level named tests execute, with 9 additional subtest RUN lines: all pass across 5 packages. Literal ratchet 0 over 58 files; census 15 roots; cancellation and exact-context witnesses green, including second registry/cache reads. |
 | Vstartup | `sed -n '454,520p' host/daemon/daemon.go; sed -n '550,607p' host/daemon/daemon.go; rg -n 'Query\|func ' host/store/scan.go; rg -n 'store\|GetObject\|ReadObject\|GetRegistryHead' host/broker/registry_reconcile.go; rg -n 'NewRequestWithContext\|RequestTimeout' host/broker/registry_reconcile.go` | New still opens store and optionally archives, then Bootstrap and scanIntegrity. scanIntegrity invokes ScanUnreadableLog/Worlds with counters/time checks between calls. Reconcile search has no store/getter hits; distinct positive RequestTimeout/NewRequestWithContext hits show HTTP path. |
-| Vcalls | `go run /private/tmp/world194-census.go` before edits; copy at `~/.ailang/state/world-iter194/design/census.go` | `census-before.txt`: production/test calls Bootstrap 1/7, DecideApproval 0/1, decideApproval 2/7, MintAttendedApproval 1/0, mintAttendedApproval 1/4, daemon.New 1/15, ReplayEntry 1/1, ReplayEpisode 0/18, GetVerifyResult 1/13; 58 production files; 27 roots. Distinct Bootstrap/mint production calls control negative replay/exported-decide counts. |
+| Vcalls | `go run ~/.ailang/state/world-iter194/design/census-round1.go` (banked original tool used before edits) | `census-before.txt`: production/test calls Bootstrap 1/7, DecideApproval 0/1, decideApproval 2/7, MintAttendedApproval 1/0, mintAttendedApproval 1/4, daemon.New 1/15, ReplayEntry 1/1, ReplayEpisode 0/18, GetVerifyResult 1/13; 58 production files; 27 roots. Distinct Bootstrap/mint production calls control negative replay/exported-decide counts. |
 | Vguard | `python3 /Users/voightkampff/.ailang/state/world-iter194/design/guard_probe.py` | `guard-control.txt` exit0, eight arms pass. `guard-reject.txt` exit1: mint/free, publish/free, startup/free, resolve/free fail; bounded four pass. Temporary eight-method guard restored in finally; probe sources banked under broker/daemon/authority artifact folders. |
-| Vmut | `python3 /Users/voightkampff/.ailang/state/world-iter194/design/mutate.py` | `mutations-run.txt`: M01–M29 KILLED; TALLY 29 29. Each transcript contains `--- FAIL:`; none counted on compile failure. |
+| Vmut | `python3 /Users/voightkampff/.ailang/state/world-iter194/design/mutate.py` | `mutations-run.txt`: M01–M35 KILLED; TALLY 35 35. Each transcript contains `--- FAIL:`; none counted on compile failure. |
 | Vreadsites | `rg -n '\.(GetObject\|GetWorld\|GetLogEntry\|GetRegistryHead\|GetVerifyResult\|SelectedHead\|ReadObject\|ResolveSession)\(' host cmd --glob '*.go' --glob '!**/*_test.go'; rg -n 'ValidateProof\(\|ReadSnapshot\(\|\.Publish\(' host cmd --glob '*.go' --glob '!**/*_test.go'; rg -n 'WithTimeout\|objectReadTimeout' host/evidence/validator.go host/projection/projection.go` | Prototype enumerates 34 exported-read call sites: all pass a ctx variable; validator derives ObjectReadTimeout, projection derives maxWait. API-only transition Publish/validator and replay are distinguished from in-repo production roots; positive ReadSnapshot/bounded-read calls control absent root claims. |
 | Vcomposition | `rg -n 'readCtx\(\|func .*Workbench\|func .*workbench' host/daemon/workbench.go; rg -n 'NewReplaySession\(\|newSession\(' host/broker/broker.go host/broker/publish_op.go; rg -n 'func .*ScanUnreadable\|Query\(' host/store/scan.go; git rev-parse --short HEAD` | Workbench calls d.readCtx; Replay-mode constructor is separate from the three Live publish sessions. ScanUnreadableLog/Worlds use context-free Query. HEAD b5b4a7d. These are retained composition limits, not converted reads. |
 | Vcompile | `go test ./... -run '^$'` | `compile.txt`: 23 ok, 0 FAIL. Deliberately compilation-only, not behavioral evidence. |
 | Vvet | `go vet ./...` | `vet.txt`: empty diagnostic output, exit0. Positive compilation control Vcompile has 23 packages. |
-| Vtest0 | `go test ./... -count=1` in restricted sandbox, AILANG_BIN unset | `test.txt`: 17 ok, 6 FAIL. Loopback bind refused and pinned-binary-required tests fail. No claim this is a green gate. |
+| Vvet2 | `go vet ./...` | `vet-round2.txt`: exit0, no diagnostics after round-2 changes. |
+| Vtarget2 | `go test ./host/store -run '^(TestProductionContextRoots\|TestNoNewDeadlineFreeStoreReads\|TestProductionGoSurface)$' -v -count=1` | `targeted-round2.txt`: all 3 pass, exit0. Ratchet 0 / 58 files; roots Background=15 / TODO=0 / WithoutCancel=0; surface 58 inside / 2 allowed. These gates were not sandbox-affected. |
+| Vtest0 | `go test ./... -count=1` in restricted sandbox, AILANG_BIN unset | `test.txt`: 17 ok, 6 FAIL. Loopback bind refused and pinned-binary-required tests fail. **UNINFORMATIVE UNDER SANDBOX**; controller independently reran the pinned gate outside the sandbox (Vtest). |
 | Vpin | `/Users/voightkampff/.pinned-ailang/ailang --version` | AILANG v0.41.0, commit 24ee1088776e21cd06a3781ed18e77f40be06db3. System PATH binary instead reports v0.43.1-8-ga2256b1c5-dirty; not used for full Go validation. |
-| Vtest | `AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang go test ./... -count=1` with loopback-enabled execution | `test-pinned.txt`: **23 ok, 0 FAIL, exit0**. Pin is needed by full Go tests even though no standalone verify_ail run is requested. |
+| Vtest | `AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang go test ./... -count=1` with loopback-enabled execution | `test-pinned.txt`: **23 ok, 0 FAIL, exit0** (round-1 prototype; controller also independently confirmed 23 ok / 0 FAIL outside the sandbox before this revision). Pin is needed by full Go tests even though no standalone verify_ail run is requested. |
 
 The controller's **F4 test-call count is the sole refuted F1–F8 numerical assertion**. F7 is
 correct as a textual line count, but would be false if interpreted as 29 executable roots.
@@ -375,6 +398,8 @@ premise is corrected explicitly in §2, rather than inherited.
 
 ## §11 Exact prototype manifest and usage
 
+Round 2 extends `host/store/context_roots_test.go` with separate constructor counts and
+`TestProductionGoSurface`; the manifest remains **28 Go files, including six new test files**.
 The banked patch contains these Go files (tracked diff plus explicit `git diff --no-index
 /dev/null` additions for new tests; an ordinary git diff alone would omit those tests):
 
@@ -432,32 +457,29 @@ says **“Unattended (mission-loop) docs: ALWAYS run it.”** The freeze trigger
 to §5. Quorum status and any absent reviewers are recorded below; no external review verdict
 is a substitute for Mark's policy decision.
 
-### Quorum result / blocker
+### Quorum log
 
-The executed command was:
+Round 1: **BLOCKED 3/3, all present** — oc-glm-5-3 reject, oc-kimi-k3 reject,
+claude-sonnet-5@claude-p reject. Author vendor OpenAI benched; gemini-3-1-pro reserve,
+not seated. Controller artifact:
+`.ailang/state/mission-quorum/w-store-deadline-free-residue-owner-2026-09-26T09-57-25Z.json`;
+banked copy `~/.ailang/state/world-iter194/quorum_r1.json`.
 
-```sh
-ailang design-quorum design_docs/planned/w-store-deadline-free-residue-owner.md --author codex:gpt-6 --reviewers gemini-3-1-pro,oc-glm-5-3,oc-kimi-k3 --seats 3 --artifact-dir /Users/voightkampff/.ailang/state/world-iter194/design/quorum --json
-```
+- R1: missing scanner witnesses — M30–M34 all killed, per-constructor counts logged in Vroots,
+  and §3's claim narrowed to the drilled forms; §6's old hedge removed.
+- R2: scan domain did not exhaust non-test Go — Vsurface measures 58 inside / 2 reproducers
+  outside; claims scoped to host/ and cmd/, explicit two-file allow-list guarded by
+  TestProductionGoSurface, with M35 killed on a new top-level Go file.
+- R3: census cited a perishable path — §10 now cites banked census sources; Vroots rerun
+  from the durable path, with the original tool preserved as census-round1.go for Vcalls.
 
-Artifact: `quorum/w-store-deadline-free-residue-owner-2026-09-26T09-53-34Z.json`.
-Observed synthesis: **blocked — all three reviewers absent/unreachable**, $0 cost, zero verdicts.
-Gemini failed to obtain an access token (`gcloud auth application-default login` required);
-oc-glm-5-3 and oc-kimi-k3 could not connect to
-127.0.0.1:11434 under the sandbox (`connect: operation not permitted`). This is **no review
-signal**, not an external objection or a quorum pass. No controller verdict was fabricated.
+This revision answers the recorded objections; no round-2 quorum verdict is claimed.
+§5's policy ratification remains separately owed to Mark.
 
-A network-enabled retry was rejected by automatic approval review: “This escalated command
-would transmit the internal design document to external reviewer services; invoking the skill
-does not specifically authorize that sensitive payload to those destinations.” It was not
-retried indirectly. **External quorum remains blocked pending explicit approval to transmit
-this design to those reviewers.** This blocks the skill's quorum gate, not delivery of the
-measured design/prototype. The controller must arrange that approval/review before routing
-under its review rules; the Gemini seat also needs functioning ADC credentials; §5's policy ratification remains separately owed to Mark.
-
-Local completion record: doc, 28-file prototype patch, 29 mutation transcripts, eight guard
-probe arms, root/caller censuses, compile/vet and full pinned Go test logs are banked. No guard,
-deadline constant, or Commit cancellation implementation remains in the patch.
+Local completion record: doc, 28-file prototype patch, 35 mutation transcripts, eight guard
+probe arms, root/caller censuses, compile/vet and full pinned Go test logs are banked. No runtime deadline guard,
+deadline constant, or Commit cancellation implementation remains in the patch. The new
+source-surface test guard is distinct from the unshipped runtime deadline guard.
 
 Final artifact check: `patch --dry-run -R -p1 < ~/.ailang/state/world-iter194/design/proto.patch`
 returned exit0 (`patch-check.txt`), so the banked patch, including new test files, matches the
