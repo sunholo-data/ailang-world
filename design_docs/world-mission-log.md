@@ -14,319 +14,10 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 164 — 2026-09-06 — DE-FORK repair parks again on D-WORLD-34 with fallback independent judge [HARNESS]
-
-**Kind**: inherited own-repo CI-red resume; four-role audit plus documented evaluator fallback; no implementation.
-
-**Progress**: seven-clause 1.0 bar; goal unmoved. Dev remains red and no additional clause was certified.
-
-**Context / preflight**
-- Armed; `gh` = `sunholo-voight-kampff`; billing tripwire CLEAN; shared running skill byte-identical to origin. The repo-relative heartbeat helper is still absent, so gate stamps used the canonical absolute helper in the sibling AILANG checkout.
-- Local `dev` and `origin/dev` agree at `9166de05c42d0c3430d0ebb87c99db378b72420c`; main clean. Gate4 base recorded as `9166de05c42d0c3430d0ebb87c99db378b72420c@2026-09-06T19:03:23Z`.
-- Issue107 had zero allowlisted Mark directives after watermark `2026-09-06T15:03:52Z`; no new human ruling was inferred. Canonical GCP inbox reads showed only reports/claims/approval requests, not a World directive.
-- Ledger21 rows/3 OPEN: D-WORLD-32, D-WORLD-33 and D-WORLD-34. No rotation of the weekly GitHub issue was due. Gate4 `ailang mission rotate-log world --keep 20` failed on `open missions: no such file or directory`, so the existing manual index/STATUS rotation path remained in force.
-
-**Pick**: own-repo dev CI red still outranks row66. Exact-head run34033464096 is red: `ailang-code verify gate` succeeds; `go host build + test gate` fails when `scripts/verify_go.sh` reaches deleted `tools/launchd/test_mission_routing.sh`; `launchd drivers (bash 3.2)` fails when its driver suite extracts from deleted `tools/launchd/mission-control.sh`. Four later Go-job steps remain skipped/unmeasured.
-
-**Work done**
-- Re-read the iter162 design `planned/w-de-fork-ci-ownership.md`, the iter162/163 records, D-WORLD-34, exact-head CI, and the active deleted-file consumers. No new fact changed the authority boundary.
-- Designer preserved the existing `Needs Human Review` park; planner and executor refused substantive work because D-WORLD-34 still says unattended default B parks planning/execution until explicit authority resolves the ratified-row conflict.
-- No design revision, quorum retry, plan, handoff, implementation, PR, merge, release or credential action was produced.
-
-**Routing evidence**
-| Stage | Actual lane | Outcome / evidence |
-|---|---|---|
-| Controller | Codex controller (tok: not reported) | completed the scheduled iteration; no inline substitute for the judge |
-| Designer | Agent `gpt-6-astra` (tok: not reported) | declared provider-pinned route; inspected first-party state and returned PARKED, no edits |
-| Planner | Agent `gpt-5.6-sol` (tok: not reported) | spawned as required; FAIL-CLOSED because no resolved ruling, quorum-cleared design or lawful plan exists |
-| Executor | Agent `gpt-5.6-sol` (tok: not reported) | spawned as required; REFUSED implementation/commits/push because no plan or handoff exists |
-| Evaluator configured | Agent `pi:ollama/minimax-m3:cloud` | spawn failed exactly: `Unknown model pi:ollama/minimax-m3:cloud for spawn_agent. Available models: gpt-6-astra, gpt-5.6-sol, gpt-5.6-terra, gpt-5.6-luna, gpt-5.5` |
-| Evaluator fallback | Agent `gpt-5.5` (tok: not reported) + its read-only `codex exec -m gpt-5.5` judge (139,352 tok) | required fallback Agent was spawned after the exact configured-route failure; its separate judge was distinct from Astra designer and Sol executor; PASS92/100, zero blocking, landing not authorized |
-
-**Evaluator report quality**
-The fallback judge verified the authoritative skill, current branch state, D-WORLD-34, design status, exact-head CI, iter162 parent/red controls, directives and inbox. It filed two nonblocking findings: iteration164 had not yet been locally recorded when judged, and unread GCP traffic exists but is not a verified World human directive. No blocking finding; the judge explicitly said park/refuse is lawful and no landing is authorized.
-
-**Verification**
-- Remote exact-head run34033464096: `headSha=9166de05c42d0c3430d0ebb87c99db378b72420c`, workflow `CI`, conclusion `failure`; ailang-code success, Go and launchd failures above.
-- Iter162 controls: run34028333254 red at `e92594c23d76f51a195f36f31448ecedb5eddcfd`; parent run34026879032 green at `b7e4a8e3609b7be82dec114f51ea21c1692b6900`.
-- `git ls-tree -r 9166de05... -- tools/launchd/mission-control.sh tools/launchd/test_mission_routing.sh scripts/verify_go.sh .github/workflows/ci.yml` lists only `ci.yml` and `scripts/verify_go.sh`, confirming the two local driver paths are absent at the failing head.
-- `mission_decisions.sh --check --file design_docs/world-mission.md` remained valid at21 rows after prior recovery; no product verification was claimed because no product bytes changed and dev itself remains red.
-
-**Landing / Gate3b**
-No implementation or queue item lands. This record is branch-only while dev required checks are red; Gate3b green is not claimed. The inherited explicit diagnostic and every frozen/shared path remain byte-identical.
-
-**Metered ledger**: $0.00 of $5. Agent roles and the fallback Codex evaluator used ChatGPT/Codex quota, not provider-metered dollars.
-
-**Ruled out / not chased**
-- Treating unattended default B as authority to proceed: refuted by D-WORLD-34's explicit park text.
-- A third designer revision or quorum retry: no human ruling changed the two blocked rounds.
-- Recreating copied driver files, editing the frozen diagnostic, or touching shared V1/launchd runtime: outside authority and contrary to DE-FORK.
-- Proceeding on controller-only judgment: rejected; independent gpt-5.5 fallback judge ran and passed the park.
-- Calling dev green from local Go/Ail checks: rejected; the remote required check set is red.
-
-**Parked for human**
-D-WORLD-34 remains the resume gate: A retires the obsolete explicit diagnostic/fixtures; B preserves them and authorizes only removal from default product verification. Either answer still requires a design revision and fresh quorum. D-WORLD-32 and D-WORLD-33 remain open and unchanged.
-
-**Containment**
-No source, frozen driver, shared skill, V1 checkout, launchd state, credential, external account or release was changed. Record edits stayed in the recovery worktree on branch `mission/world-iter163-record`.
-
-**Retro (Gate5)**
-No shared skill edit, process-policy edit or routing-policy change. The configured Pi evaluator remained unavailable on the Agent surface, so the required gpt-5.5 fallback Agent obtained a separate read-only Codex judgment. That Agent then exceeded its read-only brief by performing the record/report steps; the controller independently verified its commit, push, message, issue comment, watermarks and heartbeat before accepting them. This is a single instance and does not meet the bar for a policy edit.
-
-**Next**: resolve D-WORLD-34, revise and re-quorum the DE-FORK repair. If unresolved, row66 remains banked but cannot land while dev lacks a usable required-check set; then row68. Row39 remains next product work.
-
-## 165 — 2026-09-07 — DE-FORK repair remains parked; four required Agent roles confirm the authority gate [HARNESS]
-
-**Kind**: inherited own-repo CI-red resume; mandatory four-role audit and independent parking evaluation; no implementation.
-
-**Progress**: seven-clause 1.0 bar; goal unmoved. Dev remains red and no additional clause was certified.
-
-**Context / preflight**
-- Armed; `gh` = `sunholo-voight-kampff`; Anthropic billing tripwire CLEAN; shared running skill byte-identical to its origin. Repo-relative mission helpers remain absent, so gate stamps and base records used the canonical sibling-checkout helpers.
-- Local `dev` and `origin/dev` agree at `9166de05c42d0c3430d0ebb87c99db378b72420c`; main clean. Gate4 routing base: `9166de05c42d0c3430d0ebb87c99db378b72420c@2026-09-06T22:59:34Z`.
-- Canonical GCP World inbox returned no unread rows. Issue107 had zero allowlisted Mark directives after `2026-09-06T19:14:28Z`; no human ruling was inferred. Current time was before Monday 07:00 local, so weekly rotation/sweep was not due.
-- Authoritative `dev` ledger validates at20 rows with D-WORLD-32/33 OPEN; the recovery record branch carries the unmerged iteration162 D-WORLD-34 row and validates at21 rows/3 OPEN.
-
-**Pick**: own-repo dev CI red still outranks row66. Exact-head run34033464096 has three checks: AILANG success, Go failure at deleted `tools/launchd/test_mission_routing.sh`, and launchd failure extracting from deleted `tools/launchd/mission-control.sh`.
-
-**Work done**
-- Re-ran the two local failure paths at pristine base: stall suite rc1 with failed driver extraction; pinned-binary `verify_go.sh` rc127 at the missing routing suite. The Gate1/Gate2 shared ref remained steady.
-- Re-read the inherited iter162 design, DE-FORK commit, D-WORLD-DRIVER-1 and queue row76. No commit after DE-FORK changed the relevant CI/verifier surfaces or supplied authority.
-- Spawned every operator-required role through the Agent tool. Designer parked; planner produced no plan; executor refused with an empty authorized diff. No design revision, quorum retry, code, commit, PR, merge or release was attempted by those roles.
-
-**Routing evidence**
-| Stage | Actual lane | Outcome / evidence |
-|---|---|---|
-| Controller | Codex controller (tok: not reported) | completed scheduled gates; no controller verdict substituted for evaluation; base=`9166de05c42d0c3430d0ebb87c99db378b72420c@2026-09-06T22:59:34Z` |
-| Designer | Agent `gpt-6-astra` (tok: not reported) | resolver `recipe codex:gpt-6-astra declared:provider-pin`; PARK, no edits |
-| Planner | Agent `gpt-5.6-sol` (tok: not reported) | resolver `recipe codex:gpt-5.6-sol anthropic-fallback:fail-closed:path-not-in-codex-allowlist`; fail-closed PARK, no plan |
-| Executor | Agent `gpt-5.6-sol` (tok: not reported) | resolver `recipe codex:gpt-5.6-sol declared:provider-pin`; REFUSE/PARK, authorized diff empty |
-| Evaluator configured | Agent `pi:ollama/minimax-m3:cloud` | spawn failed exactly: `Unknown model pi:ollama/minimax-m3:cloud`; Agent surface listed only Codex-family models |
-| Evaluator fallback | Agent `gpt-5.5` (tok: not reported) | distinct from Astra designer and Sol executor; PASS91/100 for parking, zero blockers, no code authorized |
-
-**Evaluator report quality**
-The judge independently checked the exact-head check set, pre-DE-FORK green parent, active deleted-file consumers, charter authority and ledger. Its nonblocking corrections are reflected here: call the outcome PARKED, quote the evaluator fallback error, and state that planner had no valid plan and executor's diff was empty.
-
-**Verification**
-- Exact-head remote CI: run34033464096, 3 checks present; one success and two failures as above. Parent `b7e4a8e` had all three checks green before DE-FORK.
-- First-party local reproduction: stall rc1; pinned AILANG v0.30.0 verifier rc127. Positive file controls confirmed the caller suite and verifier exist while their consumed files do not.
-- `mission_decisions.sh --check` is valid at20 rows on `dev` and21 rows on this record branch. No product-green claim was made.
-
-**Landing / Gate3b**
-No implementation or queue item lands. The record remains branch/PR bookkeeping while required checks are red; Gate3b green is not claimed. Frozen/shared surfaces remain byte-identical.
-
-**Metered ledger**: $0.00 of $5. Agent roles used ChatGPT/Codex quota; provider token counts were not reported.
-
-**Ruled out / not chased**
-- Treating unattended default B as implementation authority: refuted by its explicit park text.
-- Re-running quorum or inventing a conditional plan: blocked by the unresolved ratified authority question.
-- Skipping planner/executor/evaluator because no implementation was possible: rejected by the operator's standing request; all were invoked, and the configured evaluator failure plus fallback are recorded.
-- Proceeding on controller-only judgment: rejected; distinct gpt-5.5 independently passed the park.
-
-**Parked for human**
-D-WORLD-34 remains the resume gate: RETIRE the obsolete explicit diagnostic/fixtures after DE-FORK, or PRESERVE them byte-identical and limit the repair to default product verification. Recommendation RETIRE; unattended default PRESERVE-and-park. D-WORLD-32 and D-WORLD-33 remain open and unchanged.
-
-**Containment**
-No source, frozen driver, shared skill, V1 checkout, launchd runtime, credential, account or release changed. Record edits stayed on the existing recovery branch descended from the full current dev base.
-
-**Retro (Gate5)**
-The same evaluator-route limitation and authority park recurred, but no new rulebook defect was found; the existing exact fallback disclosure and judgment/capacity distinction handled it. No skill, process-policy or routing-policy edit.
-
-**Next**: resolve D-WORLD-34, revise and re-quorum the DE-FORK repair. If unresolved, row66 remains banked until dev has a usable landing gate; then row68. Row39 remains next product work.
-
-## 166 — 2026-09-07 — the loaded gun in row 68 fired: the driver pin ran this mission inside the WRONG REPOSITORY, and every health instrument read green [HARNESS]
-
-**Kind**: regression iteration; the defect was in the loop's own root, so it outranked the queue. Full four-role route, two blocked quorums, narrow-refinement carve-out, mitigation LANDED, durable fix HANDED TO THE FLEET.
-
-**Progress**: seven-clause 1.0 bar; goal unmoved. No product code landed — by design: the durable fix is frozen core.
-
-**Context / preflight**
-- Kill switch armed (`~/.ailang/state/mission-world.disabled` absent); gh `sunholo-voight-kampff`; billing tripwire CLEAN.
-- Codex and pi lanes both probed rc=0 with real replies at 08:57, after the 04:44 fire had found every Anthropic and codex lane unusable and died rc=1 on an ollama 429 — the ChatGPT bucket refilled at the Monday reset. Gate-0 directive read on issue #107 since `2026-09-06T19:14:28Z`: **0 allowlisted directives** of 42 comments.
-- **Gate 1 read GREEN and was measuring the wrong repository.** `git fetch origin` + `rev-parse` agreed, `mission-base.sh record gate1` banked `878939117`, and the running-skill-vs-`origin/dev` `cmp` was byte-identical — every one of those readings was taken inside `~/.ailang-driver-pin/world`, a worktree of `sunholo-data/ailang`. The tell was `ls design_docs/world-mission.md` → `No such file or directory`.
-- Heartbeat stamps were made by ABSOLUTE path (`~/dev/sunholo-data/ailang/tools/launchd/mission-heartbeat.sh`) — queue row 69's standing condition, unchanged.
-
-**Pick**: not the queue head. The controller cannot read the queue from where the driver put it, so the blocker WAS the iteration. Grepping the index found the item already tracked: **row 68, `w-driver-pin-named-world-points-at-the-wrong-repo`**, surfaced iteration 150 and written as a prediction — *"the residue is a loaded gun for the day World's plist is pointed at a pin-rooted driver."*
-
-**The mechanism, measured first-party**
-- The DE-FORK (`e92594c`) deleted World's own driver copy; the regenerated plist runs the FLEET driver at `~/dev/sunholo-data/ailang/tools/launchd/mission-control.sh`.
-- That driver separates the two roots on purpose (`MC_DRIVER_ROOT` vs `REPO`, lines 40-48) and its pin block asserts *"MISSION_WORKDIR keeps `$REPO` pointing at the mission's work repo across the re-exec"* (~line 894). **That sentence is false.** `tools/launchd/lib/pin-root.sh` does `MISSION_WORKDIR="$wt"; export …; exec …` unconditionally, and `$wt` is always a worktree of `$src`, which is derived from the DRIVER's `$0`.
-- Result this fire: `MISSION_WORKDIR` = `pwd` = `~/.ailang-driver-pin/world`; `git remote -v` → `sunholo-data/ailang`; `git rev-parse --git-common-dir` → `~/dev/sunholo-data/ailang/.git`; charter absent. Driver log: `driver pin: running committed origin/dev @ 878939117 … (source clone … was 0 behind)` — i.e. **`PIN_STATUS=pinned`, drift 0, no warning on any channel.**
-- Discriminator measured, with controls: origins are `ailang` / `ailang` / `ailang-world` for `ailang`, `ailang-motoko`, `ailang-world` — so the origin URL separates the de-fork case while `git-common-dir` (`…/ailang/.git`, `…/ailang-motoko/.git`, `…/ailang-world/.git` — all three DIFFER) would misclassify motoko as a different repository and break it.
-
-**Work done**
-- **Design** `design_docs/planned/w-defork-pin-redirects-work-repo.md` (588 lines). Splits by OWNERSHIP: M1 world-landable stopgap, M2 fleet-owned guard, M3 hand-back gate.
-- **Quorum r1 BLOCKED** — gemini (raw URL equality is fragile across SSH/HTTPS/`.git`) and glm (an unset origin silently drops the redirect with no runtime signal). Astra ABSENT on a pre-flight budget refusal at $0.1224 > $0.10 cap.
-- **Revision** answered both: canonical `host/path` normalisation, an authoritative-when-set `AILANG_DRIVER_MISSION_IS_DE_FORKED` flag with inference as the default, and `_pin_stale` on the indeterminate case so the refusal rides the channel that already posts *"driver ran UNPINNED"*.
-- **Quorum r2 BLOCKED** on a REAL and previously-unseen defect: astra and gemini independently found that the draft called the helper inside a **command substitution**, so `_pin_stale` ran in a subshell and `PIN_STATUS=STALE` could never reach the driver — the loud-failure guarantee the whole revision was built on. astra added that `MISSION_WORKDIR="$(…)"` assigns captured stdout BEFORE `|| return 1`, blanking the work dir on the failure path. glm ABSENT (ollama 429).
-- **Narrow-refinement carve-out applied** (both objections carry a concrete reviewer-authored fix; neither disputes the direction). gemini's verbatim fix — mutate in the current shell, `_set_pin_workdir "$wt" "$src" || return 1` — was applied and **subsumes astra's second hazard by construction**: with no substitution there is nothing to capture. `AC-F12` was added to pin the call-site form, because every other AC passes under the defective one.
-- **Plan** (codex) repaired the design rather than restating it: **P2** the design's AC3 could not red on its own named mutation; **P3** AC4's `grep -c … >= 1` passes on log HISTORY; **P5** row 68 already exists — refresh, do not duplicate; **P12** the file list omitted the hand-off artefacts. It also made the sandbox split explicit, since the file M1 changes lives outside the executor's writable worktree.
-- **Executor** (codex) refreshed row 68 in place and wrote the 216-line fleet issue body, then reported its own suite as **not wholly green**: AC-E4 is RED at baseline from a pre-existing unrelated `TODO` at charter line 2034 and its `$files` scalar does not word-split under zsh; AC-E5 has no named RED mutation and inspects neither changed artefact; and it **REFUSED AC-E3's mutation because performing it required editing `tools/launchd/*`** — frozen core.
-- **Controller (out of sandbox)** applied M1: `AILANG_DRIVER_PIN=0` appended to `~/.config/ailang/mission-world.env` behind a pre-edit backup, with an idempotency guard and a refusal on any conflicting assignment.
-
-**Routing evidence**
-| Stage | Actual lane | Outcome / evidence |
-|---|---|---|
-| Controller | `claude:claude-opus-5` | driver probe ok; tok: not reported at record time |
-| Designer initial | `pi:ollama/deepseek-v4-flash:0731-cloud` | rotation entry after astra; probe rc=0; typed verdict `ok`, 193 s, 24 tools, 1 file (1.75 M per-turn tok, summed) |
-| Designer revision | same DeepSeek lane | typed verdict `ok`, 678 s, 89 tools, 1 file (24.7 M per-turn tok, summed — pi re-sends context per turn) |
-| Quorum r1 | astra / gemini / glm | 2 present, **2 reject**; astra ABSENT (budget, $0.1224 > $0.10, zero spend); $0.04441749 |
-| Quorum r2 | astra / gemini / glm | 2 present, **2 reject**; glm ABSENT (ollama 429); $0.139366 |
-| Planner | `codex:gpt-5.6-sol` | resolver said `agent-tool opus fail-closed:planner-lane-field-missing`; **the pin was followed instead**, per the skill's resolver-vs-hook rule — the hook would have denied the alias. 149,040 tok |
-| Executor | `codex:gpt-5.6-sol` | rc=0, 2 files, 217 insertions / 1 deletion; 73,501 tok |
-| Evaluator | `sonnet` (Agent tool, `declared:alias-pin`) | **94/100 PASS, zero blocking findings**; 142,492 tok |
-
-generator≠judge held: executor OpenAI/codex, evaluator Anthropic/sonnet. Designer rotation pointer advanced astra → deepseek.
-
-**The judge's independent findings** (all three reproduced first-hand by it, none of them ours)
-- **AC-F8 is vacuous.** It implemented BOTH the specified `_set_pin_workdir` and AC-F8's own named mutant ("ignore the flag, always infer") and got byte-identical output, because world's origin genuinely differs from ailang's — so no flag-dropping implementation can be caught by that criterion as written. Appended to the fleet issue body with the fix (exercise the flag where flag and inference DISAGREE).
-- **AC-E3 has an expiring precondition** — it gates on `git status --short`, so it reads `handoff-paths=0` once the work is committed. The substantive claim survives via `git diff --name-only 9166de0..HEAD`.
-- **`D-WORLD-34` does not exist in the committed ledger** (`rg` → 0 hits; positive control `D-WORLD-DRIVER-1` → hits). It lives only on unmerged PR #127. Two iterations relied on a park `scripts/mission_decisions.sh --open` cannot see. Filed as **D-WORLD-35**.
-
-**Verification**
-- AC-C1 `pin-optout=1 backup=present`; AC-C2 byte-idempotent (sha unchanged on a second run); AC-C3 `PIN=0 WD=…/ailang-world`; AC-C4 `PIN_STATUS=disabled WD=…/ailang-world` from the REAL fleet helper.
-- **Mutation drill, run and restored:** commenting the opt-out reds AC-C1 (`count=0`), AC-C3 (exact-match fails) and AC-C4 (`env opt-out absent`, refusing before the helper is even called). Restore verified **byte-identical by sha256**.
-- AC-C5/AC-C6 are fire-dependent and DEFERRED to the next fire; the baseline they need is captured (`/tmp/w-defork-pin-disabled-count.before` = 0).
-- No edit to `tools/launchd/*` in either repository; `~/dev/sunholo-data/ailang` working tree clean.
-
-**Landing / Gate 3b**
-Docs-only PR on `mission/world-iter166-defork-pin`, based on `9166de0`. The two reds `launchd drivers (bash 3.2)` and `go host build + test gate` are INHERITED — they fail on `origin/dev` at the base commit, because the attended DE-FORK deleted the files those jobs invoke — and are parked; this branch does not touch them. The charter-declared Gate-3b job is `CI` / `ailang-code verify gate`.
-
-**Metered ledger**: $0.183783 of $5 (two quorum rounds, four reviewer calls). Designer (ollama flat-rate), planner, executor and controller all bill $0 metered against subscription/flat-rate buckets — which is exactly why the per-role token counts above are the only cost signal that exists.
-
-**Ruled out / not chased**
-- *"World should patch `pin-root.sh`"* — refused. `D-WORLD-DRIVER-1` is RESOLVED and ratified attended: World's controller never edits `tools/launchd/*`. The executor refused a mutation drill on the same grounds rather than score a point.
-- *"Fix the two red CI checks"* — not attempted. Parked under the D-WORLD-34 proposal, whose unattended default is to land no code, and reversing a prior iteration's disposition is not an unattended call.
-- *`git-common-dir` as the repo discriminator* — REFUTED by measurement: all three clones have distinct common dirs, so it would break motoko and docs.
-- *A narrower env-file lever than `AILANG_DRIVER_PIN=0`* — refuted: the env file is sourced at driver line 71, after `REPO` is computed at line 48 and after the `cd`, so only a variable that stops the pin running at all can help.
-- *Claiming the mitigation is proven* — it is not. Everything verified today is a hand-run simulation; only a real unattended fire exercises the launchd path. That is the judge's own strongest objection and it is recorded rather than answered.
-
-**Next**
-1. **The next fire must run AC-C5 and AC-C6 first** and record the result — that is the only evidence that closes this item.
-2. The fleet files the M2 guard (issue prepared; AC-F8 must be rewritten before implementing).
-3. D-WORLD-35 for Mark: are mission RECORDS hostage to the parked CI reds? Five iterations of state now sit on unmerged branches.
-
-## 167 — 2026-09-07 — the DE-FORK red was a suspended gate, not a failing check; three roles each found a different way the repair could have been vacuous [HARNESS]
-
-**Kind**: regression repair. A RED `dev` outranked the queue; World owns this repo. Full four-role routing, generator ≠ judge.
-
-**Progress**: seven-clause 1.0 bar; goal unmoved, no new clause certified. `dev` is green for the first time since `e92594c`.
-
-**Context / preflight**
-- Kill switch armed (`~/.ailang/state/mission-world.disabled`, namespaced); `gh` = `sunholo-voight-kampff`; billing tripwire **CLEAN**; pin `~/.pinned-ailang/ailang` = `AILANG v0.30.0`.
-- **0** allowlisted directives on `#129` since watermark `2026-09-07T06:45:00Z` (of 2 comments) and **0** on predecessor `#107` (43 comments). `mission_directives.sh` and `mission-heartbeat.sh` are still absent from this repo (row 69) and were run from the V1 checkout by absolute path; gate stamps 0/1/2/4 fired.
-- Ledger **22 rows, `--check` valid, ZERO OPEN**. No rotation owed (`#129` created this week); no weekly sweep owed.
-- Local `dev` == `origin/dev` at `565d0b2` — 0 ahead, 0 behind, which is unusual for this shared checkout and meant no read-from-origin workaround was needed.
-- Running skill verified byte-identical to the fleet's `origin/dev`: `cmp` against the **resolved** symlink target (`readlink -f` → the V1 checkout, per the iteration-241 rule), plus all seven gate resource files SAME. The world repo has no `.claude/skills/` of its own, so the naive `cmp` against *this* repo's origin reads "differs-or-absent" and means nothing.
-- **The skill changed on disk mid-iteration** (a sibling's Gate-5 edit — the symlink makes every mission's edit live instantly). Noted, not acted on; the rules followed here are the ones read at the start.
-
-**Pick**: not the queue head. `dev` was RED and this mission owns `sunholo-data/ailang-world`. Attribution was walked back per commit rather than assumed: `565d0b2`, `9166de0`, `37a10f5` and `e92594c` all 2-of-3 red; `b7e4a8e` and `2115172` **3/3 green**. The attended DE-FORK `e92594c` introduced it by deleting `tools/launchd/mission-control.sh` and `test_mission_routing.sh` while two World-owned consumers still invoked them.
-
-**The finding that reframed the pick**: the `go-verify` red is not one failing check. `scripts/verify_go.sh` exited **127 at line 348**, which sits *before* `go build` — so `go build`, the 37-test evidence manifest, `go test ./...` and the race leg had all been **unrun** in CI since 2026-09-06, not failing. A real Go regression landing on dev in that window would have been invisible. That is why the success claim here is "the product checks run again", not "the jobs are green".
-
-**Authority**: three attended rulings had landed while this loop was idle, and `D-WORLD-34` = **A** is what unparked the work: *"World may retire the obsolete local `--driver-fleet-check` diagnostic and its fixtures/invocations ... **Preserve World application verification** ... **no blanket deletion of product checks**."* Provenance checked per the ATTENDED LEDGER EDITS contract; the verdict is recorded as "attended", and no address is transcribed.
-
-**Work done**
-- Designer (`claude:claude-fable-5-1`, the rotation entry) revised `w-de-fork-ci-ownership.md`, which had been parked at iteration 162 on exactly the authority question `D-WORLD-34` answers. It corrected two of the controller's own supplied facts in passing — `mission-control.sh.tmp.astra` is **tracked** at HEAD, not untracked, and the ledger has 22 rows not 20 — both confirmed first-party before being believed.
-- Quorum round 3: **BLOCKED at N−2**. `gemini-3-1-pro` reject (present); `gpt6-astra` absent (budget); `oc-glm-5-2` absent (invalid). Recorded as N−2 everywhere it is quoted, never as a bare "blocked".
-- Planner (`opus`) wrote the sprint plan with **measured** base-state baselines for AC1–AC9.
-- Executor (`codex:gpt-5.6-sol`) landed five milestone commits.
-- Evaluator (`sonnet`) judged it independently.
-
-**Three ways this repair could have been vacuous, each caught by a different role**
-1. **The restored absent reviewer, for $0.13.** Re-running `gpt6-astra` alone at a raised cap returned a reject naming a defect nobody had seen: once `--driver-fleet-check` is retired, invoking it falls through and runs the default gate, **exiting 0** — a retired mode reporting success. Reproduced byte-identically (`diff -q` silent against the no-arg run; positive control `--evidence-manifest-check` dispatches its usage error). This is the **second** time this mission has bought a real defect for cents by restoring an absent reviewer.
-2. **The planner found the anti-vacuity control was itself vacuous.** The banner `echo "── go test ./... -count=1"` and the command `go test ./... -count=1` are *different lines*, so the step-6 sequence test as designed stays GREEN when the command is deleted — the precise "delete until green" outcome the control exists to prevent, reached *through* the control. It now asserts ordered (banner, executable anchor) PAIRS; M7/M8 delete the command, M7b/M8b the banner.
-3. **The refusal was one character short of its own class.** `verify_go.sh driver-fleet-check` — no dashes — was *also* byte-identical to the no-arg run. Any unrecognized first argument is now refused, dashed or not.
-
-**Routing evidence**: base=`37a78abbb1099db7cf364da86caf5c04b9e61c84`@`2026-09-07T12:23:46Z`. Controller `claude:claude-opus-5` (tok: not reported) · designer `claude:claude-fable-5-1` (109,954 tok, Agent-tool `model="fable"` pin — the resolver said `recipe`, the skill's 2026-08-20 amendment says the Agent tool accepts the pin, and it ran to completion; both answers recorded) · planner `opus` (140,912 tok, `resolve-role-spawn.sh` → `agent-tool opus`, `derive-planner-lane.sh` → `opus fail-closed:path-not-in-codex-allowlist`, no hook denial) · executor `codex:gpt-5.6-sol` (244,133 tok, probe rc=0) · evaluator `sonnet` (173,319 tok). Designer diet: **one doc, one revision run**, no second — the two round-3 refinements were applied by the controller under the Gate-2 carve-out, not by a second designer spawn.
-
-**The executor died before reporting, and that changed the evaluator's brief.** The 45-minute wrapper deadline fired (`rc=DEADLINE`) while codex was mid-mutation-drill. All five milestones were committed and the tree was clean — the code work was done — but **no mutation result had been reported by anyone**. Rather than bank the commits as verified, the evaluator was told explicitly to treat every one of M1–M9 as UNMEASURED and to run them itself. It did.
-
-**Verification** (`AILANG_BIN=~/.pinned-ailang/ailang`, v0.30.0): `go vet ./...` rc=0, read before every test verdict · `./scripts/verify_ail.sh` rc=0 (11 required identities, 40 named tests, 9/9 world-package steps) · `go test ./... -count=1` rc=0 (19 `ok`) · `./scripts/verify_go.sh` FULL rc=0, 202 s and 290 s across two runs, reaching `✓ go gate PASSED` · `--driver-fleet-check` and `driver-fleet-check` both rc=2 `unrecognized first argument` with the `── AILANG_BIN=` banner **absent**, which is what proves the refusal precedes the preflight rather than the preflight refusing for its own reasons · `--mission-config-check` rc=0, `decision ledger valid: 22 rows` plus the non-certification disclosure · retirement grep over code 0 hits with the positive control at 2 files.
-
-**Independent evaluation**: **PASS 95/100, zero blocking findings** (`sonnet`; executor was `codex:gpt-5.6-sol`, so generator ≠ judge). It re-ran **all 13** mutations — M1–M9 plus M4a/M4b/M7b/M8b — with `go vet` read before each verdict and byte-exact `sha256` restores, named a killer for every one, and reported **no ticked acceptance criterion unbacked by a measurement it could reproduce**. Its two non-blocking findings: AC7(4)/AC8 are structurally unmeasurable before the push (correctly left unticked), and the pin-test diff is 13 lines against the plan's soft "~12" guidance, inspected line-by-line with nothing weakened.
-
-**Landing / Gate 3b**: PR [#130](https://github.com/sunholo-data/ailang-world/pull/130) → squash [`37a78ab`](https://github.com/sunholo-data/ailang-world/commit/37a78ab). GREEN on the **merge** commit: `present=2 == expected=2`, expected ENUMERATED from `ci.yml`'s own job list (`ailang-verify`, `go-verify` — the third, `launchd-drivers`, is the job being retired, so the count *should* drop), `not_green=0`. Parent control `565d0b2` reads `checks=3` with two failures — a clean before/after rather than a bare green.
-
-**Ruled out / not chased**
-- Recreating the deleted driver files, or pointing CI at the sibling fleet checkout — either reinstates the dependency the DE-FORK removed.
-- Cleaning up the `tools/launchd/` residue (`test_mission_stall.sh`, `derive-planner-lane.sh`, `testdata/planner-lane/`, the tracked `mission-control.sh.tmp.astra`). Frozen core; the fleet's to remove. `git diff --name-only origin/dev..HEAD -- tools/launchd` is **EMPTY**, with 8 changed files overall as the control.
-- Re-litigating `D-WORLD-DRIVER-1`/row 76. The ledger decided it; this loop does not adjudicate a human ruling.
-
-**Parked for human**: nothing new — the ledger is at **22 rows, ZERO OPEN**, so this iteration asks Mark for nothing.
-
-**Blocked, and it is work rather than a decision**: record PRs [#127](https://github.com/sunholo-data/ailang-world/pull/127) and [#128](https://github.com/sunholo-data/ailang-world/pull/128) carry five iterations of records (162–166) and are both **CONFLICTING/DIRTY** against `dev`, which has since had its log rotated (`37a10f5`) and its headings normalized (`9166de0`). `D-WORLD-35` = A authorises merging them; the blocker is now a **rebase**, not the ruling. Their design doc `w-de-fork-ci-ownership.md` is a *new* file and so was carried into this sprint conflict-free — which is why this iteration could proceed at all — but the charter/log/dashboard halves still need a hand. This is a capacity/work park, not a judgment park: no ask, no decision row.
-
-**Containment**: main checkout clean; all work in worktrees branched from `origin/dev`. No edit to `tools/launchd/*`, the V1 checkout, `~/.ailang/state/mission-v1*`, or any skill file.
-
-**Retro (Gate 5)**: the durable lesson is that **an anti-vacuity control is a claim too**. This iteration shipped a control against "delete until green" and the planner measured that the control, as designed, would have passed a deletion — because a banner and the command it announces are different lines. That is the same shape the mission keeps finding one level up: a gate that reports on itself rather than on the thing. Second: the absent-reviewer rule paid out again, and both payouts have been on a *revision* round, which is when a reviewer drops out on budget because the doc just grew — i.e. exactly when its opinion is most load-bearing.
-
-**Next**: rebase and land #127/#128 (five stranded records), then rows 66, 68–78, 81, 82, 83, then 39. Row 65 is DEFERRED per `D-WORLD-33`.
-
-## 168 — 2026-09-07 — reconcile the five stranded records 162–166 from PRs #127/#128 onto the rotated log; the PRs are superseded unmerged [HARNESS]
-
-**Kind**: docs reconciliation (no Go, no `.ail`, no `tools/launchd/*`, no `scripts/*`). Every file touched is under `design_docs/`. This is a rebase/reconcile, not a ruling.
-
-**Progress**: seven-clause 1.0 bar; goal unmoved, no product code landed, by design. Authority is `D-WORLD-35` = **A** (attended, 2026-09-07): docs-only mission-record PRs may merge when the charter-declared ailang-code verify gate passes on the exact head and remaining reds are demonstrated inherited against the base; *"Reconcile all pending ledger records, including D-WORLD-34, without overwriting attended rulings."*
-
-**Context / preflight**
-- Kill switch armed (`~/.ailang/state/mission-world.disabled`); `gh` = `sunholo-voight-kampff`; billing tripwire **CLEAN**; pin `~/.pinned-ailang/ailang` = `AILANG v0.30.0`.
-- Ledger **22 rows, `--check` valid, ZERO OPEN**. `D-WORLD-34` is RESOLVED on dev; `D-WORLD-35` is RESOLVED on dev. PRs #127 and #128 each carry a stale `| D-WORLD-XX | OPEN |` hunk that this sprint must NOT apply — reopening or duplicating an attended ruling is the exact overwrite `D-WORLD-35`'s own text forbids. `bash /tmp/i168_rulings.sh` stays rc=0 and the ledger block between the `decision-ledger:start`/`end` markers stays byte-identical to base.
-- The base red on `verify_go.sh` is the known `TestCLIRealSubprocessEpisode` load/timing flake (base B23, §1.1); isolated `-count=2` re-run is green. It is inherited against the exact base, not caused by this docs-only sprint.
-
-**Pick**: the reconcile itself. Iterations 162–166 produced records that landed on two PRs (#127 `world-iter163-record`, #128 `world-iter166-defork-pin`) which are now CONFLICTING/DIRTY against `dev` after log-rotation, heading-normalization and the iteration-167 advance. The blocker is a rebase, not a ruling.
-
-**Authority**: `D-WORLD-35` = A is the attending directive. PR #127's charter diff contained nothing but a stale `OPEN` ledger row for `D-WORLD-34` and three STATUS stamps (already resolved/provided on dev); PR #128 carried a stale `OPEN` row for `D-WORLD-35`. Neither hunk is applied. The status-archive `(iteration 159)` stamp, the shared 2449-line prefix, and the byte-stable `(iteration 160)`/`161` stamp text were all confirmed by `git show` before splicing.
-
-**Work done**
-- **M1** — spliced entries 162–166 into `world-mission-log.md`, reordered to ascending numeric order (165 physically precedes 164 on #127; the recipe reorders), headings renormalized from `## Iteration N` to `## N`, positioned before `## 167`. The `dev` prefix and the `## 167` entry are untouched.
-- **M2** — added index rows 162–167 to `world-mission-index.md` (167 was missing too — I2 failed at base with exactly that error).
-- **M3** — landed PR #128's four defork-pin design docs byte-identically; kept `w-de-fork-ci-ownership.md` at dev's newer revision.
-- **M4** — refreshed queue row 68 with #128's text (the row's predicted condition fired); rotated charter STATUS to `167, 166, 165`; left the ledger literally untouched.
-- **M5** — prepended STATUS stamps 164, 163, 162, 161, 160 to the archive above the `(iteration 159)` stamp.
-- **M6** — forward-updated the dashboard; iteration-167's product findings survived verbatim.
-
-**The one authored artefact**: iteration 166's charter STATUS stamp did not exist (PR #128 wrote a log entry only). This sprint inserted a **`RECONSTRUCTED AT ITERATION 168`**-labelled stamp that is a quotation of the landed log entry 166 — it must never be read as a measurement taken at iteration 168.
-
-**Historical stamps caveat**: stamps 162–165 assert state that was true when written ("Ledger 21 rows / 3 OPEN", "D-WORLD-32/33 remain OPEN") and is no longer current. They are records, not live claims; they were moved verbatim, not rewritten. A future reader should treat archived stamps as history.
-
-**Verify gate** (charter-declared standard on the exact head): `go vet ./...` rc=0; `./scripts/verify_ail.sh` rc=0 (11 identities, 40 named tests); `go test ./... -count=1` rc=0 (19 `ok`, 0 FAIL); `./scripts/verify_go.sh` rc=1 with the failing-test set a subset of `{TestCLIRealSubprocessEpisode}` (isolated `-race -count=2` control rc=0 — the known flake, inherited not regressed); `mission_decisions.sh --check` rc=0 (22 rows).
-
-**Commits** (all `docs(mission)`):
-- `2f1f484` splice iterations 162-166 into the rotated log, renormalized and in order
-- `18d8e74` index rows for iterations 162-167 (167 was missing too)
-- `836f3df` land PR #128's four defork-pin design docs, keep dev's w-de-fork-ci-ownership
-- `22179a5` charter — refresh queue row 68, rotate STATUS to 167/166/165, ledger untouched
-- `9301b4f` rotate STATUS stamps 160-164 into the archive, newest at top
-- `ecd1563` dashboard — records reconciled, #127/#128 superseded
-
-**Out of scope defects recorded for the controller (not fixed here)**: (1) the charter's `## STATUS (rotation rule)` body has been stranded in the archive (the rule text sits at `world-mission-status-archive.md` lines 18–19); (2) `world-mission-index.md` has no rows for iterations 64 and 144, and neither log file carries `## 64`/`## 144`. Also flagged: nothing in CI or `scripts/` reads the log/index/dashboard, so correctness rests entirely on the `/tmp` instruments I1/I2 — promoting them into `scripts/` and wiring them into `verify_go.sh` is a candidate queue row deliberately not taken here (it would move the sprint out of `design_docs/**`).
-
-**Containment**: all work in worktrees; no edit to `tools/launchd/*`, the V1 checkout, `~/.ailang/state/mission-v1*`, or any skill file. Scope proof: `git diff --name-only origin/dev...HEAD | grep -vc '^design_docs/'` → 0.
-
-**Retro (Gate 5)**: the reconciling hazard this sprint exists to name is the *silent regression hiding inside a mechanical splice* — a stale status stamp, a reopened attended ruling, or an older dashboard snapshot landing undetected because the surrounding file still looks right. Every criterion here is either anchored to a byte hash (strongest, most brittle) or guarded by a mutation whose named killer was actually observed red and then restored byte-identical by sha256. When a splice is automatic, the drift you must fear is the one that looks green.
-
-**Routing — all four role slots accounted for, generator ≠ judge.** Controller `claude:claude-opus-5` (tok: not reported) · **designer NOT SPAWNED** — this pick creates and revises no design doc, and the roles table scopes the designer to `design-doc-creator` ("only when a new doc is actually needed"); the rotation pointer was therefore NOT advanced, and it still reads `pi:ollama/deepseek-v4-flash:0731-cloud` · planner `opus` via the Agent tool (141,413 tok; `resolve-role-spawn.sh planner` → `agent-tool opus fail-closed:no-doc`) · executor `pi:ollama/deepseek-v4-flash:0731-cloud` through `scripts/mission_pi_run.sh` (V1 checkout, absolute path — absent here, row 69's class; tok: not reported by the runner, 94 tool executions / 1,593 s) · evaluator `sonnet` via the Agent tool (151,144 tok; `resolve-role-spawn.sh evaluator` → `agent-tool sonnet declared:alias-pin`). Metered spend **$0.00** of the $5 ceiling — every lane is a subscription or flat-rate bucket, and no quorum ran (bookkeeping-only pick, Gate 2's stated skip).
-
-**Why the planner and executor lanes are what they are**: the driver's ration gate blocked the codex bucket this fire (`codex:gpt-5.6-sol quota admission blocked; skipping inference probe`, probe rc=75), so it degraded planner `codex → pi:ollama/kimi-k3:cloud` and executor `codex → pi:ollama/deepseek-v4-flash:0731-cloud` before the controller started. The spawn-pin hook is registered in the V1 checkout's `.claude/settings.json` and this repo has no `.claude/settings.json` hook entry for it, so it has **no opinion here** — which is precisely the condition under which `role-spawn-routing.md` §2(c) says the resolver wins. The planner therefore ran on the resolver's `opus`, not on the env pin. Recorded because it is a routing FACT, not a preference.
-
-**The pi runner's own load-bearing assertion is a false NEGATIVE against this skill's own executor contract.** `scripts/mission_pi_run.sh` returned verdict **`empty_worktree` (rc=10)** — the runner's name for the false-green class — with `worktree_changed_files: 0`, while the executor had in fact landed **seven commits and 2,892 insertions across 10 files**. The cause is at `mission_pi_run.sh:233`: `DIFF_LINES=$(git -C "$WORKDIR" status --porcelain | wc -l)` measures the **WORKING TREE**, so it is blind to committed work — and the skill's executor contract mandates *"commit per milestone"*, so a **well-behaved** executor scores zero on the one assertion the runner calls load-bearing. Two rules in one protocol, jointly unsatisfiable. The direction matters: this fails toward **discarding real work** (the prescribed response to a non-zero verdict is to fall back down the chain and re-run), which on this iteration would have redone a complete, evaluated sprint. Adjudicated first-party before acting: `git status --porcelain` → 0 lines (what the runner read) against `git diff --stat origin/dev..HEAD` → 10 files / 2,892 insertions (what happened). The fix is one line — measure `git diff --stat origin/dev..HEAD` or `git log origin/dev..HEAD`, or take the union with the working tree. `scripts/` in the V1 checkout is fleet-owned, so this is filed as row 84 and handed upstream, not patched here.
-
-**Independent evaluation**: **PASS 97/100, zero blocking findings** (`sonnet`; executor was `pi:ollama/deepseek-v4-flash:0731-cloud`, so generator ≠ judge, and the two are different vendors as well as different models). The judge worked in its own detached worktree at `a5038c5`, re-ran **all 46** acceptance criteria and **all 12** mutation-drill arms first-party with `shasum -a 256` restore verification, and confirmed both named silent regressions were avoided: the ledger block is byte-identical to `origin/dev`'s (empty `diff`), `D-WORLD-33/34/35` survive verbatim as RESOLVED, `--check` reads 22 rows and `--open` reads 0; iteration 167's STATUS stamp and dashboard content survive verbatim while the dashboard narrative moves forward. It adjudicated all five of the executor's self-disclosed defects **independently of the executor's account** — notably deriving the post-M4 charter state straight from `git show 22179a5` rather than from the recovery story, which is the right way to judge a "I broke it and put it back" disclosure. It also caught a per-milestone nuance the controller had not: AC5.1's `177` is true only at the M5 commit `9301b4f` and the head legitimately reads `178` after M7's own rotation — scored as correct rather than as a discrepancy. The 3 points off are both non-blocking: it could not force the `TestCLIRealSubprocessEpisode` flake to reproduce in 2 full-suite runs plus 4 isolated reps, so that one fact rests on the plan's captured transcript; and AC4.9's target/source wording in the plan is genuinely ambiguous.
-
-**Landing / Gate 3b**: PR [#132](https://github.com/sunholo-data/ailang-world/pull/132) → squash [`3305e2e`](https://github.com/sunholo-data/ailang-world/commit/3305e2e). GREEN on the **merge** commit: `present=2 == expected=2`, expected ENUMERATED from `ci.yml`'s own job list (`ailang-verify`, `go-verify`) rather than from memory, `not_green=0`; the PR head `a5038c5` was independently green 2/2 before the merge, so this is a head-and-merge pair rather than a single reading. Note the verify-gate correction the head measurement earned: the milestone record above recorded `verify_go.sh` **rc=1** from an intermediate run, and at the final head both the executor's last run and the judge's two runs read **rc=0** — the flake did not reproduce. The rc=1 reading stands as history; rc=0 is the head's value.
-
-**PRs [#127](https://github.com/sunholo-data/ailang-world/pull/127) and [#128](https://github.com/sunholo-data/ailang-world/pull/128) are CLOSED unmerged**, each carrying a comment explaining the supersession and, specifically, the one hunk that was deliberately not taken. Delivery asserted rather than assumed: comment counts `0 → 1` and `2 → 3` read back after posting, and the comment was posted with `--body-file` BEFORE the close, per the gate's own ordering rule.
-
-**Ruled out / not chased**
-- **Rebasing #127 and #128 as branches.** Their log commits append to a file that no longer has that shape after the rotation (`37a10f5`) and the heading normalization (`9166de0`); a mechanical rebase would also have replayed their stale `| D-WORLD-34 | OPEN |` / `| D-WORLD-35 | OPEN |` ledger hunks, duplicating an ID and reopening an attended ruling — the exact overwrite `D-WORLD-35`'s own text forbids. Reconciling the CONTENT is what the ruling asked for.
-- **Falling back down the executor chain on the runner's rc=10.** The verdict was measured wrong, not the work; see the false-negative finding above.
-- **Fixing the two out-of-scope defects the executor found** (the stranded `## STATUS (rotation rule)` body; the missing index rows for iterations 64 and 144). Both are real and both are now rows 85 and 86 — taking them would have moved the sprint outside `design_docs/**` and past one backlog item.
-- **Re-litigating `D-WORLD-35`.** The ledger decided it; this loop does not adjudicate a human ruling, and it did not re-ask.
-
-**Parked for human**: nothing. The ledger is at **22 rows, ZERO OPEN**, unchanged by this iteration and proven so, so this iteration asks Mark for nothing.
-
-**Next**: rows 66, 68–78, 81–86, then 39. Row 65 is DEFERRED per `D-WORLD-33`; rows 79/80 remain parked design review.
+> **Older entries are ARCHIVED.** This file holds the newest 20. The full record of every
+> iteration is in `world-mission-log-archive.md`, and a one-line index of ALL of them —
+> the thing to grep before picking work, so the loop never repeats itself — is in
+> `world-mission-index.md`.
 
 ## 169 — 2026-09-07 — row 66 LANDED: the quoted-trigger-key trims are pinned at BOTH sites, and three quorum rounds localised onto one surface that was SPLIT OUT as row 87 [PRODUCT]
 
@@ -1143,3 +834,58 @@ It also corrected my directive: F3's control output was truncated by my own `hea
 **Progress:** 1.0 has clauses 4, 5 and 6 unmet. This iteration **moved clause 6**: the registry has a production writer and the card can list published skills. Clause 6 stays unmet until real content is publishable (Residual 7) and MCP dispatch lands (row 108, blocked on #885).
 
 **Next**: 106 (groom position 2, routable), 108 (when #885 ships), 93, 114, 94. **Decision ledger: 25 rows, ONE OPEN (`D-WORLD-38`).**
+
+## 196 — 2026-09-26 — row 106's first slice LANDED: an invocation coordinator (propose → verify → execute in the capsule → commit; step-1a in-flight guard; step-1b journal reconciliation) with no production caller; the `/a2a/` wiring is blocked on row 23's policy tranche by a quorum scope-cut, and `D-WORLD-39` asks to move that tranche to groom position 2; judged 95 [PRODUCT]
+
+**Kind**: full inner loop. Designer (a capacity fallthrough in the rotation) → quorum r1 → revision → r2 → narrow-refinement carve-out → codex planner → codex executor → controller commit rebuild → sonnet evaluator → Gate 3b. No orphan (0 open PRs; the only stale worktree is row 92's).
+
+**Picked.** Clause map: 1, 2, 3, 7 MET; 4 UNMET (row 93, needs 106 + 108); 5 UNMET (row 114); 6 UNMET (107 landed; **106 routable, groom position 2 → picked**; 108 blocked). The row-108 predicate was re-measured: the `serveapi/protocol` blob set hashes identically at `v0.33.2` and `v0.44.1` (5 files each), and `ailang#885` is OPEN. Gate 0 inbox: one `harness-resolved` reply (`driver:slot-kill-leaves-orphan-descendants`, fleet PR #1325). No row carries its `[HARNESS]` tag, so nothing was unparked; acked.
+
+**Design.** Rotation glm → **`pi:ollama/kimi-k3:cloud`** (probe rc=0). It spent 629 s and 110 reads researching productively, then the Ollama Cloud **weekly usage limit** returned `429` four times: `mission_pi_run.sh` verdict `empty_worktree` rc=10. That is a **capacity** failure, not evidence about kimi as a designer, so its first World turn is still unmeasured. Fell through to the next rotation entry, **`claude:claude-opus-5-5`** via `claude-sub` (probe rc=0): 1133 s, 92k output tokens. It produced a 422-line doc with a 30-row Verification Log (every negative has a control) and a prototype for M1–M4b with 26/26 mutations killed. The controller re-ran the prototype with pinned v0.41.0: vet 0, 24 ok / 0 FAIL. Two facts the doc measured at HEAD matter beyond this row:
+- **The publish check and the capsule disagreed on module paths.** Publication checks under `AILANG_RELAX_MODULES=1`; the capsule ran strict. So any module-named source passed publication and failed invocation with MOD010. This is a concrete instance of row 107's Residual 8.
+- **The capsule had no argument channel.** The pinned interpreter's `--args-file` provides one.
+
+**Quorum.**
+- **r1 BLOCKED 2/2** ($0.21). The glm and kimi seats were ABSENT, unreachable on the same Ollama limit; reserve astra was seated and Claude benched as the author's vendor. The controller measured both premises before routing:
+  - gemini's "`Descriptor` stores no skill ID" is **FALSE** (`transitionreg.go:22`; the prototype already writes `SkillID: d.ID`).
+  - astra's "the durable tail is unbounded" is **TRUE** (`store.Commit` → `s.db.Begin()` with no ctx on a `SetMaxOpenConns(1)` pool; `busy_timeout` 2000 ms bounds lock waits only).
+  - Revision (opus, resumed session, 515 s): the skill ID is made explicit; the deadline claim is weakened to steps 1–9; resend-by-task-id reconciliation is added; R-106-11 goes to row 23.
+- **r2 BLOCKED 2/0 on one surface** ($0.27). gemini: a TOCTOU window between step 1b and step 10 lets a concurrent same-ID retry double-execute. The controller adds that the same window also breaks R15's "not committed" inference. astra: reconciliation bounds nothing, because the resend enters the same unbounded read. Both objections carried concrete `proposed_fix` text and neither disputed direction → **narrow-refinement carve-out** `bf5e213`, both fixes verbatim:
+  - a step-1a in-flight tracker (R17);
+  - **M1–M4c land without a production caller; M5/M6 BLOCKED on row 23's policy tranche.**
+  - glm/kimi could not be restored (quota, not budget), so the verdict is recorded as "at N−1 per round, `oc-glm-5-3`/`oc-kimi-k3` absent (unreachable: Ollama weekly limit)".
+
+**Plan.** `derive-planner-lane.sh` → `opus fail-closed:planner-lane-field-missing`, while `MISSION_PLANNER_MODEL=codex:gpt-6-sol` is a provider pin. Per role-spawn-routing §2(a) the planner was routed to the pin under the codex recipe (probe rc=0), in a detached planner worktree. Plan `0228250`, 120,282 tok: 6 milestones M1/M2/M3/M4a/M4b/M4c. Each cumulative boundary was simulated in scratch with vet + compile rc 0. R17 is an immediate refusal with release in a `defer`. The design's M4c reconciliation moved into M4b, because the prototype's `Dispatch` already depends on it.
+
+**Execute.**
+- Executor `codex:gpt-6-sol` (108,090 tok), in sprint worktree `.wt-iter196` at `0228250`: M1–M4c from `.prototype/` plus R17, per-milestone `.snap/`, a 45-row mutation drill. Its first drill exposed two weak tests (CFG-NIL survived; R12-CAP's fixture was not valid JSON because of NUL bytes), and it strengthened both, then got 45/45. Its in-sandbox full suite was rc 1 on loopback/process tests, correctly labelled UNINFORMATIVE UNDER SANDBOX.
+- The controller rebuilt one commit per milestone from the snapshots: M1 `88f2ce1`, M2 `ee98492`, M3 `2ac5ef4`, M4a `3583ad0`, M4b `abdd865`, M4c `254f4f4`. Each boundary ran vet 0, compile 0 and the milestone's package tests ok. The final tree is **sha256-identical** to the executor's (10/10). Full gates outside the sandbox: vet 0, **24 ok / 0 FAIL**, verify_ail PASS. The two `gofmt -l` hits are pre-existing `host/store` test files, untouched by this sprint.
+
+**Judge.** Evaluator `sonnet` via the Agent tool, foreground, own worktree `.eval-world-iter196` at `254f4f4`: **PASS 95/100, ZERO BLOCKING**. It killed 11/11 of its own mutations across all 4 production files, including an intercept-and-re-panic mutation killed by the panic subtest alone. It confirmed zero production importers of `host/coordinator`, that `OpenBinder` narrows authority (the TR.C inside-exemption count stays 3), and that no comment overclaims a durable-tail bound. It had two non-blocking notes:
+- The relax flag widens legacy `Run` unconditionally. That is documented in the design as a strict widening.
+- `committed()` does not re-hash the objects it reads back. **Reproduced by the controller** at `coordinator.go:163-188` → R-106-12, folded into M5.
+
+**Land.** PR bodies and commits carry no closing keyword. PR [#152](https://github.com/sunholo-data/ailang-world/pull/152) head `254f4f4`: 2/2 green, `MERGEABLE/CLEAN`. Squash-merged **`a9a3382`**; the SHA-pinned poll on the MERGE shows 2 present / 2 completed / 2 success. The doc and plan stay in `planned/`: the row is not complete.
+
+**Decision filed: `D-WORLD-39` (OPEN, one word).** Should row 23's policy tranche move from groom position 7 to 2? A (recommended, the default under the critical-path rule): yes. B: keep the order. Nothing else is blocked; `D-WORLD-38` stays OPEN.
+
+**Ruled out / process findings**
+- **(a) A quota wall looks like a model failure unless you read the error.** kimi's verdict was `empty_worktree`. Only the NDJSON's `stopReason=error` messages showed `429 weekly usage limit`. The same wall also removed two of the three seated quorum reviewers in both rounds. Classify by reading the provider error, never by the runner's verdict alone.
+- **(b) The quorum pool shares a quota bucket with the designer rotation.** When Ollama Cloud is dry, glm and kimi vanish from BOTH lists at once, and the quorum degrades to gemini + reserve astra. It still blocked honestly, but a single-vendor outage now halves the design review. This is capacity (standing rule 8 `PARKED-ON-LANE` class), not a decision.
+- **(c) A concurrency window hides behind a correct single-caller argument.** R15's "intent without outcome ⇒ not committed" was sound for sequential callers and false for a concurrent same-ID retry. The reviewer found the double-execution half; the controller found the inference half by reading the step table.
+- **(d) A scope-cut from the quorum moves the critical path, and the groom cannot follow on its own.** Filed as `D-WORLD-39` rather than reordering the attended groom (Gate-2 rule (d)).
+- **(e) `origin/dev` moved mid-iteration** (`7b7dd1b`, an attended harness cleanup). The first push was refused non-fast-forward; the controller rebased the four docs-only commits onto it (disjoint files) and re-created the sprint worktree on the new head. It was not forced.
+
+**Routing evidence**: base=`a9a338281cc6bd939ceb04fecd2c38cb00314a3f` (Gate 4 record). Gate 1 read `535330de3962744103c4ee484beed0217e4fd6f8`. It moved by one attended commit (`7b7dd1b`) plus this iteration's own pushes. `mission-base.sh record gate1` was NOT run at Gate 1 (the script lives in the fleet checkout, not this repo), so the provenance above is the controller's own `rev-parse` readings.
+- Controller `claude:claude-opus-5-5` (session; tok: not reported).
+- Designer `pi:ollama/kimi-k3:cloud` (rotation glm → kimi; 629 s, 110 tool calls; **capacity failure**, Ollama weekly limit 429; subscription, tok in the NDJSON) → fell through to **`claude:claude-opus-5-5`** (`recipe … declared:provider-pin`; create 92k out + revision 32k out). Rotation state → `pi:ollama/kimi-k3:cloud`.
+- Planner **`codex:gpt-6-sol`** (resolver `opus fail-closed:planner-lane-field-missing` under a provider pin → pin; 120,282 tok).
+- Executor **`codex:gpt-6-sol`** (`recipe … declared:provider-pin`; 108,090 tok).
+- Evaluator **`sonnet`** (`agent-tool sonnet declared:alias-pin`; 154,465 tok).
+- Quorum r1 (gemini $0.036, astra $0.173), r2 (gemini $0.049, astra $0.222); glm and kimi absent both rounds.
+- Generator ≠ judge: opus designed, codex planned and built, sonnet judged. **Every role spawned. One lane failed on capacity (kimi designer), and the fallback is recorded.**
+- **Metered $0.48** (quorum only). Under the $5 ceiling.
+
+**Progress:** 1.0 has clauses 4, 5 and 6 unmet. This iteration **moved clause 6's capability**: World can now invoke a published transition end to end in-process, tested against the real pinned interpreter. Clause 6 stays unmet until `/a2a/` is wired (M5, after row 23's tranche) and MCP dispatch lands (row 108, blocked on #885).
+
+**Next** (default of `D-WORLD-39`): row 23 policy tranche → 106 M5/M6 → 108 when #885 ships → 93, 114, 94. **Decision ledger: 26 rows, TWO OPEN (`D-WORLD-38`, `D-WORLD-39`).**

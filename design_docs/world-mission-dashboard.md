@@ -1,23 +1,23 @@
-# Mission Dashboard — World (snapshot 2026-09-26, iteration 195)
+# Mission Dashboard — World (snapshot 2026-09-26, iteration 196)
 
-- **State**: **row 107 has landed** (`w-transition-registry-production-publisher`, clause 6, groom position 1 on the critical path). PR #151 was squash-merged as **`b7cfbdb`**, and remote CI is **green on the merge** (2/2, Gate 3b SHA-pinned).
-  - The transition registry finally has a production writer: `world-publish transitions`, behind the attended-operator fence, publishes through `transitionreg.PublishSet`.
-  - `PublishSet` refuses an absent source, a source the pinned interpreter's `check` refuses, an epoch the epoch registry does not nominate for that descriptor's OWN interpreter, and a same-ID CAS-retry conflict.
-  - A daemon test shows the A2A card listing a skill published this way, and an unauthorised session seeing zero.
-  - **Honest limit (Residual 7):** no landed `.ail` source can be published yet. `world/transitions.ail` imports `world/*` and is refused hermetically (LDR001). The first real card content needs a self-contained transition module or row 106's staging.
-- **Also this iteration**: dev's CI was **red** at the attended regroom `ad13c7b`. The queue census read the regroom's `1./2./3.` rule list as duplicate queue rows. The fix is format-only (`0aa53e6`), CI green.
+- **State**: **row 106's first slice has landed** (`w-transition-invocation-coordinator`, M1–M4c, clause 6, groom position 2). PR #152 was squash-merged as **`a9a3382`**, and remote CI is **green on the merge** (2/2, Gate 3b SHA-pinned).
+  - `host/coordinator` runs a published transition: propose (`transitionreg.Bind` through a new bind-only `broker.OpenBinder`), then verify the pins, execute in the capsule, and commit through the store journal.
+    - A step-1a in-flight guard means a concurrent same-task-id retry is refused and never executes twice.
+    - A step-1b reconciliation means a resent task id is answered from the journal without re-executing.
+  - `capsule.RunContext` now takes the caller's context and an `--args-file` argument. It stages under `AILANG_RELAX_MODULES=1`, the same as the publish check, which closes a measured check-passes/run-fails MOD010 divergence.
+  - **Honest limit:** there is **no production caller yet**, and `/a2a/` still refuses (-32603). Quorum r2 made row 23's policy tranche (bounded durable `Commit`/`AppendIntent`/receipt reads) a **prerequisite** of the `/a2a/` wiring (M5).
 - **Quality**:
-  - Quorum: r1 BLOCKED 3/3 → glm revision; r2 BLOCKED 2/1 (gemini pass) → narrow-refinement carve-out; astra re-run → one more claim-weakening, applied verbatim. astra's binding-record proposal was refuted by ratified D1.
-  - The planner found a real macOS/Linux divergence in the source check (MOD010); fixed with one line, reproduced by the controller.
-  - Executor 19/19 mutations; judge **PASS 93 → 96/100, zero blocking** (sonnet, own worktree). Its one surviving mutation was closed by a controller test pin (sole killer).
-- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · 5 UNMET (row 114, waits on a real question) · 6 UNMET, moved this iteration (next: 106; 108 blocked on `ailang#885`, blobs identical at v0.44.0).
-- **Next**: 106 (position 2, routable), 108 (when #885 ships), 93, 114, 94.
-- **Parked for Mark**: **`D-WORLD-38`** — one word: the verb's typed confirmation phrase.
-  - **A (shipped default, designer's pick):** keep the shared `publish world/core@0.1.0 irreversibly`.
-  - **B (loop's lean):** its own phrase `publish transition registry irreversibly` (~5 lines), so the operator confirms what they are actually doing.
+  - Quorum: r1 BLOCKED 2/2 (one premise refuted, one measured true) → revision. r2 BLOCKED 2/0 on one surface → narrow-refinement carve-out, with fixes applied verbatim.
+  - The glm and kimi reviewer seats were absent in both rounds (Ollama weekly limit).
+  - The executor killed 45/45 mutations. The controller rebuilt the per-milestone commits and got a sha256-identical tree; the full suite is 24 ok / 0 FAIL.
+  - The judge scored **PASS 95/100, zero blocking** (sonnet, own worktree, 11/11 of its own mutations killed).
+- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · 5 UNMET (row 114, waits on a real question) · 6 UNMET, capability moved this iteration (next: row 23 tranche → 106 M5/M6; 108 blocked on `ailang#885`, blobs identical at v0.44.1).
+- **Next** (default of `D-WORLD-39`): row 23 policy tranche → 106 M5/M6 → 108 → 93, 114, 94.
+- **Parked for Mark**:
+  - **`D-WORLD-39`** (new, one word): move row 23's policy tranche to groom position 2? It now gates the `/a2a/` wiring. **A (recommended, the default)**: yes. **B**: keep the order.
+  - **`D-WORLD-38`**: the typed phrase for publishing a transition. **A** keep the shared phrase (the shipped default), or **B** give it its own phrase (the loop's lean).
 - **Cadence/routing**:
-  - **Roles:** controller `claude-opus-5-5`, designer `pi:ollama/glm-5.3:cloud` (rotation; first World turn, authored correctly), planner and executor `opus` (codex over daily ration), evaluator `sonnet` (Agent tool). Every role spawned; none failed.
-  - **Spend:** **$0.91 metered** (quorum + one reviewer re-run).
-- **Maintenance for an attended session**:
-  - The running skill (V1 main checkout) is 21 commits behind the fleet's `origin/dev`, including the Gate-2 critical-path check. This iteration read origin's version by hand.
-  - QUICKSTART §6 (publish a transition) is marked *pending attended run*. It needs a TTY and a typed phrase, so only an attended session can execute it verbatim.
+  - **Roles:** controller `claude-opus-5-5`; designer `pi:ollama/kimi-k3:cloud` (rotation), **cut off by the Ollama weekly limit** after research, fell through to `claude:claude-opus-5-5`; planner and executor `codex:gpt-6-sol`; evaluator `sonnet` (Agent tool).
+  - **Spend:** **$0.48 metered** (quorum only).
+- **Capacity watch**: Ollama Cloud's weekly bucket is dry. That removes glm and kimi from the designer rotation AND from the quorum pool at once, and it also affects the pi fallback links for the executor and planner.
+- **New row 115**: a pre-existing macOS capsule EPERM flake (3/320 by the designer; not reproduced by the controller).

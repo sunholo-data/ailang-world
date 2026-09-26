@@ -12,17 +12,17 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
-| 195 | 2026-09-26 | row 107 LANDED: world-publish transitions → transitionreg.PublishSet (presence + pinned `check` + per-interpreter epoch nomination + same-ID CAS conflict), card lists published skills; no landed .ail publishable yet (R7); dev CI red from groom list fixed; D-WORLD-38 phrase... |
-| 194 | 2026-09-26 | row 23 plumbing LANDED: 11 store reads inherit the caller context, empty ratchet + 15-root census + host/cmd surface guard; strict guard + Commit parked on D-WORLD-37 (A recommended)... |
-| 193 | 2026-09-26 | row 24 LANDED: group-wide overflow kill, joined kill error, one cleanup deadline bounding drain + direct-child wait (procbound); orphans 190-192 credited (two killed by their own kill(-1) probe)... |
-| 189 | 2026-09-25 | row 22 LANDED: the daemon refuses to start unless the store's effective busy_timeout is below its read deadline; row 93 re-gated on capability... |
+| 196 | 2026-09-26 | row 106's first slice LANDED: an invocation coordinator (propose → verify → execute in the capsule → commit; step-1a in-flight guard; step-1b journ... |
+| 195 | 2026-09-26 | row 107 LANDED: the transition registry has a production writer — `world-publish transitions` → `transitionreg.PublishSet` (presence, standalone `c... |
+| 194 | 2026-09-26 | row 23's plumbing tranche LANDED: all 11 formerly deadline-free store reads inherit the caller's context, the ratchet is an empty map, and a root c... |
+| 193 | 2026-09-26 | row 24 LANDED: the overflow kill is process-group-wide in capsule and broker, a failed kill is joined behind the typed error, and one cleanup deadl... |
+| 189 | 2026-09-25 | row 22 LANDED: the daemon refuses to start unless the store's effective busy_timeout is below its read deadline, and a test reds on a reorder in ei... |
 | 188 | 2026-09-25 | row 27 LANDED: `interfaceHash` is honestly labelled as manifest coverage, and upstream's own `InterfaceHashV2` travels beside it through packet, ga... |
 | 187 | 2026-09-25 | row 40 card half LANDED: a session-scoped A2A agent card and a fail-closed `/a2a/` on row 39's session boundary — after a measured SPLIT, because t... |
 | 186 | 2026-09-25 | rows 98+102 LANDED: the workbench object page's provenance walk and grade line are never blank — one exact edge existence-checked, two named stops,... |
 | 185 | 2026-09-24 | row 34 LANDED: the workbench's closed grammar, href guard and verdict line are pinned — 20 surviving mutants now each have a named killer, test-onl... |
 | 184 | 2026-09-24 | rows 35+38 LANDED: the workbench timeline is a paged, selectable surface whose entries lead to objects — the full inner loop, with every role check... |
 | 183 | 2026-09-24 | row 92 LANDED: the clause-5 1.0 value demonstration — 4/4 real questions answered by a provenance walk in 10–20 s and verified outside World; the a... |
-| 182 | 2026-09-24 | ORPHANED: row 92 doc revised r1/r2 (quorum carve-out) + plan `10cce28` (kimi-k3), pi executor did M1–M3; controller killed at gate-3 rc=143 by the stall watchdog; credited and landed by iteration 183 |
 | 181 | 2026-09-24 | row 39 LANDED: the parked twice-judged sprint merged with CI green on the attended harness fix — and CI's bench gate caught what every local gate m... |
 | 180 | 2026-09-23 | row 39 COMPLETE but UNLANDABLE from a pi-controller slot: the orphaned sprint executed, the independent judge passed it 95/100 — and the fleet's pr... |
 | 175 | 2026-09-14 | row 74 LANDED: a real check-no-personal-email gate in World's CI — and the judge's one blocking finding was a substring whitelist the fleet's own c... |
