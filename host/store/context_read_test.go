@@ -367,10 +367,7 @@ func TestReadRetriesUnderTransientExclusiveLock(t *testing.T) {
 // deadline-free store read anywhere under host/ or cmd/ reds this test. That is
 // what makes the follow-on item's progress mechanically observable, 11 -> 0, and
 // what lets the store-boundary reject land exactly when this reads zero.
-var deadlineFreeReadPins = map[string]int{
-	"host/registry/registry.go": 2,
-	"host/replay/replay.go":     1,
-}
+var deadlineFreeReadPins = map[string]int{}
 
 // deadlineFreeReadCall matches a call of one of the six context-first read
 // getters whose context argument is the deadline-free literal.

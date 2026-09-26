@@ -19,7 +19,7 @@ import (
 // either constant into the wrong order and New refuses here. It is a
 // configuration check, not a runtime bound on a lock-blocked read.
 func TestProductionBusyTimeoutConfiguredBelowReadDeadline(t *testing.T) {
-	d, err := New(Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost})
+	d, err := New(context.Background(), Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost})
 	if err != nil {
 		t.Fatalf("New on the production defaults: %v", err)
 	}
@@ -50,7 +50,7 @@ func TestNewRefusesBusyTimeoutAtOrAboveReadDeadline(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "world.db")
 			dsn := fmt.Sprintf("file:%s?_pragma=busy_timeout(%d)", path, tc.window.Milliseconds())
-			d, err := New(Config{DBPath: dsn, BindHost: DefaultBindHost})
+			d, err := New(context.Background(), Config{DBPath: dsn, BindHost: DefaultBindHost})
 			if !tc.refused {
 				if err != nil {
 					t.Fatalf("New refused an ordered window %s: %v", tc.window, err)

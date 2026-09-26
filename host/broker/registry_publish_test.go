@@ -1294,7 +1294,7 @@ func driveReplayEntry(t *testing.T, probe string) {
 	}
 	// The recorded result deliberately does not match the probe's banner, so
 	// ReplayEntry returns a divergence — AFTER step 4 has launched the child.
-	_, _ = replay.NewEngine(base, a).ReplayEntry(replay.Episode{
+	_, _ = replay.NewEngine(base, a).ReplayEntry(context.Background(), replay.Episode{
 		WorldLibDir: t.TempDir(),
 	}, 0, replay.EpisodeEntry{
 		TransitionFn:      source.Hash,

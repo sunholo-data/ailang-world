@@ -21,7 +21,7 @@ import (
 
 func newHandlerDaemon(t *testing.T) *Daemon {
 	t.Helper()
-	d, err := New(Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost})
+	d, err := New(context.Background(), Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost})
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}

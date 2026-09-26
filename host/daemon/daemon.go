@@ -451,7 +451,8 @@ func resolveErrorLog(w io.Writer) io.Writer {
 // misconfigured bind never disturbs a database another process is serving.
 // Every failure after store.Open closes the store, releasing the writer lock:
 // a refused startup must not strand writer authority.
-func New(cfg Config) (*Daemon, error) {
+// ctx is threaded to bootstrap reads; it does not bound every startup operation.
+func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	if !isLoopbackHost(cfg.BindHost) {
 		return nil, &StartupError{
 			Stage: StageBindPolicy,
@@ -507,7 +508,7 @@ func New(cfg Config) (*Daemon, error) {
 	// divergence and registry.Bootstrap returns an error for it. Surfacing that
 	// as a fatal StartupError is the point: a divergent registry head must never
 	// be silently accepted or rewritten.
-	if _, _, err := registry.Bootstrap(s, release); err != nil {
+	if _, _, err := registry.Bootstrap(ctx, s, release); err != nil {
 		return nil, d.abort(StageRegistry,
 			fmt.Sprintf("cannot bootstrap %s with release %q", registry.SemanticID, release), err)
 	}
@@ -796,7 +797,7 @@ func drain(srv shutdowner, timeout time.Duration) error {
 // Run returns a non-nil error when the drain did not finish, so the process can
 // exit non-zero on an incomplete shutdown.
 func Run(ctx context.Context, cfg Config, announce io.Writer) error {
-	d, err := New(cfg)
+	d, err := New(ctx, cfg)
 	if err != nil {
 		return err
 	}

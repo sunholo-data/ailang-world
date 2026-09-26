@@ -778,13 +778,13 @@ func (s *Store) PutVerifyResult(r VerifyResult) error {
 
 // GetVerifyResult looks up a cached verify result by the pair
 // (transitionFn, interpreter) EXCLUSIVELY; ok=false on a miss.
-func (s *Store) GetVerifyResult(transitionFn, interpreter hashref.HashRef) (VerifyResult, bool, error) {
+func (s *Store) GetVerifyResult(ctx context.Context, transitionFn, interpreter hashref.HashRef) (VerifyResult, bool, error) {
 	var (
 		epoch    int64
 		verified int
 		detail   string
 	)
-	row := s.db.QueryRow(
+	row := s.db.QueryRowContext(ctx,
 		`SELECT semantics_epoch, verified, result_detail
 		   FROM verification_cache
 		  WHERE transition_fn_ref = ? AND interpreter_ref = ?;`,
@@ -1133,4 +1133,3 @@ func (s *Store) RevokeSession(ctx context.Context, credentialID string) error {
 	}
 	return nil
 }
-

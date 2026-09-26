@@ -73,7 +73,7 @@ func integrityFixture(t *testing.T) string {
 }
 
 func TestIntegrityStartupSweepPagesBothTables(t *testing.T) {
-	d, err := New(Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0})
+	d, err := New(context.Background(), Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,7 +232,7 @@ func TestIntegrityWarningsNeverBlockStartupForAOneLineReader(t *testing.T) {
 }
 
 func TestIntegrityStartupSweepReportsTruncation(t *testing.T) {
-	d, err := New(Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0})
+	d, err := New(context.Background(), Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0})
 	if err != nil {
 		t.Fatal(err)
 	}

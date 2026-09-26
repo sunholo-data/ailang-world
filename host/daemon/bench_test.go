@@ -205,7 +205,7 @@ func BenchmarkCommitWithReceipt(b *testing.B) {
 func benchmarkDaemonGET(b *testing.B, route string, seed bool) {
 	b.Helper()
 	dbPath := filepath.Join(b.TempDir(), "world.db")
-	d, err := New(Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
+	d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
 	if err != nil {
 		b.Fatalf("New: %v", err)
 	}
@@ -291,7 +291,7 @@ func BenchmarkHealth(b *testing.B) {
 
 func BenchmarkRESTCommit(b *testing.B) {
 	dbPath := filepath.Join(b.TempDir(), "world.db")
-	d, err := New(Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
+	d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
 	if err != nil {
 		b.Fatalf("New: %v", err)
 	}
@@ -367,7 +367,7 @@ func BenchmarkLogRange(b *testing.B) {
 	for _, limit := range []int{100, 500} {
 		b.Run(fmt.Sprintf("limit_%d", limit), func(b *testing.B) {
 			dbPath := filepath.Join(b.TempDir(), "world.db")
-			d, err := New(Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
+			d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
 			if err != nil {
 				b.Fatalf("New: %v", err)
 			}

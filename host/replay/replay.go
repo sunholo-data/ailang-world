@@ -115,8 +115,14 @@ func (e *DivergenceError) Error() string {
 // Engine is the authoritative replay engine. It reads pinned objects from a
 // Store, resolves interpreters from an Archive, and drives the released binary
 // as a subprocess. It never links or reimplements the interpreter.
+type replayStore interface {
+	GetObject(context.Context, hashref.HashRef) (store.Object, bool, error)
+	GetVerifyResult(context.Context, hashref.HashRef, hashref.HashRef) (store.VerifyResult, bool, error)
+	PutVerifyResult(store.VerifyResult) error
+}
+
 type Engine struct {
-	store   *store.Store
+	store   replayStore
 	archive *archive.Archive
 }
 
@@ -148,9 +154,10 @@ type ReplayResult struct {
 // object, unresolved interpreter, or exec failure returns the appropriate
 // structured error (store / archive.ReplayError). idx is the entry ordinal used
 // only for error context.
-func (e *Engine) ReplayEntry(ep Episode, idx int, entry EpisodeEntry) (ReplayResult, error) {
+// ctx governs source/cache reads; subprocess lifetime is separately owned.
+func (e *Engine) ReplayEntry(ctx context.Context, ep Episode, idx int, entry EpisodeEntry) (ReplayResult, error) {
 	// Step 1: load transitionFn canonical bytes and verify content address.
-	src, ok, err := e.store.GetObject(context.Background(), entry.TransitionFn)
+	src, ok, err := e.store.GetObject(ctx, entry.TransitionFn)
 	if err != nil {
 		return ReplayResult{}, err
 	}
@@ -188,7 +195,7 @@ func (e *Engine) ReplayEntry(ep Episode, idx int, entry EpisodeEntry) (ReplayRes
 	// Step 3: consult the (transitionFn, interpreter) verify cache. A miss
 	// re-verifies (here: confirms the pinned pair resolves) and caches the row.
 	// semanticsEpoch is written as metadata only and never keys the lookup.
-	_, cacheHit, err := e.store.GetVerifyResult(entry.TransitionFn, entry.Interpreter)
+	_, cacheHit, err := e.store.GetVerifyResult(ctx, entry.TransitionFn, entry.Interpreter)
 	if err != nil {
 		return ReplayResult{}, err
 	}
@@ -250,10 +257,10 @@ func (e *Engine) ReplayEntry(ep Episode, idx int, entry EpisodeEntry) (ReplayRes
 // ReplayEpisode replays every entry of an episode in order and returns the
 // per-entry results. The first divergence or structured error stops the episode
 // and is returned.
-func (e *Engine) ReplayEpisode(ep Episode) ([]ReplayResult, error) {
+func (e *Engine) ReplayEpisode(ctx context.Context, ep Episode) ([]ReplayResult, error) {
 	results := make([]ReplayResult, 0, len(ep.Entries))
 	for i, entry := range ep.Entries {
-		r, err := e.ReplayEntry(ep, i, entry)
+		r, err := e.ReplayEntry(ctx, ep, i, entry)
 		if err != nil {
 			return results, err
 		}
