@@ -33,7 +33,7 @@ not just the CLI. `canon.Source` (host/canon/source.go:47-80, F13) enforces **no
 space/tab, and performs **no parse and no type-check** — so canonicalisation alone proves
 nothing about loadability; the interpreter check in (b) is what does. The loadability check's
 honest scope is the hermetic capsule shape (F17): a source is checked STANDALONE in a scratch
-root, so a module whose imports cannot resolve there (e.g. a copy of `world/transitions.ail` without its `world/*` siblings) is refused with the interpreter's own LDR001 output; per F18 the capsule execution engine stages only the entry source under `AILANG_FS_SANDBOX`, so the same source would fail identically at execution — the publish-time refusal is the executability contract, not a limitation.
+root, so a module whose imports cannot resolve there (e.g. a copy of `world/transitions.ail` without its `world/*` siblings) is refused with the interpreter's own LDR001 output; per F18 the capsule execution engine stages only the entry source under `AILANG_FS_SANDBOX`, so the same source would fail identically at execution — the publish-time refusal is a necessary condition for executability, not a limitation. Publication verifies source presence and successful standalone checking under the pinned interpreter, plus advisory epoch nomination. It does not establish invocation compatibility, descriptor/schema correspondence, or successful execution.
 
 ## Findings (F-table)
 
@@ -81,8 +81,13 @@ carve-out**: kimi's two fixes VERBATIM (Problem sentence; Residual 7, backed by 
 astra's claim-weakening sentence VERBATIM (Q2) and its two-interpreter test adopted as
 AC-EPOCH-TWIN in the form that pins the true behaviour. astra's further proposal — an authorized
 HashRef↔epoch binding record — was **not** applied, because it would reverse ratified D1
-(epoch = compatibility metadata, HashRef = authoritative pin); the refutation is in Q2, and the
-controller re-runs astra alone against this revision rather than asserting it is satisfied.
+(epoch = compatibility metadata, HashRef = authoritative pin); the refutation is in Q2. The controller then re-ran astra alone against that revision ($0.22): it
+**no longer contested the epoch point** and rejected on a NEW overclaim, "guaranteed
+capsule-executable" (introduced by kimi's verbatim Residual-7 text), with a verbatim
+claim-weakening fix, applied in Q2, the Problem statement and Residual 7. Its request to prove
+invocation through the production capsule path is Residual 8 (row 106 owns the invocation
+contract, which does not exist yet). Objections localised onto claim STRENGTH across rounds 2–3
+while gemini passed; no further round was run.
 
 ## Design
 
@@ -177,8 +182,8 @@ Measured inventory of existing verification helpers the publisher can lean on:
   covered too. Honest scope (F17/F18): the check is hermetic — a source whose imports cannot
   resolve in the scratch root is refused with the interpreter's own LDR001 output; per F18 the
   capsule execution engine (row 106's `Bind` → capsule) stages only the entry source under
-  `AILANG_FS_SANDBOX`, so the same source would fail identically at execution. A published skill is therefore
-  guaranteed loadable in the shape it will be executed in. The check adds no new authority
+  `AILANG_FS_SANDBOX`, so the same source would fail identically at execution. A refusal here therefore predicts a refusal at
+  execution; an ACCEPTANCE predicts nothing stronger than the check itself. Publication verifies source presence and successful standalone checking under the pinned interpreter, plus advisory epoch nomination. It does not establish invocation compatibility, descriptor/schema correspondence, or successful execution. (quorum r2 astra re-run, verbatim; see Residual 8.) The check adds no new authority
   surface: `check` parses and type-checks, it never runs the module. Two S8-class inventories
   FIRE on this addition and move with it (V31): the AC10 subprocess-site census
   (`host/broker/registry_publish_test.go` gained the `host/archive/check.go` driver) and the
@@ -360,7 +365,8 @@ B adds new fence surface for no authority gain. **The row lands complete without
    designer. The check is hermetic by measurement (F17/F18); if row 106's engine stages a world
    library for executed sources, the publish check should widen to the same shape
    (`EnsureSourceLoadable` is the seam).
-7. **Operational consequence (quorum r2, oc-kimi-k3; verbatim).** Measured consequence: the repo's only landed transition module, `world/transitions.ail` (F6), imports `world/*` and is refused by this check (V26(b)); therefore after this row lands, the production path exists and everything it publishes is guaranteed capsule-executable, but no existing `.ail` source can be published through it. First real card content requires either a new hermetically self-contained transition module or row 106 widening capsule staging plus `EnsureSourceLoadable` (Residual 6). Backed by V37.
+7. **Operational consequence (quorum r2, oc-kimi-k3; verbatim).** Measured consequence: the repo's only landed transition module, `world/transitions.ail` (F6), imports `world/*` and is refused by this check (V26(b)); therefore after this row lands, the production path exists and everything it publishes passes standalone `check` under the pinned interpreter (not a guarantee of capsule executability — see Residual 8), but no existing `.ail` source can be published through it. First real card content requires either a new hermetically self-contained transition module or row 106 widening capsule staging plus `EnsureSourceLoadable` (Residual 6). Backed by V37.
+8. **Invocation contract (quorum r2 astra re-run; claim weakened verbatim above).** Publication verifies source presence and successful standalone checking under the pinned interpreter, plus advisory epoch nomination. It does not establish invocation compatibility, descriptor/schema correspondence, or successful execution. Owner: **row 106's designer**. Row 106 defines the source-object and entry-point/calling convention; it must (a) reuse/replace this row's `world/transition-source/v1` convention (Residual 1), (b) add a verification row that publishes a self-contained transition through this path with a real pinned interpreter and invokes that exact stored source through the production capsule path, and (c) decide, with a negative fixture that passes standalone `check` but lacks the required callable interface, whether publication rejects it (widening `EnsureSourceLoadable`) or invocation reports a typed incompatibility. Until then the card can list a skill that checks but cannot be invoked — the same state every card skill is in today, since `/a2a/` refuses every invocation (row 106's problem statement).
 
 ## Verification Log
 
