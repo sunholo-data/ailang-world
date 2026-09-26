@@ -34,6 +34,10 @@ var contextRootPins = map[string]int{
 	"host/store/lookup_index.go|provisionLookupIndex|Background":              1,
 	"host/store/reference_index.go|provisionReferenceIndexes|Background":      1,
 	"host/store/reference_index.go|verifyReadOnlyReferenceIndexes|Background": 1,
+	// Row 23 policy tranche M1 compatibility wrappers; removed by its M6b.
+	"host/store/journal.go|AppendIntent|Background":     1,
+	"host/store/journal.go|GetReceipt|Background":       1,
+	"host/store/journal.go|GetEffectReceipt|Background": 1,
 }
 
 func TestProductionContextRoots(t *testing.T) {

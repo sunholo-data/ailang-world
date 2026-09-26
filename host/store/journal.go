@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -407,8 +408,18 @@ func insertJournalObjectTx(tx *sql.Tx, o Object) error {
 	return nil
 }
 
-// AppendIntent durably appends a canonical intent and its index atomically.
+// AppendIntent is AppendIntentContext without a caller lifetime; a
+// compatibility wrapper removed when its callers migrate (row 23 policy
+// tranche, M6b).
 func (s *Store) AppendIntent(id string, intent JournalIntent) (int64, hashref.HashRef, error) {
+	return s.AppendIntentContext(context.Background(), id, intent)
+}
+
+// AppendIntentContext durably appends a canonical intent and its index
+// atomically. ctx bounds acquisition and every statement up to the
+// cancellation cutoff (finishDurable); after it, see UncertainError.
+func (s *Store) AppendIntentContext(ctx context.Context, id string, intent JournalIntent) (_ int64, _ hashref.HashRef, err error) {
+	defer func() { err = notCommitted(ctx, "append intent", err) }()
 	if err := validateIntent(id, intent); err != nil {
 		return 0, hashref.HashRef{}, err
 	}
@@ -417,14 +428,14 @@ func (s *Store) AppendIntent(id string, intent JournalIntent) (int64, hashref.Ha
 		return 0, hashref.HashRef{}, fmt.Errorf("store: encode intent: %w", err)
 	}
 	object := journalObject(JournalIntentV1, payload)
-	tx, err := s.db.Begin()
+	tx, err := s.beginDurable(ctx, "append intent")
 	if err != nil {
-		return 0, hashref.HashRef{}, fmt.Errorf("store: begin append intent: %w", err)
+		return 0, hashref.HashRef{}, err
 	}
 	defer func() { _ = tx.Rollback() }()
 	var seq int64
 	var existingText string
-	err = tx.QueryRow(`SELECT seq, object_ref FROM journal
+	err = tx.QueryRowContext(ctx, `SELECT seq, object_ref FROM journal
 		WHERE invocation_id = ? AND kind = 'intent'`, id).Scan(&seq, &existingText)
 	if err == nil {
 		if existingText == object.Hash.String() {
@@ -442,12 +453,12 @@ func (s *Store) AppendIntent(id string, intent JournalIntent) (int64, hashref.Ha
 	if err := insertJournalObjectTx(tx, object); err != nil {
 		return 0, hashref.HashRef{}, err
 	}
-	if _, err := tx.Exec(`INSERT INTO journal(seq, kind, invocation_id, object_ref)
+	if _, err := tx.ExecContext(ctx, `INSERT INTO journal(seq, kind, invocation_id, object_ref)
 		VALUES (?, 'intent', ?, ?)`, seq, id, object.Hash.String()); err != nil {
 		return 0, hashref.HashRef{}, fmt.Errorf("store: append intent %q: %w", id, err)
 	}
-	if err := tx.Commit(); err != nil {
-		return 0, hashref.HashRef{}, fmt.Errorf("store: commit intent: %w", err)
+	if err := s.finishDurable(ctx, "append intent", tx); err != nil {
+		return 0, hashref.HashRef{}, err
 	}
 	return seq, object.Hash, nil
 }
@@ -782,12 +793,14 @@ type journalRow struct {
 	obj Object
 }
 
-func journalRowFor(q interface{ QueryRow(string, ...any) *sql.Row }, id, kind string) (journalRow, bool, error) {
+func journalRowFor(ctx context.Context, q interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}, id, kind string) (journalRow, bool, error) {
 	var seq int64
 	var refText string
 	var ifaceText, semantic, provenance string
 	var payload []byte
-	err := q.QueryRow(`SELECT j.seq, j.object_ref, o.interface_hash_ref,
+	err := q.QueryRowContext(ctx, `SELECT j.seq, j.object_ref, o.interface_hash_ref,
 		o.semantic_id, o.provenance, o.payload FROM journal j
 		JOIN objects o ON o.hash_ref = j.object_ref
 		WHERE j.invocation_id = ? AND j.kind = ?`, id, kind).
@@ -809,18 +822,25 @@ func journalRowFor(q interface{ QueryRow(string, ...any) *sql.Row }, id, kind st
 	return journalRow{seq, ref, Object{ref, iface, semantic, provenance, payload}}, true, nil
 }
 
-// GetReceipt mirrors receiptState and never reports not-started with an intent.
+// GetReceipt is GetReceiptContext without a caller lifetime; a compatibility
+// wrapper removed when its callers migrate (row 23 policy tranche, M6b).
 func (s *Store) GetReceipt(id string) (Receipt, bool, error) {
+	return s.GetReceiptContext(context.Background(), id)
+}
+
+// GetReceiptContext mirrors receiptState and never reports not-started with
+// an intent. ctx bounds both connection acquisitions and both reads.
+func (s *Store) GetReceiptContext(ctx context.Context, id string) (Receipt, bool, error) {
 	if strings.HasPrefix(id, "effect:") {
 		return Receipt{}, false, &InvocationMismatchError{
 			ID: id, Field: "InvocationID", Want: "non-effect namespace", Got: id,
 		}
 	}
-	intentRow, hasIntent, err := journalRowFor(s.db, id, "intent")
+	intentRow, hasIntent, err := journalRowFor(ctx, s.db, id, "intent")
 	if err != nil {
 		return Receipt{}, false, err
 	}
-	outcomeRow, hasOutcome, err := journalRowFor(s.db, id, "outcome")
+	outcomeRow, hasOutcome, err := journalRowFor(ctx, s.db, id, "outcome")
 	if err != nil {
 		return Receipt{}, false, err
 	}
@@ -855,11 +875,13 @@ func (s *Store) GetEffectReceipt(id string) (Receipt, bool, error) {
 			ID: id, Field: "InvocationID", Want: "effect:<episodeID>:<ordinal>", Got: id,
 		}
 	}
-	intentRow, hasIntent, err := journalRowFor(s.db, id, "intent")
+	// Compatibility root until the effect journal migrates (row 23 policy M6b).
+	ctx := context.Background()
+	intentRow, hasIntent, err := journalRowFor(ctx, s.db, id, "intent")
 	if err != nil {
 		return Receipt{}, false, err
 	}
-	outcomeRow, hasOutcome, err := journalRowFor(s.db, id, "outcome")
+	outcomeRow, hasOutcome, err := journalRowFor(ctx, s.db, id, "outcome")
 	if err != nil {
 		return Receipt{}, false, err
 	}
