@@ -470,7 +470,7 @@ func TestApprovalFlowImmutableRecordAndSeparateDecision(t *testing.T) {
 		t.Fatalf("request object = %#v, ok %v, err %v", requestBefore, ok, err)
 	}
 
-	decisionRef, err := decideApproval(recording, requestRef, "approve", "operator", 11)
+	decisionRef, err := decideApproval(context.Background(), recording, requestRef, "approve", "operator", 11)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -568,7 +568,7 @@ func TestApprovalRecordIntegritySweep(t *testing.T) {
 		t.Fatal(err)
 	}
 	requestRef := decodePendingRef(t, pending)
-	if _, err := decideApproval(recording, requestRef, "approve", "operator", 2); err != nil {
+	if _, err := decideApproval(context.Background(), recording, requestRef, "approve", "operator", 2); err != nil {
 		t.Fatal(err)
 	}
 	if _, _, err := session.Invoke(context.Background(),
@@ -589,7 +589,7 @@ func TestApprovalRecordIntegritySweep(t *testing.T) {
 func TestDecideApprovalBeforeRequestRejected(t *testing.T) {
 	_, recording, _ := approvalSession(t)
 	ref := hashref.SumSHA256([]byte("not-a-request"))
-	_, err := decideApproval(recording, ref, "approve", "operator", 1)
+	_, err := decideApproval(context.Background(), recording, ref, "approve", "operator", 1)
 	if !errors.Is(err, ErrApprovalRequestNotFound) {
 		t.Fatalf("DecideApproval error = %v, want ErrApprovalRequestNotFound", err)
 	}
@@ -687,7 +687,7 @@ func TestApprovalReplayContract(t *testing.T) {
 		t.Fatal(err)
 	}
 	requestRef := decodePendingRef(t, pending)
-	decisionRef, err := decideApproval(recording, requestRef, "deny", "operator", 11)
+	decisionRef, err := decideApproval(context.Background(), recording, requestRef, "deny", "operator", 11)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -108,7 +108,7 @@ func TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(t *te
 	plan := attendedPlanFor(fixture, "smd0-ac25")
 
 	// --- the mint -----------------------------------------------------------
-	approvalRef, err := mintAttendedApproval(base, plan)
+	approvalRef, err := mintAttendedApproval(context.Background(), base, plan)
 	if err != nil {
 		t.Fatalf("MintAttendedApproval: %v", err)
 	}
@@ -253,7 +253,7 @@ func TestObserveMintedDecisionDrivesLegThreeInBothDirections(t *testing.T) {
 	fixture := newPublishFixture(t, "http://127.0.0.1:1", "smd0-mint-legs")
 	plan := attendedPlanFor(fixture, "smd0-mint-legs")
 
-	decisionRef, err := mintAttendedApproval(base, plan)
+	decisionRef, err := mintAttendedApproval(context.Background(), base, plan)
 	if err != nil {
 		t.Fatalf("instrument failure: the control mint failed: %v", err)
 	}
@@ -336,7 +336,7 @@ func TestIndeterminatePublishAppendsNoOutcomeAndIsNeverRetried(t *testing.T) {
 	fixture := newPublishFixture(t, validator.origin(), "smd0-ac26")
 	plan := attendedPlanFor(fixture, "smd0-ac26")
 
-	approvalRef, err := mintAttendedApproval(base, plan)
+	approvalRef, err := mintAttendedApproval(context.Background(), base, plan)
 	if err != nil {
 		t.Fatalf("MintAttendedApproval: %v", err)
 	}
@@ -463,7 +463,7 @@ func TestSessionLevelRetryOfAnIndeterminatePublishIsRefusedByTheDurableClaim(t *
 	fixture := newPublishFixture(t, validator.origin(), "smd0-retry-layers")
 	plan := attendedPlanFor(fixture, "smd0-retry-layers")
 
-	approvalRef, err := mintAttendedApproval(base, plan)
+	approvalRef, err := mintAttendedApproval(context.Background(), base, plan)
 	if err != nil {
 		t.Fatal(err)
 	}

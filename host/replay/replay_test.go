@@ -1,6 +1,7 @@
 package replay
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -175,7 +176,7 @@ func newFixtureEnv(t *testing.T) *fixtureEnv {
 func TestFixtureEpisodeReplaysBitForBit(t *testing.T) {
 	env := newFixtureEnv(t)
 
-	results, err := env.engine.ReplayEpisode(env.episode)
+	results, err := env.engine.ReplayEpisode(context.Background(), env.episode)
 	if err != nil {
 		t.Fatalf("replay episode: %v", err)
 	}
@@ -200,13 +201,13 @@ func TestReplayDoubling(t *testing.T) {
 	// artifact. A must equal B must equal the recorded bytes; the same holds for
 	// the reconstructed world hash. Any divergence fails the test.
 	envA := newFixtureEnv(t)
-	resA, err := envA.engine.ReplayEpisode(envA.episode)
+	resA, err := envA.engine.ReplayEpisode(context.Background(), envA.episode)
 	if err != nil {
 		t.Fatalf("replay A: %v", err)
 	}
 
 	envB := newFixtureEnv(t)
-	resB, err := envB.engine.ReplayEpisode(envB.episode)
+	resB, err := envB.engine.ReplayEpisode(context.Background(), envB.episode)
 	if err != nil {
 		t.Fatalf("replay B: %v", err)
 	}
@@ -241,7 +242,7 @@ func TestReplayDoublingDivergenceFails(t *testing.T) {
 	corrupt[0] ^= 0xFF
 	env.episode.Entries[0].RecordedResult = corrupt
 
-	_, err := env.engine.ReplayEpisode(env.episode)
+	_, err := env.engine.ReplayEpisode(context.Background(), env.episode)
 	if err == nil {
 		t.Fatal("expected divergence error, got nil")
 	}
@@ -260,7 +261,7 @@ func TestReplayWorldHashDivergenceFails(t *testing.T) {
 	env := newFixtureEnv(t)
 	env.episode.Entries[0].RecordedWorldHash = hashref.SumSHA256([]byte("not the real world"))
 
-	_, err := env.engine.ReplayEpisode(env.episode)
+	_, err := env.engine.ReplayEpisode(context.Background(), env.episode)
 	var de *DivergenceError
 	if !errors.As(err, &de) {
 		t.Fatalf("expected *DivergenceError, got %T: %v", err, err)
@@ -276,7 +277,7 @@ func TestReplayWorldHashDivergenceFails(t *testing.T) {
 
 func TestAuthoritativeResolutionUsesEntryInterpreter(t *testing.T) {
 	env := newFixtureEnv(t)
-	results, err := env.engine.ReplayEpisode(env.episode)
+	results, err := env.engine.ReplayEpisode(context.Background(), env.episode)
 	if err != nil {
 		t.Fatalf("replay: %v", err)
 	}
@@ -299,7 +300,7 @@ func TestUnknownEntryInterpreterFailsAbsent(t *testing.T) {
 	// A well-formed but unarchived interpreter ref.
 	env.episode.Entries[0].Interpreter = hashref.SumSHA256([]byte("some other binary"))
 
-	_, err := env.engine.ReplayEpisode(env.episode)
+	_, err := env.engine.ReplayEpisode(context.Background(), env.episode)
 	re, ok := archive.IsReplayError(err)
 	if !ok {
 		t.Fatalf("expected *archive.ReplayError, got %T: %v", err, err)
@@ -320,11 +321,11 @@ func TestEpochRegistryCandidateCannotRedirect(t *testing.T) {
 	// mutate the registry head to a DIFFERENT candidate revision. Authoritative
 	// replay must ignore the registry entirely and still resolve + execute the
 	// entry-pinned interpreter, producing the identical recorded bytes.
-	if _, _, err := registry.Bootstrap(env.store, "AILANG v0.30.0 (pinned)"); err != nil {
+	if _, _, err := registry.Bootstrap(context.Background(), env.store, "AILANG v0.30.0 (pinned)"); err != nil {
 		t.Fatalf("bootstrap registry: %v", err)
 	}
 	// Record what the interpreter-pinned replay produced BEFORE mutating.
-	before, err := env.engine.ReplayEpisode(env.episode)
+	before, err := env.engine.ReplayEpisode(context.Background(), env.episode)
 	if err != nil {
 		t.Fatalf("replay before registry mutation: %v", err)
 	}
@@ -356,7 +357,7 @@ func TestEpochRegistryCandidateCannotRedirect(t *testing.T) {
 
 	// Replay again: the registry candidate changed, but authoritative resolution
 	// is by entry interpreter hash, so the result is byte-identical.
-	after, err := env.engine.ReplayEpisode(env.episode)
+	after, err := env.engine.ReplayEpisode(context.Background(), env.episode)
 	if err != nil {
 		t.Fatalf("replay after registry mutation: %v", err)
 	}
@@ -381,7 +382,7 @@ func TestPairMemberChangeCausesCacheMiss(t *testing.T) {
 	env := newFixtureEnv(t)
 
 	// First replay: cache miss (fresh store), re-verifies and caches the pair.
-	first, err := env.engine.ReplayEpisode(env.episode)
+	first, err := env.engine.ReplayEpisode(context.Background(), env.episode)
 	if err != nil {
 		t.Fatalf("first replay: %v", err)
 	}
@@ -390,7 +391,7 @@ func TestPairMemberChangeCausesCacheMiss(t *testing.T) {
 	}
 
 	// Second replay of the SAME pair: cache HIT (row is present).
-	second, err := env.engine.ReplayEpisode(env.episode)
+	second, err := env.engine.ReplayEpisode(context.Background(), env.episode)
 	if err != nil {
 		t.Fatalf("second replay: %v", err)
 	}
@@ -422,7 +423,7 @@ func TestPairMemberChangeCausesCacheMiss(t *testing.T) {
 		SemanticsEpoch: 1,
 	}}
 	// Verify the transitionFn member is a cache MISS before replay.
-	if _, hit, err := env.store.GetVerifyResult(altObj.Hash, env.interp); err != nil {
+	if _, hit, err := env.store.GetVerifyResult(context.Background(), altObj.Hash, env.interp); err != nil {
 		t.Fatalf("cache lookup for changed transitionFn: %v", err)
 	} else if hit {
 		t.Fatal("changed transitionFn must be a cache MISS")
@@ -441,7 +442,7 @@ func TestPairMemberChangeCausesCacheMiss(t *testing.T) {
 	altEpisode.Entries[0].RecordedResult = altBytes
 	altEpisode.Entries[0].RecordedWorldHash = hashref.SumSHA256(altBytes)
 
-	altRes, err := env.engine.ReplayEpisode(altEpisode)
+	altRes, err := env.engine.ReplayEpisode(context.Background(), altEpisode)
 	if err != nil {
 		t.Fatalf("replay alt episode: %v", err)
 	}
@@ -449,7 +450,7 @@ func TestPairMemberChangeCausesCacheMiss(t *testing.T) {
 		t.Fatal("changed transitionFn replay should be a cache MISS (re-verification)")
 	}
 	// After the alt replay the changed pair is now cached.
-	if _, hit, err := env.store.GetVerifyResult(altObj.Hash, env.interp); err != nil {
+	if _, hit, err := env.store.GetVerifyResult(context.Background(), altObj.Hash, env.interp); err != nil {
 		t.Fatalf("post-replay cache lookup: %v", err)
 	} else if !hit {
 		t.Fatal("changed pair must be cached after re-verification")
@@ -457,7 +458,7 @@ func TestPairMemberChangeCausesCacheMiss(t *testing.T) {
 
 	// The ORIGINAL pair row must be untouched: changing one member does not
 	// evict or alter the other pair's cached row (independent keys).
-	if _, hit, err := env.store.GetVerifyResult(env.srcObj.Hash, env.interp); err != nil {
+	if _, hit, err := env.store.GetVerifyResult(context.Background(), env.srcObj.Hash, env.interp); err != nil {
 		t.Fatalf("original pair cache lookup: %v", err)
 	} else if !hit {
 		t.Fatal("original pair row must survive an unrelated pair change")
@@ -479,10 +480,10 @@ func TestInterpreterMemberChangeCausesCacheMiss(t *testing.T) {
 	env := newFixtureEnv(t)
 
 	// Populate the original pair via a real replay.
-	if _, err := env.engine.ReplayEpisode(env.episode); err != nil {
+	if _, err := env.engine.ReplayEpisode(context.Background(), env.episode); err != nil {
 		t.Fatalf("seed replay: %v", err)
 	}
-	if _, hit, err := env.store.GetVerifyResult(env.srcObj.Hash, env.interp); err != nil {
+	if _, hit, err := env.store.GetVerifyResult(context.Background(), env.srcObj.Hash, env.interp); err != nil {
 		t.Fatalf("original pair lookup: %v", err)
 	} else if !hit {
 		t.Fatal("original pair must be cached after replay")
@@ -494,7 +495,7 @@ func TestInterpreterMemberChangeCausesCacheMiss(t *testing.T) {
 	if otherInterp.String() == env.interp.String() {
 		t.Fatal("synthetic interpreter must differ")
 	}
-	if _, hit, err := env.store.GetVerifyResult(env.srcObj.Hash, otherInterp); err != nil {
+	if _, hit, err := env.store.GetVerifyResult(context.Background(), env.srcObj.Hash, otherInterp); err != nil {
 		t.Fatalf("changed-interpreter cache lookup: %v", err)
 	} else if hit {
 		t.Fatal("changed interpreter member must be a cache MISS")
@@ -535,10 +536,10 @@ func TestInterpreterMemberChangeDrivesRealReplayEndToEnd(t *testing.T) {
 
 	// Seed and cache the ORIGINAL (transitionFn, interpreter1) pair via a real
 	// replay so we can later prove the change leaves this row intact.
-	if _, err := env.engine.ReplayEpisode(env.episode); err != nil {
+	if _, err := env.engine.ReplayEpisode(context.Background(), env.episode); err != nil {
 		t.Fatalf("seed replay of original pair: %v", err)
 	}
-	if _, hit, err := env.store.GetVerifyResult(env.srcObj.Hash, env.interp); err != nil {
+	if _, hit, err := env.store.GetVerifyResult(context.Background(), env.srcObj.Hash, env.interp); err != nil {
 		t.Fatalf("original pair lookup: %v", err)
 	} else if !hit {
 		t.Fatal("original pair must be cached after the seed replay")
@@ -565,7 +566,7 @@ func TestInterpreterMemberChangeDrivesRealReplayEndToEnd(t *testing.T) {
 
 	// Pre-condition (1): the (transitionFn, interpreter2) pair is a cache MISS
 	// before any replay drives it.
-	if _, hit, err := env.store.GetVerifyResult(env.srcObj.Hash, interp2); err != nil {
+	if _, hit, err := env.store.GetVerifyResult(context.Background(), env.srcObj.Hash, interp2); err != nil {
 		t.Fatalf("interpreter2 pair pre-lookup: %v", err)
 	} else if hit {
 		t.Fatal("changed-interpreter pair must be a cache MISS before its first replay")
@@ -581,7 +582,7 @@ func TestInterpreterMemberChangeDrivesRealReplayEndToEnd(t *testing.T) {
 		RecordedResult:    env.recorded,
 		RecordedWorldHash: env.worldRef,
 	}}
-	res2, err := env.engine.ReplayEpisode(ep2)
+	res2, err := env.engine.ReplayEpisode(context.Background(), ep2)
 	if err != nil {
 		t.Fatalf("end-to-end replay through interpreter2: %v", err)
 	}
@@ -591,7 +592,7 @@ func TestInterpreterMemberChangeDrivesRealReplayEndToEnd(t *testing.T) {
 		t.Fatal("first end-to-end replay of the changed interpreter pair must be a cache MISS")
 	}
 	// ... and the row is now populated for the NEW pair.
-	if _, hit, err := env.store.GetVerifyResult(env.srcObj.Hash, interp2); err != nil {
+	if _, hit, err := env.store.GetVerifyResult(context.Background(), env.srcObj.Hash, interp2); err != nil {
 		t.Fatalf("interpreter2 pair post-lookup: %v", err)
 	} else if !hit {
 		t.Fatal("changed-interpreter pair must be cached after its end-to-end re-verification")
@@ -613,7 +614,7 @@ func TestInterpreterMemberChangeDrivesRealReplayEndToEnd(t *testing.T) {
 	}
 
 	// (3) the ORIGINAL (transitionFn, interpreter1) row is untouched.
-	if _, hit, err := env.store.GetVerifyResult(env.srcObj.Hash, env.interp); err != nil {
+	if _, hit, err := env.store.GetVerifyResult(context.Background(), env.srcObj.Hash, env.interp); err != nil {
 		t.Fatalf("original pair post-change lookup: %v", err)
 	} else if !hit {
 		t.Fatal("original pair row must survive the interpreter-member change")
@@ -682,7 +683,7 @@ func TestExecFailureReplayBranch(t *testing.T) {
 		WorldLibDir: worldLibDir(t),
 	}
 
-	_, err = engine.ReplayEpisode(ep)
+	_, err = engine.ReplayEpisode(context.Background(), ep)
 	re, ok := archive.IsReplayError(err)
 	if !ok {
 		t.Fatalf("expected *archive.ReplayError, got %T: %v", err, err)
@@ -758,7 +759,7 @@ func TestSidecarPresentExecutableAbsentResolvesAbsent(t *testing.T) {
 		}},
 		WorldLibDir: worldLibDir(t),
 	}
-	_, err = NewEngine(s, a).ReplayEpisode(ep)
+	_, err = NewEngine(s, a).ReplayEpisode(context.Background(), ep)
 	re, ok := archive.IsReplayError(err)
 	if !ok || re.Kind != archive.KindAbsentArtifact {
 		t.Fatalf("expected KindAbsentArtifact from replay, got %v", err)
@@ -773,7 +774,7 @@ func TestAbsentTransitionSourceFails(t *testing.T) {
 	env := newFixtureEnv(t)
 	// Point the entry at a transitionFn the store does not hold.
 	env.episode.Entries[0].TransitionFn = hashref.SumSHA256([]byte("no such source"))
-	_, err := env.engine.ReplayEpisode(env.episode)
+	_, err := env.engine.ReplayEpisode(context.Background(), env.episode)
 	re, ok := archive.IsReplayError(err)
 	if !ok || re.Kind != archive.KindAbsentArtifact {
 		t.Fatalf("expected KindAbsentArtifact for absent source, got %v", err)

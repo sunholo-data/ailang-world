@@ -165,7 +165,7 @@ func TestPublishApprovalScopeRefusesASmuggledFragment(t *testing.T) {
 
 	// KNOWN-POSITIVE CONTROL: the unmodified payload is accepted, so the
 	// refusal below is attributable to the fragment and not to the fixture.
-	if _, err := validatePublishApproval(base, fixture.payload, req); err != nil {
+	if _, err := validatePublishApproval(context.Background(), base, fixture.payload, req); err != nil {
 		t.Fatalf("control payload was refused: %v", err)
 	}
 
@@ -192,7 +192,7 @@ func TestPublishApprovalScopeRefusesASmuggledFragment(t *testing.T) {
 			if !strings.Contains(smuggledScope, publishApprovalScopeMark) {
 				t.Fatal("the smuggled scope carries no mark; this arm would pass vacuously")
 			}
-			_, err := validatePublishApproval(base, EncodePublishPayload(smuggled, fixture.hashes),
+			_, err := validatePublishApproval(context.Background(), base, EncodePublishPayload(smuggled, fixture.hashes),
 				EffectRequest{
 					Effect: EffectRegistryPublish, Scope: smuggledScope, Cost: PublishCost, Now: 50,
 				})

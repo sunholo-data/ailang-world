@@ -210,7 +210,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 		}
 	}
 	requestRef := decodePendingRef(t, calls[2].result)
-	if _, err := DecideApproval(s, requestRef, "approve", "episode-operator", 13); err != nil {
+	if _, err := DecideApproval(context.Background(), s, requestRef, "approve", "episode-operator", 13); err != nil {
 		t.Fatalf("decide approval: %v", err)
 	}
 	calls = append(calls, episodeCall{

@@ -110,7 +110,19 @@ func object(r Registry) (store.Object, error) {
 // Storage uses the ordinary object mechanism: PutObject for the immutable
 // revision object, then SetRegistryHead to map SemanticID to it. Registry
 // updates are ordinary named world state, not a privileged bypass.
-func Bootstrap(s *store.Store, releaseString string) (Registry, hashref.HashRef, error) {
+type bootstrapStore interface {
+	GetRegistryHead(context.Context, string) (hashref.HashRef, bool, error)
+	GetObject(context.Context, hashref.HashRef) (store.Object, bool, error)
+	PutObject(store.Object) error
+	SetRegistryHead(string, hashref.HashRef) error
+}
+
+// Pass the caller's intended read ctx; this API supplies no default timeout.
+func Bootstrap(ctx context.Context, s *store.Store, releaseString string) (Registry, hashref.HashRef, error) {
+	return bootstrap(ctx, s, releaseString)
+}
+
+func bootstrap(ctx context.Context, s bootstrapStore, releaseString string) (Registry, hashref.HashRef, error) {
 	want := Registry{
 		SemanticID: SemanticID,
 		Epochs: []EpochRecord{
@@ -125,7 +137,7 @@ func Bootstrap(s *store.Store, releaseString string) (Registry, hashref.HashRef,
 	// Idempotence: if a head already exists, it must resolve to the identical
 	// epoch-1 revision. A head naming different bytes is a real divergence and is
 	// surfaced as an error rather than silently overwritten.
-	if head, ok, err := s.GetRegistryHead(context.Background(), SemanticID); err != nil {
+	if head, ok, err := s.GetRegistryHead(ctx, SemanticID); err != nil {
 		return Registry{}, hashref.HashRef{}, err
 	} else if ok {
 		if head.String() != obj.Hash.String() {
@@ -133,7 +145,7 @@ func Bootstrap(s *store.Store, releaseString string) (Registry, hashref.HashRef,
 				"registry: existing head %q diverges from bootstrap revision %q",
 				head.String(), obj.Hash.String())
 		}
-		existing, found, err := s.GetObject(context.Background(), head)
+		existing, found, err := s.GetObject(ctx, head)
 		if err != nil {
 			return Registry{}, hashref.HashRef{}, err
 		}

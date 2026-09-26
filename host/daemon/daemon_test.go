@@ -149,7 +149,7 @@ func TestNewRefusesNonLoopbackBind(t *testing.T) {
 	for _, host := range refused {
 		t.Run("refused/"+host, func(t *testing.T) {
 			dbPath := filepath.Join(t.TempDir(), "world.db")
-			d, err := New(Config{DBPath: dbPath, BindHost: host, BindPort: DefaultBindPort})
+			d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: host, BindPort: DefaultBindPort})
 			if err == nil {
 				_ = d.Close()
 				t.Fatalf("New accepted non-loopback bind host %q — local-first must be structural", host)
@@ -175,7 +175,7 @@ func TestNewRefusesNonLoopbackBind(t *testing.T) {
 	for _, host := range accepted {
 		t.Run("accepted/"+host, func(t *testing.T) {
 			dbPath := filepath.Join(t.TempDir(), "world.db")
-			d, err := New(Config{DBPath: dbPath, BindHost: host, BindPort: 0})
+			d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: host, BindPort: 0})
 			if err != nil {
 				t.Fatalf("New rejected loopback bind host %q: %v", host, err)
 			}
@@ -335,7 +335,7 @@ func TestBoundedGracefulShutdownDrainsInFlightRequest(t *testing.T) {
 	const handlerWork = 250 * time.Millisecond
 	const wantBody = "drained"
 
-	d, err := New(Config{
+	d, err := New(context.Background(), Config{
 		DBPath:   filepath.Join(t.TempDir(), "world.db"),
 		BindHost: DefaultBindHost,
 		BindPort: 0,
@@ -411,7 +411,7 @@ func TestBoundedGracefulShutdownDrainsInFlightRequest(t *testing.T) {
 // Without the second half, replacing shutdownTimeout with an arbitrarily large
 // value would still look green — the drain simply never expires in practice.
 func TestDaemonShutdownIsBoundedByTheD7Constant(t *testing.T) {
-	d, err := New(Config{
+	d, err := New(context.Background(), Config{
 		DBPath:   filepath.Join(t.TempDir(), "world.db"),
 		BindHost: DefaultBindHost,
 		BindPort: 0,
@@ -471,7 +471,7 @@ func TestDaemonShutdownIsBoundedByTheD7Constant(t *testing.T) {
 // released, so the next process can open the same database.
 func TestNewReleasesWriterAuthorityOnLateFailure(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "world.db")
-	d, err := New(Config{
+	d, err := New(context.Background(), Config{
 		DBPath:    dbPath,
 		BindHost:  DefaultBindHost,
 		BindPort:  0,
@@ -558,7 +558,7 @@ func TestHealthAndHeadRoundTrip(t *testing.T) {
 	wantRef := hashref.SumSHA256(execBytes)
 	dbPath := filepath.Join(dir, "world.db")
 
-	d, err := New(Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0, AilangBin: execPath})
+	d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0, AilangBin: execPath})
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -697,7 +697,7 @@ func TestNewBootstrapsEpochRegistryIdempotently(t *testing.T) {
 
 	heads := make([]string, 0, 2)
 	for i := range 2 {
-		d, err := New(cfg)
+		d, err := New(context.Background(), cfg)
 		if err != nil {
 			t.Fatalf("New #%d: %v", i+1, err)
 		}

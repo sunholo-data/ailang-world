@@ -464,7 +464,7 @@ func TestVerificationCacheKeyIsExactlyThePair(t *testing.T) {
 	}
 
 	// Exact pair hits.
-	got, ok, err := s.GetVerifyResult(fn, interp)
+	got, ok, err := s.GetVerifyResult(context.Background(), fn, interp)
 	if err != nil || !ok {
 		t.Fatalf("GetVerifyResult exact pair: ok=%v err=%v", ok, err)
 	}
@@ -473,11 +473,11 @@ func TestVerificationCacheKeyIsExactlyThePair(t *testing.T) {
 	}
 
 	// Different transitionFn — must miss (distinct key).
-	if _, ok, _ := s.GetVerifyResult(other, interp); ok {
+	if _, ok, _ := s.GetVerifyResult(context.Background(), other, interp); ok {
 		t.Fatal("different transitionFn hit the cache; key is not the exact pair")
 	}
 	// Different interpreter — must miss (distinct key).
-	if _, ok, _ := s.GetVerifyResult(fn, other); ok {
+	if _, ok, _ := s.GetVerifyResult(context.Background(), fn, other); ok {
 		t.Fatal("different interpreter hit the cache; key is not the exact pair")
 	}
 
@@ -493,7 +493,7 @@ func TestVerificationCacheKeyIsExactlyThePair(t *testing.T) {
 	if n := s.countCacheRows(t, fn, interp); n != 1 {
 		t.Fatalf("epoch-only change produced %d rows for the pair; want exactly 1", n)
 	}
-	after, ok, _ := s.GetVerifyResult(fn, interp)
+	after, ok, _ := s.GetVerifyResult(context.Background(), fn, interp)
 	if !ok {
 		t.Fatal("pair lookup miss after epoch-only change; the selected row was not preserved")
 	}

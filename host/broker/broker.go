@@ -242,7 +242,7 @@ func (s *Session) invoke(
 		// require handing the handler a store. Both refusal families therefore
 		// land BEFORE the handler runs, i.e. before the credential is read and
 		// before any request can leave this process.
-		approvalRef, approvalErr := validatePublishApproval(s.store, payload, req)
+		approvalRef, approvalErr := validatePublishApproval(ctx, s.store, payload, req)
 		if approvalErr != nil {
 			return nil, hashref.HashRef{}, approvalErr
 		}
