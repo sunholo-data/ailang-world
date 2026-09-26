@@ -33,9 +33,7 @@ not just the CLI. `canon.Source` (host/canon/source.go:47-80, F13) enforces **no
 space/tab, and performs **no parse and no type-check** — so canonicalisation alone proves
 nothing about loadability; the interpreter check in (b) is what does. The loadability check's
 honest scope is the hermetic capsule shape (F17): a source is checked STANDALONE in a scratch
-root, so a module whose imports cannot resolve there (e.g. a copy of `world/transitions.ail`
-without its `world/*` siblings) is refused with the interpreter's own LDR001 output — which is
-exactly what row 106's capsule execution could resolve for it (F18).
+root, so a module whose imports cannot resolve there (e.g. a copy of `world/transitions.ail` without its `world/*` siblings) is refused with the interpreter's own LDR001 output; per F18 the capsule execution engine stages only the entry source under `AILANG_FS_SANDBOX`, so the same source would fail identically at execution — the publish-time refusal is the executability contract, not a limitation.
 
 ## Findings (F-table)
 
@@ -72,6 +70,19 @@ Controller facts re-verified at `0aa53e6`; every row below names the command and
 | gpt6-astra **and** gemini-3-1-pro (same surface) | **A — epoch semantics**: `SemanticsEpoch` is operator-typed and only checked non-zero (Residual 2 defers the real check); the epoch must be DERIVED from / validated against the epoch registry, refusing unknown or mismatched interpreter–epoch pairs, no default-to-1, enforced in `PublishSet` (not just the CLI), with tests proving refusal leaves head and card unchanged | **Answered by measurement + prototype.** The derivation inputs are landed and measured (F14/F15): the epoch registry decodes to epoch→nominated-release-strings, and the interpreter's release string is the manifest's `Version` field reduced exactly as the daemon's bootstrap reduces it (first non-blank line, trimmed). `PublishSet` now REQUIRES the archive (typed refusal when constructed via bare `NewReader` — `NewPublisher(db, archive.New(dbPath))` is the only publishing constructor), and enforces per descriptor: read the epoch-registry head, decode, read the pinned interpreter's manifest, derive the release, and require `descriptor.SemanticsEpoch` ∈ {epochs whose Candidates name that release}. Zero matches → typed `*InterpreterEpochMismatchError` (unknown pair); epoch present in the registry but not nominating this release → the same typed error (mismatched pair); **no epoch registry head → typed `*EpochRegistryAbsentError`** (no default; the daemon owns epoch-1 bootstrapping). The CLI manifest's `semanticsEpoch` becomes OPTIONAL: omitted + exactly one matching epoch → derived and reported; omitted + several matching epochs → refusal naming them (the operator must state one); present → must be in the match set. Mutations MUT-9 (skip the check), MUT-10 (accept a mismatched epoch), MUT-11 (default-to-1) all KILLED; `TestPublishSetRefusesEpochNotNominatingTheInterpreter` + `TestEpochRefusalKeepsCardUnchanged` prove refusal leaves head and card unchanged. Residual 2 is RESOLVED (removed). |
 | oc-kimi-k3 | **B — source validity**: the "honesty-checked" claim covers PRESENCE only; nothing verifies the transition source is loadable under the pinned interpreter; the doc never states what `canon.Source` enforces | **Answered by measurement + prototype (the strong arm, not the fallback).** F13 states `canon.Source`'s exact scope (normalisation only, no parse/type-check — V27 shows garbage canonicalises cleanly). The loadability check is REAL and infeasibility was NOT invoked: the verb already holds the archived interpreter; the NEW `host/archive/check.go` (`Archive.CheckSource`) runs `<archived interpreter> check <canonical source staged in a scratch root>` bounded via `procbound.Admit/Wait` plus the `probeVersion` wall-clock pattern (F16), and the publisher refuses with a typed `*TransitionSourceInvalidError` on any refusal, BEFORE `PutObject` (CLI, `transitionFnFile` path, via `transitionreg.EnsureSourceLoadable`) and again inside `PublishSet` (unskippable by non-CLI callers) before any head move. Measured on (i) a real module — `world/transitions.ail` copied alone → exit 1 `LDR001` (import-resolution refusal is the HONEST scope: the capsule engine stages no world lib, F18, so such a source is not executable either; pinned as an AILANG_BIN-gated CLI test) and (ii) garbage bytes → exit 1 (V26). MUT-8 (skip the source check) KILLED ×2. The Problem statement and Q2 now carry the precise "what is verified" wording; "honesty-checked" is no longer the vague claim kimi rejected. |
 | oc-kimi-k3 (secondary) | **B — same-ID CAS-retry merge**: Q3 never said what happens when the CAS-retry winner and loser both set the same ID with different descriptor bytes; it must not silently drop, and the CLI output must name the ID | **Answered by measurement + prototype.** Measured: `BuildNext` replaces by ID, so the round-1 retry WOULD have silently clobbered (F18a) — kimi's instinct was right. Q3 now specifies exactly: identical bytes for a shared ID → idempotent merge (`Unchanged` at the winner's revision, entry intact); DIFFERENT bytes for a shared ID → typed `*SameIDConflictError{ID,…}` refusing the retry — the loser writes NOTHING, the head stays at the winner's revision, and both the error and the CLI output NAME THE ID. Pinned by `TestPublishSetSameIDConflictOnCASRetryRefuses` (different bytes → refusal, winner intact, ID in error) and `TestPublishSetCASRetrySameIDIdenticalBytesIsNoOp` (identical bytes → `Unchanged`); the CLI rendering is pinned by `TestPublishErrorLineNamesConflictingID`. MUT-12 (silent clobber) KILLED. |
+
+**Round 2 — BLOCKED 2/1 (all present; gemini-3-1-pro PASS).** Surfaces: **A′ — epoch-check
+strength** (gpt6-astra: release-name nomination is advisory, so the doc overclaimed an
+interpreter–epoch binding) and **B′ — executability wording + unstated consequence** (oc-kimi-k3:
+the Problem statement said the capsule "could resolve" import-bearing sources while F18 says it
+stages only the entry source; and no landed `.ail` source can be published yet). Neither disputes
+the direction and both carry concrete fixes, so the controller applied the **narrow-refinement
+carve-out**: kimi's two fixes VERBATIM (Problem sentence; Residual 7, backed by the new V37);
+astra's claim-weakening sentence VERBATIM (Q2) and its two-interpreter test adopted as
+AC-EPOCH-TWIN in the form that pins the true behaviour. astra's further proposal — an authorized
+HashRef↔epoch binding record — was **not** applied, because it would reverse ratified D1
+(epoch = compatibility metadata, HashRef = authoritative pin); the refutation is in Q2, and the
+controller re-runs astra alone against this revision rather than asserting it is satisfied.
 
 ## Design
 
@@ -134,6 +145,25 @@ Measured inventory of existing verification helpers the publisher can lean on:
   epoch is still bound by the registry. Refusal leaves the head and the card unchanged — pinned
   at unit level (`TestPublishSetRefusesEpochNotNominatingTheInterpreter`) and at daemon level
   (`TestEpochRefusalKeepsCardUnchanged`).
+  **What this check does and does not establish (quorum r2, gpt6-astra; narrow-refinement
+  carve-out).** Candidates matching establishes advisory release nomination only; it does not establish compatibility of a pinned interpreter HashRef with an epoch. That is the
+  strength the ratified log-epoch decision assigns it: **D1 (RATIFIED 2026-07-24, Mark,
+  attended — A+B-metadata)** makes the exact-binary `interpreter` HashRef the *authoritative*
+  pin and `semanticsEpoch` *compatibility metadata* (`design_docs/planned/w-log-epoch-decision.md`
+  lines 26–30, 109, 117; charter line 943). The authoritative half of every published descriptor
+  is therefore its `Interpreter` HashRef, which the publisher requires to be an archived,
+  manifest-backed binary (above) and which execution and replay resolve exactly (P7). The
+  reviewer's further proposal — an explicitly authorized HashRef↔epoch binding record — would
+  promote the epoch from metadata to authority, i.e. reverse a ratified human ruling; this row
+  does not do that, and if it is wanted it is a new decision for Mark, not a revision of this
+  doc. The epoch check is kept because it is exactly as strong as the daemon's own bootstrap
+  nomination and it stops an operator typing an epoch the registry does not nominate. The
+  reviewer's test is adopted in the form that pins the TRUE behaviour: two archived
+  interpreters with different hashes and an identical first version line are BOTH
+  epoch-eligible under the same nomination, AND each published descriptor carries its own
+  distinct `Interpreter` HashRef (so the card, invocation and replay never conflate them);
+  refusal of a non-nominated release still leaves head and card unchanged (acceptance row
+  AC-EPOCH-TWIN below).
 - **Transition source is LOADABLE under the pinned interpreter (revision 2, objection B)**:
   `canon.Source` (F13) is normalisation only — it proves nothing about parse or types. The verb
   therefore runs the REAL check: the new `host/archive/check.go` (`Archive.CheckSource`) stages
@@ -145,9 +175,9 @@ Measured inventory of existing verification helpers the publisher can lean on:
   `transitionreg.EnsureSourceLoadable`), and again inside `PublishSet` (which reads the stored
   payload) before any head move, so the `transitionFn` ref path and every non-CLI caller are
   covered too. Honest scope (F17/F18): the check is hermetic — a source whose imports cannot
-  resolve in the scratch root is refused with the interpreter's own LDR001 output, which is
-  exactly what the capsule execution engine (row 106's `Bind` → capsule) could resolve: it
-  stages only the entry source under `AILANG_FS_SANDBOX`. A published skill is therefore
+  resolve in the scratch root is refused with the interpreter's own LDR001 output; per F18 the
+  capsule execution engine (row 106's `Bind` → capsule) stages only the entry source under
+  `AILANG_FS_SANDBOX`, so the same source would fail identically at execution. A published skill is therefore
   guaranteed loadable in the shape it will be executed in. The check adds no new authority
   surface: `check` parses and type-checks, it never runs the module. Two S8-class inventories
   FIRE on this addition and move with it (V31): the AC10 subprocess-site census
@@ -277,6 +307,7 @@ not the compiler — S6).
 | **MUT-10** (r2, objection A) | The derivation ignores the release: `EpochsForInterpreter` returns every epoch the registry holds, so any existing epoch is accepted for any interpreter | `TestPublishSetRefusesDefaultEpochOne` (epoch 1 EXISTS in the registry but does not nominate this release → must refuse) AND CLI `TestTransitionsVerbEpochArms` (the no-nomination arm expected exit 1, got a published revision) | **KILLED ×2** |
 | **MUT-11** (r2, objection A) | Epoch defaults to 1 when unverifiable/absent (absent epoch-registry head → a synthetic epoch-1 registry; a non-nominating epoch → coerced to 1) | `TestPublishSetRefusesDefaultEpochOne` AND `TestPublishSetRefusesEpochNotNominatingTheInterpreter` AND `TestPublishSetRefusesAbsentEpochRegistry` (all three wanted refusals) AND CLI `TestTransitionsVerbEpochArms` (both refusal arms published instead) | **KILLED ×4** |
 | **MUT-12** (r2, kimi secondary) | Same-ID CAS-retry silently clobbers: the `refuseConflictingSameIDs` call removed, so the loser's differing bytes replace the winner's | `TestPublishSetSameIDConflictOnCASRetryRefuses` — both of its arms fire: the typed `*SameIDConflictError` is absent (the publish SUCCEEDS) and the winner's `title-winner` bytes are gone | **KILLED** |
+| **AC-EPOCH-TWIN** (r2, astra; carve-out, to be built by the executor — NOT yet run) | (a) two archived interpreters with different hashes and an identical first `--version` line: both derive the same nominated epoch, and each published descriptor carries its own distinct `Interpreter` HashRef; (b) a release the registry does not nominate is refused and head + card are unchanged | Mutation to kill: the publisher substitutes the nominated release's FIRST archived interpreter for the descriptor's own pin (the two descriptors then share one HashRef → (a) reds). Planner sizes it; the tally above stays 12/12 until it runs. |
 
 **Tally: 12/12 killed.**
 
@@ -329,6 +360,7 @@ B adds new fence surface for no authority gain. **The row lands complete without
    designer. The check is hermetic by measurement (F17/F18); if row 106's engine stages a world
    library for executed sources, the publish check should widen to the same shape
    (`EnsureSourceLoadable` is the seam).
+7. **Operational consequence (quorum r2, oc-kimi-k3; verbatim).** Measured consequence: the repo's only landed transition module, `world/transitions.ail` (F6), imports `world/*` and is refused by this check (V26(b)); therefore after this row lands, the production path exists and everything it publishes is guaranteed capsule-executable, but no existing `.ail` source can be published through it. First real card content requires either a new hermetically self-contained transition module or row 106 widening capsule staging plus `EnsureSourceLoadable` (Residual 6). Backed by V37.
 
 ## Verification Log
 
@@ -370,6 +402,7 @@ All commands run in `.design-wt-iter195` at HEAD `0aa53e6e41ac2354d3993833a0335e
 - **V34 (r2 no-inventory-move check)** the FROZEN flag surface is untouched by revision 2 (no new flags: `grep -c 'flagNames'` unchanged; AC24(b) green in the full run, V30) and `TestProductionContextRoots` is green with the ROUND-1 pin (`cmd/world-publish/transitions.go|runTransitions|Background` still exactly 1 — the revision-2 code threads the one `ctx := context.Background()` root through the new helpers instead of adding roots).
 - **V35 (objection-A prototype, epoch)** observed green: `go test ./host/transitionreg/ -run 'TestEpochs|TestRelease|TestPublishSetRefusesEpoch|TestPublishSetRefusesDefault|TestPublishSetRefusesAbsent|TestPublishSetRefusesWithoutArchive'` → **ok**; daemon arm `go test ./host/daemon/ -run 'TestEpochRefusal|TestPublished|TestPublisherRefusal'` → **ok**; CLI arms `go test ./cmd/world-publish/ -run 'TestTransitionsVerbEpochArms|TestTransitionsVerbHappyPath'` → **ok** (happy-path stdout includes `semantics epoch 1 derived from world/epoch-registry/v1 for interpreter release "test-interpreter-version"`).
 - **V36 (objection-B prototype, loadability + same-ID)** observed green: `go test ./host/transitionreg/ -run 'TestEnsure|TestPublishSetRefusesUnloadable|TestPublishSetSameIDConflict|TestPublishSetCASRetry'` → **ok**; the refusing fake's output is carried verbatim in the typed error (asserted); `go test ./cmd/world-publish/ -run 'TestTransitionsVerbRefusesGarbageSource|TestTransitionsVerbRefusesImportBearing|TestPublishErrorLine'` → **ok** (the import-bearing arm refused with `LDR001` in the message under the pinned binary).
+- **V37 (publishable-content census, controller-measured at 0759ee7, quorum r2 kimi)** `grep -rn "^import" world/*.ail` → `world/transitions.ail:3 import world/logepoch`, `:4 import world/types`, `:8 import world/contracts`; `world/contracts.ail:3,4` import `world/logepoch`, `world/types`; `world/types.ail:3` imports `world/logepoch`. Control: `ls world/*.ail | wc -l` → **4** (the fourth, `world/logepoch.ail`, imports nothing and exports no transition). Cross-referenced with V26(b): every landed transition-source candidate imports `world/*` and is refused hermetically.
 
 ## Controller-fact audit (F1–F7 as supplied)
 
