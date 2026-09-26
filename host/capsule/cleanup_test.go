@@ -14,6 +14,10 @@ import (
 
 const overflowLoop = `i=0; while [ $i -lt 200 ]; do echo 0123456789abcdef0123456789abcdef; i=$((i+1)); done`
 
+// TestEscapeeHelper is the helper mode behind proctest.EscapeeShell; in a
+// normal run it returns at once.
+func TestEscapeeHelper(t *testing.T) { proctest.RunEscapeeIfRequested() }
+
 func scriptedInterpreter(t *testing.T, before, after string) archivedFixture {
 	t.Helper()
 	p := filepath.Join(t.TempDir(), "ailang-fork")
@@ -66,6 +70,23 @@ func TestOverflowKillErrorJoinedBehindTypedError(t *testing.T) {
 	var overflow *OutputLimitError
 	if !errors.As(err, &overflow) || !errors.Is(err, injected) {
 		t.Fatalf("error = %v, want *OutputLimitError joined with the kill failure", err)
+	}
+}
+
+// AC4. A descendant that LEFT the group (setsid) is out of the kill's reach;
+// the pipe-close bound must still return Run. Observable: Run returned while
+// the escapee is ALIVE (without the bound Run waits for it to exit).
+func TestPipeCloseBoundsEscapedDescendant(t *testing.T) {
+	pidf := filepath.Join(t.TempDir(), "gc.pid")
+	err := runScripted(t, scriptedInterpreter(t, proctest.EscapeeShell(t, pidf), "wait"), 3*time.Second)
+	gc := proctest.ReadPid(t, pidf)
+	proctest.ReapOnCleanup(t, gc)
+	var overflow *OutputLimitError
+	if !errors.As(err, &overflow) {
+		t.Fatalf("error = %T %v, want *OutputLimitError", err, err)
+	}
+	if !proctest.Alive(t, gc) {
+		t.Fatalf("escapee %d not alive at return: Run waited for it instead of closing the pipes", gc)
 	}
 }
 

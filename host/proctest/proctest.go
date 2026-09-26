@@ -7,6 +7,7 @@ package proctest
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"strconv"
@@ -80,4 +81,41 @@ func ReapOnCleanup(t testing.TB, pid int) {
 		t.Fatalf("%v", err)
 	}
 	t.Cleanup(func() { _ = Signal(pid, syscall.SIGKILL, syscall.Kill) })
+}
+
+// EscapeeShell is a /bin/sh fragment that launches this test binary as a
+// descendant that leaves the process group: it calls setsid(2), records its
+// pid in pidfile, and sleeps 30 s holding the inherited stdout/stderr. The
+// package under test must declare
+//
+//	func TestEscapeeHelper(t *testing.T) { proctest.RunEscapeeIfRequested() }
+//
+// The fragment waits (bounded) for the pid file before returning, so the
+// caller writes its output only once the escape has happened.
+func EscapeeShell(t testing.TB, pidfile string) string {
+	t.Helper()
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return fmt.Sprintf("'%s' -test.run='^TestEscapeeHelper$' escapee '%s' &\n"+
+		"n=0; while [ ! -s '%s' ] && [ $n -lt 500 ]; do sleep 0.01; n=$((n+1)); done",
+		exe, pidfile, pidfile)
+}
+
+// RunEscapeeIfRequested is the helper mode behind EscapeeShell. In a normal
+// test run (no "escapee" argument) it returns at once.
+func RunEscapeeIfRequested() {
+	if flag.Arg(0) != "escapee" || flag.Arg(1) == "" {
+		return
+	}
+	if _, err := syscall.Setsid(); err != nil {
+		os.Exit(3)
+	}
+	tmp := flag.Arg(1) + ".tmp"
+	if os.WriteFile(tmp, []byte(strconv.Itoa(os.Getpid())), 0o600) != nil || os.Rename(tmp, flag.Arg(1)) != nil {
+		os.Exit(4)
+	}
+	time.Sleep(30 * time.Second)
+	os.Exit(0)
 }

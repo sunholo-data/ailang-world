@@ -15,6 +15,10 @@ import (
 
 const overflowLoop = `i=0; while [ $i -lt 200 ]; do echo 0123456789abcdef0123456789abcdef; i=$((i+1)); done`
 
+// TestEscapeeHelper is the helper mode behind proctest.EscapeeShell; in a
+// normal run it returns at once.
+func TestEscapeeHelper(t *testing.T) { proctest.RunEscapeeIfRequested() }
+
 func runScript(t *testing.T, script string, execTimeout time.Duration) error {
 	t.Helper()
 	_, err := runBounded(context.Background(), handlerBounds{execTimeout: execTimeout, maxOutputBytes: 1024},
@@ -52,6 +56,22 @@ func TestOverflowKillErrorJoinedBehindTypedError(t *testing.T) {
 	var overflow *HandlerOutputOverflowError
 	if !errors.As(err, &overflow) || !errors.Is(err, injected) || !errors.Is(err, ErrHandlerOverflow) {
 		t.Fatalf("error = %v, want *HandlerOutputOverflowError joined with the kill failure", err)
+	}
+}
+
+// AC4. Timeout path (no overflow): an escapee holds the pipe past the group
+// kill; the pipe-close bound returns runBounded as a timeout while it is ALIVE.
+func TestPipeCloseBoundsEscapedDescendant(t *testing.T) {
+	pidf := filepath.Join(t.TempDir(), "gc.pid")
+	err := runScript(t, proctest.EscapeeShell(t, pidf)+"\necho small\nwait", 3*time.Second)
+	gc := proctest.ReadPid(t, pidf)
+	proctest.ReapOnCleanup(t, gc)
+	var timeout *HandlerTimeoutError
+	if !errors.As(err, &timeout) {
+		t.Fatalf("error = %T %v, want *HandlerTimeoutError", err, err)
+	}
+	if !proctest.Alive(t, gc) {
+		t.Fatalf("escapee %d not alive at return: runBounded waited for it", gc)
 	}
 }
 

@@ -76,6 +76,15 @@ var killGroup = func(pgid int) error {
 	return syscall.Kill(-pgid, syscall.SIGKILL)
 }
 
+// pipeCloseGrace bounds the one case the group kill cannot reach: a
+// descendant that left the process group (setsid) and still holds the pipes.
+// execTimeout+pipeCloseGrace after Start the parent's read ends are closed, so
+// the drains return; Wait is then bounded by a further pipeCloseGrace, so Run
+// returns within execTimeout+2*pipeCloseGrace even if every kill fails.
+// exec.Cmd.WaitDelay cannot do this here: its timer is only consumed by Wait,
+// which runs after the drains.
+const pipeCloseGrace = time.Second
+
 // HashMismatchError means the resolved interpreter bytes no longer match the
 // entry's content address. Execution is refused before the child is started.
 type HashMismatchError struct {
@@ -201,6 +210,11 @@ func (r *Runner) Run(entry Entry) (Result, error) {
 	if err := cmd.Start(); err != nil {
 		return Result{}, &ExecError{Path: execPath, Err: err}
 	}
+	closer := time.AfterFunc(r.execTimeout+pipeCloseGrace, func() {
+		_ = stdoutPipe.Close()
+		_ = stderrPipe.Close()
+	})
+	defer closer.Stop()
 	res, runErr, err := collectOutput(ctx, stdoutPipe, stderrPipe, r.maxOutputBytes, r.execTimeout, cmdChild{cmd})
 	if err != nil {
 		return res, err

@@ -82,6 +82,10 @@ var killGroup = func(pgid int) error {
 	return syscall.Kill(-pgid, syscall.SIGKILL)
 }
 
+// pipeCloseGrace is how long after the execTimeout the parent's read end is
+// closed. exec.Cmd.WaitDelay cannot bound this: Wait runs after the read.
+const pipeCloseGrace = time.Second
+
 // runBounded is the one timeout and allocation surface used by every subprocess
 // handler. It reads at most limit+1 bytes so overflow is detected, never hidden
 // by truncation.
@@ -115,6 +119,10 @@ func runBounded(ctx context.Context, bounds handlerBounds, spec handlerCommand) 
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("broker: start handler subprocess: %w", err)
 	}
+	// A descendant that left the group (setsid) survives the group kill and
+	// holds the pipe; close the read end after the bound so ReadAll returns.
+	closer := time.AfterFunc(bounds.execTimeout+pipeCloseGrace, func() { _ = pipe.Close() })
+	defer closer.Stop()
 
 	limited := &io.LimitedReader{R: pipe, N: bounds.maxOutputBytes + 1}
 	output, readErr := io.ReadAll(limited)
