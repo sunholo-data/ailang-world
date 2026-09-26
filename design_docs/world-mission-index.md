@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 197 | 2026-09-27 | row 23's policy tranche: design + measured bound table filed for Mark as `D-WORLD-40`; M1 (cancellable durable store ops with a CAS cut... |
 | 196 | 2026-09-26 | row 106's first slice LANDED: an invocation coordinator (propose → verify → execute in the capsule → commit; step-1a in-flight guard; step-1b journ... |
 | 195 | 2026-09-26 | row 107 LANDED: the transition registry has a production writer — `world-publish transitions` → `transitionreg.PublishSet` (presence, standalone `c... |
 | 194 | 2026-09-26 | row 23's plumbing tranche LANDED: all 11 formerly deadline-free store reads inherit the caller's context, the ratchet is an empty map, and a root c... |

@@ -889,3 +889,44 @@ It also corrected my directive: F3's control output was truncated by my own `hea
 **Progress:** 1.0 has clauses 4, 5 and 6 unmet. This iteration **moved clause 6's capability**: World can now invoke a published transition end to end in-process, tested against the real pinned interpreter. Clause 6 stays unmet until `/a2a/` is wired (M5, after row 23's tranche) and MCP dispatch lands (row 108, blocked on #885).
 
 **Next** (default of `D-WORLD-39`): row 23 policy tranche → 106 M5/M6 → 108 when #885 ships → 93, 114, 94. **Decision ledger: 26 rows, TWO OPEN (`D-WORLD-38`, `D-WORLD-39`).**
+
+## 197 — 2026-09-27 — row 23's policy tranche: design + measured bound table filed for Mark as `D-WORLD-40`; M1 (cancellable durable store ops with a CAS cutoff, three-outcome contract, Close waits for durable workers) built and judged 88 → 97, zero blocking, green as PR #153 and deliberately NOT merged until the table is ratified [PRODUCT]
+
+**Kind**: full inner loop, with the landing held back by the ruling. Designer → quorum r1 → revision → r2 → narrow-refinement carve-out → codex planner → codex executor → controller commit rebuild → sonnet evaluator r1 (one BLOCKING) → controller test-only fix → evaluator r2 → PR left open. No orphan (0 open PRs at pick; the only stale worktree is row 92's).
+
+**Picked.** Clause map: 1, 2, 3, 7 MET; 4 UNMET (row 93 needs 106 + 108); 5 UNMET (row 114); 6 UNMET (106 M5 blocked on this tranche; 108 blocked, blobs identical at `v0.33.2`/`v0.44.1`, `ailang#885` OPEN). `D-WORLD-39` is unanswered, and its stated default (A, the Gate-2 critical-path rule (d)) makes the row-23 policy tranche the pick. `D-WORLD-37` = A routes it as loop work, **and requires the design to bring the concrete bound table to Mark before anything ships.** That clause shaped the whole iteration: build M1 to green, but do not merge it.
+
+**Design.** Rotation kimi → **`claude:claude-opus-5-5`** (Ollama over ration). Doc + M1 prototype in 1205 s. Every budget derives from `max(10 × measured max, busy_timeout + 1 s)` over 3 runs × N=50 on a real store; the 3 s floor, not the multiplier, decides every store-level row, and the doc says so. The cutoff is database/sql `Tx.Commit`'s CompareAndSwap (`sql.go:2299`), re-read by the controller.
+
+**Quorum.** Seats: astra + gemini (glm and kimi unreachable, Ollama weekly limit; Claude benched as author vendor).
+- **r1 BLOCKED 2/2** ($0.16). Both measured TRUE before routing. astra: reconciling a bare commit by `SelectedHead == NextWorld.Ref` is unsound once a later commit lands. gemini: 7 context-free Store methods still had production callers (`MintSession`, `PutVerifyResult`, both `Scan*`, both `Pending*Intents`, `CompareAndSetRegistryHead`), and §0.4 contradicted §10. Revision (786 s): reconcile by the log row at the commit's own index (`log_entries` has one INSERT, inside `Commit`, and no UPDATE/DELETE — controller-measured); all 19 context-free methods inventoried, converted and guarded; M5 split into M5a/M5b.
+- **r2 BLOCKED 1/1, gemini PASS** ($0.25). astra: startup cleanup is not bounded while a post-cutoff COMMIT worker holds the connection. **The controller measured the doc's own premise FALSE**: `DB.Close` closes only idle connections and does not wait for one in use, and `store.Close` then released the writer lock under a live COMMIT. The designer reproduced a second writer `Open` succeeding. astra's quarantine contract was applied verbatim under the narrow-refinement carve-out (`e33378a`); the M1 prototype gained a Close-waits-for-durable-workers invariant.
+
+**Plan.** `derive-planner-lane.sh` → `opus fail-closed:planner-lane-field-missing` under a provider pin → routed to **`codex:gpt-6-sol`** (probe rc=0). Plan `2d3043d`: **M1 only**, split M1a–M1d in compile order, every boundary vet + fence rc 0, and each of the prototype's 4 surviving mutations given a killing seam. M2–M7 recorded as blocked on the ratification.
+
+**Execute.** **`codex:gpt-6-sol`**, M1a–M1d, 17/17 mutations killed, snapshots outside the tree. The controller rebuilt one commit per milestone (vet, fence, store + coordinator tests at every boundary); the final tree is sha256-identical (8/8); full suite 24 ok / 0 FAIL; verify_ail PASS.
+
+**Evaluate.** **`sonnet`** (Agent tool, foreground, own worktree). **r1 PASS 88/100, ONE BLOCKING**: `go test -race ./host/store/` failed deterministically, because the stall tests restored a package-global hook without joining the stalled COMMIT worker. CI's `verify_go.sh` runs `-race`, so the PR would have gone red. The controller reproduced it (the base is clean under `-race`), and while verifying found a second defect the judge had not: the fault-driver test panics `Register called twice` under `-count=N`. Test-only fix `22af8f7`: release → join → restore, and `sync.Once` registration. Both were mutation-checked (dropping the join brings the race back). **r2 (resumed judge): PASS 97/100, ZERO BLOCKING**, 4/4 of its own mutations killed, F1 CLOSED; F2 (a flagged `Background()` root in `GetEffectReceipt`) is correctly deferred to M6b.
+
+**Gate 3b.** PR [#153](https://github.com/sunholo-data/ailang-world/pull/153), head `22af8f7`, left **unmerged** by design. The docs commits `42e323a`, `fcee84b`, `e33378a`, `2d3043d` went to `dev`, each CI-green.
+
+**Ruled out / process findings**
+- **(a) A ruling can let a tranche route while forbidding it to ship.** `D-WORLD-37`'s "before anything ships" is satisfied by a green, judged, unmerged PR plus a one-word ask. It is not satisfied by merging the slice that happens to carry no duration value, because the ask also ratifies the three-outcome contract that slice implements.
+- **(b) The design's own premise was the defect.** The doc said `Close` "waits for in-flight operations". It does not, and the real hazard ran the other way: the writer lock was released early, not late. Measure the premise under an objection, not only the objection (rule 3f).
+- **(c) A judge's `-race` run found what 17 executor mutations and three full-suite runs did not.** CI runs `-race`; the executor's gate list and the controller's did not. Instance 1 of "the local gate list omits a flag CI uses" in this repo (rule 3g).
+- **(d) Verifying a fix found a second defect.** `-count=5` was added only to prove the race fix stable, and it exposed the `Register called twice` panic on the unfixed commit too.
+- **(e) `host/pkgproj` flakes under full-suite load** (2 of 3 prototype full runs, 0 of 1 pristine, 3/3 alone; no dependency on `host/store`). Filed as row 117 rather than attributed.
+
+**Routing evidence**: base=`2d3043d285197473d0831665fbc0dad61e170ee7` (the sprint worktree). Gate 1 recorded `d8db0eb9b5a32f93f0bd2b36f3d4338760bee198` via `mission-base.sh record gate1`; the drift is this iteration's own four docs commits.
+- Controller `claude:claude-opus-5-5` (session; tok: not reported).
+- Designer **`claude:claude-opus-5-5`** (`recipe … declared:provider-pin`; rotation `pi:ollama/kimi-k3:cloud` → claude; create 1205 s, revision 1 786 s, carve-out revision 2 1450 s, all on one resumed session; subscription). Rotation state → `claude:claude-opus-5-5`.
+- Planner **`codex:gpt-6-sol`** (resolver `opus fail-closed:planner-lane-field-missing` under a provider pin → pin; 103,687 tok).
+- Executor **`codex:gpt-6-sol`** (`recipe … declared:provider-pin`; 122,352 tok; 50-min cap instead of the 30-min default, for four milestones plus mutation runs — FLAGGED).
+- Evaluator **`sonnet`** (`agent-tool sonnet declared:alias-pin`; r1 170,641 tok, r2 201,281 tok).
+- Quorum r1 (astra $0.130, gemini $0.028), r2 (astra $0.207, gemini $0.044); glm and kimi absent both rounds.
+- Generator ≠ judge: opus designed, codex planned and built, sonnet judged. **Every role spawned; none fell back.**
+- **Metered $0.41** (quorum only). Under the $5 ceiling.
+
+**Progress:** 1.0 has clauses 4, 5 and 6 unmet. This iteration **readied, but did not land, clause 6's next capability**: the cancellable durable operations row 106's `/a2a/` wiring (M5) adopts. Clause 6 moves when Mark ratifies the table and PR #153 merges.
+
+**Next:** `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → this tranche's M2–M7 → 108 when #885 ships → 93, 114, 94. **Decision ledger: 27 rows, THREE OPEN (`D-WORLD-38`, `D-WORLD-39`, `D-WORLD-40`).**

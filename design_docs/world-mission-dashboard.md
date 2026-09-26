@@ -1,23 +1,19 @@
-# Mission Dashboard — World (snapshot 2026-09-26, iteration 196)
+# Mission Dashboard — World (snapshot 2026-09-27, iteration 197)
 
-- **State**: **row 106's first slice has landed** (`w-transition-invocation-coordinator`, M1–M4c, clause 6, groom position 2). PR #152 was squash-merged as **`a9a3382`**, and remote CI is **green on the merge** (2/2, Gate 3b SHA-pinned).
-  - `host/coordinator` runs a published transition: propose (`transitionreg.Bind` through a new bind-only `broker.OpenBinder`), then verify the pins, execute in the capsule, and commit through the store journal.
-    - A step-1a in-flight guard means a concurrent same-task-id retry is refused and never executes twice.
-    - A step-1b reconciliation means a resent task id is answered from the journal without re-executing.
-  - `capsule.RunContext` now takes the caller's context and an `--args-file` argument. It stages under `AILANG_RELAX_MODULES=1`, the same as the publish check, which closes a measured check-passes/run-fails MOD010 divergence.
-  - **Honest limit:** there is **no production caller yet**, and `/a2a/` still refuses (-32603). Quorum r2 made row 23's policy tranche (bounded durable `Commit`/`AppendIntent`/receipt reads) a **prerequisite** of the `/a2a/` wiring (M5).
+- **State**: **row 23's policy tranche is designed, and its first slice is built but deliberately not merged.**
+  - Design `design_docs/planned/w-store-bounded-durable-operations.md`: a measured bound table (B1–B11), a cancellation cutoff at database/sql's commit CompareAndSwap, and a three-outcome commit contract (committed / not committed / uncertain → reconcile by the log row at the commit's index). The strict store guard lands last.
+  - **M1** is the slice row 106's `/a2a/` wiring needs: cancellable `CommitContext`/`AppendIntentContext`/`GetReceiptContext`, and `Close` now waits for durable workers before releasing the writer lock. Before this, `DB.Close` returned without waiting and the lock was released under a live COMMIT (measured).
+  - PR [#153](https://github.com/sunholo-data/ailang-world/pull/153) is judged **97/100, zero blocking**, and stays **unmerged**, because `D-WORLD-37` says nothing in the tranche ships before Mark sees the bound table.
 - **Quality**:
-  - Quorum: r1 BLOCKED 2/2 (one premise refuted, one measured true) → revision. r2 BLOCKED 2/0 on one surface → narrow-refinement carve-out, with fixes applied verbatim.
-  - The glm and kimi reviewer seats were absent in both rounds (Ollama weekly limit).
-  - The executor killed 45/45 mutations. The controller rebuilt the per-milestone commits and got a sha256-identical tree; the full suite is 24 ok / 0 FAIL.
-  - The judge scored **PASS 95/100, zero blocking** (sonnet, own worktree, 11/11 of its own mutations killed).
-- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · 5 UNMET (row 114, waits on a real question) · 6 UNMET, capability moved this iteration (next: row 23 tranche → 106 M5/M6; 108 blocked on `ailang#885`, blobs identical at v0.44.1).
-- **Next** (default of `D-WORLD-39`): row 23 policy tranche → 106 M5/M6 → 108 → 93, 114, 94.
+  - Quorum: r1 BLOCKED 2/2 (both measured true) → revision. r2 BLOCKED 1/1 with gemini PASS → narrow-refinement carve-out. The glm and kimi seats were absent (Ollama weekly limit).
+  - The executor killed 17/17 mutations; the commit rebuild is sha256-identical; the full suite is 24 ok / 0 FAIL.
+  - Judge r1 88 with one BLOCKING (`-race` red in the tests). The controller fixed it test-only, plus a `-count=N` panic it found while verifying. Judge r2: 97.
+- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · 5 UNMET (row 114) · 6 UNMET (capability ready in PR #153; 108 blocked on `ailang#885`, blobs identical at v0.44.1).
+- **Next**: `D-WORLD-40` = A → merge #153 → 106 M5/M6 → tranche M2–M7 → 108 → 93.
 - **Parked for Mark**:
-  - **`D-WORLD-39`** (new, one word): move row 23's policy tranche to groom position 2? It now gates the `/a2a/` wiring. **A (recommended, the default)**: yes. **B**: keep the order.
-  - **`D-WORLD-38`**: the typed phrase for publishing a transition. **A** keep the shared phrase (the shipped default), or **B** give it its own phrase (the loop's lean).
-- **Cadence/routing**:
-  - **Roles:** controller `claude-opus-5-5`; designer `pi:ollama/kimi-k3:cloud` (rotation), **cut off by the Ollama weekly limit** after research, fell through to `claude:claude-opus-5-5`; planner and executor `codex:gpt-6-sol`; evaluator `sonnet` (Agent tool).
-  - **Spend:** **$0.48 metered** (quorum only).
-- **Capacity watch**: Ollama Cloud's weekly bucket is dry. That removes glm and kimi from the designer rotation AND from the quorum pool at once, and it also affects the pi fallback links for the executor and planner.
-- **New row 115**: a pre-existing macOS capsule EPERM flake (3/320 by the designer; not reproduced by the controller).
+  - **`D-WORLD-40`** (new, one word): ratify the bound table (startup 9 s, approval 5 s, validation / lookup / durable tail / commit 3 s, publish root 36 s). **A** ratify (recommended) · **B** name a change. Unanswered: nothing merges.
+  - **`D-WORLD-39`**: move the row-23 tranche to groom position 2. It was acted on under its default A this iteration.
+  - **`D-WORLD-38`**: the typed publish phrase (A shared, shipped · B own phrase).
+- **Cadence/routing**: controller `claude-opus-5-5`; designer `claude:claude-opus-5-5` (rotation); planner and executor `codex:gpt-6-sol`; evaluator `sonnet` (Agent tool). **$0.41 metered** (quorum only).
+- **Capacity watch**: Ollama Cloud's weekly bucket is still dry, so glm and kimi are out of both the rotation and the quorum.
+- **New row 117**: a `host/pkgproj` full-suite load flake (2 of 3 prototype runs; passes alone).
