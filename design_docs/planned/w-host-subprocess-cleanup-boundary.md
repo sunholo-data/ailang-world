@@ -61,7 +61,7 @@ This section restates row 24 using this iteration's measurements. Every claim ha
 | **Q4** Other launch sites | **OUT, as two named follow-on rows (§8).** archive + replay are grandchild-lifetime-bounded (30.37 s vs a 10 s bound; 3.235 s vs 0.205 s); there `WaitDelay` **would** work. `pkgproj/iface.go` leaks a descendant. `pkgproj.go:247` is **row 109's**. | The fixes differ in shape (copier-goroutine `Wait` vs caller-drained pipes). |
 | **Q5** Row 25 | **Not claimed.** The fixtures emit 6600 bytes, far below the **65536-byte** pipe capacity row 25 measured. | V20. |
 | **r1-A** (astra) cover or narrow? | **Option A, covered in scope.** It fits: `host/procbound` is 58 lines including comments, capsule is +66/−8 in total (r0+r1), broker is +35/−4 (V29). | P6 measured TRUE and pre-existing (30.39 s); the fix is measured in V26 and 6 mutants (Y1–Y6). |
-| **r1-A** why waiters cannot accumulate without bound | (i) A waiter outlives a call **only** when the direct child survives its SIGKILL past the deadline. (ii) SIGKILL to our own same-uid, unreaped child group **succeeded in every probe**, including a SIGSTOPped group (`kill=<nil>`, reaped in 1.06–1.16 ms, V27). EPERM cannot arise for a same-uid target, and ESRCH arises only after the reap. So outside injection a waiter appears only for a process that does not act on SIGKILL, such as one in uninterruptible I/O (**not reproduced, UNMEASURED**). (iii) The cap is kept anyway because it is cheap: `procbound.MaxOutstanding = 8` process-wide, with `Admit()` refusing new subprocesses with `ErrCleanupBacklog` before `Start` (AC8; Y7–Y10). It is a **soft** cap: N concurrent callers can each pass `Admit` before any of them abandons a waiter, so the worst case is 8 + the number of concurrent calls. | V26, V27; `TestAbandonedWaitersAreCountedCappedAndReaped`. |
+| **r1-A** why waiters cannot accumulate without bound — **the soft-cap half of this answer is WITHDRAWN at r2 (gpt6-astra); the cap is now an exact reservation, D6/AC10** | (i) A waiter outlives a call **only** when the direct child survives its SIGKILL past the deadline. (ii) SIGKILL to our own same-uid, unreaped child group **succeeded in every probe**, including a SIGSTOPped group (`kill=<nil>`, reaped in 1.06–1.16 ms, V27). EPERM cannot arise for a same-uid target, and ESRCH arises only after the reap. So outside injection a waiter appears only for a process that does not act on SIGKILL, such as one in uninterruptible I/O (**not reproduced, UNMEASURED**). (iii) The cap is kept anyway because it is cheap: `procbound.MaxOutstanding = 8` process-wide, with `Admit()` refusing new subprocesses with `ErrCleanupBacklog` before `Start` (AC8; Y7–Y10). It is a **soft** cap: N concurrent callers can each pass `Admit` before any of them abandons a waiter, so the worst case is 8 + the number of concurrent calls. | V26, V27; `TestAbandonedWaitersAreCountedCappedAndReaped`. |
 | **r1-B** (kimi) AC4 fixture | **Perl is removed.** The fixture script launches **the test binary itself** (`proctest.EscapeeShell`) in a helper mode (`proctest.RunEscapeeIfRequested`). The helper calls `syscall.Setsid()` (it is a child of `sh`, so not a group leader), writes its pid **atomically after the escape** (tmp + rename, so the file's existence proves the escape happened), and sleeps 30 s. The script waits, bounded, for the pid file **before** writing any output. `ExecTimeout` is **3 s**. | `-count=3`: 3/3 PASS per package, 4.01–4.22 s (V25). The broker arms also pass with the fixture run under **`/bin/dash`**, ubuntu's `/bin/sh` (V30). No perl remains, so the perl-on-CI premise is **N/A** (V31). |
 
 ## §3 Design
@@ -125,7 +125,7 @@ In both packages, around `cmd.Start()`:
 // which runs after the drains.
 const pipeCloseGrace = time.Second
 
-if err := procbound.Admit(); err != nil { return …, err }        // D6 cap
+release, err := procbound.Admit(); if err != nil { return …, err } // D6 exact reservation (r2); release on Start failure or reap
 if err := cmd.Start(); err != nil { … }
 started := time.Now()
 closer := time.AfterFunc(r.execTimeout+pipeCloseGrace, func() {
@@ -171,8 +171,8 @@ This is a new non-production package, imported only by `_test.go` files (V6).
 var ErrCleanupIncomplete = errors.New("subprocess cleanup incomplete: child not reaped by the cleanup deadline")
 var ErrCleanupBacklog = errors.New("subprocess refused: too many unreaped children outstanding")
 const MaxOutstanding = 8
-func Outstanding() int64
-func Admit() error                               // ErrCleanupBacklog when Outstanding() >= MaxOutstanding
+func Outstanding() int64                         // admitted children + retained waiters (r2)
+func Admit() (release func(), err error)          // r2: nonblocking atomic reservation; ErrCleanupBacklog when full
 func Wait(wait func() error, d time.Duration) error
 ```
 
@@ -180,7 +180,8 @@ func Wait(wait func() error, d time.Duration) error
   - If `wait` finishes within `d`, its result is returned.
   - Otherwise `Wait` increments the outstanding count, leaves a goroutine that receives the eventual result and decrements the count, and returns `ErrCleanupIncomplete`.
 - **Who reaps:** that background goroutine owns the child's `cmd.Wait`, which is the reap.
-- **What bounds the waiters:** `Admit`, called before every `Start` in both packages. It is soft, and the justification is in §2 r1-A.
+- **What bounds the waiters (r2, gpt6-astra's fix applied verbatim):** "Replace Admit's observational check with a nonblocking atomic reservation acquired before cmd.Start. Count both active children and abandoned waits against a documented process-wide limit. Release the reservation on Start failure or actual completion of cmd.Wait; on cleanup timeout, transfer ownership to the background waiter and retain the reservation until reaping completes. Refuse excess admissions with ErrCleanupBacklog without waiting." The limit is `MaxOutstanding` (8) and is now exact, not soft: the r1 soft-cap justification in §2 r1-A and §6.3 is withdrawn. `release` is idempotent (a `sync.Once`), so a reservation is released exactly once whichever path finishes it.
+- **ESRCH filter (r2, oc-glm-5-3 + oc-kimi-k3 fixes applied verbatim), in D1 and D2:** join the kill error only when `!errors.Is(killErr, syscall.ESRCH)` — "ESRCH from kill(-pgid) means the group is already empty, so there was nothing to kill; every other errno is still joined". Comment at both sites: the group leader may already be an unreaped zombie when the overflow kill fires. Applied unconditionally on both platforms, so the shipped error contract no longer depends on the unmeasured linux errno (§6.6).
 - This is a package rather than two copies. The logic has one owner, and row 26 (bounded Z3 producer) is the next consumer (§9).
 
 ## §4 Files
@@ -229,14 +230,17 @@ func Wait(wait func() error, d time.Duration) error
   - The test fills `procbound` to `MaxOutstanding` with blocking waits, then asserts that capsule `Run` and broker `runBounded` each return `ErrCleanupBacklog` without starting a process.
   - It then releases the waits and requires the count to drain.
 
+- **AC9 (r2, oc-glm-5-3) — an ordinary overflow carries no ESRCH.** "An ordinary overflow with an uninjected killGroup and an already-exited child must return the typed error with no syscall.ESRCH anywhere in the unwrapped chain, while the errors.As/Is contracts of AC3 still hold." Plus oc-kimi-k3's `TestZombieGroupKillNotJoined`: "injecting killGroup = ESRCH-only and asserting the returned error is exactly the typed overflow" (both packages). AC2's injected-EPERM arm is unaffected, so no existing acceptance weakens.
+- **AC10 (r2, gpt6-astra) — the reservation is exact under concurrency.** "A barrier-synchronized concurrent test with more callers than the limit and injected failed kills, asserting that admitted children and retained waiters never exceed the limit and that reservations are released exactly once." Fixtures obey S1–S3 (guarded cleanup kills only `cmd.Process`-derived pids).
+
 ## §6 What is NOT fixed (declared residuals)
 
 1. **A setsid escapee is not killed**, only disowned: the pipe is closed and the call returns. Killing it would require descendant tracking (a cgroup or a subreaper).
 2. **A direct child that survives a failed kill is not killed by us.** It is reaped by the background waiter when it exits. The only non-injected route is a process that ignores SIGKILL for a while (uninterruptible I/O), which is **UNMEASURED**.
-3. **The admission cap is soft** (§2 r1-A). An exact cap would need a reservation (CAS) at `Admit`. That is deferred because a waiter's existence already requires an unkillable child.
+3. ~~The admission cap is soft~~ — **withdrawn at r2**: the cap is an exact atomic reservation (D6, AC10).
 4. **archive `--version` and replay**: follow-on row A (§8). **pkgproj `iface.go`**: follow-on row B. **`pkgproj.go:247`**: row 109.
 5. **Row 25** (blocked-in-`write()` arm) is untouched (Q5).
-6. **Linux zombie-group kill errno** is unmeasured (darwin: nil, V19). If linux returns ESRCH for an exited-but-unreaped group, AC2's real path would add a joined `no such process` to an ordinary overflow; the typed error would stay primary. The sprint inspects AC1's error text in the first CI run; if ESRCH appears, it filters `errors.Is(killErr, syscall.ESRCH)` before joining.
+6. **Linux zombie-group kill errno** is still unmeasured locally (darwin: nil, V19; the rig has no linux container runtime — controller-checked, `docker`/`podman`/`colima`/`limactl`/`orb` all absent). It no longer decides the shipped contract: the ESRCH filter (D6) ships unconditionally with AC9 and X16/X17, and oc-kimi-k3's merge gate below makes the linux reading a precondition of merge, not a post-merge patch. **The reactive "inspect the first CI run and patch" clause of r1 is withdrawn.**
 
 ## §7 Risk: test-process safety (the reason D4 exists)
 
@@ -286,6 +290,8 @@ Descendant tracking; changing exec bounds or defaults; an exact (CAS) admission 
   - Mutations Y1–Y10 are killed.
   - The `capsule.go:203-210` comment is updated to say the residual is closed here, naming rows A and B.
 
+- **r2 additions (carve-out, verbatim reviewer fixes):** M1 also delivers the ESRCH filter with AC9 + `TestZombieGroupKillNotJoined` (mutations X16/X17); M3's `Admit` becomes the atomic reservation with AC10 (mutations Y13–Y15). **M1 exit gate (oc-kimi-k3, verbatim):** "linux verification — run the r1 test set under linux; bank V34 (AC1 joined error text on linux) and V35 (AC7 return/reap timings); any joined ESRCH residue found there blocks merge, not the sprint." On this rig the linux run is the sprint PR's own ubuntu-latest CI job, run with `-v` and banked before merge; oc-glm-5-3's V30 mirror (host/capsule/cleanup_test.go under /bin/dash) is promoted into AC4's acceptance for both packages.
+
 ## §12 Test plan and mutation matrix: every row was RUN against the r1 prototype
 
 Harness: `mutate-r1.py`. It applies one string mutation, asserts the mutation text occurs exactly once, runs `go test <pkgs> -run '^(TestOverflowKill|TestPipeClose|TestSignalRefuses|TestFailedKill|TestFullCleanupBacklog|TestWaitReturns|TestAbandoned)' -count=1 -p 1`, and restores. It records the **named** failing tests. Output: `mutations-r1.txt`.
@@ -322,7 +328,13 @@ A build failure is not a kill. Y3's first spelling left `cleanupDeadline` unused
 | Y11 | capsule wait deadline = `execTimeout` (no grace after the pipe close) | r1 diff | AC4 (the negative `ErrCleanupIncomplete` assertion) |
 | Y12 | broker wait deadline = `execTimeout` | r1 diff | AC4 (the same) |
 
-**Tally: 27/27 killed, 0 survived** (r0: 15/15). Equivalent mutant noted, not run: `Cancel` spelled `syscall.Kill(-pid)` vs `killGroup(pid)`.
+| X16 | capsule drops the ESRCH filter (joins every kill error) | r2 diff | AC9, `TestZombieGroupKillNotJoined` — **UNRUN at design time (r2 carve-out); the planner must execute it** |
+| X17 | broker drops the ESRCH filter | r2 diff | AC9, `TestZombieGroupKillNotJoined` — **UNRUN; planner executes** |
+| Y13 | `Admit` reverts to the observational check (no reservation) | r2 diff | AC10 — **UNRUN; planner executes** |
+| Y14 | reservation not retained on cleanup timeout (released at return) | r2 diff | AC10 — **UNRUN; planner executes** |
+| Y15 | `release` not idempotent (double release) | r2 diff | AC10 (released-exactly-once assertion) — **UNRUN; planner executes** |
+
+**Tally: 27/27 killed, 0 survived** on the r1 prototype (r0: 15/15). The five r2 rows (X16, X17, Y13–Y15) are specified by the r2 carve-out and were NOT run at design time; the planner must prototype and execute them before the plan is committed. Equivalent mutant noted, not run: `Cancel` spelled `syscall.Kill(-pid)` vs `killGroup(pid)`.
 
 ## §13 Verification Log
 
@@ -380,3 +392,14 @@ All commands were run at `87912f7` (repo), or on the r0/r1 prototypes on that ba
 | oc-glm-5-3 | PASS | — | — |
 | oc-kimi-k3 | REJECT | **AC4 fixture** (§5 AC4 / M2): a 1 s `ExecTimeout` with a perl fixture that writes its pid only after a cold boot + `setsid`, the configuration V14 recorded failing; perl on ubuntu-latest unmeasured | **Upheld.** Perl removed. The test-binary `setsid` helper (the controller's preference) writes its pid atomically after the escape and before any output. `ExecTimeout` is 3 s. `-count=3` 3/3 per package (V25), passes under dash (V30); the perl V-row is N/A (V31). M2 acceptance adopts the reviewer's CI clause. |
 | gpt6-astra | REJECT | **D2/D3 cleanup bound**: a failed kill leaves `Wait` unbounded; AC2 never tests a failed kill with a live direct child | **Upheld; option A.** Measured TRUE and pre-existing (V28, 30.39 s). One cleanup deadline now covers the drain and the direct-child wait (D3). `procbound` (D6) supplies the bounded wait, `ErrCleanupIncomplete`, background reap ownership and a (soft) admission cap with `ErrCleanupBacklog`. The EPERM-without-signalling tests (AC7, capsule + broker overflow + broker timeout) require a return within the documented bound, the typed error and the injected failure discoverable, the child alive at return, and an eventual guarded kill + reap. AC8 covers admission. Mutants Y1–Y12 were added and killed. |
+
+### Round 2: BLOCKED 3 reject / 0 pass, all present — resolved by the narrow-refinement carve-out (controller)
+
+| Reviewer | Verdict | Surface named | Resolution |
+|---|---|---|---|
+| oc-glm-5-3 | REJECT | **linux ESRCH premise**: every probe ran on darwin; §6.6 pre-authorised an untested reactive ESRCH filter | Applied verbatim: ESRCH filter in D1/D2 (D6 bullet), AC9, X16/X17, V34 on linux, V30 dash mirror promoted into AC4 |
+| oc-kimi-k3 | REJECT | **linux ESRCH premise** (same surface as glm) | Applied verbatim: M1 exit gate (V34/V35 on linux block merge), `TestZombieGroupKillNotJoined`, X16 |
+| gpt6-astra | REJECT | **D6 admission cap is soft** — `Admit` reserves nothing, so "8 + concurrent calls" is no finite bound | Applied verbatim: nonblocking atomic reservation before `Start`, retained by the background waiter until reaping, AC10 barrier test, Y13–Y15; soft-cap justification withdrawn |
+
+Carve-out conditions (gate-2): every remaining objection carries a concrete reviewer-authored `proposed_fix`, and none disputes the design DIRECTION (group-wide overflow kill, joined kill error, one cleanup deadline). The fixes above are the reviewers' own text, applied by the controller; no controller-invented resolution. Objection surfaces per round: r1 = AC4 fixture, cleanup bound; r2 = linux ESRCH premise (×2), admission-cap exactness — no surface repeated across rounds, so this is not the SPLIT signal. Controller measurement for r2: no linux container runtime exists on the rig, so the linux reading is deferred to the PR's CI as a merge gate rather than asserted.
+
