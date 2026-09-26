@@ -182,6 +182,35 @@ func TestCommitBodyHookPhases(t *testing.T) {
 	}
 }
 
+func TestAppendIntentCancelledMidBodyIsNotCommitted(t *testing.T) {
+	s := openFileStore(t)
+	c := journalCommitFixture(t, s, "append-mid-body")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	previous := appendIntentBodyHook
+	visits := 0
+	appendIntentBodyHook = func(got context.Context) {
+		if got != ctx {
+			t.Fatal("append hook did not receive caller context")
+		}
+		visits++
+		cancel()
+		time.Sleep(50 * time.Millisecond)
+	}
+	defer func() { appendIntentBodyHook = previous }()
+	_, _, err := s.AppendIntentContext(ctx, "append-mid-body", testCommitIntent("append-mid-body", c))
+	if visits != 1 {
+		t.Fatalf("append hook visits = %d; want one", visits)
+	}
+	if !errors.Is(err, context.Canceled) || IsUncertain(err) {
+		t.Fatalf("err = %v; want definite Canceled", err)
+	}
+	rc, hasIntent, err := s.GetReceipt("append-mid-body")
+	if err != nil || hasIntent || rc.State != ReceiptNotStarted {
+		t.Fatalf("receipt = %v, hasIntent = %v, err = %v; want not started with no intent", rc.State, hasIntent, err)
+	}
+}
+
 // TestDurableStallAtCutoffIsUncertainAndReconciles stalls the durable step of
 // each durable write past the caller deadline: the caller gets *UncertainError
 // (not a ctx error) within budget+epsilon, the finishing goroutine exits once

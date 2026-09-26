@@ -408,6 +408,8 @@ func insertJournalObjectTx(tx *sql.Tx, o Object) error {
 	return nil
 }
 
+var appendIntentBodyHook = func(context.Context) {}
+
 // AppendIntent is AppendIntentContext without a caller lifetime; a
 // compatibility wrapper removed when its callers migrate (row 23 policy
 // tranche, M6b).
@@ -450,6 +452,7 @@ func (s *Store) AppendIntentContext(ctx context.Context, id string, intent Journ
 	if err != nil {
 		return 0, hashref.HashRef{}, err
 	}
+	appendIntentBodyHook(ctx)
 	if err := insertJournalObjectTx(tx, object); err != nil {
 		return 0, hashref.HashRef{}, err
 	}
