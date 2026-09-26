@@ -297,6 +297,7 @@ func TestRegistryDispatchBindingBoundary(t *testing.T) {
 			{"POS-ctor-live", `package p; import broker ` + brokerImport + `; func f(){ broker.NewSession(nil,nil) }`, "ctor-live", 1},
 			{"POS-ctor-replay", `package p; import broker ` + brokerImport + `; func f(){ broker.NewReplaySession(nil,nil) }`, "ctor-replay", 1},
 			{"POS-session-type", `package p; import broker ` + brokerImport + `; func f(*broker.Session){}`, "session-type", 1},
+			{"NEG-session-binder", `package p; import broker ` + brokerImport + `; func f(*broker.SessionBinder){}`, "", 0},
 			{"POS-alias-session", `package p; import bk ` + brokerImport + `; func f(*bk.Session){}`, "session-type", 1},
 			{"POS-dot-import", `package p; import . ` + brokerImport, "dot-import", 1},
 			// The three shapes a CallExpr-anchored detector was blind to. Each
