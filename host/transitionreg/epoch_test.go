@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/registry"
+	"github.com/sunholo-data/ailang-world/host/store"
 )
 
 // TestEpochsForInterpreterRefusesAbsentAndUnnominated is M3's direct pin of
@@ -98,5 +100,65 @@ func TestPublishSetEpochTwinInterpretersKeepDistinctPins(t *testing.T) {
 	}
 	if after.Head != snap.Head || after.Revision != 1 || len(after.List()) != 2 {
 		t.Fatalf("after refusal: head %s rev %d entries %d, want unchanged (%s, 1, 2)", after.Head, after.Revision, len(after.List()), snap.Head)
+	}
+}
+
+// TestPublishSetEpochCheckIsPerDescriptorInterpreter closes the evaluator's
+// surviving mutation (iter-195 eval r1, E-finding 1): every earlier batch test
+// pinned interpreters nominated by the SAME epoch, so a verifyEpochs that
+// looked every descriptor up under the FIRST descriptor's interpreter passed
+// the whole suite. Here the epoch registry nominates two disjoint releases
+// under two epochs, and one batch publishes a descriptor for each: the batch
+// is accepted only if each descriptor's epoch is checked against ITS OWN
+// interpreter, and a crossed pairing is refused with the head unchanged.
+func TestPublishSetEpochCheckIsPerDescriptorInterpreter(t *testing.T) {
+	const relA, relB = "EPOCH-A v1", "EPOCH-B v2"
+	s, arch, refA := publisherStore(t, relA, "")
+	refB, err := arch.Archive(fakeInterpreterScript(t, relB, 0))
+	if err != nil {
+		t.Fatalf("archive second interpreter: %v", err)
+	}
+	payload, err := registry.Registry{SemanticID: registry.SemanticID, Epochs: []registry.EpochRecord{
+		{Epoch: 1, Candidates: []string{relA}},
+		{Epoch: 2, Candidates: []string{relB}},
+	}}.Encode()
+	if err != nil {
+		t.Fatal(err)
+	}
+	obj := store.Object{Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte(registry.SemanticID)),
+		SemanticID: registry.SemanticID, Provenance: "test-two-epoch-registry", Payload: payload}
+	if err := s.PutObject(obj); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.CompareAndSetRegistryHead(registry.SemanticID, hashref.HashRef{}, obj.Hash); err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	pub := NewPublisher(s, arch)
+
+	crossed := storedSourceDescriptor(t, s, refA, "tools.crossed")
+	crossed.SemanticsEpoch = 2
+	var mismatch *InterpreterEpochMismatchError
+	if _, err := pub.PublishSet(ctx, []Change{{ID: crossed.ID, Descriptor: &crossed}}); !errors.As(err, &mismatch) || mismatch.ID != "tools.crossed" {
+		t.Fatalf("crossed pairing (release %q under epoch 2) = %v, want *InterpreterEpochMismatchError", relA, err)
+	}
+	if _, _, ok, _ := NewReader(s).CurrentRevision(ctx); ok {
+		t.Fatal("a refused publish must leave no head")
+	}
+
+	alpha := storedSourceDescriptor(t, s, refA, "tools.alpha")
+	alpha.SemanticsEpoch = 1
+	beta := storedSourceDescriptor(t, s, refB, "tools.beta")
+	beta.SemanticsEpoch = 2
+	res, err := pub.PublishSet(ctx, []Change{{ID: alpha.ID, Descriptor: &alpha}, {ID: beta.ID, Descriptor: &beta}})
+	if err != nil || res.Revision != 1 {
+		t.Fatalf("mixed-epoch batch = (%+v, %v), want revision 1: each descriptor's epoch must be checked against its OWN interpreter", res, err)
+	}
+	snap, err := NewReader(s).ReadSnapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := snap.List(); len(got) != 2 || got[0].SemanticsEpoch != 1 || got[1].SemanticsEpoch != 2 {
+		t.Fatalf("published entries = %+v, want tools.alpha@1 and tools.beta@2", got)
 	}
 }
