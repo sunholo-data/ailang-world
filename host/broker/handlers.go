@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"syscall"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/procbound"
 )
 
 const (
@@ -82,6 +84,10 @@ var killGroup = func(pgid int) error {
 	return syscall.Kill(-pgid, syscall.SIGKILL)
 }
 
+// pipeCloseGrace is how long after the execTimeout the parent's read end is
+// closed. exec.Cmd.WaitDelay cannot bound this: Wait runs after the read.
+const pipeCloseGrace = time.Second
+
 // runBounded is the one timeout and allocation surface used by every subprocess
 // handler. It reads at most limit+1 bytes so overflow is detected, never hidden
 // by truncation.
@@ -112,19 +118,49 @@ func runBounded(ctx context.Context, bounds handlerBounds, spec handlerCommand) 
 		return nil, fmt.Errorf("broker: handler stdout pipe: %w", err)
 	}
 	cmd.Stderr = cmd.Stdout
+	release, err := procbound.Admit()
+	if err != nil {
+		return nil, err
+	}
 	if err := cmd.Start(); err != nil {
+		release()
 		return nil, fmt.Errorf("broker: start handler subprocess: %w", err)
 	}
+	// Wait is bounded too, so a failed kill cannot hang the call: the child is
+	// left to a background reaper and reported as ErrCleanupIncomplete.
+	cleanupDeadline := time.Now().Add(bounds.execTimeout + 2*pipeCloseGrace)
+	wait := func() error { return procbound.Wait(cmd.Wait, time.Until(cleanupDeadline), release) }
+	// A descendant that left the group (setsid) survives the group kill and
+	// holds the pipe; close the read end after the bound so ReadAll returns.
+	closer := time.AfterFunc(bounds.execTimeout+pipeCloseGrace, func() { _ = pipe.Close() })
+	defer closer.Stop()
 
 	limited := &io.LimitedReader{R: pipe, N: bounds.maxOutputBytes + 1}
 	output, readErr := io.ReadAll(limited)
 	if int64(len(output)) > bounds.maxOutputBytes {
-		_ = cmd.Process.Kill()
-		_ = cmd.Wait()
-		return nil, &HandlerOutputOverflowError{Limit: bounds.maxOutputBytes}
+		// Group-wide, like Cancel: a grandchild holding the pipe would otherwise
+		// outlive the call, because Wait returns once the direct child is reaped
+		// and the deadline's group kill never fires (queue row 24).
+		errs := []error{&HandlerOutputOverflowError{Limit: bounds.maxOutputBytes}}
+		// ESRCH from kill(-pgid) means the group is already empty, so there was
+		// nothing to kill: the group leader may already be an unreaped zombie
+		// when the overflow kill fires. Every other errno is still joined.
+		if killErr := killGroup(cmd.Process.Pid); killErr != nil && !errors.Is(killErr, syscall.ESRCH) {
+			errs = append(errs, fmt.Errorf("broker: overflow kill: %w", killErr))
+		}
+		if waitErr := wait(); errors.Is(waitErr, procbound.ErrCleanupIncomplete) {
+			errs = append(errs, waitErr)
+		}
+		if len(errs) == 1 {
+			return nil, errs[0]
+		}
+		return nil, errors.Join(errs...)
 	}
-	waitErr := cmd.Wait()
+	waitErr := wait()
 	if waitErr != nil && runCtx.Err() == context.DeadlineExceeded {
+		if errors.Is(waitErr, procbound.ErrCleanupIncomplete) {
+			return nil, errors.Join(&HandlerTimeoutError{Timeout: bounds.execTimeout}, waitErr)
+		}
 		return nil, &HandlerTimeoutError{Timeout: bounds.execTimeout}
 	}
 	if readErr != nil {

@@ -181,6 +181,18 @@ jobs:
         timeout-minutes: 25
         run: ./scripts/verify_go.sh
 
+      # Row 24 linux merge gate (w-host-subprocess-cleanup-boundary plan §7, design §11 r2):
+      # verify_go.sh runs these tests without -v, so a PASS is indistinguishable from a SKIP
+      # and the return/reap timings are invisible. Run the cleanup tests verbosely here so
+      # V34 (joined-error text, no ESRCH residue on linux) and V35 (AC7 timings) can be read
+      # from this log, and AC4's escapee test is seen to PASS rather than SKIP.
+      - name: Subprocess cleanup tests, verbose (row 24 linux merge gate)
+        timeout-minutes: 6
+        run: >-
+          go test ./host/procbound/ ./host/proctest/ ./host/capsule/ ./host/broker/
+          -count=1 -p 1 -timeout 300s -v
+          -run '^(TestAbandonedWaiters|TestAdmitIsExact|TestFailedKillBounds|TestFullCleanupBacklog|TestOrdinaryOverflow|TestOverflowKill|TestPipeCloseBounds|TestReleaseIsIdempotent|TestReservationIsExact|TestSignalRefuses|TestStartFailureReleases|TestWaitReturnsResult|TestZombieGroupKill)'
+
       # Platform-conditional and GATED (row 44): darwin/arm64 must reproduce the defect;
       # linux/amd64 (here) must NOT (measured, iteration-46 AC6); every configured
       # known-bad probe must run to completion and both known-good controls must fire.

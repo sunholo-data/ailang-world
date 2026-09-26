@@ -23,6 +23,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/procbound"
 )
 
 const (
@@ -60,11 +61,37 @@ type childProcess interface {
 }
 
 type cmdChild struct {
-	cmd *exec.Cmd
+	cmd      *exec.Cmd
+	deadline time.Time // the call's cleanup deadline
+	release  func()    // the procbound reservation, freed when the child is reaped
 }
 
-func (c cmdChild) Kill() error { return c.cmd.Process.Kill() }
-func (c cmdChild) Wait() error { return c.cmd.Wait() }
+// Kill is the overflow kill. It is group-wide for the same reason Cancel is:
+// a forked grandchild inherits the pipes, so killing only the direct child
+// leaves the drains blocked until the deadline (queue row 24).
+func (c cmdChild) Kill() error { return killGroup(c.cmd.Process.Pid) }
+
+// Wait is bounded by the cleanup deadline: a child that survived a failed kill
+// is left to a background reaper and reported as procbound.ErrCleanupIncomplete.
+func (c cmdChild) Wait() error {
+	return procbound.Wait(c.cmd.Wait, time.Until(c.deadline), c.release)
+}
+
+// killGroup SIGKILLs the child's whole process group. Both the overflow kill
+// and the ctx Cancel use it; it is a package-level seam so tests can observe
+// or fail the kill.
+var killGroup = func(pgid int) error {
+	return syscall.Kill(-pgid, syscall.SIGKILL)
+}
+
+// pipeCloseGrace bounds the one case the group kill cannot reach: a
+// descendant that left the process group (setsid) and still holds the pipes.
+// execTimeout+pipeCloseGrace after Start the parent's read ends are closed, so
+// the drains return; Wait is then bounded by a further pipeCloseGrace, so Run
+// returns within execTimeout+2*pipeCloseGrace even if every kill fails.
+// exec.Cmd.WaitDelay cannot do this here: its timer is only consumed by Wait,
+// which runs after the drains.
+const pipeCloseGrace = time.Second
 
 // HashMismatchError means the resolved interpreter bytes no longer match the
 // entry's content address. Execution is refused before the child is started.
@@ -177,7 +204,7 @@ func (r *Runner) Run(entry Entry) (Result, error) {
 		if cmd.Process == nil {
 			return nil
 		}
-		return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+		return killGroup(cmd.Process.Pid)
 	}
 
 	stdoutPipe, err := cmd.StdoutPipe()
@@ -188,10 +215,22 @@ func (r *Runner) Run(entry Entry) (Result, error) {
 	if err != nil {
 		return Result{}, fmt.Errorf("capsule: stderr pipe: %w", err)
 	}
+	release, err := procbound.Admit()
+	if err != nil {
+		return Result{}, err
+	}
 	if err := cmd.Start(); err != nil {
+		release()
 		return Result{}, &ExecError{Path: execPath, Err: err}
 	}
-	res, runErr, err := collectOutput(ctx, stdoutPipe, stderrPipe, r.maxOutputBytes, r.execTimeout, cmdChild{cmd})
+	started := time.Now()
+	closer := time.AfterFunc(r.execTimeout+pipeCloseGrace, func() {
+		_ = stdoutPipe.Close()
+		_ = stderrPipe.Close()
+	})
+	defer closer.Stop()
+	res, runErr, err := collectOutput(ctx, stdoutPipe, stderrPipe, r.maxOutputBytes, r.execTimeout,
+		cmdChild{cmd: cmd, deadline: started.Add(r.execTimeout + 2*pipeCloseGrace), release: release})
 	if err != nil {
 		return res, err
 	}
@@ -206,12 +245,21 @@ func (r *Runner) Run(entry Entry) (Result, error) {
 // supplied readers and Wait return. collectOutput neither makes an arbitrary
 // io.Reader cancellable nor makes Wait() error bounded. Production supplies
 // that property via context.WithTimeout, exec.CommandContext, and cmd.Cancel's
-// group-wide SIGKILL. The residual lifecycle work is owned by queue row 24,
-// w-host-subprocess-cleanup-boundary.
+// group-wide SIGKILL. Queue row 24 (w-host-subprocess-cleanup-boundary) closed
+// that residual: the overflow kill is group-wide, a failed kill and an
+// incomplete cleanup are joined behind the typed error (withCleanupFailures),
+// and one cleanup deadline (execTimeout + 2·pipeCloseGrace) bounds the drains
+// (the pipe closer in Run) and the direct-child wait (procbound). Declared
+// residuals: a setsid escapee is disowned, not killed; a child that survives a
+// failed kill is reaped later by procbound's background waiter. The same
+// grandchild shapes in archive and replay are follow-on row A
+// (w-archive-replay-grandchild-bound); the pkgproj descendant leak is
+// follow-on row B (w-pkgproj-quality-descendant-leak).
 func collectOutput(ctx context.Context, stdoutPipe, stderrPipe io.Reader, limit int64, execTimeout time.Duration, child childProcess) (Result, error, error) {
 	var stdout, stderr []byte
 	var stdoutErr, stderrErr error
 	var killOnce sync.Once
+	var killErr error
 	var wg sync.WaitGroup
 	// F6 must not decay into F5. Past the cap nothing drains the pipe, so an
 	// unkilled child blocks in write() until the wall clock expires and the
@@ -221,7 +269,7 @@ func collectOutput(ctx context.Context, stdoutPipe, stderrPipe io.Reader, limit 
 		defer wg.Done()
 		*dst, *dstErr = readCapped(pipe, limit)
 		if errors.Is(*dstErr, errOutputLimit) {
-			killOnce.Do(func() { _ = child.Kill() })
+			killOnce.Do(func() { killErr = child.Kill() })
 		}
 	}
 	wg.Add(2)
@@ -234,16 +282,42 @@ func collectOutput(ctx context.Context, stdoutPipe, stderrPipe io.Reader, limit 
 	// Overflow outranks the deadline: killing the child is what let Wait return,
 	// and that must not be reported as a wall-clock expiry.
 	if errors.Is(stdoutErr, errOutputLimit) || errors.Is(stderrErr, errOutputLimit) {
-		return Result{Stdout: stdout, Stderr: stderr}, runErr, &OutputLimitError{Limit: limit}
+		// ESRCH from kill(-pgid) means the group is already empty, so there was
+		// nothing to kill: the group leader may already be an unreaped zombie
+		// when the overflow kill fires. Every other errno is still joined.
+		var killFailure error
+		if killErr != nil && !errors.Is(killErr, syscall.ESRCH) {
+			killFailure = fmt.Errorf("capsule: overflow kill: %w", killErr)
+		}
+		return Result{Stdout: stdout, Stderr: stderr}, runErr,
+			withCleanupFailures(&OutputLimitError{Limit: limit}, killFailure, runErr)
 	}
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		return Result{Stdout: stdout, Stderr: stderr}, runErr, &TimeoutError{Limit: execTimeout}
+		return Result{Stdout: stdout, Stderr: stderr}, runErr,
+			withCleanupFailures(&TimeoutError{Limit: execTimeout}, nil, runErr)
 	}
 	if stdoutErr != nil || stderrErr != nil {
 		return Result{Stdout: stdout, Stderr: stderr}, runErr,
 			fmt.Errorf("capsule: read output: %w", errors.Join(stdoutErr, stderrErr))
 	}
 	return Result{Stdout: stdout, Stderr: stderr}, runErr, nil
+}
+
+// withCleanupFailures keeps the typed error primary (errors.As-reachable) and
+// joins a failed kill and an incomplete cleanup behind it. With neither it
+// returns primary itself, so the typed error's identity is unchanged.
+func withCleanupFailures(primary, killFailure, waitErr error) error {
+	errs := []error{primary}
+	if killFailure != nil {
+		errs = append(errs, killFailure)
+	}
+	if errors.Is(waitErr, procbound.ErrCleanupIncomplete) {
+		errs = append(errs, waitErr)
+	}
+	if len(errs) == 1 {
+		return primary
+	}
+	return errors.Join(errs...)
 }
 
 func verifyExecutable(path string, ref hashref.HashRef) error {
