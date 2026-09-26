@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -56,9 +57,14 @@ type Snapshot struct {
 }
 
 // StoreReader reads transition revisions and caches validated parsed objects by
-// their immutable content hash. The registry head is never cached.
+// their immutable content hash. The registry head is never cached. arch is
+// non-nil only on publisher handles (NewPublisher): PublishSet requires it
+// for epoch and source-loadability verification.
 type StoreReader struct {
 	store ObjectStore
+	// arch is the interpreter archive rooted next to the store DB. nil on
+	// NewReader handles, whose PublishSet refuses (PublisherArchiveRequiredError).
+	arch  *archive.Archive
 	mu    sync.RWMutex
 	cache map[hashref.HashRef]Snapshot
 }
