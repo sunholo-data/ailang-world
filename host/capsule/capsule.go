@@ -31,6 +31,7 @@ const (
 	maxCapsuleOutputBytes = int64(8 << 20)
 	entryModulePath       = "host/capsule/main.ail"
 	entryFn               = "main"
+	argsFile              = "args.json"
 )
 
 // Config supplies the injectable bounds used by the shipped execution path.
@@ -44,6 +45,10 @@ type Config struct {
 type Entry struct {
 	Interpreter hashref.HashRef
 	Source      []byte
+	// Args is one JSON value handed to the entry function through
+	// --args-file (w-transition-invocation-coordinator). Nil keeps the legacy
+	// argument-less run.
+	Args []byte
 }
 
 // Result contains the exact stdout and stderr streams produced by a capsule.
@@ -169,6 +174,13 @@ func New(a *archive.Archive, cfg Config) *Runner {
 
 // Run stages and executes one pinned transition under the six-part floor.
 func (r *Runner) Run(entry Entry) (Result, error) {
+	return r.RunContext(context.Background(), entry)
+}
+
+// RunContext is Run bounded also by the caller's ctx: the child's context is
+// derived from ctx, so the earlier of the caller's deadline and the exec
+// allowance kills the process group.
+func (r *Runner) RunContext(parent context.Context, entry Entry) (Result, error) {
 	execPath, err := r.archive.Resolve(entry.Interpreter)
 	if err != nil {
 		return Result{}, err
@@ -191,12 +203,23 @@ func (r *Runner) Run(entry Entry) (Result, error) {
 		return Result{}, fmt.Errorf("capsule: stage source: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), r.execTimeout)
+	args := []string{"run", "--quiet", "--caps", r.caps, "--entry", entryFn}
+	if entry.Args != nil {
+		if err := os.WriteFile(filepath.Join(root, argsFile), entry.Args, 0o644); err != nil {
+			return Result{}, fmt.Errorf("capsule: stage args: %w", err)
+		}
+		args = append(args, "--args-file", argsFile)
+	}
+	args = append(args, entryModulePath)
+
+	ctx, cancel := context.WithTimeout(parent, r.execTimeout)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, execPath,
-		"run", "--quiet", "--caps", r.caps, "--entry", entryFn, entryModulePath)
+	cmd := exec.CommandContext(ctx, execPath, args...)
 	cmd.Dir = root
-	cmd.Env = []string{"AILANG_FS_SANDBOX=" + root}
+	// AILANG_RELAX_MODULES=1 is the publish check's own shape
+	// (host/archive/check.go): a source's module header need not name the
+	// fixed staging path, so what publication checked is what runs.
+	cmd.Env = []string{"AILANG_FS_SANDBOX=" + root, "AILANG_RELAX_MODULES=1"}
 	// Same correction as host/broker's runBounded: kill the whole process group,
 	// or a forked grandchild keeps the inherited pipes open and outlives F5/F6.
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
