@@ -1692,7 +1692,45 @@ mission in `~/.config/ailang/mission-world.env`:
 <!-- Every open item carries a clause tag. Estimates are honest guesses at bootstrap;
      iteration 0 re-scores. NEW-DOC items start with design-doc-creator. -->
 
-### GROOMED 2026-09-21 (Mark, attended) — THIS ORDER OVERRIDES PHYSICAL POSITION
+### REGROOMED 2026-09-26 (Mark, attended) — THE 1.0 CRITICAL PATH. THIS ORDER OVERRIDES THE 2026-09-21 TABLE BELOW
+
+**What the review measured.** The bar has three clauses left: **4** (the non-inferiority floor,
+row 93, never run), **6** (the A2A card lists zero skills and there is no MCP surface) and **5**
+(row 92 landed with pre-World baselines UNMEASURED; its walk retrieved diagnoses seeded during
+the sprint). Iterations 189, 193 and 194 all landed clause-2 robustness rows (22, 24, 23), each
+spawning successors (111; 112, 113), while the two ungated rows on the clause-4/6 critical path,
+**106** and **107**, had no groom position at all: they were split out of row 40 (position 5) at
+iter-187 and never inherited its place. The loop followed the 2026-09-21 table correctly, and the
+table had fallen behind the queue. Clauses 1, 2, 3 and 7 are met; clause-2 polish no longer moves
+the bar.
+
+**PICK IN THIS ORDER.** Positions 1–4 are the critical path; do not pick below them while one
+of them is routable.
+
+| # | Row | Why here |
+|---|---|---|
+| 1 | **107** `w-transition-registry-production-publisher` (clause-6) | Gated on nothing, ~1d. Without it the A2A card lists zero skills and clause 6's "the transition registry is served" has no content |
+| 2 | **106** `w-transition-invocation-coordinator` (clause-6, clause-3) | Gated on nothing, ~2d. Without it `/a2a/` can only refuse and MCP `tools/call` has nothing to dispatch into. It is also the World arm of row 93 |
+| 3 | **108** `w-mcp-dispatch-projection` (clause-6) | Blocked upstream on `ailang#885`. **Each iteration's Gate 0 re-measures the `serveapi/protocol` blobs at the latest ailang tag**; the moment they change, this row jumps to position 1. Nudged to ailang-core 2026-09-26 (attended), `inbox_1790428380709_a044fa4b` |
+| 4 | **93** (clause-4) | The floor run. Re-enters as soon as 106 + 107 + 108 land |
+| 5 | **114** (clause-5) | Clause 5 on an unseeded question with a timed pre-World baseline, taken when real operation produces one |
+| 6 | **94** PUB011 half (clause-1) | Contracts on the 8 uncontracted `world/core` exports |
+| 7 | **23** policy tranche (`D-WORLD-37` RULED A), then 25, 26, 32, 109, 111, 112, 113 (clause-2) | Real daemon robustness, but it does not move the bar. Loop work only when positions 1–6 are all blocked or landed |
+
+**STANDING RULE — the critical-path check (Gate 2, every iteration).** Before picking, write in
+the STATUS stamp one line per UNMET bar clause naming the open row that moves it, and whether that
+row is routable. Then:
+1. **If a routable critical-path row exists and the pick is not one, the pick is wrong** unless the
+   stamp names the measured reason (a blocker, a failed premise).
+2. **A row split out of a groomed row INHERITS the parent's groom position** (children in
+   dependency order) unless the split record says otherwise. A new row that moves an unmet clause
+   and has no position is a **drift signal**: the iteration files a `D-WORLD` ask proposing its
+   position. It does not quietly pick from further down.
+3. **Drift alarm:** if the last three landings moved no unmet clause, the next Gate-5 digest leads
+   with that fact and a proposed regroom for Mark. The loop may not reorder an attended groom
+   itself; it may and must ask.
+
+### GROOMED 2026-09-21 (Mark, attended) — SUPERSEDED IN ORDER BY THE 2026-09-26 REGROOM ABOVE; ITS MAINTENANCE RULES STILL APPLY
 
 **What the grooming measured.** 34 open rows, **27 of them clause-2 (79%)** — and clause-2 had
 become the catch-all rather than "local-first daemon". Of those 27, **thirteen are mission-harness
@@ -1842,6 +1880,8 @@ shared skill anyway, so working them here produces proposals, not fixes.
 112. **w-archive-replay-grandchild-bound** · clause-2 · **THE DAEMON-START `--version` PROBE WAITS FOR A GRANDCHILD'S WHOLE LIFETIME, NOT ITS OWN 10 s BOUND, AND REPLAY DOES THE SAME.** Measured by the row-24 designer (iter-192, design §1 P3/P4, V12/V13): a fixture that forks before its `--version` branch made `archiveExecutable` take **30.371 s** against `probeTimeout` 10 s. `probeVersion` (`host/archive/archive.go:470`) uses `bytes.Buffer` stdout, so `Wait` awaits os/exec's copier, which needs EOF; the timeout's kill targets an already-exited direct child. `runPinnedTransition` (`host/replay/replay.go:327`) with a fake interpreter that forks `sleep 3 &` took **3.235 s** against a **0.205 s** no-fork control and returned `err=nil`. This also explains row 24's unattributed 33 s residue (archive ≈30 s + Run ≈3 s). **THE ITEM:** `Setpgid` + group `Cancel` + `cmd.WaitDelay` at both sites. Here `WaitDelay` IS effective, because `cmd.Run` with a buffer makes `Wait` own the copiers (unlike capsule/broker, where it was measured inert). Reuse `host/procbound` if a failed-kill bound is wanted, and `host/proctest` for every test-side signal. The archive probe runs on every daemon start. · ~0.5d · gated on nothing · **filed iter-193 from row 24's design §8 row A.**
 
 113. **w-pkgproj-quality-descendant-leak** · clause-2 · **`pkgproj/iface.go`'s `QueryInterface` IS TIME-BOUNDED BUT NOT GROUP-BOUNDED, SO A DESCENDANT SURVIVES THE CALL.** `host/pkgproj/iface.go:171` sets `cmd.WaitDelay = 2 s` (its own comment at `:69-72` says it does NOT kill a descendant: "no process group here; that lifecycle is queue row 24"). Row 24 kept to capsule and broker (design §8 row B), so this site keeps the residual. **UNMEASURED:** measure first, with a forking fixture, the descendant's state at return. Then decide whether `Setpgid` + group `Cancel` belongs here. Row 109 (`CrossCheck` has no in-process bound, `pkgproj.go:247`) is a different site in the same package. · ~0.3d · gated on nothing · **filed iter-193 from row 24's design §8 row B.**
+
+114. **w-provenance-teeth-unseeded-baselined-walk** · clause-5 · **ROW 92 PROVED RETRIEVAL, NOT DIAGNOSIS: ITS FOUR WALKS READ ANSWERS THE SPRINT HAD SEEDED, AND EVERY PRE-WORLD BASELINE IS `UNMEASURED`.** Measured 2026-09-26 (attended review) in `design_docs/verification/w-1-0-value-demonstration.md`: the baseline column reads `UNMEASURED (record states method, not cost)` for Q1–Q3 and C4, and the artifact itself states that the walk measures retrieval of a recorded diagnosis. Clause 5 asks for a provenance walk that yields the verified answer in ≤5 minutes *where the pre-World method was grep/log archaeology*, so the comparison arm is missing. **THE ITEM:** when real operation raises a new "why did X happen" question, (a) time the pre-World method live by an agent that has no access to World and (b) run the provenance walk from a World state where the answer was NOT hand-recorded (only the transitions and effect records that operation produced), then record both timings and whether each answer verifies. Repeat until ≥3 questions are done. Do not invent questions to fill the quota; the harvest rules in row 92's artifact (§ Harvest log, with rejections) apply. If no World-recorded operation can answer an unseeded question, **that is the finding**: record it and file the capability gap it names. · ~1d per question, opportunistic · NEEDS A DESIGN DOC (short: the protocol, not new code) · gated on a real incident · **filed 2026-09-26 (attended, Mark).**
 
 
 
