@@ -1574,6 +1574,14 @@ What this mission touches or overlaps, and the drawn boundaries:
   next to the correctness argument, and it is why iteration 41 carries **CF-L-3**.
 - **Kill switch stays until ratification**; only Mark (or the v1 agent on his instruction) arms
   the loop.
+- **EXECUTOR SNAPSHOTS LIVE OUTSIDE THE WORKTREE IN THIS REPO (process fix, iter-194).** Since row 23
+  landed `TestProductionGoSurface` (`host/store/context_roots_test.go`), any untracked non-test `.go` file
+  outside `host/`+`cmd/` reds the suite — including the shared skill's per-milestone `.snap/M<k>/` copies
+  inside the sprint worktree. Iteration 194's executor hit exactly that at M3, and it read as a failure. Direct
+  every executor to write snapshots to `~/.ailang/state/world-iter<N>/snap/M<k>/`, add that path to its
+  sandbox (`--add-dir`), and, if a run leaves `.snap/` in the tree anyway, move it out BEFORE any gate runs.
+  Build the reconstruction manifest from the snapshot you will restore from, never from the tree you are
+  about to reset (zsh does not word-split an unquoted `$files` — use `bash -c` or `${=files}`).
 
 ## Routing policy
 
