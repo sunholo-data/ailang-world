@@ -1,27 +1,27 @@
-# Mission Dashboard — World (snapshot 2026-09-25, iteration 189)
+# Mission Dashboard — World (snapshot 2026-09-26, iteration 193)
 
-- **State**: **row 22 has landed** (`w-daemon-lock-wait-not-deadline-bound`, clause 2). PR #148 was squash-merged as **`e34416f`**, and remote CI is **green on the merge** (2/2, Gate 3b SHA-pinned).
-  - `daemon.New` now refuses to start unless the opened store's effective `BusyTimeout()` is strictly below `readDeadline`.
-  - A test goes red when the two constants are reordered in either direction.
-  - Three false comments were corrected. The strongest said "the context always wins", but a lock-blocked read actually answers **500 at the 2 s busy window**.
-- **Queue re-measured**:
-  - **Row 93** (the clause-4 floor run) is **blocked on capability**. World has no MCP surface, which needs rows 106, 107 and 108 (upstream `ailang#885`, reopened today).
-  - **Row 75** was **solved upstream** (`ailang#1037`). On the pinned v0.41.0 an unknown positional now gets rc=1.
+- **State**: **row 24 has landed** (`w-host-subprocess-cleanup-boundary`, clause 2). PR #149 was squash-merged as **`24df816`**, and remote CI is **green on the merge** (2/2, Gate 3b SHA-pinned).
+  - In capsule and broker the output-overflow kill is now **process-group-wide**, so a forked grandchild can no longer hold the pipe.
+  - A failed kill is joined behind the typed error, with ESRCH filtered.
+  - One cleanup deadline bounds the pipe drain **and** the direct-child wait even when every kill fails (`host/procbound`, with an exact admission reservation).
+  - The linux merge gate (V34/V35) was read from CI's new `-v` step before merge.
+- **Orphans credited: 190, 191, 192** (four dead World slots in a row).
+  - 190 and 191 were killed by their own probe tests, which ran `kill(-1, SIGKILL)` with a pid parsed from a missing file. That left no exit line and no crash notice.
+  - 192 was STALL-killed while sitting on a 31-minute mutation drill.
+  - All shipped tests now signal only through the `host/proctest` pid guard (mutation-proven).
 - **Quality**:
-  - Planner: 19/19 mutations killed.
-  - Executor: 19/19 killed.
-  - Judge: **PASS 97/100, zero blocking** (sonnet, own worktree). Its one survivor (E3, the operator-facing `Detail` text) was closed by a test-only pin, and the r2 judge scored **99/100**.
-- **Design gate**:
-  - r1 blocked 2/1, both objections upheld by controller probes: a DSN `busy_timeout(-1)` is safe, and a config ordering is not a runtime bound.
-  - r2 blocked 2/1 on two disjoint surfaces and was closed by applying the reviewers' fixes verbatim.
-  - All three reviewers were present in both rounds (cap raised to $0.40 per reviewer).
-- **New row**: **111**. A lock-blocked read answers 500, not 503. Residual (i) has no owner, and per-request busy capping (arm A) should come after row 23.
-- **Next**: 23, 24, 25, 26, 32 (groom position 9), 106 (needs a design doc; with 107 and 108 it unblocks 93), 107, 109, 111, 99, 100.
+  - Controller drills per milestone: **19/19, 5/5 and 22/22 killed**.
+  - Judge: **PASS 98/100, zero blocking** (sonnet, own worktree). Its one survivor (`sync.Once` → bool) is equivalent on the single-consumer call graph, as measured.
+- **New rows**:
+  - **112**: the archive `--version` probe and replay wait out a grandchild (30.37 s against a 10 s bound). This explains row 24's old "33 s" residue.
+  - **113**: the `pkgproj/iface.go` descendant leak, unmeasured.
+- **Next**: 23 (ungated), 25, 26, 32, 106, 107, 109, 111, 112, 113, 99, 100.
 - **Parked for Mark**: **nothing — ledger 23 rows, ZERO OPEN.**
 - **Cadence/routing**:
-  - **Roles:** controller `claude-opus-5-5`. Designer `claude-opus-5-5`: astra and deepseek were skipped on capacity. Planner, executor and evaluator ran on the Agent tool as opus, opus and sonnet.
-  - **Spend:** **$0.44 metered**, all quorum.
-  - **Ration:** codex, Ollama and OpenRouter are over ration.
+  - **Roles:** controller `claude-opus-5-5`, planner `pi:openrouter/moonshotai/kimi-k3`, executor `pi:openrouter/deepseek/deepseek-v4.1-flash`, evaluator `sonnet` (Agent tool). No designer was needed (the design was complete from orphan 192).
+  - **Spend:** **$0.92 metered**: kimi $0.87, deepseek $0.04.
+  - **Ration:** codex and Ollama are over ration; OpenRouter is within.
 - **Maintenance for an attended session**:
   - `rotate-log` needs the V1 checkout as its CWD, and it drops index rows for orphaned iterations.
   - Row 101: `gofmt -l` is red at base on 2 `host/store` files.
+  - The planner resolver answers `fail-closed:planner-lane-field-missing` while the driver pins pi. The provider pin wins; see role-spawn-routing §2.

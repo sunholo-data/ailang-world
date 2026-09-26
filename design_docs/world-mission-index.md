@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 193 | 2026-09-26 | row 24 LANDED: group-wide overflow kill, joined kill error, one cleanup deadline bounding drain + direct-child wait (procbound); orphans 190-192 credited (two killed by their own kill(-1) probe)... |
 | 189 | 2026-09-25 | row 22 LANDED: the daemon refuses to start unless the store's effective busy_timeout is below its read deadline; row 93 re-gated on capability... |
 | 188 | 2026-09-25 | row 27 LANDED: `interfaceHash` is honestly labelled as manifest coverage, and upstream's own `InterfaceHashV2` travels beside it through packet, ga... |
 | 187 | 2026-09-25 | row 40 card half LANDED: a session-scoped A2A agent card and a fail-closed `/a2a/` on row 39's session boundary — after a measured SPLIT, because t... |
