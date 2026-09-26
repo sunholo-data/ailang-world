@@ -63,8 +63,18 @@ type cmdChild struct {
 	cmd *exec.Cmd
 }
 
-func (c cmdChild) Kill() error { return c.cmd.Process.Kill() }
+// Kill is the overflow kill. It is group-wide for the same reason Cancel is:
+// a forked grandchild inherits the pipes, so killing only the direct child
+// leaves the drains blocked until the deadline (queue row 24).
+func (c cmdChild) Kill() error { return killGroup(c.cmd.Process.Pid) }
 func (c cmdChild) Wait() error { return c.cmd.Wait() }
+
+// killGroup SIGKILLs the child's whole process group. Both the overflow kill
+// and the ctx Cancel use it; it is a package-level seam so tests can observe
+// or fail the kill.
+var killGroup = func(pgid int) error {
+	return syscall.Kill(-pgid, syscall.SIGKILL)
+}
 
 // HashMismatchError means the resolved interpreter bytes no longer match the
 // entry's content address. Execution is refused before the child is started.
@@ -177,7 +187,7 @@ func (r *Runner) Run(entry Entry) (Result, error) {
 		if cmd.Process == nil {
 			return nil
 		}
-		return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+		return killGroup(cmd.Process.Pid)
 	}
 
 	stdoutPipe, err := cmd.StdoutPipe()
@@ -212,6 +222,7 @@ func collectOutput(ctx context.Context, stdoutPipe, stderrPipe io.Reader, limit 
 	var stdout, stderr []byte
 	var stdoutErr, stderrErr error
 	var killOnce sync.Once
+	var killErr error
 	var wg sync.WaitGroup
 	// F6 must not decay into F5. Past the cap nothing drains the pipe, so an
 	// unkilled child blocks in write() until the wall clock expires and the
@@ -221,7 +232,7 @@ func collectOutput(ctx context.Context, stdoutPipe, stderrPipe io.Reader, limit 
 		defer wg.Done()
 		*dst, *dstErr = readCapped(pipe, limit)
 		if errors.Is(*dstErr, errOutputLimit) {
-			killOnce.Do(func() { _ = child.Kill() })
+			killOnce.Do(func() { killErr = child.Kill() })
 		}
 	}
 	wg.Add(2)
@@ -234,16 +245,39 @@ func collectOutput(ctx context.Context, stdoutPipe, stderrPipe io.Reader, limit 
 	// Overflow outranks the deadline: killing the child is what let Wait return,
 	// and that must not be reported as a wall-clock expiry.
 	if errors.Is(stdoutErr, errOutputLimit) || errors.Is(stderrErr, errOutputLimit) {
-		return Result{Stdout: stdout, Stderr: stderr}, runErr, &OutputLimitError{Limit: limit}
+		// ESRCH from kill(-pgid) means the group is already empty, so there was
+		// nothing to kill: the group leader may already be an unreaped zombie
+		// when the overflow kill fires. Every other errno is still joined.
+		var killFailure error
+		if killErr != nil && !errors.Is(killErr, syscall.ESRCH) {
+			killFailure = fmt.Errorf("capsule: overflow kill: %w", killErr)
+		}
+		return Result{Stdout: stdout, Stderr: stderr}, runErr,
+			withCleanupFailures(&OutputLimitError{Limit: limit}, killFailure, runErr)
 	}
 	if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-		return Result{Stdout: stdout, Stderr: stderr}, runErr, &TimeoutError{Limit: execTimeout}
+		return Result{Stdout: stdout, Stderr: stderr}, runErr,
+			withCleanupFailures(&TimeoutError{Limit: execTimeout}, nil, runErr)
 	}
 	if stdoutErr != nil || stderrErr != nil {
 		return Result{Stdout: stdout, Stderr: stderr}, runErr,
 			fmt.Errorf("capsule: read output: %w", errors.Join(stdoutErr, stderrErr))
 	}
 	return Result{Stdout: stdout, Stderr: stderr}, runErr, nil
+}
+
+// withCleanupFailures keeps the typed error primary (errors.As-reachable) and
+// joins a failed kill and an incomplete cleanup behind it. With neither it
+// returns primary itself, so the typed error's identity is unchanged.
+func withCleanupFailures(primary, killFailure, waitErr error) error {
+	errs := []error{primary}
+	if killFailure != nil {
+		errs = append(errs, killFailure)
+	}
+	if len(errs) == 1 {
+		return primary
+	}
+	return errors.Join(errs...)
 }
 
 func verifyExecutable(path string, ref hashref.HashRef) error {

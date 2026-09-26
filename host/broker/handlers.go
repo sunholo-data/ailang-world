@@ -119,9 +119,21 @@ func runBounded(ctx context.Context, bounds handlerBounds, spec handlerCommand) 
 	limited := &io.LimitedReader{R: pipe, N: bounds.maxOutputBytes + 1}
 	output, readErr := io.ReadAll(limited)
 	if int64(len(output)) > bounds.maxOutputBytes {
-		_ = cmd.Process.Kill()
+		// Group-wide, like Cancel: a grandchild holding the pipe would otherwise
+		// outlive the call, because Wait returns once the direct child is reaped
+		// and the deadline's group kill never fires (queue row 24).
+		errs := []error{&HandlerOutputOverflowError{Limit: bounds.maxOutputBytes}}
+		// ESRCH from kill(-pgid) means the group is already empty, so there was
+		// nothing to kill: the group leader may already be an unreaped zombie
+		// when the overflow kill fires. Every other errno is still joined.
+		if killErr := killGroup(cmd.Process.Pid); killErr != nil && !errors.Is(killErr, syscall.ESRCH) {
+			errs = append(errs, fmt.Errorf("broker: overflow kill: %w", killErr))
+		}
 		_ = cmd.Wait()
-		return nil, &HandlerOutputOverflowError{Limit: bounds.maxOutputBytes}
+		if len(errs) == 1 {
+			return nil, errs[0]
+		}
+		return nil, errors.Join(errs...)
 	}
 	waitErr := cmd.Wait()
 	if waitErr != nil && runCtx.Err() == context.DeadlineExceeded {
