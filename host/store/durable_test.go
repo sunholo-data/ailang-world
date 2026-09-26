@@ -58,6 +58,16 @@ func boundedCall(t *testing.T, f func() error, unblock func()) (error, time.Dura
 	}
 }
 
+// releaseOnce closes a test's release channel unless the test body (or
+// boundedCall's unblock) already closed it. Only the test goroutine closes it.
+func releaseOnce(release chan struct{}) {
+	select {
+	case <-release:
+	default:
+		close(release)
+	}
+}
+
 // TestDurableOpsHonourHeldConnection is the row-106 M5 shape: the sole pooled
 // connection is held past the caller deadline; every durable operation returns
 // the definite not-committed ctx error within budget+epsilon, leaves no
@@ -249,7 +259,14 @@ func TestDurableStallAtCutoffIsUncertainAndReconciles(t *testing.T) {
 			}()
 			prev := durableCommitHook
 			durableCommitHook = func() { <-release }
-			defer func() { durableCommitHook = prev }()
+			// Defers run LIFO, so this restore runs before the release defer
+			// above: release and join the stalled worker first, or the restore
+			// races its read of the hook (go test -race).
+			defer func() {
+				releaseOnce(release)
+				s.workers.Wait()
+				durableCommitHook = prev
+			}()
 			base := runtime.NumGoroutine()
 			ctx, cancel := context.WithTimeout(context.Background(), durableBudget)
 			defer cancel()
@@ -337,7 +354,13 @@ func TestUncertainBareCommitReconcilesByLogIndexNotHead(t *testing.T) {
 			}
 			prev := *hook
 			*hook = func() { <-release }
-			defer func() { *hook = prev }()
+			// Release and join the stalled worker before restoring the hook
+			// (defers run LIFO; see TestDurableStallAtCutoffIsUncertainAndReconciles).
+			defer func() {
+				releaseOnce(release)
+				s.workers.Wait()
+				*hook = prev
+			}()
 			ctx, cancel := context.WithTimeout(context.Background(), durableBudget)
 			defer cancel()
 			err, _ := boundedCall(t, func() error { return s.CommitContext(ctx, a) }, func() { close(release) })

@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 
@@ -18,6 +19,13 @@ import (
 )
 
 var errCommitAfterDurability = errors.New("injected error after real COMMIT")
+
+const durableFaultDriverName = "world_iter197_durable_fault"
+
+var (
+	durableFault             = &durableFaultDriver{}
+	registerDurableFaultOnce sync.Once
+)
 
 type durableFaultDriver struct {
 	armed   atomic.Bool
@@ -77,10 +85,14 @@ func TestDriverCommitErrorAfterRealCommitIsUncertainAndReconciles(t *testing.T) 
 		t.Fatal(err)
 	}
 	path := s.lock.dbPath
-	fault := &durableFaultDriver{}
-	const name = "world_iter197_durable_fault"
-	sql.Register(name, fault)
-	replacement, err := sql.Open(name, path)
+	// sql.Register panics on a second registration of one name, so the driver
+	// is registered once per process and its flags are reset per run
+	// (go test -count=N re-runs this test in the same process).
+	registerDurableFaultOnce.Do(func() { sql.Register(durableFaultDriverName, durableFault) })
+	fault := durableFault
+	fault.armed.Store(false)
+	fault.reached.Store(false)
+	replacement, err := sql.Open(durableFaultDriverName, path)
 	if err != nil {
 		t.Fatal(err)
 	}
