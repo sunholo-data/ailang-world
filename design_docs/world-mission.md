@@ -1720,13 +1720,13 @@ of them is routable.
 **STANDING RULE — the critical-path check (Gate 2, every iteration).** Before picking, write in
 the STATUS stamp one line per UNMET bar clause naming the open row that moves it, and whether that
 row is routable. Then:
-1. **If a routable critical-path row exists and the pick is not one, the pick is wrong** unless the
+(a) **If a routable critical-path row exists and the pick is not one, the pick is wrong** unless the
    stamp names the measured reason (a blocker, a failed premise).
-2. **A row split out of a groomed row INHERITS the parent's groom position** (children in
+(b) **A row split out of a groomed row INHERITS the parent's groom position** (children in
    dependency order) unless the split record says otherwise. A new row that moves an unmet clause
    and has no position is a **drift signal**: the iteration files a `D-WORLD` ask proposing its
    position. It does not quietly pick from further down.
-3. **Drift alarm:** if the last three landings moved no unmet clause, the next Gate-5 digest leads
+(c) **Drift alarm:** if the last three landings moved no unmet clause, the next Gate-5 digest leads
    with that fact and a proposed regroom for Mark. The loop may not reorder an attended groom
    itself; it may and must ask.
 
