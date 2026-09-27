@@ -1,0 +1,59 @@
+{
+  "id": "w-capsule-blocked-child-kill-coverage",
+  "iteration": 200,
+  "row": 25,
+  "clause": "clause-2",
+  "authority": [
+    "design_docs/world-mission.md row 25",
+    "design_docs/planned/w-capsule-output-cap-load-flake.md §7 RESIDUAL CORRECTED POST-SPRINT"
+  ],
+  "estimate": "0.5 day",
+  "scope": "One test-only milestone; one landing commit after mutations and gates",
+  "environment": [
+    "export AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang",
+    "export PATH=\"$(dirname \"$AILANG_BIN\"):$PATH\""
+  ],
+  "measured_baseline": {
+    "pipe_capacity_bytes": 65536,
+    "probe": "Undrained os.Pipe, nonblocking write descriptor, 4096-byte writes until EAGAIN; count only positive returns. Throwaway probe deleted.",
+    "go vet ./host/capsule": "rc=0",
+    "go test ./host/capsule -count=1 -v": "rc=0; 23 top-level PASS; no skips",
+    "go test ./host/capsule -count=5 -run '^TestBlockedChildOverflowKill$'": "rc=0; no tests to run at pristine base; not a stability pass",
+    "go test ./host/capsule -count=1 -race": "rc=0",
+    "./scripts/verify_ail.sh": "rc=0; 16/16 identities; 40 named tests; 9/9 package steps; PUB011 passed"
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Witness a live direct child blocked in a capacity-scaled write and released by overflow kill",
+      "deliverable": "Add TestBlockedChildOverflowKill using an archived fake interpreter that execs a helper mode of the Go test binary. The child records PID before one blocking stdout write of at least four times the freshly measured pipe capacity, and records wrote-all or short-write only if the syscall returns. Require OutputLimitError without TimeoutError, no completion marker, dead child, and each captured stream at most the 64-byte cap. ExecTimeout is 120 s; a 30 s watchdog fails and cleans up, never passes as an oracle. Existing 513-byte real-interpreter test remains a wiring control; a second real-interpreter arm is feasible in principle but not worth the added language and marker dependencies here.",
+      "files": [
+        "host/capsule/cleanup_test.go"
+      ],
+      "acceptance_commands": [
+        "go vet ./host/capsule",
+        "go test ./host/capsule -count=1",
+        "go test ./host/capsule -count=5 -run '^TestBlockedChildOverflowKill$'",
+        "go test ./host/capsule -count=1 -race",
+        "./scripts/verify_ail.sh"
+      ],
+      "mutations": [
+        {
+          "mutation": "M-kill-off: make overflow killOnce body or killGroup a no-op; the blocked child can otherwise wait for the 120 s F5 deadline",
+          "must_fail_test": "TestBlockedChildOverflowKill: 30 s watchdog fires and independently kills/reaps the child; test fails unconditionally"
+        },
+        {
+          "mutation": "M-drain-all: make readCapped drain to EOF rather than limit+1",
+          "must_fail_test": "TestBlockedChildOverflowKill: child writes all bytes and its wrote-all marker appears; test fails"
+        },
+        {
+          "mutation": "513-byte control: shrink the new payload to the old repeat(32) size, then apply M-kill-off",
+          "must_fail_test": "TestBlockedChildOverflowKill: wrote-all or equivalent blocked-write invariant fails; the old 513-byte arm cannot satisfy this test"
+        }
+      ]
+    }
+  ],
+  "mutation_revert": "Run each mutation alone, save pre-edit SHA-256 with shasum -a 256, restore original bytes by file copy, and require byte-identical SHA-256 before the next mutation. M-kill-direct-only is not a relevant killer of this direct-child test; TestOverflowKillReachesForkedGrandchild owns that group-kill property.",
+  "out_of_scope": "Rows 115 and 117; no killErr assertion, production edit, or change to group-kill behavior. Report a measured production need before expanding scope.",
+  "sandbox_note": "Capsule gates do not bind sockets. Any unrelated bind: operation not permitted result is UNINFORMATIVE UNDER SANDBOX, neither pass nor fail."
+}
