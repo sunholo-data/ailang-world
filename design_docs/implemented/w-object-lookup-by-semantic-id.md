@@ -1,6 +1,6 @@
 # w-object-lookup-by-semantic-id — Find an object by semanticId without a log scan (row 96)
 
-**Status**: Planned — **REVISION 2 (final; narrow-refinement carve-out after quorum round 2, reviewer fixes applied verbatim, no r3 quorum)**. Round 1 and round 2 were each BLOCKED 2/2 present; see "Quorum log". Design + prototype (iteration 201, designer `claude:claude-opus-5-5`). The r0 prototype was measured in this worktree and then moved out by the controller to `~/.ailang/state/world-iter201/prototype/` (see "Prototype manifest"). The r1/r2 changes (the index guard and its strict compatibility rule, dropping `next`, the `{name...}` sketch spelling) are **designed, not prototyped**. It is a measured draft, not a landing.
+**Status**: IMPLEMENTED 2026-09-27 (iteration 201) — PR #156 squash `e859501`, remote CI 2/2 green on the merge; judged PASS 95/100 zero blocking (sonnet). Design history: **REVISION 2 (final; narrow-refinement carve-out after quorum round 2, reviewer fixes applied verbatim, no r3 quorum)**. Round 1 and round 2 were each BLOCKED 2/2 present; see "Quorum log". Design + prototype (iteration 201, designer `claude:claude-opus-5-5`). The r0 prototype was measured in this worktree and then moved out by the controller to `~/.ailang/state/world-iter201/prototype/` (see "Prototype manifest"). The r1/r2 changes (the index guard and its strict compatibility rule, dropping `next`, the `{name...}` sketch spelling) are **designed, not prototyped**. It is a measured draft, not a landing.
 **Item**: queue row 96 of `design_docs/world-mission.md` (`w-object-lookup-by-semantic-id`). The row closes finding F-1 of `design_docs/verification/w-1-0-value-demonstration.md` and rules on F-2.
 **Clauses**: clause-5 (*"on ≥3 REAL 'why did X happen' questions, a provenance walk yields the verified answer in ≤5 minutes each, where the pre-World method was grep/log archaeology"*). The route is read-only and adds no effect, so no other clause is touched.
 **Estimate**: ~1d as the row says. Three milestones of ≤150 production lines each (M1 store query + index provisioning + index guard, M2 route + 503 guard class, M3 frozen-table extension: sketch, CLI verb, counts). They are sized from the r0 prototype's measured lines (V20), plus a labelled r1 estimate delta (§c).
@@ -400,7 +400,7 @@ estimated in §c, and not prototyped.
 | `host/store/objects_by_semantic_id_test.go` | new | AC-1/2/3/7/8 + writable-reopen index build | test |
 | `host/daemon/objects_by_semantic_id_test.go` | new | AC-4/5/6, and `TestWalkRetimedAtScale` (AC-11, env-gated) | test |
 | `host/daemon/read_deadline_test.go` | M | new route in `seedReadRoutes`; `ObjectsBySemanticID` on `blockingStore`, `recordingStore`, `failingStore` (AC-12) | test |
-| `design_docs/planned/w-object-lookup-by-semantic-id.md` | new | this doc | doc |
+| `design_docs/implemented/w-object-lookup-by-semantic-id.md` | new | this doc | doc |
 
 **What the prototype does not do (M3 remainder):** it does not edit
 `design_docs/sketches/worlddapi.ail` `routes()`. It does not update the count comments ("eight" →

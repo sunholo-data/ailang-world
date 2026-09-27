@@ -1,6 +1,6 @@
 {
   "sprint_id": "w-object-lookup-by-semantic-id-iter201",
-  "design_doc": "design_docs/planned/w-object-lookup-by-semantic-id.md",
+  "design_doc": "design_docs/implemented/w-object-lookup-by-semantic-id.md",
   "base": "c30b967 + design doc",
   "scope": "Whole row 96: M1 store query/index/guard, M2 read route/503, M3 CLI/frozen table; four compile-order landings, each <=150 added production LOC",
   "milestones": [

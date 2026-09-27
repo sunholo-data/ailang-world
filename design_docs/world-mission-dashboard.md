@@ -1,21 +1,22 @@
-# Mission Dashboard — World (snapshot 2026-09-27, iteration 200)
+# Mission Dashboard — World (snapshot 2026-09-27, iteration 201)
 
-- **State**: **row 25 LANDED (`227f587`).** The capsule suite again drives a live child blocked in `write()` on a full, undrained pipe, and proves the overflow kill unblocks it.
-  - The child makes one 262,144 B write against a 65,536 B pipe plus the 65 B the reader drains, so the write cannot complete unless something kills the child.
-  - Its own pid and `wrote-all`/`short-write`/`write-error` markers witness the kill; elapsed time is never the oracle.
-  - Test-only; `capsule.go` is unchanged.
+- **State**: **row 96 LANDED (`e859501`).** A provenance walk now finds an object by its semantic ID in one read: `GET /v1/objects/by-semantic-id/{name...}` and `ailang-worldd object find`.
+  - It is a 9th frozen `/v1` route, added through its own design doc and quorum. The sketch, comments and CLI verb all follow, and a parity test pins the mux against the sketch.
+  - An `objects(semantic_id, hash_ref)` index is provisioned on writable Open (schema stays v3). A strict verifier refuses any other definition, and a read-only handle without the index answers 503 `LookupIndexUnavailable` instead of table-scanning.
+  - At N=10,000 log entries the CLI walk's locate step went from **112.6 s** (scan) to **0.09 s**.
 - **Quality**:
-  - Controller gates were all green outside the sandbox, and it reproduced M-kill-off and M-drain-all.
-  - Judge `sonnet` in its own worktree: **95/100, zero blocking**, 5/5 predicted drills, 20/20 flake runs.
+  - Controller gates were green outside the sandbox: 24 ok / 0 FAIL, verify_ail PASS, `-race` at every commit boundary.
+  - Judge `sonnet` in its own worktree: **95/100, zero blocking**, 16/18 of its own mutations killed.
   - SHA-pinned CI on the merge: 2/2 green.
-- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · 5 UNMET (row 114) · 6 UNMET (capability ready in PR #153, held on `D-WORLD-40`; 108 blocked on `ailang#885`, re-measured OPEN, protocol blobs unchanged at v0.44.1).
-- **Why a clause-2 row**: groom positions 1–6 are all landed or blocked on a named answer, so the loop is working position 7. **Drift watch:** 94 and 25 moved no unmet clause. One more such landing fires the drift alarm.
-- **Next**: `D-WORLD-40` = A → merge #153 → 106 M5/M6 → tranche M2–M7 → 108 → 93. Meanwhile: rows 26, 32, 109, 111, 112, 113, 115, 117.
+- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · **5 UNMET, moved** (capability; row 114 still needs ≥3 real, timed questions) · 6 UNMET (PR #153 held on `D-WORLD-40`; 108 blocked on `ailang#885`, protocol blobs unchanged through ailang `origin/dev`).
+- **Why row 96**: the critical-path check found five clause-5 rows (96, 99, 100, 103, 104) with no groom position. The loop filed `D-WORLD-42` and picked the routable one, per the regroom's rule (d). The drift alarm does not fire.
+- **Next**: `D-WORLD-40` = A → merge #153 → 106 M5/M6 → 108 → 93. Meanwhile, under `D-WORLD-42`'s default: rows 103, 104 (designs needed), then 99, 100.
 - **Parked for Mark**:
-  - **`D-WORLD-40`** (the critical-path unlock): ratify row 23's bound table. **A** ratify (recommended) · **B** name a change. Unanswered: PR #153 stays unmerged, and clause 6 cannot move.
-  - **`D-WORLD-41`**: release the proof-hardened world/core as **A** 0.1.1 (recommended) or **B** 0.2.0. Nothing is published meanwhile.
+  - **`D-WORLD-40`** (the critical-path unlock): ratify row 23's bound table. **A** ratify (recommended) · **B** name a change.
+  - **`D-WORLD-42`** (new): put clause-5 rows 103, 104, 99, 100 at position 5 beside 114. **A** yes (recommended) · **B** leave them in the clause-2 bucket.
+  - **`D-WORLD-41`**: release world/core as **A** 0.1.1 (recommended) or **B** 0.2.0.
   - **`D-WORLD-39`**: move the row-23 tranche to groom position 2 (acting on default A).
   - **`D-WORLD-38`**: the typed publish phrase (A shared, shipped · B own phrase).
-- **Cadence/routing**: controller `claude-opus-5-5`; planner and executor `codex:gpt-6-sol` (52k / 68k tok); evaluator `sonnet` (Agent tool, foreground, 116k tok). No designer needed. **$0.00 metered.**
-- **Harness**: new ticket `rotate-log:status-flag-mutates-and-world-resolves-to-status-archive` (queue row 118). **Do not run `ailang mission rotate-log` for World**; write the index row by hand. Repeat tickets filed: planner-lane fail-closed vs the spawn pin (×3), heartbeat relative path (×3).
-- **Capacity watch**: the Ollama Cloud weekly bucket was over ration last iteration (not needed this iteration).
+- **Cadence/routing**: controller `claude-opus-5-5`; designer `claude:claude-opus-5-5` (glm, kimi skipped: ollama ration-blocked); planner and executor `codex:gpt-6-sol` (116k / 179k tok); evaluator `sonnet` (Agent tool, foreground, 191k tok). **$0.38 metered** (quorum ×2).
+- **Harness**: no new tickets. Repeat instances: planner-lane fail-closed vs the provider pin, and the heartbeat relative path. **Do not run `ailang mission rotate-log` for World** (row 118).
+- **Capacity watch**: the Ollama bucket was ration-blocked on every fire today. That took out 2 of 5 quorum seats and 2 of 4 designer rotation entries.

@@ -1,6 +1,6 @@
 # Sprint plan: w-object-lookup-by-semantic-id (iteration 201)
 
-**Base:** detached worktree at dev `c30b967` plus `design_docs/planned/w-object-lookup-by-semantic-id.md`; no production edits in this plan.  
+**Base:** detached worktree at dev `c30b967` plus `design_docs/implemented/w-object-lookup-by-semantic-id.md`; no production edits in this plan.  
 **Authority:** that design doc in full, especially B1–B8, §c–d, Prototype manifest, Mutations and the Quorum log. Round 1 and 2 dispositions override the banked r0 prototype at `/Users/voightkampff/.ailang/state/world-iter201/prototype/` (`prototype.diff` is its unified diff). Scope is the whole row: M1, M2, M3. F-2 remains a finding.
 
 ## Gates and measurements
