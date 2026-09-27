@@ -201,10 +201,11 @@ func IsInvalidRef(err error) bool {
 // single-connection embedded-library use of M1; concurrency correctness rests on
 // the single compare-and-append transaction, not on Go-level locking.
 type Store struct {
-	db                   *sql.DB
-	sel                  selectedHead
-	busyTimeout          time.Duration
-	lookupIndexAvailable bool
+	db                        *sql.DB
+	sel                       selectedHead
+	busyTimeout               time.Duration
+	lookupIndexAvailable      bool
+	referenceIndexesAvailable bool
 	// lock is the held single-writer lock (w-worldd-m2 Decision 2, arm A). It
 	// is nil for in-memory databases (nothing to exclude across processes) and
 	// for read-only handles (which never take writer authority).
@@ -246,7 +247,11 @@ func Open(path string) (*Store, error) {
 			_ = db.Close()
 			return nil, err
 		}
-		return &Store{db: db, busyTimeout: busyTimeoutFromDSN(path), lookupIndexAvailable: true}, nil
+		if err := openWritableReferenceIndexes(db); err != nil {
+			_ = db.Close()
+			return nil, err
+		}
+		return &Store{db: db, busyTimeout: busyTimeoutFromDSN(path), lookupIndexAvailable: true, referenceIndexesAvailable: true}, nil
 	}
 
 	canonical, params, err := resolveDSN(path)
@@ -269,7 +274,12 @@ func Open(path string) (*Store, error) {
 		_ = lock.release()
 		return nil, err
 	}
-	return &Store{db: db, lock: lock, busyTimeout: busyTimeoutFromParams(withBusyTimeout(params)), lookupIndexAvailable: true}, nil
+	if err := openWritableReferenceIndexes(db); err != nil {
+		_ = db.Close()
+		_ = lock.release()
+		return nil, err
+	}
+	return &Store{db: db, lock: lock, busyTimeout: busyTimeoutFromParams(withBusyTimeout(params)), lookupIndexAvailable: true, referenceIndexesAvailable: true}, nil
 }
 
 // OpenReadOnly opens an EXISTING file-backed database in SQLite's read-only
@@ -299,7 +309,14 @@ func OpenReadOnly(path string) (*Store, error) {
 		_ = db.Close()
 		return nil, err
 	}
-	return &Store{db: db, busyTimeout: busyTimeoutFromParams(withBusyTimeout(params)), lookupIndexAvailable: available}, nil
+	referenceAvailable, err := verifyReadOnlyReferenceIndexes(db)
+	if err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	lookupAvailable := available
+	available = referenceAvailable
+	return &Store{db: db, busyTimeout: busyTimeoutFromParams(withBusyTimeout(params)), lookupIndexAvailable: lookupAvailable, referenceIndexesAvailable: available}, nil
 }
 
 // BusyTimeout reports the immutable SQLite lock-retry window configured by the

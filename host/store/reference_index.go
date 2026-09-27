@@ -98,3 +98,42 @@ func verifyReferenceIndex(ctx context.Context, db *sql.DB, spec referenceIndexSp
 	}
 	return valid && keys == 2, nil
 }
+
+const referenceIndexUnavailableMessage = "entry/world reference index is absent or incompatible on this read-only store; open the store writable once to provision reference indexes"
+
+type ReferenceIndexUnavailableError struct{}
+
+func (*ReferenceIndexUnavailableError) Error() string { return referenceIndexUnavailableMessage }
+
+// openWritableReferenceIndexes provisions and verifies the whole group under one deadline.
+func openWritableReferenceIndexes(db *sql.DB) error {
+	if err := provisionReferenceIndexes(db); err != nil {
+		return err
+	}
+	return nil
+}
+
+func provisionReferenceIndexes(db *sql.DB) error {
+	ctx, cancel := context.WithTimeout(context.Background(), lookupIndexProvisionDeadline)
+	defer cancel()
+	for _, spec := range referenceIndexSpecs {
+		ddl := "CREATE INDEX IF NOT EXISTS " + spec.name + " ON " + spec.table + "(" + spec.relation + ", " + spec.sourceKey + ")"
+		if _, err := db.ExecContext(ctx, ddl); err != nil {
+			return fmt.Errorf("store: provision reference index %s: %w", spec.name, err)
+		}
+		ok, err := verifyReferenceIndex(ctx, db, spec)
+		if err != nil {
+			return fmt.Errorf("store: verify reference index %s: %w", spec.name, err)
+		}
+		if !ok {
+			return fmt.Errorf("store: incompatible reference index %s", spec.name)
+		}
+	}
+	return nil
+}
+
+func verifyReadOnlyReferenceIndexes(db *sql.DB) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), lookupIndexProvisionDeadline)
+	defer cancel()
+	return verifyReferenceIndexes(ctx, db)
+}
