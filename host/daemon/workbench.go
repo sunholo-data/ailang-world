@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"math"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
@@ -43,11 +44,12 @@ const (
 )
 
 var acceptedWorkbenchKeys = map[string]bool{
-	"world":   true,
-	"object":  true,
-	"from":    true,
-	"entry":   true,
-	"payload": true,
+	"world":     true,
+	"object":    true,
+	"from":      true,
+	"entry":     true,
+	"payload":   true,
+	"refsAfter": true,
 }
 
 func setWorkbenchHeaders(w http.ResponseWriter) {
@@ -79,12 +81,26 @@ func supportedWorkbenchQuery(query map[string][]string) bool {
 		return query["world"] != nil || query["object"] != nil
 	}
 	if len(query) != 2 {
+		if len(query) == 3 {
+			return query["object"] != nil && query["payload"] != nil && query["refsAfter"] != nil
+		}
 		return false
 	}
 	if query["from"] != nil && query["entry"] != nil {
 		return true
 	}
-	return query["object"] != nil && query["payload"] != nil
+	return query["object"] != nil && (query["payload"] != nil || query["refsAfter"] != nil)
+}
+
+func referencePageHref(ref hashref.HashRef, payload string, after *store.ObjectReferenceCursor) string {
+	q := url.Values{"object": {ref.String()}}
+	if payload != "" {
+		q.Set("payload", payload)
+	}
+	if after != nil {
+		q.Set("refsAfter", encodeReferenceCursor(*after))
+	}
+	return "?" + q.Encode()
 }
 
 func (d *Daemon) writeWorkbenchStoreError(w http.ResponseWriter, r *http.Request, ctx context.Context, err error) {
@@ -264,6 +280,15 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 		writeWorkbenchError(w, http.StatusBadRequest, "BadRequest", malformedPayloadFlagMessage)
 		return
 	}
+	var refsAfter *store.ObjectReferenceCursor
+	if values := query["refsAfter"]; values != nil {
+		cursor, err := decodeReferenceCursor(values[0])
+		if err != nil {
+			writeWorkbenchError(w, http.StatusBadRequest, "BadRequest", "malformed refsAfter cursor")
+			return
+		}
+		refsAfter = &cursor
+	}
 
 	from := int64(0)
 	if text := query.Get("from"); text != "" {
@@ -366,12 +391,19 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 			d.writeWorkbenchStoreError(w, r, ctx, err)
 			return
 		}
-		refs, err := d.reads.ObjectReferences(ctx, ref, nil, WorkbenchPageLimit+1)
+		refs, err := d.reads.ObjectReferences(ctx, ref, refsAfter, WorkbenchPageLimit+1)
 		if err != nil {
 			d.writeWorkbenchStoreError(w, r, ctx, err)
 			return
 		}
-		references := &workbench.ReferenceView{Truncated: len(refs) > WorkbenchPageLimit}
+		references := &workbench.ReferenceView{Truncated: len(refs) > WorkbenchPageLimit, Continued: refsAfter != nil}
+		if refsAfter != nil {
+			references.FirstHref = referencePageHref(ref, query.Get("payload"), nil)
+		}
+		if references.Truncated {
+			next := refs[WorkbenchPageLimit-1].Cursor
+			references.NextHref = referencePageHref(ref, query.Get("payload"), &next)
+		}
 		for _, item := range refs[:min(len(refs), workbench.WorkbenchPageLimit)] {
 			edge, err := d.checkedReferenceEdge(ctx, ref, item)
 			if err != nil {
