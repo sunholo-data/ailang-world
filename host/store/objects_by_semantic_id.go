@@ -28,6 +28,12 @@ func (s *Store) ObjectsBySemanticID(ctx context.Context, id, after string, limit
 	if limit < 1 || limit > MaxSemanticIDPage {
 		return nil, &InvalidLimitError{Op: op, Limit: limit, Max: MaxSemanticIDPage}
 	}
+	if !s.lookupIndexAvailable {
+		return nil, &LookupIndexUnavailableError{}
+	}
+	if objectsBySemanticIDBeforeQuery != nil {
+		objectsBySemanticIDBeforeQuery()
+	}
 	rows, err := s.db.QueryContext(ctx, objectsBySemanticIDSQL, id, after, limit)
 	if err != nil {
 		return nil, fmt.Errorf("store: objects by semantic id %q: %w", id, err)
@@ -54,3 +60,6 @@ func (s *Store) ObjectsBySemanticID(ctx context.Context, id, after string, limit
 	}
 	return objects, nil
 }
+
+// objectsBySemanticIDBeforeQuery is a test-only hook immediately before lookup SQL.
+var objectsBySemanticIDBeforeQuery func()
