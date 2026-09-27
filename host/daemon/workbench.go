@@ -2,16 +2,20 @@ package daemon
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
 	"math"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/workbench"
 )
+
+const WorkbenchPageLimit = workbench.WorkbenchPageLimit
 
 const workbenchCSP = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
 
@@ -29,6 +33,7 @@ const (
 	absentWorkbenchEntryMessage          = "log entry not found"
 	workbenchFromOverflowMessage         = "from index overflows"
 	workbenchInternalStoreFailureMessage = internalErrorMessage
+	referenceIndexUnavailableMessage     = "object-reference indexes are absent or incompatible; open this store writable once to provision them, then reopen this read-only handle"
 )
 
 // Named reasons for what the object inspector cannot show. Each names the
@@ -36,15 +41,15 @@ const (
 const (
 	objectGradeUnavailableReason = "no canonical host projection: this workbench handler does not resolve subject-bound evidence into an object grade"
 	objectCommittedByMissing     = "the store records no commit-to-object relation, and the provenance field is a free-text label, not a reference"
-	objectReferencedByMissing    = "no store index maps an object to the log entries or worlds that reference it"
 )
 
 var acceptedWorkbenchKeys = map[string]bool{
-	"world":   true,
-	"object":  true,
-	"from":    true,
-	"entry":   true,
-	"payload": true,
+	"world":     true,
+	"object":    true,
+	"from":      true,
+	"entry":     true,
+	"payload":   true,
+	"refsAfter": true,
 }
 
 func setWorkbenchHeaders(w http.ResponseWriter) {
@@ -76,17 +81,36 @@ func supportedWorkbenchQuery(query map[string][]string) bool {
 		return query["world"] != nil || query["object"] != nil
 	}
 	if len(query) != 2 {
+		if len(query) == 3 {
+			return query["object"] != nil && query["payload"] != nil && query["refsAfter"] != nil
+		}
 		return false
 	}
 	if query["from"] != nil && query["entry"] != nil {
 		return true
 	}
-	return query["object"] != nil && query["payload"] != nil
+	return query["object"] != nil && (query["payload"] != nil || query["refsAfter"] != nil)
+}
+
+func referencePageHref(ref hashref.HashRef, payload string, after *store.ObjectReferenceCursor) string {
+	q := url.Values{"object": {ref.String()}}
+	if payload != "" {
+		q.Set("payload", payload)
+	}
+	if after != nil {
+		q.Set("refsAfter", encodeReferenceCursor(*after))
+	}
+	return "?" + q.Encode()
 }
 
 func (d *Daemon) writeWorkbenchStoreError(w http.ResponseWriter, r *http.Request, ctx context.Context, err error) {
 	if timedOut(ctx, err) {
 		writeWorkbenchError(w, http.StatusServiceUnavailable, "Timeout", "workbench read deadline exceeded")
+		return
+	}
+	var unavailable *store.ReferenceIndexUnavailableError
+	if errors.As(err, &unavailable) {
+		writeWorkbenchError(w, http.StatusServiceUnavailable, "ReferenceIndexUnavailable", referenceIndexUnavailableMessage)
 		return
 	}
 	d.writeWorkbenchInternalError(w, r, err)
@@ -172,8 +196,67 @@ func (d *Daemon) objectEdges(ctx context.Context, object store.Object) ([]workbe
 	return []workbench.EdgeView{
 		iface,
 		{Relation: "committedBy", Missing: objectCommittedByMissing},
-		{Relation: "referencedBy", Missing: objectReferencedByMissing},
 	}, nil
+}
+
+func (d *Daemon) checkedReferenceEdge(ctx context.Context, ref hashref.HashRef, item store.ObjectReference) (workbench.EdgeView, error) {
+	c := item.Cursor
+	var actual hashref.HashRef
+	var edge workbench.EdgeView
+	switch c.Kind {
+	case store.ReferenceTransitionRef, store.ReferenceTransitionFn, store.ReferenceInterpreter:
+		entry, entryOK, err := d.reads.GetLogEntry(ctx, c.EntryIndex)
+		if err != nil {
+			return edge, err
+		}
+		if !entryOK {
+			return workbench.EdgeView{Relation: referenceRole(c.Kind), Target: fmt.Sprintf("entry %d", c.EntryIndex), Missing: "source entry is no longer stored"}, nil
+		}
+		switch c.Kind {
+		case store.ReferenceTransitionRef:
+			actual = entry.TransitionRef
+		case store.ReferenceTransitionFn:
+			actual = entry.Header.TransitionFn
+		case store.ReferenceInterpreter:
+			actual = entry.Header.Interpreter
+		}
+		from := c.EntryIndex
+		if from > math.MaxInt64-workbench.WorkbenchPageLimit {
+			from = math.MaxInt64 - workbench.WorkbenchPageLimit
+		}
+		edge = workbench.EdgeView{Relation: referenceRole(c.Kind), Target: fmt.Sprintf("entry %d", c.EntryIndex), Href: pageHref(from, c.EntryIndex), Available: true}
+	case store.ReferenceStateRoot:
+		world, worldOK, err := d.reads.GetWorld(ctx, c.WorldRef)
+		if err != nil {
+			return edge, err
+		}
+		if !worldOK {
+			return workbench.EdgeView{Relation: "stateRoot", Target: c.WorldRef.String(), Missing: "source world is no longer stored"}, nil
+		}
+		actual = world.StateRoot
+		edge = workbench.EdgeView{Relation: "stateRoot", Target: c.WorldRef.String(), Href: "?world=" + c.WorldRef.String(), Available: true}
+	default:
+		return edge, fmt.Errorf("invalid reference kind %d", c.Kind)
+	}
+	if actual != ref {
+		return workbench.EdgeView{}, fmt.Errorf("reference source relation mismatch")
+	}
+	return edge, nil
+}
+
+func referenceRole(kind store.ReferenceKind) string {
+	switch kind {
+	case store.ReferenceTransitionRef:
+		return "transitionRef"
+	case store.ReferenceTransitionFn:
+		return "transitionFn"
+	case store.ReferenceInterpreter:
+		return "interpreter"
+	case store.ReferenceStateRoot:
+		return "stateRoot"
+	default:
+		return "unknown"
+	}
 }
 
 func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
@@ -196,6 +279,15 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 	if payload := query.Get("payload"); payload != "" && payload != "0" && payload != "1" {
 		writeWorkbenchError(w, http.StatusBadRequest, "BadRequest", malformedPayloadFlagMessage)
 		return
+	}
+	var refsAfter *store.ObjectReferenceCursor
+	if values := query["refsAfter"]; values != nil {
+		cursor, err := decodeReferenceCursor(values[0])
+		if err != nil {
+			writeWorkbenchError(w, http.StatusBadRequest, "BadRequest", "malformed refsAfter cursor")
+			return
+		}
+		refsAfter = &cursor
 	}
 
 	from := int64(0)
@@ -299,11 +391,32 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 			d.writeWorkbenchStoreError(w, r, ctx, err)
 			return
 		}
+		refs, err := d.reads.ObjectReferences(ctx, ref, refsAfter, WorkbenchPageLimit+1)
+		if err != nil {
+			d.writeWorkbenchStoreError(w, r, ctx, err)
+			return
+		}
+		references := &workbench.ReferenceView{Truncated: len(refs) > WorkbenchPageLimit, Continued: refsAfter != nil}
+		if refsAfter != nil {
+			references.FirstHref = referencePageHref(ref, query.Get("payload"), nil)
+		}
+		if references.Truncated {
+			next := refs[WorkbenchPageLimit-1].Cursor
+			references.NextHref = referencePageHref(ref, query.Get("payload"), &next)
+		}
+		for _, item := range refs[:min(len(refs), workbench.WorkbenchPageLimit)] {
+			edge, err := d.checkedReferenceEdge(ctx, ref, item)
+			if err != nil {
+				d.writeWorkbenchStoreError(w, r, ctx, err)
+				return
+			}
+			references.Edges = append(references.Edges, edge)
+		}
 		page.Object = &workbench.ObjectView{
 			Hash: object.Hash.String(), InterfaceHash: object.InterfaceHash.String(),
 			SemanticID: object.SemanticID, Provenance: object.Provenance,
 			PayloadShown: showPayload, PayloadPreview: string(preview), PayloadTruncated: truncated,
-			Grade: workbench.NewGradeUnavailable(objectGradeUnavailableReason), Edges: edges,
+			Grade: workbench.NewGradeUnavailable(objectGradeUnavailableReason), Edges: edges, References: references,
 		}
 	}
 

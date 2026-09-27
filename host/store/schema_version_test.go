@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 
@@ -304,7 +305,12 @@ func TestSupportedVersionThreeOpensWithoutRewritingPragma(t *testing.T) {
 	}
 	defer s.Close()
 	afterNames, afterVersion := schemaState(t, s.db)
-	if !reflect.DeepEqual(afterNames, append(beforeNames[:5:5], append([]string{"objects_by_semantic_id"}, beforeNames[5:]...)...)) || afterVersion != beforeVersion || afterVersion != 3 {
+	wantNames := append(append([]string{}, beforeNames...), "objects_by_semantic_id")
+	for _, spec := range referenceIndexSpecs {
+		wantNames = append(wantNames, spec.name)
+	}
+	sort.Strings(wantNames)
+	if !reflect.DeepEqual(afterNames, wantNames) || afterVersion != beforeVersion || afterVersion != 3 {
 		t.Fatalf("supported state changed: before=(%v,%d) after=(%v,%d)", beforeNames, beforeVersion, afterNames, afterVersion)
 	}
 }

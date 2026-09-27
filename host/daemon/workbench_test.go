@@ -855,7 +855,7 @@ func TestWorkbenchObjectProvenanceWalk(t *testing.T) {
 			section := provenanceWalkSection(t, get(t, target))
 			for _, want := range []string{
 				`<p>committedBy: <span class="unavailable" role="note">UNAVAILABLE: ` + objectCommittedByMissing + `</span></p>`,
-				`<p>referencedBy: <span class="unavailable" role="note">UNAVAILABLE: ` + objectReferencedByMissing + `</span></p>`,
+				`<h3>referencedBy</h3>`,
 			} {
 				if !strings.Contains(section, want) {
 					t.Errorf("%s: walk missing named stop %q: %s", target, want, section)
@@ -869,11 +869,11 @@ func TestWorkbenchObjectProvenanceWalk(t *testing.T) {
 
 	t.Run("edge-order", func(t *testing.T) {
 		// The walk is a fixed, ordered list (design §2a): interface, then
-		// committedBy, then referencedBy, each exactly once.
+		// committedBy remains a named stop, followed by referencedBy.
 		for _, target := range []string{plainTarget, typedTarget} {
 			section := provenanceWalkSection(t, get(t, target))
 			last := -1
-			for _, relation := range []string{"<p>interface: ", "<p>committedBy: ", "<p>referencedBy: "} {
+			for _, relation := range []string{"<p>interface: ", "<p>committedBy: ", "<h3>referencedBy</h3>"} {
 				if n := strings.Count(section, relation); n != 1 {
 					t.Fatalf("%s: %q occurs %d times, want 1: %s", target, relation, n, section)
 				}

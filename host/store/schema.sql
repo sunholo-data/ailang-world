@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS objects (
 );
 
 -- The semantic-id lookup index is provisioned on writable Open, outside this schema.
+-- Entry/world reverse-reference indexes are provisioned in reference_index.go on writable Open.
 
 -- Immutable world revisions. Each world_ref addresses one revision; state_root
 -- is the state object and log_head is the append-only log head at that revision.

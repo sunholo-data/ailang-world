@@ -174,6 +174,10 @@ func (b *blockingStore) ObjectsBySemanticID(ctx context.Context, _, _ string, _ 
 	return nil, b.block(ctx)
 }
 
+func (b *blockingStore) ObjectReferences(ctx context.Context, _ hashref.HashRef, _ *store.ObjectReferenceCursor, _ int) ([]store.ObjectReference, error) {
+	return nil, b.block(ctx)
+}
+
 // ---------------------------------------------------------------------------
 // recordingStore — records the context each getter received, then delegates
 // ---------------------------------------------------------------------------
@@ -235,6 +239,11 @@ func (r *recordingStore) SelectedHead(ctx context.Context) (hashref.HashRef, boo
 func (r *recordingStore) ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error) {
 	r.note(ctx)
 	return r.Store.ObjectsBySemanticID(ctx, id, after, limit)
+}
+
+func (r *recordingStore) ObjectReferences(ctx context.Context, ref hashref.HashRef, after *store.ObjectReferenceCursor, limit int) ([]store.ObjectReference, error) {
+	r.note(ctx)
+	return r.Store.ObjectReferences(ctx, ref, after, limit)
 }
 
 // ---------------------------------------------------------------------------
@@ -725,6 +734,10 @@ func (failingStore) SelectedHead(context.Context) (hashref.HashRef, bool, error)
 }
 
 func (failingStore) ObjectsBySemanticID(context.Context, string, string, int) ([]store.Object, error) {
+	return nil, errSentinelInternal
+}
+
+func (failingStore) ObjectReferences(context.Context, hashref.HashRef, *store.ObjectReferenceCursor, int) ([]store.ObjectReference, error) {
 	return nil, errSentinelInternal
 }
 
