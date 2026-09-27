@@ -930,3 +930,41 @@ It also corrected my directive: F3's control output was truncated by my own `hea
 **Progress:** 1.0 has clauses 4, 5 and 6 unmet. This iteration **readied, but did not land, clause 6's next capability**: the cancellable durable operations row 106's `/a2a/` wiring (M5) adopts. Clause 6 moves when Mark ratifies the table and PR #153 merges.
 
 **Next:** `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → this tranche's M2–M7 → 108 when #885 ships → 93, 114, 94. **Decision ledger: 27 rows, THREE OPEN (`D-WORLD-38`, `D-WORLD-39`, `D-WORLD-40`).**
+
+## 199 — 2026-09-27 — row 94 LANDED (verify-and-land of orphan 198): world/core kernel exports carry proven contracts. 5 new Z3 laws, 3 measured exemptions, PUB011 8 → 3 with a monotone CI ratchet, verified floor 11 → 16; judged 96, zero blocking; release (M6) parked on `D-WORLD-41` [PRODUCT]
+
+**Kind**: verify-and-land of an orphaned iteration. **Iteration 198 is credited here.** It ran the full inner loop for row 94: designer rotation opus → **`codex:gpt-6-astra`**; quorum r1 BLOCKED 2/2 → revision; r2 BLOCKED 1/1 with gemini PASS, whose remaining premise was measured false → carve-out §6.1 (`b3e237f`); planner **`codex:gpt-6-sol`** (`6cbeadc`, M1–M5 as ONE landing commit, because any intermediate boundary reds verify_ail's exact-total floor); executor **`codex:gpt-6-sol`** (`8cbc557`). It opened PR #154 green. Then its slot was **STALL-killed at gate 3** (`rc=143`, 04:31:45: *NO PROGRESS across 5 samples (600s) with a descendant alive ≥2400s*) while its evaluator ran. That left no judge verdict, no log entry and no STATUS stamp.
+
+**Picked.** Clause map: 1, 2, 3, 7 MET; 4 UNMET (row 93 needs 106 + 108); 5 UNMET (row 114); 6 UNMET (106 M5 held on `D-WORLD-40`; 108 blocked, `ailang#885` OPEN, re-measured). No routable UNMET-clause row. The died-mid-flight traces then decided the pick. Open PR #154 from the fleet account had its head branch checked out in this clone's `.wt-world-iter198`, so it is attributable to this mission. It was 2/2 green and `MERGEABLE/CLEAN`. Both 198 worktrees were clean and no evaluation artifact existed. **Deliverable: verify and land, not redo.**
+
+**Controller first-party (pinned v0.41.0, on `8cbc557`).** `verify_ail.sh` rc 0: 16 identities, 40 named tests, 9/9 package steps, PUB011 = 3. `test_kernel_contracts.py` rc 0: 5 verified, 10 counterexample controls, 3 exemption diagnostics, 7 ratchet arms killed. History controls PASS. `go vet` 0. `go test ./... -count=1`: 24 ok / 0 FAIL.
+
+**Evaluate.** **`sonnet`** (Agent tool, foreground, fresh worktree `.eval-world-iter199` at `8cbc557`): **PASS 96/100, ZERO BLOCKING**, 15/15 independent mutations killed:
+- all 5 law bodies, with mutations outside the harness's own list;
+- the 3 exemption diagnostics, reproduced byte-for-byte;
+- an end-to-end uncontracted export;
+- a dropped `plan` `ensures` (required-identity manifest red);
+- `EXACT_TOTAL_VERIFIED` stale at 11;
+- the pristine marker stale;
+- M1-only and M2-only reverts, each redding its own check (and M1's cascading correctly into `commitAllowed`);
+- the design-flagged `commit`-guard `if true`.
+
+It confirmed exactly 17 files, no manifest bump, no publish and no `cmd/world-publish` change. **Non-blocking:** following the design's `TMPDIR="$PWD/.iteration198"` prefix puts Go build artifacts inside the repo tree, and three scanners (`host/boundary`, `host/broker`, `host/store`) then FAIL. With `GOCACHE`/`TMPDIR` outside the tree the suite is 24/24. This is a rig trap, not a diff defect.
+
+**Gate 3b.** PR [#154](https://github.com/sunholo-data/ailang-world/pull/154) squash-merged **`4b5b77b`**. The SHA-pinned check-runs poll on the merge showed 2 present / 2 completed / 2 success (07:52).
+
+**Ruled out / process findings**
+- **(a) A STALL-killed slot can leave a judge-ready PR, and that is the best case for a successor.** Everything except the verdict was on GitHub. Rule 7 (a) (prefer a FOREGROUND spawn) is what this iteration followed for its judge, and it returned in 684 s with the report attached.
+- **(b) The design's own env prefix manufactures false reds in a full `go test`.** The evaluator caught it on first use. Recorded so that a later round does not attribute those three FAILs to a diff.
+- **(c) The release question was in the plan (line 147), not in the ledger.** Iteration 198 died before Gate 4, so its `Decision for Mark` never reached `DECISIONS FOR MARK`. It is now filed as `D-WORLD-41`. A decision written only into a plan is invisible to the human until someone records it.
+
+**Routing evidence**: base=`6cbeadc8b72d7d09f7e598e222ff0ad9cd30ddc1` (Gate 1 `mission-base.sh record gate1`; merge `4b5b77b` is this iteration's own).
+- Controller `claude:claude-opus-5-5` (session; tok: not reported).
+- Designer, planner, executor: **not spawned this iteration**. Their work is orphan 198's (astra / `codex:gpt-6-sol` / `codex:gpt-6-sol`; tok: not recorded, because the slot died before Gate 4).
+- Evaluator **`sonnet`** (`agent-tool sonnet`, `MISSION_EVALUATOR_RESOLVED=sonnet`; 148,937 tok, 54 tool calls, 684 s).
+- Generator ≠ judge: codex built it, sonnet judged it. **The judge ran and returned a full report; no role fell back.**
+- **Metered $0.00.**
+
+**Progress:** clause 1 (MET) hardened: the kernel's proven-law count went 11 → 16. No UNMET clause moved, because every UNMET-clause row is blocked on `D-WORLD-40` or on `ailang#885`.
+
+**Next:** `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → tranche M2–M7 → 108 when #885 ships → 93, 114. `D-WORLD-41` → the row-94 M6 release plan. **Decision ledger: 28 rows, FOUR OPEN (`D-WORLD-38`, `D-WORLD-39`, `D-WORLD-40`, `D-WORLD-41`).**

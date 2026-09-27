@@ -1,19 +1,18 @@
-# Mission Dashboard — World (snapshot 2026-09-27, iteration 197)
+# Mission Dashboard — World (snapshot 2026-09-27, iteration 199)
 
-- **State**: **row 23's policy tranche is designed, and its first slice is built but deliberately not merged.**
-  - Design `design_docs/planned/w-store-bounded-durable-operations.md`: a measured bound table (B1–B11), a cancellation cutoff at database/sql's commit CompareAndSwap, and a three-outcome commit contract (committed / not committed / uncertain → reconcile by the log row at the commit's index). The strict store guard lands last.
-  - **M1** is the slice row 106's `/a2a/` wiring needs: cancellable `CommitContext`/`AppendIntentContext`/`GetReceiptContext`, and `Close` now waits for durable workers before releasing the writer lock. Before this, `DB.Close` returned without waiting and the lock was released under a live COMMIT (measured).
-  - PR [#153](https://github.com/sunholo-data/ailang-world/pull/153) is judged **97/100, zero blocking**, and stays **unmerged**, because `D-WORLD-37` says nothing in the tranche ships before Mark sees the bound table.
-- **Quality**:
-  - Quorum: r1 BLOCKED 2/2 (both measured true) → revision. r2 BLOCKED 1/1 with gemini PASS → narrow-refinement carve-out. The glm and kimi seats were absent (Ollama weekly limit).
-  - The executor killed 17/17 mutations; the commit rebuild is sha256-identical; the full suite is 24 ok / 0 FAIL.
-  - Judge r1 88 with one BLOCKING (`-race` red in the tests). The controller fixed it test-only, plus a `-count=N` panic it found while verifying. Judge r2: 97.
-- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · 5 UNMET (row 114) · 6 UNMET (capability ready in PR #153; 108 blocked on `ailang#885`, blobs identical at v0.44.1).
+- **State**: **row 94 LANDED (`4b5b77b`).** world/core's kernel exports now carry proven contracts.
+  - 5 new Z3 laws: `proposalMatchesWorld`, `verificationMatchesProposal`, `commitAllowed`, `plan`, `verify`.
+  - 3 measured in-code exemptions: `renderRef`, `cacheKey`, `commit`. The encoder cannot express them, and the exact diagnostics are recorded.
+  - PUB011 went 8 → 3 behind a monotone CI ratchet, and the verified floor went 11 → 16.
+  - This was a verify-and-land of **orphan 198**. That slot was STALL-killed at gate 3 while its judge ran, with PR #154 already green.
+- **Quality**: controller gates on the PR head were all green (24 ok / 0 FAIL). Judge `sonnet` in its own worktree: **96/100, zero blocking, 15/15 independent mutations killed**, including per-milestone reverts. The SHA-pinned CI on the merge was 2/2 green.
+- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · 5 UNMET (row 114) · 6 UNMET (capability ready in PR #153, held on `D-WORLD-40`; 108 blocked on `ailang#885`).
 - **Next**: `D-WORLD-40` = A → merge #153 → 106 M5/M6 → tranche M2–M7 → 108 → 93.
 - **Parked for Mark**:
-  - **`D-WORLD-40`** (new, one word): ratify the bound table (startup 9 s, approval 5 s, validation / lookup / durable tail / commit 3 s, publish root 36 s). **A** ratify (recommended) · **B** name a change. Unanswered: nothing merges.
-  - **`D-WORLD-39`**: move the row-23 tranche to groom position 2. It was acted on under its default A this iteration.
+  - **`D-WORLD-41`** (new, one word): release the proof-hardened world/core as **A** 0.1.1 (recommended) or **B** 0.2.0. Unanswered: nothing is published and nothing else is blocked.
+  - **`D-WORLD-40`**: ratify row 23's bound table (startup 9 s, approval 5 s, 3 s store rows, publish root 36 s). **A** ratify (recommended) · **B** name a change. Unanswered: PR #153 stays unmerged, and clause 6 cannot move.
+  - **`D-WORLD-39`**: move the row-23 tranche to groom position 2 (acting on default A).
   - **`D-WORLD-38`**: the typed publish phrase (A shared, shipped · B own phrase).
-- **Cadence/routing**: controller `claude-opus-5-5`; designer `claude:claude-opus-5-5` (rotation); planner and executor `codex:gpt-6-sol`; evaluator `sonnet` (Agent tool). **$0.41 metered** (quorum only).
-- **Capacity watch**: Ollama Cloud's weekly bucket is still dry, so glm and kimi are out of both the rotation and the quorum.
-- **New row 117**: a `host/pkgproj` full-suite load flake (2 of 3 prototype runs; passes alone).
+- **Cadence/routing**: controller `claude-opus-5-5`; evaluator `sonnet` (Agent tool, foreground). Designer, planner and executor were not needed this iteration (orphan 198's work). **$0.00 metered.**
+- **Capacity watch**: the Ollama Cloud weekly bucket is still over ration (driver `ration gate: blocked buckets: ollama`).
+- **Slot health**: iteration 198 was STALL-killed (rc=143) after its controller idled for over 40 minutes on a background descendant. Foreground judges avoid this.
