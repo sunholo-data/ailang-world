@@ -2,9 +2,12 @@ package capsule
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"testing"
@@ -19,6 +22,173 @@ const overflowLoop = `i=0; while [ $i -lt 200 ]; do echo 0123456789abcdef0123456
 // TestEscapeeHelper is the helper mode behind proctest.EscapeeShell; in a
 // normal run it returns at once.
 func TestEscapeeHelper(t *testing.T) { proctest.RunEscapeeIfRequested() }
+
+func blockedWriteHelper() {
+	if os.Getenv("AILANG_BLOCKED_WRITE") != "1" {
+		return
+	}
+	dir, n := flag.Arg(0), flag.Arg(1)
+	size, err := strconv.Atoi(n)
+	if err != nil || size < 1 {
+		os.Exit(2)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "child.pid"), []byte(strconv.Itoa(os.Getpid())), 0o600); err != nil {
+		os.Exit(3)
+	}
+	written, err := syscall.Write(1, make([]byte, size))
+	marker := "wrote-all"
+	if err != nil {
+		marker = "write-error"
+	} else if written != size {
+		marker = "short-write"
+	}
+	_ = os.WriteFile(filepath.Join(dir, marker), []byte(fmt.Sprintf("%d/%d: %v", written, size, err)), 0o600)
+	os.Exit(0)
+}
+
+func pipeCapacity(t *testing.T) int {
+	t.Helper()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	defer w.Close()
+	fd := int(w.Fd())
+	if err := syscall.SetNonblock(fd, true); err != nil {
+		t.Fatal(err)
+	}
+	capacity := 0
+	chunk := make([]byte, 4096)
+	for {
+		n, err := syscall.Write(fd, chunk)
+		if n > 0 {
+			capacity += n
+		}
+		if errors.Is(err, syscall.EAGAIN) {
+			break
+		}
+		if err != nil || n <= 0 || capacity > int(^uint(0)>>1)/4 {
+			t.Fatalf("measure pipe capacity: bytes=%d, write=%d, error=%v", capacity, n, err)
+		}
+	}
+	if capacity <= 0 {
+		t.Fatalf("invalid pipe capacity %d", capacity)
+	}
+	return capacity
+}
+
+func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'" }
+
+// The child's single write exceeds all space in the pipe plus the 65 bytes
+// readCapped can drain. Its own markers distinguish a blocked writer from one
+// that finished before the overflow kill.
+func TestBlockedChildOverflowKill(t *testing.T) {
+	blockedWriteHelper()
+	const limit = 64
+	capacity := pipeCapacity(t)
+	payload := 4 * capacity
+	if payload <= capacity+limit+1 {
+		t.Fatalf("payload %d does not exceed pipe %d plus cap %d", payload, capacity, limit+1)
+	}
+	t.Logf("pipe capacity=%d payload=%d limit=%d", capacity, payload, limit)
+	dir := t.TempDir()
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	wrapper := filepath.Join(dir, "ailang-blocked")
+	script := fmt.Sprintf("#!/bin/sh\nif [ \"$1\" = \"--version\" ]; then echo 'AILANG v0.30.0 blocked probe'; exit 0; fi\nAILANG_BLOCKED_WRITE=1 exec %s -test.run='^TestBlockedChildOverflowKill$' %s %d\n", shellQuote(exe), shellQuote(dir), payload)
+	if err := os.WriteFile(wrapper, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	fx := archiveExecutable(t, wrapper)
+	pidPath := filepath.Join(dir, "child.pid")
+	killChildGroup := func() {
+		data, err := os.ReadFile(pidPath)
+		if err != nil {
+			return
+		}
+		pid, err := strconv.Atoi(strings.TrimSpace(string(data)))
+		if err == nil && proctest.Check(pid) == nil {
+			_ = syscall.Kill(-pid, syscall.SIGKILL)
+		}
+	}
+	t.Cleanup(killChildGroup)
+	type outcome struct {
+		result Result
+		err    error
+	}
+	done := make(chan outcome, 1)
+	go func() {
+		result, err := New(fx.archive, Config{MaxOutputBytes: limit, ExecTimeout: 120 * time.Second}).Run(Entry{
+			Interpreter: fx.ref, Source: source(`export func main() -> string { "x" }`),
+		})
+		done <- outcome{result, err}
+	}()
+	var got outcome
+	select {
+	case got = <-done:
+	case <-time.After(30 * time.Second):
+		noMarker := true
+		for _, marker := range []string{"wrote-all", "short-write", "write-error"} {
+			if data, err := os.ReadFile(filepath.Join(dir, marker)); err == nil {
+				noMarker = false
+				t.Errorf("watchdog found child %s marker before cleanup: %s", marker, data)
+			} else if !errors.Is(err, os.ErrNotExist) {
+				noMarker = false
+				t.Errorf("watchdog read %s marker: %v", marker, err)
+			}
+		}
+		if noMarker {
+			t.Log("watchdog: no child completion marker before cleanup")
+		}
+		killChildGroup()
+		reaped := false
+		select {
+		case <-done:
+			reaped = true
+		case <-time.After(5 * time.Second):
+			t.Error("watchdog cleanup did not finish Run")
+		}
+		if data, err := os.ReadFile(pidPath); err == nil {
+			pid, parseErr := strconv.Atoi(strings.TrimSpace(string(data)))
+			if parseErr == nil && proctest.Check(pid) == nil {
+				if !proctest.DeadWithin(t, pid, time.Second) {
+					t.Errorf("watchdog cleanup left child %d alive", pid)
+				} else {
+					t.Logf("watchdog cleanup: child %d dead, Run reaped=%t", pid, reaped)
+				}
+			}
+		} else {
+			t.Errorf("watchdog found no child PID marker: %v", err)
+		}
+		t.Fatal("30 s watchdog fired: blocked child was not killed by overflow")
+	}
+	pid := proctest.ReadPid(t, pidPath)
+	proctest.ReapOnCleanup(t, pid)
+	for _, marker := range []string{"wrote-all", "short-write", "write-error"} {
+		if data, err := os.ReadFile(filepath.Join(dir, marker)); err == nil {
+			t.Errorf("child recorded %s: %s", marker, data)
+		} else if !errors.Is(err, os.ErrNotExist) {
+			t.Errorf("read %s marker: %v", marker, err)
+		}
+	}
+	var overflow *OutputLimitError
+	if !errors.As(got.err, &overflow) {
+		t.Errorf("error = %T %v, want *OutputLimitError", got.err, got.err)
+	}
+	var timeout *TimeoutError
+	if errors.As(got.err, &timeout) {
+		t.Errorf("unexpected *TimeoutError: %v", got.err)
+	}
+	if len(got.result.Stdout) > limit || len(got.result.Stderr) > limit {
+		t.Errorf("captured bytes stdout=%d stderr=%d, limit=%d", len(got.result.Stdout), len(got.result.Stderr), limit)
+	}
+	if !proctest.DeadWithin(t, pid, time.Second) {
+		t.Errorf("child %d still alive after Run returned", pid)
+	}
+}
 
 func scriptedInterpreter(t *testing.T, before, after string) archivedFixture {
 	t.Helper()
