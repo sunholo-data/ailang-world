@@ -126,6 +126,7 @@ Alternative: infer references from any equal hash or payload text. Rejected: equ
 does not establish the intended typed relation. Evidence: census and controls (V10).
 
 **D2 — Four composite indexes, writable-open provisioning, fail-closed availability.**
+*Quorum r2 (claude-sonnet-5, verbatim fix option (a)):* the 30-second ceiling is confirmed sufficient with margin at a materially larger N — four-index DDL measured **41.2 ms at N=10,000** (control, matches V10's 45 ms), **588.9 ms at N=100,000** and **7.635 s at N=1,000,000** log_entries plus as many worlds (V17), about 4x under the ceiling at 100x the fixture, while the rig's only real store (`~/.ailang/world/world.db`) holds **0** log entries (V17). Growth is roughly N log N; a store beyond ~3M entries would need the row-23 B1 startup budget (D-WORLD-40) or an offline provisioning step, and until then a timed-out provision fails Open LOUDLY (Failure modes row 2) rather than serving an unindexed reverse read.
 Follow row 96's access-path pattern without a schema version bump. Alternative: single-column
 indexes; rejected because the world key needs explicit ordered hash pagination. Entry indexes
 also declare their stable key explicitly, even though SQLite integer-primary-key storage may
@@ -458,6 +459,7 @@ full executable instrument so the measurements do not depend on retained `/tmp` 
 | V13 | `sed -n '310,415p' host/daemon/workbench.go` | Selected entry uses its own GetLogEntry; timeline uses a separate from/offset loop and bounded next arithmetic |
 | V12 | `AILANG_BIN=$HOME/.pinned-ailang/ailang go test -race -count=1 -timeout 90s ./host/store -run '^(TestObjectsBySemanticIDNonUniqueOrderedAndPaged\|TestLookupIndexGuardReadOnlyThenProvision\|TestLookupIndexIncompatibleIsRefused)$'` | Exit 0; `ok .../host/store 1.510s` |
 | V16 | `rg -n 'func \(d \*Daemon\) readCtx|ctx, cancel := d.readCtx\(r\)' host/daemon/handlers.go host/daemon/workbench.go; rg -n 'type InvalidLimitError' host/store/scan.go` (controller, quorum r1 premise check) | `handlers.go:276 func (d *Daemon) readCtx(r *http.Request) (context.Context, context.CancelFunc)` — its body is the `WithTimeout(r.Context(), d.readDeadline)` quoted in V5; callers `handlers.go:356/389/450` and `workbench.go:230 ctx, cancel := d.readCtx(r)`; `scan.go:14 type InvalidLimitError struct`. Both helpers the design names exist at `7fc05de`. |
+| V17 | Controller probe (quorum r2): overlay test `/tmp/world202/scale_probe_test.go` bulk-inserts N log_entries + N worlds by SQL into a real `Open`ed store, then times the four `CREATE INDEX IF NOT EXISTS` statements; `WORLD202_N=<N> go test -overlay /tmp/world202/overlay.json -count=1 -timeout 280s ./host/store -run '^TestIter202ProvisionScale$' -v`; plus `sqlite3 -readonly ~/.ailang/world/world.db 'select count(*) from log_entries'` | N=10000 → 41.17 ms; N=100000 → 588.91 ms; N=1000000 → 7.635 s; `indexes_present=4` each run (positive control). Real store: `0`. |
 
 Not measured: final HTML/point-check latency, final implementation cancellation and mutation
 kills, and an end-to-end real incident walk. These need implementation and an identified real
