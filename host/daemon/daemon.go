@@ -369,6 +369,7 @@ type readStore interface {
 	GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error)
 	SelectedHead(ctx context.Context) (hashref.HashRef, bool, error)
 	ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error)
+	ObjectReferences(ctx context.Context, ref hashref.HashRef, after *store.ObjectReferenceCursor, limit int) ([]store.ObjectReference, error)
 }
 
 // IntegrityReport is the bounded startup sweep result.

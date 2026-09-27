@@ -53,6 +53,15 @@ type ObjectView struct {
 	PayloadTruncated bool
 	Grade            GradeView
 	Edges            []EdgeView
+	References       *ReferenceView
+}
+
+type ReferenceView struct {
+	Edges     []EdgeView
+	Truncated bool
+	Continued bool
+	NextHref  string
+	FirstHref string
 }
 
 type EntryView struct {
@@ -157,7 +166,7 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem}dt{font-we
 </section>
 <section aria-label="provenance walk">
 <h2>Provenance walk</h2>
-{{with .Object}}{{range .Edges}}{{template "edge" .}}{{else}}<p><span class="unavailable" role="note">UNAVAILABLE: no provenance edges were supplied for this object</span></p>{{end}}{{else}}<p><span class="unavailable" role="note">UNAVAILABLE: no object selected</span></p>{{end}}
+{{with .Object}}{{range .Edges}}{{template "edge" .}}{{else}}<p><span class="unavailable" role="note">UNAVAILABLE: no provenance edges were supplied for this object</span></p>{{end}}{{with .References}}<section aria-label="referencedBy"><h3>referencedBy</h3><p>Entries/worlds only: transitionRef, transitionFn, interpreter, stateRoot. Registry, journal and object-interface inbound references are not included.</p>{{range .Edges}}{{template "edge" .}}{{else}}{{if .Continued}}<p>no further references recorded in these entry/world fields</p>{{else}}<p>none recorded in these entry/world fields</p>{{end}}{{end}}{{if .Truncated}}<p>Showing 100 references; more recorded</p>{{end}}{{if .Continued}}<p>New references before this cursor require restarting the walk. <a href="{{workbenchHref .FirstHref}}">first page</a></p>{{end}}{{if .NextHref}}<a href="{{workbenchHref .NextHref}}">next references</a>{{end}}</section>{{end}}{{else}}<p><span class="unavailable" role="note">UNAVAILABLE: no object selected</span></p>{{end}}
 </section>
 </main>
 </body>

@@ -418,3 +418,26 @@ func TestRenderGradeReasonNeverEmpty(t *testing.T) {
 		})
 	}
 }
+
+func TestReferenceView(t *testing.T) {
+	t.Run("nil", func(t *testing.T) {
+		body := renderPage(t, Page{Object: &ObjectView{}})
+		if strings.Contains(body, `aria-label="referencedBy"`) {
+			t.Fatal("nil references rendered")
+		}
+	})
+	t.Run("empty", func(t *testing.T) {
+		body := renderPage(t, Page{Object: &ObjectView{References: &ReferenceView{}}})
+		for _, want := range []string{"none recorded in these entry/world fields", "Entries/worlds only: transitionRef, transitionFn, interpreter, stateRoot. Registry, journal and object-interface inbound references are not included."} {
+			if !strings.Contains(body, want) {
+				t.Fatalf("missing %q", want)
+			}
+		}
+	})
+	t.Run("checked", func(t *testing.T) {
+		body := renderPage(t, Page{Object: &ObjectView{References: &ReferenceView{Edges: []EdgeView{{Relation: "transitionRef", Target: "entry 3", Href: "?from=3&entry=3", Available: true}}, Truncated: true}}})
+		if !strings.Contains(body, "Showing 100 references; more recorded") || !strings.Contains(body, "transitionRef: <a") {
+			t.Fatal(body)
+		}
+	})
+}
