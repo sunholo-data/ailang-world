@@ -968,3 +968,69 @@ It confirmed exactly 17 files, no manifest bump, no publish and no `cmd/world-pu
 **Progress:** clause 1 (MET) hardened: the kernel's proven-law count went 11 → 16. No UNMET clause moved, because every UNMET-clause row is blocked on `D-WORLD-40` or on `ailang#885`.
 
 **Next:** `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → tranche M2–M7 → 108 when #885 ships → 93, 114. `D-WORLD-41` → the row-94 M6 release plan. **Decision ledger: 28 rows, FOUR OPEN (`D-WORLD-38`, `D-WORLD-39`, `D-WORLD-40`, `D-WORLD-41`).**
+
+## 200 — 2026-09-27 — row 25 LANDED: a real child blocked in `write()` on a full, undrained pipe is unblocked by the capsule's overflow kill, and the child's own state witnesses it (test-only; judged 95, zero blocking; merge `227f587`)
+
+**Pick and why.** Every critical-path row is blocked, and each was re-measured this iteration:
+- Row 106's M5 waits on `D-WORLD-40`.
+- Row 108 waits on `ailang#885`: still OPEN, and the 5 `serveapi/protocol` blobs hash identically at `v0.33.2` and `v0.44.1`.
+- Row 93 needs 106 + 108, and row 114 needs real operation.
+- Row 94 landed (iter-199); its release is on `D-WORLD-41`.
+
+Groom position 7's head (row 23) is held on `D-WORLD-40` too, so the pick was the next row in that bucket, **row 25**. The premise was measured at HEAD before routing:
+- `overflowLoop` writes 200 × 33 = 6,600 B, and the F6 real-interpreter arm writes 513 B, both below the 65,536 B pipe.
+- `grep` for a pipe-sized constant in `host/capsule` finds 0 hits.
+
+So nothing in the suite blocks a writer, and `capsule.go`'s "F6 must not decay into F5" kill had no live arm.
+
+**Gate 3.** The resolvers answered:
+- Planner: `agent-tool opus fail-closed:planner-lane-field-missing` under a `codex:gpt-6-sol` provider pin, so the loop routed to the pin, as in iterations 196–198.
+- Executor: `recipe codex:gpt-6-sol declared:provider-pin`.
+- Evaluator: `agent-tool sonnet declared:alias-pin`.
+
+The codex probe returned rc=0. No design doc was needed: the row plus row 20's §7 "RESIDUAL CORRECTED POST-SPRINT" is the spec.
+- **Planner** (detached sibling worktree, bounded 30 min, rc=0): plan `933b9cb`, one test-only milestone. It re-measured the pipe capacity at 65,536 B with a non-blocking probe (and corrected its own first-draft off-by-one), baselined 5 gates at rc 0, and wrote a mutation ledger that predicts M-kill-direct-only will survive and names row 24's `TestOverflowKillReachesForkedGrandchild` as that mutation's owner.
+- **Executor** (bounded, rc=0): `TestBlockedChildOverflowKill`, +170 lines in `cleanup_test.go`; `capsule.go` unchanged.
+  - The test measures the pipe capacity in-test and picks payload = 4 × capacity = 262,144 B, asserting it exceeds capacity + 65.
+  - An archived `/bin/sh` wrapper re-execs the test binary in helper mode (env `AILANG_BLOCKED_WRITE=1`, because `Run` replaces the child env).
+  - The child writes its pid, makes one `syscall.Write(1, payload)`, and records `wrote-all`/`short-write`/`write-error` only if the call returns.
+  - Assertions: `*OutputLimitError`, no `*TimeoutError`, no marker, both streams ≤ 64 B, child dead. `ExecTimeout` is 120 s, and the 30 s watchdog group-kills, reaps and fails; it never passes.
+  - The executor's own drills: M-kill-off killed (watchdog), M-drain-all killed (`wrote-all`), 513-byte control killed, M-kill-direct-only survived as predicted (row 24's test kills it). sha256 was restored each time.
+  - Its first sandboxed `-race` run went red on the pre-existing `TestF5WallClockTimeoutHasElapsedBound` (2.73 s vs 2 s), which row 32 owns. The instance is recorded on row 32.
+- **Controller, outside the sandbox, pinned v0.41.0:**
+  - vet 0; gofmt empty; `git diff --check` clean.
+  - `-count=5` stability: 5/5 PASS, each logging `capacity=65536 payload=262144`.
+  - Package ok (18.1 s); `-race` ok (20.0 s).
+  - Reproduced **M-kill-off**: the watchdog fired, `no child completion marker`, child dead, `Run reaped=true`.
+  - Reproduced **M-drain-all**: `child recorded wrote-all: 262144/262144`.
+  - Both restores sha256-identical.
+- **Evaluator `sonnet`** (Agent tool, foreground, own detached worktree `.eval-world-iter200` at `8473842`, 648 s, 43 tool calls): **PASS 95/100, ZERO BLOCKING.**
+  - It independently re-measured the capacity (65,536 B) and checked the pid/pgid identity chain across shebang + exec and the `flag.Arg` semantics.
+  - All 6 gates green; 20/20 flake runs.
+  - 5/5 drills behaved as predicted. Its assertion-redundancy drill showed the marker check is the sole catcher of M-drain-all, and that check ships.
+  - No leftover processes (with a positive `pgrep` control); no writes outside `t.TempDir()`; no assertion on the kill error.
+  - Non-blocking findings: (a) the unretried raw `syscall.Write` could read `short-write` if a signal interrupts a partial write. That would be a false red, never a false green; recorded on row 25 as a residual. (b) Only the marker check defends the M-drain-all class (informational). (c) stderr is only passively exercised.
+
+**Gate 3b.** PR [#155](https://github.com/sunholo-data/ailang-world/pull/155):
+- Head `8473842` read 2/2 green and `MERGEABLE/CLEAN`.
+- Squash-merged as **`227f587`**. The SHA-pinned check-runs poll on the merge reads 2/2 `success`.
+
+**Ruled out / process findings**
+- **(a) The controller's first CI poll was pinned to a mistyped SHA.** It appended a character to the 7-char short SHA, so it could never match. It was caught because the call had no output after 10 minutes, then killed and re-run against the full `git rev-parse` SHA. Rule 3a aimed at a poll target: derive the SHA by command, never retype it.
+- **(b) The row-32 laptop constant fires under the sandboxed `-race` leg**, on a diff that does not touch F5. This is a second instance for row 32; it is not attributable to row 25.
+- **(c) `.wt-world-iter198-design` holds iteration 198's designer prototype** (uncommitted edits to 10 files), which row 94's landing superseded. Left untouched, since deleting it is not needed for anything, and noted here so no successor reads it as live work.
+- **(d) `ailang mission rotate-log world --status` is NOT read-only, and from the V1 CWD it targets the WRONG FILE.** The fleet CLI (`v0.44.1-23-g5637af78d-dirty`) first failed from World's CWD (`failed to read mission registry missions`). Run from the V1 checkout with `--status`, it printed a plan naming `world-mission-status-archive.md` as the "live log", and it **performed that rotation**: the STATUS archive went from 421 to 50 lines, and two new files appeared (`-status-archive-old.md` with 180 entries, and `-status-index.md`). Nothing was committed, and the full bodies were retained, so the controller banked the stray files under `~/.ailang/state/world-iter200/`. It then restored the archive from HEAD, re-applied its one intended edit (the 196 stamp; 199 → 200 stamps, +2 lines), deleted the strays, and wrote the index row by hand, per the pin-version-gap rule. Two defects, both fleet-side: a `--status` flag that mutates, and a registry resolution that maps `world` to the STATUS archive. Filed as a harness ticket; do not run `rotate-log` for World until it is resolved.
+
+**Routing evidence**:
+- Base: `6bfddbb` at Gate 1. The sprint worktree was based on `933b9cb`, which is this iteration's own plan commit (benign drift).
+- Controller `claude:claude-opus-5-5` (session; tok: not reported).
+- Designer: **not spawned** (no doc needed).
+- Planner **`codex:gpt-6-sol`** (52,282 tok).
+- Executor **`codex:gpt-6-sol`** (68,246 tok).
+- Evaluator **`sonnet`** (Agent tool; 116,390 tok).
+- Generator ≠ judge: codex planned and built it, sonnet judged it. No role fell back.
+- **Metered $0.00.**
+
+**Progress:** clause 2 (MET) hardened. No UNMET clause moved, because every UNMET-clause row is blocked on `D-WORLD-40` or on `ailang#885`. **Drift watch:** two of the last three landings (94, 25) moved no unmet clause. If iteration 201 lands another position-7 row, the drift alarm fires and the Gate-5 digest must lead with it.
+
+**Next:** `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → tranche M2–M7 → 108 when #885 ships → 93, 114. Meanwhile, position 7 continues with 26, 32, 109, 111, 112, 113, 115 and 117. **Decision ledger: 28 rows, FOUR OPEN (`D-WORLD-38`, `D-WORLD-39`, `D-WORLD-40`, `D-WORLD-41`).**

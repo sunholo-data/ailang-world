@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 200 | 2026-09-27 | row 25 LANDED (`227f587`): real child blocked in write() on a full pipe (262,144 B vs 65,536 B), unblocked by the overflow kill, witnessed by its own markers; test-only; judged 95; critical path all blocked on D-WORLD-40 / ailang#885 |
 | 199 | 2026-09-27 | row 94 LANDED (verify-and-land of orphan 198, STALL-killed at gate 3): 5 Z3 kernel laws, 3 exemptions, PUB011 8→3, floor 11→16; judged 96; release parked D-WORLD-41 |
 | 198 | 2026-09-27 | row 94 designed+planned+executed (PR #154) — slot STALL-killed rc=143 while the evaluator ran; no log entry of its own, credited in 199 |
 | 197 | 2026-09-27 | row 23's policy tranche: design + measured bound table filed for Mark as `D-WORLD-40`; M1 (cancellable durable store ops with a CAS cut... |
