@@ -1,0 +1,354 @@
+{
+  "sprint_id": "w-store-object-reference-index-iter202",
+  "design_doc": "design_docs/planned/w-store-object-reference-index.md",
+  "base": "39dec32",
+  "scope": "Row 103 entry/world reverse object references; committedBy row 104 excluded; no new /v1 route or duration",
+  "milestones": [
+    {
+      "id": "M1a",
+      "title": "index specs and verifier",
+      "estimated_added_production_loc": 115,
+      "files": [
+        "host/store/reference_index.go",
+        "host/store/reference_index_test.go",
+        "host/store/schema.sql"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store -run '^(TestReferenceIndexDefinitions|TestReferenceIndexVerifierContext)$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store ./host/daemon ./host/workbench"
+      ],
+      "mutations": [
+        {
+          "id": "MU1",
+          "file": "host/store/reference_index.go",
+          "edit": "`{\"worlds_by_state_root\", \"worlds\", \"state_root\", \"world_ref\"},` \u2192 DELETE",
+          "must_fail": "`TestReferenceIndexDefinitions/all-four`"
+        },
+        {
+          "id": "MU2",
+          "file": "host/store/reference_index.go",
+          "edit": "`partial == 0` \u2192 `true`",
+          "must_fail": "`TestReferenceIndexDefinitions/partial`"
+        },
+        {
+          "id": "MU3",
+          "file": "host/store/reference_index.go",
+          "edit": "`coll == \"BINARY\"` \u2192 `true`",
+          "must_fail": "`TestReferenceIndexDefinitions/nocase`"
+        },
+        {
+          "id": "MU4",
+          "file": "host/store/reference_index.go",
+          "edit": "`desc == 0` \u2192 `true`",
+          "must_fail": "`TestReferenceIndexDefinitions/descending`"
+        },
+        {
+          "id": "MU5",
+          "file": "host/store/reference_index.go",
+          "edit": "`return valid && keys == 2, nil` \u2192 `return true, nil`",
+          "must_fail": "`TestReferenceIndexDefinitions/extra-key`"
+        }
+      ]
+    },
+    {
+      "id": "M1b",
+      "title": "Open lifecycle and cached verdict",
+      "estimated_added_production_loc": 95,
+      "files": [
+        "host/store/store.go",
+        "host/store/reference_index.go",
+        "host/store/reference_index_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store -run '^(TestReferenceIndexLifecycle|TestReferenceIndexFailureCleanup|TestLookupIndexGuardReadOnlyThenProvision)$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store ./host/daemon ./host/workbench"
+      ],
+      "mutations": [
+        {
+          "id": "MU23",
+          "file": "host/store/store.go",
+          "edit": "`referenceIndexesAvailable: available` \u2192 `referenceIndexesAvailable: true`",
+          "must_fail": "`TestReferenceIndexLifecycle/read-only-absent`"
+        },
+        {
+          "id": "MU24",
+          "file": "host/store/reference_index.go",
+          "edit": "`host/store/reference_index.go`: `if err := provisionReferenceIndexes(db); err != nil {` \u2192 `if err := provisionReferenceIndexes(db); err != nil && false {`",
+          "must_fail": "`TestReferenceIndexFailureCleanup`"
+        }
+      ]
+    },
+    {
+      "id": "M2a",
+      "title": "API types and validation",
+      "estimated_added_production_loc": 70,
+      "files": [
+        "host/store/object_references.go",
+        "host/store/object_references_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store -run '^TestObjectReferencesValidation$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store ./host/daemon ./host/workbench"
+      ],
+      "mutations": [
+        {
+          "id": "MU11",
+          "file": "host/store/object_references.go",
+          "edit": "`limit < 1 || limit > MaxObjectReferencePage` \u2192 `false`",
+          "must_fail": "`TestObjectReferencesValidation/limits`"
+        }
+      ]
+    },
+    {
+      "id": "M2b",
+      "title": "bounded reverse read",
+      "estimated_added_production_loc": 145,
+      "files": [
+        "host/store/object_references.go",
+        "host/store/object_references_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store -run '^(TestObjectReferencesPage|TestObjectReferencesScope|TestObjectReferencesGuard|TestObjectReferencesCancellation|TestObjectReferencesPlans)$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; WORLD103_N=10000 go test -count=1 -timeout 180s ./host/store -run '^TestObjectReferencesMeasuredAtScale$' -v",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store ./host/daemon ./host/workbench"
+      ],
+      "mutations": [
+        {
+          "id": "MU6",
+          "file": "host/store/object_references.go",
+          "edit": "`if !s.referenceIndexesAvailable {` \u2192 `if false {`",
+          "must_fail": "`TestObjectReferencesGuard/no-sql`"
+        },
+        {
+          "id": "MU7a",
+          "file": "host/store/object_references.go",
+          "edit": "`SELECT entry_index FROM log_entries WHERE transition_ref = ? AND entry_index > ? ORDER BY entry_index LIMIT ?` \u2192 `SELECT entry_index FROM log_entries WHERE transition_ref = ? AND entry_index >= ? ORDER BY entry_index LIMIT ?`",
+          "must_fail": "`TestObjectReferencesPage/transition-cursor`"
+        },
+        {
+          "id": "MU7b",
+          "file": "host/store/object_references.go",
+          "edit": "`SELECT entry_index FROM log_entries WHERE transition_fn_ref = ? AND entry_index > ? ORDER BY entry_index LIMIT ?` \u2192 `SELECT entry_index FROM log_entries WHERE transition_fn_ref = ? AND entry_index >= ? ORDER BY entry_index LIMIT ?`",
+          "must_fail": "`TestObjectReferencesPage/function-cursor`"
+        },
+        {
+          "id": "MU7c",
+          "file": "host/store/object_references.go",
+          "edit": "`SELECT entry_index FROM log_entries WHERE interpreter_ref = ? AND entry_index > ? ORDER BY entry_index LIMIT ?` \u2192 `SELECT entry_index FROM log_entries WHERE interpreter_ref = ? AND entry_index >= ? ORDER BY entry_index LIMIT ?`",
+          "must_fail": "`TestObjectReferencesPage/interpreter-cursor`"
+        },
+        {
+          "id": "MU8",
+          "file": "host/store/object_references.go",
+          "edit": "`SELECT world_ref FROM worlds WHERE state_root = ? AND world_ref > ? ORDER BY world_ref LIMIT ?` \u2192 `SELECT world_ref FROM worlds WHERE state_root = ? AND world_ref >= ? ORDER BY world_ref LIMIT ?`",
+          "must_fail": "`TestObjectReferencesPage/world-cursor`"
+        },
+        {
+          "id": "MU9a",
+          "file": "host/store/object_references.go",
+          "edit": "`SELECT entry_index FROM log_entries WHERE transition_ref = ? AND entry_index > ? ORDER BY entry_index LIMIT ?` \u2192 `SELECT entry_index FROM log_entries WHERE transition_ref <> ? AND entry_index > ? ORDER BY entry_index LIMIT ?`",
+          "must_fail": "`TestObjectReferencesScope/transition`"
+        },
+        {
+          "id": "MU9b",
+          "file": "host/store/object_references.go",
+          "edit": "`SELECT entry_index FROM log_entries WHERE transition_fn_ref = ? AND entry_index > ? ORDER BY entry_index LIMIT ?` \u2192 `SELECT entry_index FROM log_entries WHERE transition_fn_ref <> ? AND entry_index > ? ORDER BY entry_index LIMIT ?`",
+          "must_fail": "`TestObjectReferencesScope/function`"
+        },
+        {
+          "id": "MU9c",
+          "file": "host/store/object_references.go",
+          "edit": "`SELECT entry_index FROM log_entries WHERE interpreter_ref = ? AND entry_index > ? ORDER BY entry_index LIMIT ?` \u2192 `SELECT entry_index FROM log_entries WHERE interpreter_ref <> ? AND entry_index > ? ORDER BY entry_index LIMIT ?`",
+          "must_fail": "`TestObjectReferencesScope/interpreter`"
+        },
+        {
+          "id": "MU9d",
+          "file": "host/store/object_references.go",
+          "edit": "`SELECT world_ref FROM worlds WHERE state_root = ? AND world_ref > ? ORDER BY world_ref LIMIT ?` \u2192 `SELECT world_ref FROM worlds WHERE state_root <> ? AND world_ref > ? ORDER BY world_ref LIMIT ?`",
+          "must_fail": "`TestObjectReferencesScope/world`"
+        },
+        {
+          "id": "MU10",
+          "file": "host/store/object_references.go",
+          "edit": "`remaining := limit - len(items)` \u2192 `remaining := limit`",
+          "must_fail": "`TestObjectReferencesPage/mixed-kind-bound`"
+        },
+        {
+          "id": "MU12",
+          "file": "host/store/object_references.go",
+          "edit": "`rows, err := s.db.QueryContext(ctx, query, ref.String(), afterKey, remaining)` \u2192 `rows, err := s.db.QueryContext(context.Background(), query, ref.String(), afterKey, remaining)`",
+          "must_fail": "`TestObjectReferencesCancellation/blocked-connection`"
+        },
+        {
+          "id": "MU13",
+          "file": "host/store/object_references.go",
+          "edit": "`kind < after.Kind` \u2192 `kind <= after.Kind`",
+          "must_fail": "`TestObjectReferencesPage/within-kind`"
+        },
+        {
+          "id": "MU14",
+          "file": "host/store/object_references.go",
+          "edit": "`SELECT entry_index FROM log_entries WHERE transition_ref = ? AND entry_index > ? ORDER BY entry_index LIMIT ?` \u2192 `SELECT entry_index FROM log_entries WHERE transition_ref = ? AND entry_index > ? ORDER BY entry_index DESC LIMIT ?`",
+          "must_fail": "`TestObjectReferencesPage/numeric-order`"
+        },
+        {
+          "id": "MU25",
+          "file": "host/store/object_references.go",
+          "edit": "`afterKey = int64(-1)` \u2192 `afterKey = int64(0)`",
+          "must_fail": "`TestObjectReferencesPage/index-zero`"
+        }
+      ]
+    },
+    {
+      "id": "M3a",
+      "title": "read seam and renderer",
+      "estimated_added_production_loc": 85,
+      "files": [
+        "host/daemon/daemon.go",
+        "host/daemon/read_deadline_test.go",
+        "host/workbench/render.go",
+        "host/workbench/render_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/daemon ./host/workbench -run '^(TestReferenceView|TestWorkbenchObjectProvenanceWalk|TestFrozenV1RouteTableMatchesMux)$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store ./host/daemon ./host/workbench"
+      ],
+      "mutations": [
+        {
+          "id": "MU21",
+          "file": "host/workbench/render.go",
+          "edit": "`none recorded in these entry/world fields` \u2192 DELETE",
+          "must_fail": "`TestReferenceView/empty`"
+        }
+      ]
+    },
+    {
+      "id": "M3b",
+      "title": "checked first object page",
+      "estimated_added_production_loc": 145,
+      "files": [
+        "host/daemon/workbench.go",
+        "host/daemon/workbench_test.go",
+        "host/daemon/workbench_references_test.go",
+        "host/workbench/render.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/daemon ./host/workbench -run '^(TestWorkbenchReferenceFirstPage|TestWorkbenchMissingReferenceSource|TestWorkbenchReferenceMismatch|TestWorkbenchReferenceUnavailable|TestWorkbenchReferenceCancellation|TestWorkbenchObjectProvenanceWalk|TestFrozenV1RouteTableMatchesMux|TestReferenceView)$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store ./host/daemon ./host/workbench"
+      ],
+      "mutations": [
+        {
+          "id": "MU15a",
+          "file": "host/daemon/workbench.go",
+          "edit": "`host/daemon/workbench.go`: `if !entryOK {` \u2192 `if false {`",
+          "must_fail": "`TestWorkbenchMissingReferenceSource/log`"
+        },
+        {
+          "id": "MU15b",
+          "file": "host/daemon/workbench.go",
+          "edit": "`host/daemon/workbench.go`: `if !worldOK {` \u2192 `if false {`",
+          "must_fail": "`TestWorkbenchMissingReferenceSource/world`"
+        },
+        {
+          "id": "MU16",
+          "file": "host/daemon/workbench.go",
+          "edit": "`host/daemon/workbench.go`: `if actual != ref {` \u2192 `if false {`",
+          "must_fail": "`TestWorkbenchReferenceMismatch`"
+        },
+        {
+          "id": "MU17",
+          "file": "host/daemon/workbench.go",
+          "edit": "`host/daemon/workbench.go`: `writeWorkbenchError(w, http.StatusServiceUnavailable, \"ReferenceIndexUnavailable\", referenceIndexUnavailableMessage)` \u2192 `writeWorkbenchError(w, http.StatusOK, \"ReferenceIndexUnavailable\", referenceIndexUnavailableMessage)`",
+          "must_fail": "`TestWorkbenchReferenceUnavailable`"
+        },
+        {
+          "id": "MU18",
+          "file": "host/daemon/workbench.go",
+          "edit": "`host/daemon/workbench.go`: `WorkbenchPageLimit+1` \u2192 `WorkbenchPageLimit`",
+          "must_fail": "`TestWorkbenchReferenceFirstPage/101`"
+        },
+        {
+          "id": "MU19",
+          "file": "host/daemon/workbench.go",
+          "edit": "`host/daemon/workbench.go`: `len(refs) > WorkbenchPageLimit` \u2192 `len(refs) >= WorkbenchPageLimit`",
+          "must_fail": "`TestWorkbenchReferenceFirstPage/100`"
+        },
+        {
+          "id": "MU22",
+          "file": "host/daemon/workbench.go",
+          "edit": "`host/daemon/workbench.go`: `d.reads.ObjectReferences(ctx, ref, nil, WorkbenchPageLimit+1)` \u2192 `d.reads.ObjectReferences(context.Background(), ref, nil, WorkbenchPageLimit+1)`",
+          "must_fail": "`TestWorkbenchReferenceCancellation`"
+        }
+      ]
+    },
+    {
+      "id": "M4a",
+      "title": "strict cursor codec",
+      "estimated_added_production_loc": 105,
+      "files": [
+        "host/daemon/workbench_reference_cursor.go",
+        "host/daemon/workbench_reference_cursor_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/daemon -run '^TestWorkbenchReferenceCursor$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store ./host/daemon ./host/workbench"
+      ],
+      "mutations": [
+        {
+          "id": "MU26",
+          "file": "host/daemon/workbench_reference_cursor.go",
+          "edit": "`v != 1` \u2192 `false`",
+          "must_fail": "`TestWorkbenchReferenceCursor/version`"
+        }
+      ]
+    },
+    {
+      "id": "M4b",
+      "title": "continuation and real-question walk",
+      "estimated_added_production_loc": 125,
+      "files": [
+        "host/daemon/workbench.go",
+        "host/daemon/workbench_references_test.go",
+        "host/daemon/route_table_test.go",
+        "host/workbench/render.go",
+        "host/workbench/render_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/daemon ./host/workbench -run '^(TestWorkbenchReferencePaging|TestWorkbenchReferenceCursor|TestWorkbenchReferenceWalk|TestWorkbenchReferenceGrammar|TestWorkbenchObjectProvenanceWalk|TestFrozenV1RouteTableMatchesMux|TestReferenceView)$' -v",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store ./host/daemon ./host/workbench"
+      ],
+      "mutations": [
+        {
+          "id": "MU20",
+          "file": "host/daemon/workbench.go",
+          "edit": "`refs[WorkbenchPageLimit-1]` \u2192 `refs[WorkbenchPageLimit]`",
+          "must_fail": "`TestWorkbenchReferencePaging/no-skipped-lookahead`"
+        }
+      ]
+    }
+  ],
+  "final_acceptance": [
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/store ./host/daemon ./host/workbench",
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -count=1 ./...",
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; ./scripts/verify_ail.sh"
+  ],
+  "blocked_not_planned": []
+}
