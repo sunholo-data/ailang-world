@@ -1,7 +1,7 @@
 # w-store-object-reference-index — checked reverse edges for object pages
 
 Status: DESIGN, iteration 202, queue row 103. Base measured: `7fc05de` (V0).
-Estimate: about one day, four independently testable milestones. This document is the
+Estimate: 2-3 days across four independently testable milestones (M1/M2 ~100-150 prod lines + full mutation coverage each, M3/M4 ~80-150 prod lines + seam/render/continuation coverage each); if M2's measured cost or M3's seam churn exceeds this, split M3/M4 further per the existing splitting clause rather than compressing the mutation table or skipping the M4 real-question walk. This document is the
 only deliverable; the prototype uses Go overlays under `/tmp`, not repository code edits.
 
 ## Problem
@@ -154,7 +154,7 @@ row-23 policy value. Once row 23 changes Open to take ctx, derive the provisioni
 from that caller, so the earlier deadline wins; integrate under its B1 startup owner and B7
 connection-wait rule. Alternative: Background per query or a freshly invented reverse-read
 budget. Rejected: it would defeat the request deadline or bypass D-WORLD-40. Evidence: existing
-`readCtx` and provisioning code (V2, V5), pending table (V7).
+`readCtx` (V5, V16) and provisioning code (V2), pending table (V7).
 
 ## Design
 
@@ -209,7 +209,7 @@ func (s *Store) ObjectReferences(ctx context.Context, ref hashref.HashRef,
 ```
 
 Validate ref, cursor shape and `1 <= limit <= 500` at the store boundary. Use the existing
-`InvalidLimitError` for limit rejection (V2); introduce a typed invalid-cursor error. Nil cursor
+`InvalidLimitError` for limit rejection (V2, V16); introduce a typed invalid-cursor error. Nil cursor
 means before every relation, including entry index 0. Reject unknown kinds, negative log
 indices and invalid world refs; inactive fields must be zero. A syntactically valid cursor
 need not identify an existing row. No OFFSET, rowid cursor, wildcard ref matching or payload.
@@ -457,6 +457,7 @@ full executable instrument so the measurements do not depend on retained `/tmp` 
 | V14 | `AILANG_BIN=$HOME/.pinned-ailang/ailang go test -overlay /tmp/world103/overlay.json -run '^$' ./host/store` after running the appendix reconstruction verbatim | Exit 0; reconstructed overlay compiles, including the test probe |
 | V13 | `sed -n '310,415p' host/daemon/workbench.go` | Selected entry uses its own GetLogEntry; timeline uses a separate from/offset loop and bounded next arithmetic |
 | V12 | `AILANG_BIN=$HOME/.pinned-ailang/ailang go test -race -count=1 -timeout 90s ./host/store -run '^(TestObjectsBySemanticIDNonUniqueOrderedAndPaged\|TestLookupIndexGuardReadOnlyThenProvision\|TestLookupIndexIncompatibleIsRefused)$'` | Exit 0; `ok .../host/store 1.510s` |
+| V16 | `rg -n 'func \(d \*Daemon\) readCtx|ctx, cancel := d.readCtx\(r\)' host/daemon/handlers.go host/daemon/workbench.go; rg -n 'type InvalidLimitError' host/store/scan.go` (controller, quorum r1 premise check) | `handlers.go:276 func (d *Daemon) readCtx(r *http.Request) (context.Context, context.CancelFunc)` — its body is the `WithTimeout(r.Context(), d.readDeadline)` quoted in V5; callers `handlers.go:356/389/450` and `workbench.go:230 ctx, cancel := d.readCtx(r)`; `scan.go:14 type InvalidLimitError struct`. Both helpers the design names exist at `7fc05de`. |
 
 Not measured: final HTML/point-check latency, final implementation cancellation and mutation
 kills, and an end-to-end real incident walk. These need implementation and an identified real
