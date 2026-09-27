@@ -1,0 +1,103 @@
+{
+  "sprint_id": "w-kernel-exports-carry-no-contract",
+  "design_doc": "design_docs/planned/w-kernel-exports-carry-no-contract.md",
+  "base": "approved design b3e237f plus uncommitted designer prototype read-only",
+  "scope": "M1-M5 as one landing commit; M6 release preparation blocked on human 0.1.1 versus 0.2.0 decision",
+  "environment": [
+    "export AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang",
+    "export PATH=\"$(dirname \"$AILANG_BIN\"):$PATH\""
+  ],
+  "landing_strategy": {
+    "commits": 1,
+    "boundary_after": "M5",
+    "reason": "The six-site verified-floor inventory and package skip pins must land together. A source/projection-only rehearsal made verify_ail.sh rc=1 (16 proofs against floor 11).",
+    "boundary_acceptance": [
+      "./scripts/verify_ail.sh",
+      "go vet ./...",
+      "python3 scripts/test_kernel_contracts.py",
+      "python3 scripts/test_world_contract_history.py",
+      "go test ./host/verifygate ./host/pkgproj ./host/runbook -count=1",
+      "./scripts/verify_go.sh (CI outside sandbox; includes -race)"
+    ],
+    "readings": [
+      {
+        "state": "pristine HEAD",
+        "verify_ail_rc": 0,
+        "go_vet_rc": 0,
+        "verified": 11,
+        "named_tests": 40,
+        "package_property_skips": 4
+      },
+      {
+        "state": "experimental source and projection only; not a commit boundary",
+        "verify_ail_rc": 1,
+        "verify_ail_reason": "expected exactly 11 proven world/ contracts, got 16",
+        "go_vet_rc": 0
+      },
+      {
+        "state": "complete M1-M5 prototype candidate; only new commit boundary",
+        "verify_ail_rc": 0,
+        "go_vet_rc": 0,
+        "kernel_controls_rc": 0,
+        "affected_go_packages_rc": 0,
+        "verified": 16,
+        "named_tests": 40,
+        "package_property_skips": 9,
+        "uncontracted_exports": 3
+      }
+    ]
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Prove the two shared identity predicates",
+      "files": ["world/contracts.ail", "packages/world-core/world/contracts.ail"],
+      "checkpoint": ["\"$AILANG_BIN\" ai-check world/contracts.ail"],
+      "acceptance": ["python3 scripts/test_kernel_contracts.py: both identities verified; false ensures and digest-only body mutants counterexample"],
+      "mutations": ["C1", "C2"]
+    },
+    {
+      "id": "M2",
+      "title": "Prove authorization and transition laws; document exact compiler exemptions",
+      "files": ["world/contracts.ail", "world/transitions.ail", "world/logepoch.ail", "packages/world-core/world/contracts.ail", "packages/world-core/world/transitions.ail", "packages/world-core/world/logepoch.ail", "packages/world-core/_smoke.ail"],
+      "checkpoint": ["\"$AILANG_BIN\" ai-check world/contracts.ail", "\"$AILANG_BIN\" ai-check world/transitions.ail", "\"$AILANG_BIN\" ai-check world/logepoch.ail"],
+      "acceptance": ["python3 scripts/test_kernel_contracts.py: five verified laws, five false-ensures counterexamples, five body counterexamples, three exemption diagnostics"],
+      "mutations": ["C3", "C4", "C5", "E1", "E2", "E3"]
+    },
+    {
+      "id": "M3",
+      "title": "Install compiler, quality, and history controls",
+      "files": ["scripts/test_kernel_contracts.py", "scripts/test_world_contract_history.py", "scripts/check_world_contract_quality.py"],
+      "acceptance": ["python3 scripts/test_kernel_contracts.py", "python3 scripts/test_world_contract_history.py"],
+      "mutations": ["Q1", "Q2", "Q3", "H1", "H2", "H3", "H4"]
+    },
+    {
+      "id": "M4",
+      "title": "Raise the verified inventory and refresh the unpublished package packet",
+      "files": ["world/contracts.ail", "world/transitions.ail", "world/logepoch.ail", "packages/world-core/world/contracts.ail", "packages/world-core/world/transitions.ail", "packages/world-core/world/logepoch.ail", "scripts/verify_ail.sh", "scripts/verify_world_package.sh", "scripts/world_package_ready_packet.golden.json", "docs/SELF_MOD_PUBLISH.md", "host/verifygate/module_manifest_gate_test.go"],
+      "acceptance": ["./scripts/verify_ail.sh", "go test ./host/verifygate ./host/pkgproj ./host/runbook -count=1"],
+      "mutations": ["F1", "F2", "F3"]
+    },
+    {
+      "id": "M5",
+      "title": "Wire PUB011 parser, monotone history ratchet, and CI",
+      "files": ["scripts/verify_world_package.sh", "scripts/check_world_contract_quality.py", "scripts/test_kernel_contracts.py", "scripts/test_world_contract_history.py", ".github/workflows/ci.yml"],
+      "acceptance": ["\"$AILANG_BIN\" pkg quality --json packages/world-core", "python3 scripts/test_kernel_contracts.py", "python3 scripts/test_world_contract_history.py", "./scripts/verify_ail.sh", "go vet ./...", "go test ./host/verifygate ./host/pkgproj ./host/runbook -count=1", "./scripts/verify_go.sh (CI outside sandbox; includes -race)"],
+      "mutations": ["Q1", "Q2", "Q3", "H1", "H2", "H3", "H4"]
+    }
+  ],
+  "ci_commands_to_keep": [
+    "python3 scripts/check_world_contract_quality.py --event \"$RATCHET_EVENT\"",
+    "AILANG_BIN=\"$WORLD_PKG_AILANG_BIN\" python3 scripts/test_kernel_contracts.py",
+    "./scripts/verify_ail.sh (includes scripts/verify_world_package.sh and PUB011 quality parser)",
+    "./scripts/verify_go.sh (go build ./..., evidence test, go test ./..., and go test ./... -race)"
+  ],
+  "sandbox_note": "Pristine ./scripts/verify_go.sh returned rc=1 only at socket bind permission denials; UNINFORMATIVE UNDER SANDBOX, neither pass nor fail.",
+  "release_guard": "Keep world/core manifest at 0.1.0 only as an unpublished local rehearsal; do not publish, bump version, rewrite published 0.1.0 fixtures, or change cmd/world-publish in M1-M5.",
+  "blocked_not_planned": [
+    {
+      "id": "M6",
+      "prerequisite": "Human release decision: 0.1.1 versus 0.2.0; then separately plan version, CHANGELOG, publisher fences, and attended release."
+    }
+  ]
+}
