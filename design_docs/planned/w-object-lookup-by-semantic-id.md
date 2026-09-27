@@ -1,6 +1,6 @@
 # w-object-lookup-by-semantic-id — Find an object by semanticId without a log scan (row 96)
 
-**Status**: Planned — **REVISION 1** after quorum round 1 (BLOCKED 2/2 present; see "Quorum log"). Design + prototype (iteration 201, designer `claude:claude-opus-5-5`). The r0 prototype was measured in this worktree and then moved out by the controller to `~/.ailang/state/world-iter201/prototype/` (see "Prototype manifest"). The r1 changes (the index guard and dropping `next`) are **designed, not prototyped**. It is a measured draft, not a landing.
+**Status**: Planned — **REVISION 2 (final; narrow-refinement carve-out after quorum round 2, reviewer fixes applied verbatim, no r3 quorum)**. Round 1 and round 2 were each BLOCKED 2/2 present; see "Quorum log". Design + prototype (iteration 201, designer `claude:claude-opus-5-5`). The r0 prototype was measured in this worktree and then moved out by the controller to `~/.ailang/state/world-iter201/prototype/` (see "Prototype manifest"). The r1/r2 changes (the index guard and its strict compatibility rule, dropping `next`, the `{name...}` sketch spelling) are **designed, not prototyped**. It is a measured draft, not a landing.
 **Item**: queue row 96 of `design_docs/world-mission.md` (`w-object-lookup-by-semantic-id`). The row closes finding F-1 of `design_docs/verification/w-1-0-value-demonstration.md` and rules on F-2.
 **Clauses**: clause-5 (*"on ≥3 REAL 'why did X happen' questions, a provenance walk yields the verified answer in ≤5 minutes each, where the pre-World method was grep/log archaeology"*). The route is read-only and adds no effect, so no other clause is touched.
 **Estimate**: ~1d as the row says. Three milestones of ≤150 production lines each (M1 store query + index provisioning + index guard, M2 route + 503 guard class, M3 frozen-table extension: sketch, CLI verb, counts). They are sized from the r0 prototype's measured lines (V20), plus a labelled r1 estimate delta (§c).
@@ -93,7 +93,13 @@ doc + quorum"). The argument:
 **What the extension changes (M3):**
 
 - The canonical frozen table is `routes()` in `design_docs/sketches/worlddapi.ail` (V8). M3 adds
-  `{ method: "GET", path: "/v1/objects/by-semantic-id/{name}" }` to it. **Exactly what row 96 adds**
+  `{ method: "GET", path: "/v1/objects/by-semantic-id/{name...}" }` to it (r2: the path is spelled
+  exactly as the mux pattern, `{name...}`, so AC-9's parity test compares like with like). **The
+  same fix applies to the sibling registry row.** `worlddapi.ail:78` lists
+  `{ method: "GET", path: "/v1/registry/{name}" }`, while the mux pattern is
+  `GET /v1/registry/{name...}` (`daemon.go:643`, V28). M3 changes line 78 to `{name...}` too.
+  Otherwise AC-9 would red on a pre-existing spelling drift, not on a real route difference.
+  **Exactly what row 96 adds**
   (corrected in r1; r0 overclaimed "no new function, contract or type"):
   - **one route** (the mux pattern, plus its `routes()` row, plus the `object find` CLI verb);
   - **one Go response struct**, `objectPageResponse{Items []objectResponse}`. It has the same
@@ -158,7 +164,7 @@ SELECT hash_ref, interface_hash_ref, semantic_id, provenance
 
 - **Returns the existing `store.Object` with `Payload` nil** (no new type). The store enforces its
   own bound, `1 ≤ limit ≤ MaxSemanticIDPage = 500`, with the existing `InvalidLimitError`, the
-  same kernel-owned-bound idiom as `ScanUnreadableLog` (V12).
+  same kernel-owned-bound idiom as `ScanUnreadableLog` (V27).
 - **No payload column.** The query never reads `payload`, so a page's allocation is bounded by
   metadata only (Decision 7 of `w-worldd-m2`). The walker fetches the payload of the one object it
   wants with the existing `object get --payload`.
@@ -167,7 +173,7 @@ SELECT hash_ref, interface_hash_ref, semantic_id, provenance
   incompatible", the method returns `*LookupIndexUnavailableError` **without executing the lookup
   query**. It never falls back to a table scan.
 - It parses every hash column with `hashref.Parse`. A malformed stored ref is an error (500), the
-  same as `GetObject` (V12).
+  same as `GetObject` (V27).
 - `readStore` gains a sixth method. The seam comment's "five distinct getters" becomes six
   (`daemon.go:355-372`, V13).
 
@@ -212,14 +218,26 @@ id such as `world/journal-intent/v1`, which has one object per commit (MU7).
 
   How that is realized:
   - **Where the check lives: once per handle, at `Open` / `OpenReadOnly`, cached on the `Store`.**
-    `verifyLookupIndex` reads `PRAGMA index_info('objects_by_semantic_id')` and the index's
-    `sqlite_master.tbl_name`. It accepts only table `objects` with columns exactly
-    `[semantic_id, hash_ref]` in that order. Any other shape, including a same-named index on
-    different columns, is "incompatible". The verdict is stored in an immutable field set before
-    `Open` returns. **Why not per call:** a per-call check would add one `sqlite_master`/PRAGMA
+    The verdict is stored in an immutable field set before `Open` returns.
+  - **Compatibility rule (r2, quorum objection applied verbatim):** Accept only a non-partial
+    index on objects whose two key columns, inspected through PRAGMA index_list and PRAGMA
+    index_xinfo, are semantic_id and hash_ref in that order with BINARY collation and the declared
+    ascending ordering. All other definitions are incompatible; writable Open fails without
+    modifying them, and read-only lookup refuses before executing SQL.
+
+    Mechanically (probed, V29): `verifyLookupIndex` runs `PRAGMA index_list('objects')` and requires
+    a row named `objects_by_semantic_id` with `partial = 0`. Listing *objects'* indexes is what
+    establishes "on objects", so a same-named index on another table is absent here. It then runs
+    `PRAGMA index_xinfo('objects_by_semantic_id')`, keeps the rows with `key = 1`, and requires
+    exactly two: `(seqno 0, name semantic_id, coll BINARY, desc 0)` and
+    `(seqno 1, name hash_ref, coll BINARY, desc 0)`. **The probe shows why both PRAGMAs are needed:**
+    a partial index `… WHERE semantic_id <> ''` has an `index_xinfo` byte-identical to the accepted
+    one. Only `index_list.partial = 1` tells them apart (V29). A `COLLATE NOCASE` key shows
+    `coll = NOCASE`, and a `hash_ref DESC` key shows `desc = 1` (V29). The rule ignores the
+    `key = 0` auxiliary rowid row that `index_xinfo` always appends. **Why not per call:** a per-call check would add one `sqlite_master`/PRAGMA
     round trip to every request, inside the read deadline, to detect a change that cannot happen
     under a writable handle. The store is single-writer (writer lock), and no code drops indexes
-    (V12's DELETE census; there is no `DROP INDEX` in production code). The one stale case is a
+    (V12's DELETE census; there is no `DROP INDEX` in production code, V27). The one stale case is a
     read-only handle whose store another process provisions later. It keeps answering 503 until it
     is reopened, which is explicit, not silent. The cost is one PRAGMA per open and zero per call.
   - **Writable open:** provision (bounded, above), then verify. A provisioning error, a deadline
@@ -325,9 +343,9 @@ vector (B1, B6). The index check itself is host I/O (a PRAGMA), so it belongs in
 
 | # | milestone | production files | r0 measured prod LOC (V20) | **r1 delta (ESTIMATE, not prototyped)** | r1 est. total | depends on |
 |---|---|---|---|---|---|---|
-| M1 | store query + bounded index provisioning + cached index guard | `host/store/objects_by_semantic_id.go` (new), `host/store/store.go` (call `provisionLookupIndex`/`verifyLookupIndex` from `Open`/`OpenReadOnly`; one `Store` field), `host/store/schema.sql` (comment only) | 63 (56 store file + 7 schema) | **+~45**: `LookupIndexUnavailableError` ~10, `provisionLookupIndex` with deadline ~12, `verifyLookupIndex` (PRAGMA index_info + tbl_name) ~18, guard + test hook ~5; **−6** schema DDL moved out | **~102** | — |
+| M1 | store query + bounded index provisioning + cached index guard | `host/store/objects_by_semantic_id.go` (new), `host/store/store.go` (call `provisionLookupIndex`/`verifyLookupIndex` from `Open`/`OpenReadOnly`; one `Store` field), `host/store/schema.sql` (comment only) | 63 (56 store file + 7 schema) | **+~45**: `LookupIndexUnavailableError` ~10, `provisionLookupIndex` with deadline ~12, `verifyLookupIndex` ~18 (r1) **→ ~30 (r2: `index_list` partial check + `index_xinfo` key/coll/desc checks)**, guard + test hook ~5; **−6** schema DDL moved out | **~114** (r2; was ~102 in r1) | — |
 | M2 | read route + seam + 503 guard class | `host/daemon/handlers.go` (handler, `objectPageResponse`, 503 mapping), `host/daemon/daemon.go` (mux line, `readStore` method), `design_docs/sketches/worlddapi.ail` (ADT variant + arm + vector) | 64 (62 handlers + 2 daemon.go) | **+~8** (`errors.As` → `writeAPIError(…"LookupIndexUnavailable"…, 503)`); **−4** (`next` field + assignment) | **~68** Go, + ~3 `.ail` lines | M1 |
-| M3 | frozen-table extension | `design_docs/sketches/worlddapi.ail` (+2 route rows), `cmd/ailang-worldd/cli.go` + `main.go` usage (`object find`), comment counts in `daemon.go` | 36 (34 cli + 2 main) | **+~6** comment-count edits; 0 for `next` (the CLI never read it) | **~42** | M2 |
+| M3 | frozen-table extension | `design_docs/sketches/worlddapi.ail` (+2 route rows), `cmd/ailang-worldd/cli.go` + `main.go` usage (`object find`), comment counts in `daemon.go` | 36 (34 cli + 2 main) | **+~6** comment-count edits; 0 for `next` (the CLI never read it); r2: `worlddapi.ail:78` `{name}` → `{name...}` is one `.ail` line, not Go | **~42** Go, + ~3 `.ail` lines | M2 |
 
 Every milestone stays ≤150. The r1 deltas are the designer's line estimates for code this round did
 **not** write; the M1/M2 executor must report the measured numbers. Moving the sketch `ApiError`
@@ -352,12 +370,12 @@ mutation per branch.
 | AC-6 | refusals: malformed `after` → 400; non-integer `limit` → 400; `/v1/objects/by-semantic-id` without a name does not reach the lookup | `TestObjectsBySemanticIDRoute` | MU9 (after unparsed) / MU10 (limit error ignored) → route test red, one each |
 | AC-7 | a writable open (fresh or existing-without-index) provisions the index, and the plan uses it | `TestObjectsBySemanticIDUsesIndex`, `TestSemanticIDIndexBuiltOnWritableReopen` | MU6 (provisioning statement deleted) / MU7 (single-column index) → index tests red. In r0 the DDL was in `schema.sql` and MU6/MU7 mutated it there; r1 mutates `provisionLookupIndex` |
 | AC-8 | **store-level result equivalence only** (r1): the *unguarded* lookup SQL returns byte-identical rows with and without the index. This is not a serving fallback | `TestObjectsBySemanticIDUsesIndex` (r1: runs `objectsBySemanticIDSQL` directly after DROP INDEX, since the guarded method would now refuse) | recorded as a property, not killed by a mutation |
-| AC-9 | (M3) the mux's `/v1` patterns equal `routes()` in the sketch, count 9 | NOT PROTOTYPED | M3 executor must show: delete the mux line → red; delete a sketch row → red |
+| AC-9 | (M3) the mux's `/v1` patterns equal `routes()` in the sketch, **spelled identically** (both `{name...}` rows: the new route and the corrected `/v1/registry/{name...}`, V28), count 9 | NOT PROTOTYPED | M3 executor must show: delete the mux line → red; delete a sketch row → red; revert `worlddapi.ail:78` to `{name}` → red |
 | AC-12 | the new route is in the shared read-route harness, so the existing deadline (503) and sanitization (500) gates cover it | `seedReadRoutes` + `blockingStore`/`recordingStore`/`failingStore` overrides in `read_deadline_test.go` | MU14, MU15, MU16 |
 | AC-10 | store error → 500 sanitized; deadline → 503 | `TestObjectsBySemanticIDRouteStoreErrors` (fault-injecting `readStore` wrapper, the V13 seam's purpose) | MU14 / MU16 → deadline / sanitize tests red |
 | AC-11 | walk re-timed at N=10,000: route locate p50 ≤ 1 s and far below the scan | `TestWalkRetimedAtScale` (env-gated, `WORLD_WALK_N`) | reported as measurement, not a gate (see §Measurements) |
 | AC-13 | **(r1, astra's named test)** an unindexed v3 store opened **read-only** answers `*LookupIndexUnavailableError`, and **no lookup query executes** (a test-only hook, `objectsBySemanticIDBeforeQuery`, is called 0 times; precedent `readObjectBetweenStatements`, V26). Then a **writable** open provisions the index, and a fresh read-only open's lookup succeeds and `EXPLAIN QUERY PLAN` shows `USING INDEX objects_by_semantic_id` | `TestLookupIndexGuardReadOnlyThenProvision` | **MU20** (guard removed: verdict ignored) → error expected, got rows, hook count 1 → red. **MU21** (`OpenReadOnly` skips `verifyLookupIndex`, zero-value verdict "present") → same red |
-| AC-14 | (r1) an **incompatible** same-named index (`objects(semantic_id)` only) is refused: read-only → the AC-13 error; writable `Open` → returns an error and leaves the index untouched | `TestLookupIndexIncompatibleIsRefused` | **MU22** (verify checks existence only, not columns) → read-only lookup runs; writable `Open` succeeds → red |
+| AC-14 | (r1, **extended r2**) incompatible same-named definitions are refused, one fixture each: (a) `objects(semantic_id)` only; (b) **partial** `objects(semantic_id, hash_ref) WHERE semantic_id <> ''`; (c) **non-BINARY collation** `objects(semantic_id COLLATE NOCASE, hash_ref)`; (d) `objects(semantic_id, hash_ref DESC)`. **For each fixture:** writable `Open` returns an error and the index's `sqlite_master.sql` is byte-unchanged afterwards (not modified); a read-only open's lookup returns `*LookupIndexUnavailableError`; the lookup hook `objectsBySemanticIDBeforeQuery` is called **0** times. The successful provision-and-query-plan test for the accepted definition (AC-7 / AC-13's second half) is **retained** | `TestLookupIndexIncompatibleIsRefused` (table-driven over (a)–(d)) | **MU22** (column-name check removed) → (a) red. **MU26** (`index_list.partial` check removed) → (b) red: writable `Open` succeeds, read-only lookup runs, hook = 1. **MU27** (`coll = BINARY` check removed) → (c) red, same symptoms. **MU28** (`desc = 0` check removed) → (d) red, same symptoms. **MU29** (writable `Open` "repairs" by `DROP INDEX` + recreate) → the byte-unchanged `sqlite_master.sql` assertion reds on (a)–(d). All **designed, not run; executor runs them and records the observed failures** |
 | AC-15 | (r1) provisioning failure is surfaced: with `lookupIndexProvisionDeadline` forced to an already-expired value (test seam), writable `Open` returns an error wrapping `context.DeadlineExceeded` and no `*Store` | `TestLookupIndexProvisionFailureIsSurfaced` | **MU23** (provision error discarded: `_ = provisionLookupIndex(…)`) → `Open` succeeds → red |
 | AC-16 | (r1) route mapping: a `readStore` returning `*LookupIndexUnavailableError` → **503**, class `LookupIndexUnavailable`, the fixed remediation text, no host detail; the class/status equal the sketch's new `httpStatus` arm (parsed by `sketchHTTPStatusVectors`) | `TestLookupIndexUnavailableIs503` (fault-injecting `readStore` wrapper; production cannot reach this branch through `New`, V23) | **MU24** (mapping deleted → falls to `writeInternalError`) → 500 `Internal` → red; **MU25** (sketch arm `=> 503` edited to `=> 500`) → mirror assertion red |
 
@@ -421,7 +439,7 @@ then restores the file from a scratch backup. Output is in `mutations.log` next 
 | MU19 | **green control**: comment-only edit | — (both packages `ok`) | none, as required |
 
 **r0 battery: 18 killed, 0 survived, 1 green control stayed green.** **r1 mutations MU13r and
-MU20–MU25 (§d AC-5, AC-13..AC-16) are DESIGNED, NOT RUN.** This round edits the doc only, and the
+MU20–MU25 (§d AC-5, AC-13..AC-16) and r2 mutations MU26–MU29 (§d AC-14) are DESIGNED, NOT RUN.** This round edits the doc only, and the
 M1/M2 executor must run them and record the observed reds. MU3 survives the *daemon* package alone
 but is killed in the store package, which is where the predicate lives. **Note on MU4:** on the
 first battery MU4 **survived the store package**. The paging loop accepted a 7-item page for
@@ -490,6 +508,9 @@ unmodified tree even after the prototype's edits). Scratch = `~/.ailang/state/wo
 | V24 | `GET /v1/log`'s list shape is an `{"items":[…]}` envelope with no `next` (refutes objection 2's raw-array premise) | `git show c30b967:host/daemon/handlers.go \| grep -n "type logRangeResponse\|Items \[\]logEntryResponse\|logRangeResponse{Items: items}"` | `63: type logRangeResponse struct {`, `64: Items []logEntryResponse` with struct tag `json:"items"`, `492: writeJSON(w, http.StatusOK, logRangeResponse{Items: items})` |
 | V25 | the sketch's `ApiError` has `Timeout` → 503 (the arm pattern the new variant follows) | `git show c30b967:design_docs/sketches/worlddapi.ail \| grep -n "\| Timeout(string)\|Timeout(_) => 503"` | `96: \| Timeout(string)`, `113: Timeout(_) => 503` |
 | V26 | a test-only hook precedent exists in the store | `git show c30b967:host/store/read_object.go \| grep -n "var readObjectBetweenStatements\|test-only scheduling input"` | `35: … is a test-only scheduling input`, `38: var readObjectBetweenStatements func()` |
+| V27 | **(r2)** B3's precedents: `GetObject` parses with `hashref.Parse`; `ScanUnreadableLog` enforces its bound with `InvalidLimitError`; no production code drops an index | `git show c30b967:host/store/store.go \| awk 'NR>=475 && NR<=506' \| grep -n "func (s \*Store) GetObject\|hashref.Parse"`; `git show c30b967:host/store/scan.go \| grep -n "func (s \*Store) ScanUnreadableLog\|invalidScanLimit(op, limit)\|return &InvalidLimitError"`; `git grep -n "DROP INDEX\|CREATE TABLE IF NOT EXISTS objects" c30b967 -- host cmd ':!*_test.go'` | `GetObject` opens at `store.go:475` and calls `hashref.Parse(ifaceText)` at `store.go:493`. `scan.go:53 func (s *Store) ScanUnreadableLog`, which calls `invalidScanLimit(op, limit)` at `:55`, which returns `&InvalidLimitError{…}` at `:46`. So the bound is enforced through a helper, and `ScanUnreadableWorlds` shares it at `:95`. `DROP INDEX`: **no match**. **Positive control, same command:** `schema.sql:13 CREATE TABLE IF NOT EXISTS objects (` |
+| V28 | **(r2)** the sketch spells the registry route `{name}`, and the mux spells it `{name...}` | `git show c30b967:design_docs/sketches/worlddapi.ail \| grep -n 'registry/{name'`; `git show c30b967:host/daemon/daemon.go \| grep -n 'GET /v1/registry/{name...}'` | `78: { method: "GET", path: "/v1/registry/{name}" },`; `643: mux.HandleFunc("GET /v1/registry/{name...}", d.handleRegistry)` |
+| V29 | **(r2)** `PRAGMA index_list` reports `partial`, and `PRAGMA index_xinfo` reports `desc`, `coll`, `key` | scratch probe: `sqlite3 pragma-probe.db "CREATE TABLE objects (hash_ref TEXT PRIMARY KEY, semantic_id TEXT NOT NULL); CREATE INDEX good ON objects(semantic_id, hash_ref); CREATE INDEX part ON objects(semantic_id, hash_ref) WHERE semantic_id <> ''; CREATE INDEX nocase ON objects(semantic_id COLLATE NOCASE, hash_ref); CREATE INDEX descd ON objects(semantic_id, hash_ref DESC);"`, then `sqlite3 -header … "PRAGMA index_list('objects');"` and `"PRAGMA index_xinfo('<i>');"` for each (`sqlite3` 3.51.0; the store's driver is `modernc.org/sqlite v1.54.0`, go.mod:7. **The executor must re-assert these columns through the driver in AC-14**, since the CLI probe is not the production SQLite) | `index_list`: header `seq\|name\|unique\|origin\|partial`; `part … partial=1`, `good`/`nocase`/`descd` `partial=0`. `index_xinfo(good)`: `0\|1\|semantic_id\|0\|BINARY\|1`, `1\|0\|hash_ref\|0\|BINARY\|1`, `2\|-1\|\|0\|BINARY\|0` (header `seqno\|cid\|name\|desc\|coll\|key`). `index_xinfo(part)`: **identical to `good`**. `index_xinfo(nocase)`: `semantic_id … NOCASE`. `index_xinfo(descd)`: `hash_ref` `desc=1` |
 | V22 | gates on the prototype | `go vet ./...`; `go test -count=1 -run '^$' ./...`; `go test -race -count=1 ./host/store/ ./host/daemon/ ./cmd/ailang-worldd/`; `./scripts/verify_ail.sh`; `go test -count=1 ./...` (all with `AILANG_BIN` pinned, `GOCACHE`/`TMPDIR` outside the tree) | vet clean; compile fence clean; gofmt clean on touched files; `-race`: store `ok` 15.8s, daemon `ok` 17.9s, cmd/ailang-worldd `ok` 3.0s; `verify_ail.sh`: "verify gate PASSED: 16 required identities verified, 40 named tests pass". Full suite: **23 ok / 1 FAIL**. The FAIL is `host/broker` `TestOrdinaryOverflowCarriesNoESRCH` ("overflow kill: operation not permitted"), an EPERM on the kill path in a package this prototype does not touch (`git diff --stat c30b967 -- host/broker` is empty). **Re-run alone: `ok host/broker 66.481s`.** It is the same EPERM-under-load family as row 115 (capsule). I did not find a broker-specific row, so it is recorded here and not claimed as a known flake |
 
 ## (f) Conflict Surface
@@ -537,6 +558,16 @@ unmodified tree even after the prototype's edits). Scratch = `~/.ailang/state/wo
 
 Not re-litigated: the ninth-frozen-route decision (B1), hash ordering (B5), empty-200 (B6), and no
 version bump (B4). Neither seat objected to them.
+
+**Round 2 — BLOCKED 2/2 present.** Seats: `gpt6-astra` **reject**, `gemini-3-1-pro` **reject**;
+`oc-glm-5-3` and `oc-kimi-k3` **absent**. Neither objection disputes the design direction, and
+both carry concrete reviewer-authored fixes. **Carve-out taken (narrow refinement, reviewer fixes
+verbatim); no r3 quorum.** The doc goes to the planner.
+
+| seat | objection (summary) | measurement | disposition | what changed |
+|---|---|---|---|---|
+| gpt6-astra | r1's compatibility check (columns + table only) accepts a partial index, a non-BINARY collation or a DESC key: an index that exists but does not serve the query's order or coverage | V29 probe: a partial index's `index_xinfo` is byte-identical to the accepted one, so only `index_list.partial` detects it; `coll`/`desc` are reported per key | **Applied verbatim** | B4 compatibility rule replaced with astra's text + the PRAGMA mechanics; AC-14 extended with (b) partial, (c) NOCASE and (d) DESC fixtures, each asserting writable-open refusal without modification, read-only `LookupIndexUnavailable` and 0 hook calls; accepted-definition provision + plan test retained; MU26–MU29 designed, not run; M1 estimate ~102 → ~114 |
+| gemini-3-1-pro | B3 cited V12 for precedents V12 does not verify (`hashref.Parse` in `GetObject`, `InvalidLimitError` in `ScanUnreadableLog`); the B1 sketch path `{name}` would not match the mux's `{name...}` in AC-9's parity test | V27: both precedents hold (`store.go:493`; `scan.go:53→55→46`, via the `invalidScanLimit` helper). V28 (controller measurement, re-run): the **existing** registry row has the same `{name}` vs `{name...}` drift (`worlddapi.ail:78` vs `daemon.go:643`) | **Applied verbatim** | V27 added and B3 cites it instead of V12; B1's sketch path is now `{name...}`. **Sibling-row change:** M3 also changes `worlddapi.ail:78` to `/v1/registry/{name...}`. This is the same fix, applied under the reviewer's stated rationale (AC-9 compares mux patterns with `routes()` literally); AC-9 gains a matching mutation |
 
 ## (h) Decision for Mark
 
