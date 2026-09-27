@@ -74,8 +74,10 @@ export func routes() -> list[Route] ! {} {
     { method: "GET", path: "/v1/head" },
     { method: "GET", path: "/v1/worlds/{ref}" },
     { method: "GET", path: "/v1/objects/{ref}" },
+    { method: "GET", path: "/v1/objects/by-semantic-id/{name...}" },
     { method: "GET", path: "/v1/log/{index}" },
-    { method: "GET", path: "/v1/registry/{name}" },
+    { method: "GET", path: "/v1/log" },
+    { method: "GET", path: "/v1/registry/{name...}" },
     { method: "POST", path: "/v1/commit" }
   ]
 }
@@ -94,6 +96,7 @@ export type ApiError
   | PayloadTooLarge(int)
   | Internal(string)
   | Timeout(string)
+  | LookupIndexUnavailable(string)
 
 export func httpStatus(e: ApiError) -> int ! {}
 tests [
@@ -101,7 +104,8 @@ tests [
   ((BadRequest("malformed hash ref")), 400),
   ((PayloadTooLarge(8388609)), 413),
   ((Internal("io failure")), 500),
-  ((Timeout("read deadline exceeded")), 503)
+  ((Timeout("read deadline exceeded")), 503),
+  ((LookupIndexUnavailable("index missing")), 503)
 ]
 {
   match e {
@@ -110,7 +114,8 @@ tests [
     BadRequest(_) => 400,
     PayloadTooLarge(_) => 413,
     Internal(_) => 500,
-    Timeout(_) => 503
+    Timeout(_) => 503,
+    LookupIndexUnavailable(_) => 503
   }
 }
 

@@ -304,7 +304,7 @@ func TestSupportedVersionThreeOpensWithoutRewritingPragma(t *testing.T) {
 	}
 	defer s.Close()
 	afterNames, afterVersion := schemaState(t, s.db)
-	if !reflect.DeepEqual(afterNames, beforeNames) || afterVersion != beforeVersion || afterVersion != 3 {
+	if !reflect.DeepEqual(afterNames, append(beforeNames[:5:5], append([]string{"objects_by_semantic_id"}, beforeNames[5:]...)...)) || afterVersion != beforeVersion || afterVersion != 3 {
 		t.Fatalf("supported state changed: before=(%v,%d) after=(%v,%d)", beforeNames, beforeVersion, afterNames, afterVersion)
 	}
 }
@@ -342,7 +342,7 @@ func TestVersionOneStoreIsRejectedUnmodifiedByWriterAndReader(t *testing.T) {
 	if !reflect.DeepEqual(afterNames, beforeNames) || afterVersion != beforeVersion {
 		t.Fatalf("version-one fixture changed: before=(%v,%d) after=(%v,%d)", beforeNames, beforeVersion, afterNames, afterVersion)
 	}
-		setPositiveFixtureVersion(t, db, 3)
+	setPositiveFixtureVersion(t, db, 3)
 	if err := db.Close(); err != nil {
 		t.Fatal(err)
 	}

@@ -159,8 +159,11 @@ func runWorld(addr string, args []string, stdout, stderr io.Writer) int {
 }
 
 func runObject(addr string, args []string, stdout, stderr io.Writer) int {
+	if len(args) >= 2 && args[0] == "find" {
+		return runObjectFind(addr, args, stdout, stderr)
+	}
 	if len(args) < 2 || args[0] != "get" {
-		fmt.Fprintln(stderr, "ailang-worldd object: usage: object get <ref> [--payload]")
+		fmt.Fprintln(stderr, "ailang-worldd object: usage: object get <ref> [--payload] | object find <semanticId> [--after <ref>] [--limit N]")
 		return exitUsage
 	}
 	fs := flag.NewFlagSet("ailang-worldd object get", flag.ContinueOnError)
@@ -172,6 +175,35 @@ func runObject(addr string, args []string, stdout, stderr io.Writer) int {
 	path := "/v1/objects/" + url.PathEscape(args[1])
 	if *payload {
 		path += "?payload=true"
+	}
+	return execute(addr, http.MethodGet, path, nil, stdout, stderr)
+}
+
+// runObjectFind maps `object find` 1:1 onto GET /v1/objects/by-semantic-id.
+// Each segment is escaped separately so the semantic ID keeps its slashes, the
+// same as runRegistry.
+func runObjectFind(addr string, args []string, stdout, stderr io.Writer) int {
+	fs := flag.NewFlagSet("ailang-worldd object find", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	after := fs.String("after", "", "resume strictly after this object hash")
+	limit := fs.Int("limit", 0, "maximum objects")
+	if err := fs.Parse(args[2:]); err != nil || len(fs.Args()) != 0 {
+		return exitUsage
+	}
+	parts := strings.Split(args[1], "/")
+	for i := range parts {
+		parts[i] = url.PathEscape(parts[i])
+	}
+	query := url.Values{}
+	if *after != "" {
+		query.Set("after", *after)
+	}
+	if *limit != 0 {
+		query.Set("limit", strconv.Itoa(*limit))
+	}
+	path := "/v1/objects/by-semantic-id/" + strings.Join(parts, "/")
+	if encoded := query.Encode(); encoded != "" {
+		path += "?" + encoded
 	}
 	return execute(addr, http.MethodGet, path, nil, stdout, stderr)
 }

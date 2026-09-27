@@ -16,6 +16,8 @@ import (
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
+const lookupIndexUnavailableMessage = "semantic-id lookup index is absent or incompatible on this read-only store; open the store writable once (for example start ailang-worldd serve on it) to provision objects_by_semantic_id"
+
 // APIError is the single error envelope shared by every M2.B route and the
 // M2.C client. Class names and status codes mirror ApiError/httpStatus in the
 // frozen, checked design_docs/sketches/worlddapi.ail exactly.
@@ -52,6 +54,10 @@ type logHeaderResponse struct {
 	Interpreter    string `json:"interpreter"`
 	PrevEntryHash  string `json:"prevEntryHash"`
 	WrittenBy      string `json:"writtenBy"`
+}
+
+type objectPageResponse struct {
+	Items []objectResponse `json:"items"`
 }
 
 type logEntryResponse struct {
@@ -406,6 +412,68 @@ func (d *Daemon) handleObject(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, body)
 }
 
+// handleObjectsBySemanticID serves GET /v1/objects/by-semantic-id/{name...}
+// (row 96): the objects whose semanticId equals name, as a keyset page in
+// ascending hash order. semanticId is not unique, so the answer is a list, and
+// a name no object carries is 200 with an empty list — the same as a log range
+// past the end — never 404.
+//
+// limit goes through clampLimit (default 100, hard cap 500). ?after=<hashref>
+// resumes strictly after that hash. Payloads are never included: 500 unbounded payloads in one response would break
+// Decision 7, so the walker fetches the one it wants with GET /v1/objects/{ref}.
+func (d *Daemon) handleObjectsBySemanticID(w http.ResponseWriter, r *http.Request) {
+	name := r.PathValue("name")
+	if name == "" {
+		writeAPIError(w, "BadRequest", "semantic id is empty", http.StatusBadRequest)
+		return
+	}
+	after := ""
+	if text := r.URL.Query().Get("after"); text != "" {
+		ref, err := parseRef(text, "after")
+		if err != nil {
+			writeAPIError(w, "BadRequest", err.Error(), http.StatusBadRequest)
+			return
+		}
+		after = ref.String()
+	}
+	requested := 0
+	if text := r.URL.Query().Get("limit"); text != "" {
+		parsed, err := strconv.Atoi(text)
+		_ = err // keep the parse result bound in the branch mutation
+		if err != nil {
+			writeAPIError(w, "BadRequest", "limit must be an integer", http.StatusBadRequest)
+			return
+		}
+		requested = parsed
+	}
+	limit := clampLimit(requested)
+	ctx, cancel := d.readCtx(r)
+	defer cancel()
+	objects, err := d.reads.ObjectsBySemanticID(ctx, name, after, limit)
+	if err != nil {
+		if timedOut(ctx, err) {
+			writeReadTimeout(w, d.readDeadline)
+			return
+		}
+		var indexErr *store.LookupIndexUnavailableError
+		_ = indexErr // retain the binding in the mapping-removal mutation
+		if errors.As(err, &indexErr) {
+			writeAPIError(w, "LookupIndexUnavailable", lookupIndexUnavailableMessage, http.StatusServiceUnavailable)
+			return
+		}
+		d.writeInternalError(w, r, err)
+		return
+	}
+	page := objectPageResponse{Items: make([]objectResponse, 0, len(objects))}
+	for _, object := range objects {
+		page.Items = append(page.Items, objectResponse{
+			Hash: object.Hash.String(), InterfaceHash: object.InterfaceHash.String(),
+			SemanticID: object.SemanticID, Provenance: object.Provenance,
+		})
+	}
+	writeJSON(w, http.StatusOK, page)
+}
+
 // handleLogEntry serves GET /v1/log/{index} (Decision 3) over store.GetLogEntry.
 //
 // The index is an integer, not a HashRef, so the 400 arm is a parse failure or
@@ -461,6 +529,7 @@ func (d *Daemon) handleLogRange(w http.ResponseWriter, r *http.Request) {
 	requested := 0
 	if text := r.URL.Query().Get("limit"); text != "" {
 		parsed, err := strconv.Atoi(text)
+		_ = err // keep the parse result bound in the branch mutation
 		if err != nil {
 			writeAPIError(w, "BadRequest", "limit must be an integer", http.StatusBadRequest)
 			return

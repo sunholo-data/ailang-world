@@ -201,9 +201,10 @@ func IsInvalidRef(err error) bool {
 // single-connection embedded-library use of M1; concurrency correctness rests on
 // the single compare-and-append transaction, not on Go-level locking.
 type Store struct {
-	db          *sql.DB
-	sel         selectedHead
-	busyTimeout time.Duration
+	db                   *sql.DB
+	sel                  selectedHead
+	busyTimeout          time.Duration
+	lookupIndexAvailable bool
 	// lock is the held single-writer lock (w-worldd-m2 Decision 2, arm A). It
 	// is nil for in-memory databases (nothing to exclude across processes) and
 	// for read-only handles (which never take writer authority).
@@ -241,7 +242,11 @@ func Open(path string) (*Store, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &Store{db: db, busyTimeout: busyTimeoutFromDSN(path)}, nil
+		if err := provisionLookupIndex(db); err != nil {
+			_ = db.Close()
+			return nil, err
+		}
+		return &Store{db: db, busyTimeout: busyTimeoutFromDSN(path), lookupIndexAvailable: true}, nil
 	}
 
 	canonical, params, err := resolveDSN(path)
@@ -259,7 +264,12 @@ func Open(path string) (*Store, error) {
 		_ = lock.release()
 		return nil, err
 	}
-	return &Store{db: db, lock: lock, busyTimeout: busyTimeoutFromParams(withBusyTimeout(params))}, nil
+	if err := provisionLookupIndex(db); err != nil {
+		_ = db.Close()
+		_ = lock.release()
+		return nil, err
+	}
+	return &Store{db: db, lock: lock, busyTimeout: busyTimeoutFromParams(withBusyTimeout(params)), lookupIndexAvailable: true}, nil
 }
 
 // OpenReadOnly opens an EXISTING file-backed database in SQLite's read-only
@@ -284,7 +294,12 @@ func OpenReadOnly(path string) (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Store{db: db, busyTimeout: busyTimeoutFromParams(withBusyTimeout(params))}, nil
+	available, err := verifyLookupIndex(db)
+	if err != nil {
+		_ = db.Close()
+		return nil, err
+	}
+	return &Store{db: db, busyTimeout: busyTimeoutFromParams(withBusyTimeout(params)), lookupIndexAvailable: available}, nil
 }
 
 // BusyTimeout reports the immutable SQLite lock-retry window configured by the

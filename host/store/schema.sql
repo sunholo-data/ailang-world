@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS objects (
     payload            BLOB NOT NULL
 );
 
+-- The semantic-id lookup index is provisioned on writable Open, outside this schema.
+
 -- Immutable world revisions. Each world_ref addresses one revision; state_root
 -- is the state object and log_head is the append-only log head at that revision.
 CREATE TABLE IF NOT EXISTS worlds (

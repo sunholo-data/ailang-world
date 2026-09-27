@@ -11,6 +11,7 @@
 //	ailang-worldd [--addr http://127.0.0.1:7644] head
 //	ailang-worldd [--addr http://127.0.0.1:7644] world get <ref>
 //	ailang-worldd [--addr http://127.0.0.1:7644] object get <ref> [--payload]
+//	ailang-worldd [--addr http://127.0.0.1:7644] object find <semanticId> [--after <ref>] [--limit N]
 //	ailang-worldd [--addr http://127.0.0.1:7644] log get <index>
 //	ailang-worldd [--addr http://127.0.0.1:7644] log range --from N [--limit M]
 //	ailang-worldd [--addr http://127.0.0.1:7644] registry get <name>
@@ -53,6 +54,7 @@ Usage:
   ailang-worldd [--addr <url>] head
   ailang-worldd [--addr <url>] world get <ref>
   ailang-worldd [--addr <url>] object get <ref> [--payload]
+  ailang-worldd [--addr <url>] object find <semanticId> [--after <ref>] [--limit N]
   ailang-worldd [--addr <url>] log get <index>
   ailang-worldd [--addr <url>] log range --from N [--limit M]
   ailang-worldd [--addr <url>] registry get <name>
