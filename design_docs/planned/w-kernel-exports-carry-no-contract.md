@@ -136,7 +136,7 @@ History controls in `scripts/test_world_contract_history.py` also run from the k
 
 ## 4. Release and published-0.1.0 consequence
 
-The old published-record fixture records content `sha256:0c8c60616e592dc01891e8bbb59350786f242a2f79a9eb2c587ae8b0ca2e00b9` and tarball `sha256:44fc9fab7be710f09b84274f744445db41a79df77c71cc43c0e952d75d97c27f` (V11). The source change moves the local golden to content `sha256:2883217cc3e308c44e2e57e0d132091cb6358507af2b28fed1d04cdf3f705e3f`, tarball `sha256:3d68abc753a748144dbaa00482308b5dd1e0adb861c7fd5042a3725ac45141c4`, 10060 bytes instead of 9785; both interface hashes stay unchanged (V12). This is a new artifact, not the published artifact with extra annotations.
+The old published-record fixture records content `sha256:0c8c60616e592dc01891e8bbb59350786f242a2f79a9eb2c587ae8b0ca2e00b9` and tarball `sha256:44fc9fab7be710f09b84274f744445db41a79df77c71cc43c0e952d75d97c27f` (V11). The seeded prototype moved the local golden to content `sha256:2883217cc3e308c44e2e57e0d132091cb6358507af2b28fed1d04cdf3f705e3f`, tarball `sha256:3d68abc753a748144dbaa00482308b5dd1e0adb861c7fd5042a3725ac45141c4`, 10060 bytes instead of 9785; both interface hashes stayed unchanged (V12). The delivered packet includes the additional rejected-commit smoke arm and has the final digests in §8. This is a new artifact, not the published artifact with extra annotations.
 
 The package gate freezes manifest version 0.1.0 and release kind `feature`, checks the dry-run identity, and compares the golden. `cmd/world-publish` also freezes version 0.1.0, recomputes the packet and refuses packet drift; its live path requires attended fences (V13). Updating the local golden therefore does **not** prove that the public registry serves these new bytes.
 
@@ -216,7 +216,7 @@ export GOCACHE="$PWD/.iteration198/go-cache"
 
 ## 8. Prototype manifest and results
 
-The prototype implements M1–M5 and leaves M6 as an attended decision. Final result: full AILANG gate rc=0 (16 identities, 40 named tests, package 9/9, PUB011=3), Go vet rc=0, requested Go tests and runbook tests rc=0 (V7, V16–V17). No git write operation was run. No live registry publish was run. The deliverable is this document plus the canonical contracts/comments, projected modules, floor inventory updates, quality parser/control harness and CI wiring listed in the final handoff.
+The delivered M1–M5 candidate adds six asserted Q3 quality rejections and an unaccepted-verification package smoke arm. Package step 6 requires its `denied:verification contract failed` line; the `if true` commit mutant fails there. The smoke byte change moves the local ready packet to content `sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780`, tarball `sha256:d532d923dc0d681cb0782d292cdce1d60d2a41b987e7fcfe6c3fef854f089cb9`, 10127 bytes. The runbook digest rows match; both interface hashes remain unchanged. The full AILANG gate reports 16/16 identities, 40 named tests, package 9/9, and PUB011=3. M6 remains an attended release decision; no publish or git write was performed.
 
 ## 9. Quorum log
 

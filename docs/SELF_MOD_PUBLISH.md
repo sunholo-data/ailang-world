@@ -80,14 +80,19 @@ instruction to "compare the digests against the gate's output" is therefore impo
 this step used to say exactly that, and this paragraph is its repair.
 
 So the eyeball check is **document against artifact, at full length**. These four digests are the
-identity of what you are about to publish permanently:
+identity of the local reviewed projection. **Iteration 198 rehearsal:** these bytes
+include additional contracts and differ from the already-published 0.1.0 artifact.
+Do not publish them as 0.1.0. A new version, release metadata, CHANGELOG section and
+updated publisher version fences need an attended release decision first (see
+`design_docs/planned/w-kernel-exports-carry-no-contract.md`). The loop never publishes:
+
 
 | field | digest |
 |---|---|
-| `contentHash` | `sha256:0c8c60616e592dc01891e8bbb59350786f242a2f79a9eb2c587ae8b0ca2e00b9` |
+| `contentHash` | `sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780` |
 | `interfaceHash` (manifest coverage only) | `sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083` |
 | `interfaceHashV2` (exported interface) | `sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8` |
-| `tarballSHA256` | `sha256:44fc9fab7be710f09b84274f744445db41a79df77c71cc43c0e952d75d97c27f` |
+| `tarballSHA256` | `sha256:d532d923dc0d681cb0782d292cdce1d60d2a41b987e7fcfe6c3fef854f089cb9` |
 
 They are gated against the golden by `host/runbook`, so this table cannot rot silently: change the
 package without reprojecting, or edit one nibble here, and the repository gate reds.

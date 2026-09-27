@@ -8,12 +8,10 @@ import world/types (World, Proposal, Verification)
 -- predicates so policy cannot drift between the two phases.
 
 -- Contract 1: a proposal's inputWorld equals the current world's stateRoot.
--- TESTS-ONLY (D2, V23): a contract here reaches Proposal.evidence (an ADT) and
--- Z3-errors `unknown sort 'Proposal'` while ai-check exits 0 silently
--- (upstream sunholo-data/ailang#477). The shared-predicate body (calls sameRef)
--- is kept byte-identical to preserve the anti-drift architecture; the two
--- inline tests are its machine check.
-export func proposalMatchesWorld(w: World, p: Proposal) -> bool
+-- Z3-PROVEN on v0.41.0; field law independently checks the shared sameRef call.
+export func proposalMatchesWorld(w: World, p: Proposal) -> bool ! {}
+ensures { result == (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest) }
+
 tests [
   ((({ revision: 0,
        stateRoot: { algo: "sha256", digest: "aa" },
@@ -39,9 +37,10 @@ tests [
 }
 
 -- Contract 2: a verification names the same proposalHash as the proposal it
--- judged. TESTS-ONLY (D2, V23): Proposal reaches an ADT ⇒ unknown sort. Body
--- unchanged (shared-predicate anti-drift); two inline tests are the machine check.
-export func verificationMatchesProposal(p: Proposal, v: Verification) -> bool
+-- judged. Z3-PROVEN on v0.41.0; preserve the shared sameRef implementation.
+export func verificationMatchesProposal(p: Proposal, v: Verification) -> bool ! {}
+ensures { result == (p.proposalHash.algo == v.proposalHash.algo && p.proposalHash.digest == v.proposalHash.digest) }
+
 tests [
   ((({ proposalHash: { algo: "sha256", digest: "ph" },
        inputWorld: { algo: "sha256", digest: "aa" },
@@ -66,9 +65,10 @@ tests [
 
 -- Contract 3: commit may proceed only when the verification is accepted AND
 -- both identity predicates hold (input-world match and proposal-hash match).
--- TESTS-ONLY (D2, V23): Proposal reaches an ADT ⇒ unknown sort. Body unchanged
--- (shared-predicate anti-drift); two inline tests are the machine check.
-export func commitAllowed(w: World, p: Proposal, v: Verification) -> bool
+-- Z3-PROVEN on v0.41.0 with both shared predicates contracted.
+export func commitAllowed(w: World, p: Proposal, v: Verification) -> bool ! {}
+ensures { result == (v.accepted && w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest && p.proposalHash.algo == v.proposalHash.algo && p.proposalHash.digest == v.proposalHash.digest) }
+
 tests [
   ((({ revision: 0,
        stateRoot: { algo: "sha256", digest: "aa" },
