@@ -16,8 +16,14 @@ export func main() -> string {
   let p = plan(w0, pHash, fnHash, "package-smoke");
   let v = verify(w0, p);
   let result = commit(w0, p, v, outState, nextLog);
-  match result {
+  let committed = match result {
     Applied(w1, _t) => "rev=${show(w1.revision)} state=${renderRef(w1.stateRoot)} log=${renderRef(w1.logHead)} proposal=${show(proposalMatchesWorld(w0, p))}",
     Denied(reason) => "denied:${reason}"
-  }
+  };
+  let unaccepted = { proposalHash: p.proposalHash, accepted: false, reason: "unaccepted verification" };
+  let rejected = match commit(w0, p, unaccepted, outState, nextLog) {
+    Applied(_w1, _t) => "unaccepted verification applied",
+    Denied(reason) => "denied:${reason}"
+  };
+  "${committed}\n${rejected}"
 }

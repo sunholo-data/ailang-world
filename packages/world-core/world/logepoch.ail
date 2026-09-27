@@ -54,8 +54,10 @@ export type LogHeader = {
 }
 
 -- Canonical rendering of a hash reference (the on-disk / in-log text form).
--- Interpolation reaches builtin `show`, which has no SMT encoding (V7), so
--- Z3 cannot prove this; inline tests are its only machine check (D3/D4).
+-- UNCONTRACTABLE exact text law on v0.41.0 (iteration 198): interpolation
+-- in ensures errors "unsupported application: $builtin.show"; std/string.concat
+-- also errors in ensures. The BODY does encode (false ensures refutes).
+-- Keep named inline text tests; reprobe the specification encoder on upgrade.
 export func renderRef(r: HashRef) -> string
 tests [
   (({ algo: "sha256", digest: "abc" }), "sha256:abc"),
@@ -116,6 +118,9 @@ tests [
 -- metadata, not validity — distinct interpreter artifacts never share cache
 -- rows, even inside one epoch. The key is exactly the pair
 -- (transitionFn, interpreter).
+-- UNCONTRACTABLE on v0.41.0 (iteration 198): exact text ensures is skipped
+-- UNENCODABLE_TYPE: calls user function "renderRef" that is not SMT-encodable
+-- in this context. Named inline tests pin both artifact references and delimiter.
 export func cacheKey(h: LogHeader) -> string
 tests [
   (({ entryIndex: 0, semanticsEpoch: 1,

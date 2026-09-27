@@ -302,8 +302,9 @@ mod = sys.argv[1]
 # Hardcoded manifest — keyed by (repo-relative module file, bare function name), V17.
 # Before adding an identity here: read the FLOOR-RAISE COUPLING INVENTORY at the head of this file.
 REQUIRED_VERIFIED = {
-    "world/transitions.ail": {"applyRevision"},
-    "world/contracts.ail":   {"commitBoundaryHolds", "isValidNextWorld"},
+    "world/transitions.ail": {"applyRevision", "plan", "verify"},
+    "world/contracts.ail":   {"commitBoundaryHolds", "isValidNextWorld",
+                              "proposalMatchesWorld", "verificationMatchesProposal", "commitAllowed"},
     "world/logepoch.ail":    {"sameRef", "servesEntry"},
     "world/types.ail":       {"gradeOf", "timeoutOutcome", "timeoutFiredLegally",
                              "validEscalation", "validDefer", "wellFormedSchedule"},
@@ -350,7 +351,7 @@ if [ "$checked" -eq 0 ]; then
   exit 1
 fi
 
-EXACT_TOTAL_VERIFIED=11
+EXACT_TOTAL_VERIFIED=16
 if [ "$total_verified" -ne "$EXACT_TOTAL_VERIFIED" ]; then
   echo "✗ expected exactly $EXACT_TOTAL_VERIFIED proven world/ contracts, got $total_verified" >&2
   exit 1

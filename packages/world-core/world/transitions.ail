@@ -25,7 +25,9 @@ export func plan(
   proposalHash: HashRef,
   transitionFn: HashRef,
   goal: string
-) -> Proposal {
+) -> Proposal ! {}
+ensures { result.inputWorld == w.stateRoot && result.proposalHash == proposalHash && result.transitionFn == transitionFn && result.goal == goal }
+ {
   {
     proposalHash: proposalHash,
     inputWorld: w.stateRoot,
@@ -42,7 +44,9 @@ export func plan(
 -- Phase 2 — Verify: evaluate the executable contract without effects. Accepts
 -- iff the proposal's input world matches the current world (Contract 1). The
 -- verification always names the proposal's own hash so Contract 2 holds.
-export func verify(w: World, p: Proposal) -> Verification {
+export func verify(w: World, p: Proposal) -> Verification ! {}
+ensures { result.proposalHash == p.proposalHash && result.accepted == (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest) }
+ {
   if proposalMatchesWorld(w, p)
   then { proposalHash: p.proposalHash, accepted: true, reason: "accepted" }
   else { proposalHash: p.proposalHash, accepted: false, reason: "input world mismatch" }
@@ -67,6 +71,11 @@ ensures {
   { revision: w.revision + 1, stateRoot: outputWorld, logHead: nextLogHead }
 }
 
+-- UNCONTRACTABLE on v0.41.0 (iteration 198): the full Applied/Denied law
+-- is skipped, UNENCODABLE_TYPE: calls user function "applyRevision" that is
+-- not SMT-encodable in this context, even with w.revision >= 0. Keep the
+-- shared predicates; applyRevision is proven separately and the package smoke
+-- exercises commit. Reprobe on compiler upgrade; see w-kernel-exports-carry-no-contract.
 -- Phase 3 — Commit: derive the next immutable world and transition record
 -- without effects. Proceeds only when Contract 3 (commitAllowed) holds:
 -- verification accepted AND both identity predicates. The resulting world

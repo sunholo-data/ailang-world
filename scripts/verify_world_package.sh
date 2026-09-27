@@ -152,7 +152,7 @@ printf '%s\n' '── World package step 5/9: package check and tests'
 ( cd "$PACKAGE_DIR" && run_bounded 120 "$tmp_check" "$AILANG_BIN" check --package ) || { cat "$tmp_check" >&2; exit 1; }
 # --allow-skips, PINNED — not a blanket permission.
 #
-# The v0.41.0 toolchain refuses to exit 0 while any property never ran. Four
+# The v0.41.0 toolchain refuses to exit 0 while any property never ran. Nine
 # never run here, and NEITHER IS FIXABLE IN THIS REPOSITORY: generators are
 # DERIVED, not authored — there is no generator syntax to write — and
 # internal/testing/derive.go states the coverage exactly: "M3 arms: scalars,
@@ -169,8 +169,8 @@ printf '%s\n' '── World package step 5/9: package check and tests'
 # sunholo-data/ailang as issues/backlog items, never worked around locally".
 #
 # The allowance is therefore PINNED rather than blanket: the skip count must be
-# EXACTLY 4, every skip must be the no-generator kind, and each must name one of
-# the four known properties. A FIFTH skip, a skip for any other reason, or a
+# EXACTLY 9, every skip must be the no-generator kind, and each must name one of
+# the nine known properties. A TENTH skip, a skip for any other reason, or a
 # rename reds this gate — which is the property a bare --allow-skips would throw
 # away, and the "check that looks like verification" class this repository has
 # paid for repeatedly.
@@ -186,20 +186,21 @@ test_activity="$(grep -Ec 'PASS|pass|test' "$tmp_test" || true)"
 # repository that looked like verification.
 skipped_count="$(sed $'s/\033\[[0-9;]*m//g' "$tmp_test" | sed -n 's/.*Skipped:[^0-9]*\([0-9][0-9]*\).*/\1/p' | tail -1)"
 [ -n "$skipped_count" ] || { printf '%s\n' '✗ could not read a Skipped count from the test output' >&2; cat "$tmp_test" >&2; exit 1; }
-[ "$skipped_count" -eq 4 ] || { printf '✗ expected exactly 4 skipped properties, got %s — a new skip is a REGRESSION, not a licence\n' "$skipped_count" >&2; cat "$tmp_test" >&2; exit 1; }
+[ "$skipped_count" -eq 9 ] || { printf '✗ expected exactly 9 skipped properties, got %s — a new skip is a REGRESSION, not a licence\n' "$skipped_count" >&2; cat "$tmp_test" >&2; exit 1; }
 nogen_count="$(grep -c 'no generator for parameter' "$tmp_test" || true)"
-[ "$nogen_count" -eq 4 ] || { printf '✗ expected 4 no-generator skips, got %s — some property skipped for a DIFFERENT reason\n' "$nogen_count" >&2; cat "$tmp_test" >&2; exit 1; }
-for prop in isValidNextWorld_property_1 applyRevision_property_1 applyRevision_property_2 gradeOf_property_1; do
+[ "$nogen_count" -eq 9 ] || { printf '✗ expected 9 no-generator skips, got %s — some property skipped for a DIFFERENT reason\n' "$nogen_count" >&2; cat "$tmp_test" >&2; exit 1; }
+for prop in proposalMatchesWorld_property_1 verificationMatchesProposal_property_1 commitAllowed_property_1 plan_property_1 verify_property_1 isValidNextWorld_property_1 applyRevision_property_1 applyRevision_property_2 gradeOf_property_1; do
   grep -q "$prop" "$tmp_test" || { printf '✗ known-skipped property missing from output: %s\n' "$prop" >&2; cat "$tmp_test" >&2; exit 1; }
 done
 printf '   ✓ package check passed and tests reported %s activity line(s)\n' "$test_activity"
-printf '   ✓ exactly 4 skips, all no-generator, all named (upstream M4 / cross-file derive gap)\n' 
+printf '   ✓ exactly 9 skips, all no-generator, all named (upstream M4 / cross-file derive gap)\n'
 
 printf '%s\n' '── World package step 6/9: bounded smoke execution'
 ( cd "$PACKAGE_DIR" && run_bounded 30 "$tmp_smoke" "$AILANG_BIN" run _smoke.ail )
 smoke_rc=$?
 [ "$smoke_rc" -eq 0 ] || { cat "$tmp_smoke" >&2; exit "$smoke_rc"; }
 grep -Fq 'rev=1 state=sha256:bbbb log=sha256:3333 proposal=true' "$tmp_smoke" || { printf '%s\n' '✗ smoke did not produce the committed flow result' >&2; cat "$tmp_smoke" >&2; exit 1; }
+grep -Fxq 'denied:verification contract failed' "$tmp_smoke" || { printf '%s\n' '✗ smoke did not reject the unaccepted verification' >&2; cat "$tmp_smoke" >&2; exit 1; }
 printf '%s\n' '   ✓ plan → verify → commit smoke completed within 30s'
 
 printf '%s\n' '── World package step 7/9: dry-run identity and full pkgproj hashes'
@@ -307,3 +308,7 @@ PY
 cmp -s "$GOLDEN" "$tmp_ready" || { printf '%s\n' '✗ ready packet differs byte-for-byte from golden' >&2; diff -u "$GOLDEN" "$tmp_ready" >&2; exit 1; }
 printf '%s\n' '   ✓ canonical JSON equals committed golden byte-for-byte'
 printf '%s\n' '✓ world package gate PASSED: 9/9 steps performed non-zero work'
+
+# PUB011 only: package-mode test discovery and AGENT.md are separate work.
+run_bounded 120 "$tmp_check" "$AILANG_BIN" pkg quality --json "$PACKAGE_DIR" || { cat "$tmp_check" >&2; exit 1; }
+python3 scripts/check_world_contract_quality.py < "$tmp_check" || exit 1

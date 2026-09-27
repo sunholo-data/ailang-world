@@ -22,6 +22,15 @@ jobs:
       GOTOOLCHAIN: go1.26.6
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Contract exemption ratchet may only decrease
+        env:
+          RATCHET_EVENT: ${{ github.event_name }}
+          RATCHET_PR_BASE: ${{ github.event.pull_request.base.sha }}
+          RATCHET_PUSH_BEFORE: ${{ github.event.before }}
+        run: python3 scripts/check_world_contract_quality.py --event "$RATCHET_EVENT"
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -97,6 +106,9 @@ jobs:
             *) echo "✗ pinned world-package binary is not v0.41.0" >&2; exit 1 ;;
           esac
           echo "WORLD_PKG_AILANG_BIN=$HOME/.pinned-ailang/ailang" >> "$GITHUB_ENV"
+
+      - name: Kernel contract and PUB011 mutation controls
+        run: AILANG_BIN="$WORLD_PKG_AILANG_BIN" python3 scripts/test_kernel_contracts.py
 
       - name: Verify all .ail modules (ai-check = check + Z3 verify)
         run: ./scripts/verify_ail.sh
