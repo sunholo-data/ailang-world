@@ -1,0 +1,310 @@
+{
+  "sprint_id": "w-object-lookup-by-semantic-id-iter201",
+  "design_doc": "design_docs/planned/w-object-lookup-by-semantic-id.md",
+  "base": "c30b967 + design doc",
+  "scope": "Whole row 96: M1 store query/index/guard, M2 read route/503, M3 CLI/frozen table; four compile-order landings, each <=150 added production LOC",
+  "milestones": [
+    {
+      "id": "M1a",
+      "title": "store keyset query (first half of design M1)",
+      "files": [
+        "host/store/objects_by_semantic_id.go",
+        "host/store/objects_by_semantic_id_test.go"
+      ],
+      "acceptance": [
+        "go test -race -count=1 ./host/store -run '^TestObjectsBySemanticIDNonUniqueOrderedAndPaged$'",
+        "go vet ./...",
+        "go test ./... -run '^$'",
+        "go test -race -count=1 ./host/store ./host/daemon ./cmd/ailang-worldd"
+      ],
+      "mutations": [
+        {
+          "id": "MU1",
+          "file": "host/store/objects_by_semantic_id.go",
+          "edit": "`host/store/objects_by_semantic_id.go`: `ORDER BY hash_ref LIMIT ?` \u2192 `ORDER BY hash_ref DESC LIMIT ?`",
+          "must_fail": "`TestObjectsBySemanticIDNonUniqueOrderedAndPaged` (AC-2)"
+        },
+        {
+          "id": "MU2",
+          "file": "host/store/objects_by_semantic_id.go",
+          "edit": "same: `hash_ref > ?` \u2192 `hash_ref >= ?`",
+          "must_fail": "same (AC-3 duplicate cursor)"
+        },
+        {
+          "id": "MU3",
+          "file": "host/store/objects_by_semantic_id.go",
+          "edit": "same: `semantic_id = ?` \u2192 `semantic_id GLOB ? || '*'`",
+          "must_fail": "same (AC-1 prefix decoy)"
+        },
+        {
+          "id": "MU4",
+          "file": "host/store/objects_by_semantic_id.go",
+          "edit": "same: `LIMIT ?` \u2192 `LIMIT 500 + 0*?`",
+          "must_fail": "same (AC-3 page length)"
+        },
+        {
+          "id": "MU5",
+          "file": "host/store/objects_by_semantic_id.go",
+          "edit": "same: `if limit < 1 || limit > MaxSemanticIDPage {` \u2192 `if false {`",
+          "must_fail": "same (AC-3 invalid limits 0 and 501)"
+        },
+        {
+          "id": "MU-empty-store",
+          "file": "host/store/objects_by_semantic_id.go",
+          "edit": "same: `objects := make([]Object, 0, limit)` \u2192 `var objects []Object`",
+          "must_fail": "same (AC-4 non-nil empty result)"
+        }
+      ]
+    },
+    {
+      "id": "M1b",
+      "title": "bounded index provisioning and cached refusal (rest of design M1)",
+      "files": [
+        "host/store/store.go",
+        "host/store/lookup_index.go",
+        "host/store/objects_by_semantic_id.go",
+        "host/store/objects_by_semantic_id_test.go",
+        "host/store/schema.sql"
+      ],
+      "acceptance": [
+        "go test -race -count=1 ./host/store -run '^(TestObjectsBySemanticIDUsesIndex|TestSemanticIDIndexBuiltOnWritableReopen|TestLookupIndexGuardReadOnlyThenProvision|TestLookupIndexIncompatibleIsRefused|TestLookupIndexProvisionFailureIsSurfaced)$'",
+        "go vet ./...",
+        "go test ./... -run '^$'",
+        "go test -race -count=1 ./host/store ./host/daemon ./cmd/ailang-worldd"
+      ],
+      "mutations": [
+        {
+          "id": "MU6",
+          "file": "host/store/lookup_index.go",
+          "edit": "`host/store/lookup_index.go`: `CREATE INDEX IF NOT EXISTS objects_by_semantic_id ON objects(semantic_id, hash_ref)` \u2192 `SELECT 1`",
+          "must_fail": "`TestObjectsBySemanticIDUsesIndex`, `TestSemanticIDIndexBuiltOnWritableReopen` (AC-7)"
+        },
+        {
+          "id": "MU7",
+          "file": "host/store/lookup_index.go",
+          "edit": "same: `ON objects(semantic_id, hash_ref)` \u2192 `ON objects(semantic_id)`",
+          "must_fail": "`TestObjectsBySemanticIDUsesIndex` (AC-7; no ordered index)"
+        },
+        {
+          "id": "MU20",
+          "file": "host/store/objects_by_semantic_id.go",
+          "edit": "`host/store/objects_by_semantic_id.go`: `if !s.lookupIndexAvailable {` \u2192 `if false {`",
+          "must_fail": "`TestLookupIndexGuardReadOnlyThenProvision` (AC-13)"
+        },
+        {
+          "id": "MU21",
+          "file": "host/store/store.go",
+          "edit": "`host/store/store.go`: `available, err := verifyLookupIndex(db)` \u2192 `available, err := true, error(nil)` in `OpenReadOnly` only",
+          "must_fail": "same (AC-13)"
+        },
+        {
+          "id": "MU22",
+          "file": "host/store/lookup_index.go",
+          "edit": "`host/store/lookup_index.go`: `name == want.name` \u2192 `true` in key comparison",
+          "must_fail": "`TestLookupIndexIncompatibleIsRefused/wrong-column-order` (AC-14a)"
+        },
+        {
+          "id": "MU26",
+          "file": "host/store/lookup_index.go",
+          "edit": "same: `partial == 0` \u2192 `true`",
+          "must_fail": "`TestLookupIndexIncompatibleIsRefused/partial` (AC-14b)"
+        },
+        {
+          "id": "MU27",
+          "file": "host/store/lookup_index.go",
+          "edit": "same: `coll == \"BINARY\"` \u2192 `true`",
+          "must_fail": "`TestLookupIndexIncompatibleIsRefused/nocase` (AC-14c)"
+        },
+        {
+          "id": "MU28",
+          "file": "host/store/lookup_index.go",
+          "edit": "same: `desc == 0` \u2192 `true`",
+          "must_fail": "`TestLookupIndexIncompatibleIsRefused/descending` (AC-14d)"
+        },
+        {
+          "id": "MU29",
+          "file": "host/store/lookup_index.go",
+          "edit": "`host/store/lookup_index.go`: `if !available { return fmt.Errorf(\"store: incompatible semantic-id lookup index\") }` \u2192 `if !available { _, _ = db.Exec(\"DROP INDEX objects_by_semantic_id\"); return provisionLookupIndex(db) }`",
+          "must_fail": "every AC-14 fixture's unchanged SQL assertion"
+        },
+        {
+          "id": "MU23",
+          "file": "host/store/store.go",
+          "edit": "`host/store/store.go`: `if err := provisionLookupIndex(db); err != nil { return nil, err }` \u2192 `_ = provisionLookupIndex(db)`",
+          "must_fail": "`TestLookupIndexProvisionFailureIsSurfaced` (AC-15)"
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "read route, seam and 503 class",
+      "files": [
+        "host/daemon/daemon.go",
+        "host/daemon/handlers.go",
+        "host/daemon/objects_by_semantic_id_test.go",
+        "host/daemon/read_deadline_test.go",
+        "design_docs/sketches/worlddapi.ail"
+      ],
+      "acceptance": [
+        "go test -race -count=1 ./host/daemon -run '^(TestObjectsBySemanticIDRoute|TestObjectsBySemanticIDRouteCapAndDefault|TestObjectsBySemanticIDRouteStoreErrors|TestLookupIndexUnavailableIs503|TestDaemonReadDeadline|TestInternalErrorsAreSanitized|TestGETRoutesRejectOtherMethods)$'",
+        "go vet ./...",
+        "go test ./... -run '^$'",
+        "go test -race -count=1 ./host/store ./host/daemon ./cmd/ailang-worldd",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh"
+      ],
+      "mutations": [
+        {
+          "id": "MU8",
+          "file": "host/daemon/handlers.go",
+          "edit": "`host/daemon/handlers.go`: `if name == \"\" {` \u2192 `if false {` in new handler",
+          "must_fail": "`TestObjectsBySemanticIDRoute` (AC-4)"
+        },
+        {
+          "id": "MU9",
+          "file": "host/daemon/handlers.go",
+          "edit": "same: `ref, err := parseRef(text, \"after\")` \u2192 `ref, err := hashref.HashRef{}, error(nil)`",
+          "must_fail": "same (AC-6)"
+        },
+        {
+          "id": "MU10",
+          "file": "host/daemon/handlers.go",
+          "edit": "same: `if err != nil {` \u2192 `if false {` immediately after `strconv.Atoi(text)`",
+          "must_fail": "same (AC-6)"
+        },
+        {
+          "id": "MU11",
+          "file": "host/daemon/handlers.go",
+          "edit": "same: `requested := 0` \u2192 `requested := 500` in new handler",
+          "must_fail": "`TestObjectsBySemanticIDRouteCapAndDefault` (AC-5)"
+        },
+        {
+          "id": "MU12",
+          "file": "host/daemon/handlers.go",
+          "edit": "same: `limit := clampLimit(requested)` \u2192 `limit := requested`",
+          "must_fail": "same (AC-5)"
+        },
+        {
+          "id": "MU13r",
+          "file": "host/daemon/handlers.go",
+          "edit": "same: `Items []objectResponse `json:\"items\"`` \u2192 `Items []objectResponse `json:\"items\"`; Next string `json:\"next\"`` in `objectPageResponse`",
+          "must_fail": "same, raw JSON key assertion (AC-5)"
+        },
+        {
+          "id": "MU14",
+          "file": "host/daemon/handlers.go",
+          "edit": "same: `if timedOut(ctx, err) {` \u2192 `if false && timedOut(ctx, err) {` in new handler",
+          "must_fail": "`TestDaemonReadDeadline` (AC-10/12)"
+        },
+        {
+          "id": "MU15",
+          "file": "host/daemon/handlers.go",
+          "edit": "same: `ctx, cancel := d.readCtx(r)` \u2192 `ctx, cancel := context.WithCancel(r.Context())` in new handler",
+          "must_fail": "`TestDaemonReadDeadline` (AC-12)"
+        },
+        {
+          "id": "MU16",
+          "file": "host/daemon/handlers.go",
+          "edit": "same: `d.writeInternalError(w, r, err)` \u2192 `writeAPIError(w, \"Internal\", err.Error(), http.StatusInternalServerError)` in new handler",
+          "must_fail": "`TestInternalErrorsAreSanitized` (AC-10/12)"
+        },
+        {
+          "id": "MU17",
+          "file": "host/daemon/handlers.go",
+          "edit": "same: `SemanticID: object.SemanticID, Provenance: object.Provenance,` \u2192 `SemanticID: object.SemanticID, Provenance: object.Provenance, Payload: &[]byte{},`",
+          "must_fail": "`TestObjectsBySemanticIDRoute` (AC-4/B7)"
+        },
+        {
+          "id": "MU18",
+          "file": "host/daemon/daemon.go",
+          "edit": "`host/daemon/daemon.go`: `mux.HandleFunc(\"GET /v1/objects/by-semantic-id/{name...}\", d.handleObjectsBySemanticID)` \u2192 DELETE",
+          "must_fail": "`TestObjectsBySemanticIDRoute` (AC-4/6)"
+        },
+        {
+          "id": "MU24",
+          "file": "host/daemon/handlers.go",
+          "edit": "`host/daemon/handlers.go`: `if errors.As(err, &indexErr) { writeAPIError(w, \"LookupIndexUnavailable\", lookupIndexUnavailableMessage, http.StatusServiceUnavailable); return }` \u2192 DELETE",
+          "must_fail": "`TestLookupIndexUnavailableIs503` (AC-16)"
+        },
+        {
+          "id": "MU25",
+          "file": "design_docs/sketches/worlddapi.ail",
+          "edit": "`design_docs/sketches/worlddapi.ail`: `LookupIndexUnavailable(_) => 503` \u2192 `LookupIndexUnavailable(_) => 500`",
+          "must_fail": "`TestLookupIndexUnavailableIs503` mirror (AC-16) and `verify_ail.sh` vector"
+        },
+        {
+          "id": "MU-empty-route",
+          "file": "host/daemon/handlers.go",
+          "edit": "`host/daemon/handlers.go`: `Items: make([]objectResponse, 0, len(objects))` \u2192 `Items: nil`",
+          "must_fail": "`TestObjectsBySemanticIDRoute` byte-exact empty JSON (AC-4)"
+        }
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "CLI and frozen-table extension",
+      "files": [
+        "cmd/ailang-worldd/cli.go",
+        "cmd/ailang-worldd/main.go",
+        "cmd/ailang-worldd/cli_test.go",
+        "host/daemon/daemon.go",
+        "host/daemon/session_middleware_test.go",
+        "host/daemon/read_deadline_test.go",
+        "host/daemon/route_table_test.go",
+        "design_docs/sketches/worlddapi.ail"
+      ],
+      "acceptance": [
+        "go test -race -count=1 ./cmd/ailang-worldd ./host/daemon -run '^(TestObjectFindCLI|TestFrozenV1RouteTableMatchesMux|TestGETRoutesRejectOtherMethods)$'",
+        "go vet ./...",
+        "go test ./... -run '^$'",
+        "go test -race -count=1 ./host/store ./host/daemon ./cmd/ailang-worldd",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh",
+        "WORLD_WALK_N=10000 go test -count=1 ./host/daemon -run '^TestWalkRetimedAtScale$' -v (socket-capable environment)"
+      ],
+      "mutations": [
+        {
+          "id": "MU-9-mux",
+          "file": "host/daemon/daemon.go",
+          "edit": "`host/daemon/daemon.go`: `mux.HandleFunc(\"GET /v1/objects/by-semantic-id/{name...}\", d.handleObjectsBySemanticID)` \u2192 DELETE",
+          "must_fail": "`TestFrozenV1RouteTableMatchesMux` (AC-9)"
+        },
+        {
+          "id": "MU-9-sketch",
+          "file": "design_docs/sketches/worlddapi.ail",
+          "edit": "`design_docs/sketches/worlddapi.ail`: `{ method: \"GET\", path: \"/v1/objects/by-semantic-id/{name...}\" },` \u2192 DELETE",
+          "must_fail": "same (AC-9)"
+        },
+        {
+          "id": "MU-9-registry",
+          "file": "design_docs/sketches/worlddapi.ail",
+          "edit": "same: `/v1/registry/{name...}` \u2192 `/v1/registry/{name}`",
+          "must_fail": "same (AC-9 sibling drift)"
+        },
+        {
+          "id": "MU-9-log",
+          "file": "design_docs/sketches/worlddapi.ail",
+          "edit": "same: `{ method: \"GET\", path: \"/v1/log\" },` \u2192 DELETE",
+          "must_fail": "same (AC-9 existing missing row)"
+        },
+        {
+          "id": "MU-CLI-route",
+          "file": "cmd/ailang-worldd/cli.go",
+          "edit": "`cmd/ailang-worldd/cli.go`: `path := \"/v1/objects/by-semantic-id/\" + strings.Join(parts, \"/\")` \u2192 `path := \"/v1/objects/\" + strings.Join(parts, \"/\")`",
+          "must_fail": "`TestObjectFindCLI`"
+        },
+        {
+          "id": "MU-CLI-cursor",
+          "file": "cmd/ailang-worldd/cli.go",
+          "edit": "same: `query.Set(\"after\", *after)` \u2192 `query.Set(\"after\", \"not-a-ref\")`",
+          "must_fail": "`TestObjectFindCLI`"
+        },
+        {
+          "id": "MU-CLI-limit",
+          "file": "cmd/ailang-worldd/cli.go",
+          "edit": "same: `query.Set(\"limit\", strconv.Itoa(*limit))` \u2192 `query.Set(\"limit\", \"1\")`",
+          "must_fail": "`TestObjectFindCLI`"
+        }
+      ]
+    }
+  ],
+  "blocked_not_planned": []
+}
