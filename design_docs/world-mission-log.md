@@ -969,7 +969,7 @@ It confirmed exactly 17 files, no manifest bump, no publish and no `cmd/world-pu
 
 **Next:** `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → tranche M2–M7 → 108 when #885 ships → 93, 114. `D-WORLD-41` → the row-94 M6 release plan. **Decision ledger: 28 rows, FOUR OPEN (`D-WORLD-38`, `D-WORLD-39`, `D-WORLD-40`, `D-WORLD-41`).**
 
-## 200 — 2026-09-27 — row 25 LANDED: a real child blocked in `write()` on a full, undrained pipe is unblocked by the capsule's overflow kill, and the child's own state witnesses it (test-only; judged 95, zero blocking; merge `227f587`)
+## 200 — 2026-09-27 — row 25 LANDED: a real child blocked in `write()` on a full, undrained pipe is unblocked by the capsule's overflow kill, and the child's own state witnesses it (test-only; judged 95, zero blocking; merge `227f587`) [PRODUCT]
 
 **Pick and why.** Every critical-path row is blocked, and each was re-measured this iteration:
 - Row 106's M5 waits on `D-WORLD-40`.
@@ -1031,6 +1031,6 @@ The codex probe returned rc=0. No design doc was needed: the row plus row 20's �
 - Generator ≠ judge: codex planned and built it, sonnet judged it. No role fell back.
 - **Metered $0.00.**
 
-**Progress:** clause 2 (MET) hardened. No UNMET clause moved, because every UNMET-clause row is blocked on `D-WORLD-40` or on `ailang#885`. **Drift watch:** two of the last three landings (94, 25) moved no unmet clause. If iteration 201 lands another position-7 row, the drift alarm fires and the Gate-5 digest must lead with it.
+**Progress**: 1.0: clauses 4, 5, 6 unmet; goal unmoved (clause 2, already MET, hardened). No UNMET clause moved, because every UNMET-clause row is blocked on `D-WORLD-40` or on `ailang#885`. **Drift watch:** two of the last three landings (94, 25) moved no unmet clause. If iteration 201 lands another position-7 row, the drift alarm fires and the Gate-5 digest must lead with it.
 
 **Next:** `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → tranche M2–M7 → 108 when #885 ships → 93, 114. Meanwhile, position 7 continues with 26, 32, 109, 111, 112, 113, 115 and 117. **Decision ledger: 28 rows, FOUR OPEN (`D-WORLD-38`, `D-WORLD-39`, `D-WORLD-40`, `D-WORLD-41`).**
