@@ -1,6 +1,6 @@
 # w-store-object-reference-index — checked reverse edges for object pages
 
-Status: DESIGN, iteration 202, queue row 103. Base measured: `7fc05de` (V0).
+Status: IMPLEMENTED 2026-09-27 (iteration 202) — PR #157 squash `c33b2a9`, remote CI 2/2 green on the merge; judged PASS 91/100 zero blocking (sonnet). Design history: designer `codex:gpt-6-astra`; quorum r1 BLOCKED (gemini premise refuted by V16), r2 BLOCKED 1/2 (sonnet, provisioning scale) → narrow-refinement carve-out with the controller's V17 measurement, no r3. Queue row 103. Base measured: `7fc05de` (V0). Paths below that say `planned/` were true when measured.
 Estimate: 2-3 days across four independently testable milestones (M1/M2 ~100-150 prod lines + full mutation coverage each, M3/M4 ~80-150 prod lines + seam/render/continuation coverage each); if M2's measured cost or M3's seam churn exceeds this, split M3/M4 further per the existing splitting clause rather than compressing the mutation table or skipping the M4 real-question walk. This document is the
 only deliverable; the prototype uses Go overlays under `/tmp`, not repository code edits.
 

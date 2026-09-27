@@ -1,6 +1,6 @@
 {
   "sprint_id": "w-store-object-reference-index-iter202",
-  "design_doc": "design_docs/planned/w-store-object-reference-index.md",
+  "design_doc": "design_docs/implemented/w-store-object-reference-index.md",
   "base": "39dec32",
   "scope": "Row 103 entry/world reverse object references; committedBy row 104 excluded; no new /v1 route or duration",
   "milestones": [

@@ -1072,3 +1072,52 @@ The codex probe returned rc=0. No design doc was needed: the row plus row 20's �
 **Progress**: 1.0: clauses 4, 5, 6 unmet. **Clause 5 moved** (capability): a provenance walk's locate step is now one indexed read, so the ≤5-minute bar no longer degrades with log size (CLI 112.6 s → 0.09 s at N=10,000). The clause stays UNMET until row 114 times ≥3 real, unseeded questions. The drift alarm does not fire.
 
 **Next:** `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → tranche M2–M7 → 108 when #885 ships → 93, 114. Under `D-WORLD-42`'s default, the next routable clause-5 rows are 103 and 104 (each needs a design doc), then 99, 100, ahead of position 7. **Decision ledger: 29 rows, FIVE OPEN (`D-WORLD-38`, `D-WORLD-39`, `D-WORLD-40`, `D-WORLD-41`, `D-WORLD-42`).**
+
+## 202 — 2026-09-27 — row 103 LANDED: the workbench object page answers "who references this object?" (`referencedBy` = existence-checked edges from four covering entry/world indexes; reverse read p50 45–86 µs at N=10,000; walk locate → object → referencedBy → entry → payload 53 ms; judged 91, zero blocking; merge `c33b2a9`) [PRODUCT]
+
+**Pick and why.** Clause map unchanged from iteration 201 (4, 5, 6 UNMET). Every row on clauses 4 and 6 is blocked: 106 M5 on `D-WORLD-40`, 108 on `ailang#885` (re-measured OPEN), and 93 on both. Row 114 is gated on a real incident. `D-WORLD-42` is unanswered, and its default treats the routable clause-5 rows as critical path, in the order 103, 104, 99, 100. **Row 103** was first. Its premise was re-measured at HEAD: `objectEdges` still returned the `referencedBy` named stop (`workbench.go:175`), and no reverse index existed. The index grep found no prior attempt.
+
+**Gate 3.**
+- **Designer `codex:gpt-6-astra`**: the rotation pointer held `claude:claude-opus-5-5`, so the turn went to astra (probe rc=0; the ration gate blocked only `ollama`). It ran the codex recipe with a 45-min cap and produced a 557-line doc.
+  - A real file-backed census at N=10,000 found that `transition_ref`, `transition_fn_ref`, `interpreter_ref` and `worlds.state_root` resolve to objects. `prev_entry_hash_ref` and `log_head` resolve to entries: 9,999 and 10,000 entry-namespace controls, 0 object joins.
+  - Registry, journal and interface references are real object references, deferred by scope rather than excluded.
+  - Timings: covering-index plans at 52–86 µs p50 against 1.7–11.7 ms unindexed.
+- **Quorum r1 BLOCKED** (author vendor OpenAI benched; oc-glm, oc-kimi unreachable).
+  - gemini rejected, claiming the doc named a nonexistent `d.readCtx(r)` and `InvalidLimitError`. The controller measured both as present (`handlers.go:276`, callers at `:356/:389/:450` and `workbench.go:230`; `scan.go:14`), so the premise was false and was recorded as V16.
+  - sonnet passed, with a non-blocking estimate note that was applied verbatim (2–3 days).
+- **Quorum r2 BLOCKED 1/2.** gemini passed. sonnet rejected because four-index provisioning at production scale might outgrow row 96's 30 s ceiling, and proposed measuring at a larger N. The controller ran that measurement outside the sandbox with a SQL bulk-load overlay test (`/tmp/world202`, banked):
+  - 41.2 ms at N=10k, the control, which matches the design's 45 ms.
+  - 588.9 ms at N=100k.
+  - **7.635 s at N=1M**, with 4 indexes present each run.
+  - The rig's only real store (`~/.ailang/world/world.db`) holds 0 log entries.
+  - sonnet's verbatim fix (a) plus V17 → **narrow-refinement carve-out**, no r3.
+- **Planner `codex:gpt-6-sol`** (probe rc=0; 45-min cap, 144k tok) produced 8 compile-ordered landings (M1a–M4b) and 32 literal one-at-a-time mutations. Its base gates matched the controller's. The daemon race was sandbox-uninformative and was labelled so.
+- **Executor `codex:gpt-6-sol`** ran as two runs so each fit a 50-min cap: A for the store half (94k tok), B for the daemon/workbench half (119k tok). Snapshots went OUTSIDE the tree (`~/.ailang/state/mission-world-iter202/snap{,B}`). Totals: 538 production and 1,151 test lines; 22/22 and 10/10 mutations killed in-sandbox.
+- **Controller, outside the sandbox, pinned v0.41.0:** it rebuilt one commit per landing. Focused tests, vet, compile fence and `-race` on store/daemon/workbench were rc 0 at **all 8 boundaries**; the daemon race is the gate the sandbox could not run. The final `go test -count=1 ./...` and `verify_ail.sh` were rc 0 and gofmt was clean. The final tree was sha256-identical to both executor runs.
+- **Evaluator `sonnet`** (Agent tool, foreground, own detached worktree `.eval-world-iter202`, 906 s, 87 tool calls; 180k tok): **PASS 91/100, ZERO BLOCKING.**
+  - It independently re-ran vet, the compile fence, race, the full suite (one pre-existing `host/pkgproj` flake, green on retry, package untouched) and the N=10k probe.
+  - It bisected at `ac584ba` (M1b) and `946dd79` (M3b) and re-confirmed plan mutations MU2, MU9a, MU17 and MU24.
+  - Of its own 6 mutations, it killed the kind-order swap and the dropped writer-lock release. Three real survivors are test gaps: the `rows.Err()` drop, a StateRoot-only relation-mismatch bypass, and the 512-byte cap off-by-one. One is benign: `url.Values` escaping, because `html/template` still escapes the attribute.
+  - All are recorded as residuals on row 103.
+
+**Gate 3b.** PR [#157](https://github.com/sunholo-data/ailang-world/pull/157): head `ca5c90c` 2/2 green, `MERGEABLE/CLEAN` → squash **`c33b2a9`**. The SHA-pinned check-runs on the merge read 2/2 `success`. The first bounded poll slice ended at 1/2; it was re-polled and settled.
+
+**Ruled out / process findings**
+- **(a) A quorum premise that says "X does not exist" is a claim, not a fact.** gemini reached it from a V-log excerpt whose line range included `readCtx`'s body but not its name. One `rg` with the call sites as controls refuted it. The doc gained a V-row instead of a rewrite. This is instance 3 of the "reviewer objection rests on a misread premise" class; each time, measuring first saved a revision round.
+- **(b) A scale objection is answered by the measurement it asks for, not by argument.** The bulk-SQL overlay test measured N=1M in about 15 s of wall-clock and turned an open-ended "might exceed" into "4x margin at 100x the fixture."
+- **(c) zsh again, twice.** `$FILES` did not word-split in a manifest step (instance 5 on this rig), and macOS `/bin/bash` 3.2 has no associative arrays (`declare -A` → "unbound variable"). Scripted rebuilds now live in banked `bash` files with `case` lookups (`rebuildA.sh`, `rebuildB.sh`).
+- **(d) Splitting a large plan across two executor runs worked.** Each run finished inside the cap, and the controller committed run A's landings before launching B, so B's snapshot base was a committed head.
+- **(e) Harness, repeat instance only:** the heartbeat relative path (called via `$AILANG_DRIVER_SRC`), already ticketed. Nothing new.
+
+**Routing evidence**:
+- Base: `7fc05de` at Gate 1 and at worktree creation.
+- Controller `claude:claude-opus-5-5` (session; tok: not reported).
+- Designer `codex:gpt-6-astra` (90,271 tok); rotation pointer now `codex:gpt-6-astra`.
+- Quorum: r1 BLOCKED 1/2 present, r2 BLOCKED 1/2 present (`gemini-3-1-pro`, `claude-sonnet-5@claude-p`; `oc-glm-5-3`, `oc-kimi-k3` unreachable; `gpt6-astra` benched as author vendor) → carve-out.
+- Planner `codex:gpt-6-sol` (143,706 tok). Executor `codex:gpt-6-sol` (run A 94,452 + run B 119,315 tok). Evaluator `sonnet` (Agent tool; 179,833 tok).
+- Generator ≠ judge: astra designed, sol planned and built, sonnet judged. No role fell back.
+- **Metered $0.055** (gemini seat r1 $0.027 + r2 $0.028).
+
+**Progress**: 1.0: clauses 4, 5, 6 unmet. **Clause 5 moved** (capability): after row 96 made the walk's locate step one read, the walk's reverse hop, from an object to the entries and worlds that name it, is now one bounded indexed read rendered as checked links on the object page. The clause stays UNMET until row 114 times ≥3 real, unseeded questions. The drift alarm does not fire (two consecutive clause-5 landings).
+
+**Next:** `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → tranche M2–M7 → 108 when #885 ships → 93, 114. Under `D-WORLD-42`'s default, the next routable clause-5 row is **104** (`committedBy`, which needs a design doc and a schema change), then 99, 100. The three test-gap residuals on row 103 are cheap follow-ups. **Decision ledger: 29 rows, FIVE OPEN (`D-WORLD-38`–`42`).**

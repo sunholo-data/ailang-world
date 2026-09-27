@@ -1,6 +1,6 @@
 # Sprint plan: w-store-object-reference-index (iteration 202, row 103)
 
-**Base:** detached worktree `39dec32`. **Authority:** `design_docs/planned/w-store-object-reference-index.md` in full, including D1–D5, V16/V17, the appendix and its mutation table. The quorum outcome accepts the controller's V16 premise check and V17 scale measurement, with sonnet's D2 fix (a). This plan implements the whole entry/world reverse-reference row. Row 104 owns `committedBy`.
+**Base:** detached worktree `39dec32`. **Authority:** `design_docs/implemented/w-store-object-reference-index.md` in full, including D1–D5, V16/V17, the appendix and its mutation table. The quorum outcome accepts the controller's V16 premise check and V17 scale measurement, with sonnet's D2 fix (a). This plan implements the whole entry/world reverse-reference row. Row 104 owns `committedBy`.
 
 ## Gates and measured base
 
