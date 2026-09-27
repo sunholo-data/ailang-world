@@ -348,15 +348,14 @@ type Daemon struct {
 	interpreterVersion string
 }
 
-// readStore is the daemon's request-read surface: EXACTLY the five store
-// getters the six /v1 GET routes reach, each context-first.
+// readStore is the daemon's request-read surface: EXACTLY the six store
+// getters the seven /v1 GET routes reach, each context-first.
 //
-// FIVE methods, not six. The route count and the method count are different
+// SIX methods. The route count and the method count are different
 // numbers and the design doc conflates them in two places: GetLogEntry serves
-// BOTH GET /v1/log/{index} and the bounded loop of GET /v1/log, so six routes
-// reach the store through five distinct getters. There is no sixth method to
-// find; Commit is the write path (out of scope) and GetVerifyResult is off the
-// daemon's read path entirely.
+// BOTH GET /v1/log/{index} and the bounded loop of GET /v1/log, so seven routes
+// reach the store through six distinct getters. Commit and GetVerifyResult
+// are outside the daemon read path.
 //
 // *store.Store satisfies this by construction — New assigns the same handle to
 // both d.store and d.reads — so the seam adds no production behaviour. Its only
@@ -369,6 +368,7 @@ type readStore interface {
 	GetLogEntry(ctx context.Context, index int64) (store.LogEntry, bool, error)
 	GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error)
 	SelectedHead(ctx context.Context) (hashref.HashRef, bool, error)
+	ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error)
 }
 
 // IntegrityReport is the bounded startup sweep result.
@@ -638,6 +638,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/head", d.handleHead)
 	mux.HandleFunc("GET /v1/worlds/{ref}", d.handleWorld)
 	mux.HandleFunc("GET /v1/objects/{ref}", d.handleObject)
+	mux.HandleFunc("GET /v1/objects/by-semantic-id/{name...}", d.handleObjectsBySemanticID)
 	mux.HandleFunc("GET /v1/log/{index}", d.handleLogEntry)
 	mux.HandleFunc("GET /v1/log", d.handleLogRange)
 	mux.HandleFunc("GET /v1/registry/{name...}", d.handleRegistry)

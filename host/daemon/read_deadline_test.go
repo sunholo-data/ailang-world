@@ -38,9 +38,9 @@ const expiredReadDeadline = -1 * time.Nanosecond
 // The route table under test
 // ---------------------------------------------------------------------------
 
-// readRoute is one of the SIX /v1 GET routes that reach the store. Six routes,
-// FIVE distinct getters: GetLogEntry serves both /v1/log/{index} and the
-// bounded loop of /v1/log. A test that drives fewer than six routes cannot see
+// readRoute is one of the SEVEN /v1 GET routes that reach the store. Seven routes,
+// SIX distinct getters: GetLogEntry serves both /v1/log/{index} and the
+// bounded loop of /v1/log. A test that drives fewer than seven routes cannot see
 // a deadline that was installed in four handlers and forgotten in two, which is
 // exactly the drift shape this item is about.
 type readRoute struct {
@@ -50,7 +50,7 @@ type readRoute struct {
 }
 
 // seedReadRoutes seeds d's store with a genesis world plus one commit and
-// returns the six route targets, every one of which answers 200 against the
+// returns the seven route targets, every one of which answers 200 against the
 // unmutated daemon (asserted by the normal-deadline subtest below — without
 // that arm, a 503-on-everything daemon would pass the timeout assertions).
 func seedReadRoutes(t *testing.T, d *Daemon, label string) []readRoute {
@@ -67,6 +67,7 @@ func seedReadRoutes(t *testing.T, d *Daemon, label string) []readRoute {
 		{"log entry", "/v1/log/1", "GetLogEntry"},
 		{"log range", "/v1/log?from=0&limit=5", "GetLogEntry"},
 		{"registry", "/v1/registry/world/epoch-registry/v1", "GetRegistryHead"},
+		{"objects by semantic id", "/v1/objects/by-semantic-id/" + commit.Objects[0].SemanticID, "ObjectsBySemanticID"},
 	}
 }
 
@@ -169,6 +170,10 @@ func (b *blockingStore) SelectedHead(ctx context.Context) (hashref.HashRef, bool
 	return hashref.HashRef{}, false, b.block(ctx)
 }
 
+func (b *blockingStore) ObjectsBySemanticID(ctx context.Context, _, _ string, _ int) ([]store.Object, error) {
+	return nil, b.block(ctx)
+}
+
 // ---------------------------------------------------------------------------
 // recordingStore — records the context each getter received, then delegates
 // ---------------------------------------------------------------------------
@@ -225,6 +230,11 @@ func (r *recordingStore) GetRegistryHead(ctx context.Context, name string) (hash
 func (r *recordingStore) SelectedHead(ctx context.Context) (hashref.HashRef, bool, error) {
 	r.note(ctx)
 	return r.Store.SelectedHead(ctx)
+}
+
+func (r *recordingStore) ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error) {
+	r.note(ctx)
+	return r.Store.ObjectsBySemanticID(ctx, id, after, limit)
 }
 
 // ---------------------------------------------------------------------------
@@ -712,6 +722,10 @@ func (failingStore) GetRegistryHead(context.Context, string) (hashref.HashRef, b
 
 func (failingStore) SelectedHead(context.Context) (hashref.HashRef, bool, error) {
 	return hashref.HashRef{}, false, errSentinelInternal
+}
+
+func (failingStore) ObjectsBySemanticID(context.Context, string, string, int) ([]store.Object, error) {
+	return nil, errSentinelInternal
 }
 
 // TestInternalErrorsAreSanitized is AC5's persistent form.
