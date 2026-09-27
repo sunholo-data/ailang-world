@@ -93,7 +93,7 @@ var errStoreInterrupted = errors.New("store: query interrupted (SQLITE_INTERRUPT
 // every 503 assertion in this file reds on it.
 var errStoreEscaped = errors.New("blockingStore: released by the test watchdog — this arm never passes")
 
-// blockingStore embeds the real *store.Store and overrides ALL FIVE getters to
+// blockingStore embeds the real *store.Store and overrides ALL SIX getters to
 // block. All five, not one: the six routes reach the store through five
 // different getters, so a one-getter fake would let the other routes fall
 // through to the embedded real store, answer 200 in microseconds, and red the
@@ -691,7 +691,7 @@ const internalDetailSentinel = "kQ7v-store-detail-9f3c1d82"
 var errSentinelInternal = errors.New(
 	`store: open "/private/var/folders/` + internalDetailSentinel + `/world.db": disk I/O error`)
 
-// failingStore wraps the real store and overrides ALL FIVE getters to fail with
+// failingStore wraps the real store and overrides ALL SIX getters to fail with
 // the sentinel error. It WRAPS rather than replaces (the iteration-80 vacuity
 // trap): every line of the handler under test — readCtx, defer cancel, timedOut,
 // writeInternalError — is the production path.
@@ -743,7 +743,7 @@ func (failingStore) ObjectsBySemanticID(context.Context, string, string, int) ([
 // still satisfies (a) — it dies on (b). A single combined assertion would be
 // killable by either mutation and would tell you nothing about which.
 //
-// The route enumeration matters too: it drives all SIX read routes plus
+// The route enumeration matters too: it drives all SEVEN read routes plus
 // POST /v1/commit, i.e. every 500 branch in the package, so a sanitizer
 // installed in five handlers and forgotten in the sixth reds here.
 func TestInternalErrorsAreSanitized(t *testing.T) {

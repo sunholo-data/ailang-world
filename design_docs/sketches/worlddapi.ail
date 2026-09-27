@@ -74,8 +74,10 @@ export func routes() -> list[Route] ! {} {
     { method: "GET", path: "/v1/head" },
     { method: "GET", path: "/v1/worlds/{ref}" },
     { method: "GET", path: "/v1/objects/{ref}" },
+    { method: "GET", path: "/v1/objects/by-semantic-id/{name...}" },
     { method: "GET", path: "/v1/log/{index}" },
-    { method: "GET", path: "/v1/registry/{name}" },
+    { method: "GET", path: "/v1/log" },
+    { method: "GET", path: "/v1/registry/{name...}" },
     { method: "POST", path: "/v1/commit" }
   ]
 }

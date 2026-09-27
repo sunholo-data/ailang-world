@@ -7,7 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -337,5 +340,46 @@ func TestCommitFileBound(t *testing.T) {
 	}
 	if !strings.Contains(stderr.String(), fmt.Sprintf("exceeds %d bytes", maxClientCommitBytes)) {
 		t.Fatalf("stderr=%q", stderr.String())
+	}
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+func TestObjectFindCLI(t *testing.T) {
+	old := http.DefaultTransport
+	defer func() { http.DefaultTransport = old }()
+	var paths []string
+	var queries []string
+	http.DefaultTransport = roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		if r.Method != http.MethodGet {
+			t.Fatalf("method=%s, want GET", r.Method)
+		}
+		paths = append(paths, r.URL.EscapedPath())
+		queries = append(queries, r.URL.RawQuery)
+		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(`{"items":[]}`)), Header: make(http.Header)}, nil
+	})
+	after := hashref.SumSHA256([]byte("cursor")).String()
+	for _, args := range [][]string{{"find", "world/mission/incident/a b"}, {"find", "world/mission/incident/a b", "--after", after, "--limit", "37"}} {
+		var out, errs bytes.Buffer
+		if code := runObject("http://example.test", args, &out, &errs); code != exitOK {
+			t.Fatalf("args=%v code=%d stderr=%s", args, code, errs.String())
+		}
+		if strings.TrimSpace(out.String()) != `{"items":[]}` {
+			t.Fatalf("output=%q", out.String())
+		}
+	}
+	for i, p := range paths {
+		if p != "/v1/objects/by-semantic-id/world/mission/incident/a%20b" {
+			t.Fatalf("path[%d]=%q", i, p)
+		}
+	}
+	if queries[0] != "" {
+		t.Fatalf("default query=%q", queries[0])
+	}
+	values, err := url.ParseQuery(queries[1])
+	if err != nil || values.Get("after") != after || values.Get("limit") != "37" {
+		t.Fatalf("options query=%q (%v)", queries[1], err)
 	}
 }
