@@ -1,9 +1,9 @@
 # w-object-lookup-by-semantic-id — Find an object by semanticId without a log scan (row 96)
 
-**Status**: Planned — design + prototype (iteration 201, designer `claude:claude-opus-5-5`). The prototype is in this worktree at its real paths (see "Prototype manifest"). It is a measured draft, not a landing.
+**Status**: Planned — **REVISION 1** after quorum round 1 (BLOCKED 2/2 present; see "Quorum log"). Design + prototype (iteration 201, designer `claude:claude-opus-5-5`). The r0 prototype was measured in this worktree and then moved out by the controller to `~/.ailang/state/world-iter201/prototype/` (see "Prototype manifest"). The r1 changes (the index guard and dropping `next`) are **designed, not prototyped**. It is a measured draft, not a landing.
 **Item**: queue row 96 of `design_docs/world-mission.md` (`w-object-lookup-by-semantic-id`). The row closes finding F-1 of `design_docs/verification/w-1-0-value-demonstration.md` and rules on F-2.
 **Clauses**: clause-5 (*"on ≥3 REAL 'why did X happen' questions, a provenance walk yields the verified answer in ≤5 minutes each, where the pre-World method was grep/log archaeology"*). The route is read-only and adds no effect, so no other clause is touched.
-**Estimate**: ~1d as the row says. Three milestones of ≤150 production lines each (M1 store query + index, M2 route, M3 frozen-table extension: sketch, CLI verb, counts). They are sized from the prototype's measured lines (V20).
+**Estimate**: ~1d as the row says. Three milestones of ≤150 production lines each (M1 store query + index provisioning + index guard, M2 route + 503 guard class, M3 frozen-table extension: sketch, CLI verb, counts). They are sized from the r0 prototype's measured lines (V20), plus a labelled r1 estimate delta (§c).
 **Verified against**: dev `c30b967` (worktree `.wt-world-iter201-design`, branch `design/w-object-lookup-by-semantic-id`). Every claim of the form "the codebase does X" has a Verification Log row with its command and observed output. Pinned interpreter: `$HOME/.pinned-ailang/ailang` (v0.41.0, V0). Machine: Apple M4 Max, macOS 26.6.2 (V0).
 
 ---
@@ -93,9 +93,19 @@ doc + quorum"). The argument:
 **What the extension changes (M3):**
 
 - The canonical frozen table is `routes()` in `design_docs/sketches/worlddapi.ail` (V8). M3 adds
-  `{ method: "GET", path: "/v1/objects/by-semantic-id/{name}" }` to it. This is the one `.ail`
-  change: a data row in an existing checked list. No new function, contract or type is added, and
-  `scripts/verify_ail.sh` re-checks the sketch (V8).
+  `{ method: "GET", path: "/v1/objects/by-semantic-id/{name}" }` to it. **Exactly what row 96 adds**
+  (corrected in r1; r0 overclaimed "no new function, contract or type"):
+  - **one route** (the mux pattern, plus its `routes()` row, plus the `object find` CLI verb);
+  - **one Go response struct**, `objectPageResponse{Items []objectResponse}`. It has the same
+    `{"items":[…]}` envelope as `logRangeResponse` (`handlers.go:63-65`, V24) and no other field;
+  - **one store method**, `ObjectsBySemanticID`, plus one `readStore` seam method, plus one store
+    error type, `LookupIndexUnavailableError` (B4);
+  - **one index**, `objects_by_semantic_id`, provisioned at writable open (B4);
+  - **one sketch `ApiError` variant**, `LookupIndexUnavailable(string)`, with its `httpStatus` arm
+    `=> 503` and one test vector (B6). It is the sketch-side authority for the guard's status,
+    mirrored the same way `TestTimeoutStatusMirrorsSketch` mirrors `Timeout` today.
+
+  No new contract is added. `scripts/verify_ail.sh` re-checks the sketch (V8).
 - **Pre-existing drift, fixed in the same edit.** `routes()` lists **7** routes, but
   `daemon.go:630` says "eight … (seven GET, one POST)". The sketch has never listed
   `GET /v1/log` (range) (V8, V6). M3 adds both rows, so the sketch and the comment agree on
@@ -153,6 +163,9 @@ SELECT hash_ref, interface_hash_ref, semantic_id, provenance
   metadata only (Decision 7 of `w-worldd-m2`). The walker fetches the payload of the one object it
   wants with the existing `object get --payload`.
 - It runs under the caller's `ctx` (`QueryContext`), which is the existing read-deadline seam (B6).
+- **Index guard, before any query.** If the handle's cached index verdict (B4) is "absent or
+  incompatible", the method returns `*LookupIndexUnavailableError` **without executing the lookup
+  query**. It never falls back to a table scan.
 - It parses every hash column with `hashref.Parse`. A malformed stored ref is an error (500), the
   same as `GetObject` (V12).
 - `readStore` gains a sixth method. The seam comment's "five distinct getters" becomes six
@@ -163,6 +176,14 @@ SELECT hash_ref, interface_hash_ref, semantic_id, provenance
 ```sql
 CREATE INDEX IF NOT EXISTS objects_by_semantic_id ON objects(semantic_id, hash_ref);
 ```
+
+**r1: where this DDL lives.** It is **not** in `schema.sql` (the r0 prototype put it there). A
+writable open re-executes `schema.sql` with `db.Exec`, which has no deadline (`store.go:355`,
+V15). Instead, M1 adds a provisioning step, `provisionLookupIndex`, that runs inside writable
+`Open` after `enforceSchemaVersion` succeeds, for fresh and existing stores alike. It runs as
+`ExecContext` under `context.WithTimeout(lookupIndexProvisionDeadline)`, a named constant of
+**30 s**. That is ~500× the measured build time of 60 ms for 100,000 objects (V19). `schema.sql` gets
+a one-line comment pointing at the step, and no DDL.
 
 The composite key `(semantic_id, hash_ref)` makes the query a single index range scan in the
 requested order. SQLite needs no sort step, and `EXPLAIN QUERY PLAN` shows
@@ -176,19 +197,53 @@ id such as `world/journal-intent/v1`, which has one object per commit (MU7).
 - **No `user_version` bump.** `enforceSchemaVersion` refuses any store below the binary's version
   as legacy and has no migration path (`store.go:348,371`, V15). Bumping 3→4 would make every
   existing v3 store unopenable, which is too high a price for an access path. An index is not
-  semantic state. The query returns identical rows with or without it (AC-8 proves this by
-  dropping the index and re-querying). A v3 store with the index and a v3 store without it are
+  semantic state. At store level the query returns identical rows with or without it (AC-8
+  proves this by dropping the index and re-querying the *unguarded* SQL). **AC-8 is retained only
+  as that store-level result-equivalence property. It is not permission for a serving
+  fallback:** the served path is guarded (above). A v3 store with the index and a v3 store without it are
   therefore the same schema version in every observable way. Both binary directions work, because
   SQLite maintains an index whatever binary writes the table.
-- **Existing v3 stores get the index on their next writable open.** At the current version a
-  writable `Open` re-executes the whole embedded `schema.sql` (`store.go:353-356`, V15), so
-  `CREATE INDEX IF NOT EXISTS` builds it once. The one-time build cost at 50,000 objects is in
-  §Measurements (V19). A read-only handle does not apply the schema. On a store that has never
-  been opened writable since the upgrade, the query falls back to a table scan and stays correct.
+- **The index is a precondition of the lookup; there is no serving fallback (r1, quorum
+  objection 1 applied verbatim).** The lookup requires the composite `objects_by_semantic_id`
+  index. Before enabling the route, verify its definition. If the index is absent or incompatible
+  on a read-only store, return an explicit 503 `LookupIndexUnavailable` response with remediation
+  instructions; do not execute the lookup query. Provisioning occurs through a writable open under
+  an explicit bounded deadline, and provisioning failures are surfaced rather than ignored.
+
+  How that is realized:
+  - **Where the check lives: once per handle, at `Open` / `OpenReadOnly`, cached on the `Store`.**
+    `verifyLookupIndex` reads `PRAGMA index_info('objects_by_semantic_id')` and the index's
+    `sqlite_master.tbl_name`. It accepts only table `objects` with columns exactly
+    `[semantic_id, hash_ref]` in that order. Any other shape, including a same-named index on
+    different columns, is "incompatible". The verdict is stored in an immutable field set before
+    `Open` returns. **Why not per call:** a per-call check would add one `sqlite_master`/PRAGMA
+    round trip to every request, inside the read deadline, to detect a change that cannot happen
+    under a writable handle. The store is single-writer (writer lock), and no code drops indexes
+    (V12's DELETE census; there is no `DROP INDEX` in production code). The one stale case is a
+    read-only handle whose store another process provisions later. It keeps answering 503 until it
+    is reopened, which is explicit, not silent. The cost is one PRAGMA per open and zero per call.
+  - **Writable open:** provision (bounded, above), then verify. A provisioning error, a deadline
+    expiry, or a post-provision verdict of "incompatible" makes `Open` **return an error** (the
+    daemon then fails startup at its existing `store.Open` stage). It is never ignored, and an
+    incompatible same-named index is never silently dropped and rebuilt. So a writable handle
+    always carries a verified index, or does not exist.
+  - **Read-only open:** verify only (a read-only handle must not attempt DDL, `store.go:266-268`).
+    It caches "absent/incompatible" and opens anyway, so the other reads keep working, and only
+    this lookup answers 503.
+  - **The 503 branch is a guard, not an expected path.** Production has **0** `OpenReadOnly`
+    callers. The daemon opens its store with `store.Open(cfg.DBPath)` (`daemon.go:470`), as do
+    `cmd/ailang-worldd/session.go:145,211` and the four `cmd/world-publish` sites (V23). So every
+    production handle is writable, and the index is provisioned and verified at daemon startup
+    before the route can be served. The guard exists so that a future read-only consumer (for
+    example a read-replica workbench) cannot silently degrade to an O(N) scan.
+  - **Remediation text (fixed, host-detail-free, like the 500 sanitizer):** `"semantic-id lookup
+    index is absent or incompatible on this read-only store; open the store writable once (for
+    example start ailang-worldd serve on it) to provision objects_by_semantic_id"`.
 - **Pinned-text tests.** `TestSchemaDDLMatchesCanonicalManifest` compares `type='table'` rows only
   (`journal_test.go:969-972`, V15), so an index does not red it. The `schemaV{1,2,3}SQL` ledger
-  pins *tables* per version and is left untouched. M1 adds a new test that pins the index DDL on
-  fresh and reopened stores (AC-7).
+  pins *tables* per version and is left untouched. Because r1 keeps the DDL out of `schema.sql`,
+  the `schemaSQL`-applying fixtures in `schema_version_test.go` are unaffected too. M1 adds new
+  tests that pin the index on fresh and reopened stores (AC-7) and the guard (AC-13..AC-15).
 - **The row-103 "0 indexes" measurement becomes 1.** Row 103's text is historical, so no edit
   is needed, but its designer must re-measure (Conflict Surface).
 
@@ -213,10 +268,14 @@ explicitly, so row 104 can add a chronological order later as a new, opt-in quer
 - **Limit:** `limit` goes through the existing, Z3-mirrored `clampLimit`. Absent or ≤0 gives
   **100**; above 500 is clamped to **500**, which is the **hard cap** (`handlers.go:240-250`, V10).
   A non-integer `limit` is a 400, the same as `GET /v1/log`.
-- **Pagination:** keyset. `after` is a canonical HashRef (parsed with `parseRef`; malformed gives
-  400). The response carries `next` = the last item's hash **iff the page is full**
-  (`len(items) == limit`). A client pages with `?after=<next>` until `next` is absent. A full last
-  page yields one extra, empty request. That is the standard keyset trade and is deterministic.
+- **Pagination (r1: no `next` field; quorum objection 2's paging rule, verbatim):** keyset. `after`
+  is a canonical HashRef (parsed with `parseRef`; malformed gives 400). The client must "read the
+  `hash` of the last item to construct `?after=`, terminating when len(items) < limit or the
+  returned page is empty". This needs no server-issued token, because the cursor *is* the ordering
+  key of the last item. A full last page costs one extra, empty request, which is the standard
+  keyset trade and is deterministic. The client must know the effective limit. It is `limit` if
+  1..500 was sent, 500 if more was sent, and 100 if none. That is the same `clampLimit` rule
+  `GET /v1/log` clients already rely on.
 
 ### B6. Error mapping (consistent with the existing handlers)
 
@@ -225,7 +284,8 @@ explicitly, so row 104 can add a chronological order later as a new, opt-in quer
 | empty name (`/v1/objects/by-semantic-id/`) | 400 | `BadRequest` "semantic id is empty" | `handleRegistry` empty name |
 | malformed `after` | 400 | `BadRequest` (parseRef text) | `handleObject` |
 | non-integer `limit` | 400 | `BadRequest` "limit must be an integer" | `handleLogRange` |
-| **no object has this semanticId** | **200** | `{"items":[]}` (no `next`) | `GET /v1/log?from=<past end>` returns 200 `[]` |
+| **no object has this semanticId** | **200** | `{"items":[]}` | `GET /v1/log?from=<past end>` returns 200 `{"items":[]}` |
+| lookup index absent/incompatible (read-only handle only; unreachable in production, V23) | **503** | **`LookupIndexUnavailable`** with the fixed remediation text (B4); the lookup query is **not** executed | new sketch arm `LookupIndexUnavailable(_) => 503` (B1) |
 | read deadline exceeded | 503 | `Timeout` via `writeReadTimeout` | every GET handler (`readCtx` + `timedOut`) |
 | any other store error | 500 | `Internal` via `writeInternalError` (sanitized) | every GET handler |
 
@@ -243,31 +303,39 @@ no edit.
 ### B7. Response shape (reuses `objectResponse`)
 
 ```json
-{"items":[{"hash":"sha256:…","interfaceHash":"sha256:…","semanticId":"world/mission/incident/iter171-index-row","provenance":"w-prove-1-0-phase-a"}],
- "next":"sha256:…"}
+{"items":[{"hash":"sha256:…","interfaceHash":"sha256:…","semanticId":"world/mission/incident/iter171-index-row","provenance":"w-prove-1-0-phase-a"}]}
 ```
 
-Each item is the existing `objectResponse` with `Payload` nil, so the `payload` key is absent,
-exactly as in `GET /v1/objects/{ref}` without `?payload=true`. `?payload=true` is **not** honoured
-here: 500 unbounded payloads in one response would break Decision 7. `next` is `omitempty`.
+The envelope is exactly `GET /v1/log`'s: `logRangeResponse` is `{"items":[…]}` with no other
+field (`handlers.go:63-65`, `:492`, V24). r1 drops the r0 `next` field (quorum objection 2). Each
+item is the existing `objectResponse` with `Payload` nil, so the `payload` key is absent, exactly
+as in `GET /v1/objects/{ref}` without `?payload=true`. `?payload=true` is **not** honoured here:
+500 unbounded payloads in one response would break Decision 7.
 
-### B8. No `.ail` change beyond the route row
+### B8. `.ail` changes: sketch data only
 
 The route is host transport over an existing pure predicate (`clampLimit`, mirrored from the sketch)
 and a store read. Coding standards put effects at the host boundary. There is no new pure decision
 to lift into AILANG, since the ordering and limit rules are a SQL clause plus the existing
-`clampLimit`. The only `.ail` edit is the `routes()` data rows (B1).
+`clampLimit`. The `.ail` edits are all in the frozen sketch: the two `routes()` data rows (B1), and
+the `ApiError` variant `LookupIndexUnavailable(string)` with its `httpStatus` arm and one test
+vector (B1, B6). The index check itself is host I/O (a PRAGMA), so it belongs in Go.
 
 ## (c) Milestones (dependency order; each ≤150 production lines)
 
-| # | milestone | production files | est. prod LOC | depends on |
-|---|---|---|---|---|
-| M1 | store query + index | `host/store/schema.sql` (+1 stmt), `host/store/objects_by_semantic_id.go` (new) | ~60 | — |
-| M2 | read route + seam | `host/daemon/handlers.go` (handler + response type), `host/daemon/daemon.go` (mux line, `readStore` method, comments) | ~60 | M1 |
-| M3 | frozen-table extension | `design_docs/sketches/worlddapi.ail` (+2 route rows), `cmd/ailang-worldd/cli.go` + `main.go` usage (`object find`), comment counts in `daemon.go` | ~45 | M2 |
+| # | milestone | production files | r0 measured prod LOC (V20) | **r1 delta (ESTIMATE, not prototyped)** | r1 est. total | depends on |
+|---|---|---|---|---|---|---|
+| M1 | store query + bounded index provisioning + cached index guard | `host/store/objects_by_semantic_id.go` (new), `host/store/store.go` (call `provisionLookupIndex`/`verifyLookupIndex` from `Open`/`OpenReadOnly`; one `Store` field), `host/store/schema.sql` (comment only) | 63 (56 store file + 7 schema) | **+~45**: `LookupIndexUnavailableError` ~10, `provisionLookupIndex` with deadline ~12, `verifyLookupIndex` (PRAGMA index_info + tbl_name) ~18, guard + test hook ~5; **−6** schema DDL moved out | **~102** | — |
+| M2 | read route + seam + 503 guard class | `host/daemon/handlers.go` (handler, `objectPageResponse`, 503 mapping), `host/daemon/daemon.go` (mux line, `readStore` method), `design_docs/sketches/worlddapi.ail` (ADT variant + arm + vector) | 64 (62 handlers + 2 daemon.go) | **+~8** (`errors.As` → `writeAPIError(…"LookupIndexUnavailable"…, 503)`); **−4** (`next` field + assignment) | **~68** Go, + ~3 `.ail` lines | M1 |
+| M3 | frozen-table extension | `design_docs/sketches/worlddapi.ail` (+2 route rows), `cmd/ailang-worldd/cli.go` + `main.go` usage (`object find`), comment counts in `daemon.go` | 36 (34 cli + 2 main) | **+~6** comment-count edits; 0 for `next` (the CLI never read it) | **~42** | M2 |
 
-The prototype implements M1 and M2 in full and the M3 CLI verb. It does not implement the M3
-sketch edit or AC-9 (see "What the prototype does not do").
+Every milestone stays ≤150. The r1 deltas are the designer's line estimates for code this round did
+**not** write; the M1/M2 executor must report the measured numbers. Moving the sketch `ApiError`
+arm into M2 (not M3) is deliberate. The handler's 503 class needs its sketch authority in the same
+landing, the way `Timeout` is mirrored by `TestTimeoutStatusMirrorsSketch`.
+
+The r0 prototype implements M1 and M2 as they stood in r0, and the M3 CLI verb. It does not
+implement the M3 sketch edit, AC-9, or any r1 change (see "What the prototype does not do").
 
 ## (d) Acceptance criteria + non-vacuity
 
@@ -279,20 +347,28 @@ mutation per branch.
 | AC-1 | non-unique names: 3 objects sharing one semanticId are all returned; an object with a different id is not | `TestObjectsBySemanticIDNonUniqueOrderedAndPaged` | MU3 (prefix match) → store test red |
 | AC-2 | ordering determinism: items are in strictly ascending `hash` order, identical across two calls and independent of insertion order | same test (inserts in reverse-hash order) | MU1 (DESC) → store + route tests red |
 | AC-3 | pagination: `after` resumes strictly after the cursor; the union of pages = the full set, no dupes | same test | MU2 (`>=`) → store + route red; MU4 (LIMIT ignored) → store + route red |
-| AC-4 | empty vs bad request: unknown name → 200 `items:[]`, no `next`; empty name → 400 | `TestObjectsBySemanticIDRoute` | MU8 (empty-name branch) → route test red |
-| AC-5 | cap: `limit=100000` returns ≤500 and `next` set when more exist; default is 100 | `TestObjectsBySemanticIDRouteCapAndDefault` | MU11 (default 500) / MU12 (cap bypass) / MU13 (next always) → cap test red |
+| AC-4 | empty vs bad request: unknown name → 200 exactly `{"items":[]}`; empty name → 400 | `TestObjectsBySemanticIDRoute` | MU8 (empty-name branch) → route test red |
+| AC-5 | cap + paging rule: with 520 objects, the default page is 100; `limit=100000` returns exactly 500; `?after=<hash of item 500>&limit=500` returns the last 20 (< limit, so the client stops); the union has 520 distinct, ascending hashes; **no response carries a `next` key** (r1) | `TestObjectsBySemanticIDRouteCapAndDefault` (r1 revision: assert via the last item's hash, not `next`) | MU11 (default 500) / MU12 (cap bypass) → cap test red; **MU13r** (r1: re-add a `next` field) → the "no `next` key" assertion red. Designed, not run |
 | AC-6 | refusals: malformed `after` → 400; non-integer `limit` → 400; `/v1/objects/by-semantic-id` without a name does not reach the lookup | `TestObjectsBySemanticIDRoute` | MU9 (after unparsed) / MU10 (limit error ignored) → route test red, one each |
-| AC-7 | the index exists on a fresh store and the plan uses it | `TestObjectsBySemanticIDUsesIndex` | MU6 (index dropped) / MU7 (single-column index) → index test red |
-| AC-8 | the index is not semantic: dropping it yields byte-identical results | `TestObjectsBySemanticIDUsesIndex` | the arm runs after DROP INDEX; a result that depended on the index (none today) would red. Recorded as a property, not killed by a mutation |
+| AC-7 | a writable open (fresh or existing-without-index) provisions the index, and the plan uses it | `TestObjectsBySemanticIDUsesIndex`, `TestSemanticIDIndexBuiltOnWritableReopen` | MU6 (provisioning statement deleted) / MU7 (single-column index) → index tests red. In r0 the DDL was in `schema.sql` and MU6/MU7 mutated it there; r1 mutates `provisionLookupIndex` |
+| AC-8 | **store-level result equivalence only** (r1): the *unguarded* lookup SQL returns byte-identical rows with and without the index. This is not a serving fallback | `TestObjectsBySemanticIDUsesIndex` (r1: runs `objectsBySemanticIDSQL` directly after DROP INDEX, since the guarded method would now refuse) | recorded as a property, not killed by a mutation |
 | AC-9 | (M3) the mux's `/v1` patterns equal `routes()` in the sketch, count 9 | NOT PROTOTYPED | M3 executor must show: delete the mux line → red; delete a sketch row → red |
 | AC-12 | the new route is in the shared read-route harness, so the existing deadline (503) and sanitization (500) gates cover it | `seedReadRoutes` + `blockingStore`/`recordingStore`/`failingStore` overrides in `read_deadline_test.go` | MU14, MU15, MU16 |
 | AC-10 | store error → 500 sanitized; deadline → 503 | `TestObjectsBySemanticIDRouteStoreErrors` (fault-injecting `readStore` wrapper, the V13 seam's purpose) | MU14 / MU16 → deadline / sanitize tests red |
 | AC-11 | walk re-timed at N=10,000: route locate p50 ≤ 1 s and far below the scan | `TestWalkRetimedAtScale` (env-gated, `WORLD_WALK_N`) | reported as measurement, not a gate (see §Measurements) |
+| AC-13 | **(r1, astra's named test)** an unindexed v3 store opened **read-only** answers `*LookupIndexUnavailableError`, and **no lookup query executes** (a test-only hook, `objectsBySemanticIDBeforeQuery`, is called 0 times; precedent `readObjectBetweenStatements`, V26). Then a **writable** open provisions the index, and a fresh read-only open's lookup succeeds and `EXPLAIN QUERY PLAN` shows `USING INDEX objects_by_semantic_id` | `TestLookupIndexGuardReadOnlyThenProvision` | **MU20** (guard removed: verdict ignored) → error expected, got rows, hook count 1 → red. **MU21** (`OpenReadOnly` skips `verifyLookupIndex`, zero-value verdict "present") → same red |
+| AC-14 | (r1) an **incompatible** same-named index (`objects(semantic_id)` only) is refused: read-only → the AC-13 error; writable `Open` → returns an error and leaves the index untouched | `TestLookupIndexIncompatibleIsRefused` | **MU22** (verify checks existence only, not columns) → read-only lookup runs; writable `Open` succeeds → red |
+| AC-15 | (r1) provisioning failure is surfaced: with `lookupIndexProvisionDeadline` forced to an already-expired value (test seam), writable `Open` returns an error wrapping `context.DeadlineExceeded` and no `*Store` | `TestLookupIndexProvisionFailureIsSurfaced` | **MU23** (provision error discarded: `_ = provisionLookupIndex(…)`) → `Open` succeeds → red |
+| AC-16 | (r1) route mapping: a `readStore` returning `*LookupIndexUnavailableError` → **503**, class `LookupIndexUnavailable`, the fixed remediation text, no host detail; the class/status equal the sketch's new `httpStatus` arm (parsed by `sketchHTTPStatusVectors`) | `TestLookupIndexUnavailableIs503` (fault-injecting `readStore` wrapper; production cannot reach this branch through `New`, V23) | **MU24** (mapping deleted → falls to `writeInternalError`) → 500 `Internal` → red; **MU25** (sketch arm `=> 503` edited to `=> 500`) → mirror assertion red |
 
-## Prototype manifest (files changed in this worktree)
+## Prototype manifest (r0; files as measured in this worktree, now moved)
 
 From `git status --short` / `git diff --stat` against `c30b967` (V20). Production lines are
-`+` lines, comments included.
+`+` lines, comments included. **After r0 the controller moved these files out of the worktree to
+`~/.ailang/state/world-iter201/prototype/` (same relative paths). The revision round edits the doc
+only.** The table describes the **r0** prototype. It still has the index DDL in `schema.sql`, the
+`next` field, and no index guard. Those are exactly the r1 changes, designed in B4/B5/B7 and
+estimated in §c, and not prototyped.
 
 | file | status | what | + lines |
 |---|---|---|---|
@@ -336,7 +412,7 @@ then restores the file from a scratch backup. Output is in `mutations.log` next 
 | MU10 | `limit` Atoi error ignored | route Route | `status = 200, want 400` |
 | MU11 | default page 500 instead of 100 | route CapAndDefault | `default page: 500 items …, want 100` |
 | MU12 | cap bypassed for `limit > 500` | route CapAndDefault | `oversized limit: 0 items next="", want the 500 cap` (the store's own bound refuses → 500) |
-| MU13 | `next` set on any non-empty page | route Route, CapAndDefault | `json: cannot unmarshal string into … []map` (a `next` key appeared on a non-full page) |
+| MU13 | `next` set on any non-empty page | route Route, CapAndDefault | `json: cannot unmarshal string into … []map` (a `next` key appeared on a non-full page). **Retired in r1**: the `next` field is dropped, and MU13r (§d AC-5) replaces it |
 | MU14 | timeout branch disabled (`if false && timedOut`) | TestDaemonReadDeadline/real-store-expired-deadline, /blocking-store | `status = 500, want 503` |
 | MU15 | lookup runs under `r.Context()`, not `readCtx` | TestDaemonReadDeadline (both arms) | `status = 200, want 503` |
 | MU16 | 500 writes `err.Error()` instead of `writeInternalError` | TestInternalErrorsAreSanitized/read-routes | `the 500 body leaked the store's internal detail "kQ7v-store-detail-9f3c1d82"` |
@@ -344,7 +420,9 @@ then restores the file from a scratch backup. Output is in `mutations.log` next 
 | MU18 | mux line removed | route Route, CapAndDefault; TestDaemonReadDeadline/normal-deadline-answers-200 … | `match status = 404 body=404 page not found` |
 | MU19 | **green control**: comment-only edit | — (both packages `ok`) | none, as required |
 
-**18 killed, 0 survived, 1 green control stayed green.** MU3 survives the *daemon* package alone
+**r0 battery: 18 killed, 0 survived, 1 green control stayed green.** **r1 mutations MU13r and
+MU20–MU25 (§d AC-5, AC-13..AC-16) are DESIGNED, NOT RUN.** This round edits the doc only, and the
+M1/M2 executor must run them and record the observed reds. MU3 survives the *daemon* package alone
 but is killed in the store package, which is where the predicate lives. **Note on MU4:** on the
 first battery MU4 **survived the store package**. The paging loop accepted a 7-item page for
 limit 3, because the concatenation was still correct. The test now asserts `len(page) ≤ 3`, and
@@ -408,13 +486,18 @@ unmodified tree even after the prototype's edits). Scratch = `~/.ailang/state/wo
 | V19 | one-time index build | `sqlite3 -readonly … ".backup scratch/idx-copy.db"`, `DROP INDEX`, then `.timer on` + `CREATE INDEX objects_by_semantic_id …`; same on a 100,000-row synthetic `objects` | `20004` objects: `Run Time: real 0.019`; `100000`: `real 0.060` |
 | V20 | prototype size | `git diff --stat`; `wc -l host/store/objects_by_semantic_id.go`; `git diff <file> \| grep -c '^+[^+]'` | 6 tracked files, +122/−1 (incl. test file); new store file 56 lines; handlers +62, cli +34, daemon.go +2, main.go +2, schema +7 |
 | V21 | mutation battery | `python3 scratch/mutate.py` then `python3 scratch/mutate.py MU4 MU19` | as §Mutations; `mutations.log` |
+| V23 | **`OpenReadOnly` has 0 production callers; every production open is writable** (census for B4's guard) | `/usr/bin/grep -rn "OpenReadOnly(\|store\.Open(" host cmd \| grep -v _test` (worktree) and `git grep -n "OpenReadOnly(\|store\.Open(" c30b967 -- host cmd \| grep -v _test` | `OpenReadOnly(` matches **only its definition** `host/store/store.go:273`. **Positive control, same command:** `store.Open(` matches **7** production call sites: `host/daemon/daemon.go:470`, `cmd/ailang-worldd/session.go:145`, `:211`, `cmd/world-publish/main.go:261`, `:295`, `:458`, `cmd/world-publish/transitions.go:69` |
+| V24 | `GET /v1/log`'s list shape is an `{"items":[…]}` envelope with no `next` (refutes objection 2's raw-array premise) | `git show c30b967:host/daemon/handlers.go \| grep -n "type logRangeResponse\|Items \[\]logEntryResponse\|logRangeResponse{Items: items}"` | `63: type logRangeResponse struct {`, `64: Items []logEntryResponse` with struct tag `json:"items"`, `492: writeJSON(w, http.StatusOK, logRangeResponse{Items: items})` |
+| V25 | the sketch's `ApiError` has `Timeout` → 503 (the arm pattern the new variant follows) | `git show c30b967:design_docs/sketches/worlddapi.ail \| grep -n "\| Timeout(string)\|Timeout(_) => 503"` | `96: \| Timeout(string)`, `113: Timeout(_) => 503` |
+| V26 | a test-only hook precedent exists in the store | `git show c30b967:host/store/read_object.go \| grep -n "var readObjectBetweenStatements\|test-only scheduling input"` | `35: … is a test-only scheduling input`, `38: var readObjectBetweenStatements func()` |
 | V22 | gates on the prototype | `go vet ./...`; `go test -count=1 -run '^$' ./...`; `go test -race -count=1 ./host/store/ ./host/daemon/ ./cmd/ailang-worldd/`; `./scripts/verify_ail.sh`; `go test -count=1 ./...` (all with `AILANG_BIN` pinned, `GOCACHE`/`TMPDIR` outside the tree) | vet clean; compile fence clean; gofmt clean on touched files; `-race`: store `ok` 15.8s, daemon `ok` 17.9s, cmd/ailang-worldd `ok` 3.0s; `verify_ail.sh`: "verify gate PASSED: 16 required identities verified, 40 named tests pass". Full suite: **23 ok / 1 FAIL**. The FAIL is `host/broker` `TestOrdinaryOverflowCarriesNoESRCH` ("overflow kill: operation not permitted"), an EPERM on the kill path in a package this prototype does not touch (`git diff --stat c30b967 -- host/broker` is empty). **Re-run alone: `ok host/broker 66.481s`.** It is the same EPERM-under-load family as row 115 (capsule). I did not find a broker-specific row, so it is recorded here and not claimed as a known flake |
 
 ## (f) Conflict Surface
 
 | file | this row's change | open rows touching the same file |
 |---|---|---|
-| `host/store/schema.sql` | +1 `CREATE INDEX` | **103** (adds indexes + reverse read), **104** (commit-membership schema change). Additive, with no shared name. Both will need a version decision this doc does not take (B4). |
+| `host/store/schema.sql` | r1: **comment only** (the DDL moved to `provisionLookupIndex`) | **103** (adds indexes + reverse read), **104** (commit-membership schema change). No shared name. Both will need a version decision this doc does not take (B4). Row 103 may reuse the `provision…`/`verify…` pattern for its own indexes. |
+| `host/store/store.go` | r1: `Open`/`OpenReadOnly` call provision/verify; one `Store` field | **23 / PR #153** (store deadline policy; `lookupIndexProvisionDeadline` is a new named bound its tranche should list), **111** (busy/lock status). Textual merge only. |
 | `host/store/objects_by_semantic_id.go` (new) | query | none |
 | `host/daemon/handlers.go` | new handler + response type | **111** (`timedOut` / 500-vs-503), **23 / PR #153** (read deadline policy). This route calls their helpers unchanged, so their edits flow through (B6). Merge risk is textual only. |
 | `host/daemon/daemon.go` | mux line, `readStore` method, comment counts | **23 / PR #153** (readCtx/deadline wiring), **103** (a reverse read also extends `readStore`), **106** (coordinator wiring in `New`). Adjacent lines in the seam interface, so whichever lands second rebases one line. |
@@ -441,6 +524,19 @@ unmodified tree even after the prototype's edits). Scratch = `~/.ailang/state/wo
 - **G-6 — the walk's CLI-per-call spawn cost** dominates the *remaining* walk steps (reading an
   incident's `sources`). It is linear in the number of sources, which is small (≤5 in row 92). No
   owner is needed; recorded for honesty.
+
+## Quorum log
+
+**Round 1 — BLOCKED 2/2 present.** Seats: `gpt6-astra` **reject**, `gemini-3-1-pro` **reject**;
+`oc-glm-5-3` and `oc-kimi-k3` **absent (unreachable)**. Revision by the same designer.
+
+| seat | objection (summary; verbatim in the controller's round-1 record) | measurement | disposition | what changed |
+|---|---|---|---|---|
+| gpt6-astra | B4 let a read-only store without the index silently execute the lookup as a table scan, which violates no-silent-fallback. AC-8 shows result equivalence, not compliance with the operational contract | V23: `OpenReadOnly` has **0** production callers (positive control: 7 `store.Open(` sites), so production could not reach the fallback. **The principle stands anyway** | **Applied verbatim** | B4: the fallback paragraph is replaced by astra's text; the check lives at open and is cached (cost argued); provisioning moved out of `schema.sql` into a 30 s-bounded `provisionLookupIndex`, with failures making `Open` return an error; B3 guard before the query; B6 503 `LookupIndexUnavailable` row; sketch `ApiError` variant (B1/B8); AC-13 (astra's named test) + AC-14..AC-16; MU20–MU25; AC-8 narrowed to store-level equivalence |
+| gemini-3-1-pro | the `{"items","next"}` envelope contradicts B1's "no new function, contract or type" and the list precedent; `GET /v1/log` returns a raw array; `next` is redundant with the last item's hash | V24: **premise false.** `GET /v1/log` returns `logRangeResponse{Items}` = `{"items":[…]}` (`handlers.go:63-65`, `:492`), not a raw array. **Two parts true:** B1 overclaimed, and `next` is not in the precedent and is redundant | **Partly applied** | envelope **kept** as `{"items":[…]}` to match `GET /v1/log` exactly; **`next` dropped**; the paging rule adopted verbatim (B5); B1 now lists exactly what is added; AC-4/AC-5 rewritten; MU13 retired → MU13r |
+
+Not re-litigated: the ninth-frozen-route decision (B1), hash ordering (B5), empty-200 (B6), and no
+version bump (B4). Neither seat objected to them.
 
 ## (h) Decision for Mark
 
