@@ -66,7 +66,7 @@ func commitFixture(t *testing.T) (*Daemon, hashref.HashRef, *commitReadStore) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "commit-page")
 	c := testCommit(genesis, 0, "commit-page")
-	if err := d.store.Commit(c); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), c); err != nil {
 		t.Fatal(err)
 	}
 	s := &commitReadStore{readStore: d.store, missing: -99}
@@ -250,12 +250,12 @@ func TestWorkbenchCommitWalk(t *testing.T) {
 			c.Objects = append(c.Objects, interpreter)
 		}
 		transitions[i] = c.Entry.TransitionRef
-		if err := d.store.Commit(c); err != nil {
+		if err := d.store.Commit(boundedTestContext(t), c); err != nil {
 			t.Fatal(err)
 		}
 		current = c.NextWorld
 	}
-	located, err := d.store.ObjectsBySemanticID(context.Background(), "incident/row104/transition", "", 10)
+	located, err := d.store.ObjectsBySemanticID(boundedTestContext(t), "incident/row104/transition", "", 10)
 	if err != nil || len(located) != 1 || located[0].Hash != transitions[0] {
 		t.Fatalf("semantic locate: %v %+v", err, located)
 	}

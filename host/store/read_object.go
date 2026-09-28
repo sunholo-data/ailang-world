@@ -41,6 +41,12 @@ var readObjectBetweenStatements func()
 // probe and payload materialization share one transaction and therefore one
 // SQLite snapshot.
 func (s *Store) ReadObject(ctx context.Context, ref hashref.HashRef, maxBytes int64) (ObjectMeta, []byte, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return ObjectMeta{}, nil, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return ObjectMeta{}, nil, err
+	}
 	conn, err := s.db.Conn(ctx)
 	if err != nil {
 		return ObjectMeta{}, nil, fmt.Errorf("store: read object %q: reserve connection: %w", ref.String(), err)

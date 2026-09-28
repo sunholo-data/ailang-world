@@ -3,15 +3,22 @@ package daemon
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/capsule"
+	"github.com/sunholo-data/ailang-world/host/coordinator"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/transitionreg"
 )
 
 // commitSeam wraps the daemon's REAL store behind the durableStore seam and
@@ -26,7 +33,7 @@ type commitSeam struct {
 // then commits for real, so it is RED on status and elapsed time, not a hang.
 const seamEscape = 2 * time.Second
 
-func (f *commitSeam) CommitContext(ctx context.Context, c store.Commit) error {
+func (f *commitSeam) Commit(ctx context.Context, c store.Commit) error {
 	// waitCtx models the caller's deadline ending. Every real uncertain
 	// outcome carries an ENDED ctx (the caller stopped waiting), so the fake
 	// must too; returning early would let a handler that consults timedOut
@@ -40,11 +47,11 @@ func (f *commitSeam) CommitContext(ctx context.Context, c store.Commit) error {
 	switch f.mode {
 	case "block": // a held sole connection: nothing happens until ctx ends
 		waitCtx()
-		return f.real.CommitContext(ctx, c)
+		return f.real.Commit(ctx, c)
 	case "land-then-uncertain": // COMMIT completed, the caller's deadline won the race
 		lctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
-		if err := f.real.CommitContext(lctx, c); err != nil {
+		if err := f.real.Commit(lctx, c); err != nil {
 			return err
 		}
 		waitCtx()
@@ -55,16 +62,16 @@ func (f *commitSeam) CommitContext(ctx context.Context, c store.Commit) error {
 	}
 }
 
-// AppendIntentContext passes through to the real store; "block" models the
+// AppendIntent passes through to the real store; "block" models the
 // held connection for the intent step too.
-func (f *commitSeam) AppendIntentContext(ctx context.Context, id string, intent store.JournalIntent) (int64, hashref.HashRef, error) {
+func (f *commitSeam) AppendIntent(ctx context.Context, id string, intent store.JournalIntent) (int64, hashref.HashRef, error) {
 	if f.mode == "block" {
 		select {
 		case <-ctx.Done():
 		case <-time.After(seamEscape):
 		}
 	}
-	return f.real.AppendIntentContext(ctx, id, intent)
+	return f.real.AppendIntent(ctx, id, intent)
 }
 
 func postCommitRec(t *testing.T, d *Daemon, auth string, c store.Commit) (*httptest.ResponseRecorder, time.Duration) {
@@ -85,10 +92,69 @@ func headOf(t *testing.T, d *Daemon) string {
 	return head.String()
 }
 
+type unusedCoordinatorRunner struct{}
+
+func (unusedCoordinatorRunner) RunContext(context.Context, capsule.Entry) (capsule.Result, error) {
+	panic("coordinator runner reached before receipt")
+}
+
 // TestCommitBudgetAndUncertainReconcile is AC5 (row 23 M2): /v1/commit is
 // bounded by B6, the two 503s are distinct classes, and an uncertain commit
 // reconciles by the log row at its index, never by the head.
 func TestCommitBudgetAndUncertainReconcile(t *testing.T) {
+	t.Run("coordinator_held_connection_honors_caller_ctx", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "world.db")
+		st, err := store.Open(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer st.Close()
+		blocker, err := sql.Open("sqlite", path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer blocker.Close()
+		conn, err := blocker.Conn(boundedTestContext(t))
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer conn.Close()
+		if _, err := conn.ExecContext(boundedTestContext(t), "BEGIN EXCLUSIVE"); err != nil {
+			t.Fatal(err)
+		}
+		released := make(chan struct{})
+		go func() {
+			time.Sleep(700 * time.Millisecond)
+			_, _ = conn.ExecContext(boundedTestContext(t), "ROLLBACK")
+			close(released)
+		}()
+		readDone := make(chan struct{})
+		go func() {
+			_, _, _ = st.GetObject(boundedTestContext(t), hashref.SumSHA256([]byte("held")))
+			close(readDone)
+		}()
+		time.Sleep(30 * time.Millisecond)
+		c, err := coordinator.New(coordinator.Config{Store: st, Runner: unusedCoordinatorRunner{}, Binder: func(string, []broker.Capability) transitionreg.Binder { return nil }, Now: func() int64 { return 1 }, MaxInput: 1024, MaxOutput: 1024})
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		defer cancel()
+		start := time.Now()
+		_, err = c.Dispatch(ctx, coordinator.Call{EpisodeID: "ep", TaskID: "held", Input: map[string]any{}})
+		if !errors.Is(err, context.DeadlineExceeded) {
+			t.Errorf("coordinator held receipt result=%v, want deadline", err)
+		}
+		if elapsed := time.Since(start); elapsed > 500*time.Millisecond {
+			t.Errorf("coordinator held receipt took %v, want caller bound", elapsed)
+		}
+		<-released
+		select {
+		case <-readDone:
+		case <-time.After(3 * time.Second):
+			t.Fatal("held read did not settle")
+		}
+	})
 	t.Run("i_held_connection_is_503_timeout_within_budget", func(t *testing.T) {
 		d := newHandlerDaemon(t)
 		genesis := seedGenesisEmbedded(t, d, "held")
@@ -299,11 +365,11 @@ func TestCommitInvocationReceiptIdentity(t *testing.T) {
 // (DuplicateInvocationError). The seam pins the mapping of the second type.
 type mismatchSeam struct{ real *store.Store }
 
-func (f mismatchSeam) CommitContext(ctx context.Context, c store.Commit) error {
-	return f.real.CommitContext(ctx, c)
+func (f mismatchSeam) Commit(ctx context.Context, c store.Commit) error {
+	return f.real.Commit(ctx, c)
 }
 
-func (f mismatchSeam) AppendIntentContext(_ context.Context, id string, _ store.JournalIntent) (int64, hashref.HashRef, error) {
+func (f mismatchSeam) AppendIntent(_ context.Context, id string, _ store.JournalIntent) (int64, hashref.HashRef, error) {
 	return 0, hashref.HashRef{}, &store.InvocationMismatchError{ID: id, Field: "WorldRef", Want: "sha256:want", Got: "sha256:got"}
 }
 

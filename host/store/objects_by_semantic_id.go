@@ -24,6 +24,12 @@ FROM objects WHERE semantic_id = ? AND hash_ref > ? ORDER BY hash_ref LIMIT ?`
 // ascending by hash_ref. Payload is always nil: callers fetch the one payload
 // they want with GetObject. An id no object carries yields an empty slice.
 func (s *Store) ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]Object, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return nil, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
 	const op = "ObjectsBySemanticID"
 	if limit < 1 || limit > MaxSemanticIDPage {
 		return nil, &InvalidLimitError{Op: op, Limit: limit, Max: MaxSemanticIDPage}

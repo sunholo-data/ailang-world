@@ -1,7 +1,6 @@
 package store
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -66,13 +65,13 @@ func TestReceiptStateDriftAllBooleanCombinations(t *testing.T) {
 			c := journalCommitFixture(t, s, id)
 			intent := testCommitIntent(id, c)
 			if tc.hasIntent == "yes" {
-				if _, _, err := s.AppendIntent(id, intent); err != nil {
+				if _, _, err := s.AppendIntent(boundedTestContext(t), id, intent); err != nil {
 					t.Fatal(err)
 				}
 			}
 			if tc.hasOutcome == "yes" {
 				outcome := JournalOutcome{id, "committed", c.NextWorld.Ref, 43}
-				_, _, err := s.AppendOutcome(id, outcome)
+				_, _, err := s.AppendOutcome(boundedTestContext(t), id, outcome)
 				if tc.corrupt {
 					if err == nil || !IsInvocationMismatch(err) {
 						t.Fatalf("outcome without intent = %v, want structured error", err)
@@ -83,7 +82,7 @@ func TestReceiptStateDriftAllBooleanCombinations(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			got, ok, err := s.GetReceipt(id)
+			got, ok, err := s.GetReceipt(boundedTestContext(t), id)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -128,22 +127,22 @@ func TestIntentBindingMirrorsAllTenSketchRows(t *testing.T) {
 			s := openMem(t)
 			id := "binding-" + tc.name
 			c := journalCommitFixture(t, s, id)
-			if _, _, err := s.AppendIntent(id, testCommitIntent(id, c)); err != nil {
+			if _, _, err := s.AppendIntent(boundedTestContext(t), id, testCommitIntent(id, c)); err != nil {
 				t.Fatal(err)
 			}
 			before := snapshotJournalStore(t, s)
 			tc.mutate(&c)
-			err := s.Commit(c)
+			err := s.Commit(boundedTestContext(t), c)
 			if tc.wantMatch {
 				if err != nil {
 					t.Fatalf("matching Commit: %v", err)
 				}
-				receipt, _, err := s.GetReceipt(id)
+				receipt, _, err := s.GetReceipt(boundedTestContext(t), id)
 				if err != nil || receipt.State != ReceiptResolved {
 					t.Fatalf("receipt = %+v, err=%v", receipt, err)
 				}
 				afterFirst := snapshotJournalStore(t, s)
-				if err := s.Commit(c); err != nil {
+				if err := s.Commit(boundedTestContext(t), c); err != nil {
 					t.Fatalf("resolved idempotent Commit: %v", err)
 				}
 				if after := snapshotJournalStore(t, s); !reflect.DeepEqual(after, afterFirst) {
@@ -173,7 +172,7 @@ type storeSnapshot struct {
 func snapshotJournalStore(t *testing.T, s *Store) storeSnapshot {
 	t.Helper()
 	var snap storeSnapshot
-	head, ok, err := s.SelectedHead(context.Background())
+	head, ok, err := s.SelectedHead(boundedTestContext(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -207,21 +206,21 @@ func TestAppendIntentIdempotencyDuplicateAndSchemaOutcomeUniqueness(t *testing.T
 	s := openMem(t)
 	c := journalCommitFixture(t, s, "idem")
 	intent := testCommitIntent("idem", c)
-	seq, ref, err := s.AppendIntent("idem", intent)
+	seq, ref, err := s.AppendIntent(boundedTestContext(t), "idem", intent)
 	if err != nil {
 		t.Fatal(err)
 	}
-	seq2, ref2, err := s.AppendIntent("idem", intent)
+	seq2, ref2, err := s.AppendIntent(boundedTestContext(t), "idem", intent)
 	if err != nil || seq2 != seq || ref2 != ref {
 		t.Fatalf("idempotent append = (%d,%s,%v), want (%d,%s,nil)", seq2, ref2, err, seq, ref)
 	}
 	changed := intent
 	changed.LogicalTime++
-	if _, _, err := s.AppendIntent("idem", changed); !IsDuplicateInvocation(err) {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), "idem", changed); !IsDuplicateInvocation(err) {
 		t.Fatalf("different bytes error = %T %v", err, err)
 	}
 	outcome := JournalOutcome{"idem", "committed", c.NextWorld.Ref, 44}
-	_, outcomeRef, err := s.AppendOutcome("idem", outcome)
+	_, outcomeRef, err := s.AppendOutcome(boundedTestContext(t), "idem", outcome)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -239,7 +238,7 @@ func TestJournalSequenceGaplessAfterInducedRollback(t *testing.T) {
 	s := openMem(t)
 	appendID := func(id string) {
 		c := journalCommitFixture(t, s, id)
-		if _, _, err := s.AppendIntent(id, testCommitIntent(id, c)); err != nil {
+		if _, _, err := s.AppendIntent(boundedTestContext(t), id, testCommitIntent(id, c)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -249,7 +248,7 @@ func TestJournalSequenceGaplessAfterInducedRollback(t *testing.T) {
 		t.Fatal(err)
 	}
 	c := journalCommitFixture(t, s, "rollback")
-	if _, _, err := s.AppendIntent("rollback", testCommitIntent("rollback", c)); err == nil {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), "rollback", testCommitIntent("rollback", c)); err == nil {
 		t.Fatal("induced rollback unexpectedly succeeded")
 	}
 	if _, err := s.db.Exec(`DROP TRIGGER induce_journal_rollback`); err != nil {
@@ -279,24 +278,24 @@ func TestPendingIntentsLimitsAndCursorPagination(t *testing.T) {
 	for i := 0; i < MaxPendingIntentsPage+7; i++ {
 		id := fmt.Sprintf("pending-%04d", i)
 		c := journalCommitFixture(t, s, id)
-		if _, _, err := s.AppendIntent(id, testCommitIntent(id, c)); err != nil {
+		if _, _, err := s.AppendIntent(boundedTestContext(t), id, testCommitIntent(id, c)); err != nil {
 			t.Fatal(err)
 		}
 	}
 	for _, limit := range []int{0, -1, MaxPendingIntentsPage + 1} {
-		if _, err := s.PendingIntents(limit); !IsInvalidLimit(err) {
+		if _, err := s.PendingIntents(boundedTestContext(t), limit); !IsInvalidLimit(err) {
 			t.Fatalf("limit %d error = %T %v", limit, err, err)
 		}
 	}
-	small, err := s.PendingIntents(3)
+	small, err := s.PendingIntents(boundedTestContext(t), 3)
 	if err != nil || len(small) != 3 {
 		t.Fatalf("small bounded page len=%d err=%v", len(small), err)
 	}
-	first, err := s.PendingIntents(MaxPendingIntentsPage)
+	first, err := s.PendingIntents(boundedTestContext(t), MaxPendingIntentsPage)
 	if err != nil || len(first) != MaxPendingIntentsPage {
 		t.Fatalf("max page len=%d err=%v", len(first), err)
 	}
-	second, err := s.PendingIntents(MaxPendingIntentsPage, first[len(first)-1].Seq)
+	second, err := s.PendingIntents(boundedTestContext(t), MaxPendingIntentsPage, first[len(first)-1].Seq)
 	if err != nil || len(second) != 7 {
 		t.Fatalf("second page len=%d err=%v", len(second), err)
 	}
@@ -351,7 +350,7 @@ func plantEffectIntent(t *testing.T, s *Store, intent EffectIntent) {
 		t.Fatal(err)
 	}
 	object := journalObject(EffectIntentV1, payload)
-	if err := s.PutObject(object); err != nil {
+	if err := s.PutObject(boundedTestContext(t), object); err != nil {
 		t.Fatal(err)
 	}
 	var seq int64
@@ -402,10 +401,10 @@ func TestEffectJournalNamespaceDisjointness(t *testing.T) {
 	s := openMem(t)
 	id := EffectInvocationID("ep-1", 0)
 	c := journalCommitFixture(t, s, id)
-	if _, _, err := s.AppendIntent(id, testCommitIntent(id, c)); !IsInvocationMismatch(err) {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), id, testCommitIntent(id, c)); !IsInvocationMismatch(err) {
 		t.Fatalf("commit-side effect ID error = %T %v", err, err)
 	}
-	if _, _, err := s.AppendEffectOutcome("commit-id", EffectOutcome{
+	if _, _, err := s.AppendEffectOutcome(boundedTestContext(t), "commit-id", EffectOutcome{
 		InvocationID: "commit-id", Status: "failed",
 		RecordRef: hashref.SumSHA256([]byte("record")), LogicalTime: 1,
 	}); !IsInvocationMismatch(err) {
@@ -415,11 +414,11 @@ func TestEffectJournalNamespaceDisjointness(t *testing.T) {
 
 func TestGetReceiptRejectsEffectNamespaceBeforeDecode(t *testing.T) {
 	s := openMem(t)
-	id, _, err := s.AppendNextEffectIntent("ep-1", effectIntentFixture("ep-1", 1))
+	id, _, err := s.AppendNextEffectIntent(boundedTestContext(t), "ep-1", effectIntentFixture("ep-1", 1))
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = s.GetReceipt(id)
+	_, _, err = s.GetReceipt(boundedTestContext(t), id)
 	var mismatch *InvocationMismatchError
 	if !errors.As(err, &mismatch) || mismatch.Field != "InvocationID" {
 		t.Fatalf("GetReceipt effect ID = %T %v, want namespace mismatch", err, err)
@@ -434,7 +433,7 @@ func TestPendingIntentsExcludeRealEffectObjects(t *testing.T) {
 		Scope: "/workspace/in", Cost: 1, RequestRef: hashref.SumSHA256([]byte("cross-request")),
 		LogicalTime: 2,
 	})
-	pending, err := s.PendingIntents(10)
+	pending, err := s.PendingIntents(boundedTestContext(t), 10)
 	if err != nil || len(pending) != 0 {
 		t.Fatalf("commit pending contaminated by effect: n=%d err=%v", len(pending), err)
 	}
@@ -442,25 +441,25 @@ func TestPendingIntentsExcludeRealEffectObjects(t *testing.T) {
 
 func TestAppendNextEffectIntentValidationAndOrdinalDerivation(t *testing.T) {
 	s := openMem(t)
-	if id, _, err := s.AppendNextEffectIntent("", effectIntentFixture("", 1)); !IsInvocationMismatch(err) || id != "" {
+	if id, _, err := s.AppendNextEffectIntent(boundedTestContext(t), "", effectIntentFixture("", 1)); !IsInvocationMismatch(err) || id != "" {
 		t.Fatalf("empty episode = (%q,%v), want structured rejection", id, err)
 	}
 	ep := "episode:with:colon"
-	id0, ordinal0, err := s.AppendNextEffectIntent(ep, effectIntentFixture(ep, 10))
+	id0, ordinal0, err := s.AppendNextEffectIntent(boundedTestContext(t), ep, effectIntentFixture(ep, 10))
 	if err != nil || id0 != EffectInvocationID(ep, 0) || ordinal0 != 0 {
 		t.Fatalf("fresh mint = (%q,%d,%v)", id0, ordinal0, err)
 	}
-	if _, _, err := s.AppendEffectOutcome(id0, EffectOutcome{
+	if _, _, err := s.AppendEffectOutcome(boundedTestContext(t), id0, EffectOutcome{
 		InvocationID: id0, Status: "succeeded",
 		RecordRef: hashref.SumSHA256([]byte("record-0")), LogicalTime: 11,
 	}); err != nil {
 		t.Fatal(err)
 	}
-	id1, ordinal1, err := s.AppendNextEffectIntent(ep, effectIntentFixture(ep, 12))
+	id1, ordinal1, err := s.AppendNextEffectIntent(boundedTestContext(t), ep, effectIntentFixture(ep, 12))
 	if err != nil || id1 != EffectInvocationID(ep, 1) || ordinal1 != 1 {
 		t.Fatalf("resumed mint = (%q,%d,%v)", id1, ordinal1, err)
 	}
-	receipt, ok, err := s.GetEffectReceipt(id1)
+	receipt, ok, err := s.GetEffectReceipt(boundedTestContext(t), id1)
 	if err != nil || !ok || receipt.State != ReceiptIndeterminate ||
 		receipt.EffectIntent == nil || receipt.EffectIntent.LogicalTime != 12 {
 		t.Fatalf("minted receipt = %+v, ok=%v err=%v", receipt, ok, err)
@@ -471,7 +470,7 @@ func TestAppendNextEffectIntentIgnoresAdversarialSuffixes(t *testing.T) {
 	s := openMem(t)
 	ep := "ep-adversarial"
 	for ordinal := int64(0); ordinal < 2; ordinal++ {
-		if _, got, err := s.AppendNextEffectIntent(ep, effectIntentFixture(ep, ordinal+1)); err != nil || got != ordinal {
+		if _, got, err := s.AppendNextEffectIntent(boundedTestContext(t), ep, effectIntentFixture(ep, ordinal+1)); err != nil || got != ordinal {
 			t.Fatalf("seed ordinal %d = %d, %v", ordinal, got, err)
 		}
 	}
@@ -481,7 +480,7 @@ func TestAppendNextEffectIntentIgnoresAdversarialSuffixes(t *testing.T) {
 			RequestRef: hashref.SumSHA256([]byte(id)), LogicalTime: 3,
 		})
 	}
-	id, ordinal, err := s.AppendNextEffectIntent(ep, effectIntentFixture(ep, 4))
+	id, ordinal, err := s.AppendNextEffectIntent(boundedTestContext(t), ep, effectIntentFixture(ep, 4))
 	if err != nil || ordinal != 2 || id != EffectInvocationID(ep, 2) {
 		t.Fatalf("adversarial next = (%q,%d,%v), want ordinal 2", id, ordinal, err)
 	}
@@ -496,7 +495,7 @@ func TestAppendNextEffectIntentOrdinalExhaustion(t *testing.T) {
 		Effect: "FS.Read", Scope: "/x", Cost: 1,
 		RequestRef: hashref.SumSHA256([]byte("exhausted")), LogicalTime: 1,
 	})
-	_, _, err := s.AppendNextEffectIntent(ep, effectIntentFixture(ep, 2))
+	_, _, err := s.AppendNextEffectIntent(boundedTestContext(t), ep, effectIntentFixture(ep, 2))
 	var exhausted *OrdinalExhaustedError
 	if !errors.As(err, &exhausted) || exhausted.EpisodeID != ep {
 		t.Fatalf("exhaustion error = %T %v", err, err)
@@ -516,7 +515,7 @@ func TestAppendNextEffectIntentConcurrentAllocation(t *testing.T) {
 		logicalTime := int64(i + 1)
 		go func() {
 			<-start
-			id, ordinal, err := s.AppendNextEffectIntent(
+			id, ordinal, err := s.AppendNextEffectIntent(boundedTestContext(t),
 				"ep-concurrent", effectIntentFixture("ep-concurrent", logicalTime))
 			results <- result{id, ordinal, err}
 		}()
@@ -540,7 +539,7 @@ func TestAppendNextEffectIntentConcurrentAllocation(t *testing.T) {
 		t.Fatalf("durable concurrent intents = %d, want 2", durable)
 	}
 	for _, item := range []result{first, second} {
-		receipt, ok, err := s.GetEffectReceipt(item.id)
+		receipt, ok, err := s.GetEffectReceipt(boundedTestContext(t), item.id)
 		if err != nil || !ok || receipt.State != ReceiptIndeterminate {
 			t.Fatalf("receipt %q = %+v, ok=%v err=%v", item.id, receipt, ok, err)
 		}
@@ -561,7 +560,7 @@ func TestAppendClaimedEffectIntentAtomicDurableAndSingleUse(t *testing.T) {
 	if _, err := s.db.Exec(`CREATE TRIGGER reject_claim BEFORE INSERT ON approval_claims BEGIN SELECT RAISE(FAIL, 'induced claim failure'); END`); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := s.AppendClaimedEffectIntent("claimed-episode", intent, approvalRef, requestRef); err == nil || !strings.Contains(err.Error(), "induced claim failure") {
+	if _, _, err := s.AppendClaimedEffectIntent(boundedTestContext(t), "claimed-episode", intent, approvalRef, requestRef); err == nil || !strings.Contains(err.Error(), "induced claim failure") {
 		t.Fatalf("induced failure = %v, want induced claim failure", err)
 	}
 	if _, err := s.db.Exec(`DROP TRIGGER reject_claim`); err != nil {
@@ -584,7 +583,7 @@ func TestAppendClaimedEffectIntentAtomicDurableAndSingleUse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	id, ordinal, err := s.AppendClaimedEffectIntent("claimed-episode", intent, approvalRef, requestRef)
+	id, ordinal, err := s.AppendClaimedEffectIntent(boundedTestContext(t), "claimed-episode", intent, approvalRef, requestRef)
 	if err != nil || ordinal != 0 {
 		t.Fatalf("successful claim = (%q,%d,%v), want ordinal 0", id, ordinal, err)
 	}
@@ -608,7 +607,7 @@ func TestAppendClaimedEffectIntentAtomicDurableAndSingleUse(t *testing.T) {
 	if err := s.db.QueryRow(`SELECT COUNT(*) FROM journal`).Scan(&journalBefore); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := s.AppendClaimedEffectIntent("claimed-episode", intent, approvalRef, requestRef); !errors.Is(err, ErrApprovalAlreadyConsumed) {
+	if _, _, err := s.AppendClaimedEffectIntent(boundedTestContext(t), "claimed-episode", intent, approvalRef, requestRef); !errors.Is(err, ErrApprovalAlreadyConsumed) {
 		t.Fatalf("reused approval error = %T %v, want ErrApprovalAlreadyConsumed", err, err)
 	}
 	var journalAfter int
@@ -618,7 +617,7 @@ func TestAppendClaimedEffectIntentAtomicDurableAndSingleUse(t *testing.T) {
 	if journalAfter != journalBefore {
 		t.Fatalf("journal rows after rejected reuse = %d, want %d", journalAfter, journalBefore)
 	}
-	receipt, ok, err := s.GetEffectReceipt(id)
+	receipt, ok, err := s.GetEffectReceipt(boundedTestContext(t), id)
 	if err != nil || !ok || receipt.EffectIntent == nil {
 		t.Fatalf("durable effect intent receipt = (%+v,%v,%v)", receipt, ok, err)
 	}
@@ -631,20 +630,20 @@ func TestAppendEffectOutcomeDisciplineAndReceiptWalk(t *testing.T) {
 		InvocationID: missingID, Status: "failed",
 		RecordRef: hashref.SumSHA256([]byte("missing-record")), LogicalTime: 2,
 	}
-	if _, _, err := s.AppendEffectOutcome(missingID, outcome); !IsInvocationMismatch(err) {
+	if _, _, err := s.AppendEffectOutcome(boundedTestContext(t), missingID, outcome); !IsInvocationMismatch(err) {
 		t.Fatalf("orphan effect outcome = %T %v", err, err)
 	}
 
 	id := EffectInvocationID("ep-walk", 0)
-	receipt, ok, err := s.GetEffectReceipt(id)
+	receipt, ok, err := s.GetEffectReceipt(boundedTestContext(t), id)
 	if err != nil || ok || receipt.State != ReceiptNotStarted {
 		t.Fatalf("not-started = %+v, ok=%v err=%v", receipt, ok, err)
 	}
-	id, _, err = s.AppendNextEffectIntent("ep-walk", effectIntentFixture("ep-walk", 3))
+	id, _, err = s.AppendNextEffectIntent(boundedTestContext(t), "ep-walk", effectIntentFixture("ep-walk", 3))
 	if err != nil {
 		t.Fatal(err)
 	}
-	receipt, ok, err = s.GetEffectReceipt(id)
+	receipt, ok, err = s.GetEffectReceipt(boundedTestContext(t), id)
 	if err != nil || !ok || receipt.State != ReceiptIndeterminate {
 		t.Fatalf("indeterminate = %+v, ok=%v err=%v", receipt, ok, err)
 	}
@@ -652,15 +651,15 @@ func TestAppendEffectOutcomeDisciplineAndReceiptWalk(t *testing.T) {
 		InvocationID: id, Status: "succeeded",
 		RecordRef: hashref.SumSHA256([]byte("record")), LogicalTime: 4,
 	}
-	if _, _, err := s.AppendEffectOutcome(id, outcome); err != nil {
+	if _, _, err := s.AppendEffectOutcome(boundedTestContext(t), id, outcome); err != nil {
 		t.Fatal(err)
 	}
-	receipt, ok, err = s.GetEffectReceipt(id)
+	receipt, ok, err = s.GetEffectReceipt(boundedTestContext(t), id)
 	if err != nil || !ok || receipt.State != ReceiptResolved ||
 		receipt.EffectOutcome == nil || receipt.EffectOutcome.Status != "succeeded" {
 		t.Fatalf("resolved = %+v, ok=%v err=%v", receipt, ok, err)
 	}
-	if _, _, err := s.AppendEffectOutcome(id, outcome); !IsDuplicateInvocation(err) {
+	if _, _, err := s.AppendEffectOutcome(boundedTestContext(t), id, outcome); !IsDuplicateInvocation(err) {
 		t.Fatalf("duplicate outcome = %T %v", err, err)
 	}
 }
@@ -668,33 +667,33 @@ func TestAppendEffectOutcomeDisciplineAndReceiptWalk(t *testing.T) {
 func TestPendingEffectIntentsLimitsPagingAndIsolation(t *testing.T) {
 	s := openMem(t)
 	c := journalCommitFixture(t, s, "commit-isolation")
-	if _, _, err := s.AppendIntent("commit-isolation", testCommitIntent("commit-isolation", c)); err != nil {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), "commit-isolation", testCommitIntent("commit-isolation", c)); err != nil {
 		t.Fatal(err)
 	}
 	var ids []string
 	for i := 0; i < 5; i++ {
-		id, _, err := s.AppendNextEffectIntent("ep-paging", effectIntentFixture("ep-paging", int64(i+1)))
+		id, _, err := s.AppendNextEffectIntent(boundedTestContext(t), "ep-paging", effectIntentFixture("ep-paging", int64(i+1)))
 		if err != nil {
 			t.Fatal(err)
 		}
 		ids = append(ids, id)
 	}
-	if _, _, err := s.AppendEffectOutcome(ids[1], EffectOutcome{
+	if _, _, err := s.AppendEffectOutcome(boundedTestContext(t), ids[1], EffectOutcome{
 		InvocationID: ids[1], Status: "failed",
 		RecordRef: hashref.SumSHA256([]byte("paging-record")), LogicalTime: 9,
 	}); err != nil {
 		t.Fatal(err)
 	}
 	for _, limit := range []int{0, -1, MaxPendingIntentsPage + 1} {
-		if _, err := s.PendingEffectIntents(limit); !IsInvalidLimit(err) {
+		if _, err := s.PendingEffectIntents(boundedTestContext(t), limit); !IsInvalidLimit(err) {
 			t.Fatalf("limit %d error = %T %v", limit, err, err)
 		}
 	}
-	first, err := s.PendingEffectIntents(2)
+	first, err := s.PendingEffectIntents(boundedTestContext(t), 2)
 	if err != nil || len(first) != 2 {
 		t.Fatalf("first page = %+v, err=%v", first, err)
 	}
-	second, err := s.PendingEffectIntents(2, first[1].Seq)
+	second, err := s.PendingEffectIntents(boundedTestContext(t), 2, first[1].Seq)
 	if err != nil || len(second) != 2 {
 		t.Fatalf("second page = %+v, err=%v", second, err)
 	}

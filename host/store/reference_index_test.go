@@ -43,7 +43,7 @@ func TestReferenceIndexDefinitions(t *testing.T) {
 				t.Fatalf("missing %s", name)
 			}
 		}
-		ok, err := verifyReferenceIndexes(context.Background(), s.db)
+		ok, err := verifyReferenceIndexes(boundedTestContext(t), s.db)
 		if err != nil || !ok {
 			t.Fatalf("all four: %v %v", ok, err)
 		}
@@ -62,7 +62,7 @@ func TestReferenceIndexDefinitions(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			s := openMem(t)
 			ddl(s, "log_entries_by_transition_ref", tc.statement)
-			ok, err := verifyReferenceIndex(context.Background(), s.db, referenceIndexSpecs[0])
+			ok, err := verifyReferenceIndex(boundedTestContext(t), s.db, referenceIndexSpecs[0])
 			if err != nil || ok {
 				t.Fatalf("%s: %v %v", tc.name, ok, err)
 			}
@@ -72,7 +72,7 @@ func TestReferenceIndexDefinitions(t *testing.T) {
 
 func TestReferenceIndexVerifierContext(t *testing.T) {
 	s := openMem(t)
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	cancel()
 	_, err := verifyReferenceIndexes(ctx, s.db)
 	if !errors.Is(err, context.Canceled) {
@@ -100,7 +100,7 @@ func TestReferenceIndexLifecycle(t *testing.T) {
 		if !s.referenceIndexesAvailable {
 			t.Fatal("memory indexes unavailable")
 		}
-		ok, err := verifyReferenceIndexes(context.Background(), s.db)
+		ok, err := verifyReferenceIndexes(boundedTestContext(t), s.db)
 		if err != nil || !ok {
 			t.Fatalf("verify: %v %v", ok, err)
 		}

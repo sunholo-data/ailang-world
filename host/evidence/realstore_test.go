@@ -98,7 +98,7 @@ func openEvidenceStoreWithBusyWindow(t *testing.T, window time.Duration) (*store
 func putEvidenceObject(t *testing.T, s *store.Store, payload []byte) hashref.HashRef {
 	t.Helper()
 	ref := hashref.SumSHA256(payload)
-	if err := s.PutObject(store.Object{
+	if err := s.PutObject(boundedTestContext(t), store.Object{
 		Hash: ref, InterfaceHash: evidence.InterfaceHashV1,
 		SemanticID: evidence.ProofSemanticID, Provenance: "real-store-test", Payload: payload,
 	}); err != nil {
@@ -123,7 +123,7 @@ func realValidator(t *testing.T, s *store.Store, timeout time.Duration) *evidenc
 func measureGetObject(t *testing.T, s *store.Store, ref hashref.HashRef) time.Duration {
 	t.Helper()
 	start := time.Now()
-	got, ok, err := s.GetObject(context.Background(), ref)
+	got, ok, err := s.GetObject(boundedTestContext(t), ref)
 	elapsed := time.Since(start)
 	if err != nil || !ok || got.Hash != ref {
 		t.Fatalf("decoy GetObject: ok=%v hash=%v err=%v", ok, got.Hash, err)
@@ -131,11 +131,11 @@ func measureGetObject(t *testing.T, s *store.Store, ref hashref.HashRef) time.Du
 	return elapsed
 }
 
-func startDecoyRead(s *store.Store, ref hashref.HashRef) <-chan time.Duration {
+func startDecoyRead(t *testing.T, s *store.Store, ref hashref.HashRef) <-chan time.Duration {
 	done := make(chan time.Duration, 1)
 	go func() {
 		start := time.Now()
-		_, _, _ = s.GetObject(context.Background(), ref)
+		_, _, _ = s.GetObject(boundedTestContext(t), ref)
 		done <- time.Since(start)
 	}()
 	return done
@@ -176,11 +176,11 @@ func TestRealStoreBlockedObjectReadReturnsWithinObjectReadTimeout(t *testing.T) 
 	v = realValidator(t, s, readTimeout)
 
 	for attempt := 1; attempt <= 5; attempt++ {
-		decoyDone := startDecoyRead(s, decoyRef)
+		decoyDone := startDecoyRead(t, s, decoyRef)
 		time.Sleep(readTimeout)
 		resultDone := make(chan evidence.ValidationResult, 1)
 		start := time.Now()
-		go func() { resultDone <- v.ValidateProof(context.Background(), goodRef, testSubject) }()
+		go func() { resultDone <- v.ValidateProof(boundedTestContext(t), goodRef, testSubject) }()
 		select {
 		case result := <-resultDone:
 			elapsed := time.Since(start)
@@ -234,7 +234,7 @@ func TestOversizeProofReportIsRefused(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	r := v.ValidateProof(context.Background(), ref, testSubject)
+	r := v.ValidateProof(boundedTestContext(t), ref, testSubject)
 	if _, sealed := r.Validated(); sealed {
 		t.Fatal("oversize envelope sealed; want oversize")
 	}
@@ -294,7 +294,7 @@ func TestConstructorPinsBusyTimeoutBelowObjectReadTimeout(t *testing.T) {
 	if hold < minDecoyHold {
 		t.Fatalf("instrument failure: nonblocking decoy hold %v; want at least %v", hold, minDecoyHold)
 	}
-	done := startDecoyRead(s, decoyRef)
+	done := startDecoyRead(t, s, decoyRef)
 	time.Sleep(hold / decoyHoldRatio)
 	start := time.Now()
 	if got := s.BusyTimeout(); got != 2*time.Second {

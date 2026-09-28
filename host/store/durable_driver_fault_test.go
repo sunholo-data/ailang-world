@@ -81,7 +81,7 @@ func (tx *durableFaultTx) Commit() error {
 func TestDriverCommitErrorAfterRealCommitIsUncertainAndReconciles(t *testing.T) {
 	s := openFileStore(t)
 	c := journalCommitFixture(t, s, "driver-fault")
-	if _, _, err := s.AppendIntent("driver-fault", testCommitIntent("driver-fault", c)); err != nil {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), "driver-fault", testCommitIntent("driver-fault", c)); err != nil {
 		t.Fatal(err)
 	}
 	path := s.lock.dbPath
@@ -107,7 +107,7 @@ func TestDriverCommitErrorAfterRealCommitIsUncertainAndReconciles(t *testing.T) 
 	}
 	s.db = replacement // openFileStore's cleanup closes this DB and releases the original lock.
 	fault.armed.Store(true)
-	err = s.CommitContext(context.Background(), c)
+	err = s.Commit(boundedTestContext(t), c)
 	var uncertain *UncertainError
 	if !fault.reached.Load() {
 		t.Fatal("fault did not reach the real COMMIT")
@@ -115,7 +115,7 @@ func TestDriverCommitErrorAfterRealCommitIsUncertainAndReconciles(t *testing.T) 
 	if !errors.As(err, &uncertain) || !errors.Is(uncertain.Cause, errCommitAfterDurability) {
 		t.Fatalf("err = %v; want uncertain with post-COMMIT sentinel", err)
 	}
-	rc, ok, err := s.GetReceiptContext(context.Background(), "driver-fault")
+	rc, ok, err := s.GetReceipt(boundedTestContext(t), "driver-fault")
 	if err != nil || !ok || rc.State != ReceiptResolved {
 		t.Fatalf("receipt = %v, found = %v, err = %v; want resolved", rc.State, ok, err)
 	}
@@ -134,17 +134,17 @@ func TestCommitBodyUsesCallerContext(t *testing.T) {
 	}
 	for _, decl := range file.Decls {
 		fn, ok := decl.(*ast.FuncDecl)
-		if !ok || fn.Name.Name != "CommitContext" {
+		if !ok || fn.Name.Name != "Commit" {
 			continue
 		}
 		body := string(source[fset.Position(fn.Body.Pos()).Offset:fset.Position(fn.Body.End()).Offset])
 		if !strings.Contains(body, "selectedHeadTx(ctx, tx)") {
-			t.Error("CommitContext head read must use caller ctx")
+			t.Error("Commit head read must use caller ctx")
 		}
 		if !strings.Contains(body, "tx.ExecContext(ctx,\n\t\t`INSERT OR IGNORE INTO worlds") {
-			t.Error("CommitContext world insert must use ExecContext with caller ctx")
+			t.Error("Commit world insert must use ExecContext with caller ctx")
 		}
 		return
 	}
-	t.Fatal("CommitContext not found")
+	t.Fatal("Commit not found")
 }

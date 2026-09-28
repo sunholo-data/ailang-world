@@ -77,6 +77,12 @@ var objectReferencesBeforeQuery func()
 
 // ObjectReferences returns at most limit edges, ordered by relation then source key.
 func (s *Store) ObjectReferences(ctx context.Context, ref hashref.HashRef, after *ObjectReferenceCursor, limit int) ([]ObjectReference, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return nil, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
 	if err := validateObjectReferences(ref, after, limit); err != nil {
 		return nil, err
 	}

@@ -27,10 +27,10 @@ func integrityFixture(t *testing.T) string {
 		Ref: ref, StateRoot: hashref.SumSHA256([]byte("integrity state")),
 		LogHead: hashref.SumSHA256([]byte("integrity head")),
 	}
-	if err := s.PutWorld(genesis); err != nil {
+	if err := s.PutWorld(boundedTestContext(t), genesis); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SelectHead(ref); err != nil {
+	if err := s.SelectHead(boundedTestContext(t), ref); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.Close(); err != nil {
@@ -73,7 +73,7 @@ func integrityFixture(t *testing.T) string {
 }
 
 func TestIntegrityStartupSweepPagesBothTables(t *testing.T) {
-	d, err := New(context.Background(), Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0})
+	d, err := New(boundedTestContext(t), Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,7 +110,7 @@ func TestIntegrityStartupSweepPagesBothTables(t *testing.T) {
 func TestIntegrityWarningsFollowTheAnnouncementAndServeNormally(t *testing.T) {
 	cfg := Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0}
 	pr, pw := io.Pipe()
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	defer cancel()
 
 	ran := make(chan error, 1)
@@ -194,7 +194,7 @@ func TestIntegrityWarningsFollowTheAnnouncementAndServeNormally(t *testing.T) {
 func TestIntegrityWarningsNeverBlockStartupForAOneLineReader(t *testing.T) {
 	cfg := Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0}
 	pr, pw := io.Pipe()
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	defer cancel()
 
 	ran := make(chan error, 1)
@@ -232,7 +232,7 @@ func TestIntegrityWarningsNeverBlockStartupForAOneLineReader(t *testing.T) {
 }
 
 func TestIntegrityStartupSweepReportsTruncation(t *testing.T) {
-	d, err := New(context.Background(), Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0})
+	d, err := New(boundedTestContext(t), Config{DBPath: integrityFixture(t), BindHost: DefaultBindHost, BindPort: 0})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -240,7 +240,7 @@ func TestIntegrityStartupSweepReportsTruncation(t *testing.T) {
 	d.scanPageSize = 64
 	d.scanRowBudget = 32
 	d.scanTimeBudget = time.Second
-	d.integrity = d.scanIntegrity()
+	d.integrity = d.scanIntegrity(boundedTestContext(t))
 	r := d.IntegrityReport()
 	if r.Complete || r.LogRowsScanned != 32 {
 		t.Fatalf("report = %+v", r)

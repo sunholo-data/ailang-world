@@ -57,7 +57,7 @@ func seedReadRoutes(t *testing.T, d *Daemon, label string) []readRoute {
 	t.Helper()
 	genesis := seedGenesisEmbedded(t, d, label)
 	commit := testCommit(genesis, 1, label)
-	if err := d.store.Commit(commit); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 		t.Fatalf("seed Commit: %v", err)
 	}
 	return []readRoute{
@@ -68,7 +68,7 @@ func seedReadRoutes(t *testing.T, d *Daemon, label string) []readRoute {
 		{"log range", "/v1/log?from=0&limit=5", "GetLogEntry"},
 		{"registry", "/v1/registry/world/epoch-registry/v1", "GetRegistryHead"},
 		{"objects by semantic id", "/v1/objects/by-semantic-id/" + commit.Objects[0].SemanticID, "ObjectsBySemanticID"},
-		{"receipt", "/v1/receipts/rest:" + label, "GetReceiptContext"},
+		{"receipt", "/v1/receipts/rest:" + label, "GetReceipt"},
 	}
 }
 
@@ -159,7 +159,7 @@ func (b *blockingStore) GetWorld(ctx context.Context, _ hashref.HashRef) (store.
 	return store.World{}, false, b.block(ctx)
 }
 
-func (b *blockingStore) GetReceiptContext(ctx context.Context, _ string) (store.Receipt, bool, error) {
+func (b *blockingStore) GetReceipt(ctx context.Context, _ string) (store.Receipt, bool, error) {
 	return store.Receipt{}, false, b.block(ctx)
 }
 
@@ -230,9 +230,9 @@ func (r *recordingStore) GetWorld(ctx context.Context, ref hashref.HashRef) (sto
 	return r.Store.GetWorld(ctx, ref)
 }
 
-func (r *recordingStore) GetReceiptContext(ctx context.Context, id string) (store.Receipt, bool, error) {
+func (r *recordingStore) GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error) {
 	r.note(ctx)
-	return r.Store.GetReceiptContext(ctx, id)
+	return r.Store.GetReceipt(ctx, id)
 }
 
 func (r *recordingStore) GetLogEntry(ctx context.Context, index int64) (store.LogEntry, bool, error) {
@@ -476,7 +476,7 @@ func TestDaemonReadDisconnect(t *testing.T) {
 	}
 
 	route := routes[1] // /v1/worlds/{ref} -> GetWorld
-	reqCtx, cancel := context.WithCancel(context.Background())
+	reqCtx, cancel := context.WithCancel(boundedTestContext(t))
 	defer cancel()
 
 	done := make(chan struct{})
@@ -740,7 +740,7 @@ func (failingStore) GetWorld(context.Context, hashref.HashRef) (store.World, boo
 	return store.World{}, false, errSentinelInternal
 }
 
-func (failingStore) GetReceiptContext(context.Context, string) (store.Receipt, bool, error) {
+func (failingStore) GetReceipt(context.Context, string) (store.Receipt, bool, error) {
 	return store.Receipt{}, false, errSentinelInternal
 }
 

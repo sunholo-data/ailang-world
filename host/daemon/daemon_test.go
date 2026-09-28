@@ -81,10 +81,10 @@ func seedHead(t *testing.T, s *store.Store) store.World {
 		StateRoot: hashref.SumSHA256([]byte("daemon-test-state-genesis")),
 		LogHead:   hashref.SumSHA256([]byte("daemon-test-log-genesis")),
 	}
-	if err := s.PutWorld(w); err != nil {
+	if err := s.PutWorld(boundedTestContext(t), w); err != nil {
 		t.Fatalf("seed PutWorld: %v", err)
 	}
-	if err := s.SelectHead(w.Ref); err != nil {
+	if err := s.SelectHead(boundedTestContext(t), w.Ref); err != nil {
 		t.Fatalf("seed SelectHead: %v", err)
 	}
 	return w
@@ -149,7 +149,7 @@ func TestNewRefusesNonLoopbackBind(t *testing.T) {
 	for _, host := range refused {
 		t.Run("refused/"+host, func(t *testing.T) {
 			dbPath := filepath.Join(t.TempDir(), "world.db")
-			d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: host, BindPort: DefaultBindPort})
+			d, err := New(boundedTestContext(t), Config{DBPath: dbPath, BindHost: host, BindPort: DefaultBindPort})
 			if err == nil {
 				_ = d.Close()
 				t.Fatalf("New accepted non-loopback bind host %q — local-first must be structural", host)
@@ -175,7 +175,7 @@ func TestNewRefusesNonLoopbackBind(t *testing.T) {
 	for _, host := range accepted {
 		t.Run("accepted/"+host, func(t *testing.T) {
 			dbPath := filepath.Join(t.TempDir(), "world.db")
-			d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: host, BindPort: 0})
+			d, err := New(boundedTestContext(t), Config{DBPath: dbPath, BindHost: host, BindPort: 0})
 			if err != nil {
 				t.Fatalf("New rejected loopback bind host %q: %v", host, err)
 			}
@@ -348,7 +348,7 @@ func TestBoundedGracefulShutdownDrainsInFlightRequest(t *testing.T) {
 	const handlerWork = 250 * time.Millisecond
 	const wantBody = "drained"
 
-	d, err := New(context.Background(), Config{
+	d, err := New(boundedTestContext(t), Config{
 		DBPath:   filepath.Join(t.TempDir(), "world.db"),
 		BindHost: DefaultBindHost,
 		BindPort: 0,
@@ -424,7 +424,7 @@ func TestBoundedGracefulShutdownDrainsInFlightRequest(t *testing.T) {
 // Without the second half, replacing shutdownTimeout with an arbitrarily large
 // value would still look green — the drain simply never expires in practice.
 func TestDaemonShutdownIsBoundedByTheD7Constant(t *testing.T) {
-	d, err := New(context.Background(), Config{
+	d, err := New(boundedTestContext(t), Config{
 		DBPath:   filepath.Join(t.TempDir(), "world.db"),
 		BindHost: DefaultBindHost,
 		BindPort: 0,
@@ -484,7 +484,7 @@ func TestDaemonShutdownIsBoundedByTheD7Constant(t *testing.T) {
 // released, so the next process can open the same database.
 func TestNewReleasesWriterAuthorityOnLateFailure(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "world.db")
-	d, err := New(context.Background(), Config{
+	d, err := New(boundedTestContext(t), Config{
 		DBPath:    dbPath,
 		BindHost:  DefaultBindHost,
 		BindPort:  0,
@@ -571,7 +571,7 @@ func TestHealthAndHeadRoundTrip(t *testing.T) {
 	wantRef := hashref.SumSHA256(execBytes)
 	dbPath := filepath.Join(dir, "world.db")
 
-	d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0, AilangBin: execPath})
+	d, err := New(boundedTestContext(t), Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0, AilangBin: execPath})
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -639,7 +639,7 @@ func TestRunAnnouncesResolvedListenAddress(t *testing.T) {
 	cfg := Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0}
 
 	pr, pw := io.Pipe()
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	defer cancel()
 
 	ran := make(chan error, 1)
@@ -710,11 +710,11 @@ func TestNewBootstrapsEpochRegistryIdempotently(t *testing.T) {
 
 	heads := make([]string, 0, 2)
 	for i := range 2 {
-		d, err := New(context.Background(), cfg)
+		d, err := New(boundedTestContext(t), cfg)
 		if err != nil {
 			t.Fatalf("New #%d: %v", i+1, err)
 		}
-		head, ok, err := d.store.GetRegistryHead(context.Background(), registry.SemanticID)
+		head, ok, err := d.store.GetRegistryHead(boundedTestContext(t), registry.SemanticID)
 		if err != nil || !ok {
 			_ = d.Close()
 			t.Fatalf("GetRegistryHead #%d: ok=%v err=%v — the lifecycle must bootstrap the registry", i+1, ok, err)
@@ -1037,10 +1037,10 @@ func seedTransitionRegistry(t *testing.T, st *store.Store, idEffect ...string) h
 		Hash: hashref.SumSHA256(payload), InterfaceHash: transitionreg.InterfaceHashV1,
 		SemanticID: transitionreg.SemanticIDV1, Provenance: "daemon-test", Payload: payload,
 	}
-	if err := st.PutObject(obj); err != nil {
+	if err := st.PutObject(boundedTestContext(t), obj); err != nil {
 		t.Fatalf("put object: %v", err)
 	}
-	if err := st.CompareAndSetRegistryHead(store.TransitionRegistryV1, hashref.HashRef{}, obj.Hash); err != nil {
+	if err := st.CompareAndSetRegistryHead(boundedTestContext(t), store.TransitionRegistryV1, hashref.HashRef{}, obj.Hash); err != nil {
 		t.Fatalf("cas head: %v", err)
 	}
 	return obj.Hash
@@ -1054,7 +1054,7 @@ func mintSessionGrants(t *testing.T, d *Daemon, episode string, effects ...strin
 	for _, e := range effects {
 		grants = append(grants, broker.Capability{Effect: e, Scope: "world", ExpiresAt: time.Now().Unix() + 7200, Budget: 10})
 	}
-	tok, _, _, err := authority.Mint(context.Background(), d.store, episode, grants, 3600, time.Now().Unix(), nil)
+	tok, _, _, err := authority.Mint(boundedTestContext(t), d.store, episode, grants, 3600, time.Now().Unix(), nil)
 	if err != nil {
 		t.Fatalf("mint session: %v", err)
 	}
@@ -1115,7 +1115,7 @@ func TestCardDenial_ByteIdenticalToCommitMiddleware(t *testing.T) {
 		"Bearer z",                          // malformed (bad token shape)
 	}
 	// Also an EXPIRED credential, minted against the daemon's own store.
-	expiredTok, _, _, err := authority.Mint(context.Background(), d.store, "ep-expired",
+	expiredTok, _, _, err := authority.Mint(boundedTestContext(t), d.store, "ep-expired",
 		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 60, time.Now().Unix()-3600, nil)
 	if err != nil {
 		t.Fatalf("mint expired: %v", err)
@@ -1143,7 +1143,7 @@ func TestCardDenial_ByteIdenticalToCommitMiddleware(t *testing.T) {
 // as literals, asserted pairwise distinct.
 func TestCardDenial_ExactClassAndMessagePerKind(t *testing.T) {
 	d := newHandlerDaemon(t)
-	expiredTok, _, _, err := authority.Mint(context.Background(), d.store, "ep-expired",
+	expiredTok, _, _, err := authority.Mint(boundedTestContext(t), d.store, "ep-expired",
 		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 60, time.Now().Unix()-3600, nil)
 	if err != nil {
 		t.Fatalf("mint expired: %v", err)

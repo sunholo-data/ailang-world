@@ -104,7 +104,7 @@ func TestClientVerbsAgainstLiveDaemon(t *testing.T) {
 	cfg := daemon.Config{DBPath: dbPath, BindHost: daemon.DefaultBindHost, BindPort: 0}
 
 	pr, pw := io.Pipe()
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	defer cancel()
 	ran := make(chan error, 1)
 	go func() {

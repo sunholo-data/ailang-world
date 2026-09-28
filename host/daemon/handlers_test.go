@@ -2,7 +2,6 @@ package daemon
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -21,7 +20,7 @@ import (
 
 func newHandlerDaemon(t *testing.T) *Daemon {
 	t.Helper()
-	d, err := New(context.Background(), Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost})
+	d, err := New(boundedTestContext(t), Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost})
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -47,7 +46,7 @@ func requestRecorder(t *testing.T, d *Daemon, method, target string, body io.Rea
 // handler past the middleware.
 func authHeader(t testing.TB, d *Daemon) string {
 	t.Helper()
-	tok, _, _, err := authority.Mint(context.Background(), d.store, "ep-test",
+	tok, _, _, err := authority.Mint(boundedTestContext(t), d.store, "ep-test",
 		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 3600, time.Now().Unix(), nil)
 	if err != nil {
 		t.Fatalf("mint test session: %v", err)
@@ -145,10 +144,10 @@ func seedGenesisEmbedded(t *testing.T, d *Daemon, label string) store.World {
 		StateRoot: hashref.SumSHA256([]byte("genesis-state-" + label)),
 		LogHead:   hashref.SumSHA256([]byte("genesis-log-" + label)),
 	}
-	if err := d.store.PutWorld(genesis); err != nil {
+	if err := d.store.PutWorld(boundedTestContext(t), genesis); err != nil {
 		t.Fatalf("PutWorld genesis: %v", err)
 	}
-	if err := d.store.SelectHead(genesis.Ref); err != nil {
+	if err := d.store.SelectHead(boundedTestContext(t), genesis.Ref); err != nil {
 		t.Fatalf("SelectHead genesis: %v", err)
 	}
 	return genesis
@@ -181,7 +180,7 @@ func TestReadRoutesAndPayloadGate(t *testing.T) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "reads")
 	commit := testCommit(genesis, 1, "reads")
-	if err := d.store.Commit(commit); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 		t.Fatalf("seed Commit: %v", err)
 	}
 
@@ -306,7 +305,7 @@ func TestStaleHeadConflictBodySupportsReplan(t *testing.T) {
 
 	// Genuine re-plan: load the selected world named by the body, construct the
 	// successor against it, and successfully commit that successor.
-	selectedWorld, ok, err := d.store.GetWorld(context.Background(), selected)
+	selectedWorld, ok, err := d.store.GetWorld(boundedTestContext(t), selected)
 	if err != nil || !ok {
 		t.Fatalf("GetWorld(selected from 409): ok=%v err=%v", ok, err)
 	}
@@ -323,7 +322,7 @@ func TestLogRangeClampAndDefaultAreNonVacuous(t *testing.T) {
 	const entries = 510
 	for i := int64(0); i < entries; i++ {
 		commit := testCommit(current, i, fmt.Sprintf("range-%d", i))
-		if err := d.store.Commit(commit); err != nil {
+		if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 			t.Fatalf("Commit(%d): %v", i, err)
 		}
 		current = commit.NextWorld
@@ -447,10 +446,10 @@ func TestRESTGenesisAndCommitAreByteEquivalent(t *testing.T) {
 	successor := testCommit(genesis.NextWorld, 1, "equivalence")
 
 	// Arm 1: the embedded kernel API.
-	if err := embedded.store.Commit(genesis); err != nil {
+	if err := embedded.store.Commit(boundedTestContext(t), genesis); err != nil {
 		t.Fatalf("embedded genesis Commit: %v", err)
 	}
-	if err := embedded.store.Commit(successor); err != nil {
+	if err := embedded.store.Commit(boundedTestContext(t), successor); err != nil {
 		t.Fatalf("embedded successor Commit: %v", err)
 	}
 
@@ -460,8 +459,8 @@ func TestRESTGenesisAndCommitAreByteEquivalent(t *testing.T) {
 	postCommit(t, server.URL, genesis, restAuth)
 	postCommit(t, server.URL, successor, restAuth)
 
-	embeddedHead, okE, errE := embedded.store.SelectedHead(context.Background())
-	restHead, okR, errR := rest.store.SelectedHead(context.Background())
+	embeddedHead, okE, errE := embedded.store.SelectedHead(boundedTestContext(t))
+	restHead, okR, errR := rest.store.SelectedHead(boundedTestContext(t))
 	if errE != nil || errR != nil || !okE || !okR {
 		t.Fatalf("SelectedHead: embedded(ok=%v err=%v) REST(ok=%v err=%v)", okE, errE, okR, errR)
 	}
@@ -475,11 +474,11 @@ func TestRESTGenesisAndCommitAreByteEquivalent(t *testing.T) {
 	// Both objects, byte-for-byte.
 	for _, c := range []store.Commit{genesis, successor} {
 		ref := c.Objects[0].Hash
-		embeddedObject, ok, err := embedded.store.GetObject(context.Background(), ref)
+		embeddedObject, ok, err := embedded.store.GetObject(boundedTestContext(t), ref)
 		if err != nil || !ok {
 			t.Fatalf("embedded GetObject(%s): ok=%v err=%v", ref, ok, err)
 		}
-		restObject, ok, err := rest.store.GetObject(context.Background(), ref)
+		restObject, ok, err := rest.store.GetObject(boundedTestContext(t), ref)
 		if err != nil || !ok {
 			t.Fatalf("REST GetObject(%s): ok=%v err=%v", ref, ok, err)
 		}
@@ -490,11 +489,11 @@ func TestRESTGenesisAndCommitAreByteEquivalent(t *testing.T) {
 
 	// Both log entries, compared through their canonical encodings.
 	for index := int64(0); index <= 1; index++ {
-		embeddedEntry, ok, err := embedded.store.GetLogEntry(context.Background(), index)
+		embeddedEntry, ok, err := embedded.store.GetLogEntry(boundedTestContext(t), index)
 		if err != nil || !ok {
 			t.Fatalf("embedded GetLogEntry(%d): ok=%v err=%v", index, ok, err)
 		}
-		restEntry, ok, err := rest.store.GetLogEntry(context.Background(), index)
+		restEntry, ok, err := rest.store.GetLogEntry(boundedTestContext(t), index)
 		if err != nil || !ok {
 			t.Fatalf("REST GetLogEntry(%d): ok=%v err=%v", index, ok, err)
 		}

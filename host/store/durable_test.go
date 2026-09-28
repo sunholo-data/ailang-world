@@ -74,24 +74,24 @@ func releaseOnce(release chan struct{}) {
 func TestDurableOpsHonourHeldConnection(t *testing.T) {
 	s := openFileStore(t)
 	c := journalCommitFixture(t, s, "held")
-	if _, _, err := s.AppendIntent("held", testCommitIntent("held", c)); err != nil {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), "held", testCommitIntent("held", c)); err != nil {
 		t.Fatalf("seed intent: %v", err)
 	}
 	ops := map[string]func(ctx context.Context) error{
-		"CommitContext": func(ctx context.Context) error { return s.CommitContext(ctx, c) },
-		"AppendIntentContext": func(ctx context.Context) error {
-			_, _, err := s.AppendIntentContext(ctx, "held-2", testCommitIntent("held-2", c))
+		"Commit": func(ctx context.Context) error { return s.Commit(ctx, c) },
+		"AppendIntent": func(ctx context.Context) error {
+			_, _, err := s.AppendIntent(ctx, "held-2", testCommitIntent("held-2", c))
 			return err
 		},
-		"GetReceiptContext": func(ctx context.Context) error {
-			_, _, err := s.GetReceiptContext(ctx, "held")
+		"GetReceipt": func(ctx context.Context) error {
+			_, _, err := s.GetReceipt(ctx, "held")
 			return err
 		},
 	}
 	for name, op := range ops {
 		t.Run(name, func(t *testing.T) {
 			base := runtime.NumGoroutine()
-			conn, err := s.db.Conn(context.Background())
+			conn, err := s.db.Conn(boundedTestContext(t))
 			if err != nil {
 				t.Fatalf("hold conn: %v", err)
 			}
@@ -110,14 +110,14 @@ func TestDurableOpsHonourHeldConnection(t *testing.T) {
 			}
 		})
 	}
-	rc, _, err := s.GetReceiptContext(context.Background(), "held")
+	rc, _, err := s.GetReceipt(boundedTestContext(t), "held")
 	if err != nil || rc.State != ReceiptIndeterminate {
 		t.Fatalf("receipt after refused ops = %+v, %v; want indeterminate (intent only)", rc, err)
 	}
-	if rc2, _, _ := s.GetReceipt("held-2"); rc2.State != ReceiptNotStarted {
+	if rc2, _, _ := s.GetReceipt(boundedTestContext(t), "held-2"); rc2.State != ReceiptNotStarted {
 		t.Fatalf("held-2 intent landed: %+v", rc2)
 	}
-	if err := s.CommitContext(context.Background(), c); err != nil {
+	if err := s.Commit(boundedTestContext(t), c); err != nil {
 		t.Fatalf("control: released store must commit: %v", err)
 	}
 }
@@ -128,10 +128,10 @@ func TestDurableOpsHonourHeldConnection(t *testing.T) {
 func TestCommitCancelledMidBodyIsAllOrNothing(t *testing.T) {
 	s := openFileStore(t)
 	c := journalCommitFixture(t, s, "mid")
-	if _, _, err := s.AppendIntent("mid", testCommitIntent("mid", c)); err != nil {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), "mid", testCommitIntent("mid", c)); err != nil {
 		t.Fatalf("seed intent: %v", err)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	defer cancel()
 	prev := commitBeforeOutcomeHook
 	// Cancel, then yield so database/sql's asynchronous rollback (awaitDone)
@@ -139,18 +139,18 @@ func TestCommitCancelledMidBodyIsAllOrNothing(t *testing.T) {
 	// sql.ErrTxDone, the arm notCommitted must translate.
 	commitBeforeOutcomeHook = func() { cancel(); time.Sleep(50 * time.Millisecond) }
 	defer func() { commitBeforeOutcomeHook = prev }()
-	err := s.CommitContext(ctx, c)
+	err := s.Commit(ctx, c)
 	if !errors.Is(err, context.Canceled) || IsUncertain(err) {
 		t.Fatalf("err = %v; want definite Canceled", err)
 	}
-	head, _, herr := s.SelectedHead(context.Background())
+	head, _, herr := s.SelectedHead(boundedTestContext(t))
 	if herr != nil || head.String() != c.ObservedHead.String() {
 		t.Fatalf("head moved to %v (%v); want untouched %v", head, herr, c.ObservedHead)
 	}
-	if _, ok, _ := s.GetWorld(context.Background(), c.NextWorld.Ref); ok {
+	if _, ok, _ := s.GetWorld(boundedTestContext(t), c.NextWorld.Ref); ok {
 		t.Fatal("next world row landed from a cancelled commit")
 	}
-	if rc, _, _ := s.GetReceipt("mid"); rc.State != ReceiptIndeterminate {
+	if rc, _, _ := s.GetReceipt(boundedTestContext(t), "mid"); rc.State != ReceiptIndeterminate {
 		t.Fatalf("receipt = %v; want indeterminate", rc.State)
 	}
 }
@@ -158,10 +158,10 @@ func TestCommitCancelledMidBodyIsAllOrNothing(t *testing.T) {
 func TestCommitBodyHookPhases(t *testing.T) {
 	s := openFileStore(t)
 	c := journalCommitFixture(t, s, "body-phases")
-	if _, _, err := s.AppendIntent("body-phases", testCommitIntent("body-phases", c)); err != nil {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), "body-phases", testCommitIntent("body-phases", c)); err != nil {
 		t.Fatal(err)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	defer cancel()
 	previous := commitBodyHook
 	visits := 0
@@ -176,17 +176,17 @@ func TestCommitBodyHookPhases(t *testing.T) {
 		}
 	}
 	defer func() { commitBodyHook = previous }()
-	err := s.CommitContext(ctx, c)
+	err := s.Commit(ctx, c)
 	if visits != 2 {
 		t.Fatalf("body hook visits = %d; want head read and world insert", visits)
 	}
 	if !errors.Is(err, context.Canceled) || IsUncertain(err) {
 		t.Fatalf("err = %v; want definite Canceled", err)
 	}
-	if _, ok, err := s.GetWorld(context.Background(), c.NextWorld.Ref); err != nil || ok {
+	if _, ok, err := s.GetWorld(boundedTestContext(t), c.NextWorld.Ref); err != nil || ok {
 		t.Fatalf("cancelled world: found=%v err=%v", ok, err)
 	}
-	if rc, _, err := s.GetReceipt("body-phases"); err != nil || rc.State != ReceiptIndeterminate {
+	if rc, _, err := s.GetReceipt(boundedTestContext(t), "body-phases"); err != nil || rc.State != ReceiptIndeterminate {
 		t.Fatalf("receipt = %v, err = %v; want indeterminate", rc.State, err)
 	}
 }
@@ -194,7 +194,7 @@ func TestCommitBodyHookPhases(t *testing.T) {
 func TestAppendIntentCancelledMidBodyIsNotCommitted(t *testing.T) {
 	s := openFileStore(t)
 	c := journalCommitFixture(t, s, "append-mid-body")
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	defer cancel()
 	previous := appendIntentBodyHook
 	visits := 0
@@ -207,14 +207,14 @@ func TestAppendIntentCancelledMidBodyIsNotCommitted(t *testing.T) {
 		time.Sleep(50 * time.Millisecond)
 	}
 	defer func() { appendIntentBodyHook = previous }()
-	_, _, err := s.AppendIntentContext(ctx, "append-mid-body", testCommitIntent("append-mid-body", c))
+	_, _, err := s.AppendIntent(ctx, "append-mid-body", testCommitIntent("append-mid-body", c))
 	if visits != 1 {
 		t.Fatalf("append hook visits = %d; want one", visits)
 	}
 	if !errors.Is(err, context.Canceled) || IsUncertain(err) {
 		t.Fatalf("err = %v; want definite Canceled", err)
 	}
-	rc, hasIntent, err := s.GetReceipt("append-mid-body")
+	rc, hasIntent, err := s.GetReceipt(boundedTestContext(t), "append-mid-body")
 	if err != nil || hasIntent || rc.State != ReceiptNotStarted {
 		t.Fatalf("receipt = %v, hasIntent = %v, err = %v; want not started with no intent", rc.State, hasIntent, err)
 	}
@@ -231,11 +231,11 @@ func TestDurableStallAtCutoffIsUncertainAndReconciles(t *testing.T) {
 		op   func(ctx context.Context, s *Store, c Commit) error
 		want ReceiptState // deadline passed before the cutoff: rolled back
 	}{
-		{"CommitContext", "stall", func(ctx context.Context, s *Store, c Commit) error {
-			return s.CommitContext(ctx, c)
+		{"Commit", "stall", func(ctx context.Context, s *Store, c Commit) error {
+			return s.Commit(ctx, c)
 		}, ReceiptIndeterminate},
-		{"AppendIntentContext", "stall-2", func(ctx context.Context, s *Store, c Commit) error {
-			_, _, err := s.AppendIntentContext(ctx, "stall-2", testCommitIntent("stall-2", c))
+		{"AppendIntent", "stall-2", func(ctx context.Context, s *Store, c Commit) error {
+			_, _, err := s.AppendIntent(ctx, "stall-2", testCommitIntent("stall-2", c))
 			return err
 		}, ReceiptNotStarted},
 	}
@@ -243,7 +243,7 @@ func TestDurableStallAtCutoffIsUncertainAndReconciles(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			s := openFileStore(t)
 			c := journalCommitFixture(t, s, "stall")
-			if _, _, err := s.AppendIntent("stall", testCommitIntent("stall", c)); err != nil {
+			if _, _, err := s.AppendIntent(boundedTestContext(t), "stall", testCommitIntent("stall", c)); err != nil {
 				t.Fatalf("seed intent: %v", err)
 			}
 			release := make(chan struct{})
@@ -286,7 +286,7 @@ func TestDurableStallAtCutoffIsUncertainAndReconciles(t *testing.T) {
 			}
 			rctx, rcancel := context.WithTimeout(context.Background(), time.Second)
 			defer rcancel()
-			rc, _, err := s.GetReceiptContext(rctx, tc.id)
+			rc, _, err := s.GetReceipt(rctx, tc.id)
 			if err != nil || rc.State != tc.want {
 				t.Fatalf("reconciled %s = %v, %v; want %v (not committed)", tc.id, rc.State, err, tc.want)
 			}
@@ -349,7 +349,7 @@ func TestUncertainBareCommitReconcilesByLogIndexNotHead(t *testing.T) {
 			}()
 			ctx, cancel := context.WithTimeout(context.Background(), durableBudget)
 			defer cancel()
-			err, _ := boundedCall(t, func() error { return s.CommitContext(ctx, a) }, func() { close(release) })
+			err, _ := boundedCall(t, func() error { return s.Commit(ctx, a) }, func() { close(release) })
 			if !IsUncertain(err) {
 				t.Fatalf("A: err = %v; want *UncertainError", err)
 			}
@@ -367,7 +367,7 @@ func TestUncertainBareCommitReconcilesByLogIndexNotHead(t *testing.T) {
 				base = a.NextWorld
 			}
 			b := bareCommit(base, base.Revision+1, "B")
-			if err := s.CommitContext(bctx, b); err != nil {
+			if err := s.Commit(bctx, b); err != nil {
 				t.Fatalf("B: %v", err)
 			}
 			head, _, err := s.SelectedHead(bctx)
@@ -408,7 +408,7 @@ func TestCloseKeepsWriterLockUntilDurableWorkerSettles(t *testing.T) {
 	defer unblock()
 	ctx, cancel := context.WithTimeout(context.Background(), durableBudget)
 	defer cancel()
-	err, _ = boundedCall(t, func() error { return s.CommitContext(ctx, bareCommit(genesis, 1, "L")) }, unblock)
+	err, _ = boundedCall(t, func() error { return s.Commit(ctx, bareCommit(genesis, 1, "L")) }, unblock)
 	if !IsUncertain(err) {
 		t.Fatalf("A: err = %v; want *UncertainError", err)
 	}

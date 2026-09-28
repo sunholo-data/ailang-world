@@ -113,8 +113,8 @@ func object(r Registry) (store.Object, error) {
 type bootstrapStore interface {
 	GetRegistryHead(context.Context, string) (hashref.HashRef, bool, error)
 	GetObject(context.Context, hashref.HashRef) (store.Object, bool, error)
-	PutObject(store.Object) error
-	SetRegistryHead(string, hashref.HashRef) error
+	PutObject(context.Context, store.Object) error
+	SetRegistryHead(context.Context, string, hashref.HashRef) error
 }
 
 // Pass the caller's intended read ctx; this API supplies no default timeout.
@@ -162,10 +162,10 @@ func bootstrap(ctx context.Context, s bootstrapStore, releaseString string) (Reg
 
 	// Fresh bootstrap: store the immutable revision object, then name it. Both
 	// operations are idempotent, so a partial prior run self-heals on retry.
-	if err := s.PutObject(obj); err != nil {
+	if err := s.PutObject(ctx, obj); err != nil {
 		return Registry{}, hashref.HashRef{}, err
 	}
-	if err := s.SetRegistryHead(SemanticID, obj.Hash); err != nil {
+	if err := s.SetRegistryHead(ctx, SemanticID, obj.Hash); err != nil {
 		return Registry{}, hashref.HashRef{}, err
 	}
 	return want, obj.Hash, nil

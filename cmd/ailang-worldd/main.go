@@ -25,15 +25,13 @@
 package main
 
 import (
-	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"net"
 	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
@@ -202,13 +200,21 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	}
 
 	// SIGINT/SIGTERM cancel the context, which starts the D7 bounded drain.
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, stop := serveSignalContext()
 	defer stop()
 
 	cfg := daemon.Config{DBPath: *dbPath, BindHost: host, BindPort: port, AilangBin: *ailangBin}
-	if err := daemon.Run(ctx, cfg, stdout); err != nil {
-		fmt.Fprintf(stderr, "ailang-worldd: %v\n", err)
-		return exitFatal
+	return serveResult(daemon.Run(ctx, cfg, stdout), stderr)
+}
+
+func serveResult(err error, stderr io.Writer) int {
+	if err == nil {
+		return exitOK
 	}
-	return exitOK
+	fmt.Fprintf(stderr, "ailang-worldd: %v\n", err)
+	var startup *daemon.StartupError
+	if errors.As(err, &startup) && startup.Settled != nil {
+		<-startup.Settled
+	}
+	return exitFatal
 }

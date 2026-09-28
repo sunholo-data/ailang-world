@@ -49,7 +49,7 @@ func liveGrant(effect string) broker.Capability {
 
 func mintToken(t *testing.T, st *store.Store, episode string, grants []broker.Capability) string {
 	t.Helper()
-	tok, _, _, err := authority.Mint(context.Background(), st, episode, grants, 3600, time.Now().Unix(), io.Discard)
+	tok, _, _, err := authority.Mint(boundedTestContext(t), st, episode, grants, 3600, time.Now().Unix(), io.Discard)
 	if err != nil {
 		t.Fatalf("mint: %v", err)
 	}
@@ -58,7 +58,7 @@ func mintToken(t *testing.T, st *store.Store, episode string, grants []broker.Ca
 
 func mintExpiredToken(t *testing.T, st *store.Store) string {
 	t.Helper()
-	tok, _, _, err := authority.Mint(context.Background(), st, "ep-expired",
+	tok, _, _, err := authority.Mint(boundedTestContext(t), st, "ep-expired",
 		[]broker.Capability{{Effect: "alpha", Scope: "world", ExpiresAt: time.Now().Unix() + 7200, Budget: 10}},
 		60, time.Now().Unix()-3600, io.Discard)
 	if err != nil {
@@ -103,10 +103,10 @@ func publishRevision(t *testing.T, st *store.Store, rev transitionreg.Revision, 
 		Hash: hashref.SumSHA256(payload), InterfaceHash: transitionreg.InterfaceHashV1,
 		SemanticID: transitionreg.SemanticIDV1, Provenance: "projection-test", Payload: payload,
 	}
-	if err := st.PutObject(obj); err != nil {
+	if err := st.PutObject(boundedTestContext(t), obj); err != nil {
 		t.Fatalf("put object: %v", err)
 	}
-	if err := st.CompareAndSetRegistryHead(store.TransitionRegistryV1, expected, obj.Hash); err != nil {
+	if err := st.CompareAndSetRegistryHead(boundedTestContext(t), store.TransitionRegistryV1, expected, obj.Hash); err != nil {
 		t.Fatalf("cas head: %v", err)
 	}
 	return obj.Hash
@@ -803,7 +803,7 @@ func TestA2A_NeverWritesStore(t *testing.T) {
 	// could even conceptually touch) must be byte-identical after the battery.
 	// The world log gains rows only through POST /v1/commit, which this suite
 	// never calls.
-	regHeadAfter, ok, err := st.GetRegistryHead(context.Background(), store.TransitionRegistryV1)
+	regHeadAfter, ok, err := st.GetRegistryHead(boundedTestContext(t), store.TransitionRegistryV1)
 	if err != nil || !ok {
 		t.Fatalf("GetRegistryHead after the battery: ok=%v err=%v — the probe must still read", ok, err)
 	}
@@ -820,7 +820,7 @@ func TestA2A_NeverWritesStore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("BuildNext control: %v", err)
 	}
-	head2, err := transitionreg.NewReader(st).Publish(context.Background(), seeded, next)
+	head2, err := transitionreg.NewReader(st).Publish(boundedTestContext(t), seeded, next)
 	if err != nil {
 		t.Fatalf("Publish control: %v", err)
 	}
@@ -973,7 +973,7 @@ func TestAgentCard_HeadChangeWithoutRestart(t *testing.T) {
 	if err != nil {
 		t.Fatalf("BuildNext: %v", err)
 	}
-	if _, err := transitionreg.NewReader(st).Publish(context.Background(), head1, next); err != nil {
+	if _, err := transitionreg.NewReader(st).Publish(boundedTestContext(t), head1, next); err != nil {
 		t.Fatalf("Publish rev 2: %v", err)
 	}
 

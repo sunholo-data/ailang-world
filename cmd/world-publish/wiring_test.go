@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"flag"
 	"go/ast"
 	"go/parser"
@@ -490,7 +489,7 @@ func TestWorldCoreManifestMatchesTheCommittedGolden(t *testing.T) {
 	if bin == "" {
 		t.Fatal("AILANG_BIN unset: interfaceHashV2 needs the pinned binary; never skip")
 	}
-	iface, err := pkgproj.QueryInterface(context.Background(), filepath.Join(root, defaultPackageDir), worldCoreManifest, bin)
+	iface, err := pkgproj.QueryInterface(boundedTestContext(t), filepath.Join(root, defaultPackageDir), worldCoreManifest, bin)
 	if err != nil {
 		t.Fatalf("query interface identity: %v", err)
 	}

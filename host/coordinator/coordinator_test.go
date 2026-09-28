@@ -67,7 +67,7 @@ func (r *rig) genesis() store.World {
 		SemanticID: "test/genesis", Provenance: "coordinator-test", Payload: []byte("genesis-state")}
 	entryHash := hashref.SumSHA256([]byte("genesis-entry"))
 	w := store.World{Ref: hashref.SumSHA256([]byte("genesis-world")), Revision: 0, StateRoot: obj.Hash, LogHead: entryHash}
-	if err := r.st.Commit(store.Commit{
+	if err := r.st.Commit(boundedTestContext(r.t), store.Commit{
 		Objects: []store.Object{obj}, NextWorld: w,
 		Entry: store.LogEntry{Header: store.LogHeader{
 			EntryIndex: 0, SemanticsEpoch: 1, TransitionFn: hashref.SumSHA256([]byte("genesis-fn")),
@@ -88,7 +88,7 @@ func (r *rig) source(raw string) hashref.HashRef {
 	}
 	obj := store.Object{Hash: hashref.SumSHA256(b), InterfaceHash: hashref.SumSHA256([]byte("world/transition-source/v1")),
 		SemanticID: "world/transition-source/v1", Provenance: "coordinator-test", Payload: b}
-	if err := r.st.PutObject(obj); err != nil {
+	if err := r.st.PutObject(boundedTestContext(r.t), obj); err != nil {
 		r.t.Fatalf("put source: %v", err)
 	}
 	return obj.Hash
@@ -114,10 +114,10 @@ func (r *rig) publish() {
 	}
 	obj := store.Object{Hash: hashref.SumSHA256(payload), InterfaceHash: transitionreg.InterfaceHashV1,
 		SemanticID: transitionreg.SemanticIDV1, Provenance: "coordinator-test", Payload: payload}
-	if err := r.st.PutObject(obj); err != nil {
+	if err := r.st.PutObject(boundedTestContext(r.t), obj); err != nil {
 		r.t.Fatalf("put revision: %v", err)
 	}
-	if err := r.st.CompareAndSetRegistryHead(store.TransitionRegistryV1, hashref.HashRef{}, obj.Hash); err != nil {
+	if err := r.st.CompareAndSetRegistryHead(boundedTestContext(r.t), store.TransitionRegistryV1, hashref.HashRef{}, obj.Hash); err != nil {
 		r.t.Fatalf("cas head: %v", err)
 	}
 }
@@ -144,7 +144,7 @@ func (r *rig) coordinator(st Store, runner Runner) *Coordinator {
 
 func (r *rig) call(skill, task string, caps []broker.Capability) Call {
 	r.t.Helper()
-	req, err := transitionreg.NewRequest(context.Background(), transitionreg.NewReader(r.st), capSource(caps), now)
+	req, err := transitionreg.NewRequest(boundedTestContext(r.t), transitionreg.NewReader(r.st), capSource(caps), now)
 	if err != nil {
 		r.t.Fatalf("NewRequest: %v", err)
 	}
@@ -154,11 +154,11 @@ func (r *rig) call(skill, task string, caps []broker.Capability) Call {
 // assertUntouched: the refusal left no durable mutation.
 func (r *rig) assertUntouched(want hashref.HashRef, task string) {
 	r.t.Helper()
-	head, _, err := r.st.SelectedHead(context.Background())
+	head, _, err := r.st.SelectedHead(boundedTestContext(r.t))
 	if err != nil || head != want {
 		r.t.Fatalf("selected head = %v (%v), want unchanged %v", head, err, want)
 	}
-	if rc, ok, err := r.st.GetReceipt(InvocationID("ep1", task)); err != nil || (ok && rc.State != store.ReceiptNotStarted) {
+	if rc, ok, err := r.st.GetReceipt(boundedTestContext(r.t), InvocationID("ep1", task)); err != nil || (ok && rc.State != store.ReceiptNotStarted) {
 		r.t.Fatalf("receipt for refused task = %+v ok=%v err=%v, want none", rc, ok, err)
 	}
 }
@@ -245,22 +245,22 @@ func TestDispatchEchoRealInterpreter(t *testing.T) {
 	w := r.genesis()
 	r.describe("echo", r.source(echoSrc), "Invoke")
 	r.publish()
-	res, err := r.coordinator(r.st, r.runner).Dispatch(context.Background(), r.call("echo", "t1", grants))
+	res, err := r.coordinator(r.st, r.runner).Dispatch(boundedTestContext(r.t), r.call("echo", "t1", grants))
 	if err != nil {
 		t.Fatalf("Dispatch: %v", err)
 	}
 	if string(res.OutputBytes) != `{"echo":{"msg":"hi"}}` {
 		t.Fatalf("output = %s", res.OutputBytes)
 	}
-	head, _, _ := r.st.SelectedHead(context.Background())
+	head, _, _ := r.st.SelectedHead(boundedTestContext(r.t))
 	if head != res.WorldRef || res.EntryIndex != w.Revision+1 {
 		t.Fatalf("head %v entry %d, want %v / %d", head, res.EntryIndex, res.WorldRef, w.Revision+1)
 	}
-	entry, ok, err := r.st.GetLogEntry(context.Background(), res.EntryIndex)
+	entry, ok, err := r.st.GetLogEntry(boundedTestContext(r.t), res.EntryIndex)
 	if err != nil || !ok || entry.Header.TransitionFn != r.descs[0].TransitionFn || entry.Header.Interpreter != r.interp {
 		t.Fatalf("log entry %+v ok=%v err=%v", entry, ok, err)
 	}
-	rc, ok, err := r.st.GetReceipt(res.InvocationID)
+	rc, ok, err := r.st.GetReceipt(boundedTestContext(r.t), res.InvocationID)
 	if err != nil || !ok || rc.State != store.ReceiptResolved {
 		t.Fatalf("receipt %+v ok=%v err=%v, want resolved", rc, ok, err)
 	}
@@ -272,11 +272,11 @@ func TestReplayCommittedInvocation(t *testing.T) {
 	r.genesis()
 	r.describe("echo", r.source(echoSrc), "Invoke")
 	r.publish()
-	res, err := r.coordinator(r.st, r.runner).Dispatch(context.Background(), r.call("echo", "t1", grants))
+	res, err := r.coordinator(r.st, r.runner).Dispatch(boundedTestContext(r.t), r.call("echo", "t1", grants))
 	if err != nil {
 		t.Fatalf("Dispatch: %v", err)
 	}
-	ctx := context.Background()
+	ctx := boundedTestContext(r.t)
 	recObj, ok, err := r.st.GetObject(ctx, res.RecordRef)
 	if err != nil || !ok {
 		t.Fatalf("record: ok=%v err=%v", ok, err)
@@ -311,7 +311,7 @@ func TestDispatchIncompatibleRealInterpreter(t *testing.T) {
 	w := r.genesis()
 	r.describe("zero", r.source("module transitions/zero\n\nexport func main() -> string {\n  \"{}\"\n}\n"), "Invoke")
 	r.publish()
-	_, err := r.coordinator(r.st, r.runner).Dispatch(context.Background(), r.call("zero", "t1", grants))
+	_, err := r.coordinator(r.st, r.runner).Dispatch(boundedTestContext(r.t), r.call("zero", "t1", grants))
 	var inc *IncompatibleError
 	if !errors.As(err, &inc) {
 		t.Fatalf("err = %T %v, want *IncompatibleError", err, err)
@@ -389,7 +389,7 @@ func TestDispatchRefuses(t *testing.T) {
 			if tc.store != nil {
 				st = tc.store(r)
 			}
-			_, err := r.coordinator(st, tc.runner).Dispatch(context.Background(), call)
+			_, err := r.coordinator(st, tc.runner).Dispatch(boundedTestContext(r.t), call)
 			if !tc.check(err) {
 				t.Fatalf("err = %T %v", err, err)
 			}
@@ -405,7 +405,7 @@ func TestDispatchRefuses(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, err = c.Dispatch(context.Background(), r.call("plain", "t1", grants))
+		_, err = c.Dispatch(boundedTestContext(r.t), r.call("plain", "t1", grants))
 		if !errors.Is(err, marker) {
 			t.Fatalf("binder error = %T %v", err, err)
 		}
@@ -416,7 +416,7 @@ func TestDispatchRefuses(t *testing.T) {
 		r := newRig(t, false)
 		r.describe("plain", r.source(echoSrc), "Invoke")
 		r.publish()
-		_, err := r.coordinator(r.st, okRun).Dispatch(context.Background(), r.call("plain", "t1", grants))
+		_, err := r.coordinator(r.st, okRun).Dispatch(boundedTestContext(r.t), r.call("plain", "t1", grants))
 		var x *WorldAbsentError
 		if !errors.As(err, &x) {
 			t.Fatalf("err = %T %v, want *WorldAbsentError", err, err)
@@ -425,7 +425,7 @@ func TestDispatchRefuses(t *testing.T) {
 
 	t.Run("R11_cancelled_during_exec", func(t *testing.T) {
 		r, w := setup(t)
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(boundedTestContext(r.t))
 		runner := fakeRunner{err: &capsule.ExecError{Stderr: []byte("ARG_DECODE_MISMATCH")}, hook: func(context.Context) { cancel() }}
 		_, err := r.coordinator(r.st, runner).Dispatch(ctx, r.call("plain", "t1", grants))
 		if !errors.Is(err, context.Canceled) {
@@ -438,12 +438,12 @@ func TestDispatchRefuses(t *testing.T) {
 	// re-executed, head unchanged.
 	t.Run("R13_resend_reconciles_committed", func(t *testing.T) {
 		r, _ := setup(t)
-		first, err := r.coordinator(r.st, okRun).Dispatch(context.Background(), r.call("plain", "t1", grants))
+		first, err := r.coordinator(r.st, okRun).Dispatch(boundedTestContext(r.t), r.call("plain", "t1", grants))
 		if err != nil {
 			t.Fatalf("first Dispatch: %v", err)
 		}
 		mustNotRun := fakeRunner{hook: func(context.Context) { t.Error("resend re-executed the transition") }, stdout: `{"second":true}`}
-		again, err := r.coordinator(r.st, mustNotRun).Dispatch(context.Background(), r.call("plain", "t1", grants))
+		again, err := r.coordinator(r.st, mustNotRun).Dispatch(boundedTestContext(r.t), r.call("plain", "t1", grants))
 		if err != nil {
 			t.Fatalf("resend: %T %v, want the committed result", err, err)
 		}
@@ -459,16 +459,16 @@ func TestDispatchRefuses(t *testing.T) {
 	t.Run("R15_resend_not_committed", func(t *testing.T) {
 		r, w := setup(t)
 		mover := fakeRunner{stdout: `{"ok":true}`, hook: func(context.Context) {
-			if _, err := r.coordinator(r.st, fakeRunner{stdout: `{"other":1}`}).Dispatch(context.Background(), r.call("plain", "other", grants)); err != nil {
+			if _, err := r.coordinator(r.st, fakeRunner{stdout: `{"other":1}`}).Dispatch(boundedTestContext(r.t), r.call("plain", "other", grants)); err != nil {
 				t.Errorf("concurrent writer: %v", err)
 			}
 		}}
-		if _, err := r.coordinator(r.st, mover).Dispatch(context.Background(), r.call("plain", "t1", grants)); !store.IsConflict(err) {
+		if _, err := r.coordinator(r.st, mover).Dispatch(boundedTestContext(r.t), r.call("plain", "t1", grants)); !store.IsConflict(err) {
 			t.Fatalf("first: %v, want conflict", err)
 		}
 		_ = w
 		mustNotRun := fakeRunner{hook: func(context.Context) { t.Error("resend re-executed the transition") }, stdout: `{}`}
-		_, err := r.coordinator(r.st, mustNotRun).Dispatch(context.Background(), r.call("plain", "t1", grants))
+		_, err := r.coordinator(r.st, mustNotRun).Dispatch(boundedTestContext(r.t), r.call("plain", "t1", grants))
 		var x *NotCommittedError
 		if !errors.As(err, &x) {
 			t.Fatalf("resend err = %T %v, want *NotCommittedError", err, err)
@@ -480,12 +480,12 @@ func TestDispatchRefuses(t *testing.T) {
 	t.Run("R16_unconfirmed_then_reconciled", func(t *testing.T) {
 		r, w := setup(t)
 		landedButErr := errStore{Store: r.st, afterCommit: errors.New("disk I/O error")}
-		_, err := r.coordinator(landedButErr, okRun).Dispatch(context.Background(), r.call("plain", "t1", grants))
+		_, err := r.coordinator(landedButErr, okRun).Dispatch(boundedTestContext(r.t), r.call("plain", "t1", grants))
 		var x *UnconfirmedError
 		if !errors.As(err, &x) {
 			t.Fatalf("err = %T %v, want *UnconfirmedError", err, err)
 		}
-		again, err := r.coordinator(r.st, okRun).Dispatch(context.Background(), r.call("plain", "t1", grants))
+		again, err := r.coordinator(r.st, okRun).Dispatch(boundedTestContext(r.t), r.call("plain", "t1", grants))
 		if err != nil || !again.Reconciled || again.EntryIndex != w.Revision+1 {
 			t.Fatalf("resend = %+v, %v; want the landed commit reconciled", again, err)
 		}
@@ -496,16 +496,16 @@ func TestDispatchRefuses(t *testing.T) {
 		mover := fakeRunner{stdout: `{"ok":true}`, hook: func(context.Context) {
 			// Another writer advances the world while the capsule runs.
 			other := r.coordinator(r.st, fakeRunner{stdout: `{"other":1}`})
-			if _, err := other.Dispatch(context.Background(), r.call("plain", "other", grants)); err != nil {
+			if _, err := other.Dispatch(boundedTestContext(r.t), r.call("plain", "other", grants)); err != nil {
 				t.Errorf("concurrent writer: %v", err)
 			}
 		}}
-		_, err := r.coordinator(r.st, mover).Dispatch(context.Background(), r.call("plain", "t1", grants))
+		_, err := r.coordinator(r.st, mover).Dispatch(boundedTestContext(r.t), r.call("plain", "t1", grants))
 		var unconfirmed *UnconfirmedError
 		if !store.IsConflict(err) || errors.As(err, &unconfirmed) {
 			t.Fatalf("err = %T %v, want a bare ConflictError (definitively not committed), not Unconfirmed", err, err)
 		}
-		head, _, _ := r.st.SelectedHead(context.Background())
+		head, _, _ := r.st.SelectedHead(boundedTestContext(r.t))
 		if head == w.Ref {
 			t.Fatal("the concurrent writer's commit did not land (fixture broken)")
 		}
@@ -520,11 +520,11 @@ type errStore struct {
 	onCommit    func()
 }
 
-func (e errStore) Commit(c store.Commit) error {
+func (e errStore) Commit(ctx context.Context, c store.Commit) error {
 	if e.onCommit != nil {
 		e.onCommit()
 	}
-	if err := e.Store.Commit(c); err != nil {
+	if err := e.Store.Commit(ctx, c); err != nil {
 		return err
 	}
 	return e.afterCommit
@@ -532,7 +532,7 @@ func (e errStore) Commit(c store.Commit) error {
 
 func (r *rig) assertHead(want hashref.HashRef) {
 	r.t.Helper()
-	head, _, err := r.st.SelectedHead(context.Background())
+	head, _, err := r.st.SelectedHead(boundedTestContext(r.t))
 	if err != nil || head != want {
 		r.t.Fatalf("head = %v (%v), want %v", head, err, want)
 	}
@@ -545,7 +545,7 @@ func TestCommitBoundary(t *testing.T) {
 		w := r.genesis()
 		r.describe("plain", r.source(echoSrc), "Invoke")
 		r.publish()
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(boundedTestContext(r.t))
 		// The capsule SUCCEEDS; the caller cancels before the commit boundary.
 		runner := fakeRunner{stdout: `{"ok":true}`, hook: func(context.Context) { cancel() }}
 		_, err := r.coordinator(r.st, runner).Dispatch(ctx, r.call("plain", "t1", grants))
@@ -553,35 +553,39 @@ func TestCommitBoundary(t *testing.T) {
 			t.Fatalf("err = %T %v, want context.Canceled", err, err)
 		}
 		r.assertUntouched(w.Ref, "t1")
-		if pending, err := r.st.PendingIntents(10); err != nil || len(pending) != 0 {
+		if pending, err := r.st.PendingIntents(boundedTestContext(r.t), 10); err != nil || len(pending) != 0 {
 			t.Fatalf("pending intents = %v (%v), want none", pending, err)
 		}
 	})
-	// The durable steps take no ctx; a deadline that expires while they run
-	// must not turn a landed commit into a reported failure.
-	t.Run("deadline_during_commit_reports_success", func(t *testing.T) {
+	// Cancellation immediately before Commit reaches the store is pre-cutoff:
+	// the intent remains, but no world or resolved receipt may appear.
+	t.Run("cancellation_before_commit_is_not_committed", func(t *testing.T) {
 		r := newRig(t, false)
-		r.genesis()
+		w := r.genesis()
 		r.describe("plain", r.source(echoSrc), "Invoke")
 		r.publish()
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(boundedTestContext(r.t))
 		st := errStore{Store: r.st, onCommit: cancel}
-		res, err := r.coordinator(st, fakeRunner{stdout: `{"ok":true}`}).Dispatch(ctx, r.call("plain", "t1", grants))
-		if err != nil {
-			t.Fatalf("Dispatch = %v after a landed commit; must report success", err)
+		_, err := r.coordinator(st, fakeRunner{stdout: `{"ok":true}`}).Dispatch(ctx, r.call("plain", "t1", grants))
+		if !errors.Is(err, context.Canceled) || store.IsUncertain(err) {
+			t.Fatalf("Dispatch = %v, want definite pre-cutoff cancellation", err)
 		}
-		r.assertHead(res.WorldRef)
+		r.assertHead(w.Ref)
+		rc, ok, err := r.st.GetReceipt(boundedTestContext(r.t), InvocationID("ep1", "t1"))
+		if err != nil || !ok || rc.State != store.ReceiptIndeterminate {
+			t.Fatalf("receipt = %+v ok=%v err=%v, want unresolved intent", rc, ok, err)
+		}
 	})
 	t.Run("receipt", func(t *testing.T) {
 		r := newRig(t, false)
 		r.genesis()
 		r.describe("plain", r.source(echoSrc), "Invoke")
 		r.publish()
-		res, err := r.coordinator(r.st, fakeRunner{stdout: `{"ok":true}`}).Dispatch(context.Background(), r.call("plain", "t1", grants))
+		res, err := r.coordinator(r.st, fakeRunner{stdout: `{"ok":true}`}).Dispatch(boundedTestContext(r.t), r.call("plain", "t1", grants))
 		if err != nil {
 			t.Fatalf("Dispatch: %v", err)
 		}
-		rc, ok, err := r.st.GetReceipt(res.InvocationID)
+		rc, ok, err := r.st.GetReceipt(boundedTestContext(r.t), res.InvocationID)
 		if err != nil || !ok || rc.State != store.ReceiptResolved || rc.Intent == nil || rc.Intent.WorldRef != res.WorldRef {
 			t.Fatalf("receipt = %+v ok=%v err=%v, want exactly one resolved intent+outcome for the commit", rc, ok, err)
 		}

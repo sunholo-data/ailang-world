@@ -43,7 +43,7 @@ var (
 
 type approvalStore interface {
 	objectStore
-	SetRegistryHead(string, hashref.HashRef) error
+	SetRegistryHead(context.Context, string, hashref.HashRef) error
 	GetRegistryHead(context.Context, string) (hashref.HashRef, bool, error)
 }
 
@@ -112,7 +112,7 @@ func (h *HumanHandler) Execute(ctx context.Context, req EffectRequest, payload [
 			Requester: input.Requester, Now: req.Now,
 		})
 		requestObj := brokerObject(ApprovalRequestV1, requestPayload)
-		if err := h.store.PutObject(requestObj); err != nil {
+		if err := h.store.PutObject(ctx, requestObj); err != nil {
 			return nil, fmt.Errorf("broker: put approval request: %w", err)
 		}
 		if err := appendApprovalHead(ctx, h.store, requestObj.Hash, hashref.HashRef{}); err != nil {
@@ -183,7 +183,7 @@ func decideApproval(ctx context.Context,
 		RequestRef: requestRef.String(), Decision: decision, DecidedBy: decidedBy, Now: now,
 	})
 	obj := brokerObject(ApprovalDecisionV1, payload)
-	if err := s.PutObject(obj); err != nil {
+	if err := s.PutObject(ctx, obj); err != nil {
 		return hashref.HashRef{}, fmt.Errorf("broker: put approval decision: %w", err)
 	}
 	if err := appendApprovalHead(ctx, s, requestRef, obj.Hash); err != nil {
@@ -205,10 +205,10 @@ func appendApprovalHead(ctx context.Context, s approvalStore, requestRef, decisi
 		wire.DecisionRef = decisionRef.String()
 	}
 	obj := brokerObject(ApprovalsV1, mustApprovalJSON(wire))
-	if err := s.PutObject(obj); err != nil {
+	if err := s.PutObject(ctx, obj); err != nil {
 		return fmt.Errorf("broker: put approvals head: %w", err)
 	}
-	if err := s.SetRegistryHead(ApprovalsV1, obj.Hash); err != nil {
+	if err := s.SetRegistryHead(ctx, ApprovalsV1, obj.Hash); err != nil {
 		return fmt.Errorf("broker: move approvals head: %w", err)
 	}
 	return nil

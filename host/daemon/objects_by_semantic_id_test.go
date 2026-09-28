@@ -28,7 +28,7 @@ func putSemanticObjects(t *testing.T, d *Daemon, id string, n int) []string {
 			Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte("route-sid-iface")),
 			SemanticID: id, Provenance: "route-sid", Payload: payload,
 		}
-		if err := d.store.PutObject(o); err != nil {
+		if err := d.store.PutObject(boundedTestContext(t), o); err != nil {
 			t.Fatalf("PutObject: %v", err)
 		}
 		hashes = append(hashes, o.Hash.String())
@@ -175,10 +175,10 @@ func seedWalkLog(tb testing.TB, d *Daemon, n int) {
 		StateRoot: hashref.SumSHA256([]byte("walk-genesis-state")),
 		LogHead:   hashref.SumSHA256([]byte("walk-genesis-log")),
 	}
-	if err := d.store.PutWorld(current); err != nil {
+	if err := d.store.PutWorld(boundedTestContext(tb), current); err != nil {
 		tb.Fatal(err)
 	}
-	if err := d.store.SelectHead(current.Ref); err != nil {
+	if err := d.store.SelectHead(boundedTestContext(tb), current.Ref); err != nil {
 		tb.Fatal(err)
 	}
 	obj := func(id, body string) store.Object {
@@ -212,7 +212,7 @@ func seedWalkLog(tb testing.TB, d *Daemon, n int) {
 				EntryHash: entryHash, TransitionRef: transition.Hash,
 			},
 		}
-		if err := d.store.Commit(c); err != nil {
+		if err := d.store.Commit(boundedTestContext(tb), c); err != nil {
 			tb.Fatalf("seed Commit(%d): %v", i, err)
 		}
 		current = c.NextWorld
@@ -236,7 +236,7 @@ func TestWalkRetimedAtScale(t *testing.T) {
 	if dbPath == "" {
 		dbPath = filepath.Join(t.TempDir(), "walk.db")
 	}
-	d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: DefaultBindHost})
+	d, err := New(boundedTestContext(t), Config{DBPath: dbPath, BindHost: DefaultBindHost})
 	if err != nil {
 		t.Fatal(err)
 	}

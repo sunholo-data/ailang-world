@@ -1,7 +1,6 @@
 package broker
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strings"
@@ -82,7 +81,7 @@ func decodeRecordAt(t *testing.T, s *store.Store, ref hashref.HashRef) EffectRec
 	if ref.IsZero() {
 		t.Fatal("instrument failure: asked to decode the ZERO record ref")
 	}
-	obj, ok, err := s.GetObject(context.Background(), ref)
+	obj, ok, err := s.GetObject(boundedTestContext(t), ref)
 	if err != nil || !ok {
 		t.Fatalf("read effect record %s: ok=%v err=%v", ref, ok, err)
 	}
@@ -108,7 +107,7 @@ func TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(t *te
 	plan := attendedPlanFor(fixture, "smd0-ac25")
 
 	// --- the mint -----------------------------------------------------------
-	approvalRef, err := mintAttendedApproval(context.Background(), base, plan)
+	approvalRef, err := mintAttendedApproval(boundedTestContext(t), base, plan)
 	if err != nil {
 		t.Fatalf("MintAttendedApproval: %v", err)
 	}
@@ -118,7 +117,7 @@ func TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(t *te
 	// The minted ref must name a real ApprovalDecisionV1 that says "approve".
 	// Without this the ref could be any digest and every assertion below would
 	// be about a number rather than about an object.
-	decisionObj, ok, err := base.GetObject(context.Background(), approvalRef)
+	decisionObj, ok, err := base.GetObject(boundedTestContext(t), approvalRef)
 	if err != nil || !ok {
 		t.Fatalf("minted approval %s names no object: ok=%v err=%v", approvalRef, ok, err)
 	}
@@ -139,7 +138,7 @@ func TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(t *te
 	if err != nil {
 		t.Fatal(err)
 	}
-	requestObj, ok, err := base.GetObject(context.Background(), requestRef)
+	requestObj, ok, err := base.GetObject(boundedTestContext(t), requestRef)
 	if err != nil || !ok {
 		t.Fatalf("minted decision references request %s which is absent", requestRef)
 	}
@@ -159,7 +158,7 @@ func TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(t *te
 	handler := attendedHandlerFor(t, fixture, validator, "success", approvalRef)
 	recording := &publishRecordingStore{base: base.Store}
 
-	result, err := invokeAttendedPublish(context.Background(), recording, handler, plan, approvalRef)
+	result, err := invokeAttendedPublish(boundedTestContext(t), recording, handler, plan, approvalRef)
 	if err != nil {
 		t.Fatalf("InvokeAttendedPublish: %v (counters %s)", err, readPublishCounters(validator, handler))
 	}
@@ -196,7 +195,7 @@ func TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(t *te
 	if len(recording.effectIDs) != 1 {
 		t.Fatalf("durable effect intents = %v, want exactly 1", recording.effectIDs)
 	}
-	receipt, ok, err := base.GetEffectReceipt(recording.effectIDs[0])
+	receipt, ok, err := base.GetEffectReceipt(boundedTestContext(t), recording.effectIDs[0])
 	if err != nil || !ok {
 		t.Fatalf("effect receipt %s: ok=%v err=%v", recording.effectIDs[0], ok, err)
 	}
@@ -214,14 +213,14 @@ func TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(t *te
 	// every call, so nothing in the second attempt is refused because a counter
 	// was already spent — the refusal has to come off the disk.
 	reopened := base.reopen(t)
-	if _, found, err := reopened.GetObject(context.Background(), approvalRef); err != nil || !found {
+	if _, found, err := reopened.GetObject(boundedTestContext(t), approvalRef); err != nil || !found {
 		t.Fatalf("the reopened store cannot read the minted approval: found=%v err=%v", found, err)
 	}
 
 	replan := plan
 	replan.EpisodeID = "smd0-ac25-reopened"
 	replan.PublishAt = 51
-	_, reuseErr := invokeAttendedPublish(context.Background(), reopened.Store, handler, replan, approvalRef)
+	_, reuseErr := invokeAttendedPublish(boundedTestContext(t), reopened.Store, handler, replan, approvalRef)
 	if !errors.Is(reuseErr, store.ErrApprovalAlreadyConsumed) {
 		t.Fatalf("reuse after reopen = %T %v, want store.ErrApprovalAlreadyConsumed", reuseErr, reuseErr)
 	}
@@ -253,11 +252,11 @@ func TestObserveMintedDecisionDrivesLegThreeInBothDirections(t *testing.T) {
 	fixture := newPublishFixture(t, "http://127.0.0.1:1", "smd0-mint-legs")
 	plan := attendedPlanFor(fixture, "smd0-mint-legs")
 
-	decisionRef, err := mintAttendedApproval(context.Background(), base, plan)
+	decisionRef, err := mintAttendedApproval(boundedTestContext(t), base, plan)
 	if err != nil {
 		t.Fatalf("instrument failure: the control mint failed: %v", err)
 	}
-	decisionObj, ok, err := base.GetObject(context.Background(), decisionRef)
+	decisionObj, ok, err := base.GetObject(boundedTestContext(t), decisionRef)
 	if err != nil || !ok {
 		t.Fatalf("minted decision %s is absent: ok=%v err=%v", decisionRef, ok, err)
 	}
@@ -336,14 +335,14 @@ func TestIndeterminatePublishAppendsNoOutcomeAndIsNeverRetried(t *testing.T) {
 	fixture := newPublishFixture(t, validator.origin(), "smd0-ac26")
 	plan := attendedPlanFor(fixture, "smd0-ac26")
 
-	approvalRef, err := mintAttendedApproval(context.Background(), base, plan)
+	approvalRef, err := mintAttendedApproval(boundedTestContext(t), base, plan)
 	if err != nil {
 		t.Fatalf("MintAttendedApproval: %v", err)
 	}
 	handler := attendedHandlerFor(t, fixture, validator, "reset", approvalRef)
 	recording := &publishRecordingStore{base: base.Store}
 
-	result, err := invokeAttendedPublish(context.Background(), recording, handler, plan, approvalRef)
+	result, err := invokeAttendedPublish(boundedTestContext(t), recording, handler, plan, approvalRef)
 
 	// The typed error, carrying the three fields a reconciliation pass needs.
 	var indeterminate *IndeterminateEffectError
@@ -392,7 +391,7 @@ func TestIndeterminatePublishAppendsNoOutcomeAndIsNeverRetried(t *testing.T) {
 	if len(recording.effectIDs) != 1 {
 		t.Fatalf("durable effect intents = %v, want exactly 1", recording.effectIDs)
 	}
-	receipt, ok, err := base.GetEffectReceipt(recording.effectIDs[0])
+	receipt, ok, err := base.GetEffectReceipt(boundedTestContext(t), recording.effectIDs[0])
 	if err != nil || !ok {
 		t.Fatalf("effect receipt %s: ok=%v err=%v", recording.effectIDs[0], ok, err)
 	}
@@ -463,13 +462,13 @@ func TestSessionLevelRetryOfAnIndeterminatePublishIsRefusedByTheDurableClaim(t *
 	fixture := newPublishFixture(t, validator.origin(), "smd0-retry-layers")
 	plan := attendedPlanFor(fixture, "smd0-retry-layers")
 
-	approvalRef, err := mintAttendedApproval(context.Background(), base, plan)
+	approvalRef, err := mintAttendedApproval(boundedTestContext(t), base, plan)
 	if err != nil {
 		t.Fatal(err)
 	}
 	handler := attendedHandlerFor(t, fixture, validator, "reset", approvalRef)
 
-	if _, err := invokeAttendedPublish(context.Background(), base.Store, handler, plan, approvalRef); err == nil {
+	if _, err := invokeAttendedPublish(boundedTestContext(t), base.Store, handler, plan, approvalRef); err == nil {
 		t.Fatal("the ambiguous arm returned no error")
 	}
 	if got := validator.count(); got != 1 {
@@ -480,7 +479,7 @@ func TestSessionLevelRetryOfAnIndeterminatePublishIsRefusedByTheDurableClaim(t *
 	retryPlan := plan
 	retryPlan.EpisodeID = "smd0-retry-layers-again"
 	retryPlan.PublishAt = 51
-	_, retryErr := invokeAttendedPublish(context.Background(), base.Store, handler, retryPlan, approvalRef)
+	_, retryErr := invokeAttendedPublish(boundedTestContext(t), base.Store, handler, retryPlan, approvalRef)
 	if !errors.Is(retryErr, store.ErrApprovalAlreadyConsumed) {
 		t.Fatalf("session-layer retry error = %T %v, want store.ErrApprovalAlreadyConsumed", retryErr, retryErr)
 	}
@@ -493,7 +492,7 @@ func TestSessionLevelRetryOfAnIndeterminatePublishIsRefusedByTheDurableClaim(t *
 	// deliberately, is the known-positive control that proves the counter above
 	// can still move; without it "the count stayed at 1" is also what a dead
 	// validator would report.
-	if _, err := handler.Execute(context.Background(), EffectRequest{
+	if _, err := handler.Execute(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: plan.PublishScope(), Cost: PublishCost, Now: 52,
 	}, plan.Payload(approvalRef)); err == nil {
 		t.Fatal("the handler-layer control returned no error from the reset validator")

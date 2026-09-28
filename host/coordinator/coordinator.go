@@ -28,9 +28,9 @@ type Store interface {
 	GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error)
 	SelectedHead(ctx context.Context) (hashref.HashRef, bool, error)
 	GetWorld(ctx context.Context, ref hashref.HashRef) (store.World, bool, error)
-	AppendIntent(id string, intent store.JournalIntent) (int64, hashref.HashRef, error)
-	GetReceipt(id string) (store.Receipt, bool, error)
-	Commit(c store.Commit) error
+	AppendIntent(ctx context.Context, id string, intent store.JournalIntent) (int64, hashref.HashRef, error)
+	GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error)
+	Commit(ctx context.Context, c store.Commit) error
 }
 
 // Runner is the capsule seam (prod: *capsule.Runner).
@@ -190,9 +190,8 @@ func (c *Coordinator) committed(ctx context.Context, rc store.Receipt) (Result, 
 
 // Dispatch runs one call through propose → verify → execute → commit. ctx is
 // the caller's single bounded context; it is never replaced. It bounds every
-// step that accepts it; AppendIntent, GetReceipt and Commit take no context
-// (row 23's policy tranche owns that), so the durable steps are bounded only
-// by what the store itself bounds — see the design doc's "Bounded waits".
+// step, including receipt lookup, intent append and commit. A caller deadline
+// bounds the durable acquisition and the pre-commit transaction body.
 func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 	input, err := c.validateCall(call) // R1
 	if err != nil {
@@ -205,7 +204,7 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 	defer c.inFlight.Delete(id)
 	// Reconcile before anything runs: a resent task id is answered from the
 	// journal and never re-executed or re-committed.
-	rc, seen, err := c.cfg.Store.GetReceipt(id)
+	rc, seen, err := c.cfg.Store.GetReceipt(ctx, id)
 	if err != nil {
 		return Result{}, fmt.Errorf("coordinator: receipt: %w", err)
 	}
@@ -279,12 +278,15 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 	if err := ctx.Err(); err != nil { // R11
 		return Result{}, fmt.Errorf("coordinator: before commit: %w", err)
 	}
-	if _, _, err := c.cfg.Store.AppendIntent(id, pl.Intent); err != nil { // R13
+	if _, _, err := c.cfg.Store.AppendIntent(ctx, id, pl.Intent); err != nil { // R13
 		return Result{}, err
 	}
-	if err := c.cfg.Store.Commit(pl.Commit); err != nil {
+	if err := c.cfg.Store.Commit(ctx, pl.Commit); err != nil {
 		if store.IsConflict(err) { // R14: compared before any write, rolled back
 			return Result{}, err
+		}
+		if (errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)) && !store.IsUncertain(err) {
+			return Result{}, err // cancellation before the COMMIT cutoff is definite
 		}
 		return Result{}, &UnconfirmedError{InvocationID: id, Err: err} // R16
 	}

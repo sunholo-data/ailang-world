@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/canon"
@@ -85,9 +86,6 @@ func runTransitions(opts options, in io.Reader, out, errw io.Writer, env environ
 		return report(errw, serr)
 	}
 
-	// One context roots every store call below (the Background root is the
-	// pinned census row for runTransitions).
-	ctx := context.Background()
 	arch := archive.New(opts.store)
 	interpreter, err := pinnedInterpreter(opts, arch, errw)
 	if err != nil {
@@ -99,6 +97,8 @@ func runTransitions(opts options, in io.Reader, out, errw io.Writer, env environ
 		fmt.Fprintln(errw, "world-publish transitions: "+err.Error())
 		return exitError
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(len(entries))*10*time.Second+3*time.Second)
+	defer cancel()
 	changes, epochNote, err := buildChanges(ctx, db, arch, entries, interpreter)
 	if err != nil {
 		fmt.Fprintln(errw, "world-publish transitions: "+err.Error())
@@ -305,7 +305,7 @@ func pinnedTransitionFn(ctx context.Context, db *store.Store, arch *archive.Arch
 			Hash: hashref.SumSHA256(source), InterfaceHash: hashref.SumSHA256([]byte(transitionSourceSemanticID)),
 			SemanticID: transitionSourceSemanticID, Provenance: "cmd/world-publish", Payload: source,
 		}
-		if err := db.PutObject(obj); err != nil {
+		if err := db.PutObject(ctx, obj); err != nil {
 			return hashref.HashRef{}, fmt.Errorf("store transition source: %w", err)
 		}
 		return obj.Hash, nil

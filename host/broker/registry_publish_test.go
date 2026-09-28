@@ -466,7 +466,7 @@ func (f publishFixture) landApprovalWithScopeAndCost(
 			EffectHumanApprove: human, EffectHumanPollApproval: human,
 		}, Live, nil)
 
-	pending, _, err := session.Invoke(context.Background(), EffectRequest{
+	pending, _, err := session.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectHumanApprove, Scope: approvalScope, Cost: cost, Now: times.request,
 	}, mustApprovalJSON(approvalInputWire{Requester: "sm-b2b-fixture"}))
 	if err != nil {
@@ -497,7 +497,7 @@ func decideAndPollLandedApproval(
 	requestRef hashref.HashRef, decision string, times approvalTimes,
 ) hashref.HashRef {
 	t.Helper()
-	decisionRef, err := decideApproval(context.Background(), base, requestRef, decision, "attended-operator", times.decide)
+	decisionRef, err := decideApproval(boundedTestContext(t), base, requestRef, decision, "attended-operator", times.decide)
 	if err != nil {
 		t.Fatalf("landed DecideApproval(%q): %v", decision, err)
 	}
@@ -505,7 +505,7 @@ func decideAndPollLandedApproval(
 	pollSession := newSession(base, "attended-poll", []Capability{
 		{Effect: EffectHumanPollApproval, Scope: approvalScope, ExpiresAt: times.expires, Budget: 4},
 	}, Registry{EffectHumanPollApproval: human}, Live, nil)
-	polled, _, err := pollSession.Invoke(context.Background(), EffectRequest{
+	polled, _, err := pollSession.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectHumanPollApproval, Scope: approvalScope, Cost: PublishCost, Now: times.decide,
 	}, mustApprovalJSON(approvalInputWire{RequestRef: requestRef.String()}))
 	if err != nil {
@@ -546,10 +546,10 @@ func (f publishFixture) landApprovalOverRawRequest(
 ) publishFixture {
 	t.Helper()
 	requestObj := brokerObject(ApprovalRequestV1, mustApprovalJSON(wire))
-	if err := base.PutObject(requestObj); err != nil {
+	if err := base.PutObject(boundedTestContext(t), requestObj); err != nil {
 		t.Fatalf("put raw approval request: %v", err)
 	}
-	if err := appendApprovalHead(context.Background(), base, requestObj.Hash, hashref.HashRef{}); err != nil {
+	if err := appendApprovalHead(boundedTestContext(t), base, requestObj.Hash, hashref.HashRef{}); err != nil {
 		t.Fatalf("head raw approval request: %v", err)
 	}
 	decisionRef := decideAndPollLandedApproval(
@@ -576,7 +576,7 @@ func (f publishFixture) landApprovalOverRawRequest(
 func putRawApprovalObject(t *testing.T, base approvalStore, semanticID string, payload []byte) hashref.HashRef {
 	t.Helper()
 	obj := brokerObject(semanticID, payload)
-	if err := base.PutObject(obj); err != nil {
+	if err := base.PutObject(boundedTestContext(t), obj); err != nil {
 		t.Fatalf("put raw %s object: %v", semanticID, err)
 	}
 	return obj.Hash
@@ -676,8 +676,8 @@ type publishRecordingStore struct {
 	effectIDs []string
 }
 
-func (s *publishRecordingStore) PutObject(obj store.Object) error {
-	if err := s.base.PutObject(obj); err != nil {
+func (s *publishRecordingStore) PutObject(ctx context.Context, obj store.Object) error {
+	if err := s.base.PutObject(ctx, obj); err != nil {
 		return err
 	}
 	if obj.SemanticID == EffectRecordV1 {
@@ -691,9 +691,9 @@ func (s *publishRecordingStore) GetObject(ctx context.Context, ref hashref.HashR
 }
 
 func (s *publishRecordingStore) AppendNextEffectIntent(
-	episodeID string, intent store.EffectIntent,
+	ctx context.Context, episodeID string, intent store.EffectIntent,
 ) (string, int64, error) {
-	id, ordinal, err := s.base.AppendNextEffectIntent(episodeID, intent)
+	id, ordinal, err := s.base.AppendNextEffectIntent(ctx, episodeID, intent)
 	if err == nil {
 		s.effectIDs = append(s.effectIDs, id)
 	}
@@ -701,9 +701,9 @@ func (s *publishRecordingStore) AppendNextEffectIntent(
 }
 
 func (s *publishRecordingStore) AppendClaimedEffectIntent(
-	episodeID string, intent store.EffectIntent, approvalRef, requestRef hashref.HashRef,
+	ctx context.Context, episodeID string, intent store.EffectIntent, approvalRef, requestRef hashref.HashRef,
 ) (string, int64, error) {
-	id, ordinal, err := s.base.AppendClaimedEffectIntent(episodeID, intent, approvalRef, requestRef)
+	id, ordinal, err := s.base.AppendClaimedEffectIntent(ctx, episodeID, intent, approvalRef, requestRef)
 	if err == nil {
 		s.effectIDs = append(s.effectIDs, id)
 	}
@@ -711,9 +711,9 @@ func (s *publishRecordingStore) AppendClaimedEffectIntent(
 }
 
 func (s *publishRecordingStore) AppendEffectOutcome(
-	id string, outcome store.EffectOutcome,
+	ctx context.Context, id string, outcome store.EffectOutcome,
 ) (int64, hashref.HashRef, error) {
-	return s.base.AppendEffectOutcome(id, outcome)
+	return s.base.AppendEffectOutcome(ctx, id, outcome)
 }
 
 func publishSession(
@@ -787,7 +787,7 @@ func TestPublishDenialsPersistAndNeverDispatchWithLivePositiveControl(t *testing
 	for _, tc := range denials {
 		t.Run(tc.name, func(t *testing.T) {
 			session, recording := publishSession(t, openTestStore(t), "ac7-denial", tc.grant, handler)
-			_, ref, err := session.Invoke(context.Background(), EffectRequest{
+			_, ref, err := session.Invoke(boundedTestContext(t), EffectRequest{
 				Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: now,
 			}, fixture.payload)
 
@@ -813,7 +813,7 @@ func TestPublishDenialsPersistAndNeverDispatchWithLivePositiveControl(t *testing
 			}
 			// The record must be READABLE FROM THE STORE, not merely observed
 			// passing through the double.
-			if _, ok, getErr := recording.base.GetObject(context.Background(), ref); getErr != nil || !ok {
+			if _, ok, getErr := recording.base.GetObject(boundedTestContext(t), ref); getErr != nil || !ok {
 				t.Fatalf("denial record %s absent from the store (ok=%v err=%v)", ref, ok, getErr)
 			}
 			if len(recording.effectIDs) != 0 {
@@ -836,7 +836,7 @@ func TestPublishDenialsPersistAndNeverDispatchWithLivePositiveControl(t *testing
 	// counter, the same handler and the same validator can be shown to move.
 	// It runs on `base`, the store the attended approval actually landed in.
 	session, recording := publishSession(t, base.Store, "ac7-allowed", validGrant, handler)
-	result, ref, err := session.Invoke(context.Background(), EffectRequest{
+	result, ref, err := session.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: now,
 	}, fixture.payload)
 	if err != nil {
@@ -871,7 +871,7 @@ func effectReceipt(t *testing.T, recording *publishRecordingStore, index int) st
 	if index >= len(recording.effectIDs) {
 		t.Fatalf("no effect intent at index %d; minted %v", index, recording.effectIDs)
 	}
-	receipt, ok, err := recording.base.GetEffectReceipt(recording.effectIDs[index])
+	receipt, ok, err := recording.base.GetEffectReceipt(boundedTestContext(t), recording.effectIDs[index])
 	if err != nil || !ok {
 		t.Fatalf("GetEffectReceipt(%q) = ok %v, err %v", recording.effectIDs[index], ok, err)
 	}
@@ -903,7 +903,7 @@ func TestDefiniteFailureResolvesWhileAmbiguityStaysIndeterminate(t *testing.T) {
 	})
 	definiteSession, definiteRecording := publishSession(
 		t, base.Store, "ac11-definite", grant(definiteFixture.scope), definiteHandler)
-	_, definiteRef, definiteErr := definiteSession.Invoke(context.Background(), EffectRequest{
+	_, definiteRef, definiteErr := definiteSession.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: definiteFixture.scope, Cost: PublishCost, Now: 50,
 	}, definiteFixture.payload)
 
@@ -938,7 +938,7 @@ func TestDefiniteFailureResolvesWhileAmbiguityStaysIndeterminate(t *testing.T) {
 	})
 	ambiguousSession, ambiguousRecording := publishSession(
 		t, base.Store, "ac11-ambiguous", grant(ambiguousFixture.scope), ambiguousHandler)
-	_, ambiguousRef, ambiguousErr := ambiguousSession.Invoke(context.Background(), EffectRequest{
+	_, ambiguousRef, ambiguousErr := ambiguousSession.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: ambiguousFixture.scope, Cost: PublishCost, Now: 50,
 	}, ambiguousFixture.payload)
 
@@ -1006,7 +1006,7 @@ func TestHandlerTimeoutIsAmbiguousButAnExitCodeIsNot(t *testing.T) {
 		ExecTimeout:     700 * time.Millisecond,
 	})
 	session, recording := publishSession(t, base.Store, "ac11-timeout", publishGrant(fixture.scope), handler)
-	_, _, err := session.Invoke(context.Background(), EffectRequest{
+	_, _, err := session.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload)
 	var indeterminate *IndeterminateEffectError
@@ -1032,7 +1032,7 @@ func TestOrdinaryHandlerFailuresKeepLandedResolvedBehaviour(t *testing.T) {
 		return nil, boom
 	})}, Live, nil)
 
-	_, ref, err := session.Invoke(context.Background(), EffectRequest{
+	_, ref, err := session.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: "probe", Scope: "s", Cost: 1, Now: 1,
 	}, []byte("payload"))
 	var failed *EffectFailedError
@@ -1163,7 +1163,7 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 	// believed, show that this exact dump mechanism DOES report the variable
 	// when a child really is handed it.
 	controlDump := filepath.Join(t.TempDir(), "control.env")
-	if _, err := runBounded(context.Background(), handlerBounds{execTimeout: 20 * time.Second},
+	if _, err := runBounded(boundedTestContext(t), handlerBounds{execTimeout: 20 * time.Second},
 		handlerCommand{
 			path: writeProbeScript(t, controlDump),
 			dir:  t.TempDir(),
@@ -1232,7 +1232,7 @@ func driveBrokerDryRunPublish(t *testing.T, probe string) {
 	// The probe prints a version banner, not v0.30.0's success line, so this
 	// classifies as a definite failure. The subprocess still ran, which is
 	// what this driver exists to cause.
-	_, _ = handler.Execute(context.Background(), EffectRequest{
+	_, _ = handler.Execute(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload)
 	if got := handler.Dispatches(); got != 1 {
@@ -1279,7 +1279,7 @@ func driveArchiveCheckSource(t *testing.T, probe string) {
 	if err != nil {
 		t.Fatalf("%s", archive.AttributeFailure("archive.Archive", err))
 	}
-	_, _ = a.CheckSource(context.Background(), ref, []byte("module world/transition\n"))
+	_, _ = a.CheckSource(boundedTestContext(t), ref, []byte("module world/transition\n"))
 }
 
 func drivePkgprojCrossCheck(t *testing.T, probe string) {
@@ -1293,7 +1293,7 @@ func drivePkgprojCrossCheck(t *testing.T, probe string) {
 func drivePkgprojQueryInterface(t *testing.T, probe string) {
 	t.Helper()
 	dir, manifest := publishFixtureDir(t)
-	_, _ = pkgproj.QueryInterface(context.Background(), dir, manifest, probe)
+	_, _ = pkgproj.QueryInterface(boundedTestContext(t), dir, manifest, probe)
 }
 
 func driveReplayEntry(t *testing.T, probe string) {
@@ -1309,12 +1309,12 @@ func driveReplayEntry(t *testing.T, probe string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := base.PutObject(source); err != nil {
+	if err := base.PutObject(boundedTestContext(t), source); err != nil {
 		t.Fatal(err)
 	}
 	// The recorded result deliberately does not match the probe's banner, so
 	// ReplayEntry returns a divergence — AFTER step 4 has launched the child.
-	_, _ = replay.NewEngine(base, a).ReplayEntry(context.Background(), replay.Episode{
+	_, _ = replay.NewEngine(base, a).ReplayEntry(boundedTestContext(t), replay.Episode{
 		WorldLibDir: t.TempDir(),
 	}, 0, replay.EpisodeEntry{
 		TransitionFn:      source.Hash,
@@ -1344,7 +1344,7 @@ func TestPublisherErrorRedactsTheSecretAndKeepsTheMarker(t *testing.T) {
 		ExecTimeout:     20 * time.Second,
 	})
 	session, recording := publishSession(t, base.Store, "ac10b", publishGrant(fixture.scope), handler)
-	_, _, err := session.Invoke(context.Background(), EffectRequest{
+	_, _, err := session.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload)
 	if err == nil {
@@ -1425,7 +1425,7 @@ func TestPublishCostLawIsExactlyOne(t *testing.T) {
 		ExecTimeout:     20 * time.Second,
 	})
 	for _, cost := range []int64{0, 2} {
-		_, err := handler.Execute(context.Background(), EffectRequest{
+		_, err := handler.Execute(boundedTestContext(t), EffectRequest{
 			Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: cost, Now: 50,
 		}, fixture.payload)
 		var refusal *PublishRefusalError
@@ -1439,7 +1439,7 @@ func TestPublishCostLawIsExactlyOne(t *testing.T) {
 
 	// The record must carry cost 1 and debit exactly one unit.
 	session, recording := publishSession(t, base.Store, "cost", publishGrant(fixture.scope), handler)
-	if _, _, err := session.Invoke(context.Background(), EffectRequest{
+	if _, _, err := session.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload); err != nil {
 		t.Fatal(err)
@@ -1566,7 +1566,7 @@ func TestPublishHandlerRefusesAlternatePackageVersionAndHashes(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := handler.Execute(context.Background(), EffectRequest{
+			_, err := handler.Execute(boundedTestContext(t), EffectRequest{
 				Effect: EffectRegistryPublish, Scope: tc.scope, Cost: PublishCost, Now: 50,
 			}, tc.payload)
 			if err == nil {
@@ -1780,7 +1780,7 @@ func TestFakeValidatorSawOnlyLoopbackTraffic(t *testing.T) {
 		Approval:        fixture.approval,
 		ExecTimeout:     20 * time.Second,
 	})
-	if _, err := handler.Execute(context.Background(), EffectRequest{
+	if _, err := handler.Execute(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload); err != nil {
 		t.Fatal(err)
@@ -1828,14 +1828,14 @@ func landNonPublishApproval(
 	session := newSession(base, "attended-nonpublish-"+scope, []Capability{
 		{Effect: EffectHumanApprove, Scope: scope, ExpiresAt: times.expires, Budget: cost},
 	}, Registry{EffectHumanApprove: human}, Live, nil)
-	pending, _, err := session.Invoke(context.Background(), EffectRequest{
+	pending, _, err := session.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectHumanApprove, Scope: scope, Cost: cost, Now: times.request,
 	}, mustApprovalJSON(approvalInputWire{Requester: "sm-b2b-fixture"}))
 	if err != nil {
 		t.Fatalf("non-publish Human.Approve: %v", err)
 	}
 	requestRef = decodePendingRef(t, pending)
-	decisionRef, err = decideApproval(context.Background(), base, requestRef, "approve", "attended-operator", times.decide)
+	decisionRef, err = decideApproval(boundedTestContext(t), base, requestRef, "approve", "attended-operator", times.decide)
 	if err != nil {
 		t.Fatalf("non-publish DecideApproval: %v", err)
 	}
@@ -1880,7 +1880,7 @@ func TestPublishClaimIsDurableBeforeDispatchAndSurvivesAFreshBudget(t *testing.T
 		observed.effectIDs = append([]string(nil), recording.effectIDs...)
 		observed.countersAtGate = readPublishCounters(validator, handler)
 		if len(recording.effectIDs) == 1 {
-			receipt, ok, err := base.GetEffectReceipt(recording.effectIDs[0])
+			receipt, ok, err := base.GetEffectReceipt(boundedTestContext(t), recording.effectIDs[0])
 			observed.hasReceipt, observed.receiptState = ok, receipt.State
 			if err != nil {
 				observed.claimReuseErr = err
@@ -1891,7 +1891,7 @@ func TestPublishClaimIsDurableBeforeDispatchAndSurvivesAFreshBudget(t *testing.T
 		// production entry point a second session would use. A rollback leaves
 		// nothing behind, so this probe cannot itself consume anything.
 		probeRef := hashref.SumSHA256([]byte("ac8-claim-probe"))
-		_, _, observed.claimReuseErr = base.AppendClaimedEffectIntent(
+		_, _, observed.claimReuseErr = base.AppendClaimedEffectIntent(boundedTestContext(t),
 			"ac8-claim-probe",
 			store.EffectIntent{
 				EpisodeID: "ac8-claim-probe", Effect: EffectRegistryPublish,
@@ -1902,7 +1902,7 @@ func TestPublishClaimIsDurableBeforeDispatchAndSurvivesAFreshBudget(t *testing.T
 	session := newSession(recording, "ac8", []Capability{publishGrant(fixture.scope)},
 		Registry{EffectRegistryPublish: probe}, Live, nil)
 
-	if _, ref, err := session.Invoke(context.Background(), EffectRequest{
+	if _, ref, err := session.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload); err != nil || ref.IsZero() {
 		t.Fatalf("AC8 grant Invoke = ref %s, err %v; want a record and no error "+
@@ -1945,7 +1945,7 @@ func TestPublishClaimIsDurableBeforeDispatchAndSurvivesAFreshBudget(t *testing.T
 		t.Fatalf("AC8: the fresh session's budget = %d, want %d — a spent budget would refuse for "+
 			"the WRONG reason", got, PublishCost)
 	}
-	_, _, reuseErr := freshSession.Invoke(context.Background(), EffectRequest{
+	_, _, reuseErr := freshSession.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 51,
 	}, fixture.payload)
 	if !errors.Is(reuseErr, store.ErrApprovalAlreadyConsumed) {
@@ -2120,10 +2120,10 @@ func TestPublishApprovalRefusalSetWithALandedPositiveControl(t *testing.T) {
 	// falls over at the broker's own decode.
 	undecodableRequest := putRawApprovalObject(t, base, ApprovalRequestV1,
 		[]byte(`{"unknownRequestField":1}`))
-	if err := appendApprovalHead(context.Background(), base, undecodableRequest, hashref.HashRef{}); err != nil {
+	if err := appendApprovalHead(boundedTestContext(t), base, undecodableRequest, hashref.HashRef{}); err != nil {
 		t.Fatal(err)
 	}
-	decisionOverUndecodableRequest, err := decideApproval(context.Background(),
+	decisionOverUndecodableRequest, err := decideApproval(boundedTestContext(t),
 		base, undecodableRequest, "approve", "attended-operator", 11)
 	if err != nil {
 		t.Fatalf("decide over an undecodable request: %v", err)
@@ -2208,7 +2208,7 @@ func TestPublishApprovalRefusalSetWithALandedPositiveControl(t *testing.T) {
 			before := readPublishCounters(validator, handler)
 			session, recording := publishSession(
 				t, base.Store, "ac9-"+tc.name, publishGrant(tc.scope), handler)
-			_, ref, err := session.Invoke(context.Background(), EffectRequest{
+			_, ref, err := session.Invoke(boundedTestContext(t), EffectRequest{
 				Effect: EffectRegistryPublish, Scope: tc.scope, Cost: PublishCost, Now: tc.now,
 			}, tc.payload)
 			if !errors.Is(err, tc.sentinel) {
@@ -2241,7 +2241,7 @@ func TestPublishApprovalRefusalSetWithALandedPositiveControl(t *testing.T) {
 	// Human.Approve -> DecideApproval -> Human.PollApproval traversal that
 	// landApproval performs and hash-checks.
 	positiveSession, _ := publishSession(t, base.Store, "ac9-positive", publishGrant(good.scope), handler)
-	if _, ref, err := positiveSession.Invoke(context.Background(), EffectRequest{
+	if _, ref, err := positiveSession.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: good.scope, Cost: PublishCost, Now: 50,
 	}, good.payload); err != nil || ref.IsZero() {
 		t.Fatalf("AC9 positive control = ref %s, err %v; want a record and no error "+
@@ -2262,7 +2262,7 @@ func TestPublishApprovalRefusalSetWithALandedPositiveControl(t *testing.T) {
 		if got := session.grants[0].Budget; got != PublishCost {
 			t.Fatalf("the reuse session's budget = %d, want %d", got, PublishCost)
 		}
-		_, _, err := session.Invoke(context.Background(), EffectRequest{
+		_, _, err := session.Invoke(boundedTestContext(t), EffectRequest{
 			Effect: EffectRegistryPublish, Scope: good.scope, Cost: PublishCost, Now: 51,
 		}, good.payload)
 		if !errors.Is(err, store.ErrApprovalAlreadyConsumed) {
@@ -2304,7 +2304,7 @@ func TestConsumedApprovalStaysConsumedAcrossStoreCloseAndReopen(t *testing.T) {
 	})
 
 	first, _ := publishSession(t, base.Store, "ac9a-first", publishGrant(fixture.scope), handler)
-	if _, _, err := first.Invoke(context.Background(), EffectRequest{
+	if _, _, err := first.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload); err != nil {
 		t.Fatalf("AC9a first invocation: %v", err)
@@ -2326,7 +2326,7 @@ func TestConsumedApprovalStaysConsumedAcrossStoreCloseAndReopen(t *testing.T) {
 	if got := second.grants[0].Budget; got != PublishCost {
 		t.Fatalf("AC9a: the reopened session's budget = %d, want a FRESH %d", got, PublishCost)
 	}
-	_, _, err := second.Invoke(context.Background(), EffectRequest{
+	_, _, err := second.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 60,
 	}, fixture.payload)
 	if !errors.Is(err, store.ErrApprovalAlreadyConsumed) {
@@ -2391,7 +2391,7 @@ func TestTwoSessionsRacingOneApprovalDispatchExactlyOnce(t *testing.T) {
 				Registry{EffectRegistryPublish: handler}, Live, nil)
 			ready.Done()
 			<-start
-			_, _, err := session.Invoke(context.Background(), EffectRequest{
+			_, _, err := session.Invoke(boundedTestContext(t), EffectRequest{
 				Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 			}, fixture.payload)
 			outcomes[i] = outcome{err: err, effectIDs: recording.effectIDs}
@@ -2461,7 +2461,7 @@ func TestIndeterminatePublishBurnsTheApprovalAndRecoveryStaysReadOnly(t *testing
 	})
 
 	first, recording := publishSession(t, base.Store, "ac9c-first", publishGrant(fixture.scope), handler)
-	_, ref, err := first.Invoke(context.Background(), EffectRequest{
+	_, ref, err := first.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload)
 	var indeterminate *IndeterminateEffectError
@@ -2486,7 +2486,7 @@ func TestIndeterminatePublishBurnsTheApprovalAndRecoveryStaysReadOnly(t *testing
 	// RECOVERY IS READ-ONLY. It is handed the real publish registry, and the
 	// counters must not move: a surface that can report an unresolved
 	// irreversible attempt must not be able to launch a second one.
-	findings, err := Recover(reopened.Store, Registry{EffectRegistryPublish: handler})
+	findings, err := Recover(boundedTestContext(t), reopened.Store, Registry{EffectRegistryPublish: handler})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -2524,7 +2524,7 @@ func TestIndeterminatePublishBurnsTheApprovalAndRecoveryStaysReadOnly(t *testing
 	if got := second.grants[0].Budget; got != PublishCost {
 		t.Fatalf("AC9c: the retry session's budget = %d, want a FRESH %d", got, PublishCost)
 	}
-	_, _, retryErr := second.Invoke(context.Background(), EffectRequest{
+	_, _, retryErr := second.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 60,
 	}, fixture.payload)
 	if !errors.Is(retryErr, store.ErrApprovalAlreadyConsumed) {

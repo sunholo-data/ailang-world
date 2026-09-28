@@ -59,7 +59,7 @@ func editTypes(t *testing.T, dir string, f func(string) string) {
 // Re-break test: the row's exact stimulus.
 func TestInterfaceV2MovesWhenAnExportedADTGainsAConstructor(t *testing.T) {
 	bin := pinnedAilang(t)
-	base, err := QueryInterface(context.Background(), copyPackage(t), worldCore, bin)
+	base, err := QueryInterface(boundedTestContext(t), copyPackage(t), worldCore, bin)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestInterfaceV2MovesWhenAnExportedADTGainsAConstructor(t *testing.T) {
 	editTypes(t, dir, func(s string) string {
 		return strings.Replace(s, "  | ProofReceipt(HashRef)\n", "  | ProofReceipt(HashRef)\n  | ProbeArm(HashRef)\n", 1)
 	})
-	got, err := QueryInterface(context.Background(), dir, worldCore, bin)
+	got, err := QueryInterface(boundedTestContext(t), dir, worldCore, bin)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,13 +85,13 @@ func TestInterfaceV2MovesWhenAnExportedADTGainsAConstructor(t *testing.T) {
 // Negative control: a comment moves neither.
 func TestInterfaceV2IgnoresACommentOnlyEdit(t *testing.T) {
 	bin := pinnedAilang(t)
-	base, err := QueryInterface(context.Background(), copyPackage(t), worldCore, bin)
+	base, err := QueryInterface(boundedTestContext(t), copyPackage(t), worldCore, bin)
 	if err != nil {
 		t.Fatal(err)
 	}
 	dir := copyPackage(t)
 	editTypes(t, dir, func(s string) string { return s + "-- comment-only control\n" })
-	got, err := QueryInterface(context.Background(), dir, worldCore, bin)
+	got, err := QueryInterface(boundedTestContext(t), dir, worldCore, bin)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +104,7 @@ func TestQueryInterfaceRefusesAV1Disagreement(t *testing.T) {
 	bin := pinnedAilang(t)
 	wrong := worldCore
 	wrong.Package.Edition = "2"
-	_, err := QueryInterface(context.Background(), copyPackage(t), wrong, bin)
+	_, err := QueryInterface(boundedTestContext(t), copyPackage(t), wrong, bin)
 	if err == nil || !strings.Contains(err.Error(), "disagrees with pkgproj.InterfaceHash") {
 		t.Fatalf("want v1 cross-check refusal, got %v", err)
 	}
@@ -142,7 +142,7 @@ func TestQueryInterfaceRefusesAnInfraExitEvenWithValidJSON(t *testing.T) {
 	if err := os.WriteFile(fake, []byte(script), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := QueryInterface(context.Background(), t.TempDir(), worldCore, fake); err == nil {
+	if _, err := QueryInterface(boundedTestContext(t), t.TempDir(), worldCore, fake); err == nil {
 		t.Fatal("exit 1 (usage/infra) accepted because stdout parsed")
 	}
 }
@@ -203,7 +203,7 @@ func runWithin(t *testing.T, limit time.Duration, f func() error) (error, time.D
 func TestQueryInterfaceTimesOutOnAHangingBinary(t *testing.T) {
 	bin := fakeBinary(t, "exec sleep 30\n")
 	err, took := runWithin(t, guard, func() error {
-		_, err := queryInterface(context.Background(), t.TempDir(), worldCore, bin, tinyBounds)
+		_, err := queryInterface(boundedTestContext(t), t.TempDir(), worldCore, bin, tinyBounds)
 		return err
 	})
 	var te *QueryTimeoutError
@@ -220,7 +220,7 @@ func TestQueryInterfaceReturnsWhileADescendantHoldsStdout(t *testing.T) {
 	pidFile := filepath.Join(t.TempDir(), "pid")
 	bin := fakeBinary(t, "sleep 30 &\necho $! > '"+pidFile+"'\nwait\n")
 	err, took := runWithin(t, guard, func() error {
-		_, err := queryInterface(context.Background(), t.TempDir(), worldCore, bin, tinyBounds)
+		_, err := queryInterface(boundedTestContext(t), t.TempDir(), worldCore, bin, tinyBounds)
 		return err
 	})
 	var te *QueryTimeoutError
@@ -242,7 +242,7 @@ func TestQueryInterfaceCapsStdout(t *testing.T) {
 	// A long internal timeout: the cap, not the deadline, must produce the error.
 	capOnly := queryBounds{timeout: 60 * time.Second, waitDelay: time.Second, maxOutput: 4096}
 	err, _ := runWithin(t, guard, func() error {
-		_, err := queryInterface(context.Background(), t.TempDir(), worldCore, bin, capOnly)
+		_, err := queryInterface(boundedTestContext(t), t.TempDir(), worldCore, bin, capOnly)
 		return err
 	})
 	if !errors.Is(err, ErrQualityOutputOverflow) {
@@ -296,7 +296,7 @@ func TestQueryInterfaceRefusesExit2WithANonSpuriousGate(t *testing.T) {
 		{"quality_world_core_pristine.json", 2},     // real --no-run: [PUB015 "_smoke.ail failed"]
 		{"quality_world_core_pristine_run.json", 0}, // real run mode: []
 	} {
-		id, err := QueryInterface(context.Background(), t.TempDir(), worldCore, fixtureBinary(t, c.fixture, c.rc))
+		id, err := QueryInterface(boundedTestContext(t), t.TempDir(), worldCore, fixtureBinary(t, c.fixture, c.rc))
 		if err != nil || id.Signatures != 53 {
 			t.Fatalf("control %s exit %d: want accepted, got %+v %v", c.fixture, c.rc, id, err)
 		}
@@ -316,7 +316,7 @@ func TestQueryInterfaceRefusesExit2WithANonSpuriousGate(t *testing.T) {
 		// derived: PUB015 but not the spurious message — the code alone is not enough
 		{"derived_quality_pub015_other_msg.json", 2, "exit 2 with gates [PUB015]"},
 	} {
-		_, err := QueryInterface(context.Background(), t.TempDir(), worldCore, fixtureBinary(t, c.fixture, c.rc))
+		_, err := QueryInterface(boundedTestContext(t), t.TempDir(), worldCore, fixtureBinary(t, c.fixture, c.rc))
 		if err == nil || !strings.Contains(err.Error(), c.want) {
 			t.Errorf("%s exit %d: want refusal naming %q, got %v", c.fixture, c.rc, c.want, err)
 		}
@@ -333,7 +333,7 @@ func TestQueryInterfaceOverflowCancelsTheChild(t *testing.T) {
 		// stderr's cap is the fixed 64 KiB; 100000 bytes crosses both caps.
 		bin := fakeBinary(t, "head -c 100000 /dev/zero"+redirect+"\nexec sleep 30\n")
 		err, took := runWithin(t, guard, func() error {
-			_, err := queryInterface(context.Background(), t.TempDir(), worldCore, bin, b)
+			_, err := queryInterface(boundedTestContext(t), t.TempDir(), worldCore, bin, b)
 			return err
 		})
 		if !errors.Is(err, ErrQualityOutputOverflow) {

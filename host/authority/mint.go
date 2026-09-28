@@ -51,7 +51,7 @@ func Mint(ctx context.Context, st *store.Store, episodeID string, grants []broke
 		ExpiresAt:    now + ttl,
 		CreatedAt:    now,
 	}
-	if err := st.MintSession(row); err != nil {
+	if err := st.MintSession(ctx, row); err != nil {
 		return "", "", store.SessionRow{}, err
 	}
 

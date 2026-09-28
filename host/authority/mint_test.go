@@ -2,7 +2,6 @@ package authority
 
 import (
 	"bytes"
-	"context"
 	"encoding/hex"
 	"regexp"
 	"strings"
@@ -19,7 +18,7 @@ func TestMint_PrintsOnce(t *testing.T) {
 	now := int64(1000)
 	var out bytes.Buffer
 
-	rawToken, credentialID, row, err := Mint(context.Background(), st, "ep-42", testGrants(), 3600, now, &out)
+	rawToken, credentialID, row, err := Mint(boundedTestContext(t), st, "ep-42", testGrants(), 3600, now, &out)
 	if err != nil {
 		t.Fatalf("mint: %v", err)
 	}
@@ -56,7 +55,7 @@ func TestMint_PrintsOnce(t *testing.T) {
 // only the hash).
 func TestMint_StoresOnlyHash(t *testing.T) {
 	st := newTestStore(t)
-	rawToken, credentialID, _, err := Mint(context.Background(), st, "ep-42", testGrants(), 3600, 1000, nil)
+	rawToken, credentialID, _, err := Mint(boundedTestContext(t), st, "ep-42", testGrants(), 3600, 1000, nil)
 	if err != nil {
 		t.Fatalf("mint: %v", err)
 	}
@@ -65,12 +64,12 @@ func TestMint_StoresOnlyHash(t *testing.T) {
 	if want != credentialID {
 		t.Fatalf("hashHexToken(raw) = %q, want credentialID %q", want, credentialID)
 	}
-	row, ok, err := st.ResolveSession(context.Background(), credentialID)
+	row, ok, err := st.ResolveSession(boundedTestContext(t), credentialID)
 	if err != nil || !ok || row.EpisodeID != "ep-42" {
 		t.Fatalf("resolve by credential_id: ok=%v err=%v row=%+v, want ok with ep-42", ok, err, row)
 	}
 	// ...but the raw token string is not a stored credential_id.
-	_, okByRaw, err := st.ResolveSession(context.Background(), rawToken)
+	_, okByRaw, err := st.ResolveSession(boundedTestContext(t), rawToken)
 	if err != nil || okByRaw {
 		t.Fatalf("resolve by raw token: ok=%v err=%v, want not-found (raw never persisted)", okByRaw, err)
 	}
@@ -80,11 +79,11 @@ func TestMint_StoresOnlyHash(t *testing.T) {
 // produce distinct tokens and distinct stored credential_ids.
 func TestMint_DistinctCredentials(t *testing.T) {
 	st := newTestStore(t)
-	a, aID, _, err := Mint(context.Background(), st, "ep-42", testGrants(), 3600, 1000, nil)
+	a, aID, _, err := Mint(boundedTestContext(t), st, "ep-42", testGrants(), 3600, 1000, nil)
 	if err != nil {
 		t.Fatalf("first mint: %v", err)
 	}
-	b, bID, _, err := Mint(context.Background(), st, "ep-42", testGrants(), 3600, 1000, nil)
+	b, bID, _, err := Mint(boundedTestContext(t), st, "ep-42", testGrants(), 3600, 1000, nil)
 	if err != nil {
 		t.Fatalf("second mint: %v", err)
 	}
@@ -106,7 +105,7 @@ func TestMint_DistinctCredentials(t *testing.T) {
 // negative ttl, and a mint with an unknown-budget grant still stores grant JSON.
 func TestMint_RejectsBadInputs(t *testing.T) {
 	st := newTestStore(t)
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 	cases := []struct {
 		name     string
 		episode  string
@@ -156,7 +155,7 @@ func TestRevoke_DeletesRow(t *testing.T) {
 	credID := hashHexToken(tok)
 
 	// Row exists before revocation.
-	row, ok, err := st.ResolveSession(context.Background(), credID)
+	row, ok, err := st.ResolveSession(boundedTestContext(t), credID)
 	if err != nil || !ok {
 		t.Fatalf("pre-revoke resolve: ok=%v err=%v want ok", ok, err)
 	}
@@ -165,10 +164,10 @@ func TestRevoke_DeletesRow(t *testing.T) {
 	}
 
 	// The authority Revoke path deletes precisely this row.
-	if err := Revoke(context.Background(), st, credID); err != nil {
+	if err := Revoke(boundedTestContext(t), st, credID); err != nil {
 		t.Fatalf("revoke: %v", err)
 	}
-	_, okAfter, err := st.ResolveSession(context.Background(), credID)
+	_, okAfter, err := st.ResolveSession(boundedTestContext(t), credID)
 	if err != nil {
 		t.Fatalf("post-revoke resolve: %v", err)
 	}
@@ -183,10 +182,10 @@ func TestRevoke_DeletesRow(t *testing.T) {
 	}
 
 	// Revoking an already-absent credential is a no-op, not an error.
-	if err := Revoke(context.Background(), st, credID); err != nil {
+	if err := Revoke(boundedTestContext(t), st, credID); err != nil {
 		t.Fatalf("second revoke of same id: %v", err)
 	}
-	if err := Revoke(context.Background(), st, hex64); err != nil {
+	if err := Revoke(boundedTestContext(t), st, hex64); err != nil {
 		t.Fatalf("revoke of never-minted id: %v", err)
 	}
 }
@@ -197,7 +196,7 @@ func TestRevoke_DoesNotRevokeOtherCredential(t *testing.T) {
 	st := newTestStore(t)
 	a := mintTestToken(t, st, "ep-42", testGrants(), 3600, 1000)
 	b := mintTestToken(t, st, "ep-42", testGrants(), 3600, 1000)
-	if err := Revoke(context.Background(), st, hashHexToken(a)); err != nil {
+	if err := Revoke(boundedTestContext(t), st, hashHexToken(a)); err != nil {
 		t.Fatalf("revoke a: %v", err)
 	}
 	if out := resolveNow(t, New(st), "Bearer "+b, 1000); out.Success == nil {

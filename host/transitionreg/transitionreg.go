@@ -40,8 +40,8 @@ type Revision struct {
 type ObjectStore interface {
 	GetRegistryHead(context.Context, string) (hashref.HashRef, bool, error)
 	GetObject(context.Context, hashref.HashRef) (store.Object, bool, error)
-	PutObject(store.Object) error
-	CompareAndSetRegistryHead(string, hashref.HashRef, hashref.HashRef) error
+	PutObject(context.Context, store.Object) error
+	CompareAndSetRegistryHead(context.Context, string, hashref.HashRef, hashref.HashRef) error
 }
 
 // Reader exposes an eager, immutable view of one registry revision.
@@ -260,10 +260,10 @@ func (r *StoreReader) Publish(ctx context.Context, expectedHead hashref.HashRef,
 	}
 	ref := hashref.SumSHA256(payload)
 	object := store.Object{Hash: ref, InterfaceHash: InterfaceHashV1, SemanticID: SemanticIDV1, Provenance: "host/transitionreg", Payload: payload}
-	if err := r.store.PutObject(object); err != nil {
+	if err := r.store.PutObject(ctx, object); err != nil {
 		return hashref.HashRef{}, fmt.Errorf("publish transition registry: put object: %w", err)
 	}
-	if err := r.store.CompareAndSetRegistryHead(store.TransitionRegistryV1, expectedHead, ref); err != nil {
+	if err := r.store.CompareAndSetRegistryHead(ctx, store.TransitionRegistryV1, expectedHead, ref); err != nil {
 		return hashref.HashRef{}, fmt.Errorf("publish transition registry: compare and set head: %w", err)
 	}
 	return ref, nil

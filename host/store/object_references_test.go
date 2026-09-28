@@ -57,7 +57,7 @@ func TestObjectReferencesValidation(t *testing.T) {
 		}
 	})
 	s := openMem(t)
-	got, err := s.ObjectReferences(context.Background(), ref, nil, 1)
+	got, err := s.ObjectReferences(boundedTestContext(t), ref, nil, 1)
 	if err != nil || got == nil || len(got) != 0 {
 		t.Fatalf("empty page=%v %v", got, err)
 	}
@@ -90,7 +90,7 @@ func cursors(items []ObjectReference) []ObjectReferenceCursor {
 }
 func wantPage(t *testing.T, s *Store, ref hashref.HashRef, after *ObjectReferenceCursor, limit int, want []ObjectReferenceCursor) {
 	t.Helper()
-	got, err := s.ObjectReferences(context.Background(), ref, after, limit)
+	got, err := s.ObjectReferences(boundedTestContext(t), ref, after, limit)
 	if err != nil || !reflect.DeepEqual(cursors(got), want) {
 		t.Fatalf("page after=%+v limit=%d: got=%+v err=%v want=%+v", after, limit, cursors(got), err, want)
 	}
@@ -164,7 +164,7 @@ func TestObjectReferencesPage(t *testing.T) {
 			var all []ObjectReferenceCursor
 			var after *ObjectReferenceCursor
 			for {
-				page, err := s.ObjectReferences(context.Background(), ref, after, 100)
+				page, err := s.ObjectReferences(boundedTestContext(t), ref, after, 100)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -222,10 +222,10 @@ func TestObjectReferencesOutOfScope(t *testing.T) {
 	ref, other := refTestHash("target"), refTestHash("other")
 	o := obj("interface-source", "interface")
 	o.InterfaceHash = ref
-	if err := s.PutObject(o); err != nil {
+	if err := s.PutObject(boundedTestContext(t), o); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SetRegistryHead("test", ref); err != nil {
+	if err := s.SetRegistryHead(boundedTestContext(t), "test", ref); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.db.Exec("INSERT INTO journal(kind,invocation_id,object_ref) VALUES('intent','scope',?)", ref.String()); err != nil {
@@ -249,7 +249,7 @@ func TestObjectReferencesGuard(t *testing.T) {
 		calls := 0
 		objectReferencesBeforeQuery = func() { calls++ }
 		defer func() { objectReferencesBeforeQuery = nil }()
-		_, err := s.ObjectReferences(context.Background(), refTestHash("target"), nil, 10)
+		_, err := s.ObjectReferences(boundedTestContext(t), refTestHash("target"), nil, 10)
 		var unavailable *ReferenceIndexUnavailableError
 		if !errors.As(err, &unavailable) || calls != 0 {
 			t.Fatalf("guard err=%v calls=%d", err, calls)
@@ -263,7 +263,7 @@ func TestObjectReferencesCancellation(t *testing.T) {
 		ref := refTestHash("target")
 		other := refTestHash("other")
 		insertReferenceEntry(t, s, 0, ref, other, other)
-		conn, err := s.db.Conn(context.Background())
+		conn, err := s.db.Conn(boundedTestContext(t))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -326,17 +326,17 @@ func TestObjectReferencesMeasuredAtScale(t *testing.T) {
 	}
 	fn, interp, state := obj("scale-function", "fn"), obj("scale-interpreter", "interpreter"), obj("scale-state", "state")
 	for _, o := range []Object{fn, interp, state} {
-		if err := s.PutObject(o); err != nil {
+		if err := s.PutObject(boundedTestContext(t), o); err != nil {
 			t.Fatal(err)
 		}
 	}
 	current := seedGenesis(t, s)
 	current.StateRoot = state.Hash
 	current.Ref = refTestHash("scale-genesis")
-	if err := s.PutWorld(current); err != nil {
+	if err := s.PutWorld(boundedTestContext(t), current); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SelectHead(current.Ref); err != nil {
+	if err := s.SelectHead(boundedTestContext(t), current.Ref); err != nil {
 		t.Fatal(err)
 	}
 	var sparse hashref.HashRef
@@ -346,7 +346,7 @@ func TestObjectReferencesMeasuredAtScale(t *testing.T) {
 		entryHash := refTestHash(fmt.Sprintf("scale-entry-%d", i))
 		next := World{Ref: refTestHash(fmt.Sprintf("scale-world-%d", i)), Revision: int64(i + 1), StateRoot: state.Hash, LogHead: entryHash}
 		commit := Commit{ObservedHead: current.Ref, Objects: []Object{body}, NextWorld: next, Entry: LogEntry{Header: LogHeader{EntryIndex: int64(i), SemanticsEpoch: 1, TransitionFn: fn.Hash, Interpreter: interp.Hash, PrevEntryHash: current.LogHead, WrittenBy: "scale"}, EntryHash: entryHash, TransitionRef: body.Hash}}
-		if err := s.Commit(commit); err != nil {
+		if err := s.Commit(boundedTestContext(t), commit); err != nil {
 			t.Fatal(err)
 		}
 		current = next
@@ -397,7 +397,7 @@ func TestObjectReferencesMeasuredAtScale(t *testing.T) {
 		var got []ObjectReferenceCursor
 		var after *ObjectReferenceCursor
 		for len(got) < len(want)+1 {
-			page, err := s.ObjectReferences(context.Background(), tc.ref, after, 101)
+			page, err := s.ObjectReferences(boundedTestContext(t), tc.ref, after, 101)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -414,7 +414,7 @@ func TestObjectReferencesMeasuredAtScale(t *testing.T) {
 		samples := make([]int64, 101)
 		for i := range samples {
 			start := time.Now()
-			_, err := s.ObjectReferences(context.Background(), tc.ref, nil, 101)
+			_, err := s.ObjectReferences(boundedTestContext(t), tc.ref, nil, 101)
 			if err != nil {
 				t.Fatal(err)
 			}

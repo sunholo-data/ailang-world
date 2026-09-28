@@ -1,7 +1,6 @@
 package broker
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -25,7 +24,7 @@ func TestEscapeeHelper(t *testing.T) { proctest.RunEscapeeIfRequested() }
 
 func runScript(t *testing.T, script string, execTimeout time.Duration) error {
 	t.Helper()
-	_, err := runBounded(context.Background(), handlerBounds{execTimeout: execTimeout, maxOutputBytes: 1024},
+	_, err := runBounded(boundedTestContext(t), handlerBounds{execTimeout: execTimeout, maxOutputBytes: 1024},
 		handlerCommand{path: "/bin/sh", args: []string{"-c", script}, dir: t.TempDir(), env: []string{"PATH=/usr/bin:/bin"}})
 	return err
 }
@@ -183,7 +182,7 @@ func TestFullCleanupBacklogRefusesRun(t *testing.T) {
 // A Start failure releases the reservation Admit took.
 func TestStartFailureReleasesReservation(t *testing.T) {
 	base := procbound.Outstanding()
-	_, err := runBounded(context.Background(), handlerBounds{execTimeout: time.Minute, maxOutputBytes: 1024},
+	_, err := runBounded(boundedTestContext(t), handlerBounds{execTimeout: time.Minute, maxOutputBytes: 1024},
 		handlerCommand{path: filepath.Join(t.TempDir(), "no-such-handler"), dir: t.TempDir(), env: []string{"PATH=/usr/bin:/bin"}})
 	if err == nil || !strings.Contains(err.Error(), "start handler subprocess") {
 		t.Fatalf("error = %v, want a Start failure", err)

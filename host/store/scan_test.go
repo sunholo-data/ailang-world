@@ -11,8 +11,8 @@ func TestIntegrityScanLimitGuard(t *testing.T) {
 	s := openMem(t)
 	for _, limit := range []int{0, -1, MaxIntegrityScanPage + 1} {
 		for _, scan := range []func(int) error{
-			func(n int) error { _, err := s.ScanUnreadableLog(0, n); return err },
-			func(n int) error { _, err := s.ScanUnreadableWorlds("", n); return err },
+			func(n int) error { _, err := s.ScanUnreadableLog(boundedTestContext(t), 0, n); return err },
+			func(n int) error { _, err := s.ScanUnreadableWorlds(boundedTestContext(t), "", n); return err },
 		} {
 			err := scan(limit)
 			var invalid *InvalidLimitError
@@ -21,10 +21,10 @@ func TestIntegrityScanLimitGuard(t *testing.T) {
 			}
 		}
 	}
-	if _, err := s.ScanUnreadableLog(0, MaxIntegrityScanPage); err != nil {
+	if _, err := s.ScanUnreadableLog(boundedTestContext(t), 0, MaxIntegrityScanPage); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := s.ScanUnreadableWorlds("", MaxIntegrityScanPage); err != nil {
+	if _, err := s.ScanUnreadableWorlds(boundedTestContext(t), "", MaxIntegrityScanPage); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -45,12 +45,12 @@ func TestScanUnreadableLogKeysetResumes(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	first, err := s.ScanUnreadableLog(1, 2)
+	first, err := s.ScanUnreadableLog(boundedTestContext(t), 1, 2)
 	if err != nil || first.Scanned != 2 || first.Done || first.NextIndex != 3 ||
 		len(first.Rows) != 1 || first.Rows[0].Index != 2 || first.Rows[0].Field != "prevEntryHash" {
 		t.Fatalf("first page = %+v, err=%v", first, err)
 	}
-	second, err := s.ScanUnreadableLog(first.NextIndex, 2)
+	second, err := s.ScanUnreadableLog(boundedTestContext(t), first.NextIndex, 2)
 	if err != nil || second.Scanned != 1 || !second.Done || second.NextIndex != 4 {
 		t.Fatalf("second page = %+v, err=%v", second, err)
 	}
@@ -65,7 +65,7 @@ func TestScanUnreadableWorldsKeysetStableAcrossEarlierInsert(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	first, err := s.ScanUnreadableWorlds("", 2)
+	first, err := s.ScanUnreadableWorlds(boundedTestContext(t), "", 2)
 	if err != nil || first.NextRef != "d" || first.Done {
 		t.Fatalf("first page = %+v, err=%v", first, err)
 	}
@@ -74,7 +74,7 @@ func TestScanUnreadableWorldsKeysetStableAcrossEarlierInsert(t *testing.T) {
 		VALUES(?,?,?,?)`, "c", 1, valid, valid); err != nil {
 		t.Fatal(err)
 	}
-	second, err := s.ScanUnreadableWorlds(first.NextRef, 2)
+	second, err := s.ScanUnreadableWorlds(boundedTestContext(t), first.NextRef, 2)
 	if err != nil || second.Scanned != 1 || !second.Done || second.NextRef != "f" {
 		t.Fatalf("second page = %+v, err=%v", second, err)
 	}
@@ -87,7 +87,7 @@ func TestScanUnreadableWorldsFindsPoison(t *testing.T) {
 		VALUES(?,?,?,?)`, valid, 1, "", valid); err != nil {
 		t.Fatal(err)
 	}
-	page, err := s.ScanUnreadableWorlds("", 10)
+	page, err := s.ScanUnreadableWorlds(boundedTestContext(t), "", 10)
 	if err != nil || len(page.Rows) != 1 || page.Rows[0].Ref != valid || page.Rows[0].Field != "stateRoot" {
 		t.Fatalf("page = %+v, err=%v", page, err)
 	}

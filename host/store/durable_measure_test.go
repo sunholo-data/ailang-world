@@ -1,7 +1,6 @@
 package store
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -28,7 +27,7 @@ func TestMeasureDurableOps(t *testing.T) {
 	if os.Getenv("WORLD_BOUND_MEASURE") != "1" {
 		t.Skip("set WORLD_BOUND_MEASURE=1 to measure")
 	}
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 	samples := map[string][]time.Duration{}
 	timeIt := func(name string, f func() error) {
 		start := time.Now()
@@ -72,17 +71,17 @@ func TestMeasureDurableOps(t *testing.T) {
 				PrevEntryHash: head.LogHead, WrittenBy: "measure"},
 				EntryHash: entryHash, TransitionRef: body.Hash},
 		}
-		timeIt("GetReceiptContext(absent)", func() error { _, _, err := s.GetReceiptContext(ctx, id); return err })
-		timeIt("AppendIntentContext", func() error {
-			_, _, err := s.AppendIntentContext(ctx, id, testCommitIntent(id, c))
+		timeIt("GetReceipt(absent)", func() error { _, _, err := s.GetReceipt(ctx, id); return err })
+		timeIt("AppendIntent", func() error {
+			_, _, err := s.AppendIntent(ctx, id, testCommitIntent(id, c))
 			return err
 		})
-		timeIt("CommitContext(invocation)", func() error { return s.CommitContext(ctx, c) })
-		timeIt("GetReceiptContext(resolved)", func() error { _, _, err := s.GetReceiptContext(ctx, id); return err })
+		timeIt("Commit(invocation)", func() error { return s.Commit(ctx, c) })
+		timeIt("GetReceipt(resolved)", func() error { _, _, err := s.GetReceipt(ctx, id); return err })
 		timeIt("GetObject", func() error { _, _, err := s.GetObject(ctx, body.Hash); return err })
 		timeIt("SelectedHead", func() error { _, _, err := s.SelectedHead(ctx); return err })
 		cred := fmt.Sprintf("cred-%d", i)
-		if err := s.MintSession(SessionRow{CredentialID: cred, EpisodeID: "ep", GrantsJSON: "[]",
+		if err := s.MintSession(boundedTestContext(t), SessionRow{CredentialID: cred, EpisodeID: "ep", GrantsJSON: "[]",
 			ExpiresAt: 1 << 40, CreatedAt: 1}); err != nil {
 			t.Fatal(err)
 		}
@@ -115,7 +114,7 @@ func TestMeasureContextFreeSurface(t *testing.T) {
 	if os.Getenv("WORLD_BOUND_MEASURE") != "1" {
 		t.Skip("set WORLD_BOUND_MEASURE=1 to measure")
 	}
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 	samples := map[string][]time.Duration{}
 	timeIt := func(name string, f func() error) {
 		start := time.Now()
@@ -128,7 +127,7 @@ func TestMeasureContextFreeSurface(t *testing.T) {
 	genesis := seedGenesis(t, s)
 	for i := 0; i < MaxPendingIntentsPage; i++ {
 		c := journalCommitFixture(t, s, fmt.Sprintf("p-%d", i))
-		if _, _, err := s.AppendIntent(fmt.Sprintf("p-%d", i), testCommitIntent(fmt.Sprintf("p-%d", i), c)); err != nil {
+		if _, _, err := s.AppendIntent(boundedTestContext(t), fmt.Sprintf("p-%d", i), testCommitIntent(fmt.Sprintf("p-%d", i), c)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -138,7 +137,7 @@ func TestMeasureContextFreeSurface(t *testing.T) {
 		entryHash := hashref.SumSHA256([]byte(fmt.Sprintf("scan-entry-%d", i)))
 		next := World{Ref: hashref.SumSHA256([]byte(fmt.Sprintf("scan-world-%d", i))),
 			Revision: int64(i + 1), StateRoot: body.Hash, LogHead: entryHash}
-		if err := s.Commit(Commit{ObservedHead: head.Ref, Objects: []Object{body}, NextWorld: next,
+		if err := s.Commit(boundedTestContext(t), Commit{ObservedHead: head.Ref, Objects: []Object{body}, NextWorld: next,
 			Entry: LogEntry{Header: LogHeader{EntryIndex: int64(i + 1), SemanticsEpoch: 1,
 				TransitionFn: body.Hash, Interpreter: body.Hash, PrevEntryHash: head.LogHead,
 				WrittenBy: "measure"}, EntryHash: entryHash, TransitionRef: body.Hash}}); err != nil {
@@ -148,58 +147,58 @@ func TestMeasureContextFreeSurface(t *testing.T) {
 	}
 	for i := 0; i < 200; i++ {
 		intent := effectIntentFixture("ep-scan", int64(i))
-		if _, _, err := s.AppendNextEffectIntent("ep-scan", intent); err != nil {
+		if _, _, err := s.AppendNextEffectIntent(boundedTestContext(t), "ep-scan", intent); err != nil {
 			t.Fatal(err)
 		}
 	}
 	for i := 0; i < measureN; i++ {
 		id := fmt.Sprintf("x-%d", i)
 		o := obj("surface-"+id, "measure/object")
-		timeIt("PutObject", func() error { return s.PutObject(o) })
+		timeIt("PutObject", func() error { return s.PutObject(boundedTestContext(t), o) })
 		w := World{Ref: hashref.SumSHA256([]byte("w-" + id)), Revision: int64(i + 1),
 			StateRoot: o.Hash, LogHead: o.Hash}
-		timeIt("PutWorld", func() error { return s.PutWorld(w) })
-		timeIt("SelectHead", func() error { return s.SelectHead(head.Ref) })
-		timeIt("SetRegistryHead", func() error { return s.SetRegistryHead("measure/reg", o.Hash) })
+		timeIt("PutWorld", func() error { return s.PutWorld(boundedTestContext(t), w) })
+		timeIt("SelectHead", func() error { return s.SelectHead(boundedTestContext(t), head.Ref) })
+		timeIt("SetRegistryHead", func() error { return s.SetRegistryHead(boundedTestContext(t), "measure/reg", o.Hash) })
 		o2 := obj("surface-next-"+id, "measure/object")
-		if err := s.PutObject(o2); err != nil {
+		if err := s.PutObject(boundedTestContext(t), o2); err != nil {
 			t.Fatal(err)
 		}
 		timeIt("CompareAndSetRegistryHead", func() error {
-			return s.CompareAndSetRegistryHead("measure/reg", o.Hash, o2.Hash)
+			return s.CompareAndSetRegistryHead(boundedTestContext(t), "measure/reg", o.Hash, o2.Hash)
 		})
 		timeIt("PutVerifyResult", func() error {
-			return s.PutVerifyResult(VerifyResult{TransitionFn: o.Hash, Interpreter: genesis.Ref,
+			return s.PutVerifyResult(boundedTestContext(t), VerifyResult{TransitionFn: o.Hash, Interpreter: genesis.Ref,
 				SemanticsEpoch: 1, Verified: true, Detail: "measure"})
 		})
 		cred := "mint-" + id
 		timeIt("MintSession", func() error {
-			return s.MintSession(SessionRow{CredentialID: cred, EpisodeID: "ep", GrantsJSON: "[]",
+			return s.MintSession(boundedTestContext(t), SessionRow{CredentialID: cred, EpisodeID: "ep", GrantsJSON: "[]",
 				ExpiresAt: 1 << 40, CreatedAt: 1})
 		})
 		timeIt("RevokeSession", func() error { return s.RevokeSession(ctx, cred) })
 		var effectID string
 		timeIt("AppendNextEffectIntent", func() error {
 			var err error
-			effectID, _, err = s.AppendNextEffectIntent("ep-m", effectIntentFixture("ep-m", int64(i)))
+			effectID, _, err = s.AppendNextEffectIntent(boundedTestContext(t), "ep-m", effectIntentFixture("ep-m", int64(i)))
 			return err
 		})
 		timeIt("AppendEffectOutcome", func() error {
-			_, _, err := s.AppendEffectOutcome(effectID, EffectOutcome{InvocationID: effectID,
+			_, _, err := s.AppendEffectOutcome(boundedTestContext(t), effectID, EffectOutcome{InvocationID: effectID,
 				Status: "succeeded", RecordRef: o.Hash, LogicalTime: int64(i)})
 			return err
 		})
-		timeIt("GetEffectReceipt", func() error { _, _, err := s.GetEffectReceipt(effectID); return err })
+		timeIt("GetEffectReceipt", func() error { _, _, err := s.GetEffectReceipt(boundedTestContext(t), effectID); return err })
 		pid := fmt.Sprintf("p-%d", i)
 		timeIt("AppendOutcome", func() error {
-			_, _, err := s.AppendOutcome(pid, JournalOutcome{InvocationID: pid, Status: "committed",
+			_, _, err := s.AppendOutcome(boundedTestContext(t), pid, JournalOutcome{InvocationID: pid, Status: "committed",
 				ResultRef: o.Hash, LogicalTime: 42})
 			return err
 		})
-		timeIt("PendingIntents(page 1000)", func() error { _, err := s.PendingIntents(MaxPendingIntentsPage); return err })
-		timeIt("PendingEffectIntents(page 200)", func() error { _, err := s.PendingEffectIntents(200); return err })
-		timeIt("ScanUnreadableLog(page 64)", func() error { _, err := s.ScanUnreadableLog(0, 64); return err })
-		timeIt("ScanUnreadableWorlds(page 64)", func() error { _, err := s.ScanUnreadableWorlds("", 64); return err })
+		timeIt("PendingIntents(page 1000)", func() error { _, err := s.PendingIntents(boundedTestContext(t), MaxPendingIntentsPage); return err })
+		timeIt("PendingEffectIntents(page 200)", func() error { _, err := s.PendingEffectIntents(boundedTestContext(t), 200); return err })
+		timeIt("ScanUnreadableLog(page 64)", func() error { _, err := s.ScanUnreadableLog(boundedTestContext(t), 0, 64); return err })
+		timeIt("ScanUnreadableWorlds(page 64)", func() error { _, err := s.ScanUnreadableWorlds(boundedTestContext(t), "", 64); return err })
 	}
 	names := make([]string, 0, len(samples))
 	for n := range samples {

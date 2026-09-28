@@ -1,7 +1,6 @@
 package store
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -35,7 +34,7 @@ func TestReadObjectProbeOmitsPayloadAndGuardsMaterialization(t *testing.T) {
 	payload := []byte("payload larger than the bound")
 	o := testReadObject(t, s, payload)
 
-	meta, got, err := s.ReadObject(context.Background(), o.Hash, int64(len(payload)-1))
+	meta, got, err := s.ReadObject(boundedTestContext(t), o.Hash, int64(len(payload)-1))
 	var tooLarge *ObjectTooLargeError
 	if !errors.As(err, &tooLarge) {
 		t.Fatalf("ReadObject oversize error = %v; want *ObjectTooLargeError", err)
@@ -51,7 +50,7 @@ func TestReadObjectProbeOmitsPayloadAndGuardsMaterialization(t *testing.T) {
 	}
 
 	absent := hashref.SumSHA256([]byte("absent"))
-	meta, got, err = s.ReadObject(context.Background(), absent, 1024)
+	meta, got, err = s.ReadObject(boundedTestContext(t), absent, 1024)
 	if err != nil || got != nil || meta != (ObjectMeta{}) {
 		t.Fatalf("ReadObject absent = (%+v, %v, %v); want zero, nil, nil", meta, got, err)
 	}
@@ -70,7 +69,7 @@ func TestConcurrentMutationCannotDesyncProbeAndPayload(t *testing.T) {
 		readObjectBetweenStatements = func() { fired = true }
 		t.Cleanup(func() { readObjectBetweenStatements = nil })
 
-		meta, payload, err := s.ReadObject(context.Background(), o.Hash, 1024)
+		meta, payload, err := s.ReadObject(boundedTestContext(t), o.Hash, 1024)
 		assertSnapshotRead(t, o.Hash, meta, payload, err)
 		if !fired {
 			t.Fatal("no-write scheduling hook did not fire")
@@ -92,7 +91,7 @@ func TestConcurrentMutationCannotDesyncProbeAndPayload(t *testing.T) {
 		mutated := []byte(strings.Repeat("changed", 50))
 		readObjectBetweenStatements = func() {
 			fired = true
-			res, writeErr := writer.ExecContext(context.Background(),
+			res, writeErr := writer.ExecContext(boundedTestContext(t),
 				`UPDATE objects SET payload = ? WHERE hash_ref = ?`, mutated, o.Hash.String())
 			if writeErr != nil {
 				writerOutcome = "busy-refused: " + writeErr.Error()
@@ -112,7 +111,7 @@ func TestConcurrentMutationCannotDesyncProbeAndPayload(t *testing.T) {
 		}
 		t.Cleanup(func() { readObjectBetweenStatements = nil })
 
-		meta, payload, err := s.ReadObject(context.Background(), o.Hash, 1024)
+		meta, payload, err := s.ReadObject(boundedTestContext(t), o.Hash, 1024)
 		if !fired {
 			t.Fatal("mutating scheduling hook did not fire; pass would be vacuous")
 		}
@@ -166,7 +165,7 @@ func TestBusyTimeoutCachesEffectiveDSNAndDoesNotBlock(t *testing.T) {
 			t.Fatalf("BusyTimeout = %v; want caller value 1.375s", got)
 		}
 
-		decoy, err := s.db.Conn(context.Background())
+		decoy, err := s.db.Conn(boundedTestContext(t))
 		if err != nil {
 			t.Fatalf("occupy sole connection: %v", err)
 		}
@@ -210,7 +209,7 @@ func testReadObject(t *testing.T, s *Store, payload []byte) Object {
 		Provenance:    "read-object-test",
 		Payload:       payload,
 	}
-	if err := s.PutObject(o); err != nil {
+	if err := s.PutObject(boundedTestContext(t), o); err != nil {
 		t.Fatalf("PutObject: %v", err)
 	}
 	return o

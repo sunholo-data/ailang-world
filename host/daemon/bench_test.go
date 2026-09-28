@@ -92,7 +92,7 @@ func BenchmarkStoreCommit(b *testing.B) {
 			},
 		}
 		start := time.Now()
-		if err := s.Commit(commit); err != nil {
+		if err := s.Commit(boundedTestContext(b), commit); err != nil {
 			b.Fatalf("Commit #%d: %v", i, err)
 		}
 		samples = append(samples, time.Since(start))
@@ -130,7 +130,7 @@ func BenchmarkJournalAppend(b *testing.B) {
 			LogicalTime:   int64(i),
 		}
 		start := time.Now()
-		if _, _, err := s.AppendIntent(id, intent); err != nil {
+		if _, _, err := s.AppendIntent(boundedTestContext(b), id, intent); err != nil {
 			b.Fatalf("AppendIntent #%d: %v", i, err)
 		}
 		samples = append(samples, time.Since(start))
@@ -183,7 +183,7 @@ func BenchmarkCommitWithReceipt(b *testing.B) {
 			TransitionFn: commits[i].Entry.Header.TransitionFn, TransitionRef: body,
 			Interpreter: commits[i].Entry.Header.Interpreter, LogicalTime: int64(i),
 		}
-		if _, _, err := s.AppendIntent(id, intent); err != nil {
+		if _, _, err := s.AppendIntent(boundedTestContext(b), id, intent); err != nil {
 			b.Fatalf("stage AppendIntent #%d: %v", i, err)
 		}
 		observed, previousLog = nextWorld, nextLog
@@ -193,7 +193,7 @@ func BenchmarkCommitWithReceipt(b *testing.B) {
 	b.ResetTimer()
 	for i := range commits {
 		start := time.Now()
-		if err := s.Commit(commits[i]); err != nil {
+		if err := s.Commit(boundedTestContext(b), commits[i]); err != nil {
 			b.Fatalf("Commit with receipt #%d: %v", i, err)
 		}
 		samples = append(samples, time.Since(start))
@@ -205,7 +205,7 @@ func BenchmarkCommitWithReceipt(b *testing.B) {
 func benchmarkDaemonGET(b *testing.B, route string, seed bool) {
 	b.Helper()
 	dbPath := filepath.Join(b.TempDir(), "world.db")
-	d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
+	d, err := New(boundedTestContext(b), Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
 	if err != nil {
 		b.Fatalf("New: %v", err)
 	}
@@ -216,11 +216,11 @@ func benchmarkDaemonGET(b *testing.B, route string, seed bool) {
 			StateRoot: hashref.SumSHA256([]byte("daemon-benchmark-state-genesis")),
 			LogHead:   hashref.SumSHA256([]byte("daemon-benchmark-log-genesis")),
 		}
-		if err := d.store.PutWorld(w); err != nil {
+		if err := d.store.PutWorld(boundedTestContext(b), w); err != nil {
 			_ = d.Close()
 			b.Fatalf("seed PutWorld: %v", err)
 		}
-		if err := d.store.SelectHead(w.Ref); err != nil {
+		if err := d.store.SelectHead(boundedTestContext(b), w.Ref); err != nil {
 			_ = d.Close()
 			b.Fatalf("seed SelectHead: %v", err)
 		}
@@ -291,7 +291,7 @@ func BenchmarkHealth(b *testing.B) {
 
 func BenchmarkRESTCommit(b *testing.B) {
 	dbPath := filepath.Join(b.TempDir(), "world.db")
-	d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
+	d, err := New(boundedTestContext(b), Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
 	if err != nil {
 		b.Fatalf("New: %v", err)
 	}
@@ -300,10 +300,10 @@ func BenchmarkRESTCommit(b *testing.B) {
 		StateRoot: hashref.SumSHA256([]byte("rest-bench-genesis-state")),
 		LogHead:   hashref.SumSHA256([]byte("rest-bench-genesis-log")),
 	}
-	if err := d.store.PutWorld(genesis); err != nil {
+	if err := d.store.PutWorld(boundedTestContext(b), genesis); err != nil {
 		b.Fatalf("PutWorld genesis: %v", err)
 	}
-	if err := d.store.SelectHead(genesis.Ref); err != nil {
+	if err := d.store.SelectHead(boundedTestContext(b), genesis.Ref); err != nil {
 		b.Fatalf("SelectHead genesis: %v", err)
 	}
 	if err := d.Listen(); err != nil {
@@ -367,7 +367,7 @@ func BenchmarkLogRange(b *testing.B) {
 	for _, limit := range []int{100, 500} {
 		b.Run(fmt.Sprintf("limit_%d", limit), func(b *testing.B) {
 			dbPath := filepath.Join(b.TempDir(), "world.db")
-			d, err := New(context.Background(), Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
+			d, err := New(boundedTestContext(b), Config{DBPath: dbPath, BindHost: DefaultBindHost, BindPort: 0})
 			if err != nil {
 				b.Fatalf("New: %v", err)
 			}
@@ -376,15 +376,15 @@ func BenchmarkLogRange(b *testing.B) {
 				StateRoot: hashref.SumSHA256([]byte("range-bench-genesis-state")),
 				LogHead:   hashref.SumSHA256([]byte("range-bench-genesis-log")),
 			}
-			if err := d.store.PutWorld(current); err != nil {
+			if err := d.store.PutWorld(boundedTestContext(b), current); err != nil {
 				b.Fatalf("PutWorld genesis: %v", err)
 			}
-			if err := d.store.SelectHead(current.Ref); err != nil {
+			if err := d.store.SelectHead(boundedTestContext(b), current.Ref); err != nil {
 				b.Fatalf("SelectHead genesis: %v", err)
 			}
 			for i := int64(0); i < 500; i++ {
 				commit := testCommit(current, i, fmt.Sprintf("range-bench-%d", i))
-				if err := d.store.Commit(commit); err != nil {
+				if err := d.store.Commit(boundedTestContext(b), commit); err != nil {
 					b.Fatalf("seed Commit(%d): %v", i, err)
 				}
 				current = commit.NextWorld
@@ -494,7 +494,7 @@ func BenchmarkBrokerFSRead(b *testing.B) {
 		}
 		b.StartTimer()
 		start := time.Now()
-		got, recordRef, err := session.Invoke(context.Background(), req, nil)
+		got, recordRef, err := session.Invoke(boundedTestContext(b), req, nil)
 		samples = append(samples, time.Since(start))
 		if err != nil {
 			b.Fatalf("Invoke #%d: %v", i, err)

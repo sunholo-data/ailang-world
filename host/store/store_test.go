@@ -1,7 +1,6 @@
 package store
 
 import (
-	"context"
 	"errors"
 	"sync"
 	"testing"
@@ -37,10 +36,10 @@ func TestObjectPersistenceRoundTrip(t *testing.T) {
 	s := openMem(t)
 	o := obj("hello world payload", "state/v1")
 
-	if err := s.PutObject(o); err != nil {
+	if err := s.PutObject(boundedTestContext(t), o); err != nil {
 		t.Fatalf("PutObject: %v", err)
 	}
-	got, ok, err := s.GetObject(context.Background(), o.Hash)
+	got, ok, err := s.GetObject(boundedTestContext(t), o.Hash)
 	if err != nil || !ok {
 		t.Fatalf("GetObject: ok=%v err=%v", ok, err)
 	}
@@ -53,7 +52,7 @@ func TestObjectPersistenceRoundTrip(t *testing.T) {
 	}
 
 	// Re-inserting the identical object is idempotent.
-	if err := s.PutObject(o); err != nil {
+	if err := s.PutObject(boundedTestContext(t), o); err != nil {
 		t.Fatalf("PutObject (idempotent): %v", err)
 	}
 }
@@ -64,7 +63,7 @@ func TestObjectContentVerificationRejectsMismatch(t *testing.T) {
 	// Corrupt the payload so Hash no longer addresses it.
 	bad.Payload = []byte("tampered payload")
 
-	if err := s.PutObject(bad); err == nil {
+	if err := s.PutObject(boundedTestContext(t), bad); err == nil {
 		t.Fatal("PutObject accepted an object whose hash does not match its payload")
 	}
 }
@@ -77,10 +76,10 @@ func TestWorldPersistenceRoundTrip(t *testing.T) {
 		StateRoot: hashref.SumSHA256([]byte("state-1")),
 		LogHead:   hashref.SumSHA256([]byte("log-head-1")),
 	}
-	if err := s.PutWorld(w); err != nil {
+	if err := s.PutWorld(boundedTestContext(t), w); err != nil {
 		t.Fatalf("PutWorld: %v", err)
 	}
-	got, ok, err := s.GetWorld(context.Background(), w.Ref)
+	got, ok, err := s.GetWorld(boundedTestContext(t), w.Ref)
 	if err != nil || !ok {
 		t.Fatalf("GetWorld: ok=%v err=%v", ok, err)
 	}
@@ -115,7 +114,7 @@ func TestFrozenHeaderRoundTrip(t *testing.T) {
 		LogHead:   entryHash,
 	}
 
-	if err := s.Commit(Commit{
+	if err := s.Commit(boundedTestContext(t), Commit{
 		ObservedHead: genesis.Ref,
 		Objects:      []Object{transitionBody},
 		NextWorld:    next,
@@ -128,7 +127,7 @@ func TestFrozenHeaderRoundTrip(t *testing.T) {
 		t.Fatalf("Commit: %v", err)
 	}
 
-	got, ok, err := s.GetLogEntry(context.Background(), 1)
+	got, ok, err := s.GetLogEntry(boundedTestContext(t), 1)
 	if err != nil || !ok {
 		t.Fatalf("GetLogEntry(1): ok=%v err=%v", ok, err)
 	}
@@ -143,7 +142,7 @@ func TestFrozenHeaderRoundTrip(t *testing.T) {
 	}
 
 	// The selected head must have advanced to the new world.
-	sel, ok, err := s.SelectedHead(context.Background())
+	sel, ok, err := s.SelectedHead(boundedTestContext(t))
 	if err != nil || !ok {
 		t.Fatalf("SelectedHead: ok=%v err=%v", ok, err)
 	}
@@ -162,10 +161,10 @@ func seedGenesis(t *testing.T, s *Store) World {
 		StateRoot: hashref.SumSHA256([]byte("state-genesis")),
 		LogHead:   hashref.SumSHA256([]byte("log-genesis")),
 	}
-	if err := s.PutWorld(g); err != nil {
+	if err := s.PutWorld(boundedTestContext(t), g); err != nil {
 		t.Fatalf("seed PutWorld: %v", err)
 	}
-	if err := s.SelectHead(g.Ref); err != nil {
+	if err := s.SelectHead(boundedTestContext(t), g.Ref); err != nil {
 		t.Fatalf("seed SelectHead: %v", err)
 	}
 	return g
@@ -203,7 +202,7 @@ func TestCommitConflictOnStaleHead(t *testing.T) {
 			TransitionRef: body.Hash,
 		},
 	}
-	if err := s.Commit(commitA); err != nil {
+	if err := s.Commit(boundedTestContext(t), commitA); err != nil {
 		t.Fatalf("first Commit: %v", err)
 	}
 
@@ -230,7 +229,7 @@ func TestCommitConflictOnStaleHead(t *testing.T) {
 			TransitionRef: body2.Hash,
 		},
 	}
-	err := s.Commit(commitB)
+	err := s.Commit(boundedTestContext(t), commitB)
 	if err == nil {
 		t.Fatal("stale-head Commit succeeded; expected ConflictError")
 	}
@@ -250,10 +249,10 @@ func TestCommitConflictOnStaleHead(t *testing.T) {
 
 	// The failed commit must have written nothing: log entry 2 absent, and the
 	// selected head unchanged from commitA's world.
-	if _, ok, _ := s.GetLogEntry(context.Background(), 2); ok {
+	if _, ok, _ := s.GetLogEntry(boundedTestContext(t), 2); ok {
 		t.Fatal("failed commit left log entry 2 behind; transaction did not roll back")
 	}
-	sel, _, _ := s.SelectedHead(context.Background())
+	sel, _, _ := s.SelectedHead(boundedTestContext(t))
 	if sel.String() != world2.Ref.String() {
 		t.Fatalf("selected head changed after failed commit: got %q want %q", sel, world2.Ref)
 	}
@@ -262,10 +261,10 @@ func TestCommitConflictOnStaleHead(t *testing.T) {
 func TestRegistryHeadRoundTrip(t *testing.T) {
 	s := openMem(t)
 	reg := hashref.SumSHA256([]byte("epoch-1-registry-object"))
-	if err := s.SetRegistryHead(EpochRegistryV1, reg); err != nil {
+	if err := s.SetRegistryHead(boundedTestContext(t), EpochRegistryV1, reg); err != nil {
 		t.Fatalf("SetRegistryHead: %v", err)
 	}
-	got, ok, err := s.GetRegistryHead(context.Background(), EpochRegistryV1)
+	got, ok, err := s.GetRegistryHead(boundedTestContext(t), EpochRegistryV1)
 	if err != nil || !ok {
 		t.Fatalf("GetRegistryHead: ok=%v err=%v", ok, err)
 	}
@@ -275,10 +274,10 @@ func TestRegistryHeadRoundTrip(t *testing.T) {
 
 	// Updating the head replaces it in place (one row per registry name).
 	reg2 := hashref.SumSHA256([]byte("epoch-2-registry-object"))
-	if err := s.SetRegistryHead(EpochRegistryV1, reg2); err != nil {
+	if err := s.SetRegistryHead(boundedTestContext(t), EpochRegistryV1, reg2); err != nil {
 		t.Fatalf("SetRegistryHead update: %v", err)
 	}
-	got2, _, _ := s.GetRegistryHead(context.Background(), EpochRegistryV1)
+	got2, _, _ := s.GetRegistryHead(boundedTestContext(t), EpochRegistryV1)
 	if got2.String() != reg2.String() {
 		t.Fatalf("registry head not updated: got %q want %q", got2, reg2)
 	}
@@ -288,14 +287,14 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 	put := func(t *testing.T, s *Store, payload string) Object {
 		t.Helper()
 		o := obj(payload, TransitionRegistryV1)
-		if err := s.PutObject(o); err != nil {
+		if err := s.PutObject(boundedTestContext(t), o); err != nil {
 			t.Fatalf("PutObject(%q): %v", payload, err)
 		}
 		return o
 	}
 	assertHead := func(t *testing.T, s *Store, name string, want hashref.HashRef, wantOK bool) {
 		t.Helper()
-		got, ok, err := s.GetRegistryHead(context.Background(), name)
+		got, ok, err := s.GetRegistryHead(boundedTestContext(t), name)
 		if err != nil || ok != wantOK || (ok && got != want) {
 			t.Fatalf("GetRegistryHead(%q) = (%q,%v,%v), want (%q,%v,nil)", name, got, ok, err, want, wantOK)
 		}
@@ -304,7 +303,7 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 	t.Run("absent_head_accepts_zero_expected", func(t *testing.T) {
 		s := openMem(t)
 		next := put(t, s, "next")
-		if err := s.CompareAndSetRegistryHead(TransitionRegistryV1, hashref.HashRef{}, next.Hash); err != nil {
+		if err := s.CompareAndSetRegistryHead(boundedTestContext(t), TransitionRegistryV1, hashref.HashRef{}, next.Hash); err != nil {
 			t.Fatalf("CompareAndSetRegistryHead: %v", err)
 		}
 		assertHead(t, s, TransitionRegistryV1, next.Hash, true)
@@ -314,7 +313,7 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 		s := openMem(t)
 		expected := put(t, s, "expected")
 		next := put(t, s, "next")
-		err := s.CompareAndSetRegistryHead(TransitionRegistryV1, expected.Hash, next.Hash)
+		err := s.CompareAndSetRegistryHead(boundedTestContext(t), TransitionRegistryV1, expected.Hash, next.Hash)
 		var conflict *RegistryCASConflict
 		if !errors.As(err, &conflict) || !IsRegistryCASConflict(err) || conflict.HadHead || conflict.Expected != expected.Hash || !conflict.Actual.IsZero() {
 			t.Fatalf("conflict = %#v, err=%v", conflict, err)
@@ -327,10 +326,10 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 		actual := put(t, s, "actual")
 		expected := put(t, s, "expected")
 		next := put(t, s, "next")
-		if err := s.SetRegistryHead(TransitionRegistryV1, actual.Hash); err != nil {
+		if err := s.SetRegistryHead(boundedTestContext(t), TransitionRegistryV1, actual.Hash); err != nil {
 			t.Fatal(err)
 		}
-		err := s.CompareAndSetRegistryHead(TransitionRegistryV1, expected.Hash, next.Hash)
+		err := s.CompareAndSetRegistryHead(boundedTestContext(t), TransitionRegistryV1, expected.Hash, next.Hash)
 		var conflict *RegistryCASConflict
 		if !errors.As(err, &conflict) || !conflict.HadHead || conflict.Expected != expected.Hash || conflict.Actual != actual.Hash {
 			t.Fatalf("conflict = %#v, err=%v", conflict, err)
@@ -341,11 +340,11 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 	t.Run("dangling_next_refused", func(t *testing.T) {
 		s := openMem(t)
 		actual := put(t, s, "actual")
-		if err := s.SetRegistryHead(TransitionRegistryV1, actual.Hash); err != nil {
+		if err := s.SetRegistryHead(boundedTestContext(t), TransitionRegistryV1, actual.Hash); err != nil {
 			t.Fatal(err)
 		}
 		dangling := hashref.SumSHA256([]byte("absent"))
-		if err := s.CompareAndSetRegistryHead(TransitionRegistryV1, actual.Hash, dangling); err == nil {
+		if err := s.CompareAndSetRegistryHead(boundedTestContext(t), TransitionRegistryV1, actual.Hash, dangling); err == nil {
 			t.Fatal("CompareAndSetRegistryHead accepted a dangling next object")
 		}
 		assertHead(t, s, TransitionRegistryV1, actual.Hash, true)
@@ -356,14 +355,14 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 		actual := put(t, s, "actual")
 		stale := put(t, s, "stale")
 		next := put(t, s, "next")
-		if err := s.SetRegistryHead(TransitionRegistryV1, actual.Hash); err != nil {
+		if err := s.SetRegistryHead(boundedTestContext(t), TransitionRegistryV1, actual.Hash); err != nil {
 			t.Fatal(err)
 		}
-		if err := s.CompareAndSetRegistryHead(TransitionRegistryV1, stale.Hash, next.Hash); err == nil {
+		if err := s.CompareAndSetRegistryHead(boundedTestContext(t), TransitionRegistryV1, stale.Hash, next.Hash); err == nil {
 			t.Fatal("stale CAS succeeded")
 		}
 		assertHead(t, s, TransitionRegistryV1, actual.Hash, true)
-		if err := s.CompareAndSetRegistryHead(TransitionRegistryV1, actual.Hash, hashref.SumSHA256([]byte("missing"))); err == nil {
+		if err := s.CompareAndSetRegistryHead(boundedTestContext(t), TransitionRegistryV1, actual.Hash, hashref.SumSHA256([]byte("missing"))); err == nil {
 			t.Fatal("dangling CAS succeeded")
 		}
 		assertHead(t, s, TransitionRegistryV1, actual.Hash, true)
@@ -374,15 +373,15 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 		epoch := put(t, s, "epoch")
 		transition := put(t, s, "transition")
 		epochNext := put(t, s, "epoch-next")
-		if err := s.SetRegistryHead(EpochRegistryV1, epoch.Hash); err != nil {
+		if err := s.SetRegistryHead(boundedTestContext(t), EpochRegistryV1, epoch.Hash); err != nil {
 			t.Fatal(err)
 		}
-		if err := s.CompareAndSetRegistryHead(TransitionRegistryV1, hashref.HashRef{}, transition.Hash); err != nil {
+		if err := s.CompareAndSetRegistryHead(boundedTestContext(t), TransitionRegistryV1, hashref.HashRef{}, transition.Hash); err != nil {
 			t.Fatal(err)
 		}
 		assertHead(t, s, EpochRegistryV1, epoch.Hash, true)
 		assertHead(t, s, TransitionRegistryV1, transition.Hash, true)
-		if err := s.CompareAndSetRegistryHead(EpochRegistryV1, epoch.Hash, epochNext.Hash); err != nil {
+		if err := s.CompareAndSetRegistryHead(boundedTestContext(t), EpochRegistryV1, epoch.Hash, epochNext.Hash); err != nil {
 			t.Fatal(err)
 		}
 		assertHead(t, s, EpochRegistryV1, epochNext.Hash, true)
@@ -404,7 +403,7 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 			go func(i int) {
 				defer wg.Done()
 				<-start
-				errs <- s.CompareAndSetRegistryHead(TransitionRegistryV1, hashref.HashRef{}, next[i].Hash)
+				errs <- s.CompareAndSetRegistryHead(boundedTestContext(t), TransitionRegistryV1, hashref.HashRef{}, next[i].Hash)
 			}(i)
 		}
 		close(start)
@@ -423,7 +422,7 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 		if wins != 1 || conflicts != racers-1 {
 			t.Fatalf("wins=%d conflicts=%d, want 1/%d", wins, conflicts, racers-1)
 		}
-		head, ok, err := s.GetRegistryHead(context.Background(), TransitionRegistryV1)
+		head, ok, err := s.GetRegistryHead(boundedTestContext(t), TransitionRegistryV1)
 		if err != nil || !ok {
 			t.Fatalf("final head: ok=%v err=%v", ok, err)
 		}
@@ -459,12 +458,12 @@ func TestVerificationCacheKeyIsExactlyThePair(t *testing.T) {
 		Verified:       true,
 		Detail:         "typecheck ok @ epoch 1",
 	}
-	if err := s.PutVerifyResult(base); err != nil {
+	if err := s.PutVerifyResult(boundedTestContext(t), base); err != nil {
 		t.Fatalf("PutVerifyResult base: %v", err)
 	}
 
 	// Exact pair hits.
-	got, ok, err := s.GetVerifyResult(context.Background(), fn, interp)
+	got, ok, err := s.GetVerifyResult(boundedTestContext(t), fn, interp)
 	if err != nil || !ok {
 		t.Fatalf("GetVerifyResult exact pair: ok=%v err=%v", ok, err)
 	}
@@ -473,11 +472,11 @@ func TestVerificationCacheKeyIsExactlyThePair(t *testing.T) {
 	}
 
 	// Different transitionFn — must miss (distinct key).
-	if _, ok, _ := s.GetVerifyResult(context.Background(), other, interp); ok {
+	if _, ok, _ := s.GetVerifyResult(boundedTestContext(t), other, interp); ok {
 		t.Fatal("different transitionFn hit the cache; key is not the exact pair")
 	}
 	// Different interpreter — must miss (distinct key).
-	if _, ok, _ := s.GetVerifyResult(context.Background(), fn, other); ok {
+	if _, ok, _ := s.GetVerifyResult(boundedTestContext(t), fn, other); ok {
 		t.Fatal("different interpreter hit the cache; key is not the exact pair")
 	}
 
@@ -485,7 +484,7 @@ func TestVerificationCacheKeyIsExactlyThePair(t *testing.T) {
 	epochChanged := base
 	epochChanged.SemanticsEpoch = 2
 	epochChanged.Detail = "typecheck ok @ epoch 2"
-	if err := s.PutVerifyResult(epochChanged); err != nil {
+	if err := s.PutVerifyResult(boundedTestContext(t), epochChanged); err != nil {
 		t.Fatalf("PutVerifyResult epoch-only change: %v", err)
 	}
 
@@ -493,7 +492,7 @@ func TestVerificationCacheKeyIsExactlyThePair(t *testing.T) {
 	if n := s.countCacheRows(t, fn, interp); n != 1 {
 		t.Fatalf("epoch-only change produced %d rows for the pair; want exactly 1", n)
 	}
-	after, ok, _ := s.GetVerifyResult(context.Background(), fn, interp)
+	after, ok, _ := s.GetVerifyResult(boundedTestContext(t), fn, interp)
 	if !ok {
 		t.Fatal("pair lookup miss after epoch-only change; the selected row was not preserved")
 	}

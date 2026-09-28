@@ -74,7 +74,7 @@ func invokeWithStallDiagnosis(
 			priorStoreHook(op)
 		}
 	}
-	_, _, invokeErr := session.Invoke(context.Background(), req, payload)
+	_, _, invokeErr := session.Invoke(boundedTestContext(t), req, payload)
 	return stallDiagnosis{
 		err:          invokeErr,
 		elapsed:      time.Since(start),

@@ -4,7 +4,6 @@
 package store
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -47,7 +46,7 @@ func snapshotStore(t *testing.T, s *Store) storeState {
 			t.Fatal(err)
 		}
 	}
-	head, ok, err := s.SelectedHead(context.Background())
+	head, ok, err := s.SelectedHead(boundedTestContext(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +56,7 @@ func snapshotStore(t *testing.T, s *Store) storeState {
 
 func assertRejectedUntouched(t *testing.T, s *Store, before storeState, c Commit, field string) {
 	t.Helper()
-	err := s.Commit(c)
+	err := s.Commit(boundedTestContext(t), c)
 	var invalid *InvalidRefError
 	if !errors.As(err, &invalid) {
 		t.Fatalf("Commit error = %T %v, want *InvalidRefError", err, err)
@@ -131,14 +130,14 @@ func TestCFB2ZeroWorldRefWedgeRejected(t *testing.T) {
 	// fired and the store could never accept another write. Asserting the bad
 	// commit was refused says nothing about that. Only a subsequent VALID commit
 	// succeeding proves the store is still live after a refusal.
-	if _, _, err := s.SelectedHead(context.Background()); err != nil {
+	if _, _, err := s.SelectedHead(boundedTestContext(t)); err != nil {
 		t.Fatalf("SelectedHead errored after a REFUSED commit: %v — that is the CLASS 3 wedge this fix exists to prevent", err)
 	}
 	good := cfb2Commit(genesis)
-	if err := s.Commit(good); err != nil {
+	if err := s.Commit(boundedTestContext(t), good); err != nil {
 		t.Fatalf("a valid Commit after a refused one failed: %v — refusal must leave the store able to accept writes", err)
 	}
-	ref, ok, err := s.SelectedHead(context.Background())
+	ref, ok, err := s.SelectedHead(boundedTestContext(t))
 	if err != nil || !ok {
 		t.Fatalf("SelectedHead after the valid commit: err=%v ok=%v", err, ok)
 	}

@@ -410,17 +410,16 @@ func insertJournalObjectTx(tx *sql.Tx, o Object) error {
 
 var appendIntentBodyHook = func(context.Context) {}
 
-// AppendIntent is AppendIntentContext without a caller lifetime; a
-// compatibility wrapper removed when its callers migrate (row 23 policy
-// tranche, M6b).
-func (s *Store) AppendIntent(id string, intent JournalIntent) (int64, hashref.HashRef, error) {
-	return s.AppendIntentContext(context.Background(), id, intent)
-}
-
-// AppendIntentContext durably appends a canonical intent and its index
+// AppendIntent durably appends a canonical intent and its index
 // atomically. ctx bounds acquisition and every statement up to the
 // cancellation cutoff (finishDurable); after it, see UncertainError.
-func (s *Store) AppendIntentContext(ctx context.Context, id string, intent JournalIntent) (_ int64, _ hashref.HashRef, err error) {
+func (s *Store) AppendIntent(ctx context.Context, id string, intent JournalIntent) (_ int64, _ hashref.HashRef, err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return 0, hashref.HashRef{}, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return 0, hashref.HashRef{}, err
+	}
 	defer func() { err = notCommitted(ctx, "append intent", err) }()
 	if err := validateIntent(id, intent); err != nil {
 		return 0, hashref.HashRef{}, err
@@ -469,18 +468,25 @@ func (s *Store) AppendIntentContext(ctx context.Context, id string, intent Journ
 // AppendNextEffectIntent atomically mints the next durable episode ordinal and
 // appends its canonical intent. The ordinal is never read outside this
 // transaction.
-func (s *Store) AppendNextEffectIntent(episodeID string, intent EffectIntent) (string, int64, error) {
+func (s *Store) AppendNextEffectIntent(ctx context.Context, episodeID string, intent EffectIntent) (id string, ordinal int64, err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return "", 0, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return "", 0, err
+	}
+	defer func() { err = notCommitted(ctx, "append effect intent", err) }()
 	if err := validateEffectIntent(episodeID, intent); err != nil {
 		return "", 0, err
 	}
-	tx, err := s.db.Begin()
+	tx, err := s.beginDurable(ctx, "append effect intent")
 	if err != nil {
 		return "", 0, fmt.Errorf("store: begin append effect intent: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
 	prefix := "effect:" + episodeID + ":"
-	rows, err := tx.Query(`SELECT invocation_id FROM journal
+	rows, err := tx.QueryContext(ctx, `SELECT invocation_id FROM journal
 		WHERE kind = 'intent' AND invocation_id >= ? AND invocation_id < ?`,
 		prefix, "effect:"+episodeID+";")
 	if err != nil {
@@ -522,8 +528,8 @@ func (s *Store) AppendNextEffectIntent(episodeID string, intent EffectIntent) (s
 	if maxOrdinal == math.MaxInt64 {
 		return "", 0, &OrdinalExhaustedError{EpisodeID: episodeID}
 	}
-	ordinal := maxOrdinal + 1
-	id := EffectInvocationID(episodeID, ordinal)
+	ordinal = maxOrdinal + 1
+	id = EffectInvocationID(episodeID, ordinal)
 	intent.InvocationID, intent.EpisodeID, intent.Ordinal = id, episodeID, ordinal
 	payload, err := encodeEffectIntent(intent)
 	if err != nil {
@@ -533,7 +539,7 @@ func (s *Store) AppendNextEffectIntent(episodeID string, intent EffectIntent) (s
 
 	var existingSeq int64
 	var existingText string
-	err = tx.QueryRow(`SELECT seq, object_ref FROM journal
+	err = tx.QueryRowContext(ctx, `SELECT seq, object_ref FROM journal
 		WHERE invocation_id = ? AND kind = 'intent'`, id).Scan(&existingSeq, &existingText)
 	if err == nil {
 		if existingText == object.Hash.String() {
@@ -551,11 +557,11 @@ func (s *Store) AppendNextEffectIntent(episodeID string, intent EffectIntent) (s
 	if err := insertJournalObjectTx(tx, object); err != nil {
 		return "", 0, err
 	}
-	if _, err := tx.Exec(`INSERT INTO journal(seq, kind, invocation_id, object_ref)
+	if _, err := tx.ExecContext(ctx, `INSERT INTO journal(seq, kind, invocation_id, object_ref)
 		VALUES (?, 'intent', ?, ?)`, seq, id, object.Hash.String()); err != nil {
 		return "", 0, fmt.Errorf("store: append effect intent %q: %w", id, err)
 	}
-	if err := tx.Commit(); err != nil {
+	if err := s.finishDurable(ctx, "append effect intent", tx); err != nil {
 		return "", 0, fmt.Errorf("store: commit effect intent: %w", err)
 	}
 	return id, ordinal, nil
@@ -564,7 +570,14 @@ func (s *Store) AppendNextEffectIntent(episodeID string, intent EffectIntent) (s
 // AppendClaimedEffectIntent atomically consumes approvalRef and appends the
 // next effect intent. A failed transaction makes neither the claim, journal
 // row, nor content-addressed intent object visible.
-func (s *Store) AppendClaimedEffectIntent(episodeID string, intent EffectIntent, approvalRef, requestRef hashref.HashRef) (string, int64, error) {
+func (s *Store) AppendClaimedEffectIntent(ctx context.Context, episodeID string, intent EffectIntent, approvalRef, requestRef hashref.HashRef) (id string, ordinal int64, err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return "", 0, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return "", 0, err
+	}
+	defer func() { err = notCommitted(ctx, "append claimed effect intent", err) }()
 	if err := validateEffectIntent(episodeID, intent); err != nil {
 		return "", 0, err
 	}
@@ -577,14 +590,14 @@ func (s *Store) AppendClaimedEffectIntent(episodeID string, intent EffectIntent,
 	if intent.RequestRef != requestRef {
 		return "", 0, &InvocationMismatchError{Field: "RequestRef", Want: requestRef.String(), Got: intent.RequestRef.String()}
 	}
-	tx, err := s.db.Begin()
+	tx, err := s.beginDurable(ctx, "append claimed effect intent")
 	if err != nil {
 		return "", 0, fmt.Errorf("store: begin claimed effect intent: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
 	var consumed int
-	if err := tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM approval_claims WHERE approval_ref = ?)`, approvalRef.String()).Scan(&consumed); err != nil {
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM approval_claims WHERE approval_ref = ?)`, approvalRef.String()).Scan(&consumed); err != nil {
 		return "", 0, fmt.Errorf("store: inspect approval claim: %w", err)
 	}
 	if consumed != 0 {
@@ -592,7 +605,7 @@ func (s *Store) AppendClaimedEffectIntent(episodeID string, intent EffectIntent,
 	}
 
 	prefix := "effect:" + episodeID + ":"
-	rows, err := tx.Query(`SELECT invocation_id FROM journal WHERE kind = 'intent' AND invocation_id >= ? AND invocation_id < ?`, prefix, "effect:"+episodeID+";")
+	rows, err := tx.QueryContext(ctx, `SELECT invocation_id FROM journal WHERE kind = 'intent' AND invocation_id >= ? AND invocation_id < ?`, prefix, "effect:"+episodeID+";")
 	if err != nil {
 		return "", 0, fmt.Errorf("store: scan claimed effect ordinals: %w", err)
 	}
@@ -619,8 +632,8 @@ func (s *Store) AppendClaimedEffectIntent(episodeID string, intent EffectIntent,
 	if maxOrdinal == math.MaxInt64 {
 		return "", 0, &OrdinalExhaustedError{EpisodeID: episodeID}
 	}
-	ordinal := maxOrdinal + 1
-	id := EffectInvocationID(episodeID, ordinal)
+	ordinal = maxOrdinal + 1
+	id = EffectInvocationID(episodeID, ordinal)
 	intent.InvocationID, intent.EpisodeID, intent.Ordinal = id, episodeID, ordinal
 	payload, err := encodeEffectIntent(intent)
 	if err != nil {
@@ -634,10 +647,10 @@ func (s *Store) AppendClaimedEffectIntent(episodeID string, intent EffectIntent,
 	if err := insertJournalObjectTx(tx, object); err != nil {
 		return "", 0, err
 	}
-	if _, err := tx.Exec(`INSERT INTO journal(seq, kind, invocation_id, object_ref) VALUES (?, 'intent', ?, ?)`, seq, id, object.Hash.String()); err != nil {
+	if _, err := tx.ExecContext(ctx, `INSERT INTO journal(seq, kind, invocation_id, object_ref) VALUES (?, 'intent', ?, ?)`, seq, id, object.Hash.String()); err != nil {
 		return "", 0, fmt.Errorf("store: append claimed effect intent %q: %w", id, err)
 	}
-	if _, err := tx.Exec(`INSERT INTO approval_claims(approval_ref, request_ref, invocation_id) VALUES (?, ?, ?)`, approvalRef.String(), requestRef.String(), id); err != nil {
+	if _, err := tx.ExecContext(ctx, `INSERT INTO approval_claims(approval_ref, request_ref, invocation_id) VALUES (?, ?, ?)`, approvalRef.String(), requestRef.String(), id); err != nil {
 		// The approval_ref PRIMARY KEY is the real single-use enforcement; the
 		// SELECT EXISTS above is only a fast path. If they disagree — another
 		// transaction claimed this approval between the two statements — the
@@ -659,7 +672,7 @@ func (s *Store) AppendClaimedEffectIntent(episodeID string, intent EffectIntent,
 		// otherwise receive an opaque constraint error and could retry an
 		// irreversible publish.
 		var claimed int
-		if queryErr := tx.QueryRow(
+		if queryErr := tx.QueryRowContext(ctx,
 			`SELECT EXISTS(SELECT 1 FROM approval_claims WHERE approval_ref = ?)`,
 			approvalRef.String(),
 		).Scan(&claimed); queryErr == nil && claimed != 0 {
@@ -667,14 +680,21 @@ func (s *Store) AppendClaimedEffectIntent(episodeID string, intent EffectIntent,
 		}
 		return "", 0, fmt.Errorf("store: claim approval %q: %w", approvalRef.String(), err)
 	}
-	if err := tx.Commit(); err != nil {
+	if err := s.finishDurable(ctx, "append claimed effect intent", tx); err != nil {
 		return "", 0, fmt.Errorf("store: commit claimed effect intent: %w", err)
 	}
 	return id, ordinal, nil
 }
 
 // AppendOutcome requires a durable intent and atomically appends one outcome.
-func (s *Store) AppendOutcome(id string, outcome JournalOutcome) (int64, hashref.HashRef, error) {
+func (s *Store) AppendOutcome(ctx context.Context, id string, outcome JournalOutcome) (seq int64, ref hashref.HashRef, err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return 0, hashref.HashRef{}, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return 0, hashref.HashRef{}, err
+	}
+	defer func() { err = notCommitted(ctx, "append outcome", err) }()
 	if id == "" || outcome.InvocationID != id {
 		return 0, hashref.HashRef{}, &InvocationMismatchError{
 			ID: id, Field: "InvocationID", Want: id, Got: outcome.InvocationID,
@@ -688,13 +708,13 @@ func (s *Store) AppendOutcome(id string, outcome JournalOutcome) (int64, hashref
 		return 0, hashref.HashRef{}, err
 	}
 	object := journalObject(JournalOutcomeV1, payload)
-	tx, err := s.db.Begin()
+	tx, err := s.beginDurable(ctx, "append outcome")
 	if err != nil {
 		return 0, hashref.HashRef{}, err
 	}
 	defer func() { _ = tx.Rollback() }()
 	var exists int
-	if err := tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM journal
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM journal
 		WHERE invocation_id = ? AND kind = 'intent')`, id).Scan(&exists); err != nil {
 		return 0, hashref.HashRef{}, fmt.Errorf("store: find outcome intent: %w", err)
 	}
@@ -704,32 +724,39 @@ func (s *Store) AppendOutcome(id string, outcome JournalOutcome) (int64, hashref
 		}
 	}
 	var existing int
-	if err := tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM journal
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM journal
 		WHERE invocation_id = ? AND kind = 'outcome')`, id).Scan(&existing); err != nil {
 		return 0, hashref.HashRef{}, err
 	}
 	if existing != 0 {
 		return 0, hashref.HashRef{}, &DuplicateInvocationError{ID: id, Kind: "outcome"}
 	}
-	seq, err := nextJournalSeqTx(tx)
+	seq, err = nextJournalSeqTx(tx)
 	if err != nil {
 		return 0, hashref.HashRef{}, err
 	}
 	if err := insertJournalObjectTx(tx, object); err != nil {
 		return 0, hashref.HashRef{}, err
 	}
-	if _, err := tx.Exec(`INSERT INTO journal(seq, kind, invocation_id, object_ref)
+	if _, err := tx.ExecContext(ctx, `INSERT INTO journal(seq, kind, invocation_id, object_ref)
 		VALUES (?, 'outcome', ?, ?)`, seq, id, object.Hash.String()); err != nil {
 		return 0, hashref.HashRef{}, fmt.Errorf("store: append outcome: %w", err)
 	}
-	if err := tx.Commit(); err != nil {
+	if err := s.finishDurable(ctx, "append outcome", tx); err != nil {
 		return 0, hashref.HashRef{}, err
 	}
 	return seq, object.Hash, nil
 }
 
 // AppendEffectOutcome requires a durable effect intent and appends one outcome.
-func (s *Store) AppendEffectOutcome(id string, outcome EffectOutcome) (int64, hashref.HashRef, error) {
+func (s *Store) AppendEffectOutcome(ctx context.Context, id string, outcome EffectOutcome) (seq int64, ref hashref.HashRef, err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return 0, hashref.HashRef{}, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return 0, hashref.HashRef{}, err
+	}
+	defer func() { err = notCommitted(ctx, "append effect outcome", err) }()
 	if !effectInvocationShape(id) || outcome.InvocationID != id {
 		return 0, hashref.HashRef{}, &InvocationMismatchError{
 			ID: id, Field: "InvocationID", Want: id, Got: outcome.InvocationID,
@@ -748,13 +775,13 @@ func (s *Store) AppendEffectOutcome(id string, outcome EffectOutcome) (int64, ha
 		return 0, hashref.HashRef{}, fmt.Errorf("store: encode effect outcome: %w", err)
 	}
 	object := journalObject(EffectOutcomeV1, payload)
-	tx, err := s.db.Begin()
+	tx, err := s.beginDurable(ctx, "append effect outcome")
 	if err != nil {
 		return 0, hashref.HashRef{}, fmt.Errorf("store: begin append effect outcome: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	var exists int
-	if err := tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM journal j
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM journal j
 		JOIN objects o ON o.hash_ref = j.object_ref
 		WHERE j.invocation_id = ? AND j.kind = 'intent'
 			AND o.semantic_id = ?)`, id, EffectIntentV1).Scan(&exists); err != nil {
@@ -766,25 +793,25 @@ func (s *Store) AppendEffectOutcome(id string, outcome EffectOutcome) (int64, ha
 		}
 	}
 	var existing int
-	if err := tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM journal
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM journal
 		WHERE invocation_id = ? AND kind = 'outcome')`, id).Scan(&existing); err != nil {
 		return 0, hashref.HashRef{}, err
 	}
 	if existing != 0 {
 		return 0, hashref.HashRef{}, &DuplicateInvocationError{ID: id, Kind: "outcome"}
 	}
-	seq, err := nextJournalSeqTx(tx)
+	seq, err = nextJournalSeqTx(tx)
 	if err != nil {
 		return 0, hashref.HashRef{}, err
 	}
 	if err := insertJournalObjectTx(tx, object); err != nil {
 		return 0, hashref.HashRef{}, err
 	}
-	if _, err := tx.Exec(`INSERT INTO journal(seq, kind, invocation_id, object_ref)
+	if _, err := tx.ExecContext(ctx, `INSERT INTO journal(seq, kind, invocation_id, object_ref)
 		VALUES (?, 'outcome', ?, ?)`, seq, id, object.Hash.String()); err != nil {
 		return 0, hashref.HashRef{}, fmt.Errorf("store: append effect outcome: %w", err)
 	}
-	if err := tx.Commit(); err != nil {
+	if err := s.finishDurable(ctx, "append effect outcome", tx); err != nil {
 		return 0, hashref.HashRef{}, fmt.Errorf("store: commit effect outcome: %w", err)
 	}
 	return seq, object.Hash, nil
@@ -825,15 +852,15 @@ func journalRowFor(ctx context.Context, q interface {
 	return journalRow{seq, ref, Object{ref, iface, semantic, provenance, payload}}, true, nil
 }
 
-// GetReceipt is GetReceiptContext without a caller lifetime; a compatibility
-// wrapper removed when its callers migrate (row 23 policy tranche, M6b).
-func (s *Store) GetReceipt(id string) (Receipt, bool, error) {
-	return s.GetReceiptContext(context.Background(), id)
-}
-
-// GetReceiptContext mirrors receiptState and never reports not-started with
+// GetReceipt mirrors receiptState and never reports not-started with
 // an intent. ctx bounds both connection acquisitions and both reads.
-func (s *Store) GetReceiptContext(ctx context.Context, id string) (Receipt, bool, error) {
+func (s *Store) GetReceipt(ctx context.Context, id string) (Receipt, bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return Receipt{}, false, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return Receipt{}, false, err
+	}
 	if strings.HasPrefix(id, "effect:") {
 		return Receipt{}, false, &InvocationMismatchError{
 			ID: id, Field: "InvocationID", Want: "non-effect namespace", Got: id,
@@ -872,14 +899,18 @@ func (s *Store) GetReceiptContext(ctx context.Context, id string) (Receipt, bool
 }
 
 // GetEffectReceipt mirrors the three-state receipt law for effect payloads.
-func (s *Store) GetEffectReceipt(id string) (Receipt, bool, error) {
+func (s *Store) GetEffectReceipt(ctx context.Context, id string) (Receipt, bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return Receipt{}, false, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return Receipt{}, false, err
+	}
 	if !effectInvocationShape(id) {
 		return Receipt{}, false, &InvocationMismatchError{
 			ID: id, Field: "InvocationID", Want: "effect:<episodeID>:<ordinal>", Got: id,
 		}
 	}
-	// Compatibility root until the effect journal migrates (row 23 policy M6b).
-	ctx := context.Background()
 	intentRow, hasIntent, err := journalRowFor(ctx, s.db, id, "intent")
 	if err != nil {
 		return Receipt{}, false, err
@@ -928,7 +959,13 @@ func (s *Store) GetEffectReceipt(id string) (Receipt, bool, error) {
 
 // PendingIntents returns oldest pending intents using seq keyset pagination.
 // The optional fromIndex cursor is exclusive; omitting it starts before seq 1.
-func (s *Store) PendingIntents(limit int, fromIndex ...int64) ([]PendingIntent, error) {
+func (s *Store) PendingIntents(ctx context.Context, limit int, fromIndex ...int64) ([]PendingIntent, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return nil, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
 	if limit < 1 || limit > MaxPendingIntentsPage {
 		return nil, &InvalidLimitError{Op: "PendingIntents", Limit: limit, Max: MaxPendingIntentsPage}
 	}
@@ -939,7 +976,7 @@ func (s *Store) PendingIntents(limit int, fromIndex ...int64) ([]PendingIntent, 
 	if len(fromIndex) == 1 {
 		after = fromIndex[0]
 	}
-	rows, err := s.db.Query(`SELECT j.seq, j.invocation_id, j.object_ref, o.payload
+	rows, err := s.db.QueryContext(ctx, `SELECT j.seq, j.invocation_id, j.object_ref, o.payload
 		FROM journal j JOIN objects o ON o.hash_ref = j.object_ref
 		WHERE j.kind = 'intent' AND j.seq > ?
 		AND o.semantic_id = 'world/journal-intent/v1'
@@ -976,7 +1013,13 @@ func (s *Store) PendingIntents(limit int, fromIndex ...int64) ([]PendingIntent, 
 
 // PendingEffectIntents returns oldest pending effect intents using keyset
 // pagination. The optional cursor is exclusive.
-func (s *Store) PendingEffectIntents(limit int, fromIndex ...int64) ([]PendingEffectIntent, error) {
+func (s *Store) PendingEffectIntents(ctx context.Context, limit int, fromIndex ...int64) ([]PendingEffectIntent, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return nil, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
 	if limit < 1 || limit > MaxPendingIntentsPage {
 		return nil, &InvalidLimitError{Op: "PendingEffectIntents", Limit: limit, Max: MaxPendingIntentsPage}
 	}
@@ -987,7 +1030,7 @@ func (s *Store) PendingEffectIntents(limit int, fromIndex ...int64) ([]PendingEf
 	if len(fromIndex) == 1 {
 		after = fromIndex[0]
 	}
-	rows, err := s.db.Query(`SELECT j.seq, j.invocation_id, j.object_ref, o.payload
+	rows, err := s.db.QueryContext(ctx, `SELECT j.seq, j.invocation_id, j.object_ref, o.payload
 		FROM journal j JOIN objects o ON o.hash_ref = j.object_ref
 		WHERE j.kind = 'intent' AND j.seq > ?
 		AND o.semantic_id = 'world/effect-intent/v1'

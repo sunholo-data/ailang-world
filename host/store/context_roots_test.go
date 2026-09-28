@@ -18,25 +18,39 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/cli.go|get|Background":                                 1,
 	"cmd/ailang-worldd/cli.go|execute|Background":                             1,
 	"cmd/ailang-worldd/cli.go|executeWithAuth|Background":                     1,
-	"cmd/ailang-worldd/main.go|runServe|Background":                           1,
+	"cmd/ailang-worldd/signal_context.go|serveSignalContext|Background":       1,
 	"cmd/ailang-worldd/session.go|runSessionMint|Background":                  1,
 	"cmd/ailang-worldd/session.go|runSessionRevoke|Background":                1,
 	"cmd/world-publish/main.go|runApprove|Background":                         1,
 	"cmd/world-publish/main.go|runPublish|Background":                         1,
 	"cmd/world-publish/main.go|runReconcile|Background":                       1,
+	"cmd/world-publish/reconcile_probe.go|reconcileReadOnlyProbe|Background":  1,
 	"cmd/world-publish/transitions.go|runTransitions|Background":              1,
 	"host/archive/archive.go|probeVersion|Background":                         1,
 	"host/capsule/capsule.go|Run|Background":                                  1,
 	"host/daemon/daemon.go|drain|Background":                                  1,
 	"host/replay/replay.go|runPinnedTransition|Background":                    1,
-	"host/store/store.go|Commit|Background":                                   1,
 	"host/store/lookup_index.go|provisionLookupIndex|Background":              1,
 	"host/store/reference_index.go|provisionReferenceIndexes|Background":      1,
 	"host/store/reference_index.go|verifyReadOnlyReferenceIndexes|Background": 1,
-	// Row 23 policy tranche M1 compatibility wrappers; removed by its M6b.
-	"host/store/journal.go|AppendIntent|Background":     1,
-	"host/store/journal.go|GetReceipt|Background":       1,
-	"host/store/journal.go|GetEffectReceipt|Background": 1,
+}
+
+// These files create contexts for process or client lifetime and make no Store
+// call. Their roots are still counted above.
+var nonStoreReachingRoots = map[string]bool{
+	"cmd/ailang-worldd/cli.go":             true,
+	"cmd/ailang-worldd/signal_context.go":  true,
+	"cmd/world-publish/reconcile_probe.go": true,
+	"host/capsule/capsule.go":              true,
+}
+
+func isContextDeadlineConstructor(expr ast.Expr, alias string) bool {
+	sel, ok := expr.(*ast.SelectorExpr)
+	if !ok || (sel.Sel.Name != "WithTimeout" && sel.Sel.Name != "WithDeadline") {
+		return false
+	}
+	id, ok := sel.X.(*ast.Ident)
+	return ok && id.Name == alias
 }
 
 func TestProductionContextRoots(t *testing.T) {
@@ -82,21 +96,39 @@ func TestProductionContextRoots(t *testing.T) {
 				if fn, ok := d.(*ast.FuncDecl); ok {
 					owner = fn.Name.Name
 				}
-				ast.Inspect(d, func(n ast.Node) bool {
+				var visit func(ast.Node, ast.Node)
+				visit = func(n ast.Node, parent ast.Node) {
+					if n == nil {
+						return
+					}
+					if call, ok := n.(*ast.CallExpr); ok && !nonStoreReachingRoots[rel] {
+						if root, ok := call.Fun.(*ast.SelectorExpr); ok && root.Sel.Name == "Background" {
+							if id, ok := root.X.(*ast.Ident); ok && id.Name == alias {
+								outer, ok := parent.(*ast.CallExpr)
+								if !ok || len(outer.Args) == 0 || outer.Args[0] != call || !isContextDeadlineConstructor(outer.Fun, alias) {
+									t.Errorf("%s|%s: Background must directly feed WithTimeout/WithDeadline", rel, owner)
+								}
+							}
+						}
+					}
 					x, ok := n.(*ast.SelectorExpr)
-					if !ok {
+					if ok {
+						if id, ok := x.X.(*ast.Ident); ok && id.Name == alias {
+							switch x.Sel.Name {
+							case "Background", "TODO", "WithoutCancel":
+								got[rel+"|"+owner+"|"+x.Sel.Name]++
+							}
+						}
+					}
+					ast.Inspect(n, func(child ast.Node) bool {
+						if child != n {
+							visit(child, n)
+							return false
+						}
 						return true
-					}
-					id, ok := x.X.(*ast.Ident)
-					if !ok || id.Name != alias {
-						return true
-					}
-					switch x.Sel.Name {
-					case "Background", "TODO", "WithoutCancel":
-						got[rel+"|"+owner+"|"+x.Sel.Name]++
-					}
-					return true
-				})
+					})
+				}
+				visit(d, nil)
 			}
 			return nil
 		})
@@ -138,7 +170,7 @@ func TestProductionGoSurface(t *testing.T) {
 			return err
 		}
 		if info.IsDir() {
-			if info.Name() == ".git" || info.Name() == "vendor" {
+			if info.Name() == ".git" || info.Name() == "vendor" || info.Name() == ".snap" {
 				return filepath.SkipDir
 			}
 			return nil

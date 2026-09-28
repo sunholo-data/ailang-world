@@ -155,7 +155,9 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	if *outPath == "" {
 		out = stdout
 	}
-	rawToken, credentialID, row, err := authority.Mint(context.Background(), st, *episode, grants, *ttl, now, out)
+	mintCtx, cancelMint := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancelMint()
+	rawToken, credentialID, row, err := authority.Mint(mintCtx, st, *episode, grants, *ttl, now, out)
 	if err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd session mint: %v\n", err)
 		return exitFatal
@@ -215,7 +217,9 @@ func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
 	}
 	defer func() { _ = st.Close() }()
 
-	if err := authority.Revoke(context.Background(), st, credID); err != nil {
+	revokeCtx, cancelRevoke := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancelRevoke()
+	if err := authority.Revoke(revokeCtx, st, credID); err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
 		return exitFatal
 	}

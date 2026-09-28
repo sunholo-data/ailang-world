@@ -278,7 +278,7 @@ func reconcileCfg(b *fakeBucket) ReconcileConfig {
 
 func mustReconcile(t *testing.T, cfg ReconcileConfig) ReconcileReceipt {
 	t.Helper()
-	receipt, err := reconcileLoopback(context.Background(), cfg)
+	receipt, err := reconcileLoopback(boundedTestContext(t), cfg)
 	if err != nil {
 		t.Fatalf("reconcileLoopback: %v", err)
 	}
@@ -341,7 +341,7 @@ func (h *countingNetworkHandler) String() string {
 func (h *countingNetworkHandler) provePositiveControl(t *testing.T) {
 	t.Helper()
 	beforeCalls, beforeRequests := h.calls.Load(), h.bucket.count()
-	if _, err := h.Execute(context.Background(), EffectRequest{
+	if _, err := h.Execute(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish,
 	}, nil); err != nil {
 		t.Fatalf("positive control: the instrument could not be driven at all: %v", err)
@@ -375,7 +375,7 @@ func TestRecoveryReportsTheIndeterminatePublishWithoutDispatchingAnyHandler(t *t
 	})
 
 	session, _ := publishSession(t, base.Store, "ac13-first", publishGrant(fixture.scope), handler)
-	_, _, err := session.Invoke(context.Background(), EffectRequest{
+	_, _, err := session.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload)
 	var indeterminate *IndeterminateEffectError
@@ -390,7 +390,7 @@ func TestRecoveryReportsTheIndeterminatePublishWithoutDispatchingAnyHandler(t *t
 	// `registries ...Registry` parameter, which exists for exactly this reason:
 	// it makes the no-dispatch policy observable at the production boundary.
 	instrument := newCountingNetworkHandler(t)
-	findings, err := Recover(reopened.Store, Registry{
+	findings, err := Recover(boundedTestContext(t), reopened.Store, Registry{
 		EffectRegistryPublish: instrument,
 		"FS.Write":            instrument,
 	})
@@ -657,7 +657,7 @@ func TestNotPublishedDoesNotReAuthorizeTheConsumedApproval(t *testing.T) {
 		ExecTimeout:     20 * time.Second,
 	})
 	first, _ := publishSession(t, base.Store, "ac16-first", publishGrant(fixture.scope), handler)
-	_, _, err := first.Invoke(context.Background(), EffectRequest{
+	_, _, err := first.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 50,
 	}, fixture.payload)
 	var indeterminate *IndeterminateEffectError
@@ -685,7 +685,7 @@ func TestNotPublishedDoesNotReAuthorizeTheConsumedApproval(t *testing.T) {
 	if got := second.grants[0].Budget; got != PublishCost {
 		t.Fatalf("the retry session's budget = %d, want a FRESH %d", got, PublishCost)
 	}
-	_, _, retryErr := second.Invoke(context.Background(), EffectRequest{
+	_, _, retryErr := second.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fixture.scope, Cost: PublishCost, Now: 60,
 	}, fixture.payload)
 	if !errors.Is(retryErr, store.ErrApprovalAlreadyConsumed) {
@@ -725,7 +725,7 @@ func TestNotPublishedDoesNotReAuthorizeTheConsumedApproval(t *testing.T) {
 		t.Fatal("AC16 positive control: the 'new' approval is the same object as the burnt one")
 	}
 	third, _ := publishSession(t, base.Store, "ac16-reapproved", publishGrant(fresh.scope), freshHandler)
-	_, _, freshErr := third.Invoke(context.Background(), EffectRequest{
+	_, _, freshErr := third.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectRegistryPublish, Scope: fresh.scope, Cost: PublishCost, Now: 80,
 	}, fresh.payload)
 	if errors.Is(freshErr, store.ErrApprovalAlreadyConsumed) {
@@ -1163,7 +1163,7 @@ func TestReplayReturnsTheRecordedPublishResultWithZeroNetworkCalls(t *testing.T)
 	}
 
 	live, _ := publishSession(t, base.Store, "ac17-live", publishGrant(fixture.scope), handler)
-	liveResult, liveRef, err := live.Invoke(context.Background(), request, fixture.payload)
+	liveResult, liveRef, err := live.Invoke(boundedTestContext(t), request, fixture.payload)
 	if err != nil {
 		t.Fatalf("AC17 setup: live publish: %v", err)
 	}
@@ -1191,7 +1191,7 @@ func TestReplayReturnsTheRecordedPublishResultWithZeroNetworkCalls(t *testing.T)
 		Registry{EffectRegistryPublish: instrument},
 		[]hashref.HashRef{liveRef})
 
-	replayed, replayRef, err := replaySession.Invoke(context.Background(), request, fixture.payload)
+	replayed, replayRef, err := replaySession.Invoke(boundedTestContext(t), request, fixture.payload)
 	if err != nil {
 		t.Fatalf("AC17: replay Invoke: %v", err)
 	}
@@ -1364,7 +1364,7 @@ func TestReconcileRefusalSetWithAPassingPositiveControl(t *testing.T) {
 		t.Run(tc.branch, func(t *testing.T) {
 			cfg := valid()
 			tc.mutate(&cfg)
-			receipt, err := reconcileLoopback(context.Background(), cfg)
+			receipt, err := reconcileLoopback(boundedTestContext(t), cfg)
 			if err == nil {
 				t.Fatalf("%s: returned receipt %s, want a refusal", tc.branch, receipt)
 			}
@@ -1393,7 +1393,7 @@ func TestReconcileRefusalSetWithAPassingPositiveControl(t *testing.T) {
 		t.Run(tc.branch, func(t *testing.T) {
 			cfg := valid()
 			cfg.RegistryOrigin = tc.origin
-			receipt, err := ReconcileRegistryPublish(context.Background(), cfg)
+			receipt, err := ReconcileRegistryPublish(boundedTestContext(t), cfg)
 			if err == nil {
 				t.Fatalf("%s: returned receipt %s, want a refusal", tc.branch, receipt)
 			}
@@ -1420,7 +1420,7 @@ func TestReconcileCancellationReportsTheRefusalItReached(t *testing.T) {
 		status: http.StatusNotFound, body: []byte(validatorPlainText404),
 	})
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	defer cancel()
 	target := targetKey()
 	bucket.onGet = func(path string) {

@@ -54,6 +54,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
@@ -258,15 +259,15 @@ func runApprove(opts options, in io.Reader, out, errw io.Writer, env environment
 	if serr := requireAttendedOperator(in, out, env.getenv, env.probe()); serr != nil {
 		return report(errw, serr)
 	}
+	activeCtx, cancelActive := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelActive()
 	db, err := store.Open(opts.store)
 	if err != nil {
 		return report(errw, storeOpenFailed(opts.store, err))
 	}
 	defer func() { _ = db.Close() }()
 
-	// Named CLI root: preserve the former mint-internal background lifetime.
-	// A finite active-I/O deadline is the row-23 policy decision, not plumbing.
-	ref, err := broker.MintAttendedApproval(context.Background(), db, plan)
+	ref, err := broker.MintAttendedApproval(activeCtx, db, plan)
 	if err != nil {
 		fmt.Fprintln(errw, "world-publish: mint approval: "+err.Error())
 		return exitError
@@ -352,6 +353,8 @@ func runPublish(opts options, in io.Reader, out, errw io.Writer, env environment
 	if serr := requireAttendedOperator(in, out, env.getenv, env.probe()); serr != nil {
 		return report(errw, serr)
 	}
+	publishCtx, cancelPublish := context.WithTimeout(context.Background(), 36*time.Second)
+	defer cancelPublish()
 	if opts.dryRun {
 		// --dry-run is the attended REHEARSAL: every fence above, then a full
 		// statement of what --live would do, and no request of any kind. It is
@@ -379,7 +382,7 @@ func runPublish(opts options, in io.Reader, out, errw io.Writer, env environment
 
 	fmt.Fprintf(out, "publishing %s@%s to %s\n", plan.Identity.Vendor+"/"+plan.Identity.Name,
 		plan.Identity.Version, plan.Identity.RegistryOrigin)
-	result, invokeErr := broker.InvokeAttendedPublish(context.Background(), db, handler, plan, approvalRef)
+	result, invokeErr := broker.InvokeAttendedPublish(publishCtx, db, handler, plan, approvalRef)
 	return reportPublishResult(out, errw, result, invokeErr)
 }
 
@@ -461,7 +464,9 @@ func runReconcile(opts options, out, errw io.Writer) int {
 	}
 	defer func() { _ = db.Close() }()
 
-	pending, err := db.PendingEffectIntents(reconcileScanLimit)
+	scanCtx, cancelScan := context.WithTimeout(context.Background(), 3*time.Second)
+	pending, err := db.PendingEffectIntents(scanCtx, reconcileScanLimit)
+	cancelScan()
 	if err != nil {
 		fmt.Fprintln(errw, "world-publish: scan pending effect intents: "+err.Error())
 		return exitError
@@ -480,7 +485,7 @@ func runReconcile(opts options, out, errw io.Writer) int {
 		fmt.Fprintln(out, "no probe issued (--probe requests the read-only metadata GETs)")
 		return exitOK
 	}
-	receipt, err := broker.ReconcileRegistryPublish(context.Background(), reconcileConfigFor(opts, packet))
+	receipt, err := reconcileReadOnlyProbe(opts, packet)
 	if err != nil {
 		fmt.Fprintln(errw, "world-publish: reconcile: "+err.Error())
 		return exitError

@@ -51,7 +51,7 @@ func TestGuardedSessionRefusesUndeclaredEffect(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			_, _, err = bound.Request(context.Background(), tc.req, nil)
+			_, _, err = bound.Request(boundedTestContext(t), tc.req, nil)
 			var undeclared *broker.UndeclaredEffectError
 			if !errors.As(err, &undeclared) || err.Error() != tc.want {
 				t.Fatalf("Request error = %v, want *UndeclaredEffectError %q", err, tc.want)
@@ -136,7 +136,7 @@ func TestGuardedSessionStillRequiresBrokerGrant(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, _, err = bound.Request(context.Background(), broker.EffectRequest{Effect: "read", Scope: "world", Cost: 2, Now: 1}, nil)
+		_, _, err = bound.Request(boundedTestContext(t), broker.EffectRequest{Effect: "read", Scope: "world", Cost: 2, Now: 1}, nil)
 		var denial *broker.DenialError
 		if !errors.As(err, &denial) || denial.Decision.Label != broker.LabelDeniedBudget {
 			t.Fatalf("Request error = %v, want *DenialError label %q", err, broker.LabelDeniedBudget)
@@ -152,7 +152,7 @@ func TestGuardedSessionStillRequiresBrokerGrant(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		got, _, err := bound.Request(context.Background(), broker.EffectRequest{Effect: "read", Scope: "world", Cost: 1, Now: 1}, nil)
+		got, _, err := bound.Request(boundedTestContext(t), broker.EffectRequest{Effect: "read", Scope: "world", Cost: 1, Now: 1}, nil)
 		if err != nil || string(got) != "ok" || count != 1 {
 			t.Fatalf("Request = %q, %v; handler count=%d, want ok/<nil>/1", got, err, count)
 		}
@@ -276,11 +276,11 @@ func TestTwoSessionExactOrderedSets(t *testing.T) {
 	sessionA := broker.NewSession(openTransitionStore(t), "allowed-a", []broker.Capability{{Effect: "alpha", Scope: "world", ExpiresAt: 10, Budget: 5}}, nil)
 	sessionB := broker.NewSession(openTransitionStore(t), "allowed-b", []broker.Capability{{Effect: "beta", Scope: "world", ExpiresAt: 10, Budget: 5}}, nil)
 
-	qa, err := NewRequest(context.Background(), &snapshotReader{snap: snap}, sessionA, 1)
+	qa, err := NewRequest(boundedTestContext(t), &snapshotReader{snap: snap}, sessionA, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	qb, err := NewRequest(context.Background(), &snapshotReader{snap: snap}, sessionB, 1)
+	qb, err := NewRequest(boundedTestContext(t), &snapshotReader{snap: snap}, sessionB, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -311,7 +311,7 @@ func TestTwoSessionExactOrderedSets(t *testing.T) {
 			{Effect: "alpha", Scope: "world", ExpiresAt: 10, Budget: 5},
 			{Effect: "beta", Scope: "world", ExpiresAt: 10, Budget: 5},
 		}, nil)
-		q, err := NewRequest(context.Background(), &snapshotReader{snap: snap}, both, 1)
+		q, err := NewRequest(boundedTestContext(t), &snapshotReader{snap: snap}, both, 1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -327,7 +327,7 @@ func TestNextReadObservesNewHeadWithoutRestart(t *testing.T) {
 	current := validRevision(d1)
 	head1 := seedRevision(t, s, current)
 	r := NewReader(s)
-	first, err := NewRequest(context.Background(), r, broker.NewSession(s, "head-one", nil, nil), 1)
+	first, err := NewRequest(boundedTestContext(t), r, broker.NewSession(s, "head-one", nil, nil), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -336,11 +336,11 @@ func TestNextReadObservesNewHeadWithoutRestart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	head2, err := r.Publish(context.Background(), head1, next)
+	head2, err := r.Publish(boundedTestContext(t), head1, next)
 	if err != nil {
 		t.Fatal(err)
 	}
-	second, err := NewRequest(context.Background(), r, broker.NewSession(s, "head-two", nil, nil), 1)
+	second, err := NewRequest(boundedTestContext(t), r, broker.NewSession(s, "head-two", nil, nil), 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -367,7 +367,7 @@ func TestSingleRequestKeepsCapturedEpochs(t *testing.T) {
 			"alpha": broker.HandlerFunc(func(context.Context, broker.EffectRequest, []byte) ([]byte, error) { handlerCount++; return nil, nil }),
 		})
 		caps := &countingCapabilities{source: session}
-		q, err := NewRequest(context.Background(), r, caps, 1)
+		q, err := NewRequest(boundedTestContext(t), r, caps, 1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -376,7 +376,7 @@ func TestSingleRequestKeepsCapturedEpochs(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, _, err := invoker.Request(context.Background(), broker.EffectRequest{Effect: "alpha", Scope: "world", Cost: 1, Now: 1}, nil); err != nil {
+		if _, _, err := invoker.Request(boundedTestContext(t), broker.EffectRequest{Effect: "alpha", Scope: "world", Cost: 1, Now: 1}, nil); err != nil {
 			t.Fatal(err)
 		}
 		d2 := descriptorWithAccess("tools.beta", "beta")
@@ -384,7 +384,7 @@ func TestSingleRequestKeepsCapturedEpochs(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err := r.Publish(context.Background(), head1, next); err != nil {
+		if _, err := r.Publish(boundedTestContext(t), head1, next); err != nil {
 			t.Fatal(err)
 		}
 		for i := 0; i < 2; i++ {
@@ -405,7 +405,7 @@ func TestSingleRequestKeepsCapturedEpochs(t *testing.T) {
 		r := &snapshotReader{err: injected}
 		count := 0
 		s := transitionSession(t, "read-error", nil, &count)
-		_, err := NewRequest(context.Background(), r, s, 1)
+		_, err := NewRequest(boundedTestContext(t), r, s, 1)
 		want := "transition registry: construct request: injected request read failure"
 		if !errors.Is(err, injected) || err.Error() != want || r.reads != 1 {
 			t.Fatalf("NewRequest error=%v reads=%d, want wrapped %q and 1", err, r.reads, want)
@@ -462,8 +462,8 @@ func (f *fakeObjectStore) clone() *fakeObjectStore {
 	}
 }
 
-func (f *fakeObjectStore) PutObject(store.Object) error { return f.putErr }
-func (f *fakeObjectStore) CompareAndSetRegistryHead(string, hashref.HashRef, hashref.HashRef) error {
+func (f *fakeObjectStore) PutObject(context.Context, store.Object) error { return f.putErr }
+func (f *fakeObjectStore) CompareAndSetRegistryHead(context.Context, string, hashref.HashRef, hashref.HashRef) error {
 	return f.casErr
 }
 
@@ -484,11 +484,11 @@ func fakeWithRevision(t *testing.T, r Revision) *fakeObjectStore {
 func TestReadSnapshotReadsHeadOnce(t *testing.T) {
 	f := fakeWithRevision(t, validRevision(validDescriptor()))
 	r := NewReader(f)
-	first, err := r.ReadSnapshot(context.Background())
+	first, err := r.ReadSnapshot(boundedTestContext(t))
 	if err != nil {
 		t.Fatal(err)
 	}
-	second, err := r.ReadSnapshot(context.Background())
+	second, err := r.ReadSnapshot(boundedTestContext(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -506,7 +506,7 @@ func TestSnapshotIsEagerAndCopyIsolated(t *testing.T) {
 	d.OutputSchema = []byte(`{"out":2}`)
 	f := fakeWithRevision(t, validRevision(d))
 	r := NewReader(f)
-	s, err := r.ReadSnapshot(context.Background())
+	s, err := r.ReadSnapshot(boundedTestContext(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -530,12 +530,12 @@ func TestSnapshotIsEagerAndCopyIsolated(t *testing.T) {
 	}
 	// Cache returns a fresh deep copy without touching the now-corrupt store bytes.
 	s.entries[0].InputSchema[2] = 'Q'
-	cached, err := r.ReadSnapshot(context.Background())
+	cached, err := r.ReadSnapshot(boundedTestContext(t))
 	if err != nil || string(cached.List()[0].InputSchema) != `{"in":1}` {
 		t.Fatalf("cache copy changed: snapshot=%+v err=%v", cached.List(), err)
 	}
 	cached.entries[0].InputSchema[2] = 'R'
-	third, err := r.ReadSnapshot(context.Background())
+	third, err := r.ReadSnapshot(boundedTestContext(t))
 	if err != nil || string(third.List()[0].InputSchema) != `{"in":1}` {
 		t.Fatalf("cache result aliases cache: snapshot=%+v err=%v", third.List(), err)
 	}
@@ -590,7 +590,7 @@ func TestReadSnapshotRefusals(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := NewReader(tc.make()).ReadSnapshot(context.Background())
+			_, err := NewReader(tc.make()).ReadSnapshot(boundedTestContext(t))
 			if err == nil {
 				t.Fatal("invalid snapshot was accepted")
 			}
@@ -614,10 +614,10 @@ func openTransitionStore(t *testing.T) *store.Store {
 func seedRevision(t *testing.T, s *store.Store, r Revision) hashref.HashRef {
 	t.Helper()
 	o := storedRevision(t, r)
-	if err := s.PutObject(o); err != nil {
+	if err := s.PutObject(boundedTestContext(t), o); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.CompareAndSetRegistryHead(store.TransitionRegistryV1, hashref.HashRef{}, o.Hash); err != nil {
+	if err := s.CompareAndSetRegistryHead(boundedTestContext(t), store.TransitionRegistryV1, hashref.HashRef{}, o.Hash); err != nil {
 		t.Fatal(err)
 	}
 	return o.Hash
@@ -640,15 +640,15 @@ func TestPublishCASConflictPreservesWinner(t *testing.T) {
 		t.Fatal(err)
 	}
 	p := NewReader(s)
-	winner, err := p.Publish(context.Background(), expected, nextA)
+	winner, err := p.Publish(boundedTestContext(t), expected, nextA)
 	if err != nil {
 		t.Fatal(err)
 	}
-	orphan, err := p.Publish(context.Background(), expected, nextB)
+	orphan, err := p.Publish(boundedTestContext(t), expected, nextB)
 	if err == nil || !store.IsRegistryCASConflict(err) {
 		t.Fatalf("stale publication error = %v, want typed CAS conflict", err)
 	}
-	head, ok, err := s.GetRegistryHead(context.Background(), store.TransitionRegistryV1)
+	head, ok, err := s.GetRegistryHead(boundedTestContext(t), store.TransitionRegistryV1)
 	if err != nil || !ok || head != winner {
 		t.Fatalf("winner was not preserved: head=%q ok=%v err=%v", head, ok, err)
 	}
@@ -657,7 +657,7 @@ func TestPublishCASConflictPreservesWinner(t *testing.T) {
 	if orphan != (hashref.HashRef{}) {
 		t.Fatalf("failed publish returned ref %q", orphan)
 	}
-	if _, ok, err := s.GetObject(context.Background(), loserRef); err != nil || !ok {
+	if _, ok, err := s.GetObject(boundedTestContext(t), loserRef); err != nil || !ok {
 		t.Fatalf("CAS orphan was not preserved: ok=%v err=%v", ok, err)
 	}
 }
@@ -678,7 +678,7 @@ func TestConcurrentPublishHasOneWinner(t *testing.T) {
 			defer done.Done()
 			ready.Done()
 			<-start
-			_, err := p.Publish(context.Background(), hashref.HashRef{}, next)
+			_, err := p.Publish(boundedTestContext(t), hashref.HashRef{}, next)
 			errs <- err
 		}()
 	}
@@ -768,7 +768,7 @@ func TestPublishRefusals(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			f, expected, next := tc.make()
-			_, err := NewReader(f).Publish(context.Background(), expected, next)
+			_, err := NewReader(f).Publish(boundedTestContext(t), expected, next)
 			if err == nil {
 				t.Fatal("invalid publication was accepted")
 			}
