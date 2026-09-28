@@ -15,9 +15,9 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const frozenFutureSchemaVersion = 4
+const frozenFutureSchemaVersion = 5
 
-const expectedCurrentSchemaVersion = 3
+const expectedCurrentSchemaVersion = 4
 
 // schemaV1SQL is copied verbatim from ad619d8:host/store/schema.sql. The
 // artifact SHA-256 is 13893a296c394cc2c5b3997e8fff729467dc9ac83a03b458796634aa52fb5436.
@@ -137,6 +137,18 @@ CREATE TABLE IF NOT EXISTS session_credentials (
 );
 `
 
+// schemaV4SQL is an independently authored ledger entry: the frozen v3 schema
+// plus the reviewed v4 commit-membership DDL (w-store-commit-object-membership
+// §3.1). It must never reference schemaSQL.
+const schemaV4SQL = schemaV3SQL + `
+
+CREATE TABLE IF NOT EXISTS commit_objects (
+    object_ref  TEXT    NOT NULL REFERENCES objects(hash_ref),
+    entry_index INTEGER NOT NULL REFERENCES log_entries(entry_index),
+    PRIMARY KEY (object_ref, entry_index)
+) WITHOUT ROWID;
+`
+
 const applicationObjectCountSQL = `SELECT count(*) FROM sqlite_master WHERE name NOT LIKE 'sqlite\_%' ESCAPE '\'`
 
 func rawDB(t *testing.T, path string) *sql.DB {
@@ -199,9 +211,9 @@ func TestSchemaVersionErrorMessages(t *testing.T) {
 		err  error
 		want string
 	}{
-		{&LegacySchemaVersionError{Path: "x", Found: 1, Current: 3}, `store: schema version legacy: "x" has user_version 1 with application schema; binary requires 3; refusing to modify`},
-		{&FutureSchemaVersionError{Path: "x", Found: 4, Current: 3}, `store: schema version future: "x" has user_version 4; binary supports 3; use a compatible binary`},
-		{&InvalidSchemaVersionError{Path: "x", Found: -1, Current: 3}, `store: schema version invalid: "x" has negative user_version -1; binary requires 3; refusing to modify`},
+		{&LegacySchemaVersionError{Path: "x", Found: 3, Current: 4}, `store: schema version legacy: "x" has user_version 3 with application schema; binary requires 4; refusing to modify`},
+		{&FutureSchemaVersionError{Path: "x", Found: 5, Current: 4}, `store: schema version future: "x" has user_version 5; binary supports 4; use a compatible binary`},
+		{&InvalidSchemaVersionError{Path: "x", Found: -1, Current: 4}, `store: schema version invalid: "x" has negative user_version -1; binary requires 4; refusing to modify`},
 		{&UninitializedReadOnlyStoreError{Path: "x"}, `store: schema uninitialized: read-only store "x" has no application schema; open writable once to initialize`},
 	}
 	for _, tc := range cases {
@@ -211,25 +223,28 @@ func TestSchemaVersionErrorMessages(t *testing.T) {
 	}
 }
 
-func TestFreshWriterInitializesSchemaAndVersionThree(t *testing.T) {
+func TestFreshWriterInitializesSchemaAndVersionFour(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "fresh.db")
 	s, err := Open(path)
 	if err != nil {
 		db := rawDB(t, path)
 		_, version := schemaState(t, db)
-		if version != 3 {
-			t.Fatalf("fresh user_version = %d, want 3 (Open error: %v)", version, err)
+		if version != 4 {
+			t.Fatalf("fresh user_version = %d, want 4 (Open error: %v)", version, err)
 		}
 		t.Fatal(err)
 	}
 	defer s.Close()
 	ddl := tableDDL(t, s.db)
-	if len(ddl) != 9 {
-		t.Fatalf("fresh table count = %d, want 9", len(ddl))
+	if len(ddl) != 10 {
+		t.Fatalf("fresh table count = %d, want 10", len(ddl))
+	}
+	if _, ok := ddl["commit_objects"]; !ok {
+		t.Fatal("fresh schema is missing commit_objects")
 	}
 	_, version := schemaState(t, s.db)
-	if version != 3 {
-		t.Fatalf("fresh user_version = %d, want 3", version)
+	if version != 4 {
+		t.Fatalf("fresh user_version = %d, want 4", version)
 	}
 }
 
@@ -288,13 +303,13 @@ func setNegativeFixtureVersion(t *testing.T, db *sql.DB, version int) {
 	}
 }
 
-func TestSupportedVersionThreeOpensWithoutRewritingPragma(t *testing.T) {
+func TestSupportedVersionFourOpensWithoutRewritingPragma(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "supported.db")
 	db := rawDB(t, path)
 	if _, err := db.Exec(schemaSQL); err != nil {
 		t.Fatal(err)
 	}
-	setPositiveFixtureVersion(t, db, 3)
+	setPositiveFixtureVersion(t, db, 4)
 	beforeNames, beforeVersion := schemaState(t, db)
 	if err := db.Close(); err != nil {
 		t.Fatal(err)
@@ -310,7 +325,7 @@ func TestSupportedVersionThreeOpensWithoutRewritingPragma(t *testing.T) {
 		wantNames = append(wantNames, spec.name)
 	}
 	sort.Strings(wantNames)
-	if !reflect.DeepEqual(afterNames, wantNames) || afterVersion != beforeVersion || afterVersion != 3 {
+	if !reflect.DeepEqual(afterNames, wantNames) || afterVersion != beforeVersion || afterVersion != 4 {
 		t.Fatalf("supported state changed: before=(%v,%d) after=(%v,%d)", beforeNames, beforeVersion, afterNames, afterVersion)
 	}
 }
@@ -338,8 +353,8 @@ func TestVersionOneStoreIsRejectedUnmodifiedByWriterAndReader(t *testing.T) {
 				t.Fatalf("%s returned a store", open.name)
 			}
 			var legacy *LegacySchemaVersionError
-			if !errors.As(err, &legacy) || legacy.Found != 1 || legacy.Current != 3 {
-				t.Fatalf("%s error = %#v, want legacy Found=1 Current=3", open.name, err)
+			if !errors.As(err, &legacy) || legacy.Found != 1 || legacy.Current != 4 {
+				t.Fatalf("%s error = %#v, want legacy Found=1 Current=4", open.name, err)
 			}
 		})
 	}
@@ -348,7 +363,12 @@ func TestVersionOneStoreIsRejectedUnmodifiedByWriterAndReader(t *testing.T) {
 	if !reflect.DeepEqual(afterNames, beforeNames) || afterVersion != beforeVersion {
 		t.Fatalf("version-one fixture changed: before=(%v,%d) after=(%v,%d)", beforeNames, beforeVersion, afterNames, afterVersion)
 	}
-	setPositiveFixtureVersion(t, db, 3)
+	// The v4 open refuses a current-version store without commit_objects, so the
+	// correction adds the frozen v4 tables before relabelling.
+	if _, err := db.Exec(schemaV4SQL); err != nil {
+		t.Fatal(err)
+	}
+	setPositiveFixtureVersion(t, db, 4)
 	if err := db.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -379,8 +399,8 @@ func TestFutureVersionIsRejected(t *testing.T) {
 		t.Fatal("future Open returned a store")
 	}
 	var future *FutureSchemaVersionError
-	if !errors.As(err, &future) || future.Found != 4 || future.Current != 3 {
-		t.Fatalf("Open error = %#v, want future Found=4 Current=3", err)
+	if !errors.As(err, &future) || future.Found != frozenFutureSchemaVersion || future.Current != 4 {
+		t.Fatalf("Open error = %#v, want future Found=5 Current=4", err)
 	}
 	if !strings.Contains(err.Error(), "schema version future") {
 		t.Fatalf("future message = %q", err)
@@ -412,8 +432,8 @@ func TestNegativeVersionsAreInvalid(t *testing.T) {
 				t.Fatal("invalid Open returned a store")
 			}
 			var invalid *InvalidSchemaVersionError
-			if !errors.As(err, &invalid) || invalid.Found != version || invalid.Current != 3 {
-				t.Fatalf("Open error = %#v, want invalid Found=%d Current=3", err, version)
+			if !errors.As(err, &invalid) || invalid.Found != version || invalid.Current != 4 {
+				t.Fatalf("Open error = %#v, want invalid Found=%d Current=4", err, version)
 			}
 			if !strings.Contains(err.Error(), "schema version invalid") {
 				t.Fatalf("invalid message = %q", err)
@@ -436,7 +456,7 @@ func TestSchemaVersionRangeBounds(t *testing.T) {
 	}
 }
 
-func TestOpenReadOnlyEnforcesVersionThree(t *testing.T) {
+func TestOpenReadOnlyEnforcesVersionFour(t *testing.T) {
 	lockControlPath := filepath.Join(t.TempDir(), "writer-lock-control.db")
 	control, err := Open(lockControlPath)
 	if err != nil {
@@ -457,13 +477,19 @@ func TestOpenReadOnlyEnforcesVersionThree(t *testing.T) {
 		wantType  string
 		accept    bool
 	}{
-		{name: "version3", setup: func(t *testing.T, db *sql.DB) {
+		{name: "version4", setup: func(t *testing.T, db *sql.DB) {
 			_, err := db.Exec(schemaSQL)
 			if err != nil {
 				t.Fatal(err)
 			}
-			setPositiveFixtureVersion(t, db, 3)
+			setPositiveFixtureVersion(t, db, 4)
 		}, accept: true},
+		{name: "version3", setup: func(t *testing.T, db *sql.DB) {
+			if _, err := db.Exec(schemaV3SQL); err != nil {
+				t.Fatal(err)
+			}
+			setPositiveFixtureVersion(t, db, 3)
+		}, wantType: "legacy"},
 		{name: "legacy", setup: func(t *testing.T, db *sql.DB) {
 			_, err := db.Exec(preJournalSchemaV0)
 			if err != nil {
@@ -481,7 +507,7 @@ func TestOpenReadOnlyEnforcesVersionThree(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			setPositiveFixtureVersion(t, db, 4)
+			setPositiveFixtureVersion(t, db, frozenFutureSchemaVersion)
 		}, wantType: "future"},
 		{name: "negative1", setup: func(t *testing.T, db *sql.DB) {
 			_, err := db.Exec(schemaSQL)
@@ -590,27 +616,27 @@ func TestSchemaVersionLedgerIsIndependent(t *testing.T) {
 	// The repair is the same one the mission's charter rotation uses: anchor to
 	// `^`, so prose and check-lines (which are indented inside this func) cannot
 	// satisfy it. `(?m)` makes `^` match at each line start.
-	ledgerDecl := regexp.MustCompile(`(?m)^const schemaV3SQL = ` + `schemaV2SQL \+`)
+	ledgerDecl := regexp.MustCompile(`(?m)^const schemaV4SQL = ` + `schemaV3SQL \+`)
 	if !ledgerDecl.Match(source) {
-		t.Fatal("schemaV3SQL is not an authored constant extending the frozen v2 ledger")
+		t.Fatal("schemaV4SQL is not an authored constant extending the frozen v3 ledger")
 	}
-	if strings.Contains(string(source), "var schemaV3SQL = "+"schemaSQL") {
-		t.Fatal("schemaV3SQL is derived from schemaSQL")
+	if strings.Contains(string(source), "var schemaV4SQL = "+"schemaSQL") {
+		t.Fatal("schemaV4SQL is derived from schemaSQL")
 	}
 	// Semantic backstop, immune to every needle game above: a ledger that IS the
 	// schema under test cannot attest to it. This catches any derivation the
 	// source-text checks miss, including forms nobody has thought of yet.
-	if schemaV3SQL == schemaSQL {
-		t.Fatal("schemaV3SQL is byte-identical to schemaSQL — the ledger is the file under test, so this gate is a no-op")
+	if schemaV4SQL == schemaSQL {
+		t.Fatal("schemaV4SQL is byte-identical to schemaSQL — the ledger is the file under test, so this gate is a no-op")
 	}
 	if strings.Contains(string(source), "frozenDB.Exec("+"schemaSQL)") {
-		t.Fatal("version-3 ledger fixture is derived from schemaSQL")
+		t.Fatal("version-4 ledger fixture is derived from schemaSQL")
 	}
 	if currentSchemaVersion != expectedCurrentSchemaVersion {
 		t.Fatalf("currentSchemaVersion = %d, frozen expectation = %d", currentSchemaVersion, expectedCurrentSchemaVersion)
 	}
-	frozenDB := rawDB(t, filepath.Join(t.TempDir(), "frozen-v3.db"))
-	if _, err := frozenDB.Exec(schemaV3SQL); err != nil {
+	frozenDB := rawDB(t, filepath.Join(t.TempDir(), "frozen-v4.db"))
+	if _, err := frozenDB.Exec(schemaV4SQL); err != nil {
 		t.Fatal(err)
 	}
 	frozenDDL := tableDDL(t, frozenDB)
@@ -624,15 +650,15 @@ func TestSchemaVersionLedgerIsIndependent(t *testing.T) {
 
 	frozenNames := sortedDDLNames(frozenDDL)
 	currentNames := sortedDDLNames(currentDDL)
-	requireExactTableNames(t, "frozen version 3", frozenDDL, currentNames)
+	requireExactTableNames(t, "frozen version 4", frozenDDL, currentNames)
 	requireExactTableNames(t, "current schema", currentDDL, frozenNames)
 	if !reflect.DeepEqual(frozenNames, currentNames) {
-		t.Fatalf("version-3 table names = %v, current names = %v", frozenNames, currentNames)
+		t.Fatalf("version-4 table names = %v, current names = %v", frozenNames, currentNames)
 	}
 	for _, name := range frozenNames {
 		got, want := normalizeDDL(currentDDL[name]), normalizeDDL(frozenDDL[name])
 		if got != want {
-			t.Fatalf("version-3 ledger DDL mismatch for table %q:\n got current: %s\nwant frozen: %s", name, got, want)
+			t.Fatalf("version-4 ledger DDL mismatch for table %q:\n got current: %s\nwant frozen: %s", name, got, want)
 		}
 	}
 }
@@ -654,8 +680,8 @@ func TestLegacyVersionZeroStoreIsRejectedUnmodified(t *testing.T) {
 		t.Fatal("legacy Open returned a store")
 	}
 	var legacy *LegacySchemaVersionError
-	if !errors.As(err, &legacy) || legacy.Found != 0 || legacy.Current != 3 {
-		t.Fatalf("Open error = %#v, want legacy Found=0 Current=3", err)
+	if !errors.As(err, &legacy) || legacy.Found != 0 || legacy.Current != 4 {
+		t.Fatalf("Open error = %#v, want legacy Found=0 Current=4", err)
 	}
 	if !strings.Contains(err.Error(), "schema version legacy") {
 		t.Fatalf("legacy message = %q", err)
@@ -671,7 +697,12 @@ func TestLegacyVersionZeroStoreIsRejectedUnmodified(t *testing.T) {
 	// Correct this fixture out-of-band only to prove the rejected writer did
 	// not strand its lock. This is a test-local cleanup probe, not a supported
 	// operator remedy for legacy stores.
-	setPositiveFixtureVersion(t, db, 3)
+	// The v4 open refuses a current-version store without commit_objects, so the
+	// correction adds the frozen v4 tables before relabelling.
+	if _, err := db.Exec(schemaV4SQL); err != nil {
+		t.Fatal(err)
+	}
+	setPositiveFixtureVersion(t, db, 4)
 	if err := db.Close(); err != nil {
 		t.Fatal(err)
 	}
