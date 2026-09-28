@@ -25,8 +25,8 @@ type cfj2RecordingStore struct {
 	records []store.Object
 }
 
-func (s *cfj2RecordingStore) PutObject(obj store.Object) error {
-	if err := s.base.PutObject(obj); err != nil {
+func (s *cfj2RecordingStore) PutObject(ctx context.Context, obj store.Object) error {
+	if err := s.base.PutObject(ctx, obj); err != nil {
 		return err
 	}
 	if obj.SemanticID == EffectRecordV1 {
@@ -40,25 +40,25 @@ func (s *cfj2RecordingStore) GetObject(ctx context.Context, ref hashref.HashRef)
 }
 
 func (s *cfj2RecordingStore) AppendNextEffectIntent(
-	episodeID string,
+	ctx context.Context, episodeID string,
 	intent store.EffectIntent,
 ) (string, int64, error) {
-	return s.base.AppendNextEffectIntent(episodeID, intent)
+	return s.base.AppendNextEffectIntent(ctx, episodeID, intent)
 }
 
 func (s *cfj2RecordingStore) AppendClaimedEffectIntent(
-	episodeID string,
+	ctx context.Context, episodeID string,
 	intent store.EffectIntent,
 	approvalRef, requestRef hashref.HashRef,
 ) (string, int64, error) {
-	return s.base.AppendClaimedEffectIntent(episodeID, intent, approvalRef, requestRef)
+	return s.base.AppendClaimedEffectIntent(ctx, episodeID, intent, approvalRef, requestRef)
 }
 
 func (s *cfj2RecordingStore) AppendEffectOutcome(
-	id string,
+	ctx context.Context, id string,
 	outcome store.EffectOutcome,
 ) (int64, hashref.HashRef, error) {
-	return s.base.AppendEffectOutcome(id, outcome)
+	return s.base.AppendEffectOutcome(ctx, id, outcome)
 }
 
 func TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord(t *testing.T) {

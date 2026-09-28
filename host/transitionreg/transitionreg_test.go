@@ -462,7 +462,7 @@ func (f *fakeObjectStore) clone() *fakeObjectStore {
 	}
 }
 
-func (f *fakeObjectStore) PutObject(store.Object) error { return f.putErr }
+func (f *fakeObjectStore) PutObject(context.Context, store.Object) error { return f.putErr }
 func (f *fakeObjectStore) CompareAndSetRegistryHead(string, hashref.HashRef, hashref.HashRef) error {
 	return f.casErr
 }
@@ -614,7 +614,7 @@ func openTransitionStore(t *testing.T) *store.Store {
 func seedRevision(t *testing.T, s *store.Store, r Revision) hashref.HashRef {
 	t.Helper()
 	o := storedRevision(t, r)
-	if err := s.PutObject(o); err != nil {
+	if err := s.PutObject(context.Background(), o); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.CompareAndSetRegistryHead(store.TransitionRegistryV1, hashref.HashRef{}, o.Hash); err != nil {

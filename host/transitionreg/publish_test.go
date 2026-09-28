@@ -18,7 +18,7 @@ func putSource(t *testing.T, s *store.Store, payload []byte) hashref.HashRef {
 		Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte("test/transition-source")),
 		SemanticID: "test/transition-source", Provenance: "publish_test", Payload: payload,
 	}
-	if err := s.PutObject(obj); err != nil {
+	if err := s.PutObject(context.Background(), obj); err != nil {
 		t.Fatalf("put source: %v", err)
 	}
 	return obj.Hash

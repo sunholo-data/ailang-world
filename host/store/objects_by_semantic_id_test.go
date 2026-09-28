@@ -22,7 +22,7 @@ func semanticObject(t *testing.T, s *Store, id, label string) Object {
 		Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte("sid-iface")),
 		SemanticID: id, Provenance: "sid-test-" + label, Payload: payload,
 	}
-	if err := s.PutObject(o); err != nil {
+	if err := s.PutObject(context.Background(), o); err != nil {
 		t.Fatalf("PutObject %s: %v", label, err)
 	}
 	return o

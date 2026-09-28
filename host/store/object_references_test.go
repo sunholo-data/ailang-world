@@ -222,10 +222,10 @@ func TestObjectReferencesOutOfScope(t *testing.T) {
 	ref, other := refTestHash("target"), refTestHash("other")
 	o := obj("interface-source", "interface")
 	o.InterfaceHash = ref
-	if err := s.PutObject(o); err != nil {
+	if err := s.PutObject(context.Background(), o); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SetRegistryHead("test", ref); err != nil {
+	if err := s.SetRegistryHead(context.Background(), "test", ref); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.db.Exec("INSERT INTO journal(kind,invocation_id,object_ref) VALUES('intent','scope',?)", ref.String()); err != nil {
@@ -326,7 +326,7 @@ func TestObjectReferencesMeasuredAtScale(t *testing.T) {
 	}
 	fn, interp, state := obj("scale-function", "fn"), obj("scale-interpreter", "interpreter"), obj("scale-state", "state")
 	for _, o := range []Object{fn, interp, state} {
-		if err := s.PutObject(o); err != nil {
+		if err := s.PutObject(context.Background(), o); err != nil {
 			t.Fatal(err)
 		}
 	}

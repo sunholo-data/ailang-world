@@ -511,7 +511,8 @@ func validateRef(op, field string, ref hashref.HashRef) error {
 // PutObject inserts one immutable object after verifying its content address.
 // Re-inserting an identical object is idempotent (INSERT OR IGNORE), since the
 // bytes and hash are unchanged by definition of content addressing.
-func (s *Store) PutObject(o Object) error {
+func (s *Store) PutObject(ctx context.Context, o Object) (err error) {
+	defer func() { err = notCommitted(ctx, "put object", err) }()
 	if err := validateRef("PutObject", "Hash", o.Hash); err != nil {
 		return err
 	}
@@ -521,7 +522,12 @@ func (s *Store) PutObject(o Object) error {
 	if err := verifyObject(o); err != nil {
 		return err
 	}
-	_, err := s.db.Exec(
+	tx, err := s.beginDurable(ctx, "put object")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	_, err = tx.ExecContext(ctx,
 		`INSERT OR IGNORE INTO objects
 			(hash_ref, interface_hash_ref, semantic_id, provenance, payload)
 		 VALUES (?, ?, ?, ?, ?);`,
@@ -530,7 +536,7 @@ func (s *Store) PutObject(o Object) error {
 	if err != nil {
 		return fmt.Errorf("store: put object %q: %w", o.Hash.String(), err)
 	}
-	return nil
+	return s.finishDurable(ctx, "put object", tx)
 }
 
 // GetObject loads an immutable object by its HashRef. It returns (Object{}, nil,
@@ -678,11 +684,17 @@ func (s *Store) GetLogEntry(ctx context.Context, index int64) (LogEntry, bool, e
 
 // SetRegistryHead upserts the current immutable registry object reference for a
 // registry name (Decision 5). M1 bootstrap uses EpochRegistryV1.
-func (s *Store) SetRegistryHead(name string, objectRef hashref.HashRef) error {
+func (s *Store) SetRegistryHead(ctx context.Context, name string, objectRef hashref.HashRef) (err error) {
+	defer func() { err = notCommitted(ctx, "set registry head", err) }()
 	if err := validateRef("SetRegistryHead", "objectRef", objectRef); err != nil {
 		return err
 	}
-	_, err := s.db.Exec(
+	tx, err := s.beginDurable(ctx, "set registry head")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	_, err = tx.ExecContext(ctx,
 		`INSERT INTO epoch_registry_heads (registry_name, object_ref)
 		 VALUES (?, ?)
 		 ON CONFLICT(registry_name) DO UPDATE SET object_ref = excluded.object_ref;`,
@@ -691,7 +703,7 @@ func (s *Store) SetRegistryHead(name string, objectRef hashref.HashRef) error {
 	if err != nil {
 		return fmt.Errorf("store: set registry head %q: %w", name, err)
 	}
-	return nil
+	return s.finishDurable(ctx, "set registry head", tx)
 }
 
 // GetRegistryHead returns the current registry object reference; ok=false when

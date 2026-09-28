@@ -85,7 +85,7 @@ func publishProductionRevision(t *testing.T, d *Daemon, dbPath, id, effect strin
 		Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte("daemon-test/transition-source")),
 		SemanticID: "daemon-test/transition-source", Provenance: "registry_publisher_test", Payload: payload,
 	}
-	if err := d.store.PutObject(src); err != nil {
+	if err := d.store.PutObject(context.Background(), src); err != nil {
 		t.Fatalf("put transition source: %v", err)
 	}
 	desc := transitionreg.Descriptor{
@@ -207,7 +207,7 @@ func TestEpochRefusalKeepsCardUnchanged(t *testing.T) {
 		DeclaredEffects: []transitionreg.EffectRequirement{{Effect: "world.apply", Scope: "world", Cost: 1}},
 		Title:           "title-tools.blocked", Description: "must never appear",
 	}
-	if err := d.store.PutObject(store.Object{
+	if err := d.store.PutObject(context.Background(), store.Object{
 		Hash: blocked.TransitionFn, InterfaceHash: hashref.SumSHA256([]byte("daemon-test/transition-source")),
 		SemanticID: "daemon-test/transition-source", Provenance: "registry_publisher_test",
 		Payload: []byte("epoch mismatch source"),
@@ -265,7 +265,7 @@ func TestEpochTwinInterpretersBothListedOnCard(t *testing.T) {
 	// pinned is one honest descriptor pinning interp; its source object is stored.
 	pinned := func(id string, interp hashref.HashRef) transitionreg.Change {
 		payload := []byte("transition source for " + id)
-		if err := d.store.PutObject(store.Object{
+		if err := d.store.PutObject(context.Background(), store.Object{
 			Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte("daemon-test/transition-source")),
 			SemanticID: "daemon-test/transition-source", Provenance: "registry_publisher_test", Payload: payload,
 		}); err != nil {

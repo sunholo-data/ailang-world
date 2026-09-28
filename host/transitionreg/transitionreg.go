@@ -40,7 +40,7 @@ type Revision struct {
 type ObjectStore interface {
 	GetRegistryHead(context.Context, string) (hashref.HashRef, bool, error)
 	GetObject(context.Context, hashref.HashRef) (store.Object, bool, error)
-	PutObject(store.Object) error
+	PutObject(context.Context, store.Object) error
 	CompareAndSetRegistryHead(string, hashref.HashRef, hashref.HashRef) error
 }
 
@@ -260,7 +260,7 @@ func (r *StoreReader) Publish(ctx context.Context, expectedHead hashref.HashRef,
 	}
 	ref := hashref.SumSHA256(payload)
 	object := store.Object{Hash: ref, InterfaceHash: InterfaceHashV1, SemanticID: SemanticIDV1, Provenance: "host/transitionreg", Payload: payload}
-	if err := r.store.PutObject(object); err != nil {
+	if err := r.store.PutObject(ctx, object); err != nil {
 		return hashref.HashRef{}, fmt.Errorf("publish transition registry: put object: %w", err)
 	}
 	if err := r.store.CompareAndSetRegistryHead(store.TransitionRegistryV1, expectedHead, ref); err != nil {

@@ -120,7 +120,7 @@ func TestCommitMembershipRollsBackWithCommit(t *testing.T) {
 func TestCommitMembershipForeignKeys(t *testing.T) {
 	s := openMem(t)
 	o := obj("fk", "t/fk")
-	if err := s.PutObject(o); err != nil {
+	if err := s.PutObject(context.Background(), o); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.db.Exec(`INSERT OR IGNORE INTO commit_objects (object_ref, entry_index) VALUES (?, 999)`, o.Hash.String()); err == nil {
@@ -273,7 +273,7 @@ func TestCommitRecordsMembershipPerCarryingCommit(t *testing.T) {
 	w := seedGenesis(t, s)
 	shared, once, stored, later := obj("shared", "t/shared"), obj("once", "t/once"), obj("stored-only", "t/stored"), obj("put-then-commit", "t/later")
 	for _, o := range []Object{stored, later} {
-		if err := s.PutObject(o); err != nil {
+		if err := s.PutObject(context.Background(), o); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -435,7 +435,7 @@ func TestObjectCommitsTimingAt10k(t *testing.T) {
 	}
 	cold := obj(fmt.Sprintf("out-%d", n/2), "invocation/output").Hash
 	stored := obj("never-committed", "t/none")
-	if err := s.PutObject(stored); err != nil {
+	if err := s.PutObject(context.Background(), stored); err != nil {
 		t.Fatal(err)
 	}
 	ctx := context.Background()

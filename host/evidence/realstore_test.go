@@ -98,7 +98,7 @@ func openEvidenceStoreWithBusyWindow(t *testing.T, window time.Duration) (*store
 func putEvidenceObject(t *testing.T, s *store.Store, payload []byte) hashref.HashRef {
 	t.Helper()
 	ref := hashref.SumSHA256(payload)
-	if err := s.PutObject(store.Object{
+	if err := s.PutObject(context.Background(), store.Object{
 		Hash: ref, InterfaceHash: evidence.InterfaceHashV1,
 		SemanticID: evidence.ProofSemanticID, Provenance: "real-store-test", Payload: payload,
 	}); err != nil {

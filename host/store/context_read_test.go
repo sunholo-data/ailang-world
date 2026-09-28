@@ -271,7 +271,7 @@ func TestReadRetriesUnderTransientExclusiveLock(t *testing.T) {
 	defer func() { _ = s.Close() }()
 
 	seeded := obj("transient exclusive lock payload", "state/v1")
-	if err := s.PutObject(seeded); err != nil {
+	if err := s.PutObject(context.Background(), seeded); err != nil {
 		t.Fatalf("seed object: %v", err)
 	}
 

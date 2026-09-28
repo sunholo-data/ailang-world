@@ -210,7 +210,7 @@ func testReadObject(t *testing.T, s *Store, payload []byte) Object {
 		Provenance:    "read-object-test",
 		Payload:       payload,
 	}
-	if err := s.PutObject(o); err != nil {
+	if err := s.PutObject(context.Background(), o); err != nil {
 		t.Fatalf("PutObject: %v", err)
 	}
 	return o

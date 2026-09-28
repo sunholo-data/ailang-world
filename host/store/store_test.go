@@ -37,7 +37,7 @@ func TestObjectPersistenceRoundTrip(t *testing.T) {
 	s := openMem(t)
 	o := obj("hello world payload", "state/v1")
 
-	if err := s.PutObject(o); err != nil {
+	if err := s.PutObject(context.Background(), o); err != nil {
 		t.Fatalf("PutObject: %v", err)
 	}
 	got, ok, err := s.GetObject(context.Background(), o.Hash)
@@ -53,7 +53,7 @@ func TestObjectPersistenceRoundTrip(t *testing.T) {
 	}
 
 	// Re-inserting the identical object is idempotent.
-	if err := s.PutObject(o); err != nil {
+	if err := s.PutObject(context.Background(), o); err != nil {
 		t.Fatalf("PutObject (idempotent): %v", err)
 	}
 }
@@ -64,7 +64,7 @@ func TestObjectContentVerificationRejectsMismatch(t *testing.T) {
 	// Corrupt the payload so Hash no longer addresses it.
 	bad.Payload = []byte("tampered payload")
 
-	if err := s.PutObject(bad); err == nil {
+	if err := s.PutObject(context.Background(), bad); err == nil {
 		t.Fatal("PutObject accepted an object whose hash does not match its payload")
 	}
 }
@@ -262,7 +262,7 @@ func TestCommitConflictOnStaleHead(t *testing.T) {
 func TestRegistryHeadRoundTrip(t *testing.T) {
 	s := openMem(t)
 	reg := hashref.SumSHA256([]byte("epoch-1-registry-object"))
-	if err := s.SetRegistryHead(EpochRegistryV1, reg); err != nil {
+	if err := s.SetRegistryHead(context.Background(), EpochRegistryV1, reg); err != nil {
 		t.Fatalf("SetRegistryHead: %v", err)
 	}
 	got, ok, err := s.GetRegistryHead(context.Background(), EpochRegistryV1)
@@ -275,7 +275,7 @@ func TestRegistryHeadRoundTrip(t *testing.T) {
 
 	// Updating the head replaces it in place (one row per registry name).
 	reg2 := hashref.SumSHA256([]byte("epoch-2-registry-object"))
-	if err := s.SetRegistryHead(EpochRegistryV1, reg2); err != nil {
+	if err := s.SetRegistryHead(context.Background(), EpochRegistryV1, reg2); err != nil {
 		t.Fatalf("SetRegistryHead update: %v", err)
 	}
 	got2, _, _ := s.GetRegistryHead(context.Background(), EpochRegistryV1)
@@ -288,7 +288,7 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 	put := func(t *testing.T, s *Store, payload string) Object {
 		t.Helper()
 		o := obj(payload, TransitionRegistryV1)
-		if err := s.PutObject(o); err != nil {
+		if err := s.PutObject(context.Background(), o); err != nil {
 			t.Fatalf("PutObject(%q): %v", payload, err)
 		}
 		return o
@@ -327,7 +327,7 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 		actual := put(t, s, "actual")
 		expected := put(t, s, "expected")
 		next := put(t, s, "next")
-		if err := s.SetRegistryHead(TransitionRegistryV1, actual.Hash); err != nil {
+		if err := s.SetRegistryHead(context.Background(), TransitionRegistryV1, actual.Hash); err != nil {
 			t.Fatal(err)
 		}
 		err := s.CompareAndSetRegistryHead(TransitionRegistryV1, expected.Hash, next.Hash)
@@ -341,7 +341,7 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 	t.Run("dangling_next_refused", func(t *testing.T) {
 		s := openMem(t)
 		actual := put(t, s, "actual")
-		if err := s.SetRegistryHead(TransitionRegistryV1, actual.Hash); err != nil {
+		if err := s.SetRegistryHead(context.Background(), TransitionRegistryV1, actual.Hash); err != nil {
 			t.Fatal(err)
 		}
 		dangling := hashref.SumSHA256([]byte("absent"))
@@ -356,7 +356,7 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 		actual := put(t, s, "actual")
 		stale := put(t, s, "stale")
 		next := put(t, s, "next")
-		if err := s.SetRegistryHead(TransitionRegistryV1, actual.Hash); err != nil {
+		if err := s.SetRegistryHead(context.Background(), TransitionRegistryV1, actual.Hash); err != nil {
 			t.Fatal(err)
 		}
 		if err := s.CompareAndSetRegistryHead(TransitionRegistryV1, stale.Hash, next.Hash); err == nil {
@@ -374,7 +374,7 @@ func TestCompareAndSetRegistryHead(t *testing.T) {
 		epoch := put(t, s, "epoch")
 		transition := put(t, s, "transition")
 		epochNext := put(t, s, "epoch-next")
-		if err := s.SetRegistryHead(EpochRegistryV1, epoch.Hash); err != nil {
+		if err := s.SetRegistryHead(context.Background(), EpochRegistryV1, epoch.Hash); err != nil {
 			t.Fatal(err)
 		}
 		if err := s.CompareAndSetRegistryHead(TransitionRegistryV1, hashref.HashRef{}, transition.Hash); err != nil {

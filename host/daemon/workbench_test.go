@@ -752,7 +752,7 @@ func TestWorkbenchTimelinePaging(t *testing.T) {
 			t.Fatalf("head root stored=%v err=%v, want false", ok, err)
 		}
 		state := workbenchTestObject("paging-stored-state", "world/state", hashref.SumSHA256([]byte("paging-state-interface")))
-		if err := d.store.PutObject(state); err != nil {
+		if err := d.store.PutObject(context.Background(), state); err != nil {
 			t.Fatal(err)
 		}
 		storedWorld := store.World{Ref: hashref.SumSHA256([]byte("paging-stored-world")), Revision: 17, StateRoot: state.Hash, LogHead: hashref.SumSHA256([]byte("paging-stored-log"))}
@@ -1018,7 +1018,7 @@ func TestWorkbenchObjectProvenanceWalk(t *testing.T) {
 	schema := workbenchTestObject("workbench-walk-schema", "test/schema", hashref.SumSHA256([]byte("interface-workbench-walk-schema")))
 	typed := workbenchTestObject("workbench-walk-typed", "test/typed", schema.Hash)
 	for _, object := range []store.Object{plain, schema, typed} {
-		if err := d.store.PutObject(object); err != nil {
+		if err := d.store.PutObject(context.Background(), object); err != nil {
 			t.Fatal(err)
 		}
 	}

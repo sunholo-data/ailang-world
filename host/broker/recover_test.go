@@ -138,7 +138,7 @@ func TestCrashWindowRecoveryReportsAndResumptionMintsFreshOrdinal(t *testing.T) 
 		payload []byte,
 	) ([]byte, error) {
 		dispatches++
-		receipt, hasIntent, err := base.GetEffectReceipt(
+		receipt, hasIntent, err := base.GetEffectReceipt(context.Background(),
 			store.EffectInvocationID(episodeID, 0),
 		)
 		if err != nil || !hasIntent || receipt.State != store.ReceiptIndeterminate {
@@ -182,14 +182,14 @@ func TestCrashWindowRecoveryReportsAndResumptionMintsFreshOrdinal(t *testing.T) 
 	}
 	defer func() { _ = reopened.Close() }()
 	firstID := store.EffectInvocationID(episodeID, 0)
-	receipt, hasIntent, err := reopened.GetEffectReceipt(firstID)
+	receipt, hasIntent, err := reopened.GetEffectReceipt(context.Background(), firstID)
 	if err != nil || !hasIntent || receipt.State != store.ReceiptIndeterminate {
 		t.Fatalf("reopened receipt = %#v, hasIntent %v, err %v; want indeterminate",
 			receipt, hasIntent, err)
 	}
 
 	recoveryProbe := &recoveryCountingProbe{}
-	findings, err := Recover(reopened, Registry{"probe": recoveryProbe})
+	findings, err := Recover(context.Background(), reopened, Registry{"probe": recoveryProbe})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -205,7 +205,7 @@ func TestCrashWindowRecoveryReportsAndResumptionMintsFreshOrdinal(t *testing.T) 
 	if recoveryProbe.dispatches != 0 {
 		t.Fatalf("recovery dispatches = %d, want 0", recoveryProbe.dispatches)
 	}
-	receipt, hasIntent, err = reopened.GetEffectReceipt(firstID)
+	receipt, hasIntent, err = reopened.GetEffectReceipt(context.Background(), firstID)
 	if err != nil || !hasIntent || receipt.State != store.ReceiptIndeterminate {
 		t.Fatalf("post-recovery receipt = %#v, hasIntent %v, err %v; recovery acted",
 			receipt, hasIntent, err)
@@ -234,7 +234,7 @@ func TestCrashWindowRecoveryReportsAndResumptionMintsFreshOrdinal(t *testing.T) 
 	if secondID <= firstID {
 		t.Fatalf("resumed ID %q is not strictly past %q", secondID, firstID)
 	}
-	resumedReceipt, hasIntent, err := reopened.GetEffectReceipt(secondID)
+	resumedReceipt, hasIntent, err := reopened.GetEffectReceipt(context.Background(), secondID)
 	if err != nil || !hasIntent || resumedReceipt.State != store.ReceiptResolved ||
 		resumedReceipt.EffectOutcome == nil || resumedReceipt.EffectOutcome.RecordRef != recordRef {
 		t.Fatalf("resumed receipt = %#v, hasIntent %v, err %v; want resolved",
@@ -244,7 +244,7 @@ func TestCrashWindowRecoveryReportsAndResumptionMintsFreshOrdinal(t *testing.T) 
 
 func TestRecoverCountingProbeDispatchesZeroHandlers(t *testing.T) {
 	s, _ := pendingRecoveryCommit(t, "counting-probe")
-	effectID, _, err := s.AppendNextEffectIntent("counting-probe-episode", store.EffectIntent{
+	effectID, _, err := s.AppendNextEffectIntent(context.Background(), "counting-probe-episode", store.EffectIntent{
 		EpisodeID:   "counting-probe-episode",
 		Effect:      recoveryProbeEffect,
 		Scope:       "/pending",
@@ -256,7 +256,7 @@ func TestRecoverCountingProbeDispatchesZeroHandlers(t *testing.T) {
 		t.Fatalf("AppendNextEffectIntent: %v", err)
 	}
 	probe := &recoveryCountingProbe{}
-	findings, err := Recover(s, Registry{recoveryProbeEffect: probe})
+	findings, err := Recover(context.Background(), s, Registry{recoveryProbeEffect: probe})
 	if err != nil {
 		t.Fatalf("Recover: %v", err)
 	}
@@ -273,7 +273,7 @@ func TestRecoverCountingProbeDispatchesZeroHandlers(t *testing.T) {
 
 func TestRecoverSurfacesNeverLieLaw(t *testing.T) {
 	s, c := pendingRecoveryCommit(t, "never-lie")
-	findings, err := Recover(s)
+	findings, err := Recover(context.Background(), s)
 	if err != nil {
 		t.Fatalf("Recover: %v", err)
 	}
@@ -304,7 +304,7 @@ func TestRecoverModelInferNeverRedispatchesAfterResolution(t *testing.T) {
 	s, c := pendingRecoveryCommit(t, "model-infer")
 	probe := &recoveryCountingProbe{}
 	registry := Registry{recoveryProbeEffect: probe}
-	findings, err := Recover(s, registry)
+	findings, err := Recover(context.Background(), s, registry)
 	if err != nil || len(findings) != 1 {
 		t.Fatalf("Recover before resolution=(findings=%d,err=%v), want (1,nil)",
 			len(findings), err)
@@ -318,7 +318,7 @@ func TestRecoverModelInferNeverRedispatchesAfterResolution(t *testing.T) {
 	if _, _, err := s.AppendOutcome(c.InvocationID, outcome); err != nil {
 		t.Fatalf("AppendOutcome: %v", err)
 	}
-	findings, err = Recover(s, registry)
+	findings, err = Recover(context.Background(), s, registry)
 	if err != nil || len(findings) != 0 {
 		t.Fatalf("Recover after resolution=(findings=%d,err=%v), want (0,nil)",
 			len(findings), err)
@@ -330,7 +330,7 @@ func TestRecoverModelInferNeverRedispatchesAfterResolution(t *testing.T) {
 
 func TestRecoverCommitPathPlannedStateAbsentWithoutOutcome(t *testing.T) {
 	s, c := pendingRecoveryCommit(t, "not-committed")
-	findings, err := Recover(s)
+	findings, err := Recover(context.Background(), s)
 	if err != nil || len(findings) != 1 {
 		t.Fatalf("Recover=(findings=%d,err=%v), want (1,nil)", len(findings), err)
 	}
@@ -345,7 +345,7 @@ func TestRecoverCommitPathPlannedStateAbsentWithoutOutcome(t *testing.T) {
 func TestRecoverUsesKernelPagingBound(t *testing.T) {
 	s, _ := pendingRecoveryCommit(t, "paging")
 	probe := &recoveryStoreProbe{Store: s}
-	if _, err := recoverPending(probe); err != nil {
+	if _, err := recoverPending(context.Background(), probe); err != nil {
 		t.Fatalf("recoverPending: %v", err)
 	}
 	if len(probe.limits) == 0 {
@@ -465,7 +465,7 @@ func (p *neverDrainingRecoveryStore) PendingEffectIntents(
 }
 
 func (p *neverDrainingRecoveryStore) GetEffectReceipt(
-	id string,
+	ctx context.Context, id string,
 ) (store.Receipt, bool, error) {
 	return store.Receipt{InvocationID: id, State: store.ReceiptResolved}, true, nil
 }
@@ -485,7 +485,7 @@ func TestRecoverCommitStopsAtPageBound(t *testing.T) {
 
 func TestRecoverEffectStopsAtPageBound(t *testing.T) {
 	probe := newNeverDrainingRecoveryStore(false, true)
-	_, err := recoverEffectPending(probe, nil)
+	_, err := recoverEffectPending(context.Background(), probe, nil)
 	const want = "broker: effect recovery exceeded 1048576 pages"
 	if err == nil || err.Error() != want {
 		t.Fatalf("recoverEffectPending error = %v, want %q (calls=%d)",
@@ -575,7 +575,7 @@ func (p *pagedRecoveryStore) PendingEffectIntents(
 	return p.effectPages[idx], nil
 }
 
-func (p *pagedRecoveryStore) GetEffectReceipt(id string) (store.Receipt, bool, error) {
+func (p *pagedRecoveryStore) GetEffectReceipt(ctx context.Context, id string) (store.Receipt, bool, error) {
 	if p.sawEffect == nil {
 		p.sawEffect = map[string]bool{}
 	}
@@ -599,7 +599,7 @@ func TestRecoverPagesWithKeysetCursorAcrossFullPages(t *testing.T) {
 		pages:    [][]store.PendingIntent{full, tail},
 		maxCalls: 8, // a stuck cursor blows this long before maxRecoveryPages
 	}
-	findings, err := recoverPending(probe)
+	findings, err := recoverPending(context.Background(), probe)
 	if err != nil {
 		t.Fatalf("recoverPending across pages: %v", err)
 	}
@@ -654,7 +654,7 @@ func TestRecoverEffectPagesWithKeysetCursorAndKeepsFindingShapesSeparate(t *test
 		effectPages: [][]store.PendingEffectIntent{full, tail},
 		maxCalls:    8,
 	}
-	findings, err := recoverPending(probe)
+	findings, err := recoverPending(context.Background(), probe)
 	if err != nil {
 		t.Fatal(err)
 	}

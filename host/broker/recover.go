@@ -1,6 +1,7 @@
 package broker
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
@@ -60,7 +61,7 @@ type recoveryStore interface {
 	PendingIntents(limit int, fromIndex ...int64) ([]store.PendingIntent, error)
 	GetReceipt(id string) (store.Receipt, bool, error)
 	PendingEffectIntents(limit int, fromIndex ...int64) ([]store.PendingEffectIntent, error)
-	GetEffectReceipt(id string) (store.Receipt, bool, error)
+	GetEffectReceipt(ctx context.Context, id string) (store.Receipt, bool, error)
 }
 
 // These consumer rules mirror the SD.C contract. The authoritative law is
@@ -88,11 +89,11 @@ func retryAllowed(indeterminate, reconciled bool) bool {
 // resolvable by deterministic reconciliation, but "indeterminate" there means
 // "executed and recorded, bookkeeping incomplete", not "unknown". Nothing here
 // claims that every crash ambiguity is eliminated.
-func Recover(s *store.Store, registries ...Registry) ([]IndeterminateEffect, error) {
+func Recover(ctx context.Context, s *store.Store, registries ...Registry) ([]IndeterminateEffect, error) {
 	// Accepting a registry makes the no-dispatch policy observable at the
 	// production boundary. It is deliberately unused.
 	_ = registries
-	return recoverPending(s)
+	return recoverPending(ctx, s)
 }
 
 // PendingPublishes selects the Registry.Publish findings from a recovery scan.
@@ -115,12 +116,12 @@ func PendingPublishes(findings []IndeterminateEffect) []IndeterminateEffect {
 	return publishes
 }
 
-func recoverPending(s recoveryStore) ([]IndeterminateEffect, error) {
+func recoverPending(ctx context.Context, s recoveryStore) ([]IndeterminateEffect, error) {
 	findings, err := recoverCommitPending(s)
 	if err != nil {
 		return nil, err
 	}
-	return recoverEffectPending(s, findings)
+	return recoverEffectPending(ctx, s, findings)
 }
 
 func recoverCommitPending(s recoveryStore) ([]IndeterminateEffect, error) {
@@ -201,7 +202,7 @@ func recoverCommitPending(s recoveryStore) ([]IndeterminateEffect, error) {
 }
 
 func recoverEffectPending(
-	s recoveryStore,
+	ctx context.Context, s recoveryStore,
 	findings []IndeterminateEffect,
 ) ([]IndeterminateEffect, error) {
 	var cursor int64
@@ -229,7 +230,7 @@ func recoverEffectPending(
 				)
 			}
 			cursor = pending.Seq
-			receipt, hasIntent, err := s.GetEffectReceipt(pending.InvocationID)
+			receipt, hasIntent, err := s.GetEffectReceipt(ctx, pending.InvocationID)
 			if err != nil {
 				return nil, fmt.Errorf(
 					"broker: recover effect receipt %q: %w", pending.InvocationID, err,

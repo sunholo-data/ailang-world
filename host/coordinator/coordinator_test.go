@@ -88,7 +88,7 @@ func (r *rig) source(raw string) hashref.HashRef {
 	}
 	obj := store.Object{Hash: hashref.SumSHA256(b), InterfaceHash: hashref.SumSHA256([]byte("world/transition-source/v1")),
 		SemanticID: "world/transition-source/v1", Provenance: "coordinator-test", Payload: b}
-	if err := r.st.PutObject(obj); err != nil {
+	if err := r.st.PutObject(context.Background(), obj); err != nil {
 		r.t.Fatalf("put source: %v", err)
 	}
 	return obj.Hash
@@ -114,7 +114,7 @@ func (r *rig) publish() {
 	}
 	obj := store.Object{Hash: hashref.SumSHA256(payload), InterfaceHash: transitionreg.InterfaceHashV1,
 		SemanticID: transitionreg.SemanticIDV1, Provenance: "coordinator-test", Payload: payload}
-	if err := r.st.PutObject(obj); err != nil {
+	if err := r.st.PutObject(context.Background(), obj); err != nil {
 		r.t.Fatalf("put revision: %v", err)
 	}
 	if err := r.st.CompareAndSetRegistryHead(store.TransitionRegistryV1, hashref.HashRef{}, obj.Hash); err != nil {

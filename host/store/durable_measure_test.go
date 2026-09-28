@@ -148,21 +148,21 @@ func TestMeasureContextFreeSurface(t *testing.T) {
 	}
 	for i := 0; i < 200; i++ {
 		intent := effectIntentFixture("ep-scan", int64(i))
-		if _, _, err := s.AppendNextEffectIntent("ep-scan", intent); err != nil {
+		if _, _, err := s.AppendNextEffectIntent(context.Background(), "ep-scan", intent); err != nil {
 			t.Fatal(err)
 		}
 	}
 	for i := 0; i < measureN; i++ {
 		id := fmt.Sprintf("x-%d", i)
 		o := obj("surface-"+id, "measure/object")
-		timeIt("PutObject", func() error { return s.PutObject(o) })
+		timeIt("PutObject", func() error { return s.PutObject(context.Background(), o) })
 		w := World{Ref: hashref.SumSHA256([]byte("w-" + id)), Revision: int64(i + 1),
 			StateRoot: o.Hash, LogHead: o.Hash}
 		timeIt("PutWorld", func() error { return s.PutWorld(w) })
 		timeIt("SelectHead", func() error { return s.SelectHead(head.Ref) })
-		timeIt("SetRegistryHead", func() error { return s.SetRegistryHead("measure/reg", o.Hash) })
+		timeIt("SetRegistryHead", func() error { return s.SetRegistryHead(context.Background(), "measure/reg", o.Hash) })
 		o2 := obj("surface-next-"+id, "measure/object")
-		if err := s.PutObject(o2); err != nil {
+		if err := s.PutObject(context.Background(), o2); err != nil {
 			t.Fatal(err)
 		}
 		timeIt("CompareAndSetRegistryHead", func() error {
@@ -181,15 +181,15 @@ func TestMeasureContextFreeSurface(t *testing.T) {
 		var effectID string
 		timeIt("AppendNextEffectIntent", func() error {
 			var err error
-			effectID, _, err = s.AppendNextEffectIntent("ep-m", effectIntentFixture("ep-m", int64(i)))
+			effectID, _, err = s.AppendNextEffectIntent(context.Background(), "ep-m", effectIntentFixture("ep-m", int64(i)))
 			return err
 		})
 		timeIt("AppendEffectOutcome", func() error {
-			_, _, err := s.AppendEffectOutcome(effectID, EffectOutcome{InvocationID: effectID,
+			_, _, err := s.AppendEffectOutcome(context.Background(), effectID, EffectOutcome{InvocationID: effectID,
 				Status: "succeeded", RecordRef: o.Hash, LogicalTime: int64(i)})
 			return err
 		})
-		timeIt("GetEffectReceipt", func() error { _, _, err := s.GetEffectReceipt(effectID); return err })
+		timeIt("GetEffectReceipt", func() error { _, _, err := s.GetEffectReceipt(context.Background(), effectID); return err })
 		pid := fmt.Sprintf("p-%d", i)
 		timeIt("AppendOutcome", func() error {
 			_, _, err := s.AppendOutcome(pid, JournalOutcome{InvocationID: pid, Status: "committed",

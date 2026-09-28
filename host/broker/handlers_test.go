@@ -25,11 +25,11 @@ type handlerRecordingStore struct {
 	onStoreCall func(op string)
 }
 
-func (s *handlerRecordingStore) PutObject(obj store.Object) error {
+func (s *handlerRecordingStore) PutObject(ctx context.Context, obj store.Object) error {
 	if s.onStoreCall != nil {
 		s.onStoreCall("PutObject")
 	}
-	if err := s.base.PutObject(obj); err != nil {
+	if err := s.base.PutObject(ctx, obj); err != nil {
 		return err
 	}
 	s.objects = append(s.objects, obj)
@@ -47,35 +47,35 @@ func (s *handlerRecordingStore) GetObject(ctx context.Context, ref hashref.HashR
 }
 
 func (s *handlerRecordingStore) AppendNextEffectIntent(
-	episodeID string,
+	ctx context.Context, episodeID string,
 	intent store.EffectIntent,
 ) (string, int64, error) {
 	if s.onStoreCall != nil {
 		s.onStoreCall("AppendNextEffectIntent")
 	}
-	return s.base.AppendNextEffectIntent(episodeID, intent)
+	return s.base.AppendNextEffectIntent(ctx, episodeID, intent)
 }
 
 func (s *handlerRecordingStore) AppendClaimedEffectIntent(
-	episodeID string,
+	ctx context.Context, episodeID string,
 	intent store.EffectIntent,
 	approvalRef, requestRef hashref.HashRef,
 ) (string, int64, error) {
-	return s.base.AppendClaimedEffectIntent(episodeID, intent, approvalRef, requestRef)
+	return s.base.AppendClaimedEffectIntent(ctx, episodeID, intent, approvalRef, requestRef)
 }
 
 func (s *handlerRecordingStore) AppendEffectOutcome(
-	id string,
+	ctx context.Context, id string,
 	outcome store.EffectOutcome,
 ) (int64, hashref.HashRef, error) {
 	if s.onStoreCall != nil {
 		s.onStoreCall("AppendEffectOutcome")
 	}
-	return s.base.AppendEffectOutcome(id, outcome)
+	return s.base.AppendEffectOutcome(ctx, id, outcome)
 }
 
-func (s *handlerRecordingStore) SetRegistryHead(name string, ref hashref.HashRef) error {
-	return s.base.SetRegistryHead(name, ref)
+func (s *handlerRecordingStore) SetRegistryHead(ctx context.Context, name string, ref hashref.HashRef) error {
+	return s.base.SetRegistryHead(ctx, name, ref)
 }
 
 func (s *handlerRecordingStore) GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error) {
@@ -632,20 +632,20 @@ type failingApprovalStore struct {
 
 var errApprovalStoreInjected = errors.New("injected approval store failure")
 
-func (s *failingApprovalStore) PutObject(obj store.Object) error {
+func (s *failingApprovalStore) PutObject(ctx context.Context, obj store.Object) error {
 	if !s.failed && obj.SemanticID == s.failSemantic {
 		s.failed = true
 		return errApprovalStoreInjected
 	}
-	return s.handlerRecordingStore.PutObject(obj)
+	return s.handlerRecordingStore.PutObject(ctx, obj)
 }
 
-func (s *failingApprovalStore) SetRegistryHead(name string, ref hashref.HashRef) error {
+func (s *failingApprovalStore) SetRegistryHead(ctx context.Context, name string, ref hashref.HashRef) error {
 	if !s.failed && s.failHead && name == ApprovalsV1 {
 		s.failed = true
 		return errApprovalStoreInjected
 	}
-	return s.handlerRecordingStore.SetRegistryHead(name, ref)
+	return s.handlerRecordingStore.SetRegistryHead(ctx, name, ref)
 }
 
 func TestApprovalFailuresKeepStandingAttentionDebit(t *testing.T) {

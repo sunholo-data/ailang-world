@@ -35,11 +35,11 @@ func (f HandlerFunc) Execute(ctx context.Context, req EffectRequest, payload []b
 type Registry map[string]Handler
 
 type objectStore interface {
-	PutObject(store.Object) error
+	PutObject(context.Context, store.Object) error
 	GetObject(context.Context, hashref.HashRef) (store.Object, bool, error)
-	AppendNextEffectIntent(string, store.EffectIntent) (string, int64, error)
-	AppendClaimedEffectIntent(string, store.EffectIntent, hashref.HashRef, hashref.HashRef) (string, int64, error)
-	AppendEffectOutcome(string, store.EffectOutcome) (int64, hashref.HashRef, error)
+	AppendNextEffectIntent(context.Context, string, store.EffectIntent) (string, int64, error)
+	AppendClaimedEffectIntent(context.Context, string, store.EffectIntent, hashref.HashRef, hashref.HashRef) (string, int64, error)
+	AppendEffectOutcome(context.Context, string, store.EffectOutcome) (int64, hashref.HashRef, error)
 }
 
 // Session is one serial capability ledger and effect-record stream.
@@ -196,7 +196,7 @@ func (s *Session) invoke(
 			BudgetBefore: budgetBefore, BudgetAfter: budgetBefore,
 			Denial: decision.Label, RequestRef: requestRef,
 		}
-		ref, putErr := s.putRecord(rec)
+		ref, putErr := s.putRecord(ctx, rec)
 		if putErr != nil {
 			return nil, hashref.HashRef{}, putErr
 		}
@@ -214,7 +214,7 @@ func (s *Session) invoke(
 	if !ok {
 		return nil, hashref.HashRef{}, fmt.Errorf("broker: no handler registered for %q", req.Effect)
 	}
-	if err := s.store.PutObject(requestObj); err != nil {
+	if err := s.store.PutObject(ctx, requestObj); err != nil {
 		return nil, hashref.HashRef{}, fmt.Errorf("broker: put effect request: %w", err)
 	}
 	intent := store.EffectIntent{
@@ -247,9 +247,9 @@ func (s *Session) invoke(
 			return nil, hashref.HashRef{}, approvalErr
 		}
 		effectID, ordinal, err = s.store.AppendClaimedEffectIntent(
-			s.episodeID, intent, approvalRef, requestRef)
+			ctx, s.episodeID, intent, approvalRef, requestRef)
 	} else {
-		effectID, ordinal, err = s.store.AppendNextEffectIntent(s.episodeID, intent)
+		effectID, ordinal, err = s.store.AppendNextEffectIntent(ctx, s.episodeID, intent)
 	}
 	if err != nil {
 		return nil, hashref.HashRef{}, fmt.Errorf("broker: append effect intent: %w", err)
@@ -284,11 +284,11 @@ func (s *Session) invoke(
 			BudgetBefore: budgetBefore, BudgetAfter: decision.Remaining,
 			Allowed: true, Failed: true, RequestRef: requestRef,
 		}
-		ref, putErr := s.putRecord(rec)
+		ref, putErr := s.putRecord(ctx, rec)
 		if putErr != nil {
 			return nil, hashref.HashRef{}, putErr
 		}
-		if _, _, outcomeErr := s.store.AppendEffectOutcome(effectID, store.EffectOutcome{
+		if _, _, outcomeErr := s.store.AppendEffectOutcome(ctx, effectID, store.EffectOutcome{
 			InvocationID: effectID, Status: "failed", RecordRef: ref, LogicalTime: req.Now,
 		}); outcomeErr != nil {
 			return nil, hashref.HashRef{}, fmt.Errorf("broker: append failed effect outcome: %w", outcomeErr)
@@ -298,7 +298,7 @@ func (s *Session) invoke(
 		}
 	}
 	resultObj := resultObject(result)
-	if err := s.store.PutObject(resultObj); err != nil {
+	if err := s.store.PutObject(ctx, resultObj); err != nil {
 		return nil, hashref.HashRef{}, fmt.Errorf("broker: put effect result: %w", err)
 	}
 	rec := EffectRecord{
@@ -306,11 +306,11 @@ func (s *Session) invoke(
 		BudgetBefore: budgetBefore, BudgetAfter: decision.Remaining, Allowed: true,
 		RequestRef: requestRef, ResultRef: resultObj.Hash,
 	}
-	recordRef, err = s.putRecord(rec)
+	recordRef, err = s.putRecord(ctx, rec)
 	if err != nil {
 		return nil, hashref.HashRef{}, err
 	}
-	if _, _, err := s.store.AppendEffectOutcome(effectID, store.EffectOutcome{
+	if _, _, err := s.store.AppendEffectOutcome(ctx, effectID, store.EffectOutcome{
 		InvocationID: effectID, Status: "succeeded", RecordRef: recordRef, LogicalTime: req.Now,
 	}); err != nil {
 		return nil, hashref.HashRef{}, fmt.Errorf("broker: append succeeded effect outcome: %w", err)
@@ -350,12 +350,12 @@ func requestObject(req EffectRequest, payload []byte) store.Object {
 	return brokerObject(EffectRequestV1, requestBytes(req, payload))
 }
 
-func (s *Session) putRecord(rec EffectRecord) (hashref.HashRef, error) {
+func (s *Session) putRecord(ctx context.Context, rec EffectRecord) (hashref.HashRef, error) {
 	if !RecordConsistent(rec) {
 		return hashref.HashRef{}, errors.New("broker: refuses inconsistent effect record")
 	}
 	obj := recordObject(rec)
-	if err := s.store.PutObject(obj); err != nil {
+	if err := s.store.PutObject(ctx, obj); err != nil {
 		return hashref.HashRef{}, fmt.Errorf("broker: put effect record: %w", err)
 	}
 	return obj.Hash, nil

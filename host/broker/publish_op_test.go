@@ -196,7 +196,7 @@ func TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(t *te
 	if len(recording.effectIDs) != 1 {
 		t.Fatalf("durable effect intents = %v, want exactly 1", recording.effectIDs)
 	}
-	receipt, ok, err := base.GetEffectReceipt(recording.effectIDs[0])
+	receipt, ok, err := base.GetEffectReceipt(context.Background(), recording.effectIDs[0])
 	if err != nil || !ok {
 		t.Fatalf("effect receipt %s: ok=%v err=%v", recording.effectIDs[0], ok, err)
 	}
@@ -392,7 +392,7 @@ func TestIndeterminatePublishAppendsNoOutcomeAndIsNeverRetried(t *testing.T) {
 	if len(recording.effectIDs) != 1 {
 		t.Fatalf("durable effect intents = %v, want exactly 1", recording.effectIDs)
 	}
-	receipt, ok, err := base.GetEffectReceipt(recording.effectIDs[0])
+	receipt, ok, err := base.GetEffectReceipt(context.Background(), recording.effectIDs[0])
 	if err != nil || !ok {
 		t.Fatalf("effect receipt %s: ok=%v err=%v", recording.effectIDs[0], ok, err)
 	}

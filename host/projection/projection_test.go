@@ -103,7 +103,7 @@ func publishRevision(t *testing.T, st *store.Store, rev transitionreg.Revision, 
 		Hash: hashref.SumSHA256(payload), InterfaceHash: transitionreg.InterfaceHashV1,
 		SemanticID: transitionreg.SemanticIDV1, Provenance: "projection-test", Payload: payload,
 	}
-	if err := st.PutObject(obj); err != nil {
+	if err := st.PutObject(context.Background(), obj); err != nil {
 		t.Fatalf("put object: %v", err)
 	}
 	if err := st.CompareAndSetRegistryHead(store.TransitionRegistryV1, expected, obj.Hash); err != nil {

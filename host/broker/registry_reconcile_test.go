@@ -390,7 +390,7 @@ func TestRecoveryReportsTheIndeterminatePublishWithoutDispatchingAnyHandler(t *t
 	// `registries ...Registry` parameter, which exists for exactly this reason:
 	// it makes the no-dispatch policy observable at the production boundary.
 	instrument := newCountingNetworkHandler(t)
-	findings, err := Recover(reopened.Store, Registry{
+	findings, err := Recover(context.Background(), reopened.Store, Registry{
 		EffectRegistryPublish: instrument,
 		"FS.Write":            instrument,
 	})

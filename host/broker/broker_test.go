@@ -384,7 +384,7 @@ func TestDeniedInvokeWritesOneRecord(t *testing.T) {
 		!rec.ResultRef.IsZero() || !RecordConsistent(rec) {
 		t.Fatalf("denial record = %#v", rec)
 	}
-	receipt, hasIntent, err := s.GetEffectReceipt(store.EffectInvocationID("denied-record", 0))
+	receipt, hasIntent, err := s.GetEffectReceipt(context.Background(), store.EffectInvocationID("denied-record", 0))
 	if err != nil || hasIntent || receipt.State != store.ReceiptNotStarted {
 		t.Fatalf("denied receipt = %#v, hasIntent %v, err %v; want not-started", receipt, hasIntent, err)
 	}
@@ -454,11 +454,11 @@ type failRecordStore struct {
 	effectOutcomeCalls int
 }
 
-func (s *failRecordStore) PutObject(obj store.Object) error {
+func (s *failRecordStore) PutObject(ctx context.Context, obj store.Object) error {
 	if obj.SemanticID == EffectRecordV1 {
 		return errors.New("injected record write failure")
 	}
-	return s.base.PutObject(obj)
+	return s.base.PutObject(ctx, obj)
 }
 
 func (s *failRecordStore) GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error) {
@@ -466,26 +466,26 @@ func (s *failRecordStore) GetObject(ctx context.Context, ref hashref.HashRef) (s
 }
 
 func (s *failRecordStore) AppendNextEffectIntent(
-	episodeID string,
+	ctx context.Context, episodeID string,
 	intent store.EffectIntent,
 ) (string, int64, error) {
-	return s.base.AppendNextEffectIntent(episodeID, intent)
+	return s.base.AppendNextEffectIntent(ctx, episodeID, intent)
 }
 
 func (s *failRecordStore) AppendClaimedEffectIntent(
-	episodeID string,
+	ctx context.Context, episodeID string,
 	intent store.EffectIntent,
 	approvalRef, requestRef hashref.HashRef,
 ) (string, int64, error) {
-	return s.base.AppendClaimedEffectIntent(episodeID, intent, approvalRef, requestRef)
+	return s.base.AppendClaimedEffectIntent(ctx, episodeID, intent, approvalRef, requestRef)
 }
 
 func (s *failRecordStore) AppendEffectOutcome(
-	id string,
+	ctx context.Context, id string,
 	outcome store.EffectOutcome,
 ) (int64, hashref.HashRef, error) {
 	s.effectOutcomeCalls++
-	return s.base.AppendEffectOutcome(id, outcome)
+	return s.base.AppendEffectOutcome(ctx, id, outcome)
 }
 
 func TestRecordFailureDeliversNoResult(t *testing.T) {
@@ -511,7 +511,7 @@ func TestRecordFailureDeliversNoResult(t *testing.T) {
 		t.Fatalf("AppendEffectOutcome calls = %d, want 0 after record failure",
 			failing.effectOutcomeCalls)
 	}
-	receipt, hasIntent, receiptErr := base.GetEffectReceipt(
+	receipt, hasIntent, receiptErr := base.GetEffectReceipt(context.Background(),
 		store.EffectInvocationID("record-failure", 0),
 	)
 	if receiptErr != nil || !hasIntent || receipt.State != store.ReceiptIndeterminate {
@@ -528,7 +528,7 @@ func TestIntentIsDurableBeforeDispatch(t *testing.T) {
 		_ EffectRequest,
 		_ []byte,
 	) ([]byte, error) {
-		receipt, hasIntent, err := s.GetEffectReceipt(store.EffectInvocationID(episodeID, 0))
+		receipt, hasIntent, err := s.GetEffectReceipt(context.Background(), store.EffectInvocationID(episodeID, 0))
 		if err != nil || !hasIntent || receipt.State != store.ReceiptIndeterminate {
 			t.Fatalf("receipt at dispatch = %#v, hasIntent %v, err %v; want indeterminate",
 				receipt, hasIntent, err)
@@ -559,7 +559,7 @@ func TestFailedInvokeJournalsResolvedOutcome(t *testing.T) {
 	if !errors.As(err, &failed) || !errors.Is(err, handlerErr) {
 		t.Fatalf("Invoke error = %v, want EffectFailedError wrapping handler error", err)
 	}
-	receipt, hasIntent, err := s.GetEffectReceipt(store.EffectInvocationID(episodeID, 0))
+	receipt, hasIntent, err := s.GetEffectReceipt(context.Background(), store.EffectInvocationID(episodeID, 0))
 	if err != nil || !hasIntent || receipt.State != store.ReceiptResolved ||
 		receipt.EffectOutcome == nil || receipt.EffectOutcome.Status != "failed" ||
 		receipt.EffectOutcome.RecordRef != recordRef || receipt.EffectOutcome.LogicalTime != 7 {
@@ -828,7 +828,7 @@ func TestReplayReturnsRecordedBytesWithoutDispatch(t *testing.T) {
 	if replayDispatches != 0 {
 		t.Fatalf("replay dispatches = %d, want 0", replayDispatches)
 	}
-	nextReceipt, hasNext, err := s.GetEffectReceipt(store.EffectInvocationID(episodeID, 1))
+	nextReceipt, hasNext, err := s.GetEffectReceipt(context.Background(), store.EffectInvocationID(episodeID, 1))
 	if err != nil || hasNext || nextReceipt.State != store.ReceiptNotStarted {
 		t.Fatalf("replay-created receipt = %#v, hasIntent %v, err %v; want none",
 			nextReceipt, hasNext, err)

@@ -73,7 +73,7 @@ func TestWriterLockHelperProcess(t *testing.T) {
 		os.Exit(3)
 	}
 	if seed := os.Getenv(helperSeedEnv); seed != "" {
-		if err := s.PutObject(obj(seed, helperSemanticID)); err != nil {
+		if err := s.PutObject(context.Background(), obj(seed, helperSemanticID)); err != nil {
 			fmt.Fprintf(os.Stderr, "helper: seed write failed: %v\n", err)
 			_ = s.Close()
 			os.Exit(4)
@@ -279,7 +279,7 @@ func TestWriterLockReadOnlyConcurrent(t *testing.T) {
 	}
 
 	// It must really be read-only, or "no writer lock" would be unsound.
-	if err := ro.PutObject(obj("written-through-the-read-only-handle", "should-fail")); err == nil {
+	if err := ro.PutObject(context.Background(), obj("written-through-the-read-only-handle", "should-fail")); err == nil {
 		t.Fatal("read-only handle accepted a write; mode=ro is not in effect")
 	}
 

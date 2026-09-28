@@ -282,7 +282,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 	}
 	for ordinal := int64(0); ordinal < 5; ordinal++ {
 		id := store.EffectInvocationID("landed-episode", ordinal)
-		effectReceipt, hasIntent, receiptErr := s.GetEffectReceipt(id)
+		effectReceipt, hasIntent, receiptErr := s.GetEffectReceipt(context.Background(), id)
 		if receiptErr != nil || !hasIntent || effectReceipt.State != store.ReceiptResolved ||
 			effectReceipt.EffectIntent == nil || effectReceipt.EffectOutcome == nil {
 			t.Fatalf("effect receipt %d = %#v, hasIntent %v, err %v; want resolved",
@@ -307,7 +307,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 	if len(pendingEffects) != 0 {
 		t.Fatalf("pending effect intents = %d, want 0", len(pendingEffects))
 	}
-	deniedEffectReceipt, deniedHasIntent, err := s.GetEffectReceipt(
+	deniedEffectReceipt, deniedHasIntent, err := s.GetEffectReceipt(context.Background(),
 		store.EffectInvocationID("landed-episode", 5),
 	)
 	if err != nil || deniedHasIntent || deniedEffectReceipt.State != store.ReceiptNotStarted {

@@ -305,7 +305,7 @@ func pinnedTransitionFn(ctx context.Context, db *store.Store, arch *archive.Arch
 			Hash: hashref.SumSHA256(source), InterfaceHash: hashref.SumSHA256([]byte(transitionSourceSemanticID)),
 			SemanticID: transitionSourceSemanticID, Provenance: "cmd/world-publish", Payload: source,
 		}
-		if err := db.PutObject(obj); err != nil {
+		if err := db.PutObject(ctx, obj); err != nil {
 			return hashref.HashRef{}, fmt.Errorf("store transition source: %w", err)
 		}
 		return obj.Hash, nil

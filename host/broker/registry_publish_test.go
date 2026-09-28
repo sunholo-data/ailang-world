@@ -546,7 +546,7 @@ func (f publishFixture) landApprovalOverRawRequest(
 ) publishFixture {
 	t.Helper()
 	requestObj := brokerObject(ApprovalRequestV1, mustApprovalJSON(wire))
-	if err := base.PutObject(requestObj); err != nil {
+	if err := base.PutObject(context.Background(), requestObj); err != nil {
 		t.Fatalf("put raw approval request: %v", err)
 	}
 	if err := appendApprovalHead(context.Background(), base, requestObj.Hash, hashref.HashRef{}); err != nil {
@@ -576,7 +576,7 @@ func (f publishFixture) landApprovalOverRawRequest(
 func putRawApprovalObject(t *testing.T, base approvalStore, semanticID string, payload []byte) hashref.HashRef {
 	t.Helper()
 	obj := brokerObject(semanticID, payload)
-	if err := base.PutObject(obj); err != nil {
+	if err := base.PutObject(context.Background(), obj); err != nil {
 		t.Fatalf("put raw %s object: %v", semanticID, err)
 	}
 	return obj.Hash
@@ -676,8 +676,8 @@ type publishRecordingStore struct {
 	effectIDs []string
 }
 
-func (s *publishRecordingStore) PutObject(obj store.Object) error {
-	if err := s.base.PutObject(obj); err != nil {
+func (s *publishRecordingStore) PutObject(ctx context.Context, obj store.Object) error {
+	if err := s.base.PutObject(ctx, obj); err != nil {
 		return err
 	}
 	if obj.SemanticID == EffectRecordV1 {
@@ -691,9 +691,9 @@ func (s *publishRecordingStore) GetObject(ctx context.Context, ref hashref.HashR
 }
 
 func (s *publishRecordingStore) AppendNextEffectIntent(
-	episodeID string, intent store.EffectIntent,
+	ctx context.Context, episodeID string, intent store.EffectIntent,
 ) (string, int64, error) {
-	id, ordinal, err := s.base.AppendNextEffectIntent(episodeID, intent)
+	id, ordinal, err := s.base.AppendNextEffectIntent(ctx, episodeID, intent)
 	if err == nil {
 		s.effectIDs = append(s.effectIDs, id)
 	}
@@ -701,9 +701,9 @@ func (s *publishRecordingStore) AppendNextEffectIntent(
 }
 
 func (s *publishRecordingStore) AppendClaimedEffectIntent(
-	episodeID string, intent store.EffectIntent, approvalRef, requestRef hashref.HashRef,
+	ctx context.Context, episodeID string, intent store.EffectIntent, approvalRef, requestRef hashref.HashRef,
 ) (string, int64, error) {
-	id, ordinal, err := s.base.AppendClaimedEffectIntent(episodeID, intent, approvalRef, requestRef)
+	id, ordinal, err := s.base.AppendClaimedEffectIntent(ctx, episodeID, intent, approvalRef, requestRef)
 	if err == nil {
 		s.effectIDs = append(s.effectIDs, id)
 	}
@@ -711,9 +711,9 @@ func (s *publishRecordingStore) AppendClaimedEffectIntent(
 }
 
 func (s *publishRecordingStore) AppendEffectOutcome(
-	id string, outcome store.EffectOutcome,
+	ctx context.Context, id string, outcome store.EffectOutcome,
 ) (int64, hashref.HashRef, error) {
-	return s.base.AppendEffectOutcome(id, outcome)
+	return s.base.AppendEffectOutcome(ctx, id, outcome)
 }
 
 func publishSession(
@@ -871,7 +871,7 @@ func effectReceipt(t *testing.T, recording *publishRecordingStore, index int) st
 	if index >= len(recording.effectIDs) {
 		t.Fatalf("no effect intent at index %d; minted %v", index, recording.effectIDs)
 	}
-	receipt, ok, err := recording.base.GetEffectReceipt(recording.effectIDs[index])
+	receipt, ok, err := recording.base.GetEffectReceipt(context.Background(), recording.effectIDs[index])
 	if err != nil || !ok {
 		t.Fatalf("GetEffectReceipt(%q) = ok %v, err %v", recording.effectIDs[index], ok, err)
 	}
@@ -1309,7 +1309,7 @@ func driveReplayEntry(t *testing.T, probe string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := base.PutObject(source); err != nil {
+	if err := base.PutObject(context.Background(), source); err != nil {
 		t.Fatal(err)
 	}
 	// The recorded result deliberately does not match the probe's banner, so
@@ -1880,7 +1880,7 @@ func TestPublishClaimIsDurableBeforeDispatchAndSurvivesAFreshBudget(t *testing.T
 		observed.effectIDs = append([]string(nil), recording.effectIDs...)
 		observed.countersAtGate = readPublishCounters(validator, handler)
 		if len(recording.effectIDs) == 1 {
-			receipt, ok, err := base.GetEffectReceipt(recording.effectIDs[0])
+			receipt, ok, err := base.GetEffectReceipt(context.Background(), recording.effectIDs[0])
 			observed.hasReceipt, observed.receiptState = ok, receipt.State
 			if err != nil {
 				observed.claimReuseErr = err
@@ -1891,7 +1891,7 @@ func TestPublishClaimIsDurableBeforeDispatchAndSurvivesAFreshBudget(t *testing.T
 		// production entry point a second session would use. A rollback leaves
 		// nothing behind, so this probe cannot itself consume anything.
 		probeRef := hashref.SumSHA256([]byte("ac8-claim-probe"))
-		_, _, observed.claimReuseErr = base.AppendClaimedEffectIntent(
+		_, _, observed.claimReuseErr = base.AppendClaimedEffectIntent(context.Background(),
 			"ac8-claim-probe",
 			store.EffectIntent{
 				EpisodeID: "ac8-claim-probe", Effect: EffectRegistryPublish,
@@ -2486,7 +2486,7 @@ func TestIndeterminatePublishBurnsTheApprovalAndRecoveryStaysReadOnly(t *testing
 	// RECOVERY IS READ-ONLY. It is handed the real publish registry, and the
 	// counters must not move: a surface that can report an unresolved
 	// irreversible attempt must not be able to launch a second one.
-	findings, err := Recover(reopened.Store, Registry{EffectRegistryPublish: handler})
+	findings, err := Recover(context.Background(), reopened.Store, Registry{EffectRegistryPublish: handler})
 	if err != nil {
 		t.Fatal(err)
 	}

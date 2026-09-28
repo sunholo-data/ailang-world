@@ -76,7 +76,7 @@ func TestReplayCacheCallerCancellation(t *testing.T) {
 	defer s.Close()
 	payload := []byte("source")
 	ref := hashref.SumSHA256(payload)
-	if err := s.PutObject(store.Object{Hash: ref, InterfaceHash: hashref.SumSHA256([]byte("iface")), SemanticID: "test/source", Payload: payload}); err != nil {
+	if err := s.PutObject(context.Background(), store.Object{Hash: ref, InterfaceHash: hashref.SumSHA256([]byte("iface")), SemanticID: "test/source", Payload: payload}); err != nil {
 		t.Fatal(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())

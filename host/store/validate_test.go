@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -52,17 +53,17 @@ func TestEveryPersistedRefFieldIsValidated(t *testing.T) {
 		{"PutObject Hash", "PutObject", "Hash", func(s *Store, _ World) error {
 			o := obj("validate", "validate")
 			o.Hash = zero
-			return s.PutObject(o)
+			return s.PutObject(context.Background(), o)
 		}},
 		{"PutObject InterfaceHash", "PutObject", "InterfaceHash", func(s *Store, _ World) error {
 			o := obj("validate", "validate")
 			o.InterfaceHash = zero
-			return s.PutObject(o)
+			return s.PutObject(context.Background(), o)
 		}},
 		{"PutWorld Ref", "PutWorld", "Ref", func(s *Store, g World) error { g.Ref = zero; return s.PutWorld(g) }},
 		{"PutWorld StateRoot", "PutWorld", "StateRoot", func(s *Store, g World) error { g.StateRoot = zero; return s.PutWorld(g) }},
 		{"PutWorld LogHead", "PutWorld", "LogHead", func(s *Store, g World) error { g.LogHead = zero; return s.PutWorld(g) }},
-		{"SetRegistryHead", "SetRegistryHead", "objectRef", func(s *Store, _ World) error { return s.SetRegistryHead("bad", zero) }},
+		{"SetRegistryHead", "SetRegistryHead", "objectRef", func(s *Store, _ World) error { return s.SetRegistryHead(context.Background(), "bad", zero) }},
 		{"SelectHead", "SelectHead", "ref", func(s *Store, _ World) error { return s.SelectHead(zero) }},
 		{"PutVerifyResult TransitionFn", "PutVerifyResult", "TransitionFn", func(s *Store, _ World) error {
 			return s.PutVerifyResult(VerifyResult{TransitionFn: zero, Interpreter: hashref.SumSHA256([]byte("i"))})

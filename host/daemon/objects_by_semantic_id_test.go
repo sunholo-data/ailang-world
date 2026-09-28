@@ -28,7 +28,7 @@ func putSemanticObjects(t *testing.T, d *Daemon, id string, n int) []string {
 			Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte("route-sid-iface")),
 			SemanticID: id, Provenance: "route-sid", Payload: payload,
 		}
-		if err := d.store.PutObject(o); err != nil {
+		if err := d.store.PutObject(context.Background(), o); err != nil {
 			t.Fatalf("PutObject: %v", err)
 		}
 		hashes = append(hashes, o.Hash.String())

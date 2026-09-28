@@ -127,7 +127,7 @@ func TestPublishSetEpochCheckIsPerDescriptorInterpreter(t *testing.T) {
 	}
 	obj := store.Object{Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte(registry.SemanticID)),
 		SemanticID: registry.SemanticID, Provenance: "test-two-epoch-registry", Payload: payload}
-	if err := s.PutObject(obj); err != nil {
+	if err := s.PutObject(context.Background(), obj); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.CompareAndSetRegistryHead(registry.SemanticID, hashref.HashRef{}, obj.Hash); err != nil {

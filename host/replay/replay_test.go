@@ -129,7 +129,7 @@ func newFixtureEnv(t *testing.T) *fixtureEnv {
 	if err != nil {
 		t.Fatalf("build source object: %v", err)
 	}
-	if err := s.PutObject(srcObj); err != nil {
+	if err := s.PutObject(context.Background(), srcObj); err != nil {
 		t.Fatalf("put source object: %v", err)
 	}
 
@@ -348,10 +348,10 @@ func TestEpochRegistryCandidateCannotRedirect(t *testing.T) {
 		Provenance:    "rogue-candidate",
 		Payload:       rogueBytes,
 	}
-	if err := env.store.PutObject(rogueObj); err != nil {
+	if err := env.store.PutObject(context.Background(), rogueObj); err != nil {
 		t.Fatalf("put rogue registry object: %v", err)
 	}
-	if err := env.store.SetRegistryHead(registry.SemanticID, rogueObj.Hash); err != nil {
+	if err := env.store.SetRegistryHead(context.Background(), registry.SemanticID, rogueObj.Hash); err != nil {
 		t.Fatalf("repoint registry head: %v", err)
 	}
 
@@ -410,7 +410,7 @@ func TestPairMemberChangeCausesCacheMiss(t *testing.T) {
 	if altObj.Hash.String() == env.srcObj.Hash.String() {
 		t.Fatal("alternate source must hash differently for the pair-change test")
 	}
-	if err := env.store.PutObject(altObj); err != nil {
+	if err := env.store.PutObject(context.Background(), altObj); err != nil {
 		t.Fatalf("put alt source object: %v", err)
 	}
 
@@ -668,7 +668,7 @@ func TestExecFailureReplayBranch(t *testing.T) {
 	if err != nil {
 		t.Fatalf("source object: %v", err)
 	}
-	if err := s.PutObject(srcObj); err != nil {
+	if err := s.PutObject(context.Background(), srcObj); err != nil {
 		t.Fatalf("put source: %v", err)
 	}
 
@@ -746,7 +746,7 @@ func TestSidecarPresentExecutableAbsentResolvesAbsent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("source object: %v", err)
 	}
-	if err := s.PutObject(srcObj); err != nil {
+	if err := s.PutObject(context.Background(), srcObj); err != nil {
 		t.Fatalf("put source: %v", err)
 	}
 	ep := Episode{
