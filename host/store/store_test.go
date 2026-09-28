@@ -115,7 +115,7 @@ func TestFrozenHeaderRoundTrip(t *testing.T) {
 		LogHead:   entryHash,
 	}
 
-	if err := s.Commit(Commit{
+	if err := s.Commit(context.Background(), Commit{
 		ObservedHead: genesis.Ref,
 		Objects:      []Object{transitionBody},
 		NextWorld:    next,
@@ -203,7 +203,7 @@ func TestCommitConflictOnStaleHead(t *testing.T) {
 			TransitionRef: body.Hash,
 		},
 	}
-	if err := s.Commit(commitA); err != nil {
+	if err := s.Commit(context.Background(), commitA); err != nil {
 		t.Fatalf("first Commit: %v", err)
 	}
 
@@ -230,7 +230,7 @@ func TestCommitConflictOnStaleHead(t *testing.T) {
 			TransitionRef: body2.Hash,
 		},
 	}
-	err := s.Commit(commitB)
+	err := s.Commit(context.Background(), commitB)
 	if err == nil {
 		t.Fatal("stale-head Commit succeeded; expected ConflictError")
 	}

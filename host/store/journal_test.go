@@ -66,7 +66,7 @@ func TestReceiptStateDriftAllBooleanCombinations(t *testing.T) {
 			c := journalCommitFixture(t, s, id)
 			intent := testCommitIntent(id, c)
 			if tc.hasIntent == "yes" {
-				if _, _, err := s.AppendIntent(id, intent); err != nil {
+				if _, _, err := s.AppendIntent(context.Background(), id, intent); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -83,7 +83,7 @@ func TestReceiptStateDriftAllBooleanCombinations(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			got, ok, err := s.GetReceipt(id)
+			got, ok, err := s.GetReceipt(context.Background(), id)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -128,22 +128,22 @@ func TestIntentBindingMirrorsAllTenSketchRows(t *testing.T) {
 			s := openMem(t)
 			id := "binding-" + tc.name
 			c := journalCommitFixture(t, s, id)
-			if _, _, err := s.AppendIntent(id, testCommitIntent(id, c)); err != nil {
+			if _, _, err := s.AppendIntent(context.Background(), id, testCommitIntent(id, c)); err != nil {
 				t.Fatal(err)
 			}
 			before := snapshotJournalStore(t, s)
 			tc.mutate(&c)
-			err := s.Commit(c)
+			err := s.Commit(context.Background(), c)
 			if tc.wantMatch {
 				if err != nil {
 					t.Fatalf("matching Commit: %v", err)
 				}
-				receipt, _, err := s.GetReceipt(id)
+				receipt, _, err := s.GetReceipt(context.Background(), id)
 				if err != nil || receipt.State != ReceiptResolved {
 					t.Fatalf("receipt = %+v, err=%v", receipt, err)
 				}
 				afterFirst := snapshotJournalStore(t, s)
-				if err := s.Commit(c); err != nil {
+				if err := s.Commit(context.Background(), c); err != nil {
 					t.Fatalf("resolved idempotent Commit: %v", err)
 				}
 				if after := snapshotJournalStore(t, s); !reflect.DeepEqual(after, afterFirst) {
@@ -207,17 +207,17 @@ func TestAppendIntentIdempotencyDuplicateAndSchemaOutcomeUniqueness(t *testing.T
 	s := openMem(t)
 	c := journalCommitFixture(t, s, "idem")
 	intent := testCommitIntent("idem", c)
-	seq, ref, err := s.AppendIntent("idem", intent)
+	seq, ref, err := s.AppendIntent(context.Background(), "idem", intent)
 	if err != nil {
 		t.Fatal(err)
 	}
-	seq2, ref2, err := s.AppendIntent("idem", intent)
+	seq2, ref2, err := s.AppendIntent(context.Background(), "idem", intent)
 	if err != nil || seq2 != seq || ref2 != ref {
 		t.Fatalf("idempotent append = (%d,%s,%v), want (%d,%s,nil)", seq2, ref2, err, seq, ref)
 	}
 	changed := intent
 	changed.LogicalTime++
-	if _, _, err := s.AppendIntent("idem", changed); !IsDuplicateInvocation(err) {
+	if _, _, err := s.AppendIntent(context.Background(), "idem", changed); !IsDuplicateInvocation(err) {
 		t.Fatalf("different bytes error = %T %v", err, err)
 	}
 	outcome := JournalOutcome{"idem", "committed", c.NextWorld.Ref, 44}
@@ -239,7 +239,7 @@ func TestJournalSequenceGaplessAfterInducedRollback(t *testing.T) {
 	s := openMem(t)
 	appendID := func(id string) {
 		c := journalCommitFixture(t, s, id)
-		if _, _, err := s.AppendIntent(id, testCommitIntent(id, c)); err != nil {
+		if _, _, err := s.AppendIntent(context.Background(), id, testCommitIntent(id, c)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -249,7 +249,7 @@ func TestJournalSequenceGaplessAfterInducedRollback(t *testing.T) {
 		t.Fatal(err)
 	}
 	c := journalCommitFixture(t, s, "rollback")
-	if _, _, err := s.AppendIntent("rollback", testCommitIntent("rollback", c)); err == nil {
+	if _, _, err := s.AppendIntent(context.Background(), "rollback", testCommitIntent("rollback", c)); err == nil {
 		t.Fatal("induced rollback unexpectedly succeeded")
 	}
 	if _, err := s.db.Exec(`DROP TRIGGER induce_journal_rollback`); err != nil {
@@ -279,7 +279,7 @@ func TestPendingIntentsLimitsAndCursorPagination(t *testing.T) {
 	for i := 0; i < MaxPendingIntentsPage+7; i++ {
 		id := fmt.Sprintf("pending-%04d", i)
 		c := journalCommitFixture(t, s, id)
-		if _, _, err := s.AppendIntent(id, testCommitIntent(id, c)); err != nil {
+		if _, _, err := s.AppendIntent(context.Background(), id, testCommitIntent(id, c)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -402,7 +402,7 @@ func TestEffectJournalNamespaceDisjointness(t *testing.T) {
 	s := openMem(t)
 	id := EffectInvocationID("ep-1", 0)
 	c := journalCommitFixture(t, s, id)
-	if _, _, err := s.AppendIntent(id, testCommitIntent(id, c)); !IsInvocationMismatch(err) {
+	if _, _, err := s.AppendIntent(context.Background(), id, testCommitIntent(id, c)); !IsInvocationMismatch(err) {
 		t.Fatalf("commit-side effect ID error = %T %v", err, err)
 	}
 	if _, _, err := s.AppendEffectOutcome(context.Background(), "commit-id", EffectOutcome{
@@ -419,7 +419,7 @@ func TestGetReceiptRejectsEffectNamespaceBeforeDecode(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = s.GetReceipt(id)
+	_, _, err = s.GetReceipt(context.Background(), id)
 	var mismatch *InvocationMismatchError
 	if !errors.As(err, &mismatch) || mismatch.Field != "InvocationID" {
 		t.Fatalf("GetReceipt effect ID = %T %v, want namespace mismatch", err, err)
@@ -668,7 +668,7 @@ func TestAppendEffectOutcomeDisciplineAndReceiptWalk(t *testing.T) {
 func TestPendingEffectIntentsLimitsPagingAndIsolation(t *testing.T) {
 	s := openMem(t)
 	c := journalCommitFixture(t, s, "commit-isolation")
-	if _, _, err := s.AppendIntent("commit-isolation", testCommitIntent("commit-isolation", c)); err != nil {
+	if _, _, err := s.AppendIntent(context.Background(), "commit-isolation", testCommitIntent("commit-isolation", c)); err != nil {
 		t.Fatal(err)
 	}
 	var ids []string

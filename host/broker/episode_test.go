@@ -132,7 +132,7 @@ func appendEpisodeIntent(t *testing.T, s *store.Store, c store.Commit) {
 		Interpreter:   c.Entry.Header.Interpreter,
 		LogicalTime:   17,
 	}
-	if _, _, err := s.AppendIntent(c.InvocationID, intent); err != nil {
+	if _, _, err := s.AppendIntent(context.Background(), c.InvocationID, intent); err != nil {
 		t.Fatalf("append episode intent: %v", err)
 	}
 }
@@ -263,10 +263,10 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 	commit := buildEpisodeCommit(t, capsuleOutput, interpreter, records)
 	commit.InvocationID = "broker-episode-live-replay"
 	appendEpisodeIntent(t, s, commit)
-	if err := s.Commit(commit); err != nil {
+	if err := s.Commit(context.Background(), commit); err != nil {
 		t.Fatalf("commit episode: %v", err)
 	}
-	receipt, ok, err := s.GetReceipt(commit.InvocationID)
+	receipt, ok, err := s.GetReceipt(context.Background(), commit.InvocationID)
 	if err != nil || !ok {
 		t.Fatalf("episode receipt: ok=%v err=%v", ok, err)
 	}

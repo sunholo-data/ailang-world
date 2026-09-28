@@ -78,11 +78,11 @@ func TestWorkbenchRendersSeededWorldAndTimeline(t *testing.T) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "workbench-render")
 	first := testCommit(genesis, 0, "workbench-first")
-	if err := d.store.Commit(first); err != nil {
+	if err := d.store.Commit(context.Background(), first); err != nil {
 		t.Fatalf("first Commit: %v", err)
 	}
 	second := testCommit(first.NextWorld, 1, "workbench-second")
-	if err := d.store.Commit(second); err != nil {
+	if err := d.store.Commit(context.Background(), second); err != nil {
 		t.Fatalf("second Commit: %v", err)
 	}
 
@@ -136,7 +136,7 @@ func TestWorkbenchRefusalBranches(t *testing.T) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "workbench-refusals")
 	commit := testCommit(genesis, 0, "workbench-refusals-entry")
-	if err := d.store.Commit(commit); err != nil {
+	if err := d.store.Commit(context.Background(), commit); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 
@@ -266,7 +266,7 @@ func commitWorkbenchPayload(t *testing.T, d *Daemon, payload []byte, label strin
 	}
 	commit.Objects = []store.Object{object}
 	commit.Entry.TransitionRef = object.Hash
-	if err := d.store.Commit(commit); err != nil {
+	if err := d.store.Commit(context.Background(), commit); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	return object.Hash
@@ -342,7 +342,7 @@ func seedWorkbenchLog(t *testing.T, d *Daemon, n int) {
 	started := time.Now()
 	for index := int64(0); index < int64(n); index++ {
 		commit := testCommit(world, index, "workbench-timeline-bound")
-		if err := d.store.Commit(commit); err != nil {
+		if err := d.store.Commit(context.Background(), commit); err != nil {
 			t.Fatalf("Commit(%d): %v", index, err)
 		}
 		world = commit.NextWorld
@@ -479,7 +479,7 @@ func TestWorkbenchWorldPane(t *testing.T) {
 				commit.NextWorld.StateRoot = state.Hash
 				commit.Objects = append(commit.Objects, state)
 			}
-			if err := d.store.Commit(commit); err != nil {
+			if err := d.store.Commit(context.Background(), commit); err != nil {
 				t.Fatal(err)
 			}
 			_, ok, err := d.store.GetObject(context.Background(), commit.NextWorld.StateRoot)
@@ -516,11 +516,11 @@ func TestWorkbenchWorldPane(t *testing.T) {
 		state := workbenchTestObject("old-state", "world/state", hashref.SumSHA256([]byte("state-interface")))
 		old.NextWorld.StateRoot = state.Hash
 		old.Objects = append(old.Objects, state)
-		if err := d.store.Commit(old); err != nil {
+		if err := d.store.Commit(context.Background(), old); err != nil {
 			t.Fatal(err)
 		}
 		newer := testCommit(old.NextWorld, 1, "new-world")
-		if err := d.store.Commit(newer); err != nil {
+		if err := d.store.Commit(context.Background(), newer); err != nil {
 			t.Fatal(err)
 		}
 		if old.NextWorld.Ref == newer.NextWorld.Ref || old.NextWorld.StateRoot == newer.NextWorld.StateRoot || old.NextWorld.LogHead == newer.NextWorld.LogHead || old.NextWorld.Revision == newer.NextWorld.Revision {
@@ -553,7 +553,7 @@ func TestWorkbenchWorldPane(t *testing.T) {
 			d := newHandlerDaemon(t)
 			genesis := seedGenesisEmbedded(t, d, tc.name)
 			commit := testCommit(genesis, 0, tc.name)
-			if err := d.store.Commit(commit); err != nil {
+			if err := d.store.Commit(context.Background(), commit); err != nil {
 				t.Fatal(err)
 			}
 			d.errLog = &bytes.Buffer{}
@@ -584,7 +584,7 @@ func TestWorkbenchSelectedEntry(t *testing.T) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "workbench-selected")
 	commit := testCommit(genesis, 0, "workbench-selected")
-	if err := d.store.Commit(commit); err != nil {
+	if err := d.store.Commit(context.Background(), commit); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	header := commit.Entry.Header
@@ -863,7 +863,7 @@ func (s denseLogStore) GetLogEntry(ctx context.Context, index int64) (store.LogE
 func TestWorkbenchNextLinkOverflowGuard(t *testing.T) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "workbench-overflow")
-	if err := d.store.Commit(testCommit(genesis, 0, "workbench-overflow")); err != nil {
+	if err := d.store.Commit(context.Background(), testCommit(genesis, 0, "workbench-overflow")); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	d.reads = denseLogStore{readStore: d.store}
@@ -977,7 +977,7 @@ func TestWorkbenchObjectGrade(t *testing.T) {
 	commit := testCommit(genesis, 0, "workbench-grade")
 	proof := workbenchTestObject("workbench-grade-proof", "world/proof-report/v1", hashref.SumSHA256([]byte("world/authenticated-proof-envelope/v1")))
 	commit.Objects = append(commit.Objects, proof)
-	if err := d.store.Commit(commit); err != nil {
+	if err := d.store.Commit(context.Background(), commit); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	// CONTROL: the registry object is the real bootstrap-written one, not a fixture.
@@ -1022,7 +1022,7 @@ func TestWorkbenchObjectProvenanceWalk(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if err := d.store.Commit(commit); err != nil {
+	if err := d.store.Commit(context.Background(), commit); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	// CONTROLS: one interface target is stored and one is not, or the link and

@@ -21,11 +21,11 @@ type receiptErrorStore struct {
 	fail atomic.Bool
 }
 
-func (s *receiptErrorStore) GetReceipt(id string) (store.Receipt, bool, error) {
+func (s *receiptErrorStore) GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error) {
 	if s.fail.Swap(false) {
 		return store.Receipt{}, false, errors.New("receipt failed")
 	}
-	return s.Store.GetReceipt(id)
+	return s.Store.GetReceipt(ctx, id)
 }
 
 func flightRig(t *testing.T) (*rig, Call) {

@@ -12,7 +12,7 @@ import (
 // transaction's COMMIT had been handed to database/sql), or COMMIT itself
 // returned a driver error. The outcome is committed or not committed, never
 // partial (one SQLite transaction). Reconcile it by reading durable state
-// (GetReceiptContext for an invocation, the log-index witness for a bare
+// (GetReceipt for an invocation, the log-index witness for a bare
 // Commit); never
 // retry blindly.
 //

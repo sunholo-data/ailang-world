@@ -397,14 +397,14 @@ type readStore interface {
 	ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error)
 	ObjectReferences(ctx context.Context, ref hashref.HashRef, after *store.ObjectReferenceCursor, limit int) ([]store.ObjectReference, error)
 	ObjectCommits(ctx context.Context, ref hashref.HashRef, afterEntry int64, limit int) ([]int64, error)
-	GetReceiptContext(ctx context.Context, id string) (store.Receipt, bool, error)
+	GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error)
 }
 
 // durableStore is the daemon's durable-write surface: the context-bounded
 // commit of row 23's M1. *store.Store satisfies it by construction.
 type durableStore interface {
-	CommitContext(ctx context.Context, c store.Commit) error
-	AppendIntentContext(ctx context.Context, id string, intent store.JournalIntent) (int64, hashref.HashRef, error)
+	Commit(ctx context.Context, c store.Commit) error
+	AppendIntent(ctx context.Context, id string, intent store.JournalIntent) (int64, hashref.HashRef, error)
 }
 
 // IntegrityReport is the bounded startup sweep result.

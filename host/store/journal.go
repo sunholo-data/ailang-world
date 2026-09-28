@@ -410,20 +410,10 @@ func insertJournalObjectTx(tx *sql.Tx, o Object) error {
 
 var appendIntentBodyHook = func(context.Context) {}
 
-// AppendIntent is AppendIntentContext without a caller lifetime; a
-// compatibility wrapper removed when its callers migrate (row 23 policy
-// tranche, M6b).
-func (s *Store) AppendIntent(id string, intent JournalIntent) (int64, hashref.HashRef, error) {
-	if err := s.checkQuarantine(); err != nil {
-		return 0, hashref.HashRef{}, err
-	}
-	return s.AppendIntentContext(context.Background(), id, intent)
-}
-
-// AppendIntentContext durably appends a canonical intent and its index
+// AppendIntent durably appends a canonical intent and its index
 // atomically. ctx bounds acquisition and every statement up to the
 // cancellation cutoff (finishDurable); after it, see UncertainError.
-func (s *Store) AppendIntentContext(ctx context.Context, id string, intent JournalIntent) (_ int64, _ hashref.HashRef, err error) {
+func (s *Store) AppendIntent(ctx context.Context, id string, intent JournalIntent) (_ int64, _ hashref.HashRef, err error) {
 	if err := s.checkQuarantine(); err != nil {
 		return 0, hashref.HashRef{}, err
 	}
@@ -847,18 +837,9 @@ func journalRowFor(ctx context.Context, q interface {
 	return journalRow{seq, ref, Object{ref, iface, semantic, provenance, payload}}, true, nil
 }
 
-// GetReceipt is GetReceiptContext without a caller lifetime; a compatibility
-// wrapper removed when its callers migrate (row 23 policy tranche, M6b).
-func (s *Store) GetReceipt(id string) (Receipt, bool, error) {
-	if err := s.checkQuarantine(); err != nil {
-		return Receipt{}, false, err
-	}
-	return s.GetReceiptContext(context.Background(), id)
-}
-
-// GetReceiptContext mirrors receiptState and never reports not-started with
+// GetReceipt mirrors receiptState and never reports not-started with
 // an intent. ctx bounds both connection acquisitions and both reads.
-func (s *Store) GetReceiptContext(ctx context.Context, id string) (Receipt, bool, error) {
+func (s *Store) GetReceipt(ctx context.Context, id string) (Receipt, bool, error) {
 	if err := s.checkQuarantine(); err != nil {
 		return Receipt{}, false, err
 	}

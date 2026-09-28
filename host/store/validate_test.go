@@ -36,7 +36,7 @@ func TestEveryPersistedRefFieldIsValidated(t *testing.T) {
 		return testCase{name, "Commit", field, func(s *Store, genesis World) error {
 			c := cfb2Commit(genesis)
 			poison(&c)
-			return s.Commit(c)
+			return s.Commit(context.Background(), c)
 		}}
 	}
 	cases := []testCase{
@@ -95,7 +95,7 @@ func TestGenesisObservedHeadRemainsZeroLegal(t *testing.T) {
 	c.ObservedHead = hashref.HashRef{}
 	c.Entry.Header.EntryIndex = 0
 	c.Entry.Header.PrevEntryHash = hashref.SumSHA256([]byte("genesis previous"))
-	if err := s.Commit(c); err != nil {
+	if err := s.Commit(context.Background(), c); err != nil {
 		t.Fatalf("genesis Commit rejected zero ObservedHead: %v", err)
 	}
 }

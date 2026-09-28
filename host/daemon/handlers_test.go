@@ -181,7 +181,7 @@ func TestReadRoutesAndPayloadGate(t *testing.T) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "reads")
 	commit := testCommit(genesis, 1, "reads")
-	if err := d.store.Commit(commit); err != nil {
+	if err := d.store.Commit(context.Background(), commit); err != nil {
 		t.Fatalf("seed Commit: %v", err)
 	}
 
@@ -323,7 +323,7 @@ func TestLogRangeClampAndDefaultAreNonVacuous(t *testing.T) {
 	const entries = 510
 	for i := int64(0); i < entries; i++ {
 		commit := testCommit(current, i, fmt.Sprintf("range-%d", i))
-		if err := d.store.Commit(commit); err != nil {
+		if err := d.store.Commit(context.Background(), commit); err != nil {
 			t.Fatalf("Commit(%d): %v", i, err)
 		}
 		current = commit.NextWorld
@@ -447,10 +447,10 @@ func TestRESTGenesisAndCommitAreByteEquivalent(t *testing.T) {
 	successor := testCommit(genesis.NextWorld, 1, "equivalence")
 
 	// Arm 1: the embedded kernel API.
-	if err := embedded.store.Commit(genesis); err != nil {
+	if err := embedded.store.Commit(context.Background(), genesis); err != nil {
 		t.Fatalf("embedded genesis Commit: %v", err)
 	}
-	if err := embedded.store.Commit(successor); err != nil {
+	if err := embedded.store.Commit(context.Background(), successor); err != nil {
 		t.Fatalf("embedded successor Commit: %v", err)
 	}
 

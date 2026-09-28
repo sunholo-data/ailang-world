@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -242,7 +243,9 @@ func (s *Session) invoke(
 		// require handing the handler a store. Both refusal families therefore
 		// land BEFORE the handler runs, i.e. before the credential is read and
 		// before any request can leave this process.
-		approvalRef, approvalErr := validatePublishApproval(ctx, s.store, payload, req)
+		validationCtx, cancelValidation := context.WithTimeout(ctx, 3*time.Second)
+		approvalRef, approvalErr := validatePublishApproval(validationCtx, s.store, payload, req)
+		cancelValidation()
 		if approvalErr != nil {
 			return nil, hashref.HashRef{}, approvalErr
 		}

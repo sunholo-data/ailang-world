@@ -92,7 +92,7 @@ func BenchmarkStoreCommit(b *testing.B) {
 			},
 		}
 		start := time.Now()
-		if err := s.Commit(commit); err != nil {
+		if err := s.Commit(context.Background(), commit); err != nil {
 			b.Fatalf("Commit #%d: %v", i, err)
 		}
 		samples = append(samples, time.Since(start))
@@ -130,7 +130,7 @@ func BenchmarkJournalAppend(b *testing.B) {
 			LogicalTime:   int64(i),
 		}
 		start := time.Now()
-		if _, _, err := s.AppendIntent(id, intent); err != nil {
+		if _, _, err := s.AppendIntent(context.Background(), id, intent); err != nil {
 			b.Fatalf("AppendIntent #%d: %v", i, err)
 		}
 		samples = append(samples, time.Since(start))
@@ -183,7 +183,7 @@ func BenchmarkCommitWithReceipt(b *testing.B) {
 			TransitionFn: commits[i].Entry.Header.TransitionFn, TransitionRef: body,
 			Interpreter: commits[i].Entry.Header.Interpreter, LogicalTime: int64(i),
 		}
-		if _, _, err := s.AppendIntent(id, intent); err != nil {
+		if _, _, err := s.AppendIntent(context.Background(), id, intent); err != nil {
 			b.Fatalf("stage AppendIntent #%d: %v", i, err)
 		}
 		observed, previousLog = nextWorld, nextLog
@@ -193,7 +193,7 @@ func BenchmarkCommitWithReceipt(b *testing.B) {
 	b.ResetTimer()
 	for i := range commits {
 		start := time.Now()
-		if err := s.Commit(commits[i]); err != nil {
+		if err := s.Commit(context.Background(), commits[i]); err != nil {
 			b.Fatalf("Commit with receipt #%d: %v", i, err)
 		}
 		samples = append(samples, time.Since(start))
@@ -384,7 +384,7 @@ func BenchmarkLogRange(b *testing.B) {
 			}
 			for i := int64(0); i < 500; i++ {
 				commit := testCommit(current, i, fmt.Sprintf("range-bench-%d", i))
-				if err := d.store.Commit(commit); err != nil {
+				if err := d.store.Commit(context.Background(), commit); err != nil {
 					b.Fatalf("seed Commit(%d): %v", i, err)
 				}
 				current = commit.NextWorld

@@ -212,7 +212,7 @@ func seedWalkLog(tb testing.TB, d *Daemon, n int) {
 				EntryHash: entryHash, TransitionRef: transition.Hash,
 			},
 		}
-		if err := d.store.Commit(c); err != nil {
+		if err := d.store.Commit(context.Background(), c); err != nil {
 			tb.Fatalf("seed Commit(%d): %v", i, err)
 		}
 		current = c.NextWorld

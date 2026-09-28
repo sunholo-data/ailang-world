@@ -82,12 +82,12 @@ func TestConvertedStoreMethodsM5b(t *testing.T) {
 		{"AppendOutcome", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
 			id := "m5b-outcome"
 			c := journalCommitFixture(t, s, id)
-			if _, _, err := s.AppendIntentContext(context.Background(), id, testCommitIntent(id, c)); err != nil {
+			if _, _, err := s.AppendIntent(context.Background(), id, testCommitIntent(id, c)); err != nil {
 				t.Fatal(err)
 			}
 			outcome := JournalOutcome{InvocationID: id, Status: "committed", ResultRef: c.NextWorld.Ref, LogicalTime: 2}
 			return func(ctx context.Context) error { _, _, err := s.AppendOutcome(ctx, id, outcome); return err }, func(t *testing.T) {
-				rc, ok, err := s.GetReceiptContext(context.Background(), id)
+				rc, ok, err := s.GetReceipt(context.Background(), id)
 				if err != nil || !ok || rc.State != ReceiptResolved {
 					t.Fatalf("outcome not durable: %+v %v %v", rc, ok, err)
 				}

@@ -110,7 +110,7 @@ func appendRecoveryIntent(t *testing.T, s *store.Store, c store.Commit) {
 		Interpreter:   c.Entry.Header.Interpreter,
 		LogicalTime:   41,
 	}
-	if _, _, err := s.AppendIntent(c.InvocationID, intent); err != nil {
+	if _, _, err := s.AppendIntent(context.Background(), c.InvocationID, intent); err != nil {
 		t.Fatalf("AppendIntent: %v", err)
 	}
 }
@@ -293,7 +293,7 @@ func TestRecoverSurfacesNeverLieLaw(t *testing.T) {
 			indeterminate.PlannedWorldRef, indeterminate.PlannedEntryHash,
 			c.NextWorld.Ref, c.Entry.EntryHash)
 	}
-	receipt, ok, err := s.GetReceipt(c.InvocationID)
+	receipt, ok, err := s.GetReceipt(context.Background(), c.InvocationID)
 	if err != nil || !ok || receipt.State == store.ReceiptNotStarted {
 		t.Fatalf("receipt=(ok=%v,state=%s,err=%v), durable intent reported not-started",
 			ok, receipt.State, err)
@@ -439,7 +439,7 @@ func (p *neverDrainingRecoveryStore) PendingIntents(
 	return p.commitPage, nil
 }
 
-func (p *neverDrainingRecoveryStore) GetReceipt(id string) (store.Receipt, bool, error) {
+func (p *neverDrainingRecoveryStore) GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error) {
 	return store.Receipt{InvocationID: id, State: store.ReceiptResolved}, true, nil
 }
 
@@ -533,7 +533,7 @@ func (p *pagedRecoveryStore) PendingIntents(
 	return p.pages[idx], nil
 }
 
-func (p *pagedRecoveryStore) GetReceipt(id string) (store.Receipt, bool, error) {
+func (p *pagedRecoveryStore) GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error) {
 	if p.sawReceipt == nil {
 		p.sawReceipt = map[string]bool{}
 	}

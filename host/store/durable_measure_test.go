@@ -72,13 +72,13 @@ func TestMeasureDurableOps(t *testing.T) {
 				PrevEntryHash: head.LogHead, WrittenBy: "measure"},
 				EntryHash: entryHash, TransitionRef: body.Hash},
 		}
-		timeIt("GetReceiptContext(absent)", func() error { _, _, err := s.GetReceiptContext(ctx, id); return err })
-		timeIt("AppendIntentContext", func() error {
-			_, _, err := s.AppendIntentContext(ctx, id, testCommitIntent(id, c))
+		timeIt("GetReceipt(absent)", func() error { _, _, err := s.GetReceipt(ctx, id); return err })
+		timeIt("AppendIntent", func() error {
+			_, _, err := s.AppendIntent(ctx, id, testCommitIntent(id, c))
 			return err
 		})
-		timeIt("CommitContext(invocation)", func() error { return s.CommitContext(ctx, c) })
-		timeIt("GetReceiptContext(resolved)", func() error { _, _, err := s.GetReceiptContext(ctx, id); return err })
+		timeIt("Commit(invocation)", func() error { return s.Commit(ctx, c) })
+		timeIt("GetReceipt(resolved)", func() error { _, _, err := s.GetReceipt(ctx, id); return err })
 		timeIt("GetObject", func() error { _, _, err := s.GetObject(ctx, body.Hash); return err })
 		timeIt("SelectedHead", func() error { _, _, err := s.SelectedHead(ctx); return err })
 		cred := fmt.Sprintf("cred-%d", i)
@@ -128,7 +128,7 @@ func TestMeasureContextFreeSurface(t *testing.T) {
 	genesis := seedGenesis(t, s)
 	for i := 0; i < MaxPendingIntentsPage; i++ {
 		c := journalCommitFixture(t, s, fmt.Sprintf("p-%d", i))
-		if _, _, err := s.AppendIntent(fmt.Sprintf("p-%d", i), testCommitIntent(fmt.Sprintf("p-%d", i), c)); err != nil {
+		if _, _, err := s.AppendIntent(context.Background(), fmt.Sprintf("p-%d", i), testCommitIntent(fmt.Sprintf("p-%d", i), c)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -138,7 +138,7 @@ func TestMeasureContextFreeSurface(t *testing.T) {
 		entryHash := hashref.SumSHA256([]byte(fmt.Sprintf("scan-entry-%d", i)))
 		next := World{Ref: hashref.SumSHA256([]byte(fmt.Sprintf("scan-world-%d", i))),
 			Revision: int64(i + 1), StateRoot: body.Hash, LogHead: entryHash}
-		if err := s.Commit(Commit{ObservedHead: head.Ref, Objects: []Object{body}, NextWorld: next,
+		if err := s.Commit(context.Background(), Commit{ObservedHead: head.Ref, Objects: []Object{body}, NextWorld: next,
 			Entry: LogEntry{Header: LogHeader{EntryIndex: int64(i + 1), SemanticsEpoch: 1,
 				TransitionFn: body.Hash, Interpreter: body.Hash, PrevEntryHash: head.LogHead,
 				WrittenBy: "measure"}, EntryHash: entryHash, TransitionRef: body.Hash}}); err != nil {

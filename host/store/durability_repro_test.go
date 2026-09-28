@@ -57,7 +57,7 @@ func snapshotStore(t *testing.T, s *Store) storeState {
 
 func assertRejectedUntouched(t *testing.T, s *Store, before storeState, c Commit, field string) {
 	t.Helper()
-	err := s.Commit(c)
+	err := s.Commit(context.Background(), c)
 	var invalid *InvalidRefError
 	if !errors.As(err, &invalid) {
 		t.Fatalf("Commit error = %T %v, want *InvalidRefError", err, err)
@@ -135,7 +135,7 @@ func TestCFB2ZeroWorldRefWedgeRejected(t *testing.T) {
 		t.Fatalf("SelectedHead errored after a REFUSED commit: %v — that is the CLASS 3 wedge this fix exists to prevent", err)
 	}
 	good := cfb2Commit(genesis)
-	if err := s.Commit(good); err != nil {
+	if err := s.Commit(context.Background(), good); err != nil {
 		t.Fatalf("a valid Commit after a refused one failed: %v — refusal must leave the store able to accept writes", err)
 	}
 	ref, ok, err := s.SelectedHead(context.Background())

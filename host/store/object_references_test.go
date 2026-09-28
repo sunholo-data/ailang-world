@@ -346,7 +346,7 @@ func TestObjectReferencesMeasuredAtScale(t *testing.T) {
 		entryHash := refTestHash(fmt.Sprintf("scale-entry-%d", i))
 		next := World{Ref: refTestHash(fmt.Sprintf("scale-world-%d", i)), Revision: int64(i + 1), StateRoot: state.Hash, LogHead: entryHash}
 		commit := Commit{ObservedHead: current.Ref, Objects: []Object{body}, NextWorld: next, Entry: LogEntry{Header: LogHeader{EntryIndex: int64(i), SemanticsEpoch: 1, TransitionFn: fn.Hash, Interpreter: interp.Hash, PrevEntryHash: current.LogHead, WrittenBy: "scale"}, EntryHash: entryHash, TransitionRef: body.Hash}}
-		if err := s.Commit(commit); err != nil {
+		if err := s.Commit(context.Background(), commit); err != nil {
 			t.Fatal(err)
 		}
 		current = next

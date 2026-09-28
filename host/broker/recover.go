@@ -59,7 +59,7 @@ type IndeterminateEffect struct {
 
 type recoveryStore interface {
 	PendingIntents(ctx context.Context, limit int, fromIndex ...int64) ([]store.PendingIntent, error)
-	GetReceipt(id string) (store.Receipt, bool, error)
+	GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error)
 	PendingEffectIntents(ctx context.Context, limit int, fromIndex ...int64) ([]store.PendingEffectIntent, error)
 	GetEffectReceipt(ctx context.Context, id string) (store.Receipt, bool, error)
 }
@@ -155,7 +155,7 @@ func recoverCommitPending(ctx context.Context, s recoveryStore) ([]Indeterminate
 			}
 			cursor = pending.Seq
 
-			receipt, hasIntent, err := s.GetReceipt(pending.InvocationID)
+			receipt, hasIntent, err := s.GetReceipt(ctx, pending.InvocationID)
 			if err != nil {
 				return nil, fmt.Errorf(
 					"broker: recover receipt %q: %w", pending.InvocationID, err,

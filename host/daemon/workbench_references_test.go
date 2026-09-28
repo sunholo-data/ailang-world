@@ -72,7 +72,7 @@ func referenceFixture(t *testing.T) (*Daemon, hashref.HashRef, hashref.HashRef) 
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "reference-fixture")
 	commit := testCommit(genesis, 0, "reference-fixture")
-	if err := d.store.Commit(commit); err != nil {
+	if err := d.store.Commit(context.Background(), commit); err != nil {
 		t.Fatal(err)
 	}
 	return d, commit.Entry.TransitionRef, commit.NextWorld.Ref
@@ -298,7 +298,7 @@ func TestWorkbenchReferenceWalk(t *testing.T) {
 			transition = c.Entry.TransitionRef
 			transitionPayload = append([]byte(nil), c.Objects[0].Payload...)
 		}
-		if err := d.store.Commit(c); err != nil {
+		if err := d.store.Commit(context.Background(), c); err != nil {
 			t.Fatal(err)
 		}
 		worlds = append(worlds, c.NextWorld.Ref)

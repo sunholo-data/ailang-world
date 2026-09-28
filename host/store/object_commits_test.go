@@ -18,7 +18,7 @@ import (
 func commitCarrying(t testing.TB, s *Store, prev World, objs ...Object) World {
 	t.Helper()
 	next, c := carryingCommit(prev, objs...)
-	if err := s.Commit(c); err != nil {
+	if err := s.Commit(context.Background(), c); err != nil {
 		t.Fatalf("Commit entry %d: %v", next.Revision, err)
 	}
 	return next
@@ -103,7 +103,7 @@ func TestCommitMembershipRollsBackWithCommit(t *testing.T) {
 				t.Fatal(err)
 			}
 			_, c := carryingCommit(World{Ref: hashref.HashRef{}, LogHead: w.LogHead}, obj("rollback", "t/rb"))
-			if err := s.Commit(c); err == nil {
+			if err := s.Commit(context.Background(), c); err == nil {
 				t.Fatal("Commit succeeded despite injected failure")
 			}
 			if _, ok, err := s.GetLogEntry(context.Background(), 1); err != nil || ok {
@@ -146,17 +146,17 @@ func TestCommitMembershipDedupesWithinCommit(t *testing.T) {
 func TestCommitReplayDoesNotDuplicateMembership(t *testing.T) {
 	s := openMem(t)
 	c := journalCommitFixture(t, s, "replay")
-	if _, _, err := s.AppendIntent("replay", testCommitIntent("replay", c)); err != nil {
+	if _, _, err := s.AppendIntent(context.Background(), "replay", testCommitIntent("replay", c)); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Commit(c); err != nil {
+	if err := s.Commit(context.Background(), c); err != nil {
 		t.Fatal(err)
 	}
 	before := membershipRows(t, s)
 	if len(before) != 1 {
 		t.Fatalf("membership after first commit = %v", before)
 	}
-	if err := s.Commit(c); err != nil {
+	if err := s.Commit(context.Background(), c); err != nil {
 		t.Fatalf("replay: %v", err)
 	}
 	if after := membershipRows(t, s); !reflect.DeepEqual(after, before) {
@@ -171,7 +171,7 @@ func TestConflictWritesNoMembership(t *testing.T) {
 	commitCarrying(t, s, g, obj("first", "t/first"))
 	stale := obj("stale", "t/stale")
 	_, c := carryingCommit(World{Ref: g.Ref, Revision: 1, LogHead: g.LogHead}, stale)
-	if err := s.Commit(c); !IsConflict(err) {
+	if err := s.Commit(context.Background(), c); !IsConflict(err) {
 		t.Fatalf("want ConflictError, got %v", err)
 	}
 	if got := membershipFor(t, s, stale.Hash); len(got) != 0 {
@@ -427,7 +427,7 @@ func TestObjectCommitsTimingAt10k(t *testing.T) {
 		}
 		next, c := carryingCommit(w, objs...)
 		start := time.Now()
-		if err := s.Commit(c); err != nil {
+		if err := s.Commit(context.Background(), c); err != nil {
 			t.Fatal(err)
 		}
 		commitTimes = append(commitTimes, time.Since(start))

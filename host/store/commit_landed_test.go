@@ -25,7 +25,7 @@ func TestCommitLandedReadsTheLogRowAtItsIndex(t *testing.T) {
 	t.Run("equal_row_is_entry_landed", func(t *testing.T) {
 		s := openFileStore(t)
 		a := bareCommit(seedGenesis(t, s), 1, "A")
-		if err := s.CommitContext(ctx(t), a); err != nil {
+		if err := s.Commit(ctx(t), a); err != nil {
 			t.Fatalf("commit A: %v", err)
 		}
 		if landed, err := s.CommitLanded(ctx(t), a); err != nil || !landed {
@@ -39,7 +39,7 @@ func TestCommitLandedReadsTheLogRowAtItsIndex(t *testing.T) {
 		a := bareCommit(seedGenesis(t, s), 1, "A")
 		other := a
 		other.Entry.Header.WrittenBy = "someone-else"
-		if err := s.CommitContext(ctx(t), other); err != nil {
+		if err := s.Commit(ctx(t), other); err != nil {
 			t.Fatalf("commit A': %v", err)
 		}
 		if landed, err := s.CommitLanded(ctx(t), a); err != nil || landed {

@@ -17,15 +17,15 @@ type contextWitnessStore struct {
 }
 
 func (s *contextWitnessStore) GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error) {
-	if ctx != s.want {
-		s.t.Fatalf("GetObject did not receive exact caller ctx")
+	if v, _ := ctx.Value(struct{}{}).(string); v != "caller" {
+		s.t.Fatalf("GetObject did not receive a ctx derived from the caller (values lost: %T)", v)
 	}
 	s.objects++
 	return s.Store.GetObject(ctx, ref)
 }
 func (s *contextWitnessStore) GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error) {
-	if ctx != s.want {
-		s.t.Fatalf("GetRegistryHead did not receive exact caller ctx")
+	if v, _ := ctx.Value(struct{}{}).(string); v != "caller" {
+		s.t.Fatalf("GetRegistryHead did not receive a ctx derived from the caller (values lost: %T)", v)
 	}
 	s.heads++
 	return s.Store.GetRegistryHead(ctx, name)

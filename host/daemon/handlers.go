@@ -422,7 +422,7 @@ func (d *Daemon) handleReceipt(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := d.readCtx(r)
 	defer cancel()
-	rc, _, err := d.reads.GetReceiptContext(ctx, id)
+	rc, _, err := d.reads.GetReceipt(ctx, id)
 	if err != nil {
 		if timedOut(ctx, err) {
 			writeReadTimeout(w, d.readDeadline)
@@ -777,12 +777,12 @@ func (d *Daemon) handleCommit(w http.ResponseWriter, r *http.Request) {
 	if commit.InvocationID != "" {
 		// Both durable steps share B6. LogicalTime = the entry index, so a
 		// resend of the same commit appends identical intent bytes (idempotent).
-		if _, _, err := d.commits.AppendIntentContext(ctx, commit.InvocationID, commitIntent(commit)); err != nil {
+		if _, _, err := d.commits.AppendIntent(ctx, commit.InvocationID, commitIntent(commit)); err != nil {
 			d.writeCommitError(w, r, ctx, commit, err)
 			return
 		}
 	}
-	if err := d.commits.CommitContext(ctx, commit); err != nil {
+	if err := d.commits.Commit(ctx, commit); err != nil {
 		d.writeCommitError(w, r, ctx, commit, err)
 		return
 	}

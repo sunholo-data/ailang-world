@@ -38,7 +38,7 @@ func (p *countingProbe) dispatch() { p.dispatches++ }
 // MUT-AUTO-RETRY changes this function to call probe.dispatch(); two independent
 // tests below then red.
 func recoverIndeterminate(s *Store, id string, probe *countingProbe) error {
-	receipt, ok, err := s.GetReceipt(id)
+	receipt, ok, err := s.GetReceipt(context.Background(), id)
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func pendingRecoveryFixture(t *testing.T) (*Store, Commit) {
 	}
 	t.Cleanup(func() { _ = s.Close() })
 	c := journalCommitFixture(t, s, "recover-pending")
-	if _, _, err := s.AppendIntent(c.InvocationID, testCommitIntent(c.InvocationID, c)); err != nil {
+	if _, _, err := s.AppendIntent(context.Background(), c.InvocationID, testCommitIntent(c.InvocationID, c)); err != nil {
 		t.Fatal(err)
 	}
 	return s, c
@@ -126,7 +126,7 @@ func reconcileCommitNotExecuted(t *testing.T, s *Store, c Commit) {
 func TestRecoverCommitPathDeterministicallyReconcilesUntouchedStore(t *testing.T) {
 	s, c := pendingRecoveryFixture(t)
 	reconcileCommitNotExecuted(t, s, c)
-	receipt, ok, err := s.GetReceipt(c.InvocationID)
+	receipt, ok, err := s.GetReceipt(context.Background(), c.InvocationID)
 	if err != nil || !ok || receipt.State != ReceiptResolved {
 		t.Fatalf("receipt after reconcile=(ok=%v,state=%s,err=%v), want resolved",
 			ok, receipt.State, err)

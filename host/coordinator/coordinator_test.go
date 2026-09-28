@@ -67,7 +67,7 @@ func (r *rig) genesis() store.World {
 		SemanticID: "test/genesis", Provenance: "coordinator-test", Payload: []byte("genesis-state")}
 	entryHash := hashref.SumSHA256([]byte("genesis-entry"))
 	w := store.World{Ref: hashref.SumSHA256([]byte("genesis-world")), Revision: 0, StateRoot: obj.Hash, LogHead: entryHash}
-	if err := r.st.Commit(store.Commit{
+	if err := r.st.Commit(context.Background(), store.Commit{
 		Objects: []store.Object{obj}, NextWorld: w,
 		Entry: store.LogEntry{Header: store.LogHeader{
 			EntryIndex: 0, SemanticsEpoch: 1, TransitionFn: hashref.SumSHA256([]byte("genesis-fn")),
@@ -158,7 +158,7 @@ func (r *rig) assertUntouched(want hashref.HashRef, task string) {
 	if err != nil || head != want {
 		r.t.Fatalf("selected head = %v (%v), want unchanged %v", head, err, want)
 	}
-	if rc, ok, err := r.st.GetReceipt(InvocationID("ep1", task)); err != nil || (ok && rc.State != store.ReceiptNotStarted) {
+	if rc, ok, err := r.st.GetReceipt(context.Background(), InvocationID("ep1", task)); err != nil || (ok && rc.State != store.ReceiptNotStarted) {
 		r.t.Fatalf("receipt for refused task = %+v ok=%v err=%v, want none", rc, ok, err)
 	}
 }
@@ -260,7 +260,7 @@ func TestDispatchEchoRealInterpreter(t *testing.T) {
 	if err != nil || !ok || entry.Header.TransitionFn != r.descs[0].TransitionFn || entry.Header.Interpreter != r.interp {
 		t.Fatalf("log entry %+v ok=%v err=%v", entry, ok, err)
 	}
-	rc, ok, err := r.st.GetReceipt(res.InvocationID)
+	rc, ok, err := r.st.GetReceipt(context.Background(), res.InvocationID)
 	if err != nil || !ok || rc.State != store.ReceiptResolved {
 		t.Fatalf("receipt %+v ok=%v err=%v, want resolved", rc, ok, err)
 	}
@@ -520,11 +520,11 @@ type errStore struct {
 	onCommit    func()
 }
 
-func (e errStore) Commit(c store.Commit) error {
+func (e errStore) Commit(ctx context.Context, c store.Commit) error {
 	if e.onCommit != nil {
 		e.onCommit()
 	}
-	if err := e.Store.Commit(c); err != nil {
+	if err := e.Store.Commit(ctx, c); err != nil {
 		return err
 	}
 	return e.afterCommit
@@ -557,20 +557,24 @@ func TestCommitBoundary(t *testing.T) {
 			t.Fatalf("pending intents = %v (%v), want none", pending, err)
 		}
 	})
-	// The durable steps take no ctx; a deadline that expires while they run
-	// must not turn a landed commit into a reported failure.
-	t.Run("deadline_during_commit_reports_success", func(t *testing.T) {
+	// Cancellation immediately before Commit reaches the store is pre-cutoff:
+	// the intent remains, but no world or resolved receipt may appear.
+	t.Run("cancellation_before_commit_is_not_committed", func(t *testing.T) {
 		r := newRig(t, false)
-		r.genesis()
+		w := r.genesis()
 		r.describe("plain", r.source(echoSrc), "Invoke")
 		r.publish()
 		ctx, cancel := context.WithCancel(context.Background())
 		st := errStore{Store: r.st, onCommit: cancel}
-		res, err := r.coordinator(st, fakeRunner{stdout: `{"ok":true}`}).Dispatch(ctx, r.call("plain", "t1", grants))
-		if err != nil {
-			t.Fatalf("Dispatch = %v after a landed commit; must report success", err)
+		_, err := r.coordinator(st, fakeRunner{stdout: `{"ok":true}`}).Dispatch(ctx, r.call("plain", "t1", grants))
+		if !errors.Is(err, context.Canceled) || store.IsUncertain(err) {
+			t.Fatalf("Dispatch = %v, want definite pre-cutoff cancellation", err)
 		}
-		r.assertHead(res.WorldRef)
+		r.assertHead(w.Ref)
+		rc, ok, err := r.st.GetReceipt(context.Background(), InvocationID("ep1", "t1"))
+		if err != nil || !ok || rc.State != store.ReceiptIndeterminate {
+			t.Fatalf("receipt = %+v ok=%v err=%v, want unresolved intent", rc, ok, err)
+		}
 	})
 	t.Run("receipt", func(t *testing.T) {
 		r := newRig(t, false)
@@ -581,7 +585,7 @@ func TestCommitBoundary(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Dispatch: %v", err)
 		}
-		rc, ok, err := r.st.GetReceipt(res.InvocationID)
+		rc, ok, err := r.st.GetReceipt(context.Background(), res.InvocationID)
 		if err != nil || !ok || rc.State != store.ReceiptResolved || rc.Intent == nil || rc.Intent.WorldRef != res.WorldRef {
 			t.Fatalf("receipt = %+v ok=%v err=%v, want exactly one resolved intent+outcome for the commit", rc, ok, err)
 		}

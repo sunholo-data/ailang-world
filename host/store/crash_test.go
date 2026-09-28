@@ -75,7 +75,7 @@ func TestCrashHelperProcess(t *testing.T) {
 		os.Exit(3)
 	}
 	c := crashFixture(t, s)
-	if _, _, err := s.AppendIntent(crashInvocationID, testCommitIntent(crashInvocationID, c)); err != nil {
+	if _, _, err := s.AppendIntent(context.Background(), crashInvocationID, testCommitIntent(crashInvocationID, c)); err != nil {
 		fmt.Fprintf(os.Stderr, "crash helper AppendIntent: %v\n", err)
 		os.Exit(4)
 	}
@@ -94,12 +94,12 @@ func TestCrashHelperProcess(t *testing.T) {
 		readyAndBlock()
 	case "mid-commit-before-outcome":
 		commitBeforeOutcomeHook = readyAndBlock
-		if err := s.Commit(c); err != nil {
+		if err := s.Commit(context.Background(), c); err != nil {
 			fmt.Fprintf(os.Stderr, "crash helper Commit: %v\n", err)
 			os.Exit(6)
 		}
 	case "after-outcome":
-		if err := s.Commit(c); err != nil {
+		if err := s.Commit(context.Background(), c); err != nil {
 			fmt.Fprintf(os.Stderr, "crash helper Commit: %v\n", err)
 			os.Exit(7)
 		}
@@ -231,7 +231,7 @@ func assertCrashStore(t *testing.T, dbPath, effectPath, stop string) {
 	}
 	defer func() { _ = s.Close() }()
 	c := crashFixtureForRead()
-	receipt, ok, err := s.GetReceipt(crashInvocationID)
+	receipt, ok, err := s.GetReceipt(context.Background(), crashInvocationID)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1019,20 +1019,11 @@ var commitBeforeOutcomeHook = func() {}
 
 var commitBodyHook = func(context.Context) {}
 
-// Commit is CommitContext without a caller lifetime. It is a compatibility
-// wrapper, removed when its callers migrate (row 23 policy tranche, M6b).
-func (s *Store) Commit(c Commit) error {
-	if err := s.checkQuarantine(); err != nil {
-		return err
-	}
-	return s.CommitContext(context.Background(), c)
-}
-
-// CommitContext is Commit bounded by ctx up to the cancellation cutoff
+// Commit is Commit bounded by ctx up to the cancellation cutoff
 // (finishDurable): connection acquisition, the intent bind, the head compare
 // and every write honour ctx and roll back. After the cutoff the outcome is
 // committed, or *UncertainError when ctx ends first; see UncertainError.
-func (s *Store) CommitContext(ctx context.Context, c Commit) (err error) {
+func (s *Store) Commit(ctx context.Context, c Commit) (err error) {
 	if err := s.checkQuarantine(); err != nil {
 		return err
 	}
