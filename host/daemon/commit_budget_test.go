@@ -290,3 +290,69 @@ func TestCommitInvocationReceiptIdentity(t *testing.T) {
 		}
 	})
 }
+
+// mismatchSeam returns the store's own *store.InvocationMismatchError from the
+// intent step. Through the real handler that error cannot come from a real
+// store: the handler derives the intent from the commit, so an id with
+// different content always collides at the intent append first
+// (DuplicateInvocationError). The seam pins the mapping of the second type.
+type mismatchSeam struct{ real *store.Store }
+
+func (f mismatchSeam) CommitContext(ctx context.Context, c store.Commit) error {
+	return f.real.CommitContext(ctx, c)
+}
+
+func (f mismatchSeam) AppendIntentContext(_ context.Context, id string, _ store.JournalIntent) (int64, hashref.HashRef, error) {
+	return 0, hashref.HashRef{}, &store.InvocationMismatchError{ID: id, Field: "WorldRef", Want: "sha256:want", Got: "sha256:got"}
+}
+
+// TestCommitInvocationReuseIsBadRequest pins writeCommitError's
+// duplicate/mismatch arm (judge survivor MY-2): reusing a "rest:" id for a
+// different commit is the client's own input error, so it is 400 BadRequest
+// naming the reuse, not a sanitized 500, and it never moves the head.
+func TestCommitInvocationReuseIsBadRequest(t *testing.T) {
+	assertReuse := func(t *testing.T, rec *httptest.ResponseRecorder, errLog *bytes.Buffer, id, detail string) {
+		t.Helper()
+		body := assertErrorClass(t, rec, http.StatusBadRequest, "BadRequest")
+		msg := body.Error.Message
+		if !strings.HasPrefix(msg, "invocationId already names a different commit: ") || !strings.Contains(msg, id) || !strings.Contains(msg, detail) {
+			t.Fatalf("reuse message = %q; want the reuse named with id %q and %q", msg, id, detail)
+		}
+		if strings.Contains(msg, "internal") || errLog.Len() != 0 {
+			t.Fatalf("a client reuse error went down the internal path: message %q, error log %q", msg, errLog.String())
+		}
+	}
+
+	t.Run("duplicate_id_different_content_real_store", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		var errLog bytes.Buffer
+		d.errLog = &errLog
+		genesis := seedGenesisEmbedded(t, d, "reuse")
+		auth := authHeader(t, d)
+		a := testCommit(genesis, 1, "A")
+		// Live control: the first use of the id commits.
+		if rec, _ := postCommitWithID(t, d, auth, "rest:reuse", a); rec.Code != http.StatusOK {
+			t.Fatalf("first commit with rest:reuse: status %d body %s", rec.Code, rec.Body)
+		}
+		// Same id, different commit content (another commit on A's world).
+		rec, _ := postCommitWithID(t, d, auth, "rest:reuse", testCommit(a.NextWorld, 2, "B"))
+		assertReuse(t, rec, &errLog, "rest:reuse", "duplicate intent")
+		if got := headOf(t, d); got != a.NextWorld.Ref.String() {
+			t.Fatalf("a refused id reuse moved the head to %s", got)
+		}
+	})
+
+	t.Run("invocation_mismatch_seam", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		var errLog bytes.Buffer
+		d.errLog = &errLog
+		genesis := seedGenesisEmbedded(t, d, "mismatch")
+		auth := authHeader(t, d)
+		d.commits = mismatchSeam{real: d.store}
+		rec, _ := postCommitWithID(t, d, auth, "rest:mismatch", testCommit(genesis, 1, "M"))
+		assertReuse(t, rec, &errLog, "rest:mismatch", "field WorldRef mismatch")
+		if got := headOf(t, d); got != genesis.Ref.String() {
+			t.Fatalf("a refused mismatch moved the head to %s", got)
+		}
+	})
+}
