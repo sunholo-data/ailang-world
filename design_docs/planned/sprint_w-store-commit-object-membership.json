@@ -1,0 +1,207 @@
+{
+  "sprint_id": "w-store-commit-object-membership-iter204",
+  "design_doc": "design_docs/planned/w-store-commit-object-membership.md",
+  "base": "07d90e0",
+  "scope": "Row 104 v4 commit-object membership and checked workbench committedBy projection; no /v1 route or .ail change; row 23 bounded-context rebase contract applies later, without a landing dependency",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "schema v4 and atomic membership write",
+      "estimated_added_production_loc": 45,
+      "files": [
+        "host/store/schema.sql",
+        "host/store/store.go",
+        "host/store/schema_version_test.go",
+        "host/store/journal_test.go",
+        "host/store/object_commits_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test -race -count=1 ./host/store -run '^(TestCommitMembershipRollsBackWithCommit|TestCommitMembershipForeignKeys|TestCommitMembershipDedupesWithinCommit|TestCommitReplayDoesNotDuplicateMembership|TestConflictWritesNoMembership|TestVersionThreeStoreIsRefusedUnmodified|TestDroppedMembershipTableIsRefusedNotRecreated|TestSchemaVersionLedgerIsIndependent|TestOpenReadOnlyEnforcesVersionFour|TestFreshWriterInitializesSchemaAndVersionFour)$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test -race -count=1 ./host/store ./host/daemon ./host/workbench"
+      ],
+      "mutations": [
+        {
+          "id": "MUT-1",
+          "file": "host/store/store.go",
+          "edit": "`` `INSERT OR IGNORE INTO commit_objects (object_ref, entry_index) VALUES (?, ?);` `` \u2192 `` `SELECT ?, ?;` ``",
+          "must_fail": "`TestCommitMembershipDedupesWithinCommit` (direct SQL expects row)."
+        },
+        {
+          "id": "MUT-2",
+          "file": "host/store/store.go",
+          "edit": "`defer func() { _ = tx.Rollback() }()` \u2192 `defer func() { _ = tx.Commit() }()`",
+          "must_fail": "`TestCommitMembershipRollsBackWithCommit/later-step-fails` (partial entry/membership must not survive)."
+        },
+        {
+          "id": "MUT-3",
+          "file": "host/store/store.go",
+          "edit": "`` `INSERT OR IGNORE INTO commit_objects (object_ref, entry_index) VALUES (?, ?);` `` \u2192 `` `INSERT INTO commit_objects (object_ref, entry_index) VALUES (?, ?);` ``",
+          "must_fail": "`TestCommitMembershipDedupesWithinCommit`."
+        },
+        {
+          "id": "MUT-4",
+          "file": "host/store/store.go",
+          "edit": "`if resolved {` \u2192 `if resolved && false {`",
+          "must_fail": "`TestCommitReplayDoesNotDuplicateMembership` (the stale-head guard rejects replay)."
+        },
+        {
+          "id": "MUT-5",
+          "file": "host/store/store.go",
+          "edit": "`if selected.String() != c.ObservedHead.String() {` \u2192 `if false {`",
+          "must_fail": "`TestConflictWritesNoMembership` (stale request must not write)."
+        },
+        {
+          "id": "MUT-10",
+          "file": "host/store/store.go",
+          "edit": "`const currentSchemaVersion = 4` \u2192 `const currentSchemaVersion = 3`",
+          "must_fail": "`TestVersionThreeStoreIsRefusedUnmodified`."
+        },
+        {
+          "id": "MUT-11",
+          "file": "host/store/schema.sql",
+          "edit": "`CREATE TABLE IF NOT EXISTS commit_objects (` \u2192 `CREATE TABLE IF NOT EXISTS commit_objects_disabled (`",
+          "must_fail": "`TestFreshWriterInitializesSchemaAndVersionFour` and canonical DDL gate."
+        },
+        {
+          "id": "MUT-12",
+          "file": "host/store/schema.sql",
+          "edit": "`object_ref  TEXT    NOT NULL REFERENCES objects(hash_ref),\\n    entry_index INTEGER NOT NULL REFERENCES log_entries(entry_index),` \u2192 same two lines without `REFERENCES \u2026`",
+          "must_fail": "`TestCommitMembershipForeignKeys` (also ledger)."
+        },
+        {
+          "id": "MUT-18",
+          "file": "host/store/store.go",
+          "edit": "`if membershipTables != 1 {` \u2192 `if false {`",
+          "must_fail": "`TestDroppedMembershipTableIsRefusedNotRecreated` (writable Open recreates)."
+        },
+        {
+          "id": "MUT-19",
+          "file": "host/store/store.go",
+          "edit": "`if membershipTables != 1 {` \u2192 `if membershipTables != 1 && applySchema {`",
+          "must_fail": "`TestDroppedMembershipTableIsRefusedNotRecreated` (read-only half)."
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "bounded store read",
+      "estimated_added_production_loc": 64,
+      "files": [
+        "host/store/object_commits.go",
+        "host/store/object_commits_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test -race -count=1 ./host/store -run '^(TestCommitRecordsMembershipPerCarryingCommit|TestObjectCommitsOrderAndContinuation|TestObjectCommitsValidation|TestObjectCommitsReadOnlyMatchesWriterAndEntriesExist|TestObjectCommitsMissingTableIsAnError|TestCommitMembershipRollsBackWithCommit|TestCommitMembershipForeignKeys|TestCommitMembershipDedupesWithinCommit|TestCommitReplayDoesNotDuplicateMembership|TestConflictWritesNoMembership|TestDroppedMembershipTableIsRefusedNotRecreated)$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test -race -count=1 ./host/store ./host/daemon ./host/workbench",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; MEMBERSHIP_TIMING=1 go test -count=1 -timeout 180s ./host/store -run '^TestObjectCommitsTimingAt10k$' -v"
+      ],
+      "mutations": [
+        {
+          "id": "MUT-6",
+          "file": "host/store/object_commits.go",
+          "edit": "`ORDER BY entry_index LIMIT ?` \u2192 `ORDER BY entry_index DESC LIMIT ?`",
+          "must_fail": "`TestObjectCommitsOrderAndContinuation`."
+        },
+        {
+          "id": "MUT-7",
+          "file": "host/store/object_commits.go",
+          "edit": "`entry_index > ? ORDER BY entry_index` \u2192 `entry_index >= ? ORDER BY entry_index`",
+          "must_fail": "`TestObjectCommitsOrderAndContinuation` (bounded continuation loop)."
+        },
+        {
+          "id": "MUT-8",
+          "file": "host/store/object_commits.go",
+          "edit": "`limit < 1",
+          "must_fail": ""
+        },
+        {
+          "id": "MUT-9",
+          "file": "host/store/object_commits.go",
+          "edit": "`afterEntry < -1` \u2192 `false`",
+          "must_fail": "`TestObjectCommitsValidation`."
+        }
+      ]
+    },
+    {
+      "id": "M3a",
+      "title": "read seam and optional renderer",
+      "estimated_added_production_loc": 35,
+      "files": [
+        "host/daemon/daemon.go",
+        "host/daemon/read_deadline_test.go",
+        "host/workbench/render.go",
+        "host/workbench/render_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test -race -count=1 ./host/daemon ./host/workbench -run '^(TestCommitView|TestWorkbenchObjectProvenanceWalk|TestFrozenV1RouteTableMatchesMux)$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test -race -count=1 ./host/store ./host/daemon ./host/workbench"
+      ],
+      "mutations": []
+    },
+    {
+      "id": "M3b",
+      "title": "checked object projection and recorder walk",
+      "estimated_added_production_loc": 125,
+      "files": [
+        "host/daemon/workbench.go",
+        "host/daemon/workbench_test.go",
+        "host/daemon/workbench_references_test.go",
+        "host/daemon/workbench_commits_test.go",
+        "host/workbench/render.go",
+        "host/workbench/render_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test -race -count=1 ./host/daemon ./host/workbench -run '^(TestWorkbenchCommittedByEdges|TestWorkbenchCommitPaging|TestWorkbenchCommitGrammar|TestWorkbenchCommitWalk|TestWorkbenchObjectProvenanceWalk|TestWorkbenchReferenceWalk|TestCommitView|TestFrozenV1RouteTableMatchesMux)$' -v",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test -race -count=1 ./host/store ./host/daemon ./host/workbench"
+      ],
+      "mutations": [
+        {
+          "id": "MUT-13",
+          "file": "host/daemon/workbench.go",
+          "edit": "`if !commitEntryOK {` \u2192 `if false {`",
+          "must_fail": "`TestWorkbenchCommittedByEdges/missing-entry` (CB-GONE, no href)."
+        },
+        {
+          "id": "MUT-14",
+          "file": "host/workbench/render.go",
+          "edit": "`no commit carried this object: it was stored outside any commit (PutObject or journal). Entries that only reference it are listed under referencedBy.` \u2192 `UNAVAILABLE: commit membership unknown`",
+          "must_fail": "`TestCommitView/none` and `TestWorkbenchCommittedByEdges/none`."
+        },
+        {
+          "id": "MUT-15",
+          "file": "host/daemon/workbench.go",
+          "edit": "`len(commits) > WorkbenchPageLimit` \u2192 `len(commits) >= WorkbenchPageLimit`",
+          "must_fail": "`TestWorkbenchCommitPaging/100` (no CB-MORE)."
+        },
+        {
+          "id": "MUT-16",
+          "file": "host/daemon/workbench.go",
+          "edit": "`if commitReadErr != nil {` \u2192 `if false {`",
+          "must_fail": "`TestWorkbenchCommittedByEdges/read-error` (must be sanitized 500)."
+        },
+        {
+          "id": "MUT-17",
+          "file": "host/daemon/workbench.go",
+          "edit": "`afterEntry = parsedCommitsAfter` \u2192 `afterEntry = -1`",
+          "must_fail": "`TestWorkbenchCommitPaging/continuation` (must not repeat first page)."
+        }
+      ]
+    }
+  ],
+  "final_acceptance": [
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go vet ./...",
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test ./... -run '^$'",
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test -race -count=1 ./host/store ./host/daemon ./host/workbench",
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; go test -count=1 ./...",
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; export GOCACHE=/Users/voightkampff/Library/Caches/go-build TMPDIR=/private/tmp; ./scripts/verify_ail.sh"
+  ],
+  "blocked_not_planned": []
+}
