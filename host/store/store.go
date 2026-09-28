@@ -26,6 +26,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
@@ -219,6 +220,12 @@ type Store struct {
 	// is nil for in-memory databases (nothing to exclude across processes) and
 	// for read-only handles (which never take writer authority).
 	lock *writerLock
+	// workers counts durable COMMIT goroutines still running after their
+	// caller returned *UncertainError (finishDurable). Close waits for them
+	// before releasing the writer lock: database/sql's DB.Close does not wait
+	// for an in-use connection, so without this the lock could be released
+	// while a COMMIT is still landing.
+	workers sync.WaitGroup
 }
 
 // selectedHead tracks the store's currently selected world head. M1 keeps this
@@ -456,7 +463,13 @@ func freshInitTx(db *sql.DB, writeVersion func(*sql.Tx) error) error {
 // Close closes the underlying database and then releases the writer lock, if
 // this handle holds one. The lock is released even when closing the database
 // fails, so a failed Close can never leave writer authority stranded.
+//
+// Close first waits for any outstanding durable worker (a COMMIT whose caller
+// already got *UncertainError), so writer exclusivity outlives every write
+// this handle started. That wait is not bounded here; a caller that must
+// return within a budget hands Close to a retained cleanup owner instead.
 func (s *Store) Close() error {
+	s.workers.Wait()
 	err := s.db.Close()
 	if s.lock != nil {
 		if rerr := s.lock.release(); rerr != nil && err == nil {
@@ -922,7 +935,20 @@ func (s *Store) SelectHead(ref hashref.HashRef) error {
 // split-transaction mutation observably red.
 var commitBeforeOutcomeHook = func() {}
 
+var commitBodyHook = func(context.Context) {}
+
+// Commit is CommitContext without a caller lifetime. It is a compatibility
+// wrapper, removed when its callers migrate (row 23 policy tranche, M6b).
 func (s *Store) Commit(c Commit) error {
+	return s.CommitContext(context.Background(), c)
+}
+
+// CommitContext is Commit bounded by ctx up to the cancellation cutoff
+// (finishDurable): connection acquisition, the intent bind, the head compare
+// and every write honour ctx and roll back. After the cutoff the outcome is
+// committed, or *UncertainError when ctx ends first; see UncertainError.
+func (s *Store) CommitContext(ctx context.Context, c Commit) (err error) {
+	defer func() { err = notCommitted(ctx, "commit", err) }()
 	refs := []struct {
 		field string
 		ref   hashref.HashRef
@@ -957,9 +983,9 @@ func (s *Store) Commit(c Commit) error {
 		}
 	}
 
-	tx, err := s.db.Begin()
+	tx, err := s.beginDurable(ctx, "commit")
 	if err != nil {
-		return fmt.Errorf("store: begin commit: %w", err)
+		return err
 	}
 	// Roll back on any early return; a nil-error Commit calls tx.Commit first,
 	// making this rollback a no-op.
@@ -969,7 +995,7 @@ func (s *Store) Commit(c Commit) error {
 	var boundIntent JournalIntent
 	if c.InvocationID != "" {
 		var resolved bool
-		boundIntent, resolved, err = bindCommitIntentTx(tx, c)
+		boundIntent, resolved, err = bindCommitIntentTx(ctx, tx, c)
 		if err != nil {
 			return err
 		}
@@ -980,9 +1006,8 @@ func (s *Store) Commit(c Commit) error {
 	}
 
 	// Step 1 continued: compare-and-append guard.
-	// DR-1: Store.Commit keeps its signature and today's unbounded behaviour;
-	// the write path's bound is the named follow-on item, not this one.
-	selected, hasSelected, err := selectedHeadTx(context.Background(), tx)
+	commitBodyHook(ctx)
+	selected, hasSelected, err := selectedHeadTx(ctx, tx)
 	if err != nil {
 		return err
 	}
@@ -997,7 +1022,7 @@ func (s *Store) Commit(c Commit) error {
 
 	// Step 2: immutable objects.
 	for _, o := range c.Objects {
-		if _, err := tx.Exec(
+		if _, err := tx.ExecContext(ctx,
 			`INSERT OR IGNORE INTO objects
 				(hash_ref, interface_hash_ref, semantic_id, provenance, payload)
 			 VALUES (?, ?, ?, ?, ?);`,
@@ -1009,7 +1034,8 @@ func (s *Store) Commit(c Commit) error {
 
 	// Step 3: next immutable world row.
 	w := c.NextWorld
-	if _, err := tx.Exec(
+	commitBodyHook(ctx)
+	if _, err := tx.ExecContext(ctx,
 		`INSERT OR IGNORE INTO worlds (world_ref, revision, state_root, log_head)
 		 VALUES (?, ?, ?, ?);`,
 		w.Ref.String(), w.Revision, w.StateRoot.String(), w.LogHead.String(),
@@ -1019,7 +1045,7 @@ func (s *Store) Commit(c Commit) error {
 
 	// Step 4: append-only log row (frozen header verbatim + separate body ref).
 	h := c.Entry.Header
-	if _, err := tx.Exec(
+	if _, err := tx.ExecContext(ctx,
 		`INSERT INTO log_entries
 			(entry_index, entry_hash_ref, semantics_epoch, transition_fn_ref,
 			 interpreter_ref, prev_entry_hash_ref, written_by, transition_ref)
@@ -1034,7 +1060,7 @@ func (s *Store) Commit(c Commit) error {
 	// Step 4b: commit membership, in this transaction. OR IGNORE collapses a
 	// hash listed twice in one commit; a resolved replay returned above.
 	for _, o := range c.Objects {
-		if _, err := tx.Exec(
+		if _, err := tx.ExecContext(ctx,
 			`INSERT OR IGNORE INTO commit_objects (object_ref, entry_index) VALUES (?, ?);`,
 			o.Hash.String(), h.EntryIndex,
 		); err != nil {
@@ -1043,7 +1069,7 @@ func (s *Store) Commit(c Commit) error {
 	}
 
 	// Step 5: advance the selected world head.
-	if _, err := tx.Exec(
+	if _, err := tx.ExecContext(ctx,
 		`INSERT INTO store_heads (head_key, world_ref) VALUES (?, ?)
 		 ON CONFLICT(head_key) DO UPDATE SET world_ref = excluded.world_ref;`,
 		selectedHeadKey, w.Ref.String(),
@@ -1072,21 +1098,18 @@ func (s *Store) Commit(c Commit) error {
 		if err := insertJournalObjectTx(tx, object); err != nil {
 			return err
 		}
-		if _, err := tx.Exec(`INSERT INTO journal(seq, kind, invocation_id, object_ref)
+		if _, err := tx.ExecContext(ctx, `INSERT INTO journal(seq, kind, invocation_id, object_ref)
 			VALUES (?, 'outcome', ?, ?)`, seq, c.InvocationID, object.Hash.String()); err != nil {
 			return fmt.Errorf("store: append commit outcome: %w", err)
 		}
 	}
 
-	// Step 7: commit.
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("store: commit transaction: %w", err)
-	}
-	return nil
+	// Step 7: the cancellation cutoff, then the durable COMMIT.
+	return s.finishDurable(ctx, "commit", tx)
 }
 
-func bindCommitIntentTx(tx *sql.Tx, c Commit) (JournalIntent, bool, error) {
-	row, ok, err := journalRowFor(tx, c.InvocationID, "intent")
+func bindCommitIntentTx(ctx context.Context, tx *sql.Tx, c Commit) (JournalIntent, bool, error) {
+	row, ok, err := journalRowFor(ctx, tx, c.InvocationID, "intent")
 	if err != nil {
 		return JournalIntent{}, false, err
 	}
@@ -1118,7 +1141,7 @@ func bindCommitIntentTx(tx *sql.Tx, c Commit) (JournalIntent, bool, error) {
 			}
 		}
 	}
-	_, resolved, err := journalRowFor(tx, c.InvocationID, "outcome")
+	_, resolved, err := journalRowFor(ctx, tx, c.InvocationID, "outcome")
 	if err != nil {
 		return JournalIntent{}, false, err
 	}
