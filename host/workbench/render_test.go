@@ -3,10 +3,14 @@ package workbench
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"html/template"
 	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
+	"text/template/parse"
 )
 
 func TestGradeViewRejectsUnavailableOrInvalidInput(t *testing.T) {
@@ -398,40 +402,293 @@ func TestRenderTimelinePagingLinks(t *testing.T) {
 	})
 }
 
-// unrenderedExempt names the view-model fields that are deliberately not
-// rendered (row candidate R-a). The self-checking arm below fails if one of
-// them starts rendering, so an exemption cannot outlive its reason.
-var unrenderedExempt = map[string]bool{
-	"TimelineView.From":  true,
-	"TimelineView.Limit": true,
+var workbenchViewTypes = []reflect.Type{
+	reflect.TypeOf(Page{}), reflect.TypeOf(TimelineView{}), reflect.TypeOf(EntryView{}),
+	reflect.TypeOf(WorldView{}), reflect.TypeOf(ObjectView{}), reflect.TypeOf(GradeView{}),
+	reflect.TypeOf(EdgeView{}), reflect.TypeOf(CommitView{}), reflect.TypeOf(ReferenceView{}),
 }
 
-// TestWorkbenchViewFieldsAllRender is the I3 class ratchet: a view-model field
-// that the handler writes and the template never reads fails here. The check is
-// lexical and name-based by design; specific mutations name specific killers.
-func TestWorkbenchViewFieldsAllRender(t *testing.T) {
-	text := pageHTML + partialsHTML
-	checked := 0
-	for _, typ := range []reflect.Type{reflect.TypeOf(EntryView{}), reflect.TypeOf(TimelineView{}), reflect.TypeOf(Page{})} {
-		for i := 0; i < typ.NumField(); i++ {
-			name := typ.Field(i).Name
-			key := typ.Name() + "." + name
-			rendered := strings.Contains(text, "."+name)
-			if unrenderedExempt[key] {
-				if rendered {
-					t.Errorf("%s is exempt as unrendered but the template now renders .%s; remove the exemption", key, name)
+type fieldCensus struct {
+	templates *template.Template
+	seen      map[string]bool
+	visited   map[string]bool
+	active    map[string]bool
+}
+
+func censusType(typ reflect.Type) reflect.Type {
+	for typ != nil && typ.Kind() == reflect.Pointer {
+		typ = typ.Elem()
+	}
+	return typ
+}
+
+func (c *fieldCensus) visitType(typ reflect.Type) {
+	typ = censusType(typ)
+	if typ != nil && typ.Kind() == reflect.Struct {
+		c.visited[typ.Name()] = true
+	}
+}
+
+func (c *fieldCensus) field(dot reflect.Type, names []string) (reflect.Type, error) {
+	typ := dot
+	for _, name := range names {
+		typ = censusType(typ)
+		if typ == nil || typ.Kind() != reflect.Struct {
+			return nil, fmt.Errorf("field %s on non-struct %v", name, typ)
+		}
+		field, ok := typ.FieldByName(name)
+		if !ok || field.PkgPath != "" {
+			return nil, fmt.Errorf("unresolved %s.%s", typ.Name(), name)
+		}
+		c.visitType(typ)
+		key := typ.Name() + "." + field.Name
+		c.seen[key] = true
+		typ = field.Type
+		c.visitType(typ)
+	}
+	return typ, nil
+}
+
+func (c *fieldCensus) expr(node parse.Node, dot reflect.Type) (reflect.Type, error) {
+	switch n := node.(type) {
+	case *parse.DotNode:
+		c.visitType(dot)
+		return dot, nil
+	case *parse.FieldNode:
+		return c.field(dot, n.Ident)
+	case *parse.StringNode:
+		return reflect.TypeOf(""), nil
+	case *parse.BoolNode:
+		return reflect.TypeOf(true), nil
+	case *parse.NumberNode:
+		return reflect.TypeOf(int64(0)), nil
+	case *parse.PipeNode:
+		if len(n.Decl) != 0 || n.IsAssign || len(n.Cmds) == 0 {
+			return nil, fmt.Errorf("unsupported pipeline declaration or empty pipeline: %s", n)
+		}
+		if len(n.Cmds) != 1 {
+			return nil, fmt.Errorf("unsupported chained pipeline: %s", n)
+		}
+		var result reflect.Type
+		for _, cmd := range n.Cmds {
+			var err error
+			result, err = c.expr(cmd, dot)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return result, nil
+	case *parse.CommandNode:
+		if len(n.Args) == 0 {
+			return nil, fmt.Errorf("empty command")
+		}
+		if fun, ok := n.Args[0].(*parse.IdentifierNode); ok {
+			args := make([]reflect.Type, 0, len(n.Args)-1)
+			for _, arg := range n.Args[1:] {
+				typ, err := c.expr(arg, dot)
+				if err != nil {
+					return nil, err
 				}
+				args = append(args, typ)
+			}
+			switch fun.Ident {
+			case "edgeUnavailable":
+				if len(args) != 1 || censusType(args[0]) != reflect.TypeOf(EdgeView{}) {
+					return nil, fmt.Errorf("edgeUnavailable requires EdgeView, got %v", args)
+				}
+				c.seen["EdgeView.Available"] = true
+				return reflect.TypeOf(true), nil
+			case "workbenchHref":
+				if len(args) != 1 || args[0] != reflect.TypeOf("") {
+					return nil, fmt.Errorf("workbenchHref requires string, got %v", args)
+				}
+				return reflect.TypeOf(""), nil
+			case "eq":
+				if len(args) < 2 {
+					return nil, fmt.Errorf("eq requires two arguments")
+				}
+				return reflect.TypeOf(true), nil
+			default:
+				return nil, fmt.Errorf("unknown template function %q", fun.Ident)
+			}
+		}
+		if len(n.Args) != 1 {
+			return nil, fmt.Errorf("unsupported command arguments: %s", n)
+		}
+		return c.expr(n.Args[0], dot)
+	case *parse.VariableNode, *parse.ChainNode:
+		return nil, fmt.Errorf("unsupported variable or chain: %s", node)
+	default:
+		return nil, fmt.Errorf("unsupported expression %T", node)
+	}
+}
+
+func (c *fieldCensus) walk(node parse.Node, dot reflect.Type) error {
+	if node == nil {
+		return nil
+	}
+	c.visitType(dot)
+	switch n := node.(type) {
+	case *parse.ListNode:
+		if n == nil {
+			return nil
+		}
+		for _, child := range n.Nodes {
+			if err := c.walk(child, dot); err != nil {
+				return err
+			}
+		}
+	case *parse.TextNode, *parse.CommentNode:
+		return nil
+	case *parse.ActionNode:
+		_, err := c.expr(n.Pipe, dot)
+		return err
+	case *parse.IfNode:
+		if _, err := c.expr(n.Pipe, dot); err != nil {
+			return err
+		}
+		if err := c.walk(n.List, dot); err != nil {
+			return err
+		}
+		return c.walk(n.ElseList, dot)
+	case *parse.WithNode:
+		next, err := c.expr(n.Pipe, dot)
+		if err != nil {
+			return err
+		}
+		if err := c.walk(n.List, next); err != nil {
+			return err
+		}
+		return c.walk(n.ElseList, dot)
+	case *parse.RangeNode:
+		collection, err := c.expr(n.Pipe, dot)
+		if err != nil {
+			return err
+		}
+		collection = censusType(collection)
+		if collection == nil {
+			return fmt.Errorf("range has no type: %s", n.Pipe)
+		}
+		if collection.Kind() != reflect.Slice && collection.Kind() != reflect.Array && collection.Kind() != reflect.Map {
+			return fmt.Errorf("unsupported range type %v", collection)
+		}
+		if err := c.walk(n.List, collection.Elem()); err != nil {
+			return err
+		}
+		return c.walk(n.ElseList, dot)
+	case *parse.TemplateNode:
+		next, err := c.expr(n.Pipe, dot)
+		if err != nil {
+			return err
+		}
+		if next == nil {
+			return fmt.Errorf("template %q has unresolved argument type", n.Name)
+		}
+		key := n.Name + "/" + next.String()
+		if c.active[key] {
+			return nil
+		}
+		child := c.templates.Lookup(n.Name)
+		if child == nil || child.Tree == nil {
+			return fmt.Errorf("unknown template %q", n.Name)
+		}
+		c.active[key] = true
+		defer delete(c.active, key)
+		return c.walk(child.Tree.Root, next)
+	default:
+		return fmt.Errorf("unsupported template node %T", node)
+	}
+	return nil
+}
+
+func missingWorkbenchFields(page, partials string) ([]string, error) {
+	tm, err := template.New("workbench").Funcs(template.FuncMap{"edgeUnavailable": edgeUnavailable, "workbenchHref": workbenchHref}).Parse(page)
+	if err != nil {
+		return nil, err
+	}
+	tm, err = tm.Parse(partials)
+	if err != nil {
+		return nil, err
+	}
+	c := &fieldCensus{templates: tm, seen: map[string]bool{}, visited: map[string]bool{}, active: map[string]bool{}}
+	if err := c.walk(tm.Tree.Root, reflect.TypeOf(Page{})); err != nil {
+		return nil, err
+	}
+	var missing []string
+	seen := c.seen
+	if len(seen) == 0 {
+		return nil, fmt.Errorf("template census observed no fields")
+	}
+	for _, typ := range workbenchViewTypes {
+		if !c.visited[typ.Name()] {
+			return nil, fmt.Errorf("view type %s was not visited", typ.Name())
+		}
+		for i := 0; i < typ.NumField(); i++ {
+			field := typ.Field(i)
+			if field.PkgPath != "" {
 				continue
 			}
-			checked++
-			if !rendered {
-				t.Errorf("%s is never rendered by the workbench template (no .%s action)", key, name)
+			if !seen[typ.Name()+"."+field.Name] {
+				missing = append(missing, typ.Name()+"."+field.Name)
 			}
 		}
 	}
-	// CONTROL: the census must have walked real fields, not an empty set.
-	if checked < 10 {
-		t.Fatalf("field census checked %d fields, want >= 10", checked)
+	sort.Strings(missing)
+	return missing, nil
+}
+
+func TestWorkbenchViewFieldsAllRender(t *testing.T) {
+	missing, err := missingWorkbenchFields(pageHTML, partialsHTML)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(missing) != 0 {
+		t.Fatalf("unrendered fields: %v", missing)
+	}
+}
+
+func TestWorkbenchFieldCensusMutations(t *testing.T) {
+	good, err := missingWorkbenchFields(pageHTML, partialsHTML)
+	if err != nil || len(good) != 0 {
+		t.Fatalf("known-good template: missing=%v err=%v", good, err)
+	}
+	for _, tc := range []struct{ name, old, replacement, want string }{
+		{"world-ref-decoy", `{{.World.Ref}}`, `literal-world`, "WorldView.Ref"},
+		{"world-unavailable", `{{.World.Unavailable}}`, `literal-unavailable`, "WorldView.Unavailable"},
+		{"object-edges", `{{with .Object}}{{range .Edges}}`, `{{with .Object}}{{range .Commits.Edges}}`, "ObjectView.Edges"},
+		{"commit-truncated", `{{if .Truncated}}<p>Showing 100 commits; more recorded</p>`, `{{if false}}<p>Showing 100 commits; more recorded</p>`, "CommitView.Truncated"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			page := pageHTML
+			if tc.name == "world-ref-decoy" {
+				if strings.Count(page, tc.old) == 0 {
+					t.Fatal("world ref mutation anchor absent")
+				}
+				page = strings.ReplaceAll(page, tc.old, tc.replacement) + `<!-- .World.Ref decoy -->`
+			} else {
+				if strings.Count(page, tc.old) != 1 {
+					t.Fatalf("mutation anchor count=%d", strings.Count(page, tc.old))
+				}
+				page = strings.Replace(page, tc.old, tc.replacement, 1)
+			}
+			missing, err := missingWorkbenchFields(page, partialsHTML)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(missing) != 1 || missing[0] != tc.want {
+				t.Fatalf("missing=%v, want [%s]", missing, tc.want)
+			}
+			good, err := missingWorkbenchFields(pageHTML, partialsHTML)
+			if err != nil || len(good) != 0 {
+				t.Fatalf("known-good control: %v %v", good, err)
+			}
+		})
+	}
+}
+
+func TestEdgeUnavailableFunctionContract(t *testing.T) {
+	if !edgeUnavailable(EdgeView{Available: false}) || edgeUnavailable(EdgeView{Available: true}) {
+		t.Fatal("edgeUnavailable disagrees with Available")
 	}
 }
 

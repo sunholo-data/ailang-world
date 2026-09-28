@@ -84,8 +84,6 @@ type EntryView struct {
 }
 
 type TimelineView struct {
-	From     int64
-	Limit    int
 	Entries  []EntryView
 	NextHref string
 	PrevHref string

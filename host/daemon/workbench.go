@@ -497,7 +497,6 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 		page.Selected = &selected
 	}
 
-	page.Timeline = workbench.TimelineView{From: from, Limit: limit}
 	for offset := int64(0); offset < int64(limit); offset++ {
 		entry, ok, err := d.reads.GetLogEntry(ctx, from+offset)
 		if err != nil {
