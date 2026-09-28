@@ -132,6 +132,7 @@ func TestCommitBudgetAndUncertainReconcile(t *testing.T) {
 				t.Fatalf("uncertain message = %q; want the reconcile route GET /v1/log/1", body.Error.Message)
 			}
 			d.commits = d.store
+			d.commitBudget = commitBudget // B is an ordinary commit: the ratified B6, not the arm's 100 ms
 			if !tc.skipB {
 				base := genesis
 				if tc.bOnTop {
