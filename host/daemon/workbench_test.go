@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -409,7 +410,165 @@ func workbenchRegion(body, start, end string) (string, bool) {
 const (
 	selectedEntryStart = `<article aria-label="selected entry">`
 	timelineStart      = `<section aria-label="timeline">`
+	worldStart         = `<nav aria-label="world browser">`
 )
+
+type rootReadStore struct {
+	readStore
+	root  hashref.HashRef
+	err   error
+	reads int
+}
+
+func (s *rootReadStore) GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error) {
+	if ref == s.root {
+		s.reads++
+		if s.err != nil {
+			return store.Object{}, false, s.err
+		}
+	}
+	return s.readStore.GetObject(ctx, ref)
+}
+
+func assertWorldNav(t *testing.T, body string, world store.World, stored bool) string {
+	t.Helper()
+	nav, ok := workbenchRegion(body, worldStart, "</nav>")
+	if !ok {
+		t.Fatal("world nav missing")
+	}
+	for _, want := range []string{
+		`<a href="/workbench">workbench</a>`,
+		`<dt>world</dt><dd><span class="hash" title="` + world.Ref.String() + `" aria-label="` + world.Ref.String() + `">` + world.Ref.String() + `</span></dd>`,
+		`<dt>revision</dt><dd>` + strconv.FormatInt(world.Revision, 10) + `</dd>`,
+		`<dt>log head</dt><dd><span class="hash" title="` + world.LogHead.String() + `" aria-label="` + world.LogHead.String() + `">` + world.LogHead.String() + `</span></dd>`,
+	} {
+		if !strings.Contains(nav, want) {
+			t.Errorf("nav missing %q: %s", want, nav)
+		}
+	}
+	if strings.Contains(nav, `aria-label="`+world.Ref.String()+`">`+world.Ref.String()+`</a>`) || strings.Contains(nav, `aria-label="`+world.LogHead.String()+`">`+world.LogHead.String()+`</a>`) {
+		t.Error("world or log head is an anchor")
+	}
+	if stored {
+		want := `stateRoot: <a href="/workbench?object=` + world.StateRoot.String() + `" class="hash" title="` + world.StateRoot.String() + `" aria-label="` + world.StateRoot.String() + `">` + world.StateRoot.String() + `</a>`
+		if !strings.Contains(nav, want) || strings.Count(nav, `?object=`) != 1 {
+			t.Errorf("stored root nav: %s", nav)
+		}
+	} else {
+		want := `stateRoot: <span class="unavailable" role="note">UNAVAILABLE: object ` + world.StateRoot.String() + ` is not stored</span>`
+		if !strings.Contains(nav, want) || strings.Contains(nav, `?object=`) {
+			t.Errorf("missing root nav: %s", nav)
+		}
+	}
+	return nav
+}
+
+func TestWorkbenchWorldPane(t *testing.T) {
+	for _, stored := range []bool{false, true} {
+		name := "missing-root"
+		if stored {
+			name = "stored-root"
+		}
+		t.Run(name, func(t *testing.T) {
+			d := newHandlerDaemon(t)
+			genesis := seedGenesisEmbedded(t, d, name)
+			commit := testCommit(genesis, 0, name)
+			commit.NextWorld.Revision = 17
+			if stored {
+				state := workbenchTestObject("state-"+name, "world/state", hashref.SumSHA256([]byte("state-interface")))
+				commit.NextWorld.StateRoot = state.Hash
+				commit.Objects = append(commit.Objects, state)
+			}
+			if err := d.store.Commit(commit); err != nil {
+				t.Fatal(err)
+			}
+			_, ok, err := d.store.GetObject(context.Background(), commit.NextWorld.StateRoot)
+			if err != nil || ok != stored {
+				t.Fatalf("root control stored=%v err=%v, want %v", ok, err, stored)
+			}
+			for _, path := range []string{"/workbench", "/workbench?from=0&entry=0", "/workbench?object=" + commit.Entry.TransitionRef.String()} {
+				rec := requestRecorder(t, d, http.MethodGet, path, nil)
+				if rec.Code != 200 {
+					t.Fatalf("%s status %d: %s", path, rec.Code, rec.Body)
+				}
+				assertWorldNav(t, rec.Body.String(), commit.NextWorld, stored)
+			}
+			if stored {
+				counter := &rootReadStore{readStore: d.store, root: commit.NextWorld.StateRoot}
+				d.reads = counter
+				rec := requestRecorder(t, d, http.MethodGet, "/workbench", nil)
+				if rec.Code != 200 || counter.reads != 1 {
+					t.Fatalf("root reads=%d status=%d", counter.reads, rec.Code)
+				}
+				d.reads = d.store
+				link := "/workbench?object=" + commit.NextWorld.StateRoot.String()
+				if rec := requestRecorder(t, d, http.MethodGet, link, nil); rec.Code != 200 {
+					t.Fatalf("root link %s status %d", link, rec.Code)
+				}
+			}
+		})
+	}
+	t.Run("explicit-world", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		genesis := seedGenesisEmbedded(t, d, "explicit-world")
+		old := testCommit(genesis, 0, "old-world")
+		old.NextWorld.Revision = 17
+		state := workbenchTestObject("old-state", "world/state", hashref.SumSHA256([]byte("state-interface")))
+		old.NextWorld.StateRoot = state.Hash
+		old.Objects = append(old.Objects, state)
+		if err := d.store.Commit(old); err != nil {
+			t.Fatal(err)
+		}
+		newer := testCommit(old.NextWorld, 1, "new-world")
+		if err := d.store.Commit(newer); err != nil {
+			t.Fatal(err)
+		}
+		if old.NextWorld.Ref == newer.NextWorld.Ref || old.NextWorld.StateRoot == newer.NextWorld.StateRoot || old.NextWorld.LogHead == newer.NextWorld.LogHead || old.NextWorld.Revision == newer.NextWorld.Revision {
+			t.Fatal("world metadata must differ")
+		}
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench?world="+old.NextWorld.Ref.String(), nil)
+		if rec.Code != 200 {
+			t.Fatalf("status %d: %s", rec.Code, rec.Body)
+		}
+		assertWorldNav(t, rec.Body.String(), old.NextWorld, true)
+	})
+	t.Run("no-selected-world", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		rec := requestRecorder(t, d, http.MethodGet, "/workbench", nil)
+		if rec.Code != 200 {
+			t.Fatalf("status %d", rec.Code)
+		}
+		nav, ok := workbenchRegion(rec.Body.String(), worldStart, "</nav>")
+		if !ok || !strings.Contains(nav, `UNAVAILABLE: no world selected`) || strings.Count(nav, "<a ") != 1 || strings.Contains(nav, `?object=`) {
+			t.Fatalf("no-world nav: %s", nav)
+		}
+	})
+	for _, tc := range []struct {
+		name   string
+		err    error
+		status int
+		class  string
+	}{{"internal", errSentinelInternal, 500, "Internal"}, {"timeout", context.DeadlineExceeded, 503, "Timeout"}} {
+		t.Run("store-error/"+tc.name, func(t *testing.T) {
+			d := newHandlerDaemon(t)
+			genesis := seedGenesisEmbedded(t, d, tc.name)
+			commit := testCommit(genesis, 0, tc.name)
+			if err := d.store.Commit(commit); err != nil {
+				t.Fatal(err)
+			}
+			d.errLog = &bytes.Buffer{}
+			wrapper := &rootReadStore{readStore: d.store, root: commit.NextWorld.StateRoot, err: tc.err}
+			d.reads = wrapper
+			if rec := requestRecorder(t, d, http.MethodGet, "/workbench?world="+genesis.Ref.String(), nil); rec.Code != 200 {
+				t.Fatalf("untargeted status %d", rec.Code)
+			}
+			rec := requestRecorder(t, d, http.MethodGet, "/workbench", nil)
+			if rec.Code != tc.status || !strings.Contains(rec.Body.String(), ">"+tc.class+"<") || strings.Contains(rec.Body.String(), tc.err.Error()) || strings.Contains(rec.Body.String(), worldStart) {
+				t.Fatalf("status=%d body=%s", rec.Code, rec.Body)
+			}
+		})
+	}
+}
 
 // objectFailingStore fails GetObject only, so the entry-edge check is the one
 // read that errors while every log and world read still reaches the real store.
@@ -498,7 +657,10 @@ func TestWorkbenchSelectedEntry(t *testing.T) {
 	t.Run("object-store-error", func(t *testing.T) {
 		oldReads, oldErrLog := d.reads, d.errLog
 		defer func() { d.reads, d.errLog = oldReads, oldErrLog }()
-		d.reads = objectFailingStore{readStore: d.store}
+		if commit.NextWorld.StateRoot == commit.Entry.TransitionRef {
+			t.Fatal("root and transition refs must differ")
+		}
+		d.reads = refFailingStore{readStore: d.store, fail: commit.Entry.TransitionRef}
 		d.errLog = &bytes.Buffer{}
 		// CONTROL: the same store serves the unselected page, so only the edge
 		// check can be what fails below.
@@ -577,13 +739,38 @@ func TestWorkbenchTimelinePaging(t *testing.T) {
 
 	t.Run("emitted-links-resolve", func(t *testing.T) {
 		counts := map[string]int{}
+		ctx := context.Background()
+		head, ok, err := d.store.SelectedHead(ctx)
+		if err != nil || !ok {
+			t.Fatalf("selected head ok=%v err=%v", ok, err)
+		}
+		headWorld, ok, err := d.store.GetWorld(ctx, head)
+		if err != nil || !ok {
+			t.Fatalf("head world ok=%v err=%v", ok, err)
+		}
+		if _, ok, err := d.store.GetObject(ctx, headWorld.StateRoot); err != nil || ok {
+			t.Fatalf("head root stored=%v err=%v, want false", ok, err)
+		}
+		state := workbenchTestObject("paging-stored-state", "world/state", hashref.SumSHA256([]byte("paging-state-interface")))
+		if err := d.store.PutObject(state); err != nil {
+			t.Fatal(err)
+		}
+		storedWorld := store.World{Ref: hashref.SumSHA256([]byte("paging-stored-world")), Revision: 17, StateRoot: state.Hash, LogHead: hashref.SumSHA256([]byte("paging-stored-log"))}
+		if err := d.store.PutWorld(storedWorld); err != nil {
+			t.Fatal(err)
+		}
+		if _, ok, err := d.store.GetObject(ctx, state.Hash); err != nil || !ok {
+			t.Fatalf("stored root control ok=%v err=%v", ok, err)
+		}
 		for _, page := range []struct {
 			target      string
 			hasSelected bool
+			storedWorld bool
 		}{
-			{"/workbench", false},
-			{"/workbench?from=100&entry=100", true},
-			{"/workbench?from=5&entry=5", true},
+			{"/workbench", false, false},
+			{"/workbench?from=100&entry=100", true, false},
+			{"/workbench?from=5&entry=5", true, false},
+			{"/workbench?world=" + storedWorld.Ref.String(), false, true},
 		} {
 			body := get(t, page.target)
 			timeline, ok := workbenchRegion(body, timelineStart, "</section>")
@@ -591,6 +778,22 @@ func TestWorkbenchTimelinePaging(t *testing.T) {
 				t.Fatalf("%s: no timeline region", page.target)
 			}
 			regions := []struct{ name, text string }{{"timeline", timeline}}
+			world, ok := workbenchRegion(body, worldStart, "</nav>")
+			if !ok || world == "" {
+				t.Fatalf("%s: no world region", page.target)
+			}
+			regions = append(regions, struct{ name, text string }{"world", world})
+			root := headWorld.StateRoot
+			if page.storedWorld {
+				root = storedWorld.StateRoot
+			}
+			if page.storedWorld {
+				if strings.Count(world, `?object=`) != 1 || !strings.Contains(world, `stateRoot: <a href="/workbench?object=`+root.String()+`"`) {
+					t.Fatalf("%s: stored world root: %s", page.target, world)
+				}
+			} else if strings.Contains(world, `?object=`) || !strings.Contains(world, `UNAVAILABLE: object `+root.String()+` is not stored`) {
+				t.Fatalf("%s: missing world root: %s", page.target, world)
+			}
 			selected, hasSelected := workbenchRegion(body, selectedEntryStart, "</article>")
 			if hasSelected != page.hasSelected {
 				t.Fatalf("%s: selected-entry region present=%v, want %v", page.target, hasSelected, page.hasSelected)
@@ -608,6 +811,10 @@ func TestWorkbenchTimelinePaging(t *testing.T) {
 					href, text := match[1], match[2]
 					category := ""
 					switch {
+					case region.name == "world" && href == "/workbench" && text == "workbench":
+						category = "world-home"
+					case region.name == "world" && strings.HasPrefix(href, "/workbench?object=") && text == storedWorld.StateRoot.String():
+						category = "world"
 					case region.name == "timeline" && (text == "previous" || text == "next"):
 						category = "paging"
 					case region.name == "timeline" && selectEntryText.MatchString(text):
@@ -627,7 +834,7 @@ func TestWorkbenchTimelinePaging(t *testing.T) {
 			}
 		}
 		// CONTROL: every category must be exercised, or a dead extractor passes vacuously.
-		for _, category := range []string{"paging", "select", "stored-edge"} {
+		for _, category := range []string{"paging", "select", "stored-edge", "world-home", "world"} {
 			if counts[category] == 0 {
 				t.Errorf("category %s matched 0 links across the three pages", category)
 			}

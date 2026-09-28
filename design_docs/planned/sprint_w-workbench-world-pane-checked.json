@@ -1,0 +1,174 @@
+{
+  "sprint_id": "w-workbench-world-pane-checked-iter205",
+  "design_doc": "design_docs/planned/w-workbench-world-pane-checked.md",
+  "base": "2904ebc",
+  "scope": "Rows 99 + 100: checked workbench world stateRoot, visible world identity/revision/log head, region-scoped link walk and typed nine-view field census; no schema, /v1 route, index, or store-method change",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "checked world pane and recorder walk",
+      "estimated_added_production_loc": 25,
+      "files": [
+        "host/daemon/workbench.go",
+        "host/workbench/render.go",
+        "host/daemon/workbench_test.go",
+        "host/daemon/workbench_references_test.go",
+        "host/workbench/render_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/daemon ./host/workbench -run '^(TestRenderWorldPane|TestWorkbenchWorldPane|TestWorkbenchTimelinePaging|TestWorkbenchSelectedEntry|TestWorkbenchReferenceWalk|TestWorkbenchCommitWalk)$' -v",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/daemon ./host/workbench"
+      ],
+      "mutations": [
+        {
+          "id": "H1",
+          "file": "`host/daemon/workbench.go`",
+          "edit": "`stateRoot, err := d.checkedEdge(ctx, \"stateRoot\", world.StateRoot)` → `stateRoot, err := workbench.EdgeView{Relation: \"stateRoot\", Available: true, Target: world.StateRoot.String(), Href: \"?object=\" + world.StateRoot.String()}, error(nil)`",
+          "must_fail": "`TestWorkbenchWorldPane/missing-root`; paging link walk."
+        },
+        {
+          "id": "H2",
+          "file": "`host/daemon/workbench.go`",
+          "edit": "`d.checkedEdge(ctx, \"stateRoot\", world.StateRoot)` → `d.checkedEdge(ctx, \"stateRoot\", world.Ref)`",
+          "must_fail": "`TestWorkbenchWorldPane/stored-root`."
+        },
+        {
+          "id": "H3",
+          "file": "`host/daemon/workbench.go`",
+          "edit": "`d.checkedEdge(ctx, \"stateRoot\", world.StateRoot)` → `d.checkedEdge(ctx, \"interface\", world.StateRoot)`",
+          "must_fail": "`TestWorkbenchWorldPane/stored-root` relation."
+        },
+        {
+          "id": "H4",
+          "file": "`host/daemon/workbench.go`",
+          "edit": "`stateRoot, err := d.checkedEdge(ctx, \"stateRoot\", world.StateRoot)\\n\\t\\tif err != nil {\\n\\t\\t\\td.writeWorkbenchStoreError(w, r, ctx, err)` → `stateRoot, err := d.checkedEdge(ctx, \"stateRoot\", world.StateRoot)\\n\\t\\tif err != nil {\\n\\t\\t\\twriteWorkbenchError(w, 404, \"NotFound\", \"missing root\")`",
+          "must_fail": "`TestWorkbenchWorldPane/store-error/internal` and `/timeout`."
+        },
+        {
+          "id": "H5",
+          "file": "`host/daemon/workbench.go`",
+          "edit": "`stateRoot, err := d.checkedEdge(ctx, \"stateRoot\", world.StateRoot)\\n\\t\\tif err != nil {\\n\\t\\t\\td.writeWorkbenchStoreError(w, r, ctx, err)` → `stateRoot, err := d.checkedEdge(ctx, \"stateRoot\", world.StateRoot)\\n\\t\\tif err != nil {\\n\\t\\t\\td.writeWorkbenchInternalError(w, r, err)`",
+          "must_fail": "`TestWorkbenchWorldPane/store-error/timeout`."
+        },
+        {
+          "id": "H6",
+          "file": "`host/daemon/workbench.go`",
+          "edit": "`Revision:  world.Revision,` → `Revision:  0,`",
+          "must_fail": "`TestWorkbenchWorldPane/explicit-world`."
+        },
+        {
+          "id": "H7",
+          "file": "`host/daemon/workbench.go`",
+          "edit": "`LogHead:   world.LogHead.String(),` → `LogHead:   world.StateRoot.String(),`",
+          "must_fail": "`TestWorkbenchWorldPane/explicit-world`."
+        },
+        {
+          "id": "R1",
+          "file": "`host/workbench/render.go`",
+          "edit": "`{{template \"edge\" .World.StateRoot}}` → `` (empty string)",
+          "must_fail": "`TestRenderWorldPane/stored-root`; paging world control."
+        },
+        {
+          "id": "R2",
+          "file": "`host/workbench/render.go`",
+          "edit": "`<dt>revision</dt><dd>{{.World.Revision}}</dd>` → `<dt>revision</dt><dd>0</dd>`",
+          "must_fail": "`TestRenderWorldPane/metadata`."
+        },
+        {
+          "id": "R3",
+          "file": "`host/workbench/render.go`",
+          "edit": "`<dt>log head</dt><dd><span class=\"hash\" title=\"{{.World.LogHead}}\" aria-label=\"{{.World.LogHead}}\">{{.World.LogHead}}</span></dd>` → `<dt>log head</dt><dd><span class=\"hash\" title=\"{{.World.Ref}}\" aria-label=\"{{.World.Ref}}\">{{.World.Ref}}</span></dd>`",
+          "must_fail": "`TestRenderWorldPane/metadata`."
+        },
+        {
+          "id": "R4",
+          "file": "`host/workbench/render.go`",
+          "edit": "`<dt>world</dt><dd><span class=\"hash\" title=\"{{.World.Ref}}\" aria-label=\"{{.World.Ref}}\">{{.World.Ref}}</span></dd>` → `<dt>world</dt><dd><span class=\"hash\" title=\"literal-world\" aria-label=\"literal-world\">literal-world</span></dd>`",
+          "must_fail": "`TestRenderWorldPane/metadata`; M2 census also detects absent Ref."
+        },
+        {
+          "id": "R5",
+          "file": "`host/workbench/render.go`",
+          "edit": "`{{if edgeUnavailable .}}` → `{{if false}}`",
+          "must_fail": "`TestRenderWorldPane/missing-root`."
+        },
+        {
+          "id": "R6",
+          "file": "`host/workbench/render.go`",
+          "edit": "`<dt>world</dt>` → `<dt>stateRoot</dt>`",
+          "must_fail": "`TestRenderWorldPane/metadata`."
+        },
+        {
+          "id": "R7",
+          "file": "`host/workbench/render.go`",
+          "edit": "`UNAVAILABLE: {{.World.Unavailable}}</span>` → `UNAVAILABLE: </span>`",
+          "must_fail": "`TestRenderWorldPane/no-selected-world`; M2 census."
+        },
+        {
+          "id": "C1",
+          "file": "`host/daemon/workbench_test.go`",
+          "edit": "`regions = append(regions, struct{ name, text string }{\"world\", world})` → `` (empty string)",
+          "must_fail": "`TestWorkbenchTimelinePaging/emitted-links-resolve` independent controls."
+        },
+        {
+          "id": "C2",
+          "file": "`host/daemon/workbench_test.go`",
+          "edit": "`world, ok := workbenchRegion(body, worldStart, \"</nav>\")` → `world, ok := \"\", true`",
+          "must_fail": "`TestWorkbenchTimelinePaging/emitted-links-resolve` nonempty/anchor controls."
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "remove dead timeline values and install typed census",
+      "estimated_added_production_loc": 0,
+      "files": [
+        "host/daemon/workbench.go",
+        "host/workbench/render.go",
+        "host/workbench/render_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/daemon ./host/workbench -run '^(TestWorkbenchViewFieldsAllRender|TestWorkbenchFieldCensusMutations|TestRenderWorldPane|TestWorkbenchWorldPane|TestWorkbenchTimelinePaging|TestWorkbenchSelectedEntry|TestWorkbenchReferenceWalk|TestWorkbenchCommitWalk)$' -v",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+        "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/daemon ./host/workbench"
+      ],
+      "mutations": [
+        {
+          "id": "A1",
+          "file": "`host/workbench/render.go`",
+          "edit": "`{{with .Object}}{{range .Edges}}` → `{{with .Object}}{{range .Commits.Edges}}`",
+          "must_fail": "`TestWorkbenchViewFieldsAllRender` reports ObjectView.Edges."
+        },
+        {
+          "id": "A2",
+          "file": "`host/workbench/render.go`",
+          "edit": "`{{if .Truncated}}<p>Showing 100 commits; more recorded</p>` → `{{if false}}<p>Showing 100 commits; more recorded</p>`",
+          "must_fail": "`TestWorkbenchViewFieldsAllRender` reports CommitView.Truncated."
+        },
+        {
+          "id": "A3",
+          "file": "`host/workbench/render.go`",
+          "edit": "`type ObjectView struct {` → `type ObjectView struct {\\n\\tForgotten string`",
+          "must_fail": "`TestWorkbenchViewFieldsAllRender` reports ObjectView.Forgotten."
+        },
+        {
+          "id": "A4",
+          "file": "`host/workbench/render_test.go`",
+          "edit": "`seen[typ.Name()+\".\"+field.Name]` → `strings.Contains(pageHTML+partialsHTML, \".\"+field.Name)`",
+          "must_fail": "`TestWorkbenchFieldCensusMutations/world-ref-decoy` detects the analyzer's false credit."
+        }
+      ]
+    }
+  ],
+  "final_acceptance": [
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -race -count=1 ./host/daemon ./host/workbench",
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; go test -count=1 ./...",
+    "export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; ./scripts/verify_ail.sh"
+  ],
+  "blocked_not_planned": []
+}

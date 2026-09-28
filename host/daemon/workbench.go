@@ -355,7 +355,7 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := d.readCtx(r)
 	defer cancel()
-	page := workbench.Page{Title: "AILANG World Workbench"}
+	page := workbench.Page{Title: "AILANG World Workbench", World: workbench.WorldView{Unavailable: "no world selected"}}
 
 	var worldRefText string
 	if values := query["world"]; values != nil {
@@ -386,10 +386,15 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 			writeWorkbenchError(w, http.StatusNotFound, "NotFound", absentWorkbenchWorldMessage)
 			return
 		}
+		stateRoot, err := d.checkedEdge(ctx, "stateRoot", world.StateRoot)
+		if err != nil {
+			d.writeWorkbenchStoreError(w, r, ctx, err)
+			return
+		}
 		page.World = workbench.WorldView{
 			Ref:       world.Ref.String(),
 			Revision:  world.Revision,
-			StateRoot: workbench.EdgeView{Available: true, Target: world.StateRoot.String(), Href: "?object=" + world.StateRoot.String()},
+			StateRoot: stateRoot,
 			LogHead:   world.LogHead.String(),
 			Available: true,
 		}
@@ -492,7 +497,6 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 		page.Selected = &selected
 	}
 
-	page.Timeline = workbench.TimelineView{From: from, Limit: limit}
 	for offset := int64(0); offset < int64(limit); offset++ {
 		entry, ok, err := d.reads.GetLogEntry(ctx, from+offset)
 		if err != nil {
