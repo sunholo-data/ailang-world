@@ -1,27 +1,24 @@
-# Mission Dashboard — World (snapshot 2026-09-28, iteration 205)
+# Mission Dashboard — World (snapshot 2026-09-28, iteration 206)
 
-- **State**: **rows 99 + 100 LANDED (`5edd25e`).** The workbench world pane (the entry point of every provenance walk) no longer offers a link that 404s.
-  - Its `stateRoot` is an existence-checked edge: stored → a link that resolves, missing → a named `UNAVAILABLE` stop, store error → 500/503 with no partial page.
-  - The world ref, revision and log head render as labelled text. The old anchor showed the world ref as its text but pointed at the state root.
-  - The dead `TimelineView.From/Limit` are gone. A type-aware template census over all nine view structs (zero exemptions) replaces the lexical field ratchet, which could not see a deleted `{{.World.Ref}}`.
-  - With these, all five `D-WORLD-42` rows (96, 103, 104, 99, 100) have landed under its default.
+- **State**: **row 23's policy tranche M1–M4 LANDED** (`9304aba`, `e437c8a`). Mark's attended rulings unblocked the critical path, and this iteration took it.
+  - M1: the durable store operations are cancellable (`CommitContext`, `AppendIntentContext`, `GetReceiptContext`), a post-cutoff outcome is `UncertainError`, and `Close` keeps the writer lock until durable workers settle.
+  - M2: `/v1/commit` is bounded by B6 (3 s). It answers 503 `Timeout` (not committed) or 503 `CommitUncertain` (reconcile by the log row at its index, never the head; `Store.CommitLanded`).
+  - M3: an opt-in `rest:` `invocationId` plus `GET /v1/receipts/{id}` (the frozen /v1 table grows 9 → 10).
+  - M4: the credential lookup is bounded by B4 (3 s). A lookup expiry answers 503, never 401, and the context-free `Resolve` is gone.
 - **Quality**:
-  - Quorum r1 and r2 were BLOCKED 3/3 on completeness only. The controller measured every premise: 2 were false and 1 was true (two existing tests would have gone red). r3 used the carve-out.
-  - Controller gates were green outside the sandbox at both commit boundaries (`-race` on daemon/workbench), plus the full suite (24 ok) and verify_ail.
-  - Judge `sonnet` in its own worktree: **98/100, zero blocking**, 14 mutations, 0 survivors.
-  - SHA-pinned CI on the merge: 2/2 green.
-- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · **5 UNMET, moved a fourth time** (row 114 still needs ≥3 real, timed questions) · 6 UNMET (PR #153 held on `D-WORLD-40`; 108 blocked on `ailang#885`, re-measured OPEN at `v0.47.1`).
-- **Next — the critical path is now FULLY BLOCKED on Mark and upstream**: `D-WORLD-40` = A → merge #153 → 106 M5/M6 → 108 → 93. Until then the loop works groom position 7 (26, 32, 109, 111, 112, 113, 115). The drift alarm fires after three such landings.
-- **Parked for Mark**:
-  - **`D-WORLD-40`** (THE unlock for clauses 4 and 6): ratify row 23's bound table. **A** ratify (recommended) · **B** name a change.
-  - **`D-WORLD-42`**: groom position for the clause-5 rows. All five have now landed under default A, so any answer closes it.
-  - **`D-WORLD-41`**: release world/core as **A** 0.1.1 (recommended) or **B** 0.2.0.
-  - **`D-WORLD-39`**: move the row-23 tranche to groom position 2 (acting on default A).
-  - **`D-WORLD-38`**: the typed publish phrase (A shared, shipped · B own phrase).
+  - M1 rebase delta judged by sonnet: **96/100, merge-safe**. M2–M4: **95 → 99/100, zero blocking**, with the one survivor closed.
+  - 28/28 plan mutations killed on the committed files. The judges re-ran 17 more and wrote 5 of their own.
+  - PR #161 went red on CI after green local runs: a test-budget leak, fixed in `29e1336`. It is recorded as row 114's first candidate incident.
+  - SHA-pinned CI on both merges: 2/2 green.
+- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · 5 UNMET (row 114 active; first candidate incident recorded) · 6 UNMET (critical path moved: 106 M5's prerequisite M1 is landed; 108 waits for ailang PR #1369 to be tagged).
+- **Next**: row 23 M5a → M5b → M6a → M6b → M7 (plan needed), then 106 M5/M6 → 108 → 93.
+- **Parked for Mark**: nothing. The ledger has **zero OPEN** decisions. Your 2026-09-28 rulings (38 B, 39 A, 40 A, 41 A, 42 A) were acted on. Defaults applied, reported rather than asked:
+  - A lookup error that is not a timeout now answers a sanitised 500 rather than 401. This follows the design's `MUT-M3-COLLAPSE`.
+  - `GET /v1/receipts/{id}` is the 10th frozen route, as named in the design's M3.
 - **Cadence/routing**:
   - Controller `claude-opus-5-5`.
-  - Designer `codex:gpt-6-astra` (rotation pointer now astra; next is glm, if the ollama ration allows).
-  - Planner and executor `codex:gpt-6-sol`. Evaluator `sonnet` (Agent tool, foreground).
-  - **$0.573 metered** (two quorum rounds).
+  - No designer.
+  - Planner and executor `opus` (Agent tool). This fire's driver found codex over its ration and substituted opus.
+  - Evaluator `sonnet` (Agent tool, foreground, own worktree).
+  - **$0.00 metered.**
 - **Harness**: no new tickets. **Do not run `ailang mission rotate-log` for World** (row 118).
-- **Capacity watch**: all three quorum seats (glm, kimi, sonnet) were reachable this iteration; gemini sat in reserve.

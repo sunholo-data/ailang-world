@@ -1219,3 +1219,50 @@ The codex probe returned rc=0. No design doc was needed: the row plus row 20's �
 **Progress**: 1.0: clauses 4, 5, 6 unmet. **Clause 5 moved** (capability): the walk's entry point now says which world, revision and log head it is walking, and its state-root hop is a working link or a named stop, never a 404. The clause stays UNMET until row 114 times ≥3 real, unseeded questions. All five `D-WORLD-42` rows (96, 103, 104, 99, 100) have landed under its default. The drift alarm does not fire (four consecutive clause-5 landings).
 
 **Next:** **the critical path is now fully blocked.** Every open clause-4/5/6 row is blocked or gated (93, 105 PARKED, 106 M5 on `D-WORLD-40`, 108 on `ailang#885`, 114 on a real incident). `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → 108 → 93. Until then: groom position 7 (26, 32, 109, 111, 112, 113, 115) and the cheap test-gap residuals on rows 103/104. The drift alarm fires after three such landings. **Decision ledger: 29 rows, FIVE OPEN (`D-WORLD-38`–`42`).**
+
+## 206 — 2026-09-28 — row 23 policy tranche M1–M4 LANDED: PR #153 (M1, cancellable durable store ops) re-verified at HEAD, rebased and merged as `9304aba`; M2–M4 planned, built and merged as `e437c8a` (`/v1/commit` bounded by B6 with 503 `Timeout` vs 503 `CommitUncertain` and INV-LOG `Store.CommitLanded`; opt-in `rest:` receipt identity + `GET /v1/receipts/{id}`; credential lookup bounded by B4, expiry = 503 never 401); judged 96 and 95 → 99, zero blocking [PRODUCT]
+
+**Pick and why.** Mark's attended rulings of 2026-09-28 (`58f6022`) resolved all five open decisions. `D-WORLD-39` = A put row 23's policy tranche at groom position 2, directly ahead of row 106's M5. `D-WORLD-40` = A ratified the bound table: "the next iteration may merge PR #153 once it is re-verified at HEAD, then route M2–M7 and row 106's M5". Clause map: 1, 2, 3, 7 MET; 4 UNMET (93 needs 106 + 108); 5 UNMET (114 active); 6 UNMET (23 policy → 106 M5 routable; 108 upstream). The pick was the critical-path row. There was no orphan: the one open PR (#153) is ours.
+
+**Gate 3.**
+- **M1 verify-and-land (controller + judge).**
+  - Rebased the 5 judged commits over 20 dev commits. The only conflict was the `contextRootPins` census map, resolved as a union: dev's three index roots (rows 96/103) plus M1's three wrapper pins.
+  - Row 104's `commit_objects` membership insert auto-merged into `CommitContext` as a context-free `tx.Exec`, so the controller bound it to `ExecContext(ctx)` (`b0ce897`).
+  - Vet, compile fence, `-race` on store+daemon, the full suite (24 ok) and verify_ail were rc 0.
+  - **Evaluator `sonnet`** (Agent tool, foreground, `.eval-world-iter206`, 498 s, 86,496 tok): **MERGE-SAFE 96/100, zero blocking.** Its range-diff showed exactly the two claimed changes. Mutating `b0ce897` back to `tx.Exec` left every test green; that is the documented untestable point-statement class, so it is non-blocking.
+  - PR #153 2/2 green → squash **`9304aba`**, merge 2/2 `success`.
+- **Planner `opus`** (Agent tool; resolver `agent-tool opus fail-closed:env-pin`; the driver logged codex over ration → opus; 1,322 s, 298,587 tok): plan `5c5ddaa` with a prototype of M2–M4 and **28/28 mutations killed**.
+  - False premise found: AC5 arm (iii) exercises "row differs", not "row absent", so it added arm (iii-b).
+  - Two defects found by prototyping and fixed in the plan: a fake that returned uncertain while ctx was live, and read fakes silently passing receipts through to the real store.
+  - Six OPEN questions, dispositioned in plan §7. None is a new policy question for Mark.
+- **Executor `opus`** (Agent tool, 403 s, 121,221 tok): `723e519` M2, `63dbd9a` M3, `2143f96` M4.
+  - The landed tree is byte-identical to the prototype on all 20 files, and 28/28 mutations were killed on the committed files.
+  - Production lines: +42/−8, +71/−1, +22/−14.
+- **Evaluator `sonnet`** (Agent tool, foreground, own worktree, 552 s, 178,006 tok): **PASS 95/100**, 8 sampled + 3 own mutations.
+  - Survivor MY-2: the duplicate/mismatch → 400 case had no test. The resumed executor closed it with `e5bc103` (140,431 tok).
+- **Remote CI red after local green.** PR #161 at `2143f96` failed the go gate (Linux, `-race`) in `TestCommitBudgetAndUncertainReconcile/ii`.
+  - Commit B, an ordinary real commit, still ran under the arm's 100 ms test budget and answered `CommitUncertain`.
+  - Controller fix `29e1336` restores the ratified budget before B, the pattern the M3 test already used. `-race -count=10` was green.
+- **Round-2 judge** (resumed, 600 s, 211,872 tok): **PASS 99/100, zero findings**.
+  - It confirmed the mismatch arm is unreachable over HTTP (`validateIntent` runs first, and `decodeCommit` rejects every input that could trip it).
+  - It judged the budget fix correct, with no lingering A worker. It re-ran MY-2 and 5 AC5 mutations: all killed.
+
+**Gate 3b.** PR [#161](https://github.com/sunholo-data/ailang-world/pull/161) head `29e1336` 2/2 green → squash **`e437c8a`**. The SHA-pinned check-runs on the merge read 2/2 `success`. The merge tree differs from the judged head only by the attended charter note `4dcacf2`.
+
+**Ruled out / process findings**
+- **(a) A textual rebase can import a new statement into a function whose contract changed underneath it.** Row 104's insert entered `CommitContext` with no conflict, context-free. Read the merged function body at every rebase over a contract change, not just the conflict hunks.
+- **(b) A test budget override leaks into the arm's next request.** Local `-race` (3 runs, two machines) never exceeded 100 ms; the CI runner did. Budget overrides in a test must be scoped to the request they model. This is row 114's first real candidate incident.
+- **(c) Controller poll-loop parse bug.** A zsh tab-split in my first CI poll printed `TIMEOUT` while both checks were `success`. A banked bash poll script with `read t p ok < <(…)` and a subject-bearing verdict (`ALL COMPLETE for <sha>`) replaced it.
+- **(d) Harness:** none new.
+
+**Routing evidence**:
+- base=e437c8a5b1b343a5cc15a36ec99081466aa90776@2026-09-28T15:11:20Z (Gate 4). Gate 1 base `58f6022`; `4dcacf2` (attended) landed mid-iteration.
+- Controller `claude:claude-opus-5-5` (session; tok: not reported).
+- Designer: none (design quorum-passed at iter-197, bound table ratified by `D-WORLD-40`). The rotation pointer is unchanged.
+- Planner `opus` (Agent tool; resolver `opus fail-closed:env-pin`; 298,587 tok). Executor `opus` (Agent tool; 121,221 + 140,431 tok). Evaluator `sonnet` (Agent tool; 86,496 + 178,006 + 211,872 tok).
+- Generator ≠ judge: opus planned and built, sonnet judged; the controller's two integration commits were judged by sonnet. No role fell back beyond the driver's codex → opus substitution.
+- **Metered $0.00.**
+
+**Progress**: 1.0: clauses 4, 5, 6 unmet. **Clause-6 critical path moved:** row 106 M5's prerequisite (M1) is on dev, and the tranche is 4 of 7 milestones done.
+
+**Next:** row 23 M5a → M5b → M6a → M6b → M7 (a plan is needed), then 106 M5/M6 → 108 when ailang PR #1369 is tagged → 93. Row 114's first candidate incident is recorded on the row. New rows 119, 120.

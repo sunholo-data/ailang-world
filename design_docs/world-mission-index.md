@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 206 | 2026-09-28 | row 23 policy tranche M1–M4 LANDED: M1 (PR #153) re-verified at HEAD + rebased → `9304aba` (delta judged 96); M2–M4 → `e437c8a` (bounded `/v1/commit`, 503 Timeout vs CommitUncertain, INV-LOG `CommitLanded`, `rest:` receipts + `GET /v1/receipts/{id}` (10th route), credential lookup 503 not 401); opus planner/executor, sonnet judge 95→99; CI red after local green (test budget leak, fixed `29e1336`) = row-114 candidate; new rows 119, 120 |
 | 205 | 2026-09-28 | rows 99+100 LANDED (`5edd25e`): world pane `stateRoot` = existence-checked edge (no 404), world ref/revision/log head rendered, dead `TimelineView.From/Limit` removed, type-aware nine-struct template census replaces the lexical ratchet; quorum r1+r2 BLOCKED 3/3 on completeness → carve-out; judged 98; clause 5 moved; critical path now fully blocked |
 | 204 | 2026-09-28 | row 104 LANDED (`b290ff3`): object page `committedBy` = existence-checked edges from a `commit_objects` membership table written in `Store.Commit`'s transaction (schema v3→v4, dropped-table refusal, `commitsAfter` paging); read p50 11–32 µs at N=10k; judged 97; clause 5 moved; resumed orphan 203 from the planner |
 | 203 | 2026-09-27 | row 104 designed (`07d90e0`, claude-opus-5-5; quorum r1+r2 BLOCKED 2/2 → carve-out, astra's row-23 landing dependency declined as pre-existing) — slot died at planner launch with no verdict or crash notice; credited in 204 |
