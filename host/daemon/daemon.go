@@ -385,12 +385,14 @@ type readStore interface {
 	ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error)
 	ObjectReferences(ctx context.Context, ref hashref.HashRef, after *store.ObjectReferenceCursor, limit int) ([]store.ObjectReference, error)
 	ObjectCommits(ctx context.Context, ref hashref.HashRef, afterEntry int64, limit int) ([]int64, error)
+	GetReceiptContext(ctx context.Context, id string) (store.Receipt, bool, error)
 }
 
 // durableStore is the daemon's durable-write surface: the context-bounded
 // commit of row 23's M1. *store.Store satisfies it by construction.
 type durableStore interface {
 	CommitContext(ctx context.Context, c store.Commit) error
+	AppendIntentContext(ctx context.Context, id string, intent store.JournalIntent) (int64, hashref.HashRef, error)
 }
 
 // IntegrityReport is the bounded startup sweep result.
@@ -649,10 +651,11 @@ func releaseFromVersion(version string) string {
 // method part of the pattern, so a non-GET on these paths is a 405 from the mux
 // rather than a hand-rolled check.
 //
-// The nine /v1 patterns below are the complete frozen v1 machine table (eight GET, one POST).
+// The ten /v1 patterns below are the complete frozen v1 machine table (nine GET, one POST;
+// GET /v1/receipts/{id} added by row 23 M3, D-WORLD-40).
 // The tenth registration, GET /workbench, is the unversioned read-only operator renderer: it is
 // NOT part of the frozen table, its HTML may evolve, and it changes the semantics of none of the
-// nine. The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
+// ten. The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
 // such as "world/epoch-registry/v1" contain slashes.
 func (d *Daemon) Handler() http.Handler {
 	mux := http.NewServeMux()
@@ -665,6 +668,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/log", d.handleLogRange)
 	mux.HandleFunc("GET /v1/registry/{name...}", d.handleRegistry)
 	mux.HandleFunc("POST /v1/commit", d.handleCommit)
+	mux.HandleFunc("GET /v1/receipts/{id}", d.handleReceipt)
 	mux.HandleFunc("GET /workbench", d.handleWorkbench)
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
 	// are ADDITIVE: the frozen /v1/ table above is untouched, and the routes

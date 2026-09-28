@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
@@ -52,6 +53,18 @@ func (f *commitSeam) CommitContext(ctx context.Context, c store.Commit) error {
 		waitCtx()
 		return &store.UncertainError{Op: "commit", Cause: context.DeadlineExceeded}
 	}
+}
+
+// AppendIntentContext passes through to the real store; "block" models the
+// held connection for the intent step too.
+func (f *commitSeam) AppendIntentContext(ctx context.Context, id string, intent store.JournalIntent) (int64, hashref.HashRef, error) {
+	if f.mode == "block" {
+		select {
+		case <-ctx.Done():
+		case <-time.After(seamEscape):
+		}
+	}
+	return f.real.AppendIntentContext(ctx, id, intent)
 }
 
 func postCommitRec(t *testing.T, d *Daemon, auth string, c store.Commit) (*httptest.ResponseRecorder, time.Duration) {
@@ -172,4 +185,108 @@ func TestCommitUncertainStatusMirrorsSketch(t *testing.T) {
 	if rec.Code != want {
 		t.Fatalf("CommitUncertain renders %d; the sketch says %d", rec.Code, want)
 	}
+}
+
+func postCommitWithID(t *testing.T, d *Daemon, auth, id string, c store.Commit) (*httptest.ResponseRecorder, time.Duration) {
+	t.Helper()
+	var wire map[string]any
+	if err := json.Unmarshal(encodeCommit(c), &wire); err != nil {
+		t.Fatal(err)
+	}
+	wire["invocationId"] = id
+	raw, _ := json.Marshal(wire)
+	start := time.Now()
+	rec := requestRecorderAuth(t, d, auth, http.MethodPost, "/v1/commit", bytes.NewReader(raw))
+	return rec, time.Since(start)
+}
+
+func getReceipt(t *testing.T, d *Daemon, id string) receiptResponse {
+	t.Helper()
+	rec := requestRecorder(t, d, http.MethodGet, "/v1/receipts/"+id, nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET /v1/receipts/%s = %d %s", id, rec.Code, rec.Body)
+	}
+	var body receiptResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatalf("decode receipt: %v; body %s", err, rec.Body)
+	}
+	return body
+}
+
+// TestCommitInvocationReceiptIdentity is AC5b (row 23 M3): with an opt-in
+// "rest:" invocationId the receipt, not the head and not the log row, is the
+// full identity witness of the commit, world included.
+func TestCommitInvocationReceiptIdentity(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		mode      string
+		wantState string
+		wantWorld bool
+	}{
+		{"A_landed_uncertain_then_B_on_top", "land-then-uncertain", "resolved", true},
+		{"A_rolled_back_uncertain", "uncertain-not-landed", "indeterminate", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			d := newHandlerDaemon(t)
+			genesis := seedGenesisEmbedded(t, d, "rcpt")
+			auth := authHeader(t, d)
+			a := testCommit(genesis, 1, "A")
+			d.commits = &commitSeam{real: d.store, mode: tc.mode}
+			d.commitBudget = 100 * time.Millisecond
+			rec, _ := postCommitWithID(t, d, auth, "rest:A", a)
+			body := assertErrorClass(t, rec, http.StatusServiceUnavailable, "CommitUncertain")
+			if !strings.Contains(body.Error.Message, "/v1/receipts/rest:A") {
+				t.Fatalf("uncertain message = %q; want the receipt route", body.Error.Message)
+			}
+			d.commits = d.store
+			d.commitBudget = commitBudget
+			if tc.wantWorld {
+				b := testCommit(a.NextWorld, 2, "B")
+				if rec, _ := postCommitRec(t, d, auth, b); rec.Code != http.StatusOK {
+					t.Fatalf("commit B: %d %s", rec.Code, rec.Body)
+				}
+			}
+			got := getReceipt(t, d, "rest:A")
+			if got.State != tc.wantState {
+				t.Fatalf("receipt state = %q, want %q", got.State, tc.wantState)
+			}
+			if tc.wantWorld && got.ResultRef != a.NextWorld.Ref.String() {
+				t.Fatalf("receipt resultRef = %q, want A's world %s", got.ResultRef, a.NextWorld.Ref)
+			}
+		})
+	}
+
+	t.Run("held_connection_on_the_intent_step_is_503_timeout", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		genesis := seedGenesisEmbedded(t, d, "rcpt-held")
+		auth := authHeader(t, d)
+		d.commits = &commitSeam{real: d.store, mode: "block"}
+		d.commitBudget = 100 * time.Millisecond
+		rec, elapsed := postCommitWithID(t, d, auth, "rest:held", testCommit(genesis, 1, "held"))
+		assertErrorClass(t, rec, http.StatusServiceUnavailable, "Timeout")
+		if elapsed > d.commitBudget+500*time.Millisecond {
+			t.Fatalf("answered after %v; bound %v + 500ms", elapsed, d.commitBudget)
+		}
+		if got := getReceipt(t, d, "rest:held"); got.State != "not-started" {
+			t.Fatalf("receipt after a pre-cutoff intent timeout = %q, want not-started", got.State)
+		}
+	})
+
+	t.Run("foreign_namespaces_are_refused", func(t *testing.T) {
+		d := newHandlerDaemon(t)
+		genesis := seedGenesisEmbedded(t, d, "rcpt-ns")
+		auth := authHeader(t, d)
+		for _, id := range []string{"effect:ep:1", "a2a:ep:task", "rest:"} {
+			rec, _ := postCommitWithID(t, d, auth, id, testCommit(genesis, 1, "ns"))
+			body := assertErrorClass(t, rec, http.StatusBadRequest, "BadRequest")
+			if !strings.Contains(body.Error.Message, "rest:<id>") {
+				t.Fatalf("%s: message %q does not name the rest: namespace", id, body.Error.Message)
+			}
+			got := requestRecorder(t, d, http.MethodGet, "/v1/receipts/"+id, nil)
+			assertErrorClass(t, got, http.StatusBadRequest, "BadRequest")
+		}
+		if got := headOf(t, d); got != genesis.Ref.String() {
+			t.Fatalf("a refused namespace moved the head to %s", got)
+		}
+	})
 }

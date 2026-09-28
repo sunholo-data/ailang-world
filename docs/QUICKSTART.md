@@ -72,6 +72,17 @@ Equal in every field means it landed. A 404, or a row that differs, means it did
 may resend. The current head is **not** evidence either way: another commit may already have
 landed on top of yours.
 
+For an exact answer, give the commit an id: add `"invocationId": "rest:<your-id>"` to the JSON
+(only the `rest:` namespace is accepted). The daemon then records the commit's intent first, and
+its receipt names the outcome:
+
+```bash
+curl -s http://127.0.0.1:7644/v1/receipts/rest:<your-id>
+```
+
+`resolved` (with `resultRef` = your `nextWorld.ref`) means it landed; `not-started` or
+`indeterminate` means it did not.
+
 ## 3. Read everything back
 
 ```bash
