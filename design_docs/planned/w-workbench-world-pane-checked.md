@@ -1,9 +1,9 @@
 # w-workbench-world-pane-checked — rows 99 + 100
 
-- Status: planned; designer iteration 205; 2026-09-28.
+- Status: planned; designer iteration 205; revision pass round 2; 2026-09-28.
 - Measurement base: `aa3e36a` (V0). One bundled Go-host change; no AILANG kernel change.
 - Estimate: about 0.6 day; two independently testable milestones. The controller owns commits.
-- This document is the only deliverable. Probe source is reproduced below; probes ran in `/tmp/world205-probe`, not in this worktree.
+- This document is the only deliverable. Round-1 probe source is reproduced below; those probes ran in `/tmp/world205-probe`. Controller measurements V11–V13 ran at base `aa3e36a` in `/Users/voightkampff/dev/sunholo-data/.probe-world-iter205`; round-2 source checks ran here (V14–V16).
 
 ## 1. Problem and clause mapping
 
@@ -24,6 +24,8 @@ Every base-code claim in this section is tied to the verification log.
 7. From/Limit are copied into TimelineView but not read back by the handler; its loop and link logic use local `from` and `limit`. The positive search control finds NextHref assignment (V3).
 8. `emitted-links-resolve` extracts timeline and selected-entry regions only, classifies every matched anchor, checks anchor counts, and requires paging/select/stored-edge categories to fire. It omits nav. A selected-entry error test uses an all-object-failing seam and expects the unselected page to succeed (V2). That control will need correction.
 9. The existing store-error writer maps deadline errors to HTML 503 and ordinary internal errors to HTML 500, logging operator detail. It also maps ReferenceIndexUnavailableError to 503. A temporary world-check insertion measured 200 for the missing-root non-error, 500 for the sentinel storage error, and 503 for DeadlineExceeded (V1, V6).
+
+10. `WorldView.Unavailable` already exists at base and the nav else-branch already renders `{{.World.Unavailable}}` (V11). This design adds no field; only the default reason `no world selected` is new.
 
 ## 3. Decisions, with alternatives
 
@@ -57,7 +59,7 @@ The census is an **action-use ratchet**, not proof that each value becomes visib
 
 Extract `<nav aria-label="world browser">` through `</nav>` on each existing paging page and the additional fixtures below. Classify its home anchor as `world-home` and its checked state-object anchor as `world`. Require both categories independently to have positive counts. Require a stored-root page with exactly one world object link. A home link alone must not satisfy the world-edge control.
 
-Alternative: scanning nav without category controls admits a dead extractor; scanning only absent-root fixtures exercises no world edge. The existing region/classification machinery and the measured missing/stored fixtures supply both controls (V2, V4, V7).
+Alternative: scanning nav without category controls admits a dead extractor; scanning only absent-root fixtures exercises no world edge. The existing region/classification machinery supplies the walk controls (V2). The paging fixture’s selected-head root is absent, so all three original paging pages are missing-root cases (V12); add a stored-root fixture to exercise the world edge.
 
 ## 4. Design
 
@@ -77,7 +79,7 @@ page.World = workbench.WorldView{
 }
 ```
 
-Initialize Page.World.Unavailable to `no world selected` when constructing Page, so an absent selected head has a named stop. The successful assignment replaces that default. A missing requested world still follows the existing GetWorld-not-found 404 path (V1). Remove `page.Timeline = workbench.TimelineView{From: from, Limit: limit}`; the Page zero value supplies the empty timeline before appends and link assignments.
+Initialize the existing Page.World.Unavailable field (already rendered at base, V11) to the new default `no world selected` when constructing Page, so an absent selected head has a named stop. The successful assignment replaces that default. A missing requested world still follows the existing GetWorld-not-found 404 path (V1). Remove `page.Timeline = workbench.TimelineView{From: from, Limit: limit}`; the Page zero value supplies the empty timeline before appends and link assignments.
 
 The existence guarantee is scoped to the read that built this response, and link-resolution tests use an unchanged store. It is not a cross-request transaction or promise against subsequent storage failure.
 
@@ -106,22 +108,30 @@ The present `edgeUnavailable .` helper reads EdgeView.Available indirectly (V1).
 
 Fail closed on unsupported type-affecting nodes, unknown function contracts or unresolved paths. If future templates introduce variables, assignments, chained expressions or new helpers, teach the analyzer their types or fail with an actionable error; silently skipping them is forbidden. Text and comments must not count as field use. Register the known presentation functions and builtins with sufficient signatures for traversal; they grant no arbitrary field credit.
 
-Reflect over all nine types; require each type to have been visited and every exported field to be accounted for with no exemptions. Add self-tests that remove World.Ref, Object.Edges while leaving Entry.Edges, and CommitView.Truncated while leaving ReferenceView.Truncated. Include a text/comment `.World.Ref` decoy. Each must report the precise missing owner/field. A known-good template is the positive control in the same test.
+Reflect over all nine types; require each type to have been visited and every exported field to be accounted for with no exemptions. Add self-tests that remove World.Ref, Object.Edges while leaving Entry.Edges, and CommitView.Truncated while leaving ReferenceView.Truncated. Also remove the `{{.World.Unavailable}}` action and require the precise omission `WorldView.Unavailable` (the field and action already exist, V11). Include a text/comment `.World.Ref` decoy. Each must report the precise missing owner/field. A known-good template is the positive control in the same test.
 
 ### 4.4 Handler and render tests
 
-Use requestRecorder and newHandlerDaemon, with test-local stores. No listener or live server.
+Keep the test packages and helpers separate (V15). `host/workbench/render_test.go` owns `TestRenderWorldPane`: use `renderPage(t, Page{...})`, which calls `Render(&body, p)` directly. Extract nav with a test-local string-region helper; use neither requestRecorder nor newHandlerDaemon. `host/daemon/workbench_test.go` owns `TestWorkbenchWorldPane` and the paging walk: use newHandlerDaemon, requestRecorder, workbenchRegion and test-local stores. No listener or live server.
 
-- `TestRenderWorldPane`: distinct world/root/log-head sentinels and nonzero revision 17. Assert labelled values inside nav, no world-ref or log-head anchor, root anchor identity in text/title/aria-label, unavailable-root text with no object anchor, and unavailable-world reason. Cover revision zero and malicious label escaping. The home anchor is expected in every case.
-- `TestWorkbenchWorldPane`: default, explicit `?world=<ref>`, selected entry, and object-page requests. Use one testCommit root absent from GetObject, plus a world carrying a stored root (set NextWorld.StateRoot to an object included in Commit.Objects, as in V7). Check GetObject true/false controls before rendering. On the absent-root page assert exact `stateRoot: ... UNAVAILABLE: object <ref> is not stored`, and **zero state-object anchors**; nav still contains home. Follow the stored-root anchor and observe 200. Assert identity, revision and log head against the fixture, not against values parsed back from HTML.
-- Include an explicit older-world request while a different head is selected, with different root, revision and log head. This kills accidental use of the selected head's metadata for `?world=`.
+Declare these exact names; mutation rows in §7 refer to them:
+
+- `TestRenderWorldPane/metadata`, `TestRenderWorldPane/stored-root`, `TestRenderWorldPane/missing-root`, `TestRenderWorldPane/no-selected-world`, `TestRenderWorldPane/escaping`, `TestRenderWorldPane/revision-zero`.
+- `TestWorkbenchWorldPane/missing-root`, `TestWorkbenchWorldPane/stored-root`, `TestWorkbenchWorldPane/explicit-world`, `TestWorkbenchWorldPane/no-selected-world`, `TestWorkbenchWorldPane/store-error/internal`, `TestWorkbenchWorldPane/store-error/timeout`.
+- Existing test targets retained: `TestWorkbenchTimelinePaging/emitted-links-resolve` (V2), `TestWorkbenchViewFieldsAllRender` (V5). The new census self-test inventory is `TestWorkbenchFieldCensusMutations/world-ref-decoy` (WorldView.Ref), `TestWorkbenchFieldCensusMutations/world-unavailable` (WorldView.Unavailable), `TestWorkbenchFieldCensusMutations/object-edges` (ObjectView.Edges), and `TestWorkbenchFieldCensusMutations/commit-truncated` (CommitView.Truncated), each paired with a known-good control.
+
+- `TestRenderWorldPane`: `metadata` uses distinct world/root/log-head sentinels and nonzero revision 17. Assert labelled values inside nav, no world-ref or log-head anchor, root anchor identity in text/title/aria-label, unavailable-root text with no object anchor, and unavailable-world reason. Use `stored-root`, `missing-root` and `no-selected-world` for their respective branches; cover zero and malicious labels in `revision-zero` and `escaping`. The home anchor is expected in every case.
+- `TestWorkbenchWorldPane`: default, explicit `?world=<ref>`, selected entry, and object-page requests. Use one testCommit root absent from GetObject, plus a world carrying a stored root (set NextWorld.StateRoot to an object included in Commit.Objects, as in V7). Run default, selected-entry and object-page requests within both `missing-root` and `stored-root`. Check GetObject true/false controls before rendering. On the absent-root page assert exact `stateRoot: ... UNAVAILABLE: object <ref> is not stored`, and **zero state-object anchors**; nav still contains home. Follow the stored-root anchor and observe 200. Assert identity, revision and log head against the fixture, not against values parsed back from HTML.
+- `TestWorkbenchWorldPane/explicit-world`: include an explicit older-world request while a different head is selected, with different root, revision and log head. V14 shows the handler resolves the explicit query ref through GetWorld(ref), bypassing SelectedHead. This case kills accidental use of the selected head's metadata for `?world=`.
 - `TestWorkbenchWorldPane/no-selected-world`: fresh store, no selected head; observe `UNAVAILABLE: no world selected`, one home anchor, no root link.
-- `TestWorkbenchWorldPane/store-error`: a ref-specific wrapper fails only the root. Untargeted ref control returns 200; root sentinel error returns 500/Internal without sentinel detail in the response; root DeadlineExceeded returns 503/Timeout. Check error responses have no partial nav success body. A counting wrapper pins one root GetObject on `/workbench` (avoid an object or selected page that legitimately reads the same ref elsewhere).
-- Adapt `TestWorkbenchSelectedEntry/object-store-error`: fail only `commit.Entry.TransitionRef`, using the existing refFailingStore (V2). The unselected request must still be 200, and selected request 500. Distinct root/transition refs are a fixture control. Do not weaken this test to allow either status.
+- `TestWorkbenchWorldPane/store-error/internal` and `TestWorkbenchWorldPane/store-error/timeout`: a ref-specific wrapper fails only the root. Untargeted ref control returns 200; root sentinel error returns 500/Internal without sentinel detail in the response; root DeadlineExceeded returns 503/Timeout. Check error responses have no partial nav success body. In `stored-root`, a counting wrapper pins one root GetObject on `/workbench` (avoid an object or selected page that legitimately reads the same ref elsewhere).
+- Adapt `TestWorkbenchSelectedEntry/object-store-error`: fail only `commit.Entry.TransitionRef`, using the existing refFailingStore (V15). The unselected request must still be 200, and selected request 500. Distinct root/transition refs are a fixture control. Do not weaken this test to allow either status.
 
 Extend `TestWorkbenchTimelinePaging/emitted-links-resolve` rather than replacing it. Keep its original three pages and category controls (V2). For each, extract with `world, ok := workbenchRegion(body, worldStart, "</nav>")`, fail on `!ok`, and add `regions = append(regions, struct{ name, text string }{"world", world})`. Require a nonempty world region, classify every anchor, and enforce `strings.Count(region,"<a ") == len(matches)`. Preserve errors for unclassified links and decode `&amp;` before fetching.
 
-Add an explicit stored-root world page in the **same daemon/store**: PutObject a state fixture, PutWorld a distinct world referencing it, then request `?world=<ref>` without changing SelectedHead. The original paging pages remain missing-root cases. Assert GetObject false for their root and true for the new root; assert missing text and absence of object anchors on the former, exactly one root anchor on the latter. Require `world-home >= 1` and `world >= 1` independently of paging/select/stored-edge. Fetch every classified link and require 200. A world extraction returning empty, a forgotten region append, and a missing stored fixture must each fail.
+Add an explicit stored-root world page in the **same daemon/store**: PutObject a state fixture, PutWorld a distinct world referencing it, then request `?world=<ref>` without changing SelectedHead. The original three paging pages all render the same selected head and remain missing-root cases (V12). V14 verifies that the explicit query loads the distinct world without selecting it. Assert GetObject false for their root and true for the new root; assert missing text and absence of object anchors on the former, exactly one root anchor on the latter. Require `world-home >= 1` and `world >= 1` independently of paging/select/stored-edge. Fetch every classified link and require 200. A world extraction returning empty, a forgotten region append, and a missing stored fixture must each fail.
+
+Adapt `TestWorkbenchReferenceWalk` in `host/daemon/workbench_references_test.go`: after requiring `worldStatus == 200`, extract ``refs, ok := workbenchRegion(stateBody, `<section aria-label="referencedBy">`, "</section>")``, fail on `!ok`, and require `strings.Count(refs, "stateRoot: <a") == 3`. The base assertion counts the whole body (V13, V15); the new nav adds a fourth edge. Keep the three-edge referencedBy guarantee. Bumping the body-wide literal to 4 would couple the reference walk to nav markup. `TestWorkbenchCommitWalk` needs no change under the measured prototype (V13).
 
 ## 5. Failure modes
 
@@ -133,7 +143,7 @@ Add an explicit stored-root world page in the **same daemon/store**: PutObject a
 | Log-head hash treated as object/index | No log-head anchor is permitted; no extra hash-resolution read. |
 | Shared field names hide omissions | Typed census reports the owning struct; mutation self-tests exercise collisions. |
 | World extractor sees nothing | Region presence, exact stored-root anchor count and independent category controls fail. |
-| New root read breaks a prior error seam | Narrow only the selected-entry test's failure target; retain its successful-page control. |
+| Root check/nav breaks existing tests | V13 measured exactly two: `TestWorkbenchSelectedEntry/object-store-error` loses its 200 control because all object reads fail; narrow failure to the transition. `TestWorkbenchReferenceWalk` counts four stateRoot links over the whole body; scope its count to referencedBy and retain exactly three. |
 | Concurrent store changes between requests | Checked at render time only; no snapshot guarantee introduced. |
 | Empty world | Explicit reason; no speculative edge. |
 
@@ -141,7 +151,7 @@ Add an explicit stored-root world page in the **same daemon/store**: PutObject a
 
 Use `export AILANG_BIN="$HOME/.pinned-ailang/ailang"`. Commands below are execution gates, not claims that the proposed tests already exist. Tests use temporary storage and the normal external Go cache; no acceptance artifact is written into `$HOME` or outside the worktree. Test temp/cache activity is not an acceptance artifact. Do not set GOCACHE/TMPDIR to the worktree. The controller handles all commits.
 
-**M1 — checked world pane and visible world metadata.** Implement daemon check, nav markup, missing-world reason and focused world tests; widen emitted-links-resolve; narrow the selected-entry failure wrapper. Retain the old field ratchet and From/Limit until M2. This milestone fixes row 99 and the two world metadata omissions without depending on M2.
+**M1 — checked world pane and visible world metadata.** Implement daemon check, nav markup, missing-world reason and focused world tests; widen emitted-links-resolve; narrow the selected-entry failure wrapper; scope the reference-walk stateRoot count to referencedBy. Retain the old field ratchet and From/Limit until M2. This milestone fixes row 99 and the two world metadata omissions without depending on M2.
 
 ```sh
 AILANG_BIN="$HOME/.pinned-ailang/ailang" go vet ./host/...
@@ -165,24 +175,25 @@ Every mutation applies singly to the proposed implementation, then is reverted b
 
 | ID / milestone | Exact mutation | Test that must kill it |
 |---|---|---|
-| H1 / M1 | Replace `stateRoot, err := d.checkedEdge(ctx, "stateRoot", world.StateRoot)` with `stateRoot, err := workbench.EdgeView{Relation: "stateRoot", Available: true, Target: world.StateRoot.String(), Href: "?object=" + world.StateRoot.String()}, error(nil)` | `TestWorkbenchWorldPane/missing-root`, plus emitted-links-resolve missing-page assertion |
+| H1 / M1 | Replace `stateRoot, err := d.checkedEdge(ctx, "stateRoot", world.StateRoot)` with `stateRoot, err := workbench.EdgeView{Relation: "stateRoot", Available: true, Target: world.StateRoot.String(), Href: "?object=" + world.StateRoot.String()}, error(nil)` | `TestWorkbenchWorldPane/missing-root`; `TestWorkbenchTimelinePaging/emitted-links-resolve` missing-page assertion |
 | H2 / M1 | At that call only, replace `world.StateRoot` with `world.Ref` | `TestWorkbenchWorldPane/stored-root` |
 | H3 / M1 | At that call only, replace `"stateRoot"` with `"interface"` | `TestWorkbenchWorldPane/stored-root` exact relation assertion |
-| H4 / M1 | In the new error arm only, replace `d.writeWorkbenchStoreError(w, r, ctx, err)` with `writeWorkbenchError(w, 404, "NotFound", "missing root")` | `TestWorkbenchWorldPane/store-error` (500 and 503 cases) |
+| H4 / M1 | In the new error arm only, replace `d.writeWorkbenchStoreError(w, r, ctx, err)` with `writeWorkbenchError(w, 404, "NotFound", "missing root")` | `TestWorkbenchWorldPane/store-error/internal`; `TestWorkbenchWorldPane/store-error/timeout` |
 | H5 / M1 | In the new error arm only, replace that call with `d.writeWorkbenchInternalError(w, r, err)` | `TestWorkbenchWorldPane/store-error/timeout` |
 | H6 / M1 | In WorldView assignment replace `Revision: world.Revision` with `Revision: 0` | `TestWorkbenchWorldPane/explicit-world` nonzero revision |
 | H7 / M1 | In WorldView assignment replace `LogHead: world.LogHead.String()` with `LogHead: world.StateRoot.String()` | `TestWorkbenchWorldPane/explicit-world` |
-| R1 / M1 | Replace `{{template "edge" .World.StateRoot}}` with empty text | `TestRenderWorldPane/stored-root`; emitted-links-resolve world category CONTROL |
+| R1 / M1 | Replace `{{template "edge" .World.StateRoot}}` with empty text | `TestRenderWorldPane/stored-root`; `TestWorkbenchTimelinePaging/emitted-links-resolve` world category CONTROL |
 | R2 / M1 | Replace `{{.World.Revision}}` with literal `0` | `TestRenderWorldPane/metadata` |
 | R3 / M1 | Replace every `{{.World.LogHead}}` in nav with `{{.World.Ref}}` | `TestRenderWorldPane/metadata` |
-| R4 / M1 | Replace every `{{.World.Ref}}` in nav with `literal-world` | `TestRenderWorldPane/metadata`; M2 typed census (weak census misses, measured V5) |
+| R4 / M1 | Replace every `{{.World.Ref}}` in nav with `literal-world` | `TestRenderWorldPane/metadata`; `TestWorkbenchViewFieldsAllRender` at M2 (weak census misses, measured V5) |
 | R5 / M1 | In edge partial replace `{{if edgeUnavailable .}}` with `{{if false}}` | `TestRenderWorldPane/missing-root` |
 | R6 / M1 | Replace `<dt>world</dt>` with `<dt>stateRoot</dt>` | `TestRenderWorldPane/metadata` label assertion |
+| R7 / M1 | Delete the `{{.World.Unavailable}}` action from the nav else-branch | `TestRenderWorldPane/no-selected-world`; `TestWorkbenchWorldPane/no-selected-world`; `TestWorkbenchViewFieldsAllRender` at M2 |
 | C1 / M1 | Delete `regions = append(regions, struct{ name, text string }{"world", world})` | `TestWorkbenchTimelinePaging/emitted-links-resolve` independent world/world-home controls |
-| C2 / M1 | At the world extraction only, replace `workbenchRegion(body, worldStart, "</nav>")` with `"", true` | Same test: missing-text / exact stored-root anchor assertions and category controls |
+| C2 / M1 | At the world extraction only, replace `workbenchRegion(body, worldStart, "</nav>")` with `"", true` | `TestWorkbenchTimelinePaging/emitted-links-resolve` missing-text / exact stored-root anchor assertions and category controls |
 | A1 / M2 | In `{{with .Object}}{{range .Edges}}` replace `.Edges` with `.Commits.Edges` (only this range) | `TestWorkbenchViewFieldsAllRender`: ObjectView.Edges absent despite other Edges uses |
-| A2 / M2 | Inside `{{with .Commits}}`, replace `{{if .Truncated}}` with `{{if false}}`, retaining ReferenceView.Truncated | Same test: CommitView.Truncated absent |
-| A3 / M2 | Add `Forgotten string` to ObjectView with no template action | Same test: ObjectView.Forgotten absent |
+| A2 / M2 | Inside `{{with .Commits}}`, replace `{{if .Truncated}}` with `{{if false}}`, retaining ReferenceView.Truncated | `TestWorkbenchViewFieldsAllRender`: CommitView.Truncated absent |
+| A3 / M2 | Add `Forgotten string` to ObjectView with no template action | `TestWorkbenchViewFieldsAllRender`: ObjectView.Forgotten absent |
 | A4 / M2 | Replace `seen[typ.Name()+"."+field.Name]` in the census field loop with `strings.Contains(pageHTML+partialsHTML, "."+field.Name)` | `TestWorkbenchFieldCensusMutations/world-ref-decoy` must fail because the mutant analyzer no longer detects the missing field |
 
 C1/C2 and A4 use the helper statements prescribed in §4.3–4.4; preserve those anchors or record an equivalent exact replacement in the sprint plan. Do not claim a landed mutant merely from a substring replacement count of zero. Self-tests operate on in-memory template strings and do not rewrite repository files.
@@ -200,13 +211,14 @@ Future implementation touches only:
 | `host/daemon/workbench.go` | world root check/error path, missing-world reason, removal of timeline initializer |
 | `host/workbench/render.go` | world nav, TimelineView fields |
 | `host/daemon/workbench_test.go` | world fixtures/assertions, world link region/control, selected-entry error seam |
+| `host/daemon/workbench_references_test.go` | scope reference-walk stateRoot count to referencedBy |
 | `host/workbench/render_test.go` | world render cases, typed census and mutation self-tests |
 
-Reference/commit walk tests need not change. The reference documents used for structure and prior findings are `design_docs/implemented/w-workbench-object-provenance-and-grade.md`, its sprint plan, and `design_docs/implemented/w-workbench-timeline-seam.md` §9 (V8). This design-time diff contains only this document.
+V13 supersedes the round-1 claim that reference/commit walks need no changes: the combined handler/nav prototype broke exactly `TestWorkbenchReferenceWalk` and `TestWorkbenchSelectedEntry/object-store-error`. Both adaptations are specified in §4.4. `TestWorkbenchCommitWalk` and every other daemon/workbench test passed that prototype. This measured blast radius changes the test scope and M1 work; decisions D1–D5 remain unchanged. The reference documents used for structure and prior findings are `design_docs/implemented/w-workbench-object-provenance-and-grade.md`, its sprint plan, and `design_docs/implemented/w-workbench-timeline-seam.md` §9 (V8). This design-time diff contains only this document.
 
 ## 10. VERIFICATION LOG
 
-Commands ran from the worktree unless a `/tmp/world205-probe` working directory is specified. Output below is trimmed. No skill was read, no git write command was run, and no server was started. The probes use the existing requestRecorder helpers; they opened no listening socket. There was no sandbox bind result to classify.
+V0–V10 record round-1 work; their status and line counts are historical. V11–V13 are controller-verified measurements at `aa3e36a` in `/Users/voightkampff/dev/sunholo-data/.probe-world-iter205`, outside the sandbox, supplied for this revision; V11 was also rechecked here. V14–V16 are round-2 read-only checks in this worktree. Other commands ran here unless a `/tmp/world205-probe` working directory is specified. Output below is trimmed. No skill was read, no git write command was run, and no server was started. The probes use the existing requestRecorder helpers; they opened no listening socket. There was no sandbox bind result to classify.
 
 | ID | Exact command / reproducible procedure | Observed output |
 |---|---|---|
@@ -221,6 +233,15 @@ Commands ran from the worktree unless a `/tmp/world205-probe` working directory 
 | V8 | `rg -n '^##' design_docs/implemented/w-workbench-object-provenance-and-grade.md; sed -n '1,60p' design_docs/implemented/w-workbench-object-provenance-and-grade-sprint-plan.md; sed -n '445,469p' design_docs/implemented/w-workbench-timeline-seam.md` | House doc sections include decisions/design/conflict/acceptance/mutations/milestones/log. Plan has two milestones and compile/drill gates. Seam §9 explicitly records R-a and R-c. Historical claims were not substituted for current probes. |
 | V9 | `~/.pinned-ailang/ailang --version; AILANG_BIN="$HOME/.pinned-ailang/ailang" go vet ./host/...; AILANG_BIN="$HOME/.pinned-ailang/ailang" go test -race ./host/workbench ./host/daemon -run 'Workbench\|Render\|Grade' -count=1` | AILANG v0.41.0, commit 24ee108; vet rc=0; workbench ok 1.277s, daemon ok 11.822s. Baseline only, not proposed implementation. |
 | V10 | `git status --short; git diff --name-only; wc -l design_docs/planned/w-workbench-world-pane-checked.md` | Only `?? design_docs/planned/w-workbench-world-pane-checked.md`; tracked diff empty; final document 395 lines. |
+
+
+| V11 | Controller: `grep -n 'Unavailable' host/workbench/render.go` at base; same command re-run here. | Line 35: `Unavailable string` (GradeView); line 100: `Unavailable string` (WorldView); line 150: nav else-branch already uses `{{.World.Unavailable}}`. The field exists and is rendered; this design adds no field. Other matches include the edge helper and grade rendering. |
+| V12 | Controller daemon-package probe: `newHandlerDaemon(t); seedWorkbenchLog(t, d, WorkbenchPageLimit+5)`; read SelectedHead → GetWorld → GetObject(world.StateRoot), then GetObject(entry0.TransitionRef) as positive control. | `PAGING head=sha256:a584866e… revision=104 stateRoot=sha256:7b247566… stored=false err=<nil>`; `CONTROL entry0 transitionRef stored=true`. The paging head root is not stored. All three paging pages render that same selected head, so all three are missing-root pages. Controller supplied the probe procedure and output, not its shell invocation; it was not re-run in round 2. |
+| V13 | Controller applied BOTH §10.5 handler patch and §4.2 nav markup verbatim to the base probe worktree; ran `AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/daemon ./host/workbench -count=1`. | host/workbench ok; host/daemon FAIL with exactly TWO failing tests: (a) `TestWorkbenchReferenceWalk`, workbench_references_test.go:347–348, whole-body `strings.Count(stateBody, "stateRoot: <a") != 3` sees 4 because the stored selected-head root (V7) adds a nav edge; (b) `TestWorkbenchSelectedEntry/object-store-error`, workbench_test.go:506, `control: /workbench status = 500, want 200` because its all-object-failing seam now fails the root read. `TestWorkbenchCommitWalk` and every other daemon/workbench test passed. Not re-run in round 2. |
+| V14 | `sed -n '345,398p' host/daemon/workbench.go` | `if values := query["world"]; values != nil` parses the explicit ref and assigns `worldRefText = ref.String()`; only the else-branch calls SelectedHead. The common branch parses worldRefText and calls `d.reads.GetWorld(ctx, ref)`. Thus `?world=<ref>` resolves that world, not the selected head. |
+| V15 | `rg -n 'func (requestRecorder\|newHandlerDaemon\|workbenchRegion)\|refFailingStore\|object-store-error' host/daemon/*test.go`; `rg -n -A 9 'func renderPage' host/workbench/render_test.go; sed -n '390,412p' host/daemon/workbench_test.go; sed -n '490,515p' host/daemon/workbench_test.go; sed -n '20,48p' host/daemon/handlers_test.go; sed -n '335,355p' host/daemon/workbench_references_test.go; rg -n 'section aria-label="referencedBy"' host/workbench/render.go` | renderPage:241 uses bytes.Buffer and Render(&body, p). newHandlerDaemon uses a temp DB; requestRecorder directly calls Handler().ServeHTTP with httptest, without a listener. workbenchRegion returns from the start marker to the first end marker. Reference walk counts `stateRoot: <a` over stateBody; template line 178 supplies the referencedBy section marker. Selected-entry seam uses objectFailingStore and expects unselected 200; refFailingStore is declared at workbench_test.go:750 with GetObject at :755. |
+| V16 | Before revision: `git status --short; wc -l design_docs/planned/w-workbench-world-pane-checked.md; git rev-parse --short HEAD` | Status empty; document 395 lines; current worktree HEAD `95b3b45`. Historical measurement base remains `aa3e36a`; controller V11–V13 explicitly used that base. |
+| V17 | After revision: `git diff --check; git diff --stat; git status --short; wc -l design_docs/planned/w-workbench-world-pane-checked.md` | Diff check emits no diagnostics; positive controls show exactly one modified file, this document, and 427 lines. No code edits or git writes. |
 
 ### 10.1 Source instrument (negative results have positive controls)
 
@@ -390,6 +411,17 @@ func TestProbe205Checked(t *testing.T){
 
 ### 10.6 Measurement limits and final artifact check
 
-All five requested design measurements were completed. A full final implementation, the future mutation table, and a new real-incident five-minute provenance walk were **not** executed: this iteration authorizes a design document only. V6 prototypes only the new daemon read/error path; V5 prototypes only the census experiment. The focused baseline race suite and host vet passed (V9). No browser-based visual assessment was performed.
+All five requested design measurements were completed. A full final implementation, the future mutation table, and a new real-incident five-minute provenance walk were **not** executed: this iteration authorizes a design document only. V6 prototypes only the new daemon read/error path; V5 prototypes only the census experiment. Controller V13 additionally tested the combined handler/nav prototype across both packages and measured the two failures documented above. The corrected implementation and its mutation drills remain future acceptance gates. The focused baseline race suite and host vet passed (V9). No browser-based visual assessment was performed.
 
-Final check: `git status --short; git diff --name-only; wc -l design_docs/planned/w-workbench-world-pane-checked.md`. Expected and observed scope: one untracked design document, no tracked-file differences. The controller will add and commit it. Temporary probe copy was removed with `shutil.rmtree("/tmp/world205-probe")`; no source file here was edited.
+Round-1 final check is preserved in V10. Its temporary probe copy was removed with `shutil.rmtree("/tmp/world205-probe")`. Round 2 creates no throwaway probes and edits only this now-tracked design document. V12–V13 are attributed controller measurements, not newly executed tests. The controller owns commits.
+
+
+## 11. Quorum verification log
+
+Round 1: **REJECT / BLOCKED 3/3** — oc-glm-5-3, oc-kimi-k3, claude-sonnet-5. All accepted the design direction; objections concerned completeness or measured premises.
+
+- **oc-glm-5-3 — blast radius:** V13 measured two failures; §4.4 scopes the reference count to referencedBy and narrows the selected-entry error seam; §5, M1 and §9 now include both. This replaces the incorrect no-reference-walk-change claim.
+- **oc-glm-5-3 — test placement and names:** V15 confirms package helpers; §4.4 separates direct render tests from daemon tests and declares exact test/subtest names used by every mutation row.
+- **claude-sonnet-5 — Unavailable premise and coverage:** V11 confirms the existing field/action; §2 item 10 and §4.1 say only its default is new; R7 deletes the action and the census self-test inventory names WorldView.Unavailable.
+- **oc-kimi-k3 — paging-root premise:** V12 measures the actual paging head root absent with a stored transition control; D5 and §4.4 cite V12 and require the additional stored-root world fixture.
+- **oc-kimi-k3 — explicit world resolution:** V14 records the query branch and GetWorld(ref); §4.4 requires an older explicit world whose metadata differs from SelectedHead.
