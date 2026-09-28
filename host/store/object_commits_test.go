@@ -4,9 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
 )
@@ -253,4 +256,213 @@ func TestDroppedMembershipTableIsRefusedNotRecreated(t *testing.T) {
 			t.Fatalf("%s recreated commit_objects (count %d)", open.name, tables)
 		}
 	}
+}
+
+func objectCommits(t *testing.T, s *Store, ref hashref.HashRef) []int64 {
+	t.Helper()
+	got, err := s.ObjectCommits(context.Background(), ref, -1, MaxObjectCommitPage)
+	if err != nil {
+		t.Fatalf("ObjectCommits: %v", err)
+	}
+	return got
+}
+
+// AC6 + AC7: one, several and no carrying commits; PutObject-then-Commit.
+func TestCommitRecordsMembershipPerCarryingCommit(t *testing.T) {
+	s := openMem(t)
+	w := seedGenesis(t, s)
+	shared, once, stored, later := obj("shared", "t/shared"), obj("once", "t/once"), obj("stored-only", "t/stored"), obj("put-then-commit", "t/later")
+	for _, o := range []Object{stored, later} {
+		if err := s.PutObject(o); err != nil {
+			t.Fatal(err)
+		}
+	}
+	w = commitCarrying(t, s, w, shared)
+	w = commitCarrying(t, s, w, once)
+	w = commitCarrying(t, s, w, shared, later)
+	_ = w
+	for _, tc := range []struct {
+		name string
+		ref  hashref.HashRef
+		want []int64
+	}{
+		{"multi", shared.Hash, []int64{1, 3}},
+		{"single", once.Hash, []int64{2}},
+		{"none", stored.Hash, []int64{}},
+		{"put-then-commit", later.Hash, []int64{3}},
+	} {
+		if got := objectCommits(t, s, tc.ref); !reflect.DeepEqual(got, tc.want) {
+			t.Errorf("%s: ObjectCommits = %v, want %v", tc.name, got, tc.want)
+		}
+	}
+}
+
+// AC10: ascending order and strict-after continuation reassemble the one-shot read.
+func TestObjectCommitsOrderAndContinuation(t *testing.T) {
+	s := openMem(t)
+	w := seedGenesis(t, s)
+	shared := obj("carried-seven-times", "t/seven")
+	var want []int64
+	for i := 1; i <= 10; i++ {
+		if i%3 == 0 {
+			w = commitCarrying(t, s, w, obj(fmt.Sprintf("other-%d", i), "t/other"))
+			continue
+		}
+		w = commitCarrying(t, s, w, shared)
+		want = append(want, int64(i))
+	}
+	if len(want) != 7 {
+		t.Fatalf("fixture carriers = %d", len(want))
+	}
+	var pages [][]int64
+	var all []int64
+	after := int64(-1)
+	for round := 0; round < 5; round++ { // bounded: a non-advancing cursor reds, not hangs
+		page, err := s.ObjectCommits(context.Background(), shared.Hash, after, 3)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(page) == 0 {
+			break
+		}
+		pages = append(pages, page)
+		all = append(all, page...)
+		after = page[len(page)-1]
+	}
+	if !reflect.DeepEqual(all, want) || len(pages) != 3 || len(pages[2]) != 1 {
+		t.Fatalf("pages = %v, want %v in pages of 3,3,1", pages, want)
+	}
+	if !sort.SliceIsSorted(all, func(i, j int) bool { return all[i] < all[j] }) {
+		t.Fatalf("not ascending: %v", all)
+	}
+}
+
+// AC11: limit and cursor bounds.
+func TestObjectCommitsValidation(t *testing.T) {
+	s := openMem(t)
+	ref := obj("v", "t/v").Hash
+	ctx := context.Background()
+	for _, limit := range []int{0, MaxObjectCommitPage + 1} {
+		var invalid *InvalidLimitError
+		if _, err := s.ObjectCommits(ctx, ref, -1, limit); !errors.As(err, &invalid) {
+			t.Errorf("limit %d: want InvalidLimitError, got %v", limit, err)
+		}
+	}
+	var cursor *InvalidObjectCommitCursorError
+	if _, err := s.ObjectCommits(ctx, ref, -2, 1); !errors.As(err, &cursor) {
+		t.Errorf("afterEntry -2: want InvalidObjectCommitCursorError, got %v", err)
+	}
+	var badRef *InvalidRefError
+	if _, err := s.ObjectCommits(ctx, hashref.HashRef{}, -1, 1); !errors.As(err, &badRef) {
+		t.Errorf("zero ref: want InvalidRefError, got %v", err)
+	}
+	if _, err := s.ObjectCommits(ctx, ref, -1, MaxObjectCommitPage); err != nil {
+		t.Errorf("limit %d refused: %v", MaxObjectCommitPage, err)
+	}
+}
+
+// AC9: a v4 store opened read-only answers the same membership; AC6 existence:
+// every returned entry is a stored log entry.
+func TestObjectCommitsReadOnlyMatchesWriterAndEntriesExist(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "membership.db")
+	s, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := seedGenesis(t, s)
+	shared := obj("ro-shared", "t/ro")
+	w = commitCarrying(t, s, w, shared)
+	w = commitCarrying(t, s, w, obj("ro-other", "t/ro"))
+	commitCarrying(t, s, w, shared)
+	writerView := objectCommits(t, s, shared.Hash)
+	ro, err := OpenReadOnly(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ro.Close()
+	readerView := objectCommits(t, ro, shared.Hash)
+	if !reflect.DeepEqual(readerView, []int64{1, 3}) || !reflect.DeepEqual(readerView, writerView) {
+		t.Fatalf("reader %v writer %v, want [1 3]", readerView, writerView)
+	}
+	for _, index := range readerView {
+		if _, ok, err := ro.GetLogEntry(context.Background(), index); err != nil || !ok {
+			t.Fatalf("membership names entry %d: ok=%v err=%v", index, ok, err)
+		}
+	}
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// AC11 (store damage): a v4 store missing the table answers an error, never [].
+func TestObjectCommitsMissingTableIsAnError(t *testing.T) {
+	s := openMem(t)
+	if _, err := s.db.Exec(`DROP TABLE commit_objects`); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := s.ObjectCommits(context.Background(), obj("x", "t/x").Hash, -1, 1); err == nil {
+		t.Fatalf("missing table answered %v, nil", got)
+	}
+}
+
+// AC13: N=10,000 timing. Opt-in: MEMBERSHIP_TIMING=1.
+func TestObjectCommitsTimingAt10k(t *testing.T) {
+	if testing.Short() || !timingEnabled() {
+		t.Skip("set MEMBERSHIP_TIMING=1")
+	}
+	path := filepath.Join(t.TempDir(), "timing.db")
+	s, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Close()
+	w := seedGenesis(t, s)
+	hot := obj("hot", "t/hot")
+	const n = 10000
+	commitTimes := make([]time.Duration, 0, n)
+	for i := 1; i <= n; i++ {
+		objs := []Object{obj(fmt.Sprintf("in-%d", i), "invocation/input"), obj(fmt.Sprintf("out-%d", i), "invocation/output"), obj(fmt.Sprintf("rec-%d", i), "invocation/record")}
+		if i%100 == 0 {
+			objs = append(objs, hot)
+		}
+		next, c := carryingCommit(w, objs...)
+		start := time.Now()
+		if err := s.Commit(c); err != nil {
+			t.Fatal(err)
+		}
+		commitTimes = append(commitTimes, time.Since(start))
+		w = next
+	}
+	cold := obj(fmt.Sprintf("out-%d", n/2), "invocation/output").Hash
+	stored := obj("never-committed", "t/none")
+	if err := s.PutObject(stored); err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	for _, tc := range []struct {
+		name  string
+		ref   hashref.HashRef
+		limit int
+		want  int
+	}{{"single", cold, 101, 1}, {"hot-100", hot.Hash, 101, 100}, {"none", stored.Hash, 101, 0}} {
+		samples := make([]time.Duration, 0, 200)
+		for i := 0; i < 200; i++ {
+			start := time.Now()
+			got, err := s.ObjectCommits(ctx, tc.ref, -1, tc.limit)
+			samples = append(samples, time.Since(start))
+			if err != nil || len(got) != tc.want {
+				t.Fatalf("%s: %d rows err=%v", tc.name, len(got), err)
+			}
+		}
+		t.Logf("read %s p50=%s p95=%s", tc.name, pct(samples, 50), pct(samples, 95))
+	}
+	t.Logf("commit (3 objects, file-backed, N=%d) p50=%s p95=%s", n, pct(commitTimes, 50), pct(commitTimes, 95))
+}
+
+func timingEnabled() bool { return os.Getenv("MEMBERSHIP_TIMING") == "1" }
+
+func pct(samples []time.Duration, p int) time.Duration {
+	sorted := append([]time.Duration(nil), samples...)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
+	return sorted[(len(sorted)-1)*p/100]
 }
