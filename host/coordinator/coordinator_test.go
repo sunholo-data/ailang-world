@@ -117,7 +117,7 @@ func (r *rig) publish() {
 	if err := r.st.PutObject(context.Background(), obj); err != nil {
 		r.t.Fatalf("put revision: %v", err)
 	}
-	if err := r.st.CompareAndSetRegistryHead(store.TransitionRegistryV1, hashref.HashRef{}, obj.Hash); err != nil {
+	if err := r.st.CompareAndSetRegistryHead(context.Background(), store.TransitionRegistryV1, hashref.HashRef{}, obj.Hash); err != nil {
 		r.t.Fatalf("cas head: %v", err)
 	}
 }
@@ -553,7 +553,7 @@ func TestCommitBoundary(t *testing.T) {
 			t.Fatalf("err = %T %v, want context.Canceled", err, err)
 		}
 		r.assertUntouched(w.Ref, "t1")
-		if pending, err := r.st.PendingIntents(10); err != nil || len(pending) != 0 {
+		if pending, err := r.st.PendingIntents(context.Background(), 10); err != nil || len(pending) != 0 {
 			t.Fatalf("pending intents = %v (%v), want none", pending, err)
 		}
 	})

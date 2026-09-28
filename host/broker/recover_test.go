@@ -32,11 +32,11 @@ type recoveryStoreProbe struct {
 }
 
 func (p *recoveryStoreProbe) PendingIntents(
-	limit int,
+	_ context.Context, limit int,
 	fromIndex ...int64,
 ) ([]store.PendingIntent, error) {
 	p.limits = append(p.limits, limit)
-	return p.Store.PendingIntents(limit, fromIndex...)
+	return p.Store.PendingIntents(context.Background(), limit, fromIndex...)
 }
 
 func openRecoveryStore(t *testing.T) *store.Store {
@@ -57,10 +57,10 @@ func recoveryCommitFixture(t *testing.T, s *store.Store, label string) store.Com
 		StateRoot: hashref.SumSHA256([]byte("recovery-genesis-state-" + label)),
 		LogHead:   hashref.SumSHA256([]byte("recovery-genesis-log-" + label)),
 	}
-	if err := s.PutWorld(genesis); err != nil {
+	if err := s.PutWorld(context.Background(), genesis); err != nil {
 		t.Fatalf("PutWorld genesis: %v", err)
 	}
-	if err := s.SelectHead(genesis.Ref); err != nil {
+	if err := s.SelectHead(context.Background(), genesis.Ref); err != nil {
 		t.Fatalf("SelectHead genesis: %v", err)
 	}
 	transitionPayload := []byte("planned-transition-" + label)
@@ -315,7 +315,7 @@ func TestRecoverModelInferNeverRedispatchesAfterResolution(t *testing.T) {
 		ResultRef:    hashref.SumSHA256([]byte("operator-abandoned-" + c.InvocationID)),
 		LogicalTime:  42,
 	}
-	if _, _, err := s.AppendOutcome(c.InvocationID, outcome); err != nil {
+	if _, _, err := s.AppendOutcome(context.Background(), c.InvocationID, outcome); err != nil {
 		t.Fatalf("AppendOutcome: %v", err)
 	}
 	findings, err = Recover(context.Background(), s, registry)
@@ -359,7 +359,7 @@ func TestRecoverUsesKernelPagingBound(t *testing.T) {
 	}
 	for _, limit := range []int{0, store.MaxPendingIntentsPage + 1} {
 		t.Run(fmt.Sprintf("invalid-%d", limit), func(t *testing.T) {
-			_, err := s.PendingIntents(limit)
+			_, err := s.PendingIntents(context.Background(), limit)
 			var invalid *store.InvalidLimitError
 			if !errors.As(err, &invalid) {
 				t.Fatalf("PendingIntents(%d) error=%T %v, want *store.InvalidLimitError",
@@ -419,7 +419,7 @@ func newNeverDrainingRecoveryStore(commit, effect bool) *neverDrainingRecoverySt
 }
 
 func (p *neverDrainingRecoveryStore) PendingIntents(
-	_ int,
+	_ context.Context, _ int,
 	fromIndex ...int64,
 ) ([]store.PendingIntent, error) {
 	if len(p.commitPage) == 0 {
@@ -444,7 +444,7 @@ func (p *neverDrainingRecoveryStore) GetReceipt(id string) (store.Receipt, bool,
 }
 
 func (p *neverDrainingRecoveryStore) PendingEffectIntents(
-	_ int,
+	_ context.Context, _ int,
 	fromIndex ...int64,
 ) ([]store.PendingEffectIntent, error) {
 	if len(p.effectPage) == 0 {
@@ -472,7 +472,7 @@ func (p *neverDrainingRecoveryStore) GetEffectReceipt(
 
 func TestRecoverCommitStopsAtPageBound(t *testing.T) {
 	probe := newNeverDrainingRecoveryStore(true, false)
-	_, err := recoverCommitPending(probe)
+	_, err := recoverCommitPending(context.Background(), probe)
 	const want = "broker: recovery exceeded 1048576 pages"
 	if err == nil || err.Error() != want {
 		t.Fatalf("recoverCommitPending error = %v, want %q (calls=%d)",
@@ -497,7 +497,7 @@ func TestRecoverEffectStopsAtPageBound(t *testing.T) {
 }
 
 func (p *pagedRecoveryStore) PendingIntents(
-	limit int,
+	_ context.Context, limit int,
 	fromIndex ...int64,
 ) ([]store.PendingIntent, error) {
 	if limit != store.MaxPendingIntentsPage {
@@ -542,7 +542,7 @@ func (p *pagedRecoveryStore) GetReceipt(id string) (store.Receipt, bool, error) 
 }
 
 func (p *pagedRecoveryStore) PendingEffectIntents(
-	limit int,
+	_ context.Context, limit int,
 	fromIndex ...int64,
 ) ([]store.PendingEffectIntent, error) {
 	if limit != store.MaxPendingIntentsPage {

@@ -175,7 +175,7 @@ type racingStore struct {
 	compete  func() error
 }
 
-func (r *racingStore) CompareAndSetRegistryHead(name string, expected, next hashref.HashRef) error {
+func (r *racingStore) CompareAndSetRegistryHead(ctx context.Context, name string, expected, next hashref.HashRef) error {
 	r.casCalls++
 	if r.always {
 		head, ok, err := r.Store.GetRegistryHead(context.Background(), name)
@@ -189,7 +189,7 @@ func (r *racingStore) CompareAndSetRegistryHead(name string, expected, next hash
 			return err
 		}
 	}
-	return r.Store.CompareAndSetRegistryHead(name, expected, next)
+	return r.Store.CompareAndSetRegistryHead(context.Background(), name, expected, next)
 }
 
 func TestPublishSetCASRetryMergesWinner(t *testing.T) {

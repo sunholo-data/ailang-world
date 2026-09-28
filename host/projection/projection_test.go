@@ -106,7 +106,7 @@ func publishRevision(t *testing.T, st *store.Store, rev transitionreg.Revision, 
 	if err := st.PutObject(context.Background(), obj); err != nil {
 		t.Fatalf("put object: %v", err)
 	}
-	if err := st.CompareAndSetRegistryHead(store.TransitionRegistryV1, expected, obj.Hash); err != nil {
+	if err := st.CompareAndSetRegistryHead(context.Background(), store.TransitionRegistryV1, expected, obj.Hash); err != nil {
 		t.Fatalf("cas head: %v", err)
 	}
 	return obj.Hash

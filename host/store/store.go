@@ -574,7 +574,8 @@ func (s *Store) GetObject(ctx context.Context, ref hashref.HashRef) (Object, boo
 
 // PutWorld inserts one immutable world revision. Re-inserting the same revision
 // is idempotent.
-func (s *Store) PutWorld(w World) error {
+func (s *Store) PutWorld(ctx context.Context, w World) (err error) {
+	defer func() { err = notCommitted(ctx, "put world", err) }()
 	if err := validateRef("PutWorld", "Ref", w.Ref); err != nil {
 		return err
 	}
@@ -584,7 +585,12 @@ func (s *Store) PutWorld(w World) error {
 	if err := validateRef("PutWorld", "LogHead", w.LogHead); err != nil {
 		return err
 	}
-	_, err := s.db.Exec(
+	tx, err := s.beginDurable(ctx, "put world")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	_, err = tx.ExecContext(ctx,
 		`INSERT OR IGNORE INTO worlds (world_ref, revision, state_root, log_head)
 		 VALUES (?, ?, ?, ?);`,
 		w.Ref.String(), w.Revision, w.StateRoot.String(), w.LogHead.String(),
@@ -592,7 +598,7 @@ func (s *Store) PutWorld(w World) error {
 	if err != nil {
 		return fmt.Errorf("store: put world %q: %w", w.Ref.String(), err)
 	}
-	return nil
+	return s.finishDurable(ctx, "put world", tx)
 }
 
 // GetWorld loads a world revision by its HashRef; ok=false when absent.
@@ -754,7 +760,8 @@ func IsRegistryCASConflict(err error) bool {
 // CompareAndSetRegistryHead atomically advances name from expected to next. A
 // zero expected requires an absent head. Next must name an existing immutable
 // object. Only the row identified by name is changed.
-func (s *Store) CompareAndSetRegistryHead(name string, expected, next hashref.HashRef) error {
+func (s *Store) CompareAndSetRegistryHead(ctx context.Context, name string, expected, next hashref.HashRef) (err error) {
+	defer func() { err = notCommitted(ctx, "compare and set registry head", err) }()
 	if !expected.IsZero() {
 		if err := validateRef("CompareAndSetRegistryHead", "expected", expected); err != nil {
 			return err
@@ -764,21 +771,21 @@ func (s *Store) CompareAndSetRegistryHead(name string, expected, next hashref.Ha
 		return err
 	}
 
-	tx, err := s.db.Begin()
+	tx, err := s.beginDurable(ctx, "compare and set registry head")
 	if err != nil {
 		return fmt.Errorf("store: compare and set registry head %q: begin: %w", name, err)
 	}
 	defer tx.Rollback()
 
 	var exists int
-	switch err := tx.QueryRow(`SELECT 1 FROM objects WHERE hash_ref = ?;`, next.String()).Scan(&exists); {
+	switch err := tx.QueryRowContext(ctx, `SELECT 1 FROM objects WHERE hash_ref = ?;`, next.String()).Scan(&exists); {
 	case errors.Is(err, sql.ErrNoRows):
 		return fmt.Errorf("store: compare and set registry head %q: next object %q does not exist", name, next.String())
 	case err != nil:
 		return fmt.Errorf("store: compare and set registry head %q: check next object: %w", name, err)
 	}
 
-	actual, hadHead, err := registryHeadTx(tx, name)
+	actual, hadHead, err := registryHeadTx(ctx, tx, name)
 	if err != nil {
 		return err
 	}
@@ -786,7 +793,7 @@ func (s *Store) CompareAndSetRegistryHead(name string, expected, next hashref.Ha
 		return &RegistryCASConflict{Name: name, Expected: expected, Actual: actual, HadHead: hadHead}
 	}
 
-	_, err = tx.Exec(
+	_, err = tx.ExecContext(ctx,
 		`INSERT INTO epoch_registry_heads (registry_name, object_ref) VALUES (?, ?)
 		 ON CONFLICT(registry_name) DO UPDATE SET object_ref = excluded.object_ref;`,
 		name, next.String(),
@@ -794,17 +801,17 @@ func (s *Store) CompareAndSetRegistryHead(name string, expected, next hashref.Ha
 	if err != nil {
 		return fmt.Errorf("store: compare and set registry head %q: write: %w", name, err)
 	}
-	if err := tx.Commit(); err != nil {
+	if err := s.finishDurable(ctx, "compare and set registry head", tx); err != nil {
 		return fmt.Errorf("store: compare and set registry head %q: commit: %w", name, err)
 	}
 	return nil
 }
 
-func registryHeadTx(q interface {
-	QueryRow(string, ...any) *sql.Row
+func registryHeadTx(ctx context.Context, q interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
 }, name string) (hashref.HashRef, bool, error) {
 	var text string
-	switch err := q.QueryRow(
+	switch err := q.QueryRowContext(ctx,
 		`SELECT object_ref FROM epoch_registry_heads WHERE registry_name = ?;`, name,
 	).Scan(&text); {
 	case errors.Is(err, sql.ErrNoRows):
@@ -823,7 +830,8 @@ func registryHeadTx(q interface {
 // (TransitionFn, Interpreter); SemanticsEpoch and the outcome fields are payload.
 // An upsert with the same pair but a different epoch updates metadata in place
 // and preserves the single selected row for that pair.
-func (s *Store) PutVerifyResult(r VerifyResult) error {
+func (s *Store) PutVerifyResult(ctx context.Context, r VerifyResult) (err error) {
+	defer func() { err = notCommitted(ctx, "put verify result", err) }()
 	if err := validateRef("PutVerifyResult", "TransitionFn", r.TransitionFn); err != nil {
 		return err
 	}
@@ -834,7 +842,12 @@ func (s *Store) PutVerifyResult(r VerifyResult) error {
 	if r.Verified {
 		verified = 1
 	}
-	_, err := s.db.Exec(
+	tx, err := s.beginDurable(ctx, "put verify result")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	_, err = tx.ExecContext(ctx,
 		`INSERT INTO verification_cache
 			(transition_fn_ref, interpreter_ref, semantics_epoch, verified, result_detail)
 		 VALUES (?, ?, ?, ?, ?)
@@ -848,7 +861,7 @@ func (s *Store) PutVerifyResult(r VerifyResult) error {
 		return fmt.Errorf("store: put verify result for (%q,%q): %w",
 			r.TransitionFn.String(), r.Interpreter.String(), err)
 	}
-	return nil
+	return s.finishDurable(ctx, "put verify result", tx)
 }
 
 // GetVerifyResult looks up a cached verify result by the pair
@@ -910,11 +923,17 @@ func selectedHeadTx(ctx context.Context, q interface {
 // SelectHead sets the store's selected world head without a full commit. It is
 // used to seed the genesis head before the first Commit; steady-state head
 // advancement happens inside Commit.
-func (s *Store) SelectHead(ref hashref.HashRef) error {
+func (s *Store) SelectHead(ctx context.Context, ref hashref.HashRef) (err error) {
+	defer func() { err = notCommitted(ctx, "select head", err) }()
 	if err := validateRef("SelectHead", "ref", ref); err != nil {
 		return err
 	}
-	_, err := s.db.Exec(
+	tx, err := s.beginDurable(ctx, "select head")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	_, err = tx.ExecContext(ctx,
 		`INSERT INTO store_heads (head_key, world_ref) VALUES (?, ?)
 		 ON CONFLICT(head_key) DO UPDATE SET world_ref = excluded.world_ref;`,
 		selectedHeadKey, ref.String(),
@@ -922,7 +941,7 @@ func (s *Store) SelectHead(ref hashref.HashRef) error {
 	if err != nil {
 		return fmt.Errorf("store: select head %q: %w", ref.String(), err)
 	}
-	return nil
+	return s.finishDurable(ctx, "select head", tx)
 }
 
 // Commit performs the single-transaction compare-and-append of Decision 4:
@@ -1177,11 +1196,17 @@ type SessionRow struct {
 // sha256(token_hex) — never the raw token (D3). The INSERT is a plain write: a
 // collision on the PK (two mints hashing to the same id) errors loudly rather than
 // being silently absorbed.
-func (s *Store) MintSession(row SessionRow) error {
+func (s *Store) MintSession(ctx context.Context, row SessionRow) (err error) {
+	defer func() { err = notCommitted(ctx, "mint session", err) }()
 	if row.CredentialID == "" || row.EpisodeID == "" {
 		return fmt.Errorf("store: mint session: empty credential_id or episode_id")
 	}
-	_, err := s.db.Exec(
+	tx, err := s.beginDurable(ctx, "mint session")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	_, err = tx.ExecContext(ctx,
 		`INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at)
 		 VALUES (?, ?, ?, ?, ?);`,
 		row.CredentialID, row.EpisodeID, row.GrantsJSON, row.ExpiresAt, row.CreatedAt,
@@ -1189,7 +1214,7 @@ func (s *Store) MintSession(row SessionRow) error {
 	if err != nil {
 		return fmt.Errorf("store: mint session: %w", err)
 	}
-	return nil
+	return s.finishDurable(ctx, "mint session", tx)
 }
 
 // ResolveSession performs the single indexed point lookup by credential_id (the

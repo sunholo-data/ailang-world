@@ -175,10 +175,10 @@ func seedWalkLog(tb testing.TB, d *Daemon, n int) {
 		StateRoot: hashref.SumSHA256([]byte("walk-genesis-state")),
 		LogHead:   hashref.SumSHA256([]byte("walk-genesis-log")),
 	}
-	if err := d.store.PutWorld(current); err != nil {
+	if err := d.store.PutWorld(context.Background(), current); err != nil {
 		tb.Fatal(err)
 	}
-	if err := d.store.SelectHead(current.Ref); err != nil {
+	if err := d.store.SelectHead(context.Background(), current.Ref); err != nil {
 		tb.Fatal(err)
 	}
 	obj := func(id, body string) store.Object {

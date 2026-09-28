@@ -461,7 +461,8 @@ func runReconcile(opts options, out, errw io.Writer) int {
 	}
 	defer func() { _ = db.Close() }()
 
-	pending, err := db.PendingEffectIntents(reconcileScanLimit)
+	scanCtx := context.Background() // M5b temporary root; M6b installs B9 here.
+	pending, err := db.PendingEffectIntents(scanCtx, reconcileScanLimit)
 	if err != nil {
 		fmt.Fprintln(errw, "world-publish: scan pending effect intents: "+err.Error())
 		return exitError

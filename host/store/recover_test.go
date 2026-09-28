@@ -118,7 +118,7 @@ func reconcileCommitNotExecuted(t *testing.T, s *Store, c Commit) {
 		ResultRef:    hashref.SumSHA256([]byte("reconciled-not-executed-" + c.InvocationID)),
 		LogicalTime:  43,
 	}
-	if _, _, err := s.AppendOutcome(c.InvocationID, outcome); err != nil {
+	if _, _, err := s.AppendOutcome(context.Background(), c.InvocationID, outcome); err != nil {
 		t.Fatalf("append reconciling outcome: %v", err)
 	}
 }
@@ -134,7 +134,7 @@ func TestRecoverCommitPathDeterministicallyReconcilesUntouchedStore(t *testing.T
 	if receipt.Outcome == nil || receipt.Outcome.Status != "not-executed" {
 		t.Fatalf("reconciling outcome=%+v, want not-executed", receipt.Outcome)
 	}
-	if pending, err := s.PendingIntents(MaxPendingIntentsPage); err != nil || len(pending) != 0 {
+	if pending, err := s.PendingIntents(context.Background(), MaxPendingIntentsPage); err != nil || len(pending) != 0 {
 		t.Fatalf("pending after reconcile=%d err=%v, want zero", len(pending), err)
 	}
 }
@@ -157,7 +157,7 @@ func TestRecoverModelInferNeverRedispatchesEvenWhenResolutionOffered(t *testing.
 		ResultRef:    hashref.SumSHA256([]byte("operator-abandoned-" + c.InvocationID)),
 		LogicalTime:  44,
 	}
-	if _, _, err := s.AppendOutcome(c.InvocationID, outcome); err != nil {
+	if _, _, err := s.AppendOutcome(context.Background(), c.InvocationID, outcome); err != nil {
 		t.Fatal(err)
 	}
 	if probe.dispatches != 0 {

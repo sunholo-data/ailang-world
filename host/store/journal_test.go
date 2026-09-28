@@ -72,7 +72,7 @@ func TestReceiptStateDriftAllBooleanCombinations(t *testing.T) {
 			}
 			if tc.hasOutcome == "yes" {
 				outcome := JournalOutcome{id, "committed", c.NextWorld.Ref, 43}
-				_, _, err := s.AppendOutcome(id, outcome)
+				_, _, err := s.AppendOutcome(context.Background(), id, outcome)
 				if tc.corrupt {
 					if err == nil || !IsInvocationMismatch(err) {
 						t.Fatalf("outcome without intent = %v, want structured error", err)
@@ -221,7 +221,7 @@ func TestAppendIntentIdempotencyDuplicateAndSchemaOutcomeUniqueness(t *testing.T
 		t.Fatalf("different bytes error = %T %v", err, err)
 	}
 	outcome := JournalOutcome{"idem", "committed", c.NextWorld.Ref, 44}
-	_, outcomeRef, err := s.AppendOutcome("idem", outcome)
+	_, outcomeRef, err := s.AppendOutcome(context.Background(), "idem", outcome)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -284,19 +284,19 @@ func TestPendingIntentsLimitsAndCursorPagination(t *testing.T) {
 		}
 	}
 	for _, limit := range []int{0, -1, MaxPendingIntentsPage + 1} {
-		if _, err := s.PendingIntents(limit); !IsInvalidLimit(err) {
+		if _, err := s.PendingIntents(context.Background(), limit); !IsInvalidLimit(err) {
 			t.Fatalf("limit %d error = %T %v", limit, err, err)
 		}
 	}
-	small, err := s.PendingIntents(3)
+	small, err := s.PendingIntents(context.Background(), 3)
 	if err != nil || len(small) != 3 {
 		t.Fatalf("small bounded page len=%d err=%v", len(small), err)
 	}
-	first, err := s.PendingIntents(MaxPendingIntentsPage)
+	first, err := s.PendingIntents(context.Background(), MaxPendingIntentsPage)
 	if err != nil || len(first) != MaxPendingIntentsPage {
 		t.Fatalf("max page len=%d err=%v", len(first), err)
 	}
-	second, err := s.PendingIntents(MaxPendingIntentsPage, first[len(first)-1].Seq)
+	second, err := s.PendingIntents(context.Background(), MaxPendingIntentsPage, first[len(first)-1].Seq)
 	if err != nil || len(second) != 7 {
 		t.Fatalf("second page len=%d err=%v", len(second), err)
 	}
@@ -434,7 +434,7 @@ func TestPendingIntentsExcludeRealEffectObjects(t *testing.T) {
 		Scope: "/workspace/in", Cost: 1, RequestRef: hashref.SumSHA256([]byte("cross-request")),
 		LogicalTime: 2,
 	})
-	pending, err := s.PendingIntents(10)
+	pending, err := s.PendingIntents(context.Background(), 10)
 	if err != nil || len(pending) != 0 {
 		t.Fatalf("commit pending contaminated by effect: n=%d err=%v", len(pending), err)
 	}
@@ -686,15 +686,15 @@ func TestPendingEffectIntentsLimitsPagingAndIsolation(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, limit := range []int{0, -1, MaxPendingIntentsPage + 1} {
-		if _, err := s.PendingEffectIntents(limit); !IsInvalidLimit(err) {
+		if _, err := s.PendingEffectIntents(context.Background(), limit); !IsInvalidLimit(err) {
 			t.Fatalf("limit %d error = %T %v", limit, err, err)
 		}
 	}
-	first, err := s.PendingEffectIntents(2)
+	first, err := s.PendingEffectIntents(context.Background(), 2)
 	if err != nil || len(first) != 2 {
 		t.Fatalf("first page = %+v, err=%v", first, err)
 	}
-	second, err := s.PendingEffectIntents(2, first[1].Seq)
+	second, err := s.PendingEffectIntents(context.Background(), 2, first[1].Seq)
 	if err != nil || len(second) != 2 {
 		t.Fatalf("second page = %+v, err=%v", second, err)
 	}

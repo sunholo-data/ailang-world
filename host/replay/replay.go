@@ -118,7 +118,7 @@ func (e *DivergenceError) Error() string {
 type replayStore interface {
 	GetObject(context.Context, hashref.HashRef) (store.Object, bool, error)
 	GetVerifyResult(context.Context, hashref.HashRef, hashref.HashRef) (store.VerifyResult, bool, error)
-	PutVerifyResult(store.VerifyResult) error
+	PutVerifyResult(context.Context, store.VerifyResult) error
 }
 
 type Engine struct {
@@ -201,7 +201,7 @@ func (e *Engine) ReplayEntry(ctx context.Context, ep Episode, idx int, entry Epi
 		return ReplayResult{}, err
 	}
 	if !cacheHit {
-		if err := e.store.PutVerifyResult(store.VerifyResult{
+		if err := e.store.PutVerifyResult(ctx, store.VerifyResult{
 			TransitionFn:   entry.TransitionFn,
 			Interpreter:    entry.Interpreter,
 			SemanticsEpoch: entry.SemanticsEpoch,

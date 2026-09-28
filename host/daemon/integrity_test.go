@@ -27,10 +27,10 @@ func integrityFixture(t *testing.T) string {
 		Ref: ref, StateRoot: hashref.SumSHA256([]byte("integrity state")),
 		LogHead: hashref.SumSHA256([]byte("integrity head")),
 	}
-	if err := s.PutWorld(genesis); err != nil {
+	if err := s.PutWorld(context.Background(), genesis); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SelectHead(ref); err != nil {
+	if err := s.SelectHead(context.Background(), ref); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.Close(); err != nil {
@@ -240,7 +240,7 @@ func TestIntegrityStartupSweepReportsTruncation(t *testing.T) {
 	d.scanPageSize = 64
 	d.scanRowBudget = 32
 	d.scanTimeBudget = time.Second
-	d.integrity = d.scanIntegrity()
+	d.integrity = d.scanIntegrity(context.Background())
 	r := d.IntegrityReport()
 	if r.Complete || r.LogRowsScanned != 32 {
 		t.Fatalf("report = %+v", r)

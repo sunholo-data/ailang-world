@@ -756,7 +756,7 @@ func TestWorkbenchTimelinePaging(t *testing.T) {
 			t.Fatal(err)
 		}
 		storedWorld := store.World{Ref: hashref.SumSHA256([]byte("paging-stored-world")), Revision: 17, StateRoot: state.Hash, LogHead: hashref.SumSHA256([]byte("paging-stored-log"))}
-		if err := d.store.PutWorld(storedWorld); err != nil {
+		if err := d.store.PutWorld(context.Background(), storedWorld); err != nil {
 			t.Fatal(err)
 		}
 		if _, ok, err := d.store.GetObject(ctx, state.Hash); err != nil || !ok {

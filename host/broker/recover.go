@@ -58,9 +58,9 @@ type IndeterminateEffect struct {
 }
 
 type recoveryStore interface {
-	PendingIntents(limit int, fromIndex ...int64) ([]store.PendingIntent, error)
+	PendingIntents(ctx context.Context, limit int, fromIndex ...int64) ([]store.PendingIntent, error)
 	GetReceipt(id string) (store.Receipt, bool, error)
-	PendingEffectIntents(limit int, fromIndex ...int64) ([]store.PendingEffectIntent, error)
+	PendingEffectIntents(ctx context.Context, limit int, fromIndex ...int64) ([]store.PendingEffectIntent, error)
 	GetEffectReceipt(ctx context.Context, id string) (store.Receipt, bool, error)
 }
 
@@ -117,14 +117,14 @@ func PendingPublishes(findings []IndeterminateEffect) []IndeterminateEffect {
 }
 
 func recoverPending(ctx context.Context, s recoveryStore) ([]IndeterminateEffect, error) {
-	findings, err := recoverCommitPending(s)
+	findings, err := recoverCommitPending(ctx, s)
 	if err != nil {
 		return nil, err
 	}
 	return recoverEffectPending(ctx, s, findings)
 }
 
-func recoverCommitPending(s recoveryStore) ([]IndeterminateEffect, error) {
+func recoverCommitPending(ctx context.Context, s recoveryStore) ([]IndeterminateEffect, error) {
 	var (
 		findings []IndeterminateEffect
 		cursor   int64
@@ -135,9 +135,9 @@ func recoverCommitPending(s recoveryStore) ([]IndeterminateEffect, error) {
 			err  error
 		)
 		if cursor == 0 {
-			page, err = s.PendingIntents(store.MaxPendingIntentsPage)
+			page, err = s.PendingIntents(ctx, store.MaxPendingIntentsPage)
 		} else {
-			page, err = s.PendingIntents(store.MaxPendingIntentsPage, cursor)
+			page, err = s.PendingIntents(ctx, store.MaxPendingIntentsPage, cursor)
 		}
 		if err != nil {
 			return nil, fmt.Errorf("broker: recover pending intents: %w", err)
@@ -212,9 +212,9 @@ func recoverEffectPending(
 			err  error
 		)
 		if cursor == 0 {
-			page, err = s.PendingEffectIntents(store.MaxPendingIntentsPage)
+			page, err = s.PendingEffectIntents(ctx, store.MaxPendingIntentsPage)
 		} else {
-			page, err = s.PendingEffectIntents(store.MaxPendingIntentsPage, cursor)
+			page, err = s.PendingEffectIntents(ctx, store.MaxPendingIntentsPage, cursor)
 		}
 		if err != nil {
 			return nil, fmt.Errorf("broker: recover pending effect intents: %w", err)

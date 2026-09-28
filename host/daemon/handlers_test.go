@@ -145,10 +145,10 @@ func seedGenesisEmbedded(t *testing.T, d *Daemon, label string) store.World {
 		StateRoot: hashref.SumSHA256([]byte("genesis-state-" + label)),
 		LogHead:   hashref.SumSHA256([]byte("genesis-log-" + label)),
 	}
-	if err := d.store.PutWorld(genesis); err != nil {
+	if err := d.store.PutWorld(context.Background(), genesis); err != nil {
 		t.Fatalf("PutWorld genesis: %v", err)
 	}
-	if err := d.store.SelectHead(genesis.Ref); err != nil {
+	if err := d.store.SelectHead(context.Background(), genesis.Ref); err != nil {
 		t.Fatalf("SelectHead genesis: %v", err)
 	}
 	return genesis

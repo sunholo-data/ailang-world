@@ -273,7 +273,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 	if receipt.State != store.ReceiptResolved {
 		t.Fatalf("episode receipt state = %q, want %q", receipt.State, store.ReceiptResolved)
 	}
-	pending, err := s.PendingIntents(store.MaxPendingIntentsPage)
+	pending, err := s.PendingIntents(context.Background(), store.MaxPendingIntentsPage)
 	if err != nil {
 		t.Fatalf("pending episode intents: %v", err)
 	}
@@ -300,7 +300,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 			t.Fatalf("effect receipt %d payload = %#v", ordinal, effectReceipt)
 		}
 	}
-	pendingEffects, err := s.PendingEffectIntents(store.MaxPendingIntentsPage)
+	pendingEffects, err := s.PendingEffectIntents(context.Background(), store.MaxPendingIntentsPage)
 	if err != nil {
 		t.Fatalf("pending effect intents: %v", err)
 	}

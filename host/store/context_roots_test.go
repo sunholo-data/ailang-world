@@ -23,7 +23,7 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/session.go|runSessionRevoke|Background":                1,
 	"cmd/world-publish/main.go|runApprove|Background":                         1,
 	"cmd/world-publish/main.go|runPublish|Background":                         1,
-	"cmd/world-publish/main.go|runReconcile|Background":                       1,
+	"cmd/world-publish/main.go|runReconcile|Background":                       2,
 	"cmd/world-publish/transitions.go|runTransitions|Background":              1,
 	"host/archive/archive.go|probeVersion|Background":                         1,
 	"host/capsule/capsule.go|Run|Background":                                  1,
@@ -137,7 +137,7 @@ func TestProductionGoSurface(t *testing.T) {
 			return err
 		}
 		if info.IsDir() {
-			if info.Name() == ".git" || info.Name() == "vendor" {
+			if info.Name() == ".git" || info.Name() == "vendor" || info.Name() == ".snap" {
 				return filepath.SkipDir
 			}
 			return nil

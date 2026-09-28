@@ -130,7 +130,7 @@ func TestPublishSetEpochCheckIsPerDescriptorInterpreter(t *testing.T) {
 	if err := s.PutObject(context.Background(), obj); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.CompareAndSetRegistryHead(registry.SemanticID, hashref.HashRef{}, obj.Hash); err != nil {
+	if err := s.CompareAndSetRegistryHead(context.Background(), registry.SemanticID, hashref.HashRef{}, obj.Hash); err != nil {
 		t.Fatal(err)
 	}
 	ctx := context.Background()

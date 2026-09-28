@@ -333,10 +333,10 @@ func TestObjectReferencesMeasuredAtScale(t *testing.T) {
 	current := seedGenesis(t, s)
 	current.StateRoot = state.Hash
 	current.Ref = refTestHash("scale-genesis")
-	if err := s.PutWorld(current); err != nil {
+	if err := s.PutWorld(context.Background(), current); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.SelectHead(current.Ref); err != nil {
+	if err := s.SelectHead(context.Background(), current.Ref); err != nil {
 		t.Fatal(err)
 	}
 	var sparse hashref.HashRef

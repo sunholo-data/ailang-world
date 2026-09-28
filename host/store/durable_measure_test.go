@@ -82,7 +82,7 @@ func TestMeasureDurableOps(t *testing.T) {
 		timeIt("GetObject", func() error { _, _, err := s.GetObject(ctx, body.Hash); return err })
 		timeIt("SelectedHead", func() error { _, _, err := s.SelectedHead(ctx); return err })
 		cred := fmt.Sprintf("cred-%d", i)
-		if err := s.MintSession(SessionRow{CredentialID: cred, EpisodeID: "ep", GrantsJSON: "[]",
+		if err := s.MintSession(context.Background(), SessionRow{CredentialID: cred, EpisodeID: "ep", GrantsJSON: "[]",
 			ExpiresAt: 1 << 40, CreatedAt: 1}); err != nil {
 			t.Fatal(err)
 		}
@@ -158,23 +158,23 @@ func TestMeasureContextFreeSurface(t *testing.T) {
 		timeIt("PutObject", func() error { return s.PutObject(context.Background(), o) })
 		w := World{Ref: hashref.SumSHA256([]byte("w-" + id)), Revision: int64(i + 1),
 			StateRoot: o.Hash, LogHead: o.Hash}
-		timeIt("PutWorld", func() error { return s.PutWorld(w) })
-		timeIt("SelectHead", func() error { return s.SelectHead(head.Ref) })
+		timeIt("PutWorld", func() error { return s.PutWorld(context.Background(), w) })
+		timeIt("SelectHead", func() error { return s.SelectHead(context.Background(), head.Ref) })
 		timeIt("SetRegistryHead", func() error { return s.SetRegistryHead(context.Background(), "measure/reg", o.Hash) })
 		o2 := obj("surface-next-"+id, "measure/object")
 		if err := s.PutObject(context.Background(), o2); err != nil {
 			t.Fatal(err)
 		}
 		timeIt("CompareAndSetRegistryHead", func() error {
-			return s.CompareAndSetRegistryHead("measure/reg", o.Hash, o2.Hash)
+			return s.CompareAndSetRegistryHead(context.Background(), "measure/reg", o.Hash, o2.Hash)
 		})
 		timeIt("PutVerifyResult", func() error {
-			return s.PutVerifyResult(VerifyResult{TransitionFn: o.Hash, Interpreter: genesis.Ref,
+			return s.PutVerifyResult(context.Background(), VerifyResult{TransitionFn: o.Hash, Interpreter: genesis.Ref,
 				SemanticsEpoch: 1, Verified: true, Detail: "measure"})
 		})
 		cred := "mint-" + id
 		timeIt("MintSession", func() error {
-			return s.MintSession(SessionRow{CredentialID: cred, EpisodeID: "ep", GrantsJSON: "[]",
+			return s.MintSession(context.Background(), SessionRow{CredentialID: cred, EpisodeID: "ep", GrantsJSON: "[]",
 				ExpiresAt: 1 << 40, CreatedAt: 1})
 		})
 		timeIt("RevokeSession", func() error { return s.RevokeSession(ctx, cred) })
@@ -192,14 +192,14 @@ func TestMeasureContextFreeSurface(t *testing.T) {
 		timeIt("GetEffectReceipt", func() error { _, _, err := s.GetEffectReceipt(context.Background(), effectID); return err })
 		pid := fmt.Sprintf("p-%d", i)
 		timeIt("AppendOutcome", func() error {
-			_, _, err := s.AppendOutcome(pid, JournalOutcome{InvocationID: pid, Status: "committed",
+			_, _, err := s.AppendOutcome(context.Background(), pid, JournalOutcome{InvocationID: pid, Status: "committed",
 				ResultRef: o.Hash, LogicalTime: 42})
 			return err
 		})
-		timeIt("PendingIntents(page 1000)", func() error { _, err := s.PendingIntents(MaxPendingIntentsPage); return err })
-		timeIt("PendingEffectIntents(page 200)", func() error { _, err := s.PendingEffectIntents(200); return err })
-		timeIt("ScanUnreadableLog(page 64)", func() error { _, err := s.ScanUnreadableLog(0, 64); return err })
-		timeIt("ScanUnreadableWorlds(page 64)", func() error { _, err := s.ScanUnreadableWorlds("", 64); return err })
+		timeIt("PendingIntents(page 1000)", func() error { _, err := s.PendingIntents(context.Background(), MaxPendingIntentsPage); return err })
+		timeIt("PendingEffectIntents(page 200)", func() error { _, err := s.PendingEffectIntents(context.Background(), 200); return err })
+		timeIt("ScanUnreadableLog(page 64)", func() error { _, err := s.ScanUnreadableLog(context.Background(), 0, 64); return err })
+		timeIt("ScanUnreadableWorlds(page 64)", func() error { _, err := s.ScanUnreadableWorlds(context.Background(), "", 64); return err })
 	}
 	names := make([]string, 0, len(samples))
 	for n := range samples {

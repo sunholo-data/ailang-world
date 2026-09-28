@@ -547,7 +547,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 			fmt.Sprintf("cannot bootstrap %s with release %q", registry.SemanticID, release), err)
 	}
 
-	d.integrity = d.scanIntegrity()
+	d.integrity = d.scanIntegrity(ctx)
 
 	// The A2A projection (w-a2a-session-projection) mounts two additive routes
 	// over the handles New already owns: the ONE resolver instance (F3), the
@@ -582,7 +582,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	return d, nil
 }
 
-func (d *Daemon) scanIntegrity() IntegrityReport {
+func (d *Daemon) scanIntegrity(ctx context.Context) IntegrityReport {
 	start := time.Now()
 	report := IntegrityReport{}
 	logDone, worldDone := false, false
@@ -596,7 +596,7 @@ func (d *Daemon) scanIntegrity() IntegrityReport {
 			limit = remaining
 		}
 		if !logDone {
-			page, err := d.store.ScanUnreadableLog(report.ResumeLogIndex, limit)
+			page, err := d.store.ScanUnreadableLog(ctx, report.ResumeLogIndex, limit)
 			if err != nil {
 				report.Holes = append(report.Holes, store.UnreadableRow{
 					Table: "log_entries", Index: report.ResumeLogIndex,
@@ -618,7 +618,7 @@ func (d *Daemon) scanIntegrity() IntegrityReport {
 			limit = remaining
 		}
 		if !worldDone {
-			page, err := d.store.ScanUnreadableWorlds(report.ResumeWorldRef, limit)
+			page, err := d.store.ScanUnreadableWorlds(ctx, report.ResumeWorldRef, limit)
 			if err != nil {
 				report.Holes = append(report.Holes, store.UnreadableRow{
 					Table: "worlds", Ref: report.ResumeWorldRef,

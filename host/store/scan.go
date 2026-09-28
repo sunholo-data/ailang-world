@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -50,12 +51,12 @@ func invalidScanLimit(op string, limit int) error {
 
 // ScanUnreadableLog scans a bounded keyset page. Columns are parsed in their
 // declared order and only the first invalid field in each row is reported.
-func (s *Store) ScanUnreadableLog(fromIndex int64, limit int) (ScanPage, error) {
+func (s *Store) ScanUnreadableLog(ctx context.Context, fromIndex int64, limit int) (ScanPage, error) {
 	const op = "ScanUnreadableLog"
 	if err := invalidScanLimit(op, limit); err != nil {
 		return ScanPage{}, err
 	}
-	rows, err := s.db.Query(`SELECT entry_index, entry_hash_ref, transition_fn_ref,
+	rows, err := s.db.QueryContext(ctx, `SELECT entry_index, entry_hash_ref, transition_fn_ref,
 		interpreter_ref, prev_entry_hash_ref, transition_ref
 		FROM log_entries WHERE entry_index >= ? ORDER BY entry_index LIMIT ?`, fromIndex, limit)
 	if err != nil {
@@ -90,12 +91,12 @@ func (s *Store) ScanUnreadableLog(fromIndex int64, limit int) (ScanPage, error) 
 
 // ScanUnreadableWorlds scans lexicographically by the explicit TEXT primary
 // key. It never depends on OFFSET or SQLite rowids.
-func (s *Store) ScanUnreadableWorlds(afterRef string, limit int) (ScanPage, error) {
+func (s *Store) ScanUnreadableWorlds(ctx context.Context, afterRef string, limit int) (ScanPage, error) {
 	const op = "ScanUnreadableWorlds"
 	if err := invalidScanLimit(op, limit); err != nil {
 		return ScanPage{}, err
 	}
-	rows, err := s.db.Query(`SELECT world_ref, state_root, log_head
+	rows, err := s.db.QueryContext(ctx, `SELECT world_ref, state_root, log_head
 		FROM worlds WHERE world_ref > ? ORDER BY world_ref LIMIT ?`, afterRef, limit)
 	if err != nil {
 		return ScanPage{}, fmt.Errorf("store: scan unreadable worlds: %w", err)

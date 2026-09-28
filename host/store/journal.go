@@ -676,7 +676,8 @@ func (s *Store) AppendClaimedEffectIntent(ctx context.Context, episodeID string,
 }
 
 // AppendOutcome requires a durable intent and atomically appends one outcome.
-func (s *Store) AppendOutcome(id string, outcome JournalOutcome) (int64, hashref.HashRef, error) {
+func (s *Store) AppendOutcome(ctx context.Context, id string, outcome JournalOutcome) (seq int64, ref hashref.HashRef, err error) {
+	defer func() { err = notCommitted(ctx, "append outcome", err) }()
 	if id == "" || outcome.InvocationID != id {
 		return 0, hashref.HashRef{}, &InvocationMismatchError{
 			ID: id, Field: "InvocationID", Want: id, Got: outcome.InvocationID,
@@ -690,13 +691,13 @@ func (s *Store) AppendOutcome(id string, outcome JournalOutcome) (int64, hashref
 		return 0, hashref.HashRef{}, err
 	}
 	object := journalObject(JournalOutcomeV1, payload)
-	tx, err := s.db.Begin()
+	tx, err := s.beginDurable(ctx, "append outcome")
 	if err != nil {
 		return 0, hashref.HashRef{}, err
 	}
 	defer func() { _ = tx.Rollback() }()
 	var exists int
-	if err := tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM journal
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM journal
 		WHERE invocation_id = ? AND kind = 'intent')`, id).Scan(&exists); err != nil {
 		return 0, hashref.HashRef{}, fmt.Errorf("store: find outcome intent: %w", err)
 	}
@@ -706,25 +707,25 @@ func (s *Store) AppendOutcome(id string, outcome JournalOutcome) (int64, hashref
 		}
 	}
 	var existing int
-	if err := tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM journal
+	if err := tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM journal
 		WHERE invocation_id = ? AND kind = 'outcome')`, id).Scan(&existing); err != nil {
 		return 0, hashref.HashRef{}, err
 	}
 	if existing != 0 {
 		return 0, hashref.HashRef{}, &DuplicateInvocationError{ID: id, Kind: "outcome"}
 	}
-	seq, err := nextJournalSeqTx(tx)
+	seq, err = nextJournalSeqTx(tx)
 	if err != nil {
 		return 0, hashref.HashRef{}, err
 	}
 	if err := insertJournalObjectTx(tx, object); err != nil {
 		return 0, hashref.HashRef{}, err
 	}
-	if _, err := tx.Exec(`INSERT INTO journal(seq, kind, invocation_id, object_ref)
+	if _, err := tx.ExecContext(ctx, `INSERT INTO journal(seq, kind, invocation_id, object_ref)
 		VALUES (?, 'outcome', ?, ?)`, seq, id, object.Hash.String()); err != nil {
 		return 0, hashref.HashRef{}, fmt.Errorf("store: append outcome: %w", err)
 	}
-	if err := tx.Commit(); err != nil {
+	if err := s.finishDurable(ctx, "append outcome", tx); err != nil {
 		return 0, hashref.HashRef{}, err
 	}
 	return seq, object.Hash, nil
@@ -929,7 +930,7 @@ func (s *Store) GetEffectReceipt(ctx context.Context, id string) (Receipt, bool,
 
 // PendingIntents returns oldest pending intents using seq keyset pagination.
 // The optional fromIndex cursor is exclusive; omitting it starts before seq 1.
-func (s *Store) PendingIntents(limit int, fromIndex ...int64) ([]PendingIntent, error) {
+func (s *Store) PendingIntents(ctx context.Context, limit int, fromIndex ...int64) ([]PendingIntent, error) {
 	if limit < 1 || limit > MaxPendingIntentsPage {
 		return nil, &InvalidLimitError{Op: "PendingIntents", Limit: limit, Max: MaxPendingIntentsPage}
 	}
@@ -940,7 +941,7 @@ func (s *Store) PendingIntents(limit int, fromIndex ...int64) ([]PendingIntent, 
 	if len(fromIndex) == 1 {
 		after = fromIndex[0]
 	}
-	rows, err := s.db.Query(`SELECT j.seq, j.invocation_id, j.object_ref, o.payload
+	rows, err := s.db.QueryContext(ctx, `SELECT j.seq, j.invocation_id, j.object_ref, o.payload
 		FROM journal j JOIN objects o ON o.hash_ref = j.object_ref
 		WHERE j.kind = 'intent' AND j.seq > ?
 		AND o.semantic_id = 'world/journal-intent/v1'
@@ -977,7 +978,7 @@ func (s *Store) PendingIntents(limit int, fromIndex ...int64) ([]PendingIntent, 
 
 // PendingEffectIntents returns oldest pending effect intents using keyset
 // pagination. The optional cursor is exclusive.
-func (s *Store) PendingEffectIntents(limit int, fromIndex ...int64) ([]PendingEffectIntent, error) {
+func (s *Store) PendingEffectIntents(ctx context.Context, limit int, fromIndex ...int64) ([]PendingEffectIntent, error) {
 	if limit < 1 || limit > MaxPendingIntentsPage {
 		return nil, &InvalidLimitError{Op: "PendingEffectIntents", Limit: limit, Max: MaxPendingIntentsPage}
 	}
@@ -988,7 +989,7 @@ func (s *Store) PendingEffectIntents(limit int, fromIndex ...int64) ([]PendingEf
 	if len(fromIndex) == 1 {
 		after = fromIndex[0]
 	}
-	rows, err := s.db.Query(`SELECT j.seq, j.invocation_id, j.object_ref, o.payload
+	rows, err := s.db.QueryContext(ctx, `SELECT j.seq, j.invocation_id, j.object_ref, o.payload
 		FROM journal j JOIN objects o ON o.hash_ref = j.object_ref
 		WHERE j.kind = 'intent' AND j.seq > ?
 		AND o.semantic_id = 'world/effect-intent/v1'

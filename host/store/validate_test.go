@@ -60,16 +60,16 @@ func TestEveryPersistedRefFieldIsValidated(t *testing.T) {
 			o.InterfaceHash = zero
 			return s.PutObject(context.Background(), o)
 		}},
-		{"PutWorld Ref", "PutWorld", "Ref", func(s *Store, g World) error { g.Ref = zero; return s.PutWorld(g) }},
-		{"PutWorld StateRoot", "PutWorld", "StateRoot", func(s *Store, g World) error { g.StateRoot = zero; return s.PutWorld(g) }},
-		{"PutWorld LogHead", "PutWorld", "LogHead", func(s *Store, g World) error { g.LogHead = zero; return s.PutWorld(g) }},
+		{"PutWorld Ref", "PutWorld", "Ref", func(s *Store, g World) error { g.Ref = zero; return s.PutWorld(context.Background(), g) }},
+		{"PutWorld StateRoot", "PutWorld", "StateRoot", func(s *Store, g World) error { g.StateRoot = zero; return s.PutWorld(context.Background(), g) }},
+		{"PutWorld LogHead", "PutWorld", "LogHead", func(s *Store, g World) error { g.LogHead = zero; return s.PutWorld(context.Background(), g) }},
 		{"SetRegistryHead", "SetRegistryHead", "objectRef", func(s *Store, _ World) error { return s.SetRegistryHead(context.Background(), "bad", zero) }},
-		{"SelectHead", "SelectHead", "ref", func(s *Store, _ World) error { return s.SelectHead(zero) }},
+		{"SelectHead", "SelectHead", "ref", func(s *Store, _ World) error { return s.SelectHead(context.Background(), zero) }},
 		{"PutVerifyResult TransitionFn", "PutVerifyResult", "TransitionFn", func(s *Store, _ World) error {
-			return s.PutVerifyResult(VerifyResult{TransitionFn: zero, Interpreter: hashref.SumSHA256([]byte("i"))})
+			return s.PutVerifyResult(context.Background(), VerifyResult{TransitionFn: zero, Interpreter: hashref.SumSHA256([]byte("i"))})
 		}},
 		{"PutVerifyResult Interpreter", "PutVerifyResult", "Interpreter", func(s *Store, _ World) error {
-			return s.PutVerifyResult(VerifyResult{TransitionFn: hashref.SumSHA256([]byte("f")), Interpreter: zero})
+			return s.PutVerifyResult(context.Background(), VerifyResult{TransitionFn: hashref.SumSHA256([]byte("f")), Interpreter: zero})
 		}},
 	}
 	for _, tc := range cases {

@@ -216,11 +216,11 @@ func benchmarkDaemonGET(b *testing.B, route string, seed bool) {
 			StateRoot: hashref.SumSHA256([]byte("daemon-benchmark-state-genesis")),
 			LogHead:   hashref.SumSHA256([]byte("daemon-benchmark-log-genesis")),
 		}
-		if err := d.store.PutWorld(w); err != nil {
+		if err := d.store.PutWorld(context.Background(), w); err != nil {
 			_ = d.Close()
 			b.Fatalf("seed PutWorld: %v", err)
 		}
-		if err := d.store.SelectHead(w.Ref); err != nil {
+		if err := d.store.SelectHead(context.Background(), w.Ref); err != nil {
 			_ = d.Close()
 			b.Fatalf("seed SelectHead: %v", err)
 		}
@@ -300,10 +300,10 @@ func BenchmarkRESTCommit(b *testing.B) {
 		StateRoot: hashref.SumSHA256([]byte("rest-bench-genesis-state")),
 		LogHead:   hashref.SumSHA256([]byte("rest-bench-genesis-log")),
 	}
-	if err := d.store.PutWorld(genesis); err != nil {
+	if err := d.store.PutWorld(context.Background(), genesis); err != nil {
 		b.Fatalf("PutWorld genesis: %v", err)
 	}
-	if err := d.store.SelectHead(genesis.Ref); err != nil {
+	if err := d.store.SelectHead(context.Background(), genesis.Ref); err != nil {
 		b.Fatalf("SelectHead genesis: %v", err)
 	}
 	if err := d.Listen(); err != nil {
@@ -376,10 +376,10 @@ func BenchmarkLogRange(b *testing.B) {
 				StateRoot: hashref.SumSHA256([]byte("range-bench-genesis-state")),
 				LogHead:   hashref.SumSHA256([]byte("range-bench-genesis-log")),
 			}
-			if err := d.store.PutWorld(current); err != nil {
+			if err := d.store.PutWorld(context.Background(), current); err != nil {
 				b.Fatalf("PutWorld genesis: %v", err)
 			}
-			if err := d.store.SelectHead(current.Ref); err != nil {
+			if err := d.store.SelectHead(context.Background(), current.Ref); err != nil {
 				b.Fatalf("SelectHead genesis: %v", err)
 			}
 			for i := int64(0); i < 500; i++ {

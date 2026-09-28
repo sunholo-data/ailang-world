@@ -243,7 +243,7 @@ func assertCrashStore(t *testing.T, dbPath, effectPath, stop string) {
 	if !ok || receipt.State != wantState {
 		t.Fatalf("%s receipt=(ok=%v,state=%s), want (true,%s)", stop, ok, receipt.State, wantState)
 	}
-	pending, err := s.PendingIntents(MaxPendingIntentsPage)
+	pending, err := s.PendingIntents(context.Background(), MaxPendingIntentsPage)
 	if err != nil {
 		t.Fatal(err)
 	}

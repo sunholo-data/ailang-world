@@ -81,10 +81,10 @@ func seedHead(t *testing.T, s *store.Store) store.World {
 		StateRoot: hashref.SumSHA256([]byte("daemon-test-state-genesis")),
 		LogHead:   hashref.SumSHA256([]byte("daemon-test-log-genesis")),
 	}
-	if err := s.PutWorld(w); err != nil {
+	if err := s.PutWorld(context.Background(), w); err != nil {
 		t.Fatalf("seed PutWorld: %v", err)
 	}
-	if err := s.SelectHead(w.Ref); err != nil {
+	if err := s.SelectHead(context.Background(), w.Ref); err != nil {
 		t.Fatalf("seed SelectHead: %v", err)
 	}
 	return w
@@ -1040,7 +1040,7 @@ func seedTransitionRegistry(t *testing.T, st *store.Store, idEffect ...string) h
 	if err := st.PutObject(context.Background(), obj); err != nil {
 		t.Fatalf("put object: %v", err)
 	}
-	if err := st.CompareAndSetRegistryHead(store.TransitionRegistryV1, hashref.HashRef{}, obj.Hash); err != nil {
+	if err := st.CompareAndSetRegistryHead(context.Background(), store.TransitionRegistryV1, hashref.HashRef{}, obj.Hash); err != nil {
 		t.Fatalf("cas head: %v", err)
 	}
 	return obj.Hash
