@@ -1,28 +1,28 @@
-# Mission Dashboard — World (snapshot 2026-09-27, iteration 202)
+# Mission Dashboard — World (snapshot 2026-09-28, iteration 204)
 
-- **State**: **row 103 LANDED (`c33b2a9`).** The workbench object page now answers "who references this object?".
-  - `referencedBy` is no longer a named stop. It shows existence-checked links to the log entries (transitionRef / transitionFn / interpreter) and worlds (stateRoot) that name the object.
-  - It reads from four covering indexes provisioned on writable Open, with a strict verifier. A read-only store without them answers 503 `ReferenceIndexUnavailable`, never an empty "unreferenced".
-  - Pages show 100 references plus a lookahead, with an explicit empty state and a strict `refsAfter` continuation. `committedBy` (row 104) is unchanged, and so are the nine `/v1` routes.
-  - Reverse read p50 45–86 µs at N=10,000. The walk locate → object → referencedBy → entry → payload takes 53 ms.
+- **State**: **row 104 LANDED (`b290ff3`).** The workbench object page now answers "which commit carried this object?".
+  - `committedBy` is no longer a named stop. It shows existence-checked links to the log entries whose commit carried the object (a missing entry renders UNAVAILABLE, never a dead link).
+  - The data comes from a new `commit_objects` table, written inside `Store.Commit`'s own transaction (schema v3 → v4). A v4 store whose table was dropped is refused, not silently recreated empty.
+  - Pages show 100 commits plus a lookahead, with explicit none/end/more states and a `commitsAfter` continuation that coexists with `refsAfter`. The nine `/v1` routes and all `.ail` are unchanged.
+  - Read p50 11–32 µs at N=10,000; commit overhead about 15%. A three-question recorder walk (object → committedBy → entry → transitionRef) passes.
+  - This resumed iteration 203, which designed row 104 and then died at planner launch without a record.
 - **Quality**:
-  - Controller gates were green outside the sandbox at all 8 commit boundaries (`-race` on store/daemon/workbench), plus the full suite and verify_ail.
-  - Judge `sonnet` in its own worktree: **91/100, zero blocking**. Its 3 test-gap survivors are recorded as residuals on row 103.
+  - Controller gates were green outside the sandbox at all 4 commit boundaries (`-race` on store/daemon/workbench), plus the full suite (24 ok) and verify_ail.
+  - Judge `sonnet` in its own worktree: **97/100, zero blocking**. Its NB-1 test gap (the `commitCursor` guard) was reproduced and recorded as a residual.
   - SHA-pinned CI on the merge: 2/2 green.
-- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · **5 UNMET, moved again** (row 114 still needs ≥3 real, timed questions) · 6 UNMET (PR #153 held on `D-WORLD-40`; 108 blocked on `ailang#885`).
-- **Why row 103**: it is first in `D-WORLD-42`'s default order for clause 5 (103, 104, 99, 100), and every clause-4 and clause-6 row is blocked.
-- **Next**: `D-WORLD-40` = A → merge #153 → 106 M5/M6 → 108 → 93. Meanwhile: row 104 (`committedBy`; needs a design and a schema change), then 99, 100.
+- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · **5 UNMET, moved a third time** (all three object-page relations are live edges now; row 114 still needs ≥3 real, timed questions) · 6 UNMET (PR #153 held on `D-WORLD-40`; 108 blocked on `ailang#885`, re-measured OPEN).
+- **Next**: `D-WORLD-40` = A → merge #153 → 106 M5/M6 → 108 → 93. Meanwhile, under `D-WORLD-42`'s default: rows 99, then 100.
 - **Parked for Mark**:
   - **`D-WORLD-40`** (the critical-path unlock): ratify row 23's bound table. **A** ratify (recommended) · **B** name a change.
-  - **`D-WORLD-42`**: put clause-5 rows 104, 99, 100 at position 5 beside 114 (103 and 96 have now landed under its default). **A** yes (recommended) · **B** leave them in the clause-2 bucket.
+  - **`D-WORLD-42`**: put clause-5 rows 99 and 100 at position 5 beside 114 (96, 103 and 104 have now landed under its default). **A** yes (recommended) · **B** leave them in the clause-2 bucket.
   - **`D-WORLD-41`**: release world/core as **A** 0.1.1 (recommended) or **B** 0.2.0.
   - **`D-WORLD-39`**: move the row-23 tranche to groom position 2 (acting on default A).
   - **`D-WORLD-38`**: the typed publish phrase (A shared, shipped · B own phrase).
 - **Cadence/routing**:
   - Controller `claude-opus-5-5`.
-  - Designer `codex:gpt-6-astra` (rotation).
-  - Planner and executor `codex:gpt-6-sol`. The executor ran twice (store half, then daemon half); tokens 144k / 94k + 119k.
-  - Evaluator `sonnet` (Agent tool, foreground, 180k tok).
-  - **$0.055 metered** (quorum ×2).
+  - Designer (iteration 203) `claude-opus-5-5`; next in rotation is `codex:gpt-6-astra`.
+  - Planner and executor `codex:gpt-6-sol`. The executor ran twice (store half, then daemon half); tokens 77k / 52k + 113k.
+  - Evaluator `sonnet` (Agent tool, foreground, 178k tok).
+  - **$0.30 metered** (iteration 203's quorum ×2); iteration 204 spent $0.
 - **Harness**: no new tickets. **Do not run `ailang mission rotate-log` for World** (row 118).
-- **Capacity watch**: Ollama was ration-blocked again. That took out 2 of 5 quorum seats and the glm/kimi designer entries.
+- **Capacity watch**: Ollama was ration-blocked again. That took out 2 of 4 quorum seats and the glm/kimi designer entries.

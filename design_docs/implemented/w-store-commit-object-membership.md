@@ -1,6 +1,6 @@
 # w-store-commit-object-membership — record which commits carried an object, and show it as checked committedBy edges
 
-Status: PLANNED (r2 + controller carve-out after quorum r2) — designed iteration 203 (designer `claude-opus-5-5`), **revision r2**. Queue row
+Status: IMPLEMENTED 2026-09-28 (iteration 204, PR #158 → `b290ff3`) — r2 + controller carve-out after quorum r2; — designed iteration 203 (designer `claude-opus-5-5`), **revision r2**. Queue row
 104. Quorum r1 was BLOCKED 2/2; the §13 Quorum log records each objection and how it was disposed
 of. The prototype (store layer only: M1 + M2) is in this worktree; §8 lists every file it changed.
 Item: row 104 `w-store-commit-object-membership` — record commit membership (a schema change) and
@@ -388,7 +388,7 @@ unchanged.
 | `host/store/object_commits_test.go` | test, new | AC1–AC11 + AC8 v3 refusal + opt-in AC13 timing + AC16 dropped-table refusal (r2) |
 | `host/store/schema_version_test.go` | test | pins 3→4 / 4→5; the authored `schemaV4SQL` ledger + ledger gate moved to v4; v3 now a read-only legacy fixture; supported/fresh tests renamed to Four. **r2:** the two writer-lock-release probes (in `…VersionOne…` and `…LegacyVersionZero…`) used to relabel a v1/v0 fixture as current and reopen it. They now apply the frozen `schemaV4SQL` before relabelling, because the integrity check (correctly) refuses a current-version store without `commit_objects`. The probes still prove only lock release. |
 | `host/store/journal_test.go` | test | `canonicalTableDDL` gains `commit_objects` |
-| `design_docs/planned/w-store-commit-object-membership.md` | doc | this file |
+| `design_docs/implemented/w-store-commit-object-membership.md` | doc | this file |
 
 That's ~107 production lines. Scratch files (the mutation harness, the base copy, logs) live under
 `~/.ailang/state/world-iter203/designer-scratch/`, outside the worktree.

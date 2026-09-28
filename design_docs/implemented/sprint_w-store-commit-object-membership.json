@@ -1,6 +1,6 @@
 {
   "sprint_id": "w-store-commit-object-membership-iter204",
-  "design_doc": "design_docs/planned/w-store-commit-object-membership.md",
+  "design_doc": "design_docs/implemented/w-store-commit-object-membership.md",
   "base": "07d90e0",
   "scope": "Row 104 v4 commit-object membership and checked workbench committedBy projection; no /v1 route or .ail change; row 23 bounded-context rebase contract applies later, without a landing dependency",
   "milestones": [

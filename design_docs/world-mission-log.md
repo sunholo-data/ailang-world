@@ -1121,3 +1121,49 @@ The codex probe returned rc=0. No design doc was needed: the row plus row 20's �
 **Progress**: 1.0: clauses 4, 5, 6 unmet. **Clause 5 moved** (capability): after row 96 made the walk's locate step one read, the walk's reverse hop, from an object to the entries and worlds that name it, is now one bounded indexed read rendered as checked links on the object page. The clause stays UNMET until row 114 times ≥3 real, unseeded questions. The drift alarm does not fire (two consecutive clause-5 landings).
 
 **Next:** `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → tranche M2–M7 → 108 when #885 ships → 93, 114. Under `D-WORLD-42`'s default, the next routable clause-5 row is **104** (`committedBy`, which needs a design doc and a schema change), then 99, 100. The three test-gap residuals on row 103 are cheap follow-ups. **Decision ledger: 29 rows, FIVE OPEN (`D-WORLD-38`–`42`).**
+
+## 204 — 2026-09-28 — row 104 LANDED: the workbench object page answers "which commit carried this object?" (`committedBy` = existence-checked edges from a new `commit_objects` membership table written inside `Store.Commit`'s transaction, schema v3 → v4; read p50 11–32 µs at N=10,000; three-question recorder walk; judged 97, zero blocking; merge `b290ff3`); resumes orphaned iteration 203 [PRODUCT]
+
+**Orphan 203, credited here.** The 2026-09-27 23:30 fire wrote no slot verdict, no `iteration complete` line and no record. Its residue: the row-104 design committed as `07d90e0` (designer `claude:claude-opus-5-5` via `claude-sub`, 1,056 s + a 305 s r2 revision; the rotation had skipped glm/kimi because the driver's ration gate blocked `ollama`), both quorum rounds on disk under `~/.ailang/state/world-iter203/`, a planner directive written at 00:00, and a clean detached planner worktree `.planner-wt-iter203`. The planner never started (no `planner_out.log`). The mechanism is unknown: it left no crash notice on `#140` and no `rc=` line. Iteration 203 is therefore **design-only, credited here**, not a separate log entry.
+
+**Pick and why.** Clause map unchanged (4, 5, 6 UNMET). Clauses 4 and 6 are fully blocked: 106 M5 on `D-WORLD-40` (0 directives since the watermark), 108 on `ailang#885` (re-measured OPEN this iteration), and 93 on both. Row 114 is gated on a real incident. Under `D-WORLD-42`'s default the next routable clause-5 row was **104**, and its design already existed from the orphan. Per Gate 2's died-mid-flight rule the deliverable was to verify and land the orphan's work, not to redo it.
+
+**Verifying the inherited carve-out before routing.** r1 BLOCKED 2/2: astra's premise was measured TRUE and applied; gemini's was measured FALSE and recorded as V13. r2 BLOCKED 2/2: gemini wanted a V-log row for `PRAGMA foreign_keys = ON`, and the fix was applied verbatim (V17; `store.go:341` at HEAD, re-checked). astra objected that Commit stays unbounded and offered a fix: make M1 wait for row 23 / PR #153, or implement the bounded Commit here. Iteration 203 applied the compatible half verbatim, as the §3.2 rebase contract, and declined the landing dependency under Gate 2 rule (c): a pre-existing defect surfaced by a reviewer is a queue row, not a revision. The controller re-read this: the unbounded Commit is DR-1 at base (`store.go:966` `selectedHeadTx(context.Background(), tx)`) and belongs to row 23. The claim that Step 4b adds no new wait point was left for the judge to check independently, and it agreed.
+
+**Gate 3.**
+- **Planner `codex:gpt-6-sol`**: `resolve-role-spawn.sh planner` → `agent-tool opus fail-closed:planner-lane-field-missing` under a `provider:model` pin, so the pin was followed (role-spawn-routing §2a). The first probe was rc=1, an INSTRUMENT failure rather than a lane failure: it ran from a non-git CWD, and codex refuses outside a trusted directory. Re-run from the repo, it was rc=0. The planner took 3 min (76,682 tok) and reused iteration 203's directive plus its base gates, measured at `07d90e0`, which was still HEAD. Output: 4 landings, 19 mutations. It disclosed what it could not measure (the intermediate boundaries).
+- **Executor `codex:gpt-6-sol`**, two runs, snapshots outside the tree:
+  - Run A, M1+M2 (52,379 tok, about 8 min): 43 + 64 production lines; 14/14 mutations killed. It reported that the plan's MUT-2 literal occurs twice in `store.go` and targeted the `Store.Commit` occurrence.
+  - Run B, M3a+M3b (113,129 tok, about 12 min): 11 + 82 production lines; 5/5 mutations killed. MUT-13's plan replacement did not compile, so a compiling equivalent was used. MUT-16 needed a stronger test before it killed.
+- **Controller, outside the sandbox (pinned ailang, `AILANG_BIN`):**
+  - It first gated M1 and M2 from the snapshots in a scratch worktree while run B was still going, and reproduced MUT-18 (red, then restored by sha256).
+  - After run B it reset the sprint tree and rebuilt `ce10f0f` / `53b97b2` / `238241d` / `75ae667` with a banked script (`land.sh`). Focused tests, vet, compile fence, `-race` on store/daemon/workbench and gofmt were all green at **every** boundary.
+  - Final checks: full `go test -count=1 ./...` 24 ok / 0 FAIL; `verify_ail.sh` rc 0; tree sha256-identical to the executor's (14/14). Production diff: +200 lines.
+  - Timing at N=10,000, controller run: read single 11.3 µs, hot-100 31.1 µs, none 12.3 µs p50; commit p50 1.18 ms.
+- **Evaluator `sonnet`** (Agent tool, foreground, own detached worktree `.eval-world-iter204`, 625 s, 64 tool calls, 178,259 tok): **PASS 97/100, ZERO BLOCKING.**
+  - It traced all 16 ACs to tests it ran, bisected all 4 commits, and re-ran 5 plan mutations (MUT-2, 12, 7, 14, 17), all killed.
+  - Of its own 4 mutations, 2 were killed and 2 survived: NB-1 (`commitCursor` nil guard) and NB-2 (negative stored index guard, unreachable, mirrors row 103's).
+  - It independently measured commit overhead of about 14.6% against the design's base, under the 25% gate. It agreed from `store.go` that Step 4b adds no new wait point.
+  - It saw one `host/pkgproj` flake, the known row-117 flake in an untouched package, green on retry.
+  - The controller **reproduced NB-1** against the whole daemon suite (still `ok`) → residual on row 104.
+
+**Gate 3b.** PR [#158](https://github.com/sunholo-data/ailang-world/pull/158): head `75ae667` 2/2 green (about 9 min), `MERGEABLE/CLEAN` → squash **`b290ff3`**. The SHA-pinned check-runs on the merge read 2/2 `success`.
+
+**Ruled out / process findings**
+- **(a) A probe's CWD is part of the instrument.** The codex probe rc=1 came from running in `~/.ailang/state/…`, which is not a git directory. It is not lane evidence, and falling back on it would have spent the chain for nothing. Probe from the repo.
+- **(b) Running the out-of-sandbox gate for run A while run B executes works,** in a separate scratch worktree against the snapshots. It overlaps controller verification with executor wall-clock at no risk to the sprint tree.
+- **(c) The plan's "exactly one occurrence" contract failed twice (MUT-2 not unique, MUT-13 did not compile), and both times the executor disclosed it rather than silently substituting.** The judge independently verified MUT-2's disclosure. This is planner-side literal hygiene, and not worth a rule at 2 instances in one plan.
+- **(d) Orphan mechanism:** iteration 203 died with no slot verdict and no crash notice. The self-notice scan's clean result is therefore not evidence that no slot died, and the residue trace (a design commit with no record commit) was what found it. No harness ticket is filed: the mechanism is unmeasured, and a ticket needs a measurement.
+
+**Routing evidence**:
+- base=b290ff3cc0b5f86981017f88af28eebf8a4b54e8@2026-09-28T06:59:11Z (Gate 4); Gate 1 and worktree base `07d90e0` (sprint branch from local plan commit `36c5af1`).
+- Controller `claude:claude-opus-5-5` (session; tok: not reported).
+- Designer (iteration 203) `claude:claude-opus-5-5` (59,820 + 16,744 output tok, subscription); rotation pointer stays `claude:claude-opus-5-5`, so the next design goes to `codex:gpt-6-astra`.
+- Quorum (iteration 203): r1 and r2 BLOCKED 2/2 present (`gpt6-astra`, `gemini-3-1-pro`; `oc-glm-5-3`, `oc-kimi-k3` unreachable; Claude benched as author vendor) → carve-out.
+- Planner `codex:gpt-6-sol` (76,682 tok). Executor `codex:gpt-6-sol` (A 52,379 + B 113,129 tok). Evaluator `sonnet` (Agent tool; 178,259 tok).
+- Generator ≠ judge: opus designed, sol planned and built, sonnet judged. No role fell back.
+- **Metered $0.30**, all iteration 203's quorum (r1 $0.135, r2 $0.163); iteration 204 $0.00.
+
+**Progress**: 1.0: clauses 4, 5, 6 unmet. **Clause 5 moved** (capability): the walk's object → carrying-commit hop is now one bounded indexed read rendered as checked links, so all three object-page relations (interface, committedBy, referencedBy) are live edges. The clause stays UNMET until row 114 times ≥3 real, unseeded questions. Three consecutive clause-5 landings; the drift alarm does not fire.
+
+**Next:** `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → tranche M2–M7 → 108 when #885 ships → 93, 114. Under `D-WORLD-42`'s default: rows 99 (StateRoot link 404s), then 100 (fields render nowhere). Cheap follow-ups: the residual test gaps on rows 103 and 104. **Decision ledger: 29 rows, FIVE OPEN (`D-WORLD-38`–`42`).**

@@ -12,6 +12,8 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 204 | 2026-09-28 | row 104 LANDED (`b290ff3`): object page `committedBy` = existence-checked edges from a `commit_objects` membership table written in `Store.Commit`'s transaction (schema v3→v4, dropped-table refusal, `commitsAfter` paging); read p50 11–32 µs at N=10k; judged 97; clause 5 moved; resumed orphan 203 from the planner |
+| 203 | 2026-09-27 | row 104 designed (`07d90e0`, claude-opus-5-5; quorum r1+r2 BLOCKED 2/2 → carve-out, astra's row-23 landing dependency declined as pre-existing) — slot died at planner launch with no verdict or crash notice; credited in 204 |
 | 202 | 2026-09-27 | row 103 LANDED (`c33b2a9`): object page `referencedBy` = existence-checked edges from four covering entry/world indexes (provisioned on writable Open, 503 guard, `refsAfter` continuation); reverse read p50 45–86 µs at N=10k; judged 91; clause 5 moved; astra designed |
 | 201 | 2026-09-27 | row 96 LANDED (`e859501`): `GET /v1/objects/by-semantic-id/{name...}` + `object find` (9th frozen /v1 route, index on writable Open, 503 guard); walk locate 112.6 s → 0.09 s at N=10k; judged 95; clause 5 moved; D-WORLD-42 files the ungroomed clause-5 rows |
 | 200 | 2026-09-27 | row 25 LANDED (`227f587`): real child blocked in write() on a full pipe (262,144 B vs 65,536 B), unblocked by the overflow kill, witnessed by its own markers; test-only; judged 95; critical path all blocked on D-WORLD-40 / ailang#885 |
