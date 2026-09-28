@@ -1,24 +1,10 @@
-# Mission Dashboard — World (snapshot 2026-09-28, iteration 206)
+# Mission Dashboard — World (snapshot 2026-09-28, iteration 207)
 
-- **State**: **row 23's policy tranche M1–M4 LANDED** (`9304aba`, `e437c8a`). Mark's attended rulings unblocked the critical path, and this iteration took it.
-  - M1: the durable store operations are cancellable (`CommitContext`, `AppendIntentContext`, `GetReceiptContext`), a post-cutoff outcome is `UncertainError`, and `Close` keeps the writer lock until durable workers settle.
-  - M2: `/v1/commit` is bounded by B6 (3 s). It answers 503 `Timeout` (not committed) or 503 `CommitUncertain` (reconcile by the log row at its index, never the head; `Store.CommitLanded`).
-  - M3: an opt-in `rest:` `invocationId` plus `GET /v1/receipts/{id}` (the frozen /v1 table grows 9 → 10).
-  - M4: the credential lookup is bounded by B4 (3 s). A lookup expiry answers 503, never 401, and the context-free `Resolve` is gone.
-- **Quality**:
-  - M1 rebase delta judged by sonnet: **96/100, merge-safe**. M2–M4: **95 → 99/100, zero blocking**, with the one survivor closed.
-  - 28/28 plan mutations killed on the committed files. The judges re-ran 17 more and wrote 5 of their own.
-  - PR #161 went red on CI after green local runs: a test-budget leak, fixed in `29e1336`. It is recorded as row 114's first candidate incident.
-  - SHA-pinned CI on both merges: 2/2 green.
-- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · 5 UNMET (row 114 active; first candidate incident recorded) · 6 UNMET (critical path moved: 106 M5's prerequisite M1 is landed; 108 waits for ailang PR #1369 to be tagged).
-- **Next**: row 23 M5a → M5b → M6a → M6b → M7 (plan needed), then 106 M5/M6 → 108 → 93.
-- **Parked for Mark**: nothing. The ledger has **zero OPEN** decisions. Your 2026-09-28 rulings (38 B, 39 A, 40 A, 41 A, 42 A) were acted on. Defaults applied, reported rather than asked:
-  - A lookup error that is not a timeout now answers a sanitised 500 rather than 401. This follows the design's `MUT-M3-COLLAPSE`.
-  - `GET /v1/receipts/{id}` is the 10th frozen route, as named in the design's M3.
-- **Cadence/routing**:
-  - Controller `claude-opus-5-5`.
-  - No designer.
-  - Planner and executor `opus` (Agent tool). This fire's driver found codex over its ration and substituted opus.
-  - Evaluator `sonnet` (Agent tool, foreground, own worktree).
-  - **$0.00 metered.**
-- **Harness**: no new tickets. **Do not run `ailang mission rotate-log` for World** (row 118).
+- **State**: **row 23's policy tranche is COMPLETE — M5a–M7b LANDED** (`666dbc2`, PR #162, CI 2/2). The whole exported `*Store` I/O surface is ctx-first, writes run through `beginDurable`/`finishDurable` with the three-outcome contract, B1–B12 root budgets are installed at their sites, M1's compatibility wrappers are gone, and the closing strict guard rejects any deadline-free call with `ErrNoDeadline`.
+  - M7's test corpus was migrated too: the guard initially refused 309 tests / 487 deadline-free call sites; M7b moved 85 test files to test deadlines with zero production changes.
+- **Quality**: independent claude-sonnet-4-6 evaluator (generator≠judge: executor codex gpt-6-sol, controller glm-5.3): **PASS 96/100, zero blocking** — 10/10 ACs traced, 14 mutations (13 killed; 1 documented survivor = a test gap in correct code, adjudicated a row-23 residual). Controller re-ran every gate outside the sandbox: full suite 24/24, verify_ail 16/40/9, gofmt clean.
+- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · 5 UNMET (row 114 ACTIVE — two candidate incidents now recorded: iter-206 CI-red-after-local-green; iter-207 full-suite-red-after-focused-green under rig load, both with measured controller answers) · 6 UNMET (critical path now: 106 M5/M6 → 108 → 93).
+- **Next**: 106 M5/M6 (`w-transition-invocation-coordinator` — its prerequisite, the full policy tranche, is landed), then 108 (`w-mcp-dispatch-projection` — predicate re-measured unblocked: ailang v0.47.2 tag + mcphttp files + proxy/sumdb 200/200), then 93 (the floor run).
+- **Parked for Mark**: nothing. The ledger has **zero OPEN** decisions. Residuals banked (not decisions): the MUT-M6-SERVE-BOUNDED test gap on row 23; rows 119/120.
+- **Cadence/routing** (this fire): controller `pi:openrouter/z-ai/glm-5.3`; planner `codex:gpt-6-sol` (110k tok); executor `codex:gpt-6-sol` ×4 (643k tok) after the pinned deepseek lane failed 3× (stream_dead on OpenRouter ×2 + ollama-cloud ×1; OpenRouter quota read CRITICAL 257%); evaluator `claude:claude-sonnet-4-6` after minimax-m3 hit a transport failure (the #1377 sandbox blocks the messaging store — harness ticket `pi-runner:sandbox-blocks-mission-inbox-handshake`, row 121). Metered ≈ $0.005 (failed transports only).
+- **Lanes to watch**: deepseek-v4.1-flash unstable tonight on both hosts; codex healthy; Anthropic recovered mid-fire; the OpenRouter account is over its cap (257%) — prefer quota lanes.
