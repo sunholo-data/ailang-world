@@ -279,6 +279,8 @@ type StartupError struct {
 	Detail string
 	// Err is the wrapped cause, if any.
 	Err error
+	// Settled closes after retained cleanup releases writer authority.
+	Settled <-chan struct{}
 }
 
 func (e *StartupError) Error() string {
@@ -295,10 +297,11 @@ func (e *StartupError) Unwrap() error { return e.Err }
 // and the HTTP server is built with its D7 timeouts. Listen/Serve/Shutdown/Close
 // drive the rest of the lifecycle.
 type Daemon struct {
-	cfg   Config
-	store *store.Store
-	srv   *http.Server
-	ln    net.Listener
+	cfg       Config
+	store     *store.Store
+	bootstrap func(context.Context, *store.Store, string) (registry.Registry, hashref.HashRef, error)
+	srv       *http.Server
+	ln        net.Listener
 
 	// resolver maps an inbound Authorization: Bearer session credential to a
 	// binding (w-session-authority D5/D6). New wires it to authority.New over
@@ -516,7 +519,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	}
 
 	d := &Daemon{
-		cfg: cfg, store: s, reads: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
+		cfg: cfg, store: s, bootstrap: registry.Bootstrap, reads: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget, resolver: authority.New(s),
@@ -542,9 +545,8 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	// divergence and registry.Bootstrap returns an error for it. Surfacing that
 	// as a fatal StartupError is the point: a divergent registry head must never
 	// be silently accepted or rewritten.
-	if _, _, err := registry.Bootstrap(ctx, s, release); err != nil {
-		return nil, d.abort(StageRegistry,
-			fmt.Sprintf("cannot bootstrap %s with release %q", registry.SemanticID, release), err)
+	if err := d.bootstrapRegistry(ctx, release); err != nil {
+		return nil, err
 	}
 
 	d.integrity = d.scanIntegrity(ctx)
@@ -580,6 +582,17 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 
 	d.srv = newServer(d.Handler())
 	return d, nil
+}
+
+func (d *Daemon) bootstrapRegistry(ctx context.Context, release string) error {
+	if _, _, err := d.bootstrap(ctx, d.store, release); err != nil {
+		detail := fmt.Sprintf("cannot bootstrap %s with release %q", registry.SemanticID, release)
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return d.abortBudget(StageRegistry, detail, ctx.Err())
+		}
+		return d.abort(StageRegistry, detail, err)
+	}
+	return nil
 }
 
 func (d *Daemon) scanIntegrity(ctx context.Context) IntegrityReport {
@@ -641,6 +654,18 @@ func (d *Daemon) scanIntegrity(ctx context.Context) IntegrityReport {
 func (d *Daemon) abort(stage, detail string, err error) error {
 	_ = d.store.Close()
 	return &StartupError{Stage: stage, Detail: detail, Err: err}
+}
+
+// abortBudget hands cleanup to a retained owner so the startup error can
+// return while a post-cutoff COMMIT still owns the sole connection.
+func (d *Daemon) abortBudget(stage, detail string, err error) error {
+	d.store.Quarantine()
+	settled := make(chan struct{})
+	go func() {
+		defer close(settled)
+		_ = d.store.Close()
+	}()
+	return &StartupError{Stage: stage, Detail: detail, Err: err, Settled: settled}
 }
 
 // releaseFromVersion reduces a verbatim `ailang --version` output (which is
@@ -833,8 +858,14 @@ func drain(srv shutdowner, timeout time.Duration) error {
 // a caller that reads the line is guaranteed the port is already accepting.
 // Run returns a non-nil error when the drain did not finish, so the process can
 // exit non-zero on an incomplete shutdown.
+func startBounded(ctx context.Context, cfg Config, budget time.Duration, construct func(context.Context, Config) (*Daemon, error)) (*Daemon, error) {
+	startupCtx, cancel := context.WithTimeout(ctx, budget)
+	defer cancel()
+	return construct(startupCtx, cfg)
+}
+
 func Run(ctx context.Context, cfg Config, announce io.Writer) error {
-	d, err := New(ctx, cfg)
+	d, err := startBounded(ctx, cfg, 9*time.Second, New)
 	if err != nil {
 		return err
 	}

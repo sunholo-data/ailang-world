@@ -50,6 +50,9 @@ var durableAfterCommitHook = func() {}
 // connection (sql.go DB.conn: select on ctx.Done() vs the conn request), so a
 // held connection bounds this wait by the caller's deadline, not busy_timeout.
 func (s *Store) beginDurable(ctx context.Context, op string) (*sql.Tx, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return nil, err
+	}
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("store: begin %s: %w", op, err)
@@ -134,6 +137,9 @@ func notCommitted(ctx context.Context, op string, err error) error {
 //
 // The selected head is NEVER consulted: another commit may have landed on top.
 func (s *Store) CommitLanded(ctx context.Context, c Commit) (bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return false, err
+	}
 	got, ok, err := s.GetLogEntry(ctx, c.Entry.Header.EntryIndex)
 	if err != nil {
 		return false, err

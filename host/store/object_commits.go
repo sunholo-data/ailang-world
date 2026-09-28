@@ -24,6 +24,9 @@ const objectCommitsSQL = "SELECT entry_index FROM commit_objects WHERE object_re
 // means no commit carried ref: membership is recorded from genesis on every
 // store this binary opens (schema v4; older stores are refused at Open).
 func (s *Store) ObjectCommits(ctx context.Context, ref hashref.HashRef, afterEntry int64, limit int) ([]int64, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return nil, err
+	}
 	const op = "ObjectCommits"
 	if limit < 1 || limit > MaxObjectCommitPage {
 		return nil, &InvalidLimitError{Op: op, Limit: limit, Max: MaxObjectCommitPage}

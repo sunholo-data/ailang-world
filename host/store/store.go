@@ -27,6 +27,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
@@ -225,7 +226,21 @@ type Store struct {
 	// before releasing the writer lock: database/sql's DB.Close does not wait
 	// for an in-use connection, so without this the lock could be released
 	// while a COMMIT is still landing.
-	workers sync.WaitGroup
+	workers     sync.WaitGroup
+	quarantined atomic.Bool
+}
+
+// ErrQuarantined reports a handle whose startup failed after its budget.
+var ErrQuarantined = errors.New("store: quarantined")
+
+// Quarantine refuses new operations while retained cleanup waits for workers.
+func (s *Store) Quarantine() { s.quarantined.Store(true) }
+
+func (s *Store) checkQuarantine() error {
+	if s.quarantined.Load() {
+		return ErrQuarantined
+	}
+	return nil
 }
 
 // selectedHead tracks the store's currently selected world head. M1 keeps this
@@ -512,6 +527,9 @@ func validateRef(op, field string, ref hashref.HashRef) error {
 // Re-inserting an identical object is idempotent (INSERT OR IGNORE), since the
 // bytes and hash are unchanged by definition of content addressing.
 func (s *Store) PutObject(ctx context.Context, o Object) (err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "put object", err) }()
 	if err := validateRef("PutObject", "Hash", o.Hash); err != nil {
 		return err
@@ -542,6 +560,9 @@ func (s *Store) PutObject(ctx context.Context, o Object) (err error) {
 // GetObject loads an immutable object by its HashRef. It returns (Object{}, nil,
 // false) — via ok=false — when the object is absent.
 func (s *Store) GetObject(ctx context.Context, ref hashref.HashRef) (Object, bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return Object{}, false, err
+	}
 	var (
 		ifaceText string
 		semantic  string
@@ -575,6 +596,9 @@ func (s *Store) GetObject(ctx context.Context, ref hashref.HashRef) (Object, boo
 // PutWorld inserts one immutable world revision. Re-inserting the same revision
 // is idempotent.
 func (s *Store) PutWorld(ctx context.Context, w World) (err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "put world", err) }()
 	if err := validateRef("PutWorld", "Ref", w.Ref); err != nil {
 		return err
@@ -603,6 +627,9 @@ func (s *Store) PutWorld(ctx context.Context, w World) (err error) {
 
 // GetWorld loads a world revision by its HashRef; ok=false when absent.
 func (s *Store) GetWorld(ctx context.Context, ref hashref.HashRef) (World, bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return World{}, false, err
+	}
 	var (
 		revision  int64
 		stateText string
@@ -632,6 +659,9 @@ func (s *Store) GetWorld(ctx context.Context, ref hashref.HashRef) (World, bool,
 // GetLogEntry loads one append-only log row by its integer index, round-tripping
 // the frozen header verbatim; ok=false when absent.
 func (s *Store) GetLogEntry(ctx context.Context, index int64) (LogEntry, bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return LogEntry{}, false, err
+	}
 	var (
 		entryHashText string
 		epoch         int64
@@ -691,6 +721,9 @@ func (s *Store) GetLogEntry(ctx context.Context, index int64) (LogEntry, bool, e
 // SetRegistryHead upserts the current immutable registry object reference for a
 // registry name (Decision 5). M1 bootstrap uses EpochRegistryV1.
 func (s *Store) SetRegistryHead(ctx context.Context, name string, objectRef hashref.HashRef) (err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "set registry head", err) }()
 	if err := validateRef("SetRegistryHead", "objectRef", objectRef); err != nil {
 		return err
@@ -715,6 +748,9 @@ func (s *Store) SetRegistryHead(ctx context.Context, name string, objectRef hash
 // GetRegistryHead returns the current registry object reference; ok=false when
 // the registry name has no head.
 func (s *Store) GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return hashref.HashRef{}, false, err
+	}
 	var text string
 	row := s.db.QueryRowContext(ctx,
 		`SELECT object_ref FROM epoch_registry_heads WHERE registry_name = ?;`, name)
@@ -761,6 +797,9 @@ func IsRegistryCASConflict(err error) bool {
 // zero expected requires an absent head. Next must name an existing immutable
 // object. Only the row identified by name is changed.
 func (s *Store) CompareAndSetRegistryHead(ctx context.Context, name string, expected, next hashref.HashRef) (err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "compare and set registry head", err) }()
 	if !expected.IsZero() {
 		if err := validateRef("CompareAndSetRegistryHead", "expected", expected); err != nil {
@@ -831,6 +870,9 @@ func registryHeadTx(ctx context.Context, q interface {
 // An upsert with the same pair but a different epoch updates metadata in place
 // and preserves the single selected row for that pair.
 func (s *Store) PutVerifyResult(ctx context.Context, r VerifyResult) (err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "put verify result", err) }()
 	if err := validateRef("PutVerifyResult", "TransitionFn", r.TransitionFn); err != nil {
 		return err
@@ -868,6 +910,9 @@ func (s *Store) PutVerifyResult(ctx context.Context, r VerifyResult) (err error)
 // (transitionFn, interpreter) EXCLUSIVELY; ok=false on a miss.
 // Pass the caller's intended cache-read ctx; this API supplies no default timeout.
 func (s *Store) GetVerifyResult(ctx context.Context, transitionFn, interpreter hashref.HashRef) (VerifyResult, bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return VerifyResult{}, false, err
+	}
 	var (
 		epoch    int64
 		verified int
@@ -897,6 +942,9 @@ func (s *Store) GetVerifyResult(ctx context.Context, transitionFn, interpreter h
 // SelectedHead returns the store's currently selected world head; ok=false
 // before any commit has selected a head.
 func (s *Store) SelectedHead(ctx context.Context) (hashref.HashRef, bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return hashref.HashRef{}, false, err
+	}
 	return selectedHeadTx(ctx, s.db)
 }
 
@@ -924,6 +972,9 @@ func selectedHeadTx(ctx context.Context, q interface {
 // used to seed the genesis head before the first Commit; steady-state head
 // advancement happens inside Commit.
 func (s *Store) SelectHead(ctx context.Context, ref hashref.HashRef) (err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "select head", err) }()
 	if err := validateRef("SelectHead", "ref", ref); err != nil {
 		return err
@@ -971,6 +1022,9 @@ var commitBodyHook = func(context.Context) {}
 // Commit is CommitContext without a caller lifetime. It is a compatibility
 // wrapper, removed when its callers migrate (row 23 policy tranche, M6b).
 func (s *Store) Commit(c Commit) error {
+	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
 	return s.CommitContext(context.Background(), c)
 }
 
@@ -979,6 +1033,9 @@ func (s *Store) Commit(c Commit) error {
 // and every write honour ctx and roll back. After the cutoff the outcome is
 // committed, or *UncertainError when ctx ends first; see UncertainError.
 func (s *Store) CommitContext(ctx context.Context, c Commit) (err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "commit", err) }()
 	refs := []struct {
 		field string
@@ -1197,6 +1254,9 @@ type SessionRow struct {
 // collision on the PK (two mints hashing to the same id) errors loudly rather than
 // being silently absorbed.
 func (s *Store) MintSession(ctx context.Context, row SessionRow) (err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "mint session", err) }()
 	if row.CredentialID == "" || row.EpisodeID == "" {
 		return fmt.Errorf("store: mint session: empty credential_id or episode_id")
@@ -1222,6 +1282,9 @@ func (s *Store) MintSession(ctx context.Context, row SessionRow) (err error) {
 // lookup). It returns ok=false when no row exists (unknown/revoked). No scan, no
 // LIKE, no fallback table.
 func (s *Store) ResolveSession(ctx context.Context, credentialID string) (SessionRow, bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return SessionRow{}, false, err
+	}
 	var row SessionRow
 	err := s.db.QueryRowContext(ctx,
 		`SELECT credential_id, episode_id, grants_json, expires_at, created_at
@@ -1243,6 +1306,9 @@ func (s *Store) ResolveSession(ctx context.Context, credentialID string) (Sessio
 // not an error. The store is single-connection (SetMaxOpenConns(1)), so this
 // transaction never races a concurrent resolve on the same process.
 func (s *Store) RevokeSession(ctx context.Context, credentialID string) error {
+	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
 	tx, err := s.db.Begin()
 	if err != nil {
 		return fmt.Errorf("store: revoke session: begin: %w", err)

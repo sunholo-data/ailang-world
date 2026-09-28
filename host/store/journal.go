@@ -414,6 +414,9 @@ var appendIntentBodyHook = func(context.Context) {}
 // compatibility wrapper removed when its callers migrate (row 23 policy
 // tranche, M6b).
 func (s *Store) AppendIntent(id string, intent JournalIntent) (int64, hashref.HashRef, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return 0, hashref.HashRef{}, err
+	}
 	return s.AppendIntentContext(context.Background(), id, intent)
 }
 
@@ -421,6 +424,9 @@ func (s *Store) AppendIntent(id string, intent JournalIntent) (int64, hashref.Ha
 // atomically. ctx bounds acquisition and every statement up to the
 // cancellation cutoff (finishDurable); after it, see UncertainError.
 func (s *Store) AppendIntentContext(ctx context.Context, id string, intent JournalIntent) (_ int64, _ hashref.HashRef, err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return 0, hashref.HashRef{}, err
+	}
 	defer func() { err = notCommitted(ctx, "append intent", err) }()
 	if err := validateIntent(id, intent); err != nil {
 		return 0, hashref.HashRef{}, err
@@ -470,6 +476,9 @@ func (s *Store) AppendIntentContext(ctx context.Context, id string, intent Journ
 // appends its canonical intent. The ordinal is never read outside this
 // transaction.
 func (s *Store) AppendNextEffectIntent(ctx context.Context, episodeID string, intent EffectIntent) (id string, ordinal int64, err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return "", 0, err
+	}
 	defer func() { err = notCommitted(ctx, "append effect intent", err) }()
 	if err := validateEffectIntent(episodeID, intent); err != nil {
 		return "", 0, err
@@ -566,6 +575,9 @@ func (s *Store) AppendNextEffectIntent(ctx context.Context, episodeID string, in
 // next effect intent. A failed transaction makes neither the claim, journal
 // row, nor content-addressed intent object visible.
 func (s *Store) AppendClaimedEffectIntent(ctx context.Context, episodeID string, intent EffectIntent, approvalRef, requestRef hashref.HashRef) (id string, ordinal int64, err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return "", 0, err
+	}
 	defer func() { err = notCommitted(ctx, "append claimed effect intent", err) }()
 	if err := validateEffectIntent(episodeID, intent); err != nil {
 		return "", 0, err
@@ -677,6 +689,9 @@ func (s *Store) AppendClaimedEffectIntent(ctx context.Context, episodeID string,
 
 // AppendOutcome requires a durable intent and atomically appends one outcome.
 func (s *Store) AppendOutcome(ctx context.Context, id string, outcome JournalOutcome) (seq int64, ref hashref.HashRef, err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return 0, hashref.HashRef{}, err
+	}
 	defer func() { err = notCommitted(ctx, "append outcome", err) }()
 	if id == "" || outcome.InvocationID != id {
 		return 0, hashref.HashRef{}, &InvocationMismatchError{
@@ -733,6 +748,9 @@ func (s *Store) AppendOutcome(ctx context.Context, id string, outcome JournalOut
 
 // AppendEffectOutcome requires a durable effect intent and appends one outcome.
 func (s *Store) AppendEffectOutcome(ctx context.Context, id string, outcome EffectOutcome) (seq int64, ref hashref.HashRef, err error) {
+	if err := s.checkQuarantine(); err != nil {
+		return 0, hashref.HashRef{}, err
+	}
 	defer func() { err = notCommitted(ctx, "append effect outcome", err) }()
 	if !effectInvocationShape(id) || outcome.InvocationID != id {
 		return 0, hashref.HashRef{}, &InvocationMismatchError{
@@ -832,12 +850,18 @@ func journalRowFor(ctx context.Context, q interface {
 // GetReceipt is GetReceiptContext without a caller lifetime; a compatibility
 // wrapper removed when its callers migrate (row 23 policy tranche, M6b).
 func (s *Store) GetReceipt(id string) (Receipt, bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return Receipt{}, false, err
+	}
 	return s.GetReceiptContext(context.Background(), id)
 }
 
 // GetReceiptContext mirrors receiptState and never reports not-started with
 // an intent. ctx bounds both connection acquisitions and both reads.
 func (s *Store) GetReceiptContext(ctx context.Context, id string) (Receipt, bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return Receipt{}, false, err
+	}
 	if strings.HasPrefix(id, "effect:") {
 		return Receipt{}, false, &InvocationMismatchError{
 			ID: id, Field: "InvocationID", Want: "non-effect namespace", Got: id,
@@ -877,6 +901,9 @@ func (s *Store) GetReceiptContext(ctx context.Context, id string) (Receipt, bool
 
 // GetEffectReceipt mirrors the three-state receipt law for effect payloads.
 func (s *Store) GetEffectReceipt(ctx context.Context, id string) (Receipt, bool, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return Receipt{}, false, err
+	}
 	if !effectInvocationShape(id) {
 		return Receipt{}, false, &InvocationMismatchError{
 			ID: id, Field: "InvocationID", Want: "effect:<episodeID>:<ordinal>", Got: id,
@@ -931,6 +958,9 @@ func (s *Store) GetEffectReceipt(ctx context.Context, id string) (Receipt, bool,
 // PendingIntents returns oldest pending intents using seq keyset pagination.
 // The optional fromIndex cursor is exclusive; omitting it starts before seq 1.
 func (s *Store) PendingIntents(ctx context.Context, limit int, fromIndex ...int64) ([]PendingIntent, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return nil, err
+	}
 	if limit < 1 || limit > MaxPendingIntentsPage {
 		return nil, &InvalidLimitError{Op: "PendingIntents", Limit: limit, Max: MaxPendingIntentsPage}
 	}
@@ -979,6 +1009,9 @@ func (s *Store) PendingIntents(ctx context.Context, limit int, fromIndex ...int6
 // PendingEffectIntents returns oldest pending effect intents using keyset
 // pagination. The optional cursor is exclusive.
 func (s *Store) PendingEffectIntents(ctx context.Context, limit int, fromIndex ...int64) ([]PendingEffectIntent, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return nil, err
+	}
 	if limit < 1 || limit > MaxPendingIntentsPage {
 		return nil, &InvalidLimitError{Op: "PendingEffectIntents", Limit: limit, Max: MaxPendingIntentsPage}
 	}

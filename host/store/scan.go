@@ -52,6 +52,9 @@ func invalidScanLimit(op string, limit int) error {
 // ScanUnreadableLog scans a bounded keyset page. Columns are parsed in their
 // declared order and only the first invalid field in each row is reported.
 func (s *Store) ScanUnreadableLog(ctx context.Context, fromIndex int64, limit int) (ScanPage, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return ScanPage{}, err
+	}
 	const op = "ScanUnreadableLog"
 	if err := invalidScanLimit(op, limit); err != nil {
 		return ScanPage{}, err
@@ -92,6 +95,9 @@ func (s *Store) ScanUnreadableLog(ctx context.Context, fromIndex int64, limit in
 // ScanUnreadableWorlds scans lexicographically by the explicit TEXT primary
 // key. It never depends on OFFSET or SQLite rowids.
 func (s *Store) ScanUnreadableWorlds(ctx context.Context, afterRef string, limit int) (ScanPage, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return ScanPage{}, err
+	}
 	const op = "ScanUnreadableWorlds"
 	if err := invalidScanLimit(op, limit); err != nil {
 		return ScanPage{}, err
