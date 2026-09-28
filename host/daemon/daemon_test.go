@@ -226,6 +226,8 @@ func TestBoundedWaitsAndBodyLimit(t *testing.T) {
 			{"readDeadline", readDeadline, 10 * time.Second},
 			// Row 23 bound table B6 (ratified D-WORLD-40).
 			{"commitBudget", commitBudget, 3 * time.Second},
+			// Row 23 bound table B4 (ratified D-WORLD-40).
+			{"credentialBudget", credentialBudget, 3 * time.Second},
 		} {
 			if c.got != c.want {
 				t.Errorf("%s = %s, want %s (D7 table)", c.name, c.got, c.want)
@@ -263,6 +265,9 @@ func TestBoundedWaitsAndBodyLimit(t *testing.T) {
 		// reads from somewhere other than the handle holding writer authority.
 		if d.reads == nil {
 			t.Fatalf("New left d.reads nil — every store-reading route would panic")
+		}
+		if d.credentialBudget != credentialBudget {
+			t.Errorf("d.credentialBudget = %s, want the named constant %s (B4)", d.credentialBudget, credentialBudget)
 		}
 		if d.commitBudget != commitBudget {
 			t.Errorf("d.commitBudget = %s, want the named constant %s (B6)", d.commitBudget, commitBudget)

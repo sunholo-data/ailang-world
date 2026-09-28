@@ -2,12 +2,14 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -82,7 +84,7 @@ func TestSessionMint_PrintsOnceExactly(t *testing.T) {
 		t.Fatalf("reopen store: %v", err)
 	}
 	defer func() { _ = st.Close() }()
-	out := authority.New(st).Resolve("Bearer "+tok, 1001)
+	out := resolveNow(t, authority.New(st), "Bearer "+tok, 1001)
 	if out.Success == nil || out.Success.EpisodeID != "e1" {
 		t.Fatalf("minted token did not resolve to episode e1: %#v", out)
 	}
@@ -189,7 +191,7 @@ func TestSessionRevokeCLI(t *testing.T) {
 		t.Fatalf("reopen store: %v", err)
 	}
 	defer func() { _ = st.Close() }()
-	outR := authority.New(st).Resolve("Bearer "+tok, 1001)
+	outR := resolveNow(t, authority.New(st), "Bearer "+tok, 1001)
 	if outR.Success != nil || outR.Denied == nil || *outR.Denied != authority.DenialUnknown {
 		t.Fatalf("post-revoke resolve = %#v, want DenialUnknown", outR)
 	}
@@ -228,4 +230,17 @@ func TestSessionMint_OutFileModeAndOnce(t *testing.T) {
 	if strings.Contains(stderr.String(), tok) {
 		t.Fatalf("stderr leaked the raw token: %q", stderr.String())
 	}
+}
+
+// resolveNow is ResolveContext under a finite deadline (row 23 M4 deleted the
+// context-free Resolve).
+func resolveNow(t testing.TB, r authority.Resolver, header string, now int64) authority.ResolveOutcome {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	out, err := r.ResolveContext(ctx, header, now)
+	if err != nil {
+		t.Fatalf("ResolveContext: %v", err)
+	}
+	return out
 }

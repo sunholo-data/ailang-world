@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -52,27 +53,27 @@ func TestResolve_TypedDenialTaxonomy(t *testing.T) {
 	res := New(st)
 
 	// Absent: empty header.
-	absent := res.Resolve("", now)
+	absent := resolveNow(t, res, "", now)
 	if absent.Success != nil || absent.Denied == nil || *absent.Denied != DenialAbsent {
 		t.Fatalf("empty header outcome = %#v, want Denied=DenialAbsent", absent)
 	}
 	// Malformed: present header but not "Bearer <64-hex>".
-	malformed := res.Resolve("Key abc", now)
+	malformed := resolveNow(t, res, "Key abc", now)
 	if malformed.Denied == nil || *malformed.Denied != DenialMalformed {
 		t.Fatalf("\"Key abc\" outcome = %#v, want Denied=DenialMalformed", malformed)
 	}
 	// Unknown: valid-shaped token, no mapping row.
-	unknown := res.Resolve("Bearer "+hex64, now)
+	unknown := resolveNow(t, res, "Bearer "+hex64, now)
 	if unknown.Denied == nil || *unknown.Denied != DenialUnknown {
 		t.Fatalf("unknown token outcome = %#v, want Denied=DenialUnknown", unknown)
 	}
 	// Expired: real row, but now past expires_at.
-	expired := res.Resolve("Bearer "+tok, now+ttl+1)
+	expired := resolveNow(t, res, "Bearer "+tok, now+ttl+1)
 	if expired.Denied == nil || *expired.Denied != DenialExpired {
 		t.Fatalf("expired token outcome = %#v, want Denied=DenialExpired", expired)
 	}
 	// Success: valid, unexpired.
-	ok := res.Resolve("Bearer "+tok, now+1)
+	ok := resolveNow(t, res, "Bearer "+tok, now+1)
 	if ok.Success == nil || ok.Denied != nil {
 		t.Fatalf("valid token outcome = %#v, want Success", ok)
 	}
@@ -99,7 +100,7 @@ func TestResolve_MalformedHeader(t *testing.T) {
 	st := newTestStore(t)
 	res := New(st)
 	for _, header := range []string{"Key abc", "Bearer", "Bearer z", "Bearer " + strings.Repeat("z", 64)} {
-		out := res.Resolve(header, 1000)
+		out := resolveNow(t, res, header, 1000)
 		if out.Success != nil || out.Denied == nil || *out.Denied != DenialMalformed {
 			t.Fatalf("header %q outcome = %#v, want Denied=DenialMalformed", header, out)
 		}
@@ -116,7 +117,7 @@ func TestResolve_SuccessBinding(t *testing.T) {
 	grants := []broker.Capability{{Effect: "fs.read", Scope: "/tmp/b", Budget: 1}}
 	tok := mintTestToken(t, st, episode, grants, ttl, now)
 
-	b := New(st).Resolve("Bearer "+tok, now+5)
+	b := resolveNow(t, New(st), "Bearer "+tok, now+5)
 	if b.Success == nil {
 		t.Fatal("expected success")
 	}
@@ -145,11 +146,11 @@ func TestResolve_ExpiryEnforced(t *testing.T) {
 	res := New(st)
 
 	// Before expiry: success.
-	if out := res.Resolve("Bearer "+tok, now); out.Success == nil {
+	if out := resolveNow(t, res, "Bearer "+tok, now); out.Success == nil {
 		t.Fatalf("resolve before expiry = %#v, want success", out)
 	}
 	// After expiry (now advanced past expires_at): DenialExpired.
-	expired := res.Resolve("Bearer "+tok, now+ttl+1)
+	expired := resolveNow(t, res, "Bearer "+tok, now+ttl+1)
 	if expired.Success != nil || expired.Denied == nil || *expired.Denied != DenialExpired {
 		t.Fatalf("resolve after expiry = %#v, want Denied=DenialExpired", expired)
 	}
@@ -160,7 +161,7 @@ func TestResolve_ExpiryEnforced(t *testing.T) {
 func TestResolve_UnknownVsExpired(t *testing.T) {
 	st := newTestStore(t)
 	res := New(st)
-	out := res.Resolve("Bearer "+hex64, 1000)
+	out := resolveNow(t, res, "Bearer "+hex64, 1000)
 	if out.Denied == nil || *out.Denied != DenialUnknown {
 		t.Fatalf("unknown-shape token = %#v, want Denied=DenialUnknown", out)
 	}
@@ -178,12 +179,12 @@ func TestNoAlternateHeader(t *testing.T) {
 	res := New(st)
 	// The resolver receives "" — an X-World-Session-only request contributes no
 	// Authorization value, so it must be absent, never resolved.
-	out := res.Resolve("", 1000)
+	out := resolveNow(t, res, "", 1000)
 	if out.Success != nil || out.Denied == nil || *out.Denied != DenialAbsent {
 		t.Fatalf("empty header (alternate-header-only request) = %#v, want Denied=DenialAbsent", out)
 	}
 	// And the valid token still resolves only via Authorization, as a control.
-	if out := res.Resolve("Bearer "+tok, 1000); out.Success == nil {
+	if out := resolveNow(t, res, "Bearer "+tok, 1000); out.Success == nil {
 		t.Fatalf("valid token control did not resolve: %#v", out)
 	}
 }
@@ -214,7 +215,7 @@ func TestResolve_SingleBoundedLookup(t *testing.T) {
 	res := New(counter)
 
 	// A present token resolves with exactly one query.
-	out := res.Resolve("Bearer "+tok, now)
+	out := resolveNow(t, res, "Bearer "+tok, now)
 	if out.Success == nil {
 		t.Fatalf("expected success, got %#v", out)
 	}
@@ -224,7 +225,7 @@ func TestResolve_SingleBoundedLookup(t *testing.T) {
 
 	// Absent header never touches the store (zero queries).
 	counter.resolveCalls = 0
-	if out := res.Resolve("", now); out.Denied == nil || *out.Denied != DenialAbsent {
+	if out := resolveNow(t, res, "", now); out.Denied == nil || *out.Denied != DenialAbsent {
 		t.Fatalf("absent header outcome = %#v", out)
 	}
 	if counter.resolveCalls != 0 {
@@ -233,7 +234,7 @@ func TestResolve_SingleBoundedLookup(t *testing.T) {
 
 	// Malformed header never touches the store (zero queries).
 	counter.resolveCalls = 0
-	if out := res.Resolve("Key abc", now); out.Denied == nil || *out.Denied != DenialMalformed {
+	if out := resolveNow(t, res, "Key abc", now); out.Denied == nil || *out.Denied != DenialMalformed {
 		t.Fatalf("malformed outcome = %#v", out)
 	}
 	if counter.resolveCalls != 0 {
@@ -283,4 +284,17 @@ func TestAuthority_NoDirectTokenCompare(t *testing.T) {
 	if anyBad {
 		t.Fatal("authority resolve path must not compare token/hash material directly; equality is the indexed store lookup")
 	}
+}
+
+// resolveNow is the test form of the deleted context-free Resolve (row 23 M4):
+// ResolveContext under a finite deadline, failing the test on a lookup error.
+func resolveNow(t testing.TB, r Resolver, header string, now int64) ResolveOutcome {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	out, err := r.ResolveContext(ctx, header, now)
+	if err != nil {
+		t.Fatalf("ResolveContext(%q): %v", header, err)
+	}
+	return out
 }

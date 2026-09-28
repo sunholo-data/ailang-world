@@ -26,7 +26,6 @@ var contextRootPins = map[string]int{
 	"cmd/world-publish/main.go|runReconcile|Background":                       1,
 	"cmd/world-publish/transitions.go|runTransitions|Background":              1,
 	"host/archive/archive.go|probeVersion|Background":                         1,
-	"host/authority/resolver.go|Resolve|Background":                           1,
 	"host/capsule/capsule.go|Run|Background":                                  1,
 	"host/daemon/daemon.go|drain|Background":                                  1,
 	"host/replay/replay.go|runPinnedTransition|Background":                    1,

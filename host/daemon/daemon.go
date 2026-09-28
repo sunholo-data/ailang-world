@@ -142,6 +142,11 @@ const (
 	// ratified D-WORLD-40: busy_timeout + 1 s). Expiry before the cutoff is 503
 	// Timeout (not committed); after it, 503 CommitUncertain (reconcile).
 	commitBudget = 3 * time.Second
+
+	// credentialBudget bounds the session middleware's credential lookup
+	// (row 23 bound table B4, ratified D-WORLD-40). Expiry is 503 Timeout,
+	// never 401: a timeout is not an authentication failure.
+	credentialBudget = 3 * time.Second
 )
 
 // Operational defaults (Decision 4 / Decision 5). Exported because
@@ -338,6 +343,10 @@ type Daemon struct {
 	commits      durableStore
 	commitBudget time.Duration
 
+	// credentialBudget is New's credentialBudget (B4); a field for the same
+	// reason commitBudget is.
+	credentialBudget time.Duration
+
 	// errLog is the RESOLVED destination of every sanitized 500's detail line.
 	// New resolves Config.ErrorLog's nil to os.Stderr here, so this field is
 	// never nil on a constructed daemon and writeInternalError needs no nil check
@@ -507,7 +516,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	}
 
 	d := &Daemon{
-		cfg: cfg, store: s, reads: s, commits: s, commitBudget: commitBudget, drainTimeout: shutdownTimeout,
+		cfg: cfg, store: s, reads: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget, resolver: authority.New(s),
@@ -676,7 +685,7 @@ func (d *Daemon) Handler() http.Handler {
 	// itself so /a2a/ can answer in JSON-RPC form (B5).
 	mux.HandleFunc("GET /.well-known/agent.json", d.projection.AgentCard)
 	mux.HandleFunc("POST /a2a/", d.projection.A2A)
-	return NewSessionMiddleware(d.resolver).Wrap(d.isProtected, mux)
+	return NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, mux)
 }
 
 // isProtected reports whether a request must carry a valid session credential

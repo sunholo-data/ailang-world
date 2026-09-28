@@ -26,11 +26,10 @@ import (
 // TestResolveContext_PolicyEquivalence is the P6.A-CTX policy-equivalence
 // gate (MUT-RESOLVE-POLICY-DRIFT's killer): over ONE fixture table spanning
 // every policy branch (absent, both malformed shapes, unknown, the expiry
-// boundary on BOTH sides, success), Resolve(header, now) and
-// ResolveContext(ctx, header, now) with a background context must agree on
-// the outcome EXACTLY. Because Resolve is implemented as ResolveContext over
-// context.Background(), this test compares both entry points against the
-// table's EXPECTED outcomes, not merely against each other — a drift in the
+// boundary on BOTH sides, success), ResolveContext under a finite deadline
+// (resolveNow; row 23 M4 deleted the context-free Resolve) and under a
+// background context must agree on the outcome EXACTLY. This test compares
+// both against the table's EXPECTED outcomes, not merely against each other — a drift in the
 // shared branch (e.g. expiry `>` mutated to `>=`) fails the pinned
 // expectation, which the bare compare could never see.
 func TestResolveContext_PolicyEquivalence(t *testing.T) {
@@ -60,7 +59,7 @@ func TestResolveContext_PolicyEquivalence(t *testing.T) {
 	res := New(st)
 	for _, tc := range table {
 		t.Run(tc.name, func(t *testing.T) {
-			gotPlain := res.Resolve(tc.header, tc.now)
+			gotPlain := resolveNow(t, res, tc.header, tc.now)
 			gotCtx, err := New(st).ResolveContext(context.Background(), tc.header, tc.now)
 			if err != nil {
 				t.Fatalf("ResolveContext over background ctx returned error: %v", err)
@@ -116,8 +115,8 @@ func (e *errorStore) ResolveSession(context.Context, string) (store.SessionRow, 
 // TestResolveContext_StoreErrorIsErrorNotDenial is the R1-CTX fix's core and
 // the killer of MUT-CTX-ERR-AS-UNKNOWN: a store read failure must return a
 // NON-NIL error (wrapping the store's error) and a ZERO outcome from
-// ResolveContext — while Resolve (same failure, background ctx) still
-// collapses it to DenialUnknown exactly as before (the /v1/commit residual).
+// ResolveContext. Row 23 M4 deleted Resolve, whose DenialUnknown collapse was
+// the /v1/commit residual; the middleware now answers 503/500, never 401.
 func TestResolveContext_StoreErrorIsErrorNotDenial(t *testing.T) {
 	storeErr := errors.New("store read failed")
 	res := New(&errorStore{err: storeErr})
@@ -131,13 +130,6 @@ func TestResolveContext_StoreErrorIsErrorNotDenial(t *testing.T) {
 	}
 	if out.Success != nil || out.Denied != nil {
 		t.Fatalf("store-failure outcome = %#v, want the zero ResolveOutcome", out)
-	}
-
-	// Resolve keeps today's byte-identical behaviour: same failure collapses
-	// to DenialUnknown (never an error).
-	plain := res.Resolve("Bearer "+hex64, 1000)
-	if plain.Success != nil || plain.Denied == nil || *plain.Denied != DenialUnknown {
-		t.Fatalf("Resolve over a failing store = %#v, want DenailUnknown (unchanged /v1/commit behaviour)", plain)
 	}
 
 	// A context error on the store read is likewise an ERROR, so a transport
