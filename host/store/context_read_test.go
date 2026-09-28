@@ -82,7 +82,7 @@ func TestReadGettersHonorContext(t *testing.T) {
 
 			// Occupy the sole pool connection. Every subsequent read must wait
 			// for it, which is exactly the wait the context has to bound.
-			conn, err := s.db.Conn(context.Background())
+			conn, err := s.db.Conn(boundedTestContext(t))
 			if err != nil {
 				t.Fatalf("take the sole pool connection: %v", err)
 			}
@@ -119,7 +119,7 @@ func TestReadGettersHonorContext(t *testing.T) {
 			}
 
 			expired, cancelExpired := context.WithDeadline(
-				context.Background(), time.Now().Add(-time.Hour))
+				boundedTestContext(t), time.Now().Add(-time.Hour))
 			defer cancelExpired()
 
 			done := make(chan error, 1)
@@ -271,7 +271,7 @@ func TestReadRetriesUnderTransientExclusiveLock(t *testing.T) {
 	defer func() { _ = s.Close() }()
 
 	seeded := obj("transient exclusive lock payload", "state/v1")
-	if err := s.PutObject(context.Background(), seeded); err != nil {
+	if err := s.PutObject(boundedTestContext(t), seeded); err != nil {
 		t.Fatalf("seed object: %v", err)
 	}
 
@@ -283,11 +283,11 @@ func TestReadRetriesUnderTransientExclusiveLock(t *testing.T) {
 		t.Fatalf("raw driver open: %v", err)
 	}
 	defer func() { _ = raw.Close() }()
-	locker, err := raw.Conn(context.Background())
+	locker, err := raw.Conn(boundedTestContext(t))
 	if err != nil {
 		t.Fatalf("raw driver conn: %v", err)
 	}
-	if _, err := locker.ExecContext(context.Background(), "BEGIN EXCLUSIVE"); err != nil {
+	if _, err := locker.ExecContext(boundedTestContext(t), "BEGIN EXCLUSIVE"); err != nil {
 		_ = locker.Close()
 		t.Fatalf("BEGIN EXCLUSIVE: %v", err)
 	}
@@ -308,7 +308,7 @@ func TestReadRetriesUnderTransientExclusiveLock(t *testing.T) {
 	go func() {
 		defer close(released)
 		time.Sleep(lockHeldFor)
-		_, _ = locker.ExecContext(context.Background(), "ROLLBACK")
+		_, _ = locker.ExecContext(boundedTestContext(t), "ROLLBACK")
 		_ = locker.Close()
 	}()
 

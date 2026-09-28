@@ -185,7 +185,7 @@ func TestGitCommitRoundTripScrubsHostileHome(t *testing.T) {
 		t.Fatal(err)
 	}
 	session, recording := handlerSession(t, EffectGitCommit, repo, handler)
-	result, ref, err := session.Invoke(context.Background(),
+	result, ref, err := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectGitCommit, Scope: repo, Cost: 2, Now: 1}, []byte("broker commit"))
 	if err != nil {
 		t.Fatal(err)
@@ -237,7 +237,7 @@ func TestModelPromptEncodesControlBytes(t *testing.T) {
 	}
 	for _, payload := range [][]byte{{0x01}, {0x08}, {0x1f}, []byte("a\x00b")} {
 		session, recording := handlerSession(t, EffectModelInfer, "model-scope", handler)
-		_, _, invokeErr := session.Invoke(context.Background(),
+		_, _, invokeErr := session.Invoke(boundedTestContext(t),
 			EffectRequest{Effect: EffectModelInfer, Scope: "model-scope", Cost: 2, Now: 1},
 			payload)
 		if invokeErr != nil {
@@ -267,7 +267,7 @@ func TestModelStubRoundTripDeterministicRecordedBytes(t *testing.T) {
 	var records [][]byte
 	for i := 0; i < 2; i++ {
 		session, recording := handlerSession(t, EffectModelInfer, "model-scope", handler)
-		result, _, invokeErr := session.Invoke(context.Background(),
+		result, _, invokeErr := session.Invoke(boundedTestContext(t),
 			EffectRequest{Effect: EffectModelInfer, Scope: "model-scope", Cost: 2, Now: 1},
 			[]byte("choose the next action"))
 		if invokeErr != nil {
@@ -306,7 +306,7 @@ func TestGitHandlerTimeoutWritesFailureRecord(t *testing.T) {
 	scope := t.TempDir()
 	session, recording := handlerSession(t, EffectGitCommit, scope, handler)
 	start := time.Now()
-	_, ref, invokeErr := session.Invoke(context.Background(),
+	_, ref, invokeErr := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, []byte("timeout"))
 	elapsed := time.Since(start)
 	// 2s tolerates process-spawn latency on a shared CI runner while still
@@ -327,7 +327,7 @@ func TestModelHandlerTimeoutWritesFailureRecord(t *testing.T) {
 	}
 	session, recording := handlerSession(t, EffectModelInfer, "model-scope", handler)
 	start := time.Now()
-	_, ref, invokeErr := session.Invoke(context.Background(),
+	_, ref, invokeErr := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectModelInfer, Scope: "model-scope", Cost: 2, Now: 1}, []byte("timeout"))
 	elapsed := time.Since(start)
 	if elapsed > 2*time.Second {
@@ -346,7 +346,7 @@ func TestGitHandlerOutputCapWritesFailureRecord(t *testing.T) {
 	}
 	scope := t.TempDir()
 	session, recording := handlerSession(t, EffectGitCommit, scope, handler)
-	_, ref, invokeErr := session.Invoke(context.Background(),
+	_, ref, invokeErr := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, []byte("overflow"))
 	assertHandlerFailureRecord(t, session, recording, ref, invokeErr, 2, ErrHandlerOverflow)
 }
@@ -360,7 +360,7 @@ func TestModelHandlerOutputCapWritesFailureRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 	session, recording := handlerSession(t, EffectModelInfer, "model-scope", handler)
-	_, ref, invokeErr := session.Invoke(context.Background(),
+	_, ref, invokeErr := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectModelInfer, Scope: "model-scope", Cost: 2, Now: 1}, []byte("overflow"))
 	assertHandlerFailureRecord(t, session, recording, ref, invokeErr, 2, ErrHandlerOverflow)
 }
@@ -373,7 +373,7 @@ func TestGitHandlerNonZeroExitWritesFailureRecord(t *testing.T) {
 	}
 	scope := t.TempDir()
 	session, recording := handlerSession(t, EffectGitCommit, scope, handler)
-	_, ref, invokeErr := session.Invoke(context.Background(),
+	_, ref, invokeErr := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, nil)
 	var exitErr *HandlerExitError
 	if !errors.As(invokeErr, &exitErr) {
@@ -393,7 +393,7 @@ func TestGitHandlerMissingRepoWritesFailureRecord(t *testing.T) {
 	}
 	scope := filepath.Join(t.TempDir(), "missing")
 	session, recording := handlerSession(t, EffectGitCommit, scope, handler)
-	_, ref, invokeErr := session.Invoke(context.Background(),
+	_, ref, invokeErr := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectGitCommit, Scope: scope, Cost: 2, Now: 1}, nil)
 	assertHandlerFailureRecord(t, session, recording, ref, invokeErr, 2, nil)
 }
@@ -401,7 +401,7 @@ func TestGitHandlerMissingRepoWritesFailureRecord(t *testing.T) {
 func TestRefusedFSPathWritesFailureRecord(t *testing.T) {
 	scope := "relative.txt"
 	session, recording := handlerSession(t, EffectFSRead, scope, FSHandler{})
-	_, ref, invokeErr := session.Invoke(context.Background(),
+	_, ref, invokeErr := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectFSRead, Scope: scope, Cost: 2, Now: 1}, nil)
 	var pathErr *FSPathError
 	if !errors.As(invokeErr, &pathErr) {
@@ -445,7 +445,7 @@ func TestApprovalFlowImmutableRecordAndSeparateDecision(t *testing.T) {
 		Effect: EffectHumanApprove, Scope: "release", Cost: 2, Now: 10,
 	}
 	pending, approveRecordRef, err := session.Invoke(
-		context.Background(), approveReq, mustApprovalJSON(approvalInputWire{Requester: "agent-7"}))
+		boundedTestContext(t), approveReq, mustApprovalJSON(approvalInputWire{Requester: "agent-7"}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -461,31 +461,31 @@ func TestApprovalFlowImmutableRecordAndSeparateDecision(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resultObj, ok, err := recording.GetObject(context.Background(), approveRecord.ResultRef)
+	resultObj, ok, err := recording.GetObject(boundedTestContext(t), approveRecord.ResultRef)
 	if err != nil || !ok || !bytes.Equal(resultObj.Payload, pending) {
 		t.Fatalf("Pending result object = ok %v payload %q err %v", ok, resultObj.Payload, err)
 	}
-	requestBefore, ok, err := recording.GetObject(context.Background(), requestRef)
+	requestBefore, ok, err := recording.GetObject(boundedTestContext(t), requestRef)
 	if err != nil || !ok || requestBefore.SemanticID != ApprovalRequestV1 {
 		t.Fatalf("request object = %#v, ok %v, err %v", requestBefore, ok, err)
 	}
 
-	decisionRef, err := decideApproval(context.Background(), recording, requestRef, "approve", "operator", 11)
+	decisionRef, err := decideApproval(boundedTestContext(t), recording, requestRef, "approve", "operator", 11)
 	if err != nil {
 		t.Fatal(err)
 	}
-	decisionObj, ok, err := recording.GetObject(context.Background(), decisionRef)
+	decisionObj, ok, err := recording.GetObject(boundedTestContext(t), decisionRef)
 	if err != nil || !ok || decisionObj.SemanticID != ApprovalDecisionV1 {
 		t.Fatalf("decision object = %#v, ok %v, err %v", decisionObj, ok, err)
 	}
 	if len(recording.records) != 1 {
 		t.Fatalf("record count after decision = %d, want unchanged at 1", len(recording.records))
 	}
-	headRef, ok, err := recording.GetRegistryHead(context.Background(), ApprovalsV1)
+	headRef, ok, err := recording.GetRegistryHead(boundedTestContext(t), ApprovalsV1)
 	if err != nil || !ok {
 		t.Fatalf("approval head = %s, ok %v, err %v", headRef, ok, err)
 	}
-	headObj, ok, err := recording.GetObject(context.Background(), headRef)
+	headObj, ok, err := recording.GetObject(boundedTestContext(t), headRef)
 	if err != nil || !ok {
 		t.Fatalf("approval head object = ok %v, err %v", ok, err)
 	}
@@ -496,12 +496,12 @@ func TestApprovalFlowImmutableRecordAndSeparateDecision(t *testing.T) {
 	if head.DecisionRef != decisionRef.String() || head.RequestRef != requestRef.String() {
 		t.Fatalf("moved head = %#v, want request and separate decision refs", head)
 	}
-	requestAfter, ok, err := recording.GetObject(context.Background(), requestRef)
+	requestAfter, ok, err := recording.GetObject(boundedTestContext(t), requestRef)
 	if err != nil || !ok || requestAfter.Hash != requestBefore.Hash ||
 		!bytes.Equal(requestAfter.Payload, requestBefore.Payload) {
 		t.Fatalf("approval request changed after decision")
 	}
-	approveRecordAfter, ok, err := recording.GetObject(context.Background(), approveRecordRef)
+	approveRecordAfter, ok, err := recording.GetObject(boundedTestContext(t), approveRecordRef)
 	if err != nil || !ok || approveRecordAfter.Hash != approveRecordRef ||
 		!bytes.Equal(approveRecordAfter.Payload, approveRecordBefore) {
 		t.Fatalf("approve effect record changed after decision")
@@ -510,7 +510,7 @@ func TestApprovalFlowImmutableRecordAndSeparateDecision(t *testing.T) {
 	pollReq := EffectRequest{
 		Effect: EffectHumanPollApproval, Scope: "release", Cost: 1, Now: 12,
 	}
-	pollResult, _, err := session.Invoke(context.Background(), pollReq,
+	pollResult, _, err := session.Invoke(boundedTestContext(t), pollReq,
 		mustApprovalJSON(approvalInputWire{RequestRef: requestRef.String()}))
 	if err != nil {
 		t.Fatal(err)
@@ -540,7 +540,7 @@ func TestApprovalFlowImmutableRecordAndSeparateDecision(t *testing.T) {
 
 func TestHumanApproveSynchronousPending(t *testing.T) {
 	session, recording, _ := approvalSession(t)
-	result, _, err := session.Invoke(context.Background(),
+	result, _, err := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectHumanApprove, Scope: "release", Cost: 2, Now: 1},
 		mustApprovalJSON(approvalInputWire{Requester: "agent"}))
 	if err != nil {
@@ -561,17 +561,17 @@ func TestHumanApproveSynchronousPending(t *testing.T) {
 
 func TestApprovalRecordIntegritySweep(t *testing.T) {
 	session, recording, _ := approvalSession(t)
-	pending, _, err := session.Invoke(context.Background(),
+	pending, _, err := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectHumanApprove, Scope: "release", Cost: 2, Now: 1},
 		mustApprovalJSON(approvalInputWire{Requester: "agent"}))
 	if err != nil {
 		t.Fatal(err)
 	}
 	requestRef := decodePendingRef(t, pending)
-	if _, err := decideApproval(context.Background(), recording, requestRef, "approve", "operator", 2); err != nil {
+	if _, err := decideApproval(boundedTestContext(t), recording, requestRef, "approve", "operator", 2); err != nil {
 		t.Fatal(err)
 	}
-	if _, _, err := session.Invoke(context.Background(),
+	if _, _, err := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectHumanPollApproval, Scope: "release", Cost: 1, Now: 3},
 		mustApprovalJSON(approvalInputWire{RequestRef: requestRef.String()})); err != nil {
 		t.Fatal(err)
@@ -589,7 +589,7 @@ func TestApprovalRecordIntegritySweep(t *testing.T) {
 func TestDecideApprovalBeforeRequestRejected(t *testing.T) {
 	_, recording, _ := approvalSession(t)
 	ref := hashref.SumSHA256([]byte("not-a-request"))
-	_, err := decideApproval(context.Background(), recording, ref, "approve", "operator", 1)
+	_, err := decideApproval(boundedTestContext(t), recording, ref, "approve", "operator", 1)
 	if !errors.Is(err, ErrApprovalRequestNotFound) {
 		t.Fatalf("DecideApproval error = %v, want ErrApprovalRequestNotFound", err)
 	}
@@ -601,14 +601,14 @@ func TestPollApprovalDeniedWithoutOwnGrant(t *testing.T) {
 	session := newSession(recording, "model-handler", []Capability{
 		{Effect: EffectHumanApprove, Scope: "release", ExpiresAt: 100, Budget: 5},
 	}, Registry{EffectHumanApprove: human, EffectHumanPollApproval: human}, Live, nil)
-	pending, _, err := session.Invoke(context.Background(),
+	pending, _, err := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectHumanApprove, Scope: "release", Cost: 2, Now: 1},
 		mustApprovalJSON(approvalInputWire{Requester: "agent"}))
 	if err != nil {
 		t.Fatal(err)
 	}
 	requestRef := decodePendingRef(t, pending)
-	_, _, err = session.Invoke(context.Background(),
+	_, _, err = session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: EffectHumanPollApproval, Scope: "release", Cost: 1, Now: 2},
 		mustApprovalJSON(approvalInputWire{RequestRef: requestRef.String()}))
 	var denial *DenialError
@@ -666,7 +666,7 @@ func TestApprovalFailuresKeepStandingAttentionDebit(t *testing.T) {
 			session := newSession(failing, "approval-failure", []Capability{{
 				Effect: EffectHumanApprove, Scope: "release", ExpiresAt: 100, Budget: 5,
 			}}, Registry{EffectHumanApprove: human}, Live, nil)
-			_, ref, invokeErr := session.Invoke(context.Background(),
+			_, ref, invokeErr := session.Invoke(boundedTestContext(t),
 				EffectRequest{Effect: EffectHumanApprove, Scope: "release", Cost: 2, Now: 1},
 				mustApprovalJSON(approvalInputWire{Requester: "agent"}))
 			var failed *EffectFailedError
@@ -682,18 +682,18 @@ func TestApprovalReplayContract(t *testing.T) {
 	session, recording, _ := approvalSession(t)
 	approveReq := EffectRequest{Effect: EffectHumanApprove, Scope: "release", Cost: 2, Now: 10}
 	approvePayload := mustApprovalJSON(approvalInputWire{Requester: "agent"})
-	pending, approveRecordRef, err := session.Invoke(context.Background(), approveReq, approvePayload)
+	pending, approveRecordRef, err := session.Invoke(boundedTestContext(t), approveReq, approvePayload)
 	if err != nil {
 		t.Fatal(err)
 	}
 	requestRef := decodePendingRef(t, pending)
-	decisionRef, err := decideApproval(context.Background(), recording, requestRef, "deny", "operator", 11)
+	decisionRef, err := decideApproval(boundedTestContext(t), recording, requestRef, "deny", "operator", 11)
 	if err != nil {
 		t.Fatal(err)
 	}
 	pollReq := EffectRequest{Effect: EffectHumanPollApproval, Scope: "release", Cost: 1, Now: 12}
 	pollPayload := mustApprovalJSON(approvalInputWire{RequestRef: requestRef.String()})
-	observation, pollRecordRef, err := session.Invoke(context.Background(), pollReq, pollPayload)
+	observation, pollRecordRef, err := session.Invoke(boundedTestContext(t), pollReq, pollPayload)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -711,11 +711,11 @@ func TestApprovalReplayContract(t *testing.T) {
 		{Effect: EffectHumanPollApproval, Scope: "release", ExpiresAt: 100, Budget: 4},
 	}, Registry{EffectHumanApprove: stub, EffectHumanPollApproval: stub}, Replay,
 		[]hashref.HashRef{approveRecordRef, pollRecordRef})
-	replayedPending, gotApproveRef, err := replay.Invoke(context.Background(), approveReq, approvePayload)
+	replayedPending, gotApproveRef, err := replay.Invoke(boundedTestContext(t), approveReq, approvePayload)
 	if err != nil {
 		t.Fatal(err)
 	}
-	replayedObservation, gotPollRef, err := replay.Invoke(context.Background(), pollReq, pollPayload)
+	replayedObservation, gotPollRef, err := replay.Invoke(boundedTestContext(t), pollReq, pollPayload)
 	if err != nil {
 		t.Fatal(err)
 	}

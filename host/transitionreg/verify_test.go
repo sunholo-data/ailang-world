@@ -1,7 +1,6 @@
 package transitionreg
 
 import (
-	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -58,7 +57,7 @@ func publisherStore(t *testing.T, interpreterRelease, bootstrapRelease string) (
 		t.Fatalf("archive fake interpreter: %v", err)
 	}
 	if bootstrapRelease != "" {
-		if _, _, err := registry.Bootstrap(context.Background(), s, bootstrapRelease); err != nil {
+		if _, _, err := registry.Bootstrap(boundedTestContext(t), s, bootstrapRelease); err != nil {
 			t.Fatalf("bootstrap epoch registry: %v", err)
 		}
 	}
@@ -72,12 +71,12 @@ func publisherStore(t *testing.T, interpreterRelease, bootstrapRelease string) (
 func TestPublishSetRefusesWithoutArchive(t *testing.T) {
 	s, _, ref := publisherStore(t, testFakeRelease, testFakeRelease)
 	d := storedSourceDescriptor(t, s, ref, "tools.echo")
-	_, err := NewReader(s).PublishSet(context.Background(), []Change{{ID: d.ID, Descriptor: &d}})
+	_, err := NewReader(s).PublishSet(boundedTestContext(t), []Change{{ID: d.ID, Descriptor: &d}})
 	var required *PublisherArchiveRequiredError
 	if !errors.As(err, &required) {
 		t.Fatalf("bare-reader publish error = %v, want *PublisherArchiveRequiredError", err)
 	}
-	if _, _, ok, _ := NewReader(s).CurrentRevision(context.Background()); ok {
+	if _, _, ok, _ := NewReader(s).CurrentRevision(boundedTestContext(t)); ok {
 		t.Fatal("a refused publish must leave no head")
 	}
 }
@@ -88,7 +87,7 @@ func TestPublishSetRefusesWithoutArchive(t *testing.T) {
 // release names exactly the bootstrapped epoch.
 func TestEpochsForInterpreterMatchesBootstrapRelease(t *testing.T) {
 	s, arch, ref := publisherStore(t, testFakeRelease, testFakeRelease)
-	epochs, release, err := NewPublisher(s, arch).EpochsForInterpreter(context.Background(), ref)
+	epochs, release, err := NewPublisher(s, arch).EpochsForInterpreter(boundedTestContext(t), ref)
 	if err != nil {
 		t.Fatalf("EpochsForInterpreter: %v", err)
 	}
@@ -125,7 +124,7 @@ func TestPublishSetRefusesEpochNotNominatingTheInterpreter(t *testing.T) {
 	s, arch, ref := publisherStore(t, testFakeRelease, testFakeRelease)
 	d := storedSourceDescriptor(t, s, ref, "tools.echo")
 	d.SemanticsEpoch = 2
-	_, err := NewPublisher(s, arch).PublishSet(context.Background(), []Change{{ID: d.ID, Descriptor: &d}})
+	_, err := NewPublisher(s, arch).PublishSet(boundedTestContext(t), []Change{{ID: d.ID, Descriptor: &d}})
 	var mismatch *InterpreterEpochMismatchError
 	if !errors.As(err, &mismatch) {
 		t.Fatalf("epoch-2 publish error = %v, want *InterpreterEpochMismatchError", err)
@@ -133,12 +132,12 @@ func TestPublishSetRefusesEpochNotNominatingTheInterpreter(t *testing.T) {
 	if mismatch.ID != "tools.echo" || mismatch.Epoch != 2 || len(mismatch.Nominating) != 1 || mismatch.Nominating[0] != 1 {
 		t.Fatalf("mismatch error = %+v, want ID/Epoch/Nominating pinned", mismatch)
 	}
-	if _, _, ok, _ := NewReader(s).CurrentRevision(context.Background()); ok {
+	if _, _, ok, _ := NewReader(s).CurrentRevision(boundedTestContext(t)); ok {
 		t.Fatal("an epoch-refused publish must leave the head unchanged (absent)")
 	}
 	// Control: the same descriptor with the registry-derived epoch publishes.
 	d.SemanticsEpoch = 1
-	res, err := NewPublisher(s, arch).PublishSet(context.Background(), []Change{{ID: d.ID, Descriptor: &d}})
+	res, err := NewPublisher(s, arch).PublishSet(boundedTestContext(t), []Change{{ID: d.ID, Descriptor: &d}})
 	if err != nil || res.Revision != 1 {
 		t.Fatalf("epoch-1 control publish = (%+v, %v), want revision 1", res, err)
 	}
@@ -151,7 +150,7 @@ func TestPublishSetRefusesDefaultEpochOne(t *testing.T) {
 	s, arch, ref := publisherStore(t, testFakeRelease, "OTHER-RELEASE v1")
 	d := storedSourceDescriptor(t, s, ref, "tools.echo")
 	d.SemanticsEpoch = 1
-	_, err := NewPublisher(s, arch).PublishSet(context.Background(), []Change{{ID: d.ID, Descriptor: &d}})
+	_, err := NewPublisher(s, arch).PublishSet(boundedTestContext(t), []Change{{ID: d.ID, Descriptor: &d}})
 	var mismatch *InterpreterEpochMismatchError
 	if !errors.As(err, &mismatch) {
 		t.Fatalf("default-epoch publish error = %v, want *InterpreterEpochMismatchError", err)
@@ -159,7 +158,7 @@ func TestPublishSetRefusesDefaultEpochOne(t *testing.T) {
 	if len(mismatch.Nominating) != 0 {
 		t.Fatalf("mismatch error = %+v, want zero nominating epochs (unknown interpreter-release pair)", mismatch)
 	}
-	if _, _, ok, _ := NewReader(s).CurrentRevision(context.Background()); ok {
+	if _, _, ok, _ := NewReader(s).CurrentRevision(boundedTestContext(t)); ok {
 		t.Fatal("a default-epoch publish must leave the head unchanged (absent)")
 	}
 }
@@ -170,12 +169,12 @@ func TestPublishSetRefusesDefaultEpochOne(t *testing.T) {
 func TestPublishSetRefusesAbsentEpochRegistry(t *testing.T) {
 	s, arch, ref := publisherStore(t, testFakeRelease, "")
 	d := storedSourceDescriptor(t, s, ref, "tools.echo")
-	_, err := NewPublisher(s, arch).PublishSet(context.Background(), []Change{{ID: d.ID, Descriptor: &d}})
+	_, err := NewPublisher(s, arch).PublishSet(boundedTestContext(t), []Change{{ID: d.ID, Descriptor: &d}})
 	var absent *EpochRegistryAbsentError
 	if !errors.As(err, &absent) {
 		t.Fatalf("absent-registry publish error = %v, want *EpochRegistryAbsentError", err)
 	}
-	if _, _, ok, _ := NewReader(s).CurrentRevision(context.Background()); ok {
+	if _, _, ok, _ := NewReader(s).CurrentRevision(boundedTestContext(t)); ok {
 		t.Fatal("a publish against an absent epoch registry must leave the head unchanged (absent)")
 	}
 }
@@ -198,12 +197,12 @@ func TestPublishSetRefusesUnloadableTransitionSource(t *testing.T) {
 	if err != nil {
 		t.Fatalf("archive refusing interpreter: %v", err)
 	}
-	if _, _, err := registry.Bootstrap(context.Background(), s, "TEST-REFUSING v1"); err != nil {
+	if _, _, err := registry.Bootstrap(boundedTestContext(t), s, "TEST-REFUSING v1"); err != nil {
 		t.Fatalf("bootstrap: %v", err)
 	}
 	d := storedSourceDescriptor(t, s, refusing, "tools.echo")
 	d.Interpreter = refusing
-	_, err = NewPublisher(s, arch).PublishSet(context.Background(), []Change{{ID: d.ID, Descriptor: &d}})
+	_, err = NewPublisher(s, arch).PublishSet(boundedTestContext(t), []Change{{ID: d.ID, Descriptor: &d}})
 	var invalid *TransitionSourceInvalidError
 	if !errors.As(err, &invalid) {
 		t.Fatalf("unloadable source error = %v, want *TransitionSourceInvalidError", err)
@@ -211,7 +210,7 @@ func TestPublishSetRefusesUnloadableTransitionSource(t *testing.T) {
 	if invalid.ID != "tools.echo" {
 		t.Fatalf("invalid error = %+v, want the entry ID named", invalid)
 	}
-	if _, _, ok, _ := NewReader(s).CurrentRevision(context.Background()); ok {
+	if _, _, ok, _ := NewReader(s).CurrentRevision(boundedTestContext(t)); ok {
 		t.Fatal("an unloadable-source publish must leave the head unchanged (absent)")
 	}
 	// Positive control: the same source bytes publish under an interpreter
@@ -219,7 +218,7 @@ func TestPublishSetRefusesUnloadableTransitionSource(t *testing.T) {
 	good, goodArch, goodRef := publisherStore(t, testFakeRelease, testFakeRelease)
 	d2 := storedSourceDescriptor(t, good, goodRef, "tools.echo")
 	d2.TransitionFn = putSource(t, good, []byte("transition source for tools.echo"))
-	res, err := NewPublisher(good, goodArch).PublishSet(context.Background(), []Change{{ID: d2.ID, Descriptor: &d2}})
+	res, err := NewPublisher(good, goodArch).PublishSet(boundedTestContext(t), []Change{{ID: d2.ID, Descriptor: &d2}})
 	if err != nil || res.Revision != 1 {
 		t.Fatalf("positive control = (%+v, %v), want revision 1 published", res, err)
 	}
@@ -241,10 +240,10 @@ func TestEnsureSourceLoadableStagesHermetically(t *testing.T) {
 		t.Fatal(err)
 	}
 	source := []byte("module world/check_entry\n\nexport func main() -> string { \"x\" }\n")
-	if err := EnsureSourceLoadable(context.Background(), arch, accepting, source); err != nil {
+	if err := EnsureSourceLoadable(boundedTestContext(t), arch, accepting, source); err != nil {
 		t.Fatalf("accepting interpreter refused a valid source: %v", err)
 	}
-	err = EnsureSourceLoadable(context.Background(), arch, refusing, source)
+	err = EnsureSourceLoadable(boundedTestContext(t), arch, refusing, source)
 	var invalid *TransitionSourceInvalidError
 	if !errors.As(err, &invalid) {
 		t.Fatalf("refusing interpreter error = %v, want *TransitionSourceInvalidError", err)

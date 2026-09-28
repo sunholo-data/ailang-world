@@ -78,11 +78,11 @@ func TestWorkbenchRendersSeededWorldAndTimeline(t *testing.T) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "workbench-render")
 	first := testCommit(genesis, 0, "workbench-first")
-	if err := d.store.Commit(context.Background(), first); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), first); err != nil {
 		t.Fatalf("first Commit: %v", err)
 	}
 	second := testCommit(first.NextWorld, 1, "workbench-second")
-	if err := d.store.Commit(context.Background(), second); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), second); err != nil {
 		t.Fatalf("second Commit: %v", err)
 	}
 
@@ -95,7 +95,7 @@ func TestWorkbenchRendersSeededWorldAndTimeline(t *testing.T) {
 	// sibling channel.
 	entryHashes := make([]string, 0, 2)
 	for index := int64(0); index < 2; index++ {
-		entry, ok, err := d.store.GetLogEntry(context.Background(), index)
+		entry, ok, err := d.store.GetLogEntry(boundedTestContext(t), index)
 		if err != nil || !ok {
 			t.Fatalf("GetLogEntry(%d): ok=%v err=%v", index, ok, err)
 		}
@@ -123,7 +123,7 @@ func TestWorkbenchRendersSeededWorldAndTimeline(t *testing.T) {
 		}
 	}
 	// The world section is the other half of "seeded world AND timeline".
-	head, ok, err := d.store.SelectedHead(context.Background())
+	head, ok, err := d.store.SelectedHead(boundedTestContext(t))
 	if err != nil || !ok {
 		t.Fatalf("SelectedHead: ok=%v err=%v", ok, err)
 	}
@@ -136,7 +136,7 @@ func TestWorkbenchRefusalBranches(t *testing.T) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "workbench-refusals")
 	commit := testCommit(genesis, 0, "workbench-refusals-entry")
-	if err := d.store.Commit(context.Background(), commit); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 
@@ -266,7 +266,7 @@ func commitWorkbenchPayload(t *testing.T, d *Daemon, payload []byte, label strin
 	}
 	commit.Objects = []store.Object{object}
 	commit.Entry.TransitionRef = object.Hash
-	if err := d.store.Commit(context.Background(), commit); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	return object.Hash
@@ -342,7 +342,7 @@ func seedWorkbenchLog(t *testing.T, d *Daemon, n int) {
 	started := time.Now()
 	for index := int64(0); index < int64(n); index++ {
 		commit := testCommit(world, index, "workbench-timeline-bound")
-		if err := d.store.Commit(context.Background(), commit); err != nil {
+		if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 			t.Fatalf("Commit(%d): %v", index, err)
 		}
 		world = commit.NextWorld
@@ -355,7 +355,7 @@ func seedWorkbenchLog(t *testing.T, d *Daemon, n int) {
 func TestWorkbenchTimelineBound(t *testing.T) {
 	d := newHandlerDaemon(t)
 	seedWorkbenchLog(t, d, workbench.WorkbenchPageLimit+5)
-	if _, ok, err := d.store.GetLogEntry(context.Background(), 104); err != nil || !ok {
+	if _, ok, err := d.store.GetLogEntry(boundedTestContext(t), 104); err != nil || !ok {
 		t.Fatalf("positive control GetLogEntry(104): ok=%v err=%v", ok, err)
 	}
 
@@ -479,10 +479,10 @@ func TestWorkbenchWorldPane(t *testing.T) {
 				commit.NextWorld.StateRoot = state.Hash
 				commit.Objects = append(commit.Objects, state)
 			}
-			if err := d.store.Commit(context.Background(), commit); err != nil {
+			if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 				t.Fatal(err)
 			}
-			_, ok, err := d.store.GetObject(context.Background(), commit.NextWorld.StateRoot)
+			_, ok, err := d.store.GetObject(boundedTestContext(t), commit.NextWorld.StateRoot)
 			if err != nil || ok != stored {
 				t.Fatalf("root control stored=%v err=%v, want %v", ok, err, stored)
 			}
@@ -516,11 +516,11 @@ func TestWorkbenchWorldPane(t *testing.T) {
 		state := workbenchTestObject("old-state", "world/state", hashref.SumSHA256([]byte("state-interface")))
 		old.NextWorld.StateRoot = state.Hash
 		old.Objects = append(old.Objects, state)
-		if err := d.store.Commit(context.Background(), old); err != nil {
+		if err := d.store.Commit(boundedTestContext(t), old); err != nil {
 			t.Fatal(err)
 		}
 		newer := testCommit(old.NextWorld, 1, "new-world")
-		if err := d.store.Commit(context.Background(), newer); err != nil {
+		if err := d.store.Commit(boundedTestContext(t), newer); err != nil {
 			t.Fatal(err)
 		}
 		if old.NextWorld.Ref == newer.NextWorld.Ref || old.NextWorld.StateRoot == newer.NextWorld.StateRoot || old.NextWorld.LogHead == newer.NextWorld.LogHead || old.NextWorld.Revision == newer.NextWorld.Revision {
@@ -553,7 +553,7 @@ func TestWorkbenchWorldPane(t *testing.T) {
 			d := newHandlerDaemon(t)
 			genesis := seedGenesisEmbedded(t, d, tc.name)
 			commit := testCommit(genesis, 0, tc.name)
-			if err := d.store.Commit(context.Background(), commit); err != nil {
+			if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 				t.Fatal(err)
 			}
 			d.errLog = &bytes.Buffer{}
@@ -584,7 +584,7 @@ func TestWorkbenchSelectedEntry(t *testing.T) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "workbench-selected")
 	commit := testCommit(genesis, 0, "workbench-selected")
-	if err := d.store.Commit(context.Background(), commit); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	header := commit.Entry.Header
@@ -602,7 +602,7 @@ func TestWorkbenchSelectedEntry(t *testing.T) {
 		{"TransitionFn", header.TransitionFn, false},
 		{"Interpreter", header.Interpreter, false},
 	} {
-		if _, ok, err := d.store.GetObject(context.Background(), control.ref); err != nil || ok != control.want {
+		if _, ok, err := d.store.GetObject(boundedTestContext(t), control.ref); err != nil || ok != control.want {
 			t.Fatalf("control GetObject(%s): ok=%v err=%v, want ok=%v", control.name, ok, err, control.want)
 		}
 	}
@@ -683,7 +683,7 @@ var selectEntryText = regexp.MustCompile(`^select entry [0-9]+$`)
 func TestWorkbenchTimelinePaging(t *testing.T) {
 	d := newHandlerDaemon(t)
 	seedWorkbenchLog(t, d, workbench.WorkbenchPageLimit+5)
-	if _, ok, err := d.store.GetLogEntry(context.Background(), 104); err != nil || !ok {
+	if _, ok, err := d.store.GetLogEntry(boundedTestContext(t), 104); err != nil || !ok {
 		t.Fatalf("positive control GetLogEntry(104): ok=%v err=%v", ok, err)
 	}
 	get := func(t *testing.T, target string) string {
@@ -739,7 +739,7 @@ func TestWorkbenchTimelinePaging(t *testing.T) {
 
 	t.Run("emitted-links-resolve", func(t *testing.T) {
 		counts := map[string]int{}
-		ctx := context.Background()
+		ctx := boundedTestContext(t)
 		head, ok, err := d.store.SelectedHead(ctx)
 		if err != nil || !ok {
 			t.Fatalf("selected head ok=%v err=%v", ok, err)
@@ -752,11 +752,11 @@ func TestWorkbenchTimelinePaging(t *testing.T) {
 			t.Fatalf("head root stored=%v err=%v, want false", ok, err)
 		}
 		state := workbenchTestObject("paging-stored-state", "world/state", hashref.SumSHA256([]byte("paging-state-interface")))
-		if err := d.store.PutObject(context.Background(), state); err != nil {
+		if err := d.store.PutObject(boundedTestContext(t), state); err != nil {
 			t.Fatal(err)
 		}
 		storedWorld := store.World{Ref: hashref.SumSHA256([]byte("paging-stored-world")), Revision: 17, StateRoot: state.Hash, LogHead: hashref.SumSHA256([]byte("paging-stored-log"))}
-		if err := d.store.PutWorld(context.Background(), storedWorld); err != nil {
+		if err := d.store.PutWorld(boundedTestContext(t), storedWorld); err != nil {
 			t.Fatal(err)
 		}
 		if _, ok, err := d.store.GetObject(ctx, state.Hash); err != nil || !ok {
@@ -863,7 +863,7 @@ func (s denseLogStore) GetLogEntry(ctx context.Context, index int64) (store.LogE
 func TestWorkbenchNextLinkOverflowGuard(t *testing.T) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "workbench-overflow")
-	if err := d.store.Commit(context.Background(), testCommit(genesis, 0, "workbench-overflow")); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), testCommit(genesis, 0, "workbench-overflow")); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	d.reads = denseLogStore{readStore: d.store}
@@ -977,11 +977,11 @@ func TestWorkbenchObjectGrade(t *testing.T) {
 	commit := testCommit(genesis, 0, "workbench-grade")
 	proof := workbenchTestObject("workbench-grade-proof", "world/proof-report/v1", hashref.SumSHA256([]byte("world/authenticated-proof-envelope/v1")))
 	commit.Objects = append(commit.Objects, proof)
-	if err := d.store.Commit(context.Background(), commit); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	// CONTROL: the registry object is the real bootstrap-written one, not a fixture.
-	registry, ok, err := d.store.GetRegistryHead(context.Background(), store.EpochRegistryV1)
+	registry, ok, err := d.store.GetRegistryHead(boundedTestContext(t), store.EpochRegistryV1)
 	if err != nil || !ok {
 		t.Fatalf("control GetRegistryHead(%s): ok=%v err=%v", store.EpochRegistryV1, ok, err)
 	}
@@ -1018,19 +1018,19 @@ func TestWorkbenchObjectProvenanceWalk(t *testing.T) {
 	schema := workbenchTestObject("workbench-walk-schema", "test/schema", hashref.SumSHA256([]byte("interface-workbench-walk-schema")))
 	typed := workbenchTestObject("workbench-walk-typed", "test/typed", schema.Hash)
 	for _, object := range []store.Object{plain, schema, typed} {
-		if err := d.store.PutObject(context.Background(), object); err != nil {
+		if err := d.store.PutObject(boundedTestContext(t), object); err != nil {
 			t.Fatal(err)
 		}
 	}
-	if err := d.store.Commit(context.Background(), commit); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	// CONTROLS: one interface target is stored and one is not, or the link and
 	// UNAVAILABLE arms below assert nothing.
-	if _, ok, err := d.store.GetObject(context.Background(), schema.Hash); err != nil || !ok {
+	if _, ok, err := d.store.GetObject(boundedTestContext(t), schema.Hash); err != nil || !ok {
 		t.Fatalf("control GetObject(schema): ok=%v err=%v, want ok=true", ok, err)
 	}
-	if _, ok, err := d.store.GetObject(context.Background(), plain.InterfaceHash); err != nil || ok {
+	if _, ok, err := d.store.GetObject(boundedTestContext(t), plain.InterfaceHash); err != nil || ok {
 		t.Fatalf("control GetObject(plain.InterfaceHash): ok=%v err=%v, want ok=false", ok, err)
 	}
 	get := func(t *testing.T, target string) string {

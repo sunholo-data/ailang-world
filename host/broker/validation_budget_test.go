@@ -34,7 +34,7 @@ func TestPublishValidationBudgetOnly(t *testing.T) {
 		base := openTestStore(t)
 		f := newPublishFixture(t, "https://registry.example", "validation-budget")
 		plan := attendedPlanFor(f, "validation-budget")
-		ref, err := MintAttendedApproval(context.Background(), base, plan)
+		ref, err := MintAttendedApproval(boundedTestContext(t), base, plan)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -61,7 +61,7 @@ func TestPublishValidationBudgetOnly(t *testing.T) {
 		base := openTestStore(t)
 		f := newPublishFixture(t, "https://registry.example", "dispatch-budget")
 		plan := attendedPlanFor(f, "dispatch-budget")
-		ref, err := MintAttendedApproval(context.Background(), base, plan)
+		ref, err := MintAttendedApproval(boundedTestContext(t), base, plan)
 		if err != nil {
 			t.Fatal(err)
 		}

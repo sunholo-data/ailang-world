@@ -19,13 +19,13 @@ func TestConvertedStoreMethodsM5b(t *testing.T) {
 	methods := []method{
 		{"CompareAndSetRegistryHead", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
 			o := obj("m5b-cas", "test/object")
-			if err := s.PutObject(context.Background(), o); err != nil {
+			if err := s.PutObject(boundedTestContext(t), o); err != nil {
 				t.Fatal(err)
 			}
 			return func(ctx context.Context) error {
 					return s.CompareAndSetRegistryHead(ctx, "m5b/cas", hashref.HashRef{}, o.Hash)
 				}, func(t *testing.T) {
-					got, ok, err := s.GetRegistryHead(context.Background(), "m5b/cas")
+					got, ok, err := s.GetRegistryHead(boundedTestContext(t), "m5b/cas")
 					if err != nil || !ok || got != o.Hash {
 						t.Fatalf("CAS not durable: %v %v %v", got, ok, err)
 					}
@@ -34,7 +34,7 @@ func TestConvertedStoreMethodsM5b(t *testing.T) {
 		{"MintSession", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
 			row := SessionRow{CredentialID: "m5b-credential", EpisodeID: "ep", GrantsJSON: "[]", ExpiresAt: 100, CreatedAt: 1}
 			return func(ctx context.Context) error { return s.MintSession(ctx, row) }, func(t *testing.T) {
-				got, ok, err := s.ResolveSession(context.Background(), row.CredentialID)
+				got, ok, err := s.ResolveSession(boundedTestContext(t), row.CredentialID)
 				if err != nil || !ok || got != row {
 					t.Fatalf("mint not durable: %+v %v %v", got, ok, err)
 				}
@@ -55,7 +55,7 @@ func TestConvertedStoreMethodsM5b(t *testing.T) {
 		{"PutVerifyResult", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
 			row := VerifyResult{TransitionFn: hashref.SumSHA256([]byte("m5b-fn")), Interpreter: hashref.SumSHA256([]byte("m5b-interp")), SemanticsEpoch: 1, Verified: true, Detail: "m5b"}
 			return func(ctx context.Context) error { return s.PutVerifyResult(ctx, row) }, func(t *testing.T) {
-				got, ok, err := s.GetVerifyResult(context.Background(), row.TransitionFn, row.Interpreter)
+				got, ok, err := s.GetVerifyResult(boundedTestContext(t), row.TransitionFn, row.Interpreter)
 				if err != nil || !ok || got != row {
 					t.Fatalf("verify result not durable: %+v %v %v", got, ok, err)
 				}
@@ -64,7 +64,7 @@ func TestConvertedStoreMethodsM5b(t *testing.T) {
 		{"PutWorld", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
 			w := World{Ref: hashref.SumSHA256([]byte("m5b-world")), Revision: 1, StateRoot: hashref.SumSHA256([]byte("m5b-state")), LogHead: hashref.SumSHA256([]byte("m5b-log"))}
 			return func(ctx context.Context) error { return s.PutWorld(ctx, w) }, func(t *testing.T) {
-				got, ok, err := s.GetWorld(context.Background(), w.Ref)
+				got, ok, err := s.GetWorld(boundedTestContext(t), w.Ref)
 				if err != nil || !ok || got != w {
 					t.Fatalf("world not durable: %+v %v %v", got, ok, err)
 				}
@@ -73,7 +73,7 @@ func TestConvertedStoreMethodsM5b(t *testing.T) {
 		{"SelectHead", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
 			ref := hashref.SumSHA256([]byte("m5b-selected"))
 			return func(ctx context.Context) error { return s.SelectHead(ctx, ref) }, func(t *testing.T) {
-				got, ok, err := s.SelectedHead(context.Background())
+				got, ok, err := s.SelectedHead(boundedTestContext(t))
 				if err != nil || !ok || got != ref {
 					t.Fatalf("head not durable: %v %v %v", got, ok, err)
 				}
@@ -82,12 +82,12 @@ func TestConvertedStoreMethodsM5b(t *testing.T) {
 		{"AppendOutcome", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
 			id := "m5b-outcome"
 			c := journalCommitFixture(t, s, id)
-			if _, _, err := s.AppendIntent(context.Background(), id, testCommitIntent(id, c)); err != nil {
+			if _, _, err := s.AppendIntent(boundedTestContext(t), id, testCommitIntent(id, c)); err != nil {
 				t.Fatal(err)
 			}
 			outcome := JournalOutcome{InvocationID: id, Status: "committed", ResultRef: c.NextWorld.Ref, LogicalTime: 2}
 			return func(ctx context.Context) error { _, _, err := s.AppendOutcome(ctx, id, outcome); return err }, func(t *testing.T) {
-				rc, ok, err := s.GetReceipt(context.Background(), id)
+				rc, ok, err := s.GetReceipt(boundedTestContext(t), id)
 				if err != nil || !ok || rc.State != ReceiptResolved {
 					t.Fatalf("outcome not durable: %+v %v %v", rc, ok, err)
 				}
@@ -98,7 +98,7 @@ func TestConvertedStoreMethodsM5b(t *testing.T) {
 		t.Run("held/"+tc.name, func(t *testing.T) {
 			s := openFileStore(t)
 			call, _ := tc.setup(t, s)
-			conn, err := s.db.Conn(context.Background())
+			conn, err := s.db.Conn(boundedTestContext(t))
 			if err != nil {
 				t.Fatal(err)
 			}

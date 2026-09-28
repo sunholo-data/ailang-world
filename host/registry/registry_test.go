@@ -1,7 +1,6 @@
 package registry
 
 import (
-	"context"
 	"testing"
 
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -23,7 +22,7 @@ const m1Release = "AILANG v0.30.0 (commit e37b370)"
 func TestBootstrapCreatesEpochOneWithReleaseCandidate(t *testing.T) {
 	s := openMem(t)
 
-	reg, head, err := Bootstrap(context.Background(), s, m1Release)
+	reg, head, err := Bootstrap(boundedTestContext(t), s, m1Release)
 	if err != nil {
 		t.Fatalf("Bootstrap: %v", err)
 	}
@@ -49,13 +48,13 @@ func TestBootstrapCreatesEpochOneWithReleaseCandidate(t *testing.T) {
 func TestBootstrapStoresThroughObjectAndRegistryHead(t *testing.T) {
 	s := openMem(t)
 
-	_, head, err := Bootstrap(context.Background(), s, m1Release)
+	_, head, err := Bootstrap(boundedTestContext(t), s, m1Release)
 	if err != nil {
 		t.Fatalf("Bootstrap: %v", err)
 	}
 
 	// The head is named via the ordinary store registry-head mechanism.
-	gotHead, ok, err := s.GetRegistryHead(context.Background(), SemanticID)
+	gotHead, ok, err := s.GetRegistryHead(boundedTestContext(t), SemanticID)
 	if err != nil || !ok {
 		t.Fatalf("GetRegistryHead: ok=%v err=%v", ok, err)
 	}
@@ -64,7 +63,7 @@ func TestBootstrapStoresThroughObjectAndRegistryHead(t *testing.T) {
 	}
 
 	// The revision itself is an ordinary immutable object addressable by the head.
-	obj, ok, err := s.GetObject(context.Background(), head)
+	obj, ok, err := s.GetObject(boundedTestContext(t), head)
 	if err != nil || !ok {
 		t.Fatalf("GetObject(head): ok=%v err=%v", ok, err)
 	}
@@ -85,12 +84,12 @@ func TestBootstrapStoresThroughObjectAndRegistryHead(t *testing.T) {
 func TestBootstrapIsIdempotent(t *testing.T) {
 	s := openMem(t)
 
-	reg1, head1, err := Bootstrap(context.Background(), s, m1Release)
+	reg1, head1, err := Bootstrap(boundedTestContext(t), s, m1Release)
 	if err != nil {
 		t.Fatalf("first Bootstrap: %v", err)
 	}
 	// Running twice does not create a divergent epoch 1: same head, same content.
-	reg2, head2, err := Bootstrap(context.Background(), s, m1Release)
+	reg2, head2, err := Bootstrap(boundedTestContext(t), s, m1Release)
 	if err != nil {
 		t.Fatalf("second Bootstrap (idempotent): %v", err)
 	}
@@ -116,13 +115,13 @@ func TestBootstrapIsIdempotent(t *testing.T) {
 
 func TestBootstrapDetectsDivergentHead(t *testing.T) {
 	s := openMem(t)
-	if _, _, err := Bootstrap(context.Background(), s, m1Release); err != nil {
+	if _, _, err := Bootstrap(boundedTestContext(t), s, m1Release); err != nil {
 		t.Fatalf("first Bootstrap: %v", err)
 	}
 	// A second bootstrap with a DIFFERENT release string would produce different
 	// content-addressed bytes; the existing head diverges, which must be an error
 	// rather than a silent overwrite of epoch 1.
-	if _, _, err := Bootstrap(context.Background(), s, "AILANG v0.31.0 (commit deadbee)"); err == nil {
+	if _, _, err := Bootstrap(boundedTestContext(t), s, "AILANG v0.31.0 (commit deadbee)"); err == nil {
 		t.Fatal("expected divergent-head error, got nil")
 	}
 }

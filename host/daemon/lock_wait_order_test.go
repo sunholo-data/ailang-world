@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -19,7 +18,7 @@ import (
 // either constant into the wrong order and New refuses here. It is a
 // configuration check, not a runtime bound on a lock-blocked read.
 func TestProductionBusyTimeoutConfiguredBelowReadDeadline(t *testing.T) {
-	d, err := New(context.Background(), Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost})
+	d, err := New(boundedTestContext(t), Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost})
 	if err != nil {
 		t.Fatalf("New on the production defaults: %v", err)
 	}
@@ -50,7 +49,7 @@ func TestNewRefusesBusyTimeoutAtOrAboveReadDeadline(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "world.db")
 			dsn := fmt.Sprintf("file:%s?_pragma=busy_timeout(%d)", path, tc.window.Milliseconds())
-			d, err := New(context.Background(), Config{DBPath: dsn, BindHost: DefaultBindHost})
+			d, err := New(boundedTestContext(t), Config{DBPath: dsn, BindHost: DefaultBindHost})
 			if !tc.refused {
 				if err != nil {
 					t.Fatalf("New refused an ordered window %s: %v", tc.window, err)
@@ -60,7 +59,7 @@ func TestNewRefusesBusyTimeoutAtOrAboveReadDeadline(t *testing.T) {
 				}
 				// Control for the no-side-effect assertion below: an accepted
 				// startup DOES bootstrap the registry head.
-				if _, ok, err := d.store.GetRegistryHead(context.Background(), registry.SemanticID); err != nil || !ok {
+				if _, ok, err := d.store.GetRegistryHead(boundedTestContext(t), registry.SemanticID); err != nil || !ok {
 					t.Fatalf("control: accepted startup has no registry head (ok=%v err=%v)", ok, err)
 				}
 				_ = d.Close()
@@ -94,7 +93,7 @@ func TestNewRefusesBusyTimeoutAtOrAboveReadDeadline(t *testing.T) {
 				t.Fatalf("store.Open after the refusal: %v — New stranded writer authority", err)
 			}
 			defer s.Close()
-			if _, ok, err := s.GetRegistryHead(context.Background(), registry.SemanticID); err != nil || ok {
+			if _, ok, err := s.GetRegistryHead(boundedTestContext(t), registry.SemanticID); err != nil || ok {
 				t.Fatalf("refused startup left a registry head (ok=%v err=%v) — the check ran after a write", ok, err)
 			}
 		})

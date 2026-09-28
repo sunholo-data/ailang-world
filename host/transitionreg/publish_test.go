@@ -18,7 +18,7 @@ func putSource(t *testing.T, s *store.Store, payload []byte) hashref.HashRef {
 		Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte("test/transition-source")),
 		SemanticID: "test/transition-source", Provenance: "publish_test", Payload: payload,
 	}
-	if err := s.PutObject(context.Background(), obj); err != nil {
+	if err := s.PutObject(boundedTestContext(t), obj); err != nil {
 		t.Fatalf("put source: %v", err)
 	}
 	return obj.Hash
@@ -58,13 +58,13 @@ func TestGenesisCannotUseBuildNextWithZeroExpectedHead(t *testing.T) {
 	if next.Parent.IsZero() {
 		t.Fatal("measurement premise wrong: BuildNext set a zero parent over an absent head")
 	}
-	_, err = r.Publish(context.Background(), hashref.HashRef{}, next)
+	_, err = r.Publish(boundedTestContext(t), hashref.HashRef{}, next)
 	if err == nil || !strings.Contains(err.Error(), "parent is not captured head (absent)") {
 		t.Fatalf("Publish(zero, BuildNext(genesis)) error = %v, want the absent-head parent refusal", err)
 	}
 	// Control: the same descriptor set publishes fine through the direct
 	// genesis construction (what PublishSet does).
-	res, err := NewPublisher(s, arch).PublishSet(context.Background(), []Change{{ID: d.ID, Descriptor: &d}})
+	res, err := NewPublisher(s, arch).PublishSet(boundedTestContext(t), []Change{{ID: d.ID, Descriptor: &d}})
 	if err != nil || res.Revision != 1 || res.Unchanged {
 		t.Fatalf("PublishSet genesis = (%+v, %v), want revision 1 changed", res, err)
 	}
@@ -73,7 +73,7 @@ func TestGenesisCannotUseBuildNextWithZeroExpectedHead(t *testing.T) {
 func TestPublishSetGenesisThenGrowth(t *testing.T) {
 	s, arch, ref := publisherStore(t, testFakeRelease, testFakeRelease)
 	r := NewPublisher(s, arch)
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 
 	first := storedSourceDescriptor(t, s, ref, "tools.echo")
 	res, err := r.PublishSet(ctx, []Change{{ID: first.ID, Descriptor: &first}})
@@ -111,7 +111,7 @@ func TestPublishSetGenesisThenGrowth(t *testing.T) {
 func TestPublishSetIdempotentRepublishIsNoOp(t *testing.T) {
 	s, arch, ref := publisherStore(t, testFakeRelease, testFakeRelease)
 	r := NewPublisher(s, arch)
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 	d := storedSourceDescriptor(t, s, ref, "tools.echo")
 	if _, err := r.PublishSet(ctx, []Change{{ID: d.ID, Descriptor: &d}}); err != nil {
 		t.Fatalf("first publish: %v", err)
@@ -142,12 +142,12 @@ func TestPublishSetRefusesAbsentTransitionSource(t *testing.T) {
 	d := validDescriptor() // pins testFn, which no object backs
 	d.Interpreter = ref
 	d.SemanticsEpoch = 1
-	_, err := NewPublisher(s, arch).PublishSet(context.Background(), []Change{{ID: d.ID, Descriptor: &d}})
+	_, err := NewPublisher(s, arch).PublishSet(boundedTestContext(t), []Change{{ID: d.ID, Descriptor: &d}})
 	var absent *TransitionSourceAbsentError
 	if !errors.As(err, &absent) {
 		t.Fatalf("absent source error = %v, want *TransitionSourceAbsentError", err)
 	}
-	if _, _, ok, _ := NewReader(s).CurrentRevision(context.Background()); ok {
+	if _, _, ok, _ := NewReader(s).CurrentRevision(boundedTestContext(t)); ok {
 		t.Fatal("a refused publish must leave no head")
 	}
 }
@@ -155,10 +155,10 @@ func TestPublishSetRefusesAbsentTransitionSource(t *testing.T) {
 func TestPublishSetRefusesEmptyAndRemovalOnlyGenesis(t *testing.T) {
 	s, arch, _ := publisherStore(t, testFakeRelease, testFakeRelease)
 	r := NewPublisher(s, arch)
-	if _, err := r.PublishSet(context.Background(), nil); !errors.As(err, new(*EmptyGenesisError)) {
+	if _, err := r.PublishSet(boundedTestContext(t), nil); !errors.As(err, new(*EmptyGenesisError)) {
 		t.Fatalf("empty genesis error = %v, want *EmptyGenesisError", err)
 	}
-	if _, err := r.PublishSet(context.Background(), []Change{{ID: "tools.echo"}}); err == nil {
+	if _, err := r.PublishSet(boundedTestContext(t), []Change{{ID: "tools.echo"}}); err == nil {
 		t.Fatal("removal-only genesis must be refused")
 	}
 }
@@ -178,7 +178,7 @@ type racingStore struct {
 func (r *racingStore) CompareAndSetRegistryHead(ctx context.Context, name string, expected, next hashref.HashRef) error {
 	r.casCalls++
 	if r.always {
-		head, ok, err := r.Store.GetRegistryHead(context.Background(), name)
+		head, ok, err := r.Store.GetRegistryHead(ctx, name)
 		if err != nil {
 			return err
 		}
@@ -189,12 +189,12 @@ func (r *racingStore) CompareAndSetRegistryHead(ctx context.Context, name string
 			return err
 		}
 	}
-	return r.Store.CompareAndSetRegistryHead(context.Background(), name, expected, next)
+	return r.Store.CompareAndSetRegistryHead(ctx, name, expected, next)
 }
 
 func TestPublishSetCASRetryMergesWinner(t *testing.T) {
 	s, arch, ref := publisherStore(t, testFakeRelease, testFakeRelease)
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 
 	// A competing publisher's descriptor set (different ID, also honest).
 	competitor := storedSourceDescriptor(t, s, ref, "worlds.merge")
@@ -231,7 +231,7 @@ func TestPublishSetCASRetryMergesWinner(t *testing.T) {
 
 func TestPublishSetSecondConflictSurfacesTypedError(t *testing.T) {
 	s, arch, ref := publisherStore(t, testFakeRelease, testFakeRelease)
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 	ours := storedSourceDescriptor(t, s, ref, "tools.echo")
 	alwaysLoses := &racingStore{Store: s, always: true, compete: nil}
 	r := NewPublisher(alwaysLoses, arch)
@@ -258,7 +258,7 @@ func TestPublishSetSecondConflictSurfacesTypedError(t *testing.T) {
 // so without this refusal the loser would silently clobber them).
 func TestPublishSetSameIDConflictOnCASRetryRefuses(t *testing.T) {
 	s, arch, ref := publisherStore(t, testFakeRelease, testFakeRelease)
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 
 	winner := storedSourceDescriptor(t, s, ref, "tools.echo")
 	winner.Title = "title-winner"
@@ -300,7 +300,7 @@ func TestPublishSetSameIDConflictOnCASRetryRefuses(t *testing.T) {
 // the entry is neither dropped nor rewritten.
 func TestPublishSetCASRetrySameIDIdenticalBytesIsNoOp(t *testing.T) {
 	s, arch, ref := publisherStore(t, testFakeRelease, testFakeRelease)
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 
 	ours := storedSourceDescriptor(t, s, ref, "tools.echo")
 	compete := func() error {

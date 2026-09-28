@@ -57,7 +57,7 @@ func seedReadRoutes(t *testing.T, d *Daemon, label string) []readRoute {
 	t.Helper()
 	genesis := seedGenesisEmbedded(t, d, label)
 	commit := testCommit(genesis, 1, label)
-	if err := d.store.Commit(context.Background(), commit); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 		t.Fatalf("seed Commit: %v", err)
 	}
 	return []readRoute{
@@ -476,7 +476,7 @@ func TestDaemonReadDisconnect(t *testing.T) {
 	}
 
 	route := routes[1] // /v1/worlds/{ref} -> GetWorld
-	reqCtx, cancel := context.WithCancel(context.Background())
+	reqCtx, cancel := context.WithCancel(boundedTestContext(t))
 	defer cancel()
 
 	done := make(chan struct{})

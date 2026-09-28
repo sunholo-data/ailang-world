@@ -31,8 +31,8 @@ func (s *contextWitnessStore) GetRegistryHead(ctx context.Context, name string) 
 	return s.Store.GetRegistryHead(ctx, name)
 }
 func TestApprovalContextIdentity(t *testing.T) {
-	// Both deadline-free and bounded callers reach identical pipelines; a
-	// deadline is supplied only by the test's second control, never production.
+	// The deadline-free arm pins the store guard; the bounded arm checks
+	// that the caller's values survive the approval pipeline.
 	for _, bounded := range []bool{false, true} {
 		t.Run(map[bool]string{false: "deadlineFree", true: "bounded"}[bounded], func(t *testing.T) {
 			ctx := context.WithValue(context.Background(), struct{}{}, "caller")
@@ -45,6 +45,12 @@ func TestApprovalContextIdentity(t *testing.T) {
 			w := &contextWitnessStore{Store: base, t: t, want: ctx}
 			f := newPublishFixture(t, "https://registry.example", "thread-context")
 			plan := attendedPlanFor(f, "ctx-identity")
+			if !bounded {
+				if _, err := mintAttendedApproval(ctx, w, plan); !errors.Is(err, store.ErrNoDeadline) {
+					t.Fatalf("deadline-free mint = %v, want ErrNoDeadline", err)
+				}
+				return
+			}
 			ref, err := mintAttendedApproval(ctx, w, plan)
 			if err != nil {
 				t.Fatal(err)
@@ -70,15 +76,15 @@ func TestApprovalContextIdentity(t *testing.T) {
 func TestApprovalCallerCancellation(t *testing.T) {
 	base := openTestStore(t)
 	h := NewHumanHandler(base)
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	cancel()
 	f := newPublishFixture(t, "https://registry.example", "cancel-context")
 	plan := attendedPlanFor(f, "cancel-context")
-	ref, err := MintAttendedApproval(context.Background(), base, plan)
+	ref, err := MintAttendedApproval(boundedTestContext(t), base, plan)
 	if err != nil {
 		t.Fatalf("live mint control: %v", err)
 	}
-	decision, ok, err := base.GetObject(context.Background(), ref)
+	decision, ok, err := base.GetObject(boundedTestContext(t), ref)
 	if err != nil || !ok {
 		t.Fatal(err)
 	}

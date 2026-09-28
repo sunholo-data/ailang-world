@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -108,7 +107,7 @@ func TestSessionMiddleware_UnknownToken(t *testing.T) {
 // a revoked row -> 401 SessionUnknown.
 func TestSessionMiddleware_ExpiredAndRevokedIsDistinct(t *testing.T) {
 	d := newHandlerDaemon(t)
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 
 	// Expired: mint with a backdated `now` so expires_at is already past the
 	// middleware's wall clock (equivalent to "--ttl 1 then advance now").
@@ -159,7 +158,7 @@ func TestSessionMiddleware_ExpiredAndRevokedIsDistinct(t *testing.T) {
 // is rejected, not even as a fallback).
 func TestSessionMiddleware_NoAlternateHeaderFallback(t *testing.T) {
 	d := newHandlerDaemon(t)
-	liveTok, _, _, err := authority.Mint(context.Background(), d.store, "ep-alt", grantForAuth(), 3600, time.Now().Unix(), nil)
+	liveTok, _, _, err := authority.Mint(boundedTestContext(t), d.store, "ep-alt", grantForAuth(), 3600, time.Now().Unix(), nil)
 	if err != nil {
 		t.Fatalf("mint: %v", err)
 	}
@@ -181,7 +180,7 @@ func TestSessionMiddleware_NoAlternateHeaderFallback(t *testing.T) {
 // routes pass through unauthenticated (residual R1).
 func TestSessionMiddleware_SuccessReachesHandler(t *testing.T) {
 	d := newHandlerDaemon(t)
-	liveTok, _, _, err := authority.Mint(context.Background(), d.store, "ep-success", grantForAuth(), 3600, time.Now().Unix(), nil)
+	liveTok, _, _, err := authority.Mint(boundedTestContext(t), d.store, "ep-success", grantForAuth(), 3600, time.Now().Unix(), nil)
 	if err != nil {
 		t.Fatalf("mint: %v", err)
 	}

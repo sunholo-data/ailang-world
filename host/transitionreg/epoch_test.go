@@ -1,7 +1,6 @@
 package transitionreg
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -18,7 +17,7 @@ import (
 // synthetic epoch-1 registry (MUT-11's absent-head arm).
 func TestEpochsForInterpreterRefusesAbsentAndUnnominated(t *testing.T) {
 	s, arch, ref := publisherStore(t, testFakeRelease, "OTHER-RELEASE v1")
-	epochs, release, err := NewPublisher(s, arch).EpochsForInterpreter(context.Background(), ref)
+	epochs, release, err := NewPublisher(s, arch).EpochsForInterpreter(boundedTestContext(t), ref)
 	if err != nil {
 		t.Fatalf("EpochsForInterpreter: %v", err)
 	}
@@ -27,12 +26,12 @@ func TestEpochsForInterpreterRefusesAbsentAndUnnominated(t *testing.T) {
 	}
 
 	absentStore, absentArch, absentRef := publisherStore(t, testFakeRelease, "")
-	_, _, err = NewPublisher(absentStore, absentArch).EpochsForInterpreter(context.Background(), absentRef)
+	_, _, err = NewPublisher(absentStore, absentArch).EpochsForInterpreter(boundedTestContext(t), absentRef)
 	if !errors.As(err, new(*EpochRegistryAbsentError)) {
 		t.Fatalf("absent epoch registry = %v, want *EpochRegistryAbsentError (never a default)", err)
 	}
 
-	if _, _, err := NewReader(s).EpochsForInterpreter(context.Background(), ref); !errors.As(err, new(*PublisherArchiveRequiredError)) {
+	if _, _, err := NewReader(s).EpochsForInterpreter(boundedTestContext(t), ref); !errors.As(err, new(*PublisherArchiveRequiredError)) {
 		t.Fatalf("bare-reader derivation = %v, want *PublisherArchiveRequiredError", err)
 	}
 }
@@ -56,7 +55,7 @@ func TestPublishSetEpochTwinInterpretersKeepDistinctPins(t *testing.T) {
 	if first == second {
 		t.Fatal("premise: the twin interpreters must have different hashes")
 	}
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 	pub := NewPublisher(s, arch)
 	for _, ref := range []hashref.HashRef{first, second} {
 		epochs, got, err := pub.EpochsForInterpreter(ctx, ref)
@@ -127,13 +126,13 @@ func TestPublishSetEpochCheckIsPerDescriptorInterpreter(t *testing.T) {
 	}
 	obj := store.Object{Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte(registry.SemanticID)),
 		SemanticID: registry.SemanticID, Provenance: "test-two-epoch-registry", Payload: payload}
-	if err := s.PutObject(context.Background(), obj); err != nil {
+	if err := s.PutObject(boundedTestContext(t), obj); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.CompareAndSetRegistryHead(context.Background(), registry.SemanticID, hashref.HashRef{}, obj.Hash); err != nil {
+	if err := s.CompareAndSetRegistryHead(boundedTestContext(t), registry.SemanticID, hashref.HashRef{}, obj.Hash); err != nil {
 		t.Fatal(err)
 	}
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 	pub := NewPublisher(s, arch)
 
 	crossed := storedSourceDescriptor(t, s, refA, "tools.crossed")

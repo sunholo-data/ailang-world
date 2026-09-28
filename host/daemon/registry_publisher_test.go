@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -44,7 +43,7 @@ func daemonFakeInterpreter(t *testing.T) string {
 func newPublisherDaemon(t *testing.T) (*Daemon, string) {
 	t.Helper()
 	dbPath := filepath.Join(t.TempDir(), "world.db")
-	d, err := New(context.Background(), Config{
+	d, err := New(boundedTestContext(t), Config{
 		DBPath: dbPath, BindHost: DefaultBindHost, AilangBin: daemonFakeInterpreter(t),
 	})
 	if err != nil {
@@ -85,7 +84,7 @@ func publishProductionRevision(t *testing.T, d *Daemon, dbPath, id, effect strin
 		Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte("daemon-test/transition-source")),
 		SemanticID: "daemon-test/transition-source", Provenance: "registry_publisher_test", Payload: payload,
 	}
-	if err := d.store.PutObject(context.Background(), src); err != nil {
+	if err := d.store.PutObject(boundedTestContext(t), src); err != nil {
 		t.Fatalf("put transition source: %v", err)
 	}
 	desc := transitionreg.Descriptor{
@@ -97,7 +96,7 @@ func publishProductionRevision(t *testing.T, d *Daemon, dbPath, id, effect strin
 		DeclaredEffects: []transitionreg.EffectRequirement{{Effect: effect, Scope: "world", Cost: 1}},
 		Title:           "title-" + id, Description: "description-" + id,
 	}
-	res, err := transitionreg.NewPublisher(d.store, archive.New(dbPath)).PublishSet(context.Background(),
+	res, err := transitionreg.NewPublisher(d.store, archive.New(dbPath)).PublishSet(boundedTestContext(t),
 		[]transitionreg.Change{{ID: id, Descriptor: &desc}})
 	if err != nil {
 		t.Fatalf("publish through the production path: %v", err)
@@ -173,7 +172,7 @@ func TestPublisherRefusalKeepsCardEmpty(t *testing.T) {
 		Access:          transitionreg.EffectRequirement{Effect: "world.apply", Scope: "world", Cost: 1},
 		DeclaredEffects: []transitionreg.EffectRequirement{{Effect: "world.apply", Scope: "world", Cost: 1}},
 	}
-	_, err := transitionreg.NewPublisher(d.store, archive.New(dbPath)).PublishSet(context.Background(),
+	_, err := transitionreg.NewPublisher(d.store, archive.New(dbPath)).PublishSet(boundedTestContext(t),
 		[]transitionreg.Change{{ID: ghost.ID, Descriptor: &ghost}})
 	var absent *transitionreg.TransitionSourceAbsentError
 	if !errors.As(err, &absent) {
@@ -194,7 +193,7 @@ func TestPublisherRefusalKeepsCardEmpty(t *testing.T) {
 func TestEpochRefusalKeepsCardUnchanged(t *testing.T) {
 	d, dbPath := newPublisherDaemon(t)
 	publishProductionRevision(t, d, dbPath, "tools.echo", "world.apply", 1)
-	headBefore, revBefore, ok, err := transitionreg.NewReader(d.store).CurrentRevision(context.Background())
+	headBefore, revBefore, ok, err := transitionreg.NewReader(d.store).CurrentRevision(boundedTestContext(t))
 	if err != nil || !ok {
 		t.Fatalf("read head after the honest publish: ok=%v err=%v", ok, err)
 	}
@@ -207,14 +206,14 @@ func TestEpochRefusalKeepsCardUnchanged(t *testing.T) {
 		DeclaredEffects: []transitionreg.EffectRequirement{{Effect: "world.apply", Scope: "world", Cost: 1}},
 		Title:           "title-tools.blocked", Description: "must never appear",
 	}
-	if err := d.store.PutObject(context.Background(), store.Object{
+	if err := d.store.PutObject(boundedTestContext(t), store.Object{
 		Hash: blocked.TransitionFn, InterfaceHash: hashref.SumSHA256([]byte("daemon-test/transition-source")),
 		SemanticID: "daemon-test/transition-source", Provenance: "registry_publisher_test",
 		Payload: []byte("epoch mismatch source"),
 	}); err != nil {
 		t.Fatal(err)
 	}
-	_, err = transitionreg.NewPublisher(d.store, archive.New(dbPath)).PublishSet(context.Background(),
+	_, err = transitionreg.NewPublisher(d.store, archive.New(dbPath)).PublishSet(boundedTestContext(t),
 		[]transitionreg.Change{{ID: blocked.ID, Descriptor: &blocked}})
 	var mismatch *transitionreg.InterpreterEpochMismatchError
 	if !errors.As(err, &mismatch) {
@@ -222,7 +221,7 @@ func TestEpochRefusalKeepsCardUnchanged(t *testing.T) {
 	}
 
 	// The head did not move.
-	headAfter, revAfter, ok, err := transitionreg.NewReader(d.store).CurrentRevision(context.Background())
+	headAfter, revAfter, ok, err := transitionreg.NewReader(d.store).CurrentRevision(boundedTestContext(t))
 	if err != nil || !ok || headAfter != headBefore || revAfter.Revision != revBefore.Revision {
 		t.Fatalf("head after the refused publish = (%q, rev %d, ok=%v), want it unchanged at (%q, rev %d)",
 			headAfter, revAfter.Revision, ok, headBefore, revBefore.Revision)
@@ -265,7 +264,7 @@ func TestEpochTwinInterpretersBothListedOnCard(t *testing.T) {
 	// pinned is one honest descriptor pinning interp; its source object is stored.
 	pinned := func(id string, interp hashref.HashRef) transitionreg.Change {
 		payload := []byte("transition source for " + id)
-		if err := d.store.PutObject(context.Background(), store.Object{
+		if err := d.store.PutObject(boundedTestContext(t), store.Object{
 			Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte("daemon-test/transition-source")),
 			SemanticID: "daemon-test/transition-source", Provenance: "registry_publisher_test", Payload: payload,
 		}); err != nil {
@@ -281,7 +280,7 @@ func TestEpochTwinInterpretersBothListedOnCard(t *testing.T) {
 		return transitionreg.Change{ID: id, Descriptor: &desc}
 	}
 	publish := func(changes ...transitionreg.Change) error {
-		_, err := transitionreg.NewPublisher(d.store, arch).PublishSet(context.Background(), changes)
+		_, err := transitionreg.NewPublisher(d.store, arch).PublishSet(boundedTestContext(t), changes)
 		return err
 	}
 	// Both twins in ONE publish: the set is where a release-level stand-in
@@ -289,7 +288,7 @@ func TestEpochTwinInterpretersBothListedOnCard(t *testing.T) {
 	if err := publish(pinned("tools.own", own), pinned("tools.twin", twin)); err != nil {
 		t.Fatalf("publish on the daemon's own interpreter and its same-release twin: %v", err)
 	}
-	snap, err := transitionreg.NewReader(d.store).ReadSnapshot(context.Background())
+	snap, err := transitionreg.NewReader(d.store).ReadSnapshot(boundedTestContext(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -307,7 +306,7 @@ func TestEpochTwinInterpretersBothListedOnCard(t *testing.T) {
 	if err := publish(pinned("tools.other", other)); !errors.As(err, &mismatch) {
 		t.Fatalf("non-nominated release = %v, want *InterpreterEpochMismatchError", err)
 	}
-	after, err := transitionreg.NewReader(d.store).ReadSnapshot(context.Background())
+	after, err := transitionreg.NewReader(d.store).ReadSnapshot(boundedTestContext(t))
 	if err != nil {
 		t.Fatal(err)
 	}

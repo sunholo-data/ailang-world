@@ -12,7 +12,7 @@ func TestStartupCallerCancellation(t *testing.T) {
 	for _, viaRun := range []bool{false, true} {
 		t.Run(map[bool]string{false: "New", true: "Run"}[viaRun], func(t *testing.T) {
 			cfg := Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost}
-			ctx, cancel := context.WithCancel(context.Background())
+			ctx, cancel := context.WithCancel(boundedTestContext(t))
 			cancel()
 			var err error
 			if viaRun {
@@ -28,7 +28,7 @@ func TestStartupCallerCancellation(t *testing.T) {
 			if !errors.Is(err, context.Canceled) || !errors.As(err, &se) || se.Stage != StageRegistry {
 				t.Fatalf("startup must observe cancelled ctx at registry: %v", err)
 			}
-			d, err := New(context.Background(), cfg)
+			d, err := New(boundedTestContext(t), cfg)
 			if err != nil {
 				t.Fatalf("live control/released writer: %v", err)
 			}

@@ -1,7 +1,6 @@
 package store
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -18,7 +17,7 @@ import (
 func commitCarrying(t testing.TB, s *Store, prev World, objs ...Object) World {
 	t.Helper()
 	next, c := carryingCommit(prev, objs...)
-	if err := s.Commit(context.Background(), c); err != nil {
+	if err := s.Commit(boundedTestContext(t), c); err != nil {
 		t.Fatalf("Commit entry %d: %v", next.Revision, err)
 	}
 	return next
@@ -103,10 +102,10 @@ func TestCommitMembershipRollsBackWithCommit(t *testing.T) {
 				t.Fatal(err)
 			}
 			_, c := carryingCommit(World{Ref: hashref.HashRef{}, LogHead: w.LogHead}, obj("rollback", "t/rb"))
-			if err := s.Commit(context.Background(), c); err == nil {
+			if err := s.Commit(boundedTestContext(t), c); err == nil {
 				t.Fatal("Commit succeeded despite injected failure")
 			}
-			if _, ok, err := s.GetLogEntry(context.Background(), 1); err != nil || ok {
+			if _, ok, err := s.GetLogEntry(boundedTestContext(t), 1); err != nil || ok {
 				t.Fatalf("entry 1 after failed commit: ok=%v err=%v", ok, err)
 			}
 			if rows := membershipRows(t, s); len(rows) != 0 {
@@ -120,7 +119,7 @@ func TestCommitMembershipRollsBackWithCommit(t *testing.T) {
 func TestCommitMembershipForeignKeys(t *testing.T) {
 	s := openMem(t)
 	o := obj("fk", "t/fk")
-	if err := s.PutObject(context.Background(), o); err != nil {
+	if err := s.PutObject(boundedTestContext(t), o); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.db.Exec(`INSERT OR IGNORE INTO commit_objects (object_ref, entry_index) VALUES (?, 999)`, o.Hash.String()); err == nil {
@@ -146,17 +145,17 @@ func TestCommitMembershipDedupesWithinCommit(t *testing.T) {
 func TestCommitReplayDoesNotDuplicateMembership(t *testing.T) {
 	s := openMem(t)
 	c := journalCommitFixture(t, s, "replay")
-	if _, _, err := s.AppendIntent(context.Background(), "replay", testCommitIntent("replay", c)); err != nil {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), "replay", testCommitIntent("replay", c)); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Commit(context.Background(), c); err != nil {
+	if err := s.Commit(boundedTestContext(t), c); err != nil {
 		t.Fatal(err)
 	}
 	before := membershipRows(t, s)
 	if len(before) != 1 {
 		t.Fatalf("membership after first commit = %v", before)
 	}
-	if err := s.Commit(context.Background(), c); err != nil {
+	if err := s.Commit(boundedTestContext(t), c); err != nil {
 		t.Fatalf("replay: %v", err)
 	}
 	if after := membershipRows(t, s); !reflect.DeepEqual(after, before) {
@@ -171,7 +170,7 @@ func TestConflictWritesNoMembership(t *testing.T) {
 	commitCarrying(t, s, g, obj("first", "t/first"))
 	stale := obj("stale", "t/stale")
 	_, c := carryingCommit(World{Ref: g.Ref, Revision: 1, LogHead: g.LogHead}, stale)
-	if err := s.Commit(context.Background(), c); !IsConflict(err) {
+	if err := s.Commit(boundedTestContext(t), c); !IsConflict(err) {
 		t.Fatalf("want ConflictError, got %v", err)
 	}
 	if got := membershipFor(t, s, stale.Hash); len(got) != 0 {
@@ -260,7 +259,7 @@ func TestDroppedMembershipTableIsRefusedNotRecreated(t *testing.T) {
 
 func objectCommits(t *testing.T, s *Store, ref hashref.HashRef) []int64 {
 	t.Helper()
-	got, err := s.ObjectCommits(context.Background(), ref, -1, MaxObjectCommitPage)
+	got, err := s.ObjectCommits(boundedTestContext(t), ref, -1, MaxObjectCommitPage)
 	if err != nil {
 		t.Fatalf("ObjectCommits: %v", err)
 	}
@@ -273,7 +272,7 @@ func TestCommitRecordsMembershipPerCarryingCommit(t *testing.T) {
 	w := seedGenesis(t, s)
 	shared, once, stored, later := obj("shared", "t/shared"), obj("once", "t/once"), obj("stored-only", "t/stored"), obj("put-then-commit", "t/later")
 	for _, o := range []Object{stored, later} {
-		if err := s.PutObject(context.Background(), o); err != nil {
+		if err := s.PutObject(boundedTestContext(t), o); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -318,7 +317,7 @@ func TestObjectCommitsOrderAndContinuation(t *testing.T) {
 	var all []int64
 	after := int64(-1)
 	for round := 0; round < 5; round++ { // bounded: a non-advancing cursor reds, not hangs
-		page, err := s.ObjectCommits(context.Background(), shared.Hash, after, 3)
+		page, err := s.ObjectCommits(boundedTestContext(t), shared.Hash, after, 3)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -341,7 +340,7 @@ func TestObjectCommitsOrderAndContinuation(t *testing.T) {
 func TestObjectCommitsValidation(t *testing.T) {
 	s := openMem(t)
 	ref := obj("v", "t/v").Hash
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 	for _, limit := range []int{0, MaxObjectCommitPage + 1} {
 		var invalid *InvalidLimitError
 		if _, err := s.ObjectCommits(ctx, ref, -1, limit); !errors.As(err, &invalid) {
@@ -385,7 +384,7 @@ func TestObjectCommitsReadOnlyMatchesWriterAndEntriesExist(t *testing.T) {
 		t.Fatalf("reader %v writer %v, want [1 3]", readerView, writerView)
 	}
 	for _, index := range readerView {
-		if _, ok, err := ro.GetLogEntry(context.Background(), index); err != nil || !ok {
+		if _, ok, err := ro.GetLogEntry(boundedTestContext(t), index); err != nil || !ok {
 			t.Fatalf("membership names entry %d: ok=%v err=%v", index, ok, err)
 		}
 	}
@@ -400,7 +399,7 @@ func TestObjectCommitsMissingTableIsAnError(t *testing.T) {
 	if _, err := s.db.Exec(`DROP TABLE commit_objects`); err != nil {
 		t.Fatal(err)
 	}
-	if got, err := s.ObjectCommits(context.Background(), obj("x", "t/x").Hash, -1, 1); err == nil {
+	if got, err := s.ObjectCommits(boundedTestContext(t), obj("x", "t/x").Hash, -1, 1); err == nil {
 		t.Fatalf("missing table answered %v, nil", got)
 	}
 }
@@ -427,7 +426,7 @@ func TestObjectCommitsTimingAt10k(t *testing.T) {
 		}
 		next, c := carryingCommit(w, objs...)
 		start := time.Now()
-		if err := s.Commit(context.Background(), c); err != nil {
+		if err := s.Commit(boundedTestContext(t), c); err != nil {
 			t.Fatal(err)
 		}
 		commitTimes = append(commitTimes, time.Since(start))
@@ -435,10 +434,10 @@ func TestObjectCommitsTimingAt10k(t *testing.T) {
 	}
 	cold := obj(fmt.Sprintf("out-%d", n/2), "invocation/output").Hash
 	stored := obj("never-committed", "t/none")
-	if err := s.PutObject(context.Background(), stored); err != nil {
+	if err := s.PutObject(boundedTestContext(t), stored); err != nil {
 		t.Fatal(err)
 	}
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 	for _, tc := range []struct {
 		name  string
 		ref   hashref.HashRef

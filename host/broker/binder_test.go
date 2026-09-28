@@ -1,7 +1,6 @@
 package broker
 
 import (
-	"context"
 	"errors"
 	"testing"
 )
@@ -14,7 +13,7 @@ func TestOpenBinder(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Bind: %v", err)
 	}
-	_, _, err = inv.Request(context.Background(), EffectRequest{Effect: "IO", Scope: "x", Cost: 1}, nil)
+	_, _, err = inv.Request(boundedTestContext(t), EffectRequest{Effect: "IO", Scope: "x", Cost: 1}, nil)
 	var undeclared *UndeclaredEffectError
 	if !errors.As(err, &undeclared) {
 		t.Fatalf("Request on an empty declaration set = %v, want *UndeclaredEffectError", err)

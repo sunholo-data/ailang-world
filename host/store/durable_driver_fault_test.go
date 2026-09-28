@@ -81,7 +81,7 @@ func (tx *durableFaultTx) Commit() error {
 func TestDriverCommitErrorAfterRealCommitIsUncertainAndReconciles(t *testing.T) {
 	s := openFileStore(t)
 	c := journalCommitFixture(t, s, "driver-fault")
-	if _, _, err := s.AppendIntent(context.Background(), "driver-fault", testCommitIntent("driver-fault", c)); err != nil {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), "driver-fault", testCommitIntent("driver-fault", c)); err != nil {
 		t.Fatal(err)
 	}
 	path := s.lock.dbPath
@@ -107,7 +107,7 @@ func TestDriverCommitErrorAfterRealCommitIsUncertainAndReconciles(t *testing.T) 
 	}
 	s.db = replacement // openFileStore's cleanup closes this DB and releases the original lock.
 	fault.armed.Store(true)
-	err = s.Commit(context.Background(), c)
+	err = s.Commit(boundedTestContext(t), c)
 	var uncertain *UncertainError
 	if !fault.reached.Load() {
 		t.Fatal("fault did not reach the real COMMIT")
@@ -115,7 +115,7 @@ func TestDriverCommitErrorAfterRealCommitIsUncertainAndReconciles(t *testing.T) 
 	if !errors.As(err, &uncertain) || !errors.Is(uncertain.Cause, errCommitAfterDurability) {
 		t.Fatalf("err = %v; want uncertain with post-COMMIT sentinel", err)
 	}
-	rc, ok, err := s.GetReceipt(context.Background(), "driver-fault")
+	rc, ok, err := s.GetReceipt(boundedTestContext(t), "driver-fault")
 	if err != nil || !ok || rc.State != ReceiptResolved {
 		t.Fatalf("receipt = %v, found = %v, err = %v; want resolved", rc.State, ok, err)
 	}

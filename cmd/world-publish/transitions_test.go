@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"os"
 	"os/exec"
@@ -91,7 +90,7 @@ func bootstrapEpochRegistry(t *testing.T, storePath, release string) {
 		t.Fatalf("open store for bootstrap: %v", err)
 	}
 	defer func() { _ = db.Close() }()
-	if _, _, err := registry.Bootstrap(context.Background(), db, release); err != nil {
+	if _, _, err := registry.Bootstrap(boundedTestContext(t), db, release); err != nil {
 		t.Fatalf("bootstrap epoch registry: %v", err)
 	}
 }
@@ -219,12 +218,12 @@ func TestTransitionsVerbRefusesGarbageSourceBeforePutObject(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, found, err := db.GetObject(context.Background(), hashref.SumSHA256(source)); err != nil {
+	if _, found, err := db.GetObject(boundedTestContext(t), hashref.SumSHA256(source)); err != nil {
 		t.Fatal(err)
 	} else if found {
 		t.Fatal("a refused source must not have been stored (the check runs BEFORE PutObject)")
 	}
-	if _, _, ok, _ := transitionreg.NewReader(db).CurrentRevision(context.Background()); ok {
+	if _, _, ok, _ := transitionreg.NewReader(db).CurrentRevision(boundedTestContext(t)); ok {
 		t.Fatal("a refused publish must leave no head")
 	}
 }
@@ -252,7 +251,7 @@ func TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter(t *test
 		t.Fatal(err)
 	}
 	release := firstVersionLine(t, bin)
-	if _, _, err := registry.Bootstrap(context.Background(), db, release); err != nil {
+	if _, _, err := registry.Bootstrap(boundedTestContext(t), db, release); err != nil {
 		t.Fatalf("bootstrap: %v", err)
 	}
 	if err := db.Close(); err != nil {

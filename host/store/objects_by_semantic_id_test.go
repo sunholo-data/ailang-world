@@ -22,7 +22,7 @@ func semanticObject(t *testing.T, s *Store, id, label string) Object {
 		Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte("sid-iface")),
 		SemanticID: id, Provenance: "sid-test-" + label, Payload: payload,
 	}
-	if err := s.PutObject(context.Background(), o); err != nil {
+	if err := s.PutObject(boundedTestContext(t), o); err != nil {
 		t.Fatalf("PutObject %s: %v", label, err)
 	}
 	return o
@@ -69,7 +69,7 @@ func TestObjectsBySemanticIDNonUniqueOrderedAndPaged(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer s.Close()
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 	id, want := seedSemanticIDs(t, s)
 
 	all, err := s.ObjectsBySemanticID(ctx, id, "", MaxSemanticIDPage)
@@ -236,7 +236,7 @@ func TestLookupIndexGuardReadOnlyThenProvision(t *testing.T) {
 	calls := 0
 	objectsBySemanticIDBeforeQuery = func() { calls++ }
 	t.Cleanup(func() { objectsBySemanticIDBeforeQuery = nil })
-	_, err = ro.ObjectsBySemanticID(context.Background(), "guard/name", "", 10)
+	_, err = ro.ObjectsBySemanticID(boundedTestContext(t), "guard/name", "", 10)
 	var unavailable *LookupIndexUnavailableError
 	if !errors.As(err, &unavailable) || calls != 0 {
 		t.Fatalf("unindexed read-only lookup = %v, hook calls=%d; want typed refusal and zero calls", err, calls)
@@ -252,7 +252,7 @@ func TestLookupIndexGuardReadOnlyThenProvision(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer ro.Close()
-	got, err := ro.ObjectsBySemanticID(context.Background(), "guard/name", "", 10)
+	got, err := ro.ObjectsBySemanticID(boundedTestContext(t), "guard/name", "", 10)
 	if err != nil || len(got) != 1 || got[0].Hash != o.Hash {
 		t.Fatalf("reopened lookup=%v (%v), want %s", got, err, o.Hash)
 	}
@@ -364,7 +364,7 @@ func TestLookupIndexIncompatibleIsRefused(t *testing.T) {
 			calls := 0
 			objectsBySemanticIDBeforeQuery = func() { calls++ }
 			t.Cleanup(func() { objectsBySemanticIDBeforeQuery = nil })
-			_, err = ro.ObjectsBySemanticID(context.Background(), "x", "", 10)
+			_, err = ro.ObjectsBySemanticID(boundedTestContext(t), "x", "", 10)
 			var unavailable *LookupIndexUnavailableError
 			if !errors.As(err, &unavailable) || calls != 0 {
 				t.Fatalf("read-only lookup=%v, hook calls=%d; want typed refusal, zero calls", err, calls)

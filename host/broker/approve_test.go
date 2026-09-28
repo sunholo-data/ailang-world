@@ -2,7 +2,6 @@ package broker
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -165,7 +164,7 @@ func TestPublishApprovalScopeRefusesASmuggledFragment(t *testing.T) {
 
 	// KNOWN-POSITIVE CONTROL: the unmodified payload is accepted, so the
 	// refusal below is attributable to the fragment and not to the fixture.
-	if _, err := validatePublishApproval(context.Background(), base, fixture.payload, req); err != nil {
+	if _, err := validatePublishApproval(boundedTestContext(t), base, fixture.payload, req); err != nil {
 		t.Fatalf("control payload was refused: %v", err)
 	}
 
@@ -192,7 +191,7 @@ func TestPublishApprovalScopeRefusesASmuggledFragment(t *testing.T) {
 			if !strings.Contains(smuggledScope, publishApprovalScopeMark) {
 				t.Fatal("the smuggled scope carries no mark; this arm would pass vacuously")
 			}
-			_, err := validatePublishApproval(context.Background(), base, EncodePublishPayload(smuggled, fixture.hashes),
+			_, err := validatePublishApproval(boundedTestContext(t), base, EncodePublishPayload(smuggled, fixture.hashes),
 				EffectRequest{
 					Effect: EffectRegistryPublish, Scope: smuggledScope, Cost: PublishCost, Now: 50,
 				})
@@ -224,7 +223,7 @@ func TestLandedApprovalWiresCarryPublishBoundDecisionsUnchanged(t *testing.T) {
 	times := defaultApprovalTimes()
 	fixture := newPublishFixture(t, "http://127.0.0.1:1", "wire").landApproval(t, base, "approve", times)
 
-	requestObj, ok, err := base.GetObject(context.Background(), fixture.approvalRequestRef)
+	requestObj, ok, err := base.GetObject(boundedTestContext(t), fixture.approvalRequestRef)
 	if err != nil || !ok {
 		t.Fatalf("approval request object = ok %v, err %v", ok, err)
 	}
@@ -249,7 +248,7 @@ func TestLandedApprovalWiresCarryPublishBoundDecisionsUnchanged(t *testing.T) {
 		t.Fatalf("re-encoded request = %s, want the landed bytes %s", got, requestObj.Payload)
 	}
 
-	decisionObj, ok, err := base.GetObject(context.Background(), fixture.identity.ApprovalRef)
+	decisionObj, ok, err := base.GetObject(boundedTestContext(t), fixture.identity.ApprovalRef)
 	if err != nil || !ok {
 		t.Fatalf("approval decision object = ok %v, err %v", ok, err)
 	}
@@ -329,7 +328,7 @@ func TestOldNonPublishApprovalBytesRemainValid(t *testing.T) {
 	pollSession := newSession(base, "old-bytes-poll", []Capability{
 		{Effect: EffectHumanPollApproval, Scope: "release", ExpiresAt: 100, Budget: 2},
 	}, Registry{EffectHumanPollApproval: human}, Live, nil)
-	polled, _, err := pollSession.Invoke(context.Background(), EffectRequest{
+	polled, _, err := pollSession.Invoke(boundedTestContext(t), EffectRequest{
 		Effect: EffectHumanPollApproval, Scope: "release", Cost: 1, Now: 12,
 	}, mustApprovalJSON(approvalInputWire{RequestRef: requestRef.String()}))
 	if err != nil {

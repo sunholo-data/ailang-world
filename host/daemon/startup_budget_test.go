@@ -45,7 +45,7 @@ func TestStartupBudgetQuarantinesPostCutoffBootstrap(t *testing.T) {
 		writeResult <- err
 		return registry.Registry{}, hashref.HashRef{}, err
 	}
-	outer, stop := context.WithCancel(context.Background())
+	outer, stop := context.WithCancel(boundedTestContext(t))
 	defer stop()
 	begin := time.Now()
 	_, err = startBounded(outer, Config{}, 100*time.Millisecond, func(ctx context.Context, _ Config) (*Daemon, error) {
@@ -107,24 +107,24 @@ func TestStartupBudgetHeldConnectionSettles(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer blocker.Close()
-	conn, err := blocker.Conn(context.Background())
+	conn, err := blocker.Conn(boundedTestContext(t))
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer conn.Close()
-	if _, err := conn.ExecContext(context.Background(), "BEGIN EXCLUSIVE"); err != nil {
+	if _, err := conn.ExecContext(boundedTestContext(t), "BEGIN EXCLUSIVE"); err != nil {
 		t.Fatal(err)
 	}
-	defer conn.ExecContext(context.Background(), "ROLLBACK")
+	defer conn.ExecContext(boundedTestContext(t), "ROLLBACK")
 	readDone := make(chan struct{})
 	go func() {
-		_, _, _ = s.GetObject(context.Background(), hashref.SumSHA256([]byte("held")))
+		_, _, _ = s.GetObject(boundedTestContext(t), hashref.SumSHA256([]byte("held")))
 		close(readDone)
 	}()
 	time.Sleep(30 * time.Millisecond)
 	d := &Daemon{store: s, bootstrap: registry.Bootstrap}
 	begin := time.Now()
-	_, err = startBounded(context.Background(), Config{}, 100*time.Millisecond, func(ctx context.Context, _ Config) (*Daemon, error) {
+	_, err = startBounded(boundedTestContext(t), Config{}, 100*time.Millisecond, func(ctx context.Context, _ Config) (*Daemon, error) {
 		return nil, d.bootstrapRegistry(ctx, unpinnedRelease)
 	})
 	var startup *StartupError
@@ -139,7 +139,7 @@ func TestStartupBudgetHeldConnectionSettles(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("no-worker cleanup stalled behind held connection")
 	}
-	if _, err := conn.ExecContext(context.Background(), "ROLLBACK"); err != nil {
+	if _, err := conn.ExecContext(boundedTestContext(t), "ROLLBACK"); err != nil {
 		t.Fatal(err)
 	}
 	select {

@@ -60,7 +60,7 @@ func TestResolveContext_PolicyEquivalence(t *testing.T) {
 	for _, tc := range table {
 		t.Run(tc.name, func(t *testing.T) {
 			gotPlain := resolveNow(t, res, tc.header, tc.now)
-			gotCtx, err := New(st).ResolveContext(context.Background(), tc.header, tc.now)
+			gotCtx, err := New(st).ResolveContext(boundedTestContext(t), tc.header, tc.now)
 			if err != nil {
 				t.Fatalf("ResolveContext over background ctx returned error: %v", err)
 			}
@@ -121,7 +121,7 @@ func TestResolveContext_StoreErrorIsErrorNotDenial(t *testing.T) {
 	storeErr := errors.New("store read failed")
 	res := New(&errorStore{err: storeErr})
 
-	out, err := res.ResolveContext(context.Background(), "Bearer "+hex64, 1000)
+	out, err := res.ResolveContext(boundedTestContext(t), "Bearer "+hex64, 1000)
 	if err == nil {
 		t.Fatalf("ResolveContext with a failing store: err = nil, outcome = %#v — a store failure is NOT a credential denial", out)
 	}
@@ -135,7 +135,7 @@ func TestResolveContext_StoreErrorIsErrorNotDenial(t *testing.T) {
 	// A context error on the store read is likewise an ERROR, so a transport
 	// deadline never arrives at the caller disguised as "unknown credential".
 	ctxErr := New(&errorStore{err: context.DeadlineExceeded})
-	out2, err2 := ctxErr.ResolveContext(context.Background(), "Bearer "+hex64, 1000)
+	out2, err2 := ctxErr.ResolveContext(boundedTestContext(t), "Bearer "+hex64, 1000)
 	if !errors.Is(err2, context.DeadlineExceeded) || out2.Success != nil || out2.Denied != nil {
 		t.Fatalf("ctx-error outcome = (%#v, %v), want (zero outcome, error wrapping context.DeadlineExceeded)", out2, err2)
 	}

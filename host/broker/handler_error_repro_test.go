@@ -70,7 +70,7 @@ func TestCFJ2HandlerErrorKeepsDebitAndWritesOneFailureRecord(t *testing.T) {
 		Registry{"FS.Write": handler}, Live, nil)
 
 	before := s.grants[0].Budget
-	_, ref, err := s.Invoke(context.Background(),
+	_, ref, err := s.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: "FS.Write", Scope: "/p", Cost: 3, Now: 1}, []byte("x"))
 
 	var failed *EffectFailedError

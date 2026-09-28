@@ -1,7 +1,6 @@
 package daemon
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,7 +23,7 @@ func TestMeasureStartup(t *testing.T) {
 		path := filepath.Join(dir, fmt.Sprintf("w-%d.db", i))
 		for _, arm := range []string{"New(fresh, archive)", "New(existing, archive)"} {
 			start := time.Now()
-			d, err := New(context.Background(), Config{DBPath: path, BindHost: DefaultBindHost, AilangBin: bin})
+			d, err := New(boundedTestContext(t), Config{DBPath: path, BindHost: DefaultBindHost, AilangBin: bin})
 			if err != nil {
 				t.Fatalf("%s: %v", arm, err)
 			}

@@ -20,7 +20,7 @@ func TestReplayCallerCancellation(t *testing.T) {
 	e := NewEngine(s, nil)
 	entry := EpisodeEntry{TransitionFn: hashref.SumSHA256([]byte("missing"))}
 	ep := Episode{Entries: []EpisodeEntry{entry}}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	cancel()
 	if _, err = e.ReplayEntry(ctx, ep, 0, entry); !errors.Is(err, context.Canceled) {
 		t.Fatalf("entry ignored cancellation: %v", err)
@@ -28,7 +28,7 @@ func TestReplayCallerCancellation(t *testing.T) {
 	if _, err = e.ReplayEpisode(ctx, ep); !errors.Is(err, context.Canceled) {
 		t.Fatalf("episode ignored cancellation: %v", err)
 	}
-	_, err = e.ReplayEpisode(context.Background(), ep)
+	_, err = e.ReplayEpisode(boundedTestContext(t), ep)
 	var absent *archive.ReplayError
 	if !errors.As(err, &absent) || absent.Kind != archive.KindAbsentArtifact {
 		t.Fatalf("live control: %v", err)
@@ -76,10 +76,10 @@ func TestReplayCacheCallerCancellation(t *testing.T) {
 	defer s.Close()
 	payload := []byte("source")
 	ref := hashref.SumSHA256(payload)
-	if err := s.PutObject(context.Background(), store.Object{Hash: ref, InterfaceHash: hashref.SumSHA256([]byte("iface")), SemanticID: "test/source", Payload: payload}); err != nil {
+	if err := s.PutObject(boundedTestContext(t), store.Object{Hash: ref, InterfaceHash: hashref.SumSHA256([]byte("iface")), SemanticID: "test/source", Payload: payload}); err != nil {
 		t.Fatal(err)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	defer cancel()
 	w := &replayWitness{Store: s, t: t, want: ctx, cancel: cancel}
 	e := &Engine{store: w, archive: a}

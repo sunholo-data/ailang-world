@@ -10,12 +10,12 @@ import (
 
 func TestBootstrapCallerCancellation(t *testing.T) {
 	s := openMem(t)
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	cancel()
 	if _, _, err := Bootstrap(ctx, s, m1Release); !errors.Is(err, context.Canceled) {
 		t.Fatalf("bootstrap ignored caller cancellation: %v", err)
 	}
-	if _, _, err := Bootstrap(context.Background(), s, m1Release); err != nil {
+	if _, _, err := Bootstrap(boundedTestContext(t), s, m1Release); err != nil {
 		t.Fatalf("live control: %v", err)
 	}
 }
@@ -46,10 +46,10 @@ func (w *bootstrapWitness) GetObject(ctx context.Context, ref hashref.HashRef) (
 }
 func TestBootstrapSecondReadCancellation(t *testing.T) {
 	s := openMem(t)
-	if _, _, err := Bootstrap(context.Background(), s, m1Release); err != nil {
+	if _, _, err := Bootstrap(boundedTestContext(t), s, m1Release); err != nil {
 		t.Fatal(err)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	defer cancel()
 	w := &bootstrapWitness{Store: s, t: t, want: ctx, cancel: cancel}
 	if _, _, err := bootstrap(ctx, w, m1Release); !errors.Is(err, context.Canceled) {

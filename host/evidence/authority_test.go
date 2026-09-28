@@ -80,7 +80,7 @@ func newFixture(t *testing.T) (*evidence.Validator, *fakeReader, hashref.HashRef
 
 func requireProvenControl(t *testing.T, v *evidence.Validator, ref hashref.HashRef) evidence.ValidatedEvidence {
 	t.Helper()
-	r := v.ValidateProof(context.Background(), ref, testSubject)
+	r := v.ValidateProof(boundedTestContext(t), ref, testSubject)
 	seal, ok := r.Validated()
 	if !ok || r.Err() != nil {
 		t.Fatalf("shared control did not mint: unsupported=%v err=%v", unsupportedOf(r), r.Err())
@@ -111,21 +111,21 @@ func TestInvalidProofRefIsRefused(t *testing.T) {
 	v, r, good := newFixture(t)
 	requireProvenControl(t, v, good)
 	r.payload = nil
-	requireReason(t, v.ValidateProof(context.Background(), hashref.HashRef{}, testSubject), evidence.UnsupportedInvalidRef, "invalid-ref guard")
+	requireReason(t, v.ValidateProof(boundedTestContext(t), hashref.HashRef{}, testSubject), evidence.UnsupportedInvalidRef, "invalid-ref guard")
 }
 
 func TestMissingProofReportIsRefused(t *testing.T) {
 	v, r, good := newFixture(t)
 	requireProvenControl(t, v, good)
 	r.payload = nil
-	requireReason(t, v.ValidateProof(context.Background(), hashref.SumSHA256([]byte("absent")), testSubject), evidence.UnsupportedMissing, "missing-object guard")
+	requireReason(t, v.ValidateProof(boundedTestContext(t), hashref.SumSHA256([]byte("absent")), testSubject), evidence.UnsupportedMissing, "missing-object guard")
 }
 
 func TestPayloadHashMismatchIsRefused(t *testing.T) {
 	v, r, good := newFixture(t)
 	requireProvenControl(t, v, good)
 	r.payload = envelopeFor(t, testKey, reportFor(testSubject, testCompiler), "wrong")
-	requireReason(t, v.ValidateProof(context.Background(), hashref.SumSHA256([]byte("different")), testSubject), evidence.UnsupportedHashMismatch, "recomputed payload-hash guard")
+	requireReason(t, v.ValidateProof(boundedTestContext(t), hashref.SumSHA256([]byte("different")), testSubject), evidence.UnsupportedHashMismatch, "recomputed payload-hash guard")
 }
 
 func TestWrongSemanticIDIsRefused(t *testing.T) {
@@ -133,7 +133,7 @@ func TestWrongSemanticIDIsRefused(t *testing.T) {
 	requireProvenControl(t, v, good)
 	r.meta.SemanticID = "wrong"
 	r.payload = envelopeFor(t, testKey, reportFor(testSubject, testCompiler), "wrong")
-	requireReason(t, v.ValidateProof(context.Background(), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedWrongSemanticID, "semantic-ID guard")
+	requireReason(t, v.ValidateProof(boundedTestContext(t), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedWrongSemanticID, "semantic-ID guard")
 }
 
 func TestWrongInterfaceIsRefused(t *testing.T) {
@@ -141,7 +141,7 @@ func TestWrongInterfaceIsRefused(t *testing.T) {
 	requireProvenControl(t, v, good)
 	r.meta.InterfaceHash = hashref.SumSHA256([]byte("wrong"))
 	r.payload = envelopeFor(t, testKey, reportFor(testSubject, testCompiler), "wrong")
-	requireReason(t, v.ValidateProof(context.Background(), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedWrongInterface, "interface-hash guard")
+	requireReason(t, v.ValidateProof(boundedTestContext(t), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedWrongInterface, "interface-hash guard")
 }
 
 func TestMalformedProofReportIsRefused(t *testing.T) {
@@ -151,21 +151,21 @@ func TestMalformedProofReportIsRefused(t *testing.T) {
 	tag := make([]byte, 32)
 	r.payload = []byte(fmt.Sprintf(`{"report":"%s","mac":"%s"}`, base64.RawURLEncoding.EncodeToString(badReport), base64.RawURLEncoding.EncodeToString(tag)))
 	ref := hashref.SumSHA256(r.payload)
-	requireReason(t, v.ValidateProof(context.Background(), ref, testSubject), evidence.UnsupportedMalformed, "strict report-decode guard")
+	requireReason(t, v.ValidateProof(boundedTestContext(t), ref, testSubject), evidence.UnsupportedMalformed, "strict report-decode guard")
 }
 
 func TestOtherwisePerfectReportWithoutMACIsUnauthenticated(t *testing.T) {
 	v, r, good := newFixture(t)
 	requireProvenControl(t, v, good)
 	r.payload = envelopeFor(t, testKey, reportFor(testSubject, testCompiler), "absent")
-	requireReason(t, v.ValidateProof(context.Background(), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedUnauthenticatedReport, "absent-MAC authentication guard")
+	requireReason(t, v.ValidateProof(boundedTestContext(t), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedUnauthenticatedReport, "absent-MAC authentication guard")
 }
 
 func TestOtherwisePerfectReportWithWrongMACIsUnauthenticated(t *testing.T) {
 	v, r, good := newFixture(t)
 	requireProvenControl(t, v, good)
 	r.payload = envelopeFor(t, testKey, reportFor(testSubject, testCompiler), "wrong")
-	requireReason(t, v.ValidateProof(context.Background(), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedUnauthenticatedReport, "wrong-MAC authentication guard")
+	requireReason(t, v.ValidateProof(boundedTestContext(t), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedUnauthenticatedReport, "wrong-MAC authentication guard")
 }
 
 func TestMismatchedProofSubjectIsRefused(t *testing.T) {
@@ -173,7 +173,7 @@ func TestMismatchedProofSubjectIsRefused(t *testing.T) {
 	requireProvenControl(t, v, good)
 	report := reportFor(hashref.SumSHA256([]byte("other subject")), hashref.SumSHA256([]byte("other compiler")))
 	r.payload = envelopeFor(t, testKey, report, "good")
-	requireReason(t, v.ValidateProof(context.Background(), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedSubjectMismatch, "subject-binding guard")
+	requireReason(t, v.ValidateProof(boundedTestContext(t), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedSubjectMismatch, "subject-binding guard")
 }
 
 func TestMismatchedProofToolIsRefused(t *testing.T) {
@@ -182,7 +182,7 @@ func TestMismatchedProofToolIsRefused(t *testing.T) {
 	report := reportFor(testSubject, hashref.SumSHA256([]byte("other compiler")))
 	report.Verified = []string{"other"}
 	r.payload = envelopeFor(t, testKey, report, "good")
-	requireReason(t, v.ValidateProof(context.Background(), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedToolMismatch, "compiler-identity guard")
+	requireReason(t, v.ValidateProof(boundedTestContext(t), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedToolMismatch, "compiler-identity guard")
 }
 
 func TestFailedProofReportIsRefused(t *testing.T) {
@@ -192,7 +192,7 @@ func TestFailedProofReportIsRefused(t *testing.T) {
 	report.CheckPassed = false
 	report.Verified = []string{"other"}
 	r.payload = envelopeFor(t, testKey, report, "good")
-	requireReason(t, v.ValidateProof(context.Background(), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedProofFailed, "proof-success guard")
+	requireReason(t, v.ValidateProof(boundedTestContext(t), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedProofFailed, "proof-success guard")
 }
 
 func TestIncompleteProofReportIsRefused(t *testing.T) {
@@ -201,7 +201,7 @@ func TestIncompleteProofReportIsRefused(t *testing.T) {
 	report := reportFor(testSubject, testCompiler)
 	report.Verified = []string{"other"}
 	r.payload = envelopeFor(t, testKey, report, "good")
-	requireReason(t, v.ValidateProof(context.Background(), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedProofIncomplete, "required-identity guard")
+	requireReason(t, v.ValidateProof(boundedTestContext(t), hashref.SumSHA256(r.payload), testSubject), evidence.UnsupportedProofIncomplete, "required-identity guard")
 }
 
 func TestAttackerChosenValidatorCannotMintForHostAuthority(t *testing.T) {
@@ -218,7 +218,7 @@ func TestAttackerChosenValidatorCannotMintForHostAuthority(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	foreign, ok := v2.ValidateProof(context.Background(), hashref.SumSHA256(payload2), testSubject).Validated()
+	foreign, ok := v2.ValidateProof(boundedTestContext(t), hashref.SumSHA256(payload2), testSubject).Validated()
 	if !ok {
 		t.Fatal("caller-constructed validator did not self-mint")
 	}
@@ -240,7 +240,7 @@ func TestValidatorMintIdentitiesAreDistinct(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	seal2, ok := v2.ValidateProof(context.Background(), hashref.SumSHA256(payload2), testSubject).Validated()
+	seal2, ok := v2.ValidateProof(boundedTestContext(t), hashref.SumSHA256(payload2), testSubject).Validated()
 	if !ok {
 		t.Fatal("second same-key validator did not mint")
 	}

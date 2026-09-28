@@ -114,23 +114,23 @@ func TestCommitBudgetAndUncertainReconcile(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer blocker.Close()
-		conn, err := blocker.Conn(context.Background())
+		conn, err := blocker.Conn(boundedTestContext(t))
 		if err != nil {
 			t.Fatal(err)
 		}
 		defer conn.Close()
-		if _, err := conn.ExecContext(context.Background(), "BEGIN EXCLUSIVE"); err != nil {
+		if _, err := conn.ExecContext(boundedTestContext(t), "BEGIN EXCLUSIVE"); err != nil {
 			t.Fatal(err)
 		}
 		released := make(chan struct{})
 		go func() {
 			time.Sleep(700 * time.Millisecond)
-			_, _ = conn.ExecContext(context.Background(), "ROLLBACK")
+			_, _ = conn.ExecContext(boundedTestContext(t), "ROLLBACK")
 			close(released)
 		}()
 		readDone := make(chan struct{})
 		go func() {
-			_, _, _ = st.GetObject(context.Background(), hashref.SumSHA256([]byte("held")))
+			_, _, _ = st.GetObject(boundedTestContext(t), hashref.SumSHA256([]byte("held")))
 			close(readDone)
 		}()
 		time.Sleep(30 * time.Millisecond)

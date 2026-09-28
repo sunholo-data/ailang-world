@@ -21,7 +21,7 @@ func TestConvertedStoreMethodsM5a(t *testing.T) {
 		{"PutObject", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
 			o := obj("m5a-object", "test/object")
 			return func(ctx context.Context) error { return s.PutObject(ctx, o) }, func(t *testing.T) {
-				_, ok, err := s.GetObject(context.Background(), o.Hash)
+				_, ok, err := s.GetObject(boundedTestContext(t), o.Hash)
 				if err != nil || !ok {
 					t.Fatalf("object not durable: ok=%v err=%v", ok, err)
 				}
@@ -30,7 +30,7 @@ func TestConvertedStoreMethodsM5a(t *testing.T) {
 		{"SetRegistryHead", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
 			ref := hashref.SumSHA256([]byte("m5a-head"))
 			return func(ctx context.Context) error { return s.SetRegistryHead(ctx, "m5a/head", ref) }, func(t *testing.T) {
-				got, ok, err := s.GetRegistryHead(context.Background(), "m5a/head")
+				got, ok, err := s.GetRegistryHead(boundedTestContext(t), "m5a/head")
 				if err != nil || !ok || got != ref {
 					t.Fatalf("head not durable: %v %v %v", got, ok, err)
 				}
@@ -41,7 +41,7 @@ func TestConvertedStoreMethodsM5a(t *testing.T) {
 					_, _, err := s.AppendNextEffectIntent(ctx, "m5a-next", effectIntentFixture("m5a-next", 1))
 					return err
 				}, func(t *testing.T) {
-					rc, ok, err := s.GetEffectReceipt(context.Background(), EffectInvocationID("m5a-next", 0))
+					rc, ok, err := s.GetEffectReceipt(boundedTestContext(t), EffectInvocationID("m5a-next", 0))
 					if err != nil || !ok || rc.State != ReceiptIndeterminate {
 						t.Fatalf("intent not durable: %+v %v %v", rc, ok, err)
 					}
@@ -56,27 +56,27 @@ func TestConvertedStoreMethodsM5a(t *testing.T) {
 					_, _, err := s.AppendClaimedEffectIntent(ctx, "m5a-claimed", intent, approval, request)
 					return err
 				}, func(t *testing.T) {
-					rc, ok, err := s.GetEffectReceipt(context.Background(), EffectInvocationID("m5a-claimed", 0))
+					rc, ok, err := s.GetEffectReceipt(boundedTestContext(t), EffectInvocationID("m5a-claimed", 0))
 					if err != nil || !ok || rc.State != ReceiptIndeterminate {
 						t.Fatalf("claimed intent not durable: %+v %v %v", rc, ok, err)
 					}
 				}
 		}, true},
 		{"AppendEffectOutcome", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
-			id, _, err := s.AppendNextEffectIntent(context.Background(), "m5a-outcome", effectIntentFixture("m5a-outcome", 1))
+			id, _, err := s.AppendNextEffectIntent(boundedTestContext(t), "m5a-outcome", effectIntentFixture("m5a-outcome", 1))
 			if err != nil {
 				t.Fatal(err)
 			}
 			outcome := EffectOutcome{InvocationID: id, Status: "succeeded", RecordRef: hashref.SumSHA256([]byte("m5a-record")), LogicalTime: 2}
 			return func(ctx context.Context) error { _, _, err := s.AppendEffectOutcome(ctx, id, outcome); return err }, func(t *testing.T) {
-				rc, ok, err := s.GetEffectReceipt(context.Background(), id)
+				rc, ok, err := s.GetEffectReceipt(boundedTestContext(t), id)
 				if err != nil || !ok || rc.State != ReceiptResolved {
 					t.Fatalf("outcome not durable: %+v %v %v", rc, ok, err)
 				}
 			}
 		}, true},
 		{"GetEffectReceipt", func(t *testing.T, s *Store) (func(context.Context) error, func(*testing.T)) {
-			id, _, err := s.AppendNextEffectIntent(context.Background(), "m5a-receipt", effectIntentFixture("m5a-receipt", 1))
+			id, _, err := s.AppendNextEffectIntent(boundedTestContext(t), "m5a-receipt", effectIntentFixture("m5a-receipt", 1))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -87,7 +87,7 @@ func TestConvertedStoreMethodsM5a(t *testing.T) {
 		t.Run("held/"+tc.name, func(t *testing.T) {
 			s := openFileStore(t)
 			call, _ := tc.setup(t, s)
-			conn, err := s.db.Conn(context.Background())
+			conn, err := s.db.Conn(boundedTestContext(t))
 			if err != nil {
 				t.Fatal(err)
 			}

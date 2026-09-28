@@ -280,7 +280,7 @@ func testCLISession(t *testing.T, dbPath string) string {
 	if err != nil {
 		t.Fatalf("open store for session mint: %v", err)
 	}
-	tok, _, _, err := authority.Mint(context.Background(), st, "cli-episode",
+	tok, _, _, err := authority.Mint(boundedTestContext(t), st, "cli-episode",
 		[]broker.Capability{{Effect: "fs.read", Scope: "/tmp", Budget: 1}}, 3600, time.Now().Unix(), nil)
 	if err != nil {
 		t.Fatalf("mint cli session: %v", err)

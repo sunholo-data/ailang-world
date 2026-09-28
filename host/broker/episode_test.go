@@ -132,14 +132,14 @@ func appendEpisodeIntent(t *testing.T, s *store.Store, c store.Commit) {
 		Interpreter:   c.Entry.Header.Interpreter,
 		LogicalTime:   17,
 	}
-	if _, _, err := s.AppendIntent(context.Background(), c.InvocationID, intent); err != nil {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), c.InvocationID, intent); err != nil {
 		t.Fatalf("append episode intent: %v", err)
 	}
 }
 
 func readEpisodeEvidence(t *testing.T, s *store.Store, ref hashref.HashRef) []hashref.HashRef {
 	t.Helper()
-	obj, ok, err := s.GetObject(context.Background(), ref)
+	obj, ok, err := s.GetObject(boundedTestContext(t), ref)
 	if err != nil || !ok {
 		t.Fatalf("transition object %s: ok=%v err=%v", ref, ok, err)
 	}
@@ -156,7 +156,7 @@ func readEpisodeEvidence(t *testing.T, s *store.Store, ref hashref.HashRef) []ha
 		if err != nil {
 			t.Fatalf("evidence[%d]: %v", i, err)
 		}
-		if _, found, getErr := s.GetObject(context.Background(), refs[i]); getErr != nil || !found {
+		if _, found, getErr := s.GetObject(boundedTestContext(t), refs[i]); getErr != nil || !found {
 			t.Fatalf("evidence record %s: found=%v err=%v", refs[i], found, getErr)
 		}
 	}
@@ -195,7 +195,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 		EffectHumanPollApproval: human,
 		"Episode.Fail":          failHandler,
 	})
-	ctx := context.Background()
+	ctx := boundedTestContext(t)
 	calls := []episodeCall{
 		{request: EffectRequest{Effect: EffectFSRead, Scope: inputPath, Cost: 2, Now: 10}},
 		{request: EffectRequest{Effect: EffectModelInfer, Scope: "episode-model", Cost: 3, Now: 11},
@@ -210,7 +210,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 		}
 	}
 	requestRef := decodePendingRef(t, calls[2].result)
-	if _, err := DecideApproval(context.Background(), s, requestRef, "approve", "episode-operator", 13); err != nil {
+	if _, err := DecideApproval(boundedTestContext(t), s, requestRef, "approve", "episode-operator", 13); err != nil {
 		t.Fatalf("decide approval: %v", err)
 	}
 	calls = append(calls, episodeCall{
@@ -244,7 +244,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 	records := make([]hashref.HashRef, len(calls))
 	for i := range calls {
 		records[i] = calls[i].record
-		obj, ok, getErr := s.GetObject(context.Background(), calls[i].record)
+		obj, ok, getErr := s.GetObject(boundedTestContext(t), calls[i].record)
 		if getErr != nil || !ok {
 			t.Fatalf("live record %d: ok=%v err=%v", i, ok, getErr)
 		}
@@ -263,17 +263,17 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 	commit := buildEpisodeCommit(t, capsuleOutput, interpreter, records)
 	commit.InvocationID = "broker-episode-live-replay"
 	appendEpisodeIntent(t, s, commit)
-	if err := s.Commit(context.Background(), commit); err != nil {
+	if err := s.Commit(boundedTestContext(t), commit); err != nil {
 		t.Fatalf("commit episode: %v", err)
 	}
-	receipt, ok, err := s.GetReceipt(context.Background(), commit.InvocationID)
+	receipt, ok, err := s.GetReceipt(boundedTestContext(t), commit.InvocationID)
 	if err != nil || !ok {
 		t.Fatalf("episode receipt: ok=%v err=%v", ok, err)
 	}
 	if receipt.State != store.ReceiptResolved {
 		t.Fatalf("episode receipt state = %q, want %q", receipt.State, store.ReceiptResolved)
 	}
-	pending, err := s.PendingIntents(context.Background(), store.MaxPendingIntentsPage)
+	pending, err := s.PendingIntents(boundedTestContext(t), store.MaxPendingIntentsPage)
 	if err != nil {
 		t.Fatalf("pending episode intents: %v", err)
 	}
@@ -282,7 +282,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 	}
 	for ordinal := int64(0); ordinal < 5; ordinal++ {
 		id := store.EffectInvocationID("landed-episode", ordinal)
-		effectReceipt, hasIntent, receiptErr := s.GetEffectReceipt(context.Background(), id)
+		effectReceipt, hasIntent, receiptErr := s.GetEffectReceipt(boundedTestContext(t), id)
 		if receiptErr != nil || !hasIntent || effectReceipt.State != store.ReceiptResolved ||
 			effectReceipt.EffectIntent == nil || effectReceipt.EffectOutcome == nil {
 			t.Fatalf("effect receipt %d = %#v, hasIntent %v, err %v; want resolved",
@@ -300,14 +300,14 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 			t.Fatalf("effect receipt %d payload = %#v", ordinal, effectReceipt)
 		}
 	}
-	pendingEffects, err := s.PendingEffectIntents(context.Background(), store.MaxPendingIntentsPage)
+	pendingEffects, err := s.PendingEffectIntents(boundedTestContext(t), store.MaxPendingIntentsPage)
 	if err != nil {
 		t.Fatalf("pending effect intents: %v", err)
 	}
 	if len(pendingEffects) != 0 {
 		t.Fatalf("pending effect intents = %d, want 0", len(pendingEffects))
 	}
-	deniedEffectReceipt, deniedHasIntent, err := s.GetEffectReceipt(context.Background(),
+	deniedEffectReceipt, deniedHasIntent, err := s.GetEffectReceipt(boundedTestContext(t),
 		store.EffectInvocationID("landed-episode", 5),
 	)
 	if err != nil || deniedHasIntent || deniedEffectReceipt.State != store.ReceiptNotStarted {
@@ -367,7 +367,7 @@ func TestEpisodeLiveReplayThreeArmsAndEvidence(t *testing.T) {
 		t.Errorf("replay mismatch error = %T %v, want *ReplayGapError", err, err)
 	}
 
-	firstRecord, _, _ := s.GetObject(context.Background(), records[0])
+	firstRecord, _, _ := s.GetObject(boundedTestContext(t), records[0])
 	firstDecoded, err := DecodeRecord(firstRecord.Payload)
 	if err != nil {
 		t.Fatal(err)

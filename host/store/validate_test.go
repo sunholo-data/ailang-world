@@ -1,7 +1,6 @@
 package store
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -36,7 +35,7 @@ func TestEveryPersistedRefFieldIsValidated(t *testing.T) {
 		return testCase{name, "Commit", field, func(s *Store, genesis World) error {
 			c := cfb2Commit(genesis)
 			poison(&c)
-			return s.Commit(context.Background(), c)
+			return s.Commit(boundedTestContext(t), c)
 		}}
 	}
 	cases := []testCase{
@@ -53,23 +52,23 @@ func TestEveryPersistedRefFieldIsValidated(t *testing.T) {
 		{"PutObject Hash", "PutObject", "Hash", func(s *Store, _ World) error {
 			o := obj("validate", "validate")
 			o.Hash = zero
-			return s.PutObject(context.Background(), o)
+			return s.PutObject(boundedTestContext(t), o)
 		}},
 		{"PutObject InterfaceHash", "PutObject", "InterfaceHash", func(s *Store, _ World) error {
 			o := obj("validate", "validate")
 			o.InterfaceHash = zero
-			return s.PutObject(context.Background(), o)
+			return s.PutObject(boundedTestContext(t), o)
 		}},
-		{"PutWorld Ref", "PutWorld", "Ref", func(s *Store, g World) error { g.Ref = zero; return s.PutWorld(context.Background(), g) }},
-		{"PutWorld StateRoot", "PutWorld", "StateRoot", func(s *Store, g World) error { g.StateRoot = zero; return s.PutWorld(context.Background(), g) }},
-		{"PutWorld LogHead", "PutWorld", "LogHead", func(s *Store, g World) error { g.LogHead = zero; return s.PutWorld(context.Background(), g) }},
-		{"SetRegistryHead", "SetRegistryHead", "objectRef", func(s *Store, _ World) error { return s.SetRegistryHead(context.Background(), "bad", zero) }},
-		{"SelectHead", "SelectHead", "ref", func(s *Store, _ World) error { return s.SelectHead(context.Background(), zero) }},
+		{"PutWorld Ref", "PutWorld", "Ref", func(s *Store, g World) error { g.Ref = zero; return s.PutWorld(boundedTestContext(t), g) }},
+		{"PutWorld StateRoot", "PutWorld", "StateRoot", func(s *Store, g World) error { g.StateRoot = zero; return s.PutWorld(boundedTestContext(t), g) }},
+		{"PutWorld LogHead", "PutWorld", "LogHead", func(s *Store, g World) error { g.LogHead = zero; return s.PutWorld(boundedTestContext(t), g) }},
+		{"SetRegistryHead", "SetRegistryHead", "objectRef", func(s *Store, _ World) error { return s.SetRegistryHead(boundedTestContext(t), "bad", zero) }},
+		{"SelectHead", "SelectHead", "ref", func(s *Store, _ World) error { return s.SelectHead(boundedTestContext(t), zero) }},
 		{"PutVerifyResult TransitionFn", "PutVerifyResult", "TransitionFn", func(s *Store, _ World) error {
-			return s.PutVerifyResult(context.Background(), VerifyResult{TransitionFn: zero, Interpreter: hashref.SumSHA256([]byte("i"))})
+			return s.PutVerifyResult(boundedTestContext(t), VerifyResult{TransitionFn: zero, Interpreter: hashref.SumSHA256([]byte("i"))})
 		}},
 		{"PutVerifyResult Interpreter", "PutVerifyResult", "Interpreter", func(s *Store, _ World) error {
-			return s.PutVerifyResult(context.Background(), VerifyResult{TransitionFn: hashref.SumSHA256([]byte("f")), Interpreter: zero})
+			return s.PutVerifyResult(boundedTestContext(t), VerifyResult{TransitionFn: hashref.SumSHA256([]byte("f")), Interpreter: zero})
 		}},
 	}
 	for _, tc := range cases {
@@ -95,7 +94,7 @@ func TestGenesisObservedHeadRemainsZeroLegal(t *testing.T) {
 	c.ObservedHead = hashref.HashRef{}
 	c.Entry.Header.EntryIndex = 0
 	c.Entry.Header.PrevEntryHash = hashref.SumSHA256([]byte("genesis previous"))
-	if err := s.Commit(context.Background(), c); err != nil {
+	if err := s.Commit(boundedTestContext(t), c); err != nil {
 		t.Fatalf("genesis Commit rejected zero ObservedHead: %v", err)
 	}
 }

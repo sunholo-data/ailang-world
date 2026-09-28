@@ -28,7 +28,7 @@ func newTestStore(t *testing.T) *store.Store {
 // mintTestToken mints a credential for a test and returns just the raw token.
 func mintTestToken(t *testing.T, st *store.Store, episode string, grants []broker.Capability, ttl, now int64) string {
 	t.Helper()
-	tok, _, _, err := Mint(context.Background(), st, episode, grants, ttl, now, io.Discard)
+	tok, _, _, err := Mint(boundedTestContext(t), st, episode, grants, ttl, now, io.Discard)
 	if err != nil {
 		t.Fatalf("mint: %v", err)
 	}

@@ -51,9 +51,9 @@ func TestInFlightGuard(t *testing.T) {
 			return capsule.Result{Stdout: []byte(`{"ok":true}`)}, nil
 		})
 		c := r.coordinator(r.st, runner)
-		go func() { _, err := c.Dispatch(context.Background(), call); done <- err }()
+		go func() { _, err := c.Dispatch(boundedTestContext(t), call); done <- err }()
 		<-entered
-		_, err := c.Dispatch(context.Background(), call)
+		_, err := c.Dispatch(boundedTestContext(t), call)
 		var inFlight *InFlightError
 		if !errors.As(err, &inFlight) || inFlight.InvocationID != InvocationID(call.EpisodeID, call.TaskID) {
 			t.Fatalf("retry = %T %v", err, err)
@@ -65,7 +65,7 @@ func TestInFlightGuard(t *testing.T) {
 		if err := <-done; err != nil {
 			t.Fatal(err)
 		}
-		again, err := c.Dispatch(context.Background(), call)
+		again, err := c.Dispatch(boundedTestContext(t), call)
 		if err != nil || !again.Reconciled || runs.Load() != 1 {
 			t.Fatalf("reconciled=%+v err=%v runs=%d", again, err, runs.Load())
 		}
@@ -78,7 +78,7 @@ func TestInFlightGuard(t *testing.T) {
 			return capsule.Result{}, errors.New("run failed")
 		}))
 		for i := 0; i < 2; i++ {
-			_, err := c.Dispatch(context.Background(), call)
+			_, err := c.Dispatch(boundedTestContext(t), call)
 			var inFlight *InFlightError
 			if err == nil || errors.As(err, &inFlight) {
 				t.Fatalf("attempt %d: %v", i, err)
@@ -103,9 +103,9 @@ func TestInFlightGuard(t *testing.T) {
 					t.Error("expected panic")
 				}
 			}()
-			_, _ = c.Dispatch(context.Background(), call)
+			_, _ = c.Dispatch(boundedTestContext(t), call)
 		}()
-		if _, err := c.Dispatch(context.Background(), call); err != nil {
+		if _, err := c.Dispatch(boundedTestContext(t), call); err != nil {
 			t.Fatalf("retry after panic: %v", err)
 		}
 		if runs.Load() != 2 {
@@ -117,10 +117,10 @@ func TestInFlightGuard(t *testing.T) {
 		st := &receiptErrorStore{Store: r.st}
 		st.fail.Store(true)
 		c := r.coordinator(st, fakeRunner{stdout: `{"ok":true}`})
-		if _, err := c.Dispatch(context.Background(), call); err == nil {
+		if _, err := c.Dispatch(boundedTestContext(t), call); err == nil {
 			t.Fatal("receipt error was ignored")
 		}
-		if _, err := c.Dispatch(context.Background(), call); err != nil {
+		if _, err := c.Dispatch(boundedTestContext(t), call); err != nil {
 			t.Fatalf("retry after receipt error: %v", err)
 		}
 	})

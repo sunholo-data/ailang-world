@@ -2,7 +2,6 @@ package store
 
 import (
 	"bufio"
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -75,7 +74,7 @@ func TestCrashHelperProcess(t *testing.T) {
 		os.Exit(3)
 	}
 	c := crashFixture(t, s)
-	if _, _, err := s.AppendIntent(context.Background(), crashInvocationID, testCommitIntent(crashInvocationID, c)); err != nil {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), crashInvocationID, testCommitIntent(crashInvocationID, c)); err != nil {
 		fmt.Fprintf(os.Stderr, "crash helper AppendIntent: %v\n", err)
 		os.Exit(4)
 	}
@@ -94,12 +93,12 @@ func TestCrashHelperProcess(t *testing.T) {
 		readyAndBlock()
 	case "mid-commit-before-outcome":
 		commitBeforeOutcomeHook = readyAndBlock
-		if err := s.Commit(context.Background(), c); err != nil {
+		if err := s.Commit(boundedTestContext(t), c); err != nil {
 			fmt.Fprintf(os.Stderr, "crash helper Commit: %v\n", err)
 			os.Exit(6)
 		}
 	case "after-outcome":
-		if err := s.Commit(context.Background(), c); err != nil {
+		if err := s.Commit(boundedTestContext(t), c); err != nil {
 			fmt.Fprintf(os.Stderr, "crash helper Commit: %v\n", err)
 			os.Exit(7)
 		}
@@ -231,7 +230,7 @@ func assertCrashStore(t *testing.T, dbPath, effectPath, stop string) {
 	}
 	defer func() { _ = s.Close() }()
 	c := crashFixtureForRead()
-	receipt, ok, err := s.GetReceipt(context.Background(), crashInvocationID)
+	receipt, ok, err := s.GetReceipt(boundedTestContext(t), crashInvocationID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -243,7 +242,7 @@ func assertCrashStore(t *testing.T, dbPath, effectPath, stop string) {
 	if !ok || receipt.State != wantState {
 		t.Fatalf("%s receipt=(ok=%v,state=%s), want (true,%s)", stop, ok, receipt.State, wantState)
 	}
-	pending, err := s.PendingIntents(context.Background(), MaxPendingIntentsPage)
+	pending, err := s.PendingIntents(boundedTestContext(t), MaxPendingIntentsPage)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -254,11 +253,11 @@ func assertCrashStore(t *testing.T, dbPath, effectPath, stop string) {
 	if len(pending) != wantPending {
 		t.Fatalf("%s PendingIntents=%d, want %d", stop, len(pending), wantPending)
 	}
-	_, worldOK, err := s.GetWorld(context.Background(), c.NextWorld.Ref)
+	_, worldOK, err := s.GetWorld(boundedTestContext(t), c.NextWorld.Ref)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, entryOK, err := s.GetLogEntry(context.Background(), c.Entry.Header.EntryIndex)
+	_, entryOK, err := s.GetLogEntry(boundedTestContext(t), c.Entry.Header.EntryIndex)
 	if err != nil {
 		t.Fatal(err)
 	}

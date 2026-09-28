@@ -60,7 +60,7 @@ func TestCapabilitySnapshotEpochAndIsolation(t *testing.T) {
 	t.Run("allowed_invoke_increments_epoch_exactly_once", func(t *testing.T) {
 		s, _ := newLive(t)
 		before := s.CapabilitySnapshot(1).Epoch
-		if _, _, err := s.Invoke(context.Background(), EffectRequest{"probe", "/ok", 2, 1}, nil); err != nil {
+		if _, _, err := s.Invoke(boundedTestContext(t), EffectRequest{"probe", "/ok", 2, 1}, nil); err != nil {
 			t.Fatal(err)
 		}
 		if after := s.CapabilitySnapshot(1).Epoch; after != before+1 {
@@ -70,7 +70,7 @@ func TestCapabilitySnapshotEpochAndIsolation(t *testing.T) {
 	t.Run("denied_invoke_does_not_increment_epoch", func(t *testing.T) {
 		s, _ := newLive(t)
 		before := s.CapabilitySnapshot(1).Epoch
-		_, _, err := s.Invoke(context.Background(), EffectRequest{"probe", "/wrong", 2, 1}, nil)
+		_, _, err := s.Invoke(boundedTestContext(t), EffectRequest{"probe", "/wrong", 2, 1}, nil)
 		var denial *DenialError
 		if !errors.As(err, &denial) || denial.Decision.Label != LabelDeniedScope {
 			t.Fatalf("denial = %v, want %s", err, LabelDeniedScope)
@@ -84,12 +84,12 @@ func TestCapabilitySnapshotEpochAndIsolation(t *testing.T) {
 		count := 0
 		live := NewSession(st, "snapshot-replay", []Capability{grant}, echoRegistry(&count))
 		req := EffectRequest{"probe", "/ok", 2, 1}
-		_, ref, err := live.Invoke(context.Background(), req, nil)
+		_, ref, err := live.Invoke(boundedTestContext(t), req, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 		replay := NewReplaySession(st, []Capability{grant}, nil, []hashref.HashRef{ref})
-		if _, _, err := replay.Invoke(context.Background(), req, nil); err != nil {
+		if _, _, err := replay.Invoke(boundedTestContext(t), req, nil); err != nil {
 			t.Fatal(err)
 		}
 		if got := replay.CapabilitySnapshot(1).Epoch; got != 1 {
@@ -110,7 +110,7 @@ func TestCapabilitySnapshotEpochAndIsolation(t *testing.T) {
 				return nil, errors.New("handler failed")
 			},
 		)})
-		_, ref, liveErr := live.Invoke(context.Background(), req, nil)
+		_, ref, liveErr := live.Invoke(boundedTestContext(t), req, nil)
 		var failed *EffectFailedError
 		if !errors.As(liveErr, &failed) {
 			t.Fatalf("live error = %v, want *EffectFailedError", liveErr)
@@ -118,7 +118,7 @@ func TestCapabilitySnapshotEpochAndIsolation(t *testing.T) {
 
 		replay := NewReplaySession(st, []Capability{grant}, nil, []hashref.HashRef{ref})
 		before := replay.CapabilitySnapshot(1).Epoch
-		if _, _, err := replay.Invoke(context.Background(), req, nil); !errors.As(err, &failed) {
+		if _, _, err := replay.Invoke(boundedTestContext(t), req, nil); !errors.As(err, &failed) {
 			t.Fatalf("replay error = %v, want *EffectFailedError", err)
 		}
 		if after := replay.CapabilitySnapshot(1).Epoch; after != before+1 {
@@ -128,7 +128,7 @@ func TestCapabilitySnapshotEpochAndIsolation(t *testing.T) {
 	t.Run("snapshot_is_isolated_from_later_debit", func(t *testing.T) {
 		s, _ := newLive(t)
 		snap := s.CapabilitySnapshot(1)
-		if _, _, err := s.Invoke(context.Background(), EffectRequest{"probe", "/ok", 2, 1}, nil); err != nil {
+		if _, _, err := s.Invoke(boundedTestContext(t), EffectRequest{"probe", "/ok", 2, 1}, nil); err != nil {
 			t.Fatal(err)
 		}
 		if got := snap.Grants()[0].Budget; got != 5 {
@@ -249,7 +249,7 @@ func TestBoundInvokerRefusesUndeclaredRequest(t *testing.T) {
 	for _, row := range rows {
 		t.Run(row.name, func(t *testing.T) {
 			before := s.CapabilitySnapshot(1).Epoch
-			_, ref, err := bound.Request(context.Background(), row.req, nil)
+			_, ref, err := bound.Request(boundedTestContext(t), row.req, nil)
 			var undeclared *UndeclaredEffectError
 			if !errors.As(err, &undeclared) || err.Error() != row.want {
 				t.Fatalf("Request error = %v, want %q", err, row.want)
@@ -269,7 +269,7 @@ func TestBoundInvokerRequestStillRunsTheLandedPipeline(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		result, ref, err := bound.Request(context.Background(), EffectRequest{"probe", "/ok", 1, 1}, []byte("x"))
+		result, ref, err := bound.Request(boundedTestContext(t), EffectRequest{"probe", "/ok", 1, 1}, []byte("x"))
 		if err != nil || string(result) != "echo:x" || ref.IsZero() || count != 1 {
 			t.Fatalf("Request = result %q ref %s err %v dispatches %d", result, ref, err, count)
 		}
@@ -281,7 +281,7 @@ func TestBoundInvokerRequestStillRunsTheLandedPipeline(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		_, ref, err := bound.Request(context.Background(), EffectRequest{"probe", "/ok", 1, 1}, nil)
+		_, ref, err := bound.Request(boundedTestContext(t), EffectRequest{"probe", "/ok", 1, 1}, nil)
 		var denial *DenialError
 		if !errors.As(err, &denial) || denial.Decision.Label != LabelDeniedEffectName {
 			t.Fatalf("Request error = %v, want *DenialError label %q", err, LabelDeniedEffectName)
@@ -344,7 +344,7 @@ func TestBindRefusesMalformedManifest(t *testing.T) {
 		if got := bound.Declared()[0]; got != (Requirement{"probe", "/ok", 1}) {
 			t.Fatalf("Declared[0] = %+v, want the envelope frozen at Bind time", got)
 		}
-		_, _, err = bound.Request(context.Background(),
+		_, _, err = bound.Request(boundedTestContext(t),
 			EffectRequest{Effect: "probe", Scope: "/evil", Cost: 1}, nil)
 		const want = `broker: undeclared effect request: effect "probe" scope "/evil" cost 1`
 		if err == nil || err.Error() != want {
@@ -358,7 +358,7 @@ func TestDeniedInvokeWritesOneRecord(t *testing.T) {
 	count := 0
 	session := NewSession(s, "denied-record", []Capability{{"probe", "/ok", 10, 5}}, echoRegistry(&count))
 	req := EffectRequest{Effect: "probe", Scope: "/wrong", Cost: 2, Now: 1}
-	result, recordRef, err := session.Invoke(context.Background(), req, []byte("x"))
+	result, recordRef, err := session.Invoke(boundedTestContext(t), req, []byte("x"))
 	var denial *DenialError
 	if !errors.As(err, &denial) {
 		t.Fatalf("Invoke error = %v, want *DenialError", err)
@@ -372,7 +372,7 @@ func TestDeniedInvokeWritesOneRecord(t *testing.T) {
 	if count != 0 {
 		t.Fatalf("handler dispatch count = %d, want 0", count)
 	}
-	obj, ok, err := s.GetObject(context.Background(), recordRef)
+	obj, ok, err := s.GetObject(boundedTestContext(t), recordRef)
 	if err != nil || !ok {
 		t.Fatalf("GetObject = ok %v, err %v", ok, err)
 	}
@@ -384,7 +384,7 @@ func TestDeniedInvokeWritesOneRecord(t *testing.T) {
 		!rec.ResultRef.IsZero() || !RecordConsistent(rec) {
 		t.Fatalf("denial record = %#v", rec)
 	}
-	receipt, hasIntent, err := s.GetEffectReceipt(context.Background(), store.EffectInvocationID("denied-record", 0))
+	receipt, hasIntent, err := s.GetEffectReceipt(boundedTestContext(t), store.EffectInvocationID("denied-record", 0))
 	if err != nil || hasIntent || receipt.State != store.ReceiptNotStarted {
 		t.Fatalf("denied receipt = %#v, hasIntent %v, err %v; want not-started", receipt, hasIntent, err)
 	}
@@ -395,14 +395,14 @@ func TestAllowedInvokeWritesResultAndRecord(t *testing.T) {
 	count := 0
 	session := NewSession(s, "allowed-record", []Capability{{"probe", "/ok", 10, 5}}, echoRegistry(&count))
 	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 2, Now: 1}
-	result, recordRef, err := session.Invoke(context.Background(), req, []byte("x"))
+	result, recordRef, err := session.Invoke(boundedTestContext(t), req, []byte("x"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if string(result) != "echo:x" || count != 1 {
 		t.Fatalf("result %q, dispatches %d", result, count)
 	}
-	obj, ok, err := s.GetObject(context.Background(), recordRef)
+	obj, ok, err := s.GetObject(boundedTestContext(t), recordRef)
 	if err != nil || !ok {
 		t.Fatalf("GetObject = ok %v, err %v", ok, err)
 	}
@@ -414,7 +414,7 @@ func TestAllowedInvokeWritesResultAndRecord(t *testing.T) {
 		rec.ResultRef.IsZero() || !RecordConsistent(rec) {
 		t.Fatalf("allowed record = %#v", rec)
 	}
-	resultObj, ok, err := s.GetObject(context.Background(), rec.ResultRef)
+	resultObj, ok, err := s.GetObject(boundedTestContext(t), rec.ResultRef)
 	if err != nil || !ok || !bytes.Equal(resultObj.Payload, result) {
 		t.Fatalf("result object = ok %v, payload %q, err %v", ok, resultObj.Payload, err)
 	}
@@ -425,10 +425,10 @@ func TestLedgerUsesRemainingBudget(t *testing.T) {
 	count := 0
 	session := NewSession(s, "ledger-budget", []Capability{{"probe", "/ok", 10, 5}}, echoRegistry(&count))
 	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 3, Now: 1}
-	if _, _, err := session.Invoke(context.Background(), req, nil); err != nil {
+	if _, _, err := session.Invoke(boundedTestContext(t), req, nil); err != nil {
 		t.Fatal(err)
 	}
-	_, ref, err := session.Invoke(context.Background(), req, nil)
+	_, ref, err := session.Invoke(boundedTestContext(t), req, nil)
 	var denial *DenialError
 	if !errors.As(err, &denial) || denial.Decision.Label != LabelDeniedBudget {
 		t.Fatalf("second Invoke error = %v, want denied:budget", err)
@@ -436,7 +436,7 @@ func TestLedgerUsesRemainingBudget(t *testing.T) {
 	if count != 1 {
 		t.Fatalf("dispatch count = %d, want 1", count)
 	}
-	obj, ok, getErr := s.GetObject(context.Background(), ref)
+	obj, ok, getErr := s.GetObject(boundedTestContext(t), ref)
 	if getErr != nil || !ok {
 		t.Fatalf("GetObject = ok %v, err %v", ok, getErr)
 	}
@@ -497,7 +497,7 @@ func TestRecordFailureDeliversNoResult(t *testing.T) {
 		echoRegistry(&count), Live, nil,
 	)
 	result, ref, err := session.Invoke(
-		context.Background(),
+		boundedTestContext(t),
 		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 1},
 		[]byte("secret"),
 	)
@@ -511,7 +511,7 @@ func TestRecordFailureDeliversNoResult(t *testing.T) {
 		t.Fatalf("AppendEffectOutcome calls = %d, want 0 after record failure",
 			failing.effectOutcomeCalls)
 	}
-	receipt, hasIntent, receiptErr := base.GetEffectReceipt(context.Background(),
+	receipt, hasIntent, receiptErr := base.GetEffectReceipt(boundedTestContext(t),
 		store.EffectInvocationID("record-failure", 0),
 	)
 	if receiptErr != nil || !hasIntent || receipt.State != store.ReceiptIndeterminate {
@@ -528,7 +528,7 @@ func TestIntentIsDurableBeforeDispatch(t *testing.T) {
 		_ EffectRequest,
 		_ []byte,
 	) ([]byte, error) {
-		receipt, hasIntent, err := s.GetEffectReceipt(context.Background(), store.EffectInvocationID(episodeID, 0))
+		receipt, hasIntent, err := s.GetEffectReceipt(boundedTestContext(t), store.EffectInvocationID(episodeID, 0))
 		if err != nil || !hasIntent || receipt.State != store.ReceiptIndeterminate {
 			t.Fatalf("receipt at dispatch = %#v, hasIntent %v, err %v; want indeterminate",
 				receipt, hasIntent, err)
@@ -537,7 +537,7 @@ func TestIntentIsDurableBeforeDispatch(t *testing.T) {
 	})
 	session := NewSession(s, episodeID,
 		[]Capability{{"probe", "/ok", 10, 5}}, Registry{"probe": handler})
-	if _, _, err := session.Invoke(context.Background(),
+	if _, _, err := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 7}, []byte("request")); err != nil {
 		t.Fatal(err)
 	}
@@ -553,13 +553,13 @@ func TestFailedInvokeJournalsResolvedOutcome(t *testing.T) {
 				return nil, handlerErr
 			},
 		)})
-	_, recordRef, err := session.Invoke(context.Background(),
+	_, recordRef, err := session.Invoke(boundedTestContext(t),
 		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 7}, nil)
 	var failed *EffectFailedError
 	if !errors.As(err, &failed) || !errors.Is(err, handlerErr) {
 		t.Fatalf("Invoke error = %v, want EffectFailedError wrapping handler error", err)
 	}
-	receipt, hasIntent, err := s.GetEffectReceipt(context.Background(), store.EffectInvocationID(episodeID, 0))
+	receipt, hasIntent, err := s.GetEffectReceipt(boundedTestContext(t), store.EffectInvocationID(episodeID, 0))
 	if err != nil || !hasIntent || receipt.State != store.ReceiptResolved ||
 		receipt.EffectOutcome == nil || receipt.EffectOutcome.Status != "failed" ||
 		receipt.EffectOutcome.RecordRef != recordRef || receipt.EffectOutcome.LogicalTime != 7 {
@@ -572,11 +572,11 @@ func TestAllowedLiveSessionRequiresEpisodeID(t *testing.T) {
 	session := NewSession(s, "",
 		[]Capability{{"probe", "/ok", 10, 5}}, echoRegistry(new(int)))
 	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 9}
-	_, _, err := session.Invoke(context.Background(), req, []byte("request"))
+	_, _, err := session.Invoke(boundedTestContext(t), req, []byte("request"))
 	if err == nil || err.Error() != "broker: live allowed effect requires an episode ID" {
 		t.Fatalf("Invoke error = %v, want empty-episode failure", err)
 	}
-	if _, ok, getErr := s.GetObject(context.Background(), requestHash(req, []byte("request"))); getErr != nil || ok {
+	if _, ok, getErr := s.GetObject(boundedTestContext(t), requestHash(req, []byte("request"))); getErr != nil || ok {
 		t.Fatalf("request object after empty episode = ok %v, err %v; want absent", ok, getErr)
 	}
 }
@@ -586,7 +586,7 @@ func TestAllowedLiveSessionWithoutHandlerDoesNotDebitBudget(t *testing.T) {
 	session := NewSession(s, "missing-handler",
 		[]Capability{{"missing", "/ok", 10, 5}}, Registry{})
 	req := EffectRequest{Effect: "missing", Scope: "/ok", Cost: 2, Now: 9}
-	_, _, err := session.Invoke(context.Background(), req, []byte("request"))
+	_, _, err := session.Invoke(boundedTestContext(t), req, []byte("request"))
 	if err == nil || err.Error() != `broker: no handler registered for "missing"` {
 		t.Fatalf("Invoke error = %v, want missing-handler failure", err)
 	}
@@ -659,7 +659,7 @@ func TestRecordConsistentAllSketchArms(t *testing.T) {
 
 func decodeStoredRecord(t *testing.T, s *store.Store, ref hashref.HashRef) EffectRecord {
 	t.Helper()
-	obj, ok, err := s.GetObject(context.Background(), ref)
+	obj, ok, err := s.GetObject(boundedTestContext(t), ref)
 	if err != nil || !ok {
 		t.Fatalf("GetObject(%s) = ok %v, err %v", ref, ok, err)
 	}
@@ -680,7 +680,7 @@ func TestThreeArmsDistinguishableFromBytesAlone(t *testing.T) {
 			Registry{"probe": handler},
 		)
 		_, ref, _ := session.Invoke(
-			context.Background(),
+			boundedTestContext(t),
 			EffectRequest{Effect: "probe", Scope: scope, Cost: 2, Now: 1},
 			[]byte("input"),
 		)
@@ -726,7 +726,7 @@ func TestLedgerReconstructibleFromRecordStreamOnFailure(t *testing.T) {
 		})},
 	)
 	_, successRef, err := session.Invoke(
-		context.Background(),
+		boundedTestContext(t),
 		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 2, Now: 1},
 		nil,
 	)
@@ -734,7 +734,7 @@ func TestLedgerReconstructibleFromRecordStreamOnFailure(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, failedRef, err := session.Invoke(
-		context.Background(),
+		boundedTestContext(t),
 		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 3, Now: 1},
 		nil,
 	)
@@ -764,7 +764,7 @@ func TestReplayOfFailedRecordReproducesTheFailure(t *testing.T) {
 			return nil, errors.New("platform-specific handler detail")
 		},
 	)})
-	_, recordRef, liveErr := live.Invoke(context.Background(), req, nil)
+	_, recordRef, liveErr := live.Invoke(boundedTestContext(t), req, nil)
 	var liveFailed *EffectFailedError
 	if !errors.As(liveErr, &liveFailed) {
 		t.Fatalf("live error = %v, want *EffectFailedError", liveErr)
@@ -777,7 +777,7 @@ func TestReplayOfFailedRecordReproducesTheFailure(t *testing.T) {
 		Registry{"probe": ProbeHandler{Dispatches: &replayDispatches}},
 		[]hashref.HashRef{recordRef},
 	)
-	result, replayRef, replayErr := replay.Invoke(context.Background(), req, nil)
+	result, replayRef, replayErr := replay.Invoke(boundedTestContext(t), req, nil)
 	var replayFailed *EffectFailedError
 	if result != nil || replayRef != recordRef {
 		t.Errorf("replay = result %q, ref %s; want nil, %s", result, replayRef, recordRef)
@@ -806,7 +806,7 @@ func TestReplayReturnsRecordedBytesWithoutDispatch(t *testing.T) {
 		"probe": ProbeHandler{Dispatches: &liveDispatches},
 	})
 	req := EffectRequest{Effect: "probe", Scope: "/ok", Cost: 2, Now: 1}
-	want, recordRef, err := live.Invoke(context.Background(), req, []byte("input"))
+	want, recordRef, err := live.Invoke(boundedTestContext(t), req, []byte("input"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -818,7 +818,7 @@ func TestReplayReturnsRecordedBytesWithoutDispatch(t *testing.T) {
 	replay := NewReplaySession(s, grants, Registry{
 		"probe": ProbeHandler{Dispatches: &replayDispatches},
 	}, []hashref.HashRef{recordRef})
-	got, gotRef, err := replay.Invoke(context.Background(), req, []byte("ignored"))
+	got, gotRef, err := replay.Invoke(boundedTestContext(t), req, []byte("ignored"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -828,7 +828,7 @@ func TestReplayReturnsRecordedBytesWithoutDispatch(t *testing.T) {
 	if replayDispatches != 0 {
 		t.Fatalf("replay dispatches = %d, want 0", replayDispatches)
 	}
-	nextReceipt, hasNext, err := s.GetEffectReceipt(context.Background(), store.EffectInvocationID(episodeID, 1))
+	nextReceipt, hasNext, err := s.GetEffectReceipt(boundedTestContext(t), store.EffectInvocationID(episodeID, 1))
 	if err != nil || hasNext || nextReceipt.State != store.ReceiptNotStarted {
 		t.Fatalf("replay-created receipt = %#v, hasIntent %v, err %v; want none",
 			nextReceipt, hasNext, err)
@@ -846,7 +846,7 @@ func TestReplayGapNeverFallsBackToLive(t *testing.T) {
 		[]hashref.HashRef{missing},
 	)
 	result, ref, err := replay.Invoke(
-		context.Background(),
+		boundedTestContext(t),
 		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 1},
 		nil,
 	)
@@ -865,7 +865,7 @@ func TestReplayRejectsMismatchedRequest(t *testing.T) {
 	grants := []Capability{{"probe", "/ok", 10, 5}}
 	live := NewSession(s, "replay-mismatch-source", grants, Registry{"probe": ProbeHandler{Dispatches: &dispatches}})
 	_, recordRef, err := live.Invoke(
-		context.Background(),
+		boundedTestContext(t),
 		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 1, Now: 1},
 		nil,
 	)
@@ -874,7 +874,7 @@ func TestReplayRejectsMismatchedRequest(t *testing.T) {
 	}
 	replay := NewReplaySession(s, grants, nil, []hashref.HashRef{recordRef})
 	_, _, err = replay.Invoke(
-		context.Background(),
+		boundedTestContext(t),
 		EffectRequest{Effect: "probe", Scope: "/ok", Cost: 2, Now: 1},
 		nil,
 	)

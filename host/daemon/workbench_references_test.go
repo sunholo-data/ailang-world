@@ -72,7 +72,7 @@ func referenceFixture(t *testing.T) (*Daemon, hashref.HashRef, hashref.HashRef) 
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "reference-fixture")
 	commit := testCommit(genesis, 0, "reference-fixture")
-	if err := d.store.Commit(context.Background(), commit); err != nil {
+	if err := d.store.Commit(boundedTestContext(t), commit); err != nil {
 		t.Fatal(err)
 	}
 	return d, commit.Entry.TransitionRef, commit.NextWorld.Ref
@@ -172,7 +172,7 @@ func TestWorkbenchReferenceCancellation(t *testing.T) {
 	if rs.seenCtx == nil {
 		t.Fatal("no context")
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(boundedTestContext(t))
 	cancel()
 	req := httptest.NewRequest(http.MethodGet, "/workbench?object="+ref.String(), nil).WithContext(ctx)
 	d.Handler().ServeHTTP(httptest.NewRecorder(), req)
@@ -298,13 +298,13 @@ func TestWorkbenchReferenceWalk(t *testing.T) {
 			transition = c.Entry.TransitionRef
 			transitionPayload = append([]byte(nil), c.Objects[0].Payload...)
 		}
-		if err := d.store.Commit(context.Background(), c); err != nil {
+		if err := d.store.Commit(boundedTestContext(t), c); err != nil {
 			t.Fatal(err)
 		}
 		worlds = append(worlds, c.NextWorld.Ref)
 		current = c.NextWorld
 	}
-	found, err := d.store.ObjectsBySemanticID(context.Background(), "incident/row103/transition", "", 10)
+	found, err := d.store.ObjectsBySemanticID(boundedTestContext(t), "incident/row103/transition", "", 10)
 	if err != nil || len(found) != 1 || found[0].Hash != transition {
 		t.Fatalf("semantic lookup: %v %+v", err, found)
 	}

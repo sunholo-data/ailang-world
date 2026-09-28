@@ -1,7 +1,6 @@
 package store
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -37,8 +36,8 @@ func (p *countingProbe) dispatch() { p.dispatches++ }
 // recoverIndeterminate surfaces the durable ambiguity and never dispatches.
 // MUT-AUTO-RETRY changes this function to call probe.dispatch(); two independent
 // tests below then red.
-func recoverIndeterminate(s *Store, id string, probe *countingProbe) error {
-	receipt, ok, err := s.GetReceipt(context.Background(), id)
+func recoverIndeterminate(t *testing.T, s *Store, id string, probe *countingProbe) error {
+	receipt, ok, err := s.GetReceipt(boundedTestContext(t), id)
 	if err != nil {
 		return err
 	}
@@ -56,7 +55,7 @@ func pendingRecoveryFixture(t *testing.T) (*Store, Commit) {
 	}
 	t.Cleanup(func() { _ = s.Close() })
 	c := journalCommitFixture(t, s, "recover-pending")
-	if _, _, err := s.AppendIntent(context.Background(), c.InvocationID, testCommitIntent(c.InvocationID, c)); err != nil {
+	if _, _, err := s.AppendIntent(boundedTestContext(t), c.InvocationID, testCommitIntent(c.InvocationID, c)); err != nil {
 		t.Fatal(err)
 	}
 	return s, c
@@ -65,7 +64,7 @@ func pendingRecoveryFixture(t *testing.T) (*Store, Commit) {
 func TestRecoverIndeterminateSurfacesNeverLieLaw(t *testing.T) {
 	s, c := pendingRecoveryFixture(t)
 	probe := &countingProbe{}
-	err := recoverIndeterminate(s, c.InvocationID, probe)
+	err := recoverIndeterminate(t, s, c.InvocationID, probe)
 	var indeterminate *IndeterminateEffectError
 	if !errors.As(err, &indeterminate) {
 		t.Fatalf("recovery error=%T %v, want *IndeterminateEffectError", err, err)
@@ -106,10 +105,10 @@ func TestRecoverRetryAllowedMirrorsAllSketchRows(t *testing.T) {
 
 func reconcileCommitNotExecuted(t *testing.T, s *Store, c Commit) {
 	t.Helper()
-	if _, ok, err := s.GetWorld(context.Background(), c.NextWorld.Ref); err != nil || ok {
+	if _, ok, err := s.GetWorld(boundedTestContext(t), c.NextWorld.Ref); err != nil || ok {
 		t.Fatalf("planned world before reconciliation: ok=%v err=%v, want absent", ok, err)
 	}
-	if _, ok, err := s.GetLogEntry(context.Background(), c.Entry.Header.EntryIndex); err != nil || ok {
+	if _, ok, err := s.GetLogEntry(boundedTestContext(t), c.Entry.Header.EntryIndex); err != nil || ok {
 		t.Fatalf("planned entry before reconciliation: ok=%v err=%v, want absent", ok, err)
 	}
 	outcome := JournalOutcome{
@@ -118,7 +117,7 @@ func reconcileCommitNotExecuted(t *testing.T, s *Store, c Commit) {
 		ResultRef:    hashref.SumSHA256([]byte("reconciled-not-executed-" + c.InvocationID)),
 		LogicalTime:  43,
 	}
-	if _, _, err := s.AppendOutcome(context.Background(), c.InvocationID, outcome); err != nil {
+	if _, _, err := s.AppendOutcome(boundedTestContext(t), c.InvocationID, outcome); err != nil {
 		t.Fatalf("append reconciling outcome: %v", err)
 	}
 }
@@ -126,7 +125,7 @@ func reconcileCommitNotExecuted(t *testing.T, s *Store, c Commit) {
 func TestRecoverCommitPathDeterministicallyReconcilesUntouchedStore(t *testing.T) {
 	s, c := pendingRecoveryFixture(t)
 	reconcileCommitNotExecuted(t, s, c)
-	receipt, ok, err := s.GetReceipt(context.Background(), c.InvocationID)
+	receipt, ok, err := s.GetReceipt(boundedTestContext(t), c.InvocationID)
 	if err != nil || !ok || receipt.State != ReceiptResolved {
 		t.Fatalf("receipt after reconcile=(ok=%v,state=%s,err=%v), want resolved",
 			ok, receipt.State, err)
@@ -134,7 +133,7 @@ func TestRecoverCommitPathDeterministicallyReconcilesUntouchedStore(t *testing.T
 	if receipt.Outcome == nil || receipt.Outcome.Status != "not-executed" {
 		t.Fatalf("reconciling outcome=%+v, want not-executed", receipt.Outcome)
 	}
-	if pending, err := s.PendingIntents(context.Background(), MaxPendingIntentsPage); err != nil || len(pending) != 0 {
+	if pending, err := s.PendingIntents(boundedTestContext(t), MaxPendingIntentsPage); err != nil || len(pending) != 0 {
 		t.Fatalf("pending after reconcile=%d err=%v, want zero", len(pending), err)
 	}
 }
@@ -142,7 +141,7 @@ func TestRecoverCommitPathDeterministicallyReconcilesUntouchedStore(t *testing.T
 func TestRecoverModelInferNeverRedispatchesEvenWhenResolutionOffered(t *testing.T) {
 	s, c := pendingRecoveryFixture(t)
 	probe := &countingProbe{}
-	err := recoverIndeterminate(s, c.InvocationID, probe)
+	err := recoverIndeterminate(t, s, c.InvocationID, probe)
 	var indeterminate *IndeterminateEffectError
 	if !errors.As(err, &indeterminate) {
 		t.Fatalf("Model.Infer recovery error=%T %v, want indeterminate", err, err)
@@ -157,7 +156,7 @@ func TestRecoverModelInferNeverRedispatchesEvenWhenResolutionOffered(t *testing.
 		ResultRef:    hashref.SumSHA256([]byte("operator-abandoned-" + c.InvocationID)),
 		LogicalTime:  44,
 	}
-	if _, _, err := s.AppendOutcome(context.Background(), c.InvocationID, outcome); err != nil {
+	if _, _, err := s.AppendOutcome(boundedTestContext(t), c.InvocationID, outcome); err != nil {
 		t.Fatal(err)
 	}
 	if probe.dispatches != 0 {

@@ -1,7 +1,6 @@
 package broker
 
 import (
-	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -13,11 +12,11 @@ func TestFSHandlerReadWrite(t *testing.T) {
 	path := filepath.Join(dir, "data.txt")
 	h := FSHandler{}
 	writeReq := EffectRequest{Effect: EffectFSWrite, Scope: path}
-	if _, err := h.Execute(context.Background(), writeReq, []byte("hello")); err != nil {
+	if _, err := h.Execute(boundedTestContext(t), writeReq, []byte("hello")); err != nil {
 		t.Fatal(err)
 	}
 	readReq := EffectRequest{Effect: EffectFSRead, Scope: path}
-	got, err := h.Execute(context.Background(), readReq, nil)
+	got, err := h.Execute(boundedTestContext(t), readReq, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +44,7 @@ func TestFSHandlerRefusesSymlinkEscape(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, err := (FSHandler{}).Execute(
-		context.Background(),
+		boundedTestContext(t),
 		EffectRequest{Effect: EffectFSRead, Scope: link},
 		nil,
 	)
@@ -57,7 +56,7 @@ func TestFSHandlerRefusesSymlinkEscape(t *testing.T) {
 
 func TestFSHandlerRequiresCanonicalAbsoluteScope(t *testing.T) {
 	_, err := (FSHandler{}).Execute(
-		context.Background(),
+		boundedTestContext(t),
 		EffectRequest{Effect: EffectFSRead, Scope: "relative.txt"},
 		nil,
 	)
