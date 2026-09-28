@@ -191,11 +191,6 @@ func (e errReader) ReadSnapshot(context.Context) (transitionreg.Snapshot, error)
 // bounded-wait assertions RED on status AND elapsed time.
 type blockingResolver struct{}
 
-func (blockingResolver) Resolve(string, int64) authority.ResolveOutcome {
-	denied := authority.DenialUnknown
-	return authority.ResolveOutcome{Denied: &denied}
-}
-
 func (blockingResolver) ResolveContext(ctx context.Context, _ string, _ int64) (authority.ResolveOutcome, error) {
 	select {
 	case <-ctx.Done():

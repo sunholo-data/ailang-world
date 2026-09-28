@@ -68,6 +68,7 @@ func seedReadRoutes(t *testing.T, d *Daemon, label string) []readRoute {
 		{"log range", "/v1/log?from=0&limit=5", "GetLogEntry"},
 		{"registry", "/v1/registry/world/epoch-registry/v1", "GetRegistryHead"},
 		{"objects by semantic id", "/v1/objects/by-semantic-id/" + commit.Objects[0].SemanticID, "ObjectsBySemanticID"},
+		{"receipt", "/v1/receipts/rest:" + label, "GetReceiptContext"},
 	}
 }
 
@@ -158,6 +159,10 @@ func (b *blockingStore) GetWorld(ctx context.Context, _ hashref.HashRef) (store.
 	return store.World{}, false, b.block(ctx)
 }
 
+func (b *blockingStore) GetReceiptContext(ctx context.Context, _ string) (store.Receipt, bool, error) {
+	return store.Receipt{}, false, b.block(ctx)
+}
+
 func (b *blockingStore) GetLogEntry(ctx context.Context, _ int64) (store.LogEntry, bool, error) {
 	return store.LogEntry{}, false, b.block(ctx)
 }
@@ -223,6 +228,11 @@ func (r *recordingStore) GetObject(ctx context.Context, ref hashref.HashRef) (st
 func (r *recordingStore) GetWorld(ctx context.Context, ref hashref.HashRef) (store.World, bool, error) {
 	r.note(ctx)
 	return r.Store.GetWorld(ctx, ref)
+}
+
+func (r *recordingStore) GetReceiptContext(ctx context.Context, id string) (store.Receipt, bool, error) {
+	r.note(ctx)
+	return r.Store.GetReceiptContext(ctx, id)
 }
 
 func (r *recordingStore) GetLogEntry(ctx context.Context, index int64) (store.LogEntry, bool, error) {
@@ -728,6 +738,10 @@ func (failingStore) GetObject(context.Context, hashref.HashRef) (store.Object, b
 
 func (failingStore) GetWorld(context.Context, hashref.HashRef) (store.World, bool, error) {
 	return store.World{}, false, errSentinelInternal
+}
+
+func (failingStore) GetReceiptContext(context.Context, string) (store.Receipt, bool, error) {
+	return store.Receipt{}, false, errSentinelInternal
 }
 
 func (failingStore) GetLogEntry(context.Context, int64) (store.LogEntry, bool, error) {

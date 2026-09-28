@@ -42,7 +42,7 @@ func TestMint_PrintsOnce(t *testing.T) {
 	// Nothing in the persisted mapping can reproduce the raw token: resolving a
 	// freshly minted, unexpired session must succeed, and the binding must not
 	// expose any credential hash (SessionBinding has no credential field).
-	b := New(st).Resolve("Bearer "+rawToken, now+1)
+	b := resolveNow(t, New(st), "Bearer "+rawToken, now+1)
 	if b.Success == nil {
 		t.Fatalf("minted credential did not resolve: %#v", b)
 	}
@@ -95,8 +95,8 @@ func TestMint_DistinctCredentials(t *testing.T) {
 		t.Fatal("two mints produced the same credential_id")
 	}
 	// Both resolve independently.
-	ra := New(st).Resolve("Bearer "+a, 1000)
-	rb := New(st).Resolve("Bearer "+b, 1000)
+	ra := resolveNow(t, New(st), "Bearer "+a, 1000)
+	rb := resolveNow(t, New(st), "Bearer "+b, 1000)
 	if ra.Success == nil || rb.Success == nil {
 		t.Fatalf("distinct mints did not both resolve: %#v / %#v", ra, rb)
 	}
@@ -137,7 +137,7 @@ func TestMint_GrantsRoundTrip(t *testing.T) {
 		{Effect: "repo.commit", Scope: "world/ep-42", ExpiresAt: 0, Budget: 5},
 	}
 	tok := mintTestToken(t, st, "ep-42", grants, 3600, 1000)
-	out := New(st).Resolve("Bearer "+tok, 1000)
+	out := resolveNow(t, New(st), "Bearer "+tok, 1000)
 	if out.Success == nil || len(out.Success.Caps) != 2 {
 		t.Fatalf("resolve = %#v, want 2 caps", out)
 	}
@@ -177,7 +177,7 @@ func TestRevoke_DeletesRow(t *testing.T) {
 	}
 
 	// The credential now resolves as UNKNOWN, never as expired or success.
-	out := New(st).Resolve("Bearer "+tok, now+1)
+	out := resolveNow(t, New(st), "Bearer "+tok, now+1)
 	if out.Success != nil || out.Denied == nil || *out.Denied != DenialUnknown {
 		t.Fatalf("post-revoke resolve = %#v, want Denied=DenialUnknown", out)
 	}
@@ -200,7 +200,7 @@ func TestRevoke_DoesNotRevokeOtherCredential(t *testing.T) {
 	if err := Revoke(context.Background(), st, hashHexToken(a)); err != nil {
 		t.Fatalf("revoke a: %v", err)
 	}
-	if out := New(st).Resolve("Bearer "+b, 1000); out.Success == nil {
+	if out := resolveNow(t, New(st), "Bearer "+b, 1000); out.Success == nil {
 		t.Fatalf("credential b was revoked alongside a: %#v", out)
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/authority"
@@ -76,6 +77,9 @@ type registryResponse struct {
 }
 
 type commitRequest struct {
+	// InvocationID is optional (row 23 M3): a "rest:" id binds the commit to
+	// a durable intent, so GET /v1/receipts/{id} reconciles it exactly.
+	InvocationID string          `json:"invocationId,omitempty"`
 	ObservedHead string          `json:"observedHead"`
 	Objects      []objectRequest `json:"objects"`
 	NextWorld    worldRequest    `json:"nextWorld"`
@@ -110,6 +114,12 @@ type logEntryRequest struct {
 	Header        logHeaderRequest `json:"header"`
 	EntryHash     string           `json:"entryHash"`
 	TransitionRef string           `json:"transitionRef"`
+}
+
+type receiptResponse struct {
+	InvocationID string `json:"invocationId"`
+	State        string `json:"state"`
+	ResultRef    string `json:"resultRef,omitempty"`
 }
 
 type commitResponse struct {
@@ -337,6 +347,95 @@ func timedOut(ctx context.Context, err error) bool {
 // TestTimeoutStatusMirrorsSketch replays that vector so the two cannot drift.
 func writeReadTimeout(w http.ResponseWriter, deadline time.Duration) {
 	writeAPIError(w, "Timeout", fmt.Sprintf("read deadline (%s) exceeded", deadline), http.StatusServiceUnavailable)
+}
+
+// restInvocationPrefix is the one namespace /v1/commit accepts: it cannot
+// collide with the coordinator's "a2a:" ids or the broker's "effect:" ids.
+const restInvocationPrefix = "rest:"
+
+func restInvocationID(id string) bool {
+	return strings.HasPrefix(id, restInvocationPrefix) && len(id) > len(restInvocationPrefix)
+}
+
+// commitIntent derives the durable intent a "rest:" commit is bound to.
+func commitIntent(c store.Commit) store.JournalIntent {
+	return store.JournalIntent{
+		InvocationID: c.InvocationID, WorldRef: c.NextWorld.Ref, EntryHash: c.Entry.EntryHash,
+		ObservedHead: c.ObservedHead, PrevEntryHash: c.Entry.Header.PrevEntryHash,
+		TransitionFn: c.Entry.Header.TransitionFn, TransitionRef: c.Entry.TransitionRef,
+		Interpreter: c.Entry.Header.Interpreter, LogicalTime: c.Entry.Header.EntryIndex,
+	}
+}
+
+// writeCommitError maps one failed durable step of POST /v1/commit.
+func (d *Daemon) writeCommitError(w http.ResponseWriter, r *http.Request, ctx context.Context, c store.Commit, err error) {
+	var (
+		conflict  *store.ConflictError
+		duplicate *store.DuplicateInvocationError
+		mismatch  *store.InvocationMismatchError
+	)
+	switch {
+	case errors.As(err, &conflict):
+		writeConflict(w, conflict)
+	case errors.As(err, &duplicate), errors.As(err, &mismatch):
+		writeAPIError(w, "BadRequest", "invocationId already names a different commit: "+err.Error(), http.StatusBadRequest)
+	case store.IsUncertain(err): // before timedOut: an uncertain outcome also carries an ended ctx
+		writeCommitUncertain(w, c)
+	case timedOut(ctx, err):
+		writeCommitTimeout(w, d.commitBudget)
+	default:
+		d.writeInternalError(w, r, err)
+	}
+}
+
+// writeCommitTimeout renders a commit whose budget ended BEFORE the
+// cancellation cutoff: rolled back, nothing landed, safe to resend (§2.3).
+func writeCommitTimeout(w http.ResponseWriter, budget time.Duration) {
+	writeAPIError(w, "Timeout", fmt.Sprintf("commit deadline (%s) exceeded before the durable step: not committed; safe to resend", budget), http.StatusServiceUnavailable)
+}
+
+// writeCommitUncertain renders a commit whose budget ended AFTER the cutoff
+// (store.UncertainError): committed or not, never partial. The only witness
+// is the log row at the commit's own index (INV-LOG, store.CommitLanded); the
+// selected head is not evidence either way, and no resend is advised until
+// the witness has been read.
+func writeCommitUncertain(w http.ResponseWriter, c store.Commit) {
+	if c.InvocationID != "" {
+		writeAPIError(w, "CommitUncertain", fmt.Sprintf("commit outcome unknown: reconcile with GET /v1/receipts/%s before any resend: "+
+			"resolved means it landed; not-started or indeterminate means it did not; "+
+			"a different head does not mean it failed", c.InvocationID), http.StatusServiceUnavailable)
+		return
+	}
+	writeAPIError(w, "CommitUncertain", fmt.Sprintf("commit outcome unknown: reconcile with GET /v1/log/%d before any resend: "+
+		"a row equal to your entry means it landed; absent or different means it did not; "+
+		"a different head does not mean it failed", c.Entry.Header.EntryIndex), http.StatusServiceUnavailable)
+}
+
+// handleReceipt serves GET /v1/receipts/{id} (row 23 M3): the three-state
+// receipt of a "rest:" commit. Other namespaces are refused, so this route
+// exposes nothing the coordinator or the broker journals.
+func (d *Daemon) handleReceipt(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if !restInvocationID(id) {
+		writeAPIError(w, "BadRequest", "receipt id must be "+restInvocationPrefix+"<id>", http.StatusBadRequest)
+		return
+	}
+	ctx, cancel := d.readCtx(r)
+	defer cancel()
+	rc, _, err := d.reads.GetReceiptContext(ctx, id)
+	if err != nil {
+		if timedOut(ctx, err) {
+			writeReadTimeout(w, d.readDeadline)
+			return
+		}
+		d.writeInternalError(w, r, err)
+		return
+	}
+	body := receiptResponse{InvocationID: id, State: string(rc.State)}
+	if rc.Outcome != nil {
+		body.ResultRef = rc.Outcome.ResultRef.String()
+	}
+	writeJSON(w, http.StatusOK, body)
 }
 
 // handleWorld serves GET /v1/worlds/{ref} (Decision 3) over store.GetWorld.
@@ -666,13 +765,25 @@ func (d *Daemon) handleCommit(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, "BadRequest", err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err := d.store.Commit(commit); err != nil {
-		var conflict *store.ConflictError
-		if errors.As(err, &conflict) {
-			writeConflict(w, conflict)
+	if request.InvocationID != "" {
+		if !restInvocationID(request.InvocationID) {
+			writeAPIError(w, "BadRequest", "invocationId must be "+restInvocationPrefix+"<id>", http.StatusBadRequest)
 			return
 		}
-		d.writeInternalError(w, r, err)
+		commit.InvocationID = request.InvocationID
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), d.commitBudget)
+	defer cancel()
+	if commit.InvocationID != "" {
+		// Both durable steps share B6. LogicalTime = the entry index, so a
+		// resend of the same commit appends identical intent bytes (idempotent).
+		if _, _, err := d.commits.AppendIntentContext(ctx, commit.InvocationID, commitIntent(commit)); err != nil {
+			d.writeCommitError(w, r, ctx, commit, err)
+			return
+		}
+	}
+	if err := d.commits.CommitContext(ctx, commit); err != nil {
+		d.writeCommitError(w, r, ctx, commit, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, commitResponse{SelectedHead: commit.NextWorld.Ref.String()})

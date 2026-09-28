@@ -1,6 +1,8 @@
 package daemon
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -29,11 +31,15 @@ import (
 // authority.FromContext pair.
 type SessionMiddleware struct {
 	resolver authority.Resolver
+	budget   time.Duration
+	fail     func(http.ResponseWriter, *http.Request, error)
 }
 
-// NewSessionMiddleware builds a middleware over an authority.Resolver.
-func NewSessionMiddleware(resolver authority.Resolver) *SessionMiddleware {
-	return &SessionMiddleware{resolver: resolver}
+// NewSessionMiddleware builds a middleware over an authority.Resolver. budget
+// bounds each credential lookup (row 23 bound table B4); fail renders a lookup
+// error that is not a timeout (the daemon passes its sanitized 500 writer).
+func NewSessionMiddleware(resolver authority.Resolver, budget time.Duration, fail func(http.ResponseWriter, *http.Request, error)) *SessionMiddleware {
+	return &SessionMiddleware{resolver: resolver, budget: budget, fail: fail}
 }
 
 // Wrap returns a handler that enforces the session boundary on requests for
@@ -46,7 +52,19 @@ func (m *SessionMiddleware) Wrap(protected func(*http.Request) bool, mux http.Ha
 			return
 		}
 		header := r.Header.Get("Authorization")
-		out := m.resolver.Resolve(header, time.Now().Unix())
+		lctx, cancel := context.WithTimeout(r.Context(), m.budget)
+		out, err := m.resolver.ResolveContext(lctx, header, time.Now().Unix())
+		timeout := err != nil && timedOut(lctx, err)
+		cancel()
+		if err != nil {
+			// A lookup that did not finish is not a denial: never 401.
+			if timeout {
+				writeAPIError(w, "Timeout", fmt.Sprintf("credential lookup deadline (%s) exceeded", m.budget), http.StatusServiceUnavailable)
+				return
+			}
+			m.fail(w, r, err)
+			return
+		}
 		if out.Denied != nil {
 			writeSessionDenial(w, *out.Denied)
 			return

@@ -72,14 +72,14 @@ type SessionBinding struct {
 }
 
 // ResolveOutcome is the typed result of credential resolution. Exactly one of
-// Success / Denied is set per Resolve call; it is never (nil, nil), so the
+// Success / Denied is set per successful ResolveContext call; it is never (nil, nil), so the
 // unauthenticated-degrade path is structurally impossible.
 type ResolveOutcome struct {
 	Success *SessionBinding
 	Denied  *DenialKind
 }
 
-// CredentialStore is the minimal store seam Resolve needs. *store.Store
+// CredentialStore is the minimal store seam ResolveContext needs. *store.Store
 // satisfies it. It exists so the bounded-lookup test can inject a counting
 // observer over exactly the one resolve query.
 type CredentialStore interface {
@@ -88,17 +88,13 @@ type CredentialStore interface {
 
 // Resolver maps an opaque Authorization: Bearer credential to a binding.
 type Resolver interface {
-	// Resolve maps the ENTIRE Authorization header value (or "" if absent)
-	// plus a caller-supplied now (Unix seconds) to a typed outcome.
-	Resolve(header string, now int64) ResolveOutcome
-	// ResolveContext is Resolve with a caller-supplied context threading
-	// one bounded request deadline into the store's single-connection wait
-	// (w-a2a-session-projection P6.A-CTX). Credential policy is IDENTICAL to
-	// Resolve; the ONE behavioural difference is that a store read failure
-	// (including context.Canceled / context.DeadlineExceeded while the query
-	// waits for the pooled connection) is returned as a non-nil error with a
-	// zero outcome — never collapsed into DenialUnknown — so a transport
-	// deadline can never be misreported to the caller as a bad credential.
+	// ResolveContext maps the ENTIRE Authorization header value (or "" if
+	// absent) plus a caller-supplied now (Unix seconds) to a typed outcome,
+	// under the caller's ctx, which bounds the store's single-connection wait
+	// (row 23 bound table B4). A store read failure (including
+	// context.Canceled / context.DeadlineExceeded) is returned as a non-nil
+	// error with a zero outcome, never collapsed into DenialUnknown: a lookup
+	// that did not finish is not an authentication failure (D-WORLD-40).
 	ResolveContext(ctx context.Context, header string, now int64) (ResolveOutcome, error)
 }
 
@@ -115,30 +111,9 @@ type resolver struct {
 // (32 bytes from crypto/rand, D3).
 const tokenHexLen = 64
 
-// Resolve implements Resolver with the bounded hash-then-index lookup. An
-// absent header is refused before any store touch (bounded by construction);
-// a present-shaped token is hashed once and looked up by the single indexed
-// PK query (bounded by design).
-//
-// Resolve is exactly ResolveContext over context.Background(): the credential
-// policy lives in ONE place so the two entry points can never drift apart
-// (P6.A-CTX policy equivalence), and the /v1/commit middleware keeps today's
-// context-less behaviour byte-for-byte, including the store-error ->
-// DenialUnknown collapse (a residual the projection does not inherit).
-func (r *resolver) Resolve(header string, now int64) ResolveOutcome {
-	out, err := r.ResolveContext(context.Background(), header, now)
-	if err != nil {
-		// A store read failure is not a denial the caller can act on; fail
-		// closed to the same surface as an unknown credential.
-		denied := DenialUnknown
-		return ResolveOutcome{Denied: &denied}
-	}
-	return out
-}
-
-// ResolveContext implements the resolve policy once for both entry points.
-// Everything up to the store call (header shape, token shape, hash) is pure
-// and identical to Resolve; the store call receives the caller's ctx so a
+// ResolveContext implements Resolver with the bounded hash-then-index lookup.
+// An absent header is refused before any store touch; everything up to the
+// store call (header shape, token shape, hash) is pure; the store call receives the caller's ctx so a
 // bounded request deadline bounds the wait for the store's single pooled
 // connection (store.SetMaxOpenConns(1)), and a store error surfaces as an
 // error, not a credential denial.

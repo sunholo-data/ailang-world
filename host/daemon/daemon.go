@@ -136,6 +136,17 @@ const (
 	// a read that consumes the whole deadline still leaves 20 s to write the
 	// error. TestBoundedWaitsAndBodyLimit pins the literal.
 	readDeadline = 10 * time.Second
+
+	// commitBudget bounds POST /v1/commit's store work: connection acquisition
+	// and every statement up to the cancellation cutoff (row 23 bound table B6,
+	// ratified D-WORLD-40: busy_timeout + 1 s). Expiry before the cutoff is 503
+	// Timeout (not committed); after it, 503 CommitUncertain (reconcile).
+	commitBudget = 3 * time.Second
+
+	// credentialBudget bounds the session middleware's credential lookup
+	// (row 23 bound table B4, ratified D-WORLD-40). Expiry is 503 Timeout,
+	// never 401: a timeout is not an authentication failure.
+	credentialBudget = 3 * time.Second
 )
 
 // Operational defaults (Decision 4 / Decision 5). Exported because
@@ -324,6 +335,18 @@ type Daemon struct {
 	// SHIPPED timeout branch can be exercised without a ten-second test.
 	readDeadline time.Duration
 
+	// commits is the durable write seam POST /v1/commit goes through (row 23
+	// M2). New wires it to the SAME *store.Store as `store`; a test wraps it
+	// to produce outcomes a real store cannot produce on demand (a held
+	// connection, a post-cutoff expiry). commitBudget is New's commitBudget,
+	// a field so the timeout branches are testable without a 3 s test.
+	commits      durableStore
+	commitBudget time.Duration
+
+	// credentialBudget is New's credentialBudget (B4); a field for the same
+	// reason commitBudget is.
+	credentialBudget time.Duration
+
 	// errLog is the RESOLVED destination of every sanitized 500's detail line.
 	// New resolves Config.ErrorLog's nil to os.Stderr here, so this field is
 	// never nil on a constructed daemon and writeInternalError needs no nil check
@@ -371,6 +394,14 @@ type readStore interface {
 	ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error)
 	ObjectReferences(ctx context.Context, ref hashref.HashRef, after *store.ObjectReferenceCursor, limit int) ([]store.ObjectReference, error)
 	ObjectCommits(ctx context.Context, ref hashref.HashRef, afterEntry int64, limit int) ([]int64, error)
+	GetReceiptContext(ctx context.Context, id string) (store.Receipt, bool, error)
+}
+
+// durableStore is the daemon's durable-write surface: the context-bounded
+// commit of row 23's M1. *store.Store satisfies it by construction.
+type durableStore interface {
+	CommitContext(ctx context.Context, c store.Commit) error
+	AppendIntentContext(ctx context.Context, id string, intent store.JournalIntent) (int64, hashref.HashRef, error)
 }
 
 // IntegrityReport is the bounded startup sweep result.
@@ -485,7 +516,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	}
 
 	d := &Daemon{
-		cfg: cfg, store: s, reads: s, drainTimeout: shutdownTimeout,
+		cfg: cfg, store: s, reads: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget, resolver: authority.New(s),
@@ -629,10 +660,11 @@ func releaseFromVersion(version string) string {
 // method part of the pattern, so a non-GET on these paths is a 405 from the mux
 // rather than a hand-rolled check.
 //
-// The nine /v1 patterns below are the complete frozen v1 machine table (eight GET, one POST).
+// The ten /v1 patterns below are the complete frozen v1 machine table (nine GET, one POST;
+// GET /v1/receipts/{id} added by row 23 M3, D-WORLD-40).
 // The tenth registration, GET /workbench, is the unversioned read-only operator renderer: it is
 // NOT part of the frozen table, its HTML may evolve, and it changes the semantics of none of the
-// nine. The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
+// ten. The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
 // such as "world/epoch-registry/v1" contain slashes.
 func (d *Daemon) Handler() http.Handler {
 	mux := http.NewServeMux()
@@ -645,6 +677,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/log", d.handleLogRange)
 	mux.HandleFunc("GET /v1/registry/{name...}", d.handleRegistry)
 	mux.HandleFunc("POST /v1/commit", d.handleCommit)
+	mux.HandleFunc("GET /v1/receipts/{id}", d.handleReceipt)
 	mux.HandleFunc("GET /workbench", d.handleWorkbench)
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
 	// are ADDITIVE: the frozen /v1/ table above is untouched, and the routes
@@ -652,7 +685,7 @@ func (d *Daemon) Handler() http.Handler {
 	// itself so /a2a/ can answer in JSON-RPC form (B5).
 	mux.HandleFunc("GET /.well-known/agent.json", d.projection.AgentCard)
 	mux.HandleFunc("POST /a2a/", d.projection.A2A)
-	return NewSessionMiddleware(d.resolver).Wrap(d.isProtected, mux)
+	return NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, mux)
 }
 
 // isProtected reports whether a request must carry a valid session credential

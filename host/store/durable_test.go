@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"testing"
 	"time"
@@ -310,19 +309,6 @@ func bareCommit(head World, index int64, tag string) Commit {
 	}
 }
 
-// logWitness is the bare-commit reconciliation rule (M2 promotes it to
-// production): the log row at c's entry index is written only by Commit and
-// never updated or deleted, and entry_index is the primary key. Absent or
-// different ⇒ c did not commit; equal in every stored field ⇒ a commit
-// carrying c's exact log row is durable. The selected head is NOT consulted.
-func logWitness(ctx context.Context, s *Store, c Commit) (landed bool, err error) {
-	got, ok, err := s.GetLogEntry(ctx, c.Entry.Header.EntryIndex)
-	if err != nil || !ok {
-		return false, err
-	}
-	return reflect.DeepEqual(got, c.Entry), nil
-}
-
 // TestUncertainBareCommitReconcilesByLogIndexNotHead is quorum r1 objection 1's
 // test: commit A reports *UncertainError, commit B lands before A is
 // reconciled, and reconciliation must still classify A correctly. A head
@@ -388,9 +374,9 @@ func TestUncertainBareCommitReconcilesByLogIndexNotHead(t *testing.T) {
 			if err != nil || head.String() == a.NextWorld.Ref.String() {
 				t.Fatalf("head = %v (%v); the scenario needs A's world NOT to be the head", head, err)
 			}
-			landed, err := logWitness(bctx, s, a)
+			landed, err := s.CommitLanded(bctx, a)
 			if err != nil || landed != tc.wantLanded {
-				t.Fatalf("logWitness(A) = %v, %v; want %v", landed, err, tc.wantLanded)
+				t.Fatalf("CommitLanded(A) = %v, %v; want %v", landed, err, tc.wantLanded)
 			}
 		})
 	}
@@ -449,7 +435,7 @@ func TestCloseKeepsWriterLockUntilDurableWorkerSettles(t *testing.T) {
 		t.Fatalf("re-Open after release: %v", err)
 	}
 	defer again.Close()
-	if landed, err := logWitness(ctx2s(t), again, bareCommit(genesis, 1, "L")); err != nil || !landed {
+	if landed, err := again.CommitLanded(ctx2s(t), bareCommit(genesis, 1, "L")); err != nil || !landed {
 		t.Fatalf("A's entry after cleanup: landed=%v err=%v; want landed", landed, err)
 	}
 }
