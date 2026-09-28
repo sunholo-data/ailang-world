@@ -734,11 +734,15 @@ const provenanceWalkStart = `<section aria-label="provenance walk">`
 // up to its </section>, failing if the section is missing.
 func provenanceWalkSection(t *testing.T, body string) string {
 	t.Helper()
-	section, ok := workbenchRegion(body, provenanceWalkStart, "</section>")
-	if !ok {
+	start := strings.Index(body, provenanceWalkStart)
+	if start < 0 {
 		t.Fatalf("no provenance-walk section in %s", body)
 	}
-	return section
+	end := strings.Index(body[start:], "</section>\n</main>")
+	if end < 0 {
+		t.Fatalf("unterminated provenance-walk section in %s", body)
+	}
+	return body[start : start+end+len("</section>")]
 }
 
 // refFailingStore fails GetObject for one ref only, so the object read itself
@@ -803,10 +807,14 @@ func TestWorkbenchObjectProvenanceWalk(t *testing.T) {
 	d := newHandlerDaemon(t)
 	genesis := seedGenesisEmbedded(t, d, "workbench-walk")
 	commit := testCommit(genesis, 0, "workbench-walk")
-	plain := commit.Objects[0]
+	plain := workbenchTestObject("workbench-walk-plain", "test/plain", hashref.SumSHA256([]byte("interface-workbench-walk-plain")))
 	schema := workbenchTestObject("workbench-walk-schema", "test/schema", hashref.SumSHA256([]byte("interface-workbench-walk-schema")))
 	typed := workbenchTestObject("workbench-walk-typed", "test/typed", schema.Hash)
-	commit.Objects = append(commit.Objects, schema, typed)
+	for _, object := range []store.Object{plain, schema, typed} {
+		if err := d.store.PutObject(object); err != nil {
+			t.Fatal(err)
+		}
+	}
 	if err := d.store.Commit(commit); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
@@ -854,7 +862,8 @@ func TestWorkbenchObjectProvenanceWalk(t *testing.T) {
 		for _, target := range []string{plainTarget, typedTarget + "&payload=1"} {
 			section := provenanceWalkSection(t, get(t, target))
 			for _, want := range []string{
-				`<p>committedBy: <span class="unavailable" role="note">UNAVAILABLE: ` + objectCommittedByMissing + `</span></p>`,
+				`<h3>committedBy</h3>`,
+				`no commit carried this object: it was stored outside any commit (PutObject or journal). Entries that only reference it are listed under referencedBy.`,
 				`<h3>referencedBy</h3>`,
 			} {
 				if !strings.Contains(section, want) {
@@ -868,12 +877,11 @@ func TestWorkbenchObjectProvenanceWalk(t *testing.T) {
 	})
 
 	t.Run("edge-order", func(t *testing.T) {
-		// The walk is a fixed, ordered list (design §2a): interface, then
-		// committedBy remains a named stop, followed by referencedBy.
+		// The walk orders interface, committedBy, then referencedBy.
 		for _, target := range []string{plainTarget, typedTarget} {
 			section := provenanceWalkSection(t, get(t, target))
 			last := -1
-			for _, relation := range []string{"<p>interface: ", "<p>committedBy: ", "<h3>referencedBy</h3>"} {
+			for _, relation := range []string{"<p>interface: ", "<h3>committedBy</h3>", "<h3>referencedBy</h3>"} {
 				if n := strings.Count(section, relation); n != 1 {
 					t.Fatalf("%s: %q occurs %d times, want 1: %s", target, relation, n, section)
 				}
