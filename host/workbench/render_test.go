@@ -247,6 +247,83 @@ func renderPage(t *testing.T, p Page) string {
 	return body.String()
 }
 
+func worldNav(t *testing.T, body string) string {
+	t.Helper()
+	start := strings.Index(body, `<nav aria-label="world browser">`)
+	if start < 0 {
+		t.Fatal("world nav missing")
+	}
+	end := strings.Index(body[start:], "</nav>")
+	if end < 0 {
+		t.Fatal("world nav unclosed")
+	}
+	return body[start : start+end]
+}
+
+func TestRenderWorldPane(t *testing.T) {
+	root := EdgeView{Relation: "stateRoot", Available: true, Target: "root-205", Href: "?object=root-205"}
+	world := WorldView{Ref: "world-205", Revision: 17, LogHead: "log-205", StateRoot: root, Available: true}
+	nav := func(p WorldView) string {
+		t.Helper()
+		got := worldNav(t, renderPage(t, Page{Title: "world", World: p}))
+		if !strings.Contains(got, `<a href="/workbench">workbench</a>`) {
+			t.Fatalf("home link missing: %s", got)
+		}
+		return got
+	}
+	t.Run("metadata", func(t *testing.T) {
+		got := nav(world)
+		for _, want := range []string{`<dt>world</dt><dd><span class="hash" title="world-205" aria-label="world-205">world-205</span></dd>`, `<dt>revision</dt><dd>17</dd>`, `<dt>log head</dt><dd><span class="hash" title="log-205" aria-label="log-205">log-205</span></dd>`} {
+			if !strings.Contains(got, want) {
+				t.Errorf("missing %q in %s", want, got)
+			}
+		}
+		if strings.Contains(got, `aria-label="world-205">world-205</a>`) || strings.Contains(got, `aria-label="log-205">log-205</a>`) {
+			t.Error("world or log head became an anchor")
+		}
+	})
+	t.Run("stored-root", func(t *testing.T) {
+		got := nav(world)
+		if want := `stateRoot: <a href="/workbench?object=root-205" class="hash" title="root-205" aria-label="root-205">root-205</a>`; !strings.Contains(got, want) {
+			t.Errorf("missing root edge %q in %s", want, got)
+		}
+		if strings.Count(got, `?object=`) != 1 {
+			t.Errorf("object anchors: %s", got)
+		}
+	})
+	t.Run("missing-root", func(t *testing.T) {
+		p := world
+		p.StateRoot = EdgeView{Relation: "stateRoot", Target: "root-205", Missing: "object root-205 is not stored"}
+		got := nav(p)
+		if !strings.Contains(got, `stateRoot: <span class="unavailable" role="note">UNAVAILABLE: object root-205 is not stored</span>`) || strings.Contains(got, `?object=`) {
+			t.Errorf("missing root: %s", got)
+		}
+	})
+	t.Run("no-selected-world", func(t *testing.T) {
+		got := nav(WorldView{Unavailable: "no world selected"})
+		if !strings.Contains(got, `UNAVAILABLE: no world selected`) || strings.Contains(got, `?object=`) {
+			t.Errorf("no world: %s", got)
+		}
+	})
+	t.Run("escaping", func(t *testing.T) {
+		p := world
+		p.Ref = `<script>alert(1)</script>`
+		p.LogHead = `" onmouseover="x`
+		p.StateRoot.Target = `<root&>`
+		got := nav(p)
+		if strings.Contains(got, `<script>`) || strings.Contains(got, `onmouseover="x`) || !strings.Contains(got, `&lt;script&gt;`) || !strings.Contains(got, `&lt;root&amp;&gt;`) {
+			t.Errorf("unescaped nav: %s", got)
+		}
+	})
+	t.Run("revision-zero", func(t *testing.T) {
+		p := world
+		p.Revision = 0
+		if got := nav(p); !strings.Contains(got, `<dt>revision</dt><dd>0</dd>`) {
+			t.Errorf("zero revision: %s", got)
+		}
+	})
+}
+
 // selectedArticle returns the substring from the selected-entry marker to the
 // first </article> after it, or "" when the marker is absent.
 func selectedArticle(body string) string {

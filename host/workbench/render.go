@@ -146,7 +146,12 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem}dt{font-we
 <nav aria-label="world browser">
 <a href="{{workbenchHref ""}}">workbench</a>
 {{if .World.Available}}
-<a href="{{workbenchHref .World.StateRoot.Href}}" class="hash" title="{{.World.Ref}}" aria-label="{{.World.Ref}}">{{.World.Ref}}</a>
+<dl>
+<dt>world</dt><dd><span class="hash" title="{{.World.Ref}}" aria-label="{{.World.Ref}}">{{.World.Ref}}</span></dd>
+<dt>revision</dt><dd>{{.World.Revision}}</dd>
+<dt>log head</dt><dd><span class="hash" title="{{.World.LogHead}}" aria-label="{{.World.LogHead}}">{{.World.LogHead}}</span></dd>
+</dl>
+{{template "edge" .World.StateRoot}}
 {{else}}<span class="unavailable" role="note">UNAVAILABLE: {{.World.Unavailable}}</span>{{end}}
 </nav>
 <main>

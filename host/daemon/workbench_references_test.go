@@ -344,8 +344,12 @@ func TestWorkbenchReferenceWalk(t *testing.T) {
 		t.Fatalf("interpreter status/refs %d", interpreterStatus)
 	}
 	worldStatus, stateBody := get("/workbench?object=" + state.Hash.String())
-	if worldStatus != 200 || strings.Count(stateBody, "stateRoot: <a") != 3 {
-		t.Fatalf("state status/refs %d", worldStatus)
+	if worldStatus != 200 {
+		t.Fatalf("state status %d", worldStatus)
+	}
+	refs, ok := workbenchRegion(stateBody, `<section aria-label="referencedBy">`, "</section>")
+	if !ok || strings.Count(refs, "stateRoot: <a") != 3 {
+		t.Fatalf("state referencedBy region present=%v, refs=%d", ok, strings.Count(refs, "stateRoot: <a"))
 	}
 	for _, ref := range worlds {
 		if !strings.Contains(stateBody, ref.String()) {
