@@ -339,6 +339,38 @@ func writeReadTimeout(w http.ResponseWriter, deadline time.Duration) {
 	writeAPIError(w, "Timeout", fmt.Sprintf("read deadline (%s) exceeded", deadline), http.StatusServiceUnavailable)
 }
 
+// writeCommitError maps one failed durable step of POST /v1/commit.
+func (d *Daemon) writeCommitError(w http.ResponseWriter, r *http.Request, ctx context.Context, c store.Commit, err error) {
+	var conflict *store.ConflictError
+	switch {
+	case errors.As(err, &conflict):
+		writeConflict(w, conflict)
+	case store.IsUncertain(err): // before timedOut: an uncertain outcome also carries an ended ctx
+		writeCommitUncertain(w, c)
+	case timedOut(ctx, err):
+		writeCommitTimeout(w, d.commitBudget)
+	default:
+		d.writeInternalError(w, r, err)
+	}
+}
+
+// writeCommitTimeout renders a commit whose budget ended BEFORE the
+// cancellation cutoff: rolled back, nothing landed, safe to resend (§2.3).
+func writeCommitTimeout(w http.ResponseWriter, budget time.Duration) {
+	writeAPIError(w, "Timeout", fmt.Sprintf("commit deadline (%s) exceeded before the durable step: not committed; safe to resend", budget), http.StatusServiceUnavailable)
+}
+
+// writeCommitUncertain renders a commit whose budget ended AFTER the cutoff
+// (store.UncertainError): committed or not, never partial. The only witness
+// is the log row at the commit's own index (INV-LOG, store.CommitLanded); the
+// selected head is not evidence either way, and no resend is advised until
+// the witness has been read.
+func writeCommitUncertain(w http.ResponseWriter, c store.Commit) {
+	writeAPIError(w, "CommitUncertain", fmt.Sprintf("commit outcome unknown: reconcile with GET /v1/log/%d before any resend: "+
+		"a row equal to your entry means it landed; absent or different means it did not; "+
+		"a different head does not mean it failed", c.Entry.Header.EntryIndex), http.StatusServiceUnavailable)
+}
+
 // handleWorld serves GET /v1/worlds/{ref} (Decision 3) over store.GetWorld.
 //
 // It is the first of the four read routes that share one shape, and the shape
@@ -666,13 +698,10 @@ func (d *Daemon) handleCommit(w http.ResponseWriter, r *http.Request) {
 		writeAPIError(w, "BadRequest", err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err := d.store.Commit(commit); err != nil {
-		var conflict *store.ConflictError
-		if errors.As(err, &conflict) {
-			writeConflict(w, conflict)
-			return
-		}
-		d.writeInternalError(w, r, err)
+	ctx, cancel := context.WithTimeout(r.Context(), d.commitBudget)
+	defer cancel()
+	if err := d.commits.CommitContext(ctx, commit); err != nil {
+		d.writeCommitError(w, r, ctx, commit, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, commitResponse{SelectedHead: commit.NextWorld.Ref.String()})

@@ -58,6 +58,20 @@ EOF
 
 Returns `{"selectedHead": "sha256:…"}` — the world now exists.
 
+A commit is bounded too: **3 s** of store work. If it answers **HTTP 503**, read the class.
+`Timeout` means the budget ended *before* the durable step: nothing landed, and resending the
+same file is safe. `CommitUncertain` means it ended *after* the durable step began: the commit
+either landed whole or not at all. **Do not resend yet.** Reconcile by reading the log row at
+your entry's index and comparing it with the `entry` you sent:
+
+```bash
+/tmp/ailang-worldd log get 0
+```
+
+Equal in every field means it landed. A 404, or a row that differs, means it did not, and you
+may resend. The current head is **not** evidence either way: another commit may already have
+landed on top of yours.
+
 ## 3. Read everything back
 
 ```bash

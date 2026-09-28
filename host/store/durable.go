@@ -119,3 +119,27 @@ func notCommitted(ctx context.Context, op string, err error) error {
 	}
 	return err
 }
+
+// CommitLanded is the bare-commit reconciliation rule INV-LOG (row 23 design
+// §2.5, ratified with D-WORLD-40): after an uncertain Commit has settled, read
+// the log row at c's own entry index. entry_index is the primary key and the
+// only writer is Commit's INSERT (no UPDATE or DELETE exists), so:
+//
+//   - no row, or a row that differs from c.Entry in any stored field: c did
+//     NOT commit (false, nil); resubmission is allowed;
+//   - a row equal to c.Entry in every stored field: a commit carrying c's
+//     exact log row is durable (true, nil) — "entry landed", not "c's world is
+//     durable": the store verifies neither EntryHash nor NextWorld.Ref;
+//   - a read error (including the caller's deadline): unknown (false, err).
+//
+// The selected head is NEVER consulted: another commit may have landed on top.
+func (s *Store) CommitLanded(ctx context.Context, c Commit) (bool, error) {
+	got, ok, err := s.GetLogEntry(ctx, c.Entry.Header.EntryIndex)
+	if err != nil {
+		return false, err
+	}
+	if !ok {
+		return false, nil
+	}
+	return got == c.Entry, nil
+}

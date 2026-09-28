@@ -136,6 +136,12 @@ const (
 	// a read that consumes the whole deadline still leaves 20 s to write the
 	// error. TestBoundedWaitsAndBodyLimit pins the literal.
 	readDeadline = 10 * time.Second
+
+	// commitBudget bounds POST /v1/commit's store work: connection acquisition
+	// and every statement up to the cancellation cutoff (row 23 bound table B6,
+	// ratified D-WORLD-40: busy_timeout + 1 s). Expiry before the cutoff is 503
+	// Timeout (not committed); after it, 503 CommitUncertain (reconcile).
+	commitBudget = 3 * time.Second
 )
 
 // Operational defaults (Decision 4 / Decision 5). Exported because
@@ -324,6 +330,14 @@ type Daemon struct {
 	// SHIPPED timeout branch can be exercised without a ten-second test.
 	readDeadline time.Duration
 
+	// commits is the durable write seam POST /v1/commit goes through (row 23
+	// M2). New wires it to the SAME *store.Store as `store`; a test wraps it
+	// to produce outcomes a real store cannot produce on demand (a held
+	// connection, a post-cutoff expiry). commitBudget is New's commitBudget,
+	// a field so the timeout branches are testable without a 3 s test.
+	commits      durableStore
+	commitBudget time.Duration
+
 	// errLog is the RESOLVED destination of every sanitized 500's detail line.
 	// New resolves Config.ErrorLog's nil to os.Stderr here, so this field is
 	// never nil on a constructed daemon and writeInternalError needs no nil check
@@ -371,6 +385,12 @@ type readStore interface {
 	ObjectsBySemanticID(ctx context.Context, id, after string, limit int) ([]store.Object, error)
 	ObjectReferences(ctx context.Context, ref hashref.HashRef, after *store.ObjectReferenceCursor, limit int) ([]store.ObjectReference, error)
 	ObjectCommits(ctx context.Context, ref hashref.HashRef, afterEntry int64, limit int) ([]int64, error)
+}
+
+// durableStore is the daemon's durable-write surface: the context-bounded
+// commit of row 23's M1. *store.Store satisfies it by construction.
+type durableStore interface {
+	CommitContext(ctx context.Context, c store.Commit) error
 }
 
 // IntegrityReport is the bounded startup sweep result.
@@ -485,7 +505,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	}
 
 	d := &Daemon{
-		cfg: cfg, store: s, reads: s, drainTimeout: shutdownTimeout,
+		cfg: cfg, store: s, reads: s, commits: s, commitBudget: commitBudget, drainTimeout: shutdownTimeout,
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget, resolver: authority.New(s),

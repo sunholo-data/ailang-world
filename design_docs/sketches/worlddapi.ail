@@ -97,6 +97,7 @@ export type ApiError
   | Internal(string)
   | Timeout(string)
   | LookupIndexUnavailable(string)
+  | CommitUncertain(int)
 
 export func httpStatus(e: ApiError) -> int ! {}
 tests [
@@ -105,7 +106,8 @@ tests [
   ((PayloadTooLarge(8388609)), 413),
   ((Internal("io failure")), 500),
   ((Timeout("read deadline exceeded")), 503),
-  ((LookupIndexUnavailable("index missing")), 503)
+  ((LookupIndexUnavailable("index missing")), 503),
+  ((CommitUncertain(1)), 503)
 ]
 {
   match e {
@@ -115,7 +117,8 @@ tests [
     PayloadTooLarge(_) => 413,
     Internal(_) => 500,
     Timeout(_) => 503,
-    LookupIndexUnavailable(_) => 503
+    LookupIndexUnavailable(_) => 503,
+    CommitUncertain(_) => 503
   }
 }
 
