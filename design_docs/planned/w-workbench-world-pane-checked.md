@@ -242,6 +242,10 @@ V0–V10 record round-1 work; their status and line counts are historical. V11�
 | V15 | `rg -n 'func (requestRecorder\|newHandlerDaemon\|workbenchRegion)\|refFailingStore\|object-store-error' host/daemon/*test.go`; `rg -n -A 9 'func renderPage' host/workbench/render_test.go; sed -n '390,412p' host/daemon/workbench_test.go; sed -n '490,515p' host/daemon/workbench_test.go; sed -n '20,48p' host/daemon/handlers_test.go; sed -n '335,355p' host/daemon/workbench_references_test.go; rg -n 'section aria-label="referencedBy"' host/workbench/render.go` | renderPage:241 uses bytes.Buffer and Render(&body, p). newHandlerDaemon uses a temp DB; requestRecorder directly calls Handler().ServeHTTP with httptest, without a listener. workbenchRegion returns from the start marker to the first end marker. Reference walk counts `stateRoot: <a` over stateBody; template line 178 supplies the referencedBy section marker. Selected-entry seam uses objectFailingStore and expects unselected 200; refFailingStore is declared at workbench_test.go:750 with GetObject at :755. |
 | V16 | Before revision: `git status --short; wc -l design_docs/planned/w-workbench-world-pane-checked.md; git rev-parse --short HEAD` | Status empty; document 395 lines; current worktree HEAD `95b3b45`. Historical measurement base remains `aa3e36a`; controller V11–V13 explicitly used that base. |
 | V17 | After revision: `git diff --check; git diff --stat; git status --short; wc -l design_docs/planned/w-workbench-world-pane-checked.md` | Diff check emits no diagnostics; positive controls show exactly one modified file, this document, and 427 lines. No code edits or git writes. |
+| V18 | Controller, round 3 (glm/kimi r2 fix): `git log --oneline aa3e36a..61ac489 -- host/ \| wc -l`; `git diff --stat aa3e36a..61ac489 -- host/ \| wc -l`; control `git log --oneline aa3e36a..61ac489 \| wc -l` | `0`; `0`; control `2` (the two design-doc commits). The host tree at the implementation target is byte-identical to measurement base `aa3e36a`, so V1–V7, V11–V15 carry over unchanged. |
+| V19 | Controller, round 3 (glm r2 fix): `rg -n 'func writeWorkbenchError\|func \(d \*Daemon\) writeWorkbenchInternalError\|func \(d \*Daemon\) writeWorkbenchStoreError' host/daemon/` | `workbench.go:67 func writeWorkbenchError(w http.ResponseWriter, status int, class, message string)`; `:112 func (d *Daemon) writeWorkbenchStoreError(w, r, ctx, err)`; `:125 func (d *Daemon) writeWorkbenchInternalError(w, r, err)`. H4/H5 mutants name real helpers with matching arity; H4's `404` is an untyped int constant accepted as `status int`. |
+| V20 | Controller, round 3 (glm r2 fix): `rg -n -o '\{\{with \.Object\}\}\{\{range \.Edges\}\}\|\{\{with \.Commits\}\}\|\{\{if \.Truncated\}\}' host/workbench/render.go \| sort \| uniq -c` | line 178: `{{with .Object}}{{range .Edges}}` ×1, `{{with .Commits}}` ×1, `{{if .Truncated}}` ×2 (CommitView then ReferenceView). A1's anchor is unique. A2 must replace only the FIRST `{{if .Truncated}}` (inside `{{with .Commits}}`); the sprint plan must spell that anchor with its preceding context so it matches once. |
+| V21 | Controller, round 3 (kimi r2 fix, supersedes V9's test run): `go test -race ./host/workbench ./host/daemon -run 'Workbench\|Render\|Grade' -v -count=1 \| grep -c '^=== RUN'` (backslash-pipe, as V9 logged it) vs the same with an unescaped pipe `-run 'Workbench|Render|Grade'` | escaped form: **0** tests run (RE2 reads `\|` as a literal pipe — V9's "ok" was vacuous); unescaped form: **176** `=== RUN` lines, both packages ok. Every acceptance command in §6 uses the unescaped form and must stay that way; a `\|` inside a Markdown table cell is table escaping, never shell text. |
 
 ### 10.1 Source instrument (negative results have positive controls)
 
@@ -416,6 +420,52 @@ All five requested design measurements were completed. A full final implementati
 Round-1 final check is preserved in V10. Its temporary probe copy was removed with `shutil.rmtree("/tmp/world205-probe")`. Round 2 creates no throwaway probes and edits only this now-tracked design document. V12–V13 are attributed controller measurements, not newly executed tests. The controller owns commits.
 
 
+### 10.7 V12 reproducible probe (sonnet r2 fix)
+
+Controller-run at base `aa3e36a` in the detached probe worktree `.probe-world-iter205` (outside any sandbox), then deleted. Write as `host/daemon/zz205probe_test.go` in a scratch copy and run `AILANG_BIN="$HOME/.pinned-ailang/ailang" go test ./host/daemon -run '^TestProbe205PagingRoot$' -v -count=1`:
+
+```go
+package daemon
+
+import (
+	"context"
+	"testing"
+
+	"github.com/sunholo-data/ailang-world/host/workbench"
+)
+
+func TestProbe205PagingRoot(t *testing.T) {
+	d := newHandlerDaemon(t)
+	seedWorkbenchLog(t, d, workbench.WorkbenchPageLimit+5)
+	ctx := context.Background()
+	head, ok, err := d.store.SelectedHead(ctx)
+	if err != nil || !ok {
+		t.Fatalf("head ok=%v err=%v", ok, err)
+	}
+	w, ok, err := d.store.GetWorld(ctx, head)
+	if err != nil || !ok {
+		t.Fatalf("world ok=%v err=%v", ok, err)
+	}
+	_, stored, err := d.store.GetObject(ctx, w.StateRoot)
+	t.Logf("PAGING head=%s revision=%d stateRoot=%s stored=%v err=%v", head, w.Revision, w.StateRoot, stored, err)
+	e, ok, err := d.store.GetLogEntry(ctx, 0)
+	if err != nil || !ok {
+		t.Fatalf("control entry0 ok=%v err=%v", ok, err)
+	}
+	_, tstored, _ := d.store.GetObject(ctx, e.TransitionRef)
+	t.Logf("CONTROL entry0 transitionRef stored=%v", tstored)
+}
+```
+
+Literal output:
+
+```text
+zz205probe_test.go:23: PAGING head=sha256:a584866ed27514a33c00d6d96a31b49ffa22fb2ee8f05381851c464f5389ab2e revision=104 stateRoot=sha256:7b2475660d4b6f7093df919899cfcf15e5f281004d7b8cd9efe674868bed04f8 stored=false err=<nil>
+zz205probe_test.go:29: CONTROL entry0 transitionRef stored=true
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.492s
+```
+
+
 ## 11. Quorum verification log
 
 Round 1: **REJECT / BLOCKED 3/3** — oc-glm-5-3, oc-kimi-k3, claude-sonnet-5. All accepted the design direction; objections concerned completeness or measured premises.
@@ -425,3 +475,10 @@ Round 1: **REJECT / BLOCKED 3/3** — oc-glm-5-3, oc-kimi-k3, claude-sonnet-5. A
 - **claude-sonnet-5 — Unavailable premise and coverage:** V11 confirms the existing field/action; §2 item 10 and §4.1 say only its default is new; R7 deletes the action and the census self-test inventory names WorldView.Unavailable.
 - **oc-kimi-k3 — paging-root premise:** V12 measures the actual paging head root absent with a stored transition control; D5 and §4.4 cite V12 and require the additional stored-root world fixture.
 - **oc-kimi-k3 — explicit world resolution:** V14 records the query branch and GetWorld(ref); §4.4 requires an older explicit world whose metadata differs from SelectedHead.
+
+Round 2: **REJECT / BLOCKED 3/3** — same seats. Again no reviewer disputed the direction; every objection was a narrow completeness gap carrying a concrete `proposed_fix`. Per the narrow-refinement carve-out, the **controller** measured each and applied the reviewers' fixes verbatim (round 3 is this edit; no designer re-run, no further quorum):
+
+- **oc-glm-5-3 / oc-kimi-k3 — base drift unbounded:** V18 shows `host/` unchanged between `aa3e36a` and `61ac489` (0 commits, 0 files; whole-range control 2 commits). Premises carry over.
+- **oc-glm-5-3 — H4/H5 helpers and A1/A2 anchors unmeasured:** V19 quotes all three error-writer signatures; V20 quotes the anchors and records that `{{if .Truncated}}` occurs twice, so A2's anchor must include its `{{with .Commits}}` context.
+- **oc-kimi-k3 — V9 possibly vacuous:** confirmed. V21 measured **0** tests for the `\|` form V9 logged and **176** for the unescaped form; V21 supersedes V9's test claim. §6 already uses the unescaped form.
+- **claude-sonnet-5 — V12 not reproducible:** §10.7 now carries the exact probe source and its literal output.
