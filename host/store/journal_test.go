@@ -848,6 +848,11 @@ var canonicalTableDDL = map[string]string{
     expires_at   INTEGER NOT NULL,
     created_at   INTEGER NOT NULL
 )`,
+	"commit_objects": `CREATE TABLE commit_objects (
+    object_ref  TEXT    NOT NULL REFERENCES objects(hash_ref),
+    entry_index INTEGER NOT NULL REFERENCES log_entries(entry_index),
+    PRIMARY KEY (object_ref, entry_index)
+) WITHOUT ROWID`,
 }
 
 // normalizeDDL collapses whitespace only; it does not lowercase, reorder,

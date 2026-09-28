@@ -39,7 +39,7 @@ import (
 //go:embed schema.sql
 var schemaSQL string
 
-const currentSchemaVersion = 3
+const currentSchemaVersion = 4
 
 // ErrApprovalAlreadyConsumed reports that an approval reference has already
 // been bound to a durable effect intent. Approval claims are single-use and
@@ -71,6 +71,15 @@ type InvalidSchemaVersionError struct {
 
 func (e *InvalidSchemaVersionError) Error() string {
 	return fmt.Sprintf("store: schema version invalid: %q has negative user_version %d; binary requires %d; refusing to modify", e.Path, e.Found, e.Current)
+}
+
+// SchemaIntegrityError reports an existing current-version store missing a
+// table whose rows cannot be re-derived. Open refuses it before any DDL runs,
+// so a dropped table is never silently recreated empty.
+type SchemaIntegrityError struct{ Path, Table string }
+
+func (e *SchemaIntegrityError) Error() string {
+	return fmt.Sprintf("store: schema integrity: %q is missing table %s; refusing to recreate it empty (its rows cannot be re-derived)", e.Path, e.Table)
 }
 
 type UninitializedReadOnlyStoreError struct{ Path string }
@@ -383,6 +392,15 @@ func enforceSchemaVersion(display string, db *sql.DB, applySchema bool) error {
 		return &InvalidSchemaVersionError{Path: display, Found: version, Current: currentSchemaVersion}
 	}
 	if version == currentSchemaVersion {
+		// Only fresh initialization may create commit_objects; check it before
+		// schemaSQL's CREATE IF NOT EXISTS could bring it back empty.
+		var membershipTables int
+		if err := db.QueryRow(`SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = 'commit_objects'`).Scan(&membershipTables); err != nil {
+			return fmt.Errorf("store: inspect commit_objects: %w", err)
+		}
+		if membershipTables != 1 {
+			return &SchemaIntegrityError{Path: display, Table: "commit_objects"}
+		}
 		if applySchema {
 			if _, err := db.Exec(schemaSQL); err != nil {
 				return fmt.Errorf("store: apply schema: %w", err)
@@ -888,7 +906,8 @@ func (s *Store) SelectHead(ref hashref.HashRef) error {
 //     return a *ConflictError (the caller planned against a stale head).
 //  2. Insert every required immutable object with content verification.
 //  3. Insert the next immutable world row.
-//  4. Insert the append-only log row (frozen header + transition-body ref).
+//  4. Insert the append-only log row (frozen header + transition-body ref),
+//     then one commit_objects membership row per distinct carried object.
 //  5. Advance the selected world head to c.NextWorld.
 //  6. Commit the SQLite transaction.
 //
@@ -1010,6 +1029,17 @@ func (s *Store) Commit(c Commit) error {
 		h.WrittenBy, c.Entry.TransitionRef.String(),
 	); err != nil {
 		return fmt.Errorf("store: commit log entry %d: %w", h.EntryIndex, err)
+	}
+
+	// Step 4b: commit membership, in this transaction. OR IGNORE collapses a
+	// hash listed twice in one commit; a resolved replay returned above.
+	for _, o := range c.Objects {
+		if _, err := tx.Exec(
+			`INSERT OR IGNORE INTO commit_objects (object_ref, entry_index) VALUES (?, ?);`,
+			o.Hash.String(), h.EntryIndex,
+		); err != nil {
+			return fmt.Errorf("store: commit membership %q: %w", o.Hash.String(), err)
+		}
 	}
 
 	// Step 5: advance the selected world head.

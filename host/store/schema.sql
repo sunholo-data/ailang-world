@@ -111,3 +111,14 @@ CREATE TABLE IF NOT EXISTS session_credentials (
     expires_at   INTEGER NOT NULL,
     created_at   INTEGER NOT NULL
 );
+
+-- Commit membership (schema v4): one row per distinct object in a commit's
+-- Objects set, written only by Store.Commit inside that commit's transaction.
+-- A row means "entry_index's commit carried this object", not "that commit
+-- first inserted the objects row" (PutObject or the journal may have stored it
+-- earlier). The primary key is the read's access path, so no extra index.
+CREATE TABLE IF NOT EXISTS commit_objects (
+    object_ref  TEXT    NOT NULL REFERENCES objects(hash_ref),
+    entry_index INTEGER NOT NULL REFERENCES log_entries(entry_index),
+    PRIMARY KEY (object_ref, entry_index)
+) WITHOUT ROWID;

@@ -441,3 +441,42 @@ func TestReferenceView(t *testing.T) {
 		}
 	})
 }
+
+func TestCommitView(t *testing.T) {
+	t.Run("nil", func(t *testing.T) {
+		if body := renderPage(t, Page{Object: &ObjectView{}}); strings.Contains(body, `<h3>committedBy</h3>`) {
+			t.Fatal("nil commits rendered")
+		}
+	})
+	t.Run("none", func(t *testing.T) {
+		body := renderPage(t, Page{Object: &ObjectView{Commits: &CommitView{}}})
+		for _, want := range []string{`<h3>committedBy</h3>`, `Commits whose object set carried this object, oldest first. An object stored by PutObject or the journal before a commit carried it is attributed only to the commits that carried it.`, `no commit carried this object: it was stored outside any commit (PutObject or journal). Entries that only reference it are listed under referencedBy.`} {
+			if !strings.Contains(body, want) {
+				t.Fatalf("missing %q: %s", want, body)
+			}
+		}
+	})
+	t.Run("continued-empty", func(t *testing.T) {
+		body := renderPage(t, Page{Object: &ObjectView{Commits: &CommitView{Continued: true, FirstHref: "?object=a&refsAfter=b"}}})
+		if !strings.Contains(body, "no further commits carried this object") || !strings.Contains(body, `first page</a>`) || strings.Contains(body, "no commit carried this object:") {
+			t.Fatal(body)
+		}
+	})
+	t.Run("available-and-truncated", func(t *testing.T) {
+		body := renderPage(t, Page{Object: &ObjectView{Edges: []EdgeView{{Relation: "interface", Available: true, Target: "if", Href: "?object=if"}}, Commits: &CommitView{Edges: []EdgeView{{Relation: "committedBy", Available: true, Target: "entry 3", Href: "?from=3&entry=3"}}, Truncated: true, NextHref: "?object=a&commitsAfter=3"}, References: &ReferenceView{}}})
+		for _, want := range []string{`committedBy: <a href="/workbench?from=3&amp;entry=3"`, `Showing 100 commits; more recorded`, `href="/workbench?object=a&amp;commitsAfter=3"`, `next commits</a>`} {
+			if !strings.Contains(body, want) {
+				t.Fatalf("missing %q: %s", want, body)
+			}
+		}
+		if !(strings.Index(body, "interface: <a") < strings.Index(body, `<h3>committedBy</h3>`) && strings.Index(body, `<h3>committedBy</h3>`) < strings.Index(body, `<h3>referencedBy</h3>`)) {
+			t.Fatal(body)
+		}
+	})
+	t.Run("html-safe-link", func(t *testing.T) {
+		body := renderPage(t, Page{Object: &ObjectView{Commits: &CommitView{Edges: []EdgeView{{Relation: "committedBy", Available: true, Target: "entry 1", Href: `?from=1&entry=1&x=<script>`}}}}})
+		if strings.Contains(body, `<script>`) || !strings.Contains(body, `entry 1</a>`) {
+			t.Fatal(body)
+		}
+	})
+}

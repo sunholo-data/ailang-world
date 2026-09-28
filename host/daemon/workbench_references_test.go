@@ -361,7 +361,7 @@ func TestWorkbenchReferenceWalk(t *testing.T) {
 	t.Logf("refs=object %s; entry 0; interpreter %s (3 entries); state %s (worlds %v)", transition, interpreter.Hash, state.Hash, worlds)
 	t.Logf("statuses=object %d, entry %d, payload %d, interpreter %d, state %d", objectStatus, entryStatus, payloadStatus, interpreterStatus, worldStatus)
 	t.Logf("elapsed=%s", time.Since(start))
-	t.Logf("remaining stops=committedBy: %s; registry, journal and object-interface inbound references outside scope", objectCommittedByMissing)
+	t.Logf("committedBy answer=entry 0 carried transition %s; registry, journal and object-interface inbound references outside scope", transition)
 }
 
 func TestWorkbenchReferenceMaxIndexLink(t *testing.T) {

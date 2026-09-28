@@ -53,7 +53,16 @@ type ObjectView struct {
 	PayloadTruncated bool
 	Grade            GradeView
 	Edges            []EdgeView
+	Commits          *CommitView
 	References       *ReferenceView
+}
+
+type CommitView struct {
+	Edges     []EdgeView
+	Truncated bool
+	Continued bool
+	NextHref  string
+	FirstHref string
 }
 
 type ReferenceView struct {
@@ -166,7 +175,7 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem}dt{font-we
 </section>
 <section aria-label="provenance walk">
 <h2>Provenance walk</h2>
-{{with .Object}}{{range .Edges}}{{template "edge" .}}{{else}}<p><span class="unavailable" role="note">UNAVAILABLE: no provenance edges were supplied for this object</span></p>{{end}}{{with .References}}<section aria-label="referencedBy"><h3>referencedBy</h3><p>Entries/worlds only: transitionRef, transitionFn, interpreter, stateRoot. Registry, journal and object-interface inbound references are not included.</p>{{range .Edges}}{{template "edge" .}}{{else}}{{if .Continued}}<p>no further references recorded in these entry/world fields</p>{{else}}<p>none recorded in these entry/world fields</p>{{end}}{{end}}{{if .Truncated}}<p>Showing 100 references; more recorded</p>{{end}}{{if .Continued}}<p>New references before this cursor require restarting the walk. <a href="{{workbenchHref .FirstHref}}">first page</a></p>{{end}}{{if .NextHref}}<a href="{{workbenchHref .NextHref}}">next references</a>{{end}}</section>{{end}}{{else}}<p><span class="unavailable" role="note">UNAVAILABLE: no object selected</span></p>{{end}}
+{{with .Object}}{{range .Edges}}{{template "edge" .}}{{else}}<p><span class="unavailable" role="note">UNAVAILABLE: no provenance edges were supplied for this object</span></p>{{end}}{{with .Commits}}<section aria-label="committedBy"><h3>committedBy</h3><p>Commits whose object set carried this object, oldest first. An object stored by PutObject or the journal before a commit carried it is attributed only to the commits that carried it.</p>{{range .Edges}}{{template "edge" .}}{{else}}{{if .Continued}}<p>no further commits carried this object</p>{{else}}<p>no commit carried this object: it was stored outside any commit (PutObject or journal). Entries that only reference it are listed under referencedBy.</p>{{end}}{{end}}{{if .Truncated}}<p>Showing 100 commits; more recorded</p>{{end}}{{if .Continued}}<p><a href="{{workbenchHref .FirstHref}}">first page</a></p>{{end}}{{if .NextHref}}<a href="{{workbenchHref .NextHref}}">next commits</a>{{end}}</section>{{end}}{{with .References}}<section aria-label="referencedBy"><h3>referencedBy</h3><p>Entries/worlds only: transitionRef, transitionFn, interpreter, stateRoot. Registry, journal and object-interface inbound references are not included.</p>{{range .Edges}}{{template "edge" .}}{{else}}{{if .Continued}}<p>no further references recorded in these entry/world fields</p>{{else}}<p>none recorded in these entry/world fields</p>{{end}}{{end}}{{if .Truncated}}<p>Showing 100 references; more recorded</p>{{end}}{{if .Continued}}<p>New references before this cursor require restarting the walk. <a href="{{workbenchHref .FirstHref}}">first page</a></p>{{end}}{{if .NextHref}}<a href="{{workbenchHref .NextHref}}">next references</a>{{end}}</section>{{end}}{{else}}<p><span class="unavailable" role="note">UNAVAILABLE: no object selected</span></p>{{end}}
 </section>
 </main>
 </body>
