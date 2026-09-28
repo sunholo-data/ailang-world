@@ -1,6 +1,6 @@
 {
   "sprint_id": "w-workbench-world-pane-checked-iter205",
-  "design_doc": "design_docs/planned/w-workbench-world-pane-checked.md",
+  "design_doc": "design_docs/implemented/w-workbench-world-pane-checked.md",
   "base": "2904ebc",
   "scope": "Rows 99 + 100: checked workbench world stateRoot, visible world identity/revision/log head, region-scoped link walk and typed nine-view field census; no schema, /v1 route, index, or store-method change",
   "milestones": [

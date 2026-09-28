@@ -1,28 +1,27 @@
-# Mission Dashboard — World (snapshot 2026-09-28, iteration 204)
+# Mission Dashboard — World (snapshot 2026-09-28, iteration 205)
 
-- **State**: **row 104 LANDED (`b290ff3`).** The workbench object page now answers "which commit carried this object?".
-  - `committedBy` is no longer a named stop. It shows existence-checked links to the log entries whose commit carried the object (a missing entry renders UNAVAILABLE, never a dead link).
-  - The data comes from a new `commit_objects` table, written inside `Store.Commit`'s own transaction (schema v3 → v4). A v4 store whose table was dropped is refused, not silently recreated empty.
-  - Pages show 100 commits plus a lookahead, with explicit none/end/more states and a `commitsAfter` continuation that coexists with `refsAfter`. The nine `/v1` routes and all `.ail` are unchanged.
-  - Read p50 11–32 µs at N=10,000; commit overhead about 15%. A three-question recorder walk (object → committedBy → entry → transitionRef) passes.
-  - This resumed iteration 203, which designed row 104 and then died at planner launch without a record.
+- **State**: **rows 99 + 100 LANDED (`5edd25e`).** The workbench world pane (the entry point of every provenance walk) no longer offers a link that 404s.
+  - Its `stateRoot` is an existence-checked edge: stored → a link that resolves, missing → a named `UNAVAILABLE` stop, store error → 500/503 with no partial page.
+  - The world ref, revision and log head render as labelled text. The old anchor showed the world ref as its text but pointed at the state root.
+  - The dead `TimelineView.From/Limit` are gone. A type-aware template census over all nine view structs (zero exemptions) replaces the lexical field ratchet, which could not see a deleted `{{.World.Ref}}`.
+  - With these, all five `D-WORLD-42` rows (96, 103, 104, 99, 100) have landed under its default.
 - **Quality**:
-  - Controller gates were green outside the sandbox at all 4 commit boundaries (`-race` on store/daemon/workbench), plus the full suite (24 ok) and verify_ail.
-  - Judge `sonnet` in its own worktree: **97/100, zero blocking**. Its NB-1 test gap (the `commitCursor` guard) was reproduced and recorded as a residual.
+  - Quorum r1 and r2 were BLOCKED 3/3 on completeness only. The controller measured every premise: 2 were false and 1 was true (two existing tests would have gone red). r3 used the carve-out.
+  - Controller gates were green outside the sandbox at both commit boundaries (`-race` on daemon/workbench), plus the full suite (24 ok) and verify_ail.
+  - Judge `sonnet` in its own worktree: **98/100, zero blocking**, 14 mutations, 0 survivors.
   - SHA-pinned CI on the merge: 2/2 green.
-- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · **5 UNMET, moved a third time** (all three object-page relations are live edges now; row 114 still needs ≥3 real, timed questions) · 6 UNMET (PR #153 held on `D-WORLD-40`; 108 blocked on `ailang#885`, re-measured OPEN).
-- **Next**: `D-WORLD-40` = A → merge #153 → 106 M5/M6 → 108 → 93. Meanwhile, under `D-WORLD-42`'s default: rows 99, then 100.
+- **1.0 clause map**: 1, 2, 3, 7 MET · 4 UNMET (row 93, needs 106 + 108) · **5 UNMET, moved a fourth time** (row 114 still needs ≥3 real, timed questions) · 6 UNMET (PR #153 held on `D-WORLD-40`; 108 blocked on `ailang#885`, re-measured OPEN at `v0.47.1`).
+- **Next — the critical path is now FULLY BLOCKED on Mark and upstream**: `D-WORLD-40` = A → merge #153 → 106 M5/M6 → 108 → 93. Until then the loop works groom position 7 (26, 32, 109, 111, 112, 113, 115). The drift alarm fires after three such landings.
 - **Parked for Mark**:
-  - **`D-WORLD-40`** (the critical-path unlock): ratify row 23's bound table. **A** ratify (recommended) · **B** name a change.
-  - **`D-WORLD-42`**: put clause-5 rows 99 and 100 at position 5 beside 114 (96, 103 and 104 have now landed under its default). **A** yes (recommended) · **B** leave them in the clause-2 bucket.
+  - **`D-WORLD-40`** (THE unlock for clauses 4 and 6): ratify row 23's bound table. **A** ratify (recommended) · **B** name a change.
+  - **`D-WORLD-42`**: groom position for the clause-5 rows. All five have now landed under default A, so any answer closes it.
   - **`D-WORLD-41`**: release world/core as **A** 0.1.1 (recommended) or **B** 0.2.0.
   - **`D-WORLD-39`**: move the row-23 tranche to groom position 2 (acting on default A).
   - **`D-WORLD-38`**: the typed publish phrase (A shared, shipped · B own phrase).
 - **Cadence/routing**:
   - Controller `claude-opus-5-5`.
-  - Designer (iteration 203) `claude-opus-5-5`; next in rotation is `codex:gpt-6-astra`.
-  - Planner and executor `codex:gpt-6-sol`. The executor ran twice (store half, then daemon half); tokens 77k / 52k + 113k.
-  - Evaluator `sonnet` (Agent tool, foreground, 178k tok).
-  - **$0.30 metered** (iteration 203's quorum ×2); iteration 204 spent $0.
+  - Designer `codex:gpt-6-astra` (rotation pointer now astra; next is glm, if the ollama ration allows).
+  - Planner and executor `codex:gpt-6-sol`. Evaluator `sonnet` (Agent tool, foreground).
+  - **$0.573 metered** (two quorum rounds).
 - **Harness**: no new tickets. **Do not run `ailang mission rotate-log` for World** (row 118).
-- **Capacity watch**: Ollama was ration-blocked again. That took out 2 of 4 quorum seats and the glm/kimi designer entries.
+- **Capacity watch**: all three quorum seats (glm, kimi, sonnet) were reachable this iteration; gemini sat in reserve.

@@ -1167,3 +1167,55 @@ The codex probe returned rc=0. No design doc was needed: the row plus row 20's �
 **Progress**: 1.0: clauses 4, 5, 6 unmet. **Clause 5 moved** (capability): the walk's object → carrying-commit hop is now one bounded indexed read rendered as checked links, so all three object-page relations (interface, committedBy, referencedBy) are live edges. The clause stays UNMET until row 114 times ≥3 real, unseeded questions. Three consecutive clause-5 landings; the drift alarm does not fire.
 
 **Next:** `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → tranche M2–M7 → 108 when #885 ships → 93, 114. Under `D-WORLD-42`'s default: rows 99 (StateRoot link 404s), then 100 (fields render nowhere). Cheap follow-ups: the residual test gaps on rows 103 and 104. **Decision ledger: 29 rows, FIVE OPEN (`D-WORLD-38`–`42`).**
+
+## 205 — 2026-09-28 — rows 99+100 LANDED: the workbench world pane's `stateRoot` is an existence-checked edge (no more 404 link), the world ref, revision and log head render as labelled text, dead `TimelineView.From/Limit` are gone, and a type-aware nine-struct template census replaces the lexical field ratchet; judged 98, zero blocking; merge `5edd25e` [PRODUCT]
+
+**Pick and why.** Clause map unchanged (4, 5, 6 UNMET). Clauses 4 and 6 are blocked (106 M5 on `D-WORLD-40`, 0 directives; 108 on `ailang#885`, re-measured OPEN with the `serveapi/protocol` blobs identical at `v0.44.1`, `v0.47.1` and ailang `origin/dev`; 93 on both). Row 114 is gated on a real incident. Under `D-WORLD-42`'s default the next clause-5 rows were **99**, then **100**. They were bundled because both edit the same three-line world-pane template block and the same constructor (precedent: 35+38, 98+102). Premises re-measured at HEAD: `workbench.go:392` hard-coded `Available: true`, and `.Revision`/`.LogHead` had no template action. The index grep found no prior attempt.
+
+**Gate 3.**
+- **Designer `codex:gpt-6-astra`** (rotation after iteration 203's claude). The first probe ran from a non-git CWD and returned rc=1, the known instrument failure; the re-probe from the worktree returned rc=0. 45-min cap; 395-line doc. It found a third defect the rows did not name: the old anchor's *text* was the world ref while its *target* was the state root. It also measured that the lexical ratchet cannot see a deleted `{{.World.Ref}}` because `.References` contains `.Ref` (V5, typed-vs-lexical experiment).
+- **Quorum r1 BLOCKED 3/3** (oc-glm-5-3, oc-kimi-k3, claude-sonnet-5; `gpt6-astra` benched as author vendor). None disputed the direction. The controller measured each premise before revising:
+  - sonnet: "`WorldView.Unavailable` is an unverified new field". **False**: `render.go:100` declares it and `:150` already renders it.
+  - kimi: "the paging fixture's root may be stored". **False**: a daemon-package probe read `stored=false`, with a stored-transition control reading `true`.
+  - glm: "blast radius unmeasured". **True and material.** The prototype (handler patch plus nav markup) breaks exactly `TestWorkbenchReferenceWalk` (a whole-body `stateRoot: <a` count becomes 4) and `TestWorkbenchSelectedEntry/object-store-error`. The doc's "walk tests need not change" was wrong.
+  - One astra revision (35-min cap) applied every fix with those measurements (V11–V13).
+- **Quorum r2 BLOCKED 3/3**, again only narrow completeness gaps, each with a `proposed_fix`:
+  - Bound the host drift between measurement base and target (V18: 0 host commits; range control 2).
+  - Quote the error-helper signatures and mutation anchors (V19, V20: `{{if .Truncated}}` occurs twice, so A2's anchor must carry context).
+  - Make V12 reproducible (§10.7 now holds its source and literal output).
+  - kimi's catch was real: the designer's V9 `-run 'Workbench\|Render\|Grade'` ran **zero** tests under RE2 (V21: 0 vs 176 for the unescaped form).
+  - **Narrow-refinement carve-out:** the controller applied the r2 fixes verbatim as r3, with no further quorum and no second designer run.
+- **Planner `codex:gpt-6-sol`**. The resolver said `opus fail-closed:planner-lane-field-missing` under a provider pin, so the loop routed to the pin; probe rc=0. Output: 2 landings and 20 one-match mutations. The plan carries V20's context-anchored A2 and V21's unescaped `-run`.
+- **Executor `codex:gpt-6-sol`**, one run (50-min cap): M1 +13 production lines, M2 0 (deletions plus test code). 20/20 mutations killed in-sandbox. It labelled the broad suite's loopback-bind reds UNINFORMATIVE UNDER SANDBOX.
+- **Controller, outside the sandbox, pinned v0.41.0:**
+  - Rebuilt one commit per landing from snapshots kept outside the tree (`rebuild.sh`, banked).
+  - Focused tests (26 / 32 runs), vet, compile fence, `-race` on daemon+workbench and gofmt were clean at **both** boundaries.
+  - Final `go test -count=1 ./...` was 24 ok and `verify_ail.sh` rc 0. The rebuilt tree was sha256-identical to the executor's.
+  - Re-drilled H1 (checked edge → hard-coded available) and A4 (typed census → substring): each red on the mutant, green on restore.
+- **Evaluator `sonnet`** (Agent tool, foreground, own detached worktree `.eval-world-iter205`, 619 s, 79 tool calls, 145,813 tok): **PASS 98/100, ZERO BLOCKING.**
+  - Gates: vet, fence, `-race` (321 `=== RUN`, 0 FAIL), the full suite (24/24) and verify_ail.
+  - M1 bisected green. 19/19 design ACs were traced to passing tests.
+  - 14 mutations (10 plan rows including H1, H4, H6, R4, R5, R7, C2, A1, A2, A4, plus 4 of its own on the no-world default, the no-partial-page error guarantee, the census's range/dot typing and the referencedBy-scoped count): **0 survivors**.
+  - Non-blocking: H6's kill set is broader than the plan named, which is stronger than specified.
+
+**Gate 3b.** PR [#160](https://github.com/sunholo-data/ailang-world/pull/160): head `0ff38c7` 2/2 green, `MERGEABLE/CLEAN` → squash **`5edd25e`**. The SHA-pinned check-runs on the merge read 2/2 `success`.
+
+**Ruled out / process findings**
+- **(a) A vacuous green inside a design doc's verification log.** V9 quoted a `\|`-alternation `-run` as a passing baseline, and it ran zero tests. The Markdown table escaping (`\|`) was carried back into the shell. The controller's measurement (0 vs 176) settles it. Rule 3a now applies to verification rows authored by the designer, not only the controller's.
+- **(b) Measuring reviewer premises first paid off in both directions:** 2 of 3 r1 premises were false and 1 was true and material (two existing tests would have gone red in the executor's hands). All three were answered in one revision.
+- **(c) Two BLOCKED rounds on a 0.6-day doc.** Every objection was completeness, never direction, and the carve-out closed it. Recorded for the round-count pattern (rule (e)): 2 rounds + controller r3.
+- **(d) zsh `set -- $out` does not word-split, again** (CI poll loop; the reading was still correct). Parameter expansion (`${out%% *}`) is the portable form.
+- **(e) Harness:** none new. The heartbeat relative path was called via `$AILANG_DRIVER_SRC` (already ticketed). The `gate0_self_notices.sh --control` count semantics were unclear (`expect=2 got=0`); not pursued.
+
+**Routing evidence**:
+- base=5edd25edfdf1861e8e3a5684f77a68fbd25328cb@2026-09-28T11:15:40Z (Gate 4). Gate 1 and worktree base `aa3e36a48527b108f47a771d64c72d3a824275af`; no drift.
+- Controller `claude:claude-opus-5-5` (session; tok: not reported).
+- Designer `codex:gpt-6-astra` (89,394 + r2 43,291 tok); rotation pointer now `codex:gpt-6-astra`.
+- Quorum r1 BLOCKED 3/3, r2 BLOCKED 3/3 (`oc-glm-5-3`, `oc-kimi-k3`, `claude-sonnet-5@claude-p`, all present; `gemini-3-1-pro` reserve; `gpt6-astra` benched) → carve-out r3 (controller).
+- Planner `codex:gpt-6-sol` (96,219 tok). Executor `codex:gpt-6-sol` (130,880 tok). Evaluator `sonnet` (Agent tool; 145,813 tok).
+- Generator ≠ judge: astra designed, sol planned and built, sonnet judged. No role fell back.
+- **Metered $0.573** (quorum r1 $0.241 + r2 $0.332; the sonnet seat is subscription).
+
+**Progress**: 1.0: clauses 4, 5, 6 unmet. **Clause 5 moved** (capability): the walk's entry point now says which world, revision and log head it is walking, and its state-root hop is a working link or a named stop, never a 404. The clause stays UNMET until row 114 times ≥3 real, unseeded questions. All five `D-WORLD-42` rows (96, 103, 104, 99, 100) have landed under its default. The drift alarm does not fire (four consecutive clause-5 landings).
+
+**Next:** **the critical path is now fully blocked.** Every open clause-4/5/6 row is blocked or gated (93, 105 PARKED, 106 M5 on `D-WORLD-40`, 108 on `ailang#885`, 114 on a real incident). `D-WORLD-40` = A → merge PR #153 → 106 M5/M6 → 108 → 93. Until then: groom position 7 (26, 32, 109, 111, 112, 113, 115) and the cheap test-gap residuals on rows 103/104. The drift alarm fires after three such landings. **Decision ledger: 29 rows, FIVE OPEN (`D-WORLD-38`–`42`).**
