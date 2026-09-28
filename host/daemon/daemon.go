@@ -659,7 +659,7 @@ func (d *Daemon) abort(stage, detail string, err error) error {
 // abortBudget hands cleanup to a retained owner so the startup error can
 // return while a post-cutoff COMMIT still owns the sole connection.
 func (d *Daemon) abortBudget(stage, detail string, err error) error {
-	d.store.Quarantine()
+	store.Quarantine(d.store)
 	settled := make(chan struct{})
 	go func() {
 		defer close(settled)

@@ -27,6 +27,9 @@ func (s *Store) ObjectsBySemanticID(ctx context.Context, id, after string, limit
 	if err := s.checkQuarantine(); err != nil {
 		return nil, err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
 	const op = "ObjectsBySemanticID"
 	if limit < 1 || limit > MaxSemanticIDPage {
 		return nil, &InvalidLimitError{Op: op, Limit: limit, Max: MaxSemanticIDPage}

@@ -485,7 +485,7 @@ func runReconcile(opts options, out, errw io.Writer) int {
 		fmt.Fprintln(out, "no probe issued (--probe requests the read-only metadata GETs)")
 		return exitOK
 	}
-	receipt, err := broker.ReconcileRegistryPublish(context.Background(), reconcileConfigFor(opts, packet))
+	receipt, err := reconcileReadOnlyProbe(opts, packet)
 	if err != nil {
 		fmt.Fprintln(errw, "world-publish: reconcile: "+err.Error())
 		return exitError

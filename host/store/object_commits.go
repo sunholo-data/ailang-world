@@ -27,6 +27,9 @@ func (s *Store) ObjectCommits(ctx context.Context, ref hashref.HashRef, afterEnt
 	if err := s.checkQuarantine(); err != nil {
 		return nil, err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
 	const op = "ObjectCommits"
 	if limit < 1 || limit > MaxObjectCommitPage {
 		return nil, &InvalidLimitError{Op: op, Limit: limit, Max: MaxObjectCommitPage}

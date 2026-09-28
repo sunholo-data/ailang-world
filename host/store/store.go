@@ -233,8 +233,22 @@ type Store struct {
 // ErrQuarantined reports a handle whose startup failed after its budget.
 var ErrQuarantined = errors.New("store: quarantined")
 
+// ErrNoDeadline reports a Store I/O request without a finite caller budget.
+var ErrNoDeadline = errors.New("store: context has no deadline")
+
+func requireDeadline(ctx context.Context) error {
+	if ctx == nil {
+		return ErrNoDeadline
+	}
+	if _, ok := ctx.Deadline(); !ok {
+		return ErrNoDeadline
+	}
+	return nil
+}
+
 // Quarantine refuses new operations while retained cleanup waits for workers.
-func (s *Store) Quarantine() { s.quarantined.Store(true) }
+// It is a lifecycle action, not an exported Store I/O method.
+func Quarantine(s *Store) { s.quarantined.Store(true) }
 
 func (s *Store) checkQuarantine() error {
 	if s.quarantined.Load() {
@@ -530,6 +544,9 @@ func (s *Store) PutObject(ctx context.Context, o Object) (err error) {
 	if err := s.checkQuarantine(); err != nil {
 		return err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "put object", err) }()
 	if err := validateRef("PutObject", "Hash", o.Hash); err != nil {
 		return err
@@ -561,6 +578,9 @@ func (s *Store) PutObject(ctx context.Context, o Object) (err error) {
 // false) — via ok=false — when the object is absent.
 func (s *Store) GetObject(ctx context.Context, ref hashref.HashRef) (Object, bool, error) {
 	if err := s.checkQuarantine(); err != nil {
+		return Object{}, false, err
+	}
+	if err := requireDeadline(ctx); err != nil {
 		return Object{}, false, err
 	}
 	var (
@@ -599,6 +619,9 @@ func (s *Store) PutWorld(ctx context.Context, w World) (err error) {
 	if err := s.checkQuarantine(); err != nil {
 		return err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "put world", err) }()
 	if err := validateRef("PutWorld", "Ref", w.Ref); err != nil {
 		return err
@@ -628,6 +651,9 @@ func (s *Store) PutWorld(ctx context.Context, w World) (err error) {
 // GetWorld loads a world revision by its HashRef; ok=false when absent.
 func (s *Store) GetWorld(ctx context.Context, ref hashref.HashRef) (World, bool, error) {
 	if err := s.checkQuarantine(); err != nil {
+		return World{}, false, err
+	}
+	if err := requireDeadline(ctx); err != nil {
 		return World{}, false, err
 	}
 	var (
@@ -660,6 +686,9 @@ func (s *Store) GetWorld(ctx context.Context, ref hashref.HashRef) (World, bool,
 // the frozen header verbatim; ok=false when absent.
 func (s *Store) GetLogEntry(ctx context.Context, index int64) (LogEntry, bool, error) {
 	if err := s.checkQuarantine(); err != nil {
+		return LogEntry{}, false, err
+	}
+	if err := requireDeadline(ctx); err != nil {
 		return LogEntry{}, false, err
 	}
 	var (
@@ -724,6 +753,9 @@ func (s *Store) SetRegistryHead(ctx context.Context, name string, objectRef hash
 	if err := s.checkQuarantine(); err != nil {
 		return err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "set registry head", err) }()
 	if err := validateRef("SetRegistryHead", "objectRef", objectRef); err != nil {
 		return err
@@ -749,6 +781,9 @@ func (s *Store) SetRegistryHead(ctx context.Context, name string, objectRef hash
 // the registry name has no head.
 func (s *Store) GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error) {
 	if err := s.checkQuarantine(); err != nil {
+		return hashref.HashRef{}, false, err
+	}
+	if err := requireDeadline(ctx); err != nil {
 		return hashref.HashRef{}, false, err
 	}
 	var text string
@@ -798,6 +833,9 @@ func IsRegistryCASConflict(err error) bool {
 // object. Only the row identified by name is changed.
 func (s *Store) CompareAndSetRegistryHead(ctx context.Context, name string, expected, next hashref.HashRef) (err error) {
 	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
+	if err := requireDeadline(ctx); err != nil {
 		return err
 	}
 	defer func() { err = notCommitted(ctx, "compare and set registry head", err) }()
@@ -873,6 +911,9 @@ func (s *Store) PutVerifyResult(ctx context.Context, r VerifyResult) (err error)
 	if err := s.checkQuarantine(); err != nil {
 		return err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "put verify result", err) }()
 	if err := validateRef("PutVerifyResult", "TransitionFn", r.TransitionFn); err != nil {
 		return err
@@ -913,6 +954,9 @@ func (s *Store) GetVerifyResult(ctx context.Context, transitionFn, interpreter h
 	if err := s.checkQuarantine(); err != nil {
 		return VerifyResult{}, false, err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return VerifyResult{}, false, err
+	}
 	var (
 		epoch    int64
 		verified int
@@ -945,6 +989,9 @@ func (s *Store) SelectedHead(ctx context.Context) (hashref.HashRef, bool, error)
 	if err := s.checkQuarantine(); err != nil {
 		return hashref.HashRef{}, false, err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return hashref.HashRef{}, false, err
+	}
 	return selectedHeadTx(ctx, s.db)
 }
 
@@ -973,6 +1020,9 @@ func selectedHeadTx(ctx context.Context, q interface {
 // advancement happens inside Commit.
 func (s *Store) SelectHead(ctx context.Context, ref hashref.HashRef) (err error) {
 	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
+	if err := requireDeadline(ctx); err != nil {
 		return err
 	}
 	defer func() { err = notCommitted(ctx, "select head", err) }()
@@ -1025,6 +1075,9 @@ var commitBodyHook = func(context.Context) {}
 // committed, or *UncertainError when ctx ends first; see UncertainError.
 func (s *Store) Commit(ctx context.Context, c Commit) (err error) {
 	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
+	if err := requireDeadline(ctx); err != nil {
 		return err
 	}
 	defer func() { err = notCommitted(ctx, "commit", err) }()
@@ -1248,6 +1301,9 @@ func (s *Store) MintSession(ctx context.Context, row SessionRow) (err error) {
 	if err := s.checkQuarantine(); err != nil {
 		return err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return err
+	}
 	defer func() { err = notCommitted(ctx, "mint session", err) }()
 	if row.CredentialID == "" || row.EpisodeID == "" {
 		return fmt.Errorf("store: mint session: empty credential_id or episode_id")
@@ -1276,6 +1332,9 @@ func (s *Store) ResolveSession(ctx context.Context, credentialID string) (Sessio
 	if err := s.checkQuarantine(); err != nil {
 		return SessionRow{}, false, err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return SessionRow{}, false, err
+	}
 	var row SessionRow
 	err := s.db.QueryRowContext(ctx,
 		`SELECT credential_id, episode_id, grants_json, expires_at, created_at
@@ -1298,6 +1357,9 @@ func (s *Store) ResolveSession(ctx context.Context, credentialID string) (Sessio
 // transaction never races a concurrent resolve on the same process.
 func (s *Store) RevokeSession(ctx context.Context, credentialID string) error {
 	if err := s.checkQuarantine(); err != nil {
+		return err
+	}
+	if err := requireDeadline(ctx); err != nil {
 		return err
 	}
 	tx, err := s.db.Begin()

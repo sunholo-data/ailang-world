@@ -140,6 +140,9 @@ func (s *Store) CommitLanded(ctx context.Context, c Commit) (bool, error) {
 	if err := s.checkQuarantine(); err != nil {
 		return false, err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return false, err
+	}
 	got, ok, err := s.GetLogEntry(ctx, c.Entry.Header.EntryIndex)
 	if err != nil {
 		return false, err

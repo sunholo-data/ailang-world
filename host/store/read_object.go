@@ -44,6 +44,9 @@ func (s *Store) ReadObject(ctx context.Context, ref hashref.HashRef, maxBytes in
 	if err := s.checkQuarantine(); err != nil {
 		return ObjectMeta{}, nil, err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return ObjectMeta{}, nil, err
+	}
 	conn, err := s.db.Conn(ctx)
 	if err != nil {
 		return ObjectMeta{}, nil, fmt.Errorf("store: read object %q: reserve connection: %w", ref.String(), err)

@@ -80,6 +80,9 @@ func (s *Store) ObjectReferences(ctx context.Context, ref hashref.HashRef, after
 	if err := s.checkQuarantine(); err != nil {
 		return nil, err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
 	if err := validateObjectReferences(ref, after, limit); err != nil {
 		return nil, err
 	}

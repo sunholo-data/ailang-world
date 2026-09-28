@@ -33,7 +33,7 @@ func TestQuarantineRejectsOperationsUntilWorkerSettles(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("commit worker did not reach stall")
 	}
-	s.Quarantine()
+	Quarantine(s)
 	guardCtx, guardCancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer guardCancel()
 	readErr, _ := boundedCall(t, func() error {

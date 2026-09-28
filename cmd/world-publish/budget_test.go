@@ -61,7 +61,10 @@ func TestApprovalBudgetExcludesPromptTime(t *testing.T) {
 
 func TestReconcileScanBudget(t *testing.T) {
 	src := budgetSource(t, "main.go")
-	requireBudgetOrder(t, src, "func runReconcile(", "context.WithTimeout(context.Background(), 3*time.Second)", "db.PendingEffectIntents(scanCtx, reconcileScanLimit)", "cancelScan()", "broker.ReconcileRegistryPublish(context.Background()")
+	requireBudgetOrder(t, src, "func runReconcile(", "context.WithTimeout(context.Background(), 3*time.Second)", "db.PendingEffectIntents(scanCtx, reconcileScanLimit)", "cancelScan()", "reconcileReadOnlyProbe(opts, packet)")
+	if !strings.Contains(budgetSource(t, "reconcile_probe.go"), "broker.ReconcileRegistryPublish(context.Background()") {
+		t.Fatal("read-only probe root moved without the broker call")
+	}
 	if strings.Contains(src, "scanCtx := context.Background()") {
 		t.Fatal("temporary unbounded reconcile root remains")
 	}

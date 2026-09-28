@@ -55,6 +55,9 @@ func (s *Store) ScanUnreadableLog(ctx context.Context, fromIndex int64, limit in
 	if err := s.checkQuarantine(); err != nil {
 		return ScanPage{}, err
 	}
+	if err := requireDeadline(ctx); err != nil {
+		return ScanPage{}, err
+	}
 	const op = "ScanUnreadableLog"
 	if err := invalidScanLimit(op, limit); err != nil {
 		return ScanPage{}, err
@@ -96,6 +99,9 @@ func (s *Store) ScanUnreadableLog(ctx context.Context, fromIndex int64, limit in
 // key. It never depends on OFFSET or SQLite rowids.
 func (s *Store) ScanUnreadableWorlds(ctx context.Context, afterRef string, limit int) (ScanPage, error) {
 	if err := s.checkQuarantine(); err != nil {
+		return ScanPage{}, err
+	}
+	if err := requireDeadline(ctx); err != nil {
 		return ScanPage{}, err
 	}
 	const op = "ScanUnreadableWorlds"
