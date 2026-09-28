@@ -1060,7 +1060,7 @@ func (s *Store) CommitContext(ctx context.Context, c Commit) (err error) {
 	// Step 4b: commit membership, in this transaction. OR IGNORE collapses a
 	// hash listed twice in one commit; a resolved replay returned above.
 	for _, o := range c.Objects {
-		if _, err := tx.Exec(
+		if _, err := tx.ExecContext(ctx,
 			`INSERT OR IGNORE INTO commit_objects (object_ref, entry_index) VALUES (?, ?);`,
 			o.Hash.String(), h.EntryIndex,
 		); err != nil {
