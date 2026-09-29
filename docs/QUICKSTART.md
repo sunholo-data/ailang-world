@@ -133,14 +133,16 @@ with `LDR001` (that is why no landed `world/*.ail` is publishable yet).
 cat > /tmp/echo.ail <<'EOF'
 module quickstart/echo
 
-export func echo(x: string) -> string { x }
+export func main(input: string) -> string {
+  "{\"echo\":${input}}"
+}
 EOF
 cat > /tmp/transitions.json <<'EOF'
 [{"id": "tools.echo", "title": "Echo", "description": "quickstart transition",
   "transitionFnFile": "/tmp/echo.ail",
   "inputSchema": {"type": "object"}, "outputSchema": {"type": "object"},
   "access": {"effect": "world.apply", "scope": "world", "cost": 1},
-  "declaredEffects": [{"effect": "world.apply", "scope": "world", "cost": 1}]}]
+  "declaredEffects": []}]
 EOF
 go build -o /tmp/world-publish ./cmd/world-publish
 /tmp/world-publish transitions --store /tmp/world-demo.db --manifest /tmp/transitions.json \
@@ -166,11 +168,33 @@ The card lists `tools.echo` / `Echo`. A session minted without `world.apply` get
 with **zero** skills — the card is capability-filtered per session. What publication does and does
 not establish: the source object exists and passes standalone `check` under the pinned
 interpreter, and its epoch is one the registry nominates for that interpreter's release; it does
-**not** establish that the transition can be invoked (`/a2a/` refuses every invocation until the
-invocation coordinator lands).
+**not** establish that the source implements the `main(input: string) -> string` invocation
+calling convention. Invocation reports an incompatibility if it does not.
+
+### 7. Invoke a published transition
+
+**Attended — pending first verbatim run.** With the daemon running and the session from §6,
+send one JSON-object data part. The task ID is an idempotency key within the session.
+
+```bash
+curl -s -H "Authorization: Bearer $(cat /tmp/qs-session)" \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tasks/send","params":{"id":"quickstart-1","metadata":{"skill_id":"tools.echo"},"message":{"role":"user","parts":[{"type":"data","data":{"message":"hello"}}]}}}' \
+  http://127.0.0.1:7644/a2a/
+```
+
+The result has task `id` `quickstart-1`, `status.state` `completed`, one JSON-object
+`artifacts[0].parts[0].data`, and `metadata.invocation_id`, `metadata.world_ref`, and
+`metadata.entry_index`. Repeat the same `curl` command with the same task ID to retrieve
+the committed result without executing the transition again. Inspect its log entry:
+
+```bash
+curl -s -H "Authorization: Bearer $(cat /tmp/qs-session)" \
+  http://127.0.0.1:7644/v1/log/1
+```
 
 ---
-**Not yet in this quickstart** (arrives with the queue): effect broker + receipts (item 4),
-MCP projection — drive commits from any MCP client (item 5), the approval-inbox workbench
-(item 7). Transition payloads here are opaque demo objects; typed `world/*.ail` transitions
-run through the replay engine (`host/replay`) and become the commit path when the broker lands.
+**Not yet in this quickstart** (arrives with the queue): MCP projection — drive commits from
+an MCP client (item 5), the approval-inbox workbench
+(item 7). The echo is a self-contained demonstration source; library-backed `world/*.ail`
+transitions still need a separately pinned library dependency before publication.
