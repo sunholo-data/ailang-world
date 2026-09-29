@@ -1,157 +1,93 @@
 {
   "sprint_id": "w-transition-invocation-coordinator",
   "design_doc": "design_docs/planned/w-transition-invocation-coordinator.md",
-  "base": "dev 32f44c6 + uncommitted designer prototype",
-  "scope": "M1-M4c; no production caller; M5/M6 blocked on queue row 23 D-WORLD-37 policy tranche",
+  "base": "8df97da (record(207)); row 23 policy tranche merged 666dbc2",
+  "scope": "M5,M6",
+  "landed_context": "M1-M4c landed at a9a3382 (iteration 196), with no production caller",
   "milestones": [
     {
-      "id": "M1",
-      "title": "Capsule argument and cancellation boundary",
-      "files": [
-        "host/capsule/capsule.go",
-        "host/capsule/runcontext_test.go"
-      ],
-      "acceptance": [
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/capsule -run 'TestRunContext(Args|Cancel|RelaxedModule)$' -count=1",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/capsule -count=1"
-      ],
-      "mutations": [
-        "CAP-ARGS",
-        "CAP-CTX",
-        "CAP-RELAX"
-      ]
-    },
-    {
-      "id": "M2",
-      "title": "Narrow broker binder",
-      "files": [
-        "host/broker/binder.go",
-        "host/broker/binder_test.go",
-        "host/broker/invoke_boundary_test.go"
-      ],
-      "acceptance": [
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/broker -run 'TestOpenBinder|TestRegistryDispatchBindingBoundary' -count=1"
-      ],
-      "mutations": [
-        "BINDER-RAW",
-        "BINDER-DECLARED",
-        "TRC-SCOPE"
-      ]
-    },
-    {
-      "id": "M3",
-      "title": "Pure invocation plan and refusal types",
-      "files": [
-        "host/coordinator/plan.go",
-        "host/coordinator/errors.go",
-        "host/coordinator/plan_test.go"
-      ],
-      "acceptance": [
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/coordinator -run 'TestPlan(Law|RecordSkillID)' -count=1"
-      ],
-      "mutations": [
-        "PLAN-REV",
-        "PLAN-STATE",
-        "PLAN-LOG",
-        "PLAN-PREV",
-        "PLAN-OBSERVED",
-        "PLAN-SKILL",
-        "R13-JOURNAL"
-      ]
-    },
-    {
-      "id": "M4a",
-      "title": "Coordinator types and helpers",
-      "files": [
-        "host/coordinator/coordinator.go",
-        "host/coordinator/new_test.go"
-      ],
-      "acceptance": [
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/coordinator -run 'TestNew|TestPlan' -count=1"
-      ],
-      "mutations": [
-        "CFG-NIL",
-        "CFG-CAP",
-        "R1-TASK",
-        "R1-INPUT",
-        "R9-INCOMPAT",
-        "R12-OUTPUT",
-        "ID-NS"
-      ]
-    },
-    {
-      "id": "M4b",
-      "title": "Dispatch composition and receipt reconciliation",
-      "files": [
-        "host/coordinator/coordinator.go",
-        "host/coordinator/coordinator_test.go",
-        "host/coordinator/plan_test.go",
-        "host/coordinator/new_test.go"
-      ],
-      "acceptance": [
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/coordinator -run 'TestPlan|TestNew|TestDispatch|TestCommitBoundary|TestReplayCommittedInvocation' -count=1",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/broker -run '^TestRegistryDispatchBindingBoundary$' -count=1"
-      ],
-      "mutations": [
-        "R1",
-        "R2",
-        "R3",
-        "R4",
-        "R5",
-        "R6",
-        "R7",
-        "R8",
-        "R9",
-        "R10",
-        "R11",
-        "R12",
-        "R13",
-        "R14",
-        "R15",
-        "R16",
-        "POSTCOMMIT-SUCCESS"
-      ]
-    },
-    {
-      "id": "M4c",
-      "title": "In-flight invocation guard",
-      "files": [
-        "host/coordinator/coordinator.go",
-        "host/coordinator/errors.go",
-        "host/coordinator/inflight_test.go"
-      ],
-      "acceptance": [
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go vet ./...",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./... -run '^$'",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/coordinator -run '^TestInFlightGuard$' -count=1",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/coordinator -count=1",
-        "export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang; go test ./host/broker -run '^TestRegistryDispatchBindingBoundary$' -count=1"
-      ],
-      "mutations": [
-        "R17-CHECK",
-        "R17-RELEASE",
-        "R17-PANIC-RELEASE"
-      ]
-    }
-  ],
-  "blocked_not_planned": [
-    {
       "id": "M5",
-      "prerequisite": "queue row 23 D-WORLD-37 policy tranche: bounded durable operations"
+      "title": "Wire admitted /a2a/ transitions and adopt row-23 deadline policy",
+      "estimate": "~120 production LOC plus tests",
+      "files": [
+        "host/projection/projection.go",
+        "host/projection/projection_test.go",
+        "host/daemon/daemon.go",
+        "host/daemon/daemon_test.go",
+        "host/coordinator/coordinator.go",
+        "host/coordinator/coordinator_test.go"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH",
+        "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+        "go test ./host/projection -run 'TestA2ADispatch|TestA2AAuthorizedSkillNoCoordinator|TestProjection_ConfigValidation|TestProjection_OneSnapshotPerRequest|TestA2A_CodeMatrix' -count=1",
+        "go test ./host/daemon -run 'TestA2AAuthorizedSkillNoCoordinator|TestA2ACardInvocationDescription|TestDaemonInvokeConfig' -count=1",
+        "go test ./host/coordinator -run 'TestDispatchRefuses/R4_bind_error|TestCommitBoundary|TestDispatchDurableDeadline|TestReplayCommittedInvocation' -count=1",
+        "go test ./host/store -run 'TestStoreDeadlineGuardDynamic|TestDurableOpsHonourHeldConnection|TestDurableStallAtCutoffIsUncertainAndReconciles|TestProductionDSNSetsBusyTimeout' -count=1",
+        "go test -race ./host/projection ./host/coordinator ./host/daemon ./host/store",
+        "./scripts/verify_ail.sh",
+        "go vet ./...",
+        "go build ./...",
+        "go test ./..."
+      ],
+      "mutations": [
+        {
+          "id": "MUT-MAP-<Rn>",
+          "count": 12,
+          "killers": "TestA2ADispatch/<Rn>; R2/R3 share one arm"
+        },
+        {
+          "id": "MUT-ONE-SNAPSHOT",
+          "killer": "TestA2ADispatch/registry_moved_after_admission"
+        },
+        {
+          "id": "MUT-UNPINNED",
+          "killer": "daemon TestA2AAuthorizedSkillNoCoordinator"
+        },
+        {
+          "id": "MUT-R4-BIND",
+          "killer": "TestDispatchRefuses/R4_bind_error; existing fake binder"
+        },
+        {
+          "id": "MUT-R11-BOUNDARY",
+          "killer": "TestCommitBoundary/cancel_before_commit"
+        },
+        {
+          "id": "MUT-POSTCOMMIT-CTX",
+          "killer": "TestCommitBoundary/deadline_during_commit_reports_success"
+        }
+      ]
     },
     {
       "id": "M6",
-      "prerequisite": "M5 and queue row 23 D-WORLD-37 policy tranche"
+      "title": "Daemon E2E, transport resend, socket deadline and attended quickstart",
+      "estimate": "~30 production/documentation LOC plus tests",
+      "files": [
+        "host/daemon/invoke_e2e_test.go",
+        "host/daemon/daemon.go",
+        "docs/QUICKSTART.md"
+      ],
+      "acceptance": [
+        "export PATH=/opt/homebrew/bin:$PATH",
+        "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+        "go test ./host/daemon -run '^TestA2AInvokesPublishedTransition$' -count=1",
+        "go test ./host/daemon -run '^TestA2AResendAfterWriteTimeout$' -count=1",
+        "go test ./host/daemon -run '^TestA2AInvokeDeadlineClosesSocket$' -count=1",
+        "go test ./host/coordinator -run '^TestReplayCommittedInvocation$' -count=1",
+        "go test -race ./host/daemon ./host/projection ./host/coordinator",
+        "./scripts/verify_ail.sh",
+        "go vet ./...",
+        "go build ./...",
+        "go test ./..."
+      ],
+      "mutations": [
+        {
+          "id": "MUT-SKIP-SOCKET",
+          "killer": "TestA2AInvokeDeadlineClosesSocket"
+        }
+      ]
     }
-  ]
+  ],
+  "gate_status": "NOT RUN by planner; executor records results; sandbox-denied gates are PERMISSION-FAILURE, never green",
+  "disposition": "\u00a75 of sprint plan: controller fills after execution"
 }

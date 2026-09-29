@@ -1,117 +1,98 @@
-# Sprint plan — w-transition-invocation-coordinator (queue row 106, iteration 196)
+# Sprint plan — row 106, iteration 208: M5 then M6
 
-**Base:** detached `dev 32f44c6` plus the designer's uncommitted prototype. **Authority:** [design](w-transition-invocation-coordinator.md), especially “Round 2 carve-out — the reviewers' fixes, applied verbatim”; that section overrides earlier milestone and bounded-wait claims. **Scope:** M1, M2, M3, M4a, M4b, M4c only. The controller commits; this planner performs no git write operation.
+**Base:** detached `8df97da` (`record(207)`); row 23 policy tranche landed at iteration 207, merge `666dbc2`. **Authority:** [ratified design](w-transition-invocation-coordinator.md), including its round-2 carve-out and `/a2a/ wiring (M5)` text. **Scope:** M5 and M6 only, groom position 2. M1–M4c landed at `a9a3382` (iteration 196) as an offline capability with no production caller. The controller commits; the planner makes no git write.
 
-M1–M4c land as an offline host capability, with **no production caller**. Nothing in `host/daemon` or `host/projection` constructs a `Coordinator`; authorized `/a2a/` `tasks/send` continues to return its constant `-32603`. **M5 and M6 are blocked, not planned.** Their prerequisite is queue row 23's `D-WORLD-37` policy tranche: context-aware receipt lookup, connection acquisition, and pre-durable transaction operations, plus an enforced bound for remaining non-cancellable durable work. M5 must test a sole connection held past the deadline and stalls in each durable operation, showing bounded completion without accumulating blocked workers. An uncertain outcome must remain unconfirmed and reconcile without re-execution; a confirmed commit must not become a failure after a later context check.
+## 1. Premise re-measurement at `8df97da`
 
-## 1. Gates and measurements
+The observations below are from this HEAD. A negative result is paired with an observed positive control. The old design's V30 and historical “blocked” wording describe its earlier HEAD; its R-106-11 adoption clause is now operative.
 
-Run every command with `export PATH=/opt/homebrew/bin:$PATH; export AILANG_BIN=$HOME/.pinned-ailang/ailang` (`AILANG v0.41.0`). The boundary simulation copied the worktree under `.plan-scratch/boundary`, restored only that copy's `capsule.go` from `HEAD`, and cumulatively applied the prototype hunks. M3 carried the six pure-law tests cut into a standalone `plan_test.go`; M4a carried a standalone construction test; M4b replaced them with the full prototype `coordinator_test.go`. M4c added the proposed `sync.Map` guard and `InFlightError` **in scratch only**. The first M3 test cut was malformed; after correction the entire sequence was rerun. These are the corrected results:
-
-| Boundary | Added production code, approximately | `go vet ./...` rc | `go test ./... -run '^$'` rc |
-|---|---:|---:|---:|
-| M1 | capsule +27/−4 diff lines | 0 | 0 |
-| M2 | binder 7 non-comment LOC | 0 | 0 |
-| M3 | plan 94 + errors 40 = 134 | 0 | 0 |
-| M4a | coordinator declarations/helpers through `parseOutput`, ~110 | 0 | 0 |
-| M4b | `committed` + full `Dispatch`, ~121 additional | 0 | 0 |
-| M4c | `sync.Map` claim/release and error, ~10 additional | 0 | 0 |
-
-This re-partitions the design's M4c reconciliation into **M4b**, because the complete prototype `Dispatch` and its refusal suite already depend on `GetReceipt`, `committed`, R15 and R16. M4c is exclusively the quorum's missing concurrency fix. No boundary exceeds roughly 150 production LOC. The M3 pure-law test extraction and M4a construction test are milestone-local file states; do not land duplicate test definitions when M4b brings in the complete prototype test file.
-
-**Re-measured here:** six compile boundaries (both commands, rc above); TR.C `go test ./host/broker -run '^TestRegistryDispatchBindingBoundary$' -count=1` in the M4c scratch tree, rc 0 with the new `binder.go`; prototype file and hunk inventory; M3 and M4a test-file compile dependencies; the design's step-1a omission from the prototype. **UNMEASURED here:** the designer's 32/32 mutation kills, real-interpreter echo/replay/incompatibility behavior, full package/full-repo test verdicts, the new R4 mutation kill, and all M5/M6 gates. The executor must perform those gates. The scratch guard passed `TestInFlightGuard` (all three subtests); its check and two release mutants each produced a targeted red (rc 1). The executor must transfer that scratch test into the landed milestone and rerun it.
-
-The designer's V34 pre-existing macOS flake is `host/capsule TestOrdinaryOverflowCarriesNoESRCH`: EPERM from process-group kill occurred 3/320 with prototype and 3/320 with pristine `HEAD`. A recurrence is **not attributable to this sprint**. Any loopback-socket or signal/process failure in this sandbox is **UNINFORMATIVE UNDER SANDBOX**; the controller reruns those gates outside it.
-
-## 2. Milestones and acceptance
-
-Each row lists exact files and prototype hunks. Commands below inherit the pinned environment above. At **every** milestone repeat `go vet ./...` and `go test ./... -run '^$'`; `go build` alone misses `_test.go` compile failures.
-
-### M1 — capsule argument and cancellation boundary
-
-**Files:** `host/capsule/capsule.go`, `host/capsule/runcontext_test.go`. Take the entire prototype `capsule.go` diff: `Entry.Args`, `argsFile`, `Run` delegation to `RunContext`, `--args-file` staging, caller-derived timeout and `AILANG_RELAX_MODULES=1`; add the three prototype tests. The fixed staging path must accept the module headers that row 107's publish check accepts. Keep the legacy `Run` tests green. **Accept:** `go test ./host/capsule -run 'TestRunContext(Args|Cancel|RelaxedModule)$' -count=1`; `go test ./host/capsule -count=1` (V34 caveat). **Mutations:** CAP-ARGS, CAP-CTX, CAP-RELAX (§3).
-
-### M2 — broker's narrow binder
-
-**Files:** `host/broker/binder.go`, `host/broker/binder_test.go`, `host/broker/invoke_boundary_test.go`. Take both prototype binder files verbatim. Add the design's missing `NEG-session-binder` detector control to the `detector_controls` table in `invoke_boundary_test.go`: a synthetic outside-broker `*broker.SessionBinder` expression must produce zero findings. The existing `POS-session-type` control already detects raw `*broker.Session`. Do not expose the raw session. TR.C's inside exemption remains exactly 3. **Accept:** `go test ./host/broker -run 'TestOpenBinder|TestRegistryDispatchBindingBoundary' -count=1`. **Mutations:** BINDER-RAW, BINDER-DECLARED, TRC-SCOPE (§3). The existing TR.C test was re-measured green with `binder.go` in scratch.
-
-### M3 — pure plan and refusal vocabulary
-
-**Files:** `host/coordinator/plan.go`, `host/coordinator/errors.go`, `host/coordinator/plan_test.go` (milestone-local). Take the complete prototype `plan.go` and `errors.go`, including R15/R16 error types required by M4b. Cut `lawPlan`, `TestPlanRecordSkillID` and all five `TestPlanLaw*` functions out of prototype `coordinator_test.go` into `plan_test.go` with only their required imports. Pin the canonical record, input/output objects, observed head, revision, state root, log head, previous entry and journal binding. The pure Go transcription follows the already verified `world/transitions.ail` law; no `.ail` edit. **Accept:** `go test ./host/coordinator -run 'TestPlan(Law|RecordSkillID)' -count=1`. **Mutations:** PLAN-REV/STATE/LOG/PREV/OBSERVED/SKILL, R13-JOURNAL (§3).
-
-### M4a — coordinator types and helpers
-
-**Files:** `host/coordinator/coordinator.go`, `host/coordinator/new_test.go` (milestone-local). Take prototype `coordinator.go` from package/imports through `parseOutput` (immediately before `// committed`): narrow `Store`/`Runner`/`BinderFor`, `Config`/`New`, `Call`/`Result`, `InvocationID`, task/input validation, execution classification, JSON-object output validation. Add a construction test that rejects missing seams and non-positive caps; test helper behavior without a dispatcher. `plan_test.go` stays. **Accept:** `go test ./host/coordinator -run 'TestNew|TestPlan' -count=1`. **Mutations:** CFG-NIL, CFG-CAP, R1-TASK, R1-INPUT, R9-CLASSIFY, R12-OBJECT, ID-NS (§3); dispatcher-level killers become runnable in M4b.
-
-### M4b — compose and reconcile, without a production caller
-
-**Files:** `host/coordinator/coordinator.go`, `host/coordinator/coordinator_test.go`; remove the milestone-local `plan_test.go` and `new_test.go` as the full prototype test file replaces them. Take the rest of prototype `coordinator.go`, from `// committed` through the end: step 1b `GetReceipt`/committed read-back, bind/check/effect/source/world/execute/output/plan, pre-durable `ctx.Err`, intent then CAS commit, R14 bare conflict, R16 unconfirmed, and no post-success context check. Take complete prototype `coordinator_test.go` (pure-law, fake-runner refusal, real pinned interpreter, replay, boundary tests). Add `TestDispatchRefuses/R1_empty_episode`, `/R1_input_over_cap`, `/R1_unmarshalable_input`, `/R12_output_over_cap` and the missing R4 branch. Add `TestDispatchRefuses/R4_bind_error` using a fake `BinderFor` whose `Bind` returns an error; assert the typed/wrapped error and no execution or durable mutation. R2 and R3 must propagate `transitionreg.Bind` refusals without replacing the captured request's capability snapshot. **Accept:** `go test ./host/coordinator -run 'TestPlan|TestNew|TestDispatch|TestCommitBoundary|TestReplayCommittedInvocation' -count=1`; `go test ./host/broker -run '^TestRegistryDispatchBindingBoundary$' -count=1`. **Mutations:** R1–R16 and composition guards in §3. This milestone includes R13/R15/R16 reconciliation because the prototype `Dispatch` is one dependent unit.
-
-### M4c — step 1a in-flight guard (quorum fix)
-
-**Files:** `host/coordinator/coordinator.go`, `host/coordinator/errors.go`, **new** `host/coordinator/inflight_test.go`. Add a per-`Coordinator` `sync.Map` keyed by `InvocationID`. After validation and ID formation, **before `GetReceipt` (1b)**, claim the ID atomically with `LoadOrStore`; if present, return typed R17 `*InFlightError`. On a successful claim, `defer Delete(id)` immediately, before any later call or return. This includes normal success, every error path and a panic unwinding through `Dispatch`. Keep the guard per Coordinator and the current single-process writer premise explicit. `InFlightError` is a coordinator refusal type, not a wire mapping in this slice.
-
-**Choice of the reviewer's two branches:** use **immediate refusal**. It gives a concurrent retry a prompt typed R17 without parking a second worker behind an execution or an unbounded durable store operation. The client can resend the same ID after the first call finishes; step 1b then returns the resolved receipt without re-execution or reports its unresolved intent. This choice preserves the carve-out's M5 block: it does not pretend that `GetReceipt`, `AppendIntent`, or `Commit` are bounded by the request context.
-
-`TestInFlightGuard/R17_concurrent_same_id` uses a Runner double blocked on a channel after counting entry. While first `Dispatch` is inside the runner, a same-ID retry gets R17 and the count remains one. After release and first completion, another same-ID retry reaches 1b, returns `Reconciled: true`, and still has count one. `TestInFlightGuard/release_after_error` has the first runner call fail, then verifies a second same-ID call reaches the runner (not R17). `TestInFlightGuard/release_after_panic` recovers the first runner panic and verifies the ID was released. Also cover early returns after claim (for example, receipt error) with the same follow-up shape. Use channel synchronization, no timing sleep. **Accept:** `go test ./host/coordinator -run '^TestInFlightGuard$' -count=1`; `go test ./host/coordinator -count=1`; `go test ./host/broker -run '^TestRegistryDispatchBindingBoundary$' -count=1`. **Mutations:** R17-CHECK and R17-RELEASE, each with the sole killing subtest named below.
-
-## 3. Mutation drill, anchored to the diff
-
-For every row, mutate **only** the named file/change in a scratch copy or isolated executor edit, run **only** its named killer, record a behavioral `--- FAIL`, then restore byte-identical contents. A compile error, unused import or a passing test does not count as a kill. The designer reported 32/32 prototype mutations killed; this planner did not rerun them. R17-CHECK, R17-RELEASE and R17-PANIC-RELEASE were killed in scratch by the named selected subtests (rc 1); the R4 binder-error and new control mutations remain unmeasured obligations. The table names the **sole intended killing test** at subtest granularity; a row with two distinct refusal branches has two mutants.
-
-| Mutation / refusal or guard | File: exact change | Sole killing test |
+| Premise | Command and observed output | Control |
 |---|---|---|
-| CAP-ARGS | `host/capsule/capsule.go`: omit `--args-file` append while retaining the file write | `TestRunContextArgs` |
-| CAP-CTX | `capsule.go`: derive timeout from `context.Background()` instead of `parent` | `TestRunContextCancel` |
-| CAP-RELAX | `capsule.go`: remove `AILANG_RELAX_MODULES=1` from child env | `TestRunContextRelaxedModule` |
-| BINDER-RAW / TR.C | `host/coordinator/coordinator.go`: introduce a `*broker.Session` type use outside broker | `TestRegistryDispatchBindingBoundary/outside_broker_is_clean` |
-| BINDER-DECLARED | `host/broker/binder.go`: `b.s.Bind(m)` → `b.s.Bind(Manifest{})`, so the negative-cost manifest is accepted | `TestOpenBinder` |
-| TRC-SCOPE | `host/broker/invoke_boundary_test.go`: classify `SessionBinder` as a forbidden `session-type` selector | `TestRegistryDispatchBindingBoundary/detector_controls` (`NEG-session-binder`) |
-| PLAN-REV | `host/coordinator/plan.go`: `Revision: w.Revision + 1` → `+ 2` | `TestPlanLawRevision` |
-| PLAN-STATE | `plan.go`: `StateRoot: out.Hash` → `in.Hash` | `TestPlanLawStateRoot` |
-| PLAN-LOG | `plan.go`: `LogHead: entryHash` → `rec.Hash` | `TestPlanLawLogHead` |
-| PLAN-PREV | `plan.go`: `PrevEntryHash: w.LogHead` → `w.Ref` | `TestPlanLawPrevEntry` |
-| PLAN-OBSERVED | `plan.go`: `ObservedHead: w.Ref` → zero ref in `Commit` | `TestPlanLawObservedHead` |
-| PLAN-SKILL | `plan.go`: `SkillID: d.ID` → empty string | `TestPlanRecordSkillID` |
-| CFG-NIL | `coordinator.go`: remove missing-seam refusal in `New` | `TestNewRefusesMissingSeamsAndCaps` |
-| CFG-CAP | `coordinator.go`: accept `MaxInput <= 0` or `MaxOutput <= 0` | `TestNewRefusesMissingSeamsAndCaps` |
-| R1-TASK | `coordinator.go`: guard `!validTaskID` with `false &&` | `TestDispatchRefuses/R1_bad_task_id` |
-| R1-INPUT | `coordinator.go`: replace nil-input guard with `if false` | `TestDispatchRefuses/R1_nil_input` |
-| R1-EPISODE | `coordinator.go`: `if call.EpisodeID == ""` → `if false` | `TestDispatchRefuses/R1_empty_episode` (new) |
-| R1-CAP | `coordinator.go`: replace `len(in) > c.cfg.MaxInput` with `false && len(in) > c.cfg.MaxInput` | `TestDispatchRefuses/R1_input_over_cap` (new) |
-| R1-MARSHAL | `coordinator.go`: replace `err != nil` in the marshal refusal with `false && err != nil` | `TestDispatchRefuses/R1_unmarshalable_input` (new) |
-| R2-ABSENT | `coordinator.go`: swallow `transitionreg.Bind`'s `TransitionAbsentError` and return generic error | `TestDispatchRefuses/R2_absent` |
-| R3-CAPS | `coordinator.go`: pass ambient Admin caps in place of `call.Request.Caps` to `transitionreg.Bind` | `TestDispatchRefuses/R3_access_denied` |
-| R4-BIND | `coordinator.go`: swallow a fake binder's `Bind` error | `TestDispatchRefuses/R4_bind_error` (new) |
-| R5-PIN | `coordinator.go`: ignore `call.PinnedFn` (`_ = call.PinnedFn` in its arm) | `TestDispatchRefuses/R5_pin_mismatch` |
-| R6-ABSENT | `coordinator.go`: source `if !ok` → `if false` | `TestDispatchRefuses/R6_absent_source` |
-| R6-HASH | `coordinator.go`: `sum != d.TransitionFn` → `false && sum != d.TransitionFn` | `TestDispatchRefuses/R6_corrupt_source` |
-| R7-WORLD | `coordinator.go`: selected-head `if !ok` → `if false` | `TestDispatchRefuses/R7_no_world` |
-| R8-EFFECT | `coordinator.go`: declared-effects guard → `if false` | `TestDispatchRefuses/R8_effects_declared` |
-| R9-INCOMPAT | `coordinator.go`: classify interpreter mismatch as `ExecutionError` | `TestDispatchIncompatibleRealInterpreter` |
-| R10-EXEC | `coordinator.go`: replace `classifyExec(err)` return with an untyped error | `TestDispatchRefuses/R10_exec_failed` |
-| R11-EXEC | `coordinator.go`: disable `ctx.Err()` guard on runner error (`false && cerr != nil`) | `TestDispatchRefuses/R11_cancelled_during_exec` |
-| R11-BOUNDARY | `coordinator.go`: disable `ctx.Err()` guard immediately before `AppendIntent` | `TestCommitBoundary/cancel_before_commit` |
-| R12-OUTPUT | `coordinator.go`: decode into `any` instead of requiring non-nil `map[string]any` | `TestDispatchRefuses/R12_output_not_object` |
-| R12-JSON | `coordinator.go`: after `json.Unmarshal(out, &obj)`, replace `err != nil || obj == nil` with `false && err != nil` | `TestDispatchRefuses/R12_output_not_json` |
-| R12-CAP | `coordinator.go`: `if len(out) > c.cfg.MaxOutput` → `if false` | `TestDispatchRefuses/R12_output_over_cap` (new) |
-| R13-RECONCILE | `coordinator.go`: `if seen` → `if false && seen` | `TestDispatchRefuses/R13_resend_reconciles_committed` |
-| R13-JOURNAL | `plan.go`: set `Commit.InvocationID` to empty while leaving intent ID | `TestCommitBoundary/receipt` |
-| R14-CAS | `coordinator.go`: re-read the head and silently re-plan before commit | `TestDispatchRefuses/R14_head_moved` |
-| R14-TYPED | `coordinator.go`: `if store.IsConflict(err)` → `if false` | `TestDispatchRefuses/R14_head_moved` |
-| R15-INTENT | `coordinator.go`: `if rc.State == store.ReceiptResolved` → `if true` | `TestDispatchRefuses/R15_resend_not_committed` |
-| R16-UNCONFIRMED | `coordinator.go`: return bare `err` instead of `UnconfirmedError` on non-conflict commit error | `TestDispatchRefuses/R16_unconfirmed_then_reconciled` |
-| POSTCOMMIT-SUCCESS | `coordinator.go`: add `if err := ctx.Err(); err != nil { return Result{}, err }` after successful `Commit` | `TestCommitBoundary/deadline_during_commit_reports_success` |
-| ID-NS | `coordinator.go`: `"a2a:" + episodeID` → `"effect:" + episodeID` | `TestDispatchEchoRealInterpreter` |
-| R17-CHECK | `coordinator.go`: `if _, loaded := c.inFlight.LoadOrStore(id, …); loaded` → `if false && loaded` (keep atomic store and use `loaded`) | `TestInFlightGuard/R17_concurrent_same_id` |
-| R17-RELEASE | `coordinator.go`: change `defer c.inFlight.Delete(id)` to a no-op `defer func() {}()` | `TestInFlightGuard/release_after_error` |
-| R17-PANIC-RELEASE | `coordinator.go`: move `Delete(id)` to normal-return code rather than a defer | `TestInFlightGuard/release_after_panic` |
+| Store signatures and strict deadline | `rg -n 'func .*GetReceipt|func .*AppendIntent|func .*Commit\(|ErrNoDeadline' host/store/{journal,store,deadline_guard_test}.go` → `journal.go:416 func (s *Store) AppendIntent(ctx context.Context, id string, intent JournalIntent) (_ int64, _ hashref.HashRef, err error)`, `journal.go:857 func (s *Store) GetReceipt(ctx context.Context, id string) (Receipt, bool, error)`, `store.go:1076 func (s *Store) Commit(ctx context.Context, c Commit) (err error)`, `store.go:237 ErrNoDeadline`, `deadline_guard_test.go:174 … want ErrNoDeadline`. | `store.go:239-246 requireDeadline` rejects nil or deadline-free ctx; `TestStoreDeadlineGuardDynamic` at `deadline_guard_test.go:117` checks every exported I/O method. |
+| Coordinator surface | `nl -ba host/coordinator/coordinator.go | sed -n '25,95p;191,299p'` → `Store` has ctx-first `GetReceipt/AppendIntent/Commit` at :31-33; `Runner.RunContext` :37-39; `BinderFor` :42; `Config{Store,Runner,Binder,Now,MaxInput,MaxOutput}` :45-52; `New(Config) (*Coordinator,error)` :63; `Call{Request,EpisodeID,Grants,SkillID,TaskID,Input,PinnedFn}` :75-83; `Result{Output,OutputBytes,InvocationID,WorldRef,EntryIndex,RecordRef,Reconciled}` :86-95; `Dispatch(ctx,Call)` :195. | `rg -n 'InvokeWait' host/coordinator host/projection host/daemon` → no code match; the proposed `InvokeWait` belongs to `projection.Config`, not `coordinator.Config`. `projection.go:151 MaxWait` is the current positive timeout field. |
+| Authorized branch and snapshot | `nl -ba host/projection/projection.go | sed -n '299,352p'` → authorized skill branch :314-320 writes `codeInternal, notAvailableMessage`; `allowedDescriptors(ctx,*authority.SessionBinding) ([]transitionreg.Descriptor,error)` :339; `NewRequest` :344; returns `req.Allowed()` :351. | `projection_test.go:756` expects the constant for an authorized skill; :752-755 expect -32602 for absent/guessed/stale/ambient names. |
+| Pinned protocol result | `rg -n 'A2AResult|A2ATaskSendParams' /Users/voightkampff/go/pkg/mod/github.com/sunholo-data/ailang@v0.33.2/serveapi/protocol/a2a_wire.go` → `A2ATaskSendParams` :14; `func A2AResult(w http.ResponseWriter, id json.RawMessage, result any)` :35. `nl -ba …/a2a_wire.go | sed -n '8,39p'` → params `ID`, `Message`, `Metadata`; message `Parts []A2AContent`; content `Type`, `Data map[string]any`; `A2AResult` writes HTTP 200 with `jsonrpc/id/result`. | `A2AError` at :29-34 is the same pinned package's error helper. |
+| Card description test search | `rg -n 'func TestA2A.*Description|Description.*AILANG World daemon|AILANG World daemon.*Description' host/daemon/*test.go host/projection/*test.go` → **no match**. | `daemon.go:573` contains the current literal; `projection_test.go:456` asserts its own injected `"test projection agent"`, not the daemon literal. Add an assertion for the new daemon sentence. |
+| Single connection and lock timeout | `rg -n 'SetMaxOpenConns|busyTimeoutMillis|func withBusyTimeout|TestProductionDSNSetsBusyTimeout' host/store/{store,writer_lock,context_read_test}.go` → `store.go:382 db.SetMaxOpenConns(1)`; `writer_lock.go:187 busyTimeoutMillis = 2000`, :194 `withBusyTimeout`; `context_read_test.go:173 TestProductionDSNSetsBusyTimeout`. | `durable_test.go:70-123 TestDurableOpsHonourHeldConnection` holds the sole connection and tests all three operations; `store.go:239-246 requireDeadline` and `deadline_guard_test.go:117` show this is under the mandatory-deadline surface. |
+| Runner argument surface | `nl -ba host/capsule/capsule.go | sed -n '39,56p;161,183p;205,217p'` → `Config{ExecTimeout,MaxOutputBytes}`; `Entry{Interpreter,Source,Args []byte}`; `New(*archive.Archive,Config)*Runner`; `RunContext(parent context.Context,entry Entry)(Result,error)`; `--args-file` at :211; child timeout derives from `parent` at :215. | `runcontext_test.go:11,29,57` has argument, cancel, relaxed-module tests. |
+| QUICKSTART placement | `rg -n '^#{1,3} ' docs/QUICKSTART.md` → title :1; sections 1–6 at :7, :31, :86, :98, :114, :118. | Section 6 is the positive anchor; add §7 after its end at :170, before the closing queue note at :172-176, and update that note's stale invocation claim. |
 
-R13 is a reconciliation success, rather than a refusal; its mutation proves no second execution. R14 is a bare store conflict and R16 is an unconfirmed outcome. `*store.DuplicateInvocationError` remains a defensive error, **not** unreachable: R17 protects concurrent callers sharing one Coordinator, while the store retains the last guard. Avoid an R15 inference across multiple processes or a widened connection pool; row 23 must revisit that premise before M5.
+Further measured conflict anchors: `projection_test.go:733-782 TestA2A_CodeMatrix` pins the old authorized constant; `daemon_test.go:1213-1256` pins it through the mount. `coordinator_test.go:400-413` already contains `TestDispatchRefuses/R4_bind_error` with a fake binder and no durable mutation; keep and run its planned mutation. `coordinator.go:207,281,284` already passes the invocation ctx into all three store calls; :278-280 still has the separate pre-boundary check; :288-291 distinguishes definite cancellation from `store.IsUncertain`; :293-298 contains no post-success ctx check. `durable.go:63-110` establishes the cutoff and uncertainty; `durable_test.go:223-260` tests stalls at the durable cutoff. The coordinator's pre-boundary test is `coordinator_test.go:543-559`; the pre-Commit test is :562-578. Search `rg -n 'deadline_during_commit_reports_success' host/coordinator` → **no match**; the positive control is `TestCommitBoundary/cancellation_before_commit_is_not_committed` at :562 and `host/store/durable_driver_fault_test.go:81 TestDriverCommitErrorAfterRealCommitIsUncertainAndReconciles`. Add the named successful-commit test in M5.
 
-## 4. Execution notes and risks
+## 2. M5 — invoke an admitted transition over `/a2a/` (~120 production LOC plus tests)
 
-1. Apply milestone files in the measured order. Keep `plan_test.go`/`new_test.go` only for their boundaries, then merge their tests into the prototype `coordinator_test.go` at M4b. Copy milestone states only under worktree-local `.plan-scratch/` while rehearsing, and remove those scratch copies when done; do not modify prototype files to simulate boundaries.
-2. At each boundary run the two compile fences and the row's targeted command with the pinned interpreter. At M4c run `go vet ./...`, `go test ./... -run '^$'`, `go test ./host/coordinator -count=1`, `go test ./host/broker -run '^TestRegistryDispatchBindingBoundary$' -count=1`, then the non-socket full gate `go test ./... -count=1` and `./scripts/verify_ail.sh`. The controller reruns sandbox-sensitive gates outside the sandbox. Do not classify socket or signal-process failures here as product verdicts.
-3. Execute the mutation drill after the tests exist. Record red test identities and restore each edit byte-identically. A full green run without mutations does not discharge S6's load-bearing claims.
-4. No `world/`, `.ail`, `tools/launchd/*`, `.claude/*`, `.agents/*`, daemon or projection change belongs in this slice. The invocation source fixture stays inline in Go; the production skill and usage walkthrough wait for M5/M6, after row 23. The major residual risk is context-free `GetReceipt`, `AppendIntent` and `Commit`: keep the coordinator uncalled in production until the prerequisite lands.
+**Files:** `host/projection/projection.go`, `host/projection/projection_test.go`, `host/daemon/daemon.go`, `host/daemon/daemon_test.go`, `host/coordinator/coordinator.go`, `host/coordinator/coordinator_test.go`. Keep the store tranche intact.
+
+1. Add required positive `projection.Config.InvokeWait`, store it in `Handler`, and use `context.WithTimeout(r.Context(), h.invokeWait)` for the entire A2A path at :265-324. Keep `MaxWait` for the card. The daemon sets `invokeDeadline = 20 * time.Second`, less than `writeTimeout = 30 * time.Second` (:94); reject an invalid ordering at construction. Use the same derived ctx through resolution, snapshot, Dispatch and store. Add config and deadline tests.
+2. Add optional `Coordinator` to projection Config/Handler. Refactor `allowedDescriptors` to return the admitted `transitionreg.Request` alongside its allowed descriptors (including an explicit empty/absent-head result); the card consumes only `Allowed()`. A2A must pass that **same** Request into `coordinator.Call`; do not call `NewRequest` again. Fill `EpisodeID` and `Grants` from the resolved binding, `SkillID` from admitted metadata, `TaskID` from `params.ID`, `Input` from the one data part, `PinnedFn` from optional metadata `transition_fn` parsed as a HashRef.
+3. In the authorized branch, preserve the nil-coordinator `-32603 notAvailableMessage`. Otherwise require exactly one part with `Type == "data"` and non-nil `Data`, and accept optional string `transition_fn` only if it parses; malformed values get `-32602 invalid params`. Call `Dispatch`. On success call `protocol.A2AResult(w, req.ID, task)` where task is `{"id":TaskID,"status":{"state":"completed"},"artifacts":[{"parts":[{"type":"data","data":Output}]}],"metadata":{"invocation_id":InvocationID,"world_ref":WorldRef,"entry_index":EntryIndex}}`. Keep HTTP 200 and constant error text.
+4. Implement one `dispatchError` switch using `errors.As`/`errors.Is`, with the full frozen table: R1/bad parts/bad pin → `-32602 invalid params`; R2/R3 → `-32602 not authorized`; R5 → `-32602 proposal does not match the registered transition`; R13 → reconciled success; R15 → `-32603 invocation was not committed; send a new task id`; R16 → `-32603 invocation outcome is not confirmed; resend the same task id`; defensive `*store.DuplicateInvocationError` → `-32602 task id already used in this session`; R4/R6/other store errors → `-32603 transition invocation is not available in this daemon`; R7 → `-32603 no world is selected; commit a genesis world first`; R8 → `-32603 transitions that declare effects cannot be invoked in this daemon`; R9 → `-32603 transition does not implement the invocation calling convention`; R10 → `-32603 transition execution failed`; R11 → `-32603 invocation exceeded its deadline`; R12 → `-32603 transition output is not a JSON object`; R14 → `-32603 world head moved during invocation; not committed; send a new task id`. Do not interpolate detail. Add tests for each distinct arm and for R13 success.
+5. Adopt R-106-11: preserve the already ctx-first calls at `coordinator.go:207,281,284` with the **unreplaced** invocation ctx. Delete the separate :278-280 `ctx.Err()` if the store pre-durable cancellation covers the same boundary; preserve `TestCommitBoundary/cancel_before_commit` and mutate the store call's ctx to `context.Background()` in MUT-R11-BOUNDARY. Map definite pre-durable cancellation from `GetReceipt`, `AppendIntent` or `Commit` to R11. Map `store.IsUncertain` from a durable write to R16 and reconcile on same-ID resend. An uncertain `AppendIntent` also needs a same-ID receipt read before deciding whether the intent landed; never re-execute blindly. Keep no ctx check after successful Commit; add `deadline_during_commit_reports_success` with an explicit landed receipt control. Preserve R17 in-flight behavior.
+6. In `daemon.New` at :529-542 retain the archive handle when `AilangBin != ""`; construct `capsule.New(archive, capsule.Config{})`, then `coordinator.New` with `Store:d.store`, `Runner`, `Binder:broker.OpenBinder` adapter, `Now`, and positive input/output caps matched to request/output policy. Inject it into `projection.Config`; leave nil when `AilangBin == ""`. Update the card description sentence to say a published skill accepts one JSON-object data part, produces a JSON-object data artifact, and requires an archived interpreter; schemas are carried but not validated. Add a daemon card sentence assertion.
+7. Add projection tests for all wire shapes, nil coordinator, one-snapshot registry change after admission, and no execution/durable mutation on invalid params. Add daemon no-interpreter variant. Add reviewer round-2 tests through the invocation path: hold the only connection beyond the request deadline, then stall `GetReceipt`, `AppendIntent`, and `Commit` separately (using test seams), asserting bounded request completion, no accumulating blocked workers across repeated calls, definite R11 before cutoff and R16 for uncertain cutoff. Assert a confirmed successful commit remains success even if the ctx expires after it lands.
+
+**M5 ACCEPT LIST** (run exactly, with the common boundary gates below):
+
+- `go test ./host/projection -run 'TestA2ADispatch|TestA2AAuthorizedSkillNoCoordinator|TestProjection_ConfigValidation|TestProjection_OneSnapshotPerRequest|TestA2A_CodeMatrix' -count=1` → HTTP 200 task/result and every constant code/message, same Request, old nil behavior green.
+- `go test ./host/daemon -run 'TestA2AAuthorizedSkillNoCoordinator|TestA2ACardInvocationDescription|TestDaemonInvokeConfig' -count=1` → nil if unpinned, constructed if pinned, correct card sentence and deadline ordering.
+- `go test ./host/coordinator -run 'TestDispatchRefuses/R4_bind_error|TestCommitBoundary|TestDispatchDurableDeadline|TestReplayCommittedInvocation' -count=1` → R4 remains no-op on durable state, deadline and commit outcomes bounded/correct, replay green.
+- `go test ./host/store -run 'TestStoreDeadlineGuardDynamic|TestDurableOpsHonourHeldConnection|TestDurableStallAtCutoffIsUncertainAndReconciles|TestProductionDSNSetsBusyTimeout' -count=1` → deadline guard, sole-connection wait, durable cutoff, 2s lock policy green.
+
+**M5 mutation drill:** In a scratch copy, change one arm at a time and require a behavioral `--- FAIL`, then restore byte-identically. `MUT-MAP-<Rn> ×12`: map each of R2/R3, R5, R15, R16, DuplicateInvocation, R7, R8, R9, R10, R11, R12, R14 to `codeInternal,notAvailableMessage` if it normally uses -32602, otherwise to `codeInvalidParams`; sole killers are `TestA2ADispatch/<Rn>` (combine R2/R3 as one not-authorized arm). Test R1 validation and R4/R6 default separately, without inflating the design's ×12 count. `MUT-ONE-SNAPSHOT`: replace the admitted Request with a fresh `NewRequest` at Dispatch → `TestA2ADispatch/registry_moved_after_admission`. `MUT-UNPINNED`: construct coordinator without archive → daemon variant of `TestA2AAuthorizedSkillNoCoordinator`. `MUT-R4-BIND`: swallow fake binder `Bind` error in `coordinator.go:218-221` → `TestDispatchRefuses/R4_bind_error`. `MUT-R11-BOUNDARY`: drop/replace ctx on `AppendIntent` → `TestCommitBoundary/cancel_before_commit`. `MUT-POSTCOMMIT-CTX`: add a ctx check after successful Commit → `TestCommitBoundary/deadline_during_commit_reports_success`. A compile failure is not a kill.
+
+## 3. M6 — daemon E2E, resend and attended walkthrough (~30 production/doc LOC plus tests)
+
+**Files:** new `host/daemon/invoke_e2e_test.go`, `docs/QUICKSTART.md`; `host/daemon/daemon.go` only for testable timeouts/hooks needed by the loopback proof. Do not change the frozen protocol.
+
+1. With a real archived pinned interpreter and `httptest.NewRecorder` (no socket), commit genesis, publish the self-contained echo descriptor **through `PublishSet`**, mint an authorized session, POST `/a2a/` `tasks/send` with a single JSON-object data part, assert the task result shape and one committed entry, and GET `/v1/log/{i}` to assert the exact entry. Read its pinned source/interpreter/input and re-run via `capsule.RunContext`; compare output bytes (AC-REPLAY). Resend the same task ID and prove no second execution/entry.
+2. Add `TestA2AResendAfterWriteTimeout` on a real loopback server: use a test-configured `WriteTimeout` shorter than injected Commit delay, observe a transport error on the first call, then a durable commit. Resend the **same** task ID after the outcome settles and assert the committed `A2AResult`, same entry and no re-execution (AC-RESEND-WIRE). Treat an uncertain first response as unconfirmed until receipt reconciliation.
+3. Add `TestA2AInvokeDeadlineClosesSocket` with `http.Server.ConnState` closure tracking, a nonterminating fixture transition and 1s `InvokeWait`; assert the deadline closes the socket and releases the capsule. Keep a positive control: a normal invocation on the same listener completes. This is the OS-level AC13 leg.
+4. Add QUICKSTART §7, **“Invoke a published transition”**, immediately after §6. Give the exact session bearer, `tasks/send` JSON-object data part, response fields, same-task resend, and `GET /v1/log/{i}` commands. Mark **attended — pending first verbatim run** (S7). The current §6 fixture at :133-143 declares an effect and exports `echo`, so replace or supplement it with a self-contained, effect-free `main(input)` echo fixture and matching manifest before directing users to invoke it. Update :169-170 and the closing queue note so they no longer claim all invocation is unavailable. Do not claim an attended run happened.
+
+**M6 ACCEPT LIST** (plus the common boundary gates):
+
+- `go test ./host/daemon -run '^TestA2AInvokesPublishedTransition$' -count=1` → recorder E2E result, GET log, no second entry, replay bytes equal.
+- `go test ./host/daemon -run '^TestA2AResendAfterWriteTimeout$' -count=1` → first transport error, durable commit, reconciled resend with original output.
+- `go test ./host/daemon -run '^TestA2AInvokeDeadlineClosesSocket$' -count=1` → tracked connection closes after invoke deadline, normal control succeeds.
+- `go test ./host/coordinator -run '^TestReplayCommittedInvocation$' -count=1` → existing pinned replay stays green.
+- `./scripts/verify_ail.sh` → all `.ail` verification gates green; required even if no `.ail` file changes.
+
+**M6 mutation drill:** `MUT-SKIP-SOCKET`: disable the test server's `ConnState` closure notification while retaining the independent close assertion in `TestA2AInvokeDeadlineClosesSocket`; that assertion must fail behaviorally. Restore byte-identically. Run the resend test with the delayed Commit path as a positive control that this is a real listener, not an `httptest` recorder.
+
+## 4. Boundary gates, conflict surface and reporting
+
+At **each** milestone boundary run, in this order:
+
+```sh
+export PATH=/opt/homebrew/bin:$PATH
+export AILANG_BIN=$HOME/.pinned-ailang/ailang
+./scripts/verify_ail.sh
+go vet ./...
+go build ./...
+go test ./...
+go test -race ./host/projection ./host/coordinator ./host/daemon ./host/store
+```
+
+Record each command, exit status and result. A socket/signal denial in the sandbox is **PERMISSION-FAILURE**, not green; rerun that exact gate outside the sandbox. These are executor gates, **NOT RUN by this planning edit**. The M5 deadline tests also need `-race` on their touched packages. Do not claim a mutation kill without its red test identity and restored source.
+
+Conflict surface: `projection_test.go:733-782 TestA2A_CodeMatrix` and `daemon_test.go:1213-1256` assert the old constant for authorized skills. Construct those test handlers/daemons without a coordinator (or with `AilangBin == ""`) so AC-UNPINNED continues to pin that behavior, then add separate pinned invocation tests. `projection_test.go:456` pins an injected test description, so leave its injection intact. `coordinator_test.go:400-413` already covers R4. The `coordinator.go:278-280` pre-boundary check may disappear; move MUT-R11-BOUNDARY to the ctx-bearing durable call and keep the observed boundary result. `docs/QUICKSTART.md:169-170` contains the now-stale unavailable claim and its §6 fixture is effectful.
+
+## OPEN QUESTIONS
+
+1. Should R17 in-flight refusal use the defensive duplicate-task wire message, since the frozen M5 table does not give R17 its own row?
+2. Which exact `MaxInput`/`MaxOutput` daemon caps should be pinned, given the design requires positive caps but specifies no numeric values?
+3. For an uncertain `AppendIntent` whose receipt remains indeterminate, should the immediate wire answer use R16's same-task resend message until it settles?
+
+## OPEN QUESTION DISPOSITIONS (controller, pre-execution)
+
+1. **R17 in-flight refusal** uses the defensive `DuplicateInvocationError` arm's wire shape: `-32602`, `task id already used in this session`. Grounds: the design's own mapping table defines exactly one arm for "a second request carrying a task id this episode already used" — it says the arm is defensive against R17 being bypassed, so when R17 itself fires, the same message applies verbatim. No new wire protocol, no new constant. Named by `TestA2ADispatch` if reachable via seams.
+2. **MaxInput/MaxOutput** = `1 << 20` bytes each, grounded in this HEAD's own bounds: the `/a2a/` request body is already capped at `maxA2ARequestBytes = 1<<20` (projection.go:109), so an input larger than that cannot reach `Dispatch` anyway; the output must fit the single JSON-object data artifact in the same envelope's response, so it takes the symmetric bound. Both are positive per the constructor check (coordinator.go:67-68).
+3. **Uncertain `AppendIntent` with an indeterminate receipt** answers **R16** — `invocation outcome is not confirmed; resend the same task id` — until the receipt settles. The resend path re-enters step 1b (`GetReceipt`), which reconciles the moment the store settles the receipt; that is the exact loop R16 exists for (the design's R16 row and the round-2 carve-out's "never re-execute blindly").
+
+## 5. Controller disposition (fill after execution)
+
+**OPEN QUESTIONS resolved above (1-3) before execution; this section records the execution results.**
+
+**M5:** implementation/ref, accept-list results, boundary-gate results, mutation reds/restores, permission reruns: _pending_.
+**M6:** implementation/ref, accept-list results, boundary-gate results, mutation red/restore, S7 attended-verbatim status: _pending_.
+**Decision/open-question resolutions and final commit:** _controller fills_.
