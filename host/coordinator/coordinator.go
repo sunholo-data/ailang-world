@@ -55,7 +55,8 @@ type Config struct {
 type Coordinator struct {
 	cfg Config
 	// inFlight protects one process's in-progress invocation IDs. The store's single-process writer premise bounds this guard.
-	inFlight sync.Map
+	inFlight        sync.Map
+	uncertainIntent sync.Map
 }
 
 // New validates cfg: a missing seam or a non-positive cap is a construction
@@ -210,9 +211,16 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 	}
 	if seen {
 		if rc.State == store.ReceiptResolved {
+			c.uncertainIntent.Delete(id)
 			return c.committed(ctx, rc)
 		}
+		if _, uncertain := c.uncertainIntent.Load(id); uncertain {
+			return Result{}, &UnconfirmedError{InvocationID: id, Err: errors.New("intent outcome indeterminate")}
+		}
 		return Result{}, &NotCommittedError{InvocationID: id} // R15
+	}
+	if _, uncertain := c.uncertainIntent.Load(id); uncertain {
+		return Result{}, &UnconfirmedError{InvocationID: id, Err: errors.New("intent receipt absent after uncertain append")}
 	}
 	// Propose: authorization + confinement (R2/R3/R4).
 	bound, err := transitionreg.Bind(call.Request.Registry, call.SkillID, call.Request.Caps,
@@ -274,11 +282,12 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 		return Result{}, err
 	}
 	pl := planInvocation(world, id, call.EpisodeID, d, input, outBytes, c.cfg.Now())
-	// Commit boundary: a cancelled/expired ctx here leaves no durable mutation.
-	if err := ctx.Err(); err != nil { // R11
-		return Result{}, fmt.Errorf("coordinator: before commit: %w", err)
-	}
 	if _, _, err := c.cfg.Store.AppendIntent(ctx, id, pl.Intent); err != nil { // R13
+		if store.IsUncertain(err) {
+			// The intent may have landed. A same-ID resend must inspect its receipt.
+			c.uncertainIntent.Store(id, struct{}{})
+			return Result{}, &UnconfirmedError{InvocationID: id, Err: err}
+		}
 		return Result{}, err
 	}
 	if err := c.cfg.Store.Commit(ctx, pl.Commit); err != nil {

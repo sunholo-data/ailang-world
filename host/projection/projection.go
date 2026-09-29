@@ -4,12 +4,10 @@
 // JSON-RPC admission gate at POST /a2a/, both over the daemon's ONE landed
 // host/authority resolver (row 39 F1-F3).
 //
-// The surface is a READ-ONLY adapter: it opens no store, writes nothing, and
-// holds no credential path of its own (P4's retained half, P5). Both routes
-// resolve the session with Resolver.ResolveContext over ONE bounded request
-// context (P6.A-CTX, Decision 6), so a resolve that waits behind the store's
-// single pooled connection is bounded and a deadline is never misreported as
-// an unknown credential.
+// The surface holds no credential path or store handle of its own. The card is
+// read-only; an admitted A2A call can invoke the injected coordinator. Both
+// routes resolve the session with Resolver.ResolveContext over one bounded
+// request context.
 //
 // Authorization on this surface is conceptually
 //
@@ -22,7 +20,7 @@
 //
 // Wire ownership (AC1): the /a2a/ route parses and emits EXCLUSIVELY through
 // the pinned github.com/sunholo-data/ailang/serveapi/protocol helpers
-// (A2ARequest in, A2AError out); the card is a map[string]any literal with the
+// (A2ARequest in, A2AError/A2AResult out); the card is a map[string]any literal with the
 // SAME keys the upstream serveapi handler emits; the REST APIError envelope
 // used for card-route denials is DAEMON-OWNED — injected as function values at
 // mount — and never hand-formatted here. Skill IDs are World stable
@@ -43,6 +41,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/coordinator"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/transitionreg"
@@ -64,10 +63,7 @@ const (
 	// codeInvalidParams (-32602) covers undecodable params and a skill_id not
 	// in this session's Allowed set (unlisted/guessed/stale names).
 	codeInvalidParams = -32602
-	// codeInternal (-32603) covers the two reach-the-handler failure shapes:
-	// a resolution/registry failure, and an AUTHORIZED skill_id (invocation
-	// does not exist in this daemon, F7 — a request that reaches the handler
-	// and cannot execute is the standard internal-error case).
+	// codeInternal (-32603) covers resolution, registry, and invocation failures.
 	codeInternal = -32603
 )
 
@@ -86,10 +82,8 @@ const (
 	// a skill_id outside the session's Allowed set. Stale and guessed names
 	// get the same refusal; the message carries no name back to the caller.
 	msgNotAuthorized = "not authorized"
-	// notAvailableMessage is the ONE constant answer for an authorized
-	// skill_id (B4) and for a resolution/registry failure on /a2a/
-	// (Decision 6): never a fake success, never a REST body, never a store
-	// write.
+	// notAvailableMessage covers unavailable dispatch, including a daemon
+	// without an archived interpreter, and resolution/registry failures.
 	notAvailableMessage = "transition invocation is not available in this daemon"
 )
 
@@ -148,7 +142,9 @@ type Config struct {
 	// this finite, positive server maximum, passed WITHOUT replacement
 	// through session resolution and the registry/capability snapshot reads.
 	// Zero/negative is rejected at startup, never silently "unlimited".
-	MaxWait time.Duration
+	MaxWait     time.Duration
+	InvokeWait  time.Duration
+	Coordinator *coordinator.Coordinator
 }
 
 // Handler serves the two projection routes. Both handlers run resolution and
@@ -157,13 +153,15 @@ type Config struct {
 // requests: every request builds its OWN fresh session, snapshot and request
 // set.
 type Handler struct {
-	resolver authority.Resolver
-	reader   transitionreg.Reader
-	heads    HeadReader
-	deny     DenyWriter
-	fail     ErrorWriter
-	agent    protocol.AgentInfo
-	maxWait  time.Duration
+	resolver   authority.Resolver
+	reader     transitionreg.Reader
+	heads      HeadReader
+	deny       DenyWriter
+	fail       ErrorWriter
+	agent      protocol.AgentInfo
+	maxWait    time.Duration
+	invokeWait time.Duration
+	coord      *coordinator.Coordinator
 }
 
 // New validates the config at startup (Decision 6: a zero/negative/omitted
@@ -182,15 +180,19 @@ func New(cfg Config) (*Handler, error) {
 		return nil, errors.New("projection: Fail is required")
 	case cfg.MaxWait <= 0:
 		return nil, fmt.Errorf("projection: MaxWait must be finite and positive, got %v", cfg.MaxWait)
+	case cfg.InvokeWait <= 0:
+		return nil, fmt.Errorf("projection: InvokeWait must be finite and positive, got %v", cfg.InvokeWait)
 	}
 	return &Handler{
-		resolver: cfg.Resolver,
-		reader:   cfg.Reader,
-		heads:    cfg.Heads,
-		deny:     cfg.Deny,
-		fail:     cfg.Fail,
-		agent:    cfg.Agent,
-		maxWait:  cfg.MaxWait,
+		resolver:   cfg.Resolver,
+		reader:     cfg.Reader,
+		heads:      cfg.Heads,
+		deny:       cfg.Deny,
+		fail:       cfg.Fail,
+		agent:      cfg.Agent,
+		maxWait:    cfg.MaxWait,
+		invokeWait: cfg.InvokeWait,
+		coord:      cfg.Coordinator,
 	}, nil
 }
 
@@ -227,7 +229,7 @@ func (h *Handler) AgentCard(w http.ResponseWriter, r *http.Request) {
 		h.deny(w, *out.Denied)
 		return
 	}
-	allowed, serr := h.allowedDescriptors(ctx, out.Success)
+	_, allowed, serr := h.allowedDescriptors(ctx, out.Success)
 	if serr != nil {
 		h.writeUnavailable(w, serr)
 		return
@@ -257,13 +259,11 @@ func (h *Handler) AgentCard(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(card)
 }
 
-// A2A serves POST /a2a/ (B4): the fail-closed JSON-RPC admission gate. Every
-// outcome is a protocol.A2AError body on an HTTP 200 carrier (F5b) — never a
-// REST envelope, never a success, never a store write. Denials precede body
-// parsing, so a denied request never acquires a registry snapshot
-// (AC-DENIAL-JSONRPC).
+// A2A serves POST /a2a/: admission and invocation share one bounded context
+// and one captured registry request. Denials precede body parsing, so a denied
+// request never acquires a registry snapshot.
 func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), h.maxWait)
+	ctx, cancel := context.WithTimeout(r.Context(), h.invokeWait)
 	defer cancel()
 	out, err := h.resolver.ResolveContext(ctx, r.Header.Get("Authorization"), time.Now().Unix())
 	if err != nil {
@@ -307,15 +307,46 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
 	// The admission check builds its OWN fresh per-request snapshot set:
 	// possession of a previously listed skill name conveys no authority (B2's
 	// one-snapshot rule, applied at /a2a/ admission time).
-	allowed, serr := h.allowedDescriptors(ctx, out.Success)
+	admitted, allowed, serr := h.allowedDescriptors(ctx, out.Success)
 	if serr != nil {
 		protocol.A2AError(w, req.ID, codeInternal, notAvailableMessage)
 		return
 	}
 	for _, d := range allowed {
 		if d.ID == skillID {
-			// An AUTHORIZED skill_id: the constant not-available refusal (B4).
-			protocol.A2AError(w, req.ID, codeInternal, notAvailableMessage)
+			if h.coord == nil {
+				protocol.A2AError(w, req.ID, codeInternal, notAvailableMessage)
+				return
+			}
+			if len(params.Message.Parts) != 1 || params.Message.Parts[0].Type != "data" || params.Message.Parts[0].Data == nil {
+				protocol.A2AError(w, req.ID, codeInvalidParams, msgInvalidParams)
+				return
+			}
+			var pin *hashref.HashRef
+			if raw, ok := params.Metadata["transition_fn"]; ok {
+				s, valid := raw.(string)
+				if !valid {
+					protocol.A2AError(w, req.ID, codeInvalidParams, msgInvalidParams)
+					return
+				}
+				parsed, err := hashref.Parse(s)
+				if err != nil {
+					protocol.A2AError(w, req.ID, codeInvalidParams, msgInvalidParams)
+					return
+				}
+				pin = &parsed
+			}
+			result, err := h.coord.Dispatch(ctx, coordinator.Call{Request: admitted, EpisodeID: out.Success.EpisodeID,
+				Grants: out.Success.Caps, SkillID: d.ID, TaskID: params.ID, Input: params.Message.Parts[0].Data, PinnedFn: pin})
+			if err != nil {
+				code, msg := dispatchError(err)
+				protocol.A2AError(w, req.ID, code, msg)
+				return
+			}
+			task := map[string]any{"id": params.ID, "status": map[string]any{"state": "completed"},
+				"artifacts": []any{map[string]any{"parts": []any{map[string]any{"type": "data", "data": result.Output}}}},
+				"metadata":  map[string]any{"invocation_id": result.InvocationID, "world_ref": result.WorldRef, "entry_index": result.EntryIndex}}
+			protocol.A2AResult(w, req.ID, task)
 			return
 		}
 	}
@@ -336,19 +367,66 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
 // PRESENT head is a genuine read failure (nil, err). The head race is
 // covered: a head published between the check and NewRequest yields a
 // successful snapshot and its skills are used.
-func (h *Handler) allowedDescriptors(ctx context.Context, b *authority.SessionBinding) ([]transitionreg.Descriptor, error) {
+func (h *Handler) allowedDescriptors(ctx context.Context, b *authority.SessionBinding) (transitionreg.Request, []transitionreg.Descriptor, error) {
 	_, hasHead, err := h.heads.GetRegistryHead(ctx, store.TransitionRegistryV1)
 	if err != nil {
-		return nil, fmt.Errorf("projection: registry head check: %w", err)
+		return transitionreg.Request{}, nil, fmt.Errorf("projection: registry head check: %w", err)
 	}
 	req, rerr := transitionreg.NewRequest(ctx, h.reader, bindingCaps{b.Caps}, time.Now().Unix())
 	if rerr != nil {
 		if !hasHead {
-			return nil, nil
+			return transitionreg.Request{}, nil, nil
 		}
-		return nil, fmt.Errorf("projection: registry snapshot: %w", rerr)
+		return transitionreg.Request{}, nil, fmt.Errorf("projection: registry snapshot: %w", rerr)
 	}
-	return req.Allowed(), nil
+	return req, req.Allowed(), nil
+}
+
+func dispatchError(err error) (int, string) {
+	var invalid *coordinator.InvalidCallError
+	var absent *transitionreg.TransitionAbsentError
+	var denied *transitionreg.AccessDeniedError
+	var mismatch *transitionreg.ProposalMismatchError
+	var duplicate *store.DuplicateInvocationError
+	var inFlight *coordinator.InFlightError
+	var noWorld *coordinator.WorldAbsentError
+	var effects *coordinator.EffectsUnsupportedError
+	var incompatible *coordinator.IncompatibleError
+	var execution *coordinator.ExecutionError
+	var deadline *coordinator.UnconfirmedError
+	var output *coordinator.OutputError
+	var notCommitted *coordinator.NotCommittedError
+	var conflict *store.ConflictError
+	switch {
+	case errors.As(err, &invalid):
+		return codeInvalidParams, msgInvalidParams
+	case errors.As(err, &absent), errors.As(err, &denied):
+		return codeInvalidParams, msgNotAuthorized
+	case errors.As(err, &mismatch):
+		return codeInvalidParams, "proposal does not match the registered transition"
+	case errors.As(err, &notCommitted):
+		return codeInternal, "invocation was not committed; send a new task id"
+	case errors.As(err, &deadline):
+		return codeInternal, "invocation outcome is not confirmed; resend the same task id"
+	case errors.As(err, &duplicate), errors.As(err, &inFlight):
+		return codeInvalidParams, "task id already used in this session"
+	case errors.As(err, &noWorld):
+		return codeInternal, "no world is selected; commit a genesis world first"
+	case errors.As(err, &effects):
+		return codeInternal, "transitions that declare effects cannot be invoked in this daemon"
+	case errors.As(err, &incompatible):
+		return codeInternal, "transition does not implement the invocation calling convention"
+	case errors.As(err, &execution):
+		return codeInternal, "transition execution failed"
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return codeInternal, "invocation exceeded its deadline"
+	case errors.As(err, &output):
+		return codeInternal, "transition output is not a JSON object"
+	case errors.As(err, &conflict):
+		return codeInternal, "world head moved during invocation; not committed; send a new task id"
+	default:
+		return codeInternal, notAvailableMessage
+	}
 }
 
 // writeUnavailable maps a resolution/registry failure on the card route to the

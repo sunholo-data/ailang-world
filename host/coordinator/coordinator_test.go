@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/broker"
@@ -520,6 +522,128 @@ type errStore struct {
 	onCommit    func()
 }
 
+type cancelAfterCommitStore struct {
+	*store.Store
+	cancel context.CancelFunc
+}
+
+type stalledDurableStore struct {
+	*store.Store
+	op        string
+	uncertain bool
+}
+
+type uncertainLandedAppendStore struct{ *store.Store }
+
+func (s uncertainLandedAppendStore) AppendIntent(ctx context.Context, id string, intent store.JournalIntent) (int64, hashref.HashRef, error) {
+	seq, ref, err := s.Store.AppendIntent(ctx, id, intent)
+	if err != nil {
+		return seq, ref, err
+	}
+	return seq, ref, &store.UncertainError{Op: "AppendIntent", Cause: errors.New("completion report lost")}
+}
+
+func (s stalledDurableStore) GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error) {
+	if s.op == "GetReceipt" {
+		<-ctx.Done()
+		return store.Receipt{}, false, ctx.Err()
+	}
+	return s.Store.GetReceipt(ctx, id)
+}
+func (s stalledDurableStore) AppendIntent(ctx context.Context, id string, intent store.JournalIntent) (int64, hashref.HashRef, error) {
+	if s.op == "AppendIntent" {
+		<-ctx.Done()
+		if s.uncertain {
+			return 0, hashref.HashRef{}, &store.UncertainError{Op: s.op, Cause: ctx.Err()}
+		}
+		return 0, hashref.HashRef{}, ctx.Err()
+	}
+	return s.Store.AppendIntent(ctx, id, intent)
+}
+func (s stalledDurableStore) Commit(ctx context.Context, c store.Commit) error {
+	if s.op == "Commit" {
+		<-ctx.Done()
+		if s.uncertain {
+			return &store.UncertainError{Op: s.op, Cause: ctx.Err()}
+		}
+		return ctx.Err()
+	}
+	return s.Store.Commit(ctx, c)
+}
+
+func TestDispatchDurableDeadline(t *testing.T) {
+	t.Run("uncertain_append_same_id_resend", func(t *testing.T) {
+		r := newRig(t, false)
+		r.genesis()
+		r.describe("plain", r.source(echoSrc), "Invoke")
+		r.publish()
+		runs := 0
+		c := r.coordinator(uncertainLandedAppendStore{Store: r.st}, fakeRunner{stdout: `{"ok":true}`, hook: func(context.Context) { runs++ }})
+		call := r.call("plain", "t1", grants)
+		for i := 0; i < 2; i++ {
+			_, err := c.Dispatch(boundedTestContext(t), call)
+			var unconfirmed *UnconfirmedError
+			if !errors.As(err, &unconfirmed) {
+				t.Fatalf("resend %d = %v, want R16", i, err)
+			}
+		}
+		if runs != 1 {
+			t.Fatalf("runs %d, want one", runs)
+		}
+		rc, ok, err := r.st.GetReceipt(boundedTestContext(t), InvocationID("ep1", "t1"))
+		if err != nil || !ok || rc.State != store.ReceiptIndeterminate {
+			t.Fatalf("receipt %+v %v %v", rc, ok, err)
+		}
+	})
+	for _, tc := range []struct {
+		name            string
+		op              string
+		uncertain       bool
+		wantUnconfirmed bool
+	}{
+		{"GetReceipt", "GetReceipt", false, false},
+		{"AppendIntent", "AppendIntent", false, false},
+		{"Commit", "Commit", false, false},
+		{"uncertain_AppendIntent", "AppendIntent", true, true},
+		{"uncertain_Commit", "Commit", true, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := newRig(t, false)
+			w := r.genesis()
+			r.describe("plain", r.source(echoSrc), "Invoke")
+			r.publish()
+			st := stalledDurableStore{Store: r.st, op: tc.op, uncertain: tc.uncertain}
+			c := r.coordinator(st, fakeRunner{stdout: `{"ok":true}`})
+			for i := 0; i < 3; i++ {
+				ctx, cancel := context.WithTimeout(boundedTestContext(t), 20*time.Millisecond)
+				start := time.Now()
+				_, err := c.Dispatch(ctx, r.call("plain", fmt.Sprintf("t%d", i), grants))
+				cancel()
+				if time.Since(start) > 250*time.Millisecond {
+					t.Fatalf("request ran past deadline: %v", time.Since(start))
+				}
+				var unconfirmed *UnconfirmedError
+				if tc.wantUnconfirmed {
+					if !errors.As(err, &unconfirmed) {
+						t.Fatalf("err %v, want R16", err)
+					}
+				} else if !errors.Is(err, context.DeadlineExceeded) || store.IsUncertain(err) {
+					t.Fatalf("err %v, want definite R11", err)
+				}
+			}
+			r.assertHead(w.Ref)
+		})
+	}
+}
+
+func (s cancelAfterCommitStore) Commit(ctx context.Context, c store.Commit) error {
+	if err := s.Store.Commit(ctx, c); err != nil {
+		return err
+	}
+	s.cancel()
+	return nil
+}
+
 func (e errStore) Commit(ctx context.Context, c store.Commit) error {
 	if e.onCommit != nil {
 		e.onCommit()
@@ -540,6 +664,22 @@ func (r *rig) assertHead(want hashref.HashRef) {
 
 // AC-BOUNDARY: both sides of the commit boundary.
 func TestCommitBoundary(t *testing.T) {
+	t.Run("deadline_during_commit_reports_success", func(t *testing.T) {
+		r := newRig(t, false)
+		r.genesis()
+		r.describe("plain", r.source(echoSrc), "Invoke")
+		r.publish()
+		ctx, cancel := context.WithCancel(boundedTestContext(r.t))
+		st := cancelAfterCommitStore{Store: r.st, cancel: cancel}
+		res, err := r.coordinator(st, fakeRunner{stdout: `{"ok":true}`}).Dispatch(ctx, r.call("plain", "t1", grants))
+		if err != nil {
+			t.Fatalf("confirmed Commit became failure: %v", err)
+		}
+		rc, ok, err := r.st.GetReceipt(boundedTestContext(r.t), res.InvocationID)
+		if err != nil || !ok || rc.State != store.ReceiptResolved {
+			t.Fatalf("landed receipt = %+v %v %v", rc, ok, err)
+		}
+	})
 	t.Run("cancel_before_commit", func(t *testing.T) {
 		r := newRig(t, false)
 		w := r.genesis()

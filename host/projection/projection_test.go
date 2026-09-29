@@ -20,6 +20,9 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/canon"
+	"github.com/sunholo-data/ailang-world/host/capsule"
+	"github.com/sunholo-data/ailang-world/host/coordinator"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/transitionreg"
@@ -207,13 +210,14 @@ func (blockingResolver) ResolveContext(ctx context.Context, _ string, _ int64) (
 // reference writers, a small finite bound (Decision 6).
 func testConfig(st *store.Store) Config {
 	return Config{
-		Resolver: authority.New(st),
-		Reader:   transitionreg.NewReader(st),
-		Heads:    st,
-		Deny:     refDeny,
-		Fail:     refFail,
-		Agent:    protocol.AgentInfo{Name: "ailang-worldd", Description: "test projection agent", Version: "0.1.0"},
-		MaxWait:  2 * time.Second,
+		Resolver:   authority.New(st),
+		Reader:     transitionreg.NewReader(st),
+		Heads:      st,
+		Deny:       refDeny,
+		Fail:       refFail,
+		Agent:      protocol.AgentInfo{Name: "ailang-worldd", Description: "test projection agent", Version: "0.1.0"},
+		MaxWait:    2 * time.Second,
+		InvokeWait: 2 * time.Second,
 	}
 }
 
@@ -783,6 +787,233 @@ func TestA2A_CodeMatrix(t *testing.T) {
 	}
 }
 
+func TestA2AAuthorizedSkillNoCoordinator(t *testing.T) {
+	st := openStore(t)
+	seedRegistry(t, st, descriptor("tools.echo", "alpha"))
+	h := mustHandler(t, testConfig(st))
+	tok := mintToken(t, st, "ep-a", []broker.Capability{liveGrant("alpha")})
+	rec := postA2A(t, h, "Bearer "+tok, tasksSendBody("tools.echo"))
+	code, msg, _ := a2aErr(t, rec.Body.Bytes())
+	if code != codeInternal || msg != notAvailableMessage {
+		t.Fatalf("response = %d %q", code, msg)
+	}
+}
+
+func TestA2ADispatch(t *testing.T) {
+	t.Run("registry_moved_after_admission", testA2ADispatchRegistryMovedAfterAdmission)
+	t.Run("invalid_parts_and_pin", testA2ADispatchInvalidParams)
+	t.Run("success_and_R13_reconciled", testA2ADispatchSuccess)
+	rows := []struct {
+		name string
+		err  error
+		code int
+		msg  string
+	}{
+		{"R1", &coordinator.InvalidCallError{Field: "task id"}, codeInvalidParams, msgInvalidParams},
+		{"R2_R3", &transitionreg.AccessDeniedError{}, codeInvalidParams, msgNotAuthorized},
+		{"R5", &transitionreg.ProposalMismatchError{}, codeInvalidParams, "proposal does not match the registered transition"},
+		{"R15", &coordinator.NotCommittedError{}, codeInternal, "invocation was not committed; send a new task id"},
+		{"R16", &coordinator.UnconfirmedError{Err: errors.New("hidden")}, codeInternal, "invocation outcome is not confirmed; resend the same task id"},
+		{"DuplicateInvocation", &store.DuplicateInvocationError{}, codeInvalidParams, "task id already used in this session"},
+		{"R17", &coordinator.InFlightError{}, codeInvalidParams, "task id already used in this session"},
+		{"R4_R6", errors.New("hidden"), codeInternal, notAvailableMessage},
+		{"R7", &coordinator.WorldAbsentError{}, codeInternal, "no world is selected; commit a genesis world first"},
+		{"R8", &coordinator.EffectsUnsupportedError{}, codeInternal, "transitions that declare effects cannot be invoked in this daemon"},
+		{"R9", &coordinator.IncompatibleError{Err: errors.New("hidden")}, codeInternal, "transition does not implement the invocation calling convention"},
+		{"R10", &coordinator.ExecutionError{Err: errors.New("hidden")}, codeInternal, "transition execution failed"},
+		{"R11", context.DeadlineExceeded, codeInternal, "invocation exceeded its deadline"},
+		{"R12", &coordinator.OutputError{}, codeInternal, "transition output is not a JSON object"},
+		{"R14", &store.ConflictError{}, codeInternal, "world head moved during invocation; not committed; send a new task id"},
+	}
+	for _, row := range rows {
+		t.Run(row.name, func(t *testing.T) {
+			code, msg := dispatchError(fmt.Errorf("wrapped: %w", row.err))
+			if code != row.code || msg != row.msg {
+				t.Fatalf("got %d %q, want %d %q", code, msg, row.code, row.msg)
+			}
+		})
+	}
+}
+
+func testA2ADispatchInvalidParams(t *testing.T) {
+	st := openStore(t)
+	seedRegistry(t, st, descriptor("tools.echo", "alpha"))
+	coord, err := coordinator.New(coordinator.Config{Store: st, Runner: unusedRunner{},
+		Binder: func(ep string, grants []broker.Capability) transitionreg.Binder {
+			return broker.OpenBinder(st, ep, grants)
+		},
+		Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg := testConfig(st)
+	cfg.Coordinator = coord
+	h := mustHandler(t, cfg)
+	tok := mintToken(t, st, "ep-a", []broker.Capability{liveGrant("alpha")})
+	parts := []string{`[]`, `[{}]`, `[{"type":"text","text":"x"}]`, `[{"type":"data"}]`, `[{"type":"data","data":{}},{"type":"data","data":{}}]`}
+	for i, part := range parts {
+		body := fmt.Sprintf(`{"jsonrpc":"2.0","id":7,"method":"tasks/send","params":{"id":"bad%d","metadata":{"skill_id":"tools.echo"},"message":{"parts":%s}}}`, i, part)
+		rec := postA2A(t, h, "Bearer "+tok, body)
+		code, msg, _ := a2aErr(t, rec.Body.Bytes())
+		if code != codeInvalidParams || msg != msgInvalidParams {
+			t.Fatalf("parts %s: %d %q", part, code, msg)
+		}
+	}
+	for _, pin := range []string{`3`, `"bad-hash"`} {
+		body := fmt.Sprintf(`{"jsonrpc":"2.0","id":7,"method":"tasks/send","params":{"id":"bad-pin","metadata":{"skill_id":"tools.echo","transition_fn":%s},"message":{"parts":[{"type":"data","data":{}}]}}}`, pin)
+		rec := postA2A(t, h, "Bearer "+tok, body)
+		code, msg, _ := a2aErr(t, rec.Body.Bytes())
+		if code != codeInvalidParams || msg != msgInvalidParams {
+			t.Fatalf("pin %s: %d %q", pin, code, msg)
+		}
+	}
+	rc, seen, err := st.GetReceipt(boundedTestContext(t), coordinator.InvocationID("ep-a", "bad-pin"))
+	if err != nil || seen {
+		t.Fatalf("invalid params mutated journal: %+v %v %v", rc, seen, err)
+	}
+}
+
+type sequenceReader struct {
+	snapshots []transitionreg.Snapshot
+	calls     int
+}
+
+func (r *sequenceReader) ReadSnapshot(context.Context) (transitionreg.Snapshot, error) {
+	i := r.calls
+	r.calls++
+	if i >= len(r.snapshots) {
+		i = len(r.snapshots) - 1
+	}
+	return r.snapshots[i], nil
+}
+
+type unusedRunner struct{}
+
+func (unusedRunner) RunContext(context.Context, capsule.Entry) (capsule.Result, error) {
+	return capsule.Result{}, errors.New("unexpected execution")
+}
+
+type countingRunner struct{ runs int }
+
+func (r *countingRunner) RunContext(context.Context, capsule.Entry) (capsule.Result, error) {
+	r.runs++
+	return capsule.Result{Stdout: []byte(`{"ok":true}`)}, nil
+}
+
+func testA2ADispatchSuccess(t *testing.T) {
+	st := openStore(t)
+	genesis := store.Object{Hash: hashref.SumSHA256([]byte("genesis-state")), InterfaceHash: hashref.SumSHA256([]byte("test/genesis")),
+		SemanticID: "test/genesis", Provenance: "projection-test", Payload: []byte("genesis-state")}
+	entryHash := hashref.SumSHA256([]byte("genesis-entry"))
+	world := store.World{Ref: hashref.SumSHA256([]byte("genesis-world")), Revision: 0, StateRoot: genesis.Hash, LogHead: entryHash}
+	interp := hashref.SumSHA256([]byte("interpreter"))
+	err := st.Commit(boundedTestContext(t), store.Commit{Objects: []store.Object{genesis}, NextWorld: world,
+		Entry: store.LogEntry{Header: store.LogHeader{EntryIndex: 0, SemanticsEpoch: 1, TransitionFn: hashref.SumSHA256([]byte("genesis-fn")),
+			Interpreter: interp, PrevEntryHash: hashref.SumSHA256([]byte("genesis-prev")), WrittenBy: "projection-test"},
+			EntryHash: entryHash, TransitionRef: genesis.Hash}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	source, err := canon.Source([]byte("module transitions/echo\nexport func main(input: string) -> string { input }\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	src := store.Object{Hash: hashref.SumSHA256(source), InterfaceHash: hashref.SumSHA256([]byte("world/transition-source/v1")),
+		SemanticID: "world/transition-source/v1", Provenance: "projection-test", Payload: source}
+	if err := st.PutObject(boundedTestContext(t), src); err != nil {
+		t.Fatal(err)
+	}
+	d := descriptor("tools.echo", "alpha")
+	d.TransitionFn = src.Hash
+	d.Interpreter = interp
+	d.DeclaredEffects = nil
+	seedRegistry(t, st, d)
+	runner := &countingRunner{}
+	coord, err := coordinator.New(coordinator.Config{Store: st, Runner: runner,
+		Binder: func(ep string, grants []broker.Capability) transitionreg.Binder {
+			return broker.OpenBinder(st, ep, grants)
+		},
+		Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg := testConfig(st)
+	cfg.Coordinator = coord
+	h := mustHandler(t, cfg)
+	tok := mintToken(t, st, "ep-a", []broker.Capability{liveGrant("alpha")})
+	body := `{"jsonrpc":"2.0","id":7,"method":"tasks/send","params":{"id":"t1","metadata":{"skill_id":"tools.echo"},"message":{"parts":[{"type":"data","data":{"x":1}}]}}}`
+	for i := 0; i < 2; i++ {
+		rec := postA2A(t, h, "Bearer "+tok, body)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status %d", rec.Code)
+		}
+		var wire struct {
+			JSONRPC string `json:"jsonrpc"`
+			ID      int    `json:"id"`
+			Result  struct {
+				ID     string `json:"id"`
+				Status struct {
+					State string `json:"state"`
+				} `json:"status"`
+				Artifacts []struct {
+					Parts []struct {
+						Type string         `json:"type"`
+						Data map[string]any `json:"data"`
+					} `json:"parts"`
+				} `json:"artifacts"`
+				Metadata map[string]any `json:"metadata"`
+			} `json:"result"`
+		}
+		if err := json.Unmarshal(rec.Body.Bytes(), &wire); err != nil {
+			t.Fatal(err)
+		}
+		if wire.JSONRPC != "2.0" || wire.ID != 7 || wire.Result.ID != "t1" || wire.Result.Status.State != "completed" || len(wire.Result.Artifacts) != 1 || len(wire.Result.Artifacts[0].Parts) != 1 || wire.Result.Artifacts[0].Parts[0].Type != "data" || wire.Result.Artifacts[0].Parts[0].Data["ok"] != true || wire.Result.Metadata["invocation_id"] != coordinator.InvocationID("ep-a", "t1") || wire.Result.Metadata["world_ref"] == nil || wire.Result.Metadata["entry_index"] != float64(1) {
+			t.Fatalf("task shape: %s", rec.Body)
+		}
+	}
+	if runner.runs != 1 {
+		t.Fatalf("runner executions %d, want one", runner.runs)
+	}
+}
+
+func testA2ADispatchRegistryMovedAfterAdmission(t *testing.T) {
+	st := openStore(t)
+	seedRegistry(t, st, descriptor("tools.echo", "alpha"))
+	first, err := transitionreg.NewReader(st).ReadSnapshot(boundedTestContext(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	other := openStore(t)
+	seedRegistry(t, other)
+	second, err := transitionreg.NewReader(other).ReadSnapshot(boundedTestContext(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	reader := &sequenceReader{snapshots: []transitionreg.Snapshot{first, second}}
+	cfg := testConfig(st)
+	cfg.Reader = reader
+	coord, err := coordinator.New(coordinator.Config{Store: st, Runner: unusedRunner{},
+		Binder: func(ep string, grants []broker.Capability) transitionreg.Binder {
+			return broker.OpenBinder(st, ep, grants)
+		},
+		Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.Coordinator = coord
+	h := mustHandler(t, cfg)
+	tok := mintToken(t, st, "ep-a", []broker.Capability{liveGrant("alpha")})
+	body := `{"jsonrpc":"2.0","id":7,"method":"tasks/send","params":{"id":"t1","metadata":{"skill_id":"tools.echo"},"message":{"parts":[{"type":"data","data":{"x":1}}]}}}`
+	rec := postA2A(t, h, "Bearer "+tok, body)
+	code, msg, _ := a2aErr(t, rec.Body.Bytes())
+	if code != codeInternal || msg != "transitions that declare effects cannot be invoked in this daemon" {
+		t.Fatalf("response = %d %q; reader calls %d", code, msg, reader.calls)
+	}
+	if reader.calls != 1 {
+		t.Fatalf("snapshot read %d times, want one", reader.calls)
+	}
+}
+
 // TestA2A_NeverWritesStore is the "produces no store/log change" half of AC5
 // and the no-store-write clause of AC8: a full denial+admission battery leaves
 // the world head AND the registry head byte-identical.
@@ -1116,6 +1347,7 @@ func TestProjection_BoundedWait(t *testing.T) {
 		cfg := testConfig(st)
 		cfg.Resolver = blockingResolver{}
 		cfg.MaxWait = maxWait
+		cfg.InvokeWait = maxWait
 		h := mustHandler(t, cfg)
 		start := time.Now()
 		rec := postA2A(t, h, "Bearer "+strings.Repeat("d", 64), tasksSendBody("tools.echo"))
@@ -1147,6 +1379,15 @@ func TestProjection_ConfigValidation(t *testing.T) {
 	bad2.MaxWait = -time.Second
 	if _, err := New(bad2); err == nil {
 		t.Fatal("New with MaxWait<0: want an error")
+	}
+	bad3 := base
+	bad3.InvokeWait = 0
+	if _, err := New(bad3); err == nil {
+		t.Fatal("New with InvokeWait=0: want an error")
+	}
+	bad3.InvokeWait = -time.Second
+	if _, err := New(bad3); err == nil {
+		t.Fatal("New with InvokeWait<0: want an error")
 	}
 
 	strip := []struct {
