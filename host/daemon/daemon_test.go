@@ -1262,6 +1262,67 @@ func TestAgentCard_ViaDaemon_SessionScoped(t *testing.T) {
 	}
 }
 
+func TestA2AAuthorizedSkillNoCoordinator(t *testing.T) {
+	d := newHandlerDaemon(t)
+	if d.projection == nil {
+		t.Fatal("projection absent")
+	}
+	seedTransitionRegistry(t, d.store, "tools.echo", "alpha")
+	tok := mintSessionGrants(t, d, "ep-a", "alpha")
+	body := `{"jsonrpc":"2.0","id":9,"method":"tasks/send","params":{"metadata":{"skill_id":"tools.echo"}}}`
+	rec := requestRecorderAuth(t, d, "Bearer "+tok, http.MethodPost, "/a2a/", strings.NewReader(body))
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"code":-32603`) || !strings.Contains(rec.Body.String(), "transition invocation is not available in this daemon") {
+		t.Fatalf("response = %d %s", rec.Code, rec.Body)
+	}
+}
+
+func TestA2ACardInvocationDescription(t *testing.T) {
+	d := newHandlerDaemon(t)
+	tok := mintSessionGrants(t, d, "ep-a", "alpha")
+	rec := requestRecorderAuth(t, d, "Bearer "+tok, http.MethodGet, "/.well-known/agent.json", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("card = %d %s", rec.Code, rec.Body)
+	}
+	var card map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &card); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := card["description"].(string)
+	for _, phrase := range []string{"one JSON-object data part", "JSON-object data artifact", "archived interpreter", "schemas are carried but not validated"} {
+		if !strings.Contains(got, phrase) {
+			t.Fatalf("description %q missing %q", got, phrase)
+		}
+	}
+}
+
+func TestDaemonInvokeConfig(t *testing.T) {
+	if invokeDeadline <= 0 || invokeDeadline >= writeTimeout {
+		t.Fatalf("invoke deadline %v outside write timeout %v", invokeDeadline, writeTimeout)
+	}
+	unpinned := newHandlerDaemon(t)
+	if unpinned.projection == nil {
+		t.Fatal("unpinned projection absent")
+	}
+	// The pinned constructor must archive the binary and expose a live coordinator.
+	dir := t.TempDir()
+	bin, _ := fakeInterpreter(t, dir, "AILANG v0.41.0\nCommit: 24ee108\n")
+	pinned, err := New(boundedTestContext(t), Config{DBPath: filepath.Join(dir, "world.db"), BindHost: DefaultBindHost, AilangBin: bin})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = pinned.Close() })
+	if pinned.projection == nil || pinned.interpreterRef == "" {
+		t.Fatal("pinned invocation wiring absent")
+	}
+	seedTransitionRegistry(t, pinned.store, "tools.echo", "alpha")
+	tok := mintSessionGrants(t, pinned, "ep-a", "alpha")
+	body := `{"jsonrpc":"2.0","id":9,"method":"tasks/send","params":{"id":"t1","metadata":{"skill_id":"tools.echo"},"message":{"parts":[]}}}`
+	rec := requestRecorderAuth(t, pinned, "Bearer "+tok, http.MethodPost, "/a2a/", strings.NewReader(body))
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"code":-32602`) || !strings.Contains(rec.Body.String(), "invalid params") {
+		t.Fatalf("pinned response = %d %s", rec.Code, rec.Body)
+	}
+}
+
 // TestAgentCard_ViaDaemon_AbsentHeadZeroSkills is the daemon-level
 // AC-ABSENT-HEAD witness: a fresh daemon (its store has the bootstrapped
 // EPOCH registry but NO transition-registry head — F8's production default)

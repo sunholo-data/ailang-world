@@ -52,6 +52,9 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/authority"
+	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/capsule"
+	"github.com/sunholo-data/ailang-world/host/coordinator"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/projection"
 	"github.com/sunholo-data/ailang-world/host/registry"
@@ -91,7 +94,8 @@ const (
 
 	// writeTimeout bounds http.Server.WriteTimeout (D7 table: 30 s) — the
 	// response write, including the ?payload=true object reads (M2.B).
-	writeTimeout = 30 * time.Second
+	writeTimeout   = 30 * time.Second
+	invokeDeadline = 20 * time.Second
 
 	// idleTimeout bounds http.Server.IdleTimeout (D7 table: 120 s) — the
 	// keep-alive connection lifetime.
@@ -525,6 +529,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		scanTimeBudget: integrityScanTimeBudget, resolver: authority.New(s),
 	}
 	release := unpinnedRelease
+	var coord *coordinator.Coordinator
 
 	if cfg.AilangBin != "" {
 		a := archive.New(cfg.DBPath)
@@ -539,6 +544,16 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		d.interpreterRef = ref.String()
 		d.interpreterVersion = m.Version
 		release = releaseFromVersion(m.Version)
+		coord, err = coordinator.New(coordinator.Config{Store: d.store, Runner: capsule.New(a, capsule.Config{}),
+			Binder: func(episodeID string, grants []broker.Capability) transitionreg.Binder {
+				return broker.OpenBinder(d.store, episodeID, grants)
+			}, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
+		if err != nil {
+			return nil, d.abort(StageConfig, "cannot construct invocation coordinator", err)
+		}
+	}
+	if invokeDeadline <= 0 || invokeDeadline >= writeTimeout {
+		return nil, d.abort(StageConfig, "invocation deadline must be shorter than write timeout", nil)
 	}
 
 	// Idempotent by construction; a head naming different bytes is a genuine
@@ -570,10 +585,12 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		Fail:     writeAPIError,
 		Agent: protocol.AgentInfo{
 			Name:        "ailang-worldd",
-			Description: "AILANG World daemon: session-scoped transition-registry projection (A2A agent card; /a2a/ admission is fail-closed — transition invocation is not available in this daemon)",
+			Description: "AILANG World daemon: a published skill accepts one JSON-object data part and produces a JSON-object data artifact; invocation requires an archived interpreter; schemas are carried but not validated.",
 			Version:     Version,
 		},
-		MaxWait: readDeadline,
+		MaxWait:     readDeadline,
+		InvokeWait:  invokeDeadline,
+		Coordinator: coord,
 	})
 	if err != nil {
 		return nil, d.abort(StageConfig, "cannot construct the A2A projection", err)
