@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 211 | 2026-09-30 | row 94 M6 LANDED (`cac4c32`): world/core@0.1.1 release candidate prepared + rehearsed, NOT published — manifest/CHANGELOG/gate/golden/publisher fence/runbook moved together, 0.1.0 history byte-preserved; opus planner prototype 15/15 mutations, minimax judge PASS 97 zero blocking; operator store schema v2 unopenable → row 124 + D-WORLD-45; row 110 closed as consequence [PRODUCT] |
 | 210 | 2026-09-30 | row114 protocol PARKED after two blocked quorums; Kimi r2 draftPR166; D-WORLD-44 OPEN. One≈83s filesystem-fenced observational baseline independentlySonnetPASS84, ADMIN dispositionPASS86; STOPuntranscribed; walkNOT-RUN(NO-CORPUS);0/3paired; no productcode [ADMIN] |
 | 209 | 2026-09-30 | row 108 design PARKED after two blocked author-excluding quorums: false timeout composition corrected, then batch path and vacuous GET mutation found; draft PR #165 preserves design; D-WORLD-43 OPEN; no code sprint or evaluator |
 | 208 | 2026-09-29 | row 106 M5/M6 LANDED after recovering watchdog-killed attempt 208: A2A published-transition invocation, real interpreter/log/replay, same-ID resend, deadline socket closure; Minimax conditional PASS 92 zero blocking; PR #163 merge `27f2574`, merge CI 2/2; attended QUICKSTART run pending |
