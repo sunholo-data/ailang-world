@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 212 | 2026-10-01 | row 122 LANDED (`d7364a4`): `Coordinator.committed` now refuses a resent A2A task id with typed `IntegrityError` unless record/output/world match their refs and name each other (shared `worldRef()`); opus planner prototype 14/14 mutations, minimax judge PASS 100 zero blocking (20/20 mutations), its N2 refuted first-party; row 125 filed (wire message + quarantine policy) [PRODUCT] |
 | 211 | 2026-09-30 | row 94 M6 LANDED (`cac4c32`): world/core@0.1.1 release candidate prepared + rehearsed, NOT published — manifest/CHANGELOG/gate/golden/publisher fence/runbook moved together, 0.1.0 history byte-preserved; opus planner prototype 15/15 mutations, minimax judge PASS 97 zero blocking; operator store schema v2 unopenable → row 124 + D-WORLD-45; row 110 closed as consequence [PRODUCT] |
 | 210 | 2026-09-30 | row114 protocol PARKED after two blocked quorums; Kimi r2 draftPR166; D-WORLD-44 OPEN. One≈83s filesystem-fenced observational baseline independentlySonnetPASS84, ADMIN dispositionPASS86; STOPuntranscribed; walkNOT-RUN(NO-CORPUS);0/3paired; no productcode [ADMIN] |
 | 209 | 2026-09-30 | row 108 design PARKED after two blocked author-excluding quorums: false timeout composition corrected, then batch path and vacuous GET mutation found; draft PR #165 preserves design; D-WORLD-43 OPEN; no code sprint or evaluator |
