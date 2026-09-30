@@ -1,0 +1,79 @@
+{
+  "doc": "/Users/voightkampff/dev/sunholo-data/.wt-world-row114-kimi-20260930/design_docs/planned/w-provenance-teeth-unseeded-baselined-walk.md",
+  "iso_ts": "2026-09-30T10:35:20Z",
+  "reviewers": [
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "quota",
+      "error": "Anthropic bucket blocked by the mission ration: Anthropic usage endpoint returned HTTP 429; CLI fallback also failed (no \"Current session\" line in `claude -p /usage` output)",
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.01967,
+      "tokens_in": 8557,
+      "tokens_out": 213,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The Verification Log (§16) contains typographical ellipses within the command literals for V6 and V7, proving these shell commands were never executed as written. This violates the premise verification gate, as the logged commands are synthetically generated shorthand rather than copy-pasted instructions from a live terminal session.",
+        "catch": "§16 V6 uses 'grep -c UNMEASURED …/w-1-0-value-demonstration.md' and V7 uses '…ObjectCommits''. Both contain the literal '…' character.",
+        "proposed_fix": "Replace the shorthand command literals in V6 and V7 with their exact, fully-qualified executable paths (e.g., 'grep -c UNMEASURED design_docs/verification/w-1-0-value-demonstration.md') and update the result columns with their true, verbatim shell outputs from the live worktree."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0486066,
+      "tokens_in": 7901,
+      "tokens_out": 8533,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The walk arm's confinement is not enforced for its primary seeding vector, contradicting the doc's own binding definition of CONFINED. §P3-W allows W 'network except loopback scratch port' with no method restriction — the one sanctioned destination carries the full HTTP surface including POST /v1/commit, /v1/receipts, /workbench, /a2a/ (per V2/V3). The doc itself disclaims the only server-side barrier twice: P9 declares isProtected 'a routing fact, NOT a confinement mechanism', and §P3-W demotes the absent session credential to 'belt-and-suspenders, not the mechanism'. The PR deny-controls (§5 PR) test only 'network except loopback scratch port + any write outside scratch' — there is no deny-leg for POST/PUT to the scratch port. So W can physically POST to the served copy through its sanctioned channel, and prevention rests entirely on an unverified assumption that the scratch serve rejects unauthenticated mutation — a claim absent from §16 (V3 verifies only which routes isProtected covers, not what it enforces or whether the scratch-serve launch flags retain it). What remains is post-hoc detection (§6.5, delta audit, MU-7), which voids the attempt after the scarce real Gate-2 incident has been burned — the exact 'capability-absence prose is not isolation' failure §2 forbids, now on the walk arm's own channel.",
+        "catch": "Two things to verify or fix before re-submission: (1) what isProtected actually enforces (token comparison? env flag? file?) and whether the scratch serve launched with default/pinned flags preserves it — currently unverified in §16; (2) the §P3 bundle alternative is internally unsatisfiable for C1/C2: a bundle 'truncated at the pin' necessarily contains the diagnosis commits (e.g. 29e1336) as ancestors, so 'rev-list --all --count equals pin-time count' and 'cat-file -e \u003cdiagnosis-sha\u003e fails' cannot both hold — the permitted alternative silently degenerates for exactly the candidates that carry diagnosis_sha[] in pins.",
+        "proposed_fix": "Amend §P3-W and §5 PR as follows: (a) W's confinement envelope becomes 'network except loopback scratch port, GET methods only' — enforced at the confinement layer (e.g., method-filtered loopback proxy), not at the server; (b) add a mandatory PR deny-leg for W, run before question reveal: issue a POST to the scratch serve's mutation routes (minimum: POST /v1/commit) from inside W's environment and quote the transport result (expected HTTP 4xx ⇒ rc≠0); failure ⇒ NOT-RUN(ISOLATION); (c) add a §16 verification row quoting the isProtected enforcement code (exact check and lines) plus the scratch-serve launch flags, pinned at P2; (d) reword D3 to: 'prevention for filesystem/process/egress plus method-level denial on the allowed channel; §6.5 post-hoc detection is a backstop only'; (e) restrict the bundle alternative to candidates whose pinned diagnosis_sha[] contains no ancestor of the pin, and state explicitly that C1/C2 (diagnosis commits already ancestors of 9b2cfac) are archive-only pending decontamination grep — eliminating the contradictory proof path."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "reject",
+    "note": "Reject pending attended decisions D2-D5 and timer correctness: clause5 bounds the World walk to verified answer, but r2 binds 300s to baseline question issue through BOTH arms and orchestration, imposing an extra baseline-time bar. Need separate World issued-to-verified envelope including its own idle; whole experiment elapsed is reported without changing clause5. Preserve NOT-RUN(NO-CORPUS), confinement and unseeded controls. C3 author status still running while baseline now completed82.938396125s; treat as historic snapshot and do not claim paired result. No third author revision this iteration."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: The Verification Log (§16) contains typographical ellipses within the command literals for V6 and V7, proving these shell commands were never executed as written. This violates the premise verification gate, as the logged commands are synthetically generated shorthand rather than copy-pasted instructions from a live terminal session.",
+      "oc-glm-5-3: The walk arm's confinement is not enforced for its primary seeding vector, contradicting the doc's own binding definition of CONFINED. §P3-W allows W 'network except loopback scratch port' with no method restriction — the one sanctioned destination carries the full HTTP surface including POST /v1/commit, /v1/receipts, /workbench, /a2a/ (per V2/V3). The doc itself disclaims the only server-side barrier twice: P9 declares isProtected 'a routing fact, NOT a confinement mechanism', and §P3-W demotes the absent session credential to 'belt-and-suspenders, not the mechanism'. The PR deny-controls (§5 PR) test only 'network except loopback scratch port + any write outside scratch' — there is no deny-leg for POST/PUT to the scratch port. So W can physically POST to the served copy through its sanctioned channel, and prevention rests entirely on an unverified assumption that the scratch serve rejects unauthenticated mutation — a claim absent from §16 (V3 verifies only which routes isProtected covers, not what it enforces or whether the scratch-serve launch flags retain it). What remains is post-hoc detection (§6.5, delta audit, MU-7), which voids the attempt after the scarce real Gate-2 incident has been burned — the exact 'capability-absence prose is not isolation' failure §2 forbids, now on the walk arm's own channel.",
+      "controller (in-session): Reject pending attended decisions D2-D5 and timer correctness: clause5 bounds the World walk to verified answer, but r2 binds 300s to baseline question issue through BOTH arms and orchestration, imposing an extra baseline-time bar. Need separate World issued-to-verified envelope including its own idle; whole experiment elapsed is reported without changing clause5. Preserve NOT-RUN(NO-CORPUS), confinement and unseeded controls. C3 author status still running while baseline now completed82.938396125s; treat as historic snapshot and do not claim paired result. No third author revision this iteration."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "claude-sonnet-5@claude-p",
+        "reason": "quota"
+      },
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.06827659999999999,
+    "total_tokens_in": 16458,
+    "total_tokens_out": 8746
+  }
+}

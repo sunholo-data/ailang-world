@@ -1,0 +1,79 @@
+{
+  "doc": "/Users/voightkampff/dev/sunholo-data/.wt-world-row114-kimi-20260930/design_docs/planned/w-provenance-teeth-unseeded-baselined-walk.md",
+  "iso_ts": "2026-09-30T10:24:19Z",
+  "reviewers": [
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "quota",
+      "error": "Anthropic bucket blocked by the mission ration: Anthropic usage endpoint returned HTTP 403; CLI fallback also failed (no \"Current session\" line in `claude -p /usage` output)",
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.022216,
+      "tokens_in": 9320,
+      "tokens_out": 298,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Section 7 schema requires `baseline-transcript` and `walk-transcript` to contain the `verify_last_cmd` block and total duration, and Section 5 sets the timer STOP at 'the LAST verification command'. However, D2 and P4-P6 strictly isolate V into a separate, fresh role that executes after B and W declare their answers. Isolated agents B and W cannot log V's subsequent commands in their own transcripts, and enforcing a continuous `first-\u003elast timestamp` cross-check across isolated role sessions is impossible without inadvertently measuring the inter-agent idle time.",
+        "catch": "The timer stop rule and transcript schema were inherited from row 92's single-executor design, which contradicts row 114's introduction of three strictly isolated B/W/V roles.",
+        "proposed_fix": "In §5 Timer rules, redefine STOP for B and W as 'the moment the answer is declared'. In §7, remove `verify_last_cmd` from `baseline-transcript` and `walk-transcript`. Add a separate `verification_duration_s` block to V's `verification` file, and update D5 to explicitly calculate the \u003c=300s total duration as the sum of the isolated agent's duration plus V's duration for that arm."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.057019,
+      "tokens_in": 8413,
+      "tokens_out": 10282,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "E4/D4 assert retrospective isolation 'by construction', but the specified mechanism — 'a worktree at the... pre-diagnosis pin' (§5 P3) — cannot deliver the claimed property that 'the packet environments exclude everything after it' (E4): a git worktree shares its parent repository's object database and refs, so B, whose packet explicitly grants git (§P3), can read post-pin commits (git show \u003cpost-pin-sha\u003e:design_docs/world-mission.md, or the fix commit 29e1336's context) and retrieve the controller diagnosis already recorded at world-mission.md:1891 (P4). Since the only two registered candidates (C1/C2, §8) are retrospective, both executable baselines collapse into retrieval of a pre-written answer — the exact row-92 seeding flaw this doc exists to kill — and the P7 transcript audit cannot distinguish contaminated git archaeology from honest archaeology, so any D5/AC9 speedup ratio against these baselines is silently fabricated.",
+        "catch": "Two more load-bearing premises are asserted rather than verified: (1) §6.1/P2 require the frozen store copy's sha256 to be unchanged post-walk, but no verification-log row establishes that serve + the E3 existence probes are byte-inert on the sqlite file — row 92's own F-5 stop→mint→restart dance (P10) suggests the server process writes to the db, and if boot/WAL checkpointing mutates the copy then every attempt, including the anticipated UNANSWERABLE(capture) gap findings, self-voids as INVALID(pin). (2) The diagnosis embargo (Design Freeze, P0/MU-9) is an unbounded wait: if the protocol stalls before P6 (e.g. NOT-RUN(TRANSPORT)), a live incident's diagnosis becomes unrecordable indefinitely, with no release-on-abandon path anywhere in §13.",
+        "proposed_fix": "Replace the B-environment mechanism in §P3/E4 with a history-truncated environment: `git bundle create b.bundle \u003cpin\u003e` (a bundle carries only history reachable from the pin), then `git clone b.bundle b-env \u0026\u0026 git checkout \u003cpin\u003e`; record b.bundle sha256 in the §7 pins schema, and add preflight leg E4b with a quoted mechanical check: in B's environment `git rev-list --all --count` equals the count at the pin AND `git cat-file -e \u003csha-of-diagnosis-bearing-commit\u003e` fails (that sha listed in pins). Add verification-log row V10 at the base pin: sha256 the store copy → serve on a scratch port → run the E3 existence probes → stop → re-sha; if bytes changed, redefine §6.1 to audit against the pristine pre-serve copy plus an explicit served-file delta manifest (or open sqlite read-only) so daemon-caused mutation can never be read as INVALID(seeding)/INVALID(pin). Bound the embargo: it lifts on any NOT-RUN(TRANSPORT) or abandoned attempt, at which point the controller writes the diagnosis to the harvest log and the attempt is preserved as NOT-RUN, never re-armed."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "reject",
+    "note": "No authorization for designer-labelled human decisions or ratified embargo; absent corpus differs from unanswerable complete corpus; completion must require measured baseline and unseeded integrity; no-credential alone is not enforced role confinement; Verification Log lacks controls for absence claims."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: Section 7 schema requires `baseline-transcript` and `walk-transcript` to contain the `verify_last_cmd` block and total duration, and Section 5 sets the timer STOP at 'the LAST verification command'. However, D2 and P4-P6 strictly isolate V into a separate, fresh role that executes after B and W declare their answers. Isolated agents B and W cannot log V's subsequent commands in their own transcripts, and enforcing a continuous `first-\u003elast timestamp` cross-check across isolated role sessions is impossible without inadvertently measuring the inter-agent idle time.",
+      "oc-glm-5-3: E4/D4 assert retrospective isolation 'by construction', but the specified mechanism — 'a worktree at the... pre-diagnosis pin' (§5 P3) — cannot deliver the claimed property that 'the packet environments exclude everything after it' (E4): a git worktree shares its parent repository's object database and refs, so B, whose packet explicitly grants git (§P3), can read post-pin commits (git show \u003cpost-pin-sha\u003e:design_docs/world-mission.md, or the fix commit 29e1336's context) and retrieve the controller diagnosis already recorded at world-mission.md:1891 (P4). Since the only two registered candidates (C1/C2, §8) are retrospective, both executable baselines collapse into retrieval of a pre-written answer — the exact row-92 seeding flaw this doc exists to kill — and the P7 transcript audit cannot distinguish contaminated git archaeology from honest archaeology, so any D5/AC9 speedup ratio against these baselines is silently fabricated.",
+      "controller (in-session): No authorization for designer-labelled human decisions or ratified embargo; absent corpus differs from unanswerable complete corpus; completion must require measured baseline and unseeded integrity; no-credential alone is not enforced role confinement; Verification Log lacks controls for absence claims."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "claude-sonnet-5@claude-p",
+        "reason": "quota"
+      },
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.079235,
+    "total_tokens_in": 17733,
+    "total_tokens_out": 10580
+  }
+}
