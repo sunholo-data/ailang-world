@@ -1,5 +1,7 @@
 #!/bin/bash
-# Attended helper for SM.D — the irreversible first publish of world/core@0.1.0.
+# Attended helper for SM.D — the irreversible publish of world/core at the version the
+# committed ready-packet golden names (0.1.0 published 2026-09-21; 0.1.1 is the D-WORLD-41
+# candidate). The version is READ from the golden, never restated here.
 #
 # WHAT THIS IS NOT: an automation of the publish. Every fence in
 # cmd/world-publish stays exactly where it was, and this script cannot satisfy
@@ -218,10 +220,12 @@ approval_ref() {
 # the pty, a different file.
 print_live_command() {
   ref="$(approval_ref)"
+  version="$(sed -n 's/.*"version":"\([^"]*\)".*/\1/p' "$REPO_ROOT/$GOLDEN_FILE")"
+  [ -n "$version" ] || die "could not read version from $GOLDEN_FILE"
   cat <<BANNER
 
   ⚠ THE IRREVERSIBLE PUBLIC WRITE IS NOT RUN BY THIS SCRIPT, BY DESIGN.
-    world/core@0.1.0 · the registry is immutable (409 on re-publish).
+    world/core@${version} · the registry is immutable (409 on re-publish).
 
     Everything above is ready. Paste this, in this terminal:
 
