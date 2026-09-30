@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/sunholo-data/ailang-world/host/pkgproj"
 )
 
 // changelogSections splits CHANGELOG.md into its `## <version>` sections, in
@@ -70,4 +72,35 @@ func TestChangelogCarriesTheCandidateAndPreservesPublishedHistory(t *testing.T) 
 			"(%d vs %d bytes): published history was rewritten", served.Version, len(got),
 			len(served.Quality.Release.Notes))
 	}
+}
+
+// TestAttendedRehearsalNamesTheCandidate drives `publish --dry-run` in-process
+// with the fence stack SATISFIED (the injected probe a headless loop cannot
+// produce for the real binary) and reads the rehearsal an operator would see:
+// the candidate version, its approval scope and the golden's tarball digest.
+// --dry-run constructs no handler and makes no request of any kind.
+func TestAttendedRehearsalNamesTheCandidate(t *testing.T) {
+	root := commandRepoRoot(t)
+	golden, err := pkgproj.LoadReadyPacket(filepath.Join(root, defaultGolden))
+	if err != nil {
+		t.Fatal(err)
+	}
+	inv := liveInvocation(t)
+	inv.bools = []string{"dry-run"}
+	got := drive(t, inv, attendedPhrase+"\n", noEnv, satisfiedProbe(t))
+	if got.code != exitOK {
+		t.Fatalf("rehearsal exit = %d\nstdout:\n%s\nstderr:\n%s", got.code, got.stdout, got.stderr)
+	}
+	for _, want := range []string{
+		"REHEARSAL — no request of any kind was made.",
+		"publish world/core@" + frozenPackageVersion + " irreversibly",
+		"package        world/core@" + frozenPackageVersion,
+		"/version:" + frozenPackageVersion + "#",
+		"tarball        " + golden.TarballSHA256,
+	} {
+		if !strings.Contains(got.stdout, want) {
+			t.Errorf("rehearsal does not contain %q\nstdout:\n%s", want, got.stdout)
+		}
+	}
+	t.Logf("rehearsal:\n%s", got.stdout)
 }
