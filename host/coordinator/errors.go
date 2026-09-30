@@ -84,3 +84,16 @@ type InFlightError struct{ InvocationID string }
 func (e *InFlightError) Error() string {
 	return fmt.Sprintf("coordinator: invocation %s is in flight", e.InvocationID)
 }
+
+// IntegrityError (R13, row 122) refuses to reconcile a resolved invocation
+// whose recorded object does not match the ref that names it, or whose
+// record/output/world rows do not name each other. Nothing is reported as
+// reconciled; the stored rows are damaged, so a resend cannot help.
+type IntegrityError struct {
+	InvocationID string
+	Object       string // "record" | "output" | "world"
+}
+
+func (e *IntegrityError) Error() string {
+	return fmt.Sprintf("coordinator: reconcile %s: recorded %s does not match its reference", e.InvocationID, e.Object)
+}

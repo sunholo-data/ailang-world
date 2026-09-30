@@ -45,6 +45,13 @@ type worldWire struct {
 	LogHead   string `json:"logHead"`
 }
 
+// worldRef is the content address of a coordinator-planned world row.
+func worldRef(w store.World) hashref.HashRef {
+	return hashref.SumSHA256(mustJSON(worldWire{
+		Revision: w.Revision, StateRoot: w.StateRoot.String(), LogHead: w.LogHead.String(),
+	}))
+}
+
 // plan is the complete, pure description of one invocation commit.
 type plan struct {
 	Objects []store.Object
@@ -92,9 +99,7 @@ func planInvocation(w store.World, id, episodeID string, d transitionreg.Descrip
 		TransitionRef: rec.Hash.String(),
 	}))
 	next := store.World{Revision: w.Revision + 1, StateRoot: out.Hash, LogHead: entryHash}
-	next.Ref = hashref.SumSHA256(mustJSON(worldWire{
-		Revision: next.Revision, StateRoot: next.StateRoot.String(), LogHead: next.LogHead.String(),
-	}))
+	next.Ref = worldRef(next)
 	objects := []store.Object{in, out, rec}
 	return plan{
 		Objects: objects,

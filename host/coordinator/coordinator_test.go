@@ -1,6 +1,7 @@
 package coordinator
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -774,5 +775,168 @@ func TestNewRefusesMissingSeamsAndCaps(t *testing.T) {
 	var incompatible *IncompatibleError
 	if !errors.As(classifyExec(execErr), &incompatible) {
 		t.Fatal("wrong execution classification")
+	}
+}
+
+// ---------- R13 reconciliation integrity (row 122) ----------
+
+// tamperStore damages what the real store returns on the reconcile path. Each
+// hook counts its hits so a fixture that never fires cannot pass vacuously.
+type tamperStore struct {
+	*store.Store
+	object  func(store.Object) store.Object
+	world   func(store.World) store.World
+	receipt func(store.Receipt) store.Receipt
+	hits    *int
+}
+
+func (s tamperStore) GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error) {
+	o, ok, err := s.Store.GetObject(ctx, ref)
+	if ok && s.object != nil {
+		if t := s.object(o); !bytes.Equal(t.Payload, o.Payload) {
+			*s.hits++
+			o = t
+		}
+	}
+	return o, ok, err
+}
+
+func (s tamperStore) GetWorld(ctx context.Context, ref hashref.HashRef) (store.World, bool, error) {
+	w, ok, err := s.Store.GetWorld(ctx, ref)
+	if ok && s.world != nil {
+		*s.hits++
+		w = s.world(w)
+	}
+	return w, ok, err
+}
+
+func (s tamperStore) GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error) {
+	rc, ok, err := s.Store.GetReceipt(ctx, id)
+	if ok && s.receipt != nil && rc.State == store.ReceiptResolved {
+		*s.hits++
+		rc = s.receipt(rc)
+	}
+	return rc, ok, err
+}
+
+// flipFirst returns o with its payload's first byte flipped when its
+// semantic id is sid; the ref (o.Hash) is left naming the original.
+func flipFirst(sid string) func(store.Object) store.Object {
+	return func(o store.Object) store.Object {
+		if o.SemanticID == sid {
+			o.Payload = append([]byte(nil), o.Payload...)
+			o.Payload[0] ^= 1
+		}
+		return o
+	}
+}
+
+func TestReconcileRefusesDamagedRecord(t *testing.T) {
+	// Two committed invocations: t1 (reconciled) and t2 (a different output,
+	// used as the "wrong but internally valid" rows a damaged journal names).
+	setup := func(t *testing.T) (*rig, Result, Result) {
+		r := newRig(t, false)
+		r.genesis()
+		r.describe("plain", r.source(echoSrc), "Invoke")
+		r.publish()
+		first, err := r.coordinator(r.st, fakeRunner{stdout: `{"ok":true}`}).Dispatch(boundedTestContext(r.t), r.call("plain", "t1", grants))
+		if err != nil {
+			t.Fatalf("t1: %v", err)
+		}
+		second, err := r.coordinator(r.st, fakeRunner{stdout: `{"ok":false}`}).Dispatch(boundedTestContext(r.t), r.call("plain", "t2", grants))
+		if err != nil {
+			t.Fatalf("t2: %v", err)
+		}
+		return r, first, second
+	}
+	worldOf := func(t *testing.T, r *rig, ref hashref.HashRef) store.World {
+		w, ok, err := r.st.GetWorld(boundedTestContext(t), ref)
+		if err != nil || !ok {
+			t.Fatalf("world %v: ok=%v err=%v", ref, ok, err)
+		}
+		return w
+	}
+	cases := []struct {
+		name   string
+		object string // "" = must reconcile (control)
+		tamper func(r *rig, first, second Result) tamperStore
+	}{
+		{"control_untampered_reconciles", "", func(r *rig, _, _ Result) tamperStore {
+			return tamperStore{Store: r.st}
+		}},
+		{"record_payload_corrupt", "record", func(r *rig, _, _ Result) tamperStore {
+			return tamperStore{Store: r.st, object: flipFirst(RecordV1)}
+		}},
+		{"output_payload_corrupt", "output", func(r *rig, _, _ Result) tamperStore {
+			return tamperStore{Store: r.st, object: flipFirst(OutputV1)}
+		}},
+		{"receipt_names_other_record", "record", func(r *rig, _, second Result) tamperStore {
+			return tamperStore{Store: r.st, receipt: func(rc store.Receipt) store.Receipt {
+				in := *rc.Intent
+				in.TransitionRef = second.RecordRef
+				rc.Intent = &in
+				return rc
+			}}
+		}},
+		{"receipt_names_other_world", "world", func(r *rig, _, second Result) tamperStore {
+			return tamperStore{Store: r.st, receipt: func(rc store.Receipt) store.Receipt {
+				in := *rc.Intent
+				in.WorldRef = second.WorldRef
+				rc.Intent = &in
+				return rc
+			}}
+		}},
+		{"world_row_corrupt", "world", func(r *rig, _, _ Result) tamperStore {
+			return tamperStore{Store: r.st, world: func(w store.World) store.World { w.Revision++; return w }}
+		}},
+		// A self-consistent row returned under the wrong key: t3 has t1's
+		// output (same state root) but another revision, so only the ref
+		// the journal names can tell the rows apart.
+		{"world_row_of_other_invocation", "world", func(r *rig, first, _ Result) tamperStore {
+			third, err := r.coordinator(r.st, fakeRunner{stdout: `{"ok":true}`}).Dispatch(boundedTestContext(r.t), r.call("plain", "t3", grants))
+			if err != nil {
+				r.t.Fatalf("t3: %v", err)
+			}
+			other, ok, err := r.st.GetWorld(boundedTestContext(r.t), third.WorldRef)
+			if err != nil || !ok || other.Ref == first.WorldRef {
+				r.t.Fatalf("fixture broken: t3 world %+v ok=%v err=%v", other, ok, err)
+			}
+			return tamperStore{Store: r.st, world: func(store.World) store.World { return other }}
+		}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			r, first, second := setup(t)
+			if tc.name == "receipt_names_other_world" && worldOf(t, r, second.WorldRef).StateRoot == worldOf(t, r, first.WorldRef).StateRoot {
+				t.Fatal("fixture broken: t1 and t2 share a state root")
+			}
+			hits := 0
+			st := tc.tamper(r, first, second)
+			st.hits = &hits
+			head, _, err := r.st.SelectedHead(boundedTestContext(r.t))
+			if err != nil {
+				t.Fatalf("head: %v", err)
+			}
+			mustNotRun := fakeRunner{hook: func(context.Context) { t.Error("reconcile re-executed the transition") }, stdout: `{}`}
+			got, err := r.coordinator(st, mustNotRun).Dispatch(boundedTestContext(r.t), r.call("plain", "t1", grants))
+			r.assertHead(head)
+			if tc.object == "" {
+				if err != nil || !got.Reconciled || got.RecordRef != first.RecordRef || got.WorldRef != first.WorldRef ||
+					got.EntryIndex != first.EntryIndex || string(got.OutputBytes) != string(first.OutputBytes) {
+					t.Fatalf("control = %+v, %v; want t1's committed result %+v", got, err, first)
+				}
+				return
+			}
+			if hits == 0 {
+				t.Fatal("fixture broken: the tamper never fired")
+			}
+			var x *IntegrityError
+			if !errors.As(err, &x) || x.Object != tc.object || x.InvocationID != InvocationID("ep1", "t1") {
+				t.Fatalf("err = %T %v, want *IntegrityError{Object: %q}", err, err, tc.object)
+			}
+			if got.Reconciled || got.OutputBytes != nil {
+				t.Fatalf("refusal carried a result: %+v", got)
+			}
+		})
 	}
 }
