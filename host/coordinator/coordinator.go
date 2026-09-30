@@ -157,17 +157,33 @@ func (c *Coordinator) parseOutput(stdout []byte) ([]byte, map[string]any, error)
 	return out, obj, nil
 }
 
+// hashes reports whether payload hashes to ref under ref's own algorithm.
+// The store returns a payload under the ref it was asked for without
+// re-hashing it (store.GetObject), so every read-back is checked here.
+func hashes(ref hashref.HashRef, payload []byte) bool {
+	sum, err := hashref.Sum(ref.Algo(), payload)
+	return err == nil && sum == ref
+}
+
 // committed reads a resolved invocation back from the journal: record,
 // output and world are all immutable rows written by the committing
-// transaction, so the answer is the one the first call produced.
+// transaction, so the answer is the one the first call produced. Each row is
+// verified against the ref that names it, and the three are verified against
+// each other, before anything is reported as reconciled (row 122).
 func (c *Coordinator) committed(ctx context.Context, rc store.Receipt) (Result, error) {
 	recObj, ok, err := c.cfg.Store.GetObject(ctx, rc.Intent.TransitionRef)
 	if err != nil || !ok {
 		return Result{}, fmt.Errorf("coordinator: reconcile %s: record: ok=%v: %w", rc.InvocationID, ok, err)
 	}
+	if !hashes(rc.Intent.TransitionRef, recObj.Payload) {
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "record"}
+	}
 	var rec record
 	if err := json.Unmarshal(recObj.Payload, &rec); err != nil {
 		return Result{}, fmt.Errorf("coordinator: reconcile %s: decode record: %w", rc.InvocationID, err)
+	}
+	if rec.InvocationID != rc.InvocationID {
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "record"}
 	}
 	outRef, err := hashref.Parse(rec.Output)
 	if err != nil {
@@ -177,9 +193,21 @@ func (c *Coordinator) committed(ctx context.Context, rc store.Receipt) (Result, 
 	if err != nil || !ok {
 		return Result{}, fmt.Errorf("coordinator: reconcile %s: output: ok=%v: %w", rc.InvocationID, ok, err)
 	}
+	if !hashes(outRef, outObj.Payload) {
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "output"}
+	}
 	w, ok, err := c.cfg.Store.GetWorld(ctx, rc.Intent.WorldRef)
 	if err != nil || !ok {
 		return Result{}, fmt.Errorf("coordinator: reconcile %s: world: ok=%v: %w", rc.InvocationID, ok, err)
+	}
+	// The store verifies no world ref (store/durable.go); "a2a:" worlds are
+	// planInvocation's, so the row must re-derive its ref, and applyRevision
+	// makes its state root the recorded output.
+	if worldRef(w) != rc.Intent.WorldRef {
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "world"}
+	}
+	if w.StateRoot != outRef {
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "world"}
 	}
 	var obj map[string]any
 	if err := json.Unmarshal(outObj.Payload, &obj); err != nil {

@@ -817,6 +817,10 @@ func TestA2ADispatch(t *testing.T) {
 		{"DuplicateInvocation", &store.DuplicateInvocationError{}, codeInvalidParams, "task id already used in this session"},
 		{"R17", &coordinator.InFlightError{}, codeInvalidParams, "task id already used in this session"},
 		{"R4_R6", errors.New("hidden"), codeInternal, notAvailableMessage},
+		// Row 122: damaged reconcile rows are store damage, like R6's corrupt
+		// source — neither "resend" nor "not committed" is true of them.
+		{"R6_corrupt_source", &coordinator.SourceError{Kind: "corrupt"}, codeInternal, notAvailableMessage},
+		{"R13_reconcile_integrity", &coordinator.IntegrityError{Object: "record"}, codeInternal, notAvailableMessage},
 		{"R7", &coordinator.WorldAbsentError{}, codeInternal, "no world is selected; commit a genesis world first"},
 		{"R8", &coordinator.EffectsUnsupportedError{}, codeInternal, "transitions that declare effects cannot be invoked in this daemon"},
 		{"R9", &coordinator.IncompatibleError{Err: errors.New("hidden")}, codeInternal, "transition does not implement the invocation calling convention"},
