@@ -1,8 +1,9 @@
-# Mission Dashboard — World (snapshot 2026-09-30, iteration 209)
+# Mission Dashboard — World (2026-09-30, iteration210)
 
-- **State**: row 108 MCP projection design is PARKED after two blocked quorum rounds. Draft PR #165 preserves the revision and findings; no product code landed.
-- **Why parked**: round 2 found a vacuous GET mutation and an omitted JSON-RPC batch path. The delivered upstream seam and module proxy are ready; the design is not quorum-cleared.
-- **1.0 clause map**: 1, 2, 3, 7 MET; 4 UNMET (93 waits on 108); 5 UNMET (114 active); 6 UNMET (108 parked).
-- **Next**: D-WORLD-43 attended ruling on one more design revision. While row 108 is parked, row 114's real-incident provenance walk is the next routable critical-path work; row 93 still waits on 108.
-- **Decision**: D-WORLD-43 OPEN. Recommend A: batch-aware revision, then full quorum; default is to keep row 108 parked.
-- **Routing/cost**: GLM 5.3 rotation designer; quorum Gemini and Kimi rejected twice, Sonnet quota and Astra unavailable; no planner/executor/evaluator by gate. Metered quorum $0.451026.
+- **State:** row114 protocol PARKED after two blocked quorums; draft PR166 preserves Kimi r2. One≈83s observational baseline, independent Sonnet PASS84 and ADMIN disposition PASS86; no World walk or product code.
+- **1.0:** clauses1/2/3/7 MET;4 UNMET(row93 needs108);5 UNMET(0/3 paired questions);6 UNMET(row108 parked D43). Goal unmoved.
+- **Evidence:** full local Go gate failed PID setup twice; controller+judge focused10/10 green. Cause unproved; race leg not reached. STOP untranscribed; cognitive blinding unproved.
+- **Corpus:** none declared for this operation; walk NOT-RUN(NO-CORPUS), capture inventory UNKNOWN. No universal absence claim.
+- **For Mark:** D44 recommends A: further scoped row114 revision+full quorum; default draft unmerged. D43 recommends A: batch-aware row108 revision+full quorum; default parked.
+- **Next:**94 M6 preparation/rehearsal (publish attended), then26 design/32 remeasurement under regroom. Active harvest may bank partial observations.
+- **Routing/cost:** all four Agent roles spawned; GPT proxies invoked actual Kimi designer/Sonnet judge. Model-enum failures recorded; independent judge required. Metered$0.1475116; Kimi1,343,096/Sonnet801,922 quota tokens; Agent counts not reported.

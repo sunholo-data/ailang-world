@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 210 | 2026-09-30 | row114 protocol PARKED after two blocked quorums; Kimi r2 draftPR166; D-WORLD-44 OPEN. One≈83s filesystem-fenced observational baseline independentlySonnetPASS84, ADMIN dispositionPASS86; STOPuntranscribed; walkNOT-RUN(NO-CORPUS);0/3paired; no productcode [ADMIN] |
 | 209 | 2026-09-30 | row 108 design PARKED after two blocked author-excluding quorums: false timeout composition corrected, then batch path and vacuous GET mutation found; draft PR #165 preserves design; D-WORLD-43 OPEN; no code sprint or evaluator |
 | 208 | 2026-09-29 | row 106 M5/M6 LANDED after recovering watchdog-killed attempt 208: A2A published-transition invocation, real interpreter/log/replay, same-ID resend, deadline socket closure; Minimax conditional PASS 92 zero blocking; PR #163 merge `27f2574`, merge CI 2/2; attended QUICKSTART run pending |
 | 207 | 2026-09-28 | row 23 policy tranche M5a–M7b LANDED: full Store surface ctx-first + budgeted + strict-deadline-guarded (32 methods, ErrNoDeadline, 96-case reflect table, census adjacency flip, 4 guarded chains); M1 wrappers removed; M7b test-corpus migration (309 red → 24/24, 85 test files, zero prod); judged PASS 96 zero blocking (independent claude-sonnet-4-6; deepseek lane stream_dead ×3 → codex executor; minimax evaluator blocked by the #1377 sandbox network allowlist → harness ticket row 121); merge `666dbc2` |
