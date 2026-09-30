@@ -1,0 +1,89 @@
+{
+  "sprint_id": "w-world-core-0-1-1-release",
+  "design_doc": "design_docs/planned/w-kernel-exports-carry-no-contract.md",
+  "plan": "design_docs/planned/w-world-core-0-1-1-release-sprint-plan.md",
+  "authority": "D-WORLD-41 RESOLVED A (attended, 2026-09-28): world/core@0.1.1, kind=feature, loop prepares and rehearses, a human publishes",
+  "base": "origin/dev 52447c3",
+  "planner_lane": "opus-required",
+  "scope": "Queue row 94 M6: prepare and rehearse the world/core@0.1.1 candidate. NEVER publish.",
+  "start_from": "planner prototype in .wt-world-iter211 (diff: ~/.ailang/state/mission-world-iter211-evidence/planner_prototype.diff, +233/-21, 11 files)",
+  "environment": [
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_PKG_AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "export TMPDIR=$HOME/.ailang/state/mission-world-iter211-evidence/tmp",
+    "prefix every command that could reach the registry with: env -u AILANG_REGISTRY_API_KEY"
+  ],
+  "forbidden": [
+    "ailang publish without --dry-run",
+    "world-publish publish --live",
+    "tools/attended/self_mod_publish.sh live|approve|dry-run (attended only)",
+    "editing host/broker/testdata/* or host/pkgproj/testdata/*",
+    "editing the CHANGELOG ## 0.1.0 section",
+    "opening or modifying ~/.ailang/world/world.db"
+  ],
+  "inventory": {"must_move": 15, "must_stay": 19, "unrelated": 28, "literal_hits_outside_design_docs": 60, "design_docs_hits_untouched": 86},
+  "landing_strategy": {
+    "commits": "1 or 3 (M1 must be atomic; M2 and M3 may follow as separate commits)",
+    "boundaries_measured": [
+      {"state": "pristine 52447c3", "go_vet_rc": 0, "four_pkg_race_tests_rc": 0, "run_count": 445, "package_gate_rc": 0},
+      {"state": "M1 only (new tests moved out)", "go_vet_rc": 0, "five_pkg_tests_rc": 0},
+      {"state": "M1+M2+M3 prototype", "go_vet_rc": 0, "five_pkg_race_tests_rc": 0, "run_count_five_pkgs": 589, "verify_ail_rc": 0, "package_gate_rc": 0, "go_test_all_rc": "0 (second run; first run hit unrelated load flake TestQueryInterfaceReturnsWhileADescendantHoldsStdout)"}
+    ]
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Move the release identity to 0.1.1 as one unit",
+      "loc": 93,
+      "files": [
+        "packages/world-core/ailang.toml",
+        "packages/world-core/CHANGELOG.md",
+        "scripts/verify_world_package.sh",
+        "scripts/world_package_ready_packet.golden.json",
+        "cmd/world-publish/fences.go",
+        "cmd/world-publish/fences_test.go",
+        "host/pkgproj/readypacket_test.go",
+        "tools/attended/self_mod_publish.sh",
+        "docs/SELF_MOD_PUBLISH.md"
+      ],
+      "acceptance": [
+        "env -u AILANG_REGISTRY_API_KEY ./scripts/verify_world_package.sh -> rc=0, '9/9 steps', 'uncontracted_exports=3'",
+        "env -u AILANG_REGISTRY_API_KEY ./scripts/verify_ail.sh -> rc=0, '16 required identities verified, 40 named tests pass'",
+        "env -u AILANG_REGISTRY_API_KEY go vet ./... -> rc=0",
+        "env -u AILANG_REGISTRY_API_KEY go test -race -count=1 ./cmd/world-publish/... ./host/broker/... ./host/pkgproj/... ./host/runbook/... ./host/verifygate/... -> 5 ok",
+        "world-publish packet -> 'ready packet for world/core@0.1.1', tarballSHA256 sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3, EQUAL",
+        "(cd packages/world-core && env -u AILANG_REGISTRY_API_KEY $AILANG_BIN publish --dry-run) -> 'Publishing world/core@0.1.1...', 'changelog_section true', 'no gates'",
+        "git diff HEAD -- host/broker/testdata host/pkgproj/testdata -> empty"
+      ],
+      "mutations": ["MUT-1", "MUT-1b", "MUT-2", "MUT-3", "MUT-4", "MUT-9", "MUT-10", "MUT-11", "MUT-12"]
+    },
+    {
+      "id": "M2",
+      "title": "Guard published history: CHANGELOG 0.1.0 == registry-recorded notes; newest section == frozen version",
+      "loc": 73,
+      "files": ["cmd/world-publish/release_history_test.go"],
+      "acceptance": ["go test -count=1 -v -run TestChangelogCarries ./cmd/world-publish/ -> --- PASS"],
+      "mutations": ["MUT-2b", "MUT-7"]
+    },
+    {
+      "id": "M3",
+      "title": "In-process attended rehearsal arm and candidate-vs-published reconcile conflict arms",
+      "loc": 88,
+      "files": ["cmd/world-publish/release_history_test.go", "host/broker/release_candidate_test.go"],
+      "acceptance": [
+        "go test -count=1 -v -run Candidate ./cmd/world-publish/ ./host/broker/ -> 3 --- PASS",
+        "repeat M1 acceptance 1-4 at the final boundary"
+      ],
+      "mutations": ["MUT-5", "MUT-6", "MUT-8", "MUT-13"]
+    }
+  ],
+  "mutation_results": {"killed": 15, "survived": 0, "unguarded_accepted": ["MUT-14 helper banner (display-only, read from golden)"]},
+  "human_publish_command": "export WORLD_STORE=$HOME/.ailang/world/world-0.1.1.db; ./tools/attended/self_mod_publish.sh preflight; ... approve; ... dry-run; ... live (prints the --live command for the human to paste)",
+  "findings": [
+    "F1: attended publish --dry-run/approve STOP at fence=tty headless by design; substitutes measured",
+    "F2: operator store ~/.ailang/world/world.db is schema v2, binary requires v4, refuses to open; fresh store RECOMMENDED pending D-WORLD-45 (Mark); legacy store never modified or deleted",
+    "F3: contentHash does not move with manifest/CHANGELOG; only tarball and version change",
+    "F4: two literal-version tests would silently break when the golden moves; fixed",
+    "F5: world-publish transitions reuses attendedPhrase",
+    "F6: unrelated full-suite load flake in host/pkgproj"
+  ]
+}

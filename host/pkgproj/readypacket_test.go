@@ -150,7 +150,7 @@ func TestReadyPacketEqualNamesTheFirstDifferingField(t *testing.T) {
 		"package":         func(p ReadyPacket) ReadyPacket { p.Package = "world/other"; return p },
 		"tarballBytes":    func(p ReadyPacket) ReadyPacket { p.TarballBytes++; return p },
 		"tarballSHA256":   func(p ReadyPacket) ReadyPacket { p.TarballSHA256 = flipHexNibble(p.TarballSHA256); return p },
-		"version":         func(p ReadyPacket) ReadyPacket { p.Version = "0.1.1"; return p },
+		"version":         func(p ReadyPacket) ReadyPacket { p.Version += "-x"; return p },
 	}
 	if len(mutations) != len(ReadyPacketFields) {
 		t.Fatalf("this test drives %d fields but the frozen list has %d: a field would go untested",

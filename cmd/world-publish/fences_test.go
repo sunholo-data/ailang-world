@@ -394,7 +394,7 @@ func fenceRows() []fenceRow {
 			trigger: func(t *testing.T) (invocation, string, func(string) string, ttyProbe) {
 				return liveInvocation(t).with(func(i *invocation) {
 					i.flags["golden"] = goldenCopy(t, func(s string) string {
-						return strings.Replace(s, `"version":"0.1.0"`, `"version":"0.1.1"`, 1)
+						return strings.Replace(s, `"version":"`+frozenPackageVersion+`"`, `"version":"9.9.9"`, 1)
 					})
 				}), phrase, noEnv, satisfiedProbe(t)
 			},

@@ -63,12 +63,15 @@ const (
 // layer that defeats automation is the controlling-terminal check in tty.go.
 // Stating that here is deliberate: an operator who believes this phrase is the
 // security boundary will eventually route around the one that is.
-const attendedPhrase = "publish world/core@0.1.0 irreversibly"
+const attendedPhrase = "publish world/core@0.1.1 irreversibly"
 
 // frozenPackageVersion is the ONE version this command may publish. The scope
 // grammar already makes an approval for 0.1.0 unable to authorize 0.1.1; this
 // is the same statement at the operator's surface, where a typo lives.
-const frozenPackageVersion = "0.1.0"
+// Moved 0.1.0 -> 0.1.1 by D-WORLD-41 (proof hardening, no exported signature
+// change). 0.1.0 is PUBLISHED and immutable; its record stays in
+// host/broker/testdata/metadata_world_core_0.1.0.json and is never rewritten.
+const frozenPackageVersion = "0.1.1"
 
 // frozenCompilerVersion is the pinned compiler the ready packet was projected
 // with. It is stated here INDEPENDENTLY of the golden so the comparison in
@@ -88,7 +91,9 @@ const frozenPackageVersion = "0.1.0"
 const frozenCompilerVersion = "AILANG v0.41.0"
 
 // frozenInterfaceHashV2 is the registry-recorded interface identity (v2) of the
-// immutable world/core@0.1.0.
+// immutable world/core@0.1.0. The 0.1.1 candidate changes no exported signature,
+// and the pinned compiler's dry-run reports the same v2 hash (53 signatures), so
+// the constant did not move with the version.
 const frozenInterfaceHashV2 = "sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8"
 
 // stopError is a fence refusal. It is a value rather than a printf because the

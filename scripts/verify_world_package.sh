@@ -125,12 +125,14 @@ with open(sys.argv[1], "rb") as f: got = tomllib.load(f)
 # grew publish QUALITY GATES after this package was frozen in July, and refused
 # the first real attended publish on two of them:
 #   PUB001 CHANGELOG.md has no non-empty `## 0.1.0` section
+# (0.1.1, D-WORLD-41: the frozen version moved in step 4, the step-7 dry-run identity and
+# the step-9 packet together; the compiler's own dry-run refuses PUB001 for `## 0.1.1`.)
 #   PUB002 [release] kind is not declared
 # [metadata] closes PUB021, which warns that no agent serves the pkg:world/core
 # inbox without a GitHub tree URL. These are ADDITIONS to a frozen structure and
 # are listed exactly, so the freeze still refuses anything not named here.
 want = {
-  "package": {"name":"world/core", "version":"0.1.0", "edition":"1", "ailang":">=0.30.0", "module_prefix":"world", "description":"AILANG World's pure semantic core"},
+  "package": {"name":"world/core", "version":"0.1.1", "edition":"1", "ailang":">=0.30.0", "module_prefix":"world", "description":"AILANG World's pure semantic core"},
   "release": {"kind":"feature"},
   "metadata": {
     "repository":"https://github.com/sunholo-data/ailang-world/tree/dev/packages/world-core",
@@ -211,7 +213,7 @@ python3 - "$tmp_dry" <<'PY' || exit 1
 import re, sys
 s = open(sys.argv[1], encoding="utf-8").read()
 checks = [
- (r"^Publishing world/core@0\.1\.0\.\.\.$", "package identity"),
+ (r"^Publishing world/core@0\.1\.1\.\.\.$", "package identity"),
  (r"^  Exports: \[world/types world/contracts world/transitions world/logepoch\]$", "exact export set"),
  (r"^  Effects: \[\]$", "empty effects"),
 ]
@@ -300,7 +302,7 @@ for line in open(sys.argv[1], encoding="utf-8"):
 required = ("contentHash", "interfaceHash", "interfaceHashV2", "tarballSHA256", "tarballBytes")
 if any(not values.get(k) for k in required):
     sys.stderr.write("✗ ready packet input is incomplete\n"); sys.exit(1)
-packet = {"compilerVersion":sys.argv[3], "contentHash":values["contentHash"], "effects":[], "exports":["world/types","world/contracts","world/transitions","world/logepoch"], "interfaceHash":values["interfaceHash"], "interfaceHashV2":values["interfaceHashV2"], "package":"world/core", "tarballBytes":int(values["tarballBytes"]), "tarballSHA256":values["tarballSHA256"], "version":"0.1.0"}
+packet = {"compilerVersion":sys.argv[3], "contentHash":values["contentHash"], "effects":[], "exports":["world/types","world/contracts","world/transitions","world/logepoch"], "interfaceHash":values["interfaceHash"], "interfaceHashV2":values["interfaceHashV2"], "package":"world/core", "tarballBytes":int(values["tarballBytes"]), "tarballSHA256":values["tarballSHA256"], "version":"0.1.1"}
 with open(sys.argv[2], "wb") as f: f.write((json.dumps(packet, sort_keys=True, separators=(",", ":")) + "\n").encode())
 PY
 [ -s "$tmp_ready" ] || { printf '%s\n' '✗ ready packet enumeration was zero-length' >&2; exit 1; }

@@ -5,7 +5,14 @@ public write. Steps 4–8 are **attended**: they are never run headless and neve
 
 The asymmetry that shapes every refusal below: a public publish is **immutable**
 (`registry-validator` 409s on an existing version), so a wrong publish permanently consumes
-`world/core@0.1.0`, while a refusal costs a human five minutes.
+`world/core@0.1.1`, while a refusal costs a human five minutes.
+
+**Current candidate: `world/core@0.1.1` — prepared and rehearsed, NOT published.**
+`world/core@0.1.0` is already published (2026-09-21) and immutable; its served record is
+preserved verbatim at `host/broker/testdata/metadata_world_core_0.1.0.json` and is never
+rewritten. `D-WORLD-41` (attended, 2026-09-28) chose 0.1.1 as a proof-hardening release with
+no exported signature change. The loop prepares and rehearses it; **only a human runs the
+irreversible publish** (Stage B).
 
 ---
 
@@ -80,11 +87,12 @@ instruction to "compare the digests against the gate's output" is therefore impo
 this step used to say exactly that, and this paragraph is its repair.
 
 So the eyeball check is **document against artifact, at full length**. These four digests are the
-identity of the local reviewed projection. **Iteration 198 rehearsal:** these bytes
-include additional contracts and differ from the already-published 0.1.0 artifact.
-Do not publish them as 0.1.0. A new version, release metadata, CHANGELOG section and
-updated publisher version fences need an attended release decision first (see
-`design_docs/planned/w-kernel-exports-carry-no-contract.md`). The loop never publishes:
+identity of the local reviewed projection. **They are the UNPUBLISHED `world/core@0.1.1`
+candidate** (manifest version, `## 0.1.1` CHANGELOG section, publisher version fence and
+confirmation phrase moved together in iteration 211 under `D-WORLD-41`). They differ from the
+already-published 0.1.0 artifact by design: the tarball gained five proven contracts and the
+0.1.1 release notes, while `interfaceHash` and `interfaceHashV2` are unchanged because no
+exported signature changed. The loop never publishes; a human runs steps 6–7 below:
 
 
 | field | digest |
@@ -92,7 +100,7 @@ updated publisher version fences need an attended release decision first (see
 | `contentHash` | `sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780` |
 | `interfaceHash` (manifest coverage only) | `sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083` |
 | `interfaceHashV2` (exported interface) | `sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8` |
-| `tarballSHA256` | `sha256:d532d923dc0d681cb0782d292cdce1d60d2a41b987e7fcfe6c3fef854f089cb9` |
+| `tarballSHA256` | `sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3` |
 
 They are gated against the golden by `host/runbook`, so this table cannot rot silently: change the
 package without reprojecting, or edit one nibble here, and the repository gate reds.
@@ -127,9 +135,24 @@ has never published there is nothing to create it. Measured 2026-09-21, on the f
 attempt: `STOP fence=store reason=unopenable … resolve parent of "…/world/world.db": no such file
 or directory`. The refusal is correct and loud; the omission was this runbook's.
 
+**Which store (decision D-WORLD-45, PENDING Mark).** The store that recorded the 0.1.0
+publish, `~/.ailang/world/world.db`, is schema `user_version 2`; the current binary requires 4
+and has no migration, so it refuses to open or modify it (measured iteration 211 on a byte
+copy: `STOP fence=store reason=unopenable … has user_version 2 … binary requires 4; refusing
+to modify`). Two options:
+
+- **RECOMMENDED, pending D-WORLD-45: a fresh store file** (`world-0.1.1.db`, below). The 0.1.1
+  publish record then lives in a new store and is not continuous with the 0.1.0 record.
+- **Alternative: migrate the legacy store first** (a future queue row; no migration exists
+  today). This would keep one provenance chain.
+
+Either way, the legacy `~/.ailang/world/world.db` must never be modified or deleted: it is the
+durable 0.1.0 publish record. The helper's default still points at the legacy file, so export
+the store path below before running it.
+
 ```bash
 mkdir -p "$HOME/.ailang/world"
-export WORLD_STORE="$HOME/.ailang/world/world.db"
+export WORLD_STORE="$HOME/.ailang/world/world-0.1.1.db"
 export WORLD_BIN="$(mktemp -d)/world-publish"
 export WORLD_REGISTRY="https://storage.googleapis.com/ailang-registry"
 export WORLD_CREDENTIAL="$HOME/.config/ailang/registry.key"
@@ -188,6 +211,9 @@ The stamp is an `ApprovalRequestV1` → `ApprovalDecisionV1` pair. `Session.Invo
 twice even across a process restart. The scope binds `contentHash`, `interfaceHash` and `tarballSHA256` above (not
 `interfaceHashV2`: the frozen 0.1.0 scope grammar does not carry it), so an approval minted
 for these bytes authorizes no other bytes, and an approval for `0.1.0` cannot authorize `0.1.1`.
+The typed confirmation phrase names the version too — for this candidate it is
+`publish world/core@0.1.1 irreversibly` — so a stale 0.1.0 approval ref saved by the helper
+(`~/.ailang/world/.last_approval_ref`) is refused at the scope check; mint a fresh one.
 
 Rehearse first. This runs every fence and makes no request:
 
