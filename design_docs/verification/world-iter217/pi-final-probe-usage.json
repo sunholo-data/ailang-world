@@ -1,0 +1,42 @@
+{
+  "path": "/tmp/world217-final-judge-probe.ndjson",
+  "sha256": "b850ad7b8bf9f626b7c7d929ddfc290753f9d99a1f2d3e684168bb69f0b7316a",
+  "bytes": 24860,
+  "completed_assistant_turns": 1,
+  "provider_reported_usage_totals": {
+    "input": 1468,
+    "output": 159,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "reasoning": 0,
+    "totalTokens": 1627
+  },
+  "metered_cost_usd": 0,
+  "records": [
+    {
+      "response_id": "chatcmpl-198",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "stop",
+      "usage": {
+        "input": 1468,
+        "output": 159,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 1627,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    }
+  ],
+  "report_write_events": [],
+  "ack_details": [],
+  "interrupted_turn_usage": "not inferred; only completed turn_end provider usage counted"
+}

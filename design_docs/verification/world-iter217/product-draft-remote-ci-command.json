@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "gh",
+    "run",
+    "view",
+    "36936976064",
+    "--repo",
+    "sunholo-data/ailang-world",
+    "--log-failed"
+  ],
+  "rc": 0,
+  "stderr": ""
+}

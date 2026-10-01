@@ -1,0 +1,38 @@
+{
+  "reviewer_role": "independent-administrative-record-reviewer",
+  "not_product_evaluator": true,
+  "base": "54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e",
+  "head": "8270b6521f854439469fd2e95948dd5ddfc7635c",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-record-eval",
+  "result": "pass",
+  "score": 98,
+  "administrative_only": true,
+  "product_row108_status": "FAIL49/54/59",
+  "draft_pr173_unmerged": true,
+  "product_acceptance": "NONE",
+  "concrete_blockers": [],
+  "checks": {
+    "diff_exclusively_design_docs": {"passed": true, "changed_files": 908, "non_design_docs": 0, "forbidden_paths": 0},
+    "git_diff_check_whitespace": {"passed": true, "exit_code": 0},
+    "ledger_35_original_byte_preserved": {"passed": true, "original_rows": 35, "total_rows": 36, "byte_identical_after_removing_only_appended_d49": true},
+    "status_rotation": {"passed": true, "newest_three": [217, 216, 215], "archived": [213, 214]},
+    "d49_open_complete": {"passed": true, "status": "OPEN", "has_A": true, "has_B": true, "default_B_immediately": true, "only_open_row": true},
+    "original_216_entry_intact": {"passed": true},
+    "index_217_216_truthful": {"passed": true},
+    "row108_parked_no_acceptance": {"passed": true, "status": "PARKED", "class": "open"},
+    "known_queue128_present": {"passed": true, "row": 128, "line": 1929},
+    "archive_213_214_retained": {"passed": true, "lines": [451, 453]},
+    "d49_not_answered": {"passed": true},
+    "no_fourth_product_review": {"passed": true},
+    "whitespace_manifest_29_files": {"passed": true, "manifest_count": 29, "raw_b64_on_disk": 29, "validated_known_positive": "d-final-race.log decoded sha256 589d12d0a50bc620155fff4a2a7cd3f1a60f048edf2d7e4f0510443e8405a0cb matches manifest; bytes 7679 match"}
+  },
+  "ci_fence": {
+    "ci_run_on_final_record": false,
+    "mandatory_future_fence": true,
+    "ci_green_not_asserted": true,
+    "terminal_digest": "issue159"
+  },
+  "controller_verdict_adoption": false,
+  "product_tests_performed_by_this_reviewer": false,
+  "production_fixes_made": false
+}

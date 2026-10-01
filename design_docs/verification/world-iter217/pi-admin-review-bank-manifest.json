@@ -1,0 +1,37 @@
+{
+  "reviewed_record_sha": "8270b6521f854439469fd2e95948dd5ddfc7635c",
+  "product_review": false,
+  "administrative_result": "PASS98",
+  "reports_verbatim_sha256": {
+    "evaluator-record-independent.md": "29e7c43adcfb191b3246ae37d8aebb67d0ff4ac129571b379d91880118abca86",
+    "evaluator-record-independent.json": "930788ae094d7907c952859f9c56b748b2274660bc45d5a78991c725c1c20738"
+  },
+  "session_ack_own": [
+    {
+      "acked": true,
+      "at": "2026-10-01T22:51:23.174Z"
+    }
+  ],
+  "actual_report_writes": [
+    {
+      "tool": "write",
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-record-eval/design_docs/verification/world-iter217/evaluator-record-independent.md"
+    },
+    {
+      "tool": "write",
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-record-eval/design_docs/verification/world-iter217/evaluator-record-independent.json"
+    }
+  ],
+  "provider_reported_usage": {
+    "input": 50961,
+    "output": 12012,
+    "cacheRead": 640669,
+    "cacheWrite": 0,
+    "reasoning": 0,
+    "totalTokens": 703642
+  },
+  "native_usage": "not reported",
+  "privacy_personal_addresses": 0,
+  "address_like_false_positive": "public world/core package version in historical STATUS",
+  "scope_correction": "Administrative report final paragraph calls product failures inherited/load-induced; those causes remain unproved, as controller-round3-scope-correction.json says. This administrative PASS cannot accept product."
+}
