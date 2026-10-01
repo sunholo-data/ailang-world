@@ -96,7 +96,7 @@
 === RUN   TestMCPBatchConformance/whole_host_failure
     mcp_conformance_test.go:191: whole failure runs=1 wire=200 event: message
         data: [{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}]
-        
+
 === RUN   TestMCPBatchConformance/notifications_and_bad_arrays
 === RUN   TestMCPBatchConformance/newer_versions_refuse
 --- FAIL: TestMCPBatchConformance (0.01s)

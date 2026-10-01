@@ -55,7 +55,7 @@ RC 1
 === RUN   TestMCPBatchConformance/whole_host_failure
     mcp_conformance_test.go:191: whole failure runs=1 wire=200 event: message
         data: [{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}]
-        
+
 === RUN   TestMCPBatchConformance/notifications_and_bad_arrays
 === RUN   TestMCPBatchConformance/newer_versions_refuse
 --- FAIL: TestMCPBatchConformance (0.01s)
@@ -125,22 +125,22 @@ RC 1
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/direct
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback timed out"}}
 --- FAIL: TestMCPAbsentPrecheckSnapshotFailure (0.01s)
     --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/direct (0.00s)
@@ -170,7 +170,7 @@ RC 1
 === RUN   TestMCPBatchAccounting/removed_between_items
     mcp_conformance_test.go:156: stale batch invocation runs=2 reads=1 wire=event: message
         data: [{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}]
-        
+
 --- FAIL: TestMCPBatchAccounting (0.01s)
     --- FAIL: TestMCPBatchAccounting/repeated_rpc_id (0.00s)
     --- FAIL: TestMCPBatchAccounting/removed_between_items (0.00s)
@@ -203,7 +203,7 @@ RC 1
 === RUN   TestMCPInvokeListedThenRevoked
     mcp_test.go:167: revoked dispatch=1 reads=1 wire=event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
 --- FAIL: TestMCPInvokeListedThenRevoked (0.00s)
 === RUN   TestMCPInvokeCanceledBeforeMint
 --- PASS: TestMCPInvokeCanceledBeforeMint (0.00s)
@@ -235,7 +235,7 @@ RC 0
 === RUN   TestMCPBatchAccounting/removed_between_items
     mcp_conformance_test.go:156: stale batch invocation runs=2 reads=1 wire=event: message
         data: [{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}]
-        
+
 --- FAIL: TestMCPBatchAccounting (0.01s)
     --- FAIL: TestMCPBatchAccounting/removed_between_items (0.01s)
 FAIL
@@ -251,22 +251,22 @@ RC 1
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/direct
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback timed out"}}
 --- FAIL: TestMCPAbsentPrecheckSnapshotFailure (0.01s)
     --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/direct (0.00s)
@@ -296,7 +296,7 @@ RC 1
 === RUN   TestMCPBatchAccounting/removed_between_items
     mcp_conformance_test.go:156: stale batch invocation runs=2 reads=1 wire=event: message
         data: [{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}]
-        
+
 --- FAIL: TestMCPBatchAccounting (0.02s)
     --- FAIL: TestMCPBatchAccounting/repeated_rpc_id (0.01s)
     --- FAIL: TestMCPBatchAccounting/removed_between_items (0.01s)
@@ -329,7 +329,7 @@ RC 1
 === RUN   TestMCPInvokeListedThenRevoked
     mcp_test.go:167: revoked dispatch=1 reads=1 wire=event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
 --- FAIL: TestMCPInvokeListedThenRevoked (0.00s)
 === RUN   TestMCPInvokeCanceledBeforeMint
 --- PASS: TestMCPInvokeCanceledBeforeMint (0.00s)
@@ -559,7 +559,7 @@ RC 0
 === RUN   TestMCPBatchConformance/whole_host_failure
     mcp_conformance_test.go:193: whole failure runs=2 wire=200 event: message
         data: [{"jsonrpc":"2.0","id":7,"result":{}}]
-        
+
 --- FAIL: TestMCPBatchConformance (0.01s)
     --- FAIL: TestMCPBatchConformance/whole_host_failure (0.01s)
 FAIL
@@ -608,7 +608,7 @@ RC 1
 === RUN   TestMCPBatchConformance/whole_host_failure
     mcp_conformance_test.go:193: whole failure runs=2 wire=200 event: message
         data: [{"jsonrpc":"2.0","id":7,"result":{}}]
-        
+
 === RUN   TestMCPBatchConformance/notifications_and_bad_arrays
 === RUN   TestMCPBatchConformance/newer_versions_refuse
 --- FAIL: TestMCPBatchConformance (0.01s)

@@ -248,10 +248,10 @@ ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: dat
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":1,"result":{"tools":[]}}
-        
+
     mcp_cross_test.go:166: payload1 response=200 event: message
         data: {"jsonrpc":"2.0","id":2,"error":{"code":-32602,"message":"unknown tool \"tools_decho\""}}
-        
+
 --- FAIL: TestMCPQuickstartPayloadsVerbatim (0.83s)
 === RUN   TestMCPToolsListMatchesAgentCard
     mcp_cross_test.go:179: sessionalpha MCP=[] expected=tools_decho

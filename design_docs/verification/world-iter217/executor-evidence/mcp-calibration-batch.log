@@ -7,7 +7,7 @@ RC 0
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/list/direct
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"tools":[]}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 --- FAIL: TestMCPAbsentPrecheckSnapshotFailure (0.01s)
     --- FAIL: TestMCPAbsentPrecheckSnapshotFailure/list/direct (0.00s)
@@ -82,22 +82,22 @@ RC 1
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/list/direct
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"tools":[]}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/list/real_reader
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"tools":[]}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/list/same_text
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"tools":[]}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/list/deadline
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"tools":[]}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback timed out"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/direct
     mcp_absence_test.go:81: failure attribution runs=0 mint=0 reads=2 sink=
@@ -338,7 +338,7 @@ RC 0
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/list/same_text
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"tools":[]}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 --- FAIL: TestMCPAbsentPrecheckSnapshotFailure (0.00s)
     --- FAIL: TestMCPAbsentPrecheckSnapshotFailure/list/same_text (0.00s)
@@ -410,7 +410,7 @@ RC 1
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/list/same_text
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"tools":[]}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/list/deadline
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/direct

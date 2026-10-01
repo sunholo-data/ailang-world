@@ -111,7 +111,7 @@ RC 1
 === RUN   TestMCPBatchConformance/whole_host_failure
     mcp_conformance_test.go:191: whole failure runs=1 wire=200 event: message
         data: [{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}]
-        
+
 === RUN   TestMCPBatchConformance/notifications_and_bad_arrays
 === RUN   TestMCPBatchConformance/newer_versions_refuse
 --- FAIL: TestMCPBatchConformance (0.01s)
@@ -369,22 +369,22 @@ RC 0
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/direct
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback timed out"}}
 --- FAIL: TestMCPAbsentPrecheckSnapshotFailure (0.01s)
     --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/direct (0.00s)
@@ -414,7 +414,7 @@ RC 0
 === RUN   TestMCPBatchAccounting/removed_between_items
     mcp_conformance_test.go:156: stale batch invocation runs=2 reads=1 wire=event: message
         data: [{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}]
-        
+
 --- FAIL: TestMCPBatchAccounting (0.01s)
     --- FAIL: TestMCPBatchAccounting/repeated_rpc_id (0.01s)
     --- FAIL: TestMCPBatchAccounting/removed_between_items (0.00s)
@@ -447,7 +447,7 @@ RC 0
 === RUN   TestMCPInvokeListedThenRevoked
     mcp_test.go:167: revoked dispatch=1 reads=1 wire=event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
 --- FAIL: TestMCPInvokeListedThenRevoked (0.00s)
 === RUN   TestMCPInvokeCanceledBeforeMint
 --- PASS: TestMCPInvokeCanceledBeforeMint (0.00s)
@@ -679,22 +679,22 @@ RC 0
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/direct
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
 === RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline
     mcp_absence_test.go:78: whole host envelope=200 event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
          want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback timed out"}}
 --- FAIL: TestMCPAbsentPrecheckSnapshotFailure (0.01s)
     --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/direct (0.00s)
@@ -724,7 +724,7 @@ RC 0
 === RUN   TestMCPBatchAccounting/removed_between_items
     mcp_conformance_test.go:156: stale batch invocation runs=2 reads=1 wire=event: message
         data: [{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}]
-        
+
 --- FAIL: TestMCPBatchAccounting (0.01s)
     --- FAIL: TestMCPBatchAccounting/repeated_rpc_id (0.01s)
     --- FAIL: TestMCPBatchAccounting/removed_between_items (0.01s)
@@ -757,7 +757,7 @@ RC 0
 === RUN   TestMCPInvokeListedThenRevoked
     mcp_test.go:167: revoked dispatch=1 reads=1 wire=event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
 --- FAIL: TestMCPInvokeListedThenRevoked (0.00s)
 === RUN   TestMCPInvokeCanceledBeforeMint
 --- PASS: TestMCPInvokeCanceledBeforeMint (0.00s)
@@ -1594,7 +1594,7 @@ RC 0
 === RUN   TestMCPBatchConformance/whole_host_failure
     mcp_conformance_test.go:193: whole failure runs=2 wire=200 event: message
         data: [{"jsonrpc":"2.0","id":7,"result":{}}]
-        
+
 === RUN   TestMCPBatchConformance/notifications_and_bad_arrays
 === RUN   TestMCPBatchConformance/newer_versions_refuse
 --- FAIL: TestMCPBatchConformance (0.01s)
@@ -2036,10 +2036,10 @@ ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: dat
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":1,"result":{"tools":[]}}
-        
+
     mcp_cross_test.go:166: payload1 response=200 event: message
         data: {"jsonrpc":"2.0","id":2,"error":{"code":-32602,"message":"unknown tool \"tools_decho\""}}
-        
+
 --- FAIL: TestMCPQuickstartPayloadsVerbatim (0.83s)
 === RUN   TestMCPToolsListMatchesAgentCard
     mcp_cross_test.go:179: sessionalpha MCP=[] expected=tools_decho
@@ -2702,17 +2702,17 @@ ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: dat
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":1,"result":{"tools":[{"name":"exit","inputSchema":{"type":"object"}},{"name":"tools_decho","description":"E2E echo","inputSchema":{"type":"object"},"outputSchema":{"type":"object"}}]}}
-        
+
     mcp_cross_test.go:168: VERBATIM payload={"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"hello"}}}
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"hello\"}}"}],"structuredContent":{"echo":{"message":"hello"}}}}
-        
+
     mcp_cross_test.go:168: VERBATIM payload=[{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"first"}}},{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"second"}}}]
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: [{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"first\"}}"}],"structuredContent":{"echo":{"message":"first"}}}},{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"second\"}}"}],"structuredContent":{"echo":{"message":"second"}}}}]
-        
+
     mcp_cross_test.go:175: journal entry=1 hash=sha256:c26b1457a9101781c0b94bcdd1e6007ffc44cdb536122a12cd5e083f167dfea2 transition=sha256:6190b07d090280064f4ceb5e7de56678a02601e156969aa83a88852afae83a4d
     mcp_cross_test.go:175: journal entry=2 hash=sha256:3cf2f2857725590b7c24178475c2a592190fb89ba64fde63c74678a7c51e8cdc transition=sha256:20722fc7ef07056736ab16fe54eab64780b38bcfa6e0915ff3f4bdccbd5d7d2d
     mcp_cross_test.go:175: journal entry=3 hash=sha256:45d2f8f9373ab9a17ea9ed719351e88bbebe9c69bb5b9cbccbec7c90729facf0 transition=sha256:14706c86e554e5d0e43ddbb462e0b5a37e171a4d9e5ac17cb76c1029033c7996
@@ -3391,17 +3391,17 @@ ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: dat
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":1,"result":{"tools":[{"name":"tools_decho","description":"E2E echo","inputSchema":{"type":"object"},"outputSchema":{"type":"object"}}]}}
-        
+
     mcp_cross_test.go:168: VERBATIM payload={"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"hello"}}}
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"hello\"}}"}],"structuredContent":{"echo":{"message":"hello"}}}}
-        
+
     mcp_cross_test.go:168: VERBATIM payload=[{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"first"}}},{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"second"}}}]
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: [{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"first\"}}"}],"structuredContent":{"echo":{"message":"first"}}}},{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"second\"}}"}],"structuredContent":{"echo":{"message":"second"}}}}]
-        
+
     mcp_cross_test.go:175: journal entry=1 hash=sha256:bff4b62e2049f2023024d3c468c17cc2dc3f9ea072564c98c25623a6d6364171 transition=sha256:b1bdb372bec809169005b3b36bd05bc2360feab60ec6bcc9c5eb5f99b3cec995
     mcp_cross_test.go:175: journal entry=2 hash=sha256:e167e2dddb33643063e3ecf47c1653be3640643591b64fc8f877d402947c0281 transition=sha256:09aab91c61c341edc99392abbad9cf7013fa24af2da31acb6b16aee38ede0c1d
     mcp_cross_test.go:175: journal entry=3 hash=sha256:58972c975cb823b8db19309fad1154d41eb874353c9db00eb4ec3a675a21fa70 transition=sha256:3e934a16987d811a749d9670c3b6cfabfa91514371f4a5ab8e0af2cabadc43a3
@@ -4082,17 +4082,17 @@ ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: dat
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":1,"result":{"tools":[{"name":"tools_decho","description":"E2E echo","inputSchema":{"type":"object"},"outputSchema":{"type":"object"}}]}}
-        
+
     mcp_cross_test.go:168: VERBATIM payload={"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"hello"}}}
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"hello\"}}"}],"structuredContent":{"echo":{"message":"hello"}}}}
-        
+
     mcp_cross_test.go:168: VERBATIM payload=[{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"first"}}},{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"second"}}}]
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: [{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"first\"}}"}],"structuredContent":{"echo":{"message":"first"}}}},{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"second\"}}"}],"structuredContent":{"echo":{"message":"second"}}}}]
-        
+
     mcp_cross_test.go:175: journal entry=1 hash=sha256:ec457f75991fee8027847b7bdc91426edfa20776120cae6bbff08fdf095fc591 transition=sha256:00a6371d882937bcc737fcedc1cb69858d9448f0af632fca3d680657fcb44cd5
     mcp_cross_test.go:175: journal entry=2 hash=sha256:c0de9e01236d5500e117289902ed15fb7838abc0194271d2b37f6db5c8e739d8 transition=sha256:9035801f2b7962fd6f71af6b4b4f50a7b9a878492b9bcc97f225fc9a791a2be5
     mcp_cross_test.go:175: journal entry=3 hash=sha256:8a222f939c91d8cbb2ab2a6f483fb64ba152ee35c50be4ba6caa79db0efbd91a transition=sha256:27ec7c0a0510eca0d0e358f3eb05c21d859dcdfb915275323445299ceb6cf137

@@ -1,7 +1,7 @@
 === RUN   TestMCPInvokeListedThenRevoked
     mcp_test.go:167: revoked dispatch=1 reads=1 wire=event: message
         data: {"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}
-        
+
 --- FAIL: TestMCPInvokeListedThenRevoked (0.00s)
 FAIL
 FAIL	github.com/sunholo-data/ailang-world/host/projection	0.192s

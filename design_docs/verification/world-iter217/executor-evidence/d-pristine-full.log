@@ -521,17 +521,17 @@ ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: dat
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":1,"result":{"tools":[{"name":"tools_decho","description":"E2E echo","inputSchema":{"type":"object"},"outputSchema":{"type":"object"}}]}}
-        
+
     mcp_cross_test.go:159: VERBATIM payload={"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"hello"}}}
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"hello\"}}"}],"structuredContent":{"echo":{"message":"hello"}}}}
-        
+
     mcp_cross_test.go:159: VERBATIM payload=[{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"first"}}},{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"second"}}}]
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: [{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"first\"}}"}],"structuredContent":{"echo":{"message":"first"}}}},{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"second\"}}"}],"structuredContent":{"echo":{"message":"second"}}}}]
-        
+
     mcp_cross_test.go:166: journal entry=1 hash=sha256:4b72f0560ef64a338875fc1013e79393b283fb6e729b631c0c933c25e9172adb transition=sha256:414d59152d6ff9a5e04d4f2cf2be51381aeccdcfdad9822c18540d2385a5d33d
     mcp_cross_test.go:166: journal entry=2 hash=sha256:3604be80d8bcb27a5d0cf128c1ce6becde53837ee015741e32d8e736c6dff238 transition=sha256:28b90e0ece6086196275a9ff3f5e19c3f9be40f0ffb7be9f8b8149af4ab2cb20
     mcp_cross_test.go:166: journal entry=3 hash=sha256:53daaec98005e572e1e0fee39c71a4bb8c551c0d47537c8c9fde7e16be42d26b transition=sha256:3fa4fa936ceb87ba04ad965b27de3faaf187b89673df884172366b2958b9cd6a

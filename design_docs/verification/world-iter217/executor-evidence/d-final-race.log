@@ -98,17 +98,17 @@ ok  	github.com/sunholo-data/ailang-world/host/projection	2.485s
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":1,"result":{"tools":[{"name":"tools_decho","description":"E2E echo","inputSchema":{"type":"object"},"outputSchema":{"type":"object"}}]}}
-        
+
     mcp_cross_test.go:168: VERBATIM payload={"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"hello"}}}
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"hello\"}}"}],"structuredContent":{"echo":{"message":"hello"}}}}
-        
+
     mcp_cross_test.go:168: VERBATIM payload=[{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"first"}}},{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"second"}}}]
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: [{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"first\"}}"}],"structuredContent":{"echo":{"message":"first"}}}},{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"second\"}}"}],"structuredContent":{"echo":{"message":"second"}}}}]
-        
+
     mcp_cross_test.go:175: journal entry=1 hash=sha256:c4935d14f5c0da25a3dda928737c1636381d0a6548ad2b1d4a1fe232d73106a3 transition=sha256:320a8e4f1733395ffba6998682a6c3c8ffd71fa01fcdec5e2d59a18376686046
     mcp_cross_test.go:175: journal entry=2 hash=sha256:41d0e4571b81c671e43bd8f9ac3c2d346eb559511ae50cfb720d408c19eb05e6 transition=sha256:0f0b07b791a8c1d90e8a21abeb1ff98bd75e3b2fe7b72b23b22748fccc1ddcc0
     mcp_cross_test.go:175: journal entry=3 hash=sha256:dc6d1b00940b655e2f5ae37997d5b83d2bc26cf45bd9d6d7f98d86d91b08ff60 transition=sha256:b9f33d03301ca716cadb85183326a59a9579e4dd7edf90bd7c8b18d2c5775175

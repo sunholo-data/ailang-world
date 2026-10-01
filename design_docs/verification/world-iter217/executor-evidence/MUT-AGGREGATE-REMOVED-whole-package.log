@@ -246,17 +246,17 @@ ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: dat
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":1,"result":{"tools":[{"name":"tools_decho","description":"E2E echo","inputSchema":{"type":"object"},"outputSchema":{"type":"object"}}]}}
-        
+
     mcp_cross_test.go:168: VERBATIM payload={"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"hello"}}}
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"hello\"}}"}],"structuredContent":{"echo":{"message":"hello"}}}}
-        
+
     mcp_cross_test.go:168: VERBATIM payload=[{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"first"}}},{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"second"}}}]
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: [{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"first\"}}"}],"structuredContent":{"echo":{"message":"first"}}}},{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"second\"}}"}],"structuredContent":{"echo":{"message":"second"}}}}]
-        
+
     mcp_cross_test.go:175: journal entry=1 hash=sha256:bff4b62e2049f2023024d3c468c17cc2dc3f9ea072564c98c25623a6d6364171 transition=sha256:b1bdb372bec809169005b3b36bd05bc2360feab60ec6bcc9c5eb5f99b3cec995
     mcp_cross_test.go:175: journal entry=2 hash=sha256:e167e2dddb33643063e3ecf47c1653be3640643591b64fc8f877d402947c0281 transition=sha256:09aab91c61c341edc99392abbad9cf7013fa24af2da31acb6b16aee38ede0c1d
     mcp_cross_test.go:175: journal entry=3 hash=sha256:58972c975cb823b8db19309fad1154d41eb874353c9db00eb4ec3a675a21fa70 transition=sha256:3e934a16987d811a749d9670c3b6cfabfa91514371f4a5ab8e0af2cabadc43a3

@@ -246,17 +246,17 @@ ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: dat
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":1,"result":{"tools":[{"name":"tools_decho","description":"E2E echo","inputSchema":{"type":"object"},"outputSchema":{"type":"object"}}]}}
-        
+
     mcp_cross_test.go:168: VERBATIM payload={"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"hello"}}}
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: {"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"hello\"}}"}],"structuredContent":{"echo":{"message":"hello"}}}}
-        
+
     mcp_cross_test.go:168: VERBATIM payload=[{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"first"}}},{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"second"}}}]
         HTTP 200 Content-Type:text/event-stream
         event: message
         data: [{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"first\"}}"}],"structuredContent":{"echo":{"message":"first"}}}},{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"{\"echo\":{\"message\":\"second\"}}"}],"structuredContent":{"echo":{"message":"second"}}}}]
-        
+
     mcp_cross_test.go:175: journal entry=1 hash=sha256:ec457f75991fee8027847b7bdc91426edfa20776120cae6bbff08fdf095fc591 transition=sha256:00a6371d882937bcc737fcedc1cb69858d9448f0af632fca3d680657fcb44cd5
     mcp_cross_test.go:175: journal entry=2 hash=sha256:c0de9e01236d5500e117289902ed15fb7838abc0194271d2b37f6db5c8e739d8 transition=sha256:9035801f2b7962fd6f71af6b4b4f50a7b9a878492b9bcc97f225fc9a791a2be5
     mcp_cross_test.go:175: journal entry=3 hash=sha256:8a222f939c91d8cbb2ab2a6f483fb64ba152ee35c50be4ba6caa79db0efbd91a transition=sha256:27ec7c0a0510eca0d0e358f3eb05c21d859dcdfb915275323445299ceb6cf137
