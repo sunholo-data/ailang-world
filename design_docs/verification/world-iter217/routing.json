@@ -10,7 +10,8 @@
     "resolved": "recipe codex:gpt-6.1-sol over-ration-reroute:ollama",
     "actual": "Agent gpt-6.1-sol",
     "transport_substitution": "explicit operator Agent request; D-WORLD-48",
-    "tokens": null
+    "tokens": null,
+    "runs": 2
   },
   "planner": {
     "resolved": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin",
@@ -30,8 +31,9 @@
     "native_spawn_error": "Unknown model sonnet",
     "fallback": "Agent gpt-6-astra",
     "independence": "same-vendor different-model fresh context",
-    "historical216_admin": "PASS92 banking only; current design/sprint verdict pending",
-    "tokens": null
+    "historical216_admin": "PASS92 historical banking only",
+    "tokens": null,
+    "design_quorum": "R1PASS; R2 narrow REJECT immutable syntax + exact refinement ACCEPTED"
   },
   "quota_blocked": {
     "ollama": "10.6pp/22h42>10pp/day",
@@ -43,5 +45,12 @@
     "inbox_1790879446012_40d2231f",
     "inbox_1790879446686_70244847",
     "inbox_1790879447354_98fc1f6f"
-  ]
+  ],
+  "quorum_reviewer": {
+    "actual": "Agent gpt-6-sol",
+    "tokens": null,
+    "independence": "same-vendor different-model",
+    "rounds": "R1REJECT typedabsence; R2PASS"
+  },
+  "metered_total_usd": 0.051604
 }

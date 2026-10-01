@@ -1,0 +1,31 @@
+{
+  "reviewed_snapshot": "077027ed1d74f62151947cacacb62e2a689fbead",
+  "reviewed_design_sha256": "8a596295fc540afd4d568896f0d1a4aeef248182037bc695bc50c25904a31086",
+  "seats": [
+    {
+      "model": "gemini-3-1-pro",
+      "verdict": "reject",
+      "objection": "invalid address-of-type syntax",
+      "transport": "CLI"
+    },
+    {
+      "model": "gpt-6-astra",
+      "verdict": "reject",
+      "objection": "same narrow syntax defect",
+      "refinement": "accepted independently",
+      "transport": "Agent"
+    },
+    {
+      "model": "gpt-6-sol",
+      "verdict": "pass",
+      "transport": "Agent"
+    }
+  ],
+  "raw_combined_verdict": "blocked",
+  "disposition": "PROCEED via Gate2 narrow-refinement carve-out",
+  "direction_blockers": 0,
+  "fix": "var target RegistryHeadAbsentError; !hasHead && errors.As(rerr, &target)",
+  "controller_measurement": "invalidrc1 fixedrc0 wrappedtrue genuinefalse; rawsource banked",
+  "author_vendor_fallback": "FLAGGED D-WORLD-48 samevendor differentmodels native seats; Anthropic unavailable quota",
+  "product_acceptance": "NOT RUN"
+}
