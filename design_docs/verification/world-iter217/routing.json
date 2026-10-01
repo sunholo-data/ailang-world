@@ -17,13 +17,13 @@
     "resolved": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin",
     "derived": "codex:gpt-6.1-sol declared:planner-lane-default-pin",
     "actual": "Agent gpt-6.1-sol",
-    "stage": "read-only readiness; implementation NOT AUTHORIZED until quorum",
+    "stage": "fullplan completed daad0b3; 5current milestones14AC43mutants1750LOC2.8days; no prototype",
     "tokens": null
   },
   "executor": {
     "resolved": "recipe codex:gpt-6.1-sol declared:provider-pin",
     "actual": "Agent gpt-6.1-sol",
-    "stage": "read-only readiness; no implementation",
+    "stage": "fullimplementation authorized afterfullplanvalidation; stagecommits required",
     "tokens": null
   },
   "evaluator": {
@@ -52,5 +52,6 @@
     "independence": "same-vendor different-model",
     "rounds": "R1REJECT typedabsence; R2PASS"
   },
-  "metered_total_usd": 0.051604
+  "metered_total_usd": 0.051604,
+  "controller_deviation": "Initially imposed nonexistent1daylimit, corrected beforeimplementation tofull2.8day scope within3\u20134day skillbound; no partialcompletionclaim"
 }
