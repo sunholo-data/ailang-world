@@ -1,0 +1,785 @@
+{
+  "sprint_id": "W-MCP-DISPATCH-PROJECTION-108-FULL",
+  "status": "not_started",
+  "created": "2026-10-01T19:03:27.751699+00:00",
+  "design_doc": "design_docs/planned/w-mcp-dispatch-projection.md",
+  "design_sha256": "74c813d0618179e07a3aec423008fc52ce5c5606a75465de45df7140c1a95580",
+  "design_snapshot_commit": "b5be8bf2db7133f585d82b00755ed56c748e63a2",
+  "sprint_plan": "design_docs/verification/world-iter217/row108-absence-tranche-sprint-plan.md",
+  "github_issues": [],
+  "issue_scope_note": "Row108 is charter queue item, not GitHub issue108; upstream ailang#885 is delivered and not auto-closed here; no issue/message discovery per controller.",
+  "authorization": "Controller end-to-end planning clearance after Gate2 narrow refinement; ALL FIVE milestones CURRENT executor scope, sequential staged commits.",
+  "row108_complete": false,
+  "clause6_complete": false,
+  "velocity": {
+    "target_loc_per_day": 625,
+    "estimated_total_loc": 1750,
+    "estimated_days": 2.8,
+    "contingency_percent": 25,
+    "basis": "Comparable host/cmd product landings218/422/330 addedLOC; no measuredworkhourvelocity. StageA500LOC/day, full625LOC/day assumes laterconformancefixture reuse; bufferedplanningassumptions."
+  },
+  "registry_reuse": [
+    {
+      "milestone": "M108A1_TYPED_ABSENCE",
+      "package": null,
+      "action": "none",
+      "search_terms": [
+        "registry",
+        "transition",
+        "projection",
+        "mcp",
+        "schema",
+        "json"
+      ],
+      "inspected": [
+        "sunholo/email",
+        "sunholo/registry_validator",
+        "world/core",
+        "sunholo/http_helpers"
+      ],
+      "reason": "Existing Go host Reader/context/HTTP error plumbing; inspected AILANG packages provide domain queries, package manifest validation, pure kernel or HTTP clients, not these host interfaces."
+    },
+    {
+      "milestone": "M108A2_CLASSIFIED_PROJECTION",
+      "package": null,
+      "action": "none",
+      "search_terms": [
+        "registry",
+        "transition",
+        "projection",
+        "mcp",
+        "schema",
+        "json"
+      ],
+      "inspected": [
+        "sunholo/email",
+        "sunholo/registry_validator",
+        "world/core",
+        "sunholo/http_helpers"
+      ],
+      "reason": "Existing Go host Reader/context/HTTP error plumbing; inspected AILANG packages provide domain queries, package manifest validation, pure kernel or HTTP clients, not these host interfaces."
+    },
+    {
+      "milestone": "M108B_DEP_NAMES",
+      "package": null,
+      "action": "none",
+      "search_terms": [
+        "mcp",
+        "registry",
+        "schema",
+        "projection",
+        "transition",
+        "json"
+      ],
+      "inspected": [
+        "sunholo/email",
+        "sunholo/registry_validator",
+        "world/core",
+        "sunholo/http_helpers"
+      ],
+      "reason": "Go host callbacks/representation or conformance artifacts; released Go-module mcphttp/hostcall seam reused, no fitting AILANG registry package."
+    },
+    {
+      "milestone": "M108C_ADAPTERS",
+      "package": null,
+      "action": "none",
+      "search_terms": [
+        "mcp",
+        "registry",
+        "schema",
+        "projection",
+        "transition",
+        "json"
+      ],
+      "inspected": [
+        "sunholo/email",
+        "sunholo/registry_validator",
+        "world/core",
+        "sunholo/http_helpers"
+      ],
+      "reason": "Go host callbacks/representation or conformance artifacts; released Go-module mcphttp/hostcall seam reused, no fitting AILANG registry package."
+    },
+    {
+      "milestone": "M108D_CONFORMANCE",
+      "package": null,
+      "action": "none",
+      "search_terms": [
+        "mcp",
+        "registry",
+        "schema",
+        "projection",
+        "transition",
+        "json"
+      ],
+      "inspected": [
+        "sunholo/email",
+        "sunholo/registry_validator",
+        "world/core",
+        "sunholo/http_helpers"
+      ],
+      "reason": "Go host callbacks/representation or conformance artifacts; released Go-module mcphttp/hostcall seam reused, no fitting AILANG registry package."
+    }
+  ],
+  "features": [
+    {
+      "id": "M108A1_TYPED_ABSENCE",
+      "description": "Value RegistryHeadAbsentError emitted only for live-context confirmed missing head; actual Reader/NewRequest classification and cancellation examples",
+      "estimated_loc": 160,
+      "dependencies": [],
+      "acceptance_criteria": [
+        "Value receiver/emission errors.As matches direct actual StoreReader and NewRequest %w wrapped absence, exact message unchanged",
+        "Post-GetRegistryHead cancellation/expiry returns context error and not typed absence; exactly one head read, zero object reads",
+        "Store/object/hash/codec/same-text errors are not absence; existing snapshot controls and executable ExampleRegistryHeadAbsentError pass",
+        "MUT-ABSENCE-UNTYPED, MUT-ABSENCE-WRAP-LOST, MUT-ABSENCE-POSTLOOKUP-CTX-REMOVED fail named assertions applied and pass reverted",
+        "Separate M1 stage commit plus controller first-party production MUT-ABSENCE-POSTLOOKUP-CTX-REMOVED RED/revert GREEN, stderr classifier ctx true/typedabsence false"
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M108A2_CLASSIFIED_PROJECTION",
+      "description": "Typed-only absent-precheck handling in shared projection helper with full A2A card/admission race controls and frozen wire",
+      "estimated_loc": 240,
+      "dependencies": [
+        "M108A1_TYPED_ABSENCE"
+      ],
+      "acceptance_criteria": [
+        "Only !hasHead && errors.As(rerr,&target) yields empty success; successful snapshot wins; failed precheck reaches zero Reader calls",
+        "Absent precheck plus genuine direct/real StoreReader object error yields existing card503 and A2A JSON-RPC200/-32603 with echoedid; error sink reached once; zero Dispatch/capsule/receipt/entry",
+        "Trueabsence bothreads explicit empty200, absent-to-success populated/successful invocation, present-to-typedabsence unavailable and same-message genuine failure propagates",
+        "All remaining current mutants killed by named assertion with pristine controls; frozen A2A route/source/wire tests and Go API example pass",
+        "Formatting/vet, exact sequential verify_ail then verify_go and complete required CI green; existing baseline red is not waived",
+        "Separate M2 stage commit plus controller first-party production MUT-ABSENT-PRECHECK-CATCHALL RED/revert GREEN before stage acceptance"
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M108B_DEP_NAMES",
+      "description": "Fetchable released seam pin, reversible names and precision-safe schema conversion",
+      "estimated_loc": 300,
+      "dependencies": [
+        "M108A2_CLASSIFIED_PROJECTION"
+      ],
+      "acceptance_criteria": [
+        "Proxy/sumdb200 beforebump, modulev0.47.2 checksum intact, frozenbinaryv0.41.0; narrowness positives/forbiddenfacade controls",
+        "AC-MAP-108 and AC-SCHEMA-108 exact corpus/canonicaldecoding/lengthrefusal/precision assertions and Go example pass",
+        "StageB scoped ledger mutants killed; separatecommit; controller production MUT-MAP-IDENTITY RED/revertGREEN; mounted recovery/finalclosure carriedtoC/D"
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M108C_ADAPTERS",
+      "description": "Existing bearer/session/registry/coordinator adapters, sharedRunner/aggregatectx and actual POST /mcp mount",
+      "estimated_loc": 400,
+      "dependencies": [
+        "M108B_DEP_NAMES"
+      ],
+      "acceptance_criteria": [
+        "AC-CARRIER-108, AC-ADMIT-108, AC-ABSENCE-108, AC-INVOKE-108 mounted callbacks and cancellation/race/counter controls pass",
+        "Positive injectedscalars, aggregate20s, Runner20s/cap8, credential/read/invokebounds; fresh itemadmission/taskmint before only coordinatorDispatch",
+        "Scoped A2A source gate preserved, MCP upstream import/NewHandler/no-codec/contextonly AST gates plus exact POST route and dependency identities",
+        "Scoped ledger mutants killed; separateCcommit; controller production MUT-INVOKE-NO-READMIT listedthenrevoked DispatchRED/revertGREEN"
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M108D_CONFORMANCE",
+      "description": "Full batch/item/clock/wire/cross-surface/fixture conformance, generated golden, runnable usage, final row108 acceptance",
+      "estimated_loc": 650,
+      "dependencies": [
+        "M108C_ADAPTERS"
+      ],
+      "acceptance_criteria": [
+        "ALL14 currentACs complete including batch non-atomic partialcommits and unique repeatedRPCidtask/journal accounting",
+        "REAL production single/batch20s aggregate legs with stageentry/write/cancel/teardown/recovery counters pass; remaining scoped mutants killed",
+        "Upstream-generated SSEgolden, ONEdaemon per-sessioncross-surface equality, bothnonempty ambientabsence controls, executed completequickstart payloadconstruction and retry/journalrecovery docs",
+        "SeparateDcommit; controller production MUT-TASK-PER-POST distincttask/receiptRED/revertGREEN; exactfinalclosure, exactsequentialAIL/Go, completeCI and evaluator/controller acceptance; no baselinewaiver"
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "baseline": {
+    "product_base": "54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e",
+    "exact_sequential_ail": {
+      "rc": 0,
+      "seconds": 8.67,
+      "artifact": "baseline-sequential-verify-ail.json"
+    },
+    "exact_sequential_go": {
+      "rc": 1,
+      "seconds": 107.89,
+      "failure": "TestDispatchDurableDeadline/uncertain_Commit AppendIntent context deadline exceeded before expected R16",
+      "artifact": "baseline-sequential-verify-go.json"
+    },
+    "waiver": false,
+    "final_full_green_required": true
+  },
+  "toolchain": {
+    "binary": "/Users/voightkampff/.pinned-ailang/ailang",
+    "binary_version": "v0.41.0",
+    "future_go_module_version": "v0.47.2",
+    "go": "1.26.6",
+    "z3": "4.16.0"
+  },
+  "routing": {
+    "recipe": "codex:gpt-6.1-sol",
+    "resolution": "declared:planner-lane-default-pin",
+    "transport": "native Agent equivalent",
+    "substitution_flag": true
+  },
+  "product_prototype": "NOT RUN",
+  "product_acceptance": "NOT RUN",
+  "background_terminals": [],
+  "artifact_validation": {
+    "stock_validator": "Refused tracked path: hardcodes ignored .ailang/state/sprints from sprint ID; no duplicate/tool edit",
+    "equivalent_check": "PASS fullscope:5features/reuse/dependencies/sum1750/duration2.8/nullprogress/14AC/allmutants/stage-reproductions/no-waiver"
+  },
+  "stages": [
+    {
+      "id": "M108B_DEP_NAMES",
+      "estimated_days": 0.6,
+      "dependencies": [
+        "M108A2_CLASSIFIED_PROJECTION"
+      ],
+      "scope": "Fetchable v0.47.2 seam pin; reversible names/precision-safe schema, admission controls; final actual mounted daemon closure proof carried to C/D",
+      "acceptance_ids": [
+        "AC-DEP-108",
+        "AC-MAP-108",
+        "AC-SCHEMA-108"
+      ],
+      "registry_reuse": {
+        "action": "none",
+        "reason": "Host Go string/schema conversions and released Go-module reuse, not an AILANG registry capability."
+      }
+    },
+    {
+      "id": "M108C_ADAPTERS",
+      "estimated_days": 0.7,
+      "dependencies": [
+        "M108B_DEP_NAMES"
+      ],
+      "scope": "Shared Runner/context-only aggregate, resolver/tools/invoker and fresh per-item coordinator admission, scalar/mount/source gates",
+      "acceptance_ids": [
+        "AC-CARRIER-108",
+        "AC-ADMIT-108",
+        "AC-ABSENCE-108",
+        "AC-INVOKE-108",
+        "AC-BOUNDS-108",
+        "AC-WIRE-108",
+        "AC-ROUTE-108"
+      ],
+      "registry_reuse": {
+        "action": "none",
+        "reason": "Go HTTP/session/coordinator callback boundary; existing host authority reused."
+      }
+    },
+    {
+      "id": "M108D_CONFORMANCE",
+      "estimated_days": 0.7,
+      "dependencies": [
+        "M108C_ADAPTERS"
+      ],
+      "scope": "Full conformance/batch/accounting/timing/mutations/cross-surface/fixtures/runbook, final dependency/full gates",
+      "acceptance_ids": [
+        "AC-DEP-108",
+        "AC-MAP-108",
+        "AC-ABSENCE-108",
+        "AC-INVOKE-108",
+        "AC-ITEM-108",
+        "AC-BATCH-108",
+        "AC-BOUNDS-108",
+        "AC-WIRE-108",
+        "AC-ROUTE-108",
+        "AC-CROSS-108",
+        "AC-FIXTURE-108"
+      ],
+      "registry_reuse": {
+        "action": "none",
+        "reason": "Test/fixture/usage artifacts for existing Go boundary, no package to install."
+      }
+    }
+  ],
+  "acceptance_ids": [
+    "AC-DEP-108",
+    "AC-MAP-108",
+    "AC-SCHEMA-108",
+    "AC-CARRIER-108",
+    "AC-ADMIT-108",
+    "AC-ABSENCE-108",
+    "AC-INVOKE-108",
+    "AC-ITEM-108",
+    "AC-BATCH-108",
+    "AC-BOUNDS-108",
+    "AC-WIRE-108",
+    "AC-ROUTE-108",
+    "AC-CROSS-108",
+    "AC-FIXTURE-108"
+  ],
+  "acceptance_ledger": [
+    {
+      "acceptance_id": "AC-DEP-108",
+      "stage": "M108C_ADAPTERS",
+      "killer_tests_observables": "TestDaemonDependencyAllowlist, TestAilangProtocolAdmissionIsNarrow, final daemon closure nonstdlib set exactly old+hostcall+mcphttp, no removals; real imports; old pin build fails",
+      "mutations_and_firing_assertions": "MUT-PIN-REGRESS\u2192build imports unavailable; MUT-ALLOWLIST-ROOT-MCP\u2192narrowness refused set differs; MUT-FACADE-IMPORT-MCP\u2192dependency gate names forbidden serveapi",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-MAP-108",
+      "stage": "M108B_DEP_NAMES",
+      "killer_tests_observables": "TestMCPNameRoundTrip/Refusal plus TestMCPSurfaceRefusalRecovers, both directions corpus, canonical escapes, 65-byte segmented/escape-heavy IDs, duplicates fail whole surface and same handler recovers",
+      "mutations_and_firing_assertions": "MUT-MAP-IDENTITY\u2192exact encoding differs; MUT-MAP-COLLIDE\u2192distinct ID encodings equal; MUT-MAP-DECODE-INVALID\u2192invalid escape accepted; MUT-MAP-NO-LEN-GUARD\u2192Tools adapter refusal missing (upstream also rejects, so wire alone insufficient); MUT-SURFACE-ERROR-CACHED\u2192followup repaired list/call fails",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-SCHEMA-108",
+      "stage": "M108B_DEP_NAMES",
+      "killer_tests_observables": "TestMCPSchemaNormalization preserves typed-object bytes, constraints/properties and exact 9007199254740993, adds missing type, refuses explicit nonobject/bad annotation; OutputSchema unchanged",
+      "mutations_and_firing_assertions": "MUT-SCHEMA-PASSTHRU\u2192legacy schema lacks type; MUT-SCHEMA-DROP-CONSTRAINT\u2192constraint/property equality differs; MUT-SCHEMA-FLOAT64\u2192exact numeric token differs",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-CARRIER-108",
+      "stage": "M108C_ADAPTERS",
+      "killer_tests_observables": "TestMCPDenialMatrix/DeniedNeverTouchesRegistry, bearer-only constant401, no denied registry/head/cap reads plus authorized nonzero control, resolution errors seam-owned",
+      "mutations_and_firing_assertions": "MUT-RESOLV-DENY-DROPPED\u2192denied reads !=0; MUT-KEY-AS-SESSION\u2192API-key request admits; MUT-MCP-PROTECTED\u2192MCP denial becomes daemon envelope",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-ADMIT-108",
+      "stage": "M108C_ADAPTERS",
+      "killer_tests_observables": "TestMCPListExactSetPerSession: unequal exact Allowed sets, dynamic head, genuine failures refused, true no-head200 empty tools, bounded reads",
+      "mutations_and_firing_assertions": "MUT-TOOLS-UNFILTERED\u2192name set includes forbidden tool; MUT-TOOLS-NO-DEADLINE\u2192observed ctx deadline absent/exceeds read budget",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-ABSENCE-108",
+      "stage": "M108C_ADAPTERS",
+      "killer_tests_observables": "TestMCPAbsentPrecheckSnapshotFailure list+fresh Invoke: reached real raced present/GetObject failure; host-error JSON200/-32603/null for list/batch; single request id echoes; no SSE empty success, zero mint/Dispatch/receipt/entry; direct injection + real reader; trueabsence and absent\u2192publish success controls, present\u2192absence compatibility",
+      "mutations_and_firing_assertions": "MUT-ABSENT-PRECHECK-CATCHALL\u2192selected list expected host-error JSON becomes empty SSE; MUT-ABSENCE-STRING-MATCH\u2192same-text genuine error classified as absence; Invoke must additionally assert genuine error reaches sink/classified result",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-INVOKE-108",
+      "stage": "M108C_ADAPTERS",
+      "killer_tests_observables": "TestMCPCallDispatch/ListedThenRevoked/InvokeDeadlineFreesSlot: decoded ID in fresh Allowed, object args, ctx check before mint/Dispatch, real coordinator only, cooperative slot release",
+      "mutations_and_firing_assertions": "MUT-INVOKE-NO-READMIT\u2192revoked tool Dispatch count nonzero; MUT-CB-BACKGROUND\u2192callback fails to cancel/slot recover; MUT-INVOKE-NO-CTX-CHECK\u2192expired adapter mint/Dispatch counter nonzero",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-ITEM-108",
+      "stage": "M108D_CONFORMANCE",
+      "killer_tests_observables": "TestMCPBatchAccounting: repeated names/args/RPCids yield distinct minted IDs, K+1 snapshots, 2 resolved receipts/entries, sequential overlap1, head removal blocks item2, early failure writes none",
+      "mutations_and_firing_assertions": "MUT-TASK-PER-POST\u2192unique IDs count !=2; MUT-SNAPSHOT-PER-POST\u2192admissions !=3; MUT-BATCH-NO-READMIT\u2192revoked item2 Dispatch nonzero",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-BATCH-108",
+      "stage": "M108D_CONFORMANCE",
+      "killer_tests_observables": "TestMCPBatchConformance default/explicit2025-03-26 SSE array+ids, ping/call/unknown name only one invoke, notifications202; empty/malformed refused; newer400; valid1/host-fail2/valid3 wholeJSON200/-32603/null, no partial SSE, #3 not invoked and #1 receipt retained; unknown-method item error continues",
+      "mutations_and_firing_assertions": "MUT-BATCH-AS-SINGLE\u2192test header decorator forces2025-06-18, expected SSE200 differs; MUT-BATCH-PARTIAL\u2192test response decorator emits accumulated success SSE, exact envelope differs. These are observable guard calibrations, not fictional World batch branches. Actual MUT-TASK-PER-POST also killed.",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-BOUNDS-108",
+      "stage": "M108C_ADAPTERS",
+      "killer_tests_observables": "Startup positive scalars/invoke<write; inner credential/read/invoke deadlines, shared8-slot Runner20s, one aggregate20s; TestMCPPostBudgetProductionConstants and shrunk clocks, no ErrNoDeadline, no expired mint/Dispatch",
+      "mutations_and_firing_assertions": "MUT-RUNNER-UNBOUNDED\u2192New accepts invalid value; MUT-RESOLV-NO-BUDGET\u2192resolver deadline exceeds credentialBudget; MUT-AGGREGATE-REMOVED\u2192actual answer>20+tolerance; MUT-AGGREGATE-PER-ITEM\u2192batch answer>20+tolerance",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-WIRE-108",
+      "stage": "M108C_ADAPTERS",
+      "killer_tests_observables": "TestMCPWireConformance generated SSE golden, initialize/ping/header errors/bodycap/frozen host errors, source/AST upstream handler use, wrapper context-only; scoped A2A gate retained",
+      "mutations_and_firing_assertions": "MUT-PLAIN-JSON\u2192test decorator changes content type/frame; MUT-ENVELOPE-HANDROLL\u2192source gate detects actual encoding; MUT-DEADLINE-RELAX-MCP\u2192source gate detects SetWriteDeadline/ResponseController; MUT-A2A-MCP-NAME-GATE\u2192A2A source guard detects CallerSurface. Source guard mutations are applied to executable source and reverted.",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-ROUTE-108",
+      "stage": "M108C_ADAPTERS",
+      "killer_tests_observables": "TestMCPMountMethodSource parses actual Handler executable AST registration exactly once, same-parse POST/a2a positive control; socket TestMCPGetRefused405/AllowPOST; frozen /v1/workbench/A2A/D7 unchanged",
+      "mutations_and_firing_assertions": "MUT-MUX-METHOD-REMOVED changes literal to /mcp/\u2192AST exact-method assertion red. Network405 is only behavior control because upstream independently refuses GET.",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-CROSS-108",
+      "stage": "M108D_CONFORMANCE",
+      "killer_tests_observables": "TestMCPToolsListMatchesAgentCard on ONE daemon, per-session encoded/decoded equality and equal cardinalities including dot/slash IDs",
+      "mutations_and_firing_assertions": "MUT-CROSS-SURFACE-DIVERGE\u2192exact set equality differs",
+      "passes": null
+    },
+    {
+      "acceptance_id": "AC-FIXTURE-108",
+      "stage": "M108D_CONFORMANCE",
+      "killer_tests_observables": "TestMCPAmbientExportsAbsent over two unequal nonempty session sets; union parent nine ambient names and existing A2A ban set absent on both surfaces",
+      "mutations_and_firing_assertions": "MUT-AMBIENT-HARDCODED\u2192forbidden encoded/decoded tool set contains ambient name",
+      "passes": null
+    }
+  ],
+  "mutation_inventory": [
+    {
+      "id": "MUT-ABSENCE-UNTYPED",
+      "mutation": "Return original errors.New for confirmed missing head",
+      "killer_assertion": "TestRegistryHeadAbsentErrorClassification/direct: errors.As must be true",
+      "applied_rc": null,
+      "reverted_rc": null,
+      "stage": "M108A1_TYPED_ABSENCE"
+    },
+    {
+      "id": "MUT-ABSENCE-WRAP-LOST",
+      "mutation": "NewRequest uses %v instead of %w for snapshot error",
+      "killer_assertion": "TestRegistryHeadAbsentErrorClassification/new_request: errors.As must be true",
+      "applied_rc": null,
+      "reverted_rc": null,
+      "stage": "M108A1_TYPED_ABSENCE"
+    },
+    {
+      "id": "MUT-ABSENCE-POSTLOOKUP-CTX-REMOVED",
+      "mutation": "Remove newly added post-GetRegistryHead ctx.Err check",
+      "killer_assertion": "TestRegistryHeadAbsentAfterLookupCancellation/absent: errors.Is(context.Canceled) must be true",
+      "applied_rc": null,
+      "reverted_rc": null,
+      "stage": "M108A1_TYPED_ABSENCE"
+    },
+    {
+      "id": "MUT-ABSENT-PRECHECK-CATCHALL",
+      "mutation": "Restore `if !hasHead { return empty,nil }` with typed reader retained",
+      "killer_assertion": "TestAgentCard_AbsentPrecheckSnapshotFailure/store_error: status must be 503 (mutant 200); future MCP list test also kills it",
+      "applied_rc": null,
+      "reverted_rc": null,
+      "stage": "M108A2_CLASSIFIED_PROJECTION"
+    },
+    {
+      "id": "MUT-ABSENCE-STRING-MATCH",
+      "mutation": "Recognize absence by matching exact message text",
+      "killer_assertion": "TestProjectionAbsenceRaceControls/same_text_genuine: error must propagate / card 503",
+      "applied_rc": null,
+      "reverted_rc": null,
+      "stage": "M108A2_CLASSIFIED_PROJECTION"
+    },
+    {
+      "id": "MUT-PRESENT-ABSENCE-EMPTY",
+      "mutation": "Remove !hasHead from typed classifier",
+      "killer_assertion": "TestProjectionAbsenceRaceControls/present_then_absent: error must propagate / card 503",
+      "applied_rc": null,
+      "reverted_rc": null,
+      "stage": "M108A2_CLASSIFIED_PROJECTION"
+    },
+    {
+      "id": "MUT-PRECHECK-ABSENCE-EARLY-RETURN",
+      "mutation": "Return empty immediately when precheck absent, before NewRequest",
+      "killer_assertion": "TestAgentCard_HeadRaceAbsentThenSucceeds: exact skills [tools.echo] (existing control)",
+      "applied_rc": null,
+      "reverted_rc": null,
+      "stage": "M108A2_CLASSIFIED_PROJECTION"
+    },
+    {
+      "id": "MUT-PRECHECK-ERROR-IGNORED",
+      "mutation": "Continue snapshot after head-precheck error",
+      "killer_assertion": "TestProjectionAbsenceRaceControls/precheck_error: Reader calls must equal 0",
+      "applied_rc": null,
+      "reverted_rc": null,
+      "stage": "M108A2_CLASSIFIED_PROJECTION"
+    },
+    {
+      "id": "MUT-PIN-REGRESS",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-DEP-108",
+      "killer_assertion": "MUT-PIN-REGRESS\u2192build imports unavailable; MUT-ALLOWLIST-ROOT-MCP\u2192narrowness refused set differs; MUT-FACADE-IMPORT-MCP\u2192dependency gate names forbidden serveapi",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-ALLOWLIST-ROOT-MCP",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-DEP-108",
+      "killer_assertion": "MUT-PIN-REGRESS\u2192build imports unavailable; MUT-ALLOWLIST-ROOT-MCP\u2192narrowness refused set differs; MUT-FACADE-IMPORT-MCP\u2192dependency gate names forbidden serveapi",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-FACADE-IMPORT-MCP",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-DEP-108",
+      "killer_assertion": "MUT-PIN-REGRESS\u2192build imports unavailable; MUT-ALLOWLIST-ROOT-MCP\u2192narrowness refused set differs; MUT-FACADE-IMPORT-MCP\u2192dependency gate names forbidden serveapi",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-MAP-IDENTITY",
+      "stage": "M108B_DEP_NAMES",
+      "acceptance_id": "AC-MAP-108",
+      "killer_assertion": "MUT-MAP-IDENTITY\u2192exact encoding differs; MUT-MAP-COLLIDE\u2192distinct ID encodings equal; MUT-MAP-DECODE-INVALID\u2192invalid escape accepted; MUT-MAP-NO-LEN-GUARD\u2192Tools adapter refusal missing (upstream also rejects, so wire alone insufficient); MUT-SURFACE-ERROR-CACHED\u2192followup repaired list/call fails",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-MAP-COLLIDE",
+      "stage": "M108B_DEP_NAMES",
+      "acceptance_id": "AC-MAP-108",
+      "killer_assertion": "MUT-MAP-IDENTITY\u2192exact encoding differs; MUT-MAP-COLLIDE\u2192distinct ID encodings equal; MUT-MAP-DECODE-INVALID\u2192invalid escape accepted; MUT-MAP-NO-LEN-GUARD\u2192Tools adapter refusal missing (upstream also rejects, so wire alone insufficient); MUT-SURFACE-ERROR-CACHED\u2192followup repaired list/call fails",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-MAP-DECODE-INVALID",
+      "stage": "M108B_DEP_NAMES",
+      "acceptance_id": "AC-MAP-108",
+      "killer_assertion": "MUT-MAP-IDENTITY\u2192exact encoding differs; MUT-MAP-COLLIDE\u2192distinct ID encodings equal; MUT-MAP-DECODE-INVALID\u2192invalid escape accepted; MUT-MAP-NO-LEN-GUARD\u2192Tools adapter refusal missing (upstream also rejects, so wire alone insufficient); MUT-SURFACE-ERROR-CACHED\u2192followup repaired list/call fails",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-MAP-NO-LEN-GUARD",
+      "stage": "M108B_DEP_NAMES",
+      "acceptance_id": "AC-MAP-108",
+      "killer_assertion": "MUT-MAP-IDENTITY\u2192exact encoding differs; MUT-MAP-COLLIDE\u2192distinct ID encodings equal; MUT-MAP-DECODE-INVALID\u2192invalid escape accepted; MUT-MAP-NO-LEN-GUARD\u2192Tools adapter refusal missing (upstream also rejects, so wire alone insufficient); MUT-SURFACE-ERROR-CACHED\u2192followup repaired list/call fails",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-SURFACE-ERROR-CACHED",
+      "stage": "M108B_DEP_NAMES",
+      "acceptance_id": "AC-MAP-108",
+      "killer_assertion": "MUT-MAP-IDENTITY\u2192exact encoding differs; MUT-MAP-COLLIDE\u2192distinct ID encodings equal; MUT-MAP-DECODE-INVALID\u2192invalid escape accepted; MUT-MAP-NO-LEN-GUARD\u2192Tools adapter refusal missing (upstream also rejects, so wire alone insufficient); MUT-SURFACE-ERROR-CACHED\u2192followup repaired list/call fails",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-SCHEMA-PASSTHRU",
+      "stage": "M108B_DEP_NAMES",
+      "acceptance_id": "AC-SCHEMA-108",
+      "killer_assertion": "MUT-SCHEMA-PASSTHRU\u2192legacy schema lacks type; MUT-SCHEMA-DROP-CONSTRAINT\u2192constraint/property equality differs; MUT-SCHEMA-FLOAT64\u2192exact numeric token differs",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-SCHEMA-DROP-CONSTRAINT",
+      "stage": "M108B_DEP_NAMES",
+      "acceptance_id": "AC-SCHEMA-108",
+      "killer_assertion": "MUT-SCHEMA-PASSTHRU\u2192legacy schema lacks type; MUT-SCHEMA-DROP-CONSTRAINT\u2192constraint/property equality differs; MUT-SCHEMA-FLOAT64\u2192exact numeric token differs",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-SCHEMA-FLOAT64",
+      "stage": "M108B_DEP_NAMES",
+      "acceptance_id": "AC-SCHEMA-108",
+      "killer_assertion": "MUT-SCHEMA-PASSTHRU\u2192legacy schema lacks type; MUT-SCHEMA-DROP-CONSTRAINT\u2192constraint/property equality differs; MUT-SCHEMA-FLOAT64\u2192exact numeric token differs",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-RESOLV-DENY-DROPPED",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-CARRIER-108",
+      "killer_assertion": "MUT-RESOLV-DENY-DROPPED\u2192denied reads !=0; MUT-KEY-AS-SESSION\u2192API-key request admits; MUT-MCP-PROTECTED\u2192MCP denial becomes daemon envelope",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-KEY-AS-SESSION",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-CARRIER-108",
+      "killer_assertion": "MUT-RESOLV-DENY-DROPPED\u2192denied reads !=0; MUT-KEY-AS-SESSION\u2192API-key request admits; MUT-MCP-PROTECTED\u2192MCP denial becomes daemon envelope",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-MCP-PROTECTED",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-CARRIER-108",
+      "killer_assertion": "MUT-RESOLV-DENY-DROPPED\u2192denied reads !=0; MUT-KEY-AS-SESSION\u2192API-key request admits; MUT-MCP-PROTECTED\u2192MCP denial becomes daemon envelope",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-TOOLS-UNFILTERED",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-ADMIT-108",
+      "killer_assertion": "MUT-TOOLS-UNFILTERED\u2192name set includes forbidden tool; MUT-TOOLS-NO-DEADLINE\u2192observed ctx deadline absent/exceeds read budget",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-TOOLS-NO-DEADLINE",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-ADMIT-108",
+      "killer_assertion": "MUT-TOOLS-UNFILTERED\u2192name set includes forbidden tool; MUT-TOOLS-NO-DEADLINE\u2192observed ctx deadline absent/exceeds read budget",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-INVOKE-NO-READMIT",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-INVOKE-108",
+      "killer_assertion": "MUT-INVOKE-NO-READMIT\u2192revoked tool Dispatch count nonzero; MUT-CB-BACKGROUND\u2192callback fails to cancel/slot recover; MUT-INVOKE-NO-CTX-CHECK\u2192expired adapter mint/Dispatch counter nonzero",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-CB-BACKGROUND",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-INVOKE-108",
+      "killer_assertion": "MUT-INVOKE-NO-READMIT\u2192revoked tool Dispatch count nonzero; MUT-CB-BACKGROUND\u2192callback fails to cancel/slot recover; MUT-INVOKE-NO-CTX-CHECK\u2192expired adapter mint/Dispatch counter nonzero",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-INVOKE-NO-CTX-CHECK",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-INVOKE-108",
+      "killer_assertion": "MUT-INVOKE-NO-READMIT\u2192revoked tool Dispatch count nonzero; MUT-CB-BACKGROUND\u2192callback fails to cancel/slot recover; MUT-INVOKE-NO-CTX-CHECK\u2192expired adapter mint/Dispatch counter nonzero",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-TASK-PER-POST",
+      "stage": "M108D_CONFORMANCE",
+      "acceptance_id": "AC-ITEM-108",
+      "killer_assertion": "MUT-TASK-PER-POST\u2192unique IDs count !=2; MUT-SNAPSHOT-PER-POST\u2192admissions !=3; MUT-BATCH-NO-READMIT\u2192revoked item2 Dispatch nonzero",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-SNAPSHOT-PER-POST",
+      "stage": "M108D_CONFORMANCE",
+      "acceptance_id": "AC-ITEM-108",
+      "killer_assertion": "MUT-TASK-PER-POST\u2192unique IDs count !=2; MUT-SNAPSHOT-PER-POST\u2192admissions !=3; MUT-BATCH-NO-READMIT\u2192revoked item2 Dispatch nonzero",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-BATCH-NO-READMIT",
+      "stage": "M108D_CONFORMANCE",
+      "acceptance_id": "AC-ITEM-108",
+      "killer_assertion": "MUT-TASK-PER-POST\u2192unique IDs count !=2; MUT-SNAPSHOT-PER-POST\u2192admissions !=3; MUT-BATCH-NO-READMIT\u2192revoked item2 Dispatch nonzero",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-BATCH-AS-SINGLE",
+      "stage": "M108D_CONFORMANCE",
+      "acceptance_id": "AC-BATCH-108",
+      "killer_assertion": "MUT-BATCH-AS-SINGLE\u2192test header decorator forces2025-06-18, expected SSE200 differs; MUT-BATCH-PARTIAL\u2192test response decorator emits accumulated success SSE, exact envelope differs. These are observable guard calibrations, not fictional World batch branches. Actual MUT-TASK-PER-POST also killed.",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-BATCH-PARTIAL",
+      "stage": "M108D_CONFORMANCE",
+      "acceptance_id": "AC-BATCH-108",
+      "killer_assertion": "MUT-BATCH-AS-SINGLE\u2192test header decorator forces2025-06-18, expected SSE200 differs; MUT-BATCH-PARTIAL\u2192test response decorator emits accumulated success SSE, exact envelope differs. These are observable guard calibrations, not fictional World batch branches. Actual MUT-TASK-PER-POST also killed.",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-RUNNER-UNBOUNDED",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-BOUNDS-108",
+      "killer_assertion": "MUT-RUNNER-UNBOUNDED\u2192New accepts invalid value; MUT-RESOLV-NO-BUDGET\u2192resolver deadline exceeds credentialBudget; MUT-AGGREGATE-REMOVED\u2192actual answer>20+tolerance; MUT-AGGREGATE-PER-ITEM\u2192batch answer>20+tolerance",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-RESOLV-NO-BUDGET",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-BOUNDS-108",
+      "killer_assertion": "MUT-RUNNER-UNBOUNDED\u2192New accepts invalid value; MUT-RESOLV-NO-BUDGET\u2192resolver deadline exceeds credentialBudget; MUT-AGGREGATE-REMOVED\u2192actual answer>20+tolerance; MUT-AGGREGATE-PER-ITEM\u2192batch answer>20+tolerance",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-AGGREGATE-REMOVED",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-BOUNDS-108",
+      "killer_assertion": "MUT-RUNNER-UNBOUNDED\u2192New accepts invalid value; MUT-RESOLV-NO-BUDGET\u2192resolver deadline exceeds credentialBudget; MUT-AGGREGATE-REMOVED\u2192actual answer>20+tolerance; MUT-AGGREGATE-PER-ITEM\u2192batch answer>20+tolerance",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-AGGREGATE-PER-ITEM",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-BOUNDS-108",
+      "killer_assertion": "MUT-RUNNER-UNBOUNDED\u2192New accepts invalid value; MUT-RESOLV-NO-BUDGET\u2192resolver deadline exceeds credentialBudget; MUT-AGGREGATE-REMOVED\u2192actual answer>20+tolerance; MUT-AGGREGATE-PER-ITEM\u2192batch answer>20+tolerance",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-PLAIN-JSON",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-WIRE-108",
+      "killer_assertion": "MUT-PLAIN-JSON\u2192test decorator changes content type/frame; MUT-ENVELOPE-HANDROLL\u2192source gate detects actual encoding; MUT-DEADLINE-RELAX-MCP\u2192source gate detects SetWriteDeadline/ResponseController; MUT-A2A-MCP-NAME-GATE\u2192A2A source guard detects CallerSurface. Source guard mutations are applied to executable source and reverted.",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-ENVELOPE-HANDROLL",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-WIRE-108",
+      "killer_assertion": "MUT-PLAIN-JSON\u2192test decorator changes content type/frame; MUT-ENVELOPE-HANDROLL\u2192source gate detects actual encoding; MUT-DEADLINE-RELAX-MCP\u2192source gate detects SetWriteDeadline/ResponseController; MUT-A2A-MCP-NAME-GATE\u2192A2A source guard detects CallerSurface. Source guard mutations are applied to executable source and reverted.",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-DEADLINE-RELAX-MCP",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-WIRE-108",
+      "killer_assertion": "MUT-PLAIN-JSON\u2192test decorator changes content type/frame; MUT-ENVELOPE-HANDROLL\u2192source gate detects actual encoding; MUT-DEADLINE-RELAX-MCP\u2192source gate detects SetWriteDeadline/ResponseController; MUT-A2A-MCP-NAME-GATE\u2192A2A source guard detects CallerSurface. Source guard mutations are applied to executable source and reverted.",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-A2A-MCP-NAME-GATE",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-WIRE-108",
+      "killer_assertion": "MUT-PLAIN-JSON\u2192test decorator changes content type/frame; MUT-ENVELOPE-HANDROLL\u2192source gate detects actual encoding; MUT-DEADLINE-RELAX-MCP\u2192source gate detects SetWriteDeadline/ResponseController; MUT-A2A-MCP-NAME-GATE\u2192A2A source guard detects CallerSurface. Source guard mutations are applied to executable source and reverted.",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-MUX-METHOD-REMOVED",
+      "stage": "M108C_ADAPTERS",
+      "acceptance_id": "AC-ROUTE-108",
+      "killer_assertion": "MUT-MUX-METHOD-REMOVED changes literal to /mcp/\u2192AST exact-method assertion red. Network405 is only behavior control because upstream independently refuses GET.",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-CROSS-SURFACE-DIVERGE",
+      "stage": "M108D_CONFORMANCE",
+      "acceptance_id": "AC-CROSS-108",
+      "killer_assertion": "MUT-CROSS-SURFACE-DIVERGE\u2192exact set equality differs",
+      "applied_rc": null,
+      "reverted_rc": null
+    },
+    {
+      "id": "MUT-AMBIENT-HARDCODED",
+      "stage": "M108D_CONFORMANCE",
+      "acceptance_id": "AC-FIXTURE-108",
+      "killer_assertion": "MUT-AMBIENT-HARDCODED\u2192forbidden encoded/decoded tool set contains ambient name",
+      "applied_rc": null,
+      "reverted_rc": null
+    }
+  ],
+  "stage_controller_production_reproductions": {
+    "M108A1_TYPED_ABSENCE": "MUT-ABSENCE-POSTLOOKUP-CTX-REMOVED",
+    "M108A2_CLASSIFIED_PROJECTION": "MUT-ABSENT-PRECHECK-CATCHALL",
+    "M108B_DEP_NAMES": "MUT-MAP-IDENTITY",
+    "M108C_ADAPTERS": "MUT-INVOKE-NO-READMIT",
+    "M108D_CONFORMANCE": "MUT-TASK-PER-POST"
+  }
+}
