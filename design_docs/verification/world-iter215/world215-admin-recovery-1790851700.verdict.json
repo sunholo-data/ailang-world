@@ -1,0 +1,21 @@
+{
+  "verdict": "ok",
+  "rc": 0,
+  "fenced": true,
+  "model": "openrouter/deepseek/deepseek-v4-pro-0813",
+  "pi_rc": 0,
+  "elapsed_seconds": 91,
+  "worktree_changed_files": 4,
+  "base_head": "4e2600e601711f40dae42479167251d43a8a3bf6",
+  "head_after": "4e2600e601711f40dae42479167251d43a8a3bf6",
+  "commits_since_start": 0,
+  "tool_executions": 6,
+  "hung_tool": "",
+  "provider_errors": 0,
+  "provider_error": "",
+  "agent_end_events": 1,
+  "ndjson_bytes_filtered": 175890,
+  "ndjson": "/tmp/world215-admin-recovery-1790851700.ndjson",
+  "snapshot": "/tmp/world215-admin-recovery-1790851700.ndjson.snapshot.ndjson",
+  "stderr": "/tmp/world215-admin-recovery-1790851700.ndjson.stderr"
+}

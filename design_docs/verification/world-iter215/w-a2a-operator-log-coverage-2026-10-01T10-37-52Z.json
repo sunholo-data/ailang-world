@@ -1,0 +1,79 @@
+{
+  "doc": "design_docs/planned/w-a2a-operator-log-coverage.md",
+  "iso_ts": "2026-10-01T10:37:52Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0616722,
+      "tokens_in": 5429,
+      "tokens_out": 12289,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The exact logging contract hardcodes the card-route constant `GET /.well-known/agent.json`, and this unverified premise is load-bearing in four places: the operator log line itself, the inline `fmt.Fprintf` snippet, the byte-exact test oracle ('distinct card prefix'), and the mutation table's card-prefix assertions. V0-V17 meticulously source-verify every other constant in the contract (A2A labels via V11, wire codes/statuses via V13-V15), but the card label's only provenance is 'the reviewer-supplied accurate card prefix', accepted verbatim from a quorum reviewer in round 1 — that is assertion, not verification. No verification-log row reads the card route registration (path or accepted method); if the registered route differs (mount prefix, agent-card.json, non-GET), this design bakes a false constant into the product log and then enforces it with full-byte assertions, making the error self-perpetuating.",
+        "catch": "Two secondary items: (1) the Success paragraph demands `go test ./...` and `./scripts/verify_ail.sh` 'pass ... with complete out-of-sandbox local runs and remote CI', while V16 records the pristine baseline already red in capsule/pkgproj/replay/verifygate — the gate is unsatisfiable at the measured base as written, and 'an existing red cannot be waved through' forbids the only workaround without defining a comparator policy, leaving the planner in deadlock; (2) the claim 'related-doc search returned highest neural score 0.42; no duplicate threshold fired' has no recorded command or threshold value in the verification log.",
+        "proposed_fix": "Before re-quorum, add a verification row, e.g. V18: `rg -n 'well-known|agent-card|agent\\.json|AgentCard|HandleFunc|mux\\.' host/daemon/ host/projection/ --glob '*.go'` plus a `sed` of the registration site, recording the exact registered path and accepted HTTP method; correct the card label in the contract, the Fprintf snippet, the test oracles, and the mutation table if the source differs. Separately, rewrite the Success clause to be baseline-relative: 'projection/daemon `go test` and `-race` fully green; `go test ./...` and `./scripts/verify_ail.sh` must exactly reproduce the recorded pristine baseline failure set (V16) — zero new failures, zero unexplained missing failures — with the comparator command and pristine red set attached to the implementation report.' Also record the related-doc search command and duplicate threshold as a log row."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.081648,
+      "tokens_in": 5421,
+      "tokens_out": 4359,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The success gate is logically unsatisfiable as written, which would force either an unbounded block or the silent fallback the mission forbids: the Success section simultaneously (a) requires full `go test ./...` and `./scripts/verify_ail.sh` green under the pinned binary, (b) records in V16 that the pristine baseline for that exact command is RED in capsule, pkgproj, replay, and verifygate, and (c) states 'an existing red cannot be waved through.' Points (a)+(b)+(c) form a contradiction: the sprint can never report success without either fixing four packages of unrelated pre-existing failures (out of this task's declared ~2-line scope) or quietly relaxing the green requirement. V17 explicitly 'proves neither full gate green nor a unique cause,' so there is no comparator on which to base an attribution rule. A plan whose verification protocol cannot terminate is a bounded-verification (A5) violation and invites exactly the kind of ad-hoc waiver ('no silent fallbacks') the doc itself prohibits.",
+        "catch": "Define the pass condition relative to a pre-established baseline fingerprint instead of absolute full-gate green, and route the four pre-existing red packages to their own remediation item — otherwise the planner inherits an unresolvable condition that V16 documents and the doc prohibits resolving by waiver.",
+        "proposed_fix": "Replace the final paragraph of the Success section with: 'Baseline comparator (required before sprint routing): the planner runs the exact full-gate command (`go test ./...` + `./scripts/verify_ail.sh` under the pinned binary) on the measured base `4e2600e...` in an isolated checkout and records the complete failing-test set (test name, package, failure signature) as the pristine fingerprint. If the fingerprint is non-empty, this task is blocked until either (1) a separate remediation row clears it, or (2) unattended quorum accepts in writing the following relative pass-rule: row127 passes iff (a) the post-change full-gate failing set equals the pristine fingerprint test-for-test by name and package, (b) no previously-green test regresses, and (c) all new/modified projection tests and mutation arms are green. A narrowed re-run (e.g., V17) is not a comparator. The V16 reds in capsule/pkgproj/replay/verifygate are hereby filed as remediation row w-baseline-reds; this clause supersedes the unqualified \"existing red cannot be waved through\" sentence by defining the only permitted disposition: fingerprint-matched, quorum-recorded, or remediated.'"
+      },
+      "landed": null
+    },
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "quota",
+      "error": "Anthropic bucket blocked by the mission ration: Anthropic usage endpoint returned HTTP 429; CLI fallback also failed (no \"Current session\" line in `claude -p /usage` output)",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.014962000000000001,
+      "tokens_in": 6173,
+      "tokens_out": 218,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The design dictates using 'invalid JSON/params' and 'unlisted skill' as negative controls that assert exactly zero log lines. However, invalid JSON triggers an A2A resolver error (for which this design explicitly adds a new log line), and an unlisted skill triggers an A2A registry admission error (which the document acknowledges already emits a log line). Asserting zero lines for these scenarios contradicts the design's coverage additions and will deterministically fail the test suite.",
+        "catch": "Negative controls incorrectly list resolver and registry failures as zero-line assertions.",
+        "proposed_fix": "Change the negative controls specification to: 'Negative controls on the same configured sink: successful card, clean absent-head zero-skills card, all four session denial kinds on both routes, and successful dispatch write zero lines. (Note: invalid JSON/params and unlisted skill correctly yield 1 line as resolver and registry failures and belong with positive controls).'"
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Reviewer supplied fixes applied and source premises measured; wire remains unchanged; full local baseline red expressly scoped."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The exact logging contract hardcodes the card-route constant `GET /.well-known/agent.json`, and this unverified premise is load-bearing in four places: the operator log line itself, the inline `fmt.Fprintf` snippet, the byte-exact test oracle ('distinct card prefix'), and the mutation table's card-prefix assertions. V0-V17 meticulously source-verify every other constant in the contract (A2A labels via V11, wire codes/statuses via V13-V15), but the card label's only provenance is 'the reviewer-supplied accurate card prefix', accepted verbatim from a quorum reviewer in round 1 — that is assertion, not verification. No verification-log row reads the card route registration (path or accepted method); if the registered route differs (mount prefix, agent-card.json, non-GET), this design bakes a false constant into the product log and then enforces it with full-byte assertions, making the error self-perpetuating.",
+      "oc-kimi-k3: The success gate is logically unsatisfiable as written, which would force either an unbounded block or the silent fallback the mission forbids: the Success section simultaneously (a) requires full `go test ./...` and `./scripts/verify_ail.sh` green under the pinned binary, (b) records in V16 that the pristine baseline for that exact command is RED in capsule, pkgproj, replay, and verifygate, and (c) states 'an existing red cannot be waved through.' Points (a)+(b)+(c) form a contradiction: the sprint can never report success without either fixing four packages of unrelated pre-existing failures (out of this task's declared ~2-line scope) or quietly relaxing the green requirement. V17 explicitly 'proves neither full gate green nor a unique cause,' so there is no comparator on which to base an attribution rule. A plan whose verification protocol cannot terminate is a bounded-verification (A5) violation and invites exactly the kind of ad-hoc waiver ('no silent fallbacks') the doc itself prohibits.",
+      "gemini-3-1-pro: The design dictates using 'invalid JSON/params' and 'unlisted skill' as negative controls that assert exactly zero log lines. However, invalid JSON triggers an A2A resolver error (for which this design explicitly adds a new log line), and an unlisted skill triggers an A2A registry admission error (which the document acknowledges already emits a log line). Asserting zero lines for these scenarios contradicts the design's coverage additions and will deterministically fail the test suite."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "claude-sonnet-5@claude-p",
+        "reason": "quota"
+      }
+    ],
+    "total_cost_usd": 0.1582822,
+    "total_tokens_in": 17023,
+    "total_tokens_out": 16866
+  }
+}

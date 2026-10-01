@@ -1,0 +1,109 @@
+── AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0
+Commit: 24ee108
+Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+Built:  2026-09-21T15:50:02Z
+
+The AI-First Programming Language
+Copyright (c) 2025-2026)
+── tracked-binary hygiene gate
+   ✓ 0 binary blobs among 546 tracked files
+── World mission-input gate (decision ledger)
+decision ledger valid: 33 rows
+   World decision-ledger validated; centralized runtime currency is NOT certified here.
+   ✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6
+── race-detector known-positive control
+go version go1.26.6 darwin/arm64
+==================
+WARNING: DATA RACE
+Read at 0x00c000112048 by goroutine 8:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter215/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x88
+
+Previous write at 0x00c000112048 by goroutine 7:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter215/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 8 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter215/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 7 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter215/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+==================
+WARNING: DATA RACE
+Write at 0x00c000112048 by goroutine 8:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter215/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Previous write at 0x00c000112048 by goroutine 7:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter215/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 8 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter215/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 7 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter215/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+control finished, shared = 34007
+Found 2 data race(s)
+exit status 66
+── go build ./...
+go version go1.26.6 darwin/arm64
+── focused host/evidence named-manifest gate (37 exact top-level tests)
+   ✓ all 37 required top-level evidence tests passed exactly once
+── go test ./... -count=1
+go version go1.26.6 darwin/arm64
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	10.983s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	44.117s
+ok  	github.com/sunholo-data/ailang-world/host/archive	40.042s
+ok  	github.com/sunholo-data/ailang-world/host/authority	0.851s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	22.570s
+ok  	github.com/sunholo-data/ailang-world/host/broker	152.988s
+ok  	github.com/sunholo-data/ailang-world/host/canon	0.793s
+--- FAIL: TestF5WallClockTimeoutHasElapsedBound (4.27s)
+    capsule_test.go:230: timeout returned after 2.097743667s, want <= 2s
+--- FAIL: TestRunContextCancel (53.78s)
+    runcontext_test.go:51: cancellation took 27.999488542s; the caller's ctx does not bound the child
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/capsule	144.628s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	1.568s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	22.294s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	71.100s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	11.078s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	1.772s
+--- FAIL: TestInterfaceV2MovesWhenAnExportedADTGainsAConstructor (30.14s)
+    iface_test.go:64: ailang pkg quality: cancelled by caller: context deadline exceeded
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/pkgproj	65.496s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.435s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	2.566s
+ok  	github.com/sunholo-data/ailang-world/host/projection	9.328s
+ok  	github.com/sunholo-data/ailang-world/host/registry	1.869s
+--- FAIL: TestUnknownEntryInterpreterFailsAbsent (12.59s)
+    replay_test.go:298: ENVIRONMENT FAILURE (rig, not a replay defect)
+        archive pinned binary: archive: replay error [exec_failure]: cannot obtain --version from archived interpreter (ref "sha256:1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f") (path "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestUnknownEntryInterpreterFailsAbsent1290775593/001/world.db.artifacts/interpreters/sha256/1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f/ailang"): /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestUnknownEntryInterpreterFailsAbsent1290775593/001/world.db.artifacts/interpreters/sha256/1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f/ailang --version: timed out after 10s: context deadline exceeded (stdout: "", stderr: "")
+        the archived interpreter's `--version` probe exceeded its wall-clock bound.
+        On macOS the FIRST exec of a freshly-written path pays a provenance assessment that is
+        globally SERIALIZED (~1.13 s each, measured), so parallel test packages that each archive
+        the pinned interpreter queue behind one another and the Nth crosses the bound at N >= 9.
+        This is a property of the rig, not of the code under test. DISCRIMINATE BEFORE ATTRIBUTING:
+        re-run this package ALONE (`go test ./<pkg> -count=1 -p 1`); if it passes, the bound was
+        queued behind sibling packages and nothing here is broken.
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/replay	181.495s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	9.050s
+ok  	github.com/sunholo-data/ailang-world/host/store	26.481s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	51.783s
+--- FAIL: TestMissionConfigDefaultFlowIntegration (24.81s)
+    --- FAIL: TestMissionConfigDefaultFlowIntegration/valid_ledger (10.78s)
+        mission_config_gate_test.go:270: fixture git command failed: rc=-1 timeout=true
+            instrument failure: context deadline exceeded
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/verifygate	505.419s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	1.203s
+FAIL

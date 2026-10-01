@@ -1,0 +1,21 @@
+{
+  "verdict": "wall_timeout",
+  "rc": 13,
+  "fenced": true,
+  "model": "openrouter/deepseek/deepseek-v4-pro-0813",
+  "pi_rc": 14,
+  "elapsed_seconds": 124,
+  "worktree_changed_files": 3,
+  "base_head": "4e2600e601711f40dae42479167251d43a8a3bf6",
+  "head_after": "4e2600e601711f40dae42479167251d43a8a3bf6",
+  "commits_since_start": 0,
+  "tool_executions": 11,
+  "hung_tool": "",
+  "provider_errors": 0,
+  "provider_error": "",
+  "agent_end_events": 0,
+  "ndjson_bytes_filtered": 236741,
+  "ndjson": "/tmp/world215-admin-judge-1790851454.ndjson",
+  "snapshot": "/tmp/world215-admin-judge-1790851454.ndjson.snapshot.ndjson",
+  "stderr": "/tmp/world215-admin-judge-1790851454.ndjson.stderr"
+}
