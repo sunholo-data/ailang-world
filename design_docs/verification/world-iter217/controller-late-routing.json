@@ -34,5 +34,13 @@
     "fallback": "D-WORLD-48 same vendor different model FLAG",
     "native_tokens": "not reported",
     "spawned_before_candidate": "skills/source review only; immutable candidate pending"
+  },
+  "fresh_product_evaluator_spawn_prompt_deviation": {
+    "required_prefix": "MISSION-ROLE: evaluator",
+    "original_prompt_prefix": "Required fresh independent PRODUCT evaluator",
+    "original_prefix_omitted": true,
+    "native_tool_result": "accepted explicit model gpt-6-astra; agent /root/evaluator_product",
+    "correction": "role-prefixed corrective message delivered after source/pristine review began; original omission preserved",
+    "support_limit": "actual fresh-context different-model judge independent; no claim original prompt satisfied spawn-hook token rule"
   }
 }
