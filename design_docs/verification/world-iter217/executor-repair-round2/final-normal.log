@@ -1,0 +1,11 @@
+=== RUN   TestMCPInvokeDeadlineFreesSlot
+    mcp_bounds_test.go:87: initial aggregate=300ms callback=2s entry remaining=215.917916ms; recovery=3s same-handler capacity=1 entered=2 return-path=2 resolver=2
+--- PASS: TestMCPInvokeDeadlineFreesSlot (0.31s)
+=== RUN   TestMCPInvokeDeadlineFreesSlot
+    mcp_bounds_test.go:87: initial aggregate=300ms callback=2s entry remaining=218.601625ms; recovery=3s same-handler capacity=1 entered=2 return-path=2 resolver=2
+--- PASS: TestMCPInvokeDeadlineFreesSlot (0.31s)
+=== RUN   TestMCPInvokeDeadlineFreesSlot
+    mcp_bounds_test.go:87: initial aggregate=300ms callback=2s entry remaining=217.853791ms; recovery=3s same-handler capacity=1 entered=2 return-path=2 resolver=2
+--- PASS: TestMCPInvokeDeadlineFreesSlot (0.31s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	1.254s

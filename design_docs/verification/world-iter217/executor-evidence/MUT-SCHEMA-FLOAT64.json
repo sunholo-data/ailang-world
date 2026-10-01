@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-run", "^TestMCPSchemaNormalization$", "-v", "-count=1", "-timeout=60s"], "rc": 1, "seconds": 0.47738083312287927}

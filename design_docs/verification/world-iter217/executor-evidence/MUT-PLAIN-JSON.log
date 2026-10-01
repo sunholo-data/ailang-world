@@ -1,0 +1,6 @@
+=== RUN   TestMCPWireConformance
+    mcp_conformance_test.go:269: upstream SSE differs: "{\"jsonrpc\":\"2.0\",\"id\":7,\"result\":{}}" / "event: message\ndata: {\"jsonrpc\":\"2.0\",\"id\":7,\"result\":{}}\n\n"
+--- FAIL: TestMCPWireConformance (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.197s
+FAIL

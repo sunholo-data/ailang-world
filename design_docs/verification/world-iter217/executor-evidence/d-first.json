@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "-timeout=60s", "./host/projection", "./host/daemon", "-run", "TestMCP(Batch|Wire|InvalidInvocation|TrueAbsence|TaskEntropy)", "-v", "-count=1"], "rc": 0, "seconds": 7.355054332874715}

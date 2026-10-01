@@ -1,0 +1,6 @@
+=== RUN   TestMCPInvokeCancelAfterAdmission
+    mcp_absence_test.go:143: after-admission cancellation err=coordinator: receipt: store: load journal intent: context canceled mint=1 runs=0
+--- FAIL: TestMCPInvokeCancelAfterAdmission (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.185s
+FAIL

@@ -1,0 +1,15 @@
+{
+  "bucket": "anthropic",
+  "argv": [
+    "ailang",
+    "mission",
+    "quota",
+    "-bucket",
+    "anthropic",
+    "-json"
+  ],
+  "rc": 0,
+  "seconds": 10.30299362493679,
+  "stdout": "{\n  \"updated\": \"2026-10-01T18:08:46.508291Z\",\n  \"usage\": [\n    {\n      \"bucket\": \"anthropic\",\n      \"window\": \"5h\",\n      \"tokens\": 1019963,\n      \"stages\": 1,\n      \"window_start\": \"2026-10-01T18:08:46Z\",\n      \"provider_reset\": \"0001-01-01T00:00:00Z\"\n    },\n    {\n      \"bucket\": \"anthropic\",\n      \"window\": \"long\",\n      \"tokens\": 1019963,\n      \"stages\": 1,\n      \"window_start\": \"2026-10-01T18:08:46Z\",\n      \"provider_reset\": \"0001-01-01T00:00:00Z\"\n    }\n  ],\n  \"at\": \"2026-10-01T22:16:14.706768Z\",\n  \"verdicts\": [\n    {\n      \"Bucket\": \"anthropic\",\n      \"Window\": \"5h\",\n      \"State\": \"not-paced\",\n      \"Consumed\": 1019963,\n      \"Allowance\": 0,\n      \"Reason\": \"1019963 tok this 5h window; the daily ration paces the long window only\"\n    },\n    {\n      \"Bucket\": \"anthropic\",\n      \"Window\": \"long\",\n      \"State\": \"capacity-unknown\",\n      \"Consumed\": 1019963,\n      \"Allowance\": 0,\n      \"Reason\": \"1019963 tok consumed, capacity unknown \u2014 left unrationed rather than rationed on a guess\"\n    }\n  ],\n  \"anthropic_provider_usage\": {\n    \"state\": \"unknown\",\n    \"reason\": \"Anthropic usage endpoint returned HTTP 403; CLI fallback also failed (no \\\"Current session\\\" line in `claude -p /usage` output)\",\n    \"observed_at\": \"2026-10-01T22:16:14.706768Z\",\n    \"source\": \"https://api.anthropic.com/api/oauth/usage\",\n    \"enforced\": true\n  }\n}\n",
+  "stderr": ""
+}

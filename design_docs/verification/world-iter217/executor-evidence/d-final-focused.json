@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "-timeout=60s", "./host/projection", "./host/daemon", "-run", "TestMCP(Batch|Wire|Invalid|True|Task|Absent|Listed|Resolver|Surface|Daemon|Mount|ToolsList)|^Example", "-v", "-count=1"], "rc": 0, "seconds": 2.2260373330209404, "process_cap_seconds": 180, "diagnostic_godebug": "goindex=0"}

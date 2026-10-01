@@ -1,0 +1,6 @@
+=== RUN   TestMCPNameRoundTrip
+    mcpname_test.go:17: exact encoding "a_b.c/d"="a_db_dc_sd"/<nil> want "a_ub_dc_sd"
+--- FAIL: TestMCPNameRoundTrip (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.205s
+FAIL

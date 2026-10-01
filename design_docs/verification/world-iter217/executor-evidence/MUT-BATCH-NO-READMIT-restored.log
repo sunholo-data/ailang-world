@@ -1,0 +1,6 @@
+=== RUN   TestMCPBatchAccounting
+=== RUN   TestMCPBatchAccounting/removed_between_items
+--- PASS: TestMCPBatchAccounting (0.00s)
+    --- PASS: TestMCPBatchAccounting/removed_between_items (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.197s

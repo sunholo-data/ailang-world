@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-run", "^TestMCPInvokeListedThenRevoked$", "-v", "-count=1", "-timeout=60s"], "rc": 0, "seconds": 0.634479874977842}

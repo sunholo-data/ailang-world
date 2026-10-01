@@ -1,0 +1,282 @@
+=== RUN   TestA2ADispatchWire
+=== RUN   TestA2ADispatchWire/R13_integrity
+=== RUN   TestA2ADispatchWire/store_error_newline
+=== RUN   TestA2ADispatchWire/R15
+=== RUN   TestA2ADispatchWire/R2_R3
+=== RUN   TestA2ADispatchWire/R11
+=== RUN   TestA2ADispatchWire/R11_transport
+=== RUN   TestA2ADispatchWire/R14
+=== RUN   TestA2ADispatchWire/R16
+=== RUN   TestA2ADispatchWire/R4_R6_default
+--- PASS: TestA2ADispatchWire (2.04s)
+    --- PASS: TestA2ADispatchWire/R13_integrity (0.00s)
+    --- PASS: TestA2ADispatchWire/store_error_newline (0.00s)
+    --- PASS: TestA2ADispatchWire/R15 (0.00s)
+    --- PASS: TestA2ADispatchWire/R2_R3 (0.00s)
+    --- PASS: TestA2ADispatchWire/R11 (0.00s)
+    --- PASS: TestA2ADispatchWire/R11_transport (2.02s)
+    --- PASS: TestA2ADispatchWire/R14 (0.01s)
+    --- PASS: TestA2ADispatchWire/R16 (0.00s)
+    --- PASS: TestA2ADispatchWire/R4_R6_default (0.00s)
+=== RUN   TestA2ADurableDeadlineWire
+=== RUN   TestA2ADurableDeadlineWire/GetReceipt
+=== RUN   TestA2ADurableDeadlineWire/AppendIntent
+=== RUN   TestA2ADurableDeadlineWire/Commit
+=== RUN   TestA2ADurableDeadlineWire/uncertain_AppendIntent
+=== RUN   TestA2ADurableDeadlineWire/uncertain_Commit
+--- PASS: TestA2ADurableDeadlineWire (4.55s)
+    --- PASS: TestA2ADurableDeadlineWire/GetReceipt (0.91s)
+    --- PASS: TestA2ADurableDeadlineWire/AppendIntent (0.91s)
+    --- PASS: TestA2ADurableDeadlineWire/Commit (0.91s)
+    --- PASS: TestA2ADurableDeadlineWire/uncertain_AppendIntent (0.91s)
+    --- PASS: TestA2ADurableDeadlineWire/uncertain_Commit (0.91s)
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/store_error
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/real_reader
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/deadline
+--- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure (0.01s)
+    --- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure/store_error (0.00s)
+    --- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure/real_reader (0.00s)
+    --- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure/deadline (0.00s)
+=== RUN   TestProjectionAbsenceRaceControls
+=== RUN   TestProjectionAbsenceRaceControls/true_absence
+=== RUN   TestProjectionAbsenceRaceControls/present_then_absent
+=== RUN   TestProjectionAbsenceRaceControls/same_text_genuine
+=== RUN   TestProjectionAbsenceRaceControls/precheck_error
+--- PASS: TestProjectionAbsenceRaceControls (0.01s)
+    --- PASS: TestProjectionAbsenceRaceControls/true_absence (0.00s)
+    --- PASS: TestProjectionAbsenceRaceControls/present_then_absent (0.00s)
+    --- PASS: TestProjectionAbsenceRaceControls/same_text_genuine (0.00s)
+    --- PASS: TestProjectionAbsenceRaceControls/precheck_error (0.00s)
+=== RUN   TestA2A_AbsentPrecheckSnapshotFailure
+=== RUN   TestA2A_AbsentPrecheckSnapshotFailure/direct
+=== RUN   TestA2A_AbsentPrecheckSnapshotFailure/real_reader
+--- PASS: TestA2A_AbsentPrecheckSnapshotFailure (0.00s)
+    --- PASS: TestA2A_AbsentPrecheckSnapshotFailure/direct (0.00s)
+    --- PASS: TestA2A_AbsentPrecheckSnapshotFailure/real_reader (0.00s)
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/direct
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/real_reader
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/same_text
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/deadline
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/direct
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline
+--- PASS: TestMCPAbsentPrecheckSnapshotFailure (0.01s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/direct (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/real_reader (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/same_text (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/deadline (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/invoke/direct (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline (0.00s)
+=== RUN   TestMCPSurfaceRefusalRecovers
+--- PASS: TestMCPSurfaceRefusalRecovers (0.00s)
+=== RUN   TestMCPInvokeCancelAfterAdmission
+--- PASS: TestMCPInvokeCancelAfterAdmission (0.00s)
+=== RUN   TestMCPBoundsValidation
+--- PASS: TestMCPBoundsValidation (0.00s)
+=== RUN   TestMCPResolverInnerBudget
+--- PASS: TestMCPResolverInnerBudget (0.00s)
+=== RUN   TestMCPInvokeDeadlineFreesSlot
+--- PASS: TestMCPInvokeDeadlineFreesSlot (0.12s)
+=== RUN   TestMCPToolsInnerBudget
+--- PASS: TestMCPToolsInnerBudget (0.00s)
+=== RUN   TestMCPBatchAccounting
+=== RUN   TestMCPBatchAccounting/repeated_rpc_id
+    mcp_conformance_test.go:140: K+1 admissions/runs/overlap=3/1/1
+=== RUN   TestMCPBatchAccounting/removed_between_items
+--- FAIL: TestMCPBatchAccounting (0.01s)
+    --- FAIL: TestMCPBatchAccounting/repeated_rpc_id (0.00s)
+    --- PASS: TestMCPBatchAccounting/removed_between_items (0.00s)
+=== RUN   TestMCPBatchConformance
+=== RUN   TestMCPBatchConformance/old_versions_and_item_errors
+=== RUN   TestMCPBatchConformance/whole_host_failure
+    mcp_conformance_test.go:191: whole failure runs=1 wire=200 event: message
+        data: [{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}]
+        
+=== RUN   TestMCPBatchConformance/notifications_and_bad_arrays
+=== RUN   TestMCPBatchConformance/newer_versions_refuse
+--- FAIL: TestMCPBatchConformance (0.01s)
+    --- PASS: TestMCPBatchConformance/old_versions_and_item_errors (0.01s)
+    --- FAIL: TestMCPBatchConformance/whole_host_failure (0.00s)
+    --- PASS: TestMCPBatchConformance/notifications_and_bad_arrays (0.00s)
+    --- PASS: TestMCPBatchConformance/newer_versions_refuse (0.00s)
+=== RUN   TestMCPWireConformance
+--- PASS: TestMCPWireConformance (0.01s)
+=== RUN   TestMCPInvalidInvocationArguments
+--- PASS: TestMCPInvalidInvocationArguments (0.00s)
+=== RUN   TestMCPTrueAbsenceAndPublication
+--- PASS: TestMCPTrueAbsenceAndPublication (0.00s)
+=== RUN   TestMCPTaskEntropyFailure
+--- PASS: TestMCPTaskEntropyFailure (0.00s)
+=== RUN   TestMCPWireOwnershipSource
+    mcp_source_test.go:56: aggregate wrapper has non-context/dispatch call
+    mcp_source_test.go:56: aggregate wrapper has non-context/dispatch call
+--- FAIL: TestMCPWireOwnershipSource (0.00s)
+=== RUN   TestMCPListExactSetPerSession
+--- PASS: TestMCPListExactSetPerSession (0.00s)
+=== RUN   TestMCPDenialMatrix
+--- PASS: TestMCPDenialMatrix (0.00s)
+=== RUN   TestMCPCallDispatch
+--- PASS: TestMCPCallDispatch (0.00s)
+=== RUN   TestMCPInvokeListedThenRevoked
+--- PASS: TestMCPInvokeListedThenRevoked (0.00s)
+=== RUN   TestMCPInvokeCanceledBeforeMint
+--- PASS: TestMCPInvokeCanceledBeforeMint (0.00s)
+=== RUN   TestMCPNameRoundTrip
+--- PASS: TestMCPNameRoundTrip (0.00s)
+=== RUN   TestMCPNameRefusal
+--- PASS: TestMCPNameRefusal (0.00s)
+=== RUN   TestMCPSchemaNormalization
+--- PASS: TestMCPSchemaNormalization (0.00s)
+=== RUN   TestAgentCard_ExactSkillSetPerSession
+--- PASS: TestAgentCard_ExactSkillSetPerSession (0.00s)
+=== RUN   TestAgentCard_TracksSessionSnapshot
+--- PASS: TestAgentCard_TracksSessionSnapshot (0.00s)
+=== RUN   TestAgentCard_AmbientExportsAbsent
+--- PASS: TestAgentCard_AmbientExportsAbsent (0.00s)
+=== RUN   TestAgentCard_UpstreamKeySet
+--- PASS: TestAgentCard_UpstreamKeySet (0.00s)
+=== RUN   TestProjection_ContentTypeJSON
+--- PASS: TestProjection_ContentTypeJSON (0.00s)
+=== RUN   TestAgentCard_DenialMatrix
+=== RUN   TestAgentCard_DenialMatrix/absent
+=== RUN   TestAgentCard_DenialMatrix/unknown
+=== RUN   TestAgentCard_DenialMatrix/expired
+=== RUN   TestAgentCard_DenialMatrix/malformed
+--- PASS: TestAgentCard_DenialMatrix (0.00s)
+    --- PASS: TestAgentCard_DenialMatrix/absent (0.00s)
+    --- PASS: TestAgentCard_DenialMatrix/unknown (0.00s)
+    --- PASS: TestAgentCard_DenialMatrix/expired (0.00s)
+    --- PASS: TestAgentCard_DenialMatrix/malformed (0.00s)
+=== RUN   TestAgentCard_AbsentHeadZeroSkills
+--- PASS: TestAgentCard_AbsentHeadZeroSkills (0.00s)
+=== RUN   TestAgentCard_HeadReadFailuresAre5xx
+--- PASS: TestAgentCard_HeadReadFailuresAre5xx (0.00s)
+=== RUN   TestAgentCard_HeadRaceAbsentThenSucceeds
+--- PASS: TestAgentCard_HeadRaceAbsentThenSucceeds (0.00s)
+=== RUN   TestA2A_DenialMatrix
+=== RUN   TestA2A_DenialMatrix/absent
+=== RUN   TestA2A_DenialMatrix/unknown
+=== RUN   TestA2A_DenialMatrix/expired
+=== RUN   TestA2A_DenialMatrix/malformed
+--- PASS: TestA2A_DenialMatrix (0.00s)
+    --- PASS: TestA2A_DenialMatrix/absent (0.00s)
+    --- PASS: TestA2A_DenialMatrix/unknown (0.00s)
+    --- PASS: TestA2A_DenialMatrix/expired (0.00s)
+    --- PASS: TestA2A_DenialMatrix/malformed (0.00s)
+=== RUN   TestA2A_CodeMatrix
+=== RUN   TestA2A_CodeMatrix/garbage_JSON
+=== RUN   TestA2A_CodeMatrix/wrong_version
+=== RUN   TestA2A_CodeMatrix/missing_version
+=== RUN   TestA2A_CodeMatrix/wrong_method
+=== RUN   TestA2A_CodeMatrix/params_not_object
+=== RUN   TestA2A_CodeMatrix/no_skill_id
+=== RUN   TestA2A_CodeMatrix/guessed_skill
+=== RUN   TestA2A_CodeMatrix/stale_skill
+=== RUN   TestA2A_CodeMatrix/ambient-name_skill
+=== RUN   TestA2A_CodeMatrix/authorized_skill
+--- PASS: TestA2A_CodeMatrix (0.00s)
+    --- PASS: TestA2A_CodeMatrix/garbage_JSON (0.00s)
+    --- PASS: TestA2A_CodeMatrix/wrong_version (0.00s)
+    --- PASS: TestA2A_CodeMatrix/missing_version (0.00s)
+    --- PASS: TestA2A_CodeMatrix/wrong_method (0.00s)
+    --- PASS: TestA2A_CodeMatrix/params_not_object (0.00s)
+    --- PASS: TestA2A_CodeMatrix/no_skill_id (0.00s)
+    --- PASS: TestA2A_CodeMatrix/guessed_skill (0.00s)
+    --- PASS: TestA2A_CodeMatrix/stale_skill (0.00s)
+    --- PASS: TestA2A_CodeMatrix/ambient-name_skill (0.00s)
+    --- PASS: TestA2A_CodeMatrix/authorized_skill (0.00s)
+=== RUN   TestA2AAuthorizedSkillNoCoordinator
+--- PASS: TestA2AAuthorizedSkillNoCoordinator (0.00s)
+=== RUN   TestA2ADispatch
+=== RUN   TestA2ADispatch/registry_moved_after_admission
+=== RUN   TestA2ADispatch/invalid_parts_and_pin
+=== RUN   TestA2ADispatch/success_and_R13_reconciled
+=== RUN   TestA2ADispatch/R1
+=== RUN   TestA2ADispatch/R2_R3
+=== RUN   TestA2ADispatch/R5
+=== RUN   TestA2ADispatch/R15
+=== RUN   TestA2ADispatch/R16
+=== RUN   TestA2ADispatch/DuplicateInvocation
+=== RUN   TestA2ADispatch/R17
+=== RUN   TestA2ADispatch/R4_R6
+=== RUN   TestA2ADispatch/R6_corrupt_source
+=== RUN   TestA2ADispatch/R13_reconcile_absent
+=== RUN   TestA2ADispatch/R13_reconcile_integrity
+=== RUN   TestA2ADispatch/R7
+=== RUN   TestA2ADispatch/R8
+=== RUN   TestA2ADispatch/R9
+=== RUN   TestA2ADispatch/R10
+=== RUN   TestA2ADispatch/R11
+=== RUN   TestA2ADispatch/R12
+=== RUN   TestA2ADispatch/R14
+--- PASS: TestA2ADispatch (0.00s)
+    --- PASS: TestA2ADispatch/registry_moved_after_admission (0.00s)
+    --- PASS: TestA2ADispatch/invalid_parts_and_pin (0.00s)
+    --- PASS: TestA2ADispatch/success_and_R13_reconciled (0.00s)
+    --- PASS: TestA2ADispatch/R1 (0.00s)
+    --- PASS: TestA2ADispatch/R2_R3 (0.00s)
+    --- PASS: TestA2ADispatch/R5 (0.00s)
+    --- PASS: TestA2ADispatch/R15 (0.00s)
+    --- PASS: TestA2ADispatch/R16 (0.00s)
+    --- PASS: TestA2ADispatch/DuplicateInvocation (0.00s)
+    --- PASS: TestA2ADispatch/R17 (0.00s)
+    --- PASS: TestA2ADispatch/R4_R6 (0.00s)
+    --- PASS: TestA2ADispatch/R6_corrupt_source (0.00s)
+    --- PASS: TestA2ADispatch/R13_reconcile_absent (0.00s)
+    --- PASS: TestA2ADispatch/R13_reconcile_integrity (0.00s)
+    --- PASS: TestA2ADispatch/R7 (0.00s)
+    --- PASS: TestA2ADispatch/R8 (0.00s)
+    --- PASS: TestA2ADispatch/R9 (0.00s)
+    --- PASS: TestA2ADispatch/R10 (0.00s)
+    --- PASS: TestA2ADispatch/R11 (0.00s)
+    --- PASS: TestA2ADispatch/R12 (0.00s)
+    --- PASS: TestA2ADispatch/R14 (0.00s)
+=== RUN   TestA2A_AbsentPrecheckPublicationDispatch
+--- PASS: TestA2A_AbsentPrecheckPublicationDispatch (0.00s)
+=== RUN   TestA2A_NeverWritesStore
+--- PASS: TestA2A_NeverWritesStore (0.00s)
+=== RUN   TestProjection_DeniedNeverTouchesRegistry
+=== RUN   TestProjection_DeniedNeverTouchesRegistry/card_route,_four_denial_kinds
+=== RUN   TestProjection_DeniedNeverTouchesRegistry//a2a/_route,_four_denial_kinds
+=== RUN   TestProjection_DeniedNeverTouchesRegistry/expired_session,_both_routes
+=== RUN   TestProjection_DeniedNeverTouchesRegistry/valid_session_+_malformed_JSON_never_reaches_admission
+=== RUN   TestProjection_DeniedNeverTouchesRegistry/control:_a_real_admission_check_reads_exactly_once_each
+--- PASS: TestProjection_DeniedNeverTouchesRegistry (0.00s)
+    --- PASS: TestProjection_DeniedNeverTouchesRegistry/card_route,_four_denial_kinds (0.00s)
+    --- PASS: TestProjection_DeniedNeverTouchesRegistry//a2a/_route,_four_denial_kinds (0.00s)
+    --- PASS: TestProjection_DeniedNeverTouchesRegistry/expired_session,_both_routes (0.00s)
+    --- PASS: TestProjection_DeniedNeverTouchesRegistry/valid_session_+_malformed_JSON_never_reaches_admission (0.00s)
+    --- PASS: TestProjection_DeniedNeverTouchesRegistry/control:_a_real_admission_check_reads_exactly_once_each (0.00s)
+=== RUN   TestProjection_OneSnapshotPerRequest
+--- PASS: TestProjection_OneSnapshotPerRequest (0.00s)
+=== RUN   TestAgentCard_HeadChangeWithoutRestart
+--- PASS: TestAgentCard_HeadChangeWithoutRestart (0.00s)
+=== RUN   TestProjection_CarrierFixed_OnlyBearerHeader
+--- PASS: TestProjection_CarrierFixed_OnlyBearerHeader (0.00s)
+=== RUN   TestProjection_BoundedWait
+=== RUN   TestProjection_BoundedWait/card_route,_resolution_blocked
+=== RUN   TestProjection_BoundedWait/card_route,_head_check_blocked
+=== RUN   TestProjection_BoundedWait//a2a/_route,_resolution_blocked
+--- PASS: TestProjection_BoundedWait (0.31s)
+    --- PASS: TestProjection_BoundedWait/card_route,_resolution_blocked (0.10s)
+    --- PASS: TestProjection_BoundedWait/card_route,_head_check_blocked (0.10s)
+    --- PASS: TestProjection_BoundedWait//a2a/_route,_resolution_blocked (0.10s)
+=== RUN   TestProjection_ConfigValidation
+--- PASS: TestProjection_ConfigValidation (0.00s)
+=== RUN   TestProjection_WireOwnershipSource
+    projection_test.go:1496: wire ownership pinned over 3 non-test source file(s)
+--- PASS: TestProjection_WireOwnershipSource (0.00s)
+=== RUN   TestProjection_NoDeadlineTampering
+--- PASS: TestProjection_NoDeadlineTampering (0.00s)
+=== RUN   TestProjection_ZeroSkipSource
+--- PASS: TestProjection_ZeroSkipSource (0.00s)
+=== RUN   ExampleEncodeMCPName
+--- PASS: ExampleEncodeMCPName (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	7.326s
+FAIL

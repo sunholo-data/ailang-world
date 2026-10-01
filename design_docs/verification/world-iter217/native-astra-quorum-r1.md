@@ -1,0 +1,46 @@
+# Native Astra design quorum — iteration217 r3
+
+**Verdict: PASS. Zero blocking objections.** This is a design-quorum seat, not implementation acceptance and not a product score. Native `gpt-6-astra` reviewed author `gpt-6.1-sol` in a separate context; **judge-independence: same-vendor**, authorized by D-WORLD-48. This auxiliary artifact does not rewrite the CLI quorum synthesis or imply absent reviewers participated.
+
+Snapshot: `07df462508618218cb4dac0eaff485a8236ef049`; full canonical design read, 214 lines; SHA256 `f1a34e803f12ec6be0024b76f4b8c6e51afb93655a61731e608d052740510101`. Read both historical rejected quorum artifacts, relevant historical design decisions, design-doc-creator hard gates, sprint-evaluator rubric, current D43/D48 and mission Gate3 authority. No product or source files modified.
+
+## Strongest objection, catch, proposed fix
+
+**Strongest objection:** The strongest remaining risk is loss of client-visible success for earlier committed batch items, followed by duplicate execution on a retry with new task IDs. This is real, but it is explicitly disclosed and follows the frozen upstream whole-POST envelope and Invocation interface; the design neither promises atomicity nor invents an unsafe retry channel. It is not a blocking objection to the stated tranche.
+
+**Catch:** Pin partial-commit visibility with a real-store three-call batch: item1 resolved receipt and entry remain, item2 host error yields only the frozen null-id envelope, item3 never invokes. Pin fresh per-item task IDs/admission and bounded aggregate timing separately. Verify runbook recovery warnings and do not infer no writes from an error envelope.
+
+**Proposed fix:** No blocking design fix required. Preserve the explicit non-atomic/retry residual and all named acceptance gates through planning. Planner should narrow the 9.8s tools fault to authorize-time admission so invocation readmission can actually reach the capsule, and preserve schema numeric values when adding type:object.
+
+## Independent source findings
+
+- **Dependency:** independently ran `go list -deps -f '{{if not .Standard}}{{.ImportPath}}{{end}}' ./serveapi/protocol/mcphttp` in the released v0.47.2 module cache: rc0, exactly protocol/hostcall/mcphttp. Same command over World `./host/daemon/... ./cmd/ailang-worldd/...`: rc0, 54 nonstdlib paths, including protocol. Python byte comparison of all four non-test old protocol files to v0.47.2: identical. `go.mod` still v0.33.2, as the design says. Fresh normal TLS curl probes with 20s bounds returned proxy200 and sumdb200. Read daemon_test.go:775–840 and960–1010: prefix allowlist already admits protocol subpackages and controls reject facade/internal/cloud. The actual post-import graph remains unmeasured and explicitly gated; this is acceptable before implementation.
+- **Names/schema:** read transitionreg.go:272–345, codec.go canonicalSchema and protocol/descriptor.go. World stable IDs and MCP grammar differ as stated. Escapes `_u/_d/_s` form an injective, uniquely decodable encoding because literal underscores are escaped. Whole-surface >64-byte refusal is partial MCP admission, clearly disclosed; A2A IDs stay verbatim. Adding object type only when missing preserves the object-input convention; explicit incompatible types are refused. CallerSurface validates annotations, duplicate names and input type. See N2 for precision-preserving implementation.
+- **Batch dispatch:** read full released mcphttp/handler.go, methods.go and wire.go. Body read precedes authorize; exactly two authorize Runs occur per POST. `serveMessages` is a sequential loop, `callTool` invokes once after name lookup; unknown methods/names return item errors, callback error writes whole-POST envelope then returns. `RequestID` in envelope.go parses an object, hence a batch error id is null. Malformed later items can fail after earlier commits. Design models these facts correctly, including dropped notifications and version-specific batch admission.
+- **Fresh admission/durability:** read projection.go allowedDescriptors/bindingCaps, transitionreg ReadSnapshot/NewRequest, coordinator Dispatch and plan, and journal receipt states. Head is reread before immutable-hash cache lookup; capability snapshots are rebuilt from the immutable binding and current admission time. Coordinator binds the supplied fresh Request, checks proposal, executes, appends intent and commits. Distinct random task IDs produce distinct `a2a:<episode>:<task>` namespaces; early errors precede AppendIntent, uncertain writes may leave receipt state, successful Commit creates resolved receipt/entry. K+1 admissions for K successful calls is correct; unknown-name entries never reach Invoker. Repeated RPC IDs carry no coordinator identity because Invocation exposes only Name/Arguments.
+- **GET guard:** read current daemon.Handler and upstream ServeHTTP. Both methodless-route and correct-route GET can return405, so the old network mutation was vacuous. Requiring the actual executable `POST /mcp/` mux call in daemon Handler's AST, plus existing A2A same-parse control, distinguishes MUT-MUX-METHOD-REMOVED. Comment bait and absent-call cases are explicitly refused. The source-guard conflict in projection_test.go:1459ff is real and the proposed scoped revision retains A2A's prohibition.
+- **Bounds:** read full hostcall/runner.go, procbound.go:1–65, daemon frozen constants and Go1.26.6 net/http/server.go:975–1008. Runner timeout is per Run, slots release only after callback return; procbound8 is a separate child/reap bound. One aggregate parent deadline clips all batch callbacks. Explicit adapter context checks address the ready-slot/expired-context select race. 3+10+20K exceeds30 without aggregation; production recipe correctly reaches ~32.6s single/~34.6s batch without it, while intact prompt-body paths cancel near20s. Body reads and synchronous CPU are honestly excluded from a universal20s wall-clock claim; transport windows stay frozen. The recipe requires cancellation observation, actual callback return, recovery and independently bounded teardown, not merely a timeout response.
+
+## Freeze decisions
+
+I accept each of the three unchecked design directions **for this reviewer seat**:
+
+1. D108-2: length refusal and schema normalization are explicit compatibility costs with loud failure, not hidden truncation or permissive schema replacement.
+2. D108-8/9/11: per-item registry/capability epochs, random task IDs and non-atomic commits match available interfaces; no retry safety is promised. Existing uncertainty laws remain authoritative.
+3. D108-5/10: shared Runner plus context-only aggregate middleware reuses the released seam without a local wire codec, preserves D7, and distinguishes response bounds from worker cleanup.
+
+No additional attended direction question is required by my findings. The controller must still combine all present reviewers; another substantive rejection remains blocking. These acceptances do not check the document's completion boxes by themselves.
+
+## Historical objections and design hard gates
+
+The r1 slot-cap premise is now directly verifiable and correctly separates two mechanisms. The r1 false33s/30s arithmetic is replaced by an aggregate parent plus a production-clock mutation recipe. The r2 GET-vacuity issue is resolved by AST identity. The r2 missing batch composition is resolved by 2+K callback accounting, K+1 successful admissions, per-item receipts, fail-fast envelope and multi-invoke production leg. Each closure is source-supported; none relies on the controller's conclusion.
+
+Conflict surface identifies A2A, frozen routes/timeouts, source guards, registry admissions and shared procbound capacity. All12 axioms are addressed; agree net+6, no A1/A3/A4/A7 hard-negative finding. No new AILANG language support claim needs a language probe. Standard sprint score is **not applicable at design stage**; acceptance tests and mutations are future obligations, not passed checks.
+
+## Nonblocking planner notes
+
+- **N1 — target the timing fault.** Saturate only authorize-time Tools work. Holding every admission/head read for9.8s can cancel the invoker's fresh admission before the intended capsule callback, making the claimed #1/#2 timing stimulus false. Use stage/call counters and require #1 commit/#2 entry; the design already demands these controls.
+- **N2 — preserve numeric schema constraints.** Registry codec uses `UseNumber`; default `map[string]any` decoding during normalization can round large integers. Use raw JSON member values or `UseNumber`, and include a >2^53 constraint fixture. This implements the existing properties/constraints-preserved requirement, not a new direction.
+- **N3 — update baseline prose.** Sequential saved JSON says verify_ail rc0/8.67s and verify_go rc1/107.89s, while the design's paragraph still says repeat in progress. Treat this as evidence freshness, not an environmental diagnosis or acceptance waiver. Final exact full-green gates remain required.
+
+No local product suite rerun: this snapshot changes design/evidence, and no implementation exists to accept. Initial and sequential baseline evidence remains separate from this design verdict. No source mutations, inbox operations or additional agents were used.

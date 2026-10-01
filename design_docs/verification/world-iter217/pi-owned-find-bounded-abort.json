@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-01T22:25:30Z",
+  "action": "SIGTERM only positively verified evaluator-owned find PID34216",
+  "owned_parent_pid": 34190,
+  "command": "find /Users/voightkampff/dev/sunholo-data -path *sprint-evaluator* -name *.md",
+  "reason": "broad lookup exceeded directive finite command bound; exact authoritative paths were already supplied",
+  "result_scope": "aborted enumerator output VOID, not negative missing-file evidence; no judge verdict altered",
+  "future_marker_notice": "controller-final-profiles-terminal.json includes this caveat before runtime review"
+}

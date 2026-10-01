@@ -1,0 +1,6 @@
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/store_error
+--- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure (0.01s)
+    --- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure/store_error (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.297s

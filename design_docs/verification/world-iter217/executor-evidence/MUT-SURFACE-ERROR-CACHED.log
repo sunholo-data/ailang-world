@@ -1,0 +1,6 @@
+=== RUN   TestMCPSurfaceRefusalRecovers
+    mcp_absence_test.go:115: not upstream SSE: "{\"jsonrpc\":\"2.0\",\"id\":7,\"error\":{\"code\":-32603,\"message\":\"host callback failed\"}}\n"
+--- FAIL: TestMCPSurfaceRefusalRecovers (0.01s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.208s
+FAIL

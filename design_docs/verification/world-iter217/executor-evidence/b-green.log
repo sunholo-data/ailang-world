@@ -1,0 +1,10 @@
+=== RUN   TestMCPNameRoundTrip
+--- PASS: TestMCPNameRoundTrip (0.00s)
+=== RUN   TestMCPNameRefusal
+--- PASS: TestMCPNameRefusal (0.00s)
+=== RUN   TestMCPSchemaNormalization
+--- PASS: TestMCPSchemaNormalization (0.00s)
+=== RUN   ExampleEncodeMCPName
+--- PASS: ExampleEncodeMCPName (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.332s

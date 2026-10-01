@@ -1,0 +1,8 @@
+=== RUN   TestRegistryHeadAbsentErrorClassification
+=== RUN   TestRegistryHeadAbsentErrorClassification/new_request
+    absence_example_test.go:44: typed absence=false: transition registry: construct request: read transition registry: head is absent
+--- FAIL: TestRegistryHeadAbsentErrorClassification (0.00s)
+    --- FAIL: TestRegistryHeadAbsentErrorClassification/new_request (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/transitionreg	0.185s
+FAIL

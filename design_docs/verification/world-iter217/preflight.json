@@ -1,0 +1,23 @@
+{
+  "iteration": 217,
+  "mission": "world",
+  "observed_at": "2026-10-01T18:28:53.758561+00:00",
+  "base": "54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e",
+  "kill_switch": "absent",
+  "gh_account": "sunholo-voight-kampff",
+  "billing": "CLEAN",
+  "directives_since": "2026-10-01T14:36:19Z",
+  "directives": 0,
+  "issue": 159,
+  "issue_comments": 33,
+  "inbox_world_unread": 0,
+  "skill_drift": "SKILL.md+12resources MATCH fleet origin/dev",
+  "heartbeat": "World helper absent; charter row69 authorizes absolute shared helper",
+  "source_pinned_compiler": "AILANG v0.41.0",
+  "read_time_gate1": "2026-10-01T18:24:45Z",
+  "worktree_creation": "exit0; base same as gate1; origin/dev symbol used at creation before full-SHA stamp (sequencing deviation)",
+  "ledger_rows": 35,
+  "ledger_open": 0,
+  "attended_rulings": "D43 A revision+quorum row108 next; D44 A row114 after108; D45 A fresh-store attended publish; D46 A108\u2192114\u219293; D47 B defer127; D48 available-lane substitutions",
+  "approvals_acked": "D44,D37,D33 stale resolved asks; publish remains pending"
+}

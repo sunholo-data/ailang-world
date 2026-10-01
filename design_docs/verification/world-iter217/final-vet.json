@@ -1,0 +1,23 @@
+{
+  "head_sha": "be286c1dbf29eb56c922f5015c0bc1a52055f087",
+  "argv": [
+    "go",
+    "vet",
+    "./..."
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter217",
+  "rc": 0,
+  "seconds": 1.261023374972865,
+  "external_timeout_seconds": 180,
+  "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+  "PATH_pin_first": true,
+  "GODEBUG": "unset",
+  "GOCACHE": "default",
+  "inherited_go_axes": {
+    "GOFLAGS": "unset",
+    "GOMAXPROCS": "unset",
+    "GOTOOLCHAIN": "unset",
+    "CI": "unset"
+  },
+  "scope": "additional full-repository vet; not a replacement for either exact profile"
+}

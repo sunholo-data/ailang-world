@@ -1,0 +1,6 @@
+=== RUN   TestRegistryHeadAbsentErrorClassification
+=== RUN   TestRegistryHeadAbsentErrorClassification/direct
+--- PASS: TestRegistryHeadAbsentErrorClassification (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/direct (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	0.191s

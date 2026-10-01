@@ -1,0 +1,32 @@
+{
+  "root-stage-D-checkout.log": {
+    "raw_sha256": "8bd3e90c2b2df4aa5146396eea9fc2c3e8d7e5ff6c3c76d435e95c01b1e95921",
+    "bytes": 185,
+    "lossless_raw": "root-stage-D-checkout.log.raw.b64"
+  },
+  "root-stage-D-fence.log": {
+    "raw_sha256": "f8f23c434945fa9868cb82dd5ad30ecbf352f8cdd6bb7908eeb4f4619314eafc",
+    "bytes": 83,
+    "lossless_raw": "root-stage-D-fence.log.raw.b64"
+  },
+  "root-stage-D-mutant.log": {
+    "raw_sha256": "71592c29823048b20d5136d64adb24ac7f176437c5cf63f5ce6b03548a15d174",
+    "bytes": 326,
+    "lossless_raw": "root-stage-D-mutant.log.raw.b64"
+  },
+  "root-stage-D-pristine.log": {
+    "raw_sha256": "2060d6065765074e56af07f87430efca69b5b51b55a2c40fa11d35ad5c466ce5",
+    "bytes": 254,
+    "lossless_raw": "root-stage-D-pristine.log.raw.b64"
+  },
+  "root-stage-D-restored.log": {
+    "raw_sha256": "e0f5b41fcfa0a89bd72b33038936d8de8b10460043a1b3489b48f78e41f3e188",
+    "bytes": 254,
+    "lossless_raw": "root-stage-D-restored.log.raw.b64"
+  },
+  "root-stage-D-status.log": {
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0,
+    "lossless_raw": "root-stage-D-status.log.raw.b64"
+  }
+}

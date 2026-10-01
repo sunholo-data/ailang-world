@@ -56,6 +56,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/capsule"
 	"github.com/sunholo-data/ailang-world/host/coordinator"
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/procbound"
 	"github.com/sunholo-data/ailang-world/host/projection"
 	"github.com/sunholo-data/ailang-world/host/registry"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -589,8 +590,9 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 			Description: "AILANG World daemon: a published skill accepts one JSON-object data part and produces a JSON-object data artifact; invocation requires an archived interpreter; schemas are carried but not validated.",
 			Version:     Version,
 		},
-		MaxWait:     readDeadline,
-		InvokeWait:  invokeDeadline,
+		MaxWait:        readDeadline,
+		InvokeWait:     invokeDeadline,
+		CredentialWait: credentialBudget, CallbackTimeout: invokeDeadline, MaxCallbacks: procbound.MaxOutstanding, WriteWait: writeTimeout,
 		Coordinator: coord,
 	})
 	if err != nil {
@@ -728,6 +730,7 @@ func (d *Daemon) Handler() http.Handler {
 	// itself so /a2a/ can answer in JSON-RPC form (B5).
 	mux.HandleFunc("GET /.well-known/agent.json", d.projection.AgentCard)
 	mux.HandleFunc("POST /a2a/", d.projection.A2A)
+	mux.HandleFunc("POST /mcp/", d.projection.MCP)
 	return NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, mux)
 }
 

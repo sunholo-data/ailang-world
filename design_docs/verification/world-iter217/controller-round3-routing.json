@@ -1,0 +1,41 @@
+{
+  "role": "evaluator round3",
+  "candidate": "741e3c371de3e558243e4ee77a09eeaddbac50a3",
+  "native_preferred": "sonnet",
+  "native_spawn_error": "Unknown model sonnet (earlier measured structuralcapability)",
+  "native_d48_different_model": "gpt-6-astra",
+  "native_new_role_spawn": "withheld becausefreshCodexproviderquota stateover82% vs80.2096% allowance; commandrc0 withstructuredover is refusal, notsuccessfulcapacityprobe",
+  "fallback": "declared pi:ollama/deepseek-v4-pro:0813-cloud",
+  "fallback_quota": "stateok8.9pp/20h4m<10pp/day at22:16:14Z",
+  "probe": "rc0 actualassistanttextok; custommodelidwarning, responseModeldeepseek-v4-pro:0813; usage recordedfromNDJSONlater",
+  "status": "fenced pi run active; ownhandshakeconfirmed; sourceauditonly until rootfullGo terminal",
+  "generator": "native codex:gpt-6.1-sol",
+  "independence": "cross-vendor/model; controller is notjudge",
+  "earlier_user_Agent_requirement": "designer/planner/executor/evaluator nativeAgent spawns complete; independentRound1/2 nativeAstraFAIL49/54; none skipped",
+  "native_tokens": "not reported; piusagewillcaptureactual",
+  "all_other_current_buckets": "Anthropicunknown403/noCurrentSession; OpenRouterover6.58>2.33/day; noresetcredits spent",
+  "handshake": {
+    "CLAUDE_read_tool_first": true,
+    "session_protocol_ack_details_acked": true,
+    "acked_at": "2026-10-01T22:21:14.826Z",
+    "source": "actualNDJSON tool_execution_end session_protocol_ack"
+  },
+  "root_full_profile_terminal": {
+    "candidate": "741e3c371de3e558243e4ee77a09eeaddbac50a3",
+    "ail_rc": 0,
+    "ail_seconds": 26.17128483299166,
+    "go_rc": 1,
+    "go_seconds": 243.76896979101002,
+    "race": "NOTRUN becauseplainlegfailed",
+    "failure_functions": [
+      "TestCLIRealSubprocessEpisode",
+      "TestF5WallClockTimeoutHasElapsedBound",
+      "TestDispatchDurableDeadline/Commit",
+      "TestCommitBudgetAndUncertainReconcile/ii_A_landed_uncertain_then_B_on_top"
+    ],
+    "scope": "exactunchanged profiles; no waiver/uniqueenvironmentalcause; independentthird verdictpending"
+  },
+  "root_marker_caveat": "controller copied profilefiles/marker to ownreviewWT afterlaunch, so changedfilecount alone cannot provejudge report. Fresh reportfiles+actualpi writeevents+SHA/restores required before anyjudgment.",
+  "final_status": "completed; independent FAIL59; park needs-human-review",
+  "actual_usage": "pi provider-reported 80794 input,38941 output,1515848 cacheRead,total1635583; native not reported"
+}

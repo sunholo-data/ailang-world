@@ -1,0 +1,1 @@
+{"files": {"host/projection/projection.go": {"mutant": "aafd8677fc82b2a117844ceab18c23b26000ba20d2e311168bc4e2cba94f4b55", "restored": "75237e6035a1499f8306416deac00f51758d2c008009b083c69acbfb168de3b6"}}, "broad_failed_tests": ["TestProjection_WireOwnershipSource"], "selected_test": "TestProjection_WireOwnershipSource"}

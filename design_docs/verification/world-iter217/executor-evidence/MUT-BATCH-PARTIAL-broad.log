@@ -1,0 +1,78 @@
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/direct
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/real_reader
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/same_text
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/deadline
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/direct
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline
+--- PASS: TestMCPAbsentPrecheckSnapshotFailure (0.01s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/direct (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/real_reader (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/same_text (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/deadline (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/invoke/direct (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline (0.00s)
+=== RUN   TestMCPSurfaceRefusalRecovers
+--- PASS: TestMCPSurfaceRefusalRecovers (0.00s)
+=== RUN   TestMCPInvokeCancelAfterAdmission
+--- PASS: TestMCPInvokeCancelAfterAdmission (0.00s)
+=== RUN   TestMCPBoundsValidation
+--- PASS: TestMCPBoundsValidation (0.00s)
+=== RUN   TestMCPResolverInnerBudget
+--- PASS: TestMCPResolverInnerBudget (0.00s)
+=== RUN   TestMCPInvokeDeadlineFreesSlot
+--- PASS: TestMCPInvokeDeadlineFreesSlot (0.12s)
+=== RUN   TestMCPToolsInnerBudget
+--- PASS: TestMCPToolsInnerBudget (0.01s)
+=== RUN   TestMCPBatchAccounting
+=== RUN   TestMCPBatchAccounting/repeated_rpc_id
+=== RUN   TestMCPBatchAccounting/removed_between_items
+--- PASS: TestMCPBatchAccounting (0.01s)
+    --- PASS: TestMCPBatchAccounting/repeated_rpc_id (0.01s)
+    --- PASS: TestMCPBatchAccounting/removed_between_items (0.01s)
+=== RUN   TestMCPBatchConformance
+=== RUN   TestMCPBatchConformance/old_versions_and_item_errors
+=== RUN   TestMCPBatchConformance/whole_host_failure
+    mcp_conformance_test.go:193: whole failure runs=2 wire=200 event: message
+        data: [{"jsonrpc":"2.0","id":7,"result":{}}]
+        
+=== RUN   TestMCPBatchConformance/notifications_and_bad_arrays
+=== RUN   TestMCPBatchConformance/newer_versions_refuse
+--- FAIL: TestMCPBatchConformance (0.01s)
+    --- PASS: TestMCPBatchConformance/old_versions_and_item_errors (0.01s)
+    --- FAIL: TestMCPBatchConformance/whole_host_failure (0.00s)
+    --- PASS: TestMCPBatchConformance/notifications_and_bad_arrays (0.00s)
+    --- PASS: TestMCPBatchConformance/newer_versions_refuse (0.00s)
+=== RUN   TestMCPWireConformance
+--- PASS: TestMCPWireConformance (0.01s)
+=== RUN   TestMCPInvalidInvocationArguments
+--- PASS: TestMCPInvalidInvocationArguments (0.00s)
+=== RUN   TestMCPTrueAbsenceAndPublication
+--- PASS: TestMCPTrueAbsenceAndPublication (0.00s)
+=== RUN   TestMCPTaskEntropyFailure
+--- PASS: TestMCPTaskEntropyFailure (0.00s)
+=== RUN   TestMCPWireOwnershipSource
+--- PASS: TestMCPWireOwnershipSource (0.00s)
+=== RUN   TestMCPListExactSetPerSession
+--- PASS: TestMCPListExactSetPerSession (0.00s)
+=== RUN   TestMCPDenialMatrix
+--- PASS: TestMCPDenialMatrix (0.00s)
+=== RUN   TestMCPCallDispatch
+--- PASS: TestMCPCallDispatch (0.00s)
+=== RUN   TestMCPInvokeListedThenRevoked
+--- PASS: TestMCPInvokeListedThenRevoked (0.00s)
+=== RUN   TestMCPInvokeCanceledBeforeMint
+--- PASS: TestMCPInvokeCanceledBeforeMint (0.00s)
+=== RUN   TestMCPNameRoundTrip
+--- PASS: TestMCPNameRoundTrip (0.00s)
+=== RUN   TestMCPNameRefusal
+--- PASS: TestMCPNameRefusal (0.00s)
+=== RUN   TestMCPSchemaNormalization
+--- PASS: TestMCPSchemaNormalization (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.386s
+FAIL

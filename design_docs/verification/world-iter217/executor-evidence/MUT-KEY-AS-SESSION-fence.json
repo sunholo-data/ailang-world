@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-timeout=60s", "-run", "^$"], "rc": 0, "seconds": 1.0564713329076767}

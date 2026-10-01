@@ -1,0 +1,1 @@
+{"cmd": ["go", "list", "-deps", "-f", "{{.ImportPath}}", "./host/daemon/...", "./cmd/ailang-worldd/..."], "rc": 0, "seconds": 0.19662449997849762, "process_cap_seconds": 180, "diagnostic_godebug": "goindex=0"}

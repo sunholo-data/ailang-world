@@ -784,7 +784,7 @@ var allowedDepModules = []string{
 	"github.com/mattn/go-isatty",                       // indirect: sqlite
 	"github.com/ncruces/go-strftime",                   // indirect: sqlite
 	"github.com/remyoudompheng/bigfft",                 // indirect: sqlite
-	"github.com/sunholo-data/ailang/serveapi/protocol", // w-a2a-session-projection P6.D: ONE pinned A2A wire package (ailang v0.33.2), never the module root
+	"github.com/sunholo-data/ailang/serveapi/protocol", // P6.D/row108: released v0.47.2 protocol + hostcall/mcphttp subpackages; never the module root
 }
 
 // daemonCorePatterns are the two package trees the allowlist governs.
@@ -992,6 +992,8 @@ func TestAilangProtocolAdmissionIsNarrow(t *testing.T) {
 	wire, err := disallowedDeps([]string{
 		"github.com/sunholo-data/ailang/serveapi/protocol",
 		"github.com/sunholo-data/ailang/serveapi/protocol/subpkg",
+		"github.com/sunholo-data/ailang/serveapi/protocol/hostcall",
+		"github.com/sunholo-data/ailang/serveapi/protocol/mcphttp",
 	})
 	if err != nil {
 		t.Fatalf("disallowedDeps: %v", err)

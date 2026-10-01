@@ -1,0 +1,13 @@
+=== RUN   TestDaemonDependencyAllowlist
+=== RUN   TestDaemonDependencyAllowlist/null_case_fails
+=== RUN   TestDaemonDependencyAllowlist/classifier_separates_stdlib_from_modules
+=== RUN   TestDaemonDependencyAllowlist/an_intruder_is_reported_by_name
+=== RUN   TestDaemonDependencyAllowlist/daemon_core_build_graph
+    daemon_test.go:962: zero-cloud allowlist enforced over 258 transitive packages for ./host/daemon/... ./cmd/ailang-worldd/...
+--- PASS: TestDaemonDependencyAllowlist (0.13s)
+    --- PASS: TestDaemonDependencyAllowlist/null_case_fails (0.00s)
+    --- PASS: TestDaemonDependencyAllowlist/classifier_separates_stdlib_from_modules (0.00s)
+    --- PASS: TestDaemonDependencyAllowlist/an_intruder_is_reported_by_name (0.00s)
+    --- PASS: TestDaemonDependencyAllowlist/daemon_core_build_graph (0.13s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.458s

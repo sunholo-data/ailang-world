@@ -1,0 +1,9 @@
+=== RUN   TestMCPPostBudgetProductionConstants
+=== RUN   TestMCPPostBudgetProductionConstants/batch
+    mcp_budget_test.go:229: production clocks3/10/20/30 elapsed=34.618025333s write=34.617685333s resolverHeld=2.802105666s toolsHeld=9.802066208s N/K/J=3/2/2 admissions=3 commits=1
+    mcp_budget_test.go:234: aggregate/wire elapsed=34.618025333s written=34.617685333s err=Post "http://127.0.0.1:57043/mcp/": EOF/<nil> payload=
+--- FAIL: TestMCPPostBudgetProductionConstants (35.41s)
+    --- FAIL: TestMCPPostBudgetProductionConstants/batch (35.41s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	35.644s
+FAIL

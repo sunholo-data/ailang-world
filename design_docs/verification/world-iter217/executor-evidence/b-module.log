@@ -1,0 +1,2 @@
+go: upgraded github.com/sunholo-data/ailang v0.33.2 => v0.47.2
+go: upgraded golang.org/x/sys v0.47.0 => v0.48.0

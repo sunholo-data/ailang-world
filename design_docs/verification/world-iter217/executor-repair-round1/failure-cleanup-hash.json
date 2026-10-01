@@ -1,0 +1,8 @@
+{
+  "kind": "test-only behavioral/failure-path calibration; no kernel or production mutation",
+  "mutant_sha256": "9631a947ec1d5435c3dec8655faee5f83617feb98d0953c29fd7fdb58b0bab84",
+  "restored_sha256": "b4bb5c42f01bc54b485e6acaf40fa1acab5d5fe4ef463519c4267c43ad5070fb",
+  "applied_rc": 1,
+  "restored_rc": 0,
+  "named_failure": "forced post-commit failure-cleanup control"
+}

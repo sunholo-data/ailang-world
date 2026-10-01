@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/daemon", "-run", "^TestDaemonDependencyAllowlist$", "-v", "-count=1", "-timeout=60s"], "rc": 0, "seconds": 1.266516833100468, "process_cap_seconds": 180, "diagnostic_godebug": "goindex=0"}

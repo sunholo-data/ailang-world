@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-run", "^TestMCPResolverInnerBudget$", "-v", "-count=1", "-timeout=60s"], "rc": 0, "seconds": 6.994607707951218}

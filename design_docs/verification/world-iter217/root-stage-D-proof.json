@@ -1,0 +1,31 @@
+{
+  "stage_sha": "be286c1dbf29eb56c922f5015c0bc1a52055f087",
+  "mutation_id": "MUT-TASK-PER-POST",
+  "files": {
+    "host/projection/mcp.go": {
+      "original_sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "mutant_sha256": "9b7ea324621002b2f1d0513f682591359071f595d337a7329d2c4669976aa6a1",
+      "edits": [
+        [
+          "type mcpAdapter struct{ h *Handler }",
+          "type mutantTaskKey struct{}\n type mcpAdapter struct{ h *Handler }"
+        ],
+        [
+          "defer cancel()\n\th.mcp.ServeHTTP",
+          "defer cancel()\n ctx=context.WithValue(ctx,mutantTaskKey{},new(string))\n\th.mcp.ServeHTTP"
+        ],
+        [
+          "task, err := a.h.mintTask()",
+          "slot:=ctx.Value(mutantTaskKey{}).(*string)\n task:=*slot\n if task==\"\" {task,err=a.h.mintTask();*slot=task}"
+        ]
+      ],
+      "restored_sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+    }
+  },
+  "pristine_rc": 0,
+  "compile_fence_rc": 0,
+  "mutant_runtime_rc": 1,
+  "restored_rc": 0,
+  "env_axis": "GODEBUG=goindex=0; focused diagnostic",
+  "scope": "D tests-only coverage control against C production behavior; no D own-production revert claim; final full profile not replaced"
+}

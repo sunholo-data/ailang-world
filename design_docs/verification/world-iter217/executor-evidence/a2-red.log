@@ -1,0 +1,33 @@
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/store_error
+    absence_test.go:71: card status=200 want 503: {"capabilities":{"pushNotifications":false,"stateTransitionHistory":false,"streaming":false},"defaultInputModes":["application/json"],"defaultOutputModes":["application/json"],"description":"test projection agent","name":"ailang-worldd","skills":[],"url":"http://example.com","version":"0.1.0"}
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/real_reader
+    absence_test.go:71: card status=200 want 503: {"capabilities":{"pushNotifications":false,"stateTransitionHistory":false,"streaming":false},"defaultInputModes":["application/json"],"defaultOutputModes":["application/json"],"description":"test projection agent","name":"ailang-worldd","skills":[],"url":"http://example.com","version":"0.1.0"}
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/deadline
+    absence_test.go:71: card status=200 want 504: {"capabilities":{"pushNotifications":false,"stateTransitionHistory":false,"streaming":false},"defaultInputModes":["application/json"],"defaultOutputModes":["application/json"],"description":"test projection agent","name":"ailang-worldd","skills":[],"url":"http://example.com","version":"0.1.0"}
+--- FAIL: TestAgentCard_AbsentPrecheckSnapshotFailure (0.01s)
+    --- FAIL: TestAgentCard_AbsentPrecheckSnapshotFailure/store_error (0.01s)
+    --- FAIL: TestAgentCard_AbsentPrecheckSnapshotFailure/real_reader (0.00s)
+    --- FAIL: TestAgentCard_AbsentPrecheckSnapshotFailure/deadline (0.00s)
+=== RUN   TestProjectionAbsenceRaceControls
+=== RUN   TestProjectionAbsenceRaceControls/true_absence
+=== RUN   TestProjectionAbsenceRaceControls/present_then_absent
+=== RUN   TestProjectionAbsenceRaceControls/same_text_genuine
+    absence_test.go:112: classification err=<nil> empty=false calls=1 want 1
+=== RUN   TestProjectionAbsenceRaceControls/precheck_error
+--- FAIL: TestProjectionAbsenceRaceControls (0.00s)
+    --- PASS: TestProjectionAbsenceRaceControls/true_absence (0.00s)
+    --- PASS: TestProjectionAbsenceRaceControls/present_then_absent (0.00s)
+    --- FAIL: TestProjectionAbsenceRaceControls/same_text_genuine (0.00s)
+    --- PASS: TestProjectionAbsenceRaceControls/precheck_error (0.00s)
+=== RUN   TestA2A_AbsentPrecheckSnapshotFailure
+=== RUN   TestA2A_AbsentPrecheckSnapshotFailure/direct
+    absence_test.go:151: A2A wire=200 "{\"error\":{\"code\":-32602,\"message\":\"not authorized\"},\"id\":7,\"jsonrpc\":\"2.0\"}\n" want "{\"jsonrpc\":\"2.0\",\"id\":7,\"error\":{\"code\":-32603,\"message\":\"transition invocation is not available in this daemon\"}}\n"
+=== RUN   TestA2A_AbsentPrecheckSnapshotFailure/real_reader
+    absence_test.go:151: A2A wire=200 "{\"error\":{\"code\":-32602,\"message\":\"not authorized\"},\"id\":7,\"jsonrpc\":\"2.0\"}\n" want "{\"jsonrpc\":\"2.0\",\"id\":7,\"error\":{\"code\":-32603,\"message\":\"transition invocation is not available in this daemon\"}}\n"
+--- FAIL: TestA2A_AbsentPrecheckSnapshotFailure (0.00s)
+    --- FAIL: TestA2A_AbsentPrecheckSnapshotFailure/direct (0.00s)
+    --- FAIL: TestA2A_AbsentPrecheckSnapshotFailure/real_reader (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.339s
+FAIL

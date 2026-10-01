@@ -1,0 +1,1 @@
+{"files": {"host/daemon/daemon.go": {"mutant": "384b398aded8382ee0fca8c9379767e96e444c551a5208d63aff6cf6c416c247", "restored": "38dddbadabc51083820c7027143028379d26e2f7cb837191bd6c3440d2218692"}}, "broad_failed_tests": ["TestMCPMountedBearerDenial"], "selected_test": "TestMCPMountedBearerDenial"}

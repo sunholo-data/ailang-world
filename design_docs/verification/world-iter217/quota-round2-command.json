@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "ailang",
+    "mission",
+    "quota",
+    "-bucket",
+    "codex",
+    "-json"
+  ],
+  "rc": 0,
+  "external_timeout_seconds": 90,
+  "stderr": ""
+}

@@ -1,0 +1,2094 @@
+{
+  "inventory_count": 43,
+  "compiled_runtime_kills": 42,
+  "expected_dependency_build_refusals": 1,
+  "model_transport": "Native Agent codex:gpt-6.1-sol, provider-pin substitution FLAG as controller declared",
+  "agent_token_usage": null,
+  "token_note": "Native Agent token metrics unavailable to executor; unknown, not zero.",
+  "normal_full_profiles": "controller-owned pending; no goindex diagnostic substitution",
+  "records": [
+    {
+      "id": "MUT-ABSENCE-UNTYPED",
+      "planner_stage": "M108A1_TYPED_ABSENCE",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/transitionreg",
+        "-run",
+        "^TestRegistryHeadAbsentErrorClassification/direct$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestRegistryHeadAbsentErrorClassification",
+        "TestRegistryHeadAbsentErrorClassification/direct"
+      ],
+      "selected_proof": "MUT-ABSENCE-UNTYPED-hash.json",
+      "selected_log": "MUT-ABSENCE-UNTYPED.log",
+      "restored_log": "MUT-ABSENCE-UNTYPED-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+        "mutant_sha256": "85c766b64db669a86a9492b9019818122316df8195bc15b0db15358ef1292a8c"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-ABSENCE-WRAP-LOST",
+      "planner_stage": "M108A1_TYPED_ABSENCE",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/transitionreg",
+        "-run",
+        "^TestRegistryHeadAbsentErrorClassification/new_request$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestRegistryHeadAbsentErrorClassification",
+        "TestRegistryHeadAbsentErrorClassification/new_request"
+      ],
+      "selected_proof": "MUT-ABSENCE-WRAP-LOST-hash.json",
+      "selected_log": "MUT-ABSENCE-WRAP-LOST.log",
+      "restored_log": "MUT-ABSENCE-WRAP-LOST-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "068fc0e47a1404e53ff8e38c2e5d3d5515fbd088914e90aa8bf34e53c129746c",
+        "mutant_sha256": "8c39e8cd0e7ca545ad0a3b4c8cbc686f8fd39f819db11dd78cddd0e645ab5a07"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-ABSENCE-POSTLOOKUP-CTX-REMOVED",
+      "planner_stage": "M108A1_TYPED_ABSENCE",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/transitionreg",
+        "-run",
+        "^TestRegistryHeadAbsentAfterLookupCancellation/absent$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestRegistryHeadAbsentAfterLookupCancellation",
+        "TestRegistryHeadAbsentAfterLookupCancellation/absent"
+      ],
+      "selected_proof": "MUT-ABSENCE-POSTLOOKUP-CTX-REMOVED-hash.json",
+      "selected_log": "MUT-ABSENCE-POSTLOOKUP-CTX-REMOVED.log",
+      "restored_log": "MUT-ABSENCE-POSTLOOKUP-CTX-REMOVED-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+        "mutant_sha256": "e62205955a68ee49d90f125dc6a5bc7fcdfe494180e33f638f46f25c059a008e"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-ABSENT-PRECHECK-CATCHALL",
+      "planner_stage": "M108A2_CLASSIFIED_PROJECTION",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPAbsentPrecheckSnapshotFailure/list/direct$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPAbsentPrecheckSnapshotFailure",
+        "TestMCPAbsentPrecheckSnapshotFailure/list/direct"
+      ],
+      "selected_proof": "MUT-ABSENT-PRECHECK-CATCHALL-mcp-hash.json",
+      "selected_log": "MUT-ABSENT-PRECHECK-CATCHALL-mcp.log",
+      "restored_log": "MUT-ABSENT-PRECHECK-CATCHALL-mcp-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-ABSENT-PRECHECK-CATCHALL-mcp-hash.json",
+          "scope": "whole projection",
+          "failed_tests": [
+            "TestAgentCard_AbsentPrecheckSnapshotFailure",
+            "TestAgentCard_AbsentPrecheckSnapshotFailure/store_error",
+            "TestAgentCard_AbsentPrecheckSnapshotFailure/real_reader",
+            "TestAgentCard_AbsentPrecheckSnapshotFailure/deadline",
+            "TestProjectionAbsenceRaceControls",
+            "TestProjectionAbsenceRaceControls/same_text_genuine",
+            "TestA2A_AbsentPrecheckSnapshotFailure",
+            "TestA2A_AbsentPrecheckSnapshotFailure/direct",
+            "TestA2A_AbsentPrecheckSnapshotFailure/real_reader",
+            "TestMCPAbsentPrecheckSnapshotFailure",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/direct",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/real_reader",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/same_text",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/deadline",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/projection.go": {
+            "mutant": "6237881d97ce8e56156fc86f77a5d6c14925e410e9f249a72f1fb229b6a42155",
+            "restored": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7"
+          }
+        },
+        "selected_test": "TestMCPAbsentPrecheckSnapshotFailure/list/direct",
+        "broad_scope": "whole projection",
+        "broad_failed_tests": [
+          "TestAgentCard_AbsentPrecheckSnapshotFailure",
+          "TestAgentCard_AbsentPrecheckSnapshotFailure/store_error",
+          "TestAgentCard_AbsentPrecheckSnapshotFailure/real_reader",
+          "TestAgentCard_AbsentPrecheckSnapshotFailure/deadline",
+          "TestProjectionAbsenceRaceControls",
+          "TestProjectionAbsenceRaceControls/same_text_genuine",
+          "TestA2A_AbsentPrecheckSnapshotFailure",
+          "TestA2A_AbsentPrecheckSnapshotFailure/direct",
+          "TestA2A_AbsentPrecheckSnapshotFailure/real_reader",
+          "TestMCPAbsentPrecheckSnapshotFailure",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/direct",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/real_reader",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/same_text",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/deadline",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline"
+        ]
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-ABSENCE-STRING-MATCH",
+      "planner_stage": "M108A2_CLASSIFIED_PROJECTION",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPAbsentPrecheckSnapshotFailure/list/same_text$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPAbsentPrecheckSnapshotFailure",
+        "TestMCPAbsentPrecheckSnapshotFailure/list/same_text"
+      ],
+      "selected_proof": "MUT-ABSENCE-STRING-MATCH-mcp-hash.json",
+      "selected_log": "MUT-ABSENCE-STRING-MATCH-mcp.log",
+      "restored_log": "MUT-ABSENCE-STRING-MATCH-mcp-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-ABSENCE-STRING-MATCH-mcp-hash.json",
+          "scope": "whole projection",
+          "failed_tests": [
+            "TestProjectionAbsenceRaceControls",
+            "TestProjectionAbsenceRaceControls/same_text_genuine",
+            "TestMCPAbsentPrecheckSnapshotFailure",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/same_text",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/projection.go": {
+            "mutant": "fd1c6200235b89b96ff112c7e38c82b4651d8942c5fb6183a1b53c4849d41d92",
+            "restored": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7"
+          }
+        },
+        "selected_test": "TestMCPAbsentPrecheckSnapshotFailure/list/same_text",
+        "broad_scope": "whole projection",
+        "broad_failed_tests": [
+          "TestProjectionAbsenceRaceControls",
+          "TestProjectionAbsenceRaceControls/same_text_genuine",
+          "TestMCPAbsentPrecheckSnapshotFailure",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/same_text",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text"
+        ]
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-PRESENT-ABSENCE-EMPTY",
+      "planner_stage": "M108A2_CLASSIFIED_PROJECTION",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-run",
+        "^TestProjectionAbsenceRaceControls/present_then_absent$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestProjectionAbsenceRaceControls",
+        "TestProjectionAbsenceRaceControls/present_then_absent"
+      ],
+      "selected_proof": "MUT-PRESENT-ABSENCE-EMPTY-hash.json",
+      "selected_log": "MUT-PRESENT-ABSENCE-EMPTY.log",
+      "restored_log": "MUT-PRESENT-ABSENCE-EMPTY-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "139854a43d5c1ba49ddeca64d0c4262989675090a4b7b8b56afdbeeb67cf0eda",
+        "mutant_sha256": "1dfe6804d26d5b45585612a3fa0b6daea266f4612c363590a904a1b891161981"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-PRECHECK-ABSENCE-EARLY-RETURN",
+      "planner_stage": "M108A2_CLASSIFIED_PROJECTION",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-run",
+        "^TestAgentCard_HeadRaceAbsentThenSucceeds$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestAgentCard_HeadRaceAbsentThenSucceeds"
+      ],
+      "selected_proof": "MUT-PRECHECK-ABSENCE-EARLY-RETURN-hash.json",
+      "selected_log": "MUT-PRECHECK-ABSENCE-EARLY-RETURN.log",
+      "restored_log": "MUT-PRECHECK-ABSENCE-EARLY-RETURN-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "139854a43d5c1ba49ddeca64d0c4262989675090a4b7b8b56afdbeeb67cf0eda",
+        "mutant_sha256": "ddf93027a06fcf5fd68586a5072db6f272089eae028df15bfba77c054d73022d"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-PRECHECK-ERROR-IGNORED",
+      "planner_stage": "M108A2_CLASSIFIED_PROJECTION",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-run",
+        "^TestProjectionAbsenceRaceControls/precheck_error$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestProjectionAbsenceRaceControls",
+        "TestProjectionAbsenceRaceControls/precheck_error"
+      ],
+      "selected_proof": "MUT-PRECHECK-ERROR-IGNORED-hash.json",
+      "selected_log": "MUT-PRECHECK-ERROR-IGNORED.log",
+      "restored_log": "MUT-PRECHECK-ERROR-IGNORED-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "139854a43d5c1ba49ddeca64d0c4262989675090a4b7b8b56afdbeeb67cf0eda",
+        "mutant_sha256": "1a4fedb22fdca79a3a951e3503b7695c3e16e80b4c3702494c14a137de5e3ccb"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-PIN-REGRESS",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "expected old-pin build/setup refusal",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": null,
+      "selected_command": [
+        "go",
+        "test",
+        "-mod=readonly",
+        "-p",
+        "1",
+        "./host/daemon",
+        "-run",
+        "^TestDaemonDependencyAllowlist$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [],
+      "selected_proof": "MUT-PIN-REGRESS-hash.json",
+      "selected_log": "MUT-PIN-REGRESS.log",
+      "restored_log": "MUT-PIN-REGRESS-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "files": {
+          "go.mod": {
+            "mutant": "78f21b853566a76ad62b80c894f3463c47f2b2d9c63ee0437c0d3098be02e770",
+            "restored": "b3427f9c52e6240ada240666f6bb70ab6dcb4df22c4f7383d44cb4dfa46c9653"
+          },
+          "go.sum": {
+            "mutant": "0efaabe8522a52a6603eb11b56716b9518b8ce1e093ea2a8a8d42fc729ca4a26",
+            "restored": "0efaabe8522a52a6603eb11b56716b9518b8ce1e093ea2a8a8d42fc729ca4a26"
+          },
+          "host/projection/mcp.go": {
+            "mutant": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "applied_rc": 1,
+        "restored_rc": 0,
+        "kind": "dependency boundary; may be expected compile failure, classify actual raw output"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-ALLOWLIST-ROOT-MCP",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/daemon",
+        "-run",
+        "^TestAilangProtocolAdmissionIsNarrow$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestAilangProtocolAdmissionIsNarrow"
+      ],
+      "selected_proof": "MUT-ALLOWLIST-ROOT-MCP-hash.json",
+      "selected_log": "MUT-ALLOWLIST-ROOT-MCP.log",
+      "restored_log": "MUT-ALLOWLIST-ROOT-MCP-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "f20dc1d6b1acec9aa26428b9e17b7e85e8947fa45b15d7e6349c4b47af4230d2",
+        "mutant_sha256": "7f02e86d380f41f0889757fa112da04435f086df9740f29203856e078f370875"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-FACADE-IMPORT-MCP",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-mod=mod",
+        "-p",
+        "1",
+        "./host/daemon",
+        "-run",
+        "^TestDaemonDependencyAllowlist$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestDaemonDependencyAllowlist",
+        "TestDaemonDependencyAllowlist/daemon_core_build_graph"
+      ],
+      "selected_proof": "MUT-FACADE-IMPORT-MCP-hash.json",
+      "selected_log": "MUT-FACADE-IMPORT-MCP.log",
+      "restored_log": "MUT-FACADE-IMPORT-MCP-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "files": {
+          "go.mod": {
+            "mutant": "b3427f9c52e6240ada240666f6bb70ab6dcb4df22c4f7383d44cb4dfa46c9653",
+            "restored": "b3427f9c52e6240ada240666f6bb70ab6dcb4df22c4f7383d44cb4dfa46c9653"
+          },
+          "go.sum": {
+            "mutant": "0efaabe8522a52a6603eb11b56716b9518b8ce1e093ea2a8a8d42fc729ca4a26",
+            "restored": "0efaabe8522a52a6603eb11b56716b9518b8ce1e093ea2a8a8d42fc729ca4a26"
+          },
+          "host/projection/mcp.go": {
+            "mutant": "f94f417421df082ab993d5a0568b5acaced91edf78e2432a6aff36c812150c98",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "applied_rc": 1,
+        "restored_rc": 0,
+        "kind": "dependency boundary; may be expected compile failure, classify actual raw output"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-MAP-IDENTITY",
+      "planner_stage": "M108B_DEP_NAMES",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-run",
+        "^TestMCPNameRoundTrip$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestMCPNameRoundTrip"
+      ],
+      "selected_proof": "MUT-MAP-IDENTITY-hash.json",
+      "selected_log": "MUT-MAP-IDENTITY.log",
+      "restored_log": "MUT-MAP-IDENTITY-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+        "mutant_sha256": "8634797bbc680ef017da32543888e6a47d40891f4897a18e3e8a06e5bdb3c940"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-MAP-COLLIDE",
+      "planner_stage": "M108B_DEP_NAMES",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-run",
+        "^TestMCPNameRoundTrip$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestMCPNameRoundTrip"
+      ],
+      "selected_proof": "MUT-MAP-COLLIDE-hash.json",
+      "selected_log": "MUT-MAP-COLLIDE.log",
+      "restored_log": "MUT-MAP-COLLIDE-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+        "mutant_sha256": "ff59993e4b7b4675fa65e3f3d181be32c9c6af7199665c9954cf9f5e1102e51d"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-MAP-DECODE-INVALID",
+      "planner_stage": "M108B_DEP_NAMES",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-run",
+        "^TestMCPNameRefusal$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestMCPNameRefusal"
+      ],
+      "selected_proof": "MUT-MAP-DECODE-INVALID-hash.json",
+      "selected_log": "MUT-MAP-DECODE-INVALID.log",
+      "restored_log": "MUT-MAP-DECODE-INVALID-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+        "mutant_sha256": "2d9bf2d24353aed27caa84f5b9599a61ea9dce0f352c1bf158139365656cf372"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-MAP-NO-LEN-GUARD",
+      "planner_stage": "M108B_DEP_NAMES",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPSurfaceRefusalRecovers$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPSurfaceRefusalRecovers"
+      ],
+      "selected_proof": "MUT-MAP-NO-LEN-GUARD-mcp-hash.json",
+      "selected_log": "MUT-MAP-NO-LEN-GUARD-mcp.log",
+      "restored_log": "MUT-MAP-NO-LEN-GUARD-mcp-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-MAP-NO-LEN-GUARD-mcp-hash.json",
+          "scope": "whole projection",
+          "failed_tests": [
+            "TestMCPSurfaceRefusalRecovers",
+            "TestMCPNameRefusal"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcpname.go": {
+            "mutant": "bc2c62e3da8530e17adeadacbe9bd4ecd1e9dc1ac9b4875f3f90f3c8274c6d4f",
+            "restored": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7"
+          }
+        },
+        "selected_test": "TestMCPSurfaceRefusalRecovers",
+        "broad_scope": "whole projection",
+        "broad_failed_tests": [
+          "TestMCPSurfaceRefusalRecovers",
+          "TestMCPNameRefusal"
+        ]
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-SURFACE-ERROR-CACHED",
+      "planner_stage": "M108B_DEP_NAMES",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPSurfaceRefusalRecovers$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPSurfaceRefusalRecovers"
+      ],
+      "selected_proof": "MUT-SURFACE-ERROR-CACHED-hash.json",
+      "selected_log": "MUT-SURFACE-ERROR-CACHED.log",
+      "restored_log": "MUT-SURFACE-ERROR-CACHED-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-SURFACE-ERROR-CACHED-hash.json",
+          "scope": "whole ./host/projection",
+          "failed_tests": [
+            "TestMCPSurfaceRefusalRecovers"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/projection.go": {
+            "mutant": "4678ae424ca4d6b846f19c099e97060623bbddc1519317c1352e783eeaf47d2c",
+            "restored": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7"
+          },
+          "host/projection/mcp.go": {
+            "mutant": "4ddec97c7cd42414fb9c71868c1a19d9ef7d9940693570a7f34a71366b500863",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "selected_test": "TestMCPSurfaceRefusalRecovers",
+        "kind": "production",
+        "broad_scope": "whole ./host/projection",
+        "broad_failed_tests": [
+          "TestMCPSurfaceRefusalRecovers"
+        ]
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-SCHEMA-PASSTHRU",
+      "planner_stage": "M108B_DEP_NAMES",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-run",
+        "^TestMCPSchemaNormalization$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestMCPSchemaNormalization"
+      ],
+      "selected_proof": "MUT-SCHEMA-PASSTHRU-hash.json",
+      "selected_log": "MUT-SCHEMA-PASSTHRU.log",
+      "restored_log": "MUT-SCHEMA-PASSTHRU-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+        "mutant_sha256": "51c1722cf5a3cf07a356bc57498b5d48d98a017c713622d982ffb7f99389f1b4"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-SCHEMA-DROP-CONSTRAINT",
+      "planner_stage": "M108B_DEP_NAMES",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-run",
+        "^TestMCPSchemaNormalization$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestMCPSchemaNormalization"
+      ],
+      "selected_proof": "MUT-SCHEMA-DROP-CONSTRAINT-hash.json",
+      "selected_log": "MUT-SCHEMA-DROP-CONSTRAINT.log",
+      "restored_log": "MUT-SCHEMA-DROP-CONSTRAINT-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+        "mutant_sha256": "bc58ebaf63d7fe1f8d336edeff7dea63cde228dc9bfb38a2ac36ee17559ec21d"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-SCHEMA-FLOAT64",
+      "planner_stage": "M108B_DEP_NAMES",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-run",
+        "^TestMCPSchemaNormalization$",
+        "-v",
+        "-count=1",
+        "-timeout=60s"
+      ],
+      "selected_failed_tests": [
+        "TestMCPSchemaNormalization"
+      ],
+      "selected_proof": "MUT-SCHEMA-FLOAT64-hash.json",
+      "selected_log": "MUT-SCHEMA-FLOAT64.log",
+      "restored_log": "MUT-SCHEMA-FLOAT64-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "original_restored_sha256": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+        "mutant_sha256": "7f53a02107ab7bf5bbd23dac1538f5ba746ab0bbf3e3329dc1b62ce1409c5134"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-RESOLV-DENY-DROPPED",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPDenialMatrix$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPDenialMatrix"
+      ],
+      "selected_proof": "MUT-RESOLV-DENY-DROPPED-hash.json",
+      "selected_log": "MUT-RESOLV-DENY-DROPPED.log",
+      "restored_log": "MUT-RESOLV-DENY-DROPPED-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-RESOLV-DENY-DROPPED-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPDenialMatrix"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "685bfaabebce3752ff3b85bac8f5f8f8f22e034e42e6799dcb5e5ff2b8dd6a11",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPDenialMatrix"
+        ],
+        "selected_test": "TestMCPDenialMatrix"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-KEY-AS-SESSION",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPDenialMatrix$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPDenialMatrix"
+      ],
+      "selected_proof": "MUT-KEY-AS-SESSION-hash.json",
+      "selected_log": "MUT-KEY-AS-SESSION.log",
+      "restored_log": "MUT-KEY-AS-SESSION-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-KEY-AS-SESSION-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPAbsentPrecheckSnapshotFailure",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/direct",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/real_reader",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/same_text",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/deadline",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline",
+            "TestMCPSurfaceRefusalRecovers",
+            "TestMCPInvokeDeadlineFreesSlot",
+            "TestMCPListExactSetPerSession",
+            "TestMCPDenialMatrix",
+            "TestMCPCallDispatch",
+            "TestMCPInvokeListedThenRevoked"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "98aac012fa81fc88f6aa2f058f62c0d358468343865d8cee742d5ad3dc20d138",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPAbsentPrecheckSnapshotFailure",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/direct",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/real_reader",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/same_text",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/deadline",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline",
+          "TestMCPSurfaceRefusalRecovers",
+          "TestMCPInvokeDeadlineFreesSlot",
+          "TestMCPListExactSetPerSession",
+          "TestMCPDenialMatrix",
+          "TestMCPCallDispatch",
+          "TestMCPInvokeListedThenRevoked"
+        ],
+        "selected_test": "TestMCPDenialMatrix"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-MCP-PROTECTED",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/daemon",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPMountedBearerDenial$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPMountedBearerDenial"
+      ],
+      "selected_proof": "MUT-MCP-PROTECTED-hash.json",
+      "selected_log": "MUT-MCP-PROTECTED.log",
+      "restored_log": "MUT-MCP-PROTECTED-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-MCP-PROTECTED-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPMountedBearerDenial"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/daemon/daemon.go": {
+            "mutant": "384b398aded8382ee0fca8c9379767e96e444c551a5208d63aff6cf6c416c247",
+            "restored": "38dddbadabc51083820c7027143028379d26e2f7cb837191bd6c3440d2218692"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPMountedBearerDenial"
+        ],
+        "selected_test": "TestMCPMountedBearerDenial"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-TOOLS-UNFILTERED",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPListExactSetPerSession$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPListExactSetPerSession"
+      ],
+      "selected_proof": "MUT-TOOLS-UNFILTERED-hash.json",
+      "selected_log": "MUT-TOOLS-UNFILTERED.log",
+      "restored_log": "MUT-TOOLS-UNFILTERED-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-TOOLS-UNFILTERED-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPListExactSetPerSession",
+            "TestAgentCard_ExactSkillSetPerSession",
+            "TestAgentCard_TracksSessionSnapshot"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/projection.go": {
+            "mutant": "9858eda236707f091927f7332bc84915aff914bade3e4645930c4e3fda22b06b",
+            "restored": "75237e6035a1499f8306416deac00f51758d2c008009b083c69acbfb168de3b6"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPListExactSetPerSession",
+          "TestAgentCard_ExactSkillSetPerSession",
+          "TestAgentCard_TracksSessionSnapshot"
+        ],
+        "selected_test": "TestMCPListExactSetPerSession"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-TOOLS-NO-DEADLINE",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPToolsInnerBudget$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPToolsInnerBudget"
+      ],
+      "selected_proof": "MUT-TOOLS-NO-DEADLINE-hash.json",
+      "selected_log": "MUT-TOOLS-NO-DEADLINE.log",
+      "restored_log": "MUT-TOOLS-NO-DEADLINE-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-TOOLS-NO-DEADLINE-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPToolsInnerBudget"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "8c1a6e7449fdc002e53ad2e5b12a481e4da3dc70aac670fcee39d35ec9dde7eb",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPToolsInnerBudget"
+        ],
+        "selected_test": "TestMCPToolsInnerBudget"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-INVOKE-NO-READMIT",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPInvokeListedThenRevoked$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPInvokeListedThenRevoked"
+      ],
+      "selected_proof": "MUT-INVOKE-NO-READMIT-hash.json",
+      "selected_log": "MUT-INVOKE-NO-READMIT.log",
+      "restored_log": "MUT-INVOKE-NO-READMIT-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-INVOKE-NO-READMIT-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPAbsentPrecheckSnapshotFailure",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline",
+            "TestMCPInvokeCancelAfterAdmission",
+            "TestMCPInvokeListedThenRevoked"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/projection.go": {
+            "mutant": "5ab9ce1243137ad54f53ee84acc17f5c65ba581c4dad69a3109aca1d1a445d55",
+            "restored": "75237e6035a1499f8306416deac00f51758d2c008009b083c69acbfb168de3b6"
+          },
+          "host/projection/mcp.go": {
+            "mutant": "55c635713e225c715c20b3777368ca15653b4be598ee5a658fa0a93e12d14188",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPAbsentPrecheckSnapshotFailure",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline",
+          "TestMCPInvokeCancelAfterAdmission",
+          "TestMCPInvokeListedThenRevoked"
+        ],
+        "selected_test": "TestMCPInvokeListedThenRevoked"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-CB-BACKGROUND",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPInvokeDeadlineFreesSlot$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPInvokeDeadlineFreesSlot"
+      ],
+      "selected_proof": "MUT-CB-BACKGROUND-hash.json",
+      "selected_log": "MUT-CB-BACKGROUND.log",
+      "restored_log": "MUT-CB-BACKGROUND-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-CB-BACKGROUND-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPInvokeCancelAfterAdmission",
+            "TestMCPInvokeDeadlineFreesSlot",
+            "TestMCPInvokeCanceledBeforeMint"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "e8d31a79a772713b859390cb0a918c78dec8536baffeab7538b89dbd4cb4777a",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPInvokeCancelAfterAdmission",
+          "TestMCPInvokeDeadlineFreesSlot",
+          "TestMCPInvokeCanceledBeforeMint"
+        ],
+        "selected_test": "TestMCPInvokeDeadlineFreesSlot"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-INVOKE-NO-CTX-CHECK",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPInvokeCancelAfterAdmission$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPInvokeCancelAfterAdmission"
+      ],
+      "selected_proof": "MUT-INVOKE-NO-CTX-CHECK-hash.json",
+      "selected_log": "MUT-INVOKE-NO-CTX-CHECK.log",
+      "restored_log": "MUT-INVOKE-NO-CTX-CHECK-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-INVOKE-NO-CTX-CHECK-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPInvokeCancelAfterAdmission"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "a73e7c178b05249c57c8c392fa47b869a1a4f05b13d2a05c1fece8df1307309d",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPInvokeCancelAfterAdmission"
+        ],
+        "selected_test": "TestMCPInvokeCancelAfterAdmission"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-TASK-PER-POST",
+      "planner_stage": "M108D_CONFORMANCE",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPBatchAccounting/repeated_rpc_id$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPBatchAccounting",
+        "TestMCPBatchAccounting/repeated_rpc_id"
+      ],
+      "selected_proof": "MUT-TASK-PER-POST-current-hash.json",
+      "selected_log": "MUT-TASK-PER-POST-current.log",
+      "restored_log": "MUT-TASK-PER-POST-current-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-TASK-PER-POST-hash.json",
+          "scope": "whole ./host/projection",
+          "failed_tests": [
+            "TestMCPBatchAccounting",
+            "TestMCPBatchAccounting/repeated_rpc_id",
+            "TestMCPBatchConformance",
+            "TestMCPBatchConformance/whole_host_failure",
+            "TestMCPWireOwnershipSource"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "9b7ea324621002b2f1d0513f682591359071f595d337a7329d2c4669976aa6a1",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "selected_test": "TestMCPBatchAccounting/repeated_rpc_id",
+        "test_file_sha256": "b5170ac63f686c3004c354e0e804c4ab288eacd61c7919079bd0d4c7183480b5",
+        "kind": "production lazy task cache scoped to one POST context"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-SNAPSHOT-PER-POST",
+      "planner_stage": "M108D_CONFORMANCE",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPBatchAccounting/repeated_rpc_id$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPBatchAccounting",
+        "TestMCPBatchAccounting/repeated_rpc_id"
+      ],
+      "selected_proof": "MUT-SNAPSHOT-PER-POST-hash.json",
+      "selected_log": "MUT-SNAPSHOT-PER-POST.log",
+      "restored_log": "MUT-SNAPSHOT-PER-POST-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-SNAPSHOT-PER-POST-hash.json",
+          "scope": "whole ./host/projection",
+          "failed_tests": [
+            "TestMCPAbsentPrecheckSnapshotFailure",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline",
+            "TestMCPInvokeCancelAfterAdmission",
+            "TestMCPBatchAccounting",
+            "TestMCPBatchAccounting/repeated_rpc_id",
+            "TestMCPBatchAccounting/removed_between_items",
+            "TestMCPInvokeListedThenRevoked"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/projection.go": {
+            "mutant": "9b82febc9e1a7b9f7ee81515d3233ea2b24ba58775369ad2707f9317f7629915",
+            "restored": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7"
+          },
+          "host/projection/mcp.go": {
+            "mutant": "55c635713e225c715c20b3777368ca15653b4be598ee5a658fa0a93e12d14188",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "selected_test": "TestMCPBatchAccounting/repeated_rpc_id",
+        "kind": "production",
+        "broad_scope": "whole ./host/projection",
+        "broad_failed_tests": [
+          "TestMCPAbsentPrecheckSnapshotFailure",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline",
+          "TestMCPInvokeCancelAfterAdmission",
+          "TestMCPBatchAccounting",
+          "TestMCPBatchAccounting/repeated_rpc_id",
+          "TestMCPBatchAccounting/removed_between_items",
+          "TestMCPInvokeListedThenRevoked"
+        ]
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-BATCH-NO-READMIT",
+      "planner_stage": "M108D_CONFORMANCE",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPBatchAccounting/removed_between_items$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPBatchAccounting",
+        "TestMCPBatchAccounting/removed_between_items"
+      ],
+      "selected_proof": "MUT-BATCH-NO-READMIT-hash.json",
+      "selected_log": "MUT-BATCH-NO-READMIT.log",
+      "restored_log": "MUT-BATCH-NO-READMIT-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-BATCH-NO-READMIT-hash.json",
+          "scope": "whole ./host/projection",
+          "failed_tests": [
+            "TestMCPAbsentPrecheckSnapshotFailure",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline",
+            "TestMCPInvokeCancelAfterAdmission",
+            "TestMCPBatchAccounting",
+            "TestMCPBatchAccounting/repeated_rpc_id",
+            "TestMCPBatchAccounting/removed_between_items",
+            "TestMCPInvokeListedThenRevoked"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/projection.go": {
+            "mutant": "9b82febc9e1a7b9f7ee81515d3233ea2b24ba58775369ad2707f9317f7629915",
+            "restored": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7"
+          },
+          "host/projection/mcp.go": {
+            "mutant": "55c635713e225c715c20b3777368ca15653b4be598ee5a658fa0a93e12d14188",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "selected_test": "TestMCPBatchAccounting/removed_between_items",
+        "kind": "production",
+        "broad_scope": "whole ./host/projection",
+        "broad_failed_tests": [
+          "TestMCPAbsentPrecheckSnapshotFailure",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline",
+          "TestMCPInvokeCancelAfterAdmission",
+          "TestMCPBatchAccounting",
+          "TestMCPBatchAccounting/repeated_rpc_id",
+          "TestMCPBatchAccounting/removed_between_items",
+          "TestMCPInvokeListedThenRevoked"
+        ]
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-BATCH-AS-SINGLE",
+      "planner_stage": "M108D_CONFORMANCE",
+      "kind": "compiled test-only observable guard calibration",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPBatchConformance/old_versions_and_item_errors$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPBatchConformance",
+        "TestMCPBatchConformance/old_versions_and_item_errors"
+      ],
+      "selected_proof": "MUT-BATCH-AS-SINGLE-hash.json",
+      "selected_log": "MUT-BATCH-AS-SINGLE.log",
+      "restored_log": "MUT-BATCH-AS-SINGLE-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-BATCH-AS-SINGLE-hash.json",
+          "scope": "whole ./host/projection",
+          "failed_tests": [
+            "TestMCPBatchConformance",
+            "TestMCPBatchConformance/old_versions_and_item_errors"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp_conformance_test.go": {
+            "mutant": "bac90ed0e1d4da6699a674d6f36d5de0a593af56ff978d2f2ae7ebbd0da383db",
+            "restored": "8ffd9f8fd460a180db4bbbe2bf12fd7277c514bc5ec63ea41bc59f46024fd3f8"
+          }
+        },
+        "selected_test": "TestMCPBatchConformance/old_versions_and_item_errors",
+        "kind": "test decorator",
+        "broad_scope": "whole ./host/projection",
+        "broad_failed_tests": [
+          "TestMCPBatchConformance",
+          "TestMCPBatchConformance/old_versions_and_item_errors"
+        ]
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-BATCH-PARTIAL",
+      "planner_stage": "M108D_CONFORMANCE",
+      "kind": "compiled test-only observable guard calibration",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPBatchConformance/whole_host_failure$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPBatchConformance",
+        "TestMCPBatchConformance/whole_host_failure"
+      ],
+      "selected_proof": "MUT-BATCH-PARTIAL-hash.json",
+      "selected_log": "MUT-BATCH-PARTIAL.log",
+      "restored_log": "MUT-BATCH-PARTIAL-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-BATCH-PARTIAL-hash.json",
+          "scope": "whole ./host/projection",
+          "failed_tests": [
+            "TestMCPBatchConformance",
+            "TestMCPBatchConformance/whole_host_failure"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp_conformance_test.go": {
+            "mutant": "04134c1b2d34824cd445fa907fbf70a719b8802d250d2957188f65e2a8da0abf",
+            "restored": "8ffd9f8fd460a180db4bbbe2bf12fd7277c514bc5ec63ea41bc59f46024fd3f8"
+          }
+        },
+        "selected_test": "TestMCPBatchConformance/whole_host_failure",
+        "kind": "test response decorator",
+        "broad_scope": "whole ./host/projection",
+        "broad_failed_tests": [
+          "TestMCPBatchConformance",
+          "TestMCPBatchConformance/whole_host_failure"
+        ]
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-RUNNER-UNBOUNDED",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPBoundsValidation$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPBoundsValidation"
+      ],
+      "selected_proof": "MUT-RUNNER-UNBOUNDED-hash.json",
+      "selected_log": "MUT-RUNNER-UNBOUNDED.log",
+      "restored_log": "MUT-RUNNER-UNBOUNDED-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-RUNNER-UNBOUNDED-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPBoundsValidation"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/projection.go": {
+            "mutant": "00bd26aff1d1cf59eb3e20117782b7d6fe30c9368759ff17fda5ffd8b48d76ee",
+            "restored": "75237e6035a1499f8306416deac00f51758d2c008009b083c69acbfb168de3b6"
+          },
+          "host/projection/mcp.go": {
+            "mutant": "a248f1a72b361dc59fbbe55c0f29a07906f5e4e7d84ce1e1d40b328ded69a8fa",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPBoundsValidation"
+        ],
+        "selected_test": "TestMCPBoundsValidation"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-RESOLV-NO-BUDGET",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPResolverInnerBudget$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPResolverInnerBudget"
+      ],
+      "selected_proof": "MUT-RESOLV-NO-BUDGET-hash.json",
+      "selected_log": "MUT-RESOLV-NO-BUDGET.log",
+      "restored_log": "MUT-RESOLV-NO-BUDGET-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-RESOLV-NO-BUDGET-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPResolverInnerBudget"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "4dbcc776769c3848d89c76a1f352b344f2e10c44ca8bbd8073673addd12c6887",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPResolverInnerBudget"
+        ],
+        "selected_test": "TestMCPResolverInnerBudget"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-AGGREGATE-REMOVED",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/daemon",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPPostBudgetProductionConstants/single$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPPostBudgetProductionConstants",
+        "TestMCPPostBudgetProductionConstants/single"
+      ],
+      "selected_proof": "MUT-AGGREGATE-REMOVED-accounting-hash.json",
+      "selected_log": "MUT-AGGREGATE-REMOVED-accounting.log",
+      "restored_log": "MUT-AGGREGATE-REMOVED-accounting-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-AGGREGATE-REMOVED-hash.json",
+          "scope": "whole ./host/daemon",
+          "failed_tests": [
+            "TestMCPPostBudgetProductionConstants",
+            "TestMCPPostBudgetProductionConstants/single",
+            "TestMCPPostBudgetProductionConstants/batch"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "ab729c5dc6e8796ac91193a381f1d137075af4ef5654dd9aef2dc4a4b82c87a3",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "test_file_sha256": "e4cbe746ec1e35b6f03e45a576b72487b6128b88a766b9d026613d959fb5d7b0",
+        "selected_test": "TestMCPPostBudgetProductionConstants/single",
+        "kind": "exact aggregate removal; real stage/receipt accounting before timing assertion"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-AGGREGATE-PER-ITEM",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/daemon",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPPostBudgetProductionConstants/batch$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPPostBudgetProductionConstants",
+        "TestMCPPostBudgetProductionConstants/batch"
+      ],
+      "selected_proof": "MUT-AGGREGATE-PER-ITEM-accounting-hash.json",
+      "selected_log": "MUT-AGGREGATE-PER-ITEM-accounting.log",
+      "restored_log": "MUT-AGGREGATE-PER-ITEM-accounting-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-AGGREGATE-PER-ITEM-hash.json",
+          "scope": "whole ./host/daemon",
+          "failed_tests": [
+            "TestMCPPostBudgetProductionConstants",
+            "TestMCPPostBudgetProductionConstants/single",
+            "TestMCPPostBudgetProductionConstants/batch"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "ab729c5dc6e8796ac91193a381f1d137075af4ef5654dd9aef2dc4a4b82c87a3",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "test_file_sha256": "e4cbe746ec1e35b6f03e45a576b72487b6128b88a766b9d026613d959fb5d7b0",
+        "selected_test": "TestMCPPostBudgetProductionConstants/batch",
+        "kind": "exact aggregate removal; real stage/receipt accounting before timing assertion"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-PLAIN-JSON",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled test-only observable guard calibration",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPWireConformance$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPWireConformance"
+      ],
+      "selected_proof": "MUT-PLAIN-JSON-hash.json",
+      "selected_log": "MUT-PLAIN-JSON.log",
+      "restored_log": "MUT-PLAIN-JSON-restored.log",
+      "actual_broad_executions": [],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp_conformance_test.go": {
+            "mutant": "70eba85f1095ecdb0e2717665c5129070d972842660c5617bda6b1bfb7fd2a03",
+            "restored": "8ffd9f8fd460a180db4bbbe2bf12fd7277c514bc5ec63ea41bc59f46024fd3f8"
+          }
+        },
+        "selected_test": "TestMCPWireConformance",
+        "selected_failed_tests": [
+          "TestMCPWireConformance"
+        ],
+        "kind": "test response decorator",
+        "broad_execution": false
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-ENVELOPE-HANDROLL",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPWireOwnershipSource$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPWireOwnershipSource"
+      ],
+      "selected_proof": "MUT-ENVELOPE-HANDROLL-hash.json",
+      "selected_log": "MUT-ENVELOPE-HANDROLL.log",
+      "restored_log": "MUT-ENVELOPE-HANDROLL-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-ENVELOPE-HANDROLL-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPAbsentPrecheckSnapshotFailure",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/direct",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/real_reader",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/same_text",
+            "TestMCPAbsentPrecheckSnapshotFailure/list/deadline",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+            "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline",
+            "TestMCPSurfaceRefusalRecovers",
+            "TestMCPInvokeDeadlineFreesSlot",
+            "TestMCPWireOwnershipSource",
+            "TestMCPListExactSetPerSession",
+            "TestMCPDenialMatrix",
+            "TestMCPCallDispatch"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "2a78c0fdbf2f44289dbe8d2ecd830883d35b90b857f25fdfcb64a2dbd52e87bc",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPAbsentPrecheckSnapshotFailure",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/direct",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/real_reader",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/same_text",
+          "TestMCPAbsentPrecheckSnapshotFailure/list/deadline",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+          "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline",
+          "TestMCPSurfaceRefusalRecovers",
+          "TestMCPInvokeDeadlineFreesSlot",
+          "TestMCPWireOwnershipSource",
+          "TestMCPListExactSetPerSession",
+          "TestMCPDenialMatrix",
+          "TestMCPCallDispatch"
+        ],
+        "selected_test": "TestMCPWireOwnershipSource"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-DEADLINE-RELAX-MCP",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPWireOwnershipSource$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPWireOwnershipSource"
+      ],
+      "selected_proof": "MUT-DEADLINE-RELAX-MCP-hash.json",
+      "selected_log": "MUT-DEADLINE-RELAX-MCP.log",
+      "restored_log": "MUT-DEADLINE-RELAX-MCP-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-DEADLINE-RELAX-MCP-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPWireOwnershipSource",
+            "TestProjection_NoDeadlineTampering"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "7044c91985f6f63c471c0a757c07048c664957f5f7e89658baa7d5d826ae77cb",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPWireOwnershipSource",
+          "TestProjection_NoDeadlineTampering"
+        ],
+        "selected_test": "TestMCPWireOwnershipSource"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-A2A-MCP-NAME-GATE",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/projection",
+        "-timeout=60s",
+        "-run",
+        "^TestProjection_WireOwnershipSource$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestProjection_WireOwnershipSource"
+      ],
+      "selected_proof": "MUT-A2A-MCP-NAME-GATE-hash.json",
+      "selected_log": "MUT-A2A-MCP-NAME-GATE.log",
+      "restored_log": "MUT-A2A-MCP-NAME-GATE-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-A2A-MCP-NAME-GATE-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestProjection_WireOwnershipSource"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/projection.go": {
+            "mutant": "aafd8677fc82b2a117844ceab18c23b26000ba20d2e311168bc4e2cba94f4b55",
+            "restored": "75237e6035a1499f8306416deac00f51758d2c008009b083c69acbfb168de3b6"
+          }
+        },
+        "broad_failed_tests": [
+          "TestProjection_WireOwnershipSource"
+        ],
+        "selected_test": "TestProjection_WireOwnershipSource"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-MUX-METHOD-REMOVED",
+      "planner_stage": "M108C_ADAPTERS",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/daemon",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPMountMethodSource$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPMountMethodSource"
+      ],
+      "selected_proof": "MUT-MUX-METHOD-REMOVED-hash.json",
+      "selected_log": "MUT-MUX-METHOD-REMOVED.log",
+      "restored_log": "MUT-MUX-METHOD-REMOVED-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-MUX-METHOD-REMOVED-hash.json",
+          "scope": "whole package in C batch",
+          "failed_tests": [
+            "TestMCPMountMethodSource"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/daemon/daemon.go": {
+            "mutant": "fb00531de7f70567b9c878767f4f070d01a5b7c9f98de14846ea83061d7a6d21",
+            "restored": "38dddbadabc51083820c7027143028379d26e2f7cb837191bd6c3440d2218692"
+          }
+        },
+        "broad_failed_tests": [
+          "TestMCPMountMethodSource"
+        ],
+        "selected_test": "TestMCPMountMethodSource"
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-CROSS-SURFACE-DIVERGE",
+      "planner_stage": "M108D_CONFORMANCE",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/daemon",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPCrossSurfaceExactSet$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPCrossSurfaceExactSet"
+      ],
+      "selected_proof": "MUT-CROSS-SURFACE-DIVERGE-hash.json",
+      "selected_log": "MUT-CROSS-SURFACE-DIVERGE.log",
+      "restored_log": "MUT-CROSS-SURFACE-DIVERGE-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-CROSS-SURFACE-DIVERGE-hash.json",
+          "scope": "whole ./host/daemon",
+          "failed_tests": [
+            "TestMCPPostBudgetProductionConstants",
+            "TestMCPPostBudgetProductionConstants/single",
+            "TestMCPPostBudgetProductionConstants/batch",
+            "TestMCPCrossSurfaceExactSet",
+            "TestMCPAmbientExportsAbsent",
+            "TestMCPQuickstartPayloadsVerbatim",
+            "TestMCPToolsListMatchesAgentCard"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "680b24b448cb4ca11b0f12bfce009244ebdf8eb7a80e46dea5722089b60fc7e9",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "selected_test": "TestMCPCrossSurfaceExactSet",
+        "kind": "production",
+        "broad_scope": "whole ./host/daemon",
+        "broad_failed_tests": [
+          "TestMCPPostBudgetProductionConstants",
+          "TestMCPPostBudgetProductionConstants/single",
+          "TestMCPPostBudgetProductionConstants/batch",
+          "TestMCPCrossSurfaceExactSet",
+          "TestMCPAmbientExportsAbsent",
+          "TestMCPQuickstartPayloadsVerbatim",
+          "TestMCPToolsListMatchesAgentCard"
+        ]
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    },
+    {
+      "id": "MUT-AMBIENT-HARDCODED",
+      "planner_stage": "M108D_CONFORMANCE",
+      "kind": "compiled production mutation",
+      "applied_rc": 1,
+      "restored_rc": 0,
+      "compile_fence_rc": 0,
+      "selected_command": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "./host/daemon",
+        "-timeout=60s",
+        "-run",
+        "^TestMCPAmbientExportsAbsent$",
+        "-v",
+        "-count=1"
+      ],
+      "selected_failed_tests": [
+        "TestMCPAmbientExportsAbsent"
+      ],
+      "selected_proof": "MUT-AMBIENT-HARDCODED-hash.json",
+      "selected_log": "MUT-AMBIENT-HARDCODED.log",
+      "restored_log": "MUT-AMBIENT-HARDCODED-restored.log",
+      "actual_broad_executions": [
+        {
+          "proof": "MUT-AMBIENT-HARDCODED-hash.json",
+          "scope": "whole ./host/daemon",
+          "failed_tests": [
+            "TestMCPCrossSurfaceExactSet",
+            "TestMCPAmbientExportsAbsent",
+            "TestMCPToolsListMatchesAgentCard"
+          ]
+        }
+      ],
+      "source_hashes": {
+        "files": {
+          "host/projection/mcp.go": {
+            "mutant": "3b2d684658a5fd76f9b64eabb1dd1567a37a3729100c7047c680c6c60d49cf76",
+            "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+          }
+        },
+        "selected_test": "TestMCPAmbientExportsAbsent",
+        "kind": "production",
+        "broad_scope": "whole ./host/daemon",
+        "broad_failed_tests": [
+          "TestMCPCrossSurfaceExactSet",
+          "TestMCPAmbientExportsAbsent",
+          "TestMCPToolsListMatchesAgentCard"
+        ]
+      },
+      "note": "D has no production behavior diff; D-time production mutations exercise C/B behavior, not D-own production nonvacuity."
+    }
+  ]
+}
