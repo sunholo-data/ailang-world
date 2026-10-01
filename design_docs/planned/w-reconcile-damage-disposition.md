@@ -63,7 +63,10 @@ All rows: VERIFIED BY ME at HEAD `8d86c4f`, in worktree `.wt-world-iter214-desig
 | V16 | `json.Unmarshal` into `map[string]any`: `null` → nil map, no error; `[1]` → error; `{}` → non-nil | throwaway `host/coordinator/zz_probe214b_test.go`, `go test -count=1 -run '^TestProbe214b$' -v ./host/coordinator/` → `unmarshal null: nil=true err=<nil>`; `unmarshal [1]: nil=true err=json: cannot unmarshal array into Go value of type map[string]interface {}`; `unmarshal {}: nil=false err=<nil>` |
 | V17 | a hash-consistent forged chain (record → output → world, receipt pointed at it) carrying a `null` output **reconciles as success with a nil `Output`** at HEAD; `[1]` fails untyped; `{}` reconciles (the control, which proves the chain passes C1–C5 and reaches line 213) | same probe, 4 `=== RUN` (parent + 3), `--- PASS`, tamper `hits=1` in each. `output=null: err=<nil> integrity=false reconciled=true outputNil=true outputBytes="null"`; `output=[1]: err=coordinator: reconcile a2a:ep1:t1: output: json: cannot unmarshal array … integrity=false reconciled=false`; `output={}: err=<nil> … reconciled=true outputNil=false`. Probe file removed; `git status --short` empty afterwards |
 | V18 | `projection.New` returns `(*Handler, error)` and already rejects nil required seams with a constant error; a table test pins each one | `grep -n 'func New(cfg Config)' -B3 -A22 host/projection/projection.go` → `167-168` Decision-6 comment; `169 func New(cfg Config) (*Handler, error)`; `171-180` `cfg.Resolver/Reader/Heads/Deny/Fail == nil` → `errors.New("projection: X is required")`; `181-184` MaxWait/InvokeWait. Test: `projection_test.go:1373 func TestProjection_ConfigValidation`, `strip` table at `:1397-1406` (`{"Fail", func(c *Config) { c.Fail = nil }}` …), each `New(c)` must error (`:1410`) |
-| V19 | the `projection.Config` construction sites: one production, two test | `grep -rn 'projection.New(' --include='*.go' host \| grep -v _test` → `daemon/daemon.go:580` only; `grep -n 'Config{' host/projection/*_test.go` → `projection_test.go:212` (`testConfig`, which the wire rig reuses: `a2a_wire_test.go:86 cfg := testConfig(r.st)`); `host/daemon/invoke_e2e_test.go:244 projection.New(projection.Config{Resolver: d.resolver, …` |
+| V19 | the `projection.Config` construction sites: one production, two test (revision 2: global search) | `grep -rn 'projection\.New(\|projection\.Config{' --include='*_test.go' host cmd` → `host/daemon/invoke_e2e_test.go:244` only (in-package tests call unqualified `New(`: `projection_test.go:226 New(cfg)` via `testConfig` `:211-212`, plus `TestProjection_ConfigValidation` `:1379-1414`); production:  `grep -rn 'projection.New(' --include='*.go' host \| grep -v _test` → `daemon/daemon.go:580` only; `grep -n 'Config{' host/projection/*_test.go` → `projection_test.go:212` (`testConfig`, which the wire rig reuses: `a2a_wire_test.go:86 cfg := testConfig(r.st)`); `host/daemon/invoke_e2e_test.go:244 projection.New(projection.Config{Resolver: d.resolver, …` |
+| V20 | the ctx arm maps deadlines to R11, not `default` (so it never takes the not-available log path) | `sed -n 423,435p host/projection/projection.go` (controller, revision 2) → `427 case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):` / `428 return codeInternal, "invocation exceeded its deadline"`; `433 default:` / `434 return codeInternal, notAvailableMessage` |
+| V21 | every committed output row passed `parseOutput`, so a non-object output at reconcile is necessarily damage | `grep -rn 'parseOutput(\|planInvocation(\|OutputV1' --include='*.go' host cmd \| grep -v _test` (controller, revision 2) → `coordinator.go:308 outBytes, outObj, err := c.parseOutput(res.Stdout) // R12` (sole call site; `err != nil` returns before planning, `:309-311`), `:312 pl := planInvocation(…, outBytes, …)` (sole call site), `plan.go:84 out := object(OutputV1, output)`, `:103 objects := []store.Object{in, out, rec}`; no other `OutputV1` writer. Throwaway `TestProbe214c` (deleted): `parseOutput("null")`, `("[1]")`, `("null\n")` → `coordinator: transition output is not a JSON object`; `("{}")` → `err=<nil>` (control) |
+| V22 | `Fail` is the card route's 503/504 renderer, a different seam from the operator log | `projection.go:136-137` → `// Fail renders the card route's non-denial 503/504 failures.` / `Fail ErrorWriter` |
 
 ## Design
 
@@ -98,11 +101,13 @@ contract change with nothing gained.
 projection gains `Config.ErrorLog io.Writer`, which `projection.New` requires to be non-nil. That
 is one more `case cfg.ErrorLog == nil:` arm in the existing required-seam switch (V18), the
 Decision-6 "construction error, never silent" pattern. The daemon passes its resolved `d.errLog`.
-Whenever a dispatch refusal maps to `notAvailableMessage`, the handler writes **one line**:
-
-```
-ailang-worldd: a2a refusal: tasks/send <invocation-id>: <verbatim error>
-```
+Whenever a dispatch refusal maps to `notAvailableMessage`, the handler writes **one line** via
+`fmt.Fprintf(h.errorLog, "ailang-worldd: a2a refusal: %s %s: %q\n", method, id, errText)`. `%q`
+escapes embedded newlines and control bytes, so the one-line guarantee holds for arbitrary store
+and bind error text, not just coordinator strings. For bind failures (R4) where no invocation id
+parsed, `id` renders as `-`. (Revision 2, kimi r2's proposed fix, applied verbatim.) `ErrorLog`
+does not overload `Fail`: `Fail` renders the card route's 503/504 responses to the client (V22);
+`ErrorLog` is the operator's sink and never reaches a client.
 
 This uses the same audience split as `writeInternalError` (`handlers.go:159-179`): the wire gets
 the constant, and the process owner gets the cause. With (3) in place, `<verbatim error>` reads,
@@ -117,7 +122,8 @@ for example, `coordinator: reconcile a2a:ep1:t1: recorded record is absent`. The
 - **No containment gain.** The damage cannot spread through reconcile. Every resend of the
   damaged id refuses again, deterministically: nothing is reported reconciled and nothing
   re-executes (`mustNotRun` in row 122's tests). The forward path never reads old
-  record/output rows.
+  record/output rows: its store reads are the receipt (`coordinator.go:236`), the transition source
+  (`:274`, R6), the selected head (`:284`) and the head world (`:291`); `committed()` is reached only from the receipt branch (V4).
 - **Not durable, so not recoverable either.** Quarantine is an in-memory bool (V8). A restart
   clears it and reopens the same damaged file, so it buys an outage, not a repair. No repair
   tooling exists for it to wait on.
@@ -152,7 +158,7 @@ effects are exactly its `Store` and `Runner` seams. The projection is the bounda
 | world `GetWorld` `ok=false, err=nil` (201) | wrap of nil | `IntegrityError{world, absent}` |
 | verified record bytes fail `json.Unmarshal` (183) | untyped | `IntegrityError{record, undecodable}` |
 | `rec.Output` not a ref (190) | untyped | `IntegrityError{record, undecodable}` (the record names no output) |
-| verified output bytes not a JSON object (214) | `[1]`: untyped; `null`: decodes to a nil map and **reconciles as success with a nil `Output`** (V16, V17) | `IntegrityError{output, undecodable}` when `err != nil \|\| obj == nil`, the same predicate `parseOutput` applies at commit time (`coordinator.go:154`, V15) |
+| verified output bytes not a JSON object (214) | `[1]`: untyped; `null`: decodes to a nil map and **reconciles as success with a nil `Output`** (V16, V17) | `IntegrityError{output, undecodable}` when `err != nil \|\| obj == nil`, the same predicate `parseOutput` applies at commit time (`coordinator.go:154`, V15); every committed output passed it (V21), so this refuses only damage |
 | any `err != nil` from the store (176/194/201) | wrap with `%!w` noise when nil | **unchanged class**: `fmt.Errorf("…: %w", err)`, split from the `!ok` branch |
 | row-122 mismatch sites (179/186/197/207/210) | `IntegrityError{Object}` | add `Kind: "mismatch"` |
 
@@ -183,8 +189,10 @@ three wire arms for one client class and one operator story. **Rejected: mapping
   `output_not_object` (two payloads, `[1]` and `null`: a forged record → forged output → forged world, with the receipt's
   `WorldRef = worldRef(forged)`), and `store_read_error_stays_untyped` (`GetObject` returns
   `fmt.Errorf("x: %w", context.DeadlineExceeded)`: assert `!errors.As(*IntegrityError)` and
-  `errors.Is(DeadlineExceeded)`). Every existing case also asserts `Kind == "mismatch"`. Then
-  implement the table above.
+  `errors.Is(DeadlineExceeded)`), and `commit_refuses_non_object_output` (real coordinator + real
+  store, no forgery: a runner whose raw output is `null`, then `[1]`; assert `*OutputError`, no
+  receipt, head unchanged), which pins V21 so the mirror argument is tested rather than assumed.
+  Every existing case also asserts `Kind == "mismatch"`. Then implement the table above.
 - **M2: projection arm, error log and daemon wiring (~25 production lines, `host/projection/projection.go`,
   `host/daemon/daemon.go`).** RED first: `TestA2ADispatch` gains `R13_reconcile_absent`
   (`IntegrityError{Kind:"absent"}` → `-32603 notAvailableMessage`). `TestA2ADispatchWire` gains
@@ -214,8 +222,10 @@ Estimate: ~0.25 d, matching the row. Revision 1 re-derived it from V18/V19 and i
 - **AC3.** The wire is byte-unchanged for every pre-existing `TestA2ADispatch` row and every
   `TestA2ADispatchWire` subtest. The new rows map to `-32603 notAvailableMessage`.
 - **AC4.** Every not-available dispatch refusal writes exactly one `ErrorLog` line that carries the
-  verbatim error. No other refusal class writes one: the R15 row asserts an empty log. Nothing
-  goes to the announce writer.
+  verbatim error text with newlines escaped; a store error containing `"\n"` still yields exactly
+  one physical line (asserted via `bytes.Count(buf, "\n") == 1`). No other refusal class writes
+  one: the R15 row and an R11 deadline row (V20) each assert an empty log. Nothing goes to the
+  announce writer.
 - **AC5.** No call to `store.Quarantine` is added:
   `grep -rn 'Quarantine(' --include='*.go' host cmd | grep -v _test` still prints only `daemon.go`'s
   existing line. The coordinator `Store` interface is unchanged.
@@ -238,6 +248,9 @@ Estimate: ~0.25 d, matching the row. Revision 1 re-derived it from V18/V19 and i
 | MUT-NOLOG | delete the `ErrorLog` write | `TestA2ADispatchWire/R13_integrity`, `/R4_R6_default` |
 | MUT-LOG-ALL | log every refusal class | R15 row's empty-log assert |
 | MUT-LOG-TO-WIRE | interpolate the error into the message | `assertWireRefusal` hidden-string check |
+| MUT-LOG-NEWLINE | log write interpolates `%v` without escaping | the newline-carrying store-error subtest (`bytes.Count == 1`) |
+| MUT-LOG-DEADLINE | log the R11 ctx arm too | the R11 row's empty-log assert |
+| MUT-COMMIT-NULL-OK | `parseOutput` drops `\|\| obj == nil` | `commit_refuses_non_object_output` (`null` arm) |
 | MUT-ERRLOG-UNWIRED | daemon passes `io.Discard` | the host/daemon wiring test |
 | MUT-ERRLOG-NIL-OK | `New` accepts a nil `ErrorLog` | the `New`-rejects row |
 
@@ -308,4 +321,16 @@ disputed the design direction.
 | The (3) table's line-214 row claims a hash-verified `null` output "decodes to a nil map and succeeds", with no V-row | glm, gemini | **Measured and confirmed.** V16 (standalone unmarshal) and V17 (`null` driven through a real reconcile on a forged hash-consistent chain → `err=<nil> reconciled=true outputNil=true`). The table row now cites both. |
 | "`\|\| obj == nil` mirrors `parseOutput`", but `parseOutput` is never cited | glm, gemini | **Measured and confirmed.** V15 cites `coordinator.go:148-158`, predicate at `:154`. The table row now cites it. |
 | M2's "`projection.New` enforces required config as a construction error" and its "~25 lines / one field in daemon.go" estimate have no V-row | kimi | **Measured and confirmed.** V18 pins `func New(cfg Config) (*Handler, error)` and its existing nil-seam switch plus `TestProjection_ConfigValidation`. V19 counts the construction sites: one production, plus the test-side `invoke_e2e_test.go:244` literal that the first draft missed (now in M2 and the Conflict Surface). The estimate is re-derived at about 16 production lines and stands. |
+
+### Round 2 (iteration 214): BLOCKED 3/3 present (glm-5.3, kimi-k3, gemini-3-1-pro; gpt6-1-sol absent, `openai error (429): You have no credits remaining`)
+
+Objections landed on three NEW surfaces, none disputing the direction, each with a concrete
+reviewer-authored `proposed_fix`. Under Gate 2's narrow-refinement carve-out the controller made a
+bounded revision 2 applying those fixes, with the controller's own measurements (V20–V22):
+
+| Objection | Reviewer | Answer |
+|---|---|---|
+| line-214 branch rests on an unverified invariant that every committed output passed `parseOutput` | glm | **Measured and confirmed** (V21: sole call site, dataflow to `plan.go:103`, probe refuses `null`/`[1]`). Added M1 RED `commit_refuses_non_object_output` and MUT-COMMIT-NULL-OK verbatim from the fix. glm's catches: `Fail`'s role stated (V22); the forward-path claim cited; the R11 arm does not map to not-available (V20), now pinned by an empty-log row and MUT-LOG-DEADLINE. |
+| AC4's one-line guarantee breaks on a `\n` in store/bind error text | kimi | Format bullet replaced with the proposed `%q` line and `-` for an unparsed id; AC4 extended with `bytes.Count == 1`; MUT-LOG-NEWLINE added; V20 quotes the full ctx arm. |
+| V19's test-site bound used a directory-scoped grep | gemini | V19 re-run with the proposed global grep: `invoke_e2e_test.go:244` is the only qualified test site; in-package tests use `testConfig`/`New(`. Conflict Surface unchanged. |
 
