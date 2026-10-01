@@ -1465,3 +1465,76 @@ The codex probe returned rc=0. No design doc was needed: the row plus row 20's �
 **Progress**: 1.0: clauses 4, 5, 6 unmet; goal unmoved (row 123 hardens clause 6's A2A surface without moving its end state). Last three landings: 213 none, 212 none, 211 none → **DRIFT ALARM fires** (charter regroom rule (c)). Every clause-moving row waits on D-WORLD-43/44, so the loop asks rather than reorders: `D-WORLD-46`.
 
 **Next:** Mark: `D-WORLD-46` (recommend A = rule 43/44 A), D-WORLD-43, D-WORLD-44, D-WORLD-45, the attended 0.1.1 publish. Loop default (46 = B): row 125 (clause-6 residual; short design note on wire message and quarantine), then the position-7 bucket.
+
+## 214 — 2026-10-01 — row 125 LANDED: reconcile damage has a decided disposition (typed absent/undecodable rows, one escaped operator log line per not-available refusal, wire unchanged, no quarantine); independent sonnet PASS 93/100 zero blocking; merge `b6df698` [PRODUCT]
+
+**Kind:** full inner loop: designer, two quorum rounds, codex planner and executor, independent Sonnet judge, PR #170 → squash `b6df698`.
+
+**Pick and why:** clause map 1/2/3/7 MET; 4 UNMET (row 93 needs 108); 5 UNMET (row 114, parked on `D-WORLD-44`); 6 UNMET (row 108, parked on `D-WORLD-43`). `mission_decisions.sh --open` re-measured D-WORLD-43/44/45/46 all OPEN, so positions 3–5 are not routable. `D-WORLD-46`'s default (B) names row 125, a clause-6 residual of row 106 that inherits position 2. Already-landed check: `git log origin/dev --grep 'row 125'` and `-S'w-reconcile-damage-disposition'` found only iteration 212's filing record. No open PR or worktree for it; open drafts #165/#166 are iterations 209/210's.
+
+**Gate 0/1:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. `mission_directives.sh` found 0 directives on #159 since `2026-09-30T07:11:14Z`, the older of the two watermarks (`mission-world-last-seen` vs the issue-scoped `03:32:04Z`); 30 comments. The `mission-world` inbox held one `harness-resolved` reply (`pi-runner:quota-429-reported-as-empty-worktree`, fleet `94524a6fc`): row 116 is marked RESOLVED and the reply is acked. `dev == origin/dev` at `8d86c4fd7e7ae0b89d4f74db1e7e99891d66403b`, check set 2/2 success. The resolved skill and all 12 resources are byte-identical to fleet `origin/dev` (per-file `cmp`). `tools/launchd/mission-heartbeat.sh` does not exist in World, so stamps went through `$MISSION_DRIVER_ROOT` (existing ticket `skill:heartbeat-relative-path-absent-in-world`, occurrence filed).
+
+**Premise, measured by the controller at HEAD:** `committed()` (`host/coordinator/coordinator.go:173-216`) wraps a nil error for absent rows (`ok=%v: %w`), and its decode and output-ref failures are untyped. `dispatchError`'s `default` maps everything unrecognised to `notAvailableMessage` (`projection.go:87`, `:433`). `store.Quarantine`'s only production caller is `daemon.go:679`.
+
+**Designer (`claude:claude-opus-5-5`, Agent `opus`; rotation: the pointer file read GLM, but iteration 210 had used Kimi per its log, so the next entry is Claude; pointer now written):** `design_docs/planned/w-reconcile-damage-disposition.md` (`09ac389`, 279 lines, 96,512 tok). Decisions:
+- (1) Keep the wire class; R6 does not move. The damaged row may be the journal intent itself, so "committed", "not committed" and "resend" are each unverifiable.
+- (2) No quarantine. It is in-memory, it blocks even the registry head read, and `/v1/health` still says ok. Instead, a required `projection.Config.ErrorLog` wired to `d.errLog`.
+- (3) Type absent and undecodable rows as `IntegrityError{Kind}`; store read errors stay untyped.
+
+The probe found that a `null` output reconciled as success.
+
+**Quorum:**
+- **r1 BLOCKED 3/3.** Present: glm-5.3, kimi-k3, gemini-3-1-pro. gpt6-1-sol was ABSENT: `openai error (429): You have no credits remaining`. Every objection was an unverified premise: null-unmarshal behaviour and `parseOutput`, and `projection.New`'s signature. The controller measured all three true. The designer's revision 1 (`57250ad`, 110,708 tok) added V15–V19.
+- **r2 BLOCKED 3/3,** same seats and the same absentee. The objections landed on three new surfaces, each with a concrete `proposed_fix` and none disputing direction:
+  - glm: the commit-side `parseOutput` invariant.
+  - kimi: a `\n` in error text breaks the one-line log, so use `%q`.
+  - gemini: V19's grep was directory-scoped.
+
+  The controller measured each one (V20 ctx arm; V21 sole `parseOutput`/`planInvocation` call sites plus a throwaway probe showing `null`/`[1]` refused at commit; V22 `Fail`'s role). It then applied the fixes verbatim under the narrow-refinement carve-out (`4b87fdd`). Quote: PROCEED via carve-out at N−1, `gpt6-1-sol` absent (unreachable: API credits).
+
+Artifacts: `w-reconcile-damage-disposition-2026-10-01T06-23-40Z.json` and `…T06-27-57Z.json`.
+
+**Planner (`codex:gpt-6.1-sol` recipe; resolver `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`; 143,781 tok):** The first probe from `/tmp` failed rc=1 (not a trusted git dir). That is an instrument failure, already banked. The re-probe from the repo returned rc=0. Plan (221 lines) and sprint JSON (`jq -e` ok). It prototyped M1+M2 and reported 17/17 mutations killed, sha-restored.
+
+**Executor (`codex:gpt-6.1-sol` recipe, `declared:provider-pin`; 111,153 tok):** reviewed the prototype hunk by hunk and left production code unchanged. It pinned the exact `Error()` phrases and the parsed-id log prefix, made `R11` deterministic (a wrapped store deadline) and kept the timed variant as `R11_transport` with a 2 s admission budget. It re-killed 6 mutations. The controller built M1 `4b12f7a` (coordinator only; gated alone in a detached worktree: vet ok, `-race` coordinator+projection ok) and M2 `fd41581`.
+
+**Independent evaluator (`sonnet` Agent, `declared:alias-pin`; 70,718 tok):** generator≠judge holds (OpenAI generator, Anthropic judge). PASS 93/100, zero blocking. It ran 16 mutations: 8 from the table and 8 of its own, 5 of those anchored to the diff. 13 were killed. Survivors:
+- 6: the `InvalidCallError` id branch, which N1 found to be dead code. The controller confirmed `dispatchError`'s first arm routes it to invalid-params and removed the branch in `e985379`; `-race` projection+daemon re-gated ok.
+- 7: the snapshot-failure log is untested (N2), filed as row 127.
+- 8: the nil-coordinator log is pinned only in `host/daemon`.
+
+N3 (a resolver error is unlogged) is in row 127.
+
+**Controller gates (outside any sandbox; pinned v0.41.0) at `fd41581`:**
+- `gofmt -l host cmd` empty; `go vet ./...` rc=0.
+- `-race -v` coordinator+projection+daemon rc=0, 469 `=== RUN`.
+- `verify_ail.sh` rc=0 (16/40); `check_no_personal_email.sh` rc=0.
+- Full `go test ./...` first ran rc=1 because AILANG_BIN was unset: my instrument, the tests say "never skip". The 5 failing packages re-ran green with AILANG_BIN, except one broker load flake (`TestHandlerTimeoutKillsTheWholeProcessGroup`, passing alone and on a full-package rerun). `go list -deps` shows broker imports none of the changed packages (control: `cmd/ailang-worldd` → 1).
+- MUT-OUT-NIL-OBJ reproduced killed first-party, with a sha-identical restore.
+
+**Gate 3b:**
+- PR head `e98537987dd1f1bdcf00c3e04ca77fed6bf9d5e5`: ALL COMPLETE 2/2 success, `MERGEABLE`/`CLEAN`.
+- Squash `b6df6987f8bab6f39126d2eea324db581f61a3ad`: first `go host build + test gate` **failure**, `TestDispatchDurableDeadline/Commit` (`coordinator_test.go:632`, R16 vs R11). The merge tree is byte-identical to the green PR head (`38d4491`). The test is untouched by the diff, and the same test failed 1 of 3 pristine-base runs locally. So the red is inherited, and row 126 is filed for it. One `rerun --failed` gave ALL COMPLETE 2/2 success (07:54:10Z), polled SHA-pinned.
+
+No closing keyword in the PR body or commits.
+
+**Routing evidence:** base=`b6df6987f8bab6f39126d2eea324db581f61a3ad` (Gate 4); Gate 1 `8d86c4fd7e7ae0b89d4f74db1e7e99891d66403b`@2026-10-01T06:16:44Z. Controller `claude-opus-5-5` (tok: not reported) · designer `claude:claude-opus-5-5` via Agent `opus` (96,512 + 110,708 tok; quorum blocked r1 and r2, revision 1 by designer, revision 2 controller carve-out) · planner `codex:gpt-6.1-sol` (143,781 tok) · executor `codex:gpt-6.1-sol` (111,153 tok) · evaluator `sonnet` Agent (70,718 tok). The operator asked for the roles through the Agent tool. Designer and evaluator ran there. Planner and executor are provider-pinned to `codex:gpt-6.1-sol`, so the routing table sends them through the codex recipe; an Agent alias spawn would be denied by the spawn-pin hook (role-spawn-routing §2). No role was skipped and no judge was replaced. metered=$0.38 (quorum only).
+
+**Record:** STATUS 214 added; 211 rotated to the archive (charter 6052 → 6055 = +2 stamp −2 rotated +3 rows 126–128; archive grep `iteration 211` = 1, control `iteration 210` = 1). Row 125 tagged LANDED; row 116 RESOLVED. Rows 126 (base load flake), 127 (operator-log coverage residuals) and 128 (journal-intent authentication, design first) filed. `mission_decisions.sh --check` valid. Index row written by hand (never `rotate-log` for World, row 118). Harness tickets filed: `quorum:gpt6-1-sol-openai-api-credits-exhausted` (new) and `skill:heartbeat-relative-path-absent-in-world` (occurrence).
+
+**Ruled out:**
+- That OPEN-1 needs Mark: the wire is unchanged, so no public-contract call was made.
+- That quarantine contains anything (V9/V10).
+- That a committed output can be a non-object (V21).
+- That the merge red was row 125's (identical tree green at the PR head; same test red at base).
+- That the full-suite failures were the change's (AILANG_BIN unset).
+
+**Retro:** no skill edit. Two frictions to bank, each instance 1:
+- (a) The OpenAI quorum seat bills the API key, which is out of credits, while codex on the subscription is fine. The vendor was missing from both rounds (ticket filed).
+- (b) The rotation pointer file disagreed with the log (iteration 210 used Kimi without writing the pointer). The log won, per the skill.
+
+The "carve-out when every objection carries a fix" path worked as designed: r2's objections were real, small and cheaply fixed.
+
+**Progress**: 1.0: clauses 4, 5, 6 unmet; goal unmoved (row 125 hardens clause 6 without moving its end state). Last four landings: 214 none, 213 none, 212 none, 211 none → DRIFT continues; `D-WORLD-46` stays OPEN (default B, followed).
+
+**Next:** Mark: `D-WORLD-46` (recommend A = rule 43/44 A), D-WORLD-43, D-WORLD-44, D-WORLD-45, the attended 0.1.1 publish. Loop default (46 = B): rows 127/128 are clause-6 residuals at position 2 (127 is small; 128 needs a design note), then the position-7 bucket (126 and 25, 26, 32, …).
