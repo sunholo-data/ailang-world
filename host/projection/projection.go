@@ -356,12 +356,7 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
 				}
 				code, msg := dispatchError(err)
 				if msg == notAvailableMessage {
-					id := coordinator.InvocationID(out.Success.EpisodeID, params.ID)
-					var invalid *coordinator.InvalidCallError
-					if errors.As(err, &invalid) {
-						id = "-"
-					}
-					h.logRefusal(req.Method, id, err)
+					h.logRefusal(req.Method, coordinator.InvocationID(out.Success.EpisodeID, params.ID), err)
 				}
 				protocol.A2AError(w, req.ID, code, msg)
 				return
