@@ -1,0 +1,22 @@
+{
+  "head_sha": "59870e58c4fc393aab62d2cf7ff8c83641ad6850",
+  "argv": [
+    "bash",
+    "scripts/verify_ail.sh"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter217",
+  "rc": 0,
+  "seconds": 67.8572774589993,
+  "external_timeout_seconds": 600,
+  "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+  "PATH_pin_first": true,
+  "GODEBUG": "unset",
+  "GOCACHE": "default",
+  "inherited_go_axes": {
+    "GOFLAGS": "unset",
+    "GOMAXPROCS": "unset",
+    "GOTOOLCHAIN": "unset",
+    "CI": "unset"
+  },
+  "scope": "exact unchanged repository profile; normal Go parallelism; no focused substitution"
+}

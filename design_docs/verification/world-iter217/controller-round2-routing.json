@@ -1,0 +1,31 @@
+{
+  "round": 2,
+  "candidate_sha": "59870e58c4fc393aab62d2cf7ff8c83641ad6850",
+  "role": "evaluator",
+  "native_agent": "/root/evaluator_product_round2",
+  "model": "codex:gpt-6-astra",
+  "generator_model": "codex:gpt-6.1-sol",
+  "transport": "native Agent",
+  "directive_first_line": "MISSION-ROLE: evaluator",
+  "routing": "D-WORLD-48 same-vendor different-model fallback FLAG",
+  "preferred_role_error": "native Sonnet Unknown model (earlier measured)",
+  "quota_probe": "quota-round2.json",
+  "token_usage": "not reported",
+  "status": "running; independent round2 verdict pending",
+  "round1": "FAIL49 retained; deterministic fixture repair; no production changes; no inherited-failure waiver",
+  "root_full_profiles": {
+    "ail_rc": 0,
+    "go_rc": 1,
+    "go_seconds": 459.39821312506683,
+    "plain_packages": "24/24 pass",
+    "race_failure_names": [
+      "TestOrdinaryOverflowCarriesNoESRCH",
+      "TestHandlerTimeoutKillsTheWholeProcessGroup",
+      "TestF5WallClockTimeoutHasElapsedBound",
+      "TestDispatchDurableDeadline/uncertain_AppendIntent",
+      "TestA2ADurableDeadlineWire/uncertain_AppendIntent",
+      "TestMCPInvokeDeadlineFreesSlot"
+    ],
+    "new_MCP_test_failure": "not classified inherited; independent evaluation running; no waiver"
+  }
+}
