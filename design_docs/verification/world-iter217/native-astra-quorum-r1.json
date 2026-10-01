@@ -1,0 +1,67 @@
+{
+  "kind": "design_quorum_review",
+  "round": 1,
+  "design_revision": "r3",
+  "verdict": "pass",
+  "model": "gpt-6-astra",
+  "author_model": "gpt-6.1-sol",
+  "judge_independence": "same-vendor",
+  "reviewed_commit": "07df462508618218cb4dac0eaff485a8236ef049",
+  "design_sha256": "f1a34e803f12ec6be0024b76f4b8c6e51afb93655a61731e608d052740510101",
+  "document": "design_docs/planned/w-mcp-dispatch-projection.md",
+  "reviewed_at_utc": "2026-10-01T18:41:25.019557+00:00",
+  "strongest_objection": "The strongest remaining risk is loss of client-visible success for earlier committed batch items, followed by duplicate execution on a retry with new task IDs. This is real, but it is explicitly disclosed and follows the frozen upstream whole-POST envelope and Invocation interface; the design neither promises atomicity nor invents an unsafe retry channel. It is not a blocking objection to the stated tranche.",
+  "catch": "Pin partial-commit visibility with a real-store three-call batch: item1 resolved receipt and entry remain, item2 host error yields only the frozen null-id envelope, item3 never invokes. Pin fresh per-item task IDs/admission and bounded aggregate timing separately. Verify runbook recovery warnings and do not infer no writes from an error envelope.",
+  "proposed_fix": "No blocking design fix required. Preserve the explicit non-atomic/retry residual and all named acceptance gates through planning. Planner should narrow the 9.8s tools fault to authorize-time admission so invocation readmission can actually reach the capsule, and preserve schema numeric values when adding type:object.",
+  "blocking_objections": [],
+  "accepted_freeze_choices": [
+    "D108-2 reversible escaping with whole-surface length refusal and constraint-preserving schema normalization",
+    "D108-8/9/11 per-item admission/task IDs, independent commits, whole-POST abort and no MCP deduplication channel",
+    "D108-5/10 shared Runner, context-only aggregate wrapper, independent process reservation cap and explicit body/CPU residual"
+  ],
+  "nonblocking_notes": [
+    {
+      "id": "N1",
+      "topic": "Production fixture stimulus",
+      "note": "Hold only initial Tools admission near9.8s. A wrapper holding every GetRegistryHead/readmission can timeout before the intended invoker/capsule stimulus. Assert reached counts and durations as the design already requires."
+    },
+    {
+      "id": "N2",
+      "topic": "Schema preservation",
+      "note": "Avoid decoding legacy schema through float64 during normalization: registry codec uses UseNumber and accepts exact numeric constraints. RawMessage-valued object or UseNumber preserves the stated contract; include a large integer constraint fixture."
+    },
+    {
+      "id": "N3",
+      "topic": "Baseline record freshness",
+      "note": "Design baseline paragraph still says sequential gates are running. Saved sequential JSON already records ail0/go1. Update eventual planning evidence without attributing unique cause or waiving final full-green gates."
+    }
+  ],
+  "evidence": {
+    "seam_go_list_rc": 0,
+    "seam_nonstdlib": [
+      "github.com/sunholo-data/ailang/serveapi/protocol",
+      "github.com/sunholo-data/ailang/serveapi/protocol/hostcall",
+      "github.com/sunholo-data/ailang/serveapi/protocol/mcphttp"
+    ],
+    "current_daemon_go_list_rc": 0,
+    "current_daemon_nonstdlib_count": 54,
+    "old_protocol_files_byte_identical": [
+      "a2a_wire.go",
+      "descriptor.go",
+      "envelope.go",
+      "interfaces.go"
+    ],
+    "proxy_http": 200,
+    "sumdb_http": 200
+  },
+  "implementation_acceptance": "NOT RUN",
+  "product_score": null,
+  "administrative_score": null,
+  "axiom_net": 6,
+  "hard_axiom_violations": [],
+  "limitations": [
+    "Design-only review; no proposed acceptance test or mutation was claimed executed.",
+    "Actual bumped-and-importing World dependency graph remains an explicit implementation gate.",
+    "No source mutation/edit; no CLI quorum synthesis modified; availability flags belong in aggregate quorum record."
+  ]
+}

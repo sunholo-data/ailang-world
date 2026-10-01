@@ -1,0 +1,6 @@
+--- FAIL: TestMission217AbsentPrecheckGenuineError (0.00s)
+    mission217_repro_test.go:8: masked genuine failure: got status=200 body={"capabilities":{"pushNotifications":false,"stateTransitionHistory":false,"streaming":false},"defaultInputModes":["application/json"],"defaultOutputModes":["application/json"],"description":"test projection agent","name":"ailang-worldd","skills":[],"url":"http://example.com","version":"0.1.0"}
+        ; want503
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.398s
+FAIL

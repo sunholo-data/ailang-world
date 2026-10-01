@@ -1,0 +1,13 @@
+{
+  "rc": 0,
+  "command": [
+    "go",
+    "test",
+    "./host/projection",
+    "-run",
+    "^TestAgentCard_(AbsentHeadZeroSkills|HeadReadFailuresAre5xx|HeadRaceAbsentThenSucceeds)$",
+    "-count=1",
+    "-timeout",
+    "45s"
+  ]
+}
