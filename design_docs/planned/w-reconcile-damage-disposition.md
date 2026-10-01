@@ -59,6 +59,11 @@ All rows: VERIFIED BY ME at HEAD `8d86c4f`, in worktree `.wt-world-iter214-desig
 | V12 | a resolved receipt and its three rows land in one transaction, and nothing deletes objects or worlds | `store.go:1118 beginDurable(ctx, "commit")` … `:1240 finishDurable`; the `objects`/`worlds` inserts and the `'outcome'` journal row all sit inside it; `plan.go:103 objects := []store.Object{in, out, rec}`; `grep -rn 'DELETE FROM' host \| grep -v _test` → only `session_credentials` (`store.go:1370`) |
 | V13 | the store's own read failures are untyped `fmt.Errorf` (I/O and stored-text decode alike) | `store.go:600-606` (`get object`, `interface hash`), `:668-677` (`get world`, `state root`, `log head`) |
 | V14 | the wire rig accepts any `coordinator.Store`, so a tampered store can be driven end to end | `a2a_wire_test.go:71 func (r *wireRig) handler(t, cs coordinator.Store, …)` |
+| V15 | `parseOutput` refuses a nil map as well as a decode error (the check (3) mirrors) | `grep -n 'func (c \*Coordinator) parseOutput' -A10 host/coordinator/coordinator.go` → `148 func … parseOutput`; `154 if err := json.Unmarshal(out, &obj); err != nil \|\| obj == nil {`; `155 return nil, nil, &OutputError{Reason: "is not a JSON object"}` |
+| V16 | `json.Unmarshal` into `map[string]any`: `null` → nil map, no error; `[1]` → error; `{}` → non-nil | throwaway `host/coordinator/zz_probe214b_test.go`, `go test -count=1 -run '^TestProbe214b$' -v ./host/coordinator/` → `unmarshal null: nil=true err=<nil>`; `unmarshal [1]: nil=true err=json: cannot unmarshal array into Go value of type map[string]interface {}`; `unmarshal {}: nil=false err=<nil>` |
+| V17 | a hash-consistent forged chain (record → output → world, receipt pointed at it) carrying a `null` output **reconciles as success with a nil `Output`** at HEAD; `[1]` fails untyped; `{}` reconciles (the control, which proves the chain passes C1–C5 and reaches line 213) | same probe, 4 `=== RUN` (parent + 3), `--- PASS`, tamper `hits=1` in each. `output=null: err=<nil> integrity=false reconciled=true outputNil=true outputBytes="null"`; `output=[1]: err=coordinator: reconcile a2a:ep1:t1: output: json: cannot unmarshal array … integrity=false reconciled=false`; `output={}: err=<nil> … reconciled=true outputNil=false`. Probe file removed; `git status --short` empty afterwards |
+| V18 | `projection.New` returns `(*Handler, error)` and already rejects nil required seams with a constant error; a table test pins each one | `grep -n 'func New(cfg Config)' -B3 -A22 host/projection/projection.go` → `167-168` Decision-6 comment; `169 func New(cfg Config) (*Handler, error)`; `171-180` `cfg.Resolver/Reader/Heads/Deny/Fail == nil` → `errors.New("projection: X is required")`; `181-184` MaxWait/InvokeWait. Test: `projection_test.go:1373 func TestProjection_ConfigValidation`, `strip` table at `:1397-1406` (`{"Fail", func(c *Config) { c.Fail = nil }}` …), each `New(c)` must error (`:1410`) |
+| V19 | the `projection.Config` construction sites: one production, two test | `grep -rn 'projection.New(' --include='*.go' host \| grep -v _test` → `daemon/daemon.go:580` only; `grep -n 'Config{' host/projection/*_test.go` → `projection_test.go:212` (`testConfig`, which the wire rig reuses: `a2a_wire_test.go:86 cfg := testConfig(r.st)`); `host/daemon/invoke_e2e_test.go:244 projection.New(projection.Config{Resolver: d.resolver, …` |
 
 ## Design
 
@@ -90,8 +95,9 @@ contract change with nothing gained.
 ### (2) Quarantine: no. Report to the operator instead
 
 **Decision.** A detected reconcile integrity failure does **not** call `store.Quarantine`. The
-projection gains `Config.ErrorLog io.Writer`, which `projection.New` requires to be non-nil (the
-Decision-6 "construction error, never silent" pattern). The daemon passes its resolved `d.errLog`.
+projection gains `Config.ErrorLog io.Writer`, which `projection.New` requires to be non-nil. That
+is one more `case cfg.ErrorLog == nil:` arm in the existing required-seam switch (V18), the
+Decision-6 "construction error, never silent" pattern. The daemon passes its resolved `d.errLog`.
 Whenever a dispatch refusal maps to `notAvailableMessage`, the handler writes **one line**:
 
 ```
@@ -146,7 +152,7 @@ effects are exactly its `Store` and `Runner` seams. The projection is the bounda
 | world `GetWorld` `ok=false, err=nil` (201) | wrap of nil | `IntegrityError{world, absent}` |
 | verified record bytes fail `json.Unmarshal` (183) | untyped | `IntegrityError{record, undecodable}` |
 | `rec.Output` not a ref (190) | untyped | `IntegrityError{record, undecodable}` (the record names no output) |
-| verified output bytes not a JSON object (214) | untyped; `null` decodes to a nil map and **succeeds** | `IntegrityError{output, undecodable}` when `err != nil \|\| obj == nil`, mirroring `parseOutput` |
+| verified output bytes not a JSON object (214) | `[1]`: untyped; `null`: decodes to a nil map and **reconciles as success with a nil `Output`** (V16, V17) | `IntegrityError{output, undecodable}` when `err != nil \|\| obj == nil`, the same predicate `parseOutput` applies at commit time (`coordinator.go:154`, V15) |
 | any `err != nil` from the store (176/194/201) | wrap with `%!w` noise when nil | **unchanged class**: `fmt.Errorf("…: %w", err)`, split from the `!ok` branch |
 | row-122 mismatch sites (179/186/197/207/210) | `IntegrityError{Object}` | add `Kind: "mismatch"` |
 
@@ -188,9 +194,14 @@ three wire arms for one client class and one operator story. **Rejected: mapping
   containing `is absent`. `R4_R6_default` additionally asserts its secret appears in the log and
   not the body. A host/daemon test runs a real daemon with a `Config.ErrorLog` buffer and asserts
   the line arrives there (this pins the wiring). `projection.New` with a nil `ErrorLog` is a
-  construction error (`TestNewRejects…` row).
+  construction error: one `{"ErrorLog", …}` row in `TestProjection_ConfigValidation`'s `strip`
+  table (V18).
+  Production-line count, from V18/V19: a `Config` field with its doc comment (~4), a `Handler`
+  field and its init (2), a `New` arm (2), the explicit `IntegrityError` arm (3), the log write (~4)
+  and one daemon field at `daemon.go:580` (1), about 16 in total. Test-side config edits: `testConfig`
+  (`projection_test.go:212`, which also feeds the wire rig) and `invoke_e2e_test.go:244`.
 
-Estimate: ~0.25 d, matching the row.
+Estimate: ~0.25 d, matching the row. Revision 1 re-derived it from V18/V19 and it stands.
 
 ## Acceptance Criteria
 
@@ -236,9 +247,11 @@ The executor records each as KILLED with a log, as row 122 did. A survivor block
 
 - `host/coordinator/coordinator_test.go`: row 122's table gains a `Kind` assertion and new rows.
   No existing expectation flips.
-- `host/projection/projection_test.go` and `a2a_wire_test.go`: `testConfig` and
-  `wireRig.handler` must supply `ErrorLog` (one helper each). Every `projection.New` call site in
-  tests changes; grep `projection.Config{` before editing.
+- `host/projection/projection_test.go`: `testConfig` (`:212`) supplies `ErrorLog`. The wire rig
+  reuses it (`a2a_wire_test.go:86`), so it needs no edit of its own. `TestProjection_ConfigValidation`
+  gains one strip row (V18).
+- `host/daemon/invoke_e2e_test.go:244`: a direct `projection.Config` literal that must add
+  `ErrorLog` (V19).
 - `host/daemon/daemon.go`: one field in the `projection.Config` literal (around line 580).
 - Parent design's refusal table, the "R4 bind error, R6 source error, other store errors" row:
   append "R13 reconcile integrity (row 122 / row 125: mismatch, absent, undecodable)". Doc-only.
@@ -259,6 +272,11 @@ The executor records each as KILLED with a log, as row 122 did. A survivor block
 
 ## Residuals
 
+- **R-125-0 (noted in revision 1, not widened):** V17's `{}` control shows that a forged chain
+  which is hash-consistent at every link reconciles. Row 122's checks bind rows to the refs the
+  journal names; they cannot detect a journal intent that was rewritten to a self-consistent
+  forgery. That is out of this row's text; owner: a future journal-authentication row, if wanted.
+
 - **R-125-1: store-level damage typing.** The store does not tell a stored-text parse failure
   apart from I/O (V13). Owner: a future store row, if a consumer needs it.
 - **R-125-2: the forward path trusts the head world row.** `Dispatch` reads `GetWorld(head)`
@@ -277,3 +295,17 @@ The executor records each as KILLED with a log, as row 122 did. A survivor block
 new lifecycle action. If Mark later wants a dedicated client message (OPEN-1 reopened), it is a
 one-arm change in `dispatchError` plus the two pinned rows. The recommended default stays "keep
 the class", for the honesty reason given in (1).
+
+## Quorum log
+
+### Round 1 (iteration 214): BLOCKED 3/3 (glm-5.3, kimi-k3, gemini-3-1-pro; gpt6-1-sol absent)
+
+All three objections were of the form "a load-bearing premise is asserted without a V-row". None
+disputed the design direction.
+
+| Objection | Reviewer | Answer (revision 1) |
+|---|---|---|
+| The (3) table's line-214 row claims a hash-verified `null` output "decodes to a nil map and succeeds", with no V-row | glm, gemini | **Measured and confirmed.** V16 (standalone unmarshal) and V17 (`null` driven through a real reconcile on a forged hash-consistent chain → `err=<nil> reconciled=true outputNil=true`). The table row now cites both. |
+| "`\|\| obj == nil` mirrors `parseOutput`", but `parseOutput` is never cited | glm, gemini | **Measured and confirmed.** V15 cites `coordinator.go:148-158`, predicate at `:154`. The table row now cites it. |
+| M2's "`projection.New` enforces required config as a construction error" and its "~25 lines / one field in daemon.go" estimate have no V-row | kimi | **Measured and confirmed.** V18 pins `func New(cfg Config) (*Handler, error)` and its existing nil-seam switch plus `TestProjection_ConfigValidation`. V19 counts the construction sites: one production, plus the test-side `invoke_e2e_test.go:244` literal that the first draft missed (now in M2 and the Conflict Surface). The estimate is re-derived at about 16 production lines and stands. |
+
