@@ -172,46 +172,55 @@ func hashes(ref hashref.HashRef, payload []byte) bool {
 // each other, before anything is reported as reconciled (row 122).
 func (c *Coordinator) committed(ctx context.Context, rc store.Receipt) (Result, error) {
 	recObj, ok, err := c.cfg.Store.GetObject(ctx, rc.Intent.TransitionRef)
-	if err != nil || !ok {
-		return Result{}, fmt.Errorf("coordinator: reconcile %s: record: ok=%v: %w", rc.InvocationID, ok, err)
+	if err != nil {
+		return Result{}, fmt.Errorf("coordinator: reconcile %s: record: %w", rc.InvocationID, err)
+	}
+	if !ok {
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "record", Kind: "absent"}
 	}
 	if !hashes(rc.Intent.TransitionRef, recObj.Payload) {
-		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "record"}
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "record", Kind: "mismatch"}
 	}
 	var rec record
 	if err := json.Unmarshal(recObj.Payload, &rec); err != nil {
-		return Result{}, fmt.Errorf("coordinator: reconcile %s: decode record: %w", rc.InvocationID, err)
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "record", Kind: "undecodable"}
 	}
 	if rec.InvocationID != rc.InvocationID {
-		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "record"}
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "record", Kind: "mismatch"}
 	}
 	outRef, err := hashref.Parse(rec.Output)
 	if err != nil {
-		return Result{}, fmt.Errorf("coordinator: reconcile %s: output ref: %w", rc.InvocationID, err)
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "record", Kind: "undecodable"}
 	}
 	outObj, ok, err := c.cfg.Store.GetObject(ctx, outRef)
-	if err != nil || !ok {
-		return Result{}, fmt.Errorf("coordinator: reconcile %s: output: ok=%v: %w", rc.InvocationID, ok, err)
+	if err != nil {
+		return Result{}, fmt.Errorf("coordinator: reconcile %s: output: %w", rc.InvocationID, err)
+	}
+	if !ok {
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "output", Kind: "absent"}
 	}
 	if !hashes(outRef, outObj.Payload) {
-		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "output"}
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "output", Kind: "mismatch"}
 	}
 	w, ok, err := c.cfg.Store.GetWorld(ctx, rc.Intent.WorldRef)
-	if err != nil || !ok {
-		return Result{}, fmt.Errorf("coordinator: reconcile %s: world: ok=%v: %w", rc.InvocationID, ok, err)
+	if err != nil {
+		return Result{}, fmt.Errorf("coordinator: reconcile %s: world: %w", rc.InvocationID, err)
+	}
+	if !ok {
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "world", Kind: "absent"}
 	}
 	// The store verifies no world ref (store/durable.go); "a2a:" worlds are
 	// planInvocation's, so the row must re-derive its ref, and applyRevision
 	// makes its state root the recorded output.
 	if worldRef(w) != rc.Intent.WorldRef {
-		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "world"}
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "world", Kind: "mismatch"}
 	}
 	if w.StateRoot != outRef {
-		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "world"}
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "world", Kind: "mismatch"}
 	}
 	var obj map[string]any
-	if err := json.Unmarshal(outObj.Payload, &obj); err != nil {
-		return Result{}, fmt.Errorf("coordinator: reconcile %s: output: %w", rc.InvocationID, err)
+	if err := json.Unmarshal(outObj.Payload, &obj); err != nil || obj == nil {
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "output", Kind: "undecodable"}
 	}
 	return Result{Output: obj, OutputBytes: outObj.Payload, InvocationID: rc.InvocationID,
 		WorldRef: w.Ref, EntryIndex: w.Revision, RecordRef: recObj.Hash, Reconciled: true}, nil

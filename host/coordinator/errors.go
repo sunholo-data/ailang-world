@@ -92,8 +92,16 @@ func (e *InFlightError) Error() string {
 type IntegrityError struct {
 	InvocationID string
 	Object       string // "record" | "output" | "world"
+	Kind         string // "mismatch" | "absent" | "undecodable"
 }
 
 func (e *IntegrityError) Error() string {
-	return fmt.Sprintf("coordinator: reconcile %s: recorded %s does not match its reference", e.InvocationID, e.Object)
+	phrase := "does not match its reference"
+	switch e.Kind {
+	case "absent":
+		phrase = "is absent"
+	case "undecodable":
+		phrase = "does not decode"
+	}
+	return fmt.Sprintf("coordinator: reconcile %s: recorded %s %s", e.InvocationID, e.Object, phrase)
 }
