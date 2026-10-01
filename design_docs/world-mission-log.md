@@ -1538,3 +1538,40 @@ The "carve-out when every objection carries a fix" path worked as designed: r2's
 **Progress**: 1.0: clauses 4, 5, 6 unmet; goal unmoved (row 125 hardens clause 6 without moving its end state). Last four landings: 214 none, 213 none, 212 none, 211 none → DRIFT continues; `D-WORLD-46` stays OPEN (default B, followed).
 
 **Next:** Mark: `D-WORLD-46` (recommend A = rule 43/44 A), D-WORLD-43, D-WORLD-44, D-WORLD-45, the attended 0.1.1 publish. Loop default (46 = B): rows 127/128 are clause-6 residuals at position 2 (127 is small; 128 needs a design note), then the position-7 bucket (126 and 25, 26, 32, …).
+
+
+## 215 — 2026-10-01 — row 127 PARKED after two blocked quorums; no product code changed; D-WORLD-47 [ADMIN]
+
+**Kind:** design + one permitted designer revision + re-quorum, then judgment park. All four Agent roles spawned; planner/executor readiness only. Independent review of the parking disposition is recorded below; implementation acceptance NOT RUN.
+
+**Pick and why:** 1/2/3/7 MET; 4/5/6 UNMET. Row 108 awaits D-WORLD-43, 114 awaits D-WORLD-44, 93 awaits 108. D-WORLD-46 default B permits clause-6 residual row 127 at inherited position 2. Previous row 125 landed; row127 remains an uncovered operator-log surface. Row128 requires design first, then position7 bucket.
+
+**Gate 0/1:** kill switch absent/armed; gh sunholo-voight-kampff; billing CLEAN. Zero allowlisted directives on #159 since both watermarks 2026-10-01T07:57:56Z; 31 comments. Cloud mission-world inbox empty, known controlplane message confirms the GCP instrument. Issue159 created after Monday07:00 local and has fewer than80 comments, so no rotation. dev == origin/dev at 4e2600e601711f40dae42479167251d43a8a3bf6; existing CI2/2 green. Running skill plus12 resources byte-match fleet origin/dev. No overlapping separate World process. Ledger33 rows valid at pick, OPEN43/44/45/46.
+
+**Premise:** handler registry and nil-coordinator log calls exist, resolver and card-unavailable calls do not. Read caller graph and released serveapi protocol constants; an initial wrong host/protocol search was an instrument error corrected by go list module path. No product code changed.
+
+**Designer:** Agent codex:gpt-6.1-sol, declared:provider-pin, rotation Claude→Codex; pointer now codex:gpt-6.1-sol. Draft208lines. Initial literal-pipe rg command corrected before quorum. R1 rejects required caller evidence, wire constants and a distinct card prefix; designer applied one protocol revision. Scope incident: scaffold helper created a new placeholder in the fleet checkout; designer removed only that new file, leaving four pre-existing fleet changes untouched. Ticket filed; no lasting fleet edit.
+
+**Quorum:** R1 BLOCKED3/3, GLM/Kimi/Gemini; Sonnet absent quota, OpenAI author benched. R2 BLOCKED3/3 with same seats. Full artifacts: design_docs/verification/world-iter215/w-a2a-operator-log-coverage-2026-10-01T10-29-00Z.json and ...T10-37-52Z.json. R2: card-route label source provenance absent; invalid-JSON/unlisted-skill zero-log negative controls contradict logging contract; pristine default full gate is red and design demands green. GLM proposes baseline-relative acceptance; Kimi requires remediation or explicit quorum agreement to such a rule. Applying both verbatim does not establish the same policy. Controller did not invent a combined pass-rule or force-pass. Park needs-human-review, D-WORLD-47 A additional designer revision plus fresh full quorum (recommended), B defer (default immediately). No third quorum.
+
+**Planner:** Agent codex:gpt-6.1-sol, declared:planner-lane-default-pin (`Planner-Lane: codex-ok`), read-only readiness completed. No plan/JSON/prototype. Notes full verify_go is more than focused package tests and fixture-call count wording needed correction (designer applied).
+
+**Executor:** Agent codex:gpt-6.1-sol, declared:provider-pin, read-only readiness completed. Two logging seams identified, counted fixtures checked. No code/tests/commits and no execution authorized through the blocked quorum.
+
+**Independent evaluator:** pending bounded independent administrative review; implementation evaluation NOT RUN. See final routing update below.
+
+**Controller gates:** pristine released compiler v0.41.0, full24ee1088776e21cd06a3781ed18e77f40be06db3. Focused projection/coordinator/daemon rc0; verify_ail rc0 (16/40). Full verify_go rc1 on five deadline/timeout assertions in capsule/pkgproj/replay/verifygate; race leg not run. Exact five-test isolated serialized control rc0; full go test ./... -p1 -count1 -timeout300s rc0. Changing execution shape narrows attribution but proves neither unique cause nor green default verify_go. Complete logs and commands tracked in design_docs/verification/world-iter215/README.md. No code diff/mutation verdict to claim.
+
+**Gate 3b:** no product landing candidate; row127 remains parked. Record-only PR subject and exact CI observations will be attached below, never treated as row127 acceptance.
+
+**Routing evidence:** base=4e2600e601711f40dae42479167251d43a8a3bf6@2026-10-01T10:43:37Z (Gate4); Gate1 same SHA@2026-10-01T10:18:05Z. Controller Codex (tok:not reported) · designer codex:gpt-6.1-sol (tok:not reported) · planner codex:gpt-6.1-sol (tok:not reported) · executor codex:gpt-6.1-sol (tok:not reported). All roles invoked through Agent, user standing request. Native evaluator `sonnet` spawn failed: Unknown model sonnet; available gpt-6.1-sol/gpt-6-astra/gpt-6-sol/gpt-6-luna/gpt-5.6-sol. Agent gpt-6.1-sol transport supervisor (tok:not reported) never judged. Subscription Sonnet probe rc0, canonical claude-sonnet-5-5, 6.20s, occurred BEFORE quota check (timing deviation); quota then fail-closed on HTTP429 and missing Current session fallback, no Sonnet judgment. Declared pi fallback Ollama DeepSeek readiness rc0, fenced/acked, 45,222 total tokens (quota, $0 metered); isolated worktree with byte-identical CLAUDE.md. CLAUDE copy preceded worktree terminal completion output (sequencing deviation); final worktree readiness proved. Native models expose no provider token totals here; unknown is not zero. Final evaluator/cost update below.
+
+**Record:** draft and quorum artifacts banked in tracked design_docs/verification/world-iter215; ignored .ailang/state/mission-quorum copies only discovery aids. STATUS215 added,212 moved as one line+blank to archive; structural3 stamps and archive212/control211 checked. Charter6055→6059 from ledger/queue edits; rotation itself6059→6059 = +2−2. Known queue128 retained. Manual index row215 in same commit; NEVER rotate-log on World while row118 ticket open. New fleet-owned escalation rows129/130, no repair authorization. Ledger34 rows valid, OPEN43/44/45/46/47. Heartbeat occurrence ticket inbox_1790850748419_c8ee4871; absolute shared helper workaround. NativeSonnet ticket inbox_1790850747516_18c97b3b; scaffold ticket inbox_1790850943604_f04b33e3.
+
+**Ruled out:** narrow-refinement carve-out for contradictory acceptance policies; attributing all baseline failures to row126; serial-green implying default-gate-green; native evaluator supervisor as judge; product landing on controller verdict; publishing0.1.1 unattended; harness repair in World. No closing issue keywords in record commit/PR metadata (positive-controlled scan).
+
+**Retro:** no shared skill or harness edits. Agent model transport and scaffold ownership escalated; heartbeat recurrence uses existing absolute-helper workaround. Latest20 index iterations: harness-authored0/20 (tickets here are ADMIN escalations, no repairs). Last3 landings214/213/212 moved no unmet clause; DRIFT persists and D-WORLD-46 remainsOPEN/defaultB. No routing-policy change.
+
+**Progress**: 1.0: clauses 4, 5, 6 unmet; goal unmoved (row127 parked; no product code changed).
+
+**Next:** default defer127 pending D-WORLD-47; row128 journal-intent authentication, design first (position2), then row126 load flake and rows25/26/32 (position7). Critical path108/114/93 awaits existing human rulings. Attended0.1.1 publication still pendingD-WORLD-45.

@@ -1,0 +1,79 @@
+{
+  "doc": "design_docs/planned/w-a2a-operator-log-coverage.md",
+  "iso_ts": "2026-10-01T10:29:00Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.07937620000000001,
+      "tokens_in": 3715,
+      "tokens_out": 16858,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The card-route placement decision — one log line 'once at entry to writeUnavailable, before status classification' — rests on an unverified call-graph premise. No verification row enumerates writeUnavailable's complete caller set: V2 reads only its body (457–468, 'only calls Fail') and V3 only the two AgentCard error branches (230–243). The design's own zero-log negative controls (successful card, clean absent-head zero-skills card, four session-denial kinds on both routes) jointly presuppose writeUnavailable is unreachable outside the enumerated resolver/head/snapshot failure fixtures, and the justification 'centralizing in writeUnavailable prevents double lines (V2/V3)' cites rows that contain no fact about other callers or multi-site traversal. Any additional writeUnavailable caller (denial rendering, not-configured, absent-head rendering) makes the cardinality table wrong, converts a zero-log control into a direct design contradiction, and forces mid-sprint replanning — exactly the error class premise verification exists to catch.",
+        "catch": "Secondary unverified premise: 'Labels and id are fixed on these pre-dispatch paths.' V1 quotes only the helper's Fprintf (466/467), never the literal arguments at the retained call sites 319/326/359; whether those lines pass constants ('tasks/send', '-') or parsed/caller-derived method and decoded request id is never shown. If 319/326 carry caller-derived values, the fixed-label `tasks/send` table claim is wrong and the privacy paragraph's scoping of the unquoted newline-injection vector to 'existing dispatch logs' is incomplete — no fixture or mutation arm covers a malicious request id on the retained lines. Related: 'all four session denial kinds on both routes' is an unverified behavior claim with no row enumerating the denial kinds or confirming the card route has them.",
+        "proposed_fix": "Before quorum, add verification rows and conditionally revise placement: (1) `rg -n 'writeUnavailable' host/projection/ -g '*.go'` listing every call site, with one sentence mapping each caller to an enumerated failure fixture; if any caller falls outside them, move the log into the two AgentCard error branches (or gate it on the classified error) and update the cardinality table and double-line rationale accordingly. (2) `sed -n '315,330p;355,362p' host/projection/projection.go` showing the literal arguments at 319/326/359 to substantiate 'labels and id are fixed'; if any retained line passes a parsed method or decoded request id, amend the privacy paragraph to scope the caller-derived newline/sensitive-text disclosure to every affected line (not just 'dispatch logs') and either add a malicious-request-id fixture plus mutation arm or register that line in the deferred logging-policy residual. (3) One row enumerating the four session-denial kinds and which apply to the card route. (4) One sentence in Decisions naming assertRefusalLog (a2a_wire_test.go:494) and stating why the new full-byte assertions do not extend or reuse it."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.12333299999999998,
+      "tokens_in": 3776,
+      "tokens_out": 7467,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Premise-verification gap on the load-bearing acceptance contract: the doc's 'Wire stays exact' paragraph asserts byte-exact values for the A2A resolver failure path (HTTP 200, null id, code -32603, and the literal message 'transition invocation is not available in this daemon'), and the entire fixture table, the mutation killers, and the success criterion 'all stated wire values unchanged' are built on these constants — but no verification-log row evidences any of them. V2 establishes only control flow ('resolver error calls only A2AError with nil id'; read of lines 275–282); it never quotes A2AError's status mapping, the -32603 constant, the message string, or the nil-id → JSON null serialization. V5 indirectly evidences a 'not-available response' only for the nil-coordinator path at daemon level. The card-side envelopes got fixture evidence (V8); the A2A resolver-side wire contract — the surface this task adds the most new code to — got none. For a doc whose whole design methodology is byte-exact assertion against verified premises, building the expected-value oracle on unverified constants is a gate-1 failure.",
+        "catch": "Add a verification row before sprint routing that pins the resolver-path wire contract from source or execution: e.g. `rg -n 'transition invocation is not available|32603' host/projection/` and `sed` of the A2AError function to capture its HTTP status, id-serialization of nil, code and message literals (positive control: same read must surface the known card Fail envelope strings); or run an existing/new scratch resolver-failure probe and record the raw response bytes. Also confirm the snapshot/nil-coordinator branches emit the same code/message as claimed ('same code/message' is currently asserted by reference, and V5 only covers daemon-level nil-coordinator). If the actual values differ (e.g., different message on resolver failure, non-null id encoding, different status), rewrite the 'Wire stays exact' paragraph and the affected fixture/mutation expectations to the verified values.",
+        "proposed_fix": "Replace the first sentence of 'Wire stays exact' with: 'Resolver A2A errors keep the exact wire emitted by A2AError today: HTTP \u003cverified status\u003e, id \u003cverified nil-id encoding\u003e, code \u003cverified code\u003e, message \u003cverified literal string, quoted from host/projection A2AError or constant def\u003e (V10). Snapshot/nil-coordinator errors keep the decoded request id and the code/message verified in V10/V5.' And append verification row: '**V10:** `rg -n \"transition invocation is not available|32603|func .*A2AError\" host/projection/*.go` → \u003cpaste actual matches with line numbers\u003e; `sed -n '\u003crange\u003e' host/projection/projection.go` → \u003cpaste A2AError body showing status, nil-id serialization, code, message\u003e; positive control: same read surfaces Fail envelope literals used by writeUnavailable. Baseline probe of resolver-failure response body recorded at \u003cbytes\u003e.' If no existing resolver-failure test exists (V9 ran none covering it), note that the wire values were verified from source constants only, and flag the fixture oracle as derived from V10, not assumed."
+      },
+      "landed": null
+    },
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "quota",
+      "error": "Anthropic bucket blocked by the mission ration: Anthropic usage endpoint returned HTTP 429; CLI fallback also failed (no \"Current session\" line in `claude -p /usage` output)",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.010990000000000002,
+      "tokens_in": 4205,
+      "tokens_out": 215,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The design explicitly mandates reusing `Handler.logRefusal` for Card read errors (placed in `writeUnavailable`), which hardcodes the prefix `\"ailang-worldd: a2a refusal:\"`. Conflating an AgentCard read failure with an 'a2a refusal' violates A3 (Effect legibility) by emitting semantically incorrect and misleading operator logs.",
+        "catch": "Reusing logRefusal for the Card route incorrectly labels card read failures as A2A refusals.",
+        "proposed_fix": "Do not reuse `Handler.logRefusal` for Card errors. Instead, inline a separate `fmt.Fprintf` inside `writeUnavailable` with an accurate prefix and constant label, such as `fmt.Fprintf(h.errorLog, \"ailang-worldd: card refusal: GET /.well-known/agent.json -: %q\\n\", err.Error())`."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Host-only residual preserves wire and parent logging direction; pending independent review."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The card-route placement decision — one log line 'once at entry to writeUnavailable, before status classification' — rests on an unverified call-graph premise. No verification row enumerates writeUnavailable's complete caller set: V2 reads only its body (457–468, 'only calls Fail') and V3 only the two AgentCard error branches (230–243). The design's own zero-log negative controls (successful card, clean absent-head zero-skills card, four session-denial kinds on both routes) jointly presuppose writeUnavailable is unreachable outside the enumerated resolver/head/snapshot failure fixtures, and the justification 'centralizing in writeUnavailable prevents double lines (V2/V3)' cites rows that contain no fact about other callers or multi-site traversal. Any additional writeUnavailable caller (denial rendering, not-configured, absent-head rendering) makes the cardinality table wrong, converts a zero-log control into a direct design contradiction, and forces mid-sprint replanning — exactly the error class premise verification exists to catch.",
+      "oc-kimi-k3: Premise-verification gap on the load-bearing acceptance contract: the doc's 'Wire stays exact' paragraph asserts byte-exact values for the A2A resolver failure path (HTTP 200, null id, code -32603, and the literal message 'transition invocation is not available in this daemon'), and the entire fixture table, the mutation killers, and the success criterion 'all stated wire values unchanged' are built on these constants — but no verification-log row evidences any of them. V2 establishes only control flow ('resolver error calls only A2AError with nil id'; read of lines 275–282); it never quotes A2AError's status mapping, the -32603 constant, the message string, or the nil-id → JSON null serialization. V5 indirectly evidences a 'not-available response' only for the nil-coordinator path at daemon level. The card-side envelopes got fixture evidence (V8); the A2A resolver-side wire contract — the surface this task adds the most new code to — got none. For a doc whose whole design methodology is byte-exact assertion against verified premises, building the expected-value oracle on unverified constants is a gate-1 failure.",
+      "gemini-3-1-pro: The design explicitly mandates reusing `Handler.logRefusal` for Card read errors (placed in `writeUnavailable`), which hardcodes the prefix `\"ailang-worldd: a2a refusal:\"`. Conflating an AgentCard read failure with an 'a2a refusal' violates A3 (Effect legibility) by emitting semantically incorrect and misleading operator logs."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "claude-sonnet-5@claude-p",
+        "reason": "quota"
+      }
+    ],
+    "total_cost_usd": 0.21369919999999998,
+    "total_tokens_in": 11696,
+    "total_tokens_out": 24540
+  }
+}
