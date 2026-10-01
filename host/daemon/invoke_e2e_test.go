@@ -241,7 +241,7 @@ func replaceInvocation(t *testing.T, d *Daemon, db string, st coordinator.Store,
 	if err != nil {
 		t.Fatal(err)
 	}
-	p, err := projection.New(projection.Config{Resolver: d.resolver, Reader: transitionreg.NewReader(d.store), Heads: d.reads,
+	p, err := projection.New(projection.Config{CredentialWait: credentialBudget, CallbackTimeout: invokeDeadline, MaxCallbacks: 8, WriteWait: writeTimeout, Resolver: d.resolver, Reader: transitionreg.NewReader(d.store), Heads: d.reads,
 		Deny: writeSessionDenial, Fail: writeAPIError, ErrorLog: d.errLog, Agent: protocol.AgentInfo{Name: "ailang-worldd", Version: Version},
 		MaxWait: readDeadline, InvokeWait: wait, Coordinator: coord})
 	if err != nil {

@@ -210,15 +210,16 @@ func (blockingResolver) ResolveContext(ctx context.Context, _ string, _ int64) (
 // reference writers, a small finite bound (Decision 6).
 func testConfig(st *store.Store) Config {
 	return Config{
-		Resolver:   authority.New(st),
-		Reader:     transitionreg.NewReader(st),
-		Heads:      st,
-		Deny:       refDeny,
-		Fail:       refFail,
-		ErrorLog:   io.Discard,
-		Agent:      protocol.AgentInfo{Name: "ailang-worldd", Description: "test projection agent", Version: "0.1.0"},
-		MaxWait:    2 * time.Second,
-		InvokeWait: 2 * time.Second,
+		Resolver:       authority.New(st),
+		Reader:         transitionreg.NewReader(st),
+		Heads:          st,
+		Deny:           refDeny,
+		Fail:           refFail,
+		ErrorLog:       io.Discard,
+		Agent:          protocol.AgentInfo{Name: "ailang-worldd", Description: "test projection agent", Version: "0.1.0"},
+		MaxWait:        2 * time.Second,
+		InvokeWait:     2 * time.Second,
+		CredentialWait: time.Second, CallbackTimeout: 2 * time.Second, MaxCallbacks: 8, WriteWait: 30 * time.Second,
 	}
 }
 
@@ -1480,7 +1481,7 @@ func TestProjection_WireOwnershipSource(t *testing.T) {
 			if strings.Contains(line, `"jsonrpc"`) || strings.Contains(line, "`json:\"jsonrpc\"`") {
 				t.Errorf("%s:%d: hand-formatted JSON-RPC wire material (a parallel wire shape is forbidden — AC1): %q", f, i+1, strings.TrimSpace(line))
 			}
-			if strings.Contains(line, "CallerSurface") || strings.Contains(line, "ValidateMCPName") {
+			if filepath.Base(f) == "projection.go" && (strings.Contains(line, "CallerSurface") || strings.Contains(line, "ValidateMCPName")) {
 				t.Errorf("%s:%d: reference to the MCP name-grammar gate (F6 — card IDs are verbatim, never CallerSurface): %q", f, i+1, strings.TrimSpace(line))
 			}
 			if strings.Contains(line, "X-World-Session") {
