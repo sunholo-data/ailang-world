@@ -60,12 +60,12 @@ Each wire row also asserts that its injection point was **reached exactly once**
 | Subtest | Real failure source | Wire expectation | Connection |
 |---|---|---|---|
 | `R2_R3` | `BinderFor` returns a binder whose `Bind` fails with `*transitionreg.AccessDeniedError{Label: secret}`. `transitionreg.Bind` wraps it with `%w` (`bind.go:78`). | −32602 `not authorized` | absent |
-| `R11` | the Runner blocks until the invocation context ends (`InvokeWait` 100 ms); the coordinator returns `coordinator: execute: <ctx err>` (`coordinator.go:304`) | −32603 `invocation exceeded its deadline` | **close** |
+| `R11` | the Runner blocks until the invocation context ends (`InvokeWait` 300 ms); the coordinator returns `coordinator: execute: <ctx err>` (`coordinator.go:304`) | −32603 `invocation exceeded its deadline` | **close** |
 | `R14` | a **real store conflict**: the Runner moves the world head mid-run (`PutWorld` + `SelectHead`), so `store.Commit`'s compare-and-append returns `*store.ConflictError` (`store.go:1148`). The test confirms the head moved. | −32603 `world head moved during invocation; not committed; send a new task id` (no head hashes, no `stale observed`) | absent |
 | `R16` | the Store's `Commit` returns `*store.UncertainError{Cause: secret}`; the coordinator wraps it in `UnconfirmedError` (`coordinator.go:328`) | −32603 `invocation outcome is not confirmed; resend the same task id` | absent |
 | `R4_R6_default` | the Store's `GetObject` (source load) returns an untyped error carrying a secret, as `coordinator: load source: %w` (`:276`) | −32603 `transition invocation is not available in this daemon` | absent |
 
-**`TestA2ADurableDeadlineWire`** (`:348`) is the repeated held-operation proof. A `stallStore` holds one named operation until the invocation context ends. A `release` channel frees it if the context never ends, so a context-dropping mutant fails instead of hanging. `InvokeWait` is 100 ms and the bound is 500 ms.
+**`TestA2ADurableDeadlineWire`** (`:348`) is the repeated held-operation proof. A `stallStore` holds one named operation until the invocation context ends. A `release` channel frees it if the context never ends, so a context-dropping mutant fails instead of hanging. `InvokeWait` is 300 ms and the completion bound is `InvokeWait` + 3 s (the executor widened both from the prototype's 100 ms / +400 ms for loaded `-race` CI runners; the mutation verdicts below were measured at the prototype's bounds, and the executor re-ran A1, A2, B1, B2, B3, C-R14, C-R16 and D1 at the widened bounds: all KILLED).
 
 | Subtest | Held op | Expected per call (×3 on one handler) |
 |---|---|---|
@@ -127,7 +127,7 @@ Log: `…/mutations.log` (run 1, superseded after the R11 runner was bounded, is
 | C-R14 | conflict arm code → `codeInvalidParams` | **KILLED** — R14 | KILLED | — |
 | C-R16 | Unconfirmed arm code → `codeInvalidParams` | **KILLED** — R16 + 2 held R16 rows | KILLED | — |
 | C-R4R6 | default arm code → `codeInvalidParams` | **KILLED** — R4_R6_default | KILLED | — |
-| **D1-invokewait-ignored** | projection.go:266 `WithTimeout(…, h.invokeWait)` → `time.Hour` | **KILLED** 8 — `call 0 did not complete within 500ms … stalled GetReceipt`; R11: `"transition execution failed"` | **SURVIVED** | KILLED by `TestProjection_BoundedWait//a2a/_route…` + loopback test |
+| **D1-invokewait-ignored** | projection.go:266 `WithTimeout(…, h.invokeWait)` → `time.Hour` | **KILLED** 8 — `call 0 did not complete within 500ms (prototype bound; widened to +3 s, D1 still KILLED) … stalled GetReceipt`; R11: `"transition execution failed"` | **SURVIVED** | KILLED by `TestProjection_BoundedWait//a2a/_route…` + loopback test |
 | D2-receipt-ctx-dropped | coordinator.go:236 `GetReceipt(ctx, …)` → `GetReceipt(context.WithoutCancel(ctx), …)` | **KILLED** 12/12 — but via the store's `ErrNoDeadline` (`binder reached 0 times`), not via the stall bound; D1 is the stall-bound kill | KILLED | — |
 | **D3-uncertain-append-unwrapped** | coordinator.go:317 uncertain AppendIntent → `return Result{}, err` (drops `UnconfirmedError`) | **KILLED** — uncertain_AppendIntent: `"…not available…", want "…not confirmed; resend…"` | **SURVIVED** | KILLED by `TestDispatchDurableDeadline/uncertain_*` (Dispatch level) |
 
