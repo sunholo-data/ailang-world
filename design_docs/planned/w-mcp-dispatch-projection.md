@@ -1,194 +1,214 @@
-# w-mcp-dispatch-projection — Session-Scoped MCP Projection (SPLIT child of `w-mcp-projection`)
+# w-mcp-dispatch-projection — Session-Scoped MCP Dispatch
 
-**Status**: Planned — **BLOCKED UPSTREAM on
-[`sunholo-data/ailang#885`](https://github.com/sunholo-data/ailang/issues/885); NOT
-QUORUM-CLEARED; deliberately NOT sprint-ready.** This doc exists to carry a confirmed
-quorum objection and its blocking predicate honestly, not to specify work that cannot yet be
-designed: the shape of the fix depends on what `#885` delivers, and a full spec written now
-would be designed against an unknown seam.  
-**Item**: split child of `w-mcp-projection` (charter clause 6, queue row 5)  
-**Clause**: clause-6 — the *"project the transition registry over MCP"* half  
-**Estimate**: deliberately NONE — estimating against an undelivered seam would be fiction; the
-estimate is written when the design is (at unblock + pick time)  
-**Author**: rotation designer, split round, 2026-08-25 (iteration 125)  
-**Verified against**: upstream `github.com/sunholo-data/ailang` tag `v0.33.2` (`63e7909f`) via the
-GitHub API (no local upstream checkout); World `dev` at `2e44e3e`  
-**Date**: 2026-08-25
+**Status**: Planned — revision r3 commissioned by **D-WORLD-43 = A**, awaiting a fresh full quorum. NOT quorum-cleared; no sprint authorized by this document.
+**Item / target / priority**: charter row 108; World 1.0 clause 6; P0.
+**Author**: `codex:gpt-6.1-sol`, iteration 217, 2026-10-01. **FLAGGED fallback** under D-WORLD-48: preferred GLM 5.3 unavailable; controller owns routing and quorum. No new quorum was run by this author.
+**Base**: `54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e`.
+**Estimate**: ~1 World day: admission 0.1d, mapping/schema 0.2d, adapters/mount 0.3d, conformance/mutations/runbook 0.4d. Planning must re-estimate if measured work exceeds this ceiling.
+**Dependencies**: existing session resolver, registry admission, invocation coordinator; proposed Go module pin `github.com/sunholo-data/ailang v0.47.2`. The separate released `.ail` compiler pin remains `~/.pinned-ailang/ailang v0.41.0` (V12).
+**Planner-Lane**: codex-ok after quorum clearance.
 
-## Why this doc exists — the objection, verbatim
+## Problem and goals
 
-The parent, `design_docs/planned/w-mcp-projection.md`, was blocked at quorum round 3
-(2026-08-25, both reviewers present, `absent_reviewers` empty) by a DIRECTION-level objection
-from `gpt5-6-sol`, **confirmed first-party by the controller with firing controls**. The
-disposition was SPLIT — a controller routing call, explicitly not `needs-human-review`: the
-reviewer-clean A2A remainder stayed in the parent; this doc carries the objection and the scope
-it blocks. The objection, verbatim:
+Clause 6 requires a session-filtered MCP transition registry alongside the A2A card. The canonical placeholder was stale: upstream #885 is CLOSED COMPLETED and the released module contains the SDK-free HTTP handler (V1–V3). The historical design went through two rejected quorum rounds; D-WORLD-43 authorizes this one batch-aware revision followed by fresh full quorum. Inputs are the preserved [prior design](../verification/world-iter216/prior-row108-design.md) and both JSON quorum artifacts in that directory (V13). This replaces the placeholder; it does not claim an implementation.
 
-> "The selected upstream seam is insufficient for the design's own no-codec rule … no MCP request
-> parser or handler for JSON-RPC method dispatch, initialization, `tools/list`, or `tools/call`. A
-> World-authored `/mcp/` handler therefore appears forced to implement MCP/JSON-RPC parsing and
-> dispatch locally, directly contradicting P1, the Design Freeze, and AC1."
->
-> — `gpt5-6-sol`, quorum round 3 on `w-mcp-projection`, 2026-08-25 (artifact
-> `.ailang/state/mission-quorum/w-mcp-projection-2026-08-25T16-33-38Z.json`)
+Serve `POST /mcp/` through upstream `mcphttp`, with the same session authority and propose → verify → execute → commit coordinator as the existing A2A surface. Success means exact per-session tool sets modulo a reversible name mapping; fresh admission per invocation; measured callback composition for single and batch requests; and zero new wire codec or ambient authority.
 
-The objection is correct, and it is not a defect in the parent's measurements — it is a scope
-finding: `serveapi/protocol@v0.33.2` delivered the whole A2A wire surface and the MCP *envelope*
-helpers, but no MCP JSON-RPC dispatch. The MCP half of clause 6 therefore has exactly two local
-routes, and both are closed by this repo's own guardrails.
+## Released seam and batch model
 
-## The measured evidence — both routes are closed
+V3 reads the actual module-cache source, not a development checkout. `mcphttp.NewHandler` takes Agent, Resolver, Tools, Invoker and a required `hostcall.Runner`. It owns JSON-RPC parsing, negotiation, dispatch, SSE framing and errors. It is stateless and refuses non-POST with 405; success writes one finite SSE `message` event and returns (V3/V5).
 
-Rows marked **[R]** were re-derived first-party in the split session (2026-08-25, commands as
-shown); rows marked **[I]** are inherited from the controller's iteration-124 measurements
-(charter STATUS stamp + the parent's premise rows), labelled as such.
+The POST order is body read (4 MiB cap), ResolveSession, Tools, CallerSurface, transport/header validation, then dispatch. Authorization runs **once per POST**, before dispatch. Empty protocol header defaults to `2025-03-26`; that version accepts JSON-RPC arrays. Versions `2025-06-18` and `2025-11-25` reject arrays with 400. `initialize` negotiation does not create server session state: each POST's header controls its batch eligibility (V3/V5).
 
-| # | Claim | Command / evidence | Result |
-|---|---|---|---|
-| E1 [R] | `protocol` ships MCP envelope helpers but the MCP HANDLER lives outside it and delegates dispatch to the SDK | `gh api 'repos/sunholo-data/ailang/contents/serveapi/mcp_handler.go?ref=v0.33.2'`, decoded: **187 lines**, `grep -c modelcontextprotocol` → **1**; same-call control `a2a_handler.go`: **180 lines**, SDK import count **0**, import block = `context`, `encoding/json`, `fmt`, `log`, `net/http` + `serveapi/protocol` | Confirmed — the A2A handler is the existence proof of the SDK-free shape; the MCP handler is not |
-| E2 [R] | `mcp_handler.go` does not string-match MCP method names AT ALL | `grep -c 'tools/list\|jsonrpc'` in `mcp_handler.go` → **0**; same grep in `a2a_handler.go` (its own method strings) → **2** | Confirmed — the 0 is not a refutation of the reviewer but the STRONGER form of the claim: the entire parse/dispatch lives in `github.com/modelcontextprotocol/go-sdk`, so there is nothing dispatch-shaped in upstream's zero-cloud-importable surface |
-| E3 [I] | Importing the MCP SDK moves the gated closure 249 → 283: **+34 packages across 5 new module roots**, and `TestDaemonDependencyAllowlist` reds on **28** disallowed packages including `golang.org/x/oauth2`, `go-sdk/auth`, `go-sdk/oauthex` | controller-measured iteration 124 over both gated patterns (`./host/daemon/... ./cmd/ailang-worldd/...`), with a sentinel control; recorded in the charter's iteration-124 STATUS stamp and the parent's status header | Inherited — an outbound-credential stack in the daemon core; breaches charter clause 2 AND clause 3 |
-| E4 [I] | The `protocol` arm, by contrast, is clean: closure 249 → 250, the single added package IS `serveapi/protocol`, removed set EMPTY (sentinel control fired), stdlib-only across all four files | parent premise rows N3/N10/N11 (revision round, first-party with controls) | Inherited — the contrast that makes route (ii)'s cost a property of the SDK, not of importing upstream per se |
-| E5 [R] | `#885` is OPEN with 0 comments | `gh issue view 885 --repo sunholo-data/ailang --json state,title,createdAt,comments` → `state=OPEN`, `comments=0`, created `2026-08-25T16:37:44Z`; same-call control `gh issue view 764 …` → `CLOSED`, 6 comments | Confirmed — the instrument can see closure and comments, and the ask is unanswered |
-| E6 [R] | Upstream latest release is still `v0.33.2`; no `v0.34.*` tag exists | `gh api repos/sunholo-data/ailang/releases/latest --jq .tag_name` → `v0.33.2`; `gh api …/git/matching-refs/tags/v0.34` → empty (rc=0); control `…/tags/v0.33` → `v0.33.0`, `v0.33.1`, `v0.33.2` | Confirmed — nothing newer has shipped that could contain a dispatch seam |
+Let N be the number of batch entries, K the entries that reach Invoker (valid request-form `tools/call`, parsable params, name found in the authorize-time surface), and J the entries that reach coordinator.Dispatch. Normally J ≤ K ≤ N. A normal single call has two authorize callbacks plus one invoke; a batch has **two authorize callbacks plus K sequential invokes**, subject to fail-fast termination. Each loop iteration finishes before the next begins. Notifications and inbound responses are dropped; unknown methods and unknown tool names produce item-level errors and dispatch continues. A host callback error aborts the whole POST immediately, emits the frozen JSON envelope and discards accumulated response objects; later items do not dispatch. The batch envelope id is `null`: `RequestID` expects an object, not an array. Malformed later entries can similarly produce a transport error after earlier items have committed (V3/V5).
 
-## Why neither route can be taken
+**A batch is not an atomic World transaction.** Its successful invocations commit independently in order. A whole-POST error may conceal earlier committed items from the client; it never rolls those commits back. This is an admitted transport property, not a new coordinator law. No local body parser, batch refusal filter, envelope wrapper or upstream fork is allowed.
 
-- **Route (i) — World writes its own MCP/JSON-RPC parsing and dispatch.** Forbidden by the
-  parent's P1 and Design Freeze, its AC1, and `DESIGN.md` §3.7's protocol-native rule ("World
-  invents no wire protocol where an open one exists" — and reimplementing an existing protocol's
-  codec is the same reinvention). This is the exact contradiction the objection names.
-- **Route (ii) — import `github.com/modelcontextprotocol/go-sdk`.** The measured closure (E3) puts
-  an OAuth/outbound-credential stack (`golang.org/x/oauth2`, `go-sdk/auth`, `go-sdk/oauthex`)
-  inside the daemon core: 28 allowlist violations, breaching charter clause 2 (zero-cloud) and
-  clause 3 (no ambient authority). D-WORLD-5 (Mark, attended, 2026-08-17) prescribes the route
-  out of a disallowed graph: **ask upstream for a narrow module, never a broad relaxation.** That
-  default executed as `#885` — the same route that previously produced `#764` → `v0.33.2`.
+## Decisions and design freeze
 
-## Blocking predicate — runnable, not prose
+All recommendations below are agent design choices subject to the commissioned quorum. D-WORLD-26 carrier, frozen D7 clocks, host authority laws and the no-codec rule are constraints, not choices.
 
-A future iteration decides "still blocked?" by RUNNING these, never by transcribing this doc.
-Each probe carries a same-call control so an empty/negative read is a measurement, not a guess.
+| Decision | Choice and cost | Authority / deadline |
+|---|---|---|
+| D108-1 | Pin released v0.47.2; remeasure daemon closure at implementation. Module bump, medium cost. | Agent + quorum / design |
+| D108-2 | Reversible escape mapping with loud >64-byte surface refusal; schema compatibility below. Medium cost. | Agent + quorum / design |
+| D108-3 | Reuse `host/projection` orchestration; adapters in new MCP-specific files; one additive daemon route. Medium cost. | Agent + quorum / design |
+| D108-4 | ONE existing bearer resolver; deny before registry reads; seam's 401 rendering. Fixed authority law. | D-WORLD-26 / fixed |
+| D108-5/10 | Shared MCP Runner (20s, 8 slots), adapter inner budgets and one aggregate 20s POST context. High cost if changed. | Agent + quorum / design |
+| D108-8/9/11 | Fresh per-item admission/task ID, independent commits, batch fail-fast wire semantics; no retry deduplication convention. High cost if changed. | Agent + quorum / design |
 
-```bash
-# 1. Is the upstream ask still open / unanswered?
-gh issue view 885 --repo sunholo-data/ailang --json state,comments \
-  --jq '{state: .state, comments: (.comments|length)}'
-# measured 2026-08-25: {"state":"OPEN","comments":0}
-# control (proves the instrument can see closure and comments):
-gh issue view 764 --repo sunholo-data/ailang --json state,comments \
-  --jq '{state: .state, comments: (.comments|length)}'
-# measured 2026-08-25: {"state":"CLOSED","comments":6}
+- [x] Preserve bearer carrier, existing coordinator/verified commit gate and frozen D7 constants.
+- [x] Delegate every JSON-RPC/MCP/SSE wire operation to the released seam.
+- [ ] Fresh quorum accepts D108-2's long-ID refusal and schema normalization.
+- [ ] Fresh quorum accepts per-item epoch/task accounting and non-atomic batch/retry residuals.
+- [ ] Fresh quorum accepts context-only aggregate middleware and distinct Runner/procbound capacities.
 
-# 2. Has anything newer than v0.33.2 shipped?
-gh api repos/sunholo-data/ailang/releases/latest --jq .tag_name
-# measured 2026-08-25: v0.33.2
-# control (proves the tag instrument sees tags at all):
-gh api 'repos/sunholo-data/ailang/git/matching-refs/tags/v0.33' --jq '.[].ref'
-# measured 2026-08-25: refs/tags/v0.33.0, v0.33.1, v0.33.2
-```
+**Unresolved direction decisions** are exactly these three unchecked quorum items. They are not silently ratified by D-WORLD-43, which authorizes revision/review, or D-WORLD-48, which authorizes available reviewers. If substantive review rejects a direction requiring an attended ruling, the controller parks that judgment and records it; no human is present in this role. Helper names, fixture organization and tolerance calibration are planner choices after clearance, within the laws and criteria below.
 
-**UNBLOCKED means ALL of:** `#885` is CLOSED as delivered (or a release tag newer than `v0.33.2`
-exists whose diff shows a dispatch seam), AND the delivered seam re-measures as stdlib-only in
-closure by the parent's own method (import-block read of every file in the seam package;
-`go list -deps` delta over both gated patterns; the unmodified `TestDaemonDependencyAllowlist`
-naming exactly the expected intruder(s)). A `#885` closed as WONTFIX also unblocks — the
-DECISION, not the design: it routes back to D-WORLD-5's arms for a human ruling, never to a local
-workaround (both local routes remain closed by the guardrails above).
+### D108-1 — Dependency admission
 
-## What upstream must deliver for this design to become writable
+Current go.mod pins v0.33.2 (V1). Recommend v0.47.2: it is fetchable from proxy and sumdb (200/200, V2), tag hash `e939cba032c0f38fbecffb47e8261fb58e1a2ca1` (V1), and the four non-test protocol files present at the old pin are byte-identical (V2). Its seam closure has exactly protocol, hostcall and mcphttp as non-stdlib packages; the current World closure already contains protocol (V2). **The final bumped-and-importing daemon graph is UNMEASURED in this design-only role**; implementation must prove added non-stdlib packages exactly hostcall and mcphttp, no removals, and pass the existing allowlist.
 
-An SDK-free MCP JSON-RPC dispatch seam importable by zero-cloud consumers: parsing and method
-dispatch for `initialize`, `notifications/initialized`, `tools/list`, and `tools/call` over MCP
-Streamable HTTP, driven by the same callback interfaces `protocol` already ships
-(`SessionResolver`, `ToolSource`, `Invoker`, `CallerSurface`), living in `serveapi/protocol` or
-an equivalently stdlib-only package whose admission moves World's gated closure by ~+1 package —
-not +34 across 5 module roots. `#885` asks for exactly this, citing `a2a_handler.go` (E1) as the
-existence proof that upstream can ship handler-shaped code over `protocol` alone.
+The existing manifest matches a package path AND its subpackages; its protocol entry already admits hostcall/mcphttp (V9). Do not invent two necessary allowlist lines or relax to a module root. Update the existing justification to describe actual use, and extend positive narrowness controls with both seam paths. Keep refused facade/internal/cloud controls. Fetch proxy/sumdb again immediately before landing a module bump; never disable checksum verification.
 
-## Scope this doc carries (moved from the parent at the split)
+### D108-2 — MCP-safe mapping and schema
 
-- the `/mcp/` endpoint and the World-authored MCP HTTP handler;
-- MCP JSON-RPC dispatch: initialization, `tools/list`, `tools/call`;
-- dispatch-bound envelope framing (`WriteMCPEnvelope`/`RequestID` used from a served handler);
-- SSE stream lifetime: the `/mcp/`-route-local `ResponseController` deadline relaxation, the
-  finite stream-lifetime maximum, and OS-level closure on expiry (quorum r1/r2 obligations,
-  `gemini-3-1-pro`);
-- the cross-surface criterion (the parent's old AC3): per session, the MCP `tools/list` name set
-  must exactly equal the A2A `skills[].id` set;
-- the SSE-framing conformance half of the parent's old AC8 (`event: message` + `data:` JSON,
-  proven against the frozen P6.A fixture);
-- the parent's old AC14 (SSE/REST deadline separation — the relaxation is route-local to `/mcp/`,
-  and the frozen D7 constants stay byte-unchanged); and
-- the RED mutations `MUT-PLAIN-JSON`, `MUT-LEAK-SSE-CONN`, `MUT-SSE-REST-DEADLINE`.
+V6 confirms stable ID grammar: lowercase/digits plus `_`, `-`, `.`, `/`, up to 128 bytes, segmented length ≤32 with boundary restrictions. MCP names allow `[a-zA-Z0-9_-]{1,64}`. Define M as `_→_u`, `.→_d`, `/→_s`, and `[a-z0-9-]→itself`. Examples: `tools.echo→tools_decho`; `world/recovery-transition/v1→world_srecovery-transition_sv1`.
 
-These are **obligations, not a spec**: when `#885` delivers, the full design — decisions,
-milestones, acceptance criteria with named RED mutations, premise verification log with firing
-controls — must be written against the ACTUAL delivered seam, and every obligation above must
-reappear in that draft's acceptance table. What is already known to carry over unchanged from the
-parent: the session carrier ruling (`D-WORLD-26` = ARM A: `Authorization: Bearer
-<session-credential>`, fail closed on absent/malformed/unknown, never an API key), the propose →
-verify → commit invocation path, the one-snapshot-per-request rule, and P6.V's verified
-commit-boundary law (which the parent lands and this half consumes).
+Encoding is total as a string transform, injective and reversible; **admission into MCP is partial because of the 64-byte limit**. Never claim every World ID fits. Decoder accepts only lowercase/digits/hyphen and the three canonical escapes; rejects dangling `_`, unknown escapes and uppercase. A decoded string is usable only if it equals an ID in the fresh Allowed set, whose descriptors already passed registry validation; do not duplicate the registry grammar as a second authority gate. Prove `decode(encode(id))=id` on a generated valid-ID corpus, and `encode(decode(name))=name` on admitted canonical names. A valid 65-byte multi-segment ID and escape-heavy IDs exercise the length refusal. Never truncate, hash, silently omit or alias an ID. Duplicate encoded names or >64 bytes refuse the entire MCP surface loudly before dispatch. A2A IDs stay verbatim.
 
-## Dependency admission — this doc carries it IF it unblocks first (added 2026-08-26, iteration 126)
+Registry schemas are canonical JSON objects but need not carry `type:"object"` (V6). Preserve a schema already carrying that type byte-for-byte. For a legacy object with no top-level `type`, add `type:"object"` while retaining its properties/constraints; `{}` becomes `{"type":"object"}`. An explicit non-object type is refused rather than erased. CallerSurface validates annotation rules and the whole surface; keep its loud refusal and pass OutputSchema unchanged (V6). This supersedes r2's substitution of all non-object schemas with a permissive object, which could silently discard constraints.
 
-The parent's `P6.D` (the `v0.33.2` pin + the single `allowedDepModules` **package-path** entry
-`github.com/sunholo-data/ailang/serveapi/protocol` + its narrowness test) was DEFERRED out of the
-parent at quorum round 5, on `gpt5-6-sol`'s objection that pre-landing an unconsumed dependency
-behind a dead compile anchor is speculative core growth. Its prescribed fix moves the admission
-into *"whichever child first becomes unblocked, where a real handler or adapter import provides
-the compile-visible use"*.
+### D108-3/4 — Host adapters, authority and mount
 
-Two children can unblock: this one (on `#885`) and
-[`w-a2a-session-projection.md`](w-a2a-session-projection.md) (on charter queue row 39
-`w-session-authority`). **If THIS doc unblocks first, it carries the admission**, with its `/mcp/`
-handler's `protocol` import as the compile-visible use; the full specification, AC16, and the
-mutations `MUT-ALLOWLIST-ROOT`/`MUT-FACADE-IMPORT` are written out in the A2A child's `P6.D`
-section and are inherited verbatim. If the A2A child lands it first, this doc inherits an
-already-admitted dependency and adds nothing. Check before starting:
-`git grep -n 'serveapi/protocol' -- go.mod host/daemon/daemon_test.go`.
+Extend host/projection with MCP-only resolver/tools/invoker adapters; reuse `allowedDescriptors`, bindingCaps and the daemon's existing resolver/reader/heads/coordinator/log sink (V7). This is host HTTP interface plumbing and representation conversion, not new World semantics: **why not an AILANG package?** HTTP request/context and Go callback interfaces must be connected at the existing host boundary; policy remains broker.Allows and transitionreg admission, transitions stay package-owned, and `world/` gains nothing.
 
-Either way it requires the parent's `P6.T` (toolchain floor `go1.25.6 → go1.26.6`) to be green
-first: `v0.33.2` declares `go 1.26.6`.
+Resolver derives its own credentialBudget context and calls ResolveContext with only `Authorization`. Absent/malformed/unknown/expired map to seam AuthorizationError 401 and constant messages; genuine resolution-store failure remains a host error. No API key, alternate header or second resolver. Tools/Invoker type-assert SessionBinding and fail closed. Denied requests must make zero registry/head/capability reads (the seam has read the body first; no contrary deny-before-body claim is made). `isProtected` remains POST /v1/commit only (V7/V8).
 
-## Non-negotiables that survive into any future draft
+Projection.New constructs one shared MCP Runner and handler; daemon injects its frozen `credentialBudget`, `readDeadline`, `invokeDeadline`, `writeTimeout`, and `procbound.MaxOutstanding`. Validate all injected scalars positive and invokeDeadline < writeTimeout; no replacement constants. Register **exactly** `mux.HandleFunc("POST /mcp/", d.projection.MCP)`; MCP delegates to the wrapped handler. Non-POST requests get mux 405 and Allow POST. Existing routes stay byte-unchanged.
 
-- No local JSON-RPC/MCP dispatch implementation (parent P1 / Design Freeze / `DESIGN.md` §3.7).
-- No MCP SDK import into the gated daemon graph (charter clauses 2 + 3; the measured
-  28-violation closure, E3).
-- The narrow PACKAGE-path allowlist discipline: admit the delivered seam by package path, never
-  a module root (the parent's measured matcher semantics).
-- Session authority per D-WORLD-26 = ARM A, with both of its constraints.
+**Non-vacuous GET guard**: network status alone cannot kill a methodless mount because upstream also returns 405 (V3). Replace MUT-GET-SERVED with **MUT-MUX-METHOD-REMOVED**, changing the registration string to `/mcp/`. `TestMCPMountMethodSource` parses daemon.go AST, locates Handler's actual mux registration call and requires exactly one executable registration of `POST /mcp/` with the MCP handler selector; reject `/mcp/` or any GET registration, fail on absent file/call, ignore comments. The positive control finds the existing POST /a2a/ registration in the same parse. Applied mutation must RED on the actual literal. `TestMCPGetRefused` remains an independent socket/HTTP behavior assertion, not its claimed killer.
 
-## Quorum status
+The existing `TestProjection_WireOwnershipSource` bans CallerSurface/ValidateMCPName throughout projection sources (V11), so MCP introduction requires a **scoped gate revision**, not suppression. Preserve A2A's verbatim-ID prohibition over A2A implementation files/functions, add an MCP gate requiring upstream handler use, and forbid local MCP wire encoding across the new files. `MUT-A2A-MCP-NAME-GATE` adds CallerSurface in the A2A path and must still RED; the real MCP adapter is the same-scan positive control. Retain no-deadline-tampering and no-skipped-gate discipline.
 
-**This doc is NOT quorum-cleared.** It was authored at the split (iteration 125) and no reviewer
-has passed it — the round-3 quorum blocked the PARENT, and this doc is the carrier of that
-block's surviving objection, not a resolution of it. When the blocking predicate above reads
-unblocked and this item is picked, the real design is written against the delivered seam and
-MUST then go through the full design quorum (`ailang design-quorum`, reject-by-default
-synthesis) at pick time. Nothing in this doc pre-authorizes a sprint.
+### D108-5/10 — Callback budgets and honest transport bounds
 
-## Relationship to the parent and to charter clause 6
+V4: Runner timeout starts fresh for each Run; its slot stays occupied until callback RETURN even if Run times out. One shared Runner bounds MCP callbacks across POSTs at 8 slots and 20s per call. V8: procbound's 8 is a DIFFERENT process-wide reservation bound, held to child REAP, also shared with A2A. Matching values is a sizing choice, not enforcement identity or a promise of available child capacity. Under healthy sequential callbacks a batch uses one Runner slot at a time; a timed-out noncooperative callback can retain its slot after the POST returns. The adapters must cooperate with ctx, and no background context substitution is permitted.
 
-Charter clause 6 names *"project the transition registry over MCP + publish the A2A agent
-card."* The parent (`w-mcp-projection.md`) delivers the A2A half plus the enabling milestones —
-P6.T (toolchain floor), P6.D (pinned `serveapi/protocol` dependency + one narrow allowlist
-line), P6.V (verified commit-boundary law) — all of which this half will ALSO consume when it
-unblocks. **Clause 6 is satisfied only when BOTH docs land.** Neither doc narrows the clause;
-they partition it, and this one carries the blocked half with its predicate named and runnable.
+The only wrapper derives `context.WithTimeout(r.Context(), invokeDeadline)`, defers cancel and calls upstream with `r.WithContext(ctx)`. It reads/writes no body, headers, status or bytes. Resolver, Tools and Invoker derive their respective inner bounds from the callback ctx. Each adapter checks ctx.Err() before admission/task mint/dispatch; a ready slot and expired context can both win Runner's first select (V4), so do not claim upstream guarantees zero callback starts after expiry. An error aborts the batch; later items are untouched.
 
-## Related Documents
+| Work | Unaggregated inner bound | Effective bound under one aggregate |
+|---|---|---|
+| ResolveSession, once | 3s credentialBudget | min(3s, Runner 20s, aggregate remainder) |
+| Tools, once | 10s readDeadline | min(10s, Runner 20s, aggregate remainder) |
+| Each Invoke, including fresh admission | 20s invokeDeadline | min(20s, Runner 20s, aggregate remainder); admission reads additionally get readDeadline |
+| Single call callback sum | 3+10+20 = 33s | cooperative callback waits clipped to aggregate 20s |
+| Batch with K invokes | 3+10+20K seconds | same ONE aggregate 20s, not 20s per item; host error stops later items |
+| Body | 4 MiB; client-paced | ReadTimeout 30s from request read start, not interrupted by aggregate ctx |
+| Response transport | WriteTimeout 30s | armed after headers, before handler body read; no deadline relaxation |
 
-- [w-mcp-projection.md](w-mcp-projection.md) — the SPLIT parent: A2A half + enablers, executable
-  now; its split-round quorum entry records this disposition
-- [world-mission.md](../world-mission.md) — clause 6; D-WORLD-5 (the ask-upstream default this
-  doc executes); D-WORLD-26 (the carrier ruling that survives into any future draft); the
-  iteration-124 STATUS stamp holding the controller's first-party closure measurements this doc
-  inherits (E3/E4)
-- [DESIGN.md](../DESIGN.md) — §3.7 protocol-native: the reinvention ban that closes route (i)
-- upstream [`sunholo-data/ailang#885`](https://github.com/sunholo-data/ailang/issues/885) — the
-  blocking ask (SDK-free MCP dispatch seam)
-- upstream [`sunholo-data/ailang#764`](https://github.com/sunholo-data/ailang/issues/764) →
-  `serveapi/protocol@v0.33.2` — the precedent: the same ask-upstream route, previously delivered
+V3–V5/V8/V10 support this composition. A prompt-body bounded fixture must deliver the envelope within 20s plus a small measured scheduling tolerance, inside the 30s transport window. **Not a universal 20s wall-clock claim**: context does not preempt synchronous JSON parsing/CallerSurface CPU or body reads; scheduler and transport write overhead remain. The finite body cap bounds input size, not a measured maximum CPU time. Slow bodies can consume the write window, yielding connection error instead of the envelope. Frozen transport deadlines bound that socket exposure; preserve the residual and test prompt-body delivery separately. Callback RESPONSE timeout does not prove slot release: wait for the cooperative callback to return and observe subsequent work succeeding.
+
+### D108-8/9/11 — Per-item invocation, snapshots and journal accounting
+
+Each reached Invoker decodes M, validates arguments as a non-null JSON object, checks its ctx, and calls allowedDescriptors under a fresh bounded admission context. It admits only that fresh Allowed set; never reuse the authorize-time descriptor/Request. Then mint 32 cryptographically random bytes as 64 lowercase hex characters (validTaskID allows this, V7); entropy failure refuses before Dispatch. Call coordinator.Dispatch under the callback-derived invoke ctx with binding episode/grants, fresh Request, decoded SkillID, task ID and input; PinnedFn nil. Return coordinator OutputBytes as InvocationResult.Value; seam wraps it in content/structuredContent (V5/V7). Log typed internal refusal safely through the existing sink, never encode a new wire taxonomy.
+
+One POST has one session resolution, one authorize-time Tools admission, and **one additional fresh registry + capability snapshot per reached invoker admission**. Normal K successful items therefore have K+1 admissions; unknown names, notifications and ping add none. Snapshot cache is immutable-head-keyed, but the head is NEVER cached: same head gives a parsed-object cache hit; changed head reparses, and the projection precheck also reads the head (V7). Do not promise every later admission is a cache hit. CapabilitySnapshot(now) is rebuilt per admission from the immutable binding's grants; each checked item uses its own epoch/time. A transition removed between item 1 and item 2 must refuse item 2 even if the POST's original surface listed it. A transition newly added during the POST is not in the original surface and is unavailable until a new POST. This is per-admission snapshot consistency, not one epoch for the entire POST.
+
+Each of J dispatched items has a distinct task/invocation ID even when method, arguments or JSON-RPC ids repeat. Admission/head-read cost and successful journal growth are O(K) per batch (not O(1)); cache hits avoid re-parsing, not admission work. Journal accounting is **up to one invocation receipt/intent namespace per dispatched item**, not one per POST and not unconditionally one successful row per item. Early coordinator rejection writes none; AppendIntent may land an unresolved receipt; successful Commit resolves it and adds its transition entry (V7). With K successful items: K unique resolved invocation receipts, K transition entries and K independently selected-head updates. A three-call batch that commits #1, fails #2 before intent and aborts #3 leaves exactly #1 resolved and no #2/#3 receipt; if #2's intent/commit outcome is uncertain, its unresolved/resolved receipt may exist instead. Preserve the coordinator's uncertain-durability and verified commit laws; never infer no writes from the envelope.
+
+Retries after a lost single or batch response mint NEW IDs and may repeat already committed effects/state transitions. JSON-RPC ids are not an idempotency key. Existing coordinator same-task-ID reconciliation exists (V7) but the MCP Invocation interface exposes only name/arguments (V5); this design invents no retry channel. Operator journal inspection is the recovery evidence. No batch-atomic rollback, automatic retry, reserved argument convention or surface-specific invocation prefix is introduced.
+
+## Split obligations and conflict surface
+
+| Carried obligation / existing surface | Disposition and guard |
+|---|---|
+| #885 SDK-free dispatch + no local codec | Reuse released mcphttp; AC-DEP/WIRE |
+| Bearer carrier and propose→verify→commit | Reuse existing resolver/coordinator; AC-CARRIER/INVOKE |
+| SSE frame and frozen host error envelope | One POST response, generated upstream golden; AC-WIRE/BATCH |
+| GET stream lifetime, route-local deadline relaxation | No GET stream in released seam; retire MUT-LEAK-SSE-CONN and MUT-SSE-REST-DEADLINE. Preserve kernels as GET mount AST guard, no-tampering scan and bounded callback tests. |
+| Exact MCP/A2A names | Equality modulo M plus decode equality/cardinality; literal equality impossible for dots/slashes; AC-CROSS |
+| Frozen P6.A ambient-export fixture | Live MCP two-session leg alongside A2A; union recorded banned names, nonempty expected allowed-set control; AC-FIXTURE |
+| Frozen /v1 routes, workbench, A2A and D7 | Add one route; existing route/constant tests and A2A suites remain controls. |
+| Existing A2A source guard vs MCP name validation | Scope A2A guard, add MCP guard; AC-WIRE and MUT-A2A-MCP-NAME-GATE. |
+| Snapshot consistency | Fresh one snapshot per admission; never mix epochs within Dispatch; explicit K+1 batch accounting; AC-ITEM. |
+
+No compiler pipeline/grammar is extended. DESIGN §1 graph semantics and §14 self-modification boundaries remain fixed; no fleet path or driver edit. Upstream seam behavior is reused, not overridden. Deliberate compatibility changes: MCP encoded names, 401 malformed bearer on MCP (AuthorizationStatus honors only 401/403, V5), and loud whole-surface refusal for long IDs or invalid schemas. A2A stays unchanged.
+
+## Milestones and files
+
+M108-1 (0.1d): fetchable pin, actual post-import daemon closure delta and narrow dependency controls.
+M108-2 (0.2d): mapping/refusal/normalization corpus, upstream CallerSurface gate, fresh-session exact sets.
+M108-3 (0.3d): mount, scalar validation, adapters, aggregate ctx, per-item coordinator/accounting.
+M108-4 (0.4d): wire golden generation, batch/durability/production-budget controls, all named mutations and runbook. Every applied mutation must fail its named test and reverted code pass; record reached injection/callback counts. Production-budget tests are sequential, bounded and do not leave workers behind.
+
+- `go.mod` — v0.47.2 pin (one line).
+- `go.sum` — checksummed module update.
+- `host/projection/mcp.go` — adapters/context-only mount (~180–250 LOC).
+- `host/projection/mcpname.go` — mapping/normalization (~90–130 LOC).
+- `host/projection/projection.go` — scalar injection/construction and package contract (~30 LOC).
+- `host/daemon/daemon.go` — scalar wiring, one route (~12 LOC).
+- `host/daemon/daemon_test.go` — existing admission justification and seam/narrow/mount controls (~50 LOC).
+- `host/projection/projection_test.go` — scope A2A source guard without weakening its laws (~30 LOC).
+- `host/projection/mcp_conformance_test.go` — single/batch/cross-surface, per-item store and timing tests (~500–750 LOC).
+- `host/projection/testdata/mcp_success.sse` — generated by invoking pinned upstream seam, never hand-typed.
+- `docs/QUICKSTART.md` — bearer transport headers, list/call/batch examples, encoded IDs, non-atomic/retry recovery (~40 lines).
+
+## Acceptance and mutation gates
+
+These tests are **proposed**, not claimed present or passing. An upstream semantic change must be caught through observable conformance, not a World reimplementation of upstream code.
+
+| AC | Required observable / killer test | Named mutation |
+|---|---|---|
+| AC-DEP-108 | Actual gated closure gains only mcphttp/hostcall non-stdlib; current facade/internal/cloud refused, seam admitted, real import visible; old-pin compile fails | MUT-PIN-REGRESS; MUT-ALLOWLIST-ROOT-MCP; MUT-FACADE-IMPORT-MCP (narrowness + dependency gate/build) |
+| AC-MAP-108 | `TestMCPNameRoundTrip/Refusal`: exact escape corpus, canonical decode, invalid IDs/escapes, >64 bytes refuse entire surface; collision detector synthetic control | MUT-MAP-IDENTITY; MUT-MAP-COLLIDE; MUT-MAP-DECODE-INVALID; MUT-MAP-NO-LEN-GUARD |
+| AC-SCHEMA-108 | `TestMCPSchemaNormalization`: {} gets type, properties preserved, typed object bytes preserved, explicit nonobject and bad annotation refuse | MUT-SCHEMA-PASSTHRU; MUT-SCHEMA-DROP-CONSTRAINT |
+| AC-CARRIER-108 | `TestMCPDenialMatrix/DeniedNeverTouchesRegistry`: bearer-only, constant 401 denial, resolver error envelope; denied read count 0 plus authorized nonzero control; middleware exclusion | MUT-RESOLV-DENY-DROPPED; MUT-KEY-AS-SESSION; MUT-MCP-PROTECTED |
+| AC-ADMIT-108 | `TestMCPListExactSetPerSession`: exact unequal session sets, no-head empty 200, dynamic head, genuine errors fail closed; bounded reads | MUT-TOOLS-UNFILTERED; MUT-TOOLS-NO-DEADLINE |
+| AC-INVOKE-108 | `TestMCPCallDispatch/ListedThenRevoked/InvokeDeadlineFreesSlot`: fresh admission, object input, real coordinator only, deadline observed and cooperative return/recovery | MUT-INVOKE-NO-READMIT; MUT-CB-BACKGROUND; MUT-INVOKE-NO-CTX-CHECK |
+| AC-ITEM-108 | `TestMCPBatchAccounting`: two successful same-name/same-arguments items (also repeated RPC id) yield distinct task IDs, 3 admission snapshots, 2 receipts/entries, sequential overlap counter=1; head removal between items blocks item 2; early rejection writes none; real store queried under fresh test ctx | MUT-TASK-PER-POST; MUT-SNAPSHOT-PER-POST; MUT-BATCH-NO-READMIT |
+| AC-BATCH-108 | `TestMCPBatchConformance`: default and explicit 2025-03-26 ping+valid call+unknown name yield one SSE array with matching item ids, only one invoke; notification-only 202; empty/malformed arrays refused; newer versions 400. Valid #1, host-failing #2, valid #3 yield exact whole-POST 200/-32603/null envelope, no SSE partial results, #3 never invoked, #1 commit remains; distinct unknown-method control yields item error and continues | MUT-BATCH-AS-SINGLE: test transport header injector forces 2025-06-18 on old-version batch; MUT-BATCH-PARTIAL: test-only response-writer decorator replaces host-failure whole envelope with previously accumulated success SSE payload. Both are explicit observable guard calibrations, not imaginary World batch branches. MUT-TASK-PER-POST also kills actual adapter defect. |
+| AC-BOUNDS-108 | Startup validation, positive injected scalars, every adapter inner deadline, aggregate shared across batch; production test recipe below; no ErrNoDeadline; cancelled adapter reaches neither mint nor Dispatch | MUT-RUNNER-UNBOUNDED; MUT-RESOLV-NO-BUDGET; MUT-AGGREGATE-REMOVED; MUT-AGGREGATE-PER-ITEM |
+| AC-WIRE-108 | `TestMCPWireConformance`: generated SSE golden, initialized/ping, Content-Type/Accept/version 400s, 4MiB cap and frozen host errors; AST/source gate requires upstream import/call; context wrapper writes nothing; scoped A2A name guard still fires | MUT-PLAIN-JSON (test mount decorator converts SSE to JSON); MUT-ENVELOPE-HANDROLL; MUT-DEADLINE-RELAX-MCP; MUT-A2A-MCP-NAME-GATE |
+| AC-ROUTE-108 | `TestMCPMountMethodSource` nonempty exact executable AST registration, same-parse A2A control; `TestMCPGetRefused` 405 Allow POST; frozen route/D7 tests | MUT-MUX-METHOD-REMOVED (AST test RED even though network 405 remains) |
+| AC-CROSS-108 | `TestMCPToolsListMatchesAgentCard`: on ONE daemon, per session set=M(card IDs), decoded sets equal, cardinalities equal; dot/slash examples populated | MUT-CROSS-SURFACE-DIVERGE |
+| AC-FIXTURE-108 | `TestMCPAmbientExportsAbsent`: both unequal sessions nonempty; recorded P6.A ambient names absent from both surfaces, plus existing A2A ban set (V11) | MUT-AMBIENT-HARDCODED |
+
+**Production constants test recipe (`TestMCPPostBudgetProductionConstants`)**: use the REAL daemon mount/injected values (3/10/20/30 seconds, shared slots 8), prompt body and bounded loopback server, recording wrapper entry and actual response write. Faults operate at credential/head/capsule seams and must prove entry/counts and cooperative teardown. Hold successful resolver work near its full budget (e.g. 2.8s), successful tools head work near its full budget (9.8s); never wait until their ctx.Done and then claim success. Assert actual held durations and deadline deltas; tolerances must not turn either inner timeout into a successful ignored cancellation. Run two separate sequential legs:
+
+1. Single call blocks its invocation until cancellation: response exact timeout envelope at aggregate ~20s, write <30s, callback parent deadline wins before its own fresh 20s; callback returns and a followup call succeeds. Without aggregate, ~2.8+9.8+20=32.6s and bound test REDs (possibly socket truncation).
+2. Batch of THREE valid calls: invoke #1 cooperatively succeeds after ~2s; #2 blocks; #3 must never enter. Same saturated authorize path yields ~14.6s before #2, leaving ~5.4s aggregate remainder; frozen whole envelope by ~20s, earlier item journal receipt remains resolved, #2 observes shared parent deadline, #3 count zero; no leaked Runner/capsule worker, followup succeeds. Aggregate removal yields ~34.6s; per-item refresh yields >20s. Both named mutations must RED this leg. Include exact N/K/J and admission/task/journal counters, not just elapsed time.
+
+Calibrate bounded tolerances on this rig (target ≤1s), assert written time inside 30s independently, and never extend production constants for a green result. Shrunk-clock tests additionally kill missing individual inner budgets (resolver must stop at its credentialBudget despite a larger Runner/aggregate); they complement rather than replace the production legs. A late-body socket test records connection truncation as permitted residual, not a success envelope promise. Bound test teardown independently and fail if any injected worker survives.
+
+## Verification Log — first-party iteration 217
+
+All commands ran at the base above on 2026-10-01. `U` below means `/Users/voightkampff/go/pkg/mod/github.com/sunholo-data/ailang@v0.47.2`; this is shorthand for an actual absolute module-cache directory. These are source/measurement premises, not claims of implemented acceptance. Negative rows include positive controls in the same invocation.
+
+| Row | Command executed / claim | Actual result |
+|---|---|---|
+| V1 | `cat go.mod`; `cat /Users/voightkampff/go/pkg/mod/cache/download/github.com/sunholo-data/ailang/@v/v0.47.2.info`; `gh issue view 885 --repo sunholo-data/ailang --json state,stateReason` | Current pin v0.33.2, go1.26.6; cached released origin ref refs/tags/v0.47.2/hash e939cba032c0f38fbecffb47e8261fb58e1a2ca1; issue CLOSED/COMPLETED. |
+| V2 | `curl -sS --max-time 20 -o /dev/null -w ...` to proxy info and sumdb lookup v0.47.2; Python subprocess `go list -deps -f '{{if not .Standard}}{{.ImportPath}}{{end}}' ./serveapi/protocol/mcphttp` cwd U and same command over World `./host/daemon/... ./cmd/ailang-worldd/...`; same Python invocation compares every non-test protocol *.go at v0.33.2 with U | HTTP 200/200; seam rc0 exactly 3 nonstdlib (protocol/hostcall/mcphttp); World rc0 54 nonstdlib, protocol present. SDK/oauth substring count 0 in both, positive protocol path control present in both. Four non-test old protocol files (a2a_wire, descriptor, envelope, interfaces) all equal bytes. Earlier Python urllib HTTPS attempt failed certificate verification before measurements; recovered with normal verified curl, no insecure flags. |
+| V3 | `cat U/serveapi/protocol/mcphttp/handler.go` full file including 140–198; `cat .../methods.go` same call | Positive NewHandler/ServeHTTP/authorize/serveMessages/callTool sites read. POST-only, body limit before authorize, two authorize Runs once, default 2025-03-26 arrays, newer-version refusal, sequential for-loop, hostErr whole envelope+return, per-name lookup and one Invoke Run per reached item. No GET stream/server session path in full handler; POST implementation is same-call positive control. |
+| V4 | `cat U/serveapi/protocol/hostcall/runner.go` | New requires positive timeout/cap; Run derives fresh timeout, waits slot, spawns callback with deferred release, select returns on timeout; slots held to callback return. No upfront ctx.Err check before slot select, positive callCtx.Done branches present in same read. |
+| V5 | `cat U/serveapi/protocol/interfaces.go`; `cat .../envelope.go`; `sed -n '1,120p' U/serveapi/protocol/mcphttp/wire.go`; V3 methods read | Invocation only Name/Arguments; Result only Value (positive fields control for absent metadata/task channel). RequestID object-unmarshal → null on array. Error taxonomy -32603 constant messages; AuthorizationStatus only 401/403; finite SSE and 202, 405 Allow POST, 4MiB cap; callTool embeds Value in text+structuredContent. |
+| V6 | `sed -n '300,350p' host/transitionreg/transitionreg.go`; `sed -n '260,300p' host/transitionreg/transitionreg.go`; `sed -n '270,310p' host/transitionreg/codec.go`; `rg -n 'InputSchema' host/transitionreg/*.go`; `cat U/serveapi/protocol/descriptor.go` | World 1..128 bytes and ≤32 segments/boundaries; MCP regex 1..64 safe bytes. Input schemas validated canonical object (Validate/codec); positive {} fixture plus {in:1} fixture prove type not required in registry. CallerSurface requires type object, validates annotations/duplicates, sorts by name; invalid descriptors refuse whole surface. |
+| V7 | `sed -n '1,220p' host/projection/projection.go`; `sed -n '260,425p' ...`; `sed -n '45,125p' host/transitionreg/transitionreg.go`; `sed -n '118,145p' host/transitionreg/bind.go`; `sed -n '90,120p' host/coordinator/coordinator.go`; `sed -n '150,346p' ...` | ONE injected resolver/readers/coordinator; bearer ResolveContext, bindingCaps and allowedDescriptors precheck/NewRequest/Allowed; NewRequest fresh registry+caps, Allows policy; head uncached/cache by immutable hash. Task grammar includes 64hex; a2a:episode:task invocation namespace, receipt reconciliation before execution, Bind/Check/RunContext/AppendIntent/Commit and uncertain outcomes. Successful commit result survives late ctx expiry inside coordinator; transport Runner may still have timed out. |
+| V8 | `rg -n 'credentialBudget|readDeadline|invokeDeadline|writeTimeout|POST /|isProtected' host/daemon/daemon.go host/daemon/daemon_test.go`; `sed -n '88,102p' host/daemon/daemon.go`; `sed -n '1,65p' host/procbound/procbound.go` | 3s credential, 10s read, 20s invoke, 30s write/read, 5s headers; injection invoke<write validation; POST /a2a/ registration and only commit protected. MaxOutstanding=8 process-wide children held to reap, independent Runner capacity. |
+| V9 | `sed -n '775,840p' host/daemon/daemon_test.go`; `sed -n '960,1010p' ...` | Existing protocol package prefix matches all subpackages. Narrowness body refuses internal/apiserver, serveapi and cloud storage; positive protocol and protocol/subpkg admitted. Thus no required new allowlist lines; real future graph remains to measure. |
+| V10 | `go env GOROOT`; `sed -n '975,1000p' /Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/server.go`; V3 body read | Go1.26.6 readRequest computes ReadTimeout from t0, deferred WriteDeadline after headers; body is read later inside handler, so body spends aggregate/write windows. |
+| V11 | `sed -n '332,424p' host/projection/projection_test.go`; `sed -n '1448,1490p' host/projection/projection_test.go`; `sed -n '1470,1520p' ...`; `rg -n 'Ambient|eprintln|submit_feedback' design_docs/planned/w-mcp-projection.md host/projection/projection_test.go` | Existing unequal-session fixture has dot/slash IDs; ambient test requires nonempty allowed control and named ban set; source guard bans MCP name validation across projection, explicit positive protocol-import check; no-tampering bans controller/deadline calls. Parent P6.A records nine names including eprintln/exit/flush/print/printErr/println/readLine/writeBytes/submit_feedback. Those historical observations are read evidence, not rerun compiler measurements. |
+| V12 | `~/.pinned-ailang/ailang version` | Released v0.41.0, commit 24ee1088776e21cd06a3781ed18e77f40be06db3. No `.ail` code/snippet or language capability assertion is introduced, so no language probe is required. |
+| V13 | `cat` both iteration216 JSON artifacts; `sed` prior-row108-design.md; `rg -n 'D-WORLD-43|D-WORLD-48|108' design_docs/world-mission.md` | Both historical quorum syntheses BLOCKED; r1 slot/arithmetic objections, r2 GET-vacuity/batch objections; D43 A commissions revision/fresh quorum; D48 available fallback, substantive objections still block. Historical judgments do not clear r3. |
+
+**Current baseline gates (controller evidence, not design acceptance):** before product changes, both full commands were RED at this base: verify_go rc1 after 318.75s on `TestQueryInterfaceReturnsWhileADescendantHoldsStdout` (“descendant pid not recorded”); verify_ail rc1 after 152.36s in nested pkgproj CrossCheck dry-run PUB015 `_smoke.ail`, despite the earlier standalone smoke leg passing. JSON/log artifacts are in [iteration217 verification](../verification/world-iter217/). The controller initially ran the two gates concurrently and is repeating the exact commands sequentially. No environmental cause or self-heal is established. Final exact full gates remain required; isolated passes cannot replace them. V14 evidence: read both `baseline-verify-*.json`, then `rg -n -C 2 'TestQueryInterfaceReturnsWhile|descendant pid not recorded|PUB015|_smoke.ail|smoke'` over both logs; positive earlier smoke output and named test execution accompany the failures. This author changed only this Markdown design.
+
+## Axiom compliance
+
+| Axiom | Score | Reason |
+|---|---|---|
+| A1 Determinism | 0 | Existing pure transition/commit laws; random task IDs are explicit host invocation metadata. |
+| A2 Replayability | +1 | Every committed item uses existing replayable coordinator record. |
+| A3 Effect legibility | 0 | Broker/capsule path reused; no hidden invocation path. |
+| A4 Explicit authority | +1 | Bearer binding plus fresh per-item capability admission. |
+| A5 Bounded verification | +1 | Named non-vacuous mutation gates and full production budget legs. |
+| A6 Safe concurrency | 0 | Existing head conflicts retained; batch explicitly non-atomic. |
+| A7 Machines first | +1 | Native MCP boundary, canonical names/structured results. |
+| A8 Minimal syntax | 0 | No language syntax. |
+| A9 Cost visibility | 0 | N/K/J and journal accounting explicit; no tariff/KPI change. |
+| A10 Composability | +1 | Reuses narrow upstream seam and host coordinator. |
+| A11 Structured failure | 0 | Frozen seam envelope; typed detail logged, batch loss residual explicit. |
+| A12 System boundary | +1 | Host-only adapters; no compiler/kernel/fleet changes. |
+
+Net +6; no hard negative. Quorum mandatory for unattended authoring and external released seam premises; controller runs fresh available author-excluding review under D43/D48. Skill scaffold and skill commit steps are superseded by the controller's explicit revise-in-place/no-commit instruction.
+
+## Residuals, completion and related work
+
+Residuals: non-atomic batch with prior commits hidden by later failure; no MCP retry-ID channel; a2a: invocation prefix shared across surfaces; no transition_fn metadata pin; full-surface long-ID/annotation refusal; noncooperative callbacks retain slots; slow-body or synchronous CPU/write overhead can make envelope delivery miss its transport window. These are explicit review subjects, not falsely measured capabilities. An atomic batch/retry channel or broader names requires a separate design/upstream seam change, never a local codec.
+
+- [ ] Fresh full quorum cleared; unchecked direction freezes resolved.
+- [ ] All ACs, RED→GREEN mutations and full verify gates pass (`./scripts/verify_ail.sh`, Go build/tests, required CI).
+- [ ] Actual pinned daemon dependency closure measured; proxy/sumdb remain 200.
+- [ ] Runbook updated with encoded names, version header, non-atomic batch and retry recovery.
+
+Related: [parent split](w-mcp-projection.md), [A2A sibling](../implemented/w-a2a-session-projection.md), [invocation coordinator](w-transition-invocation-coordinator.md), [charter](../world-mission.md), [DESIGN §1/§14](../DESIGN.md), [coding standards](../coding-standards.md), upstream [#885](https://github.com/sunholo-data/ailang/issues/885), and preserved [iteration216 evidence](../verification/world-iter216/README.md). The historical iteration216 inputs explain the authorized revision; this canonical r3 is the document to quorum and plan.

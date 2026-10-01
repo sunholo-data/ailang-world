@@ -1,0 +1,31 @@
+{
+  "role": "evaluator",
+  "classification": "PARKED-ON-LANE",
+  "native_spawn": {
+    "model": "sonnet",
+    "error": "Unknown model sonnet; available gpt-6.1-sol, gpt-6-astra, gpt-6-sol, gpt-6-luna, gpt-5.6-sol"
+  },
+  "transport_supervisor": "gpt-6.1-sol; never judge",
+  "quota_observed_at": "2026-10-01T14:20:08.585486Z",
+  "quota_commands": [
+    {
+      "command": "ailang mission quota --json",
+      "rc": 0
+    },
+    {
+      "command": "ailang mission quota --over",
+      "rc": 0,
+      "stdout": "ollama\nanthropic\nopenrouter\n"
+    }
+  ],
+  "blocked_lanes": {
+    "sonnet": "anthropic unknown, HTTP429 and CLI usage parse failure; canonical over gate fail-closed",
+    "pi:ollama/deepseek-v4-pro:0813-cloud": "Ollama over10pp/day ration",
+    "pi:openrouter/deepseek/deepseek-v4-pro-0813": "$6.54 against $2.33/day ration"
+  },
+  "judge_launched": false,
+  "administrative_review": "NOT RUN",
+  "implementation_acceptance": "NOT RUN",
+  "score": null,
+  "resume_predicate": "Fresh canonical quota --over excludes a declared independent evaluator bucket, followed by capability probe and bounded independent review on that lane."
+}

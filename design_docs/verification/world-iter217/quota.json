@@ -1,0 +1,161 @@
+{
+  "updated": "2026-10-01T18:08:46.508291Z",
+  "usage": [
+    {
+      "bucket": "anthropic",
+      "window": "5h",
+      "tokens": 1019963,
+      "stages": 1,
+      "window_start": "2026-10-01T18:08:46Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    },
+    {
+      "bucket": "anthropic",
+      "window": "long",
+      "tokens": 1019963,
+      "stages": 1,
+      "window_start": "2026-10-01T18:08:46Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    },
+    {
+      "bucket": "codex",
+      "window": "5h",
+      "tokens": 0,
+      "stages": 0,
+      "window_start": "2026-10-01T18:22:37.321215Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    },
+    {
+      "bucket": "codex",
+      "window": "long",
+      "tokens": 2016228,
+      "stages": 13,
+      "window_start": "2026-09-26T11:00:09Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    },
+    {
+      "bucket": "ollama",
+      "window": "5h",
+      "tokens": 119166,
+      "stages": 1,
+      "window_start": "2026-10-01T18:08:46Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    },
+    {
+      "bucket": "ollama",
+      "window": "long",
+      "tokens": 13555708,
+      "stages": 6,
+      "window_start": "2026-09-25T04:06:47Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    },
+    {
+      "bucket": "opencode",
+      "window": "5h",
+      "tokens": 0,
+      "stages": 0,
+      "window_start": "0001-01-01T00:00:00Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    },
+    {
+      "bucket": "opencode",
+      "window": "long",
+      "tokens": 0,
+      "stages": 0,
+      "window_start": "0001-01-01T00:00:00Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    }
+  ],
+  "at": "2026-10-01T18:22:37.321215Z",
+  "verdicts": [
+    {
+      "Bucket": "anthropic",
+      "Window": "5h",
+      "State": "not-paced",
+      "Consumed": 1019963,
+      "Allowance": 0,
+      "Reason": "1019963 tok this 5h window; the daily ration paces the long window only"
+    },
+    {
+      "Bucket": "anthropic",
+      "Window": "long",
+      "State": "capacity-unknown",
+      "Consumed": 1019963,
+      "Allowance": 0,
+      "Reason": "1019963 tok consumed, capacity unknown \u2014 left unrationed rather than rationed on a guess"
+    },
+    {
+      "Bucket": "opencode",
+      "Window": "5h",
+      "State": "not-paced",
+      "Consumed": 0,
+      "Allowance": 0,
+      "Reason": "0 tok this 5h window; the daily ration paces the long window only"
+    },
+    {
+      "Bucket": "opencode",
+      "Window": "long",
+      "State": "capacity-unknown",
+      "Consumed": 0,
+      "Allowance": 0,
+      "Reason": "0 tok consumed, capacity unknown \u2014 left unrationed rather than rationed on a guess"
+    }
+  ],
+  "codex_provider_usage": {
+    "state": "ok",
+    "reason": "provider-reported Codex account usage is within ration",
+    "observed_at": "2026-10-01T18:22:37.321215Z",
+    "source": "codex app-server account/rateLimits/read",
+    "windows": [
+      {
+        "used_percent": 59,
+        "window_minutes": 10080,
+        "resets_at": "2026-10-03T17:29:29Z",
+        "allowance_percent": 76.9808613923611
+      }
+    ],
+    "reset_credits": {
+      "available": 2,
+      "credits": [
+        {
+          "id": "RateLimitResetCredit_2592524f86088191a7104716e199c44d",
+          "title": "Full reset",
+          "status": "available",
+          "expires_at": "2026-10-22T20:37:45Z"
+        },
+        {
+          "id": "RateLimitResetCredit_1a2061d4a10c81918ddadcfb350f4360",
+          "title": "Full reset",
+          "status": "available",
+          "expires_at": "2026-10-29T19:03:05Z"
+        }
+      ]
+    }
+  },
+  "ollama_provider_usage": {
+    "gauge_status": "RATION",
+    "state": "over",
+    "reason": "Ollama Cloud weekly gauge consumed 10.6pp in the last 22h42m0s, over the 10pp/day ration; new cloud routing blocked",
+    "observed_at": "2026-10-01T18:22:37.321215Z",
+    "session_usage": 0.031,
+    "weekly_usage": 0.577
+  },
+  "anthropic_provider_usage": {
+    "state": "unknown",
+    "reason": "Anthropic usage endpoint returned HTTP 429; CLI fallback also failed (no \"Current session\" line in `claude -p /usage` output)",
+    "observed_at": "2026-10-01T18:22:37.321215Z",
+    "source": "https://api.anthropic.com/api/oauth/usage",
+    "enforced": true
+  },
+  "openrouter_provider_usage": {
+    "state": "over",
+    "reason": "OpenRouter spent $6.58 today, over the $2.33/day ration (70% of a $100.00 monthly cap); new OpenRouter routing blocked",
+    "observed_at": "2026-10-01T18:22:37.321215Z",
+    "limit_usd": 100,
+    "remaining_usd": 93.415499073,
+    "used_day_usd": 6.584500927,
+    "used_month_usd": 6.584500927,
+    "allowance_usd": 2.3333333333333335,
+    "limit_reset": "monthly"
+  }
+}

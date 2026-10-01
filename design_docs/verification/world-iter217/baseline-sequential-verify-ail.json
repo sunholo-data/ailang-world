@@ -1,0 +1,1 @@
+{"rc": 0, "seconds": 8.67, "base": "54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e", "compiler": "v0.41.0", "command": "AILANG_BIN=~/.pinned-ailang/ailang PATH=~/.pinned-ailang:$PATH ./scripts/verify_ail.sh", "changed_axis": "commands unchanged; gate legs now sequential", "load_start": [2.7177734375, 4.98681640625, 5.81591796875], "load_end": [2.4599609375, 4.85546875, 5.75927734375]}

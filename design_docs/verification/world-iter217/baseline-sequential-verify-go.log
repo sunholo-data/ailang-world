@@ -1,0 +1,89 @@
+── AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0
+Commit: 24ee108
+Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+Built:  2026-09-21T15:50:02Z
+
+The AI-First Programming Language
+Copyright (c) 2025-2026)
+── tracked-binary hygiene gate
+   ✓ 0 binary blobs among 559 tracked files
+── World mission-input gate (decision ledger)
+decision ledger valid: 35 rows
+   World decision-ledger validated; centralized runtime currency is NOT certified here.
+   ✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6
+── race-detector known-positive control
+go version go1.26.6 darwin/arm64
+==================
+WARNING: DATA RACE
+Read at 0x00c000114048 by goroutine 9:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x88
+
+Previous write at 0x00c000114048 by goroutine 6:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 9 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 6 (finished) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+==================
+WARNING: DATA RACE
+Write at 0x00c000114048 by goroutine 9:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Previous write at 0x00c000114048 by goroutine 6:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 9 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 6 (finished) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+control finished, shared = 35662
+Found 2 data race(s)
+exit status 66
+── go build ./...
+go version go1.26.6 darwin/arm64
+── focused host/evidence named-manifest gate (37 exact top-level tests)
+   ✓ all 37 required top-level evidence tests passed exactly once
+── go test ./... -count=1
+go version go1.26.6 darwin/arm64
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	3.005s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	23.518s
+ok  	github.com/sunholo-data/ailang-world/host/archive	27.195s
+ok  	github.com/sunholo-data/ailang-world/host/authority	0.664s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	2.053s
+ok  	github.com/sunholo-data/ailang-world/host/broker	85.571s
+ok  	github.com/sunholo-data/ailang-world/host/canon	0.890s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	45.613s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	1.480s
+--- FAIL: TestDispatchDurableDeadline (0.38s)
+    --- FAIL: TestDispatchDurableDeadline/uncertain_Commit (0.08s)
+        coordinator_test.go:629: err store: append intent "a2a:ep1:t1": context deadline exceeded, want R16
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/coordinator	11.620s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	33.449s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	3.317s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	2.160s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	30.352s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.289s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	2.047s
+ok  	github.com/sunholo-data/ailang-world/host/projection	8.681s
+ok  	github.com/sunholo-data/ailang-world/host/registry	2.051s
+ok  	github.com/sunholo-data/ailang-world/host/replay	32.495s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	5.253s
+ok  	github.com/sunholo-data/ailang-world/host/store	13.565s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	31.904s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	75.501s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	2.384s
+FAIL
