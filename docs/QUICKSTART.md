@@ -242,3 +242,5 @@ The upstream SSE golden is generated with `WORLD_UPDATE_MCP_GOLDEN=1 go test
 ./host/projection -run '^TestMCPWireConformance$'` against module `v0.47.2`; normal runs compare
 both the checked-in bytes and a newly constructed upstream handler. Executable mapping and
 absence examples run with `go test ./host/projection ./host/transitionreg -run '^Example' -v`.
+
+Host behavior changes are recorded in the [host changelog](HOST_CHANGELOG.md).

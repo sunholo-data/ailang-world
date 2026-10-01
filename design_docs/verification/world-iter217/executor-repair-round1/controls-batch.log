@@ -1,0 +1,28 @@
+=== RUN   TestA2AResendAfterWriteTimeout
+    invoke_e2e_test.go:352: same task executed 2 times, want once
+--- FAIL: TestA2AResendAfterWriteTimeout (5.07s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	5.500s
+FAIL
+
+RC 1
+=== RUN   TestA2AResendAfterWriteTimeout
+--- PASS: TestA2AResendAfterWriteTimeout (5.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	5.246s
+
+RC 0
+=== RUN   TestA2AResendAfterWriteTimeout
+    invoke_e2e_test.go:325: forced post-commit failure-cleanup control
+--- FAIL: TestA2AResendAfterWriteTimeout (5.94s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	6.281s
+FAIL
+
+RC 1
+=== RUN   TestA2AResendAfterWriteTimeout
+--- PASS: TestA2AResendAfterWriteTimeout (3.34s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	3.592s
+
+RC 0

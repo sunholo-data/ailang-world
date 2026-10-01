@@ -1,0 +1,20 @@
+{
+  "cmd": [
+    "go",
+    "test",
+    "-p",
+    "1",
+    "-timeout=60s",
+    "./host/daemon",
+    "-run",
+    "^TestA2AResendAfterWriteTimeout$",
+    "-v",
+    "-count=3"
+  ],
+  "rc": 0,
+  "seconds": 75.95895520900376,
+  "started_utc": "2026-10-01T21:30:47.411914+00:00",
+  "external_cap_seconds": 180,
+  "godebug": null,
+  "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+}

@@ -1,0 +1,8 @@
+=== RUN   TestA2AResendAfterWriteTimeout
+--- PASS: TestA2AResendAfterWriteTimeout (5.44s)
+=== RUN   TestA2AResendAfterWriteTimeout
+--- PASS: TestA2AResendAfterWriteTimeout (4.70s)
+=== RUN   TestA2AResendAfterWriteTimeout
+--- PASS: TestA2AResendAfterWriteTimeout (3.80s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	15.546s

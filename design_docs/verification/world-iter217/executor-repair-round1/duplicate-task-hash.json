@@ -1,0 +1,8 @@
+{
+  "kind": "test-only behavioral/failure-path calibration; no kernel or production mutation",
+  "mutant_sha256": "fbbdfd05bb81c098ca6a88d7d4b801c8578aac1dff78f2c7523ac851868204e9",
+  "restored_sha256": "b4bb5c42f01bc54b485e6acaf40fa1acab5d5fe4ef463519c4267c43ad5070fb",
+  "applied_rc": 1,
+  "restored_rc": 0,
+  "named_failure": "same task executed 2 times"
+}

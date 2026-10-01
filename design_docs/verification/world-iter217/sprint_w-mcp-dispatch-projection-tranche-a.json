@@ -210,7 +210,7 @@
       "passes": null,
       "started": "2026-10-01T20:06:19Z",
       "completed": "2026-10-01T20:55Z",
-      "notes": "Local conformance/tests/docs complete, generated upstream golden, real production clock legs, stage/receipt accounting before timing, late-body residual, exact per-POST lazy cache kill, verbatim payloads and examples, focused pristine/race/vet pass. D production behavior diff empty; mutations cover B/C. Normal final AIL\u2192Go, controller independent D proof, evaluator, required CI/product acceptance remain pending.",
+      "notes": "Local conformance/tests/docs complete, generated upstream golden, real production clock legs, stage/receipt accounting before timing, late-body residual, exact per-POST lazy cache kill, verbatim payloads and examples, focused pristine/race/vet pass. D production behavior diff empty; mutations cover B/C. Normal final AIL\u2192Go, controller independent D proof, evaluator, required CI/product acceptance remain pending. Gate3 round1 evaluator FAIL49 requires inherited resend test fixture repair and host Unreleased candidate changelog. D passes remains null; fresh judge/full profiles/required CI pending, no acceptance waiver.",
       "local_checks_passed": true
     }
   ],
@@ -871,8 +871,8 @@
     "M108D_CONFORMANCE": "MUT-TASK-PER-POST"
   },
   "implementation_complete": true,
-  "current_design_sha256": "deee814c607e0e83555f537c10f77e64d5c1ecb1a3f73b40e842c54ec3321290",
-  "design_hash_note": "design_sha256 retains authorized snapshot provenance. Current hash also includes controller V15 timeout transcription correction and authorized completion-status metadata; no acceptance contract change.",
+  "current_design_sha256": "5abe3bfb2497a5c99e434cbbf63199ec37f48da16ba782ae2ebf28d7f60bdf6b",
+  "design_hash_note": "design_sha256 retains authorized snapshot provenance. Current hash also includes controller V15 timeout transcription correction and authorized completion-status metadata; no acceptance contract change. Gate3 repair-round1 adds truthful implementation-state metadata only; authorized original design hash/snapshot remain immutable.",
   "mutation_summary": {
     "measured": 43,
     "runtime_kills": 42,
@@ -963,5 +963,17 @@
       "process_cap_seconds": 180,
       "diagnostic_godebug": "goindex=0"
     }
+  },
+  "repair_round1": {
+    "evaluator_verdict": "FAIL",
+    "reported_score": 49,
+    "scope": "Inherited resend fixture determinism and guaranteed failure cleanup; narrow Unreleased host documentation; no production/module/kernel/constants/contract changes.",
+    "checks": "local requested checks terminal and passed; negative calibrations expected rc1/restored0",
+    "pending": "Normal full profiles, fresh stateless product evaluator round2 and required CI; no baseline waiver.",
+    "documentation_provenance": "Controller-requested response to reviewer documentation deduction; not an exact reviewer-authored patch.",
+    "evidence": "executor-repair-round1/repair-manifest.json",
+    "normal_target_count3_rc": 0,
+    "race_target_count3_rc": 0,
+    "real_execution_sibling_rc": 0
   }
 }
