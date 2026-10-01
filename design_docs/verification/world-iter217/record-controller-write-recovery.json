@@ -5,5 +5,6 @@
   "recovery": "reran complete protected writer only after terminal checkout",
   "protected_ledger": "35 original rows byte-identical; new49OPEN only",
   "canonical_status_metadata_change": "candidate unaccepted, contract unchanged",
-  "current_design_sha256": "75aee388ce5b0011eb2b9f4f8408b46b73863f245fb544398287a547984004c4"
+  "current_design_sha256": "75aee388ce5b0011eb2b9f4f8408b46b73863f245fb544398287a547984004c4",
+  "diff_check_recovery": "Initial trailing blank archive line failed diff-check; sequential shell continued and made local-only commit3f7f9fd before assertion surfaced. Not pushed or reviewed. Added explicit end marker retaining both moved stamp single-line+blank blocks; rerun controls required before push."
 }

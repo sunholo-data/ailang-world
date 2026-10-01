@@ -19,5 +19,8 @@
   "manual_index_rows": [
     217,
     216
-  ]
+  ],
+  "archive_before_lines": 449,
+  "archive_after_lines": 455,
+  "archive_delta_includes_two_stamp_blocks_and_end_marker": 6
 }
