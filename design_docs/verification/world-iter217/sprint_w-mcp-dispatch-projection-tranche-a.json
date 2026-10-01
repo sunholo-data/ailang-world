@@ -1,6 +1,6 @@
 {
   "sprint_id": "W-MCP-DISPATCH-PROJECTION-108-FULL",
-  "status": "in_progress",
+  "status": "implementation_complete_pending_controller_acceptance",
   "created": "2026-10-01T19:03:27.751699+00:00",
   "design_doc": "design_docs/planned/w-mcp-dispatch-projection.md",
   "design_sha256": "74c813d0618179e07a3aec423008fc52ce5c5606a75465de45df7140c1a95580",
@@ -188,10 +188,11 @@
         "Scoped A2A source gate preserved, MCP upstream import/NewHandler/no-codec/contextonly AST gates plus exact POST route and dependency identities",
         "Scoped ledger mutants killed; separateCcommit; controller production MUT-INVOKE-NO-READMIT listedthenrevoked DispatchRED/revertGREEN"
       ],
-      "passes": null,
+      "passes": true,
       "started": "2026-10-01T19:29:28.385983+00:00",
-      "completed": null,
-      "notes": null
+      "completed": "2026-10-01T20:06:19Z",
+      "notes": "Local adapter controls and 14 C runtime mutants, selected+whole packages, race/vet passed. Controller independent NOREADMIT corroboration complete. Allowlist mutant executed B; five C-assigned dependency/aggregate/wire controls completed during D. Final normal full profile and acceptance remain controller-owned.",
+      "commit": "cad657c51632ebb8d7c64a7ee9601a6075e8c059"
     },
     {
       "id": "M108D_CONFORMANCE",
@@ -207,9 +208,10 @@
         "SeparateDcommit; controller production MUT-TASK-PER-POST distincttask/receiptRED/revertGREEN; exactfinalclosure, exactsequentialAIL/Go, completeCI and evaluator/controller acceptance; no baselinewaiver"
       ],
       "passes": null,
-      "started": null,
-      "completed": null,
-      "notes": null
+      "started": "2026-10-01T20:06:19Z",
+      "completed": "2026-10-01T20:55Z",
+      "notes": "Local conformance/tests/docs complete, generated upstream golden, real production clock legs, stage/receipt accounting before timing, late-body residual, exact per-POST lazy cache kill, verbatim payloads and examples, focused pristine/race/vet pass. D production behavior diff empty; mutations cover B/C. Normal final AIL\u2192Go, controller independent D proof, evaluator, required CI/product acceptance remain pending.",
+      "local_checks_passed": true
     }
   ],
   "baseline": {
@@ -434,345 +436,431 @@
       "id": "MUT-ABSENCE-UNTYPED",
       "mutation": "Return original errors.New for confirmed missing head",
       "killer_assertion": "TestRegistryHeadAbsentErrorClassification/direct: errors.As must be true",
-      "applied_rc": null,
-      "reverted_rc": null,
-      "stage": "M108A1_TYPED_ABSENCE"
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "stage": "M108A1_TYPED_ABSENCE",
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-ABSENCE-WRAP-LOST",
       "mutation": "NewRequest uses %v instead of %w for snapshot error",
       "killer_assertion": "TestRegistryHeadAbsentErrorClassification/new_request: errors.As must be true",
-      "applied_rc": null,
-      "reverted_rc": null,
-      "stage": "M108A1_TYPED_ABSENCE"
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "stage": "M108A1_TYPED_ABSENCE",
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-ABSENCE-POSTLOOKUP-CTX-REMOVED",
       "mutation": "Remove newly added post-GetRegistryHead ctx.Err check",
       "killer_assertion": "TestRegistryHeadAbsentAfterLookupCancellation/absent: errors.Is(context.Canceled) must be true",
-      "applied_rc": null,
-      "reverted_rc": null,
-      "stage": "M108A1_TYPED_ABSENCE"
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "stage": "M108A1_TYPED_ABSENCE",
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-ABSENT-PRECHECK-CATCHALL",
       "mutation": "Restore `if !hasHead { return empty,nil }` with typed reader retained",
       "killer_assertion": "TestAgentCard_AbsentPrecheckSnapshotFailure/store_error: status must be 503 (mutant 200); future MCP list test also kills it",
-      "applied_rc": null,
-      "reverted_rc": null,
-      "stage": "M108A2_CLASSIFIED_PROJECTION"
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "stage": "M108A2_CLASSIFIED_PROJECTION",
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-ABSENCE-STRING-MATCH",
       "mutation": "Recognize absence by matching exact message text",
       "killer_assertion": "TestProjectionAbsenceRaceControls/same_text_genuine: error must propagate / card 503",
-      "applied_rc": null,
-      "reverted_rc": null,
-      "stage": "M108A2_CLASSIFIED_PROJECTION"
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "stage": "M108A2_CLASSIFIED_PROJECTION",
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-PRESENT-ABSENCE-EMPTY",
       "mutation": "Remove !hasHead from typed classifier",
       "killer_assertion": "TestProjectionAbsenceRaceControls/present_then_absent: error must propagate / card 503",
-      "applied_rc": null,
-      "reverted_rc": null,
-      "stage": "M108A2_CLASSIFIED_PROJECTION"
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "stage": "M108A2_CLASSIFIED_PROJECTION",
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-PRECHECK-ABSENCE-EARLY-RETURN",
       "mutation": "Return empty immediately when precheck absent, before NewRequest",
       "killer_assertion": "TestAgentCard_HeadRaceAbsentThenSucceeds: exact skills [tools.echo] (existing control)",
-      "applied_rc": null,
-      "reverted_rc": null,
-      "stage": "M108A2_CLASSIFIED_PROJECTION"
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "stage": "M108A2_CLASSIFIED_PROJECTION",
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-PRECHECK-ERROR-IGNORED",
       "mutation": "Continue snapshot after head-precheck error",
       "killer_assertion": "TestProjectionAbsenceRaceControls/precheck_error: Reader calls must equal 0",
-      "applied_rc": null,
-      "reverted_rc": null,
-      "stage": "M108A2_CLASSIFIED_PROJECTION"
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "stage": "M108A2_CLASSIFIED_PROJECTION",
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-PIN-REGRESS",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-DEP-108",
       "killer_assertion": "MUT-PIN-REGRESS\u2192build imports unavailable; MUT-ALLOWLIST-ROOT-MCP\u2192narrowness refused set differs; MUT-FACADE-IMPORT-MCP\u2192dependency gate names forbidden serveapi",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "expected old-pin build/setup refusal"
     },
     {
       "id": "MUT-ALLOWLIST-ROOT-MCP",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-DEP-108",
       "killer_assertion": "MUT-PIN-REGRESS\u2192build imports unavailable; MUT-ALLOWLIST-ROOT-MCP\u2192narrowness refused set differs; MUT-FACADE-IMPORT-MCP\u2192dependency gate names forbidden serveapi",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-FACADE-IMPORT-MCP",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-DEP-108",
       "killer_assertion": "MUT-PIN-REGRESS\u2192build imports unavailable; MUT-ALLOWLIST-ROOT-MCP\u2192narrowness refused set differs; MUT-FACADE-IMPORT-MCP\u2192dependency gate names forbidden serveapi",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-MAP-IDENTITY",
       "stage": "M108B_DEP_NAMES",
       "acceptance_id": "AC-MAP-108",
       "killer_assertion": "MUT-MAP-IDENTITY\u2192exact encoding differs; MUT-MAP-COLLIDE\u2192distinct ID encodings equal; MUT-MAP-DECODE-INVALID\u2192invalid escape accepted; MUT-MAP-NO-LEN-GUARD\u2192Tools adapter refusal missing (upstream also rejects, so wire alone insufficient); MUT-SURFACE-ERROR-CACHED\u2192followup repaired list/call fails",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-MAP-COLLIDE",
       "stage": "M108B_DEP_NAMES",
       "acceptance_id": "AC-MAP-108",
       "killer_assertion": "MUT-MAP-IDENTITY\u2192exact encoding differs; MUT-MAP-COLLIDE\u2192distinct ID encodings equal; MUT-MAP-DECODE-INVALID\u2192invalid escape accepted; MUT-MAP-NO-LEN-GUARD\u2192Tools adapter refusal missing (upstream also rejects, so wire alone insufficient); MUT-SURFACE-ERROR-CACHED\u2192followup repaired list/call fails",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-MAP-DECODE-INVALID",
       "stage": "M108B_DEP_NAMES",
       "acceptance_id": "AC-MAP-108",
       "killer_assertion": "MUT-MAP-IDENTITY\u2192exact encoding differs; MUT-MAP-COLLIDE\u2192distinct ID encodings equal; MUT-MAP-DECODE-INVALID\u2192invalid escape accepted; MUT-MAP-NO-LEN-GUARD\u2192Tools adapter refusal missing (upstream also rejects, so wire alone insufficient); MUT-SURFACE-ERROR-CACHED\u2192followup repaired list/call fails",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-MAP-NO-LEN-GUARD",
       "stage": "M108B_DEP_NAMES",
       "acceptance_id": "AC-MAP-108",
       "killer_assertion": "MUT-MAP-IDENTITY\u2192exact encoding differs; MUT-MAP-COLLIDE\u2192distinct ID encodings equal; MUT-MAP-DECODE-INVALID\u2192invalid escape accepted; MUT-MAP-NO-LEN-GUARD\u2192Tools adapter refusal missing (upstream also rejects, so wire alone insufficient); MUT-SURFACE-ERROR-CACHED\u2192followup repaired list/call fails",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-SURFACE-ERROR-CACHED",
       "stage": "M108B_DEP_NAMES",
       "acceptance_id": "AC-MAP-108",
       "killer_assertion": "MUT-MAP-IDENTITY\u2192exact encoding differs; MUT-MAP-COLLIDE\u2192distinct ID encodings equal; MUT-MAP-DECODE-INVALID\u2192invalid escape accepted; MUT-MAP-NO-LEN-GUARD\u2192Tools adapter refusal missing (upstream also rejects, so wire alone insufficient); MUT-SURFACE-ERROR-CACHED\u2192followup repaired list/call fails",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-SCHEMA-PASSTHRU",
       "stage": "M108B_DEP_NAMES",
       "acceptance_id": "AC-SCHEMA-108",
       "killer_assertion": "MUT-SCHEMA-PASSTHRU\u2192legacy schema lacks type; MUT-SCHEMA-DROP-CONSTRAINT\u2192constraint/property equality differs; MUT-SCHEMA-FLOAT64\u2192exact numeric token differs",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-SCHEMA-DROP-CONSTRAINT",
       "stage": "M108B_DEP_NAMES",
       "acceptance_id": "AC-SCHEMA-108",
       "killer_assertion": "MUT-SCHEMA-PASSTHRU\u2192legacy schema lacks type; MUT-SCHEMA-DROP-CONSTRAINT\u2192constraint/property equality differs; MUT-SCHEMA-FLOAT64\u2192exact numeric token differs",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-SCHEMA-FLOAT64",
       "stage": "M108B_DEP_NAMES",
       "acceptance_id": "AC-SCHEMA-108",
       "killer_assertion": "MUT-SCHEMA-PASSTHRU\u2192legacy schema lacks type; MUT-SCHEMA-DROP-CONSTRAINT\u2192constraint/property equality differs; MUT-SCHEMA-FLOAT64\u2192exact numeric token differs",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-RESOLV-DENY-DROPPED",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-CARRIER-108",
       "killer_assertion": "MUT-RESOLV-DENY-DROPPED\u2192denied reads !=0; MUT-KEY-AS-SESSION\u2192API-key request admits; MUT-MCP-PROTECTED\u2192MCP denial becomes daemon envelope",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-KEY-AS-SESSION",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-CARRIER-108",
       "killer_assertion": "MUT-RESOLV-DENY-DROPPED\u2192denied reads !=0; MUT-KEY-AS-SESSION\u2192API-key request admits; MUT-MCP-PROTECTED\u2192MCP denial becomes daemon envelope",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-MCP-PROTECTED",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-CARRIER-108",
       "killer_assertion": "MUT-RESOLV-DENY-DROPPED\u2192denied reads !=0; MUT-KEY-AS-SESSION\u2192API-key request admits; MUT-MCP-PROTECTED\u2192MCP denial becomes daemon envelope",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-TOOLS-UNFILTERED",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-ADMIT-108",
       "killer_assertion": "MUT-TOOLS-UNFILTERED\u2192name set includes forbidden tool; MUT-TOOLS-NO-DEADLINE\u2192observed ctx deadline absent/exceeds read budget",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-TOOLS-NO-DEADLINE",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-ADMIT-108",
       "killer_assertion": "MUT-TOOLS-UNFILTERED\u2192name set includes forbidden tool; MUT-TOOLS-NO-DEADLINE\u2192observed ctx deadline absent/exceeds read budget",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-INVOKE-NO-READMIT",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-INVOKE-108",
       "killer_assertion": "MUT-INVOKE-NO-READMIT\u2192revoked tool Dispatch count nonzero; MUT-CB-BACKGROUND\u2192callback fails to cancel/slot recover; MUT-INVOKE-NO-CTX-CHECK\u2192expired adapter mint/Dispatch counter nonzero",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-CB-BACKGROUND",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-INVOKE-108",
       "killer_assertion": "MUT-INVOKE-NO-READMIT\u2192revoked tool Dispatch count nonzero; MUT-CB-BACKGROUND\u2192callback fails to cancel/slot recover; MUT-INVOKE-NO-CTX-CHECK\u2192expired adapter mint/Dispatch counter nonzero",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-INVOKE-NO-CTX-CHECK",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-INVOKE-108",
       "killer_assertion": "MUT-INVOKE-NO-READMIT\u2192revoked tool Dispatch count nonzero; MUT-CB-BACKGROUND\u2192callback fails to cancel/slot recover; MUT-INVOKE-NO-CTX-CHECK\u2192expired adapter mint/Dispatch counter nonzero",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-TASK-PER-POST",
       "stage": "M108D_CONFORMANCE",
       "acceptance_id": "AC-ITEM-108",
       "killer_assertion": "MUT-TASK-PER-POST\u2192unique IDs count !=2; MUT-SNAPSHOT-PER-POST\u2192admissions !=3; MUT-BATCH-NO-READMIT\u2192revoked item2 Dispatch nonzero",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-SNAPSHOT-PER-POST",
       "stage": "M108D_CONFORMANCE",
       "acceptance_id": "AC-ITEM-108",
       "killer_assertion": "MUT-TASK-PER-POST\u2192unique IDs count !=2; MUT-SNAPSHOT-PER-POST\u2192admissions !=3; MUT-BATCH-NO-READMIT\u2192revoked item2 Dispatch nonzero",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-BATCH-NO-READMIT",
       "stage": "M108D_CONFORMANCE",
       "acceptance_id": "AC-ITEM-108",
       "killer_assertion": "MUT-TASK-PER-POST\u2192unique IDs count !=2; MUT-SNAPSHOT-PER-POST\u2192admissions !=3; MUT-BATCH-NO-READMIT\u2192revoked item2 Dispatch nonzero",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-BATCH-AS-SINGLE",
       "stage": "M108D_CONFORMANCE",
       "acceptance_id": "AC-BATCH-108",
       "killer_assertion": "MUT-BATCH-AS-SINGLE\u2192test header decorator forces2025-06-18, expected SSE200 differs; MUT-BATCH-PARTIAL\u2192test response decorator emits accumulated success SSE, exact envelope differs. These are observable guard calibrations, not fictional World batch branches. Actual MUT-TASK-PER-POST also killed.",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled test-only observable guard calibration"
     },
     {
       "id": "MUT-BATCH-PARTIAL",
       "stage": "M108D_CONFORMANCE",
       "acceptance_id": "AC-BATCH-108",
       "killer_assertion": "MUT-BATCH-AS-SINGLE\u2192test header decorator forces2025-06-18, expected SSE200 differs; MUT-BATCH-PARTIAL\u2192test response decorator emits accumulated success SSE, exact envelope differs. These are observable guard calibrations, not fictional World batch branches. Actual MUT-TASK-PER-POST also killed.",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled test-only observable guard calibration"
     },
     {
       "id": "MUT-RUNNER-UNBOUNDED",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-BOUNDS-108",
       "killer_assertion": "MUT-RUNNER-UNBOUNDED\u2192New accepts invalid value; MUT-RESOLV-NO-BUDGET\u2192resolver deadline exceeds credentialBudget; MUT-AGGREGATE-REMOVED\u2192actual answer>20+tolerance; MUT-AGGREGATE-PER-ITEM\u2192batch answer>20+tolerance",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-RESOLV-NO-BUDGET",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-BOUNDS-108",
       "killer_assertion": "MUT-RUNNER-UNBOUNDED\u2192New accepts invalid value; MUT-RESOLV-NO-BUDGET\u2192resolver deadline exceeds credentialBudget; MUT-AGGREGATE-REMOVED\u2192actual answer>20+tolerance; MUT-AGGREGATE-PER-ITEM\u2192batch answer>20+tolerance",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-AGGREGATE-REMOVED",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-BOUNDS-108",
       "killer_assertion": "MUT-RUNNER-UNBOUNDED\u2192New accepts invalid value; MUT-RESOLV-NO-BUDGET\u2192resolver deadline exceeds credentialBudget; MUT-AGGREGATE-REMOVED\u2192actual answer>20+tolerance; MUT-AGGREGATE-PER-ITEM\u2192batch answer>20+tolerance",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-AGGREGATE-PER-ITEM",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-BOUNDS-108",
       "killer_assertion": "MUT-RUNNER-UNBOUNDED\u2192New accepts invalid value; MUT-RESOLV-NO-BUDGET\u2192resolver deadline exceeds credentialBudget; MUT-AGGREGATE-REMOVED\u2192actual answer>20+tolerance; MUT-AGGREGATE-PER-ITEM\u2192batch answer>20+tolerance",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-PLAIN-JSON",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-WIRE-108",
       "killer_assertion": "MUT-PLAIN-JSON\u2192test decorator changes content type/frame; MUT-ENVELOPE-HANDROLL\u2192source gate detects actual encoding; MUT-DEADLINE-RELAX-MCP\u2192source gate detects SetWriteDeadline/ResponseController; MUT-A2A-MCP-NAME-GATE\u2192A2A source guard detects CallerSurface. Source guard mutations are applied to executable source and reverted.",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled test-only observable guard calibration"
     },
     {
       "id": "MUT-ENVELOPE-HANDROLL",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-WIRE-108",
       "killer_assertion": "MUT-PLAIN-JSON\u2192test decorator changes content type/frame; MUT-ENVELOPE-HANDROLL\u2192source gate detects actual encoding; MUT-DEADLINE-RELAX-MCP\u2192source gate detects SetWriteDeadline/ResponseController; MUT-A2A-MCP-NAME-GATE\u2192A2A source guard detects CallerSurface. Source guard mutations are applied to executable source and reverted.",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-DEADLINE-RELAX-MCP",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-WIRE-108",
       "killer_assertion": "MUT-PLAIN-JSON\u2192test decorator changes content type/frame; MUT-ENVELOPE-HANDROLL\u2192source gate detects actual encoding; MUT-DEADLINE-RELAX-MCP\u2192source gate detects SetWriteDeadline/ResponseController; MUT-A2A-MCP-NAME-GATE\u2192A2A source guard detects CallerSurface. Source guard mutations are applied to executable source and reverted.",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-A2A-MCP-NAME-GATE",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-WIRE-108",
       "killer_assertion": "MUT-PLAIN-JSON\u2192test decorator changes content type/frame; MUT-ENVELOPE-HANDROLL\u2192source gate detects actual encoding; MUT-DEADLINE-RELAX-MCP\u2192source gate detects SetWriteDeadline/ResponseController; MUT-A2A-MCP-NAME-GATE\u2192A2A source guard detects CallerSurface. Source guard mutations are applied to executable source and reverted.",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-MUX-METHOD-REMOVED",
       "stage": "M108C_ADAPTERS",
       "acceptance_id": "AC-ROUTE-108",
       "killer_assertion": "MUT-MUX-METHOD-REMOVED changes literal to /mcp/\u2192AST exact-method assertion red. Network405 is only behavior control because upstream independently refuses GET.",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-CROSS-SURFACE-DIVERGE",
       "stage": "M108D_CONFORMANCE",
       "acceptance_id": "AC-CROSS-108",
       "killer_assertion": "MUT-CROSS-SURFACE-DIVERGE\u2192exact set equality differs",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     },
     {
       "id": "MUT-AMBIENT-HARDCODED",
       "stage": "M108D_CONFORMANCE",
       "acceptance_id": "AC-FIXTURE-108",
       "killer_assertion": "MUT-AMBIENT-HARDCODED\u2192forbidden encoded/decoded tool set contains ambient name",
-      "applied_rc": null,
-      "reverted_rc": null
+      "applied_rc": 1,
+      "reverted_rc": 0,
+      "evidence_manifest": "executor-evidence/mutation-manifest.json",
+      "evidence_kind": "compiled production mutation"
     }
   ],
   "stage_controller_production_reproductions": {
@@ -781,5 +869,99 @@
     "M108B_DEP_NAMES": "MUT-MAP-IDENTITY",
     "M108C_ADAPTERS": "MUT-INVOKE-NO-READMIT",
     "M108D_CONFORMANCE": "MUT-TASK-PER-POST"
+  },
+  "implementation_complete": true,
+  "current_design_sha256": "deee814c607e0e83555f537c10f77e64d5c1ecb1a3f73b40e842c54ec3321290",
+  "design_hash_note": "design_sha256 retains authorized snapshot provenance. Current hash also includes controller V15 timeout transcription correction and authorized completion-status metadata; no acceptance contract change.",
+  "mutation_summary": {
+    "measured": 43,
+    "runtime_kills": 42,
+    "old_pin_build_refusal": 1,
+    "manifest": "executor-evidence/mutation-manifest.json"
+  },
+  "executor_checks": {
+    "d-final-focused": {
+      "cmd": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "-timeout=60s",
+        "./host/projection",
+        "./host/daemon",
+        "-run",
+        "TestMCP(Batch|Wire|Invalid|True|Task|Absent|Listed|Resolver|Surface|Daemon|Mount|ToolsList)|^Example",
+        "-v",
+        "-count=1"
+      ],
+      "rc": 0,
+      "seconds": 2.2260373330209404,
+      "process_cap_seconds": 180,
+      "diagnostic_godebug": "goindex=0"
+    },
+    "d-final-race": {
+      "cmd": [
+        "go",
+        "test",
+        "-race",
+        "-p",
+        "1",
+        "-timeout=180s",
+        "./host/projection",
+        "./host/daemon",
+        "-run",
+        "^TestMCP",
+        "-v",
+        "-count=1"
+      ],
+      "rc": 0,
+      "seconds": 84.79039920913056,
+      "process_cap_seconds": 210,
+      "diagnostic_godebug": "goindex=0"
+    },
+    "d-final-vet": {
+      "cmd": [
+        "go",
+        "vet",
+        "-p",
+        "1",
+        "./host/projection",
+        "./host/daemon"
+      ],
+      "rc": 0,
+      "seconds": 16.061604666989297,
+      "process_cap_seconds": 180,
+      "diagnostic_godebug": "goindex=0"
+    },
+    "d-final-examples": {
+      "cmd": [
+        "go",
+        "test",
+        "./host/projection",
+        "./host/transitionreg",
+        "-run",
+        "^Example",
+        "-v"
+      ],
+      "rc": 0,
+      "seconds": 1.0442259588744491,
+      "process_cap_seconds": 180,
+      "diagnostic_godebug": "goindex=0"
+    },
+    "closure-final": {
+      "cmd": [
+        "go",
+        "list",
+        "-deps",
+        "-f",
+        "{{.ImportPath}}",
+        "./host/daemon/...",
+        "./cmd/ailang-worldd/..."
+      ],
+      "rc": 0,
+      "seconds": 0.19662449997849762,
+      "process_cap_seconds": 180,
+      "diagnostic_godebug": "goindex=0"
+    }
   }
 }

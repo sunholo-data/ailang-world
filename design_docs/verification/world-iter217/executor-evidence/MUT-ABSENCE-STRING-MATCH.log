@@ -1,0 +1,8 @@
+=== RUN   TestProjectionAbsenceRaceControls
+=== RUN   TestProjectionAbsenceRaceControls/same_text_genuine
+    absence_test.go:112: classification err=<nil> empty=false calls=1 want 1
+--- FAIL: TestProjectionAbsenceRaceControls (0.00s)
+    --- FAIL: TestProjectionAbsenceRaceControls/same_text_genuine (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.189s
+FAIL

@@ -1,0 +1,6 @@
+=== RUN   TestMCPNameRoundTrip
+    mcpname_test.go:17: exact encoding "tools.echo"="tools.echo"/<nil> want "tools_decho"
+--- FAIL: TestMCPNameRoundTrip (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.151s
+FAIL

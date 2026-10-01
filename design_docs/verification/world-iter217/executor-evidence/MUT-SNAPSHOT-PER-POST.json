@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-timeout=60s", "-run", "^TestMCPBatchAccounting/repeated_rpc_id$", "-v", "-count=1"], "rc": 1, "seconds": 4.679987458046526}

@@ -1,0 +1,1 @@
+{"cmd": ["go", "list", "-deps", "-f", "{{if not .Standard}}{{.ImportPath}}{{end}}", "./host/daemon/...", "./cmd/ailang-worldd/..."], "rc": 0, "seconds": 0.05397616606205702}

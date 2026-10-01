@@ -1,0 +1,8 @@
+=== RUN   TestA2ADispatchWire
+=== RUN   TestA2ADispatchWire/R13_integrity
+=== RUN   TestA2ADispatchWire/store_error_newline
+=== RUN   TestA2ADispatchWire/R15
+=== RUN   TestA2ADispatchWire/R2_R3
+=== RUN   TestA2ADispatchWire/R11
+    a2a_wire_test.go:260: projection.New: projection: MCP bounds must be positive and invocation below write timeout
+=== RUN   TestA2ADispatchWire/R11_transport

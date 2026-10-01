@@ -1,0 +1,6 @@
+=== RUN   TestMCPSurfaceRefusalRecovers
+    mcp_absence_test.go:114: adapter must refuse long surface before upstream validation: tools=[{aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa_sbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb description-tools.echo [123 34 116 121 112 101 34 58 34 111 98 106 101 99 116 34 125] [123 125] [] []}] err=<nil>
+--- FAIL: TestMCPSurfaceRefusalRecovers (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.211s
+FAIL

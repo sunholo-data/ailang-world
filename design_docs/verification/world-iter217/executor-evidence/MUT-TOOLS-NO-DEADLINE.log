@@ -1,0 +1,6 @@
+=== RUN   TestMCPToolsInnerBudget
+    mcp_bounds_test.go:93: tools deadline=29.999987208s calls=1 err=<nil>
+--- FAIL: TestMCPToolsInnerBudget (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.205s
+FAIL

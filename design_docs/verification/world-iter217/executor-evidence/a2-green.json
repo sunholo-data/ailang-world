@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-run", "TestAgentCard_AbsentPrecheckSnapshotFailure|TestProjectionAbsenceRaceControls|TestA2A_AbsentPrecheckSnapshotFailure|TestAgentCard_AbsentHeadZeroSkills|TestAgentCard_HeadRaceAbsentThenSucceeds|TestAgentCard_HeadReadFailuresAre5xx", "-v", "-count=1", "-timeout=60s"], "rc": 0, "seconds": 2.996653583133593}

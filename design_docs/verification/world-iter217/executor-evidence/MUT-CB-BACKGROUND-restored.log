@@ -1,0 +1,4 @@
+=== RUN   TestMCPInvokeDeadlineFreesSlot
+--- PASS: TestMCPInvokeDeadlineFreesSlot (0.12s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.312s

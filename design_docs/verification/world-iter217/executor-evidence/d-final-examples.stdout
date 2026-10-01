@@ -1,0 +1,10 @@
+=== RUN   ExampleEncodeMCPName
+--- PASS: ExampleEncodeMCPName (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.594s
+=== RUN   ExampleRegistryHeadAbsentError
+--- PASS: ExampleRegistryHeadAbsentError (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	0.345s
+
+RC 0

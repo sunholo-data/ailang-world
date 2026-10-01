@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-timeout=60s", "-run", "^TestMCPInvokeDeadlineFreesSlot$", "-v", "-count=1"], "rc": 1, "seconds": 0.7699973750859499}

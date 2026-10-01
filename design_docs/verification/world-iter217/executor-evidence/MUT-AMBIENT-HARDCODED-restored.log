@@ -1,0 +1,4 @@
+=== RUN   TestMCPAmbientExportsAbsent
+--- PASS: TestMCPAmbientExportsAbsent (0.85s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	1.092s

@@ -39,11 +39,11 @@ All recommendations below are agent design choices subject to the commissioned q
 
 - [x] Preserve bearer carrier, existing coordinator/verified commit gate and frozen D7 constants.
 - [x] Delegate every JSON-RPC/MCP/SSE wire operation to the released seam.
-- [x] Fresh quorum accepts D108-2's long-ID refusal and schema normalization.
-- [x] Fresh quorum accepts per-item epoch/task accounting and non-atomic batch/retry residuals.
-- [x] Fresh quorum accepts context-only aggregate middleware and distinct Runner/procbound capacities.
+- [x] Controller planning clearance covers D108-2's long-ID refusal and schema normalization.
+- [x] Controller planning clearance covers per-item epoch/task accounting and non-atomic batch/retry residuals.
+- [x] Controller planning clearance covers context-only aggregate middleware and distinct Runner/procbound capacities.
 
-**Unresolved direction decisions** are exactly these three unchecked quorum items. They are not silently ratified by D-WORLD-43, which authorizes revision/review, or D-WORLD-48, which authorizes available reviewers. If substantive review rejects a direction requiring an attended ruling, the controller parks that judgment and records it; no human is present in this role. Helper names, fixture organization and tolerance calibration are planner choices after clearance, within the laws and criteria below.
+**Direction status:** the three choices above have controller planning clearance through the recorded R4 narrow-refinement disposition. The original reviewer REJECT verdicts remain preserved; this is not an invented combined quorum PASS. D-WORLD-43 authorizes revision/review and D-WORLD-48 authorizes available reviewers. If substantive review rejects a direction requiring an attended ruling, the controller parks that judgment and records it; no human is present in this role. Helper names, fixture organization and tolerance calibration are planner choices after clearance, within the laws and criteria below.
 
 ### D108-1 — Dependency admission
 
@@ -228,11 +228,14 @@ Net +6; no hard negative. Quorum mandatory for unattended authoring and external
 
 Residuals: non-atomic batch with prior commits hidden by later failure; no MCP retry-ID channel; a2a: invocation prefix shared across surfaces; no transition_fn metadata pin; full-surface long-ID/annotation refusal; noncooperative callbacks retain slots; slow-body or synchronous CPU/write overhead can make envelope delivery miss its transport window. These are explicit review subjects, not falsely measured capabilities. An atomic batch/retry channel or broader names requires a separate design/upstream seam change, never a local codec.
 
-- [ ] Fresh full quorum cleared; unchecked direction freezes resolved.
-- [ ] All ACs, RED→GREEN mutations and full verify gates pass (`./scripts/verify_ail.sh`, Go build/tests, required CI).
-- [ ] Actual pinned daemon dependency closure measured; proxy/sumdb remain 200.
-- [ ] Runbook updated with encoded names, version header, non-atomic batch and retry recovery.
+- [x] Controller planning clearance through the recorded R4 narrow-refinement disposition; original REJECT verdicts preserved.
+- [x] Five implementation milestones and executor scoped checks complete; all 43 mapped mutants measured and restored.
+- [ ] Controller final unchanged normal AIL→Go profiles, independent product evaluator, required remote CI and product acceptance.
+- [x] Actual pinned daemon dependency closure measured: only hostcall/mcphttp added; proxy/sumdb freshly measured 200 at execution and handoff.
+- [x] Runbook updated; MCP payloads executed verbatim on a real ephemeral daemon with pinned interpreter and journal evidence.
 
-Related: [parent split](w-mcp-projection.md), [A2A sibling](../implemented/w-a2a-session-projection.md), [invocation coordinator](w-transition-invocation-coordinator.md), [charter](../world-mission.md), [DESIGN §1/§14](../DESIGN.md), [coding standards](../coding-standards.md), upstream [#885](https://github.com/sunholo-data/ailang/issues/885), and preserved [iteration216 evidence](../verification/world-iter216/README.md). The historical iteration216 inputs explain the authorized revision; this canonical r4 is the document to re-quorum, and to plan only after combined clearance. The three direction freeze boxes remain pending the combined review; this concrete typed-error repair introduces no new attended direction choice.
+Related: [parent split](w-mcp-projection.md), [A2A sibling](../implemented/w-a2a-session-projection.md), [invocation coordinator](w-transition-invocation-coordinator.md), [charter](../world-mission.md), [DESIGN §1/§14](../DESIGN.md), [coding standards](../coding-standards.md), upstream [#885](https://github.com/sunholo-data/ailang/issues/885), and preserved [iteration216 evidence](../verification/world-iter216/README.md). The historical iteration216 inputs explain the authorized revision; this canonical r4 is the authorized implementation contract following controller clearance through the recorded narrow-refinement carve-out. This concrete typed-error repair introduces no new attended direction choice.
 
 **R4 re-quorum narrow refinement (controller, iteration217):** Sol6 PASS; Google REJECT only on taking the address of an error TYPE in the example above. Applied its concrete typed-target `proposed_fix` verbatim under Gate2’s post-requorum narrow-refinement carve-out; no direction was disputed or overridden. V16: controller scratch Go probe in `errors-as-snippet-repro.json` shows original invalid form rc1 (“type is not an expression”), reviewer correction rc0 and wrapped typed absence=true/genuine error=false. This validates only the illustrative classifier, not World implementation or acceptance. Native Astra verdict is recorded separately in the combined artifact; all three seats are now complete and the combined record authorizes planning through the narrow-refinement carve-out, with the unavailable Anthropic seat and native substitutes flagged.
+
+**Executor completion scope (iteration217):** implementation is complete locally. Focused pristine, race (including sequential production clock legs and late-body residual), vet and executable examples pass. The normal unchanged full profiles, independent product judge and required remote CI remain controller-owned and pending; row108/product acceptance is not asserted. See [executor evidence](../verification/world-iter217/executor-evidence/README.md).

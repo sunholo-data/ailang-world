@@ -1,0 +1,31 @@
+=== RUN   TestMCPBatchAccounting
+=== RUN   TestMCPBatchAccounting/repeated_rpc_id
+=== RUN   TestMCPBatchAccounting/removed_between_items
+--- PASS: TestMCPBatchAccounting (0.01s)
+    --- PASS: TestMCPBatchAccounting/repeated_rpc_id (0.01s)
+    --- PASS: TestMCPBatchAccounting/removed_between_items (0.00s)
+=== RUN   TestMCPBatchConformance
+=== RUN   TestMCPBatchConformance/old_versions_and_item_errors
+=== RUN   TestMCPBatchConformance/whole_host_failure
+=== RUN   TestMCPBatchConformance/notifications_and_bad_arrays
+=== RUN   TestMCPBatchConformance/newer_versions_refuse
+--- PASS: TestMCPBatchConformance (0.01s)
+    --- PASS: TestMCPBatchConformance/old_versions_and_item_errors (0.00s)
+    --- PASS: TestMCPBatchConformance/whole_host_failure (0.00s)
+    --- PASS: TestMCPBatchConformance/notifications_and_bad_arrays (0.00s)
+    --- PASS: TestMCPBatchConformance/newer_versions_refuse (0.00s)
+=== RUN   TestMCPWireConformance
+--- PASS: TestMCPWireConformance (0.91s)
+=== RUN   TestMCPInvalidInvocationArguments
+--- PASS: TestMCPInvalidInvocationArguments (0.01s)
+=== RUN   TestMCPTrueAbsenceAndPublication
+--- PASS: TestMCPTrueAbsenceAndPublication (0.00s)
+=== RUN   TestMCPTaskEntropyFailure
+--- PASS: TestMCPTaskEntropyFailure (0.00s)
+=== RUN   TestMCPWireOwnershipSource
+--- PASS: TestMCPWireOwnershipSource (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	1.258s
+testing: warning: no tests to run
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.343s [no tests to run]

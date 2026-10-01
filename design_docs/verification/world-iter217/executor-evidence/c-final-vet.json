@@ -1,0 +1,1 @@
+{"cmd": ["go", "vet", "-p", "1", "./host/projection", "./host/daemon"], "rc": 0, "seconds": 38.29446504195221}

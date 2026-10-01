@@ -1,0 +1,14 @@
+# github.com/sunholo-data/ailang-world/host/projection [github.com/sunholo-data/ailang-world/host/projection.test]
+host/projection/mcpname_test.go:15:15: undefined: EncodeMCPName
+host/projection/mcpname_test.go:19:19: undefined: decodeMCPName
+host/projection/mcpname_test.go:26:16: undefined: EncodeMCPName
+host/projection/mcpname_test.go:30:16: undefined: decodeMCPName
+host/projection/mcpname_test.go:34:17: undefined: EncodeMCPName
+host/projection/mcpname_test.go:39:10: undefined: EncodeMCPName
+host/projection/mcpname_test.go:40:10: undefined: EncodeMCPName
+host/projection/mcpname_test.go:47:18: undefined: decodeMCPName
+host/projection/mcpname_test.go:52:16: undefined: EncodeMCPName
+host/projection/mcpname_test.go:57:15: undefined: mcpDescriptors
+host/projection/mcpname_test.go:57:15: too many errors
+FAIL	github.com/sunholo-data/ailang-world/host/projection [build failed]
+FAIL

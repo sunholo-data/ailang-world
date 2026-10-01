@@ -1,0 +1,9 @@
+65647390
+github.com/sunholo-data/ailang v0.47.2 h1:ZFKWmqvovYodleuCAPApcqr8gUdIHaIMFhP3Lj404cQ=
+github.com/sunholo-data/ailang v0.47.2/go.mod h1:wNCmguRiKeeO4coVZ0WRRwmn/IziJR29EZM48fockrY=
+
+go.sum database tree
+66241313
+4RuThwCS9XraVNQjpHbspIxDZxohDWTzEJQYSe8/028=
+
+— sum.golang.org Az3grsIeu5TZ++DPwJ6OAKFmBdll6BjonoYEN7n6OERYo9ewdT//bZxEb34JuEQK3Brqsi6veBPcQzh2mZ0Ly6esiQs=

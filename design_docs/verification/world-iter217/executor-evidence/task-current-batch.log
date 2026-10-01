@@ -1,0 +1,24 @@
+testing: warning: no tests to run
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.343s [no tests to run]
+
+RC 0
+=== RUN   TestMCPBatchAccounting
+=== RUN   TestMCPBatchAccounting/repeated_rpc_id
+    mcp_conformance_test.go:162: K+1 admissions/runs/overlap=3/1/1
+--- FAIL: TestMCPBatchAccounting (0.01s)
+    --- FAIL: TestMCPBatchAccounting/repeated_rpc_id (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.213s
+FAIL
+
+RC 1
+=== RUN   TestMCPBatchAccounting
+=== RUN   TestMCPBatchAccounting/repeated_rpc_id
+--- PASS: TestMCPBatchAccounting (0.01s)
+    --- PASS: TestMCPBatchAccounting/repeated_rpc_id (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.218s
+
+RC 0
+plain needle? False

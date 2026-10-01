@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-run", "^TestAgentCard_HeadRaceAbsentThenSucceeds$", "-v", "-count=1", "-timeout=60s"], "rc": 1, "seconds": 0.4907268329989165}

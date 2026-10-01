@@ -1,0 +1,8 @@
+=== RUN   TestMCPBatchAccounting
+=== RUN   TestMCPBatchAccounting/repeated_rpc_id
+    mcp_conformance_test.go:162: K+1 admissions/runs/overlap=3/1/1
+--- FAIL: TestMCPBatchAccounting (0.01s)
+    --- FAIL: TestMCPBatchAccounting/repeated_rpc_id (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.213s
+FAIL

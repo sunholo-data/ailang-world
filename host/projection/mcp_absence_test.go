@@ -74,7 +74,7 @@ func TestMCPAbsentPrecheckSnapshotFailure(t *testing.T) {
 						Message string
 					}
 				}
-				if err := json.Unmarshal(w.Body.Bytes(), &wire); err != nil || wire.ID != 7 || wire.Error.Code != -32603 || wire.Error.Message != msg || w.Code != 200 || strings.Contains(w.Header().Get("Content-Type"), "event-stream") {
+				if err := json.Unmarshal(w.Body.Bytes(), &wire); err != nil || wire.ID != 7 || wire.Error.Code != -32603 || wire.Error.Message != msg || w.Code != 200 || w.Body.String() != want || strings.Contains(w.Header().Get("Content-Type"), "event-stream") {
 					t.Fatalf("whole host envelope=%d %s want %s", w.Code, w.Body, want)
 				}
 				if runner.runs != 0 || mints != 0 || reader.calls != reader.failAt || strings.Count(sink.String(), cause.Error()) != 1 {
@@ -106,6 +106,13 @@ func TestMCPSurfaceRefusalRecovers(t *testing.T) {
 	ds[0].ID = strings.Repeat("a", 32) + "/" + strings.Repeat("b", 32)
 	next := publishRevision(t, st, transitionreg.Revision{SemanticID: transitionreg.SemanticIDV1, InterfaceHash: transitionreg.InterfaceHashV1, Revision: 2, Parent: head, Entries: ds}, head)
 	h := mustHandler(t, cfg)
+	binding, err := cfg.Resolver.ResolveContext(boundedTestContext(t), "Bearer "+tok, time.Now().Unix())
+	if err != nil || binding.Success == nil {
+		t.Fatalf("binding=%v/%v", binding, err)
+	}
+	if tools, err := (mcpAdapter{h}).Tools(boundedTestContext(t), binding.Success); err == nil || len(tools) != 0 {
+		t.Fatalf("adapter must refuse long surface before upstream validation: tools=%v err=%v", tools, err)
+	}
 	w := postMCP(t, h, "Bearer "+tok, `{"jsonrpc":"2.0","id":7,"method":"tools/list"}`)
 	if strings.Contains(w.Header().Get("Content-Type"), "event-stream") || !strings.Contains(w.Body.String(), `"code":-32603`) || runner.runs != 0 {
 		t.Fatalf("long surface not refused %s", w.Body)
@@ -176,5 +183,43 @@ func TestMCPResolverInnerBudget(t *testing.T) {
 	postMCP(t, h, "Bearer anything", `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`)
 	if r.observed <= 0 || r.observed > cfg.CredentialWait {
 		t.Fatalf("credential deadline=%s want <=%s", r.observed, cfg.CredentialWait)
+	}
+}
+
+func TestMCPListedThenTrulyAbsent(t *testing.T) {
+	cfg, tok, _, runner := mcpFixture(t)
+	cfg.Heads = fixedHeads{ok: false}
+	reader := &stageReader{inner: cfg.Reader, failure: &absenceReader{err: transitionreg.RegistryHeadAbsentError{}}, failAt: 2}
+	cfg.Reader = reader
+	h := mustHandler(t, cfg)
+	mints := 0
+	h.mintTask = func() (string, error) { mints++; return strings.Repeat("a", 64), nil }
+	w := postMCP(t, h, "Bearer "+tok, `{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"tools_decho","arguments":{}}}`)
+	if w.Code != 200 || !strings.Contains(w.Body.String(), `"code":-32603`) || strings.Contains(w.Header().Get("Content-Type"), "event-stream") || reader.calls != 2 || mints != 0 || runner.runs != 0 {
+		t.Fatalf("listed then absent reads=%d mint=%d runs=%d wire=%s", reader.calls, mints, runner.runs, w.Body)
+	}
+}
+
+type mcpFailResolver struct{ cause error }
+
+func (r mcpFailResolver) ResolveContext(context.Context, string, int64) (authority.ResolveOutcome, error) {
+	return authority.ResolveOutcome{}, r.cause
+}
+func TestMCPResolverHostFailure(t *testing.T) {
+	for _, cause := range []error{errors.New("private resolver fault"), context.DeadlineExceeded} {
+		cfg, tok, _, runner := mcpFixture(t)
+		cfg.Resolver = mcpFailResolver{cause}
+		reader := &countingReader{inner: cfg.Reader}
+		cfg.Reader = reader
+		h := mustHandler(t, cfg)
+		w := postMCP(t, h, "Bearer "+tok, `{"jsonrpc":"2.0","id":7,"method":"tools/list"}`)
+		message := "host callback failed"
+		if errors.Is(cause, context.DeadlineExceeded) {
+			message = "host callback timed out"
+		}
+		want := `{"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"` + message + `"}}` + "\n"
+		if w.Code != 200 || w.Body.String() != want || reader.calls != 0 || runner.runs != 0 {
+			t.Fatalf("resolver carrier reads=%d runs=%d wire=%d %s", reader.calls, runner.runs, w.Code, w.Body)
+		}
 	}
 }

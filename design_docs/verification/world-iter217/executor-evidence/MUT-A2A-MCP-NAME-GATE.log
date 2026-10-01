@@ -1,0 +1,6 @@
+=== RUN   TestProjection_WireOwnershipSource
+    projection_test.go:1485: projection.go:289: reference to the MCP name-grammar gate (F6 — card IDs are verbatim, never CallerSurface): "protocol.CallerSurface(nil)"
+--- FAIL: TestProjection_WireOwnershipSource (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.191s
+FAIL

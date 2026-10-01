@@ -1,0 +1,8 @@
+=== RUN   TestMCPWireOwnershipSource
+    mcp_source_test.go:56: aggregate wrapper has non-context/dispatch call
+    mcp_source_test.go:56: aggregate wrapper has non-context/dispatch call
+    mcp_source_test.go:65: local wire/deadline operation: json.NewEncoder
+--- FAIL: TestMCPWireOwnershipSource (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.197s
+FAIL

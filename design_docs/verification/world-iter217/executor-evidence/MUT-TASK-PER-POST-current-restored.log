@@ -1,0 +1,6 @@
+=== RUN   TestMCPBatchAccounting
+=== RUN   TestMCPBatchAccounting/repeated_rpc_id
+--- PASS: TestMCPBatchAccounting (0.01s)
+    --- PASS: TestMCPBatchAccounting/repeated_rpc_id (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.218s

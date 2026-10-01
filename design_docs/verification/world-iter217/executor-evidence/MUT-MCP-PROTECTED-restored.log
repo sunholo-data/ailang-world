@@ -1,0 +1,4 @@
+=== RUN   TestMCPMountedBearerDenial
+--- PASS: TestMCPMountedBearerDenial (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.344s

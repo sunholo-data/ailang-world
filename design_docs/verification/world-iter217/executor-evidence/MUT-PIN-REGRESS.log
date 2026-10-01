@@ -1,0 +1,6 @@
+# github.com/sunholo-data/ailang-world/host/daemon
+host/projection/mcp.go:12:2: cannot find module providing package github.com/sunholo-data/ailang/serveapi/protocol/hostcall: import lookup disabled by -mod=readonly
+# github.com/sunholo-data/ailang-world/host/daemon
+host/projection/mcp.go:13:2: cannot find module providing package github.com/sunholo-data/ailang/serveapi/protocol/mcphttp: import lookup disabled by -mod=readonly
+FAIL	github.com/sunholo-data/ailang-world/host/daemon [setup failed]
+FAIL

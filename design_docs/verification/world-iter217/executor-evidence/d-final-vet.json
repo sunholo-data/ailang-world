@@ -1,0 +1,1 @@
+{"cmd": ["go", "vet", "-p", "1", "./host/projection", "./host/daemon"], "rc": 0, "seconds": 16.061604666989297, "process_cap_seconds": 180, "diagnostic_godebug": "goindex=0"}

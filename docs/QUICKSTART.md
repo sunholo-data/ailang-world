@@ -196,9 +196,49 @@ curl -s -H "Authorization: Bearer $(cat /tmp/qs-session)" \
 ```
 
 ---
-**Not yet in this quickstart** (arrives with the queue): MCP projection — drive commits from
-an MCP client (item 5), the approval-inbox workbench
-(item 7). The echo is a self-contained demonstration source; library-backed `world/*.ail`
+**Later:** the approval-inbox workbench (item 7). The echo is a self-contained demonstration source; library-backed `world/*.ail`
 transitions still need a separately pinned library dependency before publication.
 
 The session-scoped agent card returns an empty `skills` array only when the registry head is confirmed absent in both reads. A raced publication followed by a store or integrity failure returns `503 ProjectionUnavailable`; a read deadline returns `504 ProjectionDeadlineExceeded`. Retry the card read after resolving the failure. A2A admission uses its existing unavailable JSON-RPC error and does not dispatch the failed admission.
+
+### 8. Use MCP tools
+
+With the published echo and bearer session from §6, POST JSON to `/mcp/`.
+Send both `Content-Type: application/json` and `Accept: application/json, text/event-stream`:
+
+```bash
+curl -s -H "Authorization: Bearer $(cat /tmp/qs-session)" \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' http://127.0.0.1:7644/mcp/
+curl -s -H "Authorization: Bearer $(cat /tmp/qs-session)" \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"hello"}}}' http://127.0.0.1:7644/mcp/
+curl -s -H "Authorization: Bearer $(cat /tmp/qs-session)" \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '[{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"first"}}},{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tools_decho","arguments":{"message":"second"}}}]' http://127.0.0.1:7644/mcp/
+```
+
+The list contains `tools_decho`, the reversible encoding of `tools.echo`: `_` becomes `_u`,
+`.` becomes `_d`, and `/` becomes `_s`. MCP names longer than 64 bytes refuse the whole
+surface; A2A IDs remain verbatim. Input schemas missing a top-level type gain `type:"object"`
+with constraints preserved. Successful replies use the pinned upstream SSE framing.
+
+Each call item receives fresh admission and a new random task ID, even when JSON-RPC IDs
+repeat. Without an explicit version, or with `MCP-Protocol-Version: 2025-03-26`, batches run
+sequentially. Versions `2025-06-18` and `2025-11-25` refuse batches. A host failure returns
+one whole-request error; earlier items may already have committed. Retries create new tasks
+and may repeat effects. Inspect the daemon journal at `/v1/log/<entry_index>` before retrying
+a lost response; MCP JSON-RPC IDs provide no idempotency guarantee.
+
+The production callback runner allows eight callbacks, each bounded at 20 seconds. Its slots
+remain occupied until callbacks return; the separate subprocess limit is also eight and remains
+held until child reap. The aggregate POST context is 20 seconds, including credential resolution
+(3 seconds) and initial Tools admission (10 seconds). Each invocation re-admits under its own
+10-second read bound. Prompt-body requests can return the timeout envelope within the frozen
+30-second write window. Slow bodies and synchronous parsing can consume that window and
+produce a connection failure. No transport deadline is extended.
+
+The upstream SSE golden is generated with `WORLD_UPDATE_MCP_GOLDEN=1 go test
+./host/projection -run '^TestMCPWireConformance$'` against module `v0.47.2`; normal runs compare
+both the checked-in bytes and a newly constructed upstream handler. Executable mapping and
+absence examples run with `go test ./host/projection ./host/transitionreg -run '^Example' -v`.

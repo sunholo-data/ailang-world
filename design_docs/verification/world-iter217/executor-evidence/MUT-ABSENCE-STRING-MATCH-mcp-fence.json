@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-timeout=60s", "-run", "^$", "-v", "-count=1"], "rc": 0, "seconds": 0.9133602920919657, "process_cap_seconds": 180, "diagnostic_godebug": "goindex=0"}

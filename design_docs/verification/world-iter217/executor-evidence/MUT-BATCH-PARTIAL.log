@@ -1,0 +1,10 @@
+=== RUN   TestMCPBatchConformance
+=== RUN   TestMCPBatchConformance/whole_host_failure
+    mcp_conformance_test.go:193: whole failure runs=2 wire=200 event: message
+        data: [{"jsonrpc":"2.0","id":7,"result":{}}]
+        
+--- FAIL: TestMCPBatchConformance (0.01s)
+    --- FAIL: TestMCPBatchConformance/whole_host_failure (0.01s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.208s
+FAIL

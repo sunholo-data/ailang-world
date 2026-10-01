@@ -1,0 +1,6 @@
+=== RUN   TestMCPMountMethodSource
+    mcp_test.go:49: MCP mount="/mcp/" want exactly POST /mcp/
+--- FAIL: TestMCPMountMethodSource (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.225s
+FAIL

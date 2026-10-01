@@ -1,0 +1,6 @@
+{
+  "proxy_status": 200,
+  "sumdb_status": 200,
+  "observed_utc": "2026-10-01T20:53Z",
+  "note": "Both curl --max-time20 commands returned exit0/status200; response bodies banked."
+}

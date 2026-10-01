@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-timeout=60s", "-run", "^TestMCPAbsentPrecheckSnapshotFailure/list/same_text$", "-v", "-count=1"], "rc": 0, "seconds": 0.6138724579941481, "process_cap_seconds": 180, "diagnostic_godebug": "goindex=0"}

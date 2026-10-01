@@ -1,0 +1,1 @@
+{"files": {"host/projection/mcp.go": {"mutant": "a73e7c178b05249c57c8c392fa47b869a1a4f05b13d2a05c1fece8df1307309d", "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"}}, "broad_failed_tests": ["TestMCPInvokeCancelAfterAdmission"], "selected_test": "TestMCPInvokeCancelAfterAdmission"}
