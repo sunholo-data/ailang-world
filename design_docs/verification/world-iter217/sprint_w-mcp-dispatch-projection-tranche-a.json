@@ -1,6 +1,6 @@
 {
   "sprint_id": "W-MCP-DISPATCH-PROJECTION-108-FULL",
-  "status": "not_started",
+  "status": "in_progress",
   "created": "2026-10-01T19:03:27.751699+00:00",
   "design_doc": "design_docs/planned/w-mcp-dispatch-projection.md",
   "design_sha256": "74c813d0618179e07a3aec423008fc52ce5c5606a75465de45df7140c1a95580",
@@ -133,10 +133,10 @@
         "MUT-ABSENCE-UNTYPED, MUT-ABSENCE-WRAP-LOST, MUT-ABSENCE-POSTLOOKUP-CTX-REMOVED fail named assertions applied and pass reverted",
         "Separate M1 stage commit plus controller first-party production MUT-ABSENCE-POSTLOOKUP-CTX-REMOVED RED/revert GREEN, stderr classifier ctx true/typedabsence false"
       ],
-      "passes": null,
-      "started": null,
-      "completed": null,
-      "notes": null
+      "passes": true,
+      "started": "2026-10-01T19:15:24.550273+00:00",
+      "completed": "2026-10-01T19:20:27.737804+00:00",
+      "notes": "Local reader/example/package controls green; three applied compiled mutations RED/reverted GREEN. Independent controller reproduction pending. Raw evidence /tmp/world-iter217-executor."
     },
     {
       "id": "M108A2_CLASSIFIED_PROJECTION",
@@ -154,7 +154,7 @@
         "Separate M2 stage commit plus controller first-party production MUT-ABSENT-PRECHECK-CATCHALL RED/revert GREEN before stage acceptance"
       ],
       "passes": null,
-      "started": null,
+      "started": "2026-10-01T19:20:27.737930+00:00",
       "completed": null,
       "notes": null
     },

@@ -73,6 +73,13 @@ func NewReader(objects ObjectStore) *StoreReader {
 	return &StoreReader{store: objects, cache: make(map[hashref.HashRef]Snapshot)}
 }
 
+// RegistryHeadAbsentError reports a confirmed missing registry head under a
+// live caller context. Use errors.As with a value target to distinguish this
+// legitimate empty state from store, integrity and cancellation failures.
+type RegistryHeadAbsentError struct{}
+
+func (RegistryHeadAbsentError) Error() string { return "read transition registry: head is absent" }
+
 func (r *StoreReader) ReadSnapshot(ctx context.Context) (Snapshot, error) {
 	if err := ctx.Err(); err != nil {
 		return Snapshot{}, fmt.Errorf("read transition registry: context: %w", err)
@@ -81,8 +88,11 @@ func (r *StoreReader) ReadSnapshot(ctx context.Context) (Snapshot, error) {
 	if err != nil {
 		return Snapshot{}, fmt.Errorf("read transition registry head: %w", err)
 	}
+	if err := ctx.Err(); err != nil {
+		return Snapshot{}, fmt.Errorf("read transition registry: context: %w", err)
+	}
 	if !ok {
-		return Snapshot{}, errors.New("read transition registry: head is absent")
+		return Snapshot{}, RegistryHeadAbsentError{}
 	}
 
 	r.mu.RLock()
