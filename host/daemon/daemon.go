@@ -583,6 +583,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		Heads:    d.reads,
 		Deny:     writeSessionDenial,
 		Fail:     writeAPIError,
+		ErrorLog: d.errLog,
 		Agent: protocol.AgentInfo{
 			Name:        "ailang-worldd",
 			Description: "AILANG World daemon: a published skill accepts one JSON-object data part and produces a JSON-object data artifact; invocation requires an archived interpreter; schemas are carried but not validated.",

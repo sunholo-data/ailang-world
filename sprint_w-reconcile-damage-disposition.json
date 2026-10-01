@@ -116,11 +116,11 @@
         "docs/QUICKSTART.md"
       ],
       "acceptance": [
-        "go test -count=1 -run '^(TestA2ADispatchWire|TestProjection_ConfigValidation|TestA2ADispatch)$' -v ./host/projection/ -> rc=0, 32 RUN",
+        "go test -count=1 -run '^(TestA2ADispatchWire|TestProjection_ConfigValidation|TestA2ADispatch)$' -v ./host/projection/ -> rc=0, 33 RUN",
         "go test -count=1 -run '^TestA2AErrorLogWiring$' -v ./host/daemon/ -> rc=0, 1 RUN",
         "gofmt -l host cmd -> empty",
         "go vet ./... -> rc=0",
-        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test -race -count=1 -v ./host/coordinator/ ./host/projection/ -> rc=0, 169 RUN, zero skips",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test -race -count=1 -v ./host/coordinator/ ./host/projection/ -> rc=0, 170 RUN, zero skips",
         "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh -> rc=0, 16 identities, 40 named tests, 9/9 steps",
         "AC6 broad host race requires controller outside-sandbox certification; failures listed in plan OPEN",
         "go build ./... -> rc=0"
@@ -339,5 +339,173 @@
     "OPEN: all-host race socket arms are UNINFORMATIVE UNDER SANDBOX; all-repository suite not certified here",
     "OPEN: pinned broad run observed broker model timeout 5.514203291s > 2s and daemon receipt Timeout instead of CommitUncertain; no unrelated fixes made",
     "Approved design residuals R-125-0 through R-125-5 stay out of scope"
-  ]
+  ],
+  "executor_review": {
+    "changes": [
+      "exact damage Error() phrases asserted",
+      "operator log invocation id and quoted prefix asserted",
+      "deterministic R11 empty-log row; original transport row renamed R11_transport and budget widened to 2 s"
+    ],
+    "production_unchanged": true,
+    "mutations": [
+      {
+        "id": "MUT-ABSENT-REC",
+        "command": "go test -count=1 -run ^TestReconcileDamageDisposition$/record_absent -v ./host/coordinator/",
+        "red_rc": 1,
+        "red_runs": 3,
+        "green_rc": 0,
+        "green_runs": 3,
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true,
+        "failures": [
+          "    coordinator_test.go:1072: damage: *fmt.wrapError coordinator: reconcile a2a:ep1:t1: record: ok=false: %!w(<nil>) want record/absent",
+          "--- FAIL: TestReconcileDamageDisposition (0.01s)",
+          "    --- FAIL: TestReconcileDamageDisposition/record_absent (0.01s)",
+          "        --- FAIL: TestReconcileDamageDisposition/record_absent/{} (0.01s)",
+          "FAIL",
+          "FAIL\tgithub.com/sunholo-data/ailang-world/host/coordinator\t0.312s",
+          "FAIL"
+        ]
+      },
+      {
+        "id": "MUT-OUT-NIL-OBJ",
+        "command": "go test -count=1 -run ^TestReconcileDamageDisposition$/output_not_object/null -v ./host/coordinator/",
+        "red_rc": 1,
+        "red_runs": 3,
+        "green_rc": 0,
+        "green_runs": 3,
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true,
+        "failures": [
+          "    coordinator_test.go:1072: damage: <nil> <nil> want output/undecodable",
+          "--- FAIL: TestReconcileDamageDisposition (0.01s)",
+          "    --- FAIL: TestReconcileDamageDisposition/output_not_object (0.01s)",
+          "        --- FAIL: TestReconcileDamageDisposition/output_not_object/null (0.01s)",
+          "FAIL",
+          "FAIL\tgithub.com/sunholo-data/ailang-world/host/coordinator\t0.315s",
+          "FAIL"
+        ]
+      },
+      {
+        "id": "MUT-ERR-AS-DAMAGE",
+        "command": "go test -count=1 -run ^TestReconcileDamageDisposition$/store_read_error_stays_untyped -v ./host/coordinator/",
+        "red_rc": 1,
+        "red_runs": 3,
+        "green_rc": 0,
+        "green_runs": 3,
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true,
+        "failures": [
+          "    coordinator_test.go:1069: read error: *coordinator.IntegrityError coordinator: reconcile a2a:ep1:t1: recorded record is absent",
+          "--- FAIL: TestReconcileDamageDisposition (3.26s)",
+          "    --- FAIL: TestReconcileDamageDisposition/store_read_error_stays_untyped (3.26s)",
+          "        --- FAIL: TestReconcileDamageDisposition/store_read_error_stays_untyped/{} (3.26s)",
+          "FAIL",
+          "FAIL\tgithub.com/sunholo-data/ailang-world/host/coordinator\t3.550s",
+          "FAIL"
+        ]
+      },
+      {
+        "id": "MUT-LOG-NEWLINE",
+        "command": "go test -count=1 -run ^TestA2ADispatchWire$/store_error_newline -v ./host/projection/",
+        "red_rc": 1,
+        "red_runs": 2,
+        "green_rc": 0,
+        "green_runs": 2,
+        "sha1": "6acbbfb21910fcf00c7fd0187a5904f6894500be",
+        "restored": true,
+        "failures": [
+          "    a2a_wire_test.go:226: operator log=\"ailang-worldd: a2a refusal: tasks/send a2a:ep-a:t1: coordinator: load source: SECRET\\nsecond line\\n\" want one line carrying \"SECRET\\\\nsecond line\"",
+          "--- FAIL: TestA2ADispatchWire (0.00s)",
+          "    --- FAIL: TestA2ADispatchWire/store_error_newline (0.00s)",
+          "FAIL",
+          "FAIL\tgithub.com/sunholo-data/ailang-world/host/projection\t0.296s",
+          "FAIL"
+        ]
+      },
+      {
+        "id": "MUT-LOG-DEADLINE",
+        "command": "go test -count=1 -run ^TestA2ADispatchWire$/R11$ -v ./host/projection/",
+        "red_rc": 1,
+        "red_runs": 2,
+        "green_rc": 0,
+        "green_runs": 2,
+        "sha1": "6acbbfb21910fcf00c7fd0187a5904f6894500be",
+        "restored": true,
+        "failures": [
+          "    a2a_wire_test.go:269: deadline logged: \"ailang-worldd: a2a refusal: tasks/send a2a:ep-a:t-r11: \\\"coordinator: load source: SECRET-R11-store-detail: context deadline exceeded\\\"\\n\"",
+          "--- FAIL: TestA2ADispatchWire (0.00s)",
+          "    --- FAIL: TestA2ADispatchWire/R11 (0.00s)",
+          "FAIL",
+          "FAIL\tgithub.com/sunholo-data/ailang-world/host/projection\t0.301s",
+          "FAIL"
+        ]
+      },
+      {
+        "id": "MUT-ERRLOG-UNWIRED",
+        "command": "go test -count=1 -run ^TestA2AErrorLogWiring$ -v ./host/daemon/",
+        "red_rc": 1,
+        "red_runs": 1,
+        "green_rc": 0,
+        "green_runs": 1,
+        "sha1": "2b66316b92c94c141dbd38c0c21870d66c7cd7a1",
+        "restored": true,
+        "failures": [
+          "    invoke_e2e_test.go:398: daemon ErrorLog=\"\"",
+          "--- FAIL: TestA2AErrorLogWiring (0.01s)",
+          "FAIL",
+          "FAIL\tgithub.com/sunholo-data/ailang-world/host/daemon\t0.360s",
+          "FAIL"
+        ]
+      }
+    ],
+    "gates": {
+      "format": {
+        "rc": 0,
+        "output": ""
+      },
+      "vet": {
+        "rc": 0
+      },
+      "build": {
+        "rc": 0
+      },
+      "named_coordinator": {
+        "rc": 0,
+        "runs": 27
+      },
+      "named_projection": {
+        "rc": 0,
+        "runs": 33
+      },
+      "race_coordinator_projection": {
+        "rc": 0,
+        "runs": 170,
+        "skips": 0,
+        "GOMAXPROCS": 2
+      },
+      "daemon_wiring": {
+        "rc": 0,
+        "runs": 1
+      },
+      "verify_ail": {
+        "rc": 0
+      },
+      "repository_all": {
+        "rc": 1,
+        "runs": 1434,
+        "socket_results": "UNINFORMATIVE UNDER SANDBOX",
+        "separate_failure": "TestPublishSetSameIDConflictOnCASRetryRefuses fake interpreter --version timed out after 10 s"
+      },
+      "transitionreg_named_recheck": {
+        "rc": 0,
+        "runs": 1
+      }
+    },
+    "open": [
+      "All-host race and outside-sandbox certification remain controller responsibilities",
+      "Base durable deadline load flake not fixed by this scope",
+      "Observed transition-registry fixture timeout passed named recheck; no fix claimed"
+    ]
+  }
 }

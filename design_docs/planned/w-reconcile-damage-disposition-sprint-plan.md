@@ -1,6 +1,6 @@
 # Sprint plan — w-reconcile-damage-disposition (iteration 214)
 
-**Authority:** approved revision-2 design [w-reconcile-damage-disposition.md](w-reconcile-damage-disposition.md), World queue row 125, following row 122. Its r1/r2 Quorum log answers were read, including V15–V22 and the newline, commit-output and construction-site refinements. **Base:** `4b87fdd`. **Planner lane:** `codex:gpt-6.1-sol`. **Scope:** two test-first milestones, ~0.25 day. **Landing:** M1 then M2, or one atomic commit; controller owns all git writes. The full prototype remains in this worktree, uncommitted.
+**Authority:** approved revision-2 design [w-reconcile-damage-disposition.md](w-reconcile-damage-disposition.md), World queue row 125, following row 122. Its r1/r2 Quorum log answers were read, including V15–V22 and the newline, commit-output and construction-site refinements. **Base:** `4b87fdd`. **Planner lane:** `codex:gpt-6.1-sol`. **Scope:** two test-first milestones, ~0.25 day. **Landing:** M1 then M2, or one atomic commit; controller owns all git writes. The full prototype remains in this worktree, uncommitted. Planner measurements below are historical prototype evidence; §6 records the executor review and current measurements.
 
 Use the pinned binary for gates that exercise AILANG:
 
@@ -35,7 +35,7 @@ RED first: `TestReconcileDamageDisposition` has the exact design names:
 | `store_read_error_stays_untyped` | GetObject returns wrapped DeadlineExceeded; not IntegrityError, errors.Is survives |
 | `commit_refuses_non_object_output/null`, `commit_refuses_non_object_output/[1]` | real forward Dispatch; OutputError, no receipt, head unchanged |
 
-Every damage case checks invocation id, Object, Kind, no `%!`, no reconciled result or output bytes, fixture-hit count, must-not-run runner and unchanged head. Existing `TestReconcileRefusesDamagedRecord` rows additionally assert `Kind == "mismatch"`; its exact-result control stays green.
+Every damage case checks invocation id, Object, Kind, no `%!`, no reconciled result or output bytes, fixture-hit count, must-not-run runner and unchanged head. Existing `TestReconcileRefusesDamagedRecord` rows additionally assert `Kind == "mismatch"`; its exact-result control stays green. The executor additionally pins the exact mismatch/absent/undecodable Error() phrases.
 
 The first compile RED exposed the missing Kind field (zero RUN: **not a behavioral gate**). Adding only that field allowed the behavioral RED: six damage rows failed, including both output variants; `null` returned success at base. The deadline and forward-output controls were already green and their named mutations below make them red. GREEN after implementation: 27 RUN, zero failures/skips.
 
@@ -66,7 +66,7 @@ Files: `host/projection/projection.go`, `host/projection/projection_test.go`, `h
 
 Require `projection.Config.ErrorLog io.Writer` in New and retain it on Handler. Add the explicit IntegrityError arm returning `codeInternal, notAvailableMessage`; SourceError remains on default. Log precisely not-available dispatch failures with `fmt.Fprintf(h.errorLog, "ailang-worldd: a2a refusal: %s %s: %q\n", method, id, err.Error())`. Admission failure or unavailable coordinator uses `-` where no validated invocation was dispatched. Other refusal classes have no operator line. The production daemon passes its resolved `d.errLog`; both test-side config sites supply concrete writers. Update the parent's refusal row and the existing QUICKSTART stderr description.
 
-RED first: `TestA2ADispatch/R13_reconcile_absent`; `TestA2ADispatchWire/R13_integrity` commits through the real coordinator and hides the record on resend; `R4_R6_default` checks its secret reaches the log; `store_error_newline` checks exactly one physical line plus escaped detail; `R15` and `R11` check empty logs; `TestProjection_ConfigValidation` strips ErrorLog; `TestA2AErrorLogWiring` constructs a real daemon with Config.ErrorLog and drives the production projection using a recorder. This last test deliberately needs no socket or interpreter, and kills io.Discard wiring.
+RED first: `TestA2ADispatch/R13_reconcile_absent`; `TestA2ADispatchWire/R13_integrity` commits through the real coordinator and hides the record on resend; `R4_R6_default` checks its secret reaches the log; `store_error_newline` checks exactly one physical line plus escaped detail; `R15` and `R11` check empty logs (executor: R11 is a deterministic wrapped store deadline; the original timed capsule row is retained as `R11_transport` with a 2 s admission budget); `TestProjection_ConfigValidation` strips ErrorLog; `TestA2AErrorLogWiring` constructs a real daemon with Config.ErrorLog and drives the production projection using a recorder. This last test deliberately needs no socket or interpreter, and kills io.Discard wiring.
 
 The projection behavioral RED had 32 RUN: missing-log rows and nil-ErrorLog validation failed. The new wire-mapping row was already green via default; its explicit-arm mutation supplies its RED. Initial daemon compile attempts were uninformative while the new seam was incomplete; the unwiring mutation then gave its behavioral RED, and the restored wiring test gave GREEN. `assertWireRefusal` checks hidden strings before the constant, so MUT-LOG-TO-WIRE fires the specified sanitizer assertion. All pre-existing rows remain unchanged on the wire.
 
@@ -86,7 +86,7 @@ M2 mutation list (all remaining design rows assigned here):
 | MUT-LOG-ALL | `host/projection/projection.go`: Log every dispatch class | `'^TestA2ADispatchWire$/R15'` | **KILLED** / 2 | `6acbbfb21910fcf00c7fd0187a5904f6894500be` |
 | MUT-LOG-TO-WIRE | `host/projection/projection.go`: Interpolate cause into wire message | `'^TestA2ADispatchWire$/R13_integrity'` | **KILLED** / 2 | `6acbbfb21910fcf00c7fd0187a5904f6894500be` |
 | MUT-LOG-NEWLINE | `host/projection/projection.go`: Log cause with %v instead of %q | `'^TestA2ADispatchWire$/store_error_newline'` | **KILLED** / 2 | `6acbbfb21910fcf00c7fd0187a5904f6894500be` |
-| MUT-LOG-DEADLINE | `host/projection/projection.go`: Also log R11 deadline class | `'^TestA2ADispatchWire$/R11'` | **KILLED** / 2 | `6acbbfb21910fcf00c7fd0187a5904f6894500be` |
+| MUT-LOG-DEADLINE | `host/projection/projection.go`: Also log R11 deadline class | `'^TestA2ADispatchWire$/R11$'` | **KILLED** / 2 | `6acbbfb21910fcf00c7fd0187a5904f6894500be` |
 | MUT-ERRLOG-NIL-OK | `host/projection/projection.go`: Accept nil ErrorLog | `'^TestProjection_ConfigValidation$'` | **KILLED** / 1 | `6acbbfb21910fcf00c7fd0187a5904f6894500be` |
 | MUT-ERRLOG-UNWIRED | `host/daemon/daemon.go`: Daemon passes io.Discard | `'^TestA2AErrorLogWiring$'` | **KILLED** / 1 | `2b66316b92c94c141dbd38c0c21870d66c7cd7a1` |
 
@@ -137,7 +137,7 @@ go test -count=1 -run '^TestA2ADispatchWire$/R13_integrity' -v ./host/projection
 # MUT-LOG-NEWLINE: rc=1, 2 RUN, KILLED; restored byte-identical
 go test -count=1 -run '^TestA2ADispatchWire$/store_error_newline' -v ./host/projection/
 # MUT-LOG-DEADLINE: rc=1, 2 RUN, KILLED; restored byte-identical
-go test -count=1 -run '^TestA2ADispatchWire$/R11' -v ./host/projection/
+go test -count=1 -run '^TestA2ADispatchWire$/R11$' -v ./host/projection/
 # MUT-ERRLOG-NIL-OK: rc=1, 1 RUN, KILLED; restored byte-identical
 go test -count=1 -run '^TestProjection_ConfigValidation$' -v ./host/projection/
 # MUT-ERRLOG-UNWIRED: rc=1, 1 RUN, KILLED; restored byte-identical
@@ -219,3 +219,42 @@ All source premises below were re-checked against HEAD `4b87fdd` (read-only git 
 | V15 | no Store-seam change and operator writer distinct from announce | `git diff HEAD -- host/coordinator/coordinator.go` → only committed body changes; no interface diff; `sed -n '225,240p' host/daemon/daemon.go` and `rg -n 'announce\|Announce' host/daemon/daemon.go` → ErrorLog resolved to process stderr separately; Run takes announce independently. Wiring test receives exactly one refusal line in Config.ErrorLog. |
 | V16 | pinned interpreter | `$HOME/.pinned-ailang/ailang --version` → AILANG v0.41.0, commit 24ee108 (released, not dirty). |
 | V17 | non-vacuity/restoration/gates | isolated commands in §4 → 17 named mutants KILLED with nonzero RUN, same before/after shasum, TREE-IDENTICAL-AFTER-HARNESS; final pinned race → 169 RUN, zero skips; wiring → 1 RUN. Gate results in §5 are measured, with broader failures left OPEN. |
+
+## 6. Executor review (iteration 214)
+
+Reviewed every prototype hunk against design §1–§3 and all named RED rows. Production is unchanged: all three missing-row branches and decode sites have the specified types; read errors stay wrapped/untyped; five mismatch sites carry Kind; explicit wire arm and required ErrorLog are present; daemon passes d.errLog. Public messages and Store interface are unchanged. The only Quarantine call remains startup abort. The AC2 `%!` check, AC4 newline count, and R15/R11 empty-log assertions were already present.
+
+Changes relative to the prototype:
+
+- `host/coordinator/coordinator_test.go`: assert the exact Error() phrases for mismatch, absent and undecodable.
+- `host/projection/a2a_wire_test.go`: assert the parsed invocation id and quoted cause prefix in each operator line; make `R11` a deterministic wrapped store-read deadline (no wall-clock wait); preserve the original capsule cancellation coverage as `R11_transport`, widening admission from 300 ms to 2 s with its existing 5 s fallback. No new elapsed-time bounds.
+- This plan and sprint JSON: distinguish historical planner results from current executor evidence. Production counts remain M1 49 changed / +17 net, M2 26 changed / +26 net. Current named projection gate has 33 RUN (formerly 32); current race gate has 170 RUN (formerly 169).
+
+Executor mutation commands use `go test -count=1 -run '<pattern>' -v ./host/<pkg>/`. Each mutant was applied alone, failed a behavioral assertion, restored from saved bytes, checked with `shasum <file>` before/after, then passed the same named test.
+
+| Mutation | Exact pattern / package | Mutant rc / RUN | Restored rc / RUN | Before = after SHA-1 |
+|---|---|---|---|---|
+| MUT-ABSENT-REC | `^TestReconcileDamageDisposition$/record_absent` / `./host/coordinator/` | 1 / 3 | 0 / 3 | `e3d3f34d46ab5ae95482c3a93d14864326faf229` |
+| MUT-OUT-NIL-OBJ | `^TestReconcileDamageDisposition$/output_not_object/null` / `./host/coordinator/` | 1 / 3 | 0 / 3 | `e3d3f34d46ab5ae95482c3a93d14864326faf229` |
+| MUT-ERR-AS-DAMAGE | `^TestReconcileDamageDisposition$/store_read_error_stays_untyped` / `./host/coordinator/` | 1 / 3 | 0 / 3 | `e3d3f34d46ab5ae95482c3a93d14864326faf229` |
+| MUT-LOG-NEWLINE | `^TestA2ADispatchWire$/store_error_newline` / `./host/projection/` | 1 / 2 | 0 / 2 | `6acbbfb21910fcf00c7fd0187a5904f6894500be` |
+| MUT-LOG-DEADLINE | `^TestA2ADispatchWire$/R11$` / `./host/projection/` | 1 / 2 | 0 / 2 | `6acbbfb21910fcf00c7fd0187a5904f6894500be` |
+| MUT-ERRLOG-UNWIRED | `^TestA2AErrorLogWiring$` / `./host/daemon/` | 1 / 1 | 0 / 1 | `2b66316b92c94c141dbd38c0c21870d66c7cd7a1` |
+
+All six required executor mutants KILLED; zero survived. No compile failures or zero-test runs counted.
+
+| Executor gate | Result |
+|---|---|
+| `gofmt -l host cmd` | rc=0; empty |
+| `git diff --check` | rc=0; empty |
+| `go vet ./...` | rc=0; empty |
+| `go build ./...` | rc=0; empty |
+| `go test -count=1 -run '^(TestReconcileDamageDisposition|TestReconcileRefusesDamagedRecord)$' -v ./host/coordinator/` | rc=0; 27 RUN |
+| `go test -count=1 -run '^(TestA2ADispatchWire|TestProjection_ConfigValidation|TestA2ADispatch)$' -v ./host/projection/` | rc=0; 33 RUN |
+| `AILANG_BIN=$HOME/.pinned-ailang/ailang GOMAXPROCS=2 go test -race -count=1 -v ./host/coordinator/ ./host/projection/` | rc=0; 170 RUN (84 coordinator + 86 projection); zero failures/skips |
+| `go test -count=1 -run '^TestA2AErrorLogWiring$' -v ./host/daemon/` | rc=0; 1 RUN; no socket needed |
+| `AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh` | rc=0; 16 identities, 40 tests, 9/9 package steps |
+
+Timing review: the new damage fixtures use the existing 30 s context helper and no elapsed-time assertions. The log deadline assertion now has deterministic coverage. Existing `TestDispatchDurableDeadline` still uses a 20 ms deadline and 250 ms elapsed assertion; the controller observed `uncertain_Commit` fail 1/3 at base under load. It passed this executor's 2-core race run; that does not certify elimination of the base flake. No unrelated durable timing test was changed. All-host race certification remains for the controller outside sandbox as described in OPEN-1.
+
+Repository-wide executor gate: `AILANG_BIN=$HOME/.pinned-ailang/ailang GOMAXPROCS=2 go test -count=1 -v ./...` returned rc=1 with 1434 `=== RUN` lines. CLI, broker and daemon loopback bind failures/panics are **UNINFORMATIVE UNDER SANDBOX**. Separately, `host/transitionreg/TestPublishSetSameIDConflictOnCASRetryRefuses` failed while archiving its fake interpreter: `--version` timed out after 10 s. Its named recheck, `AILANG_BIN=$HOME/.pinned-ailang/ailang go test -count=1 -run '^TestPublishSetSameIDConflictOnCASRetryRefuses$' -v ./host/transitionreg/`, passed rc=0 with 1 RUN. This is an observed fixture timing failure, not classified as sandbox-blocked or fixed. No further product failures were reported. Full certification remains open. Temporary executor logs were removed after their measured results were recorded here and in the sprint JSON.

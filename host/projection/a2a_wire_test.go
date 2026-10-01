@@ -109,13 +109,13 @@ func assertWireRefusal(t *testing.T, rec *recorded, reqID string, wantCode int, 
 	if want := fmt.Sprintf("%q", reqID); string(id) != want {
 		t.Fatalf("JSON-RPC id=%s, want the request id %s echoed; body=%s", id, want, rec.body)
 	}
-	if code != wantCode || msg != wantMsg {
-		t.Fatalf("error=%d %q, want %d %q; body=%s", code, msg, wantCode, wantMsg, rec.body)
-	}
 	for _, h := range append(hidden, "coordinator:", "store:", "transition registry:", "context deadline exceeded") {
 		if bytes.Contains(rec.body, []byte(h)) {
 			t.Fatalf("body interpolates inner error detail %q: %s", h, rec.body)
 		}
+	}
+	if code != wantCode || msg != wantMsg {
+		t.Fatalf("error=%d %q, want %d %q; body=%s", code, msg, wantCode, wantMsg, rec.body)
 	}
 	got := rec.header.Get("Connection")
 	if wantClose && got != "close" {
@@ -193,6 +193,50 @@ func (r hookRunner) RunContext(ctx context.Context, _ capsule.Entry) (capsule.Re
 func TestA2ADispatchWire(t *testing.T) {
 	ok := func(context.Context) error { return nil }
 
+	t.Run("R13_integrity", func(t *testing.T) {
+		r := newWireRig(t)
+		h := r.handler(t, nil, hookRunner{stdout: `{}`, hook: ok}, nil, 2*time.Second)
+		first := post(t, h, "Bearer "+r.tok, wireBody("first", "t1"))
+		if bytes.Contains(first.body, []byte(`"error"`)) {
+			t.Fatalf("commit: %s", first.body)
+		}
+		hits := 0
+		h = r.handler(t, absentRecordStore{Store: r.st, hits: &hits}, unusedRunner{}, nil, 2*time.Second)
+		var log bytes.Buffer
+		h.errorLog = &log
+		rec := post(t, h, "Bearer "+r.tok, wireBody("retry", "t1"))
+		assertWireRefusal(t, rec, "retry", codeInternal, notAvailableMessage, false, "coordinator:", "a2a:ep-a:t1")
+		if hits != 1 {
+			t.Fatalf("fixture hits=%d", hits)
+		}
+		assertRefusalLog(t, &log, "a2a:ep-a:t1", "is absent")
+	})
+	t.Run("store_error_newline", func(t *testing.T) {
+		r := newWireRig(t)
+		var reached atomic.Int32
+		secret := "SECRET\nsecond line"
+		h := r.handler(t, failStore{Store: r.st, reached: &reached, getObject: errors.New(secret)}, unusedRunner{}, nil, 2*time.Second)
+		var log bytes.Buffer
+		h.errorLog = &log
+		rec := post(t, h, "Bearer "+r.tok, wireBody("newline", "t1"))
+		assertWireRefusal(t, rec, "newline", codeInternal, notAvailableMessage, false, "SECRET")
+		if reached.Load() != 1 {
+			t.Fatal("fixture did not fire")
+		}
+		assertRefusalLog(t, &log, "a2a:ep-a:t1", `SECRET\nsecond line`)
+	})
+	t.Run("R15", func(t *testing.T) {
+		r := newWireRig(t)
+		h := r.handler(t, intentOnlyStore{Store: r.st}, unusedRunner{}, nil, 2*time.Second)
+		var log bytes.Buffer
+		h.errorLog = &log
+		rec := post(t, h, "Bearer "+r.tok, wireBody("spent", "t1"))
+		assertWireRefusal(t, rec, "spent", codeInternal, "invocation was not committed; send a new task id", false)
+		if log.Len() != 0 {
+			t.Fatalf("R15 logged: %q", log.String())
+		}
+	})
+
 	t.Run("R2_R3", func(t *testing.T) {
 		r := newWireRig(t)
 		var reached atomic.Int32
@@ -208,7 +252,25 @@ func TestA2ADispatchWire(t *testing.T) {
 		assertWireRefusal(t, rec, "wire-R2R3", codeInvalidParams, msgNotAuthorized, false, secret)
 	})
 
+	// Exercise errors.Is deadline classification without waiting for a wall clock.
 	t.Run("R11", func(t *testing.T) {
+		r := newWireRig(t)
+		var reached atomic.Int32
+		const secret = "SECRET-R11-store-detail"
+		h := r.handler(t, failStore{Store: r.st, reached: &reached, getObject: fmt.Errorf("%s: %w", secret, context.DeadlineExceeded)}, unusedRunner{}, nil, 30*time.Second)
+		var log bytes.Buffer
+		h.errorLog = &log
+		rec := post(t, h, "Bearer "+r.tok, wireBody("wire-R11", "t-r11"))
+		if reached.Load() != 1 {
+			t.Fatalf("store reached %d times, want 1", reached.Load())
+		}
+		assertWireRefusal(t, rec, "wire-R11", codeInternal, "invocation exceeded its deadline", false, secret)
+		if log.Len() != 0 {
+			t.Fatalf("deadline logged: %q", log.String())
+		}
+	})
+
+	t.Run("R11_transport", func(t *testing.T) {
 		r := newWireRig(t)
 		var reached atomic.Int32
 		const secret = "SECRET-R11-capsule-detail"
@@ -223,12 +285,17 @@ func TestA2ADispatchWire(t *testing.T) {
 		}}
 		// The deadline also covers admission (SQLite), so it must be wide enough
 		// that a loaded -race runner still reaches the runner before it expires.
-		h := r.handler(t, nil, block, nil, 300*time.Millisecond)
+		h := r.handler(t, nil, block, nil, 2*time.Second)
+		var log bytes.Buffer
+		h.errorLog = &log
 		rec := post(t, h, "Bearer "+r.tok, wireBody("wire-R11", "t-r11"))
 		if reached.Load() != 1 {
 			t.Fatalf("runner reached %d times, want 1", reached.Load())
 		}
 		assertWireRefusal(t, rec, "wire-R11", codeInternal, "invocation exceeded its deadline", true, secret)
+		if log.Len() != 0 {
+			t.Fatalf("deadline logged: %q", log.String())
+		}
 	})
 
 	t.Run("R14", func(t *testing.T) {
@@ -272,11 +339,14 @@ func TestA2ADispatchWire(t *testing.T) {
 		const secret = "SECRET-R4R6-disk-io"
 		st := failStore{Store: r.st, reached: &reached, getObject: errors.New(secret)}
 		h := r.handler(t, st, unusedRunner{}, nil, 2*time.Second)
+		var log bytes.Buffer
+		h.errorLog = &log
 		rec := post(t, h, "Bearer "+r.tok, wireBody("wire-R4R6", "t-r4r6"))
 		if reached.Load() != 1 {
 			t.Fatalf("GetObject reached %d times, want 1: the refusal must come from dispatch, not the nil-coordinator branch", reached.Load())
 		}
 		assertWireRefusal(t, rec, "wire-R4R6", codeInternal, notAvailableMessage, false, secret)
+		assertRefusalLog(t, &log, "a2a:ep-a:t-r4r6", secret)
 	})
 }
 
@@ -419,4 +489,31 @@ func TestA2ADurableDeadlineWire(t *testing.T) {
 			}
 		})
 	}
+}
+
+func assertRefusalLog(t *testing.T, log *bytes.Buffer, id, detail string) {
+	t.Helper()
+	if bytes.Count(log.Bytes(), []byte("\n")) != 1 || !strings.Contains(log.String(), "ailang-worldd: a2a refusal: tasks/send "+id+": \"") || !strings.Contains(log.String(), detail) {
+		t.Fatalf("operator log=%q want one line carrying %q", log.String(), detail)
+	}
+}
+
+type absentRecordStore struct {
+	*store.Store
+	hits *int
+}
+
+func (s absentRecordStore) GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error) {
+	o, ok, err := s.Store.GetObject(ctx, ref)
+	if ok && o.SemanticID == coordinator.RecordV1 {
+		*s.hits++
+		return store.Object{}, false, nil
+	}
+	return o, ok, err
+}
+
+type intentOnlyStore struct{ *store.Store }
+
+func (s intentOnlyStore) GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error) {
+	return store.Receipt{InvocationID: id, State: store.ReceiptIndeterminate}, true, nil
 }
