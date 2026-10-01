@@ -170,10 +170,10 @@
         "AC-MAP-108 and AC-SCHEMA-108 exact corpus/canonicaldecoding/lengthrefusal/precision assertions and Go example pass",
         "StageB scoped ledger mutants killed; separatecommit; controller production MUT-MAP-IDENTITY RED/revertGREEN; mounted recovery/finalclosure carriedtoC/D"
       ],
-      "passes": null,
+      "passes": true,
       "started": "2026-10-01T19:24:54.305034+00:00",
-      "completed": null,
-      "notes": null
+      "completed": "2026-10-01T19:29:28.385826+00:00",
+      "notes": "Mapping/schema/example plain+race green, narrowness positive controls green, eight scoped compiled mutants RED/restored GREEN. Fresh proxy/sumdb200 before normal go get v0.47.2 (x/sys v0.48.0 required transitively). Exact post-import closure and pin/facade/recovery mutants remain C/D obligations."
     },
     {
       "id": "M108C_ADAPTERS",
@@ -189,7 +189,7 @@
         "Scoped ledger mutants killed; separateCcommit; controller production MUT-INVOKE-NO-READMIT listedthenrevoked DispatchRED/revertGREEN"
       ],
       "passes": null,
-      "started": null,
+      "started": "2026-10-01T19:29:28.385983+00:00",
       "completed": null,
       "notes": null
     },
