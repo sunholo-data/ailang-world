@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "go",
+    "test",
+    "-p",
+    "1",
+    "./host/projection",
+    "-run",
+    "^$",
+    "-timeout=60s"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter217",
+  "rc": 0,
+  "seconds": 1.0827332909684628,
+  "external_timeout_seconds": 120,
+  "env_axis": "GODEBUG=goindex=0; focused diagnostic; not final profile substitution",
+  "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+}
