@@ -871,7 +871,7 @@
     "M108D_CONFORMANCE": "MUT-TASK-PER-POST"
   },
   "implementation_complete": true,
-  "current_design_sha256": "5abe3bfb2497a5c99e434cbbf63199ec37f48da16ba782ae2ebf28d7f60bdf6b",
+  "current_design_sha256": "67ce9685011d15cf595a51938eb8e9895b6f92223a3413f33712b9236f59e204",
   "design_hash_note": "design_sha256 retains authorized snapshot provenance. Current hash also includes controller V15 timeout transcription correction and authorized completion-status metadata; no acceptance contract change. Gate3 repair-round1 adds truthful implementation-state metadata only; authorized original design hash/snapshot remain immutable.",
   "mutation_summary": {
     "measured": 43,
@@ -975,5 +975,226 @@
     "normal_target_count3_rc": 0,
     "race_target_count3_rc": 0,
     "real_execution_sibling_rc": 0
-  }
+  },
+  "repair_round2": {
+    "scope": "test-only phase-isolation plus truthful design/plan status; no production/module/kernel/contract changes",
+    "evidence": "design_docs/verification/world-iter217/executor-repair-round2",
+    "checks": {
+      "aggregate-removed-compile": {
+        "command": [
+          "go",
+          "test",
+          "-p",
+          "1",
+          "-timeout=60s",
+          "./host/projection",
+          "-run",
+          "^$"
+        ],
+        "rc": 0,
+        "expected": 0,
+        "seconds": 1.1432973330374807,
+        "start_utc": "2026-10-01T22:12:20.661430+00:00",
+        "external_cap_s": 180,
+        "GODEBUG": null,
+        "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+      },
+      "final-normal": {
+        "command": [
+          "go",
+          "test",
+          "-p",
+          "1",
+          "-timeout=60s",
+          "./host/projection",
+          "-run",
+          "^TestMCPInvokeDeadlineFreesSlot$",
+          "-v",
+          "-count=3"
+        ],
+        "rc": 0,
+        "expected": 0,
+        "seconds": 6.8672338330652565,
+        "start_utc": "2026-10-01T22:13:06.739404+00:00",
+        "external_cap_s": 180,
+        "GODEBUG": null,
+        "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+      },
+      "aggregate-removed-selected": {
+        "command": [
+          "go",
+          "test",
+          "-p",
+          "1",
+          "-timeout=60s",
+          "-race",
+          "./host/projection",
+          "-run",
+          "^TestMCPInvokeDeadlineFreesSlot$",
+          "-v",
+          "-count=1"
+        ],
+        "rc": 1,
+        "expected": 1,
+        "seconds": 2.0260574580170214,
+        "start_utc": "2026-10-01T22:12:21.805889+00:00",
+        "external_cap_s": 180,
+        "GODEBUG": null,
+        "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+      },
+      "normal-target": {
+        "command": [
+          "go",
+          "test",
+          "-p",
+          "1",
+          "-timeout=60s",
+          "./host/projection",
+          "-run",
+          "^TestMCPInvokeDeadlineFreesSlot$",
+          "-v",
+          "-count=3"
+        ],
+        "rc": 0,
+        "expected": 0,
+        "seconds": 34.471210750052705,
+        "start_utc": "2026-10-01T22:10:46.533514+00:00",
+        "external_cap_s": 180,
+        "GODEBUG": null,
+        "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+      },
+      "cb-background-restored": {
+        "command": [
+          "go",
+          "test",
+          "-p",
+          "1",
+          "-timeout=60s",
+          "-race",
+          "./host/projection",
+          "-run",
+          "^TestMCPInvokeDeadlineFreesSlot$",
+          "-v",
+          "-count=1"
+        ],
+        "rc": 0,
+        "expected": 0,
+        "seconds": 3.13193825003691,
+        "start_utc": "2026-10-01T22:12:17.527313+00:00",
+        "external_cap_s": 180,
+        "GODEBUG": null,
+        "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+      },
+      "race-target": {
+        "command": [
+          "go",
+          "test",
+          "-p",
+          "1",
+          "-timeout=60s",
+          "-race",
+          "./host/projection",
+          "-run",
+          "^TestMCPInvokeDeadlineFreesSlot$",
+          "-v",
+          "-count=3"
+        ],
+        "rc": 0,
+        "expected": 0,
+        "seconds": 16.131141792051494,
+        "start_utc": "2026-10-01T22:11:43.006482+00:00",
+        "external_cap_s": 180,
+        "GODEBUG": null,
+        "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+      },
+      "final-race": {
+        "command": [
+          "go",
+          "test",
+          "-p",
+          "1",
+          "-timeout=60s",
+          "-race",
+          "./host/projection",
+          "-run",
+          "^TestMCPInvokeDeadlineFreesSlot$",
+          "-v",
+          "-count=3"
+        ],
+        "rc": 0,
+        "expected": 0,
+        "seconds": 2.973677041940391,
+        "start_utc": "2026-10-01T22:13:13.651251+00:00",
+        "external_cap_s": 180,
+        "GODEBUG": null,
+        "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+      },
+      "aggregate-removed-restored": {
+        "command": [
+          "go",
+          "test",
+          "-p",
+          "1",
+          "-timeout=60s",
+          "-race",
+          "./host/projection",
+          "-run",
+          "^TestMCPInvokeDeadlineFreesSlot$",
+          "-v",
+          "-count=1"
+        ],
+        "rc": 0,
+        "expected": 0,
+        "seconds": 2.364019042113796,
+        "start_utc": "2026-10-01T22:12:23.833073+00:00",
+        "external_cap_s": 180,
+        "GODEBUG": null,
+        "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+      },
+      "cb-background-compile": {
+        "command": [
+          "go",
+          "test",
+          "-p",
+          "1",
+          "-timeout=60s",
+          "./host/projection",
+          "-run",
+          "^$"
+        ],
+        "rc": 0,
+        "expected": 0,
+        "seconds": 1.1616070829331875,
+        "start_utc": "2026-10-01T22:12:14.315647+00:00",
+        "external_cap_s": 180,
+        "GODEBUG": null,
+        "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+      },
+      "cb-background-selected": {
+        "command": [
+          "go",
+          "test",
+          "-p",
+          "1",
+          "-timeout=60s",
+          "-race",
+          "./host/projection",
+          "-run",
+          "^TestMCPInvokeDeadlineFreesSlot$",
+          "-v",
+          "-count=1"
+        ],
+        "rc": 1,
+        "expected": 1,
+        "seconds": 2.04742533294484,
+        "start_utc": "2026-10-01T22:12:15.478216+00:00",
+        "external_cap_s": 180,
+        "GODEBUG": null,
+        "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+      }
+    },
+    "status": "local repair verified; final normal profiles/fresh Round3/remote CI pending",
+    "native_agent_tokens": "not reported"
+  },
+  "current_design_sha256_note": "Current canonical metadata/status includes round2 local fixture repair; immutable original design authorization/snapshot hashes retained; contract unchanged."
 }

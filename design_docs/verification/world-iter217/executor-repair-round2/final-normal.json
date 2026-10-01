@@ -1,0 +1,21 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-p",
+    "1",
+    "-timeout=60s",
+    "./host/projection",
+    "-run",
+    "^TestMCPInvokeDeadlineFreesSlot$",
+    "-v",
+    "-count=3"
+  ],
+  "rc": 0,
+  "expected": 0,
+  "seconds": 6.8672338330652565,
+  "start_utc": "2026-10-01T22:13:06.739404+00:00",
+  "external_cap_s": 180,
+  "GODEBUG": null,
+  "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+}

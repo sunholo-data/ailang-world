@@ -1,6 +1,6 @@
 # w-mcp-dispatch-projection — Session-Scoped MCP Dispatch
 
-**Status**: Planned — r4 plus measured reviewer-authored syntax refinement: PROCEED via Gate2 narrow-refinement carve-out after fresh combined re-quorum under **D-WORLD-43 = A**. Native Sol6 PASS; Google/Astra rejected only the exact illustrative Go syntax, now repaired. Native Astra independently ACCEPTED the refinement. Planning authorized; implementation acceptance NOT RUN.
+**Status**: Implemented locally; acceptance pending final normal profiles, fresh Round3 independent review and remote CI. Original Gate2 quorum/refinement provenance remains preserved below; no product acceptance or release is claimed.
 **Item / target / priority**: charter row 108; World 1.0 clause 6; P0.
 **Author**: `codex:gpt-6.1-sol`, iteration 217, 2026-10-01. **FLAGGED fallback** under D-WORLD-48: preferred GLM 5.3 unavailable; controller owns routing and quorum. No new quorum was run by this author.
 **Product evidence base**: `54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e`; r3 design snapshot `07df462508618218cb4dac0eaff485a8236ef049`. r4 changes this design only.
@@ -241,3 +241,8 @@ Related: [parent split](w-mcp-projection.md), [A2A sibling](../implemented/w-a2a
 **Executor completion scope (iteration217):** implementation is complete locally. Focused pristine, race (including sequential production clock legs and late-body residual), vet and executable examples pass. The normal unchanged full profiles, independent product judge and required remote CI remain controller-owned and pending; row108/product acceptance is not asserted. See [executor evidence](../verification/world-iter217/executor-evidence/README.md).
 
 **Gate3 repair-round1 status:** Implemented locally; final acceptance pending fixture repair validation, controller normal full profiles, fresh independent review and required remote CI. Round1 product verdict was FAIL49. The controller authorized a test-only deterministic resend fixture with guaranteed failure cleanup and requested an Unreleased host changelog to address the reviewer-reported documentation deduction; this is not an exact reviewer-authored patch. No production constants or acceptance contract changed, no baseline waiver applies, and this document remains at its planned path.
+
+
+### Gate3 round2 feedback repair
+
+Round2 found a failing normal full Go profile (race section), including the MCP cooperative-slot fixture. Independent resolver-delay calibration reproduced its recovery-timeout signature without slot retention; the actual original delay cause remains unknown. The controller authorized a test-only phase-isolation repair: initial-only artificial resolver delay, aggregate deadline inheritance and cooperative return-path counters, then same-handler one-slot recovery with an independent live test budget. Production budgets, module pins and contracts are unchanged. Runner return-path signals precede the actual function return; successful follow-up execution demonstrates released callback capacity. Final normal profiles, fresh Round3 review and remote CI remain pending; D acceptance stays null.

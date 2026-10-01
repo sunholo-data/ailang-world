@@ -1,0 +1,19 @@
+{
+  "command": [
+    "go",
+    "test",
+    "-p",
+    "1",
+    "-timeout=60s",
+    "./host/projection",
+    "-run",
+    "^$"
+  ],
+  "rc": 0,
+  "expected": 0,
+  "seconds": 1.1616070829331875,
+  "start_utc": "2026-10-01T22:12:14.315647+00:00",
+  "external_cap_s": 180,
+  "GODEBUG": null,
+  "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+}

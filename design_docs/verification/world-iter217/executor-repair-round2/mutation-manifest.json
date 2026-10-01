@@ -1,0 +1,22 @@
+[
+  {
+    "name": "cb-background",
+    "path": "host/projection/mcp.go",
+    "old": "context.WithTimeout(ctx, a.h.invokeWait)",
+    "new": "context.WithTimeout(context.Background(), a.h.invokeWait)",
+    "original_sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+    "mutant_sha256": "e8d31a79a772713b859390cb0a918c78dec8536baffeab7538b89dbd4cb4777a",
+    "restored_sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+    "scope": "selected named test only; no broad package red-set claim"
+  },
+  {
+    "name": "aggregate-removed",
+    "path": "host/projection/mcp.go",
+    "old": "context.WithTimeout(r.Context(), h.invokeWait)",
+    "new": "context.WithCancel(r.Context())",
+    "original_sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+    "mutant_sha256": "ab729c5dc6e8796ac91193a381f1d137075af4ef5654dd9aef2dc4a4b82c87a3",
+    "restored_sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+    "scope": "selected named test only; no broad package red-set claim"
+  }
+]
