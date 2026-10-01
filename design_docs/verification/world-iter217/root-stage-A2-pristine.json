@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "go",
+    "test",
+    "-p",
+    "1",
+    "./host/projection",
+    "-run",
+    "^TestAgentCard_AbsentPrecheckSnapshotFailure/store_error$",
+    "-v",
+    "-count=1",
+    "-timeout=60s"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter217",
+  "rc": 0,
+  "seconds": 6.065504334168509,
+  "external_timeout_seconds": 120
+}

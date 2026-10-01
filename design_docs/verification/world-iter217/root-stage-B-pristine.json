@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "go",
+    "test",
+    "-p",
+    "1",
+    "./host/projection",
+    "-run",
+    "^TestMCPNameRoundTrip$",
+    "-v",
+    "-count=1",
+    "-timeout=60s"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter217",
+  "rc": 0,
+  "seconds": 6.937393250176683,
+  "external_timeout_seconds": 120
+}

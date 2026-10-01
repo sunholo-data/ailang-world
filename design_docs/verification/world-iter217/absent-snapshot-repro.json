@@ -2,5 +2,5 @@
   "rc": 1,
   "elapsed_s": 44.52520990371704,
   "source": "package projection\nimport (\"errors\"; \"net/http\"; \"testing\"; \"github.com/sunholo-data/ailang-world/host/broker\")\nfunc TestMission217AbsentPrecheckGenuineError(t *testing.T) {\n st:=openStore(t)\n tok:=mintToken(t,st,\"ep-a\",[]broker.Capability{liveGrant(\"alpha\")})\n cfg:=testConfig(st); cfg.Heads=fixedHeads{ok:false}; cfg.Reader=errReader{err:errors.New(\"genuine snapshot failure\")}\n rec:=getCard(t,mustHandler(t,cfg),\"Bearer \"+tok)\n if rec.Code != http.StatusServiceUnavailable {t.Fatalf(\"masked genuine failure: got status=%d body=%s; want503\",rec.Code,rec.Body)}\n}\n",
-  "command": "go test ./host/projection -run ^TestMission217AbsentPrecheckGenuineError$ -count=1 -timeout45s"
+  "command": "go test ./host/projection -run ^TestMission217AbsentPrecheckGenuineError$ -count=1 -timeout 45s"
 }

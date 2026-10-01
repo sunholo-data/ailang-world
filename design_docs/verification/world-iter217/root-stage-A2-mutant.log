@@ -1,0 +1,8 @@
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/store_error
+    absence_test.go:71: card status=200 want 503: {"capabilities":{"pushNotifications":false,"stateTransitionHistory":false,"streaming":false},"defaultInputModes":["application/json"],"defaultOutputModes":["application/json"],"description":"test projection agent","name":"ailang-worldd","skills":[],"url":"http://example.com","version":"0.1.0"}
+--- FAIL: TestAgentCard_AbsentPrecheckSnapshotFailure (0.00s)
+    --- FAIL: TestAgentCard_AbsentPrecheckSnapshotFailure/store_error (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.191s
+FAIL
