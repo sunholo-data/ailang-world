@@ -10,3 +10,4 @@
 - **Baseline:** current5732e1f SHA checks2/2success; no product gate rerun/candidate this iteration.
 - **Routing:** controller Codex; four Agent role attempts/readiness, non-OpenAI native pins unsupported; actual designer/evaluator not launched. Metered$0; native token totals not reported.
 - **Records:** world-mission-log216; verification/world-iter216. No harness repair or policy change.
+- **Durability:** record draftPR172 pushed but unmerged; required independent review unavailable, so no controller-only landing. Next fire must inspect PR172 as parked216 record.
