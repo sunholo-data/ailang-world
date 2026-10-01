@@ -1,10 +1,12 @@
-# Mission Dashboard — World (2026-10-01, iteration 215)
+# Mission Dashboard — World (2026-10-01, iteration216)
 
-- **State:** RULINGS RECORDED 2026-10-01 (Mark, attended): D-WORLD-43=A, 44=A, 45=A, 46=A, 47=B; ledger has zero OPEN rows. Next pick: row 108 (MCP dispatch) batch-aware design revision + fresh full quorum, then 114. New standing rule (d): when no critical-path row is routable, stop and report the blocks; no side work.
-- **DRIFT:** landings 212/213/214 moved no unmet clause; resolved by D-WORLD-46=A (108 → 114 → 93). Row 127 deferred (47=B) and does not outrank 108/114.
-- **1.0:** clauses 1/2/3/7 MET; 4/5/6 UNMET. Goal unmoved.
-- **Latest release:** world/core 0.1.0; attended 0.1.1 publish pending D-WORLD-45/store choice.
-- **Next:** row 108 (clause 6), then 114 (clause 5), then 93 (clause 4) once 108 lands. Attended: the 0.1.1 publish from a fresh store (D-WORLD-45=A).
-- **Routing:** designer/planner/executor gpt-6.1-sol Agent; evaluator native sonnet unsupported, Anthropic ration unknown. Agent supervisor runs independent pi fallback; never an OpenAI judge. Independent DeepSeek PASS85 administrative park only; implementation NOT RUN.
-- **Baseline:** parallel verify_go red on five deadline/timeout assertions; exact isolated controls and full serial suite green on unchanged base. No unique cause proved.
-- **Cadence/quota:** one unattended iteration; no harness edits. Metered $0.413521492 total reported (quorum plus independent review); interrupted-turn usage unknown.
+- **State:** row108 PARKED-ON-LANE: rotation designer GLM5.3 Ollama refused over-ration; no revision/quorum/implementation.
+- **Independent evaluation:** NOT RUN, score none. Native Sonnet unsupported; Anthropic unknown, Ollama and OpenRouter over ration. Transport supervisor never judged.
+- **Resume:** fresh `ailang mission quota --over` excludes ollama, designer resolver returns recipe; declared independent evaluator bucket must separately clear before any product landing.
+- **Attended rulings acknowledged:** D-WORLD-43/44/45/46/47=A/A/A/A/B; zero OPEN ledger rows.108→114→93;127deferred; no side work while critical path blocked.
+- **1.0:**1/2/3/7MET;4/5/6UNMET; goal unmoved.93dependsMCP108;114follows108.
+- **DRIFT:**214/213/212moved no unmet clause;46=A supplies the regroom, no repeat ask.
+- **Latest release:**world/core0.1.0; attended0.1.1publish from fresh store authorized45=A, still operator-only.
+- **Baseline:** current5732e1f SHA checks2/2success; no product gate rerun/candidate this iteration.
+- **Routing:** controller Codex; four Agent role attempts/readiness, non-OpenAI native pins unsupported; actual designer/evaluator not launched. Metered$0; native token totals not reported.
+- **Records:** world-mission-log216; verification/world-iter216. No harness repair or policy change.
