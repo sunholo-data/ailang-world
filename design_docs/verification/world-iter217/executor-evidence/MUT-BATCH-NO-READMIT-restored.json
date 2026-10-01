@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-timeout=120s", "-run", "^TestMCPBatchAccounting/removed_between_items$", "-v", "-count=1"], "rc": 0, "seconds": 9.148342249915004}

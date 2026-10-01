@@ -1,0 +1,6 @@
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/same_text
+--- PASS: TestMCPAbsentPrecheckSnapshotFailure (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/same_text (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.204s

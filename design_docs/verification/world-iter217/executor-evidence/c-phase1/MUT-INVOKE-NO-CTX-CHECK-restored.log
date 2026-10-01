@@ -1,0 +1,4 @@
+=== RUN   TestMCPInvokeCancelAfterAdmission
+--- PASS: TestMCPInvokeCancelAfterAdmission (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.204s

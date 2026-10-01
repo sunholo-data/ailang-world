@@ -1,0 +1,89 @@
+{
+  "kind": "design_quorum_review",
+  "round": 2,
+  "design_revision": "r4",
+  "verdict": "reject",
+  "model": "gpt-6-astra",
+  "transport": "native Agent",
+  "author_model": "gpt-6.1-sol",
+  "judge_independence": "same-vendor",
+  "authority": "D-WORLD-48: available same-vendor/different-model independent seat",
+  "reviewed_commit": "077027ed1d74f62151947cacacb62e2a689fbead",
+  "design_sha256": "8a596295fc540afd4d568896f0d1a4aeef248182037bc695bc50c25904a31086",
+  "document": "design_docs/planned/w-mcp-dispatch-projection.md",
+  "reviewed_at_utc": "2026-10-01T18:54:30.508512+00:00",
+  "strongest_objection": "Immutable r4 line80 gives a noncompiling Go form: errors.As(rerr, &RegistryHeadAbsentError) takes the address of a type. This is the only remaining blocker; the intended typed-absence semantics and all freeze directions are accepted. The reviewer-authored declared-target form with matching value-error representation fixes it without changing direction.",
+  "catch": "Controller raw compile repro, independently read by this judge: invalid form rc1 RegistryHeadAbsentError (type) is not an expression; declared-target wrapped-value form rc0, outputs true for wrapped typed absence and false for genuine error. The D108-12 list/Invoke and same-text-error mutation gates remain necessary for implementation.",
+  "proposed_fix": "Apply exactly the declared-target form, qualified in projection, with emitted value errors and value Error receiver. This is a narrow concrete correction eligible for the stated refinement carveout; no further author design direction is needed.",
+  "blocking_objections": [
+    {
+      "id": "B1",
+      "classification": "narrow concrete syntax/type fix",
+      "file": "design_docs/planned/w-mcp-dispatch-projection.md",
+      "line": 80,
+      "issue": "The literal errors.As(rerr, &RegistryHeadAbsentError) takes the address of a type, which is not a Go expression.",
+      "proposed_fix": "Declare var target transitionreg.RegistryHeadAbsentError in projection, then test !hasHead && errors.As(rerr, &target). Define Error on a value receiver and emit RegistryHeadAbsentError values so the target type matches."
+    }
+  ],
+  "blocking_count": 1,
+  "rejection_classification": "narrow concrete syntax/type fix; no direction objection",
+  "r1_disposition": "Combined r1 BLOCKED correctly on Sol6 finding; this seat previous PASS did not override it.",
+  "freeze_choices": [
+    {
+      "decision": "D108-2",
+      "verdict": "accept",
+      "reason": "Reversible escaping with explicitly partial <=64-byte admission, bounded per-POST error and same-handler recovery; numeric-safe normalization preserves constraints."
+    },
+    {
+      "decision": "D108-8/9/11",
+      "verdict": "accept",
+      "reason": "Fresh per-item admission/task identity, explicit independent commit/uncertainty accounting and retry residual align with released Invocation interface and coordinator."
+    },
+    {
+      "decision": "D108-5/10",
+      "verdict": "accept",
+      "reason": "One context-only aggregate wrapper clips sequential callbacks; per-call Runner and process reservation caps remain distinct; body/CPU/noncooperation residuals are disclosed."
+    },
+    {
+      "decision": "D108-12",
+      "verdict": "accept",
+      "classification": "narrow concrete repair",
+      "reason": "Typed absence plus !hasHead guard fixes error classification without changing registry data, authority policy, coordinator law, or present-to-absence behavior."
+    }
+  ],
+  "nonblocking_notes": [
+    {
+      "id": "N1",
+      "note": "In planning, explicitly pin the new reader post-GetRegistryHead context check: a double that returns nil error/ok=false after cancel must yield context error, not RegistryHeadAbsentError. This implements the stated ctx-still-live rule."
+    },
+    {
+      "id": "N2",
+      "note": "The broad phrase A2A stays unchanged should be read/clarified as normal wire vocabulary and existing true-absence/race-success behavior preserved, with D108-12 correcting masked genuine errors. The specific intended change is already explicit and is not a blocker."
+    }
+  ],
+  "source_evidence": [
+    "Read all236 lines of r4 and re-read source paths for names/schema, upstream envelope/handler/runner, shared admission and reader, coordinator durability, mount/constants/allowlist/procbound.",
+    "Source-confirmed projection.go:388-400 catch-all, transitionreg.go:76-120 untyped absence and distinct genuine error branches, bind.go:118-124 %w wrapping; old tests cover only true absence/present failure/absent success.",
+    "Read controller absent-snapshot-repro.json source and log: legacy status200 skills[] instead of503. This is attributed controller evidence, not a test executed by this reviewer.",
+    "Python byte comparisons:12 named dependency/product source files identical to this reviewer r1 snapshot; independently measured r1 dependency closure and protocol byte comparisons remain applicable. No fresh closure or product tests claimed this round.",
+    "Read sequential baseline JSON: AIL0/8.67s; Go1/107.89s. No environmental cause or baseline waiver inferred."
+  ],
+  "implementation_acceptance": "NOT RUN",
+  "product_score": null,
+  "administrative_score": null,
+  "axiom_net": 6,
+  "hard_axiom_violations": [],
+  "limits": [
+    "Design-only judgment; every new test/mutation remains proposed.",
+    "Final actual post-import dependency closure, full exact green gates, mutation results and CI remain required.",
+    "No source/git mutations, no scratch code, no CLI quorum synthesis edits, no additional agents or inbox actions."
+  ],
+  "narrow_refinement_review": {
+    "verdict": "accepted",
+    "scope": "Only line80 declared target and explicit matching value-error representation",
+    "controller_draft_sha256_observed": "6061496c7e70dc867e8101714154bae404b3e5e59faee5d43972300e75d5921e",
+    "basis": "Independently read exact patched line and errors-as-snippet-repro.json source/stdout/stderr; Go type-target semantics agree. Compiler execution attributed to controller, not rerun by judge.",
+    "remaining_direction_blockers": [],
+    "implementation_acceptance": "NOT RUN"
+  }
+}

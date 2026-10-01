@@ -1,0 +1,7 @@
+Readable baseline .log copies strip trailing horizontal whitespace only for git diff hygiene. Raw command output is preserved losslessly in matching .log.raw.b64 text files (decode with base64); raw-log-manifest.json hashes the decoded original bytes. Every baseline producer completed before copying/staging. Commands stayed identical on the sequential control: AILANG changed rc1→0, Go stayed rc1 with a different failing assertion (row117 descendantPID initially; row126 durable-deadline uncertainCommit later). No unique environmental cause is established.
+
+Controller correction: gzip artifacts were caught by the unchanged tracked-binary gate detector before final verification; lossless base64 replaces them without a gate exception. Each decoded SHA-256 and byte equality was asserted.
+
+## Record-only whitespace conversion
+
+The full base-to-record diff check found trailing whitespace in29 executor runtime output files. Their original bytes are preserved in adjacent `.whitespace-original.raw.b64` files; `record-log-whitespace-lossless-manifest.json` maps each original path/hash to its readable normalized display/hash. Earlier executor manifests refer to original bytes: decode the mapped raw file when checking those hashes. No verdict Markdown/JSON was rewritten, no binary gate relaxed, and no source change was made.

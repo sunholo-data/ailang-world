@@ -1,0 +1,1 @@
+{"rc": 1, "seconds": 152.36, "base": "54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e", "compiler": "v0.41.0", "command": "AILANG_BIN=~/.pinned-ailang/ailang PATH=~/.pinned-ailang:$PATH ./scripts/verify_ail.sh"}

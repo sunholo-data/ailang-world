@@ -1,0 +1,14 @@
+{
+  "independent_report_preserved_verbatim": true,
+  "final_verdict": "FAIL",
+  "score": 59,
+  "exact_score": 58.545,
+  "controller_scope_corrections": [
+    "Final normal Go profile has four failed test functions plus teardown diagnostics, not five functions.",
+    "Source identity and isolated green runs do not establish pristine-baseline runtime inheritance or a unique load cause.",
+    "Pi IPv6 loopback bind denial and earlier broker permission error have distinct contexts; causal identity is unproved.",
+    "Actual separate real-capsule sibling is TestA2AInvokesPublishedTransition; round3 did not freshly prove that sibling.",
+    "Proposed serialization or widened harness margins are outside authorized scope and were not adopted.",
+    "No fourth product repair or judgment: park needs-human-review, D-WORLD-49."
+  ]
+}

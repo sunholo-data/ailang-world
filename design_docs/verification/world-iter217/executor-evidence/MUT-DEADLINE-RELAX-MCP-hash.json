@@ -1,0 +1,1 @@
+{"files": {"host/projection/mcp.go": {"mutant": "7044c91985f6f63c471c0a757c07048c664957f5f7e89658baa7d5d826ae77cb", "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"}}, "broad_failed_tests": ["TestMCPWireOwnershipSource", "TestProjection_NoDeadlineTampering"], "selected_test": "TestMCPWireOwnershipSource"}

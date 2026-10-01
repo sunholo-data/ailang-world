@@ -1,0 +1,4 @@
+=== RUN   TestMCPInvokeListedThenRevoked
+--- PASS: TestMCPInvokeListedThenRevoked (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.199s

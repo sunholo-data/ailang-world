@@ -1,0 +1,27 @@
+{
+  "administrative_record_only": true,
+  "changed_files": 876,
+  "all_changed_paths_design_docs": true,
+  "runtime_diff_empty": true,
+  "last20_loop_authored_harness": 0,
+  "last20_count": 20,
+  "last3_actual_landings": [
+    {
+      "iteration": 214,
+      "unmet_clause_moved": "none"
+    },
+    {
+      "iteration": 213,
+      "unmet_clause_moved": "none"
+    },
+    {
+      "iteration": 212,
+      "unmet_clause_moved": "none"
+    }
+  ],
+  "drift": true,
+  "prior_regroom": "D46A already108\u2192114\u219293; newD49 maxreview-budget authorization",
+  "all_original_roles_native_agent": true,
+  "product_final_independent": "FAIL59, no fourth round",
+  "worktree_checkout_race_recovery": "initial writer halted before charter; terminal checkout confirmed, protected full writer rerun"
+}

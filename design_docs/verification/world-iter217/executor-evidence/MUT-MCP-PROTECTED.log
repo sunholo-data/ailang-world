@@ -1,0 +1,6 @@
+=== RUN   TestMCPMountedBearerDenial
+    mcp_test.go:80: MCP entered REST session middleware
+--- FAIL: TestMCPMountedBearerDenial (0.21s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.548s
+FAIL

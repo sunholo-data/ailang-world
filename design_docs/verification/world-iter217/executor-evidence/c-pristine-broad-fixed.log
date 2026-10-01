@@ -1,0 +1,876 @@
+=== RUN   TestA2ADispatchWire
+=== RUN   TestA2ADispatchWire/R13_integrity
+=== RUN   TestA2ADispatchWire/store_error_newline
+=== RUN   TestA2ADispatchWire/R15
+=== RUN   TestA2ADispatchWire/R2_R3
+=== RUN   TestA2ADispatchWire/R11
+=== RUN   TestA2ADispatchWire/R11_transport
+=== RUN   TestA2ADispatchWire/R14
+=== RUN   TestA2ADispatchWire/R16
+=== RUN   TestA2ADispatchWire/R4_R6_default
+--- PASS: TestA2ADispatchWire (2.03s)
+    --- PASS: TestA2ADispatchWire/R13_integrity (0.01s)
+    --- PASS: TestA2ADispatchWire/store_error_newline (0.00s)
+    --- PASS: TestA2ADispatchWire/R15 (0.00s)
+    --- PASS: TestA2ADispatchWire/R2_R3 (0.00s)
+    --- PASS: TestA2ADispatchWire/R11 (0.00s)
+    --- PASS: TestA2ADispatchWire/R11_transport (2.00s)
+    --- PASS: TestA2ADispatchWire/R14 (0.01s)
+    --- PASS: TestA2ADispatchWire/R16 (0.00s)
+    --- PASS: TestA2ADispatchWire/R4_R6_default (0.00s)
+=== RUN   TestA2ADurableDeadlineWire
+=== RUN   TestA2ADurableDeadlineWire/GetReceipt
+=== RUN   TestA2ADurableDeadlineWire/AppendIntent
+=== RUN   TestA2ADurableDeadlineWire/Commit
+=== RUN   TestA2ADurableDeadlineWire/uncertain_AppendIntent
+=== RUN   TestA2ADurableDeadlineWire/uncertain_Commit
+--- PASS: TestA2ADurableDeadlineWire (4.55s)
+    --- PASS: TestA2ADurableDeadlineWire/GetReceipt (0.91s)
+    --- PASS: TestA2ADurableDeadlineWire/AppendIntent (0.91s)
+    --- PASS: TestA2ADurableDeadlineWire/Commit (0.91s)
+    --- PASS: TestA2ADurableDeadlineWire/uncertain_AppendIntent (0.91s)
+    --- PASS: TestA2ADurableDeadlineWire/uncertain_Commit (0.91s)
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/store_error
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/real_reader
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/deadline
+--- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure (0.01s)
+    --- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure/store_error (0.00s)
+    --- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure/real_reader (0.00s)
+    --- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure/deadline (0.00s)
+=== RUN   TestProjectionAbsenceRaceControls
+=== RUN   TestProjectionAbsenceRaceControls/true_absence
+=== RUN   TestProjectionAbsenceRaceControls/present_then_absent
+=== RUN   TestProjectionAbsenceRaceControls/same_text_genuine
+=== RUN   TestProjectionAbsenceRaceControls/precheck_error
+--- PASS: TestProjectionAbsenceRaceControls (0.01s)
+    --- PASS: TestProjectionAbsenceRaceControls/true_absence (0.00s)
+    --- PASS: TestProjectionAbsenceRaceControls/present_then_absent (0.00s)
+    --- PASS: TestProjectionAbsenceRaceControls/same_text_genuine (0.00s)
+    --- PASS: TestProjectionAbsenceRaceControls/precheck_error (0.00s)
+=== RUN   TestA2A_AbsentPrecheckSnapshotFailure
+=== RUN   TestA2A_AbsentPrecheckSnapshotFailure/direct
+=== RUN   TestA2A_AbsentPrecheckSnapshotFailure/real_reader
+--- PASS: TestA2A_AbsentPrecheckSnapshotFailure (0.00s)
+    --- PASS: TestA2A_AbsentPrecheckSnapshotFailure/direct (0.00s)
+    --- PASS: TestA2A_AbsentPrecheckSnapshotFailure/real_reader (0.00s)
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/direct
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/real_reader
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/same_text
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/deadline
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/direct
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline
+--- PASS: TestMCPAbsentPrecheckSnapshotFailure (0.01s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/direct (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/real_reader (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/same_text (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/deadline (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/invoke/direct (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text (0.00s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline (0.00s)
+=== RUN   TestMCPSurfaceRefusalRecovers
+--- PASS: TestMCPSurfaceRefusalRecovers (0.00s)
+=== RUN   TestMCPInvokeCancelAfterAdmission
+--- PASS: TestMCPInvokeCancelAfterAdmission (0.00s)
+=== RUN   TestMCPBoundsValidation
+--- PASS: TestMCPBoundsValidation (0.00s)
+=== RUN   TestMCPResolverInnerBudget
+--- PASS: TestMCPResolverInnerBudget (0.00s)
+=== RUN   TestMCPInvokeDeadlineFreesSlot
+--- PASS: TestMCPInvokeDeadlineFreesSlot (0.12s)
+=== RUN   TestMCPToolsInnerBudget
+--- PASS: TestMCPToolsInnerBudget (0.00s)
+=== RUN   TestMCPWireOwnershipSource
+--- PASS: TestMCPWireOwnershipSource (0.00s)
+=== RUN   TestMCPListExactSetPerSession
+--- PASS: TestMCPListExactSetPerSession (0.00s)
+=== RUN   TestMCPDenialMatrix
+--- PASS: TestMCPDenialMatrix (0.00s)
+=== RUN   TestMCPCallDispatch
+--- PASS: TestMCPCallDispatch (0.00s)
+=== RUN   TestMCPInvokeListedThenRevoked
+--- PASS: TestMCPInvokeListedThenRevoked (0.00s)
+=== RUN   TestMCPInvokeCanceledBeforeMint
+--- PASS: TestMCPInvokeCanceledBeforeMint (0.00s)
+=== RUN   TestMCPNameRoundTrip
+--- PASS: TestMCPNameRoundTrip (0.00s)
+=== RUN   TestMCPNameRefusal
+--- PASS: TestMCPNameRefusal (0.00s)
+=== RUN   TestMCPSchemaNormalization
+--- PASS: TestMCPSchemaNormalization (0.00s)
+=== RUN   TestAgentCard_ExactSkillSetPerSession
+--- PASS: TestAgentCard_ExactSkillSetPerSession (0.00s)
+=== RUN   TestAgentCard_TracksSessionSnapshot
+--- PASS: TestAgentCard_TracksSessionSnapshot (0.00s)
+=== RUN   TestAgentCard_AmbientExportsAbsent
+--- PASS: TestAgentCard_AmbientExportsAbsent (0.00s)
+=== RUN   TestAgentCard_UpstreamKeySet
+--- PASS: TestAgentCard_UpstreamKeySet (0.00s)
+=== RUN   TestProjection_ContentTypeJSON
+--- PASS: TestProjection_ContentTypeJSON (0.00s)
+=== RUN   TestAgentCard_DenialMatrix
+=== RUN   TestAgentCard_DenialMatrix/absent
+=== RUN   TestAgentCard_DenialMatrix/unknown
+=== RUN   TestAgentCard_DenialMatrix/expired
+=== RUN   TestAgentCard_DenialMatrix/malformed
+--- PASS: TestAgentCard_DenialMatrix (0.00s)
+    --- PASS: TestAgentCard_DenialMatrix/absent (0.00s)
+    --- PASS: TestAgentCard_DenialMatrix/unknown (0.00s)
+    --- PASS: TestAgentCard_DenialMatrix/expired (0.00s)
+    --- PASS: TestAgentCard_DenialMatrix/malformed (0.00s)
+=== RUN   TestAgentCard_AbsentHeadZeroSkills
+--- PASS: TestAgentCard_AbsentHeadZeroSkills (0.00s)
+=== RUN   TestAgentCard_HeadReadFailuresAre5xx
+--- PASS: TestAgentCard_HeadReadFailuresAre5xx (0.00s)
+=== RUN   TestAgentCard_HeadRaceAbsentThenSucceeds
+--- PASS: TestAgentCard_HeadRaceAbsentThenSucceeds (0.00s)
+=== RUN   TestA2A_DenialMatrix
+=== RUN   TestA2A_DenialMatrix/absent
+=== RUN   TestA2A_DenialMatrix/unknown
+=== RUN   TestA2A_DenialMatrix/expired
+=== RUN   TestA2A_DenialMatrix/malformed
+--- PASS: TestA2A_DenialMatrix (0.00s)
+    --- PASS: TestA2A_DenialMatrix/absent (0.00s)
+    --- PASS: TestA2A_DenialMatrix/unknown (0.00s)
+    --- PASS: TestA2A_DenialMatrix/expired (0.00s)
+    --- PASS: TestA2A_DenialMatrix/malformed (0.00s)
+=== RUN   TestA2A_CodeMatrix
+=== RUN   TestA2A_CodeMatrix/garbage_JSON
+=== RUN   TestA2A_CodeMatrix/wrong_version
+=== RUN   TestA2A_CodeMatrix/missing_version
+=== RUN   TestA2A_CodeMatrix/wrong_method
+=== RUN   TestA2A_CodeMatrix/params_not_object
+=== RUN   TestA2A_CodeMatrix/no_skill_id
+=== RUN   TestA2A_CodeMatrix/guessed_skill
+=== RUN   TestA2A_CodeMatrix/stale_skill
+=== RUN   TestA2A_CodeMatrix/ambient-name_skill
+=== RUN   TestA2A_CodeMatrix/authorized_skill
+--- PASS: TestA2A_CodeMatrix (0.00s)
+    --- PASS: TestA2A_CodeMatrix/garbage_JSON (0.00s)
+    --- PASS: TestA2A_CodeMatrix/wrong_version (0.00s)
+    --- PASS: TestA2A_CodeMatrix/missing_version (0.00s)
+    --- PASS: TestA2A_CodeMatrix/wrong_method (0.00s)
+    --- PASS: TestA2A_CodeMatrix/params_not_object (0.00s)
+    --- PASS: TestA2A_CodeMatrix/no_skill_id (0.00s)
+    --- PASS: TestA2A_CodeMatrix/guessed_skill (0.00s)
+    --- PASS: TestA2A_CodeMatrix/stale_skill (0.00s)
+    --- PASS: TestA2A_CodeMatrix/ambient-name_skill (0.00s)
+    --- PASS: TestA2A_CodeMatrix/authorized_skill (0.00s)
+=== RUN   TestA2AAuthorizedSkillNoCoordinator
+--- PASS: TestA2AAuthorizedSkillNoCoordinator (0.00s)
+=== RUN   TestA2ADispatch
+=== RUN   TestA2ADispatch/registry_moved_after_admission
+=== RUN   TestA2ADispatch/invalid_parts_and_pin
+=== RUN   TestA2ADispatch/success_and_R13_reconciled
+=== RUN   TestA2ADispatch/R1
+=== RUN   TestA2ADispatch/R2_R3
+=== RUN   TestA2ADispatch/R5
+=== RUN   TestA2ADispatch/R15
+=== RUN   TestA2ADispatch/R16
+=== RUN   TestA2ADispatch/DuplicateInvocation
+=== RUN   TestA2ADispatch/R17
+=== RUN   TestA2ADispatch/R4_R6
+=== RUN   TestA2ADispatch/R6_corrupt_source
+=== RUN   TestA2ADispatch/R13_reconcile_absent
+=== RUN   TestA2ADispatch/R13_reconcile_integrity
+=== RUN   TestA2ADispatch/R7
+=== RUN   TestA2ADispatch/R8
+=== RUN   TestA2ADispatch/R9
+=== RUN   TestA2ADispatch/R10
+=== RUN   TestA2ADispatch/R11
+=== RUN   TestA2ADispatch/R12
+=== RUN   TestA2ADispatch/R14
+--- PASS: TestA2ADispatch (0.00s)
+    --- PASS: TestA2ADispatch/registry_moved_after_admission (0.00s)
+    --- PASS: TestA2ADispatch/invalid_parts_and_pin (0.00s)
+    --- PASS: TestA2ADispatch/success_and_R13_reconciled (0.00s)
+    --- PASS: TestA2ADispatch/R1 (0.00s)
+    --- PASS: TestA2ADispatch/R2_R3 (0.00s)
+    --- PASS: TestA2ADispatch/R5 (0.00s)
+    --- PASS: TestA2ADispatch/R15 (0.00s)
+    --- PASS: TestA2ADispatch/R16 (0.00s)
+    --- PASS: TestA2ADispatch/DuplicateInvocation (0.00s)
+    --- PASS: TestA2ADispatch/R17 (0.00s)
+    --- PASS: TestA2ADispatch/R4_R6 (0.00s)
+    --- PASS: TestA2ADispatch/R6_corrupt_source (0.00s)
+    --- PASS: TestA2ADispatch/R13_reconcile_absent (0.00s)
+    --- PASS: TestA2ADispatch/R13_reconcile_integrity (0.00s)
+    --- PASS: TestA2ADispatch/R7 (0.00s)
+    --- PASS: TestA2ADispatch/R8 (0.00s)
+    --- PASS: TestA2ADispatch/R9 (0.00s)
+    --- PASS: TestA2ADispatch/R10 (0.00s)
+    --- PASS: TestA2ADispatch/R11 (0.00s)
+    --- PASS: TestA2ADispatch/R12 (0.00s)
+    --- PASS: TestA2ADispatch/R14 (0.00s)
+=== RUN   TestA2A_AbsentPrecheckPublicationDispatch
+--- PASS: TestA2A_AbsentPrecheckPublicationDispatch (0.00s)
+=== RUN   TestA2A_NeverWritesStore
+--- PASS: TestA2A_NeverWritesStore (0.00s)
+=== RUN   TestProjection_DeniedNeverTouchesRegistry
+=== RUN   TestProjection_DeniedNeverTouchesRegistry/card_route,_four_denial_kinds
+=== RUN   TestProjection_DeniedNeverTouchesRegistry//a2a/_route,_four_denial_kinds
+=== RUN   TestProjection_DeniedNeverTouchesRegistry/expired_session,_both_routes
+=== RUN   TestProjection_DeniedNeverTouchesRegistry/valid_session_+_malformed_JSON_never_reaches_admission
+=== RUN   TestProjection_DeniedNeverTouchesRegistry/control:_a_real_admission_check_reads_exactly_once_each
+--- PASS: TestProjection_DeniedNeverTouchesRegistry (0.00s)
+    --- PASS: TestProjection_DeniedNeverTouchesRegistry/card_route,_four_denial_kinds (0.00s)
+    --- PASS: TestProjection_DeniedNeverTouchesRegistry//a2a/_route,_four_denial_kinds (0.00s)
+    --- PASS: TestProjection_DeniedNeverTouchesRegistry/expired_session,_both_routes (0.00s)
+    --- PASS: TestProjection_DeniedNeverTouchesRegistry/valid_session_+_malformed_JSON_never_reaches_admission (0.00s)
+    --- PASS: TestProjection_DeniedNeverTouchesRegistry/control:_a_real_admission_check_reads_exactly_once_each (0.00s)
+=== RUN   TestProjection_OneSnapshotPerRequest
+--- PASS: TestProjection_OneSnapshotPerRequest (0.00s)
+=== RUN   TestAgentCard_HeadChangeWithoutRestart
+--- PASS: TestAgentCard_HeadChangeWithoutRestart (0.00s)
+=== RUN   TestProjection_CarrierFixed_OnlyBearerHeader
+--- PASS: TestProjection_CarrierFixed_OnlyBearerHeader (0.00s)
+=== RUN   TestProjection_BoundedWait
+=== RUN   TestProjection_BoundedWait/card_route,_resolution_blocked
+=== RUN   TestProjection_BoundedWait/card_route,_head_check_blocked
+=== RUN   TestProjection_BoundedWait//a2a/_route,_resolution_blocked
+--- PASS: TestProjection_BoundedWait (0.31s)
+    --- PASS: TestProjection_BoundedWait/card_route,_resolution_blocked (0.10s)
+    --- PASS: TestProjection_BoundedWait/card_route,_head_check_blocked (0.10s)
+    --- PASS: TestProjection_BoundedWait//a2a/_route,_resolution_blocked (0.11s)
+=== RUN   TestProjection_ConfigValidation
+--- PASS: TestProjection_ConfigValidation (0.00s)
+=== RUN   TestProjection_WireOwnershipSource
+    projection_test.go:1496: wire ownership pinned over 3 non-test source file(s)
+--- PASS: TestProjection_WireOwnershipSource (0.00s)
+=== RUN   TestProjection_NoDeadlineTampering
+--- PASS: TestProjection_NoDeadlineTampering (0.00s)
+=== RUN   TestProjection_ZeroSkipSource
+--- PASS: TestProjection_ZeroSkipSource (0.00s)
+=== RUN   ExampleEncodeMCPName
+--- PASS: ExampleEncodeMCPName (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	7.449s
+=== RUN   TestCommitBudgetAndUncertainReconcile
+=== RUN   TestCommitBudgetAndUncertainReconcile/coordinator_held_connection_honors_caller_ctx
+=== RUN   TestCommitBudgetAndUncertainReconcile/i_held_connection_is_503_timeout_within_budget
+=== RUN   TestCommitBudgetAndUncertainReconcile/ii_A_landed_uncertain_then_B_on_top
+=== RUN   TestCommitBudgetAndUncertainReconcile/iii_A_rolled_back_then_B_takes_the_index
+=== RUN   TestCommitBudgetAndUncertainReconcile/iii_b_A_rolled_back_and_nothing_else
+=== RUN   TestCommitBudgetAndUncertainReconcile/iv_reconcile_read_timeout_gives_no_resend_advice
+--- PASS: TestCommitBudgetAndUncertainReconcile (1.63s)
+    --- PASS: TestCommitBudgetAndUncertainReconcile/coordinator_held_connection_honors_caller_ctx (1.13s)
+    --- PASS: TestCommitBudgetAndUncertainReconcile/i_held_connection_is_503_timeout_within_budget (0.12s)
+    --- PASS: TestCommitBudgetAndUncertainReconcile/ii_A_landed_uncertain_then_B_on_top (0.12s)
+    --- PASS: TestCommitBudgetAndUncertainReconcile/iii_A_rolled_back_then_B_takes_the_index (0.12s)
+    --- PASS: TestCommitBudgetAndUncertainReconcile/iii_b_A_rolled_back_and_nothing_else (0.12s)
+    --- PASS: TestCommitBudgetAndUncertainReconcile/iv_reconcile_read_timeout_gives_no_resend_advice (0.01s)
+=== RUN   TestCommitUncertainStatusMirrorsSketch
+--- PASS: TestCommitUncertainStatusMirrorsSketch (0.00s)
+=== RUN   TestCommitInvocationReceiptIdentity
+=== RUN   TestCommitInvocationReceiptIdentity/A_landed_uncertain_then_B_on_top
+=== RUN   TestCommitInvocationReceiptIdentity/A_rolled_back_uncertain
+=== RUN   TestCommitInvocationReceiptIdentity/held_connection_on_the_intent_step_is_503_timeout
+=== RUN   TestCommitInvocationReceiptIdentity/foreign_namespaces_are_refused
+--- PASS: TestCommitInvocationReceiptIdentity (1.09s)
+    --- PASS: TestCommitInvocationReceiptIdentity/A_landed_uncertain_then_B_on_top (0.12s)
+    --- PASS: TestCommitInvocationReceiptIdentity/A_rolled_back_uncertain (0.11s)
+    --- PASS: TestCommitInvocationReceiptIdentity/held_connection_on_the_intent_step_is_503_timeout (0.12s)
+    --- PASS: TestCommitInvocationReceiptIdentity/foreign_namespaces_are_refused (0.74s)
+=== RUN   TestCommitInvocationReuseIsBadRequest
+=== RUN   TestCommitInvocationReuseIsBadRequest/duplicate_id_different_content_real_store
+=== RUN   TestCommitInvocationReuseIsBadRequest/invocation_mismatch_seam
+--- PASS: TestCommitInvocationReuseIsBadRequest (0.02s)
+    --- PASS: TestCommitInvocationReuseIsBadRequest/duplicate_id_different_content_real_store (0.01s)
+    --- PASS: TestCommitInvocationReuseIsBadRequest/invocation_mismatch_seam (0.00s)
+=== RUN   TestStartupCallerCancellation
+=== RUN   TestStartupCallerCancellation/New
+=== RUN   TestStartupCallerCancellation/Run
+--- PASS: TestStartupCallerCancellation (0.01s)
+    --- PASS: TestStartupCallerCancellation/New (0.00s)
+    --- PASS: TestStartupCallerCancellation/Run (0.00s)
+=== RUN   TestCredentialLookupExpiryIsNotADenial
+=== RUN   TestCredentialLookupExpiryIsNotADenial/held_lookup_is_503_timeout_within_budget
+=== RUN   TestCredentialLookupExpiryIsNotADenial/failed_lookup_is_sanitized_500
+--- PASS: TestCredentialLookupExpiryIsNotADenial (0.13s)
+    --- PASS: TestCredentialLookupExpiryIsNotADenial/held_lookup_is_503_timeout_within_budget (0.11s)
+    --- PASS: TestCredentialLookupExpiryIsNotADenial/failed_lookup_is_sanitized_500 (0.02s)
+=== RUN   TestIsLoopbackHostMirrorsSketchPredicate
+--- PASS: TestIsLoopbackHostMirrorsSketchPredicate (0.00s)
+=== RUN   TestNewRefusesNonLoopbackBind
+=== RUN   TestNewRefusesNonLoopbackBind/refused/0.0.0.0
+=== RUN   TestNewRefusesNonLoopbackBind/refused/example.com
+=== RUN   TestNewRefusesNonLoopbackBind/refused/192.168.1.10
+=== RUN   TestNewRefusesNonLoopbackBind/accepted/127.0.0.1
+=== RUN   TestNewRefusesNonLoopbackBind/accepted/::1
+=== RUN   TestNewRefusesNonLoopbackBind/accepted/localhost
+--- PASS: TestNewRefusesNonLoopbackBind (0.02s)
+    --- PASS: TestNewRefusesNonLoopbackBind/refused/0.0.0.0 (0.00s)
+    --- PASS: TestNewRefusesNonLoopbackBind/refused/example.com (0.00s)
+    --- PASS: TestNewRefusesNonLoopbackBind/refused/192.168.1.10 (0.00s)
+    --- PASS: TestNewRefusesNonLoopbackBind/accepted/127.0.0.1 (0.01s)
+    --- PASS: TestNewRefusesNonLoopbackBind/accepted/::1 (0.00s)
+    --- PASS: TestNewRefusesNonLoopbackBind/accepted/localhost (0.00s)
+=== RUN   TestBoundedWaitsAndBodyLimit
+=== RUN   TestBoundedWaitsAndBodyLimit/constants_match_the_D7_table
+=== RUN   TestBoundedWaitsAndBodyLimit/d/New_wires_the_read_deadline_onto_the_daemon
+=== RUN   TestBoundedWaitsAndBodyLimit/a/server_timeouts_are_set_and_non-zero
+=== RUN   TestBoundedWaitsAndBodyLimit/b/commit_body_cap_rejects_only_oversized_requests
+=== RUN   TestBoundedWaitsAndBodyLimit/c/maxCommitBytes_matches_the_Z3-proven_sketch_bound
+--- PASS: TestBoundedWaitsAndBodyLimit (0.01s)
+    --- PASS: TestBoundedWaitsAndBodyLimit/constants_match_the_D7_table (0.00s)
+    --- PASS: TestBoundedWaitsAndBodyLimit/d/New_wires_the_read_deadline_onto_the_daemon (0.00s)
+    --- PASS: TestBoundedWaitsAndBodyLimit/a/server_timeouts_are_set_and_non-zero (0.00s)
+    --- PASS: TestBoundedWaitsAndBodyLimit/b/commit_body_cap_rejects_only_oversized_requests (0.01s)
+    --- PASS: TestBoundedWaitsAndBodyLimit/c/maxCommitBytes_matches_the_Z3-proven_sketch_bound (0.00s)
+=== RUN   TestBoundedGracefulShutdownDrainsInFlightRequest
+--- PASS: TestBoundedGracefulShutdownDrainsInFlightRequest (0.28s)
+=== RUN   TestDaemonShutdownIsBoundedByTheD7Constant
+--- PASS: TestDaemonShutdownIsBoundedByTheD7Constant (0.12s)
+=== RUN   TestNewReleasesWriterAuthorityOnLateFailure
+--- PASS: TestNewReleasesWriterAuthorityOnLateFailure (0.01s)
+=== RUN   TestDrainHardClosesWhenDeadlineExpires
+--- PASS: TestDrainHardClosesWhenDeadlineExpires (0.05s)
+=== RUN   TestHealthAndHeadRoundTrip
+--- PASS: TestHealthAndHeadRoundTrip (0.17s)
+=== RUN   TestRunAnnouncesResolvedListenAddress
+--- PASS: TestRunAnnouncesResolvedListenAddress (0.01s)
+=== RUN   TestNewBootstrapsEpochRegistryIdempotently
+--- PASS: TestNewBootstrapsEpochRegistryIdempotently (0.11s)
+=== RUN   TestReleaseFromVersion
+--- PASS: TestReleaseFromVersion (0.00s)
+=== RUN   TestDaemonDependencyAllowlist
+=== RUN   TestDaemonDependencyAllowlist/null_case_fails
+=== RUN   TestDaemonDependencyAllowlist/classifier_separates_stdlib_from_modules
+=== RUN   TestDaemonDependencyAllowlist/an_intruder_is_reported_by_name
+=== RUN   TestDaemonDependencyAllowlist/daemon_core_build_graph
+    daemon_test.go:962: zero-cloud allowlist enforced over 258 transitive packages for ./host/daemon/... ./cmd/ailang-worldd/...
+--- PASS: TestDaemonDependencyAllowlist (0.20s)
+    --- PASS: TestDaemonDependencyAllowlist/null_case_fails (0.00s)
+    --- PASS: TestDaemonDependencyAllowlist/classifier_separates_stdlib_from_modules (0.00s)
+    --- PASS: TestDaemonDependencyAllowlist/an_intruder_is_reported_by_name (0.00s)
+    --- PASS: TestDaemonDependencyAllowlist/daemon_core_build_graph (0.20s)
+=== RUN   TestAilangProtocolAdmissionIsNarrow
+--- PASS: TestAilangProtocolAdmissionIsNarrow (0.00s)
+=== RUN   TestProjectionRoutes_MountedAndNotProtected
+--- PASS: TestProjectionRoutes_MountedAndNotProtected (0.00s)
+=== RUN   TestCardDenial_ByteIdenticalToCommitMiddleware
+--- PASS: TestCardDenial_ByteIdenticalToCommitMiddleware (0.00s)
+=== RUN   TestCardDenial_ExactClassAndMessagePerKind
+--- PASS: TestCardDenial_ExactClassAndMessagePerKind (0.00s)
+=== RUN   TestAgentCardRoute_GETOnly
+--- PASS: TestAgentCardRoute_GETOnly (0.00s)
+=== RUN   TestAgentCard_ViaDaemon_SessionScoped
+ailang-worldd: a2a refusal: tasks/send -: "projection: invocation coordinator is unavailable"
+--- PASS: TestAgentCard_ViaDaemon_SessionScoped (0.00s)
+=== RUN   TestA2AAuthorizedSkillNoCoordinator
+ailang-worldd: a2a refusal: tasks/send -: "projection: invocation coordinator is unavailable"
+--- PASS: TestA2AAuthorizedSkillNoCoordinator (0.00s)
+=== RUN   TestA2ACardInvocationDescription
+--- PASS: TestA2ACardInvocationDescription (0.00s)
+=== RUN   TestDaemonInvokeConfig
+--- PASS: TestDaemonInvokeConfig (0.13s)
+=== RUN   TestAgentCard_ViaDaemon_AbsentHeadZeroSkills
+--- PASS: TestAgentCard_ViaDaemon_AbsentHeadZeroSkills (0.00s)
+=== RUN   TestGuardedStartupChain
+--- PASS: TestGuardedStartupChain (0.01s)
+=== RUN   TestGuardedCredentialLookupChain
+--- PASS: TestGuardedCredentialLookupChain (0.00s)
+=== RUN   TestClampLimitMirrorsSketchVectors
+--- PASS: TestClampLimitMirrorsSketchVectors (0.00s)
+=== RUN   TestReadRoutesAndPayloadGate
+=== RUN   TestReadRoutesAndPayloadGate/world
+=== RUN   TestReadRoutesAndPayloadGate/object_payload_is_opt-in_base64
+=== RUN   TestReadRoutesAndPayloadGate/log
+=== RUN   TestReadRoutesAndPayloadGate/multi-segment_registry_name
+--- PASS: TestReadRoutesAndPayloadGate (0.00s)
+    --- PASS: TestReadRoutesAndPayloadGate/world (0.00s)
+    --- PASS: TestReadRoutesAndPayloadGate/object_payload_is_opt-in_base64 (0.00s)
+    --- PASS: TestReadRoutesAndPayloadGate/log (0.00s)
+    --- PASS: TestReadRoutesAndPayloadGate/multi-segment_registry_name (0.00s)
+=== RUN   TestBadRequestAndNotFoundAreDistinct
+=== RUN   TestBadRequestAndNotFoundAreDistinct/malformed_world
+=== RUN   TestBadRequestAndNotFoundAreDistinct/malformed_object
+=== RUN   TestBadRequestAndNotFoundAreDistinct/absent_world
+=== RUN   TestBadRequestAndNotFoundAreDistinct/absent_object
+=== RUN   TestBadRequestAndNotFoundAreDistinct/absent_log
+=== RUN   TestBadRequestAndNotFoundAreDistinct/absent_registry
+--- PASS: TestBadRequestAndNotFoundAreDistinct (0.00s)
+    --- PASS: TestBadRequestAndNotFoundAreDistinct/malformed_world (0.00s)
+    --- PASS: TestBadRequestAndNotFoundAreDistinct/malformed_object (0.00s)
+    --- PASS: TestBadRequestAndNotFoundAreDistinct/absent_world (0.00s)
+    --- PASS: TestBadRequestAndNotFoundAreDistinct/absent_object (0.00s)
+    --- PASS: TestBadRequestAndNotFoundAreDistinct/absent_log (0.00s)
+    --- PASS: TestBadRequestAndNotFoundAreDistinct/absent_registry (0.00s)
+=== RUN   TestHeadErrorsUseAPIEnvelope
+=== RUN   TestHeadErrorsUseAPIEnvelope/not_found
+=== RUN   TestHeadErrorsUseAPIEnvelope/internal
+ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: database is closed
+--- PASS: TestHeadErrorsUseAPIEnvelope (0.01s)
+    --- PASS: TestHeadErrorsUseAPIEnvelope/not_found (0.00s)
+    --- PASS: TestHeadErrorsUseAPIEnvelope/internal (0.00s)
+=== RUN   TestGETRoutesRejectOtherMethods
+--- PASS: TestGETRoutesRejectOtherMethods (0.00s)
+=== RUN   TestStaleHeadConflictBodySupportsReplan
+--- PASS: TestStaleHeadConflictBodySupportsReplan (0.00s)
+=== RUN   TestLogRangeClampAndDefaultAreNonVacuous
+=== RUN   TestLogRangeClampAndDefaultAreNonVacuous/default
+=== RUN   TestLogRangeClampAndDefaultAreNonVacuous/zero_defaults
+=== RUN   TestLogRangeClampAndDefaultAreNonVacuous/clamped
+=== RUN   TestLogRangeClampAndDefaultAreNonVacuous/non-zero_from_starts_at_requested_index
+--- PASS: TestLogRangeClampAndDefaultAreNonVacuous (0.34s)
+    --- PASS: TestLogRangeClampAndDefaultAreNonVacuous/default (0.00s)
+    --- PASS: TestLogRangeClampAndDefaultAreNonVacuous/zero_defaults (0.00s)
+    --- PASS: TestLogRangeClampAndDefaultAreNonVacuous/clamped (0.01s)
+    --- PASS: TestLogRangeClampAndDefaultAreNonVacuous/non-zero_from_starts_at_requested_index (0.00s)
+=== RUN   TestRESTGenesisAndCommitAreByteEquivalent
+--- PASS: TestRESTGenesisAndCommitAreByteEquivalent (0.01s)
+=== RUN   TestGenesisRefLenienceIsExactlyOneField
+=== RUN   TestGenesisRefLenienceIsExactlyOneField/nextWorld.ref
+=== RUN   TestGenesisRefLenienceIsExactlyOneField/nextWorld.stateRoot
+=== RUN   TestGenesisRefLenienceIsExactlyOneField/nextWorld.logHead
+=== RUN   TestGenesisRefLenienceIsExactlyOneField/entry.entryHash
+=== RUN   TestGenesisRefLenienceIsExactlyOneField/entry.transitionRef
+=== RUN   TestGenesisRefLenienceIsExactlyOneField/entry.header.transitionFn
+=== RUN   TestGenesisRefLenienceIsExactlyOneField/entry.header.interpreter
+=== RUN   TestGenesisRefLenienceIsExactlyOneField/entry.header.prevEntryHash
+=== RUN   TestGenesisRefLenienceIsExactlyOneField/objects[0].hash
+=== RUN   TestGenesisRefLenienceIsExactlyOneField/objects[0].interfaceHash
+--- PASS: TestGenesisRefLenienceIsExactlyOneField (0.00s)
+    --- PASS: TestGenesisRefLenienceIsExactlyOneField/nextWorld.ref (0.00s)
+    --- PASS: TestGenesisRefLenienceIsExactlyOneField/nextWorld.stateRoot (0.00s)
+    --- PASS: TestGenesisRefLenienceIsExactlyOneField/nextWorld.logHead (0.00s)
+    --- PASS: TestGenesisRefLenienceIsExactlyOneField/entry.entryHash (0.00s)
+    --- PASS: TestGenesisRefLenienceIsExactlyOneField/entry.transitionRef (0.00s)
+    --- PASS: TestGenesisRefLenienceIsExactlyOneField/entry.header.transitionFn (0.00s)
+    --- PASS: TestGenesisRefLenienceIsExactlyOneField/entry.header.interpreter (0.00s)
+    --- PASS: TestGenesisRefLenienceIsExactlyOneField/entry.header.prevEntryHash (0.00s)
+    --- PASS: TestGenesisRefLenienceIsExactlyOneField/objects[0].hash (0.00s)
+    --- PASS: TestGenesisRefLenienceIsExactlyOneField/objects[0].interfaceHash (0.00s)
+=== RUN   TestIntegrityStartupSweepPagesBothTables
+--- PASS: TestIntegrityStartupSweepPagesBothTables (0.01s)
+=== RUN   TestIntegrityWarningsFollowTheAnnouncementAndServeNormally
+--- PASS: TestIntegrityWarningsFollowTheAnnouncementAndServeNormally (0.01s)
+=== RUN   TestIntegrityWarningsNeverBlockStartupForAOneLineReader
+--- PASS: TestIntegrityWarningsNeverBlockStartupForAOneLineReader (0.01s)
+=== RUN   TestIntegrityStartupSweepReportsTruncation
+--- PASS: TestIntegrityStartupSweepReportsTruncation (0.01s)
+=== RUN   TestA2AInvokesPublishedTransition
+--- PASS: TestA2AInvokesPublishedTransition (1.12s)
+=== RUN   TestA2AResendAfterWriteTimeout
+--- PASS: TestA2AResendAfterWriteTimeout (2.98s)
+=== RUN   TestA2AInvokeDeadlineClosesSocket
+--- PASS: TestA2AInvokeDeadlineClosesSocket (1.86s)
+=== RUN   TestA2AErrorLogWiring
+--- PASS: TestA2AErrorLogWiring (0.01s)
+=== RUN   TestProductionBusyTimeoutConfiguredBelowReadDeadline
+--- PASS: TestProductionBusyTimeoutConfiguredBelowReadDeadline (0.00s)
+=== RUN   TestNewRefusesBusyTimeoutAtOrAboveReadDeadline
+=== RUN   TestNewRefusesBusyTimeoutAtOrAboveReadDeadline/disabled_(negative)
+=== RUN   TestNewRefusesBusyTimeoutAtOrAboveReadDeadline/disabled_(zero)
+=== RUN   TestNewRefusesBusyTimeoutAtOrAboveReadDeadline/just_below
+=== RUN   TestNewRefusesBusyTimeoutAtOrAboveReadDeadline/equal
+=== RUN   TestNewRefusesBusyTimeoutAtOrAboveReadDeadline/above
+--- PASS: TestNewRefusesBusyTimeoutAtOrAboveReadDeadline (0.02s)
+    --- PASS: TestNewRefusesBusyTimeoutAtOrAboveReadDeadline/disabled_(negative) (0.00s)
+    --- PASS: TestNewRefusesBusyTimeoutAtOrAboveReadDeadline/disabled_(zero) (0.00s)
+    --- PASS: TestNewRefusesBusyTimeoutAtOrAboveReadDeadline/just_below (0.00s)
+    --- PASS: TestNewRefusesBusyTimeoutAtOrAboveReadDeadline/equal (0.00s)
+    --- PASS: TestNewRefusesBusyTimeoutAtOrAboveReadDeadline/above (0.00s)
+=== RUN   TestCheckReadOrderingAcceptsDisabledWindow
+--- PASS: TestCheckReadOrderingAcceptsDisabledWindow (0.00s)
+=== RUN   TestMCPMountMethodSource
+--- PASS: TestMCPMountMethodSource (0.00s)
+=== RUN   TestMCPGetRefused
+--- PASS: TestMCPGetRefused (0.00s)
+=== RUN   TestMCPMountedBearerDenial
+--- PASS: TestMCPMountedBearerDenial (0.00s)
+=== RUN   TestObjectsBySemanticIDRoute
+--- PASS: TestObjectsBySemanticIDRoute (0.00s)
+=== RUN   TestObjectsBySemanticIDRouteCapAndDefault
+--- PASS: TestObjectsBySemanticIDRouteCapAndDefault (0.16s)
+=== RUN   TestWalkRetimedAtScale
+    objects_by_semantic_id_test.go:232: set WORLD_WALK_N to run the walk re-timing
+--- SKIP: TestWalkRetimedAtScale (0.00s)
+=== RUN   TestObjectsBySemanticIDRouteStoreErrors
+ailang-worldd: internal error: GET /v1/objects/by-semantic-id/x: host-secret-detail
+--- PASS: TestObjectsBySemanticIDRouteStoreErrors (0.00s)
+=== RUN   TestLookupIndexUnavailableIs503
+--- PASS: TestLookupIndexUnavailableIs503 (0.00s)
+=== RUN   TestDaemonReadDeadline
+=== RUN   TestDaemonReadDeadline/normal-deadline-answers-200
+=== RUN   TestDaemonReadDeadline/real-store-expired-deadline
+=== RUN   TestDaemonReadDeadline/blocking-store
+--- PASS: TestDaemonReadDeadline (0.43s)
+    --- PASS: TestDaemonReadDeadline/normal-deadline-answers-200 (0.00s)
+    --- PASS: TestDaemonReadDeadline/real-store-expired-deadline (0.00s)
+    --- PASS: TestDaemonReadDeadline/blocking-store (0.42s)
+=== RUN   TestWorkbenchReadDeadline
+=== RUN   TestWorkbenchReadDeadline/normal-deadline-answers-200
+=== RUN   TestWorkbenchReadDeadline/real-store-expired-deadline
+=== RUN   TestWorkbenchReadDeadline/blocking-store
+--- PASS: TestWorkbenchReadDeadline (0.09s)
+    --- PASS: TestWorkbenchReadDeadline/normal-deadline-answers-200 (0.02s)
+    --- PASS: TestWorkbenchReadDeadline/real-store-expired-deadline (0.01s)
+    --- PASS: TestWorkbenchReadDeadline/blocking-store (0.06s)
+=== RUN   TestDaemonReadDisconnect
+--- PASS: TestDaemonReadDisconnect (0.02s)
+=== RUN   TestReadCtxCancelledAfterHandler
+--- PASS: TestReadCtxCancelledAfterHandler (0.01s)
+=== RUN   TestTimeoutStatusMirrorsSketch
+--- PASS: TestTimeoutStatusMirrorsSketch (0.00s)
+=== RUN   TestInternalErrorsAreSanitized
+=== RUN   TestInternalErrorsAreSanitized/error-log-defaults-to-stderr
+=== RUN   TestInternalErrorsAreSanitized/read-routes
+=== RUN   TestInternalErrorsAreSanitized/commit-route
+--- PASS: TestInternalErrorsAreSanitized (0.01s)
+    --- PASS: TestInternalErrorsAreSanitized/error-log-defaults-to-stderr (0.00s)
+    --- PASS: TestInternalErrorsAreSanitized/read-routes (0.00s)
+    --- PASS: TestInternalErrorsAreSanitized/commit-route (0.00s)
+=== RUN   TestExpiredReadDeadlineExpiresAtConstruction
+--- PASS: TestExpiredReadDeadlineExpiresAtConstruction (0.00s)
+=== RUN   TestPublishedTransitionsAppearOnAgentCard
+--- PASS: TestPublishedTransitionsAppearOnAgentCard (0.16s)
+=== RUN   TestPublisherRefusalKeepsCardEmpty
+--- PASS: TestPublisherRefusalKeepsCardEmpty (0.11s)
+=== RUN   TestEpochRefusalKeepsCardUnchanged
+--- PASS: TestEpochRefusalKeepsCardUnchanged (0.13s)
+=== RUN   TestEpochTwinInterpretersBothListedOnCard
+--- PASS: TestEpochTwinInterpretersBothListedOnCard (0.34s)
+=== RUN   TestFrozenV1RouteTableMatchesMux
+--- PASS: TestFrozenV1RouteTableMatchesMux (0.00s)
+=== RUN   TestSessionMiddleware_AbsentHeader
+--- PASS: TestSessionMiddleware_AbsentHeader (0.01s)
+=== RUN   TestSessionMiddleware_MalformedHeader
+--- PASS: TestSessionMiddleware_MalformedHeader (0.01s)
+=== RUN   TestSessionMiddleware_UnknownToken
+--- PASS: TestSessionMiddleware_UnknownToken (0.00s)
+=== RUN   TestSessionMiddleware_ExpiredAndRevokedIsDistinct
+--- PASS: TestSessionMiddleware_ExpiredAndRevokedIsDistinct (0.00s)
+=== RUN   TestSessionMiddleware_NoAlternateHeaderFallback
+--- PASS: TestSessionMiddleware_NoAlternateHeaderFallback (0.00s)
+=== RUN   TestSessionMiddleware_SuccessReachesHandler
+--- PASS: TestSessionMiddleware_SuccessReachesHandler (0.00s)
+=== RUN   TestHandleCommit_DirectCallWithoutBindingFailsClosed
+--- PASS: TestHandleCommit_DirectCallWithoutBindingFailsClosed (0.00s)
+=== RUN   TestStartupBudgetQuarantinesPostCutoffBootstrap
+--- PASS: TestStartupBudgetQuarantinesPostCutoffBootstrap (0.12s)
+=== RUN   TestStartupBudgetHeldConnectionSettles
+--- PASS: TestStartupBudgetHeldConnectionSettles (0.15s)
+=== RUN   TestMeasureStartup
+    startup_measure_test.go:17: set WORLD_BOUND_MEASURE=1 to measure
+--- SKIP: TestMeasureStartup (0.00s)
+=== RUN   TestValueDemo_AnswersMatchRecord
+--- PASS: TestValueDemo_AnswersMatchRecord (0.03s)
+=== RUN   TestValueDemo_EvidenceChainComplete
+--- PASS: TestValueDemo_EvidenceChainComplete (0.01s)
+=== RUN   TestWorkbenchCommittedByEdges
+=== RUN   TestWorkbenchCommittedByEdges/none
+=== RUN   TestWorkbenchCommittedByEdges/available
+=== RUN   TestWorkbenchCommittedByEdges/missing-entry
+=== RUN   TestWorkbenchCommittedByEdges/read-error
+ailang-worldd: internal error: GET /workbench: private commit read detail
+=== RUN   TestWorkbenchCommittedByEdges/membership-error
+ailang-worldd: internal error: GET /workbench: private table detail
+=== RUN   TestWorkbenchCommittedByEdges/deadline
+=== RUN   TestWorkbenchCommittedByEdges/max-index
+--- PASS: TestWorkbenchCommittedByEdges (0.04s)
+    --- PASS: TestWorkbenchCommittedByEdges/none (0.01s)
+    --- PASS: TestWorkbenchCommittedByEdges/available (0.01s)
+    --- PASS: TestWorkbenchCommittedByEdges/missing-entry (0.00s)
+    --- PASS: TestWorkbenchCommittedByEdges/read-error (0.00s)
+    --- PASS: TestWorkbenchCommittedByEdges/membership-error (0.00s)
+    --- PASS: TestWorkbenchCommittedByEdges/deadline (0.00s)
+    --- PASS: TestWorkbenchCommittedByEdges/max-index (0.01s)
+=== RUN   TestWorkbenchCommitPaging
+=== RUN   TestWorkbenchCommitPaging/0
+=== RUN   TestWorkbenchCommitPaging/100
+=== RUN   TestWorkbenchCommitPaging/101
+=== RUN   TestWorkbenchCommitPaging/continuation
+=== RUN   TestWorkbenchCommitPaging/cursor-coexistence
+--- PASS: TestWorkbenchCommitPaging (0.05s)
+    --- PASS: TestWorkbenchCommitPaging/0 (0.01s)
+    --- PASS: TestWorkbenchCommitPaging/100 (0.01s)
+    --- PASS: TestWorkbenchCommitPaging/101 (0.01s)
+    --- PASS: TestWorkbenchCommitPaging/continuation (0.01s)
+    --- PASS: TestWorkbenchCommitPaging/cursor-coexistence (0.02s)
+=== RUN   TestWorkbenchCommitGrammar
+--- PASS: TestWorkbenchCommitGrammar (0.01s)
+=== RUN   TestWorkbenchCommitWalk
+    workbench_commits_test.go:298: question=Which entry carried the transition body? answer=[0] refs=object sha256:c73faf16af3d16a719d2add7d8fd9ea5e043a90533ff9275bf9517f79f506382 transitions [sha256:c73faf16af3d16a719d2add7d8fd9ea5e043a90533ff9275bf9517f79f506382 sha256:6ef28ed5fce55343799a40a8eef4f73cc21e87ba495d85153d65ce3fc9004d25 sha256:56108f7b5b2a1d322b170bafbee04f8503bb607bc7f66119e4ccb532022ff8ac] statuses=object 200 followed [200 200] elapsed=5.748292ms
+    workbench_commits_test.go:298: question=Which entries carried the identical state object? answer=[0 1 2] refs=object sha256:9dd01e883233ece853e57e53fdbbe70e4bb700d9eaa3b2deb38f4708b42b6998 transitions [sha256:c73faf16af3d16a719d2add7d8fd9ea5e043a90533ff9275bf9517f79f506382 sha256:6ef28ed5fce55343799a40a8eef4f73cc21e87ba495d85153d65ce3fc9004d25 sha256:56108f7b5b2a1d322b170bafbee04f8503bb607bc7f66119e4ccb532022ff8ac] statuses=object 200 followed [200 200 200 200 200 200] elapsed=7.494959ms
+    workbench_commits_test.go:298: question=Which entry carried the interpreter object? answer=[0] refs=object sha256:a1c69e2f2127845afc180c2ef6c814b91fe4446cb222396487fb571c34d44fdb transitions [sha256:c73faf16af3d16a719d2add7d8fd9ea5e043a90533ff9275bf9517f79f506382 sha256:6ef28ed5fce55343799a40a8eef4f73cc21e87ba495d85153d65ce3fc9004d25 sha256:56108f7b5b2a1d322b170bafbee04f8503bb607bc7f66119e4ccb532022ff8ac] statuses=object 200 followed [200 200] elapsed=8.30075ms
+--- PASS: TestWorkbenchCommitWalk (0.01s)
+=== RUN   TestWorkbenchReferenceCursor
+=== RUN   TestWorkbenchReferenceCursor/round-trip
+=== RUN   TestWorkbenchReferenceCursor/round-trip#01
+=== RUN   TestWorkbenchReferenceCursor/round-trip#02
+=== RUN   TestWorkbenchReferenceCursor/duplicate
+=== RUN   TestWorkbenchReferenceCursor/unknown
+=== RUN   TestWorkbenchReferenceCursor/leading-zero
+=== RUN   TestWorkbenchReferenceCursor/negative
+=== RUN   TestWorkbenchReferenceCursor/hash
+=== RUN   TestWorkbenchReferenceCursor/trailing
+=== RUN   TestWorkbenchReferenceCursor/version
+=== RUN   TestWorkbenchReferenceCursor/cap
+--- PASS: TestWorkbenchReferenceCursor (0.00s)
+    --- PASS: TestWorkbenchReferenceCursor/round-trip (0.00s)
+    --- PASS: TestWorkbenchReferenceCursor/round-trip#01 (0.00s)
+    --- PASS: TestWorkbenchReferenceCursor/round-trip#02 (0.00s)
+    --- PASS: TestWorkbenchReferenceCursor/duplicate (0.00s)
+    --- PASS: TestWorkbenchReferenceCursor/unknown (0.00s)
+    --- PASS: TestWorkbenchReferenceCursor/leading-zero (0.00s)
+    --- PASS: TestWorkbenchReferenceCursor/negative (0.00s)
+    --- PASS: TestWorkbenchReferenceCursor/hash (0.00s)
+    --- PASS: TestWorkbenchReferenceCursor/trailing (0.00s)
+    --- PASS: TestWorkbenchReferenceCursor/version (0.00s)
+    --- PASS: TestWorkbenchReferenceCursor/cap (0.00s)
+=== RUN   TestWorkbenchReferenceFirstPage
+=== RUN   TestWorkbenchReferenceFirstPage/0
+=== RUN   TestWorkbenchReferenceFirstPage/1
+=== RUN   TestWorkbenchReferenceFirstPage/100
+=== RUN   TestWorkbenchReferenceFirstPage/101
+--- PASS: TestWorkbenchReferenceFirstPage (0.02s)
+    --- PASS: TestWorkbenchReferenceFirstPage/0 (0.00s)
+    --- PASS: TestWorkbenchReferenceFirstPage/1 (0.00s)
+    --- PASS: TestWorkbenchReferenceFirstPage/100 (0.01s)
+    --- PASS: TestWorkbenchReferenceFirstPage/101 (0.01s)
+=== RUN   TestWorkbenchMissingReferenceSource
+=== RUN   TestWorkbenchMissingReferenceSource/log
+=== RUN   TestWorkbenchMissingReferenceSource/world
+--- PASS: TestWorkbenchMissingReferenceSource (0.01s)
+    --- PASS: TestWorkbenchMissingReferenceSource/log (0.00s)
+    --- PASS: TestWorkbenchMissingReferenceSource/world (0.00s)
+=== RUN   TestWorkbenchReferenceMismatch
+ailang-worldd: internal error: GET /workbench: reference source relation mismatch
+--- PASS: TestWorkbenchReferenceMismatch (0.00s)
+=== RUN   TestWorkbenchReferenceUnavailable
+--- PASS: TestWorkbenchReferenceUnavailable (0.00s)
+=== RUN   TestWorkbenchReferenceCancellation
+--- PASS: TestWorkbenchReferenceCancellation (0.00s)
+=== RUN   TestWorkbenchReferenceGrammar
+--- PASS: TestWorkbenchReferenceGrammar (0.00s)
+=== RUN   TestWorkbenchReferencePaging
+=== RUN   TestWorkbenchReferencePaging/100
+=== RUN   TestWorkbenchReferencePaging/101
+=== RUN   TestWorkbenchReferencePaging/501
+=== RUN   TestWorkbenchReferencePaging/no-skipped-lookahead
+--- PASS: TestWorkbenchReferencePaging (0.05s)
+    --- PASS: TestWorkbenchReferencePaging/100 (0.01s)
+    --- PASS: TestWorkbenchReferencePaging/101 (0.01s)
+    --- PASS: TestWorkbenchReferencePaging/501 (0.02s)
+    --- PASS: TestWorkbenchReferencePaging/no-skipped-lookahead (0.01s)
+=== RUN   TestWorkbenchReferenceWalk
+    workbench_references_test.go:363: question=Which entry references incident/row103/transition, and what transition body does that entry name?
+    workbench_references_test.go:364: answer=entry 0 names transition body sha256:a11fb6eaaf09a67231963986af47d2254e825e41b79cd50ca812a02b9c1069ef with payload "payload-row103-0"
+    workbench_references_test.go:365: refs=object sha256:a11fb6eaaf09a67231963986af47d2254e825e41b79cd50ca812a02b9c1069ef; entry 0; interpreter sha256:a1c69e2f2127845afc180c2ef6c814b91fe4446cb222396487fb571c34d44fdb (3 entries); state sha256:9dd01e883233ece853e57e53fdbbe70e4bb700d9eaa3b2deb38f4708b42b6998 (worlds [sha256:d085344fa9cfc5b9b395d9a0c0433266f91636c782cb3634b48e58d7c69e6323 sha256:20a5ed59b0b1941effda72fd63dcd60cd8cbbb72372e90ff6fa999c2703ec674 sha256:430b69e7d665f40c84b9f5ac36bd96baff87e89f0fe642771fcbd5a7754240d4])
+    workbench_references_test.go:366: statuses=object 200, entry 200, payload 200, interpreter 200, state 200
+    workbench_references_test.go:367: elapsed=6.899167ms
+    workbench_references_test.go:368: committedBy answer=entry 0 carried transition sha256:a11fb6eaaf09a67231963986af47d2254e825e41b79cd50ca812a02b9c1069ef; registry, journal and object-interface inbound references outside scope
+--- PASS: TestWorkbenchReferenceWalk (0.01s)
+=== RUN   TestWorkbenchReferenceMaxIndexLink
+--- PASS: TestWorkbenchReferenceMaxIndexLink (0.01s)
+=== RUN   TestWorkbenchRouteIsReadOnly
+=== RUN   TestWorkbenchRouteIsReadOnly/GET
+=== RUN   TestWorkbenchRouteIsReadOnly/POST
+=== RUN   TestWorkbenchRouteIsReadOnly/PUT
+=== RUN   TestWorkbenchRouteIsReadOnly/DELETE
+=== RUN   TestWorkbenchRouteIsReadOnly/PATCH
+--- PASS: TestWorkbenchRouteIsReadOnly (0.00s)
+    --- PASS: TestWorkbenchRouteIsReadOnly/GET (0.00s)
+    --- PASS: TestWorkbenchRouteIsReadOnly/POST (0.00s)
+    --- PASS: TestWorkbenchRouteIsReadOnly/PUT (0.00s)
+    --- PASS: TestWorkbenchRouteIsReadOnly/DELETE (0.00s)
+    --- PASS: TestWorkbenchRouteIsReadOnly/PATCH (0.00s)
+=== RUN   TestWorkbenchSecurityHeaders
+=== RUN   TestWorkbenchSecurityHeaders/success
+=== RUN   TestWorkbenchSecurityHeaders/bad_request
+--- PASS: TestWorkbenchSecurityHeaders (0.00s)
+    --- PASS: TestWorkbenchSecurityHeaders/success (0.00s)
+    --- PASS: TestWorkbenchSecurityHeaders/bad_request (0.00s)
+=== RUN   TestWorkbenchRendersSeededWorldAndTimeline
+--- PASS: TestWorkbenchRendersSeededWorldAndTimeline (0.00s)
+=== RUN   TestWorkbenchRefusalBranches
+=== RUN   TestWorkbenchRefusalBranches/unknown-parameter
+=== RUN   TestWorkbenchRefusalBranches/duplicate-parameter
+=== RUN   TestWorkbenchRefusalBranches/unsupported-combination
+=== RUN   TestWorkbenchRefusalBranches/unsupported-pair-world-from
+=== RUN   TestWorkbenchRefusalBranches/unsupported-pair-world-payload
+=== RUN   TestWorkbenchRefusalBranches/unsupported-triple-world-object-payload
+=== RUN   TestWorkbenchRefusalBranches/malformed-payload
+=== RUN   TestWorkbenchRefusalBranches/malformed-world
+=== RUN   TestWorkbenchRefusalBranches/absent-world
+=== RUN   TestWorkbenchRefusalBranches/malformed-object
+=== RUN   TestWorkbenchRefusalBranches/absent-object
+=== RUN   TestWorkbenchRefusalBranches/negative-from
+=== RUN   TestWorkbenchRefusalBranches/malformed-entry
+=== RUN   TestWorkbenchRefusalBranches/absent-entry
+=== RUN   TestWorkbenchRefusalBranches/from-overflow
+=== RUN   TestWorkbenchRefusalBranches/store-error
+=== RUN   TestWorkbenchRefusalBranches/accepted-keys-return-200
+--- PASS: TestWorkbenchRefusalBranches (0.01s)
+    --- PASS: TestWorkbenchRefusalBranches/unknown-parameter (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/duplicate-parameter (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/unsupported-combination (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/unsupported-pair-world-from (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/unsupported-pair-world-payload (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/unsupported-triple-world-object-payload (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/malformed-payload (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/malformed-world (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/absent-world (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/malformed-object (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/absent-object (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/negative-from (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/malformed-entry (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/absent-entry (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/from-overflow (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/store-error (0.00s)
+    --- PASS: TestWorkbenchRefusalBranches/accepted-keys-return-200 (0.00s)
+=== RUN   TestSupportedWorkbenchQueryTruthTable
+=== RUN   TestSupportedWorkbenchQueryTruthTable/none
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry
+=== RUN   TestSupportedWorkbenchQueryTruthTable/from
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+from
+=== RUN   TestSupportedWorkbenchQueryTruthTable/object
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+object
+=== RUN   TestSupportedWorkbenchQueryTruthTable/from+object
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+from+object
+=== RUN   TestSupportedWorkbenchQueryTruthTable/payload
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+payload
+=== RUN   TestSupportedWorkbenchQueryTruthTable/from+payload
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+from+payload
+=== RUN   TestSupportedWorkbenchQueryTruthTable/object+payload
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+object+payload
+=== RUN   TestSupportedWorkbenchQueryTruthTable/from+object+payload
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+from+object+payload
+=== RUN   TestSupportedWorkbenchQueryTruthTable/world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/from+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+from+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/object+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+object+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/from+object+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+from+object+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/payload+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+payload+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/from+payload+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+from+payload+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/object+payload+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+object+payload+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/from+object+payload+world
+=== RUN   TestSupportedWorkbenchQueryTruthTable/entry+from+object+payload+world
+--- PASS: TestSupportedWorkbenchQueryTruthTable (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/none (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/from (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+from (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/object (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+object (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/from+object (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+from+object (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/payload (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+payload (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/from+payload (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+from+payload (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/object+payload (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+object+payload (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/from+object+payload (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+from+object+payload (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/from+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+from+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/object+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+object+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/from+object+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+from+object+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/payload+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+payload+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/from+payload+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+from+payload+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/object+payload+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+object+payload+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/from+object+payload+world (0.00s)
+    --- PASS: TestSupportedWorkbenchQueryTruthTable/entry+from+object+payload+world (0.00s)
+=== RUN   TestWorkbenchPayloadPreviewBound
+=== RUN   TestWorkbenchPayloadPreviewBound/default-off
+=== RUN   TestWorkbenchPayloadPreviewBound/opt-in
+=== RUN   TestWorkbenchPayloadPreviewBound/small-renders-in-full
+=== RUN   TestWorkbenchPayloadPreviewBound/oversize
+--- PASS: TestWorkbenchPayloadPreviewBound (0.02s)
+    --- PASS: TestWorkbenchPayloadPreviewBound/default-off (0.00s)
+    --- PASS: TestWorkbenchPayloadPreviewBound/opt-in (0.00s)
+    --- PASS: TestWorkbenchPayloadPreviewBound/small-renders-in-full (0.00s)
+    --- PASS: TestWorkbenchPayloadPreviewBound/oversize (0.00s)
+=== RUN   TestWorkbenchTimelineBound
+--- PASS: TestWorkbenchTimelineBound (0.05s)
+=== RUN   TestWorkbenchWorldPane
+=== RUN   TestWorkbenchWorldPane/missing-root
+=== RUN   TestWorkbenchWorldPane/stored-root
+=== RUN   TestWorkbenchWorldPane/explicit-world
+=== RUN   TestWorkbenchWorldPane/no-selected-world
+=== RUN   TestWorkbenchWorldPane/store-error/internal
+=== RUN   TestWorkbenchWorldPane/store-error/timeout
+--- PASS: TestWorkbenchWorldPane (0.03s)
+    --- PASS: TestWorkbenchWorldPane/missing-root (0.00s)
+    --- PASS: TestWorkbenchWorldPane/stored-root (0.00s)
+    --- PASS: TestWorkbenchWorldPane/explicit-world (0.00s)
+    --- PASS: TestWorkbenchWorldPane/no-selected-world (0.00s)
+    --- PASS: TestWorkbenchWorldPane/store-error/internal (0.00s)
+    --- PASS: TestWorkbenchWorldPane/store-error/timeout (0.00s)
+=== RUN   TestWorkbenchSelectedEntry
+=== RUN   TestWorkbenchSelectedEntry/stored-edge-links
+=== RUN   TestWorkbenchSelectedEntry/unstored-edge-unavailable
+=== RUN   TestWorkbenchSelectedEntry/row-select-link
+=== RUN   TestWorkbenchSelectedEntry/object-store-error
+--- PASS: TestWorkbenchSelectedEntry (0.00s)
+    --- PASS: TestWorkbenchSelectedEntry/stored-edge-links (0.00s)
+    --- PASS: TestWorkbenchSelectedEntry/unstored-edge-unavailable (0.00s)
+    --- PASS: TestWorkbenchSelectedEntry/row-select-link (0.00s)
+    --- PASS: TestWorkbenchSelectedEntry/object-store-error (0.00s)
+=== RUN   TestWorkbenchTimelinePaging
+=== RUN   TestWorkbenchTimelinePaging/head-page-has-next
+=== RUN   TestWorkbenchTimelinePaging/last-page-has-prev-no-next
+=== RUN   TestWorkbenchTimelinePaging/exactly-limit-no-next
+=== RUN   TestWorkbenchTimelinePaging/emitted-links-resolve
+--- PASS: TestWorkbenchTimelinePaging (0.64s)
+    --- PASS: TestWorkbenchTimelinePaging/head-page-has-next (0.00s)
+    --- PASS: TestWorkbenchTimelinePaging/last-page-has-prev-no-next (0.00s)
+    --- PASS: TestWorkbenchTimelinePaging/exactly-limit-no-next (0.00s)
+    --- PASS: TestWorkbenchTimelinePaging/emitted-links-resolve (0.59s)
+=== RUN   TestWorkbenchNextLinkOverflowGuard
+--- PASS: TestWorkbenchNextLinkOverflowGuard (0.01s)
+=== RUN   TestWorkbenchPagingProbeStoreError
+=== RUN   TestWorkbenchPagingProbeStoreError/next-probe
+=== RUN   TestWorkbenchPagingProbeStoreError/prev-probe
+--- PASS: TestWorkbenchPagingProbeStoreError (0.06s)
+    --- PASS: TestWorkbenchPagingProbeStoreError/next-probe (0.00s)
+    --- PASS: TestWorkbenchPagingProbeStoreError/prev-probe (0.00s)
+=== RUN   TestWorkbenchObjectGrade
+=== RUN   TestWorkbenchObjectGrade/test-object
+=== RUN   TestWorkbenchObjectGrade/test-object-payload
+=== RUN   TestWorkbenchObjectGrade/proof-labelled
+=== RUN   TestWorkbenchObjectGrade/proof-labelled-payload
+=== RUN   TestWorkbenchObjectGrade/registry
+=== RUN   TestWorkbenchObjectGrade/registry-payload
+--- PASS: TestWorkbenchObjectGrade (0.01s)
+    --- PASS: TestWorkbenchObjectGrade/test-object (0.00s)
+    --- PASS: TestWorkbenchObjectGrade/test-object-payload (0.00s)
+    --- PASS: TestWorkbenchObjectGrade/proof-labelled (0.00s)
+    --- PASS: TestWorkbenchObjectGrade/proof-labelled-payload (0.00s)
+    --- PASS: TestWorkbenchObjectGrade/registry (0.00s)
+    --- PASS: TestWorkbenchObjectGrade/registry-payload (0.00s)
+=== RUN   TestWorkbenchObjectProvenanceWalk
+=== RUN   TestWorkbenchObjectProvenanceWalk/interface-stored-link
+=== RUN   TestWorkbenchObjectProvenanceWalk/interface-unstored-unavailable
+=== RUN   TestWorkbenchObjectProvenanceWalk/named-stops
+=== RUN   TestWorkbenchObjectProvenanceWalk/edge-order
+=== RUN   TestWorkbenchObjectProvenanceWalk/never-blank
+=== RUN   TestWorkbenchObjectProvenanceWalk/interface-store-error
+--- PASS: TestWorkbenchObjectProvenanceWalk (0.01s)
+    --- PASS: TestWorkbenchObjectProvenanceWalk/interface-stored-link (0.00s)
+    --- PASS: TestWorkbenchObjectProvenanceWalk/interface-unstored-unavailable (0.00s)
+    --- PASS: TestWorkbenchObjectProvenanceWalk/named-stops (0.00s)
+    --- PASS: TestWorkbenchObjectProvenanceWalk/edge-order (0.00s)
+    --- PASS: TestWorkbenchObjectProvenanceWalk/never-blank (0.00s)
+    --- PASS: TestWorkbenchObjectProvenanceWalk/interface-store-error (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	13.533s

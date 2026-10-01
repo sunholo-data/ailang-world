@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "ailang",
+    "mission",
+    "quota",
+    "-bucket",
+    "codex",
+    "-json"
+  ],
+  "rc": 0,
+  "seconds": 6.487817249959335,
+  "stderr": "",
+  "scope": "fresh final evaluator pre-spawn; no reset credit spent"
+}

@@ -1,0 +1,1 @@
+{"files": {"host/projection/mcp.go": {"mutant": "e8d31a79a772713b859390cb0a918c78dec8536baffeab7538b89dbd4cb4777a", "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"}}, "broad_failed_tests": ["TestMCPInvokeCancelAfterAdmission", "TestMCPInvokeDeadlineFreesSlot", "TestMCPInvokeCanceledBeforeMint"], "selected_test": "TestMCPInvokeDeadlineFreesSlot"}

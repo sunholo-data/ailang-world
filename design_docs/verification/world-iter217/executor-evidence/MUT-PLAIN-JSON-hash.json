@@ -1,0 +1,1 @@
+{"files": {"host/projection/mcp_conformance_test.go": {"mutant": "70eba85f1095ecdb0e2717665c5129070d972842660c5617bda6b1bfb7fd2a03", "restored": "8ffd9f8fd460a180db4bbbe2bf12fd7277c514bc5ec63ea41bc59f46024fd3f8"}}, "selected_test": "TestMCPWireConformance", "selected_failed_tests": ["TestMCPWireConformance"], "kind": "test response decorator", "broad_execution": false}

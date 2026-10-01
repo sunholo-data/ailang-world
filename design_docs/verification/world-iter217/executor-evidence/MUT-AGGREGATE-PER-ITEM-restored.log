@@ -1,0 +1,7 @@
+=== RUN   TestMCPPostBudgetProductionConstants
+=== RUN   TestMCPPostBudgetProductionConstants/batch
+    mcp_budget_test.go:248: production clocks3/10/20/30 elapsed=20.003370875s write=20.003010667s resolverHeld=2.802090416s toolsHeld=9.802039167s N/K/J=3/2/2 admissions=3 commits=1
+--- PASS: TestMCPPostBudgetProductionConstants (20.81s)
+    --- PASS: TestMCPPostBudgetProductionConstants/batch (20.81s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	21.160s

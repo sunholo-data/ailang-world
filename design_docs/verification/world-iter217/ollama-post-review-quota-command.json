@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "ailang",
+    "mission",
+    "quota",
+    "-bucket",
+    "ollama",
+    "-json"
+  ],
+  "rc": 0,
+  "stderr": "",
+  "scope": "fresh pi quota before recording role output/Gate4"
+}

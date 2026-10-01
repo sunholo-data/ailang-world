@@ -1,0 +1,135 @@
+{
+  "candidate": "741e3c371de3e558243e4ee77a09eeaddbac50a3",
+  "round": 3,
+  "final": true,
+  "started_utc": "2026-10-02T00:19:00+00:00",
+  "judge_model": "pi:ollama/deepseek-v4-pro:0813-cloud",
+  "generator_model": "gpt-6.1-sol",
+  "cross_vendor_fallback": true,
+  "native_token_usage": null,
+  "result": "fail",
+  "score": 59,
+  "score_exact": 58.54545454545455,
+  "score_breakdown": {
+    "tests": 0,
+    "lint": 10,
+    "acceptance": 24.545454545454547,
+    "code_quality": 0,
+    "documentation": 15,
+    "design_fidelity": 9
+  },
+  "acceptance": {
+    "total_criteria": 22,
+    "met": 18,
+    "features": {
+      "M108A1_TYPED_ABSENCE": {"passes": true, "criteria": 5},
+      "M108A2_CLASSIFIED_PROJECTION": {"passes": true, "criteria": 6},
+      "M108B_DEP_NAMES": {"passes": true, "criteria": 3},
+      "M108C_ADAPTERS": {"passes": true, "criteria": 4},
+      "M108D_CONFORMANCE": {"passes": null, "criteria": 4}
+    }
+  },
+  "controller_marker": {
+    "terminal": true,
+    "candidate_sha": "741e3c371de3e558243e4ee77a09eeaddbac50a3",
+    "verify_ail_rc": 0,
+    "verify_go_rc": 1,
+    "runtime_allowed_now": true,
+    "root_runtime_all_terminal": true
+  },
+  "root_profiles": [
+    {"argv": ["bash", "scripts/verify_ail.sh"], "rc": 0, "seconds": 26.17},
+    {"argv": ["bash", "scripts/verify_go.sh"], "rc": 1, "seconds": 243.77}
+  ],
+  "blockers": [
+    {
+      "id": "BLOCK-1",
+      "hard": true,
+      "summary": "Full unchanged Go profile rc1: go test ./... -count=1 fails five timing-bound tests across four packages (inherited; none touched by sprint).",
+      "failures": [
+        {"test": "TestCLIRealSubprocessEpisode", "file": "cmd/ailang-worldd/cli_test.go", "line": 266, "msg": "/v1/commit HTTP 503 commit deadline (3s) exceeded"},
+        {"test": "TestF5WallClockTimeoutHasElapsedBound", "file": "host/capsule/capsule_test.go", "line": 230, "msg": "timeout returned after 2.092940875s, want <= 2s"},
+        {"test": "TestDispatchDurableDeadline/Commit", "file": "host/coordinator/coordinator_test.go", "line": 624, "msg": "request ran past deadline: 2.504338375s"},
+        {"test": "TestCommitBudgetAndUncertainReconcile/ii_A_landed_uncertain_then_B_on_top", "file": "host/daemon/commit_budget_test.go", "line": 209, "msg": "commit B status 503 commit deadline (3s) exceeded"},
+        {"test": "host/daemon cascade", "file": "-", "line": null, "msg": "coordinator unavailable / sql database closed during teardown"}
+      ],
+      "inherited": true,
+      "proposed_fix": "Test-infrastructure change outside M108 production scope: run plain full profile with -p 1, or widen pre-existing wall-clock/commit margins, or run on a load-isolated runner. Not a production-constant relaxation and not owned by this sprint."
+    }
+  ],
+  "repair_scope": {
+    "diff_598_to_741e3c3": {
+      "production_code": ["host/projection/mcp_bounds_test.go"],
+      "metadata_only": true,
+      "go_mod_go_sum_unchanged": true
+    },
+    "target_test": "TestMCPInvokeDeadlineFreesSlot",
+    "change": "initialDelayResolver (80ms first call only) + 300ms aggregate + 2s callback + explicit returns/remaining counters + same-handler 3s recovery budget"
+  },
+  "commands": [
+    {
+      "name": "identity",
+      "cmd": ["git", "rev-parse", "HEAD"],
+      "output": "741e3c371de3e558243e4ee77a09eeaddbac50a3",
+      "rc": 0
+    },
+    {
+      "name": "slot-normal10",
+      "cmd": ["go", "test", "./host/projection", "-run", "^TestMCPInvokeDeadlineFreesSlot$", "-count=10", "-v", "-timeout=180s"],
+      "rc": 0,
+      "env": {"AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang", "GODEBUG": "unset"},
+      "note": "10/10 PASS; each run remaining~216ms entered=2 return-path=2 resolver=2"
+    },
+    {
+      "name": "slot-race10",
+      "cmd": ["go", "test", "./host/projection", "-run", "^TestMCPInvokeDeadlineFreesSlot$", "-count=10", "-race", "-timeout=180s"],
+      "rc": 0,
+      "env": {"AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang", "GODEBUG": "unset"},
+      "note": "no data race"
+    },
+    {
+      "name": "socket-normal3",
+      "cmd": ["go", "test", "./host/daemon", "-run", "^TestA2AResendAfterWriteTimeout$", "-count=3", "-v", "-timeout=90s"],
+      "rc": "EPERM",
+      "note": "sandbox forbids TCP bind (listen tcp6 [::1]:0: operation not permitted); environment restriction, not product defect; rely on root log"
+    },
+    {
+      "name": "capsule-isolated",
+      "cmd": ["go", "test", "./host/capsule", "-run", "^TestF5WallClockTimeoutHasElapsedBound$", "-count=3", "-v", "-timeout=60s"],
+      "rc": 0,
+      "note": "passes in isolation; full-profile failure is load-induced"
+    },
+    {
+      "name": "coordinator-isolated",
+      "cmd": ["go", "test", "./host/coordinator", "-run", "^TestDispatchDurableDeadline$", "-count=3", "-v", "-timeout=60s"],
+      "rc": 0,
+      "note": "passes in isolation"
+    },
+    {
+      "name": "vet",
+      "cmd": ["go", "vet", "./host/projection/"],
+      "rc": 0
+    },
+    {
+      "name": "gofmt",
+      "cmd": ["gofmt", "-l", "host/projection/mcp_bounds_test.go"],
+      "rc": 0,
+      "note": "empty output (clean)"
+    }
+  ],
+  "nonblocking_findings": [
+    "host/projection/mcp.go:19 shared-handler 8-slot saturation / ninth-entry refusal-until-RETURN path remains queued coverage (verification 3n), not expanded.",
+    "Nil-coordinator refusal branch correct but unpinned (queued).",
+    "Design-doc header 'pending final normal profiles' slightly stale (profiles terminal, Go failed); wording only.",
+    "Slot recovery asserts resolver.calls==2; successful second run (entered=2/return-path=2) demonstrates released capacity."
+  ],
+  "disposition": {
+    "result": "fail",
+    "score": "59/100",
+    "round": 3,
+    "final": true,
+    "parked": true,
+    "no_fourth_judge": true,
+    "no_waiver": true
+  }
+}

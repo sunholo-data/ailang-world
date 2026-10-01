@@ -1,0 +1,4 @@
+=== RUN   TestMCPBoundsValidation
+--- PASS: TestMCPBoundsValidation (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.183s

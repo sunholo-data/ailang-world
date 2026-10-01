@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "-timeout=60s", "./host/daemon", "-run", "TestMCP(CrossSurfaceExactSet|AmbientExportsAbsent)$", "-v", "-count=1"], "rc": 0, "seconds": 5.620233417022973}

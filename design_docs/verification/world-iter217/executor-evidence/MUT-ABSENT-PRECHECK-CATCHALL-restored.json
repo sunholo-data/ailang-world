@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-run", "^TestAgentCard_AbsentPrecheckSnapshotFailure/store_error$", "-v", "-count=1", "-timeout=60s"], "rc": 0, "seconds": 0.7546035831328481}

@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/daemon", "-timeout=180s", "-v", "-count=1"], "rc": 1, "seconds": 139.64653175021522, "process_cap_seconds": 210, "diagnostic_godebug": "goindex=0"}

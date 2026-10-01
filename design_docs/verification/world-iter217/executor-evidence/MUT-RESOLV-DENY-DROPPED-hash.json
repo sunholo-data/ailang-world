@@ -1,0 +1,1 @@
+{"files": {"host/projection/mcp.go": {"mutant": "685bfaabebce3752ff3b85bac8f5f8f8f22e034e42e6799dcb5e5ff2b8dd6a11", "restored": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"}}, "broad_failed_tests": ["TestMCPDenialMatrix"], "selected_test": "TestMCPDenialMatrix"}

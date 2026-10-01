@@ -1,0 +1,639 @@
+SIGQUIT: quit
+PC=0x18ee6750c m=0 sigcode=0
+
+goroutine 0 gp=0x101ac1640 m=0 mp=0x101ac2f80 [idle]:
+runtime.pthread_cond_wait(0x101ac34e8, 0x101ac34a8)
+	runtime/sys_darwin.go:488 +0x20 fp=0x16efa6720 sp=0x16efa66f0 pc=0x100ec2750
+runtime.semasleep(0xffffffffffffffff)
+	runtime/os_darwin.go:77 +0x80 fp=0x16efa6780 sp=0x16efa6720 pc=0x100e9d5e0
+runtime.notesleep(0x101ac30d8)
+	runtime/lock_sema.go:62 +0xac fp=0x16efa67b0 sp=0x16efa6780 pc=0x100e73c9c
+runtime.mPark(...)
+	runtime/proc.go:1967
+runtime.stopm()
+	runtime/proc.go:3008 +0x84 fp=0x16efa67e0 sp=0x16efa67b0 pc=0x100ea7ce4
+runtime.findRunnable()
+	runtime/proc.go:3796 +0xffc fp=0x16efa69b0 sp=0x16efa67e0 pc=0x100ea9a6c
+runtime.schedule()
+	runtime/proc.go:4164 +0x90 fp=0x16efa69f0 sp=0x16efa69b0 pc=0x100eaade0
+runtime.park_m(0x6235159054a0)
+	runtime/proc.go:4304 +0x244 fp=0x16efa6a50 sp=0x16efa69f0 pc=0x100eab264
+runtime.mcall()
+	runtime/asm_arm64.s:339 +0x54 fp=0x16efa6a60 sp=0x16efa6a50 pc=0x100edda84
+
+goroutine 1 gp=0x6235155d01e0 m=nil [chan receive]:
+runtime.gopark(0x6235157ac7a8?, 0x101254a94?, 0x48?, 0xc7?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515c86700 sp=0x623515c866e0 pc=0x100ed80ec
+runtime.chanrecv(0x6235156ae3f0, 0x0, 0x1)
+	runtime/chan.go:667 +0x470 fp=0x623515c86780 sp=0x623515c86700 pc=0x100e6e0e0
+runtime.chanrecv1(0x623515607380?, 0x6235157acac0?)
+	runtime/chan.go:509 +0x14 fp=0x623515c867b0 sp=0x623515c86780 pc=0x100e6dc34
+cmd/go/internal/modload.loadFromRoots(0x6235156704e0, {0x101a3a680, 0x101ae9ac0}, {{{0x0, 0x0}, 0x623515769cb0, 0x0, 0x0, {0x0, 0x0}, ...}, ...})
+	cmd/go/internal/modload/load.go:1169 +0x42c fp=0x623515c86bf0 sp=0x623515c867b0 pc=0x101254a9c
+cmd/go/internal/modload.LoadPackages(0x6235156704e0, {0x101a3a680, 0x101ae9ac0}, {{0x0, 0x0}, 0x0, 0x0, 0x0, {0x0, 0x0}, ...}, ...)
+	cmd/go/internal/modload/load.go:372 +0x404 fp=0x623515c86f30 sp=0x623515c86bf0 pc=0x101250bc4
+cmd/go/internal/load.PackagesAndErrors(0x6235156704e0, {0x101a3a680?, 0x101ae9ac0?}, {0x0, 0x1, 0x0, 0x0, 0x0, 0x0}, {0x623515606fb0, ...})
+	cmd/go/internal/load/pkg.go:2929 +0x27c fp=0x623515c87210 sp=0x623515c86f30 pc=0x1012a055c
+cmd/go/internal/test.runTest({0x101a3a680, 0x101ae9ac0}, 0x101ab3b20, {0x6235155ee120, 0x6, 0x6})
+	cmd/go/internal/test/test.go:714 +0x398 fp=0x623515c87950 sp=0x623515c87210 pc=0x10138ac68
+main.invoke(0x101ab3b20, {0x6235155ee110, 0x7, 0x7})
+	cmd/go/main.go:340 +0x6d8 fp=0x623515c87ca0 sp=0x623515c87950 pc=0x1013adfd8
+main.main()
+	cmd/go/main.go:219 +0xd20 fp=0x623515c87f30 sp=0x623515c87ca0 pc=0x1013ad2a0
+runtime.main()
+	runtime/proc.go:290 +0x2b4 fp=0x623515c87fd0 sp=0x623515c87f30 pc=0x100ea2f64
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x623515c87fd0 sp=0x623515c87fd0 pc=0x100edfb34
+
+goroutine 2 gp=0x6235155d0780 m=nil [force gc (idle)]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x62351564cf90 sp=0x62351564cf70 pc=0x100ed80ec
+runtime.goparkunlock(...)
+	runtime/proc.go:468
+runtime.forcegchelper()
+	runtime/proc.go:375 +0xb4 fp=0x62351564cfd0 sp=0x62351564cf90 pc=0x100ea3284
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x62351564cfd0 sp=0x62351564cfd0 pc=0x100edfb34
+created by runtime.init.7 in goroutine 1
+	runtime/proc.go:363 +0x24
+
+goroutine 3 gp=0x6235155d0d20 m=nil [GC sweep wait]:
+runtime.gopark(0x1?, 0x0?, 0x0?, 0x0?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x62351564d770 sp=0x62351564d750 pc=0x100ed80ec
+runtime.goparkunlock(...)
+	runtime/proc.go:468
+runtime.bgsweep(0x623515604080)
+	runtime/mgcsweep.go:324 +0x178 fp=0x62351564d7b0 sp=0x62351564d770 pc=0x100e8e0e8
+runtime.gcenable.gowrap1()
+	runtime/mgc.go:214 +0x20 fp=0x62351564d7d0 sp=0x62351564d7b0 pc=0x100e7f500
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x62351564d7d0 sp=0x62351564d7d0 pc=0x100edfb34
+created by runtime.gcenable in goroutine 1
+	runtime/mgc.go:214 +0x6c
+
+goroutine 4 gp=0x6235155d0f00 m=nil [GC scavenge wait]:
+runtime.gopark(0x10be75?, 0xda975?, 0x0?, 0x0?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x62351564df60 sp=0x62351564df40 pc=0x100ed80ec
+runtime.goparkunlock(...)
+	runtime/proc.go:468
+runtime.(*scavengerState).park(0x101ac0b60)
+	runtime/mgcscavenge.go:425 +0x5c fp=0x62351564df90 sp=0x62351564df60 pc=0x100e8bbfc
+runtime.bgscavenge(0x623515604080)
+	runtime/mgcscavenge.go:658 +0xac fp=0x62351564dfb0 sp=0x62351564df90 pc=0x100e8c19c
+runtime.gcenable.gowrap2()
+	runtime/mgc.go:215 +0x20 fp=0x62351564dfd0 sp=0x62351564dfb0 pc=0x100e7f4c0
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x62351564dfd0 sp=0x62351564dfd0 pc=0x100edfb34
+created by runtime.gcenable in goroutine 1
+	runtime/mgc.go:215 +0xac
+
+goroutine 5 gp=0x6235155d14a0 m=nil [GOMAXPROCS updater (idle)]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x62351564e770 sp=0x62351564e750 pc=0x100ed80ec
+runtime.goparkunlock(...)
+	runtime/proc.go:468
+runtime.updateMaxProcsGoroutine()
+	runtime/proc.go:7095 +0xf4 fp=0x62351564e7d0 sp=0x62351564e770 pc=0x100eb1994
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x62351564e7d0 sp=0x62351564e7d0 pc=0x100edfb34
+created by runtime.defaultGOMAXPROCSUpdateEnable in goroutine 1
+	runtime/proc.go:7083 +0x48
+
+goroutine 6 gp=0x6235155d1680 m=nil [finalizer wait]:
+runtime.gopark(0x62351564c5b8?, 0x100fd2bcc?, 0xe0?, 0x26?, 0x32?)
+	runtime/proc.go:462 +0xbc fp=0x62351564c580 sp=0x62351564c560 pc=0x100ed80ec
+runtime.runFinalizers()
+	runtime/mfinal.go:210 +0x100 fp=0x62351564c7d0 sp=0x62351564c580 pc=0x100e7e520
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x62351564c7d0 sp=0x62351564c7d0 pc=0x100edfb34
+created by runtime.createfing in goroutine 1
+	runtime/mfinal.go:172 +0x78
+
+goroutine 7 gp=0x6235155d1860 m=nil [cleanup wait]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x62351564ef50 sp=0x62351564ef30 pc=0x100ed80ec
+runtime.goparkunlock(...)
+	runtime/proc.go:468
+runtime.(*cleanupQueue).dequeue(0x101ac1480)
+	runtime/mcleanup.go:522 +0x160 fp=0x62351564ef90 sp=0x62351564ef50 pc=0x100e7b4b0
+runtime.runCleanups()
+	runtime/mcleanup.go:718 +0x40 fp=0x62351564efd0 sp=0x62351564ef90 pc=0x100e7bc00
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x62351564efd0 sp=0x62351564efd0 pc=0x100edfb34
+created by runtime.(*cleanupQueue).createGs in goroutine 1
+	runtime/mcleanup.go:672 +0x108
+
+goroutine 24 gp=0x6235156852c0 m=9 mp=0x623515c00008 [syscall]:
+syscall.syscalln(0x100efae20, {0x62351560ad90, 0x3, 0x3})
+	runtime/sys_darwin.go:38 +0x20 fp=0x62351560ad60 sp=0x62351560ad10 pc=0x100edbf70
+syscall.syscall(0x623515887500?, 0x57?, 0x62351560ae88?, 0x10101c288?)
+	syscall/syscall_darwin.go:384 +0x24 fp=0x62351560adb0 sp=0x62351560ad60 pc=0x100ef9dd4
+syscall.Open({0x623515887500?, 0x100e7608c?}, 0x1000000, 0x0)
+	syscall/zsyscall_darwin_arm64.go:1162 +0x70 fp=0x62351560ae00 sp=0x62351560adb0 pc=0x100ef89a0
+os.open(...)
+	os/file_open_unix.go:15
+os.openFileNolog.func1(...)
+	os/file_unix.go:261
+os.ignoringEINTR(...)
+	os/file_posix.go:263
+os.openFileNolog({0x623515887500, 0x57}, 0x0, 0x0)
+	os/file_unix.go:260 +0xd4 fp=0x62351560ae60 sp=0x62351560ae00 pc=0x100f52784
+os.OpenFile({0x623515887500, 0x57}, 0x0, 0x0)
+	os/file.go:412 +0x40 fp=0x62351560ae90 sp=0x62351560ae60 pc=0x100f50900
+os.Open(...)
+	os/file.go:390
+cmd/go/internal/fsys.Open({0x623515887500, 0x57})
+	cmd/go/internal/fsys/fsys.go:573 +0xac fp=0x62351560af20 sp=0x62351560ae90 pc=0x10101c2ec
+cmd/go/internal/modindex.getFileInfo({0x623515c8c800, 0x3d}, {0x62351580c800, 0x19}, 0x623515916120)
+	cmd/go/internal/modindex/build.go:255 +0x418 fp=0x62351560b010 sp=0x62351560af20 pc=0x10121a708
+cmd/go/internal/modindex.importRaw({0x623515a88580, 0x39}, {0x623515c8c7fa, 0x3})
+	cmd/go/internal/modindex/scan.go:220 +0x314 fp=0x62351560b2a0 sp=0x62351560b010 pc=0x1012263c4
+cmd/go/internal/modindex.indexModule.func1({0x623515c8c7c0, 0x3d}, {0x101a3a840, 0x6235156f2780}, {0x0?, 0x0?})
+	cmd/go/internal/modindex/scan.go:72 +0xdc fp=0x62351560b350 sp=0x62351560b2a0 pc=0x101225bec
+cmd/go/internal/fsys.walkDir({0x623515c8c7c0, 0x3d}, {0x101a3a840, 0x6235156f2780}, 0x62351560b578)
+	cmd/go/internal/fsys/walk.go:30 +0x44 fp=0x62351560b410 sp=0x62351560b350 pc=0x10101d954
+cmd/go/internal/fsys.walkDir({0x623515a88680, 0x3a}, {0x101a3a878, 0x623515a416f0}, 0x62351560b578)
+	cmd/go/internal/fsys/walk.go:52 +0x204 fp=0x62351560b4d0 sp=0x62351560b410 pc=0x10101db14
+cmd/go/internal/fsys.WalkDir({0x623515a88680, 0x3a}, 0x623515c17578)
+	cmd/go/internal/fsys/walk.go:20 +0x74 fp=0x62351560b530 sp=0x62351560b4d0 pc=0x10101d844
+cmd/go/internal/modindex.indexModule({0x623515a88580, 0x39})
+	cmd/go/internal/modindex/scan.go:60 +0xc8 fp=0x62351560b5b0 sp=0x62351560b530 pc=0x101225ab8
+cmd/go/internal/modindex.openIndexModule.func1()
+	cmd/go/internal/modindex/read.go:198 +0xa8 fp=0x62351560b6a0 sp=0x62351560b5b0 pc=0x10121fab8
+cmd/internal/par.(*ErrCache[...]).Do.func1()
+	cmd/internal/par/work.go:119 +0x24 fp=0x62351560b6b0 sp=0x62351560b6a0 pc=0x1011d7724
+cmd/internal/par.(*Cache[...]).Do(0x101a400a0, {0x623515a88580, 0x39}, 0x623515c17750)
+	cmd/internal/par/work.go:160 +0x124 fp=0x62351560b720 sp=0x62351560b6b0 pc=0x1011d7944
+cmd/internal/par.(*ErrCache[...]).Do(0x39?, {0x623515a88580?, 0x0?}, 0x0?)
+	cmd/internal/par/work.go:118 +0x3c fp=0x62351560b770 sp=0x62351560b720 pc=0x1011d76cc
+cmd/go/internal/modindex.openIndexModule({0x623515a88580?, 0x39?}, 0x80?)
+	cmd/go/internal/modindex/read.go:185 +0x54 fp=0x62351560b7d0 sp=0x62351560b770 pc=0x10121f9e4
+cmd/go/internal/modindex.GetModule({0x623515a88580, 0x39})
+	cmd/go/internal/modindex/read.go:176 +0x124 fp=0x62351560b810 sp=0x62351560b7d0 pc=0x10121f934
+cmd/go/internal/modindex.GetPackage({0x623515a88580, 0x39}, {0x623515a88580, 0x39})
+	cmd/go/internal/modindex/read.go:134 +0x2c fp=0x62351560b870 sp=0x62351560b810 pc=0x10121f63c
+cmd/go/internal/modload.dirInModule.func2()
+	cmd/go/internal/modload/import.go:771 +0x2c fp=0x62351560b8c0 sp=0x62351560b870 pc=0x10124215c
+cmd/internal/par.(*ErrCache[...]).Do.func1()
+	cmd/internal/par/work.go:119 +0x24 fp=0x62351560b8d0 sp=0x62351560b8c0 pc=0x10126cf44
+cmd/internal/par.(*Cache[...]).Do(0x101a3fca0, {0x623515a88580, 0x39}, 0x623515c17970)
+	cmd/internal/par/work.go:160 +0x124 fp=0x62351560b940 sp=0x62351560b8d0 pc=0x10126d174
+cmd/internal/par.(*ErrCache[...]).Do(0x11?, {0x623515a88580?, 0xc?}, 0x623515c17a38?)
+	cmd/internal/par/work.go:118 +0x3c fp=0x62351560b990 sp=0x62351560b940 pc=0x10126ceec
+cmd/go/internal/modload.dirInModule({0x62351569c381, 0x12}, {0x62351569c381?, 0x12}, {0x623515a88580, 0x39}, 0x0)
+	cmd/go/internal/modload/import.go:767 +0x1a0 fp=0x62351560ba70 sp=0x62351560b990 pc=0x101241fe0
+cmd/go/internal/modload.importFromModules(0x6235156704e0, {0x101a3a680, 0x101ae9ac0}, {0x62351569c381, 0x12}, 0x623515744320, 0x0, 0x0)
+	cmd/go/internal/modload/import.go:439 +0xb28 fp=0x62351560be30 sp=0x62351560ba70 pc=0x10123f488
+cmd/go/internal/modload.(*loader).load(0x6235157ae000, 0x6235156704e0, {0x101a3a680, 0x101ae9ac0}, 0x6235157f4000)
+	cmd/go/internal/modload/load.go:1859 +0x98 fp=0x62351560bf10 sp=0x62351560be30 pc=0x101257f58
+cmd/go/internal/modload.(*loader).pkg.func1.1()
+	cmd/go/internal/modload/load.go:1673 +0x28 fp=0x62351560bf50 sp=0x62351560bf10 pc=0x1012570f8
+cmd/internal/par.(*Queue).Add.func1()
+	cmd/internal/par/queue.go:58 +0x58 fp=0x62351560bfd0 sp=0x62351560bf50 pc=0x101022438
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x62351560bfd0 sp=0x62351560bfd0 pc=0x100edfb34
+created by cmd/internal/par.(*Queue).Add in goroutine 17
+	cmd/internal/par/queue.go:56 +0x184
+
+goroutine 30 gp=0x623515846000 m=15 mp=0x623515681008 [syscall]:
+syscall.syscalln(0x100efae20, {0x623515c82cd0, 0x3, 0x3})
+	runtime/sys_darwin.go:38 +0x20 fp=0x623515c82ca0 sp=0x623515c82c50 pc=0x100edbf70
+syscall.syscall(0x623515a27810?, 0x62?, 0x623515c82dc8?, 0x10101c288?)
+	syscall/syscall_darwin.go:384 +0x24 fp=0x623515c82cf0 sp=0x623515c82ca0 pc=0x100ef9dd4
+syscall.Open({0x623515a27810?, 0x100f6bd48?}, 0x1000000, 0x0)
+	syscall/zsyscall_darwin_arm64.go:1162 +0x70 fp=0x623515c82d40 sp=0x623515c82cf0 pc=0x100ef89a0
+os.open(...)
+	os/file_open_unix.go:15
+os.openFileNolog.func1(...)
+	os/file_unix.go:261
+os.ignoringEINTR(...)
+	os/file_posix.go:263
+os.openFileNolog({0x623515a27810, 0x62}, 0x0, 0x0)
+	os/file_unix.go:260 +0xd4 fp=0x623515c82da0 sp=0x623515c82d40 pc=0x100f52784
+os.OpenFile({0x623515a27810, 0x62}, 0x0, 0x0)
+	os/file.go:412 +0x40 fp=0x623515c82dd0 sp=0x623515c82da0 pc=0x100f50900
+os.Open(...)
+	os/file.go:390
+cmd/go/internal/fsys.Open({0x623515a27810, 0x62})
+	cmd/go/internal/fsys/fsys.go:573 +0xac fp=0x623515c82e60 sp=0x623515c82dd0 pc=0x10101c2ec
+cmd/go/internal/modindex.getFileInfo({0x6235156ac500, 0x50}, {0x623515f41470, 0x11}, 0x6235157a08a0)
+	cmd/go/internal/modindex/build.go:255 +0x418 fp=0x623515c82f50 sp=0x623515c82e60 pc=0x10121a708
+cmd/go/internal/modindex.importRaw({0x623515b14be0, 0x45}, {0x6235156ac4f6, 0xa})
+	cmd/go/internal/modindex/scan.go:220 +0x314 fp=0x623515c831e0 sp=0x623515c82f50 pc=0x1012263c4
+cmd/go/internal/modindex.indexModule.func1({0x6235156ac4b0, 0x50}, {0x101a3a840, 0x623515892900}, {0x0?, 0x0?})
+	cmd/go/internal/modindex/scan.go:72 +0xdc fp=0x623515c83290 sp=0x623515c831e0 pc=0x101225bec
+cmd/go/internal/fsys.walkDir({0x6235156ac4b0, 0x50}, {0x101a3a840, 0x623515892900}, 0x623515c83578)
+	cmd/go/internal/fsys/walk.go:30 +0x44 fp=0x623515c83350 sp=0x623515c83290 pc=0x10101d954
+cmd/go/internal/fsys.walkDir({0x6235156ac2d0, 0x49}, {0x101a3a840, 0x623515a23880}, 0x623515c83578)
+	cmd/go/internal/fsys/walk.go:52 +0x204 fp=0x623515c83410 sp=0x623515c83350 pc=0x10101db14
+cmd/go/internal/fsys.walkDir({0x623515b15040, 0x46}, {0x101a3a878, 0x623515ca0580}, 0x623515c83578)
+	cmd/go/internal/fsys/walk.go:52 +0x204 fp=0x623515c834d0 sp=0x623515c83410 pc=0x10101db14
+cmd/go/internal/fsys.WalkDir({0x623515b15040, 0x46}, 0x623515c13578)
+	cmd/go/internal/fsys/walk.go:20 +0x74 fp=0x623515c83530 sp=0x623515c834d0 pc=0x10101d844
+cmd/go/internal/modindex.indexModule({0x623515b14be0, 0x45})
+	cmd/go/internal/modindex/scan.go:60 +0xc8 fp=0x623515c835b0 sp=0x623515c83530 pc=0x101225ab8
+cmd/go/internal/modindex.openIndexModule.func1()
+	cmd/go/internal/modindex/read.go:198 +0xa8 fp=0x623515c836a0 sp=0x623515c835b0 pc=0x10121fab8
+cmd/internal/par.(*ErrCache[...]).Do.func1()
+	cmd/internal/par/work.go:119 +0x24 fp=0x623515c836b0 sp=0x623515c836a0 pc=0x1011d7724
+cmd/internal/par.(*Cache[...]).Do(0x101a400a0, {0x623515b14be0, 0x45}, 0x623515c13750)
+	cmd/internal/par/work.go:160 +0x124 fp=0x623515c83720 sp=0x623515c836b0 pc=0x1011d7944
+cmd/internal/par.(*ErrCache[...]).Do(0x45?, {0x623515b14be0?, 0x0?}, 0x0?)
+	cmd/internal/par/work.go:118 +0x3c fp=0x623515c83770 sp=0x623515c83720 pc=0x1011d76cc
+cmd/go/internal/modindex.openIndexModule({0x623515b14be0?, 0x45?}, 0x80?)
+	cmd/go/internal/modindex/read.go:185 +0x54 fp=0x623515c837d0 sp=0x623515c83770 pc=0x10121f9e4
+cmd/go/internal/modindex.GetModule({0x623515b14be0, 0x45})
+	cmd/go/internal/modindex/read.go:176 +0x124 fp=0x623515c83810 sp=0x623515c837d0 pc=0x10121f934
+cmd/go/internal/modindex.GetPackage({0x623515b14be0, 0x45}, {0x6235155fcd20, 0x57})
+	cmd/go/internal/modindex/read.go:134 +0x2c fp=0x623515c83870 sp=0x623515c83810 pc=0x10121f63c
+cmd/go/internal/modload.dirInModule.func2()
+	cmd/go/internal/modload/import.go:771 +0x2c fp=0x623515c838c0 sp=0x623515c83870 pc=0x10124215c
+cmd/internal/par.(*ErrCache[...]).Do.func1()
+	cmd/internal/par/work.go:119 +0x24 fp=0x623515c838d0 sp=0x623515c838c0 pc=0x10126cf44
+cmd/internal/par.(*Cache[...]).Do(0x101a3fca0, {0x6235155fcd20, 0x57}, 0x623515c13970)
+	cmd/internal/par/work.go:160 +0x124 fp=0x623515c83940 sp=0x623515c838d0 pc=0x10126d174
+cmd/internal/par.(*ErrCache[...]).Do(0x2f?, {0x6235155fcd20?, 0x28?}, 0x623515b97a48?)
+	cmd/internal/par/work.go:118 +0x3c fp=0x623515c83990 sp=0x623515c83940 pc=0x10126ceec
+cmd/go/internal/modload.dirInModule({0x62351582118d, 0x30}, {0x62351582118d?, 0x1e}, {0x623515b14be0, 0x45}, 0x0)
+	cmd/go/internal/modload/import.go:767 +0x1a0 fp=0x623515c83a70 sp=0x623515c83990 pc=0x101241fe0
+cmd/go/internal/modload.importFromModules(0x6235156704e0, {0x101a3a680, 0x101ae9ac0}, {0x62351582118d, 0x30}, 0x623515744320, 0x0, 0x0)
+	cmd/go/internal/modload/import.go:439 +0xb28 fp=0x623515c83e30 sp=0x623515c83a70 pc=0x10123f488
+cmd/go/internal/modload.(*loader).load(0x6235157ae000, 0x6235156704e0, {0x101a3a680, 0x101ae9ac0}, 0x623515802c30)
+	cmd/go/internal/modload/load.go:1859 +0x98 fp=0x623515c83f10 sp=0x623515c83e30 pc=0x101257f58
+cmd/go/internal/modload.(*loader).pkg.func1.1()
+	cmd/go/internal/modload/load.go:1673 +0x28 fp=0x623515c83f50 sp=0x623515c83f10 pc=0x1012570f8
+cmd/internal/par.(*Queue).Add.func1()
+	cmd/internal/par/queue.go:58 +0x58 fp=0x623515c83fd0 sp=0x623515c83f50 pc=0x101022438
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x623515c83fd0 sp=0x623515c83fd0 pc=0x100edfb34
+created by cmd/internal/par.(*Queue).Add in goroutine 17
+	cmd/internal/par/queue.go:56 +0x184
+
+goroutine 31 gp=0x6235158461e0 m=nil [sync.Mutex.Lock]:
+runtime.gopark(0x101ac9aa0?, 0x100ec2424?, 0xc0?, 0xe1?, 0x623515b97628?)
+	runtime/proc.go:462 +0xbc fp=0x623515b975d0 sp=0x623515b975b0 pc=0x100ed80ec
+runtime.goparkunlock(...)
+	runtime/proc.go:468
+runtime.semacquire1(0x623515ca8d58, 0x0, 0x3, 0x2, 0x16)
+	runtime/sema.go:192 +0x244 fp=0x623515b97620 sp=0x623515b975d0 pc=0x100eb7724
+internal/sync.runtime_SemacquireMutex(0x623515b97748?, 0xf0?, 0x68?)
+	runtime/sema.go:95 +0x28 fp=0x623515b97660 sp=0x623515b97620 pc=0x100ed99e8
+internal/sync.(*Mutex).lockSlow(0x623515ca8d54)
+	internal/sync/mutex.go:149 +0x170 fp=0x623515b976b0 sp=0x623515b97660 pc=0x100ee8510
+internal/sync.(*Mutex).Lock(...)
+	internal/sync/mutex.go:70
+sync.(*Mutex).Lock(...)
+	sync/mutex.go:46
+cmd/internal/par.(*Cache[...]).Do(0x101a400a0, {0x623515b14be0, 0x45}, 0x623515b97750)
+	cmd/internal/par/work.go:158 +0x104 fp=0x623515b97720 sp=0x623515b976b0 pc=0x1011d7924
+cmd/internal/par.(*ErrCache[...]).Do(0x45?, {0x623515b14be0?, 0x0?}, 0x0?)
+	cmd/internal/par/work.go:118 +0x3c fp=0x623515b97770 sp=0x623515b97720 pc=0x1011d76cc
+cmd/go/internal/modindex.openIndexModule({0x623515b14be0?, 0x45?}, 0x80?)
+	cmd/go/internal/modindex/read.go:185 +0x54 fp=0x623515b977d0 sp=0x623515b97770 pc=0x10121f9e4
+cmd/go/internal/modindex.GetModule({0x623515b14be0, 0x45})
+	cmd/go/internal/modindex/read.go:176 +0x124 fp=0x623515b97810 sp=0x623515b977d0 pc=0x10121f934
+cmd/go/internal/modindex.GetPackage({0x623515b14be0, 0x45}, {0x6235155fcd80, 0x60})
+	cmd/go/internal/modindex/read.go:134 +0x2c fp=0x623515b97870 sp=0x623515b97810 pc=0x10121f63c
+cmd/go/internal/modload.dirInModule.func2()
+	cmd/go/internal/modload/import.go:771 +0x2c fp=0x623515b978c0 sp=0x623515b97870 pc=0x10124215c
+cmd/internal/par.(*ErrCache[...]).Do.func1()
+	cmd/internal/par/work.go:119 +0x24 fp=0x623515b978d0 sp=0x623515b978c0 pc=0x10126cf44
+cmd/internal/par.(*Cache[...]).Do(0x101a3fca0, {0x6235155fcd80, 0x60}, 0x623515b97970)
+	cmd/internal/par/work.go:160 +0x124 fp=0x623515b97940 sp=0x623515b978d0 pc=0x10126d174
+cmd/internal/par.(*ErrCache[...]).Do(0x38?, {0x6235155fcd80?, 0x31?}, 0x623515b97a48?)
+	cmd/internal/par/work.go:118 +0x3c fp=0x623515b97990 sp=0x623515b97940 pc=0x10126ceec
+cmd/go/internal/modload.dirInModule({0x6235158211be, 0x39}, {0x6235158211be?, 0x1e}, {0x623515b14be0, 0x45}, 0x0)
+	cmd/go/internal/modload/import.go:767 +0x1a0 fp=0x623515b97a70 sp=0x623515b97990 pc=0x101241fe0
+cmd/go/internal/modload.importFromModules(0x6235156704e0, {0x101a3a680, 0x101ae9ac0}, {0x6235158211be, 0x39}, 0x623515744320, 0x0, 0x0)
+	cmd/go/internal/modload/import.go:439 +0xb28 fp=0x623515b97e30 sp=0x623515b97a70 pc=0x10123f488
+cmd/go/internal/modload.(*loader).load(0x6235157ae000, 0x6235156704e0, {0x101a3a680, 0x101ae9ac0}, 0x623515802d00)
+	cmd/go/internal/modload/load.go:1859 +0x98 fp=0x623515b97f10 sp=0x623515b97e30 pc=0x101257f58
+cmd/go/internal/modload.(*loader).pkg.func1.1()
+	cmd/go/internal/modload/load.go:1673 +0x28 fp=0x623515b97f50 sp=0x623515b97f10 pc=0x1012570f8
+cmd/internal/par.(*Queue).Add.func1()
+	cmd/internal/par/queue.go:58 +0x58 fp=0x623515b97fd0 sp=0x623515b97f50 pc=0x101022438
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x623515b97fd0 sp=0x623515b97fd0 pc=0x100edfb34
+created by cmd/internal/par.(*Queue).Add in goroutine 17
+	cmd/internal/par/queue.go:56 +0x184
+
+goroutine 32 gp=0x6235158463c0 m=nil [sync.Mutex.Lock]:
+runtime.gopark(0x623515b92608?, 0x100ec2424?, 0x40?, 0x6?, 0x623515b92628?)
+	runtime/proc.go:462 +0xbc fp=0x623515b925d0 sp=0x623515b925b0 pc=0x100ed80ec
+runtime.goparkunlock(...)
+	runtime/proc.go:468
+runtime.semacquire1(0x623515ca8d58, 0x0, 0x3, 0x2, 0x16)
+	runtime/sema.go:192 +0x244 fp=0x623515b92620 sp=0x623515b925d0 pc=0x100eb7724
+internal/sync.runtime_SemacquireMutex(0x623515b92698?, 0xbc?, 0x68?)
+	runtime/sema.go:95 +0x28 fp=0x623515b92660 sp=0x623515b92620 pc=0x100ed99e8
+internal/sync.(*Mutex).lockSlow(0x623515ca8d54)
+	internal/sync/mutex.go:149 +0x170 fp=0x623515b926b0 sp=0x623515b92660 pc=0x100ee8510
+internal/sync.(*Mutex).Lock(...)
+	internal/sync/mutex.go:70
+sync.(*Mutex).Lock(...)
+	sync/mutex.go:46
+cmd/internal/par.(*Cache[...]).Do(0x101a400a0, {0x623515b14be0, 0x45}, 0x623515b92750)
+	cmd/internal/par/work.go:158 +0x104 fp=0x623515b92720 sp=0x623515b926b0 pc=0x1011d7924
+cmd/internal/par.(*ErrCache[...]).Do(0x45?, {0x623515b14be0?, 0x0?}, 0x0?)
+	cmd/internal/par/work.go:118 +0x3c fp=0x623515b92770 sp=0x623515b92720 pc=0x1011d76cc
+cmd/go/internal/modindex.openIndexModule({0x623515b14be0?, 0x45?}, 0x80?)
+	cmd/go/internal/modindex/read.go:185 +0x54 fp=0x623515b927d0 sp=0x623515b92770 pc=0x10121f9e4
+cmd/go/internal/modindex.GetModule({0x623515b14be0, 0x45})
+	cmd/go/internal/modindex/read.go:176 +0x124 fp=0x623515b92810 sp=0x623515b927d0 pc=0x10121f934
+cmd/go/internal/modindex.GetPackage({0x623515b14be0, 0x45}, {0x6235155fcde0, 0x5f})
+	cmd/go/internal/modindex/read.go:134 +0x2c fp=0x623515b92870 sp=0x623515b92810 pc=0x10121f63c
+cmd/go/internal/modload.dirInModule.func2()
+	cmd/go/internal/modload/import.go:771 +0x2c fp=0x623515b928c0 sp=0x623515b92870 pc=0x10124215c
+cmd/internal/par.(*ErrCache[...]).Do.func1()
+	cmd/internal/par/work.go:119 +0x24 fp=0x623515b928d0 sp=0x623515b928c0 pc=0x10126cf44
+cmd/internal/par.(*Cache[...]).Do(0x101a3fca0, {0x6235155fcde0, 0x5f}, 0x623515b92970)
+	cmd/internal/par/work.go:160 +0x124 fp=0x623515b92940 sp=0x623515b928d0 pc=0x10126d174
+cmd/internal/par.(*ErrCache[...]).Do(0x37?, {0x6235155fcde0?, 0x31?}, 0x623515b92a48?)
+	cmd/internal/par/work.go:118 +0x3c fp=0x623515b92990 sp=0x623515b92940 pc=0x10126ceec
+cmd/go/internal/modload.dirInModule({0x6235158211f8, 0x38}, {0x6235158211f8?, 0x1e}, {0x623515b14be0, 0x45}, 0x0)
+	cmd/go/internal/modload/import.go:767 +0x1a0 fp=0x623515b92a70 sp=0x623515b92990 pc=0x101241fe0
+cmd/go/internal/modload.importFromModules(0x6235156704e0, {0x101a3a680, 0x101ae9ac0}, {0x6235158211f8, 0x38}, 0x623515744320, 0x0, 0x0)
+	cmd/go/internal/modload/import.go:439 +0xb28 fp=0x623515b92e30 sp=0x623515b92a70 pc=0x10123f488
+cmd/go/internal/modload.(*loader).load(0x6235157ae000, 0x6235156704e0, {0x101a3a680, 0x101ae9ac0}, 0x623515802dd0)
+	cmd/go/internal/modload/load.go:1859 +0x98 fp=0x623515b92f10 sp=0x623515b92e30 pc=0x101257f58
+cmd/go/internal/modload.(*loader).pkg.func1.1()
+	cmd/go/internal/modload/load.go:1673 +0x28 fp=0x623515b92f50 sp=0x623515b92f10 pc=0x1012570f8
+cmd/internal/par.(*Queue).Add.func1()
+	cmd/internal/par/queue.go:58 +0x58 fp=0x623515b92fd0 sp=0x623515b92f50 pc=0x101022438
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x623515b92fd0 sp=0x623515b92fd0 pc=0x100edfb34
+created by cmd/internal/par.(*Queue).Add in goroutine 17
+	cmd/internal/par/queue.go:56 +0x184
+
+goroutine 33 gp=0x6235159043c0 m=nil [GC worker (idle)]:
+runtime.gopark(0x101a3a680?, 0x101ae9ac0?, 0xf0?, 0x28?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515842720 sp=0x623515842700 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x6235158427b0 sp=0x623515842720 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x6235158427d0 sp=0x6235158427b0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x6235158427d0 sp=0x6235158427d0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 34 gp=0x6235159045a0 m=nil [GC worker (idle)]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x62351583e720 sp=0x62351583e700 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x62351583e7b0 sp=0x62351583e720 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x62351583e7d0 sp=0x62351583e7b0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x62351583e7d0 sp=0x62351583e7d0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 35 gp=0x623515904780 m=nil [GC worker (idle)]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x62351583ef20 sp=0x62351583ef00 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x62351583efb0 sp=0x62351583ef20 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x62351583efd0 sp=0x62351583efb0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x62351583efd0 sp=0x62351583efd0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 36 gp=0x623515904960 m=nil [GC worker (idle)]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x62351583f720 sp=0x62351583f700 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x62351583f7b0 sp=0x62351583f720 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x62351583f7d0 sp=0x62351583f7b0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x62351583f7d0 sp=0x62351583f7d0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 37 gp=0x623515904b40 m=nil [GC worker (idle)]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x62351583ff20 sp=0x62351583ff00 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x62351583ffb0 sp=0x62351583ff20 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x62351583ffd0 sp=0x62351583ffb0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x62351583ffd0 sp=0x62351583ffd0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 38 gp=0x623515904d20 m=nil [GC worker (idle)]:
+runtime.gopark(0x0?, 0x0?, 0x0?, 0x0?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515840720 sp=0x623515840700 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x6235158407b0 sp=0x623515840720 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x6235158407d0 sp=0x6235158407b0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x6235158407d0 sp=0x6235158407d0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 39 gp=0x623515904f00 m=nil [GC worker (idle)]:
+runtime.gopark(0x6d59893724126?, 0x3?, 0x76?, 0xa1?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515840f20 sp=0x623515840f00 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x623515840fb0 sp=0x623515840f20 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x623515840fd0 sp=0x623515840fb0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x623515840fd0 sp=0x623515840fd0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 40 gp=0x6235159050e0 m=nil [GC worker (idle)]:
+runtime.gopark(0x6d5998b480fc6?, 0x1?, 0x47?, 0x7a?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515b96f20 sp=0x623515b96f00 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x623515b96fb0 sp=0x623515b96f20 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x623515b96fd0 sp=0x623515b96fb0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x623515b96fd0 sp=0x623515b96fd0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 41 gp=0x6235159052c0 m=nil [GC worker (idle)]:
+runtime.gopark(0x6d59893796134?, 0x1?, 0xfd?, 0xd?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515841f20 sp=0x623515841f00 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x623515841fb0 sp=0x623515841f20 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x623515841fd0 sp=0x623515841fb0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x623515841fd0 sp=0x623515841fd0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 42 gp=0x6235159054a0 m=nil [GC worker (idle)]:
+runtime.gopark(0x6d5998b47bb4d?, 0x3?, 0x3e?, 0x43?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515962720 sp=0x623515962700 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x6235159627b0 sp=0x623515962720 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x6235159627d0 sp=0x6235159627b0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x6235159627d0 sp=0x6235159627d0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 43 gp=0x623515905680 m=nil [GC worker (idle)]:
+runtime.gopark(0x6d598930033e2?, 0x1?, 0x14?, 0xec?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515962f20 sp=0x623515962f00 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x623515962fb0 sp=0x623515962f20 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x623515962fd0 sp=0x623515962fb0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x623515962fd0 sp=0x623515962fd0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 44 gp=0x623515905860 m=nil [GC worker (idle)]:
+runtime.gopark(0x101aeb080?, 0x1?, 0x4d?, 0x8c?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515963720 sp=0x623515963700 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x6235159637b0 sp=0x623515963720 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x6235159637d0 sp=0x6235159637b0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x6235159637d0 sp=0x6235159637d0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 45 gp=0x623515905a40 m=nil [GC worker (idle)]:
+runtime.gopark(0x6d59893002f00?, 0x1?, 0xc8?, 0x2c?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515963f20 sp=0x623515963f00 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x623515963fb0 sp=0x623515963f20 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x623515963fd0 sp=0x623515963fb0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x623515963fd0 sp=0x623515963fd0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 46 gp=0x623515905c20 m=nil [GC worker (idle)]:
+runtime.gopark(0x6d5998b45865c?, 0x1?, 0xf5?, 0x5b?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515964720 sp=0x623515964700 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x6235159647b0 sp=0x623515964720 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x6235159647d0 sp=0x6235159647b0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x6235159647d0 sp=0x6235159647d0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 47 gp=0x623515968000 m=nil [GC worker (idle)]:
+runtime.gopark(0x6d59893002be8?, 0x1?, 0x74?, 0x4e?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515964f20 sp=0x623515964f00 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x623515964fb0 sp=0x623515964f20 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x623515964fd0 sp=0x623515964fb0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x623515964fd0 sp=0x623515964fd0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 48 gp=0x6235159681e0 m=nil [GC worker (idle)]:
+runtime.gopark(0x6d5998b480b38?, 0x3?, 0xa3?, 0x55?, 0x0?)
+	runtime/proc.go:462 +0xbc fp=0x623515965720 sp=0x623515965700 pc=0x100ed80ec
+runtime.gcBgMarkWorker(0x6235159300e0)
+	runtime/mgc.go:1791 +0xe0 fp=0x6235159657b0 sp=0x623515965720 pc=0x100e81f60
+runtime.gcBgMarkStartWorkers.gowrap1()
+	runtime/mgc.go:1695 +0x20 fp=0x6235159657d0 sp=0x6235159657b0 pc=0x100e81e60
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x6235159657d0 sp=0x6235159657d0 pc=0x100edfb34
+created by runtime.gcBgMarkStartWorkers in goroutine 26
+	runtime/mgc.go:1695 +0x134
+
+goroutine 98 gp=0x6235158d4b40 m=17 mp=0x623515a01808 [syscall]:
+syscall.syscalln(0x100efaff0, {0x623515da3440, 0x3, 0x3})
+	runtime/sys_darwin.go:38 +0x20 fp=0x623515da3410 sp=0x623515da33c0 pc=0x100edbf70
+syscall.syscall(0x623515de05a0?, 0x8a?, 0x623515da34a8?, 0x100f5587c?)
+	syscall/syscall_darwin.go:384 +0x24 fp=0x623515da3460 sp=0x623515da3410 pc=0x100ef9dd4
+syscall.Lstat({0x623515de05a0?, 0x100f553d4?}, 0x62351591ec68)
+	syscall/zsyscall_darwin_arm64.go:1944 +0x68 fp=0x623515da34b0 sp=0x623515da3460 pc=0x100ef9ad8
+os.lstatNolog.func1(...)
+	os/stat_unix.go:45
+os.ignoringEINTR(...)
+	os/file_posix.go:263
+os.lstatNolog({0x623515de05a0, 0x8a})
+	os/stat_unix.go:44 +0x50 fp=0x623515da34f0 sp=0x623515da34b0 pc=0x100f558a0
+os.Lstat({0x623515de05a0, 0x8a})
+	os/stat.go:26 +0x30 fp=0x623515da3510 sp=0x623515da34f0 pc=0x100f553e0
+os.(*unixDirent).Info(0x101a33f20?)
+	os/file_unix.go:462 +0x58 fp=0x623515da3560 sp=0x623515da3510 pc=0x100f53048
+cmd/go/internal/modindex.dirHash({0x6235156de3c0, 0x54}, {0x6235159300e0, 0x6a})
+	cmd/go/internal/modindex/read.go:108 +0x1e8 fp=0x623515da36b0 sp=0x623515da3560 pc=0x10121f438
+cmd/go/internal/modindex.openIndexPackage.func1()
+	cmd/go/internal/modindex/read.go:221 +0x5c fp=0x623515da37b0 sp=0x623515da36b0 pc=0x10121fc8c
+cmd/internal/par.(*ErrCache[...]).Do.func1()
+	cmd/internal/par/work.go:119 +0x24 fp=0x623515da37c0 sp=0x623515da37b0 pc=0x101228384
+cmd/internal/par.(*Cache[...]).Do(0x101a40020, {{0x6235156de3c0, 0x54}, {0x6235159300e0, 0x6a}}, 0x623515dc8880)
+	cmd/internal/par/work.go:160 +0x12c fp=0x623515da3840 sp=0x623515da37c0 pc=0x1012285ac
+cmd/internal/par.(*ErrCache[...]).Do(0x54?, {{0x6235156de3c0, 0x54}, {0x6235159300e0, 0x6a}}, 0x6235159300e0?)
+	cmd/internal/par/work.go:118 +0x48 fp=0x623515da38a0 sp=0x623515da3840 pc=0x101228338
+cmd/go/internal/modindex.openIndexPackage({0x6235156de3c0?, 0x6a?}, {0x6235159300e0?, 0x12?})
+	cmd/go/internal/modindex/read.go:219 +0x68 fp=0x623515da3930 sp=0x623515da38a0 pc=0x10121fc08
+cmd/go/internal/modindex.GetPackage({0x6235156de3c0, 0x54}, {0x6235159300e0, 0x6a})
+	cmd/go/internal/modindex/read.go:151 +0x184 fp=0x623515da3990 sp=0x623515da3930 pc=0x10121f794
+cmd/go/internal/modindex.IsStandardPackage({0x6235155fc187, 0x50}, {0x1013f5290, 0x2}, {0x623515f17395, 0x15})
+	cmd/go/internal/modindex/read.go:692 +0x148 fp=0x623515da3a70 sp=0x623515da3990 pc=0x1012236a8
+cmd/go/internal/modload.importFromModules(0x6235156704e0, {0x101a3a680, 0x101ae9ac0}, {0x623515f17395, 0x15}, 0x623515744320, 0x0, 0x0)
+	cmd/go/internal/modload/import.go:306 +0x564 fp=0x623515da3e30 sp=0x623515da3a70 pc=0x10123eec4
+cmd/go/internal/modload.(*loader).load(0x6235157ae000, 0x6235156704e0, {0x101a3a680, 0x101ae9ac0}, 0x623515c42340)
+	cmd/go/internal/modload/load.go:1859 +0x98 fp=0x623515da3f10 sp=0x623515da3e30 pc=0x101257f58
+cmd/go/internal/modload.(*loader).pkg.func1.1()
+	cmd/go/internal/modload/load.go:1673 +0x28 fp=0x623515da3f50 sp=0x623515da3f10 pc=0x1012570f8
+cmd/internal/par.(*Queue).Add.func1()
+	cmd/internal/par/queue.go:58 +0x58 fp=0x623515da3fd0 sp=0x623515da3f50 pc=0x101022438
+runtime.goexit({})
+	runtime/asm_arm64.s:1447 +0x4 fp=0x623515da3fd0 sp=0x623515da3fd0 pc=0x100edfb34
+created by cmd/internal/par.(*Queue).Add in goroutine 20
+	cmd/internal/par/queue.go:56 +0x184
+
+r0      0x104
+r1      0x0
+r2      0x7d00
+r3      0x0
+r4      0x0
+r5      0xa0
+r6      0x0
+r7      0x0
+r8      0x16efa6608
+r9      0x0
+r10     0x300
+r11     0x30000000302
+r12     0x30000000302
+r13     0x300
+r14     0x0
+r15     0x30000000300
+r16     0x131
+r17     0x1fcf27310
+r18     0x0
+r19     0x101ac34a8
+r20     0x101ac34e8
+r21     0x1fb8e6260
+r22     0x0
+r23     0x0
+r24     0x7d00
+r25     0x7d01
+r26     0x7e00
+r27     0x101aa0000
+r28     0x101ac1640
+r29     0x16efa6680
+lr      0x18eea8128
+sp      0x16efa65f0
+pc      0x18ee6750c
+fault   0x18ee6750c

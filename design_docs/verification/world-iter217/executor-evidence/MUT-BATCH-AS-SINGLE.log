@@ -1,0 +1,8 @@
+=== RUN   TestMCPBatchConformance
+=== RUN   TestMCPBatchConformance/old_versions_and_item_errors
+    mcp_conformance_test.go:173: batch SSE=400 {"jsonrpc":"2.0","id":null,"error":{"code":-32600,"message":"batch requests are not supported under protocol version 2025-06-18"}}
+--- FAIL: TestMCPBatchConformance (0.00s)
+    --- FAIL: TestMCPBatchConformance/old_versions_and_item_errors (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.196s
+FAIL

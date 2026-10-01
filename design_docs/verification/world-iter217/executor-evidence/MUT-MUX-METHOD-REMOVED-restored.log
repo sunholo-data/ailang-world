@@ -1,0 +1,4 @@
+=== RUN   TestMCPMountMethodSource
+--- PASS: TestMCPMountMethodSource (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.284s

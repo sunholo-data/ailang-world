@@ -1,0 +1,16 @@
+{
+  "stage_sha": "5258f5406d7ec1d75b8897353398f562178afffe",
+  "production_file": "host/transitionreg/transitionreg.go",
+  "original_sha256": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+  "mutant_sha256": "e62205955a68ee49d90f125dc6a5bc7fcdfe494180e33f638f46f25c059a008e",
+  "restored_sha256": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+  "mutation": {
+    "old": "\tif err := ctx.Err(); err != nil {\n\t\treturn Snapshot{}, fmt.Errorf(\"read transition registry: context: %w\", err)\n\t}\n\tif !ok {",
+    "new": "\tif !ok {"
+  },
+  "pristine_rc": 0,
+  "compile_fence_rc": 0,
+  "mutant_runtime_rc": 1,
+  "restored_rc": 0,
+  "scope": "focused independent root production regression control; not full verification"
+}

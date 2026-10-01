@@ -1,0 +1,21 @@
+{
+  "verdict": "ok",
+  "rc": 0,
+  "fenced": true,
+  "model": "ollama/deepseek-v4-pro:0813-cloud",
+  "pi_rc": 0,
+  "elapsed_seconds": 863,
+  "worktree_changed_files": 9,
+  "base_head": "741e3c371de3e558243e4ee77a09eeaddbac50a3",
+  "head_after": "741e3c371de3e558243e4ee77a09eeaddbac50a3",
+  "commits_since_start": 0,
+  "tool_executions": 47,
+  "hung_tool": "",
+  "provider_errors": 0,
+  "provider_error": "",
+  "agent_end_events": 1,
+  "ndjson_bytes_filtered": 2167106,
+  "ndjson": "/tmp/world217-final-pi-evaluator.ndjson",
+  "snapshot": "/tmp/world217-final-pi-evaluator.ndjson.snapshot.ndjson",
+  "stderr": "/tmp/world217-final-pi-evaluator.ndjson.stderr"
+}

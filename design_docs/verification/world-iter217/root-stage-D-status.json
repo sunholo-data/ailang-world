@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "status",
+    "--porcelain"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter217",
+  "rc": 0,
+  "seconds": 10.032086624996737,
+  "external_timeout_seconds": 120,
+  "env_axis": "GODEBUG=goindex=0; focused diagnostic; not final profile substitution",
+  "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+}

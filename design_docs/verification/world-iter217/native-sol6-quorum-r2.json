@@ -1,0 +1,26 @@
+{
+  "doc": "design_docs/planned/w-mcp-dispatch-projection.md",
+  "snapshot": "077027ed1d74f62151947cacacb62e2a689fbead",
+  "design_sha256": "8a596295fc540afd4d568896f0d1a4aeef248182037bc695bc50c25904a31086",
+  "reviewer": "gpt-6-sol",
+  "reviewer_role": "native quorum substitute, round 2",
+  "judge_independence": "same-vendor",
+  "author": "gpt-6.1-sol",
+  "verdict": "pass",
+  "blocking_count": 0,
+  "strongest_objection": null,
+  "catch": "R3's absent-precheck/genuine-snapshot-error gap is now specified as a typed RegistryHeadAbsentError repair with exact raced-error list and Invoke tests, A2A controls, and mutations restoring the old catch-all or using string matching. No surviving blocker found after re-evaluating mapping/schema, bounds/slots, non-atomic batch/retry accounting, GET guard and baseline policy.",
+  "proposed_fix": null,
+  "direction_freezes_reviewed": [
+    "partial reversible MCP name mapping, whole-surface long-name refusal, numeric-preserving schema normalization",
+    "one aggregate POST context with inner budgets and distinct Runner/procbound capacities",
+    "fresh per-item admission/task/receipt accounting with non-atomic batch and non-deduplicated retries"
+  ],
+  "product_acceptance": "NOT RUN",
+  "baseline": {
+    "sequential_verify_ail_rc": 0,
+    "sequential_verify_go_rc": 1,
+    "sequential_go_failure": "TestDispatchDurableDeadline/uncertain_Commit",
+    "final_full_green_required": true
+  }
+}

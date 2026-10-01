@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/daemon", "-timeout=60s", "-run", "^$"], "rc": 0, "seconds": 1.1010209578089416}

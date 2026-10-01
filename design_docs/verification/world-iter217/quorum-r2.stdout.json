@@ -1,0 +1,49 @@
+{
+  "doc": "design_docs/planned/w-mcp-dispatch-projection.md",
+  "iso_ts": "2026-10-01T18:50:40Z",
+  "reviewers": [
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "quota",
+      "error": "Anthropic bucket blocked by the mission ration: Anthropic usage endpoint returned HTTP 429; CLI fallback also failed (no \"Current session\" line in `claude -p /usage` output)",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.02815,
+      "tokens_in": 12755,
+      "tokens_out": 220,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The mandated inline code '!hasHead \u0026\u0026 errors.As(rerr, \u0026RegistryHeadAbsentError)' is syntactically invalid Go. The doc explicitly proposes 'RegistryHeadAbsentError' as a new custom error type ('The proposed type is unallocated in this package'). In Go, you cannot take the address of a type name. This violates Bounded Verification (Axiom 5) because the exact mandated logic cannot compile.",
+        "catch": "Invalid Go syntax in the required typed-absence shared-helper repair snippet.",
+        "proposed_fix": "Revise the mandated snippet to instantiate the target type before passing its pointer: `var target RegistryHeadAbsentError; !hasHead \u0026\u0026 errors.As(rerr, \u0026target)`. Alternatively, if a sentinel variable is intended instead of a custom type, define `var ErrRegistryHeadAbsent = errors.New(...)` and mandate `errors.Is(rerr, ErrRegistryHeadAbsent)`."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "R4 typed snapshot absence classifier closes live reproduced legacy helper hole; scope shared host product only. Exact full-green gates retained. Available native Astra/Sol6 seats under D48 combined independently; CLI synthesis alone not acceptance."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: The mandated inline code '!hasHead \u0026\u0026 errors.As(rerr, \u0026RegistryHeadAbsentError)' is syntactically invalid Go. The doc explicitly proposes 'RegistryHeadAbsentError' as a new custom error type ('The proposed type is unallocated in this package'). In Go, you cannot take the address of a type name. This violates Bounded Verification (Axiom 5) because the exact mandated logic cannot compile."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "claude-sonnet-5@claude-p",
+        "reason": "quota"
+      }
+    ],
+    "total_cost_usd": 0.02815,
+    "total_tokens_in": 12755,
+    "total_tokens_out": 220
+  }
+}

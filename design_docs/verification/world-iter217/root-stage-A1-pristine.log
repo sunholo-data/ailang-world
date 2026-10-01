@@ -1,0 +1,7 @@
+=== RUN   TestRegistryHeadAbsentAfterLookupCancellation
+=== RUN   TestRegistryHeadAbsentAfterLookupCancellation/absent
+    absence_example_test.go:88: context=true typedabsence=false error=read transition registry: context: context canceled
+--- PASS: TestRegistryHeadAbsentAfterLookupCancellation (0.00s)
+    --- PASS: TestRegistryHeadAbsentAfterLookupCancellation/absent (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	0.348s

@@ -1,0 +1,54 @@
+{
+  "updated": "2026-10-01T18:08:46.508291Z",
+  "usage": [
+    {
+      "bucket": "codex",
+      "window": "5h",
+      "tokens": 0,
+      "stages": 0,
+      "window_start": "2026-10-01T22:15:05.352656Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    },
+    {
+      "bucket": "codex",
+      "window": "long",
+      "tokens": 2016228,
+      "stages": 13,
+      "window_start": "2026-09-26T11:00:09Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    }
+  ],
+  "at": "2026-10-01T22:15:05.352656Z",
+  "verdicts": [],
+  "codex_provider_usage": {
+    "state": "over",
+    "reason": "provider-reported Codex account usage exceeds ration or exhausts a window; 2 Codex reset credit(s) in reserve (next expires 2026-10-22) — attended only: `ailang mission quota --codex-reset --yes`",
+    "observed_at": "2026-10-01T22:15:05.352656Z",
+    "source": "codex app-server account/rateLimits/read",
+    "windows": [
+      {
+        "used_percent": 82,
+        "window_minutes": 10080,
+        "resets_at": "2026-10-03T17:29:29Z",
+        "allowance_percent": 80.20957237407407
+      }
+    ],
+    "reset_credits": {
+      "available": 2,
+      "credits": [
+        {
+          "id": "RateLimitResetCredit_2592524f86088191a7104716e199c44d",
+          "title": "Full reset",
+          "status": "available",
+          "expires_at": "2026-10-22T20:37:45Z"
+        },
+        {
+          "id": "RateLimitResetCredit_1a2061d4a10c81918ddadcfb350f4360",
+          "title": "Full reset",
+          "status": "available",
+          "expires_at": "2026-10-29T19:03:05Z"
+        }
+      ]
+    }
+  }
+}

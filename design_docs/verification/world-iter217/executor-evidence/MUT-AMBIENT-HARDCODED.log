@@ -1,0 +1,6 @@
+=== RUN   TestMCPAmbientExportsAbsent
+    mcp_cross_test.go:108: ambient MCP=exit
+--- FAIL: TestMCPAmbientExportsAbsent (0.90s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	1.123s
+FAIL

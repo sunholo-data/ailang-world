@@ -1,0 +1,6 @@
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/direct
+--- PASS: TestMCPAbsentPrecheckSnapshotFailure (0.01s)
+    --- PASS: TestMCPAbsentPrecheckSnapshotFailure/list/direct (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.310s

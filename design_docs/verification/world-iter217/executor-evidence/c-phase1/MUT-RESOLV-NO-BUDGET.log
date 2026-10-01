@@ -1,0 +1,6 @@
+=== RUN   TestMCPResolverInnerBudget
+    mcp_absence_test.go:178: credential deadline=1.999889166s want <=30ms
+--- FAIL: TestMCPResolverInnerBudget (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.204s
+FAIL

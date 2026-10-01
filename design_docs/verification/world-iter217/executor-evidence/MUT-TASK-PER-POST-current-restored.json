@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-timeout=60s", "-run", "^TestMCPBatchAccounting/repeated_rpc_id$", "-v", "-count=1"], "rc": 0, "seconds": 1.2278896670322865, "process_cap_seconds": 180, "diagnostic_godebug": "goindex=0"}

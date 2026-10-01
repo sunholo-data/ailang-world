@@ -1,0 +1,6 @@
+=== RUN   TestMCPListExactSetPerSession
+    mcp_test.go:108: session set=[tools_dalpha tools_dbeta]
+--- FAIL: TestMCPListExactSetPerSession (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.184s
+FAIL

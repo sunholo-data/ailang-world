@@ -1,0 +1,27 @@
+{
+  "base": "54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e",
+  "candidate": "59870e58c4fc393aab62d2cf7ff8c83641ad6850",
+  "rows": [
+    {
+      "path": "host/broker",
+      "diff_numstat": "",
+      "byte_identical_tree": true
+    },
+    {
+      "path": "host/capsule",
+      "diff_numstat": "",
+      "byte_identical_tree": true
+    },
+    {
+      "path": "host/coordinator",
+      "diff_numstat": "",
+      "byte_identical_tree": true
+    },
+    {
+      "path": "host/projection/a2a_wire_test.go",
+      "diff": "diff --git a/host/projection/a2a_wire_test.go b/host/projection/a2a_wire_test.go\nindex e26f2a5..816eff9 100644\n--- a/host/projection/a2a_wire_test.go\n+++ b/host/projection/a2a_wire_test.go\n@@ -257,7 +257,7 @@ func TestA2ADispatchWire(t *testing.T) {\n \t\tr := newWireRig(t)\n \t\tvar reached atomic.Int32\n \t\tconst secret = \"SECRET-R11-store-detail\"\n-\t\th := r.handler(t, failStore{Store: r.st, reached: &reached, getObject: fmt.Errorf(\"%s: %w\", secret, context.DeadlineExceeded)}, unusedRunner{}, nil, 30*time.Second)\n+\t\th := r.handler(t, failStore{Store: r.st, reached: &reached, getObject: fmt.Errorf(\"%s: %w\", secret, context.DeadlineExceeded)}, unusedRunner{}, nil, 20*time.Second)\n \t\tvar log bytes.Buffer\n \t\th.errorLog = &log\n \t\trec := post(t, h, \"Bearer \"+r.tok, wireBody(\"wire-R11\", \"t-r11\"))\n",
+      "scope": "existing R11 handler fixture budget changed30s\u219220s; uncertain_AppendIntent fixture hunk unchanged; source identity alone is not baseline reproduction"
+    }
+  ],
+  "attribution": "source preservation only; no unique environment cause or inherited runtime verdict established by this audit"
+}

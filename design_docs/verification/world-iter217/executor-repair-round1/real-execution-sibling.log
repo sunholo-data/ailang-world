@@ -1,0 +1,4 @@
+=== RUN   TestA2AInvokesPublishedTransition
+--- PASS: TestA2AInvokesPublishedTransition (8.15s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	8.537s

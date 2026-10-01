@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/daemon", "-timeout=180s", "-run", "^TestMCPPostBudgetProductionConstants/single$", "-v", "-count=1"], "rc": 1, "seconds": 34.151314250193536, "process_cap_seconds": 210, "diagnostic_godebug": "goindex=0"}

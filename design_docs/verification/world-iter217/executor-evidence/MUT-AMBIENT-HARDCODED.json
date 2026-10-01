@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/daemon", "-timeout=60s", "-run", "^TestMCPAmbientExportsAbsent$", "-v", "-count=1"], "rc": 1, "seconds": 1.620130208088085}

@@ -1,0 +1,33 @@
+{
+  "scope": "Product candidate draft only; never acceptance. Final local/profile and independent FAIL remain authoritative.",
+  "observed_at": "2026-10-01T22:51:43Z",
+  "pr": {
+    "headRefOid": "79a5dbd485253c0ab1e92db4dc1c7a46eef5c46f",
+    "isDraft": true,
+    "mergeCommit": null,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-01T22:46:17Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/36936976064/job/110619403585",
+        "name": "ailang-code verify gate",
+        "startedAt": "2026-10-01T22:45:41Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-01T22:48:34Z",
+        "conclusion": "FAILURE",
+        "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/36936976064/job/110619403940",
+        "name": "go host build + test gate",
+        "startedAt": "2026-10-01T22:45:42Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      }
+    ],
+    "url": "https://github.com/sunholo-data/ailang-world/pull/173"
+  }
+}

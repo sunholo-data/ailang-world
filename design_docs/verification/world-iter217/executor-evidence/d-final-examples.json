@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "./host/projection", "./host/transitionreg", "-run", "^Example", "-v"], "rc": 0, "seconds": 1.0442259588744491, "process_cap_seconds": 180, "diagnostic_godebug": "goindex=0"}

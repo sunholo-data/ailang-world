@@ -1,0 +1,12 @@
+{
+  "head_sha": "be286c1dbf29eb56c922f5015c0bc1a52055f087",
+  "argv": [
+    "gofmt",
+    "-l",
+    "host",
+    "cmd"
+  ],
+  "rc": 0,
+  "stdout": "",
+  "scope": "all host/cmd Go files; observed no unformatted file"
+}

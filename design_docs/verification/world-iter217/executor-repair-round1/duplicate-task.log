@@ -1,0 +1,6 @@
+=== RUN   TestA2AResendAfterWriteTimeout
+    invoke_e2e_test.go:352: same task executed 2 times, want once
+--- FAIL: TestA2AResendAfterWriteTimeout (5.07s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	5.500s
+FAIL

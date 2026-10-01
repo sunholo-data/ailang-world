@@ -1,0 +1,130 @@
+── AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0
+Commit: 24ee108
+Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+Built:  2026-09-21T15:50:02Z
+
+The AI-First Programming Language
+Copyright (c) 2025-2026)
+── tracked-binary hygiene gate
+   ✓ 0 binary blobs among 1360 tracked files
+── World mission-input gate (decision ledger)
+decision ledger valid: 35 rows
+   World decision-ledger validated; centralized runtime currency is NOT certified here.
+   ✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6
+── race-detector known-positive control
+go version go1.26.6 darwin/arm64
+==================
+WARNING: DATA RACE
+Read at 0x00c000112048 by goroutine 8:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.check-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x88
+
+Previous write at 0x00c000112048 by goroutine 9:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.check-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 8 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.check-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 9 (finished) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.check-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+==================
+WARNING: DATA RACE
+Write at 0x00c000112048 by goroutine 7:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.check-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Previous write at 0x00c000112048 by goroutine 8:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.check-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 7 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.check-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 8 (finished) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.check-world-iter217/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+control finished, shared = 40000
+Found 2 data race(s)
+exit status 66
+── go build ./...
+go version go1.26.6 darwin/arm64
+── focused host/evidence named-manifest gate (37 exact top-level tests)
+   ✓ all 37 required top-level evidence tests passed exactly once
+── go test ./... -count=1
+go version go1.26.6 darwin/arm64
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	6.018s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	27.638s
+ok  	github.com/sunholo-data/ailang-world/host/archive	22.289s
+ok  	github.com/sunholo-data/ailang-world/host/authority	0.885s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	14.274s
+ok  	github.com/sunholo-data/ailang-world/host/broker	104.457s
+ok  	github.com/sunholo-data/ailang-world/host/canon	1.418s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	59.137s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	1.639s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	18.868s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	122.553s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	5.623s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	2.104s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	36.688s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.951s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	2.711s
+ok  	github.com/sunholo-data/ailang-world/host/projection	10.241s
+ok  	github.com/sunholo-data/ailang-world/host/registry	3.131s
+ok  	github.com/sunholo-data/ailang-world/host/replay	50.966s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	6.805s
+ok  	github.com/sunholo-data/ailang-world/host/store	18.429s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	38.095s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	114.776s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	2.691s
+── go test ./... -count=1 -race -timeout 8m
+go version go1.26.6 darwin/arm64
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	9.237s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	27.484s
+ok  	github.com/sunholo-data/ailang-world/host/archive	33.645s
+ok  	github.com/sunholo-data/ailang-world/host/authority	3.365s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	5.604s
+--- FAIL: TestOrdinaryOverflowCarriesNoESRCH (0.03s)
+    cleanup_test.go:200: error = *errors.joinError broker: handler subprocess output overflow: limit 1024 bytes
+        broker: overflow kill: operation not permitted, want exactly *HandlerOutputOverflowError
+--- FAIL: TestHandlerTimeoutKillsTheWholeProcessGroup (1.57s)
+    handlers_test.go:801: group-kill diagnosis failed: non-vacuity markers exec_started=false forked=false; elapsed=125.731333ms pre-handler=5.965792ms Execute=110.6575ms post-handler=9.108041ms error=broker: effect "Git.Commit" failed for scope "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestHandlerTimeoutKillsTheWholeProcessGroup3488548237/003" (record sha256:6ed30972e9b166188dbced22b49e60b316a50d16e40ad14cee9b36e232fbc245) cause=broker: handler subprocess timed out after 100ms store-calls=[{PutObject 62500} {AppendNextEffectIntent 1075208} {PutObject 116753333} {AppendEffectOutcome 120974917}] markers={exec_started:false forked:false survived:false} kill={count:1 offset:114.584333ms pgid:91772 errno:<nil>}
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	180.522s
+ok  	github.com/sunholo-data/ailang-world/host/canon	1.942s
+--- FAIL: TestF5WallClockTimeoutHasElapsedBound (6.60s)
+    capsule_test.go:230: timeout returned after 4.511691083s, want <= 2s
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/capsule	51.476s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	3.951s
+--- FAIL: TestDispatchDurableDeadline (1.73s)
+    --- FAIL: TestDispatchDurableDeadline/uncertain_AppendIntent (1.06s)
+        coordinator_test.go:629: err coordinator: receipt: store: load journal intent: context deadline exceeded, want R16
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/coordinator	31.149s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	154.920s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	9.607s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	1.719s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	28.608s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	4.424s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	3.421s
+--- FAIL: TestA2ADurableDeadlineWire (7.82s)
+    --- FAIL: TestA2ADurableDeadlineWire/uncertain_AppendIntent (1.18s)
+        a2a_wire_test.go:467: error=-32603 "invocation exceeded its deadline", want -32603 "invocation outcome is not confirmed; resend the same task id"; body={"error":{"code":-32603,"message":"invocation exceeded its deadline"},"id":"held-uncertain_AppendIntent-1","jsonrpc":"2.0"}
+--- FAIL: TestMCPInvokeDeadlineFreesSlot (0.21s)
+    mcp_bounds_test.go:65: not upstream SSE: "{\"jsonrpc\":\"2.0\",\"id\":2,\"error\":{\"code\":-32603,\"message\":\"host callback timed out\"}}\n"
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	18.402s
+ok  	github.com/sunholo-data/ailang-world/host/registry	4.861s
+ok  	github.com/sunholo-data/ailang-world/host/replay	51.077s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	7.755s
+ok  	github.com/sunholo-data/ailang-world/host/store	51.097s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	40.575s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	109.387s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	4.318s
+FAIL

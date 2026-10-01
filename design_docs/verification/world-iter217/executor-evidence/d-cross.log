@@ -1,0 +1,6 @@
+=== RUN   TestMCPCrossSurfaceExactSet
+--- PASS: TestMCPCrossSurfaceExactSet (0.92s)
+=== RUN   TestMCPAmbientExportsAbsent
+--- PASS: TestMCPAmbientExportsAbsent (0.92s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	2.224s

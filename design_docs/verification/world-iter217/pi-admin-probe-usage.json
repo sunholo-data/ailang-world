@@ -1,0 +1,42 @@
+{
+  "path": "/tmp/world217-admin-probe.ndjson",
+  "sha256": "d89c27497cc682da14b91ff204838df84013d0c50117a7768976a5fc29b1d1d9",
+  "bytes": 12815,
+  "completed_assistant_turns": 1,
+  "provider_reported_usage_totals": {
+    "input": 1464,
+    "output": 45,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "reasoning": 0,
+    "totalTokens": 1509
+  },
+  "metered_cost_usd": 0,
+  "records": [
+    {
+      "response_id": "chatcmpl-123",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "stop",
+      "usage": {
+        "input": 1464,
+        "output": 45,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 1509,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    }
+  ],
+  "report_write_events": [],
+  "ack_details": [],
+  "interrupted_turn_usage": "not inferred; only completed turn_end provider usage counted"
+}

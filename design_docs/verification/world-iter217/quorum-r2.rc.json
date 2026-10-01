@@ -1,0 +1,24 @@
+{
+  "rc": 3,
+  "elapsed_s": 98.32961511611938,
+  "command": [
+    "ailang",
+    "design-quorum",
+    "design_docs/planned/w-mcp-dispatch-projection.md",
+    "--author",
+    "codex:gpt-6.1-sol",
+    "--reviewers",
+    "gemini-3-1-pro,claude-sonnet-5@claude-p,gpt6-1-sol",
+    "--seats",
+    "3",
+    "--max-cost-usd",
+    "0.30",
+    "--controller-verdict",
+    "pass",
+    "--controller-note",
+    "R4 typed snapshot absence classifier closes live reproduced legacy helper hole; scope shared host product only. Exact full-green gates retained. Available native Astra/Sol6 seats under D48 combined independently; CLI synthesis alone not acceptance.",
+    "--artifact-dir",
+    "design_docs/verification/world-iter217/quorum-r2",
+    "--json"
+  ]
+}

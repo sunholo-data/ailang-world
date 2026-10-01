@@ -1,0 +1,1 @@
+{"files": {"host/daemon/daemon.go": {"mutant": "fb00531de7f70567b9c878767f4f070d01a5b7c9f98de14846ea83061d7a6d21", "restored": "38dddbadabc51083820c7027143028379d26e2f7cb837191bd6c3440d2218692"}}, "broad_failed_tests": ["TestMCPMountMethodSource"], "selected_test": "TestMCPMountMethodSource"}

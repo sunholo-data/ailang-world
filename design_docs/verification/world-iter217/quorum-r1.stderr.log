@@ -1,0 +1,4 @@
+design-quorum: author codex:gpt-6.1-sol — seated claude-sonnet-5@claude-p,gemini-3-1-pro; reserve none; sitting out gpt6-1-sol
+models registry: source=embedded version=c0bbf6e70f39a074
+GOOGLE_CLOUD_LOCATION is unset; using deprecated default global. Set GOOGLE_CLOUD_LOCATION. v1.0.0 will refuse to start without it.
+quorum artifact: /Users/voightkampff/dev/sunholo-data/.wt-world-iter217/design_docs/verification/world-iter217/quorum-r1/w-mcp-dispatch-projection-2026-10-01T18-36-54Z.json

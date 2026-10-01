@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "go",
+    "test",
+    "-p",
+    "1",
+    "./host/projection",
+    "-run",
+    "^TestMCPBatchAccounting/repeated_rpc_id$",
+    "-v",
+    "-count=1",
+    "-timeout=60s"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter217",
+  "rc": 1,
+  "seconds": 0.6968244998715818,
+  "external_timeout_seconds": 120,
+  "env_axis": "GODEBUG=goindex=0; focused diagnostic; not final profile substitution",
+  "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+}

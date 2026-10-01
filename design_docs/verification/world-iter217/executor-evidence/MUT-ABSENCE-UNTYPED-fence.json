@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/transitionreg", "-run", "^$", "-timeout=60s"], "rc": 0, "seconds": 17.196384999901056}

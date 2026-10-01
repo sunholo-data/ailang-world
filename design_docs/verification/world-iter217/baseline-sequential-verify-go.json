@@ -1,0 +1,1 @@
+{"rc": 1, "seconds": 107.89, "base": "54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e", "compiler": "v0.41.0", "command": "AILANG_BIN=~/.pinned-ailang/ailang PATH=~/.pinned-ailang:$PATH ./scripts/verify_go.sh", "changed_axis": "commands unchanged; gate legs now sequential", "load_start": [2.4599609375, 4.85546875, 5.75927734375], "load_end": [4.10498046875, 4.85546875, 5.65576171875]}

@@ -1,0 +1,8 @@
+{
+  "observed_at": "2026-10-01T21:53:31Z",
+  "uptime": "23:53  up 22 days,  8:28, 6 users, load averages: 4.89 5.81 5.25",
+  "scope": "load DURING active normal Go profile, not startup/unique-cause evidence",
+  "owned_profile_root_pids": [
+    80425
+  ]
+}

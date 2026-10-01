@@ -1,0 +1,43 @@
+{
+  "before": "be286c1dbf29eb56c922f5015c0bc1a52055f087",
+  "after": "59870e58c4fc393aab62d2cf7ff8c83641ad6850",
+  "inventory_source": "git diff --name-only base54e0..be286; go.mod/go.sum + non-test Go",
+  "production_module_files": [
+    {
+      "path": "go.mod",
+      "sha256": "b3427f9c52e6240ada240666f6bb70ab6dcb4df22c4f7383d44cb4dfa46c9653",
+      "identical": true
+    },
+    {
+      "path": "go.sum",
+      "sha256": "0efaabe8522a52a6603eb11b56716b9518b8ce1e093ea2a8a8d42fc729ca4a26",
+      "identical": true
+    },
+    {
+      "path": "host/daemon/daemon.go",
+      "sha256": "38dddbadabc51083820c7027143028379d26e2f7cb837191bd6c3440d2218692",
+      "identical": true
+    },
+    {
+      "path": "host/projection/mcp.go",
+      "sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "identical": true
+    },
+    {
+      "path": "host/projection/mcpname.go",
+      "sha256": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+      "identical": true
+    },
+    {
+      "path": "host/projection/projection.go",
+      "sha256": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7",
+      "identical": true
+    },
+    {
+      "path": "host/transitionreg/transitionreg.go",
+      "sha256": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+      "identical": true
+    }
+  ],
+  "all_ail_diff_bytes": 0
+}

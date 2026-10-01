@@ -1,0 +1,71 @@
+=== RUN   TestRegistryHeadAbsentErrorClassification
+=== RUN   TestRegistryHeadAbsentErrorClassification/direct
+=== RUN   TestRegistryHeadAbsentErrorClassification/new_request
+=== RUN   TestRegistryHeadAbsentErrorClassification/store
+=== RUN   TestRegistryHeadAbsentErrorClassification/same_text
+=== RUN   TestRegistryHeadAbsentErrorClassification/object
+=== RUN   TestRegistryHeadAbsentErrorClassification/missing_object
+=== RUN   TestRegistryHeadAbsentErrorClassification/hash
+--- PASS: TestRegistryHeadAbsentErrorClassification (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/direct (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/new_request (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/store (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/same_text (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/object (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/missing_object (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/hash (0.00s)
+=== RUN   TestRegistryHeadAbsentAfterLookupCancellation
+=== RUN   TestRegistryHeadAbsentAfterLookupCancellation/absent
+    absence_example_test.go:88: context=true typedabsence=false error=read transition registry: context: context canceled
+=== RUN   TestRegistryHeadAbsentAfterLookupCancellation/present
+    absence_example_test.go:88: context=true typedabsence=false error=read transition registry: context: context canceled
+=== RUN   TestRegistryHeadAbsentAfterLookupCancellation/deadline
+    absence_example_test.go:88: context=true typedabsence=false error=read transition registry: context: context deadline exceeded
+--- PASS: TestRegistryHeadAbsentAfterLookupCancellation (0.00s)
+    --- PASS: TestRegistryHeadAbsentAfterLookupCancellation/absent (0.00s)
+    --- PASS: TestRegistryHeadAbsentAfterLookupCancellation/present (0.00s)
+    --- PASS: TestRegistryHeadAbsentAfterLookupCancellation/deadline (0.00s)
+=== RUN   TestRegistryHeadAbsentIntegrityClassification
+=== RUN   TestRegistryHeadAbsentIntegrityClassification/semantic
+=== RUN   TestRegistryHeadAbsentIntegrityClassification/interface
+=== RUN   TestRegistryHeadAbsentIntegrityClassification/codec
+--- PASS: TestRegistryHeadAbsentIntegrityClassification (0.00s)
+    --- PASS: TestRegistryHeadAbsentIntegrityClassification/semantic (0.00s)
+    --- PASS: TestRegistryHeadAbsentIntegrityClassification/interface (0.00s)
+    --- PASS: TestRegistryHeadAbsentIntegrityClassification/codec (0.00s)
+=== RUN   ExampleRegistryHeadAbsentError
+--- PASS: ExampleRegistryHeadAbsentError (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	1.511s
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/store_error
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/real_reader
+=== RUN   TestAgentCard_AbsentPrecheckSnapshotFailure/deadline
+--- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure (0.05s)
+    --- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure/store_error (0.02s)
+    --- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure/real_reader (0.02s)
+    --- PASS: TestAgentCard_AbsentPrecheckSnapshotFailure/deadline (0.02s)
+=== RUN   TestProjectionAbsenceRaceControls
+=== RUN   TestProjectionAbsenceRaceControls/true_absence
+=== RUN   TestProjectionAbsenceRaceControls/present_then_absent
+=== RUN   TestProjectionAbsenceRaceControls/same_text_genuine
+=== RUN   TestProjectionAbsenceRaceControls/precheck_error
+--- PASS: TestProjectionAbsenceRaceControls (0.06s)
+    --- PASS: TestProjectionAbsenceRaceControls/true_absence (0.01s)
+    --- PASS: TestProjectionAbsenceRaceControls/present_then_absent (0.01s)
+    --- PASS: TestProjectionAbsenceRaceControls/same_text_genuine (0.01s)
+    --- PASS: TestProjectionAbsenceRaceControls/precheck_error (0.01s)
+=== RUN   TestA2A_AbsentPrecheckSnapshotFailure
+=== RUN   TestA2A_AbsentPrecheckSnapshotFailure/direct
+=== RUN   TestA2A_AbsentPrecheckSnapshotFailure/real_reader
+--- PASS: TestA2A_AbsentPrecheckSnapshotFailure (0.03s)
+    --- PASS: TestA2A_AbsentPrecheckSnapshotFailure/direct (0.01s)
+    --- PASS: TestA2A_AbsentPrecheckSnapshotFailure/real_reader (0.01s)
+=== RUN   TestAgentCard_AbsentHeadZeroSkills
+--- PASS: TestAgentCard_AbsentHeadZeroSkills (0.01s)
+=== RUN   TestAgentCard_HeadRaceAbsentThenSucceeds
+--- PASS: TestAgentCard_HeadRaceAbsentThenSucceeds (0.02s)
+=== RUN   TestA2A_AbsentPrecheckPublicationDispatch
+--- PASS: TestA2A_AbsentPrecheckPublicationDispatch (0.02s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	1.575s

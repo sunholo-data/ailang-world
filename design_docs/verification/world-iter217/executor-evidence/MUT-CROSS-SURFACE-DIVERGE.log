@@ -1,0 +1,6 @@
+=== RUN   TestMCPCrossSurfaceExactSet
+    mcp_cross_test.go:88: sessionalpha MCP=[] expected=tools_decho
+--- FAIL: TestMCPCrossSurfaceExactSet (0.96s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	1.202s
+FAIL

@@ -1,0 +1,9 @@
+=== RUN   TestRegistryHeadAbsentAfterLookupCancellation
+=== RUN   TestRegistryHeadAbsentAfterLookupCancellation/absent
+    absence_example_test.go:88: context=false typedabsence=true error=read transition registry: head is absent
+    absence_example_test.go:90: postlookup context/counters: read transition registry: head is absent 1/0
+--- FAIL: TestRegistryHeadAbsentAfterLookupCancellation (0.00s)
+    --- FAIL: TestRegistryHeadAbsentAfterLookupCancellation/absent (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/transitionreg	0.186s
+FAIL

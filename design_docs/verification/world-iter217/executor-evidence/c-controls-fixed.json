@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "./host/daemon", "-run", "TestMCP|TestProjection_WireOwnershipSource|TestProjection_ConfigValidation|TestProjection_NoDeadlineTampering|TestAilangProtocolAdmissionIsNarrow|TestDaemonDependencyAllowlist", "-v", "-count=1", "-timeout=60s"], "rc": 0, "seconds": 1.813444583909586}

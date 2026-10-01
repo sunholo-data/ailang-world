@@ -1,0 +1,540 @@
+{
+  "path": "/tmp/world217-admin-evaluator.ndjson",
+  "sha256": "6da4d723d8a559004dea92c4b5ebb36819b78565a5e419b8c89786c2726c3bfc",
+  "bytes": 1625694,
+  "completed_assistant_turns": 23,
+  "provider_reported_usage_totals": {
+    "input": 50961,
+    "output": 12012,
+    "cacheRead": 640669,
+    "cacheWrite": 0,
+    "reasoning": 0,
+    "totalTokens": 703642
+  },
+  "metered_cost_usd": 0,
+  "records": [
+    {
+      "response_id": "chatcmpl-571",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 8806,
+        "output": 91,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 8897,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-639",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 1011,
+        "output": 81,
+        "cacheRead": 8806,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 9898,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-516",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 112,
+        "output": 323,
+        "cacheRead": 9817,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 10252,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-540",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 1055,
+        "output": 400,
+        "cacheRead": 9929,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 11384,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-775",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 468,
+        "output": 205,
+        "cacheRead": 10984,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 11657,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-585",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 2121,
+        "output": 135,
+        "cacheRead": 11452,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 13708,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-272",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 280,
+        "output": 365,
+        "cacheRead": 13573,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 14218,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-667",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 5923,
+        "output": 448,
+        "cacheRead": 13852,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 20223,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-737",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 839,
+        "output": 304,
+        "cacheRead": 19775,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 20918,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-24",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 8355,
+        "output": 263,
+        "cacheRead": 20613,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 29231,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-2",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 4221,
+        "output": 202,
+        "cacheRead": 28968,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 33391,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-779",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 1716,
+        "output": 370,
+        "cacheRead": 33189,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 35275,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-5",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 1013,
+        "output": 238,
+        "cacheRead": 34905,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 36156,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-270",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 982,
+        "output": 260,
+        "cacheRead": 35918,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 37160,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-487",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 2661,
+        "output": 471,
+        "cacheRead": 36900,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 40032,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-542",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 2175,
+        "output": 767,
+        "cacheRead": 39561,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 42503,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-654",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 1330,
+        "output": 248,
+        "cacheRead": 41736,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 43314,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-62",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 301,
+        "output": 639,
+        "cacheRead": 43066,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 44006,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-416",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 1128,
+        "output": 1194,
+        "cacheRead": 43367,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 45689,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-716",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 1392,
+        "output": 378,
+        "cacheRead": 44495,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 46265,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-161",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 631,
+        "output": 662,
+        "cacheRead": 45887,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 47180,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-241",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "toolUse",
+      "usage": {
+        "input": 840,
+        "output": 3494,
+        "cacheRead": 46518,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 50852,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    },
+    {
+      "response_id": "chatcmpl-910",
+      "provider": "ollama",
+      "model": "deepseek-v4-pro:0813-cloud",
+      "response_model": "deepseek-v4-pro:0813",
+      "stop_reason": "stop",
+      "usage": {
+        "input": 3601,
+        "output": 474,
+        "cacheRead": 47358,
+        "cacheWrite": 0,
+        "reasoning": 0,
+        "totalTokens": 51433,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      }
+    }
+  ],
+  "report_write_events": [
+    {
+      "tool": "write",
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-record-eval/design_docs/verification/world-iter217/evaluator-record-independent.md"
+    },
+    {
+      "tool": "write",
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-record-eval/design_docs/verification/world-iter217/evaluator-record-independent.json"
+    }
+  ],
+  "ack_details": [
+    {
+      "acked": true,
+      "at": "2026-10-01T22:51:23.174Z"
+    }
+  ],
+  "interrupted_turn_usage": "not inferred; only completed turn_end provider usage counted"
+}
