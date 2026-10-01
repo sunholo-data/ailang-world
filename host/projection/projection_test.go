@@ -907,6 +907,14 @@ func (r *countingRunner) RunContext(context.Context, capsule.Entry) (capsule.Res
 }
 
 func testA2ADispatchSuccess(t *testing.T) {
+	testA2ADispatchSuccessHeads(t, false)
+}
+
+func TestA2A_AbsentPrecheckPublicationDispatch(t *testing.T) {
+	testA2ADispatchSuccessHeads(t, true)
+}
+
+func testA2ADispatchSuccessHeads(t *testing.T, absentPrecheck bool) {
 	st := openStore(t)
 	genesis := store.Object{Hash: hashref.SumSHA256([]byte("genesis-state")), InterfaceHash: hashref.SumSHA256([]byte("test/genesis")),
 		SemanticID: "test/genesis", Provenance: "projection-test", Payload: []byte("genesis-state")}
@@ -945,6 +953,9 @@ func testA2ADispatchSuccess(t *testing.T) {
 	}
 	cfg := testConfig(st)
 	cfg.Coordinator = coord
+	if absentPrecheck {
+		cfg.Heads = fixedHeads{ok: false}
+	}
 	h := mustHandler(t, cfg)
 	tok := mintToken(t, st, "ep-a", []broker.Capability{liveGrant("alpha")})
 	body := `{"jsonrpc":"2.0","id":7,"method":"tasks/send","params":{"id":"t1","metadata":{"skill_id":"tools.echo"},"message":{"parts":[{"type":"data","data":{"x":1}}]}}}`

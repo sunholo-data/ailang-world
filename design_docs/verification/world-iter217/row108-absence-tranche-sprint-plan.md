@@ -156,3 +156,8 @@ Retained design residuals: non-atomic batch can hide earlier committed effects o
 ## Planner artifact validation
 
 The stock sprint-executor validator accepts a sprint ID and hardcodes `.ailang/state/sprints/sprint_<id>.json`; passing this explicitly commissioned tracked path was refused as not found. No ignored duplicate or tool edit was created. Equivalent read-only structural validation verifies five real milestones, populated reuse decisions, valid dependencies, sum160+240+300+400+650=1750, duration2.8, null progress, all14 ACs and complete stage-assigned mutation inventory; plan/JSON accepted by that check. Product tests/coverage/mutations remain NOT RUN.
+
+## Executor progress
+
+- M108A1 locally complete: `5258f54`; actual reader/NewRequest typed classification, postlookup canceled/deadline cases, semantic/interface/codec negatives, executable example and full reader package passed. Three named compiled mutants failed their selected assertions and passed restored; raw evidence in `/tmp/world-iter217-executor`. Independent controller reproduction remains required.
+- M108A2 locally complete: narrow typed classifier; direct/real-reader raced failures, true absence/present disappearance/same-text/precheck controls, A2A zero writes and absent-precheck publication dispatch green. Full projection suite and focused reader/projection race green; all five compiled mapped mutants RED/restored GREEN. Final exact gates/controller acceptance remain open.

@@ -200,3 +200,5 @@ curl -s -H "Authorization: Bearer $(cat /tmp/qs-session)" \
 an MCP client (item 5), the approval-inbox workbench
 (item 7). The echo is a self-contained demonstration source; library-backed `world/*.ail`
 transitions still need a separately pinned library dependency before publication.
+
+The session-scoped agent card returns an empty `skills` array only when the registry head is confirmed absent in both reads. A raced publication followed by a store or integrity failure returns `503 ProjectionUnavailable`; a read deadline returns `504 ProjectionDeadlineExceeded`. Retry the card read after resolving the failure. A2A admission uses its existing unavailable JSON-RPC error and does not dispatch the failed admission.

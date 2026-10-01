@@ -153,10 +153,10 @@
         "Formatting/vet, exact sequential verify_ail then verify_go and complete required CI green; existing baseline red is not waived",
         "Separate M2 stage commit plus controller first-party production MUT-ABSENT-PRECHECK-CATCHALL RED/revert GREEN before stage acceptance"
       ],
-      "passes": null,
+      "passes": true,
       "started": "2026-10-01T19:20:27.737930+00:00",
-      "completed": null,
-      "notes": null
+      "completed": "2026-10-01T19:24:54.304887+00:00",
+      "notes": "Local full projection suite and focused A1/A2 race green; five compiled mapped mutants killed/restored. Independent controller and exact final gates pending."
     },
     {
       "id": "M108B_DEP_NAMES",
@@ -171,7 +171,7 @@
         "StageB scoped ledger mutants killed; separatecommit; controller production MUT-MAP-IDENTITY RED/revertGREEN; mounted recovery/finalclosure carriedtoC/D"
       ],
       "passes": null,
-      "started": null,
+      "started": "2026-10-01T19:24:54.305034+00:00",
       "completed": null,
       "notes": null
     },

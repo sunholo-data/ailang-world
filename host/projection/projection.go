@@ -378,13 +378,10 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
 // CapabilitySource, F9) and returns the admitted descriptors in registry
 // bytewise order.
 //
-// B3's distinct absent-head handling: GetRegistryHead is checked BEFORE the
-// snapshot read. A clean absent check makes a failed snapshot read the steady
-// absent state (transitionreg's head-absent error is untyped, F8) — reported
-// as (nil, nil): zero skills, not a failure. A failed snapshot read after a
-// PRESENT head is a genuine read failure (nil, err). The head race is
-// covered: a head published between the check and NewRequest yields a
-// successful snapshot and its skills are used.
+// An empty success requires absence in BOTH the precheck and the snapshot's
+// typed result. A raced-in head's store, integrity or context failure remains
+// a failure; present-precheck then absent-snapshot remains unavailable. A
+// successful fresh snapshot always wins over the earlier precheck.
 func (h *Handler) allowedDescriptors(ctx context.Context, b *authority.SessionBinding) (transitionreg.Request, []transitionreg.Descriptor, error) {
 	_, hasHead, err := h.heads.GetRegistryHead(ctx, store.TransitionRegistryV1)
 	if err != nil {
@@ -392,7 +389,8 @@ func (h *Handler) allowedDescriptors(ctx context.Context, b *authority.SessionBi
 	}
 	req, rerr := transitionreg.NewRequest(ctx, h.reader, bindingCaps{b.Caps}, time.Now().Unix())
 	if rerr != nil {
-		if !hasHead {
+		var target transitionreg.RegistryHeadAbsentError
+		if !hasHead && errors.As(rerr, &target) {
 			return transitionreg.Request{}, nil, nil
 		}
 		return transitionreg.Request{}, nil, fmt.Errorf("projection: registry snapshot: %w", rerr)
