@@ -34,6 +34,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -135,6 +136,8 @@ type Config struct {
 	Deny DenyWriter
 	// Fail renders the card route's non-denial 503/504 failures.
 	Fail ErrorWriter
+	// ErrorLog is the required operator sink for sanitized A2A refusals.
+	ErrorLog io.Writer
 	// Agent identities the card's name/description/version fields.
 	Agent protocol.AgentInfo
 	// MaxWait is the ONE bounded wait per projection request (Decision 6):
@@ -158,6 +161,7 @@ type Handler struct {
 	heads      HeadReader
 	deny       DenyWriter
 	fail       ErrorWriter
+	errorLog   io.Writer
 	agent      protocol.AgentInfo
 	maxWait    time.Duration
 	invokeWait time.Duration
@@ -178,6 +182,8 @@ func New(cfg Config) (*Handler, error) {
 		return nil, errors.New("projection: Deny is required")
 	case cfg.Fail == nil:
 		return nil, errors.New("projection: Fail is required")
+	case cfg.ErrorLog == nil:
+		return nil, errors.New("projection: ErrorLog is required")
 	case cfg.MaxWait <= 0:
 		return nil, fmt.Errorf("projection: MaxWait must be finite and positive, got %v", cfg.MaxWait)
 	case cfg.InvokeWait <= 0:
@@ -189,6 +195,7 @@ func New(cfg Config) (*Handler, error) {
 		heads:      cfg.Heads,
 		deny:       cfg.Deny,
 		fail:       cfg.Fail,
+		errorLog:   cfg.ErrorLog,
 		agent:      cfg.Agent,
 		maxWait:    cfg.MaxWait,
 		invokeWait: cfg.InvokeWait,
@@ -309,12 +316,14 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
 	// one-snapshot rule, applied at /a2a/ admission time).
 	admitted, allowed, serr := h.allowedDescriptors(ctx, out.Success)
 	if serr != nil {
+		h.logRefusal(req.Method, "-", serr)
 		protocol.A2AError(w, req.ID, codeInternal, notAvailableMessage)
 		return
 	}
 	for _, d := range allowed {
 		if d.ID == skillID {
 			if h.coord == nil {
+				h.logRefusal(req.Method, "-", errors.New("projection: invocation coordinator is unavailable"))
 				protocol.A2AError(w, req.ID, codeInternal, notAvailableMessage)
 				return
 			}
@@ -346,6 +355,9 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
 					w.Header().Set("Connection", "close")
 				}
 				code, msg := dispatchError(err)
+				if msg == notAvailableMessage {
+					h.logRefusal(req.Method, coordinator.InvocationID(out.Success.EpisodeID, params.ID), err)
+				}
 				protocol.A2AError(w, req.ID, code, msg)
 				return
 			}
@@ -403,6 +415,7 @@ func dispatchError(err error) (int, string) {
 	var output *coordinator.OutputError
 	var notCommitted *coordinator.NotCommittedError
 	var conflict *store.ConflictError
+	var integrity *coordinator.IntegrityError
 	switch {
 	case errors.As(err, &invalid):
 		return codeInvalidParams, msgInvalidParams
@@ -410,6 +423,8 @@ func dispatchError(err error) (int, string) {
 		return codeInvalidParams, msgNotAuthorized
 	case errors.As(err, &mismatch):
 		return codeInvalidParams, "proposal does not match the registered transition"
+	case errors.As(err, &integrity):
+		return codeInternal, notAvailableMessage
 	case errors.As(err, &notCommitted):
 		return codeInternal, "invocation was not committed; send a new task id"
 	case errors.As(err, &deadline):
@@ -445,4 +460,9 @@ func (h *Handler) writeUnavailable(w http.ResponseWriter, err error) {
 		return
 	}
 	h.fail(w, classUnavailable, msgUnavailable, http.StatusServiceUnavailable)
+}
+
+// logRefusal keeps arbitrary cause text on one physical operator-only line.
+func (h *Handler) logRefusal(method, id string, err error) {
+	fmt.Fprintf(h.errorLog, "ailang-worldd: a2a refusal: %s %s: %q\n", method, id, err.Error())
 }

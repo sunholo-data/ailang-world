@@ -931,11 +931,159 @@ func TestReconcileRefusesDamagedRecord(t *testing.T) {
 				t.Fatal("fixture broken: the tamper never fired")
 			}
 			var x *IntegrityError
-			if !errors.As(err, &x) || x.Object != tc.object || x.InvocationID != InvocationID("ep1", "t1") {
+			if !errors.As(err, &x) || x.Kind != "mismatch" || x.Object != tc.object || x.InvocationID != InvocationID("ep1", "t1") || err.Error() != fmt.Sprintf("coordinator: reconcile a2a:ep1:t1: recorded %s does not match its reference", tc.object) {
 				t.Fatalf("err = %T %v, want *IntegrityError{Object: %q}", err, err, tc.object)
 			}
 			if got.Reconciled || got.OutputBytes != nil {
 				t.Fatalf("refusal carried a result: %+v", got)
+			}
+		})
+	}
+}
+
+// dispositionStore changes only resolved read-back, leaving forward commits real.
+type dispositionStore struct {
+	*store.Store
+	objectRef hashref.HashRef
+	worldRef  hashref.HashRef
+	readErr   error
+	hits      *int
+}
+
+func (s dispositionStore) GetObject(ctx context.Context, ref hashref.HashRef) (store.Object, bool, error) {
+	if ref == s.objectRef {
+		*s.hits++
+		return store.Object{}, false, s.readErr
+	}
+	return s.Store.GetObject(ctx, ref)
+}
+func (s dispositionStore) GetWorld(ctx context.Context, ref hashref.HashRef) (store.World, bool, error) {
+	if ref == s.worldRef {
+		*s.hits++
+		return store.World{}, false, nil
+	}
+	return s.Store.GetWorld(ctx, ref)
+}
+
+func TestReconcileDamageDisposition(t *testing.T) {
+	for _, name := range []string{"record_absent", "output_absent", "world_absent", "record_undecodable", "record_output_ref_unparsable", "output_not_object", "store_read_error_stays_untyped", "commit_refuses_non_object_output"} {
+		t.Run(name, func(t *testing.T) {
+			variants := []string{"{}"}
+			if name == "output_not_object" || name == "commit_refuses_non_object_output" {
+				variants = []string{"null", "[1]"}
+			}
+			for _, payload := range variants {
+				t.Run(payload, func(t *testing.T) {
+					r := newRig(t, false)
+					r.genesis()
+					r.describe("plain", r.source(echoSrc), "Invoke")
+					r.publish()
+					head, _, _ := r.st.SelectedHead(boundedTestContext(t))
+					if name == "commit_refuses_non_object_output" {
+						got, err := r.coordinator(r.st, fakeRunner{stdout: payload}).Dispatch(boundedTestContext(t), r.call("plain", "t1", grants))
+						var x *OutputError
+						if !errors.As(err, &x) || got.Reconciled {
+							t.Fatalf("output accepted: %+v %v", got, err)
+						}
+						rc, ok, err := r.st.GetReceipt(boundedTestContext(t), InvocationID("ep1", "t1"))
+						if err != nil || ok {
+							t.Fatalf("receipt: %+v %v %v", rc, ok, err)
+						}
+						r.assertHead(head)
+						return
+					}
+					first, err := r.coordinator(r.st, fakeRunner{stdout: `{}`}).Dispatch(boundedTestContext(t), r.call("plain", "t1", grants))
+					if err != nil {
+						t.Fatal(err)
+					}
+					head, _, _ = r.st.SelectedHead(boundedTestContext(t))
+					rc, _, _ := r.st.GetReceipt(boundedTestContext(t), first.InvocationID)
+					hits := 0
+					ds := dispositionStore{Store: r.st, hits: &hits}
+					var st Store = ds
+					object, kind := "record", "absent"
+					switch name {
+					case "record_absent":
+						ds.objectRef = first.RecordRef
+						st = ds
+					case "output_absent":
+						recObj, _, _ := r.st.GetObject(boundedTestContext(t), first.RecordRef)
+						var rec record
+						json.Unmarshal(recObj.Payload, &rec)
+						ds.objectRef, _ = hashref.Parse(rec.Output)
+						st = ds
+						object = "output"
+					case "world_absent":
+						ds.worldRef = first.WorldRef
+						st = ds
+						object = "world"
+					case "store_read_error_stays_untyped":
+						ds.objectRef = first.RecordRef
+						ds.readErr = fmt.Errorf("x: %w", context.DeadlineExceeded)
+						st = ds
+					default:
+						kind = "undecodable"
+						recObj, _, _ := r.st.GetObject(boundedTestContext(t), first.RecordRef)
+						var rec record
+						json.Unmarshal(recObj.Payload, &rec)
+						if name == "record_undecodable" {
+							recObj.Payload = []byte("invalid JSON")
+						} else if name == "record_output_ref_unparsable" {
+							rec.Output = "bad"
+							recObj.Payload = mustJSON(rec)
+						} else {
+							object = "output"
+							out := store.Object{Hash: hashref.SumSHA256([]byte(payload)), InterfaceHash: hashref.SumSHA256([]byte("output")), SemanticID: OutputV1, Payload: []byte(payload)}
+							if err := r.st.PutObject(boundedTestContext(t), out); err != nil {
+								t.Fatal(err)
+							}
+							rec.Output = out.Hash.String()
+							recObj.Payload = mustJSON(rec)
+							w, _, _ := r.st.GetWorld(boundedTestContext(t), first.WorldRef)
+							w.StateRoot = out.Hash
+							w.Ref = worldRef(w)
+							if err := r.st.PutWorld(boundedTestContext(t), w); err != nil {
+								t.Fatal(err)
+							}
+							in := *rc.Intent
+							in.WorldRef = w.Ref
+							rc.Intent = &in
+						}
+						recObj.Hash = hashref.SumSHA256(recObj.Payload)
+						if err := r.st.PutObject(boundedTestContext(t), recObj); err != nil {
+							t.Fatal(err)
+						}
+						in := *rc.Intent
+						in.TransitionRef = recObj.Hash
+						rc.Intent = &in
+						st = tamperStore{Store: r.st, hits: &hits, receipt: func(store.Receipt) store.Receipt { return rc }}
+					}
+					got, err := r.coordinator(st, fakeRunner{hook: func(context.Context) { t.Error("re-executed") }}).Dispatch(boundedTestContext(t), r.call("plain", "t1", grants))
+					if hits == 0 {
+						t.Fatal("fixture never fired")
+					}
+					r.assertHead(head)
+					var x *IntegrityError
+					if name == "store_read_error_stays_untyped" {
+						if errors.As(err, &x) || !errors.Is(err, context.DeadlineExceeded) {
+							t.Fatalf("read error: %T %v", err, err)
+						}
+					} else if !errors.As(err, &x) || x.Object != object || x.Kind != kind || x.InvocationID != first.InvocationID {
+						t.Fatalf("damage: %T %v want %s/%s", err, err, object, kind)
+					}
+					if name != "store_read_error_stays_untyped" {
+						phrase := "is absent"
+						if kind == "undecodable" {
+							phrase = "does not decode"
+						}
+						if want := fmt.Sprintf("coordinator: reconcile %s: recorded %s %s", first.InvocationID, object, phrase); err.Error() != want {
+							t.Fatalf("damage text = %q, want %q", err.Error(), want)
+						}
+					}
+					if err == nil || strings.Contains(err.Error(), "%!") || got.Reconciled || got.OutputBytes != nil {
+						t.Fatalf("refusal: %+v %v", got, err)
+					}
+				})
 			}
 		})
 	}

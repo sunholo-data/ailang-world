@@ -215,6 +215,7 @@ func testConfig(st *store.Store) Config {
 		Heads:      st,
 		Deny:       refDeny,
 		Fail:       refFail,
+		ErrorLog:   io.Discard,
 		Agent:      protocol.AgentInfo{Name: "ailang-worldd", Description: "test projection agent", Version: "0.1.0"},
 		MaxWait:    2 * time.Second,
 		InvokeWait: 2 * time.Second,
@@ -820,6 +821,7 @@ func TestA2ADispatch(t *testing.T) {
 		// Row 122: damaged reconcile rows are store damage, like R6's corrupt
 		// source — neither "resend" nor "not committed" is true of them.
 		{"R6_corrupt_source", &coordinator.SourceError{Kind: "corrupt"}, codeInternal, notAvailableMessage},
+		{"R13_reconcile_absent", &coordinator.IntegrityError{Object: "record", Kind: "absent"}, codeInternal, notAvailableMessage},
 		{"R13_reconcile_integrity", &coordinator.IntegrityError{Object: "record"}, codeInternal, notAvailableMessage},
 		{"R7", &coordinator.WorldAbsentError{}, codeInternal, "no world is selected; commit a genesis world first"},
 		{"R8", &coordinator.EffectsUnsupportedError{}, codeInternal, "transitions that declare effects cannot be invoked in this daemon"},
@@ -1403,6 +1405,7 @@ func TestProjection_ConfigValidation(t *testing.T) {
 		{"Heads", func(c *Config) { c.Heads = nil }},
 		{"Deny", func(c *Config) { c.Deny = nil }},
 		{"Fail", func(c *Config) { c.Fail = nil }},
+		{"ErrorLog", func(c *Config) { c.ErrorLog = nil }},
 	}
 	for _, tc := range strip {
 		c := base

@@ -242,7 +242,7 @@ func replaceInvocation(t *testing.T, d *Daemon, db string, st coordinator.Store,
 		t.Fatal(err)
 	}
 	p, err := projection.New(projection.Config{Resolver: d.resolver, Reader: transitionreg.NewReader(d.store), Heads: d.reads,
-		Deny: writeSessionDenial, Fail: writeAPIError, Agent: protocol.AgentInfo{Name: "ailang-worldd", Version: Version},
+		Deny: writeSessionDenial, Fail: writeAPIError, ErrorLog: d.errLog, Agent: protocol.AgentInfo{Name: "ailang-worldd", Version: Version},
 		MaxWait: readDeadline, InvokeWait: wait, Coordinator: coord})
 	if err != nil {
 		t.Fatal(err)
@@ -374,5 +374,27 @@ func TestA2AInvokeDeadlineClosesSocket(t *testing.T) {
 	}
 	if parseInvokeTask(t, good)["status"].(map[string]any)["state"] != "completed" {
 		t.Fatalf("normal: %s", good)
+	}
+}
+
+func TestA2AErrorLogWiring(t *testing.T) {
+	var log bytes.Buffer
+	d, err := New(boundedTestContext(t), Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost, ErrorLog: &log})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := d.Close(); err != nil {
+			t.Error(err)
+		}
+	})
+	seedTransitionRegistry(t, d.store, "tools.echo", "alpha")
+	token := mintSessionGrants(t, d, "ep-log", "alpha")
+	rec := requestRecorderAuth(t, d, "Bearer "+token, http.MethodPost, "/a2a/", strings.NewReader(invokeBody("t1")))
+	if !strings.Contains(rec.Body.String(), "transition invocation is not available in this daemon") {
+		t.Fatalf("wire: %s", rec.Body.String())
+	}
+	if bytes.Count(log.Bytes(), []byte("\n")) != 1 || !strings.Contains(log.String(), "a2a refusal: tasks/send -:") {
+		t.Fatalf("daemon ErrorLog=%q", log.String())
 	}
 }

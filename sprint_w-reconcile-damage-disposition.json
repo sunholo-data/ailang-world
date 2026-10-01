@@ -1,0 +1,511 @@
+{
+  "sprint_id": "w-reconcile-damage-disposition",
+  "design_doc": "design_docs/planned/w-reconcile-damage-disposition.md",
+  "plan": "design_docs/planned/w-reconcile-damage-disposition-sprint-plan.md",
+  "authority": "Controller-approved revision 2; World queue row 125; r1/r2 objections answered in the design Quorum log",
+  "base": "HEAD 4b87fdd",
+  "planner_lane": "codex:gpt-6.1-sol",
+  "scope": "Coordinator reconcile damage typing; unchanged wire class; operator ErrorLog; no quarantine",
+  "start_from": "Uncommitted complete planner prototype in this worktree; controller reviews and commits",
+  "environment": [
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang"
+  ],
+  "forbidden": [
+    "ailang messages",
+    "git add/commit/stash/checkout/branch or other git write operations",
+    "editing outside this worktree",
+    "store quarantine or Store seam changes",
+    "frozen tools/launchd edits",
+    "deployment or publication"
+  ],
+  "inventory": {
+    "must_move": 10,
+    "must_stay": [
+      "world/",
+      "packages/world-core/",
+      "host/store/",
+      "tools/launchd/",
+      "public wire vocabulary"
+    ],
+    "unrelated": [
+      "broker model timeout test",
+      "daemon receipt timing test"
+    ]
+  },
+  "landing_strategy": {
+    "commits": "M1 then M2, or one atomic controller commit; planner makes no commits",
+    "boundaries_measured": [
+      {
+        "state": "M1 scaffold RED",
+        "go_test_rc": 1,
+        "run_count": 19
+      },
+      {
+        "state": "M1 GREEN",
+        "go_test_rc": 0,
+        "run_count": 27
+      },
+      {
+        "state": "M2 projection RED",
+        "go_test_rc": 1,
+        "run_count": 32
+      },
+      {
+        "state": "M2 projection GREEN",
+        "go_test_rc": 0,
+        "run_count": 32
+      },
+      {
+        "state": "final pinned coordinator/projection race",
+        "go_test_rc": 0,
+        "run_count": 169,
+        "skips": 0
+      },
+      {
+        "state": "final daemon wiring",
+        "go_test_rc": 0,
+        "run_count": 1
+      },
+      {
+        "state": "final broad host race under sandbox",
+        "go_test_rc": 1,
+        "run_count": 1361,
+        "skips": 6,
+        "socket_results": "UNINFORMATIVE UNDER SANDBOX",
+        "unrelated_timing_failures": 2
+      }
+    ]
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Type absent and undecodable reconcile damage while preserving read errors",
+      "loc": 49,
+      "files": [
+        "host/coordinator/coordinator.go",
+        "host/coordinator/errors.go",
+        "host/coordinator/coordinator_test.go"
+      ],
+      "acceptance": [
+        "go test -count=1 -run '^(TestReconcileDamageDisposition|TestReconcileRefusesDamagedRecord)$' -v ./host/coordinator/ -> rc=0, 27 RUN; all design damage/control assertions",
+        "Production diff +33/-16; Store seam unchanged"
+      ],
+      "mutations": [
+        "MUT-ABSENT-REC",
+        "MUT-ABSENT-OUT",
+        "MUT-ABSENT-WORLD",
+        "MUT-REC-DECODE-UNTYPED",
+        "MUT-OUTREF-UNTYPED",
+        "MUT-OUT-NIL-OBJ",
+        "MUT-ERR-AS-DAMAGE",
+        "MUT-KIND-SWAP",
+        "MUT-COMMIT-NULL-OK"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Pin integrity wire arm and report sanitized refusals through daemon ErrorLog",
+      "loc": 26,
+      "files": [
+        "host/projection/projection.go",
+        "host/projection/projection_test.go",
+        "host/projection/a2a_wire_test.go",
+        "host/daemon/daemon.go",
+        "host/daemon/invoke_e2e_test.go",
+        "design_docs/planned/w-transition-invocation-coordinator.md",
+        "docs/QUICKSTART.md"
+      ],
+      "acceptance": [
+        "go test -count=1 -run '^(TestA2ADispatchWire|TestProjection_ConfigValidation|TestA2ADispatch)$' -v ./host/projection/ -> rc=0, 33 RUN",
+        "go test -count=1 -run '^TestA2AErrorLogWiring$' -v ./host/daemon/ -> rc=0, 1 RUN",
+        "gofmt -l host cmd -> empty",
+        "go vet ./... -> rc=0",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test -race -count=1 -v ./host/coordinator/ ./host/projection/ -> rc=0, 170 RUN, zero skips",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh -> rc=0, 16 identities, 40 named tests, 9/9 steps",
+        "AC6 broad host race requires controller outside-sandbox certification; failures listed in plan OPEN",
+        "go build ./... -> rc=0"
+      ],
+      "mutations": [
+        "MUT-WIRE-INTEGRITY",
+        "MUT-NOLOG",
+        "MUT-LOG-ALL",
+        "MUT-LOG-TO-WIRE",
+        "MUT-LOG-NEWLINE",
+        "MUT-LOG-DEADLINE",
+        "MUT-ERRLOG-NIL-OK",
+        "MUT-ERRLOG-UNWIRED"
+      ]
+    }
+  ],
+  "mutation_results": {
+    "killed": 17,
+    "survived": 0,
+    "unguarded_accepted": [],
+    "results": [
+      {
+        "id": "MUT-ABSENT-REC",
+        "file": "host/coordinator/coordinator.go",
+        "change": "&IntegrityError{InvocationID: rc.InvocationID, Object: \"record\", Kind: \"absent\"} \u2192 fmt.Errorf(\"coordinator: reconcile %s: record: ok=%v: %w\", rc.InvocationID, ok, err)",
+        "command": "go test -count=1 -run '^TestReconcileDamageDisposition$/record_absent' -v ./host/coordinator/",
+        "rc": 1,
+        "runs": 3,
+        "verdict": "KILLED",
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true
+      },
+      {
+        "id": "MUT-ABSENT-OUT",
+        "file": "host/coordinator/coordinator.go",
+        "change": "&IntegrityError{InvocationID: rc.InvocationID, Object: \"output\", Kind: \"absent\"} \u2192 fmt.Errorf(\"coordinator: reconcile %s: output: ok=%v: %w\", rc.InvocationID, ok, err)",
+        "command": "go test -count=1 -run '^TestReconcileDamageDisposition$/output_absent' -v ./host/coordinator/",
+        "rc": 1,
+        "runs": 3,
+        "verdict": "KILLED",
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true
+      },
+      {
+        "id": "MUT-ABSENT-WORLD",
+        "file": "host/coordinator/coordinator.go",
+        "change": "&IntegrityError{InvocationID: rc.InvocationID, Object: \"world\", Kind: \"absent\"} \u2192 fmt.Errorf(\"coordinator: reconcile %s: world: ok=%v: %w\", rc.InvocationID, ok, err)",
+        "command": "go test -count=1 -run '^TestReconcileDamageDisposition$/world_absent' -v ./host/coordinator/",
+        "rc": 1,
+        "runs": 3,
+        "verdict": "KILLED",
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true
+      },
+      {
+        "id": "MUT-REC-DECODE-UNTYPED",
+        "file": "host/coordinator/coordinator.go",
+        "change": "if err := json.Unmarshal(recObj.Payload, &rec); err != nil {\n\t\treturn Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: \"record\", Kind: \"undecodable\"} \u2192 if err := json.Unmarshal(recObj.Payload, &rec); err != nil {\n\t\treturn Result{}, fmt.Errorf(\"decode record: %w\", err)",
+        "command": "go test -count=1 -run '^TestReconcileDamageDisposition$/record_undecodable' -v ./host/coordinator/",
+        "rc": 1,
+        "runs": 3,
+        "verdict": "KILLED",
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true
+      },
+      {
+        "id": "MUT-OUTREF-UNTYPED",
+        "file": "host/coordinator/coordinator.go",
+        "change": "outRef, err := hashref.Parse(rec.Output)\n\tif err != nil {\n\t\treturn Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: \"record\", Kind: \"undecodable\"} \u2192 outRef, err := hashref.Parse(rec.Output)\n\tif err != nil {\n\t\treturn Result{}, fmt.Errorf(\"output ref: %w\", err)",
+        "command": "go test -count=1 -run '^TestReconcileDamageDisposition$/record_output_ref_unparsable' -v ./host/coordinator/",
+        "rc": 1,
+        "runs": 3,
+        "verdict": "KILLED",
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true
+      },
+      {
+        "id": "MUT-OUT-NIL-OBJ",
+        "file": "host/coordinator/coordinator.go",
+        "change": "json.Unmarshal(outObj.Payload, &obj); err != nil || obj == nil \u2192 json.Unmarshal(outObj.Payload, &obj); err != nil",
+        "command": "go test -count=1 -run '^TestReconcileDamageDisposition$/output_not_object/null' -v ./host/coordinator/",
+        "rc": 1,
+        "runs": 3,
+        "verdict": "KILLED",
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true
+      },
+      {
+        "id": "MUT-ERR-AS-DAMAGE",
+        "file": "host/coordinator/coordinator.go",
+        "change": "return Result{}, fmt.Errorf(\"coordinator: reconcile %s: record: %w\", rc.InvocationID, err) \u2192 return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: \"record\", Kind: \"absent\"}",
+        "command": "go test -count=1 -run '^TestReconcileDamageDisposition$/store_read_error_stays_untyped' -v ./host/coordinator/",
+        "rc": 1,
+        "runs": 3,
+        "verdict": "KILLED",
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true
+      },
+      {
+        "id": "MUT-KIND-SWAP",
+        "file": "host/coordinator/coordinator.go",
+        "change": "Object: \"record\", Kind: \"absent\" \u2192 Object: \"record\", Kind: \"mismatch\"",
+        "command": "go test -count=1 -run '^TestReconcileDamageDisposition$/record_absent' -v ./host/coordinator/",
+        "rc": 1,
+        "runs": 3,
+        "verdict": "KILLED",
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true
+      },
+      {
+        "id": "MUT-COMMIT-NULL-OK",
+        "file": "host/coordinator/coordinator.go",
+        "change": "json.Unmarshal(out, &obj); err != nil || obj == nil \u2192 json.Unmarshal(out, &obj); err != nil",
+        "command": "go test -count=1 -run '^TestReconcileDamageDisposition$/commit_refuses_non_object_output/null' -v ./host/coordinator/",
+        "rc": 1,
+        "runs": 3,
+        "verdict": "KILLED",
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true
+      },
+      {
+        "id": "MUT-WIRE-INTEGRITY",
+        "file": "host/projection/projection.go",
+        "change": "case errors.As(err, &integrity):\n\t\treturn codeInternal, notAvailableMessage \u2192 case errors.As(err, &integrity):\n\t\treturn codeInternal, \"invocation was not committed; send a new task id\"",
+        "command": "go test -count=1 -run '^TestA2ADispatch$/(R13_reconcile_absent|R13_reconcile_integrity)' -v ./host/projection/",
+        "rc": 1,
+        "runs": 3,
+        "verdict": "KILLED",
+        "sha1": "6acbbfb21910fcf00c7fd0187a5904f6894500be",
+        "restored": true
+      },
+      {
+        "id": "MUT-NOLOG",
+        "file": "host/projection/projection.go",
+        "change": "fmt.Fprintf(h.errorLog, \"ailang-worldd: a2a refusal: %s %s: %q\\n\", method, id, err.Error()) \u2192 _ = err",
+        "command": "go test -count=1 -run '^TestA2ADispatchWire$/(R13_integrity|R4_R6_default)' -v ./host/projection/",
+        "rc": 1,
+        "runs": 3,
+        "verdict": "KILLED",
+        "sha1": "6acbbfb21910fcf00c7fd0187a5904f6894500be",
+        "restored": true
+      },
+      {
+        "id": "MUT-LOG-ALL",
+        "file": "host/projection/projection.go",
+        "change": "if msg == notAvailableMessage { \u2192 if true {",
+        "command": "go test -count=1 -run '^TestA2ADispatchWire$/R15' -v ./host/projection/",
+        "rc": 1,
+        "runs": 2,
+        "verdict": "KILLED",
+        "sha1": "6acbbfb21910fcf00c7fd0187a5904f6894500be",
+        "restored": true
+      },
+      {
+        "id": "MUT-LOG-TO-WIRE",
+        "file": "host/projection/projection.go",
+        "change": "h.logRefusal(req.Method, id, err) \u2192 h.logRefusal(req.Method, id, err)\n\t\t\t\t\tmsg = err.Error()",
+        "command": "go test -count=1 -run '^TestA2ADispatchWire$/R13_integrity' -v ./host/projection/",
+        "rc": 1,
+        "runs": 2,
+        "verdict": "KILLED",
+        "sha1": "6acbbfb21910fcf00c7fd0187a5904f6894500be",
+        "restored": true
+      },
+      {
+        "id": "MUT-LOG-NEWLINE",
+        "file": "host/projection/projection.go",
+        "change": "fmt.Fprintf(h.errorLog, \"ailang-worldd: a2a refusal: %s %s: %q\\n\", method, id, err.Error()) \u2192 fmt.Fprintf(h.errorLog, \"ailang-worldd: a2a refusal: %s %s: %v\\n\", method, id, err.Error())",
+        "command": "go test -count=1 -run '^TestA2ADispatchWire$/store_error_newline' -v ./host/projection/",
+        "rc": 1,
+        "runs": 2,
+        "verdict": "KILLED",
+        "sha1": "6acbbfb21910fcf00c7fd0187a5904f6894500be",
+        "restored": true
+      },
+      {
+        "id": "MUT-LOG-DEADLINE",
+        "file": "host/projection/projection.go",
+        "change": "if msg == notAvailableMessage { \u2192 if msg == notAvailableMessage || errors.Is(err, context.DeadlineExceeded) {",
+        "command": "go test -count=1 -run '^TestA2ADispatchWire$/R11' -v ./host/projection/",
+        "rc": 1,
+        "runs": 2,
+        "verdict": "KILLED",
+        "sha1": "6acbbfb21910fcf00c7fd0187a5904f6894500be",
+        "restored": true
+      },
+      {
+        "id": "MUT-ERRLOG-NIL-OK",
+        "file": "host/projection/projection.go",
+        "change": "case cfg.ErrorLog == nil: \u2192 case false && cfg.ErrorLog == nil:",
+        "command": "go test -count=1 -run '^TestProjection_ConfigValidation$' -v ./host/projection/",
+        "rc": 1,
+        "runs": 1,
+        "verdict": "KILLED",
+        "sha1": "6acbbfb21910fcf00c7fd0187a5904f6894500be",
+        "restored": true
+      },
+      {
+        "id": "MUT-ERRLOG-UNWIRED",
+        "file": "host/daemon/daemon.go",
+        "change": "ErrorLog: d.errLog, \u2192 ErrorLog: io.Discard,",
+        "command": "go test -count=1 -run '^TestA2AErrorLogWiring$' -v ./host/daemon/",
+        "rc": 1,
+        "runs": 1,
+        "verdict": "KILLED",
+        "sha1": "2b66316b92c94c141dbd38c0c21870d66c7cd7a1",
+        "restored": true
+      }
+    ]
+  },
+  "human_publish_command": "No publication in this sprint; controller owns commits.",
+  "findings": [
+    "All 17 design mutations KILLED; byte-identical production restoration verified with shasum after each mutation",
+    "Forward null-output control is load-bearing: MUT-COMMIT-NULL-OK commits null and fails the OutputError assertion",
+    "MUT-LOG-TO-WIRE repeated after assertion-order refinement and killed by hidden-detail assertion",
+    "OPEN: all-host race socket arms are UNINFORMATIVE UNDER SANDBOX; all-repository suite not certified here",
+    "OPEN: pinned broad run observed broker model timeout 5.514203291s > 2s and daemon receipt Timeout instead of CommitUncertain; no unrelated fixes made",
+    "Approved design residuals R-125-0 through R-125-5 stay out of scope"
+  ],
+  "executor_review": {
+    "changes": [
+      "exact damage Error() phrases asserted",
+      "operator log invocation id and quoted prefix asserted",
+      "deterministic R11 empty-log row; original transport row renamed R11_transport and budget widened to 2 s"
+    ],
+    "production_unchanged": true,
+    "mutations": [
+      {
+        "id": "MUT-ABSENT-REC",
+        "command": "go test -count=1 -run ^TestReconcileDamageDisposition$/record_absent -v ./host/coordinator/",
+        "red_rc": 1,
+        "red_runs": 3,
+        "green_rc": 0,
+        "green_runs": 3,
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true,
+        "failures": [
+          "    coordinator_test.go:1072: damage: *fmt.wrapError coordinator: reconcile a2a:ep1:t1: record: ok=false: %!w(<nil>) want record/absent",
+          "--- FAIL: TestReconcileDamageDisposition (0.01s)",
+          "    --- FAIL: TestReconcileDamageDisposition/record_absent (0.01s)",
+          "        --- FAIL: TestReconcileDamageDisposition/record_absent/{} (0.01s)",
+          "FAIL",
+          "FAIL\tgithub.com/sunholo-data/ailang-world/host/coordinator\t0.312s",
+          "FAIL"
+        ]
+      },
+      {
+        "id": "MUT-OUT-NIL-OBJ",
+        "command": "go test -count=1 -run ^TestReconcileDamageDisposition$/output_not_object/null -v ./host/coordinator/",
+        "red_rc": 1,
+        "red_runs": 3,
+        "green_rc": 0,
+        "green_runs": 3,
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true,
+        "failures": [
+          "    coordinator_test.go:1072: damage: <nil> <nil> want output/undecodable",
+          "--- FAIL: TestReconcileDamageDisposition (0.01s)",
+          "    --- FAIL: TestReconcileDamageDisposition/output_not_object (0.01s)",
+          "        --- FAIL: TestReconcileDamageDisposition/output_not_object/null (0.01s)",
+          "FAIL",
+          "FAIL\tgithub.com/sunholo-data/ailang-world/host/coordinator\t0.315s",
+          "FAIL"
+        ]
+      },
+      {
+        "id": "MUT-ERR-AS-DAMAGE",
+        "command": "go test -count=1 -run ^TestReconcileDamageDisposition$/store_read_error_stays_untyped -v ./host/coordinator/",
+        "red_rc": 1,
+        "red_runs": 3,
+        "green_rc": 0,
+        "green_runs": 3,
+        "sha1": "e3d3f34d46ab5ae95482c3a93d14864326faf229",
+        "restored": true,
+        "failures": [
+          "    coordinator_test.go:1069: read error: *coordinator.IntegrityError coordinator: reconcile a2a:ep1:t1: recorded record is absent",
+          "--- FAIL: TestReconcileDamageDisposition (3.26s)",
+          "    --- FAIL: TestReconcileDamageDisposition/store_read_error_stays_untyped (3.26s)",
+          "        --- FAIL: TestReconcileDamageDisposition/store_read_error_stays_untyped/{} (3.26s)",
+          "FAIL",
+          "FAIL\tgithub.com/sunholo-data/ailang-world/host/coordinator\t3.550s",
+          "FAIL"
+        ]
+      },
+      {
+        "id": "MUT-LOG-NEWLINE",
+        "command": "go test -count=1 -run ^TestA2ADispatchWire$/store_error_newline -v ./host/projection/",
+        "red_rc": 1,
+        "red_runs": 2,
+        "green_rc": 0,
+        "green_runs": 2,
+        "sha1": "6acbbfb21910fcf00c7fd0187a5904f6894500be",
+        "restored": true,
+        "failures": [
+          "    a2a_wire_test.go:226: operator log=\"ailang-worldd: a2a refusal: tasks/send a2a:ep-a:t1: coordinator: load source: SECRET\\nsecond line\\n\" want one line carrying \"SECRET\\\\nsecond line\"",
+          "--- FAIL: TestA2ADispatchWire (0.00s)",
+          "    --- FAIL: TestA2ADispatchWire/store_error_newline (0.00s)",
+          "FAIL",
+          "FAIL\tgithub.com/sunholo-data/ailang-world/host/projection\t0.296s",
+          "FAIL"
+        ]
+      },
+      {
+        "id": "MUT-LOG-DEADLINE",
+        "command": "go test -count=1 -run ^TestA2ADispatchWire$/R11$ -v ./host/projection/",
+        "red_rc": 1,
+        "red_runs": 2,
+        "green_rc": 0,
+        "green_runs": 2,
+        "sha1": "6acbbfb21910fcf00c7fd0187a5904f6894500be",
+        "restored": true,
+        "failures": [
+          "    a2a_wire_test.go:269: deadline logged: \"ailang-worldd: a2a refusal: tasks/send a2a:ep-a:t-r11: \\\"coordinator: load source: SECRET-R11-store-detail: context deadline exceeded\\\"\\n\"",
+          "--- FAIL: TestA2ADispatchWire (0.00s)",
+          "    --- FAIL: TestA2ADispatchWire/R11 (0.00s)",
+          "FAIL",
+          "FAIL\tgithub.com/sunholo-data/ailang-world/host/projection\t0.301s",
+          "FAIL"
+        ]
+      },
+      {
+        "id": "MUT-ERRLOG-UNWIRED",
+        "command": "go test -count=1 -run ^TestA2AErrorLogWiring$ -v ./host/daemon/",
+        "red_rc": 1,
+        "red_runs": 1,
+        "green_rc": 0,
+        "green_runs": 1,
+        "sha1": "2b66316b92c94c141dbd38c0c21870d66c7cd7a1",
+        "restored": true,
+        "failures": [
+          "    invoke_e2e_test.go:398: daemon ErrorLog=\"\"",
+          "--- FAIL: TestA2AErrorLogWiring (0.01s)",
+          "FAIL",
+          "FAIL\tgithub.com/sunholo-data/ailang-world/host/daemon\t0.360s",
+          "FAIL"
+        ]
+      }
+    ],
+    "gates": {
+      "format": {
+        "rc": 0,
+        "output": ""
+      },
+      "vet": {
+        "rc": 0
+      },
+      "build": {
+        "rc": 0
+      },
+      "named_coordinator": {
+        "rc": 0,
+        "runs": 27
+      },
+      "named_projection": {
+        "rc": 0,
+        "runs": 33
+      },
+      "race_coordinator_projection": {
+        "rc": 0,
+        "runs": 170,
+        "skips": 0,
+        "GOMAXPROCS": 2
+      },
+      "daemon_wiring": {
+        "rc": 0,
+        "runs": 1
+      },
+      "verify_ail": {
+        "rc": 0
+      },
+      "repository_all": {
+        "rc": 1,
+        "runs": 1434,
+        "socket_results": "UNINFORMATIVE UNDER SANDBOX",
+        "separate_failure": "TestPublishSetSameIDConflictOnCASRetryRefuses fake interpreter --version timed out after 10 s"
+      },
+      "transitionreg_named_recheck": {
+        "rc": 0,
+        "runs": 1
+      }
+    },
+    "open": [
+      "All-host race and outside-sandbox certification remain controller responsibilities",
+      "Base durable deadline load flake not fixed by this scope",
+      "Observed transition-registry fixture timeout passed named recheck; no fix claimed"
+    ]
+  }
+}
