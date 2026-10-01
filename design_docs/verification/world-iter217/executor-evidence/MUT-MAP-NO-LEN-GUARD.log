@@ -1,0 +1,6 @@
+=== RUN   TestMCPNameRefusal
+    mcpname_test.go:53: long encoding accepted: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+--- FAIL: TestMCPNameRefusal (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.186s
+FAIL

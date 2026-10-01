@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/tmp/world-iter217-executor/task_current.py", line 3, in <module>
+    exec(Path('/tmp/world-iter217-executor/d_full_mutations.py').read_text().split('for name,edits,pkg,test,kind in cases:')[0])
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 4
+    exec(Path('/tmp/world-iter217-executor/d_mutations.py').read_text().split('
+                                                                              ^
+SyntaxError: unterminated string literal (detected at line 4)

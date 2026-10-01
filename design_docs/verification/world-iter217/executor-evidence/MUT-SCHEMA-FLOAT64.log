@@ -1,0 +1,6 @@
+=== RUN   TestMCPSchemaNormalization
+    mcpname_test.go:80: constraint minimum lost/rounded: 9007199254740992 want 9007199254740993
+--- FAIL: TestMCPSchemaNormalization (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.200s
+FAIL

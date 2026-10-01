@@ -1,0 +1,16 @@
+=== RUN   TestDaemonDependencyAllowlist
+=== RUN   TestDaemonDependencyAllowlist/null_case_fails
+=== RUN   TestDaemonDependencyAllowlist/classifier_separates_stdlib_from_modules
+=== RUN   TestDaemonDependencyAllowlist/an_intruder_is_reported_by_name
+=== RUN   TestDaemonDependencyAllowlist/daemon_core_build_graph
+    daemon_test.go:957: 1 package(s) outside the zero-cloud allowlist reached the daemon core (patterns ./host/daemon/... ./cmd/ailang-worldd/...):
+          github.com/sunholo-data/ailang/serveapi
+        Each must be either removed or added to allowedDepModules with a justification (charter guardrail: local-first is inviolable).
+--- FAIL: TestDaemonDependencyAllowlist (0.13s)
+    --- PASS: TestDaemonDependencyAllowlist/null_case_fails (0.00s)
+    --- PASS: TestDaemonDependencyAllowlist/classifier_separates_stdlib_from_modules (0.00s)
+    --- PASS: TestDaemonDependencyAllowlist/an_intruder_is_reported_by_name (0.00s)
+    --- FAIL: TestDaemonDependencyAllowlist/daemon_core_build_graph (0.13s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.368s
+FAIL

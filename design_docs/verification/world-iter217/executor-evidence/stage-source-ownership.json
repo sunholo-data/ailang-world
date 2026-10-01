@@ -1,0 +1,55 @@
+{
+  "stage_commits": {
+    "A1": "5258f5406d7ec1d75b8897353398f562178afffe",
+    "A2": "deac7ad6c80370479d9081bf2874becfc8ebd22f",
+    "B": "5b34a77fcbd9f1ba33083da47cbe5f24ddb2c3dc",
+    "C": "cad657c51632ebb8d7c64a7ee9601a6075e8c059"
+  },
+  "D_parent": "cad657c51632ebb8d7c64a7ee9601a6075e8c059",
+  "D_production_behavior_diff": [],
+  "source_identity": [
+    {
+      "path": "host/projection/mcp.go",
+      "landed_C_sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "restored_current_sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "byte_identical": true
+    },
+    {
+      "path": "host/projection/projection.go",
+      "landed_C_sha256": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7",
+      "restored_current_sha256": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7",
+      "byte_identical": true
+    },
+    {
+      "path": "host/projection/mcpname.go",
+      "landed_C_sha256": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+      "restored_current_sha256": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+      "byte_identical": true
+    },
+    {
+      "path": "host/daemon/daemon.go",
+      "landed_C_sha256": "38dddbadabc51083820c7027143028379d26e2f7cb837191bd6c3440d2218692",
+      "restored_current_sha256": "38dddbadabc51083820c7027143028379d26e2f7cb837191bd6c3440d2218692",
+      "byte_identical": true
+    },
+    {
+      "path": "host/transitionreg/transitionreg.go",
+      "landed_C_sha256": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+      "restored_current_sha256": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+      "byte_identical": true
+    },
+    {
+      "path": "go.mod",
+      "landed_C_sha256": "b3427f9c52e6240ada240666f6bb70ab6dcb4df22c4f7383d44cb4dfa46c9653",
+      "restored_current_sha256": "b3427f9c52e6240ada240666f6bb70ab6dcb4df22c4f7383d44cb4dfa46c9653",
+      "byte_identical": true
+    },
+    {
+      "path": "go.sum",
+      "landed_C_sha256": "0efaabe8522a52a6603eb11b56716b9518b8ce1e093ea2a8a8d42fc729ca4a26",
+      "restored_current_sha256": "0efaabe8522a52a6603eb11b56716b9518b8ce1e093ea2a8a8d42fc729ca4a26",
+      "byte_identical": true
+    }
+  ],
+  "D_note": "D adds conformance tests/docs/evidence only; production mutations exercise B/C behavior. Final controller profiles/judge/CI pending."
+}

@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/daemon", "-timeout=120s", "-run", "^TestMCPCrossSurfaceExactSet$", "-v", "-count=1"], "rc": 0, "seconds": 1.9692280839663}

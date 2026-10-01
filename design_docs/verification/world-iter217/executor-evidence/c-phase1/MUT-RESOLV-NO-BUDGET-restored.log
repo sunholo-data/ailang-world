@@ -1,0 +1,4 @@
+=== RUN   TestMCPResolverInnerBudget
+--- PASS: TestMCPResolverInnerBudget (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.204s

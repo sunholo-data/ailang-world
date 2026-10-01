@@ -1,0 +1,48 @@
+{
+  "primary_byte_hashes": [
+    {
+      "path": "host/projection/mcp.go",
+      "be286c1_sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "current_sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "byte_identical": true
+    },
+    {
+      "path": "host/projection/projection.go",
+      "be286c1_sha256": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7",
+      "current_sha256": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7",
+      "byte_identical": true
+    },
+    {
+      "path": "host/projection/mcpname.go",
+      "be286c1_sha256": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+      "current_sha256": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+      "byte_identical": true
+    },
+    {
+      "path": "host/daemon/daemon.go",
+      "be286c1_sha256": "38dddbadabc51083820c7027143028379d26e2f7cb837191bd6c3440d2218692",
+      "current_sha256": "38dddbadabc51083820c7027143028379d26e2f7cb837191bd6c3440d2218692",
+      "byte_identical": true
+    },
+    {
+      "path": "host/transitionreg/transitionreg.go",
+      "be286c1_sha256": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+      "current_sha256": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+      "byte_identical": true
+    },
+    {
+      "path": "go.mod",
+      "be286c1_sha256": "b3427f9c52e6240ada240666f6bb70ab6dcb4df22c4f7383d44cb4dfa46c9653",
+      "current_sha256": "b3427f9c52e6240ada240666f6bb70ab6dcb4df22c4f7383d44cb4dfa46c9653",
+      "byte_identical": true
+    },
+    {
+      "path": "go.sum",
+      "be286c1_sha256": "0efaabe8522a52a6603eb11b56716b9518b8ce1e093ea2a8a8d42fc729ca4a26",
+      "current_sha256": "0efaabe8522a52a6603eb11b56716b9518b8ce1e093ea2a8a8d42fc729ca4a26",
+      "byte_identical": true
+    }
+  ],
+  "all_tracked_go_ail_module_production_diffs": [],
+  "tested_base": "be286c1dbf29eb56c922f5015c0bc1a52055f087"
+}

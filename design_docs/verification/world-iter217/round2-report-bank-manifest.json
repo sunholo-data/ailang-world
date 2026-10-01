@@ -1,0 +1,17 @@
+{
+  "candidate": "59870e58c4fc393aab62d2cf7ff8c83641ad6850",
+  "verdict": "FAIL",
+  "score": 54,
+  "verbatim_files": [
+    {
+      "path": "design_docs/verification/world-iter217/evaluator-product-round2/product-evaluator-independent.json",
+      "sha256": "701cecd09d937519628f637f0109c84821ba03688d5131819d1e2623d340b2f7",
+      "bytes": 441881
+    },
+    {
+      "path": "design_docs/verification/world-iter217/evaluator-product-round2/product-evaluator-independent.md",
+      "sha256": "0061ee52d3d025041ac4fe377aac5754638da4aa12189693660bdf9ceb1efbd6",
+      "bytes": 17888
+    }
+  ]
+}

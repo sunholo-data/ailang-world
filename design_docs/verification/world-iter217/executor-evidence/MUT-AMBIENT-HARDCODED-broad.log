@@ -1,0 +1,13 @@
+=== RUN   TestMCPCrossSurfaceExactSet
+    mcp_cross_test.go:88: sessionalpha MCP=[exit tools_decho] expected=tools_decho
+--- FAIL: TestMCPCrossSurfaceExactSet (0.87s)
+=== RUN   TestMCPAmbientExportsAbsent
+    mcp_cross_test.go:108: ambient MCP=exit
+--- FAIL: TestMCPAmbientExportsAbsent (0.90s)
+=== RUN   TestMCPMountMethodSource
+--- PASS: TestMCPMountMethodSource (0.00s)
+=== RUN   TestMCPMountedBearerDenial
+--- PASS: TestMCPMountedBearerDenial (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	2.008s
+FAIL

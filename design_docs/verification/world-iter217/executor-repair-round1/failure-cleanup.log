@@ -1,0 +1,6 @@
+=== RUN   TestA2AResendAfterWriteTimeout
+    invoke_e2e_test.go:325: forced post-commit failure-cleanup control
+--- FAIL: TestA2AResendAfterWriteTimeout (5.94s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	6.281s
+FAIL

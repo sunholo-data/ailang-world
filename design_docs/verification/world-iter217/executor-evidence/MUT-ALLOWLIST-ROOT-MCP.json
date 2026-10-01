@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/daemon", "-run", "^TestAilangProtocolAdmissionIsNarrow$", "-v", "-count=1", "-timeout=60s"], "rc": 1, "seconds": 0.6027214168570936}

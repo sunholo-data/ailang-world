@@ -1,0 +1,47 @@
+{
+  "doc": "design_docs/planned/w-mcp-dispatch-projection.md",
+  "iso_ts": "2026-10-01T18:36:54Z",
+  "reviewers": [
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "quota",
+      "error": "Anthropic bucket blocked by the mission ration: Anthropic usage endpoint returned HTTP 429; CLI fallback also failed (no \"Current session\" line in `claude -p /usage` output)",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.023454,
+      "tokens_in": 10437,
+      "tokens_out": 215,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The strict design choice in D108-2 to 'refuse the entire MCP surface loudly' for a single ID exceeding 64 encoded bytes creates a brittle blast radius: a single transition added to the registry with heavy escapes or a \u003e32-byte name will deterministically disable the agent's entire MCP interface for that session, prioritizing the 'no silent fallbacks' axiom over partial availability.",
+        "catch": "Ensure the whole-surface refusal triggered by CallerSurface properly surfaces as a bounded HTTP 500 or JSON-RPC transport error to the client, rather than causing an unrecoverable daemon panic during the POST request's authorization phase.",
+        "proposed_fix": "In D108-2, append: 'Surface refusal from CallerSurface MUST yield a bounded, structured HTTP or JSON-RPC error during the POST authorization phase; it must never panic the host daemon or permanently poison the route mount.'"
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "R3 controller source rechecked batch2+K sequence, GET upstream405, released proxy/sumdb200, seam closure3 and old protocol identity. Final exact full-gate acceptance retained. No code implemented. Quota-blocked Ollama/OpenRouter omitted; absent seats will use available native independent-model contexts under D48."
+  },
+  "synthesis": {
+    "verdict": "proceed",
+    "blocking_objections": null,
+    "absent_reviewers": [
+      {
+        "model": "claude-sonnet-5@claude-p",
+        "reason": "quota"
+      }
+    ],
+    "total_cost_usd": 0.023454,
+    "total_tokens_in": 10437,
+    "total_tokens_out": 215
+  }
+}

@@ -1,0 +1,6 @@
+=== RUN   TestMCPInvokeDeadlineFreesSlot
+    mcp_bounds_test.go:61: callback did not cooperate with aggregate deadline
+--- FAIL: TestMCPInvokeDeadlineFreesSlot (0.12s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.315s
+FAIL

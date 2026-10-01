@@ -1,0 +1,6 @@
+=== RUN   TestMCPBatchConformance
+=== RUN   TestMCPBatchConformance/old_versions_and_item_errors
+--- PASS: TestMCPBatchConformance (0.01s)
+    --- PASS: TestMCPBatchConformance/old_versions_and_item_errors (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.200s

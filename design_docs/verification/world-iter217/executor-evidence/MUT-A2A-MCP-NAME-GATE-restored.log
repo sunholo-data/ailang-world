@@ -1,0 +1,5 @@
+=== RUN   TestProjection_WireOwnershipSource
+    projection_test.go:1496: wire ownership pinned over 3 non-test source file(s)
+--- PASS: TestProjection_WireOwnershipSource (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.197s

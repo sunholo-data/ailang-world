@@ -1,0 +1,154 @@
+{
+  "scope": "Only resend fixture and controller-requested host documentation/implementation-state metadata; no production/module/kernel/constants/contract changes.",
+  "parent_product": "be286c1dbf29eb56c922f5015c0bc1a52055f087",
+  "fixture_original_sha256": "05095e6443a88265f897d4d932f1faa357eadec5df72d2d3f0c7d38c0c98b1b6",
+  "fixture_repaired_sha256": "b4bb5c42f01bc54b485e6acaf40fa1acab5d5fe4ef463519c4267c43ad5070fb",
+  "real_capsule_replay_sibling_unchanged": true,
+  "production_module_diffs": [],
+  "checks": {
+    "target-count3": {
+      "cmd": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "-timeout=60s",
+        "./host/daemon",
+        "-run",
+        "^TestA2AResendAfterWriteTimeout$",
+        "-v",
+        "-count=3"
+      ],
+      "rc": 0,
+      "seconds": 75.95895520900376,
+      "started_utc": "2026-10-01T21:30:47.411914+00:00",
+      "external_cap_seconds": 180,
+      "godebug": null,
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+    },
+    "target-race-count3": {
+      "cmd": [
+        "go",
+        "test",
+        "-race",
+        "-p",
+        "1",
+        "-timeout=60s",
+        "./host/daemon",
+        "-run",
+        "^TestA2AResendAfterWriteTimeout$",
+        "-v",
+        "-count=3"
+      ],
+      "rc": 0,
+      "seconds": 120.9354644168634,
+      "started_utc": "2026-10-01T21:33:07.315060+00:00",
+      "external_cap_seconds": 180,
+      "godebug": null,
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+    },
+    "real-execution-sibling": {
+      "cmd": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "-timeout=60s",
+        "./host/daemon",
+        "-run",
+        "^TestA2AInvokesPublishedTransition$",
+        "-v",
+        "-count=1"
+      ],
+      "rc": 0,
+      "seconds": 96.898657792015,
+      "started_utc": "2026-10-01T21:36:36.253991+00:00",
+      "external_cap_seconds": 180,
+      "godebug": null,
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+    },
+    "duplicate-task": {
+      "cmd": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "-timeout=30s",
+        "./host/daemon",
+        "-run",
+        "^TestA2AResendAfterWriteTimeout$",
+        "-v",
+        "-count=1"
+      ],
+      "rc": 1,
+      "seconds": 26.119174082996324,
+      "started_utc": "2026-10-01T21:38:36.960736+00:00",
+      "external_cap_seconds": 180,
+      "godebug": null,
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+    },
+    "duplicate-task-restored": {
+      "cmd": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "-timeout=30s",
+        "./host/daemon",
+        "-run",
+        "^TestA2AResendAfterWriteTimeout$",
+        "-v",
+        "-count=1"
+      ],
+      "rc": 0,
+      "seconds": 18.378152958117425,
+      "started_utc": "2026-10-01T21:39:03.137368+00:00",
+      "external_cap_seconds": 180,
+      "godebug": null,
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+    },
+    "failure-cleanup": {
+      "cmd": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "-timeout=30s",
+        "./host/daemon",
+        "-run",
+        "^TestA2AResendAfterWriteTimeout$",
+        "-v",
+        "-count=1"
+      ],
+      "rc": 1,
+      "seconds": 20.789809874957427,
+      "started_utc": "2026-10-01T21:39:21.550711+00:00",
+      "external_cap_seconds": 180,
+      "godebug": null,
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+    },
+    "failure-cleanup-restored": {
+      "cmd": [
+        "go",
+        "test",
+        "-p",
+        "1",
+        "-timeout=30s",
+        "./host/daemon",
+        "-run",
+        "^TestA2AResendAfterWriteTimeout$",
+        "-v",
+        "-count=1"
+      ],
+      "rc": 0,
+      "seconds": 5.126025291159749,
+      "started_utc": "2026-10-01T21:39:42.368687+00:00",
+      "external_cap_seconds": 180,
+      "godebug": null,
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+    }
+  },
+  "controls_note": "Both negative controls edit only the test. Different retry task intentionally permits a second real coordinator execution and is caught by the exactly-once assertion; this is observable guard calibration, not a production reconciliation mutant. Forced postcommit fatal calibrates release/join cleanup; its expected rc1 is not claimed as a passing test or semantic kernel kill.",
+  "acceptance": "D passes null; normal full profiles, fresh independent round2 evaluation and required CI pending; round1 FAIL49 retained and no baseline waiver.",
+  "agent_token_usage": null
+}

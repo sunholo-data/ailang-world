@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "go",
+    "test",
+    "-p",
+    "1",
+    "./host/transitionreg",
+    "-run",
+    "^TestRegistryHeadAbsentAfterLookupCancellation/absent$",
+    "-v",
+    "-count=1",
+    "-timeout=60s"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter217",
+  "rc": 0,
+  "seconds": 26.211077959043905,
+  "external_timeout_seconds": 120
+}

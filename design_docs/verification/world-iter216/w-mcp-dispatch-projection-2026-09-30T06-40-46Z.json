@@ -1,0 +1,78 @@
+{
+  "doc": "design_docs/planned/w-mcp-dispatch-projection.md",
+  "iso_ts": "2026-09-30T06:40:46Z",
+  "reviewers": [
+    {
+      "model": "claude-sonnet-5@claude-p",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "quota",
+      "error": "Anthropic bucket blocked by the mission ration: Anthropic usage endpoint returned HTTP 403; CLI fallback also failed (no \"Current session\" line in `claude -p /usage` output)",
+      "landed": null
+    },
+    {
+      "model": "gpt6-astra",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.04394000000000001,
+      "tokens_in": 20584,
+      "tokens_out": 231,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The design sets the Runner's slot cap using `procbound.MaxOutstanding` (claimed as 8 at `procbound.go:31` in D108-5), but this factual codebase claim is entirely unverified. There is no entry in the Premise Verification Log that reads `procbound.go` to confirm the constant's existence, its value, or its semantics as a process-wide cap. Gate 1 strictly requires all factual claims about the codebase to be verified.",
+        "catch": "Missing V-log entry for `procbound.MaxOutstanding` and its defining package.",
+        "proposed_fix": "Add a verification row to the V-log (e.g., V32) reading the exact `procbound.go` file path (e.g., `read host/procbound/procbound.go`) to explicitly verify `MaxOutstanding = 8` and its documentation, or derive the slot cap from an already-verified daemon scalar."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.14966100000000002,
+      "tokens_in": 18512,
+      "tokens_out": 6275,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Obligation 4's load-bearing safety claim — that the mounted seam 'returns inside the frozen D7 writeTimeout (30 s) … by construction' — is asserted, never derived, and is arithmetically contradicted by the doc's own constants. One POST runs up to three sequential hostcall.Run-bounded callbacks: ResolveSession (Runner timeout 20 s — D108-5 assigns the resolver adapter NO inner bound, unlike tools at readDeadline 10 s and the invoker at invokeDeadline 20 s), then Tools (≤10–20 s), then Invoke (≤20 s). Worst case ≈ 50 s, plus the ≤4 MiB body read that also eats the write-deadline window — well past the 30 s WriteTimeout at which the server kills the response. The D7 block is frozen byte-untouched, so the constants cannot be raised, and the per-callback bounds sum past them: the frozen whole-POST envelope can never be delivered on a slow authorize path. This is simultaneously a premise-verification failure (asserted, no V-row derives the latency) and a bounded-waits axiom failure (resolver store reads ride the bare 20 s Runner).",
+        "catch": "Verify the worst-case per-POST latency against writeTimeout=30 s before quorum: (1) D108-5 lists inner bounds for the tools and invoker adapters but is silent on the resolver adapter — session-resolution store reads (which ride the Runner's 20 s via the ErrNoDeadline policy) have no tighter discipline; (2) produce the actual worst-case sum (read + resolve + tools + invoke) and check it against daemon.go:97's writeTimeout; (3) note M108-4's deadline test uses 'a shrunk Runner timeout', sidestepping the production-constants question entirely, so nothing in the AC set would catch this gap.",
+        "proposed_fix": "Replace obligation 4's 'returns inside the frozen D7 writeTimeout (30 s) by construction' with a derived latency budget table and fix the bound arithmetic: give the resolver adapter an explicit inner deadline using the already-frozen credentialBudget (3 s, daemon.go:153, V19), so worst case = resolve(3) + tools(10) + invoke(20) = 33 s — which STILL exceeds 30 s, so the doc must then either (a) tighten the tools/invoke inner bounds to fit a stated ≤30 s budget with the derivation recorded as a new [R] verification row, or (b) delete the 'by construction' claim, state explicitly that worst-case POSTs exceed WriteTimeout and are truncated by the server (client sees connection termination, still no zombie stream), and justify why the frozen envelope is only guaranteed on sub-budget paths. Amend D108-5 to specify every adapter's inner bound, and add to M108-4 a production-constants test leg asserting a saturated authorize+invoke POST is answered (or truncated, per the chosen reading) within the frozen window, with a named mutation that relaxes one inner bound and reds it."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "The revised draft measures the delivered v0.47.2 seam, preserves the split obligations with explicit reductions for stateless POST, and names non-vacuous mutations. External reviewers must still decide the direction and freeze questions."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: The design sets the Runner's slot cap using `procbound.MaxOutstanding` (claimed as 8 at `procbound.go:31` in D108-5), but this factual codebase claim is entirely unverified. There is no entry in the Premise Verification Log that reads `procbound.go` to confirm the constant's existence, its value, or its semantics as a process-wide cap. Gate 1 strictly requires all factual claims about the codebase to be verified.",
+      "oc-kimi-k3: Obligation 4's load-bearing safety claim — that the mounted seam 'returns inside the frozen D7 writeTimeout (30 s) … by construction' — is asserted, never derived, and is arithmetically contradicted by the doc's own constants. One POST runs up to three sequential hostcall.Run-bounded callbacks: ResolveSession (Runner timeout 20 s — D108-5 assigns the resolver adapter NO inner bound, unlike tools at readDeadline 10 s and the invoker at invokeDeadline 20 s), then Tools (≤10–20 s), then Invoke (≤20 s). Worst case ≈ 50 s, plus the ≤4 MiB body read that also eats the write-deadline window — well past the 30 s WriteTimeout at which the server kills the response. The D7 block is frozen byte-untouched, so the constants cannot be raised, and the per-callback bounds sum past them: the frozen whole-POST envelope can never be delivered on a slow authorize path. This is simultaneously a premise-verification failure (asserted, no V-row derives the latency) and a bounded-waits axiom failure (resolver store reads ride the bare 20 s Runner)."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "claude-sonnet-5@claude-p",
+        "reason": "quota"
+      },
+      {
+        "model": "gpt6-astra",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.19360100000000002,
+    "total_tokens_in": 39096,
+    "total_tokens_out": 6506
+  }
+}

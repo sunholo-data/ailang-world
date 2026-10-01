@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "-race", "./host/projection", "-run", "TestMCPName|TestMCPSchema|ExampleEncodeMCPName", "-v", "-count=1", "-timeout=60s"], "rc": 0, "seconds": 9.444345541996881}

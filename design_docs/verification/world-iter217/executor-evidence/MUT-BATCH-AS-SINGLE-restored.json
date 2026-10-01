@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-timeout=120s", "-run", "^TestMCPBatchConformance/old_versions_and_item_errors$", "-v", "-count=1"], "rc": 0, "seconds": 0.6274717079941183}

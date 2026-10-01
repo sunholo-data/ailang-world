@@ -1,0 +1,20 @@
+{
+  "doc": "design_docs/planned/w-mcp-dispatch-projection.md",
+  "snapshot": "07df462",
+  "reviewer": "gpt-6-sol",
+  "reviewer_role": "native quorum substitute",
+  "judge_independence": "same-vendor",
+  "author": "gpt-6.1-sol",
+  "verdict": "reject",
+  "blocking_count": 1,
+  "strongest_objection": "The design reuses allowedDescriptors and claims genuine registry errors fail closed, but an absent first head check causes any subsequent NewRequest/ReadSnapshot error to be returned as an empty allowed set. A head published between the two reads followed by a snapshot/store failure is masked. The proposed acceptance tests do not distinguish that race from a legitimate absent head.",
+  "catch": "host/projection/projection.go:388-400 swallows rerr whenever hasHead is false; host/transitionreg/transitionreg.go:76-120 has multiple genuine failure causes; projection_test.go:610-663 tests the present-head error and absent-then-success cases only.",
+  "proposed_fix": "Specify typed absent-head versus genuine snapshot-error classification before reusing the helper. Add deterministic absent-precheck/failed-snapshot MCP list and Invoke tests asserting host error and zero Dispatch, alongside true absent-head and absent-then-success controls. Apply a mutation restoring the current catch-all and prove the selected new test kills it.",
+  "historical_objections": "r1 bounds/slot arithmetic and r2 batch/GET-vacuity objections appear addressed in r3 text and released source; this is a new blocking gap.",
+  "product_acceptance": "NOT RUN",
+  "baseline": {
+    "sequential_verify_ail_rc": 0,
+    "sequential_verify_go_rc": 1,
+    "sequential_go_failure": "TestDispatchDurableDeadline/uncertain_Commit"
+  }
+}

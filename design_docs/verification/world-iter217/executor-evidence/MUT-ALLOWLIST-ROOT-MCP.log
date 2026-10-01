@@ -1,0 +1,6 @@
+=== RUN   TestAilangProtocolAdmissionIsNarrow
+    daemon_test.go:986: disallowedDeps(ailang internals + cloud path) refused [cloud.google.com/go/storage], want ALL of [github.com/sunholo-data/ailang/internal/apiserver github.com/sunholo-data/ailang/serveapi cloud.google.com/go/storage] — the serveapi/protocol package-path entry must NOT widen to the module root
+--- FAIL: TestAilangProtocolAdmissionIsNarrow (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.259s
+FAIL

@@ -1,0 +1,46 @@
+{
+  "iteration": 217,
+  "time_utc": "2026-10-01T20:43:28Z",
+  "instrument_errors": [
+    {
+      "command": "mission-heartbeat.sh gate3",
+      "rc": 2,
+      "reason": "missing stamp verb"
+    },
+    {
+      "command": "mission-heartbeat.sh stamp gate3",
+      "rc": 2,
+      "reason": "invalid gate label; actual label gate-3"
+    }
+  ],
+  "corrected_command": "env MISSION_NAME=world bash /Users/voightkampff/dev/sunholo-data/ailang/tools/launchd/mission-heartbeat.sh stamp gate-3",
+  "corrected_rc": 0,
+  "base_ci_positive_control": {
+    "sha": "54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e",
+    "completed_success": [
+      "go host build + test gate",
+      "ailang-code verify gate"
+    ]
+  },
+  "D_recovery": {
+    "original_deadline": "2026-10-01T20:46:00Z",
+    "bounded_recovery_deadline": "2026-10-01T21:00:00Z",
+    "reason": "test accounting-before-timing refinement; exact selected aggregate controls; two dependency boundaries; final focused checks; evidence and D commit",
+    "product_constants_unchanged": true
+  },
+  "product_evaluator": {
+    "agent": "/root/evaluator_product",
+    "model": "gpt-6-astra",
+    "fallback": "D-WORLD-48 same vendor different model FLAG",
+    "native_tokens": "not reported",
+    "spawned_before_candidate": "skills/source review only; immutable candidate pending"
+  },
+  "fresh_product_evaluator_spawn_prompt_deviation": {
+    "required_prefix": "MISSION-ROLE: evaluator",
+    "original_prompt_prefix": "Required fresh independent PRODUCT evaluator",
+    "original_prefix_omitted": true,
+    "native_tool_result": "accepted explicit model gpt-6-astra; agent /root/evaluator_product",
+    "correction": "role-prefixed corrective message delivered after source/pristine review began; original omission preserved",
+    "support_limit": "actual fresh-context different-model judge independent; no claim original prompt satisfied spawn-hook token rule"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "baseline-verify-ail.log": {
+    "raw_sha256": "5b9de65f86c47f08321e74babaa906769ada7e9e74964186d834d8465d45c8b8",
+    "raw_base64": "baseline-verify-ail.log.raw.b64"
+  },
+  "baseline-sequential-verify-go.log": {
+    "raw_sha256": "3c82ea6546731c794e68cb465452cf2d4f0f315df6c5592b8c7331ddca7ed6a4",
+    "raw_base64": "baseline-sequential-verify-go.log.raw.b64"
+  },
+  "baseline-sequential-verify-ail.log": {
+    "raw_sha256": "03b2848e7fb136b11d0225707977b0b774426d13975796e9d8178b3b4401726d",
+    "raw_base64": "baseline-sequential-verify-ail.log.raw.b64"
+  },
+  "baseline-verify-go.log": {
+    "raw_sha256": "d758ef032420d5448c1858d7ec138376e52332902d14ea796c123b748f6d9e77",
+    "raw_base64": "baseline-verify-go.log.raw.b64"
+  }
+}

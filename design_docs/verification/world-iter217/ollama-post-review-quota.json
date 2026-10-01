@@ -1,0 +1,31 @@
+{
+  "updated": "2026-10-01T18:08:46.508291Z",
+  "usage": [
+    {
+      "bucket": "ollama",
+      "window": "5h",
+      "tokens": 119166,
+      "stages": 1,
+      "window_start": "2026-10-01T18:08:46Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    },
+    {
+      "bucket": "ollama",
+      "window": "long",
+      "tokens": 13555708,
+      "stages": 6,
+      "window_start": "2026-09-25T04:06:47Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    }
+  ],
+  "at": "2026-10-01T22:38:50.797036Z",
+  "verdicts": [],
+  "ollama_provider_usage": {
+    "gauge_status": "OK",
+    "state": "ok",
+    "reason": "Ollama Cloud gauge below 80%; reset-aware pacing unavailable without metadata; daily ration ok (9.7pp of 10pp per day over 20h26m0s)",
+    "observed_at": "2026-10-01T22:38:50.797036Z",
+    "session_usage": 0.043,
+    "weekly_usage": 0.585
+  }
+}

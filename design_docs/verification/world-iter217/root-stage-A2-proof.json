@@ -1,0 +1,16 @@
+{
+  "stage_sha": "deac7ad6c80370479d9081bf2874becfc8ebd22f",
+  "production_file": "host/projection/projection.go",
+  "original_sha256": "139854a43d5c1ba49ddeca64d0c4262989675090a4b7b8b56afdbeeb67cf0eda",
+  "mutant_sha256": "d7e7781e1a80547d1b9e29ab36194a27c3d93d4b0f7f3ceb27ad1b19726035d1",
+  "restored_sha256": "139854a43d5c1ba49ddeca64d0c4262989675090a4b7b8b56afdbeeb67cf0eda",
+  "mutation": {
+    "old": "if !hasHead && errors.As(rerr, &target) {",
+    "new": "if !hasHead { _ = target"
+  },
+  "pristine_rc": 0,
+  "compile_fence_rc": 0,
+  "mutant_runtime_rc": 1,
+  "restored_rc": 0,
+  "scope": "focused independent root production regression control; not full verification"
+}

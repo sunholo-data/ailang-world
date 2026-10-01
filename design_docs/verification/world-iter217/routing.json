@@ -1,0 +1,57 @@
+{
+  "controller": {
+    "actual": "codex:gpt-6.1-sol",
+    "quota_bucket": "codex",
+    "tokens": null
+  },
+  "designer": {
+    "preferred": "pi:ollama/glm-5.3:cloud",
+    "native_spawn_error": "Unknown model glm-5.3",
+    "resolved": "recipe codex:gpt-6.1-sol over-ration-reroute:ollama",
+    "actual": "Agent gpt-6.1-sol",
+    "transport_substitution": "explicit operator Agent request; D-WORLD-48",
+    "tokens": null,
+    "runs": 2
+  },
+  "planner": {
+    "resolved": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin",
+    "derived": "codex:gpt-6.1-sol declared:planner-lane-default-pin",
+    "actual": "Agent gpt-6.1-sol",
+    "stage": "fullplan completed daad0b3; 5current milestones14AC43mutants1750LOC2.8days; no prototype",
+    "tokens": null
+  },
+  "executor": {
+    "resolved": "recipe codex:gpt-6.1-sol declared:provider-pin",
+    "actual": "Agent gpt-6.1-sol",
+    "stage": "fullimplementation authorized afterfullplanvalidation; stagecommits required",
+    "tokens": null
+  },
+  "evaluator": {
+    "resolved": "agent-tool sonnet declared:alias-pin",
+    "native_spawn_error": "Unknown model sonnet",
+    "fallback": "Agent gpt-6-astra",
+    "independence": "same-vendor different-model fresh context",
+    "historical216_admin": "PASS92 historical banking only",
+    "tokens": null,
+    "design_quorum": "R1PASS; R2 narrow REJECT immutable syntax + exact refinement ACCEPTED"
+  },
+  "quota_blocked": {
+    "ollama": "10.6pp/22h42>10pp/day",
+    "anthropic": "unknown HTTP403 CLI usage killed",
+    "openrouter": "6.58USD>2.33USD/day"
+  },
+  "fallback_authority": "D-WORLD-48; gate3 available-lane rule",
+  "tickets": [
+    "inbox_1790879446012_40d2231f",
+    "inbox_1790879446686_70244847",
+    "inbox_1790879447354_98fc1f6f"
+  ],
+  "quorum_reviewer": {
+    "actual": "Agent gpt-6-sol",
+    "tokens": null,
+    "independence": "same-vendor different-model",
+    "rounds": "R1REJECT typedabsence; R2PASS"
+  },
+  "metered_total_usd": 0.051604,
+  "controller_deviation": "Initially imposed nonexistent1daylimit, corrected beforeimplementation tofull2.8day scope within3\u20134day skillbound; no partialcompletionclaim"
+}

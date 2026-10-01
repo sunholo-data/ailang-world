@@ -1,0 +1,8 @@
+# github.com/sunholo-data/ailang-world/host/projection [github.com/sunholo-data/ailang-world/host/projection.test]
+host/projection/mcp_test.go:14:2: "net/http" imported and not used
+host/projection/mcp_test.go:72:4: h.MCP undefined (type *Handler has no field or method MCP)
+host/projection/mcp_test.go:131:4: h.MCP undefined (type *Handler has no field or method MCP)
+host/projection/mcp_test.go:191:4: h.mintTask undefined (type *Handler has no field or method mintTask)
+host/projection/mcp_test.go:194:13: undefined: mcpAdapter
+FAIL	github.com/sunholo-data/ailang-world/host/projection [build failed]
+FAIL

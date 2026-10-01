@@ -1,0 +1,29 @@
+{
+  "design_snapshot": "07df462508618218cb4dac0eaff485a8236ef049",
+  "author": "codex:gpt-6.1-sol",
+  "seats": [
+    {
+      "model": "gemini-3-1-pro",
+      "verdict": "pass",
+      "transport": "CLI"
+    },
+    {
+      "model": "gpt-6-astra",
+      "verdict": "pass",
+      "transport": "Agent",
+      "independence": "same-vendor different-model"
+    },
+    {
+      "model": "gpt-6-sol",
+      "verdict": "reject",
+      "transport": "Agent",
+      "independence": "same-vendor different-model"
+    }
+  ],
+  "verdict": "blocked",
+  "blocking_count": 1,
+  "cli_absent": "claude-sonnet-5@claude-p quota",
+  "authority": "D-WORLD-48 substitutes native seats; CLI artifact preserved unchanged",
+  "controller_reproduction": "absent-snapshot-repro rc1; three old controls rc0",
+  "product_acceptance": "NOT RUN"
+}

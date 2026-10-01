@@ -1,0 +1,6 @@
+=== RUN   TestMCPNameRoundTrip
+    mcpname_test.go:17: exact encoding "world/recovery-transition/v1"="world/recovery-transition/v1"/<nil> want "world_srecovery-transition_sv1"
+--- FAIL: TestMCPNameRoundTrip (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.176s
+FAIL

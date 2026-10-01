@@ -1,0 +1,11 @@
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure
+=== RUN   TestMCPAbsentPrecheckSnapshotFailure/list/same_text
+    mcp_absence_test.go:78: whole host envelope=200 event: message
+        data: {"jsonrpc":"2.0","id":7,"result":{"tools":[]}}
+        
+         want {"jsonrpc":"2.0","id":7,"error":{"code":-32603,"message":"host callback failed"}}
+--- FAIL: TestMCPAbsentPrecheckSnapshotFailure (0.00s)
+    --- FAIL: TestMCPAbsentPrecheckSnapshotFailure/list/same_text (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.199s
+FAIL

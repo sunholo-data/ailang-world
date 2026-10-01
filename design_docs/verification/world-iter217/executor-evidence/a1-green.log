@@ -1,0 +1,31 @@
+=== RUN   TestRegistryHeadAbsentErrorClassification
+=== RUN   TestRegistryHeadAbsentErrorClassification/direct
+=== RUN   TestRegistryHeadAbsentErrorClassification/new_request
+=== RUN   TestRegistryHeadAbsentErrorClassification/store
+=== RUN   TestRegistryHeadAbsentErrorClassification/same_text
+=== RUN   TestRegistryHeadAbsentErrorClassification/object
+=== RUN   TestRegistryHeadAbsentErrorClassification/missing_object
+=== RUN   TestRegistryHeadAbsentErrorClassification/hash
+--- PASS: TestRegistryHeadAbsentErrorClassification (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/direct (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/new_request (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/store (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/same_text (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/object (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/missing_object (0.00s)
+    --- PASS: TestRegistryHeadAbsentErrorClassification/hash (0.00s)
+=== RUN   TestRegistryHeadAbsentAfterLookupCancellation
+=== RUN   TestRegistryHeadAbsentAfterLookupCancellation/absent
+    absence_example_test.go:87: context=true typedabsence=false error=read transition registry: context: context canceled
+=== RUN   TestRegistryHeadAbsentAfterLookupCancellation/present
+    absence_example_test.go:87: context=true typedabsence=false error=read transition registry: context: context canceled
+=== RUN   TestRegistryHeadAbsentAfterLookupCancellation/deadline
+    absence_example_test.go:87: context=true typedabsence=false error=read transition registry: context: context deadline exceeded
+--- PASS: TestRegistryHeadAbsentAfterLookupCancellation (0.00s)
+    --- PASS: TestRegistryHeadAbsentAfterLookupCancellation/absent (0.00s)
+    --- PASS: TestRegistryHeadAbsentAfterLookupCancellation/present (0.00s)
+    --- PASS: TestRegistryHeadAbsentAfterLookupCancellation/deadline (0.00s)
+=== RUN   ExampleRegistryHeadAbsentError
+--- PASS: ExampleRegistryHeadAbsentError (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	0.295s

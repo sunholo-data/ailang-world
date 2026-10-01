@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/transitionreg", "-run", "^TestRegistryHeadAbsentErrorClassification/direct$", "-v", "-count=1", "-timeout=60s"], "rc": 0, "seconds": 0.4779030829668045}

@@ -1,0 +1,14 @@
+[
+  {
+    "path": "round3-final-verify-ail.log",
+    "bytes": 2401,
+    "sha256": "03b2848e7fb136b11d0225707977b0b774426d13975796e9d8178b3b4401726d",
+    "lossless_raw_path": "round3-final-verify-ail.log.raw.b64"
+  },
+  {
+    "path": "round3-final-verify-go.log",
+    "bytes": 5877,
+    "sha256": "4b81bcebf8cee62e6f14f847eff7efae0a88fd4a8157e2339379314ca0afebda",
+    "lossless_raw_path": "round3-final-verify-go.log.raw.b64"
+  }
+]

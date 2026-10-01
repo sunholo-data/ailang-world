@@ -1,0 +1,58 @@
+{
+  "diff_check": {
+    "argv": [
+      "git",
+      "diff",
+      "--check"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "privacy_gate": {
+    "argv": [
+      "bash",
+      "scripts/check_no_personal_email.sh"
+    ],
+    "rc": 0,
+    "stdout": "\u2713 check-no-personal-email: no personal addresses in the loop-written surface\n",
+    "stderr": ""
+  },
+  "ignore_positive": {
+    "argv": [
+      "git",
+      "check-ignore",
+      "-v",
+      ".ailang/state/world217-ignore-control.txt"
+    ],
+    "rc": 0,
+    "stdout": ".gitignore:3:**/.ailang/\t.ailang/state/world217-ignore-control.txt\n",
+    "stderr": ""
+  },
+  "artifact_ignore": {
+    "argv": [
+      "git",
+      "check-ignore",
+      "-v",
+      "design_docs/verification/world-iter217/final-park-bank.json"
+    ],
+    "rc": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "binary_positive_control": true,
+  "changed_file_inventory_count": 892,
+  "binary_nul_hits": [],
+  "metadata": {
+    "argv": [
+      "python3",
+      "/tmp/world217_scan_metadata.py",
+      "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217",
+      "/tmp/world217-product-pr-title.txt",
+      "/tmp/world217-product-pr-body.txt"
+    ],
+    "rc": 0,
+    "stdout": "{\"positive_control\": true, \"checked\": [\"commits\", \"/tmp/world217-product-pr-title.txt\", \"/tmp/world217-product-pr-body.txt\"], \"hits\": []}\n",
+    "stderr": ""
+  }
+}

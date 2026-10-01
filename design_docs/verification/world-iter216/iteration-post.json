@@ -1,0 +1,45 @@
+{
+  "source": "mission:world/iter-216",
+  "stages": [
+    {
+      "role": "controller (tokens not reported)",
+      "quota_bucket": "codex",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "status": "completed"
+    },
+    {
+      "role": "designer (capacity refused; transport tokens not reported)",
+      "quota_bucket": "ollama",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "status": "failed"
+    },
+    {
+      "role": "planner (readiness only; tokens not reported)",
+      "quota_bucket": "codex",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "status": "completed"
+    },
+    {
+      "role": "executor (readiness only; tokens not reported)",
+      "quota_bucket": "codex",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "status": "completed"
+    },
+    {
+      "role": "evaluator (not run; unsupported native pin and independent capacity blocked)",
+      "quota_bucket": "sonnet",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "status": "failed"
+    }
+  ]
+}

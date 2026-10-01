@@ -1,0 +1,6 @@
+=== RUN   TestMCPDenialMatrix
+    mcp_test.go:136: API key admitted: 400
+--- FAIL: TestMCPDenialMatrix (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.192s
+FAIL

@@ -1,0 +1,38 @@
+{
+  "stage_sha": "cad657c51632ebb8d7c64a7ee9601a6075e8c059",
+  "mutation_id": "MUT-INVOKE-NO-READMIT",
+  "files": {
+    "host/projection/projection.go": {
+      "original_sha256": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7",
+      "mutant_sha256": "9b82febc9e1a7b9f7ee81515d3233ea2b24ba58775369ad2707f9317f7629915",
+      "edits": [
+        [
+          "mintTask       func() (string, error)",
+          "mintTask       func() (string, error)\n mutantAdmitted transitionreg.Request"
+        ]
+      ],
+      "restored_sha256": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7"
+    },
+    "host/projection/mcp.go": {
+      "original_sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "mutant_sha256": "55c635713e225c715c20b3777368ca15653b4be598ee5a658fa0a93e12d14188",
+      "edits": [
+        [
+          "_, ds, err := a.h.allowedDescriptors(ctx, binding)",
+          "admitted, ds, err := a.h.allowedDescriptors(ctx, binding)\n a.h.mutantAdmitted=admitted"
+        ],
+        [
+          "request, ds, err := a.h.allowedDescriptors(admissionCtx, binding)",
+          "_ = admissionCtx\n request:=a.h.mutantAdmitted\n ds:=request.Allowed()\n err = nil"
+        ]
+      ],
+      "restored_sha256": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+    }
+  },
+  "pristine_rc": 0,
+  "compile_fence_rc": 0,
+  "mutant_runtime_rc": 1,
+  "restored_rc": 0,
+  "env_axis": "GODEBUG=goindex=0; focused diagnostic",
+  "scope": "independent controller stage production control; final full profile not replaced"
+}

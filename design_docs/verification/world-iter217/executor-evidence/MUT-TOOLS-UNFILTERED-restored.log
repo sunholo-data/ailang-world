@@ -1,0 +1,4 @@
+=== RUN   TestMCPListExactSetPerSession
+--- PASS: TestMCPListExactSetPerSession (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.202s

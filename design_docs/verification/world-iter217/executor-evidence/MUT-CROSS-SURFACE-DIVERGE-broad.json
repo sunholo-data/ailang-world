@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/daemon", "-timeout=60s", "-run", "TestMCP(Cross|Ambient|Mount)", "-v", "-count=1"], "rc": 1, "seconds": 2.464038874953985}

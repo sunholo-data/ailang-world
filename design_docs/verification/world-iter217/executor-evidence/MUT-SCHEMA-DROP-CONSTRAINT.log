@@ -1,0 +1,6 @@
+=== RUN   TestMCPSchemaNormalization
+    mcpname_test.go:80: constraint properties lost/rounded:  want {"x":{"type":"integer"}}
+--- FAIL: TestMCPSchemaNormalization (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.184s
+FAIL

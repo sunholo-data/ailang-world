@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "checkout",
+    "--detach",
+    "be286c1dbf29eb56c922f5015c0bc1a52055f087"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter217",
+  "rc": 0,
+  "seconds": 0.10354379191994667,
+  "external_timeout_seconds": 120,
+  "env_axis": "GODEBUG=goindex=0; focused diagnostic; not final profile substitution",
+  "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+}

@@ -1,0 +1,6 @@
+=== RUN   TestAgentCard_HeadRaceAbsentThenSucceeds
+    projection_test.go:661: head published between check and snapshot must be USED (NewRequest's result): skills = [], want [tools.echo]
+--- FAIL: TestAgentCard_HeadRaceAbsentThenSucceeds (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.191s
+FAIL

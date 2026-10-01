@@ -1,0 +1,6 @@
+=== RUN   TestProjectionAbsenceRaceControls
+=== RUN   TestProjectionAbsenceRaceControls/same_text_genuine
+--- PASS: TestProjectionAbsenceRaceControls (0.00s)
+    --- PASS: TestProjectionAbsenceRaceControls/same_text_genuine (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.199s

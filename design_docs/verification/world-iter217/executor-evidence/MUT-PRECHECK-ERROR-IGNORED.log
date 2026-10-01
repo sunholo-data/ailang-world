@@ -1,0 +1,8 @@
+=== RUN   TestProjectionAbsenceRaceControls
+=== RUN   TestProjectionAbsenceRaceControls/precheck_error
+    absence_test.go:112: classification err=<nil> empty=false calls=1 want 0
+--- FAIL: TestProjectionAbsenceRaceControls (0.00s)
+    --- FAIL: TestProjectionAbsenceRaceControls/precheck_error (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.185s
+FAIL

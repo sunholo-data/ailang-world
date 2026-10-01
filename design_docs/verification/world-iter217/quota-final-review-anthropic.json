@@ -1,0 +1,47 @@
+{
+  "updated": "2026-10-01T18:08:46.508291Z",
+  "usage": [
+    {
+      "bucket": "anthropic",
+      "window": "5h",
+      "tokens": 1019963,
+      "stages": 1,
+      "window_start": "2026-10-01T18:08:46Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    },
+    {
+      "bucket": "anthropic",
+      "window": "long",
+      "tokens": 1019963,
+      "stages": 1,
+      "window_start": "2026-10-01T18:08:46Z",
+      "provider_reset": "0001-01-01T00:00:00Z"
+    }
+  ],
+  "at": "2026-10-01T22:16:14.706768Z",
+  "verdicts": [
+    {
+      "Bucket": "anthropic",
+      "Window": "5h",
+      "State": "not-paced",
+      "Consumed": 1019963,
+      "Allowance": 0,
+      "Reason": "1019963 tok this 5h window; the daily ration paces the long window only"
+    },
+    {
+      "Bucket": "anthropic",
+      "Window": "long",
+      "State": "capacity-unknown",
+      "Consumed": 1019963,
+      "Allowance": 0,
+      "Reason": "1019963 tok consumed, capacity unknown — left unrationed rather than rationed on a guess"
+    }
+  ],
+  "anthropic_provider_usage": {
+    "state": "unknown",
+    "reason": "Anthropic usage endpoint returned HTTP 403; CLI fallback also failed (no \"Current session\" line in `claude -p /usage` output)",
+    "observed_at": "2026-10-01T22:16:14.706768Z",
+    "source": "https://api.anthropic.com/api/oauth/usage",
+    "enforced": true
+  }
+}

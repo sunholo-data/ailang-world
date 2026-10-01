@@ -1,0 +1,10 @@
+=== RUN   TestMCPBatchAccounting
+=== RUN   TestMCPBatchAccounting/removed_between_items
+    mcp_conformance_test.go:156: stale batch invocation runs=2 reads=1 wire=event: message
+        data: [{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}},{"jsonrpc":"2.0","id":7,"result":{"content":[{"type":"text","text":"{\"ok\":true}"}],"structuredContent":{"ok":true}}}]
+        
+--- FAIL: TestMCPBatchAccounting (0.01s)
+    --- FAIL: TestMCPBatchAccounting/removed_between_items (0.01s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/projection	0.210s
+FAIL

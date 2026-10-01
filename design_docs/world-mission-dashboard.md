@@ -1,10 +1,21 @@
-# Mission Dashboard — World (2026-10-01, iteration 215)
+# World mission dashboard — iteration217, 2026-10-02
 
-- **State:** RULINGS RECORDED 2026-10-01 (Mark, attended): D-WORLD-43=A, 44=A, 45=A, 46=A, 47=B; ledger has zero OPEN rows. Next pick: row 108 (MCP dispatch) batch-aware design revision + fresh full quorum, then 114. New standing rule (d): when no critical-path row is routable, stop and report the blocks; no side work.
-- **DRIFT:** landings 212/213/214 moved no unmet clause; resolved by D-WORLD-46=A (108 → 114 → 93). Row 127 deferred (47=B) and does not outrank 108/114.
-- **1.0:** clauses 1/2/3/7 MET; 4/5/6 UNMET. Goal unmoved.
-- **Latest release:** world/core 0.1.0; attended 0.1.1 publish pending D-WORLD-45/store choice.
-- **Next:** row 108 (clause 6), then 114 (clause 5), then 93 (clause 4) once 108 lands. Attended: the 0.1.1 publish from a fresh store (D-WORLD-45=A).
-- **Routing:** designer/planner/executor gpt-6.1-sol Agent; evaluator native sonnet unsupported, Anthropic ration unknown. Agent supervisor runs independent pi fallback; never an OpenAI judge. Independent DeepSeek PASS85 administrative park only; implementation NOT RUN.
-- **Baseline:** parallel verify_go red on five deadline/timeout assertions; exact isolated controls and full serial suite green on unchanged base. No unique cause proved.
-- **Cadence/quota:** one unattended iteration; no harness edits. Metered $0.413521492 total reported (quorum plus independent review); interrupted-turn usage unknown.
+- Release: world/core0.1.0;0.1.1 ready but ATTENDED publish only.
+- Goal1.0: clauses1/2/3/7 MET;4/5/6 UNMET; goal unmoved.
+- Row108: five-milestone MCP candidate only in DRAFT PR #173; unmerged.
+- Independent judges: FAIL49, FAIL54, final FAIL59. Normal final AIL0/Go1.
+- Parked on Mark: D-WORLD-49 OPEN (new three-round-limit follow-up authorization).
+- Recommended A: bounded verified-fixture diagnosis, exact normal profiles, fresh independent judge.
+- Default unanswered: B immediately, defer108 attended; no fourth round in217.
+- Order already ruled D46A:108 →114 scoped revision/quorum →93 after108 LAND.
+- No bar-neutral side work; no unattended publish or harness/kernel/shared-skill repairs.
+- Row132: supporting-hunk coverage residual banked; no quiet scope expansion.
+- Loop: one scheduled iteration; bookkeeping issue159.
+- Native Agent designer/planner/executor ran GPT6.1Sol; independent native Astra R1/R2.
+- Final judge: declared pi Ollama DeepSeekV4Pro0813 fallback, handshake acked.
+- Routing: as configured; actual GLM/Sonnet/provider fallbacks FLAGGED underD48.
+- Quota: Codex OVER82%/80.21%; Ollama post-review9.7pp/20h26m<10pp/day.
+- Native tokens not reported; final pi provider total1,635,583 incl1,515,848cacheRead.
+- Metered Google two quorum calls $0.051604; no reset credit.
+- Historical216 full park record/evidence recovered, no stale charter imported.
+- Administrative record carries NO product code; CI/review outcome in final issue159 digest.

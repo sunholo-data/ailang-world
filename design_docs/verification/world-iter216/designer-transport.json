@@ -1,0 +1,41 @@
+{
+  "classification": "PARKED-ON-LANE",
+  "routing": "refuse over-ration:ollama",
+  "declared_lane": "pi:ollama/glm-5.3:cloud",
+  "runner": "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_pi_run.sh",
+  "runner_launched": false,
+  "typed_runner_verdict": null,
+  "quota_observed_at": "2026-10-01T14:18:58.765292Z",
+  "quota_commands": [
+    {
+      "command": "ailang mission quota --json",
+      "rc": 0
+    },
+    {
+      "command": "ailang mission quota --over",
+      "rc": 0,
+      "stdout": "ollama\nanthropic\nopenrouter\n"
+    }
+  ],
+  "ollama_reason": "Ollama Cloud weekly gauge consumed 10.1pp in the last 20h6m0s, over the 10pp/day ration; new cloud routing blocked",
+  "resolver_command": "MISSION_NAME=world MISSION_DESIGNER_MODEL=pi:ollama/glm-5.3:cloud MISSION_OVER_RATION='ollama anthropic openrouter' /Users/voightkampff/dev/sunholo-data/ailang/tools/launchd/resolve-role-spawn.sh designer",
+  "resolver_rc": 0,
+  "base": "5732e1f89adf4c9a015b770861034b6f3c82be41",
+  "branch": "design/world-iter216-mcp",
+  "worktree_creation_rc": 0,
+  "readiness_before_copy": {
+    "head_verified": true,
+    "porcelain_empty": true,
+    "creator_process_absent": true,
+    "index_lock_absent": true
+  },
+  "designer_tokens": 0,
+  "designer_metered_usd": 0,
+  "design_revision_performed": false,
+  "resume_predicate": "Fresh canonical ailang mission quota --over excludes ollama and resolver for declared pi:ollama/glm-5.3:cloud returns recipe; no overlapping World iteration, then bounded probe and fenced canonical runner with own-session protocol acknowledgement. No substitution is authorized.",
+  "rotation_pointer_advanced": false,
+  "quorum_run": false,
+  "commit_or_push": false,
+  "prior_design_input": "design_docs/verification/world-iter216/prior-row108-design.md",
+  "candidate_design_delta": false
+}

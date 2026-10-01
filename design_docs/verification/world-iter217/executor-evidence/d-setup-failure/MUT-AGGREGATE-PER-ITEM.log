@@ -1,0 +1,11 @@
+=== RUN   TestMCPPostBudgetProductionConstants
+=== RUN   TestMCPPostBudgetProductionConstants/batch
+    mcp_budget_test.go:163: PublishSet: publish transition registry: entry "tools.echo"'s source "sha256:b683b36e2ae92b68c3a10f03c8c4985c72323ca1235f79ccbdfd7827d1a0abb6" is not loadable under its pinned interpreter: interpreter check did not finish within 10s; → Type checking entry.ail...
+        → Effect checking...
+        WARNING MOD010 (relaxed): module 'quickstart/echo' does not match canonical path 'entry'
+          Running under --relax-modules; mismatch ignored. For strict checking, omit --relax-modules flag.
+--- FAIL: TestMCPPostBudgetProductionConstants (18.44s)
+    --- FAIL: TestMCPPostBudgetProductionConstants/batch (18.44s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	18.769s
+FAIL

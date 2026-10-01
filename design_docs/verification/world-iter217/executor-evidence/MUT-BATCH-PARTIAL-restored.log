@@ -1,0 +1,6 @@
+=== RUN   TestMCPBatchConformance
+=== RUN   TestMCPBatchConformance/whole_host_failure
+--- PASS: TestMCPBatchConformance (0.00s)
+    --- PASS: TestMCPBatchConformance/whole_host_failure (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/projection	0.196s

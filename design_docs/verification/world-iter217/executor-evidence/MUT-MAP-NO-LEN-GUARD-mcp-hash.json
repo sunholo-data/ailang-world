@@ -1,0 +1,1 @@
+{"files": {"host/projection/mcpname.go": {"mutant": "bc2c62e3da8530e17adeadacbe9bd4ecd1e9dc1ac9b4875f3f90f3c8274c6d4f", "restored": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7"}}, "selected_test": "TestMCPSurfaceRefusalRecovers", "broad_scope": "whole projection", "broad_failed_tests": ["TestMCPSurfaceRefusalRecovers", "TestMCPNameRefusal"]}

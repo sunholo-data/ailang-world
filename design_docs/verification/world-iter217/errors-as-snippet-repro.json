@@ -1,0 +1,14 @@
+{
+  "invalid": {
+    "source": "package main\nimport(\"errors\";\"fmt\")\ntype RegistryHeadAbsentError struct{}\nfunc(RegistryHeadAbsentError)Error()string{return \"read transition registry: head is absent\"}\nfunc main(){hasHead:=false;rerr:=error(RegistryHeadAbsentError{});fmt.Println(!hasHead && errors.As(rerr, &RegistryHeadAbsentError))}\n",
+    "rc": 1,
+    "stdout": "",
+    "stderr": "# command-line-arguments\n/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world217-errorsas-v1egwiba/main.go:5:108: RegistryHeadAbsentError (type) is not an expression\n"
+  },
+  "reviewer_fix": {
+    "source": "package main\nimport(\"errors\";\"fmt\")\ntype RegistryHeadAbsentError struct{}\nfunc(RegistryHeadAbsentError)Error()string{return \"read transition registry: head is absent\"}\nfunc main(){hasHead:=false;rerr:=fmt.Errorf(\"wrapped: %w\",RegistryHeadAbsentError{});var target RegistryHeadAbsentError;fmt.Println(!hasHead && errors.As(rerr, &target));rerr=errors.New(\"genuine failure\");fmt.Println(!hasHead && errors.As(rerr, &target))}\n",
+    "rc": 0,
+    "stdout": "true\nfalse\n",
+    "stderr": ""
+  }
+}

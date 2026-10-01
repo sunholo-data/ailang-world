@@ -1,0 +1,1 @@
+{"cmd": ["go", "test", "-p", "1", "./host/projection", "-run", "^TestMCPWireOwnershipSource$", "-v", "-count=1", "-timeout=60s"], "rc": 0, "seconds": 0.6093417920637876}
