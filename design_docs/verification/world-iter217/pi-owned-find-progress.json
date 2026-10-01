@@ -1,0 +1,12 @@
+{
+  "observed_at": "2026-10-01T22:24:53Z",
+  "pid": 34216,
+  "owned_ancestry_from_prior_positive_process_inventory": [
+    "33905 mission_pi_run",
+    "33938 pi",
+    "34190 bash",
+    "34216 find"
+  ],
+  "reading": "34216 34190 03:34 find /Users/voightkampff/dev/sunholo-data -path *sprint-evaluator* -name *.md\n",
+  "scope": "positive owned process observation; no negative result or judge verdict"
+}

@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "bash",
+    "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_pi_run.sh",
+    "--model",
+    "ollama/deepseek-v4-pro:0813-cloud",
+    "--directive",
+    "/tmp/world217-final-pi-evaluator-directive.txt",
+    "--workdir",
+    "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval-r3-pi",
+    "--out",
+    "/tmp/world217-final-pi-evaluator.ndjson",
+    "--verdict",
+    "/tmp/world217-final-pi-evaluator-verdict.json",
+    "--max-seconds",
+    "2700",
+    "--stall-seconds",
+    "600"
+  ],
+  "rc": 0,
+  "seconds": 863.6984104579315,
+  "stdout": "",
+  "stderr": "pi lane verdict: ok (rc=0) after 863s \u2014 9 changed files, 47 tool executions, 0 commits\n",
+  "candidate": "741e3c371de3e558243e4ee77a09eeaddbac50a3",
+  "scope": "declared pi fallback; mandatory handshake/fence; nativepreferredSonnetUnsupported andCodexquotaover; no reset spent"
+}

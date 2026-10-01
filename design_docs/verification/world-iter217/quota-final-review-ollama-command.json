@@ -1,0 +1,15 @@
+{
+  "bucket": "ollama",
+  "argv": [
+    "ailang",
+    "mission",
+    "quota",
+    "-bucket",
+    "ollama",
+    "-json"
+  ],
+  "rc": 0,
+  "seconds": 0.6066413749940693,
+  "stdout": "{\n  \"updated\": \"2026-10-01T18:08:46.508291Z\",\n  \"usage\": [\n    {\n      \"bucket\": \"ollama\",\n      \"window\": \"5h\",\n      \"tokens\": 119166,\n      \"stages\": 1,\n      \"window_start\": \"2026-10-01T18:08:46Z\",\n      \"provider_reset\": \"0001-01-01T00:00:00Z\"\n    },\n    {\n      \"bucket\": \"ollama\",\n      \"window\": \"long\",\n      \"tokens\": 13555708,\n      \"stages\": 6,\n      \"window_start\": \"2026-09-25T04:06:47Z\",\n      \"provider_reset\": \"0001-01-01T00:00:00Z\"\n    }\n  ],\n  \"at\": \"2026-10-01T22:16:14.706737Z\",\n  \"verdicts\": [],\n  \"ollama_provider_usage\": {\n    \"gauge_status\": \"OK\",\n    \"state\": \"ok\",\n    \"reason\": \"Ollama Cloud gauge below 80%; reset-aware pacing unavailable without metadata; daily ration ok (8.9pp of 10pp per day over 20h4m0s)\",\n    \"observed_at\": \"2026-10-01T22:16:14.706737Z\",\n    \"session_usage\": 0,\n    \"weekly_usage\": 0.577\n  }\n}\n",
+  "stderr": ""
+}

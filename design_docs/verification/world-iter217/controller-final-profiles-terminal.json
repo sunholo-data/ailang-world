@@ -1,0 +1,75 @@
+{
+  "terminal": true,
+  "candidate_sha": "741e3c371de3e558243e4ee77a09eeaddbac50a3",
+  "profiles": [
+    {
+      "head_sha": "741e3c371de3e558243e4ee77a09eeaddbac50a3",
+      "argv": [
+        "bash",
+        "scripts/verify_ail.sh"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter217",
+      "rc": 0,
+      "seconds": 26.17128483299166,
+      "external_timeout_seconds": 600,
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+      "PATH_pin_first": true,
+      "GODEBUG": "unset",
+      "GOCACHE": "default",
+      "inherited_go_axes": {
+        "GOFLAGS": "unset",
+        "GOMAXPROCS": "unset",
+        "GOTOOLCHAIN": "unset",
+        "CI": "unset"
+      },
+      "scope": "exact unchanged repository profile; normal Go parallelism; no focused substitution"
+    },
+    {
+      "head_sha": "741e3c371de3e558243e4ee77a09eeaddbac50a3",
+      "argv": [
+        "bash",
+        "scripts/verify_go.sh"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.check-world-iter217",
+      "rc": 1,
+      "seconds": 243.76896979101002,
+      "external_timeout_seconds": 1200,
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+      "PATH_pin_first": true,
+      "GODEBUG": "unset",
+      "GOCACHE": "default",
+      "inherited_go_axes": {
+        "GOFLAGS": "unset",
+        "GOMAXPROCS": "unset",
+        "GOTOOLCHAIN": "unset",
+        "CI": "unset"
+      },
+      "scope": "exact unchanged repository profile; normal Go parallelism; no focused substitution"
+    }
+  ],
+  "files": [
+    "round3-final-verify-ail.json",
+    "round3-final-verify-go.json",
+    "round3-full-profile-raw-manifest.json",
+    "round3-final-verify-ail.log",
+    "round3-final-verify-go.log",
+    "round3-final-verify-ail.log.raw.b64",
+    "round3-final-verify-go.log.raw.b64"
+  ],
+  "normal_settings": "releasedpinv0.41.0/GODEBUGunset/defaultcache/fullunchangedprofiles; no focused substitute",
+  "hardfail_policy": "Full Go rc1 MUST remain HARDFAIL; no waiver/no successful final fullprofile claimed; third/final judge must deliver independent FAIL with actualscore/blockers; no sourcefix or fourthreview",
+  "controller_bounded_search_abort": {
+    "at": "2026-10-01T22:25:30Z",
+    "action": "SIGTERM only positively verified evaluator-owned find PID34216",
+    "owned_parent_pid": 34190,
+    "command": "find /Users/voightkampff/dev/sunholo-data -path *sprint-evaluator* -name *.md",
+    "reason": "broad lookup exceeded directive finite command bound; exact authoritative paths were already supplied",
+    "result_scope": "aborted enumerator output VOID, not negative missing-file evidence; no judge verdict altered",
+    "future_marker_notice": "controller-final-profiles-terminal.json includes this caveat before runtime review"
+  },
+  "authoritative_evaluator_skill": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-evaluator/SKILL.md",
+  "rubric": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-evaluator/resources/scoring_rubric.md",
+  "verification": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/verification-protocol.md",
+  "runtime_allowed_now": true,
+  "root_runtime_all_terminal": true
+}

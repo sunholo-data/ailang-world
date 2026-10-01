@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "pi",
+    "--mode",
+    "json",
+    "--no-session",
+    "--no-tools",
+    "--model",
+    "ollama/deepseek-v4-pro:0813-cloud",
+    "-p",
+    "reply with exactly: ok"
+  ],
+  "rc": 0,
+  "seconds": 30.75748645910062,
+  "stderr": "Warning: Model \"deepseek-v4-pro:0813-cloud\" not found for provider \"ollama\". Using custom model id.\n"
+}
