@@ -63,6 +63,9 @@ type Result struct {
 type childProcess interface {
 	Kill() error
 	Wait() error
+	// GroupEmpty reports whether the child's process group has no members
+	// left; collectOutput asks only after Wait.
+	GroupEmpty() bool
 }
 
 type cmdChild struct {
@@ -75,6 +78,9 @@ type cmdChild struct {
 // a forked grandchild inherits the pipes, so killing only the direct child
 // leaves the drains blocked until the deadline (queue row 24).
 func (c cmdChild) Kill() error { return killGroup(c.cmd.Process.Pid) }
+
+// GroupEmpty probes the child's group with signal 0 (procbound.GroupEmpty).
+func (c cmdChild) GroupEmpty() bool { return procbound.GroupEmpty(c.cmd.Process.Pid) }
 
 // Wait is bounded by the cleanup deadline: a child that survived a failed kill
 // is left to a background reaper and reported as procbound.ErrCleanupIncomplete.
@@ -244,6 +250,12 @@ func (r *Runner) RunContext(parent context.Context, entry Entry) (Result, error)
 	}
 	if err := cmd.Start(); err != nil {
 		release()
+		// Start refuses an already-expired context with its error. Staging
+		// under load can outlast a short allowance before the child exists;
+		// that is still the wall-clock bound, not an interpreter exec failure.
+		if errors.Is(err, context.DeadlineExceeded) && errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return Result{}, &TimeoutError{Limit: r.execTimeout}
+		}
 		return Result{}, &ExecError{Path: execPath, Err: err}
 	}
 	started := time.Now()
@@ -305,11 +317,12 @@ func collectOutput(ctx context.Context, stdoutPipe, stderrPipe io.Reader, limit 
 	// Overflow outranks the deadline: killing the child is what let Wait return,
 	// and that must not be reported as a wall-clock expiry.
 	if errors.Is(stdoutErr, errOutputLimit) || errors.Is(stderrErr, errOutputLimit) {
-		// ESRCH from kill(-pgid) means the group is already empty, so there was
-		// nothing to kill: the group leader may already be an unreaped zombie
-		// when the overflow kill fires. Every other errno is still joined.
+		// The group leader may already be an unreaped zombie when the overflow
+		// kill fires: kill(-pgid) then answers ESRCH (linux: an empty group)
+		// or EPERM (darwin: zombies only). Neither is a failure when the group
+		// is empty after the reap; every other kill error is still joined.
 		var killFailure error
-		if killErr != nil && !errors.Is(killErr, syscall.ESRCH) {
+		if killErr != nil && !procbound.NothingToKill(killErr, child.GroupEmpty) {
 			killFailure = fmt.Errorf("capsule: overflow kill: %w", killErr)
 		}
 		return Result{Stdout: stdout, Stderr: stderr}, runErr,

@@ -15,6 +15,7 @@ import (
 	"errors"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 )
 
@@ -73,4 +74,30 @@ func Wait(wait func() error, d time.Duration, release func()) error {
 		release()
 	}()
 	return ErrCleanupIncomplete
+}
+
+// NothingToKill reports whether a failed process-group kill found nothing to
+// kill, so it must not be reported as a cleanup failure. Call it only after
+// the direct child's wait, so the reaped leader no longer holds the group.
+//   - ESRCH: the group was already empty.
+//   - Exactly EPERM (the kill's own bare errno), and groupEmpty() now: darwin
+//     answers kill(-pgid, SIGKILL) with EPERM, not ESRCH, when every member of
+//     the group is an unreaped zombie (queue row 115, measured), and an empty
+//     group after the reap shows no member outlived the call. A wrapped or
+//     joined EPERM carries more than that answer and is still reported.
+func NothingToKill(killErr error, groupEmpty func() bool) bool {
+	if errors.Is(killErr, syscall.ESRCH) {
+		return true
+	}
+	return killErr == syscall.EPERM && groupEmpty()
+}
+
+// GroupEmpty reports whether process group pgid has no members left:
+// kill(-pgid, 0) answers ESRCH. Signal 0 sends nothing; any other answer (a
+// live, unsignallable or zombie member) reports false, as does pgid <= 1.
+func GroupEmpty(pgid int) bool {
+	if pgid <= 1 {
+		return false
+	}
+	return errors.Is(syscall.Kill(-pgid, 0), syscall.ESRCH)
 }

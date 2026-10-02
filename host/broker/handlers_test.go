@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/proctest"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
@@ -739,13 +740,22 @@ type killRecord struct {
 // The wall-clock bound must kill the whole process TREE. The markers prove the
 // grandchild existed, while the delegated kill recorder and phase diagnosis make
 // a slow return attributable instead of inferring its cause from elapsed time.
+//
+// The deadline's kill is delivered only once the fixture has forked: under
+// load /bin/sh had not even started when the 100 ms deadline fired, so the
+// kill met no tree and the markers were absent. The grandchild's own state,
+// not the elapsed time, shows the kill reached it (the pipe-close bound alone
+// returns well inside 2 s after a direct-child-only kill). The return bound
+// is measured from the kill, not from Invoke's entry.
 func TestHandlerTimeoutKillsTheWholeProcessGroup(t *testing.T) {
 	markdir := t.TempDir()
+	gcPidFile := filepath.Join(markdir, "gc.pid")
 	fake := writeExecutable(t, fmt.Sprintf(`if [ "${W16_WARM:-}" = "1" ]; then exit 0; fi
 : > "%s/exec_started"
 sleep 5 && : > "%s/survived" &
+echo $! > "%s"
 : > "%s/forked"
-wait`, markdir, markdir, markdir))
+wait`, markdir, markdir, gcPidFile, markdir))
 	warmUpFixture(t, fake, execWarmUpRunner)
 	handler, err := NewGitHandler(GitHandlerConfig{
 		GitPath: fake, ExecTimeout: 100 * time.Millisecond,
@@ -760,7 +770,13 @@ wait`, markdir, markdir, markdir))
 	kill := &killRecord{}
 	orig := killGroup
 	t.Cleanup(func() { killGroup = orig })
+	marker := func(name string) bool {
+		_, err := os.Stat(filepath.Join(markdir, name))
+		return err == nil
+	}
 	killGroup = func(pgid int) error {
+		for start := time.Now(); !marker("forked") && time.Since(start) < 10*time.Second; time.Sleep(time.Millisecond) {
+		}
 		kill.mu.Lock()
 		defer kill.mu.Unlock()
 		kill.count++
@@ -775,16 +791,19 @@ wait`, markdir, markdir, markdir))
 	kill.mu.Lock()
 	count, offset, pgid, errno := kill.count, kill.offset, kill.pgid, kill.errno
 	kill.mu.Unlock()
-	marker := func(name string) bool {
-		_, err := os.Stat(filepath.Join(markdir, name))
-		return err == nil
-	}
 	execStarted, forked, survived := marker("exec_started"), marker("forked"), marker("survived")
 
 	var timeout *HandlerTimeoutError
 	var problems []string
-	if diagnosis.elapsed > 2*time.Second {
-		problems = append(problems, fmt.Sprintf("elapsed %s exceeds 2s", diagnosis.elapsed))
+	if forked {
+		gc := proctest.ReadPid(t, gcPidFile)
+		proctest.ReapOnCleanup(t, gc)
+		if !proctest.DeadWithin(t, gc, time.Second) {
+			problems = append(problems, fmt.Sprintf("grandchild %d alive after the group kill", gc))
+		}
+	}
+	if afterKill := diagnosis.elapsed - offset; afterKill > 2*time.Second {
+		problems = append(problems, fmt.Sprintf("returned %s after the deadline kill, exceeds 2s", afterKill))
 	}
 	if !errors.As(diagnosis.err, &timeout) {
 		problems = append(problems, fmt.Sprintf("error chain lacks *HandlerTimeoutError: %+v", diagnosis.err))

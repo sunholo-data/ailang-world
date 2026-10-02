@@ -124,6 +124,12 @@ func runBounded(ctx context.Context, bounds handlerBounds, spec handlerCommand) 
 	}
 	if err := cmd.Start(); err != nil {
 		release()
+		// Start refuses an already-expired context with its error; under load
+		// the allowance can run out before the child exists. That is still
+		// the wall-clock bound, not a start failure.
+		if errors.Is(err, context.DeadlineExceeded) && errors.Is(runCtx.Err(), context.DeadlineExceeded) {
+			return nil, &HandlerTimeoutError{Timeout: bounds.execTimeout}
+		}
 		return nil, fmt.Errorf("broker: start handler subprocess: %w", err)
 	}
 	// Wait is bounded too, so a failed kill cannot hang the call: the child is
@@ -142,13 +148,16 @@ func runBounded(ctx context.Context, bounds handlerBounds, spec handlerCommand) 
 		// outlive the call, because Wait returns once the direct child is reaped
 		// and the deadline's group kill never fires (queue row 24).
 		errs := []error{&HandlerOutputOverflowError{Limit: bounds.maxOutputBytes}}
-		// ESRCH from kill(-pgid) means the group is already empty, so there was
-		// nothing to kill: the group leader may already be an unreaped zombie
-		// when the overflow kill fires. Every other errno is still joined.
-		if killErr := killGroup(cmd.Process.Pid); killErr != nil && !errors.Is(killErr, syscall.ESRCH) {
+		killErr := killGroup(cmd.Process.Pid)
+		waitErr := wait()
+		// The group leader may already be an unreaped zombie when the overflow
+		// kill fires: kill(-pgid) then answers ESRCH (linux: an empty group)
+		// or EPERM (darwin: zombies only). Neither is a failure when the group
+		// is empty after the reap; every other kill error is still joined.
+		if killErr != nil && !procbound.NothingToKill(killErr, func() bool { return procbound.GroupEmpty(cmd.Process.Pid) }) {
 			errs = append(errs, fmt.Errorf("broker: overflow kill: %w", killErr))
 		}
-		if waitErr := wait(); errors.Is(waitErr, procbound.ErrCleanupIncomplete) {
+		if errors.Is(waitErr, procbound.ErrCleanupIncomplete) {
 			errs = append(errs, waitErr)
 		}
 		if len(errs) == 1 {

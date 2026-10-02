@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -16,6 +17,23 @@ import (
 	"github.com/sunholo-data/ailang-world/host/procbound"
 	"github.com/sunholo-data/ailang-world/host/proctest"
 )
+
+// zombieWithin polls pid's own process state (ps(1) STAT) until it reads Z:
+// exited and not yet reaped. It never infers that state from elapsed time.
+func zombieWithin(t *testing.T, pid int, window time.Duration) bool {
+	t.Helper()
+	if err := proctest.Check(pid); err != nil {
+		t.Errorf("%v", err)
+		return false
+	}
+	for start := time.Now(); time.Since(start) < window; time.Sleep(time.Millisecond) {
+		out, err := exec.Command("ps", "-o", "stat=", "-p", strconv.Itoa(pid)).Output()
+		if err == nil && strings.HasPrefix(strings.TrimSpace(string(out)), "Z") {
+			return true
+		}
+	}
+	return false
+}
 
 const overflowLoop = `i=0; while [ $i -lt 200 ]; do echo 0123456789abcdef0123456789abcdef; i=$((i+1)); done`
 
@@ -373,13 +391,52 @@ func TestStartFailureReleasesReservation(t *testing.T) {
 
 // AC9 (r2). An ordinary overflow, real killGroup, child exits on its own:
 // the error is exactly the typed overflow and no ESRCH is anywhere in it.
+// "leader-zombie" pins the branch only scheduling used to reach (queue row
+// 115): the real overflow kill runs once the group leader has exited and is
+// still unreaped, where darwin answers kill(-pgid) with EPERM, not ESRCH.
 func TestOrdinaryOverflowCarriesNoESRCH(t *testing.T) {
-	err := runScripted(t, scriptedInterpreter(t, ":", ""), 120*time.Second)
-	if _, ok := err.(*OutputLimitError); !ok {
-		t.Fatalf("error = %T %v, want exactly *OutputLimitError", err, err)
+	orig := killGroup
+	t.Cleanup(func() { killGroup = orig })
+	for _, tc := range []struct {
+		name string
+		kill func(int) error
+	}{
+		{"as-scheduled", orig},
+		{"leader-zombie", func(pgid int) error {
+			if !zombieWithin(t, pgid, 10*time.Second) {
+				t.Errorf("group leader %d never became an unreaped zombie", pgid)
+			}
+			return orig(pgid)
+		}},
+	} {
+		killGroup = tc.kill
+		err := runScripted(t, scriptedInterpreter(t, ":", ""), 120*time.Second)
+		if _, ok := err.(*OutputLimitError); !ok {
+			t.Fatalf("%s: error = %T %v, want exactly *OutputLimitError", tc.name, err, err)
+		}
+		if errors.Is(err, syscall.ESRCH) {
+			t.Fatalf("%s: ESRCH reached the caller: %v", tc.name, err)
+		}
 	}
-	if errors.Is(err, syscall.ESRCH) {
-		t.Fatalf("ESRCH reached the caller: %v", err)
+}
+
+// AC9 (row 115). An EPERM overflow kill is excused only when the reaped
+// group turns out empty. Here nothing is signalled and a live member (a
+// backgrounded sleep) stays in the group after the leader is reaped, so the
+// EPERM must still be joined behind the typed overflow.
+func TestEPERMKillWithLiveGroupMemberIsJoined(t *testing.T) {
+	pgidOf := recordFailingKill(t)
+	err := runScripted(t, scriptedInterpreter(t, "sleep 30 >/dev/null 2>&1 &", ""), 120*time.Second)
+	pgid := pgidOf()
+	t.Cleanup(func() {
+		_ = proctest.Signal(pgid, syscall.SIGKILL, func(p int, s syscall.Signal) error { return syscall.Kill(-p, s) })
+	})
+	var overflow *OutputLimitError
+	if !errors.As(err, &overflow) || !errors.Is(err, syscall.EPERM) {
+		t.Fatalf("error = %v, want *OutputLimitError joined with the EPERM kill", err)
+	}
+	if errors.Is(err, procbound.ErrCleanupIncomplete) {
+		t.Fatalf("leader was not reaped, so the live-member branch was not reached: %v", err)
 	}
 }
 

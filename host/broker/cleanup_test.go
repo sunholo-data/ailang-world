@@ -1,10 +1,13 @@
 package broker
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -15,6 +18,23 @@ import (
 	"github.com/sunholo-data/ailang-world/host/procbound"
 	"github.com/sunholo-data/ailang-world/host/proctest"
 )
+
+// zombieWithin polls pid's own process state (ps(1) STAT) until it reads Z:
+// exited and not yet reaped. It never infers that state from elapsed time.
+func zombieWithin(t *testing.T, pid int, window time.Duration) bool {
+	t.Helper()
+	if err := proctest.Check(pid); err != nil {
+		t.Errorf("%v", err)
+		return false
+	}
+	for start := time.Now(); time.Since(start) < window; time.Sleep(time.Millisecond) {
+		out, err := exec.Command("ps", "-o", "stat=", "-p", strconv.Itoa(pid)).Output()
+		if err == nil && strings.HasPrefix(strings.TrimSpace(string(out)), "Z") {
+			return true
+		}
+	}
+	return false
+}
 
 const overflowLoop = `i=0; while [ $i -lt 200 ]; do echo 0123456789abcdef0123456789abcdef; i=$((i+1)); done`
 
@@ -194,13 +214,71 @@ func TestStartFailureReleasesReservation(t *testing.T) {
 
 // AC9 (r2). An ordinary overflow, real killGroup, child exits on its own:
 // the error is exactly the typed overflow and no ESRCH is anywhere in it.
+// "leader-zombie" pins the branch only scheduling used to reach (queue row
+// 115): the real overflow kill runs once the group leader has exited and is
+// still unreaped, where darwin answers kill(-pgid) with EPERM, not ESRCH.
 func TestOrdinaryOverflowCarriesNoESRCH(t *testing.T) {
-	err := runScript(t, overflowLoop, 120*time.Second)
-	if _, ok := err.(*HandlerOutputOverflowError); !ok {
-		t.Fatalf("error = %T %v, want exactly *HandlerOutputOverflowError", err, err)
+	orig := killGroup
+	t.Cleanup(func() { killGroup = orig })
+	for _, tc := range []struct {
+		name string
+		kill func(int) error
+	}{
+		{"as-scheduled", orig},
+		{"leader-zombie", func(pgid int) error {
+			if !zombieWithin(t, pgid, 10*time.Second) {
+				t.Errorf("group leader %d never became an unreaped zombie", pgid)
+			}
+			return orig(pgid)
+		}},
+	} {
+		killGroup = tc.kill
+		err := runScript(t, overflowLoop, 120*time.Second)
+		if _, ok := err.(*HandlerOutputOverflowError); !ok {
+			t.Fatalf("%s: error = %T %v, want exactly *HandlerOutputOverflowError", tc.name, err, err)
+		}
+		if errors.Is(err, syscall.ESRCH) || !errors.Is(err, ErrHandlerOverflow) {
+			t.Fatalf("%s: error = %v: ESRCH present or ErrHandlerOverflow lost", tc.name, err)
+		}
 	}
-	if errors.Is(err, syscall.ESRCH) || !errors.Is(err, ErrHandlerOverflow) {
-		t.Fatalf("error = %v: ESRCH present or ErrHandlerOverflow lost", err)
+}
+
+// AC9 (row 115). An EPERM overflow kill is excused only when the reaped
+// group turns out empty. Here nothing is signalled and a live member (a
+// backgrounded sleep) stays in the group after the leader is reaped, so the
+// EPERM must still be joined behind the typed overflow.
+func TestEPERMKillWithLiveGroupMemberIsJoined(t *testing.T) {
+	pgidOf := recordFailingKill(t)
+	err := runScript(t, "sleep 30 >/dev/null 2>&1 &\n"+overflowLoop, 120*time.Second)
+	pgid := pgidOf()
+	t.Cleanup(func() {
+		_ = proctest.Signal(pgid, syscall.SIGKILL, func(p int, s syscall.Signal) error { return syscall.Kill(-p, s) })
+	})
+	var overflow *HandlerOutputOverflowError
+	if !errors.As(err, &overflow) || !errors.Is(err, syscall.EPERM) {
+		t.Fatalf("error = %v, want *HandlerOutputOverflowError joined with the EPERM kill", err)
+	}
+	if errors.Is(err, procbound.ErrCleanupIncomplete) {
+		t.Fatalf("leader was not reaped, so the live-member branch was not reached: %v", err)
+	}
+}
+
+// The allowance can expire before the child exists (staging under load);
+// exec.Cmd.Start then refuses with the context's error. That is still the
+// wall-clock bound: the typed timeout, not a start failure, and the
+// reservation is released. An already-expired deadline makes it exact.
+func TestDeadlineBeforeStartIsTypedTimeout(t *testing.T) {
+	ctx, cancel := context.WithDeadline(boundedTestContext(t), time.Now().Add(-time.Second))
+	defer cancel()
+	base := procbound.Outstanding()
+	_, err := runBounded(ctx, handlerBounds{execTimeout: time.Second, maxOutputBytes: 1024},
+		handlerCommand{path: "/bin/sh", args: []string{"-c", "exit 0"}, dir: t.TempDir(), env: []string{"PATH=/usr/bin:/bin"}})
+	var timeout *HandlerTimeoutError
+	if !errors.As(err, &timeout) {
+		t.Fatalf("error = %T %v, want *HandlerTimeoutError", err, err)
+	}
+	if got := procbound.Outstanding(); got != base {
+		t.Fatalf("reservations after a refused Start = %d, want %d", got, base)
 	}
 }
 

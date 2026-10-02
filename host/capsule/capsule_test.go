@@ -16,6 +16,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/archive"
 	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/procbound"
 )
 
 func pinnedBinary(t *testing.T) string {
@@ -216,21 +217,66 @@ export func main() -> int {
   fib(28)
 }`)
 	const limit = 40 * time.Millisecond
+	// The bound is measured from the deadline's kill, not from Run's entry.
+	// Resolving and hashing the ~100 MB pinned interpreter, staging and exec
+	// all run before the deadline can fire and are not what F5 bounds; under a
+	// loaded -race suite they alone took seconds. The kill seam records when
+	// the expired context's Cancel ran; fib(28) runs ~11 s, so only that kill
+	// can end the child inside the bound.
+	var mu sync.Mutex
+	var kills []time.Time
+	orig := killGroup
+	t.Cleanup(func() { killGroup = orig })
+	killGroup = func(pgid int) error {
+		mu.Lock()
+		kills = append(kills, time.Now())
+		mu.Unlock()
+		return orig(pgid)
+	}
 	start := time.Now()
 	_, err := New(fixture.archive, Config{ExecTimeout: limit}).Run(Entry{
 		Interpreter: fixture.ref,
 		Source:      src,
 	})
-	elapsed := time.Since(start)
+	end := time.Now()
+	mu.Lock()
+	defer mu.Unlock()
 	var timeout *TimeoutError
 	if !errors.As(err, &timeout) {
-		t.Fatalf("error after %s = %T %v, want *TimeoutError", elapsed, err, err)
+		t.Fatalf("error after %s = %T %v, want *TimeoutError", end.Sub(start), err, err)
 	}
-	if elapsed > 2*time.Second {
-		t.Fatalf("timeout returned after %s, want <= 2s", elapsed)
+	if errors.Is(err, procbound.ErrCleanupIncomplete) {
+		t.Fatalf("the deadline kill did not end the child: %v", err)
 	}
-	if elapsed < limit/2 {
-		t.Fatalf("timeout returned too early after %s, injected limit %s", elapsed, limit)
+	if len(kills) != 1 {
+		t.Fatalf("deadline kill ran %d times, want 1", len(kills))
+	}
+	if early := kills[0].Sub(start); early < limit {
+		t.Fatalf("deadline kill fired %s after Run entry, before the %s limit", early, limit)
+	}
+	if after := end.Sub(kills[0]); after > 2*time.Second {
+		t.Fatalf("timeout returned %s after the deadline kill, want <= 2s (Run total %s)", after, end.Sub(start))
+	}
+}
+
+// F5 before Start. Staging under load can outlast a short allowance before
+// the child exists; exec.Cmd.Start then refuses with the context's error. That
+// is still the wall-clock bound, so it is *TimeoutError, not *ExecError (the
+// observed load failure of the test above). An already-expired caller
+// deadline makes the branch exact.
+func TestF5DeadlineBeforeStartIsTimeout(t *testing.T) {
+	fx := scriptedInterpreter(t, ":", "")
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Second))
+	defer cancel()
+	base := procbound.Outstanding()
+	_, err := New(fx.archive, Config{ExecTimeout: time.Minute}).RunContext(ctx, Entry{
+		Interpreter: fx.ref, Source: source(`export func main() -> string { "x" }`)})
+	var timeout *TimeoutError
+	if !errors.As(err, &timeout) {
+		t.Fatalf("error = %T %v, want *TimeoutError", err, err)
+	}
+	if got := procbound.Outstanding(); got != base {
+		t.Fatalf("reservations after a refused Start = %d, want %d", got, base)
 	}
 }
 
@@ -288,6 +334,10 @@ func (c *fakeChild) Kill() error {
 	c.killed = true
 	return nil
 }
+
+// GroupEmpty is false: a fake has no process group, so a failed fake kill is
+// never excused as a zombie-only group.
+func (c *fakeChild) GroupEmpty() bool { return false }
 
 func (c *fakeChild) Wait() error {
 	c.mu.Lock()
