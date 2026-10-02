@@ -1177,18 +1177,23 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 			RegistryCredentialVariable)
 	}
 
-	drivers := map[string]func(t *testing.T, probe string){
-		"host/broker/handlers.go": driveBrokerDryRunPublish,
-		"host/archive/archive.go": driveArchiveVersionProbe,
-		"host/capsule/capsule.go": driveCapsuleRun,
-		"host/pkgproj/pkgproj.go": drivePkgprojCrossCheck,
-		"host/pkgproj/iface.go":   drivePkgprojQueryInterface,
-		"host/replay/replay.go":   driveReplayEntry,
+	drivers := map[string][]func(t *testing.T, probe string){
+		// runBounded (handlers.go) is the one exec site of every broker
+		// handler, so each handler that builds its own child env drives it:
+		// the registry dry-run publish, and both branches of the
+		// software-engineering tool handler (w-software-engineering-domain
+		// M4a: policy-tool via the constructor's summary read, and run).
+		"host/broker/handlers.go": {driveBrokerDryRunPublish, driveAilangToolPolicyTool, driveAilangToolRun},
+		"host/archive/archive.go": {driveArchiveVersionProbe},
+		"host/capsule/capsule.go": {driveCapsuleRun},
+		"host/pkgproj/pkgproj.go": {drivePkgprojCrossCheck},
+		"host/pkgproj/iface.go":   {drivePkgprojQueryInterface},
+		"host/replay/replay.go":   {driveReplayEntry},
 		// w-transition-registry-production-publisher (row 107): the publish-time
 		// source-loadability check launches the ARCHIVED interpreter
 		// (archive.CheckSource); its child env must be scrubbed like every other
 		// World-launched subprocess.
-		"host/archive/check.go": driveArchiveCheckSource,
+		"host/archive/check.go": {driveArchiveCheckSource},
 	}
 	if len(drivers) != len(files) {
 		t.Fatalf("AC10(a): %d files carry subprocess sites %v but %d have drivers; "+
@@ -1200,16 +1205,20 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 			t.Fatalf("AC10(a): subprocess site file %q has no driver", file)
 		}
 		t.Run(file, func(t *testing.T) {
-			t.Setenv(RegistryCredentialVariable, ac10Sentinel)
-			dump := filepath.Join(t.TempDir(), "child.env")
-			driver(t, writeProbeScript(t, dump))
-			observed := readEnvDump(t, dump)
-			if len(observed) == 0 {
-				t.Fatalf("%s: the child wrote a zero-length environment; nothing was measured", file)
-			}
-			if childenv.Has(observed, RegistryCredentialVariable) {
-				// Name the VARIABLE, never the value.
-				t.Fatalf("%s: the child observed %s", file, RegistryCredentialVariable)
+			for i, drive := range driver {
+				t.Run(fmt.Sprintf("driver%d", i), func(t *testing.T) {
+					t.Setenv(RegistryCredentialVariable, ac10Sentinel)
+					dump := filepath.Join(t.TempDir(), "child.env")
+					drive(t, writeProbeScript(t, dump))
+					observed := readEnvDump(t, dump)
+					if len(observed) == 0 {
+						t.Fatalf("%s: the child wrote a zero-length environment; nothing was measured", file)
+					}
+					if childenv.Has(observed, RegistryCredentialVariable) {
+						// Name the VARIABLE, never the value.
+						t.Fatalf("%s: the child observed %s", file, RegistryCredentialVariable)
+					}
+				})
 			}
 		})
 	}
