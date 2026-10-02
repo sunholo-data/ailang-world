@@ -248,7 +248,7 @@ func replaceInvocation(t *testing.T, d *Daemon, db string, st coordinator.Store,
 	t.Helper()
 	coord, err := coordinator.New(coordinator.Config{Store: st, Runner: runner,
 		Binder: func(ep string, caps []broker.Capability) transitionreg.Binder {
-			return broker.OpenBinder(d.store, ep, caps)
+			return broker.OpenBinder(d.store, ep, caps, nil)
 		},
 		Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
 	if err != nil {

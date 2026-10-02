@@ -137,7 +137,7 @@ func (r *rig) coordinator(st Store, runner Runner) *Coordinator {
 	c, err := New(Config{
 		Store: st, Runner: runner, Now: func() int64 { return now }, MaxInput: 1 << 16, MaxOutput: 1 << 16,
 		Binder: func(ep string, caps []broker.Capability) transitionreg.Binder {
-			return broker.OpenBinder(r.st, ep, caps)
+			return broker.OpenBinder(r.st, ep, caps, nil)
 		},
 	})
 	if err != nil {

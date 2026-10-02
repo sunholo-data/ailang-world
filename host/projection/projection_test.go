@@ -825,7 +825,7 @@ func TestA2ADispatch(t *testing.T) {
 		{"R13_reconcile_absent", &coordinator.IntegrityError{Object: "record", Kind: "absent"}, codeInternal, notAvailableMessage},
 		{"R13_reconcile_integrity", &coordinator.IntegrityError{Object: "record"}, codeInternal, notAvailableMessage},
 		{"R7", &coordinator.WorldAbsentError{}, codeInternal, "no world is selected; commit a genesis world first"},
-		{"R8", &coordinator.EffectsUnsupportedError{}, codeInternal, "transitions that declare effects cannot be invoked in this daemon"},
+		{"R8", &coordinator.EffectsUnsupportedError{}, codeInternal, "transition declares an effect this daemon has no handler for"},
 		{"R9", &coordinator.IncompatibleError{Err: errors.New("hidden")}, codeInternal, "transition does not implement the invocation calling convention"},
 		{"R10", &coordinator.ExecutionError{Err: errors.New("hidden")}, codeInternal, "transition execution failed"},
 		{"R11", context.DeadlineExceeded, codeInternal, "invocation exceeded its deadline"},
@@ -855,7 +855,7 @@ func testA2ADispatchInvalidParams(t *testing.T) {
 	seedRegistry(t, st, descriptor("tools.echo", "alpha"))
 	coord, err := coordinator.New(coordinator.Config{Store: st, Runner: unusedRunner{},
 		Binder: func(ep string, grants []broker.Capability) transitionreg.Binder {
-			return broker.OpenBinder(st, ep, grants)
+			return broker.OpenBinder(st, ep, grants, nil)
 		},
 		Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
 	if err != nil {
@@ -954,7 +954,7 @@ func testA2ADispatchSuccessHeads(t *testing.T, absentPrecheck bool) {
 	runner := &countingRunner{}
 	coord, err := coordinator.New(coordinator.Config{Store: st, Runner: runner,
 		Binder: func(ep string, grants []broker.Capability) transitionreg.Binder {
-			return broker.OpenBinder(st, ep, grants)
+			return broker.OpenBinder(st, ep, grants, nil)
 		},
 		Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
 	if err != nil {
@@ -1020,7 +1020,7 @@ func testA2ADispatchRegistryMovedAfterAdmission(t *testing.T) {
 	cfg.Reader = reader
 	coord, err := coordinator.New(coordinator.Config{Store: st, Runner: unusedRunner{},
 		Binder: func(ep string, grants []broker.Capability) transitionreg.Binder {
-			return broker.OpenBinder(st, ep, grants)
+			return broker.OpenBinder(st, ep, grants, nil)
 		},
 		Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
 	if err != nil {
@@ -1032,7 +1032,7 @@ func testA2ADispatchRegistryMovedAfterAdmission(t *testing.T) {
 	body := `{"jsonrpc":"2.0","id":7,"method":"tasks/send","params":{"id":"t1","metadata":{"skill_id":"tools.echo"},"message":{"parts":[{"type":"data","data":{"x":1}}]}}}`
 	rec := postA2A(t, h, "Bearer "+tok, body)
 	code, msg, _ := a2aErr(t, rec.Body.Bytes())
-	if code != codeInternal || msg != "transitions that declare effects cannot be invoked in this daemon" {
+	if code != codeInternal || msg != "transition declares an effect this daemon has no handler for" {
 		t.Fatalf("response = %d %q; reader calls %d", code, msg, reader.calls)
 	}
 	if reader.calls != 1 {

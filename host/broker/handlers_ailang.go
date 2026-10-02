@@ -458,7 +458,10 @@ const (
 //	(a) admitted: any rc, exactly one `policy:` line on stderr (V33, V39)
 //	(b) admitted then refused at runtime: rc 1, same stderr line (V34) — the
 //	    same parse as (a); the program's own rc is reported, never judged
-//	(c) statically refused: rc 2, decision JSON on stdout, stderr empty (V49)
+//	(c) refused before execution: any non-zero rc (2 for a policy violation
+//	    or type error, 1 for an unreadable entry file), a not-ok decision
+//	    JSON on stdout, stderr empty (V49, V63); the decision carries the
+//	    binary's error_kind (e.g. read_failed) verbatim
 //	(d) supervisor limit: rc 3, the `policy:` line plus one `policy-result:`
 //	    line carrying `reason` and `stage` (V61)
 //
@@ -501,7 +504,7 @@ func composeRunResult(exitCode int, stdout, stderr []byte) ([]byte, error) {
 			result.Limit = json.RawMessage(resultLines[0])
 		}
 		result.Admitted, result.Decision = true, line.Decision
-	case len(policyLines) == 0 && len(resultLines) == 0 && exitCode == 2 && len(stderr) == 0:
+	case len(policyLines) == 0 && len(resultLines) == 0 && exitCode != 0 && len(stderr) == 0:
 		var static struct {
 			Decision json.RawMessage `json:"decision"`
 		}

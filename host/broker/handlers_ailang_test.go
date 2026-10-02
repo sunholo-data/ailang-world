@@ -404,7 +404,8 @@ func TestComposeRunResultAcceptsExactlyTheFourShapes(t *testing.T) {
 		{"admitted line, decision not ok", 0, "", `policy: {"ok":true,"decision":{"ok":false}}` + "\n", false, false, false},
 		{"limit without rc 3", 1, "", pl + "\n" + limit + "\n", false, false, false},
 		{"limit without reason", 3, "", pl + "\n" + `policy-result: {"stage":"execute"}` + "\n", false, false, false},
-		{"static with rc 1 (read_failed, unenumerated)", 1, `{"decision":{"ok":false,"error_kind":"read_failed"}}`, "", false, false, false},
+		{"(c) unreadable entry rc 1 (read_failed, V63)", 1, `{"file":"missing.ail","decision":{"ok":false,"error_kind":"read_failed"}}`, "", true, false, false},
+		{"static decision with rc 0", 0, static, "", false, false, false},
 		{"static with stderr", 2, static, "warning\n", false, false, false},
 		{"static decision ok", 2, `{"decision":{"ok":true}}`, "", false, false, false},
 		{"static not json", 2, "nope", "", false, false, false},
@@ -795,6 +796,19 @@ func TestAilangRunOutcomeShapesOnTheToolBinary(t *testing.T) {
 	}
 	if res.Admitted || res.ExitCode != 2 || decision.OK || fmt.Sprint(decision.Missing) != "[Net]" || res.Stderr != "" {
 		t.Fatalf("(c) = %+v decision %s", res, res.Decision)
+	}
+	// (c) with rc 1 (V63): a missing entry file is refused before execution
+	// with the decision on stdout; the agent sees error_kind read_failed.
+	res = f.run(t, f.h, "missing.ail", "")
+	var readFailed struct {
+		OK        bool   `json:"ok"`
+		ErrorKind string `json:"error_kind"`
+	}
+	if err := json.Unmarshal(res.Decision, &readFailed); err != nil {
+		t.Fatalf("(c) rc1 decision %s: %v", res.Decision, err)
+	}
+	if res.Admitted || res.ExitCode != 1 || readFailed.OK || readFailed.ErrorKind != "read_failed" || res.Stderr != "" {
+		t.Fatalf("(c) missing entry = %+v decision %s", res, res.Decision)
 	}
 	// (d) the supervisor's own timeout (V61) under a short Clock-granting
 	// policy: rc 3 and limit.reason == "timeout", well inside the Go cap.

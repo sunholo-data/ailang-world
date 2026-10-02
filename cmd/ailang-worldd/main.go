@@ -7,6 +7,7 @@
 // path to the store, so CLI use continuously exercises the REST surface.
 //
 //	ailang-worldd serve --db <path> [--bind 127.0.0.1:7644] [--ailang-bin <path>]
+//	                    [--workspace-root <dir> --tool-ailang-bin <path>]
 //	ailang-worldd [--addr http://127.0.0.1:7644] health
 //	ailang-worldd [--addr http://127.0.0.1:7644] head
 //	ailang-worldd [--addr http://127.0.0.1:7644] world get <ref>
@@ -48,6 +49,7 @@ const usage = `ailang-worldd — AILANG World local daemon (loopback only)
 
 Usage:
   ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
+                      [--workspace-root <dir> --tool-ailang-bin <path>]
   ailang-worldd [--addr <url>] health
   ailang-worldd [--addr <url>] head
   ailang-worldd [--addr <url>] world get <ref>
@@ -67,6 +69,16 @@ serve flags:
   --bind host:port     loopback listen address (default ` + daemon.DefaultBind + `);
                        a non-loopback host is refused — there is no override
   --ailang-bin <path>  interpreter to archive and pin at startup (optional)
+  --workspace-root <dir>
+                       episode worktrees live at <dir>/<episode> (made by the
+                       operator with git worktree add before session mint); it
+                       must not contain the store, its archive, its rendered
+                       policies or its tool cache — startup refuses otherwise
+  --tool-ailang-bin <path>
+                       AILANG binary the workspace tools run (must be
+                       ` + daemon.ToolBinaryRelease + `); archived and hash-verified like
+                       --ailang-bin. The Workspace.*/Ailang.* tools are served
+                       only when both this and --workspace-root are set
 
 Exit codes: 0 ok, 1 usage or client error, 2 fatal startup.
 `
@@ -176,6 +188,8 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	dbPath := fs.String("db", "", "world store database (required)")
 	bind := fs.String("bind", daemon.DefaultBind, "loopback listen address host:port")
 	ailangBin := fs.String("ailang-bin", "", "interpreter to archive and pin at startup")
+	workspaceRoot := fs.String("workspace-root", "", "directory holding one worktree per episode")
+	toolAilangBin := fs.String("tool-ailang-bin", "", "AILANG binary the workspace tools run")
 	if err := fs.Parse(args); err != nil {
 		return exitUsage
 	}
@@ -203,7 +217,8 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	ctx, stop := serveSignalContext()
 	defer stop()
 
-	cfg := daemon.Config{DBPath: *dbPath, BindHost: host, BindPort: port, AilangBin: *ailangBin}
+	cfg := daemon.Config{DBPath: *dbPath, BindHost: host, BindPort: port, AilangBin: *ailangBin,
+		WorkspaceRoot: *workspaceRoot, ToolAilangBin: *toolAilangBin}
 	return serveResult(daemon.Run(ctx, cfg, stdout), stderr)
 }
 

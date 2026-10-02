@@ -2,14 +2,11 @@ package coordinator
 
 // Row 134 M2a/M2b/M3b: effectful dispatch through the broker.
 //
-// TEST SEAM. These tests inject a handler registry by giving the coordinator
-// a BinderFor that returns broker.NewSession(store, episode, grants, reg) —
-// an exported broker constructor that TR.C (invoke_boundary_test.go) admits
-// in _test.go files only. No production API was added for the seam: the
+// The tests inject a handler registry through the production binder,
+// broker.OpenBinder(store, episode, grants, reg) (row 134 M4b): the
 // coordinator still sees only a transitionreg.Binder, the raw Session never
-// crosses into coordinator production code, and every effect still goes
-// Bound.Request → BoundInvoker.Request. The production OpenBinder signature
-// change (a registry argument) is M4b.
+// crosses into coordinator code, and every effect still goes Bound.Request →
+// BoundInvoker.Request.
 
 import (
 	"context"
@@ -131,7 +128,7 @@ func (r *rig) fxCoordinator(st Store, runner Runner, reg broker.Registry) *Coord
 	c, err := New(Config{
 		Store: st, Runner: runner, Now: func() int64 { return now }, MaxInput: 1 << 16, MaxOutput: 1 << 16,
 		Binder: func(ep string, caps []broker.Capability) transitionreg.Binder {
-			return broker.NewSession(r.st, ep, caps, reg)
+			return broker.OpenBinder(r.st, ep, caps, reg)
 		},
 	})
 	if err != nil {

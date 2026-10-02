@@ -453,7 +453,7 @@ func dispatchError(err error) (int, string) {
 	case errors.As(err, &noWorld):
 		return codeInternal, "no world is selected; commit a genesis world first"
 	case errors.As(err, &effects):
-		return codeInternal, "transitions that declare effects cannot be invoked in this daemon"
+		return codeInternal, "transition declares an effect this daemon has no handler for"
 	case errors.As(err, &incompatible):
 		return codeInternal, "transition does not implement the invocation calling convention"
 	case errors.As(err, &execution):

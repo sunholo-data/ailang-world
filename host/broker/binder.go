@@ -13,10 +13,21 @@ import (
 // undeclared effect/scope/cost triple.
 type SessionBinder struct{ s *Session }
 
-// OpenBinder opens a live, session-scoped binder for one resolved session.
-// The handler registry is empty: slice-1 invocations declare no effects.
-func OpenBinder(s *store.Store, episodeID string, grants []Capability) *SessionBinder {
-	return &SessionBinder{s: newSession(s, episodeID, grants, nil, Live, nil)}
+// OpenBinder opens a live, session-scoped binder for one resolved session
+// over reg, the handlers this daemon runs for that episode (row 134 §4.3:
+// the daemon supplies workspaceRegistry(episodeID)). A nil or empty reg
+// handles no effect, so a descriptor declaring any effect is refused (R8)
+// before its plan or any effect runs. The registry is copied: a caller that
+// mutates its map afterwards cannot widen an open binder.
+func OpenBinder(s *store.Store, episodeID string, grants []Capability, reg Registry) *SessionBinder {
+	var own Registry
+	if len(reg) != 0 {
+		own = make(Registry, len(reg))
+		for name, h := range reg {
+			own[name] = h
+		}
+	}
+	return &SessionBinder{s: newSession(s, episodeID, grants, own, Live, nil)}
 }
 
 // OpenReplayBinder opens a replay binder over the ordered effect records of a

@@ -75,7 +75,7 @@ func (r *wireRig) handler(t *testing.T, cs coordinator.Store, runner coordinator
 	}
 	if binder == nil {
 		binder = func(ep string, grants []broker.Capability) transitionreg.Binder {
-			return broker.OpenBinder(r.st, ep, grants)
+			return broker.OpenBinder(r.st, ep, grants, nil)
 		}
 	}
 	coord, err := coordinator.New(coordinator.Config{Store: cs, Runner: runner, Binder: binder,

@@ -175,3 +175,29 @@ func TestClientCallIsBounded(t *testing.T) {
 		t.Fatalf("client call took %s — it is not bounded by the injected deadline", elapsed)
 	}
 }
+
+// Row 134 M4b: `serve --help` documents --workspace-root/--tool-ailang-bin,
+// and serve passes them to the daemon: a workspace root holding the store is
+// refused at startup (AC4.5) with the fatal exit code.
+func TestServeWorkspaceFlags(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	if got := run([]string{"help"}, &stdout, &stderr); got != exitOK {
+		t.Fatalf("help exit = %d", got)
+	}
+	for _, flag := range []string{"--workspace-root <dir>", "--tool-ailang-bin <path>", daemon.ToolBinaryRelease} {
+		if !strings.Contains(stdout.String(), flag) {
+			t.Errorf("serve --help lacks %q", flag)
+		}
+	}
+	dir := t.TempDir()
+	stdout.Reset()
+	stderr.Reset()
+	// The absent --ailang-bin guarantees a later startup failure, so a serve
+	// that skipped the workspace check fails (with the wrong message) instead
+	// of serving forever.
+	got := run([]string{"serve", "--db", filepath.Join(dir, "world.db"), "--bind", "127.0.0.1:0", "--workspace-root", dir,
+		"--ailang-bin", filepath.Join(dir, "absent-interpreter")}, &stdout, &stderr)
+	if got != exitFatal || !strings.Contains(stderr.String(), "the workspace root is refused") {
+		t.Fatalf("serve with the store inside --workspace-root: exit %d, stderr %q; want %d and the AC4.5 refusal", got, stderr.String(), exitFatal)
+	}
+}

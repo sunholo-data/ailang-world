@@ -30,10 +30,15 @@ var contextRootPins = map[string]int{
 	// Row 134 §4.3: post-effect writes are detached from the caller's
 	// cancellation and each feeds context.WithTimeout directly (4 s / 2 s
 	// budgets), so an executed effect is never stranded unrecorded.
-	"host/broker/broker.go|postDispatchContext|WithoutCancel":                 1,
-	"host/coordinator/effectful.go|detached|WithoutCancel":                    1,
-	"host/capsule/capsule.go|Run|Background":                                  1,
-	"host/daemon/daemon.go|drain|Background":                                  1,
+	"host/broker/broker.go|postDispatchContext|WithoutCancel": 1,
+	"host/coordinator/effectful.go|detached|WithoutCancel":    1,
+	"host/capsule/capsule.go|Run|Background":                  1,
+	"host/daemon/daemon.go|drain|Background":                  1,
+	// Row 134 M4b: an episode's tool handler is built inside the coordinator's
+	// BinderFor, which carries no ctx; its one summary subprocess is bounded
+	// by workspaceHandlerBudget (3 s) fed directly from this root, and it
+	// makes no Store call.
+	"host/daemon/workspace.go|episodeHandler|Background":                      1,
 	"host/replay/replay.go|runPinnedTransition|Background":                    1,
 	"host/store/lookup_index.go|provisionLookupIndex|Background":              1,
 	"host/store/reference_index.go|provisionReferenceIndexes|Background":      1,

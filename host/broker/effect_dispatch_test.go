@@ -23,7 +23,7 @@ func TestBoundInvokerUnhandled(t *testing.T) {
 	if got := inv.Unhandled(); !reflect.DeepEqual(got, []string{"B", "C"}) {
 		t.Fatalf("live Unhandled = %v, want [B C] (declaration order, no duplicates)", got)
 	}
-	empty, _ := OpenBinder(nil, "ep", nil).Bind(Manifest{Declared: declared})
+	empty, _ := OpenBinder(nil, "ep", nil, nil).Bind(Manifest{Declared: declared})
 	if got := empty.Unhandled(); !reflect.DeepEqual(got, []string{"A", "B", "C"}) {
 		t.Fatalf("OpenBinder (nil registry) Unhandled = %v, want all", got)
 	}
