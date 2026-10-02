@@ -1,0 +1,83 @@
+{
+  "start_utc": "2026-10-02T07:31:21.083981+00:00",
+  "pin": "/Users/voightkampff/.pinned-ailang/ailang",
+  "pin_sha256": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+  "pin_version": "AILANG v0.41.0\nCommit: 24ee108\nFull:   24ee1088776e21cd06a3781ed18e77f40be06db3\nBuilt:  2026-09-21T15:50:02Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026\n",
+  "go_version": "go version go1.26.6 darwin/arm64\n",
+  "go_env": {
+    "AR": "ar",
+    "CC": "clang",
+    "CGO_CFLAGS": "-O2 -g",
+    "CGO_CPPFLAGS": "",
+    "CGO_CXXFLAGS": "-O2 -g",
+    "CGO_ENABLED": "1",
+    "CGO_FFLAGS": "-O2 -g",
+    "CGO_LDFLAGS": "-O2 -g",
+    "CXX": "clang++",
+    "GCCGO": "gccgo",
+    "GO111MODULE": "",
+    "GOARCH": "arm64",
+    "GOARM64": "v8.0",
+    "GOAUTH": "netrc",
+    "GOBIN": "",
+    "GOCACHE": "/Users/voightkampff/Library/Caches/go-build",
+    "GOCACHEPROG": "",
+    "GODEBUG": "",
+    "GOENV": "/Users/voightkampff/Library/Application Support/go/env",
+    "GOEXE": "",
+    "GOEXPERIMENT": "",
+    "GOFIPS140": "off",
+    "GOFLAGS": "",
+    "GOGCCFLAGS": "-fPIC -arch arm64 -pthread -fno-caret-diagnostics -Qunused-arguments -fmessage-length=0 -ffile-prefix-map=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/go-build1267212942=/tmp/go-build -gno-record-gcc-switches -fno-common",
+    "GOHOSTARCH": "arm64",
+    "GOHOSTOS": "darwin",
+    "GOINSECURE": "",
+    "GOMOD": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220/go.mod",
+    "GOMODCACHE": "/Users/voightkampff/go/pkg/mod",
+    "GONOPROXY": "",
+    "GONOSUMDB": "",
+    "GOOS": "darwin",
+    "GOPATH": "/Users/voightkampff/go",
+    "GOPRIVATE": "",
+    "GOPROXY": "https://proxy.golang.org,direct",
+    "GOROOT": "/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64",
+    "GOSUMDB": "sum.golang.org",
+    "GOTELEMETRY": "local",
+    "GOTELEMETRYDIR": "/Users/voightkampff/Library/Application Support/go/telemetry",
+    "GOTMPDIR": "",
+    "GOTOOLCHAIN": "auto",
+    "GOTOOLDIR": "/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/pkg/tool/darwin_arm64",
+    "GOVCS": "",
+    "GOVERSION": "go1.26.6",
+    "GOWORK": "",
+    "PKG_CONFIG": "pkg-config"
+  },
+  "explicit_environment": {
+    "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+    "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+    "GOFLAGS": null,
+    "GOTOOLCHAIN": null,
+    "GOMAXPROCS": null,
+    "GODEBUG": null
+  },
+  "trees": {
+    "base": {
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-base",
+      "head": "c5c40f3e05dad27b7591ca494bfeea2e7f1920bd",
+      "tracked_status": "",
+      "scripts": {
+        "scripts/verify_ail.sh": "a393564ef28b2c3eaa898aa5bcf9c5e61077aa64a9fbedbad6ad8f008e7f0c9c",
+        "scripts/verify_go.sh": "bc2530f103ffe86420c13ac1f8005d2b7f0a8a9a0ba29cf47be65a0dbddb27f2"
+      }
+    },
+    "candidate": {
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220",
+      "head": "cdb714e19811cb067d6fa0f00c135a1216876633",
+      "tracked_status": "",
+      "scripts": {
+        "scripts/verify_ail.sh": "a393564ef28b2c3eaa898aa5bcf9c5e61077aa64a9fbedbad6ad8f008e7f0c9c",
+        "scripts/verify_go.sh": "bc2530f103ffe86420c13ac1f8005d2b7f0a8a9a0ba29cf47be65a0dbddb27f2"
+      }
+    }
+  }
+}

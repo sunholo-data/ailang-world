@@ -1,0 +1,182 @@
+{
+  "candidate": "cdb714e19811cb067d6fa0f00c135a1216876633",
+  "base": "c5c40f3e05dad27b7591ca494bfeea2e7f1920bd",
+  "judge_independence": "same-model-fresh-context",
+  "judge": "native gpt-6.1-sol",
+  "token_usage": null,
+  "routing_flag": "preferred Sonnet Agent returned Unknown model per controller; D48 amended permits this fresh context; no Astra",
+  "result": "fail",
+  "score": 59,
+  "exact_score": 58.54545454545455,
+  "round": "D49A bounded follow-up 1 (historical rounds 1/2/3 retained)",
+  "hard_fail": [
+    "Exact unchanged full Go profile red in executor, controller and independent judge; no measured causal correction"
+  ],
+  "rubric": {
+    "tests": 0,
+    "lint": 10,
+    "acceptance": 24.545454545454547,
+    "code_quality": 0,
+    "documentation": 15,
+    "design_fidelity": 9,
+    "total_max": 100,
+    "conditional_categories": "not triggered"
+  },
+  "original_sprint_criteria": {
+    "met": 18,
+    "total": 22,
+    "D_status": null
+  },
+  "original_ACs_binding": true,
+  "clause6": "UNMET; row108 unaccepted and unmerged",
+  "own_measurements": {
+    "verify_ail": {
+      "command": [
+        "./scripts/verify_ail.sh"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-eval",
+      "head": "cdb714e19811cb067d6fa0f00c135a1216876633",
+      "start_utc": "2026-10-02T07:44:58.258715+00:00",
+      "end_utc": "2026-10-02T07:45:21.985495+00:00",
+      "duration_s": 23.72665112512186,
+      "rc": 0,
+      "terminal_state": "COMPLETED",
+      "raw_sha256": "03b2848e7fb136b11d0225707977b0b774426d13975796e9d8178b3b4401726d",
+      "raw_bytes": 2401,
+      "raw_artifact": "judge-verify-ail.raw.b64",
+      "cap_s": 1200,
+      "environment": {
+        "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+        "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+        "GOFLAGS": null,
+        "GODEBUG": null,
+        "GOMAXPROCS": null,
+        "GOTOOLCHAIN": null
+      },
+      "display_artifact": "judge-verify-ail.log",
+      "display_sha256": "03b2848e7fb136b11d0225707977b0b774426d13975796e9d8178b3b4401726d"
+    },
+    "verify_go": {
+      "command": [
+        "./scripts/verify_go.sh"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-eval",
+      "head": "cdb714e19811cb067d6fa0f00c135a1216876633",
+      "start_utc": "2026-10-02T07:45:21.985807+00:00",
+      "end_utc": "2026-10-02T07:48:01.650824+00:00",
+      "duration_s": 159.66587641718797,
+      "rc": 1,
+      "terminal_state": "COMPLETED",
+      "raw_sha256": "5e2c34ae7e0ad977ed72ab4f667a76cf6e95535f2b03802dc925630354c93b49",
+      "raw_bytes": 4495,
+      "raw_artifact": "judge-verify-go.raw.b64",
+      "cap_s": 1200,
+      "environment": {
+        "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+        "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+        "GOFLAGS": null,
+        "GODEBUG": null,
+        "GOMAXPROCS": null,
+        "GOTOOLCHAIN": null
+      },
+      "display_artifact": "judge-verify-go.log",
+      "display_sha256": "5e2c34ae7e0ad977ed72ab4f667a76cf6e95535f2b03802dc925630354c93b49"
+    },
+    "race": "NOTRUN (plain suite failure under unchanged set-e script)",
+    "vet": {
+      "command": [
+        "go",
+        "vet",
+        "./..."
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "",
+      "duration_s": 0.45572183397598565
+    },
+    "format": {
+      "command": [
+        "gofmt",
+        "-l",
+        "host/daemon/daemon.go",
+        "host/daemon/daemon_test.go",
+        "host/daemon/invoke_e2e_test.go",
+        "host/daemon/mcp_budget_test.go",
+        "host/daemon/mcp_cross_test.go",
+        "host/daemon/mcp_test.go",
+        "host/projection/a2a_wire_test.go",
+        "host/projection/absence_test.go",
+        "host/projection/mcp.go",
+        "host/projection/mcp_absence_test.go",
+        "host/projection/mcp_bounds_test.go",
+        "host/projection/mcp_conformance_test.go",
+        "host/projection/mcp_source_test.go",
+        "host/projection/mcp_test.go",
+        "host/projection/mcpname.go",
+        "host/projection/mcpname_test.go",
+        "host/projection/projection.go",
+        "host/projection/projection_test.go",
+        "host/transitionreg/absence_example_test.go",
+        "host/transitionreg/transitionreg.go"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "evidence_audit": {
+    "executor_artifacts": 619,
+    "normalized_originals_recovered_via_b64": 29,
+    "unresolved_hash_mismatches": 0,
+    "executor_and_controller_full_profile_hashes": "verified"
+  },
+  "production_changes": false,
+  "mutations_this_judge": [],
+  "required_ci": "UNMEASURED at candidate SHA in this judge; no acceptance credit",
+  "blocking_findings": [
+    {
+      "id": "B1",
+      "file": "host/pkgproj/iface_test.go:232",
+      "evidence": "Executor race and own plain TestQueryInterfaceReturnsWhileADescendantHoldsStdout same missing-pid assertion at iface_test.go:232, each3.00s",
+      "action": "Establish causal fixture stimulus failure and preserve timeout/descendant/teardown assertions under authorized scope; do not widen timeout or remove instrumentation merely for green."
+    },
+    {
+      "id": "B2",
+      "file": "cmd/ailang-worldd/cli_test.go:211",
+      "evidence": "controller race daemon announcement timeout",
+      "action": "Diagnose reached startup stage; cannot equate with historical cli_test.go:266 commit failure."
+    },
+    {
+      "id": "B3",
+      "file": "host/broker/cleanup_test.go:200",
+      "evidence": "controller race overflow kill operation not permitted joined error instead of exact HandlerOutputOverflowError",
+      "action": "Measure cause and preserve exact error-classification assertion. Production correction needs normal design gate."
+    }
+  ],
+  "nonblocking_findings": [
+    "row132 retained capacity and nil-coordinator supporting-hunk survivors; no widening",
+    "Live long-surface recovery test does not assert complete exact frozen envelope or registry-valid escape-heavy case",
+    "Quickstart test executes three payloads verbatim, reconstructs setup/headers; no initialize command",
+    "Touched files exceed800 lines at base and candidate; literal rubric deduction, no cosmetic split requested",
+    "Historical round3 inheritance and saturation-only causal language is unsupported by targeted greens and untouched source"
+  ],
+  "acceptance_status": {
+    "DEP": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "SCHEMA": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "CARRIER": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "ADMIT": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "ABSENCE": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "INVOKE": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "ITEM": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "BATCH": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "BOUNDS": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "WIRE": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "ROUTE": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "CROSS": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "FIXTURE": "functionally supported by source and banked semantic controls; final product acceptance pending",
+    "MAP": "mapping/refusal/recovery supported; strongest exact-envelope and valid escape-heavy fixture support incomplete (nonblocking preserved limit)"
+  },
+  "runtime_terminal": true,
+  "final_tracked_diff": "",
+  "completed_utc": "2026-10-02T07:49:20.805129+00:00"
+}

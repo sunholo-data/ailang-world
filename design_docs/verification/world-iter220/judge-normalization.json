@@ -1,0 +1,6 @@
+{
+  "display": "product-evaluation.md",
+  "lossless": "product-evaluation.md.raw.b64",
+  "raw_sha256": "8065f4f410d5ea5e69a49a5ecab0830525ba195ca02973bff893c9627942efe1",
+  "change": "trailing blank EOF removed only"
+}

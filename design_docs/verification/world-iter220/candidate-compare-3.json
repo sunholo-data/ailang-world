@@ -1,0 +1,19 @@
+{
+  "command": "go test ./host/coordinator -run '^TestDispatchDurableDeadline$/^Commit$' -count=1",
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220",
+  "start_utc": "2026-10-02T07:31:32.751842+00:00",
+  "end_utc": "2026-10-02T07:31:33.821034+00:00",
+  "duration_seconds": 1.0692120001185685,
+  "rc": 0,
+  "terminal_state": "COMPLETED",
+  "raw_sha256": "4f061995b1ddc006120d1f46aeaf089ae33b78ae1eafe2313ffa505b4a809c2a",
+  "raw_bytes": 66,
+  "raw_artifact": "candidate-compare-3.log",
+  "process_group": 96639,
+  "timeout_cleanup": "not needed",
+  "head": "cdb714e19811cb067d6fa0f00c135a1216876633",
+  "pins": {
+    "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+    "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+  }
+}

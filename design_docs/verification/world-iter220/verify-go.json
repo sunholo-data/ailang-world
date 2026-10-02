@@ -1,0 +1,19 @@
+{
+  "command": "./scripts/verify_go.sh",
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220",
+  "start_utc": "2026-10-02T07:31:40.994251+00:00",
+  "end_utc": "2026-10-02T07:36:37.051589+00:00",
+  "duration_seconds": 296.0609553749673,
+  "rc": 1,
+  "terminal_state": "COMPLETED",
+  "raw_sha256": "d376a4c52ee97a94ccb2a0f33e8e0de52d943bbeca332ac19c97a80ea564bd89",
+  "raw_bytes": 6065,
+  "raw_artifact": "verify-go.log",
+  "process_group": 97110,
+  "timeout_cleanup": "not needed",
+  "head": "cdb714e19811cb067d6fa0f00c135a1216876633",
+  "pins": {
+    "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+    "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+  }
+}

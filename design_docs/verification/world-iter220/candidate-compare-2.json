@@ -1,0 +1,19 @@
+{
+  "command": "go test ./host/capsule -run '^TestF5WallClockTimeoutHasElapsedBound$' -count=1",
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220",
+  "start_utc": "2026-10-02T07:31:31.086935+00:00",
+  "end_utc": "2026-10-02T07:31:32.737806+00:00",
+  "duration_seconds": 1.6508954160381109,
+  "rc": 0,
+  "terminal_state": "COMPLETED",
+  "raw_sha256": "5f83285b529083898c248d4004abe83d991f66963736e7229ff407cea7e9092f",
+  "raw_bytes": 62,
+  "raw_artifact": "candidate-compare-2.log",
+  "process_group": 96584,
+  "timeout_cleanup": "not needed",
+  "head": "cdb714e19811cb067d6fa0f00c135a1216876633",
+  "pins": {
+    "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+    "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+  }
+}

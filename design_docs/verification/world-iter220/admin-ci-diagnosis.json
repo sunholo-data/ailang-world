@@ -1,0 +1,13 @@
+{
+  "red_head": "c68887cce8c5fe70ddc0e1aa64b0614d5599185b",
+  "run": 36982227102,
+  "raw_sha256": "824eaac3bdea160a1e9d163a5a10021016ff4e0b7dfb5a67311935aa5faa30d9",
+  "green_controls": [
+    "7a638e458547bb3ca2397d7c7378fbef54b0e276",
+    "563410329e219c4ed7c2e7befe1be37d60cb5215"
+  ],
+  "production_code_unchanged": true,
+  "cause": "unproved; deadline-test outcome diverges on byte-identical production tree",
+  "waiver": false,
+  "final_record_head_followup": "one bounded final evidence-bank CI; if red park record; no repeated retry"
+}

@@ -1,0 +1,77 @@
+{
+  "sprint_id": "W-MCP-D49A-ITER220",
+  "plan_path": "design_docs/verification/world-iter220/plan.md",
+  "design_doc": "design_docs/planned/w-mcp-dispatch-projection.md",
+  "status": "diagnostic_execution_completed_acceptance_unresolved",
+  "candidate_head": "cdb714e19811cb067d6fa0f00c135a1216876633",
+  "base_head": "c5c40f3e05dad27b7591ca494bfeea2e7f1920bd",
+  "authority": [
+    "D-WORLD-49=A",
+    "D-WORLD-48 amended"
+  ],
+  "github_issues": [],
+  "features": [
+    {
+      "id": "M49_COMPARE",
+      "description": "Pair exact four named tests on pristine base and candidate",
+      "estimated_loc": 40,
+      "dependencies": [],
+      "acceptance_criteria": [
+        "Four exact commands run sequentially on pristine origin/dev then candidate before any repair or full profile.",
+        "Identical released v0.41.0 pin and normal Go environment recorded with exact heads and full logs/rc.",
+        "Each named raw failure signature compared without family-level causal inference."
+      ],
+      "passes": true,
+      "started": "2026-10-02T07:31:21.745499+00:00",
+      "completed": "2026-10-02T07:37:44.510506+00:00",
+      "notes": "Exact paired comparator complete, all eight rc0; no causal proof or baseline waiver."
+    },
+    {
+      "id": "M49_PROFILE",
+      "description": "Measure unchanged full profiles and bank bounded diagnosis",
+      "estimated_loc": 60,
+      "dependencies": [
+        "M49_COMPARE"
+      ],
+      "acceptance_criteria": [
+        "Exact unchanged candidate verify_ail then verify_go measured with full logs/rc and 20-minute caps.",
+        "All fourteen original ACs and named mutations preserved; no baseline waiver or altered profile.",
+        "Any fixture repair has measured cause, compiled RED/exact-restored GREEN controls and exact final profiles.",
+        "Fresh separate product verdict and required CI remain mandatory before merge; scope expansion stops."
+      ],
+      "passes": false,
+      "started": "2026-10-02T07:31:35.230445+00:00",
+      "completed": "2026-10-02T07:37:44.510506+00:00",
+      "notes": "Exact full measurements completed AIL0/Go1; race descendant-pid instrumentation red. No verified repair; product acceptance unresolved. All original criteria preserved, judgment/CI pending."
+    }
+  ],
+  "velocity": {
+    "target_loc_per_day": 400,
+    "estimated_total_loc": 100,
+    "estimated_days": 0.25,
+    "measurement": "Evidence-only planning assumption; runtime velocity UNKNOWN"
+  },
+  "registry_reuse": [
+    {
+      "milestone": "M49_COMPARE",
+      "package": null,
+      "action": "none",
+      "reason": "Evidence-only diagnosis; no package-like capability or new implementation. Retain original sprint registry audit."
+    },
+    {
+      "milestone": "M49_PROFILE",
+      "package": null,
+      "action": "none",
+      "reason": "Evidence-only diagnosis; no package-like capability or new implementation. Retain original sprint registry audit."
+    }
+  ],
+  "token_usage": "UNKNOWN",
+  "scope": "one bounded fixture-only diagnostic follow-up; all original acceptance retained",
+  "runtime_results": {
+    "comparator": "8/8 exact targeted commands rc0",
+    "verify_ail": "rc0; completed",
+    "verify_go": "rc1; plain PASS; race FAIL; descendant pid instrument missing",
+    "product_acceptance": "UNRESOLVED; independent verdict and CI pending",
+    "repair": "NONE; verified correction not established"
+  }
+}
