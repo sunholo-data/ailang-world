@@ -7,7 +7,12 @@ The asymmetry that shapes every refusal below: a public publish is **immutable**
 (`registry-validator` 409s on an existing version), so a wrong publish permanently consumes
 `world/core@0.1.1`, while a refusal costs a human five minutes.
 
-**Current candidate: `world/core@0.1.1` — prepared and rehearsed, NOT published.**
+**`world/core@0.1.1` — PUBLISHED 2026-10-02T07:58:43Z (Mark, attended), record
+`60b46d4b…3b24` (full value in the evidence folder below), from the fresh store
+`~/.ailang/world/world-0.1.1.db` (`D-WORLD-45` = A).** The served metadata matched the reviewed
+golden on all four digests and the byte length, and the registry validator verified 16/16 contracts;
+it is banked at `design_docs/verification/world-attended-2026-10-02-publish-0.1.1/`. The next
+release needs a new candidate; the text below describes the 0.1.1 procedure as run.
 `world/core@0.1.0` is already published (2026-09-21) and immutable; its served record is
 preserved verbatim at `host/broker/testdata/metadata_world_core_0.1.0.json` and is never
 rewritten. `D-WORLD-41` (attended, 2026-09-28) chose 0.1.1 as a proof-hardening release with
@@ -135,13 +140,13 @@ has never published there is nothing to create it. Measured 2026-09-21, on the f
 attempt: `STOP fence=store reason=unopenable … resolve parent of "…/world/world.db": no such file
 or directory`. The refusal is correct and loud; the omission was this runbook's.
 
-**Which store (decision D-WORLD-45, PENDING Mark).** The store that recorded the 0.1.0
+**Which store (decision D-WORLD-45, RESOLVED A — fresh store; used for the 0.1.1 publish).** The store that recorded the 0.1.0
 publish, `~/.ailang/world/world.db`, is schema `user_version 2`; the current binary requires 4
 and has no migration, so it refuses to open or modify it (measured iteration 211 on a byte
 copy: `STOP fence=store reason=unopenable … has user_version 2 … binary requires 4; refusing
 to modify`). Two options:
 
-- **RECOMMENDED, pending D-WORLD-45: a fresh store file** (`world-0.1.1.db`, below). The 0.1.1
+- **CHOSEN (D-WORLD-45 = A): a fresh store file** (`world-0.1.1.db`, below). The 0.1.1
   publish record then lives in a new store and is not continuous with the 0.1.0 record.
 - **Alternative: migrate the legacy store first** (a future queue row; no migration exists
   today). This would keep one provenance chain.
@@ -149,6 +154,11 @@ to modify`). Two options:
 Either way, the legacy `~/.ailang/world/world.db` must never be modified or deleted: it is the
 durable 0.1.0 publish record. The helper's default still points at the legacy file, so export
 the store path below before running it.
+
+**Paste the helper's subcommands one at a time.** Measured on the 0.1.1 run: a multi-line paste
+that included a placeholder `export WORLD_APPROVAL="sha256:<…>"` made `dry-run` refuse (correctly —
+nothing was sent), and interactive zsh does not treat `#` as a comment, so inline notes became stray
+words. The helper's own message names the saved ref; export that exact value.
 
 ```bash
 mkdir -p "$HOME/.ailang/world"
