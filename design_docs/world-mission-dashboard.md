@@ -1,5 +1,5 @@
 # World mission dashboard — iteration 220, 2026-10-02
-Latest release: world/core@0.1.0; 0.1.1 preparation landed, publish attended from fresh store (D45A).
+Latest release: world/core@0.1.1 published attended07:58:43Z, D45A fresh store; evidence attended-publish directory.
 World 1.0: clauses 1/2/3/7 MET; 4/5/6 UNMET. Goal unmoved.
 Row108 bounded D49A followup spent: eight targeted comparisons PASS; exact full Go profiles RED.
 Product PR173 stays DRAFT/unmerged; no source or fixture changes in this followup.
