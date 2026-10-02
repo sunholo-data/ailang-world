@@ -29,6 +29,16 @@ type commitSeam struct {
 	mode string // "block", "land-then-uncertain", "uncertain-not-landed"
 }
 
+// setupCommitBound bounds the commits an arm only uses as SETUP: the seam's
+// real landing of A ("land-then-uncertain") and the follow-up commit B. Their
+// success is a precondition, not the property: B6's value is pinned by
+// TestBoundedWaitsAndBodyLimit, New's wiring of it by the same test, and its
+// enforcement by arm (i). Under B6 (3 s) B was a wall-clock race the arm did
+// not mean to run — a loaded full -race profile answered B with 503 Timeout
+// "commit deadline (3s) exceeded before the durable step" (row 126 tranche).
+// 30 s is boundedTestContext's bound: only a hang reaches it.
+const setupCommitBound = 30 * time.Second
+
 // seamEscape bounds "block": a ctx-ignoring mutant is released after it and
 // then commits for real, so it is RED on status and elapsed time, not a hang.
 const seamEscape = 2 * time.Second
@@ -49,7 +59,7 @@ func (f *commitSeam) Commit(ctx context.Context, c store.Commit) error {
 		waitCtx()
 		return f.real.Commit(ctx, c)
 	case "land-then-uncertain": // COMMIT completed, the caller's deadline won the race
-		lctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		lctx, cancel := context.WithTimeout(context.Background(), setupCommitBound)
 		defer cancel()
 		if err := f.real.Commit(lctx, c); err != nil {
 			return err
@@ -198,7 +208,7 @@ func TestCommitBudgetAndUncertainReconcile(t *testing.T) {
 				t.Fatalf("uncertain message = %q; want the reconcile route GET /v1/log/1", body.Error.Message)
 			}
 			d.commits = d.store
-			d.commitBudget = commitBudget // B is an ordinary commit: the ratified B6, not the arm's 100 ms
+			d.commitBudget = setupCommitBound // B is setup (another head / the index), not the budget under test
 			if !tc.skipB {
 				base := genesis
 				if tc.bOnTop {
@@ -306,7 +316,7 @@ func TestCommitInvocationReceiptIdentity(t *testing.T) {
 				t.Fatalf("uncertain message = %q; want the receipt route", body.Error.Message)
 			}
 			d.commits = d.store
-			d.commitBudget = commitBudget
+			d.commitBudget = setupCommitBound // B is setup, not the budget under test
 			if tc.wantWorld {
 				b := testCommit(a.NextWorld, 2, "B")
 				if rec, _ := postCommitRec(t, d, auth, b); rec.Code != http.StatusOK {
