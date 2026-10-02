@@ -36,6 +36,16 @@
       "bytes": 377
     },
     {
+      "path": "design_docs/verification/world-iter222/control/approval-read.txt.raw.json",
+      "sha256": "eda07dbdc835e77027c5aa565bf316d2aac9e0fc4efe349cbb97580e825702fc",
+      "bytes": 1720
+    },
+    {
+      "path": "design_docs/verification/world-iter222/control/approval-send.txt.raw.json",
+      "sha256": "a1d4b4fe6f4a776f360127c2d1cfd8013564a5e96ce053c35d58d2aa5cb10773",
+      "bytes": 668
+    },
+    {
       "path": "design_docs/verification/world-iter222/control/claim-read.txt.raw.json",
       "sha256": "9a4cab6aa7d9f291d891367ffc27e6f4264758fcdd02273ac8fd5357c1ab6701",
       "bytes": 808
@@ -64,6 +74,16 @@
       "path": "design_docs/verification/world-iter222/control/evaluator-ticket.txt",
       "sha256": "3d9188d861be271d0a1411d08337cbc984dc12eac6d75ffebf4f5918042ccf71",
       "bytes": 387
+    },
+    {
+      "path": "design_docs/verification/world-iter222/control/final-main-preservation.json",
+      "sha256": "930c97e31d0fe00fe7db1a0901bb22d0d160e1ae06239d5f40ec8adc5f758b7a",
+      "bytes": 322
+    },
+    {
+      "path": "design_docs/verification/world-iter222/control/historical-pr166.json",
+      "sha256": "accd076539257681d3540c6dd83700d1aa86e19aae46d0e65c68ea416e9aac78",
+      "bytes": 163
     },
     {
       "path": "design_docs/verification/world-iter222/control/open-prs.txt",
@@ -116,6 +136,31 @@
       "bytes": 136618
     },
     {
+      "path": "design_docs/verification/world-iter222/independent-ail.log.raw.json",
+      "sha256": "0b648485c0f2d86090c0411135c3d88d86275792d756ab6e86b80ac4f03831f2",
+      "bytes": 3370
+    },
+    {
+      "path": "design_docs/verification/world-iter222/independent-evaluation.json",
+      "sha256": "4cc7ce1a0157932ab7762fe5bde1f228681357ec0cc84235e8da49a3c57eda80",
+      "bytes": 7006
+    },
+    {
+      "path": "design_docs/verification/world-iter222/independent-evaluation.md",
+      "sha256": "c7dbd2ff7660c05ef45cd1b0fa8cafb10576e6d9df7bccc88ef231fc13e47f98",
+      "bytes": 5389
+    },
+    {
+      "path": "design_docs/verification/world-iter222/independent-go.log.raw.json",
+      "sha256": "568a68316f797157331e457eeb6fc669df1c56ba43f06104280487191ce9dda4",
+      "bytes": 8297
+    },
+    {
+      "path": "design_docs/verification/world-iter222/log-rotation.json",
+      "sha256": "048da92ca340135633dae7e300fa59e901454582b10822e3c7f647a4d8b79c3f",
+      "bytes": 4182
+    },
+    {
       "path": "design_docs/verification/world-iter222/plan.json",
       "sha256": "174f33093c4f7b77305e9503ebe8e0f578b2ad255b93caaf658519d8ef66cf65",
       "bytes": 13860
@@ -146,9 +191,14 @@
       "bytes": 1639
     },
     {
+      "path": "design_docs/verification/world-iter222/retro.json",
+      "sha256": "a4e2e61d8f91cfc29154a2a93f741c9b18efd5c2c23b07d0b29c11f4e133bc84",
+      "bytes": 582
+    },
+    {
       "path": "design_docs/verification/world-iter222/routing.json",
-      "sha256": "c2af34e4e898f1b775715acf13ee028d94b01d7a0377e6fc111f756e1c088512",
-      "bytes": 1538
+      "sha256": "2f4b97d65ddb54e011abc4c43318bec466f1eaf27b88d2f5b562a1dbe3e10ff3",
+      "bytes": 1580
     },
     {
       "path": "design_docs/world-mission-dashboard.md",
@@ -161,9 +211,14 @@
       "bytes": 38582
     },
     {
+      "path": "design_docs/world-mission-log-archive.md",
+      "sha256": "ed2d0ccb807f74b66db44fdbab94205b755285eed7ad1618d65cacab0f19fa75",
+      "bytes": 2344377
+    },
+    {
       "path": "design_docs/world-mission-log.md",
-      "sha256": "838d5bf56678a2b6134b6a057d48c62686b548c20328dc05f94512ae7cec21f0",
-      "bytes": 416047
+      "sha256": "d3eb760361445b23b6640c59072e1f98e37231f10fa05d8cae863e47d7919109",
+      "bytes": 179205
     },
     {
       "path": "design_docs/world-mission-status-archive.md",
@@ -176,5 +231,6 @@
       "bytes": 1015889
     }
   ],
-  "self_excluded": true
+  "self_excluded": true,
+  "previous_manifest_preserved_at": "23a15d5ee4d9058a9e390ae913adf91d31d157c6"
 }

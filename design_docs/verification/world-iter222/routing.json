@@ -32,7 +32,7 @@
       "error": "Unknown model claude-sonnet-5",
       "actual": "native gpt-6.1-sol",
       "tokens": "not reported",
-      "status": "pending terminal independent record"
+      "status": "completed round1 ADMIN FAIL67.5; correction delta independent review required"
     }
   ],
   "substitution_flag": "D48 same-model fresh native contexts; evaluator distinctactor required; neverAstra or oldermodels",
