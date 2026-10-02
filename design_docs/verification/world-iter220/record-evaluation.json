@@ -1,0 +1,80 @@
+{
+  "evaluation_result": "pass",
+  "evaluation_score": 97,
+  "max_score": 100,
+  "evaluation_round": 1,
+  "scope": "ADMIN record only",
+  "reviewed_sha": "077eef825a3f782ae7e1a904802da500409d0b5f",
+  "base_sha": "c5c40f3e05dad27b7591ca494bfeea2e7f1920bd",
+  "judge": {
+    "model": "gpt-6.1-sol",
+    "context": "fresh separate",
+    "independence": "same-model-fresh-context FLAG under amended D48",
+    "tokens": "not reported",
+    "astra_used": false
+  },
+  "blocking_findings": [],
+  "nonblocking_findings": [
+    {
+      "id": "N1",
+      "category": "evidence quality",
+      "deduction": 3,
+      "finding": "Gate0/1 private operational and provider metadata claims remain attributed controller summaries, not independently reproduced by ADMIN judge."
+    }
+  ],
+  "scores": {
+    "structural_verification": 20,
+    "hygiene": 10,
+    "acceptance_and_authority": 30,
+    "evidence_quality": 12,
+    "documentation": 15,
+    "design_fidelity": 10
+  },
+  "corrections": [
+    {
+      "commit": "382de40",
+      "status": "blocked historical",
+      "finding": "D50/D51 outside authoritative ledger markers, checker saw36."
+    },
+    {
+      "commit": "661e05d",
+      "status": "corrected",
+      "finding": "Exact two rows moved inside markers; final checker validates38, original36 unchanged."
+    }
+  ],
+  "invariants": {
+    "existing_ledger_rows_preserved": 36,
+    "current_ledger_rows": 38,
+    "open_decisions": [
+      "D-WORLD-50",
+      "D-WORLD-51"
+    ],
+    "charter_lines_before": 6075,
+    "charter_lines_after": 6081,
+    "status_iterations": [
+      220,
+      218,
+      217
+    ],
+    "exact216_archived": true,
+    "old_queue_append_only": true,
+    "recovered219_verbatim": true,
+    "dashboard_lines": 16,
+    "changed_paths": 61,
+    "all_changed_paths_design_docs": true,
+    "whitespace_clean": true,
+    "json_valid_count": 27,
+    "privacy_pattern_flags": 0,
+    "profile_hashes_match": true,
+    "judge_original_lossless": true,
+    "no_go_runtime_commands": true,
+    "no_production_changes": true
+  },
+  "product_verdict": "FAIL59 retained, no waiver",
+  "followthrough_pending": [
+    "bank ADMIN verdict",
+    "SHA-pinned exact-head and merge CI",
+    "two-channel report delivery and readback"
+  ],
+  "all_owned_commands": "terminal"
+}

@@ -44,7 +44,9 @@
       "actual": "gpt-6.1-sol",
       "agent": "/root/record_evaluator",
       "token_usage": "not reported",
-      "independence": "same-model-fresh-context FLAG"
+      "independence": "same-model-fresh-context FLAG",
+      "verdict": "ADMIN PASS97/100",
+      "terminal": true
     }
   },
   "policy_changes": "none; Astra never spawned this iteration",
