@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -532,6 +533,58 @@ type stalledDurableStore struct {
 	*store.Store
 	op        string
 	uncertain bool
+	// expire, when set, fires the caller's deadline on entry to the stalled
+	// operation, so the deadline lands in op and never in an earlier real-store
+	// step that ran slow under -race or load (row 126).
+	expire func()
+}
+
+// stallDeadlineCtx is a deadline the test fires at an exact point rather than
+// after a wall-clock interval: Err reports context.DeadlineExceeded once
+// expired. A 20 ms timer used here before expired inside the real
+// AppendIntent whenever SQLite under -race took longer than that, which turned
+// the "Commit" arms into an uncertain-append R16 (CI run 36936976064, dev
+// ba9fdc6). The parent bounds the whole thing so a stall never reached cannot
+// hang the run.
+type stallDeadlineCtx struct {
+	context.Context
+	done      chan struct{}
+	once      sync.Once
+	expiredAt time.Time
+}
+
+func newStallDeadlineCtx(parent context.Context) *stallDeadlineCtx {
+	c := &stallDeadlineCtx{Context: parent, done: make(chan struct{})}
+	go func() {
+		select {
+		case <-parent.Done():
+			c.expire()
+		case <-c.done:
+		}
+	}()
+	return c
+}
+
+func (c *stallDeadlineCtx) expire() {
+	c.once.Do(func() { c.expiredAt = time.Now(); close(c.done) })
+}
+
+func (c *stallDeadlineCtx) Done() <-chan struct{} { return c.done }
+
+func (c *stallDeadlineCtx) Err() error {
+	select {
+	case <-c.done:
+		return context.DeadlineExceeded
+	default:
+		return nil
+	}
+}
+
+func (s stalledDurableStore) stall(ctx context.Context) {
+	if s.expire != nil {
+		s.expire()
+	}
+	<-ctx.Done()
 }
 
 type uncertainLandedAppendStore struct{ *store.Store }
@@ -546,14 +599,14 @@ func (s uncertainLandedAppendStore) AppendIntent(ctx context.Context, id string,
 
 func (s stalledDurableStore) GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error) {
 	if s.op == "GetReceipt" {
-		<-ctx.Done()
+		s.stall(ctx)
 		return store.Receipt{}, false, ctx.Err()
 	}
 	return s.Store.GetReceipt(ctx, id)
 }
 func (s stalledDurableStore) AppendIntent(ctx context.Context, id string, intent store.JournalIntent) (int64, hashref.HashRef, error) {
 	if s.op == "AppendIntent" {
-		<-ctx.Done()
+		s.stall(ctx)
 		if s.uncertain {
 			return 0, hashref.HashRef{}, &store.UncertainError{Op: s.op, Cause: ctx.Err()}
 		}
@@ -563,7 +616,7 @@ func (s stalledDurableStore) AppendIntent(ctx context.Context, id string, intent
 }
 func (s stalledDurableStore) Commit(ctx context.Context, c store.Commit) error {
 	if s.op == "Commit" {
-		<-ctx.Done()
+		s.stall(ctx)
 		if s.uncertain {
 			return &store.UncertainError{Op: s.op, Cause: ctx.Err()}
 		}
@@ -613,22 +666,25 @@ func TestDispatchDurableDeadline(t *testing.T) {
 			w := r.genesis()
 			r.describe("plain", r.source(echoSrc), "Invoke")
 			r.publish()
-			st := stalledDurableStore{Store: r.st, op: tc.op, uncertain: tc.uncertain}
+			var ctx *stallDeadlineCtx
+			st := stalledDurableStore{Store: r.st, op: tc.op, uncertain: tc.uncertain, expire: func() { ctx.expire() }}
 			c := r.coordinator(st, fakeRunner{stdout: `{"ok":true}`})
 			for i := 0; i < 3; i++ {
-				ctx, cancel := context.WithTimeout(boundedTestContext(t), 20*time.Millisecond)
-				start := time.Now()
+				ctx = newStallDeadlineCtx(boundedTestContext(t))
 				_, err := c.Dispatch(ctx, r.call("plain", fmt.Sprintf("t%d", i), grants))
-				cancel()
-				if time.Since(start) > 250*time.Millisecond {
-					t.Fatalf("request ran past deadline: %v", time.Since(start))
+				returned := time.Now()
+				if ctx.expiredAt.IsZero() {
+					t.Fatalf("deadline never fired: the stalled %s was not reached (err %v)", tc.op, err)
+				}
+				if d := returned.Sub(ctx.expiredAt); d > 250*time.Millisecond {
+					t.Fatalf("request ran past deadline: returned %v after it expired", d)
 				}
 				var unconfirmed *UnconfirmedError
 				if tc.wantUnconfirmed {
 					if !errors.As(err, &unconfirmed) {
 						t.Fatalf("err %v, want R16", err)
 					}
-				} else if !errors.Is(err, context.DeadlineExceeded) || store.IsUncertain(err) {
+				} else if !errors.Is(err, context.DeadlineExceeded) || store.IsUncertain(err) || errors.As(err, &unconfirmed) {
 					t.Fatalf("err %v, want definite R11", err)
 				}
 			}
