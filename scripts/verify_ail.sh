@@ -154,6 +154,8 @@ command -v python3 >/dev/null 2>&1 || {
 # names in verify.results[].function (V17). Sketches are excluded from the world/ total, so a
 # contracted sketch can neither mask a required identity nor perturb the total. Sketches carry EMPTY
 # required sets except design_docs/sketches/effectplan.ail, whose plan-law proofs are gated by name.
+# The packages/se-tools transitions (row 134 M5) are likewise outside world/: their contracts are
+# gated by name per module, and they never count toward the world/ total (the S8 floor).
 GATE_LEG_TIMEOUT_S=120   # wall-clock cap per ai-check module leg (Standing Rule 6, V26)
 GATE_TEST_TIMEOUT_S=180  # wall-clock cap for the directory-mode test leg (V26)
 export GATE_LEG_TIMEOUT_S GATE_TEST_TIMEOUT_S
@@ -162,6 +164,7 @@ export GATE_LEG_TIMEOUT_S GATE_TEST_TIMEOUT_S
 ROOTS=(
   "design_docs|."
   ".|world"
+  "packages/se-tools|se_tools"
 )
 
 # Exact Leg-1 module manifest (identity allowlist, NOT a count). An intentional module
@@ -176,6 +179,14 @@ LEG1_MODULES=(
   design_docs/sketches/worlddapi.ail
   design_docs/sketches/worldkernel.ail
   design_docs/sketches/worldtypes.ail
+  packages/se-tools/se_tools/builtins_search.ail
+  packages/se-tools/se_tools/check.ail
+  packages/se-tools/se_tools/cli.ail
+  packages/se-tools/se_tools/edit.ail
+  packages/se-tools/se_tools/examples_search.ail
+  packages/se-tools/se_tools/read.ail
+  packages/se-tools/se_tools/run.ail
+  packages/se-tools/se_tools/write.ail
   world/contracts.ail
   world/logepoch.ail
   world/transitions.ail
@@ -303,6 +314,7 @@ import json, sys
 mod = sys.argv[1]
 # Hardcoded manifest — keyed by (repo-relative module file, bare function name), V17.
 # Before adding an identity here: read the FLOOR-RAISE COUPLING INVENTORY at the head of this file.
+SE_CORE = {"noDotDotSegment", "pathOk", "argKeyAllowed", "inputKeyAllowed"}
 REQUIRED_VERIFIED = {
     "world/transitions.ail": {"applyRevision", "plan", "verify"},
     "world/contracts.ail":   {"commitBoundaryHolds", "isValidNextWorld",
@@ -317,6 +329,18 @@ REQUIRED_VERIFIED = {
         "effectCountOk", "idLengthOk", "idByteOk", "idsDistinct", "requirementMatches",
         "payloadSizeOk", "reservedOutputKey", "finishKeyAllowed", "resultPresenceOk",
         "finishNeedsEffect", "effectLawfulAgainst", "planShapeLawful"},
+    # The software-engineering transitions (queue row 134 M5): each self-contained module
+    # carries the contracted path predicate, its own L-ARGS key law and the convention-v2
+    # input-key law. Outside world/, so excluded from the total below: gated by name
+    # without moving the S8 floor.
+    "packages/se-tools/se_tools/read.ail":            SE_CORE,
+    "packages/se-tools/se_tools/write.ail":           SE_CORE,
+    "packages/se-tools/se_tools/edit.ail":            SE_CORE,
+    "packages/se-tools/se_tools/check.ail":           SE_CORE,
+    "packages/se-tools/se_tools/run.ail":             SE_CORE,
+    "packages/se-tools/se_tools/examples_search.ail": SE_CORE,
+    "packages/se-tools/se_tools/builtins_search.ail": SE_CORE | {"entryMatches"},
+    "packages/se-tools/se_tools/cli.ail":             SE_CORE | {"cliOpAllowed"},
 }
 try:
     with open(sys.argv[2]) as fh:
@@ -334,7 +358,8 @@ if verify.get("errors", 0) > 0:
 if verify.get("counterexample", 0) > 0:
     sys.stderr.write("✗ %s: verify.counterexample == %s\n" % (mod, verify.get("counterexample"))); sys.exit(1)
 
-# Required identities (world/ modules, plus the effectplan sketch; other sketches carry empty sets).
+# Required identities (world/ modules, the effectplan sketch and the se-tools modules; other
+# sketches carry empty sets).
 required = REQUIRED_VERIFIED.get(mod, set())
 by_fn = {r.get("function"): r.get("status") for r in verify.get("results", [])}
 for fn in sorted(required):
@@ -439,7 +464,75 @@ if n != EXACT_TOTAL_TESTS:
 print("   ✓ all %d required named tests pass (failed_tests=0)" % EXACT_TOTAL_TESTS)
 PY
 
+# ── Leg 2b — se-tools named inline tests (queue row 134 M5), one bounded run PER MODULE ──
+# The 8 modules repeat their shared core (self-contained sources: publication refuses a local
+# import), so their BARE test names collide by design (pathOk_test_1 in every module, V22) —
+# directory mode would merge them. Each module therefore runs alone, from its source root, and
+# its exact name set is asserted: every `f_test_1..n` for the hardcoded per-function counts,
+# status pass, failed_tests==0, and len(tests[]) equal to the sum (no extra, none missing).
+# `main_test_*` pins each tool's exact plan / refusal / finish bytes.
+echo "── Leg 2b: se-tools named inline tests (per module)"
+SE_TEST_MODULES=(builtins_search check cli edit examples_search read run write)
+se_tests_total=0
+for se_mod in "${SE_TEST_MODULES[@]}"; do
+  ( cd packages/se-tools && run_bounded "$GATE_TEST_TIMEOUT_S" "$tmp_test_json" "$AILANG_BIN" test --format json "se_tools/$se_mod.ail" )
+  rc=$?
+  if [ "$rc" -eq 124 ]; then
+    echo "✗ ailang test TIMEOUT on se_tools/$se_mod.ail (>${GATE_TEST_TIMEOUT_S}s)" >&2
+    [ -s "$tmp_test_json.err" ] && { echo "   stderr tail:" >&2; tail -5 "$tmp_test_json.err" >&2; }
+    exit 1
+  fi
+  # other exit codes advisory — the JSON parse below is authoritative
+  se_n=$(python3 - "$tmp_test_json" "$se_mod" <<'PY'
+import json, sys
+SE_CORE_TESTS = {"noDotDotSegment": 7, "pathOk": 8, "inputKeyAllowed": 5}
+SE_TESTS = {  # per module: function -> number of named inline tests
+    "builtins_search": dict(SE_CORE_TESTS, argKeyAllowed=4, entryMatches=6, main=12),
+    "check":           dict(SE_CORE_TESTS, argKeyAllowed=3, main=11),
+    "cli":             dict(SE_CORE_TESTS, argKeyAllowed=6, cliOpAllowed=9, main=14),
+    "edit":            dict(SE_CORE_TESTS, argKeyAllowed=5, main=8),
+    "examples_search": dict(SE_CORE_TESTS, argKeyAllowed=3, main=6),
+    "read":            dict(SE_CORE_TESTS, argKeyAllowed=4, main=10),
+    "run":             dict(SE_CORE_TESTS, argKeyAllowed=4, main=10),
+    "write":           dict(SE_CORE_TESTS, argKeyAllowed=4, main=8),
+}
+mod = sys.argv[2]
+if mod not in SE_TESTS:
+    sys.stderr.write("✗ se-tools test leg: no expected test set for %s\n" % mod); sys.exit(1)
+required = {"%s_test_%d" % (f, i) for f, n in SE_TESTS[mod].items() for i in range(1, n + 1)}
+raw = open(sys.argv[1], "rb").read().decode("utf-8", "replace")
+i = raw.find("{")
+if i < 0:
+    sys.stderr.write("✗ se-tools test leg: se_tools/%s.ail produced no JSON object\n" % mod); sys.exit(1)
+try:
+    d = json.loads(raw[i:])
+except Exception as e:
+    sys.stderr.write("✗ se-tools test leg: se_tools/%s.ail: could not parse test JSON (%s)\n" % (mod, e)); sys.exit(1)
+tests = d.get("tests", [])
+by_name = {t.get("name"): t.get("status") for t in tests}
+bad = ["%s=%s" % (n, "MISSING" if by_name.get(n) is None else by_name.get(n))
+       for n in sorted(required) if by_name.get(n) != "pass"]
+if bad:
+    sys.stderr.write("✗ se-tools test leg: se_tools/%s.ail required named tests missing/failing: %s\n"
+                     % (mod, ", ".join(bad))); sys.exit(1)
+if d.get("failed_tests", 0):
+    sys.stderr.write("✗ se-tools test leg: se_tools/%s.ail failed_tests == %s\n" % (mod, d.get("failed_tests"))); sys.exit(1)
+if len(tests) != len(required):
+    sys.stderr.write("✗ se-tools test leg: se_tools/%s.ail expected exactly %d named tests[], got %d\n"
+                     % (mod, len(required), len(tests))); sys.exit(1)
+print(len(required))
+PY
+  ) || exit 1
+  se_tests_total=$((se_tests_total + se_n))
+done
+EXACT_SE_TESTS=287
+if [ "$se_tests_total" -ne "$EXACT_SE_TESTS" ]; then
+  echo "✗ se-tools test leg: expected exactly $EXACT_SE_TESTS named tests across ${#SE_TEST_MODULES[@]} modules, got $se_tests_total" >&2
+  exit 1
+fi
+echo "   ✓ all $se_tests_total se-tools named tests pass across ${#SE_TEST_MODULES[@]} modules"
+
 echo "── Leg 3: world package nine-step gate"
 ./scripts/verify_world_package.sh || exit $?
 
-echo "✓ verify gate PASSED: $EXACT_TOTAL_VERIFIED required identities verified, $EXACT_TOTAL_TESTS named tests pass"
+echo "✓ verify gate PASSED: $EXACT_TOTAL_VERIFIED required identities verified, $EXACT_TOTAL_TESTS named tests pass, $EXACT_SE_TESTS se-tools named tests pass"

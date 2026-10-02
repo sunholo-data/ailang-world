@@ -1,0 +1,295 @@
+module se_tools/check
+
+-- ailang-check (queue row 134, design_docs/planned/w-software-engineering-domain.md
+-- §4.2): type-check (and Z3-verify) one .ail file of the episode worktree.
+-- Args {path}. Effect Ailang.Check; payload = the policy-tool `ai_check`
+-- request {op, path}. Finish phase: reshape ai_check's JSON stdout (V45)
+-- into {ok:true, passed, error_count, errors:[{code, message, file}]}.
+--
+-- Calling convention v2 (§4.1): the coordinator passes ONE string,
+-- {"phase":"plan","args":<MCP/A2A arguments>} and, after the
+-- effect, {"phase":"finish","args":...,"results":[EffectResult]}.
+-- The plan answer is a world/effect-plan/v1 object with exactly one effect
+-- (scope "worktree", cost 1, the descriptor's declared triple) or a zero-effect
+-- refusal plan whose result is {"ok":false,"refused":...} (L7). L-ARGS: any
+-- argument key outside the schema above is refused (V56: the handler would
+-- ignore it).
+--
+-- Self-contained by construction (row 107 Residual 7): publication checks this
+-- file alone in an empty root, so it imports only std/*, which the pinned
+-- capsule interpreter resolves from the binary (V59). For that reason the
+-- contracted core noDotDotSegment / pathOk / inputKeyAllowed is repeated in
+-- every se_tools module; host/coordinator's se-tools test holds the copies
+-- byte-identical. argKeyAllowed is each tool's own schema.
+
+import std/json (decode, encode, jo, ja, kv, js, jint, jb, jn, get, asObject, asString, asArray, getBool, getInt, getArray, Json)
+import std/string (length as strLength, startsWith, endsWith, contains)
+import std/list (map)
+import std/option (Option, Some, None)
+import std/result (Result, Ok, Err)
+
+-- ── Contracted pure core (Z3) ─────────────────────────────────────────────
+
+-- No path segment is "..": the whole path, a leading "../", a trailing "/..",
+-- or an inner "/../". A segment that merely starts with two dots is legal.
+export func noDotDotSegment(p: string) -> bool ! {}
+ensures { result == (p != ".." && not startsWith(p, "../") && not endsWith(p, "/..")
+  && not contains(p, "/../")) }
+tests [
+  ("src/main.ail", true),
+  ("..", false),
+  ("../x.ail", false),
+  ("a/..", false),
+  ("a/../b.ail", false),
+  ("..a/b.ail", true),
+  ("a/..b.ail", true)
+]
+{
+  p != ".." && not startsWith(p, "../") && not endsWith(p, "/..") && not contains(p, "/../")
+}
+
+-- The plan's path predicate (§4.5): relative, non-empty, no ".." segment, no
+-- leading "-" (a hyphen-leading path is a flag-injection vector, V58). Body
+-- composes the proven callee; the exact ensures restates the whole law. A
+-- precondition for a clear refusal, NOT the confinement (§4.3: that is the
+-- AILANG policy layer behind the broker).
+export func pathOk(p: string) -> bool ! {}
+ensures { result == (strLength(p) >= 1 && not startsWith(p, "/") && not startsWith(p, "-")
+  && p != ".." && not startsWith(p, "../") && not endsWith(p, "/..")
+  && not contains(p, "/../")) }
+tests [
+  ("src/main.ail", true),
+  ("main.ail", true),
+  ("", false),
+  ("/etc/hosts", false),
+  ("-policy.ail", false),
+  ("../ailang/go.mod", false),
+  ("a/../../b", false),
+  ("a/-b.ail", true)
+]
+{
+  strLength(p) >= 1 && not startsWith(p, "/") && not startsWith(p, "-") && noDotDotSegment(p)
+}
+
+-- L-ARGS (§4.1, §4.2): the argument keys this tool admits. policy-tool ignores
+-- unknown request keys (V56), so strictness lives here: any other key is a
+-- typed refusal plan, never silently dropped.
+export func argKeyAllowed(k: string) -> bool ! {}
+ensures { result == (k == "path") }
+tests [
+  ("path", true),
+  ("file", false),
+  ("flags", false)
+]
+{
+  k == "path"
+}
+
+-- Calling convention v2 (§4.1): the input object's keys. `results` exists only
+-- in the finish phase.
+export func inputKeyAllowed(phase: string, k: string) -> bool ! {}
+ensures { result == (k == "phase" || k == "args" || (phase == "finish" && k == "results")) }
+tests [
+  (("plan", "args"), true),
+  (("plan", "phase"), true),
+  (("plan", "results"), false),
+  (("finish", "results"), true),
+  (("plan", "world"), false)
+]
+{
+  k == "phase" || k == "args" || (phase == "finish" && k == "results")
+}
+
+-- ── Plan construction (world/effect-plan/v1, §4.1) ─────────────────────────
+
+-- A zero-effect refusal plan: L7 requires its non-null result object, which
+-- reaches the caller verbatim.
+func refusal(msg: string) -> string =
+  encode(jo([
+    kv("plan", js("world/effect-plan/v1")),
+    kv("effects", ja([])),
+    kv("finish", jb(false)),
+    kv("result", jo([kv("ok", jb(false)), kv("refused", js(msg))]))
+  ]))
+
+-- The one-effect plan: id "e1", scope "worktree", cost 1 — exactly a triple
+-- of the descriptor's declaredEffects (L3), so parsePlan admits it.
+func effectPlan(effect: string, payload: Json, finish: bool) -> string =
+  encode(jo([
+    kv("plan", js("world/effect-plan/v1")),
+    kv("effects", ja([jo([
+      kv("id", js("e1")),
+      kv("effect", js(effect)),
+      kv("scope", js("worktree")),
+      kv("cost", jint(1)),
+      kv("payload", payload)
+    ])])),
+    kv("finish", jb(finish)),
+    kv("result", jn(()))
+  ]))
+
+func pathRefusal(p: string) -> string =
+  "path \"${p}\" refused: it must be relative and non-empty, with no \"..\" segment and no leading \"-\""
+
+func firstUnknownArg(es: [{key: string, value: Json}]) -> Option[string] =
+  match es {
+    [] => None,
+    e :: rest => if argKeyAllowed(e.key) then firstUnknownArg(rest) else Some(e.key)
+  }
+
+func firstUnknownInputKey(es: [{key: string, value: Json}], phase: string) -> Option[string] =
+  match es {
+    [] => None,
+    e :: rest => if inputKeyAllowed(phase, e.key) then firstUnknownInputKey(rest, phase) else Some(e.key)
+  }
+
+func requiredString(args: Json, k: string) -> Result[string, string] =
+  match get(args, k) {
+    None => Err("missing required argument \"${k}\""),
+    Some(v) => match asString(v) {
+      Some(s) => Ok(s),
+      None => Err("argument \"${k}\" must be a string")
+    }
+  }
+
+func stringField(doc: Json, k: string) -> string =
+  match get(doc, k) {
+    Some(v) => match asString(v) {
+      Some(s) => s,
+      None => ""
+    },
+    None => ""
+  }
+
+-- A finish output for an effect that did not yield a usable report. Never the
+-- reserved `world` key, never `effects` (L6).
+func finishFailure(status: string, why: string) -> string =
+  encode(jo([kv("ok", jb(false)), kv("status", js(status)), kv("refused", js(why))]))
+
+-- Exactly one EffectResult {id, effect, status, record, output} (L1 = 1).
+func finishPhase(doc: Json) -> string =
+  match get(doc, "results") {
+    None => finishFailure("", "the finish input carries no results"),
+    Some(rs) => match asArray(rs) {
+      Some(items) => match items {
+        r :: [] => {
+          let status = stringField(r, "status");
+          if status != "ok" then finishFailure(status, "the Ailang.Check effect ended ${status}")
+          else match get(r, "output") {
+            None => finishFailure(status, "the effect result carries no output"),
+            Some(out) => report(doc, out)
+          }
+        },
+        _ => finishFailure("", "expected exactly one effect result")
+      },
+      None => finishFailure("", "results must be a JSON array")
+    }
+  }
+
+-- One ai_check diagnostic: {code, message, file}; line/col stay inside
+-- message (V45 shows no separate fields).
+func diagnostic(e: Json) -> Json =
+  jo([kv("code", js(stringField(e, "code"))), kv("message", js(stringField(e, "message"))),
+      kv("file", js(stringField(e, "file")))])
+
+-- The structured report parsed from ai_check's JSON stdout (V45), or None.
+func checkReportOf(stdout: string) -> Option[Json] =
+  match decode(stdout) {
+    Err(_) => None,
+    Ok(doc) => match get(doc, "check") {
+      None => None,
+      Some(chk) => match getBool(chk, "passed") {
+        None => None,
+        Some(passed) => match getInt(chk, "error_count") {
+          None => None,
+          Some(n) => match getArray(chk, "errors") {
+            None => None,
+            Some(es) => Some(jo([kv("ok", jb(true)), kv("passed", jb(passed)), kv("error_count", jint(n)),
+              kv("errors", ja(map(diagnostic, es)))]))
+          }
+        }
+      }
+    }
+  }
+
+-- The finish output: {ok:true, passed, error_count, errors} from the ai_check
+-- report, or the policy-tool refusal (e.g. a path outside the sandbox).
+func report(doc: Json, out: Json) -> string =
+  match checkReportOf(stringField(out, "stdout")) {
+    Some(r) => encode(r),
+    None => {
+      let refused = stringField(out, "refused");
+      finishFailure("ok", if refused != "" then refused
+        else "ai_check returned no check report; stderr: ${stringField(out, "stderr")}")
+    }
+  }
+
+-- ── The tool ─────────────────────────────────────────────────────────────
+
+func planTool(args: Json) -> string =
+  match requiredString(args, "path") {
+    Err(why) => refusal(why),
+    Ok(path) => if pathOk(path)
+      then effectPlan("Ailang.Check", jo([kv("op", js("ai_check")), kv("path", js(path))]), true)
+      else refusal(pathRefusal(path))
+  }
+
+func planPhase(doc: Json) -> string =
+  match get(doc, "args") {
+    None => refusal("the input carries no args"),
+    Some(args) => match asObject(args) {
+      None => refusal("arguments must be a JSON object"),
+      Some(es) => match firstUnknownArg(es) {
+        Some(k) => refusal("unknown argument \"${k}\"; ailang-check admits only: path"),
+        None => planTool(args)
+      }
+    }
+  }
+
+func dispatch(doc: Json) -> string =
+  match asObject(doc) {
+    None => refusal("the input is not a JSON object"),
+    Some(top) => {
+      let phase = stringField(doc, "phase");
+      match firstUnknownInputKey(top, phase) {
+        Some(k) => refusal("input key \"${k}\" is not part of calling convention v2"),
+        None => if phase == "plan" then planPhase(doc)
+          else if phase == "finish" then finishPhase(doc)
+          else refusal("phase must be \"plan\" or \"finish\"")
+      }
+    }
+  }
+
+-- The transition entry (calling convention v2). Its named tests pin the exact
+-- plan bytes for an admitted call and each L-ARGS / path refusal.
+export func main(input: string) -> string
+tests [
+  ("{\"phase\":\"plan\",\"args\":{\"path\":\"bad.ail\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.Check\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"ai_check\",\"path\":\"bad.ail\"}}],\"finish\":true,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"path\":\"bad.ail\",\"limit\":5}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"limit\\\"; ailang-check admits only: path\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"path\":\"bad.ail\"},\"world\":{}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"input key \\\"world\\\" is not part of calling convention v2\"}}"),
+  ("{\"phase\":\"plan\",\"args\":[]}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"arguments must be a JSON object\"}}"),
+  ("{\"phase\":\"replay\",\"args\":{\"path\":\"bad.ail\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"phase must be \\\"plan\\\" or \\\"finish\\\"\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"path\":\"../x.ail\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"path \\\"../x.ail\\\" refused: it must be relative and non-empty, with no \\\"..\\\" segment and no leading \\\"-\\\"\"}}"),
+  ("{\"phase\":\"finish\",\"args\":{\"path\":\"bad.ail\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Check\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":false,\"argv\":[\"ai-check\",\"bad.ail\"],\"exit_code\":1,\"stdout\":\"{\\\"file\\\":\\\"bad.ail\\\",\\\"check\\\":{\\\"passed\\\":false,\\\"error_count\\\":1,\\\"errors\\\":[{\\\"code\\\":\\\"ERROR\\\",\\\"message\\\":\\\"type error at bad.ail:3:8: cannot unify string vs int\\\",\\\"file\\\":\\\"bad.ail\\\"}]},\\\"verify\\\":{\\\"available\\\":false,\\\"verified\\\":0}}\",\"tool\":\"sha256:x\",\"policy_digest\":\"d\"}}]}",
+   "{\"ok\":true,\"passed\":false,\"error_count\":1,\"errors\":[{\"code\":\"ERROR\",\"message\":\"type error at bad.ail:3:8: cannot unify string vs int\",\"file\":\"bad.ail\"}]}"),
+  ("{\"phase\":\"finish\",\"args\":{\"path\":\"good.ail\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Check\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"stdout\":\"{\\\"file\\\":\\\"good.ail\\\",\\\"check\\\":{\\\"passed\\\":true,\\\"error_count\\\":0,\\\"errors\\\":[]},\\\"verify\\\":{}}\"}}]}",
+   "{\"ok\":true,\"passed\":true,\"error_count\":0,\"errors\":[]}"),
+  ("{\"phase\":\"finish\",\"args\":{\"path\":\"nope.ail\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Check\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":false,\"refused\":\"path \\\"nope.ail\\\": no such file\"}}]}",
+   "{\"ok\":false,\"status\":\"ok\",\"refused\":\"path \\\"nope.ail\\\": no such file\"}"),
+  ("{\"phase\":\"finish\",\"args\":{\"path\":\"a.ail\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Check\",\"status\":\"denied\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":null}]}",
+   "{\"ok\":false,\"status\":\"denied\",\"refused\":\"the Ailang.Check effect ended denied\"}"),
+  ("{\"phase\":\"finish\",\"args\":{\"path\":\"a.ail\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Check\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":null},{\"id\":\"e1\",\"effect\":\"Ailang.Check\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":null}]}",
+   "{\"ok\":false,\"status\":\"\",\"refused\":\"expected exactly one effect result\"}")
+]
+{
+  match decode(input) {
+    Ok(doc) => dispatch(doc),
+    Err(e) => refusal("the input is not JSON: ${e}")
+  }
+}
