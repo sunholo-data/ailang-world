@@ -1,0 +1,10 @@
+{
+  "before": {
+    "rc": 1,
+    "output": "--- FAIL: TestProductionGoSurface (0.01s)\n    context_roots_test.go:192: non-test Go file outside context-root scan and explicit reproducer allow-list: design_docs/verification/world-iter221/evaluator/metrics.go\n    context_roots_test.go:204: Go surface: host/cmd=79 allow-listed reproducers=2\nFAIL\nFAIL\tgithub.com/sunholo-data/ailang-world/host/store\t0.354s\nFAIL\n"
+  },
+  "after": {
+    "rc": 0,
+    "output": "ok  \tgithub.com/sunholo-data/ailang-world/host/store\t0.212s\n"
+  }
+}

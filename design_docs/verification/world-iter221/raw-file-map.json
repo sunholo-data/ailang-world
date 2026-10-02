@@ -55,5 +55,7 @@
   "executor/base-ail.stdout.log": "executor/base-ail.stdout.log.raw.json",
   "executor/verify-go.stderr.log": "executor/verify-go.stderr.log.raw.json",
   "executor/verify-ail.stderr.log": "executor/verify-ail.stderr.log.raw.json",
-  "executor/base-go.stderr.log": "executor/base-go.stderr.log.raw.json"
+  "executor/base-go.stderr.log": "executor/base-go.stderr.log.raw.json",
+  "evaluator/metrics.go": "evaluator/metrics.go.raw.json",
+  "controller/record-head-failure.log": "controller/record-head-failure.log.raw.json"
 }
