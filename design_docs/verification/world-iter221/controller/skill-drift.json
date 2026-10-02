@@ -1,0 +1,54 @@
+[
+  {
+    "file": "SKILL.md",
+    "verdict": "MATCH"
+  },
+  {
+    "file": "ci-health.md",
+    "verdict": "MATCH"
+  },
+  {
+    "file": "codex-lane-false-greens.md",
+    "verdict": "MATCH"
+  },
+  {
+    "file": "gate-0-preflight.md",
+    "verdict": "MATCH"
+  },
+  {
+    "file": "gate-1-observe.md",
+    "verdict": "MATCH"
+  },
+  {
+    "file": "gate-2-pick.md",
+    "verdict": "MATCH"
+  },
+  {
+    "file": "gate-3-route.md",
+    "verdict": "MATCH"
+  },
+  {
+    "file": "gate-3b-ci-green.md",
+    "verdict": "MATCH"
+  },
+  {
+    "file": "gate-4-record.md",
+    "verdict": "MATCH"
+  },
+  {
+    "file": "gate-5-retro.md",
+    "verdict": "MATCH"
+  },
+  {
+    "file": "ref-drift.md",
+    "verdict": "MATCH"
+  },
+  {
+    "file": "role-spawn-routing.md",
+    "verdict": "MATCH"
+  },
+  {
+    "file": "verification-protocol.md",
+    "verdict": "MATCH"
+  }
+]

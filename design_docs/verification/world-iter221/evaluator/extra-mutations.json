@@ -1,0 +1,114 @@
+[
+  {
+    "name": "typed-absence-emission",
+    "file": "host/transitionreg/transitionreg.go",
+    "old": "return Snapshot{}, RegistryHeadAbsentError{}",
+    "new": "return Snapshot{}, errors.New(\"read transition registry: head is absent\")",
+    "original_sha": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+    "mutant_sha": "85c766b64db669a86a9492b9019818122316df8195bc15b0db15358ef1292a8c",
+    "build": {
+      "command": [
+        "go",
+        "build",
+        "./..."
+      ],
+      "rc": 0,
+      "seconds": 0.9260070323944092,
+      "cap": 180
+    },
+    "test": {
+      "command": [
+        "go",
+        "test",
+        "./host/transitionreg",
+        "-run",
+        "^TestRegistryHeadAbsentErrorClassification$",
+        "-count=1",
+        "-json",
+        "-timeout",
+        "150s"
+      ],
+      "rc": 1,
+      "seconds": 0.9035232067108154,
+      "cap": 180
+    },
+    "failed_names": [
+      "TestRegistryHeadAbsentErrorClassification/direct",
+      "TestRegistryHeadAbsentErrorClassification/new_request",
+      "TestRegistryHeadAbsentErrorClassification"
+    ],
+    "restored_sha": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+    "restored_test": {
+      "command": [
+        "go",
+        "test",
+        "./host/transitionreg",
+        "-run",
+        "^TestRegistryHeadAbsentErrorClassification$",
+        "-count=1",
+        "-json",
+        "-timeout",
+        "150s"
+      ],
+      "rc": 0,
+      "seconds": 0.751427173614502,
+      "cap": 180
+    }
+  },
+  {
+    "name": "fresh-allowed-guard",
+    "file": "host/projection/mcp.go",
+    "old": "if !allowed {",
+    "new": "if false && !allowed {",
+    "original_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+    "mutant_sha": "5828f665481c50c159de66206526a0a242d7c019d995736d26ac7c50c1274e61",
+    "build": {
+      "command": [
+        "go",
+        "build",
+        "./..."
+      ],
+      "rc": 0,
+      "seconds": 0.753730058670044,
+      "cap": 180
+    },
+    "test": {
+      "command": [
+        "go",
+        "test",
+        "./host/projection",
+        "-run",
+        "^Test(MCPInvokeListedThenRevoked|MCPBatchAccounting|MCPListedThenTrulyAbsent)$",
+        "-count=1",
+        "-json",
+        "-timeout",
+        "150s"
+      ],
+      "rc": 1,
+      "seconds": 1.0167827606201172,
+      "cap": 180
+    },
+    "failed_names": [
+      "TestMCPListedThenTrulyAbsent",
+      "TestMCPBatchAccounting/removed_between_items",
+      "TestMCPBatchAccounting"
+    ],
+    "restored_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+    "restored_test": {
+      "command": [
+        "go",
+        "test",
+        "./host/projection",
+        "-run",
+        "^Test(MCPInvokeListedThenRevoked|MCPBatchAccounting|MCPListedThenTrulyAbsent)$",
+        "-count=1",
+        "-json",
+        "-timeout",
+        "150s"
+      ],
+      "rc": 0,
+      "seconds": 0.7385389804840088,
+      "cap": 180
+    }
+  }
+]

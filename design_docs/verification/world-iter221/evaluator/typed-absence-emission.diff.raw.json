@@ -1,0 +1,7 @@
+{
+  "original_name": "typed-absence-emission.diff",
+  "encoding": "base64",
+  "sha256": "de502662ad9650f57204b81973180c3cb222d7ffca76876a56ead102647a3f0b",
+  "raw_base64": "ZGlmZiAtLWdpdCBhL2hvc3QvdHJhbnNpdGlvbnJlZy90cmFuc2l0aW9ucmVnLmdvIGIvaG9zdC90cmFuc2l0aW9ucmVnL3RyYW5zaXRpb25yZWcuZ28KaW5kZXggOWI5NTg1Zi4uNzIzZTczYSAxMDA2NDQKLS0tIGEvaG9zdC90cmFuc2l0aW9ucmVnL3RyYW5zaXRpb25yZWcuZ28KKysrIGIvaG9zdC90cmFuc2l0aW9ucmVnL3RyYW5zaXRpb25yZWcuZ28KQEAgLTkyLDcgKzkyLDcgQEAgZnVuYyAociAqU3RvcmVSZWFkZXIpIFJlYWRTbmFwc2hvdChjdHggY29udGV4dC5Db250ZXh0KSAoU25hcHNob3QsIGVycm9yKSB7CiAJCXJldHVybiBTbmFwc2hvdHt9LCBmbXQuRXJyb3JmKCJyZWFkIHRyYW5zaXRpb24gcmVnaXN0cnk6IGNvbnRleHQ6ICV3IiwgZXJyKQogCX0KIAlpZiAhb2sgewotCQlyZXR1cm4gU25hcHNob3R7fSwgUmVnaXN0cnlIZWFkQWJzZW50RXJyb3J7fQorCQlyZXR1cm4gU25hcHNob3R7fSwgZXJyb3JzLk5ldygicmVhZCB0cmFuc2l0aW9uIHJlZ2lzdHJ5OiBoZWFkIGlzIGFic2VudCIpCiAJfQogCiAJci5tdS5STG9jaygpCg==",
+  "text_utf8": "diff --git a/host/transitionreg/transitionreg.go b/host/transitionreg/transitionreg.go\nindex 9b9585f..723e73a 100644\n--- a/host/transitionreg/transitionreg.go\n+++ b/host/transitionreg/transitionreg.go\n@@ -92,7 +92,7 @@ func (r *StoreReader) ReadSnapshot(ctx context.Context) (Snapshot, error) {\n \t\treturn Snapshot{}, fmt.Errorf(\"read transition registry: context: %w\", err)\n \t}\n \tif !ok {\n-\t\treturn Snapshot{}, RegistryHeadAbsentError{}\n+\t\treturn Snapshot{}, errors.New(\"read transition registry: head is absent\")\n \t}\n \n \tr.mu.RLock()\n"
+}

@@ -1,0 +1,22 @@
+{
+  "host/daemon/daemon.go": 966,
+  "host/daemon/daemon_test.go": 1343,
+  "host/daemon/invoke_e2e_test.go": 437,
+  "host/daemon/mcp_budget_test.go": 318,
+  "host/daemon/mcp_cross_test.go": 179,
+  "host/daemon/mcp_test.go": 168,
+  "host/projection/a2a_wire_test.go": 519,
+  "host/projection/absence_test.go": 171,
+  "host/projection/mcp.go": 143,
+  "host/projection/mcp_absence_test.go": 225,
+  "host/projection/mcp_bounds_test.go": 148,
+  "host/projection/mcp_conformance_test.go": 364,
+  "host/projection/mcp_source_test.go": 73,
+  "host/projection/mcp_test.go": 200,
+  "host/projection/mcpname.go": 87,
+  "host/projection/mcpname_test.go": 112,
+  "host/projection/projection.go": 481,
+  "host/projection/projection_test.go": 1553,
+  "host/transitionreg/absence_example_test.go": 123,
+  "host/transitionreg/transitionreg.go": 392
+}

@@ -1,0 +1,7 @@
+{
+  "original_name": "capacity-survivor.diff",
+  "encoding": "base64",
+  "sha256": "90f0849f18ce0bc9642d24d2d24abe115b981a301cd1b636aa9f117712d9da4a",
+  "raw_base64": "ZGlmZiAtLWdpdCBhL2hvc3QvcHJvamVjdGlvbi9tY3AuZ28gYi9ob3N0L3Byb2plY3Rpb24vbWNwLmdvCmluZGV4IDRhYjk3ODEuLmFhYWNjMmMgMTAwNjQ0Ci0tLSBhL2hvc3QvcHJvamVjdGlvbi9tY3AuZ28KKysrIGIvaG9zdC9wcm9qZWN0aW9uL21jcC5nbwpAQCAtMTYsNyArMTYsNyBAQCBpbXBvcnQgKAogKQogCiBmdW5jIG5ld01DUEhhbmRsZXIoaCAqSGFuZGxlciwgY2ZnIENvbmZpZykgKGh0dHAuSGFuZGxlciwgZXJyb3IpIHsKLQlydW5uZXIsIGVyciA6PSBob3N0Y2FsbC5OZXcoY2ZnLkNhbGxiYWNrVGltZW91dCwgY2ZnLk1heENhbGxiYWNrcykKKwlydW5uZXIsIGVyciA6PSBob3N0Y2FsbC5OZXcoY2ZnLkNhbGxiYWNrVGltZW91dCwgODAwKQogCWlmIGVyciAhPSBuaWwgewogCQlyZXR1cm4gbmlsLCBlcnIKIAl9Cg==",
+  "text_utf8": "diff --git a/host/projection/mcp.go b/host/projection/mcp.go\nindex 4ab9781..aaacc2c 100644\n--- a/host/projection/mcp.go\n+++ b/host/projection/mcp.go\n@@ -16,7 +16,7 @@ import (\n )\n \n func newMCPHandler(h *Handler, cfg Config) (http.Handler, error) {\n-\trunner, err := hostcall.New(cfg.CallbackTimeout, cfg.MaxCallbacks)\n+\trunner, err := hostcall.New(cfg.CallbackTimeout, 800)\n \tif err != nil {\n \t\treturn nil, err\n \t}\n"
+}

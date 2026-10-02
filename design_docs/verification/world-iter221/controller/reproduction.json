@@ -1,0 +1,16 @@
+{
+  "source": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter221-verify",
+  "original_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+  "quality_lines": {
+    "host/daemon/daemon.go": 966,
+    "host/daemon/daemon_test.go": 1343,
+    "host/projection/projection_test.go": 1553
+  },
+  "build": {
+    "rc": 0
+  },
+  "survivor": {
+    "rc": 0
+  },
+  "restored_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe"
+}

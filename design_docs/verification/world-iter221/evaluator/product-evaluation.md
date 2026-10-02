@@ -1,0 +1,91 @@
+# Independent PRODUCT evaluation — World iteration221 row108
+
+Judge: fresh separate native gpt-6.1-sol agent; FLAG same-model-fresh-context under amended D-WORLD-48. Preferred Sonnet unavailable per supplied routing record. This reviewer did not generate the implementation, adopt any controller verdict, run metered models, or modify production beyond reversible owned-tree experiments. Token usage not reported.
+
+Base daba57776ca35b27f36802e162da9b2a9d46bea8; candidate a12fa14745855d27ed6efc94934469e67698b341. Own clean detached sibling .wt-world-iter221-product-eval. Scope: all 25 changed files, 14 original ACs, unchanged five implementation stages and acceptance-only iteration221 plan. D49/D51 authorize unchanged acceptance after base fixes; no repair authority inferred. Previous FAIL49/54/59 and attended PASS82 are historical context only.
+
+## Literal score
+
+| Category | Score | Reason |
+|---|---:|---|
+| Tests | 20/20 | Own exact released-pin verify_ail then verify_go both rc0, whole plain and race suites; no gate waiver. |
+| Lint | 10/10 | gofmt -l over all 20 changed Go files empty; whole go vet ./... rc0. |
+| Acceptance | 30/30 | 14/14 behavioral ACs implemented and supported by actual unchanged full profile, source review, exact dependency delta and bounded named controls below. Coverage limits remain explicit. |
+| Quality | 0/15 | Three changed files exceed800: daemon.go966, daemon_test.go1343, projection_test.go1553; -5 each exhausts15. AST measured Invoke52, new long conformance/budget/source tests and changed reader59 trigger function deduction capped5, already clamped. No added TODO/HACK/FIXME. Existing sprint JSON M108D passes=null and status implementation_complete_pending_controller_acceptance is incomplete (-3), also clamped. Optional artifacts were found, not invented. |
+| Documentation | 10/15 | Active Unreleased HOST_CHANGELOG and truthful candidate design status5 each. Executable Go examples and extracted real MCP payload test are useful, but literal examples/runnable/<feature>.ail is absent:0/5, no language-appropriate substitution silently awarded. |
+| Fidelity | 8/10 | Architecture/budgets/authority/seam follow design. -2 for bounded completion differences: guide omits initialize command, full setup is not executed by payload-only test; exact live long-surface envelope and registry-valid escape-heavy live fixture not pinned. Correct source and declared residuals make these nonblocking. |
+| TOTAL | 78/100 | Threshold70; no hard fail or substantive blocking finding. |
+
+Conditional shared-compiler regression category does not apply: no compiler/parser/effects paths changed. This is a protocol projection, not an optimization sprint; clocks are correctness ceilings, not a speedup goal, so CPU-profile bonus/hard-fail category does not apply.
+
+## Acceptance judgment
+
+| Original AC | Independently reviewed evidence / limits |
+|---|---|
+| DEP | Own go list -deps exact nonstdlib sets base/candidate add ONLY protocol/hostcall and protocol/mcphttp, no removals. v0.47.2/go.sum matches fresh verified proxy and sumdb200. Existing protocol-prefix allowlist retained; added positive tests do not widen facade/internal/cloud admission. |
+| MAP | Injective canonical _u/_d/_s encoding and strict decoder; lengths>64 refuse whole surface. Generated200-ID roundtrip corpus, exact examples and duplicate synthetic control. Own length removal kills direct refusal and same-mounted surface recovery; upstream rejection alone is insufficient and direct adapter assertion correctly discriminates. Live fixture is segmented long ID; escape-heavy direct fixture exists, live escape-heavy fixture remains row132 limitation. |
+| SCHEMA | RawMessage members preserve exact numeric tokens9007199254740993 and existing typed-object bytes; missing type gains object, explicit other types refused. Output schema copied. Own wrong-type mutant kills named normalization assertion. Annotation refusal remains upstream-owned. |
+| CARRIER | Resolver consumes Authorization only, derives credential budget, maps absent/malformed/expired/unknown to401 constant denial, fails missing binding. Denial matrix asserts no head/registry reads with authorized nonzero control; API-key cannot mint authority; REST middleware excludes MCP. Body is read before authorization upstream, so no deny-before-body claim. |
+| ADMIT | Tools requires typed live SessionBinding, inner maxWait, fresh allowedDescriptors and broker capabilities. Exact unequal per-session sets, true absence and dynamic publication controls. No cached live surface or registry policy duplicated. |
+| ABSENCE | Value typed absence emitted only on live ctx confirmed !ok; errors.As after NewRequest %w, paired absent precheck needed. Own catchall mutant kills both MCP list and invoke reached error stages plus A2A card/admission errors. Store/object/integrity/context and same-text errors propagate; successful raced snapshot wins; present-precheck disappearance stays unavailable. |
+| INVOKE | Decode, JSON-object arguments, fresh request/Allowed, last ctx check before task mint, real coordinator Dispatch; output bytes passed upstream. No ambient direct capsule invocation. Cooperative cancellation/return and same-handler recovery; own late-cancel guard removal mints a task and named cancellation test reds. |
+| ITEM | Per Invoke mintTask, fresh registry/cap request and ordered coordinator dispatch; no JSON-RPC-id dedup convention. Accounting test uses real journal/receipts, repeated identical RPC ids produce2 distinct tasks,3 snapshots,2 entries/receipts and max overlap1; registry removal between calls prevents item2. |
+| BATCH | Released seam owns default/2025-03-26 arrays, newer400, notifications202, item unknown errors continue, host error stops entire POST and discards accumulated wire replies. Real store assertions preserve item1 committed receipt after item2 failure and prohibit item3. Not atomic; retries can repeat effects. Test-decorator historical mutants are observable calibration, never World production branch proof. |
+| BOUNDS | Daemon injects frozen3/10/20/30 and MaxOutstanding8; validated positive values and invoke<write. One shared Runner at construction, one aggregate context at MCP entry, credential/read/invoke contexts inherit parent. Own aggregate removal compiles and attacks real single/batch clock legs, exact restore reruns. Runner slots until return differ from process reservations until reap. Capacity800 survives whole projection and remains measured coverage residual. |
+| WIRE | Upstream NewHandler owns transport/JSON-RPC/SSE, authorized surface validation and error writing; wrapper only context/delegation. Actual golden derived from pinned upstream; initialized negotiation/ping/headers4MiB/error controls. Source gates are intentionally limited textual/AST checks, not proof against every future alias/factory shape. |
+| ROUTE | One executable POST /mcp/ mux registration, existing A2A route retained, GET405 AllowPOST. Own methodless mount mutant compiles and source assertion reds while GET behavior stays green: sole killer only within selected pair. |
+| CROSS | One daemon, two nonempty unequal session sets, card IDs verbatim and MCP mapped names; exact decoded equivalence/cardinality including dot/slash fixtures. |
+| FIXTURE | Ambient union absent from both unequal populated card/tool sets, control cannot pass by an empty registry. These fixtures do not claim an ambient export implementation exists. |
+
+## Diff-anchored refusal and supporting hunk inventory
+
+Coverage classification is bounded: named test support is not synonymous with independently measured sole-killer. All unmeasured hunks below are declared, not assigned invented kills.
+
+- go.mod/go.sum: released seam pin and transitive x/sys bump. Own exact closure and verified sum data support them; runtime revert of every dependency line unmeasured. Historical old-pin compile refusal is API compatibility evidence, not runtime kill.
+- daemon.go import/config hunk around590 and mount around733: frozen scalar/procbound ownership supported by daemon wiring source test; own mount mutant sole killer within MCPMountMethodSource+MCPGetRefused pair. Individual scalar import/config reversals unmeasured in this review.
+- transitionreg.go73–96 type/Error/postlookup live-context/emission: classification/cancellation/real object integrity tests support; own emitter mutation measured separately. Preexisting other store/cache/error returns were not newly shipped and are regression controls, not new-hunk kills.
+- projection.go package comment/config/fields/New192–218: validates scalar bounds, constructs handler once, injects mint function. Validation/New failure returns have named tests; each separate branch neutering unmeasured. Stale two-routes/no-worker comments remain nonblocking. Classifier404–412 owns genuine error propagation and true absence; own catchall measured broad red set, no sole-killer assertion.
+- mcp.go19 Runner/NewHandler: constructor/config error propagation supported by bounds tests; cfg.MaxCallbacks→800 measured survivor in whole projection. MCP32 aggregate hunk measured by production single/batch controls. ResolveSession44–69: ctx, store error, denial four-case mapping, nil-success returns supported by denial/host-error tests; individual case/drop mutants unmeasured. Tools72–83: invalid binding, canceled context, read failure/name-schema error forwarding and sanitized log support; individual invalid-binding/log hunk mutants unmeasured. Invoke85–136: invalid binding/ctx/name/object/admission/Allowed/last ctx/nil coordinator/mint/coordinator-error/result returns; named arguments/revocation/absence/cancel/entropy/dispatch tests support, late ctx and Allowed guards measured; nil coordinator→empty success is measured survivor. Dispatch/log/output forwarding individual reversals unmeasured. mintMCPTask137–143: rand32 and64hex, entropy forwarding; concrete crypto/rand failure unmeasured, injected mint error does not certify rand.Read itself.
+- mcpname.go17–87: length/canonical escape checks, top-level schema/member/type checks, duplicate/error forwarding and output copy. Own length/schema-type mutants measured; all other branches supported by direct name/schema tests but individually unmeasured this review.
+- daemon_test.go allowlist comment/positive additions: no broadening; narrowness/facade gate retained. invoke_e2e_test.go resend runner, once-only signal, failure cleanup and execution-count assertion: supporting fixture change, full plain/race and real separate capsule test support; independently reverting each fixture cleanup hunk unmeasured. a2a_wire_test.go30→20 budget and projection_test.go testConfig/absence-success/source-scope hunk: necessary config compatibility/source ownership; whole suite supports, separate hunk kills unmeasured.
+- New absence_test.go/absence_example_test.go support type/value/wrapping/real raced faults, A2A compatibility and executable example. New mcp_test/mcp_absence/mcp_bounds/mcp_conformance/mcpname tests cover named mechanisms above; newly shipped assertion/precondition mutation coverage is bounded, not universal. mcp_source_test.go source census/context-only/wire text guards ignore comments/aliases in documented limited ways; future gate escape unmeasured. New daemon mcp_test/mcp_budget/mcp_cross tests provide actual mount, sequential real clocks, journal accounting, crosssets and extracted guide payloads; method/aggregate own mutations attack relevant assertions, all other test-hunk reversions unmeasured.
+- testdata/mcp_success.sse: checked-in generated wire bytes compared to newly constructed upstream and actual projection, golden overwrite flag left unset. Docs QUICKSTART/HOST_CHANGELOG: reviewed actual prose and all3 payloads; examples produce3 journal entries under pinned interpreter. Full shell setup/initialize and exact envelope for live overlength refusal remain unmeasured. No world/kernel/AIL files, runtime fleet, harness, gate scripts or unrelated packages changed.
+
+## Findings and practical limits
+
+No blocking finding. Row132 remains meaningful: actual eight-slot shared-handler saturation/ninth refusal/recovery and valid nil-coordinator admitted library call lack killing tests. Both are correct source today; surviving mutants are not evidence of a current unbounded daemon or successful nil-coordinator invocation. SurfaceRefusalRecovers only asserts code/noSSE/zero runner, not exact status/id/message; direct long adapter check discriminates length guard. Payload-only guide test reconstructs HTTP headers and setup independently, so it certifies payload bytes, not every curl/setup command. Old projection comment says two routes/no workers. Large changed files, long functions and incomplete preserved sprint JSON are concrete quality findings, already scored.
+
+Explicit transport residuals retained: per-item commits may be hidden by later batch failure; no retry/idempotency metadata channel; a2a invocation namespace shared across surfaces; no transition_fn metadata pin; long-name/schema/annotation surface refusal; noncooperative callback slots remain held; slow-body/synchronous parsing/writing can miss aggregate delivery, with frozen socket deadline and connection truncation. Source gates are not universal semantic analyzers. Local tests cover darwin/arm64; exact candidate required CI provides ubuntu evidence. Neither2 green normal candidate runs nor executor green base proves universal flake elimination.
+
+## Raw evidence and identity
+
+Own /tmp/world-iter221-product-eval-independent contains metadata.json, ail.log/go.log, complete.diff, line-counts.json, function-sizes.txt and metrics.go instrument, changed-go.txt/gofmt.log, closure-{base,candidate}.txt/closure.json, verified proxy.json/sumdb.txt, ci.json, mutation driver and per-mutant landed diffs/build/test/restored JSON logs and exact backup/hash records. Every gate1200s cap; mutation build/test external180s and test150s; vet180s; total1800s evaluation ceiling not exhausted. Full Go race includes its normal8m test/600s wrapper, unchanged env/cache/package parallelism. Released pin hash1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f, versionv0.41.0 commit24ee1088776e21cd06a3781ed18e77f40be06db3; go1.26.6 darwin/arm64, macOS26.6.2. AIL16 named verified identities/40 tests/package9of9 actual stages observed. Go hygiene/ledger/toolchain/known-positive2 race warnings/build/37 evidence/plain/fullrace actual stages observed. Warnings belong only to intentional control, not application suite.
+
+PR176 exact candidate head OPEN/DRAFT, both required completed SUCCESS checks (ailang-code verify gate; go host build + test gate), run36992316211. This is product judgment at exact head, never merge approval execution or merge-SHA CI certification.
+
+
+## Own measured experiments
+
+| Mutant | Build/Test/Restored rc | Exact failing named tests (scoped red set) |
+|---|---|---|
+| absence-catchall | 0/1/0 | TestAgentCard_AbsentPrecheckSnapshotFailure/store_error, TestAgentCard_AbsentPrecheckSnapshotFailure/real_reader, TestAgentCard_AbsentPrecheckSnapshotFailure/deadline, TestAgentCard_AbsentPrecheckSnapshotFailure, TestA2A_AbsentPrecheckSnapshotFailure/direct, TestA2A_AbsentPrecheckSnapshotFailure/real_reader, TestA2A_AbsentPrecheckSnapshotFailure, TestMCPAbsentPrecheckSnapshotFailure/list/direct, TestMCPAbsentPrecheckSnapshotFailure/list/real_reader, TestMCPAbsentPrecheckSnapshotFailure/list/same_text, TestMCPAbsentPrecheckSnapshotFailure/list/deadline, TestMCPAbsentPrecheckSnapshotFailure/invoke/direct, TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader, TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text, TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline, TestMCPAbsentPrecheckSnapshotFailure |
+| schema-type | 0/1/0 | TestMCPSchemaNormalization |
+| map-length | 0/1/0 | TestMCPSurfaceRefusalRecovers, TestMCPNameRefusal |
+| route-method | 0/1/0 | TestMCPMountMethodSource |
+| late-cancel | 0/1/0 | TestMCPInvokeCancelAfterAdmission |
+| capacity-survivor | 0/0/0 | None: measured survivor in whole projection suite |
+| nil-coordinator-survivor | 0/0/0 | None: measured survivor in whole projection suite |
+| aggregate | 0/1/0 | TestMCPPostBudgetProductionConstants/single, TestMCPPostBudgetProductionConstants/batch, TestMCPPostBudgetProductionConstants |
+| typed-absence-emission | 0/1/0 | TestRegistryHeadAbsentErrorClassification/direct, TestRegistryHeadAbsentErrorClassification/new_request, TestRegistryHeadAbsentErrorClassification |
+| fresh-allowed-guard | 0/1/0 | TestMCPListedThenTrulyAbsent, TestMCPBatchAccounting/removed_between_items, TestMCPBatchAccounting |
+
+All ten mutants landed (distinct SHA256), built and restored exactly from backup; eight killed, two survived. Schema/late-cancel/emission sole failing top-level names are sole killers only inside their selected commands; full-package inverse not measured. Method-source is sole killer within selected method-source+GET pair. Absence/length/fresh-Allowed/aggregate have measured red-set membership; no universal sole-killer claim. Fresh-Allowed removal leaves ListedThenRevoked green because coordinator independently refuses stale admission; ListedThenTrulyAbsent and BatchAccounting/removed_between_items red on task/stage accounting. That distinction prevents attributing a coarse no-run assertion to the adapter. Full raw test JSON retains run/pass/fail identities.
+
+Actual profiles: AIL0/7.922s then Go0/258.071s. Own production aggregate mutant single32.6097s/batch34.6180s writes beyond30s, EOF; exact restored single20.0035s/batch20.0027s writes, correct1/1/1 and3/2/2 N/K/J, batch one retained commit, followup success. Final vet0/0.284s and gofmt empty. Final HEAD exact, porcelain empty; source manifest SHA256 b96eeb1e28000d8ee59fc1891e922066b861bf63c0c30d656492f6092c4bfd50. Elapsed 561.185s below1800s; all own sessions terminal.
+
+**PRODUCT PASS78/100; zero hard fails, zero substantive blockers.** No merge/messages/commits/production repair performed.
+
+EVALUATION_RESULT: pass
+EVALUATION_SCORE: 78/100
+EVALUATION_ROUND: 1 (iteration221 fresh acceptance resume)
+EVALUATION_REPORT_PATH: /tmp/world-iter221-product-eval-independent/product-evaluation.json

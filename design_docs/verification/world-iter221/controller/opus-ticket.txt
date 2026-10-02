@@ -1,0 +1,1 @@
+derive-planner-lane.sh -> opus fail-closed:planner-lane-field-invalid; resolve-role-spawn -> agent-tool opus same reason; native Agent opus returned Unknown model. Actual D48 native gpt-6.1-sol planner completed unchanged acceptance resume plan.

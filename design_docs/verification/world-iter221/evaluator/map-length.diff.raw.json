@@ -1,0 +1,7 @@
+{
+  "original_name": "map-length.diff",
+  "encoding": "base64",
+  "sha256": "59cc9e029cf26b8818e7c9aa622352de5ef92a49dcc343940606459e1cbe05d4",
+  "raw_base64": "ZGlmZiAtLWdpdCBhL2hvc3QvcHJvamVjdGlvbi9tY3BuYW1lLmdvIGIvaG9zdC9wcm9qZWN0aW9uL21jcG5hbWUuZ28KaW5kZXggM2QzMThjMS4uNjc1YTQ5MyAxMDA2NDQKLS0tIGEvaG9zdC9wcm9qZWN0aW9uL21jcG5hbWUuZ28KKysrIGIvaG9zdC9wcm9qZWN0aW9uL21jcG5hbWUuZ28KQEAgLTE0LDcgKzE0LDcgQEAgaW1wb3J0ICgKIC8vIHdob2xlIHN1cmZhY2UgcmF0aGVyIHRoYW4gZHJvcHBpbmcsIHRydW5jYXRpbmcgb3IgYWxpYXNpbmcgYSB0cmFuc2l0aW9uLgogZnVuYyBFbmNvZGVNQ1BOYW1lKGlkIHN0cmluZykgKHN0cmluZywgZXJyb3IpIHsKIAluYW1lIDo9IHN0cmluZ3MuTmV3UmVwbGFjZXIoIl8iLCAiX3UiLCAiLiIsICJfZCIsICIvIiwgIl9zIikuUmVwbGFjZShpZCkKLQlpZiBsZW4obmFtZSkgPiA2NCB7CisJaWYgZmFsc2UgJiYgbGVuKG5hbWUpID4gNjQgewogCQlyZXR1cm4gIiIsIGZtdC5FcnJvcmYoInByb2plY3Rpb246IGVuY29kZWQgdHJhbnNpdGlvbiBuYW1lIGV4Y2VlZHMgNjQgYnl0ZXM6ICVxIiwgaWQpCiAJfQogCXJldHVybiBuYW1lLCBuaWwK",
+  "text_utf8": "diff --git a/host/projection/mcpname.go b/host/projection/mcpname.go\nindex 3d318c1..675a493 100644\n--- a/host/projection/mcpname.go\n+++ b/host/projection/mcpname.go\n@@ -14,7 +14,7 @@ import (\n // whole surface rather than dropping, truncating or aliasing a transition.\n func EncodeMCPName(id string) (string, error) {\n \tname := strings.NewReplacer(\"_\", \"_u\", \".\", \"_d\", \"/\", \"_s\").Replace(id)\n-\tif len(name) > 64 {\n+\tif false && len(name) > 64 {\n \t\treturn \"\", fmt.Errorf(\"projection: encoded transition name exceeds 64 bytes: %q\", id)\n \t}\n \treturn name, nil\n"
+}

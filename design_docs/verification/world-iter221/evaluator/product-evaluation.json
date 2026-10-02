@@ -1,0 +1,648 @@
+{
+  "role": "independent-product-evaluator",
+  "judge": "gpt-6.1-sol",
+  "independence": "FLAG same-model-fresh-context",
+  "result": "pass",
+  "score": 78,
+  "breakdown": {
+    "tests": 20,
+    "lint": 10,
+    "acceptance": 30,
+    "quality": 0,
+    "docs": 10,
+    "fidelity": 8
+  },
+  "hard_fails": [],
+  "blocking_findings": [],
+  "acceptance_met": 14,
+  "acceptance_total": 14,
+  "base": "daba57776ca35b27f36802e162da9b2a9d46bea8",
+  "candidate": "a12fa14745855d27ed6efc94934469e67698b341",
+  "profiles": {
+    "start": 1790941111.630523,
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "pin": "/Users/voightkampff/.pinned-ailang/ailang",
+    "sha256": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+    "version": "AILANG v0.41.0\nCommit: 24ee108\nFull:   24ee1088776e21cd06a3781ed18e77f40be06db3\nBuilt:  2026-09-21T15:50:02Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026\n",
+    "head": "a12fa14745855d27ed6efc94934469e67698b341\n",
+    "initial_status": "",
+    "runs": [
+      {
+        "name": "ail",
+        "rc": 0,
+        "seconds": 7.9220967292785645
+      },
+      {
+        "name": "go",
+        "rc": 0,
+        "seconds": 258.07070779800415
+      }
+    ]
+  },
+  "lint": {
+    "vet_rc": 0,
+    "vet_seconds": 0.28417086601257324,
+    "cap": 180,
+    "gofmt_rc": 0,
+    "gofmt_output": ""
+  },
+  "mutations": [
+    {
+      "name": "absence-catchall",
+      "file": "host/projection/projection.go",
+      "old": "if !hasHead && errors.As(rerr, &target) {",
+      "new": "if !hasHead && (errors.As(rerr, &target) || true) {",
+      "original_sha": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7",
+      "mutant_sha": "b290b6c6d772e5fe374e3ac4da6ff5572af383ae3044951d7b0a5ed3121e4601",
+      "build": {
+        "command": [
+          "go",
+          "build",
+          "./..."
+        ],
+        "rc": 0,
+        "seconds": 0.875417947769165,
+        "cap": 180
+      },
+      "test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          "^Test(MCPAbsentPrecheckSnapshotFailure|AgentCard_AbsentPrecheckSnapshotFailure|A2A_AbsentPrecheckSnapshotFailure)$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 1,
+        "seconds": 1.0621609687805176,
+        "cap": 180
+      },
+      "failed_names": [
+        "TestAgentCard_AbsentPrecheckSnapshotFailure/store_error",
+        "TestAgentCard_AbsentPrecheckSnapshotFailure/real_reader",
+        "TestAgentCard_AbsentPrecheckSnapshotFailure/deadline",
+        "TestAgentCard_AbsentPrecheckSnapshotFailure",
+        "TestA2A_AbsentPrecheckSnapshotFailure/direct",
+        "TestA2A_AbsentPrecheckSnapshotFailure/real_reader",
+        "TestA2A_AbsentPrecheckSnapshotFailure",
+        "TestMCPAbsentPrecheckSnapshotFailure/list/direct",
+        "TestMCPAbsentPrecheckSnapshotFailure/list/real_reader",
+        "TestMCPAbsentPrecheckSnapshotFailure/list/same_text",
+        "TestMCPAbsentPrecheckSnapshotFailure/list/deadline",
+        "TestMCPAbsentPrecheckSnapshotFailure/invoke/direct",
+        "TestMCPAbsentPrecheckSnapshotFailure/invoke/real_reader",
+        "TestMCPAbsentPrecheckSnapshotFailure/invoke/same_text",
+        "TestMCPAbsentPrecheckSnapshotFailure/invoke/deadline",
+        "TestMCPAbsentPrecheckSnapshotFailure"
+      ],
+      "restored_sha": "6d555cae3f76789075530a192bab01b54e0470d0829d316a6968560b2c251ac7",
+      "restored_test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          "^Test(MCPAbsentPrecheckSnapshotFailure|AgentCard_AbsentPrecheckSnapshotFailure|A2A_AbsentPrecheckSnapshotFailure)$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 0,
+        "seconds": 0.6291041374206543,
+        "cap": 180
+      }
+    },
+    {
+      "name": "schema-type",
+      "file": "host/projection/mcpname.go",
+      "old": "members[\"type\"] = json.RawMessage(`\"object\"`)",
+      "new": "members[\"type\"] = json.RawMessage(`\"array\"`)",
+      "original_sha": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+      "mutant_sha": "cf0dd9a3d2354aabdb8f2084c17d8ab3039b819a9aa3ee7fb7f0426c22d52dc0",
+      "build": {
+        "command": [
+          "go",
+          "build",
+          "./..."
+        ],
+        "rc": 0,
+        "seconds": 0.7590091228485107,
+        "cap": 180
+      },
+      "test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          "^TestMCPSchemaNormalization$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 1,
+        "seconds": 1.0314500331878662,
+        "cap": 180
+      },
+      "failed_names": [
+        "TestMCPSchemaNormalization"
+      ],
+      "restored_sha": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+      "restored_test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          "^TestMCPSchemaNormalization$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 0,
+        "seconds": 0.7317628860473633,
+        "cap": 180
+      }
+    },
+    {
+      "name": "map-length",
+      "file": "host/projection/mcpname.go",
+      "old": "if len(name) > 64 {",
+      "new": "if false && len(name) > 64 {",
+      "original_sha": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+      "mutant_sha": "e4f258a573740ce32bc13a0b1c6dc098c87aecf041125a3a755604317dd63982",
+      "build": {
+        "command": [
+          "go",
+          "build",
+          "./..."
+        ],
+        "rc": 0,
+        "seconds": 0.7470107078552246,
+        "cap": 180
+      },
+      "test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          "^Test(MCPNameRefusal|MCPSurfaceRefusalRecovers)$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 1,
+        "seconds": 0.9890098571777344,
+        "cap": 180
+      },
+      "failed_names": [
+        "TestMCPSurfaceRefusalRecovers",
+        "TestMCPNameRefusal"
+      ],
+      "restored_sha": "838e77ce767381c1dcbf14102a9cecaf028ea33e1c19ff328cf54a804596c6d7",
+      "restored_test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          "^Test(MCPNameRefusal|MCPSurfaceRefusalRecovers)$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 0,
+        "seconds": 0.6445751190185547,
+        "cap": 180
+      }
+    },
+    {
+      "name": "route-method",
+      "file": "host/daemon/daemon.go",
+      "old": "mux.HandleFunc(\"POST /mcp/\", d.projection.MCP)",
+      "new": "mux.HandleFunc(\"/mcp/\", d.projection.MCP)",
+      "original_sha": "38dddbadabc51083820c7027143028379d26e2f7cb837191bd6c3440d2218692",
+      "mutant_sha": "fb00531de7f70567b9c878767f4f070d01a5b7c9f98de14846ea83061d7a6d21",
+      "build": {
+        "command": [
+          "go",
+          "build",
+          "./..."
+        ],
+        "rc": 0,
+        "seconds": 0.7339110374450684,
+        "cap": 180
+      },
+      "test": {
+        "command": [
+          "go",
+          "test",
+          "./host/daemon",
+          "-run",
+          "^Test(MCPMountMethodSource|MCPGetRefused)$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 1,
+        "seconds": 1.4494190216064453,
+        "cap": 180
+      },
+      "failed_names": [
+        "TestMCPMountMethodSource"
+      ],
+      "restored_sha": "38dddbadabc51083820c7027143028379d26e2f7cb837191bd6c3440d2218692",
+      "restored_test": {
+        "command": [
+          "go",
+          "test",
+          "./host/daemon",
+          "-run",
+          "^Test(MCPMountMethodSource|MCPGetRefused)$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 0,
+        "seconds": 0.7926499843597412,
+        "cap": 180
+      }
+    },
+    {
+      "name": "late-cancel",
+      "file": "host/projection/mcp.go",
+      "old": "if err := ctx.Err(); err != nil {\n\t\treturn protocol.InvocationResult{}, err\n\t}\n\tif a.h.coord == nil {",
+      "new": "if err := ctx.Err(); false && err != nil {\n\t\treturn protocol.InvocationResult{}, err\n\t}\n\tif a.h.coord == nil {",
+      "original_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "mutant_sha": "f967fb709fd781d910cfc7f9117a88e4c0d3b0bee295a06dafb2fbf21b335639",
+      "build": {
+        "command": [
+          "go",
+          "build",
+          "./..."
+        ],
+        "rc": 0,
+        "seconds": 0.8483848571777344,
+        "cap": 180
+      },
+      "test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          "^TestMCPInvokeCancelAfterAdmission$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 1,
+        "seconds": 0.9900891780853271,
+        "cap": 180
+      },
+      "failed_names": [
+        "TestMCPInvokeCancelAfterAdmission"
+      ],
+      "restored_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "restored_test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          "^TestMCPInvokeCancelAfterAdmission$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 0,
+        "seconds": 0.7124192714691162,
+        "cap": 180
+      }
+    },
+    {
+      "name": "capacity-survivor",
+      "file": "host/projection/mcp.go",
+      "old": "hostcall.New(cfg.CallbackTimeout, cfg.MaxCallbacks)",
+      "new": "hostcall.New(cfg.CallbackTimeout, 800)",
+      "original_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "mutant_sha": "a94ee0bcb6256a02920de256d47f7d4af0cbb6ff91591e3c2e3d2bd1c6baafe8",
+      "build": {
+        "command": [
+          "go",
+          "build",
+          "./..."
+        ],
+        "rc": 0,
+        "seconds": 0.8213791847229004,
+        "cap": 180
+      },
+      "test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          ".",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 0,
+        "seconds": 8.499399900436401,
+        "cap": 180
+      },
+      "failed_names": [],
+      "restored_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "restored_test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          ".",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 0,
+        "seconds": 8.047486305236816,
+        "cap": 180
+      }
+    },
+    {
+      "name": "nil-coordinator-survivor",
+      "file": "host/projection/mcp.go",
+      "old": "return protocol.InvocationResult{}, errors.New(\"projection: invocation coordinator is unavailable\")",
+      "new": "return protocol.InvocationResult{}, nil",
+      "original_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "mutant_sha": "9462619a86981242336b6857fbf1274963c2da7d23b574fa4af2bab92af8b47f",
+      "build": {
+        "command": [
+          "go",
+          "build",
+          "./..."
+        ],
+        "rc": 0,
+        "seconds": 0.768826961517334,
+        "cap": 180
+      },
+      "test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          ".",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 0,
+        "seconds": 8.409395217895508,
+        "cap": 180
+      },
+      "failed_names": [],
+      "restored_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "restored_test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          ".",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 0,
+        "seconds": 8.130619287490845,
+        "cap": 180
+      }
+    },
+    {
+      "name": "aggregate",
+      "file": "host/projection/mcp.go",
+      "old": "context.WithTimeout(r.Context(), h.invokeWait)",
+      "new": "context.WithCancel(r.Context())",
+      "original_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "mutant_sha": "ab729c5dc6e8796ac91193a381f1d137075af4ef5654dd9aef2dc4a4b82c87a3",
+      "build": {
+        "command": [
+          "go",
+          "build",
+          "./..."
+        ],
+        "rc": 0,
+        "seconds": 0.7892951965332031,
+        "cap": 180
+      },
+      "test": {
+        "command": [
+          "go",
+          "test",
+          "./host/daemon",
+          "-run",
+          "^TestMCPPostBudgetProductionConstants$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 1,
+        "seconds": 70.61694383621216,
+        "cap": 180
+      },
+      "failed_names": [
+        "TestMCPPostBudgetProductionConstants/single",
+        "TestMCPPostBudgetProductionConstants/batch",
+        "TestMCPPostBudgetProductionConstants"
+      ],
+      "restored_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "restored_test": {
+        "command": [
+          "go",
+          "test",
+          "./host/daemon",
+          "-run",
+          "^TestMCPPostBudgetProductionConstants$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 0,
+        "seconds": 43.13975811004639,
+        "cap": 180
+      }
+    },
+    {
+      "name": "typed-absence-emission",
+      "file": "host/transitionreg/transitionreg.go",
+      "old": "return Snapshot{}, RegistryHeadAbsentError{}",
+      "new": "return Snapshot{}, errors.New(\"read transition registry: head is absent\")",
+      "original_sha": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+      "mutant_sha": "85c766b64db669a86a9492b9019818122316df8195bc15b0db15358ef1292a8c",
+      "build": {
+        "command": [
+          "go",
+          "build",
+          "./..."
+        ],
+        "rc": 0,
+        "seconds": 0.9260070323944092,
+        "cap": 180
+      },
+      "test": {
+        "command": [
+          "go",
+          "test",
+          "./host/transitionreg",
+          "-run",
+          "^TestRegistryHeadAbsentErrorClassification$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 1,
+        "seconds": 0.9035232067108154,
+        "cap": 180
+      },
+      "failed_names": [
+        "TestRegistryHeadAbsentErrorClassification/direct",
+        "TestRegistryHeadAbsentErrorClassification/new_request",
+        "TestRegistryHeadAbsentErrorClassification"
+      ],
+      "restored_sha": "b1f5c78ba764a20fad0c575782eee1b3955832abb9174ad165e84a55ea844065",
+      "restored_test": {
+        "command": [
+          "go",
+          "test",
+          "./host/transitionreg",
+          "-run",
+          "^TestRegistryHeadAbsentErrorClassification$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 0,
+        "seconds": 0.751427173614502,
+        "cap": 180
+      }
+    },
+    {
+      "name": "fresh-allowed-guard",
+      "file": "host/projection/mcp.go",
+      "old": "if !allowed {",
+      "new": "if false && !allowed {",
+      "original_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "mutant_sha": "5828f665481c50c159de66206526a0a242d7c019d995736d26ac7c50c1274e61",
+      "build": {
+        "command": [
+          "go",
+          "build",
+          "./..."
+        ],
+        "rc": 0,
+        "seconds": 0.753730058670044,
+        "cap": 180
+      },
+      "test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          "^Test(MCPInvokeListedThenRevoked|MCPBatchAccounting|MCPListedThenTrulyAbsent)$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 1,
+        "seconds": 1.0167827606201172,
+        "cap": 180
+      },
+      "failed_names": [
+        "TestMCPListedThenTrulyAbsent",
+        "TestMCPBatchAccounting/removed_between_items",
+        "TestMCPBatchAccounting"
+      ],
+      "restored_sha": "1e4af0f80ef89bfd95770ca530452c3d05d2965eefc2b5ce785df2d1b7295cbe",
+      "restored_test": {
+        "command": [
+          "go",
+          "test",
+          "./host/projection",
+          "-run",
+          "^Test(MCPInvokeListedThenRevoked|MCPBatchAccounting|MCPListedThenTrulyAbsent)$",
+          "-count=1",
+          "-json",
+          "-timeout",
+          "150s"
+        ],
+        "rc": 0,
+        "seconds": 0.7385389804840088,
+        "cap": 180
+      }
+    }
+  ],
+  "ci": {
+    "headRefOid": "a12fa14745855d27ed6efc94934469e67698b341",
+    "isDraft": true,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-02T09:53:39Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/36992316211/job/110791118559",
+        "name": "ailang-code verify gate",
+        "startedAt": "2026-10-02T09:52:53Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-02T10:01:08Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/36992316211/job/110791118307",
+        "name": "go host build + test gate",
+        "startedAt": "2026-10-02T09:52:58Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      }
+    ]
+  },
+  "final_clean_proof": "final-clean-proof.json",
+  "elapsed_total_seconds": 561.1849009990692,
+  "token_usage": "not reported",
+  "nonblocking": [
+    "row132 capacity800 and nil-coordinator compiled survivors",
+    "large files/long functions",
+    "preserved incomplete M108D JSON",
+    "payload-only guide proof lacks initialize/full setup",
+    "exact overlength envelope/live escape-heavy fixture limitation",
+    "stale projection comment"
+  ],
+  "raw_dir": "/tmp/world-iter221-product-eval-independent"
+}
