@@ -1,0 +1,31 @@
+{
+  "result": "pass",
+  "score": 80,
+  "reviewed_sha": "ec9894e6204510012ef5a2c7fd0cbbcd775a9ed3",
+  "delta_parent": "46faa49c4e64bf4e2704704e96f21dfbacd4822e",
+  "judge": "native gpt-6.1-sol /root/record_evaluator",
+  "judge_independence": "FLAG same-model-fresh-context",
+  "tokens": "not reported",
+  "hard_failures": [],
+  "substantive_blockers": [],
+  "prior_review_miss": "Executable evidence suffix metrics.go escaped prior review; exact CI rejected it. Earlier PASS did not prove required CI success.",
+  "manifest_entries": 116,
+  "manifest_mismatches": 0,
+  "raw_wrappers_verified": 59,
+  "metrics_original_sha256": "69366bc42efa35b44e7f34889f751fbe23dfff364090a5c875e20f329e5b6696",
+  "named_check": {
+    "command": "go test ./host/store -run '^TestProductionGoSurface$' -count=1",
+    "rc": 0,
+    "output": "ok github.com/sunholo-data/ailang-world/host/store 0.247s"
+  },
+  "full_runtime_retest": false,
+  "record_ci": "New exact-head and merge full CI still required; old46faa49 Go CI failed",
+  "scores": {
+    "tests": 20,
+    "lint": 10,
+    "acceptance": 30,
+    "quality": 0,
+    "documentation": 10,
+    "design_fidelity": 10
+  }
+}

@@ -1,16 +1,18 @@
-# World mission dashboard — iteration 220, 2026-10-02
-Latest release: world/core@0.1.1 published attended07:58:43Z, D45A fresh store; evidence attended-publish directory.
-World 1.0: clauses 1/2/3/7 MET; 4/5/6 UNMET. Goal unmoved.
-Row108 bounded D49A followup spent: eight targeted comparisons PASS; exact full Go profiles RED.
-Product PR173 stays DRAFT/unmerged; no source or fixture changes in this followup.
-Independent product evaluator: fresh separate GPT6.1Sol context, FAIL59; own AIL0/Go1.
-Critical path: 108 → 114 → 93 (D46A). 114 waits; 93 requires108 landed.
-Parked on Mark: D51 further diagnosis/defer; D50 private credential review recovered from219.
-Unanswered D51 immediately defers108; no bar-neutral side work.
-D49 remains RESOLVED A, not reopened. D48 amended: never Astra.
-Rows127/128 deferred D47B; supporting-hunk residual132 does not outrank critical path.
-Cadence: nominal four-hour launchd loop; active bounded keepalive while owned work runs.
-Routing: native Agent roles; unavailable GLM/Opus/Sonnet explicitly flagged, all actual GPT6.1Sol.
-Quota: subscription codex; tokens not reported for any native role, metered $0; no reset credit.
-Bookkeeping: issue159. Full memory: charter STATUS, mission log, verification/world-iter220.
-Record isolated from dev Stop-hook autopush; independent ADMIN review and SHA-fenced CI required.
+# World mission dashboard — iteration 221, 2026-10-02
+Latest release: world/core@0.1.1 published attended; no release in this iteration.
+World 1.0: clauses 1/2/3/6/7 MET; 4/5 UNMET. This iteration completed clause6.
+Row108 MCP dispatch LANDED: PR176 → 7adfbbe; exact merge CI two successful jobs.
+Independent PRODUCT judge: fresh native GPT6.1Sol, PASS78/100, zero blockers.
+Executor base/candidate exact AIL→Go all green; judge own full AIL→Go green.
+Critical path: next114 (approved revision D44A), then93 (floor evaluation), D46A.
+Known coverage residual132 retained: callback capacity and nil-coordinator tests.
+Parked on Mark: none; ledger38 valid, zero OPEN. D50/D51 answered attended.
+D51 base flakes fixed attended; this loop changed no product source or clocks.
+Rows127/128 remain deferred D47B; no bar-neutral side work or publication.
+Cadence: nominal four-hour launchd loop; bounded active polls during owned work.
+Routing: all four native Agent roles actually ran; actual model GPT6.1Sol.
+Preferred GLM/Opus/Sonnet unknown-model errors FLAGGED; D48 fallback, never Astra.
+Quota: subscription Codex unknown; native role tokens not reported; metered$0.
+HARNESS share:0/20. Last3 product landings:221 moves6;214/213 move none.
+Bookkeeping issue159; full memory: charter, log, verification/world-iter221.
+Record isolated branch; independent ADMIN review and exact head/merge CI required.

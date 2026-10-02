@@ -1,0 +1,364 @@
+{
+  "role": "executor",
+  "actual_model": "codex:gpt-6.1-sol (declared native routing)",
+  "role_tokens": "not reported",
+  "result": "PASS",
+  "commands": [
+    {
+      "command": "./scripts/verify_ail.sh",
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter221-base",
+      "start_utc": "2026-10-02T11:28:58.172707+00:00",
+      "start_epoch": 1790940538.1729019,
+      "ceiling_s": 1200,
+      "head": "daba57776ca35b27f36802e162da9b2a9d46bea8",
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+      "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+      "pid": 33142,
+      "pgid": 33142,
+      "deadline_epoch": 1790941738.1729019,
+      "rc": 0,
+      "end_utc": "2026-10-02T11:29:06.038476+00:00",
+      "end_epoch": 1790940546.038507,
+      "duration_s": 7.866
+    },
+    {
+      "command": "./scripts/verify_go.sh",
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter221-base",
+      "start_utc": "2026-10-02T11:29:06.038933+00:00",
+      "start_epoch": 1790940546.038938,
+      "ceiling_s": 1200,
+      "head": "daba57776ca35b27f36802e162da9b2a9d46bea8",
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+      "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+      "pid": 33743,
+      "pgid": 33743,
+      "deadline_epoch": 1790941746.038938,
+      "rc": 0,
+      "end_utc": "2026-10-02T11:32:48.477272+00:00",
+      "end_epoch": 1790940768.477313,
+      "duration_s": 222.438
+    },
+    {
+      "command": "./scripts/verify_ail.sh",
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter221-verify",
+      "start_utc": "2026-10-02T11:32:48.478144+00:00",
+      "start_epoch": 1790940768.478163,
+      "ceiling_s": 1200,
+      "head": "a12fa14745855d27ed6efc94934469e67698b341",
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+      "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+      "pid": 46541,
+      "pgid": 46541,
+      "deadline_epoch": 1790941968.478163,
+      "rc": 0,
+      "end_utc": "2026-10-02T11:32:54.215519+00:00",
+      "end_epoch": 1790940774.2155352,
+      "duration_s": 5.737
+    },
+    {
+      "command": "./scripts/verify_go.sh",
+      "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter221-verify",
+      "start_utc": "2026-10-02T11:32:54.215853+00:00",
+      "start_epoch": 1790940774.215856,
+      "ceiling_s": 1200,
+      "head": "a12fa14745855d27ed6efc94934469e67698b341",
+      "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+      "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+      "pid": 47090,
+      "pgid": 47090,
+      "deadline_epoch": 1790941974.215856,
+      "rc": 0,
+      "end_utc": "2026-10-02T11:37:04.331852+00:00",
+      "end_epoch": 1790941024.331886,
+      "duration_s": 250.116
+    }
+  ],
+  "stage_checks": {
+    "base-ail": {
+      "16/16 required world/ identities verified": true,
+      "all 40 required named tests pass": true,
+      "world package gate PASSED: 9/9 steps performed non-zero work": true,
+      "verify gate PASSED": true
+    },
+    "base-go": {
+      "tracked-binary hygiene gate": true,
+      "0 binary blobs": true,
+      "World mission-input gate": true,
+      "World decision-ledger validated": true,
+      "toolchain floor gate": true,
+      "race-detector known-positive control": true,
+      "WARNING: DATA RACE": true,
+      "go build ./...": true,
+      "all 37 required top-level evidence tests passed exactly once": true,
+      "\u2500\u2500 go test ./... -count=1\n": true,
+      "\u2500\u2500 go test ./... -count=1 -race -timeout 8m": true,
+      "go gate PASSED: build clean, plain and race tests pass": true,
+      "plain_pass_packages": [
+        "github.com/sunholo-data/ailang-world/cmd/ailang-worldd",
+        "github.com/sunholo-data/ailang-world/cmd/world-publish",
+        "github.com/sunholo-data/ailang-world/host/archive",
+        "github.com/sunholo-data/ailang-world/host/authority",
+        "github.com/sunholo-data/ailang-world/host/boundary",
+        "github.com/sunholo-data/ailang-world/host/broker",
+        "github.com/sunholo-data/ailang-world/host/canon",
+        "github.com/sunholo-data/ailang-world/host/capsule",
+        "github.com/sunholo-data/ailang-world/host/childenv",
+        "github.com/sunholo-data/ailang-world/host/coordinator",
+        "github.com/sunholo-data/ailang-world/host/daemon",
+        "github.com/sunholo-data/ailang-world/host/evidence",
+        "github.com/sunholo-data/ailang-world/host/hashref",
+        "github.com/sunholo-data/ailang-world/host/pkgproj",
+        "github.com/sunholo-data/ailang-world/host/procbound",
+        "github.com/sunholo-data/ailang-world/host/proctest",
+        "github.com/sunholo-data/ailang-world/host/projection",
+        "github.com/sunholo-data/ailang-world/host/registry",
+        "github.com/sunholo-data/ailang-world/host/replay",
+        "github.com/sunholo-data/ailang-world/host/runbook",
+        "github.com/sunholo-data/ailang-world/host/store",
+        "github.com/sunholo-data/ailang-world/host/transitionreg",
+        "github.com/sunholo-data/ailang-world/host/verifygate",
+        "github.com/sunholo-data/ailang-world/host/workbench"
+      ],
+      "race_pass_packages": [
+        "github.com/sunholo-data/ailang-world/cmd/ailang-worldd",
+        "github.com/sunholo-data/ailang-world/cmd/world-publish",
+        "github.com/sunholo-data/ailang-world/host/archive",
+        "github.com/sunholo-data/ailang-world/host/authority",
+        "github.com/sunholo-data/ailang-world/host/boundary",
+        "github.com/sunholo-data/ailang-world/host/broker",
+        "github.com/sunholo-data/ailang-world/host/canon",
+        "github.com/sunholo-data/ailang-world/host/capsule",
+        "github.com/sunholo-data/ailang-world/host/childenv",
+        "github.com/sunholo-data/ailang-world/host/coordinator",
+        "github.com/sunholo-data/ailang-world/host/daemon",
+        "github.com/sunholo-data/ailang-world/host/evidence",
+        "github.com/sunholo-data/ailang-world/host/hashref",
+        "github.com/sunholo-data/ailang-world/host/pkgproj",
+        "github.com/sunholo-data/ailang-world/host/procbound",
+        "github.com/sunholo-data/ailang-world/host/proctest",
+        "github.com/sunholo-data/ailang-world/host/projection",
+        "github.com/sunholo-data/ailang-world/host/registry",
+        "github.com/sunholo-data/ailang-world/host/replay",
+        "github.com/sunholo-data/ailang-world/host/runbook",
+        "github.com/sunholo-data/ailang-world/host/store",
+        "github.com/sunholo-data/ailang-world/host/transitionreg",
+        "github.com/sunholo-data/ailang-world/host/verifygate",
+        "github.com/sunholo-data/ailang-world/host/workbench"
+      ],
+      "same_package_sets": true
+    },
+    "verify-ail": {
+      "16/16 required world/ identities verified": true,
+      "all 40 required named tests pass": true,
+      "world package gate PASSED: 9/9 steps performed non-zero work": true,
+      "verify gate PASSED": true
+    },
+    "verify-go": {
+      "tracked-binary hygiene gate": true,
+      "0 binary blobs": true,
+      "World mission-input gate": true,
+      "World decision-ledger validated": true,
+      "toolchain floor gate": true,
+      "race-detector known-positive control": true,
+      "WARNING: DATA RACE": true,
+      "go build ./...": true,
+      "all 37 required top-level evidence tests passed exactly once": true,
+      "\u2500\u2500 go test ./... -count=1\n": true,
+      "\u2500\u2500 go test ./... -count=1 -race -timeout 8m": true,
+      "go gate PASSED: build clean, plain and race tests pass": true,
+      "plain_pass_packages": [
+        "github.com/sunholo-data/ailang-world/cmd/ailang-worldd",
+        "github.com/sunholo-data/ailang-world/cmd/world-publish",
+        "github.com/sunholo-data/ailang-world/host/archive",
+        "github.com/sunholo-data/ailang-world/host/authority",
+        "github.com/sunholo-data/ailang-world/host/boundary",
+        "github.com/sunholo-data/ailang-world/host/broker",
+        "github.com/sunholo-data/ailang-world/host/canon",
+        "github.com/sunholo-data/ailang-world/host/capsule",
+        "github.com/sunholo-data/ailang-world/host/childenv",
+        "github.com/sunholo-data/ailang-world/host/coordinator",
+        "github.com/sunholo-data/ailang-world/host/daemon",
+        "github.com/sunholo-data/ailang-world/host/evidence",
+        "github.com/sunholo-data/ailang-world/host/hashref",
+        "github.com/sunholo-data/ailang-world/host/pkgproj",
+        "github.com/sunholo-data/ailang-world/host/procbound",
+        "github.com/sunholo-data/ailang-world/host/proctest",
+        "github.com/sunholo-data/ailang-world/host/projection",
+        "github.com/sunholo-data/ailang-world/host/registry",
+        "github.com/sunholo-data/ailang-world/host/replay",
+        "github.com/sunholo-data/ailang-world/host/runbook",
+        "github.com/sunholo-data/ailang-world/host/store",
+        "github.com/sunholo-data/ailang-world/host/transitionreg",
+        "github.com/sunholo-data/ailang-world/host/verifygate",
+        "github.com/sunholo-data/ailang-world/host/workbench"
+      ],
+      "race_pass_packages": [
+        "github.com/sunholo-data/ailang-world/cmd/ailang-worldd",
+        "github.com/sunholo-data/ailang-world/cmd/world-publish",
+        "github.com/sunholo-data/ailang-world/host/archive",
+        "github.com/sunholo-data/ailang-world/host/authority",
+        "github.com/sunholo-data/ailang-world/host/boundary",
+        "github.com/sunholo-data/ailang-world/host/broker",
+        "github.com/sunholo-data/ailang-world/host/canon",
+        "github.com/sunholo-data/ailang-world/host/capsule",
+        "github.com/sunholo-data/ailang-world/host/childenv",
+        "github.com/sunholo-data/ailang-world/host/coordinator",
+        "github.com/sunholo-data/ailang-world/host/daemon",
+        "github.com/sunholo-data/ailang-world/host/evidence",
+        "github.com/sunholo-data/ailang-world/host/hashref",
+        "github.com/sunholo-data/ailang-world/host/pkgproj",
+        "github.com/sunholo-data/ailang-world/host/procbound",
+        "github.com/sunholo-data/ailang-world/host/proctest",
+        "github.com/sunholo-data/ailang-world/host/projection",
+        "github.com/sunholo-data/ailang-world/host/registry",
+        "github.com/sunholo-data/ailang-world/host/replay",
+        "github.com/sunholo-data/ailang-world/host/runbook",
+        "github.com/sunholo-data/ailang-world/host/store",
+        "github.com/sunholo-data/ailang-world/host/transitionreg",
+        "github.com/sunholo-data/ailang-world/host/verifygate",
+        "github.com/sunholo-data/ailang-world/host/workbench"
+      ],
+      "same_package_sets": true
+    }
+  },
+  "final_sources": {
+    "base": {
+      "head": "daba57776ca35b27f36802e162da9b2a9d46bea8",
+      "porcelain": ""
+    },
+    "verify": {
+      "head": "a12fa14745855d27ed6efc94934469e67698b341",
+      "porcelain": ""
+    }
+  },
+  "preflight": {
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+    "pin_version": {
+      "argv": [
+        "/Users/voightkampff/.pinned-ailang/ailang",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "AILANG v0.41.0\nCommit: 24ee108\nFull:   24ee1088776e21cd06a3781ed18e77f40be06db3\nBuilt:  2026-09-21T15:50:02Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026\n",
+      "stderr": ""
+    },
+    "pin_sha256": {
+      "argv": [
+        "shasum",
+        "-a",
+        "256",
+        "/Users/voightkampff/.pinned-ailang/ailang"
+      ],
+      "rc": 0,
+      "stdout": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f  /Users/voightkampff/.pinned-ailang/ailang\n",
+      "stderr": ""
+    },
+    "go": {
+      "argv": [
+        "go",
+        "version"
+      ],
+      "rc": 0,
+      "stdout": "go version go1.26.6 darwin/arm64\n",
+      "stderr": ""
+    },
+    "go_env": {
+      "argv": [
+        "go",
+        "env",
+        "GOVERSION",
+        "GOOS",
+        "GOARCH",
+        "GOTOOLCHAIN"
+      ],
+      "rc": 0,
+      "stdout": "go1.26.6\ndarwin\narm64\nauto\n",
+      "stderr": ""
+    },
+    "worktrees": {
+      "base": {
+        "head": {
+          "argv": [
+            "git",
+            "rev-parse",
+            "HEAD"
+          ],
+          "rc": 0,
+          "stdout": "daba57776ca35b27f36802e162da9b2a9d46bea8\n",
+          "stderr": ""
+        },
+        "status": {
+          "argv": [
+            "git",
+            "status",
+            "--porcelain"
+          ],
+          "rc": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        "ancestry": {
+          "argv": [
+            "git",
+            "merge-base",
+            "--is-ancestor",
+            "daba57776ca35b27f36802e162da9b2a9d46bea8",
+            "HEAD"
+          ],
+          "rc": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      },
+      "verify": {
+        "head": {
+          "argv": [
+            "git",
+            "rev-parse",
+            "HEAD"
+          ],
+          "rc": 0,
+          "stdout": "a12fa14745855d27ed6efc94934469e67698b341\n",
+          "stderr": ""
+        },
+        "status": {
+          "argv": [
+            "git",
+            "status",
+            "--porcelain"
+          ],
+          "rc": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        "ancestry": {
+          "argv": [
+            "git",
+            "merge-base",
+            "--is-ancestor",
+            "daba57776ca35b27f36802e162da9b2a9d46bea8",
+            "HEAD"
+          ],
+          "rc": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    }
+  },
+  "completed_utc": "2026-10-02T11:37:45.605570+00:00",
+  "worktree_creation": {
+    "base": {
+      "command": "git worktree add --detach ../.wt-world-iter221-base daba57776ca35b27f36802e162da9b2a9d46bea8",
+      "terminal_rc": 0,
+      "tool_chunk_id": "e3e801",
+      "completion": "HEAD is now at daba577"
+    },
+    "candidate": {
+      "command": "git worktree add --detach ../.wt-world-iter221-verify a12fa14745855d27ed6efc94934469e67698b341",
+      "terminal_rc": 0,
+      "tool_chunk_id": "acc898",
+      "completion": "HEAD is now at a12fa14"
+    }
+  }
+}

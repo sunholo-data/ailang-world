@@ -1,0 +1,7 @@
+{
+  "original_name": "nil-coordinator-survivor.diff",
+  "encoding": "base64",
+  "sha256": "c696cce3faae9d31b8259adca119ca225cd55e0554af9d8f6a7e4fb267957a4d",
+  "raw_base64": "ZGlmZiAtLWdpdCBhL2hvc3QvcHJvamVjdGlvbi9tY3AuZ28gYi9ob3N0L3Byb2plY3Rpb24vbWNwLmdvCmluZGV4IDRhYjk3ODEuLjE2MGViN2IgMTAwNjQ0Ci0tLSBhL2hvc3QvcHJvamVjdGlvbi9tY3AuZ28KKysrIGIvaG9zdC9wcm9qZWN0aW9uL21jcC5nbwpAQCAtMTIxLDcgKzEyMSw3IEBAIGZ1bmMgKGEgbWNwQWRhcHRlcikgSW52b2tlKGN0eCBjb250ZXh0LkNvbnRleHQsIHNlc3Npb24gcHJvdG9jb2wuU2Vzc2lvbiwgaW52IHByCiAJCXJldHVybiBwcm90b2NvbC5JbnZvY2F0aW9uUmVzdWx0e30sIGVycgogCX0KIAlpZiBhLmguY29vcmQgPT0gbmlsIHsKLQkJcmV0dXJuIHByb3RvY29sLkludm9jYXRpb25SZXN1bHR7fSwgZXJyb3JzLk5ldygicHJvamVjdGlvbjogaW52b2NhdGlvbiBjb29yZGluYXRvciBpcyB1bmF2YWlsYWJsZSIpCisJCXJldHVybiBwcm90b2NvbC5JbnZvY2F0aW9uUmVzdWx0e30sIG5pbAogCX0KIAl0YXNrLCBlcnIgOj0gYS5oLm1pbnRUYXNrKCkKIAlpZiBlcnIgIT0gbmlsIHsK",
+  "text_utf8": "diff --git a/host/projection/mcp.go b/host/projection/mcp.go\nindex 4ab9781..160eb7b 100644\n--- a/host/projection/mcp.go\n+++ b/host/projection/mcp.go\n@@ -121,7 +121,7 @@ func (a mcpAdapter) Invoke(ctx context.Context, session protocol.Session, inv pr\n \t\treturn protocol.InvocationResult{}, err\n \t}\n \tif a.h.coord == nil {\n-\t\treturn protocol.InvocationResult{}, errors.New(\"projection: invocation coordinator is unavailable\")\n+\t\treturn protocol.InvocationResult{}, nil\n \t}\n \ttask, err := a.h.mintTask()\n \tif err != nil {\n"
+}

@@ -1,0 +1,7 @@
+{
+  "original_name": "schema-type.diff",
+  "encoding": "base64",
+  "sha256": "0dbcdeb2ad6df94bca598abb8cc6f7609e77227fde4737d44cabc1897bda74f3",
+  "raw_base64": "ZGlmZiAtLWdpdCBhL2hvc3QvcHJvamVjdGlvbi9tY3BuYW1lLmdvIGIvaG9zdC9wcm9qZWN0aW9uL21jcG5hbWUuZ28KaW5kZXggM2QzMThjMS4uNzY0ZDIxOCAxMDA2NDQKLS0tIGEvaG9zdC9wcm9qZWN0aW9uL21jcG5hbWUuZ28KKysrIGIvaG9zdC9wcm9qZWN0aW9uL21jcG5hbWUuZ28KQEAgLTYyLDcgKzYyLDcgQEAgZnVuYyBub3JtYWxpemVNQ1BTY2hlbWEocmF3IFtdYnl0ZSkgKGpzb24uUmF3TWVzc2FnZSwgZXJyb3IpIHsKIAkJfQogCQlyZXR1cm4gYXBwZW5kKGpzb24uUmF3TWVzc2FnZShuaWwpLCByYXcuLi4pLCBuaWwKIAl9Ci0JbWVtYmVyc1sidHlwZSJdID0ganNvbi5SYXdNZXNzYWdlKGAib2JqZWN0ImApCisJbWVtYmVyc1sidHlwZSJdID0ganNvbi5SYXdNZXNzYWdlKGAiYXJyYXkiYCkKIAlyZXR1cm4ganNvbi5NYXJzaGFsKG1lbWJlcnMpCiB9CiBmdW5jIG1jcERlc2NyaXB0b3JzKGRzIFtddHJhbnNpdGlvbnJlZy5EZXNjcmlwdG9yKSAoW11wcm90b2NvbC5Ub29sRGVzY3JpcHRvciwgZXJyb3IpIHsK",
+  "text_utf8": "diff --git a/host/projection/mcpname.go b/host/projection/mcpname.go\nindex 3d318c1..764d218 100644\n--- a/host/projection/mcpname.go\n+++ b/host/projection/mcpname.go\n@@ -62,7 +62,7 @@ func normalizeMCPSchema(raw []byte) (json.RawMessage, error) {\n \t\t}\n \t\treturn append(json.RawMessage(nil), raw...), nil\n \t}\n-\tmembers[\"type\"] = json.RawMessage(`\"object\"`)\n+\tmembers[\"type\"] = json.RawMessage(`\"array\"`)\n \treturn json.Marshal(members)\n }\n func mcpDescriptors(ds []transitionreg.Descriptor) ([]protocol.ToolDescriptor, error) {\n"
+}

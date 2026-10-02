@@ -1,0 +1,69 @@
+{
+  "iteration": 221,
+  "transport": "native Agent as explicitly requested by unattended operator; provider recipe transport deviations FLAGGED",
+  "authority": "D-WORLD-48 amended; never Astra",
+  "driver_routing_env": "not exposed in this API invocation; defaults/rotation resolved explicitly, not claimed as driver exports",
+  "roles": {
+    "controller": {
+      "provider": "Codex",
+      "model": "not exposed",
+      "tokens": "not reported"
+    },
+    "designer": {
+      "preferred": "pi:ollama/glm-5.3:cloud",
+      "pointer_before": "codex:gpt-6.1-sol",
+      "resolver": "recipe pi:ollama/glm-5.3:cloud declared:provider-pin",
+      "native_attempt": "glm-5.3",
+      "error": "Unknown model `glm-5.3` for spawn_agent",
+      "fallback": "gpt-6.1-sol",
+      "task": "/root/designer",
+      "status": "complete readiness; no new design",
+      "tokens": "not reported",
+      "ticket": "inbox_1790940562274_f8e433dc"
+    },
+    "planner": {
+      "preferred": "opus",
+      "derive": "opus fail-closed:planner-lane-field-invalid",
+      "resolver": "agent-tool opus fail-closed:planner-lane-field-invalid",
+      "native_attempt": "opus",
+      "error": "Unknown model `opus` for spawn_agent",
+      "fallback": "gpt-6.1-sol",
+      "task": "/root/planner",
+      "status": "complete acceptance resume plan",
+      "tokens": "not reported",
+      "ticket": "inbox_1790940563018_d8029108"
+    },
+    "executor": {
+      "preferred": "codex:gpt-6.1-sol",
+      "resolver": "recipe codex:gpt-6.1-sol declared:provider-pin",
+      "actual": "gpt-6.1-sol",
+      "task": "/root/executor",
+      "status": "complete all four exact profiles rc0",
+      "tokens": "not reported"
+    },
+    "evaluator": {
+      "preferred": "sonnet",
+      "resolver": "agent-tool sonnet declared:alias-pin",
+      "native_attempt": "sonnet",
+      "error": "Unknown model `sonnet` for spawn_agent",
+      "fallback": "gpt-6.1-sol",
+      "task": "/root/evaluator",
+      "status": "complete PRODUCT PASS78/100 zero blocking; ten compiled mutants eight killed two declared survivors",
+      "judge_independence": "same-model-fresh-context",
+      "tokens": "not reported",
+      "ticket": "inbox_1790940942986_40646a80"
+    },
+    "record_evaluator": {
+      "preferred": "sonnet",
+      "native_error": "Unknown model `sonnet` already measured this iteration",
+      "fallback": "gpt-6.1-sol",
+      "task": "/root/record_evaluator",
+      "judge_independence": "same-model-fresh-context FLAG",
+      "status": "ADMIN PASS80 on466f138; deltaPASS80 on46faa49; corrected independent PASS80 on ec9894e after own source-surfacecheck; previous executable-suffix review miss acknowledged",
+      "tokens": "not reported"
+    }
+  },
+  "metered_dollars": 0,
+  "quota": "unknown, not zero",
+  "heartbeat_ticket": "inbox_1790940563744_d047d833"
+}

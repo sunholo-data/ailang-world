@@ -1,6 +1,6 @@
 # w-mcp-dispatch-projection — Session-Scoped MCP Dispatch
 
-**Status**: Candidate preserved in DRAFT PR #173, UNMERGED and UNACCEPTED. Independent product rounds FAIL49/54/59; final normal AIL0/Go1. Three-round review limit reached; parked needs-human-review pending D-WORLD-49. Original Gate2 quorum/refinement provenance is preserved; no release is claimed.
+**Status**: IMPLEMENTED 2026-10-02, iteration221. PR176 squash `7adfbbe8610e1da129b4fb6cd98308ec7ca9e037`, exact head/merge CI2/2 SUCCESS, fresh independent PRODUCT PASS78/100 zero blockers. D51 attended base-flake tranche fulfilled; unchanged full profiles green. Historical217 candidate parks/failed reviews remain provenance. Known supporting-hunk coverage limits stay row132; no release claimed.
 **Item / target / priority**: charter row 108; World 1.0 clause 6; P0.
 **Author**: `codex:gpt-6.1-sol`, iteration 217, 2026-10-01. **FLAGGED fallback** under D-WORLD-48: preferred GLM 5.3 unavailable; controller owns routing and quorum. No new quorum was run by this author.
 **Product evidence base**: `54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e`; r3 design snapshot `07df462508618218cb4dac0eaff485a8236ef049`. r4 changes this design only.

@@ -1,0 +1,26 @@
+{
+  "result": "pass",
+  "score": 80,
+  "round": 1,
+  "reviewed_sha": "46faa49c4e64bf4e2704704e96f21dfbacd4822e",
+  "delta_parent": "466f13879639efde8ada3e2c0ae5a484b6ea9e19",
+  "judge": "/root/record_evaluator native gpt-6.1-sol",
+  "judge_independence": "FLAG same-model-fresh-context",
+  "tokens": "not reported",
+  "hard_failures": [],
+  "substantive_blockers": [],
+  "runtime_retest": false,
+  "manifest_entries": 109,
+  "manifest_mismatches": 0,
+  "raw_wrappers_verified": 57,
+  "banked_prior_reports_verbatim": true,
+  "record_ci": "still required; no pending CI claimed green",
+  "score_breakdown": {
+    "tests": 20,
+    "lint": 10,
+    "acceptance": 30,
+    "quality": 0,
+    "documentation": 10,
+    "design_fidelity": 10
+  }
+}

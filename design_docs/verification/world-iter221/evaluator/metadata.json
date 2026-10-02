@@ -1,0 +1,21 @@
+{
+  "start": 1790941111.630523,
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "pin": "/Users/voightkampff/.pinned-ailang/ailang",
+  "sha256": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+  "version": "AILANG v0.41.0\nCommit: 24ee108\nFull:   24ee1088776e21cd06a3781ed18e77f40be06db3\nBuilt:  2026-09-21T15:50:02Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026\n",
+  "head": "a12fa14745855d27ed6efc94934469e67698b341\n",
+  "initial_status": "",
+  "runs": [
+    {
+      "name": "ail",
+      "rc": 0,
+      "seconds": 7.9220967292785645
+    },
+    {
+      "name": "go",
+      "rc": 0,
+      "seconds": 258.07070779800415
+    }
+  ]
+}

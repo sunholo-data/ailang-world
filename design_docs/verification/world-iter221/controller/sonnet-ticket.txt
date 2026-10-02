@@ -1,0 +1,1 @@
+Native Agent evaluator preferred sonnet returned Unknown model. Resolver agent-tool sonnet declared:alias-pin. Available native models are OpenAI only. D-WORLD-48 amended prohibits Astra; actual fresh gpt-6.1-sol independent-context product judge will run after executor terminal, FLAGGED same-model-fresh-context. No controller-only product acceptance or harness repair.

@@ -1,0 +1,58 @@
+{
+  "scope": "ADMIN documentation/evidence only",
+  "reviewed_sha": "466f13879639efde8ada3e2c0ae5a484b6ea9e19",
+  "parent_sha": "7adfbbe8610e1da129b4fb6cd98308ec7ca9e037",
+  "result": "pass",
+  "score": 80,
+  "round": 1,
+  "judge": {
+    "task": "/root/record_evaluator",
+    "model": "gpt-6.1-sol",
+    "independence": "FLAG same-model-fresh-context",
+    "tokens": "not reported"
+  },
+  "scores": {
+    "tests": 20,
+    "lint": 10,
+    "acceptance": 30,
+    "quality": 0,
+    "documentation": 10,
+    "design_fidelity": 10
+  },
+  "hard_failures": [],
+  "substantive_blockers": [],
+  "runtime_retest": false,
+  "record_ci": "pending/not independently checked; merge remains conditional on exact head and merge CI",
+  "evidence": {
+    "manifest_entries": 107,
+    "manifest_mismatches": 0,
+    "raw_wrappers": 57,
+    "raw_hash_mismatches": 0,
+    "raw_text_mismatches": 0,
+    "raw_map_entries": 57,
+    "unmanifested_owned_artifacts": 0,
+    "ledger_rows": 38,
+    "ledger_byte_equal": true,
+    "open_decisions": 0,
+    "live_status": [
+      221,
+      220,
+      218
+    ],
+    "charter_lines_before": 6081,
+    "charter_lines_after": 6081,
+    "archived217_exact_line": true,
+    "dashboard_lines": 18,
+    "historical_attended_sha256": "906b869c481c7bf3f8ab3b50913a0f329dcfada864c3766ea6ceb16f8ba47c19"
+  },
+  "nonblocking_findings": [
+    {
+      "file": "design_docs/world-mission-status-archive.md",
+      "issue": "Exact historical217 line retained at EOF, but trailing blank line is absent. Future append should preserve single-line-plus-blank convention; no record loss."
+    },
+    {
+      "file": "design_docs/verification/world-iter221/controller/designer-controller-summary.md",
+      "issue": "Readiness is attributed controller summary, not direct native transcript. This limits independent verification of that role but is explicitly disclosed."
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "original_name": "metrics.go",
+  "encoding": "base64",
+  "sha256": "69366bc42efa35b44e7f34889f751fbe23dfff364090a5c875e20f329e5b6696",
+  "raw_base64": "cGFja2FnZSBtYWluCmltcG9ydCgiZ28vcGFyc2VyIjsiZ28vdG9rZW4iOyJnby9hc3QiOyJmbXQiOyJvcyI7InN0cmluZ3MiKQpmdW5jIG1haW4oKXtiLF86PW9zLlJlYWRGaWxlKCIvdG1wL3dvcmxkLWl0ZXIyMjEtcHJvZHVjdC1ldmFsLWluZGVwZW5kZW50L2NoYW5nZWQtZ28udHh0Iik7Zm9yIF8scDo9cmFuZ2Ugc3RyaW5ncy5TcGxpdChzdHJpbmcoYiksIlxuIil7czo9dG9rZW4uTmV3RmlsZVNldCgpO2YsZTo9cGFyc2VyLlBhcnNlRmlsZShzLHAsbmlsLDApO2lmIGUhPW5pbHtwYW5pYyhlKX07Zm9yIF8sZDo9cmFuZ2UgZi5EZWNsc3tpZiBmbixvazo9ZC4oKmFzdC5GdW5jRGVjbCk7b2t7bjo9cy5Qb3NpdGlvbihmbi5FbmQoKSkuTGluZS1zLlBvc2l0aW9uKGZuLlBvcygpKS5MaW5lKzE7aWYgbj41MHtmbXQuUHJpbnRmKCIlczolZCAlcyAlZFxuIixwLHMuUG9zaXRpb24oZm4uUG9zKCkpLkxpbmUsZm4uTmFtZS5OYW1lLG4pfX19fX0K",
+  "text_utf8": "package main\nimport(\"go/parser\";\"go/token\";\"go/ast\";\"fmt\";\"os\";\"strings\")\nfunc main(){b,_:=os.ReadFile(\"/tmp/world-iter221-product-eval-independent/changed-go.txt\");for _,p:=range strings.Split(string(b),\"\\n\"){s:=token.NewFileSet();f,e:=parser.ParseFile(s,p,nil,0);if e!=nil{panic(e)};for _,d:=range f.Decls{if fn,ok:=d.(*ast.FuncDecl);ok{n:=s.Position(fn.End()).Line-s.Position(fn.Pos()).Line+1;if n>50{fmt.Printf(\"%s:%d %s %d\\n\",p,s.Position(fn.Pos()).Line,fn.Name.Name,n)}}}}}\n"
+}

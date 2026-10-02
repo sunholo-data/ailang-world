@@ -1,0 +1,16 @@
+{
+  "command": "./scripts/verify_ail.sh",
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter221-verify",
+  "start_utc": "2026-10-02T11:32:48.478144+00:00",
+  "start_epoch": 1790940768.478163,
+  "ceiling_s": 1200,
+  "head": "a12fa14745855d27ed6efc94934469e67698b341",
+  "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+  "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+  "pid": 46541,
+  "pgid": 46541,
+  "deadline_epoch": 1790941968.478163,
+  "rc": 0,
+  "end_utc": "2026-10-02T11:32:54.215519+00:00",
+  "end_epoch": 1790940774.2155352
+}

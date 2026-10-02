@@ -50,7 +50,7 @@ and the controller's routing call was SPLIT:
   That objection — and with it the whole MCP half: the `/mcp/` handler,
   `initialize`/`tools/list`/`tools/call` dispatch, dispatch-bound envelope framing, SSE stream
   lifetime, and the MCP-specific acceptance criteria and mutations — is carried VERBATIM in the
-  child doc [`w-mcp-dispatch-projection.md`](w-mcp-dispatch-projection.md), which is honestly
+  child doc [`w-mcp-dispatch-projection.md`](../implemented/w-mcp-dispatch-projection.md), which is honestly
   BLOCKED on the upstream ask
   [`sunholo-data/ailang#885`](https://github.com/sunholo-data/ailang/issues/885) (re-measured this
   round: OPEN, 0 comments; control `#764` reads CLOSED with 6 comments — premise row N21).
@@ -74,7 +74,7 @@ Charter clause 6 names *"project the transition registry over MCP + publish the 
 After split #2, THIS DOC DELIVERS THE THREE ENABLING MILESTONES ONLY. Clause 6 is now
 partitioned across THREE docs: this parent (`P6.T`/`P6.D`/`P6.V` — the enablers BOTH children
 consume, blocked on nothing); child #1
-[`w-mcp-dispatch-projection.md`](w-mcp-dispatch-projection.md) — "project the transition
+[`w-mcp-dispatch-projection.md`](../implemented/w-mcp-dispatch-projection.md) — "project the transition
 registry over MCP", blocked UPSTREAM on `ailang#885`; and child #2
 [`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md) — "publish the A2A agent card" plus
 session-scoped A2A invocation, blocked LOCALLY on charter queue row 39 `w-session-authority`.
@@ -123,7 +123,7 @@ name. That boundary is now delivered by the two split children — the A2A surfa
 at `/.well-known/agent.json`, the A2A endpoint at `/a2a/`, and session-scoped invocation through
 propose → verify → commit) by [`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md),
 blocked on charter row 39, and the MCP surface by
-[`w-mcp-dispatch-projection.md`](w-mcp-dispatch-projection.md), blocked on the upstream dispatch
+[`w-mcp-dispatch-projection.md`](../implemented/w-mcp-dispatch-projection.md), blocked on the upstream dispatch
 seam (`ailang#885`). **This doc delivers the three enabling milestones** — toolchain floor,
 pinned dependency, verified commit-boundary law — that BOTH halves consume when they unblock.
 
@@ -514,7 +514,7 @@ never pre-landed.** It is carried by whichever child unblocks first:
 - [`w-a2a-session-projection.md`](../implemented/w-a2a-session-projection.md) — blocked on charter queue row 39
   `w-session-authority`; carries the admission as its milestone step 1 (its A2A handler import is
   the compile-visible use).
-- [`w-mcp-dispatch-projection.md`](w-mcp-dispatch-projection.md) — blocked on
+- [`w-mcp-dispatch-projection.md`](../implemented/w-mcp-dispatch-projection.md) — blocked on
   [`ailang#885`](https://github.com/sunholo-data/ailang/issues/885); carries it instead if it
   unblocks first.
 
@@ -654,7 +654,7 @@ has none. The child also adds a row-39-overlap entry the round-4 `catch` demande
   SSE stream lifetime and the route-local `ResponseController` relaxation, the cross-surface
   MCP≡A2A equality criterion (old AC3), old AC8's SSE-framing assertion, old AC14, and mutations
   `MUT-PLAIN-JSON`/`MUT-LEAK-SSE-CONN`/`MUT-SSE-REST-DEADLINE` are carried by
-  [`w-mcp-dispatch-projection.md`](w-mcp-dispatch-projection.md), blocked on `ailang#885`.
+  [`w-mcp-dispatch-projection.md`](../implemented/w-mcp-dispatch-projection.md), blocked on `ailang#885`.
 - **The A2A half of clause 6 — SPLIT OUT at split #2, not silently deferred.** P6.B-A2A,
   premises P2–P6, Decisions 3 and 4, the bounded-wait contract, acceptance criteria
   AC1–AC9/AC11–AC14 with their named mutations, and the projection conflict-surface entries are
@@ -896,7 +896,7 @@ carrying the measured closure numbers and the `a2a_handler.go` existence proof. 
 D-WORLD-5's prescribed default executing as written (a disallowed graph asks upstream, never a
 broad relaxation), the same route that produced `#764` → `v0.33.2`, and it is not a new human
 ask. The full problem statement, evidence table, and runnable blocking predicate live in
-[`w-mcp-dispatch-projection.md`](w-mcp-dispatch-projection.md); this parent tracks it only as
+[`w-mcp-dispatch-projection.md`](../implemented/w-mcp-dispatch-projection.md); this parent tracks it only as
 out-of-scope context (re-measured this round: OPEN, 0 comments — premise row N21).
 
 ## Open Decisions
@@ -1118,7 +1118,7 @@ quorumed at pick time when it unblocks (it is authored NOT quorum-cleared, and s
 **Where each round-3 objection went:**
 
 - `gpt5-6-sol` (DIRECTION-level, confirmed first-party) — **carried VERBATIM into the child**,
-  [`w-mcp-dispatch-projection.md`](w-mcp-dispatch-projection.md), as its opening problem
+  [`w-mcp-dispatch-projection.md`](../implemented/w-mcp-dispatch-projection.md), as its opening problem
   statement, with the measured both-routes-closed evidence and a runnable blocking predicate
   (the `#885` state/comment read plus the upstream release tag, each with a same-call control —
   re-measured this round: OPEN, 0 comments; latest release still `v0.33.2`; premise rows
@@ -1338,7 +1338,7 @@ no objection in five rounds.
 
 ## Related Documents
 
-- [w-mcp-dispatch-projection.md](w-mcp-dispatch-projection.md) — SPLIT child #1: carries the
+- [w-mcp-dispatch-projection.md](../implemented/w-mcp-dispatch-projection.md) — SPLIT child #1: carries the
   MCP dispatch half and the round-3 objection verbatim; blocked on `ailang#885`; NOT
   quorum-cleared
 - [w-a2a-session-projection.md](../implemented/w-a2a-session-projection.md) — SPLIT child #2: carries the A2A

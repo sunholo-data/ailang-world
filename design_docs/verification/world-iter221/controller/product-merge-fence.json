@@ -1,0 +1,31 @@
+{
+  "baseRefName": "dev",
+  "body": "Row 108 (clause 6, MCP dispatch projection). This is PR #173's final candidate code, unchanged, applied onto dev `daba577`, which includes the attended base-flake tranche (D-WORLD-51, attended 2026-10-02).\n\n**Why a new PR:** a commit-by-commit rebase of #173 conflicted only on loop record docs that dev already carries. #173 stays as the preserved historical candidate.\n\n**Evidence so far**\n- The exact `verify_ail.sh` \u2192 `verify_go.sh` profile, run 3 times on the rig with pinned v0.41.0: AIL 0 and Go 0 on all three runs. Each run also logged the 2 expected race-detector control warnings.\n- Dev with the tranche alone: CI 2/2 green (run 36990994741), and 3 local full-profile runs green.\n\n**Still required before merge (D-WORLD-49):** a fresh independent product review, and CI green on this PR.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n\nhttps://claude.ai/code/session_01GBpgZybzb9c9Vv57DSdJZc",
+  "headRefOid": "a12fa14745855d27ed6efc94934469e67698b341",
+  "isDraft": true,
+  "mergeStateStatus": "CLEAN",
+  "mergeable": "MERGEABLE",
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-02T09:53:39Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/36992316211/job/110791118559",
+      "name": "ailang-code verify gate",
+      "startedAt": "2026-10-02T09:52:53Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-02T10:01:08Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/36992316211/job/110791118307",
+      "name": "go host build + test gate",
+      "startedAt": "2026-10-02T09:52:58Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    }
+  ],
+  "title": "Row 108: MCP dispatch projection on the flake-fixed base"
+}

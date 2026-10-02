@@ -1,0 +1,1 @@
+Native Agent designer preferred glm-5.3 returned Unknown model. Rotation last-used codex:gpt-6.1-sol -> glm. D48 amended fallback actual native gpt-6.1-sol designer delivered readiness; no code or harness repair.

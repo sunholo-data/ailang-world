@@ -1,0 +1,7 @@
+{
+  "original_name": "late-cancel.diff",
+  "encoding": "base64",
+  "sha256": "e59291b3da222dd153382a9501dba8f4e3b7fc30f6cfed25b73e962593047d03",
+  "raw_base64": "ZGlmZiAtLWdpdCBhL2hvc3QvcHJvamVjdGlvbi9tY3AuZ28gYi9ob3N0L3Byb2plY3Rpb24vbWNwLmdvCmluZGV4IDRhYjk3ODEuLjNjMGU5NjAgMTAwNjQ0Ci0tLSBhL2hvc3QvcHJvamVjdGlvbi9tY3AuZ28KKysrIGIvaG9zdC9wcm9qZWN0aW9uL21jcC5nbwpAQCAtMTE3LDcgKzExNyw3IEBAIGZ1bmMgKGEgbWNwQWRhcHRlcikgSW52b2tlKGN0eCBjb250ZXh0LkNvbnRleHQsIHNlc3Npb24gcHJvdG9jb2wuU2Vzc2lvbiwgaW52IHByCiAJaWYgIWFsbG93ZWQgewogCQlyZXR1cm4gcHJvdG9jb2wuSW52b2NhdGlvblJlc3VsdHt9LCBlcnJvcnMuTmV3KCJwcm9qZWN0aW9uOiB0cmFuc2l0aW9uIGlzIG5vdCBhdXRob3JpemVkIikKIAl9Ci0JaWYgZXJyIDo9IGN0eC5FcnIoKTsgZXJyICE9IG5pbCB7CisJaWYgZXJyIDo9IGN0eC5FcnIoKTsgZmFsc2UgJiYgZXJyICE9IG5pbCB7CiAJCXJldHVybiBwcm90b2NvbC5JbnZvY2F0aW9uUmVzdWx0e30sIGVycgogCX0KIAlpZiBhLmguY29vcmQgPT0gbmlsIHsK",
+  "text_utf8": "diff --git a/host/projection/mcp.go b/host/projection/mcp.go\nindex 4ab9781..3c0e960 100644\n--- a/host/projection/mcp.go\n+++ b/host/projection/mcp.go\n@@ -117,7 +117,7 @@ func (a mcpAdapter) Invoke(ctx context.Context, session protocol.Session, inv pr\n \tif !allowed {\n \t\treturn protocol.InvocationResult{}, errors.New(\"projection: transition is not authorized\")\n \t}\n-\tif err := ctx.Err(); err != nil {\n+\tif err := ctx.Err(); false && err != nil {\n \t\treturn protocol.InvocationResult{}, err\n \t}\n \tif a.h.coord == nil {\n"
+}

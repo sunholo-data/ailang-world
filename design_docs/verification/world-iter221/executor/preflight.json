@@ -1,0 +1,115 @@
+{
+  "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
+  "pin_version": {
+    "argv": [
+      "/Users/voightkampff/.pinned-ailang/ailang",
+      "--version"
+    ],
+    "rc": 0,
+    "stdout": "AILANG v0.41.0\nCommit: 24ee108\nFull:   24ee1088776e21cd06a3781ed18e77f40be06db3\nBuilt:  2026-09-21T15:50:02Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026\n",
+    "stderr": ""
+  },
+  "pin_sha256": {
+    "argv": [
+      "shasum",
+      "-a",
+      "256",
+      "/Users/voightkampff/.pinned-ailang/ailang"
+    ],
+    "rc": 0,
+    "stdout": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f  /Users/voightkampff/.pinned-ailang/ailang\n",
+    "stderr": ""
+  },
+  "go": {
+    "argv": [
+      "go",
+      "version"
+    ],
+    "rc": 0,
+    "stdout": "go version go1.26.6 darwin/arm64\n",
+    "stderr": ""
+  },
+  "go_env": {
+    "argv": [
+      "go",
+      "env",
+      "GOVERSION",
+      "GOOS",
+      "GOARCH",
+      "GOTOOLCHAIN"
+    ],
+    "rc": 0,
+    "stdout": "go1.26.6\ndarwin\narm64\nauto\n",
+    "stderr": ""
+  },
+  "worktrees": {
+    "base": {
+      "head": {
+        "argv": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "rc": 0,
+        "stdout": "daba57776ca35b27f36802e162da9b2a9d46bea8\n",
+        "stderr": ""
+      },
+      "status": {
+        "argv": [
+          "git",
+          "status",
+          "--porcelain"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "ancestry": {
+        "argv": [
+          "git",
+          "merge-base",
+          "--is-ancestor",
+          "daba57776ca35b27f36802e162da9b2a9d46bea8",
+          "HEAD"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    "verify": {
+      "head": {
+        "argv": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "rc": 0,
+        "stdout": "a12fa14745855d27ed6efc94934469e67698b341\n",
+        "stderr": ""
+      },
+      "status": {
+        "argv": [
+          "git",
+          "status",
+          "--porcelain"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "ancestry": {
+        "argv": [
+          "git",
+          "merge-base",
+          "--is-ancestor",
+          "daba57776ca35b27f36802e162da9b2a9d46bea8",
+          "HEAD"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    }
+  }
+}
