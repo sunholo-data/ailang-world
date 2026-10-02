@@ -151,8 +151,9 @@ command -v python3 >/dev/null 2>&1 || {
 
 # ── Hardcoded gate policy (NOT env-overridable) ───────────────────────────────
 # The manifest is keyed by (repo-relative module file, bare function name): ai-check emits BARE
-# names in verify.results[].function (V17). Sketches carry EMPTY required sets and are excluded from
-# the total, so a future contracted sketch can neither mask a required identity nor perturb the total.
+# names in verify.results[].function (V17). Sketches are excluded from the world/ total, so a
+# contracted sketch can neither mask a required identity nor perturb the total. Sketches carry EMPTY
+# required sets except design_docs/sketches/effectplan.ail, whose plan-law proofs are gated by name.
 GATE_LEG_TIMEOUT_S=120   # wall-clock cap per ai-check module leg (Standing Rule 6, V26)
 GATE_TEST_TIMEOUT_S=180  # wall-clock cap for the directory-mode test leg (V26)
 export GATE_LEG_TIMEOUT_S GATE_TEST_TIMEOUT_S
@@ -168,6 +169,7 @@ ROOTS=(
 # the sweep's $mod key.
 LEG1_MODULES=(
   design_docs/sketches/effectbroker.ail
+  design_docs/sketches/effectplan.ail
   design_docs/sketches/logepoch.ail
   design_docs/sketches/storejournal.ail
   design_docs/sketches/transitions.ail
@@ -308,6 +310,13 @@ REQUIRED_VERIFIED = {
     "world/logepoch.ail":    {"sameRef", "servesEntry"},
     "world/types.ail":       {"gradeOf", "timeoutOutcome", "timeoutFiredLegally",
                              "validEscalation", "validDefer", "wellFormedSchedule"},
+    # The effect-plan law (queue row 134 M1): Go parsePlan mirrors these, bound by
+    # host/coordinator/effectplan_drift_test.go. A sketch, so excluded from the world/
+    # total below: this set gates the sketch's own proofs without moving the S8 floor.
+    "design_docs/sketches/effectplan.ail": {
+        "effectCountOk", "idLengthOk", "idByteOk", "idsDistinct", "requirementMatches",
+        "payloadSizeOk", "reservedOutputKey", "finishKeyAllowed", "resultPresenceOk",
+        "finishNeedsEffect", "effectLawfulAgainst", "planShapeLawful"},
 }
 try:
     with open(sys.argv[2]) as fh:
@@ -325,7 +334,7 @@ if verify.get("errors", 0) > 0:
 if verify.get("counterexample", 0) > 0:
     sys.stderr.write("✗ %s: verify.counterexample == %s\n" % (mod, verify.get("counterexample"))); sys.exit(1)
 
-# Required identities (world/ modules only; sketches carry empty sets).
+# Required identities (world/ modules, plus the effectplan sketch; other sketches carry empty sets).
 required = REQUIRED_VERIFIED.get(mod, set())
 by_fn = {r.get("function"): r.get("status") for r in verify.get("results", [])}
 for fn in sorted(required):

@@ -1,0 +1,239 @@
+module sketches/effectplan
+
+import std/string (length as strLength)
+
+-- Compiler-checked M1 sketch for w-software-engineering-domain (queue row
+-- 134, D-WORLD-53): the PLAN LAWS of the world/effect-plan/v1 object a pure
+-- effectful transition emits in its plan phase. The coordinator enforces them
+-- in Go (host/coordinator/effectplan.go, parsePlan/parseFinish); this sketch
+-- is the specification the Go mirror transcribes, exactly as effectbroker.ail
+-- is for host/broker. host/coordinator/effectplan_drift_test.go reads THIS
+-- file, evaluates every inline test row below through the Go mirror of the
+-- same name, and fails if a law here has no Go mirror (or the reverse), so the
+-- two cannot drift.
+--
+-- What is NOT here, and why: JSON well-formedness, the closed key set of the
+-- plan/effect objects, and canonical re-encoding are properties of the JSON
+-- codec, not of the law, and live only in Go. L5 is reserved (multi-effect
+-- ordering, residual R-SE-10). L-ARGS belongs to each tool's own plan phase
+-- (packages/se-tools, M5), because only the tool knows its argument schema.
+
+-- A declared effect requirement (mirrors transitionreg.EffectRequirement).
+export type Requirement = {
+  effect: string,
+  scope: string,
+  cost: int
+}
+
+-- One planned effect, as the law sees it: its id, its authority triple, and
+-- the byte length of its canonically re-encoded payload object.
+export type PlannedEffect = {
+  id: string,
+  effect: string,
+  scope: string,
+  cost: int,
+  payloadBytes: int
+}
+
+-- L1: a v1 plan carries at most ONE effect (one call, one deadline, V47;
+-- multi-effect plans are residual R-SE-10).
+export func effectCountOk(n: int) -> bool ! {}
+ensures { result == (n >= 0 && n <= 1) }
+tests [
+  (0, true),
+  (1, true),
+  (2, false),
+  (-1, false)
+]
+{
+  n >= 0 && n <= 1
+}
+
+-- L2 (grammar, length half): an effect id is 1..16 bytes.
+export func idLengthOk(id: string) -> bool ! {}
+ensures { result == (strLength(id) >= 1 && strLength(id) <= 16) }
+tests [
+  ("e1", true),
+  ("abcdefghijklmnop", true),
+  ("abcdefghijklmnopq", false),
+  ("", false)
+]
+{
+  strLength(id) >= 1 && strLength(id) <= 16
+}
+
+-- L2 (grammar, alphabet half): every id byte is in [a-z0-9]. Stated over one
+-- byte code because a per-character quantifier over a string is outside the
+-- decidable fragment; the Go mirror applies it to every byte of the id.
+export func idByteOk(c: int) -> bool ! {}
+ensures { result == ((c >= 48 && c <= 57) || (c >= 97 && c <= 122)) }
+tests [
+  (48, true),
+  (57, true),
+  (97, true),
+  (122, true),
+  (47, false),
+  (58, false),
+  (96, false),
+  (123, false),
+  (65, false),
+  (45, false)
+]
+{
+  (c >= 48 && c <= 57) || (c >= 97 && c <= 122)
+}
+
+-- L2 (uniqueness): two effects of one plan never share an id.
+export func idsDistinct(a: string, b: string) -> bool ! {}
+ensures { result == (a != b) }
+tests [
+  (("e1", "e2"), true),
+  (("e1", "e1"), false)
+]
+{
+  a != b
+}
+
+-- L3 (one requirement): a planned effect is declared by a requirement EXACTLY
+-- when the whole (effect, scope, cost) triple is equal. Not a budget check:
+-- cost identity with the descriptor's declaration is the law here; the
+-- broker's own cost <= budget law (effectbroker.ail) applies later.
+export func requirementMatches(d: Requirement, e: PlannedEffect) -> bool ! {}
+ensures { result == (d.effect == e.effect && d.scope == e.scope && d.cost == e.cost) }
+tests [
+  (({ effect: "Workspace.Read", scope: "worktree", cost: 1 },
+    { id: "e1", effect: "Workspace.Read", scope: "worktree", cost: 1, payloadBytes: 2 }), true),
+  (({ effect: "Workspace.Read", scope: "worktree", cost: 1 },
+    { id: "e1", effect: "Workspace.Write", scope: "worktree", cost: 1, payloadBytes: 2 }), false),
+  (({ effect: "Workspace.Read", scope: "worktree", cost: 1 },
+    { id: "e1", effect: "Workspace.Read", scope: "/", cost: 1, payloadBytes: 2 }), false),
+  (({ effect: "Workspace.Read", scope: "worktree", cost: 1 },
+    { id: "e1", effect: "Workspace.Read", scope: "worktree", cost: 0, payloadBytes: 2 }), false)
+]
+{
+  d.effect == e.effect && d.scope == e.scope && d.cost == e.cost
+}
+
+-- L3 (the set): a planned effect is admissible when SOME declared requirement
+-- matches it. Recursive over the declared list, so outside the decidable
+-- fragment: TESTS-ONLY, and its only decision is the proven
+-- requirementMatches above (the contracts.ail anti-drift pattern).
+export func declaredContains(ds: [Requirement], e: PlannedEffect) -> bool
+tests [
+  (([{ effect: "Ailang.Check", scope: "worktree", cost: 1 },
+     { effect: "Workspace.Read", scope: "worktree", cost: 1 }],
+    { id: "e1", effect: "Workspace.Read", scope: "worktree", cost: 1, payloadBytes: 2 }), true),
+  (([{ effect: "Workspace.Read", scope: "worktree", cost: 1 }],
+    { id: "e1", effect: "Workspace.Write", scope: "worktree", cost: 1, payloadBytes: 2 }), false),
+  (([],
+    { id: "e1", effect: "Workspace.Read", scope: "worktree", cost: 1, payloadBytes: 2 }), false)
+]
+{
+  match ds {
+    [] => false,
+    d :: rest => requirementMatches(d, e) || declaredContains(rest, e)
+  }
+}
+
+-- L4 (size): a canonically re-encoded payload object is at most 1 MiB.
+export func payloadSizeOk(n: int) -> bool ! {}
+ensures { result == (n >= 0 && n <= 1048576) }
+tests [
+  (2, true),
+  (1048576, true),
+  (1048577, false),
+  (-1, false)
+]
+{
+  n >= 0 && n <= 1048576
+}
+
+-- L6: the key `world` is reserved in every transition and handler output; the
+-- coordinator alone writes it.
+export func reservedOutputKey(k: string) -> bool ! {}
+ensures { result == (k == "world") }
+tests [
+  ("world", true),
+  ("ok", false),
+  ("World", false)
+]
+{
+  k == "world"
+}
+
+-- L6: a finish output may carry any key except the reserved `world` and
+-- `effects` (a finish phase cannot request effects).
+export func finishKeyAllowed(k: string) -> bool ! {}
+ensures { result == (k != "world" && k != "effects") }
+tests [
+  ("passed", true),
+  ("effects", false),
+  ("world", false)
+]
+{
+  k != "world" && k != "effects"
+}
+
+-- L7: a plan with zero effects carries a non-null result object (a pure
+-- refusal must reach the caller); a plan with effects carries none.
+export func resultPresenceOk(n: int, hasResult: bool) -> bool ! {}
+ensures { result == ((n == 0) == hasResult) }
+tests [
+  ((0, true), true),
+  ((0, false), false),
+  ((1, false), true),
+  ((1, true), false)
+]
+{
+  (n == 0) == hasResult
+}
+
+-- L7 (finish half): a finish round consumes effect results, so only a plan
+-- with at least one effect may ask for it.
+export func finishNeedsEffect(n: int, finish: bool) -> bool ! {}
+ensures { result == ((not finish) || n > 0) }
+tests [
+  ((0, false), true),
+  ((1, true), true),
+  ((0, true), false)
+]
+{
+  (not finish) || n > 0
+}
+
+-- One planned effect is lawful under L2 (length) and L4 against one
+-- requirement under L3. Body INLINED (the isValidNextWorld/effectAllowed
+-- pattern), so the exact ensures restates the per-effect laws and drift
+-- between them is impossible by proof.
+export func effectLawfulAgainst(d: Requirement, e: PlannedEffect) -> bool ! {}
+ensures { result == (strLength(e.id) >= 1 && strLength(e.id) <= 16
+  && d.effect == e.effect && d.scope == e.scope && d.cost == e.cost
+  && e.payloadBytes >= 0 && e.payloadBytes <= 1048576) }
+tests [
+  (({ effect: "Workspace.Read", scope: "worktree", cost: 1 },
+    { id: "e1", effect: "Workspace.Read", scope: "worktree", cost: 1, payloadBytes: 2 }), true),
+  (({ effect: "Workspace.Read", scope: "worktree", cost: 1 },
+    { id: "e1", effect: "Workspace.Read", scope: "worktree", cost: 1, payloadBytes: 1048577 }), false),
+  (({ effect: "Workspace.Read", scope: "worktree", cost: 1 },
+    { id: "", effect: "Workspace.Read", scope: "worktree", cost: 1, payloadBytes: 2 }), false)
+]
+{
+  strLength(e.id) >= 1 && strLength(e.id) <= 16
+    && d.effect == e.effect && d.scope == e.scope && d.cost == e.cost
+    && e.payloadBytes >= 0 && e.payloadBytes <= 1048576
+}
+
+-- The plan-level laws composed: L1, L7 and its finish half. Body INLINED.
+export func planShapeLawful(n: int, hasResult: bool, finish: bool) -> bool ! {}
+ensures { result == (n >= 0 && n <= 1 && ((n == 0) == hasResult) && ((not finish) || n > 0)) }
+tests [
+  ((0, true, false), true),
+  ((1, false, false), true),
+  ((1, false, true), true),
+  ((2, false, false), false),
+  ((0, false, false), false),
+  ((0, true, true), false)
+]
+{
+  n >= 0 && n <= 1 && ((n == 0) == hasResult) && ((not finish) || n > 0)
+}

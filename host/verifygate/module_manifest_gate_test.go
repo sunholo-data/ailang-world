@@ -82,8 +82,8 @@ func newIsolatedGateRoot(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if files != 13 || ailFiles != 11 {
-		t.Fatalf("isolated copy landed %d files / %d .ail files, want 13 / 11", files, ailFiles)
+	if files != 14 || ailFiles != 12 {
+		t.Fatalf("isolated copy landed %d files / %d .ail files, want 14 / 12", files, ailFiles)
 	}
 	return root
 }
@@ -125,7 +125,7 @@ func requirePristineControl(t *testing.T, root string) string {
 	rc, out := runGateAt(t, root, map[string]string{
 		"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
 	})
-	const marker = "✓ 16/16 required world/ identities verified across 11 module(s)"
+	const marker = "✓ 16/16 required world/ identities verified across 12 module(s)"
 	if !strings.Contains(out, marker) {
 		t.Fatalf("pristine isolated control missing %q (rc=%d)\n%s", marker, rc, out)
 	}
@@ -170,8 +170,8 @@ func requireLiveTreeUntouched(t *testing.T) {
 func TestModuleManifestRejectsStrayModule(t *testing.T) {
 	root := newIsolatedGateRoot(t)
 	control := requirePristineControl(t, root)
-	if got := strings.Count(control, "\n   ai-check "); got != 11 {
-		t.Fatalf("pristine control emitted %d ai-check lines, want 11", got)
+	if got := strings.Count(control, "\n   ai-check "); got != 12 {
+		t.Fatalf("pristine control emitted %d ai-check lines, want 12", got)
 	}
 	probe := filepath.Join(root, "world", "_stray_manifest_probe.ail")
 	const source = "module world/_stray_manifest_probe\n\nexport func strayId(x: int) -> int = x\n"
@@ -236,6 +236,37 @@ func TestModuleManifestRejectsCaseVariantExtension(t *testing.T) {
 	requireLiveTreeUntouched(t)
 }
 
+// TestEffectPlanSketchIdentityIsRequired is row 134 AC1.2's mutation: the
+// effect-plan sketch's proofs are gated BY NAME, so dropping one contract (here
+// L4's payloadSizeOk ensures) leaves the module compiling but reds the gate on
+// the vanished identity — it is not absorbed by the world/-only total.
+func TestEffectPlanSketchIdentityIsRequired(t *testing.T) {
+	root := newIsolatedGateRoot(t)
+	requirePristineControl(t, root)
+	target := filepath.Join(root, "design_docs", "sketches", "effectplan.ail")
+	raw, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const contract = "ensures { result == (n >= 0 && n <= 1048576) }\n"
+	if n := strings.Count(string(raw), contract); n != 1 {
+		t.Fatalf("payloadSizeOk contract anchor count=%d, want 1", n)
+	}
+	if err := os.WriteFile(target, []byte(strings.Replace(string(raw), contract, "", 1)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	rc, out := runGateAt(t, root, map[string]string{
+		"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
+	})
+	if rc != 1 || !strings.Contains(out, "payloadSizeOk) MISSING from verify.results[]") {
+		t.Fatalf("dropped effectplan contract not refused by name: rc=%d\n%s", rc, out)
+	}
+	if strings.Contains(out, "verify gate PASSED") {
+		t.Fatalf("dropped effectplan contract printed terminal success\n%s", out)
+	}
+	requireLiveTreeUntouched(t)
+}
+
 func TestModuleManifestRejectsDeletedModule(t *testing.T) {
 	root := newIsolatedGateRoot(t)
 	requirePristineControl(t, root)
@@ -257,6 +288,7 @@ func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
 	requirePristineControl(t, root)
 	const old = `LEG1_MODULES=(
   design_docs/sketches/effectbroker.ail
+  design_docs/sketches/effectplan.ail
   design_docs/sketches/logepoch.ail
   design_docs/sketches/storejournal.ail
   design_docs/sketches/transitions.ail
