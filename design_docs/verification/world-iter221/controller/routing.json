@@ -52,6 +52,15 @@
       "judge_independence": "same-model-fresh-context",
       "tokens": "not reported",
       "ticket": "inbox_1790940942986_40646a80"
+    },
+    "record_evaluator": {
+      "preferred": "sonnet",
+      "native_error": "Unknown model `sonnet` already measured this iteration",
+      "fallback": "gpt-6.1-sol",
+      "task": "/root/record_evaluator",
+      "judge_independence": "same-model-fresh-context FLAG",
+      "status": "ADMIN PASS80/100 zero blocking on466f138",
+      "tokens": "not reported"
     }
   },
   "metered_dollars": 0,
