@@ -1,0 +1,19 @@
+{
+  "command": "go test ./host/daemon -run '^TestCommitBudgetAndUncertainReconcile$/^ii_A_landed_uncertain_then_B_on_top$' -count=1",
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-base",
+  "start_utc": "2026-10-02T07:31:27.553494+00:00",
+  "end_utc": "2026-10-02T07:31:28.779325+00:00",
+  "duration_seconds": 1.225849875016138,
+  "rc": 0,
+  "terminal_state": "COMPLETED",
+  "raw_sha256": "c063a23d6db84d0d8f7e9c4132eb65b82cb8c5261c5e8920b43bf16f1a3d3936",
+  "raw_bytes": 61,
+  "raw_artifact": "base-compare-4.log",
+  "process_group": 96441,
+  "timeout_cleanup": "not needed",
+  "head": "c5c40f3e05dad27b7591ca494bfeea2e7f1920bd",
+  "pins": {
+    "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+    "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+  }
+}

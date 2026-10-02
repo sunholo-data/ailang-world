@@ -1,17 +1,16 @@
-# World mission dashboard — iteration218, 2026-10-02
-
-- Release: world/core0.1.0; 0.1.1 ready but ATTENDED publish only (D45A fresh store).
-- Goal1.0: clauses1/2/3/7 MET; 4/5/6 UNMET; goal unmoved.
-- Row108: five-milestone MCP candidate only in DRAFT PR #173; unmerged; judges FAIL49/54/59.
-- Iteration218: critical path ALL-BLOCKED on D-WORLD-49 (OPEN, default B in force).
-- Default B: defer108 for attended review; no fourth repair/review round; no side work.
-- Order ruled D46A: 108 → 114 scoped revision/quorum → 93 floor after 108 LANDS.
-- 114 waits after108; 93 needs108 landed; standing rule (d) = blocked means stop.
-- Parked on Mark: D-WORLD-49 — A bounded verified-fixture follow-up (recommended)
-  vs B defer (current default until answered).
-- 127/128 deferred (D47=B), never outrank; 94 M6 publish attended.
-- Iteration218 kind: bookkeeping-only block report; no product roles spawned; ADMIN.
-- Record: independent record evaluation, verdict banked in log/verification/world-iter218.
-- Loop: one scheduled iteration; bookkeeping issue159; dev CI green at f383818 (2/2).
-- Routing: controller pi:ollama/glm-5.3:cloud; evaluator recipe claude:claude-sonnet-4-6.
-- Metered $0.00 product spend; no quota consumed by product roles this fire.
+# World mission dashboard — iteration 220, 2026-10-02
+Latest release: world/core@0.1.0; 0.1.1 preparation landed, publish attended from fresh store (D45A).
+World 1.0: clauses 1/2/3/7 MET; 4/5/6 UNMET. Goal unmoved.
+Row108 bounded D49A followup spent: eight targeted comparisons PASS; exact full Go profiles RED.
+Product PR173 stays DRAFT/unmerged; no source or fixture changes in this followup.
+Independent product evaluator: fresh separate GPT6.1Sol context; verdict pending in evidence.
+Critical path: 108 → 114 → 93 (D46A). 114 waits; 93 requires108 landed.
+Parked on Mark: D51 further diagnosis/defer; D50 private credential review recovered from219.
+Unanswered D51 immediately defers108; no bar-neutral side work.
+D49 remains RESOLVED A, not reopened. D48 amended: never Astra.
+Rows127/128 deferred D47B; supporting-hunk residual132 does not outrank critical path.
+Cadence: nominal four-hour launchd loop; active bounded keepalive while owned work runs.
+Routing: native Agent roles; unavailable GLM/Opus/Sonnet explicitly flagged, all actual GPT6.1Sol.
+Quota: subscription codex; tokens not reported for any native role, metered $0; no reset credit.
+Bookkeeping: issue159. Full memory: charter STATUS, mission log, verification/world-iter220.
+Record isolated from dev Stop-hook autopush; independent ADMIN review and SHA-fenced CI required.

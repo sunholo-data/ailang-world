@@ -1,0 +1,42 @@
+{
+  "iteration": 220,
+  "controller": "codex:gpt-6.1-sol",
+  "base": "c5c40f3e05dad27b7591ca494bfeea2e7f1920bd",
+  "base_read_utc": "2026-10-02T07:23:31Z",
+  "transport": "native Agent via collaboration.spawn_agent, explicitly required by unattended operator; overrides provider recipe transport",
+  "token_usage": "not reported by native harness",
+  "metered_usd": 0,
+  "roles": {
+    "designer": {
+      "rotation_last_used": "codex:gpt-6.1-sol",
+      "preferred": "pi:ollama/glm-5.3:cloud",
+      "resolver": "recipe pi:ollama/glm-5.3:cloud declared:provider-pin",
+      "spawn_error": "Unknown model glm-5.3",
+      "actual": "gpt-6.1-sol",
+      "agent": "/root/designer",
+      "ticket": "inbox_1790926266767_b866916d"
+    },
+    "planner": {
+      "derive": "opus fail-closed:planner-lane-field-invalid",
+      "resolver": "agent-tool opus fail-closed:planner-lane-field-invalid",
+      "spawn_error": "Unknown model opus",
+      "actual": "gpt-6.1-sol",
+      "agent": "/root/planner",
+      "ticket": "inbox_1790926268217_483503c4"
+    },
+    "executor": {
+      "resolver": "recipe codex:gpt-6.1-sol declared:provider-pin",
+      "actual": "gpt-6.1-sol",
+      "agent": "/root/executor"
+    },
+    "evaluator": {
+      "resolver": "agent-tool sonnet declared:alias-pin",
+      "spawn_error": "Unknown model sonnet",
+      "fallback": "gpt-6.1-sol in a fresh separate Agent context per amended D48",
+      "judge_independence": "same-model-fresh-context FLAG",
+      "ticket": "inbox_1790926267503_28b47a99"
+    }
+  },
+  "policy_changes": "none; Astra never spawned this iteration",
+  "runtime_rules": "resolved authoritative skill and all12 resources byte-match fleet origin/dev; no CWD copy exists; heartbeat/base helpers invoked via absolute fleet path, no fleet file modified"
+}

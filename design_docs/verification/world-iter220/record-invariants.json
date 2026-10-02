@@ -1,0 +1,15 @@
+{
+  "base": "c5c40f3e05dad27b7591ca494bfeea2e7f1920bd@2026-10-02T07:45:10Z",
+  "protected_pre_sha256": "396ed31a58c047045b82e2580ed90dd7e3f67192b30ff64985fd34863fe37114",
+  "old_charter_lines": 6075,
+  "new_charter_lines": 6081,
+  "status_count": 3,
+  "archived_stamp": "## STATUS 2026-10-01 (iteration 216)",
+  "existing_ledger_rows_preserved": true,
+  "new_decisions": [
+    "D-WORLD-50",
+    "D-WORLD-51"
+  ],
+  "queue_changes": "append-only current108 outcome + fleet ticket recurrences/133",
+  "rotation": "CLI registry missing from World cwd; explicit row118 forbids fleet cwd rotation; manual index under existing profile, no harness repair"
+}

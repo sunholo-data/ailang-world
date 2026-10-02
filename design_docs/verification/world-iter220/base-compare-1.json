@@ -1,0 +1,19 @@
+{
+  "command": "go test ./cmd/ailang-worldd -run '^TestCLIRealSubprocessEpisode$' -count=1",
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-base",
+  "start_utc": "2026-10-02T07:31:21.745499+00:00",
+  "end_utc": "2026-10-02T07:31:24.731368+00:00",
+  "duration_seconds": 2.985875249840319,
+  "rc": 0,
+  "terminal_state": "COMPLETED",
+  "raw_sha256": "50ff33b161894781b378c44dca9a949111d44ee4b28514ebcefd25710b3a6bdd",
+  "raw_bytes": 67,
+  "raw_artifact": "base-compare-1.log",
+  "process_group": 96093,
+  "timeout_cleanup": "not needed",
+  "head": "c5c40f3e05dad27b7591ca494bfeea2e7f1920bd",
+  "pins": {
+    "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+    "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang"
+  }
+}
