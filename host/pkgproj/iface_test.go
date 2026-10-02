@@ -216,9 +216,21 @@ func TestQueryInterfaceTimesOutOnAHangingBinary(t *testing.T) {
 // The direct child (sh) is killed at the deadline; its descendant keeps the
 // inherited stdout open. WaitDelay must release Wait anyway. The descendant is
 // NOT killed by this code (no process group) - asserted, then reaped here.
+//
+// Precondition: the descendant must exist when the deadline fires, and the
+// deadline starts at queryInterface entry. Measured on this macOS host, the
+// FIRST exec of a freshly written executable costs ~100-170 ms where a re-exec
+// of the same file costs ~10 ms (both at load average ~250), and under
+// concurrent fresh-exec load the first exec reached seconds: a probe saw 94/192
+// fake binaries not run their first line within 8 s, while the first-line ->
+// pid gap stayed <= 7 ms in all 192. The 3 s bound was then measuring exec
+// admission of a new file, not the code under test. So the double is exec'd
+// once ("warm", with its own generous bound) BEFORE the timed call, which is
+// then a re-exec.
 func TestQueryInterfaceReturnsWhileADescendantHoldsStdout(t *testing.T) {
 	pidFile := filepath.Join(t.TempDir(), "pid")
-	bin := fakeBinary(t, "sleep 30 &\necho $! > '"+pidFile+"'\nwait\n")
+	bin := fakeBinary(t, "[ \"$1\" = warm ] && exit 0\nsleep 30 &\necho $! > '"+pidFile+"'\nwait\n")
+	warmFakeBinary(t, bin)
 	err, took := runWithin(t, guard, func() error {
 		_, err := queryInterface(boundedTestContext(t), t.TempDir(), worldCore, bin, tinyBounds)
 		return err
@@ -227,6 +239,9 @@ func TestQueryInterfaceReturnsWhileADescendantHoldsStdout(t *testing.T) {
 	if !errors.As(err, &te) {
 		t.Fatalf("want QueryTimeoutError, got %v", err)
 	}
+	// sh is dead once queryInterface returns (killed, then waited), so a pid
+	// file present now was written before the kill: the descendant existed,
+	// holding stdout, when the deadline fired.
 	raw, rerr := os.ReadFile(pidFile)
 	if rerr != nil {
 		t.Fatalf("instrument: descendant pid not recorded: %v", rerr)
@@ -235,6 +250,20 @@ func TestQueryInterfaceReturnsWhileADescendantHoldsStdout(t *testing.T) {
 	alive := exec.Command("kill", "-0", pid).Run() == nil
 	t.Logf("descendant: named timeout after %s; descendant pid %s alive after return: %v", took, pid, alive)
 	_ = exec.Command("kill", "-9", pid).Run()
+}
+
+// warmFakeBinary execs a fake binary once with the single argument "warm"
+// (the double must exit 0 on it), so the first-exec cost of a new file is paid
+// outside any bound under test.
+func warmFakeBinary(t *testing.T, bin string) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	start := time.Now()
+	if out, err := exec.CommandContext(ctx, bin, "warm").CombinedOutput(); err != nil {
+		t.Fatalf("instrument: warm-up exec of %s: %v %q", bin, err, out)
+	}
+	t.Logf("warm-up exec took %s", time.Since(start))
 }
 
 func TestQueryInterfaceCapsStdout(t *testing.T) {
