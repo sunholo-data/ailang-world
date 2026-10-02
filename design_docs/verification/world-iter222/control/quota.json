@@ -1,0 +1,16 @@
+{
+  "state": "ok",
+  "reason": "provider-reported Codex account usage is within ration",
+  "observed_at": "2026-10-02T15:34:37.66887Z",
+  "source": "codex app-server account/rateLimits/read",
+  "windows": [
+    {
+      "used_percent": 94,
+      "window_minutes": 10080,
+      "resets_at": "2026-10-03T17:29:29Z",
+      "allowance_percent": 94.64760853472222
+    }
+  ],
+  "reset_credits_used": false,
+  "native_role_tokens": "not reported"
+}

@@ -1,0 +1,28 @@
+{
+  "harness_share_last20": {
+    "numerator": 0,
+    "denominator": 20
+  },
+  "last3_product_landings": [
+    {
+      "iteration": 221,
+      "moved_unmet_clause": 6,
+      "sha": "7adfbbe8610e1da129b4fb6cd98308ec7ca9e037"
+    },
+    {
+      "iteration": 214,
+      "moved_unmet_clause": null
+    },
+    {
+      "iteration": 213,
+      "moved_unmet_clause": null
+    }
+  ],
+  "drift_alarm": false,
+  "new_human_ask": "D-WORLD-52",
+  "routing_policy_change": false,
+  "harness_repair": false,
+  "weekly_issue_rotation_owed": false,
+  "sweep_last207": true,
+  "live_log_count": 20
+}

@@ -1,0 +1,1 @@
+[{"headRefName":"sprint/world-iter217-mcp","mergeable":"CONFLICTING","number":173,"title":"Preserve MCP dispatch candidate pending verification acceptance"},{"headRefName":"design-row114-kimi-20260930","mergeable":"MERGEABLE","number":166,"title":"docs: park row114 unseeded provenance protocol after quorum"}]

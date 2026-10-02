@@ -1,0 +1,2 @@
+filed [harness] agent-tool:opus-planner-unavailable · world#222 → mission-fleet (id inbox_1790955294720_106e6d06)
+2026/10/02 17:34:54 package agents: derived 9 inbox agent(s) from the registry index: pkg-sunholo-decisions, pkg-sunholo-discord, pkg-sunholo-economic, pkg-sunholo-eparse, pkg-sunholo-gemini-agents, pkg-sunholo-gmail, pkg-sunholo-oauth, pkg-sunholo-relativity, pkg-world-core

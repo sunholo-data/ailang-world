@@ -1,0 +1,4 @@
+design-quorum: author codex:gpt-6.1-sol — seated gemini-3-1-pro,oc-glm-5-3,oc-kimi-k3; reserve claude-sonnet-5@claude-p; sitting out gpt6-1-sol
+models registry: source=embedded version=0e75afabca5aff4a
+GOOGLE_CLOUD_LOCATION is unset; using deprecated default global. Set GOOGLE_CLOUD_LOCATION. v1.0.0 will refuse to start without it.
+quorum artifact: design_docs/verification/world-iter222/quorum/w-provenance-teeth-unseeded-baselined-walk-2026-10-02T15-33-08Z.json

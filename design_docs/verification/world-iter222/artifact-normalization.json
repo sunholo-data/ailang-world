@@ -1,0 +1,7 @@
+{
+  "original_path": "design_docs/verification/world-iter222/control/claim-read.json",
+  "banked_path": "design_docs/verification/world-iter222/control/claim-read.txt",
+  "sha256": "4337eafcb3791bcf39bd4083982ba446bbd458070eac15e126e985da123a4976",
+  "reason": "CLI message read receipt includes display text outside JSON; bytes preserved, executor historical check correctly flagged invalid original suffix",
+  "lossless": true
+}

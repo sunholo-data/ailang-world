@@ -1,0 +1,16 @@
+{
+  "base": "03ea641884327045ac59754d9fc25ed046066d7d",
+  "base_time": "2026-10-02T15:22:40Z",
+  "local": "daba57776ca35b27f36802e162da9b2a9d46bea8",
+  "billing": "CLEAN",
+  "skill_files": "SKILL.md + 12 resources MATCH fleet origin/dev",
+  "inbox": "mission-world unread null; controlplane positive populated",
+  "directives": "0 of38 since08:31:59Z (older than actual watermark12:35:20; no duplicate hits)",
+  "main_untracked_hash": "906b869c481c7bf3f8ab3b50913a0f329dcfada864c3766ea6ceb16f8ba47c19",
+  "initial_heartbeat": "absolute helper used, after some read-only initial observations; not timely claimed",
+  "check_instrument_error": "jq expected object got number; corrected endpoint checks2/2SUCCESS",
+  "roles": {
+    "designer_preferred_error": "Unknown model glm-5.3",
+    "designer_actual": "native gpt-6.1-sol"
+  }
+}

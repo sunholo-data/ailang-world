@@ -1,0 +1,156 @@
+{
+  "iteration": 222,
+  "round": 1,
+  "scope": "ADMIN preservation and parking only",
+  "judged_sha": "23a15d5ee4d9058a9e390ae913adf91d31d157c6",
+  "base_sha": "03ea641884327045ac59754d9fc25ed046066d7d",
+  "actual_actor": "fresh independent native gpt-6.1-sol evaluator; did not author/design/plan/execute candidate",
+  "preferred_model": "claude-sonnet-5 unavailable (controller source receipt)",
+  "routing_flag": "D48 same-model fresh-context FLAGGED; never Astra/older model",
+  "tokens": "not reported",
+  "terminal_at": "2026-10-02T15:52:23.089042+00:00",
+  "clock_source": "datetime.datetime.now(datetime.timezone.utc) on evaluator host; tool date UTC agrees",
+  "admin_verdict": "FAIL",
+  "score": 67.5,
+  "max_score": 100,
+  "hard_fails": [],
+  "blocking_findings": [
+    {
+      "file": "design_docs/world-mission-log.md",
+      "issue": "44 anchored live iteration entries exceed Gate4 rotation threshold ~40. Record falsely says log not pruned because under40entries. A2 internal-consistency criterion fails.",
+      "required_followup": "Controller-owned byte-exact rotation retaining20 newest entries, all moved bodies in archive, complete index, and explicit correction of inaccurate count. Independently review exact corrected SHA."
+    }
+  ],
+  "protocol_verdict": "REJECT/BLOCKED: all3 external reviewers present and reject; no approval overridden",
+  "score_breakdown": {
+    "Tests": {
+      "score": 20,
+      "maximum": 20,
+      "evidence": "Own exact World released-pin verify_ail then full verify_go (build/plain/race) all0, darwin/arm64. Repo Profile supersedes make literal; no scoped-subset substitution."
+    },
+    "Lint": {
+      "score": 10,
+      "maximum": 10,
+      "evidence": "Own go vet ./... exit0 and gofmt enumeration228 files zero findings. World has no make lint; concrete Go equivalents stated."
+    },
+    "AcceptanceCriteria": {
+      "score": 22.5,
+      "maximum": 30,
+      "evidence": "ADMIN A1,A3,A4 met; A2 internal consistency fails false under40 assertion. 3/4. features=[] deliberately gives no product sprint/AC credit."
+    },
+    "CodeQuality": {
+      "score": 0,
+      "maximum": 15,
+      "evidence": "Literal -5 each for changed executor.md1330, world-mission-log.md1843 and world-mission.md6082 lines; minimum0. No redistribution or inherited-large-file waiver."
+    },
+    "Documentation": {
+      "score": 5,
+      "maximum": 15,
+      "evidence": "5 accurate administrative parked status;0 CHANGELOG entry;0 runnable .ail example (no new feature; unearned points not redistributed)."
+    },
+    "DesignFidelity": {
+      "score": 10,
+      "maximum": 10,
+      "evidence": "Administrative preservation/park matches authorized intent; rejected proposal retained without repair, approval or clause credit. Rotation contradiction charged to A2, not double-deducted."
+    }
+  },
+  "audit": {
+    "changed_files": 36,
+    "all_docs_only": true,
+    "manifest_entries_matching_hash_and_bytes": 35,
+    "all_changed_json_valid": 14,
+    "raw_wrappers_decoded_sha_matching": 2,
+    "direct_whitespace_errors": 0,
+    "executable_or_source_artifacts": 0,
+    "dated_status_stamps": 3,
+    "status_iterations": [
+      222,
+      221,
+      220
+    ],
+    "exact218_archive_move": true,
+    "archive217_positive": true,
+    "original_ledger_rows_byte_retained": 38,
+    "current_ledger_rows": 39,
+    "only_open": "D-WORLD-52",
+    "charter_lines_before": 6081,
+    "charter_lines_after": 6082,
+    "goal_bar_guardrails_and_routing_protected": true,
+    "reviewer_results_verbatim": true,
+    "source_excerpts_remeasured_exact": 8,
+    "method_facility": "UNKNOWN",
+    "capture_corpus": "UNKNOWN",
+    "paired_clause5_credit": "0/3",
+    "live_log_entries": 44,
+    "candidate_tracked_drift_after_checks": false
+  },
+  "commands": [
+    {
+      "command": "git rev-parse HEAD",
+      "exit_status": 0,
+      "stdout": "23a15d5ee4d9058a9e390ae913adf91d31d157c6"
+    },
+    {
+      "command": "git status --porcelain (before evaluator artifacts)",
+      "exit_status": 0,
+      "stdout": ""
+    },
+    {
+      "command": "bash scripts/mission_decisions.sh --check --file design_docs/world-mission.md",
+      "exit_status": 0,
+      "stdout": "decision ledger valid: 39 rows"
+    },
+    {
+      "command": "bash scripts/mission_decisions.sh --open --file design_docs/world-mission.md",
+      "exit_status": 0,
+      "stdout": "D-WORLD-52 OPEN; complete A/B ask and immediate B default preserved"
+    },
+    {
+      "command": "bash scripts/check_no_personal_email.sh",
+      "exit_status": 0,
+      "stdout": "no personal addresses in the loop-written surface"
+    },
+    {
+      "command": "git diff --check 03ea641884327045ac59754d9fc25ed046066d7d HEAD",
+      "exit_status": 0,
+      "stdout": ""
+    },
+    {
+      "command": "go test ./store -run '^TestProductionGoSurface$' -count=1 -v (cwd host)",
+      "exit_status": 0,
+      "stdout": "PASS; host/cmd=79; allow-listed reproducers=2"
+    },
+    {
+      "command": "go vet ./... (cwd host)",
+      "exit_status": 0,
+      "stdout": ""
+    },
+    {
+      "command": "gofmt -l all 228 Go files enumerated under host/ and cmd/",
+      "exit_status": 0,
+      "stdout": ""
+    },
+    {
+      "command": "AILANG_BIN=~/.pinned-ailang/ailang AILANG_REPLAY_BIN=~/.pinned-ailang/ailang bash scripts/verify_ail.sh",
+      "exit_status": 0,
+      "started_at": "2026-10-02T15:46:16.189675+00:00",
+      "completed_at": "2026-10-02T15:46:21.663852+00:00",
+      "stdout_log": "independent-ail.log"
+    },
+    {
+      "command": "AILANG_BIN=~/.pinned-ailang/ailang AILANG_REPLAY_BIN=~/.pinned-ailang/ailang bash scripts/verify_go.sh",
+      "exit_status": 0,
+      "started_at": "2026-10-02T15:46:42.765597+00:00",
+      "completed_at": "2026-10-02T15:50:51.989099+00:00",
+      "stdout_log": "independent-go.log"
+    }
+  ],
+  "limitations": [
+    "Own full gates are local darwin/arm64, not exact candidate remote CI or merge CI.",
+    "All4 fresh native roles are attributed by banked role outputs/routing and parent orchestration; independent evaluator is this actual separate actor. Other model availability errors are source-attributed, not probes rerun by evaluator.",
+    "D52 later answer reported by controller is outside judged immutable SHA; this report preserves D52OPEN state of exact candidate.",
+    "No repair, design move, commit, push, external message, runtime walk, baseline, confinement or corpus discovery performed.",
+    "Initial own audit incorrectly decoded missing wrapper key and matched rotation-rule header; corrected content/base64 decoding and dated STATUS anchor pass. Initial ledger command omitted --file and failed unreadable V1 default; corrected explicit World --file command passed. No failed instrument claimed green."
+  ],
+  "conditional_categories": "Neither compilation infrastructure nor performance implementation touched; no bonus points or runtime profile requirement for protocol itself. Full repository profile executed for Tests20 under evaluator skill."
+}

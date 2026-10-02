@@ -1,0 +1,148 @@
+{
+  "iteration": 222,
+  "round": 2,
+  "scope": "ADMIN corrected documentation delta; product proposal still rejected",
+  "judged_sha": "16803134c8db0d2360b001f43ba7b28879a87722",
+  "previous_judged_sha": "23a15d5ee4d9058a9e390ae913adf91d31d157c6",
+  "full_base_sha": "03ea641884327045ac59754d9fc25ed046066d7d",
+  "actual_actor": "same independent fresh-context native gpt-6.1-sol evaluator resumed for delta; generator≠judge; no candidate authoring/design/planning/execution",
+  "routing_flag": "D48 same-model fresh-context FLAGGED; preferred Sonnet unavailable source-attributed; no Astra/older models",
+  "tokens": "not reported",
+  "terminal_at": "2026-10-02T15:56:38.415777+00:00",
+  "clock_source": "actual evaluator host datetime.datetime.now(datetime.timezone.utc)",
+  "admin_verdict": "PASS",
+  "score": 75,
+  "max_score": 100,
+  "blocking_findings": [],
+  "hard_fails": [],
+  "protocol_verdict": "REJECT/BLOCKED3/3, allpresent; no implementation/walk/clause authority",
+  "score_breakdown": {
+    "Tests": 20,
+    "Lint": 10,
+    "AcceptanceCriteria": 30,
+    "CodeQuality": 0,
+    "Documentation": 5,
+    "DesignFidelity": 10
+  },
+  "score_evidence": {
+    "Tests": "Own prior exact released-pin AIL0 then fullGo build/plain/race0, immutable23a15d5; current runtime diff empty; actual own logs decoded byte-exact. No unnecessary repeat.",
+    "Lint": "Prior own vet0/gofmt228 clean applies unchanged source; current privacy/whitespace gates0.",
+    "AcceptanceCriteria": "All A1–A4 now met; false under40 statement explicitly corrected, lossless44→20 rotation proved, source/authority unchanged. 4/4=30. No product feature credit.",
+    "CodeQuality": "Literal size deductions hit minimum0: existing charter6082, executor1330 and expanded archive exceed800; no scope waiver, no redistribution.",
+    "Documentation": "5 administrative disposition/status reflects parked rejected proposal;0 changelog and0 runnable feature example; no invented ADMIN bonus.",
+    "DesignFidelity": "10 faithful preservation and park; lossless rotation corrects bookkeeping without editing rejected r3."
+  },
+  "audit": {
+    "delta_files": 14,
+    "full_base_changed_files": 47,
+    "all_docs_only": true,
+    "manifest_hash_bytes_matches": 46,
+    "changed_json_valid": 23,
+    "raw_wrappers_decoded_sha_match": 6,
+    "own_full_profile_rawlogs_byte_exact": true,
+    "round1_reports_verbatim": true,
+    "before_live_entries": 44,
+    "after_live_entries": 20,
+    "moved_full_chunks": 24,
+    "moved_ids": [
+      169,
+      170,
+      171,
+      172,
+      173,
+      174,
+      175,
+      180,
+      181,
+      183,
+      184,
+      185,
+      186,
+      187,
+      188,
+      189,
+      193,
+      194,
+      195,
+      196,
+      197,
+      199,
+      200,
+      201
+    ],
+    "moved_hashes_recomputed_from_original_gitobject": true,
+    "all_moved_chunks_byte_exact_in_destination": true,
+    "prior_archive_prefix_preserved": true,
+    "kept19_exact_222_append_only": true,
+    "all44_index_rows_present": true,
+    "index_identical_previous": true,
+    "charter_and_rejected_r3_identical_previous": true,
+    "ledger_valid_rows": 39,
+    "only_open": "D-WORLD-52",
+    "dated_status_stamps": 3,
+    "exact218_archive_and217_positive": "unchanged from own round1 verified candidate",
+    "runtime_source_delta_empty": true,
+    "executable_source_artifact_added": false,
+    "personal_email_gate": 0,
+    "direct_whitespace_and_diffcheck": 0
+  },
+  "commands": [
+    {
+      "command": "git rev-parse HEAD",
+      "exit_status": 0,
+      "stdout": "16803134c8db0d2360b001f43ba7b28879a87722"
+    },
+    {
+      "command": "git status --porcelain (before reports)",
+      "exit_status": 0,
+      "stdout": ""
+    },
+    {
+      "command": "git diff --stat 23a15d5ee4d9058a9e390ae913adf91d31d157c6 HEAD",
+      "exit_status": 0,
+      "stdout": "14 files changed;1558insertions1060deletions"
+    },
+    {
+      "command": "Python inline audit: git show 23a15d5ee4d9058a9e390ae913adf91d31d157c6:design_docs/world-mission-log.md; anchored fullchunk parsing; sha256/bytes compared to log-rotation.json and full destination substring; prior archiveprefix; retained chunks and index",
+      "exit_status": 0,
+      "stdout": "44→20;24moved exact;19kept exact+222append;all44indexrows;archive priorprefix preserved"
+    },
+    {
+      "command": "Python inline audit: all46 manifest entry hash/bytes; all47 changedfiles directwhitespace/nonexecutable;23JSON;6base64decodedsha;own priorlog bytes",
+      "exit_status": 0,
+      "stdout": "ALL PASS"
+    },
+    {
+      "command": "git diff --name-only 23a15d5ee4d9058a9e390ae913adf91d31d157c6 HEAD -- :!design_docs",
+      "exit_status": 0,
+      "stdout": ""
+    },
+    {
+      "command": "bash scripts/mission_decisions.sh --check --file design_docs/world-mission.md",
+      "exit_status": 0,
+      "stdout": "decision ledger valid:39 rows"
+    },
+    {
+      "command": "bash scripts/mission_decisions.sh --open --file design_docs/world-mission.md",
+      "exit_status": 0,
+      "stdout": "D-WORLD-52 OPEN; A/B complete; unanswered defaultB"
+    },
+    {
+      "command": "bash scripts/check_no_personal_email.sh",
+      "exit_status": 0,
+      "stdout": "no personal addresses in loop-written surface"
+    },
+    {
+      "command": "git diff --check 03ea641884327045ac59754d9fc25ed046066d7d HEAD",
+      "exit_status": 0,
+      "stdout": ""
+    }
+  ],
+  "attribution_correction": "My round1 claim that controller reported a later D52 answer was mistaken. Decoded receipt is an approval REQUEST and readback, not an answer. D52 remainsOPEN; no human ratification or implementationauthority granted. Original report preserved verbatim plus this explicit correction.",
+  "limits": [
+    "ADMIN PASS applies only exactjudged16803134; later report/receipt banking and finalcommit require exactheadCI/mergeCI separately.",
+    "Own prior fullgates localdarwin/arm64, not newremoteCI or mergeCI.",
+    "HistoricalPR166 draft/open and attendedmain preservation are source-attributed banked receipts, not new external probes.",
+    "No repair/moveplannedtoimplemented/commit/push/externalmessage; method/corpusUNKNOWN;0/3paired;D2–D5unfrozen."
+  ]
+}
