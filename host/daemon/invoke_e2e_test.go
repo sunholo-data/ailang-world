@@ -180,16 +180,29 @@ func (r countingInvocationRunner) RunContext(ctx context.Context, e capsule.Entr
 	return r.real.RunContext(ctx, e)
 }
 
+// resendInvocationRunner isolates durable commit and lost-response reconciliation
+// from interpreter execution time; the real capsule/replay test remains separate.
+type resendInvocationRunner struct{ count *atomic.Int32 }
+
+func (r resendInvocationRunner) RunContext(ctx context.Context, _ capsule.Entry) (capsule.Result, error) {
+	if err := ctx.Err(); err != nil {
+		return capsule.Result{}, err
+	}
+	r.count.Add(1)
+	return capsule.Result{Stdout: []byte("{\"echo\":{\"msg\":\"hi\"}}\n")}, nil
+}
+
 type invocationStore struct {
 	*store.Store
 	committed chan struct{}
+	signal    *sync.Once
 	release   <-chan struct{}
 }
 
 func (s invocationStore) Commit(ctx context.Context, c store.Commit) error {
 	err := s.Store.Commit(ctx, c)
 	if err == nil && s.committed != nil {
-		close(s.committed)
+		s.signal.Do(func() { close(s.committed) })
 		<-s.release
 	}
 	return err
@@ -241,7 +254,7 @@ func replaceInvocation(t *testing.T, d *Daemon, db string, st coordinator.Store,
 	if err != nil {
 		t.Fatal(err)
 	}
-	p, err := projection.New(projection.Config{Resolver: d.resolver, Reader: transitionreg.NewReader(d.store), Heads: d.reads,
+	p, err := projection.New(projection.Config{CredentialWait: credentialBudget, CallbackTimeout: invokeDeadline, MaxCallbacks: 8, WriteWait: writeTimeout, Resolver: d.resolver, Reader: transitionreg.NewReader(d.store), Heads: d.reads,
 		Deny: writeSessionDenial, Fail: writeAPIError, ErrorLog: d.errLog, Agent: protocol.AgentInfo{Name: "ailang-worldd", Version: Version},
 		MaxWait: readDeadline, InvokeWait: wait, Coordinator: coord})
 	if err != nil {
@@ -274,7 +287,9 @@ func TestA2AResendAfterWriteTimeout(t *testing.T) {
 	d, db, _ := invocationDaemon(t)
 	committed := make(chan struct{})
 	release := make(chan struct{})
-	replaceInvocation(t, d, db, invocationStore{Store: d.store, committed: committed, release: release}, capsule.New(archive.New(db), capsule.Config{}), 3*time.Second)
+	var executions atomic.Int32
+	var committedOnce sync.Once
+	replaceInvocation(t, d, db, invocationStore{Store: d.store, committed: committed, signal: &committedOnce, release: release}, resendInvocationRunner{count: &executions}, 3*time.Second)
 	server := httptest.NewUnstartedServer(d.Handler())
 	server.Config.WriteTimeout = 2 * time.Second
 	server.Start()
@@ -282,7 +297,26 @@ func TestA2AResendAfterWriteTimeout(t *testing.T) {
 	client := &http.Client{Timeout: 5 * time.Second}
 	token := mintSessionGrants(t, d, "ep-resend", "world.apply")
 	first := make(chan error, 1)
-	go func() { _, err := socketCall(client, server.URL, token, "task-resend"); first <- err }()
+	firstDone := make(chan struct{})
+	var releaseOnce sync.Once
+	releaseCommit := func() { releaseOnce.Do(func() { close(release) }) }
+	// Registered before the worker: every failure releases Commit and joins the
+	// client before the earlier deferred server.Close drains its handlers.
+	defer func() {
+		releaseCommit()
+		server.CloseClientConnections()
+		client.CloseIdleConnections()
+		select {
+		case <-firstDone:
+		case <-time.After(client.Timeout + time.Second):
+			t.Error("first socket worker did not stop during cleanup")
+		}
+	}()
+	go func() {
+		defer close(firstDone)
+		_, err := socketCall(client, server.URL, token, "task-resend")
+		first <- err
+	}()
 	select {
 	case <-committed:
 	case <-time.After(5 * time.Second):
@@ -291,7 +325,7 @@ func TestA2AResendAfterWriteTimeout(t *testing.T) {
 	// Keep the response blocked beyond the server's WriteTimeout, after the
 	// durable commit has already landed.
 	time.Sleep(2100 * time.Millisecond)
-	close(release)
+	releaseCommit()
 	select {
 	case err := <-first:
 		if err == nil {
@@ -313,6 +347,9 @@ func TestA2AResendAfterWriteTimeout(t *testing.T) {
 		default:
 			time.Sleep(10 * time.Millisecond)
 		}
+	}
+	if got := executions.Load(); got != 1 {
+		t.Fatalf("same task executed %d times, want once", got)
 	}
 	task := parseInvokeTask(t, body)
 	if task["metadata"].(map[string]any)["entry_index"] != float64(1) {

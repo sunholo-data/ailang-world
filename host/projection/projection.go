@@ -1,8 +1,7 @@
-// Package projection is the session-scoped A2A projection surface
-// (w-a2a-session-projection, split child #2 of w-mcp-projection): a
-// World-owned agent card at GET /.well-known/agent.json and a fail-closed
-// JSON-RPC admission gate at POST /a2a/, both over the daemon's ONE landed
-// host/authority resolver (row 39 F1-F3).
+// Package projection exposes a session-scoped agent card, A2A admission,
+// and MCP tools over the daemon's shared authority resolver. MCP wire and
+// callback execution belong to the pinned protocol seams; each invocation
+// receives fresh World admission and a fresh coordinator task ID.
 //
 // The surface holds no credential path or store handle of its own. The card is
 // read-only; an admitted A2A call can invoke the injected coordinator. Both
@@ -145,9 +144,13 @@ type Config struct {
 	// this finite, positive server maximum, passed WITHOUT replacement
 	// through session resolution and the registry/capability snapshot reads.
 	// Zero/negative is rejected at startup, never silently "unlimited".
-	MaxWait     time.Duration
-	InvokeWait  time.Duration
-	Coordinator *coordinator.Coordinator
+	MaxWait         time.Duration
+	InvokeWait      time.Duration
+	Coordinator     *coordinator.Coordinator
+	CredentialWait  time.Duration
+	CallbackTimeout time.Duration
+	MaxCallbacks    int
+	WriteWait       time.Duration
 }
 
 // Handler serves the two projection routes. Both handlers run resolution and
@@ -156,16 +159,19 @@ type Config struct {
 // requests: every request builds its OWN fresh session, snapshot and request
 // set.
 type Handler struct {
-	resolver   authority.Resolver
-	reader     transitionreg.Reader
-	heads      HeadReader
-	deny       DenyWriter
-	fail       ErrorWriter
-	errorLog   io.Writer
-	agent      protocol.AgentInfo
-	maxWait    time.Duration
-	invokeWait time.Duration
-	coord      *coordinator.Coordinator
+	resolver       authority.Resolver
+	reader         transitionreg.Reader
+	heads          HeadReader
+	deny           DenyWriter
+	fail           ErrorWriter
+	errorLog       io.Writer
+	agent          protocol.AgentInfo
+	maxWait        time.Duration
+	invokeWait     time.Duration
+	coord          *coordinator.Coordinator
+	credentialWait time.Duration
+	mcp            http.Handler
+	mintTask       func() (string, error)
 }
 
 // New validates the config at startup (Decision 6: a zero/negative/omitted
@@ -186,21 +192,30 @@ func New(cfg Config) (*Handler, error) {
 		return nil, errors.New("projection: ErrorLog is required")
 	case cfg.MaxWait <= 0:
 		return nil, fmt.Errorf("projection: MaxWait must be finite and positive, got %v", cfg.MaxWait)
+	case cfg.CredentialWait <= 0 || cfg.CallbackTimeout <= 0 || cfg.MaxCallbacks <= 0 || cfg.WriteWait <= 0 || cfg.InvokeWait >= cfg.WriteWait:
+		return nil, errors.New("projection: MCP bounds must be positive and invocation below write timeout")
 	case cfg.InvokeWait <= 0:
 		return nil, fmt.Errorf("projection: InvokeWait must be finite and positive, got %v", cfg.InvokeWait)
 	}
-	return &Handler{
-		resolver:   cfg.Resolver,
-		reader:     cfg.Reader,
-		heads:      cfg.Heads,
-		deny:       cfg.Deny,
-		fail:       cfg.Fail,
-		errorLog:   cfg.ErrorLog,
-		agent:      cfg.Agent,
-		maxWait:    cfg.MaxWait,
-		invokeWait: cfg.InvokeWait,
-		coord:      cfg.Coordinator,
-	}, nil
+	h := &Handler{
+		resolver:       cfg.Resolver,
+		reader:         cfg.Reader,
+		heads:          cfg.Heads,
+		deny:           cfg.Deny,
+		fail:           cfg.Fail,
+		errorLog:       cfg.ErrorLog,
+		agent:          cfg.Agent,
+		maxWait:        cfg.MaxWait,
+		invokeWait:     cfg.InvokeWait,
+		coord:          cfg.Coordinator,
+		credentialWait: cfg.CredentialWait, mintTask: mintMCPTask,
+	}
+	var err error
+	h.mcp, err = newMCPHandler(h, cfg)
+	if err != nil {
+		return nil, err
+	}
+	return h, nil
 }
 
 // bindingCaps adapts the authority binding's grant set to
@@ -378,13 +393,10 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
 // CapabilitySource, F9) and returns the admitted descriptors in registry
 // bytewise order.
 //
-// B3's distinct absent-head handling: GetRegistryHead is checked BEFORE the
-// snapshot read. A clean absent check makes a failed snapshot read the steady
-// absent state (transitionreg's head-absent error is untyped, F8) — reported
-// as (nil, nil): zero skills, not a failure. A failed snapshot read after a
-// PRESENT head is a genuine read failure (nil, err). The head race is
-// covered: a head published between the check and NewRequest yields a
-// successful snapshot and its skills are used.
+// An empty success requires absence in BOTH the precheck and the snapshot's
+// typed result. A raced-in head's store, integrity or context failure remains
+// a failure; present-precheck then absent-snapshot remains unavailable. A
+// successful fresh snapshot always wins over the earlier precheck.
 func (h *Handler) allowedDescriptors(ctx context.Context, b *authority.SessionBinding) (transitionreg.Request, []transitionreg.Descriptor, error) {
 	_, hasHead, err := h.heads.GetRegistryHead(ctx, store.TransitionRegistryV1)
 	if err != nil {
@@ -392,7 +404,8 @@ func (h *Handler) allowedDescriptors(ctx context.Context, b *authority.SessionBi
 	}
 	req, rerr := transitionreg.NewRequest(ctx, h.reader, bindingCaps{b.Caps}, time.Now().Unix())
 	if rerr != nil {
-		if !hasHead {
+		var target transitionreg.RegistryHeadAbsentError
+		if !hasHead && errors.As(rerr, &target) {
 			return transitionreg.Request{}, nil, nil
 		}
 		return transitionreg.Request{}, nil, fmt.Errorf("projection: registry snapshot: %w", rerr)
