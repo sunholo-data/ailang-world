@@ -12,11 +12,11 @@ Paired unseeded verified questions0/3; partial historical baseline grants no cre
 Critical order108 LANDED221 →114 PARKED →93 waits (D46A); no side work.
 Parked on Mark: D52 alone; original38 attended decision rows retained.
 Cadence: nominal four-hour loop; all waits bounded and actively supervised.
-Routing: native designer/planner/executor; fresh independent evaluator required.
-Preferred GLM/Opus native unsupported; actual Sol6.1 fallbacks FLAGGED D48.
+All four native roles completed; independent ADMIN PASS75/100 after correction.
+Preferred GLM/Opus/Sonnet unsupported; fresh Sol6.1 fallbacks FLAGGED D48.
 No Astra or older model; native role token usage not reported.
 Metered quorum$0.1387566; Codex provider quota94%, within observed ration.
 Provider reset2026-10-03T17:29:29Z; no reset credit used.
 HARNESS share0/20; last3 product landings221 moved6,214/213 none.
 Bookkeeping159; full memory charter/log/verification/world-iter222.
-Administrative preservation requires independent judge and exact head/merge CI.
+Protocol remains rejected; record final-head review/CI and merge CI required.

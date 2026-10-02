@@ -46,6 +46,21 @@
       "bytes": 668
     },
     {
+      "path": "design_docs/verification/world-iter222/control/ci-first-head-checks.json",
+      "sha256": "5a386d62d18b52f86b7f8b5e0a8d6cb8a9260680d971c34262cba9697ee079f2",
+      "bytes": 7184
+    },
+    {
+      "path": "design_docs/verification/world-iter222/control/ci-first-head-jobs.json",
+      "sha256": "7ea4fd93b7fe680c2cbc24d2f690051c4eeb3bcdc55a0cadd89c14515648d4be",
+      "bytes": 6592
+    },
+    {
+      "path": "design_docs/verification/world-iter222/control/ci-first-head-verdict.json",
+      "sha256": "a95404d18f4eaf6783bd5b72b9af70be295246ab58c23c10134bb34a25042cbf",
+      "bytes": 126
+    },
+    {
       "path": "design_docs/verification/world-iter222/control/claim-read.txt.raw.json",
       "sha256": "9a4cab6aa7d9f291d891367ffc27e6f4264758fcdd02273ac8fd5357c1ab6701",
       "bytes": 808
@@ -141,6 +156,16 @@
       "bytes": 3370
     },
     {
+      "path": "design_docs/verification/world-iter222/independent-delta-evaluation.json",
+      "sha256": "055eceea420c00977d806f2d385dd8fed4e999e8112b78f480fb2e1dd27fad3d",
+      "bytes": 6198
+    },
+    {
+      "path": "design_docs/verification/world-iter222/independent-delta-evaluation.md",
+      "sha256": "c0bf351acb2c40738b1007420f73eb71d778c9d8239c673be5cc94fd73a67633",
+      "bytes": 4102
+    },
+    {
       "path": "design_docs/verification/world-iter222/independent-evaluation.json",
       "sha256": "4cc7ce1a0157932ab7762fe5bde1f228681357ec0cc84235e8da49a3c57eda80",
       "bytes": 7006
@@ -197,13 +222,13 @@
     },
     {
       "path": "design_docs/verification/world-iter222/routing.json",
-      "sha256": "2f4b97d65ddb54e011abc4c43318bec466f1eaf27b88d2f5b562a1dbe3e10ff3",
-      "bytes": 1580
+      "sha256": "9d4b437ed45b574181d7e46f228f92fd2a97f8b6f88cce142f7c54b207aeae24",
+      "bytes": 1600
     },
     {
       "path": "design_docs/world-mission-dashboard.md",
-      "sha256": "c775a904214ffcd141b49b03d97da58ce61ca3fa68350651527de98f588dcd80",
-      "bytes": 1585
+      "sha256": "d7883fa3291a1263fd8721a7b351f51a41058f0126fd55dcfee45392dbca68df",
+      "bytes": 1581
     },
     {
       "path": "design_docs/world-mission-index.md",
@@ -217,8 +242,8 @@
     },
     {
       "path": "design_docs/world-mission-log.md",
-      "sha256": "d3eb760361445b23b6640c59072e1f98e37231f10fa05d8cae863e47d7919109",
-      "bytes": 179205
+      "sha256": "2ad87c109fb03fbc68de32a1effa4077ee852bfe41ccfe120423e631cc93b69a",
+      "bytes": 180064
     },
     {
       "path": "design_docs/world-mission-status-archive.md",
@@ -227,10 +252,11 @@
     },
     {
       "path": "design_docs/world-mission.md",
-      "sha256": "c17d9906ceb6f78026056801b31e3e8ed21769ba0635f39c320cdebadcd28872",
-      "bytes": 1015889
+      "sha256": "043defd5e1c3798839305d95f648d7b0c2bbd345be67882af3903b6a97fd0ffe",
+      "bytes": 1015981
     }
   ],
   "self_excluded": true,
-  "previous_manifest_preserved_at": "23a15d5ee4d9058a9e390ae913adf91d31d157c6"
+  "reviewed_previous_subject": "16803134c8db0d2360b001f43ba7b28879a87722",
+  "final_delta": "verbatim independent report/CI receipts and truthful score/status only; no source/protocol/ledger-authority change"
 }
