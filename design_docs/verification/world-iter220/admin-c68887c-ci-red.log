@@ -1,0 +1,108 @@
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	﻿2026-10-02T08:07:26.9105362Z ##[group]Run ./scripts/verify_go.sh
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9105640Z ^[[36;1m./scripts/verify_go.sh^[[0m
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9161589Z shell: /usr/bin/bash -e {0}
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9161806Z env:
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9161972Z   Z3_VER: 4.16.0
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9162237Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9162605Z   GOTOOLCHAIN: go1.26.6
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9162825Z   AILANG_BIN: /home/runner/.local/bin/ailang
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9163053Z ##[endgroup]
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9580288Z ── AILANG_BIN=/home/runner/.local/bin/ailang (AILANG v0.41.0
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9580700Z Commit: 24ee108
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9580926Z Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9581191Z Built:  2026-09-21T15:50:02Z
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9581324Z
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9581430Z The AI-First Programming Language
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9581700Z Copyright (c) 2025-2026)
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:26.9581955Z ── tracked-binary hygiene gate
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:27.1070003Z    ✓ 0 binary blobs among 1539 tracked files
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:27.1070914Z ── World mission-input gate (decision ledger)
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:27.1160595Z decision ledger valid: 38 rows
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:27.1164727Z    World decision-ledger validated; centralized runtime currency is NOT certified here.
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:27.1244097Z    ✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:27.1244785Z ── race-detector known-positive control
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:27.1264185Z go version go1.26.6 linux/amd64
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7169599Z ==================
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7170030Z WARNING: DATA RACE
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7170404Z Read at 0x00c000018158 by goroutine 9:
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7170909Z   main.main.func1()
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7171772Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x99
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7172476Z
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7172599Z Previous write at 0x00c000018158 by goroutine 8:
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7172856Z   main.main.func1()
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7173467Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0xab
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7173826Z
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7173927Z Goroutine 9 (running) created at:
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7174149Z   main.main()
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7174705Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x7d
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7175070Z
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7175169Z Goroutine 8 (finished) created at:
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7175390Z   main.main()
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7175929Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x7d
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7176363Z ==================
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7176537Z ==================
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7176718Z WARNING: DATA RACE
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7176908Z Write at 0x00c000018158 by goroutine 9:
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7177146Z   main.main.func1()
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7177717Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0xab
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7178072Z
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7178181Z Previous write at 0x00c000018158 by goroutine 8:
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7178430Z   main.main.func1()
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7179133Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0xab
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7179486Z
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7179588Z Goroutine 9 (running) created at:
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7179807Z   main.main()
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7180330Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x7d
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7180681Z
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7180779Z Goroutine 8 (finished) created at:
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7181016Z   main.main()
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7181541Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x7d
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7182166Z ==================
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7182353Z control finished, shared = 37271
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7182559Z Found 2 data race(s)
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7182733Z exit status 66
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7184927Z ── go build ./...
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7206967Z go version go1.26.6 linux/amd64
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7732572Z go: downloading github.com/sunholo-data/ailang v0.33.2
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:33.7807267Z go: downloading modernc.org/sqlite v1.54.0
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:35.0697624Z go: downloading modernc.org/libc v1.74.1
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:35.0698398Z go: downloading golang.org/x/sys v0.47.0
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:36.7088009Z go: downloading github.com/dustin/go-humanize v1.0.1
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:36.7088425Z go: downloading github.com/google/uuid v1.6.0
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:36.7088853Z go: downloading modernc.org/mathutil v1.7.1
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:36.7620012Z go: downloading modernc.org/memory v1.11.0
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:36.7633555Z go: downloading github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:07:58.7024808Z ── focused host/evidence named-manifest gate (37 exact top-level tests)
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:08:08.1032870Z    ✓ all 37 required top-level evidence tests passed exactly once
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:08:08.1084904Z ── go test ./... -count=1
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:08:08.1109158Z go version go1.26.6 linux/amd64
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:08:11.4470306Z ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.671s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:08:22.9602460Z ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	12.761s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:08:22.9603196Z ok  	github.com/sunholo-data/ailang-world/host/archive	3.578s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:08:22.9603766Z ok  	github.com/sunholo-data/ailang-world/host/authority	0.152s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:08:22.9604319Z ok  	github.com/sunholo-data/ailang-world/host/boundary	2.627s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8434607Z ok  	github.com/sunholo-data/ailang-world/host/broker	76.975s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8435308Z ok  	github.com/sunholo-data/ailang-world/host/canon	0.002s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8435646Z ok  	github.com/sunholo-data/ailang-world/host/capsule	17.676s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8436005Z ok  	github.com/sunholo-data/ailang-world/host/childenv	0.002s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8436528Z --- FAIL: TestDispatchDurableDeadline (1.23s)
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8437113Z     --- FAIL: TestDispatchDurableDeadline/Commit (0.32s)
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8438410Z         coordinator_test.go:632: err coordinator: invocation a2a:ep1:t1 outcome not confirmed: store: append intent outcome is uncertain (reconcile before any retry): context deadline exceeded, want definite R11
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8439366Z FAIL
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8439779Z FAIL	github.com/sunholo-data/ailang-world/host/coordinator	8.618s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8440287Z ok  	github.com/sunholo-data/ailang-world/host/daemon	36.120s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8440797Z ok  	github.com/sunholo-data/ailang-world/host/evidence	7.288s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8441310Z ok  	github.com/sunholo-data/ailang-world/host/hashref	0.002s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8442454Z ok  	github.com/sunholo-data/ailang-world/host/pkgproj	11.209s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8442835Z ok  	github.com/sunholo-data/ailang-world/host/procbound	0.015s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8443188Z ok  	github.com/sunholo-data/ailang-world/host/proctest	0.002s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8443519Z ok  	github.com/sunholo-data/ailang-world/host/projection	6.936s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8444022Z ok  	github.com/sunholo-data/ailang-world/host/registry	0.015s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8444343Z ok  	github.com/sunholo-data/ailang-world/host/replay	14.291s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8444672Z ok  	github.com/sunholo-data/ailang-world/host/runbook	1.296s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8444987Z ok  	github.com/sunholo-data/ailang-world/host/store	20.749s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:29.8445465Z ok  	github.com/sunholo-data/ailang-world/host/transitionreg	2.327s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:50.9371818Z ok  	github.com/sunholo-data/ailang-world/host/verifygate	52.200s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:50.9372336Z ok  	github.com/sunholo-data/ailang-world/host/workbench	0.011s
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:50.9372673Z FAIL
+go host build + test gate	go build + test gate (replay tests run against pinned AILANG_BIN)	2026-10-02T08:09:51.0002115Z ##[error]Process completed with exit code 1.

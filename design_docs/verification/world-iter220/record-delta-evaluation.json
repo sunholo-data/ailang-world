@@ -1,0 +1,48 @@
+{
+  "evaluation_result": "pass",
+  "evaluation_score": 97,
+  "scope": "ADMIN delta only",
+  "reviewed_sha": "c68887cce8c5fe70ddc0e1aa64b0614d5599185b",
+  "prior_accepted_sha": "077eef825a3f782ae7e1a904802da500409d0b5f",
+  "fresh_attended_base": "7a638e458547bb3ca2397d7c7378fbef54b0e276",
+  "judge": "gpt-6.1-sol fresh separate context, same-model-fresh-context FLAG under amendedD48",
+  "blocking_findings": [],
+  "new_nonblocking_findings": [],
+  "retained_nonblocking_findings": [
+    "N1: private operational/provider metadata remains attributed; evidence deduction3"
+  ],
+  "scores": {
+    "structural": 20,
+    "hygiene": 10,
+    "acceptance_and_authority": 30,
+    "evidence": 12,
+    "documentation": 15,
+    "fidelity": 10
+  },
+  "checks": {
+    "delta_paths": 9,
+    "attended_row94_preserved": true,
+    "attended_evidence_runbook_byte_identical": true,
+    "all38ledger_rows_unchanged": true,
+    "status_lines_unchanged": true,
+    "charter_lines_before": 6081,
+    "charter_lines_after": 6081,
+    "remaining_charter_except94_byte_identical": true,
+    "prior_log_prefix_preserved": true,
+    "archive_index_unchanged": true,
+    "dashboard_lines": 16,
+    "all_old220_product_evidence_unchanged_except_routing": true,
+    "whitespace_clean_both_bases": true,
+    "privacy_pattern_flags": 0,
+    "no_code_diff_against_fresh_origin": true,
+    "owned_runtime_tests": 0,
+    "all_owned_commands_terminal": true
+  },
+  "product_verdict": "FAIL59 retained; no product acceptance or waiver",
+  "followthrough_pending": [
+    "fresh exactHEAD CI",
+    "mergeCI",
+    "report deliveries and readback"
+  ],
+  "report_path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-record-eval/design_docs/verification/world-iter220/record-delta-evaluation.md"
+}
