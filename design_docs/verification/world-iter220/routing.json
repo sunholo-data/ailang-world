@@ -34,7 +34,17 @@
       "spawn_error": "Unknown model sonnet",
       "fallback": "gpt-6.1-sol in a fresh separate Agent context per amended D48",
       "judge_independence": "same-model-fresh-context FLAG",
-      "ticket": "inbox_1790926267503_28b47a99"
+      "ticket": "inbox_1790926267503_28b47a99",
+      "actual": "gpt-6.1-sol",
+      "agent": "/root/evaluator",
+      "verdict": "FAIL59/100",
+      "terminal": true
+    },
+    "record_evaluator": {
+      "actual": "gpt-6.1-sol",
+      "agent": "/root/record_evaluator",
+      "token_usage": "not reported",
+      "independence": "same-model-fresh-context FLAG"
     }
   },
   "policy_changes": "none; Astra never spawned this iteration",

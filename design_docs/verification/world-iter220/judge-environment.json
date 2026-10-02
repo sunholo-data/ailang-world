@@ -1,0 +1,15 @@
+{
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-eval",
+  "head": "cdb714e19811cb067d6fa0f00c135a1216876633",
+  "environment": {
+    "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+    "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+    "GOFLAGS": null,
+    "GODEBUG": null,
+    "GOMAXPROCS": null,
+    "GOTOOLCHAIN": null
+  },
+  "go_version": "go version go1.26.6 darwin/arm64\n",
+  "pin_version": "AILANG v0.41.0\nCommit: 24ee108\nFull:   24ee1088776e21cd06a3781ed18e77f40be06db3\nBuilt:  2026-09-21T15:50:02Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026\n",
+  "platform": "darwin/arm64"
+}

@@ -1,0 +1,26 @@
+{
+  "command": [
+    "./scripts/verify_ail.sh"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-eval",
+  "head": "cdb714e19811cb067d6fa0f00c135a1216876633",
+  "start_utc": "2026-10-02T07:44:58.258715+00:00",
+  "end_utc": "2026-10-02T07:45:21.985495+00:00",
+  "duration_s": 23.72665112512186,
+  "rc": 0,
+  "terminal_state": "COMPLETED",
+  "raw_sha256": "03b2848e7fb136b11d0225707977b0b774426d13975796e9d8178b3b4401726d",
+  "raw_bytes": 2401,
+  "raw_artifact": "judge-verify-ail.raw.b64",
+  "cap_s": 1200,
+  "environment": {
+    "AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+    "WORLD_PKG_AILANG_BIN": "/Users/voightkampff/.pinned-ailang/ailang",
+    "GOFLAGS": null,
+    "GODEBUG": null,
+    "GOMAXPROCS": null,
+    "GOTOOLCHAIN": null
+  },
+  "display_artifact": "judge-verify-ail.log",
+  "display_sha256": "03b2848e7fb136b11d0225707977b0b774426d13975796e9d8178b3b4401726d"
+}

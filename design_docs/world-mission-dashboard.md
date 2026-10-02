@@ -3,7 +3,7 @@ Latest release: world/core@0.1.0; 0.1.1 preparation landed, publish attended fro
 World 1.0: clauses 1/2/3/7 MET; 4/5/6 UNMET. Goal unmoved.
 Row108 bounded D49A followup spent: eight targeted comparisons PASS; exact full Go profiles RED.
 Product PR173 stays DRAFT/unmerged; no source or fixture changes in this followup.
-Independent product evaluator: fresh separate GPT6.1Sol context; verdict pending in evidence.
+Independent product evaluator: fresh separate GPT6.1Sol context, FAIL59; own AIL0/Go1.
 Critical path: 108 → 114 → 93 (D46A). 114 waits; 93 requires108 landed.
 Parked on Mark: D51 further diagnosis/defer; D50 private credential review recovered from219.
 Unanswered D51 immediately defers108; no bar-neutral side work.
