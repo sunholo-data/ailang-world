@@ -1,6 +1,6 @@
 # w-software-engineering-domain — The first real transitions: AILANG coding tools over MCP/A2A, every tool effect through the broker
 
-**Status**: PLANNED (attended draft, 2026-10-02; D-SE-1..5 ruled A). Not implemented; quorum pending. Base `cbe564ce12f791d95fd184da86d837fb2b6bc80e` (V1).
+**Status**: PLANNED — **RATIFIED by Mark, attended 2026-10-02 (D-WORLD-53)** over ten blocked quorum rounds (§12); D-SE-1..5 = A. Queue row 134. Not implemented. Base `cbe564ce12f791d95fd184da86d837fb2b6bc80e` (V1).
 **Clauses**: 3 (explicit authority end-to-end), 4 (resident-agent non-inferiority floor — this row supplies the World arm's tools), 5 (real recorded operation for provenance walks); north star "software-engineering domain live".
 **Direction**: owner-approved (Mark, attended 2026-10-02): (1) pure transitions emit an effect plan, executed by the coordinator through the broker; (2) tool parity with the hardened `ailang_only` lane, reusing `ailang policy-tool` / `ailang run --policy` as broker handlers; (3) no Docker; (4) production handler registry + budgets + self-contained `.ail` package + checked-in publish manifest; (5) live smoke with pi and Claude Code. Refinements to the direction are marked **[REFINED]** with their V-row.
 **Closes**: R-106-3 (effect bridge) by the effect-plan route; R-106-10 for **brokered tool effects**; row 107 Residual 7 for production content (R-106-1).
