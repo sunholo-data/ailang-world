@@ -1,0 +1,46 @@
+{
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: Premise P4 cites 'V5' as its verification evidence, but V5 is completely missing from the Verification Log (Section 16).",
+      "oc-glm-5-3: Load-bearing premise P4 (retrospective contamination \u2014 the sole basis for the E4 gate, the CONTAMINATED-PENDING default in \u00a78/AC13, and the `.git`-free export / no-history-clone prohibition in P3-B) cites verification row \"V5\", but \u00a716 contains no V5 entry: the log jumps V4 \u2192 V6a/V6b \u2192 V7a/b \u2192 V9 \u2192 V10 \u2192 V11 (V8 is also absent, though uncited). No surviving \u00a716 row quotes the diagnosis-bearing row-114 text at `world-mission.md:1891` that P4 claims was \"read directly\" \u2014 the doc's most consequential factual claim is therefore asserted, not verified, which violates gate 1 and is precisely the \"shorthand premise log\" defect this r3 was scoped to eliminate. P8 (row-92 artifact F-5 caveats) is likewise unmapped to any \u00a716 row despite the premise-table contract \"verified while authoring \u2192 \u00a716\".",
+      "oc-kimi-k3: The protocol's two load-bearing execution prerequisites are admitted-UNKNOWN rather than verified, and the author concedes the searches that would settle them were never run on the roots that would answer them. PR (\u00a75) mandates an ALREADY-EXISTING facility that enforces GET-only method/path policy 'independently of credentials and server authorization' and forbids building one (D6, \u00a713 non-goals); E3 requires a positively DECLARED capture corpus. Yet V4 states 'the agent-runtime/fleet roots that would own one were NOT searched (declared missing roots)' and V10 states the method-filter search 'is NOT exhaustive absence proof. Existing external enforcement availability is UNKNOWN.' Under premise-verification, the decisive feasibility premises (does a confinement facility exist? does a capture cohort exist?) are therefore unverified exactly where the doc's own completion gate (\u00a78/AC9: \u22653 qualifying successes, each requiring PR-passed plus a live walk) depends on them. As written, every attempt is structurally terminal at NOT-RUN(ISOLATION) or NOT-RUN(NO-CORPUS), so the row cannot reach its own acceptance criteria \u2014 the doc itself half-concedes this ('park explicitly'), which means it is requesting a fresh full author-excluding quorum for a protocol it predicts cannot execute. That is a design-doc defect, not an audit finding: quorum effort should not be spent until the UNKNOWN is resolved into either a positively identified facility/cohort (pinned in \u00a7PR/E3) or an explicit PARKED status."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.1387566,
+    "total_tokens_in": 25364,
+    "total_tokens_out": 10372
+  },
+  "external_present": 3,
+  "author_vendor_benched": "OpenAI",
+  "scope_disposition": "BLOCKED; authorized D44 one revision spent; no further authoring/sprint/walk. D52 human park proposed.",
+  "premise_measurements": [
+    {
+      "command": [
+        "sed",
+        "-n",
+        "1911,1913p",
+        "design_docs/world-mission.md"
+      ],
+      "exit_code": 0,
+      "stdout": "114. **[UNPARKED 2026-10-01 \u2014 D-WORLD-44 = A (Mark, attended): scoped revision + fresh full quorum, after 108; active incident harvest remains authorized] w-provenance-teeth-unseeded-baselined-walk** \u00b7 clause-5 \u00b7 **ROW 92 PROVED RETRIEVAL, NOT DIAGNOSIS: ITS FOUR WALKS READ ANSWERS THE SPRINT HAD SEEDED, AND EVERY PRE-WORLD BASELINE IS `UNMEASURED`.** Measured 2026-09-26 (attended review) in `design_docs/verification/w-1-0-value-demonstration.md`: the baseline column reads `UNMEASURED (record states method, not cost)` for Q1\u2013Q3 and C4, and the artifact itself states that the walk measures retrieval of a recorded diagnosis. Clause 5 asks for a provenance walk that yields the verified answer in \u22645 minutes *where the pre-World method was grep/log archaeology*, so the comparison arm is missing. **THE ITEM:** when real operation raises a new \"why did X happen\" question, (a) time the pre-World method live by an agent that has no access to World and (b) run the provenance walk from a World state where the answer was NOT hand-recorded (only the transitions and effect records that operation produced), then record both timings and whether each answer verifies. Repeat until \u22653 questions are done. Do not invent questions to fill the quota; the harvest rules in row 92's artifact (\u00a7 Harvest log, with rejections) apply. If no World-recorded operation can answer an unseeded question, **that is the finding**: record it and file the capability gap it names. \u00b7 ~1d per question, opportunistic \u00b7 NEEDS A DESIGN DOC (short: the protocol, not new code) \u00b7 gated on a real incident \u00b7 **filed 2026-09-26 (attended, Mark).** **CANDIDATE INCIDENT 1 (iter-206, remote-CI-red-after-local-green):** PR #161 head `2143f96` passed `-race` locally (store, daemon) and in the judge's worktree, then failed the go gate on the Linux CI runner in `TestCommitBudgetAndUncertainReconcile/ii_A_landed_uncertain_then_B_on_top` (`commit B: status 503 \u2026 CommitUncertain`; run `36437455255`). Controller answer: a test-budget leak (B ran under the arm's 100 ms), fixed `29e1336`. The row-114 question: \"why did PR #161 go red on CI after green local runs, and which commit fixed it?\" Time the grep/log baseline first, then the World walk. **CANDIDATE INCIDENT 2 (iter-207, full-suite-red-after-focused-green, LOAD class):** the first full-suite reading failed `TestUncertainBareCommitReconcilesByLogIndexNotHead` (1 s B budget arm) at the sprint tree, and a clean BASE worktree (pre-sprint `a2e31b2`) failed `TestWorldCoreManifestMatchesTheCommittedGolden` (`ailang pkg quality` 30 s bound) in the same window \u2014 both pass alone, in two-package form, and in the second full-suite reading (24/24 clean at the sprint tree). Controller answer: budget arms saturate under multi-mission + eval rig load; base control fired, so neither is a regression of the observed sprint \u2014 a load-sensitivity measurement for the row's protocol, and a candidate question with a measured answer. The clause still needs the timed pre-World baseline + unseeded World walk per the row's own protocol.\n\n    **CANDIDATE3 (iter210):** full pinned local verify_go failed twice at descendantPID setup on pristine9b2cfac while sameSHA remoteCI2/2green;focusedcontroller+judge10/10green. Freshfilesystem-fenced archaeology\u224883s (reportedSTOPnotinrawtranscript);independentSonnetnarrowPASS84, causeunproved. WalkNOT-RUN(NO-CORPUS),captureinventoryUNKNOWN,0/3pairedcredit. Evidence `design_docs/verification/world-iter210-baseline.md`;rejectedprotocol draftPR166.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "sed",
+        "-n",
+        "181,190p",
+        "design_docs/verification/w-1-0-value-demonstration.md"
+      ],
+      "exit_code": 0,
+      "stdout": "- **F-5 \u2014 the plan's M4 setup commands do not run as written.** (a) `--addr` needs a scheme\n  (`http://127.0.0.1:7654`) and is refused before `serve`. (b) An exported\n  `AILANG_REGISTRY_API_KEY` trips the startup refusal for every verb (the executor unset it, as\n  the refusal instructs). (c) `session mint --db` cannot run while `serve` holds the same db,\n  because of the single-writer lock, so the order had to be serve \u2192 stop \u2192 mint \u2192 restart. Also,\n  a clean SIGTERM drain prints no line; the exit status was captured by a wrapper\n  (`serve exited rc=0`). Item (c) makes a live mint-then-commit on a running daemon impossible\n  without a restart. That is a usability gap for any Phase-B operator flow, but it is recorded,\n  not fixed (doc \u00a79).\n\n",
+      "stderr": ""
+    }
+  ],
+  "adjudication": {
+    "gemini_glm": "CONFIRMED: P4 cites V5 but V5 missing, P8 unmapped. Controller now reads current row1911 and F5, above, but does not repair spent author revision.",
+    "kimi": "CONFIRMED scope: facility/corpus remain UNKNOWN and external roots not searched. Review is of proposal; finding does not prove global absence. No invented facility or execution. Raw transcript is at linked committed sibling path, so claimed total inaccessibility is limited to quorum payload, not artifact inexistence."
+  },
+  "metered_usd": 0.1387566
+}

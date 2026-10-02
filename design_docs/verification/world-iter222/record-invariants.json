@@ -1,0 +1,19 @@
+{
+  "base": "03ea641884327045ac59754d9fc25ed046066d7d",
+  "gate4_time": "2026-10-02T15:38:02Z",
+  "before_lines": 6081,
+  "after_lines": 6082,
+  "status_only_formula": "before+2-2*1 = before",
+  "decision_line_addition": 1,
+  "moved_stamp": "## STATUS 2026-10-02 (iteration 218) \u2014 **CRITICAL PATH ALL-BLOCKED ON D-WORLD-49 (DEFAULT B): BOOKKEEPING-ONLY BLOCK REPORT, NO PICK [ADMIN]** \u2014 Clause map 1/2/3/7 MET; 4 UNMET (row93 needs108 landed); 5 UNMET (row114 follows108, D46A order); 6 UNMET (row108 PARKED needs-human-review, D-WORLD-49 OPEN, default B: defer attended, no fourth round). Standing rule (d): no routable critical-path row \u2192 nothing picked, no side work. 0 directives since217 watermark (both watermark files, older-wins); ledger36 rows --check valid, only D49 OPEN; 94 M6 publish attended (D45A);127/128 deferred (D47=B). Traces(a)-(c) clean: PR173/166 known World parked drafts (worktree-attributed), worktrees accounted, main clean; dev CI green f383818 checks2/2 run-exists; weekly sweep not owed (207 ran post-Sep-28 rotation; 159 created after boundary). No product roles spawned (Gate2 stopped before routing); doc-only record independently evaluated before landing, verdict+CI banked in verification/world-iter218 and follow-through. Goal unmoved. One action unblocks all three rows: Mark answers D-WORLD-49.",
+  "archive_exact_copy": true,
+  "archive_positive217": true,
+  "original_ledger_rows": 38,
+  "original_rows_byte_identical": true,
+  "current_ledger_rows": 39,
+  "open": [
+    "D-WORLD-52"
+  ],
+  "protected_goal_bar_conflict_guardrails_routing_unchanged": true,
+  "known_queue128": true
+}

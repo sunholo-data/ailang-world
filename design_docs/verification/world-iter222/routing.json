@@ -1,0 +1,43 @@
+{
+  "operator_native_agent_override": true,
+  "defaults_explicitly_resolved_not_driver_export_claim": true,
+  "roles": [
+    {
+      "role": "designer",
+      "preferred": "rotation pi:ollama/glm-5.3:cloud",
+      "error": "Unknown model glm-5.3; other non-OpenAI rotation entries outside native enum",
+      "actual": "native gpt-6.1-sol",
+      "tokens": "not reported",
+      "status": "completed"
+    },
+    {
+      "role": "planner",
+      "preferred": "agent-tool opus fail-closed:no-files-section; configured provider pin codex:gpt-6.1-sol",
+      "error": "native family probe claude-opus-5 Unknown model; current5-5 also outsideenum",
+      "actual": "native gpt-6.1-sol",
+      "tokens": "not reported",
+      "status": "completed"
+    },
+    {
+      "role": "executor",
+      "preferred": "codex:gpt-6.1-sol",
+      "error": null,
+      "actual": "native gpt-6.1-sol",
+      "tokens": "not reported",
+      "status": "completed administrative-only; product BLOCKED"
+    },
+    {
+      "role": "evaluator",
+      "preferred": "sonnet",
+      "error": "Unknown model claude-sonnet-5",
+      "actual": "native gpt-6.1-sol",
+      "tokens": "not reported",
+      "status": "pending terminal independent record"
+    }
+  ],
+  "substitution_flag": "D48 same-model fresh native contexts; evaluator distinctactor required; neverAstra or oldermodels",
+  "controller_tokens": "not reported",
+  "metered_usd": 0.1387566,
+  "driver_routing_note": "as configured",
+  "base": "03ea641884327045ac59754d9fc25ed046066d7d@2026-10-02T15:38:02Z"
+}

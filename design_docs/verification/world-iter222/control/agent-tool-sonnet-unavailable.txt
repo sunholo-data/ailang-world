@@ -1,0 +1,1 @@
+Required native evaluator preferred claude-sonnet-5 returned Unknown model; available enum excludes Anthropic. Actual fresh independent native GPT6.1Sol under amendedD48, FLAG same-model/fresh-context. Generator-not-equal-judge by actor, never controller verdict; no Astra/oldermodel. Independent ADMIN preservation judgment cannot approve rejected protocol or clause5 credit.

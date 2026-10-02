@@ -1,0 +1,4 @@
+✓ Message sent to 'controlplane' (ID: inbox_1790954758383_885f3e26)
+✓ Pub/Sub notification published
+✓ Envelope computed (2 slots, code: auto)
+2026/10/02 17:25:58 package agents: derived 9 inbox agent(s) from the registry index: pkg-sunholo-decisions, pkg-sunholo-discord, pkg-sunholo-economic, pkg-sunholo-eparse, pkg-sunholo-gemini-agents, pkg-sunholo-gmail, pkg-sunholo-oauth, pkg-sunholo-relativity, pkg-world-core

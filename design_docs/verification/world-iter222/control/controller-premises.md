@@ -1,0 +1,4 @@
+Controller source reading at 03ea641: host/daemon/daemon.go:714–743 registers POST /v1/commit, POST /a2a/, POST /mcp/ on one mux; NewSessionMiddleware wraps only isProtected, whose predicate is POST /v1/commit. This proves route registration/protection scope only; it does not prove an enforceable GET-only walk facility.
+Gate0 corrected predecessor read to actual state file140 after initial literal149; corrected instrument rc0 positivecontrol107:4, no in-window crash.
+Gate1 API jq malformed first query failed, never treated as green; corrected check endpoint2/2 completedsuccess, workflow37006394693 nonempty2jobs with34steps and no failedstep.
+Gate3 worktree add completed synchronously0 under tool wait; HEAD verified03ea641. Used origin/dev literal rather than snap-SHA prescribed; subsequent HEAD==Gate1 base confirms same subject, no stale-base claim.

@@ -1,0 +1,10 @@
+{
+  "ignore_positive": ".gitignore:3:**/.ailang/\t.ailang/iter222-ignore-control",
+  "named_destinations_unignored": true,
+  "metadata_known_bad_control_fired": true,
+  "metadata_clean": true,
+  "all_artifacts_nonexecutable_nonsource": true,
+  "personal_email_gate": 0,
+  "whitespace_clean": true,
+  "native_role_tokens": "not reported"
+}

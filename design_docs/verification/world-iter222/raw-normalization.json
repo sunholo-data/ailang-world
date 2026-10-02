@@ -1,0 +1,14 @@
+[
+  {
+    "original": "design_docs/verification/world-iter222/control/claim-read.txt",
+    "banked": "design_docs/verification/world-iter222/control/claim-read.txt.raw.json",
+    "sha256": "4337eafcb3791bcf39bd4083982ba446bbd458070eac15e126e985da123a4976",
+    "reason": "terminal blank in CLI raw transcript triggers diff--check; lossless wrapper"
+  },
+  {
+    "original": "design_docs/verification/world-iter222/control/worktrees.txt",
+    "banked": "design_docs/verification/world-iter222/control/worktrees.txt.raw.json",
+    "sha256": "c93a6d2aa43397a688c58fa5236d8169f141589afbc56d37394542b5e89744b9",
+    "reason": "terminal blank in CLI raw transcript triggers diff--check; lossless wrapper"
+  }
+]

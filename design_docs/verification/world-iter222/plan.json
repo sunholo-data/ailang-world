@@ -1,0 +1,111 @@
+{
+  "iteration": 222,
+  "role": "sprint-planner",
+  "actual_lane": "native gpt-6.1-sol fresh context",
+  "routing_flag": "D48 fallback: native claude-opus-5 Unknown model; resolver agent-tool opus fail-closed:no-files-section supersedes codex-ok prose; never Astra",
+  "base_sha": "03ea641884327045ac59754d9fc25ed046066d7d",
+  "disposition": "PARKED_NEEDS_HUMAN_REVIEW",
+  "implementation_sprint_approved": false,
+  "handoff_approved": false,
+  "features": [],
+  "registry_reuse": "not-applicable: no implementable milestone; no package capability authorized",
+  "human_and_execution_prerequisites": [
+    "D-WORLD-52 new authority: choose A or B; D44A one scoped revision is spent and full quorum substantively BLOCKED.",
+    "After any authorized correction and fresh quorum, explicitly ratify/freeze D2 roles, D3 enforcement, D4 decontaminated export and D5 World-issued-to-verified timing. Neither D44 nor D52 option A automatically ratifies these.",
+    "Identify an already-existing authorized enforcement facility and its version/configuration; prove root/process/egress/method/path confinement with attributable allow/deny and direct-daemon/bypass controls before question reveal. No new proxy/filter/harness.",
+    "Declare a real unseeded operation-produced cohort with path, archival sha256, producer and explicit completeness; UNKNOWN inventory is not proven absence or UNANSWERABLE.",
+    "Resolve real-candidate/source decontamination and fresh actor context manifests; historical C1/C2 stay CONTAMINATED-PENDING. C3 historical partial contributes zero paired successes."
+  ],
+  "administrative_executor_checks": [
+    {
+      "id": "A1",
+      "check": "Pin pwd and HEAD; inspect git status, read r3/designer/quorum and authoritative charter ledger/row suffixes.",
+      "limit": "Read-only; no fetch, reset, checkout, model API, message, incident or product command."
+    },
+    {
+      "id": "A2",
+      "check": "Validate plan.json and inspect only proposed administrative evidence for whitespace, path existence and internal consistency.",
+      "limit": "No implementation tests, daemon, baseline, walk, mutation controls or capture search beyond this review."
+    },
+    {
+      "id": "A3",
+      "check": "Preserve all reviewer results verbatim and assemble controller-owned D-WORLD-52 ask/default plus parked disposition for review.",
+      "limit": "Do not answer, resolve or insert a human ruling; do not edit r3 or manufacture missing evidence."
+    },
+    {
+      "id": "A4",
+      "check": "Confirm administrative scope remains proposal/evidence only and return terminal bounded status to controller.",
+      "limit": "No commit/push, external messages, sprint handoff, clause credit, harness changes or further revision."
+    }
+  ],
+  "decision_ask": {
+    "decision_id": "D-WORLD-52",
+    "status": "proposed-not-human-resolved",
+    "question": "Authorize one bounded row114 follow-up after iteration222 r3 full quorum BLOCKED?",
+    "options": {
+      "A": "One bounded existing-facility/corpus discovery, premise correction and fresh full quorum; no harness code and no automatic D2–D5 ratification.",
+      "B": "Attended protocol review/defer; preserve parked proposal."
+    },
+    "recommendation": "A",
+    "default_while_unanswered": "B immediately: row114 parked, row93 waits under D46A; no bar-neutral side work, sprint, baseline or walk.",
+    "post_A_execution_gate": "Quorum cleared plus explicit D2–D5 freeze, proven existing confinement, real unseeded cohort and all pre-reveal controls; otherwise retain park."
+  },
+  "quorum_artifact": "design_docs/verification/world-iter222/quorum/w-provenance-teeth-unseeded-baselined-walk-2026-10-02T15-33-08Z.json",
+  "quorum_synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: Premise P4 cites 'V5' as its verification evidence, but V5 is completely missing from the Verification Log (Section 16).",
+      "oc-glm-5-3: Load-bearing premise P4 (retrospective contamination — the sole basis for the E4 gate, the CONTAMINATED-PENDING default in §8/AC13, and the `.git`-free export / no-history-clone prohibition in P3-B) cites verification row \"V5\", but §16 contains no V5 entry: the log jumps V4 → V6a/V6b → V7a/b → V9 → V10 → V11 (V8 is also absent, though uncited). No surviving §16 row quotes the diagnosis-bearing row-114 text at `world-mission.md:1891` that P4 claims was \"read directly\" — the doc's most consequential factual claim is therefore asserted, not verified, which violates gate 1 and is precisely the \"shorthand premise log\" defect this r3 was scoped to eliminate. P8 (row-92 artifact F-5 caveats) is likewise unmapped to any §16 row despite the premise-table contract \"verified while authoring → §16\".",
+      "oc-kimi-k3: The protocol's two load-bearing execution prerequisites are admitted-UNKNOWN rather than verified, and the author concedes the searches that would settle them were never run on the roots that would answer them. PR (§5) mandates an ALREADY-EXISTING facility that enforces GET-only method/path policy 'independently of credentials and server authorization' and forbids building one (D6, §13 non-goals); E3 requires a positively DECLARED capture corpus. Yet V4 states 'the agent-runtime/fleet roots that would own one were NOT searched (declared missing roots)' and V10 states the method-filter search 'is NOT exhaustive absence proof. Existing external enforcement availability is UNKNOWN.' Under premise-verification, the decisive feasibility premises (does a confinement facility exist? does a capture cohort exist?) are therefore unverified exactly where the doc's own completion gate (§8/AC9: ≥3 qualifying successes, each requiring PR-passed plus a live walk) depends on them. As written, every attempt is structurally terminal at NOT-RUN(ISOLATION) or NOT-RUN(NO-CORPUS), so the row cannot reach its own acceptance criteria — the doc itself half-concedes this ('park explicitly'), which means it is requesting a fresh full author-excluding quorum for a protocol it predicts cannot execute. That is a design-doc defect, not an audit finding: quorum effort should not be spent until the UNKNOWN is resolved into either a positively identified facility/cohort (pinned in §PR/E3) or an explicit PARKED status."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.1387566,
+    "total_tokens_in": 25364,
+    "total_tokens_out": 10372
+  },
+  "reviewer_results_verbatim": [
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.01906,
+      "tokens_in": 8894,
+      "tokens_out": 106,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Premise P4 cites 'V5' as its verification evidence, but V5 is completely missing from the Verification Log (Section 16).",
+        "catch": "Missing V5 entry in the Verification Log.",
+        "proposed_fix": "Add the V5 entry to Section 16 Verification Log detailing the direct read of :1891 that confirms the presence of the candidate diagnoses in the row text, or remove the V5 citation from P4."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0407876,
+      "tokens_in": 8212,
+      "tokens_out": 6657,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Load-bearing premise P4 (retrospective contamination — the sole basis for the E4 gate, the CONTAMINATED-PENDING default in §8/AC13, and the `.git`-free export / no-history-clone prohibition in P3-B) cites verification row \"V5\", but §16 contains no V5 entry: the log jumps V4 → V6a/V6b → V7a/b → V9 → V10 → V11 (V8 is also absent, though uncited). No surviving §16 row quotes the diagnosis-bearing row-114 text at `world-mission.md:1891` that P4 claims was \"read directly\" — the doc's most consequential factual claim is therefore asserted, not verified, which violates gate 1 and is precisely the \"shorthand premise log\" defect this r3 was scoped to eliminate. P8 (row-92 artifact F-5 caveats) is likewise unmapped to any §16 row despite the premise-table contract \"verified while authoring → §16\".",
+        "catch": "The premise table's →§16 verification mapping is broken: P4→V5 dangles, P8 has no verification row at all, and the V5/V8 gaps suggest §16 was renumbered or rows were dropped without repairing references. The author must confirm whether the designer premise transcript actually contains the quoted `:1891` diagnosis lines (iter-206 fix `29e1336`, iter-207 load-sensitivity) and the quoted F-5 caveats, and repair every premise-to-log reference before quorum.",
+        "proposed_fix": "Add to §16 a restored V5 row with exact command and quoted output, e.g.: `V5 | sed -n '1891p' design_docs/world-mission.md` (rc 0) quoting the row-114 text showing both candidate diagnoses recorded verbatim, and re-cite P4 to it; add a row (V8 or successor ID) quoting row-92 artifact §F-5's operational caveats and re-cite P8 to it. Renumber or restore the log so no premise references a nonexistent ID, and add one sentence to the §16 preamble stating that every P# premise maps to an existing row ID (auditable in one pass). This converts P4 and P8 from assertions into measured premises and discharges the r3 'replace shorthand premise logs' scope item."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.07890899999999999,
+      "tokens_in": 8258,
+      "tokens_out": 3609,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The protocol's two load-bearing execution prerequisites are admitted-UNKNOWN rather than verified, and the author concedes the searches that would settle them were never run on the roots that would answer them. PR (§5) mandates an ALREADY-EXISTING facility that enforces GET-only method/path policy 'independently of credentials and server authorization' and forbids building one (D6, §13 non-goals); E3 requires a positively DECLARED capture corpus. Yet V4 states 'the agent-runtime/fleet roots that would own one were NOT searched (declared missing roots)' and V10 states the method-filter search 'is NOT exhaustive absence proof. Existing external enforcement availability is UNKNOWN.' Under premise-verification, the decisive feasibility premises (does a confinement facility exist? does a capture cohort exist?) are therefore unverified exactly where the doc's own completion gate (§8/AC9: ≥3 qualifying successes, each requiring PR-passed plus a live walk) depends on them. As written, every attempt is structurally terminal at NOT-RUN(ISOLATION) or NOT-RUN(NO-CORPUS), so the row cannot reach its own acceptance criteria — the doc itself half-concedes this ('park explicitly'), which means it is requesting a fresh full author-excluding quorum for a protocol it predicts cannot execute. That is a design-doc defect, not an audit finding: quorum effort should not be spent until the UNKNOWN is resolved into either a positively identified facility/cohort (pinned in §PR/E3) or an explicit PARKED status.",
+        "catch": "Two things to fix before resubmission. (1) Close the declared verification gap: the r3 author must either obtain from the controller the concrete agent-runtime/fleet root list and run + quote the recorder/confinement searches there (the absence claims in P7/V4/V10 are currently scoped to this repo only and are asserted absent), or secure a controller-cited positive identification naming the facility (identity/version/configuration) and the corpus cohort (path, sha256, producer, completeness) — recorded as new §16 rows, not left as 'declared missing roots'. (2) The §16 evidence is not in the doc: it says 'Exact commands, exit statuses and raw quoted outputs are in [designer premise transcript](../verification/world-iter222/designer.md)', which is outside the reviewed document, so V1–V11 (HEAD sha, isProtected scope, merge-base rc1 at both tips) are claimed-verified but not verifiable from this artifact; the raw transcript must be moved under this row's own verification folder so the premise log is self-contained for the quorum it demands.",
+        "proposed_fix": "(1) Add to §16 and perform before quorum, with quoted raw outputs committed to `design_docs/verification/w-provenance-teeth-unseeded-baselined-walk/iter222-premise-transcript.md` (relocate the existing designer.md content there and repoint the link): new rows 'V12 — Controller-declared fleet/agent-runtime root enumeration: quote the root list; recursive grep for proxy|filter|sandbox|method-enforce|allowlist facilities; quoted hits or quoted zero-hit output plus positive control; conclusion: facility named with identity/version/config OR absence proven only within the enumerated roots.' and 'V13 — Same roots, search for mission→World recorder/capture wiring (producer, store path, event schema); quoted results; conclusion: cohort declared {path, sha256, producer, completeness} OR capture gap confirmed as the row's first finding.' (2) Replace the Status paragraph with a conditional: 'If V12 and V13 positively identify the facility and cohort, pin them here (facility identity + configuration in §PR; cohort declaration values in E3) and proceed to fresh full author-excluding quorum. If either is absent, status changes to PARKED (facility|corpus) awaiting controller disposition; no quorum requested, no NOT-RUN attempt consumed.' This converts V4/V10's admitted non-exhaustive UNKNOWNs into either load-bearing verified premises or an explicit, honest park — matching the doc's own 'If infeasible, park explicitly' line, which the current quorum-requesting status contradicts."
+      },
+      "landed": null
+    }
+  ],
+  "planner_token_usage": "not reported: native role usage not exposed"
+}
