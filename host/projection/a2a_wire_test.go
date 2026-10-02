@@ -257,7 +257,7 @@ func TestA2ADispatchWire(t *testing.T) {
 		r := newWireRig(t)
 		var reached atomic.Int32
 		const secret = "SECRET-R11-store-detail"
-		h := r.handler(t, failStore{Store: r.st, reached: &reached, getObject: fmt.Errorf("%s: %w", secret, context.DeadlineExceeded)}, unusedRunner{}, nil, 30*time.Second)
+		h := r.handler(t, failStore{Store: r.st, reached: &reached, getObject: fmt.Errorf("%s: %w", secret, context.DeadlineExceeded)}, unusedRunner{}, nil, 20*time.Second)
 		var log bytes.Buffer
 		h.errorLog = &log
 		rec := post(t, h, "Bearer "+r.tok, wireBody("wire-R11", "t-r11"))

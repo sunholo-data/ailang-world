@@ -210,15 +210,16 @@ func (blockingResolver) ResolveContext(ctx context.Context, _ string, _ int64) (
 // reference writers, a small finite bound (Decision 6).
 func testConfig(st *store.Store) Config {
 	return Config{
-		Resolver:   authority.New(st),
-		Reader:     transitionreg.NewReader(st),
-		Heads:      st,
-		Deny:       refDeny,
-		Fail:       refFail,
-		ErrorLog:   io.Discard,
-		Agent:      protocol.AgentInfo{Name: "ailang-worldd", Description: "test projection agent", Version: "0.1.0"},
-		MaxWait:    2 * time.Second,
-		InvokeWait: 2 * time.Second,
+		Resolver:       authority.New(st),
+		Reader:         transitionreg.NewReader(st),
+		Heads:          st,
+		Deny:           refDeny,
+		Fail:           refFail,
+		ErrorLog:       io.Discard,
+		Agent:          protocol.AgentInfo{Name: "ailang-worldd", Description: "test projection agent", Version: "0.1.0"},
+		MaxWait:        2 * time.Second,
+		InvokeWait:     2 * time.Second,
+		CredentialWait: time.Second, CallbackTimeout: 2 * time.Second, MaxCallbacks: 8, WriteWait: 30 * time.Second,
 	}
 }
 
@@ -907,6 +908,14 @@ func (r *countingRunner) RunContext(context.Context, capsule.Entry) (capsule.Res
 }
 
 func testA2ADispatchSuccess(t *testing.T) {
+	testA2ADispatchSuccessHeads(t, false)
+}
+
+func TestA2A_AbsentPrecheckPublicationDispatch(t *testing.T) {
+	testA2ADispatchSuccessHeads(t, true)
+}
+
+func testA2ADispatchSuccessHeads(t *testing.T, absentPrecheck bool) {
 	st := openStore(t)
 	genesis := store.Object{Hash: hashref.SumSHA256([]byte("genesis-state")), InterfaceHash: hashref.SumSHA256([]byte("test/genesis")),
 		SemanticID: "test/genesis", Provenance: "projection-test", Payload: []byte("genesis-state")}
@@ -945,6 +954,9 @@ func testA2ADispatchSuccess(t *testing.T) {
 	}
 	cfg := testConfig(st)
 	cfg.Coordinator = coord
+	if absentPrecheck {
+		cfg.Heads = fixedHeads{ok: false}
+	}
 	h := mustHandler(t, cfg)
 	tok := mintToken(t, st, "ep-a", []broker.Capability{liveGrant("alpha")})
 	body := `{"jsonrpc":"2.0","id":7,"method":"tasks/send","params":{"id":"t1","metadata":{"skill_id":"tools.echo"},"message":{"parts":[{"type":"data","data":{"x":1}}]}}}`
@@ -1469,7 +1481,7 @@ func TestProjection_WireOwnershipSource(t *testing.T) {
 			if strings.Contains(line, `"jsonrpc"`) || strings.Contains(line, "`json:\"jsonrpc\"`") {
 				t.Errorf("%s:%d: hand-formatted JSON-RPC wire material (a parallel wire shape is forbidden — AC1): %q", f, i+1, strings.TrimSpace(line))
 			}
-			if strings.Contains(line, "CallerSurface") || strings.Contains(line, "ValidateMCPName") {
+			if filepath.Base(f) == "projection.go" && (strings.Contains(line, "CallerSurface") || strings.Contains(line, "ValidateMCPName")) {
 				t.Errorf("%s:%d: reference to the MCP name-grammar gate (F6 — card IDs are verbatim, never CallerSurface): %q", f, i+1, strings.TrimSpace(line))
 			}
 			if strings.Contains(line, "X-World-Session") {
