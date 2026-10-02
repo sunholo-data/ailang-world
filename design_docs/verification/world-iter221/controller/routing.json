@@ -59,7 +59,7 @@
       "fallback": "gpt-6.1-sol",
       "task": "/root/record_evaluator",
       "judge_independence": "same-model-fresh-context FLAG",
-      "status": "ADMIN PASS80/100 zero blocking on466f138",
+      "status": "ADMIN PASS80 on466f138; deltaPASS80 on46faa49; corrected independent PASS80 on ec9894e after own source-surfacecheck; previous executable-suffix review miss acknowledged",
       "tokens": "not reported"
     }
   },
