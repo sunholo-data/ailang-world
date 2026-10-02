@@ -244,3 +244,173 @@ both the checked-in bytes and a newly constructed upstream handler. Executable m
 absence examples run with `go test ./host/projection ./host/transitionreg -run '^Example' -v`.
 
 Host behavior changes are recorded in the [host changelog](HOST_CHANGELOG.md).
+
+### 9. Software-engineering tools
+
+**Attended — pending first verbatim run (row 134 M6).** This section serves the eight
+`packages/se-tools` transitions (`ailang-read`, `ailang-write`, `ailang-edit`, `ailang-check`,
+`ailang-run`, `builtins-search`, `examples-search`, `ailang-cli`) over `/mcp/` and `/a2a/`.
+Every tool call runs its plan in the pinned interpreter, runs exactly one brokered effect with the
+v0.51.0 tool binary inside the episode's worktree, and commits one log entry. Its flags are bound
+to `serve --help` and to the `session mint` parser by `TestQuickstartSection9FlagsMatchTheCLI`.
+The `-d` payloads below are run against a test daemon by
+`TestSeToolsQuickstartPayloadsVerbatim`.
+
+> **Known breaks, measured 2026-10-02 (M5b). M6 is blocked until they are fixed.**
+> 1. `session mint` stores each `--grant` with expiry 0, and the broker treats an expiry-0 grant
+>    as expired. A CLI-minted session therefore sees **zero** tools (`denied:expired`). Pinned by
+>    `TestSessionMintGrantsCarryNoExpiry`.
+> 2. `builtins-search`: v0.51.0 `policy-tool` cuts every CLI op's stdout at 64 KiB, and
+>    `builtins list --json` is 82,774 bytes. The call returns
+>    `{"ok":false,"refused":"builtins_list returned no inventory…"}`.
+> 3. `examples-search`: the examples corpus is **not** built into v0.51.0. The binary reads it
+>    from `$HOME/.ailang/examples` (or `AILANG_EXAMPLES`), and the handler runs it with
+>    `HOME=<db-dir>/cache/<episode>`, so the call answers `examples not found`.
+>
+> Breaks 2 and 3 are pinned as tripwires in `TestSeToolsMCPEndToEnd`.
+
+Pick two binaries. `PIN` is the `.ail` interpreter pin (AILANG v0.41.0) and runs every plan.
+`TOOL` is the tool binary, which must be exactly AILANG v0.51.0; startup refuses any other
+release. Build both CLIs from the repo root:
+
+```bash
+export PIN=$HOME/.pinned-ailang/ailang
+export TOOL=$HOME/.pinned-ailang-tools/v0.51.0/ailang
+$PIN --version && $TOOL --version
+go build -o /tmp/ailang-worldd ./cmd/ailang-worldd
+go build -o /tmp/world-publish ./cmd/world-publish
+```
+
+Next, provision the worktree. Episode `ep1` maps to `<workspace-root>/ep1`. That path must be
+a real directory, not a symlink, and the episode id must match `^[a-z0-9][a-z0-9-]{0,63}$`. The
+store directory must lie **outside** the workspace root, or startup refuses.
+
+```bash
+mkdir -p /tmp/se-world /tmp/se-ws
+git init -q /tmp/se-proj && git -C /tmp/se-proj commit -q --allow-empty -m init
+git -C /tmp/se-proj worktree add --detach /tmp/se-ws/ep1
+printf 'module hello\n\nimport std/io (println)\n\nexport func main() -> () ! {IO} {\n  println("hello from ailang-run")\n}\n' > /tmp/se-ws/ep1/hello.ail
+```
+
+Start the daemon once with the pin only. Startup bootstraps the epoch registry for the pin.
+Then commit a genesis world, because a tool call commits on top of a selected head:
+
+```bash
+/tmp/ailang-worldd serve --db /tmp/se-world/world.db --ailang-bin $PIN &
+python3 - <<'EOF'
+import json, hashlib, base64, os
+def sha(b): return "sha256:" + hashlib.sha256(b).hexdigest()
+payload = json.dumps({"goal": "se-tools smoke"}).encode()
+interp  = open(os.environ["PIN"], "rb").read()
+eh = sha(b"se-genesis-entry")
+c = {"observedHead": "",
+     "objects": [{"hash": sha(payload), "interfaceHash": sha(b"iface-v1"),
+                  "semanticId": "world/demo/genesis-goal", "provenance": "quickstart-se",
+                  "payload": base64.b64encode(payload).decode()}],
+     "nextWorld": {"ref": sha(b"se-world-1"), "revision": 0,
+                   "stateRoot": sha(b"se-state-1"), "logHead": eh},
+     "entry": {"header": {"entryIndex": 0, "semanticsEpoch": 1,
+                          "transitionFn": sha(payload), "interpreter": sha(interp),
+                          "prevEntryHash": sha(b"genesis"), "writtenBy": "quickstart-se"},
+               "entryHash": eh, "transitionRef": sha(payload)}}
+open("/tmp/se-genesis.json","w").write(json.dumps(c, indent=2))
+EOF
+/tmp/ailang-worldd commit --file /tmp/se-genesis.json
+kill %1
+```
+
+**Publish (attended, TTY fence).** Run this from the **repo root**, because the manifest's
+`transitionFnFile` paths are repo-relative. The daemon must be stopped, since publishing needs
+single-writer authority. `world-publish` refuses without a controlling terminal and asks for the
+typed confirmation phrase. An agent cannot run this step:
+
+```bash
+/tmp/world-publish transitions --store /tmp/se-world/world.db \
+  --manifest packages/se-tools/transitions.json --ailang-bin $PIN
+```
+
+The output is `published transition registry revision 1 (head sha256:…)`. Re-running it prints
+`UNCHANGED`.
+
+**Mint (attended, TTY fence)** a session holding the six effect grants, one per effect name. A
+grant is `EFFECT=SCOPE:BUDGET`, with scope `worktree` and a budget counted in calls. `write`
+and `edit` share `Workspace.Write`, and the two searches share `Ailang.Discover`:
+
+```bash
+/tmp/ailang-worldd session mint --db /tmp/se-world/world.db --episode ep1 \
+  --grant Workspace.Read=worktree:50 --grant Workspace.Write=worktree:50 \
+  --grant Ailang.Check=worktree:50 --grant Ailang.Run=worktree:50 \
+  --grant Ailang.Discover=worktree:50 --grant Ailang.CLI=worktree:50 \
+  --ttl 14400 --out /tmp/se-session
+```
+
+Serve with the workspace tools enabled. Both `--workspace-root` and `--tool-ailang-bin` are
+required. With only one of them, the daemon logs `workspace tools disabled` and refuses every
+tool call before any effect runs. This is rule R8, and over `/a2a/` its message is
+`transition declares an effect this daemon has no handler for`:
+
+```bash
+/tmp/ailang-worldd serve --db /tmp/se-world/world.db --ailang-bin $PIN \
+  --workspace-root /tmp/se-ws --tool-ailang-bin $TOOL &
+```
+
+List the tools, then make one call:
+
+```bash
+curl -s -H "Authorization: Bearer $(cat /tmp/se-session)" \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' http://127.0.0.1:7644/mcp/
+curl -s -H "Authorization: Bearer $(cat /tmp/se-session)" \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ailang-read","arguments":{"path":"hello.ail"}}}' http://127.0.0.1:7644/mcp/
+```
+
+The list holds exactly the eight names. Each MCP name is its ID, because `-` needs no
+escaping. A session sees only the tools whose effect it holds a grant for. The call result
+carries the handler's fields (`ok`, `content`, `tool`, `policy_digest`) plus
+`world: {effects:[{id, status, record}], plan}`. Resolve the record with
+`curl -s -H "Authorization: Bearer $(cat /tmp/se-session)" http://127.0.0.1:7644/v1/objects/<record>`.
+An argument outside a tool's schema is refused by its plan (`{"ok":false,"refused":"…"}`,
+`effects: []`), and the refusal still commits.
+
+**pi** loads the server through pi-mcp-adapter, measured on 2.32.1 with `pi` 0.85.1.
+`directTools` registers each tool as its own pi tool. The adapter names a direct tool
+`<server>_<tool>` with `.` replaced by `_` (`formatToolName`, `toolPrefix: "server"`), so server
+`world` gives `world_ailang-read` and so on:
+
+```bash
+cat > /tmp/se-pi-mcp.json <<'EOF'
+{"mcpServers": {"world": {"url": "http://127.0.0.1:7644/mcp/", "auth": "bearer",
+  "bearerTokenEnv": "WORLD_SESSION", "directTools": true, "toolPrefix": "server"}}}
+EOF
+export WORLD_SESSION=$(cat /tmp/se-session)
+pi --mcp-config /tmp/se-pi-mcp.json
+```
+
+In that interactive session, run `/mcp tools` and confirm the eight `world_*` names. This first
+session also writes the adapter's metadata cache (`~/.pi/agent/mcp-cache.json`). Direct tools
+register from that cache, and until it exists they fall back to the proxy. Then run the smoke
+with every built-in disabled:
+
+```bash
+pi --mcp-config /tmp/se-pi-mcp.json --no-builtin-tools \
+  --tools world_ailang-read,world_ailang-write,world_ailang-edit,world_ailang-check,world_ailang-run,world_builtins-search,world_examples-search,world_ailang-cli \
+  -p "Read hello.ail, change its message to 'hello from pi', check it, then run it and report its stdout."
+```
+
+**Claude Code** generates its own config. In a scratch directory, the `-s project` scope writes
+`.mcp.json`, which holds the raw bearer token, so delete the directory after the smoke.
+`--tools ""` disables the built-in tools, because `--allowedTools` alone leaves them in place:
+
+```bash
+mkdir -p /tmp/se-claude && cd /tmp/se-claude
+claude mcp add --transport http world http://127.0.0.1:7644/mcp/ \
+  --header "Authorization: Bearer $(cat /tmp/se-session)" -s project
+claude -p "Read hello.ail, change its message to 'hello from claude', check it, then run it and report its stdout." \
+  --tools "" --strict-mcp-config --mcp-config /tmp/se-claude/.mcp.json \
+  --allowedTools mcp__world__ailang-read,mcp__world__ailang-write,mcp__world__ailang-edit,mcp__world__ailang-check,mcp__world__ailang-run,mcp__world__builtins-search,mcp__world__examples-search,mcp__world__ailang-cli
+```
+
+Confirm the `mcp__world__*` names in an interactive `claude --strict-mcp-config --mcp-config
+/tmp/se-claude/.mcp.json` session with `/mcp`. Every call from either client is one log entry:
+read them back with `/v1/log/<entry_index>` as in §7.

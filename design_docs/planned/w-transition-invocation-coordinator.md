@@ -297,7 +297,7 @@ When the daemon has **no** pinned interpreter (`cfg.AilangBin == ""`, V16), it h
 | `*store.DuplicateInvocationError` (defensive mapping; reachable only if the step-1a in-flight guard is bypassed — see "Round 2 carve-out") | -32602 | `task id already used in this session` |
 | R4 bind error, R6 source error, other store errors, R13 reconcile integrity (row 122 / row 125: mismatch, absent, undecodable) | -32603 | `transition invocation is not available in this daemon` (existing `notAvailableMessage`) |
 | R7 no world | -32603 | `no world is selected; commit a genesis world first` |
-| R8 effects declared | -32603 | `transitions that declare effects cannot be invoked in this daemon` |
+| R8 effects declared | -32603 | `transitions that declare effects cannot be invoked in this daemon` — reworded by row 134 M4b (R8 now refuses only a declared effect with no registered handler) to `transition declares an effect this daemon has no handler for` |
 | R9 incompatible | -32603 | `transition does not implement the invocation calling convention` |
 | R10 execution failed | -32603 | `transition execution failed` |
 | R11 deadline/cancel | -32603 | `invocation exceeded its deadline` |
