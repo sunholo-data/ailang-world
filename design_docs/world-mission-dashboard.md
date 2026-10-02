@@ -1,22 +1,16 @@
-# World mission dashboard — iteration 222, 2026-10-02
+# World mission dashboard — iteration 223, 2026-10-02
 Latest release: world/core@0.1.1 published attended; no release this run.
-World 1.0: clauses1/2/3/6/7 MET;4/5 UNMET. Goal unmoved.
-Pick114: D44A ONE scoped protocol revision spent; no implementation/walk.
-Fresh full quorum BLOCKED: Gemini/GLM/Kimi all present, OpenAI author benched.
-Missing V5/P8 premise evidence; method facility and capture cohort UNKNOWN.
-Row114 needs-human-review D52; inherited draft166 stays DRAFT/unmerged.
-D52 A recommended: bounded discovery/premise correction, fresh full quorum.
-D52 B default immediately: attended defer; no further revision or walk.
-D2–D5 still unfrozen; A does not ratify them or authorize harness code.
-Paired unseeded verified questions0/3; partial historical baseline grants no credit.
-Critical order108 LANDED221 →114 PARKED →93 waits (D46A); no side work.
-Parked on Mark: D52 alone; original38 attended decision rows retained.
+World 1.0: clauses 1/2/3/6/7 MET; 4/5 UNMET. Goal unmoved by the loop.
+Critical path (attended D-WORLD-53): 134 → 114 → 93.
+Row 134 w-software-engineering-domain: RATIFIED, IN-SPRINT for the attended session.
+  Loop must not pick it until the attended controller hands it back.
+Row 114 (clause 5): PARKED on D-WORLD-52 (default B: attended defer).
+Row 93 (clause 4): capability-blocked although 106/107/108 landed; needs 134.
+This fire: NO PICK (standing rule (d)); bookkeeping-only record.
+Mid-fire: loop's own D-WORLD-53 ask/row 134 withdrawn before merge (attended IDs won).
+Parked on Mark: D-WORLD-52 only (ledger 40 rows, one OPEN).
 Cadence: nominal four-hour loop; all waits bounded and actively supervised.
-All four native roles completed; independent ADMIN PASS75/100 after correction.
-Preferred GLM/Opus/Sonnet unsupported; fresh Sol6.1 fallbacks FLAGGED D48.
-No Astra or older model; native role token usage not reported.
-Metered quorum$0.1387566; Codex provider quota94%, within observed ration.
-Provider reset2026-10-03T17:29:29Z; no reset credit used.
-HARNESS share0/20; last3 product landings221 moved6,214/213 none.
-Bookkeeping159; full memory charter/log/verification/world-iter222.
-Protocol remains rejected; record final-head review/CI and merge CI required.
+Routing this fire: controller Opus (codex over daily ration); no product roles.
+Record judged by a separate sonnet evaluator before merge.
+Metered $0 this fire. HARNESS share unchanged; no drift alarm.
+Bookkeeping issue #159; full memory in charter/log/status archive.
