@@ -58,7 +58,10 @@ type workspaceTools struct {
 	bin      string // archived tool binary path, "" when --tool-ailang-bin is unset
 	binRef   hashref.HashRef
 	stateDir string // canonical <db-dir>: policies/ and cache/ live here
-	errLog   io.Writer
+	// examplesDir is the canonical --examples-dir, "" when none is configured
+	// (examples-search then refuses, broker.NoExamplesCorpusRefusal).
+	examplesDir string
+	errLog      io.Writer
 
 	mu      sync.Mutex
 	handler map[string]episodeTool // episode id -> constructed handler
@@ -116,6 +119,27 @@ func resolveWorkspaceRoot(root, dbPath string) (canonicalRoot, stateDir string, 
 		}
 	}
 	return canonicalRoot, stateDir, nil
+}
+
+// resolveExamplesDir canonicalises --examples-dir and refuses one that is not
+// a directory or that lies inside the canonical workspace root: a corpus an
+// agent can write is a corpus it can poison for every later search.
+func resolveExamplesDir(dir, canonicalRoot string) (string, error) {
+	abs, err := filepath.Abs(dir)
+	if err != nil {
+		return "", err
+	}
+	resolved, err := filepath.EvalSymlinks(abs)
+	if err != nil {
+		return "", fmt.Errorf("resolve --examples-dir: %w", err)
+	}
+	if info, err := os.Stat(resolved); err != nil || !info.IsDir() {
+		return "", fmt.Errorf("--examples-dir %q is not a directory", dir)
+	}
+	if err := broker.CheckPolicyOutsideRoot(resolved, canonicalRoot); err != nil {
+		return "", &WorkspaceStateError{What: "the examples corpus is inside --workspace-root", Err: err}
+	}
+	return resolved, nil
 }
 
 // canonicalStateDir is <db-dir> with symlinks resolved (it exists once the
@@ -249,6 +273,7 @@ func (w *workspaceTools) episodeHandler(episodeID, epRoot string) (broker.Handle
 	defer cancel()
 	h, err := broker.NewAilangToolHandler(ctx, broker.AilangToolConfig{
 		Bin: w.bin, BinRef: w.binRef, PolicyPath: policyPath, Root: epRoot, CacheDir: cacheDir,
+		ExamplesDir: w.examplesDir,
 	})
 	if err != nil {
 		return nil, err

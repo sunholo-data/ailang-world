@@ -205,8 +205,11 @@ func newFakeToolHandler(t *testing.T, mode string) (*AilangToolHandler, fakeTool
 	t.Helper()
 	tool := newFakeTool(t, mode)
 	l := newToolLayout(t)
+	examples := filepath.Join(l.base, "examples")
+	mustMkdir(t, examples)
 	h, err := NewAilangToolHandler(boundedTestContext(t), AilangToolConfig{
 		Bin: tool.bin, BinRef: fakeBinRef(t), PolicyPath: l.policyPath, Root: l.root, CacheDir: l.cacheDir,
+		ExamplesDir: examples,
 	})
 	if err != nil {
 		t.Fatalf("NewAilangToolHandler: %v", err)
@@ -896,4 +899,42 @@ func mustRead(t *testing.T, path string) []byte {
 		t.Fatal(err)
 	}
 	return data
+}
+
+// TestAilangToolExamplesSearchNeedsACorpus (row 134 break-3 fix): with no
+// ExamplesDir, examples_search is answered with NoExamplesCorpusRefusal in
+// policy-tool's refusal shape and never dispatched; builtins_list on the same
+// handler still dispatches. An ExamplesDir inside the root is refused at
+// construction.
+func TestAilangToolExamplesSearchNeedsACorpus(t *testing.T) {
+	tool := newFakeTool(t, "ok")
+	l := newToolLayout(t)
+	h, err := NewAilangToolHandler(boundedTestContext(t), AilangToolConfig{
+		Bin: tool.bin, BinRef: fakeBinRef(t), PolicyPath: l.policyPath, Root: l.root, CacheDir: l.cacheDir,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := EffectRequest{Effect: EffectAilangDiscover, Scope: WorkspaceScope, Cost: 1}
+	before := tool.dispatches(t)
+	out, err := h.Execute(boundedTestContext(t), req, []byte(`{"op":"examples_search","query":"foldl"}`))
+	var resp map[string]any
+	if err != nil || json.Unmarshal(out, &resp) != nil || resp["ok"] != false || resp["refused"] != NoExamplesCorpusRefusal ||
+		resp["tool"] != fakeBinRef(t).String() || resp["policy_digest"] != "fakedigest" {
+		t.Fatalf("examples_search without a corpus = %s %v, want the no-corpus refusal with provenance", out, err)
+	}
+	if got := tool.dispatches(t) - before; got != 0 {
+		t.Fatalf("examples_search without a corpus dispatched %d times, want 0", got)
+	}
+	if _, err := h.Execute(boundedTestContext(t), req, []byte(`{"op":"builtins_list"}`)); err != nil || tool.dispatches(t)-before != 1 {
+		t.Fatalf("builtins_list: err=%v, want one dispatch", err)
+	}
+	_, err = NewAilangToolHandler(boundedTestContext(t), AilangToolConfig{
+		Bin: tool.bin, BinRef: fakeBinRef(t), PolicyPath: l.policyPath, Root: l.root, CacheDir: l.cacheDir,
+		ExamplesDir: filepath.Join(l.root, "examples"),
+	})
+	var inside *PolicyInsideWorkspaceError
+	if !errors.As(err, &inside) {
+		t.Fatalf("ExamplesDir inside the root: err = %v, want *PolicyInsideWorkspaceError", err)
+	}
 }

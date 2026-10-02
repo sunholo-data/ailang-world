@@ -103,9 +103,35 @@ const (
 	seBrokenProgram = "module broken\n\nexport func main() -> int {\n  \"oops\"\n}\n"
 )
 
+// seExamplesCorpus writes a one-example AILANG examples corpus in the layout
+// v0.51.0 `examples search` reads (measured, V65): manifest.json for the
+// descriptions and tags, and the searched .ail files under runnable/.
+func seExamplesCorpus(t *testing.T, dir string) {
+	t.Helper()
+	if err := os.MkdirAll(filepath.Join(dir, "runnable"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(dir, "manifest.json"),
+		`{"examples":[{"path":"fold_demo.ail","status":"working","tags":["fold"],"description":"Sum a list with foldl"}]}`+"\n")
+	writeFile(t, filepath.Join(dir, "runnable", "fold_demo.ail"),
+		"-- fold_demo.ail - Sum a list with foldl\nmodule fold_demo\n")
+}
+
 // newSeRig serves the published se-tools package from a daemon whose
-// --workspace-root holds the fixture worktree ep1.
+// --workspace-root holds the fixture worktree ep1 and whose --examples-dir is
+// a fixture corpus outside that root.
 func newSeRig(t *testing.T) *seRig {
+	t.Helper()
+	return newSeRigWith(t, func(f wsFixture, cfg *Config) {
+		// Not at <base>/examples: the binary's CWD fallback (../../examples
+		// from <root>/ep1) would find that one even without AILANG_EXAMPLES.
+		corpus := filepath.Join(f.outside, "se-corpus")
+		seExamplesCorpus(t, corpus)
+		cfg.ExamplesDir = corpus
+	})
+}
+
+func newSeRigWith(t *testing.T, configure func(f wsFixture, cfg *Config)) *seRig {
 	t.Helper()
 	interp, tool := seToolBins(t)
 	f := newWSFixture(t)
@@ -113,7 +139,9 @@ func newSeRig(t *testing.T) *seRig {
 	writeFile(t, filepath.Join(ep, "hello.ail"), seHelloProgram)
 	writeFile(t, filepath.Join(ep, "broken.ail"), seBrokenProgram)
 	writeFile(t, filepath.Join(ep, "notes.txt"), "alpha beta\n")
-	d := mustWSDaemon(t, Config{DBPath: f.db, AilangBin: interp, WorkspaceRoot: f.root, ToolAilangBin: tool})
+	cfg := Config{DBPath: f.db, AilangBin: interp, WorkspaceRoot: f.root, ToolAilangBin: tool}
+	configure(f, &cfg)
+	d := mustWSDaemon(t, cfg)
 	if d.coord == nil {
 		t.Fatal("no coordinator with --ailang-bin set")
 	}
@@ -413,30 +441,35 @@ func TestSeToolsMCPEndToEnd(t *testing.T) {
 			}
 			return nil
 		}},
-		// KNOWN BREAK (measured in M5b, reported, not papered over): the
-		// effect runs and is recorded, but v0.51.0 policy-tool truncates every
-		// CLI op's stdout at a hard-coded 64 KiB (internal/policytool
-		// cli_ops.go capBytes; "…[truncated]"), and `builtins list --json`
-		// is 82,774 bytes on v0.51.0 — so the finish phase cannot decode the
-		// inventory and refuses. This arm pins that measured behaviour as a
-		// tripwire: when the package or the binary is fixed it turns red and
-		// must be replaced by the real assertion (a println match).
+		// Row 134 break-2 fix: v0.51.0 policy-tool caps a CLI op's stdout at
+		// 64 KiB (cli_ops.go capBytes) and `builtins list --json` is 82,774
+		// bytes, so the plan asks for the 18,827-byte TEXT inventory and the
+		// finish parses it (V64). A real query through /mcp/ returns matches.
 		{"builtins-search", broker.EffectAilangDiscover, map[string]any{"query": "println"}, func(out map[string]any) error {
-			if out["ok"] != false || !strings.HasPrefix(str(out["refused"]), "builtins_list returned no inventory") {
-				return fmt.Errorf("builtins-search: the measured 64 KiB truncation break changed — replace this tripwire with the real assertion")
+			matches, _ := out["matches"].([]any)
+			if _, refused := out["refused"]; refused || len(matches) == 0 || out["count"] != float64(len(matches)) {
+				return fmt.Errorf("builtins-search: want println matches, got none or a refusal")
+			}
+			found := false
+			for _, m := range matches {
+				e, _ := m.(map[string]any)
+				if !strings.Contains(strings.ToLower(str(e["name"])), "println") {
+					return fmt.Errorf("builtins-search: match %v does not contain the query", e)
+				}
+				found = found || (e["name"] == "_io_println" && e["module"] == "std/io" && e["effect"] == "io")
+			}
+			if !found {
+				return fmt.Errorf("builtins-search: want _io_println [io] std/io among the matches")
 			}
 			return nil
 		}},
-		// KNOWN BREAK (measured in M5b, reported): the v0.51.0 examples
-		// corpus is NOT built into the binary (design V17's premise); the
-		// binary resolves it from $HOME/.ailang/examples or AILANG_EXAMPLES,
-		// and the handler's child env sets HOME=<db-dir>/cache/<ep> with no
-		// AILANG_EXAMPLES, so the op exits 1 "examples not found". Measured:
-		// a corpus provisioned at <db-dir>/cache/<ep>/.ailang/examples makes
-		// the same call answer "Found 6 examples". Tripwire, as above.
+		// Row 134 break-3 fix: the corpus is not in the binary (V65); serve
+		// --examples-dir reaches the tool as AILANG_EXAMPLES, and the fixture
+		// corpus's one example is found.
 		{"examples-search", broker.EffectAilangDiscover, map[string]any{"query": "foldl"}, func(out map[string]any) error {
-			if out["ok"] != false || !strings.Contains(str(out["stderr"]), "examples not found") {
-				return fmt.Errorf("examples-search: the measured missing-corpus break changed — replace this tripwire with the real assertion (results)")
+			if out["ok"] != true || !strings.Contains(str(out["stdout"]), "Found 1 examples") ||
+				!strings.Contains(str(out["stdout"]), "fold_demo.ail") {
+				return fmt.Errorf("examples-search: want the fixture corpus's fold_demo.ail found")
 			}
 			return nil
 		}},
@@ -504,6 +537,28 @@ func TestSeToolsMCPEndToEnd(t *testing.T) {
 	sort.Strings(names)
 	for _, name := range names {
 		t.Logf("TIMING tools/call %-30s %6d ms", name, timings[name].Milliseconds())
+	}
+}
+
+// TestSeToolsExamplesSearchWithoutCorpusRefuses: a daemon started with no
+// examples corpus answers examples-search with a clear refusal through /mcp/
+// (never an empty result, never a search of the agent's own worktree), and the
+// effect is still recorded and committed.
+func TestSeToolsExamplesSearchWithoutCorpusRefuses(t *testing.T) {
+	r := newSeRigWith(t, func(wsFixture, *Config) {})
+	// A worktree-local examples/ corpus must not be what answers: the binary
+	// falls back to CWD-relative examples/ dirs when AILANG_EXAMPLES is unset.
+	seExamplesCorpus(t, filepath.Join(r.f.root, "ep1", "examples"))
+	token := r.mint("ep1", broker.EffectAilangDiscover)
+	before := r.entryCount()
+	wire, _ := r.call(token, "examples-search", map[string]any{"query": "foldl"})
+	out := wire.Result.StructuredContent
+	if wire.Error != nil || out["ok"] != false || out["refused"] != broker.NoExamplesCorpusRefusal {
+		t.Fatalf("examples-search without a corpus = %+v, want ok:false refused %q", wire, broker.NoExamplesCorpusRefusal)
+	}
+	r.assertEffectRecord("examples-search", out, broker.EffectAilangDiscover)
+	if after := r.entryCount(); after != before+1 {
+		t.Fatalf("log entries %d -> %d, want one commit", before, after)
 	}
 }
 

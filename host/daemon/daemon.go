@@ -235,6 +235,13 @@ type Config struct {
 	// (independent of the compiler pin) and must be ToolBinaryRelease. The
 	// workspace tools are served only when WorkspaceRoot is also set.
 	ToolAilangBin string
+	// ExamplesDir (`--examples-dir`, row 134 break-3 fix) is the AILANG examples
+	// corpus examples-search reads, passed to the tool as AILANG_EXAMPLES. The
+	// corpus is not built into the tool binary (V65). It must be a directory
+	// outside WorkspaceRoot — startup refuses otherwise. Empty means no corpus:
+	// examples-search answers NoExamplesCorpusRefusal. (The CLI defaults it to
+	// the operator's ~/.ailang/examples when that exists.)
+	ExamplesDir string
 	// ErrorLog receives the operator-facing detail of every sanitized 500: one
 	// line per error, carrying the route and the VERBATIM store error that the
 	// response body no longer echoes (Decision: sanitize-vs-expose).
@@ -534,6 +541,13 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 			return nil, &StartupError{Stage: StageConfig, Detail: "the workspace root is refused", Err: err}
 		}
 		workspace.root, workspace.stateDir = root, stateDir
+		if cfg.ExamplesDir != "" {
+			examples, err := resolveExamplesDir(cfg.ExamplesDir, root)
+			if err != nil {
+				return nil, &StartupError{Stage: StageConfig, Detail: "the examples corpus directory is refused", Err: err}
+			}
+			workspace.examplesDir = examples
+		}
 	}
 
 	s, err := store.Open(cfg.DBPath)

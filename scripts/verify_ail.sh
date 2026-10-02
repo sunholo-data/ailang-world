@@ -339,7 +339,8 @@ REQUIRED_VERIFIED = {
     "packages/se-tools/se_tools/check.ail":           SE_CORE,
     "packages/se-tools/se_tools/run.ail":             SE_CORE,
     "packages/se-tools/se_tools/examples_search.ail": SE_CORE,
-    "packages/se-tools/se_tools/builtins_search.ail": SE_CORE | {"entryMatches"},
+    "packages/se-tools/se_tools/builtins_search.ail": SE_CORE | {"entryMatches", "isEffectTag", "untag",
+                                                                 "isHeader", "isTruncated"},
     "packages/se-tools/se_tools/cli.ail":             SE_CORE | {"cliOpAllowed"},
 }
 try:
@@ -487,7 +488,8 @@ for se_mod in "${SE_TEST_MODULES[@]}"; do
 import json, sys
 SE_CORE_TESTS = {"noDotDotSegment": 7, "pathOk": 8, "inputKeyAllowed": 5}
 SE_TESTS = {  # per module: function -> number of named inline tests
-    "builtins_search": dict(SE_CORE_TESTS, argKeyAllowed=4, entryMatches=6, main=12),
+    "builtins_search": dict(SE_CORE_TESTS, argKeyAllowed=4, entryMatches=7, isEffectTag=6, untag=5,
+                            isHeader=5, isTruncated=2, main=18),
     "check":           dict(SE_CORE_TESTS, argKeyAllowed=3, main=11),
     "cli":             dict(SE_CORE_TESTS, argKeyAllowed=6, cliOpAllowed=9, main=14),
     "edit":            dict(SE_CORE_TESTS, argKeyAllowed=5, main=8),
@@ -525,7 +527,7 @@ PY
   ) || exit 1
   se_tests_total=$((se_tests_total + se_n))
 done
-EXACT_SE_TESTS=287
+EXACT_SE_TESTS=312
 if [ "$se_tests_total" -ne "$EXACT_SE_TESTS" ]; then
   echo "✗ se-tools test leg: expected exactly $EXACT_SE_TESTS named tests across ${#SE_TEST_MODULES[@]} modules, got $se_tests_total" >&2
   exit 1

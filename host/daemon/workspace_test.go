@@ -635,3 +635,112 @@ func TestWorkspaceReadThroughProductionWiring(t *testing.T) {
 		t.Fatalf("spend = %v %v, want Workspace.Read=1", spend, err)
 	}
 }
+
+// TestWorkspaceExamplesDirReachesTheToolEnv (row 134 break-3 fix): a
+// configured --examples-dir reaches the tool's minimal child env as
+// AILANG_EXAMPLES=<canonical dir>; with none configured the variable is
+// absent, and the rest of the env is unchanged.
+func TestWorkspaceExamplesDirReachesTheToolEnv(t *testing.T) {
+	envOf := func(t *testing.T, configure func(f wsFixture, cfg *Config)) (wsFixture, []string) {
+		f := newWSFixture(t)
+		cfg := Config{DBPath: f.db, WorkspaceRoot: f.root, ToolAilangBin: fakeToolBin(t, f.logDir, ToolBinaryRelease)}
+		configure(f, &cfg)
+		d := mustWSDaemon(t, cfg)
+		if len(d.workspace.registry("ep1")) == 0 {
+			t.Fatal("registry(ep1) is empty")
+		}
+		raw, err := os.ReadFile(filepath.Join(f.logDir, "env"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var keys []string
+		for _, line := range strings.Split(strings.TrimSpace(string(raw)), "\n") {
+			if k, _, ok := strings.Cut(line, "="); ok && k != "PWD" && k != "SHLVL" && k != "_" && k != "OLDPWD" {
+				keys = append(keys, line)
+			}
+		}
+		sort.Strings(keys)
+		return f, keys
+	}
+	f, with := envOf(t, func(f wsFixture, cfg *Config) {
+		corpus := filepath.Join(f.outside, "examples")
+		if err := os.MkdirAll(corpus, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		cfg.ExamplesDir = corpus
+	})
+	cache := filepath.Join(f.stateDir, "cache", "ep1")
+	want := []string{"AILANG_CACHE_DIR=" + cache, "AILANG_EXAMPLES=" + filepath.Join(f.outside, "examples"),
+		"HOME=" + cache, "LANG=C", "LC_ALL=C", "PATH=/usr/bin:/bin"}
+	if strings.Join(with, "\n") != strings.Join(want, "\n") {
+		t.Fatalf("tool env with --examples-dir =\n%s\nwant\n%s", strings.Join(with, "\n"), strings.Join(want, "\n"))
+	}
+	_, without := envOf(t, func(wsFixture, *Config) {})
+	for _, kv := range without {
+		if strings.HasPrefix(kv, "AILANG_EXAMPLES=") {
+			t.Fatalf("tool env without --examples-dir carries %s", kv)
+		}
+	}
+	if len(without) != len(want)-1 {
+		t.Fatalf("tool env without --examples-dir = %v, want the %d minimal keys", without, len(want)-1)
+	}
+}
+
+// TestWorkspaceExamplesDirInsideTheRootRefusesStartup: an examples corpus an
+// agent can write (inside --workspace-root, directly or through a symlink) is
+// refused at startup like the policy and cache dirs; so is one that is not a
+// directory. A corpus outside the root starts.
+func TestWorkspaceExamplesDirInsideTheRootRefusesStartup(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		dir   func(t *testing.T, f wsFixture) string
+		state bool // wraps *WorkspaceStateError and *broker.PolicyInsideWorkspaceError
+	}{
+		{"corpus inside an episode worktree", func(t *testing.T, f wsFixture) string {
+			dir := filepath.Join(f.root, "ep1", "examples")
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			return dir
+		}, true},
+		{"corpus is the root", func(t *testing.T, f wsFixture) string { return f.root }, true},
+		{"corpus symlinked into the root", func(t *testing.T, f wsFixture) string {
+			link := filepath.Join(f.outside, "examples-link")
+			if err := os.Symlink(filepath.Join(f.root, "ep2"), link); err != nil {
+				t.Fatal(err)
+			}
+			return link
+		}, true},
+		{"corpus is a file", func(t *testing.T, f wsFixture) string {
+			p := filepath.Join(f.outside, "examples.txt")
+			writeFile(t, p, "x\n")
+			return p
+		}, false},
+		{"corpus is absent", func(t *testing.T, f wsFixture) string { return filepath.Join(f.outside, "missing") }, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newWSFixture(t)
+			_, err := newWSDaemon(t, Config{DBPath: f.db, WorkspaceRoot: f.root,
+				ToolAilangBin: fakeToolBin(t, f.logDir, ToolBinaryRelease), ExamplesDir: tc.dir(t, f)})
+			var startup *StartupError
+			if !errors.As(err, &startup) || startup.Stage != StageConfig || !strings.Contains(err.Error(), "examples corpus") {
+				t.Fatalf("New = %v, want a %s StartupError about the examples corpus", err, StageConfig)
+			}
+			var state *WorkspaceStateError
+			var inside *broker.PolicyInsideWorkspaceError
+			if tc.state && (!errors.As(err, &state) || !errors.As(err, &inside)) {
+				t.Fatalf("New = %v, want it to wrap *WorkspaceStateError and *broker.PolicyInsideWorkspaceError", err)
+			}
+		})
+	}
+	f := newWSFixture(t)
+	corpus := filepath.Join(f.outside, "examples")
+	if err := os.MkdirAll(corpus, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	d := mustWSDaemon(t, Config{DBPath: f.db, WorkspaceRoot: f.root,
+		ToolAilangBin: fakeToolBin(t, f.logDir, ToolBinaryRelease), ExamplesDir: corpus})
+	if d.workspace.examplesDir != corpus {
+		t.Fatalf("examplesDir = %q, want %q", d.workspace.examplesDir, corpus)
+	}
+}

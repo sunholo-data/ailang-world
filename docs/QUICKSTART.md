@@ -256,18 +256,14 @@ to `serve --help` and to the `session mint` parser by `TestQuickstartSection9Fla
 The `-d` payloads below are run against a test daemon by
 `TestSeToolsQuickstartPayloadsVerbatim`.
 
-> **Known breaks, measured 2026-10-02 (M5b). M6 is blocked until they are fixed.**
-> 1. `session mint` stores each `--grant` with expiry 0, and the broker treats an expiry-0 grant
->    as expired. A CLI-minted session therefore sees **zero** tools (`denied:expired`). Pinned by
->    `TestSessionMintGrantsCarryNoExpiry`.
-> 2. `builtins-search`: v0.51.0 `policy-tool` cuts every CLI op's stdout at 64 KiB, and
->    `builtins list --json` is 82,774 bytes. The call returns
->    `{"ok":false,"refused":"builtins_list returned no inventory…"}`.
-> 3. `examples-search`: the examples corpus is **not** built into v0.51.0. The binary reads it
->    from `$HOME/.ailang/examples` (or `AILANG_EXAMPLES`), and the handler runs it with
->    `HOME=<db-dir>/cache/<episode>`, so the call answers `examples not found`.
->
-> Breaks 2 and 3 are pinned as tripwires in `TestSeToolsMCPEndToEnd`.
+The three end-to-end breaks measured in M5b (2026-10-02) are fixed:
+- `session mint` grants now expire with the session, at mint time + `--ttl` (they were stored
+  with expiry 0, so every CLI-minted session saw zero tools). Pinned by
+  `TestSessionMintGrantsExpireWithTheSession`.
+- `builtins-search` reads the text inventory. The JSON one is over `policy-tool`'s 64 KiB stdout
+  cap. Matches are `{name, module, effect}`, with no signature or description.
+- `examples-search` reads the corpus named by `serve --examples-dir`. That corpus is not built into
+  the binary.
 
 Pick two binaries. `PIN` is the `.ail` interpreter pin (AILANG v0.41.0) and runs every plan.
 `TOOL` is the tool binary, which must be exactly AILANG v0.51.0; startup refuses any other
@@ -347,11 +343,18 @@ and `edit` share `Workspace.Write`, and the two searches share `Ailang.Discover`
 Serve with the workspace tools enabled. Both `--workspace-root` and `--tool-ailang-bin` are
 required. With only one of them, the daemon logs `workspace tools disabled` and refuses every
 tool call before any effect runs. This is rule R8, and over `/a2a/` its message is
-`transition declares an effect this daemon has no handler for`:
+`transition declares an effect this daemon has no handler for`.
+
+`examples-search` needs an AILANG examples corpus. The corpus is not built into the tool binary,
+and the tool runs with `HOME` set to a per-episode cache. `$TOOL examples download` fills
+`~/.ailang/examples`, and serve uses that directory by default when it exists. `--examples-dir`
+names a different corpus, which reaches the tool as `AILANG_EXAMPLES`. It must lie **outside**
+the workspace root, or startup refuses. Without a corpus, `examples-search` answers
+`{"ok":false,"refused":"no examples corpus configured: …"}`:
 
 ```bash
 /tmp/ailang-worldd serve --db /tmp/se-world/world.db --ailang-bin $PIN \
-  --workspace-root /tmp/se-ws --tool-ailang-bin $TOOL &
+  --workspace-root /tmp/se-ws --tool-ailang-bin $TOOL --examples-dir $HOME/.ailang/examples &
 ```
 
 List the tools, then make one call:

@@ -172,7 +172,7 @@ var seToolsCases = []seToolsCase{
 		`{"path":"bad.ail","flags":{"json":""}}`, "flags"},
 	{"ailang-run", `{"path":"args.ail","args_json":"\"data.txt\""}`, `{"path":"args.ail","args_json":"\"data.txt\""}`, false,
 		`{"path":"args.ail","caps":"IO,Net"}`, "caps"},
-	{"builtins-search", `{"query":"readFile","module":"std/fs"}`, `{"op":"builtins_list","flags":{"json":""}}`, true,
+	{"builtins-search", `{"query":"readFile","module":"std/fs"}`, `{"op":"builtins_list"}`, true,
 		`{"query":"readFile","limit":3}`, "limit"},
 	{"examples-search", `{"query":"foldl"}`, `{"op":"examples_search","query":"foldl"}`, false,
 		`{"query":"foldl","limit":2}`, "limit"},
@@ -316,36 +316,68 @@ func TestSeToolsFinishPhases(t *testing.T) {
 		}
 	})
 
-	t.Run("builtins-search", func(t *testing.T) {
-		inventory, err := exec.Command(rig.bin, "builtins", "list", "--json").Output()
-		if err != nil {
-			t.Fatalf("builtins list: %v", err)
+	// builtins-search reads the TEXT inventory (V64): policy-tool caps a CLI
+	// op's stdout at 64 KiB, which the JSON form exceeds. The handler output is
+	// built the way policy-tool returns it, including its cap.
+	policyToolCap := func(s string) string {
+		const capBytes = 64 * 1024 // ailang internal/policytool/cli_ops.go capBytes
+		if len(s) > capBytes {
+			return s[:capBytes] + "\n…[truncated]"
 		}
-		handlerOut, _ := json.Marshal(map[string]any{"ok": true, "argv": []string{"builtins", "list", "--json"},
-			"stdout": string(inventory), "tool": "sha256:x", "policy_digest": "d"})
+		return s
+	}
+	discover := func(t *testing.T, args string, argv ...string) []byte {
+		t.Helper()
+		inventory, err := exec.Command(rig.bin, argv...).Output()
+		if err != nil {
+			t.Fatalf("%v: %v", argv, err)
+		}
+		handlerOut, _ := json.Marshal(map[string]any{"ok": true, "argv": argv, "exit_code": 0,
+			"stdout": policyToolCap(string(inventory)), "stderr": "", "tool": "sha256:x", "policy_digest": "d"})
 		start := time.Now()
 		out, err := parseFinish(rig.run(manifest["builtins-search"],
-			effectResultsInput(`{"query":"READFILE","module":"std/fs"}`, "Ailang.Discover", string(handlerOut))))
+			effectResultsInput(args, "Ailang.Discover", string(handlerOut))))
 		if err != nil {
 			t.Fatalf("parseFinish: %v", err)
 		}
 		t.Logf("builtins finish over a %d-byte inventory: %s", len(inventory), time.Since(start))
+		return out
+	}
+
+	t.Run("builtins-search", func(t *testing.T) {
+		out := discover(t, `{"query":"READFILE","module":"std/fs"}`, "builtins", "list")
 		var rep struct {
 			Count   int
-			Matches []struct{ Name, Module string }
+			Matches []struct{ Name, Module, Effect string }
 		}
 		if err := json.Unmarshal(out, &rep); err != nil {
 			t.Fatal(err)
 		}
 		found := false
 		for _, m := range rep.Matches {
-			if m.Module != "std/fs" && !strings.Contains(m.Module, "std/fs") {
-				t.Fatalf("match %+v escapes the module filter", m)
+			if !strings.Contains(m.Module, "std/fs") || m.Effect == "" {
+				t.Fatalf("match %+v escapes the module filter or lacks its effect", m)
 			}
-			found = found || m.Name == "readFile" || strings.Contains(strings.ToLower(m.Name), "readfile")
+			found = found || m.Name == "_fs_readFile"
 		}
 		if rep.Count != len(rep.Matches) || rep.Count == 0 || rep.Count > 10 || !found {
-			t.Fatalf("builtins report %s; want 1..10 std/fs matches including readFile", out)
+			t.Fatalf("builtins report %s; want 1..10 std/fs matches including _fs_readFile", out)
+		}
+	})
+
+	// A capped (JSON) inventory is a clear refusal, never an empty match list.
+	t.Run("builtins-search refuses a truncated inventory", func(t *testing.T) {
+		out := discover(t, `{"query":"readFile"}`, "builtins", "list", "--json")
+		var rep struct {
+			OK      *bool `json:"ok"`
+			Refused string
+			Matches []any
+		}
+		if err := json.Unmarshal(out, &rep); err != nil {
+			t.Fatal(err)
+		}
+		if rep.OK == nil || *rep.OK || !strings.Contains(rep.Refused, "truncated") || rep.Matches != nil {
+			t.Fatalf("finish over a capped inventory = %s; want ok:false refused naming the truncation", out)
 		}
 	})
 }

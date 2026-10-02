@@ -315,7 +315,7 @@
   {
     "id": "builtins-search",
     "title": "Search AILANG builtins",
-    "description": "Search the REAL builtin inventory compiled into the tool binary (policy-tool `builtins_list`). Pass query (case-insensitive substring over name/module/signature/description; at most 10 matches) and/or module (e.g. 'std/fs'); omit both for the full list. Use this instead of guessing builtin names. Returns {count, matches}. Unknown argument keys are refused, never ignored. Costs one Ailang.Discover call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
+    "description": "Search the REAL builtin inventory compiled into the tool binary (policy-tool `builtins_list`, text form). Pass query (case-insensitive substring over name/module/effect; at most 10 matches) and/or module (e.g. 'std/fs'); omit both for the full list. Use this instead of guessing builtin names. Returns {count, matches}, each match {name, module, effect}. Degraded: no signature or description is returned or searched (policy-tool caps a CLI op's stdout at 64 KiB and the JSON inventory exceeds it); use ailang-cli `builtins_show` or examples-search for usage. A truncated or unparseable inventory is refused, never an empty result. Unknown argument keys are refused, never ignored. Costs one Ailang.Discover call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
     "transitionFnFile": "packages/se-tools/se_tools/builtins_search.ail",
     "inputSchema": {
       "type": "object",
@@ -380,7 +380,7 @@
   {
     "id": "examples-search",
     "title": "Search AILANG examples",
-    "description": "Search the example corpus built into the tool binary (policy-tool `examples_search`) for `query`, then read a hit with ailang-cli op examples_show. The op admits no flags, so there is no limit argument. Use this before writing a construct you are unsure of. Returns {ok, argv, exit_code, stdout, stderr}. Unknown argument keys are refused, never ignored. Costs one Ailang.Discover call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
+    "description": "Search the AILANG examples corpus this daemon serves (policy-tool `examples_search`; the operator's --examples-dir) for `query`, then read a hit with ailang-cli op examples_show. The op admits no flags, so there is no limit argument. Use this before writing a construct you are unsure of. Returns {ok, argv, exit_code, stdout, stderr}, or {ok:false, refused} when no corpus is configured. Unknown argument keys are refused, never ignored. Costs one Ailang.Discover call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
     "transitionFnFile": "packages/se-tools/se_tools/examples_search.ail",
     "inputSchema": {
       "type": "object",

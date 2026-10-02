@@ -8,6 +8,7 @@
 //
 //	ailang-worldd serve --db <path> [--bind 127.0.0.1:7644] [--ailang-bin <path>]
 //	                    [--workspace-root <dir> --tool-ailang-bin <path>]
+//	                    [--examples-dir <dir>]
 //	ailang-worldd [--addr http://127.0.0.1:7644] health
 //	ailang-worldd [--addr http://127.0.0.1:7644] head
 //	ailang-worldd [--addr http://127.0.0.1:7644] world get <ref>
@@ -32,6 +33,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
@@ -50,6 +52,7 @@ const usage = `ailang-worldd — AILANG World local daemon (loopback only)
 Usage:
   ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
+                      [--examples-dir <dir>]
   ailang-worldd [--addr <url>] health
   ailang-worldd [--addr <url>] head
   ailang-worldd [--addr <url>] world get <ref>
@@ -79,6 +82,11 @@ serve flags:
                        ` + daemon.ToolBinaryRelease + `); archived and hash-verified like
                        --ailang-bin. The Workspace.*/Ailang.* tools are served
                        only when both this and --workspace-root are set
+  --examples-dir <dir> AILANG examples corpus examples-search reads (passed
+                       to the tool as AILANG_EXAMPLES; not built into the
+                       binary). Default: ~/.ailang/examples when it exists,
+                       else examples-search refuses "no examples corpus
+                       configured". Must be outside --workspace-root
 
 Exit codes: 0 ok, 1 usage or client error, 2 fatal startup.
 `
@@ -190,6 +198,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	ailangBin := fs.String("ailang-bin", "", "interpreter to archive and pin at startup")
 	workspaceRoot := fs.String("workspace-root", "", "directory holding one worktree per episode")
 	toolAilangBin := fs.String("tool-ailang-bin", "", "AILANG binary the workspace tools run")
+	examplesDir := fs.String("examples-dir", "", "AILANG examples corpus for examples-search (default ~/.ailang/examples when it exists)")
 	if err := fs.Parse(args); err != nil {
 		return exitUsage
 	}
@@ -218,8 +227,30 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	defer stop()
 
 	cfg := daemon.Config{DBPath: *dbPath, BindHost: host, BindPort: port, AilangBin: *ailangBin,
-		WorkspaceRoot: *workspaceRoot, ToolAilangBin: *toolAilangBin}
+		WorkspaceRoot: *workspaceRoot, ToolAilangBin: *toolAilangBin,
+		ExamplesDir: resolveExamplesDefault(*examplesDir, os.UserHomeDir)}
 	return serveResult(daemon.Run(ctx, cfg, stdout), stderr)
+}
+
+// resolveExamplesDefault is --examples-dir's default, resolved once at
+// startup: an explicit flag wins; otherwise the operator's own
+// ~/.ailang/examples (what `ailang examples download` populates) when it is a
+// directory; otherwise "" (no corpus, examples-search refuses). The tool's
+// HOME is the per-episode cache, so the binary's own ~/.ailang fallback can
+// never see the operator's corpus (V65).
+func resolveExamplesDefault(flagValue string, home func() (string, error)) string {
+	if flagValue != "" {
+		return flagValue
+	}
+	h, err := home()
+	if err != nil || h == "" {
+		return ""
+	}
+	dir := filepath.Join(h, ".ailang", "examples")
+	if info, err := os.Stat(dir); err == nil && info.IsDir() {
+		return dir
+	}
+	return ""
 }
 
 func serveResult(err error, stderr io.Writer) int {

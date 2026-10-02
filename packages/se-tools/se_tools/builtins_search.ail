@@ -3,8 +3,17 @@ module se_tools/builtins_search
 -- builtins-search (queue row 134, design_docs/planned/w-software-engineering-domain.md
 -- §4.2): search the real builtin inventory compiled into the tool binary.
 -- Args {query?, module?}. Effect Ailang.Discover; payload = the policy-tool
--- `builtins_list` request with the json flag (V17). Finish phase: the
--- lane's substring filter (no op does it, V21), answered as {count, matches}.
+-- `builtins_list` request in its TEXT form, no flags (V64: policy-tool caps a
+-- CLI op's stdout at 64 KiB and `builtins list --json` is 82,774 bytes on
+-- v0.51.0, so the JSON form always arrives truncated; the op admits no flag
+-- but --json, so it cannot be narrowed). The text form (18,827 bytes) is a
+-- "Total: N builtins" header and one "  name  [effect] module" line per
+-- builtin. Finish phase: parse that inventory and apply the lane's substring
+-- filter (no op does it, V21), answered as {count, matches} with each match
+-- {name, module, effect}. Degradation: the text form carries no signature or
+-- description, so the query matches name, module and effect only. A
+-- truncated or unparseable inventory is an {ok:false, refused} answer, never
+-- an empty match list.
 --
 -- Calling convention v2 (§4.1): the coordinator passes ONE string,
 -- {"phase":"plan","args":<MCP/A2A arguments>} and, after the
@@ -22,9 +31,9 @@ module se_tools/builtins_search
 -- every se_tools module; host/coordinator's se-tools test holds the copies
 -- byte-identical. argKeyAllowed is each tool's own schema.
 
-import std/json (decode, encode, jo, ja, kv, js, jint, jb, jn, get, asObject, asString, asArray, getArray, Json)
-import std/string (length as strLength, startsWith, endsWith, contains, toLower)
-import std/list (filter, take, length as listLength)
+import std/json (decode, encode, jo, ja, kv, js, jint, jb, jn, get, asObject, asString, asArray, getBool, Json)
+import std/string (length as strLength, startsWith, endsWith, contains, toLower, split, words, trim, substring, stringToInt)
+import std/list (filter, take, reverse, length as listLength)
 import std/option (Option, Some, None)
 import std/result (Result, Ok, Err)
 
@@ -102,22 +111,81 @@ tests [
 }
 
 -- The lane's builtins_search predicate (V21), over already-lowercased fields:
--- the module filter, then the query as a substring of name, module, signature
--- or description. An empty filter matches everything.
-export func entryMatches(q: string, m: string, name: string, mdl: string, sig: string, desc: string) -> bool ! {}
+-- the module filter, then the query as a substring of name, module or effect
+-- (the text inventory carries no signature or description, V64). An empty
+-- filter matches everything.
+export func entryMatches(q: string, m: string, name: string, mdl: string, eff: string) -> bool ! {}
 ensures { result == ((m == "" || contains(mdl, m)) && (q == "" || contains(name, q)
-  || contains(mdl, q) || contains(sig, q) || contains(desc, q))) }
+  || contains(mdl, q) || contains(eff, q))) }
 tests [
-  (("", "", "readfile", "std/fs", "readfile: string -> string ! {fs}", "read a file"), true),
-  (("readfile", "", "readfile", "std/fs", "s", "d"), true),
-  (("", "std/fs", "readfile", "std/fs", "s", "d"), true),
-  (("", "std/net", "readfile", "std/fs", "s", "d"), false),
-  (("prepend", "std/list", "::", "std/list", "s", "prepend an element"), true),
-  (("zzz", "", "readfile", "std/fs", "s", "d"), false)
+  (("", "", "_fs_readfile", "std/fs", "fs"), true),
+  (("readfile", "", "_fs_readfile", "std/fs", "fs"), true),
+  (("", "std/fs", "_fs_readfile", "std/fs", "fs"), true),
+  (("", "std/net", "_fs_readfile", "std/fs", "fs"), false),
+  (("net", "", "_net_httpget", "std/net", "net"), true),
+  (("pure", "std/list", "::", "std/list", "pure"), true),
+  (("zzz", "", "_fs_readfile", "std/fs", "fs"), false)
 ]
 {
   (m == "" || contains(mdl, m)) && (q == "" || contains(name, q)
-    || contains(mdl, q) || contains(sig, q) || contains(desc, q))
+    || contains(mdl, q) || contains(eff, q))
+}
+
+-- The text inventory's effect column is one bracketed word, e.g. "[fs]".
+export func isEffectTag(w: string) -> bool ! {}
+ensures { result == (strLength(w) >= 3 && startsWith(w, "[") && endsWith(w, "]")) }
+tests [
+  ("[fs]", true),
+  ("[pure]", true),
+  ("[]", false),
+  ("fs", false),
+  ("[fs", false),
+  ("std/fs", false)
+]
+{
+  strLength(w) >= 3 && startsWith(w, "[") && endsWith(w, "]")
+}
+
+-- The effect name inside a tag: the first and last byte stripped (total: a
+-- string shorter than two bytes has no inside).
+export func untag(w: string) -> string ! {}
+ensures { result == (if strLength(w) >= 2 then substring(w, 1, strLength(w) - 1) else "") }
+tests [
+  ("[fs]", "fs"),
+  ("[pure]", "pure"),
+  ("[sharedindex]", "sharedindex"),
+  ("[]", ""),
+  ("x", "")
+]
+{
+  if strLength(w) >= 2 then substring(w, 1, strLength(w) - 1) else ""
+}
+
+-- The inventory's first line, "Total: N builtins", with at least one digit
+-- between the fixed prefix (7 bytes) and suffix (9 bytes).
+export func isHeader(l: string) -> bool ! {}
+ensures { result == (strLength(l) >= 17 && startsWith(l, "Total: ") && endsWith(l, " builtins")) }
+tests [
+  ("Total: 378 builtins", true),
+  ("Total: 3 builtins", true),
+  ("Total:  builtins", false),
+  ("Total: 378", false),
+  ("  ::  [pure] std/list", false)
+]
+{
+  strLength(l) >= 17 && startsWith(l, "Total: ") && endsWith(l, " builtins")
+}
+
+-- policy-tool's truncation marker (cli_ops.go capBytes): a capped stdout ends
+-- with it, and a capped inventory must be refused, never searched.
+export func isTruncated(s: string) -> bool ! {}
+ensures { result == endsWith(s, "…[truncated]") }
+tests [
+  ("Total: 1 builtins\n\n  ::  [pure] std/list\n", false),
+  ("{\"count\":378,\"builtins\":[{\"name\"\n…[truncated]", true)
+]
+{
+  endsWith(s, "…[truncated]")
 }
 
 -- ── Plan construction (world/effect-plan/v1, §4.1) ─────────────────────────
@@ -219,34 +287,76 @@ func finishPhase(doc: Json) -> string =
 
 func builtinMatches(e: Json, q: string, m: string) -> bool =
   entryMatches(q, m, toLower(stringField(e, "name")), toLower(stringField(e, "module")),
-    toLower(stringField(e, "signature")), toLower(stringField(e, "description")))
+    toLower(stringField(e, "effect")))
+
+-- One inventory line "  name  [effect] module" as {name, module, effect}.
+func parseLine(line: string) -> Option[Json] =
+  match words(line) {
+    n :: tag :: mdl :: [] => if isEffectTag(tag)
+      then Some(jo([kv("name", js(n)), kv("module", js(mdl)), kv("effect", js(untag(tag)))]))
+      else None,
+    _ => None
+  }
+
+-- Every non-blank line after the header must parse; the first that does not
+-- is the refusal.
+func parseLines(ls: [string], acc: [Json]) -> Result[[Json], string] =
+  match ls {
+    [] => Ok(reverse(acc)),
+    l :: rest => if trim(l) == "" then parseLines(rest, acc)
+      else match parseLine(l) {
+        Some(e) => parseLines(rest, e :: acc),
+        None => Err("builtins_list line \"${l}\" is not \"name [effect] module\"")
+      }
+  }
+
+func headerCount(l: string) -> Option[int] =
+  if isHeader(l) then stringToInt(substring(l, 7, strLength(l) - 9)) else None
+
+-- The text inventory: the header, then exactly as many entries as it states.
+func parseInventory(text: string) -> Result[[Json], string] =
+  if isTruncated(text) then Err("builtins_list output was truncated at policy-tool's 64 KiB stdout cap")
+  else match split(text, "\n") {
+    [] => Err("builtins_list returned no inventory"),
+    h :: rest => match headerCount(h) {
+      None => Err("builtins_list returned no \"Total: N builtins\" header"),
+      Some(n) => match parseLines(rest, []) {
+        Err(why) => Err(why),
+        Ok(entries) => if listLength(entries) == n then Ok(entries)
+          else Err("builtins_list header states ${show(n)} builtins but ${show(listLength(entries))} lines parsed")
+      }
+    }
+  }
 
 -- The finish output: the lane's {count, matches} (V21): the builtins_list
 -- inventory filtered by the call's query/module (case-insensitive substring),
 -- capped at 10 when a query is given; omit both for the full inventory.
 func report(doc: Json, out: Json) -> string =
-  match decode(stringField(out, "stdout")) {
-    Err(_) => noInventory(out),
-    Ok(inv) => match getArray(inv, "builtins") {
-      None => noInventory(out),
-      Some(entries) => {
-        let args = match get(doc, "args") {
-          Some(a) => a,
-          None => jo([])
-        };
-        let q = toLower(stringField(args, "query"));
-        let m = toLower(stringField(args, "module"));
-        let hits = filter(\e. builtinMatches(e, q, m), entries);
-        let matches = if q == "" then hits else take(10, hits);
-        encode(jo([kv("count", jint(listLength(matches))), kv("matches", ja(matches))]))
-      }
+  match getBool(out, "ok") {
+    Some(true) => search(doc, out),
+    _ => noInventory(out)
+  }
+
+func search(doc: Json, out: Json) -> string =
+  match parseInventory(stringField(out, "stdout")) {
+    Err(why) => finishFailure("ok", why),
+    Ok(entries) => {
+      let args = match get(doc, "args") {
+        Some(a) => a,
+        None => jo([])
+      };
+      let q = toLower(stringField(args, "query"));
+      let m = toLower(stringField(args, "module"));
+      let hits = filter(\e. builtinMatches(e, q, m), entries);
+      let matches = if q == "" then hits else take(10, hits);
+      encode(jo([kv("count", jint(listLength(matches))), kv("matches", ja(matches))]))
     }
   }
 
 func noInventory(out: Json) -> string {
   let refused = stringField(out, "refused");
   finishFailure("ok", if refused != "" then refused
-    else "builtins_list returned no inventory; stderr: ${stringField(out, "stderr")}")
+    else "builtins_list did not succeed; stderr: ${stringField(out, "stderr")}")
 }
 
 -- ── The tool ─────────────────────────────────────────────────────────────
@@ -257,7 +367,7 @@ func planTool(args: Json) -> string =
     Ok(_) => match optionalString(args, "module") {
       Err(why) => refusal(why),
       Ok(_) => effectPlan("Ailang.Discover",
-        jo([kv("op", js("builtins_list")), kv("flags", jo([kv("json", js(""))]))]), true)
+        jo([kv("op", js("builtins_list"))]), true)
     }
   }
 
@@ -292,7 +402,7 @@ func dispatch(doc: Json) -> string =
 export func main(input: string) -> string
 tests [
   ("{\"phase\":\"plan\",\"args\":{\"query\":\"readFile\"}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"builtins_list\",\"flags\":{\"json\":\"\"}}}],\"finish\":true,\"result\":null}"),
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"builtins_list\"}}],\"finish\":true,\"result\":null}"),
   ("{\"phase\":\"plan\",\"args\":{\"query\":\"readFile\",\"limit\":5}}",
    "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"limit\\\"; builtins-search admits only: query, module\"}}"),
   ("{\"phase\":\"plan\",\"args\":{\"query\":\"readFile\"},\"world\":{}}",
@@ -302,19 +412,31 @@ tests [
   ("{\"phase\":\"replay\",\"args\":{\"query\":\"readFile\"}}",
    "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"phase must be \\\"plan\\\" or \\\"finish\\\"\"}}"),
   ("{\"phase\":\"plan\",\"args\":{}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"builtins_list\",\"flags\":{\"json\":\"\"}}}],\"finish\":true,\"result\":null}"),
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"builtins_list\"}}],\"finish\":true,\"result\":null}"),
   ("{\"phase\":\"plan\",\"args\":{\"query\":1}}",
    "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"query\\\" must be a string\"}}"),
-  ("{\"phase\":\"finish\",\"args\":{\"query\":\"FILE\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"stdout\":\"{\\\"count\\\":3,\\\"builtins\\\":[{\\\"name\\\":\\\"readFile\\\",\\\"module\\\":\\\"std/fs\\\",\\\"signature\\\":\\\"readFile: string -> string ! {FS}\\\",\\\"is_pure\\\":false,\\\"effect\\\":\\\"FS\\\",\\\"num_args\\\":1,\\\"description\\\":\\\"Read a file\\\"},{\\\"name\\\":\\\"httpGet\\\",\\\"module\\\":\\\"std/net\\\",\\\"signature\\\":\\\"httpGet: string -> string ! {Net}\\\",\\\"is_pure\\\":false,\\\"effect\\\":\\\"Net\\\",\\\"num_args\\\":1,\\\"description\\\":\\\"HTTP GET\\\"},{\\\"name\\\":\\\"writeFile\\\",\\\"module\\\":\\\"std/fs\\\",\\\"signature\\\":\\\"writeFile: (string, string) -> () ! {FS}\\\",\\\"is_pure\\\":false,\\\"effect\\\":\\\"FS\\\",\\\"num_args\\\":2,\\\"description\\\":\\\"Write a file\\\"}]}\"}}]}",
-   "{\"count\":2,\"matches\":[{\"name\":\"readFile\",\"module\":\"std/fs\",\"signature\":\"readFile: string -> string ! {FS}\",\"is_pure\":false,\"effect\":\"FS\",\"num_args\":1,\"description\":\"Read a file\"},{\"name\":\"writeFile\",\"module\":\"std/fs\",\"signature\":\"writeFile: (string, string) -> () ! {FS}\",\"is_pure\":false,\"effect\":\"FS\",\"num_args\":2,\"description\":\"Write a file\"}]}"),
-  ("{\"phase\":\"finish\",\"args\":{\"module\":\"std/net\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"stdout\":\"{\\\"count\\\":3,\\\"builtins\\\":[{\\\"name\\\":\\\"readFile\\\",\\\"module\\\":\\\"std/fs\\\",\\\"signature\\\":\\\"readFile: string -> string ! {FS}\\\",\\\"is_pure\\\":false,\\\"effect\\\":\\\"FS\\\",\\\"num_args\\\":1,\\\"description\\\":\\\"Read a file\\\"},{\\\"name\\\":\\\"httpGet\\\",\\\"module\\\":\\\"std/net\\\",\\\"signature\\\":\\\"httpGet: string -> string ! {Net}\\\",\\\"is_pure\\\":false,\\\"effect\\\":\\\"Net\\\",\\\"num_args\\\":1,\\\"description\\\":\\\"HTTP GET\\\"},{\\\"name\\\":\\\"writeFile\\\",\\\"module\\\":\\\"std/fs\\\",\\\"signature\\\":\\\"writeFile: (string, string) -> () ! {FS}\\\",\\\"is_pure\\\":false,\\\"effect\\\":\\\"FS\\\",\\\"num_args\\\":2,\\\"description\\\":\\\"Write a file\\\"}]}\"}}]}",
-   "{\"count\":1,\"matches\":[{\"name\":\"httpGet\",\"module\":\"std/net\",\"signature\":\"httpGet: string -> string ! {Net}\",\"is_pure\":false,\"effect\":\"Net\",\"num_args\":1,\"description\":\"HTTP GET\"}]}"),
-  ("{\"phase\":\"finish\",\"args\":{},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"stdout\":\"{\\\"count\\\":3,\\\"builtins\\\":[{\\\"name\\\":\\\"readFile\\\",\\\"module\\\":\\\"std/fs\\\",\\\"signature\\\":\\\"readFile: string -> string ! {FS}\\\",\\\"is_pure\\\":false,\\\"effect\\\":\\\"FS\\\",\\\"num_args\\\":1,\\\"description\\\":\\\"Read a file\\\"},{\\\"name\\\":\\\"httpGet\\\",\\\"module\\\":\\\"std/net\\\",\\\"signature\\\":\\\"httpGet: string -> string ! {Net}\\\",\\\"is_pure\\\":false,\\\"effect\\\":\\\"Net\\\",\\\"num_args\\\":1,\\\"description\\\":\\\"HTTP GET\\\"},{\\\"name\\\":\\\"writeFile\\\",\\\"module\\\":\\\"std/fs\\\",\\\"signature\\\":\\\"writeFile: (string, string) -> () ! {FS}\\\",\\\"is_pure\\\":false,\\\"effect\\\":\\\"FS\\\",\\\"num_args\\\":2,\\\"description\\\":\\\"Write a file\\\"}]}\"}}]}",
-   "{\"count\":3,\"matches\":[{\"name\":\"readFile\",\"module\":\"std/fs\",\"signature\":\"readFile: string -> string ! {FS}\",\"is_pure\":false,\"effect\":\"FS\",\"num_args\":1,\"description\":\"Read a file\"},{\"name\":\"httpGet\",\"module\":\"std/net\",\"signature\":\"httpGet: string -> string ! {Net}\",\"is_pure\":false,\"effect\":\"Net\",\"num_args\":1,\"description\":\"HTTP GET\"},{\"name\":\"writeFile\",\"module\":\"std/fs\",\"signature\":\"writeFile: (string, string) -> () ! {FS}\",\"is_pure\":false,\"effect\":\"FS\",\"num_args\":2,\"description\":\"Write a file\"}]}"),
-  ("{\"phase\":\"finish\",\"args\":{\"query\":\"file\",\"module\":\"std/net\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"stdout\":\"{\\\"count\\\":3,\\\"builtins\\\":[{\\\"name\\\":\\\"readFile\\\",\\\"module\\\":\\\"std/fs\\\",\\\"signature\\\":\\\"readFile: string -> string ! {FS}\\\",\\\"is_pure\\\":false,\\\"effect\\\":\\\"FS\\\",\\\"num_args\\\":1,\\\"description\\\":\\\"Read a file\\\"},{\\\"name\\\":\\\"httpGet\\\",\\\"module\\\":\\\"std/net\\\",\\\"signature\\\":\\\"httpGet: string -> string ! {Net}\\\",\\\"is_pure\\\":false,\\\"effect\\\":\\\"Net\\\",\\\"num_args\\\":1,\\\"description\\\":\\\"HTTP GET\\\"},{\\\"name\\\":\\\"writeFile\\\",\\\"module\\\":\\\"std/fs\\\",\\\"signature\\\":\\\"writeFile: (string, string) -> () ! {FS}\\\",\\\"is_pure\\\":false,\\\"effect\\\":\\\"FS\\\",\\\"num_args\\\":2,\\\"description\\\":\\\"Write a file\\\"}]}\"}}]}",
+  ("{\"phase\":\"finish\",\"args\":{\"query\":\"FILE\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"argv\":[\"builtins\",\"list\"],\"exit_code\":0,\"stdout\":\"Total: 3 builtins\\n\\n  _fs_readFile                   [fs] std/fs\\n  _net_httpGet                   [net] std/net\\n  _fs_writeFile                  [fs] std/fs\\n\",\"stderr\":\"\"}}]}",
+   "{\"count\":2,\"matches\":[{\"name\":\"_fs_readFile\",\"module\":\"std/fs\",\"effect\":\"fs\"},{\"name\":\"_fs_writeFile\",\"module\":\"std/fs\",\"effect\":\"fs\"}]}"),
+  ("{\"phase\":\"finish\",\"args\":{\"module\":\"std/net\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"argv\":[\"builtins\",\"list\"],\"exit_code\":0,\"stdout\":\"Total: 3 builtins\\n\\n  _fs_readFile                   [fs] std/fs\\n  _net_httpGet                   [net] std/net\\n  _fs_writeFile                  [fs] std/fs\\n\",\"stderr\":\"\"}}]}",
+   "{\"count\":1,\"matches\":[{\"name\":\"_net_httpGet\",\"module\":\"std/net\",\"effect\":\"net\"}]}"),
+  ("{\"phase\":\"finish\",\"args\":{},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"argv\":[\"builtins\",\"list\"],\"exit_code\":0,\"stdout\":\"Total: 3 builtins\\n\\n  _fs_readFile                   [fs] std/fs\\n  _net_httpGet                   [net] std/net\\n  _fs_writeFile                  [fs] std/fs\\n\",\"stderr\":\"\"}}]}",
+   "{\"count\":3,\"matches\":[{\"name\":\"_fs_readFile\",\"module\":\"std/fs\",\"effect\":\"fs\"},{\"name\":\"_net_httpGet\",\"module\":\"std/net\",\"effect\":\"net\"},{\"name\":\"_fs_writeFile\",\"module\":\"std/fs\",\"effect\":\"fs\"}]}"),
+  ("{\"phase\":\"finish\",\"args\":{\"query\":\"file\",\"module\":\"std/net\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"argv\":[\"builtins\",\"list\"],\"exit_code\":0,\"stdout\":\"Total: 3 builtins\\n\\n  _fs_readFile                   [fs] std/fs\\n  _net_httpGet                   [net] std/net\\n  _fs_writeFile                  [fs] std/fs\\n\",\"stderr\":\"\"}}]}",
    "{\"count\":0,\"matches\":[]}"),
+  ("{\"phase\":\"finish\",\"args\":{\"query\":\"net\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"argv\":[\"builtins\",\"list\"],\"exit_code\":0,\"stdout\":\"Total: 3 builtins\\n\\n  _fs_readFile                   [fs] std/fs\\n  _net_httpGet                   [net] std/net\\n  _fs_writeFile                  [fs] std/fs\\n\",\"stderr\":\"\"}}]}",
+   "{\"count\":1,\"matches\":[{\"name\":\"_net_httpGet\",\"module\":\"std/net\",\"effect\":\"net\"}]}"),
   ("{\"phase\":\"finish\",\"args\":{\"query\":\"x\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"failed\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":null}]}",
-   "{\"ok\":false,\"status\":\"failed\",\"refused\":\"the Ailang.Discover effect ended failed\"}")
+   "{\"ok\":false,\"status\":\"failed\",\"refused\":\"the Ailang.Discover effect ended failed\"}"),
+  ("{\"phase\":\"finish\",\"args\":{\"query\":\"file\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"argv\":[\"builtins\",\"list\"],\"exit_code\":0,\"stdout\":\"{\\\"count\\\":378,\\\"builtins\\\":[{\\\"name\\\":\\\"::\\\"\\n…[truncated]\",\"stderr\":\"\"}}]}",
+   "{\"ok\":false,\"status\":\"ok\",\"refused\":\"builtins_list output was truncated at policy-tool's 64 KiB stdout cap\"}"),
+  ("{\"phase\":\"finish\",\"args\":{\"query\":\"file\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"argv\":[\"builtins\",\"list\"],\"exit_code\":0,\"stdout\":\"Total: 4 builtins\\n\\n  _fs_readFile                   [fs] std/fs\\n  _net_httpGet                   [net] std/net\\n  _fs_writeFile                  [fs] std/fs\\n\",\"stderr\":\"\"}}]}",
+   "{\"ok\":false,\"status\":\"ok\",\"refused\":\"builtins_list header states 4 builtins but 3 lines parsed\"}"),
+  ("{\"phase\":\"finish\",\"args\":{\"query\":\"file\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"argv\":[\"builtins\",\"list\"],\"exit_code\":0,\"stdout\":\"  _fs_readFile  [fs] std/fs\\n\",\"stderr\":\"\"}}]}",
+   "{\"ok\":false,\"status\":\"ok\",\"refused\":\"builtins_list returned no \\\"Total: N builtins\\\" header\"}"),
+  ("{\"phase\":\"finish\",\"args\":{\"query\":\"file\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":true,\"argv\":[\"builtins\",\"list\"],\"exit_code\":0,\"stdout\":\"Total: 3 builtins\\n\\n  _fs_readFile                   [fs] std/fs\\n  _net_httpGet                   std/net\\n  _fs_writeFile                  [fs] std/fs\\n\",\"stderr\":\"\"}}]}",
+   "{\"ok\":false,\"status\":\"ok\",\"refused\":\"builtins_list line \\\"  _net_httpGet                   std/net\\\" is not \\\"name [effect] module\\\"\"}"),
+  ("{\"phase\":\"finish\",\"args\":{\"query\":\"file\"},\"results\":[{\"id\":\"e1\",\"effect\":\"Ailang.Discover\",\"status\":\"ok\",\"record\":\"sha256:0000000000000000000000000000000000000000000000000000000000000000\",\"output\":{\"ok\":false,\"refused\":\"op builtins_list does not admit flag --module (admitted: --json)\"}}]}",
+   "{\"ok\":false,\"status\":\"ok\",\"refused\":\"op builtins_list does not admit flag --module (admitted: --json)\"}")
 ]
 {
   match decode(input) {

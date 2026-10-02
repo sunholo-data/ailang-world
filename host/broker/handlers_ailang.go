@@ -147,12 +147,18 @@ func within(path, base string) bool {
 // AilangToolConfig binds one episode's tool handler. Bin is the (archived)
 // tool binary and BinRef its content hash; PolicyPath is the rendered policy,
 // Root the episode worktree, CacheDir the AILANG_CACHE_DIR, both outside Root.
+// ExamplesDir, when set, is the examples corpus `examples_search` reads (passed
+// as AILANG_EXAMPLES; also outside Root). The corpus is NOT built into the
+// v0.51.0 binary (V65): it reads AILANG_EXAMPLES, then ~/.ailang/examples,
+// then CWD-relative examples/ dirs, so an unset ExamplesDir refuses the op
+// rather than let it search the agent's own worktree or report nothing.
 type AilangToolConfig struct {
 	Bin            string
 	BinRef         hashref.HashRef
 	PolicyPath     string
 	Root           string
 	CacheDir       string
+	ExamplesDir    string
 	ExecTimeout    time.Duration
 	MaxOutputBytes int64
 }
@@ -167,6 +173,7 @@ type AilangToolHandler struct {
 	policyPath   string
 	root         string
 	cacheDir     string
+	examplesDir  string // "" = no corpus configured: examples_search is refused
 	bounds       handlerBounds
 	cliOps       map[string]bool
 	policyDigest string
@@ -197,9 +204,17 @@ func NewAilangToolHandler(ctx context.Context, cfg AilangToolConfig) (*AilangToo
 	if err := CheckPolicyOutsideRoot(cfg.CacheDir, root); err != nil {
 		return nil, err
 	}
+	if cfg.ExamplesDir != "" {
+		if !filepath.IsAbs(cfg.ExamplesDir) {
+			return nil, fmt.Errorf("broker: the examples corpus dir must be absolute")
+		}
+		if err := CheckPolicyOutsideRoot(cfg.ExamplesDir, root); err != nil {
+			return nil, err
+		}
+	}
 	h := &AilangToolHandler{
 		bin: cfg.Bin, binRef: cfg.BinRef, policyPath: cfg.PolicyPath, root: root,
-		cacheDir: cfg.CacheDir,
+		cacheDir: cfg.CacheDir, examplesDir: cfg.ExamplesDir,
 		bounds: handlerBounds{
 			execTimeout: cfg.ExecTimeout, maxOutputBytes: cfg.MaxOutputBytes,
 		},
@@ -321,6 +336,12 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 	if !h.opsFor(req.Effect)[op] {
 		return nil, &AilangToolRefusalError{Effect: req.Effect, Op: op, Why: "not in this effect's op allowlist"}
 	}
+	if op == "examples_search" && h.examplesDir == "" {
+		// Answered in policy-tool's own refusal shape (ok:false, rc 0), so the
+		// caller sees why instead of an empty search.
+		refused, _ := json.Marshal(NoExamplesCorpusRefusal)
+		return h.stamp(map[string]json.RawMessage{"ok": json.RawMessage(`false`), "refused": refused})
+	}
 	// Re-encode what was checked, so the bytes policy-tool reads are the
 	// bytes the allowlist saw (duplicate keys collapse here, not there).
 	body, err := json.Marshal(fields)
@@ -344,6 +365,17 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 			return nil, fmt.Errorf("broker: policy-tool response carries the reserved key %q", reserved)
 		}
 	}
+	return h.stamp(resp)
+}
+
+// NoExamplesCorpusRefusal is the examples_search answer when the daemon was
+// started without an examples corpus (no --examples-dir and no
+// ~/.ailang/examples at startup).
+const NoExamplesCorpusRefusal = "no examples corpus configured: start ailang-worldd serve with --examples-dir DIR " +
+	"(an AILANG examples corpus: manifest.json plus runnable/; `ailang examples download` makes one at ~/.ailang/examples)"
+
+// stamp adds the handler's provenance keys to a response object.
+func (h *AilangToolHandler) stamp(resp map[string]json.RawMessage) ([]byte, error) {
 	resp["tool"], _ = json.Marshal(h.binRef.String())
 	resp["policy_digest"], _ = json.Marshal(h.policyDigest)
 	return json.Marshal(resp)
@@ -365,14 +397,22 @@ func decodePayloadObject(payload []byte) (map[string]json.RawMessage, error) {
 // the parent's (so the registry credential cannot reach a tool), with the
 // compile cache pointed outside the worktree (honoured by policy-tool; ignored
 // by `run --policy`, V57 / R-SE-4, which the .ailang/** deny glob covers).
+//
+// AILANG_EXAMPLES (only when a corpus is configured) points examples_search at
+// the operator's corpus: HOME is the per-episode cache, so the binary's
+// ~/.ailang/examples fallback never finds the real one (V65).
 func (h *AilangToolHandler) childEnv() []string {
-	return []string{
+	env := []string{
 		"HOME=" + h.cacheDir,
 		"PATH=/usr/bin:/bin",
 		"LANG=C",
 		"LC_ALL=C",
 		"AILANG_CACHE_DIR=" + h.cacheDir,
 	}
+	if h.examplesDir != "" {
+		env = append(env, "AILANG_EXAMPLES="+h.examplesDir)
+	}
+	return env
 }
 
 // policyTool is execution branch 1: the request on stdin, cwd = the worktree.

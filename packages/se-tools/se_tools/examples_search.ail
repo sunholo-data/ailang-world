@@ -1,7 +1,10 @@
 module se_tools/examples_search
 
 -- examples-search (queue row 134, design_docs/planned/w-software-engineering-domain.md
--- §4.2): search the example corpus built into the tool binary (V17). Args
+-- §4.2): search the AILANG examples corpus the daemon was started with
+-- (serve --examples-dir, passed to the tool as AILANG_EXAMPLES; the corpus is
+-- NOT built into the binary, V65 corrects V17). Without a corpus the handler
+-- answers {ok:false, refused}. Args
 -- {query}: no limit, because the op admits no flags (V56). Effect
 -- Ailang.Discover; payload = the policy-tool `examples_search` request
 -- {op, query}. No finish phase.

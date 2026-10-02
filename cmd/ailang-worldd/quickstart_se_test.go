@@ -102,20 +102,20 @@ func TestQuickstartSection9FlagsMatchTheCLI(t *testing.T) {
 	}
 }
 
-// TestSessionMintGrantsCarryNoExpiry pins a KNOWN BREAK measured in row 134
-// M5b: `session mint` stores each --grant with ExpiresAt 0, and the broker's
-// liveness rule (now < ExpiresAt) treats it as expired, so a CLI-minted
-// session is admitted by the resolver but sees zero tools (denied:expired).
-// The daemon tests mint through authority.Mint with an explicit ExpiresAt and
-// never observe this. When the mint path is fixed this tripwire turns red and
-// must become the positive assertion (allowed).
-func TestSessionMintGrantsCarryNoExpiry(t *testing.T) {
+// TestSessionMintGrantsExpireWithTheSession is the positive form of the row
+// 134 M5b break-1 tripwire: `session mint` used to store each --grant with
+// ExpiresAt 0, which the broker's liveness rule (now < ExpiresAt, Unix
+// seconds) treats as expired, so a CLI-minted session resolved but saw zero
+// tools. Each CLI-minted grant now expires at the session's own expiry
+// (mint time + --ttl): live now and through the last second, denied:expired
+// at the session expiry and after.
+func TestSessionMintGrantsExpireWithTheSession(t *testing.T) {
 	dir := t.TempDir()
 	db, out := filepath.Join(dir, "world.db"), filepath.Join(dir, "session")
 	var stdout, stderr bytes.Buffer
 	now := time.Now().Unix()
 	env := sessionEnv{openTerminal: func() (io.ReadWriteCloser, error) { return &fakeTerm{r: strings.NewReader("y\n")}, nil }, now: func() int64 { return now }}
-	if got := runSessionMint([]string{"--db", db, "--episode", "ep1", "--grant", "Workspace.Read=worktree:5", "--ttl", "3600", "--out", out}, &stdout, &stderr, env); got != exitOK {
+	if got := runSessionMint([]string{"--db", db, "--episode", "ep1", "--grant", "Workspace.Read=worktree:5", "--grant", "Ailang.CLI=worktree:1", "--ttl", "3600", "--out", out}, &stdout, &stderr, env); got != exitOK {
 		t.Fatalf("mint exit %d: %s", got, stderr.String())
 	}
 	token, err := os.ReadFile(out)
@@ -130,15 +130,50 @@ func TestSessionMintGrantsCarryNoExpiry(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	res, err := authority.New(st).ResolveContext(ctx, "Bearer "+string(token), now)
-	if err != nil || res.Success == nil || len(res.Success.Caps) != 1 {
+	if err != nil || res.Success == nil || len(res.Success.Caps) != 2 {
 		t.Fatalf("resolve = %+v %v", res, err)
 	}
-	if res.Success.ExpiresAt != now+3600 || res.Success.Caps[0].ExpiresAt != 0 {
-		t.Fatalf("session expiry %d, grant expiry %d: the measured break changed — replace this tripwire",
-			res.Success.ExpiresAt, res.Success.Caps[0].ExpiresAt)
+	if res.Success.ExpiresAt != now+3600 {
+		t.Fatalf("session expiry %d, want %d", res.Success.ExpiresAt, now+3600)
 	}
-	d := broker.Allows(broker.NewCapabilitySnapshot(res.Success.Caps, now), broker.Requirement{Effect: "Workspace.Read", Scope: "worktree", Cost: 0})
-	if d.Allowed || d.Label != broker.LabelDeniedExpired {
-		t.Fatalf("CLI-minted grant decision = %+v: the measured break changed — replace this tripwire", d)
+	for _, c := range res.Success.Caps {
+		if c.ExpiresAt != res.Success.ExpiresAt {
+			t.Fatalf("grant %s expiry %d, want the session expiry %d", c.Effect, c.ExpiresAt, res.Success.ExpiresAt)
+		}
+	}
+	req := broker.Requirement{Effect: "Workspace.Read", Scope: "worktree", Cost: 1}
+	for _, at := range []int64{now, now + 3599} {
+		if d := broker.Allows(broker.NewCapabilitySnapshot(res.Success.Caps, at), req); !d.Allowed {
+			t.Fatalf("CLI-minted grant at t=now+%d: %+v, want allowed", at-now, d)
+		}
+	}
+	for _, at := range []int64{now + 3600, now + 3601} {
+		if d := broker.Allows(broker.NewCapabilitySnapshot(res.Success.Caps, at), req); d.Allowed || d.Label != broker.LabelDeniedExpired {
+			t.Fatalf("CLI-minted grant at t=now+%d: %+v, want denied:expired", at-now, d)
+		}
+	}
+}
+
+// TestServeExamplesDirDefault (row 134 break-3 fix): an explicit
+// --examples-dir wins; otherwise the operator's ~/.ailang/examples is the
+// default when it is a directory; otherwise no corpus ("").
+func TestServeExamplesDirDefault(t *testing.T) {
+	home := t.TempDir()
+	homeFn := func() (string, error) { return home, nil }
+	if got := resolveExamplesDefault("", homeFn); got != "" {
+		t.Fatalf("no ~/.ailang/examples: default = %q, want none", got)
+	}
+	corpus := filepath.Join(home, ".ailang", "examples")
+	if err := os.MkdirAll(corpus, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if got := resolveExamplesDefault("", homeFn); got != corpus {
+		t.Fatalf("default = %q, want %q", got, corpus)
+	}
+	if got := resolveExamplesDefault("/explicit/corpus", homeFn); got != "/explicit/corpus" {
+		t.Fatalf("explicit flag = %q, want it kept", got)
+	}
+	if got := resolveExamplesDefault("", func() (string, error) { return "", os.ErrNotExist }); got != "" {
+		t.Fatalf("no home: default = %q, want none", got)
 	}
 }
