@@ -104,7 +104,7 @@ func guardFixtures() map[string]guardFixture {
 		"ObjectCommits":        simple(ref("missing"), int64(0), 1),
 		"ObjectReferences":     simple(ref("missing"), (*ObjectReferenceCursor)(nil), 1),
 		"ObjectsBySemanticID":  simple("missing", "", 1),
-		"PendingEffectIntents": simple(1), "PendingIntents": simple(1),
+		"PendingEffectIntents": simple(1), "PendingIntents": simple(1), "EffectSpend": simple("episode"),
 		"PutObject": simple(obj1), "PutVerifyResult": simple(VerifyResult{TransitionFn: ref("transition"), Interpreter: ref("interpreter"), Verified: true}),
 		"PutWorld": simple(world), "ReadObject": simple(ref("missing"), int64(1024)),
 		"ResolveSession": simple("missing"), "RevokeSession": simple("missing"),
