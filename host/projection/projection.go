@@ -429,7 +429,13 @@ func dispatchError(err error) (int, string) {
 	var notCommitted *coordinator.NotCommittedError
 	var conflict *store.ConflictError
 	var integrity *coordinator.IntegrityError
+	var unrecorded *coordinator.EffectsUnrecordedError
 	switch {
+	// First: an effect already ran, whatever the cause (which it wraps — a
+	// conflict, a deadline, an unconfirmed commit) says. The caller gets the
+	// effect-record refs so the executed effect stays addressable (row 134).
+	case errors.As(err, &unrecorded):
+		return codeInternal, effectsUnrecordedMessage(unrecorded)
 	case errors.As(err, &invalid):
 		return codeInvalidParams, msgInvalidParams
 	case errors.As(err, &absent), errors.As(err, &denied):
@@ -461,6 +467,21 @@ func dispatchError(err error) (int, string) {
 	default:
 		return codeInternal, notAvailableMessage
 	}
+}
+
+// EffectsUnrecordedPrefix opens the message dispatchError gives an
+// *coordinator.EffectsUnrecordedError; the effect-record refs follow it.
+const EffectsUnrecordedPrefix = "effects were requested but the invocation was not confirmed committed; effect records:"
+
+func effectsUnrecordedMessage(e *coordinator.EffectsUnrecordedError) string {
+	msg := EffectsUnrecordedPrefix
+	if len(e.EffectRecords) == 0 {
+		return msg + " none"
+	}
+	for _, r := range e.EffectRecords {
+		msg += " " + r.String()
+	}
+	return msg
 }
 
 // writeUnavailable maps a resolution/registry failure on the card route to the

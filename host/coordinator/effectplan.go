@@ -13,7 +13,8 @@ package coordinator
 // effectplan_drift_test.go evaluates every inline test row of the sketch
 // through these mirrors, so the Go law and the proven law cannot drift.
 //
-// M1 scope: parsePlan is not yet called from Dispatch (M2a wires it).
+// parsePlan and parseFinish are called from effectful dispatch and replay
+// (effectful.go, row 134 M2a/M2b).
 
 import (
 	"encoding/json"

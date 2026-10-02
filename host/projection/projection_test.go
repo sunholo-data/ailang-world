@@ -831,6 +831,14 @@ func TestA2ADispatch(t *testing.T) {
 		{"R11", context.DeadlineExceeded, codeInternal, "invocation exceeded its deadline"},
 		{"R12", &coordinator.OutputError{}, codeInternal, "transition output is not a JSON object"},
 		{"R14", &store.ConflictError{}, codeInternal, "world head moved during invocation; not committed; send a new task id"},
+		// Row 134: an effect already ran, so the mapping wins over the wrapped
+		// cause (R14 here) and carries the effect-record refs.
+		{"EffectsUnrecorded", &coordinator.EffectsUnrecordedError{
+			EffectRecords: []hashref.HashRef{hashref.SumSHA256([]byte("r1")), hashref.SumSHA256([]byte("r2"))},
+			Cause:         &store.ConflictError{}},
+			codeInternal, EffectsUnrecordedPrefix + " " + hashref.SumSHA256([]byte("r1")).String() + " " + hashref.SumSHA256([]byte("r2")).String()},
+		{"EffectsUnrecorded_no_record", &coordinator.EffectsUnrecordedError{Cause: &coordinator.UnconfirmedError{Err: errors.New("hidden")}},
+			codeInternal, EffectsUnrecordedPrefix + " none"},
 	}
 	for _, row := range rows {
 		t.Run(row.name, func(t *testing.T) {

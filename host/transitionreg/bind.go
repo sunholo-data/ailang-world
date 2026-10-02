@@ -103,6 +103,10 @@ func (b *Bound) Check(p Proposal) error {
 	return nil
 }
 
+// Unhandled reports the declared effect names the bound session has no
+// handler for (broker.BoundInvoker.Unhandled).
+func (b *Bound) Unhandled() []string { return b.invoker.Unhandled() }
+
 // Request dispatches only through the broker's descriptor-bound invoker.
 func (b *Bound) Request(ctx context.Context, req broker.EffectRequest, payload []byte) ([]byte, hashref.HashRef, error) {
 	return b.invoker.Request(ctx, req, payload)

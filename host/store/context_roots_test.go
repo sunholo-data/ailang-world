@@ -15,18 +15,23 @@ import (
 // Every surviving production root is named, including the explicit CLI mint
 // root. These are compatibility exceptions, NOT evidence of bounded store waits.
 var contextRootPins = map[string]int{
-	"cmd/ailang-worldd/cli.go|get|Background":                                 1,
-	"cmd/ailang-worldd/cli.go|execute|Background":                             1,
-	"cmd/ailang-worldd/cli.go|executeWithAuth|Background":                     1,
-	"cmd/ailang-worldd/signal_context.go|serveSignalContext|Background":       1,
-	"cmd/ailang-worldd/session.go|runSessionMint|Background":                  1,
-	"cmd/ailang-worldd/session.go|runSessionRevoke|Background":                1,
-	"cmd/world-publish/main.go|runApprove|Background":                         1,
-	"cmd/world-publish/main.go|runPublish|Background":                         1,
-	"cmd/world-publish/main.go|runReconcile|Background":                       1,
-	"cmd/world-publish/reconcile_probe.go|reconcileReadOnlyProbe|Background":  1,
-	"cmd/world-publish/transitions.go|runTransitions|Background":              1,
-	"host/archive/archive.go|probeVersion|Background":                         1,
+	"cmd/ailang-worldd/cli.go|get|Background":                                1,
+	"cmd/ailang-worldd/cli.go|execute|Background":                            1,
+	"cmd/ailang-worldd/cli.go|executeWithAuth|Background":                    1,
+	"cmd/ailang-worldd/signal_context.go|serveSignalContext|Background":      1,
+	"cmd/ailang-worldd/session.go|runSessionMint|Background":                 1,
+	"cmd/ailang-worldd/session.go|runSessionRevoke|Background":               1,
+	"cmd/world-publish/main.go|runApprove|Background":                        1,
+	"cmd/world-publish/main.go|runPublish|Background":                        1,
+	"cmd/world-publish/main.go|runReconcile|Background":                      1,
+	"cmd/world-publish/reconcile_probe.go|reconcileReadOnlyProbe|Background": 1,
+	"cmd/world-publish/transitions.go|runTransitions|Background":             1,
+	"host/archive/archive.go|probeVersion|Background":                        1,
+	// Row 134 §4.3: post-effect writes are detached from the caller's
+	// cancellation and each feeds context.WithTimeout directly (4 s / 2 s
+	// budgets), so an executed effect is never stranded unrecorded.
+	"host/broker/broker.go|postDispatchContext|WithoutCancel":                 1,
+	"host/coordinator/effectful.go|detached|WithoutCancel":                    1,
 	"host/capsule/capsule.go|Run|Background":                                  1,
 	"host/daemon/daemon.go|drain|Background":                                  1,
 	"host/replay/replay.go|runPinnedTransition|Background":                    1,

@@ -13,6 +13,7 @@ const (
 	InputV1   = "world/invocation-input/v1"
 	OutputV1  = "world/invocation-output/v1"
 	RecordV1  = "world/invocation-record/v1"
+	RecordV2  = "world/invocation-record/v2"
 	writtenBy = "coordinator:a2a"
 )
 
@@ -27,6 +28,22 @@ type record struct {
 	SemanticsEpoch int64  `json:"semanticsEpoch"`
 	Input          string `json:"input"`
 	Output         string `json:"output"`
+}
+
+// recordV2 is the effectful invocation record (row 134 §4.1): the v1 fields
+// in v1 order, then the plan object's ref and the ordered effect-record refs
+// (never null: an empty plan records []).
+type recordV2 struct {
+	InvocationID   string   `json:"invocationId"`
+	EpisodeID      string   `json:"episodeId"`
+	SkillID        string   `json:"skillId"`
+	TransitionFn   string   `json:"transitionFn"`
+	Interpreter    string   `json:"interpreter"`
+	SemanticsEpoch int64    `json:"semanticsEpoch"`
+	Input          string   `json:"input"`
+	Output         string   `json:"output"`
+	Plan           string   `json:"plan"`
+	Effects        []string `json:"effects"`
 }
 
 type entryWire struct {
@@ -87,6 +104,31 @@ func planInvocation(w store.World, id, episodeID string, d transitionreg.Descrip
 		TransitionFn: d.TransitionFn.String(), Interpreter: d.Interpreter.String(),
 		SemanticsEpoch: d.SemanticsEpoch, Input: in.Hash.String(), Output: out.Hash.String(),
 	}))
+	return planCommit(w, id, d, []store.Object{in, out, rec}, rec, out, logicalTime)
+}
+
+// planEffectInvocation is planInvocation for an effectful descriptor (row
+// 134): the record is world/invocation-record/v2 — the v1 fields plus the
+// plan object's ref and the ordered effect-record refs — and the plan object
+// is committed alongside input and output. The world laws are unchanged.
+func planEffectInvocation(w store.World, id, episodeID string, d transitionreg.Descriptor,
+	input, output, planObject []byte, effects []hashref.HashRef, logicalTime int64) plan {
+	in, out, po := object(InputV1, input), object(OutputV1, output), object(EffectPlanV1, planObject)
+	refs := make([]string, len(effects))
+	for i, e := range effects {
+		refs[i] = e.String()
+	}
+	rec := object(RecordV2, mustJSON(recordV2{
+		InvocationID: id, EpisodeID: episodeID, SkillID: d.ID,
+		TransitionFn: d.TransitionFn.String(), Interpreter: d.Interpreter.String(),
+		SemanticsEpoch: d.SemanticsEpoch, Input: in.Hash.String(), Output: out.Hash.String(),
+		Plan: po.Hash.String(), Effects: refs,
+	}))
+	return planCommit(w, id, d, []store.Object{in, out, po, rec}, rec, out, logicalTime)
+}
+
+func planCommit(w store.World, id string, d transitionreg.Descriptor, objects []store.Object,
+	rec, out store.Object, logicalTime int64) plan {
 	header := store.LogHeader{
 		EntryIndex: w.Revision + 1, SemanticsEpoch: d.SemanticsEpoch,
 		TransitionFn: d.TransitionFn, Interpreter: d.Interpreter,
@@ -100,7 +142,6 @@ func planInvocation(w store.World, id, episodeID string, d transitionreg.Descrip
 	}))
 	next := store.World{Revision: w.Revision + 1, StateRoot: out.Hash, LogHead: entryHash}
 	next.Ref = worldRef(next)
-	objects := []store.Object{in, out, rec}
 	return plan{
 		Objects: objects,
 		Record:  rec.Hash,
