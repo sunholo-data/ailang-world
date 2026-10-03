@@ -26,6 +26,7 @@
 //	ailang-worldd [--addr http://127.0.0.1:7644] why <index|head|sha256:...|a2a:...|rest:...|-> | --result <file> [--scan N] [--json]
 //	ailang-worldd [--addr http://127.0.0.1:7644] provenance [--since <entry>] [--episode <ep>]
 //	ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>] [--workspace-root <dir>] [--from-dir <dir>] [--replace]
+//	ailang-worldd [--addr http://127.0.0.1:7644] doctor [--db <path>] [--workspace-root <dir>] [--online] ...
 //	ailang-worldd session mint|revoke ...
 //
 // `--addr` is ONE GLOBAL CLIENT FLAG available to every client verb; it is not a
@@ -86,11 +87,15 @@ Usage:
   ailang-worldd [--addr <url>] provenance [--since <entry>] [--episode <ep>] [--scan N]
   ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>]
                     [--workspace-root <dir>] [--from-dir <dir>] [--replace]
+  ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
+                    [--interpreter-dir <dir>] [--tools-dir <dir>]
+                    [--examples-dir <dir>] [--online]
   ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
                     [--ttl 3600] [--out <file>]
   ailang-worldd session revoke [--db <path>] <credential_id-hash>
 
-  <verb> --help prints the help of: tools, call, why, log tail, provenance, setup.
+  <verb> --help prints the help of: tools, call, why, log tail, provenance, setup,
+  doctor.
 
 Session credential (tools, call, commit): --session <file> (a file holding
 the 64-hex token, mode 0600) or the token itself (warns: visible on argv),
@@ -227,6 +232,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 
 	case "provenance":
 		return runProvenance(*addr, rest[1:], stdout, stderr)
+
+	case "doctor":
+		return runDoctor(*addr, rest[1:], stdout, stderr)
 
 	case "setup":
 		if addrGiven {

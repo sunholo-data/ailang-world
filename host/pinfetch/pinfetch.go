@@ -563,3 +563,11 @@ func isHex64(s string) bool {
 	}
 	return true
 }
+
+// ReleaseChecksum fetches only pin's release `.sha256` (≤ MaxChecksumBytes)
+// and returns its digest, for `doctor --online`: a reachability check that
+// also compares the release's claim with the compiled-in pin. It installs
+// nothing and downloads no tarball.
+func ReleaseChecksum(ctx context.Context, src Source, pin Pin) (string, error) {
+	return fetchChecksum(ctx, src, pin)
+}

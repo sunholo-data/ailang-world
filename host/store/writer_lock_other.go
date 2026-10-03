@@ -22,3 +22,8 @@ func acquireWriterLock(dbPath string) (*writerLock, error) {
 // release is unreachable on this platform (acquireWriterLock never returns a
 // lock) and exists only so the shared call sites compile.
 func (l *writerLock) release() error { return nil }
+
+// writerLockHeld cannot probe without a lock primitive; it says so.
+func writerLockHeld(lockPath string) (bool, error) {
+	return false, &UnsupportedPlatformError{GOOS: runtime.GOOS}
+}

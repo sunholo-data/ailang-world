@@ -39,11 +39,15 @@ Usage:
   ailang-worldd [--addr <url>] provenance [--since <entry>] [--episode <ep>] [--scan N]
   ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>]
                     [--workspace-root <dir>] [--from-dir <dir>] [--replace]
+  ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
+                    [--interpreter-dir <dir>] [--tools-dir <dir>]
+                    [--examples-dir <dir>] [--online]
   ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
                     [--ttl 3600] [--out <file>]
   ailang-worldd session revoke [--db <path>] <credential_id-hash>
 
-  <verb> --help prints the help of: tools, call, why, log tail, provenance, setup.
+  <verb> --help prints the help of: tools, call, why, log tail, provenance, setup,
+  doctor.
 
 Session credential (tools, call, commit): --session <file> (a file holding
 the 64-hex token, mode 0600) or the token itself (warns: visible on argv),
@@ -91,8 +95,8 @@ Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
               setup: a digest mismatch, nothing installed).
 ```
 
-`ailang-worldd help` prints the same text. `tools`, `call`, `why`, `log tail`, `provenance` and
-`setup` print their own help with `--help` (exit 0, shown below); for the other verbs Go's flag parser
+`ailang-worldd help` prints the same text. `tools`, `call`, `why`, `log tail`, `provenance`,
+`setup` and `doctor` print their own help with `--help` (exit 0, shown below); for the other verbs Go's flag parser
 prints a flag list where one is shown.
 
 `--addr` is refused with `session mint` and `session revoke`, as with `serve`, because they act on
@@ -364,6 +368,62 @@ digests (`cmd/ailang-worldd/pins.go`) are:
 A tarball whose own `.sha256` agrees with it but not with the compiled-in pin is refused with
 exit 3: `tarball digest mismatch: release .sha256 …, computed …, compiled-in pin …`, and nothing
 is installed. Release signatures (`.sig`/`.pem`) are not checked.
+
+### `doctor`
+
+```text
+usage: ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
+           [--interpreter-dir <dir>] [--tools-dir <dir>] [--examples-dir <dir>] [--online]
+
+Checks this machine for everything World needs, read-only, and prints one
+line per check: ✓ fine, ! worth knowing (with a fix), ✗ broken (with a fix).
+
+  api key      AILANG_REGISTRY_API_KEY is unset (doctor could not run otherwise:
+               every verb refuses while it is set)
+  tty          the mint fence (/dev/tty opens) and the publish fence (stdin is
+               that terminal), each with its reason
+  pins         both pinned binaries present and hashing to the compiled-in
+               digests (never executed); stale tarballs and old binaries noted
+  daemon       what answers at --addr: a worldd (its store and interpreter),
+               a foreign listener, or nothing
+  store        exists (never created), writer lock held or free, world head
+               and transition registry present
+  examples     the examples corpus examples-search reads
+  workspace    the workspace root; each child a git worktree with a valid
+               episode name
+  --online     the release .sha256 of both pins is reachable and matches
+
+Defaults: --db ~/.ailang/world/world.db, --workspace-root ~/.ailang/world-ws,
+the pin directories of 'setup', --examples-dir ~/.ailang/examples.
+Exit: 0 no ✗; 1 at least one ✗ (or a usage error).
+```
+
+```bash
+ailang-worldd doctor --online
+```
+
+```text
+✓ api key    AILANG_REGISTRY_API_KEY is unset
+! tty        no controlling terminal (open /dev/tty: device not configured): session mint/new and world-publish will refuse here
+             fix: run the attended steps (publish, session new) in a real terminal
+✓ pins       interpreter AILANG v0.41.0 at /Users/you/.pinned-ailang/ailang (sha256 1a67b0146858…)
+✓ pins       tool AILANG v0.52.1 at /Users/you/.pinned-ailang-tools/v0.52.1/ailang (sha256 0dd70a1d0036…)
+! daemon     nothing answers at http://127.0.0.1:7644
+             fix: ailang-worldd serve --db … (when you need it running)
+! store      /Users/you/.ailang/world/world.db does not exist yet (doctor never creates it)
+             fix: world-publish transitions --store /Users/you/.ailang/world/world.db … creates it (the attended publish)
+! examples   no examples corpus (~/.ailang/examples is absent): examples-search will refuse
+             fix: pass serve --examples-dir <dir>
+✓ workspace  /Users/you/.ailang/world-ws: 0 episode worktree(s)
+✓ online     interpreter AILANG v0.41.0: release .sha256 reachable and matches the pin
+✓ online     tool AILANG v0.52.1: release .sha256 reachable and matches the pin
+no check failed
+```
+
+doctor creates nothing: the writer lock is probed with a shared, non-blocking lock on the lock
+file opened read-only, and the store is read through a read-only handle, so it runs safely
+beside a live daemon. With `AILANG_REGISTRY_API_KEY` set, doctor (like every verb) refuses with
+exit 2 and names the variable — that refusal is the finding.
 
 ### `session mint`
 

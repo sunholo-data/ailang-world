@@ -181,6 +181,7 @@ func printNextSteps(w io.Writer, roles []pinRole, db, root string) {
 	interp, tool := roles[0].dest, roles[1].dest
 	fmt.Fprintf(w, `
 next (the attended steps; docs/QUICKSTART.md §9 has the full walk):
+  0. ailang-worldd doctor --db %[1]s --workspace-root %[2]s
   1. publish the se-tools transitions (a human act at a terminal), from the repo root:
        world-publish transitions --store %[1]s \
          --manifest packages/se-tools/transitions.json --ailang-bin %[3]s
