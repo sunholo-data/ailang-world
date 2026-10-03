@@ -193,6 +193,16 @@ jobs:
         timeout-minutes: 25
         run: ./scripts/verify_go.sh
 
+      # w-verifygate-etxtbsy (design_docs/planned/w-verifygate-etxtbsy.md): verify_go.sh has no -v
+      # (V16), so a SKIP of the Linux-only kernel control is indistinguishable from a PASS there.
+      # Run the fork-locked write tests verbosely so TestKernelRefusesExecOfWriterOpenFile is seen
+      # to PASS (not SKIP) on linux (AC6/V18).
+      - name: Fork-locked write tests, verbose (w-verifygate-etxtbsy linux gate)
+        timeout-minutes: 3
+        run: >-
+          go test ./host/verifygate/ -count=1 -p 1 -timeout 120s -v
+          -run '^(TestForkLockedWriteBlocksConcurrentFork|TestKernelRefusesExecOfWriterOpenFile|TestVerifygateTestWritesAreForkLocked)$'
+
       # Row 24 linux merge gate (w-host-subprocess-cleanup-boundary plan §7, design §11 r2):
       # verify_go.sh runs these tests without -v, so a PASS is indistinguishable from a SKIP
       # and the return/reap timings are invisible. Run the cleanup tests verbosely here so

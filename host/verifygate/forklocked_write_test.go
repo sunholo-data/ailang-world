@@ -3,11 +3,18 @@ package verifygate
 import (
 	"errors"
 	"fmt"
+	"go/ast"
+	"go/importer"
+	"go/parser"
+	"go/token"
+	"go/types"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sort"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -168,5 +175,191 @@ func TestKernelRefusesExecOfWriterOpenFile(t *testing.T) {
 	}
 	if err := exec.Command(path).Run(); err != nil {
 		t.Fatalf("exec after Close failed: %v", err)
+	}
+}
+
+// ---- mechanical guard: every file write in this package is fork-locked ----
+
+var bannedWriteFuncs = map[string]bool{"WriteFile": true, "OpenFile": true, "Create": true, "CreateTemp": true}
+
+// wrapperFuncs are the fork-locked entry points whose call sites the floor counts.
+var wrapperFuncs = map[string]bool{
+	"writeFileForkLocked":  true,
+	"copyFileForkLocked":   true,
+	"createTempForkLocked": true,
+	"createForkLocked":     true,
+	"forkLockedWrite":      true,
+}
+
+// rawWriteAllowlist is the set of enclosing FuncDecls that may call the banned
+// os functions: the wrapper cores and the Linux kernel control (calls inside
+// func literals attribute to the enclosing FuncDecl).
+var rawWriteAllowlist = map[string]bool{
+	"forkLockedWrite":                       true,
+	"createTempForkLocked":                  true,
+	"TestKernelRefusesExecOfWriterOpenFile": true,
+}
+
+const wrapperFile = "forklocked_write_test.go"
+
+type scanReport struct {
+	violations   []string
+	filesSeen    int
+	wrapperCalls int
+}
+
+// scanForkLockedWrites type-checks the package in dir (all *.go files, test and
+// non-test) or, when files is non-nil, the given name->source map, and reports
+// every banned os write call outside the allowlist plus aliased/dot "os" imports.
+func scanForkLockedWrites(dir string, files map[string][]byte) (scanReport, error) {
+	var rep scanReport
+	if files == nil {
+		files = map[string][]byte{}
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			return rep, err
+		}
+		for _, e := range entries {
+			if e.IsDir() || !strings.HasSuffix(e.Name(), ".go") {
+				continue
+			}
+			raw, err := os.ReadFile(filepath.Join(dir, e.Name()))
+			if err != nil {
+				return rep, err
+			}
+			files[e.Name()] = raw
+		}
+	}
+	names := make([]string, 0, len(files))
+	for n := range files {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	fset := token.NewFileSet()
+	var parsed []*ast.File
+	for _, n := range names {
+		f, err := parser.ParseFile(fset, n, files[n], 0)
+		if err != nil {
+			return rep, err
+		}
+		parsed = append(parsed, f)
+	}
+	rep.filesSeen = len(parsed)
+	info := &types.Info{Uses: map[*ast.Ident]types.Object{}}
+	conf := types.Config{Importer: importer.ForCompiler(fset, "source", nil)}
+	if _, err := conf.Check("verifygate", fset, parsed, info); err != nil {
+		return rep, fmt.Errorf("type-check: %w", err)
+	}
+	add := func(pos token.Pos, msg string) {
+		p := fset.Position(pos)
+		rep.violations = append(rep.violations, fmt.Sprintf("%s:%d: %s", p.Filename, p.Line, msg))
+	}
+	for _, f := range parsed {
+		fname := fset.Position(f.Pos()).Filename
+		for _, imp := range f.Imports {
+			if imp.Path.Value == `"os"` && imp.Name != nil {
+				add(imp.Pos(), fmt.Sprintf("aliased or dot import of os (%s) evades the write scan", imp.Name.Name))
+			}
+		}
+		visit := func(encl string, root ast.Node) {
+			ast.Inspect(root, func(n ast.Node) bool {
+				call, ok := n.(*ast.CallExpr)
+				if !ok {
+					return true
+				}
+				var id *ast.Ident
+				switch fn := call.Fun.(type) {
+				case *ast.Ident:
+					id = fn
+				case *ast.SelectorExpr:
+					id = fn.Sel
+				}
+				if id == nil {
+					return true
+				}
+				fo, ok := info.Uses[id].(*types.Func)
+				if !ok || fo.Pkg() == nil {
+					return true
+				}
+				if fo.Pkg().Path() == "os" && bannedWriteFuncs[fo.Name()] && !(encl != "" && rawWriteAllowlist[encl]) {
+					where := "package-level initializer"
+					if encl != "" {
+						where = "func " + encl
+					}
+					add(call.Pos(), fmt.Sprintf("raw os.%s in %s: use a fork-locked wrapper", fo.Name(), where))
+				}
+				if wrapperFuncs[fo.Name()] && fname != wrapperFile {
+					rep.wrapperCalls++
+				}
+				return true
+			})
+		}
+		for _, d := range f.Decls {
+			if fd, ok := d.(*ast.FuncDecl); ok {
+				if fd.Body != nil {
+					visit(fd.Name.Name, fd.Body)
+				}
+			} else {
+				visit("", d)
+			}
+		}
+	}
+	return rep, nil
+}
+
+func TestVerifygateTestWritesAreForkLocked(t *testing.T) {
+	live, err := scanForkLockedWrites(".", nil)
+	if err != nil {
+		t.Fatalf("live scan: %v", err)
+	}
+	// Violations first, so a raw write is named at its file:line rather than masked by the floors.
+	if len(live.violations) > 0 {
+		t.Fatalf("raw (non-fork-locked) file writes in verifygate tests:\n%s", strings.Join(live.violations, "\n"))
+	}
+	if live.filesSeen < 9 {
+		t.Fatalf("scan enumerated %d files, want >= 9", live.filesSeen)
+	}
+	if live.wrapperCalls < 21 {
+		t.Fatalf("scan found %d wrapper call sites, want >= 21", live.wrapperCalls)
+	}
+
+	// Known positives: one per banned function, plus an aliased import.
+	positives := []struct {
+		name, src string
+		want      []string
+	}{
+		{"WriteFile", "package p\n\nimport \"os\"\n\nfunc f() { _ = os.WriteFile(\"x\", nil, 0o644) }\n", []string{"fixture_WriteFile.go:5"}},
+		{"OpenFile", "package p\n\nimport \"os\"\n\nfunc f() { _, _ = os.OpenFile(\"x\", 0, 0) }\n", []string{"fixture_OpenFile.go:5"}},
+		{"Create", "package p\n\nimport \"os\"\n\nfunc f() { _, _ = os.Create(\"x\") }\n", []string{"fixture_Create.go:5"}},
+		{"CreateTemp", "package p\n\nimport \"os\"\n\nfunc f() { _, _ = os.CreateTemp(\"\", \"x\") }\n", []string{"fixture_CreateTemp.go:5"}},
+		{"AliasedImport", "package p\n\nimport osw \"os\"\n\nfunc f() { _ = osw.WriteFile(\"x\", nil, 0o644) }\n", []string{"fixture_AliasedImport.go:3", "fixture_AliasedImport.go:5"}},
+	}
+	for _, p := range positives {
+		fname := "fixture_" + p.name + ".go"
+		rep, err := scanForkLockedWrites("", map[string][]byte{fname: []byte(p.src)})
+		if err != nil {
+			t.Fatalf("fixture %s: %v", p.name, err)
+		}
+		for _, want := range p.want {
+			found := false
+			for _, v := range rep.violations {
+				if strings.HasPrefix(v, want+":") {
+					found = true
+				}
+			}
+			if !found {
+				t.Fatalf("fixture %s: %s not reported (got %v)", p.name, want, rep.violations)
+			}
+		}
+	}
+
+	// Known negative: a wrapper-shaped call and os.ReadFile are clean.
+	neg := "package p\n\nimport \"os\"\n\nfunc writeFileForkLocked(p string) error { return nil }\n\nfunc f() {\n\t_ = writeFileForkLocked(\"x\")\n\t_, _ = os.ReadFile(\"x\")\n}\n"
+	rep, err := scanForkLockedWrites("", map[string][]byte{"fixture_negative.go": []byte(neg)})
+	if err != nil {
+		t.Fatalf("negative fixture: %v", err)
+	}
+	if len(rep.violations) != 0 {
+		t.Fatalf("negative fixture was flagged: %v", rep.violations)
 	}
 }
