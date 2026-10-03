@@ -19,7 +19,7 @@ const config = {
   title: 'AILANG World',
   tagline:
     'A semantic operating environment whose transactions are AILANG programs: agents propose, a verifier checks, and only verified, authorized changes commit.',
-  favicon: 'img/favicon.ico',
+  favicon: 'https://ailang.sunholo.com/img/favicon.ico',
 
   url: SITE_URL,
   baseUrl: BASE_URL,
@@ -99,7 +99,7 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: 'img/ailang-social-card.jpg',
+      image: 'https://ailang.sunholo.com/img/ailang-social-card.jpg',
       navbar: {
         title: 'AILANG World',
         logo: {

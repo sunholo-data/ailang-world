@@ -83,7 +83,7 @@ Conventions:
   `[roadmap](../roadmap/index.md)`. Docusaurus resolves them and the build checks them.
 - **Links to repo files**: use full GitHub URLs, for example
   `https://github.com/sunholo-data/ailang-world/blob/dev/docs/QUICKSTART.md`.
-- **Images**: put them in `website/static/img/` and reference them as `/img/<name>`.
+- **Images**: SVG only in `website/static/img/` (reference as `/img/<name>`). The repo's tracked-binary hygiene gate (`scripts/verify_go.sh`) refuses PNG/JPG/ICO files. For raster images, link the copies hosted on the AILANG site (e.g. `https://ailang.sunholo.com/img/…`), as the favicon and social card do.
 - **Code blocks**: tag the language (`bash`, `json`, `go`). AILANG code uses `ailang`
   (highlighted as plain text with an AILANG label).
 - Do not invent CLI flags or wire shapes. Copy them from `docs/QUICKSTART.md`, `README.md`
