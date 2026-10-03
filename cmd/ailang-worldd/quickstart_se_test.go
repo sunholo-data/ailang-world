@@ -1,7 +1,8 @@
 package main
 
 // Row 134 M7 (AC7.1, coding-standards S7): QUICKSTART §9's `serve` and
-// `session mint` command lines are bound to the real CLI — every flag the
+// `session new` (row 138 M5; `session mint` before it) command lines are
+// bound to the real CLI — every flag the
 // runbook names is documented by `serve --help` and accepted by the parser —
 // so a renamed or mistyped flag reds here instead of at the operator's
 // keyboard in the attended M6 smoke.
@@ -53,7 +54,7 @@ var flagToken = regexp.MustCompile(`^--[a-z][a-z-]*$`)
 
 func TestQuickstartSection9FlagsMatchTheCLI(t *testing.T) {
 	var help, ignored bytes.Buffer
-	if got := run([]string{"serve", "--help"}, &ignored, &help); got != exitUsage {
+	if got := run([]string{"serve", "--help"}, &help, &ignored); got != exitOK {
 		t.Fatalf("serve --help exit = %d", got)
 	}
 	_, serveHelp, ok := strings.Cut(help.String(), "serve flags:")
@@ -85,31 +86,50 @@ func TestQuickstartSection9FlagsMatchTheCLI(t *testing.T) {
 			if got != exitUsage || !strings.Contains(errw.String(), "is not host:port") {
 				t.Errorf("QUICKSTART §9 `serve %s` does not parse: exit %d, %s", strings.Join(argv[1:], " "), got, errw.String())
 			}
-		case len(argv) > 1 && argv[0] == "session" && argv[1] == "mint":
+		case len(argv) > 1 && argv[0] == "session" && argv[1] == "new":
 			mints++
-			// Flags and every --grant spec parse; the tty fence (absent here)
-			// is the first check after parsing.
+			// Row 138 M5: the runbook provisions the session with `session new`.
+			// Its paths are swapped for a fixture (an existing store, a
+			// workspace root holding an ep1 worktree), so validation passes and
+			// the tty fence (absent here) is the first refusal: every flag and
+			// the preset parse.
+			fx := t.TempDir()
+			db := filepath.Join(fx, "world.db")
+			st, err := store.Open(db)
+			if err != nil {
+				t.Fatal(err)
+			}
+			_ = st.Close()
+			ws := filepath.Join(fx, "ws")
+			_ = os.MkdirAll(filepath.Join(ws, "ep1"), 0o700)
+			_ = os.WriteFile(filepath.Join(ws, "ep1", ".git"), []byte("gitdir: /x/.git/worktrees/ep1\n"), 0o644)
+			args := make([]string, 0, len(argv))
+			for _, tok := range argv[2:] {
+				switch tok {
+				case "/tmp/se-world/world.db":
+					tok = db
+				case "/tmp/se-ws":
+					tok = ws
+				case "/tmp/se-session":
+					tok = filepath.Join(fx, "session")
+				}
+				args = append(args, tok)
+			}
 			var out, errw bytes.Buffer
 			env := sessionEnv{openTerminal: func() (io.ReadWriteCloser, error) { return nil, os.ErrNotExist }, now: func() int64 { return 0 }}
-			got := runSessionMint(argv[2:], &out, &errw, env)
+			got := runSessionNew(args, &out, &errw, env)
 			if got != exitUsage || !strings.Contains(errw.String(), "no controlling terminal") {
-				t.Errorf("QUICKSTART §9 `session mint %s` does not parse: exit %d, %s", strings.Join(argv[2:], " "), got, errw.String())
+				t.Errorf("QUICKSTART §9 `session new %s` does not parse: exit %d, %s", strings.Join(argv[2:], " "), got, errw.String())
 			}
-			grants := 0
-			for _, tok := range argv {
-				if tok == "--grant" {
-					grants++
-				}
-			}
-			if grants != 8 {
-				t.Errorf("QUICKSTART §9 mint names %d grants, want the eight effect grants (row 135)", grants)
+			if strings.Join(argv, " ") != "session new ep1 --db /tmp/se-world/world.db --workspace-root /tmp/se-ws --preset se-tools --ttl 14400 --out /tmp/se-session" {
+				t.Errorf("QUICKSTART §9 session line changed: %q (the eight se-tools grants come from --preset se-tools)", strings.Join(argv, " "))
 			}
 		}
 	}
 	// serve twice (pin-only bootstrap, then with the workspace tools), one
-	// mint, then the one session-gated genesis commit.
+	// session new, then the one session-gated genesis commit.
 	if serves != 2 || mints != 1 || commits != 1 {
-		t.Fatalf("QUICKSTART §9 holds %d serve, %d mint and %d commit commands, want 2, 1 and 1", serves, mints, commits)
+		t.Fatalf("QUICKSTART §9 holds %d serve, %d session new and %d commit commands, want 2, 1 and 1", serves, mints, commits)
 	}
 }
 
@@ -153,7 +173,7 @@ func assertSection9CommitLine(t *testing.T, argv []string) {
 // at the session expiry and after.
 func TestSessionMintGrantsExpireWithTheSession(t *testing.T) {
 	dir := t.TempDir()
-	db, out := filepath.Join(dir, "world.db"), filepath.Join(dir, "session")
+	db, out := dbPathOf(t), filepath.Join(dir, "session")
 	var stdout, stderr bytes.Buffer
 	now := time.Now().Unix()
 	env := sessionEnv{openTerminal: func() (io.ReadWriteCloser, error) { return &fakeTerm{r: strings.NewReader("y\n")}, nil }, now: func() int64 { return now }}
@@ -227,7 +247,7 @@ func TestServeExamplesDirDefault(t *testing.T) {
 // daemon's startup refusals (host/daemon TestRunCapsStartupRefusals).
 func TestServeRunCapsFlags(t *testing.T) {
 	var help, ignored bytes.Buffer
-	run([]string{"serve", "--help"}, &ignored, &help)
+	run([]string{"serve", "--help"}, &help, &ignored)
 	for _, flag := range []string{"--run-allow-caps", "--run-net-allow", "--run-net-allow-http"} {
 		if !regexp.MustCompile(`(?m)^\s+` + regexp.QuoteMeta(flag) + `\b`).MatchString(help.String()) {
 			t.Errorf("serve --help does not document %s", flag)

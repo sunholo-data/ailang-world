@@ -66,3 +66,29 @@ func (l *writerLock) release() error {
 	}
 	return nil
 }
+
+// writerLockHeld probes lockPath without taking writer authority and without
+// creating anything (row 138 M4, `doctor`): it opens the lock file READ-ONLY
+// and asks for a SHARED lock, non-blocking. EWOULDBLOCK means another open
+// file description holds the exclusive writer lock. A missing lock file means
+// no writer has ever opened the database at this path, so nobody holds it.
+// The shared lock, when granted, is released at once (R-CLI-4: a writer
+// starting in that microsecond window sees a busy lock and refuses — benign).
+func writerLockHeld(lockPath string) (bool, error) {
+	f, err := os.Open(lockPath)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return false, nil
+		}
+		return false, fmt.Errorf("store: open writer lock file %q read-only: %w", lockPath, err)
+	}
+	defer func() { _ = f.Close() }()
+	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_SH|syscall.LOCK_NB); err != nil {
+		if errors.Is(err, syscall.EWOULDBLOCK) || errors.Is(err, syscall.EAGAIN) {
+			return true, nil
+		}
+		return false, fmt.Errorf("store: probe writer lock %q: %w", lockPath, err)
+	}
+	_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+	return false, nil
+}

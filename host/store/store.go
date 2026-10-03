@@ -1375,3 +1375,49 @@ func (s *Store) RevokeSession(ctx context.Context, credentialID string) error {
 	}
 	return nil
 }
+
+// MaxListSessions caps one ListSessions page (row 138 M5, `session list`).
+const MaxListSessions = 500
+
+// ListSessions returns up to limit session_credentials rows (at most
+// MaxListSessions), ordered by created_at then credential_id; a non-empty
+// episodeID restricts it to that episode. Rows carry the credential_id HASH
+// only — the raw token is never stored (D3). It is a plain read, so it works
+// on an OpenReadOnly handle beside a live writer (row 138 §3.7, AC5.6).
+func (s *Store) ListSessions(ctx context.Context, episodeID string, limit int) ([]SessionRow, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return nil, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
+	if limit <= 0 || limit > MaxListSessions {
+		limit = MaxListSessions
+	}
+	q := `SELECT credential_id, episode_id, grants_json, expires_at, created_at
+	        FROM session_credentials`
+	args := []any{}
+	if episodeID != "" {
+		q += ` WHERE episode_id = ?`
+		args = append(args, episodeID)
+	}
+	q += ` ORDER BY created_at, credential_id LIMIT ?;`
+	args = append(args, limit)
+	rows, err := s.db.QueryContext(ctx, q, args...)
+	if err != nil {
+		return nil, fmt.Errorf("store: list sessions: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []SessionRow
+	for rows.Next() {
+		var r SessionRow
+		if err := rows.Scan(&r.CredentialID, &r.EpisodeID, &r.GrantsJSON, &r.ExpiresAt, &r.CreatedAt); err != nil {
+			return nil, fmt.Errorf("store: list sessions: scan: %w", err)
+		}
+		out = append(out, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("store: list sessions: %w", err)
+	}
+	return out, nil
+}

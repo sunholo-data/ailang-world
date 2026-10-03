@@ -33,7 +33,8 @@ started, the agent guide and the CLI/HTTP reference — and
 ## Try it
 
 Serve World's eight AILANG coding tools to an agent, one step at a time (needs the two pinned
-AILANG binaries; the two attended steps, publish and mint, need a human at a terminal):
+AILANG binaries — `go run ./cmd/ailang-worldd setup` installs both, verified, and `doctor`
+checks the machine; the two attended steps, publish and mint, need a human at a terminal):
 
 ```sh
 tools/attended/se_smoke.sh prepare   # build the CLIs, a scratch store and an episode worktree

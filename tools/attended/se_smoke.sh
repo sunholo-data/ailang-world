@@ -9,8 +9,9 @@
 # TestNoCIStepOrScriptReachesThePublishEntrypoint): `publish` only checks the
 # daemon is stopped and points you at the Publish block of QUICKSTART §9, which
 # you paste yourself from the repo root. `mint` is TTY-fenced in ailang-worldd;
-# this script runs it with stdin connected to /dev/tty (the fence's own
-# requirement, honestly met) and you still type the confirmation. Every other
+# this script runs it (as `session new`, row 138) with stdin connected to
+# /dev/tty (the fence's own requirement, honestly met) and you still type the
+# confirmation. Every other
 # step needs no human.
 #
 # WHAT IT ABSORBS (each measured on the first M6 run, 2026-10-03):
@@ -30,7 +31,7 @@
 # treat `#` as a comment):
 #   tools/attended/se_smoke.sh prepare   build CLIs, store, worktree, bootstrap
 #   tools/attended/se_smoke.sh publish   ATTENDED: you paste QUICKSTART §9's Publish block
-#   tools/attended/se_smoke.sh mint      ATTENDED: mint the 6-grant session
+#   tools/attended/se_smoke.sh mint      ATTENDED: session new, the 8 se-tools grants
 #   tools/attended/se_smoke.sh serve     daemon with tools + genesis commit
 #   tools/attended/se_smoke.sh check     curl tools/list (expects 8) + one read
 #   tools/attended/se_smoke.sh pi        pi smoke, World tools only
@@ -146,12 +147,12 @@ cmd_publish() {
 
 cmd_mint() {
   daemon_running && die "stop the daemon first: $0 stop"
-  "$BIN/ailang-worldd" session mint --db "$DB" --episode "$EP" \
-    --grant Workspace.Read=worktree:50 --grant Workspace.Write=worktree:50 \
-    --grant Ailang.Check=worktree:50 --grant Ailang.Run=worktree:50 \
-    --grant Ailang.Discover=worktree:50 --grant Ailang.CLI=worktree:50 \
-    --ttl 14400 --out "$SESSION" </dev/tty
-  chmod 600 "$SESSION"
+  # session new reuses the worktree prepare made and mints the eight
+  # se-tools grants (--preset se-tools = the manifest's declaredEffects,
+  # budget 50 each); --out is written once at 0600 and must not exist.
+  rm -f "$SESSION"
+  "$BIN/ailang-worldd" session new "$EP" --db "$DB" --workspace-root "$WS" --repo "$PROJ" \
+    --preset se-tools --ttl 14400 --out "$SESSION" </dev/tty
   say "next: $0 serve"
 }
 

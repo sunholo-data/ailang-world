@@ -46,7 +46,20 @@ const hex64Re = `^[0-9a-f]{64}$`
 
 var hex64TokenRegex = regexp.MustCompile(`\b[0-9a-f]{64}\b`)
 
-func dbPathOf(t *testing.T) string { return filepath.Join(t.TempDir(), "world.db") }
+// dbPathOf returns the path of a fresh, EXISTING store: the session verbs
+// refuse a missing --db rather than create one (row 138 §3.7).
+func dbPathOf(t *testing.T) string {
+	t.Helper()
+	db := filepath.Join(t.TempDir(), "world.db")
+	st, err := store.Open(db)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := st.Close(); err != nil {
+		t.Fatal(err)
+	}
+	return db
+}
 
 // TestSessionMint_PrintsOnceExactly is AC-M1-1: under a driven tty-fencing seam
 // the mint prints the raw 64-hex token to stdout EXACTLY once (never logged
@@ -149,18 +162,68 @@ func TestSessionMint_ConfirmationRejected(t *testing.T) {
 	}
 }
 
-// TestSessionRevokeUsageNamesTheParsedOrder (queue row 137 item 5): flags
-// after the id are not parsed, so the refusal's usage line must show the order
-// that works — --db first — never the reverse.
-func TestSessionRevokeUsageNamesTheParsedOrder(t *testing.T) {
+// TestSessionRevokeAcceptsEitherOrderAndRefusesAnUnknownID is row 137 item
+// 5 (both halves) and row 138 AC5.5: flags and the id parse in either order,
+// and an id with no credential in the store is refused with exit 1 and a
+// message that names it — never "revoked". Kills MUT-REVOKE-UNKNOWN-OK.
+func TestSessionRevokeAcceptsEitherOrderAndRefusesAnUnknownID(t *testing.T) {
+	db := dbPathOf(t)
 	id := strings.Repeat("a", 64)
-	var out, errOut bytes.Buffer
-	if code := runSessionRevoke([]string{id, "--db", dbPathOf(t)}, &out, &errOut); code != exitUsage {
-		t.Fatalf("id-then---db exit=%d, want usage", code)
+	for _, args := range [][]string{{id, "--db", db}, {"--db", db, id}} {
+		var out, errOut bytes.Buffer
+		code := runSessionRevoke(args, &out, &errOut)
+		if code != exitUsage {
+			t.Fatalf("revoke %v of an unknown id: exit=%d, want %d", args, code, exitUsage)
+		}
+		if strings.Contains(out.String(), "revoked") || !strings.Contains(errOut.String(), "no session credential "+id) {
+			t.Fatalf("revoke %v of an unknown id: stdout %q stderr %q", args, out.String(), errOut.String())
+		}
 	}
-	if !strings.Contains(errOut.String(), "session revoke [--db <path>] <credential_id-hash>") ||
-		strings.Contains(errOut.String(), "<credential_id-hash> [--db") {
-		t.Fatalf("usage line %q must show --db before the id", errOut.String())
+	// A real credential revokes in the id-first order too.
+	var mintOut, mintErr bytes.Buffer
+	if code := runSessionMint([]string{"--db", db, "--episode", "e1", "--grant", "fs.read=/tmp/b:1"}, &mintOut, &mintErr, testMintEnv("y\n", 1000)); code != exitOK {
+		t.Fatalf("mint: %d %s", code, mintErr.String())
+	}
+	credID := hex64TokenRegex.FindString(mintErr.String())
+	var out, errOut bytes.Buffer
+	if code := runSessionRevoke([]string{credID, "--db", db}, &out, &errOut); code != exitOK || !strings.Contains(out.String(), "revoked session credential "+credID) {
+		t.Fatalf("id-first revoke: exit %d stdout %q stderr %q", code, out.String(), errOut.String())
+	}
+	// ... and a second revoke of it is now an unknown id.
+	out.Reset()
+	errOut.Reset()
+	if code := runSessionRevoke([]string{"--db", db, credID}, &out, &errOut); code != exitUsage {
+		t.Fatalf("second revoke: exit %d, want %d", code, exitUsage)
+	}
+}
+
+// TestSessionVerbsNeverCreateAStore is AC5.5's last clause for mint, revoke
+// and list (new has its own): a --db that does not exist is refused with
+// exit 1 and is still absent afterwards — no world.db, no lock file. Kills
+// MUT-STORE-CREATE.
+func TestSessionVerbsNeverCreateAStore(t *testing.T) {
+	dir := t.TempDir()
+	db := filepath.Join(dir, "world.db")
+	id := strings.Repeat("b", 64)
+	for name, call := range map[string]func(out, errw *bytes.Buffer) int{
+		"revoke": func(out, errw *bytes.Buffer) int { return runSessionRevoke([]string{"--db", db, id}, out, errw) },
+		"revoke-ep": func(out, errw *bytes.Buffer) int {
+			return runSessionRevoke([]string{"--db", db, "--episode", "ep1"}, out, errw)
+		},
+		"list": func(out, errw *bytes.Buffer) int {
+			return runSessionList([]string{"--db", db}, out, errw, testMintEnv("", 0))
+		},
+		"mint": func(out, errw *bytes.Buffer) int {
+			return runSessionMint([]string{"--db", db, "--episode", "e1", "--grant", "x=y:1"}, out, errw, testMintEnv("y\n", 0))
+		},
+	} {
+		var out, errw bytes.Buffer
+		if code := call(&out, &errw); code != exitUsage || !strings.Contains(errw.String(), "does not exist; refusing to create one") {
+			t.Errorf("%s on a missing store: exit %d stderr %q", name, code, errw.String())
+		}
+		if ents, _ := os.ReadDir(dir); len(ents) != 0 {
+			t.Fatalf("%s created %d file(s) for a missing store", name, len(ents))
+		}
 	}
 }
 
@@ -216,7 +279,7 @@ func TestSessionRevokeCLI(t *testing.T) {
 // exactly once at mode 0600 and prints no credential to stdout.
 func TestSessionMint_OutFileModeAndOnce(t *testing.T) {
 	dir := t.TempDir()
-	db := filepath.Join(dir, "world.db")
+	db := dbPathOf(t)
 	outPath := filepath.Join(dir, "credential.txt")
 	var stdout, stderr bytes.Buffer
 	code := runSessionMint([]string{

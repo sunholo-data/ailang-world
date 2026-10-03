@@ -22,6 +22,10 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/signal_context.go|serveSignalContext|Background":      1,
 	"cmd/ailang-worldd/session.go|runSessionMint|Background":                 1,
 	"cmd/ailang-worldd/session.go|runSessionRevoke|Background":               1,
+	"cmd/ailang-worldd/doctor.go|doctorStore|Background":                     1, // row 138 M4: doctor's read-only store reads (3 s) through OpenReadOnly
+	"cmd/ailang-worldd/session_new.go|runSessionNew|Background":              1, // row 138 M5: worktree add + 3 s mint + rollback (75 s)
+	"cmd/ailang-worldd/session_new.go|runSessionList|Background":             1, // row 138 M5: read-only ListSessions (3 s)
+	"cmd/ailang-worldd/setup.go|runSetup|Background":                         1, // row 138 M3: setup's whole-command budget (12 min); no Store call
 	"cmd/world-publish/main.go|runApprove|Background":                        1,
 	"cmd/world-publish/main.go|runPublish|Background":                        1,
 	"cmd/world-publish/main.go|runReconcile|Background":                      1,

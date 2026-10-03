@@ -30,6 +30,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/pkgproj"
 	"github.com/sunholo-data/ailang-world/host/replay"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/worktree"
 )
 
 // ---------------------------------------------------------------------------
@@ -1194,6 +1195,11 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 		// (archive.CheckSource); its child env must be scrubbed like every other
 		// World-launched subprocess.
 		"host/archive/check.go": {driveArchiveCheckSource},
+		// Row 138 M5 (w-worldd-developer-cli AC5.8): `session new` makes and,
+		// on a failed mint, removes the episode worktree through the one
+		// bounded git site; its child must see neither the registry
+		// credential nor any GIT_* redirect.
+		"host/worktree/worktree.go": {driveWorktreeAdd, driveWorktreeRemove},
 	}
 	if len(drivers) != len(files) {
 		t.Fatalf("AC10(a): %d files carry subprocess sites %v but %d have drivers; "+
@@ -1252,6 +1258,24 @@ func driveBrokerDryRunPublish(t *testing.T, probe string) {
 	}
 	if got := validator.count(); got != 0 {
 		t.Fatalf("dry-run reached the validator %d times, want 0", got)
+	}
+}
+
+// driveWorktreeAdd launches host/worktree's git site with the env-dumping
+// probe standing in for git. The probe exits 0 without touching anything;
+// the launch and its environment are the measurement.
+func driveWorktreeAdd(t *testing.T, probe string) {
+	t.Helper()
+	t.Setenv("GIT_DIR", filepath.Join(t.TempDir(), "decoy.git"))
+	if err := worktree.Add(boundedTestContext(t), probe, t.TempDir(), filepath.Join(t.TempDir(), "ep"), ""); err != nil {
+		t.Fatalf("worktree.Add via the probe: %v", err)
+	}
+}
+
+func driveWorktreeRemove(t *testing.T, probe string) {
+	t.Helper()
+	if err := worktree.Remove(boundedTestContext(t), probe, t.TempDir(), filepath.Join(t.TempDir(), "ep")); err != nil {
+		t.Fatalf("worktree.Remove via the probe: %v", err)
 	}
 }
 

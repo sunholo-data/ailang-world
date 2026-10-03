@@ -280,3 +280,20 @@ func fileURI(canonical string, params url.Values) string {
 	}
 	return u.String()
 }
+
+// WriterLockHeld reports whether a writer currently holds the single-writer
+// lock for the database at path (row 138 M4, `ailang-worldd doctor`). It is
+// NON-MUTATING: it creates no database, no lock file and no directory, takes
+// no writer authority and opens no SQLite handle, so it is safe beside a live
+// daemon and on a path that does not exist yet. An in-memory DSN has no lock
+// and reports false.
+func WriterLockHeld(path string) (bool, error) {
+	if isInMemoryDSN(path) {
+		return false, nil
+	}
+	canonical, _, err := resolveDSN(path)
+	if err != nil {
+		return false, err
+	}
+	return writerLockHeld(canonical + writerLockSuffix)
+}

@@ -56,6 +56,15 @@ var protectedGoGroups = []goGroup{
 	// the loopback-daemon exception at the row above is true of cmd/ailang-worldd
 	// and of nothing else.
 	{"cmd/world-publish", "./cmd/world-publish/...", "cmd/world-publish", "cmd/world-publish/main.go", "net/http/httputil", []string{"net/http"}},
+	// Row 138 M3 (w-worldd-developer-cli AC3.8, D-CLI-1): host/pinfetch is the
+	// ONE non-loopback network package outside host/broker — `setup` fetches
+	// the two pinned AILANG releases through it, https-only to an allowlisted
+	// GitHub host. Bare net/http is its job, so it carries no extra
+	// forbidden prefix; every other HTTP surface and every registry/cloud
+	// import stays forbidden. Added deliberately (4 -> 5 groups), and
+	// TestPinfetchStaysOutOfStoreReplayAndPublish asserts that no store,
+	// replay or world-publish closure contains it.
+	{"host/pinfetch", "./host/pinfetch/...", "host/pinfetch", "host/pinfetch/pinfetch.go", "net/http/httputil", nil},
 }
 
 var forbiddenImportPrefixes = []string{
@@ -868,17 +877,18 @@ func TestWorldBoundaryNullCases(t *testing.T) {
 
 // TestBareNetHTTPExemptionIsPerGroup pins the asymmetry that the single shared
 // forbiddenImportPrefixes list used to erase. The loopback-daemon exception is
-// true of cmd/ailang-worldd and of nothing else, so bare "net/http" must be
-// rejected for host/store and host/replay while remaining permitted for
-// cmd/ailang-worldd. Collapsing extraForbidden back into one global list makes
+// true of cmd/ailang-worldd, and the release-fetch exception of host/pinfetch
+// (row 138 M3), and of nothing else, so bare "net/http" must be rejected for
+// host/store, host/replay and cmd/world-publish while remaining permitted for
+// those two. Collapsing extraForbidden back into one global list makes
 // this test fail rather than silently re-granting the exemption.
 func TestBareNetHTTPExemptionIsPerGroup(t *testing.T) {
 	byName := make(map[string]goGroup, len(protectedGoGroups))
 	for _, g := range protectedGoGroups {
 		byName[g.name] = g
 	}
-	if len(byName) != 4 {
-		t.Fatalf("protected group enumeration is %d, want 4: the guard below would not cover what it claims", len(byName))
+	if len(byName) != 5 {
+		t.Fatalf("protected group enumeration is %d, want 5: the guard below would not cover what it claims", len(byName))
 	}
 
 	for _, want := range []struct {
@@ -889,6 +899,7 @@ func TestBareNetHTTPExemptionIsPerGroup(t *testing.T) {
 		{"host/replay", true},
 		{"cmd/ailang-worldd", false}, // documented loopback-IPC exception
 		{"cmd/world-publish", true},  // SM.D0: no transport of its own
+		{"host/pinfetch", false},     // row 138 M3: the pinned-release fetch is its one job
 	} {
 		g, ok := byName[want.group]
 		if !ok {
@@ -1031,6 +1042,52 @@ func TestWorkbenchPackageRemainsTransportFree(t *testing.T) {
 			return nil // mutateViaOverlay reports that the detector did not fire.
 		})
 	})
+}
+
+// TestPinfetchStaysOutOfStoreReplayAndPublish is row 138 AC3.8's second half:
+// the release-fetch package must never enter the dependency closure of the
+// store, the replay engine, the archive (replay imports it, V23) or the
+// attended publish entrypoint. Its positive control is the daemon CLI, whose
+// `setup` verb is the package's one intended importer: that closure must
+// contain it exactly once, or the absence asserted below could be vacuous.
+// The overlay arm injects the import into host/store/store.go and requires
+// the detector to fire.
+func TestPinfetchStaysOutOfStoreReplayAndPublish(t *testing.T) {
+	root := repoRoot(t)
+	const pinfetch = "github.com/sunholo-data/ailang-world/host/pinfetch"
+	daemonDeps, err := goListDeps(root, "", "./cmd/ailang-worldd/...")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := countDep(daemonDeps, pinfetch); got != 1 {
+		t.Fatalf("positive control: the daemon CLI closure contains %s %d time(s), want exactly 1 (setup imports it)", pinfetch, got)
+	}
+	check := func(jsonPath string) error {
+		for _, pattern := range []string{"./host/store/...", "./host/replay/...", "./host/archive/...", "./cmd/world-publish/..."} {
+			deps, err := goListDeps(root, jsonPath, pattern)
+			if err != nil {
+				return err
+			}
+			if len(deps) == 0 {
+				return fmt.Errorf("%s dependency enumeration is empty: the absence below would be vacuous", pattern)
+			}
+			if got := countDep(deps, pinfetch); got != 0 {
+				return fmt.Errorf("host/store/store.go: %s closure contains %s %d time(s), want 0", pattern, pinfetch, got)
+			}
+		}
+		return nil
+	}
+	if err := check(""); err != nil {
+		t.Fatal(err)
+	}
+	inject := func(src []byte) []byte {
+		anchor := []byte("import (\n")
+		if bytes.Count(src, anchor) != 1 {
+			t.Fatalf("mutation anchor count for host/store/store.go is %d, want 1", bytes.Count(src, anchor))
+		}
+		return bytes.Replace(src, anchor, []byte("import (\n\t_ \""+pinfetch+"\"\n"), 1)
+	}
+	mutateViaOverlay(t, root, "host/store/store.go", "pinfetch-in-store", inject, func(ov overlay) error { return check(ov.jsonPath) })
 }
 
 // TestEveryCommandDirectoryIsAProtectedGroup is AC31, and it exists because
