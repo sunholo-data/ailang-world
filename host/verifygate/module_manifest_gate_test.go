@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -22,48 +23,67 @@ var liveStorejournalDigest = func() [sha256.Size]byte {
 
 func copyGateFile(t *testing.T, root, rel string, mode os.FileMode) {
 	t.Helper()
+	if err := copyGateFileErr(root, rel, mode); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func copyGateFileErr(root, rel string, mode os.FileMode) error {
 	src := filepath.Join(repoRoot, filepath.FromSlash(rel))
 	dst := filepath.Join(root, filepath.FromSlash(rel))
 	in, err := os.Open(src)
 	if err != nil {
-		t.Fatalf("open copy source %s: %v", rel, err)
+		return fmt.Errorf("open copy source %s: %v", rel, err)
 	}
 	defer in.Close()
 	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
-		t.Fatal(err)
+		return err
 	}
 	out, err := os.OpenFile(dst, os.O_CREATE|os.O_EXCL|os.O_WRONLY, mode)
 	if err != nil {
-		t.Fatalf("create copy target %s: %v", rel, err)
+		return fmt.Errorf("create copy target %s: %v", rel, err)
 	}
 	if _, err := io.Copy(out, in); err != nil {
 		out.Close()
-		t.Fatalf("copy %s: %v", rel, err)
+		return fmt.Errorf("copy %s: %v", rel, err)
 	}
-	if err := out.Close(); err != nil {
-		t.Fatal(err)
-	}
+	return out.Close()
 }
 
 func newIsolatedGateRoot(t *testing.T) string {
 	t.Helper()
 	root := filepath.Join(t.TempDir(), "iso")
-	copyGateFile(t, root, "scripts/verify_ail.sh", 0o755)
-	copyGateFile(t, root, "scripts/testdata/ailang_release_observed.txt", 0o644)
+	if err := buildIsolatedGateRoot(root); err != nil {
+		t.Fatal(err)
+	}
+	return root
+}
+
+// buildIsolatedGateRoot is newIsolatedGateRoot without a *testing.T, so the ONE shared pristine
+// control (sharedPristineControl) can build its own root outside any single test's lifetime.
+func buildIsolatedGateRoot(root string) error {
+	if err := copyGateFileErr(root, "scripts/verify_ail.sh", 0o755); err != nil {
+		return err
+	}
+	if err := copyGateFileErr(root, "scripts/testdata/ailang_release_observed.txt", 0o644); err != nil {
+		return err
+	}
 	for _, pattern := range []string{"world/*.ail", "design_docs/sketches/*.ail", "packages/se-tools/se_tools/*.ail"} {
 		matches, err := filepath.Glob(filepath.Join(repoRoot, filepath.FromSlash(pattern)))
 		if err != nil {
-			t.Fatal(err)
+			return err
 		}
 		if len(matches) == 0 {
-			t.Fatalf("copy pattern %q matched zero files", pattern)
+			return fmt.Errorf("copy pattern %q matched zero files", pattern)
 		}
 		for _, src := range matches {
 			rel, err := filepath.Rel(repoRoot, src)
 			if err != nil {
-				t.Fatal(err)
+				return err
 			}
-			copyGateFile(t, root, filepath.ToSlash(rel), 0o644)
+			if err := copyGateFileErr(root, filepath.ToSlash(rel), 0o644); err != nil {
+				return err
+			}
 		}
 	}
 	files, ailFiles := 0, 0
@@ -80,16 +100,53 @@ func newIsolatedGateRoot(t *testing.T) string {
 		return nil
 	})
 	if err != nil {
-		t.Fatal(err)
+		return err
 	}
 	if files != 22 || ailFiles != 20 {
-		t.Fatalf("isolated copy landed %d files / %d .ail files, want 22 / 20", files, ailFiles)
+		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 22 / 20", files, ailFiles)
 	}
-	return root
+	return nil
+}
+
+// isolatedTreeDigest is a content+mode digest of every regular file under root, keyed by its
+// root-relative path in sorted (Walk) order. Two roots with equal digests are byte- and
+// mode-identical gate inputs, which is what lets one pristine control stand for every root.
+func isolatedTreeDigest(root string) (string, int, error) {
+	h := sha256.New()
+	n := 0
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		rel, err := filepath.Rel(root, path)
+		if err != nil {
+			return err
+		}
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		sum := sha256.Sum256(raw)
+		fmt.Fprintf(h, "%s\x00%o\x00%x\n", filepath.ToSlash(rel), info.Mode().Perm(), sum)
+		n++
+		return nil
+	})
+	return fmt.Sprintf("%x", h.Sum(nil)), n, err
 }
 
 func runGateAt(t *testing.T, root string, env map[string]string) (int, string) {
 	t.Helper()
+	rc, out, err := runGateAtErr(root, env)
+	if err != nil {
+		t.Fatalf("start isolated verify gate: %v", err)
+	}
+	return rc, out
+}
+
+func runGateAtErr(root string, env map[string]string) (int, string, error) {
 	cmd := exec.Command(filepath.Join(root, "scripts", "verify_ail.sh"))
 	cmd.Dir = root
 	blocked := map[string]bool{
@@ -110,27 +167,138 @@ func runGateAt(t *testing.T, root string, env map[string]string) (int, string) {
 	cmd.Stdout, cmd.Stderr = &output, &output
 	err := cmd.Run()
 	if err == nil {
-		return 0, output.String()
+		return 0, output.String(), nil
 	}
 	if exitErr, ok := err.(*exec.ExitError); ok {
-		return exitErr.ExitCode(), output.String()
+		return exitErr.ExitCode(), output.String(), nil
 	}
-	t.Fatalf("start isolated verify gate: %v", err)
-	return -1, output.String()
+	return -1, output.String(), err
+}
+
+// sharedPristineControl is the ONE pristine-control gate run that every mutation arm in this file
+// stands on (CI budget fix, 2026-10-03). Each arm used to re-run the FULL gate on its own fresh,
+// unmutated copy before mutating it: 8 identical full runs (~16 s each locally, Leg 2b ~12 s of
+// that) on byte-identical inputs, the largest single cost in host/verifygate and the reason the
+// -race leg overran its 600 s budget on the 2-core runner once row 135 grew the se-tools tests.
+// The claim each arm needs is unchanged -- "THIS root, unmutated, satisfies the control" -- and is
+// now proven as two facts instead of one rerun: the shared run on a freshly built root carries the
+// marker, AND the arm's own root is digest-identical (every file's path, mode and sha256) to that
+// root before the arm mutates it. A root that differs in any byte is refused, never assumed equal.
+var sharedPristine struct {
+	once   sync.Once
+	digest string
+	files  int
+	rc     int
+	out    string
+	err    error
+}
+
+func sharedPristineControl() (digest string, files, rc int, out string, err error) {
+	s := &sharedPristine
+	s.once.Do(func() {
+		dir, err := os.MkdirTemp("", "verifygate-pristine-")
+		if err != nil {
+			s.err = err
+			return
+		}
+		defer os.RemoveAll(dir)
+		root := filepath.Join(dir, "iso")
+		if s.err = buildIsolatedGateRoot(root); s.err != nil {
+			return
+		}
+		if s.digest, s.files, s.err = isolatedTreeDigest(root); s.err != nil {
+			return
+		}
+		s.rc, s.out, s.err = runGateAtErr(root, map[string]string{
+			"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
+		})
+	})
+	return s.digest, s.files, s.rc, s.out, s.err
 }
 
 func requirePristineControl(t *testing.T, root string) string {
 	t.Helper()
 	requirePinned(t)
-	rc, out := runGateAt(t, root, map[string]string{
-		"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
-	})
-	const marker = "✓ 16/16 required world/ identities verified across 20 module(s)"
-	if !strings.Contains(out, marker) {
-		t.Fatalf("pristine isolated control missing %q (rc=%d)\n%s", marker, rc, out)
+	out, digest, err := pristineControlCovers(root)
+	if err != nil {
+		t.Fatal(err)
 	}
-	t.Logf("pristine control observed: %s", marker)
+	t.Logf("pristine control observed (shared run, digest-identical root %s): %s", digest[:12], pristineMarker)
 	return out
+}
+
+const pristineMarker = "✓ 16/16 required world/ identities verified across 20 module(s)"
+
+// pristineControlCovers is requirePristineControl's contract as a predicate: it returns the shared
+// control's output only when that run carries the marker AND root is digest-identical to the root
+// it ran on. TestPristineControlRefusesANonIdenticalRoot points it at altered roots.
+func pristineControlCovers(root string) (string, string, error) {
+	digest, files, rc, out, err := sharedPristineControl()
+	if err != nil {
+		return "", "", fmt.Errorf("shared pristine control could not run: %v", err)
+	}
+	if files != 22 {
+		return "", "", fmt.Errorf("shared pristine control digested %d files, want 22", files)
+	}
+	mine, mineFiles, err := isolatedTreeDigest(root)
+	if err != nil {
+		return "", "", err
+	}
+	if mine != digest || mineFiles != files {
+		return "", "", fmt.Errorf("this arm's isolated root (%d files, digest %s) is NOT identical to the root the shared "+
+			"pristine control ran on (%d files, digest %s) -- the control does not cover it", mineFiles, mine, files, digest)
+	}
+	if !strings.Contains(out, pristineMarker) {
+		return "", "", fmt.Errorf("pristine isolated control missing %q (rc=%d)\n%s", pristineMarker, rc, out)
+	}
+	return out, digest, nil
+}
+
+// TestPristineControlRefusesANonIdenticalRoot is the non-vacuity arm for the shared pristine
+// control: a fresh root is covered, and each single-fact divergence (one content byte, one mode
+// bit, one extra file) is refused. Without it, a digest that ignored content or mode would let one
+// control run silently stand for a root it never saw.
+func TestPristineControlRefusesANonIdenticalRoot(t *testing.T) {
+	// Parallel-safe: this arm runs the gate only in its OWN t.TempDir() copy (own .ailang compile
+	// cache), never on the live tree; see sharedPristineControl for the CI budget rationale.
+	t.Parallel()
+	requirePinned(t)
+	if _, _, err := pristineControlCovers(newIsolatedGateRoot(t)); err != nil {
+		t.Fatalf("positive control: a fresh isolated root is not covered: %v", err)
+	}
+	for _, arm := range []struct {
+		name  string
+		alter func(t *testing.T, root string)
+	}{
+		{"content-byte", func(t *testing.T, root string) {
+			p := filepath.Join(root, "world", "types.ail")
+			raw, err := os.ReadFile(p)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(p, append(raw, ' '), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"mode-bit", func(t *testing.T, root string) {
+			if err := os.Chmod(filepath.Join(root, "scripts", "verify_ail.sh"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}},
+		{"extra-file", func(t *testing.T, root string) {
+			if err := os.WriteFile(filepath.Join(root, "world", "extra.txt"), nil, 0o644); err != nil {
+				t.Fatal(err)
+			}
+		}},
+	} {
+		t.Run(arm.name, func(t *testing.T) {
+			root := newIsolatedGateRoot(t)
+			arm.alter(t, root)
+			if _, _, err := pristineControlCovers(root); err == nil || !strings.Contains(err.Error(), "NOT identical") {
+				t.Fatalf("altered root (%s) was covered by the shared control: err=%v", arm.name, err)
+			}
+		})
+	}
 }
 
 func mutateCopiedScript(t *testing.T, root, old, replacement string) {
@@ -168,6 +336,9 @@ func requireLiveTreeUntouched(t *testing.T) {
 }
 
 func TestModuleManifestRejectsStrayModule(t *testing.T) {
+	// Parallel-safe: this arm runs the gate only in its OWN t.TempDir() copy (own .ailang compile
+	// cache), never on the live tree; see sharedPristineControl for the CI budget rationale.
+	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	control := requirePristineControl(t, root)
 	if got := strings.Count(control, "\n   ai-check "); got != 20 {
@@ -211,6 +382,9 @@ func TestModuleManifestRejectsStrayModule(t *testing.T) {
 // The assertion deliberately reads the offending path out of the gate's OWN diff output rather than
 // reconstructing the expected text, so a gate that refuses for some unrelated reason cannot pass it.
 func TestModuleManifestRejectsCaseVariantExtension(t *testing.T) {
+	// Parallel-safe: this arm runs the gate only in its OWN t.TempDir() copy (own .ailang compile
+	// cache), never on the live tree; see sharedPristineControl for the CI budget rationale.
+	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	requirePristineControl(t, root)
 	probe := filepath.Join(root, "world", "SNEAKY.AIL")
@@ -241,6 +415,9 @@ func TestModuleManifestRejectsCaseVariantExtension(t *testing.T) {
 // L4's payloadSizeOk ensures) leaves the module compiling but reds the gate on
 // the vanished identity — it is not absorbed by the world/-only total.
 func TestEffectPlanSketchIdentityIsRequired(t *testing.T) {
+	// Parallel-safe: this arm runs the gate only in its OWN t.TempDir() copy (own .ailang compile
+	// cache), never on the live tree; see sharedPristineControl for the CI budget rationale.
+	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	requirePristineControl(t, root)
 	target := filepath.Join(root, "design_docs", "sketches", "effectplan.ail")
@@ -274,6 +451,9 @@ func TestEffectPlanSketchIdentityIsRequired(t *testing.T) {
 // expectation reds Leg 2b on main_test_1 by name. Neither is absorbed by the
 // world/-only total.
 func TestSeToolsGateArmsAreLoadBearing(t *testing.T) {
+	// Parallel-safe: this arm runs the gate only in its OWN t.TempDir() copy (own .ailang compile
+	// cache), never on the live tree; see sharedPristineControl for the CI budget rationale.
+	t.Parallel()
 	arms := []struct {
 		name, old, replacement, want string
 	}{
@@ -284,6 +464,7 @@ func TestSeToolsGateArmsAreLoadBearing(t *testing.T) {
 	}
 	for _, arm := range arms {
 		t.Run(arm.name, func(t *testing.T) {
+			t.Parallel()
 			root := newIsolatedGateRoot(t)
 			requirePristineControl(t, root)
 			target := filepath.Join(root, "packages", "se-tools", "se_tools", "read.ail")
@@ -312,6 +493,9 @@ func TestSeToolsGateArmsAreLoadBearing(t *testing.T) {
 }
 
 func TestModuleManifestRejectsDeletedModule(t *testing.T) {
+	// Parallel-safe: this arm runs the gate only in its OWN t.TempDir() copy (own .ailang compile
+	// cache), never on the live tree; see sharedPristineControl for the CI budget rationale.
+	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	requirePristineControl(t, root)
 	target := filepath.Join(root, "design_docs", "sketches", "storejournal.ail")
@@ -328,6 +512,9 @@ func TestModuleManifestRejectsDeletedModule(t *testing.T) {
 }
 
 func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
+	// Parallel-safe: this arm runs the gate only in its OWN t.TempDir() copy (own .ailang compile
+	// cache), never on the live tree; see sharedPristineControl for the CI budget rationale.
+	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	requirePristineControl(t, root)
 	const old = `LEG1_MODULES=(
@@ -366,6 +553,9 @@ func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
 }
 
 func TestModuleManifestEmptyEnumerationFailsLoudly(t *testing.T) {
+	// Parallel-safe: this arm runs the gate only in its OWN t.TempDir() copy (own .ailang compile
+	// cache), never on the live tree; see sharedPristineControl for the CI budget rationale.
+	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	requirePristineControl(t, root)
 	const old = `mods+=("${f#./}")            # repo-relative path (manifest key), normalized (gemini catch)`
