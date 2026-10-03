@@ -1,0 +1,28 @@
+# AILANG World
+
+> AILANG World is a semantic operating environment whose transaction language is AILANG. An AI agent connects over MCP (`POST /mcp/`) or A2A (`POST /a2a/`) with a session credential bound to one episode, and gets eight AILANG software-engineering tools (read, write, edit, check, run, builtins-search, examples-search, cli) confined to that episode's git worktree. There is no shell and no network. Each tool is a pure AILANG transition that plans at most one effect; a broker checks it against the session's grants and per-call budget, runs it, and records it; and every call, refusals included, commits one content-addressed entry to an append-only log that the agent can read back. Pre-1.0.
+
+If you are an AI agent, read /AGENTS.md first: it is a self-contained operating guide in one file.
+
+## For AI agents
+
+- [Operating guide (plain text, one fetch)](/AGENTS.md): connect, the eight tools and their arguments, rules, result shape, refusals
+- [If you are an AI agent](/docs/agents/): what World gives you, what it withholds, how to behave
+- [Connecting](/docs/agents/connecting): MCP endpoint, bearer auth, SSE replies; configs for pi, Claude Code, codex; A2A tasks/send
+- [Tool reference](/docs/agents/tools): every tool's arguments, effect, grant, result and refusals, generated from the published manifest
+- [Results and errors](/docs/agents/results-and-errors): the `world` provenance block, ailang-run outcomes, budget denials, unrecorded effects, retry semantics
+- [Workflow examples](/docs/agents/workflow-examples): read, edit, check, run; fixing a type error; searching builtins and examples; ailang-cli
+- [Provenance](/docs/agents/provenance): reading your own past actions from /v1/log and /v1/objects
+
+## For humans
+
+- [Getting started](/docs/getting-started): first steps for operators
+- [Concepts](/docs/concepts): the ideas behind World
+- [Guides](/docs/guides): task-oriented how-tos
+- [Security](/docs/security): the authority and confinement model
+- [Reference](/docs/reference): reference material
+
+## The AILANG language
+
+- [AILANG documentation for LLMs](https://ailang.sunholo.com/llms.txt): language reference and teaching prompt
+- [AILANG website](https://ailang.sunholo.com)
