@@ -4,6 +4,7 @@
 **Author lane**: claude:claude-opus-5-5 (iteration 229 designer) · **Date**: 2026-10-03 · **Base**: `origin/dev` `2d3a255`
 **Parent**: [w-verifygate-etxtbsy](../implemented/w-verifygate-etxtbsy.md) (fix `382fd7e`; judge
 verdict [evaluator-r1](../verification/world-iter228/evaluator-r1.md), PASS 88, mutants E1, E2, E3, E5b, E8b, E6b SURVIVED).
+**Revision**: r2, the narrow-refinement carve-out. It applies the reviewers' own r2 fixes only; the direction is unchanged.
 **Scope**: `host/verifygate/forklocked_write_test.go` plus one `ci.yml` step. Test-only. No production
 code, no `.ail`, no `tools/launchd/*`, and no change to gate-script semantics. Estimate ~0.5 d.
 
@@ -51,6 +52,8 @@ on go1.26.6 darwin/arm64 with `AILANG_BIN` set to the v0.41.0 pin.
 | V7 | Baseline of the fast tests | `go test ./host/verifygate/ -run 'TestForkLocked\|TestVerifygateTestWritesAreForkLocked\|TestKernelRefuses' -count=1 -v` | `PASS TestForkLockedWriteBlocksConcurrentFork (0.26s)`, `SKIP TestKernelRefusesExecOfWriterOpenFile`, `PASS TestVerifygateTestWritesAreForkLocked (1.96s)`, `ok 2.492s` |
 | V8 | A closed file is detectable | `/tmp` probe (deleted): `CreateTemp`, `Close`, `f.Stat()` | `file already closed isErrClosed=true` (`errors.Is(err, os.ErrClosed)`) |
 | V9 | R2: packages that write and fork, and their parallelism | `grep -rln 't\.Parallel()' --include='*.go' host cmd`. Then, per dir over all `*.go`, count `os\.(WriteFile\|OpenFile\|Create\|CreateTemp)\(` × `exec\.Command(Context)?\(\|os\.StartProcess\(\|syscall\.(ForkExec\|StartProcess)\(` × `t\.Parallel()` | `t.Parallel` appears **only** in `host/verifygate/{mission_config,module_manifest}_gate_test.go`. 12 write+fork dirs: `cmd/ailang-worldd` w22 e4, `cmd/world-publish` w11 e1, `host/archive` w8 e3, `host/broker` w25 e8, `host/capsule` w10 e3, `host/coordinator` w1 e3, `host/daemon` w9 e2, `host/pkgproj` w5 e7, `host/replay` w5 e1, `host/runbook` w1 e2, `host/store` w3 e2, `host/verifygate` (par 10). **Parallel outside verifygate: 0** |
+| V10 | Shape of `createTempForkLocked`'s open closure (quorum r2, kimi) | `sed -n 91,111p host/verifygate/forklocked_write_test.go`; `sed -n 35,58p $(go env GOROOT)/src/os/tempfile.go` | l.93 `err := forkLockedDo(func() (*os.File, error) {`, l.94 `f, err := os.CreateTemp(dir, pattern)`, l.95–97 `if f != nil { name = f.Name() }`, l.98 `return f, err`. It is **not** a single return expression; l.56's `forkLockedWrite` closure is. `os.CreateTemp` returns `nil` on every error path (l.42, l.54, and `return f, err` from `OpenFile`), and `forkLockedDo` calls `fill` only when `open` succeeded (l.39–41), so `name` can be read via `f.Name()` inside `fill` with no change in behaviour |
+| V11 | The kernel control PASSes on the ubuntu runner (quorum r2, glm) | `gh api --allow-escape-sequences repos/sunholo-data/ailang-world/actions/jobs/111247747923/logs \| sed 's/\x1b\[[0-9;]*m//g' \| grep -E -- '--- (PASS\|SKIP\|FAIL): Test(ForkLocked\|KernelRefuses\|VerifygateTestWrites)'` (merge CI run 37138466945, job `go host build + test gate`, `ubuntu-latest`) | rc=0: `17:01:17.5443589Z --- PASS: TestForkLockedWriteBlocksConcurrentFork (0.25s)`, `17:01:17.5483229Z --- PASS: TestKernelRefusesExecOfWriterOpenFile (0.00s)`, `17:01:19.2795176Z --- PASS: TestVerifygateTestWritesAreForkLocked (1.73s)`. No SKIP. The verbose step prints the PASS/SKIP line; a person read it at iter-228, and M3's loop machine-checks it |
 | V9a | Cost of a parse-only sweep | `find host cmd -name '*.go' \| wc -l`; time of `gofmt -l host cmd`; dir counts | 272 files; 0.07 s; 26 Go dirs; 178 `_test.go` |
 
 **Premise corrections.**
@@ -75,6 +78,18 @@ Each premise was measured before revising.
 - **oc-kimi-k3 — N-OpenClosure could read as a local shadow: APPLIED** (fixture reworded, M2).
 - **oc-glm-5-3 (secondary) — the CI step checks only the kernel control: APPLIED.** It now
   asserts a top-level `--- PASS:` line for every test in its `-run` list (M3, AC8, AC11).
+
+## Quorum r2 dispositions
+
+Round 2: gemini-3-1-pro PASS, oc-glm-5-3 REJECT, oc-kimi-k3 REJECT
+([artifact](../verification/world-iter229/w-verifygate-forklock-guard-residuals-2026-10-03T19-33-28Z.json)).
+
+- **oc-kimi-k3 — exemption (a) covers the whole open closure: APPLIED**, adapted to the measured
+  shape (V10): M2 makes both real closures a single `return os.<Opener>(…)`; D2 exempts only that
+  opener and reports every other banned use in the closure. P-Smuggle and AC12 added.
+- **gemini-3-1-pro — `Args[0]` coupling: APPLIED** as a doc comment on `forkLockedDo` (M2).
+- **oc-glm-5-3 — "no linux evidence the kernel control PASSes": premise REFUTED** by V11; its
+  contingency is **APPLIED** verbatim in M3, which also names the new tests' first linux run.
 
 ## Decisions
 
@@ -122,15 +137,19 @@ A use is banned if its object is either of these:
 - `*types.Func` with `Pkg().Path()=="syscall"` and a name in {**Open, Openat, Creat**}.
 
 A use is exempt **only** if its position lies in one of two places:
-- (a) a `*ast.FuncLit` that is `Args[0]` of a call whose `Fun` resolves to **the package-scope
-  object** `pkg.Scope().Lookup("forkLockedDo")`;
+- (a) the `Fun` of the **opener call**: the `*ast.CallExpr` that is the sole result of the
+  `*ast.ReturnStmt` that is the **last statement** of a `*ast.FuncLit`, where that FuncLit is
+  `Args[0]` of a call whose `Fun` resolves to **the package-scope object**
+  `pkg.Scope().Lookup("forkLockedDo")`, and the opener's `Fun` resolves to `os.OpenFile` or
+  `os.CreateTemp`. So each exempt closure has exactly one exempt use, and it is the opener whose
+  `*os.File` is returned. **Any other banned use inside the closure is reported** (kimi, r2);
 - (b) the body of the FuncDecl whose `info.Defs` object is the package-scope
   `TestKernelRefusesExecOfWriterOpenFile`.
 
 The scan also changes in these ways:
 - The by-name `rawWriteAllowlist` is deleted (this fixes finding 6).
-- Every `forkLockedDo(func() (*os.File, error) {…}, …)` call is genuinely locked, so the exemption
-  is semantic. Nothing is exempt because of the name of the function it sits in.
+- Every `forkLockedDo(func() (*os.File, error) { return os.<Opener>(…) }, …)` call is genuinely
+  locked, so the exemption is semantic. Nothing is exempt because of the name of the function it sits in.
 - `wrapperFuncs` counting compares `info.Uses[id]` with the package-scope wrapper objects. It
   fails with a scan error if any wrapper is missing or is not declared in `forklocked_write_test.go`.
 - The import bans gain `"io/ioutil"` and `"golang.org/x/sys/unix"` (zero today, V5b), next to the
@@ -188,8 +207,14 @@ recorded as R2′. A tripwire only has to fire on the ordinary way someone adds 
 - Gate: `go vet ./host/verifygate/` and
   `go test ./host/verifygate/ -run '^TestForkLocked' -count=1 -v`, plus the same with `-race`.
 
-**M2 — Scan hardening (kills E5b, E8b, E6b, finding 6).** Same file. Rework
-`scanForkLockedWrites` per D2: `types.Info` gains `Defs`, the scan iterates over Uses, the
+**M2 — Scan hardening (kills E5b, E8b, E6b, finding 6).** Same file.
+- Refactor `createTempForkLocked` (V10): its open closure becomes the single statement
+  `return os.CreateTemp(dir, pattern)`, and `name = f.Name()` moves to the first line of its `fill`.
+  Behaviour is unchanged, because `fill` runs only after a successful open (V10).
+- Add to `forkLockedDo`'s doc comment: "`scanForkLockedWrites` hardcodes this function's first
+  argument (`Args[0]`) as the exempt open closure. Do not reorder the signature." A reorder moves
+  the opener out of `Args[0]` and reds the live scan (AC10's firing).
+- Rework `scanForkLockedWrites` per D2: `types.Info` gains `Defs`, the scan iterates over Uses, the
 exemption is the open closure plus the kernel-control identity, the banned set and import bans
 are extended, and the output is sorted. The existing 5 positives and the negative stay. New
 fixtures:
@@ -202,11 +227,12 @@ fixtures:
 | P-NamedWrapper (F6) | `func forkLockedWrite() { _, _ = os.OpenFile("x", 0, 0) }` (the old by-name allowlist shape) | that line |
 | P-Ioutil | `import "io/ioutil"` + `ioutil.WriteFile(…)` | the ImportSpec line |
 | P-RootWrite | `func h(r *os.Root) { _ = r.WriteFile("x", nil, 0o755) }` | that line |
+| P-Smuggle (kimi r2) | `func() (*os.File, error) { _ = os.WriteFile("y", nil, 0o644); return os.OpenFile("x", 0, 0) }` passed to the fixture package's `forkLockedDo` | the `os.WriteFile` line **only** (the `os.OpenFile` opener stays exempt) |
 | N-OpenClosure | a package-level `forkLockedDo` defined in the fixture package, called with an open closure `func() (*os.File, error) { return os.OpenFile("x", 0, 0) }` | **nothing** (the exemption is live; the callee is the fixture's package-scope object, so identity matching applies) |
 
 Live floors stay (at least 9 files, at least 21 wrapper sites) and are now counted by identity.
 The live scan must stay at zero violations, which proves that the narrowed exemption covers both
-real open closures (`forkLockedWrite` l.56, `createTempForkLocked` l.93) and the kernel
+real open closures (`forkLockedWrite` l.56, `createTempForkLocked` l.93 after the refactor) and the kernel
 control. Gate: `go vet`, plus `go test ./host/verifygate/ -run '^TestVerifygateTestWritesAreForkLocked$' -count=1 -v`.
 
 **M3 — CI SKIP fail and R2 tripwire.**
@@ -236,6 +262,12 @@ control. Gate: `go vet`, plus `go test ./host/verifygate/ -run '^TestVerifygateT
 
 - The `-run` regex is built from the same `$tests` list the loop checks, so the two cannot drift.
   `grep -q` reads a file, and the step has no pipe at all (V6a).
+- **Contingency** (glm, r2, verbatim): "If the kernel control does not PASS on the runner (SKIP or
+  FAIL), the row HALTS and judge finding 5 is escalated as a CI-environment defect; the PASS loop is
+  never weakened and no per-test exemption is added." V11 shows it PASSes today.
+- `TestForkLockedWrappersHoldLockThroughClose` and `TestNoParallelWriteForkPackagesOutsideVerifygate`
+  have no linux evidence yet. The PR-head CI run of M3 is their first linux run, and Gate 3b reads
+  their `--- PASS:` lines from that job's log (V11's command, with the names widened).
 - Local known positives with no edit needed, both recorded with their rc in the PR: on the rig,
   the body with `RUNNER_TEMP=$(mktemp -d)` and `RUNNER_OS` unset **must exit 1** on the linux
   precondition; with `RUNNER_OS=Linux` it **must exit 1** on
@@ -258,6 +290,7 @@ control. Gate: `go vet`, plus `go test ./host/verifygate/ -run '^TestVerifygateT
 | AC9 (R2) | add `t.Parallel()` to one test in `host/broker` | `host/broker/<file>:<line>: t.Parallel in a write+fork package outside the fork-locked scan` |
 | AC10 (exemption live) | delete the open-closure exemption | the live scan reds on `forkLockedWrite`/`createTempForkLocked` and N-OpenClosure is reported |
 | AC11 (regression) | n/a | all prior ACs of the parent stay green. The fast tests run in under 5 s locally (baseline 2.5 s, V7). CI shows a top-level `--- PASS: ` line for each of the five tests in the step, asserted by the step's loop |
+| AC12 (smuggle, kimi r2) | insert a raw `_ = os.WriteFile(filepath.Join(dir, "y"), nil, 0o644)` as the first statement of `createTempForkLocked`'s open closure | live scan names that line, `func createTempForkLocked`; the `os.CreateTemp` opener is not named |
 
 ## Risks and residuals
 
