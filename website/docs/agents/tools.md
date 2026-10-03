@@ -21,12 +21,12 @@ Rules that apply to every tool:
 | [`ailang-write`](#ailang-write) | `Workspace.Write` (scope `worktree`) | `path`, `content` | no |
 | [`ailang-edit`](#ailang-edit) | `Workspace.Write` (scope `worktree`) | `path`, `old_text`, `new_text` | no |
 | [`ailang-check`](#ailang-check) | `Ailang.Check` (scope `worktree`) | `path` | yes |
-| [`ailang-run`](#ailang-run) | `Ailang.Run` (scope `worktree`) | `path`, `args_json?` | no |
+| [`ailang-run`](#ailang-run) | `Ailang.Run` (scope `worktree`) | `path`, `args_json?`, `stdin?`, `argv?`, `caps?` | no |
 | [`builtins-search`](#builtins-search) | `Ailang.Discover` (scope `worktree`) | `query?`, `module?` | yes |
 | [`examples-search`](#examples-search) | `Ailang.Discover` (scope `worktree`) | `query` | no |
 | [`ailang-cli`](#ailang-cli) | `Ailang.CLI` (scope `worktree`) | `op`, `path?`, `module?`, `query?`, `package?`, `flags?` | no |
 
-Six grants cover the eight tools: `ailang-write` and `ailang-edit` share `Workspace.Write`, and the two searches share `Ailang.Discover`. `tools/list` shows only the tools whose effect your session holds a grant for. A grant with budget 0 still lists the tool, but every call is `denied:budget`.
+Six grants cover the eight tools: `ailang-write` and `ailang-edit` share `Workspace.Write`, and the two searches share `Ailang.Discover`. Two more, `Ailang.RunEnv` and `Ailang.RunNet`, let `ailang-run` take the `Env` or `Net` capability when the operator enables it. `tools/list` shows only the tools whose effect your session holds a grant for. A grant with budget 0 still lists the tool, but every call is `denied:budget`.
 
 ## ailang-read
 
@@ -215,12 +215,12 @@ unknown argument "limit"; ailang-check admits only: path
 
 ## ailang-run
 
-**AILANG Run (policy-gated).** Effect `Ailang.Run`, scope `worktree`, cost 1 per call. Handler: `ailang run --policy <policy> [--args-json J] -- <path>` (cwd = the worktree root). Module: `packages/se-tools/se_tools/run.ail`.
+**AILANG Run (policy-gated).** Effect `Ailang.Run, Ailang.RunEnv, Ailang.RunNet`, scope `worktree`, cost 1 per call. Handler: `ailang run --policy <policy> [--args-json J] -- <path> [-- <argv...>]` with `stdin` piped in (cwd = the worktree root). The policy is the episode's base policy for an IO/FS run, otherwise a per-cap-set variant World renders and AILANG's `policy-tool summary` verifies before its first use. Module: `packages/se-tools/se_tools/run.ail`.
 
 Description served in `tools/list`:
 
 ```text
-Execute an AILANG program inside this episode's worktree under the operator's policy: `ailang run --policy <policy> [--args-json J] -- <path>`, from the worktree root. The program's declared effect row must be a subset of the policy's allowed_caps (IO, FS); FS stays inside the worktree; the run is bounded by the policy's timeout (8 s). Returns {admitted, exit_code, decision, limit, stdout, stderr}. Denied programs never execute; read `decision.missing_from_policy` and narrow the program's effects. A refused inner effect can still exit 0, so read stdout and stderr, not only exit_code. The program's inner effects are governed by the AILANG policy layer, not brokered one by one. The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Costs one Ailang.Run call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).
+Execute an AILANG program inside this episode's worktree under the operator's policy: `ailang run --policy <policy> [--args-json J] -- <path> [-- <argv...>]`, from the worktree root, with `stdin` piped in. `caps` is the run's EXACT capability set, like the grader's `--caps` (default IO and FS): distinct names from Declassify, Env, FS, IO, Net, never Env with Net; each beyond IO and FS must also be enabled by the operator (`serve --run-allow-caps`), or the call is refused. An Env run is the effect Ailang.RunEnv and a Net run Ailang.RunNet, each needing its own session grant; any other run, Declassify included, is Ailang.Run. Net reaches only the loopback host:port pairs the operator named (`serve --run-net-allow`); every other host, port and redirect is refused. `argv` (at most 32 strings, each at most 1024 bytes, no NUL) always follows an inner `--`, so it never reaches the run's flag parser; `stdin` is text of at most 65536 bytes (absent = empty). The program's declared effect row must be a subset of the rendered policy's allowed_caps; an unrequested FS is admitted at budget 0, so it fails at first use; the run is bounded by the policy's timeout (8 s). Returns {admitted, exit_code, decision, limit, stdout, stderr, policy}; policy is {digest, security_mode, caps, net_allow} of the variant that ran. Denied programs never execute; read `decision.missing_from_policy` and narrow the program's effects or widen `caps`. A refused inner effect can still exit 0, so read stdout and stderr, not only exit_code. The program's inner effects are governed by the AILANG policy layer, not brokered one by one. The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Costs one call of its effect from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).
 ```
 
 ### Arguments
@@ -229,14 +229,19 @@ Execute an AILANG program inside this episode's worktree under the operator's po
 |---|---|---|---|
 | `path` | string | yes | Path to the .ail file, relative to the worktree root |
 | `args_json` | string | no | JSON arguments for the entrypoint (passed as --args-json) |
+| `stdin` | string | no | The program's whole standard input, at most 65536 UTF-8 bytes (absent = empty) |
+| `argv` | array of string | no | Program arguments (getArgs), passed after an inner `--`; at most 32, each at most 1024 bytes, no NUL |
+| `caps` | array of Declassify / Env / FS / IO / Net | no | The run's exact capability set (default IO, FS); never Env with Net |
 
 `additionalProperties` is `false`: any other key is refused.
 
 ### Result
 
-`admitted`, `exit_code`, `decision`, `limit`, `stdout`, `stderr`, `world`. See [Results and errors](./results-and-errors.md#ailang-run-outcomes) for the four outcome shapes.
+`admitted`, `exit_code`, `decision`, `limit`, `stdout`, `stderr`, `policy`, `world`. `policy` is `{digest, security_mode, caps, net_allow}` of the policy the run executed under. See [Results and errors](./results-and-errors.md#ailang-run-outcomes) for the four outcome shapes.
 
-Output schema properties: `admitted`, `exit_code`, `decision`, `limit`, `stdout`, `stderr`, `ok`, `refused`, `world` (required: `world`).
+Which effect a call spends follows `caps`: with `Env` it is `Ailang.RunEnv`, with `Net` it is `Ailang.RunNet`, otherwise `Ailang.Run` (a `Declassify` run included). Each needs its own grant, and each capability beyond `IO` and `FS` must also be enabled by the operator (`serve --run-allow-caps`), or the handler refuses the call before anything runs (the effect is recorded `failed`). A Net run reaches only the loopback `host:port` pairs the operator named with `--run-net-allow`. See [Tool confinement](../security/tool-confinement.md#ailang-run-capabilities).
+
+Output schema properties: `admitted`, `exit_code`, `decision`, `limit`, `stdout`, `stderr`, `ok`, `refused`, `world`, `policy` (required: `world`).
 
 ### Refusals you will see
 
@@ -246,13 +251,20 @@ From the plan (zero effects, `world.effects` is `[]`, still committed):
 path "<p>" refused: it must be relative and non-empty, with no ".." segment and no leading "-"
 argument "args_json" must be a string holding JSON
 argument "args_json" must be a string
-unknown argument "caps"; ailang-run admits only: path, args_json
+argument "stdin" is 65537 bytes; the limit is 65536
+argument "argv" has 33 items; the limit is 32
+an argv item is 1025 bytes; the limit is 1024
+an argv item contains a NUL byte
+unknown capability "Process"; caps admits only: Declassify, Env, FS, IO, Net
+capability "IO" is listed twice
+caps names both Env and Net; one run takes at most one of them
+unknown argument "env"; ailang-run admits only: path, args_json, stdin, argv, caps
 ```
 
 ### Example call
 
 ```json
-{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"ailang-run","arguments":{"path":"hello.ail"}}}
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"ailang-run","arguments":{"path":"benchmark/solution.ail","caps":["IO"],"stdin":"1\n2\n3\n4\n5\n"}}}
 ```
 
 ## builtins-search

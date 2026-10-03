@@ -421,6 +421,40 @@ func (h *AilangToolHandler) verifyVariant(ctx context.Context, path string, data
 		Caps: gotCaps, NetAllow: netAllow}}, nil
 }
 
+// VerifyRunCaps is the startup half of §4.3 gate 3: it renders the base
+// policy at cfg.PolicyPath for cfg.Root, then every variant class the
+// operator's allowlist can produce (Declassify, Net, Env), and has the tool
+// binary's own `policy-tool summary` verify each. cfg.Root is any directory
+// (the daemon passes the workspace root); the files are the caller's to
+// remove.
+func VerifyRunCaps(ctx context.Context, cfg AilangToolConfig) error {
+	base, err := RenderEpisodePolicy(cfg.Root)
+	if err != nil {
+		return err
+	}
+	if err := writeFileAtomic(cfg.PolicyPath, base); err != nil {
+		return err
+	}
+	h, err := NewAilangToolHandler(ctx, cfg)
+	if err != nil {
+		return err
+	}
+	classes := map[string][]string{
+		RunCapDeclassify: {RunCapDeclassify, RunCapIO},
+		RunCapNet:        {RunCapIO, RunCapNet},
+		RunCapEnv:        {RunCapEnv, RunCapFS, RunCapIO},
+	}
+	for _, name := range runOperatorCaps {
+		if !cfg.RunCaps.allows(name) {
+			continue
+		}
+		if _, err := h.runVariantFor(ctx, classes[name]); err != nil {
+			return fmt.Errorf("the %s run variant: %w", name, err)
+		}
+	}
+	return nil
+}
+
 // writeFileAtomic replaces path with data at mode 0600.
 func writeFileAtomic(path string, data []byte) error {
 	tmp, err := os.CreateTemp(filepath.Dir(path), ".policy-*.tmp")

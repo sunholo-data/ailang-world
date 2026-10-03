@@ -67,7 +67,10 @@ type workspaceTools struct {
 	// examplesDir is the canonical --examples-dir, "" when none is configured
 	// (examples-search then refuses, broker.NoExamplesCorpusRefusal).
 	examplesDir string
-	errLog      io.Writer
+	// runCaps is the operator's ailang-run allowlist (row 135 §4.6), handed
+	// to every episode's handler; the zero value admits IO/FS runs only.
+	runCaps broker.RunCapsConfig
+	errLog  io.Writer
 
 	mu      sync.Mutex
 	handler map[string]episodeTool // episode id -> constructed handler
@@ -279,7 +282,7 @@ func (w *workspaceTools) episodeHandler(episodeID, epRoot string) (broker.Handle
 	defer cancel()
 	h, err := broker.NewAilangToolHandler(ctx, broker.AilangToolConfig{
 		Bin: w.bin, BinRef: w.binRef, PolicyPath: policyPath, Root: epRoot, CacheDir: cacheDir,
-		ExamplesDir: w.examplesDir,
+		ExamplesDir: w.examplesDir, RunCaps: w.runCaps,
 	})
 	if err != nil {
 		return nil, err
@@ -290,6 +293,47 @@ func (w *workspaceTools) episodeHandler(episodeID, epRoot string) (broker.Handle
 	}
 	w.handler[episodeID] = episodeTool{root: epRoot, h: tool}
 	return tool, nil
+}
+
+// runCapsStartupBudget bounds the startup check of the run variants: one
+// policy-tool summary per extra capability class (~0.1 s each).
+const runCapsStartupBudget = 10 * time.Second
+
+// configureRunCaps applies the --run-* flags (row 135 §4.3 gate 2, §4.6):
+// the allowlist must validate, needs the workspace tools, and every variant
+// it can produce is rendered once against the workspace root and verified by
+// the tool binary's own `policy-tool summary` — a variant the policy layer
+// refuses at load (V35) is a startup refusal, not a first-call failure.
+func (w *workspaceTools) configureRunCaps(parent context.Context, cfg Config) error {
+	op := broker.RunCapsConfig{Allow: cfg.RunAllowCaps, NetAllow: cfg.RunNetAllow, NetAllowHTTP: cfg.RunNetAllowHTTP}
+	if len(op.Allow) == 0 && len(op.NetAllow) == 0 && !op.NetAllowHTTP {
+		return nil
+	}
+	if err := op.Validate(); err != nil {
+		return err
+	}
+	if !w.enabled() {
+		return fmt.Errorf("--run-allow-caps, --run-net-allow and --run-net-allow-http need the workspace tools " +
+			"(--workspace-root and --tool-ailang-bin)")
+	}
+	checkDir := filepath.Join(w.stateDir, "policies", ".run-caps-check")
+	cacheDir := filepath.Join(w.stateDir, "cache", ".run-caps-check")
+	for _, dir := range []string{checkDir, cacheDir} {
+		if err := os.MkdirAll(dir, 0o700); err != nil {
+			return err
+		}
+	}
+	defer func() { _ = os.RemoveAll(checkDir) }()
+	ctx, cancel := context.WithTimeout(parent, runCapsStartupBudget)
+	defer cancel()
+	if err := broker.VerifyRunCaps(ctx, broker.AilangToolConfig{
+		Bin: w.bin, BinRef: w.binRef, PolicyPath: filepath.Join(checkDir, "root.toml"), Root: w.root, CacheDir: cacheDir,
+		RunCaps: op,
+	}); err != nil {
+		return err
+	}
+	w.runCaps = op
+	return nil
 }
 
 // writePolicy replaces path with data at mode 0600, atomically.

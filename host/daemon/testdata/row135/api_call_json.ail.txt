@@ -1,0 +1,14 @@
+module benchmark/solution
+
+import std/net (httpRequest)
+
+import std/io (println)
+
+export func main() -> () ! {IO, Net} {
+  let headers = [{ name: "X-Test-Header", value: "value123" }, { name: "Content-Type", value: "application/json" }]
+  let body = "{\"message\":\"Hello from AILANG\",\"count\":42}"
+  match httpRequest("POST", "{{MOCK_HTTP_URL}}", headers, body) {
+    Ok(resp) => println(show(resp.status)),
+    Err(_) => ()
+  }
+}
