@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
@@ -27,6 +28,13 @@ import (
 // Every fork takes syscall.ForkLock for WRITING, so a writer holding RLock
 // from open to close excludes all forks. See
 // design_docs/planned/w-verifygate-etxtbsy.md.
+
+// forkLockedProbe is a test-only seam. When set it runs on the goroutine that
+// holds ForkLock.RLock, at stage "filled" (after fill/hold, before Close) and
+// stage "closed" (after Close returned, RLock still held). It MUST NOT fork:
+// a fork calls ForkLock.Lock and would deadlock against the caller's own RLock
+// (R1). Only serial tests may set it.
+var forkLockedProbe atomic.Pointer[func(stage string, f *os.File)]
 
 // forkLockedDo holds syscall.ForkLock.RLock across open, fill, hold and Close.
 // NOTHING inside the region may fork (exec.Command.Start, os.StartProcess, ...):
@@ -49,7 +57,14 @@ func forkLockedDo(open func() (*os.File, error), fill func(*os.File) error, hold
 	if hold != nil {
 		hold()
 	}
-	return f.Close()
+	if p := forkLockedProbe.Load(); p != nil {
+		(*p)("filled", f)
+	}
+	err = f.Close()
+	if p := forkLockedProbe.Load(); p != nil {
+		(*p)("closed", f)
+	}
+	return err
 }
 
 func forkLockedWrite(path string, flag int, mode os.FileMode, fill func(*os.File) error, hold func()) error {
@@ -149,6 +164,147 @@ func TestForkLockedWriteBlocksConcurrentFork(t *testing.T) {
 	}
 	if err := <-writeDone; err != nil {
 		t.Fatal(err)
+	}
+}
+
+// TestForkLockedWrappersHoldLockThroughClose drives every wrapper with the
+// after-Close probe: ForkLock must be read-held at "filled" and still at
+// "closed" (after f.Close returned), and the stages must be exactly
+// [filled closed] (a wrapper that bypasses forkLockedDo records none).
+// Serial on purpose: it installs the package-global probe.
+func TestForkLockedWrappersHoldLockThroughClose(t *testing.T) {
+	root := t.TempDir()
+	var stages []string
+	var problems []string
+	var wantLen int
+	probe := func(stage string, f *os.File) {
+		if !strings.HasPrefix(f.Name(), root) {
+			return
+		}
+		stages = append(stages, stage)
+		held := !syscall.ForkLock.TryLock()
+		if !held {
+			syscall.ForkLock.Unlock()
+		}
+		_, statErr := f.Stat()
+		switch stage {
+		case "filled":
+			if !held {
+				problems = append(problems, "ForkLock not read-held during fill")
+			}
+			if fi, err := f.Stat(); err != nil || fi.Size() != int64(wantLen) {
+				problems = append(problems, fmt.Sprintf("file size at filled stage != %d (err %v)", wantLen, err))
+			}
+		case "closed":
+			if !held {
+				problems = append(problems, "ForkLock released before Close returned")
+			}
+			if !errors.Is(statErr, os.ErrClosed) {
+				problems = append(problems, "probe at closed stage saw an open file")
+			}
+		}
+	}
+	data := []byte("#!/bin/sh\nexit 0\n")
+
+	// src for copyFileForkLocked is written before the probe is installed.
+	srcDir := t.TempDir()
+	srcPath := filepath.Join(srcDir, "src.sh")
+	if err := writeFileForkLocked(srcPath, data, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	src, err := os.Open(srcPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer src.Close()
+
+	forkLockedProbe.Store(&probe)
+	t.Cleanup(func() { forkLockedProbe.Store(nil) })
+
+	type perm int
+	const (
+		exec755 perm = iota
+		priv600
+		noExec
+	)
+	cases := []struct {
+		name    string
+		mode    perm
+		size    int
+		content []byte
+		run     func(dir string) (string, error)
+	}{
+		{"writeFileForkLocked", exec755, len(data), data, func(dir string) (string, error) {
+			p := filepath.Join(dir, "w.sh")
+			return p, writeFileForkLocked(p, data, 0o755)
+		}},
+		{"copyFileForkLocked", exec755, len(data), data, func(dir string) (string, error) {
+			p := filepath.Join(dir, "c.sh")
+			if _, err := src.Seek(0, io.SeekStart); err != nil {
+				return p, err
+			}
+			return p, copyFileForkLocked(src, p, "rel", 0o755)
+		}},
+		{"createTempForkLocked", priv600, len(data), data, func(dir string) (string, error) {
+			return createTempForkLocked(dir, "p*", data)
+		}},
+		{"createForkLocked", noExec, 0, nil, func(dir string) (string, error) {
+			p := filepath.Join(dir, "e.txt")
+			return p, createForkLocked(p)
+		}},
+		{"forkLockedWrite", exec755, len(data), data, func(dir string) (string, error) {
+			p := filepath.Join(dir, "f.sh")
+			return p, forkLockedWrite(p, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o755, func(f *os.File) error {
+				_, err := f.Write(data)
+				return err
+			}, nil)
+		}},
+	}
+	for _, c := range cases {
+		stages, problems, wantLen = nil, nil, c.size
+		dir := filepath.Join(root, c.name)
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		path, err := c.run(dir)
+		if err != nil {
+			t.Errorf("%s: %v", c.name, err)
+			continue
+		}
+		if got := strings.Join(stages, " "); got != "filled closed" {
+			t.Errorf("%s: fork-lock probe stages = %v, want [filled closed]", c.name, stages)
+		}
+		for _, p := range problems {
+			t.Errorf("%s: %s", c.name, p)
+		}
+		got, err := os.ReadFile(path)
+		if err != nil {
+			t.Errorf("%s: read back: %v", c.name, err)
+			continue
+		}
+		if string(got) != string(c.content) {
+			t.Errorf("%s: content = %q, want %q", c.name, got, c.content)
+		}
+		fi, err := os.Stat(path)
+		if err != nil {
+			t.Errorf("%s: stat: %v", c.name, err)
+			continue
+		}
+		pm := fi.Mode().Perm()
+		switch c.mode {
+		case exec755:
+			if pm&0o111 != 0o111 {
+				t.Errorf("%s: mode %v lacks exec bits", c.name, pm)
+			}
+		case priv600:
+			if pm != 0o600 {
+				t.Errorf("%s: mode %v, want 0600", c.name, pm)
+			}
+		case noExec:
+			if pm&0o111 != 0 {
+				t.Errorf("%s: mode %v has exec bits", c.name, pm)
+			}
+		}
 	}
 }
 
