@@ -243,6 +243,16 @@ type Config struct {
 	// examples-search answers NoExamplesCorpusRefusal. (The CLI defaults it to
 	// the operator's ~/.ailang/examples when that exists.)
 	ExamplesDir string
+	// RunAllowCaps, RunNetAllow and RunNetAllowHTTP (`--run-allow-caps`,
+	// `--run-net-allow`, `--run-net-allow-http`; row 135 §4.3/§4.6) are the
+	// operator's ailang-run allowlist: the extra capabilities (Declassify,
+	// Env, Net) a run may request, and the port-qualified loopback literals a
+	// Net run may reach. Empty admits only row 134's IO/FS runs. Startup
+	// refuses an invalid allowlist, one set without the workspace tools, and
+	// one whose rendered variant AILANG's own policy summary refuses.
+	RunAllowCaps    []string
+	RunNetAllow     []string
+	RunNetAllowHTTP bool
 	// ErrorLog receives the operator-facing detail of every sanitized 500: one
 	// line per error, carrying the route and the VERBATIM store error that the
 	// response body no longer echoes (Decision: sanitize-vs-expose).
@@ -579,6 +589,9 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 			return nil, d.abort(StageArchive, "cannot archive the configured workspace tool binary", err)
 		}
 		workspace.bin, workspace.binRef = bin, ref
+	}
+	if err := workspace.configureRunCaps(ctx, cfg); err != nil {
+		return nil, d.abort(StageConfig, "the run capabilities are refused", err)
 	}
 	if (cfg.WorkspaceRoot == "") != (cfg.ToolAilangBin == "") {
 		fmt.Fprintln(d.errLog, "ailang-worldd: workspace tools disabled: --workspace-root and --tool-ailang-bin must both be set; "+

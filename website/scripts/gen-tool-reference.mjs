@@ -88,16 +88,29 @@ const NOTES = {
     policy: [],
   },
   "ailang-run": {
-    handlerOp: "`ailang run --policy <policy> [--args-json J] -- <path>` (cwd = the worktree root)",
+    handlerOp:
+      "`ailang run --policy <policy> [--args-json J] -- <path> [-- <argv...>]` with `stdin` piped in (cwd = the worktree root). " +
+      "The policy is the episode's base policy for an IO/FS run, otherwise a per-cap-set variant World renders and AILANG's `policy-tool summary` verifies before its first use",
     finish: false,
-    example: { path: "hello.ail" },
+    example: { path: "benchmark/solution.ail", caps: ["IO"], stdin: "1\n2\n3\n4\n5\n" },
     result:
-      "`admitted`, `exit_code`, `decision`, `limit`, `stdout`, `stderr`, `world`. See [Results and errors](./results-and-errors.md#ailang-run-outcomes) for the four outcome shapes.",
+      "`admitted`, `exit_code`, `decision`, `limit`, `stdout`, `stderr`, `policy`, `world`. `policy` is `{digest, security_mode, caps, net_allow}` of the policy the run executed under. " +
+      "See [Results and errors](./results-and-errors.md#ailang-run-outcomes) for the four outcome shapes.\n\n" +
+      "Which effect a call spends follows `caps`: with `Env` it is `Ailang.RunEnv`, with `Net` it is `Ailang.RunNet`, otherwise `Ailang.Run` (a `Declassify` run included). " +
+      "Each needs its own grant, and each capability beyond `IO` and `FS` must also be enabled by the operator (`serve --run-allow-caps`), or the handler refuses the call before anything runs (the effect is recorded `failed`). " +
+      "A Net run reaches only the loopback `host:port` pairs the operator named with `--run-net-allow`. See [Tool confinement](../security/tool-confinement.md#ailang-run-capabilities).",
     refusals: [
       PATH_RULE,
       'argument "args_json" must be a string holding JSON',
       'argument "args_json" must be a string',
-      'unknown argument "caps"; ailang-run admits only: path, args_json',
+      'argument "stdin" is 65537 bytes; the limit is 65536',
+      'argument "argv" has 33 items; the limit is 32',
+      'an argv item is 1025 bytes; the limit is 1024',
+      'an argv item contains a NUL byte',
+      'unknown capability "Process"; caps admits only: Declassify, Env, FS, IO, Net',
+      'capability "IO" is listed twice',
+      'caps names both Env and Net; one run takes at most one of them',
+      'unknown argument "env"; ailang-run admits only: path, args_json, stdin, argv, caps',
     ],
     policy: [],
   },
@@ -183,6 +196,7 @@ for (const t of tools) {
 out();
 out(
   "Six grants cover the eight tools: `ailang-write` and `ailang-edit` share `Workspace.Write`, and the two searches share `Ailang.Discover`. " +
+    "Two more, `Ailang.RunEnv` and `Ailang.RunNet`, let `ailang-run` take the `Env` or `Net` capability when the operator enables it. " +
     "`tools/list` shows only the tools whose effect your session holds a grant for. A grant with budget 0 still lists the tool, but every call is `denied:budget`.",
 );
 out();
@@ -213,6 +227,9 @@ for (const t of tools) {
       let type = s.type;
       if (s.type === "object" && s.additionalProperties && s.additionalProperties.type) {
         type = `object of ${s.additionalProperties.type}`;
+      }
+      if (s.type === "array" && s.items && s.items.type) {
+        type = s.items.enum ? `array of ${s.items.enum.join(" / ")}` : `array of ${s.items.type}`;
       }
       out(`| \`${name}\` | ${type} | ${req.has(name) ? "yes" : "no"} | ${mdx(s.description || "")} |`);
     }
