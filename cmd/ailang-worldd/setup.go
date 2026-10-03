@@ -185,8 +185,9 @@ next (the attended steps; docs/QUICKSTART.md §9 has the full walk):
   1. publish the se-tools transitions (a human act at a terminal), from the repo root:
        world-publish transitions --store %[1]s \
          --manifest packages/se-tools/transitions.json --ailang-bin %[3]s
-  2. mint a session for an episode worktree under %[2]s
-       (ailang-worldd session mint --db %[1]s --episode <ep> --grant ... --out <file>)
+  2. provision an episode (a human act at a terminal): its worktree and session
+       ailang-worldd session new <ep> --db %[1]s --workspace-root %[2]s \
+         --repo <your git repo> --preset se-tools --out <session-file>
   3. ailang-worldd serve --db %[1]s --ailang-bin %[3]s \
        --workspace-root %[2]s --tool-ailang-bin %[4]s
 `, db, root, interp, tool)

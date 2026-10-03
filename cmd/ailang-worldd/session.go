@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -47,18 +48,87 @@ func realSessionEnv() sessionEnv {
 // (residual R13); revoke deletes the mapping row by credential_id hash.
 func runSession(args []string, stdout, stderr io.Writer) int {
 	if len(args) == 0 {
-		fmt.Fprintln(stderr, "ailang-worldd session: usage: session mint | session revoke <credential_id-hash>")
+		fmt.Fprint(stderr, sessionHelp)
 		return exitUsage
 	}
 	sub, rest := args[0], args[1:]
 	switch sub {
 	case "mint":
 		return runSessionMint(rest, stdout, stderr, realSessionEnv())
+	case "new":
+		return runSessionNew(rest, stdout, stderr, realSessionEnv())
+	case "list":
+		return runSessionList(rest, stdout, stderr, realSessionEnv())
 	case "revoke":
 		return runSessionRevoke(rest, stdout, stderr)
+	case "--help", "-help", "-h", "help":
+		fmt.Fprint(stdout, sessionHelp)
+		return exitOK
 	default:
-		fmt.Fprintf(stderr, "ailang-worldd session: unknown subcommand %q\n", sub)
+		fmt.Fprintf(stderr, "ailang-worldd session: unknown subcommand %q\n\n", sub)
+		fmt.Fprint(stderr, sessionHelp)
 		return exitUsage
+	}
+}
+
+const sessionHelp = `usage: ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>] [--repo <dir>]
+                 [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
+                 [--ttl 3600] [--out <file>] [--branch <name>]
+       ailang-worldd session list [--db <path>] [--episode <ep>] [--json]
+       ailang-worldd session revoke [--db <path>] <credential_id> | --episode <ep>
+       ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
+                 [--ttl 3600] [--out <file>]
+
+Session credentials act on the store file (--db) directly, never on a running
+daemon. new and mint are ATTENDED (they open /dev/tty and ask y/N there) and,
+like revoke, need the daemon stopped (single writer). list reads beside a
+live daemon. A --db that does not exist is refused, never created.
+'<verb> --help' prints each one's help.
+`
+
+// requireExistingStore refuses a --db that is not an existing regular file:
+// the session verbs never create a store (row 137 item 6, row 138 §3.7,
+// MUT-STORE-CREATE).
+func requireExistingStore(db string) error {
+	info, err := os.Stat(db)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("world store %s does not exist; refusing to create one (world-publish transitions or serve creates the store)", db)
+		}
+		return fmt.Errorf("world store %s: %w", db, err)
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("world store %s is not a regular file", db)
+	}
+	return nil
+}
+
+// openStoreForSession opens the store for writing, naming the usual cause of
+// a held lock.
+func openStoreForSession(db string) (*store.Store, error) {
+	st, err := store.Open(db)
+	if err != nil {
+		if store.IsWriterAlreadyActive(err) {
+			return nil, fmt.Errorf("%w — stop the daemon first (session mint, new and revoke need the writer lock)", err)
+		}
+		return nil, err
+	}
+	return st, nil
+}
+
+// parseInterleaved parses fs over args, allowing flags and positional
+// arguments in any order (Go's flag package stops at the first positional).
+func parseInterleaved(fs *flag.FlagSet, args []string) ([]string, error) {
+	var positional []string
+	for {
+		if err := fs.Parse(args); err != nil {
+			return nil, err
+		}
+		if fs.NArg() == 0 {
+			return positional, nil
+		}
+		positional = append(positional, fs.Arg(0))
+		args = fs.Args()[1:]
 	}
 }
 
@@ -87,7 +157,7 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	episode := fs.String("episode", "", "episode the session binds to (required)")
 	var grantSpecs multiFlag
 	fs.Var(&grantSpecs, "grant", "EFFECT=SCOPE:BUDGET, repeatable, at least one")
-	ttl := fs.Int64("ttl", 3600, "lifetime in whole seconds (default 3600)")
+	ttl := fs.Int64("ttl", 3600, "lifetime in whole seconds")
 	outPath := fs.String("out", "", "write the credential ONCE to <path> at mode 0600 (default: print to stdout exactly once)")
 	// `--db` default is "" — matching serve --db exactly (serve's --db is
 	// required, so an empty value is refused below). A literal path default
@@ -95,6 +165,10 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	// silently target a surprise store.
 	dbPath := fs.String("db", "", "world store database (required)")
 	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			fmt.Fprint(stdout, sessionHelp)
+			return exitOK
+		}
 		return exitUsage
 	}
 	if extra := fs.Args(); len(extra) > 0 {
@@ -120,6 +194,10 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	}
 	if *ttl < 0 {
 		fmt.Fprintf(stderr, "ailang-worldd session mint: --ttl must be non-negative, got %d\n", *ttl)
+		return exitUsage
+	}
+	if err := requireExistingStore(*dbPath); err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd session mint: %v\n", err)
 		return exitUsage
 	}
 
@@ -150,7 +228,7 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 		return exitUsage
 	}
 
-	st, err := store.Open(*dbPath)
+	st, err := openStoreForSession(*dbPath)
 	if err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd session mint: cannot open world store %q: %v\n", *dbPath, err)
 		return exitFatal
@@ -192,33 +270,65 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	return exitOK
 }
 
+const sessionRevokeHelp = `usage: ailang-worldd session revoke [--db <path>] <credential_id>
+       ailang-worldd session revoke [--db <path>] --episode <ep>
+
+Deletes a session credential's row, so the next request with its token is an
+unknown credential. <credential_id> is the 64-hex hash session mint/new print
+to stderr (and session list shows) — never the token itself. --episode
+revokes every credential of that episode. Flags and the id may come in either
+order. An id (or episode) with no credential in the store is refused (exit 1),
+and so is a --db that does not exist (it is never created). The daemon must be
+stopped: revoke needs the writer lock.
+`
+
 // runSessionRevoke implements `session revoke <credential_id-hash>` (D4): it
 // DELETEs the mapping row so the next resolve of that credential is an UNKNOWN
 // credential. No terminal fence is required — revocation is an ordinary
 // operator command, not a one-human-act mint.
+//
+// Row 137 item 5 / row 138 §3.7: flags and the id parse in either order; an
+// id with no row is REFUSED with exit 1 (authority.Revoke is deliberately a
+// no-op on an absent row, so the CLI checks first, under the same writer lock
+// — MUT-REVOKE-UNKNOWN-OK); a missing --db is refused, never created
+// (MUT-STORE-CREATE); --episode revokes every credential of one episode.
 func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("ailang-worldd session revoke", flag.ContinueOnError)
 	fs.SetOutput(stderr)
+	fs.Usage = func() {}
 	dbPath := fs.String("db", "", "world store database (required)")
-	if err := fs.Parse(args); err != nil {
+	episode := fs.String("episode", "", "revoke every credential of this episode")
+	rest, err := parseInterleaved(fs, args)
+	if err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			fmt.Fprint(stdout, sessionRevokeHelp)
+			return exitOK
+		}
+		fmt.Fprint(stderr, sessionRevokeHelp)
 		return exitUsage
 	}
-	rest := fs.Args()
-	if len(rest) != 1 {
-		fmt.Fprintln(stderr, "ailang-worldd session revoke: usage: session revoke [--db <path>] <credential_id-hash> (flags before the id)")
+	if len(rest) > 1 || (len(rest) == 1) == (*episode != "") {
+		fmt.Fprintln(stderr, "ailang-worldd session revoke: usage: session revoke [--db <path>] <credential_id-hash> | --episode <ep>")
 		return exitUsage
 	}
 	if *dbPath == "" {
 		fmt.Fprintln(stderr, "ailang-worldd session revoke: --db is required (matching serve --db)")
 		return exitUsage
 	}
-	credID := rest[0]
-	if !isHex64(credID) {
-		fmt.Fprintf(stderr, "ailang-worldd session revoke: %q is not a 64-hex credential_id hash\n", credID)
+	credID := ""
+	if len(rest) == 1 {
+		credID = rest[0]
+		if !isHex64(credID) {
+			fmt.Fprintf(stderr, "ailang-worldd session revoke: %q is not a 64-hex credential_id hash\n", credID)
+			return exitUsage
+		}
+	}
+	if err := requireExistingStore(*dbPath); err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
 		return exitUsage
 	}
 
-	st, err := store.Open(*dbPath)
+	st, err := openStoreForSession(*dbPath)
 	if err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd session revoke: cannot open world store %q: %v\n", *dbPath, err)
 		return exitFatal
@@ -227,11 +337,36 @@ func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
 
 	revokeCtx, cancelRevoke := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancelRevoke()
-	if err := authority.Revoke(revokeCtx, st, credID); err != nil {
+	ids := []string{credID}
+	if *episode != "" {
+		rows, err := st.ListSessions(revokeCtx, *episode, store.MaxListSessions)
+		if err != nil {
+			fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
+			return exitFatal
+		}
+		if len(rows) == 0 {
+			fmt.Fprintf(stderr, "ailang-worldd session revoke: refusing: episode %s has no session credential in %s\n", *episode, *dbPath)
+			return exitUsage
+		}
+		ids = ids[:0]
+		for _, r := range rows {
+			ids = append(ids, r.CredentialID)
+		}
+	} else if _, ok, err := st.ResolveSession(revokeCtx, credID); err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
 		return exitFatal
+	} else if !ok {
+		fmt.Fprintf(stderr, "ailang-worldd session revoke: refusing: no session credential %s in %s "+
+			"(already revoked, or minted in another store); nothing was revoked\n", credID, *dbPath)
+		return exitUsage
 	}
-	fmt.Fprintf(stdout, "revoked session credential %s\n", credID)
+	for _, id := range ids {
+		if err := authority.Revoke(revokeCtx, st, id); err != nil {
+			fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
+			return exitFatal
+		}
+		fmt.Fprintf(stdout, "revoked session credential %s\n", id)
+	}
 	return exitOK
 }
 

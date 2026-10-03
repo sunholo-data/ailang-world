@@ -300,7 +300,7 @@ Every tool call runs its plan in the pinned interpreter, runs exactly one broker
 v0.52.1 tool binary inside the episode's worktree, and commits one log entry. (The M6 smoke ran
 on v0.51.0; row 135 M0 moved the tool pin to v0.52.1 after re-proving the confinement matrix,
 `design_docs/planned/w-software-engineering-domain.md` §13.) Its flags are bound
-to `serve --help` and to the `session mint` parser by `TestQuickstartSection9FlagsMatchTheCLI`.
+to `serve --help` and to the `session new` parser by `TestQuickstartSection9FlagsMatchTheCLI`.
 The `-d` payloads below are run against a test daemon by
 `TestSeToolsQuickstartPayloadsVerbatim`.
 
@@ -310,12 +310,14 @@ every snag below. It never runs the irreversible publish itself (AC30): its `pub
 you at the Publish block below, which you paste. Where it and this section disagree, this
 section wins.
 
-Four facts measured on the first M6 run (2026-10-03):
+`ailang-worldd doctor --db /tmp/se-world/world.db --workspace-root /tmp/se-ws` names each of
+the snags below that applies to your shell. Four facts measured on the first M6 run
+(2026-10-03):
 - **Unset `AILANG_REGISTRY_API_KEY`** in the shell that starts the daemon. With it in the
   environment, the daemon refuses to start.
 - The two attended steps (publish, mint) are TTY-fenced. In an embedded terminal (an IDE pane,
   an agent harness) `world-publish` stops with `STOP fence=tty reason=…` (for example
-  `stdin-is-not-the-controlling-terminal`) and `session mint` with `refusing: no controlling
+  `stdin-is-not-the-controlling-terminal`) and `session new` with `refusing: no controlling
   terminal`; append `< /dev/tty` to those two commands.
 - `POST /v1/commit` is session-gated, so the genesis commit comes **after** mint, against the
   running daemon, with `--session`.
@@ -332,7 +334,10 @@ The three end-to-end breaks measured in M5b (2026-10-02) are fixed:
 
 Pick two binaries. `PIN` is the `.ail` interpreter pin (AILANG v0.41.0) and runs every plan.
 `TOOL` is the tool binary, which must be exactly AILANG v0.52.1; startup refuses any other
-release. Build both CLIs from the repo root:
+release. `ailang-worldd setup` installs both at the paths below, each verified against the
+digests compiled into the CLI, and `ailang-worldd doctor` checks them (and the TTY fences, the
+port, the store and the workspace) without changing anything. Build both CLIs from the repo
+root:
 
 ```bash
 export PIN=$HOME/.pinned-ailang/ailang
@@ -401,20 +406,24 @@ store). An agent cannot run this step:
 The output is `published transition registry revision 1 (head sha256:…)`. Re-running it prints
 `UNCHANGED`.
 
-**Mint (attended, TTY fence)** a session holding the eight effect grants, one per effect name. A
-grant is `EFFECT=SCOPE:BUDGET`, with scope `worktree` and a budget counted in calls. `write`
-and `edit` share `Workspace.Write`, and the two searches share `Ailang.Discover`.
-`Ailang.RunEnv` and `Ailang.RunNet` are the `ailang-run` calls whose `caps` hold `Env` or `Net`
-(row 135); drop them to keep runs at IO/FS (and Declassify):
+**Session (attended, TTY fence).** `session new` mints a session for episode `ep1` holding the
+eight effect grants, one per effect name the se-tools transitions declare (`--preset
+se-tools`): `Workspace.Read`, `Workspace.Write` (shared by `write` and `edit`), `Ailang.Check`,
+`Ailang.Run`, `Ailang.RunEnv` and `Ailang.RunNet` (the `ailang-run` calls whose `caps` hold
+`Env` or `Net`, row 135), `Ailang.Discover` (shared by the two searches) and `Ailang.CLI`, each
+with scope `worktree` and a budget of 50 calls. It reuses the worktree made above (without it,
+`--repo /tmp/se-proj` makes one), asks y/N on the terminal, and writes the token once to
+`--out` (mode 0600; the file must not exist yet):
 
 ```bash
-/tmp/ailang-worldd session mint --db /tmp/se-world/world.db --episode ep1 \
-  --grant Workspace.Read=worktree:50 --grant Workspace.Write=worktree:50 \
-  --grant Ailang.Check=worktree:50 --grant Ailang.Run=worktree:50 \
-  --grant Ailang.RunEnv=worktree:50 --grant Ailang.RunNet=worktree:50 \
-  --grant Ailang.Discover=worktree:50 --grant Ailang.CLI=worktree:50 \
-  --ttl 14400 --out /tmp/se-session
+/tmp/ailang-worldd session new ep1 --db /tmp/se-world/world.db --workspace-root /tmp/se-ws \
+  --preset se-tools --ttl 14400 --out /tmp/se-session
 ```
+
+To keep runs at IO/FS (and Declassify), mint with explicit grants instead and leave out
+`Ailang.RunEnv` and `Ailang.RunNet`: `--grant EFFECT=SCOPE:BUDGET`, repeatable, in place of
+`--preset`. `session list --db /tmp/se-world/world.db` shows the credential (its hash, never the
+token), and `session revoke --db /tmp/se-world/world.db <credential_id>` revokes it.
 
 Serve with the workspace tools enabled. Both `--workspace-root` and `--tool-ailang-bin` are
 required. With only one of them, the daemon logs `workspace tools disabled` and refuses every

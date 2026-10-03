@@ -42,12 +42,16 @@ Usage:
   ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
                     [--interpreter-dir <dir>] [--tools-dir <dir>]
                     [--examples-dir <dir>] [--online]
+  ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>]
+                    [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
+                    [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
+  ailang-worldd session list [--db <path>] [--episode <ep>] [--json]
+  ailang-worldd session revoke --db <path> <credential_id-hash> | --episode <ep>
   ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
                     [--ttl 3600] [--out <file>]
-  ailang-worldd session revoke [--db <path>] <credential_id-hash>
+  ailang-worldd help [<verb>]
 
-  <verb> --help prints the help of: tools, call, why, log tail, provenance, setup,
-  doctor.
+  '<verb> --help' and 'help <verb>' print a verb's help (exit 0).
 
 Session credential (tools, call, commit): --session <file> (a file holding
 the 64-hex token, mode 0600) or the token itself (warns: visible on argv),
@@ -95,12 +99,12 @@ Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
               setup: a digest mismatch, nothing installed).
 ```
 
-`ailang-worldd help` prints the same text. `tools`, `call`, `why`, `log tail`, `provenance`,
-`setup` and `doctor` print their own help with `--help` (exit 0, shown below); for the other verbs Go's flag parser
-prints a flag list where one is shown.
+`ailang-worldd help` prints the same text. Every verb prints its help with `<verb> --help` or
+`ailang-worldd help <verb>` (exit 0); the verbs without a help text of their own print their
+lines of the usage above.
 
-`--addr` is refused with `session mint` and `session revoke`, as with `serve`, because they act on
-`--db` directly, not on a running daemon.
+`--addr` is refused with the `session` verbs, `setup`, and `serve`, because they act on files
+directly, not on a running daemon.
 
 Every invocation refuses to start (exit 2) if `AILANG_REGISTRY_API_KEY` is set in its
 environment.
@@ -425,6 +429,113 @@ file opened read-only, and the store is read through a read-only handle, so it r
 beside a live daemon. With `AILANG_REGISTRY_API_KEY` set, doctor (like every verb) refuses with
 exit 2 and names the variable — that refusal is the finding.
 
+### `session new`
+
+```text
+usage: ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>]
+           [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
+           [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
+
+ATTENDED. Provisions one episode: its git worktree at <workspace-root>/<episode>
+and a session credential bound to it, after a y/N typed at /dev/tty. With no
+controlling terminal it refuses before touching anything (in an embedded
+terminal, append </dev/tty).
+
+  <episode>            ^[a-z0-9][a-z0-9-]{0,63}$ (the daemon's grammar)
+  --db <path>          an EXISTING world store (default ~/.ailang/world/world.db);
+                       never created. The daemon must be stopped.
+  --workspace-root <dir>
+                       default ~/.ailang/world-ws; must not contain the store
+  --repo <dir>         the git repository the worktree is added from
+                       (git worktree add --detach); not needed when
+                       <workspace-root>/<episode> is already a worktree
+  --branch <name>      add the worktree on a new branch instead of detached
+  --preset se-tools    one grant per effect the se-tools transitions declare:
+                       Workspace.Read, Workspace.Write, Ailang.Check, Ailang.Run,
+                       Ailang.RunEnv, Ailang.RunNet, Ailang.Discover, Ailang.CLI,
+                       each scope worktree with --budget calls
+  --grant EFFECT=SCOPE:BUDGET
+                       an explicit grant (repeatable); it overrides a preset
+                       grant with the same effect and scope
+  --budget N           budget of each preset grant (default 50)
+  --ttl N              session lifetime in seconds (default 3600); every grant
+                       expires with the session
+  --out <file>         write the token once to <file> (mode 0600); default:
+                       print it to stdout once
+
+The credential_id (the hash 'session revoke' takes) goes to stderr; the token
+never does. If the mint fails, the worktree this run created is removed.
+```
+
+```bash
+ailang-worldd session new ep1 --repo ~/src/my-project --preset se-tools --out ~/.ailang/world/ep1.session
+```
+
+On the terminal it asks:
+
+```text
+Create worktree /Users/you/.ailang/world-ws/ep1 from /Users/you/src/my-project and mint a session for episode ep1 with 8 grant(s) [Workspace.Read=worktree:50 Workspace.Write=worktree:50 Ailang.Check=worktree:50 Ailang.Run=worktree:50 Ailang.RunEnv=worktree:50 Ailang.RunNet=worktree:50 Ailang.Discover=worktree:50 Ailang.CLI=worktree:50], expiry +3600s? [y/N]
+```
+
+and, after `y`:
+
+```text
+session for episode ep1: 8 grant(s), expires epoch 1791060000, token written to /Users/you/.ailang/world/ep1.session
+ailang-worldd session new: worktree /Users/you/.ailang/world-ws/ep1 created
+ailang-worldd session new: credential_id=<64-hex> (episode ep1, worktree /Users/you/.ailang/world-ws/ep1, 8 grant(s), expires 1791060000)
+```
+
+Without a controlling terminal it refuses before touching anything:
+`refusing: no controlling terminal (open /dev/tty: device not configured); provisioning a session
+credential requires one human act at a terminal` (exit 1). Every validation (the episode name,
+an existing `--db`, the workspace root, the grants, `--out` not existing yet) runs before that
+fence; the writer lock is taken before the worktree is created, so with the daemon running it
+stops at `stop the daemon first` with nothing created.
+
+### `session list`
+
+```text
+usage: ailang-worldd session list [--db <path>] [--episode <ep>] [--json]
+
+Lists the session credentials in a store (at most 500): credential_id (the
+hash, never the token), episode, live or expired, expiry and grants. Reads
+through a read-only handle, so it works while the daemon is running. A --db
+that does not exist is refused, never created.
+```
+
+```text
+3f9c…e21a  ep1          live    expires 2026-10-03T21:40:00Z  Ailang.CLI=worktree:50 Ailang.Check=worktree:50 …
+1 session credential(s)
+```
+
+`--json` prints the same rows as JSON (`credentialId`, `episode`, `live`, `createdAt`,
+`expiresAt`, `grants`).
+
+### `session revoke`
+
+```text
+usage: ailang-worldd session revoke [--db <path>] <credential_id>
+       ailang-worldd session revoke [--db <path>] --episode <ep>
+
+Deletes a session credential's row, so the next request with its token is an
+unknown credential. <credential_id> is the 64-hex hash session mint/new print
+to stderr (and session list shows) — never the token itself. --episode
+revokes every credential of that episode. Flags and the id may come in either
+order. An id (or episode) with no credential in the store is refused (exit 1),
+and so is a --db that does not exist (it is never created). The daemon must be
+stopped: revoke needs the writer lock.
+```
+
+```bash
+ailang-worldd session revoke --db ~/.ailang/world/world.db <credential_id>
+ailang-worldd session revoke <credential_id> --db ~/.ailang/world/world.db   # either order
+ailang-worldd session revoke --db ~/.ailang/world/world.db --episode ep1     # every credential of ep1
+```
+
+An id with no credential in the store prints
+`refusing: no session credential <id> in <db> (already revoked, or minted in another store);
+nothing was revoked` and exits 1. With the daemon running it stops at `stop the daemon first`.
+
 ### `session mint`
 
 ```text
@@ -438,32 +549,17 @@ Usage of ailang-worldd session mint:
   -out string
     	write the credential ONCE to <path> at mode 0600 (default: print to stdout exactly once)
   -ttl int
-    	lifetime in whole seconds (default 3600) (default 3600)
+    	lifetime in whole seconds (default 3600)
 ```
 
-Attended: opens `/dev/tty` and asks `Confirm mint for episode … [y/N]` there; refuses without
-a controlling terminal. The daemon must be stopped (single writer). Each grant's expiry is set to
-the session's (`now + ttl`). With `--out` it prints
+The lower-level form of `session new`: it mints a session for an episode whose worktree you made
+yourself, with explicit `--grant` flags. Attended: opens `/dev/tty` and asks
+`Confirm mint for episode … [y/N]` there; refuses without a controlling terminal. The store must
+exist (it is never created) and the daemon must be stopped (single writer). Each grant's expiry
+is set to the session's (`now + ttl`). With `--out` it prints
 `minted session credential for episode <ep>: <n> grant(s), expires epoch <t>, written to <path>`;
 it always prints `credential_id=<hash>` to stderr. See
 [Sessions and episodes](../concepts/sessions-and-episodes.md).
-
-### `session revoke`
-
-```text
-Usage of ailang-worldd session revoke:
-  -db string
-    	world store database (required)
-```
-
-```bash
-ailang-worldd session revoke --db <path> <credential_id>
-```
-
-`--db` must come **before** the ID, as the command's usage message
-(`session revoke [--db <path>] <credential_id-hash> (flags before the id)`) says; flags after the
-ID are not parsed. The ID
-is the 64-hex `credential_id` printed at mint. Not attended; the daemon must be stopped.
 
 ## `world-publish`
 

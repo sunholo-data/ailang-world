@@ -27,7 +27,8 @@
 //	ailang-worldd [--addr http://127.0.0.1:7644] provenance [--since <entry>] [--episode <ep>]
 //	ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>] [--workspace-root <dir>] [--from-dir <dir>] [--replace]
 //	ailang-worldd [--addr http://127.0.0.1:7644] doctor [--db <path>] [--workspace-root <dir>] [--online] ...
-//	ailang-worldd session mint|revoke ...
+//	ailang-worldd session new|list|revoke|mint ...
+//	ailang-worldd help [<verb>]
 //
 // `--addr` is ONE GLOBAL CLIENT FLAG available to every client verb; it is not a
 // `serve` flag, and passing it to `serve` is a usage error rather than a silently
@@ -90,12 +91,16 @@ Usage:
   ailang-worldd [--addr <url>] doctor [--db <path>] [--workspace-root <dir>]
                     [--interpreter-dir <dir>] [--tools-dir <dir>]
                     [--examples-dir <dir>] [--online]
+  ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>]
+                    [--repo <dir>] [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]...
+                    [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
+  ailang-worldd session list [--db <path>] [--episode <ep>] [--json]
+  ailang-worldd session revoke --db <path> <credential_id-hash> | --episode <ep>
   ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
                     [--ttl 3600] [--out <file>]
-  ailang-worldd session revoke [--db <path>] <credential_id-hash>
+  ailang-worldd help [<verb>]
 
-  <verb> --help prints the help of: tools, call, why, log tail, provenance, setup,
-  doctor.
+  '<verb> --help' and 'help <verb>' print a verb's help (exit 0).
 
 Session credential (tools, call, commit): --session <file> (a file holding
 the 64-hex token, mode 0600) or the token itself (warns: visible on argv),
@@ -187,6 +192,15 @@ func run(args []string, stdout, stderr io.Writer) int {
 	if len(rest) == 0 {
 		fmt.Fprint(stderr, usage)
 		return exitUsage
+	}
+	// `help <verb...>` is `<verb...> --help` (row 138 AC5.7).
+	if rest[0] == "help" && len(rest) > 1 {
+		rest = append(append([]string(nil), rest[1:]...), "--help")
+	}
+	// Verbs with no help of their own print their usage lines (exit 0).
+	if text, ok := genericVerbHelp(rest); ok {
+		fmt.Fprint(stdout, text)
+		return exitOK
 	}
 
 	switch verb := rest[0]; verb {
@@ -358,4 +372,67 @@ func serveResult(err error, stderr io.Writer) int {
 		<-startup.Settled
 	}
 	return exitFatal
+}
+
+// ownHelpVerbs handle --help themselves (each prints its own help, exit 0).
+var ownHelpVerbs = map[string]bool{
+	"tools": true, "call": true, "why": true, "provenance": true,
+	"setup": true, "doctor": true, "session": true,
+}
+
+// genericVerbHelp answers `<verb> ... --help` for the verbs that have no help
+// text of their own, from the usage block itself, so the two cannot drift.
+func genericVerbHelp(rest []string) (string, bool) {
+	verb := rest[0]
+	if ownHelpVerbs[verb] || (verb == "log" && len(rest) > 1 && rest[1] == "tail") {
+		return "", false
+	}
+	wants := false
+	for _, a := range rest[1:] {
+		if a == "--help" || a == "-help" || a == "-h" {
+			wants = true
+		}
+	}
+	if !wants {
+		return "", false
+	}
+	lines := usageLinesFor(verb)
+	if len(lines) == 0 {
+		return "", false
+	}
+	text := "usage:\n" + strings.Join(lines, "\n") + "\n"
+	if verb == "serve" {
+		if i := strings.Index(usage, "serve flags:"); i >= 0 {
+			flags := usage[i:]
+			if j := strings.Index(flags, "\nExit codes:"); j >= 0 {
+				flags = flags[:j+1]
+			}
+			text += "\n" + flags
+		}
+	} else {
+		text += "\n--addr <url> is the daemon's base URL (default " + daemon.DefaultAddr + ").\n"
+	}
+	return text, true
+}
+
+// usageLinesFor returns the usage lines (with continuation lines) of verb.
+func usageLinesFor(verb string) []string {
+	var out []string
+	in := false
+	for _, l := range strings.Split(usage, "\n") {
+		if strings.HasPrefix(l, "  ailang-worldd ") {
+			cmd := strings.TrimPrefix(strings.TrimPrefix(l, "  ailang-worldd "), "[--addr <url>] ")
+			in = cmd == verb || strings.HasPrefix(cmd, verb+" ")
+			if in {
+				out = append(out, l)
+			}
+			continue
+		}
+		if in && strings.HasPrefix(l, "                    ") {
+			out = append(out, l)
+			continue
+		}
+		in = false
+	}
+	return out
 }
