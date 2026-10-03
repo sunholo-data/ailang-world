@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 228 | 2026-10-03 | **dev RED at Gate 1 → verifygate ETXTBSY flake FIXED+LANDED** (`382fd7e`, #194): `e6064b6`'s `t.Parallel()` let forks inherit freshly written script fds (golang/go#22315, Linux-only); every test write now holds `syscall.ForkLock.RLock`, go/types scan bans raw os writes, Linux kernel control PASS on CI; quorum r1/r2 blocked → 3 premises refuted by measurement → carve-out; opus designer/planner, sonnet executor, opus judge PASS 88 (6 non-blocking → row 142); merge CI 2/2 green |
 | 227 | 2026-10-03 | No pick (rule (d)): rows 135 (attended `r135-build`, M1–M3 committed unpushed) and 138 (attended PR #188) in live attended execution; 140/93/114/139 sequenced by D-WORLD-58; D-WORLD-61 OPEN asks positions for 136/141; row 134 LANDED attended (`f3a90ee`); record independently judged [ADMIN] |
 | 226 | 2026-10-03 | No pick (rule (d)): row 134 still IN-SPRINT attended (`bb6b2b2`); attended `7f4ebff` drafted row 93's design and `926990d` ruled it (D-WORLD-55; new row 135 gated on 134); 114 behind 134; 93 still R8-blocked on dev; record independently judged [ADMIN] |
 | 225 | 2026-10-03 | No pick (rule (d)): row 134 still IN-SPRINT attended, no new attended commits since 224 (`bb6b2b2`); 114 behind 134; 93 still R8-blocked on dev; record independently judged [ADMIN] |

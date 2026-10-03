@@ -955,3 +955,54 @@ So no D-WORLD-58 row is routable by the loop; rule (d) → block report.
 **Next:** the attended session pushes and lands 135 (M1–M3 + attended M4) and 138; then **row 140** (`Workspace.Exec`, needs a design + quorum) is the loop's next routable path row, then 93 (FINAL) → 114 → 139. Mark answers D-WORLD-61 for 136/141.
 
 **Record follow-through (iteration 227):** the independent evaluator (Agent tool, `sonnet`, fresh separate context, read-only, ~29 s, 48,732 subagent tok) judged record commit `52e72a689d35672a36af0da62355e263c0e25aa1` on `a266465` and returned **PASS 90/100, zero blocking**. It measured first-party: record-only scope (5 files); 224 moved byte-identical to the archive's end; ledger valid at 48 rows with only D-WORLD-61 OPEN; the `r135-build` worktree's M1–M3 commits present and absent from origin; PR #188 2/2 green; R8 gone at `a266465`; census and personal-email checks rc=0; no closing keywords. Banked in `design_docs/verification/world-iter227/evaluator-r1.md`.
+
+## 228 — 2026-10-03 — dev RED at Gate 1 → `host/verifygate` ETXTBSY flake fixed and LANDED (`382fd7e`, #194; judge PASS 88) [PRODUCT-HYGIENE]
+
+**Kind:** full inner loop on a Gate-1 red (designer → quorum ×2 → carve-out revision → planner → executor → independent evaluator → merge → merge-CI green).
+
+**Pick and why:** Gate 1 found `origin/dev` `c2476ff` red on `go host build + test gate` (run 37132037850 attempt 1): `TestModuleManifestEmptyEnumerationFailsLoudly` → `fork/exec …/iso/scripts/verify_ail.sh: text file busy`. The parents (`e6064b6`, `78db602`, `901b87c`, `0b18b94`) were green, the red commit is docs-only, and a rerun went green, so the red is an intermittent flake (1 red of 6 dev runs). A red dev outranks the queue, and World owns this repo. Clause map: 1/2/3/6/7 MET; 4 UNMET (135 re-landed attended `e6064b6`; 138 M1+M2 attended #188; 140 next per D-WORLD-58, needing design + quorum); 5 UNMET (114 after 93). The pick moves no unmet clause. The reason is the measured red, not groom position.
+
+**Diagnosis:** this is golang/go#22315. `e6064b6` (#192, the attended verifygate CI-budget fix) put 10 verifygate arms under `t.Parallel()`. Those arms write or rewrite a script and then execve it. Meanwhile another parallel test's fork inherits the write fd, which `O_CLOEXEC` closes only at that child's exec, so the kernel refuses our execve with ETXTBSY. darwin does not enforce this, so the rig cannot reproduce it. The designer measured that darwin allows exec while a writer is open.
+
+**Fix (option C′):** every test-side write in `host/verifygate` holds `syscall.ForkLock.RLock` from open to close. Every fork takes `ForkLock.Lock`, as `forkpipe2.go:45` and `forkpipe.go:25` in go1.26.6 show, so no fork can inherit the fd. That removes the cause, with no retry and no timing, and it also covers shims that bash execs. All 21 write sites are migrated to 4 wrappers. A go/types scan (`TestVerifygateTestWritesAreForkLocked`) bans raw `os.{WriteFile,OpenFile,Create,CreateTemp}` and aliased or dot `os` imports, with floors and 5 known-positive fixtures. A Linux-only kernel control (`TestKernelRefusesExecOfWriterOpenFile`) proves the ETXTBSY premise. A new verbose CI step shows those tests PASS rather than SKIP.
+
+**Quorum:** both rounds BLOCKED, with 3/3 present reviewers rejecting and `gpt6-1-sol` unreachable in both. Measured, not forwarded (rule 3f):
+- R1 gemini said forks take `RLock`. REFUTED: `forkpipe2.go:45` takes `ForkLock.Lock()`, and its comment says the stdlib never takes RLock.
+- R1 kimi said `:564` was not the exec site. REFUTED: it is `runGateAt`'s caller line, reported via `t.Helper`, and the exec is at `runGateAtErr:150`.
+- R1 glm's liveness and provenance gaps were fixed.
+- R2 gemini said `hasWaitingReaders` does not exist. REFUTED: it is at `forkpipe2.go:26/28/52`.
+- R2 glm's O_EXCL worry: the original already uses O_EXCL (l.42), now cited.
+- R2 kimi's go/types scan spec was applied verbatim.
+Because every remaining objection carried a concrete fix and none disputed the direction, a narrow-refinement carve-out revision followed. Quorum spend about $0.54. Artifacts are banked in `design_docs/verification/world-iter228/`.
+
+**Evidence:**
+- Executor gates: `verify_go.sh` rc 0 and `verify_ail.sh` rc 0 at M2/M3; verifygate went 148 → 150 pass + 1 skip on darwin.
+- Executor drills: AC1, AC1b, AC2, AC3, AC4a, AC4b and AC8 were all KILLED, each followed by a byte-identical revert.
+- Judge: PASS 88, zero blocking. Its own mutation table found 6 surviving mutants or gaps in the guard, recorded as row 142.
+- CI on the PR head and on the merge `382fd7e` (run 37138466945) was 2/2 success. The kernel control showed `--- PASS` on Linux both times. Verifygate's race time was 238 s on the PR head and 155 s on the merge, both under the 600 s cap.
+- AC5's throwaway-commit drill on CI was not run. It was substituted by judge mutant E4: running the kernel test where the kernel allows the exec fails with "expected ETXTBSY", so the assertion is live.
+
+**Routing evidence:**
+- Base: Gate 1 base `c2476ff`@15:22:03Z; merge on `c2476ff` (origin had not moved at the pre-merge re-fetch).
+- Controller: `claude:claude-opus-5-5`.
+- Designer: Agent `opus`. The env pin `claude:claude-opus-5-5` resolved `recipe … declared:provider-pin`, and the operator's standing request was the Agent tool, with the same weights. The rotation's next entry is `pi:ollama/glm-5.3:cloud`, but ollama is over ration. 3 runs (author plus 2 revisions); subagent tokens ~96k, ~111k and ~129k cumulative.
+- Planner: Agent `opus` (`agent-tool opus fail-closed:env-pin`; ~65k tokens).
+- Executor: Agent `sonnet`. The pin `claude:claude-sonnet-5-5` resolved as a `recipe`. The Agent spawn was ACCEPTED by the hook (~73k tokens, 36 min).
+- Evaluator: Agent `opus`. The resolver gave `reroute pi:openrouter/minimax/minimax-m3 generator-equals-judge`, but openrouter is over ration, and the next lane in the chain, `claude:claude-sonnet-4-6`, is the executor's family. Generator≠judge holds (sonnet vs opus); ~79k tokens.
+- Metered spend: quorum about $0.54.
+
+**Ruled out:**
+- Retry on ETXTBSY (A): cannot reach the shims that bash execs, and leaves a residual.
+- `bash <script>` (B): drops the shebang and exec bit from what is tested.
+- A private mutex (C): would need a two-sided protocol.
+- Reverting `t.Parallel` (D): brings back the 600 s overrun that caused `78db602`.
+- Treating the rerun-green as "nothing to do": the flake is real and recurs.
+- Rows 135/138/140: 135 and 138 are attended, and 140 comes after them per D-WORLD-58.
+
+**Side observation (row-114 candidate, not routed):** the executor's first M3 `verify_go.sh` run went red once on `host/projection` `TestMCPToolsInnerBudget` (a 30 ms deadline). `-count=3` and a full re-run were green. That is a second timing flake to watch.
+
+**Retro:** a parallelism change that fixes a CI *budget* can create a *correctness* flake that the PR's own green run cannot see. #192 was green on its head, and the next docs-only commit went red. When a change adds `t.Parallel()`, ask what the tests write and then exec. Instance 1; no skill edit (World cannot edit the shared skill).
+
+**Progress:** World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Dev de-flaked; goal unmoved by the loop.
+
+**Next:** row 140 (`Workspace.Exec`, design + quorum) once 135/138 are confirmed done or handed back by the attended session. Mark answers D-WORLD-61. Row 142 is hygiene below the critical path.
