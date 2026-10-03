@@ -122,7 +122,7 @@ class ArmDiff(unittest.TestCase):
 
 
 REPO = os.environ.get('FLOOR_AILANG_REPO')
-TOOL = os.environ.get('FLOOR_TOOL_BIN', os.path.expanduser('~/.pinned-ailang-tools/v0.51.0/ailang'))
+TOOL = os.environ.get('FLOOR_TOOL_BIN', os.path.expanduser('~/.pinned-ailang-tools/v0.52.1/ailang'))
 
 
 @unittest.skipUnless(REPO and os.path.isfile(TOOL), 'rig-only: FLOOR_AILANG_REPO and the pinned tool binary')

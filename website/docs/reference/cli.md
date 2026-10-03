@@ -44,14 +44,15 @@ serve flags:
                        policies or its tool cache — startup refuses otherwise
   --tool-ailang-bin <path>
                        AILANG binary the workspace tools run (must be
-                       AILANG v0.51.0); archived and hash-verified like
+                       AILANG v0.52.1); archived and hash-verified like
                        --ailang-bin. The Workspace.*/Ailang.* tools are served
                        only when both this and --workspace-root are set
   --examples-dir <dir> AILANG examples corpus examples-search reads (passed
-                       to the tool as AILANG_EXAMPLES; not built into the
-                       binary). Default: ~/.ailang/examples when it exists,
-                       else examples-search refuses "no examples corpus
-                       configured". Must be outside --workspace-root
+                       to the tool as AILANG_EXAMPLES; World never falls back
+                       to a corpus in the binary). Default: ~/.ailang/examples
+                       when it exists, else examples-search refuses "no
+                       examples corpus configured". Must be outside
+                       --workspace-root
 
 Exit codes: 0 ok, 1 usage or client error, 2 fatal startup.
 ```

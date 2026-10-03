@@ -41,7 +41,7 @@
 #
 # Paths (override by env): SE_BASE (default ~/.ailang/se-smoke), SE_EPISODE
 # (ep1), SE_PORT (7644), PIN (~/.pinned-ailang/ailang, v0.41.0), TOOL
-# (~/.pinned-ailang-tools/v0.51.0/ailang), SE_EXAMPLES (~/.ailang/examples).
+# (~/.pinned-ailang-tools/v0.52.1/ailang), SE_EXAMPLES (~/.ailang/examples).
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -49,7 +49,7 @@ SE_BASE="${SE_BASE:-$HOME/.ailang/se-smoke}"
 EP="${SE_EPISODE:-ep1}"
 PORT="${SE_PORT:-7644}"
 PIN="${PIN:-$HOME/.pinned-ailang/ailang}"
-TOOL="${TOOL:-$HOME/.pinned-ailang-tools/v0.51.0/ailang}"
+TOOL="${TOOL:-$HOME/.pinned-ailang-tools/v0.52.1/ailang}"
 EXAMPLES="${SE_EXAMPLES:-$HOME/.ailang/examples}"
 
 BIN="$SE_BASE/bin"
@@ -75,8 +75,8 @@ need_pin_and_tool() {
   local pv tv
   pv="$("$PIN" --version)"; tv="$("$TOOL" --version)"
   case "$pv" in *'AILANG v0.41.0'*) ;; *) die "PIN is not AILANG v0.41.0: $PIN" ;; esac
-  case "$tv" in *'AILANG v0.51.0'*) ;; *) die "TOOL is not AILANG v0.51.0: $TOOL" ;; esac
-  ok "PIN v0.41.0, TOOL v0.51.0"
+  case "$tv" in *'AILANG v0.52.1'*) ;; *) die "TOOL is not AILANG v0.52.1: $TOOL" ;; esac
+  ok "PIN v0.41.0, TOOL v0.52.1"
 }
 
 daemon_running() { [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; }

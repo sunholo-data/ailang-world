@@ -24,11 +24,13 @@ import (
 // pure envelope tables) always run and carry the op allowlist, the `--`
 // separator, the envelope classification and the rendered key set. The
 // real-binary tests run only when WORLD_TOOL_AILANG_BIN names the measured
-// v0.51.0 tool binary, and reproduce the design's V-rows on fixture worktrees.
+// tool binary (measuredToolVersion; V-rows first measured on v0.51.0 and
+// re-proved on v0.52.1, design §13), and reproduce the design's V-rows on
+// fixture worktrees.
 
 const toolBinEnv = "WORLD_TOOL_AILANG_BIN"
 
-const measuredToolVersion = "AILANG v0.51.0"
+const measuredToolVersion = "AILANG v0.52.1"
 
 // ---------------------------------------------------------------------------
 // rendered policy (§4.3) and the D4-style refusal (AC4.5, handler half)
@@ -471,7 +473,7 @@ func toolBinary(t *testing.T) string {
 	bin := os.Getenv(toolBinEnv)
 	if bin == "" {
 		t.Skipf("%s is unset: the real-binary AC4.1/AC4.3 matrix needs the %s tool binary "+
-			"(e.g. $HOME/.pinned-ailang-tools/v0.51.0/ailang); skipping", toolBinEnv, measuredToolVersion)
+			"(e.g. $HOME/.pinned-ailang-tools/v0.52.1/ailang); skipping", toolBinEnv, measuredToolVersion)
 	}
 	return bin
 }

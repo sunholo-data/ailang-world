@@ -236,7 +236,7 @@ The tuning ledger is `design_docs/verification/world-floor-tuning-ledger.jsonl`.
 | P9 | Minting is TTY-fenced and needs the daemon stopped | V31 |
 | P10 | The per-call World latency is not recorded on the row-134 branch | V33 |
 | P11 | The `api_error` catch-all and a ~3% Codex fault rate threaten eligibility | V17, V19 |
-| P12 | The graded version is the World tool binary v0.51.0, not the PATH binary | V9, V21, V37 |
+| P12 | The graded version is the World tool binary, not the PATH binary. It was v0.51.0; it is **v0.52.1 since row 135 M0** (2026-10-03). AC1.2 was re-run on v0.52.1 and PASSES: 1350/1357 (0.9948), zero `unexplained`. One more `version` disagreement than before: an `api_call_json` solution that names an out-of-scope constructor `Network` is now a type error. Evidence: `design_docs/verification/world-row135-m0-2026-10-03/` | V9, V21, V37 |
 
 ## 6. Milestones (each ≤ 1 executor day; ACs mechanically checkable)
 

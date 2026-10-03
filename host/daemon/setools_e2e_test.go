@@ -4,8 +4,8 @@ package daemon
 // se-tools package, published into a TEST store through the production
 // publisher core, served by a daemon built with New(...) and its real routes,
 // and driven over real HTTP on /mcp/ and /a2a/ — the archived pinned
-// interpreter runs every plan and finish phase, the archived v0.51.0 tool
-// binary runs every effect inside the episode's worktree.
+// interpreter runs every plan and finish phase, the archived tool binary
+// (ToolBinaryRelease) runs every effect inside the episode's worktree.
 
 import (
 	"context"
@@ -474,7 +474,7 @@ func TestSeToolsMCPEndToEnd(t *testing.T) {
 			return nil
 		}},
 		{"ailang-cli", broker.EffectAilangCLI, map[string]any{"op": "version"}, func(out map[string]any) error {
-			if out["ok"] != true || !strings.Contains(str(out["stdout"]), "v0.51.0") {
+			if out["ok"] != true || !strings.Contains(str(out["stdout"]), strings.TrimPrefix(seToolRelease, "AILANG ")) {
 				return fmt.Errorf("cli version: want the tool binary's version on stdout")
 			}
 			return nil

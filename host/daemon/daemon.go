@@ -237,7 +237,8 @@ type Config struct {
 	ToolAilangBin string
 	// ExamplesDir (`--examples-dir`, row 134 break-3 fix) is the AILANG examples
 	// corpus examples-search reads, passed to the tool as AILANG_EXAMPLES. The
-	// corpus is not built into the tool binary (V65). It must be a directory
+	// corpus was not built into the v0.51.0 tool binary (V65); v0.52.1 embeds
+	// one, but World serves only the operator's corpus. It must be a directory
 	// outside WorkspaceRoot — startup refuses otherwise. Empty means no corpus:
 	// examples-search answers NoExamplesCorpusRefusal. (The CLI defaults it to
 	// the operator's ~/.ailang/examples when that exists.)

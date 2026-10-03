@@ -53,13 +53,13 @@ Four facts measured on the first attended run:
 
 ```bash
 export PIN=$HOME/.pinned-ailang/ailang
-export TOOL=$HOME/.pinned-ailang-tools/v0.51.0/ailang
+export TOOL=$HOME/.pinned-ailang-tools/v0.52.1/ailang
 $PIN --version && $TOOL --version
 go build -o /tmp/ailang-worldd ./cmd/ailang-worldd
 go build -o /tmp/world-publish ./cmd/world-publish
 ```
 
-`PIN` (v0.41.0) runs every plan. `TOOL` must be exactly v0.51.0; startup refuses any other
+`PIN` (v0.41.0) runs every plan. `TOOL` must be exactly v0.52.1; startup refuses any other
 release. See [Install](install.md) for why there are two.
 
 ## 2. Provision the worktree

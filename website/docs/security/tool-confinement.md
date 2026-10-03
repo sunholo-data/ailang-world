@@ -6,8 +6,9 @@ description: The measured confinement facts for the eight coding tools — workt
 
 # Tool confinement
 
-Every fact on this page was measured first-party on the AILANG **v0.51.0** tool binary
-(the only release the daemon accepts for `--tool-ailang-bin`) and is cited by its Verification
+Every fact on this page was measured first-party on the AILANG **v0.51.0** tool binary and
+re-proved on **v0.52.1**, the only release the daemon now accepts for `--tool-ailang-bin`
+(Verification Log §13, V69–V80) and is cited by its Verification
 Log row (`V…`) in `design_docs/planned/w-software-engineering-domain.md`. Most are also
 regression tests that run against the real binary (the AC4.1 matrix).
 
@@ -61,6 +62,7 @@ The rendered policy makes these read-only to the agent:
 | `.ailang/**` is denied so an agent cannot poison the compile cache later checks and runs read; `run` and `check` still work. | V57 |
 | On a case-insensitive volume (macOS APFS), v0.51.0 matched the deny list **case-sensitively**: `.CLAUDE/settings.json`, `.GITHUB/…`, `.AILANG/…`, `.Pi/…`, `.GITMODULES`, `.GitAttributes` and `.gitmoduleſ` (U+017F) all wrote through to the protected lowercase files, by `write`, `edit` and running programs. | V68 |
 | **Fix, in the policy only:** each directory is rendered as every Unicode simple-fold variant of its name plus `/**` (196 literals), and each file as one `path.Match` class over its fold orbit, for example `.[gG][iI][tT][mM][oO][dD][uU][lL][eE][sſS]`. 198 patterns, 3102 bytes. All case-variant rows are refused, with the lowercase targets unchanged. | V68, R-SE-15 |
+| On v0.52.1 the deny matcher folds case upstream (one matcher, `fileguard.Protection`): with only the six lowercase entries, all 39 case-variant rows are refused. World still renders the folded list (redundant, harmless). policy-tool also refuses `fmt --write` on a deny-listed path, and `test` no longer writes into the tested file's directory. | V72, V73, V75 |
 | The only non-ASCII code points APFS folds onto ASCII letters are `ſ` (U+017F, onto `s`) and the Kelvin sign (U+212A, onto `k`); no code point is ignored. None of the four directory names contains `s` or `k`. | V68 |
 
 ## Environment and cache

@@ -32,10 +32,11 @@ import (
 )
 
 // ToolBinaryRelease is the only tool-binary release the confinement matrix
-// and the run outcome shapes were measured on (V32–V39, V49, V52–V63). A
-// different release changes those facts, so startup refuses it (R-SE-8:
+// and the run outcome shapes were measured on (V32–V39, V49, V52–V63 on
+// v0.51.0; re-proved on v0.52.1 by the row-134 design §13, V69–V80, in row 135
+// M0). A different release changes those facts, so startup refuses it (R-SE-8:
 // never widen; stay on the last binary that passed AC4.1).
-const ToolBinaryRelease = "AILANG v0.51.0"
+const ToolBinaryRelease = "AILANG v0.52.1"
 
 // workspaceHandlerBudget bounds one episode handler's construction: the
 // policy write plus the one `policy-tool` summary subprocess (~0.1 s, M4a).
