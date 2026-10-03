@@ -122,7 +122,7 @@ if [ "$1" = "policy-tool" ]; then
     *'"summary"'*)
       sm=restricted; [ "$mode" = permissive ] && sm=permissive
       sb=$(pwd -P); [ "$mode" = elsewhere ] && sb=/
-      printf '{"ok":true,"summary":{"security_mode":"%s","policy_digest":"fakedigest","fs_sandbox":"%s","cli":["check","tree"]}}' "$sm" "$sb"
+      printf '{"ok":true,"summary":{"security_mode":"%s","policy_digest":"fakedigest","fs_sandbox":"%s","cli":["check","tree","fmt"]}}' "$sm" "$sb"
       exit 0 ;;
   esac
   printf '%s' "$req" > "$d/stdin"
@@ -228,7 +228,7 @@ func TestAilangToolOpAllowlistIsFixedPerEffect(t *testing.T) {
 		EffectWorkspaceWrite: {"write", "edit"},
 		EffectAilangCheck:    {"ai_check"},
 		EffectAilangDiscover: {"builtins_list", "examples_search"},
-		EffectAilangCLI:      {"check", "tree"}, // the fake summary's cli list
+		EffectAilangCLI:      {"check", "tree", "fmt"}, // the fake summary's cli list
 	}
 	universe := []string{"read", "write", "edit", "ai_check", "builtins_list", "examples_search",
 		"check", "tree", "summary", "run", "fmt", "policy_check", ""}
@@ -262,7 +262,7 @@ func TestAilangToolOpAllowlistIsFixedPerEffect(t *testing.T) {
 		}
 	}
 	t.Logf("op allowlist: %d admitted, %d refused", want, refusals)
-	if want != 8 || refusals != 5*len(universe)-8 {
+	if want != 9 || refusals != 5*len(universe)-9 {
 		t.Fatalf("matrix counted %d admitted / %d refused", want, refusals)
 	}
 }
@@ -704,6 +704,14 @@ func TestAilangToolConfinementMatrix(t *testing.T) {
 				}
 				f.assertProtectedUnchanged(t)
 			}
+
+			// `fmt --write` through Ailang.CLI (judge finding P2, V67): on
+			// v0.51.0 policy-tool runs it under the rendered policy and the
+			// formatter rewrites the file, fs_deny_write notwithstanding. A
+			// session holding only Ailang.CLI must not write the worktree, so
+			// it is refused on a deny-listed path AND on an ordinary one,
+			// whatever the flag's value, and under an aliased "flags" key.
+			rows += f.assertCLIFmtWriteRefused(t)
 
 			// In-sandbox writes succeed by both paths, and edit works.
 			if resp := f.op(t, EffectWorkspaceWrite, map[string]any{"op": "write", "path": "ok.txt", "content": "fine"}); resp["ok"] != true {

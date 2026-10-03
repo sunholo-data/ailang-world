@@ -10,6 +10,8 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -58,9 +60,17 @@ func TestQuickstartSection9FlagsMatchTheCLI(t *testing.T) {
 	if !ok {
 		t.Fatalf("serve --help has no serve flags block:\n%s", help.String())
 	}
-	var serves, mints int
-	for _, argv := range section9Commands(t) {
+	var serves, mints, commits int
+	for i, argv := range section9Commands(t) {
 		switch {
+		case len(argv) > 2 && argv[0] == "--addr" && argv[2] == "commit":
+			commits++
+			// M6 measured POST /v1/commit as session-gated: the genesis commit
+			// runs against the live daemon, after mint, with --session.
+			if mints != 1 || serves != 2 {
+				t.Errorf("QUICKSTART §9 commits (command %d) before the mint and the tools serve", i)
+			}
+			assertSection9CommitLine(t, argv)
 		case argv[0] == "serve":
 			serves++
 			for _, tok := range argv[1:] {
@@ -96,9 +106,41 @@ func TestQuickstartSection9FlagsMatchTheCLI(t *testing.T) {
 			}
 		}
 	}
-	// serve twice (pin-only bootstrap, then with the workspace tools) and one mint.
-	if serves != 2 || mints != 1 {
-		t.Fatalf("QUICKSTART §9 holds %d serve and %d mint commands, want 2 and 1", serves, mints)
+	// serve twice (pin-only bootstrap, then with the workspace tools), one
+	// mint, then the one session-gated genesis commit.
+	if serves != 2 || mints != 1 || commits != 1 {
+		t.Fatalf("QUICKSTART §9 holds %d serve, %d mint and %d commit commands, want 2, 1 and 1", serves, mints, commits)
+	}
+}
+
+// assertSection9CommitLine runs §9's commit line, with its file and its
+// `$(cat /tmp/se-session)` substitution replaced by fixtures and --addr by a
+// recording server: it must POST the file to /v1/commit as the Bearer session.
+func assertSection9CommitLine(t *testing.T, argv []string) {
+	t.Helper()
+	want := []string{"--addr", "http://127.0.0.1:7644", "commit", "--file", "/tmp/se-genesis.json", "--session", `"$(cat`, `/tmp/se-session)"`}
+	if strings.Join(argv, " ") != strings.Join(want, " ") {
+		t.Fatalf("QUICKSTART §9 commit line = %q, want %q", argv, want)
+	}
+	var method, path, auth, body string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		data, _ := io.ReadAll(r.Body)
+		method, path, auth, body = r.Method, r.URL.Path, r.Header.Get("Authorization"), string(data)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"ok":true}`)
+	}))
+	defer srv.Close()
+	file := filepath.Join(t.TempDir(), "se-genesis.json")
+	if err := os.WriteFile(file, []byte(`{"observedHead":""}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	token := strings.Repeat("ab", 32)
+	var out, errw bytes.Buffer
+	if got := run([]string{"--addr", srv.URL, "commit", "--file", file, "--session", token}, &out, &errw); got != exitOK {
+		t.Fatalf("§9 commit line exit %d: %s", got, errw.String())
+	}
+	if method != http.MethodPost || path != "/v1/commit" || auth != "Bearer "+token || body != `{"observedHead":""}` {
+		t.Fatalf("§9 commit sent %s %s auth=%q body=%q", method, path, auth, body)
 	}
 }
 

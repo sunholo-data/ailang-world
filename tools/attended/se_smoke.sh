@@ -4,10 +4,14 @@
 # limited to World's MCP tools. Runbook: docs/QUICKSTART.md §9 — where they
 # disagree, the runbook wins.
 #
-# WHAT THIS IS NOT: an automation of the two attended steps. `publish` and
-# `mint` are TTY-fenced in world-publish / ailang-worldd; this script runs them
-# with stdin connected to /dev/tty (the fence's own requirement, honestly met)
-# and you still type the confirmation. Every other step needs no human.
+# WHAT THIS IS NOT: an automation of the two attended steps. The irreversible
+# transition publish is NEVER run or built here (AC30,
+# TestNoCIStepOrScriptReachesThePublishEntrypoint): `publish` only checks the
+# daemon is stopped and points you at the Publish block of QUICKSTART §9, which
+# you paste yourself from the repo root. `mint` is TTY-fenced in ailang-worldd;
+# this script runs it with stdin connected to /dev/tty (the fence's own
+# requirement, honestly met) and you still type the confirmation. Every other
+# step needs no human.
 #
 # WHAT IT ABSORBS (each measured on the first M6 run, 2026-10-03):
 #   - AILANG_REGISTRY_API_KEY in the environment makes the daemon refuse to start
@@ -25,7 +29,7 @@
 # Usage (from anywhere; paste ONE line at a time — interactive zsh does not
 # treat `#` as a comment):
 #   tools/attended/se_smoke.sh prepare   build CLIs, store, worktree, bootstrap
-#   tools/attended/se_smoke.sh publish   ATTENDED: publish packages/se-tools
+#   tools/attended/se_smoke.sh publish   ATTENDED: you paste QUICKSTART §9's Publish block
 #   tools/attended/se_smoke.sh mint      ATTENDED: mint the 6-grant session
 #   tools/attended/se_smoke.sh serve     daemon with tools + genesis commit
 #   tools/attended/se_smoke.sh check     curl tools/list (expects 8) + one read
@@ -120,8 +124,8 @@ for line in sys.stdin:
 cmd_prepare() {
   need_pin_and_tool
   mkdir -p "$BIN" "$STORE_DIR" "$WS"
-  (cd "$REPO_ROOT" && go build -o "$BIN/ailang-worldd" ./cmd/ailang-worldd && go build -o "$BIN/world-publish" ./cmd/world-publish)
-  ok "built ailang-worldd and world-publish into $BIN"
+  (cd "$REPO_ROOT" && go build -o "$BIN/ailang-worldd" ./cmd/ailang-worldd)
+  ok "built ailang-worldd into $BIN"
   if [ ! -d "$WS/$EP" ]; then
     [ -d "$PROJ/.git" ] || { git init -q "$PROJ" && git -C "$PROJ" -c user.email=se-smoke@example.com -c user.name=se-smoke commit -q --allow-empty -m init; }
     git -C "$PROJ" worktree add -q --detach "$WS/$EP"
@@ -135,10 +139,9 @@ cmd_prepare() {
 
 cmd_publish() {
   daemon_running && die "stop the daemon first (publish needs single-writer authority): $0 stop"
-  [ -x "$BIN/world-publish" ] || die "run: $0 prepare"
-  cd "$REPO_ROOT"   # manifest transitionFnFile paths are repo-relative
-  "$BIN/world-publish" transitions --store "$DB" --manifest packages/se-tools/transitions.json --ailang-bin "$PIN" </dev/tty
-  say "next (attended): $0 mint"
+  say "attended: from $REPO_ROOT, paste the Publish block of docs/QUICKSTART.md §9 with"
+  say "  --store $DB --ailang-bin $PIN  (append </dev/tty in an embedded terminal)"
+  say "then: $0 mint"
 }
 
 cmd_mint() {

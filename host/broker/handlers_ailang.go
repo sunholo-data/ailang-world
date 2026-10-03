@@ -58,6 +58,24 @@ var fixedToolOps = map[string][]string{
 	EffectAilangDiscover: {"builtins_list", "examples_search"},
 }
 
+// cliWriteFlags names, per op, the policy-tool flags that make an op write
+// the worktree (V67, measured on v0.51.0). policy-tool runs `fmt --write`
+// under the episode policy, and the formatter rewrites the file without the
+// fs_deny_write check, so `.claude/**` and `.ailang/**` were writable through
+// Ailang.CLI alone. The flag's value is ignored (`"write":"false"` still
+// writes), so the key's presence is refused. The other 19 cli ops admit no
+// write-capable flag (the audited table in the tests). Writes go through
+// Workspace.Write, never Ailang.CLI.
+var cliWriteFlags = map[string][]string{
+	"fmt": {"write"},
+}
+
+// policyToolRequestKeys are the policy-tool Request fields the handler reads
+// (op) or polices (flags). policy-tool decodes into a Go struct, whose field
+// match is case-insensitive, so any other spelling of these keys ("OP",
+// "FLAGS", "flagſ") would reach it unseen and is refused.
+var policyToolRequestKeys = []string{"op", "flags"}
+
 // RenderEpisodePolicy renders the per-episode AILANG operator policy with
 // exactly the §4.3 key set (measured admitted on v0.51.0, V39). root is the
 // episode worktree, rendered verbatim as fs_sandbox; it must be an absolute,
@@ -322,10 +340,12 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 	var op string
 	for key, value := range fields {
 		// policy-tool decodes into a Go struct, whose field match is
-		// case-insensitive: an "OP" key would reach it as the op. Only the
-		// exact key may name the op that the allowlist checked.
-		if key != "op" && strings.EqualFold(key, "op") {
-			return nil, &AilangToolRefusalError{Effect: req.Effect, Why: fmt.Sprintf("key %q aliases \"op\"", key)}
+		// case-insensitive: an "OP" key would reach it as the op, a "FLAGS"
+		// key as the flags. Only the exact key may name what was checked.
+		for _, name := range policyToolRequestKeys {
+			if key != name && strings.EqualFold(key, name) {
+				return nil, &AilangToolRefusalError{Effect: req.Effect, Why: fmt.Sprintf("key %q aliases %q", key, name)}
+			}
 		}
 		if key == "op" {
 			if err := json.Unmarshal(value, &op); err != nil {
@@ -335,6 +355,9 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 	}
 	if !h.opsFor(req.Effect)[op] {
 		return nil, &AilangToolRefusalError{Effect: req.Effect, Op: op, Why: "not in this effect's op allowlist"}
+	}
+	if why := writeFlagRefusal(op, fields["flags"]); why != "" {
+		return nil, &AilangToolRefusalError{Effect: req.Effect, Op: op, Why: why}
 	}
 	if op == "examples_search" && h.examplesDir == "" {
 		// Answered in policy-tool's own refusal shape (ok:false, rc 0), so the
@@ -366,6 +389,27 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 		}
 	}
 	return h.stamp(resp)
+}
+
+// writeFlagRefusal is the defence-in-depth twin of the ailang-cli plan's
+// refusal (V67): "" when op's flags carry no write-capable flag. The flags
+// object has already collapsed duplicate top-level "flags" keys (the map
+// decode keeps the last, and the re-encode sends only that one); a flags
+// value that is not an object is refused, since it cannot be inspected.
+func writeFlagRefusal(op string, rawFlags json.RawMessage) string {
+	if rawFlags == nil {
+		return ""
+	}
+	var flags map[string]json.RawMessage
+	if err := json.Unmarshal(rawFlags, &flags); err != nil {
+		return "flags is not a JSON object"
+	}
+	for _, name := range cliWriteFlags[op] {
+		if _, present := flags[name]; present {
+			return fmt.Sprintf("flag %q writes the worktree; Ailang.CLI never writes (use Workspace.Write)", name)
+		}
+	}
+	return ""
 }
 
 // NoExamplesCorpusRefusal is the examples_search answer when the daemon was

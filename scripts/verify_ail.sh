@@ -341,7 +341,7 @@ REQUIRED_VERIFIED = {
     "packages/se-tools/se_tools/examples_search.ail": SE_CORE,
     "packages/se-tools/se_tools/builtins_search.ail": SE_CORE | {"entryMatches", "isEffectTag", "untag",
                                                                  "isHeader", "isTruncated"},
-    "packages/se-tools/se_tools/cli.ail":             SE_CORE | {"cliOpAllowed"},
+    "packages/se-tools/se_tools/cli.ail":             SE_CORE | {"cliOpAllowed", "writeFlag"},
 }
 try:
     with open(sys.argv[2]) as fh:
@@ -491,7 +491,7 @@ SE_TESTS = {  # per module: function -> number of named inline tests
     "builtins_search": dict(SE_CORE_TESTS, argKeyAllowed=4, entryMatches=7, isEffectTag=6, untag=5,
                             isHeader=5, isTruncated=2, main=18),
     "check":           dict(SE_CORE_TESTS, argKeyAllowed=3, main=11),
-    "cli":             dict(SE_CORE_TESTS, argKeyAllowed=6, cliOpAllowed=9, main=14),
+    "cli":             dict(SE_CORE_TESTS, argKeyAllowed=6, cliOpAllowed=9, writeFlag=5, main=18),
     "edit":            dict(SE_CORE_TESTS, argKeyAllowed=5, main=8),
     "examples_search": dict(SE_CORE_TESTS, argKeyAllowed=3, main=6),
     "read":            dict(SE_CORE_TESTS, argKeyAllowed=4, main=10),
@@ -527,7 +527,7 @@ PY
   ) || exit 1
   se_tests_total=$((se_tests_total + se_n))
 done
-EXACT_SE_TESTS=312
+EXACT_SE_TESTS=321
 if [ "$se_tests_total" -ne "$EXACT_SE_TESTS" ]; then
   echo "✗ se-tools test leg: expected exactly $EXACT_SE_TESTS named tests across ${#SE_TEST_MODULES[@]} modules, got $se_tests_total" >&2
   exit 1

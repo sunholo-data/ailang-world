@@ -274,6 +274,35 @@ func TestSeToolsPathPredicateRefusesBeforeAnyEffect(t *testing.T) {
 	}
 }
 
+// TestSeToolsCLIRefusesFmtWriteBeforeAnyEffect is V67's plan half: ailang-cli
+// never plans `fmt --write` (it rewrote deny-listed files through policy-tool
+// on v0.51.0), whatever the flag's value or a duplicated flags key; the
+// read-only fmt forms still plan their one Ailang.CLI effect.
+func TestSeToolsCLIRefusesFmtWriteBeforeAnyEffect(t *testing.T) {
+	manifest := loadSeToolsManifest(t)
+	rig := newSeToolsRig(t)
+	e := manifest["ailang-cli"]
+	for _, args := range []string{
+		`{"op":"fmt","path":".claude/settings.ail","flags":{"write":""}}`,
+		`{"op":"fmt","path":"src/main.ail","flags":{"write":"false"}}`,
+		`{"op":"fmt","path":"src/main.ail","flags":{},"flags":{"write":""}}`,
+	} {
+		plan, err := parsePlan(rig.run(e, planInput(args)), e.declared())
+		if err != nil {
+			t.Fatalf("%s: parsePlan: %v", args, err)
+		}
+		if len(plan.Effects) != 0 || !strings.Contains(string(plan.Result), `flag \"write\" writes the worktree`) {
+			t.Fatalf("%s: effects=%d result=%s; want the zero-effect write-flag refusal", args, len(plan.Effects), plan.Result)
+		}
+	}
+	for _, args := range []string{`{"op":"fmt","path":"src/main.ail"}`, `{"op":"fmt","path":"src/main.ail","flags":{"check":""}}`} {
+		plan, err := parsePlan(rig.run(e, planInput(args)), e.declared())
+		if err != nil || len(plan.Effects) != 1 || string(plan.Effects[0].Payload) != canonical(t, args) {
+			t.Fatalf("%s: err=%v plan=%+v; want one Ailang.CLI effect with the args as payload", args, err, plan)
+		}
+	}
+}
+
 func effectResultsInput(args, effect, output string) string {
 	return `{"phase":"finish","args":` + args + `,"results":[{"id":"e1","effect":"` + effect +
 		`","status":"ok","record":"sha256:` + strings.Repeat("0", 64) + `","output":` + output + `}]}`

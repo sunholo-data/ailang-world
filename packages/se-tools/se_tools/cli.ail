@@ -130,6 +130,25 @@ tests [
     || op == "prompt" || op == "test" || op == "tree" || op == "version"
 }
 
+-- The flags that make an admitted op write the worktree (V67, measured on the
+-- tool binary v0.51.0 from policy-tool's per-op "admitted:" refusal text):
+-- of every cli op's admitted flags, only fmt's --write writes. policy-tool
+-- runs it without the fs_deny_write check and ignores the flag's value, so the
+-- key's presence is refused. ailang-cli never writes: writes are ailang-write.
+-- The handler refuses the same flag again (defence in depth, §4.3).
+export func writeFlag(op: string, flag: string) -> bool ! {}
+ensures { result == (op == "fmt" && flag == "write") }
+tests [
+  (("fmt", "write"), true),
+  (("fmt", "check"), false),
+  (("fmt", "Write"), false),
+  (("check", "write"), false),
+  (("test", "json"), false)
+]
+{
+  op == "fmt" && flag == "write"
+}
+
 -- ── Plan construction (world/effect-plan/v1, §4.1) ─────────────────────────
 
 -- A zero-effect refusal plan: L7 requires its non-null result object, which
@@ -247,6 +266,36 @@ func firstErr(checks: [Result[(), string]]) -> Option[string] =
     }
   }
 
+func firstWriteFlagIn(op: string, fs: [{key: string, value: Json}]) -> Option[string] =
+  match fs {
+    [] => None,
+    f :: rest => if writeFlag(op, f.key) then Some(f.key) else firstWriteFlagIn(op, rest)
+  }
+
+-- Every top-level "flags" entry is scanned, not just the first: a duplicate
+-- key survives the JSON round trip, and policy-tool merges duplicates (V67).
+func firstWriteFlag(op: string, es: [{key: string, value: Json}]) -> Option[string] =
+  match es {
+    [] => None,
+    e :: rest => if e.key == "flags" then match asObject(e.value) {
+        Some(fs) => match firstWriteFlagIn(op, fs) {
+          Some(k) => Some(k),
+          None => firstWriteFlag(op, rest)
+        },
+        None => firstWriteFlag(op, rest)
+      }
+      else firstWriteFlag(op, rest)
+  }
+
+func writeFlagOk(op: string, args: Json) -> Result[(), string] =
+  match asObject(args) {
+    None => Ok(()),
+    Some(es) => match firstWriteFlag(op, es) {
+      Some(k) => Err("op \"${op}\" flag \"${k}\" writes the worktree; ailang-cli never writes (fmt without it returns the formatted text; write it with ailang-write)"),
+      None => Ok(())
+    }
+  }
+
 -- The payload is the call's own arguments, key for key (§4.2: exactly
 -- policy-tool's Request fields minus write/edit content).
 func planTool(args: Json) -> string =
@@ -255,7 +304,7 @@ func planTool(args: Json) -> string =
     Ok(op) => if not cliOpAllowed(op)
       then refusal("op \"${op}\" is not an ailang-cli op; reads, writes and edits have their own tools, and run is ailang-run")
       else match firstErr([pathArgOk(args, "path"), stringArgOk(args, "module"), stringArgOk(args, "query"),
-                           pathArgOk(args, "package"), flagsOk(args)]) {
+                           pathArgOk(args, "package"), flagsOk(args), writeFlagOk(op, args)]) {
         Some(why) => refusal(why),
         None => effectPlan("Ailang.CLI", args, false)
       }
@@ -318,7 +367,15 @@ tests [
   ("{\"phase\":\"plan\",\"args\":{\"op\":\"check\",\"path\":\"a.ail\",\"content\":\"x\"}}",
    "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"content\\\"; ailang-cli admits only: op, path, module, query, package, flags\"}}"),
   ("{\"phase\":\"plan\",\"args\":{\"path\":\"a.ail\"}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"missing required argument \\\"op\\\"\"}}")
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"missing required argument \\\"op\\\"\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"fmt\",\"path\":\".claude/x.ail\",\"flags\":{\"write\":\"\"}}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"op \\\"fmt\\\" flag \\\"write\\\" writes the worktree; ailang-cli never writes (fmt without it returns the formatted text; write it with ailang-write)\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"fmt\",\"path\":\"src/main.ail\",\"flags\":{\"check\":\"\",\"write\":\"false\"}}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"op \\\"fmt\\\" flag \\\"write\\\" writes the worktree; ailang-cli never writes (fmt without it returns the formatted text; write it with ailang-write)\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"fmt\",\"path\":\"main.ail\",\"flags\":{},\"flags\":{\"write\":\"\"}}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"op \\\"fmt\\\" flag \\\"write\\\" writes the worktree; ailang-cli never writes (fmt without it returns the formatted text; write it with ailang-write)\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"fmt\",\"path\":\"main.ail\",\"flags\":{\"check\":\"\"}}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.CLI\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"fmt\",\"path\":\"main.ail\",\"flags\":{\"check\":\"\"}}}],\"finish\":false,\"result\":null}")
 ]
 {
   match decode(input) {

@@ -247,7 +247,8 @@ Host behavior changes are recorded in the [host changelog](HOST_CHANGELOG.md).
 
 ### 9. Software-engineering tools
 
-**Attended — pending first verbatim run (row 134 M6).** This section serves the eight
+**Attended — run verbatim in the row 134 M6 smoke, 2026-10-03** (evidence:
+`design_docs/verification/world-attended-2026-10-03-row134-m6/`). This section serves the eight
 `packages/se-tools` transitions (`ailang-read`, `ailang-write`, `ailang-edit`, `ailang-check`,
 `ailang-run`, `builtins-search`, `examples-search`, `ailang-cli`) over `/mcp/` and `/a2a/`.
 Every tool call runs its plan in the pinned interpreter, runs exactly one brokered effect with the
@@ -255,6 +256,22 @@ v0.51.0 tool binary inside the episode's worktree, and commits one log entry. It
 to `serve --help` and to the `session mint` parser by `TestQuickstartSection9FlagsMatchTheCLI`.
 The `-d` payloads below are run against a test daemon by
 `TestSeToolsQuickstartPayloadsVerbatim`.
+
+**One command per step:** `tools/attended/se_smoke.sh` wraps this runbook as subcommands
+(`prepare`, `publish`, `mint`, `serve`, `check`, `pi`, `claude`, `log`, `stop`, `clean`) and absorbs
+every snag below. It never runs the irreversible publish itself (AC30): its `publish` step points
+you at the Publish block below, which you paste. Where it and this section disagree, this
+section wins.
+
+Four facts measured on the first M6 run (2026-10-03):
+- **Unset `AILANG_REGISTRY_API_KEY`** in the shell that starts the daemon. With it in the
+  environment, the daemon refuses to start.
+- The two attended steps (publish, mint) are TTY-fenced. In an embedded terminal (an IDE pane,
+  an agent harness) they fail `fence=tty reason=stdin-is-not-the-controlling-terminal`; append
+  `< /dev/tty` to those two commands.
+- `POST /v1/commit` is session-gated, so the genesis commit comes **after** mint, against the
+  running daemon, with `--session`.
+- `/mcp/` answers as SSE: the JSON-RPC response is the `data:` line of an `event: message`.
 
 The three end-to-end breaks measured in M5b (2026-10-02) are fixed:
 - `session mint` grants now expire with the session, at mint time + `--ttl` (they were stored
@@ -288,11 +305,20 @@ git -C /tmp/se-proj worktree add --detach /tmp/se-ws/ep1
 printf 'module hello\n\nimport std/io (println)\n\nexport func main() -> () ! {IO} {\n  println("hello from ailang-run")\n}\n' > /tmp/se-ws/ep1/hello.ail
 ```
 
-Start the daemon once with the pin only. Startup bootstraps the epoch registry for the pin.
-Then commit a genesis world, because a tool call commits on top of a selected head:
+Start the daemon once with the pin only, then stop it. Startup bootstraps the epoch registry
+for the pin:
 
 ```bash
+unset AILANG_REGISTRY_API_KEY
 /tmp/ailang-worldd serve --db /tmp/se-world/world.db --ailang-bin $PIN &
+until curl -sf http://127.0.0.1:7644/v1/health >/dev/null; do sleep 0.2; done
+kill %1
+```
+
+Write the genesis commit now; it is sent after mint, because a tool call commits on top of a
+selected head and `/v1/commit` needs the session:
+
+```bash
 python3 - <<'EOF'
 import json, hashlib, base64, os
 def sha(b): return "sha256:" + hashlib.sha256(b).hexdigest()
@@ -311,8 +337,6 @@ c = {"observedHead": "",
                "entryHash": eh, "transitionRef": sha(payload)}}
 open("/tmp/se-genesis.json","w").write(json.dumps(c, indent=2))
 EOF
-/tmp/ailang-worldd commit --file /tmp/se-genesis.json
-kill %1
 ```
 
 **Publish (attended, TTY fence).** Run this from the **repo root**, because the manifest's
@@ -357,7 +381,14 @@ the workspace root, or startup refuses. Without a corpus, `examples-search` answ
   --workspace-root /tmp/se-ws --tool-ailang-bin $TOOL --examples-dir $HOME/.ailang/examples &
 ```
 
-List the tools, then make one call:
+Commit the genesis world through the running daemon, with the minted session:
+
+```bash
+/tmp/ailang-worldd --addr http://127.0.0.1:7644 commit --file /tmp/se-genesis.json --session "$(cat /tmp/se-session)"
+```
+
+List the tools, then make one call. Each response is SSE; the JSON-RPC object is on the
+`data:` line:
 
 ```bash
 curl -s -H "Authorization: Bearer $(cat /tmp/se-session)" \
