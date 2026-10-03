@@ -1,0 +1,11 @@
+All done! Here's a summary of each step:
+
+1. **Read `hello.ail`** — it was a simple module with a `main` function that printed `hello from ailang-run`.
+2. **Edited the message** — changed `println("hello from ailang-run")` to `println("hello from pi")`.
+3. **Checked the file** — type-check and Z3 verification passed with **0 errors**.
+4. **Ran it** — the program was admitted (its declared `IO` effect is within the policy's allowed caps `FS, IO`) and exited with code 0.
+
+**stdout:**
+```
+hello from pi
+```

@@ -8,8 +8,8 @@ Mark ran the two terminal-fenced steps (`world-publish transitions`, `session mi
 | mint | episode `ep1`, 6 grants × 50, TTL 14400 s |
 | `tools/list` (curl) | exactly the 8 tools (`tools-list.json`) |
 | `ailang-read` (curl) | `ok:true`, content, `world.effects[0]` ok with a record ref (`call-read.json`) |
-| **pi** 0.85.1, `--no-builtin-tools`, World tools only | read → edit → check (0 errors) → run; stdout `hello from pi`; 9 s (`pi.out`) |
-| **Claude Code**, `--tools "" --strict-mcp-config`, World tools only | read → edit → check → run; stdout `hello from claude`; 9 s (`claude.out`) |
+| **pi** 0.85.1, `--no-builtin-tools`, World tools only | read → edit → check (0 errors) → run; stdout `hello from pi`; 9 s (`pi.txt`) |
+| **Claude Code**, `--tools "" --strict-mcp-config`, World tools only | read → edit → check → run; stdout `hello from claude`; 9 s (`claude.txt`) |
 | World log | 10 entries: genesis + 9 tool calls (1 curl + 4 pi + 4 Claude); 9 effect intents / 9 outcomes (`log-*.json`) |
 
 Snags found on the first run, now handled by `tools/attended/se_smoke.sh`:
