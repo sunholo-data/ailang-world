@@ -1,6 +1,6 @@
 # Sprint plan — w-verifygate-forklock-guard-residuals (iteration 229, row 142)
 
-**Design**: `design_docs/planned/w-verifygate-forklock-guard-residuals.md` (r2, `9ad84f2`). **Branch**:
+**Design**: `design_docs/implemented/w-verifygate-forklock-guard-residuals.md` (r2, `9ad84f2`). **Branch**:
 `sprint/w-verifygate-forklock-guard-residuals`, base `74247e8` (on `origin/dev` `2d3a255`). **Scope**:
 `host/verifygate/forklocked_write_test.go` + the one `ci.yml` step. Test-only: no production code, no
 `.ail`, no `tools/launchd/*`, no `scripts/*` change. **Size**: 3 milestones, ~1 executor session.

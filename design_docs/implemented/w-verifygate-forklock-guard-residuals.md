@@ -1,6 +1,6 @@
 # w-verifygate-forklock-guard-residuals
 
-**Status**: PLANNED · **Queue row**: 142 · **Clause**: clause-2 (MET — hygiene; rule (e) position)
+**Status**: IMPLEMENTED (iter-229; judge PASS 92) · **Queue row**: 142 · **Clause**: clause-2 (MET — hygiene; rule (e) position)
 **Author lane**: claude:claude-opus-5-5 (iteration 229 designer) · **Date**: 2026-10-03 · **Base**: `origin/dev` `2d3a255`
 **Parent**: [w-verifygate-etxtbsy](../implemented/w-verifygate-etxtbsy.md) (fix `382fd7e`; judge
 verdict [evaluator-r1](../verification/world-iter228/evaluator-r1.md), PASS 88, mutants E1, E2, E3, E5b, E8b, E6b SURVIVED).
