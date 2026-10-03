@@ -175,9 +175,7 @@ func registryNames(reg broker.Registry) []string {
 	return names
 }
 
-// wantWorkspaceEffects is the eight names (row 135 AC3: 6 -> 8, always bound).
-var wantWorkspaceEffects = []string{"Ailang.CLI", "Ailang.Check", "Ailang.Discover", "Ailang.Run", "Ailang.RunEnv",
-	"Ailang.RunNet", "Workspace.Read", "Workspace.Write"}
+var wantWorkspaceEffects = []string{"Ailang.CLI", "Ailang.Check", "Ailang.Discover", "Ailang.Run", "Workspace.Read", "Workspace.Write"}
 
 // refusedEpisodes are AC4.4's shapes: each must yield an empty registry.
 var refusedEpisodes = []string{
@@ -205,7 +203,7 @@ func TestWorkspaceRegistryRefusesEpisodesOutsideTheGrammarAndRoot(t *testing.T) 
 	if n := f.summaries(t); n != 0 {
 		t.Fatalf("a refused episode constructed a handler (%d summary runs)", n)
 	}
-	// Positive control: the provisioned episode gets the eight effect names.
+	// Positive control: the provisioned episode gets the six effect names.
 	reg := d.workspace.registry("ep1")
 	if got := registryNames(reg); fmt.Sprint(got) != fmt.Sprint(wantWorkspaceEffects) {
 		t.Fatalf("registry(ep1) = %v, want %v", got, wantWorkspaceEffects)

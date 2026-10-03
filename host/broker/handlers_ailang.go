@@ -9,9 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
-	"sync"
 	"time"
 	"unicode"
 
@@ -29,12 +27,6 @@ const (
 	EffectAilangRun      = "Ailang.Run"
 	EffectAilangDiscover = "Ailang.Discover"
 	EffectAilangCLI      = "Ailang.CLI"
-
-	// The two extra run effects (row 135, D-135-3 = A): an ailang-run whose
-	// caps hold Env is Ailang.RunEnv, one whose caps hold Net Ailang.RunNet;
-	// any other run (Declassify included, D-135-5 = A) is Ailang.Run.
-	EffectAilangRunEnv = "Ailang.RunEnv"
-	EffectAilangRunNet = "Ailang.RunNet"
 
 	// WorkspaceScope is the only scope an AilangToolHandler serves.
 	WorkspaceScope = "worktree"
@@ -163,7 +155,27 @@ var policyToolRequestKeys = []string{"op", "flags"}
 // episode worktree, rendered verbatim as fs_sandbox; it must be an absolute,
 // clean path with no character that would need TOML escaping.
 func RenderEpisodePolicy(root string) ([]byte, error) {
-	return renderPolicy(root, baseRunSpec)
+	if !filepath.IsAbs(root) || filepath.Clean(root) != root {
+		return nil, fmt.Errorf("broker: episode policy root %q is not a clean absolute path", root)
+	}
+	for _, r := range root {
+		if r == '"' || r == '\\' || r == unicode.ReplacementChar || !unicode.IsPrint(r) {
+			return nil, fmt.Errorf("broker: episode policy root %q has a character TOML would need escaped", root)
+		}
+	}
+	quoted := make([]string, len(episodeDenyWrite))
+	for i, glob := range episodeDenyWrite {
+		quoted[i] = `"` + glob + `"`
+	}
+	var b strings.Builder
+	b.WriteString(`security_mode = "restricted"` + "\n")
+	b.WriteString(`allowed_caps = ["IO", "FS"]` + "\n")
+	b.WriteString(`fs_sandbox = "` + root + `"` + "\n")
+	fmt.Fprintf(&b, "timeout_ms = %d\n", episodePolicyTimeoutMS)
+	b.WriteString("fs_deny_write = [" + strings.Join(quoted, ", ") + "]\n")
+	b.WriteString(`entry = "main"` + "\n")
+	b.WriteString("\n[budgets]\nFS = 1000\n")
+	return []byte(b.String()), nil
 }
 
 // PolicyInsideWorkspaceError is the D4-style refusal (§4.3, AC4.5): a policy an
@@ -235,10 +247,6 @@ func within(path, base string) bool {
 // v0.52.1 embeds a corpus and skips the CWD and ~/.ailang corpora under
 // policy-tool (row-134 design §13 V76); the refusal is kept as the
 // stricter-or-equal behaviour until serving the embedded corpus is decided.
-//
-// RunCaps (row 135) is the operator's run allowlist: the extra capabilities an
-// ailang-run may request and where a Net run may connect. Its variants are
-// rendered next to PolicyPath (<policy>.run-<caps>.toml), so also outside Root.
 type AilangToolConfig struct {
 	Bin            string
 	BinRef         hashref.HashRef
@@ -248,7 +256,6 @@ type AilangToolConfig struct {
 	ExamplesDir    string
 	ExecTimeout    time.Duration
 	MaxOutputBytes int64
-	RunCaps        RunCapsConfig
 }
 
 // AilangToolHandler serves the six §4.3 effect names through the hardened
@@ -265,13 +272,6 @@ type AilangToolHandler struct {
 	bounds       handlerBounds
 	cliOps       map[string]bool
 	policyDigest string
-
-	// Row 135: the operator's run allowlist, the base policy as a run
-	// variant, and the per-cap-set variants rendered and verified so far.
-	runCaps     RunCapsConfig
-	baseVariant runVariant
-	variantMu   sync.Mutex
-	variants    map[string]runVariant
 }
 
 // NewAilangToolHandler validates cfg, refuses a policy or cache inside the
@@ -307,12 +307,9 @@ func NewAilangToolHandler(ctx context.Context, cfg AilangToolConfig) (*AilangToo
 			return nil, err
 		}
 	}
-	if err := cfg.RunCaps.Validate(); err != nil {
-		return nil, err
-	}
 	h := &AilangToolHandler{
 		bin: cfg.Bin, binRef: cfg.BinRef, policyPath: cfg.PolicyPath, root: root,
-		cacheDir: cfg.CacheDir, examplesDir: cfg.ExamplesDir, runCaps: cfg.RunCaps,
+		cacheDir: cfg.CacheDir, examplesDir: cfg.ExamplesDir,
 		bounds: handlerBounds{
 			execTimeout: cfg.ExecTimeout, maxOutputBytes: cfg.MaxOutputBytes,
 		},
@@ -328,13 +325,23 @@ func NewAilangToolHandler(ctx context.Context, cfg AilangToolConfig) (*AilangToo
 }
 
 func (h *AilangToolHandler) loadSummary(ctx context.Context) error {
-	s, stdout, err := h.summary(ctx, h.policyPath)
+	stdout, err := h.policyTool(ctx, []byte(`{"op":"summary"}`))
 	if err != nil {
-		if stdout == nil {
-			return fmt.Errorf("broker: policy summary: %w", err)
-		}
+		return fmt.Errorf("broker: policy summary: %w", err)
+	}
+	var resp struct {
+		OK      bool `json:"ok"`
+		Summary struct {
+			SecurityMode string   `json:"security_mode"`
+			PolicyDigest string   `json:"policy_digest"`
+			FSSandbox    string   `json:"fs_sandbox"`
+			CLI          []string `json:"cli"`
+		} `json:"summary"`
+	}
+	if err := json.Unmarshal(stdout, &resp); err != nil || !resp.OK {
 		return fmt.Errorf("broker: policy summary is not an ok summary: %q", stdout)
 	}
+	s := resp.Summary
 	if s.SecurityMode != "restricted" {
 		return fmt.Errorf("broker: policy security_mode is %q, want \"restricted\"", s.SecurityMode)
 	}
@@ -345,10 +352,6 @@ func (h *AilangToolHandler) loadSummary(ctx context.Context) error {
 		return fmt.Errorf("broker: policy summary lacks a digest or a cli op list")
 	}
 	h.policyDigest = s.PolicyDigest
-	caps := append([]string(nil), s.Caps...)
-	sort.Strings(caps)
-	h.baseVariant = runVariant{path: h.policyPath, info: runPolicyInfo{Digest: s.PolicyDigest,
-		SecurityMode: s.SecurityMode, Caps: caps, NetAllow: []string{}}}
 	h.cliOps = make(map[string]bool, len(s.CLI))
 	for _, op := range s.CLI {
 		h.cliOps[op] = true
@@ -401,8 +404,8 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 		return nil, &AilangToolRefusalError{Effect: req.Effect, Why: fmt.Sprintf("scope %q is not %q", req.Scope, WorkspaceScope)}
 	}
 	switch req.Effect {
-	case EffectAilangRun, EffectAilangRunEnv, EffectAilangRunNet:
-		return h.executeRun(ctx, req.Effect, payload)
+	case EffectAilangRun:
+		return h.executeRun(ctx, payload)
 	case EffectWorkspaceRead, EffectWorkspaceWrite, EffectAilangCheck, EffectAilangDiscover, EffectAilangCLI:
 	default:
 		return nil, fmt.Errorf("broker: ailang tool handler does not implement %q", req.Effect)
@@ -537,15 +540,9 @@ func (h *AilangToolHandler) childEnv() []string {
 // policy-tool answers refusals as ok:false JSON with rc 0; any non-zero rc is
 // a handler failure.
 func (h *AilangToolHandler) policyTool(ctx context.Context, request []byte) ([]byte, error) {
-	return h.policyToolWith(ctx, h.policyPath, request)
-}
-
-// policyToolWith runs policy-tool under policyPath (the base policy, or a run
-// variant being verified by its summary).
-func (h *AilangToolHandler) policyToolWith(ctx context.Context, policyPath string, request []byte) ([]byte, error) {
 	stderr := newBoundedSink(h.bounds.maxOutputBytes)
 	stdout, err := runBounded(ctx, h.bounds, handlerCommand{
-		path: h.bin, args: []string{"policy-tool", "--policy", policyPath},
+		path: h.bin, args: []string{"policy-tool", "--policy", h.policyPath},
 		dir: h.root, env: h.childEnv(), stdin: request, stderr: stderr,
 	})
 	if err != nil {
@@ -554,31 +551,40 @@ func (h *AilangToolHandler) policyToolWith(ctx context.Context, policyPath strin
 	return stdout, nil
 }
 
-// executeRun is execution branch 2 (row 134 §4.3, row 135 §4.5): `ailang
-// run --policy P [--args-json J] -- <path> [-- <argv…>]` with the payload's
-// stdin piped in. P is the episode's base policy for an IO/FS run, otherwise
-// the cap set's verified variant. The payload is checked again here (the
-// plan's twin), the caps must select the effect requested, and every cap
-// beyond IO/FS must be enabled by the operator — all before any subprocess.
-func (h *AilangToolHandler) executeRun(ctx context.Context, effect string, payload []byte) ([]byte, error) {
-	req, err := parseRunPayload(effect, payload)
+// executeRun is execution branch 2: `ailang run --policy P [--args-json J] --
+// <path>`. The `--` makes a hyphen-leading path a file, never a flag (V58).
+func (h *AilangToolHandler) executeRun(ctx context.Context, payload []byte) ([]byte, error) {
+	fields, err := decodePayloadObject(payload)
 	if err != nil {
-		return nil, err
+		return nil, &AilangToolRefusalError{Effect: EffectAilangRun, Why: err.Error()}
 	}
-	if why := h.operatorRefusal(req.caps); why != "" {
-		return nil, &AilangToolRefusalError{Effect: effect, Why: why}
+	var path, argsJSON string
+	for key, value := range fields {
+		switch key {
+		case "path":
+			if json.Unmarshal(value, &path) != nil || path == "" {
+				return nil, &AilangToolRefusalError{Effect: EffectAilangRun, Why: "path must be a non-empty string"}
+			}
+		case "args_json":
+			if json.Unmarshal(value, &argsJSON) != nil || !json.Valid([]byte(argsJSON)) {
+				return nil, &AilangToolRefusalError{Effect: EffectAilangRun, Why: "args_json must be a string holding JSON"}
+			}
+		default:
+			return nil, &AilangToolRefusalError{Effect: EffectAilangRun, Why: fmt.Sprintf("unknown payload key %q", key)}
+		}
 	}
-	variant, err := h.runVariantFor(ctx, req.caps)
-	if err != nil {
-		return nil, err
+	if path == "" {
+		return nil, &AilangToolRefusalError{Effect: EffectAilangRun, Why: "path is required"}
 	}
-	var stdin []byte
-	if req.stdin != nil {
-		stdin = []byte(*req.stdin)
+	args := []string{"run", "--policy", h.policyPath}
+	if argsJSON != "" {
+		args = append(args, "--args-json", argsJSON)
 	}
+	args = append(args, "--", path)
+
 	stderr := newBoundedSink(h.bounds.maxOutputBytes)
 	stdout, err := runBounded(ctx, h.bounds, handlerCommand{
-		path: h.bin, args: runArgv(variant.path, req), dir: h.root, env: h.childEnv(), stdin: stdin, stderr: stderr,
+		path: h.bin, args: args, dir: h.root, env: h.childEnv(), stderr: stderr,
 	})
 	exitCode := 0
 	if err != nil {
@@ -589,13 +595,7 @@ func (h *AilangToolHandler) executeRun(ctx context.Context, effect string, paylo
 		}
 		exitCode, stdout = procErr.ExitCode(), exitErr.Output
 	}
-	result, err := composeRunOutcome(exitCode, stdout, stderr.Bytes())
-	if err != nil {
-		return nil, err
-	}
-	info := variant.info
-	result.Policy = &info
-	return json.Marshal(result)
+	return composeRunResult(exitCode, stdout, stderr.Bytes())
 }
 
 // runResult is the Ailang.Run handler output (§4.3).
@@ -606,9 +606,6 @@ type runResult struct {
 	Limit    json.RawMessage `json:"limit"`
 	Stdout   string          `json:"stdout"`
 	Stderr   string          `json:"stderr"`
-	// Policy (row 135 §4.3) names the verified policy the run executed
-	// under; set by executeRun, absent from the pure composition.
-	Policy *runPolicyInfo `json:"policy,omitempty"`
 }
 
 const (
@@ -632,14 +629,6 @@ const (
 // Anything else is an *AilangRunEnvelopeError. rc alone never signals success:
 // a refused inner effect can exit 0 (V35), so output is returned verbatim.
 func composeRunResult(exitCode int, stdout, stderr []byte) ([]byte, error) {
-	result, err := composeRunOutcome(exitCode, stdout, stderr)
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(result)
-}
-
-func composeRunOutcome(exitCode int, stdout, stderr []byte) (runResult, error) {
 	unrecognised := &AilangRunEnvelopeError{ExitCode: exitCode, Stdout: string(stdout), Stderr: string(stderr)}
 	var policyLines, resultLines []string
 	for _, line := range strings.Split(string(stderr), "\n") {
@@ -658,11 +647,11 @@ func composeRunOutcome(exitCode int, stdout, stderr []byte) (runResult, error) {
 			Decision json.RawMessage `json:"decision"`
 		}
 		if json.Unmarshal([]byte(policyLines[0]), &line) != nil || !line.OK {
-			return runResult{}, unrecognised
+			return nil, unrecognised
 		}
 		ok, valid := decisionOK(line.Decision)
 		if !valid || !ok {
-			return runResult{}, unrecognised
+			return nil, unrecognised
 		}
 		if len(resultLines) == 1 {
 			// (d): only with rc 3 and a parseable reason.
@@ -671,7 +660,7 @@ func composeRunOutcome(exitCode int, stdout, stderr []byte) (runResult, error) {
 				Stage  string `json:"stage"`
 			}
 			if exitCode != 3 || json.Unmarshal([]byte(resultLines[0]), &limit) != nil || limit.Reason == "" || limit.Stage == "" {
-				return runResult{}, unrecognised
+				return nil, unrecognised
 			}
 			result.Limit = json.RawMessage(resultLines[0])
 		}
@@ -681,17 +670,17 @@ func composeRunOutcome(exitCode int, stdout, stderr []byte) (runResult, error) {
 			Decision json.RawMessage `json:"decision"`
 		}
 		if json.Unmarshal(stdout, &static) != nil {
-			return runResult{}, unrecognised
+			return nil, unrecognised
 		}
 		ok, valid := decisionOK(static.Decision)
 		if !valid || ok {
-			return runResult{}, unrecognised
+			return nil, unrecognised
 		}
 		result.Admitted, result.Decision = false, static.Decision
 	default:
-		return runResult{}, unrecognised
+		return nil, unrecognised
 	}
-	return result, nil
+	return json.Marshal(result)
 }
 
 // decisionOK reads a decision object's boolean ok; valid is false when the

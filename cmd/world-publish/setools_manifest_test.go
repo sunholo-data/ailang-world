@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -77,15 +76,9 @@ func TestSeToolsManifestPublishes(t *testing.T) {
 			t.Fatalf("EncodeMCPName(%q) = (%q, %v), want the ID itself", d.ID, name, err)
 		}
 		access := transitionreg.EffectRequirement{Effect: effect, Scope: "worktree", Cost: 0}
-		declared := []transitionreg.EffectRequirement{{Effect: effect, Scope: "worktree", Cost: 1}}
-		if d.ID == "ailang-run" {
-			// Row 135 (§4.2 L3): the Env and Net runs are their own effects.
-			declared = append(declared,
-				transitionreg.EffectRequirement{Effect: "Ailang.RunEnv", Scope: "worktree", Cost: 1},
-				transitionreg.EffectRequirement{Effect: "Ailang.RunNet", Scope: "worktree", Cost: 1})
-		}
-		if d.Access != access || !reflect.DeepEqual(d.DeclaredEffects, declared) {
-			t.Fatalf("%s: access %+v declared %+v; want %+v and %+v", d.ID, d.Access, d.DeclaredEffects, access, declared)
+		declared := transitionreg.EffectRequirement{Effect: effect, Scope: "worktree", Cost: 1}
+		if d.Access != access || len(d.DeclaredEffects) != 1 || d.DeclaredEffects[0] != declared {
+			t.Fatalf("%s: access %+v declared %+v; want %+v and [%+v]", d.ID, d.Access, d.DeclaredEffects, access, declared)
 		}
 		if d.Title == "" || d.Description == "" || d.SemanticsEpoch != 1 {
 			t.Fatalf("%s: title %q description %d bytes epoch %d", d.ID, d.Title, len(d.Description), d.SemanticsEpoch)

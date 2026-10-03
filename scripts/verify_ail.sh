@@ -337,8 +337,7 @@ REQUIRED_VERIFIED = {
     "packages/se-tools/se_tools/write.ail":           SE_CORE,
     "packages/se-tools/se_tools/edit.ail":            SE_CORE,
     "packages/se-tools/se_tools/check.ail":           SE_CORE,
-    "packages/se-tools/se_tools/run.ail":             SE_CORE | {"capAllowed", "runEffect", "stdinBytesOk",
-                                                                 "argvCountOk", "argBytesOk"},
+    "packages/se-tools/se_tools/run.ail":             SE_CORE,
     "packages/se-tools/se_tools/examples_search.ail": SE_CORE,
     "packages/se-tools/se_tools/builtins_search.ail": SE_CORE | {"entryMatches", "isEffectTag", "untag",
                                                                  "isHeader", "isTruncated"},
@@ -496,8 +495,7 @@ SE_TESTS = {  # per module: function -> number of named inline tests
     "edit":            dict(SE_CORE_TESTS, argKeyAllowed=5, main=8),
     "examples_search": dict(SE_CORE_TESTS, argKeyAllowed=3, main=6),
     "read":            dict(SE_CORE_TESTS, argKeyAllowed=4, main=10),
-    "run":             dict(SE_CORE_TESTS, argKeyAllowed=8, capAllowed=8, runEffect=3, stdinBytesOk=3,
-                            argvCountOk=3, argBytesOk=3, main=30),
+    "run":             dict(SE_CORE_TESTS, argKeyAllowed=4, main=10),
     "write":           dict(SE_CORE_TESTS, argKeyAllowed=4, main=8),
 }
 mod = sys.argv[2]
@@ -529,7 +527,7 @@ PY
   ) || exit 1
   se_tests_total=$((se_tests_total + se_n))
 done
-EXACT_SE_TESTS=365
+EXACT_SE_TESTS=321
 if [ "$se_tests_total" -ne "$EXACT_SE_TESTS" ]; then
   echo "✗ se-tools test leg: expected exactly $EXACT_SE_TESTS named tests across ${#SE_TEST_MODULES[@]} modules, got $se_tests_total" >&2
   exit 1

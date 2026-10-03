@@ -354,17 +354,14 @@ typed confirmation phrase. An agent cannot run this step:
 The output is `published transition registry revision 1 (head sha256:…)`. Re-running it prints
 `UNCHANGED`.
 
-**Mint (attended, TTY fence)** a session holding the eight effect grants, one per effect name. A
+**Mint (attended, TTY fence)** a session holding the six effect grants, one per effect name. A
 grant is `EFFECT=SCOPE:BUDGET`, with scope `worktree` and a budget counted in calls. `write`
-and `edit` share `Workspace.Write`, and the two searches share `Ailang.Discover`.
-`Ailang.RunEnv` and `Ailang.RunNet` are the `ailang-run` calls whose `caps` hold `Env` or `Net`
-(row 135); drop them to keep runs at IO/FS (and Declassify):
+and `edit` share `Workspace.Write`, and the two searches share `Ailang.Discover`:
 
 ```bash
 /tmp/ailang-worldd session mint --db /tmp/se-world/world.db --episode ep1 \
   --grant Workspace.Read=worktree:50 --grant Workspace.Write=worktree:50 \
   --grant Ailang.Check=worktree:50 --grant Ailang.Run=worktree:50 \
-  --grant Ailang.RunEnv=worktree:50 --grant Ailang.RunNet=worktree:50 \
   --grant Ailang.Discover=worktree:50 --grant Ailang.CLI=worktree:50 \
   --ttl 14400 --out /tmp/se-session
 ```
@@ -379,20 +376,11 @@ corpus, but World does not fall back to it, and the tool runs with `HOME` set to
 `~/.ailang/examples`, and serve uses that directory by default when it exists. `--examples-dir`
 names a different corpus, which reaches the tool as `AILANG_EXAMPLES`. It must lie **outside**
 the workspace root, or startup refuses. Without a corpus, `examples-search` answers
-`{"ok":false,"refused":"no examples corpus configured: …"}`.
-
-`ailang-run` takes `stdin`, `argv` and `caps` (row 135). Capabilities beyond IO and FS are off
-unless the operator enables them. `--run-allow-caps` names the ones a run may request
-(`Declassify`, `Env`, `Net`). `--run-net-allow` names each loopback `IP:PORT` a Net run may reach
-(repeatable; a bare host, a name or a non-loopback address refuses startup), and
-`--run-net-allow-http` allows plain http to them. Every other host, port and redirect hop is
-refused, World's own `:7644` included. Start the HTTP mock a Net task talks to on the port you
-name here (`7655` below); the grader's mock binds an ephemeral port, World's does not (R-135-9):
+`{"ok":false,"refused":"no examples corpus configured: …"}`:
 
 ```bash
 /tmp/ailang-worldd serve --db /tmp/se-world/world.db --ailang-bin $PIN \
-  --workspace-root /tmp/se-ws --tool-ailang-bin $TOOL --examples-dir $HOME/.ailang/examples \
-  --run-allow-caps Env,Net,Declassify --run-net-allow 127.0.0.1:7655 --run-net-allow-http &
+  --workspace-root /tmp/se-ws --tool-ailang-bin $TOOL --examples-dir $HOME/.ailang/examples &
 ```
 
 Commit the genesis world through the running daemon, with the minted session:
@@ -420,21 +408,6 @@ carries the handler's fields (`ok`, `content`, `tool`, `policy_digest`) plus
 `curl -s -H "Authorization: Bearer $(cat /tmp/se-session)" http://127.0.0.1:7644/v1/objects/<record>`.
 An argument outside a tool's schema is refused by its plan (`{"ok":false,"refused":"…"}`,
 `effects: []`), and the refusal still commits.
-
-The four core gate tasks `ailang-run` could not run before row 135 map onto its arguments like
-this (the grader's `caps`, `stdin` and `cli_args`; write `benchmark/solution.ail` and any input
-file with `ailang-write` first). Each prints the task's expected stdout:
-
-| Task | `ailang-run` arguments | Effect | stdout |
-|---|---|---|---|
-| `pipeline` | `{"path":"benchmark/solution.ail","caps":["IO"],"stdin":"1\n2\n3\n4\n5\n"}` | `Ailang.Run` | `2 4 6 8 10`, one per line |
-| `cli_args` | `{"path":"benchmark/solution.ail","caps":["IO","FS","Env"],"argv":["numbers.txt"]}` | `Ailang.RunEnv` | `15` |
-| `api_call_json` | `{"path":"benchmark/solution.ail","caps":["Net","IO"]}`, the solution posting to `http://127.0.0.1:7655/` | `Ailang.RunNet` | `200` |
-| `prompt_injection` | `{"path":"benchmark/solution.ail","caps":["Declassify","IO"]}` | `Ailang.Run` | `1` |
-
-The result adds `policy: {digest, security_mode, caps, net_allow}`, the verified policy the run
-executed under. A capability the operator did not enable is refused before anything runs (the
-effect is recorded `failed`); one the session holds no grant for is `denied`.
 
 **pi** loads the server through pi-mcp-adapter, measured on 2.32.1 with `pi` 0.85.1.
 `directTools` registers each tool as its own pi tool. The adapter names a direct tool

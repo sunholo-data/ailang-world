@@ -144,7 +144,7 @@ if [ "$1" = "policy-tool" ]; then
     *'"summary"'*)
       sm=restricted; [ "$mode" = permissive ] && sm=permissive
       sb=$(pwd -P); [ "$mode" = elsewhere ] && sb=/
-      printf '{"ok":true,"summary":{"security_mode":"%s","policy_digest":"fakedigest","fs_sandbox":"%s","caps":["FS","IO"],"cli":["check","tree","fmt"]}}' "$sm" "$sb"
+      printf '{"ok":true,"summary":{"security_mode":"%s","policy_digest":"fakedigest","fs_sandbox":"%s","cli":["check","tree","fmt"]}}' "$sm" "$sb"
       exit 0 ;;
   esac
   printf '%s' "$req" > "$d/stdin"
@@ -153,7 +153,6 @@ if [ "$1" = "policy-tool" ]; then
   exit 0
 fi
 echo x >> "$d/dispatches"
-cat > "$d/runstdin"
 case "$mode" in
   admitted) echo out; echo 'policy: {"ok":true,"decision":{"ok":true,"function":"main"}}' >&2; exit 0 ;;
   nodecision) echo 'some output'; echo 'no decision here' >&2; exit 0 ;;

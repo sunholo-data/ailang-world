@@ -1,28 +1,20 @@
 module se_tools/run
 
 -- ailang-run (queue row 134, design_docs/planned/w-software-engineering-domain.md
--- §4.2-§4.3; widened by row 135, design_docs/planned/w-ailang-run-stdin-argv-caps.md
--- §4.1): run one AILANG program of the episode worktree under a rendered
--- operator policy (`ailang run --policy P [--args-json J] -- <path> [-- <argv…>]`,
--- cwd = the worktree root, stdin piped). Args {path, args_json?, stdin?, argv?,
--- caps?}; args_json is a string holding JSON, stdin a string (≤ 65 536 UTF-8
--- bytes), argv an array of ≤ 32 strings (each ≤ 1 024 bytes, no NUL), caps the
--- run's EXACT capability set: distinct names from {Declassify, Env, FS, IO,
--- Net}, never Env with Net (R-135-4). The one effect is runEffect's choice —
--- Ailang.RunEnv when Env is asked, Ailang.RunNet when Net is, otherwise
--- Ailang.Run (a Declassify-only run included, D-135-5 = A) — with payload
--- {path, args_json?, stdin?, argv?, caps?} (caps sorted). With none of the new
--- arguments the plan is byte-identical to row 134's. No finish phase: the
--- handler's {admitted, exit_code, decision, limit, stdout, stderr, policy} is
--- the result.
+-- §4.2-§4.3): run one AILANG program of the episode worktree under the
+-- rendered operator policy (`ailang run --policy P [--args-json J] -- <path>`,
+-- cwd = the worktree root). Args {path, args_json?}; args_json is a string
+-- holding JSON. Effect Ailang.Run; payload {path, args_json?} — the run
+-- handler's own request, which carries no op. No finish phase: the handler's
+-- {admitted, exit_code, decision, limit, stdout, stderr} is the result.
 --
 -- Calling convention v2 (§4.1): the coordinator passes ONE string,
 -- {"phase":"plan","args":<MCP/A2A arguments>}.
 -- The plan answer is a world/effect-plan/v1 object with exactly one effect
--- (scope "worktree", cost 1, one of the descriptor's declared triples) or a
--- zero-effect refusal plan whose result is {"ok":false,"refused":...} (L7).
--- L-ARGS: any argument key outside the schema above is refused (V56: the
--- handler would ignore it).
+-- (scope "worktree", cost 1, the descriptor's declared triple) or a zero-effect
+-- refusal plan whose result is {"ok":false,"refused":...} (L7). L-ARGS: any
+-- argument key outside the schema above is refused (V56: the handler would
+-- ignore it).
 --
 -- Self-contained by construction (row 107 Residual 7): publication checks this
 -- file alone in an empty root, so it imports only std/*, which the pinned
@@ -31,10 +23,8 @@ module se_tools/run
 -- every se_tools module; host/coordinator's se-tools test holds the copies
 -- byte-identical. argKeyAllowed is each tool's own schema.
 
-import std/json (decode, encode, jo, ja, kv, js, jint, jb, jn, get, asObject, asString, asArray, Json)
-import std/string (length as strLength, startsWith, endsWith, contains, compare)
-import std/bytes (fromString, toInts, length as bytesLength)
-import std/list (any, length as listLength, map)
+import std/json (decode, encode, jo, ja, kv, js, jint, jb, jn, get, asObject, asString, Json)
+import std/string (length as strLength, startsWith, endsWith, contains)
 import std/option (Option, Some, None)
 import std/result (Result, Ok, Err)
 
@@ -83,21 +73,17 @@ tests [
 
 -- L-ARGS (§4.1, §4.2): the argument keys this tool admits. policy-tool ignores
 -- unknown request keys (V56), so strictness lives here: any other key is a
--- typed refusal plan, never silently dropped. Row 135 adds stdin, argv, caps.
+-- typed refusal plan, never silently dropped.
 export func argKeyAllowed(k: string) -> bool ! {}
-ensures { result == (k == "path" || k == "args_json" || k == "stdin" || k == "argv" || k == "caps") }
+ensures { result == (k == "path" || k == "args_json") }
 tests [
   ("path", true),
   ("args_json", true),
-  ("stdin", true),
-  ("argv", true),
-  ("caps", true),
   ("args", false),
-  ("Caps", false),
-  ("env", false)
+  ("caps", false)
 ]
 {
-  k == "path" || k == "args_json" || k == "stdin" || k == "argv" || k == "caps"
+  k == "path" || k == "args_json"
 }
 
 -- Calling convention v2 (§4.1): the input object's keys. `results` exists only
@@ -113,76 +99,6 @@ tests [
 ]
 {
   k == "phase" || k == "args" || (phase == "finish" && k == "results")
-}
-
--- ── Row 135 contracted core (Z3): caps, effect selection, bounds ──────────
-
--- The capability names a run may request (§4.1). The operator's
--- --run-allow-caps narrows this per daemon; the handler enforces that.
-export func capAllowed(c: string) -> bool ! {}
-ensures { result == (c == "IO" || c == "FS" || c == "Env" || c == "Net" || c == "Declassify") }
-tests [
-  ("IO", true),
-  ("FS", true),
-  ("Env", true),
-  ("Net", true),
-  ("Declassify", true),
-  ("Process", false),
-  ("io", false),
-  ("Clock", false)
-]
-{
-  c == "IO" || c == "FS" || c == "Env" || c == "Net" || c == "Declassify"
-}
-
--- Effect selection (§4.1, L1 = 1): Env picks Ailang.RunEnv, Net picks
--- Ailang.RunNet, anything else — a Declassify-only run included (D-135-5 = A)
--- — stays Ailang.Run. Env together with Net never reaches here (R-135-4).
-export func runEffect(hasEnv: bool, hasNet: bool) -> string ! {}
-ensures { result == (if hasEnv then "Ailang.RunEnv" else if hasNet then "Ailang.RunNet" else "Ailang.Run") }
-tests [
-  ((false, false), "Ailang.Run"),
-  ((true, false), "Ailang.RunEnv"),
-  ((false, true), "Ailang.RunNet")
-]
-{
-  if hasEnv then "Ailang.RunEnv" else if hasNet then "Ailang.RunNet" else "Ailang.Run"
-}
-
--- stdin is at most 65 536 UTF-8 bytes.
-export func stdinBytesOk(n: int) -> bool ! {}
-ensures { result == (n <= 65536) }
-tests [
-  (0, true),
-  (65536, true),
-  (65537, false)
-]
-{
-  n <= 65536
-}
-
--- argv holds at most 32 items.
-export func argvCountOk(n: int) -> bool ! {}
-ensures { result == (n <= 32) }
-tests [
-  (0, true),
-  (32, true),
-  (33, false)
-]
-{
-  n <= 32
-}
-
--- Each argv item is at most 1 024 UTF-8 bytes.
-export func argBytesOk(n: int) -> bool ! {}
-ensures { result == (n <= 1024) }
-tests [
-  (0, true),
-  (1024, true),
-  (1025, false)
-]
-{
-  n <= 1024
 }
 
 -- ── Plan construction (world/effect-plan/v1, §4.1) ─────────────────────────
@@ -259,136 +175,10 @@ func optionalString(args: Json, k: string) -> Result[Option[string], string] =
 
 -- ── The tool ─────────────────────────────────────────────────────────────
 
-func utf8Bytes(s: string) -> int = bytesLength(fromString(s))
-
-func hasNul(s: string) -> bool = any(\b. b == 0, toInts(fromString(s)))
-
-func argvShape() -> string = "argument \"argv\" must be an array of strings"
-
-func capsShape() -> string = "argument \"caps\" must be an array of capability names"
-
-func optionalArray(args: Json, k: string, shape: string) -> Result[Option[[Json]], string] =
-  match get(args, k) {
-    None => Ok(None),
-    Some(v) => match asArray(v) {
-      Some(xs) => Ok(Some(xs)),
-      None => Err(shape)
-    }
-  }
-
-func checkStdin(stdin: Option[string]) -> Result[Option[string], string] =
-  match stdin {
-    None => Ok(None),
-    Some(s) => if stdinBytesOk(utf8Bytes(s)) then Ok(Some(s))
-      else Err("argument \"stdin\" is ${show(utf8Bytes(s))} bytes; the limit is 65536")
-  }
-
-@allow_empty_ok("an empty argv array is a legitimate, distinct request: the program gets no arguments")
-func argvItems(items: [Json]) -> Result[[string], string] =
-  match items {
-    [] => Ok([]),
-    x :: rest => match asString(x) {
-      None => Err(argvShape()),
-      Some(s) => if not argBytesOk(utf8Bytes(s)) then Err("an argv item is ${show(utf8Bytes(s))} bytes; the limit is 1024")
-        else if hasNul(s) then Err("an argv item contains a NUL byte")
-        else match argvItems(rest) {
-          Ok(ss) => Ok(s :: ss),
-          Err(why) => Err(why)
-        }
-    }
-  }
-
-func parseArgv(args: Json) -> Result[Option[[string]], string] =
-  match optionalArray(args, "argv", argvShape()) {
-    Err(why) => Err(why),
-    Ok(None) => Ok(None),
-    Ok(Some(items)) => if not argvCountOk(listLength(items)) then Err("argument \"argv\" has ${show(listLength(items))} items; the limit is 32")
-      else match argvItems(items) {
-        Ok(ss) => Ok(Some(ss)),
-        Err(why) => Err(why)
-      }
-  }
-
-func capItems(items: [Json], seen: [string]) -> Result[[string], string] =
-  match items {
-    [] => Ok(seen),
-    x :: rest => match asString(x) {
-      None => Err(capsShape()),
-      Some(c) => if not capAllowed(c) then Err("unknown capability \"${c}\"; caps admits only: Declassify, Env, FS, IO, Net")
-        else if any(\s. s == c, seen) then Err("capability \"${c}\" is listed twice")
-        else capItems(rest, c :: seen)
-    }
-  }
-
--- Insertion into an ascending list (caps hold at most five names).
-func insertSorted(c: string, cs: [string]) -> [string] =
-  match cs {
-    [] => [c],
-    x :: rest => if compare(c, x) < 0 then c :: cs else x :: insertSorted(c, rest)
-  }
-
-func sortCaps(cs: [string]) -> [string] =
-  match cs {
-    [] => [],
-    x :: rest => insertSorted(x, sortCaps(rest))
-  }
-
-func hasCap(caps: Option[[string]], c: string) -> bool =
-  match caps {
-    None => false,
-    Some(cs) => any(\s. s == c, cs)
-  }
-
--- caps, canonicalised (sorted; a duplicate was refused): an empty set is
--- refused (a run names what it may do), and so is Env with Net (R-135-4).
-func parseCaps(args: Json) -> Result[Option[[string]], string] =
-  match optionalArray(args, "caps", capsShape()) {
-    Err(why) => Err(why),
-    Ok(None) => Ok(None),
-    Ok(Some(items)) => match capItems(items, []) {
-      Err(why) => Err(why),
-      Ok(cs) => if listLength(cs) == 0 then Err("argument \"caps\" names no capability")
-        else if any(\s. s == "Env", cs) && any(\s. s == "Net", cs) then Err("caps names both Env and Net; one run takes at most one of them")
-        else Ok(Some(sortCaps(cs)))
-    }
-  }
-
-func optKv(k: string, v: Option[Json]) -> [{key: string, value: Json}] =
-  match v {
-    None => [],
-    Some(j) => [kv(k, j)]
-  }
-
-func optStrings(xs: Option[[string]]) -> Option[Json] =
-  match xs {
-    None => None,
-    Some(ss) => Some(ja(map(js, ss)))
-  }
-
-func optString(x: Option[string]) -> Option[Json] =
-  match x {
-    None => None,
-    Some(s) => Some(js(s))
-  }
-
-func runPayload(path: string, argsJSON: Option[string], stdin: Option[string], argv: Option[[string]], caps: Option[[string]]) -> Json =
-  jo([kv("path", js(path))] ++ optKv("args_json", optString(argsJSON)) ++ optKv("stdin", optString(stdin))
-    ++ optKv("argv", optStrings(argv)) ++ optKv("caps", optStrings(caps)))
-
-func planRun(args: Json, path: string, argsJSON: Option[string]) -> string =
-  match optionalString(args, "stdin") {
-    Err(why) => refusal(why),
-    Ok(rawStdin) => match checkStdin(rawStdin) {
-      Err(why) => refusal(why),
-      Ok(stdin) => match parseArgv(args) {
-        Err(why) => refusal(why),
-        Ok(argv) => match parseCaps(args) {
-          Err(why) => refusal(why),
-          Ok(caps) => effectPlan(runEffect(hasCap(caps, "Env"), hasCap(caps, "Net")),
-            runPayload(path, argsJSON, stdin, argv, caps), false)
-        }
-      }
-    }
+func runPayload(path: string, argsJSON: Option[string]) -> Json =
+  match argsJSON {
+    None => jo([kv("path", js(path))]),
+    Some(j) => jo([kv("path", js(path)), kv("args_json", js(j))])
   }
 
 func planTool(args: Json) -> string =
@@ -398,9 +188,9 @@ func planTool(args: Json) -> string =
       Err(why) => refusal(why),
       Ok(argsJSON) => if not pathOk(path) then refusal(pathRefusal(path))
         else match argsJSON {
-          None => planRun(args, path, None),
+          None => effectPlan("Ailang.Run", runPayload(path, None), false),
           Some(j) => match decode(j) {
-            Ok(_) => planRun(args, path, Some(j)),
+            Ok(_) => effectPlan("Ailang.Run", runPayload(path, Some(j)), false),
             Err(_) => refusal("argument \"args_json\" must be a string holding JSON")
           }
         }
@@ -413,7 +203,7 @@ func planPhase(doc: Json) -> string =
     Some(args) => match asObject(args) {
       None => refusal("arguments must be a JSON object"),
       Some(es) => match firstUnknownArg(es) {
-        Some(k) => refusal("unknown argument \"${k}\"; ailang-run admits only: path, args_json, stdin, argv, caps"),
+        Some(k) => refusal("unknown argument \"${k}\"; ailang-run admits only: path, args_json"),
         None => planTool(args)
       }
     }
@@ -434,16 +224,13 @@ func dispatch(doc: Json) -> string =
   }
 
 -- The transition entry (calling convention v2). Its named tests pin the exact
--- plan bytes for an admitted call and each L-ARGS / path refusal, and (row 135
--- AC1.1) each stdin / argv / caps case: the effect choice, the canonical caps,
--- every bound and refusal. The 1 025-byte argv item and the 65 537-byte stdin
--- are pinned by host/coordinator's se-tools test (too large for a literal).
+-- plan bytes for an admitted call and each L-ARGS / path refusal.
 export func main(input: string) -> string
 tests [
   ("{\"phase\":\"plan\",\"args\":{\"path\":\"args.ail\"}}",
    "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.Run\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"path\":\"args.ail\"}}],\"finish\":false,\"result\":null}"),
   ("{\"phase\":\"plan\",\"args\":{\"path\":\"args.ail\",\"limit\":5}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"limit\\\"; ailang-run admits only: path, args_json, stdin, argv, caps\"}}"),
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"limit\\\"; ailang-run admits only: path, args_json\"}}"),
   ("{\"phase\":\"plan\",\"args\":{\"path\":\"args.ail\"},\"world\":{}}",
    "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"input key \\\"world\\\" is not part of calling convention v2\"}}"),
   ("{\"phase\":\"plan\",\"args\":[]}",
@@ -459,47 +246,7 @@ tests [
   ("{\"phase\":\"plan\",\"args\":{\"path\":\"-policy.ail\"}}",
    "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"path \\\"-policy.ail\\\" refused: it must be relative and non-empty, with no \\\"..\\\" segment and no leading \\\"-\\\"\"}}"),
   ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"caps\":\"IO,Net\"}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"caps\\\" must be an array of capability names\"}}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"pipeline.ail\",\"caps\":[\"IO\"],\"stdin\":\"1\\n2\\n3\\n4\\n5\\n\"}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.Run\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"path\":\"pipeline.ail\",\"stdin\":\"1\\n2\\n3\\n4\\n5\\n\",\"caps\":[\"IO\"]}}],\"finish\":false,\"result\":null}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"args.ail\",\"argv\":[\"numbers.txt\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.Run\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"path\":\"args.ail\",\"argv\":[\"numbers.txt\"]}}],\"finish\":false,\"result\":null}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"sum.ail\",\"caps\":[\"IO\",\"FS\",\"Env\"],\"argv\":[\"numbers.txt\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.RunEnv\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"path\":\"sum.ail\",\"argv\":[\"numbers.txt\"],\"caps\":[\"Env\",\"FS\",\"IO\"]}}],\"finish\":false,\"result\":null}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"api.ail\",\"caps\":[\"Net\",\"IO\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.RunNet\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"path\":\"api.ail\",\"caps\":[\"IO\",\"Net\"]}}],\"finish\":false,\"result\":null}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"pi.ail\",\"caps\":[\"IO\",\"Declassify\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.Run\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"path\":\"pi.ail\",\"caps\":[\"Declassify\",\"IO\"]}}],\"finish\":false,\"result\":null}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"caps\":[\"IO\",\"Env\",\"Net\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"caps names both Env and Net; one run takes at most one of them\"}}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"caps\":[\"IO\",\"Process\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown capability \\\"Process\\\"; caps admits only: Declassify, Env, FS, IO, Net\"}}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"caps\":[\"IO\",\"io\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown capability \\\"io\\\"; caps admits only: Declassify, Env, FS, IO, Net\"}}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"caps\":[\"IO\",\"Net\",\"IO\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"capability \\\"IO\\\" is listed twice\"}}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"caps\":[]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"caps\\\" names no capability\"}}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"caps\":[\"IO\",7]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"caps\\\" must be an array of capability names\"}}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"argv\":[\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"argv\\\" has 33 items; the limit is 32\"}}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"argv\":[\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.Run\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"path\":\"x.ail\",\"argv\":[\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\"]}}],\"finish\":false,\"result\":null}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"argv\":[\"ok\",\"a\\u0000b\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"an argv item contains a NUL byte\"}}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"argv\":\"numbers.txt\"}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"argv\\\" must be an array of strings\"}}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"argv\":[1]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"argv\\\" must be an array of strings\"}}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"x.ail\",\"stdin\":3}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"stdin\\\" must be a string\"}}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"argv.ail\",\"caps\":[\"IO\"],\"argv\":[\"--caps=IO,Net\",\"-\",\"--\",\"a b\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.Run\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"path\":\"argv.ail\",\"argv\":[\"--caps=IO,Net\",\"-\",\"--\",\"a b\"],\"caps\":[\"IO\"]}}],\"finish\":false,\"result\":null}"),
-  ("{\"phase\":\"plan\",\"args\":{\"caps\":[\"FS\",\"IO\"],\"argv\":[],\"stdin\":\"\",\"args_json\":\"1\",\"path\":\"all.ail\"}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.Run\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"path\":\"all.ail\",\"args_json\":\"1\",\"stdin\":\"\",\"argv\":[],\"caps\":[\"FS\",\"IO\"]}}],\"finish\":false,\"result\":null}"),
-  ("{\"phase\":\"plan\",\"args\":{\"path\":\"../x.ail\",\"caps\":[\"Env\"]}}",
-   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"path \\\"../x.ail\\\" refused: it must be relative and non-empty, with no \\\"..\\\" segment and no leading \\\"-\\\"\"}}")
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"caps\\\"; ailang-run admits only: path, args_json\"}}")
 ]
 {
   match decode(input) {

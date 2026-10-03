@@ -12,7 +12,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -172,7 +171,7 @@ var seToolsCases = []seToolsCase{
 	{"ailang-check", `{"path":"bad.ail"}`, `{"op":"ai_check","path":"bad.ail"}`, true,
 		`{"path":"bad.ail","flags":{"json":""}}`, "flags"},
 	{"ailang-run", `{"path":"args.ail","args_json":"\"data.txt\""}`, `{"path":"args.ail","args_json":"\"data.txt\""}`, false,
-		`{"path":"args.ail","env":{"K":"V"}}`, "env"},
+		`{"path":"args.ail","caps":"IO,Net"}`, "caps"},
 	{"builtins-search", `{"query":"readFile","module":"std/fs"}`, `{"op":"builtins_list"}`, true,
 		`{"query":"readFile","limit":3}`, "limit"},
 	{"examples-search", `{"query":"foldl"}`, `{"op":"examples_search","query":"foldl"}`, false,
@@ -200,16 +199,7 @@ func TestSeToolsPlansAdmittedByPlanLaw(t *testing.T) {
 				t.Fatalf("manifest has no %q", c.id)
 			}
 			declared := e.declared()
-			// Row 135 (§4.2 L3): ailang-run declares its three run effects;
-			// every other tool its one. The access triple stays the first.
-			wantDeclared := 1
-			if c.id == "ailang-run" {
-				wantDeclared = 3
-				if fmt.Sprint(declared) != fmt.Sprint(seToolsRunDeclared) {
-					t.Fatalf("ailang-run declares %+v, want %+v", declared, seToolsRunDeclared)
-				}
-			}
-			if len(declared) != wantDeclared || declared[0].Scope != "worktree" || declared[0].Cost != 1 ||
+			if len(declared) != 1 || declared[0].Scope != "worktree" || declared[0].Cost != 1 ||
 				e.Access.Effect != declared[0].Effect || e.Access.Scope != "worktree" || e.Access.Cost != 0 {
 				t.Fatalf("descriptor triples: access %+v declared %+v; want the effect at cost 0 and cost 1 in scope worktree", e.Access, declared)
 			}
