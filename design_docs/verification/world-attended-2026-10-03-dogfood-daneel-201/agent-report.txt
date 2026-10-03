@@ -1,0 +1,30 @@
+I swapped in the native `find` and `length` in all nine candidate modules that can be checked here. Every one still passes, and no verify count went down. I left `daneel_sources.ail` alone because it won't even load in this environment.
+
+**Native behaviour, confirmed by running it** (not just from the docs): `find(haystack, needle)` returns the position in characters, not bytes, so it lines up with `substring`. It returns `-1` when there's no match and `0` for an empty needle. That is exactly what the local `indexOf`/`scan` did, including the copies that write `0 - 1` instead of `-1`. The `foldChars`-based `slen` also gives the same answer as native `length` on empty, accented, `—` and emoji strings.
+
+**How I named it:** `daneel_brief.ail` already imported `length as slen`, so I used that same alias everywhere. That avoids the clash with `std/list.length`, and existing `slen(...)` calls didn't need touching. I only removed `foldChars` from an import where nothing else in the file used it.
+
+| Module | Result | Verified before → after |
+|---|---|---|
+| daneel_brief | changed: `slen` was already native; replaced `indexOf`/`scanFor` (3 calls) with `find` | 6 → 6 |
+| daneel_candidates | changed: `slen` and `indexOf`/`scan` (2 calls) | 4 → 4 |
+| daneel_context | changed: `slen` and `indexOf`/`scan` (3 calls) | 4 → 4 |
+| daneel_evidence | changed: `slen`; its `indexOf`/`scan` had no callers, so I deleted it | 2 → 2 |
+| daneel_github | changed: `slen` and `indexOf`/`scan` (2 calls) | 4 → 4 |
+| daneel_memory | changed: `slen` and `indexOf`/`scan` (1 call) | 0 → 0 |
+| daneel_reports | changed: `slen` and `indexOf`/`scan` (1 call) | 7 → 7 |
+| daneel_tenant | changed: `slen` and `indexOf`/`scan` (2 calls) | 13 → 13 |
+| daneel_sync | changed: `slen` and `indexOf`/`scan` (1 call) | 0 → 0 |
+| daneel_sources | **skipped**: failed before any edit (`pkg/sunholo/oauth/token` is not in `ailang.lock`). It does have both helpers. | — |
+
+Nothing needed reverting. I also deleted the copied "lengths are HOISTED" comment block wherever I removed a helper, since it only explained the old loop. In `daneel_memory` I reworded one comment that referred back to it.
+
+**Tests:** none of these modules has inline `tests`, so there was nothing to run with `op: "test"`. Instead I wrote a small script that calls the edited modules' exported functions (`repoOfUrl`, `requestOf`, `meantOf`, `movingLines`, `clip`). It covers matches, misses, empty input and accented text, and all 14 cases matched the old behaviour. I added one deliberately wrong expectation to make sure the script can fail, and it printed `FAIL` as it should. I didn't run Daneel's external smoke suite.
+
+**The three files you said not to edit** (left untouched) all contain the same reimplementations: `daneel_docs.ail` (`slen` at line 53, `indexOf`/`scan` at 98), `daneel_intake.ail` (95 and 569) and `daneel_share.ail` (58 and 75).
+
+**Things to check:**
+- **Scratch files:** two of my files are left in `tools/`: `scratch_grep.ail` (a small line search I needed because `daneel_brief.ail` was too big to read whole) and `scratch_probe_find.ail`. I have no way to delete files here, so they need removing by hand.
+- **Bytes or characters:** `daneel_context`'s header says the size limit is "at most 4000 bytes", but `slen` counts characters, both before and after this change. I kept the existing behaviour and didn't fix the comment.
+- **Case-folded search:** `daneel_github`'s `requestOf` finds the position in a lowercased copy of the line, then cuts the original line at that position. That was already the case and the swap doesn't change it.
+agent rc=0

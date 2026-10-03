@@ -1,0 +1,13 @@
+GATE code ok 9 files
+guard: gate positive controls: both status forms accepted, all five violations refused
+guard: bash -n ok
+guard: the agent skills (daneel-design-doc, daneel-ask) are identical in both trees
+guard: ailang verify green on 23 extension modules
+guard: extension smokes OK
+guard: generated registry is fresh
+guard: ailang verify green on 52 modules
+guard: ailang verify green on tools/video and tools/serve
+guard: manifest and call sites agree
+guard: HC ok 23 rows; an every:5 row is refused
+guard: test-work, test-design, test-heartbeat, test-discord, test-brief, test-tenant, test-tenant-intake, test-route, test-decisions, test-reports, test-comments, test-channels, test-loopback, test-github, test-memory-push, test-sources-drive, test-links, test-audit and test-live, test-dream, test-watch-stray, test-projects, test-reading, test-sync-backup passed
+guard: ok
