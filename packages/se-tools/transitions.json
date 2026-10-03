@@ -247,7 +247,7 @@
   {
     "id": "ailang-run",
     "title": "AILANG Run (policy-gated)",
-    "description": "Execute an AILANG program inside this episode's worktree under the operator's policy: `ailang run --policy <policy> [--args-json J] -- <path>`, from the worktree root. The program's declared effect row must be a subset of the policy's allowed_caps (IO, FS); FS stays inside the worktree; the run is bounded by the policy's timeout (8 s). Returns {admitted, exit_code, decision, limit, stdout, stderr}. Denied programs never execute; read `decision.missing_from_policy` and narrow the program's effects. A refused inner effect can still exit 0, so read stdout and stderr, not only exit_code. The program's inner effects are governed by the AILANG policy layer, not brokered one by one. The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Costs one Ailang.Run call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
+    "description": "Execute an AILANG program inside this episode's worktree under the operator's policy: `ailang run --policy <policy> [--args-json J] -- <path> [-- <argv...>]`, from the worktree root, with `stdin` piped in. `caps` is the run's EXACT capability set, like the grader's `--caps` (default IO and FS): distinct names from Declassify, Env, FS, IO, Net, never Env with Net; each beyond IO and FS must also be enabled by the operator (`serve --run-allow-caps`), or the call is refused. An Env run is the effect Ailang.RunEnv and a Net run Ailang.RunNet, each needing its own session grant; any other run, Declassify included, is Ailang.Run. Net reaches only the loopback host:port pairs the operator named (`serve --run-net-allow`); every other host, port and redirect is refused. `argv` (at most 32 strings, each at most 1024 bytes, no NUL) always follows an inner `--`, so it never reaches the run's flag parser; `stdin` is text of at most 65536 bytes (absent = empty). The program's declared effect row must be a subset of the rendered policy's allowed_caps; an unrequested FS is admitted at budget 0, so it fails at first use; the run is bounded by the policy's timeout (8 s). Returns {admitted, exit_code, decision, limit, stdout, stderr, policy}; policy is {digest, security_mode, caps, net_allow} of the variant that ran. Denied programs never execute; read `decision.missing_from_policy` and narrow the program's effects or widen `caps`. A refused inner effect can still exit 0, so read stdout and stderr, not only exit_code. The program's inner effects are governed by the AILANG policy layer, not brokered one by one. The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Costs one call of its effect from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
     "transitionFnFile": "packages/se-tools/se_tools/run.ail",
     "inputSchema": {
       "type": "object",
@@ -259,6 +259,34 @@
         "args_json": {
           "type": "string",
           "description": "JSON arguments for the entrypoint (passed as --args-json)"
+        },
+        "stdin": {
+          "type": "string",
+          "description": "The program's whole standard input, at most 65536 UTF-8 bytes (absent = empty)"
+        },
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 32,
+          "description": "Program arguments (getArgs), passed after an inner `--`; at most 32, each at most 1024 bytes, no NUL"
+        },
+        "caps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "Declassify",
+              "Env",
+              "FS",
+              "IO",
+              "Net"
+            ]
+          },
+          "uniqueItems": true,
+          "minItems": 1,
+          "description": "The run's exact capability set (default IO, FS); never Env with Net"
         }
       },
       "required": [
@@ -293,6 +321,10 @@
         "world": {
           "type": "object",
           "description": "World's provenance: the plan ref and the effect record refs"
+        },
+        "policy": {
+          "type": "object",
+          "description": "The policy variant that ran: {digest, security_mode, caps, net_allow}"
         }
       },
       "required": [
@@ -307,6 +339,16 @@
     "declaredEffects": [
       {
         "effect": "Ailang.Run",
+        "scope": "worktree",
+        "cost": 1
+      },
+      {
+        "effect": "Ailang.RunEnv",
+        "scope": "worktree",
+        "cost": 1
+      },
+      {
+        "effect": "Ailang.RunNet",
         "scope": "worktree",
         "cost": 1
       }

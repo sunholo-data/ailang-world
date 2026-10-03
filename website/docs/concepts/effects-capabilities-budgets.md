@@ -62,11 +62,16 @@ one grant per effect name covers both. Six grants cover all eight tools, because
 and `ailang-edit` share `Workspace.Write` and the two searches share `Ailang.Discover`. A grant
 with budget 0 still shows the tool, but every call is recorded as `denied:budget`.
 
+`ailang-run` also declares `Ailang.RunEnv` and `Ailang.RunNet`: a run whose `caps` include `Env`
+or `Net` spends that effect instead of `Ailang.Run`, so it needs that grant too, and the operator
+must enable the capability with `serve --run-allow-caps`
+([Tool confinement](../security/tool-confinement.md#ailang-run-capabilities)).
+
 ### Effect names in the code today
 
 | Effect | Handler | Status |
 |---|---|---|
-| `Workspace.Read`, `Workspace.Write`, `Ailang.Check`, `Ailang.Run`, `Ailang.Discover`, `Ailang.CLI` | `AilangToolHandler` (the coding tools) | Served when `serve` has both `--workspace-root` and `--tool-ailang-bin` |
+| `Workspace.Read`, `Workspace.Write`, `Ailang.Check`, `Ailang.Run`, `Ailang.RunEnv`, `Ailang.RunNet`, `Ailang.Discover`, `Ailang.CLI` | `AilangToolHandler` (the coding tools) | Served when `serve` has both `--workspace-root` and `--tool-ailang-bin`; an `Env` or `Net` run also needs `--run-allow-caps` |
 | `FS.Read`, `FS.Write` | Direct file handler, scope = one canonical absolute file path | Library only; no production caller |
 | `Git.Commit`, `Model.Infer`, `Human.Approve`, `Human.PollApproval` | Broker handlers | Library only; not served by the daemon |
 | `Registry.Publish` | Package publish handler | Used only by the attended `world-publish publish` |

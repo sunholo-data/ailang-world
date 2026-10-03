@@ -101,8 +101,8 @@ func TestQuickstartSection9FlagsMatchTheCLI(t *testing.T) {
 					grants++
 				}
 			}
-			if grants != 6 {
-				t.Errorf("QUICKSTART §9 mint names %d grants, want the six effect grants", grants)
+			if grants != 8 {
+				t.Errorf("QUICKSTART §9 mint names %d grants, want the eight effect grants (row 135)", grants)
 			}
 		}
 	}
@@ -217,5 +217,31 @@ func TestServeExamplesDirDefault(t *testing.T) {
 	}
 	if got := resolveExamplesDefault("", func() (string, error) { return "", os.ErrNotExist }); got != "" {
 		t.Fatalf("no home: default = %q, want none", got)
+	}
+}
+
+// TestServeRunCapsFlags (row 135 AC3.1, CLI half): serve --help documents the
+// three --run-* flags, the parser accepts them (stopping at a later bad
+// --bind), and an empty name in --run-allow-caps is a usage error. The
+// semantic refusals (unknown names, bare or non-loopback hosts) are the
+// daemon's startup refusals (host/daemon TestRunCapsStartupRefusals).
+func TestServeRunCapsFlags(t *testing.T) {
+	var help, ignored bytes.Buffer
+	run([]string{"serve", "--help"}, &ignored, &help)
+	for _, flag := range []string{"--run-allow-caps", "--run-net-allow", "--run-net-allow-http"} {
+		if !regexp.MustCompile(`(?m)^\s+` + regexp.QuoteMeta(flag) + `\b`).MatchString(help.String()) {
+			t.Errorf("serve --help does not document %s", flag)
+		}
+	}
+	var out, errw bytes.Buffer
+	if got := run([]string{"serve", "--db", "/x/world.db", "--run-allow-caps", "Env,Net", "--run-net-allow", "127.0.0.1:7655",
+		"--run-net-allow", "[::1]:7655", "--run-net-allow-http", "--bind", "not-a-hostport"}, &out, &errw); got != exitUsage ||
+		!strings.Contains(errw.String(), "is not host:port") {
+		t.Fatalf("serve with the --run-* flags: exit %d, %s", got, errw.String())
+	}
+	errw.Reset()
+	if got := run([]string{"serve", "--db", "/x/world.db", "--run-allow-caps", "Env,,Net"}, &out, &errw); got != exitUsage ||
+		!strings.Contains(errw.String(), "empty capability name") {
+		t.Fatalf("serve --run-allow-caps Env,,Net: exit %d, %s", got, errw.String())
 	}
 }

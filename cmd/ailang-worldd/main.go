@@ -9,6 +9,8 @@
 //	ailang-worldd serve --db <path> [--bind 127.0.0.1:7644] [--ailang-bin <path>]
 //	                    [--workspace-root <dir> --tool-ailang-bin <path>]
 //	                    [--examples-dir <dir>]
+//	                    [--run-allow-caps Env,Net,Declassify]
+//	                    [--run-net-allow 127.0.0.1:PORT ...] [--run-net-allow-http]
 //	ailang-worldd [--addr http://127.0.0.1:7644] health
 //	ailang-worldd [--addr http://127.0.0.1:7644] head
 //	ailang-worldd [--addr http://127.0.0.1:7644] world get <ref>
@@ -43,6 +45,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
@@ -61,6 +64,8 @@ Usage:
   ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
                       [--examples-dir <dir>]
+                      [--run-allow-caps Env,Net,Declassify]
+                      [--run-net-allow 127.0.0.1:PORT ...] [--run-net-allow-http]
   ailang-worldd [--addr <url>] health
   ailang-worldd [--addr <url>] head
   ailang-worldd [--addr <url>] world get <ref>
@@ -113,6 +118,17 @@ serve flags:
                        when it exists, else examples-search refuses "no
                        examples corpus configured". Must be outside
                        --workspace-root
+  --run-allow-caps Env,Net,Declassify
+                       extra capabilities an ailang-run may request beyond
+                       IO and FS (default none). An Env run is the effect
+                       Ailang.RunEnv, a Net run Ailang.RunNet; each needs
+                       its own session grant
+  --run-net-allow 127.0.0.1:PORT
+                       a loopback IP:PORT a Net run may reach (repeatable;
+                       required with Net). Every other host, port and
+                       redirect hop is refused; a bare host, a name, or a
+                       non-loopback address is refused at startup
+  --run-net-allow-http allow plain http to the --run-net-allow pairs
 
 Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
             3 integrity refusal (why: a broken link; call --strict: ok:false).
@@ -243,6 +259,21 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	workspaceRoot := fs.String("workspace-root", "", "directory holding one worktree per episode")
 	toolAilangBin := fs.String("tool-ailang-bin", "", "AILANG binary the workspace tools run")
 	examplesDir := fs.String("examples-dir", "", "AILANG examples corpus for examples-search (default ~/.ailang/examples when it exists)")
+	var runAllowCaps, runNetAllow []string
+	fs.Func("run-allow-caps", "extra capabilities an ailang-run may request (Env,Net,Declassify)", func(v string) error {
+		for _, name := range strings.Split(v, ",") {
+			if name = strings.TrimSpace(name); name == "" {
+				return fmt.Errorf("empty capability name in %q", v)
+			}
+			runAllowCaps = append(runAllowCaps, strings.TrimSpace(name))
+		}
+		return nil
+	})
+	fs.Func("run-net-allow", "a loopback IP:PORT a Net run may reach (repeatable)", func(v string) error {
+		runNetAllow = append(runNetAllow, v)
+		return nil
+	})
+	runNetAllowHTTP := fs.Bool("run-net-allow-http", false, "allow plain http to the --run-net-allow pairs")
 	if err := fs.Parse(args); err != nil {
 		return exitUsage
 	}
@@ -272,7 +303,8 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 
 	cfg := daemon.Config{DBPath: *dbPath, BindHost: host, BindPort: port, AilangBin: *ailangBin,
 		WorkspaceRoot: *workspaceRoot, ToolAilangBin: *toolAilangBin,
-		ExamplesDir: resolveExamplesDefault(*examplesDir, os.UserHomeDir)}
+		ExamplesDir:  resolveExamplesDefault(*examplesDir, os.UserHomeDir),
+		RunAllowCaps: runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP}
 	return serveResult(daemon.Run(ctx, cfg, stdout), stderr)
 }
 
