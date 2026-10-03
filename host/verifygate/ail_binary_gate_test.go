@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -103,6 +104,42 @@ func shimEnv(line string) map[string]string {
 		"AILANG_SHIM_DELEGATE":     pinned,
 		"WORLD_PKG_AILANG_BIN":     pinned,
 	}
+}
+
+// shimRuns memoises a full gate run per shim version line, for UNMODIFIED shimEnv(line) envs only
+// (CI budget fix, 2026-10-03). TestKnownPositiveDelegates and TestReleaseChangeNotice's
+// ArmCILatest both ran the identical full gate on shimEnv("AILANG v0.33.0") — same script, same
+// tree, same env — so the second was a ~17 s (local) / ~27 s (CI) byte-for-byte rerun. Each test
+// still applies its own assertions to the shared output; an arm that edits the env (e.g. a
+// Z3-absent or fixture-discrimination control) must call runGate directly, never this.
+var shimRuns struct {
+	mu   sync.Mutex
+	runs map[string]*shimRun
+}
+
+type shimRun struct {
+	once sync.Once
+	rc   int
+	out  string
+}
+
+func runGateShim(t *testing.T, line string) (int, string) {
+	t.Helper()
+	shimRuns.mu.Lock()
+	if shimRuns.runs == nil {
+		shimRuns.runs = map[string]*shimRun{}
+	}
+	r := shimRuns.runs[line]
+	if r == nil {
+		r = &shimRun{rc: -1}
+		shimRuns.runs[line] = r
+	}
+	shimRuns.mu.Unlock()
+	r.once.Do(func() { r.rc, r.out = runGate(t, shimEnv(line)) })
+	if r.rc == -1 && r.out == "" {
+		t.Fatalf("shared shim run for %q never completed (an earlier caller failed to start the gate)", line)
+	}
+	return r.rc, r.out
 }
 
 func requireRefusal(t *testing.T, line, code string) {
@@ -317,7 +354,7 @@ func TestSolverAvailableInThisLane(t *testing.T) {
 
 func TestKnownPositiveDelegates(t *testing.T) {
 	requirePinned(t)
-	_, out := runGate(t, shimEnv("AILANG v0.33.0"))
+	_, out := runGateShim(t, "AILANG v0.33.0")
 	requireProceeded(t, "delegating release arm", out)
 }
 
@@ -474,7 +511,7 @@ func TestReleaseChangeNotice(t *testing.T) {
 	}
 	quietCounts := map[string]int{}
 	for _, arm := range quiet {
-		_, out := runGate(t, shimEnv(arm.version))
+		_, out := runGateShim(t, arm.version)
 		requireProceeded(t, arm.name, out)
 		n := strings.Count(out, notice)
 		quietCounts[arm.name] = n
@@ -483,7 +520,7 @@ func TestReleaseChangeNotice(t *testing.T) {
 		}
 	}
 
-	_, outB := runGate(t, shimEnv("AILANG v0.34.0"))
+	_, outB := runGateShim(t, "AILANG v0.34.0")
 	requireProceeded(t, "ArmUnrecognised", outB)
 	countB := strings.Count(outB, notice)
 	if countB != 1 {

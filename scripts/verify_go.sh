@@ -313,6 +313,11 @@ go test ./... -count=1
 
 # Measured at 78 s wall on darwin/arm64 at 7550ee9 under load ~4.5;
 # host/broker was the 76.9 s critical path. The doc's ~179 s was not reproduced.
+# 2026-10-03 (row 135 revert 78db602): on the 2-core runner this leg overran 600 s; with -p 2
+# packages run two at a time and host/verifygate (alphabetically last, 412 s race pre-#190) is
+# the tail. Fixed by removing redundant gate reruns inside verifygate (one shared, digest-checked
+# pristine control; one shared run per shim version line), not by raising this budget or
+# dropping the package from -race. Local GOMAXPROCS=2 race leg: 465 s before, 312 s after.
 echo "── go test ./... -count=1 -race -timeout 8m"
 go version
 python3 - <<'PY'

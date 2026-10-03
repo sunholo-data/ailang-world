@@ -119,6 +119,38 @@ infers success from the exit code.
 | `security_mode` defaults to `restricted` if omitted; the rendered policy states it anyway, and a test pins the exact key set. | V62 |
 | The policy's `timeout_ms` is 8000, below the handler's 10 s cap, so AILANG's supervisor kills first and reports shape (d). | §4.3, V61 |
 
+## `ailang-run` capabilities
+
+By default `ailang-run` runs under the episode policy above: restricted mode, `IO` and `FS`.
+Row 135 (`design_docs/planned/w-ailang-run-stdin-argv-caps.md`) adds `stdin`, `argv` and `caps`,
+the run's exact capability set, like the grader's `--caps`. Each capability beyond `IO` and `FS`
+passes three gates:
+
+1. **The broker (who).** An `Env` run is the effect `Ailang.RunEnv` and a `Net` run is
+   `Ailang.RunNet`, each with its own grant and budget. A `Declassify` run stays `Ailang.Run`
+   (D-135-5): `Declassify` is an admission-only label with no runtime operations.
+2. **The operator (what is possible).** `serve --run-allow-caps Env,Net,Declassify` names the
+   extra capabilities a run may request; anything else is refused by the handler before any
+   process starts. `Net` also needs `--run-net-allow 127.0.0.1:PORT` (repeatable), and plain
+   http needs `--run-net-allow-http`.
+3. **The policy layer (what runs).** World renders one policy variant per episode and cap set,
+   next to the episode policy and outside the worktree. AILANG's own `policy-tool summary` must
+   report exactly the rendered mode, caps, `net_allow`, sandbox and digest before the variant's
+   first run. AILANG enforces it.
+
+| Requested caps | Variant | Evidence |
+|---|---|---|
+| a subset of `IO`, `FS`, `Declassify` | restricted. `FS` is always allowed, at budget 0 when not requested, so the entry file must be inside the sandbox and a file operation fails at first use, as the grader's would | V23, V24, V33 |
+| with `Net` | restricted, with `net_allow` set to the operator's `IP:PORT` literals. Only those pairs are reachable: another port (World's own `:7644` included), `localhost`, `[::1]`, another loopback address and a redirect hop are all refused. `.git` stays read-only | V34 |
+| with `Env` | `trusted_host`, the only mode that admits `Env`. Its relaxations are compensated in the rendered policy: one `.git/**` deny entry (which, on v0.52.1, covers every case spelling, the bare `.git` and a worktree's `.git` pointer file), and the four byte limits set to the restricted defaults. The program sees only the handler's minimal environment | V36–V38 |
+
+| Fact | Evidence |
+|---|---|
+| `argv` always follows an inner `--` after the path, so no item reaches the run's flag parser: `["--caps=IO,Net","-","--","a b"]` comes back verbatim. | V13, V39 |
+| `stdin` is passed to the program's standard input; `--args-json -` stays refused. | V12, V14 |
+| `Env` and `Net` together are refused in one run; public-network `Net` is not offered. | §2, R-135-4 |
+| Startup refuses an unknown capability name, `Net` without `--run-net-allow`, a `--run-net-allow` entry that is a bare host, a name, or a non-loopback address, and any variant the policy layer refuses at load. | §4.3, V35 |
+
 ## Not covered by the broker
 
 The **inner** file operations of a program run by `ailang-run` are confined and budgeted by the

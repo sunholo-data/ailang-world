@@ -242,6 +242,8 @@ func TestMissionConfigRejectsBadLedger(t *testing.T) {
 }
 
 func TestMissionConfigBlockingTimeoutClassified(t *testing.T) {
+	// Parallel-safe: own fixture root; its 10 s is a wait on a blocked child, not CPU work.
+	t.Parallel()
 	root := newMissionFixture(t, fixtureLedger(validFixtureRows), false)
 	writeFile(t, filepath.Join(root, "scripts", "mission_decisions.sh"), []byte("#!/bin/bash\nsleep 30\n"), 0o755)
 	_, out, timedOut := runMissionCommand(t, root, missionEnv(), "/bin/bash", "scripts/verify_go.sh", "--mission-config-check")

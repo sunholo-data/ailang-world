@@ -50,9 +50,10 @@ Filed in `sunholo-data/ailang` while landing row 134: `#1547`, `#1548`, `#1551`�
 `#1557`–`#1559`. The charter records that most are fixed in AILANG v0.52.1. Three are named
 in the decision ledger:
 
-- `#1557` — admit `Declassify` in a policy. Row 135 (stdin, argv and per-call capabilities for
-  `ailang-run`) is **held** on it, and the final clause-4 floor run waits on row 135.
-- `#1558` — port-scoped loopback in policies.
+- `#1557` — admit `Declassify` in a policy. Shipped in v0.52.1; row 135 (stdin, argv and
+  per-call capabilities for `ailang-run`) builds on it.
+- `#1558` — port-scoped loopback in policies. Shipped in v0.52.1; a row-135 `Net` run reaches
+  only the operator's `--run-net-allow` pairs.
 - `#1559` — case-folded `fs_deny_write` matching (R-SE-15).
 
 World does not work around language gaps locally. When upstream fixes land, World adopts them by

@@ -15,7 +15,7 @@ coding loop inside one git worktree, with every tool effect going through World'
 | `ailang-write` | `path`, `content` | `Workspace.Write` |
 | `ailang-edit` | `path`, `old_text`, `new_text` | `Workspace.Write` |
 | `ailang-check` | `path` | `Ailang.Check` |
-| `ailang-run` | `path`, optional `args_json` | `Ailang.Run` |
+| `ailang-run` | `path`, optional `args_json`, `stdin`, `argv`, `caps` | `Ailang.Run` (`Ailang.RunEnv` / `Ailang.RunNet` when `caps` holds `Env` / `Net`) |
 | `builtins-search` | optional `query`, `module` | `Ailang.Discover` |
 | `examples-search` | `query` | `Ailang.Discover` |
 | `ailang-cli` | `op`, optional `path`, `module`, `query`, `package`, `flags` | `Ailang.CLI` |
