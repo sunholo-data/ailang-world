@@ -197,11 +197,24 @@ jobs:
       # (V16), so a SKIP of the Linux-only kernel control is indistinguishable from a PASS there.
       # Run the fork-locked write tests verbosely so TestKernelRefusesExecOfWriterOpenFile is seen
       # to PASS (not SKIP) on linux (AC6/V18).
+      # row 142: PASS loop, fail-loud linux precondition.
       - name: Fork-locked write tests, verbose (w-verifygate-etxtbsy linux gate)
         timeout-minutes: 3
-        run: >-
-          go test ./host/verifygate/ -count=1 -p 1 -timeout 120s -v
-          -run '^(TestForkLockedWriteBlocksConcurrentFork|TestKernelRefusesExecOfWriterOpenFile|TestVerifygateTestWritesAreForkLocked)$'
+        run: |
+          set -euo pipefail
+          # Assumes linux: fail loud, never skip (a skip guard reopens the SKIP hole).
+          [ "${RUNNER_OS:-}" = Linux ] || { echo "::error::this step must run on linux"; exit 1; }
+          tests="TestForkLockedWriteBlocksConcurrentFork TestForkLockedWrappersHoldLockThroughClose TestKernelRefusesExecOfWriterOpenFile TestVerifygateTestWritesAreForkLocked TestNoParallelWriteForkPackagesOutsideVerifygate"
+          log="$RUNNER_TEMP/forklock-verbose.log"
+          rc=0
+          go test ./host/verifygate/ -count=1 -p 1 -timeout 120s -v \
+            -run "^(${tests// /|})\$" >"$log" 2>&1 || rc=$?
+          cat "$log"
+          [ "$rc" -eq 0 ] || exit "$rc"
+          for t in $tests; do
+            grep -q -- "^--- PASS: $t " "$log" \
+              || { echo "::error::$t did not PASS on linux (SKIP?)"; exit 1; }
+          done
 
       # Row 24 linux merge gate (w-host-subprocess-cleanup-boundary plan §7, design §11 r2):
       # verify_go.sh runs these tests without -v, so a PASS is indistinguishable from a SKIP

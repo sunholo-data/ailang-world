@@ -605,3 +605,142 @@ func TestVerifygateTestWritesAreForkLocked(t *testing.T) {
 		}
 	}
 }
+
+// ---- R2 tripwire: parallel tests in write+fork packages outside this scan ----
+
+// loadGoDirs reads every *.go file under roots, grouped by directory. Keys are
+// the directory paths with the leading "../" segments trimmed (host/broker).
+func loadGoDirs(roots ...string) (map[string]map[string][]byte, error) {
+	dirs := map[string]map[string][]byte{}
+	for _, root := range roots {
+		err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			if d.IsDir() || !strings.HasSuffix(d.Name(), ".go") {
+				return nil
+			}
+			raw, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			dir := strings.TrimLeft(filepath.ToSlash(filepath.Dir(path)), "./")
+			if dirs[dir] == nil {
+				dirs[dir] = map[string][]byte{}
+			}
+			dirs[dir][d.Name()] = raw
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return dirs, nil
+}
+
+// parallelWriteForkViolations reports every t.Parallel() call in a _test.go of
+// a directory (other than host/verifygate, which the full scan covers) whose
+// .go files both write files and fork. It is syntactic: it matches the selector's
+// X identifier name, so an aliased import evades it (R2').
+func parallelWriteForkViolations(dirs map[string]map[string][]byte) (viol []string, nDirs, nWriteFork int, err error) {
+	writeSel := map[string]map[string]bool{
+		"os":      {"WriteFile": true, "OpenFile": true, "Create": true, "CreateTemp": true, "NewFile": true},
+		"syscall": {"Open": true, "Openat": true, "Creat": true},
+	}
+	forkSel := map[string]map[string]bool{
+		"exec":    {"Command": true, "CommandContext": true},
+		"os":      {"StartProcess": true},
+		"syscall": {"ForkExec": true, "StartProcess": true, "Exec": true},
+	}
+	names := make([]string, 0, len(dirs))
+	for d := range dirs {
+		names = append(names, d)
+	}
+	sort.Strings(names)
+	for _, dir := range names {
+		nDirs++
+		fset := token.NewFileSet()
+		var writes, forks bool
+		var parallel []string
+		files := make([]string, 0, len(dirs[dir]))
+		for n := range dirs[dir] {
+			files = append(files, n)
+		}
+		sort.Strings(files)
+		for _, n := range files {
+			f, perr := parser.ParseFile(fset, n, dirs[dir][n], 0)
+			if perr != nil {
+				return nil, 0, 0, perr
+			}
+			isTest := strings.HasSuffix(n, "_test.go")
+			ast.Inspect(f, func(node ast.Node) bool {
+				switch x := node.(type) {
+				case *ast.SelectorExpr:
+					if id, ok := x.X.(*ast.Ident); ok {
+						if writeSel[id.Name][x.Sel.Name] {
+							writes = true
+						}
+						if forkSel[id.Name][x.Sel.Name] {
+							forks = true
+						}
+					}
+				case *ast.CallExpr:
+					if sel, ok := x.Fun.(*ast.SelectorExpr); ok && isTest && sel.Sel.Name == "Parallel" && len(x.Args) == 0 {
+						parallel = append(parallel, fmt.Sprintf("%s/%s:%d", dir, n, fset.Position(x.Pos()).Line))
+					}
+				}
+				return true
+			})
+		}
+		if writes && forks {
+			nWriteFork++
+			if dir != "host/verifygate" {
+				for _, p := range parallel {
+					viol = append(viol, p+": t.Parallel in a write+fork package outside the fork-locked scan")
+				}
+			}
+		}
+	}
+	sort.Strings(viol)
+	return viol, nDirs, nWriteFork, nil
+}
+
+func TestNoParallelWriteForkPackagesOutsideVerifygate(t *testing.T) {
+	dirs, err := loadGoDirs("../../host", "../../cmd")
+	if err != nil {
+		t.Fatal(err)
+	}
+	viol, nDirs, nWriteFork, err := parallelWriteForkViolations(dirs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(viol) > 0 {
+		t.Fatalf("parallel tests in write+fork packages outside the fork-locked scan:\n%s", strings.Join(viol, "\n"))
+	}
+	if nDirs < 26 {
+		t.Fatalf("sweep saw %d Go dirs, want >= 26", nDirs)
+	}
+	if nWriteFork < 12 {
+		t.Fatalf("sweep saw %d write+fork dirs, want >= 12", nWriteFork)
+	}
+
+	// Known positive: t.Parallel + a write + a fork must be named. Known
+	// negative: the same without t.Parallel() must not.
+	const body = "package zz\n\nimport (\n\t\"os\"\n\t\"os/exec\"\n\t\"testing\"\n)\n\nfunc TestX(t *testing.T) {\n%s\t_ = os.WriteFile(\"x\", nil, 0o755)\n\t_ = exec.Command(\"x\")\n}\n"
+	pos := map[string]map[string][]byte{"zz": {"x_test.go": []byte(fmt.Sprintf(body, "\tt.Parallel()\n"))}}
+	pv, _, _, err := parallelWriteForkViolations(pos)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(pv) != 1 || !strings.HasPrefix(pv[0], "zz/x_test.go:10: t.Parallel in a write+fork package") {
+		t.Fatalf("known positive not named: %v", pv)
+	}
+	neg := map[string]map[string][]byte{"zz": {"x_test.go": []byte(fmt.Sprintf(body, ""))}}
+	nv, _, _, err := parallelWriteForkViolations(neg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(nv) != 0 {
+		t.Fatalf("known negative flagged: %v", nv)
+	}
+}
