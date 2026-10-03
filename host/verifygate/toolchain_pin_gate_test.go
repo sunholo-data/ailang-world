@@ -481,7 +481,7 @@ func requireBash(t *testing.T) string {
 
 func writeExecutableAt(t *testing.T, path, contents string) {
 	t.Helper()
-	if err := os.WriteFile(path, []byte(contents), 0o755); err != nil {
+	if err := writeFileForkLocked(path, []byte(contents), 0o755); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -501,7 +501,7 @@ func runBoundedBash(t *testing.T, bash, script string, env []string) ([]byte, er
 
 func writeToolchainFixture(t *testing.T, dir, contents string) {
 	t.Helper()
-	if err := os.WriteFile(filepath.Join(dir, "toolchain_pins.conf"), []byte(contents), 0o644); err != nil {
+	if err := writeFileForkLocked(filepath.Join(dir, "toolchain_pins.conf"), []byte(contents), 0o644); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -526,12 +526,8 @@ func requireChildExitCode(t *testing.T, err error) int {
 
 func assertWritableSentinel(t *testing.T, sentinel string) {
 	t.Helper()
-	file, err := os.Create(sentinel)
-	if err != nil {
+	if err := createForkLocked(sentinel); err != nil {
 		t.Fatalf("known-positive writable-directory control could not create %s: %v", sentinel, err)
-	}
-	if err := file.Close(); err != nil {
-		t.Fatal(err)
 	}
 	if _, err := os.Stat(sentinel); err != nil {
 		t.Fatalf("known-positive writable-directory control did not create %s: %v", sentinel, err)

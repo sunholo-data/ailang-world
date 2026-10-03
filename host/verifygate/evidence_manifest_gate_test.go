@@ -72,7 +72,7 @@ func newIsolatedEvidenceGateRoot(t *testing.T) string {
 		if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(dst, in, 0o755); err != nil {
+		if err := writeFileForkLocked(dst, in, 0o755); err != nil {
 			t.Fatal(err)
 		}
 	} else {
@@ -110,7 +110,7 @@ func writeSyntheticEvidenceEvents(t *testing.T, root string, tests []string) str
 	if err := enc.Encode(map[string]string{"Action": "pass", "Package": syntheticEvidencePackage}); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(path, raw.Bytes(), 0o644); err != nil {
+	if err := writeFileForkLocked(path, raw.Bytes(), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	return path
@@ -131,7 +131,7 @@ func writeSyntheticEvidenceEventsWithoutPackagePass(t *testing.T, root string, t
 			t.Fatal(err)
 		}
 	}
-	if err := os.WriteFile(path, raw.Bytes(), 0o644); err != nil {
+	if err := writeFileForkLocked(path, raw.Bytes(), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	return path
@@ -194,7 +194,7 @@ func emptyCopiedEvidenceRequiredSet(t *testing.T, root string) {
 		t.Fatalf("required-set mutation anchors missing")
 	}
 	mutant := string(raw[:start]) + "REQUIRED_EVIDENCE_TESTS = {}\nEXACT_EVIDENCE_TESTS = int(sys.argv[2])" + string(raw[end+len(endMarker):])
-	if err := os.WriteFile(path, []byte(mutant), 0o755); err != nil {
+	if err := writeFileForkLocked(path, []byte(mutant), 0o755); err != nil {
 		t.Fatal(err)
 	}
 }
