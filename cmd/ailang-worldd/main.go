@@ -17,13 +17,21 @@
 //	ailang-worldd [--addr http://127.0.0.1:7644] log get <index>
 //	ailang-worldd [--addr http://127.0.0.1:7644] log range --from N [--limit M]
 //	ailang-worldd [--addr http://127.0.0.1:7644] registry get <name>
-//	ailang-worldd [--addr http://127.0.0.1:7644] commit --file <commit.json>
+//	ailang-worldd [--addr http://127.0.0.1:7644] commit --file <commit.json> [--session <file|token>]
+//	ailang-worldd [--addr http://127.0.0.1:7644] log tail [--from N] [--follow] [--interval 1s] [--raw]
+//	ailang-worldd [--addr http://127.0.0.1:7644] tools list [--session <file|token>] [--json]
+//	ailang-worldd [--addr http://127.0.0.1:7644] call <tool> [--arg k=v]... [--arg-json k=<json>]... | --json <obj>|@file|- [--json-out] [--strict]
+//	ailang-worldd [--addr http://127.0.0.1:7644] why <index|head|sha256:...|a2a:...|rest:...|-> | --result <file> [--scan N] [--json]
+//	ailang-worldd [--addr http://127.0.0.1:7644] provenance [--since <entry>] [--episode <ep>]
+//	ailang-worldd session mint|revoke ...
 //
 // `--addr` is ONE GLOBAL CLIENT FLAG available to every client verb; it is not a
 // `serve` flag, and passing it to `serve` is a usage error rather than a silently
 // ignored argument.
 //
-// Exit codes: 0 success, 1 usage or client error, 2 fatal startup/runtime.
+// Exit codes: 0 success, 1 usage or client error, 2 fatal startup/runtime,
+// 3 integrity refusal (a broken provenance link in why; call --strict on a
+// committed ok:false).
 package main
 
 import (
@@ -61,7 +69,24 @@ Usage:
   ailang-worldd [--addr <url>] log get <index>
   ailang-worldd [--addr <url>] log range --from N [--limit M]
   ailang-worldd [--addr <url>] registry get <name>
-  ailang-worldd [--addr <url>] commit --file <commit.json>
+  ailang-worldd [--addr <url>] log tail [--from N] [--follow] [--interval 1s] [--raw]
+  ailang-worldd [--addr <url>] commit --file <commit.json> [--session <file|token>]
+  ailang-worldd [--addr <url>] tools list [--session <file|token>] [--json]
+  ailang-worldd [--addr <url>] call <tool> [--session <file|token>]
+                    [--arg k=v]... [--arg-json k=<json>]... | --json <obj>|@file|-
+                    [--json-out] [--strict]
+  ailang-worldd [--addr <url>] why <index|head|sha256:<ref>|a2a:<id>|rest:<id>|->
+                    [--result <file>] [--scan N] [--json]
+  ailang-worldd [--addr <url>] provenance [--since <entry>] [--episode <ep>] [--scan N]
+  ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
+                    [--ttl 3600] [--out <file>]
+  ailang-worldd session revoke [--db <path>] <credential_id-hash>
+
+  <verb> --help prints the help of: tools, call, why, log tail, provenance.
+
+Session credential (tools, call, commit): --session <file> (a file holding
+the 64-hex token, mode 0600) or the token itself (warns: visible on argv),
+else $WORLD_SESSION. The token is never printed.
 
 Global client flag:
   --addr <url>   base URL of the daemon (default ` + daemon.DefaultAddr + `).
@@ -89,8 +114,12 @@ serve flags:
                        examples corpus configured". Must be outside
                        --workspace-root
 
-Exit codes: 0 ok, 1 usage or client error, 2 fatal startup.
+Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
+            3 integrity refusal (why: a broken link; call --strict: ok:false).
 `
+
+// cliStdin is what `call --json -` and `why -` read.
+var cliStdin io.Reader = os.Stdin
 
 func main() { os.Exit(run(os.Args[1:], os.Stdout, os.Stderr)) }
 
@@ -164,6 +193,20 @@ func run(args []string, stdout, stderr io.Writer) int {
 
 	case "commit":
 		return runCommit(*addr, rest[1:], stdout, stderr)
+
+	// Row 138 M1/M2 and D-WORLD-60: the MCP client, the provenance walk,
+	// the log tail and the PR trailer.
+	case "tools":
+		return runTools(*addr, rest[1:], stdout, stderr)
+
+	case "call":
+		return runCall(*addr, rest[1:], cliStdin, stdout, stderr)
+
+	case "why":
+		return runWhy(*addr, rest[1:], cliStdin, stdout, stderr)
+
+	case "provenance":
+		return runProvenance(*addr, rest[1:], stdout, stderr)
 
 	case "session":
 		// (w-session-authority D1/D4) session mint|revoke speak directly to the

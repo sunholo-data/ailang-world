@@ -36,29 +36,49 @@ func newClient(base string) *client {
 // context so cancellation propagates, and every request additionally receives
 // the client's injectable D7 deadline.
 func (c *client) do(ctx context.Context, method, path string, body io.Reader) (int, []byte, error) {
+	status, _, data, err := c.doRequest(ctx, method, path, body, nil)
+	return status, data, err
+}
+
+// doRequest is do with extra request headers, also returning the response
+// Content-Type: the MCP client (mcpclient.go) classifies a /mcp/ answer by
+// status and Content-Type, never by sniffing the body (row 138 §3.2). It is
+// the single transport core under do and doAuth.
+func (c *client) doRequest(ctx context.Context, method, path string, body io.Reader, headers map[string]string) (int, string, []byte, error) {
 	ctx, cancel := context.WithTimeout(ctx, c.timeout)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, method, c.base+path, body)
 	if err != nil {
-		return 0, nil, fmt.Errorf("build %s %s%s: %w", method, c.base, path, err)
+		return 0, "", nil, fmt.Errorf("build %s %s%s: %w", method, c.base, path, err)
 	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
 	resp, err := c.http.Do(req)
 	if err != nil {
-		return 0, nil, fmt.Errorf("%s %s%s: %w", method, c.base, path, err)
+		return 0, "", nil, fmt.Errorf("%s %s%s: %w", method, c.base, path, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 	limited := io.LimitReader(resp.Body, maxClientResponseBytes+1)
 	data, err := io.ReadAll(limited)
 	if err != nil {
-		return resp.StatusCode, nil, fmt.Errorf("read %s%s response: %w", c.base, path, err)
+		return resp.StatusCode, "", nil, fmt.Errorf("read %s%s response: %w", c.base, path, err)
 	}
 	if len(data) > maxClientResponseBytes {
-		return resp.StatusCode, nil, fmt.Errorf("response from %s%s exceeds %d bytes", c.base, path, maxClientResponseBytes)
+		return resp.StatusCode, "", nil, fmt.Errorf("response from %s%s exceeds %d bytes", c.base, path, maxClientResponseBytes)
 	}
-	return resp.StatusCode, data, nil
+	return resp.StatusCode, resp.Header.Get("Content-Type"), data, nil
+}
+
+// budgetContext is the one context root of the row-138 client verbs (tools,
+// call, why, provenance): a whole-command budget under which every request
+// still gets the client's own per-request deadline. Those verbs make no Store
+// call; they only speak HTTP to the loopback daemon.
+func budgetContext(d time.Duration) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), d)
 }
 
 func (c *client) get(path string) (int, string, error) {
@@ -98,32 +118,12 @@ func execute(addr, method, path string, body io.Reader, stdout, stderr io.Writer
 // requires a session credential, the CLI commit client must be able to present
 // its Bearer token.
 func (c *client) doAuth(ctx context.Context, method, path string, body io.Reader, auth string) (int, []byte, error) {
-	ctx, cancel := context.WithTimeout(ctx, c.timeout)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, method, c.base+path, body)
-	if err != nil {
-		return 0, nil, fmt.Errorf("build %s %s%s: %w", method, c.base, path, err)
-	}
-	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
+	var headers map[string]string
 	if auth != "" {
-		req.Header.Set("Authorization", auth)
+		headers = map[string]string{"Authorization": auth}
 	}
-	resp, err := c.http.Do(req)
-	if err != nil {
-		return 0, nil, fmt.Errorf("%s %s%s: %w", method, c.base, path, err)
-	}
-	defer func() { _ = resp.Body.Close() }()
-	limited := io.LimitReader(resp.Body, maxClientResponseBytes+1)
-	data, err := io.ReadAll(limited)
-	if err != nil {
-		return resp.StatusCode, nil, fmt.Errorf("read %s%s response: %w", c.base, path, err)
-	}
-	if len(data) > maxClientResponseBytes {
-		return resp.StatusCode, nil, fmt.Errorf("response from %s%s exceeds %d bytes", c.base, path, maxClientResponseBytes)
-	}
-	return resp.StatusCode, data, nil
+	status, _, data, err := c.doRequest(ctx, method, path, body, headers)
+	return status, data, err
 }
 
 // executeWithAuth is execute for a session-bearing request.
@@ -214,8 +214,11 @@ func runLog(addr string, args []string, stdout, stderr io.Writer) int {
 			return "/v1/log/" + url.PathEscape(index)
 		}, addr)
 	}
+	if len(args) >= 1 && args[0] == "tail" {
+		return runLogTail(addr, args[1:], stdout, stderr)
+	}
 	if len(args) < 1 || args[0] != "range" {
-		fmt.Fprintln(stderr, "ailang-worldd log: usage: log get <index> | log range --from N [--limit M]")
+		fmt.Fprintln(stderr, "ailang-worldd log: usage: log get <index> | log range --from N [--limit M] | log tail [--from N] [--follow]")
 		return exitUsage
 	}
 	fs := flag.NewFlagSet("ailang-worldd log range", flag.ContinueOnError)
@@ -251,7 +254,8 @@ func runCommit(addr string, args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("ailang-worldd commit", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	file := fs.String("file", "", "commit JSON file")
-	session := fs.String("session", "", "session credential (64-hex Bearer token) for the session-gated /v1/commit")
+	session := fs.String("session", "", "session credential for the session-gated /v1/commit: a file holding the "+
+		"64-hex token (preferred) or the token itself; default $"+sessionEnvVar)
 	if err := fs.Parse(args); err != nil || len(fs.Args()) != 0 || *file == "" {
 		if *file == "" {
 			fmt.Fprintln(stderr, "ailang-worldd commit: --file is required")
@@ -277,9 +281,16 @@ func runCommit(addr string, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "ailang-worldd commit: commit file is empty")
 		return exitUsage
 	}
-	if *session == "" {
-		// No session flag: unchanged path.
+	if *session == "" && os.Getenv(sessionEnvVar) == "" {
+		// No session flag and no WORLD_SESSION: unchanged path.
 		return execute(addr, http.MethodPost, "/v1/commit", bytes.NewReader(data), stdout, stderr)
 	}
-	return executeWithAuth(addr, http.MethodPost, "/v1/commit", bytes.NewReader(data), "Bearer "+*session, stdout, stderr)
+	// Row 138 §3.1: the one session resolver (--session > WORLD_SESSION; a
+	// 64-hex value is the token, anything else a ≤256 B file).
+	token, err := resolveSession(*session, stderr)
+	if err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd commit: %v\n", err)
+		return exitUsage
+	}
+	return executeWithAuth(addr, http.MethodPost, "/v1/commit", bytes.NewReader(data), "Bearer "+token, stdout, stderr)
 }

@@ -26,7 +26,24 @@ Usage:
   ailang-worldd [--addr <url>] log get <index>
   ailang-worldd [--addr <url>] log range --from N [--limit M]
   ailang-worldd [--addr <url>] registry get <name>
-  ailang-worldd [--addr <url>] commit --file <commit.json>
+  ailang-worldd [--addr <url>] log tail [--from N] [--follow] [--interval 1s] [--raw]
+  ailang-worldd [--addr <url>] commit --file <commit.json> [--session <file|token>]
+  ailang-worldd [--addr <url>] tools list [--session <file|token>] [--json]
+  ailang-worldd [--addr <url>] call <tool> [--session <file|token>]
+                    [--arg k=v]... [--arg-json k=<json>]... | --json <obj>|@file|-
+                    [--json-out] [--strict]
+  ailang-worldd [--addr <url>] why <index|head|sha256:<ref>|a2a:<id>|rest:<id>|->
+                    [--result <file>] [--scan N] [--json]
+  ailang-worldd [--addr <url>] provenance [--since <entry>] [--episode <ep>] [--scan N]
+  ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
+                    [--ttl 3600] [--out <file>]
+  ailang-worldd session revoke [--db <path>] <credential_id-hash>
+
+  <verb> --help prints the help of: tools, call, why, log tail, provenance.
+
+Session credential (tools, call, commit): --session <file> (a file holding
+the 64-hex token, mode 0600) or the token itself (warns: visible on argv),
+else $WORLD_SESSION. The token is never printed.
 
 Global client flag:
   --addr <url>   base URL of the daemon (default http://127.0.0.1:7644).
@@ -54,17 +71,16 @@ serve flags:
                        examples corpus configured". Must be outside
                        --workspace-root
 
-Exit codes: 0 ok, 1 usage or client error, 2 fatal startup.
+Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
+            3 integrity refusal (why: a broken link; call --strict: ok:false).
 ```
 
-`ailang-worldd help` prints the same text. There is no `--help` per verb except where Go's flag
-parser prints a flag list (shown below).
+`ailang-worldd help` prints the same text. `tools`, `call`, `why`, `log tail` and `provenance`
+print their own help with `--help` (exit 0, shown below); for the other verbs Go's flag parser
+prints a flag list where one is shown.
 
-:::note `session` is not in the usage text
-`session mint` and `session revoke` exist but are missing from the top-level usage above.
-`--addr` is refused with them, as with `serve`, because they act on `--db` directly, not on a
-running daemon.
-:::
+`--addr` is refused with `session mint` and `session revoke`, as with `serve`, because they act on
+`--db` directly, not on a running daemon.
 
 Every invocation refuses to start (exit 2) if `AILANG_REGISTRY_API_KEY` is set in its
 environment.
@@ -90,7 +106,7 @@ response body on success. On an HTTP error they print
 | `log get <index>` | `GET /v1/log/{index}` |
 | `log range --from N [--limit M]` | `GET /v1/log?from=N&limit=M` |
 | `registry get <name>` | `GET /v1/registry/{name}` |
-| `commit --file <commit.json> [--session <token>]` | `POST /v1/commit` |
+| `commit --file <commit.json> [--session <file\|token>]` | `POST /v1/commit` |
 
 Flags come **after** the positional argument for `object get`, `object find`, and `log range`.
 
@@ -101,11 +117,171 @@ Usage of ailang-worldd commit:
   -file string
     	commit JSON file
   -session string
-    	session credential (64-hex Bearer token) for the session-gated /v1/commit
+    	session credential for the session-gated /v1/commit: a file holding the 64-hex token (preferred) or the token itself; default $WORLD_SESSION
 ```
 
-`--session` is sent as `Authorization: Bearer <token>`. Without it the daemon answers
-`401 SessionAbsent`. (The top-level usage line omits `--session`.)
+The session is resolved like `call`'s (see [Session credential](#session-credential)) and sent as
+`Authorization: Bearer <token>`. With neither `--session` nor `WORLD_SESSION` the daemon answers
+`401 SessionAbsent`.
+
+### Session credential
+
+`tools`, `call` and `commit` resolve the session the same way:
+
+1. `--session <value>`, else the `WORLD_SESSION` environment variable, else an error.
+2. A 64-hex value is the token itself. Given on the command line it works but warns, because
+   other local processes can read a process's arguments.
+3. Any other value is a file (at most 256 bytes) holding the token, which is how
+   `session mint --out <file>` writes it. A file readable by group or other gets a warning
+   (`chmod 600` it).
+
+The token is only ever sent as the `Authorization: Bearer` header; no command prints it.
+
+### `tools list`
+
+```text
+usage: ailang-worldd [--addr <url>] tools list [--session <file|token>] [--json]
+
+Lists the tools the session may call (MCP tools/list on /mcp/): name,
+description and required arguments. --json prints the tools array verbatim.
+
+The session is --session (a file holding the 64-hex token, preferred; or the
+token itself, which warns) or $WORLD_SESSION.
+```
+
+```bash
+ailang-worldd tools list --session ~/.ailang/world/ep1.session
+```
+
+```text
+ailang-check       Type-check and Z3-verify an AILANG file inside this episode's worktree (policy-tool `ai_check`) and …
+                   required: path
+ailang-read        Read a file inside this episode's worktree (policy-tool `read`). The path is relative to the worktre…
+                   required: path
+…
+8 tool(s)
+```
+
+The list follows the session's grants: a session granted only `Workspace.Read` lists only
+`ailang-read`.
+
+### `call`
+
+```text
+usage: ailang-worldd [--addr <url>] call <tool> [--session <file|token>]
+           [--arg k=v]... [--arg-json k=<json>]... | --json '<obj>'|@file|-
+           [--json-out] [--strict]
+
+Calls one tool (MCP tools/call on /mcp/). Arguments come from repeated --arg
+(a string value) and --arg-json (any JSON value), or from one --json object
+(inline, @file, or - for stdin); the two forms do not mix.
+
+Output: the result's fields (long values elided with their byte counts), then
+the world block: the plan ref and, per effect, its id, status and record ref.
+--json-out prints the committed output bytes exactly (one trailing newline),
+so sha256 of stdout minus that newline is the output ref, and the output can
+be piped to 'ailang-worldd why -'.
+
+Exit: 0 committed (including a committed refusal, ok:false); 3 with --strict
+when the committed result has ok:false; 1 on a tool error, a session denial
+or a host failure. A host failure is probed: "no world head" means commit a
+genesis first; "a commit landed (entry N)" means do not retry — run why N.
+```
+
+```bash
+ailang-worldd call ailang-read --session ~/.ailang/world/ep1.session --arg path=data.txt
+```
+
+```text
+content:     hello from ep1\n
+ok:          true
+policy_digest: 4b7541a98c773068896571d54c5182bc5601b335f2c5e663743c07eda077b121
+tool:        sha256:e55ff71c710c10395ebf949f6777ef9114bed8bba859e3ba719ed73c6d1b9c7f
+output:      sha256:a70447b8e8c490f547b021f257ee0c3799857d3d70ec6eaeccfb9a6293ee1572 (416 bytes)
+world:
+  plan       sha256:a1f0feb6b661e46646dab346043e8c144bf3d2be7733df0e520506119b2b773f
+  effect     e1 ok sha256:4770647ef5f9b08c8ccb51773631a3460a070d2be9a06cffb609b4eb094df1df
+```
+
+`/mcp/` answers in three shapes, and `call` tells them apart by HTTP status and `Content-Type`:
+
+| Answer | Meaning | What `call` does |
+|---|---|---|
+| `200 text/event-stream` | the JSON-RPC response | prints the result; a JSON-RPC `error` inside it is a tool error (exit 1) |
+| `200 application/json` with `-32603` | a host failure, which can follow a commit that did land | reads `/v1/head` before and after the call: no head → "no world head" (commit a genesis); the head moved → "a commit landed (entry N) — do not retry"; otherwise the message as sent |
+| `401 text/plain` | the session was refused | prints the reason and a one-line fix (absent, unknown, malformed or expired) |
+
+### `why`
+
+```text
+usage: ailang-worldd [--addr <url>] why <target> [--scan N] [--json]
+       ailang-worldd [--addr <url>] why --result <file> [--scan N] [--json]
+```
+
+Walks one committed invocation back to its whole provenance chain and checks every link:
+the world ref (recomputed and confirmed by `GET /v1/worlds/<ref>`), the log entry (its hash
+recomputed), the invocation record, the input, the plan, each effect record (with its request
+and result), and the output, which must equal the world's `stateRoot`.
+
+| Target | Resolves by |
+|---|---|
+| `<index>` or `head` | the log entry directly |
+| `sha256:<ref>` | the object's `semanticId`: a record, input, output, plan, effect record, effect request or result; or a world ref |
+| `a2a:<id>` | the record's `invocationId` |
+| `rest:<id>` | its receipt's world |
+| `-` or `--result <file>` | the output of `call --json-out`: its sha256 is the output ref (the result's `world.plan` is the fallback) |
+
+Every target except an index or `head` is found by scanning the log backwards from the head,
+one object read per entry, at most `--scan N` entries (default 500, maximum 5000) within 60
+seconds. Past either limit it prints `not found in the last N entries` and exits 1. An entry
+not written by the coordinator (a REST genesis, say) is shown with its object only, with the
+reason.
+
+Exit codes: 0 when every link is ✓; **3 when any link is ✗** (the bytes the daemon served do
+not match a content address); 1 when the target is not found. `--json` prints the chain as
+JSON. See [Provenance](../agents/provenance.md) for a walked example.
+
+### `log tail`
+
+```text
+usage: ailang-worldd [--addr <url>] log tail [--from N] [--follow] [--interval 1s] [--raw]
+
+Prints log entries, one line each: index, short entry hash, writtenBy, and for
+a coordinator invocation its episode, skill and effect statuses.
+
+  --from N      first entry (default: head-19, the last 20 entries)
+  --follow      keep polling for new entries until Ctrl-C; a daemon restart
+                is retried with backoff (up to 5 s) and the outage is named
+  --interval D  poll interval with --follow (default 1s)
+  --raw         print each entry as its JSON
+```
+
+```text
+#1 ef2b3322 coordinator:a2a ep1 ailang-read [Workspace.Read ok]
+#2 b7aa36d6 coordinator:a2a ep1 ailang-read [Workspace.Read ok]
+#3 c0cd3ae0 coordinator:a2a ep1 ailang-read [no effects]
+```
+
+With `--follow` the next read starts at the entry after the last one printed, so each entry
+is printed exactly once.
+
+### `provenance`
+
+```text
+usage: ailang-worldd [--addr <url>] provenance [--since <entry>] [--episode <ep>] [--scan N]
+```
+
+Prints the trailer that a pull request or commit made through World carries:
+
+```text
+World-Provenance: store=/Users/you/.ailang/world/world.db episode=ep1 entries=1-4
+```
+
+`store` is the daemon's database path from `/v1/health`; `entries` are the episode's first and
+last coordinator entries from `--since` (default: the last 500 entries) to the head. Without
+`--episode` it prints one trailer per episode in the range. Any entry in the range can be walked
+back with `ailang-worldd why <entry>`. It exits 1 when the range holds no coordinator entry for
+the episode.
 
 ### `session mint`
 
