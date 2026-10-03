@@ -1,0 +1,79 @@
+{
+  "doc": "design_docs/planned/w-verifygate-etxtbsy.md",
+  "iso_ts": "2026-10-03T15:46:33Z",
+  "reviewers": [
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.018652000000000002,
+      "tokens_in": 7376,
+      "tokens_out": 325,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The liveness justification for Option C' relies on a fabricated premise in V9. The Go standard library's `syscall/forkpipe2.go` does not contain a `hasWaitingReaders` branch; `acquireForkLock` simply increments a `forking` counter while holding an internal mutex. A stream of forks (which act as writers on the RWMutex) will inherently starve new readers like `ForkLock.RLock()`. While this theoretical starvation is naturally bounded by the finite number of parallel test arms (10), the hallucinated `hasWaitingReaders` observation in V9 violates the Premise Verification gate.",
+        "catch": "The `hasWaitingReaders` branch in `forkpipe2.go` does not exist, and the V9 log output claiming it is hallucinated to satisfy the liveness axiom.",
+        "proposed_fix": "Remove the hallucinated `hasWaitingReaders` text from the V9 'Observed' column. Update the Option C' liveness paragraph to state: 'A write could theoretically be starved by an infinite stream of forks, but in this package the stream is strictly bounded by the finite number of concurrent parallel tests (10 arms per V5). Therefore, the write will proceed once the finite set of overlapping forks completes.' Additionally, update the AST scan to parse all `*.go` files (not just `*_test.go`) to ensure no future non-test helper files can evade the ban."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0818278,
+      "tokens_in": 6651,
+      "tokens_out": 16481,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The chosen mechanism's copy-path spec rests on an unverified premise about the codebase it modifies: `copyFileForkLocked` is specified to open with `O_EXCL` while 'keeping' `copyGateFileErr`'s error text, but the Verification Log never records the original OpenFile flag set at `copyGateFileErr:42` (V1a/V11 log only mode 0755) nor enumerates its call sites. If the original opens with the usual copy shape (O_WRONLY|O_CREATE|O_TRUNC), adding O_EXCL is a semantic change: any copy onto a pre-existing dst goes from truncate-and-succeed to an EEXIST failure — a case whose error text cannot be 'kept' because it does not exist today. This contradicts M2's own invariant ('Assertions, arms and error texts stay as they are') and the 'small defect fix, no feature' scope, and it sits squarely inside the 21-site migration the whole design depends on. O_EXCL is gratuitous to the fix (the RLock is the fix), so it is pure unverified risk in the one place the doc claims zero behavior change.",
+        "catch": "Verify before resubmit: (1) the exact flag set of `copyGateFileErr:42` and whether any of its call sites can present an existing dst — no row records this; (2) 'verify_go.sh runs without -v', the sole justification for the new ci.yml verbose step, has no verification row either; (3) the liveness claim 'a write cannot be starved by a stream of forks' is verified only against forkpipe2.go (Linux) — the rig's darwin forkpipe.go path is verified for Lock polarity (V9a) but not for the hasWaitingReaders relief that bullet leans on.",
+        "proposed_fix": "Add V15: `sed -n '35,60p' host/verifygate/module_manifest_gate_test.go` recording copyGateFileErr's exact OpenFile flags, plus a call-site enumeration showing every dst is freshly created under a per-test root. Then either (a) drop O_EXCL from copyFileForkLocked and specify it to match the recorded flags exactly — e.g. replace the wrapper bullet with: 'copyFileForkLocked(src, dst, mode) opens dst with the exact flags recorded at copyGateFileErr:42 (V15: O_WRONLY|O_CREATE|O_TRUNC, 0755), replacing its body and preserving its error text for every flag-reachable case' — or (b) if V15 shows the original already uses O_EXCL, cite the row so 'keeps its error text' is substantiated rather than asserted. Also add V16: `grep -n 'go test' scripts/verify_go.sh` confirming the missing -v that motivates the ci.yml step, and reword the write-starvation liveness bullet to scope the hasWaitingReaders relief to forkpipe2/Linux, noting the rig-side wait is bounded by the finite number of in-process forks rather than by mutex relief."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.13350599999999999,
+      "tokens_in": 6582,
+      "tokens_out": 7584,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The 'total ban' AST scan — the entire enforcement mechanism that AC2/AC3/AC4 and the 'no raw write is left' guarantee rest on — is specified as matching 'a CallExpr whose Fun is the selector os.{WriteFile,OpenFile,Create,CreateTemp}'. That is a purely syntactic match on the qualifier identifier literally named os. It is trivially and silently bypassed by an aliased import (import osw \"os\" → osw.WriteFile produces zero selector named os.*) or a dot import, and no acceptance mutant covers this: every fixture writes 'os.WriteFile' verbatim, so the hole survives AC2–AC4 green. The flake's whole history is 'a future t.Parallel()/edit reintroduces the race out of reach of the guard'; a guard whose totality depends on nobody renaming an import reintroduces exactly that failure mode, and unlike option A it fails silently. The package already imports go/types (V2a TestImports), so resolving callees semantically is available and the syntactic shortcut is unjustified.",
+        "catch": "Two things to fix/verify in the scan spec: (1) state the disposition of a banned CallExpr with no enclosing FuncDecl (package-level var/init FuncLit) — under the written rule 'unless the enclosing FuncDecl is on a named allowlist' the behavior for a nil enclosing FuncDecl is unspecified and an implementation could skip rather than fail; (2) the same premise-standard asymmetry you accepted for ETXTBSY applies to the lock: V10's RLock-blocks-fork probe ran only on the darwin forkpipe.go path, while CI exercises the linux forkpipe2.go path, which is verified only by the source grep in V9a — record test 1's verbose Linux PASS (or a Linux container run of the V10 probe) as a pending verification-log row rather than letting 'V9a + darwin probe' stand as the proof for the platform where the failure actually occurs.",
+        "proposed_fix": "Replace the scan spec paragraph with: 'The scan parses and type-checks every *_test.go in host/verifygate (go/parser + go/types, mirroring the pattern already used by subprocess_sink_gate_test.go; go/types is already a test import, V2a). A CallExpr is a violation if go/types resolves its callee to a *types.Func whose Pkg().Path() is \"os\" and whose Name() is in {WriteFile, OpenFile, Create, CreateTemp}, with alias- and dot-imports thus covered by construction. As a belt-and-braces syntactic fence, the scan additionally fails on any ImportSpec for path \"os\" whose Name is non-nil (alias or dot). A banned call with no enclosing FuncDecl (package-level FuncLit or init) is a violation, never a skip. The enclosing-FuncDecl allowlist (forkLocked* wrappers, TestKernelRefusesExecOfWriterOpenFile) is matched on the function the types.Info attributes the call to.' Add a fifth known-positive fixture that does `import osw \"os\"; osw.WriteFile(...)` and must be reported with file:line, and add AC8 to the acceptance table: mutant 'rename the os import in one fixture/call site' → scan fires naming the site. Add a verification-log row: V15 (pending at PR time): run the V10 hold-lock probe on the CI linux-2core runner (or record TestForkLockedWriteBlocksConcurrentFork's verbose PASS from the new ci.yml step) as behavioral confirmation of the forkpipe2.go path, since forkpipe.go ≠ forkpipe2.go (V9a) and only source reading currently covers Linux."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "R2: gemini polarity objection refuted by forkpipe2.go:45 ForkLock.Lock; kimi :564 attribution refuted (t.Helper caller line); glm liveness + provenance gaps fixed with V9b/V13a/V2a and a bounded-return assertion."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: The liveness justification for Option C' relies on a fabricated premise in V9. The Go standard library's `syscall/forkpipe2.go` does not contain a `hasWaitingReaders` branch; `acquireForkLock` simply increments a `forking` counter while holding an internal mutex. A stream of forks (which act as writers on the RWMutex) will inherently starve new readers like `ForkLock.RLock()`. While this theoretical starvation is naturally bounded by the finite number of parallel test arms (10), the hallucinated `hasWaitingReaders` observation in V9 violates the Premise Verification gate.",
+      "oc-glm-5-3: The chosen mechanism's copy-path spec rests on an unverified premise about the codebase it modifies: `copyFileForkLocked` is specified to open with `O_EXCL` while 'keeping' `copyGateFileErr`'s error text, but the Verification Log never records the original OpenFile flag set at `copyGateFileErr:42` (V1a/V11 log only mode 0755) nor enumerates its call sites. If the original opens with the usual copy shape (O_WRONLY|O_CREATE|O_TRUNC), adding O_EXCL is a semantic change: any copy onto a pre-existing dst goes from truncate-and-succeed to an EEXIST failure — a case whose error text cannot be 'kept' because it does not exist today. This contradicts M2's own invariant ('Assertions, arms and error texts stay as they are') and the 'small defect fix, no feature' scope, and it sits squarely inside the 21-site migration the whole design depends on. O_EXCL is gratuitous to the fix (the RLock is the fix), so it is pure unverified risk in the one place the doc claims zero behavior change.",
+      "oc-kimi-k3: The 'total ban' AST scan — the entire enforcement mechanism that AC2/AC3/AC4 and the 'no raw write is left' guarantee rest on — is specified as matching 'a CallExpr whose Fun is the selector os.{WriteFile,OpenFile,Create,CreateTemp}'. That is a purely syntactic match on the qualifier identifier literally named os. It is trivially and silently bypassed by an aliased import (import osw \"os\" → osw.WriteFile produces zero selector named os.*) or a dot import, and no acceptance mutant covers this: every fixture writes 'os.WriteFile' verbatim, so the hole survives AC2–AC4 green. The flake's whole history is 'a future t.Parallel()/edit reintroduces the race out of reach of the guard'; a guard whose totality depends on nobody renaming an import reintroduces exactly that failure mode, and unlike option A it fails silently. The package already imports go/types (V2a TestImports), so resolving callees semantically is available and the syntactic shortcut is unjustified."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.2339858,
+    "total_tokens_in": 20609,
+    "total_tokens_out": 24390
+  }
+}

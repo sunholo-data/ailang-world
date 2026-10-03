@@ -1,0 +1,79 @@
+{
+  "doc": "design_docs/planned/w-verifygate-etxtbsy.md",
+  "iso_ts": "2026-10-03T15:40:05Z",
+  "reviewers": [
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.014922,
+      "tokens_in": 6015,
+      "tokens_out": 241,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The design uses `syscall.ForkLock.RLock()` in the wrapper based on the false premise (V9) that Go's fork takes `ForkLock.Lock()`. In reality, process creation (`exec.Cmd.Start()`) takes `ForkLock.RLock()` so that multiple forks can execute concurrently. Because both the wrapper and the concurrent forks would acquire read locks (`RLock()`), they will not mutually exclude each other, meaning forks will still run while the write fd is open, and the ETXTBSY race will persist.",
+        "catch": "The lock polarities are reversed. The write wrapper must take the exclusive lock (`Lock`) to block concurrent forks (which hold `RLock`).",
+        "proposed_fix": "Change the `forkLockedWrite` wrapper (and Design C') to use the exclusive `syscall.ForkLock.Lock()` and `syscall.ForkLock.Unlock()`. Correct the V9 premise to state that Go's standard library promises to take `ForkLock.RLock()` during a fork."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0702454,
+      "tokens_in": 5399,
+      "tokens_out": 14247,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The liveness claim that justifies the chosen option C′ — 'the writer preference avoids starvation (V9)' — is directly contradicted by V9's own recorded observation ('readers are let through first to avoid starvation (hasWaitingReaders)'). The doc cites the same row for a claim and its opposite, so the property C′ depends on (a pending fork cannot be starved by a chain of test-side RLock acquisitions) is asserted, not verified. If the go1.26 ForkLock is reader-priority, C′ can in principle convert the intermittent ETXTBSY into an intermittent fork-hang bounded only by the 600 s cap, which breaks the doc's 'no timing involved' determinism argument for choosing C′ over the toolchain-precedented option A.",
+        "catch": "Three secondary premise gaps to fix in the same pass: (1) V14 is labeled 'CI baseline after the fix' but no fix has landed — record the commit/workflow provenance of job 111231727567 or relabel it, since AC7's ±15% fence inherits the ambiguity; (2) the assertion that 78db602 'reverted a feature' because the race leg overran the 600 s cap — the load-bearing reason option D is rejected — has no verification-log row; (3) the 21-site enumeration and the AST guard are scoped to files inside host/verifygate only: nothing verifies that verifygate tests do not import a file-writing helper from another package, which would bypass both the wrapper migration and the scan, and the '148 test-event count' figure in M2 is likewise uncited.",
+        "proposed_fix": "Add V15 verifying the actual lock policy: `grep -n -B3 -A15 'hasWaitingReaders' $(go env GOROOT)/src/syscall/*.go` plus the ForkLock declaration, recording whether a pending ForkLock.Lock blocks new RLocks (writer preference) or admits readers ahead of a waiting writer (reader preference). If writer preference, keep the design sentence and cite the exact lines. If reader preference, replace it with a measured bound, e.g.: 'A fork's wait is bounded by the sum of concurrently-held fork-locked writes (≤21 sites, microseconds each); starvation beyond the package test timeout is accepted as R5' — and extend test 1 to assert that Start returns within a bounded window (e.g. \u003c5 s) after release, so any starvation regression fails loudly instead of hanging to the 600 s cap. In the same revision: relabel V14 with its commit/workflow provenance, add a `git show 78db602` row substantiating the option-D rationale, add a row enumerating the imports of the 8 _test.go files confirming no imported helper writes files on behalf of verifygate tests (or widen the scan floors accordingly), and cite the source of the '148 test-event' M2 figure."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.22569299999999998,
+      "tokens_in": 5371,
+      "tokens_out": 13972,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The write-then-exec enumeration table makes a categorical, load-bearing attribution — 'module_manifest:150 runGateAtErr ... This is the failing site (EmptyEnumeration mutates, then execs)' — that the doc's own verification log does not support. V1 shows the failure reported at module_manifest_gate_test.go:564 ('start isolated verify gate: fork/exec …/001/iso/scripts/verify_ail.sh: text file busy'), i.e., the isolated-setup path that copies verify_ail.sh (copyGateFileErr:42), not runGateAtErr:150 or mutateCopiedScript:315 — and 564 is not among the exec sites V12 attributes to that file. Worse, the failure took 30.11s, which is inconsistent with the immediate ETXTBSY return the mechanism assumes (Start fails in microseconds); a ~30s duration implies a poll/retry loop or repeated write+exec cycles inside startIsolatedVerifyGate that the doc never explains. The saved log cannot identify which of the 21 writes raced (the window is microseconds), so 'this is the failing site' is asserted, not verified — a premise-verification failure in the diagnosis the whole doc hangs on. The total-coverage fix happens to be robust to this misattribution, which is further evidence the claim was never needed and was fabricated as narrative rather than derived from evidence.",
+        "catch": "Two verification-log integrity items to fix or substantiate: (1) reconcile the :564 / 30.11s evidence with the table — extract the attempt-1 log window around lines 377–405 to show what startIsolatedVerifyGate was doing for 30 seconds (a poll loop? repeated write+exec attempts?) and which helper and write site actually produced the verify_ail.sh inode that failed execve; (2) V14 is titled 'CI baseline after the fix' in a DRAFT doc whose files are listed as not-yet-written — job 111231727567 can only be the attempt-2 re-run of the unfixed code from V3, so a post-fix measurement could not have been collected.",
+        "proposed_fix": "Replace the table's parenthetical with: 'The failing exec is the isolated gate's verify_ail.sh, reported at :564 (V1); the racing write cannot be determined from the log (microsecond window) but is necessarily one of the 21 sites in V11 — all are inside the total ban, so C′ covers every candidate. No single-site claim is made.' Add a new log row (V1a) that pulls the attempt-1 log segment from the test start to line 405 and reports what startIsolatedVerifyGate does across the 30.11s (poll interval, retry/write+exec frequency, where the ETXTBSY surfaced), since an unexplained 30s-duration failure mode is a hole in the mechanism story even if the fix is unaffected. Retitle V14 'CI baseline, unfixed dev (attempt-2 re-run, job 111231727567)' and state in AC7 that the 215s baseline is intentionally pre-fix. If the log pull shows the write sites differ from V11's counts (e.g., setup writes verify_ail.sh via a helper not in the 7/1/0/0 tally for module_manifest), update V11, the 21-site floors in AC4, and the M2 gate to match."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Mechanism matches golang/go#22315 and syscall.ForkLock semantics (exec_unix.go forkExec takes ForkLock for write); rerun-green confirms intermittency; scope is test-only; option C' removes cause and covers bash-exec'd shims."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: The design uses `syscall.ForkLock.RLock()` in the wrapper based on the false premise (V9) that Go's fork takes `ForkLock.Lock()`. In reality, process creation (`exec.Cmd.Start()`) takes `ForkLock.RLock()` so that multiple forks can execute concurrently. Because both the wrapper and the concurrent forks would acquire read locks (`RLock()`), they will not mutually exclude each other, meaning forks will still run while the write fd is open, and the ETXTBSY race will persist.",
+      "oc-glm-5-3: The liveness claim that justifies the chosen option C′ — 'the writer preference avoids starvation (V9)' — is directly contradicted by V9's own recorded observation ('readers are let through first to avoid starvation (hasWaitingReaders)'). The doc cites the same row for a claim and its opposite, so the property C′ depends on (a pending fork cannot be starved by a chain of test-side RLock acquisitions) is asserted, not verified. If the go1.26 ForkLock is reader-priority, C′ can in principle convert the intermittent ETXTBSY into an intermittent fork-hang bounded only by the 600 s cap, which breaks the doc's 'no timing involved' determinism argument for choosing C′ over the toolchain-precedented option A.",
+      "oc-kimi-k3: The write-then-exec enumeration table makes a categorical, load-bearing attribution — 'module_manifest:150 runGateAtErr ... This is the failing site (EmptyEnumeration mutates, then execs)' — that the doc's own verification log does not support. V1 shows the failure reported at module_manifest_gate_test.go:564 ('start isolated verify gate: fork/exec …/001/iso/scripts/verify_ail.sh: text file busy'), i.e., the isolated-setup path that copies verify_ail.sh (copyGateFileErr:42), not runGateAtErr:150 or mutateCopiedScript:315 — and 564 is not among the exec sites V12 attributes to that file. Worse, the failure took 30.11s, which is inconsistent with the immediate ETXTBSY return the mechanism assumes (Start fails in microseconds); a ~30s duration implies a poll/retry loop or repeated write+exec cycles inside startIsolatedVerifyGate that the doc never explains. The saved log cannot identify which of the 21 writes raced (the window is microseconds), so 'this is the failing site' is asserted, not verified — a premise-verification failure in the diagnosis the whole doc hangs on. The total-coverage fix happens to be robust to this misattribution, which is further evidence the claim was never needed and was fabricated as narrative rather than derived from evidence."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.3108604,
+    "total_tokens_in": 16785,
+    "total_tokens_out": 28460
+  }
+}
