@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap">
 <link rel="icon" type="image/svg+xml" href="/ailang-world/img/ailang-logo.svg"><link rel="stylesheet" href="/ailang-world/assets/css/styles.ce82f1aa.css">
-<script src="/ailang-world/assets/js/runtime~main.cfec4aa5.js" defer="defer"></script>
+<script src="/ailang-world/assets/js/runtime~main.38b71572.js" defer="defer"></script>
 <script src="/ailang-world/assets/js/main.a11602c4.js" defer="defer"></script>
 </head>
 <body>
@@ -53,9 +53,8 @@ terminal it refuses. See <a class="" href="/ailang-world/docs/guides/attended-st
 <div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#F8F8F2"><span class="token plain">ailang-worldd session revoke </span><span class="token parameter variable" style="color:rgb(189, 147, 249);font-style:italic">--db</span><span class="token plain"> /path/world.db </span><span class="token operator">&lt;</span><span class="token plain">credential_id</span><span class="token operator">&gt;</span><br></div></code></pre></div></div>
 <p>Revocation deletes the mapping row, so the next request with that token is <code>SessionUnknown</code>.
 It needs no terminal. Like mint, it opens the store for writing, so stop the daemon first.</p>
-<p>Put <code>--db</code> <strong>before</strong> the <code>credential_id</code>. The command&#x27;s own usage line shows
-<code>session revoke &lt;credential_id-hash&gt; [--db &lt;path&gt;]</code>, but flags after the ID are not parsed and
-that order fails with the usage message. Revoking an ID that does not exist still prints
+<p>Put <code>--db</code> <strong>before</strong> the <code>credential_id</code>: flags after the ID are not parsed, and that order
+fails with the usage message. Revoking an ID that does not exist still prints
 <code>revoked session credential …</code> and exits 0.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-a-session-gates">What a session gates<a href="#what-a-session-gates" class="hash-link" aria-label="Direct link to What a session gates" title="Direct link to What a session gates" translate="no">​</a></h2>
 <table><thead><tr><th>Surface</th><th>Without a valid session</th></tr></thead><tbody><tr><td><code>POST /v1/commit</code></td><td><code>401 SessionAbsent</code> / <code>SessionUnknown</code> / <code>SessionExpired</code>, or <code>400 InvalidSession</code> for a malformed header</td></tr><tr><td><code>GET /.well-known/agent.json</code></td><td>Same REST error envelope and status mapping</td></tr><tr><td><code>POST /a2a/</code></td><td>JSON-RPC error <code>-32001</code> (absent, unknown, expired) or <code>-32600</code> (malformed)</td></tr><tr><td><code>POST /mcp/</code></td><td>HTTP <code>401</code> with a plain-text message</td></tr><tr><td>All other <code>GET /v1/*</code> routes and <code>/workbench</code></td><td><strong>Open.</strong> Reads are not session-gated today (residual R1 of the session-authority design)</td></tr></tbody></table>

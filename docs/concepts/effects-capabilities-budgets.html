@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap">
 <link rel="icon" type="image/svg+xml" href="/ailang-world/img/ailang-logo.svg"><link rel="stylesheet" href="/ailang-world/assets/css/styles.ce82f1aa.css">
-<script src="/ailang-world/assets/js/runtime~main.cfec4aa5.js" defer="defer"></script>
+<script src="/ailang-world/assets/js/runtime~main.38b71572.js" defer="defer"></script>
 <script src="/ailang-world/assets/js/main.a11602c4.js" defer="defer"></script>
 </head>
 <body>
@@ -57,8 +57,12 @@ card and in MCP <code>tools/list</code>, and may call only those.</li>
 one grant per effect name covers both. Six grants cover all eight tools, because <code>ailang-write</code>
 and <code>ailang-edit</code> share <code>Workspace.Write</code> and the two searches share <code>Ailang.Discover</code>. A grant
 with budget 0 still shows the tool, but every call is recorded as <code>denied:budget</code>.</p>
+<p><code>ailang-run</code> also declares <code>Ailang.RunEnv</code> and <code>Ailang.RunNet</code>: a run whose <code>caps</code> include <code>Env</code>
+or <code>Net</code> spends that effect instead of <code>Ailang.Run</code>, so it needs that grant too, and the operator
+must enable the capability with <code>serve --run-allow-caps</code>
+(<a class="" href="/ailang-world/docs/security/tool-confinement#ailang-run-capabilities">Tool confinement</a>).</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="effect-names-in-the-code-today">Effect names in the code today<a href="#effect-names-in-the-code-today" class="hash-link" aria-label="Direct link to Effect names in the code today" title="Direct link to Effect names in the code today" translate="no">​</a></h3>
-<table><thead><tr><th>Effect</th><th>Handler</th><th>Status</th></tr></thead><tbody><tr><td><code>Workspace.Read</code>, <code>Workspace.Write</code>, <code>Ailang.Check</code>, <code>Ailang.Run</code>, <code>Ailang.Discover</code>, <code>Ailang.CLI</code></td><td><code>AilangToolHandler</code> (the coding tools)</td><td>Served when <code>serve</code> has both <code>--workspace-root</code> and <code>--tool-ailang-bin</code></td></tr><tr><td><code>FS.Read</code>, <code>FS.Write</code></td><td>Direct file handler, scope = one canonical absolute file path</td><td>Library only; no production caller</td></tr><tr><td><code>Git.Commit</code>, <code>Model.Infer</code>, <code>Human.Approve</code>, <code>Human.PollApproval</code></td><td>Broker handlers</td><td>Library only; not served by the daemon</td></tr><tr><td><code>Registry.Publish</code></td><td>Package publish handler</td><td>Used only by the attended <code>world-publish publish</code></td></tr></tbody></table>
+<table><thead><tr><th>Effect</th><th>Handler</th><th>Status</th></tr></thead><tbody><tr><td><code>Workspace.Read</code>, <code>Workspace.Write</code>, <code>Ailang.Check</code>, <code>Ailang.Run</code>, <code>Ailang.RunEnv</code>, <code>Ailang.RunNet</code>, <code>Ailang.Discover</code>, <code>Ailang.CLI</code></td><td><code>AilangToolHandler</code> (the coding tools)</td><td>Served when <code>serve</code> has both <code>--workspace-root</code> and <code>--tool-ailang-bin</code>; an <code>Env</code> or <code>Net</code> run also needs <code>--run-allow-caps</code></td></tr><tr><td><code>FS.Read</code>, <code>FS.Write</code></td><td>Direct file handler, scope = one canonical absolute file path</td><td>Library only; no production caller</td></tr><tr><td><code>Git.Commit</code>, <code>Model.Infer</code>, <code>Human.Approve</code>, <code>Human.PollApproval</code></td><td>Broker handlers</td><td>Library only; not served by the daemon</td></tr><tr><td><code>Registry.Publish</code></td><td>Package publish handler</td><td>Used only by the attended <code>world-publish publish</code></td></tr></tbody></table>
 <p>When a transition declares an effect the daemon has no handler for, the coordinator refuses it
 before the plan or any effect runs (rule R8). Over A2A the message is
 <code>transition declares an effect this daemon has no handler for</code>.</p>

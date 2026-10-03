@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap">
 <link rel="icon" type="image/svg+xml" href="/ailang-world/img/ailang-logo.svg"><link rel="stylesheet" href="/ailang-world/assets/css/styles.ce82f1aa.css">
-<script src="/ailang-world/assets/js/runtime~main.cfec4aa5.js" defer="defer"></script>
+<script src="/ailang-world/assets/js/runtime~main.38b71572.js" defer="defer"></script>
 <script src="/ailang-world/assets/js/main.a11602c4.js" defer="defer"></script>
 </head>
 <body>
@@ -28,9 +28,10 @@ software-engineering residuals (<code>R-SE-*</code>) come from §9 of
 <code>#1557</code>–<code>#1559</code>. The charter records that most are fixed in AILANG v0.52.1. Three are named
 in the decision ledger:</p>
 <ul>
-<li class=""><code>#1557</code> — admit <code>Declassify</code> in a policy. Row 135 (stdin, argv and per-call capabilities for
-<code>ailang-run</code>) is <strong>held</strong> on it, and the final clause-4 floor run waits on row 135.</li>
-<li class=""><code>#1558</code> — port-scoped loopback in policies.</li>
+<li class=""><code>#1557</code> — admit <code>Declassify</code> in a policy. Shipped in v0.52.1; row 135 (stdin, argv and
+per-call capabilities for <code>ailang-run</code>) builds on it.</li>
+<li class=""><code>#1558</code> — port-scoped loopback in policies. Shipped in v0.52.1; a row-135 <code>Net</code> run reaches
+only the operator&#x27;s <code>--run-net-allow</code> pairs.</li>
 <li class=""><code>#1559</code> — case-folded <code>fs_deny_write</code> matching (R-SE-15).</li>
 </ul>
 <p>World does not work around language gaps locally. When upstream fixes land, World adopts them by

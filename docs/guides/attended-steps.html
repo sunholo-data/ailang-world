@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Montserrat:wght@600;700;800&amp;display=swap">
 <link rel="icon" type="image/svg+xml" href="/ailang-world/img/ailang-logo.svg"><link rel="stylesheet" href="/ailang-world/assets/css/styles.ce82f1aa.css">
-<script src="/ailang-world/assets/js/runtime~main.cfec4aa5.js" defer="defer"></script>
+<script src="/ailang-world/assets/js/runtime~main.38b71572.js" defer="defer"></script>
 <script src="/ailang-world/assets/js/main.a11602c4.js" defer="defer"></script>
 </head>
 <body>
@@ -46,15 +46,17 @@ same file as <code>/dev/tty</code>. This is what rejects <code>&lt; /dev/null</c
 (<code>reason=eof</code> for closed stdin, <code>reason=mismatch</code> for anything else).</li>
 </ol>
 <p>The store is opened <strong>before</strong> the fence, so a mistyped path, or a daemon still holding the
-writer lock, is reported before you are asked to type anything.</p>
+writer lock, is reported before you are asked to type anything. <code>transitions</code> also reads its
+manifest before the fence, so that the phrase can name the write.</p>
 <h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-confirmation-phrase">The confirmation phrase<a href="#the-confirmation-phrase" class="hash-link" aria-label="Direct link to The confirmation phrase" title="Direct link to The confirmation phrase" translate="no">​</a></h3>
-<p>All three attended <code>world-publish</code> verbs ask for the same phrase, which names the current
+<p>Each verb&#x27;s phrase names the write it confirms. <code>approve</code> and <code>publish</code> name the current
 <code>world/core</code> candidate:</p>
 <div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#F8F8F2"><span class="token plain">Type exactly, to proceed with an IRREVERSIBLE public write:</span><br></div><div class="token-line" style="color:#F8F8F2"><span class="token plain">  publish world/core@0.1.1 irreversibly</span><br></div><div class="token-line" style="color:#F8F8F2"><span class="token plain">&gt;</span><br></div></code></pre></div></div>
-<div class="theme-admonition theme-admonition-note admonition_xJq3 alert alert--secondary"><div class="admonitionHeading_Gvgb"><span class="admonitionIcon_Rf37"><svg viewBox="0 0 14 16"><path fill-rule="evenodd" d="M6.3 5.69a.942.942 0 0 1-.28-.7c0-.28.09-.52.28-.7.19-.18.42-.28.7-.28.28 0 .52.09.7.28.18.19.28.42.28.7 0 .28-.09.52-.28.7a1 1 0 0 1-.7.3c-.28 0-.52-.11-.7-.3zM8 7.99c-.02-.25-.11-.48-.31-.69-.2-.19-.42-.3-.69-.31H6c-.27.02-.48.13-.69.31-.2.2-.3.44-.31.69h1v3c.02.27.11.5.31.69.2.2.42.31.69.31h1c.27 0 .48-.11.69-.31.2-.19.3-.42.31-.69H8V7.98v.01zM7 2.3c-3.14 0-5.7 2.54-5.7 5.68 0 3.14 2.56 5.7 5.7 5.7s5.7-2.55 5.7-5.7c0-3.15-2.56-5.69-5.7-5.69v.01zM7 .98c3.86 0 7 3.14 7 7s-3.14 7-7 7-7-3.12-7-7 3.14-7 7-7z"></path></svg></span><code>transitions</code> reuses the package-publish phrase</div><div class="admonitionContent_BuS1"><p><code>world-publish transitions</code> is a <strong>local</strong> registry write, not a public one, and a later
-revision can supersede it. It still shows the &quot;IRREVERSIBLE public write&quot; prompt and requires
-the <code>world/core</code> phrase, because it shares the attended-operator fence with <code>approve</code>. Type the
-phrase exactly as printed.</p></div></div>
+<p><code>transitions</code> is a <strong>local</strong> registry write, not a public one, and a later revision can
+supersede it. Its phrase names the descriptor count and the store; for the se-tools manifest:</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#F8F8F2;--prism-background-color:#282A36"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#F8F8F2;background-color:#282A36"><code class="codeBlockLines_e6Vv"><div class="token-line" style="color:#F8F8F2"><span class="token plain">Type exactly, to write a LOCAL transition-registry revision (8 descriptor(s) from packages/se-tools/transitions.json):</span><br></div><div class="token-line" style="color:#F8F8F2"><span class="token plain">  publish 8 transitions to /tmp/se-world/world.db</span><br></div><div class="token-line" style="color:#F8F8F2"><span class="token plain">&gt;</span><br></div></code></pre></div></div>
+<p>The <code>tty</code> and <code>ci</code> fences in front of it are the same as for the package publish. Type the
+phrase exactly as printed.</p>
 <h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="running-attended-steps-from-an-ide-pane-or-agent-harness">Running attended steps from an IDE pane or agent harness<a href="#running-attended-steps-from-an-ide-pane-or-agent-harness" class="hash-link" aria-label="Direct link to Running attended steps from an IDE pane or agent harness" title="Direct link to Running attended steps from an IDE pane or agent harness" translate="no">​</a></h2>
 <p>Embedded terminals often give the process a stdin that is not the controlling terminal. The
 publish then fails with <code>STOP fence=tty reason=stdin-is-not-the-controlling-terminal</code>. Connect
