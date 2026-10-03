@@ -39,11 +39,31 @@ func TestRenderEpisodePolicyHasExactlyTheDesignKeySet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// fs_deny_write is case-folded (V68, R-SE-15): every fold variant of each
+	// protected directory as a literal `/**` prefix, then one path.Match
+	// character class per protected file. The expected list is built here
+	// independently of the renderer: ASCII case of each letter, plus U+017F
+	// (ſ) for `s` — the only non-ASCII fold APFS was measured to apply to
+	// these letters (V68). No directory name holds an `s` or a `k`.
+	var deny []string
+	for _, dir := range []string{".github", ".pi", ".claude", ".ailang"} {
+		if strings.ContainsAny(dir, "sk") {
+			t.Fatalf("%s: the expectation below does not model ſ/K folds", dir)
+		}
+		deny = append(deny, asciiCaseVariants(dir)...)
+	}
+	for i := range deny {
+		deny[i] = `"` + deny[i] + `/**"`
+	}
+	if len(deny) != 64+4+64+64 {
+		t.Fatalf("expected %d directory variants, want 196", len(deny))
+	}
+	deny = append(deny, `".[gG][iI][tT][mM][oO][dD][uU][lL][eE][sſS]"`, `".[gG][iI][tT][aA][tT][tT][rR][iI][bB][uU][tT][eE][sſS]"`)
 	want := `security_mode = "restricted"
 allowed_caps = ["IO", "FS"]
 fs_sandbox = "/w/root/ep1"
 timeout_ms = 8000
-fs_deny_write = [".github/**", ".pi/**", ".claude/**", ".gitmodules", ".gitattributes", ".ailang/**"]
+fs_deny_write = [` + strings.Join(deny, ", ") + `]
 entry = "main"
 
 [budgets]
@@ -712,6 +732,11 @@ func TestAilangToolConfinementMatrix(t *testing.T) {
 			// it is refused on a deny-listed path AND on an ordinary one,
 			// whatever the flag's value, and under an aliased "flags" key.
 			rows += f.assertCLIFmtWriteRefused(t)
+
+			// Case variants of every fs_deny_write entry (V68, R-SE-15): on
+			// APFS `.CLAUDE/x` IS `.claude/x`, and v0.51.0 matches the list
+			// case-sensitively, so the rendered policy carries the folds.
+			rows += f.assertCaseVariantDenyRows(t)
 
 			// In-sandbox writes succeed by both paths, and edit works.
 			if resp := f.op(t, EffectWorkspaceWrite, map[string]any{"op": "write", "path": "ok.txt", "content": "fine"}); resp["ok"] != true {

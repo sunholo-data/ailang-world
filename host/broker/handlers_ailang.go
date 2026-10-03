@@ -41,11 +41,80 @@ const (
 	episodePolicyTimeoutMS = 8000
 )
 
-// episodeDenyWrite is the rendered fs_deny_write list (§4.3): CI config, agent
-// harness config, the git metadata files a worktree does not protect by itself
-// (V54), and the compile cache `run --policy` writes inside the worktree (V57).
-var episodeDenyWrite = []string{
-	".github/**", ".pi/**", ".claude/**", ".gitmodules", ".gitattributes", ".ailang/**",
+// episodeDenyDirs and episodeDenyFiles are the protected names (§4.3): CI
+// config, agent harness config, the compile cache `run --policy` writes inside
+// the worktree (V57), and the git metadata files a worktree does not protect
+// by itself (V54).
+var (
+	episodeDenyDirs  = []string{".github", ".pi", ".claude", ".ailang"}
+	episodeDenyFiles = []string{".gitmodules", ".gitattributes"}
+)
+
+// episodeDenyWrite is the rendered fs_deny_write list, case-folded in the
+// policy because v0.51.0 matches it case-SENSITIVELY while macOS APFS (the
+// default volume) resolves names case-insensitively (V68, R-SE-15): under the
+// lowercase-only list `.CLAUDE/settings.json` and `.GITMODULES` were written
+// through to `.claude/settings.json` and `.gitmodules`. Only `.git` is
+// case-folded upstream. The v0.51.0 matcher (effects.MatchDenyWrite) treats a
+// pattern ending `/**` as a LITERAL prefix, so each directory is rendered as
+// every fold variant of its name; any other pattern is a path.Match glob
+// against the whole relative path and its base name, so each file is one
+// character-class pattern. Variants follow Unicode simple case folding, which
+// is what APFS was measured to fold onto these letters (V68: only U+017F ſ for
+// `s`, besides ASCII case).
+var episodeDenyWrite = renderEpisodeDenyWrite()
+
+func renderEpisodeDenyWrite() []string {
+	var out []string
+	for _, dir := range episodeDenyDirs {
+		for _, v := range foldVariants(dir) {
+			out = append(out, v+"/**")
+		}
+	}
+	for _, file := range episodeDenyFiles {
+		out = append(out, foldClassPattern(file))
+	}
+	return out
+}
+
+// foldOrbit is r's Unicode simple case-folding orbit, starting with r itself.
+func foldOrbit(r rune) []rune {
+	orbit := []rune{r}
+	for f := unicode.SimpleFold(r); f != r; f = unicode.SimpleFold(f) {
+		orbit = append(orbit, f)
+	}
+	return orbit
+}
+
+// foldVariants is every spelling of name that case-folds to it, name first.
+func foldVariants(name string) []string {
+	variants := []string{""}
+	for _, r := range name {
+		orbit := foldOrbit(r)
+		next := make([]string, 0, len(variants)*len(orbit))
+		for _, prefix := range variants {
+			for _, f := range orbit {
+				next = append(next, prefix+string(f))
+			}
+		}
+		variants = next
+	}
+	return variants
+}
+
+// foldClassPattern is a path.Match pattern matching exactly the fold variants
+// of name (a name with no glob metacharacter).
+func foldClassPattern(name string) string {
+	var b strings.Builder
+	for _, r := range name {
+		orbit := foldOrbit(r)
+		if len(orbit) == 1 {
+			b.WriteRune(r)
+			continue
+		}
+		b.WriteString("[" + string(orbit) + "]")
+	}
+	return b.String()
 }
 
 // fixedToolOps is the policy-tool op allowlist per effect name (§4.3).
