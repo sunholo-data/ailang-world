@@ -17,3 +17,6 @@
 *.out
 *.prof
 coverage.txt
+
+# Python bytecode (scripts/floor harness tests)
+__pycache__/

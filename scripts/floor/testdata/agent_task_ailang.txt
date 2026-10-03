@@ -1,0 +1,49 @@
+You are solving an AILANG benchmark.
+
+## Task
+
+{{DESCRIPTION}}
+
+**IMPORTANT: Write your complete solution to: {{SOLUTION_PATH}}**
+
+Expected output:
+{{EXPECTED_OUTPUT}}
+
+## Requirements
+
+**⚠️ CRITICAL: Write RAW AILANG code only! NO markdown fences (```` ```ailang ````) in solution.ail!**
+
+- Timeout: {{TIMEOUT}} seconds
+- Write your solution to: **{{SOLUTION_PATH}}**
+- Your solution must produce output matching the expected output **exactly** (no extra newlines, spaces, etc.)
+- Read {{SOLUTION_PATH}} file first so you know the template to write to
+- If your solution is impossible due to AILANG language limitations - stop and report
+
+{{CONTRACT_SPEC}}
+
+{{Z3_HINTS}}
+
+{{TOOL_GUIDANCE}}
+
+## Verification Steps (REQUIRED!)
+
+**You MUST verify your solution before finishing:**
+
+{{VERIFICATION_STEPS}}
+
+## Available Tools
+
+You have access to the `ailang` command:
+- **Run code:** `ailang run --entry main --caps {{CAPS}} solution.ail`
+- **Type check:** `ailang check solution.ail`
+- **Run tests:** `ailang test solution.ail`
+{{EXTRA_TOOLS}}
+
+## Common Pitfalls
+
+- ❌ **No markdown fences in solution.ail:** Write raw AILANG code, NOT ```ailang...```
+- ❌ **Don't skip verification:** Always run your solution to check output
+- ✅ **Write raw code:** The file should start with `module benchmark/solution` NOT ``` ```ailang```
+- ✅ **Correct:** Run, compare, fix, repeat until perfect
+
+Good luck!

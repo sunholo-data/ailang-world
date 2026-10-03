@@ -1,0 +1,369 @@
+{
+  "disagreements": [
+    {
+      "agree": false,
+      "alt": [
+        {
+          "bin": "/Users/voightkampff/.pinned-ailang/ailang",
+          "sha256": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+          "stderr": "Error: effect checking failed in benchmark/solution: Effect checking failed for function 'main'\n  Function uses effects not declared in signature\n\n  Missing effects: FS\n\n  Current signature: func main(...) -> T ! {IO}\n  Suggested fix:     func main(...) -> T ! {FS, IO}\n\n",
+          "stdout_ok": false
+        },
+        {
+          "bin": "/Users/voightkampff/.pinned-ailang/ailang.v0.30.0",
+          "sha256": "e9746fef8570bc42b8cc52c0e88b7088468a5d2bd38bb8c42e27e5859b8f3fb5",
+          "stderr": "2026/10/03 09:46:29 Observatory: 585MB (DB=581MB WAL=4MB) \u2014 running retention cleanup\n2026/10/03 09:46:29 Observatory cleanup: deleted spans=321 summaries=8 metrics=0 chat=0 tools=0 (size 585MB \u2192 583MB)\n",
+          "stdout_ok": true
+        }
+      ],
+      "banked_error_category": "none",
+      "banked_stderr": "\n\n=== Motoko Session Transcript ===\ntool_call: ReadFile {\"path\":\"/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/ailang_eval/effect_tracking_io_fs_motoko-local-qwen3-6-35b-a3b-mxfp8_20260721_154311_66977/effect_tracking_io_fs_ailang_motoko_66977/benchmark/solution.ail\"}\ntool_call: WriteFile {\"path\":\"/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/ailang_eval/effect_tracking_io_fs_motoko-local-qwen3-6-35b-a3b-mxfp8_20260721_154311_66977/effect_tracking_io_fs_ailang_motoko_66977/benchmark/solution.ail\",\"content\":\"module benchmark/solution\\nimport std/fs (writeFile)\\nimport std/io (println)\\n\\n",
+      "banked_stdout": "Sum: 30\nDone\n",
+      "banked_stdout_ok": true,
+      "cause": "version",
+      "compile_ok": true,
+      "elapsed_s": 0.098,
+      "id": "effect_tracking_io_fs",
+      "model": "motoko-local-qwen3-6-35b-a3b-mxfp8",
+      "path": "eval_results/rotation/os-rolling/v0.30.0/agent/effect_tracking_io_fs_ailang_motoko-local-qwen3-6-35b-a3b-mxfp8_1784641530.json",
+      "runtime_ok": false,
+      "solution_state": "present",
+      "stderr": "Error: effect checking failed in benchmark/solution: Effect checking failed for function 'main'\n  Function uses effects not declared in signature\n\n  Missing effects: FS\n\n  Current signature: func main(...) -> T ! {IO}\n  Suggested fix:     func main(...) -> T ! {FS, IO}\n\n",
+      "stdout": "",
+      "stdout_ok": false,
+      "timestamp": "2026-07-21T15:45:30.307258+02:00",
+      "tool_sha256": "e55ff71c710c10395ebf949f6777ef9114bed8bba859e3ba719ed73c6d1b9c7f"
+    },
+    {
+      "agree": false,
+      "alt": [
+        {
+          "bin": "/Users/voightkampff/.pinned-ailang/ailang",
+          "sha256": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+          "stderr": "Error: effect checking failed in benchmark/solution: Effect checking failed for function 'printResult'\n  Function uses effects not declared in signature\n\n  Missing effects: IO\n\n  Current signature: func printResult(...) -> T\n  Suggested fix:     func printResult(...) -> T ! {IO}\n\n",
+          "stdout_ok": false
+        },
+        {
+          "bin": "/Users/voightkampff/.pinned-ailang/ailang.v0.30.0",
+          "sha256": "e9746fef8570bc42b8cc52c0e88b7088468a5d2bd38bb8c42e27e5859b8f3fb5",
+          "stderr": "2026/10/03 09:46:33 Observatory: 583MB (DB=581MB WAL=2MB) \u2014 running retention cleanup\n2026/10/03 09:46:33 Observatory cleanup: deleted spans=65 summaries=2 metrics=0 chat=0 tools=0 (size 583MB \u2192 581MB)\n",
+          "stdout_ok": true
+        }
+      ],
+      "banked_error_category": "none",
+      "banked_stderr": "",
+      "banked_stdout": "ok: CREDIT(50)\nerr: insufficient_funds\nok: CREDIT(150)\nok: DISPENSING(25)\nerr: busy\nok: IDLE\nerr: no_credit\nok: CREDIT(100)\nok: DISPENSING(25)\nok: IDLE\n",
+      "banked_stdout_ok": true,
+      "cause": "version",
+      "compile_ok": true,
+      "elapsed_s": 0.038,
+      "id": "state_machine_vending",
+      "model": "opencode-qwen3-6-35b-a3b-mxfp8",
+      "path": "eval_results/rotation/os-rolling/v0.30.0/agent/state_machine_vending_ailang_opencode-qwen3-6-35b-a3b-mxfp8_1784552603.json",
+      "runtime_ok": false,
+      "solution_state": "present",
+      "stderr": "Error: effect checking failed in benchmark/solution: Effect checking failed for function 'printResult'\n  Function uses effects not declared in signature\n\n  Missing effects: IO\n\n  Current signature: func printResult(...) -> T\n  Suggested fix:     func printResult(...) -> T ! {IO}\n\n",
+      "stdout": "",
+      "stdout_ok": false,
+      "timestamp": "2026-07-20T15:03:23.225416+02:00",
+      "tool_sha256": "e55ff71c710c10395ebf949f6777ef9114bed8bba859e3ba719ed73c6d1b9c7f"
+    },
+    {
+      "agree": false,
+      "alt": [
+        {
+          "bin": "/Users/voightkampff/.pinned-ailang/ailang",
+          "sha256": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+          "stderr": "",
+          "stdout_ok": true
+        },
+        {
+          "bin": "/Users/voightkampff/.pinned-ailang/ailang.v0.30.0",
+          "sha256": "e9746fef8570bc42b8cc52c0e88b7088468a5d2bd38bb8c42e27e5859b8f3fb5",
+          "stderr": "2026/10/03 09:48:08 Observatory: 585MB (DB=581MB WAL=4MB) \u2014 running retention cleanup\n2026/10/03 09:48:08 Observatory cleanup: deleted spans=178 summaries=5 metrics=0 chat=0 tools=0 (size 585MB \u2192 582MB)\n",
+          "stdout_ok": true
+        }
+      ],
+      "banked_error_category": "runtime_error",
+      "banked_stderr": "execution timed out",
+      "banked_stdout": "",
+      "banked_stdout_ok": false,
+      "cause": "banked_grade_timeout",
+      "compile_ok": true,
+      "elapsed_s": 0.045,
+      "id": "prompt_injection",
+      "model": "opencode-qwen3-8-27b",
+      "path": "eval_results/rotation/os-rolling/v0.41.0/agent/prompt_injection_ailang_opencode-qwen3-8-27b_1790061149.json",
+      "runtime_ok": true,
+      "solution_state": "present",
+      "stderr": "",
+      "stdout": "1\n",
+      "stdout_ok": true,
+      "timestamp": "2026-09-22T09:12:29.758364+02:00",
+      "tool_sha256": "e55ff71c710c10395ebf949f6777ef9114bed8bba859e3ba719ed73c6d1b9c7f"
+    },
+    {
+      "agree": false,
+      "alt": [
+        {
+          "bin": "/Users/voightkampff/.pinned-ailang/ailang",
+          "sha256": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+          "stderr": "",
+          "stdout_ok": true
+        },
+        {
+          "bin": "/Users/voightkampff/.pinned-ailang/ailang.v0.30.0",
+          "sha256": "e9746fef8570bc42b8cc52c0e88b7088468a5d2bd38bb8c42e27e5859b8f3fb5",
+          "stderr": "2026/10/03 09:48:24 Observatory: 584MB (DB=581MB WAL=3MB) \u2014 running retention cleanup\n2026/10/03 09:48:24 Observatory cleanup: deleted spans=66 summaries=2 metrics=0 chat=0 tools=0 (size 584MB \u2192 581MB)\nError: IMP010: symbol 'jint' not exported by 'std/json'\n",
+          "stdout_ok": false
+        }
+      ],
+      "banked_error_category": "compile_error",
+      "banked_stderr": "Warning: stdlib version mismatch: expected v0.51.1-dirty, found v0.52.0 at /Users/voightkampff/dev/sunholo-data/ailang/std\nError: type error in std/math (decl 23): undefined variable: shiftRightLogical_Int at /Users/voightkampff/dev/sunholo-data/ailang/std/math.ail:145:61\n\n\n=== Motoko Session Transcript ===\ntool_call: ReadFile {\"path\":\"/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/ailang_eval/config_file_parser_motoko-local-qwen3-8-27b-microrag_20261003_013435_82719/config_file_parser_ailang_motoko_82719/benchmark/solution.ail\"}\ntool_call: BashExec {\"cmd\":\"which ailang; ailang --version 2>&",
+      "banked_stdout": "",
+      "banked_stdout_ok": false,
+      "cause": "banked_stdlib_skew_v37",
+      "compile_ok": true,
+      "elapsed_s": 0.147,
+      "id": "config_file_parser",
+      "model": "motoko-local-qwen3-8-27b-microrag",
+      "path": "eval_results/rotation/os-rolling/v0.51.1/agent/config_file_parser_ailang_motoko-local-qwen3-8-27b-microrag_1790984443.json",
+      "runtime_ok": true,
+      "solution_state": "present",
+      "stderr": "",
+      "stdout": "Loaded MyApp v1.0.0 on port 8080 with 3 features\n",
+      "stdout_ok": true,
+      "timestamp": "2026-10-03T01:40:43.103783+02:00",
+      "tool_sha256": "e55ff71c710c10395ebf949f6777ef9114bed8bba859e3ba719ed73c6d1b9c7f"
+    },
+    {
+      "agree": false,
+      "alt": [
+        {
+          "bin": "/Users/voightkampff/.pinned-ailang/ailang",
+          "sha256": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+          "stderr": "",
+          "stdout_ok": true
+        },
+        {
+          "bin": "/Users/voightkampff/.pinned-ailang/ailang.v0.30.0",
+          "sha256": "e9746fef8570bc42b8cc52c0e88b7088468a5d2bd38bb8c42e27e5859b8f3fb5",
+          "stderr": "2026/10/03 09:48:24 Observatory: 581MB (DB=581MB WAL=0MB) \u2014 running retention cleanup\n2026/10/03 09:48:24 Observatory cleanup: deleted spans=0 summaries=0 metrics=0 chat=0 tools=0 (size 581MB \u2192 581MB)\n",
+          "stdout_ok": true
+        }
+      ],
+      "banked_error_category": "compile_error",
+      "banked_stderr": "Warning: stdlib version mismatch: expected v0.51.1-dirty, found v0.52.0 at /Users/voightkampff/dev/sunholo-data/ailang/std\nError: type error in std/math (decl 23): undefined variable: shiftRightLogical_Int at /Users/voightkampff/dev/sunholo-data/ailang/std/math.ail:145:61\n\n\n=== Pi Session Transcript ===\nThe solution works. The program output is exactly:\n\n```\nLoaded MyApp v1.0.0 on port 8080 with 3 features\n```\n\n(The `2026/10/03...OTel` line is a stderr warning from the Go runtime, not part of the program's stdout.)\n\nSummary of what the solution does:\n- **`countDots`** \u2014 counts `.` in a version",
+      "banked_stdout": "",
+      "banked_stdout_ok": false,
+      "cause": "banked_stdlib_skew_v37",
+      "compile_ok": true,
+      "elapsed_s": 0.135,
+      "id": "config_file_parser",
+      "model": "pi-qwen3-8-27b",
+      "path": "eval_results/rotation/os-rolling/v0.51.1/agent/config_file_parser_ailang_pi-qwen3-8-27b_1791006301.json",
+      "runtime_ok": true,
+      "solution_state": "present",
+      "stderr": "",
+      "stdout": "Loaded MyApp v1.0.0 on port 8080 with 3 features\n",
+      "stdout_ok": true,
+      "timestamp": "2026-10-03T07:45:01.697486+02:00",
+      "tool_sha256": "e55ff71c710c10395ebf949f6777ef9114bed8bba859e3ba719ed73c6d1b9c7f"
+    },
+    {
+      "agree": false,
+      "alt": [
+        {
+          "bin": "/Users/voightkampff/.pinned-ailang/ailang",
+          "sha256": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+          "stderr": "Error: effect checking failed in benchmark/solution: Effect checking failed for function 'printResult'\n  Function uses effects not declared in signature\n\n  Missing effects: IO\n\n  Current signature: func printResult(...) -> T\n  Suggested fix:     func printResult(...) -> T ! {IO}\n\n",
+          "stdout_ok": false
+        },
+        {
+          "bin": "/Users/voightkampff/.pinned-ailang/ailang.v0.30.0",
+          "sha256": "e9746fef8570bc42b8cc52c0e88b7088468a5d2bd38bb8c42e27e5859b8f3fb5",
+          "stderr": "2026/10/03 09:48:30 Observatory: 581MB (DB=581MB WAL=0MB) \u2014 running retention cleanup\n2026/10/03 09:48:30 Observatory cleanup: deleted spans=0 summaries=0 metrics=0 chat=0 tools=0 (size 581MB \u2192 581MB)\n",
+          "stdout_ok": true
+        }
+      ],
+      "banked_error_category": "none",
+      "banked_stderr": "",
+      "banked_stdout": "ok: CREDIT(50)\nerr: insufficient_funds\nok: CREDIT(150)\nok: DISPENSING(25)\nerr: busy\nok: IDLE\nerr: no_credit\nok: CREDIT(100)\nok: DISPENSING(25)\nok: IDLE\n",
+      "banked_stdout_ok": true,
+      "cause": "version",
+      "compile_ok": true,
+      "elapsed_s": 0.04,
+      "id": "state_machine_vending",
+      "model": "pi-qwen3-6-35b-a3b-mxfp8",
+      "path": "eval_results/rotation/postfix-broad-pi-20260621/agent/state_machine_vending_ailang_pi-qwen3-6-35b-a3b-mxfp8_1782021446.json",
+      "runtime_ok": false,
+      "solution_state": "present",
+      "stderr": "Error: effect checking failed in benchmark/solution: Effect checking failed for function 'printResult'\n  Function uses effects not declared in signature\n\n  Missing effects: IO\n\n  Current signature: func printResult(...) -> T\n  Suggested fix:     func printResult(...) -> T ! {IO}\n\n",
+      "stdout": "",
+      "stdout_ok": false,
+      "timestamp": "2026-06-21T07:57:26.46668+02:00",
+      "tool_sha256": "e55ff71c710c10395ebf949f6777ef9114bed8bba859e3ba719ed73c6d1b9c7f"
+    }
+  ],
+  "summary": {
+    "agree": 1351,
+    "agreement": 0.9955784819454679,
+    "agreement_excluding_version_caused": 0.9977843426883308,
+    "alt_bins": [
+      {
+        "bin": "/Users/voightkampff/.pinned-ailang/ailang",
+        "sha256": "1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f"
+      },
+      {
+        "bin": "/Users/voightkampff/.pinned-ailang/ailang.v0.30.0",
+        "sha256": "e9746fef8570bc42b8cc52c0e88b7088468a5d2bd38bb8c42e27e5859b8f3fb5"
+      }
+    ],
+    "api_call_json_mock": {
+      "bound+hit": 80,
+      "no-single-port": 2
+    },
+    "banked_fail_rows": 85,
+    "banked_pass_rows": 1272,
+    "corpus_commit": "76a5aef65c81ac2fb4657fafaeff4a89e9faaf75",
+    "corpus_digest": "4c17fc4935311de98cf64d98d9a218af0dc66fe1b753195ab5f0175a529a8588",
+    "disagreement_causes": {
+      "banked_grade_timeout": 1,
+      "banked_stdlib_skew_v37": 2,
+      "version": 3
+    },
+    "disagreements": 6,
+    "executed_tool_sha256": [
+      "e55ff71c710c10395ebf949f6777ef9114bed8bba859e3ba719ed73c6d1b9c7f"
+    ],
+    "grader": "floor-grade/1 (port of ailang runner.go+agent_validation.go @ corpus commit)",
+    "per_task": {
+      "api_call_json": {
+        "agree": 82,
+        "n": 82
+      },
+      "ast_patch_roundtrip": {
+        "agree": 80,
+        "n": 80
+      },
+      "cli_args": {
+        "agree": 83,
+        "n": 83
+      },
+      "config_file_parser": {
+        "agree": 82,
+        "n": 84
+      },
+      "contract_bst_validate": {
+        "agree": 71,
+        "n": 71
+      },
+      "contract_leap_year": {
+        "agree": 30,
+        "n": 30
+      },
+      "contract_roman_numeral": {
+        "agree": 66,
+        "n": 66
+      },
+      "csv_to_json_converter": {
+        "agree": 65,
+        "n": 65
+      },
+      "effect_composition": {
+        "agree": 21,
+        "n": 21
+      },
+      "effect_tracking_io_fs": {
+        "agree": 64,
+        "n": 65
+      },
+      "error_handling": {
+        "agree": 67,
+        "n": 67
+      },
+      "explicit_dataflow_ssa": {
+        "agree": 57,
+        "n": 57
+      },
+      "float_eq": {
+        "agree": 20,
+        "n": 20
+      },
+      "higher_order_functions": {
+        "agree": 71,
+        "n": 71
+      },
+      "intent_annotated_solver": {
+        "agree": 61,
+        "n": 61
+      },
+      "json_transform": {
+        "agree": 65,
+        "n": 65
+      },
+      "list_comprehension": {
+        "agree": 60,
+        "n": 60
+      },
+      "merge_sort": {
+        "agree": 16,
+        "n": 16
+      },
+      "pipeline": {
+        "agree": 62,
+        "n": 62
+      },
+      "prompt_injection": {
+        "agree": 18,
+        "n": 19
+      },
+      "state_machine_elevator": {
+        "agree": 68,
+        "n": 68
+      },
+      "state_machine_vending": {
+        "agree": 81,
+        "n": 83
+      },
+      "tree_transformation_pipeline": {
+        "agree": 61,
+        "n": 61
+      }
+    },
+    "regraded": 1357,
+    "selection": {
+      "core_files": 1979,
+      "eligible": 1357,
+      "excluded_shape": 141,
+      "excluded_yaml_changed_since": 481
+    },
+    "tool_bin": "/Users/voightkampff/.pinned-ailang-tools/v0.51.0/ailang",
+    "tool_sha256": "e55ff71c710c10395ebf949f6777ef9114bed8bba859e3ba719ed73c6d1b9c7f",
+    "yaml_last_change": {
+      "api_call_json": "2026-06-05T08:30:38+02:00",
+      "ast_patch_roundtrip": "2026-05-21T09:36:26+02:00",
+      "cli_args": "2026-05-21T09:43:38+02:00",
+      "config_file_parser": "2026-05-21T09:43:38+02:00",
+      "contract_bst_validate": "2026-05-21T09:43:38+02:00",
+      "contract_leap_year": "2026-08-04T11:46:31+02:00",
+      "contract_roman_numeral": "2026-05-21T09:43:38+02:00",
+      "csv_to_json_converter": "2026-05-21T09:43:38+02:00",
+      "effect_composition": "2026-08-04T11:46:31+02:00",
+      "effect_tracking_io_fs": "2026-05-21T09:43:38+02:00",
+      "error_handling": "2026-05-21T09:36:26+02:00",
+      "explicit_dataflow_ssa": "2026-05-21T09:13:46+02:00",
+      "float_eq": "2026-08-04T11:46:31+02:00",
+      "higher_order_functions": "2026-05-21T09:36:26+02:00",
+      "intent_annotated_solver": "2026-05-21T09:36:26+02:00",
+      "json_transform": "2026-05-21T09:36:26+02:00",
+      "list_comprehension": "2026-05-21T09:36:26+02:00",
+      "merge_sort": "2026-08-04T11:46:31+02:00",
+      "pipeline": "2026-05-21T09:43:38+02:00",
+      "prompt_injection": "2026-08-17T21:23:38+02:00",
+      "state_machine_elevator": "2026-05-21T09:36:26+02:00",
+      "state_machine_vending": "2026-05-21T09:36:26+02:00",
+      "tree_transformation_pipeline": "2026-05-21T09:43:38+02:00"
+    }
+  }
+}
