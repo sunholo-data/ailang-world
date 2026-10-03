@@ -71,8 +71,10 @@ Same, for `session mint`. Run it at a real terminal.
 
 ### `STOP fence=confirmation reason=mismatch`
 
-The typed line is not the exact phrase. All three attended `world-publish` verbs, including
-`transitions`, currently ask for `publish world/core@0.1.1 irreversibly`. See
+The typed line is not the exact phrase. `approve` and `publish` ask for
+`publish world/core@0.1.1 irreversibly`; `transitions` asks for
+`publish <N> transitions to <store>`, with the manifest's descriptor count and the `--store`
+you gave. Type the line exactly as printed. See
 [Attended steps](attended-steps.md#the-confirmation-phrase).
 
 ### `interpreter release "…" is nominated by NO epoch in world/epoch-registry/v1`
@@ -85,9 +87,10 @@ interpreter. Start `serve --ailang-bin $PIN` once against the store, stop it, th
 The transition source failed `check` under the pinned interpreter. A common cause is importing
 `world/*`: publishable modules must be self-contained and import only `std/*`.
 
-### `session revoke: usage: session revoke <credential_id-hash> [--db <path>]`
+### `session revoke: usage: session revoke [--db <path>] <credential_id-hash> (flags before the id)`
 
-Put `--db` before the credential ID: `session revoke --db /path/world.db <credential_id>`.
+Flags after the ID are not parsed. Put `--db` before the credential ID:
+`session revoke --db /path/world.db <credential_id>`.
 
 ## Committing
 

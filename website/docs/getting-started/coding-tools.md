@@ -207,7 +207,8 @@ An argument outside a tool's schema is refused by its plan (`{"ok":false,"refuse
 
 ## 9. Connect pi
 
-pi loads the server through pi-mcp-adapter (measured on adapter 2.32.1 with pi 0.85.1).
+pi loads the server through pi-mcp-adapter (measured on adapter 2.32.1 with pi 0.85.1; 2.33.0
+is the version installed on the reference rig on 2026-10-03).
 `directTools` registers each tool as its own pi tool named `<server>_<tool>`, so server `world`
 gives `world_ailang-read` and so on:
 

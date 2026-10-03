@@ -205,7 +205,7 @@ func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
 	}
 	rest := fs.Args()
 	if len(rest) != 1 {
-		fmt.Fprintln(stderr, "ailang-worldd session revoke: usage: session revoke <credential_id-hash> [--db <path>]")
+		fmt.Fprintln(stderr, "ailang-worldd session revoke: usage: session revoke [--db <path>] <credential_id-hash> (flags before the id)")
 		return exitUsage
 	}
 	if *dbPath == "" {

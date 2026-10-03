@@ -1,19 +1,35 @@
 # Quickstart — run AILANG World's daemon in 5 minutes
 
-*Every command below was executed verbatim on 2026-07-28 against `dev` (attended demo, Mark +
-coordinator). Maintained under coding-standards **S7**: if this doc drifts from the binary,
-that is a defect.*
+*§1–§5 were first executed verbatim on 2026-07-28 against `dev` (attended demo, Mark +
+coordinator); §9 was executed verbatim in the row-134 M6 smoke on 2026-10-03. On 2026-10-03
+§1–§4 were brought up to date with the session-gated commit and the v0.41.0 interpreter pin
+(queue row 137): the serve, health, unsessioned-commit (`401 SessionAbsent`) and mint-fence
+steps were re-measured against a scratch daemon; the minted-session commit was not, because
+mint needs a human at a terminal. Maintained under coding-standards **S7**: if this doc drifts
+from the binary, that is a defect.*
+
+> **Shortest path.** The software-engineering tools in [§9](#9-software-engineering-tools) are
+> what an agent actually uses; `tools/attended/se_smoke.sh` runs that section one step at a
+> time. Once a daemon is serving, `ailang-worldd tools list`, `call`, `why`, `log tail` and
+> `provenance` replace hand-written curl (`ailang-worldd <verb> --help` for each).
 
 ## 1. Build and start
 
+`PIN` is the `.ail` interpreter pin, **AILANG v0.41.0**. It runs every transition plan and its
+content hash is in every log entry. Unset `AILANG_REGISTRY_API_KEY` first: with it in the
+environment, the daemon refuses to start.
+
 ```bash
+export PIN=$HOME/.pinned-ailang/ailang
+$PIN --version
+unset AILANG_REGISTRY_API_KEY
 go build -o /tmp/ailang-worldd ./cmd/ailang-worldd
-/tmp/ailang-worldd serve --db /tmp/world-demo.db --ailang-bin /tmp/ailang-v0300/ailang &
+/tmp/ailang-worldd serve --db /tmp/world-demo.db --ailang-bin $PIN &
 ```
 
 `serve` is loopback-only (a non-loopback `--bind` is refused, no override). `--ailang-bin`
 archives and pins the interpreter at startup — its content hash becomes the D1 replay pin that
-every log entry carries.
+every log entry carries. The first start also bootstraps the epoch registry for that pin.
 
 Every read below is bounded: a store read that has not answered within **10 s** is abandoned and
 the route answers **HTTP 503, class `Timeout`**, naming the deadline — never a hang and never a
@@ -32,16 +48,21 @@ Returns the daemon version, DB path, and the pinned `interpreter_ref` + version.
 
 ## 2. Commit the genesis transition
 
+`POST /v1/commit` is **session-gated**: without a session it answers
+`HTTP 401 SessionAbsent: a session credential is required`. A session is minted by an attended,
+local operator verb that needs single-writer authority, so the order is: write the commit, stop
+the daemon, mint, serve again, commit with `--session`.
+
 A commit is JSON: `observedHead` (empty for genesis) + content-addressed `objects` (payload
 base64; `hash` MUST be `sha256:<hex>` of the payload bytes — the store verifies) + `nextWorld`
 + the frozen 6-field log `entry` header. Generate a valid one:
 
 ```bash
 python3 - <<'EOF'
-import json, hashlib, base64
+import json, hashlib, base64, os
 def sha(b): return "sha256:" + hashlib.sha256(b).hexdigest()
 payload = json.dumps({"goal": "hello, World"}).encode()
-interp  = open("/tmp/ailang-v0300/ailang","rb").read()
+interp  = open(os.environ["PIN"],"rb").read()
 eh = sha(b"genesis-entry-1")
 c = {"observedHead": "",
      "objects": [{"hash": sha(payload), "interfaceHash": sha(b"iface-v1"),
@@ -55,10 +76,24 @@ c = {"observedHead": "",
                "entryHash": eh, "transitionRef": sha(payload)}}
 open("/tmp/genesis.json","w").write(json.dumps(c, indent=2))
 EOF
-/tmp/ailang-worldd commit --file /tmp/genesis.json
 ```
 
-Returns `{"selectedHead": "sha256:…"}` — the world now exists.
+Stop the daemon, mint a session, and start the daemon again. **Mint is TTY-fenced**: it asks a
+one-line y/N on the controlling terminal and, without one, refuses with
+`session mint: refusing: no controlling terminal`. In an embedded terminal (an IDE pane, an
+agent harness) append `< /dev/tty`. The `world.apply` grant is the one §6's published skill
+needs, so §6 reuses this session:
+
+```bash
+kill %1
+/tmp/ailang-worldd session mint --db /tmp/world-demo.db --episode quickstart \
+  --grant world.apply=world:10 --ttl 14400 --out /tmp/qs-session
+/tmp/ailang-worldd serve --db /tmp/world-demo.db --ailang-bin $PIN &
+/tmp/ailang-worldd commit --file /tmp/genesis.json --session /tmp/qs-session
+```
+
+Returns `{"selectedHead": "sha256:…"}` — the world now exists. `--session` takes the file (mode
+0600) or the token itself; `$WORLD_SESSION` is the fallback.
 
 A commit is bounded too: **3 s** of store work. If it answers **HTTP 503**, read the class.
 `Timeout` means the budget ended *before* the durable step: nothing landed, and resending the
@@ -100,11 +135,12 @@ that is the replay pin, live. Object payloads read back with
 ## 4. See the guarantees refuse things
 
 ```bash
-/tmp/ailang-worldd commit --file /tmp/genesis.json
+/tmp/ailang-worldd commit --file /tmp/genesis.json --session /tmp/qs-session
 ```
 
 → HTTP 409 `HeadConflict` with `observedHead`/`selectedHead` — the structured conflict a
-caller re-plans from; stale writers get facts, not corruption.
+caller re-plans from; stale writers get facts, not corruption. Without `--session` the same
+command is refused earlier, `HTTP 401 SessionAbsent`.
 
 ```bash
 /tmp/ailang-worldd serve --db /tmp/world-demo.db
@@ -151,18 +187,20 @@ go build -o /tmp/world-publish ./cmd/world-publish
   --interpreter-ref <interpreter_ref from health>
 ```
 
-Type the confirmation phrase when asked. Output: `semantics epoch 1 derived from
+`world-publish` refuses without a controlling terminal
+(`STOP fence=tty reason=…`; append `< /dev/tty` in an embedded terminal), then asks you to type
+a line naming the local write — here `publish 1 transitions to /tmp/world-demo.db` (the
+manifest's descriptor count and the `--store` you gave). Output: `semantics epoch 1 derived from
 world/epoch-registry/v1 for interpreter release "…"` then `published transition registry revision
 1 (head sha256:…)`. Running it again prints `transition registry UNCHANGED at revision 1` — an
 identical republish writes nothing. `semanticsEpoch` is omitted on purpose: it is derived from the
 epoch registry the daemon bootstrapped, never defaulted.
 
-Mint a session that holds the skill's capability, restart the daemon, and read the card:
+The session minted in §2 already holds the skill's capability (`world.apply`). Restart the
+daemon and read the card:
 
 ```bash
-/tmp/ailang-worldd session mint --db /tmp/world-demo.db --episode quickstart \
-  --grant world.apply=world:10 --out /tmp/qs-session
-/tmp/ailang-worldd serve --db /tmp/world-demo.db --ailang-bin /tmp/ailang-v0300/ailang &
+/tmp/ailang-worldd serve --db /tmp/world-demo.db --ailang-bin $PIN &
 curl -s -H "Authorization: Bearer $(cat /tmp/qs-session)" http://127.0.0.1:7644/.well-known/agent.json
 ```
 
@@ -188,11 +226,14 @@ curl -s -H "Authorization: Bearer $(cat /tmp/qs-session)" \
 The result has task `id` `quickstart-1`, `status.state` `completed`, one JSON-object
 `artifacts[0].parts[0].data`, and `metadata.invocation_id`, `metadata.world_ref`, and
 `metadata.entry_index`. Repeat the same `curl` command with the same task ID to retrieve
-the committed result without executing the transition again. Inspect its log entry:
+the committed result without executing the transition again. Inspect its log entry, or walk
+its whole provenance chain (entry, invocation record, input, plan, effects, output — every link
+checked):
 
 ```bash
 curl -s -H "Authorization: Bearer $(cat /tmp/qs-session)" \
   http://127.0.0.1:7644/v1/log/1
+/tmp/ailang-worldd why 1
 ```
 
 ---
@@ -227,8 +268,12 @@ Each call item receives fresh admission and a new random task ID, even when JSON
 repeat. Without an explicit version, or with `MCP-Protocol-Version: 2025-03-26`, batches run
 sequentially. Versions `2025-06-18` and `2025-11-25` refuse batches. A host failure returns
 one whole-request error; earlier items may already have committed. Retries create new tasks
-and may repeat effects. Inspect the daemon journal at `/v1/log/<entry_index>` before retrying
-a lost response; MCP JSON-RPC IDs provide no idempotency guarantee.
+and may repeat effects. MCP JSON-RPC IDs provide no idempotency guarantee, and an MCP result
+carries **no** log entry index (unlike A2A's `metadata.entry_index`). Before retrying a lost
+response, look at what committed: `ailang-worldd log tail` lists the latest entries with their
+episode, skill and effect statuses, and `ailang-worldd why <index>` walks one. `ailang-worldd
+call` runs that probe itself on a host failure: `a commit landed (entry N)` means do not retry,
+run `why N`.
 
 The production callback runner allows eight callbacks, each bounded at 20 seconds. Its slots
 remain occupied until callbacks return; the separate subprocess limit is also eight and remains
@@ -269,8 +314,9 @@ Four facts measured on the first M6 run (2026-10-03):
 - **Unset `AILANG_REGISTRY_API_KEY`** in the shell that starts the daemon. With it in the
   environment, the daemon refuses to start.
 - The two attended steps (publish, mint) are TTY-fenced. In an embedded terminal (an IDE pane,
-  an agent harness) they fail `fence=tty reason=stdin-is-not-the-controlling-terminal`; append
-  `< /dev/tty` to those two commands.
+  an agent harness) `world-publish` stops with `STOP fence=tty reason=…` (for example
+  `stdin-is-not-the-controlling-terminal`) and `session mint` with `refusing: no controlling
+  terminal`; append `< /dev/tty` to those two commands.
 - `POST /v1/commit` is session-gated, so the genesis commit comes **after** mint, against the
   running daemon, with `--session`.
 - `/mcp/` answers as SSE: the JSON-RPC response is the `data:` line of an `event: message`.
@@ -343,8 +389,9 @@ EOF
 
 **Publish (attended, TTY fence).** Run this from the **repo root**, because the manifest's
 `transitionFnFile` paths are repo-relative. The daemon must be stopped, since publishing needs
-single-writer authority. `world-publish` refuses without a controlling terminal and asks for the
-typed confirmation phrase. An agent cannot run this step:
+single-writer authority. `world-publish` refuses without a controlling terminal and asks you to
+type `publish 8 transitions to /tmp/se-world/world.db` (the manifest's descriptor count and the
+store). An agent cannot run this step:
 
 ```bash
 /tmp/world-publish transitions --store /tmp/se-world/world.db \
@@ -436,7 +483,8 @@ The result adds `policy: {digest, security_mode, caps, net_allow}`, the verified
 executed under. A capability the operator did not enable is refused before anything runs (the
 effect is recorded `failed`); one the session holds no grant for is `denied`.
 
-**pi** loads the server through pi-mcp-adapter, measured on 2.32.1 with `pi` 0.85.1.
+**pi** loads the server through pi-mcp-adapter, first measured on 2.32.1 with `pi` 0.85.1 and
+installed at 2.33.0 on 2026-10-03 (`~/.pi/agent/npm/node_modules/pi-mcp-adapter/package.json`).
 `directTools` registers each tool as its own pi tool. The adapter names a direct tool
 `<server>_<tool>` with `.` replaced by `_` (`formatToolName`, `toolPrefix: "server"`), so server
 `world` gives `world_ailang-read` and so on:
@@ -475,5 +523,19 @@ claude -p "Read hello.ail, change its message to 'hello from claude', check it, 
 ```
 
 Confirm the `mcp__world__*` names in an interactive `claude --strict-mcp-config --mcp-config
-/tmp/se-claude/.mcp.json` session with `/mcp`. Every call from either client is one log entry:
-read them back with `/v1/log/<entry_index>` as in §7.
+/tmp/se-claude/.mcp.json` session with `/mcp`. Every call from either client is one log entry.
+An MCP result carries no entry index, so read calls back with the developer CLI rather than
+`/v1/log/<entry_index>`:
+
+```bash
+/tmp/ailang-worldd tools list --session /tmp/se-session
+/tmp/ailang-worldd call ailang-read --session /tmp/se-session --arg path=hello.ail --json-out | /tmp/ailang-worldd why -
+/tmp/ailang-worldd log tail
+/tmp/ailang-worldd provenance --episode ep1
+```
+
+`call --json-out` prints the committed output bytes, whose hash is the output ref, so `why -`
+finds the entry that committed it and walks the chain (exit 3 on any broken link). `log tail`
+shows the latest entries with episode, skill and effect statuses. `provenance` prints the
+`World-Provenance: store=… episode=ep1 entries=<from>-<to>` trailer for a PR or commit made
+through World (D-WORLD-60; label such PRs `ailang-world`).

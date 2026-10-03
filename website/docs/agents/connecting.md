@@ -58,7 +58,8 @@ MCP facts worth knowing:
 
 ## pi (pi-mcp-adapter)
 
-Measured with pi 0.85.1 and pi-mcp-adapter 2.32.1. `directTools: true` registers each World tool as its own pi tool, named `<server>_<tool>`, so server `world` gives `world_ailang-read` and so on.
+Measured with pi 0.85.1 and pi-mcp-adapter 2.32.1; the adapter installed on the reference rig
+on 2026-10-03 is 2.33.0. `directTools: true` registers each World tool as its own pi tool, named `<server>_<tool>`, so server `world` gives `world_ailang-read` and so on.
 
 ```json title="world-mcp.json"
 {"mcpServers": {"world": {"url": "http://127.0.0.1:7644/mcp/", "auth": "bearer",

@@ -65,9 +65,8 @@ ailang-worldd session revoke --db /path/world.db <credential_id>
 Revocation deletes the mapping row, so the next request with that token is `SessionUnknown`.
 It needs no terminal. Like mint, it opens the store for writing, so stop the daemon first.
 
-Put `--db` **before** the `credential_id`. The command's own usage line shows
-`session revoke <credential_id-hash> [--db <path>]`, but flags after the ID are not parsed and
-that order fails with the usage message. Revoking an ID that does not exist still prints
+Put `--db` **before** the `credential_id`: flags after the ID are not parsed, and that order
+fails with the usage message. Revoking an ID that does not exist still prints
 `revoked session credential …` and exits 0.
 
 ## What a session gates

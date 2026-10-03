@@ -160,6 +160,8 @@ Read routes (open in this version; send your bearer header anyway):
 - `GET /v1/log/<index>` -> one entry; `transitionRef` is the invocation record
 - `GET /v1/objects/<ref>?payload=true` -> object with base64 `payload`
 
+An MCP result carries no log entry index. With a shell and the `ailang-worldd` CLI, `ailang-worldd log tail` lists recent entries, `ailang-worldd why <index|head|->` walks one (piping `ailang-worldd call ... --json-out` into `why -` finds the entry that committed that output), and `ailang-worldd provenance --episode <ep>` prints the `World-Provenance` trailer for a PR made through World (label such PRs `ailang-world`).
+
 The invocation record (`world/invocation-record/v2`) names `skillId`, `input` (your arguments), `output` (your result), `plan` and `effects` (effect record refs). An effect record (`world/effect-record/v1`) has `effect`, `scope`, `cost`, `budgetBefore`, `budgetAfter`, `allowed`, `failed`, `denial`, `requestRef`, `resultRef`. MCP and A2A calls are both logged with `writtenBy: "coordinator:a2a"`.
 
 Retries: MCP calls are at-least-once (each `tools/call` runs again and is recorded again); A2A task ids are idempotent within the session. If a response is lost, page the log before resending.

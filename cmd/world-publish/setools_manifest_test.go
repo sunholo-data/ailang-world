@@ -40,11 +40,11 @@ func TestSeToolsManifestPublishes(t *testing.T) {
 	t.Chdir(filepath.Join("..", ".."))
 
 	flags := map[string]string{"store": storePath, "manifest": "packages/se-tools/transitions.json", "ailang-bin": bin}
-	res := driveTransitions(t, flags, attendedPhrase+"\n", noEnv)
+	res := driveTransitions(t, flags, transitionsOK, noEnv)
 	if res.code != exitOK || !strings.Contains(res.stdout, "published transition registry revision 1") {
 		t.Fatalf("publish = (%d, %q, %q), want exit 0 and revision 1", res.code, res.stdout, res.stderr)
 	}
-	again := driveTransitions(t, flags, attendedPhrase+"\n", noEnv)
+	again := driveTransitions(t, flags, transitionsOK, noEnv)
 	if again.code != exitOK || !strings.Contains(again.stdout, "UNCHANGED at revision 1") {
 		t.Fatalf("republish = (%d, %q, %q), want the idempotent no-op", again.code, again.stdout, again.stderr)
 	}

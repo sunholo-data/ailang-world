@@ -200,9 +200,18 @@ func refuseAutomationEnvironment(getenv func(string) string) *stopError {
 // ---------------------------------------------------------------------------
 
 // requireTypedConfirmation reads ONE line and compares it with the exact
-// phrase.
+// package-publish phrase.
 func requireTypedConfirmation(in io.Reader, out io.Writer) *stopError {
-	fmt.Fprintf(out, "Type exactly, to proceed with an IRREVERSIBLE public write:\n  %s\n> ", attendedPhrase)
+	return requireTypedPhrase(in, out, "Type exactly, to proceed with an IRREVERSIBLE public write:", attendedPhrase)
+}
+
+// requireTypedPhrase prints prompt, then the phrase, reads ONE line and
+// compares it with the phrase. Every attended verb names what IT writes: the
+// package publish asks for attendedPhrase, the local transition-registry
+// write asks for transitionsPhrase (queue row 137 item 7) — an operator is
+// never asked to type a sentence that describes a different write.
+func requireTypedPhrase(in io.Reader, out io.Writer, prompt, phrase string) *stopError {
+	fmt.Fprintf(out, "%s\n  %s\n> ", prompt, phrase)
 	reader := bufio.NewReader(in)
 	line, err := reader.ReadString('\n')
 	// R-PHRASE-EOF. A closed stdin is not a silent yes. Note the deliberate
@@ -213,7 +222,7 @@ func requireTypedConfirmation(in io.Reader, out io.Writer) *stopError {
 			Detail: "stdin closed before a confirmation line was typed"}
 	}
 	// R-PHRASE
-	if strings.TrimSpace(line) != attendedPhrase {
+	if strings.TrimSpace(line) != phrase {
 		return &stopError{Fence: fenceConfirmation, Reason: "mismatch",
 			Detail: "the typed line is not the required confirmation phrase"}
 	}
@@ -236,6 +245,20 @@ func requireAttendedOperator(in io.Reader, out io.Writer, getenv func(string) st
 		return err
 	}
 	return requireTypedConfirmation(in, out)
+}
+
+// requireAttendedLocalWrite is the same fence stack as requireAttendedOperator
+// (automation environment, controlling terminal, typed line), with a typed
+// phrase that names the local write being confirmed instead of the package
+// publish. The CI and TTY fences are byte-identical: only the phrase differs.
+func requireAttendedLocalWrite(in io.Reader, out io.Writer, getenv func(string) string, probe ttyProbe, prompt, phrase string) *stopError {
+	if err := refuseAutomationEnvironment(getenv); err != nil {
+		return err
+	}
+	if err := requireControllingTerminal(probe); err != nil {
+		return err
+	}
+	return requireTypedPhrase(in, out, prompt, phrase)
 }
 
 // ---------------------------------------------------------------------------
