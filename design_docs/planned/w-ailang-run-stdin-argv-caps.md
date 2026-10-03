@@ -1,6 +1,6 @@
 # w-ailang-run-stdin-argv-caps — `ailang-run` gains stdin, argv and operator-allowlisted caps (Env, loopback Net) under the AILANG policy layer
 
-**Status**: PLANNED — attended draft 2026-10-03 (drafted by a read-only Plan agent, written to file by the attended controller). Queue row 135. No quorum yet. D-135-1..4 are open. Gated on row 134 landing on `dev`. Bases: ailang-world `dev` `926990d2a68b`; row-134 branch `efe3a9698a86`; ailang `76a5aef65c81`; tool binary v0.51.0 `b99dd25` (sha256 `e55ff71c710c1039…`).
+**Status**: PLANNED — attended draft 2026-10-03 (drafted by a read-only Plan agent, written to file by the attended controller). Queue row 135. No quorum yet. D-135-1..4 RULED (D-WORLD-56): HELD on ailang#1557. Gated on row 134 landing on `dev`. Bases: ailang-world `dev` `926990d2a68b`; row-134 branch `efe3a9698a86`; ailang `76a5aef65c81`; tool binary v0.51.0 `b99dd25` (sha256 `e55ff71c710c1039…`).
 **Clauses**: 4 (the World arm of the non-inferiority floor; counted as World tuning for row 93, D-WORLD-54) and 3 (each extra capability is explicit, brokered, budgeted and recorded).
 **Direction**: D-WORLD-55, D-NF-3 = B (widen `ailang-run` before row 93's FINAL). Row 134's discipline applies throughout: a pure plan with one brokered effect, confinement kept in AILANG's policy layer, a rendered policy, the deadline budget, the outcome shapes, mutants, and V-rows. Refinements are marked **[REFINED]**.
 **Estimate**: ≈ 2.75 executor days (M1–M3) + ≈ 0.5 d attended (M0, M4). That is above the row's original 1–1.5 d, because v0.51.0 cannot express Env or loopback Net in restricted mode (V8, V16).
@@ -243,7 +243,10 @@ stdin, argv and caps are in the content-addressed request object, so Replay retu
 | MUT-STDIN-CAP: the size bounds removed | AC1.1 + AC2.3 |
 | MUT-VARIANT-UNVERIFIED: the summary check skipped | AC2.1 (a tampered variant is refused) |
 
-## 8. Decisions (OPEN; recommended defaults in bold)
+## 8. Decisions — RULED by Mark, attended 2026-10-03 (D-WORLD-56)
+
+**D-135-1 = B: HOLD the row for upstream Declassify (ailang#1557).** D-135-2 = A, with loopback port scoping asked upstream (ailang#1558). D-135-3 = A. D-135-4 = A. The original options follow.
+
 - **D-135-1 Declassify.**
   - **A: ship stdin, argv, Env and Net now.** `prompt_injection` stays check-only in World and is reported per task in row 93; the upstream ask is filed in M0.
   - B: hold row 135 until upstream ships Declassify.
