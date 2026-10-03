@@ -42,8 +42,12 @@ on go1.26.6 darwin/arm64 with `AILANG_BIN` set to the v0.41.0 pin.
 | V5 | The scan looks at call `Fun` only | same | l.264–296 `ast.Inspect` matches only `*ast.CallExpr`. A banned func used as a **value** is never visited. The banned set is `os`.{WriteFile, OpenFile, Create, CreateTemp} (l.183) only |
 | V5a | Raw-fd routes that exist | `GOOS=darwin\|linux go doc syscall.{Open,Openat,Creat}`; `go doc os.NewFile`; `go doc os.Root \| grep 'func (r \*Root)'`; `go doc io/ioutil \| grep func` | `syscall.Open` exists on both. `Openat` and `Creat` are **linux only** ("no symbol" on darwin). `os.NewFile` exists. `*os.Root` has `Create`, `OpenFile`, `WriteFile` (the method objects have `Pkg()=="os"`, so the name set already matches them). `io/ioutil` has `WriteFile`, `TempFile` (they wrap `os`, so they evade an `os`-only scan) |
 | V5b | Today's imports | `grep -rln '"golang.org/x/sys/unix"\|"io/ioutil"' --include='*_test.go' .`; `grep -ln '"syscall"' host/verifygate/*.go` | no hits. `syscall` is imported by `mission_config_gate_test.go` and `forklocked_write_test.go` only. `x/sys` is `// indirect` in go.mod |
+| V5c | Zero live hits under the widened ban (quorum r1, glm/kimi). Each zero is paired with a known positive for the same instrument | (i) `grep -n 'syscall\.' host/verifygate/*.go \| grep -v forklocked_write_test.go`. (ii) `grep -rnE 'os\.NewFile\|syscall\.(Open\|Openat\|Creat)\b\|os\.Root\|OpenRoot\|ioutil' host/verifygate/`; control: the same pattern `grep -cE` on this doc. (iii) value-use probe `P='[=(,] *os\.(WriteFile\|OpenFile\|Create\|CreateTemp)([^a-zA-Z(]\|$)'`, `grep -rnE "$P" host/verifygate/`; controls: `printf 'wf := os.WriteFile\n' \| grep -cE "$P"`, and `grep -rnE "$P" host cmd` | (i) only `mission_config_gate_test.go:43 &syscall.SysProcAttr{Setpgid: true}` and `:55 syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)`, neither a banned name; control: the same grep on `forklocked_write_test.go` hits l.37–38 `syscall.ForkLock.RLock/RUnlock`. (ii) no output, rc=1; control: `10`. (iii) no output, rc=1; controls: `1`, and `host/boundary/allowlist_world_test.go:380:var rawWrite = os.WriteFile` (real code, outside the scan). **Instrument note:** the probe as first written (`…[^a-zA-Z(]` with no `\|$`) returned `0` on the `printf` control, because an end-of-line value use has no trailing char. The zero was only accepted after the `\|$` fix made the control fire |
+| V5d | Wrapper signatures that M1 drives (quorum r1, kimi) | `grep -nE '^func (writeFileForkLocked\|copyFileForkLocked\|createForkLocked\|createTempForkLocked\|forkLockedWrite)\(' host/verifygate/forklocked_write_test.go` | l.55 `forkLockedWrite(path string, flag int, mode os.FileMode, fill func(*os.File) error, hold func()) error`; l.60 `writeFileForkLocked(path string, data []byte, mode os.FileMode) error`; l.69 `copyFileForkLocked(src *os.File, dst, rel string, mode os.FileMode) error`; l.91 `createTempForkLocked(dir, pattern string, data []byte) (string, error)`; l.113 `createForkLocked(path string) error`. `forkLockedDo` is l.36 `(open func() (*os.File, error), fill func(*os.File) error, hold func()) error` |
+| V5e | CI runners (quorum r1, gemini) | `grep -n 'runs-on' .github/workflows/*.yml` | `20: runs-on: ubuntu-latest`, `118: runs-on: ubuntu-latest`. There is no macOS CI job |
 | V6 | The CI step passes on SKIP | `grep -n -A4 'Fork-locked write tests' .github/workflows/ci.yml` | l.200–204: a bare `go test … -v -run '^(…)$'` with no assertion on the output. A SKIP exits 0 |
 | V6a | Pipe hazard in this file | `sed -n 93,100p .github/workflows/ci.yml` | l.93 "NO PIPE. `cmd … \| grep -q` under `set -o pipefail` is a RACE" (SIGPIPE 141, measured 3/40). Other steps use `set -euo pipefail` |
+| V6b | Dry run of M3's step body at `2d3a255` (before M1–M3 exist), extracted from this doc | `RUNNER_TEMP=$(mktemp -d) bash body.sh`; then with `RUNNER_OS=Linux` | unset: rc=1 `::error::this step must run on linux`. `Linux`: `go test` `ok`, then rc=1 `::error::TestForkLockedWrappersHoldLockThroughClose did not PASS on linux (SKIP?)`: a listed test that never ran also fails the loop. After M1–M3 land, darwin fails on the kernel control instead (M3) |
 | V7 | Baseline of the fast tests | `go test ./host/verifygate/ -run 'TestForkLocked\|TestVerifygateTestWritesAreForkLocked\|TestKernelRefuses' -count=1 -v` | `PASS TestForkLockedWriteBlocksConcurrentFork (0.26s)`, `SKIP TestKernelRefusesExecOfWriterOpenFile`, `PASS TestVerifygateTestWritesAreForkLocked (1.96s)`, `ok 2.492s` |
 | V8 | A closed file is detectable | `/tmp` probe (deleted): `CreateTemp`, `Close`, `f.Stat()` | `file already closed isErrClosed=true` (`errors.Is(err, os.ErrClosed)`) |
 | V9 | R2: packages that write and fork, and their parallelism | `grep -rln 't\.Parallel()' --include='*.go' host cmd`. Then, per dir over all `*.go`, count `os\.(WriteFile\|OpenFile\|Create\|CreateTemp)\(` × `exec\.Command(Context)?\(\|os\.StartProcess\(\|syscall\.(ForkExec\|StartProcess)\(` × `t\.Parallel()` | `t.Parallel` appears **only** in `host/verifygate/{mission_config,module_manifest}_gate_test.go`. 12 write+fork dirs: `cmd/ailang-worldd` w22 e4, `cmd/world-publish` w11 e1, `host/archive` w8 e3, `host/broker` w25 e8, `host/capsule` w10 e3, `host/coordinator` w1 e3, `host/daemon` w9 e2, `host/pkgproj` w5 e7, `host/replay` w5 e1, `host/runbook` w1 e2, `host/store` w3 e2, `host/verifygate` (par 10). **Parallel outside verifygate: 0** |
@@ -55,6 +59,22 @@ on go1.26.6 darwin/arm64 with `AILANG_BIN` set to the v0.41.0 pin.
   (V3). That is why narrowing the exemption to those closures is a clean cut.
 - (b) Widening the ForkLock discipline to the 11 serial packages means more than 100 write sites
   (V9). That is well over 0.5 d, so R2 gets a tripwire, not a widening (decision D3).
+
+## Quorum r1 dispositions
+
+Round 1 blocked 3/3 ([artifact](../verification/world-iter229/w-verifygate-forklock-guard-residuals-2026-10-03T19-28-41Z.json)).
+Each premise was measured before revising.
+
+- **gemini-3-1-pro — "the CI grep breaks the macOS workflow": REFUTED** (V5e: both jobs are
+  `ubuntu-latest`). We do **not** add a `RUNNER_OS` skip guard: it would make any future non-Linux
+  leg silently skip the very check, which is the SKIP hole this row closes. The step instead gains a
+  fail-loud linux precondition (M3).
+- **oc-glm-5-3 / oc-kimi-k3 — "zero live violations is asserted, not measured": APPLIED** as V5c,
+  with a known positive per zero, and a contingency clause in D2.
+- **oc-kimi-k3 — wrapper signatures unmeasured: APPLIED** as V5d; M1's drive list matches it.
+- **oc-kimi-k3 — N-OpenClosure could read as a local shadow: APPLIED** (fixture reworded, M2).
+- **oc-glm-5-3 (secondary) — the CI step checks only the kernel control: APPLIED.** It now
+  asserts a top-level `--- PASS:` line for every test in its `-run` list (M3, AC8, AC11).
 
 ## Decisions
 
@@ -116,6 +136,10 @@ The scan also changes in these ways:
 - The import bans gain `"io/ioutil"` and `"golang.org/x/sys/unix"` (zero today, V5b), next to the
   existing aliased/dot `"os"` ban.
 - Violations are sorted, because map iteration is unordered.
+- **Contingency** (glm): V5c measures zero live hits today. If M2's first live run nevertheless
+  surfaces a non-exempt hit, that use is exempted by package-scope object identity, like the kernel
+  control, or the syscall-name ban is split to a follow-up row. The scan must not red on
+  pre-existing legitimate code, and the executor must report the hit and the choice made.
 - The `where` text is the enclosing FuncDecl name, or `package-level initializer`.
 - `Openat`/`Creat` resolve only when the scan runs on linux (V5a). A linux-tagged file that uses
   them already fails the darwin type-check loudly, so the name set needs no build-tag logic.
@@ -147,7 +171,7 @@ recorded as R2′. A tripwire only has to fire on the ordinary way someone adds 
 **M1 — Wrapper bodies guarded (kills E1, E2, E3).** File: `host/verifygate/forklocked_write_test.go`.
 - Add `forkLockedProbe` (D1) and its two call points in `forkLockedDo`. Imports gain `sync/atomic`.
 - New serial test `TestForkLockedWrappersHoldLockThroughClose`. It installs the probe
-  (with `t.Cleanup` restoring `nil`) and drives each public wrapper under its own `t.TempDir()`:
+  (with `t.Cleanup` restoring `nil`) and drives each wrapper under its own `t.TempDir()`, with the exact signatures of V5d:
   - `writeFileForkLocked(p, data, 0o755)`
   - `copyFileForkLocked(src, dst, "rel", 0o755)`, with `src` from `os.Open` (read-only, not banned)
   - `createTempForkLocked(dir, "p*", data)`
@@ -178,7 +202,7 @@ fixtures:
 | P-NamedWrapper (F6) | `func forkLockedWrite() { _, _ = os.OpenFile("x", 0, 0) }` (the old by-name allowlist shape) | that line |
 | P-Ioutil | `import "io/ioutil"` + `ioutil.WriteFile(…)` | the ImportSpec line |
 | P-RootWrite | `func h(r *os.Root) { _ = r.WriteFile("x", nil, 0o755) }` | that line |
-| N-OpenClosure | a local `forkLockedDo(open func() (*os.File, error), …)` called with `func() (*os.File, error) { return os.OpenFile("x", 0, 0) }` | **nothing** (the exemption is live) |
+| N-OpenClosure | a package-level `forkLockedDo` defined in the fixture package, called with an open closure `func() (*os.File, error) { return os.OpenFile("x", 0, 0) }` | **nothing** (the exemption is live; the callee is the fixture's package-scope object, so identity matching applies) |
 
 Live floors stay (at least 9 files, at least 21 wrapper sites) and are now counted by identity.
 The live scan must stay at zero violations, which proves that the narrowed exemption covers both
@@ -195,20 +219,28 @@ control. Gate: `go vet`, plus `go test ./host/verifygate/ -run '^TestVerifygateT
 ```yaml
         run: |
           set -euo pipefail
+          # Assumes linux: fail loud, never skip (a skip guard reopens the SKIP hole).
+          [ "${RUNNER_OS:-}" = Linux ] || { echo "::error::this step must run on linux"; exit 1; }
+          tests="TestForkLockedWriteBlocksConcurrentFork TestForkLockedWrappersHoldLockThroughClose TestKernelRefusesExecOfWriterOpenFile TestVerifygateTestWritesAreForkLocked TestNoParallelWriteForkPackagesOutsideVerifygate"
           log="$RUNNER_TEMP/forklock-verbose.log"
           rc=0
           go test ./host/verifygate/ -count=1 -p 1 -timeout 120s -v \
-            -run '^(TestForkLockedWriteBlocksConcurrentFork|TestForkLockedWrappersHoldLockThroughClose|TestKernelRefusesExecOfWriterOpenFile|TestVerifygateTestWritesAreForkLocked|TestNoParallelWriteForkPackagesOutsideVerifygate)$' \
-            >"$log" 2>&1 || rc=$?
+            -run "^(${tests// /|})\$" >"$log" 2>&1 || rc=$?
           cat "$log"
           [ "$rc" -eq 0 ] || exit "$rc"
-          grep -q -- '^--- PASS: TestKernelRefusesExecOfWriterOpenFile ' "$log" \
-            || { echo "::error::TestKernelRefusesExecOfWriterOpenFile did not PASS on linux (SKIP?)"; exit 1; }
+          for t in $tests; do
+            grep -q -- "^--- PASS: $t " "$log" \
+              || { echo "::error::$t did not PASS on linux (SKIP?)"; exit 1; }
+          done
 ```
 
-- Local known positive with no edit needed: on darwin the kernel test SKIPs (V7), so running the
-  same script body on the rig with `RUNNER_TEMP=$(mktemp -d)` **must exit 1** with the `::error::`
-  line. Record that rc in the PR.
+- The `-run` regex is built from the same `$tests` list the loop checks, so the two cannot drift.
+  `grep -q` reads a file, and the step has no pipe at all (V6a).
+- Local known positives with no edit needed, both recorded with their rc in the PR: on the rig,
+  the body with `RUNNER_TEMP=$(mktemp -d)` and `RUNNER_OS` unset **must exit 1** on the linux
+  precondition; with `RUNNER_OS=Linux` it **must exit 1** on
+  `::error::TestKernelRefusesExecOfWriterOpenFile did not PASS on linux (SKIP?)`, because darwin
+  SKIPs that test (V7).
 - Gate: `verify_go.sh` and `verify_ail.sh` with `AILANG_BIN` set, plus `check_no_personal_email.sh`.
 
 ## Acceptance (load-bearing, each mutant → firing assertion; coding-standards S6)
@@ -222,10 +254,10 @@ control. Gate: `go vet`, plus `go test ./host/verifygate/ -run '^TestVerifygateT
 | AC5 (E8b) | add the P-RawFd body as a helper in `toolchain_pin_gate_test.go` | live scan names the `syscall.Open` and `os.NewFile` lines |
 | AC6 (E6b) | the scan skips uses with no enclosing FuncDecl (`if encl == "" { continue }`) | `fixture PkgInit: … not reported` |
 | AC7 (F6) | restore the by-name exemption for FuncDecls named `forkLockedWrite` | `fixture NamedWrapper: … not reported` |
-| AC8 (CI SKIP) | the kernel test skips unconditionally (`if true { t.Skip(…) }`) on a scratch PR commit | the step fails with `::error::TestKernelRefusesExecOfWriterOpenFile did not PASS on linux (SKIP?)`. The darwin run of the same body is the free local known positive (M3) |
+| AC8 (CI SKIP) | the kernel test skips unconditionally (`if true { t.Skip(…) }`) on a scratch PR commit | the step fails with `::error::TestKernelRefusesExecOfWriterOpenFile did not PASS on linux (SKIP?)`. The loop gives the same failure for a SKIP of **any** listed test. The darwin runs of the same body are the free local known positives (M3) |
 | AC9 (R2) | add `t.Parallel()` to one test in `host/broker` | `host/broker/<file>:<line>: t.Parallel in a write+fork package outside the fork-locked scan` |
 | AC10 (exemption live) | delete the open-closure exemption | the live scan reds on `forkLockedWrite`/`createTempForkLocked` and N-OpenClosure is reported |
-| AC11 (regression) | n/a | all prior ACs of the parent stay green. The fast tests run in under 5 s locally (baseline 2.5 s, V7). CI shows `--- PASS` for all five tests in the step |
+| AC11 (regression) | n/a | all prior ACs of the parent stay green. The fast tests run in under 5 s locally (baseline 2.5 s, V7). CI shows a top-level `--- PASS: ` line for each of the five tests in the step, asserted by the step's loop |
 
 ## Risks and residuals
 
