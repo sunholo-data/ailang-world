@@ -3,7 +3,7 @@
 **Status**: PLANNED. Designer draft 2026-10-03 (attended session; Agent `opus`, pin `claude:claude-opus-5-5`). Queue row 140. **Quorum: BLOCKED in all three rounds (the brief's cap; §12).**
 - Each round's objections were measured first (V36–V42). They were mostly real, and every real one was fixed.
 - **The round-3 revisions have not been reviewed by quorum.** They are the host/child env split, the in-sandbox `TMPDIR` and the whole-tree archive.
-- **This doc is not executor-ready until D-140-5 is answered.**
+- **RULED (Mark, attended 2026-10-03, D-WORLD-62):** D-140-1 = A, D-140-2 = A, D-140-3 = A, D-140-4 = A, **D-140-5 = B** (Mark reviews the r3 delta attended; no fourth quorum round). **Executor-ready once Mark's r3 review is recorded here.**
 - **Direction:** D-WORLD-58 (1): land before 1.0, after rows 135 and 138 (both landed on `dev`: `e6064b6`, `0b18b94`).
 - **Precedent:** row 134 (pure plan → one brokered effect → record v2 → handler-free replay) and row 135 (operator allowlists, a restricted default, residuals stated rather than hidden; D-WORLD-55/56/59).
 - **Base:** ailang-world `origin/dev` `a8c9f57`. The sandbox is `@anthropic-ai/sandbox-runtime` (`srt`): 0.0.71 as the fleet installs it for pi; 0.0.78 (latest) re-measured on the load-bearing arms (V32).
@@ -443,6 +443,8 @@ This is the Linux gate as well. A host where bwrap or user namespaces are missin
 
 ## 8. Decisions for Mark (each with a recommended default)
 
+**RULED 2026-10-03 (Mark, attended; D-WORLD-62): 1 = A (fence reads), 2 = A (no network in v1), 3 = A (per-episode seeded caches), 4 = A (inside the frozen D7 deadlines; follow-up row for long runs), 5 = B (Mark reviews the r3 delta attended: the host/child env split, the in-sandbox `TMPDIR`, the whole-tree archive).**
+
 - **D-140-1 Reads.**
   - **A (recommended): fence reads by default.** `denyRead` = the operator `$HOME`, World's state dir and the workspace root. `allowRead` = this worktree, this episode's cache and the profile's toolchain roots. Measured working for Go, TS and Python (V19, V23, V24). It corrects the row: reads **are** fenceable, though weaker than the AILANG tools (system paths and `/tmp` stay readable, V8b).
   - B: no read fence (the row's assumption).
@@ -461,7 +463,7 @@ This is the Linux gate as well. A host where bwrap or user namespaces are missin
   - **A (recommended): one more quorum round on the r3 delta before sprint planning** (≈ $0.40). Rounds 1–3 each found a real defect, so a fourth look at the newest, unreviewed text is worth its cost.
   - B: Mark reviews the r3 delta attended and waives the round.
 
-Designer's calls (not asked): the srt CLI with `--` and the trampoline, rather than a World-owned node launcher (both CLI hazards are closed and pinned by mutants; upstream issues are filed for the TERM → 0 mapping and the option parsing); a JSON profile (no new Go dependency); the tool name `workspace-exec`.
+Designer's calls (not asked): the srt CLI with `--` and the trampoline, rather than a World-owned node launcher (both CLI hazards are closed and pinned by mutants; upstream issues are PROPOSED, not yet filed, for the TERM → 0 mapping and the option parsing); a JSON profile (no new Go dependency); the tool name `workspace-exec`.
 
 ## 9. Risks and residuals
 
