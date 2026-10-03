@@ -13,7 +13,7 @@
 - **Behaviour confirmed unchanged:** the natives were probed directly, and a 14-case equivalence script over the edited exports passed, with a planted failure caught.
 - **One module skipped:** `daneel_sources` imports a registry package the confined tools can't resolve (row 141).
 - **Daneel's own guard** (`tools/ci.sh` with the CI-pinned AILANG v0.50.0) reports `guard: ok`: 52 + 23 modules verified, 24 test suites passed (`daneel-guard.txt`).
-- **PR:** sunholo-data/daneel#325.
+- **PR:** sunholo-data/daneel#325 — **merged by Mark (2026-10-03T10:35:12Z 687fac6d)**, labelled `ailang-world` (D-WORLD-60).
 
 **What World recorded:** 117 log entries, one per call (`log-summary.json`):
 
