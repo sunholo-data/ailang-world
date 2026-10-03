@@ -116,6 +116,7 @@ const config = {
           },
           {to: '/docs/getting-started', label: 'Get started', position: 'left'},
           {to: '/docs/agents', label: 'For AI agents', position: 'left'},
+          {to: '/docs/use-cases', label: 'Use cases', position: 'left'},
           {to: '/docs/roadmap', label: 'Roadmap', position: 'left'},
           {href: AILANG_URL, label: 'AILANG', position: 'right'},
           {href: GITHUB_URL, label: 'GitHub', position: 'right'},
