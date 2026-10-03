@@ -318,8 +318,9 @@ Usage of ailang-worldd session revoke:
 ailang-worldd session revoke --db <path> <credential_id>
 ```
 
-`--db` must come **before** the ID; the command's own usage message
-(`session revoke <credential_id-hash> [--db <path>]`) shows the other order, which fails. The ID
+`--db` must come **before** the ID, as the command's usage message
+(`session revoke [--db <path>] <credential_id-hash> (flags before the id)`) says; flags after the
+ID are not parsed. The ID
 is the 64-hex `credential_id` printed at mint. Not attended; the daemon must be stopped.
 
 ## `world-publish`

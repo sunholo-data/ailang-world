@@ -59,9 +59,14 @@ either way. If the floor fails on eligible agents after honest tuning, World par
 so.
 
 **Where it stands.** Tracked as queue row 93. Its prerequisite, row 134 (the
-software-engineering tools agents use in the World arm), landed on 2026-10-03. Row 135
-widens the `ailang-run` tool (stdin, argv and per-task capabilities) before the final run;
-it is waiting on AILANG v0.52.1, which carries the upstream change it needs.
+software-engineering tools agents use in the World arm), landed on 2026-10-03, and the
+floor's grader port, classification and statistics landed the same day (row 93 M1 and M3,
+no agent run yet). Row 135 widened the `ailang-run` tool (stdin, argv and per-task
+capabilities) so all 23 core tasks can run through World; it landed on 2026-10-03 on the
+v0.52.1 tool binary (#192), with an attended four-task smoke still to run. The ratified order
+to release is now the rest of the
+developer CLI (row 138), a toolchain effect for non-AILANG projects (row 140), the floor run
+(row 93), provenance teeth (row 114) and an interpreter epoch-upgrade path (row 139).
 
 ### 5. The human surface works, with provenance teeth <span className="world-status world-status--unmet">Not yet met</span>
 
@@ -96,7 +101,8 @@ workstream against the July 2026 markdown-and-scheduler baseline.
 
 ## Following along
 
-Every mission iteration reports on the project's
-[bookkeeping issue](https://github.com/sunholo-data/ailang-world/issues/1), and the full
+Every mission iteration reports on the project's weekly
+[bookkeeping issue](https://github.com/sunholo-data/ailang-world/issues?q=is%3Aissue+%22mission+bookkeeping%22),
+and the full
 per-iteration log lives in
 [`design_docs/world-mission-log.md`](https://github.com/sunholo-data/ailang-world/blob/dev/design_docs/world-mission-log.md).

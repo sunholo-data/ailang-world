@@ -50,11 +50,12 @@ order:
    (`reason=eof` for closed stdin, `reason=mismatch` for anything else).
 
 The store is opened **before** the fence, so a mistyped path, or a daemon still holding the
-writer lock, is reported before you are asked to type anything.
+writer lock, is reported before you are asked to type anything. `transitions` also reads its
+manifest before the fence, so that the phrase can name the write.
 
 ### The confirmation phrase
 
-All three attended `world-publish` verbs ask for the same phrase, which names the current
+Each verb's phrase names the write it confirms. `approve` and `publish` name the current
 `world/core` candidate:
 
 ```text
@@ -63,12 +64,17 @@ Type exactly, to proceed with an IRREVERSIBLE public write:
 >
 ```
 
-:::note `transitions` reuses the package-publish phrase
-`world-publish transitions` is a **local** registry write, not a public one, and a later
-revision can supersede it. It still shows the "IRREVERSIBLE public write" prompt and requires
-the `world/core` phrase, because it shares the attended-operator fence with `approve`. Type the
+`transitions` is a **local** registry write, not a public one, and a later revision can
+supersede it. Its phrase names the descriptor count and the store; for the se-tools manifest:
+
+```text
+Type exactly, to write a LOCAL transition-registry revision (8 descriptor(s) from packages/se-tools/transitions.json):
+  publish 8 transitions to /tmp/se-world/world.db
+>
+```
+
+The `tty` and `ci` fences in front of it are the same as for the package publish. Type the
 phrase exactly as printed.
-:::
 
 ## Running attended steps from an IDE pane or agent harness
 

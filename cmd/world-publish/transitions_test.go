@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,10 +18,33 @@ import (
 )
 
 // driveTransitions runs the transitions verb in-process with an injected
-// environment. stdin carries the typed confirmation phrase.
+// environment. stdin carries the typed confirmation line; the sentinel
+// transitionsOK stands for the CORRECT line for this invocation, computed
+// from the manifest's descriptor count and the store flag.
 func driveTransitions(t *testing.T, flags map[string]string, stdin string, getenv func(string) string) armResult {
 	t.Helper()
+	if stdin == transitionsOK {
+		stdin = expectedTransitionsPhrase(t, flags) + "\n"
+	}
 	return drive(t, invocation{verb: "transitions", flags: flags}, stdin, getenv, satisfiedProbe(t))
+}
+
+// transitionsOK is driveTransitions' sentinel for "type the right phrase".
+const transitionsOK = "\x00type-the-transitions-phrase"
+
+// expectedTransitionsPhrase is the phrase the verb must ask for: the manifest's
+// descriptor count and the store path, independently counted here (an absent
+// or unparseable manifest counts 0; the verb refuses it before the gate).
+func expectedTransitionsPhrase(t *testing.T, flags map[string]string) string {
+	t.Helper()
+	n := 0
+	if body, err := os.ReadFile(flags["manifest"]); err == nil {
+		var entries []json.RawMessage
+		if json.Unmarshal(body, &entries) == nil {
+			n = len(entries)
+		}
+	}
+	return fmt.Sprintf("publish %d transitions to %s", n, flags["store"])
 }
 
 func writeTransitionManifest(t *testing.T, body string) string {
@@ -112,7 +137,7 @@ func TestTransitionsVerbHappyPathAndIdempotence(t *testing.T) {
 	bootstrapEpochRegistry(t, storePath, "test-interpreter-version")
 	flags := map[string]string{"store": storePath, "manifest": manifest, "ailang-bin": fakeInterpreter(t)}
 
-	res := driveTransitions(t, flags, attendedPhrase+"\n", noEnv)
+	res := driveTransitions(t, flags, transitionsOK, noEnv)
 	if res.code != exitOK {
 		t.Fatalf("happy path = (%d, %s, %s), want exit 0", res.code, res.stdout, res.stderr)
 	}
@@ -127,7 +152,7 @@ func TestTransitionsVerbHappyPathAndIdempotence(t *testing.T) {
 		t.Fatalf("happy path stdout = %q, want the head ref printed", res.stdout)
 	}
 
-	again := driveTransitions(t, flags, attendedPhrase+"\n", noEnv)
+	again := driveTransitions(t, flags, transitionsOK, noEnv)
 	if again.code != exitOK {
 		t.Fatalf("republish = (%d, %s), want exit 0", again.code, again.stderr)
 	}
@@ -158,7 +183,7 @@ func TestTransitionsVerbEpochArms(t *testing.T) {
 		fixed := strings.Replace(string(body), `"semanticsEpoch": 1`, `"semanticsEpoch": 2`, 1)
 		manifest = writeTransitionManifest(t, fixed)
 		res := driveTransitions(t, map[string]string{"store": storePath, "manifest": manifest, "ailang-bin": fakeInterpreter(t)},
-			attendedPhrase+"\n", noEnv)
+			transitionsOK, noEnv)
 		if res.code != exitError || !strings.Contains(res.stderr, "semanticsEpoch 2 is not one of the epochs nominating") {
 			t.Fatalf("mismatched epoch = (%d, %q), want exit 1 naming the epochs that nominate", res.code, res.stderr)
 		}
@@ -169,7 +194,7 @@ func TestTransitionsVerbEpochArms(t *testing.T) {
 		bootstrapEpochRegistry(t, storePath, "some-other-release") // epoch 1 nominates a DIFFERENT release
 		manifest := echoManifest(t, srcPath, false)
 		res := driveTransitions(t, map[string]string{"store": storePath, "manifest": manifest, "ailang-bin": fakeInterpreter(t)},
-			attendedPhrase+"\n", noEnv)
+			transitionsOK, noEnv)
 		if res.code != exitError || !strings.Contains(res.stderr, "nominated by NO epoch") {
 			t.Fatalf("no-nomination epoch = (%d, %q), want exit 1 refusing (never defaulted)", res.code, res.stderr)
 		}
@@ -179,7 +204,7 @@ func TestTransitionsVerbEpochArms(t *testing.T) {
 		storePath := filepath.Join(t.TempDir(), "world.db") // never bootstrapped
 		manifest := echoManifest(t, srcPath, false)
 		res := driveTransitions(t, map[string]string{"store": storePath, "manifest": manifest, "ailang-bin": fakeInterpreter(t)},
-			attendedPhrase+"\n", noEnv)
+			transitionsOK, noEnv)
 		if res.code != exitError || !strings.Contains(res.stderr, "no epoch registry head exists") {
 			t.Fatalf("absent registry = (%d, %q), want exit 1 naming the epoch registry's absence", res.code, res.stderr)
 		}
@@ -204,7 +229,7 @@ func TestTransitionsVerbRefusesGarbageSourceBeforePutObject(t *testing.T) {
 	}
 	manifest := echoManifest(t, srcPath, false)
 	res := driveTransitions(t, map[string]string{"store": storePath, "manifest": manifest, "ailang-bin": refusingInterpreter(t)},
-		attendedPhrase+"\n", noEnv)
+		transitionsOK, noEnv)
 	if res.code != exitError || !strings.Contains(res.stderr, "not loadable under its pinned interpreter") {
 		t.Fatalf("garbage source = (%d, %q), want exit 1 refusing the unloadable source", res.code, res.stderr)
 	}
@@ -259,7 +284,7 @@ func TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter(t *test
 	}
 	manifest := echoManifest(t, srcPath, false)
 	res := driveTransitions(t, map[string]string{"store": storePath, "manifest": manifest, "ailang-bin": bin},
-		attendedPhrase+"\n", noEnv)
+		transitionsOK, noEnv)
 	if res.code != exitError || !strings.Contains(res.stderr, "not loadable under its pinned interpreter") {
 		t.Fatalf("import-bearing source = (%d, %q), want exit 1 refusing the unloadable source", res.code, res.stderr)
 	}
@@ -323,7 +348,7 @@ func TestTransitionsVerbFences(t *testing.T) {
 		}
 	})
 	t.Run("ci environment stops", func(t *testing.T) {
-		res := driveTransitions(t, base, attendedPhrase+"\n", ciEnv)
+		res := driveTransitions(t, base, transitionsOK, ciEnv)
 		if res.code != exitStop {
 			t.Fatalf("ci = (%d, %q), want STOP (never run in CI)", res.code, res.stderr)
 		}
@@ -334,15 +359,47 @@ func TestTransitionsVerbFences(t *testing.T) {
 			t.Fatalf("phrase = (%d, %q), want STOP on a mistyped confirmation", res.code, res.stderr)
 		}
 	})
+	// Row 137 item 7: the local registry write asks for a phrase naming THIS
+	// write (descriptor count + store), never the package-publish phrase. The
+	// package phrase, a count off by one and another store each STOP, and the
+	// store is left without a registry head.
+	t.Run("phrase names the local write, not the package publish", func(t *testing.T) {
+		wrong := map[string]string{
+			"package-publish phrase": attendedPhrase + "\n",
+			"wrong count":            transitionsPhrase(2, storePath) + "\n",
+			"wrong store":            transitionsPhrase(1, storePath+".other") + "\n",
+		}
+		for name, line := range wrong {
+			res := driveTransitions(t, base, line, noEnv)
+			if res.code != exitStop || !strings.Contains(res.stderr, "fence=confirmation reason=mismatch") {
+				t.Fatalf("%s = (%d, %q), want STOP fence=confirmation reason=mismatch", name, res.code, res.stderr)
+			}
+		}
+		if got, want := expectedTransitionsPhrase(t, base), "publish 1 transitions to "+storePath; got != want {
+			t.Fatalf("test oracle phrase = %q, want %q", got, want)
+		}
+		bootstrapEpochRegistry(t, storePath, "test-interpreter-version")
+		res := driveTransitions(t, base, transitionsOK, noEnv)
+		if res.code != exitOK {
+			t.Fatalf("correct phrase = (%d, %q), want exit 0", res.code, res.stderr)
+		}
+		if !strings.Contains(res.stdout, "LOCAL transition-registry revision (1 descriptor(s) from "+manifest+")") ||
+			!strings.Contains(res.stdout, "publish 1 transitions to "+storePath) {
+			t.Fatalf("prompt = %q, want it to name the local write, the descriptor count, the manifest and the store", res.stdout)
+		}
+		if strings.Contains(res.stdout, attendedPhrase) || strings.Contains(res.stdout, "IRREVERSIBLE public write") {
+			t.Fatalf("prompt = %q, must not ask for the package-publish phrase", res.stdout)
+		}
+	})
 	t.Run("interpreter pin required", func(t *testing.T) {
 		noPin := map[string]string{"store": storePath, "manifest": manifest}
-		res := driveTransitions(t, noPin, attendedPhrase+"\n", noEnv)
+		res := driveTransitions(t, noPin, transitionsOK, noEnv)
 		if res.code != exitError || !strings.Contains(res.stderr, "interpreter pin is required") {
 			t.Fatalf("pin = (%d, %q), want exit 1 naming the missing interpreter pin", res.code, res.stderr)
 		}
 	})
 	t.Run("absent manifest is usage", func(t *testing.T) {
-		res := driveTransitions(t, map[string]string{"store": storePath}, attendedPhrase+"\n", noEnv)
+		res := driveTransitions(t, map[string]string{"store": storePath}, transitionsOK, noEnv)
 		if res.code != exitUsage {
 			t.Fatalf("manifest = (%d, %q), want usage exit 2", res.code, res.stderr)
 		}
@@ -350,7 +407,7 @@ func TestTransitionsVerbFences(t *testing.T) {
 	t.Run("unverifiable interpreter ref refused", func(t *testing.T) {
 		pinned := map[string]string{"store": storePath, "manifest": manifest,
 			"interpreter-ref": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
-		res := driveTransitions(t, pinned, attendedPhrase+"\n", noEnv)
+		res := driveTransitions(t, pinned, transitionsOK, noEnv)
 		if res.code != exitError || !strings.Contains(res.stderr, "is not archived next to the store") {
 			t.Fatalf("unverifiable ref = (%d, %q), want exit 1 refusing the unarchived interpreter", res.code, res.stderr)
 		}

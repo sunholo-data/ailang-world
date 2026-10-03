@@ -77,22 +77,31 @@ func runTransitions(opts options, in io.Reader, out, errw io.Writer, env environ
 	}
 	defer func() { _ = db.Close() }()
 
-	// THE GATE: the same human-in-the-loop fence as `approve` — refuse the
-	// automation environment, require a controlling terminal, require the
+	// The manifest is read BEFORE the gate (a local read, no write): the
+	// confirmation names how many descriptors this run writes, so the operator
+	// confirms the write that is actually about to happen.
+	entries, err := readManifest(opts.manifest, errw)
+	if err != nil {
+		fmt.Fprintln(errw, "world-publish transitions: "+err.Error())
+		return exitError
+	}
+
+	// THE GATE: the same human-in-the-loop fence stack as `approve` — refuse
+	// the automation environment, require a controlling terminal, require a
 	// typed confirmation. A headless loop must not be able to publish a
 	// registry revision (clause 3: the write path is the operator's hands,
-	// never an agent's).
-	if serr := requireAttendedOperator(in, out, env.getenv, env.probe()); serr != nil {
+	// never an agent's). The typed phrase names THIS write — a local
+	// transition-registry revision of N descriptors to this store — not the
+	// network package publish (queue row 137 item 7).
+	if serr := requireAttendedLocalWrite(in, out, env.getenv, env.probe(),
+		fmt.Sprintf("Type exactly, to write a LOCAL transition-registry revision (%d descriptor(s) from %s):",
+			len(entries), opts.manifest),
+		transitionsPhrase(len(entries), opts.store)); serr != nil {
 		return report(errw, serr)
 	}
 
 	arch := archive.New(opts.store)
 	interpreter, err := pinnedInterpreter(opts, arch, errw)
-	if err != nil {
-		fmt.Fprintln(errw, "world-publish transitions: "+err.Error())
-		return exitError
-	}
-	entries, err := readManifest(opts.manifest, errw)
 	if err != nil {
 		fmt.Fprintln(errw, "world-publish transitions: "+err.Error())
 		return exitError
@@ -126,6 +135,14 @@ func runTransitions(opts options, in io.Reader, out, errw io.Writer, env environ
 	fmt.Fprintf(out, "published transition registry revision %d (head %s); the daemon's A2A card will list these skills on its next read\n",
 		res.Revision, res.Head)
 	return exitOK
+}
+
+// transitionsPhrase is the line an operator types to confirm a local
+// transition-registry write: it names the descriptor count and the store, so
+// it cannot be reused for a different manifest size or a different store, and
+// it is never the package-publish phrase (attendedPhrase).
+func transitionsPhrase(n int, storePath string) string {
+	return fmt.Sprintf("publish %d transitions to %s", n, storePath)
 }
 
 // publishSetErrorLine renders a PublishSet failure for the operator. The

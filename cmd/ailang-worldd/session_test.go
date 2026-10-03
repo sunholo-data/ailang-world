@@ -149,6 +149,21 @@ func TestSessionMint_ConfirmationRejected(t *testing.T) {
 	}
 }
 
+// TestSessionRevokeUsageNamesTheParsedOrder (queue row 137 item 5): flags
+// after the id are not parsed, so the refusal's usage line must show the order
+// that works — --db first — never the reverse.
+func TestSessionRevokeUsageNamesTheParsedOrder(t *testing.T) {
+	id := strings.Repeat("a", 64)
+	var out, errOut bytes.Buffer
+	if code := runSessionRevoke([]string{id, "--db", dbPathOf(t)}, &out, &errOut); code != exitUsage {
+		t.Fatalf("id-then---db exit=%d, want usage", code)
+	}
+	if !strings.Contains(errOut.String(), "session revoke [--db <path>] <credential_id-hash>") ||
+		strings.Contains(errOut.String(), "<credential_id-hash> [--db") {
+		t.Fatalf("usage line %q must show --db before the id", errOut.String())
+	}
+}
+
 // TestSessionRevokeCLI is AC-M2-5's CLI half: `session revoke <credential_id>`.
 func TestSessionRevokeCLI(t *testing.T) {
 	db := dbPathOf(t)
