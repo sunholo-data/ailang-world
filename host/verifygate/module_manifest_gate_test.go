@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -39,15 +38,7 @@ func copyGateFileErr(root, rel string, mode os.FileMode) error {
 	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 		return err
 	}
-	out, err := os.OpenFile(dst, os.O_CREATE|os.O_EXCL|os.O_WRONLY, mode)
-	if err != nil {
-		return fmt.Errorf("create copy target %s: %v", rel, err)
-	}
-	if _, err := io.Copy(out, in); err != nil {
-		out.Close()
-		return fmt.Errorf("copy %s: %v", rel, err)
-	}
-	return out.Close()
+	return copyFileForkLocked(in, dst, rel, mode)
 }
 
 func newIsolatedGateRoot(t *testing.T) string {
@@ -276,7 +267,7 @@ func TestPristineControlRefusesANonIdenticalRoot(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if err := os.WriteFile(p, append(raw, ' '), 0o644); err != nil {
+			if err := writeFileForkLocked(p, append(raw, ' '), 0o644); err != nil {
 				t.Fatal(err)
 			}
 		}},
@@ -286,7 +277,7 @@ func TestPristineControlRefusesANonIdenticalRoot(t *testing.T) {
 			}
 		}},
 		{"extra-file", func(t *testing.T, root string) {
-			if err := os.WriteFile(filepath.Join(root, "world", "extra.txt"), nil, 0o644); err != nil {
+			if err := writeFileForkLocked(filepath.Join(root, "world", "extra.txt"), nil, 0o644); err != nil {
 				t.Fatal(err)
 			}
 		}},
@@ -312,7 +303,7 @@ func mutateCopiedScript(t *testing.T, root, old, replacement string) {
 		t.Fatalf("copied-script mutation anchor count=%d, want 1 for %q", n, old)
 	}
 	mutant := strings.Replace(string(raw), old, replacement, 1)
-	if err := os.WriteFile(path, []byte(mutant), 0o755); err != nil {
+	if err := writeFileForkLocked(path, []byte(mutant), 0o755); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -346,7 +337,7 @@ func TestModuleManifestRejectsStrayModule(t *testing.T) {
 	}
 	probe := filepath.Join(root, "world", "_stray_manifest_probe.ail")
 	const source = "module world/_stray_manifest_probe\n\nexport func strayId(x: int) -> int = x\n"
-	if err := os.WriteFile(probe, []byte(source), 0o644); err != nil {
+	if err := writeFileForkLocked(probe, []byte(source), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	rc, out := runGateAt(t, root, map[string]string{
@@ -389,7 +380,7 @@ func TestModuleManifestRejectsCaseVariantExtension(t *testing.T) {
 	requirePristineControl(t, root)
 	probe := filepath.Join(root, "world", "SNEAKY.AIL")
 	const source = "module world/SNEAKY\n\nexport func sneakyId(x: int) -> int = x\n"
-	if err := os.WriteFile(probe, []byte(source), 0o644); err != nil {
+	if err := writeFileForkLocked(probe, []byte(source), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	rc, out := runGateAt(t, root, map[string]string{
@@ -429,7 +420,7 @@ func TestEffectPlanSketchIdentityIsRequired(t *testing.T) {
 	if n := strings.Count(string(raw), contract); n != 1 {
 		t.Fatalf("payloadSizeOk contract anchor count=%d, want 1", n)
 	}
-	if err := os.WriteFile(target, []byte(strings.Replace(string(raw), contract, "", 1)), 0o644); err != nil {
+	if err := writeFileForkLocked(target, []byte(strings.Replace(string(raw), contract, "", 1)), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	rc, out := runGateAt(t, root, map[string]string{
@@ -475,7 +466,7 @@ func TestSeToolsGateArmsAreLoadBearing(t *testing.T) {
 			if n := strings.Count(string(raw), arm.old); n != 1 {
 				t.Fatalf("mutation anchor count=%d, want 1 for %q", n, arm.old)
 			}
-			if err := os.WriteFile(target, []byte(strings.Replace(string(raw), arm.old, arm.replacement, 1)), 0o644); err != nil {
+			if err := writeFileForkLocked(target, []byte(strings.Replace(string(raw), arm.old, arm.replacement, 1)), 0o644); err != nil {
 				t.Fatal(err)
 			}
 			rc, out := runGateAt(t, root, map[string]string{

@@ -108,7 +108,7 @@ func writeFile(t *testing.T, path string, raw []byte, mode os.FileMode) {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(path, raw, mode); err != nil {
+	if err := writeFileForkLocked(path, raw, mode); err != nil {
 		t.Fatal(err)
 	}
 }

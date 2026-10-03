@@ -373,7 +373,7 @@ func TestGitDescribeRefused(t *testing.T) {
 func writeExecutable(t *testing.T, body string) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "ailang")
-	if err := os.WriteFile(path, []byte("#!/usr/bin/env bash\n"+body+"\n"), 0o755); err != nil {
+	if err := writeFileForkLocked(path, []byte("#!/usr/bin/env bash\n"+body+"\n"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	return path
@@ -397,7 +397,7 @@ func TestUnresolvable(t *testing.T) {
 		{"Missing", filepath.Join(t.TempDir(), "missing")},
 		{"NoExec", func() string {
 			p := filepath.Join(t.TempDir(), "ailang")
-			if err := os.WriteFile(p, []byte("x"), 0o644); err != nil {
+			if err := writeFileForkLocked(p, []byte("x"), 0o644); err != nil {
 				t.Fatal(err)
 			}
 			return p
@@ -461,18 +461,11 @@ func TestInScriptControl(t *testing.T) {
 		t.Fatalf("control anchor count=%d", strings.Count(string(src), old))
 	}
 	mutant := strings.Replace(string(src), old, replacement, 1)
-	path, err := os.CreateTemp(filepath.Join(repoRoot, "scripts"), ".verify-control-*.sh")
+	name, err := createTempForkLocked(filepath.Join(repoRoot, "scripts"), ".verify-control-*.sh", []byte(mutant))
 	if err != nil {
 		t.Fatal(err)
 	}
-	name := path.Name()
 	defer os.Remove(name)
-	if _, err := path.WriteString(mutant); err != nil {
-		t.Fatal(err)
-	}
-	if err := path.Close(); err != nil {
-		t.Fatal(err)
-	}
 	if err := os.Chmod(name, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -560,24 +553,17 @@ func TestEmptyExpectedReleaseSetFailsLoudly(t *testing.T) {
 		t.Fatalf("fixture-read anchor count=%d, want 1 (the redirect below would be ambiguous)", n)
 	}
 	empty := filepath.Join(t.TempDir(), "empty.txt")
-	if err := os.WriteFile(empty, []byte("# only a comment\n\n"), 0o644); err != nil {
+	if err := writeFileForkLocked(empty, []byte("# only a comment\n\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	mutant := strings.Replace(string(src), fixtureRead,
 		`grep -vE '^[[:space:]]*(#|$)' `+empty, 1)
 
-	f, err := os.CreateTemp(filepath.Join(repoRoot, "scripts"), ".verify-emptyset-*.sh")
+	name, err := createTempForkLocked(filepath.Join(repoRoot, "scripts"), ".verify-emptyset-*.sh", []byte(mutant))
 	if err != nil {
 		t.Fatal(err)
 	}
-	name := f.Name()
 	defer os.Remove(name)
-	if _, err := f.WriteString(mutant); err != nil {
-		t.Fatal(err)
-	}
-	if err := f.Close(); err != nil {
-		t.Fatal(err)
-	}
 	if err := os.Chmod(name, 0o755); err != nil {
 		t.Fatal(err)
 	}
