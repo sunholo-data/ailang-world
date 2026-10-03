@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 225 | 2026-10-03 | No pick (rule (d)): row 134 still IN-SPRINT attended, no new attended commits since 224 (`bb6b2b2`); 114 behind 134; 93 still R8-blocked on dev; record independently judged [ADMIN] |
 | 224 | 2026-10-03 | No pick (rule (d)): row 134 still IN-SPRINT attended; D-WORLD-52/54 attended rulings acknowledged (114 sequenced behind 134; clause-4 core-tier gate); 93 still R8-blocked on dev; record independently judged [ADMIN] |
 | 223 | 2026-10-02 | No pick (rule (d)): row 134 IN-SPRINT attended after mid-fire D-WORLD-53 ratification; 114 on D52; 93 capability-blocked (R8); loop withdrew its same-ID ask before merge; record independently judged [ADMIN] |
 | 222 | 2026-10-02 | Row114 D44 scoped revision spent; full author-excluding quorum rejects3/3, protocol PARKED D52; four native roles required, administrative preservation only, goal unmoved [ADMIN] |
