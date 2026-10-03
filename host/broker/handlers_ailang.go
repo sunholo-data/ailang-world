@@ -28,6 +28,12 @@ const (
 	EffectAilangDiscover = "Ailang.Discover"
 	EffectAilangCLI      = "Ailang.CLI"
 
+	// The two extra run effects (row 135, D-135-3 = A): an ailang-run whose
+	// caps hold Env is Ailang.RunEnv, one whose caps hold Net Ailang.RunNet;
+	// any other run (Declassify included, D-135-5 = A) is Ailang.Run.
+	EffectAilangRunEnv = "Ailang.RunEnv"
+	EffectAilangRunNet = "Ailang.RunNet"
+
 	// WorkspaceScope is the only scope an AilangToolHandler serves.
 	WorkspaceScope = "worktree"
 )

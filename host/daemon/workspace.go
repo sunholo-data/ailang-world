@@ -46,10 +46,15 @@ const workspaceHandlerBudget = 3 * time.Second
 // directory directly under the workspace root, never a path.
 var episodeIDPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,63}$`)
 
-// workspaceEffects are the six effect names an episode's handler serves.
+// workspaceEffects are the eight effect names an episode's handler serves:
+// row 134's six plus row 135's Ailang.RunEnv and Ailang.RunNet. All eight are
+// ALWAYS bound (R8 refuses a plan whose declared effects lack a handler, and
+// ailang-run declares all three run effects); the operator's run allowlist is
+// enforced inside the handler, never by leaving a name unregistered (§4.2).
 var workspaceEffects = []string{
 	broker.EffectWorkspaceRead, broker.EffectWorkspaceWrite, broker.EffectAilangCheck,
-	broker.EffectAilangRun, broker.EffectAilangDiscover, broker.EffectAilangCLI,
+	broker.EffectAilangRun, broker.EffectAilangRunEnv, broker.EffectAilangRunNet,
+	broker.EffectAilangDiscover, broker.EffectAilangCLI,
 }
 
 // workspaceTools is the resolved --workspace-root/--tool-ailang-bin pair.
@@ -204,7 +209,7 @@ func verifyArchivedTool(path string, ref hashref.HashRef) error {
 // enabled reports whether both flags were given.
 func (w *workspaceTools) enabled() bool { return w != nil && w.root != "" && w.bin != "" }
 
-// registry is workspaceRegistry(episodeID) of §4.3: the six effect names
+// registry is workspaceRegistry(episodeID) of §4.3: the eight effect names
 // bound to the episode's handler, or an empty registry.
 func (w *workspaceTools) registry(episodeID string) broker.Registry {
 	if !w.enabled() {
