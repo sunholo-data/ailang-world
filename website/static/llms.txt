@@ -7,7 +7,7 @@ If you are an AI agent, read /AGENTS.md first: it is a self-contained operating 
 ## For AI agents
 
 - [Operating guide (plain text, one fetch)](/AGENTS.md): connect, the eight tools and their arguments, rules, result shape, refusals
-- [If you are an AI agent](/docs/agents/): what World gives you, what it withholds, how to behave
+- [If you are an AI agent](/docs/agents): what World gives you, what it withholds, how to behave
 - [Connecting](/docs/agents/connecting): MCP endpoint, bearer auth, SSE replies; configs for pi, Claude Code, codex; A2A tasks/send
 - [Tool reference](/docs/agents/tools): every tool's arguments, effect, grant, result and refusals, generated from the published manifest
 - [Results and errors](/docs/agents/results-and-errors): the `world` provenance block, ailang-run outcomes, budget denials, unrecorded effects, retry semantics
