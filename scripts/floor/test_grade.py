@@ -4,7 +4,7 @@
 Hermetic arms drive a FAKE tool binary (a tiny interpreter for directive "solutions"), so the
 run plumbing — stdin, argv, input files, cwd, timeout, compile/runtime split, the executed
 binary's digest — is tested without ailang. The REAL-binary arms run the pinned tool
-($FLOOR_TOOL_BIN, default ~/.pinned-ailang-tools/v0.51.0/ailang) on banked solutions; they skip
+($FLOOR_TOOL_BIN, default ~/.pinned-ailang-tools/v0.52.1/ailang) on banked solutions; they skip
 when it is absent unless FLOOR_REQUIRE_TOOL=1, which turns the absence red (CI sets it).
 
 Mutants killed here: MUT-GRADE-LOOSE (near-miss), MUT-NO-STDIN (stdin arms), MUT-PATH-AILANG
@@ -128,7 +128,7 @@ class Argv(unittest.TestCase):
 class FakeToolGrading(unittest.TestCase):
     def setUp(self):
         self.td = tempfile.mkdtemp(prefix='floor-test-')
-        self.tool = os.path.join(self.td, 'tool', 'ailang-v0.51.0')
+        self.tool = os.path.join(self.td, 'tool', 'ailang-v0.52.1')
         os.makedirs(os.path.dirname(self.tool))
         _write_exe(self.tool, FAKE_TOOL)
         # an impostor `ailang` FIRST on PATH: a grader that drifts to PATH runs it (MUT-PATH-AILANG)

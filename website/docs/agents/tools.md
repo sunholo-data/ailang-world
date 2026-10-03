@@ -365,19 +365,19 @@ Run an allowlisted ailang operation as a typed policy-tool request. ops: agent_p
 
 `additionalProperties` is `false`: any other key is refused.
 
-Admitted ops and their flags (v0.51.0 tool binary). Pass flags as `{"name": "value"}`; boolean flags take `""`.
+Admitted ops and their flags (v0.52.1 tool binary). Pass flags as `{"name": "value"}`; boolean flags take `""`.
 
 | `op` | Fields | Admitted flags |
 |---|---|---|
 | `agent_prompt` | none | none |
 | `ai_check` | `path` | --timeout |
 | `axioms` | none | none |
-| `builtins_list` | none | --json |
+| `builtins_list` | none | --by-effect --by-module --json --module --query --verbose |
 | `builtins_show` | `module` (a name) | none |
 | `check` | `path` | --json --quiet --strict-syntax |
 | `devtools_prompt` | none | none |
 | `docs_search` | `query` | --json --limit |
-| `examples_list` | none | --status --tag |
+| `examples_list` | none | --status --tags |
 | `examples_search` | `query` | none |
 | `examples_show` | `module` (a name) | none |
 | `examples_tags` | none | none |

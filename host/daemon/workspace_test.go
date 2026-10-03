@@ -540,7 +540,7 @@ func realToolBin(t *testing.T) string {
 	bin := os.Getenv(toolBinEnv)
 	if bin == "" {
 		t.Skipf("%s is unset: this real-binary test needs the %s tool binary "+
-			"(e.g. $HOME/.pinned-ailang-tools/v0.51.0/ailang); skipping", toolBinEnv, ToolBinaryRelease)
+			"(e.g. $HOME/.pinned-ailang-tools/v0.52.1/ailang); skipping", toolBinEnv, ToolBinaryRelease)
 	}
 	return bin
 }

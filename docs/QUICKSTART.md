@@ -252,7 +252,9 @@ Host behavior changes are recorded in the [host changelog](HOST_CHANGELOG.md).
 `packages/se-tools` transitions (`ailang-read`, `ailang-write`, `ailang-edit`, `ailang-check`,
 `ailang-run`, `builtins-search`, `examples-search`, `ailang-cli`) over `/mcp/` and `/a2a/`.
 Every tool call runs its plan in the pinned interpreter, runs exactly one brokered effect with the
-v0.51.0 tool binary inside the episode's worktree, and commits one log entry. Its flags are bound
+v0.52.1 tool binary inside the episode's worktree, and commits one log entry. (The M6 smoke ran
+on v0.51.0; row 135 M0 moved the tool pin to v0.52.1 after re-proving the confinement matrix,
+`design_docs/planned/w-software-engineering-domain.md` §13.) Its flags are bound
 to `serve --help` and to the `session mint` parser by `TestQuickstartSection9FlagsMatchTheCLI`.
 The `-d` payloads below are run against a test daemon by
 `TestSeToolsQuickstartPayloadsVerbatim`.
@@ -283,12 +285,12 @@ The three end-to-end breaks measured in M5b (2026-10-02) are fixed:
   the binary.
 
 Pick two binaries. `PIN` is the `.ail` interpreter pin (AILANG v0.41.0) and runs every plan.
-`TOOL` is the tool binary, which must be exactly AILANG v0.51.0; startup refuses any other
+`TOOL` is the tool binary, which must be exactly AILANG v0.52.1; startup refuses any other
 release. Build both CLIs from the repo root:
 
 ```bash
 export PIN=$HOME/.pinned-ailang/ailang
-export TOOL=$HOME/.pinned-ailang-tools/v0.51.0/ailang
+export TOOL=$HOME/.pinned-ailang-tools/v0.52.1/ailang
 $PIN --version && $TOOL --version
 go build -o /tmp/ailang-worldd ./cmd/ailang-worldd
 go build -o /tmp/world-publish ./cmd/world-publish
@@ -369,8 +371,8 @@ required. With only one of them, the daemon logs `workspace tools disabled` and 
 tool call before any effect runs. This is rule R8, and over `/a2a/` its message is
 `transition declares an effect this daemon has no handler for`.
 
-`examples-search` needs an AILANG examples corpus. The corpus is not built into the tool binary,
-and the tool runs with `HOME` set to a per-episode cache. `$TOOL examples download` fills
+`examples-search` needs an AILANG examples corpus that the operator names. v0.52.1 does embed a
+corpus, but World does not fall back to it, and the tool runs with `HOME` set to a per-episode cache. `$TOOL examples download` fills
 `~/.ailang/examples`, and serve uses that directory by default when it exists. `--examples-dir`
 names a different corpus, which reaches the tool as `AILANG_EXAMPLES`. It must lie **outside**
 the workspace root, or startup refuses. Without a corpus, `examples-search` answers

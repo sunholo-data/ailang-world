@@ -137,13 +137,13 @@ const NOTES = {
   },
 };
 
-// Flags each ailang-cli op admits on the v0.51.0 tool binary, from the V67
+// Flags each ailang-cli op admits on the v0.52.1 tool binary, from the V67/V78
 // audit table in host/broker/handlers_ailang_cliwrite_test.go
 // (measuredCLIFlags). policy-tool enforces it; fmt's --write is refused by World.
 const CLI_FLAGS = {
-  agent_prompt: "none", ai_check: "--timeout", axioms: "none", builtins_list: "--json",
+  agent_prompt: "none", ai_check: "--timeout", axioms: "none", builtins_list: "--by-effect --by-module --json --module --query --verbose",
   builtins_show: "none", check: "--json --quiet --strict-syntax", devtools_prompt: "none",
-  docs_search: "--json --limit", examples_list: "--status --tag", examples_search: "none",
+  docs_search: "--json --limit", examples_list: "--status --tags", examples_search: "none",
   examples_show: "none", examples_tags: "none", fmt: "--check (--write is refused)", iface: "--compact",
   pkg_docs: "none", policy_check: "none", prompt: "none",
   test: "--allow-skips --json --no-color --package", tree: "none", version: "none",
@@ -221,7 +221,7 @@ for (const t of tools) {
   out(`\`additionalProperties\` is \`${t.inputSchema.additionalProperties}\`: any other key is refused.`);
   out();
   if (t.id === "ailang-cli") {
-    out("Admitted ops and their flags (v0.51.0 tool binary). Pass flags as `{\"name\": \"value\"}`; boolean flags take `\"\"`.");
+    out("Admitted ops and their flags (v0.52.1 tool binary). Pass flags as `{\"name\": \"value\"}`; boolean flags take `\"\"`.");
     out();
     out("| `op` | Fields | Admitted flags |");
     out("|---|---|---|");

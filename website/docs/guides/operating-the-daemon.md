@@ -23,7 +23,7 @@ ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
 | `--bind` | `127.0.0.1:7644` | Loopback listen address. A non-loopback host is refused; there is no override. |
 | `--ailang-bin` | none | The interpreter (`PIN`, v0.41.0) to archive and pin at startup. **Without it, transitions cannot be invoked**: the A2A and MCP surfaces answer `transition invocation is not available in this daemon`. |
 | `--workspace-root` | none | Directory holding one worktree per episode, at `<dir>/<episode>`. Must not contain the store, its archive, its rendered policies or its tool cache. |
-| `--tool-ailang-bin` | none | The AILANG binary the coding tools run (`TOOL`). Must be AILANG v0.51.0. Archived and hash-verified like `--ailang-bin`. |
+| `--tool-ailang-bin` | none | The AILANG binary the coding tools run (`TOOL`). Must be AILANG v0.52.1. Archived and hash-verified like `--ailang-bin`. |
 | `--examples-dir` | `~/.ailang/examples` if it exists | The AILANG examples corpus `examples-search` reads, passed to the tool as `AILANG_EXAMPLES`. Must be outside `--workspace-root`. |
 
 The coding tools are served only when **both** `--workspace-root` and `--tool-ailang-bin` are
@@ -46,7 +46,7 @@ In order, within a 9 s startup budget:
 3. Resolves `--workspace-root` and `--examples-dir` and refuses a workspace root that contains
    the daemon's own state, or an examples corpus inside the workspace root.
 4. Opens the store and takes the writer lock.
-5. Archives `--tool-ailang-bin` (if given) and refuses any release but `AILANG v0.51.0`.
+5. Archives `--tool-ailang-bin` (if given) and refuses any release but `AILANG v0.52.1`.
 6. Archives `--ailang-bin` (if given) and builds the invocation coordinator.
 7. Bootstraps the epoch registry (`world/epoch-registry/v1`) for the interpreter's release.
    A registry head naming different bytes is a fatal divergence, never silently rewritten.

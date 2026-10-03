@@ -55,7 +55,10 @@ var (
 // default volume) resolves names case-insensitively (V68, R-SE-15): under the
 // lowercase-only list `.CLAUDE/settings.json` and `.GITMODULES` were written
 // through to `.claude/settings.json` and `.gitmodules`. Only `.git` is
-// case-folded upstream. The v0.51.0 matcher (effects.MatchDenyWrite) treats a
+// case-folded upstream. (v0.52.1 folds fs_deny_write upstream too — one
+// matcher, fileguard.Protection; row-134 design §13 V73 — so on the pinned
+// binary this rendering is redundant defence in depth, kept until a separate
+// decision shrinks it.) The v0.51.0 matcher (effects.MatchDenyWrite) treats a
 // pattern ending `/**` as a LITERAL prefix, so each directory is rendered as
 // every fold variant of its name; any other pattern is a path.Match glob
 // against the whole relative path and its base name, so each file is one
@@ -132,7 +135,9 @@ var fixedToolOps = map[string][]string{
 // under the episode policy, and the formatter rewrites the file without the
 // fs_deny_write check, so `.claude/**` and `.ailang/**` were writable through
 // Ailang.CLI alone. The flag's value is ignored (`"write":"false"` still
-// writes), so the key's presence is refused. The other 19 cli ops admit no
+// writes), so the key's presence is refused. (v0.52.1 refuses a deny-listed
+// fmt --write and a "false" value itself, §13 V71/V72; `fmt --write` on an
+// ordinary file still writes, so the refusal stays.) The other 19 cli ops admit no
 // write-capable flag (the audited table in the tests). Writes go through
 // Workspace.Write, never Ailang.CLI.
 var cliWriteFlags = map[string][]string{
@@ -239,6 +244,9 @@ func within(path, base string) bool {
 // v0.51.0 binary (V65): it reads AILANG_EXAMPLES, then ~/.ailang/examples,
 // then CWD-relative examples/ dirs, so an unset ExamplesDir refuses the op
 // rather than let it search the agent's own worktree or report nothing.
+// v0.52.1 embeds a corpus and skips the CWD and ~/.ailang corpora under
+// policy-tool (row-134 design §13 V76); the refusal is kept as the
+// stricter-or-equal behaviour until serving the embedded corpus is decided.
 type AilangToolConfig struct {
 	Bin            string
 	BinRef         hashref.HashRef

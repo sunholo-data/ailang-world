@@ -50,7 +50,7 @@ agent ── Authorization: Bearer ──▶ session resolver ── (episode, g
 | A transition asks only for what it declared | Plan laws, and each request must equal a `declaredEffects` triple | coordinator, then the bound invoker again |
 | Each effect is authorized and paid for | Effect name, exact scope, liveness, `cost ≤ budget`; denials recorded without debit | broker (decision law Z3-verified in a sketch, transcribed to Go under a drift test) |
 | Budget cannot be reset by reconnecting | Spend summed per episode from durable intents | coordinator |
-| Tool effects stay inside the worktree | AILANG's policy layer (`policy-tool`, `run --policy`) under a rendered restricted policy | the v0.51.0 tool binary |
+| Tool effects stay inside the worktree | AILANG's policy layer (`policy-tool`, `run --policy`) under a rendered restricted policy | the v0.52.1 tool binary |
 | Agents cannot edit their own policy, cache or corpus | Startup refuses state or corpus inside the workspace root; policy and cache live under `<db-dir>` | daemon startup |
 | Every outcome is evidence | Effect records, intents and outcomes; one log entry per call | broker, journal, store |
 | Irreversible and registry writes need a human | Controlling-terminal fence, typed phrase, one-shot approval | `world-publish` |

@@ -118,15 +118,18 @@ func (f *realFixture) assertCLIFmtWriteRefused(t *testing.T) int {
 	return rows
 }
 
-// measuredCLIFlags is each `cli` op's admitted flag set as v0.51.0's
-// policy-tool states it in the refusal for an unknown flag (V67). Of these,
-// only fmt's --write writes the worktree (cliWriteFlags); the table is a
-// tripwire: a release that admits a new flag reds here before it can reach
-// an agent unaudited.
+// measuredCLIFlags is each `cli` op's admitted flag set as the tool binary's
+// policy-tool states it in the refusal for an unknown flag (V67 on v0.51.0,
+// re-baselined on v0.52.1 by row-134 design §13 V78: builtins_list gained the
+// read-only filters --by-effect --by-module --module --query --verbose, and
+// examples_list's --tag became --tags; a write watch over the worktree and the
+// cache saw no file change for any of them). Of these, only fmt's --write
+// writes the worktree (cliWriteFlags); the table is a tripwire: a release that
+// admits a new flag reds here before it can reach an agent unaudited.
 var measuredCLIFlags = map[string]string{
-	"agent_prompt": "none", "ai_check": "--timeout", "axioms": "none", "builtins_list": "--json",
+	"agent_prompt": "none", "ai_check": "--timeout", "axioms": "none", "builtins_list": "--by-effect --by-module --json --module --query --verbose",
 	"builtins_show": "none", "check": "--json --quiet --strict-syntax", "devtools_prompt": "none",
-	"docs_search": "--json --limit", "examples_list": "--status --tag", "examples_search": "none",
+	"docs_search": "--json --limit", "examples_list": "--status --tags", "examples_search": "none",
 	"examples_show": "none", "examples_tags": "none", "fmt": "--check --write", "iface": "--compact",
 	"pkg_docs": "none", "policy_check": "none", "prompt": "none",
 	"test": "--allow-skips --json --no-color --package", "tree": "none", "version": "none",

@@ -18,7 +18,7 @@ What is ported exactly:
     ``strconv.FormatFloat(f, 'f', -1, 64)`` for decimal canonicalisation).
 
 What deliberately differs (and why):
-  * the binary is an EXPLICIT absolute path (``$TOOL``, the v0.51.0 tool binary the World arm
+  * the binary is an EXPLICIT absolute path (``$TOOL``, the v0.52.1 tool binary the World arm
     uses), never ``ailang`` from PATH (V21: PATH is a -dirty dev build). Its sha256 is recorded
     on every grade;
   * ``--stdlib-path`` is never passed: the Go harness adds ``--stdlib-path <cwd>/std`` when its
@@ -47,7 +47,7 @@ import threading
 import time
 
 GRADER_VERSION = 'floor-grade/1 (port of ailang runner.go+agent_validation.go @ corpus commit)'
-DEFAULT_TOOL_BIN = os.path.expanduser('~/.pinned-ailang-tools/v0.51.0/ailang')
+DEFAULT_TOOL_BIN = os.path.expanduser('~/.pinned-ailang-tools/v0.52.1/ailang')
 TIMEOUT_S = 10.0
 MAX_OUTPUT = 1 * 1024 * 1024  # runner.go MaxOutputSize
 # agent_runner_multi.go: the placeholder seeded into benchmark/solution.ail before the agent runs

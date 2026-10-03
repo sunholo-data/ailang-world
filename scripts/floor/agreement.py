@@ -13,7 +13,7 @@ with the banked verdict. A row is eligible only when:
     ``stdout_ok`` is not a grade of ``code``.
 
 Banked rows were graded by whatever ailang binary (and the ailang repo's SOURCE stdlib, V37)
-was current when they were banked; this grader uses the pinned v0.51.0 tool binary and its
+was current when they were banked; this grader uses the pinned v0.52.1 tool binary and its
 built-in stdlib. Every disagreement is therefore re-run under each available older binary
 (``--alt-bin``) and given a TYPED cause, most specific first:
   * ``banked_stdlib_skew_v37`` — the banked grade failed inside ``std/`` after a "stdlib version
@@ -48,8 +48,10 @@ import corpus as corpus_mod  # noqa: E402
 import grade as grade_mod  # noqa: E402
 
 GRADED_CATEGORIES = {'none', 'compile_error', 'runtime_error', 'logic_error'}
-# The pinned $TOOL (v0.51.0 darwin/arm64, ~/.pinned-ailang-tools/v0.51.0/ailang) — D-WORLD-55 M0.
-PINNED_TOOL_SHA256 = 'e55ff71c710c10395ebf949f6777ef9114bed8bba859e3ba719ed73c6d1b9c7f'
+# The pinned $TOOL (v0.52.1 darwin/arm64, ~/.pinned-ailang-tools/v0.52.1/ailang) — row 135 M0,
+# superseding v0.51.0 (e55ff71c…, D-WORLD-55 M0). AC1.2 re-run on it: PASS, 1350/1357 (0.9948),
+# zero unexplained (design_docs/verification/world-row135-m0-2026-10-03/).
+PINNED_TOOL_SHA256 = '0dd70a1d00360be0b7b4c667054c71fdc4ea87aa3deb79710cf56f18ffe1a8f5'
 
 
 def attribute(rec: dict, banked: dict, regraded: dict) -> str:
