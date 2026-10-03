@@ -18,6 +18,7 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/cli.go|get|Background":                                1,
 	"cmd/ailang-worldd/cli.go|execute|Background":                            1,
 	"cmd/ailang-worldd/cli.go|executeWithAuth|Background":                    1,
+	"cmd/ailang-worldd/cli.go|budgetContext|Background":                      1, // row 138: tools/call/why/provenance whole-command budget; no Store call
 	"cmd/ailang-worldd/signal_context.go|serveSignalContext|Background":      1,
 	"cmd/ailang-worldd/session.go|runSessionMint|Background":                 1,
 	"cmd/ailang-worldd/session.go|runSessionRevoke|Background":               1,

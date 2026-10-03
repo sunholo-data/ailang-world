@@ -28,6 +28,11 @@ func TestMain(m *testing.M) {
 	if err := os.Unsetenv(broker.RegistryCredentialVariable); err != nil {
 		panic(err)
 	}
+	// Row 138: an operator's ambient WORLD_SESSION would silently become the
+	// session of every call/tools/commit test below.
+	if err := os.Unsetenv(sessionEnvVar); err != nil {
+		panic(err)
+	}
 	os.Exit(m.Run())
 }
 
