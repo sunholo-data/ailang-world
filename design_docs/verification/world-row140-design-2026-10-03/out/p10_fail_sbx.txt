@@ -1,0 +1,25 @@
+ FAIL  tests/animationSheets.test.ts > tile animation sprite sheets > each has a sidecar that agrees with the PNG
+ FAIL  tests/assetCasing.test.ts > Asset casing — public/ has no case-duplicate files > finds files (guards against a broken walk)
+ FAIL  tests/assetCasing.test.ts > Asset casing — public/ has no case-duplicate files > has no two files under public/ whose paths differ only by case
+ FAIL  tests/assetIntegrity.test.ts > Asset Integrity - assets.ts exports > every asset path exported from assets.ts resolves to a real file
+ FAIL  tests/assetIntegrity.test.ts > Asset Integrity - iconAssets.ts > every icon asset path resolves to a real file
+ FAIL  tests/assetIntegrity.test.ts > Asset Integrity - ITEMS image fields > every ITEMS image / placedImage / foregroundPlacedImage points at a real file
+ FAIL  tests/assetIntegrity.test.ts > Asset Integrity - path resolution sanity > resolves the repo root and public/ directory regardless of CWD
+ FAIL  tests/characterOutfits.test.ts > every sprite URL the outfit config produces resolves to a file > base sets and costume sets all exist in assets-optimized
+ FAIL  tests/characterOutfits.test.ts > outfit registry sanity > gives every costume an icon that exists (the creator chip needs one)
+ FAIL  tests/clothingActions.test.ts > the polka-dot dress item > has a real icon (inventory slot + creator chip share it)
+ FAIL  tests/emoteAssets.test.ts > emote artwork > ships only small thumbnails for every permitted emote
+ FAIL  tests/helpDocs.test.ts > Help Browser pages > every page path resolves to a file under public/
+ FAIL  tests/helpDocs.test.ts > Help Browser pages > has no unlisted pages in public/docs/
+ FAIL  tests/lavaLeapArtwork.test.ts > Lava Leap visible character bounds > crops to the artwork, including the feet, for every sideways animation frame
+ FAIL  tests/lavaLeapSound.test.ts > Lava Leap sound cues > ships short, non-silent, unclipped PCM files with click-free starts and tails
+ FAIL  tests/mapTextureBudget.test.ts > Map texture sets > every texture a map references resolves to a real file
+ FAIL  tests/playerGrounding.test.ts > grounds visible artwork rather than transparent image padding: character1/base/down_0.png
+ FAIL  tests/playerGrounding.test.ts > grounds visible artwork rather than transparent image padding: character1/base/left_1.png
+ FAIL  tests/playerGrounding.test.ts > grounds visible artwork rather than transparent image padding: character2/base/down_0.png
+ FAIL  tests/roomProps.test.ts > room prop artwork > every prop image exists under public/
+ FAIL  tests/serviceWorkerVersion.test.ts > service worker cache versioning > sw.js names its cache from the stamped app version
+ FAIL  tests/splashScenes.test.ts > splash screen seasonal backdrop > every splash layer file resolves on disk (case-sensitive)
+ FAIL  tests/spriteMetadata.test.ts > SPRITE_METADATA - Image Files Exist > every referenced image resolves to a real file on disk
+ FAIL  tests/textureVariants.test.ts > every player sprite, NPC sprite and room image has its @half sibling on disk > finds a sibling for each image under character*/, npcs/ and rooms/ (run npm run optimize-assets if not)
+ FAIL  tests/weatherVane.test.ts > magical weather vane > has a distinct, in-bounds sign for every real outdoor weather state
