@@ -1,0 +1,31 @@
+{
+  "commit": "76a5aef65c81ac2fb4657fafaeff4a89e9faaf75",
+  "count": 23,
+  "digest": "4c17fc4935311de98cf64d98d9a218af0dc66fe1b753195ab5f0175a529a8588",
+  "tier": "core",
+  "yaml_sha256": {
+    "api_call_json": "1054bfd62ccd12197b5ff7a6649386669875021659db5f3bd446d9818e9c2ecc",
+    "ast_patch_roundtrip": "b14241aa18c8adfa485604d7324dc6b0ee4ba588b637109cbcf20eacfe81badd",
+    "cli_args": "b227fe7dfdd7df131e0babe2b58afe8723d9b93c0ea73eb9ba89b7779e4335b0",
+    "config_file_parser": "3e0b477201898f0ef424fa7080ad176b9f1a8c5caed7416de7db9eb01bcb4cc8",
+    "contract_bst_validate": "743c066c1f0a584c5b0bcd22aad0ca8e7e4b051bb83f1965e2ac3f875ebba424",
+    "contract_leap_year": "f8acb212c4f941a6f9a259faa34db9e64fd6d867edb224ae6337bee8af6a95cf",
+    "contract_roman_numeral": "228af6b937ac826b1881bc31aba0a6ad6abc3b20298b1ca6e44f1ce3a96bd5ab",
+    "csv_to_json_converter": "2f5b8917140783178cf5c21b61836283787cc100b118eb634630bb9e19e311fb",
+    "effect_composition": "f51e195d5175b66760b816f6811e047e40511bab59a292eb74705133d00e8a22",
+    "effect_tracking_io_fs": "857f583187df64ee09cc787d822ae8355277d34f6f8feb9500c62f7138658e8a",
+    "error_handling": "fca6a125bd9ce12b930002292abb727324eab69eb3b88417ffb6b7f96a6cb879",
+    "explicit_dataflow_ssa": "36fce66748a27580e315f44c71cbb1b757fa80620cb2bed709c7b4d8cd26f2c7",
+    "float_eq": "82765a7d20c8e9a5e0e21ab4cfececdc27267d0c8f652cd25ba3697851442c90",
+    "higher_order_functions": "3dd5608ff1a7ef040764e83f69a1df64fcacbd96e3a3fe70b6c6ccec33cdd7e2",
+    "intent_annotated_solver": "2b233eb0a623608113473ebaddac57fe220675a3d5197cc8ddd63a7f57f6ed67",
+    "json_transform": "2b53cf8815bf45c95c44846fcee17409d8b693ca2a0b32230dea7d3d31bcf0bc",
+    "list_comprehension": "85e786611a20769e0379b86a13bb88eaafda627a3137260af06f44ceb9215077",
+    "merge_sort": "9f9d66f7b42a569c1f977436b208f02923f4754760f7ca5d1f16861ccc5de151",
+    "pipeline": "387cd96915afe31c8b8b6088b5c3645fb6ad9049a814d5c176d9fbf81b02fe66",
+    "prompt_injection": "c5068994eb92ff94a3db100e696de7bba7a41d3f8f1270ffb63cd9fc6a770974",
+    "state_machine_elevator": "b7f98dad108fc332e29d58da53f20a5430037e7ca63b6365c46e8e8912485bd4",
+    "state_machine_vending": "43160eb6732b2defd8a838f4fa904fd2503c414d8a93035b1bf449d60463891b",
+    "tree_transformation_pipeline": "17ffba8e0b530cd8d8c4e501ed27d1ce8274145412329df5f8cb70830e6170b5"
+  }
+}

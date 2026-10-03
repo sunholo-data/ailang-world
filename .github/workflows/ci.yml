@@ -262,3 +262,32 @@ jobs:
       - name: Personal-email gate self-test
         timeout-minutes: 2
         run: bash scripts/test_check_no_personal_email.sh
+
+      # Row 93 (w-resident-agent-non-inferiority-floor-run) M1+M3: the clause-4 floor harness —
+      # corpus loader, prompt renderer, grader port, classifier, exact statistics, sealed report.
+      # The grader's real-binary arms run the World TOOL binary (v0.51.0: the binary the World
+      # arm and the grader both use, design V21/P12), installed to its own path and never put on
+      # PATH. FLOOR_REQUIRE_TOOL=1 turns a missing binary into a red, not a skip.
+      - name: Install PINNED v0.51.0 ailang tool binary (floor grader $TOOL)
+        run: |
+          set -euo pipefail
+          base="https://github.com/sunholo-data/ailang/releases/download/v0.51.0"
+          curl -fsSL -o tool.tar.gz "$base/linux.x64.ailang.tar.gz"
+          curl -fsSL -o tool.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
+          echo "$(cut -d' ' -f1 tool.tar.gz.sha256)  tool.tar.gz" | sha256sum -c -
+          mkdir -p "$HOME/.pinned-ailang-tools/v0.51.0"
+          tar -xzf tool.tar.gz -C "$HOME/.pinned-ailang-tools/v0.51.0" ailang
+          chmod +x "$HOME/.pinned-ailang-tools/v0.51.0/ailang"
+          # no pipe (see the SIGPIPE note on the world-package install above)
+          tool_ver="$("$HOME/.pinned-ailang-tools/v0.51.0/ailang" --version)"
+          echo "$tool_ver"
+          case "$tool_ver" in
+            *'AILANG v0.51.0'*) ;;
+            *) echo "✗ floor tool binary is not v0.51.0" >&2; exit 1 ;;
+          esac
+
+      - name: Floor harness suite (row 93 M1+M3)
+        timeout-minutes: 3
+        env:
+          FLOOR_REQUIRE_TOOL: '1'
+        run: python3 -m unittest discover -s scripts/floor -p 'test_*.py' -v
