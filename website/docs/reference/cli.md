@@ -18,6 +18,8 @@ Usage:
   ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
                       [--examples-dir <dir>]
+                      [--run-allow-caps Env,Net,Declassify]
+                      [--run-net-allow 127.0.0.1:PORT ...] [--run-net-allow-http]
   ailang-worldd [--addr <url>] health
   ailang-worldd [--addr <url>] head
   ailang-worldd [--addr <url>] world get <ref>
@@ -35,11 +37,13 @@ Usage:
   ailang-worldd [--addr <url>] why <index|head|sha256:<ref>|a2a:<id>|rest:<id>|->
                     [--result <file>] [--scan N] [--json]
   ailang-worldd [--addr <url>] provenance [--since <entry>] [--episode <ep>] [--scan N]
+  ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>]
+                    [--workspace-root <dir>] [--from-dir <dir>] [--replace]
   ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
                     [--ttl 3600] [--out <file>]
   ailang-worldd session revoke [--db <path>] <credential_id-hash>
 
-  <verb> --help prints the help of: tools, call, why, log tail, provenance.
+  <verb> --help prints the help of: tools, call, why, log tail, provenance, setup.
 
 Session credential (tools, call, commit): --session <file> (a file holding
 the 64-hex token, mode 0600) or the token itself (warns: visible on argv),
@@ -70,13 +74,25 @@ serve flags:
                        when it exists, else examples-search refuses "no
                        examples corpus configured". Must be outside
                        --workspace-root
+  --run-allow-caps Env,Net,Declassify
+                       extra capabilities an ailang-run may request beyond
+                       IO and FS (default none). An Env run is the effect
+                       Ailang.RunEnv, a Net run Ailang.RunNet; each needs
+                       its own session grant
+  --run-net-allow 127.0.0.1:PORT
+                       a loopback IP:PORT a Net run may reach (repeatable;
+                       required with Net). Every other host, port and
+                       redirect hop is refused; a bare host, a name, or a
+                       non-loopback address is refused at startup
+  --run-net-allow-http allow plain http to the --run-net-allow pairs
 
 Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
-            3 integrity refusal (why: a broken link; call --strict: ok:false).
+            3 integrity refusal (why: a broken link; call --strict: ok:false;
+              setup: a digest mismatch, nothing installed).
 ```
 
-`ailang-worldd help` prints the same text. `tools`, `call`, `why`, `log tail` and `provenance`
-print their own help with `--help` (exit 0, shown below); for the other verbs Go's flag parser
+`ailang-worldd help` prints the same text. `tools`, `call`, `why`, `log tail`, `provenance` and
+`setup` print their own help with `--help` (exit 0, shown below); for the other verbs Go's flag parser
 prints a flag list where one is shown.
 
 `--addr` is refused with `session mint` and `session revoke`, as with `serve`, because they act on
@@ -282,6 +298,72 @@ last coordinator entries from `--since` (default: the last 500 entries) to the h
 `--episode` it prints one trailer per episode in the range. Any entry in the range can be walked
 back with `ailang-worldd why <entry>`. It exits 1 when the range holds no coordinator entry for
 the episode.
+
+### `setup`
+
+```text
+usage: ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>]
+           [--db <path>] [--workspace-root <dir>] [--from-dir <dir>] [--replace]
+
+Installs the two pinned AILANG binaries World runs, verified byte for byte:
+  interpreter  v0.41.0  -> <interpreter-dir>/ailang  (serve --ailang-bin)
+  tool         <tool>   -> <tools-dir>/<tool>/ailang  (serve --tool-ailang-bin)
+where <tool> is the tool-binary release this daemon is built for.
+
+For each pin: a file already hashing to the pin is left alone (no network
+request). Otherwise the release's .sha256 and tarball are fetched over https
+from github.com/sunholo-data/ailang (the URL is compiled in), and the install
+happens only when the release .sha256, the computed tarball sha256 and the
+compiled-in digest all agree and the extracted ailang hashes to the
+compiled-in binary digest. No tarball is kept; pin.json records what was
+installed. A mismatching existing file is refused unless --replace, which
+keeps it as ailang.prev-<sha8>. setup never runs a downloaded byte.
+
+Then it creates the store directory and the workspace root (mode 0700),
+refusing a workspace root that contains the store, and prints the attended
+steps that follow.
+
+  --interpreter-dir <dir>  default ~/.pinned-ailang
+  --tools-dir <dir>        default ~/.pinned-ailang-tools
+  --db <path>              world store (default ~/.ailang/world/world.db);
+                           only its directory is created, never the store
+  --workspace-root <dir>   default ~/.ailang/world-ws
+  --from-dir <dir>         install offline from <dir>/<release>/<asset> and
+                           its .sha256, verified the same way
+  --replace                replace a mismatching existing binary
+
+Platforms: darwin/arm64 and linux/amd64.
+Exit: 0 ok; 1 usage, unsupported platform, network refusal or an existing
+mismatching file; 3 a digest mismatch (nothing installed).
+```
+
+```bash
+ailang-worldd setup
+```
+
+```text
+✓ interpreter AILANG v0.41.0 installed /Users/you/.pinned-ailang/ailang (sha256 1a67b0146858…)
+✓ tool        AILANG v0.52.1 installed /Users/you/.pinned-ailang-tools/v0.52.1/ailang (sha256 0dd70a1d0036…)
+✓ store directory /Users/you/.ailang/world
+✓ workspace root  /Users/you/.ailang/world-ws
+
+next (the attended steps; docs/QUICKSTART.md §9 has the full walk):
+…
+```
+
+A second run prints `present` for both pins and makes no network request. The compiled-in
+digests (`cmd/ailang-worldd/pins.go`) are:
+
+| Release | Platform | Tarball sha256 | Binary sha256 |
+|---|---|---|---|
+| v0.41.0 (interpreter) | darwin/arm64 | `b08f3cde…598e0b` | `1a67b014…5b9f` |
+| v0.41.0 (interpreter) | linux/amd64 | `fa0045de…faa56` | `8e7a275d…25fb5` |
+| v0.52.1 (tool) | darwin/arm64 | `576236fe…a7579e` | `0dd70a1d…a8f5` |
+| v0.52.1 (tool) | linux/amd64 | `c682c30f…46f883f` | `97dcd4a5…070f30` |
+
+A tarball whose own `.sha256` agrees with it but not with the compiled-in pin is refused with
+exit 3: `tarball digest mismatch: release .sha256 …, computed …, compiled-in pin …`, and nothing
+is installed. Release signatures (`.sig`/`.pem`) are not checked.
 
 ### `session mint`
 

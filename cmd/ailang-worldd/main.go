@@ -25,6 +25,7 @@
 //	ailang-worldd [--addr http://127.0.0.1:7644] call <tool> [--arg k=v]... [--arg-json k=<json>]... | --json <obj>|@file|- [--json-out] [--strict]
 //	ailang-worldd [--addr http://127.0.0.1:7644] why <index|head|sha256:...|a2a:...|rest:...|-> | --result <file> [--scan N] [--json]
 //	ailang-worldd [--addr http://127.0.0.1:7644] provenance [--since <entry>] [--episode <ep>]
+//	ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>] [--workspace-root <dir>] [--from-dir <dir>] [--replace]
 //	ailang-worldd session mint|revoke ...
 //
 // `--addr` is ONE GLOBAL CLIENT FLAG available to every client verb; it is not a
@@ -33,7 +34,7 @@
 //
 // Exit codes: 0 success, 1 usage or client error, 2 fatal startup/runtime,
 // 3 integrity refusal (a broken provenance link in why; call --strict on a
-// committed ok:false).
+// committed ok:false; a setup digest mismatch).
 package main
 
 import (
@@ -83,11 +84,13 @@ Usage:
   ailang-worldd [--addr <url>] why <index|head|sha256:<ref>|a2a:<id>|rest:<id>|->
                     [--result <file>] [--scan N] [--json]
   ailang-worldd [--addr <url>] provenance [--since <entry>] [--episode <ep>] [--scan N]
+  ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>]
+                    [--workspace-root <dir>] [--from-dir <dir>] [--replace]
   ailang-worldd session mint --db <path> --episode <ep> --grant EFFECT=SCOPE:BUDGET...
                     [--ttl 3600] [--out <file>]
   ailang-worldd session revoke [--db <path>] <credential_id-hash>
 
-  <verb> --help prints the help of: tools, call, why, log tail, provenance.
+  <verb> --help prints the help of: tools, call, why, log tail, provenance, setup.
 
 Session credential (tools, call, commit): --session <file> (a file holding
 the 64-hex token, mode 0600) or the token itself (warns: visible on argv),
@@ -131,7 +134,8 @@ serve flags:
   --run-net-allow-http allow plain http to the --run-net-allow pairs
 
 Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
-            3 integrity refusal (why: a broken link; call --strict: ok:false).
+            3 integrity refusal (why: a broken link; call --strict: ok:false;
+              setup: a digest mismatch, nothing installed).
 `
 
 // cliStdin is what `call --json -` and `why -` read.
@@ -223,6 +227,13 @@ func run(args []string, stdout, stderr io.Writer) int {
 
 	case "provenance":
 		return runProvenance(*addr, rest[1:], stdout, stderr)
+
+	case "setup":
+		if addrGiven {
+			fmt.Fprintln(stderr, "ailang-worldd: --addr is a client flag and is not valid for 'setup'")
+			return exitUsage
+		}
+		return runSetup(rest[1:], stdout, stderr)
 
 	case "session":
 		// (w-session-authority D1/D4) session mint|revoke speak directly to the

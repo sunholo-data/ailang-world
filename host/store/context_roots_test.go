@@ -22,6 +22,7 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/signal_context.go|serveSignalContext|Background":      1,
 	"cmd/ailang-worldd/session.go|runSessionMint|Background":                 1,
 	"cmd/ailang-worldd/session.go|runSessionRevoke|Background":               1,
+	"cmd/ailang-worldd/setup.go|runSetup|Background":                         1, // row 138 M3: setup's whole-command budget (12 min); no Store call
 	"cmd/world-publish/main.go|runApprove|Background":                        1,
 	"cmd/world-publish/main.go|runPublish|Background":                        1,
 	"cmd/world-publish/main.go|runReconcile|Background":                      1,
