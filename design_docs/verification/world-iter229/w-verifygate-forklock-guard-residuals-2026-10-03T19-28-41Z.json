@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-verifygate-forklock-guard-residuals.md",
+  "iso_ts": "2026-10-03T19:28:41Z",
+  "reviewers": [
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.01633,
+      "tokens_in": 6881,
+      "tokens_out": 214,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The proposed CI step in M3 unconditionally requires the test log to contain a PASS line for TestKernelRefusesExecOfWriterOpenFile. Because this test correctly skips on Darwin (as verified in V7), this step will systematically exit 1 and break the macOS CI workflow. The design incorrectly treats the Darwin exit 1 as a 'known positive' proof of the script, rather than recognizing it as an unconditional pipeline break on macOS runners.",
+        "catch": "The ci.yml validation script lacks an OS condition for the grep assertion, causing a guaranteed build failure on macOS.",
+        "proposed_fix": "Condition the grep assertion in ci.yml on the Linux runner OS: if [ \"$RUNNER_OS\" = \"Linux\" ]; then grep -q -- '^--- PASS: TestKernelRefusesExecOfWriterOpenFile ' \"$log\" || { echo \"::error::TestKernelRefusesExecOfWriterOpenFile did not PASS on linux (SKIP?)\"; exit 1; }; fi"
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.08385360000000001,
+      "tokens_in": 6382,
+      "tokens_out": 17027,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Gate 1 violation: D2's linchpin claim — 'the live scan must stay at zero violations' under the widened banned set — is asserted, never measured. The new bans add syscall.{Open,Openat,Creat} and os.NewFile (plus os.Root method names) across the scanned package, yet the verification log contains no symbol-level sweep of host/verifygate for these identifiers. The doc's own V5b shows `mission_config_gate_test.go` imports `syscall` (so it necessarily uses some syscall symbol, contents unverified), and `os.NewFile`/`os.Root` usage in the scanned files is checked nowhere. A single pre-existing legitimate `syscall.Open` (or `os.NewFile`) outside the exempt open-closures/kernel-control would red the live scan on M2's first run, invalidating the 'narrowed exemption is a clean cut' premise (correction (a)) and forcing an unplanned exemption redesign mid-implementation.",
+        "catch": "Before M2, add a log row verifying the newly banned symbols' current usage: `grep -n 'syscall\\.' host/verifygate/mission_config_gate_test.go host/verifygate/forklocked_write_test.go` (enumerate exactly which syscall identifiers the two importing files use) and `grep -rn 'os\\.NewFile\\|os\\.Root' --include='*.go' host/verifygate`, confirming every hit is either not a banned name or lies inside an exempt region. Secondary flag: the M3 CI grep asserts `--- PASS` only for TestKernelRefusesExecOfWriterOpenFile, so a silent `t.Skip` added to any of the other four listed tests still exits 0 — the exact V6 hole class this doc claims to close ('no silent fallbacks').",
+        "proposed_fix": "1) Add verification-log row V5c: 'Newly banned symbols have zero non-exempt uses in host/verifygate' with commands `grep -n 'syscall\\.' host/verifygate/mission_config_gate_test.go host/verifygate/forklocked_write_test.go` and `grep -rn 'syscall\\.\\(Open\\|Openat\\|Creat\\)\\|os\\.NewFile\\|os\\.Root\\.' --include='*.go' host/verifygate`, and record the observed output. 2) Add a contingency clause to D2: 'If V5c shows a non-exempt hit (e.g., syscall.Open in mission_config_gate_test.go), that use is exempted by package-scope object identity exactly as rule (b) does for the kernel control, or the syscall name ban is split to a follow-up row; the scan must not red on pre-existing legitimate code.' 3) Harden the M3 step body: after the rc check, assert a top-level `--- PASS:` line for each of the five tests in the -run list (e.g., loop over the names grepping \"$log\", or `test \"$(grep -c -- '^--- PASS: ' \"$log\")\" -ge 5`), so a SKIP of any listed test fails the step, not only the kernel control."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.12461699999999999,
+      "tokens_in": 6394,
+      "tokens_out": 7029,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The load-bearing M2 gate — 'the live scan must stay at zero violations' after widening from call-Fun matching to Uses-based identity matching and adding os.NewFile, syscall.Open/Openat/Creat, and *os.Root methods to the banned set — is asserted, never measured. The doc's own V5 establishes that today's scan never visits value-uses ('A banned func used as a value is never visited'), so dormant value-uses of banned symbols could exist in the live tree by construction; V5b only verified that io/ioutil and x/sys/unix imports are absent and that syscall is imported by two files, but never characterized WHAT mission_config_gate_test.go and forklocked_write_test.go use syscall for, and never grepped for os.NewFile or os.Root method uses across host/verifygate tests. If any previously-invisible use exists, the reworked scan reds on landing and M2's own acceptance gate fails — the exact class of unverified premise this queue row exists to eliminate.",
+        "catch": "Verification log gap: (1) no row shows zero occurrences of the newly banned identifiers (os.NewFile, syscall.Open/Openat/Creat, r.WriteFile/r.Create/r.OpenFile on *os.Root) in the live scanned files; (2) no row shows zero value-uses (= os.WriteFile without a call) of the existing banned set, which V5 proves today's scan cannot see; (3) M1's drive list asserts wrapper signatures (writeFileForkLocked(p, data, 0o755), copyFileForkLocked(src, dst, \"rel\", 0o755), createForkLocked(p), createTempForkLocked(dir, \"p*\", data)) that no log row confirms exist with those arities; (4) the N-OpenClosure fixture is ambiguous: D2(a) exempts only closures whose Fun resolves to the PACKAGE-SCOPE forkLockedDo object, so a truly *local* (shadowing) forkLockedDo would be flagged, contradicting the fixture's expected 'nothing reported' — it presumably means a fixture-package-level forkLockedDo, but as written a reviewer can read it as a contradiction.",
+        "proposed_fix": "Add three rows to the Verification Log before re-queueing: (1) `grep -rn 'os\\.NewFile\\|syscall\\.\\(Open\\|Openat\\|Creat\\)\\|\\.WriteFile(\\|\\.CreateTemp(' --include='*_test.go' host/verifygate` plus a value-use probe such as `grep -rn '= os\\.\\(WriteFile\\|OpenFile\\|Create\\|CreateTemp\\)[^a-zA-Z(]' --include='*_test.go' host/verifygate`, with the observed output showing zero newly-flagged sites outside the open closures and the kernel-control FuncDecl (and name whatever mission_config_gate_test.go actually uses syscall for, proving it is not in the banned name set); if any hit exists, state the exemption/migration decision explicitly. (2) `grep -n 'func \\(writeFileForkLocked\\|copyFileForkLocked\\|createForkLocked\\|createTempForkLocked\\|forkLockedWrite\\)(' host/verifygate/forklocked_write_test.go` with observed signatures, correcting the M1 drive list to match. (3) Reword the N-OpenClosure fixture row to 'a package-level `forkLockedDo` defined in the fixture package, called with an open closure' so it cannot be read as a local-variable shadow that D2(a)'s package-scope identity check would flag."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller read: scope matches row 142 exactly (E1/E2/E3/E5b/E8b/E6b + CI SKIP + R2 tripwire); test-only; probe runs on the RLock-holding goroutine in a serial test, so parallel readers cannot mask E3."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: The proposed CI step in M3 unconditionally requires the test log to contain a PASS line for TestKernelRefusesExecOfWriterOpenFile. Because this test correctly skips on Darwin (as verified in V7), this step will systematically exit 1 and break the macOS CI workflow. The design incorrectly treats the Darwin exit 1 as a 'known positive' proof of the script, rather than recognizing it as an unconditional pipeline break on macOS runners.",
+      "oc-glm-5-3: Gate 1 violation: D2's linchpin claim — 'the live scan must stay at zero violations' under the widened banned set — is asserted, never measured. The new bans add syscall.{Open,Openat,Creat} and os.NewFile (plus os.Root method names) across the scanned package, yet the verification log contains no symbol-level sweep of host/verifygate for these identifiers. The doc's own V5b shows `mission_config_gate_test.go` imports `syscall` (so it necessarily uses some syscall symbol, contents unverified), and `os.NewFile`/`os.Root` usage in the scanned files is checked nowhere. A single pre-existing legitimate `syscall.Open` (or `os.NewFile`) outside the exempt open-closures/kernel-control would red the live scan on M2's first run, invalidating the 'narrowed exemption is a clean cut' premise (correction (a)) and forcing an unplanned exemption redesign mid-implementation.",
+      "oc-kimi-k3: The load-bearing M2 gate — 'the live scan must stay at zero violations' after widening from call-Fun matching to Uses-based identity matching and adding os.NewFile, syscall.Open/Openat/Creat, and *os.Root methods to the banned set — is asserted, never measured. The doc's own V5 establishes that today's scan never visits value-uses ('A banned func used as a value is never visited'), so dormant value-uses of banned symbols could exist in the live tree by construction; V5b only verified that io/ioutil and x/sys/unix imports are absent and that syscall is imported by two files, but never characterized WHAT mission_config_gate_test.go and forklocked_write_test.go use syscall for, and never grepped for os.NewFile or os.Root method uses across host/verifygate tests. If any previously-invisible use exists, the reworked scan reds on landing and M2's own acceptance gate fails — the exact class of unverified premise this queue row exists to eliminate."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.22480060000000002,
+    "total_tokens_in": 19657,
+    "total_tokens_out": 24270
+  }
+}

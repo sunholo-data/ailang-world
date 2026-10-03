@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-verifygate-forklock-guard-residuals.md",
+  "iso_ts": "2026-10-03T19:33:28Z",
+  "reviewers": [
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.019136,
+      "tokens_in": 8410,
+      "tokens_out": 193,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The closest concern is the rigid structural coupling in M2 where the static analyzer exempts exactly `Args[0]` of `forkLockedDo` calls. If `forkLockedDo` is ever refactored to take the open closure at a different argument index, the exemption will break, causing false positives on valid closures or silent false negatives on others.",
+        "catch": "M2 hardcodes `Args[0]` for the open closure exemption, creating a brittle structural dependency between `forkLockedDo`'s signature and the static analyzer.",
+        "proposed_fix": "Add a documentation warning directly on the `forkLockedDo` declaration explicitly stating that the static analyzer `scanForkLockedWrites` hardcodes its first argument (`Args[0]`) as the exempt open closure, so the function signature must not be reordered."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.10316380000000001,
+      "tokens_in": 7833,
+      "tokens_out": 20954,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "M3's fail-loud loop hard-requires a top-level `--- PASS:` line for all five listed tests on ubuntu-latest, but the doc contains zero linux execution evidence that `TestKernelRefusesExecOfWriterOpenFile` passes there: the rig is darwin (where it SKIPs, V7), the only dry run of the step body was darwin-only (V6b), and green CI on dev proves nothing because the current step exits 0 on a SKIP — that masking is precisely hole #4, so no existing run distinguishes PASS from SKIP for the kernel control. This load-bearing premise ('the kernel control PASSES on the runner') is asserted, not measured. By the doc's own quorum-r1 standard — where 'zero live violations' was rejected as asserted-until-measured (V5c) — the linux-PASS claim demanded the same treatment. If false, AC8/AC11 are unmeetable without weakening the loop and reopening the SKIP hole, and merging M3 turns CI red on an untested assumption.",
+        "catch": "Produce linux evidence for the kernel control before M3 lands: a container run on the rig of the exact five-test `-run` set (expecting `--- PASS: TestKernelRefusesExecOfWriterOpenFile`), or a cited parent-row ubuntu CI verbose log containing that line. Do not accept 'CI is green at 2d3a255' as evidence — the step being replaced passes on SKIP by design.",
+        "proposed_fix": "Add a verification row (e.g. V10): run `docker run --rm -v \"$PWD\":/w -w /w -e AILANG_BIN=\u003cv0.41.0 pin\u003e golang:1.26 go test ./host/verifygate/ -run '^(TestForkLockedWriteBlocksConcurrentFork|TestForkLockedWrappersHoldLockThroughClose|TestKernelRefusesExecOfWriterOpenFile|TestVerifygateTestWritesAreForkLocked|TestNoParallelWriteForkPackagesOutsideVerifygate)$' -count=1 -v` (or cite the parent's ubuntu runner log line) and record `--- PASS: TestKernelRefusesExecOfWriterOpenFile`. Extend M3 with an explicit contingency in the D2 style: 'If the kernel control does not PASS on the runner (SKIP or FAIL), the row HALTS and judge finding 5 is escalated as a CI-environment defect; the PASS loop is never weakened and no per-test exemption is added.' If no linux environment is reachable from the rig, split M3: assert PASS only for the four tests with linux evidence now, and land the kernel-control assertion in a follow-up row gated on a verified linux run — never by reinstating a RUNNER_OS skip guard."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.167469,
+      "tokens_in": 7833,
+      "tokens_out": 9598,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Exemption (a) in D2 is materially broader than every verified need: it exempts the ENTIRE body of any FuncLit passed as Args[0] to a package-scope forkLockedDo call. Nothing in the verification log shows the two real open closures contain more than the single open call, yet as specified a raw write smuggled inside an open closure (e.g., `func() (*os.File, error) { _ = os.WriteFile(\"y\", nil, 0o644); return os.OpenFile(\"x\", 0, 0) }`) is statically exempt, and D1's probe does not catch it either (the probe only checks stage order, lock-held, and the wrapper's own file size). So the row re-creates, in a new position-based form, exactly the class of guard hole it exists to close ('wrapper bodies have no guard'), and the closing claim 'Nothing is exempt because of the name of the function it sits in' is true but misleading about what remains exempt. No acceptance mutant probes this: AC1–AC10 never place a banned call inside the open closure, so the hole would survive the judge unchanged.",
+        "catch": "Verify what the two real open closures actually contain (M2 itself describes them as single-expression `return os.OpenFile(...)` bodies, and fixture N-OpenClosure is shaped that way), then check the scan spec against that: as written, exemption (a) whitelists arbitrary code inside Args[0] FuncLits. Confirm with a scratch fixture that a second banned call inside the open closure is or is not reported — the doc currently neither measures nor constrains this.",
+        "proposed_fix": "Bound exemption (a) to the measured shape. Replace the exemption rule with: 'A use is exempt only if its position lies within the return expression of a *ast.FuncLit that is Args[0] of a call whose Fun resolves to the package-scope object forkLockedDo; the FuncLit body must contain exactly one banned use, which is the open call whose result is returned. Any other banned use inside the closure is reported.' Then add to M2's fixture table: P-Smuggle — `func() (*os.File, error) { _ = os.WriteFile(\"y\", nil, 0o644); return os.OpenFile(\"x\", 0, 0) }` passed to the fixture package's forkLockedDo — must report the os.WriteFile line while still exempting the os.OpenFile line; and add AC12 to the acceptance table: mutant 'insert a raw os.WriteFile inside createTempForkLocked's open closure' → live scan names that line. If a broader whole-closure exemption is intentionally retained instead, say so explicitly, add a corresponding residual alongside R2′ explaining why the smuggle vector is accepted, and note the probe's non-coverage of writes to paths other than the wrapper's own file."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2: r1 objections dispositioned with first-party measurements (V5c/V5d/V5e/V6b); gemini macOS premise refuted (ubuntu-latest only); CI step asserts PASS for every listed test."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: M3's fail-loud loop hard-requires a top-level `--- PASS:` line for all five listed tests on ubuntu-latest, but the doc contains zero linux execution evidence that `TestKernelRefusesExecOfWriterOpenFile` passes there: the rig is darwin (where it SKIPs, V7), the only dry run of the step body was darwin-only (V6b), and green CI on dev proves nothing because the current step exits 0 on a SKIP — that masking is precisely hole #4, so no existing run distinguishes PASS from SKIP for the kernel control. This load-bearing premise ('the kernel control PASSES on the runner') is asserted, not measured. By the doc's own quorum-r1 standard — where 'zero live violations' was rejected as asserted-until-measured (V5c) — the linux-PASS claim demanded the same treatment. If false, AC8/AC11 are unmeetable without weakening the loop and reopening the SKIP hole, and merging M3 turns CI red on an untested assumption.",
+      "oc-kimi-k3: Exemption (a) in D2 is materially broader than every verified need: it exempts the ENTIRE body of any FuncLit passed as Args[0] to a package-scope forkLockedDo call. Nothing in the verification log shows the two real open closures contain more than the single open call, yet as specified a raw write smuggled inside an open closure (e.g., `func() (*os.File, error) { _ = os.WriteFile(\"y\", nil, 0o644); return os.OpenFile(\"x\", 0, 0) }`) is statically exempt, and D1's probe does not catch it either (the probe only checks stage order, lock-held, and the wrapper's own file size). So the row re-creates, in a new position-based form, exactly the class of guard hole it exists to close ('wrapper bodies have no guard'), and the closing claim 'Nothing is exempt because of the name of the function it sits in' is true but misleading about what remains exempt. No acceptance mutant probes this: AC1–AC10 never place a banned call inside the open closure, so the hole would survive the judge unchanged."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.28976880000000005,
+    "total_tokens_in": 24076,
+    "total_tokens_out": 30745
+  }
+}
