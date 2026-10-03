@@ -1,6 +1,6 @@
 # w-resident-agent-non-inferiority-floor-run — the clause-4 floor: two reference agents, shell vs World, core tier, eligibility first
 
-**Status**: PLANNED — attended draft 2026-10-03 (read-only Plan agent; written to file by the attended controller). Queue row 93. Not implemented; no quorum yet; decisions D-NF-1..6 open. Bases: ailang-world `dev` `587ee2576420…` (V1); row 134 branch `origin/attended/row134` `bb6b2b20…` (V2); ailang `76a5aef65c81…` (V4).
+**Status**: PLANNED — attended draft 2026-10-03 (read-only Plan agent; written to file by the attended controller). Queue row 93. Not implemented; no quorum yet; decisions D-NF-1..6 RULED (D-WORLD-55); depends on rows 134 and 135. Bases: ailang-world `dev` `587ee2576420…` (V1); row 134 branch `origin/attended/row134` `bb6b2b20…` (V2); ailang `76a5aef65c81…` (V4).
 **Clauses**: 4 (resident-agent non-inferiority floor). Touches no other clause; the World runs *feed* the row-114 corpus (D-WORLD-52).
 **Direction**: the charter's "The bar" clause 4 (V35); `w-prove-the-1-0-bar.md` §5–§7 and its Conflict Surface; D-WORLD-54 (gate = `core` tier, tuning = `smoke` tier on a cheap model, `frontier` informative, tune-then-judge with every change recorded); D-WORLD-48 (independence is a preference, not a blocker); row 134 (the World arm's 8 tools). Refinements are marked **[REFINED]** with their V-row.
 **Depends on**: row 134 landed on `dev` (today it is draft PR #180, V3), plus its M6 smoke (passed 2026-10-03). Row 92 is an ordering dependency only.
@@ -292,7 +292,10 @@ The tuning ledger is `design_docs/verification/world-floor-tuning-ledger.jsonl`.
 | MUT-SEAL-ORDER: World stats computed before eligibility | AC3.4 |
 | MUT-FINAL-NOPREREG | AC5.1 |
 
-## 8. Decisions (OPEN; recommended defaults)
+## 8. Decisions — RULED by Mark, attended 2026-10-03 (D-WORLD-55)
+
+The bar is unchanged: point estimate, with the bootstrap CI reported as context. D-NF-1 = A (port). D-NF-2 = `claude-opus-5-5` + `gpt-6.1-sol` (tuning on `claude-haiku-4-5` / `gpt-6-luna`). **D-NF-3 = B: widen `ailang-run` first (queue row 135).** D-NF-4 = N=3, D-NF-5 = A and D-NF-6 as recommended. The original options follow.
+
 
 - **D-NF-1 — grader.**
   - **A (rec.):** the in-repo port (§4.2), proven against banked rows by AC1.2.
