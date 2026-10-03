@@ -1006,3 +1006,71 @@ Because every remaining objection carried a concrete fix and none disputed the d
 **Progress:** World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Dev de-flaked; goal unmoved by the loop.
 
 **Next:** row 140 (`Workspace.Exec`, design + quorum) once 135/138 are confirmed done or handed back by the attended session. Mark answers D-WORLD-61. Row 142 is hygiene below the critical path.
+
+## 229 — 2026-10-03 — row 142 LANDED: verifygate fork-lock guard residuals (`2da63de`, #198; judge PASS 92) [PRODUCT-HYGIENE]
+
+**Kind:** full inner loop: designer → quorum ×2 → carve-out revision → planner → executor → independent evaluator → merge → merge CI.
+
+**Pick and why:** the clause map is 1/2/3/6/7 MET and 4/5 UNMET. The whole critical path is attended or sequenced:
+- Row 135 was re-landed attended (`e6064b6`).
+- Row 138 M3–M5 landed attended (`2d3a255`, #196, 20:24 local).
+- Row 140 is in **active attended design**: PR #197 `attended/row140-design`, D-WORLD-62 rulings, "Mark reviews r3". Its worktree commits sit in the main checkout's `.claude/worktrees/agent-ad349…` at 21:12 local, minutes before this fire's Gate 2.
+- Rows 93 → 114 → 139 are sequenced behind 140 (D-WORLD-58).
+- Rows 136/141 sit on D-WORLD-61's default B.
+
+No routable UNMET-clause row exists, so rule (e) admits the top MET-clause hygiene row: **142**, gated on nothing. Its premises were re-measured at `2d3a255`:
+- `rawWriteAllowlist` exempts whole bodies by name (l.197–201).
+- The scan matches call Fun idents only (l.284).
+
+**Work:**
+- **M1** (`000ef12`): a test-only `atomic.Pointer` probe in `forkLockedDo` fires at "filled" and after `Close` returns. It runs on the goroutine that holds `RLock`, asserts `!ForkLock.TryLock()` and checks that `Stat` gives `ErrClosed`. `TestForkLockedWrappersHoldLockThroughClose` drives all five wrappers at 0o755 where a mode applies. Kills E1, E2 and E3.
+- **M2** (`6a34737`): the scan walks every `info.Uses` and matches by object identity. It bans `os.NewFile`, `syscall.Open/Openat/Creat`, `io/ioutil` and `x/sys/unix`. Exactly one opener is exempt per `Args[0]` closure of the package-scope `forkLockedDo`; to make that hold, `createTempForkLocked`'s closure became `return os.CreateTemp(…)`. Adds 8 fixtures, including package-level, smuggle and value-use cases. Kills E5b, E8b and E6b, and fixes judge finding 6.
+- **M3** (`3c68ece`): `TestNoParallelWriteForkPackagesOutsideVerifygate`, with floors of 26 dirs and 12 write+fork dirs. The CI verbose step now fails loudly off Linux and requires `--- PASS:` for every test in its `-run` list, which is built from the same list.
+
+**Quorum:**
+- **r1** BLOCKED 3/3 present: gemini, glm and kimi.
+  - gemini said the step breaks macOS CI. REFUTED: both jobs run on `ubuntu-latest` (ci.yml:20, :118). No `RUNNER_OS` skip guard was added, because one would reopen the SKIP hole.
+  - glm and kimi said zero live violations was asserted, not measured. APPLIED as V5c, with controls. The designer found **my own value-use probe was broken**: it missed an end-of-line value use, and its own control returned 0. It was fixed to `([^a-zA-Z(]|$)`.
+  - Also applied: kimi's signature row and fixture wording, and glm's PASS check for every listed test.
+- **r2:** gemini PASS; glm and kimi rejected.
+  - glm said there was no Linux evidence that the kernel control PASSes. REFUTED: merge run 37138466945, job 111247747923, logs `--- PASS: TestKernelRefusesExecOfWriterOpenFile`. Its halt-don't-weaken contingency was applied.
+  - kimi's "the whole open closure is exempt" was APPLIED verbatim as the bounded opener rule, plus the P-Smuggle fixture and AC12.
+  - gemini's `Args[0]` doc comment was applied.
+- Every remaining objection had a concrete fix and none disputed the direction, so a narrow-refinement carve-out revision followed (`9ad84f2`).
+- Quorum spend: ≈ $0.51 (r1 $0.23, r2 $0.29). Artifacts are in `design_docs/verification/world-iter229/`.
+
+**Evidence:**
+- Executor gates, with `AILANG_BIN` = v0.41.0 pin:
+  - `gofmt` and `go vet` clean.
+  - verifygate went from 150+1 skip to 151+1, 151+1, then 152+1, with 0 fail.
+  - The `-race` subset was green.
+  - `verify_ail.sh` rc 0.
+  - Full `go test ./...` rc 0.
+  - The CI step body run locally exits 1 both when `RUNNER_OS` is unset and on the darwin SKIP.
+- Executor drills: 14/14 KILLED, each reverted to byte-identical.
+- Judge (opus, own scratch worktree): **PASS 92/100, zero blocking**. All six iter-228 survivors are KILLED. Of 16 new mutants, 11 were killed and 5 survived (N3, N5, N6, N10 `os.CopyFS`, N15b), filed as **row 143**.
+- CI on the PR head `733dffc` and on `08b31aa` (docs-only) was 2/2 success. The verbose step printed `--- PASS` for all five tests on ubuntu, which is the first Linux run of the two new tests. Merge CI: see the follow-through below.
+
+**Routing evidence:**
+- Base: Gate 1 base `2d3a255`@19:21:53Z. `origin/dev` was unchanged at the pre-merge re-fetch, and #198 merged CLEAN with `--match-head-commit`.
+- Controller: `claude:claude-opus-5-5`.
+- Designer: Agent `opus`. The resolver gave `recipe claude:claude-opus-5-5 declared:provider-pin`, and the operator's standing request was the Agent tool, with the same weights. 3 runs (author plus 2 revisions); ~83k, ~50k and ~55k subagent tok.
+- Planner: Agent `opus` (`opus fail-closed:env-pin`; ~79k tok).
+- Executor: Agent `sonnet`. The pin `claude:claude-sonnet-5-5` resolved as a `recipe`. ~84k tok, 16.6 min.
+- Evaluator: Agent `opus`. The resolver gave `reroute pi:openrouter/minimax/minimax-m3 generator-equals-judge`, but openrouter is in `MISSION_OVER_RATION`, and the next lane in the chain, `claude:claude-sonnet-4-6`, is the executor's family. Generator≠judge holds (sonnet vs opus); ~99k tok, 15.9 min.
+- Metered spend: ≈ $0.51 (quorum).
+
+**Ruled out:**
+- Rows 140, 93, 114 and 139: 140 is in attended design (#197), and the rest are sequenced behind it.
+- Rows 136/141: default B under D-WORLD-61.
+- Widening fork-lock discipline to the 12 other write+fork dirs: over 100 sites, so it got a tripwire instead, since only verifygate uses `t.Parallel`.
+- A `RUNNER_OS` skip guard: it would reopen the SKIP hole.
+- Treating the bare-name `forkLockedDo` match as fixed: N3 survives, so it goes to row 143.
+
+**Retro:** the controller's own measurement tool was wrong, and a role caught it. The value-use grep I handed the designer as a refutation returned 0 on its own known-positive control, because a value use at end-of-line has no following character. Rule 3a applied to my own probe: never hand a sub-agent a zero without its control. Instance 1; no skill edit (World cannot edit the shared skill).
+
+**Progress:** World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Dev guard hardened; goal unmoved by the loop.
+
+**Next:** row 140 once the attended session lands its design (#197) or hands it back; then 93 (FINAL) → 114 → 139. Mark answers D-WORLD-61. Row 143 is hygiene below the critical path.
+
+**Merge follow-through (Gate 3b):** merge commit `2da63de` CI run 37151953890 2/2 success (`go host build + test gate`, `ailang-code verify gate`); the verbose fork-lock step logs `--- PASS:` for all five listed tests on ubuntu (0 SKIP). Item LANDED.
