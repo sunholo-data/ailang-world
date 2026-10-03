@@ -128,7 +128,9 @@ func TestA2A_AbsentPrecheckSnapshotFailure(t *testing.T) {
 		t.Run(map[bool]string{false: "direct", true: "real_reader"}[realReader], func(t *testing.T) {
 			st := openStore(t)
 			runner := &countingRunner{}
-			coord, err := coordinator.New(coordinator.Config{Store: st, Runner: runner, Binder: func(ep string, caps []broker.Capability) transitionreg.Binder { return broker.OpenBinder(st, ep, caps) }, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
+			coord, err := coordinator.New(coordinator.Config{Store: st, Runner: runner, Binder: func(ep string, caps []broker.Capability) transitionreg.Binder {
+				return broker.OpenBinder(st, ep, caps, nil)
+			}, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
 			if err != nil {
 				t.Fatal(err)
 			}

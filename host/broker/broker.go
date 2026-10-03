@@ -259,6 +259,13 @@ func (s *Session) invoke(
 	}
 	s.debitGrant(grantIndex, decision.Remaining)
 	result, err = handler.Execute(ctx, req, payload)
+	// The handler has run. Every write below records an effect that already
+	// happened, so it runs on a detached context with its own bound
+	// (postDispatchContext): an expired or cancelled caller context can never
+	// strand an executed effect without its record and outcome (row 134 §4.3,
+	// V48). A failure of these writes is the typed *OutcomeWriteError.
+	post, cancelPost := postDispatchContext(ctx)
+	defer cancelPost()
 	if err != nil {
 		// THE ONE NARROW SPECIAL CASE. Only the typed *IndeterminateEffectError
 		// suppresses the outcome, and only after the intent is already durable.
@@ -287,39 +294,66 @@ func (s *Session) invoke(
 			BudgetBefore: budgetBefore, BudgetAfter: decision.Remaining,
 			Allowed: true, Failed: true, RequestRef: requestRef,
 		}
-		ref, putErr := s.putRecord(ctx, rec)
+		ref, putErr := s.putRecord(post, rec)
 		if putErr != nil {
-			return nil, hashref.HashRef{}, putErr
+			return nil, hashref.HashRef{}, &OutcomeWriteError{Effect: req.Effect, Scope: req.Scope, Err: putErr}
 		}
-		if _, _, outcomeErr := s.store.AppendEffectOutcome(ctx, effectID, store.EffectOutcome{
+		if _, _, outcomeErr := s.store.AppendEffectOutcome(post, effectID, store.EffectOutcome{
 			InvocationID: effectID, Status: "failed", RecordRef: ref, LogicalTime: req.Now,
 		}); outcomeErr != nil {
-			return nil, hashref.HashRef{}, fmt.Errorf("broker: append failed effect outcome: %w", outcomeErr)
+			return nil, hashref.HashRef{}, &OutcomeWriteError{Effect: req.Effect, Scope: req.Scope, RecordRef: ref,
+				Err: fmt.Errorf("broker: append failed effect outcome: %w", outcomeErr)}
 		}
 		return nil, ref, &EffectFailedError{
 			Effect: req.Effect, Scope: req.Scope, RecordRef: ref, cause: err,
 		}
 	}
 	resultObj := resultObject(result)
-	if err := s.store.PutObject(ctx, resultObj); err != nil {
-		return nil, hashref.HashRef{}, fmt.Errorf("broker: put effect result: %w", err)
+	if err := s.store.PutObject(post, resultObj); err != nil {
+		return nil, hashref.HashRef{}, &OutcomeWriteError{Effect: req.Effect, Scope: req.Scope,
+			Err: fmt.Errorf("broker: put effect result: %w", err)}
 	}
 	rec := EffectRecord{
 		Effect: req.Effect, Scope: req.Scope, Cost: req.Cost,
 		BudgetBefore: budgetBefore, BudgetAfter: decision.Remaining, Allowed: true,
 		RequestRef: requestRef, ResultRef: resultObj.Hash,
 	}
-	recordRef, err = s.putRecord(ctx, rec)
+	recordRef, err = s.putRecord(post, rec)
 	if err != nil {
-		return nil, hashref.HashRef{}, err
+		return nil, hashref.HashRef{}, &OutcomeWriteError{Effect: req.Effect, Scope: req.Scope, Err: err}
 	}
-	if _, _, err := s.store.AppendEffectOutcome(ctx, effectID, store.EffectOutcome{
+	if _, _, err := s.store.AppendEffectOutcome(post, effectID, store.EffectOutcome{
 		InvocationID: effectID, Status: "succeeded", RecordRef: recordRef, LogicalTime: req.Now,
 	}); err != nil {
-		return nil, hashref.HashRef{}, fmt.Errorf("broker: append succeeded effect outcome: %w", err)
+		return nil, hashref.HashRef{}, &OutcomeWriteError{Effect: req.Effect, Scope: req.Scope, RecordRef: recordRef,
+			Err: fmt.Errorf("broker: append succeeded effect outcome: %w", err)}
 	}
 	return result, recordRef, nil
 }
+
+// PostDispatchBudget bounds the broker's writes after a handler has run (the
+// result object, the effect record and the outcome row). They run detached
+// from the caller's cancellation, so a completed effect is always recorded,
+// and bounded, so a stuck store cannot hold the session forever.
+const PostDispatchBudget = 4 * time.Second
+
+func postDispatchContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.WithoutCancel(ctx), PostDispatchBudget)
+}
+
+// OutcomeWriteError reports a handler that was dispatched but whose result,
+// record or outcome could not be persisted. The effect ran (its intent is
+// durable and its budget debited); only its accounting is incomplete.
+// RecordRef is set when the effect record itself landed.
+type OutcomeWriteError struct {
+	Effect    string
+	Scope     string
+	RecordRef hashref.HashRef
+	Err       error
+}
+
+func (e *OutcomeWriteError) Error() string { return e.Err.Error() }
+func (e *OutcomeWriteError) Unwrap() error { return e.Err }
 
 func (s *Session) decide(req EffectRequest) (int, Decision) {
 	return decideOver(s.grants, req)

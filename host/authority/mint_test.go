@@ -145,6 +145,37 @@ func TestMint_GrantsRoundTrip(t *testing.T) {
 	}
 }
 
+// TestMint_GrantNeverOutlivesItsSession (row 134 break-1 fix): a grant whose
+// ExpiresAt is later than the session's expiry (now + ttl) is stored clamped to
+// the session expiry; an earlier grant expiry is kept; the caller's slice is
+// not mutated.
+func TestMint_GrantNeverOutlivesItsSession(t *testing.T) {
+	st := newTestStore(t)
+	grants := []broker.Capability{
+		{Effect: "fs.read", Scope: "/tmp/a", ExpiresAt: 1000 + 99999, Budget: 1},
+		{Effect: "repo.commit", Scope: "world/ep-42", ExpiresAt: 1500, Budget: 5},
+	}
+	tok := mintTestToken(t, st, "ep-42", grants, 3600, 1000)
+	if grants[0].ExpiresAt != 1000+99999 {
+		t.Fatalf("Mint mutated the caller's grants: %+v", grants[0])
+	}
+	out := resolveNow(t, New(st), "Bearer "+tok, 1000)
+	if out.Success == nil || len(out.Success.Caps) != 2 {
+		t.Fatalf("resolve = %#v", out)
+	}
+	if got := out.Success.Caps[0].ExpiresAt; got != 1000+3600 {
+		t.Fatalf("over-long grant stored with expiry %d, want the session expiry %d", got, 1000+3600)
+	}
+	if got := out.Success.Caps[1].ExpiresAt; got != 1500 {
+		t.Fatalf("shorter grant stored with expiry %d, want 1500 kept", got)
+	}
+	for _, c := range out.Success.Caps {
+		if c.ExpiresAt > out.Success.ExpiresAt {
+			t.Fatalf("grant %s outlives its session: %d > %d", c.Effect, c.ExpiresAt, out.Success.ExpiresAt)
+		}
+	}
+}
+
 // TestRevoke_DeletesRow is mutation M5's sole killer (AC-M2-5): after Revoke the
 // mapping row is gone and resolving the revoked credential is DenialUnknown
 // (delete-from-mapping = unknown, D4).

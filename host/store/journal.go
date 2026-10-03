@@ -1064,3 +1064,48 @@ func (s *Store) PendingEffectIntents(ctx context.Context, limit int, fromIndex .
 	}
 	return pending, nil
 }
+
+// EffectKey groups effect spend by the intent's own Effect and Scope.
+type EffectKey struct {
+	Effect string
+	Scope  string
+}
+
+// EffectSpend sums Cost over every effect intent of episodeID, grouped by the
+// intent's own Effect and Scope. It scans only the episode's `effect:<ep>:`
+// key range (invocation intents live outside the effect namespace), is
+// read-only, and works on a read-only handle. Denied requests append no intent
+// (see the broker), so the sum is executed-effect spend.
+func (s *Store) EffectSpend(ctx context.Context, episodeID string) (map[EffectKey]int64, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return nil, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
+	rows, err := s.db.QueryContext(ctx, `SELECT o.payload
+		FROM journal j JOIN objects o ON o.hash_ref = j.object_ref
+		WHERE j.kind = 'intent' AND j.invocation_id >= ? AND j.invocation_id < ?
+		AND o.semantic_id = ?`,
+		"effect:"+episodeID+":", "effect:"+episodeID+";", EffectIntentV1)
+	if err != nil {
+		return nil, fmt.Errorf("store: effect spend: %w", err)
+	}
+	defer rows.Close()
+	spend := map[EffectKey]int64{}
+	for rows.Next() {
+		var payload []byte
+		if err := rows.Scan(&payload); err != nil {
+			return nil, err
+		}
+		intent, err := decodeEffectIntent(payload)
+		if err != nil {
+			return nil, err
+		}
+		spend[EffectKey{intent.Effect, intent.Scope}] += intent.Cost
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return spend, nil
+}

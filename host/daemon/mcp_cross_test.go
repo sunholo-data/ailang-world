@@ -138,7 +138,9 @@ func TestMCPQuickstartPayloadsVerbatim(t *testing.T) {
 	if len(section) != 2 {
 		t.Fatal("MCP section absent")
 	}
-	matches := regexp.MustCompile(`-d '([^']+)'`).FindAllStringSubmatch(section[1], -1)
+	// §8 ends where §9 (the se-tools runbook, its own verbatim test) begins.
+	body, _, _ := strings.Cut(section[1], "### 9. ")
+	matches := regexp.MustCompile(`-d '([^']+)'`).FindAllStringSubmatch(body, -1)
 	if len(matches) != 3 {
 		t.Fatalf("payload count=%d", len(matches))
 	}

@@ -1,0 +1,385 @@
+module se_tools/cli
+
+-- ailang-cli (queue row 134, design_docs/planned/w-software-engineering-domain.md
+-- §4.2): the rest of the ailang CLI as a typed policy-tool request. Args
+-- exactly policy-tool's Request fields minus write/edit content (V56):
+-- {op, path?, module?, query?, package?, flags?: {name: value}}. Effect
+-- Ailang.CLI; payload = the arguments verbatim. No finish phase.
+--
+-- Calling convention v2 (§4.1): the coordinator passes ONE string,
+-- {"phase":"plan","args":<MCP/A2A arguments>}.
+-- The plan answer is a world/effect-plan/v1 object with exactly one effect
+-- (scope "worktree", cost 1, the descriptor's declared triple) or a zero-effect
+-- refusal plan whose result is {"ok":false,"refused":...} (L7). L-ARGS: any
+-- argument key outside the schema above is refused (V56: the handler would
+-- ignore it).
+--
+-- Self-contained by construction (row 107 Residual 7): publication checks this
+-- file alone in an empty root, so it imports only std/*, which the pinned
+-- capsule interpreter resolves from the binary (V59). For that reason the
+-- contracted core noDotDotSegment / pathOk / inputKeyAllowed is repeated in
+-- every se_tools module; host/coordinator's se-tools test holds the copies
+-- byte-identical. argKeyAllowed is each tool's own schema.
+
+import std/json (decode, encode, jo, ja, kv, js, jint, jb, jn, get, asObject, asString, Json)
+import std/string (length as strLength, startsWith, endsWith, contains)
+import std/option (Option, Some, None)
+import std/result (Result, Ok, Err)
+
+-- ── Contracted pure core (Z3) ─────────────────────────────────────────────
+
+-- No path segment is "..": the whole path, a leading "../", a trailing "/..",
+-- or an inner "/../". A segment that merely starts with two dots is legal.
+export func noDotDotSegment(p: string) -> bool ! {}
+ensures { result == (p != ".." && not startsWith(p, "../") && not endsWith(p, "/..")
+  && not contains(p, "/../")) }
+tests [
+  ("src/main.ail", true),
+  ("..", false),
+  ("../x.ail", false),
+  ("a/..", false),
+  ("a/../b.ail", false),
+  ("..a/b.ail", true),
+  ("a/..b.ail", true)
+]
+{
+  p != ".." && not startsWith(p, "../") && not endsWith(p, "/..") && not contains(p, "/../")
+}
+
+-- The plan's path predicate (§4.5): relative, non-empty, no ".." segment, no
+-- leading "-" (a hyphen-leading path is a flag-injection vector, V58). Body
+-- composes the proven callee; the exact ensures restates the whole law. A
+-- precondition for a clear refusal, NOT the confinement (§4.3: that is the
+-- AILANG policy layer behind the broker).
+export func pathOk(p: string) -> bool ! {}
+ensures { result == (strLength(p) >= 1 && not startsWith(p, "/") && not startsWith(p, "-")
+  && p != ".." && not startsWith(p, "../") && not endsWith(p, "/..")
+  && not contains(p, "/../")) }
+tests [
+  ("src/main.ail", true),
+  ("main.ail", true),
+  ("", false),
+  ("/etc/hosts", false),
+  ("-policy.ail", false),
+  ("../ailang/go.mod", false),
+  ("a/../../b", false),
+  ("a/-b.ail", true)
+]
+{
+  strLength(p) >= 1 && not startsWith(p, "/") && not startsWith(p, "-") && noDotDotSegment(p)
+}
+
+-- L-ARGS (§4.1, §4.2): the argument keys this tool admits. policy-tool ignores
+-- unknown request keys (V56), so strictness lives here: any other key is a
+-- typed refusal plan, never silently dropped.
+export func argKeyAllowed(k: string) -> bool ! {}
+ensures { result == (k == "op" || k == "path" || k == "module" || k == "query" || k == "package" || k == "flags") }
+tests [
+  ("op", true),
+  ("flags", true),
+  ("package", true),
+  ("content", false),
+  ("old_text", false),
+  ("limit", false)
+]
+{
+  k == "op" || k == "path" || k == "module" || k == "query" || k == "package" || k == "flags"
+}
+
+-- Calling convention v2 (§4.1): the input object's keys. `results` exists only
+-- in the finish phase.
+export func inputKeyAllowed(phase: string, k: string) -> bool ! {}
+ensures { result == (k == "phase" || k == "args" || (phase == "finish" && k == "results")) }
+tests [
+  (("plan", "args"), true),
+  (("plan", "phase"), true),
+  (("plan", "results"), false),
+  (("finish", "results"), true),
+  (("plan", "world"), false)
+]
+{
+  k == "phase" || k == "args" || (phase == "finish" && k == "results")
+}
+
+-- The ops ailang-cli may name: the policy summary's `cli` list measured on the
+-- tool binary (V40) — policy-tool's ops minus read/write/edit/summary, and
+-- never run. The handler re-checks against the live summary (§4.3); this is
+-- the plan's clear refusal before any effect is spent.
+export func cliOpAllowed(op: string) -> bool ! {}
+ensures { result == (op == "agent_prompt" || op == "ai_check" || op == "axioms" || op == "builtins_list"
+    || op == "builtins_show" || op == "check" || op == "devtools_prompt" || op == "docs_search"
+    || op == "examples_list" || op == "examples_search" || op == "examples_show" || op == "examples_tags"
+    || op == "fmt" || op == "iface" || op == "pkg_docs" || op == "policy_check"
+    || op == "prompt" || op == "test" || op == "tree" || op == "version") }
+tests [
+  ("check", true),
+  ("iface", true),
+  ("version", true),
+  ("read", false),
+  ("write", false),
+  ("edit", false),
+  ("summary", false),
+  ("run", false),
+  ("", false)
+]
+{
+  op == "agent_prompt" || op == "ai_check" || op == "axioms" || op == "builtins_list"
+    || op == "builtins_show" || op == "check" || op == "devtools_prompt" || op == "docs_search"
+    || op == "examples_list" || op == "examples_search" || op == "examples_show" || op == "examples_tags"
+    || op == "fmt" || op == "iface" || op == "pkg_docs" || op == "policy_check"
+    || op == "prompt" || op == "test" || op == "tree" || op == "version"
+}
+
+-- The flags that make an admitted op write the worktree (V67, measured on the
+-- tool binary v0.51.0 from policy-tool's per-op "admitted:" refusal text):
+-- of every cli op's admitted flags, only fmt's --write writes. policy-tool
+-- runs it without the fs_deny_write check and ignores the flag's value, so the
+-- key's presence is refused. ailang-cli never writes: writes are ailang-write.
+-- The handler refuses the same flag again (defence in depth, §4.3).
+export func writeFlag(op: string, flag: string) -> bool ! {}
+ensures { result == (op == "fmt" && flag == "write") }
+tests [
+  (("fmt", "write"), true),
+  (("fmt", "check"), false),
+  (("fmt", "Write"), false),
+  (("check", "write"), false),
+  (("test", "json"), false)
+]
+{
+  op == "fmt" && flag == "write"
+}
+
+-- ── Plan construction (world/effect-plan/v1, §4.1) ─────────────────────────
+
+-- A zero-effect refusal plan: L7 requires its non-null result object, which
+-- reaches the caller verbatim.
+func refusal(msg: string) -> string =
+  encode(jo([
+    kv("plan", js("world/effect-plan/v1")),
+    kv("effects", ja([])),
+    kv("finish", jb(false)),
+    kv("result", jo([kv("ok", jb(false)), kv("refused", js(msg))]))
+  ]))
+
+-- The one-effect plan: id "e1", scope "worktree", cost 1 — exactly a triple
+-- of the descriptor's declaredEffects (L3), so parsePlan admits it.
+func effectPlan(effect: string, payload: Json, finish: bool) -> string =
+  encode(jo([
+    kv("plan", js("world/effect-plan/v1")),
+    kv("effects", ja([jo([
+      kv("id", js("e1")),
+      kv("effect", js(effect)),
+      kv("scope", js("worktree")),
+      kv("cost", jint(1)),
+      kv("payload", payload)
+    ])])),
+    kv("finish", jb(finish)),
+    kv("result", jn(()))
+  ]))
+
+func pathRefusal(p: string) -> string =
+  "path \"${p}\" refused: it must be relative and non-empty, with no \"..\" segment and no leading \"-\""
+
+func firstUnknownArg(es: [{key: string, value: Json}]) -> Option[string] =
+  match es {
+    [] => None,
+    e :: rest => if argKeyAllowed(e.key) then firstUnknownArg(rest) else Some(e.key)
+  }
+
+func firstUnknownInputKey(es: [{key: string, value: Json}], phase: string) -> Option[string] =
+  match es {
+    [] => None,
+    e :: rest => if inputKeyAllowed(phase, e.key) then firstUnknownInputKey(rest, phase) else Some(e.key)
+  }
+
+func requiredString(args: Json, k: string) -> Result[string, string] =
+  match get(args, k) {
+    None => Err("missing required argument \"${k}\""),
+    Some(v) => match asString(v) {
+      Some(s) => Ok(s),
+      None => Err("argument \"${k}\" must be a string")
+    }
+  }
+
+func stringField(doc: Json, k: string) -> string =
+  match get(doc, k) {
+    Some(v) => match asString(v) {
+      Some(s) => s,
+      None => ""
+    },
+    None => ""
+  }
+
+-- An optional string argument: absent is Ok(None); present but not a string
+-- is refused.
+func optionalString(args: Json, k: string) -> Result[Option[string], string] =
+  match get(args, k) {
+    None => Ok(None),
+    Some(v) => match asString(v) {
+      Some(s) => Ok(Some(s)),
+      None => Err("argument \"${k}\" must be a string")
+    }
+  }
+
+-- ── The tool ─────────────────────────────────────────────────────────────
+
+func pathArgOk(args: Json, k: string) -> Result[(), string] =
+  match optionalString(args, k) {
+    Err(why) => Err(why),
+    Ok(None) => Ok(()),
+    Ok(Some(p)) => if pathOk(p) then Ok(()) else Err(pathRefusal(p))
+  }
+
+func stringArgOk(args: Json, k: string) -> Result[(), string] =
+  match optionalString(args, k) {
+    Err(why) => Err(why),
+    Ok(_) => Ok(())
+  }
+
+func allStringValues(es: [{key: string, value: Json}]) -> bool =
+  match es {
+    [] => true,
+    e :: rest => match asString(e.value) {
+      Some(_) => allStringValues(rest),
+      None => false
+    }
+  }
+
+-- flags: {name: value}, every value a string (policy-tool's Request.flags is
+-- map[string]string; per-op flag admission is policy-tool's own refusal, V56).
+func flagsOk(args: Json) -> Result[(), string] =
+  match get(args, "flags") {
+    None => Ok(()),
+    Some(f) => match asObject(f) {
+      None => Err("argument \"flags\" must be an object of string values"),
+      Some(es) => if allStringValues(es) then Ok(())
+        else Err("argument \"flags\" must be an object of string values")
+    }
+  }
+
+func firstErr(checks: [Result[(), string]]) -> Option[string] =
+  match checks {
+    [] => None,
+    c :: rest => match c {
+      Err(why) => Some(why),
+      Ok(_) => firstErr(rest)
+    }
+  }
+
+func firstWriteFlagIn(op: string, fs: [{key: string, value: Json}]) -> Option[string] =
+  match fs {
+    [] => None,
+    f :: rest => if writeFlag(op, f.key) then Some(f.key) else firstWriteFlagIn(op, rest)
+  }
+
+-- Every top-level "flags" entry is scanned, not just the first: a duplicate
+-- key survives the JSON round trip, and policy-tool merges duplicates (V67).
+func firstWriteFlag(op: string, es: [{key: string, value: Json}]) -> Option[string] =
+  match es {
+    [] => None,
+    e :: rest => if e.key == "flags" then match asObject(e.value) {
+        Some(fs) => match firstWriteFlagIn(op, fs) {
+          Some(k) => Some(k),
+          None => firstWriteFlag(op, rest)
+        },
+        None => firstWriteFlag(op, rest)
+      }
+      else firstWriteFlag(op, rest)
+  }
+
+func writeFlagOk(op: string, args: Json) -> Result[(), string] =
+  match asObject(args) {
+    None => Ok(()),
+    Some(es) => match firstWriteFlag(op, es) {
+      Some(k) => Err("op \"${op}\" flag \"${k}\" writes the worktree; ailang-cli never writes (fmt without it returns the formatted text; write it with ailang-write)"),
+      None => Ok(())
+    }
+  }
+
+-- The payload is the call's own arguments, key for key (§4.2: exactly
+-- policy-tool's Request fields minus write/edit content).
+func planTool(args: Json) -> string =
+  match requiredString(args, "op") {
+    Err(why) => refusal(why),
+    Ok(op) => if not cliOpAllowed(op)
+      then refusal("op \"${op}\" is not an ailang-cli op; reads, writes and edits have their own tools, and run is ailang-run")
+      else match firstErr([pathArgOk(args, "path"), stringArgOk(args, "module"), stringArgOk(args, "query"),
+                           pathArgOk(args, "package"), flagsOk(args), writeFlagOk(op, args)]) {
+        Some(why) => refusal(why),
+        None => effectPlan("Ailang.CLI", args, false)
+      }
+  }
+
+func planPhase(doc: Json) -> string =
+  match get(doc, "args") {
+    None => refusal("the input carries no args"),
+    Some(args) => match asObject(args) {
+      None => refusal("arguments must be a JSON object"),
+      Some(es) => match firstUnknownArg(es) {
+        Some(k) => refusal("unknown argument \"${k}\"; ailang-cli admits only: op, path, module, query, package, flags"),
+        None => planTool(args)
+      }
+    }
+  }
+
+func dispatch(doc: Json) -> string =
+  match asObject(doc) {
+    None => refusal("the input is not a JSON object"),
+    Some(top) => {
+      let phase = stringField(doc, "phase");
+      match firstUnknownInputKey(top, phase) {
+        Some(k) => refusal("input key \"${k}\" is not part of calling convention v2"),
+        None => if phase == "plan" then planPhase(doc)
+          else if phase == "finish" then encode(jo([kv("ok", jb(false)), kv("refused", js("ailang-cli has no finish phase"))]))
+          else refusal("phase must be \"plan\" or \"finish\"")
+      }
+    }
+  }
+
+-- The transition entry (calling convention v2). Its named tests pin the exact
+-- plan bytes for an admitted call and each L-ARGS / path refusal.
+export func main(input: string) -> string
+tests [
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"iface\",\"module\":\"std/json\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.CLI\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"iface\",\"module\":\"std/json\"}}],\"finish\":false,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"iface\",\"module\":\"std/json\",\"limit\":5}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"limit\\\"; ailang-cli admits only: op, path, module, query, package, flags\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"iface\",\"module\":\"std/json\"},\"world\":{}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"input key \\\"world\\\" is not part of calling convention v2\"}}"),
+  ("{\"phase\":\"plan\",\"args\":[]}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"arguments must be a JSON object\"}}"),
+  ("{\"phase\":\"replay\",\"args\":{\"op\":\"iface\",\"module\":\"std/json\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"phase must be \\\"plan\\\" or \\\"finish\\\"\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"check\",\"path\":\"world/contracts.ail\",\"flags\":{\"json\":\"\"}}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.CLI\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"check\",\"path\":\"world/contracts.ail\",\"flags\":{\"json\":\"\"}}}],\"finish\":false,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"read\",\"path\":\"go.mod\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"op \\\"read\\\" is not an ailang-cli op; reads, writes and edits have their own tools, and run is ailang-run\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"run\",\"path\":\"x.ail\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"op \\\"run\\\" is not an ailang-cli op; reads, writes and edits have their own tools, and run is ailang-run\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"check\",\"path\":\"-x.ail\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"path \\\"-x.ail\\\" refused: it must be relative and non-empty, with no \\\"..\\\" segment and no leading \\\"-\\\"\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"test\",\"package\":\"../other\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"path \\\"../other\\\" refused: it must be relative and non-empty, with no \\\"..\\\" segment and no leading \\\"-\\\"\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"examples_search\",\"query\":\"x\",\"flags\":[\"--limit\"]}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"flags\\\" must be an object of string values\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"examples_search\",\"query\":\"x\",\"flags\":{\"limit\":2}}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"flags\\\" must be an object of string values\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"check\",\"path\":\"a.ail\",\"content\":\"x\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"content\\\"; ailang-cli admits only: op, path, module, query, package, flags\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"path\":\"a.ail\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"missing required argument \\\"op\\\"\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"fmt\",\"path\":\".claude/x.ail\",\"flags\":{\"write\":\"\"}}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"op \\\"fmt\\\" flag \\\"write\\\" writes the worktree; ailang-cli never writes (fmt without it returns the formatted text; write it with ailang-write)\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"fmt\",\"path\":\"src/main.ail\",\"flags\":{\"check\":\"\",\"write\":\"false\"}}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"op \\\"fmt\\\" flag \\\"write\\\" writes the worktree; ailang-cli never writes (fmt without it returns the formatted text; write it with ailang-write)\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"fmt\",\"path\":\"main.ail\",\"flags\":{},\"flags\":{\"write\":\"\"}}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"op \\\"fmt\\\" flag \\\"write\\\" writes the worktree; ailang-cli never writes (fmt without it returns the formatted text; write it with ailang-write)\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"op\":\"fmt\",\"path\":\"main.ail\",\"flags\":{\"check\":\"\"}}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Ailang.CLI\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"op\":\"fmt\",\"path\":\"main.ail\",\"flags\":{\"check\":\"\"}}}],\"finish\":false,\"result\":null}")
+]
+{
+  match decode(input) {
+    Ok(doc) => dispatch(doc),
+    Err(e) => refusal("the input is not JSON: ${e}")
+  }
+}

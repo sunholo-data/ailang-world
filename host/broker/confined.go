@@ -56,6 +56,34 @@ func (b *BoundInvoker) Declared() []Requirement {
 	return append([]Requirement(nil), b.declared...)
 }
 
+// Unhandled returns, in declaration order and without duplicates, the declared
+// effect names this session has no registered handler for. A caller checks it
+// BEFORE requesting any effect, so a descriptor that could only be partly
+// honoured runs none of its effects (row 134 R8). A replay session never
+// dispatches a handler (V10), so it reports none.
+func (b *BoundInvoker) Unhandled() []string {
+	if b.s.mode == Replay {
+		return nil
+	}
+	var missing []string
+	for _, d := range b.declared {
+		if _, ok := b.s.registry[d.Effect]; ok || containsName(missing, d.Effect) {
+			continue
+		}
+		missing = append(missing, d.Effect)
+	}
+	return missing
+}
+
+func containsName(names []string, name string) bool {
+	for _, n := range names {
+		if n == name {
+			return true
+		}
+	}
+	return false
+}
+
 // Request refuses undeclared triples before entering the broker pipeline.
 func (b *BoundInvoker) Request(
 	ctx context.Context,

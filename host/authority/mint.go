@@ -40,6 +40,11 @@ func Mint(ctx context.Context, st *store.Store, episodeID string, grants []broke
 	rawToken = hex.EncodeToString(raw)
 	credentialID = hashHexToken(rawToken)
 
+	// A grant never outlives its session (row 134 fix): any grant whose
+	// ExpiresAt is later than the session's own expiry is clamped to it. The
+	// caller's slice is not mutated.
+	expiresAt := now + ttl
+	grants = clampGrantExpiry(grants, expiresAt)
 	grantsJSON, err := json.Marshal(grants)
 	if err != nil {
 		return "", "", store.SessionRow{}, fmt.Errorf("authority: mint: marshal grants: %w", err)
@@ -48,7 +53,7 @@ func Mint(ctx context.Context, st *store.Store, episodeID string, grants []broke
 		CredentialID: credentialID,
 		EpisodeID:    episodeID,
 		GrantsJSON:   string(grantsJSON),
-		ExpiresAt:    now + ttl,
+		ExpiresAt:    expiresAt,
 		CreatedAt:    now,
 	}
 	if err := st.MintSession(ctx, row); err != nil {
@@ -63,4 +68,17 @@ func Mint(ctx context.Context, st *store.Store, episodeID string, grants []broke
 		}
 	}
 	return rawToken, credentialID, row, nil
+}
+
+// clampGrantExpiry returns a copy of grants with every ExpiresAt later than
+// sessionExpiry lowered to sessionExpiry, so no stored grant can outlive the
+// session that carries it. Earlier expiries (including 0) are kept as given.
+func clampGrantExpiry(grants []broker.Capability, sessionExpiry int64) []broker.Capability {
+	out := append([]broker.Capability(nil), grants...)
+	for i := range out {
+		if out[i].ExpiresAt > sessionExpiry {
+			out[i].ExpiresAt = sessionExpiry
+		}
+	}
+	return out
 }

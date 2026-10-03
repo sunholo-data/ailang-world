@@ -225,6 +225,23 @@ type Config struct {
 	// AilangBin, when non-empty, is the interpreter archived at startup
 	// (Decision 6 pinning) and reported by GET /v1/health.
 	AilangBin string
+	// WorkspaceRoot (`--workspace-root`, row 134 D-SE-4 A) is the directory
+	// whose child <root>/<episode> is that episode's worktree. It must be a
+	// directory that contains none of the daemon's state (store, archive,
+	// rendered policies, tool cache) — startup refuses otherwise (AC4.5).
+	WorkspaceRoot string
+	// ToolAilangBin (`--tool-ailang-bin`, D-SE-1 A) is the AILANG binary the
+	// workspace tools run. It is archived and hash-verified like AilangBin
+	// (independent of the compiler pin) and must be ToolBinaryRelease. The
+	// workspace tools are served only when WorkspaceRoot is also set.
+	ToolAilangBin string
+	// ExamplesDir (`--examples-dir`, row 134 break-3 fix) is the AILANG examples
+	// corpus examples-search reads, passed to the tool as AILANG_EXAMPLES. The
+	// corpus is not built into the tool binary (V65). It must be a directory
+	// outside WorkspaceRoot — startup refuses otherwise. Empty means no corpus:
+	// examples-search answers NoExamplesCorpusRefusal. (The CLI defaults it to
+	// the operator's ~/.ailang/examples when that exists.)
+	ExamplesDir string
 	// ErrorLog receives the operator-facing detail of every sanitized 500: one
 	// line per error, carrying the route and the VERBATIM store error that the
 	// response body no longer echoes (Decision: sanitize-vs-expose).
@@ -374,6 +391,14 @@ type Daemon struct {
 	// itself so /a2a/ can answer in JSON-RPC form.
 	projection *projection.Handler
 
+	// coord is the invocation coordinator (nil without --ailang-bin); its
+	// Binder is d.binder, over workspace.registry(episode).
+	coord *coordinator.Coordinator
+
+	// workspace is the resolved --workspace-root/--tool-ailang-bin pair
+	// (row 134 §4.3). Its registry is empty unless both are set.
+	workspace *workspaceTools
+
 	// Health facts resolved once at startup and served verbatim.
 	interpreterRef     string
 	interpreterVersion string
@@ -507,6 +532,23 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	if cfg.DBPath == "" {
 		return nil, &StartupError{Stage: StageConfig, Detail: "no database path configured (--db is required)"}
 	}
+	// Row 134 AC4.5: refuse a workspace root that contains the daemon's own
+	// state BEFORE taking writer authority, like the bind policy.
+	workspace := &workspaceTools{errLog: resolveErrorLog(cfg.ErrorLog)}
+	if cfg.WorkspaceRoot != "" {
+		root, stateDir, err := resolveWorkspaceRoot(cfg.WorkspaceRoot, cfg.DBPath)
+		if err != nil {
+			return nil, &StartupError{Stage: StageConfig, Detail: "the workspace root is refused", Err: err}
+		}
+		workspace.root, workspace.stateDir = root, stateDir
+		if cfg.ExamplesDir != "" {
+			examples, err := resolveExamplesDir(cfg.ExamplesDir, root)
+			if err != nil {
+				return nil, &StartupError{Stage: StageConfig, Detail: "the examples corpus directory is refused", Err: err}
+			}
+			workspace.examplesDir = examples
+		}
+	}
 
 	s, err := store.Open(cfg.DBPath)
 	if err != nil {
@@ -527,10 +569,20 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		cfg: cfg, store: s, bootstrap: registry.Bootstrap, reads: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
-		scanTimeBudget: integrityScanTimeBudget, resolver: authority.New(s),
+		scanTimeBudget: integrityScanTimeBudget, resolver: authority.New(s), workspace: workspace,
 	}
 	release := unpinnedRelease
-	var coord *coordinator.Coordinator
+	if cfg.ToolAilangBin != "" {
+		bin, ref, err := archiveToolBinary(archive.New(cfg.DBPath), cfg.ToolAilangBin)
+		if err != nil {
+			return nil, d.abort(StageArchive, "cannot archive the configured workspace tool binary", err)
+		}
+		workspace.bin, workspace.binRef = bin, ref
+	}
+	if (cfg.WorkspaceRoot == "") != (cfg.ToolAilangBin == "") {
+		fmt.Fprintln(d.errLog, "ailang-worldd: workspace tools disabled: --workspace-root and --tool-ailang-bin must both be set; "+
+			"every effect-declaring transition is refused")
+	}
 
 	if cfg.AilangBin != "" {
 		a := archive.New(cfg.DBPath)
@@ -545,10 +597,8 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		d.interpreterRef = ref.String()
 		d.interpreterVersion = m.Version
 		release = releaseFromVersion(m.Version)
-		coord, err = coordinator.New(coordinator.Config{Store: d.store, Runner: capsule.New(a, capsule.Config{}),
-			Binder: func(episodeID string, grants []broker.Capability) transitionreg.Binder {
-				return broker.OpenBinder(d.store, episodeID, grants)
-			}, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
+		d.coord, err = coordinator.New(coordinator.Config{Store: d.store, Runner: capsule.New(a, capsule.Config{}),
+			Binder: d.binder, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
 		if err != nil {
 			return nil, d.abort(StageConfig, "cannot construct invocation coordinator", err)
 		}
@@ -593,7 +643,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		MaxWait:        readDeadline,
 		InvokeWait:     invokeDeadline,
 		CredentialWait: credentialBudget, CallbackTimeout: invokeDeadline, MaxCallbacks: procbound.MaxOutstanding, WriteWait: writeTimeout,
-		Coordinator: coord,
+		Coordinator: d.coord,
 	})
 	if err != nil {
 		return nil, d.abort(StageConfig, "cannot construct the A2A projection", err)
@@ -602,6 +652,13 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 
 	d.srv = newServer(d.Handler())
 	return d, nil
+}
+
+// binder is the coordinator's production BinderFor: a live binder over the
+// episode's workspace registry (row 134 §4.3) — empty, so R8 refuses every
+// declared effect, unless the episode resolves to a served worktree.
+func (d *Daemon) binder(episodeID string, grants []broker.Capability) transitionreg.Binder {
+	return broker.OpenBinder(d.store, episodeID, grants, d.workspace.registry(episodeID))
 }
 
 func (d *Daemon) bootstrapRegistry(ctx context.Context, release string) error {

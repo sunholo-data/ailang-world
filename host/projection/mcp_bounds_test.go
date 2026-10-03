@@ -44,7 +44,9 @@ func TestMCPInvokeDeadlineFreesSlot(t *testing.T) {
 	cfg, tok, st, _ := mcpFixture(t)
 	runner := &cooperativeRunner{returned: make(chan struct{})}
 	runner.block.Store(true)
-	coord, err := coordinator.New(coordinator.Config{Store: st, Runner: runner, Binder: func(ep string, caps []broker.Capability) transitionreg.Binder { return broker.OpenBinder(st, ep, caps) }, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
+	coord, err := coordinator.New(coordinator.Config{Store: st, Runner: runner, Binder: func(ep string, caps []broker.Capability) transitionreg.Binder {
+		return broker.OpenBinder(st, ep, caps, nil)
+	}, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
 	if err != nil {
 		t.Fatal(err)
 	}

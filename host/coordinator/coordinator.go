@@ -31,6 +31,8 @@ type Store interface {
 	AppendIntent(ctx context.Context, id string, intent store.JournalIntent) (int64, hashref.HashRef, error)
 	GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error)
 	Commit(ctx context.Context, c store.Commit) error
+	// EffectSpend seeds an effectful dispatch's grants (row 134 §4.4).
+	EffectSpend(ctx context.Context, episodeID string) (map[store.EffectKey]int64, error)
 }
 
 // Runner is the capsule seam (prod: *capsule.Runner).
@@ -57,6 +59,11 @@ type Coordinator struct {
 	// inFlight protects one process's in-progress invocation IDs. The store's single-process writer premise bounds this guard.
 	inFlight        sync.Map
 	uncertainIntent sync.Map
+	// episodeLocks serialises effectful dispatch per episode (row 134 §4.4):
+	// episodeID → a one-slot channel. One writer process per store is
+	// enforced by the store's flock (V42), so an in-process lock serialises
+	// every spend-seeding reader against every effect-intent writer.
+	episodeLocks sync.Map
 }
 
 // New validates cfg: a missing seam or a non-positive cap is a construction
@@ -181,8 +188,13 @@ func (c *Coordinator) committed(ctx context.Context, rc store.Receipt) (Result, 
 	if !hashes(rc.Intent.TransitionRef, recObj.Payload) {
 		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "record", Kind: "mismatch"}
 	}
-	var rec record
+	// v1 and v2 share every field committed() checks; a v2 record must also
+	// name its plan object and effect records by well-formed refs.
+	var rec recordV2
 	if err := json.Unmarshal(recObj.Payload, &rec); err != nil {
+		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "record", Kind: "undecodable"}
+	}
+	if recObj.SemanticID == RecordV2 && !wellFormedV2(rec) {
 		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "record", Kind: "undecodable"}
 	}
 	if rec.InvocationID != rc.InvocationID {
@@ -240,6 +252,20 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 		return Result{}, &InFlightError{InvocationID: id} // R17
 	}
 	defer c.inFlight.Delete(id)
+	// An effectful descriptor's whole Dispatch holds its episode's lock, and
+	// its grants are seeded from the episode's durable spend (row 134 §4.4).
+	// The lookup is the same snapshot and ID Bind resolves below; an absent ID
+	// falls through to Bind's R2 refusal.
+	grants := call.Grants
+	effectful := false
+	if d, ok := call.Request.Registry.Lookup(call.SkillID); ok && len(d.DeclaredEffects) != 0 {
+		effectful = true
+		unlock, err := c.lockEpisode(ctx, call.EpisodeID)
+		if err != nil {
+			return Result{}, err
+		}
+		defer unlock()
+	}
 	// Reconcile before anything runs: a resent task id is answered from the
 	// journal and never re-executed or re-committed.
 	rc, seen, err := c.cfg.Store.GetReceipt(ctx, id)
@@ -259,9 +285,14 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 	if _, uncertain := c.uncertainIntent.Load(id); uncertain {
 		return Result{}, &UnconfirmedError{InvocationID: id, Err: errors.New("intent receipt absent after uncertain append")}
 	}
+	if effectful {
+		if grants, err = c.seedGrants(ctx, call.EpisodeID, call.Grants); err != nil {
+			return Result{}, err
+		}
+	}
 	// Propose: authorization + confinement (R2/R3/R4).
 	bound, err := transitionreg.Bind(call.Request.Registry, call.SkillID, call.Request.Caps,
-		c.cfg.Binder(call.EpisodeID, call.Grants))
+		c.cfg.Binder(call.EpisodeID, grants))
 	if err != nil {
 		return Result{}, err
 	}
@@ -277,32 +308,12 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 	if err := bound.Check(p); err != nil {
 		return Result{}, err
 	}
-	if len(d.DeclaredEffects) != 0 { // R8
-		return Result{}, &EffectsUnsupportedError{ID: d.ID}
+	if len(d.DeclaredEffects) != 0 {
+		return c.dispatchEffectful(ctx, id, call.EpisodeID, input, bound, d)
 	}
-	src, ok, err := c.cfg.Store.GetObject(ctx, d.TransitionFn) // R6
+	src, world, err := c.loadSourceAndWorld(ctx, d)
 	if err != nil {
-		return Result{}, fmt.Errorf("coordinator: load source: %w", err)
-	}
-	if !ok {
-		return Result{}, &SourceError{Kind: "absent"}
-	}
-	if sum, err := hashref.Sum(d.TransitionFn.Algo(), src.Payload); err != nil || sum != d.TransitionFn {
-		return Result{}, &SourceError{Kind: "corrupt"}
-	}
-	head, ok, err := c.cfg.Store.SelectedHead(ctx) // R7
-	if err != nil {
-		return Result{}, fmt.Errorf("coordinator: read head: %w", err)
-	}
-	if !ok {
-		return Result{}, &WorldAbsentError{}
-	}
-	world, ok, err := c.cfg.Store.GetWorld(ctx, head)
-	if err != nil {
-		return Result{}, fmt.Errorf("coordinator: read world: %w", err)
-	}
-	if !ok { // a head naming no world row is store damage, not "no world"
-		return Result{}, fmt.Errorf("coordinator: selected head %s has no world row", head)
+		return Result{}, err
 	}
 	// Execute (R9/R10/R11).
 	res, err := c.cfg.Runner.RunContext(ctx, capsule.Entry{
@@ -319,6 +330,42 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 		return Result{}, err
 	}
 	pl := planInvocation(world, id, call.EpisodeID, d, input, outBytes, c.cfg.Now())
+	return c.appendAndCommit(ctx, id, pl, outBytes, outObj)
+}
+
+// loadSourceAndWorld reads the descriptor's verified source (R6) and the
+// selected world (R7).
+func (c *Coordinator) loadSourceAndWorld(ctx context.Context, d transitionreg.Descriptor) (store.Object, store.World, error) {
+	src, ok, err := c.cfg.Store.GetObject(ctx, d.TransitionFn) // R6
+	if err != nil {
+		return store.Object{}, store.World{}, fmt.Errorf("coordinator: load source: %w", err)
+	}
+	if !ok {
+		return store.Object{}, store.World{}, &SourceError{Kind: "absent"}
+	}
+	if sum, err := hashref.Sum(d.TransitionFn.Algo(), src.Payload); err != nil || sum != d.TransitionFn {
+		return store.Object{}, store.World{}, &SourceError{Kind: "corrupt"}
+	}
+	head, ok, err := c.cfg.Store.SelectedHead(ctx) // R7
+	if err != nil {
+		return store.Object{}, store.World{}, fmt.Errorf("coordinator: read head: %w", err)
+	}
+	if !ok {
+		return store.Object{}, store.World{}, &WorldAbsentError{}
+	}
+	world, ok, err := c.cfg.Store.GetWorld(ctx, head)
+	if err != nil {
+		return store.Object{}, store.World{}, fmt.Errorf("coordinator: read world: %w", err)
+	}
+	if !ok { // a head naming no world row is store damage, not "no world"
+		return store.Object{}, store.World{}, fmt.Errorf("coordinator: selected head %s has no world row", head)
+	}
+	return src, world, nil
+}
+
+// appendAndCommit is the durable tail (R13–R16) shared by every invocation:
+// the intent, then the compare-and-append commit, both under ctx.
+func (c *Coordinator) appendAndCommit(ctx context.Context, id string, pl plan, outBytes []byte, outObj map[string]any) (Result, error) {
 	if _, _, err := c.cfg.Store.AppendIntent(ctx, id, pl.Intent); err != nil { // R13
 		if store.IsUncertain(err) {
 			// The intent may have landed. A same-ID resend must inspect its receipt.

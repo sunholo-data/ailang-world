@@ -345,3 +345,21 @@ func TestCanonicalSchemaExportMatchesValidate(t *testing.T) {
 		t.Fatalf("CanonicalSchema = %s, want the codec's canonical form", got)
 	}
 }
+
+func TestCanonicalJSONExportIsTheCodec(t *testing.T) {
+	got, err := CanonicalJSON([]byte(` [ {"z":1.0, "a":"x"}, 2e1 ] `), 64)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != `[{"a":"x","z":1},20]` {
+		t.Fatalf("CanonicalJSON = %s, want the codec's canonical form", got)
+	}
+	for _, bad := range []string{`{"a":1,"a":2}`, `{"a":1} {}`, `"\ud800"`, "\"\xff\""} {
+		if _, err := CanonicalJSON([]byte(bad), 64); err == nil {
+			t.Fatalf("CanonicalJSON accepted %q", bad)
+		}
+	}
+	if _, err := CanonicalJSON([]byte(`{"a":"0123456789"}`), 8); err == nil {
+		t.Fatal("CanonicalJSON ignored maxRaw")
+	}
+}

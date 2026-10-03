@@ -1,11 +1,13 @@
 package broker
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os/exec"
+	"sync"
 	"syscall"
 	"time"
 
@@ -76,6 +78,54 @@ type handlerCommand struct {
 	args []string
 	dir  string
 	env  []string
+	// stdin, when non-nil, is the child's whole standard input.
+	stdin []byte
+	// stderr, when non-nil, receives the child's stderr SEPARATELY from the
+	// returned stdout capture, under the same byte bound; nil keeps the
+	// historical merged capture every pre-existing handler relies on.
+	stderr *boundedSink
+}
+
+// boundedSink is a concurrency-safe stderr capture holding at most limit
+// bytes. It keeps accepting (and discarding) writes past the limit so the
+// child never blocks on a full pipe, and records the overflow, which
+// runBounded reports as *HandlerOutputOverflowError — never a silent
+// truncation.
+type boundedSink struct {
+	mu       sync.Mutex
+	buf      []byte
+	limit    int64
+	overflow bool
+}
+
+func newBoundedSink(limit int64) *boundedSink { return &boundedSink{limit: limit} }
+
+func (s *boundedSink) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	room := s.limit - int64(len(s.buf))
+	if int64(len(p)) > room {
+		if room > 0 {
+			s.buf = append(s.buf, p[:room]...)
+		}
+		s.overflow = true
+		return len(p), nil
+	}
+	s.buf = append(s.buf, p...)
+	return len(p), nil
+}
+
+// Bytes returns a copy of the captured bytes.
+func (s *boundedSink) Bytes() []byte {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return append([]byte(nil), s.buf...)
+}
+
+func (s *boundedSink) overflowed() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.overflow
 }
 
 // killGroup is the cancellation kill boundary, a package-level seam so the
@@ -117,7 +167,21 @@ func runBounded(ctx context.Context, bounds handlerBounds, spec handlerCommand) 
 	if err != nil {
 		return nil, fmt.Errorf("broker: handler stdout pipe: %w", err)
 	}
-	cmd.Stderr = cmd.Stdout
+	if spec.stdin != nil {
+		cmd.Stdin = bytes.NewReader(spec.stdin)
+	}
+	if spec.stderr != nil {
+		if spec.stderr.limit <= 0 {
+			spec.stderr.limit = bounds.maxOutputBytes
+		}
+		cmd.Stderr = spec.stderr
+		// A separate stderr is copied by an exec-owned goroutine that Wait
+		// joins; a descendant holding that pipe must not stall Wait, so the
+		// pipes are force-closed a grace period after the child exits.
+		cmd.WaitDelay = pipeCloseGrace
+	} else {
+		cmd.Stderr = cmd.Stdout
+	}
 	release, err := procbound.Admit()
 	if err != nil {
 		return nil, err
@@ -174,6 +238,9 @@ func runBounded(ctx context.Context, bounds handlerBounds, spec handlerCommand) 
 	}
 	if readErr != nil {
 		return nil, fmt.Errorf("broker: read handler output: %w", readErr)
+	}
+	if spec.stderr != nil && spec.stderr.overflowed() {
+		return nil, &HandlerOutputOverflowError{Limit: spec.stderr.limit}
 	}
 	if waitErr != nil {
 		return nil, &HandlerExitError{Err: waitErr, Output: output}

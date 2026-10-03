@@ -135,6 +135,14 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	defer func() { _ = term.Close() }()
 
 	now := env.now()
+	// Each CLI-minted grant expires WITH the session (row 134 break 1): the
+	// broker's liveness rule is now < ExpiresAt in Unix seconds, so a grant left
+	// at ExpiresAt 0 is denied:expired from the moment it is minted. The session
+	// row's own expiry is now + ttl (authority.Mint), and the grant takes the
+	// same instant — never 0, never later than the session.
+	for i := range grants {
+		grants[i].ExpiresAt = now + *ttl
+	}
 	fmt.Fprintf(term, "Confirm mint for episode %s (%d grant(s), expiry +%ds) with a session credential? [y/N] ",
 		*episode, len(grants), *ttl)
 	if !isYes(readTermLine(term)) {

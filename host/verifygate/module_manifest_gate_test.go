@@ -50,7 +50,7 @@ func newIsolatedGateRoot(t *testing.T) string {
 	root := filepath.Join(t.TempDir(), "iso")
 	copyGateFile(t, root, "scripts/verify_ail.sh", 0o755)
 	copyGateFile(t, root, "scripts/testdata/ailang_release_observed.txt", 0o644)
-	for _, pattern := range []string{"world/*.ail", "design_docs/sketches/*.ail"} {
+	for _, pattern := range []string{"world/*.ail", "design_docs/sketches/*.ail", "packages/se-tools/se_tools/*.ail"} {
 		matches, err := filepath.Glob(filepath.Join(repoRoot, filepath.FromSlash(pattern)))
 		if err != nil {
 			t.Fatal(err)
@@ -82,8 +82,8 @@ func newIsolatedGateRoot(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if files != 13 || ailFiles != 11 {
-		t.Fatalf("isolated copy landed %d files / %d .ail files, want 13 / 11", files, ailFiles)
+	if files != 22 || ailFiles != 20 {
+		t.Fatalf("isolated copy landed %d files / %d .ail files, want 22 / 20", files, ailFiles)
 	}
 	return root
 }
@@ -125,7 +125,7 @@ func requirePristineControl(t *testing.T, root string) string {
 	rc, out := runGateAt(t, root, map[string]string{
 		"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
 	})
-	const marker = "✓ 16/16 required world/ identities verified across 11 module(s)"
+	const marker = "✓ 16/16 required world/ identities verified across 20 module(s)"
 	if !strings.Contains(out, marker) {
 		t.Fatalf("pristine isolated control missing %q (rc=%d)\n%s", marker, rc, out)
 	}
@@ -170,8 +170,8 @@ func requireLiveTreeUntouched(t *testing.T) {
 func TestModuleManifestRejectsStrayModule(t *testing.T) {
 	root := newIsolatedGateRoot(t)
 	control := requirePristineControl(t, root)
-	if got := strings.Count(control, "\n   ai-check "); got != 11 {
-		t.Fatalf("pristine control emitted %d ai-check lines, want 11", got)
+	if got := strings.Count(control, "\n   ai-check "); got != 20 {
+		t.Fatalf("pristine control emitted %d ai-check lines, want 20", got)
 	}
 	probe := filepath.Join(root, "world", "_stray_manifest_probe.ail")
 	const source = "module world/_stray_manifest_probe\n\nexport func strayId(x: int) -> int = x\n"
@@ -236,6 +236,81 @@ func TestModuleManifestRejectsCaseVariantExtension(t *testing.T) {
 	requireLiveTreeUntouched(t)
 }
 
+// TestEffectPlanSketchIdentityIsRequired is row 134 AC1.2's mutation: the
+// effect-plan sketch's proofs are gated BY NAME, so dropping one contract (here
+// L4's payloadSizeOk ensures) leaves the module compiling but reds the gate on
+// the vanished identity — it is not absorbed by the world/-only total.
+func TestEffectPlanSketchIdentityIsRequired(t *testing.T) {
+	root := newIsolatedGateRoot(t)
+	requirePristineControl(t, root)
+	target := filepath.Join(root, "design_docs", "sketches", "effectplan.ail")
+	raw, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const contract = "ensures { result == (n >= 0 && n <= 1048576) }\n"
+	if n := strings.Count(string(raw), contract); n != 1 {
+		t.Fatalf("payloadSizeOk contract anchor count=%d, want 1", n)
+	}
+	if err := os.WriteFile(target, []byte(strings.Replace(string(raw), contract, "", 1)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	rc, out := runGateAt(t, root, map[string]string{
+		"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
+	})
+	if rc != 1 || !strings.Contains(out, "payloadSizeOk) MISSING from verify.results[]") {
+		t.Fatalf("dropped effectplan contract not refused by name: rc=%d\n%s", rc, out)
+	}
+	if strings.Contains(out, "verify gate PASSED") {
+		t.Fatalf("dropped effectplan contract printed terminal success\n%s", out)
+	}
+	requireLiveTreeUntouched(t)
+}
+
+// TestSeToolsGateArmsAreLoadBearing is row 134 M5's pair of gate mutations on
+// the se-tools package: (contract) dropping the L-ARGS key law's ensures from
+// se_tools/read.ail leaves the module compiling but reds Leg 1 on the vanished
+// identity by name; (plan bytes) changing the cost in read's pinned admitted-plan
+// expectation reds Leg 2b on main_test_1 by name. Neither is absorbed by the
+// world/-only total.
+func TestSeToolsGateArmsAreLoadBearing(t *testing.T) {
+	arms := []struct {
+		name, old, replacement, want string
+	}{
+		{"contract", "ensures { result == (k == \"path\") }\n", "",
+			"argKeyAllowed) MISSING from verify.results[]"},
+		{"plan-bytes", `cost\":1,\"payload`, `cost\":0,\"payload`,
+			"se_tools/read.ail required named tests missing/failing: main_test_1="},
+	}
+	for _, arm := range arms {
+		t.Run(arm.name, func(t *testing.T) {
+			root := newIsolatedGateRoot(t)
+			requirePristineControl(t, root)
+			target := filepath.Join(root, "packages", "se-tools", "se_tools", "read.ail")
+			raw, err := os.ReadFile(target)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n := strings.Count(string(raw), arm.old); n != 1 {
+				t.Fatalf("mutation anchor count=%d, want 1 for %q", n, arm.old)
+			}
+			if err := os.WriteFile(target, []byte(strings.Replace(string(raw), arm.old, arm.replacement, 1)), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			rc, out := runGateAt(t, root, map[string]string{
+				"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
+			})
+			if rc != 1 || !strings.Contains(out, arm.want) {
+				t.Fatalf("se-tools %s mutant not refused by name (want %q): rc=%d\n%s", arm.name, arm.want, rc, out)
+			}
+			if strings.Contains(out, "verify gate PASSED") {
+				t.Fatalf("se-tools %s mutant printed terminal success\n%s", arm.name, out)
+			}
+			requireLiveTreeUntouched(t)
+		})
+	}
+}
+
 func TestModuleManifestRejectsDeletedModule(t *testing.T) {
 	root := newIsolatedGateRoot(t)
 	requirePristineControl(t, root)
@@ -257,12 +332,21 @@ func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
 	requirePristineControl(t, root)
 	const old = `LEG1_MODULES=(
   design_docs/sketches/effectbroker.ail
+  design_docs/sketches/effectplan.ail
   design_docs/sketches/logepoch.ail
   design_docs/sketches/storejournal.ail
   design_docs/sketches/transitions.ail
   design_docs/sketches/worlddapi.ail
   design_docs/sketches/worldkernel.ail
   design_docs/sketches/worldtypes.ail
+  packages/se-tools/se_tools/builtins_search.ail
+  packages/se-tools/se_tools/check.ail
+  packages/se-tools/se_tools/cli.ail
+  packages/se-tools/se_tools/edit.ail
+  packages/se-tools/se_tools/examples_search.ail
+  packages/se-tools/se_tools/read.ail
+  packages/se-tools/se_tools/run.ail
+  packages/se-tools/se_tools/write.ail
   world/contracts.ail
   world/logepoch.ail
   world/transitions.ail

@@ -1,0 +1,521 @@
+[
+  {
+    "id": "ailang-read",
+    "title": "Read (sandboxed)",
+    "description": "Read a file inside this episode's worktree (policy-tool `read`). The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Returns {ok, content} or {ok:false, refused}. Costs one Workspace.Read call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
+    "transitionFnFile": "packages/se-tools/se_tools/read.ail",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "File path, relative to the worktree root"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "refused": {
+          "type": "string",
+          "description": "Why the call was refused (plan, policy or handler)"
+        },
+        "world": {
+          "type": "object",
+          "description": "World's provenance: the plan ref and the effect record refs"
+        }
+      },
+      "required": [
+        "world"
+      ]
+    },
+    "access": {
+      "effect": "Workspace.Read",
+      "scope": "worktree",
+      "cost": 0
+    },
+    "declaredEffects": [
+      {
+        "effect": "Workspace.Read",
+        "scope": "worktree",
+        "cost": 1
+      }
+    ]
+  },
+  {
+    "id": "ailang-write",
+    "title": "Write (sandboxed)",
+    "description": "Create or overwrite a file inside this episode's worktree (policy-tool `write`). The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Returns {ok} or {ok:false, refused}. Costs one Workspace.Write call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
+    "transitionFnFile": "packages/se-tools/se_tools/write.ail",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "File path, relative to the worktree root"
+        },
+        "content": {
+          "type": "string",
+          "description": "The complete new file content"
+        }
+      },
+      "required": [
+        "path",
+        "content"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "refused": {
+          "type": "string",
+          "description": "Why the call was refused (plan, policy or handler)"
+        },
+        "world": {
+          "type": "object",
+          "description": "World's provenance: the plan ref and the effect record refs"
+        }
+      },
+      "required": [
+        "world"
+      ]
+    },
+    "access": {
+      "effect": "Workspace.Write",
+      "scope": "worktree",
+      "cost": 0
+    },
+    "declaredEffects": [
+      {
+        "effect": "Workspace.Write",
+        "scope": "worktree",
+        "cost": 1
+      }
+    ]
+  },
+  {
+    "id": "ailang-edit",
+    "title": "Edit (sandboxed)",
+    "description": "Replace old_text with new_text in a file inside this episode's worktree (policy-tool `edit`); old_text must occur exactly once (include enough context). The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Returns {ok} or {ok:false, refused}. Costs one Workspace.Write call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
+    "transitionFnFile": "packages/se-tools/se_tools/edit.ail",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "File path, relative to the worktree root"
+        },
+        "old_text": {
+          "type": "string",
+          "description": "Exact text to replace (must occur exactly once)"
+        },
+        "new_text": {
+          "type": "string",
+          "description": "Replacement text"
+        }
+      },
+      "required": [
+        "path",
+        "old_text",
+        "new_text"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "refused": {
+          "type": "string",
+          "description": "Why the call was refused (plan, policy or handler)"
+        },
+        "world": {
+          "type": "object",
+          "description": "World's provenance: the plan ref and the effect record refs"
+        }
+      },
+      "required": [
+        "world"
+      ]
+    },
+    "access": {
+      "effect": "Workspace.Write",
+      "scope": "worktree",
+      "cost": 0
+    },
+    "declaredEffects": [
+      {
+        "effect": "Workspace.Write",
+        "scope": "worktree",
+        "cost": 1
+      }
+    ]
+  },
+  {
+    "id": "ailang-check",
+    "title": "AILANG Check",
+    "description": "Type-check and Z3-verify an AILANG file inside this episode's worktree (policy-tool `ai_check`) and return STRUCTURED diagnostics: {ok:true, passed, error_count, errors:[{code, message, file}]} (line and column stay inside message), or {ok:false, status, refused}. The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Costs one Ailang.Check call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
+    "transitionFnFile": "packages/se-tools/se_tools/check.ail",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Path to the .ail file, relative to the worktree root"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "passed": {
+          "type": "boolean"
+        },
+        "error_count": {
+          "type": "integer"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "file": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "status": {
+          "type": "string",
+          "description": "The effect's status when no report was produced"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "refused": {
+          "type": "string",
+          "description": "Why the call was refused (plan, policy or handler)"
+        },
+        "world": {
+          "type": "object",
+          "description": "World's provenance: the plan ref and the effect record refs"
+        }
+      },
+      "required": [
+        "world"
+      ]
+    },
+    "access": {
+      "effect": "Ailang.Check",
+      "scope": "worktree",
+      "cost": 0
+    },
+    "declaredEffects": [
+      {
+        "effect": "Ailang.Check",
+        "scope": "worktree",
+        "cost": 1
+      }
+    ]
+  },
+  {
+    "id": "ailang-run",
+    "title": "AILANG Run (policy-gated)",
+    "description": "Execute an AILANG program inside this episode's worktree under the operator's policy: `ailang run --policy <policy> [--args-json J] -- <path>`, from the worktree root. The program's declared effect row must be a subset of the policy's allowed_caps (IO, FS); FS stays inside the worktree; the run is bounded by the policy's timeout (8 s). Returns {admitted, exit_code, decision, limit, stdout, stderr}. Denied programs never execute; read `decision.missing_from_policy` and narrow the program's effects. A refused inner effect can still exit 0, so read stdout and stderr, not only exit_code. The program's inner effects are governed by the AILANG policy layer, not brokered one by one. The path is relative to the worktree root, non-empty, with no `..` segment and no leading `-`; anything that resolves outside the worktree (absolute, `..`, or a symlink leading out) is refused by AILANG's policy layer, and `.git/` plus the operator's deny list stay read-only. Unknown argument keys are refused, never ignored. Costs one Ailang.Run call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
+    "transitionFnFile": "packages/se-tools/se_tools/run.ail",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Path to the .ail file, relative to the worktree root"
+        },
+        "args_json": {
+          "type": "string",
+          "description": "JSON arguments for the entrypoint (passed as --args-json)"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "admitted": {
+          "type": "boolean"
+        },
+        "exit_code": {
+          "type": "integer"
+        },
+        "decision": {},
+        "limit": {},
+        "stdout": {
+          "type": "string"
+        },
+        "stderr": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "refused": {
+          "type": "string",
+          "description": "Why the call was refused (plan, policy or handler)"
+        },
+        "world": {
+          "type": "object",
+          "description": "World's provenance: the plan ref and the effect record refs"
+        }
+      },
+      "required": [
+        "world"
+      ]
+    },
+    "access": {
+      "effect": "Ailang.Run",
+      "scope": "worktree",
+      "cost": 0
+    },
+    "declaredEffects": [
+      {
+        "effect": "Ailang.Run",
+        "scope": "worktree",
+        "cost": 1
+      }
+    ]
+  },
+  {
+    "id": "builtins-search",
+    "title": "Search AILANG builtins",
+    "description": "Search the REAL builtin inventory compiled into the tool binary (policy-tool `builtins_list`, text form). Pass query (case-insensitive substring over name/module/effect; at most 10 matches) and/or module (e.g. 'std/fs'); omit both for the full list. Use this instead of guessing builtin names. Returns {count, matches}, each match {name, module, effect}. Degraded: no signature or description is returned or searched (policy-tool caps a CLI op's stdout at 64 KiB and the JSON inventory exceeds it); use ailang-cli `builtins_show` or examples-search for usage. A truncated or unparseable inventory is refused, never an empty result. Unknown argument keys are refused, never ignored. Costs one Ailang.Discover call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
+    "transitionFnFile": "packages/se-tools/se_tools/builtins_search.ail",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Substring to look for"
+        },
+        "module": {
+          "type": "string",
+          "description": "Module filter, e.g. std/fs"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer"
+        },
+        "matches": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "status": {
+          "type": "string",
+          "description": "The effect's status when no inventory was produced"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "refused": {
+          "type": "string",
+          "description": "Why the call was refused (plan, policy or handler)"
+        },
+        "world": {
+          "type": "object",
+          "description": "World's provenance: the plan ref and the effect record refs"
+        }
+      },
+      "required": [
+        "world"
+      ]
+    },
+    "access": {
+      "effect": "Ailang.Discover",
+      "scope": "worktree",
+      "cost": 0
+    },
+    "declaredEffects": [
+      {
+        "effect": "Ailang.Discover",
+        "scope": "worktree",
+        "cost": 1
+      }
+    ]
+  },
+  {
+    "id": "examples-search",
+    "title": "Search AILANG examples",
+    "description": "Search the AILANG examples corpus this daemon serves (policy-tool `examples_search`; the operator's --examples-dir) for `query`, then read a hit with ailang-cli op examples_show. The op admits no flags, so there is no limit argument. Use this before writing a construct you are unsure of. Returns {ok, argv, exit_code, stdout, stderr}, or {ok:false, refused} when no corpus is configured. Unknown argument keys are refused, never ignored. Costs one Ailang.Discover call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
+    "transitionFnFile": "packages/se-tools/se_tools/examples_search.ail",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "Text to search the examples for"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "stdout": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "refused": {
+          "type": "string",
+          "description": "Why the call was refused (plan, policy or handler)"
+        },
+        "world": {
+          "type": "object",
+          "description": "World's provenance: the plan ref and the effect record refs"
+        }
+      },
+      "required": [
+        "world"
+      ]
+    },
+    "access": {
+      "effect": "Ailang.Discover",
+      "scope": "worktree",
+      "cost": 0
+    },
+    "declaredEffects": [
+      {
+        "effect": "Ailang.Discover",
+        "scope": "worktree",
+        "cost": 1
+      }
+    ]
+  },
+  {
+    "id": "ailang-cli",
+    "title": "AILANG CLI (policy-allowlisted)",
+    "description": "Run an allowlisted ailang operation as a typed policy-tool request. ops: agent_prompt, ai_check, axioms, builtins_list, builtins_show, check, devtools_prompt, docs_search, examples_list, examples_search, examples_show, examples_tags, fmt, iface, pkg_docs, policy_check, prompt, test, tree, version. Field by op: check/ai_check/fmt/tree/policy_check: {path}; iface/pkg_docs: {module}; docs_search/examples_search: {query}; examples_show/builtins_show: {module: <name>}; test: {path?, package?}; flags: {\"json\": \"\", \"limit\": \"5\"} only where the op admits them (boolean flags take \"\"). fmt's write flag is refused: ailang-cli never writes (fmt returns the formatted text; save it with ailang-write). NOT read/write/edit (their own tools) and NOT run (ailang-run). Paths and package directories follow the worktree path rule. Unknown argument keys are refused, never ignored. Returns {ok, argv, exit_code, stdout, stderr} or {ok:false, refused}. Costs one Ailang.CLI call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
+    "transitionFnFile": "packages/se-tools/se_tools/cli.ail",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "description": "The operation, e.g. \"check\", \"iface\", \"docs_search\", \"test\""
+        },
+        "path": {
+          "type": "string",
+          "description": "In-worktree file path (check, ai_check, fmt, tree, policy_check, test)"
+        },
+        "module": {
+          "type": "string",
+          "description": "Module path or name (iface: \"std/fs\"; examples_show/builtins_show: a name)"
+        },
+        "query": {
+          "type": "string",
+          "description": "Search text (docs_search, examples_search)"
+        },
+        "package": {
+          "type": "string",
+          "description": "Package directory for test (in-worktree)"
+        },
+        "flags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Admitted flags by name; boolean flags take \"\" (e.g. {\"json\": \"\"})"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exit_code": {
+          "type": "integer"
+        },
+        "stdout": {
+          "type": "string"
+        },
+        "stderr": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "refused": {
+          "type": "string",
+          "description": "Why the call was refused (plan, policy or handler)"
+        },
+        "world": {
+          "type": "object",
+          "description": "World's provenance: the plan ref and the effect record refs"
+        }
+      },
+      "required": [
+        "world"
+      ]
+    },
+    "access": {
+      "effect": "Ailang.CLI",
+      "scope": "worktree",
+      "cost": 0
+    },
+    "declaredEffects": [
+      {
+        "effect": "Ailang.CLI",
+        "scope": "worktree",
+        "cost": 1
+      }
+    ]
+  }
+]

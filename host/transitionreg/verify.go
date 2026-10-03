@@ -14,6 +14,19 @@ import (
 // produced by exactly the code that will re-validate them at encode time.
 func CanonicalSchema(raw []byte) ([]byte, error) { return canonicalSchema(raw) }
 
+// CanonicalJSON re-encodes any JSON value with the same codec: strict UTF-8,
+// no escaped surrogates, no duplicate object members, normalized numbers and
+// sorted object keys. It is exported for the coordinator's effect-plan parser
+// (host/coordinator/effectplan.go), so plan payloads are canonicalized by the
+// one hardened codec instead of a second, weaker one. maxRaw bounds the input.
+func CanonicalJSON(raw []byte, maxRaw int) ([]byte, error) {
+	v, err := parseJSON(raw, maxRaw)
+	if err != nil {
+		return nil, err
+	}
+	return appendJSON(nil, v), nil
+}
+
 // NewPublisher returns a StoreReader that MAY PUBLISH: it carries the
 // interpreter archive rooted next to the store, which PublishSet requires for
 // its epoch and source-loadability verification. NewReader stays read-only —

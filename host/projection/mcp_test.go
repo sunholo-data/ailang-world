@@ -49,7 +49,7 @@ func mcpFixture(t *testing.T) (Config, string, *store.Store, *countingRunner) {
 	runner := &countingRunner{}
 	coord, err := coordinator.New(coordinator.Config{Store: st, Runner: runner,
 		Binder: func(ep string, grants []broker.Capability) transitionreg.Binder {
-			return broker.OpenBinder(st, ep, grants)
+			return broker.OpenBinder(st, ep, grants, nil)
 		},
 		Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
 	if err != nil {
