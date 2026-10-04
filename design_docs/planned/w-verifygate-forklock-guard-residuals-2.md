@@ -4,7 +4,7 @@
 **Author lane**: pi:ollama/glm-5.3:cloud (iteration 230 designer) · **Date**: 2026-10-04 · **Base**: `95575aa`
 **Parent**: [w-verifygate-forklock-guard-residuals](../implemented/w-verifygate-forklock-guard-residuals.md) (landed `2da63de`, #198;
 judge verdict [evaluator-r1](../verification/world-iter229/evaluator-r1.md), PASS 92, zero blocking; new mutants N3, N5, N6, N10, N15b SURVIVED).
-**Revision**: r1.
+**Revision**: r2 (quorum r1 fixes).
 **Scope**: `host/verifygate/forklocked_write_test.go` only. Test-only. No production code, no `.ail`, no `tools/launchd/*`, no
 gate-script semantics, and no `ci.yml` change (V10: this row adds no top-level test name, so the CI step's list cannot drift). Estimate ~0.25 d.
 
@@ -52,20 +52,20 @@ Tests touched (names, no new top-level test): `TestVerifygateTestWritesAreForkLo
   `{"CopyFS", "package p\n\nimport \"os\"\n\nfunc h() { _ = os.CopyFS(\"dst\", os.DirFS(\"src\")) }\n", []string{"fixture_CopyFS.go:5|raw os.CopyFS in func h"}, nil}`.
   It type-checks under the scan's source importer (`os.DirFS` comes from the same `"os"` import;
   no `io/fs` identifier appears).
-- Tripwire positive, added to the fixture block before the test's closing `}` (l.746), with a
+- Tripwire positive, added to the `pos` map (l.730) with key `"zzcopyfs"` — deliberately NOT
+  host-prefixed, so it isolates the `writeSel` claim from M3's dir-exemption claim — with a
   `bodyCopyFS` const = the `body` template (l.729) with the write line replaced by
-  `_ = os.CopyFS("dst", os.DirFS("src"))` (the parallel call stays at l.10), keyed `zz` —
-  deliberately NOT host-prefixed, so this fixture isolates the `writeSel` claim from M3's
-  dir-exemption claim. Expect exactly 1 violation prefixed
-  `zz/x_test.go:10: t.Parallel in a write+fork package` (message l.699).
+  `_ = os.CopyFS("dst", os.DirFS("src"))`. Expect exactly 1 violation prefixed
+  `zzcopyfs/x_test.go:10: t.Parallel in a write+fork package`.
 - Acceptance (mutant → firing assertion):
   - **AC1 (N10, live escape)**: add `func evalCopyFS230() { _ = os.CopyFS("dst", os.DirFS("testdata")) }`
     to `ail_binary_gate_test.go` (scratch worktree) → the live scan reds
     `ail_binary_gate_test.go:<line>: raw os.CopyFS in func evalCopyFS230`. Today it is silent (V5).
   - **AC2 (N10, scan)**: drop `"CopyFS": true` from `bannedOSFuncs` →
     `fixture CopyFS: fixture_CopyFS.go:5|raw os.CopyFS in func h not reported (got [])` (l.581).
-  - **AC3 (N10, tripwire)**: drop `CopyFS` from `writeSel["os"]` → the `zz` CopyFS fixture reds
-    `known positive not named: []` (l.736).
+  - **AC3 (N10, tripwire)**: drop `CopyFS` from `writeSel["os"]` → the `zzcopyfs` CopyFS fixture
+    produces no violation, so the known-positive assertion (l.735–736) reds — the expected
+    `zzcopyfs/x_test.go:10` prefix is never named.
 - Gate: `go vet ./host/verifygate/`; `go test ./host/verifygate/ -run
   'TestVerifygateTestWritesAreForkLocked|TestNoParallelWriteForkPackagesOutsideVerifygate' -count=1 -v`,
   plain and `-race`. The live scan must stay at zero violations (V5) and the floors must not move
@@ -105,7 +105,11 @@ slice (after M1's `CopyFS` entry). Test touched: `TestVerifygateTestWritesAreFor
   - **AC6 (N6)**: apply the judge's N6 mutant at l.697 → `known positive not named: []` on the
     `host/zz` fixture; the live test stays green, proving only the fixture sees it.
   - **AC7 (exemption liveness)**: replace l.697 with `true` → the `host/verifygate` negative
-    fixture reds AND the live test reds with 10 real violations (V7).
+    fixture reds AND the live test reds with 10 real violations (V7). The executor must re-ground
+    AC7's "10 real violations" prediction first — re-measure at the package level that
+    host/verifygate's real (non-fixture) code contains both a `writeSel`-selected writer call and
+    a fork, and record the observed violation count under the `true` mutant before treating the
+    drill as passed.
   - **AC8 (regression)**: every row-142 AC stays green; the six iter-228 survivors stay dead;
     floors unchanged (`filesSeen` ≥ 9, `wrapperCalls` ≥ 21, `nDirs` ≥ 26, `nWriteFork` ≥ 12);
     all five fork-lock tests PASS plain (baseline 6.3 s, V11) and `-race`;
@@ -130,6 +134,7 @@ on go1.26.6 darwin/arm64.
 | V9 | Fixture inventory and insertion anchors | `grep -n 'const doDecl\|"RootWrite"\|"Smuggle"\|"OpenClosure"\|not reported\|exempt opener\|const body\|pos := map\|neg := map\|known positive not named\|known negative flagged\|want >= 26\|want >= 12\|t.Parallel in a write+fork' <file>` | doDecl l.538; positives RootWrite l.559, Smuggle l.563–565, slice closes l.566; failure texts l.581 (`not reported`) and l.587 (`exempt opener … reported`); negative OpenClosure l.596; tripwire `body` l.729, `pos` keyed `zz` l.730, prefix assertion `zz/x_test.go:10` l.735–736, `neg` l.738, `known negative flagged` l.744; floors l.721 (`>= 26`) / l.724 (`>= 12`); message l.699 |
 | V10 | The CI verbose step needs no change | `grep -n 'Fork-locked' .github/workflows/ci.yml`; `sed -n '196,216p' .github/workflows/ci.yml` | step `Fork-locked write tests, verbose (w-verifygate-etxtbsy linux gate)` at l.201; its `tests=` list names all five fork-lock tests — including both tests this row deepens — and the loop asserts a top-level `--- PASS: ` line per test. M1–M3 add no top-level test name, so the list cannot drift and no `ci.yml` edit is made |
 | V11 | Live baseline of the five tests at the base | `go test ./host/verifygate/ -run 'TestForkLocked\|TestVerifygateTestWritesAreForkLocked\|TestNoParallel\|TestKernelRefuses' -count=1 -v` | `PASS TestForkLockedWriteBlocksConcurrentFork (0.26s)`; `PASS TestForkLockedWrappersHoldLockThroughClose (0.00s)`; `SKIP TestKernelRefusesExecOfWriterOpenFile` (darwin, as designed); `PASS TestVerifygateTestWritesAreForkLocked (5.76s)`; `PASS TestNoParallelWriteForkPackagesOutsideVerifygate (0.10s)`; `ok 6.296s` |
+| V12 | The tripwire's fixture container is a keyed map literal, so an added positive must not collide with an existing key or prefix | `sed -n '726,748p' host/verifygate/forklocked_write_test.go` | the containers are literally `pos := map[string]map[string][]byte{...}` (l.730) and `neg := map[string]map[string][]byte{...}` (l.738) — existing keys: `pos` `"zz"`; `neg` `"zz"` — a second `"zz"` key in `pos` would be a Go duplicate-key compile error, and l.735–736 already asserts the existing positive's prefix `zz/x_test.go:10`; `"zzcopyfs"` is unique, and the two positives' expectation prefixes — `zz/x_test.go:10` vs `zzcopyfs/x_test.go:10` — are distinct |
 
 **Instrument note.** A repo-wide `grep -rn 'os.CopyFS' --include='*.go' . | head -3` was also run
 and is NOT cited: the pipe makes `$?` report `head`'s exit, not grep's (the parent's V6a hazard).
@@ -163,5 +168,8 @@ Every zero above is an un-piped grep whose rc was echoed.
 
 Round results pending (artifacts to land under `design_docs/verification/world-iter230/`).
 
-- **r1**: _pending_ — designer `pi:ollama/glm-5.3:cloud`; reviewers per the routing table.
+- **r1**: BLOCKED 2/2 present reject (gemini-3-1-pro, oc-kimi-k3; gpt6-1-sol auth-absent,
+  claude-sonnet-5@claude-p quota-absent; author's vendor oc-glm-5-3 benched) — duplicate `zz`
+  map-key collision in M1's tripwire fixture; fixes applied verbatim from the reviewers'
+  proposed_fix.
 - **r2** (only if r1 blocks): _pending_.
