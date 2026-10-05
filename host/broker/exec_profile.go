@@ -4,7 +4,8 @@ package broker
 // the operator's exec profile, read once into memory and digested (§4.6
 // "Profile"). ParseExecProfile is the in-memory loader: the field refusals a
 // handler needs to run a call honestly. The `serve` flags, the placement
-// rules and the read_roots ancestor/realpath rules are M3's startup table.
+// rules and the read_roots ancestor/realpath rules are M3's startup table
+// (exec_startup.go); M3 adds the `probe` key (§4.6 arm 7).
 
 import (
 	"bytes"
@@ -61,6 +62,11 @@ type ExecProfile struct {
 	Caches    map[string]ExecCache
 	TimeoutMS int
 	Commands  map[string]ExecProfileCommand
+	// Probe is the startup probe's toolchain argv (§4.6 arm 7, row 140 M3):
+	// the `probe` key, or by default the argv[0] of the first command (in
+	// byte order of id) with --version. Its argv[0] is resolved like a
+	// command's; it must exit 0 under the sandbox.
+	Probe ExecProfileCommand
 	// Digest is "sha256:<hex>" of the exact bytes read: the record's
 	// profile.digest names what ran.
 	Digest string
@@ -120,7 +126,7 @@ func decodeField(field string, raw json.RawMessage, v any) error {
 // host relies on and resolves each command's argv[0] on the profile path.
 func ParseExecProfile(data []byte) (*ExecProfile, error) {
 	top, err := strictObject("profile", data, "profile", "project", "root", "path", "env", "read_roots", "caches",
-		"timeout_ms", "commands")
+		"timeout_ms", "commands", "probe")
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +226,38 @@ func ParseExecProfile(data []byte) (*ExecProfile, error) {
 		}
 		p.Commands[id] = c
 	}
+	if err := parseExecProbe(top["probe"], p); err != nil {
+		return nil, err
+	}
 	return p, nil
+}
+
+// parseExecProbe reads the `probe` key (§4.6 arm 7) or derives its default:
+// the first command's argv[0] with --version.
+func parseExecProbe(raw json.RawMessage, p *ExecProfile) error {
+	var argv []string
+	if raw == nil {
+		first := sortedKeys(p.Commands)[0]
+		argv = []string{p.Commands[first].Argv[0], "--version"}
+	} else {
+		if err := decodeField("probe", raw, &argv); err != nil {
+			return err
+		}
+		if len(argv) == 0 {
+			return profileErr("probe", "is empty")
+		}
+		for _, a := range argv {
+			if a == "" || strings.ContainsRune(a, 0) {
+				return profileErr("probe", "has an empty or NUL-bearing item")
+			}
+		}
+	}
+	argv0, sum, err := resolveArgv0(argv[0], p.Path)
+	if err != nil {
+		return profileErr("probe", "%v", err)
+	}
+	p.Probe = ExecProfileCommand{ExecCommand: ExecCommand{Argv: argv}, Argv0: argv0, Argv0SHA256: sum}
+	return nil
 }
 
 func parseExecCaches(raw json.RawMessage, p *ExecProfile) error {
