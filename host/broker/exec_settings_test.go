@@ -98,6 +98,13 @@ func TestRenderExecSettingsExactKeySet(t *testing.T) {
 					t.Fatalf("denyWrite %v lacks World's %s", denyWrite, name)
 				}
 			}
+			// [M2-linux] V50: .git/hooks and .git/config precede .git, or srt's stubs for them
+			// land inside the read-only .git bind and bwrap refuses to start.
+			gitFirst := []string{filepath.Join(spec.Worktree, ".git", "hooks"), filepath.Join(spec.Worktree, ".git", "config"),
+				filepath.Join(spec.Worktree, ".git")}
+			if len(denyWrite) < 3 || !reflect.DeepEqual(denyWrite[:3], gitFirst) {
+				t.Fatalf("denyWrite %v must open with %v (V50)", denyWrite, gitFirst)
+			}
 			for _, p := range []string{"/tmp/claude", spec.OperatorHome + "/.npm/_logs", spec.OperatorHome + "/.claude/debug"} {
 				if !slicesContains(denyWrite, p) {
 					t.Fatalf("denyWrite %v lacks srt's always-writable %s (V4)", denyWrite, p)

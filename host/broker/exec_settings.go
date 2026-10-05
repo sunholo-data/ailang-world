@@ -57,8 +57,17 @@ type execSettings struct {
 // execDenyNames are World's episode deny names (§4.4: the AILANG policy's
 // names, plus `.git`, which srt's own list covers only in part, V5): each is
 // denied as an absolute path under the worktree, a dir or a file alike.
+//
+// `.git/hooks` and `.git/config` come FIRST, before `.git` ([M2-linux], V50).
+// When an episode's .git is a DIRECTORY, srt on Linux adds both to its own
+// deny and stubs each absent one with a bind mount; a stub emitted after the
+// read-only bind of .git makes bwrap abort ("Can't create file at
+// …/.git/hooks: Read-only file system") and nothing runs. srt emits World's
+// denies in order, before its own, so listed here the stubs are mounted while
+// .git is still writable, and srt's later entries for them are duplicates.
+// With a .git pointer file both are skipped (nothing can exist under a file).
 func execDenyNames() []string {
-	names := []string{".git"}
+	names := []string{".git/hooks", ".git/config", ".git"}
 	names = append(names, episodeDenyDirs...)
 	return append(names, episodeDenyFiles...)
 }

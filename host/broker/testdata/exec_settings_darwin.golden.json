@@ -16,6 +16,8 @@
    "/W/state/exec-cache/ep1/ailang-compiler"
   ],
   "denyWrite": [
+   "/W/workspace/ep1/.git/hooks",
+   "/W/workspace/ep1/.git/config",
    "/W/workspace/ep1/.git",
    "/W/workspace/ep1/.github",
    "/W/workspace/ep1/.pi",
