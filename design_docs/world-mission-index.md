@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 234 | 2026-10-06 | **NO PICK — rule (d) block report**: row 140 still IN-SPRINT attended (M1–M3 open as stacked PRs #208–#210); 136 → 141 → 93 → 114 → 139 behind it; dev CI on `adeb042` cancelled by the Actions outage, re-run → 2/2 green [ADMIN] |
 | 233 | 2026-10-05 | **NO PICK — rule (d) block report**: row 140 approved (#197 `fccaae9`) and IN-SPRINT attended (M0 #206, M1 committed attended); D-WORLD-61 = A → 136 → 141 → 93 behind it; harness replies for rotate-log (#1580) and heartbeat path (#1578) acted on, row 118 RESOLVED; record judged independently (Agent sonnet) |
 | 232 | 2026-10-05 | **NO PICK — rule (d) block report**: row 140 (#197) awaits Mark's review (0 comments/reviews, unchanged since 10-03); 93 → 114 → 139 sequenced (D-WORLD-58; 134 landed); 136/141 on D-WORLD-61 default B; superseded preservation PR #173 retired (row 108 landed via #176); row 114 queue tag refreshed (D-WORLD-52 = A); record judged independently before merge |
 | 231 | 2026-10-05 | **row 143 LANDED** (`38f270b`, #200): verifygate fork-lock guard residuals 2 — os.CopyFS banned in scan+tripwire (N10), LocalDo/CreateOpener fixtures (N3/N5), host/zz + host/verifygate + host/verifygate/zz tripwire fixtures (N6, prefix); resumed orphan 230 design via carve-out r3 (gemini overlay premise refuted, kimi V13–V15 measured); opus designer/planner/judge, sonnet executor; judge PASS 94 → 97; planner caught wrong AILANG_BIN (gate pin is v0.41.0) |
