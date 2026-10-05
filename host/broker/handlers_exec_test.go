@@ -6,7 +6,12 @@ package broker
 
 import (
 	"encoding/json"
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -40,5 +45,51 @@ func TestExecUnconfiguredHandlerRefuses(t *testing.T) {
 		if out, err := h.Execute(boundedTestContext(t), req, []byte(`{}`)); err == nil {
 			t.Fatalf("Execute(%+v) = %s, want an error", req, out)
 		}
+	}
+}
+
+// MUT-SECOND-LIFECYCLE: handlers_exec.go owns no process lifecycle — no
+// exec.Cmd, no Setpgid, no kill, no procbound — so runBounded stays the one
+// (§4.5 [REVISED r1]). Like TestProjection_NoDeadlineTampering, a source scan;
+// identifiers are read from the syntax tree, so a comment cannot trip it.
+func TestExecHandlerOwnsNoProcessLifecycle(t *testing.T) {
+	forbidden := func(file string) []string {
+		fset := token.NewFileSet()
+		f, err := parser.ParseFile(fset, file, nil, parser.SkipObjectResolution)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var hits []string
+		for _, imp := range f.Imports {
+			switch strings.Trim(imp.Path.Value, `"`) {
+			case "os/exec", "syscall", "github.com/sunholo-data/ailang-world/host/procbound":
+				hits = append(hits, "import "+imp.Path.Value)
+			}
+		}
+		ast.Inspect(f, func(n ast.Node) bool {
+			switch x := n.(type) {
+			case *ast.SelectorExpr:
+				if pkg, ok := x.X.(*ast.Ident); ok {
+					switch pkg.Name + "." + x.Sel.Name {
+					case "exec.Cmd", "exec.Command", "exec.CommandContext", "syscall.Kill", "syscall.SysProcAttr":
+						hits = append(hits, fmt.Sprintf("%s.%s at %s", pkg.Name, x.Sel.Name, fset.Position(x.Pos())))
+					}
+				}
+			case *ast.Ident:
+				switch x.Name {
+				case "Setpgid", "Kill", "procbound", "killGroup":
+					hits = append(hits, fmt.Sprintf("%s at %s", x.Name, fset.Position(x.Pos())))
+				}
+			}
+			return true
+		})
+		return hits
+	}
+	if hits := forbidden("handlers_exec.go"); len(hits) != 0 {
+		t.Fatalf("handlers_exec.go owns process-lifecycle code (MUT-SECOND-LIFECYCLE): %v", hits)
+	}
+	// Instrument health: the scanner sees runBounded's own lifecycle.
+	if hits := forbidden("handlers.go"); len(hits) < 4 {
+		t.Fatalf("the scanner found only %v in handlers.go; it is blind", hits)
 	}
 }

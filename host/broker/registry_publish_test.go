@@ -1184,7 +1184,10 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 		// the registry dry-run publish, and both branches of the
 		// software-engineering tool handler (w-software-engineering-domain
 		// M4a: policy-tool via the constructor's summary read, and run).
-		"host/broker/handlers.go": {driveBrokerDryRunPublish, driveAilangToolPolicyTool, driveAilangToolRun},
+		// Row 140 M2: Workspace.Exec has TWO environments, the host node that
+		// runs srt and the child the trampoline builds; both are driven.
+		"host/broker/handlers.go": {driveBrokerDryRunPublish, driveAilangToolPolicyTool, driveAilangToolRun,
+			driveExecHostNode, driveExecChild},
 		"host/archive/archive.go": {driveArchiveVersionProbe},
 		"host/capsule/capsule.go": {driveCapsuleRun},
 		"host/pkgproj/pkgproj.go": {drivePkgprojCrossCheck},
