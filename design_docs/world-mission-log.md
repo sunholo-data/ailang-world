@@ -1230,3 +1230,44 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 **Next:** when row 140's attended tag changes (landed or handed back), 136 → 141 → 93 (`core` tier) → 114 → 139. No hygiene row is filed.
 
 **Record follow-through (iteration 233):** the independent evaluator (Agent tool `sonnet`, fresh separate context, read-only, foreground; 40,168 tok, 27 s) judged record commit `8d245a3` on `a36e459` and returned **PASS 93/100, zero blocking**. It verified all seven claims first-party: scope 5 `design_docs/` files; ledger valid 49 rows / zero OPEN; the 229 stamp archived byte-identical; ledger markers and `## Queue` intact; all cited SHAs resolve; dev CI 2/2. Its non-blocking notes: it did not re-derive the clause map independently, did not read rows 146–147 individually, and did not check the "~20 min" timing. Report: `design_docs/verification/world-iter233/evaluator-r1.md`.
+
+## 234 — 2026-10-06 — no pick: row 140 still IN-SPRINT attended (M1–M3 open as stacked PRs #208–#210, updated minutes before Gate 2); rule (d) block report; dev CI cancelled-by-outage re-run to green [ADMIN]
+
+**Kind:** bookkeeping-only iteration under the charter's standing rule (d) (D-WORLD-46). No design doc, plan, code or product acceptance. Doc-only record (STATUS, log, index, dashboard, STATUS archive, evaluator report), independently judged before merge.
+
+**Pick and why:** NONE. Row 140's tag is unchanged (`IN-SPRINT — ATTENDED … NOT routable for the loop until this tag changes`), and the attended work is live: PR #208 (M1, base `dev`, CLEAN), #209 (M2, base `attended/row140-m1`, UNSTABLE) and #210 (M3, base `attended/row140-m2`, UNSTABLE) are OPEN, last updated 23:06–23:17Z, with matching locked agent worktrees under the main checkout's `.claude/worktrees/`. Clause map at `origin/dev` `adeb042`: 1/2/3/6/7 MET · 4 UNMET (140 attended → 136 → 141 → 93) · 5 UNMET (114 after 93, then 139). No routable UNMET-clause row, so rule (d) applies.
+
+**Block report (each row, exact blocker, the one action that unblocks it):**
+- **140**: IN-SPRINT attended. Action: the attended session merges the #208 → #209 → #210 chain (or hands the row back by re-tagging it).
+- **136**: sequenced after 140 (D-WORLD-61 = A). Action: 140 lands.
+- **141**: sequenced after 136. Action: 136 lands.
+- **93**: sequenced after 141 (D-WORLD-58/61). Action: 141 lands; gate set = `core` tier per D-WORLD-54.
+- **114**: after 93, plus the owed D-WORLD-52 = A revision and a fresh full author-excluding quorum.
+- **139**: after 114.
+- **145–147**: PARKED post-1.0 by Mark (R1 path).
+- **144** `[HARNESS]`: fleet-owned; no `harness-resolved` reply yet.
+
+**Gate 1 red, triaged:** `origin/dev` HEAD `adeb042` (iteration 233's record merge, #207) carried `CI` run 37366775651 = `failure` at attempt 2, both jobs `cancelled` — no failed step, no test output. That matches the GitHub Actions outage iteration 233 recorded at its own merge and the fleet's iteration-20 report ("parked on GitHub Actions outage"). The tree is the green PR head of #207. Disposition: `gh run rerun` → attempt 3 → **completed success**, both jobs `success`. A run exists at HEAD and dev is green; no code change.
+
+**Gate 0:** kill switch armed (`mission-world.disabled` absent); gh = `sunholo-voight-kampff`; billing tripwire CLEAN. `mission_directives.sh` → **0** allowlisted directives on #202 since 2026-10-05T12:46:05Z (4 comments, all public feedback), so the watermark is unchanged. `mission-world` inbox: 3 unread, none new since iteration 233 (iter-230/231 claims, the v0.52.1 note already actioned attended); no `harness-resolved` reply. Ledger `valid: 49 rows`, `--open` empty. #202 was created 2026-10-05T12:43Z, after this week's Monday 07:00 local boundary, with 4 comments → no rotation. Not the first iteration after the Monday rotation (232 ran the weekly sweep). Last slot (iteration 233, 20:29:59Z) COMPLETED rc=0, so there is no orphan.
+
+**Skill drift:** unchanged from iteration 233. The resolved skill (V1 main checkout `c68ded4b2`) differs from fleet `origin/dev` on 7 resource files (`gate-0`…`gate-5`); the pin worktree (`$MISSION_DRIVER_ROOT`, `a12a319b5` == origin/dev) matches on all 13 files. The delta is the absolute `$MISSION_DRIVER_ROOT` heartbeat path and the `19=provider_quota` rc line. This iteration read the pin's (origin's) copies and stamped with the absolute path (rc=0 at gates 0–4).
+
+**Designer / planner / executor:** not spawned. There was no pick (rule (d)), so there was nothing to design, plan or execute (iteration 227/232/233 precedent). The operator's standing request to spawn roles through the Agent tool applies to the evaluator here.
+
+**Independent evaluator (record):** REQUIRED. Agent tool, `sonnet` (resolver `MISSION_EVALUATOR_RESOLVED=sonnet`, path `agent-tool`), fresh separate context, read-only, judged the record commit before merge. Verdict: see the follow-through below; report banked in `design_docs/verification/world-iter234/`.
+
+**Routing evidence:** base=adeb042c6d8115610fa31a8aaa713e2abd18e2e9@2026-10-05T23:36:44Z (Gate 4; Gate 1 read the same SHA at 23:26:18Z; `dev` == `origin/dev` == base). Controller `claude:claude-opus-5-5` (tok: not reported). `$MISSION_ROUTING_NOTE`: planner and executor codex lanes over daily ration (rc 75) → opus / `claude:claude-sonnet-5-5`; unused, no pick. Designer/planner/executor: none. Evaluator: Agent `sonnet` (tok: see follow-through). Metered $0.
+
+**Ruled out:** picking 140 (IN-SPRINT attended; three attended PRs updated minutes before Gate 2); picking 136/141/93/114/139 (sequenced behind 140 by D-WORLD-58/61, which the loop may not reorder); picking 145–147 (PARKED post-1.0 by Mark); working row 144 (harness, fleet-owned); any MET-clause hygiene row (rule (d)); treating the cancelled dev run as a code red (no failed step; the re-run of the identical commit passed); running `ailang mission rotate-log world` (still unverified on World; the index row is written by hand).
+
+**Retro:**
+- **(1)** A `failure` conclusion on a run whose jobs are all `cancelled` is not a code red. The disposition is to re-run the identical commit and read the jobs, not to attribute it. That is iteration 233's outage reaching the next fire.
+- **(2)** Third consecutive rule-(d) no-pick (232, 233, 234). The block is a single attended row that is visibly moving (three PRs in four hours), so this is not drift: rule (d) is Mark's ruling, and the critical path is moving attended. No ask is filed.
+- **(3)** No skill or charter process change proposed.
+
+**Progress:** World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. The loop did not move the goal; row 140 is moving attended.
+
+**Next:** when row 140's attended tag changes (landed or handed back), 136 → 141 → 93 (`core` tier) → 114 → 139. No hygiene row is filed.
+
+**Record follow-through (iteration 234):** the independent evaluator (Agent tool `sonnet`, fresh separate context, read-only, foreground; 37,921 tok, 36 s) judged record commit `7e88ecb` on `adeb042` and returned **PASS 95/100, zero blocking**. It verified all eight claims first-party: scope 5 `design_docs/` files (+50/−8); 3 live STATUS stamps and the 231 stamp archived byte-identical; `## Queue` and row 140 intact; ledger valid 49 rows / zero OPEN; row 140 still tagged IN-SPRINT attended with #208–#210 OPEN on the stated bases; run 37366775651 attempt 3 success, both jobs; 0 directives on #202; all cited SHAs resolve (two in the ailang repo); no closing keyword or email-shaped string. Non-blocking notes: its own extraction cut off before clause 5's UNMET line (stated in the stamp); dashboard/index/log diffs were audited for scope, SHAs and keywords only. Report: `design_docs/verification/world-iter234/evaluator-r1.md`.
