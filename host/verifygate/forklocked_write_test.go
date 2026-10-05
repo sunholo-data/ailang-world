@@ -780,4 +780,12 @@ func TestNoParallelWriteForkPackagesOutsideVerifygate(t *testing.T) {
 	if len(ev) != 0 {
 		t.Fatalf("exempt host/verifygate fixture flagged: %v", ev)
 	}
+	// ...and a subdirectory of host/verifygate is not exempt either: the match is exact.
+	sv, _, _, err := parallelWriteForkViolations(map[string]map[string][]byte{"host/verifygate/zz": {"x_test.go": []byte(fmt.Sprintf(body, "\tt.Parallel()\n"))}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(sv) != 1 || !strings.HasPrefix(sv[0], "host/verifygate/zz/x_test.go:10: t.Parallel in a write+fork package") {
+		t.Fatalf("known host/verifygate/zz positive not named: %v", sv)
+	}
 }

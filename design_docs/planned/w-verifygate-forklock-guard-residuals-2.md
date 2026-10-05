@@ -116,14 +116,16 @@ slice (after M1's `CopyFS` entry). Test touched: `TestVerifygateTestWritesAreFor
 - Acceptance:
   - **AC6 (N6)**: apply the judge's N6 mutant at l.697 → `known positive not named: []` on the
     `host/zz` fixture; the live test stays green, proving only the fixture sees it.
-  - **AC7 (exemption liveness)**: replace l.697 with `true` → the `host/verifygate` negative
-    fixture reds AND the live test reds with exactly 10 per-callsite violations (MEASURED, V14).
+  - **AC7 (exemption liveness)**: replace l.697 with `true` → the live test reds with exactly
+    10 per-callsite violations (MEASURED, V14). The live red fires first and stops the test, so the
+    `host/verifygate` negative fixture's kill is measured separately with the live assertion
+    neutralised (`if false && len(viol) > 0`; the plan's AC7fx).
     Re-measure only if anything landed in `host/verifygate` since `95575aa`.
   - **AC8 (regression)**: every row-142 AC stays green; the six iter-228 survivors stay dead;
     floors unchanged (`filesSeen` ≥ 9, `wrapperCalls` ≥ 21, `nDirs` ≥ 26, `nWriteFork` ≥ 12);
     all five fork-lock tests PASS plain (baseline 6.3 s, V11) and `-race`; and the repo's
     CLAUDE.md verify gate, with no gate-script change:
-    `AILANG_BIN=/Users/voightkampff/.pinned-ailang-tools/v0.52.1/ailang ./scripts/verify_ail.sh`
+    `AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang ./scripts/verify_ail.sh` (the repo pin v0.41.0; v0.52.1 is red at base by design)
     (no `.ail` touched), `go vet ./host/verifygate/` (the `_test.go` compile fence),
     `go build ./... && go test ./...`, and `check_no_personal_email.sh`. (`verify_go.sh` pins an
     old binary and is not this repo's gate — r2's citation of it is withdrawn.)
@@ -176,6 +178,8 @@ Every zero above is an un-piped grep whose rc was echoed.
 - **R6 (new, judge N15b) — D1 is a two-point sample.** The probe observes the lock at "filled"
   and "closed" only (V6); a mutant that releases and re-takes the lock across `Close` survives.
   The judge accepts this for the realistic E3 shape. Recorded as a known limit of D1; no test.
+- **Pinned by judge finding 1 (iter-231).** The tripwire exemption is exactly `host/verifygate`:
+  a `host/verifygate/zz` fixture must be named (kills the `HasPrefix(dir, "host/verifygate")` mutant).
 - Carried unchanged from row 142: **R2′** the tripwire is syntactic (an aliased import evades
   it); **R3** a stray `RLock` holder can hide E3-class mutants (false-negative direction only);
   **R4** `syscall.Openat`/`Creat` match only on linux; **R5** a kernel that drops write-deny reds
