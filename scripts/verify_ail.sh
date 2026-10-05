@@ -407,6 +407,54 @@ if [ "$total_verified" -ne "$EXACT_TOTAL_VERIFIED" ]; then
 fi
 echo "   ✓ $total_verified/$EXACT_TOTAL_VERIFIED required world/ identities verified across $checked module(s)"
 
+# ── Leg 2c — the execargs sketch's named inline tests (queue row 140 M1) ──────
+# host/broker/execargs_drift_test.go checks the sketch's EXPECTED values against the Go mirror;
+# this leg runs the sketch's own AILANG bodies against them, so the tests-only list-level law
+# (matchArgs, flagClassOf, intValueParses, enumHas) is executed by the pinned binary too. Its exact
+# name set is asserted as in Leg 2b. Run from design_docs/, the sketch sweep's base.
+# It runs straight after Leg 1, before Legs 2/2b: the legs are independent and a passing gate runs
+# them all, but host/verifygate's load-bearing arm for this leg (a changed sketch expectation) then
+# stops here instead of paying for Legs 2 and 2b first (row 140 M1 CI budget, 2026-10-06).
+echo "── Leg 2c: execargs sketch named inline tests"
+( cd design_docs && run_bounded "$GATE_TEST_TIMEOUT_S" "$tmp_test_json" "$AILANG_BIN" test --format json sketches/execargs.ail )
+rc=$?
+if [ "$rc" -eq 124 ]; then
+  echo "✗ ailang test TIMEOUT on sketches/execargs.ail (>${GATE_TEST_TIMEOUT_S}s)" >&2
+  [ -s "$tmp_test_json.err" ] && { echo "   stderr tail:" >&2; tail -5 "$tmp_test_json.err" >&2; }
+  exit 1
+fi
+# other exit codes advisory — the JSON parse below is authoritative
+python3 - "$tmp_test_json" <<'PY' || exit 1
+import json, sys
+EXECARGS_TESTS = {  # function -> number of named inline tests
+    "noDotDotSegment": 6, "pathOk": 7, "flagNameOf": 4, "flagValueOf": 4, "flagRuleMatches": 5,
+    "consumesNext": 4, "digitByteOk": 6, "intValueOk": 4, "regexValueOk": 6, "flagValueOk": 10,
+    "pkgpatternOk": 11, "testfileOk": 6, "positionalOk": 7, "dashDashOk": 3, "argCountOk": 4,
+    "intValueParses": 9, "enumHas": 6, "flagClassOf": 5, "matchArgs": 31,
+}
+required = {"%s_test_%d" % (f, i) for f, n in EXECARGS_TESTS.items() for i in range(1, n + 1)}
+raw = open(sys.argv[1], "rb").read().decode("utf-8", "replace")
+i = raw.find("{")
+if i < 0:
+    sys.stderr.write("✗ execargs sketch test leg: no JSON object in output\n"); sys.exit(1)
+try:
+    d = json.loads(raw[i:])
+except Exception as e:
+    sys.stderr.write("✗ execargs sketch test leg: could not parse test JSON (%s)\n" % e); sys.exit(1)
+tests = d.get("tests", [])
+by_name = {t.get("name"): t.get("status") for t in tests}
+bad = ["%s=%s" % (n, "MISSING" if by_name.get(n) is None else by_name.get(n))
+       for n in sorted(required) if by_name.get(n) != "pass"]
+if bad:
+    sys.stderr.write("✗ execargs sketch test leg: required named tests missing/failing: %s\n" % ", ".join(bad)); sys.exit(1)
+if d.get("failed_tests", 0):
+    sys.stderr.write("✗ execargs sketch test leg: failed_tests == %s\n" % d.get("failed_tests")); sys.exit(1)
+if len(tests) != len(required):
+    sys.stderr.write("✗ execargs sketch test leg: expected exactly %d named tests[], got %d\n"
+                     % (len(required), len(tests))); sys.exit(1)
+print("   ✓ all %d execargs sketch named tests pass" % len(required))
+PY
+
 # ── Leg 2 — named inline tests (directory mode, V18/V22) ──────────────────────
 # One bounded `test --format json world/` run. Names are preserved and merged across modules (V22).
 # Exit codes advisory EXCEPT 124. Strip the human banner before the first '{' (V19). Assert every
@@ -550,51 +598,6 @@ if [ "$se_tests_total" -ne "$EXACT_SE_TESTS" ]; then
   exit 1
 fi
 echo "   ✓ all $se_tests_total se-tools named tests pass across ${#SE_TEST_MODULES[@]} modules"
-
-# ── Leg 2c — the execargs sketch's named inline tests (queue row 140 M1) ──────
-# host/broker/execargs_drift_test.go checks the sketch's EXPECTED values against the Go mirror;
-# this leg runs the sketch's own AILANG bodies against them, so the tests-only list-level law
-# (matchArgs, flagClassOf, intValueParses, enumHas) is executed by the pinned binary too. Its exact
-# name set is asserted as in Leg 2b. Run from design_docs/, the sketch sweep's base.
-echo "── Leg 2c: execargs sketch named inline tests"
-( cd design_docs && run_bounded "$GATE_TEST_TIMEOUT_S" "$tmp_test_json" "$AILANG_BIN" test --format json sketches/execargs.ail )
-rc=$?
-if [ "$rc" -eq 124 ]; then
-  echo "✗ ailang test TIMEOUT on sketches/execargs.ail (>${GATE_TEST_TIMEOUT_S}s)" >&2
-  [ -s "$tmp_test_json.err" ] && { echo "   stderr tail:" >&2; tail -5 "$tmp_test_json.err" >&2; }
-  exit 1
-fi
-# other exit codes advisory — the JSON parse below is authoritative
-python3 - "$tmp_test_json" <<'PY' || exit 1
-import json, sys
-EXECARGS_TESTS = {  # function -> number of named inline tests
-    "noDotDotSegment": 6, "pathOk": 7, "flagNameOf": 4, "flagValueOf": 4, "flagRuleMatches": 5,
-    "consumesNext": 4, "digitByteOk": 6, "intValueOk": 4, "regexValueOk": 6, "flagValueOk": 10,
-    "pkgpatternOk": 11, "testfileOk": 6, "positionalOk": 7, "dashDashOk": 3, "argCountOk": 4,
-    "intValueParses": 9, "enumHas": 6, "flagClassOf": 5, "matchArgs": 31,
-}
-required = {"%s_test_%d" % (f, i) for f, n in EXECARGS_TESTS.items() for i in range(1, n + 1)}
-raw = open(sys.argv[1], "rb").read().decode("utf-8", "replace")
-i = raw.find("{")
-if i < 0:
-    sys.stderr.write("✗ execargs sketch test leg: no JSON object in output\n"); sys.exit(1)
-try:
-    d = json.loads(raw[i:])
-except Exception as e:
-    sys.stderr.write("✗ execargs sketch test leg: could not parse test JSON (%s)\n" % e); sys.exit(1)
-tests = d.get("tests", [])
-by_name = {t.get("name"): t.get("status") for t in tests}
-bad = ["%s=%s" % (n, "MISSING" if by_name.get(n) is None else by_name.get(n))
-       for n in sorted(required) if by_name.get(n) != "pass"]
-if bad:
-    sys.stderr.write("✗ execargs sketch test leg: required named tests missing/failing: %s\n" % ", ".join(bad)); sys.exit(1)
-if d.get("failed_tests", 0):
-    sys.stderr.write("✗ execargs sketch test leg: failed_tests == %s\n" % d.get("failed_tests")); sys.exit(1)
-if len(tests) != len(required):
-    sys.stderr.write("✗ execargs sketch test leg: expected exactly %d named tests[], got %d\n"
-                     % (len(required), len(tests))); sys.exit(1)
-print("   ✓ all %d execargs sketch named tests pass" % len(required))
-PY
 
 echo "── Leg 3: world package nine-step gate"
 ./scripts/verify_world_package.sh || exit $?
