@@ -559,5 +559,113 @@
         "cost": 1
       }
     ]
+  },
+  {
+    "id": "workspace-exec",
+    "title": "Exec (operator-profiled, sandboxed)",
+    "description": "Run one command of the operator's exec profile (e.g. `test`, `vet`, `typecheck`) in this episode's worktree. Commands come only from the operator's exec profile (`serve --exec-profile`): `command` is the id of one of them, never an executable or a shell line, and the profile fixes the program, its leading arguments, the working directory, the environment and the timeout. `args` (at most 16 strings, each 1 to 512 bytes, no NUL; absent = none) must match that command's argument grammar: only the flags it lists, as `-f=v` or `-f v`, and positionals of its declared class (relative paths, package patterns or test files); `--` only where the command declares it. The command runs sandboxed: writes stay inside the worktree and the episode's caches, your home directory, World's state and other episodes are unreadable, and there is no network. No shell sees an argument. Without a configured profile the call is refused (`no exec profile configured`). Unknown argument keys are refused, never ignored. Returns {exit_code, timed_out, limit, duration_ms, stdout, stdout_bytes, stdout_truncated, stdout_sha256, stderr, stderr_bytes, stderr_truncated, stderr_sha256, argv, profile, sandbox} or {ok:false, refused}; long output keeps its head and tail. exit_code is the command's own status, reported, never judged. Costs one Workspace.Exec call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).",
+    "transitionFnFile": "packages/se-tools/se_tools/exec.ail",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,31}$",
+          "description": "The id of one command in the operator's exec profile, e.g. \"test\""
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maxItems": 16,
+          "description": "Arguments matched against the command's grammar; at most 16, each 1 to 512 bytes, no NUL"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "exit_code": {
+          "type": "integer"
+        },
+        "timed_out": {
+          "type": "boolean"
+        },
+        "limit": {},
+        "duration_ms": {
+          "type": "integer"
+        },
+        "stdout": {
+          "type": "string"
+        },
+        "stdout_bytes": {
+          "type": "integer"
+        },
+        "stdout_truncated": {
+          "type": "boolean"
+        },
+        "stdout_sha256": {
+          "type": "string"
+        },
+        "stderr": {
+          "type": "string"
+        },
+        "stderr_bytes": {
+          "type": "integer"
+        },
+        "stderr_truncated": {
+          "type": "boolean"
+        },
+        "stderr_sha256": {
+          "type": "string"
+        },
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "profile": {
+          "type": "object",
+          "description": "The profile command that ran: {project, digest, command, argv0_sha256}"
+        },
+        "sandbox": {
+          "type": "object",
+          "description": "The sandbox it ran in: {runtime, version, cli_sha256, settings_digest, read_fence, network}"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "refused": {
+          "type": "string",
+          "description": "Why the call was refused (plan, profile, grammar or handler)"
+        },
+        "world": {
+          "type": "object",
+          "description": "World's provenance: the plan ref and the effect record refs"
+        }
+      },
+      "required": [
+        "world"
+      ]
+    },
+    "access": {
+      "effect": "Workspace.Exec",
+      "scope": "worktree",
+      "cost": 0
+    },
+    "declaredEffects": [
+      {
+        "effect": "Workspace.Exec",
+        "scope": "worktree",
+        "cost": 1
+      }
+    ]
   }
 ]

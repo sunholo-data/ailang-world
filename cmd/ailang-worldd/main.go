@@ -124,7 +124,10 @@ serve flags:
                        AILANG binary the workspace tools run (must be
                        ` + daemon.ToolBinaryRelease + `); archived and hash-verified like
                        --ailang-bin. The Workspace.*/Ailang.* tools are served
-                       only when both this and --workspace-root are set
+                       only when both this and --workspace-root are set.
+                       Workspace.Exec (workspace-exec) is bound with them but
+                       refuses every call "no exec profile configured" until
+                       exec profiles land (row 140 M2/M3)
   --examples-dir <dir> AILANG examples corpus examples-search reads (passed
                        to the tool as AILANG_EXAMPLES; World never falls back
                        to a corpus in the binary). Default: ~/.ailang/examples

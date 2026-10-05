@@ -1,0 +1,517 @@
+module sketches/execargs
+
+import std/string (length as strLength, startsWith, endsWith, contains, find, substring, split)
+import std/bytes (fromString, toInts, length as bytesLength)
+import std/json (encode, ja, js)
+import std/list (map)
+
+-- Compiler-checked M1 sketch for w-workspace-exec-toolchain-effect (queue row
+-- 140, D-WORLD-62): the ARGUMENT-MATCHING LAW of §4.3, by which the
+-- Workspace.Exec handler matches an agent's args against one command of the
+-- operator's exec profile before anything is spawned. The handler enforces it
+-- in Go (host/broker/execargs.go, MatchExecArgs); this sketch is the
+-- specification the Go mirror transcribes, exactly as effectplan.ail is for
+-- host/coordinator. host/broker/execargs_drift_test.go reads THIS file,
+-- evaluates every inline test row below through the Go mirror of the same
+-- name, and fails if a law here has no Go mirror (or the reverse).
+--
+-- The law, in order, for each agent arg:
+--   * after an admitted "--", the arg is a positional of the command's class;
+--   * "--" itself is refused unless the command declares passthrough "--";
+--   * an arg starting "-" is a flag: its name (the text before the first
+--     "=") must EXACTLY equal a name the command lists. A bool flag takes no
+--     value; any other class takes one, as "-f=v" or as "-f v", and both are
+--     normalized to "-f=v", so the recorded argv has one spelling per meaning;
+--   * anything else is a positional of the command's class (none admitted
+--     when the command declares no class);
+--   * the normalized list holds at most max_args items.
+-- Value classes: bool (no value), regex (1-256 bytes, no NUL or newline), int
+-- (decimal digits, 0 to 10^6), relpath (pathOk), enum:[a,b,...] (one of the
+-- listed words). Positional classes: relpath (pathOk, so no leading "-"),
+-- pkgpattern (a relpath with no "..." except an optional final "/..."; "./..."
+-- included), testfile (a relpath ending in one of the declared suffixes).
+--
+-- What is NOT here, and why: the profile's own shape (unknown keys, argv0
+-- resolution, env names) is a load-time property of the operator's file
+-- (§4.3 load-time refusals, M3), and the command id's lookup is a map read;
+-- neither is a law over the agent's bytes. The bounds on the raw args (at
+-- most 16, each 1-512 bytes, no NUL) are the plan's (se_tools/exec.ail).
+
+-- One flag a command lists: its exact name and its value class.
+export type FlagRule = {
+  name: string,
+  cls: string
+}
+
+-- The matchable part of one profile command (§4.3). The fixed argv prefix is
+-- not here: the agent never supplies it, so no law over agent args reads it.
+export type Grammar = {
+  flags: [FlagRule],
+  positional: string,
+  suffixes: [string],
+  maxArgs: int,
+  passthrough: bool
+}
+
+-- ── Contracted laws (Z3) ──────────────────────────────────────────────────
+
+-- No path segment is "..": the whole path, a leading "../", a trailing "/..",
+-- or an inner "/../" (se_tools' path core, repeated: a sketch is checked alone).
+export func noDotDotSegment(p: string) -> bool ! {}
+ensures { result == (p != ".." && not startsWith(p, "../") && not endsWith(p, "/..")
+  && not contains(p, "/../")) }
+tests [
+  ("src/main.go", true),
+  ("..", false),
+  ("../x", false),
+  ("a/..", false),
+  ("a/../b", false),
+  ("..a/b", true)
+]
+{
+  p != ".." && not startsWith(p, "../") && not endsWith(p, "/..") && not contains(p, "/../")
+}
+
+-- relpath: relative, non-empty, no ".." segment, no leading "-" (a
+-- hyphen-leading positional would be read as a flag by the tool).
+export func pathOk(p: string) -> bool ! {}
+ensures { result == (strLength(p) >= 1 && not startsWith(p, "/") && not startsWith(p, "-")
+  && p != ".." && not startsWith(p, "../") && not endsWith(p, "/..")
+  && not contains(p, "/../")) }
+tests [
+  ("internal/lexer", true),
+  ("./...", true),
+  ("", false),
+  ("/abs", false),
+  ("-x", false),
+  ("../x", false),
+  ("a/../../b", false)
+]
+{
+  strLength(p) >= 1 && not startsWith(p, "/") && not startsWith(p, "-") && noDotDotSegment(p)
+}
+
+-- A flag's name is the text before its first "=", or the whole arg.
+export func flagNameOf(a: string) -> string ! {}
+ensures { result == (if find(a, "=") >= 0 then substring(a, 0, find(a, "=")) else a) }
+tests [
+  ("-run=X", "-run"),
+  ("-run", "-run"),
+  ("-a=b=c", "-a"),
+  ("--maxfail=2", "--maxfail")
+]
+{
+  if find(a, "=") >= 0 then substring(a, 0, find(a, "=")) else a
+}
+
+-- A flag's value is the text after its first "=" ("" when it has none).
+export func flagValueOf(a: string) -> string ! {}
+ensures { result == (if find(a, "=") >= 0 then substring(a, find(a, "=") + 1, strLength(a)) else "") }
+tests [
+  ("-run=X", "X"),
+  ("-run", ""),
+  ("-a=b=c", "b=c"),
+  ("-run=", "")
+]
+{
+  if find(a, "=") >= 0 then substring(a, find(a, "=") + 1, strLength(a)) else ""
+}
+
+-- The allowlist is EXACT: a rule matches an arg only when the arg's whole
+-- flag name equals the rule's name, so "-runX", "-ru" and "-RUN" never match
+-- "-run". Stated per rule; the list search is matchArgs' (tests-only).
+export func flagRuleMatches(r: FlagRule, a: string) -> bool ! {}
+ensures { result == (r.name == (if find(a, "=") >= 0 then substring(a, 0, find(a, "=")) else a)) }
+tests [
+  (({ name: "-run", cls: "regex" }, "-run=X"), true),
+  (({ name: "-run", cls: "regex" }, "-run"), true),
+  (({ name: "-run", cls: "regex" }, "-runX"), false),
+  (({ name: "-run", cls: "regex" }, "-ru=X"), false),
+  (({ name: "-run", cls: "regex" }, "-RUN=X"), false)
+]
+{
+  r.name == flagNameOf(a)
+}
+
+-- Normalization: a flag written WITHOUT "=" takes the next arg as its value
+-- exactly when its class is not bool ("-run X" is "-run=X"; "-v X" is the
+-- bool "-v" and then the positional "X").
+export func consumesNext(cls: string, hasEq: bool) -> bool ! {}
+ensures { result == ((not hasEq) && cls != "bool") }
+tests [
+  (("regex", false), true),
+  (("int", false), true),
+  (("bool", false), false),
+  (("regex", true), false)
+]
+{
+  (not hasEq) && cls != "bool"
+}
+
+-- One byte of an int value is a decimal digit.
+export func digitByteOk(c: int) -> bool ! {}
+ensures { result == (c >= 48 && c <= 57) }
+tests [
+  (48, true),
+  (57, true),
+  (47, false),
+  (58, false),
+  (43, false),
+  (45, false)
+]
+{
+  c >= 48 && c <= 57
+}
+
+-- An int value is at most 10^6 (and, being digits, never negative).
+export func intValueOk(n: int) -> bool ! {}
+ensures { result == (n >= 0 && n <= 1000000) }
+tests [
+  (0, true),
+  (1000000, true),
+  (1000001, false),
+  (-1, false)
+]
+{
+  n >= 0 && n <= 1000000
+}
+
+-- A regex value is 1 to 256 UTF-8 bytes (n) with no newline and no NUL.
+export func regexValueOk(v: string, n: int) -> bool ! {}
+ensures { result == (n >= 1 && n <= 256 && not contains(v, "\n") && not contains(v, "\u0000")) }
+tests [
+  (("TestLex", 7), true),
+  (("^Test(A|B)$", 11), true),
+  (("", 0), false),
+  (("x", 257), false),
+  (("a\nb", 3), false),
+  (("a\u0000b", 3), false)
+]
+{
+  n >= 1 && n <= 256 && not contains(v, "\n") && not contains(v, "\u0000")
+}
+
+-- The value-class dispatch: a bool flag never takes a value; regex and
+-- relpath are decided here; int and enum arrive decided (intOk: the value
+-- parsed as digits within intValueOk; enumOk: it is one of the listed words),
+-- because each needs a walk over the value or the word list. An unknown class
+-- admits nothing.
+export func flagValueOk(cls: string, v: string, n: int, intOk: bool, enumOk: bool) -> bool ! {}
+ensures { result == ((cls == "regex" && n >= 1 && n <= 256 && not contains(v, "\n") && not contains(v, "\u0000"))
+  || (cls == "relpath" && pathOk(v))
+  || (cls == "int" && intOk)
+  || (startsWith(cls, "enum:") && enumOk)) }
+tests [
+  (("regex", "TestX", 5, false, false), true),
+  (("regex", "a\nb", 3, false, false), false),
+  (("relpath", "testdata/x.json", 15, false, false), true),
+  (("relpath", "../x", 4, false, false), false),
+  (("int", "5", 1, true, false), true),
+  (("int", "x", 1, false, false), false),
+  (("enum:[json,text]", "json", 4, false, true), true),
+  (("enum:[json,text]", "xml", 3, false, false), false),
+  (("bool", "true", 4, true, true), false),
+  (("shell", "x", 1, true, true), false)
+]
+{
+  (cls == "regex" && regexValueOk(v, n)) || (cls == "relpath" && pathOk(v))
+    || (cls == "int" && intOk) || (startsWith(cls, "enum:") && enumOk)
+}
+
+-- pkgpattern: "./..." exactly, or a relpath with no "..." anywhere, or a
+-- relpath with no "..." followed by one final "/..." (so "a/.../b" and a bare
+-- "..." are refused).
+export func pkgpatternOk(p: string) -> bool ! {}
+ensures { result == (p == "./..."
+  || (pathOk(p) && not contains(p, "..."))
+  || (strLength(p) >= 5 && endsWith(p, "/...") && pathOk(substring(p, 0, strLength(p) - 4))
+      && not contains(substring(p, 0, strLength(p) - 4), "..."))) }
+tests [
+  ("./...", true),
+  ("./internal/lexer/", true),
+  ("./a/...", true),
+  ("a/...", true),
+  ("internal/lexer", true),
+  ("...", false),
+  ("a/.../b", false),
+  ("../...", false),
+  ("/abs/...", false),
+  ("-x/...", false),
+  ("../x", false)
+]
+{
+  p == "./..." || (pathOk(p) && not contains(p, "..."))
+    || (strLength(p) >= 5 && endsWith(p, "/...") && pathOk(substring(p, 0, strLength(p) - 4))
+        && not contains(substring(p, 0, strLength(p) - 4), "..."))
+}
+
+-- testfile, per declared suffix: a relpath that ends in the (non-empty)
+-- suffix and is longer than it.
+export func testfileOk(p: string, suffix: string) -> bool ! {}
+ensures { result == (pathOk(p) && strLength(suffix) >= 1 && endsWith(p, suffix) && strLength(p) > strLength(suffix)) }
+tests [
+  (("tests/test_cli.py", ".py"), true),
+  (("src/a.test.ts", ".test.ts"), true),
+  ((".py", ".py"), false),
+  (("tests/x.txt", ".py"), false),
+  (("../t.py", ".py"), false),
+  (("t.py", ""), false)
+]
+{
+  pathOk(p) && strLength(suffix) >= 1 && endsWith(p, suffix) && strLength(p) > strLength(suffix)
+}
+
+-- The positional-class dispatch. suffixMatched arrives decided (testfileOk
+-- against SOME declared suffix: a list walk). A command declaring no class
+-- ("") admits no positional.
+export func positionalOk(cls: string, p: string, suffixMatched: bool) -> bool ! {}
+ensures { result == ((cls == "relpath" && pathOk(p)) || (cls == "pkgpattern" && pkgpatternOk(p))
+  || (cls == "testfile" && suffixMatched)) }
+tests [
+  (("relpath", "a/b", false), true),
+  (("relpath", "-a", false), false),
+  (("pkgpattern", "./...", false), true),
+  (("pkgpattern", "a/.../b", false), false),
+  (("testfile", "t_test.py", true), true),
+  (("testfile", "t_test.py", false), false),
+  (("", "a", true), false)
+]
+{
+  (cls == "relpath" && pathOk(p)) || (cls == "pkgpattern" && pkgpatternOk(p)) || (cls == "testfile" && suffixMatched)
+}
+
+-- "--" is admitted only when the command declares passthrough "--"; after it
+-- every arg is a positional.
+export func dashDashOk(a: string, passthrough: bool) -> bool ! {}
+ensures { result == (a != "--" || passthrough) }
+tests [
+  (("--", true), true),
+  (("--", false), false),
+  (("-v", false), true)
+]
+{
+  a != "--" || passthrough
+}
+
+-- The normalized args hold at most max_args items.
+export func argCountOk(n: int, maxArgs: int) -> bool ! {}
+ensures { result == (n >= 0 && n <= maxArgs) }
+tests [
+  ((0, 0), true),
+  ((8, 8), true),
+  ((9, 8), false),
+  ((1, 0), false)
+]
+{
+  n >= 0 && n <= maxArgs
+}
+
+-- ── The list-level law (TESTS-ONLY: recursive, outside the decidable
+-- fragment; every decision it makes is one of the proven laws above) ──────
+
+func utf8Ints(s: string) -> [int] = toInts(fromString(s))
+
+func digitsValue(bs: [int], acc: int) -> int =
+  match bs {
+    [] => acc,
+    b :: rest => if acc > 1000000 then acc else digitsValue(rest, acc * 10 + (b - 48))
+  }
+
+func allDigits(bs: [int]) -> bool =
+  match bs {
+    [] => true,
+    b :: rest => digitByteOk(b) && allDigits(rest)
+  }
+
+-- An int value: 1 to 7 decimal digits whose value passes intValueOk.
+export func intValueParses(v: string) -> bool
+tests [
+  ("5", true),
+  ("0", true),
+  ("1000000", true),
+  ("1000001", false),
+  ("", false),
+  ("+5", false),
+  ("-1", false),
+  ("5x", false),
+  ("10000000", false)
+]
+{
+  let bs = utf8Ints(v);
+  match bs {
+    [] => false,
+    _ => allDigits(bs) && bytesLength(fromString(v)) <= 7 && intValueOk(digitsValue(bs, 0))
+  }
+}
+
+func wordIn(ws: [string], v: string) -> bool =
+  match ws {
+    [] => false,
+    w :: rest => w == v || wordIn(rest, v)
+  }
+
+-- An enum value: one of the words of "enum:[a,b,...]".
+export func enumHas(cls: string, v: string) -> bool
+tests [
+  (("enum:[json,text]", "json"), true),
+  (("enum:[json,text]", "text"), true),
+  (("enum:[json,text]", "xml"), false),
+  (("enum:[json,text]", ""), false),
+  (("enum:[json,text]", "json,text"), false),
+  (("regex", "regex"), false)
+]
+{
+  startsWith(cls, "enum:[") && endsWith(cls, "]") && strLength(v) >= 1
+    && wordIn(split(substring(cls, 6, strLength(cls) - 1), ","), v)
+}
+
+func suffixIn(ss: [string], p: string) -> bool =
+  match ss {
+    [] => false,
+    s :: rest => testfileOk(p, s) || suffixIn(rest, p)
+  }
+
+-- The class of the rule whose name the arg's flag name EXACTLY equals, or ""
+-- when the command does not list it.
+export func flagClassOf(rules: [FlagRule], a: string) -> string
+tests [
+  (([{ name: "-run", cls: "regex" }, { name: "-v", cls: "bool" }], "-v"), "bool"),
+  (([{ name: "-run", cls: "regex" }, { name: "-v", cls: "bool" }], "-run=X"), "regex"),
+  (([{ name: "-run", cls: "regex" }], "-runX"), ""),
+  (([{ name: "-run", cls: "regex" }], "-exec=sh"), ""),
+  (([], "-v"), "")
+]
+{
+  match rules {
+    [] => "",
+    r :: rest => if flagRuleMatches(r, a) then r.cls else flagClassOf(rest, a)
+  }
+}
+
+func valueOk(cls: string, v: string) -> bool =
+  flagValueOk(cls, v, bytesLength(fromString(v)), intValueParses(v), enumHas(cls, v))
+
+func refused(i: int, why: string) -> string = "refused ${show(i)} ${why}"
+
+func admit(acc: [string]) -> string = "ok ${encode(ja(map(js, acc)))}"
+
+-- acc is the normalized list so far, reversed; i the index of the head arg.
+func matchFrom(g: Grammar, args: [string], i: int, afterDashDash: bool, acc: [string], n: int) -> string =
+  match args {
+    [] => admit(reverse(acc)),
+    a :: rest =>
+      if afterDashDash then
+        (if not positionalOk(g.positional, a, suffixIn(g.suffixes, a)) then refused(i, "positional")
+         else if not argCountOk(n + 1, g.maxArgs) then refused(i, "max-args")
+         else matchFrom(g, rest, i + 1, true, a :: acc, n + 1))
+      else if a == "--" then
+        (if not dashDashOk(a, g.passthrough) then refused(i, "dash-dash")
+         else if not argCountOk(n + 1, g.maxArgs) then refused(i, "max-args")
+         else matchFrom(g, rest, i + 1, true, a :: acc, n + 1))
+      else if startsWith(a, "-") then matchFlag(g, a, rest, i, acc, n)
+      else if not positionalOk(g.positional, a, suffixIn(g.suffixes, a)) then refused(i, "positional")
+      else if not argCountOk(n + 1, g.maxArgs) then refused(i, "max-args")
+      else matchFrom(g, rest, i + 1, false, a :: acc, n + 1)
+  }
+
+func matchFlag(g: Grammar, a: string, rest: [string], i: int, acc: [string], n: int) -> string = {
+  let cls = flagClassOf(g.flags, a);
+  let hasEq = contains(a, "=");
+  if cls == "" then refused(i, "flag")
+  else if hasEq then
+    (if not valueOk(cls, flagValueOf(a)) then refused(i, "value")
+     else if not argCountOk(n + 1, g.maxArgs) then refused(i, "max-args")
+     else matchFrom(g, rest, i + 1, false, a :: acc, n + 1))
+  else if consumesNext(cls, hasEq) then
+    (match rest {
+      [] => refused(i, "missing-value"),
+      v :: rest2 => if not valueOk(cls, v) then refused(i + 1, "value")
+        else if not argCountOk(n + 1, g.maxArgs) then refused(i, "max-args")
+        else matchFrom(g, rest2, i + 2, false, "${a}=${v}" :: acc, n + 1)
+    })
+  else if not argCountOk(n + 1, g.maxArgs) then refused(i, "max-args")
+  else matchFrom(g, rest, i + 1, false, a :: acc, n + 1)
+}
+
+func reverse(xs: [string]) -> [string] = revOnto(xs, [])
+
+func revOnto(xs: [string], acc: [string]) -> [string] =
+  match xs {
+    [] => acc,
+    x :: rest => revOnto(rest, x :: acc)
+  }
+
+-- The whole law: "ok <normalized args as a JSON array>" or "refused <index of
+-- the first bad agent arg> <reason>", reason one of flag, value,
+-- missing-value, dash-dash, positional, max-args. A scalar rendering because
+-- the pinned binary's inline tests compare scalar expected values only.
+export func matchArgs(g: Grammar, args: [string]) -> string
+tests [
+  (({ flags: [{ name: "-run", cls: "regex" }, { name: "-v", cls: "bool" }, { name: "-short", cls: "bool" }],
+      positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-run", "TestLex", "./internal/lexer/"]), "ok [\"-run=TestLex\",\"./internal/lexer/\"]"),
+  (({ flags: [{ name: "-run", cls: "regex" }, { name: "-v", cls: "bool" }],
+      positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-run=TestLex", "-v", "./a/..."]), "ok [\"-run=TestLex\",\"-v\",\"./a/...\"]"),
+  (({ flags: [{ name: "-v", cls: "bool" }], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-v", "./..."]), "ok [\"-v\",\"./...\"]"),
+  (({ flags: [], positional: "pkgpattern", suffixes: [], maxArgs: 4, passthrough: false },
+    []), "ok []"),
+  (({ flags: [{ name: "-run", cls: "regex" }], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-exec=sh", "./..."]), "refused 0 flag"),
+  (({ flags: [{ name: "-run", cls: "regex" }], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["./...", "-race"]), "refused 1 flag"),
+  (({ flags: [{ name: "-run", cls: "regex" }], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-runX"]), "refused 0 flag"),
+  (({ flags: [{ name: "-run", cls: "regex" }], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["--settings", "x.json"]), "refused 0 flag"),
+  (({ flags: [{ name: "-run", cls: "regex" }], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["--", "./..."]), "refused 0 dash-dash"),
+  (({ flags: [{ name: "-run", cls: "regex" }], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-run", "a\nb"]), "refused 1 value"),
+  (({ flags: [{ name: "-run", cls: "regex" }], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-run=a\nb"]), "refused 0 value"),
+  (({ flags: [{ name: "-run", cls: "regex" }], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-run"]), "refused 0 missing-value"),
+  (({ flags: [{ name: "-v", cls: "bool" }], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-v=true"]), "refused 0 value"),
+  (({ flags: [{ name: "-v", cls: "bool" }], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-v", "X"]), "ok [\"-v\",\"X\"]"),
+  (({ flags: [], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["../x"]), "refused 0 positional"),
+  (({ flags: [], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["/abs"]), "refused 0 positional"),
+  (({ flags: [], positional: "pkgpattern", suffixes: [], maxArgs: 8, passthrough: false },
+    ["a/.../b"]), "refused 0 positional"),
+  (({ flags: [], positional: "", suffixes: [], maxArgs: 8, passthrough: false },
+    ["src"]), "refused 0 positional"),
+  (({ flags: [{ name: "-count", cls: "int" }], positional: "", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-count", "3"]), "ok [\"-count=3\"]"),
+  (({ flags: [{ name: "-count", cls: "int" }], positional: "", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-count=1000001"]), "refused 0 value"),
+  (({ flags: [{ name: "--format", cls: "enum:[json,text]" }], positional: "", suffixes: [], maxArgs: 8, passthrough: false },
+    ["--format", "json"]), "ok [\"--format=json\"]"),
+  (({ flags: [{ name: "--format", cls: "enum:[json,text]" }], positional: "", suffixes: [], maxArgs: 8, passthrough: false },
+    ["--format=xml"]), "refused 0 value"),
+  (({ flags: [{ name: "--rootdir", cls: "relpath" }], positional: "", suffixes: [], maxArgs: 8, passthrough: false },
+    ["--rootdir", "/etc"]), "refused 1 value"),
+  (({ flags: [{ name: "-k", cls: "regex" }], positional: "testfile", suffixes: [".py"], maxArgs: 6, passthrough: true },
+    ["-k", "parse", "--", "tests/test_cli.py"]), "ok [\"-k=parse\",\"--\",\"tests/test_cli.py\"]"),
+  (({ flags: [{ name: "-k", cls: "regex" }], positional: "testfile", suffixes: [".py"], maxArgs: 6, passthrough: true },
+    ["--", "-k"]), "refused 1 positional"),
+  (({ flags: [], positional: "testfile", suffixes: [".test.ts", ".spec.ts"], maxArgs: 6, passthrough: false },
+    ["src/a.spec.ts"]), "ok [\"src/a.spec.ts\"]"),
+  (({ flags: [], positional: "testfile", suffixes: [".test.ts"], maxArgs: 6, passthrough: false },
+    ["src/a.ts"]), "refused 0 positional"),
+  (({ flags: [{ name: "-v", cls: "bool" }], positional: "pkgpattern", suffixes: [], maxArgs: 2, passthrough: false },
+    ["-v", "./a/", "./b/"]), "refused 2 max-args"),
+  (({ flags: [{ name: "-run", cls: "regex" }], positional: "pkgpattern", suffixes: [], maxArgs: 1, passthrough: false },
+    ["-run", "X"]), "ok [\"-run=X\"]"),
+  (({ flags: [], positional: "pkgpattern", suffixes: [], maxArgs: 0, passthrough: false },
+    ["./..."]), "refused 0 max-args"),
+  (({ flags: [{ name: "-c", cls: "bool" }], positional: "", suffixes: [], maxArgs: 8, passthrough: false },
+    ["-s=x.json"]), "refused 0 flag")
+]
+{
+  matchFrom(g, args, 0, false, [], 0)
+}

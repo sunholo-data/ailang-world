@@ -169,7 +169,7 @@ func TestSeToolsRunBenchmarkTasksEndToEnd(t *testing.T) {
 	r := newSeRunRig(t, mock)
 	token := r.mint("ep1", seRunGrants...)
 	if got := r.toolsList(token); !reflect.DeepEqual(got, seToolNames) {
-		t.Fatalf("tools/list = %v, want exactly the 8 tools %v", got, seToolNames)
+		t.Fatalf("tools/list = %v, want exactly the 9 tools %v", got, seToolNames)
 	}
 	for _, task := range benchTasks(t, mock.srv.URL) {
 		for path, content := range task.files {

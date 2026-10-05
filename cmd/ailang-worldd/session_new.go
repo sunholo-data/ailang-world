@@ -62,7 +62,7 @@ terminal, append </dev/tty).
   --preset se-tools    one grant per effect the se-tools transitions declare:
                        Workspace.Read, Workspace.Write, Ailang.Check, Ailang.Run,
                        Ailang.RunEnv, Ailang.RunNet, Ailang.Discover, Ailang.CLI,
-                       each scope worktree with --budget calls
+                       Workspace.Exec, each scope worktree with --budget calls
   --grant EFFECT=SCOPE:BUDGET
                        an explicit grant (repeatable); it overrides a preset
                        grant with the same effect and scope
@@ -95,6 +95,7 @@ var sePresetGrants = []broker.Capability{
 	{Effect: broker.EffectAilangRunNet, Scope: "worktree"},
 	{Effect: broker.EffectAilangDiscover, Scope: "worktree"},
 	{Effect: broker.EffectAilangCLI, Scope: "worktree"},
+	{Effect: broker.EffectWorkspaceExec, Scope: "worktree"},
 }
 
 // sessionNewBudget bounds the whole command after the confirmation: the

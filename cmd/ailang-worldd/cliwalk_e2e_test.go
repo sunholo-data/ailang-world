@@ -49,7 +49,7 @@ type cliSeRig struct {
 }
 
 // newCLISeRig provisions the store (genesis when asked, the published
-// se-tools package, a six-grant ep1 session in a 0600 file) with the daemon
+// se-tools package, a seven-grant ep1 session in a 0600 file) with the daemon
 // stopped, then serves it.
 func newCLISeRig(t *testing.T, genesis bool) cliSeRig {
 	t.Helper()
@@ -106,7 +106,7 @@ func newCLISeRig(t *testing.T, genesis bool) cliSeRig {
 	now := time.Now().Unix()
 	var grants []broker.Capability
 	for _, e := range []string{broker.EffectWorkspaceRead, broker.EffectWorkspaceWrite, broker.EffectAilangCheck,
-		broker.EffectAilangRun, broker.EffectAilangDiscover, broker.EffectAilangCLI} {
+		broker.EffectAilangRun, broker.EffectAilangDiscover, broker.EffectAilangCLI, broker.EffectWorkspaceExec} {
 		grants = append(grants, broker.Capability{Effect: e, Scope: broker.WorkspaceScope, ExpiresAt: now + 7200, Budget: 20})
 	}
 	tok, _, _, err := authority.Mint(ctx, st, "ep1", grants, 3600, now, nil)
@@ -180,7 +180,7 @@ func publishSeToolsCLI(t *testing.T, st *store.Store, db string, interp hashref.
 			InputSchema: in, OutputSchema: out, Access: e.Access, DeclaredEffects: e.DeclaredEffects, Title: e.Title, Description: e.Description}
 		changes = append(changes, transitionreg.Change{ID: e.ID, Descriptor: &desc})
 	}
-	if _, err := pub.PublishSet(ctx, changes); err != nil || len(changes) != 8 {
+	if _, err := pub.PublishSet(ctx, changes); err != nil || len(changes) != 9 {
 		t.Fatalf("PublishSet: %v (%d changes)", err, len(changes))
 	}
 }
@@ -194,10 +194,10 @@ func TestCLIAgainstSeToolsDaemon(t *testing.T) {
 	t.Logf("$ ailang-worldd tools list --session <file>")
 	code, stdout, stderr := runCLI(t, r.url, "tools", "list", "--session", r.session)
 	t.Logf("%s", stdout)
-	if code != exitOK || !strings.HasSuffix(stdout, "8 tool(s)\n") {
+	if code != exitOK || !strings.HasSuffix(stdout, "9 tool(s)\n") {
 		t.Fatalf("AC1.3 tools list: exit %d %q %q", code, stdout, stderr)
 	}
-	for _, name := range []string{"ailang-check", "ailang-cli", "ailang-edit", "ailang-read", "ailang-run", "ailang-write", "builtins-search", "examples-search"} {
+	for _, name := range []string{"ailang-check", "ailang-cli", "ailang-edit", "ailang-read", "ailang-run", "ailang-write", "builtins-search", "examples-search", "workspace-exec"} {
 		if !strings.Contains(stdout, name+" ") {
 			t.Fatalf("tools list lacks %s", name)
 		}

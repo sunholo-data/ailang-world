@@ -293,9 +293,11 @@ Host behavior changes are recorded in the [host changelog](HOST_CHANGELOG.md).
 ### 9. Software-engineering tools
 
 **Attended — run verbatim in the row 134 M6 smoke, 2026-10-03** (evidence:
-`design_docs/verification/world-attended-2026-10-03-row134-m6/`). This section serves the eight
+`design_docs/verification/world-attended-2026-10-03-row134-m6/`). This section serves the nine
 `packages/se-tools` transitions (`ailang-read`, `ailang-write`, `ailang-edit`, `ailang-check`,
-`ailang-run`, `builtins-search`, `examples-search`, `ailang-cli`) over `/mcp/` and `/a2a/`.
+`ailang-run`, `builtins-search`, `examples-search`, `ailang-cli`, and row 140's `workspace-exec`)
+over `/mcp/` and `/a2a/`. Until exec profiles land (row 140 M2/M3), `workspace-exec` answers
+every call `{"ok":false,"refused":"no exec profile configured: …"}` and runs nothing.
 Every tool call runs its plan in the pinned interpreter, runs exactly one brokered effect with the
 v0.52.1 tool binary inside the episode's worktree, and commits one log entry. (The M6 smoke ran
 on v0.51.0; row 135 M0 moved the tool pin to v0.52.1 after re-proving the confinement matrix,
@@ -407,11 +409,12 @@ The output is `published transition registry revision 1 (head sha256:…)`. Re-r
 `UNCHANGED`.
 
 **Session (attended, TTY fence).** `session new` mints a session for episode `ep1` holding the
-eight effect grants, one per effect name the se-tools transitions declare (`--preset
+nine effect grants, one per effect name the se-tools transitions declare (`--preset
 se-tools`): `Workspace.Read`, `Workspace.Write` (shared by `write` and `edit`), `Ailang.Check`,
 `Ailang.Run`, `Ailang.RunEnv` and `Ailang.RunNet` (the `ailang-run` calls whose `caps` hold
-`Env` or `Net`, row 135), `Ailang.Discover` (shared by the two searches) and `Ailang.CLI`, each
-with scope `worktree` and a budget of 50 calls. It reuses the worktree made above (without it,
+`Env` or `Net`, row 135), `Ailang.Discover` (shared by the two searches), `Ailang.CLI` and
+`Workspace.Exec` (`workspace-exec`, row 140), each with scope `worktree` and a budget of 50
+calls. It reuses the worktree made above (without it,
 `--repo /tmp/se-proj` makes one), asks y/N on the terminal, and writes the token once to
 `--out` (mode 0600; the file must not exist yet):
 
@@ -469,7 +472,7 @@ curl -s -H "Authorization: Bearer $(cat /tmp/se-session)" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ailang-read","arguments":{"path":"hello.ail"}}}' http://127.0.0.1:7644/mcp/
 ```
 
-The list holds exactly the eight names. Each MCP name is its ID, because `-` needs no
+The list holds exactly the nine names. Each MCP name is its ID, because `-` needs no
 escaping. A session sees only the tools whose effect it holds a grant for. The call result
 carries the handler's fields (`ok`, `content`, `tool`, `policy_digest`) plus
 `world: {effects:[{id, status, record}], plan}`. Resolve the record with
@@ -507,7 +510,7 @@ export WORLD_SESSION=$(cat /tmp/se-session)
 pi --mcp-config /tmp/se-pi-mcp.json
 ```
 
-In that interactive session, run `/mcp tools` and confirm the eight `world_*` names. This first
+In that interactive session, run `/mcp tools` and confirm the nine `world_*` names. This first
 session also writes the adapter's metadata cache (`~/.pi/agent/mcp-cache.json`). Direct tools
 register from that cache, and until it exists they fall back to the proxy. Then run the smoke
 with every built-in disabled:

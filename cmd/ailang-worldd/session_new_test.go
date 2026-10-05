@@ -125,8 +125,8 @@ func TestSessionNewProvisionsTheWorktreeAndTheSession(t *testing.T) {
 	}
 	var grants []broker.Capability
 	_ = json.Unmarshal([]byte(rows[0].GrantsJSON), &grants)
-	if len(grants) != 8 {
-		t.Fatalf("%d grants, want the eight se-tools grants", len(grants))
+	if len(grants) != 9 {
+		t.Fatalf("%d grants, want the nine se-tools grants", len(grants))
 	}
 	for _, g := range grants {
 		if g.Scope != "worktree" || g.Budget != 50 || g.ExpiresAt != now+14400 {
@@ -287,8 +287,8 @@ func TestSessionNewPresetEqualsDeclaredEffects(t *testing.T) {
 	if keys(got) != keys(want) {
 		t.Fatalf("preset %s\nmanifest %s", keys(got), keys(want))
 	}
-	if len(got) != 8 {
-		t.Fatalf("preset has %d grants, want 8", len(got))
+	if len(got) != 9 {
+		t.Fatalf("preset has %d grants, want 9", len(got))
 	}
 }
 
@@ -327,7 +327,7 @@ func TestSessionListBesideALiveWriter(t *testing.T) {
 		t.Fatal(errw.String())
 	}
 	var listing []sessionListing
-	if err := json.Unmarshal(out.Bytes(), &listing); err != nil || len(listing) != 1 || listing[0].Live || len(listing[0].Grants) != 8 {
+	if err := json.Unmarshal(out.Bytes(), &listing); err != nil || len(listing) != 1 || listing[0].Live || len(listing[0].Grants) != 9 {
 		t.Fatalf("json listing %+v %v", listing, err)
 	}
 }

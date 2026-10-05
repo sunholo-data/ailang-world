@@ -93,8 +93,8 @@ func buildIsolatedGateRoot(root string) error {
 	if err != nil {
 		return err
 	}
-	if files != 22 || ailFiles != 20 {
-		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 22 / 20", files, ailFiles)
+	if files != 24 || ailFiles != 22 {
+		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 24 / 22", files, ailFiles)
 	}
 	return nil
 }
@@ -218,7 +218,7 @@ func requirePristineControl(t *testing.T, root string) string {
 	return out
 }
 
-const pristineMarker = "✓ 16/16 required world/ identities verified across 20 module(s)"
+const pristineMarker = "✓ 16/16 required world/ identities verified across 22 module(s)"
 
 // pristineControlCovers is requirePristineControl's contract as a predicate: it returns the shared
 // control's output only when that run carries the marker AND root is digest-identical to the root
@@ -228,8 +228,8 @@ func pristineControlCovers(root string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("shared pristine control could not run: %v", err)
 	}
-	if files != 22 {
-		return "", "", fmt.Errorf("shared pristine control digested %d files, want 22", files)
+	if files != 24 {
+		return "", "", fmt.Errorf("shared pristine control digested %d files, want 24", files)
 	}
 	mine, mineFiles, err := isolatedTreeDigest(root)
 	if err != nil {
@@ -332,8 +332,8 @@ func TestModuleManifestRejectsStrayModule(t *testing.T) {
 	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	control := requirePristineControl(t, root)
-	if got := strings.Count(control, "\n   ai-check "); got != 20 {
-		t.Fatalf("pristine control emitted %d ai-check lines, want 20", got)
+	if got := strings.Count(control, "\n   ai-check "); got != 22 {
+		t.Fatalf("pristine control emitted %d ai-check lines, want 22", got)
 	}
 	probe := filepath.Join(root, "world", "_stray_manifest_probe.ail")
 	const source = "module world/_stray_manifest_probe\n\nexport func strayId(x: int) -> int = x\n"
@@ -483,6 +483,56 @@ func TestSeToolsGateArmsAreLoadBearing(t *testing.T) {
 	}
 }
 
+// TestExecGateArmsAreLoadBearing is row 140 M1's gate mutations: (contract)
+// dropping the passthrough law's ensures from the execargs sketch, or the
+// args-count bound's from se_tools/exec.ail, leaves the module compiling but
+// reds Leg 1 on the vanished identity by name; (sketch tests) changing one of
+// the sketch's matchArgs expectations reds Leg 2c on that test by name, so the
+// sketch's own AILANG body is executed, not only its expectations through Go.
+func TestExecGateArmsAreLoadBearing(t *testing.T) {
+	// Parallel-safe: this arm runs the gate only in its OWN t.TempDir() copy (own .ailang compile
+	// cache), never on the live tree; see sharedPristineControl for the CI budget rationale.
+	t.Parallel()
+	arms := []struct {
+		name, file, old, replacement, want string
+	}{
+		{"sketch contract", "design_docs/sketches/execargs.ail", "ensures { result == (a != \"--\" || passthrough) }\n", "",
+			"dashDashOk) MISSING from verify.results[]"},
+		{"exec contract", "packages/se-tools/se_tools/exec.ail", "ensures { result == (n >= 0 && n <= 16) }\n", "",
+			"argsOk) MISSING from verify.results[]"},
+		{"sketch tests", "design_docs/sketches/execargs.ail", `["--", "./..."]), "refused 0 dash-dash"),`,
+			`["--", "./..."]), "ok []"),`, "execargs sketch test leg: required named tests missing/failing: matchArgs_test_9="},
+	}
+	for _, arm := range arms {
+		t.Run(arm.name, func(t *testing.T) {
+			t.Parallel()
+			root := newIsolatedGateRoot(t)
+			requirePristineControl(t, root)
+			target := filepath.Join(root, filepath.FromSlash(arm.file))
+			raw, err := os.ReadFile(target)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n := strings.Count(string(raw), arm.old); n != 1 {
+				t.Fatalf("mutation anchor count=%d, want 1 for %q", n, arm.old)
+			}
+			if err := writeFileForkLocked(target, []byte(strings.Replace(string(raw), arm.old, arm.replacement, 1)), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			rc, out := runGateAt(t, root, map[string]string{
+				"AILANG_BIN": pinned, "WORLD_PKG_AILANG_BIN": pinned,
+			})
+			if rc != 1 || !strings.Contains(out, arm.want) {
+				t.Fatalf("exec %s mutant not refused by name (want %q): rc=%d\n%s", arm.name, arm.want, rc, out)
+			}
+			if strings.Contains(out, "verify gate PASSED") {
+				t.Fatalf("exec %s mutant printed terminal success\n%s", arm.name, out)
+			}
+			requireLiveTreeUntouched(t)
+		})
+	}
+}
+
 func TestModuleManifestRejectsDeletedModule(t *testing.T) {
 	// Parallel-safe: this arm runs the gate only in its OWN t.TempDir() copy (own .ailang compile
 	// cache), never on the live tree; see sharedPristineControl for the CI budget rationale.
@@ -511,6 +561,7 @@ func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
 	const old = `LEG1_MODULES=(
   design_docs/sketches/effectbroker.ail
   design_docs/sketches/effectplan.ail
+  design_docs/sketches/execargs.ail
   design_docs/sketches/logepoch.ail
   design_docs/sketches/storejournal.ail
   design_docs/sketches/transitions.ail
@@ -522,6 +573,7 @@ func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
   packages/se-tools/se_tools/cli.ail
   packages/se-tools/se_tools/edit.ail
   packages/se-tools/se_tools/examples_search.ail
+  packages/se-tools/se_tools/exec.ail
   packages/se-tools/se_tools/read.ail
   packages/se-tools/se_tools/run.ail
   packages/se-tools/se_tools/write.ail
