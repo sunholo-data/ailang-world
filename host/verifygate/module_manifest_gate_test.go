@@ -93,8 +93,8 @@ func buildIsolatedGateRoot(root string) error {
 	if err != nil {
 		return err
 	}
-	if files != 22 || ailFiles != 20 {
-		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 22 / 20", files, ailFiles)
+	if files != 23 || ailFiles != 21 {
+		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 23 / 21", files, ailFiles)
 	}
 	return nil
 }
@@ -218,7 +218,7 @@ func requirePristineControl(t *testing.T, root string) string {
 	return out
 }
 
-const pristineMarker = "✓ 16/16 required world/ identities verified across 20 module(s)"
+const pristineMarker = "✓ 16/16 required world/ identities verified across 21 module(s)"
 
 // pristineControlCovers is requirePristineControl's contract as a predicate: it returns the shared
 // control's output only when that run carries the marker AND root is digest-identical to the root
@@ -228,8 +228,8 @@ func pristineControlCovers(root string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("shared pristine control could not run: %v", err)
 	}
-	if files != 22 {
-		return "", "", fmt.Errorf("shared pristine control digested %d files, want 22", files)
+	if files != 23 {
+		return "", "", fmt.Errorf("shared pristine control digested %d files, want 23", files)
 	}
 	mine, mineFiles, err := isolatedTreeDigest(root)
 	if err != nil {
@@ -332,8 +332,8 @@ func TestModuleManifestRejectsStrayModule(t *testing.T) {
 	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	control := requirePristineControl(t, root)
-	if got := strings.Count(control, "\n   ai-check "); got != 20 {
-		t.Fatalf("pristine control emitted %d ai-check lines, want 20", got)
+	if got := strings.Count(control, "\n   ai-check "); got != 21 {
+		t.Fatalf("pristine control emitted %d ai-check lines, want 21", got)
 	}
 	probe := filepath.Join(root, "world", "_stray_manifest_probe.ail")
 	const source = "module world/_stray_manifest_probe\n\nexport func strayId(x: int) -> int = x\n"
@@ -511,6 +511,7 @@ func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
 	const old = `LEG1_MODULES=(
   design_docs/sketches/effectbroker.ail
   design_docs/sketches/effectplan.ail
+  design_docs/sketches/execargs.ail
   design_docs/sketches/logepoch.ail
   design_docs/sketches/storejournal.ail
   design_docs/sketches/transitions.ail
