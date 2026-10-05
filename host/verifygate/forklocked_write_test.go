@@ -334,7 +334,7 @@ func TestKernelRefusesExecOfWriterOpenFile(t *testing.T) {
 
 // ---- mechanical guard: every file write in this package is fork-locked ----
 
-var bannedOSFuncs = map[string]bool{"WriteFile": true, "OpenFile": true, "Create": true, "CreateTemp": true, "NewFile": true}
+var bannedOSFuncs = map[string]bool{"WriteFile": true, "OpenFile": true, "Create": true, "CreateTemp": true, "NewFile": true, "CopyFS": true}
 var bannedSyscallFuncs = map[string]bool{"Open": true, "Openat": true, "Creat": true}
 
 // wrapperNames are the fork-locked entry points whose uses the floor counts
@@ -562,6 +562,8 @@ func TestVerifygateTestWritesAreForkLocked(t *testing.T) {
 		// returned opener stays exempt.
 		{"Smuggle", "package p\n\nimport \"os\"\n\n" + doDecl + "\nfunc h() {\n\t_ = forkLockedDo(func() (*os.File, error) {\n\t\t_ = os.WriteFile(\"y\", nil, 0o644)\n\t\treturn os.OpenFile(\"x\", 0, 0)\n\t}, nil, nil)\n}\n",
 			[]string{"fixture_Smuggle.go:9|raw os.WriteFile in func h"}, []string{"fixture_Smuggle.go:10"}},
+		{"CopyFS", "package p\n\nimport \"os\"\n\nfunc h() { _ = os.CopyFS(\"dst\", os.DirFS(\"src\")) }\n",
+			[]string{"fixture_CopyFS.go:5|raw os.CopyFS in func h"}, nil},
 	}
 	for _, p := range positives {
 		fname := "fixture_" + p.name + ".go"
@@ -644,7 +646,7 @@ func loadGoDirs(roots ...string) (map[string]map[string][]byte, error) {
 // X identifier name, so an aliased import evades it (R2').
 func parallelWriteForkViolations(dirs map[string]map[string][]byte) (viol []string, nDirs, nWriteFork int, err error) {
 	writeSel := map[string]map[string]bool{
-		"os":      {"WriteFile": true, "OpenFile": true, "Create": true, "CreateTemp": true, "NewFile": true},
+		"os":      {"WriteFile": true, "OpenFile": true, "Create": true, "CreateTemp": true, "NewFile": true, "CopyFS": true},
 		"syscall": {"Open": true, "Openat": true, "Creat": true},
 	}
 	forkSel := map[string]map[string]bool{
@@ -742,5 +744,17 @@ func TestNoParallelWriteForkPackagesOutsideVerifygate(t *testing.T) {
 	}
 	if len(nv) != 0 {
 		t.Fatalf("known negative flagged: %v", nv)
+	}
+
+	// Each fixture below is its own single-key map and its own call: the
+	// function reports every callsite across all keys of one map.
+	// os.CopyFS is a write (not host-prefixed, so only writeSel is exercised).
+	const bodyCopyFS = "package zz\n\nimport (\n\t\"os\"\n\t\"os/exec\"\n\t\"testing\"\n)\n\nfunc TestX(t *testing.T) {\n\tt.Parallel()\n\t_ = os.CopyFS(\"dst\", os.DirFS(\"src\"))\n\t_ = exec.Command(\"x\")\n}\n"
+	cv, _, _, err := parallelWriteForkViolations(map[string]map[string][]byte{"zzcopyfs": {"x_test.go": []byte(bodyCopyFS)}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cv) != 1 || !strings.HasPrefix(cv[0], "zzcopyfs/x_test.go:10: t.Parallel in a write+fork package") {
+		t.Fatalf("known CopyFS positive not named: %v", cv)
 	}
 }
