@@ -1,6 +1,6 @@
 # w-verifygate-forklock-guard-residuals-2
 
-**Status**: PLANNED · **Queue row**: 143 · **Clause**: clause-2 (MET — hygiene; below every routable UNMET-clause row, rule (e))
+**Status**: IMPLEMENTED (iter-231; judge PASS 94 r1 → 97 r2) · **Queue row**: 143 · **Clause**: clause-2 (MET — hygiene; below every routable UNMET-clause row, rule (e))
 **Author lane**: pi:ollama/glm-5.3:cloud (iteration 230 designer) · **Date**: 2026-10-04 · **Base**: `95575aa`
 **Parent**: [w-verifygate-forklock-guard-residuals](../implemented/w-verifygate-forklock-guard-residuals.md) (landed `2da63de`, #198;
 judge verdict [evaluator-r1](../verification/world-iter229/evaluator-r1.md), PASS 92, zero blocking; new mutants N3, N5, N6, N10, N15b SURVIVED).
