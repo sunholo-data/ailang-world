@@ -1,0 +1,5 @@
+{
+ "package": "@anthropic-ai/sandbox-runtime",
+ "version": "0.0.78",
+ "cli_sha256": "3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e"
+}
