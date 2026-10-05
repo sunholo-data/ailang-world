@@ -43,15 +43,25 @@ jobs:
           GOT=$(sha256sum node_modules/@anthropic-ai/sandbox-runtime/dist/cli.js | cut -d' ' -f1)
           echo "srt $V cli.js sha256 $GOT (pinned $WANT)"
           test "$GOT" = "$WANT"
-      - name: Run the matrix
+      # Design §4.6 as written: the archive (and srt's in-sandbox apply-seccomp helper) under the
+      # read-denied state dir. Recorded, not gating: on Linux it fails every arm (rc 127).
+      - name: Run the matrix — design as written (recorded, expected to fail on Linux)
+        continue-on-error: true
         run: |
           python3 design_docs/verification/world-row140-m0/m0_matrix.py \
             --srt-node-modules "$RUNNER_TEMP/srt/node_modules" \
-            --node "$(command -v node)" \
-            --json "$RUNNER_TEMP/m0-linux.json"
+            --node "$(command -v node)" --seccomp-read none \
+            --json "$RUNNER_TEMP/m0-linux-none.json"
+      # The amended rendering: re-allow ONLY <archive>/…/vendor/seccomp/<arch> for reading. Gating.
+      - name: Run the matrix — seccomp helper re-allowed (gating)
+        run: |
+          python3 design_docs/verification/world-row140-m0/m0_matrix.py \
+            --srt-node-modules "$RUNNER_TEMP/srt/node_modules" \
+            --node "$(command -v node)" --seccomp-read allowread \
+            --json "$RUNNER_TEMP/m0-linux-allowread.json"
       - name: Upload the results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: m0-linux
-          path: ${{ runner.temp }}/m0-linux.json
+          path: ${{ runner.temp }}/m0-linux-*.json

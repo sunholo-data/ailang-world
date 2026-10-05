@@ -19,6 +19,9 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--srt-node-modules", required=True, help="a node_modules dir holding @anthropic-ai/sandbox-runtime and its deps")
 ap.add_argument("--node", required=True, help="absolute path of the node binary World would verify")
 ap.add_argument("--json", help="write the results here")
+ap.add_argument("--seccomp-read", choices=["none", "allowread"], default="none",
+                help="Linux: how srt's in-sandbox apply-seccomp helper (archived under the read-denied state dir) is reached. "
+                     "none = design §4.6 as written; allowread = re-allow ONLY <archive>/…/vendor/seccomp/<arch> for reading")
 a = ap.parse_args()
 
 NODE = os.path.realpath(a.node)
@@ -85,9 +88,15 @@ DENY_WRITE = [os.path.join(EP1, n) for n in (".git", ".github", ".pi", ".claude"
 if sys.platform != "darwin":
     DENY_WRITE = [p for p in DENY_WRITE if not p.startswith("/private/")]
 
+SECCOMP_DIR = os.path.join(ARCH_NM, "@anthropic-ai", "sandbox-runtime", "vendor", "seccomp",
+                           {"x86_64": "x64", "aarch64": "arm64", "arm64": "arm64"}.get(platform.machine(), platform.machine()))
+EXTRA_READ = [SECCOMP_DIR] if (a.seccomp_read == "allowread" and sys.platform != "darwin") else []
+meta["seccomp_read"] = a.seccomp_read
+meta["extra_allow_read"] = EXTRA_READ
+
 def settings(name, **over):
     s = {
-        "filesystem": {"denyRead": [HOME, STATE, ROOT], "allowRead": [EP1, CACHE],
+        "filesystem": {"denyRead": [HOME, STATE, ROOT], "allowRead": [EP1, CACHE] + EXTRA_READ,
                        "allowWrite": [EP1, CACHE], "denyWrite": DENY_WRITE},
         "network": {"allowedDomains": [], "deniedDomains": [], "allowLocalBinding": False, "allowAllUnixSockets": False},
         "enableWeakerNetworkIsolation": False, "allowAppleEvents": False,
@@ -224,16 +233,16 @@ try:
 
     # ---- V3: grandchild, orphan, symlink writes outside ----
     g = os.path.join(EP2, "grandchild.txt")
-    srt(["/bin/sh", "-c", f'sh -c "sh -c \\"echo z > {g}\\""'])
-    rec("V3 grandchild write outside refused", True, "absent", os.path.exists(g), not os.path.exists(g))
+    rc, out = srt(["/bin/sh", "-c", f'echo WORLD-PROBE-RAN; sh -c "sh -c \\"echo z > {g}\\""'])
+    rec("V3 grandchild write outside refused", True, "ran; absent", f"{tok(out)}; exists={os.path.exists(g)}", tok(out) == "WORLD-PROBE-RAN" and not os.path.exists(g))
     o = os.path.join(EP2, "orphan.txt")
-    srt(["/bin/sh", "-c", f'( nohup sh -c "sleep 2; echo late > {o}" >/dev/null 2>&1 & ); echo parent-exits'])
+    rc, out = srt(["/bin/sh", "-c", f'( nohup sh -c "sleep 2; echo late > {o}" >/dev/null 2>&1 & ); echo WORLD-PROBE-RAN'])
     time.sleep(3)
-    rec("V3 orphan write (2 s after srt exits) refused", True, "absent", os.path.exists(o), not os.path.exists(o))
+    rec("V3 orphan write (2 s after srt exits) refused", True, "ran; absent", f"{tok(out)}; exists={os.path.exists(o)}", tok(out) == "WORLD-PROBE-RAN" and not os.path.exists(o))
     os.symlink(EP2, os.path.join(EP1, "lnk"))
     s = os.path.join(EP2, "viaslink.txt")
-    srt(["/bin/sh", "-c", "echo y > lnk/viaslink.txt"])
-    rec("V3 write through symlink to sibling refused", True, "absent", os.path.exists(s), not os.path.exists(s))
+    rc, out = srt(["/bin/sh", "-c", "echo WORLD-PROBE-RAN; echo y > lnk/viaslink.txt"])
+    rec("V3 write through symlink to sibling refused", True, "ran; absent", f"{tok(out)}; exists={os.path.exists(s)}", tok(out) == "WORLD-PROBE-RAN" and not os.path.exists(s))
 
     # ---- arm 6: network against a LIVE listener with accept count (V37, V38) ----
     srv = socket.socket(); srv.bind(("127.0.0.1", 0)); srv.listen(16); port = srv.getsockname()[1]
@@ -250,15 +259,15 @@ try:
     rc, out = srt(conn); time.sleep(0.3); n1 = len(accepts)
     rec("arm6 raw loopback connect refused (live listener)", True, "control CONNECTED count 1; sbx not CONNECTED; count stays 1",
         f"control={ctl} n0={n0}; sbx={tok(out)} n1={n1}", ctl == "WORLD-PROBE-CONNECTED" and n0 == 1 and tok(out) != "WORLD-PROBE-CONNECTED" and tok(out) is not None and n1 == n0)
-    rc, out = srt(["/bin/sh", "-c", f"curl -sS --max-time 5 -o /dev/null -w '%{{http_code}}' http://127.0.0.1:{port}/; echo \" rc=$?\""], tramp=False)
+    rc, out = srt(["/bin/sh", "-c", f"echo WORLD-PROBE-RAN; curl -sS --max-time 5 -o /dev/null -w '%{{http_code}}' http://127.0.0.1:{port}/; echo \" rc=$?\""], tramp=False)
     time.sleep(0.3); n2 = len(accepts)
-    rec("arm6 loopback via srt proxy env (no trampoline) refused", True, "count unchanged", f"{out[:160]} n2={n2}", n2 == n0)
-    rc, out = srt(["/bin/sh", "-c", f"curl -sS --noproxy '*' --max-time 5 -o /dev/null http://127.0.0.1:{port}/; echo \" rc=$?\""], tramp=False)
+    rec("arm6 loopback via srt proxy env (no trampoline) refused", True, "ran; count unchanged", f"{out[:160]} n2={n2}", "WORLD-PROBE-RAN" in out and n2 == n0)
+    rc, out = srt(["/bin/sh", "-c", f"echo WORLD-PROBE-RAN; curl -sS --noproxy '*' --max-time 5 -o /dev/null http://127.0.0.1:{port}/; echo \" rc=$?\""], tramp=False)
     time.sleep(0.3); n3 = len(accepts)
-    rec("arm6 loopback with --noproxy refused", True, "count unchanged", f"{out[:160]} n3={n3}", n3 == n0)
+    rec("arm6 loopback with --noproxy refused", True, "ran; count unchanged", f"{out[:160]} n3={n3}", "WORLD-PROBE-RAN" in out and n3 == n0)
     srv.close()
-    rc, out = srt(["/bin/sh", "-c", "curl -sS --max-time 8 -o /dev/null -w '%{http_code}' https://example.com/; echo \" rc=$?\""], tramp=False)
-    rec("V9 external https refused (allowedDomains=[])", True, "no 200", out[:160], "200" not in out.split(" rc=")[0])
+    rc, out = srt(["/bin/sh", "-c", "echo WORLD-PROBE-RAN; curl -sS --max-time 8 -o /dev/null -w '%{http_code}' https://example.com/; echo \" rc=$?\""], tramp=False)
+    rec("V9 external https refused (allowedDomains=[])", True, "ran; no 200", out[:160], "WORLD-PROBE-RAN" in out and "200" not in out.split(" rc=")[0])
     bind = js("const n=require('net');const s=n.createServer();s.on('error',e=>console.log('WORLD-PROBE-REFUSED '+e.code));s.listen(0,'127.0.0.1',()=>{console.log('WORLD-PROBE-BOUND');s.close()})")
     rc, out = srt(bind)
     rec("V9 bind 127.0.0.1 refused (allowLocalBinding=false)", True, "not BOUND", tok(out), tok(out) is not None and tok(out) != "WORLD-PROBE-BOUND")

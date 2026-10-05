@@ -7,8 +7,8 @@ META {"platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O", "machine": "arm64", "sr
 [PASS] arm2 write $HOME refused: expected 'REFUSED; absent'; observed 'WORLD-PROBE-REFUSED EPERM; exists=False'
 [PASS] arm2 write state dir refused: expected 'REFUSED; absent'; observed 'WORLD-PROBE-REFUSED EPERM; exists=False'
 [PASS] arm3 read decoy $HOME/.ailang-worldd-exec-probe-decoy-m0 refused: expected 'control READ; sandboxed REFUSED'; observed 'control=WORLD-PROBE-READ; sbx=WORLD-PROBE-REFUSED EPERM'
-[PASS] arm3 read decoy $HOME/.world-row140-m0-ce7s0n2h/state/exec-probe/decoy refused: expected 'control READ; sandboxed REFUSED'; observed 'control=WORLD-PROBE-READ; sbx=WORLD-PROBE-REFUSED EPERM'
-[PASS] arm3 read decoy $HOME/.world-row140-m0-ce7s0n2h/workspace/.exec-probe-sibling/decoy refused: expected 'control READ; sandboxed REFUSED'; observed 'control=WORLD-PROBE-READ; sbx=WORLD-PROBE-REFUSED EPERM'
+[PASS] arm3 read decoy $HOME/.world-row140-m0-nxxjn_1_/state/exec-probe/decoy refused: expected 'control READ; sandboxed REFUSED'; observed 'control=WORLD-PROBE-READ; sbx=WORLD-PROBE-REFUSED EPERM'
+[PASS] arm3 read decoy $HOME/.world-row140-m0-nxxjn_1_/workspace/.exec-probe-sibling/decoy refused: expected 'control READ; sandboxed REFUSED'; observed 'control=WORLD-PROBE-READ; sbx=WORLD-PROBE-REFUSED EPERM'
 [PASS] arm3b read sibling episode file refused (V35): expected 'REFUSED'; observed 'WORLD-PROBE-REFUSED EPERM'
 [PASS] V42 child cannot read the archived cli.js: expected 'REFUSED'; observed 'WORLD-PROBE-REFUSED EPERM'
 [PASS] V8 ls $HOME refused: expected 'non-zero, no listing of BASE'; observed 'rc 1: ls: $HOME: Operation not permitted'
@@ -25,16 +25,16 @@ META {"platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O", "machine": "arm64", "sr
 [PASS] arm5 exit 3 -> 3: expected 3; observed 3
 [PASS] V11 missing binary -> 127: expected 127; observed 127
 [PASS] (info) V11 bare srt (no trampoline) SIGTERM rc: expected '0 on macOS 0.0.71/0.0.78 (the hazard)'; observed 0
-[PASS] V41 child env == rendered K=V set (no proxy vars, no TMPDIR=/tmp/claude): expected ['CI=1', 'HOME=$HOME/.world-row140-m0-ce7s0n2h/state/exec-cache/ep1/proj/home', 'LANG=C.UTF-8', 'LC_ALL=C.UTF-8', 'PATH=/usr/bin:/bin', 'TMPDIR=$HOME/.world-row140-m0-ce7s0n2h/state/exec-cache/ep1/proj/tmp']; observed ['CI=1', 'HOME=$HOME/.world-row140-m0-ce7s0n2h/state/exec-cache/ep1/proj/home', 'LANG=C.UTF-8', 'LC_ALL=C.UTF-8', 'PATH=/usr/bin:/bin', 'TMPDIR=$HOME/.world-row140-m0-ce7s0n2h/state/exec-cache/ep1/proj/tmp']
+[PASS] V41 child env == rendered K=V set (no proxy vars, no TMPDIR=/tmp/claude): expected ['CI=1', 'HOME=$HOME/.world-row140-m0-nxxjn_1_/state/exec-cache/ep1/proj/home', 'LANG=C.UTF-8', 'LC_ALL=C.UTF-8', 'PATH=/usr/bin:/bin', 'TMPDIR=$HOME/.world-row140-m0-nxxjn_1_/state/exec-cache/ep1/proj/tmp']; observed ['CI=1', 'HOME=$HOME/.world-row140-m0-nxxjn_1_/state/exec-cache/ep1/proj/home', 'LANG=C.UTF-8', 'LC_ALL=C.UTF-8', 'PATH=/usr/bin:/bin', 'TMPDIR=$HOME/.world-row140-m0-nxxjn_1_/state/exec-cache/ep1/proj/tmp']
 [PASS] V12 argv verbatim after -- (incl. -c, -s, X=Y): expected '[a b][$(id)][-c][--][X=Y][-s][/nonexistent.json]'; observed '[a b][$(id)][-c][--][X=Y][-s][/nonexistent.json]'
 [PASS] (info) V12 WITHOUT -- srt takes -c (the hazard): expected 'OPTION-INJECTED executed'; observed 'rc 0: OPTION-INJECTED'
-[PASS] V3 grandchild write outside refused: expected 'absent'; observed False
-[PASS] V3 orphan write (2 s after srt exits) refused: expected 'absent'; observed False
-[PASS] V3 write through symlink to sibling refused: expected 'absent'; observed False
+[PASS] V3 grandchild write outside refused: expected 'ran; absent'; observed 'WORLD-PROBE-RAN; exists=False'
+[PASS] V3 orphan write (2 s after srt exits) refused: expected 'ran; absent'; observed 'WORLD-PROBE-RAN; exists=False'
+[PASS] V3 write through symlink to sibling refused: expected 'ran; absent'; observed 'WORLD-PROBE-RAN; exists=False'
 [PASS] arm6 raw loopback connect refused (live listener): expected 'control CONNECTED count 1; sbx not CONNECTED; count stays 1'; observed 'control=WORLD-PROBE-CONNECTED n0=1; sbx=WORLD-PROBE-REFUSED EPERM n1=1'
-[PASS] arm6 loopback via srt proxy env (no trampoline) refused: expected 'count unchanged'; observed "000 rc=7\ncurl: (7) Failed to connect to 127.0.0.1 port 51658 after 0 ms: Couldn't connect to server n2=1"
-[PASS] arm6 loopback with --noproxy refused: expected 'count unchanged'; observed "rc=7\ncurl: (7) Failed to connect to 127.0.0.1 port 51658 after 0 ms: Couldn't connect to server n3=1"
-[PASS] V9 external https refused (allowedDomains=[]): expected 'no 200'; observed '000 rc=56\ncurl: (56) CONNECT tunnel failed, response 403'
+[PASS] arm6 loopback via srt proxy env (no trampoline) refused: expected 'ran; count unchanged'; observed "WORLD-PROBE-RAN\n000 rc=7\ncurl: (7) Failed to connect to 127.0.0.1 port 52165 after 0 ms: Couldn't connect to server n2=1"
+[PASS] arm6 loopback with --noproxy refused: expected 'ran; count unchanged'; observed "WORLD-PROBE-RAN\n rc=7\ncurl: (7) Failed to connect to 127.0.0.1 port 52165 after 0 ms: Couldn't connect to server n3=1"
+[PASS] V9 external https refused (allowedDomains=[]): expected 'ran; no 200'; observed 'WORLD-PROBE-RAN\n000 rc=56\ncurl: (56) CONNECT tunnel failed, response 403'
 [PASS] V9 bind 127.0.0.1 refused (allowLocalBinding=false): expected 'not BOUND'; observed 'WORLD-PROBE-REFUSED EPERM'
 [PASS] (info) V9 direct DNS: expected 'REFUSED (macOS)'; observed 'WORLD-PROBE-REFUSED ENOTFOUND'
 [PASS] V13 killpg(srt group) leaves no sleeper: expected 'before 2, after 0'; observed 'before 2, after 0'
