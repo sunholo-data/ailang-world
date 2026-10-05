@@ -4,7 +4,7 @@
 **Author lane**: pi:ollama/glm-5.3:cloud (iteration 230 designer) · **Date**: 2026-10-04 · **Base**: `95575aa`
 **Parent**: [w-verifygate-forklock-guard-residuals](../implemented/w-verifygate-forklock-guard-residuals.md) (landed `2da63de`, #198;
 judge verdict [evaluator-r1](../verification/world-iter229/evaluator-r1.md), PASS 92, zero blocking; new mutants N3, N5, N6, N10, N15b SURVIVED).
-**Revision**: r2 (quorum r1 fixes).
+**Revision**: r3 (quorum r2 fixes, iteration 231 designer: V13–V16 measured; gemini overlay premise refuted).
 **Scope**: `host/verifygate/forklocked_write_test.go` only. Test-only. No production code, no `.ail`, no `tools/launchd/*`, no
 gate-script semantics, and no `ci.yml` change (V10: this row adds no top-level test name, so the CI step's list cannot drift). Estimate ~0.25 d.
 
@@ -52,11 +52,13 @@ Tests touched (names, no new top-level test): `TestVerifygateTestWritesAreForkLo
   `{"CopyFS", "package p\n\nimport \"os\"\n\nfunc h() { _ = os.CopyFS(\"dst\", os.DirFS(\"src\")) }\n", []string{"fixture_CopyFS.go:5|raw os.CopyFS in func h"}, nil}`.
   It type-checks under the scan's source importer (`os.DirFS` comes from the same `"os"` import;
   no `io/fs` identifier appears).
-- Tripwire positive, added to the `pos` map (l.730) with key `"zzcopyfs"` — deliberately NOT
-  host-prefixed, so it isolates the `writeSel` claim from M3's dir-exemption claim — with a
-  `bodyCopyFS` const = the `body` template (l.729) with the write line replaced by
-  `_ = os.CopyFS("dst", os.DirFS("src"))`. Expect exactly 1 violation prefixed
-  `zzcopyfs/x_test.go:10: t.Parallel in a write+fork package`.
+- Tripwire positive keyed `"zzcopyfs"` — deliberately NOT host-prefixed, so it isolates the
+  `writeSel` claim from M3's dir-exemption claim — with a `bodyCopyFS` const = the `body`
+  template (l.729) with the write line replaced by `_ = os.CopyFS("dst", os.DirFS("src"))`.
+  It goes in its OWN single-key map and its OWN `parallelWriteForkViolations` call, NOT into
+  the existing `pos` map: reporting is per-callsite over all keys (V16), so a second key in `pos`
+  makes `len(pv) == 2` and reds the existing `len(pv) != 1` assertion (l.735). Expect exactly 1
+  violation prefixed `zzcopyfs/x_test.go:10: t.Parallel in a write+fork package`.
 - Acceptance (mutant → firing assertion):
   - **AC1 (N10, live escape)**: add `func evalCopyFS230() { _ = os.CopyFS("dst", os.DirFS("testdata")) }`
     to `ail_binary_gate_test.go` (scratch worktree) → the live scan reds
@@ -73,12 +75,18 @@ Tests touched (names, no new top-level test): `TestVerifygateTestWritesAreForkLo
 
 **M2 — exemption identity and opener name pinned (kills N3, N5).** Same file, same positives
 slice (after M1's `CopyFS` entry). Test touched: `TestVerifygateTestWritesAreForkLocked`.
-- **P-LocalDo (N3)**: `{"LocalDo", "package p\n\nimport \"os\"\n\n" + doDecl + "\nfunc h() {\n\tforkLockedDo := func(open func() (*os.File, error), fill func(*os.File, error), hold func()) error { return nil }\n\t_ = forkLockedDo(func() (*os.File, error) { return os.OpenFile(\"x\", 0, 0) }, nil, nil)\n}\n", []string{"fixture_LocalDo.go:9|raw os.OpenFile in func h"}, nil}`.
+- **P-LocalDo (N3)**: `{"LocalDo", "package p\n\nimport \"os\"\n\n" + doDecl + "\nfunc h() {\n\tforkLockedDo := func(open func() (*os.File, error), fill func(*os.File) error, hold func()) error { return nil }\n\t_ = forkLockedDo(func() (*os.File, error) { return os.OpenFile(\"x\", 0, 0) }, nil, nil)\n}\n", []string{"fixture_LocalDo.go:9|raw os.OpenFile in func h"}, nil}`.
   The local callee is a `*types.Var`, so the identity check (l.469) refuses the exemption; the N3
-  bare-name mutant (`fid.Name != "forkLockedDo"`) exempts it and the fixture reds.
+  bare-name mutant (`fid.Name != "forkLockedDo"`) exempts it and the fixture reds. (r3: r2's
+  local type spelled `fill func(*os.File, error)` — a typo; aligned to `doDecl`'s signature for
+  readability. Either spelling type-checks: the local is a distinct `*types.Var` and gets `nil`.)
 - **P-CreateOpener (N5)**: `{"CreateOpener", "package p\n\nimport \"os\"\n\n" + doDecl + "\nfunc h() {\n\t_ = forkLockedDo(func() (*os.File, error) { return os.Create(\"x\") }, nil, nil)\n}\n", []string{"fixture_CreateOpener.go:8|raw os.Create in func h"}, nil}`.
   `os.Create` is banned (l.337) and only `OpenFile`/`CreateTemp` are exempt openers (l.489); the
   N5 mutant (any `os` opener exempt) reds.
+- Expected lines (V13): `doDecl` is one line ending in `\n`, so in either concatenation lines
+  1–4 are package/blank/import/blank, line 5 is `doDecl`, line 6 blank, line 7 `func h() {`.
+  LocalDo's `os.OpenFile` is line 9 (line 8 is the local `forkLockedDo :=`); CreateOpener's
+  `os.Create` is line 8 — the same offset P-Smuggle already pins and passes (V11).
 - The existing N-OpenClosure (l.596) and P-Smuggle (l.563) stay unchanged and green: the
   exemption stays live and stays narrow (only the returned `os.OpenFile` opener is exempt).
 - Acceptance:
@@ -99,22 +107,26 @@ slice (after M1's `CopyFS` entry). Test touched: `TestVerifygateTestWritesAreFor
 - **Negative keyed `host/verifygate`**: the same parallel body keyed `"host/verifygate"` →
   0 violations. It pins the exemption at fixture level; replacing the l.697 guard with `true`
   reds this fixture (`known negative flagged: [host/verifygate/x_test.go:10 …]`, l.744) and the
-  live test (the 10 real `t.Parallel()` calls, V7).
+  live test (the 10 real `t.Parallel()` calls, V14). Kept despite quorum r2's overlay objection,
+  whose premise is false (V17: fixtures are parsed in memory in a separate call, no
+  `packages.Load`). It is not redundant: the 10 live calls are outside this row's control and a
+  refactor could remove them; the fixture is the durable pin.
+- Both new M3 fixtures, like M1's, are each their own single-key map and own call (V16).
 - The existing `zz` positive (l.730) and no-Parallel negative (l.738) stay untouched.
 - Acceptance:
   - **AC6 (N6)**: apply the judge's N6 mutant at l.697 → `known positive not named: []` on the
     `host/zz` fixture; the live test stays green, proving only the fixture sees it.
   - **AC7 (exemption liveness)**: replace l.697 with `true` → the `host/verifygate` negative
-    fixture reds AND the live test reds with 10 real violations (V7). The executor must re-ground
-    AC7's "10 real violations" prediction first — re-measure at the package level that
-    host/verifygate's real (non-fixture) code contains both a `writeSel`-selected writer call and
-    a fork, and record the observed violation count under the `true` mutant before treating the
-    drill as passed.
+    fixture reds AND the live test reds with exactly 10 per-callsite violations (MEASURED, V14).
+    Re-measure only if anything landed in `host/verifygate` since `95575aa`.
   - **AC8 (regression)**: every row-142 AC stays green; the six iter-228 survivors stay dead;
     floors unchanged (`filesSeen` ≥ 9, `wrapperCalls` ≥ 21, `nDirs` ≥ 26, `nWriteFork` ≥ 12);
-    all five fork-lock tests PASS plain (baseline 6.3 s, V11) and `-race`;
-    `verify_go.sh`, `verify_ail.sh` (no `.ail` touched) and `check_no_personal_email.sh` pass
-    with no gate-script change.
+    all five fork-lock tests PASS plain (baseline 6.3 s, V11) and `-race`; and the repo's
+    CLAUDE.md verify gate, with no gate-script change:
+    `AILANG_BIN=/Users/voightkampff/.pinned-ailang-tools/v0.52.1/ailang ./scripts/verify_ail.sh`
+    (no `.ail` touched), `go vet ./host/verifygate/` (the `_test.go` compile fence),
+    `go build ./... && go test ./...`, and `check_no_personal_email.sh`. (`verify_go.sh` pins an
+    old binary and is not this repo's gate — r2's citation of it is withdrawn.)
 
 ## Verification Log
 
@@ -134,6 +146,11 @@ on go1.26.6 darwin/arm64.
 | V9 | Fixture inventory and insertion anchors | `grep -n 'const doDecl\|"RootWrite"\|"Smuggle"\|"OpenClosure"\|not reported\|exempt opener\|const body\|pos := map\|neg := map\|known positive not named\|known negative flagged\|want >= 26\|want >= 12\|t.Parallel in a write+fork' <file>` | doDecl l.538; positives RootWrite l.559, Smuggle l.563–565, slice closes l.566; failure texts l.581 (`not reported`) and l.587 (`exempt opener … reported`); negative OpenClosure l.596; tripwire `body` l.729, `pos` keyed `zz` l.730, prefix assertion `zz/x_test.go:10` l.735–736, `neg` l.738, `known negative flagged` l.744; floors l.721 (`>= 26`) / l.724 (`>= 12`); message l.699 |
 | V10 | The CI verbose step needs no change | `grep -n 'Fork-locked' .github/workflows/ci.yml`; `sed -n '196,216p' .github/workflows/ci.yml` | step `Fork-locked write tests, verbose (w-verifygate-etxtbsy linux gate)` at l.201; its `tests=` list names all five fork-lock tests — including both tests this row deepens — and the loop asserts a top-level `--- PASS: ` line per test. M1–M3 add no top-level test name, so the list cannot drift and no `ci.yml` edit is made |
 | V11 | Live baseline of the five tests at the base | `go test ./host/verifygate/ -run 'TestForkLocked\|TestVerifygateTestWritesAreForkLocked\|TestNoParallel\|TestKernelRefuses' -count=1 -v` | `PASS TestForkLockedWriteBlocksConcurrentFork (0.26s)`; `PASS TestForkLockedWrappersHoldLockThroughClose (0.00s)`; `SKIP TestKernelRefusesExecOfWriterOpenFile` (darwin, as designed); `PASS TestVerifygateTestWritesAreForkLocked (5.76s)`; `PASS TestNoParallelWriteForkPackagesOutsideVerifygate (0.10s)`; `ok 6.296s` |
+| V13 | `doDecl`'s expansion fixes M2's expected lines | `sed -n '538p;563,564p' host/verifygate/forklocked_write_test.go` | l.538 `const doDecl = "func forkLockedDo(open func() (*os.File, error), fill func(*os.File) error, hold func()) error { return nil }\n"` — ONE line, trailing `\n`. With prefix `"package p\n\nimport \"os\"\n\n"` + doDecl + `"\nfunc h() {"`: l.1–4 package/blank/import/blank, l.5 doDecl, l.6 blank, l.7 `func h() {` → LocalDo `os.OpenFile` = 9, CreateOpener `os.Create` = 8. Cross-check: P-Smuggle (l.563–564) uses the same prefix, has its `os.WriteFile` on the second line inside `h`, and expects `fixture_Smuggle.go:9` — passing today (V11) |
+| V14 | AC7's count is measured, not predicted | (r3 designer, after the controller) `sed -i '' '697s/if dir != "host\/verifygate" {/if true {/' <file>`; `go test ./host/verifygate/ -run '^TestNoParallelWriteForkPackagesOutsideVerifygate$' -count=1`; `git checkout -- <file>; git status --porcelain \| wc -l` | `--- FAIL` at l.718 with exactly 10 lines: `host/verifygate/mission_config_gate_test.go:246` and `module_manifest_gate_test.go:255,332,378,411,447,458,489,508,549`, each `: t.Parallel in a write+fork package outside the fork-locked scan` — per-callsite, matching V7's 10 sites; reverted, `0` dirty |
+| V15 | Live `CopyFS` absence is repo-wide (the live scan's full scope) | `grep -rn 'CopyFS' --include='*.go' .; echo rc=$?`; control: `grep -rl 'NewFile' --include='*.go' . \| wc -l` | no output, `rc=1`; control `17` |
+| V16 | The tripwire reports per-callsite across ALL keys of one map, sorted | `sed -n '655,705p' <file>` | dirs sorted (l.659); every `t.Parallel` of a write+fork dir outside `host/verifygate` appended (l.698–700); `sort.Strings(viol)` (l.704). So a second positive key in `pos` yields 2 violations and reds `len(pv) != 1` (l.735) — new fixtures need their own map and call |
+| V17 | Refutes quorum r2 (gemini): no `packages.Load` overlay exists | `grep -n 'packages.Load' <file>; echo rc=$?`; control `grep -c 'parser.ParseFile' <file>`; `sed -n '671p;713,717p;730,731p' <file>` | `packages.Load`: no output, `rc=1`; control `2`. l.671 `parser.ParseFile(fset, n, dirs[dir][n], 0)` parses in-memory bytes with no type-check or package-name check; l.713 `loadGoDirs("../../host", "../../cmd")` feeds the live call; fixtures (`pos` l.730) go to a separate call (l.731). A `host/verifygate` fixture key cannot collide with the real directory |
 | V12 | The tripwire's fixture container is a keyed map literal, so an added positive must not collide with an existing key or prefix | `sed -n '726,748p' host/verifygate/forklocked_write_test.go` | the containers are literally `pos := map[string]map[string][]byte{...}` (l.730) and `neg := map[string]map[string][]byte{...}` (l.738) — existing keys: `pos` `"zz"`; `neg` `"zz"` — a second `"zz"` key in `pos` would be a Go duplicate-key compile error, and l.735–736 already asserts the existing positive's prefix `zz/x_test.go:10`; `"zzcopyfs"` is unique, and the two positives' expectation prefixes — `zz/x_test.go:10` vs `zzcopyfs/x_test.go:10` — are distinct |
 
 **Instrument note.** A repo-wide `grep -rn 'os.CopyFS' --include='*.go' . | head -3` was also run
@@ -172,4 +189,12 @@ Round results pending (artifacts to land under `design_docs/verification/world-i
   claude-sonnet-5@claude-p quota-absent; author's vendor oc-glm-5-3 benched) — duplicate `zz`
   map-key collision in M1's tripwire fixture; fixes applied verbatim from the reviewers'
   proposed_fix.
-- **r2** (only if r1 blocks): _pending_.
+- **r2**: BLOCKED 2/4 present, both reject, neither disputing direction (gpt6-1-sol
+  auth-absent, claude-sonnet-5@claude-p quota-absent; author vendor Z-AI benched).
+  gemini-3-1-pro — M3's `host/verifygate` negative fixture "overlays" the real package during
+  `packages.Load`: PREMISE REFUTED (V17), fixture kept (M3). oc-kimi-k3 — M2 line offsets,
+  AC7's count and `CopyFS` scope asserted not measured: fixes applied as V13, V14, V15.
+- **r3**: narrow-refinement carve-out (ratified carve-out, iter-95) — fixes/refutations only, no
+  scope or direction change; routed to planner without a further quorum round. Also found while
+  measuring: M1's new tripwire positive placed in the existing `pos` map would have reddened
+  l.735 (V16) — each new fixture now gets its own map and call; the LocalDo `fill` type typo fixed.
