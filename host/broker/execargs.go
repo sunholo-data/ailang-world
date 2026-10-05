@@ -51,6 +51,9 @@ type ExecCommand struct {
 	Suffixes    []string          `json:"suffixes,omitempty"`
 	MaxArgs     int               `json:"max_args"`
 	Passthrough string            `json:"passthrough,omitempty"`
+	// Forms maps a valued flag to how the EMITTED argv spells it (row 140
+	// M2, EmitExecArgs); matching never reads it.
+	Forms map[string]string `json:"-"`
 }
 
 // Why an agent arg was refused (the sketch's reason words).

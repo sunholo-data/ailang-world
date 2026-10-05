@@ -201,6 +201,7 @@
   - `relpath`: `pathOk`;
   - `enum:[…]`.
   - `-f=v` and `-f v` are both normalized to `-f=v` before matching, so `-run` and `-run=X` cannot differ in meaning.
+  - **[M2, ruled in session 2026-10-05]** Matching stays on the normalized form, but the **emitted** argv (and the record's `argv`) renders each valued flag per an optional per-flag profile field `"form": "eq" | "sep"` (`"-k": {"class": "regex", "form": "sep"}`): `eq`, the default, is one item `-f=v`; `sep` is two items `-f`, `v`, because argparse reads `-k=expr` as the value `=expr`. An unknown form, or a form on a `bool` flag, is a load refusal.
 - **`positional`** must be one class:
   - `relpath`: `pathOk`, with no leading `-`;
   - `pkgpattern`: `relpath` optionally ending `/...`, or exactly `./...`;
@@ -230,8 +231,8 @@ It is not presented as an execution fence (§9 R-140-3).
 | `filesystem.denyWrite` | World's episode deny list, the same names as the AILANG policy: `.git` (dir **or** pointer file), `.github`, `.pi`, `.claude`, `.ailang`, `.gitmodules`, `.gitattributes`, each as an absolute path under the worktree. Plus srt's always-on paths `/tmp/claude`, `/private/tmp/claude`, `$HOME/.npm/_logs`, `$HOME/.claude/debug` | V4, V5, V6, V35 |
 | `filesystem.denyRead` | D-140-1 = A: `[<operator $HOME>, <World state dir>, <workspace root>]` | V8, V19, V23, V24, V35 |
 | `filesystem.allowRead` | `[<this episode's worktree>, <this episode's exec cache>, <profile read_roots>, <each read_root's realpath>]`, **plus on Linux only `<archive>/…/sandbox-runtime/vendor/seccomp/<arch>` [M0, V43, V44]**: srt runs that helper inside the sandbox. The dir is never in `allowWrite`, it is covered by the per-call archive digest, and nothing else of the archive is re-allowed. The workspace root is denied, so **sibling episodes' worktrees are unreadable** | V8, V24 |
-| `network.allowedDomains` | `[]` (D-140-2 = A) | V9 |
-| `network.allowLocalBinding`, `allowAllUnixSockets`, `enableWeakerNetworkIsolation`, `allowAppleEvents` | all `false`, rendered explicitly | V9, V20 |
+| `network.allowedDomains` | `[]` (D-140-2 = A). **[M2]** `network.deniedDomains: []` is rendered too: srt 0.0.78's schema requires it, and M0's measured shape carries it | V9 |
+| `network.allowLocalBinding`, `allowAllUnixSockets`, `enableWeakerNetworkIsolation`, `allowAppleEvents` | all `false`, rendered explicitly. **[M2]** The last two are TOP-LEVEL keys in srt's schema, not under `network` (M0's shape) | V9, V20 |
 
 - **Verification at render** (srt has no `summary` command, unlike AILANG's policy-tool):
   - World re-reads the file and checks it byte-for-byte against its own canonical rendering;
