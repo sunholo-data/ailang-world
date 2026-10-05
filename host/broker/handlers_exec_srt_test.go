@@ -372,7 +372,12 @@ func TestExecSrtGitHeadIsNotWritable(t *testing.T) {
 	r := f.mustRun(t, "w-githead")
 	tok := probeToken(r)
 	if fileState(head) != "ref: refs/heads/dev\n" || !isRefusal(tok) {
-		t.Fatalf(".git/HEAD through the sandbox: token %q, bytes %q", tok, fileState(head))
+		lim := "null"
+		if r.Limit != nil {
+			lim = *r.Limit
+		}
+		t.Fatalf(".git/HEAD through the sandbox: token %q, bytes %q (exit %s timed_out %t limit %s)\nstdout %q\nstderr %q",
+			tok, fileState(head), r.code(), r.TimedOut, lim, r.Stdout, r.Stderr)
 	}
 }
 

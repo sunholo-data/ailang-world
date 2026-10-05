@@ -115,10 +115,10 @@ SET_NODENYW = settings("no-denywrite", filesystem__denyWrite=[])
 KV = [f"HOME={CACHE}/home", f"TMPDIR={CACHE}/tmp", "PATH=/usr/bin:/bin", "LANG=C.UTF-8", "LC_ALL=C.UTF-8", "CI=1"]
 TRAMP = ["/bin/sh", "-c", '/usr/bin/env -i "$@"; exit $?', "world-exec"]
 
-def srt(argv, st=SET, tramp=True, dashdash=True, cli=CLI, timeout=60):
+def srt(argv, st=SET, tramp=True, dashdash=True, cli=CLI, timeout=60, cwd=EP1):
     cmd = [NODE, cli, "--settings", st] + (["--"] if dashdash else []) + ((TRAMP + KV) if tramp else []) + argv
     try:
-        r = subprocess.run(cmd, cwd=EP1, env=HOST_ENV, capture_output=True, text=True, timeout=timeout, stdin=subprocess.DEVNULL)
+        r = subprocess.run(cmd, cwd=cwd, env=HOST_ENV, capture_output=True, text=True, timeout=timeout, stdin=subprocess.DEVNULL)
         return r.returncode, (r.stdout + r.stderr).strip()
     except subprocess.TimeoutExpired:
         return "timeout", ""
@@ -212,6 +212,41 @@ try:
         changed = (before != after) if before is not None else (after is not None)
         rec(f"V6/V35 write {os.path.relpath(p, EP1)} refused", sys.platform == "darwin" or not p.endswith("GITHUB/x"),
             "REFUSED; bytes unchanged", f"{tok(out)}; changed={changed}", tok(out) in REFUSED and not changed)
+
+    # ---- .git as a DIRECTORY (M2-linux): an episode whose .git holds HEAD, run from that episode ----
+    # srt adds <cwd>/.git/hooks and <cwd>/.git/config to its own deny only when .git is a directory;
+    # World's rendered deny covers the whole .git (V5: srt's list leaves .git/HEAD writable).
+    def git_dir_episode(name, with_hooks_config=False):
+        ep = os.path.join(ROOT, name)
+        os.makedirs(os.path.join(ep, ".git"), exist_ok=True)
+        with open(os.path.join(ep, ".git", "HEAD"), "w") as f:
+            f.write("ref: refs/heads/dev\n")
+        if with_hooks_config:
+            os.makedirs(os.path.join(ep, ".git", "hooks"), exist_ok=True)
+            open(os.path.join(ep, ".git", "config"), "w").close()
+        return ep
+    def ep_settings(name, ep, deny_read=None, deny_write=None):
+        dw = [os.path.join(ep, os.path.relpath(p, EP1)) if p.startswith(EP1 + os.sep) else p for p in DENY_WRITE]
+        return settings(name, filesystem__allowRead=[ep, CACHE] + EXTRA_READ, filesystem__allowWrite=[ep, CACHE],
+                        filesystem__denyRead=deny_read if deny_read is not None else [HOME, STATE, ROOT],
+                        filesystem__denyWrite=deny_write(dw) if deny_write else dw)
+    def git_head_arm(label, ep, st, gating):
+        head = os.path.join(ep, ".git", "HEAD")
+        rc, out = srt(writep(head), st=st, cwd=ep)
+        after = open(head).read()
+        rec(label, gating, "REFUSED token; HEAD bytes unchanged", f"rc {rc}: {tok(out)}; HEAD={after!r}; out={out[-600:]!r}",
+            tok(out) in REFUSED and after == "ref: refs/heads/dev\n")
+    epg = git_dir_episode("epg")
+    git_head_arm("M2-linux write .git/HEAD (.git a dir, no hooks/config) refused", epg, ep_settings("epg", epg), False)
+    eph = git_dir_episode("eph", with_hooks_config=True)
+    git_head_arm("M2-linux diag: .git dir WITH hooks/ + config", eph, ep_settings("eph", eph), False)
+    epr = git_dir_episode("epr")
+    git_head_arm("M2-linux diag: .git dir, workspace root NOT in denyRead", epr, ep_settings("epr", epr, deny_read=[HOME, STATE]), False)
+    epn = git_dir_episode("epn")
+    head_n = os.path.join(epn, ".git", "HEAD")
+    rc, out = srt(writep(head_n), st=ep_settings("epn", epn, deny_write=lambda dw: [p for p in dw if not p.endswith("/.git")]), cwd=epn)
+    rec("M2-linux diag: .git dir WITHOUT World's .git deny", False, "ran (WROTE: srt alone leaves HEAD open, V5)",
+        f"rc {rc}: {tok(out)}; out={out[-600:]!r}", tok(out) is not None)
 
     # ---- arm 5: exit status through the trampoline (V11, V41) ----
     for sig, want in (("TERM", 143), ("INT", 130), ("KILL", 137)):
