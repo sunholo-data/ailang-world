@@ -1,0 +1,41 @@
+META {"platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39", "machine": "x86_64", "srt_version": "0.0.78", "cli_sha256": "3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e", "node": "/opt/hostedtoolcache/node/22.23.3/x64/bin/node", "node_version": "v22.23.3", "bwrap": "bubblewrap 0.9.0", "socat": "socat by Gerhard Rieger and contributors - see www.dest-unreach.org", "rg": "ripgrep 14.1.0", "userns_sysctl": "0"}
+[FAIL] sanity: srt from whole-tree archive runs (V42): expected 'rc 0 + M0-ALIVE'; observed 'rc 127: /usr/bin/bash: line 4: /home/runner/.world-row140-m0-k60gdfgu/state/archive/exec-sandbox/node_modules/@anthropic-ai/sandbox-runtime/vendor/seccomp/x64/apply-seccomp: No such file or directory'
+[PASS] (info) V42 package-dir-only archive fails to load: expected 'non-zero, module not found'; observed "rc 1: node:internal/modules/package_json_reader:314\n  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);\n        ^\n\nError [ERR_MODULE_NOT_FOUND]: Cannot find package 'commander' importe"
+[FAIL] arm1 write inside worktree: expected "WORLD-PROBE-WROTE + readback 'x'"; observed 'None readback=None'
+[FAIL] arm1b write inside episode exec cache: expected 'WORLD-PROBE-WROTE'; observed None
+[FAIL] arm2 write sibling episode refused: expected 'control WROTE; sandboxed REFUSED; file absent'; observed 'control=WORLD-PROBE-WROTE; sbx=None; exists=False'
+[FAIL] arm2 write $HOME refused: expected 'REFUSED; absent'; observed 'None; exists=False'
+[FAIL] arm2 write state dir refused: expected 'REFUSED; absent'; observed 'None; exists=False'
+[FAIL] arm3 read decoy $HOME/.ailang-worldd-exec-probe-decoy-m0 refused: expected 'control READ; sandboxed REFUSED'; observed 'control=WORLD-PROBE-READ; sbx=None'
+[FAIL] arm3 read decoy $HOME/.world-row140-m0-k60gdfgu/state/exec-probe/decoy refused: expected 'control READ; sandboxed REFUSED'; observed 'control=WORLD-PROBE-READ; sbx=None'
+[FAIL] arm3 read decoy $HOME/.world-row140-m0-k60gdfgu/workspace/.exec-probe-sibling/decoy refused: expected 'control READ; sandboxed REFUSED'; observed 'control=WORLD-PROBE-READ; sbx=None'
+[FAIL] arm3b read sibling episode file refused (V35): expected 'REFUSED'; observed None
+[FAIL] V42 child cannot read the archived cli.js: expected 'REFUSED'; observed None
+[FAIL] V8 ls $HOME refused: expected 'non-zero, no listing of BASE'; observed 'rc 127: /usr/bin/bash: line 4: /home/runner/.world-row140-m0-k60gdfgu/state/archive/exec-sandbox/node_modules/@anthropic-ai/sandbox-runtime/vendor/seccomp/x64/apply-sec'
+[FAIL] (info) V8 system path /etc/hosts stays readable (R-140-1): expected 'READ'; observed None
+[FAIL] V8 own worktree readable under denied $HOME: expected 'READ'; observed None
+[FAIL] arm4 /tmp/claude write refused (rendered denyWrite): expected 'REFUSED'; observed None
+[FAIL] (info) V4 /tmp/claude writable WITHOUT World's denyWrite: expected 'WROTE (srt default)'; observed None
+[FAIL] V6/V35 write .git refused: expected 'REFUSED; bytes unchanged'; observed 'None; changed=False'
+[FAIL] (info) V6/V35 write .GITHUB/x refused: expected 'REFUSED; bytes unchanged'; observed 'None; changed=False'
+[FAIL] V6/V35 write .github/x refused: expected 'REFUSED; bytes unchanged'; observed 'None; changed=False'
+[FAIL] arm5 SIGTERM self-kill -> 143 via trampoline: expected 143; observed 127
+[FAIL] arm5 SIGINT self-kill -> 130 via trampoline: expected 130; observed 127
+[FAIL] arm5 SIGKILL self-kill -> 137 via trampoline: expected 137; observed 127
+[FAIL] arm5 exit 3 -> 3: expected 3; observed 127
+[PASS] V11 missing binary -> 127: expected 127; observed 127
+[PASS] (info) V11 bare srt (no trampoline) SIGTERM rc: expected '0 on macOS 0.0.71/0.0.78 (the hazard)'; observed 127
+[FAIL] V41 child env == rendered K=V set (no proxy vars, no TMPDIR=/tmp/claude): expected ['CI=1', 'HOME=/home/runner/.world-row140-m0-k60gdfgu/state/exec-cache/ep1/proj/home', 'LANG=C.UTF-8', 'LC_ALL=C.UTF-8', 'PATH=/usr/bin:/bin', 'TMPDIR=/home/runner/.world-row140-m0-k60gdfgu/state/exec-cache/ep1/proj/tmp']; observed []
+[FAIL] V12 argv verbatim after -- (incl. -c, -s, X=Y): expected '[a b][$(id)][-c][--][X=Y][-s][/nonexistent.json]'; observed '/usr/bin/bash: line 4: /home/runner/.world-row140-m0-k60gdfgu/state/archive/exec-sandbox/node_modules/@anthropic-ai/sandbox-runtime/vendor/seccomp/x64/apply-seccomp: No such file or directory'
+[PASS] (info) V12 WITHOUT -- srt takes -c (the hazard): expected 'OPTION-INJECTED executed'; observed 'rc 127: /usr/bin/bash: line 4: /home/runner/.world-row140-m0-k60gdfgu/state/archive/exec-sandbox/node_modules/@anthropic-ai/sandbox-runtime/vendor/seccomp/x64/apply-sec'
+[PASS] V3 grandchild write outside refused: expected 'absent'; observed False
+[PASS] V3 orphan write (2 s after srt exits) refused: expected 'absent'; observed False
+[PASS] V3 write through symlink to sibling refused: expected 'absent'; observed False
+[FAIL] arm6 raw loopback connect refused (live listener): expected 'control CONNECTED count 1; sbx not CONNECTED; count stays 1'; observed 'control=WORLD-PROBE-CONNECTED n0=1; sbx=None n1=1'
+[PASS] arm6 loopback via srt proxy env (no trampoline) refused: expected 'count unchanged'; observed '/usr/bin/bash: line 4: /home/runner/.world-row140-m0-k60gdfgu/state/archive/exec-sandbox/node_modules/@anthropic-ai/sandbox-runtime/vendor/seccomp/x64/apply-sec n2=1'
+[PASS] arm6 loopback with --noproxy refused: expected 'count unchanged'; observed '/usr/bin/bash: line 4: /home/runner/.world-row140-m0-k60gdfgu/state/archive/exec-sandbox/node_modules/@anthropic-ai/sandbox-runtime/vendor/seccomp/x64/apply-sec n3=1'
+[PASS] V9 external https refused (allowedDomains=[]): expected 'no 200'; observed '/usr/bin/bash: line 4: /home/runner/.world-row140-m0-k60gdfgu/state/archive/exec-sandbox/node_modules/@anthropic-ai/sandbox-runtime/vendor/seccomp/x64/apply-sec'
+[FAIL] V9 bind 127.0.0.1 refused (allowLocalBinding=false): expected 'not BOUND'; observed None
+[PASS] (info) V9 direct DNS: expected 'REFUSED (macOS)'; observed None
+[FAIL] V13 killpg(srt group) leaves no sleeper: expected 'before 2, after 0'; observed 'before 0, after 0'
+SUMMARY gating 7/32 pass; failed: ['sanity: srt from whole-tree archive runs (V42)', 'arm1 write inside worktree', 'arm1b write inside episode exec cache', 'arm2 write sibling episode refused', 'arm2 write $HOME refused', 'arm2 write state dir refused', 'arm3 read decoy $HOME/.ailang-worldd-exec-probe-decoy-m0 refused', 'arm3 read decoy $HOME/.world-row140-m0-k60gdfgu/state/exec-probe/decoy refused', 'arm3 read decoy $HOME/.world-row140-m0-k60gdfgu/workspace/.exec-probe-sibling/decoy refused', 'arm3b read sibling episode file refused (V35)', 'V42 child cannot read the archived cli.js', 'V8 ls $HOME refused', 'V8 own worktree readable under denied $HOME', 'arm4 /tmp/claude write refused (rendered denyWrite)', 'V6/V35 write .git refused', 'V6/V35 write .github/x refused', 'arm5 SIGTERM self-kill -> 143 via trampoline', 'arm5 SIGINT self-kill -> 130 via trampoline', 'arm5 SIGKILL self-kill -> 137 via trampoline', 'arm5 exit 3 -> 3', 'V41 child env == rendered K=V set (no proxy vars, no TMPDIR=/tmp/claude)', 'V12 argv verbatim after -- (incl. -c, -s, X=Y)', 'arm6 raw loopback connect refused (live listener)', 'V9 bind 127.0.0.1 refused (allowLocalBinding=false)', 'V13 killpg(srt group) leaves no sleeper']
