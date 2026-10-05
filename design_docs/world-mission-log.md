@@ -1228,3 +1228,5 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 **Progress:** World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. The loop did not move the goal; row 140 is moving attended.
 
 **Next:** when row 140's attended tag changes (landed or handed back), 136 → 141 → 93 (`core` tier) → 114 → 139. No hygiene row is filed.
+
+**Record follow-through (iteration 233):** the independent evaluator (Agent tool `sonnet`, fresh separate context, read-only, foreground; 40,168 tok, 27 s) judged record commit `8d245a3` on `a36e459` and returned **PASS 93/100, zero blocking**. It verified all seven claims first-party: scope 5 `design_docs/` files; ledger valid 49 rows / zero OPEN; the 229 stamp archived byte-identical; ledger markers and `## Queue` intact; all cited SHAs resolve; dev CI 2/2. Its non-blocking notes: it did not re-derive the clause map independently, did not read rows 146–147 individually, and did not check the "~20 min" timing. Report: `design_docs/verification/world-iter233/evaluator-r1.md`.
