@@ -764,4 +764,20 @@ func TestNoParallelWriteForkPackagesOutsideVerifygate(t *testing.T) {
 	if len(cv) != 1 || !strings.HasPrefix(cv[0], "zzcopyfs/x_test.go:10: t.Parallel in a write+fork package") {
 		t.Fatalf("known CopyFS positive not named: %v", cv)
 	}
+	// The exemption is exactly host/verifygate: a sibling host package is named...
+	hv, _, _, err := parallelWriteForkViolations(map[string]map[string][]byte{"host/zz": {"x_test.go": []byte(fmt.Sprintf(body, "\tt.Parallel()\n"))}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(hv) != 1 || !strings.HasPrefix(hv[0], "host/zz/x_test.go:10: t.Parallel in a write+fork package") {
+		t.Fatalf("known host positive not named: %v", hv)
+	}
+	// ...and host/verifygate itself is not.
+	ev, _, _, err := parallelWriteForkViolations(map[string]map[string][]byte{"host/verifygate": {"x_test.go": []byte(fmt.Sprintf(body, "\tt.Parallel()\n"))}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ev) != 0 {
+		t.Fatalf("exempt host/verifygate fixture flagged: %v", ev)
+	}
 }
