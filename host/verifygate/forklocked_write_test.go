@@ -564,6 +564,13 @@ func TestVerifygateTestWritesAreForkLocked(t *testing.T) {
 			[]string{"fixture_Smuggle.go:9|raw os.WriteFile in func h"}, []string{"fixture_Smuggle.go:10"}},
 		{"CopyFS", "package p\n\nimport \"os\"\n\nfunc h() { _ = os.CopyFS(\"dst\", os.DirFS(\"src\")) }\n",
 			[]string{"fixture_CopyFS.go:5|raw os.CopyFS in func h"}, nil},
+		// P-LocalDo: a local forkLockedDo is not the package-scope wrapper, so its
+		// open closure gets no exemption.
+		{"LocalDo", "package p\n\nimport \"os\"\n\n" + doDecl + "\nfunc h() {\n\tforkLockedDo := func(open func() (*os.File, error), fill func(*os.File) error, hold func()) error { return nil }\n\t_ = forkLockedDo(func() (*os.File, error) { return os.OpenFile(\"x\", 0, 0) }, nil, nil)\n}\n",
+			[]string{"fixture_LocalDo.go:9|raw os.OpenFile in func h"}, nil},
+		// P-CreateOpener: only os.OpenFile / os.CreateTemp are exempt openers.
+		{"CreateOpener", "package p\n\nimport \"os\"\n\n" + doDecl + "\nfunc h() {\n\t_ = forkLockedDo(func() (*os.File, error) { return os.Create(\"x\") }, nil, nil)\n}\n",
+			[]string{"fixture_CreateOpener.go:8|raw os.Create in func h"}, nil},
 	}
 	for _, p := range positives {
 		fname := "fixture_" + p.name + ".go"
