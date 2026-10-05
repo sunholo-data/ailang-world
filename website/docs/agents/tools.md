@@ -1,12 +1,12 @@
 ---
 title: Tool reference
 sidebar_position: 3
-description: The eight AILANG World software-engineering tools, generated from packages/se-tools/transitions.json.
+description: The nine AILANG World software-engineering tools, generated from packages/se-tools/transitions.json.
 ---
 
 # Tool reference
 
-AILANG World serves 8 tools. Each one is a pure AILANG transition that plans exactly one brokered effect, runs it inside your episode's worktree, and commits one World log entry. The MCP tool name and the A2A skill id are both the tool id below.
+AILANG World serves 9 tools. Each one is a pure AILANG transition that plans exactly one brokered effect, runs it inside your episode's worktree, and commits one World log entry. The MCP tool name and the A2A skill id are both the tool id below.
 
 Rules that apply to every tool:
 
@@ -25,8 +25,9 @@ Rules that apply to every tool:
 | [`builtins-search`](#builtins-search) | `Ailang.Discover` (scope `worktree`) | `query?`, `module?` | yes |
 | [`examples-search`](#examples-search) | `Ailang.Discover` (scope `worktree`) | `query` | no |
 | [`ailang-cli`](#ailang-cli) | `Ailang.CLI` (scope `worktree`) | `op`, `path?`, `module?`, `query?`, `package?`, `flags?` | no |
+| [`workspace-exec`](#workspace-exec) | `Workspace.Exec` (scope `worktree`) | `command`, `args?` | no |
 
-Six grants cover the eight tools: `ailang-write` and `ailang-edit` share `Workspace.Write`, and the two searches share `Ailang.Discover`. Two more, `Ailang.RunEnv` and `Ailang.RunNet`, let `ailang-run` take the `Env` or `Net` capability when the operator enables it. `tools/list` shows only the tools whose effect your session holds a grant for. A grant with budget 0 still lists the tool, but every call is `denied:budget`.
+Seven grants cover the nine tools: `ailang-write` and `ailang-edit` share `Workspace.Write`, the two searches share `Ailang.Discover`, and `workspace-exec` has its own `Workspace.Exec`. Two more, `Ailang.RunEnv` and `Ailang.RunNet`, let `ailang-run` take the `Env` or `Net` capability when the operator enables it. `tools/list` shows only the tools whose effect your session holds a grant for. A grant with budget 0 still lists the tool, but every call is `denied:budget`.
 
 ## ailang-read
 
@@ -430,6 +431,61 @@ op check does not admit flag --zz (admitted: --json --quiet --strict-syntax)
 
 ```json
 {"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"ailang-cli","arguments":{"op":"iface","module":"std/io","flags":{"compact":""}}}}
+```
+
+## workspace-exec
+
+**Exec (operator-profiled, sandboxed).** Effect `Workspace.Exec`, scope `worktree`, cost 1 per call. Handler: one command of the operator's exec profile (`serve --exec-profile`), run as `<node> <archived srt cli.js> --settings <episode settings> -- /bin/sh -c '/usr/bin/env -i "$@"; exit $?' world-exec <K=V…> <argv0> <prefix…> <args…>` (cwd = the profile's `root` in the worktree; host/broker/handlers_exec.go). Module: `packages/se-tools/se_tools/exec.ail`.
+
+Description served in `tools/list`:
+
+```text
+Run one command of the operator's exec profile (e.g. `test`, `vet`, `typecheck`) in this episode's worktree. Commands come only from the operator's exec profile (`serve --exec-profile`): `command` is the id of one of them, never an executable or a shell line, and the profile fixes the program, its leading arguments, the working directory, the environment and the timeout. `args` (at most 16 strings, each 1 to 512 bytes, no NUL; absent = none) must match that command's argument grammar: only the flags it lists, as `-f=v` or `-f v`, and positionals of its declared class (relative paths, package patterns or test files); `--` only where the command declares it. The command runs sandboxed: writes stay inside the worktree and the episode's caches, your home directory, World's state and other episodes are unreadable, and there is no network. No shell sees an argument. Without a configured profile the call is refused (`no exec profile configured`). Unknown argument keys are refused, never ignored. Returns {exit_code, timed_out, limit, duration_ms, stdout, stdout_bytes, stdout_truncated, stdout_sha256, stderr, stderr_bytes, stderr_truncated, stderr_sha256, argv, profile, sandbox} or {ok:false, refused}; long output keeps its head and tail. exit_code is the command's own status, reported, never judged. Costs one Workspace.Exec call from the session's budget. Every call commits one World log entry; the result carries `world` (the effect plan and the brokered effect's record ref).
+```
+
+### Arguments
+
+| Name | Type | Required | Description |
+|---|---|---|---|
+| `command` | string | yes | The id of one command in the operator's exec profile, e.g. "test" |
+| `args` | array of string | no | Arguments matched against the command's grammar; at most 16, each 1 to 512 bytes, no NUL |
+
+`additionalProperties` is `false`: any other key is refused.
+
+### Result
+
+`exit_code`, `timed_out`, `limit`, `duration_ms`, `stdout`, `stdout_bytes`, `stdout_truncated`, `stdout_sha256`, `stderr`, `stderr_bytes`, `stderr_truncated`, `stderr_sha256`, `argv`, `profile`, `sandbox`, `world`. `exit_code` is the command's own status (a signal death is 128 + n), reported, never judged; each stream keeps its first 8 KiB and last 56 KiB with its total size and sha256.
+
+The operator writes the profile: the program, its fixed leading arguments, the flags and positional class `args` must match, the environment, the read roots and the timeout (at most 9 s). The command runs under `srt` with writes confined to the worktree and the episode's exec cache, your home directory, World's state and every other episode unreadable, and no network. See the operator guide, `docs/QUICKSTART.md` §10.
+
+Output schema properties: `exit_code`, `timed_out`, `limit`, `duration_ms`, `stdout`, `stdout_bytes`, `stdout_truncated`, `stdout_sha256`, `stderr`, `stderr_bytes`, `stderr_truncated`, `stderr_sha256`, `argv`, `profile`, `sandbox`, `ok`, `refused`, `world` (required: `world`).
+
+### Refusals you will see
+
+From the plan (zero effects, `world.effects` is `[]`, still committed):
+
+```text
+command "Test" refused: a command id must match ^[a-z][a-z0-9-]{0,31}$ (the id of a command in the operator's exec profile)
+argument "args" has 17 items; the limit is 16
+an args item contains a NUL byte
+an args item is 0 bytes; each must be 1 to 512
+argument "args" must be an array of strings
+missing required argument "command"
+unknown argument "cwd"; workspace-exec admits only: command, args
+```
+
+From the handler or AILANG's policy layer (the effect ran with status `ok`; the output says `ok: false`):
+
+```text
+no exec profile configured: start ailang-worldd serve with --exec-profile FILE
+command "deploy" is not a command of exec profile "ailang-compiler"
+command "test": argument 0 "-exec=sh" refused: the command does not list this flag
+```
+
+### Example call
+
+```json
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"workspace-exec","arguments":{"command":"test","args":["-run","TestLex","./internal/lexer/"]}}}
 ```
 
 ---

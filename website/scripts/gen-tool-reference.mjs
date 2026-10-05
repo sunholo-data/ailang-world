@@ -148,6 +148,34 @@ const NOTES = {
     ],
     policy: ["op check does not admit flag --zz (admitted: --json --quiet --strict-syntax)"],
   },
+  "workspace-exec": {
+    handlerOp:
+      "one command of the operator's exec profile (`serve --exec-profile`), run as " +
+      "`<node> <archived srt cli.js> --settings <episode settings> -- /bin/sh -c '/usr/bin/env -i \"$@\"; exit $?' world-exec <K=V…> <argv0> <prefix…> <args…>` " +
+      "(cwd = the profile's `root` in the worktree; host/broker/handlers_exec.go)",
+    finish: false,
+    example: { command: "test", args: ["-run", "TestLex", "./internal/lexer/"] },
+    result:
+      "`exit_code`, `timed_out`, `limit`, `duration_ms`, `stdout`, `stdout_bytes`, `stdout_truncated`, `stdout_sha256`, `stderr`, `stderr_bytes`, `stderr_truncated`, `stderr_sha256`, `argv`, `profile`, `sandbox`, `world`. " +
+      "`exit_code` is the command's own status (a signal death is 128 + n), reported, never judged; each stream keeps its first 8 KiB and last 56 KiB with its total size and sha256.\n\n" +
+      "The operator writes the profile: the program, its fixed leading arguments, the flags and positional class `args` must match, the environment, the read roots and the timeout (at most 9 s). " +
+      "The command runs under `srt` with writes confined to the worktree and the episode's exec cache, your home directory, World's state and every other episode unreadable, and no network. " +
+      "See the operator guide, `docs/QUICKSTART.md` §10.",
+    refusals: [
+      'command "Test" refused: a command id must match ^[a-z][a-z0-9-]{0,31}$ (the id of a command in the operator\'s exec profile)',
+      'argument "args" has 17 items; the limit is 16',
+      "an args item contains a NUL byte",
+      "an args item is 0 bytes; each must be 1 to 512",
+      'argument "args" must be an array of strings',
+      'missing required argument "command"',
+      'unknown argument "cwd"; workspace-exec admits only: command, args',
+    ],
+    policy: [
+      "no exec profile configured: start ailang-worldd serve with --exec-profile FILE",
+      'command "deploy" is not a command of exec profile "ailang-compiler"',
+      'command "test": argument 0 "-exec=sh" refused: the command does not list this flag',
+    ],
+  },
 };
 
 // Flags each ailang-cli op admits on the v0.52.1 tool binary, from the V67/V78
@@ -168,7 +196,7 @@ const out = (s = "") => lines.push(s);
 out("---");
 out("title: Tool reference");
 out("sidebar_position: 3");
-out("description: The eight AILANG World software-engineering tools, generated from packages/se-tools/transitions.json.");
+out("description: The nine AILANG World software-engineering tools, generated from packages/se-tools/transitions.json.");
 out("---");
 out();
 out("# Tool reference");
@@ -195,7 +223,7 @@ for (const t of tools) {
 }
 out();
 out(
-  "Six grants cover the eight tools: `ailang-write` and `ailang-edit` share `Workspace.Write`, and the two searches share `Ailang.Discover`. " +
+  "Seven grants cover the nine tools: `ailang-write` and `ailang-edit` share `Workspace.Write`, the two searches share `Ailang.Discover`, and `workspace-exec` has its own `Workspace.Exec`. " +
     "Two more, `Ailang.RunEnv` and `Ailang.RunNet`, let `ailang-run` take the `Env` or `Net` capability when the operator enables it. " +
     "`tools/list` shows only the tools whose effect your session holds a grant for. A grant with budget 0 still lists the tool, but every call is `denied:budget`.",
 );

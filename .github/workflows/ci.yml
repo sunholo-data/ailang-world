@@ -220,16 +220,23 @@ jobs:
       # WORLD_EXEC_SRT_NODE_MODULES is unset, and verify_go.sh has no -v, so a SKIP would read as a
       # PASS there: run them verbosely and fail unless each one prints --- PASS (the fork-lock
       # step's pass-line pattern).
+      # Row 140 M3 (§6 AC3.1–AC3.5) adds the startup probe against srt shims and the real srt,
+      # the QUICKSTART §10 refusal table (whose probe-package-only row needs the real srt, so its
+      # subtest PASS is checked too), §10's profile script, and the /mcp/ + replay end to end
+      # (AILANG_BIN, set above, runs the plan).
       - name: Row 140 Workspace.Exec real-srt tests, verbose (linux bubblewrap)
-        timeout-minutes: 10
+        timeout-minutes: 12
         run: |
           set -euo pipefail
           [ "${RUNNER_OS:-}" = Linux ] || { echo "::error::this step must run on linux"; exit 1; }
           [ -n "${WORLD_EXEC_SRT_NODE_MODULES:-}" ] || { echo "::error::WORLD_EXEC_SRT_NODE_MODULES is unset"; exit 1; }
+          [ -n "${AILANG_BIN:-}" ] || { echo "::error::AILANG_BIN is unset"; exit 1; }
           tests="TestExecSrtGoTest TestExecSrtExitStatusAndArgv TestExecSrtRefusalsSpawnNothing TestExecSrtConfinementMatrix TestExecSrtGitHeadIsNotWritable TestExecSrtTimeoutKillsTheGroup TestExecSrtPycacheStaysOutOfTheWorktree TestExecSrtProfileEnvNeverReachesTheHostNode"
+          tests="$tests TestExecSrtStartupProbePasses TestExecSrtProbeRefusesAPackageOnlySandbox TestExecProbePassThroughShimFailsEveryConfinementArm TestExecProbeNoopShimFailsArm1 TestExecProbeZeroShimFailsArm5 TestExecProbeFailingToolchainFailsArm7 TestExecProbeMissingClientFailsTheRefusalArms TestQuickstartSection10ProfilesLoad"
+          tests="$tests TestExecStartupRefusalTable TestExecSrtMCPEndToEnd TestExecSrtMCPGrantAndBudget TestExecSrtReplayIsByteEqual"
           log="$RUNNER_TEMP/exec-srt-verbose.log"
           rc=0
-          go test ./host/broker/ -count=1 -p 1 -timeout 480s -v \
+          go test ./host/broker/ ./host/daemon/ -count=1 -p 1 -timeout 600s -v \
             -run "^(${tests// /|})\$" >"$log" 2>&1 || rc=$?
           cat "$log"
           [ "$rc" -eq 0 ] || exit "$rc"
@@ -237,6 +244,8 @@ jobs:
             grep -q -- "^--- PASS: $t " "$log" \
               || { echo "::error::$t did not PASS on linux (SKIP?)"; exit 1; }
           done
+          grep -q -- "^    --- PASS: TestExecStartupRefusalTable/probe-package-only " "$log" \
+            || { echo "::error::TestExecStartupRefusalTable/probe-package-only did not PASS on linux (SKIP?)"; exit 1; }
 
       - name: go build + test gate (replay tests run against pinned AILANG_BIN)
         # Expiry is RED; route an overrun to 4e/OD-4, never silently raise this ceiling.
