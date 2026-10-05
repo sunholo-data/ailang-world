@@ -175,9 +175,10 @@ func registryNames(reg broker.Registry) []string {
 	return names
 }
 
-// wantWorkspaceEffects is the eight names (row 135 AC3: 6 -> 8, always bound).
+// wantWorkspaceEffects is the nine names (row 135 AC3: 6 -> 8; row 140 AC1.3:
+// 8 -> 9, Workspace.Exec; always bound).
 var wantWorkspaceEffects = []string{"Ailang.CLI", "Ailang.Check", "Ailang.Discover", "Ailang.Run", "Ailang.RunEnv",
-	"Ailang.RunNet", "Workspace.Read", "Workspace.Write"}
+	"Ailang.RunNet", "Workspace.Exec", "Workspace.Read", "Workspace.Write"}
 
 // refusedEpisodes are AC4.4's shapes: each must yield an empty registry.
 var refusedEpisodes = []string{
@@ -205,7 +206,7 @@ func TestWorkspaceRegistryRefusesEpisodesOutsideTheGrammarAndRoot(t *testing.T) 
 	if n := f.summaries(t); n != 0 {
 		t.Fatalf("a refused episode constructed a handler (%d summary runs)", n)
 	}
-	// Positive control: the provisioned episode gets the eight effect names.
+	// Positive control: the provisioned episode gets the nine effect names.
 	reg := d.workspace.registry("ep1")
 	if got := registryNames(reg); fmt.Sprint(got) != fmt.Sprint(wantWorkspaceEffects) {
 		t.Fatalf("registry(ep1) = %v, want %v", got, wantWorkspaceEffects)
@@ -217,6 +218,31 @@ func TestWorkspaceRegistryRefusesEpisodesOutsideTheGrammarAndRoot(t *testing.T) 
 	_ = d.workspace.registry("ep1")
 	if n := f.summaries(t); n != 1 {
 		t.Fatalf("summary runs = %d after two registry(ep1) calls, want 1 (cached)", n)
+	}
+}
+
+// TestWorkspaceExecUnconfiguredSpawnsNothing is row 140 M1's binding: the
+// Workspace.Exec name is always bound (R8: workspace-exec declares it), and
+// with no exec profile configured its handler answers the typed refusal
+// without running the tool binary or anything else.
+func TestWorkspaceExecUnconfiguredSpawnsNothing(t *testing.T) {
+	f := newWSFixture(t)
+	d := mustWSDaemon(t, Config{DBPath: f.db, WorkspaceRoot: f.root, ToolAilangBin: fakeToolBin(t, f.logDir, ToolBinaryRelease)})
+	h := d.workspace.registry("ep1")[broker.EffectWorkspaceExec]
+	if h == nil {
+		t.Fatal("registry(ep1) does not bind Workspace.Exec")
+	}
+	out, err := h.Execute(boundedTestContext(t), broker.EffectRequest{Effect: broker.EffectWorkspaceExec, Scope: broker.WorkspaceScope, Cost: 1},
+		[]byte(`{"command":"test"}`))
+	if err != nil {
+		t.Fatalf("Execute: %v", err)
+	}
+	var got map[string]any
+	if err := json.Unmarshal(out, &got); err != nil || got["ok"] != false || got["refused"] != broker.NoExecProfileRefusal || len(got) != 2 {
+		t.Fatalf("Workspace.Exec without a profile = %s (%v), want ok:false refused %q", out, err, broker.NoExecProfileRefusal)
+	}
+	if n := f.dispatches(t); n != 0 {
+		t.Fatalf("the unconfigured refusal ran the tool binary %d times", n)
 	}
 }
 
