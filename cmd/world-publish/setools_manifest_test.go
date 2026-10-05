@@ -15,8 +15,8 @@ import (
 // TestSeToolsManifestPublishes is row 134 AC5.2: the CHECKED-IN
 // packages/se-tools/transitions.json, published by this verb (in-process, the
 // attended fence satisfied by the test probe) with the pinned released
-// interpreter into a TEST store, yields exactly the 8 descriptors of the
-// ailang_only lane — IDs that are already their MCP names
+// interpreter into a TEST store, yields exactly the 9 descriptors (the 8 of the
+// ailang_only lane plus row 140's workspace-exec) — IDs that are already their MCP names
 // (EncodeMCPName(id) == id), each tool's effect at cost 0 as access and at
 // cost 1 as its one declared effect in scope "worktree". Run from the repo
 // root, because the manifest's transitionFnFile paths are repo-relative (the
@@ -61,7 +61,7 @@ func TestSeToolsManifestPublishes(t *testing.T) {
 	want := map[string]string{
 		"ailang-read": "Workspace.Read", "ailang-write": "Workspace.Write", "ailang-edit": "Workspace.Write",
 		"ailang-check": "Ailang.Check", "ailang-run": "Ailang.Run", "builtins-search": "Ailang.Discover",
-		"examples-search": "Ailang.Discover", "ailang-cli": "Ailang.CLI",
+		"examples-search": "Ailang.Discover", "ailang-cli": "Ailang.CLI", "workspace-exec": "Workspace.Exec",
 	}
 	if len(rev.Entries) != len(want) {
 		t.Fatalf("published %d descriptors, want %d", len(rev.Entries), len(want))

@@ -1,0 +1,420 @@
+module se_tools/exec
+
+-- workspace-exec (queue row 140, design_docs/planned/w-workspace-exec-toolchain-effect.md
+-- §4.1-§4.3): run one command of the operator's exec profile in this
+-- episode's worktree, sandboxed, with no network. Args {command, args?}:
+-- command is the id of one command in the profile (^[a-z][a-z0-9-]{0,31}$),
+-- args an array of at most 16 strings, each 1 to 512 UTF-8 bytes with no NUL
+-- (absent = no arguments). The one effect is Workspace.Exec with payload
+-- {command, args?}: args is carried exactly as given when present (an empty
+-- array included) and omitted when absent, run.ail's optKv convention. No
+-- finish phase: the handler's {exit_code, timed_out, limit, stdout, stderr,
+-- argv, profile, sandbox, ...} is the result.
+--
+-- The plan cannot see the profile (operator config, host-side): it checks the
+-- key set and the bounds; the handler resolves the command id against the
+-- profile and matches args against that command's grammar (§4.3, the
+-- execargs.ail law), so an id or an argument the plan admits can still be
+-- refused there.
+--
+-- Calling convention v2 (§4.1): the coordinator passes ONE string,
+-- {"phase":"plan","args":<MCP/A2A arguments>}.
+-- The plan answer is a world/effect-plan/v1 object with exactly one effect
+-- (scope "worktree", cost 1, the descriptor's declared triple) or a
+-- zero-effect refusal plan whose result is {"ok":false,"refused":...} (L7).
+-- L-ARGS: any argument key outside the schema above is refused (no cwd, env,
+-- timeout or argv-prefix key: all four come from the profile).
+--
+-- Self-contained by construction (row 107 Residual 7): publication checks this
+-- file alone in an empty root, so it imports only std/*, which the pinned
+-- capsule interpreter resolves from the binary (V59). For that reason the
+-- contracted core noDotDotSegment / pathOk / inputKeyAllowed is repeated in
+-- every se_tools module; host/coordinator's se-tools test holds the copies
+-- byte-identical. argKeyAllowed is each tool's own schema.
+
+import std/json (decode, encode, jo, ja, kv, js, jint, jb, jn, get, asObject, asString, asArray, Json)
+import std/string (length as strLength, startsWith, endsWith, contains)
+import std/bytes (fromString, toInts, length as bytesLength)
+import std/list (any, length as listLength, map)
+import std/option (Option, Some, None)
+import std/result (Result, Ok, Err)
+
+-- ── Contracted pure core (Z3) ─────────────────────────────────────────────
+
+-- No path segment is "..": the whole path, a leading "../", a trailing "/..",
+-- or an inner "/../". A segment that merely starts with two dots is legal.
+export func noDotDotSegment(p: string) -> bool ! {}
+ensures { result == (p != ".." && not startsWith(p, "../") && not endsWith(p, "/..")
+  && not contains(p, "/../")) }
+tests [
+  ("src/main.ail", true),
+  ("..", false),
+  ("../x.ail", false),
+  ("a/..", false),
+  ("a/../b.ail", false),
+  ("..a/b.ail", true),
+  ("a/..b.ail", true)
+]
+{
+  p != ".." && not startsWith(p, "../") && not endsWith(p, "/..") && not contains(p, "/../")
+}
+
+-- The plan's path predicate (§4.5): relative, non-empty, no ".." segment, no
+-- leading "-" (a hyphen-leading path is a flag-injection vector, V58). Body
+-- composes the proven callee; the exact ensures restates the whole law. A
+-- precondition for a clear refusal, NOT the confinement (§4.3: that is the
+-- AILANG policy layer behind the broker).
+export func pathOk(p: string) -> bool ! {}
+ensures { result == (strLength(p) >= 1 && not startsWith(p, "/") && not startsWith(p, "-")
+  && p != ".." && not startsWith(p, "../") && not endsWith(p, "/..")
+  && not contains(p, "/../")) }
+tests [
+  ("src/main.ail", true),
+  ("main.ail", true),
+  ("", false),
+  ("/etc/hosts", false),
+  ("-policy.ail", false),
+  ("../ailang/go.mod", false),
+  ("a/../../b", false),
+  ("a/-b.ail", true)
+]
+{
+  strLength(p) >= 1 && not startsWith(p, "/") && not startsWith(p, "-") && noDotDotSegment(p)
+}
+
+-- L-ARGS (§4.1, §4.2): the argument keys this tool admits. There is no cwd,
+-- env, timeout or argv-prefix key (the profile owns all four); any other key
+-- is a typed refusal plan, never silently dropped.
+export func argKeyAllowed(k: string) -> bool ! {}
+ensures { result == (k == "command" || k == "args") }
+tests [
+  ("command", true),
+  ("args", true),
+  ("cwd", false),
+  ("env", false),
+  ("timeout", false),
+  ("Command", false)
+]
+{
+  k == "command" || k == "args"
+}
+
+-- Calling convention v2 (§4.1): the input object's keys. `results` exists only
+-- in the finish phase.
+export func inputKeyAllowed(phase: string, k: string) -> bool ! {}
+ensures { result == (k == "phase" || k == "args" || (phase == "finish" && k == "results")) }
+tests [
+  (("plan", "args"), true),
+  (("plan", "phase"), true),
+  (("plan", "results"), false),
+  (("finish", "results"), true),
+  (("plan", "world"), false)
+]
+{
+  k == "phase" || k == "args" || (phase == "finish" && k == "results")
+}
+
+-- ── Row 140 contracted core (Z3): the command id and the args bounds ──────
+
+-- The command-id alphabet after the first byte, [a-z0-9-], over one byte
+-- code: a per-character quantifier over a string is outside the decidable
+-- fragment (the effectplan.ail idByteOk pattern), so the plan applies this to
+-- every later byte of the id's UTF-8 encoding. A non-ASCII byte (>= 128) is
+-- outside the alphabet.
+export func commandIdByteOk(c: int) -> bool ! {}
+ensures { result == ((c >= 97 && c <= 122) || (c >= 48 && c <= 57) || c == 45) }
+tests [
+  (97, true),
+  (122, true),
+  (48, true),
+  (57, true),
+  (45, true),
+  (65, false),
+  (90, false),
+  (95, false),
+  (46, false),
+  (47, false),
+  (96, false),
+  (123, false),
+  (0, false)
+]
+{
+  (c >= 97 && c <= 122) || (c >= 48 && c <= 57) || c == 45
+}
+
+-- The command-id law ^[a-z][a-z0-9-]{0,31}$ over its decidable parts: the
+-- byte length n (1 to 32), the first byte (a lowercase letter, so never "-"
+-- and never uppercase: the agent cannot spell a flag or an executable here),
+-- and whether every later byte passed commandIdByteOk. Body INLINED, so the
+-- exact ensures restates the whole law.
+export func commandIdOk(n: int, first: int, restOk: bool) -> bool ! {}
+ensures { result == (n >= 1 && n <= 32 && first >= 97 && first <= 122 && restOk) }
+tests [
+  ((4, 116, true), true),
+  ((1, 122, true), true),
+  ((32, 97, true), true),
+  ((33, 97, true), false),
+  ((0, 97, true), false),
+  ((4, 84, true), false),
+  ((2, 45, true), false),
+  ((4, 116, false), false)
+]
+{
+  n >= 1 && n <= 32 && first >= 97 && first <= 122 && restOk
+}
+
+-- One args item is 1 to 512 UTF-8 bytes (n) and holds no NUL byte.
+export func argOk(n: int, hasNul: bool) -> bool ! {}
+ensures { result == (n >= 1 && n <= 512 && not hasNul) }
+tests [
+  ((1, false), true),
+  ((512, false), true),
+  ((513, false), false),
+  ((0, false), false),
+  ((3, true), false)
+]
+{
+  n >= 1 && n <= 512 && not hasNul
+}
+
+-- args holds at most 16 items (an empty array is a distinct, admitted call).
+export func argsOk(n: int) -> bool ! {}
+ensures { result == (n >= 0 && n <= 16) }
+tests [
+  (0, true),
+  (16, true),
+  (17, false),
+  (-1, false)
+]
+{
+  n >= 0 && n <= 16
+}
+
+-- ── Plan construction (world/effect-plan/v1, §4.1) ─────────────────────────
+
+-- A zero-effect refusal plan: L7 requires its non-null result object, which
+-- reaches the caller verbatim.
+func refusal(msg: string) -> string =
+  encode(jo([
+    kv("plan", js("world/effect-plan/v1")),
+    kv("effects", ja([])),
+    kv("finish", jb(false)),
+    kv("result", jo([kv("ok", jb(false)), kv("refused", js(msg))]))
+  ]))
+
+-- The one-effect plan: id "e1", scope "worktree", cost 1 — exactly a triple
+-- of the descriptor's declaredEffects (L3), so parsePlan admits it.
+func effectPlan(effect: string, payload: Json, finish: bool) -> string =
+  encode(jo([
+    kv("plan", js("world/effect-plan/v1")),
+    kv("effects", ja([jo([
+      kv("id", js("e1")),
+      kv("effect", js(effect)),
+      kv("scope", js("worktree")),
+      kv("cost", jint(1)),
+      kv("payload", payload)
+    ])])),
+    kv("finish", jb(finish)),
+    kv("result", jn(()))
+  ]))
+
+func pathRefusal(p: string) -> string =
+  "path \"${p}\" refused: it must be relative and non-empty, with no \"..\" segment and no leading \"-\""
+
+func firstUnknownArg(es: [{key: string, value: Json}]) -> Option[string] =
+  match es {
+    [] => None,
+    e :: rest => if argKeyAllowed(e.key) then firstUnknownArg(rest) else Some(e.key)
+  }
+
+func firstUnknownInputKey(es: [{key: string, value: Json}], phase: string) -> Option[string] =
+  match es {
+    [] => None,
+    e :: rest => if inputKeyAllowed(phase, e.key) then firstUnknownInputKey(rest, phase) else Some(e.key)
+  }
+
+func requiredString(args: Json, k: string) -> Result[string, string] =
+  match get(args, k) {
+    None => Err("missing required argument \"${k}\""),
+    Some(v) => match asString(v) {
+      Some(s) => Ok(s),
+      None => Err("argument \"${k}\" must be a string")
+    }
+  }
+
+func stringField(doc: Json, k: string) -> string =
+  match get(doc, k) {
+    Some(v) => match asString(v) {
+      Some(s) => s,
+      None => ""
+    },
+    None => ""
+  }
+
+-- ── The tool ─────────────────────────────────────────────────────────────
+
+func utf8Ints(s: string) -> [int] = toInts(fromString(s))
+
+func utf8Bytes(s: string) -> int = bytesLength(fromString(s))
+
+func hasNul(s: string) -> bool = any(\b. b == 0, utf8Ints(s))
+
+func restBytesOk(bs: [int]) -> bool =
+  match bs {
+    [] => true,
+    b :: rest => commandIdByteOk(b) && restBytesOk(rest)
+  }
+
+-- The id law applied to the id's UTF-8 bytes; the empty id reaches
+-- commandIdOk as length 0, so the law, not this match, refuses it.
+func commandIdValid(c: string) -> bool =
+  match utf8Ints(c) {
+    [] => commandIdOk(0, 0, true),
+    b :: rest => commandIdOk(1 + listLength(rest), b, restBytesOk(rest))
+  }
+
+func commandRefusal(c: string) -> string =
+  "command \"${c}\" refused: a command id must match ^[a-z][a-z0-9-]{0,31}$ (the id of a command in the operator's exec profile)"
+
+func argsShape() -> string = "argument \"args\" must be an array of strings"
+
+@allow_empty_ok("an empty args array is a legitimate, distinct request: the command gets no arguments")
+func argItems(items: [Json]) -> Result[[string], string] =
+  match items {
+    [] => Ok([]),
+    x :: rest => match asString(x) {
+      None => Err(argsShape()),
+      Some(s) => if not argOk(utf8Bytes(s), hasNul(s)) then
+          (if hasNul(s) then Err("an args item contains a NUL byte")
+           else Err("an args item is ${show(utf8Bytes(s))} bytes; each must be 1 to 512"))
+        else match argItems(rest) {
+          Ok(ss) => Ok(s :: ss),
+          Err(why) => Err(why)
+        }
+    }
+  }
+
+-- args, absent (None) or the checked items exactly as given.
+func parseArgs(args: Json) -> Result[Option[[string]], string] =
+  match get(args, "args") {
+    None => Ok(None),
+    Some(v) => match asArray(v) {
+      None => Err(argsShape()),
+      Some(items) => if not argsOk(listLength(items)) then Err("argument \"args\" has ${show(listLength(items))} items; the limit is 16")
+        else match argItems(items) {
+          Ok(ss) => Ok(Some(ss)),
+          Err(why) => Err(why)
+        }
+    }
+  }
+
+func optKv(k: string, v: Option[Json]) -> [{key: string, value: Json}] =
+  match v {
+    None => [],
+    Some(j) => [kv(k, j)]
+  }
+
+func optStrings(xs: Option[[string]]) -> Option[Json] =
+  match xs {
+    None => None,
+    Some(ss) => Some(ja(map(js, ss)))
+  }
+
+func execPayload(command: string, args: Option[[string]]) -> Json =
+  jo([kv("command", js(command))] ++ optKv("args", optStrings(args)))
+
+func planTool(args: Json) -> string =
+  match requiredString(args, "command") {
+    Err(why) => refusal(why),
+    Ok(command) => if not commandIdValid(command) then refusal(commandRefusal(command))
+      else match parseArgs(args) {
+        Err(why) => refusal(why),
+        Ok(items) => effectPlan("Workspace.Exec", execPayload(command, items), false)
+      }
+  }
+
+func planPhase(doc: Json) -> string =
+  match get(doc, "args") {
+    None => refusal("the input carries no args"),
+    Some(args) => match asObject(args) {
+      None => refusal("arguments must be a JSON object"),
+      Some(es) => match firstUnknownArg(es) {
+        Some(k) => refusal("unknown argument \"${k}\"; workspace-exec admits only: command, args"),
+        None => planTool(args)
+      }
+    }
+  }
+
+func dispatch(doc: Json) -> string =
+  match asObject(doc) {
+    None => refusal("the input is not a JSON object"),
+    Some(top) => {
+      let phase = stringField(doc, "phase");
+      match firstUnknownInputKey(top, phase) {
+        Some(k) => refusal("input key \"${k}\" is not part of calling convention v2"),
+        None => if phase == "plan" then planPhase(doc)
+          else if phase == "finish" then encode(jo([kv("ok", jb(false)), kv("refused", js("workspace-exec has no finish phase"))]))
+          else refusal("phase must be \"plan\" or \"finish\"")
+      }
+    }
+  }
+
+-- The transition entry (calling convention v2). Its named tests pin the exact
+-- plan bytes for each admitted call and each L-ARGS / id / bounds refusal
+-- (row 140 AC1.1). The 513-byte args item is pinned by host/coordinator's
+-- se-tools test (too large for a literal).
+export func main(input: string) -> string
+tests [
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"test\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Workspace.Exec\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"command\":\"test\"}}],\"finish\":false,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"test\",\"args\":[\"-run=X\",\"./a/...\"]}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Workspace.Exec\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"command\":\"test\",\"args\":[\"-run=X\",\"./a/...\"]}}],\"finish\":false,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"args\":[\"./...\"],\"command\":\"vet\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Workspace.Exec\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"command\":\"vet\",\"args\":[\"./...\"]}}],\"finish\":false,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"a-345678901234567890123456789012\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Workspace.Exec\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"command\":\"a-345678901234567890123456789012\"}}],\"finish\":false,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"test\",\"args\":[]}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Workspace.Exec\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"command\":\"test\",\"args\":[]}}],\"finish\":false,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"test\",\"args\":[\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\"]}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Workspace.Exec\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"command\":\"test\",\"args\":[\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\"]}}],\"finish\":false,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"test\",\"args\":[\"--settings\",\"x.json\",\"--\",\"sh\"]}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[{\"id\":\"e1\",\"effect\":\"Workspace.Exec\",\"scope\":\"worktree\",\"cost\":1,\"payload\":{\"command\":\"test\",\"args\":[\"--settings\",\"x.json\",\"--\",\"sh\"]}}],\"finish\":false,\"result\":null}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"Test\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"command \\\"Test\\\" refused: a command id must match ^[a-z][a-z0-9-]{0,31}$ (the id of a command in the operator's exec profile)\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"-x\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"command \\\"-x\\\" refused: a command id must match ^[a-z][a-z0-9-]{0,31}$ (the id of a command in the operator's exec profile)\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"abcdefghijklmnopqrstuvwxyzabcdefg\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"command \\\"abcdefghijklmnopqrstuvwxyzabcdefg\\\" refused: a command id must match ^[a-z][a-z0-9-]{0,31}$ (the id of a command in the operator's exec profile)\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"command \\\"\\\" refused: a command id must match ^[a-z][a-z0-9-]{0,31}$ (the id of a command in the operator's exec profile)\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"go test\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"command \\\"go test\\\" refused: a command id must match ^[a-z][a-z0-9-]{0,31}$ (the id of a command in the operator's exec profile)\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"test\",\"args\":[\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\",\"a\"]}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"args\\\" has 17 items; the limit is 16\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"test\",\"args\":[\"ok\",\"a\\u0000b\"]}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"an args item contains a NUL byte\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"test\",\"args\":\"-run=X\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"args\\\" must be an array of strings\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"test\",\"args\":[1]}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"args\\\" must be an array of strings\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"test\",\"args\":[\"-v\",\"\"]}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"an args item is 0 bytes; each must be 1 to 512\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"test\",\"cwd\":\"/\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"unknown argument \\\"cwd\\\"; workspace-exec admits only: command, args\"}}"),
+  ("{\"phase\":\"plan\",\"args\":[]}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"arguments must be a JSON object\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"args\":[\"-v\"]}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"missing required argument \\\"command\\\"\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":[\"go\",\"test\"]}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"argument \\\"command\\\" must be a string\"}}"),
+  ("{\"phase\":\"plan\",\"args\":{\"command\":\"test\"},\"world\":{}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"input key \\\"world\\\" is not part of calling convention v2\"}}"),
+  ("{\"phase\":\"replay\",\"args\":{\"command\":\"test\"}}",
+   "{\"plan\":\"world/effect-plan/v1\",\"effects\":[],\"finish\":false,\"result\":{\"ok\":false,\"refused\":\"phase must be \\\"plan\\\" or \\\"finish\\\"\"}}")
+]
+{
+  match decode(input) {
+    Ok(doc) => dispatch(doc),
+    Err(e) => refusal("the input is not JSON: ${e}")
+  }
+}

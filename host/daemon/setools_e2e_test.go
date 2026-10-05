@@ -49,7 +49,7 @@ const (
 
 var seToolNames = []string{
 	"ailang-check", "ailang-cli", "ailang-edit", "ailang-read", "ailang-run",
-	"ailang-write", "builtins-search", "examples-search",
+	"ailang-write", "builtins-search", "examples-search", "workspace-exec",
 }
 
 // seToolBins returns the pinned interpreter and the tool binary, or skips
@@ -229,10 +229,11 @@ func publishSeTools(t *testing.T, d *Daemon, db string) {
 	}
 }
 
-// seGrants are the six effect grants of §4.2 (one per effect name).
+// seGrants are the seven effect grants: §4.2's six (one per effect name)
+// plus row 140's Workspace.Exec.
 var seGrantEffects = []string{
 	broker.EffectWorkspaceRead, broker.EffectWorkspaceWrite, broker.EffectAilangCheck,
-	broker.EffectAilangRun, broker.EffectAilangDiscover, broker.EffectAilangCLI,
+	broker.EffectAilangRun, broker.EffectAilangDiscover, broker.EffectAilangCLI, broker.EffectWorkspaceExec,
 }
 
 func (r *seRig) mint(episode string, effects ...string) string {
@@ -559,6 +560,35 @@ func TestSeToolsExamplesSearchWithoutCorpusRefuses(t *testing.T) {
 	r.assertEffectRecord("examples-search", out, broker.EffectAilangDiscover)
 	if after := r.entryCount(); after != before+1 {
 		t.Fatalf("log entries %d -> %d, want one commit", before, after)
+	}
+}
+
+// TestSeToolsWorkspaceExecWithoutProfileRefuses is row 140 M1 end to end: a
+// daemon with no exec profile answers workspace-exec through /mcp/ with the
+// typed refusal and still records and commits the effect (that it spawns
+// nothing is TestWorkspaceExecUnconfiguredSpawnsNothing's, on the fake tool
+// binary); the plan's own refusal of a bad id is a zero-effect commit.
+func TestSeToolsWorkspaceExecWithoutProfileRefuses(t *testing.T) {
+	r := newSeRig(t)
+	token := r.mint("ep1", broker.EffectWorkspaceExec)
+	before := r.entryCount()
+	wire, _ := r.call(token, "workspace-exec", map[string]any{"command": "test", "args": []string{"-run=X", "./..."}})
+	out := wire.Result.StructuredContent
+	if wire.Error != nil || out["ok"] != false || out["refused"] != broker.NoExecProfileRefusal {
+		t.Fatalf("workspace-exec without a profile = %+v, want ok:false refused %q", wire, broker.NoExecProfileRefusal)
+	}
+	r.assertEffectRecord("workspace-exec", out, broker.EffectWorkspaceExec)
+	if after := r.entryCount(); after != before+1 {
+		t.Fatalf("log entries %d -> %d, want one commit", before, after)
+	}
+
+	wire, _ = r.call(token, "workspace-exec", map[string]any{"command": "-x"})
+	out = wire.Result.StructuredContent
+	if wire.Error != nil || out["ok"] != false || !strings.HasPrefix(fmt.Sprint(out["refused"]), `command "-x" refused`) {
+		t.Fatalf("workspace-exec -x = %+v, want the plan's id refusal", wire)
+	}
+	if w := worldOf(t, out); len(w.Effects) != 0 {
+		t.Fatalf("the id refusal ran effects: %+v", w.Effects)
 	}
 }
 

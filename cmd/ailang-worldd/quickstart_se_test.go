@@ -122,7 +122,7 @@ func TestQuickstartSection9FlagsMatchTheCLI(t *testing.T) {
 				t.Errorf("QUICKSTART §9 `session new %s` does not parse: exit %d, %s", strings.Join(argv[2:], " "), got, errw.String())
 			}
 			if strings.Join(argv, " ") != "session new ep1 --db /tmp/se-world/world.db --workspace-root /tmp/se-ws --preset se-tools --ttl 14400 --out /tmp/se-session" {
-				t.Errorf("QUICKSTART §9 session line changed: %q (the eight se-tools grants come from --preset se-tools)", strings.Join(argv, " "))
+				t.Errorf("QUICKSTART §9 session line changed: %q (the nine se-tools grants come from --preset se-tools)", strings.Join(argv, " "))
 			}
 		}
 	}

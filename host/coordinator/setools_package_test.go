@@ -179,6 +179,9 @@ var seToolsCases = []seToolsCase{
 		`{"query":"foldl","limit":2}`, "limit"},
 	{"ailang-cli", `{"op":"iface","module":"std/json","flags":{"json":""}}`, `{"op":"iface","module":"std/json","flags":{"json":""}}`, false,
 		`{"op":"check","path":"a.ail","content":"x"}`, "content"},
+	// Row 140: the 9th tool, the first outside the ailang_only lane.
+	{"workspace-exec", `{"command":"test","args":["-run=X"]}`, `{"command":"test","args":["-run=X"]}`, false,
+		`{"command":"test","cwd":"/"}`, "cwd"},
 }
 
 // TestSeToolsPlansAdmittedByPlanLaw is AC5 (M5a): per tool, the module run
@@ -189,8 +192,8 @@ var seToolsCases = []seToolsCase{
 // a refusal is a lawful pure plan, L7).
 func TestSeToolsPlansAdmittedByPlanLaw(t *testing.T) {
 	manifest := loadSeToolsManifest(t)
-	if len(manifest) != 8 || len(seToolsCases) != 8 {
-		t.Fatalf("manifest has %d tools, cases %d; the ailang_only lane has 8", len(manifest), len(seToolsCases))
+	if len(manifest) != 9 || len(seToolsCases) != 9 {
+		t.Fatalf("manifest has %d tools, cases %d; the ailang_only lane has 8, plus row 140's workspace-exec", len(manifest), len(seToolsCases))
 	}
 	rig := newSeToolsRig(t)
 	for _, c := range seToolsCases {
@@ -425,7 +428,7 @@ func TestSeToolsFinishPhases(t *testing.T) {
 // module (self-contained sources, row 107 Residual 7), so the contracted path
 // predicate, the convention-v2 key law and the plan builders are COPIED into
 // every module. This holds the copies identical, so a fix to one cannot leave
-// seven stale.
+// eight stale.
 func TestSeToolsSharedCoreIsByteIdentical(t *testing.T) {
 	manifest := loadSeToolsManifest(t)
 	blocks := []struct{ name, start, end string }{
