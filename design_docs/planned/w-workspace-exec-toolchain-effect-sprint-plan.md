@@ -37,14 +37,8 @@ Estimate: about 4 days of sessions. The design said 3 + 0.5. The extra half day 
   - **srt 0.0.78: 33/33 gating arms pass.**
   - **Control:** a pass-through (unsandboxed) srt fails all 21 confinement arms.
   - **Pin:** `0.0.78`, `cli.js` sha256 `3c3092bd…d96e` (`pin.json`).
-- **AC0.2:** `.github/workflows/exec-sandbox-linux.yml` runs the same matrix on `ubuntu-latest`:
-  - installs `bubblewrap socat ripgrep`;
-  - sets `kernel.apparmor_restrict_unprivileged_userns=0`;
-  - checks the pinned digest;
-  - uploads the JSON.
-
-  **Deviation from design §10:** this is a separate workflow, not a step in `ci.yml`. That keeps the two merge-gate jobs exactly two, which the loop's Gate-1 instruments count on. The job runs when the matrix, the pin or the workflow changes, or on manual dispatch.
-- **AC0.3:** any Linux arm that differs becomes a new V-row and an amended premise in the design before M1 starts. If bubblewrap cannot run on the runner, R-140-8's degraded gate applies and is stated here.
+- **AC0.2:** a step in `ci.yml`'s go job runs the same matrix on `ubuntu-latest`, as design §10 planned. It installs `bubblewrap socat ripgrep`, sets `kernel.apparmor_restrict_unprivileged_userns=0`, checks the pinned digest and runs the gating mode. A separate workflow was tried first; `TestGoToolchainPinsAgreeAndMatchJobList` refuses any second workflow file.
+- **AC0.3 — DONE.** Linux differed, and the design now records it: V43–V49, P19/P20, an amended §4.4 `allowRead` and §4.6 probe semantics. Run as written, the design fails every Linux arm with rc 127, because srt runs its seccomp helper inside the sandbox. The fix re-allows only `<archive>/…/vendor/seccomp/<arch>` for reading. With it, Linux passes 32/32 gating arms and macOS 33/33. R-140-8 is closed.
 
 ### M1 — transition and sketch
 

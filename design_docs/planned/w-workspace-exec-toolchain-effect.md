@@ -369,7 +369,7 @@ This is the Linux gate as well. A host where bwrap or user namespaces are missin
   - set `kernel.apparmor_restrict_unprivileged_userns=0`;
   - run the startup-probe arms 1–6 plus V3/V8/V9/V11/V12/V13 against srt and record the results as V-rows.
 - AC0.3: if any Linux arm differs, it is written into this doc as a new V-row and an amended premise before M1 starts.
-- **M0 DONE 2026-10-05 (attended, PR #206):** pin srt **0.0.78** (`cli.js` sha256 `3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e`, `world-row140-m0/pin.json`). Linux differed, so V43–V49 and P19/P20 were added, and §4.4 (the seccomp helper read) and §4.6 (probe semantics on Linux) were amended. `.github/workflows/exec-sandbox-linux.yml` runs the matrix on `ubuntu-latest`. It is a separate workflow so `ci.yml` keeps exactly two merge-gate jobs.
+- **M0 DONE 2026-10-05 (attended, PR #206):** pin srt **0.0.78** (`cli.js` sha256 `3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e`, `world-row140-m0/pin.json`). Linux differed, so V43–V49 and P19/P20 were added, and §4.4 (the seccomp helper read) and §4.6 (probe semantics on Linux) were amended. A step in `ci.yml`'s go job runs the matrix on `ubuntu-latest` (a second workflow file is refused by `TestGoToolchainPinsAgreeAndMatchJobList`).
 
 **M1 (1 d) — transition, descriptor, sketch.**
 - AC1.1: `exec.ail` named tests pin the plan bytes for:

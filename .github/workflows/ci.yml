@@ -228,6 +228,29 @@ jobs:
           -count=1 -p 1 -timeout 300s -v
           -run '^(TestAbandonedWaiters|TestAdmitIsExact|TestFailedKillBounds|TestFullCleanupBacklog|TestOrdinaryOverflow|TestOverflowKill|TestPipeCloseBounds|TestReleaseIsIdempotent|TestReservationIsExact|TestSignalRefuses|TestStartFailureReleases|TestWaitReturnsResult|TestZombieGroupKill)'
 
+      # Row 140 M0 (w-workspace-exec-toolchain-effect §6 AC0.2, V43–V49): srt's confinement under
+      # bubblewrap, measured with the same matrix the macOS rig runs. The pin (version + cli.js
+      # sha256) is design_docs/verification/world-row140-m0/pin.json; node is the runner's own.
+      # Rendering = the amended §4.4 (only srt's in-sandbox seccomp helper dir re-allowed for read).
+      - name: Row 140 srt confinement matrix (linux bubblewrap)
+        timeout-minutes: 8
+        run: |
+          set -euo pipefail
+          [ "${RUNNER_OS:-}" = Linux ] || { echo "::error::this step must run on linux"; exit 1; }
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap socat ripgrep
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          PIN=design_docs/verification/world-row140-m0/pin.json
+          V=$(jq -r .version "$PIN"); WANT=$(jq -r .cli_sha256 "$PIN")
+          mkdir -p "$RUNNER_TEMP/srt"
+          ( cd "$RUNNER_TEMP/srt" && npm init -y >/dev/null && npm install --no-audit --no-fund "@anthropic-ai/sandbox-runtime@$V" )
+          GOT=$(sha256sum "$RUNNER_TEMP/srt/node_modules/@anthropic-ai/sandbox-runtime/dist/cli.js" | cut -d' ' -f1)
+          echo "srt $V cli.js sha256 $GOT (pinned $WANT)"
+          [ "$GOT" = "$WANT" ] || { echo "::error::srt cli.js digest drifted from pin.json"; exit 1; }
+          python3 design_docs/verification/world-row140-m0/m0_matrix.py \
+            --srt-node-modules "$RUNNER_TEMP/srt/node_modules" \
+            --node "$(command -v node)" --seccomp-read allowread
+
       # Platform-conditional and GATED (row 44): darwin/arm64 must reproduce the defect;
       # linux/amd64 (here) must NOT (measured, iteration-46 AC6); every configured
       # known-bad probe must run to completion and both known-good controls must fire.
