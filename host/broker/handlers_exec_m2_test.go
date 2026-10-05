@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -171,6 +172,14 @@ func (f *execFixture) mustRun(t *testing.T, command string, args ...string) exec
 	return execDecode(t, out)
 }
 
+// code renders exit_code for a failure message (null when none).
+func (r execResult) code() string {
+	if r.ExitCode == nil {
+		return "null"
+	}
+	return strconv.Itoa(*r.ExitCode)
+}
+
 // stubCalls is how many times the host node (the stub) was launched.
 func (f *execFixture) stubCalls(t *testing.T) int {
 	data, err := os.ReadFile(f.calls)
@@ -234,7 +243,7 @@ func TestExecHandlerLaunchLineAndHostEnv(t *testing.T) {
 	}})
 	r := f.mustRun(t, "test", "-k", "a b", "-v", "$(id)", "x;y")
 	if r.ExitCode == nil || *r.ExitCode != 0 || r.Stdout != "[-k][a b][-v][$(id)][x;y]" {
-		t.Fatalf("stdout = %q exit %v: the args reached the command altered (MUT-SHELL-JOIN) or srt took them", r.Stdout, r.ExitCode)
+		t.Fatalf("stdout = %q exit %v: the args reached the command altered (MUT-SHELL-JOIN) or srt took them", r.Stdout, r.code())
 	}
 	raw, err := os.ReadFile(f.argvLog)
 	if err != nil {
@@ -326,10 +335,10 @@ func TestExecHandlerRefusalsSpawnNothing(t *testing.T) {
 func TestExecHandlerExitStatusThroughTheTrampoline(t *testing.T) {
 	f := newExecFixture(t, execFixtureOpts{})
 	if r := f.mustRun(t, "exit"); r.ExitCode == nil || *r.ExitCode != 3 {
-		t.Fatalf("exit 3 -> %v", r.ExitCode)
+		t.Fatalf("exit 3 -> %v", r.code())
 	}
 	if r := f.mustRun(t, "term"); r.ExitCode == nil || *r.ExitCode != 143 {
-		t.Fatalf("SIGTERM self-kill -> %v, want 143", r.ExitCode)
+		t.Fatalf("SIGTERM self-kill -> %v, want 143", r.code())
 	}
 }
 
@@ -375,7 +384,7 @@ func TestExecHandlerHardCapRecordsLimitOutput(t *testing.T) {
 	f.h.maxOutput = 1 << 20
 	r := f.mustRun(t, "big")
 	if r.Limit == nil || *r.Limit != "output" || r.ExitCode != nil || r.TimedOut {
-		t.Fatalf("over the cap: limit=%v exit=%v timed_out=%t", r.Limit, r.ExitCode, r.TimedOut)
+		t.Fatalf("over the cap: limit=%v exit=%v timed_out=%t", r.Limit, r.code(), r.TimedOut)
 	}
 }
 

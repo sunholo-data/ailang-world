@@ -186,14 +186,14 @@ func TestExecSrtGoTest(t *testing.T) {
 
 	r := f.mustRun(t, "go-test", "./ok/")
 	if r.ExitCode == nil || *r.ExitCode != 0 || !strings.Contains(r.Stdout, "ok") {
-		t.Fatalf("go test ./ok/: exit %v timed_out %t\nstdout %s\nstderr %s", r.ExitCode, r.TimedOut, r.Stdout, r.Stderr)
+		t.Fatalf("go test ./ok/: exit %v timed_out %t\nstdout %s\nstderr %s", r.code(), r.TimedOut, r.Stdout, r.Stderr)
 	}
 	if !reflect.DeepEqual(r.Argv, []string{"go", "test", "-count=1", "./ok/"}) {
 		t.Fatalf("argv = %q", r.Argv)
 	}
 	r = f.mustRun(t, "go-test", "-run", "TestBad", "./bad/")
 	if r.ExitCode == nil || *r.ExitCode == 0 || !strings.Contains(r.Stdout+r.Stderr, "WORLD-M2-EXPECTED-FAILURE") {
-		t.Fatalf("go test ./bad/: exit %v, want non-zero with the failure text\nstdout %s\nstderr %s", r.ExitCode, r.Stdout, r.Stderr)
+		t.Fatalf("go test ./bad/: exit %v, want non-zero with the failure text\nstdout %s\nstderr %s", r.code(), r.Stdout, r.Stderr)
 	}
 	if r := f.mustRun(t, "gocache-write"); probeToken(r) != "WORLD-PROBE-WROTE" {
 		t.Fatalf("the run could not write its GOCACHE: %+v", r)
@@ -217,10 +217,10 @@ func TestExecSrtGoTest(t *testing.T) {
 func TestExecSrtExitStatusAndArgv(t *testing.T) {
 	f := newSrtFixture(t, nil, nil)
 	if r := f.mustRun(t, "term"); r.ExitCode == nil || *r.ExitCode != 143 {
-		t.Fatalf("SIGTERM self-kill through srt -> %v, want 143 (stderr %q)", r.ExitCode, r.Stderr)
+		t.Fatalf("SIGTERM self-kill through srt -> %v, want 143 (stderr %q)", r.code(), r.Stderr)
 	}
 	if r := f.mustRun(t, "exit"); r.ExitCode == nil || *r.ExitCode != 3 {
-		t.Fatalf("exit 3 through srt -> %v (stderr %q)", r.ExitCode, r.Stderr)
+		t.Fatalf("exit 3 through srt -> %v (stderr %q)", r.code(), r.Stderr)
 	}
 	r := f.mustRun(t, "test", "-k", "a b", "$(id)", "x;y", "X=Y")
 	if r.Stdout != "[-k][a b][$(id)][x;y][X=Y]" {
@@ -426,7 +426,7 @@ func TestExecSrtPycacheStaysOutOfTheWorktree(t *testing.T) {
 	})
 	r := f.mustRun(t, "py")
 	if r.ExitCode == nil || *r.ExitCode != 0 || strings.TrimSpace(r.Stdout) != "ZZ-IMPORTED" {
-		t.Fatalf("python import through srt: exit %v stdout %q stderr %q", r.ExitCode, r.Stdout, r.Stderr)
+		t.Fatalf("python import through srt: exit %v stdout %q stderr %q", r.code(), r.Stdout, r.Stderr)
 	}
 	var inWorktree []string
 	_ = filepath.Walk(f.worktree, func(p string, info os.FileInfo, err error) error {
