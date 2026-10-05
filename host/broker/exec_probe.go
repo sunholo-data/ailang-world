@@ -129,11 +129,10 @@ func (e *ExecProbeError) FailedArms() []string {
 }
 
 // execProbeEnv is the per-startup scratch the probes share: the decoys and
-// /tmp/claude, planted once and removed after every profile has run.
+// /tmp/claude, planted once; the decoys are removed after every profile.
 type execProbeEnv struct {
-	decoys        []string
-	decoyOK       []bool // each decoy read back unsandboxed (the arm 3 control)
-	madeTmpClaude bool
+	decoys  []string
+	decoyOK []bool // each decoy read back unsandboxed (the arm 3 control)
 }
 
 // ProbeExecProfiles runs the startup probe for every profile, concurrently,
@@ -164,6 +163,8 @@ const execProbeDecoyText = "DECOY-NOT-A-SECRET\n"
 
 // plantExecProbe plants the three fixed decoys (§4.6 arm 3) and makes sure
 // /tmp/claude exists, so a refusal there cannot be a vacuous ENOENT (V49).
+// /tmp/claude is srt's own default dir (V4): World leaves it in place, as srt
+// does, so concurrent probes never pull it from under each other.
 func plantExecProbe(h ExecHostPaths) (*execProbeEnv, error) {
 	env := &execProbeEnv{decoys: ExecProbeDecoys(h)}
 	for _, d := range env.decoys {
@@ -180,7 +181,6 @@ func plantExecProbe(h ExecHostPaths) (*execProbeEnv, error) {
 		if err := os.Mkdir("/tmp/claude", 0o777); err != nil && !errors.Is(err, os.ErrExist) {
 			return env, fmt.Errorf("broker: exec probe: make /tmp/claude: %w", err)
 		}
-		env.madeTmpClaude = true
 	}
 	return env, nil
 }
@@ -191,9 +191,6 @@ func (env *execProbeEnv) cleanup(h ExecHostPaths) {
 	}
 	_ = os.RemoveAll(filepath.Join(h.StateDir, "exec-probe"))
 	_ = os.RemoveAll(filepath.Join(h.WorkspaceRoot, ".exec-probe-sibling"))
-	if env.madeTmpClaude {
-		_ = os.Remove("/tmp/claude") // only when empty: never someone else's files
-	}
 }
 
 // execRefusalCodes are the errno codes a sandbox refusal of a file write or
