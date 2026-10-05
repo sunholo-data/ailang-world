@@ -604,6 +604,8 @@ func TestSeToolsQuickstartPayloadsVerbatim(t *testing.T) {
 	if !ok {
 		t.Fatal("QUICKSTART §9 is absent")
 	}
+	// §9 ends where §10 (row 140's exec runbook, bound by its own tests) begins.
+	section, _, _ = strings.Cut(section, "### 10. ")
 	matches := regexp.MustCompile(`-d '([^']+)'`).FindAllStringSubmatch(section, -1)
 	if len(matches) != 2 {
 		t.Fatalf("§9 payload count = %d, want 2 (tools/list, one tools/call)", len(matches))

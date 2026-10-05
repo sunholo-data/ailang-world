@@ -80,7 +80,8 @@ type workspaceTools struct {
 	runCaps broker.RunCapsConfig
 	// exec is the Workspace.Exec configuration (row 140): nil, the default,
 	// binds the typed unconfigured refusal (broker.ExecUnconfiguredHandler).
-	// M3's `serve --exec-*` flags fill it after their startup checks.
+	// The `serve --exec-*` flags fill it after their startup checks and the
+	// startup probe (configureExec).
 	exec   *workspaceExec
 	errLog io.Writer
 
@@ -89,12 +90,59 @@ type workspaceTools struct {
 	execH   map[string]episodeTool // episode id -> constructed exec handler
 }
 
-// workspaceExec is one verified exec profile and the archived sandbox that
-// runs it (row 140 §4.6).
+// workspaceExec is the verified exec profiles and the archived sandbox that
+// runs them (row 140 §4.6).
 type workspaceExec struct {
-	profile        *broker.ExecProfile
+	// profile is the episode default: the only profile, when exactly one is
+	// configured (nil with several).
+	profile *broker.ExecProfile
+	// byProject and episodeProject are the --exec-episode-project map.
+	byProject      map[string]*broker.ExecProfile
+	episodeProject map[string]string
 	sandbox        *broker.ExecSandbox
-	maxOutputBytes int64 // 0 = broker.DefaultExecMaxOutputBytes
+	maxOutputBytes int64  // 0 = broker.DefaultExecMaxOutputBytes
+	operatorHome   string // "" = os.UserHomeDir, as the probe resolved it
+}
+
+// profileFor selects an episode's profile: its --exec-episode-project
+// mapping, else the only profile; nil when several are configured and the
+// episode is unmapped.
+func (e *workspaceExec) profileFor(episodeID string) *broker.ExecProfile {
+	if project, ok := e.episodeProject[episodeID]; ok {
+		return e.byProject[project]
+	}
+	return e.profile
+}
+
+// execStartupHook adjusts the exec startup config before it runs. It is nil
+// in production; tests use it for the srt shims' pin and the probe client.
+var execStartupHook func(*broker.ExecStartupConfig)
+
+// configureExec applies the --exec-* flags (row 140 §4.3, §4.6): they need
+// the workspace tools, and broker.StartExec verifies the profiles, the
+// placement of the confinement stack and the pin, and runs the startup probe
+// for every profile. Any refusal stops startup; nothing is enabled partly.
+func (w *workspaceTools) configureExec(ctx context.Context, cfg Config) error {
+	sc := broker.ExecStartupConfig{ProfileFiles: cfg.ExecProfiles, EpisodeProjects: cfg.ExecEpisodeProjects,
+		SandboxDir: cfg.ExecSandbox, Node: cfg.ExecNode, MaxOutputBytes: cfg.ExecMaxOutputBytes}
+	if len(sc.ProfileFiles)+len(sc.EpisodeProjects) == 0 && sc.SandboxDir == "" && sc.Node == "" && sc.MaxOutputBytes == 0 {
+		return nil
+	}
+	if !w.enabled() {
+		return fmt.Errorf("the --exec-* flags need the workspace tools (--workspace-root and --tool-ailang-bin): " +
+			"workspace-exec runs in an episode worktree")
+	}
+	sc.Paths = broker.ExecHostPaths{StateDir: w.stateDir, WorkspaceRoot: w.root}
+	if execStartupHook != nil {
+		execStartupHook(&sc)
+	}
+	st, err := broker.StartExec(ctx, sc)
+	if err != nil {
+		return err
+	}
+	w.exec = &workspaceExec{profile: st.Only, byProject: st.Profiles, episodeProject: st.EpisodeProjects,
+		sandbox: st.Sandbox, maxOutputBytes: st.MaxOutputBytes, operatorHome: st.OperatorHome}
+	return nil
 }
 
 // execFailedHandler answers every call with the error that kept the
@@ -279,10 +327,14 @@ func (w *workspaceTools) execHandler(episodeID, epRoot string) broker.Handler {
 	if cached, ok := w.execH[episodeID]; ok && cached.root == epRoot {
 		return cached.h
 	}
+	profile := w.exec.profileFor(episodeID)
+	if profile == nil {
+		return broker.ExecRefusalHandler{Why: broker.ExecNoEpisodeProfileRefusal(episodeID)}
+	}
 	var h broker.Handler
-	eh, err := broker.NewExecHandler(broker.ExecHandlerConfig{Profile: w.exec.profile, Sandbox: w.exec.sandbox,
+	eh, err := broker.NewExecHandler(broker.ExecHandlerConfig{Profile: profile, Sandbox: w.exec.sandbox,
 		Episode: episodeID, Worktree: epRoot, WorkspaceRoot: w.root, StateDir: w.stateDir,
-		MaxOutputBytes: w.exec.maxOutputBytes})
+		OperatorHome: w.exec.operatorHome, MaxOutputBytes: w.exec.maxOutputBytes})
 	if err != nil {
 		fmt.Fprintf(w.errLog, "ailang-worldd: workspace-exec unavailable for episode %q: %v\n", episodeID, err)
 		return execFailedHandler{err: err}

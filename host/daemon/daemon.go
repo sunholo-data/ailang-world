@@ -253,6 +253,18 @@ type Config struct {
 	RunAllowCaps    []string
 	RunNetAllow     []string
 	RunNetAllowHTTP bool
+	// ExecProfiles, ExecEpisodeProjects, ExecSandbox, ExecNode and
+	// ExecMaxOutputBytes are the `--exec-*` flags (row 140 §4.6): operator
+	// exec profiles, the episode->project map, the pinned srt install, the
+	// node that runs it ("" = node on PATH) and the per-stream output kill
+	// (0 = 64 MiB). Startup refuses an exec flag without the workspace tools
+	// and any §4.3/§4.6 violation, and runs the startup probe for every
+	// profile; with no profile, workspace-exec refuses every call.
+	ExecProfiles        []string
+	ExecEpisodeProjects []string
+	ExecSandbox         string
+	ExecNode            string
+	ExecMaxOutputBytes  int64
 	// ErrorLog receives the operator-facing detail of every sanitized 500: one
 	// line per error, carrying the route and the VERBATIM store error that the
 	// response body no longer echoes (Decision: sanitize-vs-expose).
@@ -592,6 +604,9 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	}
 	if err := workspace.configureRunCaps(ctx, cfg); err != nil {
 		return nil, d.abort(StageConfig, "the run capabilities are refused", err)
+	}
+	if err := workspace.configureExec(ctx, cfg); err != nil {
+		return nil, d.abort(StageConfig, "the exec configuration is refused", err)
 	}
 	if (cfg.WorkspaceRoot == "") != (cfg.ToolAilangBin == "") {
 		fmt.Fprintln(d.errLog, "ailang-worldd: workspace tools disabled: --workspace-root and --tool-ailang-bin must both be set; "+

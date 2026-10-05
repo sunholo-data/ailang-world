@@ -37,6 +37,8 @@ func section9Commands(t *testing.T) [][]string {
 	if !ok {
 		t.Fatal("QUICKSTART §9 is absent")
 	}
+	// §9 ends where §10 (row 140's exec runbook, bound by its own tests) begins.
+	section, _, _ = strings.Cut(section, "### 10. ")
 	joined := strings.ReplaceAll(section, "\\\n", " ")
 	var cmds [][]string
 	for _, line := range strings.Split(joined, "\n") {
