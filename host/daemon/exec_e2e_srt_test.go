@@ -123,7 +123,7 @@ func TestExecSrtMCPEndToEnd(t *testing.T) {
 	out := wire.Result.StructuredContent
 	t.Logf("workspace-exec test: %v (%d ms)", out, took.Milliseconds())
 	if wire.Error != nil || wire.Result.IsError || out["exit_code"] != float64(0) || out["stdout"] != "[-run=TestX][a]" {
-		t.Fatalf("workspace-exec = %+v, want exit 0 and the profiled argv's output", wire)
+		t.Fatalf("workspace-exec = %+v (error %+v), want exit 0 and the profiled argv's output", wire, wire.Error)
 	}
 	sandbox, _ := out["sandbox"].(map[string]any)
 	if sandbox["version"] != broker.ExecSandboxRelease || sandbox["cli_sha256"] != broker.ExecSandboxCLISHA256 ||
