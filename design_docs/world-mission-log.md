@@ -1074,3 +1074,76 @@ No routable UNMET-clause row exists, so rule (e) admits the top MET-clause hygie
 **Next:** row 140 once the attended session lands its design (#197) or hands it back; then 93 (FINAL) → 114 → 139. Mark answers D-WORLD-61. Row 143 is hygiene below the critical path.
 
 **Merge follow-through (Gate 3b):** merge commit `2da63de` CI run 37151953890 2/2 success (`go host build + test gate`, `ailang-code verify gate`); the verbose fork-lock step logs `--- PASS:` for all five listed tests on ubuntu (0 SKIP). Item LANDED.
+
+## 231 — 2026-10-05 — row 143 LANDED: verifygate fork-lock guard residuals 2 (`38f270b`, #200; judge PASS 94 → 97), resuming orphaned iteration 230 [PRODUCT-HYGIENE]
+
+**Kind:** VERIFY-AND-FINISH an orphan, then the full inner loop. Steps: carve-out design revision → planner → executor → independent evaluator → fix round → judge r2 → merge → merge CI.
+
+**Orphan credited — iteration 230:** iteration 230 fired on 2026-10-04 with controller `pi:ollama/glm-5.3:cloud`. It sent a `mission-world` CLAIM for row 143, and as designer `pi:ollama/glm-5.3:cloud` it authored design r1 (`2df3c0e`) and the r1-fix revision r2 (`0076f18`) on `sprint/w-verifygate-forklock-guard-residuals-2`, in worktree `.wt-world-iter230-forklock2`. It ran quorum r1 and r2, both BLOCKED. The slot then ended `PAUSED-NO-CAPACITY_at=gate-3` (slot-verdicts 2026-10-04T15:55:03Z) with no PR, no charter row and no log entry. The next two fires (03:21Z, 07:21Z) paused at `fired`: every controller rung was unusable. That makes three consecutive capacity-dead slots before this one.
+
+**Pick and why:** the clause map is 1/2/3/6/7 MET and 4/5 UNMET.
+- Row 140 is still in attended design. PR #197 has been OPEN and unchanged since 2026-10-03T19:13Z, with 0 comments; its D-WORLD-62 rulings are on the branch and it awaits Mark's review of r3.
+- Rows 93 → 114 → 139 are sequenced behind 140 (D-WORLD-58).
+- Rows 136/141 sit on D-WORLD-61's default B.
+
+So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iteration 230. Its premises were re-measured at `95575aa`:
+- `CopyFS` is absent repo-wide (rc=1, `NewFile` control 17 files).
+- The exemption is at l.697.
+- The `zz` fixture is at l.730.
+
+**Quorum (inherited):**
+- **r1** BLOCKED 2/2 present. Gemini and kimi both rejected; gpt6-1-sol was absent (auth) and claude-sonnet-5@claude-p absent (quota); Z-AI was benched as the author's vendor. Iteration 230 applied the fixes as r2.
+- **r2** BLOCKED with the same seats.
+  - gemini said the negative fixture keyed `host/verifygate` would overlay the real package under `packages.Load`. **REFUTED by the controller**: the tripwire parses in-memory maps with `parser.ParseFile` (l.671), there are 0 `packages.Load` calls, and the fixtures go through a separate call from the live `loadGoDirs` sweep.
+  - kimi said three load-bearing values were asserted, not measured. **APPLIED**, all measured by the controller before the revision:
+    - V13: `doDecl` is one line, so the fixtures land at lines 9 and 8, matching P-Smuggle's offset.
+    - V14: the `true` mutant gives 10 per-callsite violations.
+    - V15: `CopyFS` is absent repo-wide.
+- Neither reviewer disputed the design direction, and every fix was concrete, so the **narrow-refinement carve-out** applied: revision r3 (`5f5228e`), no r3 quorum.
+  - The r3 designer also found an r2 defect neither reviewer had raised. The `zzcopyfs` positive in the shared `pos` map would have produced 2 violations and broken `len(pv) != 1`, so every new tripwire fixture now gets its own single-key map.
+
+**Work (test-only, `host/verifygate/forklocked_write_test.go`):**
+- **M1** (`e0ccf3f`): `os.CopyFS` added to `bannedOSFuncs` and `writeSel["os"]`, with a P-CopyFS scan fixture and a `zzcopyfs` tripwire fixture.
+- **M2** (`613f94c`): the P-LocalDo and P-CreateOpener fixtures.
+- **M3** (`df7ac90`): the `host/zz` positive and the `host/verifygate` negative.
+- **M4** (`d5d569e`): a `host/verifygate/zz` positive, from judge r1 finding 1. The design's AC7/AC8 were corrected too:
+  - AC7: the live red fires first, so the fixture's kill is measured with the live assertion neutralised.
+  - AC8: the gate binary is the v0.41.0 pin.
+- Docs went to `implemented/`, and the judge report is banked at `design_docs/verification/world-iter231/evaluator-r1.md` (`4b7ad9b`).
+
+**Evidence:**
+- **Planner:** prototyped M1–M3 in scratch and measured every named kill (8/8). It also caught a **controller error**: my directive named the v0.52.1 tool binary as `AILANG_BIN`, which makes `go test ./...` red at base (30 "not the pinned v0.41.0" refusals) and `verify_ail.sh` red. The repo pin is v0.41.0 at `~/.pinned-ailang/ailang`, matching ci.yml:77–85; I confirmed it first-party.
+- **Executor:** 8/8 drills killed, each reverted byte-identical. `go vet` and `gofmt` clean; the five fork-lock tests passed plain and `-race`; `go build ./...` rc 0; `go test ./...` rc 0 (26 ok); `verify_ail.sh` rc 0 (16 identities / 40 named / 365 se-tools); the personal-address scan rc 0.
+- **Executor cross-check (controller):** it reported all that in 10 tool calls. I checked the 3 commits, the 8 fresh drill logs, `gotest_all.log` (0 `--- FAIL`, 26 `ok`) and the `verify_ail` PASS line.
+- **Judge r1** (opus): **PASS 94**. 16 guard mutants, 14 killed and 1 equivalent. N3, N5 and N6 also pass on base `95575aa`, so the new fixtures are what kills them.
+- **The judge's survivor, reproduced by the controller:** `!strings.HasPrefix(dir, "host/verifygate")` gave rc=0. It was fixed in M4.
+- **Judge r2:** **PASS 97**. The prefix, `verifygat`-prefix and `Contains` mutants are KILLED. `HasSuffix(dir, "verifygate")` survives, but it is non-blocking because no other `verifygate` dir exists.
+- **CI:** PR head `4b7ad9b` was 2/2 success, MERGEABLE/CLEAN. Merge `38f270b`, run 37308586798, was 2/2 success. All five fork-lock tests `--- PASS` on ubuntu at both, including the Linux kernel control.
+
+**Routing evidence:**
+- **Controller:** `claude:claude-opus-5-5` (tok: not reported).
+- **Designer:** Agent `opus`. The resolver said `recipe claude:claude-opus-5-5 declared:provider-pin` (same weights; the operator's standing request was the Agent tool). It made one carve-out revision of the glm-authored doc, ~52k subagent tok. The rotation pointer stays `codex:gpt-6.1-sol` (codex over ration this fire).
+- **Planner:** Agent `opus` (`agent-tool opus fail-closed:env-pin`; ~96k tok, 9.7 min).
+- **Executor:** Agent `sonnet`. The pin `claude:claude-sonnet-5-5` resolved as a `recipe`. ~48k tok, then ~54k for M4.
+- **Evaluator:** Agent `opus`. The resolver gave `reroute pi:openrouter/minimax/minimax-m3 generator-equals-judge`, but openrouter is in `MISSION_OVER_RATION`, and the chain's `claude:claude-sonnet-4-6` is the executor's family. Generator≠judge holds (sonnet vs opus). ~83k tok over 12.2 min, then ~92k for r2.
+- **Metered spend this iteration:** $0. No quorum round was run; iteration 230's two rounds were spent in its own slot.
+
+**Ruled out:**
+- Rows 140, 93, 114 and 139: 140 is in attended design (#197, unchanged ~40h), and the rest are sequenced behind it.
+- Rows 136/141: default B under D-WORLD-61.
+- Re-running quorum on r3: the carve-out was already ratified, and the absent seats were auth and quota, not budget.
+- Gemini's "remove the negative fixture": the premise was false, and the fixture is the durable pin.
+- Killing the `HasSuffix` survivor in this row: it is behaviour-identical today, so it is recorded only.
+
+**Retro:**
+- **(1)** The controller handed a role a wrong fact (v0.52.1 as `AILANG_BIN`) without a provenance label. The planner's base-red baseline caught it, which is rule 3e working as designed. Lesson: the World gate binary is the **v0.41.0 pin at `~/.pinned-ailang/ailang`** (ci.yml:77); the v0.52.1 path under `~/.pinned-ailang-tools/` is only the floor grader's `$TOOL`.
+- **(2)** Three consecutive capacity-dead World slots (iteration 230, then the 2026-10-05 03:21Z and 07:21Z fires) are a pattern rather than three incidents. The fleet already reports it ("PAUSED — no capacity"); no ticket was filed, because the driver's own pause notice is the escalation.
+
+**Progress:** World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. Dev guard hardened. The goal was not moved by the loop.
+
+**Next:**
+- Row 140 once the attended session lands its design (#197) or hands it back; then 93 → 114 → 139.
+- Mark answers D-WORLD-61.
+- No hygiene row is filed: the `HasSuffix` survivor is behaviour-identical today and recorded in the judge report.
+
+**Merge follow-through (Gate 3b):** merge commit `38f270b`, CI run 37308586798, 2/2 success; the verbose fork-lock step logs `--- PASS:` for all five tests on ubuntu. Item LANDED.
