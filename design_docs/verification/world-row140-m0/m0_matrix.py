@@ -170,7 +170,11 @@ try:
         ctl == "WORLD-PROBE-WROTE" and tok(out) in REFUSED and not os.path.exists(tgt))
     for name, p in (("$HOME", os.path.join(HOME, ".world-row140-m0-home-write")), ("state dir", os.path.join(STATE, "w.txt"))):
         rc, out = srt(writep(p))
-        rec(f"arm2 write {name} refused", True, "REFUSED; absent", f"{tok(out)}; exists={os.path.exists(p)}", tok(out) in REFUSED and not os.path.exists(p))
+        # macOS refuses (EPERM). Linux/bwrap masks a read-denied dir with an empty tmpfs, so the write can
+        # land in that throwaway mount: the gating property is "host bytes unchanged", the token is recorded.
+        ok = (not os.path.exists(p)) and (tok(out) in REFUSED if sys.platform == "darwin" else tok(out) is not None)
+        rec(f"arm2 write {name}: host unchanged", True, "host absent (macOS: REFUSED; Linux: REFUSED or WROTE-into-tmpfs)",
+            f"{tok(out)}; host exists={os.path.exists(p)}", ok)
         if os.path.exists(p):
             os.remove(p)
 
@@ -185,7 +189,8 @@ try:
     rc, out = srt(readp(CLI))
     rec("V42 child cannot read the archived cli.js", True, "REFUSED", tok(out), tok(out) in REFUSED)
     rc, out = srt(["/bin/ls", HOME])
-    rec("V8 ls $HOME refused", True, "non-zero, no listing of BASE", f"rc {rc}: {out[:160]}", rc != 0 and os.path.basename(BASE) not in out)
+    rec("V8 ls $HOME leaks nothing", True, "ran; BASE not listed (macOS rc!=0; Linux masked: empty)", f"rc {rc}: {out[:160]}",
+        os.path.basename(BASE) not in out and (rc != 0 if sys.platform == "darwin" else rc == 0))
     rc, out = srt(readp("/etc/hosts"))
     rec("V8 system path /etc/hosts stays readable (R-140-1)", False, "READ", tok(out), tok(out) == "WORLD-PROBE-READ")
     rc, out = srt(readp(os.path.join(EP1, "in.txt")))
@@ -270,7 +275,26 @@ try:
     rec("V9 external https refused (allowedDomains=[])", True, "ran; no 200", out[:160], "WORLD-PROBE-RAN" in out and "200" not in out.split(" rc=")[0])
     bind = js("const n=require('net');const s=n.createServer();s.on('error',e=>console.log('WORLD-PROBE-REFUSED '+e.code));s.listen(0,'127.0.0.1',()=>{console.log('WORLD-PROBE-BOUND');s.close()})")
     rc, out = srt(bind)
-    rec("V9 bind 127.0.0.1 refused (allowLocalBinding=false)", True, "not BOUND", tok(out), tok(out) is not None and tok(out) != "WORLD-PROBE-BOUND")
+    rec("V9 bind 127.0.0.1 (allowLocalBinding=false)", False, "macOS REFUSED; Linux binds inside its own netns", tok(out), tok(out) is not None)
+    # the gating property: a listener the child opens is NOT reachable from the host
+    lst = js("const n=require('net');const s=n.createServer(c=>c.end());s.on('error',e=>console.log('WORLD-PROBE-REFUSED '+e.code));"
+             "s.listen(0,'127.0.0.1',()=>{console.log('WORLD-PROBE-BOUND '+s.address().port);setTimeout(()=>s.close(),4000)})")
+    sp = subprocess.Popen([NODE, CLI, "--settings", SET, "--"] + TRAMP + KV + lst, cwd=EP1, env=HOST_ENV,
+                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, stdin=subprocess.DEVNULL)
+    line = sp.stdout.readline().strip()
+    reached = None
+    if line.startswith("WORLD-PROBE-BOUND "):
+        bport = int(line.split()[1])
+        c = socket.socket(); c.settimeout(2)
+        try:
+            c.connect(("127.0.0.1", bport)); reached = True
+        except OSError as e:
+            reached = False
+        finally:
+            c.close()
+    sp.wait(timeout=20)
+    rec("V9 child listener unreachable from host", True, "BOUND-and-unreachable or REFUSED",
+        f"{line}; host reached={reached}", line.startswith("WORLD-PROBE-REFUSED") or (line.startswith("WORLD-PROBE-BOUND ") and reached is False))
     rc, out = srt(js("require('dns').lookup('example.com',(e,a)=>console.log(e?'WORLD-PROBE-REFUSED '+e.code:'WORLD-PROBE-RESOLVED '+a))"))
     rec("V9 direct DNS", False, "REFUSED (macOS)", tok(out), True)
 
