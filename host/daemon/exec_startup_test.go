@@ -356,6 +356,65 @@ func quickstartExecRefusals(t *testing.T) map[string][]string {
 	return rows
 }
 
+// namedProfile is a one-command profile whose command prints its project.
+func namedProfile(t *testing.T, project string) *broker.ExecProfile {
+	t.Helper()
+	data, _ := json.Marshal(map[string]any{"profile": broker.ExecProfileVersion, "project": project, "path": []any{"/usr/bin", "/bin"},
+		"timeout_ms": 5000, "commands": map[string]any{"who": map[string]any{"argv": []any{"/bin/sh", "-c", "echo " + project}}}})
+	p, err := broker.ParseExecProfile(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+// §4.6: an episode runs under its --exec-episode-project profile; with
+// several profiles an unmapped episode is refused per call (never a guess);
+// with exactly one, every episode uses it.
+func TestWorkspaceExecEpisodeSelectsItsProfile(t *testing.T) {
+	f := newWSFixture(t)
+	if err := os.MkdirAll(filepath.Join(f.root, "ep3"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	d := mustWSDaemon(t, Config{DBPath: f.db, WorkspaceRoot: f.root, ToolAilangBin: fakeToolBin(t, f.logDir, ToolBinaryRelease)})
+	a, b := namedProfile(t, "alpha"), namedProfile(t, "beta")
+	sb := stubExecSandbox(t, f.stateDir)
+	who := func(ep string) string {
+		t.Helper()
+		out, err := d.workspace.registry(ep)[broker.EffectWorkspaceExec].Execute(boundedTestContext(t),
+			broker.EffectRequest{Effect: broker.EffectWorkspaceExec, Scope: broker.WorkspaceScope, Cost: 1}, []byte(`{"command":"who"}`))
+		if err != nil {
+			t.Fatalf("%s: %v", ep, err)
+		}
+		var res struct {
+			Stdout  string `json:"stdout"`
+			Refused string `json:"refused"`
+		}
+		_ = json.Unmarshal(out, &res)
+		return strings.TrimSpace(res.Stdout + res.Refused)
+	}
+	d.workspace.exec = &workspaceExec{byProject: map[string]*broker.ExecProfile{"alpha": a, "beta": b},
+		episodeProject: map[string]string{"ep1": "alpha", "ep2": "beta"}, sandbox: sb}
+	if got := who("ep1"); got != "alpha" {
+		t.Fatalf("ep1 ran under %q, want alpha", got)
+	}
+	if got := who("ep2"); got != "beta" {
+		t.Fatalf("ep2 ran under %q, want beta", got)
+	}
+	if got, want := who("ep3"), broker.ExecNoEpisodeProfileRefusal("ep3"); got != want {
+		t.Fatalf("unmapped ep3 with two profiles = %q, want the refusal %q", got, want)
+	}
+	// One profile: every episode uses it, mapped or not.
+	f2 := newWSFixture(t)
+	d2 := mustWSDaemon(t, Config{DBPath: f2.db, WorkspaceRoot: f2.root, ToolAilangBin: fakeToolBin(t, f2.logDir, ToolBinaryRelease)})
+	d2.workspace.exec = &workspaceExec{profile: a, byProject: map[string]*broker.ExecProfile{"alpha": a},
+		episodeProject: map[string]string{}, sandbox: stubExecSandbox(t, f2.stateDir)}
+	d = d2
+	if got := who("ep2"); got != "alpha" {
+		t.Fatalf("with one profile ep2 ran under %q, want alpha", got)
+	}
+}
+
 // TestExecStartupRefusalTable is AC3.1: every row of QUICKSTART §10's table
 // refuses `serve` at startup (StageConfig, nothing listening) naming what the
 // row quotes, and the table and these cases are the same set.

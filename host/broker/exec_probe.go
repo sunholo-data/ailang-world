@@ -441,19 +441,28 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, worktree, si
 	reached := poll()
 	time.Sleep(200 * time.Millisecond)
 	acceptsC := net6.accepts.Load()
-	switch raw, proxy, rev := a.token(6), c.token(0), c.token(1); {
-	case netCtl != nil:
-		pp.fail(ExecProbeArmNetwork, "control: World's live listener did not accept an unsandboxed connect: %v", netCtl)
-	case !strings.HasPrefix(raw, "WORLD-PROBE-REFUSED ") || acceptsA != 1:
-		pp.fail(ExecProbeArmNetwork, "a raw connect to World's live listener: token %q, accepts %d (want a refusal and still 1; %s)",
-			raw, acceptsA, a.describe())
-	case !strings.HasPrefix(proxy, "WORLD-PROBE-REFUSED ") || acceptsC != 1:
-		pp.fail(ExecProbeArmNetwork, "a connect through srt's proxy environment: token %q, accepts %d (want a refusal and still 1; %s)",
-			proxy, acceptsC, c.describe())
-	case rev != "WORLD-PROBE-BOUND" && !strings.HasPrefix(rev, "WORLD-PROBE-REFUSED "):
-		pp.fail(ExecProbeArmNetwork, "reverse leg: no token from the child's listener (%q; %s)", rev, c.describe())
-	case reached:
-		pp.fail(ExecProbeArmNetwork, "reverse leg: the host reached the listener the child bound on 127.0.0.1:%d", revPort)
+	// Every leg is judged and every failing one named: one leg must never
+	// hide another (the reverse leg would otherwise mask a vacuous connect).
+	var legs []string
+	raw, proxy, rev := a.token(6), c.token(0), c.token(1)
+	if netCtl != nil {
+		legs = append(legs, fmt.Sprintf("control: World's live listener did not accept an unsandboxed connect: %v", netCtl))
+	}
+	if !strings.HasPrefix(raw, "WORLD-PROBE-REFUSED ") || acceptsA != 1 {
+		legs = append(legs, fmt.Sprintf("a raw connect to World's live listener: token %q, accepts %d (want a refusal and still 1; %s)",
+			raw, acceptsA, a.describe()))
+	}
+	if !strings.HasPrefix(proxy, "WORLD-PROBE-REFUSED ") || acceptsC != 1 {
+		legs = append(legs, fmt.Sprintf("a connect through srt's proxy environment: token %q, accepts %d (want a refusal and still 1; %s)",
+			proxy, acceptsC, c.describe()))
+	}
+	if rev != "WORLD-PROBE-BOUND" && !strings.HasPrefix(rev, "WORLD-PROBE-REFUSED ") {
+		legs = append(legs, fmt.Sprintf("reverse leg: no token from the child's listener (%q; %s)", rev, c.describe()))
+	} else if reached {
+		legs = append(legs, fmt.Sprintf("reverse leg: the host reached the listener the child bound on 127.0.0.1:%d", revPort))
+	}
+	if len(legs) > 0 {
+		pp.fail(ExecProbeArmNetwork, "%s", strings.Join(legs, "; "))
 	}
 
 	// Run D: arm 7, the profile's toolchain probe exits 0.

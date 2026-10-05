@@ -184,6 +184,22 @@ func TestExecProbePassThroughShimFailsEveryConfinementArm(t *testing.T) {
 	if !slices.Equal(got, want) {
 		t.Fatalf("pass-through srt failed arms %v, want exactly %v", got, want)
 	}
+	// MUT-PROBE-NET-VACUOUS: each of arm 6's legs catches the unsandboxed
+	// run on its own — the live counted listener (raw and via the proxy
+	// environment) as well as the reverse leg.
+	var perr *ExecProbeError
+	errors.As(err, &perr)
+	for _, f := range perr.Failed {
+		if f.Arm != ExecProbeArmNetwork {
+			continue
+		}
+		for _, leg := range []string{"a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2",
+			"a connect through srt's proxy environment: token \"WORLD-PROBE-CONNECTED\", accepts 3", "reverse leg: the host reached"} {
+			if !strings.Contains(f.Why, leg) {
+				t.Errorf("arm 6 under a pass-through srt does not report %q:\n%s", leg, f.Why)
+			}
+		}
+	}
 	f.assertProbeCleaned(t)
 }
 
