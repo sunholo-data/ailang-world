@@ -1,0 +1,60 @@
+{
+  "doc": "design_docs/planned/w-workspace-exec-toolchain-effect.md",
+  "iso_ts": "2026-10-03T18:33:14Z",
+  "reviewers": [
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.03384,
+      "tokens_in": 15516,
+      "tokens_out": 234,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The document fails the Conflict Surface gate by claiming 'runBounded' will remain unchanged (Section 10) while simultaneously proposing to duplicate its complex, OS-level process lifecycle management (Setpgid, procbound.Admit/Wait, context cancellation, group kill) in the new ExecHandler just to swap the output sink (Section 4.5). This avoids necessary refactoring of shared, dangerous system-level machinery.",
+        "catch": "Section 10 explicitly lists 'runBounded unchanged' but Section 4.5 requires its internal OS-level process bounds logic to be reused alongside a new headTailSink.",
+        "proposed_fix": "Move 'runBounded' to the 'Touches' list in Section 10. Refactor 'runBounded' to accept an output-sink interface (e.g., allowing both the legacy boundedSink and the new headTailSink) so the critical Admit, Setpgid, Wait, and context cancellation lifecycle is shared rather than duplicated in handlers_exec.go."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.088872,
+      "tokens_in": 14134,
+      "tokens_out": 15701,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc's central correction — D-140-1, 'reads ARE fenceable, and this design fences them' (P2, §1, R-140-1) — is asserted, not enforced. §4.3's load-time refusals reject a read_roots entry that is *inside* the World state dir or workspace root, but never one that *contains* a denied root: a profile with read_roots [\"/Users/\u003cop\u003e\"] (or any ancestor of the workspace root, e.g. the projects dir holding root/ep1, root/ep2) passes load and silently re-opens the operator's $HOME and every sibling episode to each sandboxed run, since deny-then-allow means allow wins (V8). Worse, every startup-probe arm stays green in that configuration, because arm 3 plants its decoy 'outside the allow roots' — the probe adapts to the config it is supposed to be testing rather than testing the config against a fixed decoy. The measured fence (V8, V19, V23, V24, V35) holds only for the narrow read_roots the designer happened to test; as a design invariant, 'reads are fenced by default' is a silent, operator-config-driven fallback, violating the fail-closed axiom the doc otherwise upholds and leaving its headline claim (the row was wrong; reads are fenced) unbacked.",
+        "catch": "Two coupled holes to verify before this proceeds: (1) the containment direction of the read_roots check in §4.3 (only descendants of the state dir/workspace root are refused; ancestors of denied roots are not), and (2) probe arm 3 in §4.6, whose decoy is defined relative to the configured allow roots rather than at fixed sensitive paths. Reproduce it in one line: run the V35 topology with read_roots [\"/Users/\u003cop\u003e\"] and confirm that today's spec loads, the probe passes, and the child reads the decoy. Secondary, cheap to close while you are in there: §4.2/AC2.4/AC3.3 never state what a handler-side refusal (unprofiled id or grammar mismatch, which the plan cannot pre-empt since it cannot see the profile) debits or records — AC3.3 covers only grant-absence and budget exhaustion — and §4.6 re-hashes argv0 per call but srt's cli.js only at serve, the reverse of the sensible trust cadence.",
+        "proposed_fix": "Add to §4.3's load-time refusals: 'a read_roots entry that, after realpath resolution (the V24 symlink lesson), is equal to or an ancestor of the operator's $HOME, the World state dir, or the workspace root → serve exits non-zero naming the entry and the denied root it re-opens.' Replace probe arm 3 with two fixed decoys that do not depend on the configured allow roots: one planted under the operator's real $HOME and one under a sibling-episode path inside the workspace root; both must be refused, and if a read_root covers either, the arm fails and names it. Add a V-row re-running the V35 topology with the hostile profile read_roots [\"/Users/\u003cop\u003e\"] recording the load-time refusal, and restate D-140-1 as conditional-but-enforced: 'reads are fenced by default, and the fence is load-time-enforced against overbroad read_roots.' In the same edit: specify in §4.2 whether a handler-side refusal debits cost 1 and what its record contains (mirror row 134's refused-effect record), and either re-hash dist/cli.js per call (≈ ms, same as argv0) or state why the confinement binary is trusted on a weaker cadence than the command binary."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.161502,
+      "tokens_in": 14069,
+      "tokens_out": 7953,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The fail-closed startup probe's network arm (§4.6 arm 6) is vacuous as specified: it requires that a sandboxed connect to '127.0.0.1:\u003cWorld's own port\u003e' be refused, but the doc never orders the probe relative to serve binding its listener. If the port is unbound when the probe runs, the connect fails with ECONNREFUSED — and V9 shows srt's policy refusal is also rc 7 ('Couldn't connect'), so a refused-to-an-unbound-port and a refused-by-sandbox are indistinguishable. The arm can pass without proving any network fence exists. This is the only production check on the network confinement, and it matters most on the platform the doc itself flags as unmeasured (V33/R-140-8): Linux's network isolation depends on srt's socat-based proxy, so 'socat missing → srt silently ignores the network config' is precisely the failure arm 6 exists to convert into a serve-refusal. As written, that failure would pass the probe. Note V9 measured with a live stand-in server at :17644, so the spec regressed relative to its own evidence; the mutation table even assumes a 'probe server' (MUT-NET-ON → AC2.5 'a connect to the probe server') that §4.6 does not define.",
+        "catch": "Flag §4.6 arm 6: replace 'World's own port' with a guaranteed live listener, and pin the probe/serve bind ordering. Also verify on Linux (M0/AC0.2): with socat absent, does srt fail closed at startup, or does it start with the network fence silently unenforced? The current arm 6 cannot tell the difference.",
+        "proposed_fix": "Rewrite §4.6 arm 6 as: 'the probe binds its own loopback TCP listener on an ephemeral port before any sandbox runs; a sandboxed connect to that port must fail, AND the listener must have accepted zero connections AND the refusal signature must match srt's policy refusal (proxy 403/rc 56 or rc 7 against a live listener, per V9), not ECONNREFUSED to an unbound port. If the only observed failure is ECONNREFUSED with zero listener activity, the arm is inconclusive and serve refuses to enable the tool.' Add one line pinning ordering: 'the probe runs before serve binds its public port, with its own dedicated listener' (or, if run after bind, assert the World port is confirmed listening first). Extend M0/AC0.2 to run this amended arm on ubuntu-latest with and without socat installed, and record both outcomes as a V-row so 'network fence absent on Linux' is a typed serve-refusal by measurement, not assumption; extend the AC3.1 probe table to name the listener guarantee for arm 6."
+      },
+      "landed": null
+    }
+  ],
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: The document fails the Conflict Surface gate by claiming 'runBounded' will remain unchanged (Section 10) while simultaneously proposing to duplicate its complex, OS-level process lifecycle management (Setpgid, procbound.Admit/Wait, context cancellation, group kill) in the new ExecHandler just to swap the output sink (Section 4.5). This avoids necessary refactoring of shared, dangerous system-level machinery.",
+      "oc-glm-5-3: The doc's central correction — D-140-1, 'reads ARE fenceable, and this design fences them' (P2, §1, R-140-1) — is asserted, not enforced. §4.3's load-time refusals reject a read_roots entry that is *inside* the World state dir or workspace root, but never one that *contains* a denied root: a profile with read_roots [\"/Users/\u003cop\u003e\"] (or any ancestor of the workspace root, e.g. the projects dir holding root/ep1, root/ep2) passes load and silently re-opens the operator's $HOME and every sibling episode to each sandboxed run, since deny-then-allow means allow wins (V8). Worse, every startup-probe arm stays green in that configuration, because arm 3 plants its decoy 'outside the allow roots' — the probe adapts to the config it is supposed to be testing rather than testing the config against a fixed decoy. The measured fence (V8, V19, V23, V24, V35) holds only for the narrow read_roots the designer happened to test; as a design invariant, 'reads are fenced by default' is a silent, operator-config-driven fallback, violating the fail-closed axiom the doc otherwise upholds and leaving its headline claim (the row was wrong; reads are fenced) unbacked.",
+      "oc-kimi-k3: The fail-closed startup probe's network arm (§4.6 arm 6) is vacuous as specified: it requires that a sandboxed connect to '127.0.0.1:\u003cWorld's own port\u003e' be refused, but the doc never orders the probe relative to serve binding its listener. If the port is unbound when the probe runs, the connect fails with ECONNREFUSED — and V9 shows srt's policy refusal is also rc 7 ('Couldn't connect'), so a refused-to-an-unbound-port and a refused-by-sandbox are indistinguishable. The arm can pass without proving any network fence exists. This is the only production check on the network confinement, and it matters most on the platform the doc itself flags as unmeasured (V33/R-140-8): Linux's network isolation depends on srt's socat-based proxy, so 'socat missing → srt silently ignores the network config' is precisely the failure arm 6 exists to convert into a serve-refusal. As written, that failure would pass the probe. Note V9 measured with a live stand-in server at :17644, so the spec regressed relative to its own evidence; the mutation table even assumes a 'probe server' (MUT-NET-ON → AC2.5 'a connect to the probe server') that §4.6 does not define."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.284214,
+    "total_tokens_in": 43719,
+    "total_tokens_out": 23888
+  }
+}

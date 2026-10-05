@@ -1,0 +1,60 @@
+{
+  "doc": "design_docs/planned/w-workspace-exec-toolchain-effect.md",
+  "iso_ts": "2026-10-03T18:36:55Z",
+  "reviewers": [
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.037888000000000005,
+      "tokens_in": 17576,
+      "tokens_out": 228,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Probe arm 6 (network isolation) is vacuous if the network client (e.g., `curl` or `python`) is missing from the profile's restricted `path`. A missing binary exits with rc 127 or 126, which perfectly satisfies both the \"must fail\" and \"count must still be 1\" conditions. This causes a false pass on hosts with broken network isolation, silently defeating the load-bearing Linux gate.",
+        "catch": "The arm 6 control proves the listener is live but fails to prove the client command actually executed, allowing command-not-found errors to masquerade as sandbox network refusals.",
+        "proposed_fix": "Require the arm 6 control to execute the exact same connect command unsandboxed using the profile's `env` and `path`, and assert that the listener's accept count increments. This guarantees the client exists and functions, ensuring the subsequent sandboxed failure is genuinely caused by the network fence."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.08640300000000001,
+      "tokens_in": 16079,
+      "tokens_out": 14521,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The core fail-closed promise — 'never an unsandboxed run, on any platform' (§2) — is not enforced against a mid-session swap of the confinement stack itself. `--exec-sandbox` (and `--exec-node`, and the `--exec-profile` file) have no placement rules in the load-time refusal list: nothing refuses a sandbox dir or profile inside the workspace root, an episode worktree, or the exec cache, all of which sit inside `allowWrite` and are therefore writable by the very project code R-140-3 assumes hostile. The startup probe runs once per profile at `serve` time, and `dist/cli.js` is hash-checked only at load — while the far less load-bearing `argv0` is re-hashed on every call and refused on change (§4.3). Project code can rewrite the pinned `cli.js` after the probe passes, and the next `ExecHandler` invocation spawns the swapped bytes: every subsequent 'sandboxed' run is unsandboxed, with a stale `sandbox.cli_sha256` in the record. Whether the profile is re-read per call is also unstated: if it is, a worktree-resident profile is agent-controlled argv/env/grammar; if it is not, the 'outside every worktree' property in §4.3 is prose, not an enforced rule. For a design whose entire value proposition is 'the sandbox, not the allowlist, is the fence', the fence binary is the one component whose integrity is checked least often.",
+        "catch": "Two load-bearing codebase claims are asserted, not verified. (1) `childenv.RegistryVariables`, `childenv.Scrubbed` and the credential arms have no V-row anywhere, yet §4.3's env refusal rule ('or anything `childenv.RegistryVariables` strips') and MUT-ENV-INHERIT's killer both depend on their existence and behavior. (2) §4.5's 'With `allowedDomains: []`, the proxy refuses every host' is inferred from V9, which measured a non-empty allowlist (a non-allowlisted host got a 403), never the empty allowlist the design will actually render. Also minor: §4.4's denyWrite rows for srt's always-on paths ('$HOME/.npm/_logs', '$HOME/.claude/debug') do not say whose `$HOME` — the operator's (what V4 measured) or the child's redirected exec-cache HOME — and the two cases render differently.",
+        "proposed_fix": "1) Add to §4.3's load-time refusals: 'a `--exec-profile`, `--exec-sandbox` or `--exec-node` path whose literal path or realpath equals or lies inside the workspace root, any episode worktree, or the state dir's exec-cache → refused' (reuse the read_roots equal/ancestor/realpath clauses). 2) Amend §4.5: 'World re-hashes `dist/cli.js` on every call, exactly as argv0; a digest change is a typed `sandbox-drift` refusal with no spawn. The profile is held in memory from load and re-hashed against its recorded digest per call.' 3) Add mutants: MUT-SANDBOX-SWAPPED (cli.js swapped between probe and first call → next call refuses; killer: an AC2.5 arm that rewrites the sandbox file mid-test) and MUT-CONFIG-IN-WORKTREE (a profile/sandbox path inside a worktree refused at load; killer: an AC3.1 row). 4) Bank two V-rows before M1: one reading `host/childenv` (`RegistryVariables`, `Scrubbed`, the credential arms) to ground MUT-ENV-INHERIT; one re-running the V9 network arms with `allowedDomains: []` (proxy-connect and raw-connect) to measure the empty-allowlist refusal rather than infer it. 5) In §4.4, state explicitly that the denyWrite rows for srt's always-on paths are rendered against the operator's `$HOME` (or add both the operator's and the child's HOME variants), citing which one V4 measured."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.164772,
+      "tokens_in": 15979,
+      "tokens_out": 7789,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Quorum gate is not satisfied as written: §12 records exactly one quorum round — BLOCKED 3/3 — and then stops. The three [REVISED r1] sections that resulted (runBounded capture-strategy redesign, the read_roots equal/ancestor/realpath load rule, probe arm 3 fixed decoys, probe arm 6 live-listener) are the highest-risk parts of the design, and the evidence closing them (V36, V37) was measured by the author alone, first-party, same day, in response to the block — with no ratifying round 2 or delta review recorded. The doc is filed in planned/ declaring itself executor-ready ('PLANNED'), yet its own process artifact shows rejection with self-certified fixes. Either the quorum policy permits author-attested re-measurement to close a BLOCK (in which case the doc must cite that policy), or a second round is required before M0 — the doc states neither, so premise 'quorum log in §12' supports 'was blocked,' not 'cleared.'",
+        "catch": "Two internal inconsistencies the executor will trip on: (1) §4.6's flags table lists 4 flags but the `--exec-profile` row defines a 5th serve flag, `--exec-episode-project \u003cep\u003e=\u003cproject\u003e`, which appears in no table, and §10's conflict surface asserts main.go gains '4 flags' — multi-profile episode binding is therefore unenumerated, and AC3.1's acceptance ('§4.6's flags') inherits the omission; no milestone tests multi-profile selection. (2) The §4.5 example result JSON asserts `\"version\":\"0.0.78\"` although the pin is unmade until M0 (fleet installs 0.0.71; 0.0.78 measured on only six arms in V32) — the example should say the version is the M0-pinned one.",
+        "proposed_fix": "Append to §12 either (a) a Round 2 (quorum or delta-seats) re-review scoped to the three [REVISED r1] sections with V36/V37/§4.5-revision artifacts, recording its verdict, or (b) an explicit citation of the quorum policy clause under which a BLOCK is closed by author re-measurement alone, with the clause quoted. Also: add `--exec-episode-project \u003cep\u003e=\u003cproject\u003e` as its own row in the §4.6 flags table, correct §10 to '5 flags', add an AC3.x arm for multi-profile episode selection (episodes with no mapping and ≥2 profiles must get a typed refusal), and change the §4.5 example `\"version\":\"0.0.78\"` to `\"version\":\"\u003cExecSandboxRelease, pinned at M0\u003e\"`."
+      },
+      "landed": null
+    }
+  ],
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: Probe arm 6 (network isolation) is vacuous if the network client (e.g., `curl` or `python`) is missing from the profile's restricted `path`. A missing binary exits with rc 127 or 126, which perfectly satisfies both the \"must fail\" and \"count must still be 1\" conditions. This causes a false pass on hosts with broken network isolation, silently defeating the load-bearing Linux gate.",
+      "oc-glm-5-3: The core fail-closed promise — 'never an unsandboxed run, on any platform' (§2) — is not enforced against a mid-session swap of the confinement stack itself. `--exec-sandbox` (and `--exec-node`, and the `--exec-profile` file) have no placement rules in the load-time refusal list: nothing refuses a sandbox dir or profile inside the workspace root, an episode worktree, or the exec cache, all of which sit inside `allowWrite` and are therefore writable by the very project code R-140-3 assumes hostile. The startup probe runs once per profile at `serve` time, and `dist/cli.js` is hash-checked only at load — while the far less load-bearing `argv0` is re-hashed on every call and refused on change (§4.3). Project code can rewrite the pinned `cli.js` after the probe passes, and the next `ExecHandler` invocation spawns the swapped bytes: every subsequent 'sandboxed' run is unsandboxed, with a stale `sandbox.cli_sha256` in the record. Whether the profile is re-read per call is also unstated: if it is, a worktree-resident profile is agent-controlled argv/env/grammar; if it is not, the 'outside every worktree' property in §4.3 is prose, not an enforced rule. For a design whose entire value proposition is 'the sandbox, not the allowlist, is the fence', the fence binary is the one component whose integrity is checked least often.",
+      "oc-kimi-k3: Quorum gate is not satisfied as written: §12 records exactly one quorum round — BLOCKED 3/3 — and then stops. The three [REVISED r1] sections that resulted (runBounded capture-strategy redesign, the read_roots equal/ancestor/realpath load rule, probe arm 3 fixed decoys, probe arm 6 live-listener) are the highest-risk parts of the design, and the evidence closing them (V36, V37) was measured by the author alone, first-party, same day, in response to the block — with no ratifying round 2 or delta review recorded. The doc is filed in planned/ declaring itself executor-ready ('PLANNED'), yet its own process artifact shows rejection with self-certified fixes. Either the quorum policy permits author-attested re-measurement to close a BLOCK (in which case the doc must cite that policy), or a second round is required before M0 — the doc states neither, so premise 'quorum log in §12' supports 'was blocked,' not 'cleared.'"
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.289063,
+    "total_tokens_in": 49634,
+    "total_tokens_out": 22538
+  }
+}

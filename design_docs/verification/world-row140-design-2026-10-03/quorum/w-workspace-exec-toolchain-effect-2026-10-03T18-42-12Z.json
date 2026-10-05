@@ -1,0 +1,60 @@
+{
+  "doc": "design_docs/planned/w-workspace-exec-toolchain-effect.md",
+  "iso_ts": "2026-10-03T18:42:12Z",
+  "reviewers": [
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.0422,
+      "tokens_in": 19318,
+      "tokens_out": 297,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Missing Conflict Surface analysis regarding environment namespace overlap: §4.5 injects the profile's `env` directly into the host-level `exec.Cmd` that spawns `\u003cnode\u003e \u003csrt\u003e/dist/cli.js`. Because the sandbox runtime itself executes on Node, passing the profile's `env` (which might legitimately contain `NODE_OPTIONS` for a TypeScript project) directly to the host Node process will pollute the wrapper's runtime before the sandbox even starts. This risks breaking `srt` or causing a complete sandbox escape if the profile's `NODE_OPTIONS` includes a `--require` pointing to untrusted workspace code.",
+        "catch": "Profile environment variables pollute the unconfined host Node process executing the sandbox wrapper.",
+        "proposed_fix": "In §4.5, do not pass `profile.env` to the host `exec.Cmd`. Instead, inject the profile's environment variables strictly inside the sandbox by prefixing the trampoline with `/usr/bin/env` as separate argv elements. For example, modify the handler command to: `\u003cnode\u003e \u003csrt\u003e/dist/cli.js --settings \u003crendered\u003e -- /usr/bin/env KEY=val /bin/sh -c '\"$@\"; exit $?' world-exec \u003cabs argv0\u003e ...`."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.1025992,
+      "tokens_in": 17710,
+      "tokens_out": 17683,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Gate 1 fails on a load-bearing mechanism that is asserted, not measured: §4.4/§4.5 place the child's TMPDIR in the per-episode exec cache 'through CLAUDE_CODE_TMPDIR' and cite V4, but no V-row ever sets CLAUDE_CODE_TMPDIR. V4 and V10 measured only srt's default behavior, which sets TMPDIR=/tmp/claude — a path §4.4's own mandatory denyWrite blocks, and V25 shows /tmp writes refused outright since allowWrite covers only the worktree plus exec cache. §4.5's minimal env notably omits TMPDIR, so the design has no measured route to the child's temp directory at all: if srt ignores CLAUDE_CODE_TMPDIR, or clobbers a parent-set TMPDIR as V10's 'plus' wording suggests, every temp-writing command (pytest tmp_path fixtures, vitest, go cgo) fails inside the fence — and no M2 AC pins this arm, so it would surface late, in M4, against real projects.",
+        "catch": "The argv0 story contradicts the doc's own measurements and its own integrity rules: V22 and the M4 plan run TwilightGame typecheck via ./node_modules/.bin/tsc, which the load rule 'argv[0] resolves on path' cannot express (the example path lists host dirs only, and the worktree is per-episode), and argv0 is the one executable exempt from §4.6's placement rule — a worktree-resident argv0 is agent-writable content, contradicting §4.3's claim that the grammar keeps the executable the operator's choice. Secondarily, §4.3's schema refuses unknown keys while §4.3/§4.6 reference keys the example schema lacks (probe, passthrough, testfile suffix sets).",
+        "proposed_fix": "Add V40 to the probe bank on the pinned srt with §4.5's env: (a) parent sets only CLAUDE_CODE_TMPDIR=\u003cstate\u003e/exec-cache/\u003cep\u003e/\u003cproject\u003e/tmp, run /usr/bin/env, record the child TMPDIR; (b) parent sets TMPDIR=\u003cstate\u003e/exec-cache/\u003cep\u003e/\u003cproject\u003e/tmp directly, record whether srt overrides it to /tmp/claude. Pin whichever route is measured into §4.5's env list (set TMPDIR explicitly if srt honors it), replace §4.4's 'through CLAUDE_CODE_TMPDIR, V4' citation with V40, and add AC2.10: through the real handler, a sandboxed os-tmp write lands in the episode tmp/ directory and a /tmp write is refused. In the same revision: extend §4.6's placement rule to argv0 (refuse argv0 resolving inside the workspace root, or explicitly permit worktree argv0 and restate it in R-140-3 as agent-supplied code), specify how the TS profile expresses node_modules/.bin/tsc under the path-resolution rule (e.g. path entries may be root-relative), and add the probe, passthrough and testfile-suffix keys to §4.3's schema so its own unknown-key law is satisfiable."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.23805300000000001,
+      "tokens_in": 17576,
+      "tokens_out": 12355,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§4.6 (round-2 revision) makes World run srt from its 'content-addressed archive', but the doc never says where that archive lives, and §4.4's rendered allowRead — [this worktree, this episode's exec cache, profile read_roots, their realpaths] — does not include it. §4.4 denies reads of the World state dir, which is the natural (and in V35 the only modeled) home for World-owned state: if the archived srt tree lands under the state dir, the sandboxed node cannot read dist/cli.js and every exec call fails before spawn. So the confinement-stack revision is, as written, a design that cannot run, and the r2 revisions are precisely the part no quorum round reviewed — §12 remains BLOCKED 3/3, and the author answered kimi's r2 process objection ('self-certified fixes are not a cleared quorum') with the symmetric move it flagged: self-certifying the r2 fixes and declaring the objection's premise false. Gate 1 fails: a load-bearing premise about the actual execution path is unspecified, unverified, and unreviewed.",
+        "catch": "Two unverified load-bearing claims to bank before this proceeds. (1) srt's own files (and the node's libnode dir, if custom) are absent from the rendered allowRead list: demonstrate a probe arm executing the ARCHIVED srt from a path under the denied state dir with that archive re-allowed as a child (the V8/V35 child-reallow mechanics), or state explicitly that the archive resolves outside every denied root — the placement rule in §4.6 currently covers writability, not readability-through-the-fence. (2) §4.4 claims the child's TMPDIR is relocated to the episode cache 'through CLAUDE_CODE_TMPDIR (V4)', but V4 as logged contains no CLAUDE_CODE_TMPDIR arm — it shows TMPDIR=/tmp/claude and that denyWrite beats srt's always-allow list. Since §4.4 renders /tmp/claude and /private/tmp/claude into denyWrite, if srt ignores or only partially honors CLAUDE_CODE_TMPDIR (V10 shows srt hardcodes TMPDIR=/tmp/claude into the child env), the rendered settings deny the toolchain temp dir that P6/V18 depend on. (Minor: milestone arithmetic 0.5+1+1+0.75 = 3.25 d, not '≈ 3'.)",
+        "proposed_fix": "Add to §4.6: 'The archive lives at \u003cstate\u003e/exec-archive/srt/\u003cmanifest-digest\u003e/. It is added to the rendered allowRead as a child of the denied state dir (V8/V35 child-reallow). The startup probe runs srt from the archived copy against the profile's real rendered settings, so arm 1's positive WORLD-PROBE token proves the sandboxed node can read the archive through the fence.' Add the matching entry to the §4.4 allowRead row. Add a V-row: 'p15_archive.sh: archive srt under \u003cstate\u003e, render denyRead=[$HOME, state, root] and allowRead=[ws, ep, \u003carchive\u003e]; node \u003carchive\u003e/dist/cli.js --settings R -- true → rc 0; sandboxed cat \u003cstate\u003e/world.db → refused (WORLD-PROBE-REFUSED EACCES/EPERM)'. Add a V-row: 'p16_tmpdir.sh: CLAUDE_CODE_TMPDIR=\u003cep\u003e/tmp; sandboxed child prints TMPDIR → \u003cep\u003e/tmp; write $TMPDIR/x → ok; write /tmp/claude/x → Operation not permitted' — or, if srt ignores the variable, strike the claim and render GOTMPDIR/TMPDIR handling explicitly. Then record a quorum round 3 over the r2 revisions; until §12 shows PROCEED after both r1 and r2 fixes were actually re-reviewed, the doc's own Status must keep it out of the executor queue."
+      },
+      "landed": null
+    }
+  ],
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-3-1-pro: Missing Conflict Surface analysis regarding environment namespace overlap: §4.5 injects the profile's `env` directly into the host-level `exec.Cmd` that spawns `\u003cnode\u003e \u003csrt\u003e/dist/cli.js`. Because the sandbox runtime itself executes on Node, passing the profile's `env` (which might legitimately contain `NODE_OPTIONS` for a TypeScript project) directly to the host Node process will pollute the wrapper's runtime before the sandbox even starts. This risks breaking `srt` or causing a complete sandbox escape if the profile's `NODE_OPTIONS` includes a `--require` pointing to untrusted workspace code.",
+      "oc-glm-5-3: Gate 1 fails on a load-bearing mechanism that is asserted, not measured: §4.4/§4.5 place the child's TMPDIR in the per-episode exec cache 'through CLAUDE_CODE_TMPDIR' and cite V4, but no V-row ever sets CLAUDE_CODE_TMPDIR. V4 and V10 measured only srt's default behavior, which sets TMPDIR=/tmp/claude — a path §4.4's own mandatory denyWrite blocks, and V25 shows /tmp writes refused outright since allowWrite covers only the worktree plus exec cache. §4.5's minimal env notably omits TMPDIR, so the design has no measured route to the child's temp directory at all: if srt ignores CLAUDE_CODE_TMPDIR, or clobbers a parent-set TMPDIR as V10's 'plus' wording suggests, every temp-writing command (pytest tmp_path fixtures, vitest, go cgo) fails inside the fence — and no M2 AC pins this arm, so it would surface late, in M4, against real projects.",
+      "oc-kimi-k3: §4.6 (round-2 revision) makes World run srt from its 'content-addressed archive', but the doc never says where that archive lives, and §4.4's rendered allowRead — [this worktree, this episode's exec cache, profile read_roots, their realpaths] — does not include it. §4.4 denies reads of the World state dir, which is the natural (and in V35 the only modeled) home for World-owned state: if the archived srt tree lands under the state dir, the sandboxed node cannot read dist/cli.js and every exec call fails before spawn. So the confinement-stack revision is, as written, a design that cannot run, and the r2 revisions are precisely the part no quorum round reviewed — §12 remains BLOCKED 3/3, and the author answered kimi's r2 process objection ('self-certified fixes are not a cleared quorum') with the symmetric move it flagged: self-certifying the r2 fixes and declaring the objection's premise false. Gate 1 fails: a load-bearing premise about the actual execution path is unspecified, unverified, and unreviewed."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.38285220000000003,
+    "total_tokens_in": 54604,
+    "total_tokens_out": 30335
+  }
+}
