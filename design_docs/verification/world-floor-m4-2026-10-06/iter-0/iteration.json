@@ -1,0 +1,134 @@
+{
+  "abort": null,
+  "arm_digests": {
+    "claude/shell": "23c99c08b3c09428616f8eca4756fc01c52aedef6175505ef0df7510e6b2b9b1",
+    "claude/world": "b3054cd65cc4370b2acdc397888ec9e2927f82463c64c8713aa5ec8e1bd8fa1f",
+    "codex/shell": "8e750bb9d1c67d281c05ec27b11f9600cec47648343d5c72c752609f09291a76",
+    "codex/world": "1131d0b0993efcd0521d1e4473a81a57004c505329e5c34aefb6a37fa8f8a45f"
+  },
+  "canary": [
+    {
+      "agent": "claude",
+      "arm": "shell",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 14411
+    },
+    {
+      "agent": "claude",
+      "arm": "world",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 23733
+    },
+    {
+      "agent": "codex",
+      "arm": "shell",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 16368
+    },
+    {
+      "agent": "codex",
+      "arm": "world",
+      "attestation": [],
+      "class": "FAIL",
+      "task": "fizzbuzz",
+      "wall_ms": 9761
+    }
+  ],
+  "change": "M2 config as merged: World tools block wording m1, no Claude isolation flags, full teaching prompt",
+  "codex_tokens": 2856137,
+  "commit": "c2dc2db5aaef67f5d1042f83c31f3c72fa7e18d4",
+  "config_digest_smoke": "b97de1dafebbb061403872b98cfb27c5f7530f27f7107e69c80881ca4b82acc7",
+  "iteration": 0,
+  "knob": "baseline",
+  "native_write_detected": [],
+  "row153": {
+    "claude": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 6
+    },
+    "codex": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 6
+    }
+  },
+  "shell_rows_reused_from": {},
+  "side": "baseline",
+  "spend_usd_claude": 1.6367,
+  "status": "complete",
+  "summary": {
+    "claude": {
+      "O": 0.3417,
+      "T": 6,
+      "delta": 0.0,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "api_call_json": -0.491,
+        "cli_args": 1.725,
+        "effect_tracking_io_fs": 0.068,
+        "higher_order_functions": 0.616,
+        "pipeline": 0.02,
+        "prompt_injection": 1.394
+      },
+      "pass_S": 6,
+      "pass_W": 6,
+      "unclassified": 0
+    },
+    "codex": {
+      "O": -0.5044,
+      "T": 6,
+      "delta": -1.0,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "api_call_json": -0.532,
+        "cli_args": -0.379,
+        "effect_tracking_io_fs": -0.576,
+        "higher_order_functions": -0.477,
+        "pipeline": -0.738,
+        "prompt_injection": -0.319
+      },
+      "pass_S": 6,
+      "pass_W": 0,
+      "unclassified": 0
+    }
+  },
+  "tasks": [
+    "api_call_json",
+    "cli_args",
+    "effect_tracking_io_fs",
+    "higher_order_functions",
+    "pipeline",
+    "prompt_injection"
+  ],
+  "transcripts": ".ailang/state/floor-tune/m4/transcripts/iter-0",
+  "wall_s": 673.5,
+  "world_writes_per_run": {
+    "claude/api_call_json": 1,
+    "claude/cli_args": 3,
+    "claude/effect_tracking_io_fs": 1,
+    "claude/higher_order_functions": 1,
+    "claude/pipeline": 1,
+    "claude/prompt_injection": 4,
+    "codex/api_call_json": 0,
+    "codex/cli_args": 0,
+    "codex/effect_tracking_io_fs": 0,
+    "codex/higher_order_functions": 0,
+    "codex/pipeline": 0,
+    "codex/prompt_injection": 0
+  }
+}
