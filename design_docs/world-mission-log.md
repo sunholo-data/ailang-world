@@ -1273,3 +1273,43 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 **Record follow-through (iteration 234):** the independent evaluator (Agent tool `sonnet`, fresh separate context, read-only, foreground; 37,921 tok, 36 s) judged record commit `7e88ecb` on `adeb042` and returned **PASS 95/100, zero blocking**. It verified all eight claims first-party: scope 5 `design_docs/` files (+50/−8); 3 live STATUS stamps and the 231 stamp archived byte-identical; `## Queue` and row 140 intact; ledger valid 49 rows / zero OPEN; row 140 still tagged IN-SPRINT attended with #208–#210 OPEN on the stated bases; run 37366775651 attempt 3 success, both jobs; 0 directives on #202; all cited SHAs resolve (two in the ailang repo); no closing keyword or email-shaped string. Non-blocking notes: its own extraction cut off before clause 5's UNMET line (stated in the stamp); dashboard/index/log diffs were audited for scope, SHAs and keywords only. Report: `design_docs/verification/world-iter234/evaluator-r1.md`.
 
 **Correction (iteration 234, post-merge):** the attended session squash-merged row 140 M1 (#208 → `edadf39`, 01:39:52 local) between this record's Gate-4 base (`adeb042`, 23:36:44Z) and its merge (#211 → `cfce6ad`). This record says #208 was OPEN; that was true at Gate 2 and Gate 4, and it is now LANDED. #209 (M2) was retargeted to `dev`; #210 (M3) is still stacked on M2. Row 140's tag is unchanged (IN-SPRINT attended), so the no-pick and the block report stand. The record was not rebased, because the change came from attended work and is additive (rule (e): attended wins). It is noted here instead.
+
+## 235 — 2026-10-06 — no pick: row 140's code landed (M0–M3) but its tag stays IN-SPRINT attended for M4; rule (d) block report; NEW ASK D-WORLD-63 (may 136 start alongside the attended M4?) [ADMIN]
+
+**Kind:** bookkeeping-only iteration under the charter's standing rule (d) (D-WORLD-46). No design doc, plan, code or product acceptance. Doc-only record (STATUS, ledger row, log, index, dashboard, STATUS archive, evaluator report), independently judged before merge.
+
+**Pick and why:** NONE. Row 140's tag at `origin/dev` `d0a5778` reads `IN-SPRINT — ATTENDED … NOT routable for the loop until this tag changes`, and lists M0–M3 LANDED and **M4 (attended: republish se-tools + three real projects through an MCP client)** remaining. Clause map: 1/2/3/6/7 MET · 4 UNMET (140 attended → 136 → 141 → 93) · 5 UNMET (114 after 93, then 139). No routable UNMET-clause row, so rule (d) applies.
+
+**New ask (D-WORLD-63, OPEN):** may the loop take row 136 now, alongside the attended M4? The block has changed shape since iteration 234: 140 is no longer code under attended review (#208–#210 all merged) but one attended operational milestone with no open PR. Row 136's premise re-measured first-party at `d0a5778`: `dispatchError(` has one call site, `host/projection/projection.go:372` (A2A); `mcpAdapter.Invoke` (`host/projection/mcp.go:85`) returns raw errors. Recommendation A (route 136 now); default B (hold until 140's tag changes), because the loop does not reorder an attended groom.
+
+**Block report (each row, exact blocker, the one action that unblocks it):**
+- **140**: IN-SPRINT attended, M4 remaining. Action: the attended session runs M4 or re-tags the row.
+- **136**: sequenced after 140 (D-WORLD-61 = A). Action: 140's tag changes, or D-WORLD-63 = A.
+- **141**: after 136. Action: 136 lands.
+- **93**: after 141 (D-WORLD-58/61). Action: 141 lands; gate set = `core` tier per D-WORLD-54.
+- **114**: after 93, plus the owed D-WORLD-52 = A revision and a fresh full author-excluding quorum.
+- **139**: after 114.
+- **145–147**: PARKED post-1.0 by Mark (R1 path).
+- **144** `[HARNESS]`: fleet-owned; no `harness-resolved` reply yet.
+
+**Gate 0:** kill switch armed (`mission-world.disabled` absent); gh = `sunholo-voight-kampff`; billing tripwire CLEAN. `mission_directives.sh` → **0** allowlisted directives on #202 since 2026-10-05T12:46:05Z (6 comments, all public feedback), so the watermark is unchanged. `mission-world` inbox: the same 3 unread as iteration 234 (iter-230/231 claims, a fleet note), nothing new; no `harness-resolved` reply. #202 is this week's thread → no rotation, no weekly sweep (232 ran it).
+
+**Gate 1:** local `dev` was 1 behind (`d0a5778`, the iteration-234 correction); fast-forwarded. `dev` == `origin/dev` == `d0a5778`; check-runs **2/2 success** at HEAD (`go host build + test gate`, `ailang-code verify gate`); the last six `CI` runs on `dev` are all success. Open PRs: #166 only (row 114 draft, preserved). The four newest `.claude/worktrees/agent-*` hold the pre-squash row-140 M1–M3 commits, which have already landed. No orphan: iteration 234 recorded and corrected.
+
+**Skill drift:** unchanged from iterations 233/234. The resolved skill (V1 main checkout `c68ded4b2`) differs from fleet `origin/dev` on 7 resource files (`gate-0`…`gate-5`); the delta is the single fleet commit `c55ca4398` (absolute `$MISSION_DRIVER_ROOT` heartbeat path). The pin worktree matches origin; this iteration read gates 2 and 4 from the pin and stamped with the absolute path.
+
+**Designer / planner / executor:** not spawned. There was no pick (rule (d)), so there was nothing to design, plan or execute (iterations 227/232–234 precedent). The operator's standing request to spawn roles through the Agent tool applies to the evaluator here.
+
+**Independent evaluator (record):** REQUIRED. Agent tool, `sonnet` (resolver `MISSION_EVALUATOR_RESOLVED=sonnet`, path `agent-tool`), fresh separate context, read-only, judged the record commit before merge. Verdict: see the follow-through below; report banked in `design_docs/verification/world-iter235/`.
+
+**Routing evidence:** base=d0a57787b1de162b3d5f6937be6151ed2aa114d3@2026-10-06T03:32:04Z (Gate 4; Gate 1 read the same SHA at 03:26:56Z). Controller `claude:claude-opus-5-5` (tok: not reported). `$MISSION_ROUTING_NOTE`: planner and executor codex lanes over daily ration (rc 75) → opus / `claude:claude-sonnet-5-5`; unused, no pick. Designer/planner/executor: none. Evaluator: Agent `sonnet` (tok: see follow-through). Metered $0.
+
+**Ruled out:** picking 140 (attended M4); picking 136 without a ruling (D-WORLD-61 orders it after 140, and the loop may not reorder an attended groom — hence D-WORLD-63); picking 141/93/114/139 (sequenced behind 136); 145–147 (PARKED post-1.0); row 144 (harness, fleet-owned); any MET-clause hygiene row (rule (d)); running `ailang mission rotate-log world` (index row written by hand, as in 232–234).
+
+**Retro:**
+- **(1)** Iteration 234's retro said a moving attended row is not drift and filed no ask. That held while PRs were landing. Once the row's code is all merged and only an attended operational step remains, the block can last days with no visible activity, so the cheapest unblock is a one-word ask, not another block report. Filed as D-WORLD-63.
+- **(2)** No skill or charter process change proposed.
+
+**Progress:** World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET. The loop did not move the goal; row 140's code landed attended.
+
+**Next:** if D-WORLD-63 = A, take row 136 (design note → plan → execute → judge). Otherwise, when row 140's tag changes, 136 → 141 → 93 (`core` tier) → 114 → 139.
