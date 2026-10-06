@@ -748,7 +748,10 @@ driver — never a hand-rolled second loop), with the `ailang-code` verify profi
    numerically before M4 starts (candidate: pass-rate within noise on the standard
    benchmark tier, ≤25% wall-clock overhead) — set at M0 so the gate can't be argued
    after the fact.
-9. **Agent-UI protocol dialect**: A2UI and AG-UI are both young — standardize on one for
+9. **ANSWERED 2026-10-06 (`D-WORLD-65`, attended): both, layered.** AG-UI is the event
+   transport and A2UI is the payload for agent-generated views. See
+   [planned/w-world-live-surface.md](planned/w-world-live-surface.md) D1. Original question:
+   **Agent-UI protocol dialect**: A2UI and AG-UI are both young — standardize on one for
    generated projections, or emit a common core with per-client adapters? Related: how
    much of the A2A task lifecycle to adopt at M7 vs agent-card-only interop first.
    Interop test target either way: an aitana/platform agent drives a World transition
