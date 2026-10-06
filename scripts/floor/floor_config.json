@@ -6,7 +6,8 @@
   "knobs": {
     "world_tools_wording": "m1",
     "claude_isolation": false,
-    "teaching": "full"
+    "teaching": "full",
+    "codex_mcp_approval": "approve"
   },
   "smoke": {
     "N": 1,
