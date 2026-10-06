@@ -66,16 +66,38 @@ What each knob did:
 |---|---|
 | file | `scripts/floor/floor_config.json` (sha256 `a0bf41172eda31bfd7c1e409475416da1851775d426ac3b31ce9013fd995eebc`) |
 | knobs | `world_tools_wording=row135-rw`, `claude_isolation=true`, `codex_mcp_approval=approve`, `teaching=full` |
-| live smoke config digest | `0e2e6d7841312f22921d06fa563f80e433dc2b68483f7e0ee7c2670cb3b9e55b` (`run.py digest --mode smoke`; identical in it 4 and it 5) |
-| live FINAL config digest | `49ea20053c729749a713de39a24661d370f44de83ca67a2503ac9b9326f28464` (`preregistration.draft.json`) |
+| live smoke config digest | `ce87a7e23524dd7fa8d0b072cf8e6e6c55b3aead146a91ed011a495b006d23cf` (`run.py digest --mode smoke`, after D-WORLD-67). Iterations 4 and 5 ran under `0e2e6d78…e55b`: the argv was the same, but the digest did not yet carry the pre-registered rules |
+| live FINAL config digest | **`aaa9b2b6c99db7d723f5fe0806de152eeab2b2ae019821feb1174b2dc1e7714a`** (`preregistration.draft.json`, regenerated after D-WORLD-67). The first draft's `49ea2005…8464` had no `rules` block |
 
 **Prereg draft:** `preregistration.draft.json`.
 - Models `claude-opus-5-5` and `gpt-6.1-sol`; N=3; the 23 core tasks with YAML hashes at `76a5aef`.
 - Thresholds −1/50, 1/20 and 1/4; the statistics and protocol as ruled.
-- Pinned CLI versions; the argv templates; `--max-budget-usd 5.00` per Claude task-run (the value is a proposal for Mark).
+- Pinned CLI versions; the argv templates; `--max-budget-usd 5.00` per Claude task-run (ruled by D-WORLD-67).
+- The §4.6 capacity rule (`capacity_rule`, and `rules` in the live config).
 - The ledger head.
 
 M5 commits a copy as `preregistration.json`. `run.py final` refuses unless that file is committed and its `config_digest` equals the live FINAL config. A CLI upgrade, a knob, the teaching prompt or a task YAML all move the live config digest.
+
+## Rulings (D-WORLD-67, Mark Edmondson, attended 2026-10-06)
+
+1. **The three argv additions are canonical.** They are Claude isolation, the codex World `default_tools_approval_mode=approve`, and `--max-budget-usd` (5.00 FINAL).
+   - They are in §4.3's table, the goldens, `test_arms.py`'s table copy and `arms.build_argv`'s defaults.
+   - Mutation results on a copy of `scripts/floor`, each named test FAILED (killed); the unmutated `ArgvGoldens` and `CapacityRule` passed:
+
+     | Mutant | Killing tests |
+     |---|---|
+     | MUT-ALLOWEDTOOLS-ONLY | `test_builder_matches_checked_in_golden`, `test_claude_world_removes_every_builtin` |
+     | MUT-CODEX-SHELL | `test_builder_matches_checked_in_golden`, `test_codex_world_has_no_shell` |
+     | **MUT-CODEX-NOAPPROVE** (new) | `test_builder_matches_checked_in_golden`, `test_codex_world_tools_are_approved` |
+2. **The 6-task core smoke set is accepted** (§4.10).
+3. **Capacity faults: option A, pre-registered** (§4.6). Only a typed `Selected model is at capacity` fault is re-run, up to 3 attempts in all, in both agents and both arms.
+   - Every attempt is recorded; the last attempt is the outcome. Three capacity faults stay HARNESS-FAULT.
+   - Tests in `test_run.CapacityRule`: capacity then pass → PASS with 2 attempts recorded; 3 capacity faults → HARNESS-FAULT with no 4th attempt; timeout, other api_errors (typed and untyped), a wrong answer and a pass → no retry; eligibility and the summary use the last attempt.
+   - **MUT-RETRY-ANY-APIERROR** (retry any `api_error`) turns `test_no_retry_for_timeouts_other_api_errors_or_wrong_answers` red (4 failures).
+   - The rule is in the prereg and in the live config digest (`test_rule_is_in_the_digest`).
+4. **Stale design figures corrected:** V34 (`--compact` is unusable, and the prompt is about 97.5 KB, not about 49 KB), §4.2 (a), P4, R2, R3, R5 and R10.
+
+Row 153 vs row 93 ordering (Q4) was not answered, so D-WORLD-65's order stands.
 
 ## Row 153 (plan-phase deadline)
 

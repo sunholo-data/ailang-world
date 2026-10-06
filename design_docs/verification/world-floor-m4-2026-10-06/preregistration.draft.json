@@ -1,7 +1,14 @@
 {
   "canary": "one smoke-tier task per (agent, arm) before each phase (\u00a74.9); abort on the first quota/rate-limit evidence",
+  "capacity_rule": {
+    "max_attempts": 3,
+    "never_retried": "timeouts, any other api_error, wrong answers, everything else",
+    "outcome": "the last attempt; every attempt is recorded and reported; 3 capacity faults stay HARNESS_FAULT (eligibility fails honestly)",
+    "retryable": "ONLY a typed provider-capacity api_error whose evidence matches /Selected model is at capacity/ (V-M4-4); both agents, both arms",
+    "source": "design \u00a74.6 capacity rule, D-WORLD-67 (Mark Edmondson, attended 2026-10-06)"
+  },
   "classification": "design \u00a74.6, scripts/floor/classify.py (pre-registered table; unlisted categories refused)",
-  "config_digest": "49ea20053c729749a713de39a24661d370f44de83ca67a2503ac9b9326f28464",
+  "config_digest": "aaa9b2b6c99db7d723f5fe0806de152eeab2b2ae019821feb1174b2dc1e7714a",
   "episodes": "one per (agent, run): fl-cc-r<k>, fl-cx-r<k> (\u00a74.5), 8 explicit grants each, --ttl 43200",
   "kind": "row93-floor-preregistration",
   "live_config": {
@@ -222,6 +229,20 @@
       "template_sha256": "55269918507ffb516498c1cbd3ec93d564452aebf144a9d6dd3db9a986c47c21",
       "world_tools_block_sha256": "0947751b254102e1478a61b65b3587f5aa9b3965d5cdeac5b8f1525295f7c80b",
       "world_tools_wording": "row135-rw"
+    },
+    "rules": {
+      "capacity": {
+        "max_attempts": 3,
+        "pattern": "Selected model is at capacity",
+        "source": "design \u00a74.6, D-WORLD-67"
+      },
+      "thresholds": {
+        "deadline_ms": 600000,
+        "delta_min": "-1/50",
+        "min_runs": 3,
+        "overhead_max": "1/4",
+        "range_max": "1/20"
+      }
     },
     "tool_bin_sha256": "0dd70a1d00360be0b7b4c667054c71fdc4ea87aa3deb79710cf56f18ffe1a8f5",
     "world_grants": [

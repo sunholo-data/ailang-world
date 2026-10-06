@@ -18,6 +18,8 @@
   - `prompt_injection` needs `Declassify`.
 
   The World agent can still write and check these four tasks. It cannot run them under benchmark conditions; the shell agent can.
+
+  **[2026-10-06]** Superseded by row 135 (D-NF-3 = B): `ailang-run` now takes `stdin`, `argv` and `caps`, and the scratch daemon allows Env, Net (127.0.0.1:7655) and Declassify. In M4 all four tasks passed in both World arms on the tuned config.
 - **P5 — eligibility is fragile by arithmetic.**
   - With 23 tasks, one task is 4.35 pp, so "range ≤ 5 pp" means per-run pass counts may differ by at most 1.
   - "−2 pp" at N=3 (69 pooled task-runs, 1.45 pp each) means World may lose **at most one** task-run.
@@ -76,7 +78,7 @@ Both come from paired shell and World arms on the 23 `core` tasks, N runs per ar
 | V31 | `git show …:cmd/ailang-worldd/session.go` (84–190); `git grep -n single-writer …host/store` | mint opens `/dev/tty`, refuses without one and asks y/N, then `store.Open` takes the cross-process **single-writer lock** (`store.go:271`). So minting needs a human at a TTY **and** the daemon stopped |
 | V32 | `git show …:docs/QUICKSTART.md` §9 | 6 grants `EFFECT=worktree:N`; episode → `<workspace-root>/<ep>`, id `^[a-z0-9][a-z0-9-]{0,63}$`; publish TTY-fenced; Claude flags `--tools "" --strict-mcp-config --mcp-config <.mcp.json> --allowedTools mcp__world__ailang-read,…` (8 names) |
 | V33 | `git grep -nE '270\|530 ?ms\|latency' origin/attended/row134 -- design_docs docs` | **no banked per-call latency measurement** on the branch at `bb6b2b20`; the 270–530 ms figure was reported in an executor's hand-back only. Re-measured in M0 AC0.1 |
-| V34 | `ailang prompt --help` | teaching prompt comes from the binary (`--version`; `--compact` ≈ 15 KB vs ≈ 49 KB) |
+| V34 | `ailang prompt --help` | teaching prompt comes from the binary (`--version`; `--compact` ≈ 15 KB vs ≈ 49 KB per the help text). **[2026-10-06, V-M4-2]** On the pinned v0.52.1 the full prompt is **97,530 bytes (≈ 97.5 KB)**, and `--compact` is **unusable** (rc 1, `"v0.16.6-compact" is not a known prompt version`) |
 | V35 | `grep -n '\| D-WORLD-5[24] \|\| D-WORLD-48 '` and the bar section of `world-mission.md` | D-WORLD-54 as quoted under Direction; D-WORLD-52: row 93's runs are row-114 corpus; clause 4 says "same benchmark set (standard tier)" |
 | V36 | `sed -n 1857,1876p design_docs/world-mission.md` | row 93: "run the eligibility precondition first and report it separately … **only then run the paired arms**" |
 | V37 | `sed -n 576,582p runner.go` | `stdlibPathArgs(cwd)` passes `--stdlib-path <cwd>/std` whenever cwd holds a stdlib, so a grader run from inside the ailang repo grades against its *source* stdlib |
@@ -122,7 +124,7 @@ This is the w-prove Conflict Surface's "adapter that reuses the corpus and schem
 **Corpus.** The 23 `tier: core` ids (V5). The loader refuses any count other than 23. `--tier smoke` is for tuning only.
 
 **Prompt.** Rendered from `agent_task_ailang.txt` at the pinned commit (V16), with the teaching prompt from `$TOOL prompt` (V34) prepended in the **task message** for both agents. Codex has no system-prompt flag, and one mechanism for both agents keeps them comparable. Per agent, the two arms differ **only** in two places:
-- (a) the "Available Tools" block. The shell arm keeps `ailang run/check/test`. The World arm lists the 8 tools and says plainly that `ailang-run` has no stdin, argv or extra caps (P4).
+- (a) the "Available Tools" block. The shell arm keeps `ailang run/check/test`. The World arm lists the 8 tools and says plainly what `ailang-run` can do. **[2026-10-06, M4]** That is no longer P4's "no stdin, argv or extra caps": row 135 added `stdin`, `argv` and `caps`, so the tuned block (wording `row135-rw`, `scripts/floor/prompt.py`) says `ailang-run` takes them, the run step names the task's caps, and one sentence says the read-only sandbox does not limit the World write tools. M1's stale text survives only as wording `m1`, to reproduce M4 iteration 0.
 - (b) `{{SOLUTION_PATH}}`: the absolute worktree path for shell, `benchmark/solution.ail` for World.
 
 `{{MOCK_HTTP_URL}}` is replaced with a per-task-run mock that stays up through grading (V8).
@@ -144,8 +146,8 @@ Common rules:
 
 | | shell arm | World arm |
 |---|---|---|
-| Claude Code | cwd = worktree; `claude -p "$P" --model $M --output-format stream-json --verbose --no-session-persistence --disable-slash-commands --tools Bash,Read,Write,Edit,Glob,Grep --strict-mcp-config --mcp-config '{"mcpServers":{}}' --permission-mode acceptEdits --settings '{"sandbox":{"enabled":true,"autoAllowBashIfSandboxed":true,"allowUnsandboxedCommands":false}}'` | cwd = empty `void/<ep>`; `claude -p "$P" --model $M --output-format stream-json --verbose --no-session-persistence --disable-slash-commands --tools "" --strict-mcp-config --mcp-config <private>/<ep>.mcp.json --allowedTools mcp__world__ailang-read,…,mcp__world__ailang-cli` (V22, V32) |
-| codex | `codex exec --json --ephemeral --ignore-user-config --skip-git-repo-check -m $M -s workspace-write -C <worktree> --disable plugins --disable apps --disable browser_use --disable computer_use --disable image_generation --disable multi_agent -c web_search="disabled" "$P"` | same flags, but `-s read-only -C <void/ep> --disable shell_tool --disable unified_exec -c mcp_servers.world.url="http://127.0.0.1:7644/mcp/" -c mcp_servers.world.bearer_token_env_var="WORLD_SESSION" -c mcp_servers.world.required=true` (V24–V26) |
+| Claude Code | cwd = worktree; `claude -p "$P" --model $M --output-format stream-json --verbose --no-session-persistence --disable-slash-commands --tools Bash,Read,Write,Edit,Glob,Grep --strict-mcp-config --mcp-config '{"mcpServers":{}}' --permission-mode acceptEdits --settings '{"sandbox":{"enabled":true,"autoAllowBashIfSandboxed":true,"allowUnsandboxedCommands":false},"enabledPlugins":{"cc-plugin-agents-md@builtin":false,"cc-plugin-telemetry@builtin":false,"cc-plugin-plugin-authoring@builtin":false},"autoMemoryEnabled":false}' --setting-sources "" --max-budget-usd 5.00` | cwd = empty `void/<ep>`; `claude -p "$P" --model $M --output-format stream-json --verbose --no-session-persistence --disable-slash-commands --tools "" --strict-mcp-config --mcp-config <private>/<ep>.mcp.json --allowedTools mcp__world__ailang-read,…,mcp__world__ailang-cli --setting-sources "" --settings '{"enabledPlugins":{"cc-plugin-agents-md@builtin":false,"cc-plugin-telemetry@builtin":false,"cc-plugin-plugin-authoring@builtin":false},"autoMemoryEnabled":false}' --max-budget-usd 5.00` (V22, V32, V-M4-1) |
+| codex | `codex exec --json --ephemeral --ignore-user-config --skip-git-repo-check -m $M -s workspace-write -C <worktree> --disable plugins --disable apps --disable browser_use --disable computer_use --disable image_generation --disable multi_agent -c web_search="disabled" "$P"` | same flags, but `-s read-only -C <void/ep> --disable shell_tool --disable unified_exec -c mcp_servers.world.url="http://127.0.0.1:7644/mcp/" -c mcp_servers.world.bearer_token_env_var="WORLD_SESSION" -c mcp_servers.world.required=true -c mcp_servers.world.default_tools_approval_mode="approve"` (V24–V26, V-M4-3) |
 
 **[REFINED]** Web tools are dropped from both agents' shell arms. World has none, and the bar compares "native tools" on a coding task, so web access would confound the comparison in the shell arm's favour.
 
@@ -153,10 +155,10 @@ Codex has no switch that removes apply_patch (V26), and its tool list can't be c
 
 Two things were **not yet measured** at draft time: the `-c web_search="disabled"` key name and the Claude sandbox settings semantics. **[2026-10-06, M2]** Both are now measured. `web_search` is a real enum key (V-M2-1). The sandbox confines Bash only, and under the drafted `bypassPermissions` the Write tool escaped the worktree. The Claude shell arm therefore runs `--permission-mode acceptEdits` (V-M2-3), which refuses an edit outside the cwd in `-p` mode and keeps sandboxed Bash auto-allowed. This is the one argv change from the draft. **ACKed by Mark Edmondson, attended 2026-10-06.** The goldens in `scripts/floor/testdata/argv_<agent>_<arm>.json` and `test_arms.py`'s copy of this table hold it. The codex shell arm's `-s workspace-write` refused both escape routes (V-M2-4). **World-arm canaries (attended 2026-10-06, `world-floor-m2-2026-10-06/canary-world/`):** Claude's init listed exactly the 8 `mcp__world__*` tools with `world` the only server; codex reported no shell tool and its one attempt ran nothing; `void/` stayed empty for both; `codex mcp list` showed only `world`; the token grep found 0 of 2 tokens. Gap carried to M4: both canaries only read, so the live AC2.4 write-provenance path ran with 0 World writes; it is fixture-tested, and M4's first smoke task is its first live exercise.
 
-**[2026-10-06, M4 — three argv/prompt additions from smoke tuning; NOT yet ACKed by Mark; the goldens and the table above stay the pre-M4 text, and `arms.build_argv`'s defaults reproduce them exactly.]** The tuned config `scripts/floor/floor_config.json` turns on:
+**[2026-10-06, M4 — three argv additions from smoke tuning; ACKed by Mark Edmondson, attended 2026-10-06 (D-WORLD-67).]** They are in the table above, in the goldens `scripts/floor/testdata/argv_<agent>_<arm>.json` and in `test_arms.py`'s copy of the table, and `arms.build_argv`'s **defaults** produce them (passing `claude_isolation=False`, `max_budget_usd=None` or `codex_mcp_approval='default'` only reproduces M4's ledgered iterations 0–2). Mutants MUT-ALLOWEDTOOLS-ONLY, MUT-CODEX-SHELL and MUT-CODEX-NOAPPROVE are each killed against the new goldens (§7). The three additions:
 - **(b) Claude isolation, both arms identically (V-M4-1).** `--setting-sources ""` plus the isolation keys merged into each arm's `--settings`. This is what §4.3's "plugins … suppressed identically" needs: M2 measured that they were not suppressed.
 - **(c) codex World `-c mcp_servers.world.default_tools_approval_mode=approve` (V-M4-3).** Without it, the codex World arm cannot call any World tool.
-- **`--max-budget-usd`** on every Claude task-run (§4.9; 1.00 for smoke, 5.00 proposed for FINAL).
+- **`--max-budget-usd`** on every Claude task-run (§4.9; 1.00 for smoke, **5.00 for FINAL**).
 
 The World tools block is wording `row135-rw` (§4.2 (a), a §4.10 knob). The prereg draft carries the full argv templates, so a FINAL run uses exactly what is ACKed.
 
@@ -197,6 +199,13 @@ What a fault does:
 - **Shell arm:** any harness fault makes that agent **ineligible** for the attempt. The cause is fixed (instrumentation) and the **whole** shell phase re-runs. Every attempt stays banked.
 - **World arm:** a quota or rate-limit fault, evidenced by the provider, re-runs that task-run once, and both runs are banked. A second such fault aborts the run, and the row **blocks on quota**. That is neither PAUSE nor a park (D-WORLD-48).
 
+**Capacity rule (pre-registered; D-WORLD-67, ruled by Mark Edmondson, attended 2026-10-06; option A).** It covers a task-run whose failure is a **typed provider-capacity fault**: an `api_error` whose provider evidence is the message class measured in V-M4-4, `Selected model is at capacity`.
+- **Retry:** such a task-run is re-run, up to **2 more attempts (3 in all)**. This applies to both agents and both arms.
+- **Never retried:** a timeout, any other `api_error`, a wrong answer, or anything else.
+- **Outcome:** every attempt is recorded and reported, and the task-run's outcome is its **last** attempt. A task-run whose 3 attempts all hit capacity stays **HARNESS-FAULT**, so the agent's eligibility still fails, honestly.
+- **Justification (the bar's own text):** an ineligible agent is "fixed or substituted". Re-running a provider capacity refusal is therefore an **instrumentation fix, not a change to the threshold**. The range ≤ 5 pp and zero-fault conditions are untouched.
+- **Implementation:** `scripts/floor/run.py` (`is_capacity_fault`, `run_with_retries`), with `stats.final_rows` taking the last attempt in both arms. It is carried in the prereg (`capacity_rule`), and the mutant MUT-RETRY-ANY-APIERROR is killed (§7).
+
 ### 4.7 Statistics (exact)
 Notation:
 - T = 23 tasks; N = runs per arm.
@@ -231,15 +240,18 @@ Verdict rules, in order:
 The tuning ledger is `design_docs/verification/world-floor-tuning-ledger.jsonl`.
 
 ### 4.9 Cost and quota guard (D-WORLD-54: smoke first)
-- **Tuning:** smoke-tier only, on cheap models. FINAL runs only after the preregistration commit.
+- **Tuning:** the smoke set only (§4.10), on cheap models. FINAL runs only after the preregistration commit.
 - **Canary:** one smoke task per arm per agent before each phase.
 - **Abort:** on the first `quota_exhausted` or `rate_limit` evidence.
 - **Caps:** Claude gets `--max-budget-usd` per task-run. Codex has no budget flag, so it is bounded by the per-task deadline and a phase wall-clock ceiling of 3× the R5 estimate.
 
 ### 4.10 Tuning protocol (honest, recorded)
-- **Loop:** smoke tier, N=1 per arm, on `claude-haiku-4-5` and `gpt-6-luna`.
+- **Loop:** the smoke set, N=1 per arm, on `claude-haiku-4-5` and `gpt-6-luna`.
+- **Smoke set [ACCEPTED by Mark Edmondson, attended 2026-10-06, D-WORLD-67].** A fixed 6-task **core** subset: `pipeline`, `cli_args`, `api_call_json`, `prompt_injection`, `effect_tracking_io_fs`, `higher_order_functions`.
+  - Why not the `smoke` tier: its 23 tasks are all `[IO]`, with no stdin, argv, Env, Net or Declassify task. Those are exactly the P4 tasks that row 135's widening and the World tools wording have to be tuned on.
+  - The phase canary (§4.9) stays a `smoke`-tier task, `fizzbuzz`.
 - **Allowed knobs:**
-  - **harness-side, applied to both arms:** tool-block wording; the deadline (fixed before prereg); teaching prompt full vs `--compact`.
+  - **harness-side, applied to both arms:** tool-block wording; the deadline (fixed before prereg); teaching prompt full vs `--compact`. **[2026-10-06, V-M4-2]** The `--compact` knob is unusable on the pinned v0.52.1, so the teaching prompt is the full ≈ 97.5 KB one.
   - **World-side:** daemon/serve config, grant budgets, and product changes such as lighter read commits, the run cap or batching. A product change that touches `host/` goes through its own row.
 - **Forbidden:** changing the benchmark set, the grader, the thresholds, N, or the model after prereg, or excluding tasks.
 - **Ledger:** every change appends a row: `date, knob, side, before/after smoke Δ and O, commit`.
@@ -307,6 +319,11 @@ The tuning ledger is `design_docs/verification/world-floor-tuning-ledger.jsonl`.
   - Smoke result on the tuned config (N=1, 6 tasks): Δ = 0 for both agents. O: claude +0.06 and +0.15; codex +0.03 (it 4), and +1.30 on 4 tasks (it 5, after 2 shell harness faults, V-M4-4).
   - Row 153: 0 callback timeouts in 70 World task-runs. AC2.4 live: 84 World writes, 0 `native_write_detected`.
   - Tuned config and prereg draft: `world-floor-m4-2026-10-06/README.md`.
+  - **Rulings (D-WORLD-67, Mark Edmondson, attended 2026-10-06):**
+    - the three argv additions are ACKed and canonical (§4.3);
+    - the 6-task smoke set is ACCEPTED (§4.10);
+    - capacity faults follow option A, pre-registered (§4.6);
+    - the stale figures were corrected (V34, P4, R2, R3, R5, R10).
 
 **M5 (attended, ~0.5 d of attention within ~4–5 h wall) — FINAL.** Commit the prereg; run the mint block; Phase 1 → commit eligibility → Phase 2 plus the drift probe → verdict → evidence; record PR.
 - AC5.1: `--final` refuses unless the prereg is committed and its digest equals the live config.
@@ -330,6 +347,9 @@ The tuning ledger is `design_docs/verification/world-floor-tuning-ledger.jsonl`.
 | MUT-SEAL-ORDER: World stats computed before eligibility | AC3.4 |
 | MUT-FINAL-NOPREREG | AC5.1 |
 | MUT-EXEC-GRANT: World-arm grants include `Workspace.Exec` [2026-10-06] | `test_arms.py` (exec absent from tools and grants) |
+| MUT-CODEX-NOAPPROVE: the codex World approve override dropped [D-WORLD-67] | `test_arms.ArgvGoldens.test_codex_world_tools_are_approved` + the golden |
+| MUT-DIRTY-LEDGER: `run.py` accepts a dirty tuning ledger [M4] | `test_run.LedgerGuard.test_refuses_dirty_ledger`, `…test_iterate_refuses_before_any_work` (AC4.2) |
+| MUT-RETRY-ANY-APIERROR: the capacity rule retries any `api_error` [D-WORLD-67] | `test_run.CapacityRule.test_no_retry_for_timeouts_other_api_errors_or_wrong_answers` |
 
 ## 8. Decisions — RULED by Mark, attended 2026-10-03 (D-WORLD-55)
 
@@ -358,18 +378,19 @@ The bar is unchanged: point estimate, with the bootstrap CI reported as context.
 ## 9. Risks and residuals
 
 - **R1 — false fails at the ceiling (estimate).** With k coin-flip tasks, two *identical* arms still fail Δ ≥ −2 pp with probability ≈ 11% (k=1) to 24% (k=3) at N=3, and ≈ 18% at k=3, N=5. Mitigations: pre-registration and the informative bootstrap CI. The bar's thresholds are not changed.
-- **R2 — eligibility (estimate).** At 1/31 faults per task-run, P(zero faults in 69) ≈ 0.10; at N=5 it is ≈ 0.02. With 3 coin-flip tasks, P(range ≤ 1 task) ≈ 0.57. Owner: M0 AC0.2, which classifies the Codex stalls before any FINAL.
-- **R3 — overhead for fast agents (estimate).** Claude takes about 15 s per task (V20). At 10 World calls of 0.27–0.53 s each (V33, unverified), World adds +18% to +35%. Measured by AC0.1, and the main tuning target.
+- **R2 — eligibility (estimate).** **[2026-10-06, M4 measured]** In 14 fresh codex shell task-runs on `gpt-6-luna`, 2 were provider capacity refusals (V-M4-4), so the codex fault rate can far exceed 1/31. The §4.6 capacity rule (D-WORLD-67) re-runs exactly that fault class, up to 3 attempts. At 1/31 faults per task-run, P(zero faults in 69) ≈ 0.10; at N=5 it is ≈ 0.02. With 3 coin-flip tasks, P(range ≤ 1 task) ≈ 0.57. Owner: M0 AC0.2, which classifies the Codex stalls before any FINAL.
+- **R3 — overhead for fast agents (estimate).** Claude takes about 15 s per task (V20). **[2026-10-06, M4 measured on haiku/luna, smoke set]** Shell task-runs took 15–65 s (Claude) and 4–33 s (codex). The smoke O on the tuned config was +0.06 and +0.15 for Claude, and +0.03 for codex. A Claude World run made about 4.7 World calls (140 in 30 runs) and a codex World run about 3.4, far fewer than the 10 assumed here. At 10 World calls of 0.27–0.53 s each (V33, unverified), World adds +18% to +35%. Measured by AC0.1, and the main tuning target.
 - **R4 — P4 asymmetry.** At N=3, losing one task-run of 69 fails the floor. Owner: D-NF-3.
 - **R5 — cost (estimate, from V19/V20).**
   - **Codex:** ≈ 5.3M tokens and ≈ 26 min per 23-task run-arm. A gate (7 run-arms) is ≈ 37M tokens and ≈ 3 h.
   - **Claude sonnet-5-5:** ≈ $2.4 list-equivalent and ≈ 6 min per run-arm; ≈ $17 and ≈ 45 min per gate.
+  - **[2026-10-06, M4 measured]** haiku-4-5 costs $0.09–0.21 per task-run, dominated by the ≈ 97.5 KB teaching prompt (V-M4-2), not the ≈ 49 KB assumed. gpt-6-luna averages about 0.25M tokens per task-run (12.0M over 49 runs, mostly cached input). FINAL budgets `--max-budget-usd 5.00` per opus task-run.
   - **Smoke tuning** on luna/haiku costs a fraction of this.
 - **R6 — contamination.** The shell agents can read outside their worktree; for example, the ailang repo's `eval_results` holds 1979 solutions (V18). Mitigations: worktrees under a neutral root, plus an audit of absolute paths in the transcripts, flagged in the report.
 - **R7 — provider drift between phases.** Covered by the drift probe.
 - **R8 — row 134 not landed (V3).** M2 onward is blocked until it lands.
 - **R9 — session TTL and mint fatigue.** 2N mints in one block; TTL 12 h.
-- **R10 — log growth (estimate).** 23·N·2 task-runs at ~15 calls each ≈ 2k entries per gate.
+- **R10 — log growth (estimate).** 23·N·2 task-runs at ~15 calls each ≈ 2k entries per gate. **[2026-10-06, M4]** M4 measured about 3–5 World calls per task-run, so expect ≈ 0.5–0.7k entries per gate.
 
 ## 10. Conflict surface
 
