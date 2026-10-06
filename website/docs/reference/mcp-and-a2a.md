@@ -203,6 +203,10 @@ stderr and in the store (the effect journal and records).
 
 :::warning EffectsUnrecorded is only named over A2A
 The effect-record refs of an `EffectsUnrecordedError` reach the caller over `/a2a/`. Over
-`/mcp/` the caller sees only `host callback failed`. After such a failure, check the log and the
-episode's effect records before retrying.
+`/mcp/` the caller sees only `host callback failed`: the released MCP handler has no typed host
+error yet (upstream ask: [ailang#1602](https://github.com/sunholo-data/ailang/issues/1602)). Until it ships, the operator recovers the refs from the
+daemon's stderr. The line `ailang-worldd: mcp refusal: tools/call mcp:<episode>:<task>: "…"`
+names the invocation id and, in its quoted cause, every effect record (`records [sha256:…]`).
+Check that line and the episode's effect records before retrying. An MCP retry is a new
+invocation and runs its effects again.
 :::
