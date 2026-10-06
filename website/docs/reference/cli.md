@@ -34,7 +34,7 @@ Usage:
   ailang-worldd [--addr <url>] call <tool> [--session <file|token>]
                     [--arg k=v]... [--arg-json k=<json>]... | --json <obj>|@file|-
                     [--json-out] [--strict]
-  ailang-worldd [--addr <url>] why <index|head|sha256:<ref>|a2a:<id>|rest:<id>|->
+  ailang-worldd [--addr <url>] why <index|head|sha256:<ref>|a2a:<id>|mcp:<id>|rest:<id>|->
                     [--result <file>] [--scan N] [--json]
   ailang-worldd [--addr <url>] provenance [--since <entry>] [--episode <ep>] [--scan N]
   ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>]
@@ -251,7 +251,7 @@ and result), and the output, which must equal the world's `stateRoot`.
 |---|---|
 | `<index>` or `head` | the log entry directly |
 | `sha256:<ref>` | the object's `semanticId`: a record, input, output, plan, effect record, effect request or result; or a world ref |
-| `a2a:<id>` | the record's `invocationId` |
+| `mcp:<id>` or `a2a:<id>` | the record's `invocationId` |
 | `rest:<id>` | its receipt's world |
 | `-` or `--result <file>` | the output of `call --json-out`: its sha256 is the output ref (the result's `world.plan` is the fallback) |
 
@@ -281,9 +281,9 @@ a coordinator invocation its episode, skill and effect statuses.
 ```
 
 ```text
-#1 ef2b3322 coordinator:a2a ep1 ailang-read [Workspace.Read ok]
-#2 b7aa36d6 coordinator:a2a ep1 ailang-read [Workspace.Read ok]
-#3 c0cd3ae0 coordinator:a2a ep1 ailang-read [no effects]
+#1 ef2b3322 coordinator:mcp ep1 ailang-read [Workspace.Read ok]
+#2 b7aa36d6 coordinator:mcp ep1 ailang-read [Workspace.Read ok]
+#3 c0cd3ae0 coordinator:mcp ep1 ailang-read [no effects]
 ```
 
 With `--follow` the next read starts at the entry after the last one printed, so each entry

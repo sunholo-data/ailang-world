@@ -152,7 +152,7 @@ func (r *rig) call(skill, task string, caps []broker.Capability) Call {
 	if err != nil {
 		r.t.Fatalf("NewRequest: %v", err)
 	}
-	return Call{Request: req, EpisodeID: "ep1", Grants: caps, SkillID: skill, TaskID: task, Input: map[string]any{"msg": "hi"}}
+	return Call{Surface: SurfaceA2A, Request: req, EpisodeID: "ep1", Grants: caps, SkillID: skill, TaskID: task, Input: map[string]any{"msg": "hi"}}
 }
 
 // assertUntouched: the refusal left no durable mutation.
@@ -162,7 +162,7 @@ func (r *rig) assertUntouched(want hashref.HashRef, task string) {
 	if err != nil || head != want {
 		r.t.Fatalf("selected head = %v (%v), want unchanged %v", head, err, want)
 	}
-	if rc, ok, err := r.st.GetReceipt(boundedTestContext(r.t), InvocationID("ep1", task)); err != nil || (ok && rc.State != store.ReceiptNotStarted) {
+	if rc, ok, err := r.st.GetReceipt(boundedTestContext(r.t), InvocationID(SurfaceA2A, "ep1", task)); err != nil || (ok && rc.State != store.ReceiptNotStarted) {
 		r.t.Fatalf("receipt for refused task = %+v ok=%v err=%v, want none", rc, ok, err)
 	}
 }
@@ -190,7 +190,30 @@ func lawPlan() (store.World, transitionreg.Descriptor, plan) {
 		StateRoot: hashref.SumSHA256([]byte("s")), LogHead: hashref.SumSHA256([]byte("l"))}
 	d := transitionreg.Descriptor{ID: "x", TransitionFn: hashref.SumSHA256([]byte("fn")),
 		Interpreter: hashref.SumSHA256([]byte("i")), SemanticsEpoch: 1}
-	return w, d, planInvocation(w, "a2a:e:t", "e", d, []byte(`{"a":1}`), []byte(`{"b":2}`), 5)
+	return w, d, planInvocation(w, SurfaceA2A, "a2a:e:t", "e", d, []byte(`{"a":1}`), []byte(`{"b":2}`), 5)
+}
+
+// TestPlanWrittenByNamesSurface is row 136 AC2.3a (kills MUT-WRITTENBY-CONST
+// without the tool binary): the entry header and every coordinator object
+// name the surface the invocation arrived on.
+func TestPlanWrittenByNamesSurface(t *testing.T) {
+	w, d, _ := lawPlan()
+	for _, surface := range []Surface{SurfaceA2A, SurfaceMCP} {
+		want := "coordinator:" + string(surface)
+		for _, p := range []plan{
+			planInvocation(w, surface, InvocationID(surface, "e", "t"), "e", d, []byte(`{"a":1}`), []byte(`{"b":2}`), 5),
+			planEffectInvocation(w, surface, InvocationID(surface, "e", "t"), "e", d, []byte(`{"a":1}`), []byte(`{"b":2}`), []byte(`{}`), nil, 5),
+		} {
+			if got := p.Commit.Entry.Header.WrittenBy; got != want {
+				t.Fatalf("%s: header writtenBy = %q, want %q", surface, got, want)
+			}
+			for _, o := range p.Objects {
+				if o.Provenance != want {
+					t.Fatalf("%s: object %s provenance = %q, want %q", surface, o.SemanticID, o.Provenance, want)
+				}
+			}
+		}
+	}
 }
 
 // The record's skillId is the descriptor's ID — the registry key the card
@@ -366,6 +389,10 @@ func TestDispatchRefuses(t *testing.T) {
 		{"R1_input_over_cap", "plain", "t1", okRun, func(c *Call) { c.Input = map[string]any{"oversized": string(make([]byte, 1<<17))} }, nil, func(e error) bool { var x *InvalidCallError; return errors.As(e, &x) }},
 		{"R1_unmarshalable_input", "plain", "t1", okRun, func(c *Call) { c.Input = map[string]any{"bad": make(chan int)} }, nil, func(e error) bool { var x *InvalidCallError; return errors.As(e, &x) }},
 		{"R1_nil_input", "plain", "t1", okRun, func(c *Call) { c.Input = nil }, nil, func(e error) bool { var x *InvalidCallError; return errors.As(e, &x) }},
+		// Row 136 AC2.2 (MUT-SURFACE-DEFAULT): an untagged or unknown surface is
+		// refused, never defaulted to a2a.
+		{"R1_empty_surface", "plain", "t1", okRun, func(c *Call) { c.Surface = "" }, nil, func(e error) bool { var x *InvalidCallError; return errors.As(e, &x) && x.Field == "surface" }},
+		{"R1_unknown_surface", "plain", "t1", okRun, func(c *Call) { c.Surface = "rest" }, nil, func(e error) bool { var x *InvalidCallError; return errors.As(e, &x) && x.Field == "surface" }},
 		{"R2_absent", "nosuch", "t1", okRun, nil, nil, func(e error) bool { var x *transitionreg.TransitionAbsentError; return errors.As(e, &x) }},
 		{"R3_access_denied", "locked", "t1", okRun, nil, nil, func(e error) bool { var x *transitionreg.AccessDeniedError; return errors.As(e, &x) }},
 		{"R5_pin_mismatch", "plain", "t1", okRun, func(c *Call) { h := hashref.SumSHA256([]byte("other")); c.PinnedFn = &h }, nil,
@@ -644,7 +671,7 @@ func TestDispatchDurableDeadline(t *testing.T) {
 		if runs != 1 {
 			t.Fatalf("runs %d, want one", runs)
 		}
-		rc, ok, err := r.st.GetReceipt(boundedTestContext(t), InvocationID("ep1", "t1"))
+		rc, ok, err := r.st.GetReceipt(boundedTestContext(t), InvocationID(SurfaceA2A, "ep1", "t1"))
 		if err != nil || !ok || rc.State != store.ReceiptIndeterminate {
 			t.Fatalf("receipt %+v %v %v", rc, ok, err)
 		}
@@ -768,7 +795,7 @@ func TestCommitBoundary(t *testing.T) {
 			t.Fatalf("Dispatch = %v, want definite pre-cutoff cancellation", err)
 		}
 		r.assertHead(w.Ref)
-		rc, ok, err := r.st.GetReceipt(boundedTestContext(r.t), InvocationID("ep1", "t1"))
+		rc, ok, err := r.st.GetReceipt(boundedTestContext(r.t), InvocationID(SurfaceA2A, "ep1", "t1"))
 		if err != nil || !ok || rc.State != store.ReceiptIndeterminate {
 			t.Fatalf("receipt = %+v ok=%v err=%v, want unresolved intent", rc, ok, err)
 		}
@@ -815,7 +842,7 @@ func TestNewRefusesMissingSeamsAndCaps(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if InvocationID("ep", "task") != "a2a:ep:task" {
+	if InvocationID(SurfaceA2A, "ep", "task") != "a2a:ep:task" {
 		t.Fatal("wrong invocation namespace")
 	}
 	if validTaskID("bad id") || !validTaskID("a-1") {
@@ -987,7 +1014,7 @@ func TestReconcileRefusesDamagedRecord(t *testing.T) {
 				t.Fatal("fixture broken: the tamper never fired")
 			}
 			var x *IntegrityError
-			if !errors.As(err, &x) || x.Kind != "mismatch" || x.Object != tc.object || x.InvocationID != InvocationID("ep1", "t1") || err.Error() != fmt.Sprintf("coordinator: reconcile a2a:ep1:t1: recorded %s does not match its reference", tc.object) {
+			if !errors.As(err, &x) || x.Kind != "mismatch" || x.Object != tc.object || x.InvocationID != InvocationID(SurfaceA2A, "ep1", "t1") || err.Error() != fmt.Sprintf("coordinator: reconcile a2a:ep1:t1: recorded %s does not match its reference", tc.object) {
 				t.Fatalf("err = %T %v, want *IntegrityError{Object: %q}", err, err, tc.object)
 			}
 			if got.Reconciled || got.OutputBytes != nil {
@@ -1041,7 +1068,7 @@ func TestReconcileDamageDisposition(t *testing.T) {
 						if !errors.As(err, &x) || got.Reconciled {
 							t.Fatalf("output accepted: %+v %v", got, err)
 						}
-						rc, ok, err := r.st.GetReceipt(boundedTestContext(t), InvocationID("ep1", "t1"))
+						rc, ok, err := r.st.GetReceipt(boundedTestContext(t), InvocationID(SurfaceA2A, "ep1", "t1"))
 						if err != nil || ok {
 							t.Fatalf("receipt: %+v %v %v", rc, ok, err)
 						}

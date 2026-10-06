@@ -259,7 +259,7 @@ genesis plus nine tool calls.
 /tmp/ailang-worldd log range --from 0
 ```
 
-Tool-call entries have `writtenBy: "coordinator:a2a"`. To trace a call back from its result, see
+Tool-call entries have `writtenBy: "coordinator:mcp"` (an A2A call writes `coordinator:a2a`). To trace a call back from its result, see
 [Provenance walks](../guides/provenance-walks.md).
 
 ## What the tools can and cannot do

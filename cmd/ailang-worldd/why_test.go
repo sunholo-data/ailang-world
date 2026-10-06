@@ -107,10 +107,18 @@ func mustJSONT(t *testing.T, v any) []byte {
 // allowed Workspace.Read effect) on the tip, exactly as planEffectInvocation
 // lays it out, and returns what it committed.
 func (r *walkRig) invoke(episode, skill, task, content string) synthInv {
+	r.t.Helper()
+	return r.invokeAs(coordinator.SurfaceA2A, episode, skill, task, content)
+}
+
+// invokeAs is invoke for an invocation that arrived on surface: its id is
+// <surface>:<episode>:<task> and it is written by coordinator:<surface>.
+func (r *walkRig) invokeAs(surface coordinator.Surface, episode, skill, task, content string) synthInv {
 	t := r.t
 	t.Helper()
-	in := synthObject(coordinator.InputV1, "coordinator:a2a", mustJSONT(t, map[string]string{"path": "data.txt"}))
-	plan := synthObject(coordinator.EffectPlanV1, "coordinator:a2a",
+	by := "coordinator:" + string(surface)
+	in := synthObject(coordinator.InputV1, by, mustJSONT(t, map[string]string{"path": "data.txt"}))
+	plan := synthObject(coordinator.EffectPlanV1, by,
 		[]byte(`{"effects":[{"cost":1,"effect":"Workspace.Read","id":"e1","payload":{"op":"read","path":"data.txt"},"scope":"worktree"}],"finish":true,"plan":"world/effect-plan/v1","result":null}`))
 	reqObj := synthObject(broker.EffectRequestV1, "host/broker", []byte(`{"op":"read","path":"data.txt","task":"`+task+`"}`))
 	resObj := synthObject(broker.EffectResultV1, "host/broker", mustJSONT(t, map[string]string{"content": content}))
@@ -119,11 +127,11 @@ func (r *walkRig) invoke(episode, skill, task, content string) synthInv {
 	recObj := synthObject(broker.EffectRecordV1, "host/broker", broker.EncodeRecord(rec))
 	outputText := string(mustJSONT(t, map[string]any{"ok": true, "content": content,
 		"world": map[string]any{"plan": plan.Hash, "effects": []map[string]any{{"id": "e1", "status": "ok", "record": recObj.Hash}}}}))
-	out := synthObject(coordinator.OutputV1, "coordinator:a2a", []byte(outputText))
-	id := coordinator.InvocationID(episode, task)
+	out := synthObject(coordinator.OutputV1, by, []byte(outputText))
+	id := coordinator.InvocationID(surface, episode, task)
 	fn := hashref.SumSHA256([]byte("fn-" + skill)).String()
 	interp := hashref.SumSHA256([]byte("interpreter")).String()
-	record := synthObject(coordinator.RecordV2, "coordinator:a2a", mustJSONT(t, struct {
+	record := synthObject(coordinator.RecordV2, by, mustJSONT(t, struct {
 		InvocationID   string   `json:"invocationId"`
 		EpisodeID      string   `json:"episodeId"`
 		SkillID        string   `json:"skillId"`
@@ -135,7 +143,7 @@ func (r *walkRig) invoke(episode, skill, task, content string) synthInv {
 		Plan           string   `json:"plan"`
 		Effects        []string `json:"effects"`
 	}{id, episode, skill, fn, interp, 1, in.Hash, out.Hash, plan.Hash, []string{recObj.Hash}}))
-	hdr := cliHeader{EntryIndex: r.next, SemanticsEpoch: 1, TransitionFn: fn, Interpreter: interp, PrevEntryHash: r.tip.LogHead, WrittenBy: "coordinator:a2a"}
+	hdr := cliHeader{EntryIndex: r.next, SemanticsEpoch: 1, TransitionFn: fn, Interpreter: interp, PrevEntryHash: r.tip.LogHead, WrittenBy: by}
 	entryHash := hashref.SumSHA256(mustJSONT(t, struct {
 		EntryIndex     int64  `json:"entryIndex"`
 		SemanticsEpoch int64  `json:"semanticsEpoch"`
@@ -234,6 +242,28 @@ func TestWhyTargetFormsResolveToOneEntry(t *testing.T) {
 	code, stdout, _ = whyRun(t, r.url, "", "0")
 	if code != exitOK || !strings.Contains(stdout, "is not a coordinator invocation") {
 		t.Fatalf("why 0: exit %d\n%s", code, stdout)
+	}
+}
+
+// TestWhyResolvesMCPInvocationID is row 136 AC2.4 (kills MUT-WHY-PREFIX): an
+// MCP invocation id, mcp:<episode>:<task>, resolves to its entry exactly as an
+// a2a: id does; an unknown namespace is still a usage refusal.
+func TestWhyResolvesMCPInvocationID(t *testing.T) {
+	r := newWalkRig(t)
+	a2a := r.invoke("ep1", "ailang-read", "x", "over a2a\n")
+	mcp := r.invokeAs(coordinator.SurfaceMCP, "ep1", "ailang-read", "x", "over mcp\n")
+	if a2a.id != "a2a:ep1:x" || mcp.id != "mcp:ep1:x" {
+		t.Fatalf("fixture ids = %q / %q", a2a.id, mcp.id)
+	}
+	code, stdout, stderr := whyRun(t, r.url, "", "mcp:ep1:x")
+	assertChainOK(t, "mcp invocation id", code, stdout, stderr, 2)
+	if !strings.Contains(stdout, "writtenBy coordinator:mcp") {
+		t.Fatalf("why mcp:ep1:x does not show the mcp writer:\n%s", stdout)
+	}
+	code, stdout, stderr = whyRun(t, r.url, "", "a2a:ep1:x")
+	assertChainOK(t, "a2a invocation id, same episode and task", code, stdout, stderr, 1)
+	if code, _, stderr := whyRun(t, r.url, "", "bogus:ep1:x"); code != exitUsage || !strings.Contains(stderr, "is not an entry index") {
+		t.Fatalf("why bogus:ep1:x = %d %q, want a usage refusal", code, stderr)
 	}
 }
 
