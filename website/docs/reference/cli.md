@@ -384,8 +384,8 @@ line per check: ✓ fine, ! worth knowing (with a fix), ✗ broken (with a fix).
 
   api key      AILANG_REGISTRY_API_KEY is unset (doctor could not run otherwise:
                every verb refuses while it is set)
-  tty          the mint fence (/dev/tty opens) and the publish fence (stdin is
-               that terminal), each with its reason
+  tty          /dev/tty opens, so the attended steps (world-publish, session
+               new/mint) can read the confirmation you type
   pins         both pinned binaries present and hashing to the compiled-in
                digests (never executed); stale tarballs and old binaries noted
   daemon       what answers at --addr: a worldd (its store and interpreter),
@@ -408,8 +408,8 @@ ailang-worldd doctor --online
 
 ```text
 ✓ api key    AILANG_REGISTRY_API_KEY is unset
-! tty        no controlling terminal (open /dev/tty: device not configured): session mint/new and world-publish will refuse here
-             fix: run the attended steps (publish, session new) in a real terminal
+! tty        no controlling terminal (open /dev/tty: device not configured): world-publish and session new/mint will refuse here
+             fix: run the attended steps yourself from a terminal window (an IDE terminal pane works); an agent cannot run them
 ✓ pins       interpreter AILANG v0.41.0 at /Users/you/.pinned-ailang/ailang (sha256 1a67b0146858…)
 ✓ pins       tool AILANG v0.52.1 at /Users/you/.pinned-ailang-tools/v0.52.1/ailang (sha256 0dd70a1d0036…)
 ! daemon     nothing answers at http://127.0.0.1:7644
@@ -437,9 +437,9 @@ usage: ailang-worldd session new <episode> [--db <path>] [--workspace-root <dir>
            [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
 
 ATTENDED. Provisions one episode: its git worktree at <workspace-root>/<episode>
-and a session credential bound to it, after a y/N typed at /dev/tty. With no
-controlling terminal it refuses before touching anything (in an embedded
-terminal, append </dev/tty).
+and a session credential bound to it, after a y/N typed at /dev/tty (any
+terminal window, an IDE terminal pane included; stdin is never read). With no
+controlling terminal (an agent, cron, CI) it refuses before touching anything.
 
   <episode>            ^[a-z0-9][a-z0-9-]{0,63}$ (the daemon's grammar)
   --db <path>          an EXISTING world store (default ~/.ailang/world/world.db);
@@ -487,7 +487,8 @@ ailang-worldd session new: credential_id=<64-hex> (episode ep1, worktree /Users/
 
 Without a controlling terminal it refuses before touching anything:
 `refusing: no controlling terminal (open /dev/tty: device not configured); provisioning a session
-credential requires one human act at a terminal` (exit 1). Every validation (the episode name,
+credential requires one human act at a terminal. fix: run it yourself from a terminal window (an
+IDE terminal pane works); an agent cannot run this step` (exit 1). Every validation (the episode name,
 an existing `--db`, the workspace root, the grants, `--out` not existing yet) runs before that
 fence; the writer lock is taken before the worktree is created, so with the daemon running it
 stops at `stop the daemon first` with nothing created.

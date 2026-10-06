@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"io/fs"
 	"os"
 )
@@ -32,13 +33,33 @@ import (
 //	os.Stat("/dev/null") -> mode Dcrw-rw-rw-, chardev=TRUE
 //	os.SameFile(/dev/null, /dev/null) -> true
 //
-// The third line is why R-TTY-SAMEFILE exists. /dev/null IS a character device,
-// so a naive isatty check admits `world-publish publish --live < /dev/null` —
-// the mission's recurring class, a check that looks like verification. The
-// fourth line is the positive control: the passing branch is reachable in a unit
-// test with no pty and no new dependency, because /dev/null is the same file as
+// The third line is why R-TTY-SAMEFILE existed. /dev/null IS a character
+// device, so a naive isatty check admits `world-publish publish --live <
+// /dev/null` — the mission's recurring class, a check that looks like
+// verification. The fourth line is the positive control: the stdin path is
+// reachable in a unit test with no pty, because /dev/null is the same file as
 // itself. In PRODUCTION the ctty FileInfo comes only from os.Open("/dev/tty"),
 // which never resolves to /dev/null.
+//
+// WHERE THE TYPED LINE COMES FROM (2026-10-06, attended-steps ergonomics).
+// R-TTY-CHARDEV and R-TTY-SAMEFILE used to REFUSE any process whose stdin was
+// not the very file /dev/tty. That stopped every human too: in an IDE terminal
+// pane — and in an ordinary terminal window, whose stdin is /dev/ttysNNN, a
+// different file from /dev/tty — the operator was told
+// `reason=stdin-is-not-the-controlling-terminal`, and the documented way past it
+// was to re-run with `< /dev/tty`. The fence now does that itself: when stdin is
+// not the controlling terminal, the prompt is written to, and the typed line is
+// read from, the /dev/tty handle the probe opened.
+//
+// THIS IS EXACTLY AS STRONG AS THE `< /dev/tty` ROUTE QUICKSTART ALREADY
+// SANCTIONED. That route reads the line from /dev/tty too; here the command
+// opens the same device instead of the shell. Either way the line can only
+// come from the controlling terminal, and a process that has none cannot open
+// /dev/tty at all — R-TTY-OPEN, unchanged, is still the refusal an agent
+// harness, setsid, cron or CI meets. What a redirected stdin carries (`echo
+// phrase |`, `< /dev/null`) is never read as the confirmation: the stdin
+// identity checks did not stop being enforced, they stopped deciding WHETHER to
+// refuse and now decide WHERE to read.
 //
 // Stdlib only. No build tags. Works on darwin and linux.
 // ---------------------------------------------------------------------------
@@ -48,10 +69,14 @@ import (
 // process with no controlling terminal cannot open it at all.
 const devTTY = "/dev/tty"
 
+// ttyFix is the exact fix every terminal refusal ends with. An operator who
+// reads a STOP line needs the next command, not the theory.
+const ttyFix = "fix: run it yourself from a terminal window (an IDE terminal pane works); an agent cannot run this step"
+
 // ttyProbe is one observation of this process's terminal situation. It is a
-// VALUE so the three refusals below can be driven from a unit test without a
-// pty, a subprocess or a new dependency — and so the production path can be
-// asserted to build it from nothing but the two syscalls named here.
+// VALUE so the refusal and the choice of input below can be driven from a unit
+// test without a pty, a subprocess or a new dependency — and so the production
+// path can be asserted to build it from nothing but the two syscalls named here.
 type ttyProbe struct {
 	// stdin is os.Stdin's FileInfo, or nil if it could not be stat'ed.
 	stdin fs.FileInfo
@@ -61,63 +86,81 @@ type ttyProbe struct {
 	// collapsed into "ctty == nil" because "there is no controlling terminal"
 	// is the single most informative thing this fence can tell an operator.
 	cttyErr error
+	// term is the opened /dev/tty itself, read-write. When stdin is not the
+	// controlling terminal, the prompt is written here and the typed line is
+	// read from here. nil whenever cttyErr is set.
+	term io.ReadWriter
 }
 
 // probeControllingTerminal performs the two syscalls. It is the ONLY place the
-// production path touches the terminal, and it opens /dev/tty read-only and
-// closes it immediately: the fence needs the file's identity, not a handle.
+// production path touches the terminal. It opens /dev/tty read-write and keeps
+// the handle in the probe, because the confirmation may be read from it; the
+// fence stack closes it once the line has been read.
 func probeControllingTerminal() ttyProbe {
 	var p ttyProbe
 	if info, err := os.Stdin.Stat(); err == nil {
 		p.stdin = info
 	}
-	tty, err := os.OpenFile(devTTY, os.O_RDONLY, 0)
+	tty, err := os.OpenFile(devTTY, os.O_RDWR, 0)
 	if err != nil {
 		p.cttyErr = err
 		return p
 	}
-	defer func() { _ = tty.Close() }()
-	if info, statErr := tty.Stat(); statErr == nil {
-		p.ctty = info
-	} else {
+	info, statErr := tty.Stat()
+	if statErr != nil {
+		_ = tty.Close()
 		p.cttyErr = statErr
+		return p
 	}
+	p.ctty = info
+	p.term = tty
 	return p
 }
 
-// requireControllingTerminal is the fence. Its three refusals are independent
-// and are ordered so that each one's precondition is established by the one
-// before it.
+// requireControllingTerminal is the fence: a process with no controlling
+// terminal is refused. It is the only terminal refusal; which device the typed
+// line is then read from is confirmationSource's decision.
 func requireControllingTerminal(p ttyProbe) *stopError {
 	// R-TTY-OPEN. Measured to fire in this loop's own shell today.
 	if p.cttyErr != nil {
-		return &stopError{
-			Fence:  fenceTTY,
-			Reason: "no-controlling-terminal",
-			Detail: "opening " + devTTY + " failed: " + p.cttyErr.Error(),
-		}
-	}
-	// R-TTY-CHARDEV. Measured to fire in this loop's own shell today: stdin is
-	// a socket.
-	if p.stdin == nil || p.stdin.Mode()&os.ModeCharDevice == 0 {
-		return &stopError{
-			Fence:  fenceTTY,
-			Reason: "stdin-not-a-terminal",
-			Detail: describeStdin(p.stdin),
-		}
-	}
-	// R-TTY-SAMEFILE. THE REPAIR: /dev/null is a character device, so the check
-	// above alone admits `--live < /dev/null`. Redirected stdin is not the
-	// controlling terminal, whatever kind of device it happens to be.
-	if !sameFile(p.stdin, p.ctty) {
-		return &stopError{
-			Fence:  fenceTTY,
-			Reason: "stdin-is-not-the-controlling-terminal",
-			Detail: "stdin is a character device but not " + devTTY +
-				"; a redirect such as `< /dev/null` is not an attended operator",
-		}
+		return noControllingTerminal("opening " + devTTY + " failed: " + p.cttyErr.Error())
 	}
 	return nil
+}
+
+func noControllingTerminal(cause string) *stopError {
+	return &stopError{
+		Fence:  fenceTTY,
+		Reason: "no-controlling-terminal",
+		Detail: cause + "; there is no controlling terminal here (an agent harness, setsid, cron or CI). " + ttyFix,
+	}
+}
+
+// confirmationSource picks where the prompt goes and the typed line comes
+// from. When stdin IS the controlling terminal (`< /dev/tty`, or a process
+// whose stdin was opened from it) that is stdin and stdout, as before. In every
+// other case it is the opened /dev/tty — never the redirected stdin.
+//
+// It fails CLOSED: a stdin that is not the terminal with no terminal handle to
+// read from is refused as no-controlling-terminal, not read. In production
+// that state cannot follow a passing requireControllingTerminal; the arm is
+// here so that neutering R-TTY-OPEN alone cannot turn a redirected stdin back
+// into the confirmation.
+func confirmationSource(p ttyProbe, in io.Reader, out io.Writer) (io.Reader, io.Writer, *stopError) {
+	if sameFile(p.stdin, p.ctty) {
+		return in, out, nil
+	}
+	if p.term == nil {
+		return nil, nil, noControllingTerminal(devTTY + " is not open for reading")
+	}
+	return p.term, p.term, nil
+}
+
+// closeTerminal releases the probe's /dev/tty handle, if it holds one.
+func closeTerminal(p ttyProbe) {
+	if c, ok := p.term.(io.Closer); ok {
+		_ = c.Close()
+	}
 }
 
 // sameFile is os.SameFile with a nil-tolerant front. It fails CLOSED: an
@@ -133,13 +176,4 @@ func sameFile(a, b fs.FileInfo) bool {
 		return false
 	}
 	return os.SameFile(a, b)
-}
-
-// describeStdin names what stdin actually was, so an operator who gets this
-// refusal in a terminal knows to look at their redirect rather than their tty.
-func describeStdin(info fs.FileInfo) string {
-	if info == nil {
-		return "stdin could not be stat'ed"
-	}
-	return "stdin mode is " + info.Mode().String() + ", which carries no character-device bit"
 }

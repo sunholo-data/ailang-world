@@ -63,8 +63,12 @@ known-positive control, and it FATALs if they are absent. Do not "fix" them.
 ## Stage B — attended publish
 
 Every command in this stage is refused unless a human is present. The refusal is **structural, not
-advisory**: `world-publish` opens `/dev/tty` and requires stdin to be *that same file*. A pipe, a
-redirect, a CI runner and an autonomous agent all fail it, and none of them can arrange otherwise.
+advisory**: `world-publish` opens `/dev/tty` and reads the typed phrase from the controlling
+terminal: from stdin when stdin *is* that terminal, from the opened `/dev/tty` otherwise, never from
+a redirected stdin. A CI runner and an autonomous agent have no controlling terminal, so `/dev/tty`
+does not open and the command refuses; a pipe or a redirect can only feed a stdin that is not read.
+(Until 2026-10-06 a stdin that was not the very file `/dev/tty` was refused outright, which stopped
+IDE-pane operators too; the `< /dev/tty` that `self_mod_publish.sh` adds is still harmless.)
 
 `--dry-run` is a rehearsal that passes every one of those fences and then makes no request at all,
 so an operator can walk the exact keystrokes before the real one.
@@ -293,12 +297,14 @@ otherwise is how a fence stack rots:
 | **`tty`** | **automation** | **the load-bearing layer** |
 
 The controlling-terminal check is the one an autonomous process cannot satisfy: it requires
-`/dev/tty` to open *and* stdin to be the same file as that device. Measured in this repository's own
+`/dev/tty` to open, and the phrase is read from that terminal. Measured in this repository's own
 loop, `/dev/tty` fails to open with "device not configured" and stdin is a socket.
 
 A naive `isatty` would not be enough, and this is measured too: **`/dev/null` is a character
-device**, so a character-device test alone admits `< /dev/null`. The `os.SameFile` comparison is the
-repair, and deleting it reopens the hole.
+device**, so a character-device test alone would admit `< /dev/null`. The `os.SameFile` comparison
+decides where the phrase is read from: stdin only when it is the same file as `/dev/tty`, the
+opened `/dev/tty` otherwise. Weakening it so that a redirected stdin is read reopens the hole
+(`TestRedirectedStdinIsNeverTheConfirmation` reds).
 
 ---
 

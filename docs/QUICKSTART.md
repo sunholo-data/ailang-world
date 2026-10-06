@@ -13,6 +13,60 @@ from the binary, that is a defect.*
 > time. Once a daemon is serving, `ailang-worldd tools list`, `call`, `why`, `log tail` and
 > `provenance` replace hand-written curl (`ailang-worldd <verb> --help` for each).
 
+## 0. Attended steps (the only commands a person must run)
+
+An agent or a script can run everything else in this guide. These two steps each read a line
+**you type** at your terminal, and they refuse to run when there is no terminal (an agent
+harness, cron, CI). Run them yourself from the repo root, with the daemon stopped. The values
+are the ones §9 uses.
+
+**Publish the transitions** (once, and again whenever the manifest changes):
+
+```bash
+/tmp/world-publish transitions --store /tmp/se-world/world.db \
+  --manifest packages/se-tools/transitions.json --ailang-bin $PIN
+```
+
+- `--store`: the world database, the same file the daemon serves with `serve --db`.
+- `--manifest`: the transition descriptors to publish. Its paths are repo-relative, so run it
+  from the repo root.
+- `--ailang-bin`: the `.ail` interpreter pin, `$PIN` (AILANG v0.41.0).
+
+At the prompt, type the line it shows exactly: `publish 9 transitions to /tmp/se-world/world.db`
+(the manifest's descriptor count and your `--store`). On success it prints
+`published transition registry revision N (head sha256:…)`. Running it again with nothing
+changed prints `transition registry UNCHANGED at revision N`.
+
+**Mint a session** (once per episode):
+
+```bash
+/tmp/ailang-worldd session new ep1 --db /tmp/se-world/world.db --workspace-root /tmp/se-ws \
+  --preset se-tools --ttl 14400 --out /tmp/se-session
+```
+
+- `ep1`: the episode. Its worktree is `<workspace-root>/ep1`, and the name must match
+  `^[a-z0-9][a-z0-9-]{0,63}$`.
+- `--db`: the same store as the publish step.
+- `--out`: where the token is written, once, at mode 0600. The file must not exist yet.
+
+At `[y/N]`, type `y`. On success it prints `session for episode ep1: 9 grant(s), expires epoch …,
+token written to /tmp/se-session`, plus `credential_id=…` on stderr (the hash `session revoke`
+takes; the token itself is never printed).
+
+**Two snags, both handled:**
+- **IDE terminal panes work as they are.** Both commands open `/dev/tty` themselves and ask
+  there, so you no longer need to add `< /dev/tty`. It is still accepted, and reads the same
+  device. If you see `STOP fence=tty reason=no-controlling-terminal` or `refusing: no
+  controlling terminal`, the command was not run from a terminal (for example, an agent ran it).
+  Run it yourself in a terminal window.
+- **`AILANG_REGISTRY_API_KEY`.** While it is set, `ailang-worldd` refuses every verb except
+  `--help`, because every process World starts would inherit unrecallable publish authority
+  (design Decision 4). Unset it in that shell (`unset AILANG_REGISTRY_API_KEY`), or prefix the one
+  command: `env -u AILANG_REGISTRY_API_KEY /tmp/ailang-worldd session new …`.
+
+Run `ailang-worldd doctor` in the shell you will use to check both. With the key set, doctor
+refuses too, and names the variable.
+
 ## 1. Build and start
 
 `PIN` is the `.ail` interpreter pin, **AILANG v0.41.0**. It runs every transition plan and its
@@ -79,10 +133,10 @@ EOF
 ```
 
 Stop the daemon, mint a session, and start the daemon again. **Mint is TTY-fenced**: it asks a
-one-line y/N on the controlling terminal and, without one, refuses with
-`session mint: refusing: no controlling terminal`. In an embedded terminal (an IDE pane, an
-agent harness) append `< /dev/tty`. The `world.apply` grant is the one §6's published skill
-needs, so §6 reuses this session:
+one-line y/N on the controlling terminal (it opens `/dev/tty` itself, so an IDE terminal pane
+works as is) and, without one, refuses with `session mint: refusing: no controlling terminal`.
+See [§0](#0-attended-steps-the-only-commands-a-person-must-run). The `world.apply` grant is the
+one §6's published skill needs, so §6 reuses this session:
 
 ```bash
 kill %1
@@ -188,8 +242,9 @@ go build -o /tmp/world-publish ./cmd/world-publish
 ```
 
 `world-publish` refuses without a controlling terminal
-(`STOP fence=tty reason=…`; append `< /dev/tty` in an embedded terminal), then asks you to type
-a line naming the local write — here `publish 1 transitions to /tmp/world-demo.db` (the
+(`STOP fence=tty reason=no-controlling-terminal`; see
+[§0](#0-attended-steps-the-only-commands-a-person-must-run)). It asks at `/dev/tty` itself, so an
+IDE terminal pane works as is. It asks you to type a line naming the local write — here `publish 1 transitions to /tmp/world-demo.db` (the
 manifest's descriptor count and the `--store` you gave). Output: `semantics epoch 1 derived from
 world/epoch-registry/v1 for interpreter release "…"` then `published transition registry revision
 1 (head sha256:…)`. Running it again prints `transition registry UNCHANGED at revision 1` — an
@@ -317,11 +372,13 @@ section wins.
 the snags below that applies to your shell. Four facts measured on the first M6 run
 (2026-10-03):
 - **Unset `AILANG_REGISTRY_API_KEY`** in the shell that starts the daemon. With it in the
-  environment, the daemon refuses to start.
-- The two attended steps (publish, mint) are TTY-fenced. In an embedded terminal (an IDE pane,
-  an agent harness) `world-publish` stops with `STOP fence=tty reason=…` (for example
-  `stdin-is-not-the-controlling-terminal`) and `session new` with `refusing: no controlling
-  terminal`; append `< /dev/tty` to those two commands.
+  environment, the daemon refuses to start (only `--help` still answers).
+- The two attended steps (publish, session new) are TTY-fenced and are listed, copy-paste
+  ready, in [§0](#0-attended-steps-the-only-commands-a-person-must-run). Both ask at
+  `/dev/tty` themselves, so an IDE terminal pane works without `< /dev/tty` (this was a snag on
+  the first M6 run, fixed on 2026-10-06). An agent harness has no controlling terminal: there
+  `world-publish` stops with `STOP fence=tty reason=no-controlling-terminal` and `session new`
+  with `refusing: no controlling terminal`.
 - `POST /v1/commit` is session-gated, so the genesis commit comes **after** mint, against the
   running daemon, with `--session`.
 - `/mcp/` answers as SSE: the JSON-RPC response is the `data:` line of an `event: message`.
@@ -397,9 +454,10 @@ EOF
 
 **Publish (attended, TTY fence).** Run this from the **repo root**, because the manifest's
 `transitionFnFile` paths are repo-relative. The daemon must be stopped, since publishing needs
-single-writer authority. `world-publish` refuses without a controlling terminal and asks you to
-type `publish 8 transitions to /tmp/se-world/world.db` (the manifest's descriptor count and the
-store). An agent cannot run this step:
+single-writer authority. `world-publish` refuses without a controlling terminal and asks you, at
+the terminal, to type `publish 9 transitions to /tmp/se-world/world.db` (the manifest's
+descriptor count and the store). An agent cannot run this step. It is the first step of
+[§0](#0-attended-steps-the-only-commands-a-person-must-run):
 
 ```bash
 /tmp/world-publish transitions --store /tmp/se-world/world.db \
@@ -416,8 +474,9 @@ se-tools`): `Workspace.Read`, `Workspace.Write` (shared by `write` and `edit`), 
 `Env` or `Net`, row 135), `Ailang.Discover` (shared by the two searches), `Ailang.CLI` and
 `Workspace.Exec` (`workspace-exec`, row 140), each with scope `worktree` and a budget of 50
 calls. It reuses the worktree made above (without it,
-`--repo /tmp/se-proj` makes one), asks y/N on the terminal, and writes the token once to
-`--out` (mode 0600; the file must not exist yet):
+`--repo /tmp/se-proj` makes one), asks y/N on the terminal (type `y`), and writes the token once
+to `--out` (mode 0600; the file must not exist yet). It is the second step of
+[§0](#0-attended-steps-the-only-commands-a-person-must-run):
 
 ```bash
 /tmp/ailang-worldd session new ep1 --db /tmp/se-world/world.db --workspace-root /tmp/se-ws \

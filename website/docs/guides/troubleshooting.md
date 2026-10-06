@@ -58,16 +58,25 @@ directory outside the workspace root.
 
 ### `STOP fence=tty reason=stdin-is-not-the-controlling-terminal`
 
-`world-publish` was run with stdin that is a character device but not `/dev/tty`, typically an
-IDE pane or an agent harness. Append `< /dev/tty` and type the phrase yourself.
+Printed by `world-publish` builds before 2026-10-06, in an IDE pane. Current builds read the
+phrase from `/dev/tty` themselves, so rebuild (`go build -o /tmp/world-publish
+./cmd/world-publish`) and run the plain command. `< /dev/tty` also still works.
 
 ### `STOP fence=tty reason=no-controlling-terminal`
 
-There is no terminal at all. A headless process cannot do this step; a human must.
+There is no terminal at all. A headless process cannot do this step; a human must. Run it
+yourself from a terminal window (an IDE terminal pane works).
 
 ### `refusing: no controlling terminal (…); minting a session credential requires one human act at a terminal`
 
-Same, for `session mint`. Run it at a real terminal.
+Same, for `session mint` and `session new`. Run it yourself from a terminal window.
+
+### `AILANG_REGISTRY_API_KEY is set in the process environment`
+
+Every `ailang-worldd` verb except `--help` refuses while the registry key is in the
+environment (design Decision 4). Run `unset AILANG_REGISTRY_API_KEY` in that shell, or run the
+one command as the refusal's last line shows: `env -u AILANG_REGISTRY_API_KEY ailang-worldd
+<verb> …`.
 
 ### `STOP fence=confirmation reason=mismatch`
 

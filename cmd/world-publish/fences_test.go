@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -12,7 +13,15 @@ import (
 )
 
 // ---------------------------------------------------------------------------
-// AC21 — all 14 refusal branches, driven, with a per-row positive control
+// AC21 — all 12 refusal branches, driven, with a per-row positive control
+//
+// 12, not 14: R-TTY-CHARDEV and R-TTY-SAMEFILE were REMOVED on 2026-10-06
+// (attended-steps ergonomics). They refused an operator whose stdin was not the
+// controlling terminal; the fence now reads the typed line from /dev/tty itself
+// in that case, so stdin's identity no longer decides anything and the only
+// terminal refusal left is R-TTY-OPEN. TestRedirectedStdinIsNeverTheConfirmation
+// pins what the two rows used to guard: a phrase on a redirected stdin is never
+// read.
 //
 // SAFETY: every row below runs IN PROCESS with an injected ttyProbe and an
 // injected getenv. No row performs a network request of any kind: the only row
@@ -31,8 +40,8 @@ import (
 
 // fenceStages is the total order of refusal stages a `publish` invocation walks.
 // "Later" in AC21 is defined against THIS list, and the list is finer-grained
-// than the fence names: the three TTY refusals share one fence name but are
-// three distinct stages, so a control that merely reached a different reason on
+// than the fence names: the TTY refusal and the two confirmation refusals are
+// distinct stages, so a control that merely reached a different reason on
 // the same fence cannot be mistaken for progress.
 var fenceStages = []string{
 	"mode",
@@ -42,15 +51,13 @@ var fenceStages = []string{
 	"packet",
 	"ci",
 	"tty/no-controlling-terminal",
-	"tty/stdin-not-a-terminal",
-	"tty/stdin-is-not-the-controlling-terminal",
 	"confirmation/eof",
 	"confirmation/mismatch",
 	"handler",
 }
 
 // multiStageFences are the fences whose REASONS are sequential rather than
-// alternative: the three TTY refusals and the two confirmation refusals are
+// alternative: the TTY refusal and the two confirmation refusals are
 // checked in order, so a control that reached a different reason on the same
 // fence HAS made progress and must be scored as such. Every other fence's
 // reasons are alternatives reached at one position.
@@ -308,12 +315,6 @@ func fenceRows() []fenceRow {
 	openProbe := func(t *testing.T) ttyProbe {
 		return ttyProbe{stdin: regularFileInfo(t), cttyErr: fmt.Errorf("device not configured")}
 	}
-	chardevProbe := func(t *testing.T) ttyProbe {
-		return ttyProbe{stdin: regularFileInfo(t), ctty: devNullInfo(t)}
-	}
-	sameFileProbe := func(t *testing.T) ttyProbe {
-		return ttyProbe{stdin: devNullInfo(t), ctty: regularFileInfo(t)}
-	}
 	phrase := attendedPhrase + "\n"
 
 	return []fenceRow{
@@ -419,30 +420,10 @@ func fenceRows() []fenceRow {
 				return liveInvocation(t), phrase, noEnv, openProbe(t)
 			},
 			control: func(t *testing.T) (invocation, string, func(string) string, ttyProbe) {
-				// /dev/tty opens; stdin is still a regular file.
-				return liveInvocation(t), phrase, noEnv, chardevProbe(t)
-			},
-		},
-		{
-			branch:   "R-TTY-CHARDEV",
-			wantLine: "STOP fence=tty reason=stdin-not-a-terminal",
-			trigger: func(t *testing.T) (invocation, string, func(string) string, ttyProbe) {
-				return liveInvocation(t), phrase, noEnv, chardevProbe(t)
-			},
-			control: func(t *testing.T) (invocation, string, func(string) string, ttyProbe) {
-				// stdin becomes a character device — /dev/null, which is exactly
-				// the `--live < /dev/null` case a naive isatty check admits.
-				return liveInvocation(t), phrase, noEnv, sameFileProbe(t)
-			},
-		},
-		{
-			branch:   "R-TTY-SAMEFILE",
-			wantLine: "STOP fence=tty reason=stdin-is-not-the-controlling-terminal",
-			trigger: func(t *testing.T) (invocation, string, func(string) string, ttyProbe) {
-				return liveInvocation(t), phrase, noEnv, sameFileProbe(t)
-			},
-			control: func(t *testing.T) (invocation, string, func(string) string, ttyProbe) {
-				return liveInvocation(t), "", noEnv, satisfiedProbe(t)
+				// /dev/tty opens; stdin is still a regular file carrying the
+				// phrase, which is NOT read: the terminal is, and nothing is
+				// typed there, so the next stage (confirmation/eof) is reached.
+				return liveInvocation(t), phrase, noEnv, terminalProbe(t, regularFileInfo(t), "")
 			},
 		},
 		{
@@ -520,7 +501,7 @@ func flipOneNibble(golden string) string {
 // rather than silently reducing coverage.
 var enumeratedBranches = []string{
 	"R-MODE-NONE", "R-MODE-BOTH", "R-CI",
-	"R-TTY-OPEN", "R-TTY-CHARDEV", "R-TTY-SAMEFILE",
+	"R-TTY-OPEN",
 	"R-PHRASE-EOF", "R-PHRASE",
 	"R-STORE", "R-APPROVAL-ABSENT", "R-CRED-FLAG",
 	"R-PACKET-DRIFT", "R-PACKET-VERSION", "R-RECONCILE-LIVE-FLAG",
@@ -640,26 +621,92 @@ func TestGithubActionsAlsoTripsTheDeclaredTripwire(t *testing.T) {
 	}
 }
 
-// TestDevNullIsACharacterDevice records the measurement that makes
-// R-TTY-SAMEFILE necessary rather than defensive. If this ever stops holding,
-// the SameFile branch stops being the repair for anything and someone should
-// find out from a test rather than from an unexpected publish.
-func TestDevNullIsACharacterDevice(t *testing.T) {
-	info := devNullInfo(t)
-	t.Logf("%s mode = %v (character device: the naive isatty check ALONE admits `--live < /dev/null`)",
-		os.DevNull, info.Mode())
+// scriptedTerminal stands in for an opened /dev/tty: Read yields what the
+// operator typed, Write records the prompt, Close is observed.
+type scriptedTerminal struct {
+	typed  *strings.Reader
+	shown  bytes.Buffer
+	closed bool
+}
 
-	// A chardev stdin that is NOT the controlling terminal must still be refused.
-	refused := requireControllingTerminal(ttyProbe{stdin: info, ctty: regularFileInfo(t)})
-	if refused == nil {
-		t.Fatal("a character-device stdin that is not the ctty was ACCEPTED")
+func (s *scriptedTerminal) Read(p []byte) (int, error)  { return s.typed.Read(p) }
+func (s *scriptedTerminal) Write(p []byte) (int, error) { return s.shown.Write(p) }
+func (s *scriptedTerminal) Close() error                { s.closed = true; return nil }
+
+// terminalProbe is a process whose /dev/tty opened but whose stdin is NOT that
+// terminal (stdin is the given file): an IDE pane, `< /dev/null`, a pipe.
+func terminalProbe(t *testing.T, stdin fs.FileInfo, typed string) ttyProbe {
+	t.Helper()
+	return ttyProbe{stdin: stdin, ctty: regularFileInfo(t), term: &scriptedTerminal{typed: strings.NewReader(typed)}}
+}
+
+// TestRedirectedStdinIsNeverTheConfirmation is what R-TTY-CHARDEV and
+// R-TTY-SAMEFILE used to guard, restated for the fence that reads from the
+// controlling terminal. For a stdin that is a pipe-like regular file and for
+// /dev/null (a character device, the case a naive isatty check admits):
+//
+//   - the exact phrase on stdin, nothing typed at the terminal -> STOP
+//     confirmation/eof. `echo phrase |` and `< /dev/null` are not an operator;
+//   - nothing on stdin, the phrase typed at the terminal -> the fence passes,
+//     and the prompt went to the terminal, not to stdout.
+//
+// Each arm is the other's control: the same probe shape, differing only in
+// which device carries the line.
+func TestRedirectedStdinIsNeverTheConfirmation(t *testing.T) {
+	stdins := map[string]fs.FileInfo{"regular file": regularFileInfo(t), os.DevNull: devNullInfo(t)}
+	for name, stdin := range stdins {
+		t.Run(name, func(t *testing.T) {
+			var out bytes.Buffer
+			piped := terminalProbe(t, stdin, "")
+			err := requireAttendedOperator(strings.NewReader(attendedPhrase+"\n"), &out, noEnv, piped)
+			if err == nil || err.Line() != "STOP fence=confirmation reason=eof" {
+				t.Fatalf("a phrase on a redirected stdin was accepted or refused oddly: %v", err)
+			}
+			if !piped.term.(*scriptedTerminal).closed {
+				t.Fatal("the terminal was left open after the refusal")
+			}
+
+			out.Reset()
+			typed := terminalProbe(t, stdin, attendedPhrase+"\n")
+			if err := requireAttendedOperator(strings.NewReader(""), &out, noEnv, typed); err != nil {
+				t.Fatalf("the phrase typed at the controlling terminal was refused: %v", err)
+			}
+			term := typed.term.(*scriptedTerminal)
+			if !strings.Contains(term.shown.String(), attendedPhrase) {
+				t.Fatalf("the prompt did not reach the terminal: %q", term.shown.String())
+			}
+			if out.Len() != 0 {
+				t.Fatalf("the prompt went to stdout %q, not to the terminal the line is read from", out.String())
+			}
+			if !term.closed {
+				t.Fatal("the terminal was left open after the confirmation")
+			}
+		})
 	}
-	if refused.Reason != "stdin-is-not-the-controlling-terminal" {
-		t.Fatalf("refusal reason = %q, want the SameFile branch", refused.Reason)
+}
+
+// TestEveryAttendedRefusalEndsWithItsFix: an operator who reads a STOP line
+// gets the next thing to do, as the LAST thing printed.
+func TestEveryAttendedRefusalEndsWithItsFix(t *testing.T) {
+	cases := map[string]*stopError{
+		"tty":      requireControllingTerminal(ttyProbe{cttyErr: fmt.Errorf("device not configured")}),
+		"ci":       refuseAutomationEnvironment(ciEnv),
+		"eof":      requireTypedPhrase(strings.NewReader(""), io.Discard, "p", "phrase"),
+		"mismatch": requireTypedPhrase(strings.NewReader("nope\n"), io.Discard, "p", "phrase"),
 	}
-	// And the same file as itself passes — the branch is not simply always-false.
-	if err := requireControllingTerminal(ttyProbe{stdin: info, ctty: info}); err != nil {
-		t.Fatalf("the SameFile branch refused a file compared with itself: %v", err)
+	want := map[string]string{"tty": ttyFix, "ci": ciFix, "eof": phraseFix, "mismatch": phraseFix}
+	for name, err := range cases {
+		if err == nil {
+			t.Fatalf("%s: no refusal", name)
+		}
+		var buf bytes.Buffer
+		report(&buf, err)
+		if !strings.HasSuffix(strings.TrimSpace(buf.String()), want[name]) {
+			t.Errorf("%s refusal does not end with its fix %q:\n%s", name, want[name], buf.String())
+		}
+		if !strings.HasPrefix(want[name], "fix: ") {
+			t.Errorf("%s fix %q does not start with \"fix: \"", name, want[name])
+		}
 	}
 }
 

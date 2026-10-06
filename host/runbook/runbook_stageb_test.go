@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 
 	"github.com/sunholo-data/ailang-world/host/childenv"
@@ -496,7 +497,9 @@ func itoa(n int) string {
 //
 //  1. The controlling-terminal fence is ordered BEFORE any transport can exist
 //     (asserted over the AST by AC22), and it is UNSATISFIABLE here: the child
-//     gets piped stdio, so /dev/tty either will not open or is not stdin.
+//     runs in a new session (setsid) with no controlling terminal, so
+//     /dev/tty does not open — wherever the gate runs, a person's terminal
+//     included.
 //  2. The child's environment is built with childenv.Scrubbed, so every
 //     registry variable — including the credential — is REMOVED. This test
 //     never reads, sets or passes AILANG_REGISTRY_API_KEY.
@@ -766,6 +769,13 @@ func runArgv(t *testing.T, root string, argv []string) argvResult {
 	// hide whether the load-bearing layer works at all.
 	cmd.Env = withoutVariables(cmd.Env, "CI", "GITHUB_ACTIONS")
 	cmd.Stdin = strings.NewReader("")
+	// A NEW SESSION WITH NO CONTROLLING TERMINAL. Since 2026-10-06 the fence
+	// reads the phrase from /dev/tty whenever /dev/tty opens, whatever stdin
+	// is — so a `go test` started from a person's terminal would otherwise
+	// prompt THEM, and wait. setsid makes item 1 below hold wherever the gate
+	// runs: /dev/tty does not open, and the STOP is the controlling-terminal
+	// fence, as measured.
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	var stdout, stderr strings.Builder
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr

@@ -29,7 +29,8 @@ import (
 // CORRECTED (controller iter-67, measured). This comment previously claimed
 // "every single AC21 row still passes" under that mutant. It does not — 6 of
 // 15 red (R-CI, R-TTY-OPEN, R-TTY-CHARDEV, R-TTY-SAMEFILE, R-PHRASE-EOF,
-// R-PHRASE), because those rows' fixture supplies a LOOPBACK registry origin,
+// R-PHRASE; as measured then — the two stdin rows were removed on 2026-10-06,
+// see tty.go), because those rows' fixture supplies a LOOPBACK registry origin,
 // so a hoisted constructor refuses on loopback/ambient-credential first and
 // the row sees "STOP fence=handler" rather than its documented line. The
 // ARGUMENT for this test survives intact — an AC21 row passing proves only

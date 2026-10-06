@@ -46,9 +46,9 @@ const sessionNewHelp = `usage: ailang-worldd session new <episode> [--db <path>]
            [--budget 50] [--ttl 3600] [--out <file>] [--branch <name>]
 
 ATTENDED. Provisions one episode: its git worktree at <workspace-root>/<episode>
-and a session credential bound to it, after a y/N typed at /dev/tty. With no
-controlling terminal it refuses before touching anything (in an embedded
-terminal, append </dev/tty).
+and a session credential bound to it, after a y/N typed at /dev/tty (any
+terminal window, an IDE terminal pane included; stdin is never read). With no
+controlling terminal (an agent, cron, CI) it refuses before touching anything.
 
   <episode>            ^[a-z0-9][a-z0-9-]{0,63}$ (the daemon's grammar)
   --db <path>          an EXISTING world store (default ~/.ailang/world/world.db);
@@ -202,7 +202,7 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 	term, err := env.openTerminal()
 	if err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd session new: refusing: no controlling terminal (%v); "+
-			"provisioning a session credential requires one human act at a terminal\n", err)
+			"provisioning a session credential requires one human act at a terminal. %s\n", err, sessionTTYFix)
 		return exitUsage
 	}
 	defer func() { _ = term.Close() }()
@@ -219,7 +219,7 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 	fmt.Fprintf(term, "%s and mint a session for episode %s with %d grant(s) [%s], expiry +%ds? [y/N] ",
 		action, episode, len(grants), grantList(grants), *ttl)
 	if !isYes(readTermLine(term)) {
-		fmt.Fprintln(stderr, "ailang-worldd session new: aborted (not confirmed)")
+		fmt.Fprintln(stderr, "ailang-worldd session new: aborted (not confirmed). fix: run it again and type y at the prompt")
 		return exitUsage
 	}
 

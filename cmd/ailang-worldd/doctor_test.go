@@ -24,11 +24,7 @@ func doctorFixture(t *testing.T) *setupFixture {
 	}
 	old := observeTTY
 	t.Cleanup(func() { observeTTY = old })
-	devNull, err := os.Stat(os.DevNull)
-	if err != nil {
-		t.Fatal(err)
-	}
-	observeTTY = func() ttyObservation { return ttyObservation{stdin: devNull, ctty: devNull} }
+	observeTTY = func() ttyObservation { return ttyObservation{} }
 	return f
 }
 
@@ -157,31 +153,28 @@ func TestDoctorLockProbeCreatesNothing(t *testing.T) {
 	})
 }
 
-// AC4.2: all three publish-fence reasons, and the mint fence, are reported.
+// AC4.2, restated 2026-10-06: the attended steps read their confirmation from
+// /dev/tty itself, so ONE terminal fact is left to report — whether /dev/tty
+// opens. The publish-fence reasons this used to report (stdin-not-a-terminal,
+// stdin-is-not-the-controlling-terminal, and their `</dev/tty` fix) no longer
+// exist in world-publish, so doctor must not send an operator after them.
+// Each row is the other's control.
 func TestDoctorTTYReasons(t *testing.T) {
 	doctorFixture(t)
 	addr := deadAddr(t)
-	devNull, _ := os.Stat(os.DevNull)
-	devZero, err := os.Stat("/dev/zero")
-	if err != nil {
-		t.Skip("no /dev/zero")
-	}
-	file := filepath.Join(t.TempDir(), "f")
-	_ = os.WriteFile(file, nil, 0o600)
-	regular, _ := os.Stat(file)
 	for _, tc := range []struct {
-		name string
-		obs  ttyObservation
-		want []string
+		name   string
+		obs    ttyObservation
+		want   []string
+		absent []string
 	}{
-		{"no-ctty", ttyObservation{stdin: devNull, cttyErr: os.ErrNotExist},
-			[]string{"! tty", "no controlling terminal", "session mint/new and world-publish will refuse"}},
-		{"stdin-not-a-terminal", ttyObservation{stdin: regular, ctty: devNull},
-			[]string{"✓ tty        mint fence", "publish fence: stdin-not-a-terminal", "</dev/tty"}},
-		{"stdin-is-not-the-ctty", ttyObservation{stdin: devZero, ctty: devNull},
-			[]string{"✓ tty        mint fence", "publish fence: stdin-is-not-the-controlling-terminal", "</dev/tty"}},
-		{"both-fences-admit", ttyObservation{stdin: devNull, ctty: devNull},
-			[]string{"✓ tty        mint fence", "✓ tty        publish fence: stdin is the controlling terminal"}},
+		{"no-ctty", ttyObservation{cttyErr: os.ErrNotExist},
+			[]string{"! tty", "no controlling terminal", "world-publish and session new/mint will refuse here",
+				"fix: run the attended steps yourself from a terminal window (an IDE terminal pane works); an agent cannot run them"},
+			[]string{"✓ tty"}},
+		{"ctty-opens", ttyObservation{},
+			[]string{"✓ tty        /dev/tty opens: world-publish and session new/mint read your confirmation from it"},
+			[]string{"! tty", "</dev/tty", "publish fence", "stdin-is-not-the-controlling-terminal"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			observeTTY = func() ttyObservation { return tc.obs }
@@ -189,6 +182,11 @@ func TestDoctorTTYReasons(t *testing.T) {
 			for _, w := range tc.want {
 				if !strings.Contains(out, w) {
 					t.Errorf("doctor output lacks %q:\n%s", w, out)
+				}
+			}
+			for _, a := range tc.absent {
+				if strings.Contains(out, a) {
+					t.Errorf("doctor output carries %q:\n%s", a, out)
 				}
 			}
 		})
