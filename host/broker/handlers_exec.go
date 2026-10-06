@@ -47,6 +47,28 @@ func (ExecUnconfiguredHandler) Execute(_ context.Context, req EffectRequest, _ [
 	return execRefusal(NoExecProfileRefusal)
 }
 
+// ExecNoEpisodeProfileRefusal is the Workspace.Exec answer for an episode
+// that no `--exec-episode-project` names while several profiles are
+// configured (row 140 M3, §4.6): World never guesses a project.
+func ExecNoEpisodeProfileRefusal(episode string) string {
+	return fmt.Sprintf("no exec profile for episode %q: several profiles are configured; start ailang-worldd serve with "+
+		"--exec-episode-project %s=PROJECT", episode, episode)
+}
+
+// ExecRefusalHandler answers every Workspace.Exec call {ok:false, refused:
+// Why} and runs nothing, like ExecUnconfiguredHandler.
+type ExecRefusalHandler struct{ Why string }
+
+func (r ExecRefusalHandler) Execute(_ context.Context, req EffectRequest, _ []byte) ([]byte, error) {
+	if req.Effect != EffectWorkspaceExec {
+		return nil, fmt.Errorf("broker: exec handler does not implement %q", req.Effect)
+	}
+	if req.Scope != WorkspaceScope {
+		return nil, fmt.Errorf("broker: exec handler: scope %q is not %q", req.Scope, WorkspaceScope)
+	}
+	return execRefusal(r.Why)
+}
+
 func execRefusal(why string) ([]byte, error) {
 	return json.Marshal(map[string]any{"ok": false, "refused": why})
 }
@@ -228,9 +250,7 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 	if budget <= 0 {
 		return nil, fmt.Errorf("broker: exec handler: the call's budget is spent before %q could start", id)
 	}
-	launch := append([]string{h.sandbox.CLI(), "--settings", h.settingsPath, "--", "/bin/sh", "-c", execTrampoline, "world-exec"},
-		h.childEnv()...)
-	launch = append(append(append(launch, cmd.Argv0), cmd.Argv[1:]...), emitted...)
+	launch := h.launch(append(append([]string{cmd.Argv0}, cmd.Argv[1:]...), emitted...), true)
 	capture := newCaptureHeadTail(execHeadBytes, execTailBytes, h.maxOutput)
 	start := time.Now()
 	h.spawns.Add(1)
@@ -265,6 +285,23 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 	res.Stderr, res.StderrBytes, res.StderrTruncated, res.StderrSHA256 = errOut.Text, errOut.Bytes, errOut.Truncated, errOut.SHA256
 	return json.Marshal(res)
 }
+
+// launch is the §4.5 launch line the host node runs for argv: srt's own
+// options closed by "--" (V12), then, with trampoline, the in-sandbox `env
+// -i` trampoline carrying World's K=V set (V41). Only the startup probe's
+// proxy leg (exec_probe.go) runs without the trampoline, to keep srt's
+// proxy environment.
+func (h *ExecHandler) launch(argv []string, trampoline bool) []string {
+	line := []string{h.sandbox.CLI(), "--settings", h.settingsPath, "--"}
+	if trampoline {
+		line = append(append(line, "/bin/sh", "-c", execTrampoline, "world-exec"), h.childEnv()...)
+	}
+	return append(line, argv...)
+}
+
+// Spawns is how many subprocesses this handler has started (cache seeding
+// and srt): a refusal, a denial or a drifted stack leaves it unchanged.
+func (h *ExecHandler) Spawns() int64 { return h.spawns.Load() }
 
 var execPayloadKeys = []string{"command", "args"}
 

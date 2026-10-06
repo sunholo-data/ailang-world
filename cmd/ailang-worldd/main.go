@@ -11,6 +11,9 @@
 //	                    [--examples-dir <dir>]
 //	                    [--run-allow-caps Env,Net,Declassify]
 //	                    [--run-net-allow 127.0.0.1:PORT ...] [--run-net-allow-http]
+//	                    [--exec-profile <file> ... --exec-sandbox <dir>]
+//	                    [--exec-episode-project EP=PROJECT ...] [--exec-node <path>]
+//	                    [--exec-max-output-bytes N]
 //	ailang-worldd [--addr http://127.0.0.1:7644] health
 //	ailang-worldd [--addr http://127.0.0.1:7644] head
 //	ailang-worldd [--addr http://127.0.0.1:7644] world get <ref>
@@ -69,6 +72,9 @@ Usage:
                       [--examples-dir <dir>]
                       [--run-allow-caps Env,Net,Declassify]
                       [--run-net-allow 127.0.0.1:PORT ...] [--run-net-allow-http]
+                      [--exec-profile <file> ... --exec-sandbox <dir>]
+                      [--exec-episode-project EP=PROJECT ...] [--exec-node <path>]
+                      [--exec-max-output-bytes N]
   ailang-worldd [--addr <url>] health
   ailang-worldd [--addr <url>] head
   ailang-worldd [--addr <url>] world get <ref>
@@ -125,9 +131,9 @@ serve flags:
                        ` + daemon.ToolBinaryRelease + `); archived and hash-verified like
                        --ailang-bin. The Workspace.*/Ailang.* tools are served
                        only when both this and --workspace-root are set.
-                       Workspace.Exec (workspace-exec) is bound with them but
-                       refuses every call "no exec profile configured" until
-                       exec profiles land (row 140 M2/M3)
+                       Workspace.Exec (workspace-exec) is bound with them; it
+                       refuses every call "no exec profile configured" unless
+                       --exec-profile is given
   --examples-dir <dir> AILANG examples corpus examples-search reads (passed
                        to the tool as AILANG_EXAMPLES; World never falls back
                        to a corpus in the binary). Default: ~/.ailang/examples
@@ -145,6 +151,28 @@ serve flags:
                        redirect hop is refused; a bare host, a name, or a
                        non-loopback address is refused at startup
   --run-net-allow-http allow plain http to the --run-net-allow pairs
+  --exec-profile <file>
+                       an operator exec profile (world/exec-profile/v1 JSON;
+                       repeatable, one per project): the commands
+                       workspace-exec may run, sandboxed by srt. Needs the
+                       workspace tools and --exec-sandbox. Read once at
+                       startup; it, srt, node and every cache seed must lie
+                       outside --workspace-root and the state dir. Each
+                       profile must pass the startup probe (seven arms,
+                       arm1-write-inside … arm7-toolchain) or serve refuses
+  --exec-episode-project EP=PROJECT
+                       run episode EP's workspace-exec under the profile
+                       whose project is PROJECT (repeatable; optional with
+                       one profile, which every episode then uses)
+  --exec-sandbox <dir> the node_modules holding @anthropic-ai/sandbox-runtime
+                       ` + broker.ExecSandboxRelease + ` (its dist/cli.js must hash to the pin);
+                       World archives the whole tree and re-verifies it
+                       before every call. Required with --exec-profile
+  --exec-node <path>   the node (>= 20.11) that runs srt and the probe
+                       client (default: node on PATH, resolved once)
+  --exec-max-output-bytes N
+                       kill a workspace-exec command whose stdout or stderr
+                       passes N bytes (default 67108864, 64 MiB)
 
 Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
             3 integrity refusal (why: a broken link; call --strict: ok:false;
@@ -310,6 +338,26 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		return nil
 	})
 	runNetAllowHTTP := fs.Bool("run-net-allow-http", false, "allow plain http to the --run-net-allow pairs")
+	var execProfiles, execEpisodeProjects []string
+	fs.Func("exec-profile", "an operator exec profile (repeatable, one per project)", func(v string) error {
+		execProfiles = append(execProfiles, v)
+		return nil
+	})
+	fs.Func("exec-episode-project", "EP=PROJECT: the profile an episode's workspace-exec runs under (repeatable)", func(v string) error {
+		execEpisodeProjects = append(execEpisodeProjects, v)
+		return nil
+	})
+	execSandbox := fs.String("exec-sandbox", "", "node_modules holding the pinned @anthropic-ai/sandbox-runtime")
+	execNode := fs.String("exec-node", "", "the node that runs srt (default: node on PATH)")
+	var execMaxOutput int64
+	fs.Func("exec-max-output-bytes", "per-stream output kill for workspace-exec (default 67108864)", func(v string) error {
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil || n < 1 {
+			return fmt.Errorf("%q is not a positive byte count", v)
+		}
+		execMaxOutput = n
+		return nil
+	})
 	if err := fs.Parse(args); err != nil {
 		return exitUsage
 	}
@@ -340,9 +388,14 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	cfg := daemon.Config{DBPath: *dbPath, BindHost: host, BindPort: port, AilangBin: *ailangBin,
 		WorkspaceRoot: *workspaceRoot, ToolAilangBin: *toolAilangBin,
 		ExamplesDir:  resolveExamplesDefault(*examplesDir, os.UserHomeDir),
-		RunAllowCaps: runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP}
-	return serveResult(daemon.Run(ctx, cfg, stdout), stderr)
+		RunAllowCaps: runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP,
+		ExecProfiles: execProfiles, ExecEpisodeProjects: execEpisodeProjects, ExecSandbox: *execSandbox,
+		ExecNode: *execNode, ExecMaxOutputBytes: execMaxOutput}
+	return serveResult(runDaemon(ctx, cfg, stdout), stderr)
 }
+
+// runDaemon is daemon.Run; a test replaces it to see the Config serve built.
+var runDaemon = daemon.Run
 
 // resolveExamplesDefault is --examples-dir's default, resolved once at
 // startup: an explicit flag wins; otherwise the operator's own

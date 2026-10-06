@@ -296,8 +296,9 @@ Host behavior changes are recorded in the [host changelog](HOST_CHANGELOG.md).
 `design_docs/verification/world-attended-2026-10-03-row134-m6/`). This section serves the nine
 `packages/se-tools` transitions (`ailang-read`, `ailang-write`, `ailang-edit`, `ailang-check`,
 `ailang-run`, `builtins-search`, `examples-search`, `ailang-cli`, and row 140's `workspace-exec`)
-over `/mcp/` and `/a2a/`. Until exec profiles land (row 140 M2/M3), `workspace-exec` answers
-every call `{"ok":false,"refused":"no exec profile configured: …"}` and runs nothing.
+over `/mcp/` and `/a2a/`. This section configures no exec profile, so `workspace-exec` answers
+every call `{"ok":false,"refused":"no exec profile configured: …"}` and runs nothing; §10 turns it
+on.
 Every tool call runs its plan in the pinned interpreter, runs exactly one brokered effect with the
 v0.52.1 tool binary inside the episode's worktree, and commits one log entry. (The M6 smoke ran
 on v0.51.0; row 135 M0 moved the tool pin to v0.52.1 after re-proving the confinement matrix,
@@ -551,3 +552,268 @@ finds the entry that committed it and walks the chain (exit 3 on any broken link
 shows the latest entries with episode, skill and effect statuses. `provenance` prints the
 `World-Provenance: store=… episode=ep1 entries=<from>-<to>` trailer for a PR or commit made
 through World (D-WORLD-60; label such PRs `ailang-world`).
+
+### 10. Build and test non-AILANG projects
+
+**Written in row 140 M3 (2026-10-05); the attended run on three real projects is M4.**
+`TestExecStartupRefusalTable` drives the refusal table below row by row.
+`TestQuickstartSection10FlagsMatchTheCLI` binds the `serve` line to `serve --help`.
+`TestQuickstartSection10ProfilesLoad` runs the profile script and loads its three profiles. The
+design is `design_docs/planned/w-workspace-exec-toolchain-effect.md`.
+
+`workspace-exec` (effect `Workspace.Exec`) runs **one command of a profile you write**. It runs
+inside the episode's worktree, under the sandbox runtime `srt` (`@anthropic-ai/sandbox-runtime`).
+The agent picks a command id and passes arguments. The profile fixes everything else: the
+program, its leading arguments, the working directory, the environment and the timeout. Inside
+the sandbox:
+- writes reach only the worktree and the episode's own exec cache. `.git`, `.github`, `.claude`
+  and the other World-owned names stay read-only.
+- your `$HOME`, World's state dir and the workspace root (so every other episode) are
+  unreadable, except the `read_roots` you list. System paths (`/usr`, `/opt`, `/etc`, `/tmp`)
+  stay readable.
+- there is no network. You install dependencies before the session.
+- the child's environment is exactly World's set plus the profile's `env`, never yours.
+
+A command runs for at most `timeout_ms`, which is at most 9000, inside the 10-second handler cap.
+So a profile names targeted commands (one package, one test file, a type check), not full suites.
+
+**Install and pin srt.** World accepts exactly srt 0.0.78 whose `dist/cli.js` hashes to the pin
+below (`design_docs/verification/world-row140-m0/pin.json`). `serve` refuses any other. Keep srt,
+your profiles and your cache seeds **outside** the workspace root and the state dir:
+
+```bash
+export EXEC=$HOME/.ailang-world-exec
+mkdir -p $EXEC/srt $EXEC/profiles $EXEC/seeds
+npm install --prefix $EXEC/srt --no-audit --no-fund @anthropic-ai/sandbox-runtime@0.0.78
+shasum -a 256 $EXEC/srt/node_modules/@anthropic-ai/sandbox-runtime/dist/cli.js
+# want 3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e
+node --version   # v20.11 or later (srt's engines)
+```
+
+On Linux, srt needs bubblewrap, socat and ripgrep, and unprivileged user namespaces. Use
+`sha256sum` for the digest there:
+
+```bash
+sudo apt-get install -y bubblewrap socat ripgrep
+sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+```
+
+`--exec-node` defaults to the `node` on your `PATH`, resolved once at startup. It runs srt. It is
+also the startup probe's client **inside** the sandbox, so it must be readable there. A Homebrew
+or system node is. A node under `$HOME` (nvm) needs its directory in every profile's
+`read_roots`.
+
+**Profile keys.** A profile is one JSON object. An unknown key anywhere refuses startup.
+
+| Key | Meaning |
+|---|---|
+| `profile` | always `"world/exec-profile/v1"` |
+| `project` | the profile's name, `^[a-z0-9][a-z0-9-]{0,63}$`; `--exec-episode-project EP=PROJECT` selects it |
+| `root` | the project directory inside the worktree (`"."` or a clean relative path), and the command's cwd |
+| `path` | absolute directories. Every command's `argv[0]` is resolved on it once, at startup, and hashed |
+| `env` | extra child variables (e.g. `GOFLAGS`). World owns `HOME`, `TMPDIR`, `PATH`, `LANG`, `LC_ALL`, `PYTHONPYCACHEPREFIX`, `npm_config_cache`, `CI`, `NO_COLOR`, `SANDBOX_RUNTIME`, every `*_PROXY`, `NO_PROXY`, `GIT_*` and the registry credentials. Naming one refuses startup |
+| `read_roots` | absolute paths the child may read beyond the worktree and its cache (a module cache, a toolchain). Never `$HOME`, the state dir, the workspace root, an ancestor of them, a path inside the state dir or the root, or `/`, by path or by realpath |
+| `caches` | `{"NAME": {"seed": "/abs/dir"}}`. The child gets `NAME=<episode cache>/NAME`, cloned from the read-only seed on first use; `{}` starts empty |
+| `timeout_ms` | 1 to 9000 |
+| `probe` | the startup probe's toolchain argv. It must exit 0 in an empty scratch worktree. Default: the first command's `argv[0] --version` |
+| `commands.ID.argv` | the fixed program and leading arguments; `argv[0]` is a bare name on `path` or an absolute path |
+| `commands.ID.flags` | the only flags the agent may pass, e.g. `{"-run": "regex"}`. Classes: `bool`, `regex`, `int`, `relpath`, `enum:[a,b]`. `{"-k": {"class": "regex", "form": "sep"}}` emits `-k`, `v` as two items (for argparse) instead of the default `"form": "eq"`, `-k=v` |
+| `commands.ID.positional` | `relpath`, `pkgpattern` (`./...`, `a/b/...`) or `testfile` (with `suffixes`) |
+| `commands.ID.suffixes` | the test-file suffixes, with `testfile` only |
+| `commands.ID.max_args` | at most this many arguments (0 to 16, default 0); a flag and its value count once |
+| `commands.ID.passthrough` | `"--"` lets the agent pass `--` before positionals |
+
+**Three worked profiles.** Point the three variables at your checkouts, then write the profiles.
+The Go toolchain and module cache are read from the compiler checkout. The Python interpreter
+comes from the CLI's venv:
+
+```bash
+export AILANG_SRC=$HOME/dev/sunholo-data/ailang
+export TWILIGHT_SRC=$HOME/dev/TwilightGame
+export SUNHOLO_SRC=$HOME/dev/sunholo-platform
+export GOTC=$(cd $AILANG_SRC && go env GOVERSION) GOMOD=$(cd $AILANG_SRC && go env GOMODCACHE)
+export GODIR=$(dirname $(command -v go)) NODEDIR=$(dirname $(command -v node))
+export PYBIN=$(cd $SUNHOLO_SRC/cli && .venv/bin/python -c 'import os, sys; print(os.path.realpath(sys.executable))')
+python3 - <<'EOF'
+import json, os
+E = os.environ
+V = "world/exec-profile/v1"
+profiles = {
+  "ailang-compiler": {"profile": V, "project": "ailang-compiler", "root": ".",
+    "path": [E["GODIR"], "/usr/bin", "/bin"],
+    "env": {"GOFLAGS": "-mod=readonly", "GOPROXY": "off", "GOTOOLCHAIN": E["GOTC"],
+            "GOTELEMETRY": "off", "GOMODCACHE": E["GOMOD"]},
+    "read_roots": [E["GOMOD"]],
+    "caches": {"GOCACHE": {"seed": E["EXEC"] + "/seeds/ailang-compiler/go-build"}},
+    "timeout_ms": 9000, "probe": ["go", "version"],
+    "commands": {
+      "test": {"argv": ["go", "test", "-count=1"],
+               "flags": {"-run": "regex", "-v": "bool", "-short": "bool"},
+               "positional": "pkgpattern", "max_args": 8},
+      "vet": {"argv": ["go", "vet"], "positional": "pkgpattern", "max_args": 4}}},
+  "twilightgame": {"profile": V, "project": "twilightgame", "root": ".",
+    "path": [E["NODEDIR"], "/usr/bin", "/bin"],
+    "timeout_ms": 9000, "probe": ["node", "--version"],
+    "commands": {
+      "typecheck": {"argv": ["node", "node_modules/typescript/bin/tsc", "--noEmit"]},
+      "test-file": {"argv": ["node", "node_modules/vitest/vitest.mjs", "run"],
+                    "positional": "testfile", "suffixes": [".test.ts", ".test.tsx"], "max_args": 4}}},
+  "sunholo-cli": {"profile": V, "project": "sunholo-cli", "root": "cli",
+    "path": ["/usr/bin", "/bin"],
+    "read_roots": [os.path.dirname(os.path.dirname(E["PYBIN"]))],
+    "timeout_ms": 9000, "probe": [E["PYBIN"], "--version"],
+    "commands": {
+      "test-file": {"argv": ["sh", "-c", "exec .venv/bin/python -m pytest -q -p no:cacheprovider \"$@\"", "pytest"],
+                    "flags": {"-k": {"class": "regex", "form": "sep"}, "-x": "bool"},
+                    "positional": "testfile", "suffixes": [".py"], "max_args": 6}}},
+}
+for name, p in profiles.items():
+    with open(E["EXEC"] + "/profiles/" + name + ".json", "w") as f:
+        json.dump(p, f, indent=1)
+EOF
+```
+
+- **Go:** the module cache is a read root, and it also holds the switched toolchain (V17).
+  `GOPROXY=off` keeps the run offline. `GOCACHE` is a per-episode clone of a seed you warm once.
+- **TypeScript:** `tsc` and `vitest` run through `node` from the worktree's `node_modules`, so
+  install them in each worktree (below).
+- **Python:** `uv sync` makes the venv inside the worktree. Its interpreter is a symlink into
+  uv's store under `$HOME`, so the store's version directory is the read root; World adds each
+  root's realpath too. `-k` is `"form": "sep"` because pytest reads `-k=expr` as the value
+  `=expr`. The `sh -c '… "$@"'` prefix belongs to the profile: the agent's arguments arrive as
+  `"$@"`, and the shell never parses them. `-p no:cacheprovider` keeps `.pytest_cache` out of the
+  worktree.
+
+**Seed the caches.** Warm the Go build cache once, from your own checkout, with the profile's
+environment. Each episode then starts from a clonefile copy (`cp -cR`; `cp -a --reflink=auto` on
+Linux), and the seed is never written:
+
+```bash
+mkdir -p $EXEC/seeds/ailang-compiler/go-build
+(cd $AILANG_SRC && GOCACHE=$EXEC/seeds/ailang-compiler/go-build GOFLAGS=-mod=readonly GOPROXY=off \
+  GOTOOLCHAIN=$GOTC GOTELEMETRY=off go test -count=1 ./internal/lexer/ ./internal/parser/)
+```
+
+**Worktrees and dependencies.** Make one episode per project. Install each one's dependencies
+before the session, because the sandbox has no network:
+
+```bash
+git -C $AILANG_SRC worktree add --detach /tmp/se-ws/go1
+git -C $TWILIGHT_SRC worktree add --detach /tmp/se-ws/ts1 && (cd /tmp/se-ws/ts1 && npm ci --no-audit --no-fund)
+git -C $SUNHOLO_SRC worktree add --detach /tmp/se-ws/py1 && (cd /tmp/se-ws/py1/cli && uv sync --frozen)
+```
+
+Mint one session per episode exactly as §9 does: `session new go1 …`, then `ts1` and `py1`,
+each with `--preset se-tools`, which grants `Workspace.Exec`. Write each token to its own file
+(`--out /tmp/se-go1-session`, and so on).
+
+**Serve.** The four flags:
+- `--exec-profile` is repeatable. With more than one profile, `--exec-episode-project EP=PROJECT`
+  says which episode runs which. With one profile it is optional. An unmapped episode with
+  several profiles is refused on each call.
+- `--exec-sandbox` names srt's `node_modules`.
+- `--exec-node` names the node (default: `node` on `PATH`).
+- `--exec-max-output-bytes` is the per-stream kill (default 64 MiB).
+
+```bash
+/tmp/ailang-worldd serve --db /tmp/se-world/world.db --ailang-bin $PIN \
+  --workspace-root /tmp/se-ws --tool-ailang-bin $TOOL \
+  --exec-profile $EXEC/profiles/ailang-compiler.json --exec-profile $EXEC/profiles/twilightgame.json \
+  --exec-profile $EXEC/profiles/sunholo-cli.json \
+  --exec-episode-project go1=ailang-compiler --exec-episode-project ts1=twilightgame \
+  --exec-episode-project py1=sunholo-cli \
+  --exec-sandbox $EXEC/srt/node_modules --exec-node $NODEDIR/node --exec-max-output-bytes 67108864 &
+```
+
+**The startup probe.** Before `serve` listens, World runs seven arms for each profile, against
+that profile's own sandbox settings. A scratch episode under the workspace root stands in for a
+worktree, and World removes it afterwards, pass or fail. Every refusal must be a positive token
+from the probe client, never a bare non-zero exit: `WORLD-PROBE-REFUSED EPERM` on macOS, and
+`ENOENT` or `EROFS` on Linux, where a denied directory is masked. Each arm has an unsandboxed
+control.
+
+1. `arm1-write-inside`: a write inside the scratch worktree lands.
+2. `arm2-write-outside`: a write to a sibling episode is refused, and the host file stays absent.
+3. `arm3-read-fence`: reads of three decoys World plants are refused. The decoys are
+   `$HOME/.ailang-worldd-exec-probe-decoy`, `<state>/exec-probe/decoy` and
+   `<workspace root>/.exec-probe-sibling/decoy`.
+4. `arm4-srt-default-write`: a write to `/tmp/claude` (srt's own default) is refused.
+5. `arm5-exit-status`: a TERM self-kill reports 143.
+6. `arm6-network`: World opens its own live `127.0.0.1` listener, and an unsandboxed connect is
+   accepted first. A raw connect and a connect through srt's proxy must not reach it, and a port
+   the child binds must be unreachable from the host.
+7. `arm7-toolchain`: the profile's `probe` exits 0.
+
+**Startup refusals.** `serve` exits 2 with `daemon startup failed at config: the exec
+configuration is refused: …`, naming the flag and the field:
+
+<!-- exec-refusals:begin -->
+| Id | When | `serve` names |
+|---|---|---|
+| `no-workspace-tools` | an `--exec-*` flag without `--workspace-root` and `--tool-ailang-bin` | `need the workspace tools` |
+| `sandbox-without-profile` | `--exec-sandbox` without `--exec-profile` | `--exec-sandbox: needs --exec-profile` |
+| `node-without-profile` | `--exec-node` without `--exec-profile` | `--exec-node: needs --exec-profile` |
+| `episode-without-profile` | `--exec-episode-project` without `--exec-profile` | `--exec-episode-project: needs --exec-profile` |
+| `max-output-without-profile` | `--exec-max-output-bytes` without `--exec-profile` | `--exec-max-output-bytes: needs --exec-profile` |
+| `no-sandbox` | `--exec-profile` without `--exec-sandbox` | `--exec-sandbox: is required` |
+| `sandbox-not-srt` | `--exec-sandbox` names no srt install | `is neither a node_modules holding @anthropic-ai/sandbox-runtime` |
+| `sandbox-other-version` | srt other than 0.0.78 | `only 0.0.78 is measured` |
+| `sandbox-other-digest` | a `dist/cli.js` other than the pinned bytes | `is not the pinned 3c3092bd` |
+| `node-absent` | the `--exec-node` file does not exist | `--exec-node` `does not resolve` |
+| `node-too-old` | node below v20.11 | `is below 20.11` |
+| `max-output-zero` | `--exec-max-output-bytes` below 1 | `must be at least 1` |
+| `episode-not-pair` | an `--exec-episode-project` that is not `EP=PROJECT` | `is not EP=PROJECT` |
+| `episode-bad-id` | an episode outside the episode grammar | `outside the episode grammar` |
+| `episode-no-project` | a project that names no profile | `names no configured profile` |
+| `episode-twice` | one episode mapped twice | `a second time` |
+| `project-twice` | two profiles with one `project` | `is configured twice` |
+| `profile-absent` | an `--exec-profile` file that does not exist | `--exec-profile` `does not exist` |
+| `unknown-key` | a profile key World does not know | `unknown key "network"` |
+| `root-escapes` | a `root` that is not a clean relative path | `root:` |
+| `argv0-missing` | a command's `argv[0]` that is not on `path` | `does not resolve on path` |
+| `env-world-owned` | an `env` naming a World-owned variable | `"HTTPS_PROXY" is World-owned` |
+| `env-bad-name` | an `env` name outside `^[A-Za-z_][A-Za-z0-9_]*$` | `is not a variable name` |
+| `timeout-cap` | a `timeout_ms` above 9000 | `timeout_ms:` |
+| `probe-missing` | a `probe` program that is not on `path` | `probe:` |
+| `readroot-home` | `read_roots: [$HOME]` | `ancestor of the operator HOME` |
+| `readroot-home-symlink` | `read_roots: [<a symlink to $HOME>]` | `its realpath` `ancestor of the operator HOME` |
+| `readroot-root-ancestor` | a read root above the workspace root | `is an ancestor of` |
+| `readroot-slash` | `read_roots: ["/"]` | `is "/"` |
+| `readroot-decoy` | a read root that is a probe decoy | `probe decoy` |
+| `readroot-in-state` | a read root at or inside the state dir | `the state dir` |
+| `sandbox-in-root` | `--exec-sandbox` inside the workspace root | `--exec-sandbox` `inside the workspace root` |
+| `sandbox-in-state` | `--exec-sandbox` inside the state dir | `--exec-sandbox` `inside the state dir` |
+| `sandbox-in-cache` | `--exec-sandbox` inside an exec cache | `--exec-sandbox` `inside an exec cache` |
+| `node-in-root` | `--exec-node` inside the workspace root | `--exec-node` `inside the workspace root` |
+| `node-in-state` | `--exec-node` inside the state dir | `--exec-node` `inside the state dir` |
+| `node-in-cache` | `--exec-node` inside an exec cache | `--exec-node` `inside an exec cache` |
+| `profile-in-root` | an `--exec-profile` file inside the workspace root | `--exec-profile` `inside the workspace root` |
+| `profile-in-state` | an `--exec-profile` file inside the state dir | `--exec-profile` `inside the state dir` |
+| `profile-in-cache` | an `--exec-profile` file inside an exec cache | `--exec-profile` `inside an exec cache` |
+| `seed-in-root` | a cache seed inside the workspace root | `caches.GOCACHE.seed` `inside the workspace root` |
+| `probe-passthrough` | an srt that runs commands unsandboxed | `arm2-write-outside` `arm3-read-fence` `arm4-srt-default-write` `arm6-network` |
+| `probe-noop` | an srt that runs nothing | `arm1-write-inside` |
+| `probe-zero` | an srt that reports a signal death as 0 | `arm5-exit-status` |
+| `probe-toolchain` | a `probe` that exits non-zero | `arm7-toolchain` |
+| `probe-no-client` | a probe client that cannot run inside the sandbox (a node under `$HOME` that no read root covers) | `arm2-write-outside` `arm3-read-fence` `arm6-network` |
+| `probe-package-only` | an `--exec-sandbox` holding srt without its dependencies | `arm1-write-inside` `ERR_MODULE_NOT_FOUND` |
+<!-- exec-refusals:end -->
+
+**Call it.** The result is the command's own outcome, reported, never judged:
+- `exit_code` (a signal death is 128 + n), `timed_out`, `limit` (`"output"` past the kill) and
+  `duration_ms`;
+- the head (8 KiB) and tail (56 KiB) of each stream, with its total bytes and sha256;
+- the exact `argv`, and the `profile` and `sandbox` digests.
+
+A command id the profile lacks, or an argument its grammar does not admit, gets
+`{"ok":false,"refused":…}`, and nothing runs:
+
+```bash
+curl -s -H "Authorization: Bearer $(cat /tmp/se-go1-session)" \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"workspace-exec","arguments":{"command":"test","args":["-run","TestLex","./internal/lexer/"]}}}' http://127.0.0.1:7644/mcp/
+```
+
+Each call is one log entry, and its record holds the full result. So `why` and replay return it
+without running anything again. A change to a profile, node or srt shows as a different digest
+in later records. `serve` reads a profile file once, so restart it after editing one.
