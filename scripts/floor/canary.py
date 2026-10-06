@@ -21,7 +21,6 @@ from __future__ import annotations
 import argparse
 import base64
 import datetime as dt
-import gzip
 import hashlib
 import json
 import os
@@ -92,9 +91,9 @@ def seed_repo(path: str) -> None:
         git('commit', '-q', '-m', 'floor fixture: placeholder', cwd=path)
 
 
-def gz_copy(src: str, dst: str) -> None:
-    with open(src, 'rb') as f, gzip.open(dst, 'wb') as g:
-        g.write(f.read())
+def plain_copy(src: str, dst: str) -> None:
+    """Evidence transcripts stay plain .jsonl: verify_go.sh's tracked-binary gate refuses .gz."""
+    shutil.copyfile(src, dst)
 
 
 def write_json(path: str, obj) -> None:
@@ -188,9 +187,9 @@ def cmd_shell(a) -> int:
         checks['positive_control_inside_write'] = [f'not written: {miss}'] if miss else []
         passed = all(not v for v in checks.values())
         ok_all &= passed
-        gz_copy(tr, os.path.join(out, 'transcripts', f'{agent}-shell.jsonl.gz'))
+        plain_copy(tr, os.path.join(out, 'transcripts', f'{agent}-shell.jsonl'))
         if os.path.getsize(tr + '.stderr'):
-            gz_copy(tr + '.stderr', os.path.join(out, 'transcripts', f'{agent}-shell.stderr.gz'))
+            plain_copy(tr + '.stderr', os.path.join(out, 'transcripts', f'{agent}-shell.stderr'))
         summary['agents'][agent] = {
             'model': model, 'pass': passed, 'checks': checks, 'files': files,
             'argv': row.get('argv'), 'rc': row.get('rc'), 'wall_ms': row.get('wall_ms'),
@@ -446,7 +445,7 @@ def cmd_world(a) -> int:
                 checks['AC2.4_provenance'] = [] if not prov['native_write_detected'] else [prov['reason']]
                 checks['mcp_config_deleted'] = [] if row['mcp_config_deleted'] else ['config left behind']
                 if os.path.exists(tr):
-                    gz_copy(tr, os.path.join(out, 'transcripts', f'{agent}-world.jsonl.gz'))
+                    plain_copy(tr, os.path.join(out, 'transcripts', f'{agent}-world.jsonl'))
             passed = all(not v for v in checks.values())
             ok_all &= passed
             summary['agents'][agent] = {

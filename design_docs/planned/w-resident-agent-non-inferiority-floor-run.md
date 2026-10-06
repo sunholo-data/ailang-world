@@ -209,7 +209,7 @@ Verdict rules, in order:
 - `preregistration.json`: the config digest. It records agents, models, CLI versions, argv templates, prompt and teaching digests, the corpus commit and YAML hashes, the `$TOOL` sha256, the grader version, N, the deadline, the store, and the tuning-ledger head.
 - `runs/<agent>/<arm>/r<k>.jsonl`;
 - `eligibility.json`, `verdict.json`, `summary.md`;
-- `transcripts/*.jsonl.gz`, with no tokens in them;
+- `transcripts/*.jsonl`, with no tokens in them (plain, not `.gz`: `verify_go.sh`'s tracked-binary gate refuses a `.gz`; measured in M2);
 - `world-log-ranges.json`.
 
 The tuning ledger is `design_docs/verification/world-floor-tuning-ledger.jsonl`.

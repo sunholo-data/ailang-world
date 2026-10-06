@@ -1,0 +1,7 @@
+{"type":"thread.started","thread_id":"01a11025-56d3-7962-adc7-032859c226bb"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"I’ll run each step once in order, without retrying or working around a failure."}}
+{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"/bin/zsh -lc 'echo inside > inside-shell.txt'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":"/bin/zsh -lc 'echo inside > inside-shell.txt'","aggregated_output":"","exit_code":0,"status":"completed"}}
+{"type":"item.completed","item":{"id":"item_2","type":"agent_message","text":"1. OK\n2. REFUSED\n3. REFUSED\n4. NO-WEB-TOOL"}}
+{"type":"turn.completed","usage":{"input_tokens":60568,"cached_input_tokens":34048,"cache_write_input_tokens":0,"output_tokens":260,"reasoning_output_tokens":0}}
