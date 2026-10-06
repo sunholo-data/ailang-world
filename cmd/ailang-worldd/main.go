@@ -9,6 +9,8 @@
 //	ailang-worldd serve --db <path> [--bind 127.0.0.1:7644] [--ailang-bin <path>]
 //	                    [--workspace-root <dir> --tool-ailang-bin <path>]
 //	                    [--examples-dir <dir>]
+//	                    [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
+//	                    [--workspace-package-cache <dir>]
 //	                    [--run-allow-caps Env,Net,Declassify]
 //	                    [--run-net-allow 127.0.0.1:PORT ...] [--run-net-allow-http]
 //	                    [--exec-profile <file> ... --exec-sandbox <dir>]
@@ -70,6 +72,8 @@ Usage:
   ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
                       [--examples-dir <dir>]
+                      [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
+                      [--workspace-package-cache <dir>]
                       [--run-allow-caps Env,Net,Declassify]
                       [--run-net-allow 127.0.0.1:PORT ...] [--run-net-allow-http]
                       [--exec-profile <file> ... --exec-sandbox <dir>]
@@ -140,6 +144,25 @@ serve flags:
                        when it exists, else examples-search refuses "no
                        examples corpus configured". Must be outside
                        --workspace-root
+  --workspace-module-root REL
+                       the AILANG sandbox and module root of every episode is
+                       <workspace-root>/<episode>/REL, so bare imports among a
+                       project's modules resolve (default . = the worktree).
+                       REL is clean and relative, with no .. segment, and
+                       must already exist as a real directory or that
+                       episode's tools are refused; it is independent of an
+                       exec profile's root. Needs --workspace-root
+  --workspace-episode-module-root EP=REL
+                       episode EP's module root, overriding the default
+                       (repeatable)
+  --workspace-package-cache <dir>
+                       a read-only snapshot of registry packages
+                       (<ns>/<name>/<ver>/ailang.toml; QUICKSTART section 11),
+                       linked as every episode's package cache so pkg/ imports
+                       resolve. It must lie outside --workspace-root and the
+                       state dir and hold no symlink and nothing writable
+                       (chmod -R a-w); serve refuses to start as uid 0 with
+                       it. Restart serve after rebuilding it
   --run-allow-caps Env,Net,Declassify
                        extra capabilities an ailang-run may request beyond
                        IO and FS (default none). An Env run is the effect
@@ -332,6 +355,20 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	workspaceRoot := fs.String("workspace-root", "", "directory holding one worktree per episode")
 	toolAilangBin := fs.String("tool-ailang-bin", "", "AILANG binary the workspace tools run")
 	examplesDir := fs.String("examples-dir", "", "AILANG examples corpus for examples-search (default ~/.ailang/examples when it exists)")
+	var moduleRoot string
+	var episodeModuleRoots []string
+	fs.Func("workspace-module-root", "REL under each episode worktree that is the AILANG sandbox and module root (default .)", func(v string) error {
+		if v == "" {
+			return fmt.Errorf("is empty (use . for the worktree root)")
+		}
+		moduleRoot = v
+		return nil
+	})
+	fs.Func("workspace-episode-module-root", "EP=REL: one episode's module root, overriding the default (repeatable)", func(v string) error {
+		episodeModuleRoots = append(episodeModuleRoots, v)
+		return nil
+	})
+	packageCache := fs.String("workspace-package-cache", "", "read-only snapshot of registry packages linked as every episode's package cache")
 	var runAllowCaps, runNetAllow []string
 	fs.Func("run-allow-caps", "extra capabilities an ailang-run may request (Env,Net,Declassify)", func(v string) error {
 		for _, name := range strings.Split(v, ",") {
@@ -399,7 +436,8 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		ExamplesDir:  resolveExamplesDefault(*examplesDir, os.UserHomeDir),
 		RunAllowCaps: runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP,
 		ExecProfiles: execProfiles, ExecEpisodeProjects: execEpisodeProjects, ExecSandbox: *execSandbox,
-		ExecNode: *execNode, ExecMaxOutputBytes: execMaxOutput}
+		ExecNode: *execNode, ExecMaxOutputBytes: execMaxOutput,
+		WorkspaceModuleRoot: moduleRoot, WorkspaceEpisodeModuleRoots: episodeModuleRoots, WorkspacePackageCache: *packageCache}
 	return serveResult(runDaemon(ctx, cfg, stdout), stderr)
 }
 

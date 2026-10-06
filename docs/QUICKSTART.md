@@ -886,3 +886,90 @@ curl -s -H "Authorization: Bearer $(cat /tmp/se-go1-session)" \
 Each call is one log entry, and its record holds the full result. So `why` and replay return it
 without running anything again. A change to a profile, node or srt shows as a different digest
 in later records. `serve` reads a profile file once, so restart it after editing one.
+
+### 11. Projects with a module root and registry packages
+
+**Written in row 141 M3; the attended verbatim run is pending.**
+`TestQuickstartSection11FlagsMatchTheCLI` binds the `serve` line below to `serve --help`. The
+design is `design_docs/planned/w-workspace-project-layouts.md`.
+
+Bare imports between a project's modules (`import daneel_reading`) resolve against the AILANG
+sandbox root, and registry packages (`import pkg/sunholo/oauth/token`) resolve under the tool's
+`HOME`, which World points at an empty per-episode directory. Two flags fix those two gaps. Both
+are off by default, and with neither set `serve` behaves exactly as in §9.
+
+**Provision the worktree.** Make the episode as in §9 (the example project keeps its modules in
+`tools/`, so its module root is `tools`):
+
+```bash
+export WS=/tmp/se-ws SNAP=$HOME/.ailang-world-pkgs
+/tmp/ailang-worldd session new dev1 --db /tmp/se-world/world.db --workspace-root $WS \
+  --repo /tmp/se-proj --preset se-tools --ttl 14400 --out /tmp/se-dev1-session
+```
+
+**The lock is an operator step.** v0.52.1 needs an `ailang.lock` in the module root before it
+resolves a registry import. The agent cannot create one: `lock` is not an admitted `ailang-cli`
+op. A project that gitignores its lock has none in a fresh worktree. The lock is also the input
+to the snapshot below, so run it first, as the operator, with the project's own `ailang.toml`:
+
+```bash
+(cd $WS/dev1/tools && $TOOL lock)
+```
+
+**Build the package snapshot.** `SNAP` is a read-only copy of exactly the registry packages the
+lock names, laid out `<ns>/<name>/<version>/`. It must lie outside the workspace root and the
+state directory. The loop stops at the first package your own cache (`~/.ailang/cache/registry`)
+lacks:
+
+```bash
+LOCK=$WS/dev1/tools/ailang.lock
+set -euo pipefail
+jq -r '.packages[] | select(.source == "registry") | "\(.name)/\(.version)"' "$LOCK" | while read -r p; do test -d "$HOME/.ailang/cache/registry/$p" || { echo "not in operator cache: $p" >&2; exit 1; }; mkdir -p "$SNAP/$(dirname "$p")" && cp -R "$HOME/.ailang/cache/registry/$p" "$SNAP/$p"; done
+chmod -R a-w "$SNAP"
+```
+
+- **More than one episode.** `--workspace-package-cache` is daemon-global, but each worktree has
+  its own lock. Build `SNAP` as the union: run the `jq … | while …` loop once per episode's `LOCK`
+  into the same `SNAP`, then `chmod -R a-w "$SNAP"` once at the end.
+- **Refreshing.** Run `chmod -R u+w "$SNAP"`, rebuild, `chmod -R a-w "$SNAP"`, and **restart
+  `serve`**: the snapshot's digest is computed once, at startup.
+
+**Serve.** One extra flag per gap. `--workspace-module-root` is the default for every episode,
+and `--workspace-episode-module-root EP=REL` (repeatable) overrides it for one episode, e.g.
+`other1=.` for an episode whose modules sit at the worktree root:
+
+```bash
+/tmp/ailang-worldd serve --db /tmp/se-world/world.db --ailang-bin $PIN \
+  --workspace-root $WS --tool-ailang-bin $TOOL \
+  --workspace-module-root tools --workspace-episode-module-root dev1=tools \
+  --workspace-package-cache $SNAP &
+```
+
+**What the agent sees.** The sandbox is `<workspace-root>/dev1/tools`, so every path in a
+`read`, `write`, `ai-check` or `ailang-run` payload is relative to the module root
+(`daneel_brief.ail`, not `tools/daneel_brief.ail`), and the agent cannot write anything outside
+it (`.git`, `.github` and the rest of the worktree are out of reach). Each result carries
+`policy_digest`, which changes with the sandbox, and, with a snapshot, `package_cache`: the
+digest of the snapshot that `ai-check`, `test` and `run` resolved against. The effect record
+therefore names the packages a result depended on. An exec profile's `root` (§10) is independent
+of the module root: it only places a toolchain command's cwd.
+
+**Operator lines.** Each is written once per refused call, and the episode's tools stay refused
+(every declared effect fails, as for a missing worktree) until you fix the cause:
+
+| Line | Cause | What to do |
+|---|---|---|
+| `workspace tools unavailable for episode "dev1": module root "tools": …` | the module root is missing, not a directory, or reached through a symlink | create it as a real directory in the worktree (World never creates it) |
+| `workspace package cache refused for episode "dev1": <dir> is not empty and was not provisioned by --workspace-package-cache; clear it manually` | the episode's `HOME` already holds a registry cache World did not link (for example a package fetched by `pkg_docs` before the flag was set) | inspect it and remove it yourself; World never deletes content |
+| `workspace package cache does not cover episode "dev1": lock requires <ns>/<name>@<version>, absent from <dir>; …` | the worktree's `ailang.lock` needs a registry package the snapshot lacks (or the lock is unreadable, not a regular file or not JSON) | rebuild the snapshot from this episode's lock, then restart `serve` |
+
+`serve` itself refuses, at startup and naming the flag, a `--workspace-package-cache` that is not
+a directory, lies inside the workspace root or the state directory, holds a symlink, a special
+file or anything writable (the directory itself included), holds no `<ns>/<name>/<ver>/ailang.toml`
+package, or when the daemon runs as root (mode bits do not stop root).
+
+**Two things this does not change.** The admitted `pkg_docs` op still fetches from the registry
+when it is given a package that is not cached and no snapshot is set; with the snapshot linked it
+cannot store one (the tree is read-only). Closing that egress is a separate follow-up. And
+`ailang.lock` stays writable by the agent: it can only make a package resolve if the snapshot
+already holds it, since coverage is checked against the lock at episode construction.
