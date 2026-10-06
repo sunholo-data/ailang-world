@@ -403,3 +403,76 @@ func TestMCPRefusalLineNamesSurfaceAndCause(t *testing.T) {
 		t.Fatalf("operator log = %q, want one line starting %q carrying the cause", got, want)
 	}
 }
+
+// failAfterHeads delegates the first okCalls head reads, then fails.
+type failAfterHeads struct {
+	inner   HeadReader
+	okCalls int
+	err     error
+	mu      sync.Mutex
+	n       int
+}
+
+func (f *failAfterHeads) GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error) {
+	f.mu.Lock()
+	f.n++
+	fail := f.n > f.okCalls
+	f.mu.Unlock()
+	if fail {
+		return hashref.HashRef{}, false, f.err
+	}
+	return f.inner.GetRegistryHead(ctx, name)
+}
+
+// TestMCPPreDispatchRefusalLinesAreLabelled is the sibling of
+// TestMCPRefusalLineNamesSurfaceAndCause for the three MCP refusal sites that
+// have no invocation id yet (row 136 round 2): the registry read behind
+// tools/list, a descriptor set that cannot be projected to MCP, and the
+// admission read behind tools/call. Each writes exactly one operator line
+// labelled mcp with the method and the "-" id.
+func TestMCPPreDispatchRefusalLinesAreLabelled(t *testing.T) {
+	const list = `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`
+	cases := []struct {
+		name, body, prefix string
+		setup              func(t *testing.T, h *Handler, st *store.Store)
+		cause              string
+	}{
+		{"tools_list_registry_read", list, "ailang-worldd: mcp refusal: tools/list -: \"",
+			func(t *testing.T, h *Handler, _ *store.Store) {
+				h.heads = errHeads{err: errors.New("injected head failure")}
+			},
+			"injected head failure"},
+		{"tools_list_unprojectable", list, "ailang-worldd: mcp refusal: tools/list -: \"",
+			func(t *testing.T, h *Handler, st *store.Store) {
+				head, ok, err := st.GetRegistryHead(boundedTestContext(t), store.TransitionRegistryV1)
+				if err != nil || !ok {
+					t.Fatalf("registry head ok=%v err=%v", ok, err)
+				}
+				d := descriptor("tools.echo", "alpha")
+				d.InputSchema = []byte(`{"type":"array"}`)
+				publishRevision(t, st, transitionreg.Revision{SemanticID: transitionreg.SemanticIDV1,
+					InterfaceHash: transitionreg.InterfaceHashV1, Revision: 2, Parent: head, Entries: []transitionreg.Descriptor{d}}, head)
+			},
+			"input schema type must be object"},
+		// tools/call lists first (name check), then admits inside Invoke: the
+		// head read fails only from its second call on.
+		{"tools_call_admission", mcpCallItem, "ailang-worldd: mcp refusal: tools/call -: \"",
+			func(t *testing.T, h *Handler, _ *store.Store) {
+				h.heads = &failAfterHeads{inner: h.heads, okCalls: 1, err: errors.New("injected head failure")}
+			},
+			"injected head failure"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			h, tok, s, _, _ := batchFixture(t)
+			var sink lockedSink
+			h.errorLog = &sink
+			c.setup(t, h, s.Store)
+			w := postMCP(t, h, "Bearer "+tok, c.body)
+			got := sink.String()
+			if strings.Count(got, "\n") != 1 || !strings.HasPrefix(got, c.prefix) || !strings.Contains(got, c.cause) {
+				t.Fatalf("operator log = %q, want one line starting %q carrying %q (wire=%s)", got, c.prefix, c.cause, w.Body)
+			}
+		})
+	}
+}

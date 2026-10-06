@@ -1,6 +1,6 @@
 # w-mcp-effects-unrecorded-is-untyped — MCP callers get an untyped error after an effect has run (row 136)
 
-**Status:** APPROVED for planning (iteration 237). Designed iteration 236 (designer lane claude-opus-5-5); quorum round 2 BLOCKED; the one design-scope objection (option D) was ruled by Mark as `D-WORLD-66` = A (attended 2026-10-06): ship option C, file D as row 155. The three remaining round-2 objections are applied verbatim (narrow-refinement carve-out; see the quorum log). Nothing implemented yet.
+**Status:** IMPLEMENTED (iteration 237; M1 `e480ddc`, M2 `7a0ede1`, M3 `18a4e9c`; judge PASS 92). Designed iteration 236 (designer lane claude-opus-5-5); quorum round 2 BLOCKED; the one design-scope objection (option D) was ruled by Mark as `D-WORLD-66` = A (attended 2026-10-06): ship option C, file D as row 155. The three remaining round-2 objections were applied verbatim (narrow-refinement carve-out; see the quorum log).
 **Target:** next World patch. **Priority:** clause-6 (+5); charter position after row 140, before 141 → 93 (D-WORLD-61=A).
 **Estimated:** ~0.5 d host Go + docs. **Dependencies:** none for M1–M2. The client-visible part (M3) waits on an upstream release.
 **Measured base:** worktree `sprint/row136-mcp-typed-errors` at `3d965f6`; pinned upstream `github.com/sunholo-data/ailang v0.47.2` (`go.mod:6`); upstream checked at `v0.47.2` (module cache), `v0.52.1` (latest tag) and `origin/dev` `b7028a7cb` (2026-10-06).
