@@ -376,7 +376,7 @@ func TestEffectConflictUnrecorded(t *testing.T) {
 		t.Fatalf("dispatches %d spend %d, want 1/1 (no re-execution on R14)", h.n.Load(), r.spend())
 	}
 	var unrec *EffectsUnrecordedError
-	if !errors.As(err, &unrec) || !store.IsConflict(err) || unrec.InvocationID != InvocationID(fxEp, "t1") {
+	if !errors.As(err, &unrec) || !store.IsConflict(err) || unrec.InvocationID != InvocationID(SurfaceA2A, fxEp, "t1") {
 		t.Fatalf("err = %T %v, want *EffectsUnrecordedError wrapping R14", err, err)
 	}
 	if len(unrec.EffectRecords) != 1 || r.effectReceiptRecord(0) != unrec.EffectRecords[0] {

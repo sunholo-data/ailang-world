@@ -5,7 +5,7 @@ package main
 // provenance chain, recomputing and checking every link.
 //
 // An MCP result carries no entry index, invocation id or record ref (V12), and
-// /v1/receipts refuses a2a: ids (V13), so a target that is not an index is
+// /v1/receipts refuses a2a:/mcp: ids (V13), so a target that is not an index is
 // found by scanning the log backwards from head — one log page of 500 at a
 // time and one object GET per entry — bounded by --scan (default 500, max
 // 5000) and a 60 s budget. The reads are unauthenticated GETs (V15); `why`
@@ -32,11 +32,10 @@ import (
 )
 
 const (
-	whyBudget       = 60 * time.Second
-	whyScanDefault  = 500
-	whyScanMax      = 5000
-	logPageMax      = 500
-	coordinatorAuth = "coordinator:a2a" // the coordinator's writtenBy (host/coordinator/plan.go)
+	whyBudget      = 60 * time.Second
+	whyScanDefault = 500
+	whyScanMax     = 5000
+	logPageMax     = 500
 )
 
 // ---------------------------------------------------------------------------
@@ -273,7 +272,8 @@ Targets:
   sha256:<ref>                 any object (dispatched on its semanticId: a
                                record, input, output, plan, effect record,
                                effect request or result), or a world ref
-  a2a:<id> | rest:<id>         an invocation id
+  a2a:<id> | mcp:<id> | rest:<id>
+                               an invocation id
   - | --result <file>          the output of 'call --json-out': its sha256 is
                                the output ref (the world.plan is the fallback)
 
@@ -314,7 +314,7 @@ func parseWhyTarget(arg, resultFile string, stdin io.Reader) (whyTarget, error) 
 		return whyTarget{kind: "result", result: trimOneNewline(b)}, nil
 	case arg == "head":
 		return whyTarget{kind: "head"}, nil
-	case strings.HasPrefix(arg, "a2a:") || strings.HasPrefix(arg, "rest:"):
+	case strings.HasPrefix(arg, "a2a:") || strings.HasPrefix(arg, "mcp:") || strings.HasPrefix(arg, "rest:"):
 		return whyTarget{kind: "invocation", text: arg}, nil
 	case strings.HasPrefix(arg, "sha256:"):
 		if _, err := hashref.Parse(arg); err != nil {
@@ -324,7 +324,7 @@ func parseWhyTarget(arg, resultFile string, stdin io.Reader) (whyTarget, error) 
 	}
 	n, err := strconv.ParseInt(arg, 10, 64)
 	if err != nil || n < 0 {
-		return whyTarget{}, fmt.Errorf("%q is not an entry index, head, sha256:<ref>, a2a:/rest:<id>, or -", arg)
+		return whyTarget{}, fmt.Errorf("%q is not an entry index, head, sha256:<ref>, a2a:/mcp:/rest:<id>, or -", arg)
 	}
 	return whyTarget{kind: "index", index: n}, nil
 }

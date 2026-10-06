@@ -1,6 +1,7 @@
 package projection
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -124,7 +125,7 @@ func assertReceipts(t *testing.T, s *accountingStore, want int) {
 			t.Fatalf("task shape/uniqueness=%v", s.tasks)
 		}
 		taskSeen[task] = true
-		if i < len(s.ids) && coordinator.InvocationID("ep-a", task) != s.ids[i] {
+		if i < len(s.ids) && coordinator.InvocationID(coordinator.SurfaceMCP, "ep-a", task) != s.ids[i] {
 			t.Fatalf("task/receipt identity mismatch item%d", i)
 		}
 	}
@@ -134,7 +135,7 @@ func assertReceipts(t *testing.T, s *accountingStore, want int) {
 			t.Fatalf("duplicate invocation IDs: %v", s.ids)
 		}
 		unique[id] = true
-		task := strings.TrimPrefix(id, "a2a:ep-a:")
+		task := strings.TrimPrefix(id, "mcp:ep-a:")
 		if len(task) != 64 || strings.Trim(task, "0123456789abcdef") != "" {
 			t.Fatalf("task not 64hex: %q", task)
 		}
@@ -350,7 +351,7 @@ func TestMCPAbsentPrecheckSuccessfulInvocation(t *testing.T) {
 	if len(mcpPayload(t, w)["error"]) != 0 || runner.runs != 1 {
 		t.Fatalf("raced publication invoke runs=%d wire=%s", runner.runs, w.Body)
 	}
-	receipt, ok, err := st.GetReceipt(boundedTestContext(t), coordinator.InvocationID("ep-a", task))
+	receipt, ok, err := st.GetReceipt(boundedTestContext(t), coordinator.InvocationID(coordinator.SurfaceMCP, "ep-a", task))
 	if err != nil || !ok || receipt.State != store.ReceiptResolved {
 		t.Fatalf("published invocation receipt=%+v/%t/%v", receipt, ok, err)
 	}
@@ -362,5 +363,116 @@ func TestMCPTaskEntropyFailure(t *testing.T) {
 	w := postMCP(t, h, "Bearer "+tok, mcpCallItem)
 	if runner.runs.Load() != 0 || len(s.ids) != 0 || !strings.Contains(w.Body.String(), `"code":-32603`) {
 		t.Fatalf("entropy failure executed runs=%d intents=%d wire=%s", runner.runs.Load(), len(s.ids), w.Body)
+	}
+}
+
+// lockedSink is an ErrorLog written from the hostcall goroutine.
+type lockedSink struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (l *lockedSink) Write(p []byte) (int, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.buf.Write(p)
+}
+
+func (l *lockedSink) String() string {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.buf.String()
+}
+
+// TestMCPRefusalLineNamesSurfaceAndCause is row 136 AC1.1a — the
+// binary-free companion of AC1.1 that CI runs (kills MUT-MCP-LOG-LABEL and
+// MUT-MCP-LOG-NOCAUSE without WORLD_TOOL_AILANG_BIN): a failed MCP
+// tools/call writes exactly one operator line, labelled mcp, naming the
+// minted invocation id and carrying the cause.
+func TestMCPRefusalLineNamesSurfaceAndCause(t *testing.T) {
+	h, tok, s, _, runner := batchFixture(t)
+	var sink lockedSink
+	h.errorLog = &sink
+	runner.failAt = 1
+	w := postMCP(t, h, "Bearer "+tok, mcpCallItem)
+	if !strings.Contains(w.Body.String(), `"host callback failed"`) || len(s.tasks) != 1 {
+		t.Fatalf("wire=%s tasks=%d", w.Body, len(s.tasks))
+	}
+	want := "ailang-worldd: mcp refusal: tools/call " + coordinator.InvocationID(coordinator.SurfaceMCP, "ep-a", s.tasks[0]) + `: "`
+	if got := sink.String(); strings.Count(got, "\n") != 1 || !strings.HasPrefix(got, want) || !strings.Contains(got, "batch injected capsule failure") {
+		t.Fatalf("operator log = %q, want one line starting %q carrying the cause", got, want)
+	}
+}
+
+// failAfterHeads delegates the first okCalls head reads, then fails.
+type failAfterHeads struct {
+	inner   HeadReader
+	okCalls int
+	err     error
+	mu      sync.Mutex
+	n       int
+}
+
+func (f *failAfterHeads) GetRegistryHead(ctx context.Context, name string) (hashref.HashRef, bool, error) {
+	f.mu.Lock()
+	f.n++
+	fail := f.n > f.okCalls
+	f.mu.Unlock()
+	if fail {
+		return hashref.HashRef{}, false, f.err
+	}
+	return f.inner.GetRegistryHead(ctx, name)
+}
+
+// TestMCPPreDispatchRefusalLinesAreLabelled is the sibling of
+// TestMCPRefusalLineNamesSurfaceAndCause for the three MCP refusal sites that
+// have no invocation id yet (row 136 round 2): the registry read behind
+// tools/list, a descriptor set that cannot be projected to MCP, and the
+// admission read behind tools/call. Each writes exactly one operator line
+// labelled mcp with the method and the "-" id.
+func TestMCPPreDispatchRefusalLinesAreLabelled(t *testing.T) {
+	const list = `{"jsonrpc":"2.0","id":1,"method":"tools/list"}`
+	cases := []struct {
+		name, body, prefix string
+		setup              func(t *testing.T, h *Handler, st *store.Store)
+		cause              string
+	}{
+		{"tools_list_registry_read", list, "ailang-worldd: mcp refusal: tools/list -: \"",
+			func(t *testing.T, h *Handler, _ *store.Store) {
+				h.heads = errHeads{err: errors.New("injected head failure")}
+			},
+			"injected head failure"},
+		{"tools_list_unprojectable", list, "ailang-worldd: mcp refusal: tools/list -: \"",
+			func(t *testing.T, h *Handler, st *store.Store) {
+				head, ok, err := st.GetRegistryHead(boundedTestContext(t), store.TransitionRegistryV1)
+				if err != nil || !ok {
+					t.Fatalf("registry head ok=%v err=%v", ok, err)
+				}
+				d := descriptor("tools.echo", "alpha")
+				d.InputSchema = []byte(`{"type":"array"}`)
+				publishRevision(t, st, transitionreg.Revision{SemanticID: transitionreg.SemanticIDV1,
+					InterfaceHash: transitionreg.InterfaceHashV1, Revision: 2, Parent: head, Entries: []transitionreg.Descriptor{d}}, head)
+			},
+			"input schema type must be object"},
+		// tools/call lists first (name check), then admits inside Invoke: the
+		// head read fails only from its second call on.
+		{"tools_call_admission", mcpCallItem, "ailang-worldd: mcp refusal: tools/call -: \"",
+			func(t *testing.T, h *Handler, _ *store.Store) {
+				h.heads = &failAfterHeads{inner: h.heads, okCalls: 1, err: errors.New("injected head failure")}
+			},
+			"injected head failure"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			h, tok, s, _, _ := batchFixture(t)
+			var sink lockedSink
+			h.errorLog = &sink
+			c.setup(t, h, s.Store)
+			w := postMCP(t, h, "Bearer "+tok, c.body)
+			got := sink.String()
+			if strings.Count(got, "\n") != 1 || !strings.HasPrefix(got, c.prefix) || !strings.Contains(got, c.cause) {
+				t.Fatalf("operator log = %q, want one line starting %q carrying %q (wire=%s)", got, c.prefix, c.cause, w.Body)
+			}
+		})
 	}
 }

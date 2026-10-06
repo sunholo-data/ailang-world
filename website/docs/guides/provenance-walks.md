@@ -76,7 +76,7 @@ for h in $(curl -s "$U/v1/objects/by-semantic-id/world/invocation-record/v2?limi
 done
 ```
 
-The invocation record names `invocationId` (`a2a:<episode>:<task>`), `episodeId`, `skillId`,
+The invocation record names `invocationId` (`mcp:<episode>:<task>` or `a2a:<episode>:<task>`), `episodeId`, `skillId`,
 `transitionFn`, `interpreter`, `semanticsEpoch`, `input`, `output`, `plan` and `effects`. Its hash
 is the `transitionRef` of exactly one log entry; find that entry by scanning
 `log range` for it, or open `/workbench?object=<record-hash>` to see the entries that reference

@@ -37,17 +37,17 @@ curl -s -H "$H" "http://127.0.0.1:7644/v1/objects/sha256:<ref>?payload=true" \
 ```json
 {"header": {"entryIndex": 5, "semanticsEpoch": 1,
             "transitionFn": "sha256:371fa1dc…", "interpreter": "sha256:1a67b014…",
-            "prevEntryHash": "sha256:5261510b…", "writtenBy": "coordinator:a2a"},
+            "prevEntryHash": "sha256:5261510b…", "writtenBy": "coordinator:mcp"},
  "entryHash": "sha256:c3710b76…",
  "transitionRef": "sha256:98fe1ad1…"}
 ```
 
-`transitionFn` is the content address of the tool's AILANG source, and `interpreter` is the pinned interpreter that ran its plan. `writtenBy` is `coordinator:a2a` for both A2A and MCP calls: they share one invocation path, so the log does not say which surface you used.
+`transitionFn` is the content address of the tool's AILANG source, and `interpreter` is the pinned interpreter that ran its plan. `writtenBy` names the surface the call arrived on: `coordinator:mcp` for an MCP `tools/call` (this example, and every `ailang-worldd call`), `coordinator:a2a` for an A2A `tasks/send`. Entries written before this tag existed say `coordinator:a2a` for both surfaces.
 
 **2. The invocation record** (`world/invocation-record/v2`, the payload of `transitionRef`):
 
 ```json
-{"invocationId": "a2a:ep1:93819a13…", "episodeId": "ep1", "skillId": "ailang-run",
+{"invocationId": "mcp:ep1:93819a13…", "episodeId": "ep1", "skillId": "ailang-run",
  "transitionFn": "sha256:371fa1dc…", "interpreter": "sha256:1a67b014…", "semanticsEpoch": 1,
  "input": "sha256:d3527c92…", "output": "sha256:fa74ca0e…",
  "plan": "sha256:5d0d3fde…", "effects": ["sha256:f932f3aa…"]}
@@ -88,7 +88,7 @@ This is where to look when a call was denied (`allowed: false`, `denial: "denied
 content address from the bytes the daemon serves, recomputes the entry hash and the world ref,
 and confirms the output is the world's `stateRoot`. Give it the result itself, piped from
 `call --json-out`, or any other handle you have: an entry index, `head`, any `sha256:` ref
-from your result (the output, `world.plan`, an effect record), or your `a2a:` invocation id.
+from your result (the output, `world.plan`, an effect record), or your `mcp:` or `a2a:` invocation id.
 
 ```bash
 ailang-worldd call ailang-read --json '{"path":"data.txt"}' --json-out | ailang-worldd why -
@@ -97,8 +97,8 @@ ailang-worldd call ailang-read --json '{"path":"data.txt"}' --json-out | ailang-
 ```text
 why: entry 2 (matched by output (sha256 of the result))
   ✓ world   sha256:08ab69ae…  revision 2, stateRoot sha256:4500f68f…, logHead sha256:b7aa36d6… (recomputed)
-  ✓ entry   sha256:b7aa36d6…  #2 writtenBy coordinator:a2a prev sha256:ef2b3322… transitionFn sha256:076bd38e… interpreter sha256:1a67b014… (AILANG v0.41.0, the daemon's pin)
-  ✓ record  sha256:08e8d4cd…  world/invocation-record/v2 invocation a2a:ep1:9ebcd16a… episode ep1 skill ailang-read
+  ✓ entry   sha256:b7aa36d6…  #2 writtenBy coordinator:mcp prev sha256:ef2b3322… transitionFn sha256:076bd38e… interpreter sha256:1a67b014… (AILANG v0.41.0, the daemon's pin)
+  ✓ record  sha256:08e8d4cd…  world/invocation-record/v2 invocation mcp:ep1:9ebcd16a… episode ep1 skill ailang-read
   ✓ input   sha256:db1faa2d…  {"path":"data.txt"}
   ✓ plan    sha256:a1f0feb6…  1 effect(s): e1 Workspace.Read@worktree cost 1
   ✓ effect  sha256:a06b7bac…  e1 allowed Workspace.Read@worktree cost 1 budget 19→18 request 71 B result 204 B

@@ -10,12 +10,15 @@ import (
 
 // Semantic IDs of the three immutable objects one invocation records.
 const (
-	InputV1   = "world/invocation-input/v1"
-	OutputV1  = "world/invocation-output/v1"
-	RecordV1  = "world/invocation-record/v1"
-	RecordV2  = "world/invocation-record/v2"
-	writtenBy = "coordinator:a2a"
+	InputV1  = "world/invocation-input/v1"
+	OutputV1 = "world/invocation-output/v1"
+	RecordV1 = "world/invocation-record/v1"
+	RecordV2 = "world/invocation-record/v2"
 )
+
+// writtenBy is the entry header's WrittenBy and the objects' (advisory,
+// first-writer-wins) Provenance for an invocation on surface.
+func writtenBy(surface Surface) string { return "coordinator:" + string(surface) }
 
 // record is the canonical invocation record (the log entry's TransitionRef).
 // Field order is the canonical encoding order.
@@ -77,10 +80,10 @@ type plan struct {
 	Record  hashref.HashRef
 }
 
-func object(semanticID string, payload []byte) store.Object {
+func object(by, semanticID string, payload []byte) store.Object {
 	return store.Object{
 		Hash: hashref.SumSHA256(payload), InterfaceHash: hashref.SumSHA256([]byte(semanticID)),
-		SemanticID: semanticID, Provenance: writtenBy, Payload: payload,
+		SemanticID: semanticID, Provenance: by, Payload: payload,
 	}
 }
 
@@ -96,43 +99,45 @@ func mustJSON(v any) []byte {
 // applyRevision (revision+1, stateRoot = output, logHead = the new entry) and
 // proposalMatchesWorld (the commit observes exactly w, enforced by the
 // store's compare-and-append at the boundary). Pure: no clock, no I/O.
-func planInvocation(w store.World, id, episodeID string, d transitionreg.Descriptor,
+func planInvocation(w store.World, surface Surface, id, episodeID string, d transitionreg.Descriptor,
 	input, output []byte, logicalTime int64) plan {
-	in, out := object(InputV1, input), object(OutputV1, output)
-	rec := object(RecordV1, mustJSON(record{
+	by := writtenBy(surface)
+	in, out := object(by, InputV1, input), object(by, OutputV1, output)
+	rec := object(by, RecordV1, mustJSON(record{
 		InvocationID: id, EpisodeID: episodeID, SkillID: d.ID,
 		TransitionFn: d.TransitionFn.String(), Interpreter: d.Interpreter.String(),
 		SemanticsEpoch: d.SemanticsEpoch, Input: in.Hash.String(), Output: out.Hash.String(),
 	}))
-	return planCommit(w, id, d, []store.Object{in, out, rec}, rec, out, logicalTime)
+	return planCommit(w, by, id, d, []store.Object{in, out, rec}, rec, out, logicalTime)
 }
 
 // planEffectInvocation is planInvocation for an effectful descriptor (row
 // 134): the record is world/invocation-record/v2 — the v1 fields plus the
 // plan object's ref and the ordered effect-record refs — and the plan object
 // is committed alongside input and output. The world laws are unchanged.
-func planEffectInvocation(w store.World, id, episodeID string, d transitionreg.Descriptor,
+func planEffectInvocation(w store.World, surface Surface, id, episodeID string, d transitionreg.Descriptor,
 	input, output, planObject []byte, effects []hashref.HashRef, logicalTime int64) plan {
-	in, out, po := object(InputV1, input), object(OutputV1, output), object(EffectPlanV1, planObject)
+	by := writtenBy(surface)
+	in, out, po := object(by, InputV1, input), object(by, OutputV1, output), object(by, EffectPlanV1, planObject)
 	refs := make([]string, len(effects))
 	for i, e := range effects {
 		refs[i] = e.String()
 	}
-	rec := object(RecordV2, mustJSON(recordV2{
+	rec := object(by, RecordV2, mustJSON(recordV2{
 		InvocationID: id, EpisodeID: episodeID, SkillID: d.ID,
 		TransitionFn: d.TransitionFn.String(), Interpreter: d.Interpreter.String(),
 		SemanticsEpoch: d.SemanticsEpoch, Input: in.Hash.String(), Output: out.Hash.String(),
 		Plan: po.Hash.String(), Effects: refs,
 	}))
-	return planCommit(w, id, d, []store.Object{in, out, po, rec}, rec, out, logicalTime)
+	return planCommit(w, by, id, d, []store.Object{in, out, po, rec}, rec, out, logicalTime)
 }
 
-func planCommit(w store.World, id string, d transitionreg.Descriptor, objects []store.Object,
+func planCommit(w store.World, by, id string, d transitionreg.Descriptor, objects []store.Object,
 	rec, out store.Object, logicalTime int64) plan {
 	header := store.LogHeader{
 		EntryIndex: w.Revision + 1, SemanticsEpoch: d.SemanticsEpoch,
 		TransitionFn: d.TransitionFn, Interpreter: d.Interpreter,
-		PrevEntryHash: w.LogHead, WrittenBy: writtenBy,
+		PrevEntryHash: w.LogHead, WrittenBy: by,
 	}
 	entryHash := hashref.SumSHA256(mustJSON(entryWire{
 		EntryIndex: header.EntryIndex, SemanticsEpoch: header.SemanticsEpoch,

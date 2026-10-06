@@ -350,7 +350,7 @@ func writeReadTimeout(w http.ResponseWriter, deadline time.Duration) {
 }
 
 // restInvocationPrefix is the one namespace /v1/commit accepts: it cannot
-// collide with the coordinator's "a2a:" ids or the broker's "effect:" ids.
+// collide with the coordinator's "a2a:"/"mcp:" ids or the broker's "effect:" ids.
 const restInvocationPrefix = "rest:"
 
 func restInvocationID(id string) bool {

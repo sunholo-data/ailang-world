@@ -100,7 +100,7 @@ The name may contain slashes. Query: `after=<ref>` resumes strictly after that h
 `limit=N`.
 
 ```json
-{"items":[{"hash":"sha256:…","interfaceHash":"sha256:…","semanticId":"world/invocation-record/v2","provenance":"coordinator:a2a"}]}
+{"items":[{"hash":"sha256:…","interfaceHash":"sha256:…","semanticId":"world/invocation-record/v2","provenance":"coordinator:mcp"}]}
 ```
 
 Ascending hash order, never payloads. A name no object carries is `200` with `"items":[]`, never
@@ -111,7 +111,7 @@ Ascending hash order, never payloads. A name no object carries is `200` with `"i
 
 ```json
 {"header":{"entryIndex":1,"semanticsEpoch":1,"transitionFn":"sha256:…",
-           "interpreter":"sha256:…","prevEntryHash":"sha256:…","writtenBy":"coordinator:a2a"},
+           "interpreter":"sha256:…","prevEntryHash":"sha256:…","writtenBy":"coordinator:mcp"},
  "entryHash":"sha256:…","transitionRef":"sha256:…"}
 ```
 

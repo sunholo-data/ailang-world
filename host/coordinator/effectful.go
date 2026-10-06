@@ -245,7 +245,7 @@ func (c *Coordinator) composeEffectOutput(finishCtx context.Context, interp hash
 
 // dispatchEffectful runs an effectful descriptor's invocation. The caller
 // holds the episode lock and bound the descriptor over seeded grants.
-func (c *Coordinator) dispatchEffectful(ctx context.Context, id, episodeID string, input []byte,
+func (c *Coordinator) dispatchEffectful(ctx context.Context, surface Surface, id, episodeID string, input []byte,
 	bound *transitionreg.Bound, d transitionreg.Descriptor) (Result, error) {
 	// R8: every declared effect must have a handler in this binder, decided
 	// before any effect — or the plan — runs.
@@ -272,7 +272,7 @@ func (c *Coordinator) dispatchEffectful(ctx context.Context, id, episodeID strin
 		if err != nil {
 			return Result{}, err
 		}
-		p := planEffectInvocation(world, id, episodeID, d, input, outBytes, pl.Canonical, nil, now)
+		p := planEffectInvocation(world, surface, id, episodeID, d, input, outBytes, pl.Canonical, nil, now)
 		return c.appendAndCommit(ctx, id, p, outBytes, outObj)
 	}
 
@@ -305,7 +305,7 @@ func (c *Coordinator) dispatchEffectful(ctx context.Context, id, episodeID strin
 	if err != nil {
 		return unrecorded(err)
 	}
-	p := planEffectInvocation(world, id, episodeID, d, input, outBytes, pl.Canonical, records, now)
+	p := planEffectInvocation(world, surface, id, episodeID, d, input, outBytes, pl.Canonical, records, now)
 	pctx, cancelPost := detached(ctx, PostEffectBudget)
 	defer cancelPost()
 	res, err := c.appendAndCommit(pctx, id, p, outBytes, outObj)

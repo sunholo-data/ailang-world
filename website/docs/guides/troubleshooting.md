@@ -184,7 +184,7 @@ sessions for the same episode; use a new episode (and worktree) for a fresh budg
 ### `transition invocation is not available in this daemon`
 
 `serve` ran without `--ailang-bin`, so there is no invocation coordinator, or a registry read
-failed. Check the daemon's stderr for an `a2a refusal` line with the cause.
+failed. Check the daemon's stderr for an `a2a refusal` line (A2A) or an `mcp refusal` line (MCP) with the cause.
 
 ### `effects were requested but the invocation was not confirmed committed; effect records: …`
 

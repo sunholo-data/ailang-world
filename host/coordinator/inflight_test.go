@@ -55,7 +55,7 @@ func TestInFlightGuard(t *testing.T) {
 		<-entered
 		_, err := c.Dispatch(boundedTestContext(t), call)
 		var inFlight *InFlightError
-		if !errors.As(err, &inFlight) || inFlight.InvocationID != InvocationID(call.EpisodeID, call.TaskID) {
+		if !errors.As(err, &inFlight) || inFlight.InvocationID != InvocationID(call.Surface, call.EpisodeID, call.TaskID) {
 			t.Fatalf("retry = %T %v", err, err)
 		}
 		if got := runs.Load(); got != 1 {
