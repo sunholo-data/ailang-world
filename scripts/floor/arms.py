@@ -82,6 +82,17 @@ CLAUDE_SANDBOX_SETTINGS = {'sandbox': {'enabled': True, 'autoAllowBashIfSandboxe
                                        'allowUnsandboxedCommands': False}}
 CLAUDE_EMPTY_MCP = {'mcpServers': {}}
 CLAUDE_SHELL_PERMISSION_MODE = 'acceptEdits'  # §4.3 as amended by M2 (V-M2-3)
+# [M4 knob (b), harness-side, BOTH Claude arms identically; V-M4-1] §4.3's "user MCP servers,
+# plugins and skills are suppressed identically in both arms" — M2 measured that the user's
+# plugins were still loaded and 2 SessionStart hooks still ran in both arms (V-M2-3).
+# `--setting-sources ""` loads no user/project/local settings file (so no user plugins, hooks or
+# enabled-plugin list); the built-in plugins that remain are switched off and auto-memory is off
+# through the same `--settings` object the shell arm already uses for its sandbox. The flag set is
+# identical in both arms; only the shell arm's settings object additionally carries the sandbox.
+CLAUDE_BUILTIN_PLUGINS = ('cc-plugin-agents-md@builtin', 'cc-plugin-telemetry@builtin',
+                          'cc-plugin-plugin-authoring@builtin')
+CLAUDE_ISOLATION_SETTINGS = {'enabledPlugins': {p: False for p in CLAUDE_BUILTIN_PLUGINS},
+                             'autoMemoryEnabled': False}
 # codex, both arms: every non-coding feature off (V26, V28); web search off by config key (V-M2-1).
 CODEX_DISABLED_FEATURES = ('plugins', 'apps', 'browser_use', 'computer_use', 'image_generation',
                            'multi_agent')
@@ -117,9 +128,16 @@ def codex_world_overrides(addr: str = DEFAULT_ADDR) -> list[str]:
 
 
 def build_argv(agent: str, arm: str, *, model: str, prompt_text: str, cwd: str,
-               mcp_config_path: str | None = None, addr: str = DEFAULT_ADDR) -> list[str]:
+               mcp_config_path: str | None = None, addr: str = DEFAULT_ADDR,
+               claude_isolation: bool = False, max_budget_usd: float | None = None) -> list[str]:
     """The exact argv of §4.3 for one (agent, arm). ``cwd`` is the worktree (shell) or the empty
-    ``void/<ep>`` (World); Claude takes it as the process cwd, codex also as ``-C``."""
+    ``void/<ep>`` (World); Claude takes it as the process cwd, codex also as ``-C``.
+
+    The two M4 additions are Claude-only, keyword-only and applied IDENTICALLY to both arms, so the
+    defaults reproduce the §4.3 goldens exactly: ``claude_isolation`` (knob (b), V-M4-1) appends
+    ``--setting-sources ""`` and merges ``CLAUDE_ISOLATION_SETTINGS`` into the arm's ``--settings``;
+    ``max_budget_usd`` (§4.9) appends ``--max-budget-usd``. codex ignores both (it has no budget
+    flag; ``--ignore-user-config`` already drops its user config)."""
     if agent not in AGENTS or arm not in ARMS:
         raise ArmError(f'unknown agent/arm {agent!r}/{arm!r}')
     if not model or not prompt_text or not cwd:
@@ -127,6 +145,15 @@ def build_argv(agent: str, arm: str, *, model: str, prompt_text: str, cwd: str,
     if agent == 'claude':
         argv = ['claude', '-p', prompt_text, '--model', model, '--output-format', 'stream-json',
                 '--verbose', '--no-session-persistence', '--disable-slash-commands']
+        tail = []
+        if claude_isolation:
+            tail += ['--setting-sources', '']
+            if arm == 'world':
+                tail += ['--settings', _compact(CLAUDE_ISOLATION_SETTINGS)]
+        if max_budget_usd is not None:
+            if not max_budget_usd > 0:
+                raise ArmError(f'max_budget_usd must be positive, got {max_budget_usd!r}')
+            tail += ['--max-budget-usd', f'{float(max_budget_usd):.2f}']
         if arm == 'shell':
             if mcp_config_path is not None:
                 raise ArmError('the Claude shell arm takes no MCP config file')
@@ -137,11 +164,13 @@ def build_argv(agent: str, arm: str, *, model: str, prompt_text: str, cwd: str,
                            # wrote outside the worktree (AC2.5 canary r1). acceptEdits refuses an
                            # edit outside the cwd in -p mode and keeps sandboxed Bash auto-allowed.
                            '--permission-mode', CLAUDE_SHELL_PERMISSION_MODE,
-                           '--settings', _compact(CLAUDE_SANDBOX_SETTINGS)]
+                           '--settings', _compact(dict(CLAUDE_SANDBOX_SETTINGS,
+                                                       **(CLAUDE_ISOLATION_SETTINGS if claude_isolation else {})))
+                           ] + tail
         if not mcp_config_path:
             raise ArmError('the Claude World arm needs its private MCP config path')
         return argv + ['--tools', '', '--strict-mcp-config', '--mcp-config', mcp_config_path,
-                       '--allowedTools', ','.join(world_allowed_tools())]
+                       '--allowedTools', ','.join(world_allowed_tools())] + tail
     argv = ['codex', 'exec', '--json', '--ephemeral', '--ignore-user-config', '--skip-git-repo-check',
             '-m', model, '-s', 'workspace-write' if arm == 'shell' else 'read-only', '-C', cwd]
     for feat in CODEX_DISABLED_FEATURES:
