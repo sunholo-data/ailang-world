@@ -1,6 +1,6 @@
 # w-workspace-project-layouts — a module-root subdirectory sandbox and a read-only registry package cache (row 141)
 
-**Status:** PLANNED. Designed in iteration 238 (designer lane claude-opus-5-5, unattended). Quorum not yet run.
+**Status:** PLANNED. Designed in iteration 238 (designer lane claude-opus-5-5, unattended). **Quorum round 1 BLOCKED 3/3** (gemini-3-1-pro, oc-glm-5-3, oc-kimi-k3). None disputed the direction; all raised completeness or premise defects. **This is r2**, the single revision pass, applying the five r1 fixes listed under "r2 changes" at the end of the doc.
 **Target:** next World patch. **Priority:** clause-2/4 (dogfood, D-WORLD-58). Charter position: after 136, before 93 (D-WORLD-61 = A).
 **Estimated:** ~1 d of host Go and docs (M1 ~0.35 d, M2 ~0.4 d, M3 ~0.25 d). **Dependencies:** none. Everything runs on the pinned tool binary, AILANG v0.52.1. Two upstream asks (M3) are hardening only and gate nothing in this row.
 **Measured base:** worktree `sprint/row141-workspace-project-layouts` at `499105b`. Tool binary `~/.pinned-ailang-tools/v0.52.1/ailang` (V21). Upstream source read at tag `v0.52.1` (`c68ded4`) in `~/dev/sunholo-data/ailang`. Daneel read-only at `ebe26c0`. Every probe ran on a `git archive` copy under `~/.ailang/state/world-iter238-row141/`.
@@ -26,7 +26,7 @@ Each row is backed by the Verification Log (§ Verification Log) entry of the sa
 |---|---|
 | V1 | `episodeHandler` sets `cacheDir := <state>/cache/E` (`host/daemon/workspace.go:380`). It renders `broker.RenderEpisodePolicy(epRoot)` (`:387`) and builds the handler with `Root: epRoot, CacheDir: cacheDir` (`:397`). `episodeRoot` requires `EvalSymlinks(W/E) == W/E` and a directory (`:355–368`). |
 | V2 | Every tool child gets `HOME=<cacheDir>` and `AILANG_CACHE_DIR=<cacheDir>`, with `PATH=/usr/bin:/bin` (`host/broker/handlers_ailang.go:522–533`). Each result is stamped with `tool` and `policy_digest` only (`:496–500`). |
-| V3 | No module-root or package-cache option exists. The negative grep over non-test Go in `host/` and `cmd/` returns 0 hits; the positive control (`AILANG_CACHE_DIR`) returns 3. |
+| V3 | No module-root or package-cache option exists. The (valid-ERE) grep over non-test Go in `host/` and `cmd/` returns exactly 1 hit, `host/pinfetch/pinfetch.go:183` ("release subdirectory", unrelated). The positive control (`AILANG_CACHE_DIR`) returns 3. |
 | V4 | policy-tool (v0.52.1) runs every `needsRoot` CLI op with `cmd.Dir = h.root.Dir()`, the sandbox root (`internal/policytool/cli_ops.go:316`). The child is "a separate, UNCONFINED process" (`:156`). Its `AILANG_CACHE_DIR` is overridden with a private temp dir (`:405`). Its `HOME` is inherited from World. |
 | V5 | The module loader's base dir is `"."`, the cwd (`internal/pipeline/pipeline_module_phases.go:153`). |
 | V6 | The v0.52.1 operator policy has 16 TOML keys. None is a module root or a package path. `cli_allow` exists (`internal/policy/policy.go:43,51`). |
@@ -46,6 +46,8 @@ Each row is backed by the Verification Log (§ Verification Log) entry of the sa
 | V20 | No upstream issue covers either ask (5 searches, none relevant). Positive control: `examples policy-tool` finds #1552. |
 | V21 | `--version` reports `AILANG v0.52.1`, commit `c68ded4`, which equals `v0.52.1^{commit}`. The binary's sha256 begins `0dd70a1d00360be0`. |
 | V22 | The operator's own `~/.ailang/cache/registry` is writable (6173 entries with `u+w`) and is 233 MB. The V14 snapshot of Daneel's 8 packages is 480 KB. |
+| V23 | Where `ailang run --policy` writes its compile cache, under World's exact child env with the `tools/` sandbox and a fresh `HOME`. It writes **inside the sandbox**, at `tools/.ailang/cache/compile/{manifest.json,modules/…}`, and ignores `AILANG_CACHE_DIR` (#1547 confirmed). The rendered `.ailang/**` `fs_deny_write` entry does **not** stop the runtime's own cache write. It **does** refuse an agent `write` to `.ailang/cache/compile/planted.txt` (`matches fs_deny_write ".ailang/**"`; control: `write probe_ok.txt` → `ok: true`). In `HOME` the run creates only the empty `.ailang/cache/registry`. Control: `ai_check` of the same module through policy-tool adds nothing to the sandbox or to `HOME`. |
+| V24 | **Every writer under `<state>/cache/E/.ailang/**`.** World creates only `<state>/cache/E` itself (`workspace.go:380–384`). Its 4 non-test `".ailang"` sites are the deny list (`handlers_ailang.go:57`), the `setup` defaults (`setup.go:82–83`) and the examples default (`main.go:423`), none of which write under the cache dir. v0.52.1 writes there in two places. `RegistryCacheDir` creates the **empty** `.ailang/cache/registry` (V10, V11, V23). `pkg_docs` extracts packages into it (V13). The compile cache is not one of them: `run` writes it into the sandbox (V23), and CLI children write it to a private temp dir (V4). Neither is the prompt cache: it lives at `$AILANG_CACHE_DIR/prompts/…` (`internal/prompt/fresh.go:195–200`), outside `.ailang`. So a non-empty `.ailang/cache/registry` under `<state>/cache/E` can only have come from `pkg_docs`, or from a person. |
 
 ## Options
 
@@ -73,13 +75,15 @@ Why this is safe:
 - `pkg_docs` can no longer store a fetched package (V14).
 - A confined run cannot write the snapshot (V15), and `Workspace.Write` is confined to the sandbox (row 134 §4.3).
 
+**Leftover content:** World never deletes anything that holds content under the episode `HOME`. An unprovisioned `registry` directory refuses the episode with a named operator line (M2, V24).
+
 What it depends on: the `.ailang/cache/registry` layout under `HOME` is upstream *source*, not a documented interface (V11). Two things cover that. The rig e2e test (AC2.6) is the tripwire. Upstream ask U2 asks for a first-class, read-only package root, and World would drop the symlink once that ships.
 
 **(b2) Point `HOME` straight at a shared, operator-owned home. Rejected.** `HOME` is also where the unconfined CLI children write: the registry root `MkdirAll` and `pkg_docs` extraction (V10, V13). A home shared across episodes would make those writes visible from one episode to the next.
 
 **(b3) The lock's `path` fallback for `registry` entries (V11). Rejected.** `ailang.lock` sits in the worktree, and the agent can write it (it is not in the deny list). A cache location chosen by the lock is a location chosen by the agent.
 
-**(b4) Copy the snapshot into each episode's `HOME`, the way row 140 seeds caches. Rejected.** The copy is World-owned and writable, so `pkg_docs` could add to it again (V13), unless World also re-applies `a-w` to every copy. The symlink gets read-only for free from a tree whose read-only state is checked at startup.
+**(b4) Copy the snapshot into each episode's `HOME`. Rejected.** This is the pattern of row 140's exec caches. Those are seeded from an operator's read-only `seed`, but into `<state>/exec-cache/<id>/` (`host/broker/exec_probe.go:315–321`, with dirs `home`, `tmp`, `pycache`, `npm`), not into the AILANG tools' `<state>/cache/E`. The copy would be World-owned and writable, so `pkg_docs` could add to it again (V13), unless World also re-applied `a-w` to every copy. The symlink gets read-only for free from a tree that is checked read-only at startup.
 
 **Why host code, not a package (S3):** this is serve-time configuration of the sandbox root and the child's `HOME` at the host boundary (S2), the same layer as `--workspace-root` and `--examples-dir`. No `world/` kernel or `.ail` change.
 
@@ -118,7 +122,8 @@ This is the `projectDir` rule (V18), applied after `episodeRoot`. A module root 
 
 **Confinement (row 134 §4.3 is unchanged and AILANG's own).**
 - The sandbox shrinks from `W/E` to `W/E/REL`. Writes outside it, including the worktree's `.git`, `.github/` and `.claude/` at `W/E`, are now outside `fs_sandbox` and refused by AILANG's path confinement.
-- The deny globs are sandbox-relative. They still cover `REL/.ailang/**`, which is where `run --policy` writes its compile cache (#1547). They also cover any `.github/`, `.claude/` or `.pi/` inside REL.
+- The deny globs are sandbox-relative, so they also cover any `.github/`, `.claude/`, `.pi/` or `.ailang/` inside REL.
+- Measured on the `tools/` sandbox (V23): `run --policy` writes its compile cache to `REL/.ailang/cache/compile` (#1547), and the `.ailang/**` deny entry does **not** stop that runtime write. What the entry does stop is an agent `write` into `.ailang/**`. This is the same behaviour as at the worktree root today. The subdirectory sandbox neither causes it nor fixes it, and nothing here relies on it as a safety property.
 - Reads by the unconfined module loader already reach outside the sandbox (path dependencies, V10). This row does not change that (see Risks).
 
 ### M2 — Read-only registry package cache (~0.4 d)
@@ -133,14 +138,17 @@ This is the `projectDir` rule (V18), applied after `episodeRoot`. A module root 
 5. Fewer than one package exists. A package is a `<ns>/<name>/<ver>/ailang.toml` path. A vacuous cache fails loudly (S6).
 6. The daemon runs as uid 0, where mode bits do not stop writes. A `geteuid` seam var lets tests reach this case.
 
-**Snapshot digest.** The check also computes a tree digest over the walk, in byte order. Each entry contributes `relpath NUL kind NUL sha256(bytes)`, and the whole is SHA-256 hashed, giving `sha256:<hex>`. Startup logs one line: `ailang-worldd: workspace package cache DIR: N packages, read-only, sha256:…`.
+**Snapshot digest.** The check also computes a tree digest over the walk, in byte order. A directory contributes `relpath NUL "d"`. A file contributes `relpath NUL "f" NUL sha256(content)`. Entries are separated by newlines, and the whole is SHA-256 hashed, giving `sha256:<hex>`. The digest is computed **once, at startup**, and never per episode (gemini r1). Startup logs one line: `ailang-worldd: workspace package cache DIR: N packages, read-only, sha256:…`.
 
 **Per episode.** In `episodeHandler`, after the existing `MkdirAll(cacheDir)`, `linkPackageCache(cacheDir)` runs.
 - **Flag set:**
   - `MkdirAll(cacheDir/.ailang/cache, 0700)`.
-  - If `cacheDir/.ailang/cache/registry` is already a symlink whose `Readlink` equals the canonical DIR, keep it. Otherwise `RemoveAll` whatever is there, then `Symlink(DIR, link)`. Anything already there was fetched by an agent (V13); it was never provisioned by the operator.
-  - Re-verify checks 3–5 and recompute the digest. A digest different from the startup digest is a handler-construction error: the snapshot changed under a running daemon. That error takes the existing empty-registry path and writes its operator line.
-- **Flag unset:** if that path is a **symlink**, remove it. A stale symlink can only come from an earlier run with the flag set. A real directory there is left alone, which is today's behaviour. Nothing else changes.
+  - Let `link := cacheDir/.ailang/cache/registry`. **Nothing that holds content is ever deleted** (kimi r1).
+    - A symlink whose `Readlink` equals the canonical DIR is kept.
+    - If `link` is absent, or is an **empty** directory, it is removed (`os.Remove` on the empty directory only) and replaced by `Symlink(DIR, link)`. An empty directory is what v0.52.1's own `RegistryCacheDir` leaves behind (V24).
+    - **Anything else** is a handler-construction error: a non-empty directory, a file, or a symlink to anywhere else. Nothing is deleted. The error takes the existing empty-registry path (R8), and the operator line is `ailang-worldd: workspace package cache refused for episode "E": <link> is not empty and was not provisioned by --workspace-package-cache; clear it manually`. Per V24, such content can only have come from `pkg_docs` or from a person, and deciding what to do with it is the operator's call.
+  - There is **no** per-episode re-walk of DIR. Episodes are stamped with the startup digest (gemini r1: a per-episode walk is unbounded I/O on the dispatch path).
+- **Flag unset:** if `link` is a **symlink**, it is removed. Only an earlier run with the flag set creates one there (V24). A real directory, empty or not, is never touched, which is today's behaviour. Nothing else changes.
 
 **Stamp.** `AilangToolConfig` gains `PackageCacheDigest string`. When it is non-empty, `stamp` adds `"package_cache": "<digest>"` next to `policy_digest`. When it is empty, the key is absent, so results with the flag unset are byte-identical to today's. This records *which* packages an `ai_check` saw. Without it, the result would depend on an input the record does not name.
 
@@ -156,6 +164,8 @@ chmod -R a-w "$SNAP"
 ```
 
 To refresh the snapshot, run `chmod -R u+w "$SNAP"`, rebuild it, and restart `serve`: the digest is fixed at startup.
+
+**More than one episode.** `--workspace-package-cache` is daemon-global, but locks belong to each worktree. A deployment with several episodes must therefore build the one `SNAP` as the **union** of every episode's locked registry packages: run the recipe's `jq … | while …` loop once per episode's `LOCK` into the same `SNAP`, then run `chmod -R a-w` once at the end.
 
 ### M3 — Docs, upstream asks, follow-up rows (~0.25 d)
 
@@ -182,7 +192,7 @@ Every criterion names one test and the mutant it kills (S6). **CI** means the te
 | AC | Test | Kind | Asserts | Mutant it kills |
 |---|---|---|---|---|
 | AC1.1 | `host/daemon` `TestWorkspaceModuleRootGrammar` (table) | CI | `tools`, `tools/sub` and `.` are accepted. `""` as a value, `/abs`, `../x`, `tools/../../x`, `-x`, `tools/`, `a"b` and `EP` outside the grammar are refused at startup, as is an episode mapped twice. | **MUT-MR-DOTDOT**: drop the `..`-segment check, and the `tools/../../x` row fires. **MUT-MR-DUP**: last mapping wins, and the duplicate row fires. |
-| AC1.2 | `TestWorkspaceModuleRootIsTheSandbox` | CI | With `--workspace-module-root tools` and `ep1/tools` present: `policies/ep1.toml` equals `RenderEpisodePolicy(<root>/ep1/tools)` byte for byte. The fake binary's summary and dispatch `pwd` both equal `<root>/ep1/tools`. The registry has all 9 names. | **MUT-MR-POLICY-ROOT**: the policy is rendered with `epRoot`, and the byte-equality assertion fires. **MUT-MR-CWD**: `Root: epRoot` is passed, and the `pwd` assertion fires. |
+| AC1.2 | `TestWorkspaceModuleRootIsTheSandbox` | CI | With `--workspace-module-root tools` and `ep1/tools` present: `policies/ep1.toml` equals `RenderEpisodePolicy(<root>/ep1/tools)` byte for byte. The fake binary's summary and dispatch `pwd` both equal `<root>/ep1/tools`. The registry binds exactly the 9 names of `workspaceEffects` (`workspace.go:55–66`): `Workspace.Read`, `Workspace.Write`, `Ailang.Check`, `Ailang.Run`, `Ailang.RunEnv`, `Ailang.RunNet`, `Ailang.Discover`, `Ailang.CLI`, `Workspace.Exec`. | **MUT-MR-POLICY-ROOT**: the policy is rendered with `epRoot`, and the byte-equality assertion fires. **MUT-MR-CWD**: `Root: epRoot` is passed, and the `pwd` assertion fires. |
 | AC1.3 | `TestWorkspaceModuleRootSymlinkOrMissingIsR8` | CI | `ep1/tools` as a symlink (to `ep1/real`, and to `../ep2/tools`), as a file, or missing → empty registry, zero summaries and dispatches, one operator line naming `module root "tools"`. The missing directory is **not** created. | **MUT-MR-NOSYMLINK**: the `EvalSymlinks == want` check is skipped, and the symlink row fires. **MUT-MR-MKDIR**: the root is `MkdirAll`ed, and the not-created assertion fires. |
 | AC1.4 | `TestWorkspaceEpisodeModuleRootOverrides` | CI | With default `tools` and `ep2=.`, ep1's sandbox is `ep1/tools` and ep2's sandbox is `ep2` (logged `pwd`). | **MUT-MR-OVERRIDE-IGNORED**: the override is ignored, and the ep2 assertion fires. |
 | AC1.5 | `TestWorkspaceModuleRootNeedsWorkspaceRoot` | CI | Either flag without `--workspace-root` → `StartupError`, and the store is not opened. | **MUT-MR-SILENT**: the flags are ignored when the root is unset, and the error assertion fires. |
@@ -190,9 +200,9 @@ Every criterion names one test and the mutant it kills (S6). **CI** means the te
 | AC1.7 | `host/daemon/setools_e2e_test.go` `TestSeToolsModuleRootResolvesBareImports` | RIG | V16 fixture. Without the flag, `ai_check tools/a.ail` → `LDR001 module not found: b`. With `--workspace-module-root tools`, `ai_check a.ail` → `passed`. | MUT-MR-POLICY-ROOT and MUT-MR-CWD (both also killed in CI by AC1.2) |
 | AC2.1 | `TestWorkspacePackageCacheStartupChecks` (table) | CI | A read-only tree with one package is accepted, and its digest is stable across two calls. Refused, one row each: not a dir; inside `--workspace-root`; inside the state dir; a writable **file**; a writable **dir**; DIR itself writable; a symlink inside; zero packages; uid 0 (seam); no `--workspace-root`. | **MUT-PC-DIRS-ONLY**: only directories' modes are checked, and the writable-file row fires. **MUT-PC-SYMLINK**: symlinks are not refused, and the symlink row fires. **MUT-PC-EMPTY**: the package count is dropped, and the zero-packages row fires. |
 | AC2.2 | `TestWorkspacePackageCacheLinkedIntoEpisodeHome` | CI | After `registry("ep1")`, `Lstat(<state>/cache/ep1/.ailang/cache/registry)` is a symlink to the canonical DIR. The fake binary's logged env still has `HOME=<state>/cache/ep1`, and the policy bytes equal the flag-unset render. | **MUT-PC-NOLINK**: the link step is skipped, and the `Lstat` assertion fires. |
-| AC2.3 | `TestWorkspacePackageCacheReplacesAgentFetchedRegistry` | CI | A real directory pre-planted at that path, holding `sunholo/x/9.9.9/ailang.toml`, is replaced by the symlink, and the planted file is gone. | **MUT-PC-KEEP-EXISTING**: an existing entry is kept, and the symlink assertion fires. |
-| AC2.4 | `TestWorkspacePackageCacheUnsetLeavesHomeAlone` | CI | Flag unset: a pre-existing real `registry` directory is untouched, and a pre-existing symlink is removed. | **MUT-PC-UNSET-REMOVES-DIR**: `RemoveAll` runs for any entry, and the untouched-dir assertion fires. |
-| AC2.5 | `TestWorkspacePackageCacheDigestIsStamped` (fake-binary dispatch through the handler) | CI | Flag set: the result carries `"package_cache":"sha256:…"` equal to the startup digest. Flag unset: the result has **no** `package_cache` key. A file whose bytes change after startup (chmod u+w, write, chmod a-w) gives an empty registry on the next episode, with an operator line. | **MUT-PC-STAMP-ALWAYS**: the key is stamped when empty, and the unset assertion fires. **MUT-PC-NO-RECHECK**: the per-episode digest re-check is skipped, and the changed-snapshot assertion fires. |
+| AC2.3 | `TestWorkspacePackageCacheRefusesUnprovisionedRegistry` | CI | Flag set. (i) A non-empty directory pre-planted at `link`, holding `sunholo/x/9.9.9/ailang.toml`, a file at `link`, and a symlink to another dir each give an **empty registry**, zero summaries, and exactly one operator line `ailang-worldd: workspace package cache refused for episode "ep1": <link> is not empty and was not provisioned by --workspace-package-cache; clear it manually`. The planted file **survives**, byte-identical. (ii) An **empty** directory at `link` is replaced by the symlink. | **MUT-PC-SILENT-DELETE**: `RemoveAll` and relink any entry, and the planted-file-survives assertion fires. **MUT-PC-KEEP-EMPTY**: an empty dir is refused instead of replaced, and arm (ii) fires. |
+| AC2.4 | `TestWorkspacePackageCacheUnsetLeavesHomeAlone` | CI | Flag unset: a pre-existing non-empty `registry` directory **and** an empty one are both untouched, and a registry still forms. A pre-existing symlink is removed, and its target is untouched. | **MUT-PC-UNSET-REMOVES-DIR**: anything but a symlink is removed, and the untouched-dir assertions fire. **MUT-PC-UNSET-FOLLOWS-LINK**: `RemoveAll` on the symlink's target, and the target-untouched assertion fires. |
+| AC2.5 | `TestWorkspacePackageCacheDigestIsStamped` (fake-binary dispatch through the handler) | CI | Flag set: the result carries `"package_cache":"sha256:…"` equal to the startup digest. Flag unset: the result has **no** `package_cache` key. The digest equals the value recomputed by the test from its own fixture under the r2 rule (directory: `relpath NUL d`; file: `relpath NUL f NUL sha256(content)`). | **MUT-PC-STAMP-ALWAYS**: the key is stamped when empty, and the unset assertion fires. **MUT-PC-DIR-HASH**: directories are hashed like files, and the recomputed-digest assertion fires. |
 | AC2.6 | `TestSeToolsPackageCacheResolvesRegistryImports` | RIG | V16 fixture with `--workspace-module-root tools`. Without `--workspace-package-cache`, `ai_check a.ail` → `cache not found`. With it → `passed`. The snapshot's tree digest is unchanged after `ai_check`, `test` and `ailang-run`. This is the tripwire for the upstream `HOME` layout (V11). | **MUT-PC-NOLINK** (also killed in CI by AC2.2) |
 | AC3.1 | `cmd/ailang-worldd` `TestQuickstartSection11FlagsMatchTheCLI` | CI | `serve --help` documents the three flags. §11's single `serve` line uses them, and every flag on it is documented and parses (it stops at an appended bad `--bind`). | **MUT-HELP-DROP**: one flag is removed from the usage text, and the documented-flag assertion fires. |
 | AC3.2 | the U1/U2 issue URLs and the `ailang messages` id, recorded in the iteration log, plus the R-A/R-B rows | — | the asks exist and can be addressed | n/a: evidence, not a test (a labelled instrument) |
@@ -223,7 +233,7 @@ Not touched: `tools/launchd/*`, `world/`, `packages/`, `scripts/verify_ail.sh`, 
 ## Risks
 
 - **R1: the upstream `HOME` layout moves.** The symlink depends on `internal/pkg/registry.go`, not a documented interface (V11). Mitigations: AC2.6 reds on a pin bump that moves it, and `ToolBinaryRelease` already refuses any other release at startup. U2 removes the dependency.
-- **R2: read-only depends on mode bits.** Root bypasses them, which is why check 6 refuses uid 0. The operator could also `chmod u+w` the tree while serve runs. The per-episode digest re-check (AC2.5) catches content changes at handler construction, but not between calls on an already-built handler. That gap is accepted and documented: the snapshot is operator state outside the workspace root.
+- **R2: read-only depends on mode bits.** Root bypasses them, which is why check 6 refuses uid 0. The operator could also `chmod u+w` the tree and change it while serve runs. The digest is computed once at startup (gemini r1), so such a change goes undetected for **every** episode, including ones built after it, and their results carry a stamp that no longer describes the tree. This risk is accepted and documented: the snapshot is operator state outside the workspace root, and the documented refresh is a rebuild followed by a restart (M2).
 - **R3: the unconfined loader reads outside the sandbox.** This covers path dependencies (V10), the stdlib, and the snapshot. It is pre-existing AILANG behaviour, recorded as R-B. A subdirectory sandbox does not widen it.
 - **R4: packages are not verified against the lock.** `ai_check` accepted a placeholder `content_hash` (V16), so the snapshot is trusted as provisioned. The digest stamp (M2) makes what was used auditable, and U2 asks upstream to verify.
 
@@ -235,7 +245,7 @@ All probes used `B=~/.pinned-ailang-tools/v0.52.1/ailang` and `S=~/.ailang/state
 |---|---|---|
 | V1 | `grep -n 'cacheDir := \|RenderEpisodePolicy(epRoot)\|Root: epRoot' host/daemon/workspace.go` | `380: cacheDir := filepath.Join(w.stateDir, "cache", episodeID)`, `387: … RenderEpisodePolicy(epRoot)`, `397: … Root: epRoot, CacheDir: cacheDir` |
 | V2 | `sed -n 496,500p;522,533p host/broker/handlers_ailang.go` | `"HOME=" + h.cacheDir`, `"AILANG_CACHE_DIR=" + h.cacheDir`; `resp["tool"]`, `resp["policy_digest"]` |
-| V3 | `grep -rniE 'module.?root\|package.?cache\|modulesubdir' host cmd --include='*.go' \| grep -v _test.go \| wc -l`; control `grep -rn AILANG_CACHE_DIR … \| wc -l` | `0`; control `3` (`handlers_ailang.go:229,528`, `workspace.go:8`) |
+| V3 | r2 re-run; exact command in the block below the table | 1 hit: `host/pinfetch/pinfetch.go:183:// The release subdirectory keeps the two pins apart` (unrelated); control → `handlers_ailang.go:229`, `handlers_ailang.go:528`, `workspace.go:8` |
 | V4 | `git show v0.52.1:internal/policytool/cli_ops.go \| grep -nF 'dir = h.root.Dir()'` (and the other two) | `316`; `156` (`separate, UNCONFINED process`); `405` (`config.EnvCacheDir+"="+cacheDir`) |
 | V5 | `… pipeline_module_phases.go \| grep -nF 'loaderBaseDir := "."'` | `153` |
 | V6 | `git grep -n 'toml:"' v0.52.1 -- internal/policy/ \| sed … \| sort -u` | `ai_provider allowed_caps budgets cli_allow entry fs_deny_write fs_sandbox max_fs_transfer_bytes max_module_graph_bytes max_output_bytes max_source_bytes net_allow net_allow_http process_allow security_mode timeout_ms` (16) |
@@ -255,9 +265,30 @@ All probes used `B=~/.pinned-ailang-tools/v0.52.1/ailang` and `S=~/.ailang/state
 | V20 | `gh issue list -R sunholo-data/ailang --state all --search` `pkg-docs` / `registry cache read-only` / `AILANG_CACHE_DIR registry` / `module root policy-tool` / `package cache policy` | no relevant hit (closest: #1547 `run --policy ignores AILANG_CACHE_DIR`, a different issue); control `examples policy-tool` → `#1552` |
 | V21 | `$B --version`; `git rev-parse 'v0.52.1^{commit}'`; `shasum -a 256 $B \| cut -c1-16` | `AILANG v0.52.1 Commit: c68ded4`; `c68ded4b2d5e…`; `0dd70a1d00360be0` |
 | V22 | `find ~/.ailang/cache/registry -perm -u+w \| wc -l`; `du -sh ~/.ailang/cache/registry $S/pkgro` | `6173`; `233M`, `480K` |
+| V23 | `T=$S/daneel/tools`; `rm -rf $T/.ailang`; fresh `H=$S/h2`; `find` listings of `$T` and `$H` before and after `(cd $T && env -i HOME=$H … AILANG_CACHE_DIR=$H $B run --policy policy-tools.toml -- probe_hello.ail)`; then the same for `policy-tool` `ai_check probe_hello.ail`; then `policy-tool` `{"op":"write","path":".ailang/cache/compile/planted.txt",…}` and the control `{"op":"write","path":"probe_ok.txt",…}` | run: `hello rc=0`; new in sandbox: `./.ailang/cache/compile/manifest.json`, `./.ailang/cache/compile/modules/probe_hello/{artifacts.json,constructors.json,core.gob,coretypeinfo.gob}`; new in HOME: `./.ailang/cache/registry` only. ai_check: `"ok": true`, nothing new in either. write: `"refused": "write .ailang/cache/compile/planted.txt: matches fs_deny_write \".ailang/**\" — read-only under this policy"`; `ls planted.txt`: No such file; control `{"ok": true}` |
+| V24 | `grep -rn '"\.ailang"' host cmd --include='*.go' \| grep -v _test.go`; `sed -n 380,384p host/daemon/workspace.go`; `git grep -n 'config.CacheDir()' v0.52.1 -- '*.go' \| grep -v _test`; `git show v0.52.1:internal/prompt/fresh.go \| sed -n 195,210p`; positive controls: V10 and V23 (the registry MkdirAll seen), V13 (pkg_docs extraction seen) | World: 4 hits, `handlers_ailang.go:57` (deny list), `setup.go:82,83` (operator-HOME defaults), `main.go:423` (examples default), none under `<state>/cache`; `cacheDir := filepath.Join(w.stateDir, "cache", episodeID)` and then `os.MkdirAll(dir, 0o700)`. Upstream `AILANG_CACHE_DIR` users: `pipeline/cache_runtime.go:50`, `pipeline/cache_store.go:67` (both `<dir>/compile`), `prompt/fresh.go:199` (`cacheBaseDir` returns `$AILANG_CACHE_DIR`, used as `…/prompts/<version>/<kind>.md`). None is under `.ailang`. |
+
+Exact V3 command (r2; valid ERE with bare `|`):
+
+```bash
+grep -rniE 'module.?root|subdir|package.?cache|pkg_cache|AILANG_PKG' host cmd --include='*.go' | grep -v _test
+grep -rn 'AILANG_CACHE_DIR' host cmd --include='*.go' | grep -v _test   # positive control
+```
+
+**Escaping note (r2, glm r1).** In the table cells above, `\|` is Markdown's escaped pipe inside a table, and every command was executed with a bare `|`. The r1 V3 cell also showed a `\|` alternation, which is invalid inside `-E`. That row is replaced by the block above. No other V-log command uses `-E` with an alternation. V19's `-run '^(A\|B)$'` is a Go regexp, executed with a bare `|`.
 
 **UNMEASURED (named, not claimed):**
 - The exact semantics of v0.52.1's `cli_allow` beyond its source comment (R-A's option).
 - Whether a writable `ailang.lock` lets the loader read arbitrary directories through a `path` entry (R-B).
 - `test` op behaviour under the snapshot. AC2.6 measures it at implementation.
 - Behaviour on Linux CI runners of the mode-bit checks. They are pure `Lstat` mode reads, so it is expected to be identical; AC2.1 proves it.
+
+## r2 changes (quorum round 1 → this revision)
+
+| # | Reviewer | Fix | Section | V-rows |
+|---|---|---|---|---|
+| 1 | oc-kimi-k3 | The non-destructive `linkPackageCache`. Keep a matching symlink. Replace an absent or empty dir. Refuse a non-empty dir, a file or a foreign symlink, with a named operator line and no delete. The unset arm removes only a stale symlink. AC2.3 is rewritten (MUT-PC-SILENT-DELETE), and AC2.4 is tightened. (b4) is corrected: row 140 seeds `<state>/exec-cache/<id>`, not the episode `HOME` | M2 "Per episode"; Options (b1)/(b4); AC2.3, AC2.4 | V24 (every writer under `<state>/cache/E/.ailang/**`) |
+| 2 | oc-glm-5-3 | The #1547 compile-cache claim is now measured. `run --policy` writes `REL/.ailang/cache/compile` despite the `.ailang/**` deny, which only stops agent writes. The M1 bullet is rewritten, and it is no longer used as a safety rationale | M1 "Confinement" | V23 |
+| 3 | oc-glm-5-3 | V3 re-run with valid ERE (1 unrelated hit, `pinfetch.go:183`). Escaping note added for the other cells | Measured facts V3; Verification Log | V3 (replaced) |
+| 4 | oc-glm-5-3 | AC1.2 names the 9 effect names. Multi-episode deployments union each episode's locked registry packages into one `SNAP` | AC1.2; M2 "More than one episode" | — (`workspace.go:55–66`) |
+| 5 | gemini-3-1-pro | No per-episode re-walk: the digest is computed once at startup and stamped. R2 is widened to all episodes. MUT-PC-NO-RECHECK and the changed-snapshot arm are dropped. Digest rule: directories contribute `relpath NUL d`, files `relpath NUL f NUL sha256(content)`. MUT-PC-DIR-HASH is added | M2 "Snapshot digest", "Per episode"; AC2.5; R2 | — |
