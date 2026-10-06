@@ -19,3 +19,11 @@ Non-blocking notes:
 - The stamp's clause-map excerpt I read lists only "4 UNMET" up to the cut; I did not read the full line to confirm clause 5 is stated UNMET. Minor.
 - Dashboard/index/log diffs were not line-audited beyond scope + SHA/email/keyword scans.
 - Evidence of PR activity is 10-20 min old at record time; the no-pick is sound regardless since the tag, not PR activity, governs routability.
+
+## r2 (correction, PR #212, 9470966)
+VERDICT: PASS  SCORE: 96/100  BLOCKING: none
+(a) #208 MERGED, mergeCommit edadf39bbe16..., mergedAt 2026-10-05T23:39:53Z: after 23:36:44Z, before #211 (cfce6ad, 23:52:57Z). edadf39 is an ancestor of origin/dev; subject "Row 140 M1 ... (#208)".
+(b) #209 OPEN base dev; #210 OPEN base attended/row140-m2. Matches the correction text (local 01:39:52 = 23:39:52Z).
+(c) origin/dev row 140 tag still "IN-SPRINT — ATTENDED (Mark, 2026-10-05): ... NOT routable"; no-pick stands.
+(d) Diff = dashboard (1 line) + log (2 added lines) only; message has no closing keyword.
+Note (non-blocking): the iter-234 STATUS stamp in the charter still says #208 OPEN; the log correction covers it, and "attended wins" is stated. Earlier r1 "PRs OPEN" evidence was true at its time.
