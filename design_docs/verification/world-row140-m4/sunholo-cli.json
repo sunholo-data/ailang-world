@@ -1,0 +1,40 @@
+{
+ "profile": "world/exec-profile/v1",
+ "project": "sunholo-cli",
+ "root": "cli",
+ "path": [
+  "/usr/bin",
+  "/bin"
+ ],
+ "read_roots": [
+  "$HOME/.local/share/uv/python/cpython-3.12-macos-aarch64-none",
+  "$HOME/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none"
+ ],
+ "timeout_ms": 9000,
+ "probe": [
+  "$HOME/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/bin/python3.12",
+  "--version"
+ ],
+ "commands": {
+  "test-file": {
+   "argv": [
+    "sh",
+    "-c",
+    "exec .venv/bin/python -m pytest -q -p no:cacheprovider \"$@\"",
+    "pytest"
+   ],
+   "flags": {
+    "-k": {
+     "class": "regex",
+     "form": "sep"
+    },
+    "-x": "bool"
+   },
+   "positional": "testfile",
+   "suffixes": [
+    ".py"
+   ],
+   "max_args": 6
+  }
+ }
+}

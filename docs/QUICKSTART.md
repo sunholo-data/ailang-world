@@ -688,11 +688,14 @@ comes from the CLI's venv:
 
 ```bash
 export AILANG_SRC=$HOME/dev/sunholo-data/ailang
-export TWILIGHT_SRC=$HOME/dev/TwilightGame
-export SUNHOLO_SRC=$HOME/dev/sunholo-platform
+export TWILIGHT_SRC=<your TwilightGame checkout>      # M4 ran ~/dev/markedmondson1234/TwilightGame
+export SUNHOLO_SRC=<your sunholo-platform checkout>    # M4 ran ~/dev/sunholo-data/sunholo-platform
 export GOTC=$(cd $AILANG_SRC && go env GOVERSION) GOMOD=$(cd $AILANG_SRC && go env GOMODCACHE)
 export GODIR=$(dirname $(command -v go)) NODEDIR=$(dirname $(command -v node))
 export PYBIN=$(cd $SUNHOLO_SRC/cli && .venv/bin/python -c 'import os, sys; print(os.path.realpath(sys.executable))')
+# the venv links to uv's version-ALIAS dir (cpython-3.12-…), which links to the real one (cpython-3.12.13-…);
+# both must be read roots (V24, M4 finding F1)
+export PYLINK=$(readlink $SUNHOLO_SRC/cli/.venv/bin/python)
 python3 - <<'EOF'
 import json, os
 E = os.environ
@@ -719,7 +722,7 @@ profiles = {
                     "positional": "testfile", "suffixes": [".test.ts", ".test.tsx"], "max_args": 4}}},
   "sunholo-cli": {"profile": V, "project": "sunholo-cli", "root": "cli",
     "path": ["/usr/bin", "/bin"],
-    "read_roots": [os.path.dirname(os.path.dirname(E["PYBIN"]))],
+    "read_roots": sorted({os.path.dirname(os.path.dirname(E["PYLINK"])), os.path.dirname(os.path.dirname(E["PYBIN"]))}),
     "timeout_ms": 9000, "probe": [E["PYBIN"], "--version"],
     "commands": {
       "test-file": {"argv": ["sh", "-c", "exec .venv/bin/python -m pytest -q -p no:cacheprovider \"$@\"", "pytest"],
@@ -737,8 +740,9 @@ EOF
 - **TypeScript:** `tsc` and `vitest` run through `node` from the worktree's `node_modules`, so
   install them in each worktree (below).
 - **Python:** `uv sync` makes the venv inside the worktree. Its interpreter is a symlink into
-  uv's store under `$HOME`, so the store's version directory is the read root; World adds each
-  root's realpath too. `-k` is `"form": "sep"` because pytest reads `-k=expr` as the value
+  uv's store under `$HOME`: first to the version-alias directory (`cpython-3.12-…`), which links to
+  the real one (`cpython-3.12.13-…`). Both are read roots. With only the real one, the sandbox
+  fences the alias path and every call exits 126 (`Operation not permitted`; M4 finding F1). `-k` is `"form": "sep"` because pytest reads `-k=expr` as the value
   `=expr`. The `sh -c '… "$@"'` prefix belongs to the profile: the agent's arguments arrive as
   `"$@"`, and the shell never parses them. `-p no:cacheprovider` keeps `.pytest_cache` out of the
   worktree.
@@ -752,6 +756,11 @@ mkdir -p $EXEC/seeds/ailang-compiler/go-build
 (cd $AILANG_SRC && GOCACHE=$EXEC/seeds/ailang-compiler/go-build GOFLAGS=-mod=readonly GOPROXY=off \
   GOTOOLCHAIN=$GOTC GOTELEMETRY=off go test -count=1 ./internal/lexer/ ./internal/parser/)
 ```
+
+**Warm each worktree once.** The first command in a freshly created worktree can overrun the
+9-second cap from cold disk alone (M4 measured `go test` at 14 s, then 2.3 s, then 0.3 s, outside
+the sandbox). The call reports `timed_out: true`, and a second call passes. Run each profile's
+command once, unsandboxed, in each new worktree before the session.
 
 **Worktrees and dependencies.** Make one episode per project. Install each one's dependencies
 before the session, because the sandbox has no network:
