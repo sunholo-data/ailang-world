@@ -95,8 +95,9 @@ shell that starts the daemon. The publish credential belongs in a file named by
   could not finish (`integrity_hole …`, `integrity_scan_incomplete …`). A clean scan prints
   nothing.
 - **stderr**: one line per internal error with its route (the HTTP client sees only
-  `internal store failure`), A2A refusal causes
-  (`ailang-worldd: a2a refusal: tasks/send <invocation-id>: "<cause>"`), and workspace-tool
+  `internal store failure`), A2A and MCP refusal causes
+  (`ailang-worldd: a2a refusal: tasks/send <invocation-id>: "<cause>"` and
+  `ailang-worldd: mcp refusal: tools/call <invocation-id>: "<cause>"`), and workspace-tool
   messages.
 
 Run `serve` in a terminal you can see, or redirect both streams to a file. When it is

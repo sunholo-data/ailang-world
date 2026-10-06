@@ -171,7 +171,7 @@ Errors are JSON-RPC errors in an HTTP `200`.
 | `-32603` | `invocation outcome is not confirmed; resend the same task id` | Commit outcome uncertain |
 | `-32603` | `invocation was not committed; send a new task id` | Known not committed |
 | `-32603` | `world head moved during invocation; not committed; send a new task id` | Head conflict on a pure transition |
-| `-32603` | `transition invocation is not available in this daemon` | No coordinator (`serve` without `--ailang-bin`), registry read failure, integrity failure; the cause is logged to stderr as an `a2a refusal` line |
+| `-32603` | `transition invocation is not available in this daemon` | No coordinator (`serve` without `--ailang-bin`), registry read failure, integrity failure; the cause is logged to stderr as an `a2a refusal` line (an `mcp refusal: tools/call` line over MCP) |
 
 ### `EffectsUnrecorded` in detail
 

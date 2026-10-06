@@ -1,6 +1,7 @@
 package projection
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -362,5 +363,43 @@ func TestMCPTaskEntropyFailure(t *testing.T) {
 	w := postMCP(t, h, "Bearer "+tok, mcpCallItem)
 	if runner.runs.Load() != 0 || len(s.ids) != 0 || !strings.Contains(w.Body.String(), `"code":-32603`) {
 		t.Fatalf("entropy failure executed runs=%d intents=%d wire=%s", runner.runs.Load(), len(s.ids), w.Body)
+	}
+}
+
+// lockedSink is an ErrorLog written from the hostcall goroutine.
+type lockedSink struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (l *lockedSink) Write(p []byte) (int, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.buf.Write(p)
+}
+
+func (l *lockedSink) String() string {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.buf.String()
+}
+
+// TestMCPRefusalLineNamesSurfaceAndCause is row 136 AC1.1a — the
+// binary-free companion of AC1.1 that CI runs (kills MUT-MCP-LOG-LABEL and
+// MUT-MCP-LOG-NOCAUSE without WORLD_TOOL_AILANG_BIN): a failed MCP
+// tools/call writes exactly one operator line, labelled mcp, naming the
+// minted invocation id and carrying the cause.
+func TestMCPRefusalLineNamesSurfaceAndCause(t *testing.T) {
+	h, tok, s, _, runner := batchFixture(t)
+	var sink lockedSink
+	h.errorLog = &sink
+	runner.failAt = 1
+	w := postMCP(t, h, "Bearer "+tok, mcpCallItem)
+	if !strings.Contains(w.Body.String(), `"host callback failed"`) || len(s.tasks) != 1 {
+		t.Fatalf("wire=%s tasks=%d", w.Body, len(s.tasks))
+	}
+	want := "ailang-worldd: mcp refusal: tools/call " + coordinator.InvocationID("ep-a", s.tasks[0]) + `: "`
+	if got := sink.String(); strings.Count(got, "\n") != 1 || !strings.HasPrefix(got, want) || !strings.Contains(got, "batch injected capsule failure") {
+		t.Fatalf("operator log = %q, want one line starting %q carrying the cause", got, want)
 	}
 }

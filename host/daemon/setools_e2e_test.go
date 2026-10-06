@@ -21,6 +21,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -722,8 +723,11 @@ type r14Store struct{ *store.Store }
 
 func (r14Store) Commit(context.Context, store.Commit) error { return &store.ConflictError{} }
 
-func TestSeToolsA2APostEffectFailureIsMapped(t *testing.T) {
-	r := newSeRig(t)
+// serveR14 rebinds r's projection to a coordinator over r14Store, logging
+// operator refusals to errLog, and serves it from a fresh server.
+func (r *seRig) serveR14(errLog io.Writer) {
+	t := r.t
+	t.Helper()
 	coord, err := coordinator.New(coordinator.Config{Store: r14Store{r.d.store}, Runner: capsule.New(archive.New(r.f.db), capsule.Config{}),
 		Binder: r.d.binder, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
 	if err != nil {
@@ -731,7 +735,7 @@ func TestSeToolsA2APostEffectFailureIsMapped(t *testing.T) {
 	}
 	p, err := projection.New(projection.Config{CredentialWait: credentialBudget, CallbackTimeout: invokeDeadline, MaxCallbacks: 8, WriteWait: writeTimeout,
 		Resolver: r.d.resolver, Reader: transitionreg.NewReader(r.d.store), Heads: r.d.reads, Deny: writeSessionDenial, Fail: writeAPIError,
-		ErrorLog: io.Discard, Agent: protocol.AgentInfo{Name: "ailang-worldd", Version: Version},
+		ErrorLog: errLog, Agent: protocol.AgentInfo{Name: "ailang-worldd", Version: Version},
 		MaxWait: readDeadline, InvokeWait: invokeDeadline, Coordinator: coord})
 	if err != nil {
 		t.Fatal(err)
@@ -742,6 +746,11 @@ func TestSeToolsA2APostEffectFailureIsMapped(t *testing.T) {
 	r.srv.Close()
 	r.srv = httptest.NewServer(r.d.Handler())
 	t.Cleanup(r.srv.Close)
+}
+
+func TestSeToolsA2APostEffectFailureIsMapped(t *testing.T) {
+	r := newSeRig(t)
+	r.serveR14(io.Discard)
 	token := r.mint("ep1", broker.EffectWorkspaceRead)
 	before := r.entryCount()
 	code, raw := r.post("/a2a/", token, a2aSendBody("a2a-r14", "ailang-read", map[string]any{"path": "data.txt"}))
@@ -764,6 +773,74 @@ func TestSeToolsA2APostEffectFailureIsMapped(t *testing.T) {
 	}
 	if rec, err := broker.DecodeRecord(obj.Payload); err != nil || !rec.Allowed || rec.Effect != broker.EffectWorkspaceRead {
 		t.Fatalf("effect record = %+v %v", rec, err)
+	}
+	if after := r.entryCount(); after != before {
+		t.Fatalf("the conflicted call committed (%d -> %d)", before, after)
+	}
+}
+
+// syncLog is an ErrorLog the hostcall goroutine writes while the test reads.
+type syncLog struct {
+	mu  sync.Mutex
+	buf strings.Builder
+}
+
+func (l *syncLog) Write(p []byte) (int, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.buf.Write(p)
+}
+
+func (l *syncLog) String() string {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.buf.String()
+}
+
+// mcpRefusalPrefix is the operator line an MCP tools/call refusal opens with
+// for episode ep1 (row 136 AC1.1).
+const mcpRefusalPrefix = "ailang-worldd: mcp refusal: tools/call a2a:ep1:"
+
+// TestSeToolsMCPPostEffectFailureIsLogged is row 136 AC1.1 (kills
+// MUT-MCP-LOG-NOCAUSE and MUT-MCP-LOG-LABEL): under R14 the /mcp/ wire is the
+// released handler's frozen envelope (the tripwire for the upstream typed
+// error), and the operator line, labelled mcp, names the minted invocation id
+// and carries the effect-record ref, which resolves in the store.
+func TestSeToolsMCPPostEffectFailureIsLogged(t *testing.T) {
+	r := newSeRig(t)
+	var log syncLog
+	r.serveR14(&log)
+	token := r.mint("ep1", broker.EffectWorkspaceRead)
+	before := r.entryCount()
+	wire, _ := r.call(token, "ailang-read", map[string]any{"path": "data.txt"})
+	if wire.Error == nil || wire.Error.Code != -32603 || wire.Error.Message != "host callback failed" {
+		t.Fatalf("tools/call under R14 error = %+v, want the frozen -32603 \"host callback failed\"", wire.Error)
+	}
+	text := log.String()
+	if strings.Count(text, "\n") != 1 || !strings.HasPrefix(text, mcpRefusalPrefix) {
+		t.Fatalf("operator log = %q, want exactly one line starting %q", text, mcpRefusalPrefix)
+	}
+	// The line's id is the id the coordinator dispatched: the cause names it.
+	id := regexp.MustCompile(`^ailang-worldd: mcp refusal: tools/call (\S+): `).FindStringSubmatch(text)
+	if len(id) != 2 || !strings.Contains(text, "coordinator: invocation "+id[1]+" requested effects") {
+		t.Fatalf("operator line id is not the dispatched invocation id: %q", text)
+	}
+	refs := regexp.MustCompile(`sha256:[0-9a-f]{64}`).FindAllString(text, -1)
+	if len(refs) == 0 {
+		t.Fatalf("operator line carries no effect-record ref: %q", text)
+	}
+	resolved := false
+	for _, ref := range refs {
+		obj, ok, err := r.d.store.GetObject(boundedTestContext(t), hashref.MustParse(ref))
+		if err != nil || !ok || obj.SemanticID != broker.EffectRecordV1 {
+			continue
+		}
+		if rec, err := broker.DecodeRecord(obj.Payload); err == nil && rec.Allowed && rec.Effect == broker.EffectWorkspaceRead {
+			resolved = true
+		}
+	}
+	if !resolved {
+		t.Fatalf("no ref on the operator line resolves to an allowed Workspace.Read effect record: %q", text)
 	}
 	if after := r.entryCount(); after != before {
 		t.Fatalf("the conflicted call committed (%d -> %d)", before, after)

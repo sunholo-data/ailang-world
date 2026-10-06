@@ -90,7 +90,8 @@ the route answers **HTTP 503, class `Timeout`**, naming the deadline — never a
 500. A genuine internal failure answers **HTTP 500 with the fixed body `internal store failure`**;
 the verbatim cause (DSN path, driver detail) goes to the daemon's **stderr**, one line per error
 carrying the route. A2A not-available refusals similarly write
-`ailang-worldd: a2a refusal: tasks/send <invocation-id-or->: "<escaped cause>"`
+`ailang-worldd: a2a refusal: tasks/send <invocation-id-or->: "<escaped cause>"`, and MCP refusals write
+`ailang-worldd: mcp refusal: tools/call <invocation-id-or->: "<escaped cause>"` (or `tools/list -`)
 to stderr (or the configured ErrorLog), with embedded newlines escaped. So the terminal running `serve` is where you read *why* a 500 happened — the
 HTTP client is told *that* one happened, and nothing about the host.
 

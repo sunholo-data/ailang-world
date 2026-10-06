@@ -331,14 +331,14 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
 	// one-snapshot rule, applied at /a2a/ admission time).
 	admitted, allowed, serr := h.allowedDescriptors(ctx, out.Success)
 	if serr != nil {
-		h.logRefusal(req.Method, "-", serr)
+		h.logRefusal("a2a", req.Method, "-", serr)
 		protocol.A2AError(w, req.ID, codeInternal, notAvailableMessage)
 		return
 	}
 	for _, d := range allowed {
 		if d.ID == skillID {
 			if h.coord == nil {
-				h.logRefusal(req.Method, "-", errors.New("projection: invocation coordinator is unavailable"))
+				h.logRefusal("a2a", req.Method, "-", errors.New("projection: invocation coordinator is unavailable"))
 				protocol.A2AError(w, req.ID, codeInternal, notAvailableMessage)
 				return
 			}
@@ -371,7 +371,7 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
 				}
 				code, msg := dispatchError(err)
 				if msg == notAvailableMessage {
-					h.logRefusal(req.Method, coordinator.InvocationID(out.Success.EpisodeID, params.ID), err)
+					h.logRefusal("a2a", req.Method, coordinator.InvocationID(out.Success.EpisodeID, params.ID), err)
 				}
 				protocol.A2AError(w, req.ID, code, msg)
 				return
@@ -497,6 +497,6 @@ func (h *Handler) writeUnavailable(w http.ResponseWriter, err error) {
 }
 
 // logRefusal keeps arbitrary cause text on one physical operator-only line.
-func (h *Handler) logRefusal(method, id string, err error) {
-	fmt.Fprintf(h.errorLog, "ailang-worldd: a2a refusal: %s %s: %q\n", method, id, err.Error())
+func (h *Handler) logRefusal(surface, method, id string, err error) {
+	fmt.Fprintf(h.errorLog, "ailang-worldd: %s refusal: %s %s: %q\n", surface, method, id, err.Error())
 }
