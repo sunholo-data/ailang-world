@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a11094-c3f9-7b63-a633-c93a9bb275dd"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"I can’t run a shell command in this session because no shell tool is available. The attempted call failed before running anything, so I can’t report shell output."}}
+{"type":"turn.completed","usage":{"input_tokens":48417,"cached_input_tokens":34816,"cache_write_input_tokens":0,"output_tokens":190,"reasoning_output_tokens":55}}

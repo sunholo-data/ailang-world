@@ -1,0 +1,10 @@
+{
+  "pass": true,
+  "shell_arm": [],
+  "world_arm": [
+    "world"
+  ],
+  "world_transport": [
+    "streamable_http"
+  ]
+}

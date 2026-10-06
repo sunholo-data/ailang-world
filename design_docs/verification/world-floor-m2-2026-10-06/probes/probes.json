@@ -1,0 +1,40 @@
+{
+  "V-M2-1 codex web_search key (offline, no model call)": {
+    "bogus_value": {
+      "argv": [
+        "codex",
+        "-c",
+        "web_search=bogus",
+        "debug",
+        "prompt-input",
+        "x"
+      ],
+      "rc": 1,
+      "stderr_head": "Error: unknown variant `bogus`, expected one of `disabled`, `cached`, `indexed`, `live`\nin `web_search`"
+    },
+    "disabled_value": {
+      "argv": [
+        "codex",
+        "-c",
+        "web_search=disabled",
+        "debug",
+        "prompt-input",
+        "x"
+      ],
+      "rc": 0
+    },
+    "misspelled_key": {
+      "argv": [
+        "codex",
+        "-c",
+        "web_serch=bogus",
+        "debug",
+        "prompt-input",
+        "x"
+      ],
+      "rc": 0
+    }
+  },
+  "V-M2-3 claude acceptEdits probe (1 model call)": "probes/claude-shell-acceptEdits.jsonl: Bash escape EPERM (sandbox), Write escape refused \"Claude requested permissions to write to \u2026 but you haven't granted it yet\", both inside writes OK",
+  "V-M2-4 codex forced shell escape (1 model call)": "probes/codex-shell-forced.jsonl: the agent reports exit 1 + \"zsh:1: operation not permitted\" and nothing was written, but the --json stream holds NO command_execution item for it"
+}
