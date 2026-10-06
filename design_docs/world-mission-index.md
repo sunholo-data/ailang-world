@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 239 | 2026-10-07 | UNJUDGED draft; row152 premise true; PARKED-ON-LANE all, required native planner/judge unavailable; fleet ticket agent-tool:mission-role-pins-unavailable [HARNESS] |
 | 238 | 2026-10-06 | row 141 LANDED (6eeff52): --workspace-module-root subdirectory sandbox + --workspace-package-cache read-only registry snapshot; ailang#1607/#1608; opus judge 91→96; rows 162/163; row-153 load flake 7/9 CI attempts → D-WORLD-68 OPEN [PRODUCT] |
 | 237 | 2026-10-06 | row 136 LANDED (d83baad, option C): MCP refusal line + mcp: surface tag; ailang#1602; opus judge 92→96; rows 159/160 |
 | 236 | 2026-10-06 | **ROW 136 PICKED (Mark attended D-WORLD-63 = yes on PR #214), DESIGNED, PARKED**: design `w-mcp-effects-unrecorded-is-untyped` (draft #219, option C: MCP refusal line + surface tags + upstream ask; released mcphttp has no typed-error/isError path); quorum r2 BLOCKED (gpt6-1-sol absent, 429) — kimi's option D (MCP retry idempotency key) needs a ruling → NEW ASK D-WORLD-66 [PRODUCT] |
