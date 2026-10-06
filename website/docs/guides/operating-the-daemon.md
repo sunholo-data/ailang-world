@@ -15,6 +15,8 @@ A2A on a loopback address.
 ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
                     [--workspace-root <dir> --tool-ailang-bin <path>]
                     [--examples-dir <dir>]
+                    [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
+                    [--workspace-package-cache <dir>]
 ```
 
 | Flag | Default | Meaning |
@@ -25,6 +27,9 @@ ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
 | `--workspace-root` | none | Directory holding one worktree per episode, at `<dir>/<episode>`. Must not contain the store, its archive, its rendered policies or its tool cache. |
 | `--tool-ailang-bin` | none | The AILANG binary the coding tools run (`TOOL`). Must be AILANG v0.52.1. Archived and hash-verified like `--ailang-bin`. |
 | `--examples-dir` | `~/.ailang/examples` if it exists | The AILANG examples corpus `examples-search` reads, passed to the tool as `AILANG_EXAMPLES`. Must be outside `--workspace-root`. |
+| `--workspace-module-root` | none (`.`, the worktree) | The AILANG sandbox and module root of every episode is `<workspace-root>/<episode>/REL`, so bare imports among a project's modules resolve. `REL` is clean and relative and must already be a real directory, or that episode's tools are refused. Independent of an exec profile's `root`. Needs `--workspace-root`. |
+| `--workspace-episode-module-root` | none | `EP=REL`, repeatable: one episode's module root, overriding `--workspace-module-root`. |
+| `--workspace-package-cache` | none | A read-only snapshot of registry packages (`<ns>/<name>/<ver>/ailang.toml`), linked as every episode's package cache so `pkg/` imports resolve. Must be outside `--workspace-root` and the state directory and hold no symlink and nothing writable (`chmod -R a-w`); refused when the daemon runs as uid 0. Restart `serve` after rebuilding it. See QUICKSTART section 11. |
 
 The coding tools are served only when **both** `--workspace-root` and `--tool-ailang-bin` are
 set. With one but not the other, startup logs:

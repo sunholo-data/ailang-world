@@ -7,7 +7,7 @@ description: Every ailang-worldd and world-publish command and flag, taken from 
 # CLI reference
 
 Two programs, both built from this repository. Help text below is the binaries' own output,
-captured from a build of `dev` on 2026-10-03.
+captured from a build of `dev` on 2026-10-06.
 
 ## `ailang-worldd`
 
@@ -18,8 +18,13 @@ Usage:
   ailang-worldd serve --db <path> [--bind host:port] [--ailang-bin <path>]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
                       [--examples-dir <dir>]
+                      [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
+                      [--workspace-package-cache <dir>]
                       [--run-allow-caps Env,Net,Declassify]
                       [--run-net-allow 127.0.0.1:PORT ...] [--run-net-allow-http]
+                      [--exec-profile <file> ... --exec-sandbox <dir>]
+                      [--exec-episode-project EP=PROJECT ...] [--exec-node <path>]
+                      [--exec-max-output-bytes N]
   ailang-worldd [--addr <url>] health
   ailang-worldd [--addr <url>] head
   ailang-worldd [--addr <url>] world get <ref>
@@ -75,13 +80,35 @@ serve flags:
                        AILANG binary the workspace tools run (must be
                        AILANG v0.52.1); archived and hash-verified like
                        --ailang-bin. The Workspace.*/Ailang.* tools are served
-                       only when both this and --workspace-root are set
+                       only when both this and --workspace-root are set.
+                       Workspace.Exec (workspace-exec) is bound with them; it
+                       refuses every call "no exec profile configured" unless
+                       --exec-profile is given
   --examples-dir <dir> AILANG examples corpus examples-search reads (passed
                        to the tool as AILANG_EXAMPLES; World never falls back
                        to a corpus in the binary). Default: ~/.ailang/examples
                        when it exists, else examples-search refuses "no
                        examples corpus configured". Must be outside
                        --workspace-root
+  --workspace-module-root REL
+                       the AILANG sandbox and module root of every episode is
+                       <workspace-root>/<episode>/REL, so bare imports among a
+                       project's modules resolve (default . = the worktree).
+                       REL is clean and relative, with no .. segment, and
+                       must already exist as a real directory or that
+                       episode's tools are refused; it is independent of an
+                       exec profile's root. Needs --workspace-root
+  --workspace-episode-module-root EP=REL
+                       episode EP's module root, overriding the default
+                       (repeatable)
+  --workspace-package-cache <dir>
+                       a read-only snapshot of registry packages
+                       (<ns>/<name>/<ver>/ailang.toml; QUICKSTART section 11),
+                       linked as every episode's package cache so pkg/ imports
+                       resolve. It must lie outside --workspace-root and the
+                       state dir and hold no symlink and nothing writable
+                       (chmod -R a-w); serve refuses to start as uid 0 with
+                       it. Restart serve after rebuilding it
   --run-allow-caps Env,Net,Declassify
                        extra capabilities an ailang-run may request beyond
                        IO and FS (default none). An Env run is the effect
@@ -93,6 +120,28 @@ serve flags:
                        redirect hop is refused; a bare host, a name, or a
                        non-loopback address is refused at startup
   --run-net-allow-http allow plain http to the --run-net-allow pairs
+  --exec-profile <file>
+                       an operator exec profile (world/exec-profile/v1 JSON;
+                       repeatable, one per project): the commands
+                       workspace-exec may run, sandboxed by srt. Needs the
+                       workspace tools and --exec-sandbox. Read once at
+                       startup; it, srt, node and every cache seed must lie
+                       outside --workspace-root and the state dir. Each
+                       profile must pass the startup probe (seven arms,
+                       arm1-write-inside … arm7-toolchain) or serve refuses
+  --exec-episode-project EP=PROJECT
+                       run episode EP's workspace-exec under the profile
+                       whose project is PROJECT (repeatable; optional with
+                       one profile, which every episode then uses)
+  --exec-sandbox <dir> the node_modules holding @anthropic-ai/sandbox-runtime
+                       0.0.78 (its dist/cli.js must hash to the pin);
+                       World archives the whole tree and re-verifies it
+                       before every call. Required with --exec-profile
+  --exec-node <path>   the node (>= 20.11) that runs srt and the probe
+                       client (default: node on PATH, resolved once)
+  --exec-max-output-bytes N
+                       kill a workspace-exec command whose stdout or stderr
+                       passes N bytes (default 67108864, 64 MiB)
 
 Exit codes: 0 ok, 1 usage or client error, 2 fatal startup,
             3 integrity refusal (why: a broken link; call --strict: ok:false;

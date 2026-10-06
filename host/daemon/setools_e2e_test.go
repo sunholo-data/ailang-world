@@ -902,3 +902,124 @@ func TestSeToolsSurfaceTaggedInLog(t *testing.T) {
 			by, id, a2a.Result.Metadata["invocation_id"])
 	}
 }
+
+// ---------------------------------------------------------------------------
+// row 141: project layouts (RIG: WORLD_TOOL_AILANG_BIN; SKIP in CI)
+// ---------------------------------------------------------------------------
+
+// wsToolRun runs one payload through the episode's handler for effect and
+// returns the decoded response.
+func wsToolRun(t *testing.T, d *Daemon, episode, effect, payload string) map[string]any {
+	t.Helper()
+	h := d.workspace.registry(episode)[effect]
+	if h == nil {
+		t.Fatalf("registry(%s) has no %s handler", episode, effect)
+	}
+	out, err := h.Execute(boundedTestContext(t), broker.EffectRequest{Effect: effect, Scope: broker.WorkspaceScope, Cost: 1}, []byte(payload))
+	if err != nil {
+		t.Fatalf("%s %s: %v", effect, payload, err)
+	}
+	var resp map[string]any
+	if err := json.Unmarshal(out, &resp); err != nil {
+		t.Fatalf("%s: %v", out, err)
+	}
+	return resp
+}
+
+// aiCheckOf decodes an ai_check response's inner check report: the
+// tool's stdout is itself a JSON document with check.passed and errors[].
+func aiCheckOf(t *testing.T, resp map[string]any) (ok, passed bool, errs []map[string]any) {
+	t.Helper()
+	ok, _ = resp["ok"].(bool)
+	stdout, _ := resp["stdout"].(string)
+	var inner struct {
+		Check struct {
+			Passed bool             `json:"passed"`
+			Errors []map[string]any `json:"errors"`
+		} `json:"check"`
+	}
+	if err := json.Unmarshal([]byte(stdout), &inner); err != nil {
+		t.Fatalf("ai_check stdout is not the check report (%v): %v", err, resp)
+	}
+	return ok, inner.Check.Passed, inner.Check.Errors
+}
+
+// TestSeToolsModuleRootResolvesBareImports is AC1.7: with the worktree as
+// the sandbox a bare import in tools/ is LDR001; with --workspace-module-root
+// tools the same module passes. The fixture (b, c) has no registry import.
+func TestSeToolsModuleRootResolvesBareImports(t *testing.T) {
+	bin := realToolBin(t)
+	setup := func(t *testing.T, cfg Config) (*Daemon, wsFixture) {
+		f := newWSFixture(t)
+		tools := filepath.Join(f.root, "ep1", "tools")
+		mkdirs(t, tools)
+		writeFile(t, filepath.Join(tools, "b.ail"), "module b\n\nexport func b() -> string {\n  \"b\"\n}\n")
+		writeFile(t, filepath.Join(tools, "c.ail"), "module c\n\nimport b (b)\n\nexport func c() -> string {\n  b()\n}\n")
+		cfg.DBPath, cfg.WorkspaceRoot, cfg.ToolAilangBin = f.db, f.root, bin
+		return mustWSDaemon(t, cfg), f
+	}
+	d, _ := setup(t, Config{})
+	_, passed, errs := aiCheckOf(t, wsToolRun(t, d, "ep1", broker.EffectAilangCheck, `{"op":"ai_check","path":"tools/c.ail"}`))
+	if passed || len(errs) == 0 || errs[0]["code"] != "LDR001" || errs[0]["message"] != "module not found: b" {
+		t.Fatalf("without a module root: passed=%v errors=%v, want LDR001 module not found: b", passed, errs)
+	}
+	d, _ = setup(t, Config{WorkspaceModuleRoot: "tools"})
+	ok, passed, errs := aiCheckOf(t, wsToolRun(t, d, "ep1", broker.EffectAilangCheck, `{"op":"ai_check","path":"c.ail"}`))
+	if !ok || !passed {
+		t.Fatalf("with --workspace-module-root tools: ok=%v passed=%v errors=%v, want a pass", ok, passed, errs)
+	}
+}
+
+// TestSeToolsPackageCacheResolvesRegistryImports is AC2.6, the tripwire for
+// the upstream HOME layout (internal/pkg/registry.go): the same project
+// cannot resolve its registry import without --workspace-package-cache and
+// passes check, test and run with it, the snapshot byte-identical after.
+func TestSeToolsPackageCacheResolvesRegistryImports(t *testing.T) {
+	bin := realToolBin(t)
+	setup := func(t *testing.T, withCache bool) (*Daemon, wsFixture) {
+		f := newWSFixture(t)
+		tools := filepath.Join(f.root, "ep1", "tools")
+		mkdirs(t, tools)
+		writeFile(t, filepath.Join(tools, "b.ail"), "module b\n\nexport func b() -> string {\n  \"b\"\n}\n")
+		writeFile(t, filepath.Join(tools, "a.ail"), "module a\n\nimport b (b)\nimport pkg/acme/util/greet (greet)\n\n"+
+			"export func a() -> string {\n  \"${b()}${greet()}\"\n}\n")
+		writeFile(t, filepath.Join(tools, "ailang.toml"), "[package]\nname = \"local/proj\"\nversion = \"0.1.0\"\nedition = \"1\"\n")
+		writeLock(t, filepath.Join(tools, "ailang.lock"), lockEntry{"acme/util", "0.1.0", "registry"})
+		writeFile(t, filepath.Join(tools, "t.ail"), "module t\n\nimport pkg/acme/util/greet (greet)\n\n"+
+			"export func hi() -> string tests [((), \"hi\")] {\n  greet()\n}\n")
+		writeFile(t, filepath.Join(tools, "r.ail"), "module r\n\nimport std/io (println)\nimport pkg/acme/util/greet (greet)\n\n"+
+			"export func main() -> () ! {IO} {\n  println(greet())\n}\n")
+		cfg := Config{DBPath: f.db, WorkspaceRoot: f.root, ToolAilangBin: bin, WorkspaceModuleRoot: "tools"}
+		if withCache {
+			snap := f.pkgcacheDir()
+			mkdirs(t, filepath.Join(snap, "acme", "util", "0.1.0"))
+			writeFile(t, filepath.Join(snap, "acme", "util", "0.1.0", "ailang.toml"),
+				"[package]\nname = \"acme/util\"\nversion = \"0.1.0\"\nedition = \"1\"\n\n[exports]\nmodules = [\"acme/util/greet\"]\n")
+			writeFile(t, filepath.Join(snap, "acme", "util", "0.1.0", "greet.ail"),
+				"module acme/util/greet\n\nexport func greet() -> string {\n  \"hi\"\n}\n")
+			lockdown(t, snap)
+			cfg.WorkspacePackageCache = snap
+		}
+		return mustWSDaemon(t, cfg), f
+	}
+	d, _ := setup(t, false)
+	resp := wsToolRun(t, d, "ep1", broker.EffectAilangCheck, `{"op":"ai_check","path":"a.ail"}`)
+	if _, passed, errs := aiCheckOf(t, resp); passed || !strings.Contains(fmt.Sprint(errs), "cache not found") {
+		t.Fatalf("without the cache: passed=%v errors=%v, want a `cache not found` failure", passed, errs)
+	}
+	d, f := setup(t, true)
+	before := ownDigest(t, f.pkgcacheDir())
+	if ok, passed, errs := aiCheckOf(t, wsToolRun(t, d, "ep1", broker.EffectAilangCheck, `{"op":"ai_check","path":"a.ail"}`)); !ok || !passed {
+		t.Fatalf("with the cache, ai_check a.ail: ok=%v passed=%v errors=%v", ok, passed, errs)
+	}
+	if resp := wsToolRun(t, d, "ep1", broker.EffectAilangCLI, `{"op":"test","path":"t.ail"}`); resp["ok"] != true {
+		t.Fatalf("with the cache, test t.ail = %v", resp)
+	}
+	run := wsToolRun(t, d, "ep1", broker.EffectAilangRun, `{"path":"r.ail"}`)
+	if run["admitted"] != true || run["exit_code"] != float64(0) || run["stdout"] != "hi\n" || run["package_cache"] != d.workspace.packageCacheDigest {
+		t.Fatalf("with the cache, run r.ail = %v", run)
+	}
+	if after := ownDigest(t, f.pkgcacheDir()); after != before || after != d.workspace.packageCacheDigest {
+		t.Fatalf("snapshot digest before %s, after %s, stamped %s: want all equal", before, after, d.workspace.packageCacheDigest)
+	}
+}

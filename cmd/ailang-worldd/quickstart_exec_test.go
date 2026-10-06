@@ -78,6 +78,7 @@ func section10ServeLines(t *testing.T) [][]string {
 	if !ok {
 		t.Fatal("QUICKSTART §10 is absent")
 	}
+	section, _, _ = strings.Cut(section, "### 11. ")
 	var cmds [][]string
 	for _, line := range strings.Split(strings.ReplaceAll(section, "\\\n", " "), "\n") {
 		line = strings.TrimSpace(line)
