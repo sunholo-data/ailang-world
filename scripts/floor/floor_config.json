@@ -4,7 +4,7 @@
   "tool_bin": "~/.pinned-ailang-tools/v0.52.1/ailang",
   "deadline_s": 600,
   "knobs": {
-    "world_tools_wording": "m1",
+    "world_tools_wording": "row135",
     "claude_isolation": false,
     "teaching": "full",
     "codex_mcp_approval": "approve"
