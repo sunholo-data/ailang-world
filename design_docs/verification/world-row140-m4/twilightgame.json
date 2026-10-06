@@ -1,0 +1,37 @@
+{
+ "profile": "world/exec-profile/v1",
+ "project": "twilightgame",
+ "root": ".",
+ "path": [
+  "/opt/homebrew/bin",
+  "/usr/bin",
+  "/bin"
+ ],
+ "timeout_ms": 9000,
+ "probe": [
+  "node",
+  "--version"
+ ],
+ "commands": {
+  "typecheck": {
+   "argv": [
+    "node",
+    "node_modules/typescript/bin/tsc",
+    "--noEmit"
+   ]
+  },
+  "test-file": {
+   "argv": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run"
+   ],
+   "positional": "testfile",
+   "suffixes": [
+    ".test.ts",
+    ".test.tsx"
+   ],
+   "max_args": 4
+  }
+ }
+}
