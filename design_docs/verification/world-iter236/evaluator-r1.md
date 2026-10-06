@@ -15,3 +15,10 @@ Non-blocking:
 - N3: design doc is 296 lines vs log's "277 + quorum-log lines" (plausible; not checked line by line).
 - N4: the pick rests on an unmerged attended PR whose own CI is red (queue-census); if #214 is revised, D-WORLD-63's answer text may change. Re-fetch before merging the record (log already commits to this).
 - N5: UNMEASURED: CI state of dev HEAD (dashboard says go gate in progress), the content/quality of design doc beyond quorum-cited points, mission_directives count (0) on #202.
+
+## Round 2 (delta e174776, rebased on #216 7616d41 and #214 53ec2f0)
+Score: 90/100 - PASS. Zero blocking.
+- `git diff origin/dev...HEAD` on the charter touches only: D-WORLD-66 row added, iteration-236 STATUS added / 233 stamp rotated, row 136 tag line. D-WORLD-63/64/65 rows and rows 140, 148-154 are untouched (each present once; no email addresses in the diff).
+- Ledger valid, 53 rows. Census rc 0 (73 closed / 154 rows, controls ok). 3 live STATUS stamps.
+- Row 136 retag to PARKED on D-WORLD-66 is consistent: D-WORLD-63 is RESOLVED on dev, so [NEXT] no longer reflects loop state while D-66 is OPEN; the row body (THE ITEM text) is unchanged apart from the tag.
+- Non-blocking: N1 from round 1 is now satisfied by this file; N3 resolved by #214 merging. The census shows NEXT 1 (another row holds NEXT); not examined.
