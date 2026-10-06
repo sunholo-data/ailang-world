@@ -191,7 +191,7 @@ def run_agent(agent: str, arm: str, *, model: str, prompt_text: str, worktree: s
               episode: str | None = None, token: str | None = None, tool_bin: str | None = None,
               addr: str = arms.DEFAULT_ADDR, deadline_s: float = arms.DEADLINE_S,
               client: world.Client | None = None, claude_isolation: bool = False,
-              max_budget_usd: float | None = None) -> dict:
+              max_budget_usd: float | None = None, codex_mcp_approval: str = 'default') -> dict:
     """§4.4 steps 2–4 for one (agent, arm). Returns the driver fields of the row."""
     if arm == 'world' and not (void_dir and episode and token):
         raise DriverError('the World arm needs void_dir, episode and token')
@@ -217,7 +217,7 @@ def run_agent(agent: str, arm: str, *, model: str, prompt_text: str, worktree: s
             mcp_path = write_private_mcp_config(private_dir, episode, token, addr)
         argv = arms.build_argv(agent, arm, model=model, prompt_text=prompt_text, cwd=cwd,
                                mcp_config_path=mcp_path, addr=addr, claude_isolation=claude_isolation,
-                               max_budget_usd=max_budget_usd)
+                               max_budget_usd=max_budget_usd, codex_mcp_approval=codex_mcp_approval)
         row['argv'] = arms.redact_argv(argv, prompt_text, secrets)
         env = agent_env(agent, arm, private_dir=private_dir, tool_bin=tool_bin, token=token)
         row.update(spawn(argv, cwd=cwd, env=env, transcript_path=transcript_path,

@@ -118,18 +118,32 @@ def claude_mcp_config(token: str, addr: str = DEFAULT_ADDR) -> dict:
                                         'headers': {'Authorization': f'Bearer {token}'}}}}
 
 
-def codex_world_overrides(addr: str = DEFAULT_ADDR) -> list[str]:
+# [M4 knob (c), harness-side, codex World arm; V-M4-3] Under `codex exec` (approval policy
+# `never`) every MCP tool call of the `world` server failed with "MCP tool call requires approval,
+# but approval policy is never" (M4 iteration 0: 0/6, every call `failed`). M2's codex World canary
+# never made an MCP call, so it could not see this. `default_tools_approval_mode` is a real,
+# enum-validated server key (`auto|prompt|writes|approve`; `bogus` is a load error); `approve`
+# lets the World tools run, as codex's shell arm runs its sandboxed commands without approval.
+CODEX_MCP_APPROVAL_MODES = ('default', 'approve')
+
+
+def codex_world_overrides(addr: str = DEFAULT_ADDR, mcp_approval: str = 'default') -> list[str]:
     """The ``-c`` overrides that give codex exactly the ``world`` server (token by env var name)."""
+    if mcp_approval not in CODEX_MCP_APPROVAL_MODES:
+        raise ArmError(f'codex MCP approval mode {mcp_approval!r} not in {CODEX_MCP_APPROVAL_MODES}')
+    extra = [] if mcp_approval == 'default' else [
+        '-c', f'mcp_servers.{MCP_SERVER}.default_tools_approval_mode={mcp_approval}']
     # The design's shell text `-c key="v"` reaches codex unquoted (`key=v`): a value that is not
     # TOML is taken as a literal string (codex -c help), measured identical by `codex mcp list`.
     return ['-c', f'mcp_servers.{MCP_SERVER}.url={mcp_url(addr)}',
             '-c', f'mcp_servers.{MCP_SERVER}.bearer_token_env_var={TOKEN_ENV}',
-            '-c', f'mcp_servers.{MCP_SERVER}.required=true']
+            '-c', f'mcp_servers.{MCP_SERVER}.required=true'] + extra
 
 
 def build_argv(agent: str, arm: str, *, model: str, prompt_text: str, cwd: str,
                mcp_config_path: str | None = None, addr: str = DEFAULT_ADDR,
-               claude_isolation: bool = False, max_budget_usd: float | None = None) -> list[str]:
+               claude_isolation: bool = False, max_budget_usd: float | None = None,
+               codex_mcp_approval: str = 'default') -> list[str]:
     """The exact argv of §4.3 for one (agent, arm). ``cwd`` is the worktree (shell) or the empty
     ``void/<ep>`` (World); Claude takes it as the process cwd, codex also as ``-C``.
 
@@ -180,7 +194,7 @@ def build_argv(agent: str, arm: str, *, model: str, prompt_text: str, cwd: str,
             argv += ['--disable', feat]
     argv += ['-c', 'web_search=disabled']  # a real key: `web_search=bogus` is an enum error (V-M2-1)
     if arm == 'world':
-        argv += codex_world_overrides(addr)
+        argv += codex_world_overrides(addr, codex_mcp_approval)
     return argv + [prompt_text]
 
 

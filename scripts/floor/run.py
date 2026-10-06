@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Row 93 floor harness — the phase/iteration runner (design §4.4, §4.9–§4.11; AC4.1, AC4.2, AC5.1).
 
-    run.py iterate --iteration K --knob K --side S --change TEXT [--reuse-shell-from DIR]
+    run.py iterate --iteration K --knob K --side S --change TEXT [--reuse-from iter-J]
         One smoke-tuning iteration (§4.10): canary per (agent, arm) (§4.9), then every smoke task
         N=1 per arm for both agents on the tuning models; grade, classify (§4.6), append JSONL rows
         under <evidence>/iter-K/runs/<agent>/<arm>/r1.jsonl, then append ONE ledger row (AC4.1).
@@ -130,6 +130,8 @@ def load_config(path: str = CONFIG) -> dict:
         raise RunRefused(f'knobs.teaching must be one of {TEACHING_MODES}')
     if not isinstance(k.get('claude_isolation'), bool):
         raise RunRefused('knobs.claude_isolation must be a bool')
+    if k.get('codex_mcp_approval', 'default') not in arms.CODEX_MCP_APPROVAL_MODES:
+        raise RunRefused(f'knobs.codex_mcp_approval must be one of {arms.CODEX_MCP_APPROVAL_MODES}')
     for m in MODES:
         sec = cfg.get(m) or {}
         if set((sec.get('models') or {})) != set(arms.AGENTS):
@@ -171,7 +173,8 @@ def argv_template(cfg: dict, mode: str, agent: str, arm: str) -> list:
     mcp = '<private>/<ep>.mcp.json' if (agent, arm) == ('claude', 'world') else None
     return arms.build_argv(agent, arm, model=sec['models'][agent], prompt_text='$P', cwd=cwd,
                            mcp_config_path=mcp, claude_isolation=k['claude_isolation'],
-                           max_budget_usd=sec['claude_max_budget_usd'] if agent == 'claude' else None)
+                           max_budget_usd=sec['claude_max_budget_usd'] if agent == 'claude' else None,
+                           codex_mcp_approval=k.get('codex_mcp_approval', 'default'))
 
 
 class Probes:
@@ -590,7 +593,8 @@ def run_cell(ctx: Ctx, agent: str, arm: str, task, *, run_k: int, rows_path: str
             episode=ep if arm == 'world' else None, token=ctx.tokens.get(agent) if arm == 'world' else None,
             tool_bin=tool_bin(cfg), deadline_s=cfg['deadline_s'], client=ctx.client,
             claude_isolation=k['claude_isolation'],
-            max_budget_usd=ctx.sec['claude_max_budget_usd'] if agent == 'claude' else None)
+            max_budget_usd=ctx.sec['claude_max_budget_usd'] if agent == 'claude' else None,
+            codex_mcp_approval=k.get('codex_mcp_approval', 'default'))
         graded = None
         if drv.get('error_category') != 'harness_setup':
             try:
@@ -708,19 +712,22 @@ def cmd_iterate(a) -> int:
     live = live_config(cfg, mode, probes)
     digests = {f'{ag}/{x}': arm_digest(cfg, mode, ag, x, probes) for ag in arms.AGENTS for x in arms.ARMS}
     reused = {}
-    if a.reuse_shell_from:
-        src = os.path.join(a.evidence, a.reuse_shell_from)
+    if a.reuse_from:
+        # A cell (agent, arm) whose arm digest is unchanged since iteration <reuse_from> is not
+        # re-run: its rows are copied and the ledger row says so (a knob that cannot affect a
+        # cell is not re-measured there). A changed digest is always re-run.
+        src = os.path.join(a.evidence, a.reuse_from)
         with open(os.path.join(src, 'iteration.json')) as f:
             prev = json.load(f)
-        for ag in agents:
-            key = f'{ag}/shell'
-            if prev['arm_digests'].get(key) != digests[key]:
-                raise RunRefused(f'cannot reuse {key} rows from {a.reuse_shell_from}: arm digest changed')
-            s = os.path.join(src, 'runs', ag, 'shell', 'r1.jsonl')
-            d = os.path.join(it_dir, 'runs', ag, 'shell', 'r1.jsonl')
-            os.makedirs(os.path.dirname(d), exist_ok=True)
-            shutil.copyfile(s, d)
-            reused[key] = a.reuse_shell_from
+        for key, dg in digests.items():
+            ag, x = key.split('/')
+            s = os.path.join(src, 'runs', ag, x, 'r1.jsonl')
+            if prev['arm_digests'].get(key) == dg and os.path.exists(s):
+                origin = (prev.get('rows_reused_from') or {}).get(key, a.reuse_from)
+                d = os.path.join(it_dir, 'runs', ag, x, 'r1.jsonl')
+                os.makedirs(os.path.dirname(d), exist_ok=True)
+                shutil.copyfile(s, d)
+                reused[key] = origin
     toks, client, daemon = {}, None, None
     if 'world' in arms_run:
         import world
@@ -740,6 +747,7 @@ def cmd_iterate(a) -> int:
         for ag in agents:
             for x in arms_run:
                 if f'{ag}/{x}' in reused:
+                    print(f'{ag}/{x}: rows reused from {reused[f"{ag}/{x}"]} (arm digest unchanged)', flush=True)
                     continue
                 if time.time() - t0 > a.max_wall_s:
                     raise RunRefused(f'wall-clock ceiling {a.max_wall_s} s reached')
@@ -749,6 +757,11 @@ def cmd_iterate(a) -> int:
                 print(f'canary {ag}/{x}: {c["class"]} att={c["attestation"]} {c["wall_ms"]} ms', flush=True)
                 if c['attestation'] or c['error_category'] == 'harness_setup':
                     raise RunRefused(f'canary {ag}/{x} failed attestation/setup: {c["attestation"]} {c["cause_evidence"]}')
+                if c['class'] != classify_mod.PASS and not a.canary_fail_ok:
+                    # M4 iteration 0's codex World canary FAILED (every MCP call refused for want of
+                    # approval) and the phase ran on regardless: a failed canary now stops the phase.
+                    raise RunRefused(f'canary {ag}/{x} did not pass ({c["class"]} {c["error_category"]}); '
+                                     'investigate before spending the phase (or --canary-fail-ok)')
                 for t in tasks:
                     if time.time() - t0 > a.max_wall_s:
                         raise RunRefused(f'wall-clock ceiling {a.max_wall_s} s reached')
@@ -786,7 +799,7 @@ def cmd_iterate(a) -> int:
     world_writes = {f'{r["agent"]}/{r["task"]}': (r.get('provenance') or {}).get('world_writes') for r in rows if r['arm'] == 'world'}
     it = {'iteration': a.iteration, 'knob': a.knob, 'side': a.side, 'change': a.change, 'status': status,
           'abort': abort, 'commit': head_commit(), 'config_digest_smoke': config_digest(live),
-          'arm_digests': digests, 'shell_rows_reused_from': reused, 'tasks': [t.id for t in tasks],
+          'arm_digests': digests, 'rows_reused_from': reused, 'tasks': [t.id for t in tasks],
           'canary': canaries, 'summary': summ, 'row153': r153, 'native_write_detected': native,
           'world_writes_per_run': world_writes, 'spend_usd_claude': round(ctx.spend_this, 4),
           'codex_tokens': sum((r.get('input_tokens') or 0) + (r.get('output_tokens') or 0)
@@ -811,7 +824,7 @@ def cmd_iterate(a) -> int:
                    'commit': it['commit'], 'config_digest_smoke': it['config_digest_smoke'],
                    'status': status, 'evidence': os.path.relpath(it_dir, REPO),
                    'spend_usd_claude': it['spend_usd_claude'], 'codex_tokens': it['codex_tokens'],
-                   'wall_s': wall_s, 'row153': r153, 'shell_rows_reused_from': reused}, LEDGER)
+                   'wall_s': wall_s, 'row153': r153, 'rows_reused_from': reused}, LEDGER)
     print(json.dumps({'summary': summ, 'row153': r153, 'spend': it['spend_usd_claude'], 'wall_s': wall_s,
                       'status': status}, indent=1))
     return 0 if status == 'complete' else 4
@@ -862,7 +875,7 @@ def main(argv=None) -> int:
     p.add_argument('--change', required=True)
     p.add_argument('--agents', default='claude,codex')
     p.add_argument('--arms', default='shell,world')
-    p.add_argument('--reuse-shell-from', default=None)
+    p.add_argument('--reuse-from', default=None, help='iter-J: copy unchanged cells')
     p.add_argument('--root', default=DEFAULT_ROOT)
     p.add_argument('--addr', default=arms.DEFAULT_ADDR)
     p.add_argument('--evidence', default=EVIDENCE)
@@ -870,6 +883,7 @@ def main(argv=None) -> int:
     p.add_argument('--prior-spend', type=float, default=0.0, help='Claude spend outside the ledger (probes)')
     p.add_argument('--max-wall-s', type=float, default=3 * 3600)
     p.add_argument('--allow-dirty-harness', action='store_true')
+    p.add_argument('--canary-fail-ok', action='store_true')
     p.set_defaults(fn=cmd_iterate)
     p = sub.add_parser('digest')
     p.add_argument('--mode', default='smoke', choices=MODES)

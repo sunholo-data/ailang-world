@@ -263,6 +263,30 @@ class Isolation(unittest.TestCase):  # knob (b): identical in both Claude arms
             arms.build_argv('claude', 'shell', model='m', prompt_text='p', cwd='/w', max_budget_usd=0)
 
 
+class CodexMcpApproval(unittest.TestCase):  # knob (c)
+    def test_default_is_the_golden_and_approve_adds_one_override(self):
+        d = arms.build_argv('codex', 'world', model='m', prompt_text='p', cwd='/v')
+        a = arms.build_argv('codex', 'world', model='m', prompt_text='p', cwd='/v', codex_mcp_approval='approve')
+        self.assertEqual(d, arms.build_argv('codex', 'world', model='m', prompt_text='p', cwd='/v',
+                                            codex_mcp_approval='default'))
+        added = [x for x in a if x not in d]
+        self.assertEqual(added, ['mcp_servers.world.default_tools_approval_mode=approve'])
+        self.assertEqual(a[a.index(added[0]) - 1], '-c')
+        self.assertIn('shell_tool', a)  # still no shell
+        sh = arms.build_argv('codex', 'shell', model='m', prompt_text='p', cwd='/w', codex_mcp_approval='approve')
+        self.assertEqual(sh, arms.build_argv('codex', 'shell', model='m', prompt_text='p', cwd='/w'))
+        with self.assertRaises(arms.ArmError):
+            arms.build_argv('codex', 'world', model='m', prompt_text='p', cwd='/v', codex_mcp_approval='auto')
+
+    def test_only_the_codex_world_cell_digest_moves(self):
+        p = FakeProbes()
+        a, b = cfg(codex_mcp_approval='default'), cfg(codex_mcp_approval='approve')
+        for ag in arms.AGENTS:
+            for x in arms.ARMS:
+                same = run.arm_digest(a, 'smoke', ag, x, p) == run.arm_digest(b, 'smoke', ag, x, p)
+                self.assertEqual(same, (ag, x) != ('codex', 'world'), (ag, x))
+
+
 def run_flag(argv, flag):
     return argv[argv.index(flag) + 1]
 
