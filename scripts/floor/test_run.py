@@ -227,7 +227,7 @@ class ConfigRules(unittest.TestCase):
 
     def test_shell_digest_ignores_world_wording_world_digest_does_not(self):
         p = FakeProbes()
-        a, b = cfg(world_tools_wording='m1'), cfg(world_tools_wording='row135')
+        a, b = cfg(world_tools_wording='m1', claude_isolation=False), cfg(world_tools_wording='row135', claude_isolation=False)
         for ag in arms.AGENTS:
             self.assertEqual(run.arm_digest(a, 'smoke', ag, 'shell', p), run.arm_digest(b, 'smoke', ag, 'shell', p))
             self.assertNotEqual(run.arm_digest(a, 'smoke', ag, 'world', p), run.arm_digest(b, 'smoke', ag, 'world', p))

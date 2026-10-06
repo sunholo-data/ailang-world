@@ -81,8 +81,15 @@ WORLD_RUN_NOTE_ROW135 = (
     '`caps` (the exact set, e.g. `["IO", "FS"]`; the default is IO and FS). A network run reaches '
     'only the local mock address the task names. Your solution is graded with the task\'s own '
     'stdin, arguments and capabilities.')
+# ``row135-rw`` (M4 iteration 4): row135 plus one sentence. Measured in iteration 2: codex's World
+# arm (`-s read-only`, no shell) answered "this workspace is explicitly read-only, and the available
+# AILANG tools cannot override that restriction" and never called ailang-write. The sentence says
+# the truth: the read-only sandbox binds native tools only; the World tools write the worktree.
+WORLD_WRITE_NOTE = ('Your own sandbox is read-only and has no shell, but that does not limit these '
+                    'tools: `ailang-write` and `ailang-edit` do write files in your worktree.')
+WORLD_RUN_NOTE_ROW135_RW = WORLD_RUN_NOTE_ROW135 + ' ' + WORLD_WRITE_NOTE
 WORLD_RUN_NOTE = WORLD_RUN_NOTE_ROW135
-WORLD_WORDINGS = ('m1', 'row135')
+WORLD_WORDINGS = ('m1', 'row135', 'row135-rw')
 DEFAULT_WORLD_WORDING = 'row135'
 
 SHELL_TOOLS_TMPL = ('You have access to the `ailang` command:\n'
@@ -170,6 +177,8 @@ def world_wording(wording: str) -> tuple:
         return WORLD_TOOLS_M1, WORLD_RUN_NOTE_M1, WORLD_STEPS_HEAD_M1
     if wording == 'row135':
         return WORLD_TOOLS_ROW135, WORLD_RUN_NOTE_ROW135, WORLD_STEPS_HEAD_ROW135
+    if wording == 'row135-rw':
+        return WORLD_TOOLS_ROW135, WORLD_RUN_NOTE_ROW135_RW, WORLD_STEPS_HEAD_ROW135
     raise PromptError(f'unknown World tools-block wording {wording!r} (one of {WORLD_WORDINGS})')
 
 
