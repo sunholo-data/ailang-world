@@ -81,12 +81,23 @@ Both come from paired shell and World arms on the 23 `core` tasks, N runs per ar
 | V36 | `sed -n 1857,1876p design_docs/world-mission.md` | row 93: "run the eligibility precondition first and report it separately … **only then run the paired arms**" |
 | V37 | `sed -n 576,582p runner.go` | `stdlibPathArgs(cwd)` passes `--stdlib-path <cwd>/std` whenever cwd holds a stdlib, so a grader run from inside the ailang repo grades against its *source* stdlib |
 
+**M2 measurements (2026-10-06, attended executor; `claude` 2.1.291, `codex-cli` 0.159.2; tuning models `claude-haiku-4-5` / `gpt-6-luna`).** Evidence: `design_docs/verification/world-floor-m2-2026-10-06/`.
+
+| V | Command | Observed (short) |
+|---|---|---|
+| V-M2-1 | `codex -c web_search=bogus debug prompt-input x`; same with `=disabled`; with the misspelled key `web_serch=bogus` (no model call) | rc 1 `unknown variant 'bogus', expected one of 'disabled', 'cached', 'indexed', 'live' in 'web_search'`; rc 0; rc 0. **`web_search` is a real, enum-validated key; a misspelled key is ignored silently**, so the argv golden pins it. The codex shell canary had 0 `web_search` items and the agent answered `NO-WEB-TOOL` (AC2.6) |
+| V-M2-2 | `codex mcp list --json` with an empty `CODEX_HOME` (standing in for `--ignore-user-config`, which `mcp list` does not take) plus the World arm's three `-c` overrides; then with none | `["world"]` (`streamable_http`, `bearer_token_env_var: WORLD_SESSION`); `[]`. The user config's `computer-use`/`cua_repl`/`node_repl` (V28) are gone in both (AC2.3, list half) |
+| V-M2-3 | Claude shell canary, drafted argv (`--permission-mode bypassPermissions` + the §4.3 sandbox settings), then the same with `--permission-mode acceptEdits` | **The sandbox confines Bash only.** Both modes: Bash `echo > <outside>/x` → `(eval):1: operation not permitted`; inside Bash write OK. `bypassPermissions`: **the Write tool wrote outside the worktree** (AC2.5 FAIL, `canary-shell-r1`). `acceptEdits`: Write outside refused (`permission_denied`, "Path is outside allowed working directories"), inside Write OK (`canary-shell-r2` + `probes/`). init in both: `tools` = the 6, `mcp_servers` = `[]`, no WebFetch/WebSearch, `skills` = `[]`, `slash_commands` = `[]`; user plugins are still *listed* and 2 SessionStart hooks run (empty output), identically in both Claude arms. §4.3 amended to `acceptEdits` |
+| V-M2-4 | codex shell canary (`-s workspace-write`), then one forced probe "run exactly `echo escape > <outside>/x`" | inside `echo` OK (a `command_execution` item); outside `echo` refused (`zsh:1: operation not permitted`, file absent); `apply_patch` outside refused (stderr `patch rejected: writing outside of the project; rejected by user approval settings`). **Neither refused call produced any `--json` item**: codex's item stream is not a complete record of attempted tool calls. AC2.3's "0 `command_execution`" is therefore necessary, not sufficient; it stands with `void/` empty and AC2.4 provenance |
+| V-M2-5 | `claude --version`; `codex --version` | `2.1.291` (V21 had 2.1.288); `codex-cli 0.159.2` (unchanged). Pin both in the M0 prereg |
+
 ## 4. Design
 
 ### 4.1 Home and shape (S3)
 `scripts/floor/` (Python 3, matching the existing `scripts/*.py` and `scripts/test_*.py`):
 - `corpus.py`, `prompt.py`, `grade.py`, `arms.py`;
-- `world.py`: per-task pre-flight and log-range capture;
+- `world.py`: per-task pre-flight and log-range capture (and AC2.4 provenance);
+- M2 adds `run_task.py` (one agent spawn), `attest.py` (transcript attestation), `tokens.py` (AC2.7), `canary.py`, and the test-only `fakeworld.py`;
 - `classify.py`, `stats.py`, `report.py`;
 - `run.py`: the entry point.
 
@@ -124,14 +135,14 @@ Common rules:
 
 | | shell arm | World arm |
 |---|---|---|
-| Claude Code | cwd = worktree; `claude -p "$P" --model $M --output-format stream-json --verbose --no-session-persistence --disable-slash-commands --tools Bash,Read,Write,Edit,Glob,Grep --strict-mcp-config --mcp-config '{"mcpServers":{}}' --permission-mode bypassPermissions --settings '{"sandbox":{"enabled":true,"autoAllowBashIfSandboxed":true,"allowUnsandboxedCommands":false}}'` | cwd = empty `void/<ep>`; `claude -p "$P" --model $M --output-format stream-json --verbose --no-session-persistence --disable-slash-commands --tools "" --strict-mcp-config --mcp-config <private>/<ep>.mcp.json --allowedTools mcp__world__ailang-read,…,mcp__world__ailang-cli` (V22, V32) |
+| Claude Code | cwd = worktree; `claude -p "$P" --model $M --output-format stream-json --verbose --no-session-persistence --disable-slash-commands --tools Bash,Read,Write,Edit,Glob,Grep --strict-mcp-config --mcp-config '{"mcpServers":{}}' --permission-mode acceptEdits --settings '{"sandbox":{"enabled":true,"autoAllowBashIfSandboxed":true,"allowUnsandboxedCommands":false}}'` | cwd = empty `void/<ep>`; `claude -p "$P" --model $M --output-format stream-json --verbose --no-session-persistence --disable-slash-commands --tools "" --strict-mcp-config --mcp-config <private>/<ep>.mcp.json --allowedTools mcp__world__ailang-read,…,mcp__world__ailang-cli` (V22, V32) |
 | codex | `codex exec --json --ephemeral --ignore-user-config --skip-git-repo-check -m $M -s workspace-write -C <worktree> --disable plugins --disable apps --disable browser_use --disable computer_use --disable image_generation --disable multi_agent -c web_search="disabled" "$P"` | same flags, but `-s read-only -C <void/ep> --disable shell_tool --disable unified_exec -c mcp_servers.world.url="http://127.0.0.1:7644/mcp/" -c mcp_servers.world.bearer_token_env_var="WORLD_SESSION" -c mcp_servers.world.required=true` (V24–V26) |
 
 **[REFINED]** Web tools are dropped from both agents' shell arms. World has none, and the bar compares "native tools" on a coding task, so web access would confound the comparison in the shell arm's favour.
 
 Codex has no switch that removes apply_patch (V26), and its tool list can't be checked offline (V27). The World arm's defence is `-s read-only` plus an empty cwd, measured by AC2.3 and AC2.4.
 
-Two things are **not yet measured**: the `-c web_search="disabled"` key name and the Claude sandbox settings semantics. AC2.5 and AC2.6 measure them before any gate run.
+Two things were **not yet measured** at draft time: the `-c web_search="disabled"` key name and the Claude sandbox settings semantics. **[2026-10-06, M2]** Both are now measured. `web_search` is a real enum key (V-M2-1). The sandbox confines Bash only, and under the drafted `bypassPermissions` the Write tool escaped the worktree. The Claude shell arm therefore runs `--permission-mode acceptEdits` (V-M2-3), which refuses an edit outside the cwd in `-p` mode and keeps sandboxed Bash auto-allowed. This is the one argv change from the draft. The goldens in `scripts/floor/testdata/argv_<agent>_<arm>.json` and `test_arms.py`'s copy of this table hold it. The codex shell arm's `-s workspace-write` refused both escape routes (V-M2-4).
 
 **[2026-10-06]** World serves **9** se-tools since row 140 (`workspace-exec`, effect `Workspace.Exec`). The World arm keeps **exactly the 8 AILANG tools** above: the benchmark is AILANG-only, and an unconfigured exec tool would be a dead tool that changes the prompt surface. `scripts/floor/prompt.py` (`WORLD_TOOL_NAMES`, `WORLD_EXCLUDED_TOOLS`) and `scripts/floor/arms.py` (`world_allowed_tools`) pin the 8 names; `test_arms.py` checks them against `packages/se-tools/transitions.json` and asserts `workspace-exec` is absent from the prompt, the allowed tools and the grants (mutant MUT-EXEC-GRANT).
 
@@ -261,6 +272,7 @@ The tuning ledger is `design_docs/verification/world-floor-tuning-ledger.jsonl`.
 - AC2.5: shell confinement canary: a write outside the worktree is refused, for both agents.
 - AC2.6: web-tool canary: no web tool is available in either shell arm.
 - AC2.7: grepping the evidence finds 0 bearer tokens.
+- **[2026-10-06] M2 status** (PR "Row 93 M2"): built in `scripts/floor/` as `arms.py` (argv builders, AC2.1 goldens), `run_task.py` (spawn, 600 s process-group deadline, transcript parse, token-file discipline), `world.py` (pre-flight, log range, AC2.4 provenance over `/v1/log` + `/v1/objects`), `attest.py` (AC2.2/2.3/2.6 checks on transcripts), `tokens.py` (AC2.7) and `canary.py`. Shell-arm canaries are measured: AC2.2 shell half, AC2.5 and AC2.6 pass on the amended argv (V-M2-1..4). AC2.2 World half, AC2.3's agent run and AC2.4 on a live run wait on the attended mint of `fl-tune-cc`/`fl-tune-cx` (`canary.py mint-block`), then `canary.py world`.
 
 **M3 (0.75 d) — classify, stats, verdict, report (pure functions, fixture-tested).**
 - AC3.1: classification table, one row per category × arm.

@@ -1,0 +1,19 @@
+[
+ "claude",
+ "-p",
+ "$P",
+ "--model",
+ "$M",
+ "--output-format",
+ "stream-json",
+ "--verbose",
+ "--no-session-persistence",
+ "--disable-slash-commands",
+ "--tools",
+ "",
+ "--strict-mcp-config",
+ "--mcp-config",
+ "<private>/<ep>.mcp.json",
+ "--allowedTools",
+ "mcp__world__ailang-read,mcp__world__ailang-write,mcp__world__ailang-edit,mcp__world__ailang-check,mcp__world__ailang-run,mcp__world__builtins-search,mcp__world__examples-search,mcp__world__ailang-cli"
+]

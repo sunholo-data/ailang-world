@@ -1,0 +1,21 @@
+[
+ "claude",
+ "-p",
+ "$P",
+ "--model",
+ "$M",
+ "--output-format",
+ "stream-json",
+ "--verbose",
+ "--no-session-persistence",
+ "--disable-slash-commands",
+ "--tools",
+ "Bash,Read,Write,Edit,Glob,Grep",
+ "--strict-mcp-config",
+ "--mcp-config",
+ "{\"mcpServers\":{}}",
+ "--permission-mode",
+ "acceptEdits",
+ "--settings",
+ "{\"sandbox\":{\"enabled\":true,\"autoAllowBashIfSandboxed\":true,\"allowUnsandboxedCommands\":false}}"
+]
