@@ -68,7 +68,7 @@ ROW153_PATTERNS = ('host callback timed out', 'execute plan phase: context deadl
                    'context deadline exceeded')
 QUOTA_PATTERNS = (('quota_exhausted', re.compile(r'(?i)usage limit|quota|insufficient[_ ]credit|credit balance')),
                   ('rate_limit', re.compile(r'(?i)rate[_ -]?limit|\b429\b|too many requests')))
-TYPED_API = re.compile(r'(?i)overloaded|\b5\d\d\b|internal server error|api_error|service unavailable')
+TYPED_API = re.compile(r'(?i)overloaded|at capacity|\b5\d\d\b|internal server error|api_error|service unavailable')
 
 
 class RunRefused(Exception):

@@ -348,6 +348,9 @@ class Outcomes(unittest.TestCase):
         cat, _, typed = run.agent_failure('codex', 1, {'errors': ['stream disconnected before completion']}, '')
         self.assertEqual((cat, typed), ('api_error', False))
         self.assertTrue(run.agent_failure('codex', 1, {'errors': ['503 Service Unavailable']}, '')[2])
+        # measured in M4 iteration 5 (codex shell, gpt-6-luna): a provider capacity refusal is typed
+        cap = 'Selected model is at capacity. Please try a different model.'
+        self.assertEqual(run.agent_failure('codex', 1, {'errors': [cap]}, ''), ('api_error', cap, True))
         self.assertEqual(run.agent_failure('codex', 2, {'errors': []}, 'x')[0], 'api_error')
         self.assertIsNone(run.agent_failure('codex', 0, {'errors': []}, ''))
 
