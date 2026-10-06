@@ -5,7 +5,7 @@
   "deadline_s": 600,
   "knobs": {
     "world_tools_wording": "row135",
-    "claude_isolation": false,
+    "claude_isolation": true,
     "teaching": "full",
     "codex_mcp_approval": "approve"
   },
