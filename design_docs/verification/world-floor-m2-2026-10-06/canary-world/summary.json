@@ -1,0 +1,290 @@
+{
+  "AC2.3_codex_mcp_list": {
+    "pass": true,
+    "shell_arm": [],
+    "world_arm": [
+      "world"
+    ],
+    "world_transport": [
+      "streamable_http"
+    ]
+  },
+  "AC2.7": {
+    "findings": [],
+    "known_tokens_checked": 2,
+    "pass": true
+  },
+  "agents": {
+    "claude": {
+      "argv": [
+        "claude",
+        "-p",
+        "<prompt sha256:b5c3a6c8d854c63c29e6d9c01b1de621c3cd096a31d3de4ba40c0bbda2f9fdc1>",
+        "--model",
+        "claude-haiku-4-5",
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--no-session-persistence",
+        "--disable-slash-commands",
+        "--tools",
+        "",
+        "--strict-mcp-config",
+        "--mcp-config",
+        "/Users/voightkampff/.ailang/state/floor-tune/private/fl-tune-cc.mcp.json",
+        "--allowedTools",
+        "mcp__world__ailang-read,mcp__world__ailang-write,mcp__world__ailang-edit,mcp__world__ailang-check,mcp__world__ailang-run,mcp__world__builtins-search,mcp__world__examples-search,mcp__world__ailang-cli"
+      ],
+      "checks": {
+        "AC2.2_world_init": [],
+        "AC2.4_provenance": [],
+        "mcp_config_deleted": [],
+        "used_only_arm_tools": []
+      },
+      "episode": "fl-tune-cc",
+      "final_message": "DONE",
+      "finish_reason": "exit",
+      "hooks": [
+        {
+          "hook": "SessionStart:startup",
+          "outcome": "success",
+          "output_bytes": 0
+        },
+        {
+          "hook": "SessionStart:startup",
+          "outcome": "success",
+          "output_bytes": 0
+        }
+      ],
+      "init": {
+        "apiKeySource": "none",
+        "claude_code_version": "2.1.291",
+        "cwd": "/Users/voightkampff/.ailang/state/floor-tune/void/fl-tune-cc",
+        "mcp_servers": [
+          {
+            "name": "world",
+            "source": "dynamic",
+            "status": "connected"
+          }
+        ],
+        "model": "claude-haiku-4-5",
+        "permissionMode": "default",
+        "plugins": [
+          "ailang-parse",
+          "ailang-lens",
+          "cc-plugin-agents-md",
+          "cc-plugin-telemetry",
+          "cc-plugin-plugin-authoring"
+        ],
+        "skills": [],
+        "slash_commands": [],
+        "tools": [
+          "mcp__world__ailang-check",
+          "mcp__world__ailang-cli",
+          "mcp__world__ailang-edit",
+          "mcp__world__ailang-read",
+          "mcp__world__ailang-run",
+          "mcp__world__ailang-write",
+          "mcp__world__builtins-search",
+          "mcp__world__examples-search"
+        ]
+      },
+      "mcp_tool_calls": null,
+      "model": "claude-haiku-4-5",
+      "pass": true,
+      "permission_denied": [],
+      "preflight": {
+        "health": {
+          "daemon_version": "0.1.0",
+          "interpreter_ref": "sha256:1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+          "status": "ok"
+        },
+        "tools": [
+          "ailang-check",
+          "ailang-cli",
+          "ailang-edit",
+          "ailang-read",
+          "ailang-run",
+          "ailang-write",
+          "builtins-search",
+          "examples-search"
+        ]
+      },
+      "prompt": "Call the ailang-read tool with path benchmark/solution.ail, then reply with the word DONE.",
+      "provenance": {
+        "graded_sha256": "f9824d263ff7fc0e414f25ec0b8f2433748aa78fafe3173f7014b3a7bac65cf2",
+        "last_world_write_index": null,
+        "native_write_detected": false,
+        "reason": null,
+        "solution_provenance": "world",
+        "void_listing": [],
+        "world_sha256": "f9824d263ff7fc0e414f25ec0b8f2433748aa78fafe3173f7014b3a7bac65cf2",
+        "world_writes": 0
+      },
+      "rc": 0,
+      "result": {
+        "duration_ms": 3040,
+        "is_error": false,
+        "num_turns": 2,
+        "result": "DONE",
+        "subtype": "success",
+        "total_cost_usd": 0.023717000000000002,
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 10814,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 10814,
+          "cache_read_input_tokens": 10410,
+          "fallback_credit": null,
+          "inference_geo": "not_available",
+          "input_tokens": 18,
+          "iterations": [
+            {
+              "cache_creation": {
+                "ephemeral_1h_input_tokens": 404,
+                "ephemeral_5m_input_tokens": 0
+              },
+              "cache_creation_input_tokens": 404,
+              "cache_read_input_tokens": 10410,
+              "input_tokens": 8,
+              "output_tokens": 90,
+              "type": "message"
+            }
+          ],
+          "output_tokens": 206,
+          "output_tokens_details": {
+            "thinking_tokens": 132
+          },
+          "server_tool_use": {
+            "web_fetch_requests": 0,
+            "web_search_requests": 0
+          },
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      },
+      "tool_items": {
+        "mcp__world__ailang-read": 1
+      },
+      "usage": null,
+      "void_listing": [],
+      "wall_ms": 4244,
+      "world": {
+        "episode": "fl-tune-cc",
+        "log_from": 1,
+        "log_to": 1
+      }
+    },
+    "codex": {
+      "argv": [
+        "codex",
+        "exec",
+        "--json",
+        "--ephemeral",
+        "--ignore-user-config",
+        "--skip-git-repo-check",
+        "-m",
+        "gpt-6-luna",
+        "-s",
+        "read-only",
+        "-C",
+        "/Users/voightkampff/.ailang/state/floor-tune/void/fl-tune-cx",
+        "--disable",
+        "plugins",
+        "--disable",
+        "apps",
+        "--disable",
+        "browser_use",
+        "--disable",
+        "computer_use",
+        "--disable",
+        "image_generation",
+        "--disable",
+        "multi_agent",
+        "--disable",
+        "shell_tool",
+        "--disable",
+        "unified_exec",
+        "-c",
+        "web_search=disabled",
+        "-c",
+        "mcp_servers.world.url=http://127.0.0.1:7644/mcp/",
+        "-c",
+        "mcp_servers.world.bearer_token_env_var=WORLD_SESSION",
+        "-c",
+        "mcp_servers.world.required=true",
+        "<prompt sha256:93c939da8e16aeb8104b91c53095954b1dfbee08b0dea2c2098b7543e33b8750>"
+      ],
+      "checks": {
+        "AC2.3_no_shell_no_native_write": [],
+        "AC2.4_provenance": [],
+        "mcp_config_deleted": []
+      },
+      "episode": "fl-tune-cx",
+      "final_message": "I can\u2019t run a shell command in this session because no shell tool is available. The attempted call failed before running anything, so I can\u2019t report shell output.",
+      "finish_reason": "exit",
+      "hooks": null,
+      "init": null,
+      "mcp_tool_calls": [],
+      "model": "gpt-6-luna",
+      "pass": true,
+      "permission_denied": null,
+      "preflight": {
+        "health": {
+          "daemon_version": "0.1.0",
+          "interpreter_ref": "sha256:1a67b0146858450182f48082299956ea5b08cdf30131979b188b339fcedb5b9f",
+          "status": "ok"
+        },
+        "tools": [
+          "ailang-check",
+          "ailang-cli",
+          "ailang-edit",
+          "ailang-read",
+          "ailang-run",
+          "ailang-write",
+          "builtins-search",
+          "examples-search"
+        ]
+      },
+      "prompt": "Run `echo floor-canary` in a shell and tell me exactly what it printed.",
+      "provenance": {
+        "graded_sha256": "f9824d263ff7fc0e414f25ec0b8f2433748aa78fafe3173f7014b3a7bac65cf2",
+        "last_world_write_index": null,
+        "native_write_detected": false,
+        "reason": null,
+        "solution_provenance": "world",
+        "void_listing": [],
+        "world_sha256": "f9824d263ff7fc0e414f25ec0b8f2433748aa78fafe3173f7014b3a7bac65cf2",
+        "world_writes": 0
+      },
+      "rc": 0,
+      "result": null,
+      "tool_items": {
+        "agent_message": 1
+      },
+      "usage": {
+        "cache_write_input_tokens": 0,
+        "cached_input_tokens": 34816,
+        "input_tokens": 48417,
+        "output_tokens": 190,
+        "reasoning_output_tokens": 55
+      },
+      "void_listing": [],
+      "wall_ms": 11039,
+      "world": {
+        "episode": "fl-tune-cx",
+        "log_from": 2,
+        "log_to": 1
+      }
+    }
+  },
+  "cli": {
+    "claude": "2.1.291 (Claude Code)",
+    "codex": "codex-cli 0.159.2"
+  },
+  "date": "2026-10-06",
+  "genesis": "committed",
+  "kind": "row93-m2-world-canary",
+  "model_calls": 2
+}
