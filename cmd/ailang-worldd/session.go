@@ -31,6 +31,10 @@ type sessionEnv struct {
 	now func() int64
 }
 
+// sessionTTYFix ends every terminal refusal of the attended session verbs. It
+// is cmd/world-publish's ttyFix, word for word: one fix for one fence.
+const sessionTTYFix = "fix: run it yourself from a terminal window (an IDE terminal pane works); an agent cannot run this step"
+
 // realSessionEnv is the production seam: /dev/tty and the wall clock. It is
 // the ONLY place the mint path touches the terminal.
 func realSessionEnv() sessionEnv {
@@ -207,7 +211,7 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	term, err := env.openTerminal()
 	if err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd session mint: refusing: no controlling terminal (%v); "+
-			"minting a session credential requires one human act at a terminal\n", err)
+			"minting a session credential requires one human act at a terminal. %s\n", err, sessionTTYFix)
 		return exitUsage
 	}
 	defer func() { _ = term.Close() }()
@@ -224,7 +228,7 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	fmt.Fprintf(term, "Confirm mint for episode %s (%d grant(s), expiry +%ds) with a session credential? [y/N] ",
 		*episode, len(grants), *ttl)
 	if !isYes(readTermLine(term)) {
-		fmt.Fprintln(stderr, "ailang-worldd session mint: aborted (not confirmed)")
+		fmt.Fprintln(stderr, "ailang-worldd session mint: aborted (not confirmed). fix: run it again and type y at the prompt")
 		return exitUsage
 	}
 

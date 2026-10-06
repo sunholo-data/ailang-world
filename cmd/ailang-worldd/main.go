@@ -195,8 +195,17 @@ func run(args []string, stdout, stderr io.Writer) int {
 	// to every client verb alike: there is no subcommand that is exempt.
 	//
 	// The message names the VARIABLE, never the value.
+	//
+	// The one exemption is a help request (keyguard.go): its text is resolved
+	// from the argv alone and no verb runs, so there is no process to inherit
+	// the key. Everything else refuses, and the refusal ends with the exact
+	// `env -u` command to run instead.
 	if err := broker.AssertNoAmbientRegistryCredential(os.Environ()); err != nil {
-		fmt.Fprintf(stderr, "ailang-worldd: %v\n", err)
+		if text, ok := helpOnly(args); ok {
+			fmt.Fprint(stdout, text)
+			return exitOK
+		}
+		fmt.Fprintf(stderr, "ailang-worldd: %v\n%s\n%s\n", err, registryKeyRationale, registryKeyFix(args))
 		return exitFatal
 	}
 

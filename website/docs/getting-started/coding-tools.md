@@ -41,10 +41,11 @@ Four facts measured on the first attended run:
 
 - **Unset `AILANG_REGISTRY_API_KEY`** in the shell that starts the daemon, or it refuses to
   start.
-- The two attended steps, publish and mint, need a controlling terminal. In an IDE pane or agent
-  harness, `world-publish` fails with `STOP fence=tty reason=stdin-is-not-the-controlling-terminal`;
-  append `< /dev/tty` to the publish command. `session mint` reads its confirmation from
-  `/dev/tty` itself.
+- The two attended steps, publish and mint, need a controlling terminal. Both read their
+  confirmation from `/dev/tty` themselves, so an IDE terminal pane works with the plain command
+  (since 2026-10-06; before that the publish needed `< /dev/tty`). An agent harness has no
+  controlling terminal, so there `world-publish` stops with
+  `STOP fence=tty reason=no-controlling-terminal`.
 - `POST /v1/commit` is session-gated, so the genesis commit comes **after** mint, against the
   running daemon, with `--session`.
 - `/mcp/` answers as SSE: the JSON-RPC response is on the `data:` line of an `event: message`.

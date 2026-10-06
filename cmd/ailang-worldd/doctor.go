@@ -42,8 +42,8 @@ line per check: ✓ fine, ! worth knowing (with a fix), ✗ broken (with a fix).
 
   api key      AILANG_REGISTRY_API_KEY is unset (doctor could not run otherwise:
                every verb refuses while it is set)
-  tty          the mint fence (/dev/tty opens) and the publish fence (stdin is
-               that terminal), each with its reason
+  tty          /dev/tty opens, so the attended steps (world-publish, session
+               new/mint) can read the confirmation you type
   pins         both pinned binaries present and hashing to the compiled-in
                digests (never executed); stale tarballs and old binaries noted
   daemon       what answers at --addr: a worldd (its store and interpreter),
@@ -66,11 +66,11 @@ const doctorStoreBudget = 3 * time.Second
 // doctorProbeTimeout bounds the daemon health probe.
 const doctorProbeTimeout = 2 * time.Second
 
-// ttyObservation is what the two fences look at: stdin's identity and the
-// controlling terminal's. It mirrors cmd/world-publish/tty.go's ttyProbe.
+// ttyObservation is what the attended fences look at: whether /dev/tty opens.
+// Since 2026-10-06 that is the only terminal fact either fence decides on —
+// world-publish, like session new/mint, reads the typed line from /dev/tty
+// itself when stdin is something else — so stdin's identity is not observed.
 type ttyObservation struct {
-	stdin   fs.FileInfo
-	ctty    fs.FileInfo
 	cttyErr error
 }
 
@@ -78,35 +78,13 @@ type ttyObservation struct {
 // place doctor touches the terminal; tests replace it.
 var observeTTY = func() ttyObservation {
 	var o ttyObservation
-	if info, err := os.Stdin.Stat(); err == nil {
-		o.stdin = info
-	}
 	tty, err := os.OpenFile("/dev/tty", os.O_RDONLY, 0)
 	if err != nil {
 		o.cttyErr = err
 		return o
 	}
-	defer func() { _ = tty.Close() }()
-	if info, err := tty.Stat(); err == nil {
-		o.ctty = info
-	} else {
-		o.cttyErr = err
-	}
+	_ = tty.Close()
 	return o
-}
-
-// publishFenceReason replays world-publish's three refusals in their order;
-// "" means the fence admits this process.
-func publishFenceReason(o ttyObservation) string {
-	switch {
-	case o.cttyErr != nil:
-		return "no-controlling-terminal"
-	case o.stdin == nil || o.stdin.Mode()&os.ModeCharDevice == 0:
-		return "stdin-not-a-terminal"
-	case o.ctty == nil || !os.SameFile(o.stdin, o.ctty):
-		return "stdin-is-not-the-controlling-terminal"
-	}
-	return ""
 }
 
 type doctorMark string
@@ -176,17 +154,11 @@ func runDoctor(addr string, args []string, stdout, stderr io.Writer) int {
 
 func doctorTTY(r *doctorReport, o ttyObservation) {
 	if o.cttyErr != nil {
-		r.add(markWarn, "tty", fmt.Sprintf("no controlling terminal (%v): session mint/new and world-publish will refuse here", o.cttyErr),
-			"run the attended steps (publish, session new) in a real terminal")
+		r.add(markWarn, "tty", fmt.Sprintf("no controlling terminal (%v): world-publish and session new/mint will refuse here", o.cttyErr),
+			"run the attended steps yourself from a terminal window (an IDE terminal pane works); an agent cannot run them")
 		return
 	}
-	r.add(markOK, "tty", "mint fence: /dev/tty opens (session mint/new can run here)", "")
-	if reason := publishFenceReason(o); reason != "" {
-		r.add(markWarn, "tty", "publish fence: "+reason+" (world-publish would STOP fence=tty reason="+reason+")",
-			"append </dev/tty to the world-publish command")
-		return
-	}
-	r.add(markOK, "tty", "publish fence: stdin is the controlling terminal", "")
+	r.add(markOK, "tty", "/dev/tty opens: world-publish and session new/mint read your confirmation from it (no stdin redirect needed)", "")
 }
 
 // doctorPins hashes both pins against the table; it never executes them.

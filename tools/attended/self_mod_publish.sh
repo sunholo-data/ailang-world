@@ -273,6 +273,10 @@ do_publish() {
   # genuine attended operator fails the SameFile check unless stdin IS /dev/tty.
   # Measured 2026-09-21 on a normal zsh session. Conservative and fail-closed,
   # but it is the reason this helper has to exist at all.
+  #
+  # Since 2026-10-06 the fence no longer refuses that: when stdin is not the
+  # controlling terminal it reads the phrase from the /dev/tty it opened. The
+  # redirect is kept — it reads the same device and changes nothing.
   ( cd "$REPO_ROOT" && env -u AILANG_REGISTRY_API_KEY "$BIN" publish "$mode" \
       --store "$STORE" --registry-origin "$REGISTRY" --publisher "$COMPILER" \
       --credential-file "$CREDENTIAL" --approval-ref "$ref" --now 2 --expires 1000 \

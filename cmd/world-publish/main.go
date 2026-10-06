@@ -339,7 +339,8 @@ func runPublish(opts options, in io.Reader, out, errw io.Writer, env environment
 	// the same sentence in wiring_test.go and the plan, claimed AC22 was the
 	// ONLY killer and that "every AC21 row still passes"). It is not: under the
 	// mutant 6 of 15 AC21 rows ALSO red — R-CI, R-TTY-OPEN, R-TTY-CHARDEV,
-	// R-TTY-SAMEFILE, R-PHRASE-EOF, R-PHRASE. The cause is worth knowing: those
+	// R-TTY-SAMEFILE, R-PHRASE-EOF, R-PHRASE (as measured then; the two
+	// stdin rows were removed on 2026-10-06, see tty.go). The cause is worth knowing: those
 	// rows' fixture supplies a LOOPBACK registry origin as a defensive
 	// baseline, so with the constructor hoisted above the fence its own
 	// loopback/ambient-credential refusal fires first and the row observes

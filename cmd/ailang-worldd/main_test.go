@@ -40,12 +40,18 @@ func TestMain(m *testing.M) {
 // its mandatory negative control: the SAME invocation, differing only in the
 // environment. Identical outcomes in both arms would mean the check never read
 // the environment.
+//
+// The invocation is `serve` (no --db), not `help` as it was until 2026-10-06:
+// help is now deliberately exempt (TestHelpIsNeverBlockedByTheRegistryKeyGuard),
+// so it can no longer show the refusal. `serve` with no flags is the verb the
+// guard exists for, and its key-absent outcome (usage, "--db is required") is
+// distinguishable from the refusal (fatal).
 func TestRunRefusesAnAmbientRegistryCredential(t *testing.T) {
 	const sentinel = "worldd-ambient-sentinel-not-a-real-key"
 
 	t.Setenv(broker.RegistryCredentialVariable, sentinel)
 	var stdout, stderr bytes.Buffer
-	if got := run([]string{"help"}, &stdout, &stderr); got != exitFatal {
+	if got := run([]string{"serve"}, &stdout, &stderr); got != exitFatal {
 		t.Fatalf("ambient arm exit = %d, want %d (fatal)", got, exitFatal)
 	}
 	if !strings.Contains(stderr.String(), broker.RegistryCredentialVariable) {
@@ -59,10 +65,10 @@ func TestRunRefusesAnAmbientRegistryCredential(t *testing.T) {
 	t.Setenv(broker.RegistryCredentialVariable, "")
 	stdout.Reset()
 	stderr.Reset()
-	if got := run([]string{"help"}, &stdout, &stderr); got != exitOK {
+	if got := run([]string{"serve"}, &stdout, &stderr); got != exitUsage {
 		t.Fatalf("NEGATIVE CONTROL failed: absent-variable arm exit = %d, want %d; "+
 			"the same outcome in both arms means the check never read the environment",
-			got, exitOK)
+			got, exitUsage)
 	}
 }
 

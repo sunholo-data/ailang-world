@@ -28,7 +28,7 @@ Mint opens `/dev/tty` read-write, writes the prompt there and reads the answer f
 `/dev/tty` cannot be opened it refuses:
 
 ```text
-ailang-worldd session mint: refusing: no controlling terminal (open /dev/tty: device not configured); minting a session credential requires one human act at a terminal
+ailang-worldd session mint: refusing: no controlling terminal (open /dev/tty: device not configured); minting a session credential requires one human act at a terminal. fix: run it yourself from a terminal window (an IDE terminal pane works); an agent cannot run this step
 ```
 
 Anything but `y` or `yes` aborts (`aborted (not confirmed)`).
@@ -41,13 +41,16 @@ order:
 
 1. **`ci`** — refuses when `CI` or `GITHUB_ACTIONS` is set. This is a declared tripwire, not the
    fence: `env -u CI` defeats it.
-2. **`tty`** — the load-bearing fence:
-   - `reason=no-controlling-terminal`: `/dev/tty` does not open.
-   - `reason=stdin-not-a-terminal`: stdin is not a character device (a pipe, a socket, a file).
-   - `reason=stdin-is-not-the-controlling-terminal`: stdin is a character device but not the
-     same file as `/dev/tty`. This is what rejects `< /dev/null`, which a naive `isatty` admits.
-3. **`confirmation`** — reads one line and compares it with the exact phrase
-   (`reason=eof` for closed stdin, `reason=mismatch` for anything else).
+2. **`tty`** — the load-bearing fence. `reason=no-controlling-terminal`: `/dev/tty` does not
+   open, which is what an agent harness, `setsid`, cron or CI sees. It is the only `tty`
+   refusal.
+3. **`confirmation`** — prints the prompt and reads one line **from the controlling terminal**,
+   then compares it with the exact phrase (`reason=eof` when the terminal closes first,
+   `reason=mismatch` for anything else). When stdin is that terminal, it is read; otherwise
+   the command reads the `/dev/tty` it opened. A redirected stdin (`echo phrase |`,
+   `< /dev/null`) is never read as the confirmation.
+
+Every refusal's last line is the fix.
 
 The store is opened **before** the fence, so a mistyped path, or a daemon still holding the
 writer lock, is reported before you are asked to type anything. `transitions` also reads its
@@ -78,20 +81,20 @@ phrase exactly as printed.
 
 ## Running attended steps from an IDE pane or agent harness
 
-Embedded terminals often give the process a stdin that is not the controlling terminal. The
-publish then fails with `STOP fence=tty reason=stdin-is-not-the-controlling-terminal`. Connect
-stdin to the terminal explicitly:
+Embedded terminals often give the process a stdin that is not the controlling terminal. That
+no longer matters: `world-publish`, `session new` and `session mint` all open `/dev/tty`
+themselves and prompt and read there, so an IDE terminal pane works with the plain command:
 
 ```bash
 /tmp/world-publish transitions --store /tmp/se-world/world.db \
-  --manifest packages/se-tools/transitions.json --ailang-bin $PIN < /dev/tty
+  --manifest packages/se-tools/transitions.json --ailang-bin $PIN
 ```
 
-This is the fence's own requirement, honestly met: you still type the phrase. If `/dev/tty`
-itself does not open (a true headless process), there is no way through, by design.
-
-`session mint` reads from `/dev/tty` directly, so it works in an embedded terminal as long as
-`/dev/tty` opens. `tools/attended/se_smoke.sh mint` runs it with `</dev/tty` anyway.
+Until 2026-10-06 the publish refused such a stdin
+(`reason=stdin-is-not-the-controlling-terminal`) and the advice was to append `< /dev/tty`.
+Reading `/dev/tty` directly is exactly as strong: the line comes from the same device either
+way, and you still type it. `< /dev/tty` still works. If `/dev/tty` itself does not open (a
+true headless process: an agent harness, cron, CI), there is no way through, by design.
 
 ## The order of operations
 

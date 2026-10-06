@@ -170,6 +170,12 @@ func refuseLiveOnReadOnlyVerb(verb string, live bool) *stopError {
 // R-CI — a TRIPWIRE, DECLARED. NOT THE FENCE.
 // ---------------------------------------------------------------------------
 
+// ciFix ends the CI refusal: the attended steps are a person's, in a terminal.
+const ciFix = "fix: run it yourself from a terminal window, outside CI; an agent or a CI job cannot run this step"
+
+// phraseFix ends the two confirmation refusals.
+const phraseFix = "fix: run the command again and type the line shown at the prompt, exactly"
+
 // ciVariables are the two markers every runner in use here sets.
 var ciVariables = []string{"CI", "GITHUB_ACTIONS"}
 
@@ -189,7 +195,7 @@ func refuseAutomationEnvironment(getenv func(string) string) *stopError {
 		// R-CI
 		if getenv(name) != "" {
 			return &stopError{Fence: fenceCI, Reason: strings.ToLower(name),
-				Detail: name + " is set; this command is never run in CI"}
+				Detail: name + " is set; this command is never run in CI. " + ciFix}
 		}
 	}
 	return nil
@@ -219,12 +225,12 @@ func requireTypedPhrase(in io.Reader, out io.Writer, prompt, phrase string) *sto
 	// terminal that sends the phrase without a trailing newline still works.
 	if err != nil && strings.TrimSpace(line) == "" {
 		return &stopError{Fence: fenceConfirmation, Reason: "eof",
-			Detail: "stdin closed before a confirmation line was typed"}
+			Detail: "the terminal closed before a confirmation line was typed. " + phraseFix}
 	}
 	// R-PHRASE
 	if strings.TrimSpace(line) != phrase {
 		return &stopError{Fence: fenceConfirmation, Reason: "mismatch",
-			Detail: "the typed line is not the required confirmation phrase"}
+			Detail: "the typed line is not the required confirmation phrase. " + phraseFix}
 	}
 	return nil
 }
@@ -238,13 +244,20 @@ func requireTypedPhrase(in io.Reader, out io.Writer, prompt, phrase string) *sto
 // what distinguishes "there is a fence" from "the fence dominates the
 // irreversible path".
 func requireAttendedOperator(in io.Reader, out io.Writer, getenv func(string) string, probe ttyProbe) *stopError {
+	defer closeTerminal(probe)
 	if err := refuseAutomationEnvironment(getenv); err != nil {
 		return err
 	}
 	if err := requireControllingTerminal(probe); err != nil {
 		return err
 	}
-	return requireTypedConfirmation(in, out)
+	// The line is read from the controlling terminal (tty.go): stdin only
+	// when stdin IS that terminal, the opened /dev/tty otherwise.
+	termIn, termOut, err := confirmationSource(probe, in, out)
+	if err != nil {
+		return err
+	}
+	return requireTypedConfirmation(termIn, termOut)
 }
 
 // requireAttendedLocalWrite is the same fence stack as requireAttendedOperator
@@ -252,13 +265,18 @@ func requireAttendedOperator(in io.Reader, out io.Writer, getenv func(string) st
 // phrase that names the local write being confirmed instead of the package
 // publish. The CI and TTY fences are byte-identical: only the phrase differs.
 func requireAttendedLocalWrite(in io.Reader, out io.Writer, getenv func(string) string, probe ttyProbe, prompt, phrase string) *stopError {
+	defer closeTerminal(probe)
 	if err := refuseAutomationEnvironment(getenv); err != nil {
 		return err
 	}
 	if err := requireControllingTerminal(probe); err != nil {
 		return err
 	}
-	return requireTypedPhrase(in, out, prompt, phrase)
+	termIn, termOut, err := confirmationSource(probe, in, out)
+	if err != nil {
+		return err
+	}
+	return requireTypedPhrase(termIn, termOut, prompt, phrase)
 }
 
 // ---------------------------------------------------------------------------

@@ -18,7 +18,9 @@
 #   - AILANG_REGISTRY_API_KEY in the environment makes the daemon refuse to start
 #     (broker guard) — it is unset for every child here.
 #   - `fence=tty reason=stdin-is-not-the-controlling-terminal` in embedded
-#     terminals — publish/mint read stdin from /dev/tty.
+#     terminals — fixed in the CLIs on 2026-10-06: publish and session new
+#     read the confirmation from /dev/tty themselves. The `</dev/tty` below is
+#     kept; it reads the same device and is harmless.
 #   - POST /v1/commit is session-gated, so the genesis commit needs the minted
 #     session and therefore runs at `serve`, after `mint`, not at `prepare`.
 #   - /mcp/ answers as SSE (`event: message` / `data: …`) — parsed here.
@@ -141,7 +143,7 @@ cmd_prepare() {
 cmd_publish() {
   daemon_running && die "stop the daemon first (publish needs single-writer authority): $0 stop"
   say "attended: from $REPO_ROOT, paste the Publish block of docs/QUICKSTART.md §9 with"
-  say "  --store $DB --ailang-bin $PIN  (append </dev/tty in an embedded terminal)"
+  say "  --store $DB --ailang-bin $PIN  (it asks at /dev/tty itself; an IDE pane works as is)"
   say "then: $0 mint"
 }
 
