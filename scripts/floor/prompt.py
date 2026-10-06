@@ -12,7 +12,8 @@ The two arms of one agent differ in EXACTLY two places (§4.2):
   (a) the TOOLS BLOCK — the template's two tool-specific slots: the ``## Available Tools``
       command list (+ ``{{EXTRA_TOOLS}}``) and the ``{{VERIFICATION_STEPS}}`` body, which in
       the Go default is itself a shell ``ailang run`` command. Shell keeps ``ailang run/check/
-      test``; World lists its 8 tools and says plainly what ``ailang-run`` cannot do;
+      test``; World lists its 8 AILANG tools (``WORLD_TOOL_NAMES`` — never row 140's
+      ``workspace-exec``) and says plainly what ``ailang-run`` cannot do;
   (b) ``{{SOLUTION_PATH}}`` — the absolute worktree path (shell) vs ``benchmark/solution.ail``
       (World).
 Everything else — including the teaching prompt, which itself mentions ``ailang run`` — is
@@ -49,6 +50,12 @@ WORLD_TOOLS = (
     ('examples-search', 'search AILANG examples (`query`)'),
     ('ailang-cli', 'policy-allowlisted AILANG CLI operations (`op`, ...)'),
 )
+# The World arm's tool set is EXACTLY these 8 AILANG tools (amendment 2026-10-06, design §4.3).
+# World serves a 9th se-tool since row 140, `workspace-exec` (effect Workspace.Exec). The floor
+# benchmark is AILANG-only, so the World arm never lists it, never allows it and never grants its
+# effect: an unconfigured exec tool would be a dead tool that changes the prompt surface.
+WORLD_TOOL_NAMES = tuple(name for name, _ in WORLD_TOOLS)
+WORLD_EXCLUDED_TOOLS = ('workspace-exec',)  # test_arms.py asserts both, against the manifest
 # P4 (§1): today's ailang-run has no stdin, no argv and only IO/FS. Row 135 (D-NF-3 = B) widens
 # it; this sentence is a recorded tuning knob, applied before the prereg is committed.
 WORLD_RUN_NOTE = ('`ailang-run` cannot pipe stdin, cannot pass command-line arguments and grants '

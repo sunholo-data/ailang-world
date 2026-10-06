@@ -133,6 +133,8 @@ Codex has no switch that removes apply_patch (V26), and its tool list can't be c
 
 Two things are **not yet measured**: the `-c web_search="disabled"` key name and the Claude sandbox settings semantics. AC2.5 and AC2.6 measure them before any gate run.
 
+**[2026-10-06]** World serves **9** se-tools since row 140 (`workspace-exec`, effect `Workspace.Exec`). The World arm keeps **exactly the 8 AILANG tools** above: the benchmark is AILANG-only, and an unconfigured exec tool would be a dead tool that changes the prompt surface. `scripts/floor/prompt.py` (`WORLD_TOOL_NAMES`, `WORLD_EXCLUDED_TOOLS`) and `scripts/floor/arms.py` (`world_allowed_tools`) pin the 8 names; `test_arms.py` checks them against `packages/se-tools/transitions.json` and asserts `workspace-exec` is absent from the prompt, the allowed tools and the grants (mutant MUT-EXEC-GRANT).
+
 The `.mcp.json` holds the raw bearer token (V32). It lives at mode 0600 in a harness-private directory outside every worktree and void directory, and is deleted after the run. An AC greps the evidence to prove no token reached it.
 
 ### 4.4 One task-run
@@ -147,6 +149,7 @@ The `.mcp.json` holds the raw bearer token (V32). It lives at mode 0600 in a har
 ### 4.5 World sessions (minting is TTY-fenced and needs the daemon stopped, V31)
 - **Episodes:** one per (agent, run): `fl-cc-r<k>` and `fl-cx-r<k>`. The episode's `<workspace-root>/<ep>` worktree is reset between tasks (§4.4). Per-task episodes would need 138 terminal mints per gate; per-run episodes need 2N.
 - **Grants:** the 6 grants of V32, each `worktree:5000`, with `--ttl 43200`.
+- **[2026-10-06] Grants are explicit, never `--preset se-tools`** (the preset grants `Workspace.Exec` since row 140). The session holds one `--grant EFFECT=worktree:5000` per effect the 8 tools declare: `Workspace.Read`, `Workspace.Write`, `Ailang.Check`, `Ailang.Run`, `Ailang.RunEnv`, `Ailang.RunNet` (row 135, D-NF-3 = B), `Ailang.Discover`, `Ailang.CLI`. That is 8 grants, superseding the 6 of V32; `arms.world_grant_args()` builds them. A session sees only the tools it holds a grant for, so the omission keeps `workspace-exec` off `tools/list` and the §4.4 pre-flight still expects exactly the 8 names.
 - **The attended mint block:** with the daemon stopped, Mark runs the 2N mints, answering y each time; then `serve` starts once.
 - **Tuning:** two long-TTL sessions, `fl-tune-cc` and `fl-tune-cx`, on a scratch store, minted once.
 - **No batch-mint:** adding one would weaken the D1 fence, and is out of scope.
@@ -291,6 +294,7 @@ The tuning ledger is `design_docs/verification/world-floor-tuning-ledger.jsonl`.
 | MUT-MEAN: mean overhead instead of median | AC3.2 outlier fixture |
 | MUT-SEAL-ORDER: World stats computed before eligibility | AC3.4 |
 | MUT-FINAL-NOPREREG | AC5.1 |
+| MUT-EXEC-GRANT: World-arm grants include `Workspace.Exec` [2026-10-06] | `test_arms.py` (exec absent from tools and grants) |
 
 ## 8. Decisions — RULED by Mark, attended 2026-10-03 (D-WORLD-55)
 
