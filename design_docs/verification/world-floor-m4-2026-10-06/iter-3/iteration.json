@@ -1,0 +1,121 @@
+{
+  "abort": null,
+  "arm_digests": {
+    "claude/shell": "59d6f7e0664ed3c518ed70a46326d455876a9d69dc7d695251d03cb55ef341f6",
+    "claude/world": "25ff08b59f32e79251dbd551a763aa8109170689d70c1124dde0b546f6284627",
+    "codex/shell": "8e750bb9d1c67d281c05ec27b11f9600cec47648343d5c72c752609f09291a76",
+    "codex/world": "926c5805a6ce39a76a8439e0efcb9931e1cedf70a29c7eb2eda57b12ff4efa7c"
+  },
+  "canary": [
+    {
+      "agent": "claude",
+      "arm": "shell",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 31080
+    },
+    {
+      "agent": "claude",
+      "arm": "world",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 17870
+    }
+  ],
+  "change": "both Claude arms: --setting-sources '' + --settings {enabledPlugins builtin off, autoMemoryEnabled false} (no user plugins, hooks, CLAUDE.md, auto-memory)",
+  "codex_tokens": 0,
+  "commit": "64cbf716ad1711b89f6365844b7987bde4fdbed3",
+  "config_digest_smoke": "21b18406c104fcc9444bc2c8ff2985420f1bbfa70154b0e18c517e2bf9a60a4e",
+  "iteration": 3,
+  "knob": "claude_isolation",
+  "native_write_detected": [],
+  "row153": {
+    "claude": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 6
+    },
+    "codex": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 6
+    }
+  },
+  "rows_reused_from": {
+    "codex/shell": "iter-0",
+    "codex/world": "iter-2"
+  },
+  "side": "harness",
+  "spend_usd_claude": 1.5771,
+  "status": "complete",
+  "summary": {
+    "claude": {
+      "O": 0.0753,
+      "T": 6,
+      "delta": 0.0,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "api_call_json": -0.504,
+        "cli_args": 0.808,
+        "effect_tracking_io_fs": -0.098,
+        "higher_order_functions": 0.254,
+        "pipeline": 0.051,
+        "prompt_injection": 0.1
+      },
+      "pass_S": 6,
+      "pass_W": 6,
+      "unclassified": 0
+    },
+    "codex": {
+      "O": -0.0948,
+      "T": 6,
+      "delta": -0.1667,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "api_call_json": -0.468,
+        "cli_args": 0.406,
+        "effect_tracking_io_fs": 2.006,
+        "higher_order_functions": -0.264,
+        "pipeline": -0.521,
+        "prompt_injection": 0.075
+      },
+      "pass_S": 6,
+      "pass_W": 5,
+      "unclassified": 0
+    }
+  },
+  "tasks": [
+    "api_call_json",
+    "cli_args",
+    "effect_tracking_io_fs",
+    "higher_order_functions",
+    "pipeline",
+    "prompt_injection"
+  ],
+  "transcripts": ".ailang/state/floor-tune/m4/transcripts/iter-3",
+  "wall_s": 366.8,
+  "world_writes_per_run": {
+    "claude/api_call_json": 1,
+    "claude/cli_args": 2,
+    "claude/effect_tracking_io_fs": 1,
+    "claude/higher_order_functions": 1,
+    "claude/pipeline": 1,
+    "claude/prompt_injection": 2,
+    "codex/api_call_json": 1,
+    "codex/cli_args": 2,
+    "codex/effect_tracking_io_fs": 1,
+    "codex/higher_order_functions": 0,
+    "codex/pipeline": 1,
+    "codex/prompt_injection": 2
+  }
+}
