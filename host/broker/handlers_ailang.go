@@ -249,6 +249,11 @@ type AilangToolConfig struct {
 	ExecTimeout    time.Duration
 	MaxOutputBytes int64
 	RunCaps        RunCapsConfig
+	// PackageCacheDigest (row 141) is the startup digest of the read-only
+	// registry package snapshot linked into the episode's HOME. When set it
+	// is stamped on every result as "package_cache", next to policy_digest;
+	// empty (no snapshot) leaves results byte-identical.
+	PackageCacheDigest string
 }
 
 // AilangToolHandler serves the six §4.3 effect names through the hardened
@@ -265,6 +270,8 @@ type AilangToolHandler struct {
 	bounds       handlerBounds
 	cliOps       map[string]bool
 	policyDigest string
+	// packageCacheDigest is AilangToolConfig.PackageCacheDigest.
+	packageCacheDigest string
 
 	// Row 135: the operator's run allowlist, the base policy as a run
 	// variant, and the per-cap-set variants rendered and verified so far.
@@ -312,7 +319,7 @@ func NewAilangToolHandler(ctx context.Context, cfg AilangToolConfig) (*AilangToo
 	}
 	h := &AilangToolHandler{
 		bin: cfg.Bin, binRef: cfg.BinRef, policyPath: cfg.PolicyPath, root: root,
-		cacheDir: cfg.CacheDir, examplesDir: cfg.ExamplesDir, runCaps: cfg.RunCaps,
+		cacheDir: cfg.CacheDir, examplesDir: cfg.ExamplesDir, runCaps: cfg.RunCaps, packageCacheDigest: cfg.PackageCacheDigest,
 		bounds: handlerBounds{
 			execTimeout: cfg.ExecTimeout, maxOutputBytes: cfg.MaxOutputBytes,
 		},
@@ -457,7 +464,7 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 	if raw, present := resp["ok"]; !present || json.Unmarshal(raw, &ok) != nil {
 		return nil, fmt.Errorf("broker: policy-tool response has no boolean ok: %q", stdout)
 	}
-	for _, reserved := range []string{"tool", "policy_digest", "world"} {
+	for _, reserved := range []string{"tool", "policy_digest", "package_cache", "world"} {
 		if _, clash := resp[reserved]; clash {
 			return nil, fmt.Errorf("broker: policy-tool response carries the reserved key %q", reserved)
 		}
@@ -496,6 +503,9 @@ const NoExamplesCorpusRefusal = "no examples corpus configured: start ailang-wor
 func (h *AilangToolHandler) stamp(resp map[string]json.RawMessage) ([]byte, error) {
 	resp["tool"], _ = json.Marshal(h.binRef.String())
 	resp["policy_digest"], _ = json.Marshal(h.policyDigest)
+	if h.packageCacheDigest != "" {
+		resp["package_cache"], _ = json.Marshal(h.packageCacheDigest)
+	}
 	return json.Marshal(resp)
 }
 
@@ -595,6 +605,7 @@ func (h *AilangToolHandler) executeRun(ctx context.Context, effect string, paylo
 	}
 	info := variant.info
 	result.Policy = &info
+	result.PackageCache = h.packageCacheDigest
 	return json.Marshal(result)
 }
 
@@ -609,6 +620,9 @@ type runResult struct {
 	// Policy (row 135 §4.3) names the verified policy the run executed
 	// under; set by executeRun, absent from the pure composition.
 	Policy *runPolicyInfo `json:"policy,omitempty"`
+	// PackageCache (row 141) is the read-only registry snapshot's startup
+	// digest, as stamp adds it to the policy-tool results; omitted without one.
+	PackageCache string `json:"package_cache,omitempty"`
 }
 
 const (

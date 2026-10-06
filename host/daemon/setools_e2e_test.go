@@ -969,3 +969,57 @@ func TestSeToolsModuleRootResolvesBareImports(t *testing.T) {
 		t.Fatalf("with --workspace-module-root tools: ok=%v passed=%v errors=%v, want a pass", ok, passed, errs)
 	}
 }
+
+// TestSeToolsPackageCacheResolvesRegistryImports is AC2.6, the tripwire for
+// the upstream HOME layout (internal/pkg/registry.go): the same project
+// cannot resolve its registry import without --workspace-package-cache and
+// passes check, test and run with it, the snapshot byte-identical after.
+func TestSeToolsPackageCacheResolvesRegistryImports(t *testing.T) {
+	bin := realToolBin(t)
+	setup := func(t *testing.T, withCache bool) (*Daemon, wsFixture) {
+		f := newWSFixture(t)
+		tools := filepath.Join(f.root, "ep1", "tools")
+		mkdirs(t, tools)
+		writeFile(t, filepath.Join(tools, "b.ail"), "module b\n\nexport func b() -> string {\n  \"b\"\n}\n")
+		writeFile(t, filepath.Join(tools, "a.ail"), "module a\n\nimport b (b)\nimport pkg/acme/util/greet (greet)\n\n"+
+			"export func a() -> string {\n  \"${b()}${greet()}\"\n}\n")
+		writeFile(t, filepath.Join(tools, "ailang.toml"), "[package]\nname = \"local/proj\"\nversion = \"0.1.0\"\nedition = \"1\"\n")
+		writeLock(t, filepath.Join(tools, "ailang.lock"), lockEntry{"acme/util", "0.1.0", "registry"})
+		writeFile(t, filepath.Join(tools, "t.ail"), "module t\n\nimport pkg/acme/util/greet (greet)\n\n"+
+			"export func hi() -> string tests [((), \"hi\")] {\n  greet()\n}\n")
+		writeFile(t, filepath.Join(tools, "r.ail"), "module r\n\nimport std/io (println)\nimport pkg/acme/util/greet (greet)\n\n"+
+			"export func main() -> () ! {IO} {\n  println(greet())\n}\n")
+		cfg := Config{DBPath: f.db, WorkspaceRoot: f.root, ToolAilangBin: bin, WorkspaceModuleRoot: "tools"}
+		if withCache {
+			snap := f.pkgcacheDir()
+			mkdirs(t, filepath.Join(snap, "acme", "util", "0.1.0"))
+			writeFile(t, filepath.Join(snap, "acme", "util", "0.1.0", "ailang.toml"),
+				"[package]\nname = \"acme/util\"\nversion = \"0.1.0\"\nedition = \"1\"\n\n[exports]\nmodules = [\"acme/util/greet\"]\n")
+			writeFile(t, filepath.Join(snap, "acme", "util", "0.1.0", "greet.ail"),
+				"module acme/util/greet\n\nexport func greet() -> string {\n  \"hi\"\n}\n")
+			lockdown(t, snap)
+			cfg.WorkspacePackageCache = snap
+		}
+		return mustWSDaemon(t, cfg), f
+	}
+	d, _ := setup(t, false)
+	resp := wsToolRun(t, d, "ep1", broker.EffectAilangCheck, `{"op":"ai_check","path":"a.ail"}`)
+	if _, passed, errs := aiCheckOf(t, resp); passed || !strings.Contains(fmt.Sprint(errs), "cache not found") {
+		t.Fatalf("without the cache: passed=%v errors=%v, want a `cache not found` failure", passed, errs)
+	}
+	d, f := setup(t, true)
+	before := ownDigest(t, f.pkgcacheDir())
+	if ok, passed, errs := aiCheckOf(t, wsToolRun(t, d, "ep1", broker.EffectAilangCheck, `{"op":"ai_check","path":"a.ail"}`)); !ok || !passed {
+		t.Fatalf("with the cache, ai_check a.ail: ok=%v passed=%v errors=%v", ok, passed, errs)
+	}
+	if resp := wsToolRun(t, d, "ep1", broker.EffectAilangCLI, `{"op":"test","path":"t.ail"}`); resp["ok"] != true {
+		t.Fatalf("with the cache, test t.ail = %v", resp)
+	}
+	run := wsToolRun(t, d, "ep1", broker.EffectAilangRun, `{"path":"r.ail"}`)
+	if run["admitted"] != true || run["exit_code"] != float64(0) || run["stdout"] != "hi\n" || run["package_cache"] != d.workspace.packageCacheDigest {
+		t.Fatalf("with the cache, run r.ail = %v", run)
+	}
+	if after := ownDigest(t, f.pkgcacheDir()); after != before || after != d.workspace.packageCacheDigest {
+		t.Fatalf("snapshot digest before %s, after %s, stamped %s: want all equal", before, after, d.workspace.packageCacheDigest)
+	}
+}

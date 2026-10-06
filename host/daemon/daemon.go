@@ -274,6 +274,12 @@ type Config struct {
 	// directory refuses that episode's tools (R8), never creates it.
 	WorkspaceModuleRoot         string
 	WorkspaceEpisodeModuleRoots []string
+	// WorkspacePackageCache (`--workspace-package-cache DIR`; row 141 M2) is
+	// a read-only operator snapshot of registry packages, linked as every
+	// episode's package cache. It must lie outside WorkspaceRoot and the state
+	// directory and hold no symlink and nothing writable; startup refuses
+	// otherwise, and as uid 0. Needs WorkspaceRoot.
+	WorkspacePackageCache string
 	// ErrorLog receives the operator-facing detail of every sanitized 500: one
 	// line per error, carrying the route and the VERBATIM store error that the
 	// response body no longer echoes (Decision: sanitize-vs-expose).
@@ -564,8 +570,8 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	if cfg.DBPath == "" {
 		return nil, &StartupError{Stage: StageConfig, Detail: "no database path configured (--db is required)"}
 	}
-	if cfg.WorkspaceRoot == "" && (cfg.WorkspaceModuleRoot != "" || len(cfg.WorkspaceEpisodeModuleRoots) > 0) {
-		return nil, &StartupError{Stage: StageConfig, Detail: "--workspace-module-root and --workspace-episode-module-root need --workspace-root"}
+	if cfg.WorkspaceRoot == "" && (cfg.WorkspaceModuleRoot != "" || len(cfg.WorkspaceEpisodeModuleRoots) > 0 || cfg.WorkspacePackageCache != "") {
+		return nil, &StartupError{Stage: StageConfig, Detail: "--workspace-module-root, --workspace-episode-module-root and --workspace-package-cache need --workspace-root"}
 	}
 	// Row 134 AC4.5: refuse a workspace root that contains the daemon's own
 	// state BEFORE taking writer authority, like the bind policy.
@@ -588,6 +594,14 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 			return nil, &StartupError{Stage: StageConfig, Detail: "the module root is refused", Err: err}
 		}
 		workspace.moduleRoot, workspace.episodeModuleRoot = def, byEp
+		if cfg.WorkspacePackageCache != "" {
+			cache, digest, n, err := resolvePackageCache(cfg.WorkspacePackageCache, root, stateDir)
+			if err != nil {
+				return nil, &StartupError{Stage: StageConfig, Detail: "the --workspace-package-cache directory is refused", Err: err}
+			}
+			workspace.packageCache, workspace.packageCacheDigest = cache, digest
+			fmt.Fprintf(workspace.errLog, "ailang-worldd: workspace package cache %s: %d packages, read-only, %s\n", cache, n, digest)
+		}
 	}
 
 	s, err := store.Open(cfg.DBPath)

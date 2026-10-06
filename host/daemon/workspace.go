@@ -18,6 +18,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -88,7 +89,12 @@ type workspaceTools struct {
 	// startup; empty means the episode worktree itself is the sandbox.
 	moduleRoot        string
 	episodeModuleRoot map[string]string
-	errLog            io.Writer
+	// packageCache and packageCacheDigest are the canonical
+	// --workspace-package-cache and its startup digest (row 141 M2); "" when
+	// unset.
+	packageCache       string
+	packageCacheDigest string
+	errLog             io.Writer
 
 	mu      sync.Mutex
 	handler map[string]episodeTool // episode id -> constructed handler
@@ -313,7 +319,12 @@ func (w *workspaceTools) registry(episodeID string) broker.Registry {
 	}
 	h, err := w.episodeHandler(episodeID, sandbox)
 	if err != nil {
-		fmt.Fprintf(w.errLog, "ailang-worldd: workspace tools unavailable for episode %q: %v\n", episodeID, err)
+		var refusal *episodeRefusal
+		if errors.As(err, &refusal) {
+			fmt.Fprintln(w.errLog, refusal.line)
+		} else {
+			fmt.Fprintf(w.errLog, "ailang-worldd: workspace tools unavailable for episode %q: %v\n", episodeID, err)
+		}
 		return broker.Registry{}
 	}
 	reg := make(broker.Registry, len(workspaceEffects))
@@ -394,6 +405,12 @@ func (w *workspaceTools) episodeHandler(episodeID, sandbox string) (broker.Handl
 			return nil, err
 		}
 	}
+	if err := w.linkPackageCache(episodeID, cacheDir); err != nil {
+		return nil, err
+	}
+	if err := w.checkLockCoverage(episodeID, sandbox); err != nil {
+		return nil, err
+	}
 	policyPath := filepath.Join(policyDir, episodeID+".toml")
 	policy, err := broker.RenderEpisodePolicy(sandbox)
 	if err != nil {
@@ -406,7 +423,7 @@ func (w *workspaceTools) episodeHandler(episodeID, sandbox string) (broker.Handl
 	defer cancel()
 	h, err := broker.NewAilangToolHandler(ctx, broker.AilangToolConfig{
 		Bin: w.bin, BinRef: w.binRef, PolicyPath: policyPath, Root: sandbox, CacheDir: cacheDir,
-		ExamplesDir: w.examplesDir, RunCaps: w.runCaps,
+		ExamplesDir: w.examplesDir, RunCaps: w.runCaps, PackageCacheDigest: w.packageCacheDigest,
 	})
 	if err != nil {
 		return nil, err

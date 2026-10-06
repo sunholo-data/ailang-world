@@ -1,17 +1,23 @@
 package daemon
 
-// Row 141 (w-workspace-project-layouts) M1: the module-root sandbox. These
+// Row 141 (w-workspace-project-layouts) M1: the module-root sandbox, and M2:
+// the read-only registry package cache. These
 // run in CI with fakeToolBin (the fake reports fs_sandbox = its cwd and
 // answers every dispatch with `fake:<cwd>`); the real-binary arms live in
 // setools_e2e_test.go.
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
@@ -206,5 +212,612 @@ func TestWorkspaceModuleRootNeedsWorkspaceRoot(t *testing.T) {
 		ToolAilangBin: fakeToolBin(t, f.logDir, ToolBinaryRelease)})
 	if _, err := os.Stat(f.db); err != nil {
 		t.Fatalf("control: the store is absent after a successful start: %v", err)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// M2: the read-only registry package cache
+// ---------------------------------------------------------------------------
+
+// lockdown makes dir a read-only tree (0o444 files, 0o555 dirs; symlinks and
+// special files are left alone, since chmod would follow a link), bottom-up so
+// every directory is still traversable while its children are changed. It
+// registers, right away, the cleanup that makes the tree removable again:
+// t.TempDir's own cleanup was registered first, so this runs before it.
+func lockdown(t *testing.T, dir string) {
+	t.Helper()
+	var paths []string
+	_ = filepath.WalkDir(dir, func(p string, d os.DirEntry, err error) error {
+		if err == nil {
+			paths = append(paths, p)
+		}
+		return nil
+	})
+	t.Cleanup(func() {
+		_ = filepath.WalkDir(dir, func(p string, d os.DirEntry, err error) error {
+			if d == nil {
+				return nil
+			}
+			switch {
+			case d.Type()&os.ModeSymlink != 0:
+			case d.IsDir():
+				_ = os.Chmod(p, 0o755)
+			case d.Type().IsRegular():
+				_ = os.Chmod(p, 0o644)
+			}
+			return nil
+		})
+	})
+	for i := len(paths) - 1; i >= 0; i-- {
+		fi, err := os.Lstat(paths[i])
+		if err != nil || fi.Mode()&os.ModeSymlink != 0 {
+			continue
+		}
+		switch {
+		case fi.IsDir():
+			if err := os.Chmod(paths[i], 0o555); err != nil {
+				t.Fatal(err)
+			}
+		case fi.Mode().IsRegular():
+			if err := os.Chmod(paths[i], 0o444); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+}
+
+// readOnlyPackageCache builds dir as a snapshot of the packages (each
+// "ns/name/ver"): an ailang.toml and one .ail file apiece, then lockdown.
+func readOnlyPackageCache(t *testing.T, dir string, pkgs ...string) {
+	t.Helper()
+	buildPackageCache(t, dir, pkgs...)
+	lockdown(t, dir)
+}
+
+func buildPackageCache(t *testing.T, dir string, pkgs ...string) {
+	t.Helper()
+	for _, pkg := range pkgs {
+		parts := strings.Split(pkg, "/")
+		mkdirs(t, filepath.Join(dir, pkg))
+		writeFile(t, filepath.Join(dir, pkg, "ailang.toml"),
+			fmt.Sprintf("[package]\nname = %q\nversion = %q\nedition = \"1\"\n", parts[0]+"/"+parts[1], parts[2]))
+		writeFile(t, filepath.Join(dir, pkg, "greet.ail"), "module "+pkg+"/greet\n\nexport func greet() -> string {\n  \"hi\"\n}\n")
+	}
+}
+
+type lockEntry struct{ Name, Version, Source string }
+
+// writeLock writes an ailang.lock marshalled from a Go struct.
+func writeLock(t *testing.T, path string, entries ...lockEntry) {
+	t.Helper()
+	type pkg struct {
+		Name        string `json:"name"`
+		Version     string `json:"version"`
+		Source      string `json:"source"`
+		ContentHash string `json:"content_hash"`
+	}
+	doc := struct {
+		Schema        string `json:"schema"`
+		SchemaVersion string `json:"schema_version"`
+		Packages      []pkg  `json:"packages"`
+	}{Schema: "ailang.lock/v1", SchemaVersion: "1.0.0", Packages: []pkg{}}
+	for _, e := range entries {
+		doc.Packages = append(doc.Packages, pkg{e.Name, e.Version, e.Source, "sha256:" + strings.Repeat("0", 64)})
+	}
+	data, err := json.Marshal(doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, path, string(data))
+}
+
+// withUID sets the geteuid seam for the test (serial: it is a package var).
+func withUID(t *testing.T, uid int) {
+	t.Helper()
+	old := geteuid
+	geteuid = func() int { return uid }
+	t.Cleanup(func() { geteuid = old })
+}
+
+// pkgcacheDir is where the fixtures place the snapshot: outside f.root
+// (base/ws) and f.stateDir (base/state).
+func (f wsFixture) pkgcacheDir() string { return filepath.Join(f.base, "pkgcache") }
+
+func (f wsFixture) cfgWithCache(t *testing.T, dir string, log *bytes.Buffer) Config {
+	cfg := Config{DBPath: f.db, WorkspaceRoot: f.root, WorkspacePackageCache: dir,
+		ToolAilangBin: fakeToolBin(t, f.logDir, ToolBinaryRelease)}
+	if log != nil {
+		cfg.ErrorLog = log
+	}
+	return cfg
+}
+
+func (f wsFixture) registryLink() string {
+	return filepath.Join(f.stateDir, "cache", "ep1", ".ailang", "cache", "registry")
+}
+
+func TestWorkspacePackageCacheStartupChecks(t *testing.T) {
+	type row struct {
+		name  string
+		uid   int
+		build func(t *testing.T, f wsFixture) string // returns the --workspace-package-cache value
+		want  string                                 // "" = accepted
+	}
+	valid := func(t *testing.T, f wsFixture) string {
+		readOnlyPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0")
+		return f.pkgcacheDir()
+	}
+	rows := []row{
+		{"accepted", 1000, valid, ""},
+		{"not a dir", 1000, func(t *testing.T, f wsFixture) string {
+			writeFile(t, f.pkgcacheDir(), "x")
+			return f.pkgcacheDir()
+		}, "not a directory"},
+		{"inside the workspace root", 1000, func(t *testing.T, f wsFixture) string {
+			readOnlyPackageCache(t, filepath.Join(f.root, "pkgs"), "acme/util/0.1.0")
+			return filepath.Join(f.root, "pkgs")
+		}, "inside --workspace-root"},
+		{"inside the state dir", 1000, func(t *testing.T, f wsFixture) string {
+			readOnlyPackageCache(t, filepath.Join(f.stateDir, "pkgs"), "acme/util/0.1.0")
+			return filepath.Join(f.stateDir, "pkgs")
+		}, "inside the state directory"},
+		{"writable file", 1000, func(t *testing.T, f wsFixture) string {
+			valid(t, f)
+			if err := os.Chmod(filepath.Join(f.pkgcacheDir(), "acme/util/0.1.0/greet.ail"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			return f.pkgcacheDir()
+		}, "is writable"},
+		{"writable inner dir", 1000, func(t *testing.T, f wsFixture) string {
+			valid(t, f)
+			if err := os.Chmod(filepath.Join(f.pkgcacheDir(), "acme/util"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			return f.pkgcacheDir()
+		}, "is writable"},
+		{"DIR itself writable", 1000, func(t *testing.T, f wsFixture) string {
+			valid(t, f)
+			if err := os.Chmod(f.pkgcacheDir(), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			return f.pkgcacheDir()
+		}, "is writable"},
+		{"symlink inside", 1000, func(t *testing.T, f wsFixture) string {
+			buildPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0")
+			sibling := filepath.Join(f.base, "sibling")
+			buildPackageCache(t, sibling, "acme/other/0.1.0")
+			if err := os.Symlink(sibling, filepath.Join(f.pkgcacheDir(), "link")); err != nil {
+				t.Fatal(err)
+			}
+			lockdown(t, sibling)
+			lockdown(t, f.pkgcacheDir())
+			return f.pkgcacheDir()
+		}, "is a symlink"},
+		{"zero packages", 1000, func(t *testing.T, f wsFixture) string {
+			mkdirs(t, filepath.Join(f.pkgcacheDir(), "acme", "util"))
+			lockdown(t, f.pkgcacheDir())
+			return f.pkgcacheDir()
+		}, "holds no package"},
+		{"uid 0", 0, valid, "uid 0"},
+		{"a FIFO inside", 1000, func(t *testing.T, f wsFixture) string {
+			buildPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0")
+			if err := syscall.Mkfifo(filepath.Join(f.pkgcacheDir(), "pipe"), 0o444); err != nil {
+				t.Fatal(err)
+			}
+			lockdown(t, f.pkgcacheDir())
+			return f.pkgcacheDir()
+		}, "neither a directory nor a regular file"},
+	}
+	for _, tc := range rows {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newWSFixture(t)
+			withUID(t, tc.uid)
+			dir := tc.build(t, f)
+			var log bytes.Buffer
+			d, err := newWSDaemon(t, f.cfgWithCache(t, dir, &log))
+			if tc.want == "" {
+				if err != nil {
+					t.Fatalf("New = %v, want accepted", err)
+				}
+				// Precondition (kimi r2): the accepted tree really holds no symlink.
+				symlinks, total := 0, 0
+				_ = filepath.WalkDir(dir, func(p string, de os.DirEntry, err error) error {
+					if err == nil {
+						total++
+						if fi, err := os.Lstat(p); err == nil && fi.Mode()&os.ModeSymlink != 0 {
+							symlinks++
+						}
+					}
+					return nil
+				})
+				if symlinks != 0 || total == 0 {
+					t.Fatalf("accepted tree: %d symlinks of %d entries, want 0 of >0", symlinks, total)
+				}
+				if want := "workspace package cache " + dir + ": 1 packages, read-only, sha256:"; !strings.Contains(log.String(), want) {
+					t.Fatalf("startup log = %q, want it to contain %q", log.String(), want)
+				}
+				_, d1, _, err1 := resolvePackageCache(dir, f.root, f.stateDir)
+				_, d2, _, err2 := resolvePackageCache(dir, f.root, f.stateDir)
+				if err1 != nil || err2 != nil || d1 != d2 || d1 != d.workspace.packageCacheDigest {
+					t.Fatalf("digests %q %q (%v %v), startup %q: want all equal", d1, d2, err1, err2, d.workspace.packageCacheDigest)
+				}
+				return
+			}
+			var startup *StartupError
+			if !errors.As(err, &startup) || startup.Stage != StageConfig ||
+				!strings.Contains(err.Error(), "--workspace-package-cache") || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("New = %v, want a %s StartupError naming --workspace-package-cache and %q", err, StageConfig, tc.want)
+			}
+		})
+	}
+	t.Run("no --workspace-root", func(t *testing.T) {
+		f := newWSFixture(t)
+		withUID(t, 1000)
+		readOnlyPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0")
+		_, err := newWSDaemon(t, Config{DBPath: f.db, WorkspacePackageCache: f.pkgcacheDir()})
+		var startup *StartupError
+		if !errors.As(err, &startup) || startup.Stage != StageConfig || !strings.Contains(err.Error(), "need --workspace-root") {
+			t.Fatalf("New = %v, want a %s StartupError containing %q", err, StageConfig, "need --workspace-root")
+		}
+		if _, err := os.Stat(f.db); !os.IsNotExist(err) {
+			t.Fatalf("the store was opened before the refusal (stat: %v)", err)
+		}
+	})
+}
+
+func TestWorkspacePackageCacheLinkedIntoEpisodeHome(t *testing.T) {
+	f := newWSFixture(t)
+	withUID(t, 1000)
+	readOnlyPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0")
+	d := mustWSDaemon(t, f.cfgWithCache(t, f.pkgcacheDir(), nil))
+	if len(d.workspace.registry("ep1")) == 0 {
+		t.Fatal("registry(ep1) is empty")
+	}
+	link := f.registryLink()
+	fi, err := os.Lstat(link)
+	if err != nil || fi.Mode()&os.ModeSymlink == 0 {
+		t.Fatalf("Lstat(%s) = %v, %v, want a symlink", link, fi, err)
+	}
+	if target, err := os.Readlink(link); err != nil || target != d.workspace.packageCache || target != f.pkgcacheDir() {
+		t.Fatalf("Readlink = %q, %v, want %s", target, err, f.pkgcacheDir())
+	}
+	env, err := os.ReadFile(filepath.Join(f.logDir, "env"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "HOME=" + filepath.Join(f.stateDir, "cache", "ep1") + "\n"; !strings.Contains(string(env), want) {
+		t.Fatalf("tool env lacks %q:\n%s", want, env)
+	}
+	got, _ := os.ReadFile(filepath.Join(f.stateDir, "policies", "ep1.toml"))
+	if want, _ := broker.RenderEpisodePolicy(filepath.Join(f.root, "ep1")); string(got) != string(want) {
+		t.Fatalf("policy bytes changed with the cache flag:\n%s\nwant\n%s", got, want)
+	}
+	// The keep arm: a symlink already pointing at the snapshot is left as is.
+	if err := d.workspace.linkPackageCache("ep1", filepath.Join(f.stateDir, "cache", "ep1")); err != nil {
+		t.Fatalf("second linkPackageCache = %v, want nil", err)
+	}
+	if target, _ := os.Readlink(link); target != f.pkgcacheDir() {
+		t.Fatalf("link changed to %q", target)
+	}
+}
+
+func TestWorkspacePackageCacheRefusesUnprovisionedRegistry(t *testing.T) {
+	type plant struct {
+		name  string
+		setup func(t *testing.T, f wsFixture, link string)
+		check func(t *testing.T, f wsFixture, link string)
+	}
+	plants := []plant{
+		{"non-empty dir", func(t *testing.T, f wsFixture, link string) {
+			mkdirs(t, filepath.Join(link, "sunholo", "x", "9.9.9"))
+			writeFile(t, filepath.Join(link, "sunholo", "x", "9.9.9", "ailang.toml"), "planted\n")
+		}, func(t *testing.T, f wsFixture, link string) {
+			if b, err := os.ReadFile(filepath.Join(link, "sunholo", "x", "9.9.9", "ailang.toml")); err != nil || string(b) != "planted\n" {
+				t.Fatalf("planted file after the refusal = %q, %v", b, err)
+			}
+		}},
+		{"regular file", func(t *testing.T, f wsFixture, link string) { writeFile(t, link, "planted\n") },
+			func(t *testing.T, f wsFixture, link string) {
+				if b, err := os.ReadFile(link); err != nil || string(b) != "planted\n" {
+					t.Fatalf("planted file after the refusal = %q, %v", b, err)
+				}
+			}},
+		{"foreign symlink", func(t *testing.T, f wsFixture, link string) {
+			if err := os.Symlink(f.outside, link); err != nil {
+				t.Fatal(err)
+			}
+		}, func(t *testing.T, f wsFixture, link string) {
+			if target, err := os.Readlink(link); err != nil || target != f.outside {
+				t.Fatalf("foreign link after the refusal = %q, %v", target, err)
+			}
+		}},
+	}
+	for _, tc := range plants {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newWSFixture(t)
+			withUID(t, 1000)
+			readOnlyPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0")
+			var log bytes.Buffer
+			d := mustWSDaemon(t, f.cfgWithCache(t, f.pkgcacheDir(), &log))
+			link := f.registryLink()
+			mkdirs(t, filepath.Dir(link))
+			tc.setup(t, f, link)
+			log.Reset() // drop the startup line: assert on what the episode prints
+			if reg := d.workspace.registry("ep1"); len(reg) != 0 {
+				t.Fatalf("registry = %v, want empty", registryNames(reg))
+			}
+			want := fmt.Sprintf("ailang-worldd: workspace package cache refused for episode \"ep1\": %s is not empty and was not provisioned by "+
+				"--workspace-package-cache; clear it manually\n", link)
+			if log.String() != want {
+				t.Fatalf("operator log = %q, want exactly %q", log.String(), want)
+			}
+			if n := f.summaries(t); n != 0 {
+				t.Fatalf("a refused episode ran the tool (%d summaries)", n)
+			}
+			tc.check(t, f, link)
+		})
+	}
+	t.Run("empty dir is replaced", func(t *testing.T) {
+		f := newWSFixture(t)
+		withUID(t, 1000)
+		readOnlyPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0")
+		d := mustWSDaemon(t, f.cfgWithCache(t, f.pkgcacheDir(), nil))
+		mkdirs(t, f.registryLink())
+		if len(d.workspace.registry("ep1")) == 0 {
+			t.Fatal("registry(ep1) is empty with an empty registry dir in place")
+		}
+		if target, err := os.Readlink(f.registryLink()); err != nil || target != f.pkgcacheDir() {
+			t.Fatalf("Readlink = %q, %v, want the snapshot", target, err)
+		}
+	})
+}
+
+func TestWorkspacePackageCacheUnsetLeavesHomeAlone(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		setup func(t *testing.T, f wsFixture, link string)
+		check func(t *testing.T, f wsFixture, link string)
+	}{
+		{"non-empty dir untouched", func(t *testing.T, f wsFixture, link string) {
+			mkdirs(t, link)
+			writeFile(t, filepath.Join(link, "keep.txt"), "kept\n")
+		}, func(t *testing.T, f wsFixture, link string) {
+			if b, err := os.ReadFile(filepath.Join(link, "keep.txt")); err != nil || string(b) != "kept\n" {
+				t.Fatalf("keep.txt = %q, %v", b, err)
+			}
+		}},
+		{"empty dir untouched", func(t *testing.T, f wsFixture, link string) { mkdirs(t, link) },
+			func(t *testing.T, f wsFixture, link string) {
+				if fi, err := os.Lstat(link); err != nil || !fi.IsDir() {
+					t.Fatalf("empty registry dir after startup: %v, %v", fi, err)
+				}
+			}},
+		{"stale symlink removed, target intact", func(t *testing.T, f wsFixture, link string) {
+			target := filepath.Join(f.outside, "target")
+			mkdirs(t, target)
+			writeFile(t, filepath.Join(target, "keep.txt"), "kept\n")
+			if err := os.Symlink(target, link); err != nil {
+				t.Fatal(err)
+			}
+		}, func(t *testing.T, f wsFixture, link string) {
+			if _, err := os.Lstat(link); !os.IsNotExist(err) {
+				t.Fatalf("stale symlink still present (lstat: %v)", err)
+			}
+			if b, err := os.ReadFile(filepath.Join(f.outside, "target", "keep.txt")); err != nil || string(b) != "kept\n" {
+				t.Fatalf("the symlink's target was touched: %q, %v", b, err)
+			}
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newWSFixture(t)
+			d := mustWSDaemon(t, Config{DBPath: f.db, WorkspaceRoot: f.root, ToolAilangBin: fakeToolBin(t, f.logDir, ToolBinaryRelease)})
+			link := f.registryLink()
+			mkdirs(t, filepath.Dir(link))
+			tc.setup(t, f, link)
+			if len(d.workspace.registry("ep1")) == 0 {
+				t.Fatal("registry(ep1) is empty")
+			}
+			tc.check(t, f, link)
+		})
+	}
+}
+
+// fakeToolBinWith is fakeToolBin with two changes: a policy-tool dispatch
+// prints dispatchJSON (when non-empty), and `run` answers outcome shape (a) of
+// composeRunOutcome (an admitted run, rc 0), so Ailang.Run reaches executeRun's
+// stamp without a real binary.
+func fakeToolBinWith(t *testing.T, logDir, dispatchJSON string) string {
+	t.Helper()
+	dispatch := `printf '{"ok":true,"content":"fake:%s"}' "$(pwd -P)"`
+	if dispatchJSON != "" {
+		dispatch = fmt.Sprintf("printf '%%s' '%s'", dispatchJSON)
+	}
+	script := fmt.Sprintf(`#!/bin/sh
+log=%q
+if [ "$1" = "--version" ]; then echo %q; exit 0; fi
+if [ "$1" = "policy-tool" ]; then
+  req=$(cat)
+  case "$req" in
+    *'"summary"'*)
+      echo x >> "$log/summaries"
+      env > "$log/env"
+      printf '{"ok":true,"summary":{"security_mode":"restricted","policy_digest":"fakedigest","fs_sandbox":"%%s","cli":["check"]}}' "$(pwd -P)"
+      exit 0 ;;
+  esac
+  echo x >> "$log/dispatches"
+  %s
+  exit 0
+fi
+if [ "$1" = "run" ]; then echo 'policy: {"ok":true,"decision":{"ok":true}}' >&2; exit 0; fi
+echo x >> "$log/dispatches"
+exit 0
+`, logDir, ToolBinaryRelease, dispatch)
+	bin := filepath.Join(canonicalTemp(t), "ailang")
+	if err := os.WriteFile(bin, []byte(script), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	return bin
+}
+
+// ownDigest recomputes the snapshot digest with its own recursive ReadDir
+// walker and its own sort (the P-D5 byte form), sharing nothing with
+// resolvePackageCache.
+func ownDigest(t *testing.T, dir string) string {
+	t.Helper()
+	var records []string
+	var walk func(rel string)
+	walk = func(rel string) {
+		entries, err := os.ReadDir(filepath.Join(dir, rel))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, e := range entries {
+			r := e.Name()
+			if rel != "" {
+				r = rel + "/" + e.Name()
+			}
+			if e.IsDir() {
+				records = append(records, r+"\x00d")
+				walk(r)
+				continue
+			}
+			b, err := os.ReadFile(filepath.Join(dir, r))
+			if err != nil {
+				t.Fatal(err)
+			}
+			sum := sha256.Sum256(b)
+			records = append(records, r+"\x00f\x00"+hex.EncodeToString(sum[:]))
+		}
+	}
+	walk("")
+	sort.Strings(records)
+	all := strings.Join(records, "\n") + "\n"
+	sum := sha256.Sum256([]byte(all))
+	return "sha256:" + hex.EncodeToString(sum[:])
+}
+
+func execJSON(t *testing.T, d *Daemon, episode, effect, payload string) (map[string]any, error) {
+	t.Helper()
+	h := d.workspace.registry(episode)[effect]
+	if h == nil {
+		t.Fatalf("registry(%s) has no %s handler", episode, effect)
+	}
+	out, err := h.Execute(boundedTestContext(t), broker.EffectRequest{Effect: effect, Scope: broker.WorkspaceScope, Cost: 1}, []byte(payload))
+	if err != nil {
+		return nil, err
+	}
+	var resp map[string]any
+	if err := json.Unmarshal(out, &resp); err != nil {
+		t.Fatalf("%s: %v", out, err)
+	}
+	return resp, nil
+}
+
+func TestWorkspacePackageCacheDigestIsStamped(t *testing.T) {
+	const readPayload, runPayload = `{"op":"read","path":"x"}`, `{"path":"r.ail"}`
+	f := newWSFixture(t)
+	withUID(t, 1000)
+	// util and util-x: walk order differs from byte order of the full relpath.
+	readOnlyPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0", "acme/util-x/0.1.0")
+	cfg := Config{DBPath: f.db, WorkspaceRoot: f.root, WorkspacePackageCache: f.pkgcacheDir(),
+		ToolAilangBin: fakeToolBinWith(t, f.logDir, "")}
+	d := mustWSDaemon(t, cfg)
+	want := ownDigest(t, f.pkgcacheDir())
+	if d.workspace.packageCacheDigest != want {
+		t.Fatalf("startup digest = %q, the test's own recomputation = %q", d.workspace.packageCacheDigest, want)
+	}
+	// (a) a policy-tool result names the snapshot.
+	resp, err := execJSON(t, d, "ep1", broker.EffectWorkspaceRead, readPayload)
+	if err != nil || resp["package_cache"] != want {
+		t.Fatalf("Workspace.Read package_cache = %v (%v), want %s", resp["package_cache"], err, want)
+	}
+	// (c) and so does an ailang-run result.
+	resp, err = execJSON(t, d, "ep1", broker.EffectAilangRun, runPayload)
+	if err != nil || resp["admitted"] != true || resp["package_cache"] != want {
+		t.Fatalf("Ailang.Run result = %v (%v), want admitted with package_cache %s", resp, err, want)
+	}
+
+	// (b) and (c, unset arm): with no snapshot the key is absent.
+	f2 := newWSFixture(t)
+	d2 := mustWSDaemon(t, Config{DBPath: f2.db, WorkspaceRoot: f2.root, ToolAilangBin: fakeToolBinWith(t, f2.logDir, "")})
+	for effect, payload := range map[string]string{broker.EffectWorkspaceRead: readPayload, broker.EffectAilangRun: runPayload} {
+		resp, err := execJSON(t, d2, "ep1", effect, payload)
+		if err != nil {
+			t.Fatalf("%s: %v", effect, err)
+		}
+		if _, present := resp["package_cache"]; present {
+			t.Fatalf("%s result carries package_cache with the flag unset: %v", effect, resp)
+		}
+	}
+
+	// (d) the key is reserved: a tool response carrying it is refused even
+	// with no snapshot, so it can never pass for World provenance.
+	f3 := newWSFixture(t)
+	d3 := mustWSDaemon(t, Config{DBPath: f3.db, WorkspaceRoot: f3.root,
+		ToolAilangBin: fakeToolBinWith(t, f3.logDir, `{"ok":true,"package_cache":"forged"}`)})
+	if _, err := execJSON(t, d3, "ep1", broker.EffectWorkspaceRead, readPayload); err == nil || !strings.Contains(err.Error(), "package_cache") {
+		t.Fatalf("a forged package_cache key = %v, want an error naming the reserved key", err)
+	}
+}
+
+func TestWorkspacePackageCacheCoversLock(t *testing.T) {
+	util := lockEntry{"acme/util", "0.1.0", "registry"}
+	for _, tc := range []struct {
+		name  string
+		setup func(t *testing.T, f wsFixture, lock string)
+		want  string // "" = the registry forms; else the exact operator line (with %DIR%) or a prefix ending in "lock"
+		exact bool
+	}{
+		{"covered", func(t *testing.T, f wsFixture, lock string) { writeLock(t, lock, util) }, "", true},
+		{"one registry entry absent", func(t *testing.T, f wsFixture, lock string) {
+			writeLock(t, lock, util, lockEntry{"sunholo/oauth", "0.1.0", "registry"})
+		}, `ailang-worldd: workspace package cache does not cover episode "ep1": lock requires sunholo/oauth@0.1.0, absent from %DIR%; ` +
+			`rebuild the snapshot per QUICKSTART §11` + "\n", true},
+		{"path-source entry is not checked", func(t *testing.T, f wsFixture, lock string) {
+			writeLock(t, lock, util, lockEntry{"local/thing", "0.1.0", "path"})
+		}, "", true},
+		{"no lock", func(t *testing.T, f wsFixture, lock string) {}, "", true},
+		{"invalid JSON", func(t *testing.T, f wsFixture, lock string) { writeFile(t, lock, "{") },
+			`does not cover episode "ep1": lock`, false},
+		{"traversal in the name", func(t *testing.T, f wsFixture, lock string) {
+			// The traversal WOULD succeed: DIR/../esc/1.0.0/ailang.toml exists.
+			mkdirs(t, filepath.Join(f.base, "esc", "1.0.0"))
+			writeFile(t, filepath.Join(f.base, "esc", "1.0.0", "ailang.toml"), "[package]\n")
+			writeLock(t, lock, lockEntry{"../esc", "1.0.0", "registry"})
+		}, `does not cover episode "ep1": lock requires ../esc@1.0.0`, false},
+		{"lock is a symlink", func(t *testing.T, f wsFixture, lock string) {
+			real := filepath.Join(f.outside, "real.lock")
+			writeLock(t, real, util)
+			if err := os.Symlink(real, lock); err != nil {
+				t.Fatal(err)
+			}
+		}, `does not cover episode "ep1": lock`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newWSFixture(t)
+			withUID(t, 1000)
+			readOnlyPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0")
+			mkdirs(t, filepath.Join(f.root, "ep1", "tools"))
+			tc.setup(t, f, filepath.Join(f.root, "ep1", "tools", "ailang.lock"))
+			var log bytes.Buffer
+			cfg := f.cfgWithCache(t, f.pkgcacheDir(), &log)
+			cfg.WorkspaceModuleRoot = "tools"
+			d := mustWSDaemon(t, cfg)
+			log.Reset()
+			reg := d.workspace.registry("ep1")
+			if tc.want == "" {
+				if len(reg) == 0 || log.Len() != 0 {
+					t.Fatalf("registry = %v, log %q, want a registry and a silent log", registryNames(reg), log.String())
+				}
+				return
+			}
+			if len(reg) != 0 || f.summaries(t) != 0 {
+				t.Fatalf("registry = %v, summaries %d, want empty and 0", registryNames(reg), f.summaries(t))
+			}
+			want := strings.ReplaceAll(tc.want, "%DIR%", f.pkgcacheDir())
+			if n := strings.Count(log.String(), "\n"); n != 1 || (tc.exact && log.String() != want) || (!tc.exact && !strings.Contains(log.String(), want)) {
+				t.Fatalf("operator log (%d lines) = %q, want %q", n, log.String(), want)
+			}
+		})
 	}
 }
