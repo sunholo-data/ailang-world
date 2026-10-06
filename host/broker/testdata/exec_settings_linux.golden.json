@@ -1,0 +1,42 @@
+{
+ "filesystem": {
+  "denyRead": [
+   "/Users/op",
+   "/W/state",
+   "/W/workspace"
+  ],
+  "allowRead": [
+   "/W/workspace/ep1",
+   "/W/state/exec-cache/ep1/ailang-compiler",
+   "/Users/op/go/pkg/mod",
+   "/opt/homebrew/Cellar/go/1.26.4/libexec",
+   "/W/state/archive/exec-sandbox/d/node_modules/@anthropic-ai/sandbox-runtime/vendor/seccomp/x64"
+  ],
+  "allowWrite": [
+   "/W/workspace/ep1",
+   "/W/state/exec-cache/ep1/ailang-compiler"
+  ],
+  "denyWrite": [
+   "/W/workspace/ep1/.git/hooks",
+   "/W/workspace/ep1/.git/config",
+   "/W/workspace/ep1/.git",
+   "/W/workspace/ep1/.github",
+   "/W/workspace/ep1/.pi",
+   "/W/workspace/ep1/.claude",
+   "/W/workspace/ep1/.ailang",
+   "/W/workspace/ep1/.gitmodules",
+   "/W/workspace/ep1/.gitattributes",
+   "/tmp/claude",
+   "/Users/op/.npm/_logs",
+   "/Users/op/.claude/debug"
+  ]
+ },
+ "network": {
+  "allowedDomains": [],
+  "deniedDomains": [],
+  "allowLocalBinding": false,
+  "allowAllUnixSockets": false
+ },
+ "enableWeakerNetworkIsolation": false,
+ "allowAppleEvents": false
+}

@@ -60,9 +60,9 @@ var ailangToolEffects = []string{
 
 // workspaceEffects are the nine names an episode's registry binds: the eight
 // above plus row 140's Workspace.Exec, also ALWAYS bound (workspace-exec
-// declares it). Until an exec profile can be configured (row 140 M2/M3) its
-// handler is broker.ExecUnconfiguredHandler: a typed refusal that spawns
-// nothing, never an unregistered name.
+// declares it). With no exec profile configured its handler is
+// broker.ExecUnconfiguredHandler: a typed refusal that spawns nothing, never
+// an unregistered name; with one, the episode's broker.ExecHandler.
 var workspaceEffects = append(append([]string(nil), ailangToolEffects...), broker.EffectWorkspaceExec)
 
 // workspaceTools is the resolved --workspace-root/--tool-ailang-bin pair.
@@ -78,10 +78,32 @@ type workspaceTools struct {
 	// runCaps is the operator's ailang-run allowlist (row 135 §4.6), handed
 	// to every episode's handler; the zero value admits IO/FS runs only.
 	runCaps broker.RunCapsConfig
-	errLog  io.Writer
+	// exec is the Workspace.Exec configuration (row 140): nil, the default,
+	// binds the typed unconfigured refusal (broker.ExecUnconfiguredHandler).
+	// M3's `serve --exec-*` flags fill it after their startup checks.
+	exec   *workspaceExec
+	errLog io.Writer
 
 	mu      sync.Mutex
 	handler map[string]episodeTool // episode id -> constructed handler
+	execH   map[string]episodeTool // episode id -> constructed exec handler
+}
+
+// workspaceExec is one verified exec profile and the archived sandbox that
+// runs it (row 140 §4.6).
+type workspaceExec struct {
+	profile        *broker.ExecProfile
+	sandbox        *broker.ExecSandbox
+	maxOutputBytes int64 // 0 = broker.DefaultExecMaxOutputBytes
+}
+
+// execFailedHandler answers every call with the error that kept the
+// episode's exec handler from being built: a recorded failure, never a run
+// and never an unbound name (R8).
+type execFailedHandler struct{ err error }
+
+func (h execFailedHandler) Execute(context.Context, broker.EffectRequest, []byte) ([]byte, error) {
+	return nil, h.err
 }
 
 type episodeTool struct {
@@ -240,8 +262,37 @@ func (w *workspaceTools) registry(episodeID string) broker.Registry {
 	for _, name := range ailangToolEffects {
 		reg[name] = h
 	}
-	reg[broker.EffectWorkspaceExec] = broker.ExecUnconfiguredHandler{}
+	reg[broker.EffectWorkspaceExec] = w.execHandler(episodeID, epRoot)
 	return reg
+}
+
+// execHandler is the episode's Workspace.Exec handler: the typed refusal
+// when no profile is configured, else a broker.ExecHandler bound to the
+// episode worktree, built once (it renders and verifies the episode's srt
+// settings) and cached like the AILANG tool handler.
+func (w *workspaceTools) execHandler(episodeID, epRoot string) broker.Handler {
+	if w.exec == nil {
+		return broker.ExecUnconfiguredHandler{}
+	}
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if cached, ok := w.execH[episodeID]; ok && cached.root == epRoot {
+		return cached.h
+	}
+	var h broker.Handler
+	eh, err := broker.NewExecHandler(broker.ExecHandlerConfig{Profile: w.exec.profile, Sandbox: w.exec.sandbox,
+		Episode: episodeID, Worktree: epRoot, WorkspaceRoot: w.root, StateDir: w.stateDir,
+		MaxOutputBytes: w.exec.maxOutputBytes})
+	if err != nil {
+		fmt.Fprintf(w.errLog, "ailang-worldd: workspace-exec unavailable for episode %q: %v\n", episodeID, err)
+		return execFailedHandler{err: err}
+	}
+	h = eh
+	if w.execH == nil {
+		w.execH = map[string]episodeTool{}
+	}
+	w.execH[episodeID] = episodeTool{root: epRoot, h: h}
+	return h
 }
 
 // episodeRoot applies the episode grammar and requires root/episode to be a

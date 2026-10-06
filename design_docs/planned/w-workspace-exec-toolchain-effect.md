@@ -130,6 +130,7 @@
 | V47 | **[M0]** Linux exit status, bare and through the trampoline | bare srt SIGTERM → **143** (the rc-0 hazard is macOS-only); trampoline 143/130/137, `exit 3` → 3, missing binary 127 |
 | V48 | **[M0]** Linux V3 (grandchild, orphan, symlink), V12 (argv after `--`; `-c` without it), V13 (group kill), V41 (child env), `.git` pointer file and `.github/x` | identical to macOS: all outside writes absent on the host, argv verbatim, `-c` taken without `--` (the hazard is cross-platform), 2 → 0 sleepers, env exactly the `K=V` set, `.git`/`.github` → `EROFS` with bytes unchanged |
 | V49 | **[M0]** Linux `.GITHUB/x`; `/tmp/claude` without World's `denyWrite` | `.GITHUB/x` is **written**: ext4 is case-sensitive, so it is a different, non-special dir (git and GitHub read only `.github`). `/tmp/claude` does not exist on the runner (`ENOENT`) |
+| V50 | **[M2-linux]** CI runs 37373299127 / 37381703401 (`ubuntu-latest`, bubblewrap, srt 0.0.78): an episode whose `.git` is a **directory** holding only `HEAD`, run from that episode, under the §4.4 rendering as M0 left it (`.git` denied, no `hooks/` or `config` inside); the same with `hooks/` and `config` present; with `.git/hooks` and `.git/config` listed **before** `.git` in `denyWrite`; with World's `.git` entries removed | As M0 left it: **nothing runs**, rc 1, `bwrap: Can't create file at …/epg/.git/hooks: Read-only file system`. srt (Linux) adds `.git/hooks` and `.git/config` to its own deny only when `.git` is a directory, stubs each absent one with a bind mount, and emits that stub after World's read-only `.git` bind. It cannot skip the stub because the workspace root (and `$HOME`) are read-denied tmpfs regions, which veto srt's "already under a read-only deny" shortcut. The same failure appears with the workspace root dropped from `denyRead`. With `hooks/` and `config` present: `EROFS`, `HEAD` unchanged. **Listed first (CI run 37386984373): `EROFS`, `HEAD` unchanged, and no stub left in the host `.git`**: the stubs are mounted while `.git` is still writable, srt's own entries are deduplicated, and srt removes its mount points on exit. The matrix's old-order arm still aborts there. Without World's entries: `WROTE` (V5). macOS: `EPERM` in every rendered case. The handler's `TestExecSrtGitHeadIsNotWritable` failed on Linux the same way (empty token, the same bwrap line in stderr) |
 
 ## 4. Design
 
@@ -201,6 +202,7 @@
   - `relpath`: `pathOk`;
   - `enum:[…]`.
   - `-f=v` and `-f v` are both normalized to `-f=v` before matching, so `-run` and `-run=X` cannot differ in meaning.
+  - **[M2, ruled in session 2026-10-05]** Matching stays on the normalized form, but the **emitted** argv (and the record's `argv`) renders each valued flag per an optional per-flag profile field `"form": "eq" | "sep"` (`"-k": {"class": "regex", "form": "sep"}`): `eq`, the default, is one item `-f=v`; `sep` is two items `-f`, `v`, because argparse reads `-k=expr` as the value `=expr`. An unknown form, or a form on a `bool` flag, is a load refusal.
 - **`positional`** must be one class:
   - `relpath`: `pathOk`, with no leading `-`;
   - `pkgpattern`: `relpath` optionally ending `/...`, or exactly `./...`;
@@ -227,11 +229,11 @@ It is not presented as an execution fence (§9 R-140-3).
 | Key | Rendered value | Evidence |
 |---|---|---|
 | `filesystem.allowWrite` | `[<worktree>/<root>…<worktree>, <state>/exec-cache/<ep>/<project>]`. The **whole worktree** is writable, as with `ailang-write`, plus that episode's exec cache | V3 |
-| `filesystem.denyWrite` | World's episode deny list, the same names as the AILANG policy: `.git` (dir **or** pointer file), `.github`, `.pi`, `.claude`, `.ailang`, `.gitmodules`, `.gitattributes`, each as an absolute path under the worktree. Plus srt's always-on paths `/tmp/claude`, `/private/tmp/claude`, `$HOME/.npm/_logs`, `$HOME/.claude/debug` | V4, V5, V6, V35 |
+| `filesystem.denyWrite` | World's episode deny list, the same names as the AILANG policy: `.git` (dir **or** pointer file), `.github`, `.pi`, `.claude`, `.ailang`, `.gitmodules`, `.gitattributes`, each as an absolute path under the worktree. Plus srt's always-on paths `/tmp/claude`, `/private/tmp/claude`, `$HOME/.npm/_logs`, `$HOME/.claude/debug`. **[M2-linux]** The list opens with `<worktree>/.git/hooks` and `<worktree>/.git/config`, **before** `.git`: on Linux, when `.git` is a directory without them, srt's own stubs for those two would land inside the read-only `.git` bind and bwrap would refuse to start (V50). Listed first, the stubs are mounted while `.git` is still writable. With a `.git` pointer file srt skips both. On macOS the two entries are redundant with `.git` | V4, V5, V6, V35, V50 |
 | `filesystem.denyRead` | D-140-1 = A: `[<operator $HOME>, <World state dir>, <workspace root>]` | V8, V19, V23, V24, V35 |
 | `filesystem.allowRead` | `[<this episode's worktree>, <this episode's exec cache>, <profile read_roots>, <each read_root's realpath>]`, **plus on Linux only `<archive>/…/sandbox-runtime/vendor/seccomp/<arch>` [M0, V43, V44]**: srt runs that helper inside the sandbox. The dir is never in `allowWrite`, it is covered by the per-call archive digest, and nothing else of the archive is re-allowed. The workspace root is denied, so **sibling episodes' worktrees are unreadable** | V8, V24 |
-| `network.allowedDomains` | `[]` (D-140-2 = A) | V9 |
-| `network.allowLocalBinding`, `allowAllUnixSockets`, `enableWeakerNetworkIsolation`, `allowAppleEvents` | all `false`, rendered explicitly | V9, V20 |
+| `network.allowedDomains` | `[]` (D-140-2 = A). **[M2]** `network.deniedDomains: []` is rendered too: srt 0.0.78's schema requires it, and M0's measured shape carries it | V9 |
+| `network.allowLocalBinding`, `allowAllUnixSockets`, `enableWeakerNetworkIsolation`, `allowAppleEvents` | all `false`, rendered explicitly. **[M2]** The last two are TOP-LEVEL keys in srt's schema, not under `network` (M0's shape) | V9, V20 |
 
 - **Verification at render** (srt has no `summary` command, unlike AILANG's policy-tool):
   - World re-reads the file and checks it byte-for-byte against its own canonical rendering;
