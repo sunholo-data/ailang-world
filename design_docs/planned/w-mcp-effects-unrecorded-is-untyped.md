@@ -1,6 +1,6 @@
 # w-mcp-effects-unrecorded-is-untyped — MCP callers get an untyped error after an effect has run (row 136)
 
-**Status:** PARKED `needs-human-review` (iteration 236, designer lane claude-opus-5-5): quorum round 2 BLOCKED; one design-scope objection (option D, MCP idempotency key) awaits Mark as `D-WORLD-66`. Design only; nothing implemented.
+**Status:** APPROVED for planning (iteration 237). Designed iteration 236 (designer lane claude-opus-5-5); quorum round 2 BLOCKED; the one design-scope objection (option D) was ruled by Mark as `D-WORLD-66` = A (attended 2026-10-06): ship option C, file D as row 155. The three remaining round-2 objections are applied verbatim (narrow-refinement carve-out; see the quorum log). Nothing implemented yet.
 **Target:** next World patch. **Priority:** clause-6 (+5); charter position after row 140, before 141 → 93 (D-WORLD-61=A).
 **Estimated:** ~0.5 d host Go + docs. **Dependencies:** none for M1–M2. The client-visible part (M3) waits on an upstream release.
 **Measured base:** worktree `sprint/row136-mcp-typed-errors` at `3d965f6`; pinned upstream `github.com/sunholo-data/ailang v0.47.2` (`go.mod:6`); upstream checked at `v0.47.2` (module cache), `v0.52.1` (latest tag) and `origin/dev` `b7028a7cb` (2026-10-06).
@@ -49,7 +49,7 @@ line for an MCP refusal reads `ailang-worldd: a2a refusal: mcp invoke a2a:…` (
 |---|---|---|---|---|
 | `interfaces.go` | `7a0ede1b1df8e6de` | `7a0ede1b1df8e6de` | `7a0ede1b1df8e6de` | `7a0ede1b1df8e6de` |
 | `envelope.go` | `015396f49c73a4ad` | `015396f49c73a4ad` | `015396f49c73a4ad` | `015396f49c73a4ad` |
-| `hostcall/runner.go` | — | `5fbd63356c6d405b` | `5fbd63356c6d405b` | `5fbd63356c6d405b` |
+| `hostcall/runner.go` | `5fbd63356c6d405b` | `5fbd63356c6d405b` | `5fbd63356c6d405b` | `5fbd63356c6d405b` |
 | `mcphttp/methods.go` | `36f983ee1cbadcca` | `36f983ee1cbadcca` | `5373f733ca2ab094` | `5373f733ca2ab094` |
 | `mcphttp/handler.go` | `f4e310bd59c27464` | `f4e310bd59c27464` | `773f279b764b7541` | `773f279b764b7541` |
 
@@ -64,8 +64,19 @@ Neither change touches the error path. Extracting the functions with
 `type callResultJSON`) and hashing each gives identical values at v0.47.2 and v0.52.1:
 `callTool` `422c9a368c954ec4`, `serveMessages` `bb348556a44c1974`, `callResultJSON`
 `c72048e7bc092348`. `git diff --stat v0.52.1 origin/dev -- serveapi/protocol` is empty. These hunks are the only reason line numbers
-move at v0.52.1: by +2 in `methods.go` (the Invoke call moves `:84 → :86`) and by +30 in
-`handler.go` (the host-error envelope moves `:182 → :208`).
+move at v0.52.1: by +2 in `methods.go` (the Invoke call moves `:84 → :86`) and by +26 in
+`handler.go` (the host-error envelope moves `:182 → :208`). Measured 2026-10-06 (iteration 237) with
+`git show <rev>:serveapi/protocol/mcphttp/handler.go | grep -n 'CallbackMessage(hostErr)'` → `182` at
+v0.47.2 and `208` at v0.52.1, and `grep -n '\.Invoke('` on `methods.go` → `84` and `86`. V3's
+`:178–183` range is the v0.47.2 anchor; the same block sits at `:204–209` at v0.52.1.
+
+**V15 — operator-line consumer sweep** (iteration 237, at `origin/dev` `1bf36bd`):
+`grep -rnE "a2a refusal|mcp invoke|mcp tools" website docs` → **7** hits (control: `grep -rn 'a2a:'
+website docs` → 8). Four are the operator line and are M1's doc step: `docs/QUICKSTART.md:93`,
+`website/docs/guides/operating-the-daemon.md:99`, `website/docs/guides/troubleshooting.md:187`,
+`website/docs/reference/mcp-and-a2a.md:174`. Three are pi's `/mcp tools` slash command, not the log
+line, and stay unchanged: `docs/QUICKSTART.md:573`, `website/docs/agents/connecting.md:79`,
+`website/docs/getting-started/coding-tools.md:225`.
 
 ## Options
 
@@ -104,6 +115,16 @@ Both are host-only and correct today.
   a follow-up row bumps the pin and changes the M1 e2e assertion from the frozen envelope to the
   typed error.
 
+**(D) Caller-supplied MCP idempotency key reaching `committed()`. Rejected for this row; filed as
+row 155 (`D-WORLD-66` = A, Mark attended 2026-10-06).** The key would make an MCP retry safe
+host-side, and `committed()`/Replay are reachable from `mcp.go` once a key exists. But measured at
+`3d965f6`: (1) the released `callTool` decodes only `name` and `arguments`
+(`mcphttp/methods.go:73–76`, v0.47.2), so a `_meta` key never reaches the host; (2) 9 of the 10
+`additionalProperties` keys in `packages/se-tools/transitions.json` are `false`, so a key carried in
+`arguments` changes every advertised tool input schema; (3) a key hashed from tool+arguments would
+collapse two legitimate identical calls (two reads of a file that changed in between) into one.
+Row 155 owns it, likely gated on the same upstream ask that would carry `_meta`.
+
 **Pin bump: out of scope.** No release, including v0.52.1 and origin/dev, carries `isError` or a typed-error
 hook (V1–V4). A bump would buy nothing and would trigger the S8 floor-raise inventory.
 
@@ -119,7 +140,14 @@ construction. No `world/` kernel or `.ail` change is needed (V11).
   and writes `ailang-worldd: <surface> refusal: <method> <id>: %q\n`. Every A2A call site passes
   `"a2a"`, so A2A bytes do not change. The four MCP call sites (`mcp.go:76, 81, 107, 132`) pass
   `"mcp"`. Their method labels become the JSON-RPC method names: `tools/list` for `mcp tools`, and
-  `tools/call` for `mcp invoke`.
+  `tools/call` for `mcp invoke`. The id argument stays `-` at `mcp.go:76`, `:81` and `:107` (no
+  invocation id exists yet at those sites), and stays the minted invocation id at `:132`.
+- **Docs, in the M1 commit** (glm r2 fix): the refusal-line format for both surfaces at the four
+  operator-line sites V15 found — `docs/QUICKSTART.md:93`,
+  `website/docs/guides/operating-the-daemon.md:99`, `website/docs/guides/troubleshooting.md:187`,
+  `website/docs/reference/mcp-and-a2a.md:174`. Executor gate step: re-run
+  `grep -rnE "a2a refusal|mcp invoke|mcp tools" website docs` after the edit; every remaining hit
+  must be an A2A line or pi's `/mcp tools` slash command.
 - No wire change, and no change to the logged cause content (`err.Error()`, `%q`-escaped, one physical line). Only the surface label and the method label change.
   The row-127 privacy boundary is unchanged: causes stay on the operator-only sink.
 - `dispatchError` stays as it is. It is already a pure `error → (code, message)` function with a
@@ -161,8 +189,7 @@ construction. No `world/` kernel or `.ail` change is needed (V11).
   an A2A client can no longer pick a task id that collides with an MCP call in the same episode.
 - `/v1/commit` still accepts only `rest:` (V11), so `mcp:` cannot be forged over REST. M2 adds a row
   to the existing `commit_budget_test.go:356` id table.
-- Docs (S7), updated together with M2: `docs/QUICKSTART.md:39` gets the refusal-line format for
-  both surfaces. In `website/docs/`: `agents/provenance.md:45,50,91` (delete the "cannot tell"
+- Docs (S7), updated together with M2 (the refusal-line format moved to M1, above). In `website/docs/`: `agents/provenance.md:45,50,91` (delete the "cannot tell"
   sentence), `concepts/sessions-and-episodes.md:16`, `guides/provenance-walks.md:79`,
   `reference/cli.md:37,254,284–286`, `reference/http-api.md`, `getting-started/coding-tools.md`,
   and `website/static/AGENTS.md`. Sweep with `grep -rn 'coordinator:a2a\|a2a:<' website docs`.
@@ -193,8 +220,8 @@ construction. No `world/` kernel or `.ail` change is needed (V11).
   ```bash
   gh issue view <N> -R sunholo-data/ailang --json state -q .state
   tag=$(gh release list -R sunholo-data/ailang --limit 1 --exclude-drafts --exclude-pre-releases --json tagName -q '.[0].tagName')
-  gh api "repos/sunholo-data/ailang/contents/serveapi/protocol/mcphttp/methods.go?ref=$tag" -q .content | base64 -d | grep -cE 'isError|IsError'
-  gh api "repos/sunholo-data/ailang/contents/serveapi/protocol/envelope.go?ref=$tag" -q .content | base64 -d | awk '/^func CallbackMessage/,/^}/' | grep -cE 'errors\.As'
+  gh api "repos/sunholo-data/ailang/contents/serveapi/protocol/mcphttp/methods.go?ref=$tag" -q .content | base64 -d | grep -cE 'isError|IsError' || true
+  gh api "repos/sunholo-data/ailang/contents/serveapi/protocol/envelope.go?ref=$tag" -q .content | base64 -d | awk '/^func CallbackMessage/,/^}/' | grep -cE 'errors\.As' || true
   ```
 
   **UNBLOCKED** iff the issue state is `CLOSED` **and** at least one count is ≥ 1 (an `isError` field
@@ -275,10 +302,10 @@ not been re-reviewed.
 | 1 | gpt6-1-sol | ABSENT | OpenAI 429 "no credits remaining"; cannot be restored | none; round is N-1 |
 | 1 | controller | PASS | none | none |
 | 2 | (single allowed revision; designer claude-opus-5-5) | REVISED | items 1–6 above | awaiting controller disposition |
-| 2 | gemini-3-1-pro | REJECT | The M3 Gate-1 predicate's `grep -c` exits 1 on zero matches, so under `set -e` it aborts instead of evaluating to BLOCKED | OPEN. Reviewer fix: append `\|\| true` to both `grep -cE` commands |
-| 2 | oc-glm-5-3 | REJECT | M1 changes the operator line (`a2a refusal: mcp invoke` → `mcp refusal: tools/call`), but every doc edit and the consumer sweep are scoped to M2; catch: V14 has `—` for the module-cache `hostcall/runner.go` hash that V6 cites | OPEN. Reviewer fix: move the doc step and a `grep -rnE "a2a refusal\|mcp invoke\|mcp tools" website docs` sweep (recorded as V15) into M1; fill the runner.go cell |
-| 2 | oc-kimi-k3 (quorum seat) | REJECT | **Design scope:** no option makes an MCP retry safe host-side. A caller-supplied idempotency key minted as `mcp:<ep>:<key>` would reach the existing `committed()` dedup (`coordinator.go:199`) and Replay | OPEN, **needs a human ruling (D-WORLD-66)**. Reviewer fix: add option (D) and either adopt it with an AC, or reject it with file:line evidence that `committed()`/Replay cannot be reached from `mcp.go`'s Dispatch path |
-| 2 | oc-kimi-k3 (solo re-run, $0.40 cap) | REJECT | V14's line-shift arithmetic contradicts itself (`:182 → :208` is +26, not +30; V3 anchors at `:178–183`) | OPEN. Reviewer fix: re-run the `grep -n "CallbackMessage(hostErr)"` extraction at both revisions and state the measured shift; specify `-` as the id at `mcp.go:76, :81` |
+| 2 | gemini-3-1-pro | REJECT | The M3 Gate-1 predicate's `grep -c` exits 1 on zero matches, so under `set -e` it aborts instead of evaluating to BLOCKED | APPLIED r3 (iteration 237, verbatim): `\|\| true` appended to both `grep -cE` commands; dry-run under `set -e` at `v0.52.1` → counts `0`/`0`, control `func CallbackMessage` = 1 |
+| 2 | oc-glm-5-3 | REJECT | M1 changes the operator line (`a2a refusal: mcp invoke` → `mcp refusal: tools/call`), but every doc edit and the consumer sweep are scoped to M2; catch: V14 has `—` for the module-cache `hostcall/runner.go` hash that V6 cites | APPLIED r3 (iteration 237, verbatim): M1 carries the doc step and the sweep, recorded as V15 (7 hits: 4 operator-line sites, 3 pi slash-command false positives); runner.go module-cache cell filled (`5fbd63356c6d405b`) |
+| 2 | oc-kimi-k3 (quorum seat) | REJECT | **Design scope:** no option makes an MCP retry safe host-side. A caller-supplied idempotency key minted as `mcp:<ep>:<key>` would reach the existing `committed()` dedup (`coordinator.go:199`) and Replay | RULED: `D-WORLD-66` = A (Mark attended 2026-10-06): option C ships; option (D) added to Options as rejected for this row on the three measurements and filed as row 155. Reviewer fix: add option (D) and either adopt it with an AC, or reject it with file:line evidence that `committed()`/Replay cannot be reached from `mcp.go`'s Dispatch path |
+| 2 | oc-kimi-k3 (solo re-run, $0.40 cap) | REJECT | V14's line-shift arithmetic contradicts itself (`:182 → :208` is +26, not +30; V3 anchors at `:178–183`) | APPLIED r3 (iteration 237, verbatim): re-measured `182` (v0.47.2) → `208` (v0.52.1) = **+26**, stated in V14 with the command; M1 specifies `-` as the id at `mcp.go:76, :81` (and `:107`) |
 | 2 | gpt6-1-sol | ABSENT | OpenAI 429 "no credits remaining" | none; round is N-1 |
 | 2 | controller | PASS (in-session) | — | — |
 
@@ -294,3 +321,9 @@ v0.47.2), so a `_meta` idempotency key never reaches the host; (2) 9 of the 10 `
 keys in `packages/se-tools/transitions.json` are `false`, so a key carried in `arguments` changes
 every advertised tool input schema; (3) a key derived from a hash of tool+arguments would collapse
 two legitimate identical calls (e.g. two reads of a file that changed in between) into one.
+
+**Round-3 disposition (iteration 237): NARROW-REFINEMENT CARVE-OUT, routed to the planner without a
+re-quorum.** With `D-WORLD-66` ruled, every remaining round-2 objection carries a reviewer-authored
+fix and none disputes the direction, so the controller applied the three fixes verbatim (above) and
+the measurements they required. Round count: 2 quorum rounds; objections did not localise onto one
+surface (scope, predicate shell, doc-step placement, arithmetic), so no split.
