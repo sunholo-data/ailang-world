@@ -1,0 +1,54 @@
+{
+ "profile": "world/exec-profile/v1",
+ "project": "ailang-compiler",
+ "root": ".",
+ "path": [
+  "/opt/homebrew/bin",
+  "/usr/bin",
+  "/bin"
+ ],
+ "env": {
+  "GOFLAGS": "-mod=readonly",
+  "GOPROXY": "off",
+  "GOTOOLCHAIN": "go1.26.6",
+  "GOTELEMETRY": "off",
+  "GOMODCACHE": "$HOME/go/pkg/mod"
+ },
+ "read_roots": [
+  "$HOME/go/pkg/mod"
+ ],
+ "caches": {
+  "GOCACHE": {
+   "seed": "$HOME/.ailang-world-exec/seeds/ailang-compiler/go-build"
+  }
+ },
+ "timeout_ms": 9000,
+ "probe": [
+  "go",
+  "version"
+ ],
+ "commands": {
+  "test": {
+   "argv": [
+    "go",
+    "test",
+    "-count=1"
+   ],
+   "flags": {
+    "-run": "regex",
+    "-v": "bool",
+    "-short": "bool"
+   },
+   "positional": "pkgpattern",
+   "max_args": 8
+  },
+  "vet": {
+   "argv": [
+    "go",
+    "vet"
+   ],
+   "positional": "pkgpattern",
+   "max_args": 4
+  }
+ }
+}

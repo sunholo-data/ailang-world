@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -51,10 +52,17 @@ func TestQuickstartSection10ProfilesLoad(t *testing.T) {
 	if err := os.WriteFile(pybin, []byte("#!/bin/sh\necho Python 3.12.13\n"), 0o755); err != nil {
 		t.Fatal(err)
 	}
+	// uv's layout (M4 finding F1): the venv links to a version-ALIAS dir, which links to the
+	// real one. The script must make both read roots.
+	aliasDir := filepath.Join(filepath.Dir(filepath.Dir(filepath.Dir(pybin))), "cpython-3.12-test")
+	if err := os.Symlink(filepath.Dir(filepath.Dir(pybin)), aliasDir); err != nil {
+		t.Fatal(err)
+	}
+	pylink := filepath.Join(aliasDir, "bin", "python3.12")
 	cmd := exec.Command(py, "-")
 	cmd.Stdin = strings.NewReader(script)
 	cmd.Env = []string{"PATH=/usr/bin:/bin", "HOME=" + h.OperatorHome, "EXEC=" + execDir, "GODIR=" + bin, "NODEDIR=" + bin,
-		"GOTC=go1.26.6", "GOMOD=" + gomod, "PYBIN=" + pybin}
+		"GOTC=go1.26.6", "GOMOD=" + gomod, "PYBIN=" + pybin, "PYLINK=" + pylink}
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("the §10 profile script failed: %v\n%s", err, out)
 	}
@@ -75,6 +83,12 @@ func TestQuickstartSection10ProfilesLoad(t *testing.T) {
 			t.Fatalf("§10 profile %s names project %q", name, p.Project)
 		}
 		profiles[name] = p
+	}
+	// Both uv dirs are read roots: the alias the venv links to, and its realpath (F1).
+	for _, root := range []string{aliasDir, filepath.Dir(filepath.Dir(pybin))} {
+		if !slices.Contains(profiles["sunholo-cli"].ReadRoots, root) {
+			t.Errorf("§10 sunholo-cli read_roots %q lack %s", profiles["sunholo-cli"].ReadRoots, root)
+		}
 	}
 	// The probes: go version, node --version, the venv's interpreter.
 	for name, want := range map[string][]string{"ailang-compiler": {"go", "version"}, "twilightgame": {"node", "--version"},
