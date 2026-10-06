@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 236 | 2026-10-06 | **ROW 136 PICKED (Mark attended D-WORLD-63 = yes on PR #214), DESIGNED, PARKED**: design `w-mcp-effects-unrecorded-is-untyped` (draft #219, option C: MCP refusal line + surface tags + upstream ask; released mcphttp has no typed-error/isError path); quorum r2 BLOCKED (gpt6-1-sol absent, 429) — kimi's option D (MCP retry idempotency key) needs a ruling → NEW ASK D-WORLD-66 [PRODUCT] |
 | 235 | 2026-10-06 | **NO PICK — rule (d) block report**: row 140's code landed (M0–M3 `6ddd700` `edadf39` `32b52d5` `f4f2dcb`) but its tag stays IN-SPRINT attended for M4; 136 → 141 → 93 → 114 → 139 behind it; NEW ASK D-WORLD-63 (may 136 start alongside the attended M4? A recommended, default B hold) [ADMIN] |
 | 234 | 2026-10-06 | **NO PICK — rule (d) block report**: row 140 still IN-SPRINT attended (M1–M3 open as stacked PRs #208–#210); 136 → 141 → 93 → 114 → 139 behind it; dev CI on `adeb042` cancelled by the Actions outage, re-run → 2/2 green [ADMIN] |
 | 233 | 2026-10-05 | **NO PICK — rule (d) block report**: row 140 approved (#197 `fccaae9`) and IN-SPRINT attended (M0 #206, M1 committed attended); D-WORLD-61 = A → 136 → 141 → 93 behind it; harness replies for rotate-log (#1580) and heartbeat path (#1578) acted on, row 118 RESOLVED; record judged independently (Agent sonnet) |
