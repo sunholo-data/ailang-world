@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 238 | 2026-10-06 | row 141 LANDED (6eeff52): --workspace-module-root subdirectory sandbox + --workspace-package-cache read-only registry snapshot; ailang#1607/#1608; opus judge 91→96; rows 162/163; row-153 load flake 7/9 CI attempts → D-WORLD-68 OPEN [PRODUCT] |
 | 237 | 2026-10-06 | row 136 LANDED (d83baad, option C): MCP refusal line + mcp: surface tag; ailang#1602; opus judge 92→96; rows 159/160 |
 | 236 | 2026-10-06 | **ROW 136 PICKED (Mark attended D-WORLD-63 = yes on PR #214), DESIGNED, PARKED**: design `w-mcp-effects-unrecorded-is-untyped` (draft #219, option C: MCP refusal line + surface tags + upstream ask; released mcphttp has no typed-error/isError path); quorum r2 BLOCKED (gpt6-1-sol absent, 429) — kimi's option D (MCP retry idempotency key) needs a ruling → NEW ASK D-WORLD-66 [PRODUCT] |
 | 235 | 2026-10-06 | **NO PICK — rule (d) block report**: row 140's code landed (M0–M3 `6ddd700` `edadf39` `32b52d5` `f4f2dcb`) but its tag stays IN-SPRINT attended for M4; 136 → 141 → 93 → 114 → 139 behind it; NEW ASK D-WORLD-63 (may 136 start alongside the attended M4? A recommended, default B hold) [ADMIN] |

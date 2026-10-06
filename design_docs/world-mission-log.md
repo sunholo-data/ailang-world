@@ -1387,3 +1387,50 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 **Next:** row 141 `w-workspace-project-layouts` (D-WORLD-65 order), then 152 → 153 → 93. Row 159 is Gate-1 predicate-watched (#1602). Observation, not edited (attended-owned): the census reads row 138 as `NEXT` ("NEXT alongside 135 — RULED D-WORLD-57"), although 135/138 landed attended (iterations 227–229); a stale tag for the attended session to retire.
 
 **Merge follow-through:** merge commit `d83baad` check-runs 2/2 success (verify gate + go host build + test gate).
+
+## 238 — 2026-10-06 — row 141 LANDED: module-root subdirectory sandbox + read-only registry package cache; upstream asks ailang#1607/#1608; judge PASS 91 → 96; row-153 load flake 7/9 CI attempts → D-WORLD-68 [PRODUCT]
+
+**Kind:** product landing. PR #224 → `6eeff52` (squash of design `565ecba`/`cc5bd41`/`3c76e99`, plan `c17e002`, M1 `588838d`, M2 `475eed2`, M3 `f680e28`, r2 `2319d9d`). The record is doc-only (STATUS + archive rotation, row 141 tag, row 153 evidence, new rows 162/163, design + plan moved to `implemented/`, QUICKSTART §11 design link, log, index, dashboard, judge reports under `design_docs/verification/world-iter238/`).
+
+**Pick and why:** row 141 `w-workspace-project-layouts`, the next row of UNMET clause 4 on Mark's ruled order (D-WORLD-65: 136 LANDED → 141 → 152 → 153 → 93; 141's own position from D-WORLD-61 = A). Clause map at `499105b`: 1/2/3/6/7 MET; 4 UNMET (141 → 152 → 153 → 93); 5 UNMET (114 after 93, then 139). No orphan: no branch, PR or worktree named for 141; attended worktrees hold row 93 M4 only (PR #222). Premise re-measured TRUE at `499105b` (no module-root/package-cache option; ERE grep 1 unrelated hit, control `AILANG_CACHE_DIR` firing).
+
+**Design:** designer Agent `opus` (rotation pointer `claude:claude-opus-5-5`; next entries codex/glm/kimi all over ration → back to claude). 26 V-rows on the v0.52.1 tool binary: Daneel copy LDR001 at the root sandbox, `passed`/6 verified at `tools/`; registry packages resolve only under `$HOME/.ailang/cache/registry` (upstream `registry.go:213`), no policy key; a read-only snapshot symlinked there makes all 12 `pkg/`-importing Daneel modules pass and cannot be written by a confined run; `pkg_docs` fetches over the network into the per-episode HOME (V13 → row 162). Quorum (`--author claude:claude-opus-5-5`, seats gemini/glm/kimi): **r1 BLOCKED 3/3**, all premise/completeness with fixes. Kimi's destructive-RemoveAll premise was half false (controller measured row 140 seeds `<state>/exec-cache/<id>`, not `cache/E`) and half true (the loader `MkdirAll`s an empty registry dir), so the design adopted kimi's non-destructive rule. Glm's `#1547` compile-cache claim was measured (V23: `run --policy` writes `tools/.ailang/cache/compile` in the sandbox), and its V3 grep was re-run with valid ERE. Gemini's per-episode re-walk was dropped. **r2:** gemini PASS; glm (lock coverage, recipe `set -euo pipefail` guard) and kimi (symlink premise) REJECT with verbatim fixes. The controller measured kimi's premise first: 0 symlinks in both snapshots and in the 5146-file source cache, positive control 2. Then the **narrow-refinement carve-out r3** applied both verbatim; no further quorum. Metered $0.58.
+
+**Plan:** opus planner (`c17e002`) measured base gates (per-package `-race` green; a 3-package concurrent run hit the known broker flake `TestRunBoundedHeadTailTimeoutKeepsPartialOutput`, green alone 5/5), refuted 4 design details (AC1.1's killing row, AC1.7 needing a bare-import-only module, the §10 binding test reading to EOF, `ailang-run` results bypassing `stamp`), and listed 8 decisions P-D1..P-D8. All are tightening or wiring choices, none policy, so none was raised as a D-ask.
+
+**Execution:** sonnet executor, three milestone commits. Per-package `go test -race` green at each boundary (daemon 471 RUN / 0 FAIL at M2); `verify_ail.sh` rc 0, equal to base; full `-race ./...` rc 0; RIG e2e (`WORLD_TOOL_AILANG_BIN` = v0.52.1) 2/2 `--- PASS` with arm (i) asserting the real failure first. 31/31 mutants killed. It amended M3 after the controller's first push (report-only delta, `191d4e5` → `f680e28`, force-pushed with lease).
+
+**Judge:** opus Agent, fresh context, own worktree. **r1 PASS 91/100, zero blocking**. It ran 33 mutants of its own, none from the executor's list; 5 low-severity survivors (lock 1 MiB bound, group/other-writable modes, directory named `ailang.toml`, deeper toml count, unset-flag registry creation), plus N1 (Lstat→open FIFO race on the lock), N4 (recipe `set -e` kills a pasted shell) and N6 (moved-snapshot message). **Fix round:** executor resumed → `2319d9d`. Lock read is `O_RDONLY|O_NONBLOCK|O_NOFOLLOW` + `Fstat`, each survivor confirmed surviving then killed, the recipe runs in a subshell, and the moved-snapshot message is new. **r2 PASS 96/100**, every finding CLOSED by its own re-applied mutants. It adjudicated E9/E16 as test gaps on correct code, and N4 as closed by reading (its verbatim run was permission-blocked).
+
+**Upstream:** sunholo-data/ailang#1607 (pkg-docs under a policy fetches and writes the registry cache), #1608 (read-only operator package root + lock content-hash check). `ailang messages send mission-control` sent (iteration-238 asks).
+
+**Dev red (Gate 1), diagnosed, not fixed:** dev `499105b` (a docs-only record whose code tree equals green `d83baad`) failed **4/4** attempts on `TestExecSrtMCP*` in `verify_go.sh`'s parallel `-race` step. The failures were `TestExecSrtMCPEndToEnd` ×3 (`host callback timed out`; `where = "<nil>"`) and `TestExecSrtMCPGrantAndBudget` ×1. The same tests PASS in the dedicated `-p 1` srt step of the same runs. The PR heads failed the same way (`f680e28`; `2319d9d` attempt 1, then green on attempt 2), and so did the merge `6eeff52` on attempt 1, green on attempt 2. That is **7 of 9 attempts red since ~14:00Z**, against a GitHub status of all operational. This is row 153's defect (plan-phase deadline under load), and the evidence is appended to row 153. Disposition: a reasoned non-fix plus an ask. Row 153 is a measure-first row on the attended order, and skipping the tests from the race step would weaken a gate the attended session owns. **D-WORLD-68** asks whether to promote 153 ahead of 152 (A recommended; default B keeps the order). Dev HEAD `6eeff52` is green.
+
+**Gate 0:** kill switch armed; gh = `sunholo-voight-kampff`; billing CLEAN. `mission_directives.sh` → **0** allowlisted directives on #202 since 2026-10-05T12:46:05Z (10 comments); watermark unchanged. `mission-world` inbox: only this loop's own claims. Ledger valid 53 rows, ZERO OPEN at Gate 0; this record adds D-WORLD-68 (OPEN). Not a Monday (no rotation or sweep).
+
+**Attended mid-fire:** `8b04ec6` (row 93 M4 #222, resolving an attended D-WORLD-67) and `0398095` (hygiene row 161 `w-exec-srt-mcp-e2e-flake`, the same flake) landed during this fire. The re-fetch before the record merge caught them. The record was rebased, attended ids win, and the loop's ask and rows were renumbered to D-WORLD-68 and rows 162/163.
+
+**Gate 1:** `dev` == `origin/dev` == `499105b`; skill drift none (resolved symlink and pin copies `cmp`-identical to fleet `origin/dev` on SKILL.md and all 12 resources).
+
+**Routing evidence:** base=499105ba6d013eda09311a9e6681925b53b7d725@2026-10-06T15:22:22Z.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer Agent `opus` (resolver `recipe claude:claude-opus-5-5 declared:provider-pin`; Agent alias accepted, as in 236): 252,400 tok cumulative over create + r2 + r3.
+- Planner Agent `opus` (`agent-tool opus fail-closed:env-pin`): 180,506 tok.
+- Executor Agent `sonnet` (resolver `recipe claude:claude-sonnet-5-5 declared:provider-pin`): 261,772 tok cumulative over r1 + r2.
+- Evaluator Agent `opus` (resolver `reroute pi:openrouter/minimax/minimax-m3 generator-equals-judge`; openrouter over ration, and `claude-sonnet-4-6` is the executor's family, so the chain's `opus`): 178,990 tok cumulative over r1 + r2. FLAG: the judge shares a model with the designer and planner (structural while codex, ollama and openrouter are over ration). Generator ≠ judge holds against the executor.
+- Quorum: gemini-3-1-pro, oc-glm-5-3, oc-kimi-k3 (`gpt6-1-sol` not seated).
+- metered=$0.58.
+
+**Ruled out:** a second quorum after the carve-out; merging over the inherited red (waited for an observed green on the PR head); widening `verify_go.sh` or skipping the srt MCP e2e from the race step as a local stopgap (gate change on attended territory, and it would hide row 153's evidence); filing the planner's P-D1..P-D8 as asks (none carries policy); filing the judge's survivors as rows (one-fixture fixes, closed as r2 per iter-231).
+
+**Retro:**
+- **(1)** Measuring a reviewer's premise before forwarding it paid twice: kimi r1's row-140 claim was false, and only the true half shaped the fix. Kimi r2's symlink premise was a cheap `find` with a control.
+- **(2)** An executor amended a commit after the controller pushed it, so the judge reviewed `191d4e5` while the PR carried `f680e28` (report-only delta). Tell executors "never amend; add commits", and diff the pushed head against the judged head before quoting a verdict for it.
+- **(3)** A "flake" with a known row became a standing red within one afternoon (6 consecutive dev/PR attempts). The rerun-once habit recorded each instance as noise. Counting consecutive attempts per test is what showed it.
+- **(4)** No skill change proposed.
+
+**Progress:** clause 4's second row closed; 4 and 5 still UNMET; 1/2/3/6/7 MET.
+
+**Next:** if D-WORLD-68 = A, row 153; otherwise (default B) row 152, then 153 → 93. If dev HEAD is red at the next Gate 1, Gate 1's red-outranks-the-queue rule applies. Rows 162/163 are unranked.
+
+**Merge follow-through:** merge commit `6eeff52`, run 37504759449: attempt 1 red only on `TestExecSrtMCPEndToEnd` (the inherited row-153 flake, tree identical to `2319d9d`); attempt 2 check-runs 2/2 success (verify gate + go host build + test gate).
