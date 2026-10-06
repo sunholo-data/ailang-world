@@ -891,7 +891,7 @@ in later records. `serve` reads a profile file once, so restart it after editing
 
 **Written in row 141 M3; the attended verbatim run is pending.**
 `TestQuickstartSection11FlagsMatchTheCLI` binds the `serve` line below to `serve --help`. The
-design is `design_docs/planned/w-workspace-project-layouts.md`.
+design is `design_docs/implemented/w-workspace-project-layouts.md`.
 
 Bare imports between a project's modules (`import daneel_reading`) resolve against the AILANG
 sandbox root, and registry packages (`import pkg/sunholo/oauth/token`) resolve under the tool's
