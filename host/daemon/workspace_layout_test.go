@@ -19,6 +19,7 @@ import (
 	"strings"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 )
@@ -382,6 +383,45 @@ func TestWorkspacePackageCacheStartupChecks(t *testing.T) {
 			}
 			return f.pkgcacheDir()
 		}, "is writable"},
+		{"group-writable file", 1000, func(t *testing.T, f wsFixture) string {
+			valid(t, f)
+			if err := os.Chmod(filepath.Join(f.pkgcacheDir(), "acme/util/0.1.0/greet.ail"), 0o464); err != nil {
+				t.Fatal(err)
+			}
+			return f.pkgcacheDir()
+		}, "is writable"},
+		{"other-writable file", 1000, func(t *testing.T, f wsFixture) string {
+			valid(t, f)
+			if err := os.Chmod(filepath.Join(f.pkgcacheDir(), "acme/util/0.1.0/greet.ail"), 0o446); err != nil {
+				t.Fatal(err)
+			}
+			return f.pkgcacheDir()
+		}, "is writable"},
+		{"group-writable dir", 1000, func(t *testing.T, f wsFixture) string {
+			valid(t, f)
+			if err := os.Chmod(filepath.Join(f.pkgcacheDir(), "acme/util"), 0o575); err != nil {
+				t.Fatal(err)
+			}
+			return f.pkgcacheDir()
+		}, "is writable"},
+		{"other-writable dir", 1000, func(t *testing.T, f wsFixture) string {
+			valid(t, f)
+			if err := os.Chmod(filepath.Join(f.pkgcacheDir(), "acme/util"), 0o557); err != nil {
+				t.Fatal(err)
+			}
+			return f.pkgcacheDir()
+		}, "is writable"},
+		{"ailang.toml one level too deep", 1000, func(t *testing.T, f wsFixture) string {
+			mkdirs(t, filepath.Join(f.pkgcacheDir(), "acme/util/0.1.0/sub"))
+			writeFile(t, filepath.Join(f.pkgcacheDir(), "acme/util/0.1.0/sub/ailang.toml"), "[package]\n")
+			lockdown(t, f.pkgcacheDir())
+			return f.pkgcacheDir()
+		}, "holds no package"},
+		{"ailang.toml is a directory", 1000, func(t *testing.T, f wsFixture) string {
+			mkdirs(t, filepath.Join(f.pkgcacheDir(), "acme/util/0.1.0/ailang.toml"))
+			lockdown(t, f.pkgcacheDir())
+			return f.pkgcacheDir()
+		}, "holds no package"},
 		{"symlink inside", 1000, func(t *testing.T, f wsFixture) string {
 			buildPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0")
 			sibling := filepath.Join(f.base, "sibling")
@@ -548,6 +588,11 @@ func TestWorkspacePackageCacheRefusesUnprovisionedRegistry(t *testing.T) {
 			}
 			want := fmt.Sprintf("ailang-worldd: workspace package cache refused for episode \"ep1\": %s is not empty and was not provisioned by "+
 				"--workspace-package-cache; clear it manually\n", link)
+			if tc.name == "foreign symlink" {
+				// N6: say what the link is, since the operator may have moved the snapshot.
+				want = fmt.Sprintf("ailang-worldd: workspace package cache refused for episode \"ep1\": %s is a symlink to %s, "+
+					"not to --workspace-package-cache %s; remove it if the snapshot moved\n", link, f.outside, f.pkgcacheDir())
+			}
 			if log.String() != want {
 				t.Fatalf("operator log = %q, want exactly %q", log.String(), want)
 			}
@@ -590,6 +635,12 @@ func TestWorkspacePackageCacheUnsetLeavesHomeAlone(t *testing.T) {
 			func(t *testing.T, f wsFixture, link string) {
 				if fi, err := os.Lstat(link); err != nil || !fi.IsDir() {
 					t.Fatalf("empty registry dir after startup: %v, %v", fi, err)
+				}
+			}},
+		{"missing registry stays missing", func(t *testing.T, f wsFixture, link string) {},
+			func(t *testing.T, f wsFixture, link string) {
+				if _, err := os.Lstat(link); !os.IsNotExist(err) {
+					t.Fatalf("flag unset: the absent registry path was created (lstat: %v)", err)
 				}
 			}},
 		{"stale symlink removed, target intact", func(t *testing.T, f wsFixture, link string) {
@@ -785,6 +836,14 @@ func TestWorkspacePackageCacheCoversLock(t *testing.T) {
 			writeFile(t, filepath.Join(f.base, "esc", "1.0.0", "ailang.toml"), "[package]\n")
 			writeLock(t, lock, lockEntry{"../esc", "1.0.0", "registry"})
 		}, `does not cover episode "ep1": lock requires ../esc@1.0.0`, false},
+		{"lock over 1 MiB", func(t *testing.T, f wsFixture, lock string) {
+			// Valid JSON that WOULD be covered, so only the size bound refuses it.
+			writeFile(t, lock, `{"packages":[],"pad":"`+strings.Repeat("a", 1<<20)+`"}`)
+		}, `is larger than 1 MiB; rebuild the snapshot per QUICKSTART §11`, false},
+		{"ailang.toml of a locked package is a directory", func(t *testing.T, f wsFixture, lock string) {
+			mkdirs(t, filepath.Join(f.pkgcacheDir(), "acme", "dirpkg", "0.1.0", "ailang.toml"))
+			writeLock(t, lock, util, lockEntry{"acme/dirpkg", "0.1.0", "registry"})
+		}, `lock requires acme/dirpkg@0.1.0`, false},
 		{"lock is a symlink", func(t *testing.T, f wsFixture, lock string) {
 			real := filepath.Join(f.outside, "real.lock")
 			writeLock(t, real, util)
@@ -796,9 +855,10 @@ func TestWorkspacePackageCacheCoversLock(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			f := newWSFixture(t)
 			withUID(t, 1000)
-			readOnlyPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0")
+			buildPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0")
 			mkdirs(t, filepath.Join(f.root, "ep1", "tools"))
 			tc.setup(t, f, filepath.Join(f.root, "ep1", "tools", "ailang.lock"))
+			lockdown(t, f.pkgcacheDir())
 			var log bytes.Buffer
 			cfg := f.cfgWithCache(t, f.pkgcacheDir(), &log)
 			cfg.WorkspaceModuleRoot = "tools"
@@ -819,5 +879,39 @@ func TestWorkspacePackageCacheCoversLock(t *testing.T) {
 				t.Fatalf("operator log (%d lines) = %q, want %q", n, log.String(), want)
 			}
 		})
+	}
+}
+
+// TestWorkspacePackageCacheLockFIFOIsRefusedPromptly (N1): ailang.lock is
+// agent-writable, and opening a FIFO for reading blocks until a writer
+// appears. The lock read must refuse it promptly instead of hanging episode
+// construction while the handler mutex is held.
+func TestWorkspacePackageCacheLockFIFOIsRefusedPromptly(t *testing.T) {
+	f := newWSFixture(t)
+	withUID(t, 1000)
+	readOnlyPackageCache(t, f.pkgcacheDir(), "acme/util/0.1.0")
+	mkdirs(t, filepath.Join(f.root, "ep1", "tools"))
+	lock := filepath.Join(f.root, "ep1", "tools", "ailang.lock")
+	if err := syscall.Mkfifo(lock, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var log bytes.Buffer
+	cfg := f.cfgWithCache(t, f.pkgcacheDir(), &log)
+	cfg.WorkspaceModuleRoot = "tools"
+	d := mustWSDaemon(t, cfg)
+	log.Reset()
+	done := make(chan int, 1)
+	go func() { done <- len(d.workspace.registry("ep1")) }()
+	select {
+	case n := <-done:
+		if n != 0 || !strings.Contains(log.String(), `does not cover episode "ep1": lock `) || !strings.Contains(log.String(), "is not a regular file") {
+			t.Fatalf("registry size %d, log %q, want an empty registry and a not-a-regular-file refusal", n, log.String())
+		}
+	case <-time.After(2 * time.Second):
+		// Release the blocked open so the goroutine and the daemon's Close can finish.
+		if w, err := os.OpenFile(lock, os.O_RDWR|syscall.O_NONBLOCK, 0); err == nil {
+			_ = w.Close()
+		}
+		t.Fatal("a FIFO as ailang.lock hung registry construction (no refusal within 2s)")
 	}
 }

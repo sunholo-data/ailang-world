@@ -108,3 +108,39 @@ Notes on how the plan's mutants fired:
   `ExecPathOk` plus the `package_cache` stamp), the same class as the known
   `TestRunBoundedHeadTailTimeoutKeepsPartialOutput` flake. The earlier full `-race` run was green.
 - Not done, by instruction: U1/U2 upstream issues, `ailang messages send`, the R-A/R-B rows, the iteration log.
+
+## r2 (fix round for judge findings N1-N7, one commit on top of `f680e28`)
+
+Method per finding: apply the judge's mutant to the current suite (SURVIVE), add the row, re-apply (KILL),
+restore from a byte copy (`cmp` identical). Mutants run against `^TestWorkspacePackageCache` (32 RUN before, 42 after).
+
+| Finding | Mutant (judge's) | Before: current suite | New row | After: killed by | Reverted |
+|---|---|---|---|---|---|
+| N2 / E8 | `case len(data) > lockMaxBytes:` -> `case false:` | SURVIVED (ok) | CoversLock `lock over 1 MiB` (valid JSON that would be covered, 1 MiB + padding) | `operator log ... is not valid JSON: unexpected end ..., want "is larger than 1 MiB; rebuild ..."` | yes |
+| N3 / E10 | `Perm()&0o222` -> `Perm()&0o200` | SURVIVED | StartupChecks: group-writable file `0o464`, other-writable file `0o446`, group-writable dir `0o575`, other-writable dir `0o557` | 4x `New = <nil>, want ... "is writable"` | yes |
+| N5 / E9 | `covered = err == nil && st.Mode().IsRegular()` -> `err == nil && st != nil` | SURVIVED | CoversLock `ailang.toml of a locked package is a directory` | `registry = [...], summaries 1, want empty and 0` | yes |
+| N7 / E16 | count `len(segs) == 4 && segs[3] == ...` -> `len(segs) >= 4 && last == ...` | SURVIVED | StartupChecks `ailang.toml one level too deep`, `ailang.toml is a directory` | `New = <nil>, want ... "holds no package"` | yes |
+| N5b / E25 | flag-unset arm `MkdirAll(link)` | SURVIVED | UnsetLeavesHomeAlone `missing registry stays missing` | `flag unset: the absent registry path was created (lstat: <nil>)` | yes |
+| N1 | (code change; see below) | n/a | `TestWorkspacePackageCacheLockFIFOIsRefusedPromptly` (FIFO `ailang.lock`, refusal within 2 s) | mutant drop `O_NONBLOCK`: `a FIFO as ailang.lock hung registry construction (no refusal within 2s)`; mutant drop the Fstat regular check: `registry size 0, log ...` assertion fails | yes |
+| N6 | (code change) mutant `case fi.Mode()&os.ModeSymlink != 0:` -> `case false:` | n/a | foreign-symlink arm now expects the new line | exact-line mismatch (old "is not empty ..." line printed) | yes |
+
+Code changes:
+- **N5, N7:** no code change was needed. The code already required a regular file for coverage (`IsRegular`)
+  and counted only exactly 4-segment regular `ailang.toml` files; the survivors were missing tests, now added.
+  CoversLock now builds the snapshot, runs the row's setup, then locks it down, so a row can shape the snapshot.
+- **N1:** `checkLockCoverage` no longer does `Lstat` then `Open`. One `OpenFile(O_RDONLY|O_NONBLOCK|O_NOFOLLOW)`
+  (ELOOP -> "is not a regular file"; not-exist -> covered/no lock), then `f.Stat()` must be a regular file. The
+  1 MiB bound is enforced once, on the bytes read (`LimitReader` + `len(data) > lockMaxBytes`), not also by Fstat
+  size, so E8 stays a real mutant. A pre-planted FIFO is refused by the new code and was refused by the old
+  `Lstat` too, so that test cannot fail on the old code (the race itself is not deterministic); it fails on the
+  two mutants above, which reintroduce the blocking open or drop the type check. Runs on Linux and macOS.
+- **N6:** an existing symlink to a different path is refused with `... <link> is a symlink to <old>, not to
+  --workspace-package-cache <DIR>; remove it if the snapshot moved` (still refused, never deleted). §11's
+  operator-line table has the new row.
+- **N4:** the §11 recipe is wrapped in `( set -euo pipefail; ... )`. Re-run verbatim (extracted from the doc)
+  on the synthetic lock: rc 0, 1 package, 0 writable entries, `shell survived rc=0`; missing-package arm
+  prints `not in operator cache: acme/nope/1`, `shell survived rc=1`.
+
+Gates (one package at a time, `-race -count=1 -v`, all rc 0, 0 FAIL): `go vet ./...` 0; daemon 481 RUN / 142 PASS /
+23 SKIP (ok 151 s); broker 627 / 203 / 19 (ok 145 s); cmd 115 / 71 / 3. RIG pair: 2 `=== RUN`, 2 `--- PASS`, 0 SKIP.
+No flake appeared in this round.

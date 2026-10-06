@@ -29,6 +29,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"syscall"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 )
@@ -240,6 +241,10 @@ func (w *workspaceTools) linkPackageCache(episodeID, cacheDir string) error {
 		if err := os.Remove(link); err != nil {
 			return err
 		}
+	case fi.Mode()&os.ModeSymlink != 0:
+		old, _ := os.Readlink(link)
+		return &episodeRefusal{line: fmt.Sprintf("ailang-worldd: workspace package cache refused for episode %q: %s is a symlink to %s, "+
+			"not to --workspace-package-cache %s; remove it if the snapshot moved", episodeID, link, old, w.packageCache)}
 	default:
 		return &episodeRefusal{line: fmt.Sprintf("ailang-worldd: workspace package cache refused for episode %q: %s is not empty "+
 			"and was not provisioned by --workspace-package-cache; clear it manually", episodeID, link)}
@@ -291,20 +296,24 @@ func (w *workspaceTools) checkLockCoverage(episodeID, sandbox string) error {
 		return &episodeRefusal{line: fmt.Sprintf("ailang-worldd: workspace package cache does not cover episode %q: lock %s %s; "+
 			"rebuild the snapshot per QUICKSTART §11", episodeID, lock, why)}
 	}
-	fi, err := os.Lstat(lock)
+	// One open, then Fstat on it: no Lstat/Open window in which the agent can
+	// swap a FIFO in (a blocking open would hold w.mu). O_NONBLOCK makes a
+	// FIFO open return at once and O_NOFOLLOW refuses a symlink (ELOOP).
+	f, err := os.OpenFile(lock, os.O_RDONLY|syscall.O_NONBLOCK|syscall.O_NOFOLLOW, 0)
 	switch {
 	case os.IsNotExist(err):
 		return nil
-	case err != nil:
-		return bad("cannot be inspected: " + err.Error())
-	case !fi.Mode().IsRegular():
+	case errors.Is(err, syscall.ELOOP):
 		return bad("is not a regular file")
-	}
-	f, err := os.Open(lock)
-	if err != nil {
+	case err != nil:
 		return bad("cannot be read: " + err.Error())
 	}
 	defer func() { _ = f.Close() }()
+	if fi, err := f.Stat(); err != nil {
+		return bad("cannot be inspected: " + err.Error())
+	} else if !fi.Mode().IsRegular() {
+		return bad("is not a regular file")
+	}
 	data, err := io.ReadAll(io.LimitReader(f, lockMaxBytes+1))
 	switch {
 	case err != nil:

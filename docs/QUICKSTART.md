@@ -923,10 +923,13 @@ lacks:
 
 ```bash
 LOCK=$WS/dev1/tools/ailang.lock
-set -euo pipefail
+( set -euo pipefail
 jq -r '.packages[] | select(.source == "registry") | "\(.name)/\(.version)"' "$LOCK" | while read -r p; do test -d "$HOME/.ailang/cache/registry/$p" || { echo "not in operator cache: $p" >&2; exit 1; }; mkdir -p "$SNAP/$(dirname "$p")" && cp -R "$HOME/.ailang/cache/registry/$p" "$SNAP/$p"; done
-chmod -R a-w "$SNAP"
+chmod -R a-w "$SNAP" )
 ```
+
+The recipe runs in a subshell, so `set -euo pipefail` does not leak into your terminal and a
+missing package stops the build without closing it.
 
 - **More than one episode.** `--workspace-package-cache` is daemon-global, but each worktree has
   its own lock. Build `SNAP` as the union: run the `jq … | while …` loop once per episode's `LOCK`
@@ -962,6 +965,7 @@ of the module root: it only places a toolchain command's cwd.
 | `workspace tools unavailable for episode "dev1": module root "tools": …` | the module root is missing, not a directory, or reached through a symlink | create it as a real directory in the worktree (World never creates it) |
 | `workspace package cache refused for episode "dev1": <dir> is not empty and was not provisioned by --workspace-package-cache; clear it manually` | the episode's `HOME` already holds a registry cache World did not link (for example a package fetched by `pkg_docs` before the flag was set) | inspect it and remove it yourself; World never deletes content |
 | `workspace package cache does not cover episode "dev1": lock requires <ns>/<name>@<version>, absent from <dir>; …` | the worktree's `ailang.lock` needs a registry package the snapshot lacks (or the lock is unreadable, not a regular file or not JSON) | rebuild the snapshot from this episode's lock, then restart `serve` |
+| `workspace package cache refused for episode "dev1": <link> is a symlink to <old>, not to --workspace-package-cache <dir>; remove it if the snapshot moved` | an earlier run linked the episode's `HOME` to a different snapshot path | `rm` that link yourself (World never deletes it) and retry |
 
 `serve` itself refuses, at startup and naming the flag, a `--workspace-package-cache` that is not
 a directory, lies inside the workspace root or the state directory, holds a symlink, a special
