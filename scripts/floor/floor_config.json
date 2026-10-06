@@ -1,0 +1,29 @@
+{
+  "schema": "row93-floor-config/1",
+  "corpus_commit": "76a5aef65c81ac2fb4657fafaeff4a89e9faaf75",
+  "tool_bin": "~/.pinned-ailang-tools/v0.52.1/ailang",
+  "deadline_s": 600,
+  "knobs": {
+    "world_tools_wording": "row135-rw",
+    "claude_isolation": true,
+    "teaching": "full",
+    "codex_mcp_approval": "approve"
+  },
+  "smoke": {
+    "N": 1,
+    "tasks": ["pipeline", "cli_args", "api_call_json", "prompt_injection", "effect_tracking_io_fs",
+              "higher_order_functions"],
+    "canary_tier": "smoke",
+    "canary_task": "fizzbuzz",
+    "models": {"claude": "claude-haiku-4-5", "codex": "gpt-6-luna"},
+    "claude_max_budget_usd": 1.0
+  },
+  "final": {
+    "N": 3,
+    "tier": "core",
+    "canary_tier": "smoke",
+    "canary_task": "fizzbuzz",
+    "models": {"claude": "claude-opus-5-5", "codex": "gpt-6.1-sol"},
+    "claude_max_budget_usd": 5.0
+  }
+}

@@ -82,6 +82,17 @@ CLAUDE_SANDBOX_SETTINGS = {'sandbox': {'enabled': True, 'autoAllowBashIfSandboxe
                                        'allowUnsandboxedCommands': False}}
 CLAUDE_EMPTY_MCP = {'mcpServers': {}}
 CLAUDE_SHELL_PERMISSION_MODE = 'acceptEdits'  # §4.3 as amended by M2 (V-M2-3)
+# [M4 knob (b), harness-side, BOTH Claude arms identically; V-M4-1] §4.3's "user MCP servers,
+# plugins and skills are suppressed identically in both arms" — M2 measured that the user's
+# plugins were still loaded and 2 SessionStart hooks still ran in both arms (V-M2-3).
+# `--setting-sources ""` loads no user/project/local settings file (so no user plugins, hooks or
+# enabled-plugin list); the built-in plugins that remain are switched off and auto-memory is off
+# through the same `--settings` object the shell arm already uses for its sandbox. The flag set is
+# identical in both arms; only the shell arm's settings object additionally carries the sandbox.
+CLAUDE_BUILTIN_PLUGINS = ('cc-plugin-agents-md@builtin', 'cc-plugin-telemetry@builtin',
+                          'cc-plugin-plugin-authoring@builtin')
+CLAUDE_ISOLATION_SETTINGS = {'enabledPlugins': {p: False for p in CLAUDE_BUILTIN_PLUGINS},
+                             'autoMemoryEnabled': False}
 # codex, both arms: every non-coding feature off (V26, V28); web search off by config key (V-M2-1).
 CODEX_DISABLED_FEATURES = ('plugins', 'apps', 'browser_use', 'computer_use', 'image_generation',
                            'multi_agent')
@@ -107,19 +118,52 @@ def claude_mcp_config(token: str, addr: str = DEFAULT_ADDR) -> dict:
                                         'headers': {'Authorization': f'Bearer {token}'}}}}
 
 
-def codex_world_overrides(addr: str = DEFAULT_ADDR) -> list[str]:
+# [M4 knob (c), harness-side, codex World arm; V-M4-3] Under `codex exec` (approval policy
+# `never`) every MCP tool call of the `world` server failed with "MCP tool call requires approval,
+# but approval policy is never" (M4 iteration 0: 0/6, every call `failed`). M2's codex World canary
+# never made an MCP call, so it could not see this. `default_tools_approval_mode` is a real,
+# enum-validated server key (`auto|prompt|writes|approve`; `bogus` is a load error); `approve`
+# lets the World tools run, as codex's shell arm runs its sandboxed commands without approval.
+CODEX_MCP_APPROVAL_MODES = ('default', 'approve')
+# [D-WORLD-67, Mark Edmondson attended 2026-10-06] the three M4 additions are the CANONICAL §4.3
+# argv: the defaults below produce the FINAL argv (the goldens). `default` / False / None remain
+# only so M4's ledgered iterations 0–2 can be reproduced from their recorded knobs.
+DEFAULT_CODEX_MCP_APPROVAL = 'approve'
+DEFAULT_CLAUDE_ISOLATION = True
+FINAL_CLAUDE_MAX_BUDGET_USD = 5.0  # per Claude task-run in FINAL (D-WORLD-67); smoke passes 1.00
+
+
+def codex_world_overrides(addr: str = DEFAULT_ADDR, mcp_approval: str = 'approve') -> list[str]:
     """The ``-c`` overrides that give codex exactly the ``world`` server (token by env var name)."""
+    if mcp_approval not in CODEX_MCP_APPROVAL_MODES:
+        raise ArmError(f'codex MCP approval mode {mcp_approval!r} not in {CODEX_MCP_APPROVAL_MODES}')
+    extra = [] if mcp_approval == 'default' else [
+        '-c', f'mcp_servers.{MCP_SERVER}.default_tools_approval_mode={mcp_approval}']
     # The design's shell text `-c key="v"` reaches codex unquoted (`key=v`): a value that is not
     # TOML is taken as a literal string (codex -c help), measured identical by `codex mcp list`.
     return ['-c', f'mcp_servers.{MCP_SERVER}.url={mcp_url(addr)}',
             '-c', f'mcp_servers.{MCP_SERVER}.bearer_token_env_var={TOKEN_ENV}',
-            '-c', f'mcp_servers.{MCP_SERVER}.required=true']
+            '-c', f'mcp_servers.{MCP_SERVER}.required=true'] + extra
 
 
 def build_argv(agent: str, arm: str, *, model: str, prompt_text: str, cwd: str,
-               mcp_config_path: str | None = None, addr: str = DEFAULT_ADDR) -> list[str]:
+               mcp_config_path: str | None = None, addr: str = DEFAULT_ADDR,
+               claude_isolation: bool = DEFAULT_CLAUDE_ISOLATION,
+               max_budget_usd: float | None = FINAL_CLAUDE_MAX_BUDGET_USD,
+               codex_mcp_approval: str = DEFAULT_CODEX_MCP_APPROVAL) -> list[str]:
     """The exact argv of §4.3 for one (agent, arm). ``cwd`` is the worktree (shell) or the empty
-    ``void/<ep>`` (World); Claude takes it as the process cwd, codex also as ``-C``."""
+    ``void/<ep>`` (World); Claude takes it as the process cwd, codex also as ``-C``.
+
+    The M4 additions (ACKed by Mark Edmondson, attended 2026-10-06, D-WORLD-67) are ON by default,
+    so the defaults produce the canonical FINAL argv of §4.3 and the goldens:
+      * ``claude_isolation`` (V-M4-1): ``--setting-sources ""`` and ``CLAUDE_ISOLATION_SETTINGS``
+        merged into each Claude arm's ``--settings``, identically in both arms;
+      * ``max_budget_usd`` (§4.9): ``--max-budget-usd`` on every Claude run (5.00 FINAL; None omits);
+      * ``codex_mcp_approval`` (V-M4-3): the codex World arm's
+        ``-c mcp_servers.world.default_tools_approval_mode=approve``.
+    codex ignores the two Claude ones (it has no budget flag; ``--ignore-user-config`` already
+    drops its user config). Passing False / None / 'default' reproduces M4's early iterations.
+    """
     if agent not in AGENTS or arm not in ARMS:
         raise ArmError(f'unknown agent/arm {agent!r}/{arm!r}')
     if not model or not prompt_text or not cwd:
@@ -127,6 +171,15 @@ def build_argv(agent: str, arm: str, *, model: str, prompt_text: str, cwd: str,
     if agent == 'claude':
         argv = ['claude', '-p', prompt_text, '--model', model, '--output-format', 'stream-json',
                 '--verbose', '--no-session-persistence', '--disable-slash-commands']
+        tail = []
+        if claude_isolation:
+            tail += ['--setting-sources', '']
+            if arm == 'world':
+                tail += ['--settings', _compact(CLAUDE_ISOLATION_SETTINGS)]
+        if max_budget_usd is not None:
+            if not max_budget_usd > 0:
+                raise ArmError(f'max_budget_usd must be positive, got {max_budget_usd!r}')
+            tail += ['--max-budget-usd', f'{float(max_budget_usd):.2f}']
         if arm == 'shell':
             if mcp_config_path is not None:
                 raise ArmError('the Claude shell arm takes no MCP config file')
@@ -137,11 +190,13 @@ def build_argv(agent: str, arm: str, *, model: str, prompt_text: str, cwd: str,
                            # wrote outside the worktree (AC2.5 canary r1). acceptEdits refuses an
                            # edit outside the cwd in -p mode and keeps sandboxed Bash auto-allowed.
                            '--permission-mode', CLAUDE_SHELL_PERMISSION_MODE,
-                           '--settings', _compact(CLAUDE_SANDBOX_SETTINGS)]
+                           '--settings', _compact(dict(CLAUDE_SANDBOX_SETTINGS,
+                                                       **(CLAUDE_ISOLATION_SETTINGS if claude_isolation else {})))
+                           ] + tail
         if not mcp_config_path:
             raise ArmError('the Claude World arm needs its private MCP config path')
         return argv + ['--tools', '', '--strict-mcp-config', '--mcp-config', mcp_config_path,
-                       '--allowedTools', ','.join(world_allowed_tools())]
+                       '--allowedTools', ','.join(world_allowed_tools())] + tail
     argv = ['codex', 'exec', '--json', '--ephemeral', '--ignore-user-config', '--skip-git-repo-check',
             '-m', model, '-s', 'workspace-write' if arm == 'shell' else 'read-only', '-C', cwd]
     for feat in CODEX_DISABLED_FEATURES:
@@ -151,7 +206,7 @@ def build_argv(agent: str, arm: str, *, model: str, prompt_text: str, cwd: str,
             argv += ['--disable', feat]
     argv += ['-c', 'web_search=disabled']  # a real key: `web_search=bogus` is an enum error (V-M2-1)
     if arm == 'world':
-        argv += codex_world_overrides(addr)
+        argv += codex_world_overrides(addr, codex_mcp_approval)
     return argv + [prompt_text]
 
 

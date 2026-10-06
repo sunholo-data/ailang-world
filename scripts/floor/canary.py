@@ -169,7 +169,7 @@ def cmd_shell(a) -> int:
         tr = os.path.join(L['shell'], f'{agent}-shell.jsonl')
         row = run_task.run_agent(agent, 'shell', model=model, prompt_text=prompt_text, worktree=wt,
                                  private_dir=priv, transcript_path=tr, tool_bin=TOOL,
-                                 deadline_s=CANARY_DEADLINE_S)
+                                 deadline_s=CANARY_DEADLINE_S, claude_isolation=a.claude_isolation)
         parsed = row['transcript']
         files = {'inside_written': {n: os.path.exists(os.path.join(wt, n)) for n in SHELL_FILES[agent]['inside']},
                  'outside_written': {n: os.path.exists(os.path.join(outside, n)) for n in SHELL_FILES[agent]['outside']}}
@@ -424,7 +424,8 @@ def cmd_world(a) -> int:
             tr = os.path.join(L['root'], f'{agent}-world.jsonl')
             row = run_task.run_agent(agent, 'world', model=model, prompt_text=prompt_text, worktree=wt,
                                      private_dir=priv, transcript_path=tr, void_dir=void, episode=ep,
-                                     token=toks[agent], addr=a.addr, deadline_s=CANARY_DEADLINE_S, client=client)
+                                     token=toks[agent], addr=a.addr, deadline_s=CANARY_DEADLINE_S, client=client,
+                                     claude_isolation=a.claude_isolation)
             checks = {}
             if row.get('error_category') == 'harness_setup':
                 checks['preflight'] = [row['cause_evidence']]
@@ -486,6 +487,8 @@ def main(argv=None) -> int:
         p.add_argument('--out', default=DEFAULT_OUT, help='evidence base dir')
         p.add_argument('--out-dir', default=None, help='exact evidence dir (overrides --out/<sub>)')
         p.add_argument('--agents', default='claude,codex')
+        p.add_argument('--no-claude-isolation', dest='claude_isolation', action='store_false',
+                       help='reproduce the pre-M4 Claude argv (the isolation flags are canonical since D-WORLD-67)')
     a = ap.parse_args(argv)
     a.root = os.path.abspath(os.path.expanduser(a.root))
     return a.fn(a)

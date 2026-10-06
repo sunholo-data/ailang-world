@@ -30,6 +30,7 @@ Two deliberate departures from the Go agent path, identical in both arms:
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
 import subprocess
@@ -39,8 +40,15 @@ MOCK_TOKEN = '{{MOCK_HTTP_URL}}'
 WORLD_SOLUTION_PATH = 'benchmark/solution.ail'
 ARMS = ('shell', 'world')
 
-# Row 134's se-tools ids (V29), in transitions.json order.
-WORLD_TOOLS = (
+# Row 134's se-tools ids (V29), in transitions.json order. Two recorded wordings of the World
+# tools block exist (design §4.10 "tool-block wording", a World-side tuning knob, M4):
+#   * ``m1``     — M1's text, written before row 135: it said `ailang-run` takes only `path` (+
+#                  `args_json`) and has no stdin, argv or extra caps (P4). Row 135 removed all
+#                  three gaps, so this text is STALE; it is kept only to reproduce M4 iteration 0.
+#   * ``row135`` — the truth since row 135 (packages/se-tools/transitions.json `ailang-run`):
+#                  optional `stdin`, `argv` and `caps` (the run's exact capability set, like the
+#                  grader's `--caps`; default IO and FS), Net only to the operator's loopback pairs.
+WORLD_TOOLS_M1 = (
     ('ailang-read', 'read a file in your worktree (`path` relative to the worktree root)'),
     ('ailang-write', 'write a file (`path`, `content`)'),
     ('ailang-edit', 'replace text in a file (`path`, `old_text`, `new_text`)'),
@@ -50,18 +58,39 @@ WORLD_TOOLS = (
     ('examples-search', 'search AILANG examples (`query`)'),
     ('ailang-cli', 'policy-allowlisted AILANG CLI operations (`op`, ...)'),
 )
+WORLD_TOOLS_ROW135 = tuple(
+    (n, "run a file's `main` under World's policy (`path`; optional `stdin`, `argv`, `caps`, "
+        '`args_json`)') if n == 'ailang-run' else (n, d) for n, d in WORLD_TOOLS_M1)
 # The World arm's tool set is EXACTLY these 8 AILANG tools (amendment 2026-10-06, design §4.3).
 # World serves a 9th se-tool since row 140, `workspace-exec` (effect Workspace.Exec). The floor
 # benchmark is AILANG-only, so the World arm never lists it, never allows it and never grants its
 # effect: an unconfigured exec tool would be a dead tool that changes the prompt surface.
+WORLD_TOOLS = WORLD_TOOLS_ROW135
 WORLD_TOOL_NAMES = tuple(name for name, _ in WORLD_TOOLS)
 WORLD_EXCLUDED_TOOLS = ('workspace-exec',)  # test_arms.py asserts both, against the manifest
-# P4 (§1): today's ailang-run has no stdin, no argv and only IO/FS. Row 135 (D-NF-3 = B) widens
-# it; this sentence is a recorded tuning knob, applied before the prereg is committed.
-WORLD_RUN_NOTE = ('`ailang-run` cannot pipe stdin, cannot pass command-line arguments and grants '
-                  'no capabilities beyond IO and FS. If the task needs any of those, it cannot be '
-                  'run end to end here: use `ailang-check` and reason carefully about the output. '
-                  'Your solution is graded with the task\'s own stdin, arguments and capabilities.')
+# P4 (§1) as M1 wrote it: STALE since row 135 (D-NF-3 = B), kept for iteration 0 only.
+WORLD_RUN_NOTE_M1 = ('`ailang-run` cannot pipe stdin, cannot pass command-line arguments and grants '
+                     'no capabilities beyond IO and FS. If the task needs any of those, it cannot be '
+                     'run end to end here: use `ailang-check` and reason carefully about the output. '
+                     'Your solution is graded with the task\'s own stdin, arguments and capabilities.')
+# The truth since row 135 (M4 knob (a)). Never the words "ailang run": the World task text carries
+# no shell command (MUT-PROMPT-LEAK, test_prompt.py).
+WORLD_RUN_NOTE_ROW135 = (
+    '`ailang-run` runs the program the way it is graded: pass the task\'s standard input as `stdin` '
+    '(text), its command-line arguments as `argv` (a list of strings) and its capabilities as '
+    '`caps` (the exact set, e.g. `["IO", "FS"]`; the default is IO and FS). A network run reaches '
+    'only the local mock address the task names. Your solution is graded with the task\'s own '
+    'stdin, arguments and capabilities.')
+# ``row135-rw`` (M4 iteration 4): row135 plus one sentence. Measured in iteration 2: codex's World
+# arm (`-s read-only`, no shell) answered "this workspace is explicitly read-only, and the available
+# AILANG tools cannot override that restriction" and never called ailang-write. The sentence says
+# the truth: the read-only sandbox binds native tools only; the World tools write the worktree.
+WORLD_WRITE_NOTE = ('Your own sandbox is read-only and has no shell, but that does not limit these '
+                    'tools: `ailang-write` and `ailang-edit` do write files in your worktree.')
+WORLD_RUN_NOTE_ROW135_RW = WORLD_RUN_NOTE_ROW135 + ' ' + WORLD_WRITE_NOTE
+WORLD_RUN_NOTE = WORLD_RUN_NOTE_ROW135
+WORLD_WORDINGS = ('m1', 'row135', 'row135-rw')
+DEFAULT_WORLD_WORDING = 'row135'
 
 SHELL_TOOLS_TMPL = ('You have access to the `ailang` command:\n'
                     '- **Run code:** `ailang run --entry main --caps {caps} solution.ail`\n'
@@ -85,8 +114,12 @@ SHELL_STEPS_TMPL = ('1. **Run your solution:**\n'
                     '\n'
                     '4. **Only finish once verified!**')
 
+WORLD_STEPS_HEAD_M1 = '   call the `ailang-run` tool with `{{"path": "benchmark/solution.ail"}}`\n'
+# row135: the run call names the task's caps, mirroring the shell step's `--caps {caps}`.
+WORLD_STEPS_HEAD_ROW135 = ('   call the `ailang-run` tool with `{{"path": "benchmark/solution.ail", '
+                           '"caps": {caps_json}}}` (plus `stdin` / `argv` if the task reads them)\n')
 WORLD_STEPS_TMPL = ('1. **Run your solution:**\n'
-                    '   call the `ailang-run` tool with `{{"path": "benchmark/solution.ail"}}`\n'
+                    '{head}'
                     '\n'
                     '2. **Compare output carefully:**\n'
                     '   - Check that every line matches expected output\n'
@@ -138,6 +171,22 @@ def world_tools_block(note: str = WORLD_RUN_NOTE, tools=WORLD_TOOLS) -> str:
     return '\n'.join(lines) + '\n'
 
 
+def world_wording(wording: str) -> tuple:
+    """(tools, run note, steps head) for a recorded World tools-block wording (§4.10 knob)."""
+    if wording == 'm1':
+        return WORLD_TOOLS_M1, WORLD_RUN_NOTE_M1, WORLD_STEPS_HEAD_M1
+    if wording == 'row135':
+        return WORLD_TOOLS_ROW135, WORLD_RUN_NOTE_ROW135, WORLD_STEPS_HEAD_ROW135
+    if wording == 'row135-rw':
+        return WORLD_TOOLS_ROW135, WORLD_RUN_NOTE_ROW135_RW, WORLD_STEPS_HEAD_ROW135
+    raise PromptError(f'unknown World tools-block wording {wording!r} (one of {WORLD_WORDINGS})')
+
+
+def world_steps(wording: str, spec: dict) -> str:
+    head = world_wording(wording)[2].format(caps_json=json.dumps(list(spec.get('caps') or [])))
+    return WORLD_STEPS_TMPL.format(head=head)
+
+
 def _caps_value(spec: dict) -> str:
     v = ','.join(spec.get('caps') or [])
     if spec.get('net_allow_localhost'):
@@ -146,7 +195,7 @@ def _caps_value(spec: dict) -> str:
 
 
 def render_task(spec: dict, arm: str, *, template: str, solution_path: str, deadline_s: int,
-                mock_url: str | None = None, world_note: str = WORLD_RUN_NOTE) -> str:
+                mock_url: str | None = None, world_wording_id: str = DEFAULT_WORLD_WORDING) -> str:
     if arm not in ARMS:
         raise PromptError(f'unknown arm {arm!r}')
     if arm == 'world' and solution_path != WORLD_SOLUTION_PATH:
@@ -164,8 +213,9 @@ def render_task(spec: dict, arm: str, *, template: str, solution_path: str, dead
         tools = SHELL_TOOLS_TMPL.format(caps=_caps_value(spec))
         steps = SHELL_STEPS_TMPL.format(caps=caps)
     else:
-        tools = world_tools_block(world_note)
-        steps = WORLD_STEPS_TMPL.format()
+        w_tools, w_note, _ = world_wording(world_wording_id)
+        tools = world_tools_block(w_note, w_tools)
+        steps = world_steps(world_wording_id, spec)
     t = template[:a + len(AVAILABLE_TOOLS_HEADING)] + tools + template[b:]
     task_text = spec.get('task_prompt') or spec.get('prompt') or ''
     if MOCK_TOKEN in task_text:

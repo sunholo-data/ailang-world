@@ -1,0 +1,121 @@
+{
+  "abort": null,
+  "arm_digests": {
+    "claude/shell": "59d6f7e0664ed3c518ed70a46326d455876a9d69dc7d695251d03cb55ef341f6",
+    "claude/world": "df734f3e5bb96ea6fac8f05aebafec8de6b47994fbb5e071fbb1533097559a4f",
+    "codex/shell": "8e750bb9d1c67d281c05ec27b11f9600cec47648343d5c72c752609f09291a76",
+    "codex/world": "729aacda114e134c563af2bfbe766d703957b13b7f4dfd0230ae73f6bb8ceafc"
+  },
+  "canary": [
+    {
+      "agent": "claude",
+      "arm": "world",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 63266
+    },
+    {
+      "agent": "codex",
+      "arm": "world",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 14440
+    }
+  ],
+  "change": "World tools block: row135 -> row135-rw (+1 sentence: the read-only sandbox binds native tools only; ailang-write/ailang-edit write the worktree). Measured cause: iter-2 codex/world/higher_order_functions refused to write, citing the read-only workspace",
+  "codex_tokens": 2061454,
+  "commit": "a48950c9e176c90006aef41ada0896f5ea8af54f",
+  "config_digest_smoke": "0e2e6d7841312f22921d06fa563f80e433dc2b68483f7e0ee7c2670cb3b9e55b",
+  "iteration": 4,
+  "knob": "world_tools_wording",
+  "native_write_detected": [],
+  "row153": {
+    "claude": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 6
+    },
+    "codex": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 6
+    }
+  },
+  "rows_reused_from": {
+    "claude/shell": "iter-3",
+    "codex/shell": "iter-0"
+  },
+  "side": "world",
+  "spend_usd_claude": 0.8481,
+  "status": "complete",
+  "summary": {
+    "claude": {
+      "O": 0.0622,
+      "T": 6,
+      "delta": 0.0,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "api_call_json": -0.707,
+        "cli_args": 0.407,
+        "effect_tracking_io_fs": 3.157,
+        "higher_order_functions": -0.024,
+        "pipeline": 0.035,
+        "prompt_injection": 0.09
+      },
+      "pass_S": 6,
+      "pass_W": 6,
+      "unclassified": 0
+    },
+    "codex": {
+      "O": 0.0271,
+      "T": 6,
+      "delta": 0.0,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "api_call_json": 1.876,
+        "cli_args": -0.007,
+        "effect_tracking_io_fs": -0.303,
+        "higher_order_functions": 0.062,
+        "pipeline": 1.642,
+        "prompt_injection": -0.108
+      },
+      "pass_S": 6,
+      "pass_W": 6,
+      "unclassified": 0
+    }
+  },
+  "tasks": [
+    "api_call_json",
+    "cli_args",
+    "effect_tracking_io_fs",
+    "higher_order_functions",
+    "pipeline",
+    "prompt_injection"
+  ],
+  "transcripts": ".ailang/state/floor-tune/m4/transcripts/iter-4",
+  "wall_s": 523.9,
+  "world_writes_per_run": {
+    "claude/api_call_json": 1,
+    "claude/cli_args": 2,
+    "claude/effect_tracking_io_fs": 1,
+    "claude/higher_order_functions": 1,
+    "claude/pipeline": 1,
+    "claude/prompt_injection": 2,
+    "codex/api_call_json": 1,
+    "codex/cli_args": 1,
+    "codex/effect_tracking_io_fs": 1,
+    "codex/higher_order_functions": 1,
+    "codex/pipeline": 1,
+    "codex/prompt_injection": 1
+  }
+}

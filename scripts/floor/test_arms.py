@@ -77,16 +77,21 @@ class WorldArmToolSet(unittest.TestCase):
 
 # The §4.3 table, verbatim from design_docs/planned/w-resident-agent-non-inferiority-floor-run.md
 # (the World Claude arm's "…" expanded to the 8 names; codex World = "same flags, but …"; the Claude
-# shell arm's --permission-mode is acceptEdits as amended by M2, V-M2-3).
+# shell arm's --permission-mode is acceptEdits as amended by M2, V-M2-3; the M4 additions ACKed by
+# Mark Edmondson attended 2026-10-06, D-WORLD-67: Claude isolation in both arms, --max-budget-usd
+# 5.00, and the codex World arm's MCP approval override).
+ISOLATION_JSON_BODY = ('"enabledPlugins":{"cc-plugin-agents-md@builtin":false,"cc-plugin-telemetry@builtin":false,"cc-plugin-plugin-authoring@builtin":false},"autoMemoryEnabled":false')
 DESIGN_CLAUDE_SHELL = (
     'claude -p "$P" --model $M --output-format stream-json --verbose --no-session-persistence '
     '--disable-slash-commands --tools Bash,Read,Write,Edit,Glob,Grep --strict-mcp-config '
     "--mcp-config '{\"mcpServers\":{}}' --permission-mode acceptEdits --settings "
-    "'{\"sandbox\":{\"enabled\":true,\"autoAllowBashIfSandboxed\":true,\"allowUnsandboxedCommands\":false}}'")
+    "'{\"sandbox\":{\"enabled\":true,\"autoAllowBashIfSandboxed\":true,\"allowUnsandboxedCommands\":false},"
+    + ISOLATION_JSON_BODY + "}' --setting-sources \"\" --max-budget-usd 5.00")
 DESIGN_CLAUDE_WORLD = (
     'claude -p "$P" --model $M --output-format stream-json --verbose --no-session-persistence '
     '--disable-slash-commands --tools "" --strict-mcp-config --mcp-config <private>/<ep>.mcp.json '
-    '--allowedTools ' + ','.join(f'mcp__world__{n}' for n in EIGHT))
+    '--allowedTools ' + ','.join(f'mcp__world__{n}' for n in EIGHT)
+    + " --setting-sources \"\" --settings '{" + ISOLATION_JSON_BODY + "}' --max-budget-usd 5.00")
 DESIGN_CODEX_SHELL = (
     'codex exec --json --ephemeral --ignore-user-config --skip-git-repo-check -m $M '
     '-s workspace-write -C <worktree> --disable plugins --disable apps --disable browser_use '
@@ -99,7 +104,8 @@ DESIGN_CODEX_WORLD = (
     '--disable shell_tool --disable unified_exec -c web_search="disabled" '
     '-c mcp_servers.world.url="http://127.0.0.1:7644/mcp/" '
     '-c mcp_servers.world.bearer_token_env_var="WORLD_SESSION" '
-    '-c mcp_servers.world.required=true "$P"')
+    '-c mcp_servers.world.required=true '
+    '-c mcp_servers.world.default_tools_approval_mode="approve" "$P"')
 DESIGN = {('claude', 'shell'): DESIGN_CLAUDE_SHELL, ('claude', 'world'): DESIGN_CLAUDE_WORLD,
           ('codex', 'shell'): DESIGN_CODEX_SHELL, ('codex', 'world'): DESIGN_CODEX_WORLD}
 
@@ -157,7 +163,23 @@ class ArgvGoldens(unittest.TestCase):
         self.assertEqual(flag_value(argv, '--permission-mode'), 'acceptEdits')  # never bypassPermissions
         sb = json.loads(flag_value(argv, '--settings'))['sandbox']
         self.assertEqual(sb, {'enabled': True, 'autoAllowBashIfSandboxed': True, 'allowUnsandboxedCommands': False})
+        self.assertEqual(flag_value(argv, '--setting-sources'), '')  # isolation is canonical (D-WORLD-67)
         self.assertEqual(flag_value(arms.golden_argv('codex', 'shell'), '-s'), 'workspace-write')
+
+    def test_codex_world_tools_are_approved(self):  # MUT-CODEX-NOAPPROVE (V-M4-3, D-WORLD-67)
+        argv = arms.golden_argv('codex', 'world')
+        cs = [argv[i + 1] for i, a in enumerate(argv) if a == '-c']
+        self.assertIn('mcp_servers.world.default_tools_approval_mode=approve', cs)
+        self.assertNotIn('mcp_servers.world.default_tools_approval_mode=approve',
+                         arms.golden_argv('codex', 'shell'))  # the shell arm has no World server
+
+    def test_claude_isolation_and_budget_identical_in_both_arms(self):  # D-WORLD-67
+        sh, wo = arms.golden_argv('claude', 'shell'), arms.golden_argv('claude', 'world')
+        for argv in (sh, wo):
+            self.assertEqual(flag_value(argv, '--setting-sources'), '')
+            self.assertEqual(flag_value(argv, '--max-budget-usd'), '5.00')
+            s = json.loads(flag_value(argv, '--settings'))
+            self.assertEqual({k: s[k] for k in arms.CLAUDE_ISOLATION_SETTINGS}, arms.CLAUDE_ISOLATION_SETTINGS)
 
     def test_model_is_a_parameter(self):
         for agent in arms.AGENTS:
