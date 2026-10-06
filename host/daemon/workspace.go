@@ -82,8 +82,13 @@ type workspaceTools struct {
 	// binds the typed unconfigured refusal (broker.ExecUnconfiguredHandler).
 	// The `serve --exec-*` flags fill it after their startup checks and the
 	// startup probe (configureExec).
-	exec   *workspaceExec
-	errLog io.Writer
+	exec *workspaceExec
+	// moduleRoot and episodeModuleRoot are the --workspace-module-root and
+	// --workspace-episode-module-root values (row 141 M1), validated at
+	// startup; empty means the episode worktree itself is the sandbox.
+	moduleRoot        string
+	episodeModuleRoot map[string]string
+	errLog            io.Writer
 
 	mu      sync.Mutex
 	handler map[string]episodeTool // episode id -> constructed handler
@@ -301,7 +306,12 @@ func (w *workspaceTools) registry(episodeID string) broker.Registry {
 	if !ok {
 		return broker.Registry{}
 	}
-	h, err := w.episodeHandler(episodeID, epRoot)
+	sandbox, err := w.sandboxRoot(episodeID, epRoot)
+	if err != nil {
+		fmt.Fprintf(w.errLog, "ailang-worldd: workspace tools unavailable for episode %q: %v\n", episodeID, err)
+		return broker.Registry{}
+	}
+	h, err := w.episodeHandler(episodeID, sandbox)
 	if err != nil {
 		fmt.Fprintf(w.errLog, "ailang-worldd: workspace tools unavailable for episode %q: %v\n", episodeID, err)
 		return broker.Registry{}
@@ -367,13 +377,14 @@ func (w *workspaceTools) episodeRoot(episodeID string) (string, bool) {
 	return resolved, true
 }
 
-// episodeHandler returns the episode's cached handler, constructing it on
+// episodeHandler returns the episode's cached handler (sandbox is the module
+// root: <worktree>/REL, the worktree itself by default), constructing it on
 // first use (the constructor runs one summary subprocess, so it is built
 // once per episode rather than per Dispatch).
-func (w *workspaceTools) episodeHandler(episodeID, epRoot string) (broker.Handler, error) {
+func (w *workspaceTools) episodeHandler(episodeID, sandbox string) (broker.Handler, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	if cached, ok := w.handler[episodeID]; ok && cached.root == epRoot {
+	if cached, ok := w.handler[episodeID]; ok && cached.root == sandbox {
 		return cached.h, nil
 	}
 	policyDir := filepath.Join(w.stateDir, "policies")
@@ -384,7 +395,7 @@ func (w *workspaceTools) episodeHandler(episodeID, epRoot string) (broker.Handle
 		}
 	}
 	policyPath := filepath.Join(policyDir, episodeID+".toml")
-	policy, err := broker.RenderEpisodePolicy(epRoot)
+	policy, err := broker.RenderEpisodePolicy(sandbox)
 	if err != nil {
 		return nil, err
 	}
@@ -394,7 +405,7 @@ func (w *workspaceTools) episodeHandler(episodeID, epRoot string) (broker.Handle
 	ctx, cancel := context.WithTimeout(context.Background(), workspaceHandlerBudget)
 	defer cancel()
 	h, err := broker.NewAilangToolHandler(ctx, broker.AilangToolConfig{
-		Bin: w.bin, BinRef: w.binRef, PolicyPath: policyPath, Root: epRoot, CacheDir: cacheDir,
+		Bin: w.bin, BinRef: w.binRef, PolicyPath: policyPath, Root: sandbox, CacheDir: cacheDir,
 		ExamplesDir: w.examplesDir, RunCaps: w.runCaps,
 	})
 	if err != nil {
@@ -404,7 +415,7 @@ func (w *workspaceTools) episodeHandler(episodeID, epRoot string) (broker.Handle
 	if w.handler == nil {
 		w.handler = map[string]episodeTool{}
 	}
-	w.handler[episodeID] = episodeTool{root: epRoot, h: tool}
+	w.handler[episodeID] = episodeTool{root: sandbox, h: tool}
 	return tool, nil
 }
 

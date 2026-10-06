@@ -902,3 +902,70 @@ func TestSeToolsSurfaceTaggedInLog(t *testing.T) {
 			by, id, a2a.Result.Metadata["invocation_id"])
 	}
 }
+
+// ---------------------------------------------------------------------------
+// row 141: project layouts (RIG: WORLD_TOOL_AILANG_BIN; SKIP in CI)
+// ---------------------------------------------------------------------------
+
+// wsToolRun runs one payload through the episode's handler for effect and
+// returns the decoded response.
+func wsToolRun(t *testing.T, d *Daemon, episode, effect, payload string) map[string]any {
+	t.Helper()
+	h := d.workspace.registry(episode)[effect]
+	if h == nil {
+		t.Fatalf("registry(%s) has no %s handler", episode, effect)
+	}
+	out, err := h.Execute(boundedTestContext(t), broker.EffectRequest{Effect: effect, Scope: broker.WorkspaceScope, Cost: 1}, []byte(payload))
+	if err != nil {
+		t.Fatalf("%s %s: %v", effect, payload, err)
+	}
+	var resp map[string]any
+	if err := json.Unmarshal(out, &resp); err != nil {
+		t.Fatalf("%s: %v", out, err)
+	}
+	return resp
+}
+
+// aiCheckOf decodes an ai_check response's inner check report: the
+// tool's stdout is itself a JSON document with check.passed and errors[].
+func aiCheckOf(t *testing.T, resp map[string]any) (ok, passed bool, errs []map[string]any) {
+	t.Helper()
+	ok, _ = resp["ok"].(bool)
+	stdout, _ := resp["stdout"].(string)
+	var inner struct {
+		Check struct {
+			Passed bool             `json:"passed"`
+			Errors []map[string]any `json:"errors"`
+		} `json:"check"`
+	}
+	if err := json.Unmarshal([]byte(stdout), &inner); err != nil {
+		t.Fatalf("ai_check stdout is not the check report (%v): %v", err, resp)
+	}
+	return ok, inner.Check.Passed, inner.Check.Errors
+}
+
+// TestSeToolsModuleRootResolvesBareImports is AC1.7: with the worktree as
+// the sandbox a bare import in tools/ is LDR001; with --workspace-module-root
+// tools the same module passes. The fixture (b, c) has no registry import.
+func TestSeToolsModuleRootResolvesBareImports(t *testing.T) {
+	bin := realToolBin(t)
+	setup := func(t *testing.T, cfg Config) (*Daemon, wsFixture) {
+		f := newWSFixture(t)
+		tools := filepath.Join(f.root, "ep1", "tools")
+		mkdirs(t, tools)
+		writeFile(t, filepath.Join(tools, "b.ail"), "module b\n\nexport func b() -> string {\n  \"b\"\n}\n")
+		writeFile(t, filepath.Join(tools, "c.ail"), "module c\n\nimport b (b)\n\nexport func c() -> string {\n  b()\n}\n")
+		cfg.DBPath, cfg.WorkspaceRoot, cfg.ToolAilangBin = f.db, f.root, bin
+		return mustWSDaemon(t, cfg), f
+	}
+	d, _ := setup(t, Config{})
+	_, passed, errs := aiCheckOf(t, wsToolRun(t, d, "ep1", broker.EffectAilangCheck, `{"op":"ai_check","path":"tools/c.ail"}`))
+	if passed || len(errs) == 0 || errs[0]["code"] != "LDR001" || errs[0]["message"] != "module not found: b" {
+		t.Fatalf("without a module root: passed=%v errors=%v, want LDR001 module not found: b", passed, errs)
+	}
+	d, _ = setup(t, Config{WorkspaceModuleRoot: "tools"})
+	ok, passed, errs := aiCheckOf(t, wsToolRun(t, d, "ep1", broker.EffectAilangCheck, `{"op":"ai_check","path":"c.ail"}`))
+	if !ok || !passed {
+		t.Fatalf("with --workspace-module-root tools: ok=%v passed=%v errors=%v, want a pass", ok, passed, errs)
+	}
+}

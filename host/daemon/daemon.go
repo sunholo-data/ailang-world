@@ -265,6 +265,15 @@ type Config struct {
 	ExecSandbox         string
 	ExecNode            string
 	ExecMaxOutputBytes  int64
+	// WorkspaceModuleRoot and WorkspaceEpisodeModuleRoots
+	// (`--workspace-module-root REL`, `--workspace-episode-module-root EP=REL`;
+	// row 141 M1) make <workspace-root>/<episode>/REL the AILANG sandbox and
+	// module root instead of the worktree itself. REL is clean and relative
+	// (the exec profile's path grammar); the episode override beats the
+	// default. Both need WorkspaceRoot; a REL that is not an existing real
+	// directory refuses that episode's tools (R8), never creates it.
+	WorkspaceModuleRoot         string
+	WorkspaceEpisodeModuleRoots []string
 	// ErrorLog receives the operator-facing detail of every sanitized 500: one
 	// line per error, carrying the route and the VERBATIM store error that the
 	// response body no longer echoes (Decision: sanitize-vs-expose).
@@ -555,6 +564,9 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	if cfg.DBPath == "" {
 		return nil, &StartupError{Stage: StageConfig, Detail: "no database path configured (--db is required)"}
 	}
+	if cfg.WorkspaceRoot == "" && (cfg.WorkspaceModuleRoot != "" || len(cfg.WorkspaceEpisodeModuleRoots) > 0) {
+		return nil, &StartupError{Stage: StageConfig, Detail: "--workspace-module-root and --workspace-episode-module-root need --workspace-root"}
+	}
 	// Row 134 AC4.5: refuse a workspace root that contains the daemon's own
 	// state BEFORE taking writer authority, like the bind policy.
 	workspace := &workspaceTools{errLog: resolveErrorLog(cfg.ErrorLog)}
@@ -571,6 +583,11 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 			}
 			workspace.examplesDir = examples
 		}
+		def, byEp, err := resolveModuleRoots(cfg.WorkspaceModuleRoot, cfg.WorkspaceEpisodeModuleRoots, root)
+		if err != nil {
+			return nil, &StartupError{Stage: StageConfig, Detail: "the module root is refused", Err: err}
+		}
+		workspace.moduleRoot, workspace.episodeModuleRoot = def, byEp
 	}
 
 	s, err := store.Open(cfg.DBPath)

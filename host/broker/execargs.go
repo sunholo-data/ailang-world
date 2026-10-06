@@ -256,3 +256,8 @@ func flagClassOf(flags map[string]string, a string) string {
 func execValueOk(cls, v string) bool {
 	return flagValueOk(cls, v, len(v), intValueParses(v), enumHas(cls, v))
 }
+
+// ExecPathOk is execPathOk for other host packages (row 141): the workspace
+// module root shares the exec profile's relative-path grammar, so the two
+// cannot drift apart.
+func ExecPathOk(p string) bool { return execPathOk(p) }
