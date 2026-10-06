@@ -125,9 +125,15 @@ def claude_mcp_config(token: str, addr: str = DEFAULT_ADDR) -> dict:
 # enum-validated server key (`auto|prompt|writes|approve`; `bogus` is a load error); `approve`
 # lets the World tools run, as codex's shell arm runs its sandboxed commands without approval.
 CODEX_MCP_APPROVAL_MODES = ('default', 'approve')
+# [D-WORLD-67, Mark Edmondson attended 2026-10-06] the three M4 additions are the CANONICAL §4.3
+# argv: the defaults below produce the FINAL argv (the goldens). `default` / False / None remain
+# only so M4's ledgered iterations 0–2 can be reproduced from their recorded knobs.
+DEFAULT_CODEX_MCP_APPROVAL = 'approve'
+DEFAULT_CLAUDE_ISOLATION = True
+FINAL_CLAUDE_MAX_BUDGET_USD = 5.0  # per Claude task-run in FINAL (D-WORLD-67); smoke passes 1.00
 
 
-def codex_world_overrides(addr: str = DEFAULT_ADDR, mcp_approval: str = 'default') -> list[str]:
+def codex_world_overrides(addr: str = DEFAULT_ADDR, mcp_approval: str = 'approve') -> list[str]:
     """The ``-c`` overrides that give codex exactly the ``world`` server (token by env var name)."""
     if mcp_approval not in CODEX_MCP_APPROVAL_MODES:
         raise ArmError(f'codex MCP approval mode {mcp_approval!r} not in {CODEX_MCP_APPROVAL_MODES}')
@@ -142,16 +148,22 @@ def codex_world_overrides(addr: str = DEFAULT_ADDR, mcp_approval: str = 'default
 
 def build_argv(agent: str, arm: str, *, model: str, prompt_text: str, cwd: str,
                mcp_config_path: str | None = None, addr: str = DEFAULT_ADDR,
-               claude_isolation: bool = False, max_budget_usd: float | None = None,
-               codex_mcp_approval: str = 'default') -> list[str]:
+               claude_isolation: bool = DEFAULT_CLAUDE_ISOLATION,
+               max_budget_usd: float | None = FINAL_CLAUDE_MAX_BUDGET_USD,
+               codex_mcp_approval: str = DEFAULT_CODEX_MCP_APPROVAL) -> list[str]:
     """The exact argv of §4.3 for one (agent, arm). ``cwd`` is the worktree (shell) or the empty
     ``void/<ep>`` (World); Claude takes it as the process cwd, codex also as ``-C``.
 
-    The two M4 additions are Claude-only, keyword-only and applied IDENTICALLY to both arms, so the
-    defaults reproduce the §4.3 goldens exactly: ``claude_isolation`` (knob (b), V-M4-1) appends
-    ``--setting-sources ""`` and merges ``CLAUDE_ISOLATION_SETTINGS`` into the arm's ``--settings``;
-    ``max_budget_usd`` (§4.9) appends ``--max-budget-usd``. codex ignores both (it has no budget
-    flag; ``--ignore-user-config`` already drops its user config)."""
+    The M4 additions (ACKed by Mark Edmondson, attended 2026-10-06, D-WORLD-67) are ON by default,
+    so the defaults produce the canonical FINAL argv of §4.3 and the goldens:
+      * ``claude_isolation`` (V-M4-1): ``--setting-sources ""`` and ``CLAUDE_ISOLATION_SETTINGS``
+        merged into each Claude arm's ``--settings``, identically in both arms;
+      * ``max_budget_usd`` (§4.9): ``--max-budget-usd`` on every Claude run (5.00 FINAL; None omits);
+      * ``codex_mcp_approval`` (V-M4-3): the codex World arm's
+        ``-c mcp_servers.world.default_tools_approval_mode=approve``.
+    codex ignores the two Claude ones (it has no budget flag; ``--ignore-user-config`` already
+    drops its user config). Passing False / None / 'default' reproduces M4's early iterations.
+    """
     if agent not in AGENTS or arm not in ARMS:
         raise ArmError(f'unknown agent/arm {agent!r}/{arm!r}')
     if not model or not prompt_text or not cwd:

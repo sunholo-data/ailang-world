@@ -190,8 +190,10 @@ def run_agent(agent: str, arm: str, *, model: str, prompt_text: str, worktree: s
               private_dir: str, transcript_path: str, void_dir: str | None = None,
               episode: str | None = None, token: str | None = None, tool_bin: str | None = None,
               addr: str = arms.DEFAULT_ADDR, deadline_s: float = arms.DEADLINE_S,
-              client: world.Client | None = None, claude_isolation: bool = False,
-              max_budget_usd: float | None = None, codex_mcp_approval: str = 'default') -> dict:
+              client: world.Client | None = None,
+              claude_isolation: bool = arms.DEFAULT_CLAUDE_ISOLATION,
+              max_budget_usd: float | None = arms.FINAL_CLAUDE_MAX_BUDGET_USD,
+              codex_mcp_approval: str = arms.DEFAULT_CODEX_MCP_APPROVAL) -> dict:
     """§4.4 steps 2–4 for one (agent, arm). Returns the driver fields of the row."""
     if arm == 'world' and not (void_dir and episode and token):
         raise DriverError('the World arm needs void_dir, episode and token')

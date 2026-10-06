@@ -17,5 +17,9 @@
  "--permission-mode",
  "acceptEdits",
  "--settings",
- "{\"sandbox\":{\"enabled\":true,\"autoAllowBashIfSandboxed\":true,\"allowUnsandboxedCommands\":false}}"
+ "{\"sandbox\":{\"enabled\":true,\"autoAllowBashIfSandboxed\":true,\"allowUnsandboxedCommands\":false},\"enabledPlugins\":{\"cc-plugin-agents-md@builtin\":false,\"cc-plugin-telemetry@builtin\":false,\"cc-plugin-plugin-authoring@builtin\":false},\"autoMemoryEnabled\":false}",
+ "--setting-sources",
+ "",
+ "--max-budget-usd",
+ "5.00"
 ]

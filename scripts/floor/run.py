@@ -68,6 +68,11 @@ ROW153_PATTERNS = ('host callback timed out', 'execute plan phase: context deadl
                    'context deadline exceeded')
 QUOTA_PATTERNS = (('quota_exhausted', re.compile(r'(?i)usage limit|quota|insufficient[_ ]credit|credit balance')),
                   ('rate_limit', re.compile(r'(?i)rate[_ -]?limit|\b429\b|too many requests')))
+# §4.6 capacity rule (D-WORLD-67, pre-registered): a task-run whose failure is a TYPED provider-capacity
+# fault is re-run, up to MAX_ATTEMPTS attempts in all. Only this exact provider message class (V-M4-4)
+# qualifies; timeouts, every other api_error, wrong answers and anything else are never re-run.
+CAPACITY_FAULT = re.compile(r'Selected model is at capacity')
+MAX_ATTEMPTS = 3
 TYPED_API = re.compile(r'(?i)overloaded|at capacity|\b5\d\d\b|internal server error|api_error|service unavailable')
 
 
@@ -271,6 +276,13 @@ def live_config(cfg: dict, mode: str, probes: Probes) -> dict:
         'tool_bin_sha256': probes.tool_sha256(tool_bin(cfg)), 'grader': grade.GRADER_VERSION,
         'cli_versions': probes.cli_versions(), 'deadline_s': cfg['deadline_s'],
         'world_grants': arms.world_grant_args(), 'world_tools': list(prompt.WORLD_TOOL_NAMES),
+        # Pre-registered rules the run applies (a change to either moves the digest, so AC5.1 refuses
+        # a FINAL whose rules drifted from the committed prereg).
+        'rules': {'capacity': {'pattern': CAPACITY_FAULT.pattern, 'max_attempts': MAX_ATTEMPTS,
+                               'source': 'design §4.6, D-WORLD-67'},
+                  'thresholds': {'range_max': str(stats.RANGE_MAX), 'delta_min': str(stats.DELTA_MIN),
+                                 'overhead_max': str(stats.OVERHEAD_MAX), 'min_runs': stats.MIN_RUNS,
+                                 'deadline_ms': stats.DEADLINE_MS}},
     }
 
 
@@ -306,6 +318,13 @@ def prereg_draft(cfg: dict, probes: Probes, ledger: str = LEDGER) -> dict:
                          'Drift probe: one extra shell run per agent (informative)',
                          'Verdict: report.py verdict (refuses unless eligibility.json is committed)'],
         'canary': 'one smoke-tier task per (agent, arm) before each phase (§4.9); abort on the first quota/rate-limit evidence',
+        'capacity_rule': {'source': 'design §4.6 capacity rule, D-WORLD-67 (Mark Edmondson, attended 2026-10-06)',
+                          'retryable': 'ONLY a typed provider-capacity api_error whose evidence matches '
+                                       f'/{CAPACITY_FAULT.pattern}/ (V-M4-4); both agents, both arms',
+                          'max_attempts': MAX_ATTEMPTS,
+                          'never_retried': 'timeouts, any other api_error, wrong answers, everything else',
+                          'outcome': 'the last attempt; every attempt is recorded and reported; 3 capacity '
+                                     'faults stay HARNESS_FAULT (eligibility fails honestly)'},
     }
 
 
@@ -428,6 +447,27 @@ def decide_category(*, driver_category, agent_fail, graded: dict | None) -> tupl
     return grade.error_category(graded), None, False
 
 
+def is_capacity_fault(row: dict) -> bool:
+    """The ONLY retryable outcome (§4.6 capacity rule): not passed, a typed ``api_error`` whose
+    evidence is the provider's capacity refusal."""
+    return (row.get('stdout_ok') is not True and row.get('error_category') == 'api_error'
+            and row.get('cause_typed') is True
+            and bool(CAPACITY_FAULT.search(row.get('cause_evidence') or '')))
+
+
+def run_with_retries(run_once, max_attempts: int = MAX_ATTEMPTS) -> list:
+    """Run ``run_once(attempt)`` (attempt = 1, 2, …) until it is not a capacity fault or the
+    attempts are spent. Returns EVERY attempt's row (all are recorded); the last is the outcome.
+    Three capacity faults in a row stay a HARNESS_FAULT (the shell agent stays ineligible)."""
+    out = []
+    for attempt in range(1, max_attempts + 1):
+        row = run_once(attempt)
+        out.append(row)
+        if not is_capacity_fault(row):  # MUT-RETRY-ANY-APIERROR widens this test
+            break
+    return out
+
+
 def classify_row(row: dict) -> str:
     try:
         return classify_mod.classify(row)
@@ -447,7 +487,9 @@ def summarize(rows: list, tasks: list) -> dict:
         a = [r for r in rows if r['agent'] == agent]
         if not a:
             continue
-        by = {(r['arm'], r['task']): r for r in a}
+        by = {}
+        for r in sorted(a, key=lambda r: r.get('attempt', 1)):  # the last attempt is the outcome
+            by[(r['arm'], r['task'])] = r
         ps = sum(1 for t in tasks if by.get(('shell', t), {}).get('class') == classify_mod.PASS)
         pw = sum(1 for t in tasks if by.get(('world', t), {}).get('class') == classify_mod.PASS)
         o_t = {}
@@ -459,12 +501,14 @@ def summarize(rows: list, tasks: list) -> dict:
             ws = stats.DEADLINE_MS if w.get('finish_reason') == 'timeout' else w['wall_ms']
             ss = stats.DEADLINE_MS if s.get('finish_reason') == 'timeout' else s['wall_ms']
             o_t[t] = ws / ss - 1
-        faults = {x: sum(1 for r in a if r['arm'] == x and r['class'] == classify_mod.HARNESS_FAULT) for x in arms.ARMS}
+        final = list(by.values())
+        faults = {x: sum(1 for r in final if r['arm'] == x and r['class'] == classify_mod.HARNESS_FAULT) for x in arms.ARMS}
+        retried = sum(1 for r in a if r.get('attempt', 1) > 1)
         out[agent] = {'T': T, 'pass_S': ps, 'pass_W': pw, 'delta': round((pw - ps) / T, 4) if T else None,
                       'O': round(float(stats.median(o_t.values())), 4) if o_t else None,
                       'o_t': {k: round(v, 3) for k, v in sorted(o_t.items())},
-                      'harness_faults': faults,
-                      'unclassified': sum(1 for r in a if r['class'] == 'UNCLASSIFIED')}
+                      'harness_faults': faults, 'capacity_reruns': retried,
+                      'unclassified': sum(1 for r in final if r['class'] == 'UNCLASSIFIED')}
     return out
 
 
@@ -558,7 +602,8 @@ class Ctx:
         self.spend_this = 0.0
 
 
-def run_cell(ctx: Ctx, agent: str, arm: str, task, *, run_k: int, rows_path: str, label: str) -> dict:
+def run_cell(ctx: Ctx, agent: str, arm: str, task, *, run_k: int, rows_path: str, label: str,
+             attempt: int = 1) -> dict:
     """§4.4 for one task-run: reset, (pre-flight), spawn, grade, classify, append one row."""
     import run_task
     import world
@@ -575,7 +620,8 @@ def run_cell(ctx: Ctx, agent: str, arm: str, task, *, run_k: int, rows_path: str
     spec = task.spec
     sol_path = os.path.join(wt, SOL) if arm == 'shell' else prompt.WORLD_SOLUTION_PATH
     mock = grade.HTTPMock(port=MOCK_PORT) if spec.get('net_allow_localhost') else None
-    tr = os.path.join(ctx.tdir, f'{label}-{agent}-{arm}-{task.id}.jsonl')
+    suffix = '' if attempt == 1 else f'-a{attempt}'
+    tr = os.path.join(ctx.tdir, f'{label}-{agent}-{arm}-{task.id}{suffix}.jsonl')
     os.makedirs(ctx.tdir, exist_ok=True)
     log_off = _size(L['serve_log'])
     t_start = time.time()
@@ -618,6 +664,7 @@ def run_cell(ctx: Ctx, agent: str, arm: str, task, *, run_k: int, rows_path: str
     row = {
         'id': task.id, 'task': task.id, 'lang': 'ailang', 'model': ctx.sec['models'][agent],
         'executor': agent, 'agent': agent, 'arm': arm, 'run': run_k, 'trial': run_k, 'label': label,
+        'attempt': attempt,
         'compile_ok': bool(graded and graded['compile_ok']), 'runtime_ok': bool(graded and graded['runtime_ok']),
         'stdout_ok': bool(graded and graded['stdout_ok']), 'error_category': cat, 'cause_evidence': ev,
         'cause_typed': typed, 'finish_reason': drv.get('finish_reason'), 'rc': drv.get('rc'),
@@ -751,7 +798,9 @@ def cmd_iterate(a) -> int:
                     continue
                 if time.time() - t0 > a.max_wall_s:
                     raise RunRefused(f'wall-clock ceiling {a.max_wall_s} s reached')
-                c = run_cell(ctx, ag, x, can, run_k=1, rows_path=os.path.join(it_dir, 'canary.jsonl'), label='canary')
+                c = run_with_retries(lambda k: run_cell(
+                    ctx, ag, x, can, run_k=1, rows_path=os.path.join(it_dir, 'canary.jsonl'), label='canary',
+                    attempt=k))[-1]
                 canaries.append({'agent': ag, 'arm': x, 'task': can.id, 'class': c['class'],
                                  'attestation': c['attestation'], 'wall_ms': c['wall_ms']})
                 print(f'canary {ag}/{x}: {c["class"]} att={c["attestation"]} {c["wall_ms"]} ms', flush=True)
@@ -765,8 +814,12 @@ def cmd_iterate(a) -> int:
                 for t in tasks:
                     if time.time() - t0 > a.max_wall_s:
                         raise RunRefused(f'wall-clock ceiling {a.max_wall_s} s reached')
-                    r = run_cell(ctx, ag, x, t, run_k=1,
-                                 rows_path=os.path.join(it_dir, 'runs', ag, x, 'r1.jsonl'), label=f'iter{a.iteration}')
+                    tries = run_with_retries(lambda k: run_cell(
+                        ctx, ag, x, t, run_k=1, rows_path=os.path.join(it_dir, 'runs', ag, x, 'r1.jsonl'),
+                        label=f'iter{a.iteration}', attempt=k))
+                    for prev in tries[:-1]:
+                        print(f'{ag}/{x}/{t.id}: attempt {prev["attempt"]} capacity fault, re-run (§4.6)', flush=True)
+                    r = tries[-1]
                     print(f'{ag}/{x}/{t.id}: {r["class"]} {r["error_category"]} {r["wall_ms"]} ms '
                           f'${r["cost_usd"]} att={r["attestation"]} '
                           f'prov={(r.get("provenance") or {}).get("solution_provenance")} '

@@ -18,8 +18,8 @@ Verdict, in order: no agent eligible → PAUSED; any eligible agent fails either
 both eligible and both pass → HOLDS; otherwise → INCOMPLETE.
 
 Rows are dicts with at least ``task, run, arm, class`` (PASS/FAIL/HARNESS_FAULT, from
-classify.py), ``wall_ms`` and ``finish_reason``; a re-run World task-run (quota/rate-limit,
-§4.6) carries ``attempt`` — the highest attempt is the task-run's outcome.
+classify.py), ``wall_ms`` and ``finish_reason``; a re-run task-run (World quota/rate-limit, or the
+capacity rule in either arm, §4.6) carries ``attempt`` — the highest attempt is the task-run's outcome.
 """
 from __future__ import annotations
 
@@ -91,6 +91,7 @@ def eligibility(shell_rows, tasks) -> dict:
     """Eligible(a) from ONE shell-phase attempt (all its rows, faults included)."""
     tasks = list(tasks)
     T = len(tasks)
+    shell_rows = final_rows(shell_rows)  # §4.6 capacity rule: the last attempt is the outcome
     grid = _grid(shell_rows, tasks, 'shell')
     N = len(grid)
     faults = sorted((r['task'], r['run']) for g in grid.values() for r in g.values() if r['class'] == HARNESS_FAULT)
@@ -158,6 +159,7 @@ def pass_rate_test(shell_rows, world_rows, tasks) -> dict:
 
 
 def agent_tests(shell_rows, world_rows, tasks) -> dict:
+    shell_rows = final_rows(shell_rows)
     world_rows = final_rows(world_rows)
     pr = pass_rate_test(shell_rows, world_rows, tasks)
     ov = overhead(shell_rows, world_rows, tasks)
@@ -188,6 +190,7 @@ def verdict(eligible: dict, tests: dict) -> str:
 def informative(shell_rows, world_rows, tasks, *, seed: int = 93, B: int = 10000) -> dict:
     """Never the gate: pooled-median ratio, total-time ratio, paired bootstrap CI for Δ."""
     tasks = list(tasks)
+    shell_rows = final_rows(shell_rows)
     world_rows = final_rows(world_rows)
     s_ok = [r for r in shell_rows if r['class'] != HARNESS_FAULT]
     w_ok = [r for r in world_rows if r['class'] != HARNESS_FAULT]

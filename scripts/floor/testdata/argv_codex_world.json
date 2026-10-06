@@ -35,5 +35,7 @@
  "mcp_servers.world.bearer_token_env_var=WORLD_SESSION",
  "-c",
  "mcp_servers.world.required=true",
+ "-c",
+ "mcp_servers.world.default_tools_approval_mode=approve",
  "$P"
 ]

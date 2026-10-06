@@ -487,8 +487,8 @@ def main(argv=None) -> int:
         p.add_argument('--out', default=DEFAULT_OUT, help='evidence base dir')
         p.add_argument('--out-dir', default=None, help='exact evidence dir (overrides --out/<sub>)')
         p.add_argument('--agents', default='claude,codex')
-        p.add_argument('--claude-isolation', action='store_true',
-                       help='M4 knob (b): run Claude with the isolation flags (arms.CLAUDE_ISOLATION_SETTINGS)')
+        p.add_argument('--no-claude-isolation', dest='claude_isolation', action='store_false',
+                       help='reproduce the pre-M4 Claude argv (the isolation flags are canonical since D-WORLD-67)')
     a = ap.parse_args(argv)
     a.root = os.path.abspath(os.path.expanduser(a.root))
     return a.fn(a)

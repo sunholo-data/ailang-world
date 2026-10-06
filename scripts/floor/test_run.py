@@ -248,12 +248,16 @@ class Isolation(unittest.TestCase):  # knob (b): identical in both Claude arms
         self.assertEqual(json.loads(run_flag(sh, '--settings'))['sandbox'], arms.CLAUDE_SANDBOX_SETTINGS['sandbox'])
         self.assertNotIn('sandbox', json.loads(run_flag(wo, '--settings')))
         base_sh = arms.build_argv('claude', 'shell', model='m', prompt_text='p', cwd='/w')
-        self.assertNotIn('--setting-sources', base_sh)  # off by default: the goldens stay the §4.3 text
+        self.assertIn('--setting-sources', base_sh)  # ON by default since D-WORLD-67 (canonical)
+        old = arms.build_argv('claude', 'shell', model='m', prompt_text='p', cwd='/w', claude_isolation=False,
+                              max_budget_usd=None)
+        self.assertNotIn('--setting-sources', old)  # iteration 0-2 reproduction
 
     def test_codex_unaffected_and_budget_claude_only(self):
         for arm in arms.ARMS:
             mcp = None
-            a = arms.build_argv('codex', arm, model='m', prompt_text='p', cwd='/w', mcp_config_path=mcp)
+            a = arms.build_argv('codex', arm, model='m', prompt_text='p', cwd='/w', mcp_config_path=mcp,
+                                claude_isolation=False, max_budget_usd=None)
             b = arms.build_argv('codex', arm, model='m', prompt_text='p', cwd='/w', mcp_config_path=mcp,
                                 claude_isolation=True, max_budget_usd=1.0)
             self.assertEqual(a, b)
@@ -265,10 +269,9 @@ class Isolation(unittest.TestCase):  # knob (b): identical in both Claude arms
 
 class CodexMcpApproval(unittest.TestCase):  # knob (c)
     def test_default_is_the_golden_and_approve_adds_one_override(self):
-        d = arms.build_argv('codex', 'world', model='m', prompt_text='p', cwd='/v')
+        d = arms.build_argv('codex', 'world', model='m', prompt_text='p', cwd='/v', codex_mcp_approval='default')
         a = arms.build_argv('codex', 'world', model='m', prompt_text='p', cwd='/v', codex_mcp_approval='approve')
-        self.assertEqual(d, arms.build_argv('codex', 'world', model='m', prompt_text='p', cwd='/v',
-                                            codex_mcp_approval='default'))
+        self.assertEqual(a, arms.build_argv('codex', 'world', model='m', prompt_text='p', cwd='/v'))  # default
         added = [x for x in a if x not in d]
         self.assertEqual(added, ['mcp_servers.world.default_tools_approval_mode=approve'])
         self.assertEqual(a[a.index(added[0]) - 1], '-c')
@@ -377,6 +380,113 @@ class Outcomes(unittest.TestCase):
         self.assertEqual(h['transcript_callback_timeouts'], 2)
         self.assertEqual(h['daemon_deadline_lines'], 1)
         self.assertEqual(run.row153_hits('{"ok":1}', '')['transcript_callback_timeouts'], 0)
+
+
+CAP = 'Selected model is at capacity. Please try a different model.'
+
+
+def attempt_row(arm, outcome, attempt, task='t', run_k=1):
+    """A classified row for one attempt: 'cap' (typed capacity api_error), 'pass', 'timeout',
+    'api' (another typed api_error), 'api_untyped', 'wrong' (logic_error)."""
+    base = {'agent': 'codex', 'arm': arm, 'task': task, 'run': run_k, 'attempt': attempt, 'wall_ms': 1000,
+            'finish_reason': 'exit', 'stdout_ok': False, 'cause_typed': False, 'cause_evidence': None}
+    if outcome == 'pass':
+        base.update(stdout_ok=True, error_category='none')
+    elif outcome == 'cap':
+        base.update(error_category='api_error', cause_typed=True, cause_evidence=CAP)
+    elif outcome == 'timeout':
+        base.update(error_category='timeout', cause_evidence='killed at 600 s', finish_reason='timeout')
+    elif outcome == 'api':
+        base.update(error_category='api_error', cause_typed=True, cause_evidence='503 Service Unavailable')
+    elif outcome == 'api_untyped':
+        base.update(error_category='api_error', cause_evidence='stream disconnected before completion')
+    elif outcome == 'wrong':
+        base.update(error_category='logic_error')
+    base['class'] = run.classify_row(base)
+    return base
+
+
+class CapacityRule(unittest.TestCase):  # §4.6 capacity rule, D-WORLD-67
+    def scripted(self, arm, outcomes):
+        calls = []
+
+        def once(k):
+            calls.append(k)
+            return attempt_row(arm, outcomes[k - 1], k)
+        return once, calls
+
+    def test_capacity_then_pass_is_pass_with_two_attempts_recorded(self):
+        for arm in arms.ARMS:
+            once, calls = self.scripted(arm, ['cap', 'pass', 'pass'])
+            rows = run.run_with_retries(once)
+            self.assertEqual(calls, [1, 2])
+            self.assertEqual([r['attempt'] for r in rows], [1, 2])
+            self.assertEqual(rows[0]['class'], classify.HARNESS_FAULT)
+            self.assertEqual(rows[-1]['class'], classify.PASS)
+            final = run.stats.final_rows(rows)
+            self.assertEqual([r['class'] for r in final], [classify.PASS])
+
+    def test_three_capacity_faults_stay_a_harness_fault(self):
+        for arm in arms.ARMS:
+            once, calls = self.scripted(arm, ['cap', 'cap', 'cap', 'pass'])
+            rows = run.run_with_retries(once)
+            self.assertEqual(calls, [1, 2, 3])  # never a 4th attempt
+            self.assertEqual(run.stats.final_rows(rows)[0]['class'], classify.HARNESS_FAULT)
+            self.assertEqual(run.stats.final_rows(rows)[0]['attempt'], 3)
+
+    def test_no_retry_for_timeouts_other_api_errors_or_wrong_answers(self):  # MUT-RETRY-ANY-APIERROR
+        for outcome in ('timeout', 'api', 'api_untyped', 'wrong', 'pass'):
+            for arm in arms.ARMS:
+                with self.subTest(outcome=outcome, arm=arm):
+                    once, calls = self.scripted(arm, [outcome, 'pass', 'pass'])
+                    self.assertEqual(len(run.run_with_retries(once)), 1)
+                    self.assertEqual(calls, [1])
+
+    def test_capacity_evidence_must_be_typed_and_exact(self):
+        r = attempt_row('shell', 'cap', 1)
+        self.assertTrue(run.is_capacity_fault(r))
+        self.assertFalse(run.is_capacity_fault(dict(r, cause_typed=False)))
+        self.assertFalse(run.is_capacity_fault(dict(r, cause_evidence='model overloaded')))
+        self.assertFalse(run.is_capacity_fault(dict(r, stdout_ok=True)))
+        self.assertFalse(run.is_capacity_fault(dict(r, error_category='timeout')))
+        # the live agent_failure typing feeds it (codex error event, V-M4-4)
+        cat, ev, typed = run.agent_failure('codex', 1, {'errors': [CAP, CAP]}, '')
+        self.assertTrue(run.is_capacity_fault({'stdout_ok': False, 'error_category': cat,
+                                               'cause_evidence': ev, 'cause_typed': typed}))
+
+    def test_eligibility_uses_the_last_attempt(self):
+        tasks = ['a', 'b', 'c']
+        rows = []
+        for k in (1, 2, 3):
+            for t in tasks:
+                rows.append(attempt_row('shell', 'pass', 1, task=t, run_k=k))
+        rows[0] = attempt_row('shell', 'cap', 1, task='a', run_k=1)
+        rows.append(attempt_row('shell', 'pass', 2, task='a', run_k=1))
+        e = run.stats.eligibility(rows, tasks)
+        self.assertTrue(e['eligible'], e['reasons'])
+        rows2 = [r for r in rows if not (r['task'] == 'a' and r['run'] == 1)]
+        rows2 += [attempt_row('shell', 'cap', k, task='a', run_k=1) for k in (1, 2, 3)]
+        e2 = run.stats.eligibility(rows2, tasks)
+        self.assertFalse(e2['eligible'])
+        self.assertEqual(e2['harness_faults'], [['a', 1]])
+
+    def test_summary_reports_reruns_and_uses_last_attempt(self):
+        rows = [attempt_row('shell', 'cap', 1), attempt_row('shell', 'pass', 2), attempt_row('world', 'pass', 1)]
+        s = run.summarize(rows, ['t'])['codex']
+        self.assertEqual((s['pass_S'], s['pass_W'], s['capacity_reruns']), (1, 1, 1))
+        self.assertEqual(s['harness_faults'], {'shell': 0, 'world': 0})
+
+    def test_rule_is_in_the_digest(self):  # a changed rule must fail AC5.1
+        c, p = cfg(), FakeProbes()
+        d = run.config_digest(run.live_config(c, 'final', p))
+        with mock.patch.object(run, 'MAX_ATTEMPTS', 4):
+            self.assertNotEqual(d, run.config_digest(run.live_config(c, 'final', p)))
+
+    def test_prereg_carries_the_rule(self):
+        pre = run.prereg_draft(cfg(), FakeProbes(), ledger='/nonexistent/ledger.jsonl')
+        rule = pre['capacity_rule']
+        self.assertEqual(rule['max_attempts'], 3)
+        self.assertIn('Selected model is at capacity', rule['retryable'])
 
 
 class Summary(unittest.TestCase):
