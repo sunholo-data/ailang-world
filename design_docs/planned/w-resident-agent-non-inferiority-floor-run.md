@@ -91,6 +91,15 @@ Both come from paired shell and World arms on the 23 `core` tasks, N runs per ar
 | V-M2-4 | codex shell canary (`-s workspace-write`), then one forced probe "run exactly `echo escape > <outside>/x`" | inside `echo` OK (a `command_execution` item); outside `echo` refused (`zsh:1: operation not permitted`, file absent); `apply_patch` outside refused (stderr `patch rejected: writing outside of the project; rejected by user approval settings`). **Neither refused call produced any `--json` item**: codex's item stream is not a complete record of attempted tool calls. AC2.3's "0 `command_execution`" is therefore necessary, not sufficient; it stands with `void/` empty and AC2.4 provenance |
 | V-M2-5 | `claude --version`; `codex --version` | `2.1.291` (V21 had 2.1.288); `codex-cli 0.159.2` (unchanged). Pin both in the M0 prereg |
 
+**M4 measurements (2026-10-06, attended executor; same CLIs and tuning models).** Evidence: `design_docs/verification/world-floor-m4-2026-10-06/`.
+
+| V | Command | Observed (short) |
+|---|---|---|
+| V-M4-1 | `claude -p … --tools ""` with no flag, `--setting-sources ""`, `--setting-sources project,local` and `--safe-mode`; then `--setting-sources ""` plus `--settings {"enabledPlugins":{<3 cc-plugin-*@builtin>:false},"autoMemoryEnabled":false}`; then `canary.py shell --claude-isolation` | No flag: 5 plugins (`ailang-parse`, `ailang-lens`, 3 built-in `cc-plugin-*`), 2 SessionStart hooks, an auto-memory path. `--setting-sources ""`: user plugins and hooks gone, but the 3 built-ins and auto-memory remain. `--safe-mode`: all 5 plugins still listed. The combined flags give **`plugins: []`, 0 hooks, no memory path**. The shell canary under these flags still refuses the Bash escape (sandbox) and the Write escape (`acceptEdits`); the inside-write positive control passes (`canary-shell-isolation/`) |
+| V-M4-2 | `$TOOL prompt --compact`; `$TOOL prompt --list` (v0.52.1) | rc 1, `"v0.16.6-compact" is not a known prompt version`; the only compact prompt listed is `v0.7.4-compact`. The full prompt is **97,530 bytes** (V34's "≈ 49 KB" is stale). §4.10's full-vs-compact knob is unavailable on the pinned tool |
+| V-M4-3 | M4 iteration 0, codex World arm; then `codex mcp list` with `-c mcp_servers.world.default_tools_approval_mode=bogus` | Every World MCP call returned `MCP tool call requires approval, but approval policy is never` (7 runs, 0 successful calls). M2's codex World canary asked for a shell, so it made no MCP call and could not see this. `bogus` fails to load with `expected one of auto, prompt, writes, approve`. With `=approve`, codex World passed 6/6 with 0 failed calls (iteration 1) |
+| V-M4-4 | M4 iteration 5, codex shell arm (`gpt-6-luna`) | 2 of 6 task-runs ended `{"type":"error","message":"Selected model is at capacity. Please try a different model."}` before any work: provider-side `api_error`, typed, a shell **harness fault**. One draw at N=1 already shows the R2 risk to codex eligibility |
+
 ## 4. Design
 
 ### 4.1 Home and shape (S3)
@@ -143,6 +152,13 @@ Common rules:
 Codex has no switch that removes apply_patch (V26), and its tool list can't be checked offline (V27). The World arm's defence is `-s read-only` plus an empty cwd, measured by AC2.3 and AC2.4.
 
 Two things were **not yet measured** at draft time: the `-c web_search="disabled"` key name and the Claude sandbox settings semantics. **[2026-10-06, M2]** Both are now measured. `web_search` is a real enum key (V-M2-1). The sandbox confines Bash only, and under the drafted `bypassPermissions` the Write tool escaped the worktree. The Claude shell arm therefore runs `--permission-mode acceptEdits` (V-M2-3), which refuses an edit outside the cwd in `-p` mode and keeps sandboxed Bash auto-allowed. This is the one argv change from the draft. **ACKed by Mark Edmondson, attended 2026-10-06.** The goldens in `scripts/floor/testdata/argv_<agent>_<arm>.json` and `test_arms.py`'s copy of this table hold it. The codex shell arm's `-s workspace-write` refused both escape routes (V-M2-4). **World-arm canaries (attended 2026-10-06, `world-floor-m2-2026-10-06/canary-world/`):** Claude's init listed exactly the 8 `mcp__world__*` tools with `world` the only server; codex reported no shell tool and its one attempt ran nothing; `void/` stayed empty for both; `codex mcp list` showed only `world`; the token grep found 0 of 2 tokens. Gap carried to M4: both canaries only read, so the live AC2.4 write-provenance path ran with 0 World writes; it is fixture-tested, and M4's first smoke task is its first live exercise.
+
+**[2026-10-06, M4 — three argv/prompt additions from smoke tuning; NOT yet ACKed by Mark; the goldens and the table above stay the pre-M4 text, and `arms.build_argv`'s defaults reproduce them exactly.]** The tuned config `scripts/floor/floor_config.json` turns on:
+- **(b) Claude isolation, both arms identically (V-M4-1).** `--setting-sources ""` plus the isolation keys merged into each arm's `--settings`. This is what §4.3's "plugins … suppressed identically" needs: M2 measured that they were not suppressed.
+- **(c) codex World `-c mcp_servers.world.default_tools_approval_mode=approve` (V-M4-3).** Without it, the codex World arm cannot call any World tool.
+- **`--max-budget-usd`** on every Claude task-run (§4.9; 1.00 for smoke, 5.00 proposed for FINAL).
+
+The World tools block is wording `row135-rw` (§4.2 (a), a §4.10 knob). The prereg draft carries the full argv templates, so a FINAL run uses exactly what is ACKed.
 
 **[2026-10-06]** World serves **9** se-tools since row 140 (`workspace-exec`, effect `Workspace.Exec`). The World arm keeps **exactly the 8 AILANG tools** above: the benchmark is AILANG-only, and an unconfigured exec tool would be a dead tool that changes the prompt surface. `scripts/floor/prompt.py` (`WORLD_TOOL_NAMES`, `WORLD_EXCLUDED_TOOLS`) and `scripts/floor/arms.py` (`world_allowed_tools`) pin the 8 names; `test_arms.py` checks them against `packages/se-tools/transitions.json` and asserts `workspace-exec` is absent from the prompt, the allowed tools and the grants (mutant MUT-EXEC-GRANT).
 
@@ -284,6 +300,13 @@ The tuning ledger is `design_docs/verification/world-floor-tuning-ledger.jsonl`.
 - AC4.1: each iteration appends a ledger row.
 - AC4.2: `run.py` refuses to run with a dirty ledger.
 - Deliverables: the tuned config and a prereg draft.
+
+- **[2026-10-06] M4 status** (PR "Row 93 M4"): `scripts/floor/run.py` and the ledger `design_docs/verification/world-floor-tuning-ledger.jsonl` hold 6 iterations.
+  - The smoke set is a fixed 6-task **core** subset covering the four P4 tasks, as the brief asked; the `smoke` tier has none of them. The canary is the smoke-tier `fizzbuzz`.
+  - AC4.1: one ledger row per iteration. AC4.2: dirty ledger refused (MUT-DIRTY-LEDGER killed). AC5.1 built early: `run.py final` refuses an uncommitted prereg or a digest mismatch (MUT-FINAL-NOPREREG killed).
+  - Smoke result on the tuned config (N=1, 6 tasks): Δ = 0 for both agents. O: claude +0.06 and +0.15; codex +0.03 (it 4), and +1.30 on 4 tasks (it 5, after 2 shell harness faults, V-M4-4).
+  - Row 153: 0 callback timeouts in 70 World task-runs. AC2.4 live: 84 World writes, 0 `native_write_detected`.
+  - Tuned config and prereg draft: `world-floor-m4-2026-10-06/README.md`.
 
 **M5 (attended, ~0.5 d of attention within ~4–5 h wall) — FINAL.** Commit the prereg; run the mint block; Phase 1 → commit eligibility → Phase 2 plus the drift probe → verdict → evidence; record PR.
 - AC5.1: `--final` refuses unless the prereg is committed and its digest equals the live config.
