@@ -1,0 +1,121 @@
+{
+  "abort": null,
+  "arm_digests": {
+    "claude/shell": "23c99c08b3c09428616f8eca4756fc01c52aedef6175505ef0df7510e6b2b9b1",
+    "claude/world": "abfffd41ca8493c685b82a0e6b47e3a1e409cb167f1b3e5db8879c430421cc1e",
+    "codex/shell": "8e750bb9d1c67d281c05ec27b11f9600cec47648343d5c72c752609f09291a76",
+    "codex/world": "926c5805a6ce39a76a8439e0efcb9931e1cedf70a29c7eb2eda57b12ff4efa7c"
+  },
+  "canary": [
+    {
+      "agent": "claude",
+      "arm": "world",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 15419
+    },
+    {
+      "agent": "codex",
+      "arm": "world",
+      "attestation": [],
+      "class": "PASS",
+      "task": "fizzbuzz",
+      "wall_ms": 23229
+    }
+  ],
+  "change": "World tools block: m1 (stale: ailang-run has no stdin/argv/caps) -> row135 (stdin, argv, caps as row 135 shipped; run step names the task's caps)",
+  "codex_tokens": 1949959,
+  "commit": "60d1408b069874f5f8dd9e5663c6cf822039ba92",
+  "config_digest_smoke": "05d68369b06e6f0cc723ce7f6271023f038cf6f1d8b0a65d3f362c4a996611cb",
+  "iteration": 2,
+  "knob": "world_tools_wording",
+  "native_write_detected": [],
+  "row153": {
+    "claude": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 6
+    },
+    "codex": {
+      "callback_timeouts": 0,
+      "daemon_deadline_lines": 0,
+      "runs_with_callback_timeout": 0,
+      "task_runs": 6
+    }
+  },
+  "rows_reused_from": {
+    "claude/shell": "iter-0",
+    "codex/shell": "iter-0"
+  },
+  "side": "world",
+  "spend_usd_claude": 0.7804,
+  "status": "complete",
+  "summary": {
+    "claude": {
+      "O": 0.1796,
+      "T": 6,
+      "delta": 0.0,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "api_call_json": -0.039,
+        "cli_args": 0.233,
+        "effect_tracking_io_fs": 0.126,
+        "higher_order_functions": 0.33,
+        "pipeline": 0.592,
+        "prompt_injection": -0.003
+      },
+      "pass_S": 6,
+      "pass_W": 6,
+      "unclassified": 0
+    },
+    "codex": {
+      "O": -0.0948,
+      "T": 6,
+      "delta": -0.1667,
+      "harness_faults": {
+        "shell": 0,
+        "world": 0
+      },
+      "o_t": {
+        "api_call_json": -0.468,
+        "cli_args": 0.406,
+        "effect_tracking_io_fs": 2.006,
+        "higher_order_functions": -0.264,
+        "pipeline": -0.521,
+        "prompt_injection": 0.075
+      },
+      "pass_S": 6,
+      "pass_W": 5,
+      "unclassified": 0
+    }
+  },
+  "tasks": [
+    "api_call_json",
+    "cli_args",
+    "effect_tracking_io_fs",
+    "higher_order_functions",
+    "pipeline",
+    "prompt_injection"
+  ],
+  "transcripts": ".ailang/state/floor-tune/m4/transcripts/iter-2",
+  "wall_s": 406.5,
+  "world_writes_per_run": {
+    "claude/api_call_json": 1,
+    "claude/cli_args": 2,
+    "claude/effect_tracking_io_fs": 1,
+    "claude/higher_order_functions": 1,
+    "claude/pipeline": 2,
+    "claude/prompt_injection": 2,
+    "codex/api_call_json": 1,
+    "codex/cli_args": 2,
+    "codex/effect_tracking_io_fs": 1,
+    "codex/higher_order_functions": 0,
+    "codex/pipeline": 1,
+    "codex/prompt_injection": 2
+  }
+}
