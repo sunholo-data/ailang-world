@@ -127,9 +127,9 @@ func (a mcpAdapter) Invoke(ctx context.Context, session protocol.Session, inv pr
 	if err != nil {
 		return protocol.InvocationResult{}, err
 	}
-	result, err := a.h.coord.Dispatch(ctx, coordinator.Call{Request: request, EpisodeID: binding.EpisodeID, Grants: binding.Caps, SkillID: id, TaskID: task, Input: input})
+	result, err := a.h.coord.Dispatch(ctx, coordinator.Call{Surface: coordinator.SurfaceMCP, Request: request, EpisodeID: binding.EpisodeID, Grants: binding.Caps, SkillID: id, TaskID: task, Input: input})
 	if err != nil {
-		a.h.logRefusal("mcp", "tools/call", coordinator.InvocationID(binding.EpisodeID, task), err)
+		a.h.logRefusal("mcp", "tools/call", coordinator.InvocationID(coordinator.SurfaceMCP, binding.EpisodeID, task), err)
 		return protocol.InvocationResult{}, err
 	}
 	return protocol.InvocationResult{Value: result.OutputBytes}, nil

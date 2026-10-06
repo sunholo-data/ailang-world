@@ -162,7 +162,7 @@ func TestA2A_AbsentPrecheckSnapshotFailure(t *testing.T) {
 			} else if r.calls != 1 {
 				t.Fatalf("reader calls=%d", r.calls)
 			}
-			if _, seen, err := st.GetReceipt(boundedTestContext(t), coordinator.InvocationID("ep-a", "race")); err != nil || seen {
+			if _, seen, err := st.GetReceipt(boundedTestContext(t), coordinator.InvocationID(coordinator.SurfaceA2A, "ep-a", "race")); err != nil || seen {
 				t.Fatalf("unexpected receipt seen=%t err=%v", seen, err)
 			}
 			if _, seen, err := st.SelectedHead(boundedTestContext(t)); err != nil || seen {

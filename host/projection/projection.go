@@ -360,7 +360,7 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
 				}
 				pin = &parsed
 			}
-			result, err := h.coord.Dispatch(ctx, coordinator.Call{Request: admitted, EpisodeID: out.Success.EpisodeID,
+			result, err := h.coord.Dispatch(ctx, coordinator.Call{Surface: coordinator.SurfaceA2A, Request: admitted, EpisodeID: out.Success.EpisodeID,
 				Grants: out.Success.Caps, SkillID: d.ID, TaskID: params.ID, Input: params.Message.Parts[0].Data, PinnedFn: pin})
 			if err != nil {
 				// A timed-out invocation must release its transport as well as its
@@ -371,7 +371,7 @@ func (h *Handler) A2A(w http.ResponseWriter, r *http.Request) {
 				}
 				code, msg := dispatchError(err)
 				if msg == notAvailableMessage {
-					h.logRefusal("a2a", req.Method, coordinator.InvocationID(out.Success.EpisodeID, params.ID), err)
+					h.logRefusal("a2a", req.Method, coordinator.InvocationID(coordinator.SurfaceA2A, out.Success.EpisodeID, params.ID), err)
 				}
 				protocol.A2AError(w, req.ID, code, msg)
 				return

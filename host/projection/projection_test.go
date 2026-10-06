@@ -882,7 +882,7 @@ func testA2ADispatchInvalidParams(t *testing.T) {
 			t.Fatalf("pin %s: %d %q", pin, code, msg)
 		}
 	}
-	rc, seen, err := st.GetReceipt(boundedTestContext(t), coordinator.InvocationID("ep-a", "bad-pin"))
+	rc, seen, err := st.GetReceipt(boundedTestContext(t), coordinator.InvocationID(coordinator.SurfaceA2A, "ep-a", "bad-pin"))
 	if err != nil || seen {
 		t.Fatalf("invalid params mutated journal: %+v %v %v", rc, seen, err)
 	}
@@ -993,7 +993,7 @@ func testA2ADispatchSuccessHeads(t *testing.T, absentPrecheck bool) {
 		if err := json.Unmarshal(rec.Body.Bytes(), &wire); err != nil {
 			t.Fatal(err)
 		}
-		if wire.JSONRPC != "2.0" || wire.ID != 7 || wire.Result.ID != "t1" || wire.Result.Status.State != "completed" || len(wire.Result.Artifacts) != 1 || len(wire.Result.Artifacts[0].Parts) != 1 || wire.Result.Artifacts[0].Parts[0].Type != "data" || wire.Result.Artifacts[0].Parts[0].Data["ok"] != true || wire.Result.Metadata["invocation_id"] != coordinator.InvocationID("ep-a", "t1") || wire.Result.Metadata["world_ref"] == nil || wire.Result.Metadata["entry_index"] != float64(1) {
+		if wire.JSONRPC != "2.0" || wire.ID != 7 || wire.Result.ID != "t1" || wire.Result.Status.State != "completed" || len(wire.Result.Artifacts) != 1 || len(wire.Result.Artifacts[0].Parts) != 1 || wire.Result.Artifacts[0].Parts[0].Type != "data" || wire.Result.Artifacts[0].Parts[0].Data["ok"] != true || wire.Result.Metadata["invocation_id"] != coordinator.InvocationID(coordinator.SurfaceA2A, "ep-a", "t1") || wire.Result.Metadata["world_ref"] == nil || wire.Result.Metadata["entry_index"] != float64(1) {
 			t.Fatalf("task shape: %s", rec.Body)
 		}
 	}

@@ -799,7 +799,7 @@ func (l *syncLog) String() string {
 
 // mcpRefusalPrefix is the operator line an MCP tools/call refusal opens with
 // for episode ep1 (row 136 AC1.1).
-const mcpRefusalPrefix = "ailang-worldd: mcp refusal: tools/call a2a:ep1:"
+const mcpRefusalPrefix = "ailang-worldd: mcp refusal: tools/call mcp:ep1:"
 
 // TestSeToolsMCPPostEffectFailureIsLogged is row 136 AC1.1 (kills
 // MUT-MCP-LOG-NOCAUSE and MUT-MCP-LOG-LABEL): under R14 the /mcp/ wire is the
@@ -844,5 +844,61 @@ func TestSeToolsMCPPostEffectFailureIsLogged(t *testing.T) {
 	}
 	if after := r.entryCount(); after != before {
 		t.Fatalf("the conflicted call committed (%d -> %d)", before, after)
+	}
+}
+
+// entryTag reads log entry n's header writer and its record's invocation id.
+func (r *seRig) entryTag(n int64) (writtenBy, invocationID string) {
+	r.t.Helper()
+	ctx := boundedTestContext(r.t)
+	e, ok, err := r.d.store.GetLogEntry(ctx, n)
+	if err != nil || !ok {
+		r.t.Fatalf("log entry %d ok=%v err=%v", n, ok, err)
+	}
+	obj, ok, err := r.d.store.GetObject(ctx, e.TransitionRef)
+	if err != nil || !ok {
+		r.t.Fatalf("entry %d record %s ok=%v err=%v", n, e.TransitionRef, ok, err)
+	}
+	var rec struct {
+		InvocationID string `json:"invocationId"`
+	}
+	if err := json.Unmarshal(obj.Payload, &rec); err != nil || rec.InvocationID == "" {
+		r.t.Fatalf("entry %d record %s: %v", n, obj.Payload, err)
+	}
+	return e.Header.WrittenBy, rec.InvocationID
+}
+
+// TestSeToolsSurfaceTaggedInLog is row 136 AC2.3 (kills MUT-WRITTENBY-CONST):
+// one MCP call and one A2A call on one daemon; each entry's header names its
+// surface and each record's invocation id carries the surface namespace.
+func TestSeToolsSurfaceTaggedInLog(t *testing.T) {
+	r := newSeRig(t)
+	token := r.mint("ep1", broker.EffectWorkspaceRead)
+	first := r.entryCount()
+	wire, _ := r.call(token, "ailang-read", map[string]any{"path": "data.txt"})
+	if wire.Error != nil || wire.Result.IsError {
+		t.Fatalf("MCP ailang-read = %+v", wire)
+	}
+	code, raw := r.post("/a2a/", token, a2aSendBody("a2a-tag-1", "ailang-read", map[string]any{"path": "data.txt"}))
+	var a2a struct {
+		Result struct {
+			Metadata map[string]any `json:"metadata"`
+		} `json:"result"`
+		Error any `json:"error"`
+	}
+	if code != http.StatusOK || json.Unmarshal(raw, &a2a) != nil || a2a.Error != nil {
+		t.Fatalf("tasks/send = %d %s", code, raw)
+	}
+	if n := r.entryCount(); n != first+2 {
+		t.Fatalf("entries %d -> %d, want two commits", first, n)
+	}
+	by, id := r.entryTag(first)
+	if by != "coordinator:mcp" || !strings.HasPrefix(id, "mcp:ep1:") {
+		t.Fatalf("MCP entry writtenBy=%q invocationId=%q, want coordinator:mcp and mcp:ep1:<task>", by, id)
+	}
+	by, id = r.entryTag(first + 1)
+	if by != "coordinator:a2a" || id != "a2a:ep1:a2a-tag-1" || a2a.Result.Metadata["invocation_id"] != id {
+		t.Fatalf("A2A entry writtenBy=%q invocationId=%q metadata=%v, want coordinator:a2a and a2a:ep1:a2a-tag-1",
+			by, id, a2a.Result.Metadata["invocation_id"])
 	}
 }

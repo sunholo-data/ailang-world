@@ -521,7 +521,7 @@ func readCall(t *testing.T, d *Daemon, episode, task string, now int64) coordina
 	if err != nil {
 		t.Fatal(err)
 	}
-	return coordinator.Call{Request: req, EpisodeID: episode, Grants: grants, SkillID: "ws.read", TaskID: task, Input: map[string]any{"path": "data.txt"}}
+	return coordinator.Call{Surface: coordinator.SurfaceA2A, Request: req, EpisodeID: episode, Grants: grants, SkillID: "ws.read", TaskID: task, Input: map[string]any{"path": "data.txt"}}
 }
 
 // TestWorkspaceEpisodeEscapeIsR8BeforeAnyEffect is AC4.4 end to end through

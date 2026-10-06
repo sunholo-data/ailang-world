@@ -125,7 +125,7 @@ func assertReceipts(t *testing.T, s *accountingStore, want int) {
 			t.Fatalf("task shape/uniqueness=%v", s.tasks)
 		}
 		taskSeen[task] = true
-		if i < len(s.ids) && coordinator.InvocationID("ep-a", task) != s.ids[i] {
+		if i < len(s.ids) && coordinator.InvocationID(coordinator.SurfaceMCP, "ep-a", task) != s.ids[i] {
 			t.Fatalf("task/receipt identity mismatch item%d", i)
 		}
 	}
@@ -135,7 +135,7 @@ func assertReceipts(t *testing.T, s *accountingStore, want int) {
 			t.Fatalf("duplicate invocation IDs: %v", s.ids)
 		}
 		unique[id] = true
-		task := strings.TrimPrefix(id, "a2a:ep-a:")
+		task := strings.TrimPrefix(id, "mcp:ep-a:")
 		if len(task) != 64 || strings.Trim(task, "0123456789abcdef") != "" {
 			t.Fatalf("task not 64hex: %q", task)
 		}
@@ -351,7 +351,7 @@ func TestMCPAbsentPrecheckSuccessfulInvocation(t *testing.T) {
 	if len(mcpPayload(t, w)["error"]) != 0 || runner.runs != 1 {
 		t.Fatalf("raced publication invoke runs=%d wire=%s", runner.runs, w.Body)
 	}
-	receipt, ok, err := st.GetReceipt(boundedTestContext(t), coordinator.InvocationID("ep-a", task))
+	receipt, ok, err := st.GetReceipt(boundedTestContext(t), coordinator.InvocationID(coordinator.SurfaceMCP, "ep-a", task))
 	if err != nil || !ok || receipt.State != store.ReceiptResolved {
 		t.Fatalf("published invocation receipt=%+v/%t/%v", receipt, ok, err)
 	}
@@ -398,7 +398,7 @@ func TestMCPRefusalLineNamesSurfaceAndCause(t *testing.T) {
 	if !strings.Contains(w.Body.String(), `"host callback failed"`) || len(s.tasks) != 1 {
 		t.Fatalf("wire=%s tasks=%d", w.Body, len(s.tasks))
 	}
-	want := "ailang-worldd: mcp refusal: tools/call " + coordinator.InvocationID("ep-a", s.tasks[0]) + `: "`
+	want := "ailang-worldd: mcp refusal: tools/call " + coordinator.InvocationID(coordinator.SurfaceMCP, "ep-a", s.tasks[0]) + `: "`
 	if got := sink.String(); strings.Count(got, "\n") != 1 || !strings.HasPrefix(got, want) || !strings.Contains(got, "batch injected capsule failure") {
 		t.Fatalf("operator log = %q, want one line starting %q carrying the cause", got, want)
 	}

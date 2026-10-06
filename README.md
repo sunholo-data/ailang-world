@@ -237,7 +237,7 @@ The same binary is the bounded-timeout client:
 ./ailang-worldd session mint --db ./world.db --episode <ep> --grant EFFECT=SCOPE:BUDGET   # attended, TTY-fenced
 ./ailang-worldd tools list --session <file>
 ./ailang-worldd call <tool> --session <file> --arg k=v
-./ailang-worldd why <index|head|sha256:<ref>|a2a:<id>|->
+./ailang-worldd why <index|head|sha256:<ref>|a2a:<id>|mcp:<id>|rest:<id>|->
 ./ailang-worldd provenance --episode <ep>
 ```
 

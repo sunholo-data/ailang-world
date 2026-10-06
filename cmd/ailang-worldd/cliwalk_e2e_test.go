@@ -229,7 +229,7 @@ func TestCLIAgainstSeToolsDaemon(t *testing.T) {
 	if !strings.Contains(stdout, "✓ output  "+outRef) || !strings.Contains(stdout, "your result is these exact bytes") {
 		t.Fatalf("AC1.2: sha256(--json-out − newline) %s is not the walked output ref:\n%s", outRef, stdout)
 	}
-	inv := regexp.MustCompile(`invocation (a2a:\S+)`).FindStringSubmatch(stdout)
+	inv := regexp.MustCompile(`invocation (mcp:\S+)`).FindStringSubmatch(stdout)
 	if len(inv) != 2 {
 		t.Fatalf("no invocation id in the chain:\n%s", stdout)
 	}

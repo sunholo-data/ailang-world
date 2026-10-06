@@ -13,7 +13,7 @@ An **episode** is the unit of work an agent session belongs to. It names:
 - the budget ledger (spend is summed per episode, see
   [budgets](effects-capabilities-budgets.md#budgets));
 - for the coding tools, the worktree `<workspace-root>/<episode>` the tools act in;
-- part of every invocation ID: tool calls are recorded as `a2a:<episode>:<task-id>`.
+- part of every invocation ID: tool calls are recorded as `mcp:<episode>:<task-id>` (MCP) or `a2a:<episode>:<task-id>` (A2A).
 
 For the coding tools the episode ID must match `^[a-z0-9][a-z0-9-]{0,63}$`, and
 `<workspace-root>/<episode>` must be a real directory (not a symlink) that the operator created

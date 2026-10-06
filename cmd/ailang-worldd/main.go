@@ -26,7 +26,7 @@
 //	ailang-worldd [--addr http://127.0.0.1:7644] log tail [--from N] [--follow] [--interval 1s] [--raw]
 //	ailang-worldd [--addr http://127.0.0.1:7644] tools list [--session <file|token>] [--json]
 //	ailang-worldd [--addr http://127.0.0.1:7644] call <tool> [--arg k=v]... [--arg-json k=<json>]... | --json <obj>|@file|- [--json-out] [--strict]
-//	ailang-worldd [--addr http://127.0.0.1:7644] why <index|head|sha256:...|a2a:...|rest:...|-> | --result <file> [--scan N] [--json]
+//	ailang-worldd [--addr http://127.0.0.1:7644] why <index|head|sha256:...|a2a:...|mcp:...|rest:...|-> | --result <file> [--scan N] [--json]
 //	ailang-worldd [--addr http://127.0.0.1:7644] provenance [--since <entry>] [--episode <ep>]
 //	ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>] [--workspace-root <dir>] [--from-dir <dir>] [--replace]
 //	ailang-worldd [--addr http://127.0.0.1:7644] doctor [--db <path>] [--workspace-root <dir>] [--online] ...
@@ -89,7 +89,7 @@ Usage:
   ailang-worldd [--addr <url>] call <tool> [--session <file|token>]
                     [--arg k=v]... [--arg-json k=<json>]... | --json <obj>|@file|-
                     [--json-out] [--strict]
-  ailang-worldd [--addr <url>] why <index|head|sha256:<ref>|a2a:<id>|rest:<id>|->
+  ailang-worldd [--addr <url>] why <index|head|sha256:<ref>|a2a:<id>|mcp:<id>|rest:<id>|->
                     [--result <file>] [--scan N] [--json]
   ailang-worldd [--addr <url>] provenance [--since <entry>] [--episode <ep>] [--scan N]
   ailang-worldd setup [--interpreter-dir <dir>] [--tools-dir <dir>] [--db <path>]

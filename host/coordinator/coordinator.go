@@ -78,9 +78,20 @@ func New(cfg Config) (*Coordinator, error) {
 	return &Coordinator{cfg: cfg}, nil
 }
 
+// Surface names the transport an invocation arrived on. It is the namespace
+// of the invocation id and the tag in the entry header's writtenBy (row 136).
+type Surface string
+
+const (
+	SurfaceA2A Surface = "a2a"
+	SurfaceMCP Surface = "mcp"
+)
+
 // Call is one invocation. Request is the ONE registry + capability snapshot
 // pair the caller admitted against; Dispatch never re-reads the registry.
+// Surface is required: an empty or unknown surface is an InvalidCallError.
 type Call struct {
+	Surface   Surface
 	Request   transitionreg.Request
 	EpisodeID string
 	Grants    []broker.Capability
@@ -103,9 +114,12 @@ type Result struct {
 	Reconciled bool
 }
 
-// InvocationID names the journal row for one session's task. The "a2a:"
-// namespace never collides with the journal's reserved "effect:" namespace.
-func InvocationID(episodeID, taskID string) string { return "a2a:" + episodeID + ":" + taskID }
+// InvocationID names the journal row for one session's task on one surface.
+// The "a2a:" and "mcp:" namespaces never collide with the journal's reserved
+// "effect:" namespace or /v1/commit's "rest:".
+func InvocationID(surface Surface, episodeID, taskID string) string {
+	return string(surface) + ":" + episodeID + ":" + taskID
+}
 
 func validTaskID(id string) bool {
 	if id == "" || len(id) > 128 {
@@ -120,6 +134,9 @@ func validTaskID(id string) bool {
 }
 
 func (c *Coordinator) validateCall(call Call) ([]byte, error) {
+	if call.Surface != SurfaceA2A && call.Surface != SurfaceMCP {
+		return nil, &InvalidCallError{Field: "surface"}
+	}
 	if !validTaskID(call.TaskID) {
 		return nil, &InvalidCallError{Field: "task id"}
 	}
@@ -221,7 +238,7 @@ func (c *Coordinator) committed(ctx context.Context, rc store.Receipt) (Result, 
 	if !ok {
 		return Result{}, &IntegrityError{InvocationID: rc.InvocationID, Object: "world", Kind: "absent"}
 	}
-	// The store verifies no world ref (store/durable.go); "a2a:" worlds are
+	// The store verifies no world ref (store/durable.go); coordinator worlds are
 	// planInvocation's, so the row must re-derive its ref, and applyRevision
 	// makes its state root the recorded output.
 	if worldRef(w) != rc.Intent.WorldRef {
@@ -247,7 +264,7 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 	if err != nil {
 		return Result{}, err
 	}
-	id := InvocationID(call.EpisodeID, call.TaskID)
+	id := InvocationID(call.Surface, call.EpisodeID, call.TaskID)
 	if _, loaded := c.inFlight.LoadOrStore(id, struct{}{}); loaded {
 		return Result{}, &InFlightError{InvocationID: id} // R17
 	}
@@ -309,7 +326,7 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 		return Result{}, err
 	}
 	if len(d.DeclaredEffects) != 0 {
-		return c.dispatchEffectful(ctx, id, call.EpisodeID, input, bound, d)
+		return c.dispatchEffectful(ctx, call.Surface, id, call.EpisodeID, input, bound, d)
 	}
 	src, world, err := c.loadSourceAndWorld(ctx, d)
 	if err != nil {
@@ -329,7 +346,7 @@ func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
 	if err != nil {
 		return Result{}, err
 	}
-	pl := planInvocation(world, id, call.EpisodeID, d, input, outBytes, c.cfg.Now())
+	pl := planInvocation(world, call.Surface, id, call.EpisodeID, d, input, outBytes, c.cfg.Now())
 	return c.appendAndCommit(ctx, id, pl, outBytes, outObj)
 }
 

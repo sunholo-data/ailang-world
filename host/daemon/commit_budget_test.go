@@ -151,7 +151,7 @@ func TestCommitBudgetAndUncertainReconcile(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 		defer cancel()
 		start := time.Now()
-		_, err = c.Dispatch(ctx, coordinator.Call{EpisodeID: "ep", TaskID: "held", Input: map[string]any{}})
+		_, err = c.Dispatch(ctx, coordinator.Call{Surface: coordinator.SurfaceA2A, EpisodeID: "ep", TaskID: "held", Input: map[string]any{}})
 		if !errors.Is(err, context.DeadlineExceeded) {
 			t.Errorf("coordinator held receipt result=%v, want deadline", err)
 		}
@@ -353,7 +353,7 @@ func TestCommitInvocationReceiptIdentity(t *testing.T) {
 		d := newHandlerDaemon(t)
 		genesis := seedGenesisEmbedded(t, d, "rcpt-ns")
 		auth := authHeader(t, d)
-		for _, id := range []string{"effect:ep:1", "a2a:ep:task", "rest:"} {
+		for _, id := range []string{"effect:ep:1", "a2a:ep:task", "mcp:ep:task", "rest:"} {
 			rec, _ := postCommitWithID(t, d, auth, id, testCommit(genesis, 1, "ns"))
 			body := assertErrorClass(t, rec, http.StatusBadRequest, "BadRequest")
 			if !strings.Contains(body.Error.Message, "rest:<id>") {
