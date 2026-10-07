@@ -100,6 +100,16 @@ or was committed; resend the same task id`) — nothing ran, so resending the sa
 the matching operator line reads `… plan phase exceeded its <budget> budget after <elapsed>`. MCP
 clients see the released handler's fixed `host callback timed out` for the same event.
 
+Publishing a transition (the `world-publish transitions` verb, or anything that calls the registry
+publisher) also **builds that transition's compile-cache template** under
+`<db>.artifacts/capsule-cache/<interpreter-digest>/<source-sha256>/`; every capsule run starts from a
+copy of it, which is what keeps the plan phase fast under load. A publish whose interpreter passes
+the check but writes no template is refused (retried three times first) rather than accepted into a
+registry that would run cold forever. A run that finds no template (a store published before this
+change, or a deleted cache) still works, but is never silent: it writes
+`capsule: cold compile <interpreter-digest>/<source-sha256> (template missing)` to the daemon's
+stderr (or the configured ErrorLog) once, and its success leaves the template behind for the next run.
+
 ```bash
 /tmp/ailang-worldd health
 ```

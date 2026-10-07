@@ -94,6 +94,7 @@ func (e seToolsEntry) declared() []transitionreg.EffectRequirement {
 type seToolsRig struct {
 	t      *testing.T
 	runner *capsule.Runner
+	arch   *archive.Archive
 	interp hashref.HashRef
 	bin    string
 }
@@ -113,7 +114,7 @@ func newSeToolsRig(t *testing.T) *seToolsRig {
 	if err != nil {
 		t.Fatalf("archive interpreter: %v", err)
 	}
-	return &seToolsRig{t: t, runner: capsule.New(a, capsule.Config{}), interp: ref, bin: bin}
+	return &seToolsRig{t: t, runner: capsule.New(a, capsule.Config{}), arch: a, interp: ref, bin: bin}
 }
 
 func (r *seToolsRig) source(e seToolsEntry) []byte {

@@ -29,7 +29,7 @@ import (
 const (
 	capsuleExecTimeout    = 60 * time.Second
 	maxCapsuleOutputBytes = int64(8 << 20)
-	entryModulePath       = "host/capsule/main.ail"
+	entryModulePath       = archive.CapsuleEntryPath
 	entryFn               = "main"
 	argsFile              = "args.json"
 )
@@ -39,6 +39,9 @@ const (
 type Config struct {
 	ExecTimeout    time.Duration
 	MaxOutputBytes int64
+	// Log receives the operator line a cold (template-less) run writes
+	// (row 153). Nil discards it.
+	Log io.Writer
 }
 
 // Entry pins both the interpreter and the canonical transition source.
@@ -162,6 +165,7 @@ type Runner struct {
 	execTimeout    time.Duration
 	maxOutputBytes int64
 	caps           string
+	cs             *coldState
 }
 
 // New constructs a Runner. The archive is authoritative: callers cannot
@@ -175,7 +179,11 @@ func New(a *archive.Archive, cfg Config) *Runner {
 	if outputLimit == 0 {
 		outputLimit = maxCapsuleOutputBytes
 	}
-	return &Runner{archive: a, execTimeout: timeout, maxOutputBytes: outputLimit, caps: ""}
+	log := cfg.Log
+	if log == nil {
+		log = io.Discard
+	}
+	return &Runner{archive: a, execTimeout: timeout, maxOutputBytes: outputLimit, caps: "", cs: &coldState{log: log}}
 }
 
 // Run stages and executes one pinned transition under the six-part floor.
@@ -209,6 +217,11 @@ func (r *Runner) RunContext(parent context.Context, entry Entry) (Result, error)
 		return Result{}, fmt.Errorf("capsule: stage source: %w", err)
 	}
 
+	cacheDir, cold, err := r.seedCache(root, entry.Interpreter, entry.Source)
+	if err != nil {
+		return Result{}, err
+	}
+
 	args := []string{"run", "--quiet", "--caps", r.caps, "--entry", entryFn}
 	if entry.Args != nil {
 		if err := os.WriteFile(filepath.Join(root, argsFile), entry.Args, 0o644); err != nil {
@@ -225,7 +238,9 @@ func (r *Runner) RunContext(parent context.Context, entry Entry) (Result, error)
 	// AILANG_RELAX_MODULES=1 is the publish check's own shape
 	// (host/archive/check.go): a source's module header need not name the
 	// fixed staging path, so what publication checked is what runs.
-	cmd.Env = []string{"AILANG_FS_SANDBOX=" + root, "AILANG_RELAX_MODULES=1"}
+	// AILANG_CACHE_DIR is the run's private copy of the compile-cache template
+	// (never the template itself: a warm run rewrites manifest.json).
+	cmd.Env = []string{"AILANG_FS_SANDBOX=" + root, "AILANG_RELAX_MODULES=1", archive.CacheDirEnv + "=" + cacheDir}
 	// Same correction as host/broker's runBounded: kill the whole process group,
 	// or a forked grandchild keeps the inherited pipes open and outlives F5/F6.
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
@@ -271,6 +286,9 @@ func (r *Runner) RunContext(parent context.Context, entry Entry) (Result, error)
 	}
 	if runErr != nil {
 		return res, &ExecError{Path: execPath, Stderr: res.Stderr, Err: runErr}
+	}
+	if cold {
+		r.promoteCold(cacheDir, entry.Interpreter, entry.Source)
 	}
 	return res, nil
 }

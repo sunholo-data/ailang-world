@@ -416,6 +416,10 @@ type Daemon struct {
 	// on a path that only runs when something has already gone wrong.
 	errLog io.Writer
 
+	// capsule is the runner behind d.coord (nil without --ailang-bin); kept so
+	// the daemon can report its cold-run count (row 153).
+	capsule *capsule.Runner
+
 	scanPageSize   int
 	scanRowBudget  int
 	scanTimeBudget time.Duration
@@ -657,7 +661,10 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		d.interpreterRef = ref.String()
 		d.interpreterVersion = m.Version
 		release = releaseFromVersion(m.Version)
-		d.coord, err = coordinator.New(coordinator.Config{Store: d.store, Runner: capsule.New(a, capsule.Config{}),
+		// The capsule's log is the daemon's operator log: a cold (template-less)
+		// run writes its `capsule: cold compile` line there (row 153).
+		d.capsule = capsule.New(a, capsule.Config{Log: d.errLog})
+		d.coord, err = coordinator.New(coordinator.Config{Store: d.store, Runner: d.capsule,
 			Binder: d.binder, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
 		if err != nil {
 			return nil, d.abort(StageConfig, "cannot construct invocation coordinator", err)

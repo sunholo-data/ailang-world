@@ -62,8 +62,9 @@ func newExecSrtRig(t *testing.T) *seRig {
 	d := mustWSDaemon(t, Config{DBPath: f.db, AilangBin: interp, WorkspaceRoot: f.root,
 		ToolAilangBin: fakeToolBin(t, f.logDir, ToolBinaryRelease),
 		ExecProfiles:  []string{pf}, ExecSandbox: nm, ExecNode: node,
-		// Row 153 AC1.6: a refusal's operator line reaches the test log.
-		ErrorLog: testErrorLog(t)})
+		// Row 153 AC1.6/AC3.6: a refusal's operator line reaches the test log, and a
+		// cold capsule compile fails the test.
+		ErrorLog: testOperatorLog(t)})
 	if d.coord == nil || d.workspace.exec == nil {
 		t.Fatal("the daemon did not configure the coordinator and workspace-exec")
 	}
