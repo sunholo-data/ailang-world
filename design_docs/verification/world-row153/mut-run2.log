@@ -1,0 +1,70 @@
+=== MUT MUT-SILENT-COLD host/daemon/templates.go [			fmt.Fprintf(d.errLog, "ailang-worldd: capsule template %s: %s
+", desc.ID, state)] -> [			_ = state] test=TestDaemonStartReportsMissingTemplates
+    templates_test.go:133: startup lines = map[], want the same states map[ailang-check:ready ailang-cli:ready ailang-edit:ready ailang-read:missing ailang-run:ready ailang-write:ready builtins-search:ready examples-search:ready workspace-exec:ready]
+--- FAIL: TestDaemonStartReportsMissingTemplates (2.52s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	2.882s
+FAIL
+rc=1
+=== MUT MUT-BLOCKING-PREWARM host/daemon/daemon.go [	d.reportTemplates(ctx)
+] -> [	d.reportTemplates(ctx)
+	d.maintainTemplates(ctx)
+] test=TestDaemonStartReportsMissingTemplates
+    templates_test.go:130: CapsuleTemplates() = map[ailang-check:ready ailang-cli:ready ailang-edit:ready ailang-read:rebuilt ailang-run:ready ailang-write:ready builtins-search:ready examples-search:ready workspace-exec:ready], want map[ailang-check:ready ailang-cli:ready ailang-edit:ready ailang-read:missing ailang-run:ready ailang-write:ready builtins-search:ready examples-search:ready workspac
+--- FAIL: TestDaemonStartReportsMissingTemplates (2.71s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	3.074s
+FAIL
+rc=1
+=== MUT MUT-SOFT-PUBLISH host/archive/check.go [err != nil || !info.Mode().IsRegular() {
+		return passed] -> [false && (err != nil || !info.Mode().IsRegular()) {
+		return passed] test=TestPublishWithoutATemplateIsRefused
+    templates_test.go:255: PublishSet with an interpreter that writes no cache = <nil>, want *archive.TemplateBuildError
+--- FAIL: TestPublishWithoutATemplateIsRefused (0.14s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.498s
+FAIL
+rc=1
+=== MUT MUT-NO-GC host/archive/capsulecache.go [		if err := os.RemoveAll(path); err != nil {] -> [		if true {
+			continue
+		}
+		if err := os.RemoveAll(path); err != nil {] test=TestTemplateGCPrunesStaleInterpDigests
+    templates_test.go:293: the stale interpreter digest's templates were not pruned
+    templates_test.go:296: the stale .tmp-old was not pruned
+--- FAIL: TestTemplateGCPrunesStaleInterpDigests (0.14s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.501s
+FAIL
+rc=1
+=== MUT MUT-GC-KEEP-INVERTED host/archive/capsulecache.go [isDigestName(name) && !keep[name]] -> [isDigestName(name) && keep[name]] test=TestPruneCapsuleCacheKeepsListedDigests
+    capsulecache_test.go:153: removed = [aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb], want only cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+--- FAIL: TestPruneCapsuleCacheKeepsListedDigests (0.01s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/archive	0.273s
+FAIL
+rc=1
+=== MUT MUT-GC-FRESH-TMP host/archive/capsulecache.go [now.Sub(info.ModTime()) <= tmpMaxAge] -> [now.Sub(info.ModTime()) <= -tmpMaxAge] test=TestTemplateGCPrunesStaleInterpDigests
+    templates_test.go:302: a fresh .tmp-new (a concurrent publisher's) was pruned
+--- FAIL: TestTemplateGCPrunesStaleInterpDigests (0.14s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	0.511s
+FAIL
+rc=1
+=== MUT MUT-NO-REBUILD host/daemon/templates.go [			d.rebuildTemplate(ctx, e)] -> [			_ = e] test=TestDaemonStartReportsMissingTemplates
+    templates_test.go:203: timed out after 1m0s waiting for the ailang-read rebuilt line
+--- FAIL: TestDaemonStartReportsMissingTemplates (62.87s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	63.238s
+FAIL
+rc=1
+=== MUT MUT-STATUS-LIE host/daemon/templates.go [			if d.arch.CapsuleTemplateReady(desc.Interpreter, obj.Payload) {] -> [			if true {] test=TestDaemonStartReportsMissingTemplates
+    templates_test.go:130: CapsuleTemplates() = map[ailang-check:ready ailang-cli:ready ailang-edit:ready ailang-read:ready ailang-run:ready ailang-write:ready builtins-search:ready examples-search:ready workspace-exec:ready], want map[ailang-check:ready ailang-cli:ready ailang-edit:ready ailang-read:missing ailang-run:ready ailang-write:ready builtins-search:ready examples-search:ready workspace-
+--- FAIL: TestDaemonStartReportsMissingTemplates (2.58s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	2.977s
+FAIL
+rc=1
+=== MUT MUT-BLOCKING-PREWARM-b daemon.go Run: d.maintainTemplates(ctx) before d.Listen() (the (ii) arm cannot catch it) test=TestDaemonStartReportsMissingTemplates
+    templates_test.go:175: Run announced nothing within 7s with the template rebuild held: the rebuild is blocking startup (log: ailang-worldd: capsule template ailang-check: ready
+--- FAIL: TestDaemonStartReportsMissingTemplates (9.58s)
+rc=1

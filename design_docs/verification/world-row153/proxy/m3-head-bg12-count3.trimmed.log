@@ -1,0 +1,20 @@
+=== RUN   TestExecSrtMCPEndToEnd
+    exec_e2e_srt_test.go:143: PublishSet = {Head: Revision:0 Unchanged:false} publish transition registry: entry "builtins-search"'s source "sha256:7ed1f8436865c194b2ce30611c0de92a73b0d86bf4776b2a28bf1c8d192e988b" is not loadable under its pinned interpreter: → Type checking host/capsule/main.ail...
+--- FAIL: TestExecSrtMCPEndToEnd (58.87s)
+=== RUN   TestExecSrtMCPGrantAndBudget
+    exec_e2e_srt_test.go:210: New: daemon startup failed at config: the exec configuration is refused: exec startup probe failed for profile "proj" (1 of 7 arms): arm7-toolchain: probe "sh -c echo toolchain-ok": broker: handler subprocess timed out after 999.596042ms; stderr ""; stdout ""
+--- FAIL: TestExecSrtMCPGrantAndBudget (31.29s)
+=== RUN   TestExecSrtMCPEndToEnd
+    exec_e2e_srt_test.go:143: New: daemon startup failed at config: the exec configuration is refused: exec startup probe failed for profile "proj" (1 of 7 arms): arm7-toolchain: probe "sh -c echo toolchain-ok": broker: handler subprocess timed out after 181.885208ms; stderr ""; stdout ""
+--- FAIL: TestExecSrtMCPEndToEnd (31.43s)
+=== RUN   TestExecSrtMCPGrantAndBudget
+    exec_e2e_srt_test.go:210: New: daemon startup failed at config: the exec configuration is refused: exec startup probe failed for profile "proj" (2 of 7 arms): arm6-network: a connect through srt's proxy environment: token "", accepts 1 (want a refusal and still 1; broker: handler subprocess timed out after 4.845862458s; stderr ""); reverse leg: no token from the child's listener (""; broker: handler subprocess ti
+--- FAIL: TestExecSrtMCPGrantAndBudget (31.69s)
+=== RUN   TestExecSrtMCPEndToEnd
+    exec_e2e_srt_test.go:143: PublishSet = {Head: Revision:0 Unchanged:false} publish transition registry: entry "examples-search"'s source "sha256:bd6d41cfae833e636cd079352ad4dc63fde37800dd8bdda4da39abbbb2e0e6c7" is not loadable under its pinned interpreter: → Type checking host/capsule/main.ail...
+--- FAIL: TestExecSrtMCPEndToEnd (59.39s)
+=== RUN   TestExecSrtMCPGrantAndBudget
+    exec_e2e_srt_test.go:210: PublishSet = {Head: Revision:0 Unchanged:false} publish transition registry: entry "examples-search"'s source "sha256:bd6d41cfae833e636cd079352ad4dc63fde37800dd8bdda4da39abbbb2e0e6c7" is not loadable under its pinned interpreter: → Type checking host/capsule/main.ail...
+--- FAIL: TestExecSrtMCPGrantAndBudget (58.91s)
+RC=1
+DONE
