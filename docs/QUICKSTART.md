@@ -110,6 +110,15 @@ change, or a deleted cache) still works, but is never silent: it writes
 `capsule: cold compile <interpreter-digest>/<source-sha256> (template missing)` to the daemon's
 stderr (or the configured ErrorLog) once, and its success leaves the template behind for the next run.
 
+At startup the daemon states, per transition in the registry head, whether its template is there:
+`ailang-worldd: capsule template <id>: ready` or `… <id>: missing` (a stat each; it never builds
+anything before it serves). Once the listener is up, a background pass rebuilds each `missing` one
+(two at a time, each bounded by the 10 s check limit) and writes `capsule template <id>: rebuilt in
+<duration>` or `… <id>: rebuild failed: <reason>`; a call that arrives first simply runs cold and is
+labelled as above. The same pass prunes `capsule-cache/<digest>/` directories of interpreters no
+transition pins any more (`capsule template gc: pruned <n>: <digests>`) and any `.tmp-*` build
+directory older than twenty seconds.
+
 ```bash
 /tmp/ailang-worldd health
 ```

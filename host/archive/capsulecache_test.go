@@ -9,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
 )
@@ -130,5 +131,30 @@ func TestCapsulePromotionSurvivesCrossDevice(t *testing.T) {
 	var build *TemplateBuildError
 	if !errors.As(err, &build) || !errors.Is(err, syscall.EXDEV) {
 		t.Fatalf("direct cross-device PromoteTemplate = %v, want *TemplateBuildError wrapping EXDEV", err)
+	}
+}
+
+// P11: the keep set names every digest GC must leave (the daemon pin and each
+// head descriptor's interpreter); unlisted digests, and only digest-named
+// directories, go.
+func TestPruneCapsuleCacheKeepsListedDigests(t *testing.T) {
+	a := New(storeDBPath(t))
+	keepA, keepB, drop := strings.Repeat("a", 64), strings.Repeat("b", 64), strings.Repeat("c", 64)
+	for _, name := range []string{keepA, keepB, drop, "not-a-digest"} {
+		if err := os.MkdirAll(filepath.Join(a.CapsuleCacheRoot(), name, "src"), 0o700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	removed, err := a.PruneCapsuleCache(map[string]bool{keepA: true, keepB: true}, StaleTemplateTmpAge, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(removed) != 1 || removed[0] != drop {
+		t.Fatalf("removed = %v, want only %s", removed, drop)
+	}
+	for _, name := range []string{keepA, keepB, "not-a-digest"} {
+		if _, err := os.Stat(filepath.Join(a.CapsuleCacheRoot(), name)); err != nil {
+			t.Errorf("%s was pruned: %v", name, err)
+		}
 	}
 }

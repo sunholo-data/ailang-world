@@ -293,6 +293,11 @@ type Config struct {
 	// one-line protocol whose consumers read exactly one line, and extra lines
 	// on that stream were measured deadlocking Run against an io.Pipe.
 	ErrorLog io.Writer
+
+	// templateRebuildGate is a test seam (row 153 AC3.7): when non-nil, the
+	// background template rebuild awaits a receive on it before each rebuild.
+	// Production leaves it nil.
+	templateRebuildGate <-chan struct{}
 }
 
 // Startup stages, used as the Stage field of StartupError so an operator (and a
@@ -419,6 +424,13 @@ type Daemon struct {
 	// capsule is the runner behind d.coord (nil without --ailang-bin); kept so
 	// the daemon can report its cold-run count (row 153).
 	capsule *capsule.Runner
+
+	// arch is the archive behind the capsule (nil without --ailang-bin) and
+	// interpreterHash the pinned interpreter's ref; templates is the row-153
+	// per-descriptor compile-cache status (templates.go).
+	arch            *archive.Archive
+	interpreterHash hashref.HashRef
+	templates       templateBook
 
 	scanPageSize   int
 	scanRowBudget  int
@@ -659,6 +671,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 			return nil, d.abort(StageArchive, "cannot read the archived interpreter manifest", err)
 		}
 		d.interpreterRef = ref.String()
+		d.arch, d.interpreterHash = a, ref
 		d.interpreterVersion = m.Version
 		release = releaseFromVersion(m.Version)
 		// The capsule's log is the daemon's operator log: a cold (template-less)
@@ -681,6 +694,10 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	if err := d.bootstrapRegistry(ctx, release); err != nil {
 		return nil, err
 	}
+
+	// Row 153 M3b: say, per descriptor, whether its compile-cache template is
+	// ready. A stat each, no build; the rebuild runs from Run after Listen.
+	d.reportTemplates(ctx)
 
 	d.integrity = d.scanIntegrity(ctx)
 
@@ -968,7 +985,10 @@ func (d *Daemon) Shutdown() error { return drain(d.srv, d.drainTimeout) }
 
 // Close releases writer authority by closing the store (which releases the
 // cross-process writer lock).
-func (d *Daemon) Close() error { return d.store.Close() }
+func (d *Daemon) Close() error {
+	d.stopTemplateMaintenance()
+	return d.store.Close()
+}
 
 // shutdowner is the http.Server subset drain needs. It exists so the
 // deadline-expiry branch — the branch that must never be reachable in
@@ -1067,6 +1087,10 @@ func Run(ctx context.Context, cfg Config, announce io.Writer) error {
 			}
 		}()
 	}
+
+	// Row 153 M3b: rebuild missing templates only now that the listener is bound
+	// and announced; the goroutine is cancelled and joined by Close.
+	d.startTemplateMaintenance(ctx)
 
 	served := make(chan error, 1)
 	go func() { served <- d.Serve() }()

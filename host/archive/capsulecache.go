@@ -21,7 +21,10 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"syscall"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
 )
@@ -170,4 +173,61 @@ func CopyCacheTree(src, dst string) error {
 			return fmt.Errorf("refusing to copy %s (%s): only regular files and directories", rel, d.Type())
 		}
 	})
+}
+
+// StaleTemplateTmpAge is how old an in-flight `.tmp-*` directory must be
+// before PruneCapsuleCache treats it as abandoned: twice the check bound, so
+// a concurrent publisher still building (it owns a fresh .tmp-*) is never
+// touched.
+const StaleTemplateTmpAge = 2 * checkTimeout
+
+// PruneCapsuleCache is the template garbage collector (row 153 P11). Under
+// capsule-cache/ it removes (a) every interpreter-digest directory whose
+// digest is not in keep, and (b) every `.tmp-*` entry last modified before
+// now-tmpMaxAge. Anything else in the directory (a name that is not a 64-hex
+// digest) is left alone. It returns the removed entry names, sorted.
+func (a *Archive) PruneCapsuleCache(keep map[string]bool, tmpMaxAge time.Duration, now time.Time) ([]string, error) {
+	entries, err := os.ReadDir(a.CapsuleCacheRoot())
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	var removed []string
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		path := filepath.Join(a.CapsuleCacheRoot(), name)
+		switch {
+		case strings.HasPrefix(name, tmpPrefix):
+			info, err := e.Info()
+			if err != nil || now.Sub(info.ModTime()) <= tmpMaxAge {
+				continue
+			}
+		case isDigestName(name) && !keep[name]:
+		default:
+			continue
+		}
+		if err := os.RemoveAll(path); err != nil {
+			return removed, err
+		}
+		removed = append(removed, name)
+	}
+	sort.Strings(removed)
+	return removed, nil
+}
+
+func isDigestName(s string) bool {
+	if len(s) != 64 {
+		return false
+	}
+	for _, c := range s {
+		if !(c >= '0' && c <= '9' || c >= 'a' && c <= 'f') {
+			return false
+		}
+	}
+	return true
 }
