@@ -207,10 +207,12 @@ func median(ds []time.Duration) time.Duration {
 	return s[len(s)/2]
 }
 
-// AC3.4 (MUT-NOTEMPLATE): warm runs are decisively faster than cold ones. The
-// arms are INTERLEAVED so a load burst hits both, and every warm run must also
-// lack MOD010: the deterministic tooth that does not depend on the clock.
-func TestCapsuleWarmIsFaster(t *testing.T) {
+// AC3.4 (MUT-NOTEMPLATE), r2: warm runs do not compile. The deterministic
+// MOD010 witness is the gate; the timings are logged as evidence only. The
+// original median-warm < median-cold/2 assertion was removed (judge B1): the
+// ratio is machine-dependent (CI linux -race 0.53-0.63, idle mac 0.35) because
+// fixed per-run costs (100 MB verify, copy-in) do not scale with compile cost.
+func TestCapsuleWarmRunsDoNotCompile(t *testing.T) {
 	r := newTemplateRig(t)
 	runner := New(r.a, Config{Log: &syncBuf{}})
 	var cold, warm []time.Duration
@@ -230,9 +232,9 @@ func TestCapsuleWarmIsFaster(t *testing.T) {
 		}
 	}
 	mc, mw := median(cold), median(warm)
-	t.Logf("cold %v median %v; warm %v median %v", cold, mc, warm, mw)
-	if mw >= mc/2 {
-		t.Fatalf("median warm %v is not under half the median cold %v", mw, mc)
+	t.Logf("cold %v median %v; warm %v median %v (evidence only, not asserted)", cold, mc, warm, mw)
+	if got := runner.ColdRuns(); got != 5 {
+		t.Fatalf("ColdRuns = %d, want 5 (one per cold arm, none for warm arms)", got)
 	}
 }
 
