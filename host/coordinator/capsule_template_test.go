@@ -72,6 +72,10 @@ func TestCapsuleWarmEqualsColdForSeTools(t *testing.T) {
 			if !compiledStderr(cold) || rig.runner.ColdRuns() != coldBefore+1 {
 				t.Fatalf("cold arm: MOD010=%v ColdRuns %d -> %d; want a compiling run counted cold", compiledStderr(cold), coldBefore, rig.runner.ColdRuns())
 			}
+			// The cold run lazily promoted its own cache. Drop it so the warm
+			// arm runs from the PUBLICATION-built template, not the run-promoted
+			// one (judge N2: otherwise a hollow check-built template is invisible).
+			rig.dropTemplate(e)
 			rig.buildTemplate(e)
 			coldBefore = rig.runner.ColdRuns()
 			warm := rig.runFull(e, p.input)
