@@ -1,13 +1,16 @@
-# World mission — iteration 239 (UNJUDGED draft)
+# World mission dashboard — iteration240 (2026-10-07)
 
-- Base: origin/dev dcefe2a; dev CI 2/2 green.
-- 1.0: clauses 4/5 UNMET; 1/2/3/6/7 MET; goal unmoved.
-- Next: row 152 → 153 → 93 (D-WORLD-65; D-WORLD-68 default B).
-- Row 152 premise confirmed by read-only code checks; no runtime repro/design/plan/code.
-- PARKED-ON-LANE all: required native opus planner and sonnet evaluator rejected.
-- Fleet ticket: agent-tool:mission-role-pins-unavailable, world#239.
-- Routing env absent; three GPT-6.1 Sol readiness roles only; judge absent, no verdict.
-- Resume: valid driver routes + native planner/judge pins accepted, or attended supported independent judge route.
-- D-WORLD-68 OPEN: promote 153 ahead of 152? A recommended; default B preserves order.
-- $0 metered; subscription tokens not reported. Rotation pointer unchanged.
-- This draft record is unmerged and requires independent evaluation.
+- Outcome: PARKED-ON-LANE ALL; goal unmoved; no product change or verdict.
+- Required native planner opus and evaluator sonnet rejected Unknown model.
+- Native Agent enum is OpenAI-only; per-role driver environment absent.
+- Designer/executor GPT-6.1 Sol completed read-only readiness only.
+- Fleet: agent-tool:mission-role-pins-unavailable, occurrence inbox_1791343441284_b09f7570.
+- Record: draft PR226 holds iterations239/240, UNJUDGED; no merge.
+- Resume: valid per-fire routes and native pin admission, or attended supported judge ruling.
+- 1.0: clauses1/2/3/6/7 MET; 4/5 UNMET.
+- Next: row152 → 153 → 93 → 114 → 139 (D-WORLD-65).
+- Pending human: D-WORLD-68, promote153 ahead152? A recommended; default B.
+- Dev base: dcefe2a, 2/2 exact-SHA successful checks.
+- Skill: authoritative resolved V1 skill and all12 resources match fleet origin.
+- Last20 harness share: 2/20; escalation only, no local harness repairs.
+- Metered $0; subscription codex tokens not reported.
