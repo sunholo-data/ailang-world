@@ -161,3 +161,46 @@ func TestSlowPlanLeavesHandlerItsCap(t *testing.T) {
 		t.Fatalf("the handler had %s after the slow plan, want >= HandlerCap−100ms = %s: the plan cap steals the handler's time", left, HandlerCap-100*time.Millisecond)
 	}
 }
+
+// finishDeadlineRunner records how long the finish phase's context allows.
+type finishDeadlineRunner struct {
+	*phaseRunner
+	budget atomic.Int64 // nanos until the finish phase's deadline, -1 = none
+}
+
+func (f *finishDeadlineRunner) RunContext(ctx context.Context, e capsule.Entry) (capsule.Result, error) {
+	var arg string
+	if err := json.Unmarshal(e.Args, &arg); err == nil && strings.Contains(arg, `"phase":"finish"`) {
+		if dl, ok := ctx.Deadline(); ok {
+			f.budget.Store(int64(time.Until(dl)))
+		} else {
+			f.budget.Store(-1)
+		}
+	}
+	return f.phaseRunner.RunContext(ctx, e)
+}
+
+// MUT-FINISH-BUDGET (judge N3): the finish phase runs under FinishPhaseBudget
+// at the production call sites (effectful.go composeEffectOutput and
+// dispatchEffectful), not planBudget. HandlerHeadroom = FinishPhaseBudget +
+// PostEffectBudget is the arithmetic AC2.4 relies on, so a finish that quietly
+// gets the 4 s plan cap breaks it. Default budgets; the dispatch carries a 30 s
+// caller deadline, which the detached finish context does not inherit.
+func TestFinishPhaseRunsUnderFinishBudget(t *testing.T) {
+	r, _ := fxRig(t, false)
+	runner := &finishDeadlineRunner{phaseRunner: &phaseRunner{plan: readPlan(true), finish: func(map[string]any) (string, error) {
+		return `{"passed":true}`, nil
+	}}}
+	runner.budget.Store(-2)
+	c := r.fxCoordinator(r.st, runner, broker.Registry{fxRead: &probe{}})
+	if _, err := c.Dispatch(boundedTestContext(t), r.call("fx", "t1", fxGrants(5))); err != nil {
+		t.Fatalf("Dispatch: %v", err)
+	}
+	got := time.Duration(runner.budget.Load())
+	if got == -2 {
+		t.Fatal("the finish phase never ran")
+	}
+	if got < 0 || got > FinishPhaseBudget {
+		t.Fatalf("finish phase deadline in %v, want within (0, FinishPhaseBudget=%v] (plan budget is %v)", got, FinishPhaseBudget, PlanPhaseBudget)
+	}
+}
