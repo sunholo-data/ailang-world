@@ -158,3 +158,68 @@ func TestPruneCapsuleCacheKeepsListedDigests(t *testing.T) {
 		}
 	}
 }
+
+// Judge N4 (OWN-4): CopyCacheTree refuses a symlink (here a link out of the
+// tree to a real file), so a template cannot smuggle a path out of the run's
+// root; PromoteCopy therefore promotes nothing from such a run.
+func TestCopyCacheTreeRefusesSymlinks(t *testing.T) {
+	outside := filepath.Join(t.TempDir(), "secret")
+	if err := os.WriteFile(outside, []byte("secret"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	src := filepath.Join(t.TempDir(), "run")
+	writeRunCache(t, src, "run")
+	if err := os.Symlink(outside, filepath.Join(src, "compile", "modules", "link.bin")); err != nil {
+		t.Skipf("symlinks unsupported: %v", err)
+	}
+
+	dst := t.TempDir()
+	err := CopyCacheTree(src, dst)
+	if err == nil || !strings.Contains(err.Error(), "refusing to copy") {
+		t.Fatalf("CopyCacheTree over a symlink = %v, want a refusal", err)
+	}
+	if _, serr := os.Stat(filepath.Join(dst, "compile", "modules", "link.bin")); serr == nil {
+		t.Fatal("the symlink's target was copied into the destination")
+	}
+
+	a, interp, source := templateFixture(t)
+	if perr := a.PromoteCopy(src, interp, source); perr == nil {
+		t.Fatal("PromoteCopy of a run holding a symlink succeeded")
+	}
+	if a.CapsuleTemplateReady(interp, source) {
+		t.Fatal("a template was promoted from a run holding a symlink")
+	}
+	noTemplateTmp(t, a)
+}
+
+// Judge N6 (OWN-7): a template counts as ready only if compile/manifest.json
+// exists as a regular file; a bare directory (or one without the manifest) is
+// not a template.
+func TestCapsuleTemplateReadyNeedsTheManifest(t *testing.T) {
+	a, interp, source := templateFixture(t)
+	if a.CapsuleTemplateReady(interp, source) {
+		t.Fatal("ready with no template directory")
+	}
+	dir := a.CapsuleTemplateDir(interp, source)
+	if err := os.MkdirAll(filepath.Join(dir, "compile", "modules"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if a.CapsuleTemplateReady(interp, source) {
+		t.Fatal("ready for a directory without compile/manifest.json")
+	}
+	if err := os.Mkdir(filepath.Join(dir, "compile", "manifest.json"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if a.CapsuleTemplateReady(interp, source) {
+		t.Fatal("ready when manifest.json is a directory")
+	}
+	if err := os.Remove(filepath.Join(dir, "compile", "manifest.json")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "compile", "manifest.json"), []byte("{}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if !a.CapsuleTemplateReady(interp, source) {
+		t.Fatal("not ready with a regular compile/manifest.json")
+	}
+}
