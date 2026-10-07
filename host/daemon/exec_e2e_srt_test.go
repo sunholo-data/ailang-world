@@ -18,6 +18,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/hashref"
@@ -60,7 +61,9 @@ func newExecSrtRig(t *testing.T) *seRig {
 	}
 	d := mustWSDaemon(t, Config{DBPath: f.db, AilangBin: interp, WorkspaceRoot: f.root,
 		ToolAilangBin: fakeToolBin(t, f.logDir, ToolBinaryRelease),
-		ExecProfiles:  []string{pf}, ExecSandbox: nm, ExecNode: node})
+		ExecProfiles:  []string{pf}, ExecSandbox: nm, ExecNode: node,
+		// Row 153 AC1.6: a refusal's operator line reaches the test log.
+		ErrorLog: testErrorLog(t)})
 	if d.coord == nil || d.workspace.exec == nil {
 		t.Fatal("the daemon did not configure the coordinator and workspace-exec")
 	}
@@ -69,6 +72,27 @@ func newExecSrtRig(t *testing.T) *seRig {
 	srv := httptest.NewServer(d.Handler())
 	t.Cleanup(srv.Close)
 	return &seRig{t: t, f: f, d: d, srv: srv, client: &http.Client{Timeout: DefaultClientTimeout}}
+}
+
+// callOK is r.call for a call that must reach the tool: a JSON-RPC error on
+// the wire fails here, with the error's code and message (row 153 AC1.6,
+// P14) rather than as a downstream "<nil>" field mismatch.
+func (r *seRig) callOK(token, name string, args map[string]any) (mcpWire, time.Duration) {
+	r.t.Helper()
+	wire, took := r.call(token, name, args)
+	if wire.Error != nil {
+		r.t.Fatalf("%s: wire error %+v", name, *wire.Error)
+	}
+	return wire, took
+}
+
+// errText renders the JSON-RPC error by value: %+v of the *struct field
+// prints an address, which is what hid refusals before row 153.
+func (w mcpWire) errText() string {
+	if w.Error == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("%+v", *w.Error)
 }
 
 // execSpawns is the ep1 exec handler's spawn count (0 before it is built).
@@ -119,11 +143,11 @@ func TestExecSrtMCPEndToEnd(t *testing.T) {
 	}
 	before := r.entryCount()
 	args := []string{"-run", "TestX", "a"}
-	wire, took := r.call(token, "workspace-exec", map[string]any{"command": "test", "args": args})
+	wire, took := r.callOK(token, "workspace-exec", map[string]any{"command": "test", "args": args})
 	out := wire.Result.StructuredContent
 	t.Logf("workspace-exec test: %v (%d ms)", out, took.Milliseconds())
 	if wire.Error != nil || wire.Result.IsError || out["exit_code"] != float64(0) || out["stdout"] != "[-run=TestX][a]" {
-		t.Fatalf("workspace-exec = %+v (error %+v), want exit 0 and the profiled argv's output", wire, wire.Error)
+		t.Fatalf("workspace-exec = %+v (error %s), want exit 0 and the profiled argv's output", wire.Result, wire.errText())
 	}
 	sandbox, _ := out["sandbox"].(map[string]any)
 	if sandbox["version"] != broker.ExecSandboxRelease || sandbox["cli_sha256"] != broker.ExecSandboxCLISHA256 ||
@@ -149,7 +173,7 @@ func TestExecSrtMCPEndToEnd(t *testing.T) {
 		t.Fatalf("request object %v, want exactly {command:test, args:%q}", req, args)
 	}
 	// The cwd is the episode's worktree, through the sandbox.
-	wire, _ = r.call(token, "workspace-exec", map[string]any{"command": "where"})
+	wire, _ = r.callOK(token, "workspace-exec", map[string]any{"command": "where"})
 	if got := strings.TrimSpace(fmt.Sprint(wire.Result.StructuredContent["stdout"])); got != filepath.Join(r.f.root, "ep1") {
 		t.Fatalf("where = %q, want the ep1 worktree", got)
 	}
@@ -185,26 +209,26 @@ func TestExecSrtMCPGrantAndBudget(t *testing.T) {
 	before := r.entryCount()
 	wire, _ := r.call(noGrant, "workspace-exec", map[string]any{"command": "mark"})
 	if wire.Error == nil && !wire.Result.IsError {
-		t.Fatalf("workspace-exec without a Workspace.Exec grant = %+v, want refused", wire)
+		t.Fatalf("workspace-exec without a Workspace.Exec grant = %+v (error %s), want refused", wire.Result, wire.errText())
 	}
 	if _, err := os.Stat(ran); !os.IsNotExist(err) || r.execSpawns() != 0 || r.entryCount() != before {
 		t.Fatalf("the ungranted call ran (%v), spawned %d or committed (%d -> %d)", err, r.execSpawns(), before, r.entryCount())
 	}
 
 	one := r.mintBudgets("ep1", map[string]int64{broker.EffectWorkspaceExec: 1})
-	wire, _ = r.call(one, "workspace-exec", map[string]any{"command": "mark"})
+	wire, _ = r.callOK(one, "workspace-exec", map[string]any{"command": "mark"})
 	if out := wire.Result.StructuredContent; out["exit_code"] != float64(0) || strings.TrimSpace(fmt.Sprint(out["stdout"])) != "marked" {
-		t.Fatalf("first call with budget 1 = %+v", wire)
+		t.Fatalf("first call with budget 1 = %+v (error %s)", wire.Result, wire.errText())
 	}
 	spawned := r.execSpawns()
 	if spawned == 0 || mustReadFile(t, ran) != "ran\n" {
 		t.Fatalf("the first call did not run (spawns %d)", spawned)
 	}
 	before = r.entryCount()
-	wire, _ = r.call(one, "workspace-exec", map[string]any{"command": "mark"})
+	wire, _ = r.callOK(one, "workspace-exec", map[string]any{"command": "mark"})
 	out := wire.Result.StructuredContent
 	if w := worldOf(t, out); len(w.Effects) != 1 || w.Effects[0].Status != "denied" {
-		t.Fatalf("second call with budget 1 = %+v, want the effect denied", wire)
+		t.Fatalf("second call with budget 1 = %+v (error %s), want the effect denied", wire.Result, wire.errText())
 	}
 	rec, _ := r.effectRequestAny(out)
 	if rec.Allowed || !strings.Contains(rec.Denial, "budget") || rec.Effect != broker.EffectWorkspaceExec {

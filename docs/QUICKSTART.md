@@ -93,7 +93,12 @@ carrying the route. A2A not-available refusals similarly write
 `ailang-worldd: a2a refusal: tasks/send <invocation-id-or->: "<escaped cause>"`, and MCP refusals write
 `ailang-worldd: mcp refusal: tools/call <invocation-id-or->: "<escaped cause>"` (or `tools/list -`)
 to stderr (or the configured ErrorLog), with embedded newlines escaped. So the terminal running `serve` is where you read *why* a 500 happened — the
-HTTP client is told *that* one happened, and nothing about the host.
+HTTP client is told *that* one happened, and nothing about the host. A transition whose **plan
+phase** runs out of its own time budget (the caller still waiting) answers an A2A `-32603` that
+names the phase and the budget (`transition plan phase exceeded its <budget> budget; nothing ran
+or was committed; resend the same task id`) — nothing ran, so resending the same task id is safe;
+the matching operator line reads `… plan phase exceeded its <budget> budget after <elapsed>`. MCP
+clients see the released handler's fixed `host callback timed out` for the same event.
 
 ```bash
 /tmp/ailang-worldd health
