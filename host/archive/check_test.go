@@ -11,6 +11,12 @@ import (
 	"github.com/sunholo-data/ailang-world/host/hashref"
 )
 
+// writeCacheManifestSh is the shell a fake `check` runs to model the real
+// interpreter populating AILANG_CACHE_DIR (row 153): it writes only when the
+// variable is set, so a fake still models "check passed, cache absent" for a
+// test that unsets it.
+const writeCacheManifestSh = `if [ -n "$AILANG_CACHE_DIR" ]; then mkdir -p "$AILANG_CACHE_DIR/compile" && printf '{}' > "$AILANG_CACHE_DIR/compile/manifest.json"; fi; `
+
 // checkingInterpreter writes the house-pattern shell-script fake whose
 // `check <file>` echoes the STAGED file's bytes (so the test sees exactly what
 // CheckSource staged, and where) and exits checkExit. body distinguishes
@@ -20,7 +26,7 @@ func checkingInterpreter(t *testing.T, body string, checkExit int) string {
 	path := filepath.Join(t.TempDir(), "check-fake-"+body)
 	script := "#!/bin/sh\n" +
 		"if [ \"$1\" = \"--version\" ]; then echo 'CHECK-FAKE v1'; exit 0; fi\n" +
-		"if [ \"$1\" = \"check\" ]; then cat \"$2\"; echo \"staged-as:$2\"; exit " + strconv.Itoa(checkExit) + "; fi\n" +
+		"if [ \"$1\" = \"check\" ]; then cat \"$2\"; echo \"staged-as:$2\"; " + writeCacheManifestSh + "exit " + strconv.Itoa(checkExit) + "; fi\n" +
 		"# body marker: " + body + "\n" +
 		"exit 0\n"
 	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
@@ -50,14 +56,14 @@ func TestCheckSourceReportsTheArchivedInterpretersVerdict(t *testing.T) {
 	if err != nil || !ok.Passed {
 		t.Fatalf("accepting check = (%+v, %v), want Passed", ok, err)
 	}
-	if !strings.Contains(ok.Output, "export func main()") || !strings.Contains(ok.Output, "staged-as:entry.ail") {
+	if !strings.Contains(ok.Output, "export func main()") || !strings.Contains(ok.Output, "staged-as:host/capsule/main.ail") {
 		t.Fatalf("accepting output = %q, want the staged source bytes checked as entry.ail", ok.Output)
 	}
 	bad, err := a.CheckSource(context.Background(), refusing, source)
 	if err != nil {
 		t.Fatalf("a refusing interpreter is a verdict, not an error: %v", err)
 	}
-	if bad.Passed || !strings.Contains(bad.Output, "staged-as:entry.ail") {
+	if bad.Passed || !strings.Contains(bad.Output, "staged-as:host/capsule/main.ail") {
 		t.Fatalf("refusing check = %+v, want !Passed with the interpreter's captured output", bad)
 	}
 	if _, err := a.CheckSource(context.Background(), hashref.SumSHA256([]byte("never archived")), source); err == nil {

@@ -83,7 +83,10 @@ func echoManifest(t *testing.T, sourcePath string, withEpoch bool) string {
 func fakeInterpreter(t *testing.T) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "fake-ailang")
+	// `check` also models the real interpreter populating AILANG_CACHE_DIR
+	// (row 153): publication builds a compile-cache template.
 	script := "#!/bin/sh\n" +
+		"if [ \"$1\" = check ] && [ -n \"$AILANG_CACHE_DIR\" ]; then mkdir -p \"$AILANG_CACHE_DIR/compile\" && printf '{}' > \"$AILANG_CACHE_DIR/compile/manifest.json\"; fi\n" +
 		"echo test-interpreter-version\n"
 	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
 		t.Fatal(err)

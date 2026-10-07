@@ -27,6 +27,7 @@ func daemonFakeInterpreter(t *testing.T) string {
 	script := "#!/bin/sh\n" +
 		"case \"$1\" in\n" +
 		"  --version) echo \"" + daemonFakeRelease + "\";;\n" +
+		"  check) if [ -n \"$AILANG_CACHE_DIR\" ]; then mkdir -p \"$AILANG_CACHE_DIR/compile\" && printf '{}' > \"$AILANG_CACHE_DIR/compile/manifest.json\"; fi;;\n" +
 		"esac\n" +
 		"exit 0\n"
 	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
@@ -247,7 +248,9 @@ func TestEpochTwinInterpretersBothListedOnCard(t *testing.T) {
 	writeFake := func(name, versionOut string) hashref.HashRef {
 		t.Helper()
 		path := filepath.Join(t.TempDir(), name)
-		script := "#!/bin/sh\ncase \"$1\" in\n  --version) printf '" + versionOut + "';;\nesac\nexit 0\n"
+		script := "#!/bin/sh\ncase \"$1\" in\n  --version) printf '" + versionOut + "';;\n" +
+			"  check) if [ -n \"$AILANG_CACHE_DIR\" ]; then mkdir -p \"$AILANG_CACHE_DIR/compile\" && printf '{}' > \"$AILANG_CACHE_DIR/compile/manifest.json\"; fi;;\n" +
+			"esac\nexit 0\n"
 		if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
 			t.Fatal(err)
 		}

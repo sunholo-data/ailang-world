@@ -16,6 +16,11 @@ import (
 // testFakeRelease is the release string the default fake interpreter reports.
 const testFakeRelease = "TEST-FAKE v9.9.9"
 
+// fakeCacheManifestSh models the real interpreter populating AILANG_CACHE_DIR
+// during `check` (row 153: publication builds a compile-cache template and
+// refuses a pass that wrote none). It writes only when the variable is set.
+const fakeCacheManifestSh = `if [ -n "$AILANG_CACHE_DIR" ]; then mkdir -p "$AILANG_CACHE_DIR/compile" && printf '{}' > "$AILANG_CACHE_DIR/compile/manifest.json"; fi`
+
 // fakeInterpreterScript writes the house-pattern shell-script fake
 // interpreter (host/archive/archive_test.go): --version prints version;
 // `check` exits with checkExit (0 accepts every source, 1 refuses all).
@@ -29,6 +34,7 @@ func fakeInterpreterScript(t *testing.T, version string, checkExit int) string {
 		"fi\n" +
 		"if [ \"$1\" = \"check\" ]; then\n" +
 		"  echo \"Error: this fake refuses the check\" >&2\n" +
+		"  " + fakeCacheManifestSh + "\n" +
 		"  exit " + strconv.Itoa(checkExit) + "\n" +
 		"fi\n" +
 		"exit 0\n"
