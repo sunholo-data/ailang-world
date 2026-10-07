@@ -837,6 +837,16 @@ func TestA2ADispatch(t *testing.T) {
 			EffectRecords: []hashref.HashRef{hashref.SumSHA256([]byte("r1")), hashref.SumSHA256([]byte("r2"))},
 			Cause:         &store.ConflictError{}},
 			codeInternal, EffectsUnrecordedPrefix + " " + hashref.SumSHA256([]byte("r1")).String() + " " + hashref.SumSHA256([]byte("r2")).String()},
+		// Row 153: a plan phase that ran out of its own budget names the phase
+		// and the budget; any other phase's timeout stays the generic deadline.
+		{"PlanPhaseTimeout", &coordinator.PhaseTimeoutError{Phase: "plan", Budget: coordinator.PlanPhaseBudget},
+			codeInternal, PhaseTimeoutPrefix + " " + coordinator.PlanPhaseBudget.String() + " budget; nothing ran or was committed; resend the same task id"},
+		{"FinishPhaseTimeout_bare", &coordinator.PhaseTimeoutError{Phase: "finish", Budget: coordinator.FinishPhaseBudget},
+			codeInternal, "invocation exceeded its deadline"},
+		// An effect already ran: a plan-timeout cause must not displace the
+		// effects-unrecorded mapping (MUT-ORDER-FINISH).
+		{"EffectsUnrecorded_wrapping_plan_timeout", &coordinator.EffectsUnrecordedError{Cause: &coordinator.PhaseTimeoutError{Phase: "plan"}},
+			codeInternal, EffectsUnrecordedPrefix + " none"},
 		{"EffectsUnrecorded_no_record", &coordinator.EffectsUnrecordedError{Cause: &coordinator.UnconfirmedError{Err: errors.New("hidden")}},
 			codeInternal, EffectsUnrecordedPrefix + " none"},
 	}

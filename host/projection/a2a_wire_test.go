@@ -3,6 +3,7 @@ package projection
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -37,7 +38,11 @@ type wireRig struct {
 	world store.World
 }
 
-func newWireRig(t *testing.T) *wireRig {
+func newWireRig(t *testing.T) *wireRig { return newWireRigWith(t, false) }
+
+// newWireRigWith is newWireRig; effectful keeps the descriptor's declared
+// effect (alpha@world) so the coordinator takes the plan/finish path.
+func newWireRigWith(t *testing.T, effectful bool) *wireRig {
 	t.Helper()
 	st := openStore(t)
 	genesis := store.Object{Hash: hashref.SumSHA256([]byte("genesis-state")), InterfaceHash: hashref.SumSHA256([]byte("test/genesis")),
@@ -61,7 +66,10 @@ func newWireRig(t *testing.T) *wireRig {
 		t.Fatal(err)
 	}
 	d := descriptor("tools.echo", "alpha")
-	d.TransitionFn, d.Interpreter, d.DeclaredEffects = src.Hash, interp, nil
+	d.TransitionFn, d.Interpreter = src.Hash, interp
+	if !effectful {
+		d.DeclaredEffects = nil
+	}
 	seedRegistry(t, st, d)
 	return &wireRig{st: st, tok: mintToken(t, st, "ep-a", []broker.Capability{liveGrant("alpha")}), world: world}
 }
@@ -516,4 +524,100 @@ type intentOnlyStore struct{ *store.Store }
 
 func (s intentOnlyStore) GetReceipt(ctx context.Context, id string) (store.Receipt, bool, error) {
 	return store.Receipt{InvocationID: id, State: store.ReceiptIndeterminate}, true, nil
+}
+
+// phaseRunnerFn answers a convention-v2 phase from fn (the phase name and the
+// invocation ctx), so a test can stall exactly one phase.
+type phaseRunnerFn func(ctx context.Context, phase string) (string, error)
+
+func (f phaseRunnerFn) RunContext(ctx context.Context, e capsule.Entry) (capsule.Result, error) {
+	var arg string
+	if err := json.Unmarshal(e.Args, &arg); err != nil {
+		return capsule.Result{}, err
+	}
+	var in struct {
+		Phase string `json:"phase"`
+	}
+	if err := json.Unmarshal([]byte(arg), &in); err != nil {
+		return capsule.Result{}, err
+	}
+	out, err := f(ctx, in.Phase)
+	return capsule.Result{Stdout: []byte(out + "\n")}, err
+}
+
+type okEffect struct{}
+
+func (okEffect) Execute(context.Context, broker.EffectRequest, []byte) ([]byte, error) {
+	return []byte(`{"ok":true}`), nil
+}
+
+// effectfulPlan is a one-effect plan on the wire rig's alpha@world grant.
+func effectfulPlan(finish bool) string {
+	return fmt.Sprintf(`{"plan":"world/effect-plan/v1","effects":[{"id":"e1","effect":"alpha","scope":"world","cost":1,"payload":{}}],"finish":%t,"result":null}`, finish)
+}
+
+func effectfulHandler(t *testing.T, r *wireRig, runner coordinator.Runner, invokeWait time.Duration) *Handler {
+	t.Helper()
+	return r.handler(t, nil, runner, func(ep string, grants []broker.Capability) transitionreg.Binder {
+		return broker.OpenBinder(r.st, ep, grants, broker.Registry{"alpha": okEffect{}})
+	}, invokeWait)
+}
+
+// TestA2APlanTimeoutIsTypedAndNamesThePhase is row 153 AC1.3 on the wire: a
+// plan that blocks until ITS budget ends, with the caller still live, answers
+// -32603 with the plan-phase message (not the generic deadline text), and the
+// connection is not closed (the invocation deadline did not expire).
+// Waits the real PlanPhaseBudget (P1).
+func TestA2APlanTimeoutIsTypedAndNamesThePhase(t *testing.T) {
+	r := newWireRigWith(t, true)
+	var plans atomic.Int32
+	runner := phaseRunnerFn(func(ctx context.Context, phase string) (string, error) {
+		if phase != "plan" {
+			return "", errors.New("unexpected phase " + phase)
+		}
+		plans.Add(1)
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		case <-time.After(coordinator.PlanPhaseBudget + 5*time.Second): // a budget-less mutant fails, never hangs
+			return "", errors.New("the plan budget never cancelled the capsule")
+		}
+	})
+	h := effectfulHandler(t, r, runner, 20*time.Second)
+	var log bytes.Buffer
+	h.errorLog = &log
+	rec := post(t, h, "Bearer "+r.tok, wireBody("wire-plan-timeout", "t-plan"))
+	if plans.Load() != 1 {
+		t.Fatalf("plan ran %d times, want 1", plans.Load())
+	}
+	want := PhaseTimeoutPrefix + " " + coordinator.PlanPhaseBudget.String() + " budget; nothing ran or was committed; resend the same task id"
+	assertWireRefusal(t, rec, "wire-plan-timeout", codeInternal, want, false)
+}
+
+// TestA2AFinishOverrunStaysEffectsUnrecorded is row 153 AC1.7: a finish
+// phase that overruns AFTER the effect ran is an effects-unrecorded answer
+// (the effect record is durable), never the plan-timeout "resend" message.
+// Waits the real FinishPhaseBudget (P1).
+func TestA2AFinishOverrunStaysEffectsUnrecorded(t *testing.T) {
+	r := newWireRigWith(t, true)
+	runner := phaseRunnerFn(func(ctx context.Context, phase string) (string, error) {
+		if phase == "plan" {
+			return effectfulPlan(true), nil
+		}
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		case <-time.After(coordinator.FinishPhaseBudget + 5*time.Second):
+			return "", errors.New("the finish budget never cancelled the capsule")
+		}
+	})
+	h := effectfulHandler(t, r, runner, 20*time.Second)
+	rec := post(t, h, "Bearer "+r.tok, wireBody("wire-finish-overrun", "t-finish"))
+	code, msg, _ := a2aErr(t, rec.body)
+	if code != codeInternal || !strings.HasPrefix(msg, EffectsUnrecordedPrefix) {
+		t.Fatalf("answer = %d %q, want %d with prefix %q; body=%s", code, msg, codeInternal, EffectsUnrecordedPrefix, rec.body)
+	}
+	if strings.HasPrefix(msg, PhaseTimeoutPrefix) || msg == "invocation exceeded its deadline" {
+		t.Fatalf("finish overrun answered %q: it must stay effects-unrecorded", msg)
+	}
 }

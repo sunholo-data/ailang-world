@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/capsule"
@@ -64,6 +65,10 @@ type Coordinator struct {
 	// enforced by the store's flock (V42), so an in-process lock serialises
 	// every spend-seeding reader against every effect-intent writer.
 	episodeLocks sync.Map
+	// planBudget and finishBudget are the per-phase caps. New sets them to
+	// PlanPhaseBudget/FinishPhaseBudget; only in-package tests scale them
+	// (row 153 P1: no exported knob, so no production surface).
+	planBudget, finishBudget time.Duration
 }
 
 // New validates cfg: a missing seam or a non-positive cap is a construction
@@ -75,7 +80,7 @@ func New(cfg Config) (*Coordinator, error) {
 	case cfg.MaxInput <= 0 || cfg.MaxOutput <= 0:
 		return nil, fmt.Errorf("coordinator: MaxInput/MaxOutput must be positive, got %d/%d", cfg.MaxInput, cfg.MaxOutput)
 	}
-	return &Coordinator{cfg: cfg}, nil
+	return &Coordinator{cfg: cfg, planBudget: PlanPhaseBudget, finishBudget: FinishPhaseBudget}, nil
 }
 
 // Surface names the transport an invocation arrived on. It is the namespace

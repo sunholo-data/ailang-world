@@ -430,12 +430,18 @@ func dispatchError(err error) (int, string) {
 	var conflict *store.ConflictError
 	var integrity *coordinator.IntegrityError
 	var unrecorded *coordinator.EffectsUnrecordedError
+	var phase *coordinator.PhaseTimeoutError
 	switch {
 	// First: an effect already ran, whatever the cause (which it wraps — a
 	// conflict, a deadline, an unconfirmed commit) says. The caller gets the
 	// effect-record refs so the executed effect stays addressable (row 134).
 	case errors.As(err, &unrecorded):
 		return codeInternal, effectsUnrecordedMessage(unrecorded)
+	// Row 153: a plan phase that ran out of ITS budget (the caller still live)
+	// ran nothing and committed nothing, so a resend is safe. Before the
+	// generic deadline case below, which a PhaseTimeoutError also satisfies.
+	case errors.As(err, &phase) && phase.Phase == "plan":
+		return codeInternal, fmt.Sprintf("%s %s budget; nothing ran or was committed; resend the same task id", PhaseTimeoutPrefix, phase.Budget)
 	case errors.As(err, &invalid):
 		return codeInvalidParams, msgInvalidParams
 	case errors.As(err, &absent), errors.As(err, &denied):
@@ -468,6 +474,10 @@ func dispatchError(err error) (int, string) {
 		return codeInternal, notAvailableMessage
 	}
 }
+
+// PhaseTimeoutPrefix opens the message dispatchError gives a plan-phase
+// *coordinator.PhaseTimeoutError; the budget follows it.
+const PhaseTimeoutPrefix = "transition plan phase exceeded its"
 
 // EffectsUnrecordedPrefix opens the message dispatchError gives an
 // *coordinator.EffectsUnrecordedError; the effect-record refs follow it.
