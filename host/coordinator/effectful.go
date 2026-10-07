@@ -33,8 +33,16 @@ import (
 // remaining − HandlerHeadroom); the headroom is the finish phase plus the
 // post-effect writes, so a call whose handler uses its whole cap still
 // commits inside the caller's deadline.
+//
+// PlanPhaseBudget is DERIVED (row 153), not guessed: it is the largest plan
+// cap that still leaves the handler its full cap inside the daemon's 20 s
+// invocation deadline (daemon invokeDeadline, daemon.go:99, pinned by mcp_test.go:165):
+// 20 s − HandlerCap − HandlerHeadroom = 20 − 10 − (2 + 4) = 4 s. Pinned by
+// daemon.TestPlanPhaseBudgetIsDerived and coordinator.TestSlowPlanLeavesHandlerItsCap.
+// FinishPhaseBudget stays 2 s: it is part of the headroom, so raising it would
+// lower the plan cap one-for-one (AC2.4, R2).
 const (
-	PlanPhaseBudget   = 2 * time.Second
+	PlanPhaseBudget   = 4 * time.Second
 	FinishPhaseBudget = 2 * time.Second
 	HandlerCap        = 10 * time.Second
 	HandlerHeadroom   = FinishPhaseBudget + PostEffectBudget

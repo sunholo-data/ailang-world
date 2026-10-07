@@ -5,6 +5,7 @@ package coordinator
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"strings"
 	"sync/atomic"
@@ -100,5 +101,63 @@ func TestA2APlanTimeoutRetrySameTaskID(t *testing.T) {
 	}
 	if got := decodeWorld(t, res.OutputBytes).World.Effects; len(got) != 1 || got[0].Status != StatusOK {
 		t.Fatalf("effects = %+v, want one ok effect record", got)
+	}
+}
+
+// slowPlanRunner holds the plan phase until 500 ms before the PHASE
+// context's own deadline, then answers: the slowest plan the cap admits.
+type slowPlanRunner struct {
+	*phaseRunner
+	returned atomic.Int64 // unix nanos at which the plan returned
+}
+
+func (s *slowPlanRunner) RunContext(ctx context.Context, e capsule.Entry) (capsule.Result, error) {
+	var arg string
+	if err := json.Unmarshal(e.Args, &arg); err != nil {
+		return capsule.Result{}, err
+	}
+	if strings.Contains(arg, `"phase":"plan"`) {
+		dl, ok := ctx.Deadline()
+		if !ok {
+			return capsule.Result{}, errors.New("the plan phase has no deadline")
+		}
+		select {
+		case <-time.After(time.Until(dl) - 500*time.Millisecond):
+		case <-ctx.Done():
+			return capsule.Result{}, ctx.Err()
+		}
+		defer func() { s.returned.Store(time.Now().UnixNano()) }()
+	}
+	return s.phaseRunner.RunContext(ctx, e)
+}
+
+// AC2.3 (MUT-STEAL, MUT-DEFAULT): a plan that uses all but 500 ms of its cap
+// still leaves the handler its full HandlerCap inside the daemon's 20 s
+// invocation deadline. Default budgets, no hook: this also pins New's
+// defaults. The 20 s is the literal daemon invokeDeadline (pinned by
+// daemon.TestPlanPhaseBudgetIsDerived and mcp_test.go:165).
+func TestSlowPlanLeavesHandlerItsCap(t *testing.T) {
+	const modelInvokeDeadline = 20 * time.Second
+	r, _ := fxRig(t, false)
+	var handlerDeadline atomic.Int64
+	h := &probe{delay: func(ctx context.Context) error {
+		if dl, ok := ctx.Deadline(); ok {
+			handlerDeadline.Store(dl.UnixNano())
+		}
+		return nil
+	}}
+	runner := &slowPlanRunner{phaseRunner: &phaseRunner{plan: readPlan(false)}}
+	c := r.fxCoordinator(r.st, runner, broker.Registry{fxRead: h})
+	ctx, cancel := context.WithTimeout(context.Background(), modelInvokeDeadline)
+	defer cancel()
+	if _, err := c.Dispatch(ctx, r.call("fx", "t1", fxGrants(5))); err != nil {
+		t.Fatalf("Dispatch: %v", err)
+	}
+	if h.n.Load() != 1 || handlerDeadline.Load() == 0 || runner.returned.Load() == 0 {
+		t.Fatalf("handler ran %d times, deadline %d, plan returned %d", h.n.Load(), handlerDeadline.Load(), runner.returned.Load())
+	}
+	left := time.Duration(handlerDeadline.Load() - runner.returned.Load())
+	if left < HandlerCap-100*time.Millisecond {
+		t.Fatalf("the handler had %s after the slow plan, want >= HandlerCap−100ms = %s: the plan cap steals the handler's time", left, HandlerCap-100*time.Millisecond)
 	}
 }
