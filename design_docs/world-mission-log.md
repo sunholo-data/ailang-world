@@ -1460,3 +1460,29 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 **Progress:** World 1.0 clauses 4/5 UNMET; 1/2/3/6/7 MET; goal unmoved.
 
 **Next:** restore admitted independent judging, then row 152 → 153 → 93 unless Mark answers D-WORLD-68 = A. Re-evaluate this draft before merge; no acceptance claim.
+
+## 240 — 2026-10-07 — required planner/judge native pins rejected again; PARKED-ON-LANE all; fleet occurrence filed; UNJUDGED draft #226 [HARNESS]
+
+**Kind:** harness escalation only. No product work, no landing, no acceptance verdict. Appended to existing unjudged draft #226 rather than creating a second competing record PR. Prior iteration239 preserved unchanged.
+
+**Pick and why:** none admitted. Row 152 is the next critical-path item on D-WORLD-65 (D-WORLD-68 remains OPEN, default B); routing capacity blocks every item. No design/quorum/plan/execution attempted. Clause map: 1 MET; 2 MET; 3 MET; 4 UNMET (152 → 153 → 93); 5 UNMET (114 after 93 → 139); 6 MET; 7 MET.
+
+**Reality check:** Gate-1 fetch found local dev `499105b` four commits behind origin `dcefe2a`. Read state from origin and existing draft #226; no shared checkout reset/pull/stash. Dev exact SHA has 2/2 successful checks. No code-test premise claimed this iteration; row152's prior reproduction remains inherited, not re-certified here.
+
+**Gate 0:** armed; GitHub fleet account active; billing CLEAN. Directives script on #202 since older dual watermark 2026-10-05T12:46:05Z: 0 allowlisted directives / 13 comments. No new human timestamp to advance. Canonical mission-world inbox contained five prior notifications (four self-claims and v0.52.1 upstream fixes already reflected in landed rows); no new regression/directive, left unchanged. Wednesday; issue created Monday after 07:00 local and 13 comments, no rotation/sweep due. Origin ledger check performed on draft below; no decision resolution.
+
+**Gate 1:** base `dcefe2a`; resolved skill and every one of 12 resources MATCH fleet origin/dev. No repo-relative World skill copy exists. An initial relative mission-base call failed because World has no local driver; repeated with the authoritative absolute MISSION_DRIVER_ROOT, rc0. No harness fix or workaround. Existing worktree / PR226 attributed by branch `mission/world-iter239-park`, clean, draft, unjudged; no other role work modified.
+
+**Routing evidence:** base=dcefe2a5bb057627d9bc559e4f4d946ecd9a2e26@2026-10-07T03:24:01Z. Controller `codex:gpt-6.1-sol` (tok: not reported). Designer native Agent `gpt-6.1-sol` (tok: not reported), rotation successor to `claude:claude-opus-5-5`, READINESS ONLY; actual resolver `refuse fail-closed:designer-model-missing`. Planner attempted native Agent `opus`: `Unknown model opus`; resolver `agent-tool opus fail-closed:env-pin`; fallback NONE, no plan (tok: not reported). Executor native Agent `gpt-6.1-sol` (tok: not reported), table-default READINESS ONLY; resolver `refuse fail-closed:executor-model-missing`. Evaluator REQUIRED: attempted native Agent `sonnet`: `Unknown model sonnet`; resolver `refuse fail-closed:evaluator-model-missing`; fallback NONE, verdict ABSENT (tok: not reported). Available model enum is OpenAI-only. The accepted readiness agents returned deliverables, no background work remains. No rotation pointer advanced. Metered $0; codex subscription quota totals not reported. Evidence: `design_docs/verification/world-iter240/routing-evidence.md`.
+
+**Park:** PARKED-ON-LANE blocking all, recurrence after239. Role/lane: planner native opus, judge native sonnet; explicit spawn errors above (tool errors have no shell rc). Resume predicate: valid per-fire routes and required native pins accepted, or attended routing admits a supported independent judge; no reset time known. Fleet ticket `agent-tool:mission-role-pins-unavailable`, occurrence `inbox_1791343441284_b09f7570`. Capacity is not a new DECISIONS ask. No CLI substitution, invented judge, policy change or merge. Generator-not-equal-judge preserved by no landing.
+
+**Gate 3b:** no dev push/merge; no LANDED verdict. Draft head CI can run but cannot substitute for evaluator admission.
+
+**Ruled out:** relying on iteration239's capability claim without re-probing; treating readiness as admitted roles; choosing another OpenAI judge outside the declared routing; merging records on controller judgment; repairing fleet harness from World; overwriting shared stale checkout; taking release rows148–151 through the same broken routing.
+
+**Retro:** recurring native pin/driver-env transport mismatch (239,240) routed to existing fleet ticket; no local skill/process/routing edit. Last three product landings238/237/231 moved clause4/clause4/none respectively, so no three-landing drift trigger. Last20 harness share recorded in digest (escalations, no harness repairs).
+
+**Progress:** 1.0 clauses4/5 UNMET; goal unmoved.
+
+**Next:** fleet restores admitted routing; then row152 → 153 → 93 unless Mark answers D-WORLD-68=A. Preserve #226 until an admitted independent evaluator reviews the entire draft.
