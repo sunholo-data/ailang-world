@@ -171,8 +171,11 @@ func TestDaemonStartReportsMissingTemplates(t *testing.T) {
 	case line = <-announced:
 	case err := <-ran:
 		t.Fatalf("Run returned %v before announcing", err)
-	case <-time.After(7 * time.Second):
-		t.Fatalf("Run announced nothing within 7s with the template rebuild held: the rebuild is blocking startup (log: %s)", log.String())
+	// The gate holds the rebuild forever, so a blocking rebuild never lets Run
+	// announce: any bound kills that mutant, hence a generous one that cannot
+	// flake on a loaded -race runner.
+	case <-time.After(60 * time.Second):
+		t.Fatalf("Run announced nothing within 60s with the template rebuild held: the rebuild is blocking startup (log: %s)", log.String())
 	}
 	if !strings.HasPrefix(line, ListenAnnouncePrefix) {
 		t.Fatalf("announcement = %q", line)
