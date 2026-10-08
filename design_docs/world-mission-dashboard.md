@@ -9,6 +9,7 @@
 - Judge: sonnet r1 90 → r2 92, zero blocking (cross-vendor from the codex executor).
 - Quorum: r1 BLOCKED 3/3 → r2 BLOCKED 3/3 (completeness only) → r3 narrow-refinement carve-out; `gpt6-1-sol` unreachable both rounds (N−1).
 - CI: first head red on linux `-race` — two tests assumed one bounded run drains the log; fixed to follow the resume contract; final head 3/3 green; merge tree-identical.
+- Post-merge: one more load flake in a slow-body test (a complete 408 is legal) → fix PR #233 `9319e6b` widened every test stuck-guard to ≥2 s; judge 91/92, CI 3/3.
 - 1.0: clauses 1/2/3/6/7 MET; 4/5 UNMET.
 - Critical path: row 93 M5 FINAL is attended (Mark mints the sessions); 114 → 139 follow it.
 - Next (loop): row 149 `w-workbench-live-and-polish` under the same exception, unless 93 M5 lands first.
