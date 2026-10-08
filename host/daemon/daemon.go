@@ -46,6 +46,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/sunholo-data/ailang/serveapi/protocol"
@@ -453,6 +454,14 @@ type Daemon struct {
 	// (row 134 §4.3). Its registry is empty unless both are set.
 	workspace *workspaceTools
 
+	// Per-instance stream bounds and lifetime signals.
+	aguiBudget    time.Duration
+	aguiBodyBound time.Duration
+	aguiTick      time.Duration
+	aguiStop      chan struct{}
+	aguiStopOnce  sync.Once
+	aguiSlots     chan struct{}
+
 	// Health facts resolved once at startup and served verbatim.
 	interpreterRef     string
 	interpreterVersion string
@@ -638,6 +647,8 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 
 	d := &Daemon{
 		cfg: cfg, store: s, bootstrap: registry.Bootstrap, reads: s, commits: s, commitBudget: commitBudget, credentialBudget: credentialBudget, drainTimeout: shutdownTimeout,
+		aguiBudget: aguiRunBudget, aguiBodyBound: aguiBodyBound, aguiTick: aguiTick,
+		aguiStop: make(chan struct{}), aguiSlots: make(chan struct{}, aguiCap),
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog),
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget, resolver: authority.New(s), workspace: workspace,
@@ -736,6 +747,7 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 	d.projection = proj
 
 	d.srv = newServer(d.Handler())
+	d.srv.RegisterOnShutdown(func() { d.aguiStopOnce.Do(func() { close(d.aguiStop) }) })
 	return d, nil
 }
 
@@ -875,6 +887,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /.well-known/agent.json", d.projection.AgentCard)
 	mux.HandleFunc("POST /a2a/", d.projection.A2A)
 	mux.HandleFunc("POST /mcp/", d.projection.MCP)
+	mux.HandleFunc("POST /agui/", d.handleAGUI)
 	return NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, mux)
 }
 
