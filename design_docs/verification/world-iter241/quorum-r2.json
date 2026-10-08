@@ -1,0 +1,79 @@
+{
+  "doc": "/Users/voightkampff/.ailang/state/world-wt/iter241-row153/design_docs/planned/w-plan-phase-deadline-under-load.md",
+  "iso_ts": "2026-10-07T20:30:29Z",
+  "reviewers": [
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.139917,
+      "tokens_in": 14799,
+      "tokens_out": 6368,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc's marquee premise — the b1 derivation that turns '2 s was guessed' into '4 s is derived' — rests on a formula that is cited but never verified. §5 b1 states 'The handler gets min(HandlerCap, remaining − HandlerHeadroom) (effectful.go:111–118)', yet the Verification Log (V1–V35) never displays those lines: V1 covers only the constants at :32–42, V2 covers runPhase at :127–141. Every other load-bearing line reference gets a sed excerpt; the single line range that the entire cap arithmetic, AC2.2/AC2.3, and the rejection of b5 depend on is asserted. If the handler budget is actually computed differently (e.g., 'remaining' anchored somewhere other than the 20 s invoke deadline at dispatch, a max instead of a min, headroom applied elsewhere, or the deadline fixed before the plan runs rather than after), then PlanPhaseBudget = 20 − 10 − (2+4) = 4 s is wrong in exactly the way the row's own rule forbids — an underived number wearing a derivation's clothes. Gate 1 fails on the derivation's foundation, not on a peripheral claim.",
+        "catch": "Two further unverified-or-untensioned points: (1) AC3.1's hard-fail justification 'its only trigger is interpreter or filesystem drift, so it cannot newly fail publication under load' is asserted, not measured — V34 measures timing equivalence only; there is no failure-injection run under bg+8 showing a passed check cannot yield a missing/partial manifest or a failed rename due to load-adjacent causes (disk pressure, slow fsync under the 10 s checkTimeout window, cross-device temp dir). With an 84%-red CI, converting anything on the publication path to a hard failure needs that evidence, or the row trades a plan flake for a publish flake. (2) Landing order vs 'CI-green on its own': M1 (and M2) must be CI-green while the defect they instrument but do not fix is failing 11/13 attempts — the doc never states the rerun/sequencing strategy for those two PRs. Separately, template GC (orphaned \u003cinterp-digest\u003e/\u003csource-sha256\u003e dirs across republishes and floor raises) is unaddressed.",
+        "proposed_fix": "Add V36: `sed -n 100,125p host/coordinator/effectful.go` showing verbatim how the handler budget is computed, plus one sentence locating where 'remaining' is anchored (invoke deadline at dispatch vs. after plan vs. before handler). Then revise b1 to: 'The handler gets min(HandlerCap, remaining − HandlerHeadroom) where remaining = invokeDeadline − elapsed-at-handler-entry (V36). A plan that consumes its full budget X leaves the handler min(10, 20 − X − 6); setting X = 4 leaves ≥ HandlerCap − ε (AC2.3).' If V36 shows a different computation, redo the arithmetic before pinning it in AC2.2. Additionally, for AC3.1 either (a) add a failure-injection V-row under bg+8 (passed check + killed cache writer / full tmpfs / cross-mount rename) demonstrating the no-manifest state cannot be load-induced, with the control being the V33/V34 passing arms, or (b) soften the claim to 'the hard failure is new; its trigger surface is bounded by checkTimeout and the archive fs, measured in V36b' and make TemplateBuildError retryable at the publish caller so a transient trigger does not wedge PublishSet. And state explicitly in §6 that M1/M2 land behind expected CI reruns (or fold c1's rig fixes into M2 so the first PR already raises the cap), plus add a template-GC sentence to AC3.1 (prune dirs whose interp digest ≠ current pinned digest at daemon start, post-listener, bounded)."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.03566400000000001,
+      "tokens_in": 16332,
+      "tokens_out": 250,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "AC3.6 specifies an 'atomic rename' to promote the run's cache directory (located 'inside the run's temp root' per AC3.2, typically in $TMPDIR) to the template directory in the persistent \u003carchive\u003e. Because temporary roots and persistent state directories frequently reside on different filesystems or mounts, os.Rename will predictably fail with an EXDEV (invalid cross-device link) error. This prevents the template from ever being saved from a run, trapping the system in a permanent cold-compile loop.",
+        "catch": "Cross-device rename failure (EXDEV) between the run's temporary root and the persistent state archive.",
+        "proposed_fix": "Modify AC3.6 to require a two-step promotion to cross filesystems safely: first deep-copy the run's cache directory into a new .tmp-* directory alongside the target inside \u003carchive\u003e/capsule-cache/, then perform the atomic os.Rename within that same directory. Additionally, amend AC3.1 to explicitly ignore ENOTEMPTY or os.ErrExist during its rename step, ensuring that redundant publishes or winning racers do not trigger a hard TemplateBuildError."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0763142,
+      "tokens_in": 14885,
+      "tokens_out": 12608,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The a1 A2A payload 'transition plan phase exceeded its 4s budget; nothing ran or was committed; resend the same task id' is safety-critical, and its guard is an unverified, untested premise. The doc asserts that a finish-phase timeout 'already arrives wrapped in EffectsUnrecordedError, which dispatchError matches first (projection.go:438)', but no V-row shows (a) where the coordinator wraps finish-phase runPhase errors in EffectsUnrecordedError, or (b) that the :438 case precedes the proposed new case. AC1.1's runPhase classification is phase-generic, so a finish overrun will emit *PhaseTimeoutError{Phase:\"finish\"} whose Unwrap chain contains context.DeadlineExceeded; the new case's match predicate is unspecified (§5a says only 'a case before the generic deadline case', which is compatible with placing it above :438), AC1.1–AC1.6 exercise only plan-phase timeouts and parent-deadline expiry, and §7's MUT-ORDER pins placement only relative to the generic deadline case at :461 — nothing pins placement relative to :438. If the wrap is missing on any finish path, or the new case lands above :438, a client whose effects DID execute is told 'nothing ran or was committed' and to resend the same task id: duplicate effect execution, introduced by this row's own error-relabelling.",
+        "catch": "Verify before M1 lands: (1) the EffectsUnrecordedError-first ordering at projection.go:438 — cited but never demonstrated, and the only thing standing between a finish-phase overrun and the resend message; (2) b2's integrity argument cites V17 for 'the interpreter validates cache entries by its own cache_key', but V17 only shows the manifest exists — validation is an upstream assumption the doc itself concedes in §11, so the citation over-claims; (3) AC3.6's lazy promotion writes templates from runs (real args, post-execution), so the integrity sentence 'produced by a check that executes nothing (V31)' is inaccurate on that path and should be scoped to the publication-built template only.",
+        "proposed_fix": "Amend §5a/M1 and re-run quorum on the delta: (1) Specify the new dispatchError case matches only *PhaseTimeoutError with Phase == \"plan\" — never a bare errors.Is on the type — and state that predicate in AC1.3. (2) Add V36: grep/sed of the finish-phase call site in host/coordinator/effectful.go showing runPhase's error is wrapped in EffectsUnrecordedError before Dispatch returns, plus sed of dispatchError showing the :438 case textually precedes :461. (3) Add AC1.7: a fake runner whose finish overruns the scaled test budget → /tasks/send answers the existing EffectsUnrecordedError message, never PhaseTimeoutPrefix and never 'invocation exceeded its deadline'; add MUT-ORDER-FINISH to §7 (relocating the new case above the EffectsUnrecordedError case reds it). (4) Either add a V-row that corrupts one compiled artifact inside a warm cache and shows the pinned interpreter rejects/recompiles it, or reword the b2 integrity argument to 'assumed upstream invariant, gated by AC3.3 over every shipped source' and drop V17 as the citation for validation; scope the 'check executes nothing' provenance sentence to publication-built templates and describe the promoted-from-run path separately. None of this changes the measured direction (a1+b1+b2+c1+c2); with these amendments the row is acceptable."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2: all r1 objections mapped in §14; template built in the publication check (hard-fail there, measured zero extra cost V34); no silent cold runs (labelled + counter, red in test rigs); startup rebuild after listener-ready ≤2 concurrency, 10s each; glm's await not adopted with measured reason F13; check-executes-nothing execution control V31."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: The doc's marquee premise — the b1 derivation that turns '2 s was guessed' into '4 s is derived' — rests on a formula that is cited but never verified. §5 b1 states 'The handler gets min(HandlerCap, remaining − HandlerHeadroom) (effectful.go:111–118)', yet the Verification Log (V1–V35) never displays those lines: V1 covers only the constants at :32–42, V2 covers runPhase at :127–141. Every other load-bearing line reference gets a sed excerpt; the single line range that the entire cap arithmetic, AC2.2/AC2.3, and the rejection of b5 depend on is asserted. If the handler budget is actually computed differently (e.g., 'remaining' anchored somewhere other than the 20 s invoke deadline at dispatch, a max instead of a min, headroom applied elsewhere, or the deadline fixed before the plan runs rather than after), then PlanPhaseBudget = 20 − 10 − (2+4) = 4 s is wrong in exactly the way the row's own rule forbids — an underived number wearing a derivation's clothes. Gate 1 fails on the derivation's foundation, not on a peripheral claim.",
+      "gemini-3-1-pro: AC3.6 specifies an 'atomic rename' to promote the run's cache directory (located 'inside the run's temp root' per AC3.2, typically in $TMPDIR) to the template directory in the persistent \u003carchive\u003e. Because temporary roots and persistent state directories frequently reside on different filesystems or mounts, os.Rename will predictably fail with an EXDEV (invalid cross-device link) error. This prevents the template from ever being saved from a run, trapping the system in a permanent cold-compile loop.",
+      "oc-glm-5-3: The a1 A2A payload 'transition plan phase exceeded its 4s budget; nothing ran or was committed; resend the same task id' is safety-critical, and its guard is an unverified, untested premise. The doc asserts that a finish-phase timeout 'already arrives wrapped in EffectsUnrecordedError, which dispatchError matches first (projection.go:438)', but no V-row shows (a) where the coordinator wraps finish-phase runPhase errors in EffectsUnrecordedError, or (b) that the :438 case precedes the proposed new case. AC1.1's runPhase classification is phase-generic, so a finish overrun will emit *PhaseTimeoutError{Phase:\"finish\"} whose Unwrap chain contains context.DeadlineExceeded; the new case's match predicate is unspecified (§5a says only 'a case before the generic deadline case', which is compatible with placing it above :438), AC1.1–AC1.6 exercise only plan-phase timeouts and parent-deadline expiry, and §7's MUT-ORDER pins placement only relative to the generic deadline case at :461 — nothing pins placement relative to :438. If the wrap is missing on any finish path, or the new case lands above :438, a client whose effects DID execute is told 'nothing ran or was committed' and to resend the same task id: duplicate effect execution, introduced by this row's own error-relabelling."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.2518952,
+    "total_tokens_in": 46016,
+    "total_tokens_out": 19226
+  }
+}

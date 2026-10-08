@@ -1,0 +1,79 @@
+{
+  "doc": "/Users/voightkampff/.ailang/state/world-wt/iter241-row153/design_docs/planned/w-plan-phase-deadline-under-load.md",
+  "iso_ts": "2026-10-07T20:20:11Z",
+  "reviewers": [
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.149169,
+      "tokens_in": 11298,
+      "tokens_out": 7685,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "AC3.1 makes the row's core fix optional at runtime: 'Failure is logged and non-fatal: runs fall back to cold.' That is the silent-fallback pattern the mission axiom forbids, and it is load-bearing here: M2's 4 s cap has only a 7% measured margin for a COLD plan at the heaviest bootable proxy load (V15: 3.72 s peak vs 4 s), so the arithmetic only holds comfortably when M3's warm path is actually active. If Prewarm fails, hits its 10 s bound under exactly the CPU contention this row exists for (V19/V20 are idle-only numbers; U4 admits the full-registry prewarm cost is an unmeasured estimate), or produces an empty cache, the daemon runs every capsule cold — re-exposing the 2.4–3.7 s plan times M2 now tolerates up to 4 s — with no signal except a startup log line nothing asserts (M1 routes ErrorLog to t.Log only inside the exec srt rig). No AC, test, or CI gate fails when all templates are absent, so the fix can silently no-op in production while the design's own margin math collapses.",
+        "catch": "No acceptance criterion asserts that a started daemon actually holds a non-empty template for every registered effectful descriptor: AC3.6's test asserts prewarm was invoked (MUT-LAZY-ONLY), AC3.5 only checks the gate binary honours AILANG_CACHE_DIR, and AC3.2 tests copy semantics against a template the test itself built. Verify, before landing M2's thin cold margin, that `ailang check`'s runtime under proxy load is measured against the 10 s bound (idle 73–174 ms, ~5–7× slower under V18's load puts 9 sequential descriptor checks near it, each individual failure silently cold).",
+        "proposed_fix": "Replace in AC3.1 the sentence 'Failure is logged and non-fatal: runs fall back to cold' with: 'Failure is surfaced: the daemon records per-descriptor template status in its operator-visible state and logs an error; when a pinned test environment is detected, daemon start FAILS rather than running cold.' Add AC3.7: 'TestDaemonStartReportsDegradedWithoutTemplate' (stubbed failing interpreter; asserts the degraded state is reported and, in the pinned test env, start fails — kills MUT-SILENT-COLD). Amend AC4.1 to record per-descriptor Prewarm duration and template presence under the 8-burner proxy before any plan runs. Delete the word 'non-fatal' from AC3.1 and update §11's risk table to reference the new gate instead of the log line."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "openai error (429): You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.",
+      "landed": null
+    },
+    {
+      "model": "gemini-3-1-pro",
+      "cost_usd": 0.027722,
+      "tokens_in": 12571,
+      "tokens_out": 215,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "AC3.1 specifies that if pre-warming the cache template fails, it is 'logged and non-fatal: runs fall back to cold.' This violates the 'no silent fallbacks' mission axiom. Furthermore, since §5(b) notes the 4s cap has only a 7% margin for cold runs under load, falling back to cold will just result in the exact timeouts this design attempts to fix, effectively turning a cache-build failure into a mysterious deadline error.",
+        "catch": "AC3.1's silent fallback to cold execution on template build failure.",
+        "proposed_fix": "Rewrite AC3.1 to return a hard error: if `check` fails to produce the template or the directory rename fails, `Prewarm` (and the lazy fallback) must fail the operation (e.g., failing daemon startup or failing the plan phase immediately) rather than silently degrading to the cold path."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.06387780000000001,
+      "tokens_in": 11351,
+      "tokens_out": 10906,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "M3's pre-warm-at-daemon-start — the mechanism that must make CI's first call warm, and the milestone carrying most of the row's effort — is specified without stating whether it blocks serving, and §9 prices it at '≈ 30–180 ms each idle (V20)' while the doc's own under-load data says the contended cost is ~10× that: V18's bg+8 arm measures 2.36–2.52 s per cold compile, so 9 effectful descriptors is ~2–2.5 s × 9 ≈ 18–22 s of startup work in exactly the contention regime CI runs. V16 further proves the startup probe's 10 s subprocess cap is the rig's next-weakest bound (first thing to fail above ~8 burners). So: synchronous pre-warm before serving plausibly trips the 10 s startup-probe cap in the same CI legs this row is trying to turn green — a new signature re-opening the row-161 neighborhood it claims to close — while asynchronous pre-warm races the CI first call and leaves it cold, defeating AC3.6 ('the first plan of a fresh daemon shows a warm child' is untestable as written because the property depends on the unspecified sync/async ordering). Neither branch is analyzed in §9 or §11; U4 records only idle-side estimates. The conflict-surface analysis is materially incomplete on the load-bearing mechanism.",
+        "catch": "§9's daemon.go row must not price pre-warm with V20's idle numbers when the row's own V18 (bg+8) and V16 (startup-probe cap is the next failure bound) predict the contended startup cost and the exposed cap; and AC3.1/AC3.6 must pin pre-warm ordering (before/after listener-ready, per-descriptor bounded waits, bounded concurrency) instead of leaving it to 'M3 measures it'. Secondary, worth a control while you are in there: 'check executes nothing and fully warms run' (V20/F9) is evidenced only by timing; the b2 integrity argument leans on it, so add a tamper/execution control (a fixture whose plan emits stdout and an effect, asserted to produce neither under check).",
+        "proposed_fix": "Amend AC3.1, AC3.6, §9's daemon.go row, and U4 as follows. (1) Ordering: pre-warm starts after the listener is accepting connections, as per-descriptor futures each bounded by the archive check's 10 s context (already in AC3.1) with bounded concurrency (≤2); RunContext awaits its (interpreter, source) future under the phase's own derived context and falls back to cold, logged, on expiry — all waits bounded, cold fallback loud and covered by the existing AC3.4/AC3.5 canaries. (2) Replace the §9 sentence 'Startup time grows by one check per effectful descriptor (≈ 30–180 ms each idle, V20)' with: 'Idle ≈ 30–180 ms per descriptor (V20); under the 8-burner proxy ≈ 2.4–2.5 s per descriptor (V18), so ~2–2.5 s × N contended. N=9 serialized exceeds the startup probe's 10 s subprocess cap (V16), which is why pre-warm starts only after listener-ready and never blocks serving.' (3) Add a required M3 V-row: with pre-warm enabled, run the archived $S/bg_load.sh 8 N proxy and record (a) startup probe PASS, (b) first plan child warm per the probe log, (c) daemon time-to-ready; control = V16 on the base tree, which must still fail only at ≥12 burners, not below its previous threshold. (4) Add the missing execution control for 'check executes nothing': one V-row running $B check on a fixture whose plan writes stdout and, under caps, records an effect, asserting zero stdout and zero effects; cite it from the b2 integrity paragraph in place of the timing-only V20 evidence. With those four edits the milestone's central mechanism is conflict-analyzed under the load it must survive, and the rest of the doc (V1–V30, b1 derivation, c1/c2) stands as written."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Measured root cause (cold compile + underived 2s cap), both CI signatures reproduced under a throttled proxy; derived 4s bound from named constants; typed A2A error now, MCP honest until #1602; compile-cache template keyed by (interp digest, source sha) copy-in with warm==cold determinism gate; no skip/retry/inflation."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: AC3.1 makes the row's core fix optional at runtime: 'Failure is logged and non-fatal: runs fall back to cold.' That is the silent-fallback pattern the mission axiom forbids, and it is load-bearing here: M2's 4 s cap has only a 7% measured margin for a COLD plan at the heaviest bootable proxy load (V15: 3.72 s peak vs 4 s), so the arithmetic only holds comfortably when M3's warm path is actually active. If Prewarm fails, hits its 10 s bound under exactly the CPU contention this row exists for (V19/V20 are idle-only numbers; U4 admits the full-registry prewarm cost is an unmeasured estimate), or produces an empty cache, the daemon runs every capsule cold — re-exposing the 2.4–3.7 s plan times M2 now tolerates up to 4 s — with no signal except a startup log line nothing asserts (M1 routes ErrorLog to t.Log only inside the exec srt rig). No AC, test, or CI gate fails when all templates are absent, so the fix can silently no-op in production while the design's own margin math collapses.",
+      "gemini-3-1-pro: AC3.1 specifies that if pre-warming the cache template fails, it is 'logged and non-fatal: runs fall back to cold.' This violates the 'no silent fallbacks' mission axiom. Furthermore, since §5(b) notes the 4s cap has only a 7% margin for cold runs under load, falling back to cold will just result in the exact timeouts this design attempts to fix, effectively turning a cache-build failure into a mysterious deadline error.",
+      "oc-glm-5-3: M3's pre-warm-at-daemon-start — the mechanism that must make CI's first call warm, and the milestone carrying most of the row's effort — is specified without stating whether it blocks serving, and §9 prices it at '≈ 30–180 ms each idle (V20)' while the doc's own under-load data says the contended cost is ~10× that: V18's bg+8 arm measures 2.36–2.52 s per cold compile, so 9 effectful descriptors is ~2–2.5 s × 9 ≈ 18–22 s of startup work in exactly the contention regime CI runs. V16 further proves the startup probe's 10 s subprocess cap is the rig's next-weakest bound (first thing to fail above ~8 burners). So: synchronous pre-warm before serving plausibly trips the 10 s startup-probe cap in the same CI legs this row is trying to turn green — a new signature re-opening the row-161 neighborhood it claims to close — while asynchronous pre-warm races the CI first call and leaves it cold, defeating AC3.6 ('the first plan of a fresh daemon shows a warm child' is untestable as written because the property depends on the unspecified sync/async ordering). Neither branch is analyzed in §9 or §11; U4 records only idle-side estimates. The conflict-surface analysis is materially incomplete on the load-bearing mechanism."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "gpt6-1-sol",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.2407688,
+    "total_tokens_in": 35220,
+    "total_tokens_out": 18806
+  }
+}

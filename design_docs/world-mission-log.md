@@ -1486,3 +1486,57 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 **Progress:** 1.0 clauses4/5 UNMET; goal unmoved.
 
 **Next:** fleet restores admitted routing; then row152 → 153 → 93 unless Mark answers D-WORLD-68=A. Preserve #226 until an admitted independent evaluator reviews the entire draft.
+
+## 241 — 2026-10-07 — row 153 LANDED (closes row 161): typed plan-phase timeout, derived 4 s plan cap, compile-cache template built in the publication check; judge 80 → 92; CI 5/5 independent attempts green [PRODUCT]
+
+**Kind:** product landing. PR #227 → `42a2511` (squash of design `9909a06`/`988ce41`/`e37807e`, plan `8e15d28`, C1 `b5a4a25`, C2 `ed6b8d7`, C3 `2f9e377`, C4a `b3219b2`, C4b `a2d68d1`, log `b6f7dfb`, C5 `06970ca`, C6 `e327415`, fix round `c40410e`…`0c67c9a`). This record also lands the unjudged drafts of iterations 239 and 240 (from draft PR #226, cherry-picked) and is judged with them.
+
+**Pick and why:** row 153 `w-plan-phase-deadline-under-load` on Mark's attended **D-WORLD-68 = A** (`990a6da`, recorded in the ledger; provenance: attended, not fleet-authored). Clause map at `990a6da`: 1/2/3/6/7 MET; 4 UNMET (153 → 152 → 93); 5 UNMET (114 after 93, then 139). No orphan worktree, branch or PR on 153; the four `.claude/worktrees/agent-*` trees are 2026-10-03 leftovers of rows 134/138/140/142. Premise re-measured: the two newest dev reds (runs 37509957933, 37509997919, 18:31Z 2026-10-06) were `TestExecSrtMCPEndToEnd` with `where = "<nil>"` + `database is closed`.
+
+**Design:** designer Agent `opus` (rotation pointer `claude:claude-opus-5-5`; codex/glm/kimi over ration). 30 V-rows on v0.41.0 and the real srt 0.0.78, installed on the rig for the first time (darwin real-srt path runs, not skips). Root cause measured: the plan child cold-compiles the transition + 7 `std/*` modules on every call because each capsule run gets a fresh temp root (cold 171–181 ms vs warm 25–30 ms idle; 2.36–2.52 s vs 0.41–0.56 s on a throttled 8-burner proxy), plus an 18–30% re-hash of the 100 MB interpreter; the store and callback queue take no part. The 2 s cap came from a row-134 assertion that was never measured. Both CI signatures reproduced on the proxy; signature 2 = the same timeout on the test's second call (unread `wire.Error`, daemon log discarded), and `database is closed` is printed by a different, passing test (`TestHeadErrorsUseAPIEnvelope`). So row 161 is this defect.
+
+**Quorum:** r1 BLOCKED (kimi, gemini, glm reject; `gpt6-1-sol` unreachable → N−1), all on M3's pre-warm: silent cold fallback, and startup ordering priced with idle numbers. Revision r2 measured that a startup pre-warm costs 10.4–21.8 s under load, then moved template building into the publication check, which costs nothing extra (V34). The hard failure stays at publication only, and cold runs are labelled and counted, never silent. r2 BLOCKED 3/3 with concrete fixes: the handler-budget derivation was not shown, EXDEV on promotion, the finish-phase predicate and order, and the integrity citation. None disputed the direction, glm explicitly, so r3 used the narrow-refinement carve-out and applied the reviewers' fixes verbatim (§15). The controller measured the premises first: `handlerBudget` = `min(HandlerCap, time.Until(dl) − HandlerHeadroom)` at `effectful.go:111`; finish wrapped in `EffectsUnrecordedError`, first case in `dispatchError`. Quorum spend $0.49.
+
+**Plan:** opus planner (`8e15d28`). Base gates all green on an idle 16-core rig. It found three design tests that could not catch their bugs and replaced them: output equality cannot see a stale template, so it uses the `MOD010` compile witness instead; an mtime-only template test; a synthetic row for the finish-order mutant. The publication hard-failure breaks 19 existing tests whose fakes write no cache, so the fakes are fixed in the same commit. 16 planner decisions. M3 split across two executor runs.
+
+**Execution:** sonnet executor, two runs plus a fix round. Run 1 (C1–C4b) proved 26 of 26 mutants red then restored. Run 2 (C5–C6) proved 9 of 9. Gates green at every boundary except `host/broker` `TestRunBoundedHeadTailTimeoutKeepsPartialOutput`, which was red at the C0 baseline under parallel load and passes alone (now row 166). AC4.1 proxy on the C5 head: plan timeouts **4/4 at base → 0/12**, plan `took` 2.03–2.96 s → 1.33–1.66 s, first-plan child 0.50–0.82 s, 0 `cold compile` lines, all 9 templates `ready`. Publication under 8 burners takes ~28 s of the rig's 30 s test context (V16 class; rig-only).
+
+**Judge:** opus Agent, own worktree (`.wt-world-iter241-eval`).
+- **r1: PASS 80, one BLOCKING.** B1: `TestCapsuleWarmIsFaster`'s "warm < cold/2" depends on the machine, because fixed per-run costs do not scale with compile cost: 0.35 idle, 0.53–0.63 on CI linux `-race`. The controller handed it CI run 37696379845 as a candidate; the judge re-measured it independently. Also 11 non-blocking findings, and 4 of its 8 own mutants survived.
+- **Fix round** (tests and docs only): ratio dropped (the `MOD010` witness still kills MUT-NOTEMPLATE); N2 warm arms now use the publication-built template; N3/N4/N5/N6 pinned; N7 bound 7 s → 60 s; N9 tripwire extended to the R14 rig.
+- **r2: PASS 92, zero blocking.** Every finding closed on the judge's own re-measurement. One minor survivor: the inner-site finish budget on the refusal/replay paths, not unsafe, filed into row 165. Reports in `design_docs/verification/world-iter241/`.
+
+**CI:**
+- Run-1 head `b6f7dfb` red on B1 only (run 37696379845). Run-2 head `e327415` red on B1 only (run 37700015498).
+- PR head `0c67c9a`: **5/5 independent attempts green**, as concurrent separate runners: PR run 37703800801 plus `workflow_dispatch` 37703807574, 37703809910, 37703812491, 37703815214. Both jobs succeeded in each; `TestExecSrtMCPEndToEnd`/`GrantAndBudget` `--- PASS` in each, 0 SKIP; `host/capsule` ok in all three legs.
+- Merge `42a2511` tree-identical to `0c67c9a`; dev CI run 37705846033 on it — see Merge follow-through.
+- Note: dispatched runs are attempts on the same tree, not reruns of a red. AC4.2 asked for consecutive attempts; they ran in parallel, which measures the same thing without adding load.
+
+**Gate 0:** kill switch armed; gh `sunholo-voight-kampff`; billing CLEAN. `mission_directives.sh` → 0 allowlisted directives on #202 since 2026-10-05T12:46:05Z; watermark unchanged. Ledger valid 55 rows, ZERO OPEN; D-WORLD-68 resolved attended in-ledger (`990a6da`). Inbox: only fleet/controlplane traffic for other repos.
+
+**Gate 1:** local dev 5 behind → fast-forwarded (clean tree) to `990a6da`; dev CI 2/2 success at HEAD. Skill: resolved symlink and pin copies identical across `SKILL.md` and all 12 resources. Iterations 239/240 (Codex controller) had parked PARKED-ON-LANE because the native spawn enum was OpenAI-only. This Claude-controller fire spawned every role on its pin, so the park's resume predicate held; row 164 is annotated rather than closed (fleet-owned ticket).
+
+**Routing evidence:** base=990a6dad33f75b0436593c484396d5fc0f71239b@2026-10-07T19:22:22Z.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer Agent `opus` (resolver `recipe claude:claude-opus-5-5 declared:provider-pin`): 280,880 tok cumulative over create + r2 + r3.
+- Planner Agent `opus` (`agent-tool opus fail-closed:env-pin`): 291,851 tok.
+- Executor Agent `sonnet` (resolver `recipe claude:claude-sonnet-5-5 declared:provider-pin`): run 1 256,261 · run 2 188,055 · fix round 108,085 tok.
+- Evaluator Agent `opus` (resolver `reroute pi:openrouter/minimax/minimax-m3 generator-equals-judge`; openrouter over ration, `claude-sonnet-4-6` is the executor's family → chain's `opus`): 222,220 tok cumulative over r1 + r2. FLAG: the judge shares a model with designer and planner (not with the executor).
+- Quorum: kimi, gemini, glm (`gpt6-1-sol` unreachable both rounds). metered=$0.49.
+
+**Ruled out:**
+- A wall-clock ratio as the M3 effect gate: measured machine-dependent, and it reintroduced the load-fragile class this row removes.
+- A hard failure at daemon start or per call: under load a startup pre-warm costs 10–22 s, and failing a call turns slowness into an outage.
+- Awaiting an in-flight pre-warm inside the plan budget: slower than running cold (F13).
+- Moving the e2e tests out of the parallel legs: it would hide the defect; kept as an attended-only lever.
+- Inflating test timeouts or retry-until-green.
+
+**Retro:**
+- **(1)** The design's ratio-cancels-machine-speed argument was wrong in a way only Linux CI could show, and the design had named exactly that as UNMEASURED (U1). Pushing the run-1 head as a draft PR before run 2 started surfaced it ~1 h earlier. Push intermediate heads early when the design lists a platform UNMEASURED.
+- **(2)** Concurrent `workflow_dispatch` runs gave a 5-attempt CI gate in one CI wall-clock (~20 min) instead of five sequential reruns.
+- **(3)** The judge's own mutants found 4 survivors the executor's list did not have. Handing the judge the CI candidate with its instrument let it confirm independently rather than adopt.
+- **(4)** No skill change proposed.
+
+**Progress:** clause 4's third row closed (and hygiene row 161); 4 and 5 still UNMET; 1/2/3/6/7 MET.
+
+**Next:** row 152 `w-exec-availability-decoupled-from-ailang-policy` (D-WORLD-65/68), then 93. Rows 165/166 unranked/hygiene.

@@ -6,8 +6,8 @@
   "clause": "clause-4",
   "authority": [
     "design_docs/world-mission.md row 153 (D-WORLD-68 = A, attended 2026-10-07)",
-    "design_docs/planned/w-plan-phase-deadline-under-load.md (r3 carve-out, e37807e)",
-    "design_docs/planned/w-plan-phase-deadline-under-load-sprint-plan.md"
+    "design_docs/implemented/w-plan-phase-deadline-under-load.md (r3 carve-out, e37807e)",
+    "design_docs/implemented/w-plan-phase-deadline-under-load-sprint-plan.md"
   ],
   "estimate": "1.75 day",
   "scope": "One PR, 7 commits (C0 is a no-commit re-baseline), two executor runs: run 1 = M0, M1, M2, M3a; run 2 = M3b, M4-executor. Host Go + tests + one QUICKSTART paragraph; no .ail, no pin, no tools/launchd.",
