@@ -1,11 +1,9 @@
 # w-worldd-agui-event-stream — row 148
 
-- Status: **PLANNED — pick-time design, iteration 243.** Supersedes the row-148 parts of the
-  attended DRAFT [`w-world-live-surface.md`](w-world-live-surface.md) (D2–D5, §5, §6 148(a)–(e),
-  §7) where the two disagree. That draft remains the design input for rows 149–151, which are out of scope here.
-- Measurement base: worktree HEAD `d6334c2` (`origin/dev`, iteration 242 record). Every
-  load-bearing premise is in §2 (V-rows). Probes: [`../verification/world-row148-design/`](../verification/world-row148-design/).
-- Binding inputs: [coding-standards.md](../coding-standards.md) S2, S3, S6, S7; `D-WORLD-64`.
+- Status: **PLANNED — pick-time design, iteration 243, revision r1.** Supersedes the row-148 parts of
+  the attended DRAFT [`w-world-live-surface.md`](w-world-live-surface.md) (D2–D5, §5–§7). Rows 149–151 stay there.
+- Base `d6334c2`; premises in §2; probes in [`../verification/world-row148-design/`](../verification/world-row148-design/).
+  Binding: [coding-standards.md](../coding-standards.md) S2, S3, S6, S7; `D-WORLD-64`.
 
 ## 1. Problem and clause mapping
 
@@ -17,10 +15,9 @@ transport to consume.
 **Row 148 adds one additive route, `POST /agui/`.** It speaks AG-UI 1.0 over SSE, and every event
 is derived from committed log entries and nothing else.
 
-**Clause mapping.** Clause 6 is strengthened (+5): the route adds an open protocol and invents no
-new wire dialect. Clause 5 is enabled indirectly through 149 and 151. This is a **release row**
-under `D-WORLD-64` and closes no UNMET clause on its own. The loop may take it only through that ruling's
-scoped rule-(d) exception.
+**Clause mapping.** Clause 6 +5 (an open protocol, no new dialect); clause 5 indirectly via 149/151.
+A **release row** under `D-WORLD-64`: it closes no UNMET clause, and the loop takes it only via that
+ruling's scoped rule-(d) exception.
 
 **Interface handed to 149 and 151 (named here, not designed here).** Three things are provided.
 (1) The route and its request/response contract (§3 D3). (2) The state document
@@ -30,13 +27,12 @@ Row 151's `world.view.a2ui` is a future entry in that table.
 
 ## 2. Verification Log (first-party, at `d6334c2`)
 
-Probe source and raw output: `design_docs/verification/world-row148-design/probes_test.go.txt`
-and `probes-output.txt`. The probes ran as a scratch module whose `replace` pointed at this
-worktree (`probes.go.mod.txt`), using Go 1.26.6 on darwin/arm64.
+Probes: `world-row148-design/probes_test.go.txt` + `probes-output.txt`, run as a scratch module
+`replace`d onto this worktree (`probes.go.mod.txt`), Go 1.26.6 darwin/arm64.
 
 | # | Premise | Command | Output (abridged, verbatim values) |
 |---|---|---|---|
-| V1 | Route table | `grep -n 'HandleFunc' host/daemon/daemon.go` | 859–876: ten `/v1` patterns (nine GET plus `POST /v1/commit`), `GET /workbench`, `GET /.well-known/agent.json`, `POST /a2a/`, `POST /mcp/`. No stream route. The draft's `:800-821` is **stale**: the table moved down 57 lines. |
+| V1 | Route table | `grep -n 'HandleFunc' host/daemon/daemon.go` | 859–868, the ten `/v1` patterns: `GET /v1/health`, `GET /v1/head`, `GET /v1/worlds/{ref}`, `GET /v1/objects/{ref}`, `GET /v1/objects/by-semantic-id/{name...}`, **`GET /v1/log/{index}` (`:864`)**, `GET /v1/log`, `GET /v1/registry/{name...}`, `POST /v1/commit`, `GET /v1/receipts/{id}`. Then 869–876: `GET /workbench`, `GET /.well-known/agent.json`, `POST /a2a/`, `POST /mcp/`. No stream route. The draft's `:800-821` is **stale**: the table moved down 57 lines. |
 | V2 | Read posture | `sed -n 877,887p host/daemon/daemon.go`; `sed -n 48,53p host/daemon/middleware.go` | `isProtected` (`:885`) is `POST && path == "/v1/commit"` only. `Wrap` does `if !protected(r) { mux.ServeHTTP(w, r); return }` (`middleware.go:50`). An unprotected GET **or POST** passes through untouched: no credential is read and none is rejected. |
 | V3 | No per-session read filter exists | V2 plus `grep -n 'FromContext' host/daemon/handlers.go` | 1 hit, `:732`, inside `handleCommit` (positive control: the pattern does match). No `/v1` GET handler consults a binding. The draft D4's "filtered by session when a credential is presented" has **nothing to reuse**. That would be a new authority feature. |
 | V4 | Transport deadlines | `sed -n 88,104p;143p host/daemon/daemon.go`; `:943-944` | `readHeaderTimeout 5s`, `readTimeout 30s`, **`writeTimeout 30s`**, `idleTimeout 120s`, `readDeadline 10s`, `shutdownTimeout 10s` (`:127`). Every value is wired into `newServer` and pinned by `TestBoundedWaitsAndBodyLimit`. |
@@ -56,6 +52,9 @@ worktree (`probes.go.mod.txt`), using Go 1.26.6 on darwin/arm64.
 | V18 | SSE framing of the stock client | `client/src/transform/sse.ts:25,54`; `encoder/src/encoder.ts:28-29`; `client/src/agent/http.ts:55,59` | The encoder emits `data: <json>\n\n`. The client splits on `/\n\n/`, and "Non-data fields (event, id, retry) are ignored". `HttpAgent` sends `POST` with `Accept: text/event-stream`. **So a stock client never sends `Last-Event-ID`.** Resume needs an in-band path. `\r\n` framing would break this parser. |
 | V19 | "CUSTOM names must be namespaced" | `grep -c -i namespac schema.json` | **0** (control `grep -c 'RFC 6902'` returns 11). The pinned spec does not require namespacing. `world.` is our own convention (D3), not an AG-UI rule. Whether the prose docs require it is **UNVERIFIED**: the docs site was not fetched. |
 | V20 | Workbench CSP unchanged by this row | `sed -n 20p host/daemon/workbench.go` | `default-src 'none'; style-src 'unsafe-inline'; …`. This is row 149's change, not this row's. |
+| V21 | Single-entry route and its bytes | `sed -n 580,602p host/daemon/handlers.go`; `sed -n 129,133p`; probe `encprobe_main.go.txt` | `handleLogEntry` ends `writeJSON(w, http.StatusOK, logJSON(entry))` (`:601`), a bare object. `writeJSON` = `json.NewEncoder(w).Encode(value)` (`:132`), and GOROOT `encoding/json/stream.go:200` says "followed by a newline character". The probe (default build: `stream.go` is `//go:build !goexperiment.jsonv2`, `GOEXPERIMENT` empty) gives `encode==marshal+\n: true`, with both HTML-escaping `<>&` identically. **So the route body is exactly `json.Marshal(logJSON(e))` followed by one `\n`.** |
+| V22 | The write window opens before the handler, and the body read eats it | GOROOT `net/http/server.go:980-989` | `readRequest` sets `t0 := time.Now()` and `wholeReqDeadline = t0.Add(ReadTimeout)`, then `defer c.rwc.SetWriteDeadline(time.Now().Add(WriteTimeout))`. The 30 s write window therefore starts when the headers are parsed, **before** the handler runs. The body is read by the handler afterwards and is bounded only by the same 30 s whole-request read deadline. A slow body consumes the run budget. Found by quorum r1 (oc-kimi-k3), controller-measured, re-read here. |
+| V23 | Stock clients send state back | `client/src/agent/agent.ts` at `903a9ab9` (sha256 `2e8c352c…5a162`, banked `~/.ailang/state/world-iter243/agui-src/`): `:238`, `:562-564`, `:578-607` | The constructor sets `this.state = structuredClone_(initialState ?? {})`. Applied `STATE_SNAPSHOT`/`STATE_DELTA` results land in `this.state` (`if (event.state !== undefined) { this.state = event.state; …`). `prepareRunAgentInput` sends `state: structuredClone_(this.state)` on **every** run. A first run sends `{}`. |
 
 **Draft claims found false or stale at HEAD:** route and `isProtected` line numbers (V1, V2).
 "No store change is needed" is false for a gap-correct tail (V10). "A broadcaster misses
@@ -64,7 +63,8 @@ under `writeTimeout` (V5). Session-filtered reads have nothing to reuse (V3). "I
 construction" is not true by construction, because `isProtected` is a path predicate (V2).
 "Namespaced as AG-UI requires" has no basis in the schema (V19). "Stock clients resume via
 `Last-Event-ID`" is false: they ignore `id:` (V18). The `world.decision.*` and `world.effect.*`
-mappings have no log-derivable source (V14).
+mappings have no log-derivable source (V14). Quorum r1 also corrected this doc's own r0: the run clock
+was unanchored (V22), and the in-band cursor ignored the standard `state` field (V23).
 
 ## 3. Decisions, with alternatives
 
@@ -73,16 +73,32 @@ mappings have no log-derivable source (V14).
 One `POST /agui/` is one AG-UI run of at most **`aguiRunBudget = writeTimeout − readDeadline −
 aguiWriteMargin` = 30 s − 10 s − 2 s = 18 s**. After the budget, no new store read starts.
 The run ends with `RUN_FINISHED` whose `result` is `{"lastIndex": k}`. The client re-POSTs with
-cursor `k`. The arithmetic guarantees the final frame is writable: the last read may start at
-18 s, it finishes by 28 s, and that leaves 2 s of the write window. A test pins the derivation,
-not just the value (M3).
+cursor `k`. A test pins the derivation, not just the value (M3).
 
-*Alternatives:* (a) extend the per-write deadline with `http.ResponseController`. This relaxes
-D7, which V6 shows is policed, and would need a ratified D7 change for a gain the resume loop
-already provides. (b) The draft's 30-min budget. It cannot work (V5). (c) A separate `http.Server` without
-`WriteTimeout` for streams. That is a second listener and a D7 exemption. All three are rejected. The cost is a
-reconnect every 18 s. Resume is exact by index (D4), so a reconnect loses nothing. AG-UI runs are
-finite by design (V17), so a bounded run is the conformant shape anyway.
+**The clock is anchored at handler entry (r1 fix, V22).** `t0` is the handler's first statement.
+The write deadline `W` was set at header parse, before dispatch, so `W = t0 + 30 s − δ`. Here δ is
+the in-process dispatch gap: the mux plus a middleware that does no I/O on unprotected routes
+(V2). δ is microseconds, and the 2 s margin absorbs it. **The body read counts against the
+budget.**
+
+- The body must be fully read by `t0 + aguiBodyBound` (**2 s**). A counting reader checks the
+  clock on every `Read` return. Once past the bound it stops reading, and the handler answers
+  **408 `SlowBody`** before any stream byte. Any `Read` that returns by `t0 + 25 s` yields that
+  typed refusal, which is a small JSON write at ≤ `t0 + 25 s` and leaves ≥ 5 s − δ of `W`.
+- A `Read` that returns later (a client that sends nothing until the server's whole-request
+  read deadline fails it, V22) gets **no bytes at all**. The handler returns silently and the
+  transport closes the connection. That is the same outcome a stalled body gets on `POST
+  /v1/commit` today. It is analysis, not measured.
+- If the body is done by `t0 + 2 s`, the stream starts. No read starts after `t0 + 18 s`. Each
+  read is bounded by 10 s, so the final frame is written by `t0 + 28 s`, which leaves 2 s − δ.
+  **Invariant:** a response is either a complete `APIError`, or a stream ending in
+  `RUN_FINISHED`/`RUN_ERROR`, or zero bytes. It is never a truncated stream. No
+  `ResponseController` or `SetReadDeadline` is used (V6).
+
+*Alternatives (rejected):* (a) `ResponseController` deadline extension relaxes policed D7 (V6);
+(b) the draft's 30-min budget cannot work (V5); (c) a second `http.Server` without `WriteTimeout`
+is a D7 exemption. Cost: a reconnect every 18 s, lossless because resume is exact (D4); AG-UI runs
+are finite by design (V17).
 
 ### D2 — Events come from the log only; v1 emits exactly six event types (REVISES draft D3 mapping)
 
@@ -121,25 +137,33 @@ unusable by AG-UI clients.
   (V18), and row 149 uses `fetch`. A `GET` on `/agui/` is a mux 405.
 - **Input.** Body ≤ **64 KiB** (`http.MaxBytesReader`, 413 `PayloadTooLarge`). The body is JSON
   with `threadId` (string), `runId` (string) and `messages` (array), as V17 requires. `messages`,
-  `state`, `tools` and `context` are accepted and ignored. `threadId` is opaque and echoed. The
+  `tools`, `context` and `forwardedProps` are accepted and ignored. `state` is the resume
+  cursor (D4). `threadId` is opaque and echoed. The
   store has one world, so it names nothing (REVISES the draft's "threadId names the world").
 - **Response.** `200`, `Content-Type: text/event-stream`, `Cache-Control: no-store`,
   `X-Content-Type-Options: nosniff`. Frames use `\n` only, and there is one `Flush` per entry pair.
-- **Error split.** Anything wrong **before the first byte** (bad JSON, missing field, bad or
-  conflicting cursor, unknown cursor index, cap reached) is a normal `APIError` HTTP response.
+- **Error split.** Anything wrong **before the first byte** (bad JSON, missing field, slow body,
+  bad or conflicting cursor, unknown cursor index, cap reached) is a normal `APIError` HTTP response.
   The stock client surfaces `!response.ok` (V18). Anything after `RUN_STARTED` becomes `RUN_ERROR`
   `{message, code}`, with `code` taken from the daemon's classes (`Timeout`, `Internal`) and a
   **constant** message. Internal detail goes only to `writeInternalError`'s log path.
   `RUN_ERROR` never carries `threadId` (V17: `unevaluatedProperties:false`).
 
-### D4 — Resume by entry index, carried in-band or by header (REVISES draft D2)
+### D4 — Resume by entry index, read from the standard `state` field (REVISES draft D2; r1 fix)
 
-The cursor `after` comes from `Last-Event-ID` (standard SSE, for hand-rolled clients and `curl`)
-or from `forwardedProps.world.after` (in-band, because stock clients ignore `id:`, V18). If both
-are present and differ, the request is refused with 400. With neither, `after = -1` (from
-genesis). A non-negative `after` must name an **existing** entry (one `GetLogEntry`, which also
-feeds the snapshot). Otherwise the answer is 404 `NotFound` "unknown cursor", never a silent
-empty stream. The run then delivers exactly the entries with index `> after`, in order.
+A stock client sends back the state it built from our snapshot and deltas, on every run (V23).
+The cursor is therefore read from that standard field, with no custom client code:
+
+- `state.schema == "world/agui-state/v1"`: then `after = state.lastIndex`, which must be an
+  integer ≥ −1, or the request gets 400 `BadRequest`. `state.logHead` is not trusted, because the
+  snapshot re-derives it from the store.
+- `state` absent, or without our schema (a first run sends `{}`): from genesis, `after = −1`.
+- `Last-Event-ID` (standard SSE) is kept for `curl` and hand-rolled clients. If both are present
+  and differ, the request gets 400. `forwardedProps` is **not** a cursor (dropped from r0: it was
+  a private dialect).
+- A non-negative `after` must name an **existing** entry (one `GetLogEntry`, which also feeds
+  the snapshot). Otherwise the answer is 404 `NotFound` "unknown cursor", never a silent empty
+  stream. The run then delivers exactly the entries with index `> after`, in order.
 
 ### D5 — Tail by keyset read, one statement per tick; one small store read is added (REVISES draft D2 "no store change")
 
@@ -167,11 +191,11 @@ immediately. If it is short, sleep `aguiTick = 250 ms`, unless the run is stoppi
 
 | Bound | Value | Enforced by |
 |---|---|---|
-| Run lifetime | 18 s, derived (D1) | `d.aguiBudget` field set from the constant (test-shrinkable, like `drainTimeout`) |
+| Run lifetime | 18 s from **handler entry**, derived (D1) | `d.aguiBudget` field set from the constant (test-shrinkable, like `drainTimeout`) |
 | Global concurrent runs | 16 | buffered-channel semaphore. Over cap → 503 class `StreamLimit` with `Retry-After: 1`, before any byte |
 | Entries per read | 100 (≤ the 500 store max) | `LogEntriesAfter` limit |
 | Idle tick | 250 ms | constant |
-| Request body | 64 KiB | `MaxBytesReader` |
+| Request body | 64 KiB, fully read by `t0 + 2 s` | `MaxBytesReader` plus the clock-checking reader (D1). Over the bound → 408 `SlowBody` |
 | Each store read | `readDeadline` (10 s) | `readCtx`-equivalent |
 | Slow or stalled client | ≤ `writeTimeout` (30 s) total | the unchanged D7 server deadline (V5) |
 | Shutdown | the run ends with `RUN_FINISHED` ≤ 1 tick after `Shutdown()` starts | `srv.RegisterOnShutdown` closes `d.aguiStop` (V7) |
@@ -236,10 +260,21 @@ other origins cannot read the stream. Nothing here is actionable. The stream is 
 - AC3.1 `TestAGUIGoldenRun`: a daemon over the fixture store, with `aguiBudget` shrunk to
   300 ms. The body equals the golden plus `RUN_FINISHED`, and it is identical on a second run.
 - AC3.2 `TestAGUIResumeExact`: for each k in {−1,0,1,2,5,6}, `Last-Event-ID: k` yields exactly
-  the entries > k. `forwardedProps.world.after` gives the same bytes. Conflicting values give
-  400, and an unknown k (3) gives 404.
-- AC3.3 `TestAGUIEntryValueEqualsLogRoute`: each `CUSTOM` value equals the trimmed body of
-  `GET /v1/log/{i}`.
+  the entries > k. `state:{schema,lastIndex:k}` gives the same bytes. `state:{}` means genesis.
+  A malformed `lastIndex` (`"2"`, `-2`, `1.5`) gives 400, a state/header conflict gives 400, and
+  an unknown k (3) gives 404.
+- AC3.2b `TestAGUIStockClientStateResume`: take run 1's exact frames, parse them with the
+  `\n\n` splitter, and apply `STATE_SNAPSHOT` plus each `STATE_DELTA` with a test-local RFC 6902
+  applier (`replace`/`add` only; any other op fails the test). Commit 2 more entries, POST the
+  resulting state verbatim as `state`, and get exactly the entries > that state's `lastIndex`.
+- AC3.11 `TestAGUISlowBodyNeverTruncates`: bounds are shrunk (`aguiBodyBound` 100 ms, budget
+  300 ms; both are daemon fields like `drainTimeout`). A body dripping 1 byte every 30 ms that
+  ends after the bound gives 408 `SlowBody` with no `data:` byte. A body that ends at 80 ms gives
+  a stream whose `RUN_FINISHED` arrives by `t0 + 300 ms + 1 tick + 50 ms` slack. Every response
+  body is either one parseable `APIError` or ends with a `RUN_FINISHED`/`RUN_ERROR` frame.
+- AC3.3 `TestAGUIEntryValueEqualsLogRoute`: for each entry, the `CUSTOM` value bytes followed by
+  `"\n"` equal the body of `GET /v1/log/{i}` byte-for-byte (V21). This is not a trimmed or
+  semantic comparison.
 - AC3.4 `TestAGUISeesDirectStoreCommit`: mid-run, `d.store.Commit` (which bypasses every
   handler) appears within 2 ticks. So does a `POST /v1/commit`.
 - AC3.5 `TestAGUIGlobalCap`: 16 runs held open, the 17th gets 503 `StreamLimit`, and after one
@@ -270,6 +305,7 @@ is an instrument-health control only. The executed transcript is the real check.
 | Failure | Behaviour |
 |---|---|
 | Client disconnects | `r.Context()` cancels the in-flight read. The handler returns and the semaphore is released (AC3.8) |
+| Slow or stalled request body | 408 `SlowBody` before any byte, or zero bytes if no `Read` returns by `t0 + 25 s`. Never a truncated stream (AC3.11) |
 | Client stops reading | The write blocks until the unchanged 30 s `WriteTimeout` drops the connection. There is no buffering beyond one entry pair |
 | Store read error or deadline | `RUN_ERROR` (`Internal`/`Timeout`), constant message, stream closed (AC3.10) |
 | Log index gap | Crossed by the keyset read (AC2.1, AC3.2 with k=2) |
@@ -297,6 +333,10 @@ is an instrument-health control only. The executed transcript is the real check.
 | M-l `id:` moved to the `CUSTOM` frame | `TestGolden` |
 | M-m `/agui/` added to `isProtected` | `TestAGUIReadPostureMatchesLog` |
 | M-n conflicting cursors: header wins silently | `TestAGUIResumeExact` (400 arm) |
+| M-q run clock anchored **after** the body read | `TestAGUISlowBodyNeverTruncates` (`RUN_FINISHED` late) |
+| M-r body bound not enforced (stream starts after a slow body) | `TestAGUISlowBodyNeverTruncates` (408 arm) |
+| M-s `state` ignored, cursor only from `Last-Event-ID` | `TestAGUIStockClientStateResume` |
+| M-t a schema-less `state` treated as an error, not genesis | `TestAGUIResumeExact` (`state:{}` arm) |
 | M-o tail only on an in-handler commit signal (no poll) | `TestAGUISeesDirectStoreCommit` |
 | M-p store error text copied into `RUN_ERROR.message` | `TestAGUIStoreErrorIsRunError` |
 
@@ -307,32 +347,34 @@ is an instrument-health control only. The executed transcript is the real check.
 - **Edited:** `host/daemon/daemon.go` (one `HandleFunc` line, the `readStore` method, the
   `aguiBudget`/`aguiStop`/semaphore fields, `RegisterOnShutdown` in `newServer`'s caller, and the
   route doc comment), and `docs/QUICKSTART.md`.
-- **Must stay unchanged:** the ten `/v1` patterns and their handlers, `isProtected`'s body, every
-  D7 constant and `TestBoundedWaitsAndBodyLimit`, `workbenchCSP`, `host/projection/*`, and
-  `tools/launchd/*`. The executor's diff must show no hunk in these. The evaluator checks with
-  `git diff --stat`.
-- **Concurrency with the critical path:** none of the files above is named by an open
-  critical-path row at `d6334c2`. Re-check at merge (attended sessions race the record).
+- **Must stay unchanged** (no hunk; evaluator checks `git diff --stat`): the ten `/v1` patterns and
+  handlers, `isProtected`'s body, every D7 constant and `TestBoundedWaitsAndBodyLimit`,
+  `workbenchCSP`, `host/projection/*`, `tools/launchd/*`. No open critical-path row names these
+  files at `d6334c2`; re-check at merge.
 
 ## 9. Findings to file (not fixed here)
 
-1. **The store and REST commit path accept a gapped `entryIndex` and an unlinked
-   `prevEntryHash`** (V10). `GET /v1/log` then stops at the gap, so later entries are unreachable
-   through the range route. This is a log-integrity question for the ledger, and a candidate
-   queue row. It is not silently absorbed here.
-2. The draft `w-world-live-surface.md` §2–§3 should note that it is superseded for row 148 by this
-   doc. Rows 149 and 151 should consume §1's interface (bounded runs plus resume).
+1. **The store and REST commit path accept a gapped `entryIndex` and an unlinked `prevEntryHash`**
+   (V10); `GET /v1/log` then stops at the gap. A log-integrity ledger question / queue candidate.
+2. `w-world-live-surface.md` should point here for row 148; 149/151 consume §1's interface.
 
 ## 10. Non-goals
 
 - Rows 149–151: the CSP change, `workbench.js`, demo seed, captures, A2UI views.
-- `world.decision.*` and `world.effect.*` events (no log source, V14). Session-filtered streams.
-  Closing residual R1.
-- Text, tool-call, reasoning or `MESSAGES_SNAPSHOT` events. Protobuf encoding (we always answer
-  SSE). CORS. Any change to `GET /v1/log`.
+- `world.decision.*`/`world.effect.*` (no log source, V14); session filtering; closing residual R1;
+  text/tool-call/reasoning/`MESSAGES_SNAPSHOT` events; protobuf; CORS; any change to `GET /v1/log`.
 - A "start at tail" cursor. Row 149 server-renders the current last index and passes it as
   `after`.
 
 ## 11. Quorum verification log
 
-Not yet run. The pick-time quorum records here.
+**Round 1: BLOCKED.** 3 of 4 seats present. `gpt6-1-sol` was absent (unreachable). The controller
+measured every objection premise first-party before this revision (V21–V23).
+
+| Seat | Verdict | Objection (one line) | Premise | Resolution |
+|---|---|---|---|---|
+| oc-kimi-k3 | BLOCK | The run clock is unanchored: body-read time eats the 18 s budget, and a slow body can push the final frame past `WriteTimeout` (a silent cut) | REAL (V22) | D1 anchors at handler entry with a 2 s body bound, typed 408 and the write-window arithmetic. AC3.11, M-q, M-r |
+| gemini-3-1-pro | BLOCK | Ignoring `state` and inventing `forwardedProps.world.after` is a dialect; stock clients send `state` back every run | REAL (V23) | D4 reads the cursor from `state`. `forwardedProps` cursor dropped. AC3.2/3.2b, M-s, M-t |
+| oc-glm-5-3 | BLOCK | `GET /v1/log/{index}` does not exist, so the "value equals route body" proof is unfounded | FALSE (V1 `:864`, V21) | V1 now names all ten patterns. AC3.3 states the exact bytes compared (`Marshal` + `\n`) |
+
+Round 2: pending.

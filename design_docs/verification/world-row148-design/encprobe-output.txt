@@ -1,0 +1,3 @@
+encode="{\"writtenBy\":\"a\\u003cb\\u003e\\u0026c\",\"entryIndex\":3}\n"
+marshal="{\"writtenBy\":\"a\\u003cb\\u003e\\u0026c\",\"entryIndex\":3}"
+encode==marshal+\n: true
