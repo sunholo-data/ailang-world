@@ -12,7 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
-| 241 | 2026-10-07 | row 153 LANDED (42a2511, closes row 161): typed PhaseTimeoutError, derived 4 s plan cap, capsule compile-cache template built in the publication check; root cause cold compile per call; quorum r1/r2 BLOCKED → r3 carve-out; opus judge 80→92; CI 5/5 independent attempts; folds unjudged 239/240 drafts (PR #226); rows 165/166 [PRODUCT] |
+| 241 | 2026-10-07 | row 153 LANDED (42a2511, closes row 161): typed PhaseTimeoutError, derived 4 s plan cap, capsule compile-cache template built in the publication check; root cause cold compile per call; quorum r1/r2 BLOCKED → r3 carve-out; opus judge 80→92; CI 5/5 concurrent attempts (1 PR + 4 dispatched); folds unjudged 239/240 drafts (PR #226); rows 165/166 [PRODUCT] |
 | 240 | 2026-10-07 | PARKED-ON-LANE all; native opus planner / sonnet judge re-probed Unknown model, role env absent; fleet occurrence; UNJUDGED draft226, no landing [HARNESS] |
 | 239 | 2026-10-07 | UNJUDGED draft; row152 premise true; PARKED-ON-LANE all, required native planner/judge unavailable; fleet ticket agent-tool:mission-role-pins-unavailable [HARNESS] |
 | 238 | 2026-10-06 | row 141 LANDED (6eeff52): --workspace-module-root subdirectory sandbox + --workspace-package-cache read-only registry snapshot; ailang#1607/#1608; opus judge 91→96; rows 162/163; row-153 load flake 7/9 CI attempts → D-WORLD-68 OPEN [PRODUCT] |

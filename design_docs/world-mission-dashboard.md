@@ -4,7 +4,7 @@
 - What changed: plan-phase timeout is a typed `PhaseTimeoutError` (A2A names the phase, retryable; MCP wire unchanged until row 159 / ailang#1602).
 - Plan cap derived: invokeDeadline − HandlerCap − HandlerHeadroom = 4 s (was an unmeasured 2 s).
 - Root cause: every capsule run cold-compiled the transition + std (5–7× slower); now runs copy a compile-cache template built in the publication check; cold runs are labelled and red in test rigs.
-- Evidence: throttled-proxy plan timeouts 4/4 → 0/12; CI 5/5 independent attempts green on the PR head.
+- Evidence: throttled-proxy plan timeouts 4/4 → 0/12; CI 5/5 concurrent attempts (1 PR run + 4 dispatched) green on the PR head.
 - Judge: opus r1 80 (1 blocking: machine-dependent ratio test) → r2 92, zero blocking.
 - Quorum: r1/r2 BLOCKED at N−1 (gpt6-1-sol unreachable) → r3 narrow-refinement carve-out, reviewers' fixes verbatim.
 - Folded in: iterations 239/240 unjudged drafts (Codex-controller lane park, PR #226) now recorded; row 164 scoped to Codex-controller fires.

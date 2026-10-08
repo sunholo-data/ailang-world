@@ -1487,7 +1487,7 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 
 **Next:** fleet restores admitted routing; then row152 → 153 → 93 unless Mark answers D-WORLD-68=A. Preserve #226 until an admitted independent evaluator reviews the entire draft.
 
-## 241 — 2026-10-07 — row 153 LANDED (closes row 161): typed plan-phase timeout, derived 4 s plan cap, compile-cache template built in the publication check; judge 80 → 92; CI 5/5 independent attempts green [PRODUCT]
+## 241 — 2026-10-07 — row 153 LANDED (closes row 161): typed plan-phase timeout, derived 4 s plan cap, compile-cache template built in the publication check; judge 80 → 92; CI 5/5 concurrent attempts green [PRODUCT]
 
 **Kind:** product landing. PR #227 → `42a2511` (squash of design `9909a06`/`988ce41`/`e37807e`, plan `8e15d28`, C1 `b5a4a25`, C2 `ed6b8d7`, C3 `2f9e377`, C4a `b3219b2`, C4b `a2d68d1`, log `b6f7dfb`, C5 `06970ca`, C6 `e327415`, fix round `c40410e`…`0c67c9a`). This record also lands the unjudged drafts of iterations 239 and 240 (from draft PR #226, cherry-picked) and is judged with them.
 
@@ -1508,7 +1508,7 @@ So rule (e) admits the top MET-clause hygiene row, 143, the same pick as iterati
 
 **CI:**
 - Run-1 head `b6f7dfb` red on B1 only (run 37696379845). Run-2 head `e327415` red on B1 only (run 37700015498).
-- PR head `0c67c9a`: **5/5 independent attempts green**, as concurrent separate runners: PR run 37703800801 plus `workflow_dispatch` 37703807574, 37703809910, 37703812491, 37703815214. Both jobs succeeded in each; `TestExecSrtMCPEndToEnd`/`GrantAndBudget` `--- PASS` in each, 0 SKIP; `host/capsule` ok in all three legs.
+- PR head `0c67c9a`: **5/5 concurrent attempts green** on separate runners: PR run 37703800801 plus `workflow_dispatch` 37703807574, 37703809910, 37703812491, 37703815214. Both jobs succeeded in each; `TestExecSrtMCPEndToEnd`/`GrantAndBudget` `--- PASS` in each, 0 SKIP; `host/capsule` ok in all three legs.
 - Merge `42a2511` tree-identical to `0c67c9a`; dev CI run 37705846033 on it — see Merge follow-through.
 - Note: dispatched runs are attempts on the same tree, not reruns of a red. AC4.2 asked for consecutive attempts; they ran in parallel, which measures the same thing without adding load.
 
