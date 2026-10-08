@@ -1,12 +1,15 @@
 # w-workbench-live-and-polish — row 149
 
-- Status: **PLANNED — iteration 244 pick-time design, revision r0.** Not yet quorum-reviewed.
+- Status: **PLANNED — iteration 244/245 pick-time design, revision r1** (after quorum round 1
+  BLOCKED 3/3 present; §12).
   Supersedes the row-149 parts of the attended DRAFT
   [`w-world-live-surface.md`](w-world-live-surface.md) (D6, D7, §4 row 149, §6 149(a)–(e)).
   Rows 150–151 stay there.
 - Base `b702d73`. Premises are in §2. Probes are banked under
   `~/.ailang/state/world-iter244-design/` (`probe/` is a scratch Go module `replace`d onto this
-  worktree; `scratch/` is a `git archive HEAD` copy used for compile and test probes).
+  worktree; `scratch/` is a `git archive HEAD` copy used for compile and test probes). The r1
+  probes (V29) are banked under `~/.ailang/state/world-iter245/design/` (`scratch/` is a fresh
+  `git archive b702d73`; `v29_probe_test.go` sha256 `112e2e12…ba97fd`; `v29-probe.log`).
 - Binding: [coding-standards.md](../coding-standards.md) S2, S3, S6, S7; `D-WORLD-64`;
   [HUMAN-SURFACE.md](../HUMAN-SURFACE.md) P1, P3, P5, §5. Consumes the row-148 interface in
   [`../implemented/w-worldd-agui-event-stream.md`](../implemented/w-worldd-agui-event-stream.md) §1, D1–D6.
@@ -40,7 +43,7 @@ with a positive control in the same row.
 | V2 | The page has no script and no live region | `grep -rn '<script\|script-src\|connect-src' host cmd` | Only hits are hostile-input strings in `host/workbench/render_test.go` (`:160`, `:187`, `:314`, `:318`, `:811`, `:812`). This is the positive control: the pattern matches test text. No production template contains a script. |
 | V3 | The CSP literal is pinned in **two** test places, not one | `grep -rn "default-src" host cmd \| grep -v '^host/daemon/workbench.go'`; `grep -rn assertWorkbenchSecurityHeaders host` | `workbench_test.go:51` (`TestWorkbenchSecurityHeaders`, comment `:46-50`: "LITERAL, never the production `workbenchCSP` symbol") and `:386` (`assertWorkbenchSecurityHeaders`). The helper is called at `workbench_test.go:197,217` and `read_deadline_test.go:384,442`. **So "every existing workbench test unchanged" (row text, draft 149(b)) cannot hold literally: the widening must edit exactly these two literal lines.** |
 | V4 | Routes, and the frozen-table test counts `/v1` only | `grep -n 'HandleFunc("GET /workbench"\|HandleFunc("POST /agui/"' host/daemon/daemon.go`; `sed -n 875,876p host/daemon/daemon.go`; `sed -n 34p;51p host/daemon/route_table_test.go` | `:875 mux := http.NewServeMux()`, `:876 GET /v1/health`, `:886 GET /workbench`, `:894 POST /agui/`. The route test regex is `` mux\.HandleFunc\("(GET\|POST) (/v1/[^\"]+)" `` and requires `len(mux) != 10`. A non-`/v1` route such as `GET /workbench/live.js` is outside the frozen set. |
-| V5 | The row-148 contract this row consumes | `sed -n 17-25p host/daemon/agui.go`; `sed -n 10-16p host/agui/agui.go`; `docs/QUICKSTART.md:1012-1059` | `aguiRunBudget = writeTimeout - readDeadline - aguiWriteMargin` (18 s), `aguiTick 250ms`, `aguiPage 100`, **`aguiCap 16`**, `aguiMaxBody 64<<10`. `StateSchema = "world/agui-state/v1"`. **`customNames = []string{"world.entry.committed"}`** (`:16`) is the only CUSTOM. Cursor comes from `state.lastIndex` or `Last-Event-ID`. An unknown cursor gets 404 before any byte. A run ends with `RUN_FINISHED.result.lastIndex`. |
+| V5 | The row-148 contract this row consumes | `sed -n 17-25p host/daemon/agui.go`; `sed -n 10-16p host/agui/agui.go`; `docs/QUICKSTART.md:1012-1059` | `aguiRunBudget = writeTimeout - readDeadline - aguiWriteMargin` (18 s), `aguiTick 250ms`, `aguiPage 100`, **`aguiCap 16`**, `aguiMaxBody 64<<10`. `StateSchema = "world/agui-state/v1"`. **`customNames = []string{"world.entry.committed"}`** (`:16`) is the only CUSTOM. Cursor comes from `state.lastIndex` or `Last-Event-ID`. An unknown cursor gets 404 before any byte; `-1` is genesis, never 404 (V29). A run ends with `RUN_FINISHED.result.lastIndex`. |
 | V6 | A browser consumes the POST SSE stream via fetch + ReadableStream under the proposed CSP; inline script and cross-origin connect stay blocked | probe `probe/main.go` + `probe/live.js` (sha256 `01e8890e…`), Chrome headless (`/Applications/Google Chrome.app`), page CSP = the exact §3 D2 literal; server = `host/agui` encoder, 1.5 s runs, entry 2 committed at 3.3 s; `probe/js-on.log` | `0.690s REPORT external-script-ran cursor=1` · `REPORT cross-origin-fetch-blocked: TypeError` · `agui POST ct="application/json" body={"threadId":"workbench","runId":"wb-0","messages":[],"state":{"schema":"world/agui-state/v1","lastIndex":1}}` · `3.302s committed entry 2` · `3.323s agui emitted entry 2` · **`3.730s REPORT run 1 status=200 entries=1 firstEntryAtMs=1111 cursor=2 timeline=entries=3`**. The entry reached the script 1.11 s into a run, before the response ended (incremental delivery). The re-fetch and swap updated the timeline. Chrome console: `Executing inline script violates … 'script-src 'self''. … The action has been blocked.` and `Connecting to 'http://127.0.0.1:47812/x' violates … "connect-src 'self'"`. The cross-origin server logged **no** request. |
 | V7 | JS off: the same page makes no stream request | same probe, Chrome `--blink-settings=scriptEnabled=false`; `probe/js-off.log` | `0.645s PAGE GET /workbench` (positive control: the page loaded), then only `3.302s committed entry 2`. **Zero** `agui POST` and zero `REPORT` lines. |
 | V8 | `--dump-dom --virtual-time-budget` cannot observe a streamed swap | same probe, `--virtual-time-budget=8000 --dump-dom` under `perl -e 'alarm 25'` | `rc=142` (alarm). `dump.log` shows run 0 POSTed and the server committed entry 2, but no `REPORT run 0` ever arrived. A DOM-dump oracle is unusable, so the drill's oracle is the server-side request trace (§6). |
@@ -64,6 +67,8 @@ with a positive control in the same row.
 | V26 | The workbench has no evidence read | `grep -n 'evidence\|Evidence' host/daemon/workbench.go host/workbench/render.go` | One hit, `workbench.go:42`, the *reason* string "does not resolve subject-bound evidence into an object grade". The draft D7's "transition → object → **evidence**" graph layer has no source. |
 | V27 | Test tooling on the rigs | `node --version`; `sed -n 193p;216p .github/workflows/ci.yml`; Chrome path | Local `v26.0.0`. CI go-verify job: "node is the runner's own" and `echo "WORLD_EXEC_NODE=$(command -v node)" >> "$GITHUB_ENV"`. Chrome on CI is **UNVERIFIED** (not measured), so no CI gate depends on it. Locally, Chrome headless hangs inside this Bash sandbox (`about:blank --dump-dom` > 120 s) and runs unsandboxed (V6–V9). |
 | V28 | Test context guard | `sed -n 10-15p host/daemon/m7b_deadline_test.go` | `boundedTestContext` = `context.WithTimeout(…, 30*time.Second)`, a stuck guard. |
+| V29 | `state.lastIndex = -1` is genesis on an empty **and** a non-empty store (r1, quorum objection 2) | Code: `sed -n 51-80p;139-152p host/daemon/agui.go`. Runtime: `v29_probe_test.go` copied into `world-iter245/design/scratch/host/daemon/`, `AILANG_BIN=~/.pinned-ailang/ailang go test ./host/daemon/ -run TestV29 -v -count=1` (`v29-probe.log`). Body `{"threadId":"workbench","runId":"wb-0","messages":[],"state":{"schema":"world/agui-state/v1","lastIndex":-1}}` | Code: `aguiCursor` starts `after := int64(-1)` and refuses only `after < -1` ("invalid state.lastIndex"). `handleAGUI` calls `GetLogEntry` (404 "unknown cursor") only `if after >= 0`. **(a) Empty store:** `status=200 content-type="text/event-stream"`; lines `data: {"type":"RUN_STARTED","threadId":"workbench","runId":"wb-0","protocolVersion":"1.0"}`, `data: {"type":"STATE_SNAPSHOT","snapshot":{"schema":"world/agui-state/v1","lastIndex":-1,"logHead":null}}`; entry 0, committed after the run's first poll, arrives as `data: {"type":"CUSTOM","name":"world.entry.committed","value":{"header":{"entryIndex":0,…` (`V29a DELIVERED entry 0`). **(b) Store 0..2:** `status=200`, first frame `data: {"type":"RUN_STARTED","threadId":"workbench","runId":"wb-0","protocolVersion":"1.0"}`, CUSTOM indexes `[0 1 2]`. **Controls (the instrument sees rejection):** `lastIndex=3` on 0..2 → `404 {"error":{"class":"NotFound","message":"unknown cursor"}}`; `lastIndex=-2` → `400 … "invalid state.lastIndex"`; `lastIndex=0` on the empty store → `404 … "unknown cursor"` (the M-ad premise). Contract text: row 148 D4 (`../implemented/w-worldd-agui-event-stream.md:159-166`): "`after = state.lastIndex`, which must be an integer ≥ −1" and "A non-negative `after` must name an **existing** entry"; `:118-119` "`logHead`: <hash of entry n, or null when n = -1>". |
+| V30 | `isProtected` is an exact single-route match; every GET is unprotected by construction (r1, quorum objection 1) | `sed -n 903,905p host/daemon/daemon.go`; positive control `sed -n 1082,1083p host/daemon/daemon_test.go`; `grep -rn isProtected host --include='*.go'` | `func (d *Daemon) isProtected(r *http.Request) bool {` / `return r.Method == http.MethodPost && r.URL.Path == "/v1/commit"` / `}`. Exact `==` on method and path, no prefix. Control: `daemon_test.go:1082` asserts `isProtected(POST /v1/commit)` is true ("the predicate probe is vacuous" otherwise), so the predicate does return true for its one route. Other call sites: `daemon.go:895` (`Wrap(d.isProtected, mux)`), `agui_test.go:454` (row 148's posture pin), `daemon_test.go:1077`. **So `GET /workbench/live.js` and `GET /workbench` are both `false`, and the body needs no change.** |
 
 **Draft claims false or stale at `b702d73`** (all in [`w-world-live-surface.md`](w-world-live-surface.md)):
 
@@ -95,7 +100,8 @@ with a positive control in the same row.
 The script is `host/workbench/live.js` (embedded, about 150 lines, no framework):
 
 1. Read the cursor from `section[aria-label="live"]`'s `data-live-cursor`. This is the latest
-   committed index at render time, or `-1` (D3).
+   committed index at render time, or `-1` on an empty log (D3). `-1` is genesis on the
+   `/agui/` side, never an unknown cursor (V29).
 2. `fetch("/agui/", {method:"POST"})` with body
    `{"threadId":"workbench","runId":"wb-<n>","messages":[],"state":{"schema":"world/agui-state/v1","lastIndex":<cursor>}}`
    (V5 and V6: accepted unchanged). Read `response.body.getReader()`. Split on `"\n\n"`, keep the
@@ -107,9 +113,13 @@ The script is `host/workbench/live.js` (embedded, about 150 lines, no framework)
    `DOMParser`. For each selector in one fixed list, it calls
    `old.replaceWith(document.importNode(fresh, true))`. The list is
    `nav[aria-label="world browser"]`, `section[aria-label="timeline"]`,
-   `section[aria-label="live"]`, `section[aria-label="world graph"]`,
-   `section[aria-label="decisions"]` and `footer[aria-label="live status"]`. Newly arrived
-   live rows get a CSS class `fresh` (animated in the stylesheet).
+   `section[aria-label="live"]`, `section[aria-label="world graph"]` and
+   `section[aria-label="decisions"]`. **The footer is never swapped.** The script owns
+   `<span data-live-status>`; on every applied swap it re-renders the current status
+   (live/paused/failed) from script state, so a refresh can never revert the footer to the
+   server-rendered off text. The server-rendered span text is the no-JS state only. (The
+   log-position sentence that must refresh lives in the swapped live section, D5.) Newly
+   arrived live rows get a CSS class `fresh` (animated in the stylesheet).
 5. On `RUN_FINISHED`, re-POST at once with the new cursor. Never assume one run drains the
    log: a run is bounded (V5) and the script simply follows `lastIndex`.
 
@@ -134,6 +144,8 @@ reached.
   `Cache-Control: no-store`, `Content-Security-Policy: default-src 'none'`, and writes
   `LiveScript`. Other methods get a mux 405. It is not protected:
   `isProtected(GET /workbench/live.js) == isProtected(GET /workbench)`, pinned by a test.
+  This holds with `isProtected`'s body unchanged: it is an exact match on `POST /v1/commit`
+  only, so every GET is `false` by construction (V30).
 - The page head gains exactly `<script src="/workbench/live.js" defer></script>`. There is no
   other `<script` anywhere: no inline script, no `on*=` handler, no `eval`, no CDN. The error
   page stays script-free (V25).
@@ -158,8 +170,12 @@ deadline required, quarantine refused. It reuses `scanLogAfterRow` and joins `re
 
 - **Why a store read:** V17. Nothing yields the latest index. A dense `GetLogEntry` scan
   stalls at gaps (row 148 V10/V26). Paging `LogEntriesAfter` to the end is O(log length).
-- **Why the cursor must be an existing index:** `/agui/` returns 404 for an unknown cursor
-  (V5). The max existing index is always valid. A commit landing between render and the first
+- **Why the cursor must be an existing index or `-1`:** `/agui/` returns 404 for an unknown
+  non-negative cursor (V5, V29 control `lastIndex=3`). The max existing index is always valid.
+  On an empty log the cursor is `-1`, which row 148 D4 defines as genesis ("must be an integer
+  ≥ −1"; only a non-negative cursor must name an existing entry). Measured: `-1` on an empty
+  store gets 200 and the first committed entry 0 is delivered on that stream (V29a); `0` on
+  an empty store would be 404 (V29 control). A commit landing between render and the first
   POST is delivered by the stream, never lost.
 - **Why a separate live list:** the timeline is the oldest-first page `from=0` (100 rows,
   V11b). A commit at index ≥ 100 never appears there. The live list shows the tail.
@@ -185,16 +201,26 @@ log on every page load and holds a slot for up to 18 s per 100-entry page. Rejec
   the daemon never renders an available object grade (V14), and P3 forbids colour alone.
 - **Census:** every new view type is appended to `workbenchViewTypes` (V13).
 
-### D5 — Quiet is health: the footer is a positive assertion
+### D5 — Quiet is health: a positive log assertion plus a script-owned status footer
 
-The server renders `footer[aria-label="live status"]` with `role="status"`. It reads "Log at
-entry N (head `<hash>`) when this page was rendered", or "The log is empty", plus a
-`<span data-live-status>Live updates: off. Reload to refresh.</span>`. There is no server
-wall clock, so the render stays deterministic. With JS on, the script rewrites only that span
-after each `RUN_FINISHED`: "Live: checked HH:MM:SS, no new entries after entry N; next check
-within 18 s". After a burst it reads "K new entries since HH:MM:SS". On failure it reads
-"paused: <reason>, retrying in Ns" (D8). That is P5's "last verified heartbeat, next expected,
-what was checked" (V22). A dead stream is never rendered as calm.
+The log-position sentence lives in the **swapped** `section[aria-label="live"]`, so every
+refresh updates it: "Log at entry N (head `<hash>`) when this page was rendered", or "The log
+is empty". The server renders `footer[aria-label="live status"]` with `role="status"`
+containing only `<span data-live-status>Live updates: off. Reload to refresh.</span>`. That
+text is the no-JS state only. The footer is never swapped (D1 step 4). There is no server
+wall clock, so the render stays deterministic. With JS on, the script owns the span. It
+renders it from script state at start, after each `RUN_FINISHED`, on every wait, and after
+every applied swap: "Live: checked HH:MM:SS, no new entries after entry N; next check within
+18 s". After a burst it reads "K new entries since HH:MM:SS". On failure it reads "paused:
+<reason>, retrying in Ns" (D8). That is P5's "last verified heartbeat, next expected, what was
+checked" (V22). A dead stream is never rendered as calm, and a live one is never rendered as
+off.
+
+| Event | Status span |
+|---|---|
+| JS off or blocked | Server text "Live updates: off. Reload to refresh." (unchanged forever) |
+| refresh swap during a run | The status span is re-asserted from script state; the footer never reverts to off while the stream is live |
+| Wait (503, network, `RUN_ERROR`, hidden tab) | "paused: <reason>, retrying in Ns" — survives any swap, because the footer is not swapped and the span is re-asserted |
 
 ### D6 — The world graph: a deterministic bipartite SVG of entries → objects, from checked edges only
 
@@ -253,7 +279,8 @@ page. Both rejected.
 while `document.visibilityState === "visible"`. On `visibilitychange` to hidden it aborts the
 fetch (`AbortController`) and resumes on show. On 503 `StreamLimit` it waits `Retry-After`
 seconds, then backs off exponentially (×2, cap 30 s). On a network error, a non-200, or
-`RUN_ERROR`, it does the same. Every wait is shown in the D5 span. The page itself never
+`RUN_ERROR`, it does the same. Every wait is shown in the D5 span, and a refresh swap never
+erases it (the footer is not swapped; the span is re-asserted after each swap, D1 step 4). The page itself never
 depends on the script.
 
 ### D9 — No `.ail` in this row (S1/S2/S3 answer)
@@ -291,10 +318,11 @@ files. The evaluator checks this by hunk listing.
 - AC1.1 `TestTokensBothThemes`: parse the `<style>` block. `:root` and the dark `:root` declare
   the same 11 token names (V21). Null control: the test fails if it finds 0 tokens in either.
 - AC1.2 `TestRenderLiveRegion`: `Live{Cursor:7, Recent:[7,6]}` renders `data-live-cursor="7"`,
-  rows newest first, and no `<h3>entry `. `Cursor:-1` renders `data-live-cursor="-1"` and "The
-  log is empty".
-- AC1.3 `TestRenderQuietFooter`: both states render a positive sentence (index plus head, or
-  empty log) and `<span data-live-status>Live updates: off`. The footer is outside `<main>`.
+  rows newest first, no `<h3>entry `, and inside the live section "Log at entry 7 (head …)".
+  `Cursor:-1` renders `data-live-cursor="-1"` and "The log is empty" inside the live section.
+- AC1.3 `TestRenderQuietFooter`: both states render a footer that is outside `<main>` and holds
+  `<span data-live-status>Live updates: off`. The log-position sentence is **not** in the footer
+  (it is in the swapped live section, D5).
 - AC1.4 `TestProvenanceWalkStaysLast`: the rendered page contains exactly one
   `"</section>\n</main>"`, and it closes the provenance walk.
 - AC1.5 `workbenchViewTypes` gains `LiveView`. `TestWorkbenchViewFieldsAllRender` passes.
@@ -309,7 +337,12 @@ files. The evaluator checks this by hunk listing.
   AC3.14) renders `data-live-cursor="5"`. An empty store renders `-1`.
 - AC2.4 `TestWorkbenchLiveCursorIsResumable`: POST `/agui/` with the rendered cursor as
   `state.lastIndex` gets 200, not 404. It uses `aguiBudget` 300 ms (stimulus) and a 10 s client
-  context (stuck guard).
+  context (stuck guard). **Empty-store arm (r1):** on an empty store, the cursor read from the
+  rendered `data-live-cursor` (`-1`) is POSTed over an `httptest.NewServer`; the response is 200;
+  after the run's first poll (the `aguiPollReads` pattern of row 148's
+  `TestAGUISeesDirectStoreCommit`) the test commits entry 0 and asserts a `CUSTOM` with
+  `"entryIndex":0` arrives on that same stream (V29a measured exactly this). Stuck guard 5 s per
+  wait.
 - AC2.5 `TestWorkbenchLiveStoreError`: a seam failing `LogEntriesLatest` gives the existing
   constant 500 HTML, with no store text.
 
@@ -321,18 +354,27 @@ files. The evaluator checks this by hunk listing.
 - AC3.3 `TestWorkbenchErrorPageInert`: 400/404/500 workbench pages contain no `<script`.
 - AC3.4 `TestWorkbenchLiveScriptRoute`: GET returns 200, the D2 headers (literal values), and a
   body byte-equal to `workbench.LiveScript` with `len > 0`. POST gets 405.
-  `isProtected` is equal for `GET /workbench/live.js` and `GET /workbench`.
+  `isProtected` is equal (both `false`) for `GET /workbench/live.js` and `GET /workbench`
+  (V30).
 - AC3.5 `TestLiveScriptContract` (binary-free): from the embedded script, extract the
   `STATE_SCHEMA` literal and assert it equals `agui.StateSchema`. Extract the one-line
   `REGIONS` JSON array and assert every selector's `aria-label` occurs exactly once in a
-  rendered daemon page. Extract the POST path and assert it equals `/agui/`. Null control: the
+  rendered daemon page, and that no selector names `footer` or `live status` (D1 step 4). Extract the POST path and assert it equals `/agui/`. Null control: the
   test fails if any extraction finds nothing.
 - AC3.6 `TestLiveScriptPure` (node): runs `node` (from `WORLD_EXEC_NODE` or `PATH`) on the
-  script plus a harness (the script exports `splitFrames`/`applyDelta`/`nextBackoff` only when
-  `module` exists, and starts only when `document` exists). It feeds
+  script plus a harness (the script exports `splitFrames`/`applyDelta`/`nextBackoff`/`applySwap`/
+  `renderStatus` only when `module` exists, and starts only when `document` exists). It feeds
   `host/agui/testdata/stream_fixture.golden` split at **every** byte offset into two chunks.
   The event list equals the whole-buffer parse, and the cursor never exceeds the last fully
   delivered entry. `applyDelta` with an `add` op throws. Backoff is 1, 2, 4 … capped at 30.
+  **Footer arm (r1):** the harness builds a minimal stub document (plain objects with
+  `querySelector`/`replaceWith`/`textContent`; no DOM library), rewrites the status span to the
+  script's live status, then calls `applySwap` with a fresh document whose footer holds the
+  server-rendered `Live updates: off. Reload to refresh.` span, and asserts the span still
+  carries `renderStatus(state)` and that the footer stub's `replaceWith` was never called.
+  A second sub-arm makes the re-assert itself load-bearing: the span holds the server "off"
+  text, script state is `paused`, and after `applySwap` the span must read
+  `renderStatus(paused)`.
   Locally the test SKIPs without node. In CI a new verbose step runs it and fails unless
   `--- PASS: TestLiveScriptPure` appears (the ci.yml PASS-loop pattern).
 
@@ -388,7 +430,7 @@ with `AILANG_BIN=~/.pinned-ailang/ailang`.
 | Test | Wall-clock bound | Kind |
 |---|---|---|
 | M1, M4, AC2.1–2.3, AC2.5, M3 (except 3.6), M5 | none (pure or synchronous `httptest.ResponseRecorder`); store ctx = `boundedTestContext` 30 s | stuck guard (V28) |
-| AC2.4 cursor resumable | `aguiBudget` 300 ms; client ctx 10 s | 300 ms = **stimulus** (ends the run); 10 s = stuck guard. It asserts status and frames, never elapsed time |
+| AC2.4 cursor resumable | `aguiBudget` 300 ms; client ctx 10 s. Empty-store arm: `aguiBudget` 5 s, commit after the first poll, each wait ≤ 5 s | 300 ms and the post-poll commit = **stimulus**; 10 s and 5 s = stuck guards. It asserts status and frames, never elapsed time |
 | AC3.6 node | `exec.CommandContext` 30 s | stuck guard |
 | AC6.2 Chrome drill | `aguiBudget` 1 s; commit after the first POST is observed; each wait ≤ 20 s; JS-off window 3 s | 1 s and the commit = **stimulus**; 20 s = stuck guard; the 3 s window is a labelled non-load-bearing control |
 
@@ -405,6 +447,8 @@ No test asserts that one bounded run delivers the whole log. AC2.4 and AC6.2 fol
 | `RUN_ERROR` / non-200 | Same as above. The status span names the class |
 | Connection cut mid-frame | The unterminated tail is discarded. The cursor advanced only on complete frames (AC3.6), and the deltas are idempotent (row 148 AC1.5) |
 | Re-fetch returns 5xx | Regions are kept and the status span says "refresh failed (503 Timeout)". The next entry retries |
+| Refresh swap during a run | The footer is not swapped; the status span is re-asserted from script state, so it never reverts to the server "off" text while the stream is live, and a paused/retrying text survives (D1 step 4, D5; AC3.5, AC3.6 footer arm) |
+| Fresh world (empty log) | Cursor `-1` (genesis): 200, and entry 0 is delivered when it commits (V29a; AC2.4 empty-store arm) |
 | Hidden tab | The stream is aborted and the slot released. It resumes on show |
 | Log index gap | The cursor and stream cross it (AC2.3, row 148 AC3.14) |
 | Malformed approvals chain | Pane UNAVAILABLE with a named reason. The page is 200 (AC5.3) |
@@ -428,7 +472,8 @@ No test asserts that one bounded run delivers the whole log. AC2.4 and AC6.2 fol
   `host/store/` (new file), `docs/QUICKSTART.md`, `.github/workflows/ci.yml` (one step), and
   the two V3 literals.
 - **Must stay unchanged** (no hunk; the evaluator checks `git diff --stat`): the ten `/v1`
-  patterns and handlers, `isProtected`'s body, `acceptedWorkbenchKeys` and
+  patterns and handlers, `isProtected`'s body (exact match on `POST /v1/commit`, so the new GET
+  is unprotected without an edit, V30), `acceptedWorkbenchKeys` and
   `supportedWorkbenchQuery`, `host/agui/*`, `host/daemon/agui.go`, every D7 constant,
   `workbenchErrorTemplate`, `tools/launchd/*`. No open critical-path row names these files at
   `b702d73`. Re-check at merge.
@@ -471,7 +516,7 @@ No test asserts that one bounded run delivers the whole log. AC2.4 and AC6.2 fol
 | M-l `<svg xmlns="http://www.w3.org/2000/svg">` | `TestRenderEmitsOnlyLocalLinks` (measured, V12 m1) |
 | M-m new section placed after the provenance walk | `TestProvenanceWalkStaysLast` |
 | M-n dark theme missing a token | `TestTokensBothThemes` |
-| M-o footer empty-log branch renders nothing | `TestRenderQuietFooter` |
+| M-o live section's empty-log branch renders nothing | `TestRenderLiveRegion` (`Cursor:-1` arm) |
 | M-p new view type not appended to the census | `TestWorkbenchViewFieldsAllRender` (after AC1.5 lists it; V13) |
 | M-q graph links an unstored target | `TestGraphUnavailableNodeHasNoLink` |
 | M-r graph row pitch < box height | `TestGraphNodesDisjointAndInBounds` |
@@ -486,7 +531,18 @@ No test asserts that one bounded run delivers the whole log. AC2.4 and AC6.2 fol
 | M-aa approvals walk unbounded | `TestRecentApprovalsBounded` |
 | M-ab malformed chain → 500 page | `TestRecentApprovalsMalformed` |
 | M-ac decisions pane gains a form/button | `TestWorkbenchDecisionsReadOnly` |
+| M-ad empty-log cursor rendered as `0` instead of `-1` | `TestWorkbenchLiveCursorIsResumable` (empty-store arm: status 404 ≠ 200; premise measured, V29 control) |
+| M-ae `footer[aria-label="live status"]` re-added to `REGIONS` | `TestLiveScriptContract` (footer-exclusion arm) |
+| M-af `applySwap` skips the status re-assert | `TestLiveScriptPure` (footer arm, second sub-arm: span still reads the server "off" text) |
 
 ## 12. Quorum verification log
 
-Not yet run. The pick-time quorum records here.
+**Round 1: BLOCKED.** 3 of 4 seats present; `gpt6-1-sol` unreachable, so N−1. Each objection's
+premise was measured first-party before revising (controller code reads, then this designer's
+own commands in V29/V30). No objection disputed direction.
+
+| Reviewer | Verdict | Objection (one line) | Premise measured | Surface | r1 answer |
+|---|---|---|---|---|---|
+| gemini-3-1-pro | BLOCK | D2/§8 claim `isProtected` stays unchanged and is equal for the two GETs, but §2 never shows exact vs prefix matching | REAL gap in evidence, claim TRUE: exact `==` on `POST /v1/commit` (V30) | §2, D2, §8, AC3.4 | V30 added with the source lines and a positive control; D2 and §8 cite it; the posture-pin test (AC3.4, M-g) is kept |
+| oc-glm-5-3 (and oc-kimi-k3, second half) | BLOCK | `lastIndex = -1` on an empty log was never probed; if refused, a fresh world's live surface is dead on arrival; no empty-store AC | REAL gap in evidence, claim TRUE: 200 on both stores, entry 0 delivered (V29) | §2, V5, D1, D3, AC2.4, §6, §7, §11 | V29 probe on an empty store and a 0..2 store, with 404/400 controls; row 148 D4's "≥ −1" quoted; AC2.4 empty-store arm; mutant M-ad |
+| oc-kimi-k3 | BLOCK | Swapping the footer reverts a working stream's status span to the server "off" text (and wipes D8's paused text) on every refresh | REAL (by construction of r0's D1 list) | D1, D5, D8, AC1.2, AC1.3, AC3.5, AC3.6, §7, §11 | Footer removed from the swap list; script owns and re-asserts `<span data-live-status>` after every swap; log-position sentence moved into the swapped live section; D5 status table row "refresh swap during a run"; AC3.6 footer arm; AC3.5 exclusion arm; mutants M-ae, M-af |

@@ -1,0 +1,119 @@
+package daemon
+
+// V29 probe (row 149 design r1, iter-245): does POST /agui/ accept
+// state.lastIndex == -1 on (a) an empty store and (b) a store with entries 0..2?
+// Plus controls: lastIndex 3 on the 0..2 store (unknown cursor -> 404) and
+// lastIndex -2 (-> 400), which prove the instrument can see a rejection.
+
+import (
+	"bufio"
+	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+)
+
+func v29Body(last int64) string {
+	return fmt.Sprintf(`{"threadId":"workbench","runId":"wb-0","messages":[],"state":{"schema":"world/agui-state/v1","lastIndex":%d}}`, last)
+}
+
+func v29FirstFrame(b []byte) string {
+	s := string(b)
+	if i := strings.Index(s, "\n\n"); i >= 0 {
+		return s[:i]
+	}
+	return s
+}
+
+func TestV29EmptyStoreMinusOne(t *testing.T) {
+	d := aguiTestDaemon(t)
+	d.aguiBudget = 5 * time.Second
+	d.aguiTick = 20 * time.Millisecond
+	p := aguiPollReads{d.reads, make(chan struct{}, 100)}
+	d.reads = p
+	s := httptest.NewServer(d.Handler())
+	defer s.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	req, _ := http.NewRequestWithContext(ctx, "POST", s.URL+"/agui/", strings.NewReader(v29Body(-1)))
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	t.Logf("V29a empty store lastIndex=-1: status=%d content-type=%q", resp.StatusCode, resp.Header.Get("Content-Type"))
+	if resp.StatusCode != 200 {
+		t.Fatalf("V29a status=%d", resp.StatusCode)
+	}
+	lines := make(chan string, 200)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		sc := bufio.NewScanner(resp.Body)
+		sc.Buffer(make([]byte, 1<<20), 1<<20)
+		for sc.Scan() {
+			lines <- sc.Text()
+		}
+	}()
+	defer func() { cancel(); resp.Body.Close(); <-done }()
+	aguiWait(t, p.polls, "initial poll")
+	if err := d.store.Commit(boundedTestContext(t), genesisCommit("v29")); err != nil {
+		t.Fatal(err)
+	}
+	t.Log("V29a committed entry 0 after first poll")
+	deadline := time.NewTimer(5 * time.Second)
+	defer deadline.Stop()
+	n := 0
+	for {
+		select {
+		case line := <-lines:
+			if line != "" && n < 4 {
+				if len(line) > 220 {
+					line = line[:220] + "..."
+				}
+				t.Logf("V29a line %d: %s", n, line)
+				n++
+			}
+			if strings.Contains(line, `"type":"CUSTOM"`) && strings.Contains(line, `"entryIndex":0`) {
+				t.Log("V29a DELIVERED entry 0 on the -1 stream")
+				return
+			}
+		case <-deadline.C:
+			t.Fatal("V29a entry 0 not delivered within 5 s")
+		}
+	}
+}
+
+func TestV29PopulatedStoreMinusOne(t *testing.T) {
+	d := aguiTestDaemon(t)
+	c := genesisCommit("v29")
+	for i := int64(0); i < 3; i++ {
+		if i != 0 {
+			c = testCommit(c.NextWorld, i, "v29")
+		}
+		if err := d.store.Commit(boundedTestContext(t), c); err != nil {
+			t.Fatal(err)
+		}
+	}
+	rec := aguiRequest(t, d, v29Body(-1), "")
+	t.Logf("V29b store 0..2 lastIndex=-1: status=%d first frame=%q", rec.Code, v29FirstFrame(rec.Body.Bytes()))
+	if rec.Code != 200 {
+		t.Fatalf("V29b status=%d %s", rec.Code, rec.Body)
+	}
+	t.Logf("V29b CUSTOM indexes=%v", aguiIndexes(t, rec.Body.Bytes()))
+	for _, ctl := range []int64{3, -2} {
+		r := aguiRequest(t, d, v29Body(ctl), "")
+		t.Logf("V29 control lastIndex=%d: status=%d body=%s", ctl, r.Code, strings.TrimSpace(r.Body.String()))
+	}
+	_ = context.Background
+}
+
+// M-ad premise: an empty-log cursor rendered as 0 instead of -1 is refused.
+func TestV29EmptyStoreZeroControl(t *testing.T) {
+	d := aguiTestDaemon(t)
+	r := aguiRequest(t, d, v29Body(0), "")
+	t.Logf("V29 control empty store lastIndex=0: status=%d body=%s", r.Code, strings.TrimSpace(r.Body.String()))
+}
