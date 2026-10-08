@@ -1,9 +1,14 @@
 # w-exec-availability-decoupled-from-ailang-policy — a failed AILANG tool-handler build unbinds `Workspace.Exec`, which never uses it (row 152)
 
-**Status:** PLANNED. Designed in iteration 242 (designer lane claude-opus-5-5, unattended).
+**Status:** PLANNED, revision r2. Designed in iteration 242 (designer lane claude-opus-5-5, unattended). **Quorum r1 BLOCKED → r2.** In r1, 3 of 3 present seats rejected (oc-glm-5-3, oc-kimi-k3, gemini-3-1-pro) and gpt6-1-sol was absent. All three objections landed on M2's background retry or on the probe's provenance; M1 drew no objection on its direction. r2 drops the background retry, keeps the retry synchronous, and commits the probe in-repo. §14 maps each objection to its change.
 **Queue:** World mission row 152 `w-exec-availability-decoupled-from-ailang-policy` (clause 4). It is next after row 153 (D-WORLD-65, re-ordered by D-WORLD-68 = A).
-**Estimated:** ~0.75 d of host Go and tests (M1 ~0.35 d, M2 ~0.35 d, M3 ~0.05 d). **Dependencies:** none. No `.ail` changes, no pin changes, no upstream gate.
-**Measured base:** worktree `sprint/row152-exec-availability` at `fe7c2a4`. Gate interpreter `~/.pinned-ailang/ailang` = `AILANG v0.41.0`. `go1.26.6 darwin/arm64`. Probe test banked as `~/.ailang/state/mission-world-iter242/zz_probe152_test.go.txt`, output as `…/probe152.log` (`$S` below). **The probe was removed from the tree; this commit touches only this document.**
+**Estimated:** (r2) ~0.6 d of host Go and tests (M1 ~0.35 d, M2 ~0.2 d, M3 ~0.05 d). **Dependencies:** none. No `.ail` changes, no pin changes, no upstream gate.
+**Measured base:** worktree `sprint/row152-exec-availability` at `fe7c2a4`. Gate interpreter `~/.pinned-ailang/ailang` = `AILANG v0.41.0`. `go1.26.6 darwin/arm64`. (r2) The probe is committed in-repo under `design_docs/verification/world-row152-design/` (`$P` below):
+- the source, as `zz_probe152_test.go.txt` so it is never compiled;
+- two run logs;
+- a README with the exact re-run command.
+
+The compiled copy under `host/daemon/` is removed after each run. No production code or test file changes in this commit.
 
 ## 1. Problem
 
@@ -35,7 +40,11 @@ The coupling has two more costs, both measured:
 
 ## 3. Verification Log
 
-Shorthand: `W=` this worktree, `S=~/.ailang/state/mission-world-iter242`. The probe ran as `PATH=/opt/homebrew/bin:$PATH AILANG_BIN=~/.pinned-ailang/ailang go test ./host/daemon/ -count=1 -v -run '^TestZZProbe152'` with `$S/zz_probe152_test.go.txt` copied to `host/daemon/zz_probe152_test.go`. Output is in `$S/probe152.log`, and both probe tests printed `--- PASS`. The probe's tool binary is a `/bin/sh` stub shaped like `fakeToolBin` (`workspace_test.go:95`): it answers `--version` with `AILANG v0.52.1`, and its `policy-tool` summary either `sleep 30`s (mode `sleep`) or prints `{"ok":false}` and exits 1 (mode `fail`). Exec is configured with the existing `stubExecSandbox` + `execProfile` (`workspace_exec_test.go:26,50`, command `where` = `pwd -P`). **Rule applied:** each null result is paired with a positive control.
+Shorthand: `W=` this worktree, `P=design_docs/verification/world-row152-design` (in-repo, r2). The probe ran as `PATH=/opt/homebrew/bin:$PATH AILANG_BIN=~/.pinned-ailang/ailang go test ./host/daemon/ -count=1 -v -run '^TestZZProbe152'`, with `$P/zz_probe152_test.go.txt` copied to `host/daemon/zz_probe152_test.go` and removed afterwards (exact steps in `$P/README.md`). It was run twice on base `fe7c2a4`:
+- run 1 (r1): `$P/probe-run1.log`, filtered;
+- run 2 (r2): `$P/probe.log`, full `-v` output, ending `rc=0`.
+
+Both probe tests printed `--- PASS` in both runs. The probe's tool binary is a `/bin/sh` stub shaped like `fakeToolBin` (`workspace_test.go:95`): it answers `--version` with `AILANG v0.52.1`, and its `policy-tool` summary either `sleep 30`s (mode `sleep`) or prints `{"ok":false}` and exits 1 (mode `fail`). Exec is configured with the existing `stubExecSandbox` + `execProfile` (`workspace_exec_test.go:26,50`, command `where` = `pwd -P`). **Rule applied:** each null result is paired with a positive control.
 
 | V | Command (trimmed) | Reading | Control / scope |
 |---|---|---|---|
@@ -44,9 +53,9 @@ Shorthand: `W=` this worktree, `S=~/.ailang/state/mission-world-iter242`. The pr
 | V3 | `sed -n 395,437p host/daemon/workspace.go` | `episodeHandler` takes `w.mu` for its whole body (`:396–397`). It runs, in order: `MkdirAll` policy/cache dirs, `linkPackageCache`, `checkLockCoverage`, `RenderEpisodePolicy`, `writePolicy`, then `NewAilangToolHandler` under `context.WithTimeout(context.Background(), workspaceHandlerBudget)` (`:422`). It writes to the cache `w.handler[...]` only after success (`:432–435`). Every error returns before that. | The success cache is proved by the existing `TestWorkspaceRegistryRefusesEpisodesOutsideTheGrammarAndRoot` (`summaries == 1` after two calls, `workspace_test.go:218–222`) |
 | V4 | `grep -rn 'workspaceHandlerBudget\|ailangToolExecTimeout' host --include='*.go'` | `workspaceHandlerBudget = 3 * time.Second` (`workspace.go:44`), used once (`:422`). `ailangToolExecTimeout = 10 * time.Second` (`handlers_ailang.go:48`), the handler's default `execTimeout` (`:328`). `NewAilangToolHandler` → `loadSummary` → `policyToolWith(ctx, …)` (`handlers_ailang.go:331,338`; `handlers_ailang_run.go:376`). | static |
 | V5 | `sed -n 50,52p;153,157p;204,232p host/broker/handlers.go` | `runBounded`: `runCtx, cancel := context.WithTimeout(ctx, bounds.execTimeout)` (`:156`). On expiry it returns `&HandlerTimeoutError{Timeout: bounds.execTimeout}` (`:208,229,231`). `Error()` = `fmt.Sprintf("%v after %s", ErrHandlerTimeout, e.Timeout)` (`:51`). A parent deadline that fires first is reported with the child's 10 s. | V6 is the runtime positive |
-| V6 | probe `TestZZProbe152SummaryTimeout/sleep` | call 1: `elapsed=3.007s names=[] execBound=false summaries=1`. call 2: `elapsed=3.018s names=[] execBound=false summaries=2`. Operator log, twice: `ailang-worldd: workspace tools unavailable for episode "ep1": broker: policy summary: broker: handler subprocess timed out after 10s (stderr "")`. | **Control:** `execHandler("ep1", epRoot)` called directly in the same daemon → `{"exit_code":0,…,"stdout":".../ws/ep1\n",…}`, `err=<nil>` |
-| V7 | probe `…/fail` | `elapsed=17ms`/`18ms`, `names=[]`, `execBound=false`, `summaries=2`. Log: `… broker: policy summary: broker: handler subprocess failed: exit status 1 (output "{\"ok\":false}\n")`. | Same control → `exit_code 0`. Deterministic trigger of the same path with no wall-clock bound |
-| V8 | probe `TestZZProbe152LockCoupling`: `registry("ep1")` in a goroutine (stub summary sleeps), 200 ms later `execHandler("ep2", ep2Root)` | `execHandler(ep2) waited 2.822s behind ep1's summary` | Cross-episode coupling through `w.mu`. The 2.82 s matches 3 s − the 0.2 s head start. |
+| V6 | probe `TestZZProbe152SummaryTimeout/sleep` → `$P/probe-run1.log`, `$P/probe.log` | run 1: call 1 `elapsed=3.007s names=[] execBound=false summaries=1`, call 2 `elapsed=3.018s … summaries=2`. Run 2: `3.009s`/`3.015s`, same names and counts. Operator log, twice: `ailang-worldd: workspace tools unavailable for episode "ep1": broker: policy summary: broker: handler subprocess timed out after 10s (stderr "")`. | **Control:** `execHandler("ep1", epRoot)` called directly in the same daemon → `{"exit_code":0,…,"stdout":".../ws/ep1\n",…}`, `err=<nil>` |
+| V7 | probe `…/fail` → same files | run 1 `elapsed=17ms`/`18ms`, run 2 `26ms`/`14ms`; `names=[]`, `execBound=false`, `summaries=2`. Log: `… broker: policy summary: broker: handler subprocess failed: exit status 1 (output "{\"ok\":false}\n")`. | Same control → `exit_code 0`. Deterministic trigger of the same path with no wall-clock bound |
+| V8 | probe `TestZZProbe152LockCoupling` → same files: `registry("ep1")` in a goroutine (stub summary sleeps), 200 ms later `execHandler("ep2", ep2Root)` | `execHandler(ep2) waited 2.822s` (run 1) / `2.82s` (run 2) `behind ep1's summary` | Cross-episode coupling through `w.mu`. The 2.82 s matches 3 s − the 0.2 s head start. |
 | V9 | `cd design_docs/verification/world-row140-m4; grep -c 'policy summary' serve.log; grep -c 'registered handler' serve.log; grep -c go1 serve.log; grep -c 'plan phase' serve.log`; `grep -c 'policy summary' README.md`; `sed -n 1,11p log-tail.txt` | serve.log: **0 / 0 / 0**, control `plan phase` **2** (it has 3 lines in all). README: 1 (finding F5's prose). `log-tail.txt` shows two `go1 workspace-exec [Workspace.Exec ok]` entries (#1, #2). | The row's citation of `serve.log` is **false**; the sequence is reported only in README F5. |
 | V10 | `git show 7664d3f:host/daemon/workspace.go \| grep -n workspaceHandlerBudget`; `git show 7664d3f:host/broker/handlers.go \| grep -n 'HandlerTimeoutError{Timeout'` | At M4's build: `workspaceHandlerBudget = 3 * time.Second` (`:43`), and `HandlerTimeoutError{Timeout: bounds.execTimeout}` at `:208,229,231,313,328,330` | F5's "timed out at 10 s" was the V5 mislabel. The bound was 3 s. |
 | V11 | `sed -n 267,320p host/coordinator/coordinator.go` | `Dispatch` evaluates `c.cfg.Binder(call.EpisodeID, grants)` as an argument of `transitionreg.Bind` (`:316–317`) on **every** call. For effectful calls this happens after `lockEpisode` (`:283–289`). Production `Binder` = `d.binder` (`daemon.go:681`) → `broker.OpenBinder(…, d.workspace.registry(episodeID))` (`daemon.go:745`). | `grep -n 'workspace.registry' host/daemon/*.go \| grep -v _test` → only `:745` (plus the comment at `:449`) |
@@ -56,7 +65,7 @@ Shorthand: `W=` this worktree, `S=~/.ailang/state/mission-world-iter242`. The pr
 | V15 | `sed -n 36,49p;118,125p host/coordinator/effectful.go`; `grep -n 'invokeDeadline *=' host/daemon/daemon.go` | `PlanPhaseBudget = 4s` is derived in the comment as "20 s − HandlerCap − HandlerHeadroom = 20 − 10 − (2 + 4) = 4 s". `HandlerCap = 10s`, `HandlerHeadroom = Finish (2s) + PostEffect (4s)`. `handlerBudget` = `min(HandlerCap, time.Until(deadline) − HandlerHeadroom)`. `invokeDeadline = 20s` (`daemon.go:99`). | A 3 s stall before the plan leaves the handler `min(10, 20 − 3 − 4 − 6) = 7 s` when the plan uses its full budget. That is arithmetic on the constants, not a measured run (UNMEASURED U2). |
 | V16 | `grep -n 'len(reg) != 0\|want empty' host/daemon/*_test.go`; `sed -n 889,915p host/daemon/workspace_layout_test.go` | Existing "empty registry" assertions: `workspace_layout_test.go:159` (module root), `:586` (package cache plants), `:874` (lock coverage), `:905` (FIFO lock, `n != 0`); `workspace_test.go:203` (episode grammar), `:277`, `:290` (one flag alone). | M1 changes the first four and must leave the last three unchanged (§6) |
 | V17 | `sed -n 95,121p host/daemon/workspace_test.go`; `sed -n 449,538p host/daemon/workspace_test.go`; `sed -n 128,130p host/daemon/workspace.go` | Seams that already exist: `fakeToolBin` (a shell stub archived as the tool binary, which counts `summaries`/`dispatches`), `publishReadTool` + `readPlanRunner` (a coordinator wired to `d.binder` with a fake plan runner, so no interpreter is needed), and `stubExecSandbox`. `execStartupHook` adjusts only `ExecStartupConfig` at startup (`configureExec`), **not** handler construction, so it cannot drive the summary. | V6/V7 used these seams directly |
-| V18 | `sed -n 988,991p host/daemon/daemon.go`; `grep -n 'func (d \*Daemon) stopTemplateMaintenance' host/daemon/templates.go` | `Close()` = `d.stopTemplateMaintenance(); return d.store.Close()`. Row 153's background rebuild (`templates.go:158`) is the precedent for a daemon-owned goroutine that `Close` joins. | static |
+| V18 | `sed -n 988,991p host/daemon/daemon.go`; `grep -n 'func (d \*Daemon) stopTemplateMaintenance' host/daemon/templates.go` | `Close()` = `d.stopTemplateMaintenance(); return d.store.Close()`. Row 153's background rebuild (`templates.go:158`) is the precedent for a daemon-owned goroutine that `Close` joins. | static. (r2) Cited only for the withdrawn c4: r2 adds no goroutine. |
 | V19 | `sed -n 984,989p docs/QUICKSTART.md` | "Each is written once per refused call, and the episode's tools stay refused (**every declared effect fails, as for a missing worktree**) until you fix the cause". This sentence becomes false after M1 (S7). | static |
 | V20 | `sed -n 229,245p;283,288p .github/workflows/ci.yml`; `sed -n 290,330p scripts/verify_go.sh` | CI runs `verify_ail.sh`, then `verify_go.sh` (`go build ./...`, `go test ./... -count=1`, `go test ./... -count=1 -race -timeout 8m` under a 600 s kill), a linux srt step (`go test ./host/broker/ ./host/daemon/ -count=1 -p 1 -v -run '^(…TestExecSrtMCPEndToEnd|TestExecSrtMCPGrantAndBudget|TestExecSrtReplayIsByteEqual)$'` with a `--- PASS` grep per name) and the subprocess-cleanup step | §8 is derived from these |
 
@@ -93,15 +102,22 @@ The deciding fact is which inputs each family's handler needs (F2):
 
 ### (c) Retry policy for a failed AILANG build
 
-- c1. Today: a synchronous retry on every Binder open. **Rejected.** It costs up to `workspaceHandlerBudget` (3.0 s, V6) per call, pure calls included (F8). The cost is paid under the episode lock and under `w.mu`, so it also blocks other episodes (V8). It also eats into the derived plan/handler budget (F11). And the failure happens when the machine is loaded, so retrying on every call adds load at the worst moment.
+Today's retry policy (c1) has two costs. r2 separates them.
+- **Cross-family / cross-episode cost.** The build holds `w.mu`, so exec construction and every other episode wait behind it (F5, V8).
+- **Per-call cost in a persistently broken episode.** Every Binder open re-runs the build on the caller's clock, up to 3.0 s, pure calls included (F4, F8, F11).
+
+- c1. Today, unchanged: a synchronous retry under `w.mu`. **Rejected.** It carries both costs.
 - c2. Cache the failure until restart. Rejected: a transient timeout would disable the episode's AILANG tools for the daemon's lifetime.
 - c3. Cache the failure for a cool-down of N seconds. Rejected: N would be a guessed number (row 153's rule: derive bounds or do not add them).
-- **c4 (chosen). Per-episode single-flight build state; after a failure, retry off the caller's clock.**
-  - The first build for an episode stays synchronous. That is today's healthy path (~0.1 s, per the `workspaceHandlerBudget` comment), so the first AILANG call still works.
-  - The build no longer holds `w.mu` across the subprocess. Concurrent first callers of the *same* episode wait on that one build. Other episodes and exec construction do not wait at all (fixes F5).
-  - After a failure, `registry()` returns at once with exec bound and the AILANG names unbound. If no retry is in flight, it starts **one** background build, bounded by `workspaceHandlerBudget` and joined by `Daemon.Close` (the V18 precedent). Success is cached, and the next Binder open binds all nine names.
-  - Cost under load: at most one summary subprocess per failing episode in flight. Zero added caller latency after the first failure.
-  - Trade-off, stated: after an operator fixes a row-141 layout refusal, the *first* call afterwards still gets R8 while the background retry runs. The call after it succeeds.
+- c4. (r1's choice, **withdrawn in r2**) Retry in the background after a failure. Quorum r1 showed it is non-deterministic in two ways:
+  - **For clients.** A client that fixes a layout error and resends can still get a stale R8 if it arrives before the background build ends, and it cannot know when that is (gemini).
+  - **For tests.** An asynchronously arriving operator line races the row-141 tests' exact-log assertions (glm).
+- **c5 (chosen, r2). Synchronous retry on the caller's clock, as today, but never under a shared lock.**
+  - Every Binder open of an episode whose AILANG handler is not built runs the build itself, and prints one operator line if it fails. These are today's per-call semantics, so a fixed layout error takes effect on the very next call. No existing log-line or summary-count assertion changes (§6, AC2.4).
+  - **Per-episode single flight.** Concurrent `registry()` calls for the same episode share one in-flight build and its result. Each caller whose call ends without the AILANG names still prints its own line, as today.
+  - **Locks.** `w.mu` guards only the build-state map, and the new `execMu` guards only the exec cache. Neither is held across the summary subprocess. Exec construction for any episode, and the AILANG build of *other* episodes, never wait behind a stuck build (fixes F5/V8 deterministically).
+  - **Exec stays bound throughout** (M1).
+  - **Cost kept, stated.** In a *persistently* broken episode, each call to that episode, `workspace-exec` included, still waits up to `workspaceHandlerBudget` (3 s) before its plan. In that case F11's erosion of the derived handler budget remains. This is the same cost as today, now confined to the broken episode. The deterministic fix is to build only the families a transition declares. r2 proposes that as one follow-up row covering both this cost and R2 (§10, R2).
 
 ### (d) How the test drives the summary to time out
 
@@ -111,7 +127,7 @@ No wall-clock ratio and no reliance on the 3 s constant. Two pieces:
 
 Assertions are on outcomes: names bound, R8 vs committed, summary spawn counts, and error kind (`errors.As(err, *broker.HandlerTimeoutError)` reaching the operator line). They are never on elapsed time. Where a test needs "while the build is in flight", the FIFO holds it open until the test releases it, so the state is reached by construction, not by a sleep.
 
-**Recommendation:** a1 + b1 + c4 + d, in two code landings plus records (§6). The `HandlerTimeoutError` label becomes a follow-up row (R1).
+**Recommendation:** a1 + b1 + c5 + d, in two code landings plus records (§6). The `HandlerTimeoutError` label becomes a follow-up row (R1).
 
 **Why is this not a package? (S3)** The handler registry is host-boundary wiring (S2). The broker binds effect names to Go handlers that spawn subprocesses, and no `.ail` code can express or replace that. This row adds no surface and no kernel growth. It narrows an existing host coupling and moves no policy out of AILANG: the confinement stays in AILANG's own policy layer.
 
@@ -145,19 +161,27 @@ Files: `host/daemon/workspace.go`, `host/daemon/workspace_test.go`, `host/daemon
 - **AC1.7** Exec construction never waits on an AILANG build. The test holds ep1's summary on a FIFO, with the budget seam set to the test's own bounded context, so only the FIFO can end the build. It then calls `execHandler("ep2", …)` and `registry("ep2")`'s exec entry. Both must return **while ep1's `registry` goroutine is still blocked**: the goroutine's done-channel is asserted not closed after they return. Then the test releases the FIFO.
 - **AC1.8 (S7)** Update the QUICKSTART operator-lines paragraph (V19): the episode's AILANG tools stay refused, and `workspace-exec` keeps working (it needs only the worktree). Update the file header and the `ailangToolEffects`/`workspaceEffects` comments in `workspace.go`, which say "an EMPTY registry" and "ALWAYS bound".
 
-### M2 — single-flight build, retry off the caller's clock (~0.35 d)
+### M2 — (r2) single-flight synchronous build, no shared lock across the subprocess (~0.2 d)
 
-Files: `host/daemon/workspace.go`, `host/daemon/daemon.go` (`Close`), tests.
+Files: `host/daemon/workspace.go`, tests. **`daemon.go` is untouched:** r2 adds no goroutine and no `Close` change.
 
-- **AC2.1** Per-episode build state: `{built tool | last error | in-flight done-chan}`, keyed as today by `(episodeID, sandbox)`. `w.mu` guards only the map, never a subprocess.
-- **AC2.2** Same-episode single flight: two concurrent first `registry("ep1")` calls spawn **one** summary (stub spawn count == 1).
-- **AC2.3** After a failure:
-  - `registry("ep1")` returns `[Workspace.Exec]` without spawning synchronously;
-  - it starts at most one background retry;
-  - three further calls while that retry is held on the FIFO return at once and leave the spawn count at exactly 2 (1 failed + 1 retry).
-- **AC2.4** Recovery: the stub is switched to answer ok (a flag file) and the FIFO released. A test-only `w.awaitBuilds()` joins the retry. The next `registry("ep1")` binds all nine names, and a recovery operator line is printed once: `workspace tools available for episode "ep1" after retry`.
-- **AC2.5** `Daemon.Close` cancels and joins in-flight retries: the retry's context derives from a daemon-owned context that `Close` cancels. The test closes the daemon with a retry blocked on the FIFO and asserts that `Close` returns and the stub's process group is gone (the FIFO writer side observes EOF/EPIPE). No goroutine outlives `Close`.
-- **AC2.6** The failure operator line is printed once per *attempt*, not once per call. With 1 failure + 3 calls during the retry, there are 2 lines when the retry also fails.
+- **AC2.1** Per-episode build state: `{built tool | in-flight done-chan + result}`, keyed as today by `(episodeID, sandbox)`. `w.mu` guards only the map and is released before `NewAilangToolHandler` runs. **A failure is not cached** (today's semantics): the in-flight entry is cleared when the build returns, so the next Binder open builds again, synchronously.
+- **AC2.2** Same-episode single flight. Two concurrent `registry("ep1")` calls, made while the first build is held on a FIFO, spawn **one** summary (stub spawn count == 1). Both get the build's result. If the build fails, each prints its own operator line (2 lines, one per call, as today).
+- **AC2.3** Other episodes never wait. While ep1's build is held on a FIFO (budget seam set to the test's bounded context), `registry("ep2")` with a healthy summary returns all nine names. The test asserts this **before** releasing the FIFO, by checking that ep1's done-channel is still open. This is the AILANG-family counterpart of AC1.7.
+- **AC2.4 — assertions M2 must leave unchanged** (each test is re-run with `--- PASS` grepped; none is edited by M2):
+  - `workspace_test.go:207`: `summaries == 0` for all refused episodes.
+  - `workspace_test.go:220`: `summaries == 1` after two `registry("ep1")` calls (the success cache).
+  - `workspace_test.go:270`: `summaries + dispatches == 0` with one flag.
+  - `workspace_test.go:558`: `plans == 0 && dispatches == 0 && summaries == 0` for refused episodes.
+  - `workspace_layout_test.go:128`: `summaries == 1`.
+  - `workspace_layout_test.go:162–165`: `summaries == 0`, `dispatches == 0`, and **exactly 1** operator line per refused call.
+  - `workspace_layout_test.go:596`: `log.String() == want`, **exact**.
+  - `workspace_layout_test.go:599`: `summaries == 0`.
+  - `workspace_layout_test.go:869`: healthy registry with `log.Len() == 0`.
+  - `workspace_layout_test.go:874–878`: `summaries == 0` and **exactly 1** line, exact or containing `want`.
+
+  M1 changes only the registry-size halves of `:159`, `:586`, `:874` and `:905` (AC1.5). The log-line and summary-count halves listed above are unchanged by both milestones.
+- **AC2.5** Per-call retry preserved. With a summary stub that fails (non-ok, no timing), three sequential `registry("ep1")` calls produce: 3 summary spawns, 3 operator lines, and `[Workspace.Exec]` each time. Then the stub is switched to ok (a flag file), and the 4th call binds all nine names with no extra line. This pins c5's "a fix takes effect on the next call" (gemini's objection) and kills any cached or async failure.
 
 ### M3 — records (~0.05 d)
 
@@ -174,9 +198,9 @@ Every row is mutation-proven by the executor: apply the named production mutatio
 | unedited `TestWorkspaceRegistryRefusesEpisodesOutsideTheGrammarAndRoot`, `TestWorkspaceRegistryNeedsBothFlags`, `TestWorkspaceEpisodeEscapeIsR8BeforeAnyEffect` | 1.6 | **MUT-EXEC-BEFORE-EPROOT:** exec bound before the `episodeRoot` check → `registry("escape")` non-empty, red |
 | `TestWorkspaceExecNeverWaitsOnAilangBuild` | 1.7 | **MUT-SHARED-LOCK:** `execHandler` takes `w.mu` again → ep2 blocks until the FIFO release; the "ep1 still in flight" assertion fires |
 | `TestWorkspaceAilangBuildSingleFlight` | 2.2 | **MUT-NO-SINGLEFLIGHT:** each caller builds → spawn count 2 |
-| `TestWorkspaceFailedBuildRetriesOffClock` | 2.3, 2.6 | **MUT-SYNC-RETRY:** today's synchronous retry → calls block on the FIFO (assert-returns fires) and the spawn count grows per call. **MUT-RETRY-STORM:** a retry per call → spawn count > 2. **MUT-LINE-PER-CALL:** log count > 2. |
-| `TestWorkspaceFailedBuildRecovers` | 2.4 | **MUT-NEGATIVE-CACHE-FOREVER:** failure cached with no retry → still 1 name after recovery |
-| `TestWorkspaceCloseJoinsRetry` | 2.5 | **MUT-LEAK:** the retry not tied to the daemon context → `Close` returns with a live stub group (the process-group probe fires) |
+| `TestWorkspaceAilangBuildDoesNotBlockOtherEpisodes` | 2.3 | **MUT-LOCK-ACROSS-SUBPROCESS:** `w.mu` held across `NewAilangToolHandler` (today) → `registry("ep2")` blocks until the FIFO release; the "ep1 still in flight" assertion fires |
+| `TestWorkspaceFailedBuildRetriesEachCall` | 2.5 | **MUT-NEGATIVE-CACHE:** failure cached → spawn count 1 and no recovery on call 4. **MUT-ASYNC-RETRY:** r1's background retry → call 4 is still `[Workspace.Exec]` (the stale R8). **MUT-LINE-PER-ATTEMPT:** lines ≠ 3. |
+| the AC2.4 list (unedited) | 2.4 | Any change to per-call log or summary semantics reds an existing exact assertion. This row is an instrument-health control, not a load-bearing claim (S6). |
 
 ## 8. CI gate list (every milestone)
 
@@ -185,7 +209,7 @@ export PATH=/opt/homebrew/bin:$PATH AILANG_BIN=~/.pinned-ailang/ailang   # gate 
 ./scripts/verify_ail.sh                        # no .ail change in this row; still run
 go vet ./...                                   # compile fence for _test.go (go build is not one)
 ./scripts/verify_go.sh                         # go build ./...; host/evidence manifest; go test ./... -count=1; -race -timeout 8m under 600 s
-go test ./host/daemon/ -count=1 -race -v -run '^(TestWorkspace|TestExecMaxTimeout)' | tee $S/m<N>-ws.log   # every new/amended name: grep "^--- PASS: <name>"
+go test ./host/daemon/ -count=1 -race -v -run '^(TestWorkspace|TestExecMaxTimeout)' | tee ~/.ailang/state/<iter>/m<N>-ws.log   # every new/amended name: grep "^--- PASS: <name>"
 # real srt (CI's linux step runs this; locally with WORLD_EXEC_SRT_NODE_MODULES=<pinned 0.0.78 install>):
 go test ./host/broker/ ./host/daemon/ -count=1 -p 1 -v -run '^(TestExecSrtMCPEndToEnd|TestExecSrtMCPGrantAndBudget|TestExecSrtReplayIsByteEqual)$'   # each must print --- PASS
 ```
@@ -196,23 +220,26 @@ A bare `-run` with no match exits 0, so every new test name gets a `--- PASS: <n
 
 | File | Change | Interaction |
 |---|---|---|
-| `host/daemon/workspace.go` | registry split, `execMu`, per-episode build state, budget `var` | Rows 140/141 code. No open row edits `registry()`. |
-| `host/daemon/daemon.go` | `Close` joins workspace retries | Row 153 added `stopTemplateMaintenance` here. Same pattern; append, not replace. |
+| `host/daemon/workspace.go` | registry split, `execMu`, per-episode single-flight build state (no lock across the subprocess), budget `var` | Rows 140/141 code. No open row edits `registry()`. |
+| `host/daemon/daemon.go` | (r2) **untouched**: no background retry, so no `Close` change | none |
 | `host/daemon/workspace_layout_test.go`, `workspace_test.go` | 4 assertions amended (AC1.5), harness generalised (`publishReadTool` → effect/id) | `publishReadTool` is shared with row 153's template note (`workspace_test.go:499–507`): keep that block intact. |
 | `docs/QUICKSTART.md` | operator-lines paragraph | S7; QUICKSTART is executed verbatim. Only prose changes, no command. |
 | `host/broker/handlers.go` | **untouched** | The `HandlerTimeoutError` label (R1) is deliberately left to a follow-up row, so this row does not collide with row 166 (broker head/tail timeout flake). |
-| — | — | **Row 93** (World arm under load): after M2 a broken episode no longer adds 3 s per call (F11). |
+| — | — | **Row 93** (World arm under load): a *persistently* broken episode still adds up to 3 s per call (F11). After M2 that cost no longer spreads to other episodes; the per-call cost is removed only by the R2 follow-up row. |
 
 ## 10. Non-goals, residuals, follow-up rows (proposed; the controller files)
 
 - **R1 — `HandlerTimeoutError` names the wrong bound** (F6, V5, V10). Proposed row *w-handler-timeout-names-effective-bound* (hygiene). `runBounded` should report the effective deadline (`min(parent, execTimeout)`), or say which bound fired. Every subprocess handler shares this, which is why it is not folded in here. It misled row 140 M4's diagnosis.
-- **R2 — the first build is still on the first caller's clock.** A fresh episode's first call of *any* transition waits for the first AILANG build (≤ `workspaceHandlerBudget`), because `registry()` cannot know which family the transition needs: `BinderFor(episodeID, caps)` carries no declared effects (V11). The healthy cost is ~0.1 s. The worst case is 3 s once per episode, which still erodes F11's derivation once. Proposed row *w-binder-builds-only-declared-families*: pass the descriptor's declared effects to `BinderFor` (it changes the coordinator type; there are 18 test call sites, from `grep -rn 'Binder: ' host --include='*_test.go' | wc -l`). That removes the residual entirely.
+- **R2 — (r2, widened) AILANG builds still run on the caller's clock.** Two costs remain after this row:
+  - (i) A fresh episode's first call of *any* transition waits for the first AILANG build (healthy ~0.1 s, worst case 3 s).
+  - (ii) **(r2)** In a *persistently* broken episode, every call, `workspace-exec` included, waits up to `workspaceHandlerBudget` (3 s) before its plan, because c5 keeps today's synchronous per-call retry (F4, F8). In both cases F11's derived handler budget is eroded by the stall (to 7 s with a full-budget plan, V15).
+
+  Both exist because `registry()` cannot know which family the transition needs: `BinderFor(episodeID, caps)` carries no declared effects (V11). Proposed row *w-binder-builds-only-declared-families* (clause 4): pass the descriptor's declared effects to `BinderFor` and build only the families they name. Then a `workspace-exec` call never runs the AILANG build, and both costs vanish deterministically, with no async state. It changes the coordinator type, with 18 test call sites (`grep -rn 'Binder: ' host --include='*_test.go' | wc -l`), which is why it is a separate row.
 - **R3 — client-visible cause for R8.** The A2A/MCP R8 text does not say *why* the handler is absent. That is row 159 / ailang#1602's territory for MCP, and an A2A message change for every R8, so it is out of scope.
 
 ## 11. Risks
 
-- **A background goroutine in the daemon.** It is bounded by `workspaceHandlerBudget`, cancelled and joined by `Close` (AC2.5), and has row 153's precedent (V18). A test that removes temp dirs while a retry runs would flake; AC2.5's join is what prevents that, and every test daemon is closed via `t.Cleanup` (`newWSDaemon`).
-- **One extra R8 after an operator fixes a layout refusal** (c4 trade-off). It is documented in QUICKSTART (AC1.8), and the next call succeeds.
+- **(r2) The per-call stall in a broken episode is kept, not fixed** (c5). A client calling `workspace-exec` in an episode whose AILANG build keeps timing out gets a correct result 3 s later than in a healthy episode. Under heavy load that cost could combine with a slow plan (F11). The cost is confined to that episode (AC2.3) and is the same as today. R2's follow-up row removes it. r1's background retry removed it too, but at the price of the two non-determinisms quorum r1 found (§14).
 - **Exec available while AILANG tools are not** is a new mixed state. It is intended (the row's acceptance bar). The operator line still names the AILANG cause on every attempt.
 
 ## 12. Upstream asks
@@ -224,4 +251,17 @@ None.
 - **U1 — The real-tool path.** All probes used the `/bin/sh` stub. That the real v0.52.1 `policy-tool summary` can exceed 3 s under load rests on README F5's prose (V9: no raw log). The code path is the same for any `NewAilangToolHandler` error (V6 vs V7), so the fix does not depend on the trigger.
 - **U2 — The F11 erosion in a live run.** The 7 s handler figure is arithmetic on the constants (V15), not a measured Dispatch with a stalled registry.
 - **U3 — Linux.** Probes ran on darwin/arm64. The lock and early-return findings are static (V1–V3); only the 3.0 s/2.82 s timings are platform-measured.
+- **U5 — (r2) The probe on another machine.** It is now re-runnable from `$P/README.md`. Only this rig's two runs are recorded.
 - **U4 — Whether the daemon logs an `EffectFailedError`'s cause anywhere.** Not checked. It only bears on rejected option b2.
+
+## 14. Quorum r1 resolution (r2)
+
+Round 1: oc-glm-5-3, oc-kimi-k3 and gemini-3-1-pro rejected, and gpt6-1-sol was absent (N−1). Full JSON is in the controller's quorum artifact `w-exec-availability-decoupled-from-ailang-policy-2026-10-08T00-39-39Z.json`. The controller checked all three premises and found each true. None disputed M1's direction.
+
+| # | Objection (seat) | Doc change |
+|---|---|---|
+| Q-1 | M2's AC2.6 (one line per attempt) plus an auto-started background retry would add a second line that arrives asynchronously and races the row-141 tests' exact-log assertions, which AC1.5 claims are unchanged. The doc never listed the assertions M2 invalidates, and `awaitBuilds()` existed only for AC2.4 (glm). | Background retry **dropped** (§5 c4 withdrawn, c5 chosen). The retry is synchronous per call, one line per failed call, exactly as today. New AC2.4 lists every summary-count and log-line assertion in `workspace_test.go`/`workspace_layout_test.go` by file:line, all unchanged; AC2.5 pins per-call retry. `awaitBuilds()`, the recovery line and the `Close` join are removed. |
+| Q-2 | A client that fixes a layout error and retries gets a stale R8 if it arrives before the background build finishes, and cannot know when that is (gemini). | Same change. The next call after a fix runs the build itself (AC2.5, killing MUT-ASYNC-RETRY). The per-call 3 s cost this reintroduces in a persistently broken episode is stated in §5(c), §9 and §11 and moved to R2's follow-up row, the deterministic fix. |
+| Q-3 | V6–V8 rested on a probe banked only on one machine; nobody else could re-run it (kimi). | The probe source, both run logs and a README with the exact re-run command are committed at `design_docs/verification/world-row152-design/`. The probe was re-run for r2 (`probe.log`, `rc=0`: 3.009/3.015 s, 26/14 ms, 2.82 s; same outcomes as run 1). V6–V8 cite both files. |
+
+Re-estimate: M2 shrinks from ~0.35 d to ~0.2 d (no goroutine lifecycle), for a total of ~0.6 d.
