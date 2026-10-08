@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 247 | 2026-10-08 | no product pick: row150 stays parked on unchanged D-WORLD-69; four required native role preflights and independent record judge [ADMIN] |
 | 246 | 2026-10-08 | row 150 PARKED: full showcase requires separately owned prerequisites; two blocked quorums; independent discovery/PARK accepted; D-WORLD-69 OPEN [A... |
 | 245 | 2026-10-08 | row 149 LANDED: live workbench — AG-UI follower script, theme tokens, SVG graph, read-only decisions pane; resuming orphaned iteration 244; judge 9... |
 | 244 | 2026-10-08 | ORPHAN (rig Aqua session lost ~08:52Z, no slot verdict): row 149 opus design r0 uncommitted in .wt-world-iter244-row149 — finished by 245 |

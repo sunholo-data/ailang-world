@@ -1,21 +1,20 @@
-# World mission dashboard — iteration 246 (2026-10-08)
+# World mission dashboard — iteration247 (2026-10-08)
 
-- Outcome: row150 PARKED — needs-human-review, D-WORLD-69 OPEN; no seed/release images implemented.
-- Find: production packet producer/read path absent; grade resolver remains unavailable. Proof validator is library-only.
-- Quorum: two BLOCKED rounds, glm/kimi/gemini reject; sonnet absent quota. No freeze or forced pass.
-- Judge: separate native GPT-6.1 Sol independently ACCEPTS discovery/PARK; same-model-fresh-context FLAG under D48.
-- All four operator-required Agent roles spawned; planner/executor preflight only because design gates stayed open.
-- Technical gates: bounded product Chrome lifecycle, byte-field inventory, fresh-seed/normal-clock composition remain unmeasured.
-- D-WORLD-69 A (recommended): retain full showcase; extend blocked-critical-path exception to26→105→172→150.
-- D-WORLD-69 B: explicitly narrow150 to truthful unavailable grades/approvals; defer full showcase to named owners.
-- Default:150 stays parked immediately;151 cannot bypass the lowest-open release-row rule.
-- No separate human ask for normal credential supply or routine demo-local logical-time wiring.
-- 1.0 clauses1/2/3/6/7 MET,4/5 UNMET; goal unmoved.
-- Critical path:93 M5 FINAL attended →114 →139. Nothing on it is presently loop-routable.
-- Banked26/105/new172 need D69 placement; no unauthorized priority jump.
-- Native sonnet unavailable; resolver refuses Anthropic ration. Fleet recurrence ticket filed, no World harness repair.
-- Metered quorum $0.333723; native Codex quota tokens not reported. Driver degradation retained in full log/digest.
-- Gate4 base:94fc5ba4d017505849e2adab1e87c8aae8ad0bdc@2026-10-08T13:17:15Z.
-- Cadence: one bounded scheduled iteration; separate roles; park human judgments; report GCP AILANG + GitHub202.
-- CI packaging delta: probe PNGs rejected; retained privately with hash manifest. Final record rechecks CI; gate unchanged.
-- Row173: fleet-owned global binary gate conflicts with literal release PNGs; ticket filed, blocking150 separately from D69.
+- Outcome:no product pick; row150 PARKED, D-WORLD-69 OPEN; ADMIN block record.
+- 1.0:clauses1/2/3/6/7 MET;4/5 UNMET. Goal unmoved.
+- Critical path:93 M5 FINAL attended→114→139; none READY unattended.
+- D64 release exception stops at lowest-open150;151 cannot bypass.
+- D69 A (recommended):retain full showcase;authorize26→105→172→150 prerequisite exception.
+- D69 B:explicitly narrow150 to truthful unavailable grades/approvals;defer full showcase.
+- Default immediately:150 stays parked. No new decision or scope amendment.
+- Prior two row150 quorums BLOCKED;no third round or implementation.
+- Designer/planner/executor native Agent preflights completed.
+- Required fresh separate GPT-6.1 Sol-pinned evaluator accepts PARK/no product;terminal ADMIN PASS/N/A,zero blocking.
+- FLAG same-model-fresh-context under amendedD48;exact model/tokens unattested.
+- Preferred native sonnet unsupported;resolver refuses Anthropic ration;fleet recurrence filed.
+- Row173 fleet-owned PNG-gate ticket open;no World repair.
+- Row159 predicate:upstream1602 OPEN;v0.52.5 hooks0/0,positive control1.
+- Metered$0 this iteration;subscription tokens not reported.
+- Record:independent acceptance+exact-head/merge CI before shipped.
+- Base84e532272730e75d596757242ba817f5816cbbf0@2026-10-08T16:58:55Z.
+- Evidence:verification/world-iter247;report GCP AILANG + GitHub202.

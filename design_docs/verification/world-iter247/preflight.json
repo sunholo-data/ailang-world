@@ -1,0 +1,450 @@
+{
+  "iteration": 247,
+  "time": "2026-10-08T16:58:55.298044+00:00",
+  "fire_id": "world-1791478476-73590",
+  "commands": [
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "84e532272730e75d596757242ba817f5816cbbf0\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "log",
+        "-5",
+        "--format=%h %s",
+        "--",
+        "design_docs/planned/w-resident-agent-non-inferiority-floor-run.md"
+      ],
+      "rc": 0,
+      "stdout": "8b04ec6 Row 93 M4: smoke tuning \u2014 run.py, tuning ledger (AC4.1/4.2), FINAL prereg guard (AC5.1), tuned config + prereg draft (#222)\n76f3f0c Row 93 M2: floor arm drivers + attestation (AC2.1\u2013AC2.7); shell canaries measured, World canaries await attended mint (#221)\n3d965f6 feat(floor): row 93 M1+M3 follow-up \u2014 World arm pinned to the 8 AILANG tools (no workspace-exec); AC1.2 re-proved on v0.52.1 (#218)\na266465 feat(row135-M0): tool binary to AILANG v0.52.1 (re-proved); row-135 design un-held (#187)\n926990d record(attended): D-WORLD-55 \u2014 row 93 rulings (bar unchanged; opus-5-5 + gpt-6.1-sol; in-repo grader; widen ailang-run first = new row 135)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_decisions.sh",
+        "--check",
+        "--file",
+        "design_docs/world-mission.md"
+      ],
+      "rc": 0,
+      "stdout": "decision ledger valid: 56 rows\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_decisions.sh",
+        "--open",
+        "--file",
+        "design_docs/world-mission.md"
+      ],
+      "rc": 0,
+      "stdout": "D-WORLD-69\tOPEN\t**D-WORLD-69 \u2014 retain row 150\u2019s full showcase and authorize its prerequisites, or narrow it? A (recommended): retain packet/every-grade requirements; extend D-WORLD-64\u2019s blocked-critical-path exception to 26 \u2192 105 \u2192 172 \u2192 150 (bounded proof producer, real grade projection, packet production/read path, then capture), with each normal design/quorum gate intact. B: amend row 150 to honest unavailable grades and the existing approvals pane; defer packet/PROVEN showcase to those named owners. Default if unanswered: park 150 immediately; 151 cannot bypass the lowest-open-row rule. Logical-time wiring is technical discovery, not a separate human ask.**\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "gh",
+        "pr",
+        "list",
+        "-R",
+        "sunholo-data/ailang-world",
+        "--author",
+        "sunholo-voight-kampff",
+        "--state",
+        "open",
+        "--json",
+        "number,title,headRefName"
+      ],
+      "rc": 0,
+      "stdout": "[{\"headRefName\":\"design-row114-kimi-20260930\",\"number\":166,\"title\":\"docs: park row114 unseeded provenance protocol after quorum\"}]\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "gh",
+        "run",
+        "list",
+        "-R",
+        "sunholo-data/ailang-world",
+        "--workflow",
+        "CI",
+        "--branch",
+        "dev",
+        "--limit",
+        "1",
+        "--json",
+        "databaseId,status,conclusion,headSha"
+      ],
+      "rc": 0,
+      "stdout": "[{\"conclusion\":\"success\",\"databaseId\":37788163934,\"headSha\":\"84e532272730e75d596757242ba817f5816cbbf0\",\"status\":\"completed\"}]\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang-world/commits/84e532272730e75d596757242ba817f5816cbbf0/check-runs",
+        "--jq",
+        "{total_count,checks:[.check_runs[]|{name,status,conclusion,head_sha}]}"
+      ],
+      "rc": 0,
+      "stdout": "{\"checks\":[{\"conclusion\":\"success\",\"head_sha\":\"84e532272730e75d596757242ba817f5816cbbf0\",\"name\":\"ailang-code verify gate\",\"status\":\"completed\"},{\"conclusion\":\"success\",\"head_sha\":\"84e532272730e75d596757242ba817f5816cbbf0\",\"name\":\"go host build + test gate\",\"status\":\"completed\"}],\"total_count\":2}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "gh",
+        "issue",
+        "view",
+        "1602",
+        "-R",
+        "sunholo-data/ailang",
+        "--json",
+        "state"
+      ],
+      "rc": 0,
+      "stdout": "{\"state\":\"OPEN\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "scripts/gate0_self_notices.sh",
+        "--issue",
+        "202",
+        "--prev-issue",
+        "159",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--self",
+        "sunholo-voight-kampff",
+        "--watermark-file",
+        "/Users/voightkampff/.ailang/state/mission-world-last-seen",
+        "--watermark-file",
+        "/Users/voightkampff/.ailang/state/mission-202-last-seen",
+        "--control",
+        "107:4",
+        "--driver-src",
+        "/Users/voightkampff/dev/sunholo-data/ailang/tools/launchd/mission-control.sh"
+      ],
+      "rc": 0,
+      "stdout": "gate0_self_notices: repo=sunholo-data/ailang-world self=sunholo-voight-kampff issues=202,159\nwatermark: /Users/voightkampff/.ailang/state/mission-world-last-seen = 2026-10-05T12:46:05Z ok\nwatermark: /Users/voightkampff/.ailang/state/mission-202-last-seen = 2026-10-05T12:46:05Z ok\nsince: 2026-10-05T12:46:05Z (older of 2 readable watermark(s) of 2)\ncrash: issue=159 at=2026-09-29T03:12:24Z rc=143 in-window=no url=https://github.com/sunholo-data/ailang-world/issues/159#issuecomment-5882911909\ncrash: issue=159 at=2026-09-30T14:15:21Z rc=1 in-window=no url=https://github.com/sunholo-data/ailang-world/issues/159#issuecomment-5913079979\ncrash: issue=159 at=2026-10-02T03:38:19Z rc=1 in-window=no url=https://github.com/sunholo-data/ailang-world/issues/159#issuecomment-5945160145\nissue: 202 comments=22 self=22 crash=0 other=22\nissue: 159 comments=54 self=54 crash=3 other=51\ncontrol: issue=107 expect=4 got=4 ok\nsignature-source: /Users/voightkampff/dev/sunholo-data/ailang/tools/launchd/mission-control.sh ok\nverdict: 0 crash notice(s) since 2026-10-05T12:46:05Z on #202,#159 \u2014 no death signal from the driver; Gate 2's traces (a)-(c) still run [gate0_self_notices.sh, control 107:4, watermarks 2/2]\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_directives.sh",
+        "--issue",
+        "202",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--since",
+        "2026-10-05T12:46:05Z"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "\u001b[1;33mmission_directives: #202 \u2014 0 directive(s) from [MarkEdmondson1234] since 2026-10-05T12:46:05Z (of 22 comments; the rest are public feedback, never directives)\u001b[0m\n"
+    },
+    {
+      "command": [
+        "gh",
+        "api",
+        "user",
+        "--jq",
+        ".login"
+      ],
+      "rc": 0,
+      "stdout": "sunholo-voight-kampff\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "ailang",
+        "messages",
+        "list",
+        "--unread",
+        "--inbox",
+        "mission-world",
+        "--json"
+      ],
+      "rc": 0,
+      "stdout": "null\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "worktree",
+        "list",
+        "--porcelain"
+      ],
+      "rc": 0,
+      "stdout": "worktree /Users/voightkampff/dev/sunholo-data/ailang-world\nHEAD 84e532272730e75d596757242ba817f5816cbbf0\nbranch refs/heads/dev\n\nworktree /Users/voightkampff/.ailang/state/floor-tune/repo\nHEAD 748e7255e30ada38bd602112507d4555d40c149d\ndetached\n\nworktree /Users/voightkampff/.ailang/state/world-wt/iter239-record\nHEAD 16988ff52ee632480e493dcf001298c019793121\nbranch refs/heads/mission/world-iter239-park\n\nworktree /Users/voightkampff/.ailang/state/world-wt/iter241-row153\nHEAD 0c67c9a02d5def7c4b2720d3d89491c0337685f5\nbranch refs/heads/sprint/row153-plan-phase-deadline-under-load\n\nworktree /Users/voightkampff/dev/sunholo-data/.eval-world-iter208\nHEAD b858693b27a58ba05303bf3bd423cc623014063a\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.eval-world-iter215-preflight\nHEAD 4e2600e601711f40dae42479167251d43a8a3bf6\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.eval-world-iter217\nHEAD 07df462508618218cb4dac0eaff485a8236ef049\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.eval-world-iter217-r2\nHEAD 077027ed1d74f62151947cacacb62e2a689fbead\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.eval-world-iter218\nHEAD ba9fdc6611b9b5e3d9ee53eaf39c820795a1ed85\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-row93\nHEAD dbe32b5629322c23a98ecf51d08e97cef895a834\nbranch refs/heads/attended/row93-floor-m1m3\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter182\nHEAD 74052188cfdcf3745192bd57ec0a8aff6ad7259e\nbranch refs/heads/sprint/w-prove-1-0-phase-a\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter198-design\nHEAD 12a02706f90118c653a80bf4f19e01743c0f22fd\nbranch refs/heads/design/w-kernel-exports-carry-no-contract\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter208\nHEAD b858693b27a58ba05303bf3bd423cc623014063a\nbranch refs/heads/sprint/w-transition-invocation-m5m6\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval\nHEAD be286c1dbf29eb56c922f5015c0bc1a52055f087\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval-r2\nHEAD 59870e58c4fc393aab62d2cf7ff8c83641ad6850\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval-r3-pi\nHEAD 741e3c371de3e558243e4ee77a09eeaddbac50a3\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter217-record-eval\nHEAD 8270b6521f854439469fd2e95948dd5ddfc7635c\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter219-record\nHEAD b026d4e7e95dff8fd0828951fc14873b7604c325\nbranch refs/heads/mission/world-iter219-record\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter220\nHEAD cdb714e19811cb067d6fa0f00c135a1216876633\nbranch refs/heads/sprint/world-iter220-followup\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter220-eval\nHEAD cdb714e19811cb067d6fa0f00c135a1216876633\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter220-record-eval\nHEAD c68887cce8c5fe70ddc0e1aa64b0614d5599185b\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter222-evaluator\nHEAD 23a15d5ee4d9058a9e390ae913adf91d31d157c6\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter222-evaluator-delta\nHEAD 16803134c8db0d2360b001f43ba7b28879a87722\ndetached\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter230-forklock2\nHEAD 4b7ad9b2436d78ccc5835af6658eab234361cfea\nbranch refs/heads/sprint/w-verifygate-forklock-guard-residuals-2\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter232-ft\nHEAD e9032f11dd6ea7395644c17eba06658d1388c143\nbranch refs/heads/mission/world-iter232-followthrough\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter232-harness\nHEAD 5516b3fc766dfee03678b6b24ac272fdfaefc896\nbranch refs/heads/mission/world-iter232-harnessrow\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter232-record\nHEAD 96876a1a2dea23fc17fbfef6474ebba8b621b033\nbranch refs/heads/mission/world-iter232-record\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter234-record\nHEAD 4ef13f5324dcea8d5285b50338c72bed7b6dedeb\nbranch refs/heads/mission/world-iter234-correction\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter241-record\nHEAD 8c8486b1d398fcc1ba11b84baf6686ae823fe24e\nbranch refs/heads/mission/world-iter241-record\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter242-record\nHEAD 93858218bed8685341e0ce58286e53e2372b3f91\nbranch refs/heads/mission/world-iter242-record\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter242-row152\nHEAD 442e7ec21ebec7f592fba5890caf9be02b4a21c4\nbranch refs/heads/sprint/row152-exec-availability\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter244-row149\nHEAD a5672da186f81c91ba7906b451d76d53b9c1cc3d\nbranch refs/heads/sprint/row149-workbench-live-and-polish\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter245-record\nHEAD 9c3b24e7c1d64b06cb54d46e54eddf6bb44a5962\nbranch refs/heads/mission/world-iter245-record\n\nworktree /Users/voightkampff/dev/sunholo-data/.wt-world-iter247-record\nHEAD 84e532272730e75d596757242ba817f5816cbbf0\nbranch refs/heads/mission/world-iter247-record\n\nworktree /Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a2110ab10af7e8b8a\nHEAD 9f06ca691f155e101282a12af6de21c3fef1f4d5\nbranch refs/heads/cli-m1m2\nlocked claude agent agent-a2110ab10af7e8b8a (pid 99466 start Fri Oct  2 07:49:02 2026)\n\nworktree /Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-ad349fba6d3f1cee4\nHEAD 34c9f71c331ef61b8d9f3f9ccaf59cb894427e40\nbranch refs/heads/r140-design\n\nworktree /Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-ae2e5875bae5b36aa\nHEAD 0bd6583c27535e667239f143e8884172d9e134ee\nbranch refs/heads/final-work\nlocked claude agent agent-ae2e5875bae5b36aa (pid 99466 start Fri Oct  2 07:49:02 2026)\n\nworktree /Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aeb33c9510c459c54\nHEAD 8ce298c273297534c44250ebdeca053c588a77c8\nbranch refs/heads/ci-budget\nlocked claude agent agent-aeb33c9510c459c54 (pid 99466 start Fri Oct  2 07:49:02 2026)\n\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "log",
+        "-3",
+        "--format=%h %s",
+        "--grep",
+        "feat(row138)"
+      ],
+      "rc": 0,
+      "stdout": "2d3a255 feat(row138): M3\u2013M5 \u2014 setup, doctor, session new|list|revoke (#196)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "log",
+        "-1",
+        "--format=%h %s",
+        "--grep",
+        "row 138 M1"
+      ],
+      "rc": 0,
+      "stdout": "0b18b94 feat(cli): row 138 M1+M2 \u2014 tools list, call, why, log tail, provenance (#188)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "gh",
+        "issue",
+        "view",
+        "202",
+        "-R",
+        "sunholo-data/ailang-world",
+        "--json",
+        "title,createdAt,comments",
+        "--jq",
+        "{title,createdAt,count:(.comments|length)}"
+      ],
+      "rc": 0,
+      "stdout": "{\"count\":22,\"createdAt\":\"2026-10-05T12:43:34Z\",\"title\":\"Ailang World mission bookkeeping \u2014 week of 2026-10-05\"}\n",
+      "stderr": ""
+    }
+  ],
+  "routing": {
+    "MISSION_ANTHROPIC_AVAILABLE": "0",
+    "MISSION_DESIGNER_CHAIN_REMAINING": "pi:ollama/glm-5.3:cloud,pi:ollama/kimi-k3:cloud,pi:openrouter/z-ai/glm-5.3,pi:openrouter/moonshotai/kimi-k3",
+    "MISSION_DESIGNER_FALLBACK": "codex:gpt-6.1-sol,pi:ollama/glm-5.3:cloud,pi:ollama/kimi-k3:cloud,pi:openrouter/z-ai/glm-5.3,pi:openrouter/moonshotai/kimi-k3",
+    "MISSION_DESIGNER_MODEL": "codex:gpt-6.1-sol",
+    "MISSION_DESIGNER_PATH": "recipe",
+    "MISSION_DESIGNER_RESOLVED": "codex:gpt-6.1-sol",
+    "MISSION_EVALUATOR_CHAIN_REMAINING": "opus",
+    "MISSION_EVALUATOR_FALLBACK": "pi:openrouter/minimax/minimax-m3,claude:claude-sonnet-4-6,opus",
+    "MISSION_EVALUATOR_MODEL": "claude:claude-sonnet-4-6",
+    "MISSION_EVALUATOR_PATH": "recipe",
+    "MISSION_EVALUATOR_RESOLVED": "claude:claude-sonnet-4-6",
+    "MISSION_EXECUTOR_FALLBACK": "pi:ollama/deepseek-v4.1-flash:cloud,pi:openrouter/deepseek/deepseek-v4.1-flash",
+    "MISSION_EXECUTOR_MODEL": "codex:gpt-6.1-sol",
+    "MISSION_EXECUTOR_PATH": "recipe",
+    "MISSION_EXECUTOR_RESOLVED": "codex:gpt-6.1-sol",
+    "MISSION_OVER_RATION": "anthropic openrouter",
+    "MISSION_PLANNER_ALLOWLIST": "tools/launchd/*|.claude/skills/mission-control/SKILL.md|.claude/skills/design-doc-creator/*",
+    "MISSION_PLANNER_ANTHROPIC_FALLBACK": "codex:gpt-6.1-sol",
+    "MISSION_PLANNER_FALLBACK": "pi:ollama/kimi-k3:cloud,pi:openrouter/moonshotai/kimi-k3",
+    "MISSION_PLANNER_MODEL": "codex:gpt-6.1-sol",
+    "MISSION_PLANNER_PATH": "recipe",
+    "MISSION_PLANNER_RESOLVED": "codex:gpt-6.1-sol",
+    "MISSION_ROUTING_NOTE": "lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`75` \u2014 over daily ration) \u2192 handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`75` \u2014 over daily ration) \u2192 handed to `pi:openrouter/minimax/minimax-m3`; `evaluator`: **pi** lane `openrouter/minimax/minimax-m3` unusable (probe rc=`75`) \u2192 advanced to `claude:claude-sonnet-4-6`"
+  },
+  "preferred_evaluator_spawn_error": "Unknown model sonnet for spawn_agent. Available models: gpt-6.1-sol, gpt-6-astra, gpt-6-sol, gpt-6-luna, gpt-5.6-sol",
+  "evaluator_fallback": "gpt-6.1-sol fresh separate context, amended D-WORLD-48; FLAG same-model-fresh-context",
+  "fleet_ticket": "inbox_1791478635258_e8f141bd",
+  "skill_drift": "authoritative SKILL.md and all12 resources matched shared origin/dev; World CWD skill copy absent",
+  "row159_release_probe": {
+    "release": "v0.52.5",
+    "command": "gh api repos/sunholo-data/ailang/contents/<file>?ref=<release>; base64 decode; scoped CallbackMessage body for envelope; regex hooks counts",
+    "outputs": {
+      "serveapi/protocol/mcphttp/methods.go": {
+        "hook_count": 0,
+        "CallbackMessage_control": 0
+      },
+      "serveapi/protocol/envelope.go": {
+        "hook_count": 0,
+        "CallbackMessage_control": 1
+      }
+    }
+  },
+  "preflight": "armed; correct GitHub account; billing CLEAN; zero allowlisted directives since2026-10-05T12:46:05Z; no new attended ledger ruling; no weekly rotation owed",
+  "skill_drift_evidence": {
+    "command": "git show origin/dev:<file> vs absolute running file bytes in shared AILANG checkout (fetched earlier this fire)",
+    "files": [
+      {
+        "file": ".claude/skills/mission-control/SKILL.md",
+        "verdict": "MATCH"
+      },
+      {
+        "file": ".claude/skills/mission-control/resources/ci-health.md",
+        "verdict": "MATCH"
+      },
+      {
+        "file": ".claude/skills/mission-control/resources/codex-lane-false-greens.md",
+        "verdict": "MATCH"
+      },
+      {
+        "file": ".claude/skills/mission-control/resources/gate-0-preflight.md",
+        "verdict": "MATCH"
+      },
+      {
+        "file": ".claude/skills/mission-control/resources/gate-1-observe.md",
+        "verdict": "MATCH"
+      },
+      {
+        "file": ".claude/skills/mission-control/resources/gate-2-pick.md",
+        "verdict": "MATCH"
+      },
+      {
+        "file": ".claude/skills/mission-control/resources/gate-3-route.md",
+        "verdict": "MATCH"
+      },
+      {
+        "file": ".claude/skills/mission-control/resources/gate-3b-ci-green.md",
+        "verdict": "MATCH"
+      },
+      {
+        "file": ".claude/skills/mission-control/resources/gate-4-record.md",
+        "verdict": "MATCH"
+      },
+      {
+        "file": ".claude/skills/mission-control/resources/gate-5-retro.md",
+        "verdict": "MATCH"
+      },
+      {
+        "file": ".claude/skills/mission-control/resources/ref-drift.md",
+        "verdict": "MATCH"
+      },
+      {
+        "file": ".claude/skills/mission-control/resources/role-spawn-routing.md",
+        "verdict": "MATCH"
+      },
+      {
+        "file": ".claude/skills/mission-control/resources/verification-protocol.md",
+        "verdict": "MATCH"
+      }
+    ],
+    "symlink_target": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control",
+    "cwd_copy_present": false
+  },
+  "billing_evidence": {
+    "command": "test -z ANTHROPIC_API_KEY && test -z ANTHROPIC_AUTH_TOKEN",
+    "verdict": "CLEAN"
+  },
+  "fleet_open_evidence": {
+    "command": "ailang mission ticket open --json (world-related signatures only retained)",
+    "signatures": [
+      {
+        "signature": "agent-tool:sonnet-unavailable",
+        "blocking": "item",
+        "slots_lost": 6,
+        "missions": [
+          "world"
+        ]
+      },
+      {
+        "signature": "agent-tool-glm-designer-unavailable",
+        "blocking": "none",
+        "slots_lost": 3,
+        "missions": [
+          "world"
+        ]
+      },
+      {
+        "signature": "agent-tool-sonnet-unavailable",
+        "blocking": "none",
+        "slots_lost": 2,
+        "missions": [
+          "world"
+        ]
+      },
+      {
+        "signature": "agent-tool-opus-planner-unavailable",
+        "blocking": "none",
+        "slots_lost": 2,
+        "missions": [
+          "world"
+        ]
+      },
+      {
+        "signature": "quorum:invalid-absent-on-quoted-literals",
+        "blocking": "none",
+        "slots_lost": 1,
+        "missions": [
+          "world"
+        ]
+      },
+      {
+        "signature": "quorum:gpt6-1-sol-openai-api-credits-exhausted",
+        "blocking": "none",
+        "slots_lost": 1,
+        "missions": [
+          "world"
+        ]
+      },
+      {
+        "signature": "skill:design-scaffold-hardcodes-owning-repo",
+        "blocking": "none",
+        "slots_lost": 1,
+        "missions": [
+          "world"
+        ]
+      },
+      {
+        "signature": "agent-tool:glm-designer-unavailable",
+        "blocking": "none",
+        "slots_lost": 1,
+        "missions": [
+          "world"
+        ]
+      },
+      {
+        "signature": "agent-tool:opus-planner-unavailable",
+        "blocking": "none",
+        "slots_lost": 1,
+        "missions": [
+          "world"
+        ]
+      },
+      {
+        "signature": "gate5:controlplane-send-refused-local-store",
+        "blocking": "none",
+        "slots_lost": 1,
+        "missions": [
+          "world"
+        ]
+      },
+      {
+        "signature": "ci:world:tracked-binary-rejects-release-png",
+        "blocking": "item",
+        "slots_lost": 1,
+        "missions": [
+          "world"
+        ]
+      }
+    ]
+  },
+  "triaged_historical_message_ids": [
+    "inbox_1791464350390_a0abcfc8",
+    "inbox_1791449760968_68b681eb",
+    "inbox_1791433896948_9032324a",
+    "inbox_1791300211676_c8871643",
+    "inbox_1791285819710_28e20e5f",
+    "inbox_1791199800285_109fcb69",
+    "inbox_1791128127942_a0f83fe5",
+    "inbox_1791021463467_20261923"
+  ],
+  "inbox_ack_note": "Full bodies read this fire from canonical GCP list; claims credited by landed records; prior v0.52.1 delivered and already adopted. All8 acked only after triage; current unread0."
+}

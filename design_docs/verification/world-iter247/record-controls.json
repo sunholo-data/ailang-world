@@ -1,0 +1,15 @@
+{
+  "log_old_count": 237,
+  "log_new_count": 238,
+  "old_bodies_preserved": true,
+  "index_old_count": 237,
+  "index_new_count": 238,
+  "index_ids_preserved": true,
+  "charter_line_count_before": 6159,
+  "charter_line_count_after": 6159,
+  "status_count": 3,
+  "status_243_archived_verbatim": true,
+  "ledger_unchanged": true,
+  "queue_unchanged_except_row129_occurrence": true,
+  "harness_share_last20": 2
+}
