@@ -861,6 +861,10 @@ func releaseFromVersion(version string) string {
 // method part of the pattern, so a non-GET on these paths is a 405 from the mux
 // rather than a hand-rolled check.
 //
+// POST /agui/ is an additive read-only AG-UI 1.0 SSE run, bounded to 18 s
+// from handler entry. Resume with standard state or Last-Event-ID; see
+// docs/QUICKSTART.md, "Watch the world live".
+//
 // The ten /v1 patterns below are the complete frozen v1 machine table (nine GET, one POST;
 // GET /v1/receipts/{id} added by row 23 M3, D-WORLD-40).
 // The tenth registration, GET /workbench, is the unversioned read-only operator renderer: it is

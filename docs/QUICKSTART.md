@@ -1008,3 +1008,52 @@ when it is given a package that is not cached and no snapshot is set; with the s
 cannot store one (the tree is read-only). Closing that egress is a separate follow-up. And
 `ailang.lock` stays writable by the agent: it can only make a package resolve if the snapshot
 already holds it, since coverage is checked against the lock at episode construction.
+
+## 10. Watch the world live
+
+With the daemon from §1 serving and entries 0 and 1 committed (§2–§3), open a
+read-only AG-UI 1.0 event stream. The complete request payload is:
+
+```bash
+curl -N -X POST -H 'Content-Type: application/json' -d '{"threadId":"t","runId":"r","messages":[]}' http://127.0.0.1:7644/agui/
+```
+
+The first three frames look like this (the CUSTOM value is an example committed
+log entry; your hashes and writer will differ):
+
+```text
+data: {"type":"RUN_STARTED","threadId":"t","runId":"r","protocolVersion":"1.0"}
+
+data: {"type":"STATE_SNAPSHOT","snapshot":{"schema":"world/agui-state/v1","lastIndex":-1,"logHead":null}}
+
+data: {"type":"CUSTOM","name":"world.entry.committed","value":{"header":{"entryIndex":0,"semanticsEpoch":1,"transitionFn":"sha256:0000000000000000000000000000000000000000000000000000000000000064","interpreter":"sha256:0000000000000000000000000000000000000000000000000000000000000065","prevEntryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000064","writtenBy":"fixture \u003c\u003e\u0026"},"entryHash":"sha256:0000000000000000000000000000000000000000000000000000000000000001","transitionRef":"sha256:00000000000000000000000000000000000000000000000000000000000000c8"}}
+
+```
+
+Each committed entry produces a `CUSTOM world.entry.committed` frame followed by
+`STATE_DELTA` replacing `lastIndex` and `logHead`. Only that final delta frame has
+an SSE `id`, acknowledging the complete entry. The stream crosses index gaps;
+its CUSTOM value is the same JSON as `GET /v1/log/{index}`.
+
+A run ends after **18 s** from handler entry with `RUN_FINISHED` and
+`result.lastIndex`. To keep watching, **re-POST** with the last complete cursor.
+For example, resume after entry 1:
+
+```bash
+curl -N -X POST -H 'Content-Type: application/json' -H 'Last-Event-ID: 1' -d '{"threadId":"t","runId":"r-resume","messages":[]}' http://127.0.0.1:7644/agui/
+```
+
+A stock AG-UI client sends its snapshot/delta state back in the standard `state`
+field: `{"schema":"world/agui-state/v1","lastIndex":1,"logHead":"…"}`. The daemon
+uses `lastIndex` and re-derives `logHead`; absent state or `state:{}` starts from
+genesis. An explicit state cursor conflicting with `Last-Event-ID` gets 400, and
+an unknown cursor gets 404 before any stream bytes.
+
+After a severed connection, discard the unfinished trailing frame and resume
+from the last complete delta's state or SSE id. An interrupted CUSTOM frame may
+be replayed; the replacement deltas are idempotent. `threadId` and `runId` are
+opaque strings echoed by the run; `messages`, `tools`, `context` and
+`forwardedProps` are accepted and ignored. This route has the same read posture
+as `GET /v1/log`, including ignoring any Authorization header. It adds no CORS
+headers. At most 16 streams run concurrently; the 17th gets 503 `StreamLimit`
+and `Retry-After: 1`. Send at most 64 KiB and finish the body within 2 s.

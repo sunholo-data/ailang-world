@@ -974,3 +974,28 @@ func TestAGUISlowReaderCutIsResumable(t *testing.T) {
 		aguiCompleteCursor(t, r.Body.Bytes())
 	}
 }
+
+// AC4.1 is documentation instrument health; socket transport is tested above.
+func TestAGUIQuickstartControl(t *testing.T) {
+	b, err := os.ReadFile("../../docs/QUICKSTART.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts := strings.SplitN(string(b), "## 10. Watch the world live", 2)
+	if len(parts) != 2 {
+		t.Fatal("QUICKSTART missing Watch the world live")
+	}
+	section := parts[1]
+	for _, text := range []string{
+		`curl -N -X POST -H 'Content-Type: application/json' -d '{"threadId":"t","runId":"r","messages":[]}' http://127.0.0.1:7644/agui/`,
+		`curl -N -X POST -H 'Content-Type: application/json' -H 'Last-Event-ID: 1' -d '{"threadId":"t","runId":"r-resume","messages":[]}' http://127.0.0.1:7644/agui/`,
+		`data: {"type":"RUN_STARTED"`, `data: {"type":"STATE_SNAPSHOT"`, `data: {"type":"CUSTOM"`, "18 s", "re-POST",
+	} {
+		if !strings.Contains(section, text) {
+			t.Fatalf("QUICKSTART missing %q", text)
+		}
+	}
+	if !(strings.Index(section, `data: {"type":"RUN_STARTED"`) < strings.Index(section, `data: {"type":"STATE_SNAPSHOT"`) && strings.Index(section, `data: {"type":"STATE_SNAPSHOT"`) < strings.Index(section, `data: {"type":"CUSTOM"`)) {
+		t.Fatal("first-three-frame example order")
+	}
+}
