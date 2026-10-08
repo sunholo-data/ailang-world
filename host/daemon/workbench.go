@@ -554,6 +554,25 @@ func (d *Daemon) handleWorkbench(w http.ResponseWriter, r *http.Request) {
 		page.Live.Recent = append(page.Live.Recent, view)
 	}
 
+	var graphEntries []workbench.GraphEntry
+	if page.Selected != nil {
+		graphEntries = append(graphEntries, workbench.GraphEntry{Index: page.Selected.EntryIndex, Href: pageHref(from, page.Selected.EntryIndex), Edges: page.Selected.Edges})
+	} else if page.Object == nil {
+		for _, entry := range latest[:min(5, len(latest))] {
+			edges, err := d.entryEdges(ctx, entry)
+			if err != nil {
+				d.writeInternalErrorLog(r, err)
+				page.Graph.Unavailable = "graph checked edges could not be read"
+				graphEntries = nil
+				break
+			}
+			graphEntries = append(graphEntries, workbench.GraphEntry{Index: entry.Header.EntryIndex, Href: pageHref(entry.Header.EntryIndex, entry.Header.EntryIndex), Edges: edges})
+		}
+	}
+	if page.Graph.Unavailable == "" {
+		page.Graph = workbench.LayoutGraph(graphEntries)
+	}
+
 	_ = workbench.Render(w, page)
 }
 

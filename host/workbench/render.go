@@ -106,6 +106,7 @@ type LiveView struct {
 }
 
 type Page struct {
+	Graph    GraphView
 	Live     LiveView
 	Title    string
 	World    WorldView
@@ -196,7 +197,12 @@ dl{display:grid;grid-template-columns:max-content 1fr;gap:.25rem 1rem}dt{font-we
 <ul class="live-list">{{range .Live.Recent}}<li><a href="{{workbenchHref .SelectHref}}">select entry {{.EntryIndex}}</a> <span class="hash" title="{{.EntryHash}}">{{.EntryHash}}</span></li>{{end}}</ul>
 {{else}}<p>The log is empty</p>{{end}}
 </section>
-<section aria-label="world graph"><h2>World graph</h2></section>
+<section aria-label="world graph"><h2>World graph</h2>
+{{if .Graph.Unavailable}}<p>UNAVAILABLE: {{.Graph.Unavailable}}</p>{{end}}{{if .Graph.Nodes}}{{else}}<p>graph: select an entry</p>{{end}}
+<svg role="img" aria-label="checked entry edges" viewBox="0 0 640 {{.Graph.Height}}">
+{{range .Graph.Edges}}<line x1="{{.X1}}" y1="{{.Y1}}" x2="{{.X2}}" y2="{{.Y2}}" stroke="currentColor"><title>{{.Relation}}</title></line>{{end}}
+{{range .Graph.Nodes}}<g>{{if .Available}}<a href="{{workbenchHref .Href}}">{{end}}<rect x="{{.X}}" y="{{.Y}}" width="280" height="28" fill="none" stroke="currentColor"{{if .Available}}{{else}} stroke-dasharray="4 3"{{end}}></rect><text x="{{.X}}" y="{{.Y}}" dy="20">{{if .Available}}{{else}}UNAVAILABLE: {{end}}{{.Label}}</text>{{if .Available}}</a>{{end}}</g>{{end}}
+</svg></section>
 <section aria-label="decisions"><h2>Decisions</h2></section>
 <section aria-label="provenance walk">
 <h2>Provenance walk</h2>
