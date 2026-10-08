@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 243 | 2026-10-08 | row 148 LANDED (38db793): POST /agui/ AG-UI 1.0 live log stream, bounded 18 s runs + resume by state.lastIndex/Last-Event-ID, keyset tail crosses gaps; D-WORLD-64 exception (93 M5 attended); quorum r1/r2 BLOCKED → r3 carve-out; sonnet judge 90 → 92; CI red on bounded-run test oracles → drain fix → 3/3; post-merge slow-body flake → #233 9319e6b (oracle + ≥2 s guards, judge 91/92); rows 169/170 [PRODUCT] |
 | 242 | 2026-10-08 | row 152 LANDED (c51a9c9): workspace-exec stays bound when the AILANG tool-handler build fails (policy-summary timeout, layout refusal); single-flight AILANG build, no lock across the subprocess; quorum r1/r2 BLOCKED → r3 carve-out; opus judge 91→94; CI 5/5 + merge 2/2; rows 167/168 filed; row 164 resolved by fleet [PRODUCT] |
 | 241 | 2026-10-07 | row 153 LANDED (42a2511, closes row 161): typed PhaseTimeoutError, derived 4 s plan cap, capsule compile-cache template built in the publication check; root cause cold compile per call; quorum r1/r2 BLOCKED → r3 carve-out; opus judge 80→92; CI 5/5 concurrent attempts (1 PR + 4 dispatched); folds unjudged 239/240 drafts (PR #226); rows 165/166 [PRODUCT] |
 | 240 | 2026-10-07 | PARKED-ON-LANE all; native opus planner / sonnet judge re-probed Unknown model, role env absent; fleet occurrence; UNJUDGED draft226, no landing [HARNESS] |

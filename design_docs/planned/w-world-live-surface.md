@@ -3,6 +3,7 @@
 - Status: **DRAFT — authored attended 2026-10-06 (Mark + Claude), routed for v1.0.0 by
   `D-WORLD-64`.** Not yet quorum-reviewed. The loop's designer takes this as its input: re-measure
   §2 at the pick-time base, run the pick-time quorum, then plan. Nothing here waives a gate.
+- **Row 148 is SUPERSEDED here by [`../implemented/w-worldd-agui-event-stream.md`](../implemented/w-worldd-agui-event-stream.md)** (iteration 243, landed `38db793`): bounded 18 s runs + resume (no 30-min connection, frozen D7 `writeTimeout`), resume cursor from AG-UI `state.lastIndex` or `Last-Event-ID`, keyset tail, no session filtering. Rows 149 and 151 consume that interface.
 - Measurement base: `2d53d72` (`origin/dev`, iteration 235 record). All measurements are listed in §10.
 - Rows: **148** `w-worldd-agui-event-stream` · **149** `w-workbench-live-and-polish` ·
   **150** `w-marketing-capture` · **151** `w-agent-generated-projections`. One design, four rows,
