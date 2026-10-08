@@ -1,0 +1,533 @@
+{
+  "id": "w-worldd-agui-event-stream",
+  "iteration": 243,
+  "row": 148,
+  "clause": "clause-6 (+5; release row, D-WORLD-64)",
+  "authority": [
+    "design_docs/planned/w-worldd-agui-event-stream.md \u2014 ratified quorum r3 narrow-refinement carve-out",
+    "design_docs/world-mission.md row 148; D-WORLD-64 scoped rule-(d) release exception",
+    "CLAUDE.md; design_docs/coding-standards.md S2/S3/S6/S7",
+    "design_docs/planned/w-worldd-agui-event-stream-sprint-plan.md"
+  ],
+  "estimate": "~1.8 executor days; C1 0.3d, C2 0.3d, C3 1.0d, C4 0.2d (each <=1 day)",
+  "scope": "One PR, exactly four milestones/commits C1..C4. Executor writes tests first, never runs git; controller commits per-milestone snapshots. Host wire encoder/store keyset/daemon route + QUICKSTART; no .ail, dependencies, frozen-surface or mission edits.",
+  "environment": [
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "export PATH=/opt/homebrew/bin:$PATH",
+    "S7 rehearsal only: controller provides a daemon on 127.0.0.1:7644 using a disposable fixture (entries 0,1,2,5,6) wholly inside the rehearsal temporary directory; no live/user store. The printed curl commands intentionally exercise the default 18s contract."
+  ],
+  "measured_baseline": {
+    "tree": "0006819; controller baseline d6334c2 is code-identical except docs",
+    "source": "Controller ran both full gates outside sandbox on pristine d6334c2; planner read both logs.",
+    "logs": [
+      "~/.ailang/state/world-iter243/base_ail.log",
+      "~/.ailang/state/world-iter243/base_go.log"
+    ],
+    "./scripts/verify_ail.sh": "controller rc=0; 22 modules; 16/16 world identities; 138 execargs tests; 40 required named tests; 444 se-tools tests across 9 modules; world package 9/9 steps; PUB011 uncontracted_exports=3",
+    "./scripts/verify_go.sh": "controller rc=0; Go 1.26.6 darwin/arm64; AILANG v0.41.0 (24ee108); 2133 tracked files, 0 binary blobs; decision ledger 55 rows; evidence 37 exact tests; plain daemon 179.509s, store 13.146s; race daemon 199.241s, store 26.767s, broker 145.978s, verifygate 169.697s; intentional race-control exit 66 with 2 races is expected",
+    "go vet ./...": "planner rc=0; empty output at 0006819",
+    "go test -count=1 ./host/store": "planner rc=0; 11.297s; no socket refusal",
+    "sandbox_rule": "Loopback bind: operation not permitted is UNINFORMATIVE UNDER SANDBOX, never pass or fail. No planner full-gate rerun or socket run; full-gate wall time not recorded in these logs."
+  },
+  "milestones": [
+    {
+      "id": "C1",
+      "title": "M1 \u2014 pure host/agui encoder",
+      "files": [
+        "host/agui/agui.go",
+        "host/agui/agui_test.go",
+        "host/agui/testdata/agui-1.0-schema.json",
+        "host/agui/testdata/stream_fixture.golden"
+      ],
+      "tests_first": [
+        {
+          "ac": "AC1.1",
+          "tests": "TestGolden, TestDeterministic",
+          "assertions": "Fixture 0,1,2,5,6 including gap; compare exact LF bytes with golden, independently pinned terminal/error bytes, and two encodes. Assert no timestamp (PD1); closed CUSTOM table allows only world.entry.committed, protocolVersion 1.0, state schema world/agui-state/v1.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC1.2",
+          "tests": "TestEventsConformToPinnedSchema",
+          "assertions": "Read pinned schema; assert exact SHA-256, six nonzero checked event types/defs, EventType enum and def const, required keys, allowed def/BaseEvent/Attributable keys, and delta op/path/value. Include Error so extra threadId reds. No claim of a general JSON Schema validator.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC1.3",
+          "tests": "TestFramesSplitLikeStockClient",
+          "assertions": "Use exact LF LF splitter and data-line parser; reject CR; compare all parsed events with independent expected list and drop unterminated tail.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC1.4",
+          "tests": "TestAGUIDependencyBoundary",
+          "assertions": "Test invokes go list -deps ./host/agui and refuses net/http and host/store; also go vet ./host/agui. Independently inspect dependency list.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC1.5",
+          "tests": "TestDeltaIdempotent",
+          "assertions": "Every delta op is replace; independently apply each delta twice to post-entry state and assert equality, including both lastIndex and logHead.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        }
+      ],
+      "acceptance": [
+        "go test -count=1 -v ./host/agui",
+        "go vet ./host/agui",
+        "go list -deps ./host/agui | awk '/^(net\\/http|github.com\\/sunholo-data\\/ailang-world\\/host\\/store)$/ {bad=1; print} END {exit bad}'",
+        "go vet ./..."
+      ],
+      "mutations": [
+        {
+          "mutant": "M-b",
+          "mutation": "add timestamp, including a constant timestamp",
+          "must_fail_test": "TestDeterministic",
+          "assertion": "timestamp-absence and golden bytes (also TestAGUIGoldenRun at C3)",
+          "command": "go test -count=1 -race -v ./host/agui -run '^(TestDeterministic)$'"
+        },
+        {
+          "mutant": "M-j",
+          "mutation": "RUN_ERROR carries threadId",
+          "must_fail_test": "TestEventsConformToPinnedSchema",
+          "assertion": "allowed properties excludes threadId on Error",
+          "command": "go test -count=1 -race -v ./host/agui -run '^(TestEventsConformToPinnedSchema)$'"
+        },
+        {
+          "mutant": "M-k",
+          "mutation": "CRLF CRLF framing",
+          "must_fail_test": "TestFramesSplitLikeStockClient",
+          "assertion": "noCR/exact stock-split event list",
+          "command": "go test -count=1 -race -v ./host/agui -run '^(TestFramesSplitLikeStockClient)$'"
+        },
+        {
+          "mutant": "M-l",
+          "mutation": "move id to CUSTOM frame",
+          "must_fail_test": "TestGolden",
+          "assertion": "exact frame bytes",
+          "command": "go test -count=1 -race -v ./host/agui -run '^(TestGolden)$'"
+        },
+        {
+          "mutant": "M-u",
+          "mutation": "non-replace delta e.g. add /entries/-",
+          "must_fail_test": "TestDeltaIdempotent",
+          "assertion": "every op replace and double application equal",
+          "command": "go test -count=1 -race -v ./host/agui -run '^(TestDeltaIdempotent)$'"
+        }
+      ],
+      "commit_message": "feat(agui): add deterministic AG-UI 1.0 SSE encoder"
+    },
+    {
+      "id": "C2",
+      "title": "M2 \u2014 keyset Store.LogEntriesAfter and readStore seam",
+      "files": [
+        "host/store/log_after.go",
+        "host/store/log_after_test.go",
+        "host/daemon/daemon.go",
+        "host/daemon/agui_test.go"
+      ],
+      "tests_first": [
+        {
+          "ac": "AC2.1",
+          "tests": "TestLogEntriesAfterCrossesGap",
+          "assertions": "Store commits 0,1,5: after -1 => [0,1,5], after 1 => [5], after 5 => []; assert ascending exclusive ordering; add >100 entries and limit 1/100/500 paging so full-page loss is observable.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC2.2",
+          "tests": "TestLogEntriesAfterBounds",
+          "assertions": "Limits 0,501 => InvalidLimitError; after < -1 refused; missing deadline => ErrNoDeadline; quarantined store refused; expired/canceled context propagates error. Seed and quarantine only a t.TempDir store.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC2.3",
+          "tests": "TestLogEntriesAfterMatchesGetLogEntry",
+          "assertions": "Deep-equal each result with GetLogEntry same index; include realistic hashes/header fields and malformed hash parse errors. Verify one ordered SQL query, no per-row getter calls.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC2.4",
+          "tests": "TestAGUIReadStoreSeam",
+          "assertions": "Add compile-time *store.Store satisfies readStore assertion plus call LogEntriesAfter via readStore on temporary fixture. Existing fake stores embed *store.Store or readStore and inherit the added method; no unrelated test edits required. New blocking/recording/failing overrides live in agui_test.go.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        }
+      ],
+      "acceptance": [
+        "go test -count=1 -v ./host/store -run '^TestLogEntriesAfter'",
+        "go test -count=1 -v ./host/daemon -run '^TestAGUIReadStoreSeam$'",
+        "go test -count=1 ./host/daemon ./host/store",
+        "go vet ./..."
+      ],
+      "mutations": [
+        {
+          "mutant": "M-d",
+          "mutation": "LogEntriesAfter WHERE >=",
+          "must_fail_test": "TestLogEntriesAfterCrossesGap",
+          "assertion": "after1 excludes1",
+          "command": "go test -count=1 -race -v ./host/store -run '^(TestLogEntriesAfterCrossesGap)$'"
+        }
+      ],
+      "commit_message": "feat(store): add bounded keyset log reads for AG-UI"
+    },
+    {
+      "id": "C3",
+      "title": "M3 \u2014 bounded POST /agui/ event stream",
+      "files": [
+        "host/daemon/agui.go",
+        "host/daemon/agui_test.go",
+        "host/daemon/daemon.go"
+      ],
+      "tests_first": [
+        {
+          "ac": "AC3.14",
+          "tests": "TestAGUIRESTGapCrossed",
+          "assertions": "FIRST M3 test written and run before any M3 production edit: authenticated POST /v1/commit commits 0,1,5 with valid observed-head CAS, each 200; GET /v1/log?from=0 gives exactly [0,1], GET /v1/log/5 200; POST /agui/ genesis emits exactly 0,1,5. Baseline red is missing /agui/, never failure of the commit precondition.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.1",
+          "tests": "TestAGUIGoldenRun",
+          "assertions": "Real daemon reads 0,1,2,5,6 fixture, aguiBudget=300ms; byte-exact golden prefix plus independently expected RUN_FINISHED, same input twice identical bytes. Add >100-entry subtest to catch skipped row of full page (M-a).",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.2",
+          "tests": "TestAGUIResumeExact",
+          "assertions": "For k=-1,0,1,2,5,6 compare header-only and state schema/lastIndex exact bytes, only entries >k; state:{} genesis; empty state + header allowed (PD6); malformed lastIndex string 2, -2,1.5 =>400; conflicting explicit cursors =>400; unknown 3 =>404, before any data byte. Include matching cursors, forged logHead ignored, malformed header, beyond-head cursor, forwardedProps ignored.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.2b",
+          "tests": "TestAGUIStockClientStateResume",
+          "assertions": "Parse run 1 bytes exactly like stock splitter; local RFC6902 applier supports replace/add only, rejects all other ops; apply snapshot/deltas, commit two more entries, POST resulting state verbatim without header; receive exactly newer entries.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.3",
+          "tests": "TestAGUIEntryValueEqualsLogRoute",
+          "assertions": "Retain raw CUSTOM value token bytes using json.RawMessage, append one LF, compare to GET /v1/log/{i} body exactly; no TrimSpace/remarshal/semantic equality. Include <>& escaping control and all fixture entries.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.4",
+          "tests": "TestAGUISeesDirectStoreCommit",
+          "assertions": "Wait for stream start, commit through d.store.Commit bypassing handlers; see it within two shrunk ticks; repeat POST /v1/commit. Record polls with channel handshake, never rely on arbitrary sleep; no commit signal may be sole source.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.5",
+          "tests": "TestAGUIGlobalCap",
+          "assertions": "Hold 16 streams with start handshakes (one shared short budget); 17th =>503 APIError StreamLimit and Retry-After:1 before any SSE byte; cancel/join one then next admitted; verify slot cleanup on refusals, store errors and disconnect.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.6",
+          "tests": "TestAGUIBudgetDerivation",
+          "assertions": "Pin aguiRunBudget == writeTimeout-readDeadline-aguiWriteMargin, >0 and 18s; new d.aguiBudget matches, margin=2s, body bound=2s, tick=250ms, page=100 and cap=16. Do not shrink defaults before checking them.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.7",
+          "tests": "TestAGUIShutdownEndsRuns",
+          "assertions": "Real server run open: d.Shutdown returns nil in <2s; stream ends RUN_FINISHED within one shrunk tick plus scheduling slack. Include idle and blocked-read seam, observe context cancellation; no wait for frozen 10s drain expiry (PD7).",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.8",
+          "tests": "TestAGUIClientDisconnectReturns",
+          "assertions": "Block read in request-rooted seam, cancel client; require read ctx canceled and handler returned within one tick plus bounded scheduling slack; join all goroutines/stop watchers, goroutine count returns to measured baseline under race; release fallback blocker only in cleanup so M-h reds promptly.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.9",
+          "tests": "TestAGUIReadPostureMatchesLog, TestAGUIRejectsGET, TestAGUIInputErrors",
+          "assertions": "Assert isProtected(POST /agui/)==isProtected(GET /v1/log)==false. Compare no auth/invalid/live/expired auth responses against log read posture; no filtering. GET =>405. Bad/trailing JSON, missing runId/threadId, non-string IDs, messages non-array/missing/null =>400; >64KiB =>413 PayloadTooLarge; optional messages contents/tools/context/forwardedProps accepted/ignored. Pin stream headers/no CORS and pre-stream APIError shape.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.10",
+          "tests": "TestAGUIStoreErrorIsRunError",
+          "assertions": "After start fail read seam with secret-bearing error: terminal RUN_ERROR code Internal constant sanitized message, no threadId/no store text; context deadline variant =>Timeout; pre-stream failure =>500 APIError; emit no second terminal frame. Capture detail only via existing internal log path.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.11",
+          "tests": "TestAGUISlowBodyNeverTruncates",
+          "assertions": "BodyBound=100ms, budget=300ms, tick=10ms; 1 byte/30ms body returning past bound =>408 SlowBody and no data; valid body completed at 80ms =>RUN_FINISHED by entry t0+300ms+tick+50ms. Reading client sees complete APIError or terminal stream. Add scaled scratch-server stalled-body arm =>zero bytes/clean EOF; no deadline setter. Total deliberate waits <2s.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.12",
+          "tests": "TestAGUISeveranceResumable",
+          "assertions": "Every byte offset of golden run: LF LF parser drops partial tail; recover snapshot/last complete delta cursor; append replay entry frames and prove no entry loss/gap (duplicate CUSTOM before its delta may be replayed). Also SSE-id oracle and header resume per PD2; never claim exactly-once CUSTOM delivery.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        },
+        {
+          "ac": "AC3.13",
+          "tests": "TestAGUISlowReaderCutIsResumable",
+          "assertions": "Scratch server wraps d.Handler with WriteTimeout=200ms; about 5000 temporary-store entries whose frames exceed socket buffers. Read 1KiB then pause ~250ms, then drain delivered prefix with bounded client deadline; assert write-timeout cut and incomplete terminal run rather than normal finish. Ensure run budget exceeds scratch write timeout. Resume from last complete state and id per PD2/AC3.12, verify expected remaining entries. Real sockets mandatory; recorder alone cannot prove a cut.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        }
+      ],
+      "acceptance": [
+        "go test -count=1 -v ./host/daemon -run '^TestAGUIRESTGapCrossed$'",
+        "go test -count=1 -v ./host/daemon -run '^TestAGUI'",
+        "go test -count=1 ./host/agui ./host/store",
+        "go build ./...",
+        "go test -count=1 ./...",
+        "go test -race -count=1 ./host/agui ./host/daemon ./host/store",
+        "go vet ./..."
+      ],
+      "mutations": [
+        {
+          "mutant": "M-a",
+          "mutation": "cursor +2 / skip final row of full page",
+          "must_fail_test": "TestAGUIGoldenRun|TestAGUIResumeExact",
+          "assertion": "expected indexes and >100-entry page-boundary arm",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIGoldenRun|TestAGUIResumeExact)$'"
+        },
+        {
+          "mutant": "M-c",
+          "mutation": "tail via GetLogEntry(cursor+1)",
+          "must_fail_test": "TestAGUIResumeExact",
+          "assertion": "k=2 must deliver entry5",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIResumeExact)$'"
+        },
+        {
+          "mutant": "M-e",
+          "mutation": "budget=writeTimeout",
+          "must_fail_test": "TestAGUIBudgetDerivation",
+          "assertion": "derived equality/default budget",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIBudgetDerivation)$'"
+        },
+        {
+          "mutant": "M-f",
+          "mutation": "remove semaphore check",
+          "must_fail_test": "TestAGUIGlobalCap",
+          "assertion": "17th is503 StreamLimit",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIGlobalCap)$'"
+        },
+        {
+          "mutant": "M-g",
+          "mutation": "remove RegisterOnShutdown hook",
+          "must_fail_test": "TestAGUIShutdownEndsRuns",
+          "assertion": "shutdown cancels blocked read and ends RUN_FINISHED promptly",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIShutdownEndsRuns)$'"
+        },
+        {
+          "mutant": "M-h",
+          "mutation": "read ctx from context.Background",
+          "must_fail_test": "TestAGUIClientDisconnectReturns",
+          "assertion": "actual read ctx cancels and handler returns",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIClientDisconnectReturns)$'"
+        },
+        {
+          "mutant": "M-i",
+          "mutation": "CUSTOM adds transition payload field",
+          "must_fail_test": "TestAGUIEntryValueEqualsLogRoute",
+          "assertion": "raw value+LF equals single-entry route bytes",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIEntryValueEqualsLogRoute)$'"
+        },
+        {
+          "mutant": "M-m",
+          "mutation": "add /agui/ to isProtected",
+          "must_fail_test": "TestAGUIReadPostureMatchesLog",
+          "assertion": "read-posture equality false",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIReadPostureMatchesLog)$'"
+        },
+        {
+          "mutant": "M-n",
+          "mutation": "header wins conflicting cursor",
+          "must_fail_test": "TestAGUIResumeExact",
+          "assertion": "conflict =>400 before SSE",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIResumeExact)$'"
+        },
+        {
+          "mutant": "M-o",
+          "mutation": "tail only on in-handler commit signal",
+          "must_fail_test": "TestAGUISeesDirectStoreCommit",
+          "assertion": "direct store commit appears within2ticks",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUISeesDirectStoreCommit)$'"
+        },
+        {
+          "mutant": "M-p",
+          "mutation": "copy store error text into message",
+          "must_fail_test": "TestAGUIStoreErrorIsRunError",
+          "assertion": "constant message excludes secret sentinel",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIStoreErrorIsRunError)$'"
+        },
+        {
+          "mutant": "M-q",
+          "mutation": "anchor run clock after body",
+          "must_fail_test": "TestAGUISlowBodyNeverTruncates",
+          "assertion": "80ms body still finishes within entry-anchored bound",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUISlowBodyNeverTruncates)$'"
+        },
+        {
+          "mutant": "M-r",
+          "mutation": "ignore body bound",
+          "must_fail_test": "TestAGUISlowBodyNeverTruncates",
+          "assertion": "slow body =>408 no data",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUISlowBodyNeverTruncates)$'"
+        },
+        {
+          "mutant": "M-s",
+          "mutation": "ignore state cursor",
+          "must_fail_test": "TestAGUIStockClientStateResume",
+          "assertion": "state-only replay gives only newer entries",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIStockClientStateResume)$'"
+        },
+        {
+          "mutant": "M-t",
+          "mutation": "reject schema-less state",
+          "must_fail_test": "TestAGUIResumeExact",
+          "assertion": "state:{} =>genesis200",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIResumeExact)$'"
+        },
+        {
+          "mutant": "M-v",
+          "mutation": "emit id before final entry frame",
+          "must_fail_test": "TestAGUISeveranceResumable|TestAGUISlowReaderCutIsResumable",
+          "assertion": "id-bearing frame matches completed delta at every cut (PD2)",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUISeveranceResumable|TestAGUISlowReaderCutIsResumable)$'"
+        },
+        {
+          "mutant": "M-w",
+          "mutation": "rebuild tail using dense /v1/log loop",
+          "must_fail_test": "TestAGUIRESTGapCrossed",
+          "assertion": "AGUI crosses1to5 while frozen log range stops",
+          "command": "go test -count=1 -race -v ./host/daemon -run '^(TestAGUIRESTGapCrossed)$'"
+        }
+      ],
+      "commit_message": "feat(daemon): stream committed log events over POST /agui/"
+    },
+    {
+      "id": "C4",
+      "title": "M4 \u2014 S7 live-watch usage surface",
+      "files": [
+        "docs/QUICKSTART.md",
+        "host/daemon/daemon.go",
+        "host/daemon/agui_test.go"
+      ],
+      "tests_first": [
+        {
+          "ac": "AC4.1",
+          "tests": "TestAGUIQuickstartControl",
+          "assertions": "Documentation instrument-health only (PD5): QUICKSTART Watch the world live, complete payload curl -N POST, first three frames RUN_STARTED/STATE_SNAPSHOT/CUSTOM, Last-Event-ID resume and 18s re-POST. Execute both printed curl examples verbatim against temporary daemon fixture; record transcript for controller/PR, not a new repo artifact. Route doc comment updated.",
+          "red_first": "Write before production/documentation changes; run on pre-milestone snapshot and require red. Missing new API/package compile errors are explicit build-red evidence, not behavioral mutation kills."
+        }
+      ],
+      "acceptance": [
+        "go test -count=1 -v ./host/daemon -run '^TestAGUIQuickstartControl$'",
+        "rg -n 'Watch the world live|Last-Event-ID|18 s' docs/QUICKSTART.md",
+        "curl -N -X POST -H 'Content-Type: application/json' -d '{\"threadId\":\"t\",\"runId\":\"r\",\"messages\":[]}' http://127.0.0.1:7644/agui/",
+        "curl -N -X POST -H 'Content-Type: application/json' -H 'Last-Event-ID: 1' -d '{\"threadId\":\"t\",\"runId\":\"r-resume\",\"messages\":[]}' http://127.0.0.1:7644/agui/",
+        "go test -race -count=1 ./host/agui ./host/daemon ./host/store",
+        "go vet ./..."
+      ],
+      "mutations": [],
+      "commit_message": "docs(agui): document and rehearse live world watching"
+    }
+  ],
+  "gates": [
+    {
+      "milestone": "C1",
+      "commands": [
+        "go test -count=1 -v ./host/agui",
+        "go vet ./host/agui",
+        "go list -deps ./host/agui | awk '/^(net\\/http|github.com\\/sunholo-data\\/ailang-world\\/host\\/store)$/ {bad=1; print} END {exit bad}'",
+        "go vet ./..."
+      ],
+      "rule": "Named test PASS manifest required, zero-match/SKIP is not acceptance; socket refusal is UNINFORMATIVE UNDER SANDBOX."
+    },
+    {
+      "milestone": "C2",
+      "commands": [
+        "go test -count=1 -v ./host/store -run '^TestLogEntriesAfter'",
+        "go test -count=1 -v ./host/daemon -run '^TestAGUIReadStoreSeam$'",
+        "go test -count=1 ./host/daemon ./host/store",
+        "go vet ./..."
+      ],
+      "rule": "Named test PASS manifest required, zero-match/SKIP is not acceptance; socket refusal is UNINFORMATIVE UNDER SANDBOX."
+    },
+    {
+      "milestone": "C3",
+      "commands": [
+        "go test -count=1 -v ./host/daemon -run '^TestAGUIRESTGapCrossed$'",
+        "go test -count=1 -v ./host/daemon -run '^TestAGUI'",
+        "go test -count=1 ./host/agui ./host/store",
+        "go build ./...",
+        "go test -count=1 ./...",
+        "go test -race -count=1 ./host/agui ./host/daemon ./host/store",
+        "go vet ./..."
+      ],
+      "rule": "Named test PASS manifest required, zero-match/SKIP is not acceptance; socket refusal is UNINFORMATIVE UNDER SANDBOX."
+    },
+    {
+      "milestone": "C4",
+      "commands": [
+        "go test -count=1 -v ./host/daemon -run '^TestAGUIQuickstartControl$'",
+        "rg -n 'Watch the world live|Last-Event-ID|18 s' docs/QUICKSTART.md",
+        "curl -N -X POST -H 'Content-Type: application/json' -d '{\"threadId\":\"t\",\"runId\":\"r\",\"messages\":[]}' http://127.0.0.1:7644/agui/",
+        "curl -N -X POST -H 'Content-Type: application/json' -H 'Last-Event-ID: 1' -d '{\"threadId\":\"t\",\"runId\":\"r-resume\",\"messages\":[]}' http://127.0.0.1:7644/agui/",
+        "go test -race -count=1 ./host/agui ./host/daemon ./host/store",
+        "go vet ./..."
+      ],
+      "rule": "Named test PASS manifest required, zero-match/SKIP is not acceptance; socket refusal is UNINFORMATIVE UNDER SANDBOX."
+    },
+    {
+      "milestone": "final",
+      "commands": [
+        "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+        "export PATH=/opt/homebrew/bin:$PATH",
+        "./scripts/verify_ail.sh",
+        "./scripts/verify_go.sh",
+        "go test -race -count=1 ./host/agui ./host/daemon ./host/store"
+      ],
+      "rule": "Run full verification on socket-capable host; record rc separately and exact named passes. Controller owns CI and commits."
+    }
+  ],
+  "risks": [
+    "CI Go race leg has ~600s wall budget (8m per-package timeout). Keep new tests fast: shrunk per-daemon budgets/ticks, concurrent held streams, channel handshakes, no test sleeping >~2s total. Report focused AGUI and full daemon race wall; do not widen CI budgets.",
+    "Slow-reader test requires actual sockets and fixture bytes larger than buffers; bounded post-pause drain distinguishes write-timeout severance from normal finish. Never skip this oracle or substitute recorder evidence.",
+    "Timing oracle for M-q needs handler-entry timestamp and 80ms body stimulus; 50ms slack must remain below the 80ms shift. Report race/load flakes; do not silently increase slack to let mutant survive.",
+    "Cancel and join every stream/read/stop watcher before test return; shutdown channel closure must be idempotent; semaphore cleanup on every exit.",
+    "Schema asset must be exact V16 bytes; custom names are World convention, not a schema namespace requirement. No new dependency or package manifest change.",
+    "Golden fixture contains gaps; replay can repeat CUSTOM from an interrupted entry pair. State replace operations are idempotent; promise lossless resumability, not exactly-once event delivery.",
+    "Frozen /v1/log retains first-gap stop, and commit density/linkage remain unfixed. Controller records design section9 findings separately; executor changes no mission doc."
+  ],
+  "planner_decisions": {
+    "PD1": "Golden boundary is underspecified (AC3.1 says golden plus RUN_FINISHED). Store stream_fixture.golden as Start + entries 0,1,2,5,6, excluding terminal; TestGolden pins that prefix and separately pins Finished and Error bytes. TestAGUIGoldenRun appends the independently expected RUN_FINISHED(lastIndex=6). TestDeterministic also asserts timestamp absent in every frame: a fixed added timestamp need not break two-encode equality (M-b).",
+    "PD2": "AC3.12/3.13 using only delta state cannot kill early id placement (M-v). Keep the state-cursor recovery oracle, and additionally track complete SSE id-bearing frames at every cut; require each id on its matching STATE_DELTA and last complete id == last fully delivered delta index. Resume through Last-Event-ID too. This makes M-v red even if state-only recovery would succeed.",
+    "PD3": "D6 fixes aguiTick at 250ms but the brief requires shrunk ticks. Add an unexported per-daemon aguiTick field initialized from the unchanged new constant (250ms); use 5\u201310ms in most tests, 10ms for slow-body tests. Add aguiBodyBound and aguiBudget fields as the design requests. Pin defaults in TestAGUIBudgetDerivation; no D7 constant changes or package-global mutable test seams.",
+    "PD4": "D5 says reuse GetLogEntry row parse, but section 8 does not permit store.go refactoring. In log_after.go faithfully reuse the same column order, hashref.Parse operations, header construction and error handling algorithm locally. Do not change store.go or call GetLogEntry N times. TestLogEntriesAfterMatchesGetLogEntry deep-equality and malformed-row arms bind the local parser to the existing representation. A shared-helper refactor is deferred.",
+    "PD5": "M4 has only a grep instrument-health AC, so red-first needs an explicit oracle. Before docs edits add TestAGUIQuickstartControl in host/daemon/agui_test.go: require the live-watch heading, runnable exact POST payload, first-three-frame example, Last-Event-ID example and 18s re-POST text. It must fail on C3 docs. The grep and this control are documentation instrument-health checks, not load-bearing transport proof; execute examples verbatim separately.",
+    "PD6": "D4 header/state conflict wording must not make header-only resume conflict with implicit genesis. Compare header only against an explicitly supplied recognized-schema state cursor; absent or schema-less state is genesis only when no header is supplied. Test header-only, empty state plus header, matching/conflicting recognized state, malformed/overflow header and untrusted logHead.",
+    "PD7": "Shutdown may occur during a 10s in-flight store read, so merely selecting aguiStop during idle wait does not prove within-one-tick shutdown. Use a cancellable child of r.Context for run reads, cancel it on aguiStop, join the watcher on all exits, and treat shutdown cancellation as RUN_FINISHED rather than RUN_ERROR. AC3.7 includes a blocking read seam and idle stream, AC3.8 tests actual read-context cancellation (kills M-h). Keep server drain and readDeadline unchanged."
+  },
+  "must_not_change": [
+    "GET /v1/health",
+    "GET /v1/head",
+    "GET /v1/worlds/{ref}",
+    "GET /v1/objects/{ref}",
+    "GET /v1/objects/by-semantic-id/{name...}",
+    "GET /v1/log/{index}",
+    "GET /v1/log",
+    "GET /v1/registry/{name...}",
+    "POST /v1/commit",
+    "GET /v1/receipts/{id}",
+    "host/daemon/handlers.go (all /v1 handlers unchanged)",
+    "host/daemon/daemon.go isProtected body",
+    "all D7 constants and TestBoundedWaitsAndBodyLimit in host/daemon/daemon_test.go",
+    "host/daemon/workbench.go workbenchCSP",
+    "host/projection/*",
+    "tools/launchd/*",
+    "design_docs/world-mission*.md"
+  ],
+  "test_write_rule": "Any test writing outside its own t.TempDir() is forbidden. Put stores, fixtures, fake HOME/state/cache roots and subprocess outputs inside t.TempDir; never seed $HOME or ~/.ailang. Read-only pinned/schema sources may be read. Planner writes only its two deliverables, no git writes.",
+  "mutation_protocol": "Apply each mutant alone on its Cn snapshot, run named command and require the named assertion red, then restore exact bytes from in-memory/per-milestone snapshot without git. Re-run green, compare bytes before next mutant. Mutations touching protected surfaces (M-m) are isolated reversible drills only, absent from delivered snapshots. Build failures, sandbox refusals, zero tests and skips do not kill a mutant. Report SURVIVED and block acceptance; never silently rewrite mutant.",
+  "controller_owned": [
+    "C1..C4 commits from executor snapshots; executor does not run git",
+    "Final socket-capable gates/CI and PR transcript retention",
+    "Design section9 findings and row148 landing bookkeeping outside executor scope"
+  ]
+}
