@@ -59,7 +59,7 @@ type workbenchChromeTrace struct {
 func startWorkbenchChrome(t *testing.T, chrome, url string, jsOff bool) {
 	t.Helper()
 	root := t.TempDir()
-	for _, dir := range []string{"home", "cache", "tmp", "profile"} {
+	for _, dir := range []string{"cache", "tmp", "profile"} {
 		if err := os.Mkdir(filepath.Join(root, dir), 0700); err != nil {
 			t.Fatal(err)
 		}
@@ -73,11 +73,15 @@ func startWorkbenchChrome(t *testing.T, chrome, url string, jsOff bool) {
 	cmd := exec.CommandContext(ctx, chrome, args...)
 	for _, e := range os.Environ() {
 		key := strings.SplitN(e, "=", 2)[0]
-		if key != "HOME" && key != "XDG_CACHE_HOME" && key != "TMPDIR" && key != "TMP" && key != "TEMP" {
+		// HOME is deliberately NOT overridden: on macOS headless Chrome with a
+		// relocated HOME never loads its URL (measured iteration 245: zero
+		// requests with HOME set, one without). --user-data-dir isolates the
+		// profile instead.
+		if key != "XDG_CACHE_HOME" && key != "TMPDIR" && key != "TMP" && key != "TEMP" {
 			cmd.Env = append(cmd.Env, e)
 		}
 	}
-	cmd.Env = append(cmd.Env, "HOME="+filepath.Join(root, "home"), "XDG_CACHE_HOME="+filepath.Join(root, "cache"), "TMPDIR="+filepath.Join(root, "tmp"), "TMP="+filepath.Join(root, "tmp"), "TEMP="+filepath.Join(root, "tmp"))
+	cmd.Env = append(cmd.Env, "XDG_CACHE_HOME="+filepath.Join(root, "cache"), "TMPDIR="+filepath.Join(root, "tmp"), "TMP="+filepath.Join(root, "tmp"), "TEMP="+filepath.Join(root, "tmp"))
 	logPath := filepath.Join(root, "chrome.log")
 	log, err := os.Create(logPath)
 	if err != nil {
