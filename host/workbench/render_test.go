@@ -406,6 +406,7 @@ var workbenchViewTypes = []reflect.Type{
 	reflect.TypeOf(Page{}), reflect.TypeOf(TimelineView{}), reflect.TypeOf(EntryView{}),
 	reflect.TypeOf(WorldView{}), reflect.TypeOf(ObjectView{}), reflect.TypeOf(GradeView{}),
 	reflect.TypeOf(EdgeView{}), reflect.TypeOf(CommitView{}), reflect.TypeOf(ReferenceView{}),
+	reflect.TypeOf(LiveView{}),
 }
 
 type fieldCensus struct {
