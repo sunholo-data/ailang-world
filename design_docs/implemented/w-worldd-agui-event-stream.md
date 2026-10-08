@@ -1,7 +1,7 @@
 # w-worldd-agui-event-stream — row 148
 
-- Status: **PLANNED — pick-time design, iteration 243, revision r1.** Supersedes the row-148 parts of
-  the attended DRAFT [`w-world-live-surface.md`](w-world-live-surface.md) (D2–D5, §5–§7). Rows 149–151 stay there.
+- Status: **IMPLEMENTED — iteration 243, PR #231 → `38db793` (quorum r1/r2 BLOCKED → r3 narrow-refinement carve-out; sonnet judge r1 90 → r2 92, zero blocking).** Pick-time design, revision r1. Supersedes the row-148 parts of
+  the attended DRAFT [`w-world-live-surface.md`](../planned/w-world-live-surface.md) (D2–D5, §5–§7). Rows 149–151 stay there.
 - Base `d6334c2`; premises in §2; probes in [`../verification/world-row148-design/`](../verification/world-row148-design/).
   Binding: [coding-standards.md](../coding-standards.md) S2, S3, S6, S7; `D-WORLD-64`.
 
