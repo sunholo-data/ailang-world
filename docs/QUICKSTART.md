@@ -981,8 +981,11 @@ digest of the snapshot that `ai-check`, `test` and `run` resolved against. The e
 therefore names the packages a result depended on. An exec profile's `root` (§10) is independent
 of the module root: it only places a toolchain command's cwd.
 
-**Operator lines.** Each is written once per refused call, and the episode's tools stay refused
-(every declared effect fails, as for a missing worktree) until you fix the cause:
+**Operator lines.** Each is written once per refused call, and the episode's **AILANG tools**
+(read, write, edit, check, run, discover, cli) stay refused (every declared effect fails) until
+you fix the cause. `workspace-exec` keeps working: it needs only the episode worktree, not the
+module root, the package cache or the policy, so it is refused only when the worktree itself is
+missing or unsafe:
 
 | Line | Cause | What to do |
 |---|---|---|

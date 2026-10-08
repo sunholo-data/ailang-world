@@ -99,8 +99,8 @@ func (w mcpWire) errText() string {
 // execSpawns is the ep1 exec handler's spawn count (0 before it is built).
 func (r *seRig) execSpawns() int64 {
 	r.t.Helper()
-	r.d.workspace.mu.Lock()
-	defer r.d.workspace.mu.Unlock()
+	r.d.workspace.execMu.Lock()
+	defer r.d.workspace.execMu.Unlock()
 	cached, ok := r.d.workspace.execH["ep1"]
 	if !ok {
 		return 0
